@@ -346,12 +346,12 @@ PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
 }
 
 static void Gfx_RegisterShaderStage( PLShaderProgram *program, PLShaderStageType type, const char *path ) {
-	PLFile *filePtr = plLoadPackageFile( globalWad, path );
+	PLFile *filePtr = plOpenFile( path, true );
 	if ( filePtr == NULL ) {
 		PrintError( "Failed to find shader \"%s\" in WAD!\nPL: %s\n", path, plGetError() );
 	}
 
-	const char *buffer = plGetFileData( filePtr );
+	const char *buffer = ( const char* ) plGetFileData( filePtr );
 	size_t length = plGetFileSize( filePtr );
 
 	if ( !plRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
@@ -503,10 +503,10 @@ void Gfx_Initialize( void ) {
 	playerCamera->viewport.h = YIN_DISPLAY_HEIGHT;
 
 	/* create the default shader programs */
-	Gfx_RegisterShader( SHADER_GENERIC, "SVERTEX", "SCOLOUR" );
-	Gfx_RegisterShader( SHADER_TEXTURE, "SVERTEX", "STEXTURE" );
-	Gfx_RegisterShader( SHADER_ALPHA_TEST, "SVERTEX", "SALPHA" );
-	Gfx_RegisterShader( SHADER_LIT, "SVERTEX", "SLIT" );
+	Gfx_RegisterShader( SHADER_GENERIC, "shader:vertex", "shader:colour" );
+	Gfx_RegisterShader( SHADER_TEXTURE, "shader:vertex", "shader:texture" );
+	Gfx_RegisterShader( SHADER_ALPHA_TEST, "shader:vertex", "shader:alpha" );
+	Gfx_RegisterShader( SHADER_LIT, "shader:vertex", "shader:lit" );
 
 	plSetClearColour(PLColour( 0, 0, 0, 255 ) );
 

@@ -12,6 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
 
 add_subdirectory( src/3rdparty/platform/platform )
 add_subdirectory( src/3rdparty/freeglut/freeglut/freeglut )
+add_subdirectory( tools/pkgman/ )
 
 file( GLOB YIN_SOURCE_FILES
         src/*.c

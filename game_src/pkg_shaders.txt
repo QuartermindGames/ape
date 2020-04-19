@@ -1,0 +1,8 @@
+; Generates BaseShaders.pkg file
+output ../bin/shaders.pkg
+dir shaders/ glsl shader
+;add shaders/alpha.glsl shader alpha
+;add shaders/colour.glsl shader colour
+;add shaders/lit.glsl shader lit
+;add shaders/texture.glsl shader texture
+;add shaders/vertex.glsl shader vertex

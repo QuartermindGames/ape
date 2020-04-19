@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "act.h"
 #include "game.h"
+#include "pkg_loader.h"
 
 #include <GL/freeglut.h>
 
@@ -104,6 +105,11 @@ unsigned int Sys_GetNumTicks( void ) {
 	return numTicks;
 }
 
+void Sys_MountPackageCallback( const char *path, void *userData ) {
+	PrintMsg( "Mounting %s as directory\n" );
+	plMountLocation( path );
+}
+
 int Sys_Init( int argc, char **argv ) {
 	pl_calloc = Sys_AllocateMemory;
 	pl_malloc = Sys_malloc;
@@ -112,25 +118,33 @@ int Sys_Init( int argc, char **argv ) {
 	plInitialize( argc, argv );
 	plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS | PL_SUBSYSTEM_IO | PL_SUBSYSTEM_IMAGE );
 
-	/* mount all the dirs we need */
-	plMountLocation( "./" );
-
-#if 0 /* don't need this anymore */
 	plSetupLogOutput( "log.txt" );
-#endif
 	plSetupLogLevel( LOG_LEVEL_ERROR, "error", PL_COLOUR_RED, true );
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	plRegisterStandardPackageLoaders();
-
 	PrintMsg( "Initializing...\n" );
+
+	plRegisterStandardPackageLoaders();
+	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
+
+	PrintMsg( "Mounting VFS locations...\n" );
+
+	/* mount all the dirs and packages we need */
+	plMountLocation( plGetWorkingDirectory() );
+	const char *rPackages[]={
+			"shaders.pkg",
+	};
+	for ( unsigned int i = 0; i < plArrayElements( rPackages ); ++i ) {
+		if ( plMountLocation( rPackages[ i ] ) == NULL ) {
+			PrintError( "Failed to mount required package \"%s\"!\nPL: %s\n", rPackages[ i ], plGetError() );
+		}
+	}
 
 	/* ensure our wad is available */
 	globalWad = plLoadPackage( YIN_GLOBAL_WAD );
 	if( globalWad == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
-		return EXIT_FAILURE;
 	}
 
 	glutInitWindowSize( YIN_WINDOW_WIDTH, YIN_WINDOW_HEIGHT );
