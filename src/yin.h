@@ -17,7 +17,7 @@
 #define YIN_WINDOW_WIDTH  640
 #define YIN_WINDOW_HEIGHT 400
 
-#define YIN_WINDOW_TITLE "Buddy's Adventure"
+#define YIN_WINDOW_TITLE "Yin Engine"
 
 #define YIN_TICK_RATE 1000 / 60 /* ms */
 
