@@ -4,11 +4,11 @@
 
 #include <PL/platform.h>
 #include <PL/platform_filesystem.h>
+#include <PL/platform_image.h>
+
+#include "main.h"
 
 /* PkgMan, the shitty package generator! */
-
-#define Print( ... )	printf( __VA_ARGS__ )
-#define Error( ... )	printf( __VA_ARGS__ ); exit( EXIT_FAILURE )
 
 #define PKG_IDENTIFIER	"PKG1"
 
@@ -49,7 +49,7 @@ static const char *ReadString( const char *buffer, char *destination, size_t len
 
 	unsigned int destPos = 0;
 	while ( *buffer != '\0' ) {
-		if ( *buffer == '\n' || ( isContained && *buffer == '"' ) || ( !isContained && *buffer == ' ' ) ) {
+		if ( ( *buffer == '\r' || *buffer == '\n' ) || ( isContained && *buffer == '"' ) || ( !isContained && *buffer == ' ' ) ) {
 			buffer++;
 			break;
 		}
@@ -69,16 +69,40 @@ static const char *ReadString( const char *buffer, char *destination, size_t len
 static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *fileName ) {
 	Print( "Adding %s (%s)...\n", fileName, fileTag );
 
-	PLFile *filePtr = plOpenFile( filePath, true );
+	/* so we can do some path/name mangling */
+	char packPath[ PL_SYSTEM_MAX_PATH ];
+	strncpy( packPath, filePath, sizeof( packPath ) );
+	char packName[ 16 ];
+	strncpy( packName, fileName, sizeof( packName ) );
+
+	/* see if it's a file we can pack */
+	const char *extension = plGetFileExtension( packPath );
+	if ( strcmp( extension, "png" ) == 0 || strcmp( extension, "gif" ) == 0 || strcmp( extension, "bmp" ) == 0 ) {
+		Print( "Compressing %s\n", packPath );
+
+		PLImage image;
+		if ( !plLoadImage( packPath, &image ) ) {
+			Error( "Failed to load \"%s\"!\nPL: %s\n", packPath, plGetError() );
+		}
+
+		strncpy( packPath + strlen( packPath ) - 4, ".gfx", 4 );
+		strncpy( packName + strlen( packName ) - 4, ".gfx", 4 );
+
+		PackImage_Write( packPath, &image );
+
+		plFreeImage( &image );
+	}
+
+	PLFile *filePtr = plOpenFile( packPath, true );
 	if ( filePtr == NULL ) {
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, plGetError() );
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", packPath, plGetError() );
 	}
 
 	const uint8_t *data = plGetFileData( filePtr );
 	size_t fileLength = plGetFileSize( filePtr );
 
 	char indexName[ 32 ];
-	snprintf( indexName, sizeof( indexName ), "%s:%s", fileTag, fileName );
+	snprintf( indexName, sizeof( indexName ), "%s:%s", fileTag, packName );
 
 	/* write the index header */
 	uint8_t nameLength = strlen( indexName );
@@ -106,6 +130,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 		Error( "Failed to get valid file name from \"%s\"!\n", filePath );
 	}
 
+#if 0 /* nevermind, let's include extensions */
 	const char *fileExtension = plGetFileExtension( fileName );
 	if ( fileExtension == NULL ) {
 		Error( "Failed to get valid file extension from \"%s\"!\n", filePath );
@@ -115,6 +140,9 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 	if ( length >= 16 ) {
 		Error( "File name \"%s\" is too long!\n", fileName );
 	}
+#else
+	unsigned int length = strlen( fileName );
+#endif
 
 	/* now produce a copy of the filename without the extension... */
 	char packFileName[ 16 ];
@@ -155,18 +183,18 @@ static void ParseScript( const char *buffer, size_t length ) {
 			continue;
 		} else if ( strncmp( curPos, "add ", 4 ) == 0 ) { /* add file */
 			curPos += 4;
-			curPos = SkipSpaces( curPos );
+			curPos = SkipSpaces(curPos);
 
-			char filePath[ PL_SYSTEM_MAX_PATH ];
-			curPos = ReadString( curPos, filePath, sizeof( filePath ) );
+			char filePath[PL_SYSTEM_MAX_PATH];
+			curPos = ReadString(curPos, filePath, sizeof(filePath));
 
-			char fileTag[ 15 ];
-			curPos = ReadString( curPos, fileTag, sizeof( fileTag ) );
+			char fileTag[15];
+			curPos = ReadString(curPos, fileTag, sizeof(fileTag));
 
-			char fileName[ 16 ];
-			curPos = ReadString( curPos, fileName, sizeof( fileName ) );
+			char fileName[16];
+			curPos = ReadString(curPos, fileName, sizeof(fileName));
 
-			Pkg_AddFile( filePath, fileTag, fileName );
+			Pkg_AddFile(filePath, fileTag, fileName);
 			continue;
 		} else if ( strncmp( curPos, "dir ", 4 ) == 0 ) {
 			curPos += 4;

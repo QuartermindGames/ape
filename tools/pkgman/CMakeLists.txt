@@ -6,7 +6,7 @@ project( pkgman )
 
 set( CMAKE_C_STANDARD 11 )
 
-add_executable( pkgman WIN32 main.c )
+add_executable( pkgman WIN32 main.c pack_image.c )
 
 target_link_libraries( pkgman platform )
 
