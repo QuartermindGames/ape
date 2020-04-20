@@ -1,0 +1,6 @@
+; Generates BaseTextures.pkg
+output ../bin/BaseTextures.pkg
+
+; Default/fallback textures
+add BaseTextures/Default.png Engine Default
+add BaseTextures/DefaultTile.png Engine DefaultTile
