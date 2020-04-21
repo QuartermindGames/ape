@@ -7,6 +7,7 @@
 #include "act.h"
 #include "game.h"
 #include "pkg_loader.h"
+#include "image.h"
 
 #include <GL/freeglut.h>
 
@@ -123,7 +124,7 @@ int Sys_Init( int argc, char **argv ) {
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	PrintMsg( "Initializing...\n" );
+	PrintMsg( "Initializing Yin Engine...\n" );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
@@ -133,7 +134,7 @@ int Sys_Init( int argc, char **argv ) {
 	/* mount all the dirs and packages we need */
 	plMountLocation( plGetWorkingDirectory() );
 	const char *rPackages[]={
-			"shaders.pkg",
+			"BaseShaders.pkg",
 	};
 	for ( unsigned int i = 0; i < plArrayElements( rPackages ); ++i ) {
 		if ( plMountLocation( rPackages[ i ] ) == NULL ) {
@@ -146,6 +147,9 @@ int Sys_Init( int argc, char **argv ) {
 	if( globalWad == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
+
+	PLImage *image = Image_LoadPackedImage( "Default.gfx" );
+	plWriteImage( image, "test.png" );
 
 	glutInitWindowSize( YIN_WINDOW_WIDTH, YIN_WINDOW_HEIGHT );
 	glutInitWindowPosition( 256, 256 );
@@ -186,13 +190,13 @@ int WinMain(
 	int       nShowCmd
 ) {
 	int numArguments;
-	LPWSTR* strArgs = CommandLineToArgvW( lpCmdLine, &numArguments );
+	LPWSTR* strArgs = CommandLineToArgvW( (LPCWSTR) lpCmdLine, &numArguments );
 	if( strArgs == NULL ) {
 		printf( "Failed to get command line arguments from Win32 API!\n" );
 		return EXIT_FAILURE;
 	}
 
-	return Sys_Init( numArguments, strArgs );
+	return Sys_Init(numArguments, (char **) strArgs);
 }
 
 #else

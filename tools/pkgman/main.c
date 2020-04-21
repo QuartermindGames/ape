@@ -78,15 +78,16 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	/* see if it's a file we can pack */
 	const char *extension = plGetFileExtension( packPath );
 	if ( strcmp( extension, "png" ) == 0 || strcmp( extension, "gif" ) == 0 || strcmp( extension, "bmp" ) == 0 ) {
-		Print( "Compressing %s\n", packPath );
-
 		PLImage image;
 		if ( !plLoadImage( packPath, &image ) ) {
 			Error( "Failed to load \"%s\"!\nPL: %s\n", packPath, plGetError() );
 		}
 
-		strncpy( packPath + strlen( packPath ) - 4, ".gfx", 4 );
-		strncpy( packName + strlen( packName ) - 4, ".gfx", 4 );
+		unsigned int strPos;
+		strPos = strlen( packPath ) - 4;
+		strncpy( packPath + strPos, ".gfx", 4 );
+
+		Print( "Converting \"%s\" to \"%s\"\n", filePath, packPath );
 
 		PackImage_Write( packPath, &image );
 
@@ -130,7 +131,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 		Error( "Failed to get valid file name from \"%s\"!\n", filePath );
 	}
 
-#if 0 /* nevermind, let's include extensions */
+#if 1 /* nevermind, let's include extensions */
 	const char *fileExtension = plGetFileExtension( fileName );
 	if ( fileExtension == NULL ) {
 		Error( "Failed to get valid file extension from \"%s\"!\n", filePath );

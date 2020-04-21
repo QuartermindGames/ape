@@ -4,3 +4,8 @@ output ../bin/BaseTextures.pkg
 ; Default/fallback textures
 add BaseTextures/Default.png Engine Default
 add BaseTextures/DefaultTile.png Engine DefaultTile
+
+; Tests for the image compression
+add BaseTextures/Red.png Debug Red
+add BaseTextures/Green.png Debug Green
+add BaseTextures/Blue.png Debug Blue

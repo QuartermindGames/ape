@@ -6,7 +6,7 @@
 #include "pkg_loader.h"
 
 PLPackage *Pkg_LoadPackage( const char *path ) {
-	PrintMsg( "Loading %s...\n" );
+	PrintMsg( "Loading %s...\n", path );
 
 	PLFile *filePtr = plOpenFile( path, false );
 	if ( filePtr == NULL ) {
