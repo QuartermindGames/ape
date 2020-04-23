@@ -25,6 +25,11 @@ typedef struct GfxAnimationFrame {
 void Gfx_Initialize( void );
 void Gfx_Shutdown( void );
 void Gfx_Display( void );
+
+const PLCamera *Gfx_GetCurrentCamera( void );
+
+void Gfx_SetViewportSize( int width, int height );
+
 void Gfx_EnableShaderProgram( GfxShaderType type );
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );

@@ -11,7 +11,6 @@
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
 static PLCamera *auxCamera = NULL;
-static PLCamera *playerCamera = NULL;
 
 typedef struct RGBMap {
 	uint8_t r;
@@ -408,9 +407,14 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 }
 
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
+	const PLCamera *camera = Gfx_GetCurrentCamera();
+	if( camera == NULL ) {
+		return;
+	}
+
 	/* here we go, dumb maths written by dumb me... */
 	PLVector2 a = PLVector2( position->x, position->z );
-	PLVector2 b = PLVector2( playerCamera->position.x, playerCamera->position.z );
+	PLVector2 b = PLVector2( camera->position.x, camera->position.z );
 	PLVector2 normal = plComputeLineNormal( &a, &b );
 
 	float spriteAngle = atan2f( normal.y, normal.x ) * PL_180_DIV_PI;
@@ -477,6 +481,9 @@ void Gfx_DrawNumber( int x, int y, unsigned int number ) {
 	Gfx_DrawDigit( x, y, number % 10 );
 }
 
+void Gfx_InitializeCameras( void ); /* gfx_camera.c */
+void Gfx_ShutdownCameras( void );	/* gfx_camera.c */
+
 void Gfx_Initialize( void ) {
 	PrintMsg( "Initializing Gfx...\n" );
 
@@ -494,19 +501,13 @@ void Gfx_Initialize( void ) {
 	auxCamera->viewport.w = YIN_DISPLAY_WIDTH;
 	auxCamera->viewport.h = YIN_DISPLAY_HEIGHT;
 
-	playerCamera = plCreateCamera();
-	if ( playerCamera == NULL) {
-		PrintError( "Failed to create player camera!\nPL: %s\n", plGetError());
-	}
-	playerCamera->fov = 75.0f;
-	playerCamera->viewport.w = YIN_DISPLAY_WIDTH;
-	playerCamera->viewport.h = YIN_DISPLAY_HEIGHT;
+	Gfx_InitializeCameras();
 
 	/* create the default shader programs */
-	Gfx_RegisterShader( SHADER_GENERIC, "shader:vertex", "shader:colour" );
-	Gfx_RegisterShader( SHADER_TEXTURE, "shader:vertex", "shader:texture" );
-	Gfx_RegisterShader( SHADER_ALPHA_TEST, "shader:vertex", "shader:alpha" );
-	Gfx_RegisterShader( SHADER_LIT, "shader:vertex", "shader:lit" );
+	Gfx_RegisterShader( SHADER_GENERIC, "Shader:vertex.glsl", "Shader:colour.glsl" );
+	Gfx_RegisterShader( SHADER_TEXTURE, "Shader:vertex.glsl", "Shader:texture.glsl" );
+	Gfx_RegisterShader( SHADER_ALPHA_TEST, "Shader:vertex.glsl", "Shader:alpha.glsl" );
+	Gfx_RegisterShader( SHADER_LIT, "Shader:vertex.glsl", "Shader:lit.glsl" );
 
 	plSetClearColour(PLColour( 0, 0, 0, 255 ) );
 
@@ -544,8 +545,7 @@ void Gfx_Initialize( void ) {
 }
 
 void Gfx_Shutdown( void ) {
-	plDestroyCamera( auxCamera );
-	plDestroyCamera( playerCamera );
+	Gfx_ShutdownCameras();
 }
 
 static void Gfx_DrawViewSprite( void ) {
@@ -612,17 +612,6 @@ void Gfx_DisplayScene( void ) {
 		return;
 	}
 
-#ifdef DEBUG_CAM
-	playerCamera->position = Act_GetPosition( player );
-	playerCamera->position.y = 512;
-	playerCamera->angles.x = -85;
-	playerCamera->angles.y = -Act_GetAngle( player ) + 90.0f;
-#else
-	playerCamera->angles.y   = -Act_GetAngle( player ) + 90.0f;
-	playerCamera->position   = Act_GetPosition( player );
-	playerCamera->position.y = Act_GetViewOffset( player );
-#endif
-
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
 	plSetupCamera( playerCamera );
@@ -655,4 +644,8 @@ void Gfx_Display( void ) {
 
 	Gfx_DisplayScene();
 	Gfx_DisplayMenu();
+}
+
+void Gfx_SetViewportSize( int width, int height ) {
+	/* todo */
 }
