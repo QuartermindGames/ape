@@ -12,16 +12,21 @@
 #include <assert.h>
 
 #define YIN_DISPLAY_WIDTH  640
-#define YIN_DISPLAY_HEIGHT 400
+#define YIN_DISPLAY_HEIGHT 480
 
 #define YIN_WINDOW_WIDTH  640
-#define YIN_WINDOW_HEIGHT 400
+#define YIN_WINDOW_HEIGHT 480
 
 #define YIN_WINDOW_TITLE "Yin Engine"
 
 #define YIN_TICK_RATE 1000 / 60 /* ms */
 
 #define u_unused( a ) ( void )( ( a ) )
+
+typedef enum LaunchMode {
+	LAUNCH_MODE_DEFAULT,	/* aka, game mode */
+	LAUNCH_MODE_EDITOR,		/* edit mode */
+} LaunchMode;
 
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
@@ -58,7 +63,7 @@ enum {
 	LOG_LEVEL_INFO,
 };
 
-#define DEBUG_CAM
+//#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS
 
 #define PrintError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )

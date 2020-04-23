@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "act.h"
 #include "game.h"
+#include "editor.h"
 #include "pkg_loader.h"
 #include "image.h"
 
@@ -14,6 +15,11 @@
 PLPackage *globalWad = NULL;
 
 unsigned int numTicks = 0;
+
+LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
+LaunchMode Sys_GetLaunchMode( void ) {
+	return launchMode;
+}
 
 void *Sys_AllocateMemory( size_t num, size_t size ) {
 	void *mem = calloc( num, size );
@@ -87,7 +93,7 @@ static void Sys_KeyboardUp( unsigned char key, int x, int y ) {
 
 static void Sys_Reshape( int width, int height ) {
 	/* this seems to be broken, at least from what I tested on Windows 10 */
-	//glutReshapeWindow( YIN_DISPLAY_WIDTH, YIN_DISPLAY_HEIGHT );
+	Gfx_SetViewportSize( width, height );
 }
 
 static void Sys_Idle( void ) {
@@ -135,6 +141,7 @@ int Sys_Init( int argc, char **argv ) {
 	plMountLocation( plGetWorkingDirectory() );
 	const char *rPackages[]={
 			"BaseShaders.pkg",
+			"BaseTextures.pkg",
 	};
 	for ( unsigned int i = 0; i < plArrayElements( rPackages ); ++i ) {
 		if ( plMountLocation( rPackages[ i ] ) == NULL ) {
@@ -160,7 +167,21 @@ int Sys_Init( int argc, char **argv ) {
 
 	glutCreateWindow( YIN_WINDOW_TITLE );
 
+	if( plHasCommandLineArgument( "editor" ) ) {
+		launchMode = LAUNCH_MODE_EDITOR;
+	}
+
 	Gfx_Initialize();
+	
+	switch( launchMode ) {
+	case LAUNCH_MODE_EDITOR: 
+		Editor_Initialize();
+		break;
+	case LAUNCH_MODE_DEFAULT:
+		Act_Initialize();
+		break;
+	default:PrintError( "Unhandled launch mode, %d!\n", launchMode );
+	}
 
 	glutReshapeFunc( Sys_Reshape );
 	glutDisplayFunc( Sys_Display );
@@ -170,8 +191,6 @@ int Sys_Init( int argc, char **argv ) {
 	glutIdleFunc( Sys_Idle );
 
 	glutTimerFunc( YIN_TICK_RATE, Sys_Tick, 0 );
-
-	Act_Initialize();
 
 	glutMainLoop();
 

@@ -83,7 +83,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 			Error( "Failed to load \"%s\"!\nPL: %s\n", packPath, plGetError() );
 		}
 
-		unsigned int strPos;
+		size_t strPos;
 		strPos = strlen( packPath ) - 4;
 		strncpy( packPath + strPos, ".gfx", 4 );
 
@@ -106,7 +106,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	snprintf( indexName, sizeof( indexName ), "%s:%s", fileTag, packName );
 
 	/* write the index header */
-	uint8_t nameLength = strlen( indexName );
+	uint8_t nameLength = ( uint8_t ) strlen( indexName );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, fileOutPtr );
 	char *name = malloc( nameLength );
 	strncpy( name, indexName, nameLength );
@@ -137,7 +137,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 		Error( "Failed to get valid file extension from \"%s\"!\n", filePath );
 	}
 
-	unsigned int length = strlen( fileName ) - ( strlen( fileExtension ) + 1 );
+	size_t length = strlen( fileName ) - ( strlen( fileExtension ) + 1 );
 	if ( length >= 16 ) {
 		Error( "File name \"%s\" is too long!\n", fileName );
 	}

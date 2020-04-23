@@ -121,7 +121,7 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 	const uint8_t *pixelPos = image->data[ 0 ];
 	uint8_t *colourBuffer = calloc(image->size, sizeof( uint8_t ) );
 	uint16_t numColours = 0;
-	uint16_t outputChannels = 0;
+	uint8_t outputChannels = 0;
 	for( unsigned int i = 0; i < imagePixelSize; ++i ) {
 		/* copy the initial colour to kick us off */
 		if ( numColours == 0 ) {
@@ -160,12 +160,6 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 		}
 
 		pixelPos += numChannels;
-	}
-
-	/* shrink it down so we're not gobbling up memory like no tomorrow */
-	colourBuffer = realloc(colourBuffer, numColours * numChannels );
-	if ( colourBuffer == NULL ) {
-		Error( "Failed to reallocate colour buffer!\n" );
 	}
 
 	Print( "Found %d unique pixels\n", numColours );
