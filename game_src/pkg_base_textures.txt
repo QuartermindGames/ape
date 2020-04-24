@@ -2,10 +2,12 @@
 output ../bin/BaseTextures.pkg
 
 ; Default/fallback textures
-add BaseTextures/Default.png Engine Default
-add BaseTextures/DefaultTile.png Engine DefaultTile
+add other/librequake/CONCHARS.png Engine DefaultFont.gfx
+add BaseTextures/Default.png Engine Default.gfx
+add BaseTextures/DefaultTile.png Engine DefaultTile.gfx
 
 ; Tests for the image compression
-add BaseTextures/Red.png Debug Red
-add BaseTextures/Green.png Debug Green
-add BaseTextures/Blue.png Debug Blue
+add BaseTextures/MultiColours.png Debug MultiColours.gfx
+add BaseTextures/Red.png Debug Red.gfx
+add BaseTextures/Green.png Debug Green.gfx
+add BaseTextures/Blue.png Debug Blue.gfx

@@ -8,6 +8,7 @@
 
 /* Future Improvements
  * - if the number of colours in the block are less than 16 bytes, we need to pack the data smaller
+ * - if there are two colours that aren't discernably different, pack them together (optional)
  */
 
 #define CHANNEL_RED		( 1 << 0 )
@@ -41,10 +42,10 @@ static void PackImage_WriteHeader( FILE *filePtr, uint8_t channels, uint16_t wid
 
 static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t channelFlags, uint8_t numChannels, const uint8_t *srcBuffer, uint16_t srcPixelSize ) {
 	/* figure out how many channels we need for this block */
-	uint8_t blockChannelFlags = channelFlags;
+	uint8_t blockChannelFlags = 0;
 	for ( unsigned int i = 0; i < numChannels; ++i ) {
 		/* hackity hack, figure out how many channels we're actually using */
-		if ( colour[ i ] > 0 ) {
+		if ( colour[ i ] > 0 && i < 3 ) {
 			uint8_t specificChannel = 0;
 			if ( i == 0 ) 		{ specificChannel = CHANNEL_RED; }
 			else if ( i == 1 ) 	{ specificChannel = CHANNEL_GREEN; }
@@ -61,23 +62,25 @@ static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t 
 	if ( blockChannelFlags & CHANNEL_BLUE )		{ fputc( colour[ 2 ], filePtr ); }
 	if ( blockChannelFlags & CHANNEL_ALPHA ) 	{ fputc( colour[ 3 ], filePtr ); }
 
-	uint8_t numBlockChannels = PackImage_GetNumChannels( blockChannelFlags );
-
 	/* now figure out how many pixels there are that we need in this block */
 	uint16_t numBlockPixels = 0;
 	uint16_t *pixelOffsets = malloc( sizeof( uint16_t ) * srcPixelSize );
 	for ( uint16_t i = 0; i < srcPixelSize; ++i ) {
+		uint8_t srcColour[ 4 ];
+		memcpy( srcColour, srcBuffer, sizeof( uint8_t ) * numChannels );
+
 		bool rgba[ 4 ] = { true, true, true, true };
 		for ( uint8_t j = 0; j < numChannels; ++j ) {
-			rgba[ j ] = ( srcBuffer[ i * numChannels + j ] == colour[ j ] );
+			rgba[ j ] = ( srcColour[ j ] == colour[ j ] );
 		}
+
+		srcBuffer += numChannels;
 
 		if ( !( rgba[ 0 ] && rgba[ 1 ] && rgba[ 2 ] && rgba[ 3 ] ) ) {
 			continue;
 		}
 
 		pixelOffsets[ numBlockPixels++ ] = i;
-		srcBuffer += numChannels;
 	}
 
 	if ( numBlockPixels == 0 ) {
@@ -119,14 +122,15 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 	/* figure out how many unique colours there are
 	 * so we know how many blocks there should be */
 	const uint8_t *pixelPos = image->data[ 0 ];
-	uint8_t *colourBuffer = calloc(image->size, sizeof( uint8_t ) );
+	uint8_t *colourBuffer = calloc( image->size, sizeof( uint8_t ) );
 	uint16_t numColours = 0;
 	uint8_t outputChannels = 0;
 	for( unsigned int i = 0; i < imagePixelSize; ++i ) {
 		/* copy the initial colour to kick us off */
 		if ( numColours == 0 ) {
-			memcpy(&colourBuffer[ numColours * numChannels ], pixelPos, numChannels );
+			memcpy( &colourBuffer[ numColours * numChannels ], pixelPos, numChannels );
 			numColours++;
+			continue;
 		}
 
 		/* check whether or not the colour is already in the table */
@@ -137,7 +141,7 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 
 				/* hackity hack, figure out how many channels we're actually using */
 				/* todo: refer back to a table to ensure we're setting the correct channels here */
-				if ( colourBuffer[ j * numChannels + k ] > 0 ) {
+				if ( colourBuffer[ j * numChannels + k ] > 0 && k < 3 ) {
 					uint8_t specificChannel = 0;
 					if ( k == 0 ) 		{ specificChannel = CHANNEL_RED; }
 					else if ( k == 1 ) 	{ specificChannel = CHANNEL_GREEN; }
@@ -177,7 +181,7 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 	numBlocks = 0;
 #endif
 
-	Print( "Ch. %d, Bl. %d, W. %d, H. %d\n", outputChannels, numBlocks, image->width, image->height );
+	Print( "ChFl. %d, BlNum. %d, W. %d, H. %d\n", outputChannels, numBlocks, image->width, image->height );
 
 	/* go ahead and write out the header */
 	PackImage_WriteHeader( filePtr, outputChannels, image->width, image->height, numBlocks );
