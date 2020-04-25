@@ -134,6 +134,7 @@ int Sys_Init( int argc, char **argv ) {
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
+	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
 	PrintMsg( "Mounting VFS locations...\n" );
 
@@ -154,9 +155,6 @@ int Sys_Init( int argc, char **argv ) {
 	if( globalWad == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
-
-	PLImage *image = Image_LoadPackedImage( "Default.gfx" );
-	plWriteImage( image, "test.png" );
 
 	glutInitWindowSize( YIN_WINDOW_WIDTH, YIN_WINDOW_HEIGHT );
 	glutInitWindowPosition( 256, 256 );

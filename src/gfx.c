@@ -10,6 +10,7 @@
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
+static GfxCamera *playerCamera = NULL;
 static PLCamera *auxCamera = NULL;
 
 typedef struct RGBMap {
@@ -19,9 +20,8 @@ typedef struct RGBMap {
 } RGBMap;
 static RGBMap playPal[256], titlePal[256];
 
-PLTexture *fallbackTexture = NULL;
+static PLTexture *fallbackTexture = NULL;
 static PLTexture *titlePicTexture = NULL;
-static PLTexture *playScrnTexture = NULL;
 
 static PLTexture *numTextureTable[10];
 
@@ -29,6 +29,10 @@ static GfxAnimationFrame **wallTextures;
 static unsigned int      numWallTextures;
 static PLTexture         **floorTextures;
 static unsigned int      numFloorTextures;
+
+PLTexture *Gfx_GetFallbackTexture( void ) {
+	return fallbackTexture;
+}
 
 PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
 										bool generateMipMap ) {
@@ -407,14 +411,14 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 }
 
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
-	const PLCamera *camera = Gfx_GetCurrentCamera();
+	const GfxCamera *camera = Gfx_GetCurrentCamera();
 	if( camera == NULL ) {
 		return;
 	}
 
 	/* here we go, dumb maths written by dumb me... */
 	PLVector2 a = PLVector2( position->x, position->z );
-	PLVector2 b = PLVector2( camera->position.x, camera->position.z );
+	PLVector2 b = PLVector2( camera->cameraPtr->position.x, camera->cameraPtr->position.z );
 	PLVector2 normal = plComputeLineNormal( &a, &b );
 
 	float spriteAngle = atan2f( normal.y, normal.x ) * PL_180_DIV_PI;
@@ -503,6 +507,9 @@ void Gfx_Initialize( void ) {
 
 	Gfx_InitializeCameras();
 
+	/* create default cameras */
+	playerCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), false );
+
 	/* create the default shader programs */
 	Gfx_RegisterShader( SHADER_GENERIC, "Shader:vertex.glsl", "Shader:colour.glsl" );
 	Gfx_RegisterShader( SHADER_TEXTURE, "Shader:vertex.glsl", "Shader:texture.glsl" );
@@ -528,7 +535,6 @@ void Gfx_Initialize( void ) {
 
 	/* and now, finally, load in the splash screen! */
 	titlePicTexture = Gfx_LoadLumpTexture( titlePal, "TITLEPIC" );
-	playScrnTexture = Gfx_LoadLumpTexture( playPal, "PLAYSCRN" );
 
 	/* load the numbers */
 	for ( unsigned int i = 0; i < 10; ++i ) {
@@ -577,10 +583,7 @@ void Gfx_DisplayMenu( void ) {
 
 		case MENU_STATE_HUD:
 			Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
-
 			Gfx_DrawViewSprite();
-
-			plDrawTexturedRectangle( &transform, 0, 0, YIN_DISPLAY_WIDTH, YIN_DISPLAY_HEIGHT, playScrnTexture );
 			break;
 	}
 #endif
@@ -603,18 +606,22 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 }
 
 void Gfx_DisplayScene( void ) {
-	if ( Gam_GetMenuState() == MENU_STATE_START ) {
-		return;
-	}
-
 	Actor *player = Gam_GetPlayer();
 	if ( player == NULL ) {
 		return;
 	}
 
+	playerCamera->parentActor = player;
+
+	Gfx_TickCameras();
+
+	if ( Gam_GetMenuState() == MENU_STATE_START ) {
+		return;
+	}
+
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
-	plSetupCamera( playerCamera );
+	plSetupCamera( playerCamera->cameraPtr );
 
 #ifdef DEBUG_CAM
 	PLMatrix4 mat = plMatrix4Identity();

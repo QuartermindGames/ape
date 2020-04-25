@@ -4,36 +4,27 @@
 
 #pragma once
 
-typedef struct MapPoint {
-	int16_t x, y;
-} MapPoint;
+typedef struct MapVertex {
+	int32_t x, y, z;
+} MapVertex;
 
-typedef struct MapLine {
-	uint16_t startVertex;
-	uint16_t endVertex;
-	uint16_t flags;
-	uint16_t unknown0;
-	uint16_t colSomething;
-	uint8_t  unknown1;
-	uint8_t  hScale;
-	uint16_t unknown2;
-	uint32_t unknown3;
-	uint16_t unknown4;
+typedef struct MapPolygon {
+	PLPolygon   *polygon;
+	PLTexture   *texture;
+	PLVector2   textureOffset;
+	PLVector2   textureScale;
+	PLVector2   normal;
+	uint8_t     flags;
+} MapFace;
 
-	PLVector2 normal;
-} MapLine;
-
-typedef struct MapArea {
-	uint32_t     unknown0;
-	uint16_t     unused0;
-	uint16_t     unused1;
+typedef struct MapSector {
 	unsigned int numLines;
 	unsigned int *lineIndices;
 	int          max[ 2 ]; /* boundary maximum */
 	int          min[ 2 ]; /* boundary minimum */
-} MapArea;
+} MapSector;
 
-void Map_Load( PLPackage *wad );
+void Map_Load( const char *path );
 void Map_Draw( void );
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );

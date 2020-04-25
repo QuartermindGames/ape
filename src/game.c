@@ -36,7 +36,7 @@ void Gam_Start( void ) {
 	menuState = MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
 
-	Map_Load( globalWad ); /* load the map from the global wad */
+	Map_Load( "Maps/Test.map" ); /* load the map from the global wad */
 
 	Act_SpawnActors();
 

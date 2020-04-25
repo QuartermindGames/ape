@@ -20,13 +20,35 @@ typedef struct GfxAnimationFrame {
 	PLTexture    *texture;
 } GfxAnimationFrame;
 
+typedef enum ViewPerspective {
+	VIEW_PERSPECTIVE_EYE,
+
+	/* editor modes */
+	VIEW_PERSPECTIVE_TOP,
+	VIEW_PERSPECTIVE_SIDE,
+	VIEW_PERSPECTIVE_FRONT,
+
+	MAX_VIEW_PERSPECTIVES
+} ViewPerspective;
+
+typedef struct GfxCamera {
+	struct PLWindow         *viewportPtr;		/* unused for now */
+	PLCamera			    *cameraPtr;			/* the camera used for this viewport */
+	ViewPerspective		    perspective;
+	struct Actor		    *parentActor;
+	struct PLLinkedListNode *node;				/* node representing this object in the linked list */
+} GfxCamera;
+
 #define GFX_NUM_SPRITE_ANGLES 8
 
 void Gfx_Initialize( void );
 void Gfx_Shutdown( void );
 void Gfx_Display( void );
 
-const PLCamera *Gfx_GetCurrentCamera( void );
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, bool createViewport );
+GfxCamera *Gfx_GetCurrentCamera( void );
+
+void Gfx_TickCameras( void );
 
 void Gfx_SetViewportSize( int width, int height );
 
@@ -40,3 +62,4 @@ void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destin
 
 PLTexture *Gfx_GetWallTexture( unsigned int index );
 PLTexture *Gfx_GetFloorTexture( unsigned int index );
+PLTexture *Gfx_GetFallbackTexture( void );

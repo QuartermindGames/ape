@@ -7,16 +7,7 @@
 
 /* Camera management fun! */
 
-typedef enum ViewPerspective {
-	VIEW_PERSPECTIVE_EYE,
 
-	/* editor modes */
-	VIEW_PERSPECTIVE_TOP,	
-	VIEW_PERSPECTIVE_SIDE,
-	VIEW_PERSPECTIVE_FRONT,
-
-	MAX_VIEW_PERSPECTIVES
-} ViewPerspective;
 static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
 	[ VIEW_PERSPECTIVE_EYE ] = "Eye",
 	[ VIEW_PERSPECTIVE_TOP ] = "Top",
@@ -24,21 +15,14 @@ static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
 	[ VIEW_PERSPECTIVE_FRONT ] = "Front",
 };
 
-typedef struct GfxCamera {
-	PLWindow			*viewportPtr;		/* unused for now */
-	PLCamera			*cameraPtr;			/* the camera used for this viewport */
-	ViewPerspective		perspective;
-	Actor				*parentActor;
-	PLLinkedListNode	*node;				/* node representing this object in the linked list */
-} GfxCamera;
 static PLLinkedList *camerasList = NULL;
 static GfxCamera *currentCamera = NULL;
 
-const PLCamera *Gfx_GetCurrentCamera( void ) {
-	return currentCamera->cameraPtr;
+GfxCamera *Gfx_GetCurrentCamera( void ) {
+	return currentCamera;
 }
 
-void Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, bool createViewport ) {
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, bool createViewport ) {
 	u_unused( createViewport );
 	
 	GfxCamera *gfxCamera = Sys_AllocateMemory( 1, sizeof( GfxCamera ) );
@@ -70,6 +54,8 @@ void Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector
 	gfxCamera->cameraPtr->angles = angles;
 
 	gfxCamera->node = plInsertLinkedListNode( camerasList, gfxCamera );
+
+	return gfxCamera;
 }
 
 void Gfx_InitializeCameras( void ) {
@@ -80,16 +66,23 @@ void Gfx_InitializeCameras( void ) {
 		PrintError( "Failed to create camera list!\nPL: %s\n", plGetError() );
 	}
 
-	if( Sys_GetLaunchMode() == LAUNCH_MODE_DEFAULT ) {
-		Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-	} else {
+#if 0 /* todo: move this out of here! */
+	if( Sys_GetLaunchMode() == LAUNCH_MODE_EDITOR ) {
 		Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
 		Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
 		Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
 		Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-	}
 
-	currentCamera = plGetRootNode( camerasList );
+		PLLinkedListNode *curNode = plGetRootNode( camerasList );
+		GfxCamera *camera = plGetLinkedListNodeUserData( curNode );
+		if( camera == NULL ) {
+			PrintError( "Uninitialized root node!\n" );
+		}
+
+		/* default to first camera added */
+		currentCamera = camera;
+	}
+#endif
 }
 
 void Gfx_TickCameras( void ) {
@@ -101,9 +94,12 @@ void Gfx_TickCameras( void ) {
 			continue;
 		}
 
+		currentCamera = camera;
+
 		/* if we have a parent, follow them */
 		if( camera->parentActor != NULL ) {
 			switch( camera->perspective ) {
+			default: break;
 			case VIEW_PERSPECTIVE_EYE:
 #ifdef DEBUG_CAM
 				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
@@ -116,6 +112,9 @@ void Gfx_TickCameras( void ) {
 				camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
 #endif
 				break;
+			case VIEW_PERSPECTIVE_TOP:break;
+			case VIEW_PERSPECTIVE_SIDE:break;
+			case VIEW_PERSPECTIVE_FRONT:break;
 			}
 		}
 

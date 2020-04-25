@@ -74,6 +74,7 @@ extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "yin.wad"
 
 bool Sys_GetInputState( InputButton inputIndex );
+LaunchMode Sys_GetLaunchMode( void );
 
 void *Sys_AllocateMemory( size_t num, size_t size );
 

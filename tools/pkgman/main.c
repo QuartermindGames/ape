@@ -72,7 +72,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	/* so we can do some path/name mangling */
 	char packPath[ PL_SYSTEM_MAX_PATH ];
 	strncpy( packPath, filePath, sizeof( packPath ) );
-	char packName[ 16 ];
+	char packName[ 64 ];
 	strncpy( packName, fileName, sizeof( packName ) );
 
 	/* see if it's a file we can pack */
@@ -102,7 +102,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	const uint8_t *data = plGetFileData( filePtr );
 	size_t fileLength = plGetFileSize( filePtr );
 
-	char indexName[ 32 ];
+	char indexName[ 128 ];
 	snprintf( indexName, sizeof( indexName ), "%s:%s", fileTag, packName );
 
 	/* write the index header */
@@ -131,7 +131,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 		Error( "Failed to get valid file name from \"%s\"!\n", filePath );
 	}
 
-#if 1 /* nevermind, let's include extensions */
+#if 0 /* nevermind, let's include extensions */
 	const char *fileExtension = plGetFileExtension( fileName );
 	if ( fileExtension == NULL ) {
 		Error( "Failed to get valid file extension from \"%s\"!\n", filePath );
@@ -146,7 +146,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 #endif
 
 	/* now produce a copy of the filename without the extension... */
-	char packFileName[ 16 ];
+	char packFileName[ 64 ];
 	strncpy( packFileName, fileName, length );
 	packFileName[ length ] = '\0';
 
@@ -189,10 +189,10 @@ static void ParseScript( const char *buffer, size_t length ) {
 			char filePath[PL_SYSTEM_MAX_PATH];
 			curPos = ReadString(curPos, filePath, sizeof(filePath));
 
-			char fileTag[15];
+			char fileTag[64];
 			curPos = ReadString(curPos, fileTag, sizeof(fileTag));
 
-			char fileName[16];
+			char fileName[64];
 			curPos = ReadString(curPos, fileName, sizeof(fileName));
 
 			Pkg_AddFile(filePath, fileTag, fileName);
@@ -207,7 +207,7 @@ static void ParseScript( const char *buffer, size_t length ) {
 			char extension[ 8 ];
 			curPos = ReadString( curPos, extension, sizeof( extension ) );
 
-			char tag[ 15 ];
+			char tag[ 64 ];
 			curPos = ReadString( curPos, tag, sizeof( tag ) );
 
 			plScanDirectory( directory, extension, Pkg_AddFileCallback, false, tag );

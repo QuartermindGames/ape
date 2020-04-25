@@ -101,8 +101,6 @@ PLImage *Image_LoadPackedImage( const char *path ) {
 					PrintError( "Invalid pixel offset %d in block %d, in \"%s\"!\n", i, j );
 				}
 
-				PrintMsg( "PixelOffset: %d, R%dG%dB%dA%d\n", pixelOffsets[ j ], colour[ 0 ], colour[ 1 ], colour[ 2 ], colour[ 3 ] );
-
 				unsigned int numChannels = ( imageFormat == PL_IMAGEFORMAT_RGBA8 ) ? 4 : 3;
 				memcpy( &image->data[ 0 ][ pixelOffsets[ j ] * numChannels ], colour, numChannels );
 			}

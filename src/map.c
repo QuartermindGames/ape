@@ -2,119 +2,200 @@
  * Project Yin
  * */
 
+#include <PL/pl_graphics.h>
+
 #include "yin.h"
 #include "map.h"
 #include "gfx.h"
 #include "act.h"
 #include "game.h"
+#include "image.h"
 
 static struct {
-	MapArea      *areas;
-	unsigned int numAreas;
-	MapPoint     *points;
-	unsigned int numPoints;
-	MapLine      *lines;
-	unsigned int numLines;
+	MapSector       *sectors;
+	unsigned int    numSectors;
+	MapVertex       *vertices;
+	unsigned int    numVertices;
+	MapFace         *faces;
+	unsigned int    numFaces;
+
+	/* textures */
+	PLFileSystemMount   **texturePackages;
+	unsigned int        numTexturePackages;
+	PLTexture           **textures;
+	unsigned int        numTextures;
 } mapData = {
-		.points    = NULL,
-		.numPoints = 0,
-		.lines     = NULL,
-		.numLines  = 0,
+		.vertices       = NULL,
+		.numVertices    = 0,
+		.faces          = NULL,
+		.numFaces       = 0,
 };
 
-static void Map_LoadPoints( PLPackage *wad ) {
-	PLFile *filePtr = plLoadPackageFile( wad, "M_POINTS" );
-	if ( filePtr == NULL ) {
-		PrintError( "Failed to find point data!\nPL: %s\n", plGetError() );
+static PLMesh *renderMesh = NULL;
+
+static void Map_LoadTextures( PLPackage *mapPkg ) {
+	/* all of the texture packages this map is using, eventually
+	 * these will be loaded from the map itself */
+	static const char *texturePackagePaths[]={
+		"Textures/Blasphemer.pkg",
+	};
+
+	/* mount all of the packages we're going to use */
+	mapData.numTexturePackages = plArrayElements( texturePackagePaths );
+	PLFileSystemMount **texturePackages = Sys_AllocateMemory( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
+	for ( unsigned int i = 0; i < mapData.numTexturePackages; ++i ) {
+		texturePackages[ i ] = plMountLocation( texturePackagePaths[ i ] );
 	}
 
-	bool status;
-	mapData.numPoints = plReadInt32( filePtr, false, &status );
-	mapData.points = Sys_AllocateMemory( mapData.numPoints, sizeof( MapPoint ) );
-	for ( unsigned int i = 0; i < mapData.numPoints; ++i ) {
-		/* flipped so they match up with what we need */
-		mapData.points[ i ].y = ( int16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 ) * 2;
-		mapData.points[ i ].x = ( int16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 ) * 2;
-	}
+	/* all the textures the map is using, eventually these will be loaded
+	 * from the map itself */
+	static const char *textureNames[]={
+		"Walls:woodsl04.gif",
+		"Engine:DefaultTile.gfx",
+		"Walls:wall515.gif",
+		"Walls:woodsl07.gif",
+		"Walls:woodsl10.gif",
+	};
 
-	plCloseFile( filePtr );
-}
+	mapData.numTextures = plArrayElements( textureNames );
+	mapData.textures = Sys_AllocateMemory( mapData.numTextures, sizeof( PLTexture* ) );
 
-static void Map_LoadLines( PLPackage *wad ) {
-	PLFile *filePtr = plLoadPackageFile( wad, "M_LINES" );
-	if ( filePtr == NULL ) {
-		PrintError( "Failed to find line data!\nPL: %s\n", plGetError() );
-	}
-
-	bool status;
-	mapData.numLines = plReadInt32( filePtr, false, &status );
-	if( mapData.numLines == 0 ) {
-		PrintError( "Invalid line count provided in WAD!\nPL: %s\n", plGetError() );
-	}
-
-	mapData.lines = Sys_AllocateMemory( mapData.numLines, sizeof( MapLine ) );
-	for ( unsigned int i = 0; i < mapData.numLines; ++i ) {
-		mapData.lines[ i ].startVertex  = plReadInt16( filePtr, false, &status );
-		if ( mapData.lines[ i ].startVertex >= mapData.numPoints ) {
-			PrintError( "Invalid start vertex for line %d!\n", i );
+	for ( unsigned int i = 0; i < mapData.numTextures; ++i ) {
+		PLImage *image = Image_LoadPackedImage( textureNames[ i ] );
+		if ( image == NULL ) {
+			mapData.textures[ i ] = Gfx_GetWallTexture( 10 );
+			continue;
 		}
 
-		mapData.lines[ i ].endVertex    = plReadInt16( filePtr, false, &status );
-		if ( mapData.lines[ i ].endVertex >= mapData.numPoints ) {
-			PrintError( "Invalid end vertex for line %d!\n", i );
+		mapData.textures[ i ] = plCreateTexture();
+		if ( mapData.textures[ i ] == NULL ) {
+			plDestroyImage( image );
+			mapData.textures[ i ] = Gfx_GetWallTexture( 10 );
+			continue;
 		}
 
-		mapData.lines[ i ].flags        = plReadInt16( filePtr, false, &status );
-		mapData.lines[ i ].unknown0     = plReadInt16( filePtr, false, &status );
-		mapData.lines[ i ].colSomething = plReadInt16( filePtr, false, &status );
-		mapData.lines[ i ].unknown1     = plReadInt8( filePtr, &status );
-		mapData.lines[ i ].hScale       = plReadInt8( filePtr, &status );
-		mapData.lines[ i ].unknown2     = plReadInt16( filePtr, false, &status );
-		mapData.lines[ i ].unknown3     = plReadInt32( filePtr, false, &status );
-		mapData.lines[ i ].unknown4     = plReadInt16( filePtr, false, &status );
-	}
+		plUploadTextureImage( mapData.textures[ i ], image );
 
-	if( !status ) {
-		PrintError( "Failed to load line data from WAD!\nPL: %s\n", plGetError() );
+		plDestroyImage( image );
 	}
-
-	plCloseFile( filePtr );
 }
 
-void Map_LoadAreas( PLPackage *wad ) {
-	PLFile *filePtr = plLoadPackageFile( wad, "M_AREAS" );
+static void Map_LoadVertices( PLPackage *mapPkg ) {
+	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Vertices" );
 	if ( filePtr == NULL ) {
-		PrintError( "Failed to load area data!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to open vertex data in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
 	}
 
 	bool status;
-	mapData.numAreas = plReadInt32( filePtr, false, &status );
-	mapData.areas = Sys_AllocateMemory( mapData.numAreas, sizeof( MapArea ) );
-	for ( unsigned int i = 0; i < mapData.numAreas; ++i ) {
-		MapArea *area = &mapData.areas[ i ];
-		area->unknown0 = plReadInt32( filePtr, false, &status );
-		area->unused0  = plReadInt16( filePtr, false, &status );
-		area->unused1  = plReadInt16( filePtr, false, &status );
-		area->numLines = plReadInt16( filePtr, false, &status );
+	mapData.numVertices = plReadInt32( filePtr, false, &status );
+	if ( !status ) {
+		PrintError( "Failed to fetch number of vertices in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
+	}
+
+	mapData.vertices = Sys_AllocateMemory( mapData.numVertices, sizeof( MapVertex ) );
+	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
+		mapData.vertices[ i ].x = plReadInt32( filePtr, false, &status );
+		mapData.vertices[ i ].y = plReadInt32( filePtr, false, &status );
+		mapData.vertices[ i ].z = plReadInt32( filePtr, false, &status );
+	}
+
+	if ( !status ) {
+		PrintError( "Failed to read in all vertices in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
+	}
+}
+
+static void Map_LoadFaces( PLPackage *mapPkg ) {
+	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Polygons" );
+	if ( filePtr == NULL ) {
+		PrintError( "Failed to open primitive data!\nPL: %s\n", plGetError() );
+	}
+
+	bool status;
+	mapData.numFaces = plReadInt32( filePtr, false, &status );
+	if ( !status ) {
+		PrintError( "Failed to fetch number of primitives!\nPL: %s\n", plGetError() );
+	}
+
+	mapData.faces = Sys_AllocateMemory( mapData.numFaces, sizeof( MapFace ) );
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
+		MapFace *curFace = &mapData.faces[ i ];
+
+		curFace->flags = plReadInt8( filePtr, &status );
+
+		uint32_t textureId = plReadInt32( filePtr, false, &status );
+		if ( textureId >= mapData.numTextures ) {
+			PrintWarn( "Invalid texture id %d for polygon %d!\n", textureId, i );
+			curFace->texture = Gfx_GetFallbackTexture();
+		} else {
+			curFace->texture = mapData.textures[ textureId ];
+		}
+
+		curFace->textureOffset.x = ( float ) plReadInt32( filePtr, false, &status );
+		curFace->textureOffset.y = ( float ) plReadInt32( filePtr, false, &status );
+		curFace->textureScale.x = ( float ) plReadInt32( filePtr, false, &status );
+		curFace->textureScale.y = ( float ) plReadInt32( filePtr, false, &status );
+
+		uint8_t numVertices = plReadInt8( filePtr, &status );
+
+		curFace->polygon = plCreatePolygon();
+		if ( curFace->polygon == NULL ) {
+			PrintError( "Failed to create polygon!\n" );
+		}
+
+		for ( unsigned int j = 0; j < numVertices; ++j ) {
+			uint32_t vertIndex = plReadInt32( filePtr, false, &status );
+			if ( !status ) {
+				PrintError( "Failed to read vertex %d!\n", j );
+			}
+
+			if ( vertIndex >= mapData.numVertices ) {
+				PrintError( "Invalid vertex index!\n" );
+			}
+
+			PLVertex vertex;
+			memset( &vertex, 0, sizeof( PLVertex ) );
+
+			vertex.position.x = mapData.vertices[ vertIndex ].x;
+			vertex.position.y = mapData.vertices[ vertIndex ].y;
+			vertex.position.z = mapData.vertices[ vertIndex ].z;
+
+			plAddPolygonVertex( curFace->polygon, &vertex );
+		}
+
+		if ( !status ) {
+			PrintError( "Failed to read in polygon %d in \"%s\"!\nPL: %s\n", i, plGetPackagePath( mapPkg ), plGetError() );
+		}
+	}
+}
+
+void Map_LoadSectors( PLPackage *wad ) {
+#if 0
+	/* all this for now is just dummy code. everything is treated as one sector */
+
+	mapData.numSectors = 1; //plReadInt32( filePtr, false, &status );
+	mapData.sectors = Sys_AllocateMemory( mapData.numSectors, sizeof( MapSector ) );
+	for ( unsigned int i = 0; i < mapData.numSectors; ++i ) {
+		MapSector *area = &mapData.sectors[ i ];
 
 		/* generate a list of all our line indices */
-		area->lineIndices = Sys_AllocateMemory( mapData.areas[ i ].numLines, sizeof( unsigned int ) );
+		mapData.sectors[ i ].numLines = mapData.numPolygons;
+		area->lineIndices = Sys_AllocateMemory( mapData.sectors[ i ].numLines, sizeof( unsigned int ) );
 
 		area->max[ 0 ] = area->max[ 1 ] = INT32_MIN;
 		area->min[ 0 ] = area->min[ 1 ] = INT32_MAX;
 
-		for ( unsigned int j = 0; j < mapData.areas[ i ].numLines; ++j ) {
-			mapData.areas[ i ].lineIndices[ j ] = plReadInt16( filePtr, false, &status );
-			if ( mapData.areas[ i ].lineIndices[ j ] >= mapData.numLines ) {
-				PrintError( "Invalid line index %d in area %d!\n", mapData.areas[ i ].lineIndices[ j ], i );
+		for ( unsigned int j = 0; j < mapData.sectors[ i ].numLines; ++j ) {
+			mapData.sectors[ i ].lineIndices[ j ] = j; //plReadInt16( filePtr, false, &status );
+			if ( mapData.sectors[ i ].lineIndices[ j ] >= mapData.numPolygons ) {
+				PrintError( "Invalid line index %d in area %d!\n", mapData.sectors[ i ].lineIndices[ j ], i );
 			}
 
-			MapLine *curLine = &mapData.lines[ mapData.areas[ i ].lineIndices[ j ] ];
+			MapPolygon *curLine = &mapData.polygons[ mapData.sectors[ i ].lineIndices[ j ] ];
 
 			/* calculate the area bounds */
-			const MapPoint *points[ 2 ];
-			points[ 0 ] = &mapData.points[ curLine->startVertex ];
-			points[ 1 ] = &mapData.points[ curLine->endVertex ];
+			const MapVertex *points[ 2 ];
+			points[ 0 ] = &mapData.vertices[ curLine->startVertex ];
+			points[ 1 ] = &mapData.vertices[ curLine->endVertex ];
 
 			for ( unsigned int k = 0; k < 2; ++k ) {
 				if ( points[ k ]->x > area->max[ 0 ] ) {
@@ -138,22 +219,41 @@ void Map_LoadAreas( PLPackage *wad ) {
 			curLine->normal = plComputeLineNormal( &PLVector2( points[ 0 ]->x, points[ 0 ]->y ), &PLVector2( points[ 1 ]->x, points[ 1 ]->y ) );
 		}
 	}
-
-	plCloseFile( filePtr );
+#endif
 }
 
-void Map_Load( PLPackage *wad ) {
-	Map_LoadPoints( wad );
-	Map_LoadLines( wad );
-	Map_LoadAreas( wad );
+void Map_Load( const char *path ) {
+	PLPackage *mapPkg = plLoadPackage( path );
+	if ( mapPkg == NULL ) {
+		PrintWarn( "Failed to open map, \"%s\"!\nPL: %s\n", path, plGetError() );
+		return;
+	}
+
+	Map_LoadTextures( mapPkg );
+	Map_LoadVertices( mapPkg );
+	Map_LoadFaces( mapPkg );
+	//Map_LoadSectors( mapPkg );
+
+	/* create our mesh container for rendering */
+
+	unsigned int maxTriangles = 0;
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
+		maxTriangles += plGetNumOfPolygonTriangles( mapData.faces[ i ].polygon );
+	}
+
+	renderMesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_DYNAMIC, maxTriangles, maxTriangles * 3 );
+	if ( renderMesh == NULL ) {
+		PrintError( "Failed to create render mesh!\nPL: %s\n", plGetError() );
+	}
 }
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) {
-	const MapArea *area = &mapData.areas[ curArea ];
+#if 0
+	const MapSector *area = &mapData.sectors[ curArea ];
 	for( unsigned int j = 0; j < area->numLines; ++j ) {
-		MapLine  *line = &mapData.lines[ area->lineIndices[ j ] ];
-		MapPoint *startPoint = &mapData.points[ line->startVertex ];
-		MapPoint *endPoint = &mapData.points[ line->endVertex ];
+		MapPolygon  *line = &mapData.polygons[ area->lineIndices[ j ] ];
+		MapVertex *startPoint = &mapData.vertices[ line->startVertex ];
+		MapVertex *endPoint = &mapData.vertices[ line->endVertex ];
 
 		//bool hit = plIsAABBIntersectingLine( bounds, &PLVector2( startPoint->x, startPoint->y ), &PLVector2( endPoint->x, endPoint->y ), &line->normal );
 		float hitValue;
@@ -165,7 +265,7 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 
 		//PrintMsg( "NO HIT: %f\n", hitValue );
 	}
-
+#endif
 	return false;
 }
 
@@ -178,15 +278,56 @@ void Map_Draw( void ) {
 
 	Gfx_EnableShaderProgram( SHADER_LIT );
 
-	/* prototype only supports a single wall texture at a time */
-	PLTexture *wallTexture = Gfx_GetWallTexture( 20 );
-	unsigned int wallHeight = wallTexture->h * 2;
+	/* super duper slow innefficient rendering, wheeee */
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
+		MapFace *curFace = &mapData.faces[ i ];
 
-	for ( unsigned int i = 0; i < mapData.numAreas; ++i ) {
-		const MapArea *area = &mapData.areas[ i ];
+		plSetTexture( curFace->texture, 0 );
+
+
+
+		plUploadMesh( renderMesh );
+		plDrawMesh( renderMesh );
+	}
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plLoadIdentityMatrix();
+
+	const PLMatrix4 *transform = plGetMatrix( PL_MODELVIEW_MATRIX );
+	plDrawMeshNormals( transform, renderMesh );
+
+#if 0
+	PLMatrix4 transform = plMatrix4Identity();
+
+	plSetTexture( mapData.staticMeshes[ 0 ]->texture, 0);
+	plSetNamedShaderUniformMatrix4(NULL, "pl_model", transform, true);
+	plUploadMesh( mapData.staticMeshes[ 0 ] );
+
+	plDrawMesh( mapData.staticMeshes[ 0 ] );
+
+	plSetTexture( NULL, 0 );
+
+	for ( unsigned int i = 0; i < mapData.staticMeshes[ 0 ]->num_verts; ++i ) {
+		Gfx_EnableShaderProgram( SHADER_GENERIC );
+
+		PLVector3 linePos = mapData.staticMeshes[ 0 ]->vertices[ i ].position;
+		PLVector3 lineEndPos = plAddVector3( linePos, plScaleVector3f( mapData.staticMeshes->vertices[ i ].normal, 64.0f ) );
+
+		plDrawSimpleLine( &transform, &linePos, &lineEndPos, &PLColour( 255, 0, 0, 255 ) );
+
+		Gfx_EnableShaderProgram( SHADER_LIT );
+	}
+
+	/* prototype only supports a single wall texture at a time */
+	srand( mapData.numTextures );
+	PLTexture *floorTexture = mapData.textures[ rand() % mapData.numTextures ];
+	PLTexture *ceilingTexture = mapData.textures[ rand() % mapData.numTextures ];
+
+	for ( unsigned int i = 0; i < mapData.numSectors; ++i ) {
+		const MapSector *area = &mapData.sectors[ i ];
 		for ( unsigned int j = 0; j < area->numLines; ++j ) {
-			MapPoint *startPoint = &mapData.points[ mapData.lines[ area->lineIndices[ j ] ].startVertex ];
-			MapPoint *endPoint = &mapData.points[ mapData.lines[ area->lineIndices[ j ] ].endVertex ];
+			MapVertex *startPoint = &mapData.vertices[ mapData.polygons[ area->lineIndices[ j ] ].startVertex ];
+			MapVertex *endPoint = &mapData.vertices[ mapData.polygons[ area->lineIndices[ j ] ].endVertex ];
 
 			/* ensure the wall is visible before we draw it */
 			bool aVisible = Player_IsPointVisible( player, &PLVector2( startPoint->x, startPoint->y ) );
@@ -195,7 +336,13 @@ void Map_Draw( void ) {
 				continue;
 			}
 
+			PLTexture *wallTexture = mapData.textures[ mapData.polygons[ area->lineIndices[ j ] ].textureId ];
+			if ( wallTexture == NULL ) {
+				wallTexture = Gfx_GetWallTexture( 10 );
+			}
+
 			/* in the long term this should obviously all just get batched... */
+			unsigned int wallHeight = wallTexture->h * 2;
 			plDrawTexturedQuad(
 					&PLVector3( startPoint->x, wallHeight, startPoint->y ),
 					&PLVector3( endPoint->x, wallHeight, endPoint->y ),
@@ -229,17 +376,18 @@ void Map_Draw( void ) {
 				&PLVector3( area->max[ 0 ], 0.0f, area->min[ 1 ] ),
 				&PLVector3( area->min[ 0 ], 0.0f, area->min[ 1 ] ),
 				2, 2,
-				Gfx_GetFloorTexture( 0 )
+				floorTexture
 		);
 #ifndef DEBUG_CAM
 		plDrawTexturedQuad(
-				&PLVector3( area->max[ 0 ], wallHeight, area->max[ 1 ] ),
-				&PLVector3( area->min[ 0 ], wallHeight, area->max[ 1 ] ),
-				&PLVector3( area->max[ 0 ], wallHeight, area->min[ 1 ] ),
-				&PLVector3( area->min[ 0 ], wallHeight, area->min[ 1 ] ),
+				&PLVector3( area->max[ 0 ], 128.0f, area->max[ 1 ] ),
+				&PLVector3( area->min[ 0 ], 128.0f, area->max[ 1 ] ),
+				&PLVector3( area->max[ 0 ], 128.0f, area->min[ 1 ] ),
+				&PLVector3( area->min[ 0 ], 128.0f, area->min[ 1 ] ),
 				2, 2,
-				Gfx_GetFloorTexture( 1 )
+				ceilingTexture
 		);
 #endif
 	}
+#endif
 }
