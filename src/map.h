@@ -9,13 +9,14 @@ typedef struct MapVertex {
 } MapVertex;
 
 typedef struct MapPolygon {
-	PLPolygon   *polygon;
-	PLTexture   *texture;
-	PLVector2   textureOffset;
-	PLVector2   textureScale;
-	float       textureRotation;
-	PLVector2   normal;
-	uint8_t     flags;
+	PLPolygon   	*polygon;
+	PLCollisionAABB	bounds;
+	PLTexture   	*texture;
+	PLVector2   	textureOffset;
+	PLVector2   	textureScale;
+	float       	textureRotation;
+	PLVector2   	normal;
+	uint8_t     	flags;
 } MapFace;
 
 typedef struct MapSector {

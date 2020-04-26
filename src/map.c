@@ -50,8 +50,9 @@ static void Map_LoadTextures( PLPackage *mapPkg ) {
 	/* all the textures the map is using, eventually these will be loaded
 	 * from the map itself */
 	static const char *textureNames[]={
-		"Walls:woodsl04.gif",
 		"Engine:DefaultTile.gfx",
+		"Engine:Default.gfx",
+		"Walls:woodsl04.gif",
 		"Walls:wall515.gif",
 		"Walls:woodsl07.gif",
 		"Walls:woodsl10.gif",
@@ -104,6 +105,12 @@ static void Map_LoadVertices( PLPackage *mapPkg ) {
 	}
 }
 
+static void Map_GenerateFaceTextureCoordinates( MapFace *face ) {
+	unsigned int numPolyVertices;
+	PLVertex *vertices = plGetPolygonVertices( face->polygon, &numPolyVertices );
+	plGenerateTextureCoordinates( vertices, numPolyVertices, face->textureOffset, face->textureScale );
+}
+
 static void Map_LoadFaces( PLPackage *mapPkg ) {
 	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Polygons" );
 	if ( filePtr == NULL ) {
@@ -135,6 +142,10 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 		curFace->textureScale.x = ( float ) plReadInt32( filePtr, false, &status );
 		curFace->textureScale.y = ( float ) plReadInt32( filePtr, false, &status );
 
+		if ( !status ) {
+			PrintError( "Failed to read in face %d!\nPL: %s\n", i, plGetError() );
+		}
+
 		uint8_t numVertices = plReadInt8( filePtr, &status );
 
 		curFace->polygon = plCreatePolygon();
@@ -158,14 +169,33 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 			vertex.position.x = mapData.vertices[ vertIndex ].x * 100.0f;
 			vertex.position.y = mapData.vertices[ vertIndex ].y * 100.0f;
 			vertex.position.z = mapData.vertices[ vertIndex ].z * 100.0f;
-			vertex.colour = PLColour( 128, 128, 0, 255 );
+			vertex.colour = PLColour( 255, 255, 255, 255 );
 
 			plAddPolygonVertex( curFace->polygon, &vertex );
 		}
 
-		if ( !status ) {
-			PrintError( "Failed to read in polygon %d in \"%s\"!\nPL: %s\n", i, plGetPackagePath( mapPkg ), plGetError() );
+		/* now generate the correct texture coords */
+
+		unsigned int numPolyVertices;
+		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numPolyVertices );
+		if ( numPolyVertices != numVertices ) {
+			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
+
+		unsigned int numTriangles;
+		unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
+		if ( numTriangles == 0 ) {
+			PrintError( "Invalid polygon plain!\n" );
+		}
+
+		plGenerateVertexNormals( vertices, numPolyVertices, indices, numTriangles, true ); /* required for correct coords */
+
+		/* generate the bounds for cheap culling */
+		curFace->bounds = plGenerateAABB( vertices, numPolyVertices );
+
+		free( indices );
+
+		Map_GenerateFaceTextureCoordinates( curFace );
 	}
 }
 
@@ -277,15 +307,22 @@ void Map_Draw( void ) {
 		return;
 	}
 
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
+	Gfx_EnableShaderProgram( SHADER_TEXTURE );
 
-	/* super duper slow innefficient rendering, wheeee */
+	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
 
 		plClearMesh( renderMesh );
 
 		plSetTexture( curFace->texture, 0 );
+
+#if 1 /* test coord generation */
+		curFace->textureScale.x = 8.0f;
+		curFace->textureScale.y = 8.0f;
+
+		Map_GenerateFaceTextureCoordinates( curFace );
+#endif
 
 		unsigned int numVertices;
 		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
@@ -300,8 +337,6 @@ void Map_Draw( void ) {
 			plAddMeshTriangle( renderMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2] );
 			curIndex += 3;
 		}
-
-		plGenerateMeshNormals( renderMesh, true );
 
 		plUploadMesh( renderMesh );
 		plDrawMesh( renderMesh );
