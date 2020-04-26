@@ -13,6 +13,7 @@ typedef struct MapPolygon {
 	PLTexture   *texture;
 	PLVector2   textureOffset;
 	PLVector2   textureScale;
+	float       textureRotation;
 	PLVector2   normal;
 	uint8_t     flags;
 } MapFace;

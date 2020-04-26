@@ -155,9 +155,10 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 			PLVertex vertex;
 			memset( &vertex, 0, sizeof( PLVertex ) );
 
-			vertex.position.x = mapData.vertices[ vertIndex ].x;
-			vertex.position.y = mapData.vertices[ vertIndex ].y;
-			vertex.position.z = mapData.vertices[ vertIndex ].z;
+			vertex.position.x = mapData.vertices[ vertIndex ].x * 100.0f;
+			vertex.position.y = mapData.vertices[ vertIndex ].y * 100.0f;
+			vertex.position.z = mapData.vertices[ vertIndex ].z * 100.0f;
+			vertex.colour = PLColour( 128, 128, 0, 255 );
 
 			plAddPolygonVertex( curFace->polygon, &vertex );
 		}
@@ -276,19 +277,37 @@ void Map_Draw( void ) {
 		return;
 	}
 
-	Gfx_EnableShaderProgram( SHADER_LIT );
+	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
 	/* super duper slow innefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
 
+		plClearMesh( renderMesh );
+
 		plSetTexture( curFace->texture, 0 );
 
+		unsigned int numVertices;
+		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
+		for( unsigned int j = 0; j < numVertices; ++j ) {
+			plAddMeshVertex( renderMesh, vertices[ j ].position, vertices[ j ].normal, vertices[ j ].colour, vertices[ j ].st[ 0 ] );
+		}
 
+		unsigned int numTriangles;
+		unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
+		unsigned int *curIndex = indices;
+		for ( unsigned int j = 0; j < numTriangles; ++j ) {
+			plAddMeshTriangle( renderMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2] );
+			curIndex += 3;
+		}
+
+		plGenerateMeshNormals( renderMesh, true );
 
 		plUploadMesh( renderMesh );
 		plDrawMesh( renderMesh );
 	}
+
+	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plLoadIdentityMatrix();

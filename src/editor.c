@@ -10,7 +10,7 @@
 
 char texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
 static void Editor_MountTexturePackageCallback( const char *path, void *userData ) {
-	u_unused( *userData );
+	u_unused( userData );
 	plMountLocation( path );
 }
 
