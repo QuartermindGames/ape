@@ -11,7 +11,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
 
 add_subdirectory( src/3rdparty/platform/platform )
-add_subdirectory( src/3rdparty/freeglut/freeglut/freeglut )
 add_subdirectory( tools/pkgman/ )
 
 file( GLOB YIN_SOURCE_FILES
@@ -20,7 +19,7 @@ file( GLOB YIN_SOURCE_FILES
 
 add_executable( Yin WIN32 ${YIN_SOURCE_FILES} )
 
-target_link_libraries( Yin platform freeglut_static )
-target_include_directories( Yin PRIVATE src/3rdparty/freeglut/freeglut/freeglut/include/ )
-
-
+target_link_libraries( Yin platform )
+if ( !UNIX )
+    target_include_directories( Yin PRIVATE src/3rdparty/sdl2/include/ )
+endif()

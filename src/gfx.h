@@ -32,7 +32,7 @@ typedef enum ViewPerspective {
 } ViewPerspective;
 
 typedef struct GfxCamera {
-	struct PLWindow         *viewportPtr;		/* unused for now */
+	SysWindow               *viewportPtr;
 	PLCamera			    *cameraPtr;			/* the camera used for this viewport */
 	ViewPerspective		    perspective;
 	struct Actor		    *parentActor;
@@ -45,7 +45,7 @@ void Gfx_Initialize( void );
 void Gfx_Shutdown( void );
 void Gfx_Display( void );
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, bool createViewport );
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport );
 GfxCamera *Gfx_GetCurrentCamera( void );
 
 void Gfx_TickCameras( void );

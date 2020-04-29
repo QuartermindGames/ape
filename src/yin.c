@@ -2,6 +2,8 @@
  * Project Yin
  * */
 
+#include <SDL2/SDL.h>
+
 #include "yin.h"
 #include "gfx.h"
 #include "act.h"
@@ -10,15 +12,60 @@
 #include "pkg_loader.h"
 #include "image.h"
 
-#include <GL/freeglut.h>
-
 PLPackage *globalWad = NULL;
 
+typedef struct SysWindow {
+	SDL_Window      *sdlWindowPtr;
+	SDL_GLContext   *sdlGLContext;
+} SysWindow;
+
+static SDL_TimerID timer = 0;
 unsigned int numTicks = 0;
 
 LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
 LaunchMode Sys_GetLaunchMode( void ) {
 	return launchMode;
+}
+
+SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
+	SDL_Window *sdlWindowPtr = SDL_CreateWindow( title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+	if ( sdlWindowPtr == NULL ) {
+		PrintError( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
+	}
+
+	SDL_GLContext sdlGLContext = SDL_GL_CreateContext( sdlWindowPtr );
+	if ( sdlGLContext == NULL ) {
+		SDL_DestroyWindow( sdlWindowPtr );
+
+		PrintWarn( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
+		return NULL;
+	}
+
+	SysWindow *window = Sys_AllocateMemory( 1, sizeof( SysWindow ) );
+	window->sdlWindowPtr = sdlWindowPtr;
+	window->sdlGLContext = sdlGLContext;
+
+	return window;
+}
+
+void Sys_DestroyWindow( SysWindow *windowPtr ) {
+	if ( windowPtr == NULL ) {
+		return;
+	}
+
+	if ( windowPtr->sdlGLContext != NULL ) {
+		SDL_GL_DeleteContext( windowPtr->sdlGLContext );
+	}
+
+	if ( windowPtr->sdlWindowPtr != NULL ) {
+		SDL_DestroyWindow( windowPtr->sdlWindowPtr );
+	}
+
+	free( windowPtr );
+}
+
+void Sys_MakeWindowActive( SysWindow *windowPtr ) {
+	SDL_GL_MakeCurrent( windowPtr->sdlWindowPtr, windowPtr->sdlGLContext );
 }
 
 void *Sys_AllocateMemory( size_t num, size_t size ) {
@@ -31,9 +78,7 @@ void *Sys_AllocateMemory( size_t num, size_t size ) {
 }
 
 /* wrapper for malloc */
-static void *Sys_malloc( size_t size ) {
-	return Sys_AllocateMemory( 1, size );
-}
+static void *Sys_malloc( size_t size ) { return Sys_AllocateMemory( 1, size ); }
 
 static void Sys_Close( void ) {
 	Act_Shutdown();
@@ -44,19 +89,24 @@ static void Sys_Close( void ) {
 static void Sys_Display( void ) {
 	Gfx_Display();
 
-	glutSwapBuffers();
+	SDL_GL_SwapWindow( NULL );
 }
 
-static unsigned char Sys_TranslateKeyboardInput( unsigned char key ) {
+static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 	switch( key ) {
 		default: return YIN_INPUT_INVALID;
 		case 'w': return YIN_INPUT_UP;
 		case 's': return YIN_INPUT_DOWN;
 		case 'a': return YIN_INPUT_LEFT;
 		case 'd': return YIN_INPUT_RIGHT;
-		case GLUT_KEY_SHIFT_L: return YIN_INPUT_LEFT_STICK;
-		case 27: return YIN_INPUT_START; /* escape */
+		//case GLUT_KEY_SHIFT_L: return YIN_INPUT_LEFT_STICK;
+		//case 27: return YIN_INPUT_START; /* escape */
 		case ' ': return YIN_INPUT_A;
+
+		case SDLK_UP:       return YIN_INPUT_UP;
+		case SDLK_DOWN:     return YIN_INPUT_DOWN;
+		case SDLK_LEFT:     return YIN_INPUT_LEFT;
+		case SDLK_RIGHT:    return YIN_INPUT_RIGHT;
 	}
 }
 
@@ -100,12 +150,26 @@ static void Sys_Idle( void ) {
 	Sys_Display();
 }
 
-static void Sys_Tick( int time ) {
+static void Sys_Tick( unsigned int interval ) {
 	Gam_Tick();
 
 	numTicks++;
+}
 
-	glutTimerFunc( YIN_TICK_RATE, Sys_Tick, 0 );
+static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
+	SDL_UserEvent userEvent;
+	userEvent.type = SDL_USEREVENT;
+	userEvent.code = 0;
+	userEvent.data1 = Sys_Tick;
+	userEvent.data2 = &interval;
+
+	SDL_Event event;
+	event.type = SDL_USEREVENT;
+	event.user = userEvent;
+
+	SDL_PushEvent( &event );
+
+	return interval;
 }
 
 unsigned int Sys_GetNumTicks( void ) {
@@ -156,18 +220,28 @@ int Sys_Init( int argc, char **argv ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
 
-	glutInitWindowSize( YIN_WINDOW_WIDTH, YIN_WINDOW_HEIGHT );
-	glutInitWindowPosition( 256, 256 );
-	glutInit( &argc, argv );
-	glutInitContextVersion( 3, 2 );
-	glutInitContextFlags( GLUT_CORE_PROFILE | GLUT_DEBUG );
-	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
+	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 ) {
+		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
+	}
 
-	glutCreateWindow( YIN_WINDOW_TITLE );
+	//glutInitContextVersion( 3, 2 );
+	//glutInitContextFlags( GLUT_CORE_PROFILE | GLUT_DEBUG );
+	//glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 
 	if( plHasCommandLineArgument( "editor" ) ) {
 		launchMode = LAUNCH_MODE_EDITOR;
 	}
+
+	/* setup our timers, in this case we're just setting up our tick */
+	timer = SDL_AddTimer( YIN_TICK_RATE, Sys_TimerCallback, NULL );
+
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
+	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 
 	Gfx_Initialize();
 	
@@ -181,16 +255,18 @@ int Sys_Init( int argc, char **argv ) {
 	default:PrintError( "Unhandled launch mode, %d!\n", launchMode );
 	}
 
-	glutReshapeFunc( Sys_Reshape );
-	glutDisplayFunc( Sys_Display );
-	glutKeyboardFunc( Sys_Keyboard );
-	glutKeyboardUpFunc( Sys_KeyboardUp );
-	glutCloseFunc( Sys_Close );
-	glutIdleFunc( Sys_Idle );
+	SDL_Event event;
+	while( SDL_PollEvent( &event ) ) {
+		switch( event.type ) {
+			case SDL_USEREVENT: {
+				void ( *TickFunc )( unsigned int ) = event.user.data1;
+				TickFunc( ( unsigned int ) event.user.data2 );
+				break;
+			}
+		}
 
-	glutTimerFunc( YIN_TICK_RATE, Sys_Tick, 0 );
-
-	glutMainLoop();
+		Sys_Display();
+	}
 
 	return EXIT_SUCCESS;
 }

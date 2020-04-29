@@ -10,6 +10,7 @@
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
+static SysWindow *mainWindow = NULL;
 static GfxCamera *playerCamera = NULL;
 static PLCamera *auxCamera = NULL;
 

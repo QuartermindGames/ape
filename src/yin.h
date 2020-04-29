@@ -66,12 +66,19 @@ enum {
 //#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS
 
+typedef struct SysWindow SysWindow;
+
 #define PrintError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )
 #define PrintWarn( ... )  plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
 #define PrintMsg( ... )   plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 
 extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "yin.wad"
+
+/* windowing API */
+SysWindow *Sys_CreateWindow( const char *title, int width, int height );
+void Sys_DestroyWindow( SysWindow *windowPtr );
+void Sys_MakeWindowActive( SysWindow *windowPtr );
 
 bool Sys_GetInputState( InputButton inputIndex );
 LaunchMode Sys_GetLaunchMode( void );

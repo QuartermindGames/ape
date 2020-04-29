@@ -1,12 +1,10 @@
 #include <PL/pl_llist.h>
-#include <PL/pl_window.h>
 
 #include "yin.h"
 #include "gfx.h"
 #include "act.h"
 
 /* Camera management fun! */
-
 
 static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
 	[ VIEW_PERSPECTIVE_EYE ] = "Eye",
@@ -22,9 +20,7 @@ GfxCamera *Gfx_GetCurrentCamera( void ) {
 	return currentCamera;
 }
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, bool createViewport ) {
-	u_unused( createViewport );
-	
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
 	GfxCamera *gfxCamera = Sys_AllocateMemory( 1, sizeof( GfxCamera ) );
 
 	gfxCamera->cameraPtr = plCreateCamera();
@@ -94,7 +90,12 @@ void Gfx_TickCameras( void ) {
 			continue;
 		}
 
-		currentCamera = camera;
+		if ( camera->viewportPtr == NULL ) {
+			PrintWarn( "No viewport assigned to camera, skipping!\n" );
+			continue;
+		}
+
+		Sys_MakeContextActive( camera->viewportPtr );
 
 		/* if we have a parent, follow them */
 		if( camera->parentActor != NULL ) {
@@ -117,6 +118,8 @@ void Gfx_TickCameras( void ) {
 			case VIEW_PERSPECTIVE_FRONT:break;
 			}
 		}
+
+		currentCamera = camera;
 
 		curNode = plGetNextLinkedListNode( curNode );
 	}
