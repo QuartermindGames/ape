@@ -162,11 +162,6 @@ static void Sys_KeyboardUp( unsigned char key, int x, int y ) {
 	keyStates[ key ] = false;
 }
 
-static void Sys_Reshape( int width, int height ) {
-	/* this seems to be broken, at least from what I tested on Windows 10 */
-	Gfx_SetViewportSize( width, height );
-}
-
 static void Sys_Idle( void ) {
 	Sys_Display();
 }

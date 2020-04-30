@@ -13,18 +13,15 @@ static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
 	[ VIEW_PERSPECTIVE_FRONT ] = "Front",
 };
 
+const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective ) {
+	return perspectiveDescriptions[ perspective ];
+}
+
 static PLLinkedList *camerasList = NULL;
-static GfxCamera *currentCamera = NULL;
-
-GfxCamera *Gfx_GetCurrentCamera( void ) {
-	return currentCamera;
-}
-
-void Gfx_SetCurrentCamera( GfxCamera *camera ) {
-	currentCamera = camera;
-}
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
+	PrintMsg( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
+
 	if ( viewport == NULL ) {
 		PrintError( "Invalid viewport!\n" );
 	}
@@ -78,6 +75,8 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
+	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
+
 	/* if we have a parent, follow them */
 	if( camera->parentActor != NULL ) {
 		switch( camera->perspective ) {
@@ -100,17 +99,9 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		}
 	}
 
-	Sys_MakeWindowActive( camera->viewportPtr );
-	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
-
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
-
 	plSetupCamera( camera->cameraPtr );
 
 	Gfx_DrawScene( camera );
-
-	/* make sure the rest of the gfx subsystem knows which camera is active... */
-	currentCamera = camera;
 }
 
 void Gfx_ShutdownCameras( void ) {

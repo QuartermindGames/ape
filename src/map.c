@@ -301,7 +301,7 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 }
 
 void Map_Draw( void ) {
-	Gfx_EnableShaderProgram( SHADER_LIT );
+	Gfx_EnableShaderProgram( SHADER_TEXTURE );
 
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {

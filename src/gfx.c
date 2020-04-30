@@ -410,6 +410,7 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 }
 
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
+#if 0
 	const GfxCamera *camera = Gfx_GetCurrentCamera();
 	if( camera == NULL ) {
 		return;
@@ -450,6 +451,7 @@ void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, u
 	}
 
 	Gfx_DrawAnimationFrame( animation[ actualFrame ], position, spriteAngle );
+#endif
 }
 
 void Gfx_DrawDigit( int x, int y, int digit ) {
@@ -487,6 +489,17 @@ void Gfx_DrawNumber( int x, int y, unsigned int number ) {
 void Gfx_InitializeCameras( void ); /* gfx_camera.c */
 void Gfx_ShutdownCameras( void );	/* gfx_camera.c */
 
+void Gfx_SetupDefaultState( void ) {
+	plSetClearColour(PLColour( 0, 0, 0, 255 ) );
+
+	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
+	plSetDepthMask( true );
+
+	Gfx_EnableShaderProgram( SHADER_GENERIC );
+
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+}
+
 void Gfx_Initialize( void ) {
 	PrintMsg( "Initializing Gfx...\n" );
 
@@ -511,8 +524,6 @@ void Gfx_Initialize( void ) {
 	Gfx_RegisterShader( SHADER_TEXTURE, "Shader:vertex.glsl", "Shader:texture.glsl" );
 	Gfx_RegisterShader( SHADER_ALPHA_TEST, "Shader:vertex.glsl", "Shader:alpha.glsl" );
 	Gfx_RegisterShader( SHADER_LIT, "Shader:vertex.glsl", "Shader:lit.glsl" );
-
-	plSetClearColour(PLColour( 0, 0, 0, 255 ) );
 
 	Gfx_LoadPalette( titlePal, "TITLEPAL" );
 	Gfx_LoadPalette( playPal, "PLAYPAL" );
@@ -541,9 +552,6 @@ void Gfx_Initialize( void ) {
 
 	Gfx_LoadWallTextures();
 	Gfx_LoadFloorTextures();
-
-	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
-	plSetDepthMask( true );
 }
 
 void Gfx_Shutdown( void ) {
@@ -602,8 +610,6 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 }
 
 void Gfx_DrawScene( GfxCamera *camera ) {
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
-
 #ifdef DEBUG_CAM
 	PLMatrix4 mat = plMatrix4Identity();
 
@@ -623,14 +629,10 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 255, 0, 0, 255 ) );
 #endif
 
+	if ( ( Sys_GetLaunchMode() == LAUNCH_MODE_DEFAULT ) && ( Game_GetMenuState() == MENU_STATE_START ) ) {
+		return;
+	}
+
 	Map_Draw();
 	Act_DrawActors();
-}
-
-void Gfx_Display( void ) {
-	Gfx_DisplayMenu();
-}
-
-void Gfx_SetViewportSize( int width, int height ) {
-	/* todo */
 }

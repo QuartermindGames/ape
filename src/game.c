@@ -76,7 +76,6 @@ void Game_Initialize( void ) {
 	Act_Initialize();
 }
 
-void Gfx_DisplayMenu();
 void Game_Display( void ) {
 	if ( playerActor == NULL ) {
 		return;
@@ -86,6 +85,12 @@ void Game_Display( void ) {
 	if ( playerCamera == NULL ) {
 		return;
 	}
+
+	Sys_MakeWindowActive( playerCamera->viewportPtr );
+
+	Gfx_SetupDefaultState();
+
+	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
 	Gfx_DrawPerspective( playerCamera );
 	Gfx_DisplayMenu();
