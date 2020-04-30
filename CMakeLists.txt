@@ -19,8 +19,9 @@ file( GLOB YIN_SOURCE_FILES
 
 add_executable( Yin WIN32 ${YIN_SOURCE_FILES} )
 
-if ( !UNIX )
+if ( NOT UNIX )
     target_include_directories( Yin PRIVATE src/3rdparty/sdl2/include/ )
+    target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/ )
 endif()
 
 target_link_libraries( Yin platform SDL2 )
