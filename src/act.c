@@ -207,7 +207,7 @@ static Actor *Act_CheckCollisions( Actor *self ) {
 	return NULL;
 }
 
-void Act_DisplayActors( void ) {
+void Act_DrawActors( void ) {
 	PLLinkedListNode *curNode = plGetRootNode( actorList );
 	while ( curNode != NULL ) {
 		Actor *actor = plGetLinkedListNodeUserData( curNode );

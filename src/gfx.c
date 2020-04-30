@@ -602,14 +602,8 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 }
 
 void Gfx_DrawCameras( void );
-void Gfx_DisplayScene( GfxCamera *currentCamera ) {
-	if ( Gam_GetMenuState() == MENU_STATE_START ) {
-		return;
-	}
-
+void Gfx_DrawScene( GfxCamera *camera ) {
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
-
-	plSetupCamera( currentCamera->cameraPtr );
 
 #ifdef DEBUG_CAM
 	PLMatrix4 mat = plMatrix4Identity();
@@ -631,15 +625,10 @@ void Gfx_DisplayScene( GfxCamera *currentCamera ) {
 #endif
 
 	Map_Draw();
-	Act_DisplayActors();
-
-	Sys_SwapWindow( currentCamera->viewportPtr );
+	Act_DrawActors();
 }
 
 void Gfx_Display( void ) {
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
-
-	Gfx_DrawCameras();
 	Gfx_DisplayMenu();
 }
 

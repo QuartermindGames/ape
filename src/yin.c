@@ -20,9 +20,11 @@ typedef struct SysWindow {
 static SysWindow *mainWindow = NULL;
 
 static SDL_TimerID timer = 0;
-unsigned int numTicks = 0;
+static unsigned int numTicks = 0;
 
-LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
+static EngineInterface engineInterface;
+static LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
+
 LaunchMode Sys_GetLaunchMode( void ) {
 	return launchMode;
 }
@@ -89,13 +91,15 @@ void *Sys_AllocateMemory( size_t num, size_t size ) {
 static void *Sys_malloc( size_t size ) { return Sys_AllocateMemory( 1, size ); }
 
 static void Sys_Close( void ) {
-	Act_Shutdown();
-	Gam_Shutdown();
-	Gfx_Shutdown();
+	PrintMsg( "Shutting down...\n" );
+
+	engineInterface.Shutdown();
+
+	exit( EXIT_SUCCESS );
 }
 
 static void Sys_Display( void ) {
-	Gfx_Display();
+	engineInterface.Display();
 }
 
 void Sys_SwapWindow( SysWindow *windowPtr ) {
@@ -119,7 +123,9 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 		case SDLK_RIGHT:    return YIN_INPUT_RIGHT;
 
 		/* temp temp temp */
-		case SDLK_ESCAPE: exit( 0 ); break;
+		case SDLK_ESCAPE:
+			Sys_Close();
+			break;
 	}
 }
 
@@ -163,18 +169,10 @@ static void Sys_Idle( void ) {
 	Sys_Display();
 }
 
-static void Sys_Tick( unsigned int interval ) {
-	Gam_Tick();
-
-	numTicks++;
-}
-
 static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
 	SDL_UserEvent userEvent;
 	userEvent.type = SDL_USEREVENT;
 	userEvent.code = 0;
-	userEvent.data1 = Sys_Tick;
-	userEvent.data2 = &interval;
 
 	SDL_Event event;
 	event.type = SDL_USEREVENT;
@@ -252,28 +250,28 @@ _Noreturn int Sys_Init( int argc, char **argv ) {
 		PrintError( "Failed to create main window!\n" );
 	}
 
-	Gfx_Initialize();
-	
+	void Editor_SetupInterface( EngineInterface *interface );
+	void Game_SetupInterface( EngineInterface *interface );
 	switch( launchMode ) {
 	case LAUNCH_MODE_EDITOR: 
-		Editor_Initialize();
+		Editor_SetupInterface( &engineInterface );
 		break;
 	case LAUNCH_MODE_DEFAULT:
-		Act_Initialize();
+		Game_SetupInterface( &engineInterface );
 		break;
 	default:PrintError( "Unhandled launch mode, %d!\n", launchMode );
 	}
+
+	engineInterface.Initialize();
 
 	for( ;; ) {
 		SDL_Event event;
 		while ( SDL_PollEvent( &event )) {
 			switch ( event.type ) {
-				case SDL_USEREVENT: {
-					void ( *TickFunc )( unsigned int ) = event.user.data1;
-					TickFunc(( unsigned int ) event.user.data2 );
+				case SDL_USEREVENT:
+					engineInterface.Tick();
+					numTicks++;
 					break;
-				}
-
 				case SDL_KEYUP:
 					Sys_KeyboardUp( event.key.keysym.sym, 0, 0 );
 					break;

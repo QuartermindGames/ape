@@ -28,6 +28,13 @@ typedef enum LaunchMode {
 	LAUNCH_MODE_EDITOR,		/* edit mode */
 } LaunchMode;
 
+typedef struct ModeInterface {
+	void ( *Initialize ) ( void );
+	void ( *Tick ) ( void );
+	void ( *Display ) ( void );
+	void ( *Shutdown ) ( void );
+} EngineInterface;
+
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */

@@ -20,6 +20,10 @@ GfxCamera *Gfx_GetCurrentCamera( void ) {
 	return currentCamera;
 }
 
+void Gfx_SetCurrentCamera( void ) {
+
+}
+
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
 	if ( viewport == NULL ) {
 		PrintError( "Invalid viewport!\n" );
@@ -59,82 +63,55 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 }
 
 void Gfx_InitializeCameras( void ) {
-	PrintMsg( "Setting up cameras...\n" );
+	PrintMsg( "Initializing cameras...\n" );
 
 	camerasList = plCreateLinkedList();
 	if( camerasList == NULL ) {
 		PrintError( "Failed to create camera list!\nPL: %s\n", plGetError() );
 	}
-
-#if 0 /* todo: move this out of here! */
-	if( Sys_GetLaunchMode() == LAUNCH_MODE_EDITOR ) {
-		Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-		Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-		Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-		Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), true );
-
-		PLLinkedListNode *curNode = plGetRootNode( camerasList );
-		GfxCamera *camera = plGetLinkedListNodeUserData( curNode );
-		if( camera == NULL ) {
-			PrintError( "Uninitialized root node!\n" );
-		}
-
-		/* default to first camera added */
-		currentCamera = camera;
-	}
-#endif
 }
 
-/**
- * Iterate through each camera and draw from it's perspective.
- */
-void Gfx_DisplayScene( GfxCamera *currentCamera );
-void Gfx_DrawCameras( void ) {
-	PLLinkedListNode *curNode = plGetRootNode( camerasList );
-	while( curNode != NULL ) {
-		GfxCamera *camera = plGetLinkedListNodeUserData( curNode );
-		if ( camera == NULL) {
-			PrintWarn( "Uninitialized node, skipping!\n" );
-			continue;
-		}
+void Gfx_DrawScene( GfxCamera *camera );
+void Gfx_DrawPerspective( GfxCamera *camera ) {
+	if ( camera->viewportPtr == NULL ) {
+		PrintWarn( "No viewport assigned to camera, skipping!\n" );
+		return;
+	}
 
-		if ( camera->viewportPtr == NULL ) {
-			PrintWarn( "No viewport assigned to camera, skipping!\n" );
-			continue;
-		}
+	Sys_MakeWindowActive( camera->viewportPtr );
+	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
 
-		Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
+	plSetupCamera( camera->cameraPtr );
 
-		/* if we have a parent, follow them */
-		if( camera->parentActor != NULL ) {
-			switch( camera->perspective ) {
-				default: break;
-				case VIEW_PERSPECTIVE_EYE:
+	/* clear the buffers, needs to be done AFTER context change */
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+
+	/* if we have a parent, follow them */
+	if( camera->parentActor != NULL ) {
+		switch( camera->perspective ) {
+			default: break;
+			case VIEW_PERSPECTIVE_EYE:
 #ifdef DEBUG_CAM
-					camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
+				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
 				camera->cameraPtr->position.y = 512.0f;
 				camera->cameraPtr->angles.x = -85.0f;
 				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
 #else
-					camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-					camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
-					camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
+				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
+				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
+				camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
 #endif
-					break;
-				case VIEW_PERSPECTIVE_TOP:break;
-				case VIEW_PERSPECTIVE_SIDE:break;
-				case VIEW_PERSPECTIVE_FRONT:break;
-			}
+				break;
+			case VIEW_PERSPECTIVE_TOP:
+			case VIEW_PERSPECTIVE_SIDE:
+			case VIEW_PERSPECTIVE_FRONT:break;
 		}
-
-		currentCamera = camera;
-
-		Sys_MakeWindowActive( camera->viewportPtr );
-
-		Gfx_DisplayScene( currentCamera );
-
-		curNode = plGetNextLinkedListNode( curNode );
 	}
+
+	Gfx_DrawScene( camera );
+
+	/* make sure the rest of the gfx subsystem knows which camera is active... */
+	currentCamera = camera;
 }
 
 void Gfx_ShutdownCameras( void ) {

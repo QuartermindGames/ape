@@ -6,6 +6,7 @@
 #include "game.h"
 #include "act.h"
 #include "map.h"
+#include "gfx.h"
 
 /* game specific implementation goes here! */
 
@@ -57,6 +58,7 @@ void Gam_Tick( void ) {
 }
 
 void Gam_Keyboard( unsigned char key ) {
+#if 0
 	if ( inputTarget == INPUT_TARGET_MENU ) {
 		switch( menuState ) {
 			case MENU_STATE_START:
@@ -69,8 +71,26 @@ void Gam_Keyboard( unsigned char key ) {
 		}
 		return;
 	}
+#endif
 }
 
-void Gam_Initialize( void ) {}
+void Gam_Initialize( void ) {
+	/* initialize core services */
+	Gfx_Initialize();
+	Act_Initialize();
+}
 
-void Gam_Shutdown( void ) {}
+void Game_Display( void ) {}
+
+void Gam_Shutdown( void ) {
+	/* shutdown core services */
+	Act_Shutdown();
+	Gfx_Shutdown();
+}
+
+void Game_SetupInterface( EngineInterface *interface ) {
+	interface->Tick = Gam_Tick;
+	interface->Shutdown = Gam_Shutdown;
+	interface->Initialize = Gam_Initialize;
+	interface->Display = Game_Display;
+}

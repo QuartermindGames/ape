@@ -52,6 +52,7 @@ void Gfx_SetViewportSize( int width, int height );
 
 void Gfx_EnableShaderProgram( GfxShaderType type );
 
+void Gfx_DrawPerspective( GfxCamera *camera );
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
