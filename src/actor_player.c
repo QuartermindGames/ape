@@ -4,6 +4,7 @@
 
 #include "yin.h"
 #include "act.h"
+#include "gfx.h"
 
 #define PLAYER_VIEW_OFFSET  75.0f
 
@@ -23,6 +24,8 @@ typedef struct APlayer {
 
 	float forwardVelocity;
 	float viewBob;
+
+	GfxCamera *eyeCamera;
 } APlayer;
 
 static void Player_CalculateViewFrustum( Actor *self ) {
@@ -68,13 +71,26 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 	return true;
 }
 
-void Player_Spawn( Actor *self ) {
-	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET );
+/* move this somewhere else... */
+static unsigned int numPlayers = 0;
 
+void Player_Spawn( Actor *self ) {
 	APlayer* playerData = Sys_AllocateMemory( 1, sizeof( APlayer ) );
 	Act_SetUserData( self, playerData );
 
+	if ( numPlayers == 0 ) { /* local player */
+		playerData->eyeCamera = Gfx_CreateCamera(
+			VIEW_PERSPECTIVE_EYE,
+			Act_GetPosition( self ),
+			PLVector3( 0, Act_GetAngle( self ), 0 ),
+			Sys_GetMainWindow() );
+		playerData->eyeCamera->parentActor = self;
+	}
+
+	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET );
 	Player_CalculateViewFrustum( self );
+
+	numPlayers++;
 }
 
 void Player_Tick( Actor *self, void *userData ) {

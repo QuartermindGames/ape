@@ -20,16 +20,7 @@ typedef struct ATroo {
 	GfxAnimationFrame *walkFrames[ TROO_NUM_WALK_FRAMES ];
 } ATroo;
 
-void Troo_Draw( Actor *self, void *userData ) {
-	if ( Act_GetType( self ) != ACTOR_TROO ) {
-		return;
-	}
-
-	PLVector3 position = Act_GetPosition( self );
-
-	ATroo *trooData = ( ATroo* ) userData;
-	Gfx_DrawAnimation( trooData->walkFrames, TROO_NUM_WALK_FRAMES - 1, Act_GetCurrentFrame( self ), &position, Act_GetAngle( self ) );
-}
+void Troo_Draw( Actor *self, void *userData ) {}
 
 void Troo_Tick( Actor *self, void *userData ) {
 	/* wedge this in here, running out of time */

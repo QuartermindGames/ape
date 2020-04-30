@@ -6,12 +6,6 @@
 
 typedef enum ActorType {
 	ACTOR_NONE,
-
-	/* monsters */
-	ACTOR_BOSS, /* baron of hell */
-	ACTOR_TROO, /* imp */
-	ACTOR_SARG, /* demon */
-
 	ACTOR_PLAYER,
 
 	MAX_ACTOR_TYPES,

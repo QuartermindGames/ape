@@ -10,7 +10,6 @@
 #include "game.h"
 #include "editor.h"
 #include "pkg_loader.h"
-#include "image.h"
 
 PLPackage *globalWad = NULL;
 
@@ -118,6 +117,9 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 		case SDLK_DOWN:     return YIN_INPUT_DOWN;
 		case SDLK_LEFT:     return YIN_INPUT_LEFT;
 		case SDLK_RIGHT:    return YIN_INPUT_RIGHT;
+
+		/* temp temp temp */
+		case SDLK_ESCAPE: exit( 0 ); break;
 	}
 }
 
@@ -187,11 +189,6 @@ unsigned int Sys_GetNumTicks( void ) {
 	return numTicks;
 }
 
-void Sys_MountPackageCallback( const char *path, void *userData ) {
-	PrintMsg( "Mounting %s as directory\n" );
-	plMountLocation( path );
-}
-
 _Noreturn int Sys_Init( int argc, char **argv ) {
 	pl_calloc = Sys_AllocateMemory;
 	pl_malloc = Sys_malloc;
@@ -234,10 +231,6 @@ _Noreturn int Sys_Init( int argc, char **argv ) {
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 ) {
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
 	}
-
-	//glutInitContextVersion( 3, 2 );
-	//glutInitContextFlags( GLUT_CORE_PROFILE | GLUT_DEBUG );
-	//glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 
 	if( plHasCommandLineArgument( "editor" ) ) {
 		launchMode = LAUNCH_MODE_EDITOR;

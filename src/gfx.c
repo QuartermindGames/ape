@@ -10,8 +10,6 @@
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
-static SysWindow *mainWindow = NULL;
-static GfxCamera *playerCamera = NULL;
 static PLCamera *auxCamera = NULL;
 
 typedef struct RGBMap {
@@ -508,9 +506,6 @@ void Gfx_Initialize( void ) {
 
 	Gfx_InitializeCameras();
 
-	/* create default cameras */
-	playerCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), Sys_GetMainWindow() );
-
 	/* create the default shader programs */
 	Gfx_RegisterShader( SHADER_GENERIC, "Shader:vertex.glsl", "Shader:colour.glsl" );
 	Gfx_RegisterShader( SHADER_TEXTURE, "Shader:vertex.glsl", "Shader:texture.glsl" );
@@ -608,13 +603,6 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 
 void Gfx_DrawCameras( void );
 void Gfx_DisplayScene( GfxCamera *currentCamera ) {
-	Actor *player = Gam_GetPlayer();
-	if ( player == NULL ) {
-		return;
-	}
-
-	currentCamera->parentActor = player;
-
 	if ( Gam_GetMenuState() == MENU_STATE_START ) {
 		return;
 	}

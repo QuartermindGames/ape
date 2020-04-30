@@ -20,16 +20,7 @@ typedef struct ASarg {
 	GfxAnimationFrame *walkFrames[ SARG_NUM_WALK_FRAMES ];
 } ASarg;
 
-void Sarg_Draw( Actor *self, void *userData ) {
-	if( Act_GetType( self ) != ACTOR_SARG ) {
-		return;
-	}
-
-	PLVector3 position = Act_GetPosition( self );
-
-	ASarg *sargData = ( ASarg* ) userData;
-	Gfx_DrawAnimation( sargData->walkFrames, SARG_NUM_WALK_FRAMES - 1, Act_GetCurrentFrame( self ), &position, Act_GetAngle( self ) );
-}
+void Sarg_Draw( Actor *self, void *userData ) {}
 
 void Sarg_Tick( Actor *self, void *userData ) {
 	/* wedge this in here, running out of time */

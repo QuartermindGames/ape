@@ -20,16 +20,7 @@ typedef struct ABoss {
 	GfxAnimationFrame *walkFrames[ BOSS_NUM_WALK_FRAMES ];
 } ABoss;
 
-void Boss_Draw( Actor *self, void *userData ) {
-	if ( Act_GetType( self ) != ACTOR_BOSS ) {
-		return;
-	}
-
-	PLVector3 position = Act_GetPosition( self );
-
-	ABoss *bossData = ( ABoss* ) userData;
-	Gfx_DrawAnimation( bossData->walkFrames, BOSS_NUM_WALK_FRAMES - 1, Act_GetCurrentFrame( self ), &position, Act_GetAngle( self ) );
-}
+void Boss_Draw( Actor *self, void *userData ) {}
 
 void Boss_Tick( Actor *self, void *userData ) {
 	/* wedge this in here, running out of time */
