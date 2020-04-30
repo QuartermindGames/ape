@@ -70,13 +70,14 @@ void Game_Keyboard( unsigned char key ) {
 #endif
 }
 
-void Game_Initialize( void ) {
-	/* initialize core services */
-	Gfx_Initialize();
-	Act_Initialize();
-}
-
 void Game_Display( void ) {
+	SysWindow *window = Sys_GetMainWindow();
+	Sys_MakeWindowActive( window );
+
+	Gfx_SetupDefaultState();
+
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+
 	if ( playerActor == NULL ) {
 		return;
 	}
@@ -86,23 +87,15 @@ void Game_Display( void ) {
 		return;
 	}
 
-	Sys_MakeWindowActive( playerCamera->viewportPtr );
-
-	Gfx_SetupDefaultState();
-
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
-
 	Gfx_DrawPerspective( playerCamera );
-	Gfx_DisplayMenu();
+	Gfx_DrawMenu();
 
-	Sys_SwapWindow( playerCamera->viewportPtr );
+	Sys_SwapWindow( window );
 }
 
-void Game_Shutdown( void ) {
-	/* shutdown core services */
-	Act_Shutdown();
-	Gfx_Shutdown();
-}
+void Game_Initialize( void ) {}
+
+void Game_Shutdown( void ) {}
 
 void Game_SetupInterface( EngineInterface *interface ) {
 	interface->Tick = Game_Tick;

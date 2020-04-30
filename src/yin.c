@@ -97,6 +97,9 @@ static void Sys_Close( void ) {
 
 	engineInterface.Shutdown();
 
+	Act_Shutdown();
+	Gfx_Shutdown();
+
 	exit( EXIT_SUCCESS );
 }
 
@@ -246,6 +249,10 @@ _Noreturn int Sys_Init( int argc, char **argv ) {
 	if ( mainWindow == NULL ) {
 		PrintError( "Failed to create main window!\n" );
 	}
+
+	/* initialize core services */
+	Gfx_Initialize();
+	Act_Initialize();
 
 	void Editor_SetupInterface( EngineInterface *interface );
 	void Game_SetupInterface( EngineInterface *interface );

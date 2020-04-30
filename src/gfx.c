@@ -496,8 +496,6 @@ void Gfx_SetupDefaultState( void ) {
 	plSetDepthMask( true );
 
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
-
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
 }
 
 void Gfx_Initialize( void ) {
@@ -552,6 +550,8 @@ void Gfx_Initialize( void ) {
 
 	Gfx_LoadWallTextures();
 	Gfx_LoadFloorTextures();
+
+	Gfx_SetupDefaultState();
 }
 
 void Gfx_Shutdown( void ) {
@@ -570,7 +570,7 @@ static void Gfx_DrawViewSprite( void ) {
 #endif
 }
 
-void Gfx_DisplayMenu( void ) {
+void Gfx_DrawMenu( void ) {
 	plSetupCamera( auxCamera );
 
 	PLMatrix4 transform = plMatrix4Identity();

@@ -44,7 +44,7 @@ typedef struct GfxCamera {
 void Gfx_Initialize( void );
 void Gfx_Shutdown( void );
 void Gfx_SetupDefaultState( void );
-void Gfx_DisplayMenu( void );
+void Gfx_DrawMenu( void );
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport );
 

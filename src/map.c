@@ -301,7 +301,12 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 }
 
 void Map_Draw( void ) {
-	Gfx_EnableShaderProgram( SHADER_TEXTURE );
+	Gfx_EnableShaderProgram( SHADER_LIT );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plLoadIdentityMatrix();
+	const PLMatrix4 *transform = plGetMatrix( PL_MODELVIEW_MATRIX );
+	plSetNamedShaderUniformMatrix4( NULL, "pl_model", *transform, true );
 
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
@@ -341,7 +346,6 @@ void Map_Draw( void ) {
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plLoadIdentityMatrix();
 
-	const PLMatrix4 *transform = plGetMatrix( PL_MODELVIEW_MATRIX );
 	plDrawMeshNormals( transform, renderMesh );
 
 #if 0

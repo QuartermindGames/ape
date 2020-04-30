@@ -24,10 +24,6 @@ static void Editor_MountTexturePackageCallback( const char *path, void *userData
 }
 
 void Editor_Initialize( void ) {
-	/* initialize core services */
-	Gfx_Initialize();
-	Act_Initialize();
-
 	PrintMsg( "Initializing Editor...\n" );
 
 	PrintMsg( "Mounting textures\n" );
