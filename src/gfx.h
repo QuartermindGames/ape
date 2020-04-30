@@ -48,8 +48,6 @@ void Gfx_Display( void );
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport );
 GfxCamera *Gfx_GetCurrentCamera( void );
 
-void Gfx_TickCameras( void );
-
 void Gfx_SetViewportSize( int width, int height );
 
 void Gfx_EnableShaderProgram( GfxShaderType type );

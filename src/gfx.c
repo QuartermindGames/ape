@@ -509,7 +509,7 @@ void Gfx_Initialize( void ) {
 	Gfx_InitializeCameras();
 
 	/* create default cameras */
-	playerCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), false );
+	playerCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), Sys_GetMainWindow() );
 
 	/* create the default shader programs */
 	Gfx_RegisterShader( SHADER_GENERIC, "Shader:vertex.glsl", "Shader:colour.glsl" );
@@ -606,15 +606,14 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 	//printf( "%s\n", plPrintVector3( &position, pl_int_var ) );
 }
 
-void Gfx_DisplayScene( void ) {
+void Gfx_DrawCameras( void );
+void Gfx_DisplayScene( GfxCamera *currentCamera ) {
 	Actor *player = Gam_GetPlayer();
 	if ( player == NULL ) {
 		return;
 	}
 
-	playerCamera->parentActor = player;
-
-	Gfx_TickCameras();
+	currentCamera->parentActor = player;
 
 	if ( Gam_GetMenuState() == MENU_STATE_START ) {
 		return;
@@ -622,7 +621,7 @@ void Gfx_DisplayScene( void ) {
 
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
-	plSetupCamera( playerCamera->cameraPtr );
+	plSetupCamera( currentCamera->cameraPtr );
 
 #ifdef DEBUG_CAM
 	PLMatrix4 mat = plMatrix4Identity();
@@ -645,12 +644,14 @@ void Gfx_DisplayScene( void ) {
 
 	Map_Draw();
 	Act_DisplayActors();
+
+	Sys_SwapWindow( currentCamera->viewportPtr );
 }
 
 void Gfx_Display( void ) {
 	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
 
-	Gfx_DisplayScene();
+	Gfx_DrawCameras();
 	Gfx_DisplayMenu();
 }
 

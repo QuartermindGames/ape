@@ -18,6 +18,7 @@ typedef struct SysWindow {
 	SDL_Window      *sdlWindowPtr;
 	SDL_GLContext   *sdlGLContext;
 } SysWindow;
+static SysWindow *mainWindow = NULL;
 
 static SDL_TimerID timer = 0;
 unsigned int numTicks = 0;
@@ -25,6 +26,14 @@ unsigned int numTicks = 0;
 LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
 LaunchMode Sys_GetLaunchMode( void ) {
 	return launchMode;
+}
+
+SysWindow *Sys_GetMainWindow( void ) {
+	return mainWindow;
+}
+
+void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
+	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
 }
 
 SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
@@ -88,8 +97,10 @@ static void Sys_Close( void ) {
 
 static void Sys_Display( void ) {
 	Gfx_Display();
+}
 
-	SDL_GL_SwapWindow( NULL );
+void Sys_SwapWindow( SysWindow *windowPtr ) {
+	SDL_GL_SwapWindow( mainWindow->sdlWindowPtr );
 }
 
 static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
@@ -110,7 +121,7 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 	}
 }
 
-bool keyStates[ MAX_BUTTON_INPUTS ];
+static bool keyStates[ MAX_BUTTON_INPUTS ];
 bool Sys_GetInputState( InputButton inputIndex ) {
 	return keyStates[ inputIndex ];
 }
@@ -181,7 +192,7 @@ void Sys_MountPackageCallback( const char *path, void *userData ) {
 	plMountLocation( path );
 }
 
-int Sys_Init( int argc, char **argv ) {
+_Noreturn int Sys_Init( int argc, char **argv ) {
 	pl_calloc = Sys_AllocateMemory;
 	pl_malloc = Sys_malloc;
 
@@ -243,6 +254,11 @@ int Sys_Init( int argc, char **argv ) {
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
 	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 
+	mainWindow = Sys_CreateWindow( YIN_WINDOW_TITLE, YIN_WINDOW_WIDTH, YIN_WINDOW_HEIGHT );
+	if ( mainWindow == NULL ) {
+		PrintError( "Failed to create main window!\n" );
+	}
+
 	Gfx_Initialize();
 	
 	switch( launchMode ) {
@@ -255,20 +271,27 @@ int Sys_Init( int argc, char **argv ) {
 	default:PrintError( "Unhandled launch mode, %d!\n", launchMode );
 	}
 
-	SDL_Event event;
-	while( SDL_PollEvent( &event ) ) {
-		switch( event.type ) {
-			case SDL_USEREVENT: {
-				void ( *TickFunc )( unsigned int ) = event.user.data1;
-				TickFunc( ( unsigned int ) event.user.data2 );
-				break;
+	for( ;; ) {
+		SDL_Event event;
+		while ( SDL_PollEvent( &event )) {
+			switch ( event.type ) {
+				case SDL_USEREVENT: {
+					void ( *TickFunc )( unsigned int ) = event.user.data1;
+					TickFunc(( unsigned int ) event.user.data2 );
+					break;
+				}
+
+				case SDL_KEYUP:
+					Sys_KeyboardUp( event.key.keysym.sym, 0, 0 );
+					break;
+				case SDL_KEYDOWN:
+					Sys_Keyboard( event.key.keysym.sym, 0, 0 );
+					break;
 			}
 		}
 
 		Sys_Display();
 	}
-
-	return EXIT_SUCCESS;
 }
 
 #if defined( _WIN32 )

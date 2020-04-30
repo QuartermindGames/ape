@@ -76,9 +76,12 @@ extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "yin.wad"
 
 /* windowing API */
+SysWindow *Sys_GetMainWindow( void );
+void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height );
 SysWindow *Sys_CreateWindow( const char *title, int width, int height );
 void Sys_DestroyWindow( SysWindow *windowPtr );
 void Sys_MakeWindowActive( SysWindow *windowPtr );
+void Sys_SwapWindow( SysWindow *windowPtr );
 
 bool Sys_GetInputState( InputButton inputIndex );
 LaunchMode Sys_GetLaunchMode( void );

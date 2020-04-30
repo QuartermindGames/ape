@@ -21,6 +21,10 @@ GfxCamera *Gfx_GetCurrentCamera( void ) {
 }
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
+	if ( viewport == NULL ) {
+		PrintError( "Invalid viewport!\n" );
+	}
+
 	GfxCamera *gfxCamera = Sys_AllocateMemory( 1, sizeof( GfxCamera ) );
 
 	gfxCamera->cameraPtr = plCreateCamera();
@@ -28,8 +32,8 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 		PrintError( "Failed to create camera!\nPL: %s\n", plGetError() );
 	}
 
-	gfxCamera->cameraPtr->viewport.w = YIN_DISPLAY_WIDTH;
-	gfxCamera->cameraPtr->viewport.h = YIN_DISPLAY_HEIGHT;
+	gfxCamera->viewportPtr = viewport;
+	Sys_GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->cameraPtr->viewport.w, &gfxCamera->cameraPtr->viewport.h );
 
 	gfxCamera->perspective = perspective;
 	switch( gfxCamera->perspective ) {
@@ -81,11 +85,15 @@ void Gfx_InitializeCameras( void ) {
 #endif
 }
 
-void Gfx_TickCameras( void ) {
+/**
+ * Iterate through each camera and draw from it's perspective.
+ */
+void Gfx_DisplayScene( GfxCamera *currentCamera );
+void Gfx_DrawCameras( void ) {
 	PLLinkedListNode *curNode = plGetRootNode( camerasList );
 	while( curNode != NULL ) {
 		GfxCamera *camera = plGetLinkedListNodeUserData( curNode );
-		if( camera == NULL ) {
+		if ( camera == NULL) {
 			PrintWarn( "Uninitialized node, skipping!\n" );
 			continue;
 		}
@@ -95,31 +103,35 @@ void Gfx_TickCameras( void ) {
 			continue;
 		}
 
-		Sys_MakeContextActive( camera->viewportPtr );
+		Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
 
 		/* if we have a parent, follow them */
 		if( camera->parentActor != NULL ) {
 			switch( camera->perspective ) {
-			default: break;
-			case VIEW_PERSPECTIVE_EYE:
+				default: break;
+				case VIEW_PERSPECTIVE_EYE:
 #ifdef DEBUG_CAM
-				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
+					camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
 				camera->cameraPtr->position.y = 512.0f;
 				camera->cameraPtr->angles.x = -85.0f;
 				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
 #else
-				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
-				camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
+					camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
+					camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
+					camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
 #endif
-				break;
-			case VIEW_PERSPECTIVE_TOP:break;
-			case VIEW_PERSPECTIVE_SIDE:break;
-			case VIEW_PERSPECTIVE_FRONT:break;
+					break;
+				case VIEW_PERSPECTIVE_TOP:break;
+				case VIEW_PERSPECTIVE_SIDE:break;
+				case VIEW_PERSPECTIVE_FRONT:break;
 			}
 		}
 
 		currentCamera = camera;
+
+		Sys_MakeWindowActive( camera->viewportPtr );
+
+		Gfx_DisplayScene( currentCamera );
 
 		curNode = plGetNextLinkedListNode( curNode );
 	}
