@@ -301,13 +301,7 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 }
 
 void Map_Draw( void ) {
-	/* fetch the local player so we can perform vis testing */
-	Actor *player = Gam_GetPlayer();
-	if ( player == NULL ) {
-		return;
-	}
-
-	Gfx_EnableShaderProgram( SHADER_TEXTURE );
+	Gfx_EnableShaderProgram( SHADER_LIT );
 
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {

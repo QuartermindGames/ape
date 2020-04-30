@@ -20,8 +20,8 @@ GfxCamera *Gfx_GetCurrentCamera( void ) {
 	return currentCamera;
 }
 
-void Gfx_SetCurrentCamera( void ) {
-
+void Gfx_SetCurrentCamera( GfxCamera *camera ) {
+	currentCamera = camera;
 }
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
@@ -78,14 +78,6 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
-	Sys_MakeWindowActive( camera->viewportPtr );
-	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
-
-	plSetupCamera( camera->cameraPtr );
-
-	/* clear the buffers, needs to be done AFTER context change */
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
-
 	/* if we have a parent, follow them */
 	if( camera->parentActor != NULL ) {
 		switch( camera->perspective ) {
@@ -107,6 +99,13 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 			case VIEW_PERSPECTIVE_FRONT:break;
 		}
 	}
+
+	Sys_MakeWindowActive( camera->viewportPtr );
+	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
+
+	Gfx_EnableShaderProgram( SHADER_GENERIC );
+
+	plSetupCamera( camera->cameraPtr );
 
 	Gfx_DrawScene( camera );
 

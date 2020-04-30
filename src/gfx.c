@@ -568,7 +568,7 @@ void Gfx_DisplayMenu( void ) {
 	PLMatrix4 transform = plMatrix4Identity();
 
 #ifndef DEBUG_CAM
-	switch ( Gam_GetMenuState()) {
+	switch ( Game_GetMenuState()) {
 		default:
 		PrintError( "Invalid menu state!\n" );
 
@@ -601,9 +601,8 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 	//printf( "%s\n", plPrintVector3( &position, pl_int_var ) );
 }
 
-void Gfx_DrawCameras( void );
 void Gfx_DrawScene( GfxCamera *camera ) {
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
 
 #ifdef DEBUG_CAM
 	PLMatrix4 mat = plMatrix4Identity();

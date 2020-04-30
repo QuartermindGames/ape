@@ -55,6 +55,8 @@ SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 	window->sdlWindowPtr = sdlWindowPtr;
 	window->sdlGLContext = sdlGLContext;
 
+	Sys_MakeWindowActive( window );
+
 	return window;
 }
 
@@ -138,7 +140,7 @@ static void Sys_Keyboard( unsigned char key, int x, int y ) {
 	u_unused( x );
 	u_unused( y );
 
-	Gam_Keyboard( key );
+	Game_Keyboard( key );
 
 	key = Sys_TranslateKeyboardInput( key );
 	if ( key == YIN_INPUT_INVALID ) {

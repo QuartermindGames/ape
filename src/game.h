@@ -8,12 +8,13 @@ typedef enum MenuState {
 	MENU_STATE_START, /* draw start screen */
 	MENU_STATE_HUD,   /* hud/overlay mode */
 } MenuState;
-MenuState Gam_GetMenuState( void );
+MenuState Game_GetMenuState( void );
 
 typedef struct Actor Actor;
-Actor *Gam_GetPlayer( void );
 
-void Gam_Initialize( void );
-void Gam_Shutdown( void );
-void Gam_Tick( void );
-void Gam_Keyboard( unsigned char key );
+Actor *Game_GetPlayer( void );
+
+void Game_Initialize( void );
+void Game_Shutdown( void );
+void Game_Tick( void );
+void Game_Keyboard( unsigned char key );

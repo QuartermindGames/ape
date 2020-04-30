@@ -23,17 +23,17 @@ typedef enum GameState {
 } GameState;
 GameState gameState = GAME_STATE_PAUSED;
 
-MenuState Gam_GetMenuState( void ) {
+MenuState Game_GetMenuState( void ) {
 	return menuState;
 }
 
 static Actor *playerActor = NULL;
 
-Actor *Gam_GetPlayer( void ) {
+Actor *Game_GetPlayer( void ) {
 	return playerActor;
 }
 
-void Gam_Start( void ) {
+static void Game_Start( void ) {
 	menuState = MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
 
@@ -45,11 +45,7 @@ void Gam_Start( void ) {
 	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 500, 0, 1276 ), -90.0f );
 }
 
-void Gam_End( void ) {
-
-}
-
-void Gam_Tick( void ) {
+void Game_Tick( void ) {
 	if ( gameState == GAME_STATE_PAUSED ) {
 		return;
 	}
@@ -57,13 +53,13 @@ void Gam_Tick( void ) {
 	Act_TickActors();
 }
 
-void Gam_Keyboard( unsigned char key ) {
-#if 0
+void Game_Keyboard( unsigned char key ) {
+#if 1
 	if ( inputTarget == INPUT_TARGET_MENU ) {
 		switch( menuState ) {
 			case MENU_STATE_START:
 				/* if any key was hit here, just switch to the game */
-				Gam_Start();
+				Game_Start();
 				gameState = GAME_STATE_ACTIVE;
 				break;
 			default:
@@ -74,23 +70,38 @@ void Gam_Keyboard( unsigned char key ) {
 #endif
 }
 
-void Gam_Initialize( void ) {
+void Game_Initialize( void ) {
 	/* initialize core services */
 	Gfx_Initialize();
 	Act_Initialize();
 }
 
-void Game_Display( void ) {}
+void Gfx_DisplayMenu();
+void Game_Display( void ) {
+	if ( playerActor == NULL ) {
+		return;
+	}
 
-void Gam_Shutdown( void ) {
+	GfxCamera *playerCamera = Player_GetCamera( playerActor );
+	if ( playerCamera == NULL ) {
+		return;
+	}
+
+	Gfx_DrawPerspective( playerCamera );
+	Gfx_DisplayMenu();
+
+	Sys_SwapWindow( playerCamera->viewportPtr );
+}
+
+void Game_Shutdown( void ) {
 	/* shutdown core services */
 	Act_Shutdown();
 	Gfx_Shutdown();
 }
 
 void Game_SetupInterface( EngineInterface *interface ) {
-	interface->Tick = Gam_Tick;
-	interface->Shutdown = Gam_Shutdown;
-	interface->Initialize = Gam_Initialize;
+	interface->Tick = Game_Tick;
+	interface->Shutdown = Game_Shutdown;
+	interface->Initialize = Game_Initialize;
 	interface->Display = Game_Display;
 }

@@ -28,6 +28,15 @@ typedef struct APlayer {
 	GfxCamera *eyeCamera;
 } APlayer;
 
+GfxCamera *Player_GetCamera( Actor *self ) {
+	APlayer *playerData = Act_GetUserData( self );
+	if ( playerData == NULL ) {
+		return NULL;
+	}
+
+	return playerData->eyeCamera;
+}
+
 static void Player_CalculateViewFrustum( Actor *self ) {
 	APlayer *playerData = Act_GetUserData( self );
 
@@ -79,11 +88,7 @@ void Player_Spawn( Actor *self ) {
 	Act_SetUserData( self, playerData );
 
 	if ( numPlayers == 0 ) { /* local player */
-		playerData->eyeCamera = Gfx_CreateCamera(
-			VIEW_PERSPECTIVE_EYE,
-			Act_GetPosition( self ),
-			PLVector3( 0, Act_GetAngle( self ), 0 ),
-			Sys_GetMainWindow() );
+		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ), Sys_GetMainWindow() );
 		playerData->eyeCamera->parentActor = self;
 	}
 

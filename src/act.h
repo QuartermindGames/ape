@@ -44,4 +44,5 @@ PLVector3    Act_GetForward( const Actor *self );
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );
 
 /* player functions */
+struct GfxCamera *Player_GetCamera( Actor *self );
 bool Player_IsPointVisible( Actor *self, const PLVector2 *point );
