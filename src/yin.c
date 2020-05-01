@@ -289,25 +289,13 @@ _Noreturn int Sys_Init( int argc, char **argv ) {
 	}
 }
 
-#if defined( _WIN32 )
+#if 1
 
 #include <Windows.h>
 #include <shellapi.h>
 
-int WinMain(
-	HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR     lpCmdLine,
-	int       nShowCmd
-) {
-	int numArguments;
-	LPWSTR* strArgs = CommandLineToArgvW( (LPCWSTR) lpCmdLine, &numArguments );
-	if( strArgs == NULL ) {
-		printf( "Failed to get command line arguments from Win32 API!\n" );
-		return EXIT_FAILURE;
-	}
-
-	return Sys_Init(numArguments, (char **) strArgs);
+int WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
+	return Sys_Init( __argc, __argv );
 }
 
 #else
