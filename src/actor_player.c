@@ -100,18 +100,18 @@ void Player_Spawn( Actor *self ) {
 
 void Player_Tick( Actor *self, void *userData ) {
 	float nAngle = Act_GetAngle( self );
-	if ( Sys_GetInputState( YIN_INPUT_LEFT ) ) {
+	if ( Sys_GetButtonState( YIN_INPUT_LEFT ) ) {
 		nAngle += PLAYER_TURN_SPEED;
-	} else if ( Sys_GetInputState( YIN_INPUT_RIGHT ) ) {
+	} else if ( Sys_GetButtonState( YIN_INPUT_RIGHT ) ) {
 		nAngle -= PLAYER_TURN_SPEED;
 	}
 	Act_SetAngle( self, nAngle );
 
 	static const float incAmount = 0.25f;
 	APlayer *playerData = ( APlayer * ) userData;
-	if ( Sys_GetInputState( YIN_INPUT_UP ) ) {
+	if ( Sys_GetButtonState( YIN_INPUT_UP ) ) {
 		playerData->forwardVelocity += incAmount;
-	} else if ( Sys_GetInputState( YIN_INPUT_DOWN ) ) {
+	} else if ( Sys_GetButtonState( YIN_INPUT_DOWN ) ) {
 		playerData->forwardVelocity -= incAmount;
 	} else if ( playerData->forwardVelocity != 0.0f ) {
 		playerData->forwardVelocity = playerData->forwardVelocity > 0 ? playerData->forwardVelocity - incAmount : playerData->forwardVelocity + incAmount;
@@ -121,7 +121,7 @@ void Player_Tick( Actor *self, void *userData ) {
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = Sys_GetInputState( YIN_INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity = Sys_GetButtonState( YIN_INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
 	PLVector3 curVelocity = Act_GetVelocity( self );

@@ -7,6 +7,7 @@
 #include "game.h"
 #include "act.h"
 #include "map.h"
+#include "image.h"
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
@@ -23,6 +24,7 @@ static PLTexture *fallbackTexture = NULL;
 static PLTexture *titlePicTexture = NULL;
 
 static PLTexture *numTextureTable[10];
+static PLTexture *defaultFont;
 
 static GfxAnimationFrame **wallTextures;
 static unsigned int      numWallTextures;
@@ -296,6 +298,28 @@ void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destin
 	}
 }
 
+PLTexture *Gfx_LoadTexture( const char *path ) {
+	PLImage *image = Image_LoadPackedImage( path );
+	if ( image == NULL ) {
+		PLTexture *texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_NEAREST );
+		if ( texture == NULL ) {
+			PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
+			return fallbackTexture;
+		}
+
+		return texture;
+	}
+
+	PLTexture *texture = plCreateTexture();
+	if ( !plUploadTextureImage( texture, image ) ) {
+		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
+		texture = fallbackTexture;
+	}
+	plDestroyImage( image );
+
+	return texture;
+}
+
 PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
 	PLFile *filePtr = plLoadPackageFile( globalWad, indexName );
 	if ( filePtr == NULL) {
@@ -538,6 +562,8 @@ void Gfx_Initialize( void ) {
 		PrintError( "Failed to create fallback texture!\n" );
 	}
 
+	defaultFont = Gfx_LoadTexture( "Engine:DefaultFont.gfx" );
+
 	/* and now, finally, load in the splash screen! */
 	titlePicTexture = Gfx_LoadLumpTexture( titlePal, "TITLEPIC" );
 
@@ -635,4 +661,36 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 
 	Map_Draw();
 	Act_DrawActors();
+}
+
+/********************************************/
+/* Font Render */
+/********************************************/
+
+void Gfx_DrawCharacter( PLTexture *baseTexture, char character, float x, float y, float scale ) {
+	if ( baseTexture == NULL) {
+		baseTexture = defaultFont;
+	}
+
+	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+	plLoadIdentityMatrix();
+
+	plScaleMatrix( PLVector3( scale, scale, scale ) );
+
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, 8, 8, baseTexture );
+
+	plPopMatrix();
+}
+
+void Gfx_DrawString( PLTexture *baseTexture, const char *string, float x, float y, float scale ) {
+	if ( baseTexture == NULL ) {
+		baseTexture = defaultFont;
+	}
+
+	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
+
+
 }

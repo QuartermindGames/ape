@@ -60,3 +60,8 @@ void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destin
 PLTexture *Gfx_GetWallTexture( unsigned int index );
 PLTexture *Gfx_GetFloorTexture( unsigned int index );
 PLTexture *Gfx_GetFallbackTexture( void );
+
+const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective );
+
+void Gfx_DrawCharacter( PLTexture *baseTexture, char character, float x, float y, float scale );
+void Gfx_DrawString( PLTexture *baseTexture, const char *string, float x, float y, float scale );

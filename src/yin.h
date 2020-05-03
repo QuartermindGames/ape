@@ -90,7 +90,9 @@ void Sys_DestroyWindow( SysWindow *windowPtr );
 void Sys_MakeWindowActive( SysWindow *windowPtr );
 void Sys_SwapWindow( SysWindow *windowPtr );
 
-bool Sys_GetInputState( InputButton inputIndex );
+bool Sys_GetButtonState( InputButton inputIndex );
+bool Sys_GetKeyState( unsigned char keyIndex );
+
 LaunchMode Sys_GetLaunchMode( void );
 
 void *Sys_AllocateMemory( size_t num, size_t size );

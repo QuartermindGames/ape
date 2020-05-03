@@ -114,7 +114,7 @@ void Sys_SwapWindow( SysWindow *windowPtr ) {
 	SDL_GL_SwapWindow( mainWindow->sdlWindowPtr );
 }
 
-static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
+static unsigned char Sys_TranslateSDLButtonInput( unsigned int key ) {
 	switch( key ) {
 		default: return YIN_INPUT_INVALID;
 		case 'w': return YIN_INPUT_UP;
@@ -124,6 +124,8 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 		//case GLUT_KEY_SHIFT_L: return YIN_INPUT_LEFT_STICK;
 		//case 27: return YIN_INPUT_START; /* escape */
 		case ' ': return YIN_INPUT_A;
+
+		case 'z': return YIN_INPUT_LEFT_STICK;
 
 		case SDLK_UP:       return YIN_INPUT_UP;
 		case SDLK_DOWN:     return YIN_INPUT_DOWN;
@@ -139,39 +141,39 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 	return key;
 }
 
-static bool keyStates[ MAX_BUTTON_INPUTS ];
-bool Sys_GetInputState( InputButton inputIndex ) {
-	return keyStates[ inputIndex ];
-}
+static bool buttonStates[ MAX_BUTTON_INPUTS ];
+static bool keyStates[ 256 ];
+
+bool Sys_GetButtonState( InputButton inputIndex ) { return buttonStates[ inputIndex ]; }
+bool Sys_GetKeyState( unsigned char keyIndex ) { return keyStates[ keyIndex ]; }
 
 static void Sys_Keyboard( unsigned char key, int x, int y ) {
 	u_unused( x );
 	u_unused( y );
 
-	Game_Keyboard( key );
+	keyStates[ key ] = true;
 
-	key = Sys_TranslateKeyboardInput( key );
-	if ( key == YIN_INPUT_INVALID ) {
+	/* see if we can translate it to a button */
+	unsigned char button = Sys_TranslateSDLButtonInput( key );
+	if ( button == YIN_INPUT_INVALID ) {
 		return;
 	}
 
-	keyStates[ key ] = true;
+	buttonStates[ button ] = true;
 }
 
 static void Sys_KeyboardUp( unsigned char key, int x, int y ) {
 	u_unused( x );
 	u_unused( y );
 
-	key = Sys_TranslateKeyboardInput( key );
-	if ( key == YIN_INPUT_INVALID ) {
+	keyStates[ key ] = false;
+
+	unsigned char button = Sys_TranslateSDLButtonInput( key );
+	if ( button == YIN_INPUT_INVALID ) {
 		return;
 	}
 
-	keyStates[ key ] = false;
-}
-
-static void Sys_Idle( void ) {
-	Sys_Display();
+	buttonStates[ button ] = false;
 }
 
 static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
@@ -299,7 +301,7 @@ void Sys_Init( int argc, char **argv ) {
 	}
 }
 
-#if 1
+#if defined( WIN32 )
 
 #include <Windows.h>
 
