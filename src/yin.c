@@ -2,6 +2,9 @@
  * Project Yin
  * */
 
+#if defined( _WIN32 )
+#   define SDL_MAIN_HANDLED
+#endif
 #include <SDL2/SDL.h>
 
 #include "yin.h"
@@ -132,6 +135,8 @@ static unsigned char Sys_TranslateKeyboardInput( unsigned int key ) {
 			Sys_Close();
 			break;
 	}
+
+	return key;
 }
 
 static bool keyStates[ MAX_BUTTON_INPUTS ];
@@ -187,7 +192,12 @@ unsigned int Sys_GetNumTicks( void ) {
 	return numTicks;
 }
 
-_Noreturn int Sys_Init( int argc, char **argv ) {
+#if defined( _MSC_VER )
+__declspec(noreturn)
+#else
+_Noreturn
+#endif
+void Sys_Init( int argc, char **argv ) {
 	pl_calloc = Sys_AllocateMemory;
 	pl_malloc = Sys_malloc;
 
@@ -292,16 +302,17 @@ _Noreturn int Sys_Init( int argc, char **argv ) {
 #if 1
 
 #include <Windows.h>
-#include <shellapi.h>
 
-int WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
-	return Sys_Init( __argc, __argv );
+int __stdcall WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
+	Sys_Init( __argc, __argv );
+	return EXIT_SUCCESS;
 }
 
 #else
 
 int main( int argc, char **argv ) {
-	return Sys_Init( argc, argv );
+	Sys_Init( argc, argv );
+	return EXIT_SUCCESS;
 }
 
 #endif

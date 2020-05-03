@@ -4,6 +4,10 @@ cmake_minimum_required( VERSION 3.5.1 )
 
 project( Yin )
 
+include( DetermineTargetArchitecture.cmake )
+
+message( "Configuring Yin..." )
+
 set( CMAKE_C_STANDARD 11 )
 
 # Set all of our output directories.
@@ -19,9 +23,15 @@ file( GLOB YIN_SOURCE_FILES
 
 add_executable( Yin WIN32 ${YIN_SOURCE_FILES} )
 
+determine_target_architecture( Yin )
+
 if ( NOT UNIX )
     target_include_directories( Yin PRIVATE src/3rdparty/sdl2/include/ )
-    target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/ )
+    if ( ${ARCH} MATCHES x86_64 )
+        target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/x64/ )
+    else()
+        target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/x86/ )
+    endif()
 endif()
 
 target_link_libraries( Yin platform SDL2 )
