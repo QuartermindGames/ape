@@ -212,7 +212,7 @@ void Sys_Init( int argc, char **argv ) {
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	PrintMsg( "Initializing Yin Engine...\n" );
+	PrintMsg( "YIN ENGINE\nCopyright (C) 2020 OldTimes Software\n\n" );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
