@@ -1,13 +1,12 @@
-
-#if 0
+/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
+ * Project Yin
+ * */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
 
-#include "SDL.h"
-#include "SDL_main.h"
+#include <SDL2/SDL.h>
 
+#include "yin.h"
 #include "micromod.h"
 
 /*
@@ -104,19 +103,16 @@ static void termination_handler( int signum ) {
 }
 
 static long read_file( char *filename, void *buffer, long length ) {
-	FILE *file;
 	long count;
 	count = -1;
-	file = fopen( filename, "rb" );
+	PLFile *file = plOpenFile( filename, true );
 	if( file != NULL ) {
-		count = fread( buffer, 1, length, file );
-		if( count < length && !feof( file ) ) {
+		count = plReadFile( file, buffer, 1, length );
+		if( count < length ) {
 			fprintf( stderr, "Unable to read file '%s'.\n", filename );
 			count = -1;
 		}
-		if( fclose( file ) != 0 ) {
-			fprintf( stderr, "Unable to close file '%s'.\n", filename );
-		}
+		plCloseFile( file );
 	}
 	return count;
 }
@@ -196,6 +192,7 @@ static long play_module( signed char *module ) {
 	return result;
 }
 
+#if 0
 int main( int argc, char **argv ) {
 	int arg, result;
 	long count, length;
@@ -237,5 +234,4 @@ int main( int argc, char **argv ) {
 	}
 	return result;
 }
-
 #endif
