@@ -424,10 +424,10 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 	int x = -frame->leftOffset;
 	int y = -frame->topOffset;
 #else /* for the sake of time, let's botch it! */
-	int w = frame->texture->w * 1.7;
-	int h = frame->texture->h * 1.7;
-	int x = -( w / 2 );
-	int y = -h;
+	float w = frame->texture->w * 1.7f;
+	float h = frame->texture->h * 1.7f;
+	float x = -( w / 2.0f );
+	float y = -h;
 #endif
 
 	plDrawTexturedRectangle( &transform, x, y, w, h, frame->texture );
@@ -478,20 +478,15 @@ void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, u
 #endif
 }
 
-void Gfx_DrawDigit( int x, int y, int digit ) {
+void Gfx_DrawDigit( float x, float y, int digit ) {
 	if ( digit < 0 ) { digit = 0; }
 	else if ( digit > 9 ) { digit = 9; }
 
 	PLMatrix4 transform = plMatrix4Identity();
-	plDrawTexturedRectangle(
-			&transform,
-			x, y,
-			( signed ) numTextureTable[ digit ]->w,
-			( signed ) numTextureTable[ digit ]->h,
-			numTextureTable[ digit ] );
+	plDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
-void Gfx_DrawNumber( int x, int y, unsigned int number ) {
+void Gfx_DrawNumber( float x, float y, unsigned int number ) {
 	/* restrict it to 999 for sanity */
 	if ( number > 999 ) { number = 999; }
 

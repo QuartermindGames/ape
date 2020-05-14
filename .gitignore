@@ -53,3 +53,6 @@ dkms.conf
 /cmake-build-debug/
 /bin/pkgman
 /bin/Yin
+
+# Generated Files
+*.gfx

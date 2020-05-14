@@ -32,6 +32,7 @@ typedef struct ModeInterface {
 	void ( *Initialize ) ( void );
 	void ( *Tick ) ( void );
 	void ( *Display ) ( void );
+	void ( *Keyboard ) ( unsigned char key, bool isDown );
 	void ( *Shutdown ) ( void );
 } EngineInterface;
 

@@ -2,16 +2,11 @@
  * Project Yin
  * */
 
-#if defined( _WIN32 )
-#   define SDL_MAIN_HANDLED
-#endif
 #include <SDL2/SDL.h>
 
 #include "yin.h"
 #include "gfx.h"
 #include "act.h"
-#include "game.h"
-#include "editor.h"
 #include "pkg_loader.h"
 
 PLPackage *globalWad = NULL;
@@ -212,7 +207,7 @@ void Sys_Init( int argc, char **argv ) {
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	PrintMsg( "YIN ENGINE\nCopyright (C) 2020 OldTimes Software\n\n" );
+	PrintMsg( "Yin Engine, Copyright (C) 2020 OldTimes Software\n" );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
@@ -301,20 +296,7 @@ void Sys_Init( int argc, char **argv ) {
 	}
 }
 
-#if defined( WIN32 )
-
-#include <Windows.h>
-
-int __stdcall WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
-	Sys_Init( __argc, __argv );
-	return EXIT_SUCCESS;
-}
-
-#else
-
 int main( int argc, char **argv ) {
 	Sys_Init( argc, argv );
 	return EXIT_SUCCESS;
 }
-
-#endif

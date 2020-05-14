@@ -8,14 +8,9 @@ typedef struct MapVertex {
 	int32_t x, y, z;
 } MapVertex;
 
-typedef struct MapPolygon {
+typedef struct MapFace {
 	PLPolygon   	*polygon;
 	PLCollisionAABB	bounds;
-	PLTexture   	*texture;
-	PLVector2   	textureOffset;
-	PLVector2   	textureScale;
-	float       	textureRotation;
-	PLVector2   	normal;
 	uint8_t     	flags;
 } MapFace;
 
@@ -26,6 +21,7 @@ typedef struct MapSector {
 	int          min[ 2 ]; /* boundary minimum */
 } MapSector;
 
+void Map_ClearData( void );
 void Map_Load( const char *path );
 void Map_Draw( void );
 

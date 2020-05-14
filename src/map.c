@@ -13,10 +13,13 @@
 
 static struct {
 	MapSector       *sectors;
+	unsigned int	maxSectors;
 	unsigned int    numSectors;
 	MapVertex       *vertices;
+	unsigned int	maxVertices;
 	unsigned int    numVertices;
 	MapFace         *faces;
+	unsigned int	maxFaces;
 	unsigned int    numFaces;
 
 	/* textures */
@@ -24,12 +27,7 @@ static struct {
 	unsigned int        numTexturePackages;
 	PLTexture           **textures;
 	unsigned int        numTextures;
-} mapData = {
-		.vertices       = NULL,
-		.numVertices    = 0,
-		.faces          = NULL,
-		.numFaces       = 0,
-};
+} mapData;
 
 static PLMesh *renderMesh = NULL;
 
@@ -105,12 +103,6 @@ static void Map_LoadVertices( PLPackage *mapPkg ) {
 	}
 }
 
-static void Map_GenerateFaceTextureCoordinates( MapFace *face ) {
-	unsigned int numPolyVertices;
-	PLVertex *vertices = plGetPolygonVertices( face->polygon, &numPolyVertices );
-	plGenerateTextureCoordinates( vertices, numPolyVertices, face->textureOffset, face->textureScale );
-}
-
 static void Map_LoadFaces( PLPackage *mapPkg ) {
 	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Polygons" );
 	if ( filePtr == NULL ) {
@@ -129,18 +121,21 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 
 		curFace->flags = plReadInt8( filePtr, &status );
 
+		PLTexture *texturePtr;
 		uint32_t textureId = plReadInt32( filePtr, false, &status );
 		if ( textureId >= mapData.numTextures ) {
 			PrintWarn( "Invalid texture id %d for polygon %d!\n", textureId, i );
-			curFace->texture = Gfx_GetFallbackTexture();
+			texturePtr = Gfx_GetFallbackTexture();
 		} else {
-			curFace->texture = mapData.textures[ textureId ];
+			texturePtr = mapData.textures[ textureId ];
 		}
 
-		curFace->textureOffset.x = ( float ) plReadInt32( filePtr, false, &status );
-		curFace->textureOffset.y = ( float ) plReadInt32( filePtr, false, &status );
-		curFace->textureScale.x = ( float ) plReadInt32( filePtr, false, &status );
-		curFace->textureScale.y = ( float ) plReadInt32( filePtr, false, &status );
+		PLVector2 textureOffset;
+		textureOffset.x = ( float ) plReadInt32( filePtr, false, &status );
+		textureOffset.y = ( float ) plReadInt32( filePtr, false, &status );
+		PLVector2 textureScale;
+		textureScale.x = ( float ) plReadInt32( filePtr, false, &status );
+		textureScale.y = ( float ) plReadInt32( filePtr, false, &status );
 
 		if ( !status ) {
 			PrintError( "Failed to read in face %d!\nPL: %s\n", i, plGetError() );
@@ -148,7 +143,7 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 
 		uint8_t numVertices = plReadInt8( filePtr, &status );
 
-		curFace->polygon = plCreatePolygon();
+		curFace->polygon = plCreatePolygon( texturePtr, textureOffset, textureScale, 0.0f );
 		if ( curFace->polygon == NULL ) {
 			PrintError( "Failed to create polygon!\n" );
 		}
@@ -174,28 +169,14 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 			plAddPolygonVertex( curFace->polygon, &vertex );
 		}
 
-		/* now generate the correct texture coords */
-
 		unsigned int numPolyVertices;
 		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numPolyVertices );
 		if ( numPolyVertices != numVertices ) {
 			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
 
-		unsigned int numTriangles;
-		unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
-		if ( numTriangles == 0 ) {
-			PrintError( "Invalid polygon plain!\n" );
-		}
-
-		plGenerateVertexNormals( vertices, numPolyVertices, indices, numTriangles, true ); /* required for correct coords */
-
 		/* generate the bounds for cheap culling */
 		curFace->bounds = plGenerateAABB( vertices, numPolyVertices );
-
-		free( indices );
-
-		Map_GenerateFaceTextureCoordinates( curFace );
 	}
 }
 
@@ -251,6 +232,13 @@ void Map_LoadSectors( PLPackage *wad ) {
 		}
 	}
 #endif
+}
+
+/**
+ * Clears out the current map data.
+ */
+void Map_ClearData( void ) {
+	memset( &mapData, 0, sizeof( mapData ) );
 }
 
 void Map_Load( const char *path ) {
@@ -314,14 +302,7 @@ void Map_Draw( void ) {
 
 		plClearMesh( renderMesh );
 
-		plSetTexture( curFace->texture, 0 );
-
-#if 1 /* test coord generation */
-		curFace->textureScale.x = 8.0f;
-		curFace->textureScale.y = 8.0f;
-
-		Map_GenerateFaceTextureCoordinates( curFace );
-#endif
+		plSetTexture( plGetPolygonTexture( curFace->polygon ), 0 );
 
 		unsigned int numVertices;
 		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );

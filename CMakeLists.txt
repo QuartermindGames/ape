@@ -21,7 +21,7 @@ file( GLOB YIN_SOURCE_FILES
         src/*.c
         src/*.h )
 
-add_executable( Yin WIN32 ${YIN_SOURCE_FILES} )
+add_executable( Yin ${YIN_SOURCE_FILES} )
 
 determine_target_architecture( Yin )
 
@@ -35,4 +35,4 @@ if ( NOT UNIX )
     #endif()
 endif()
 
-target_link_libraries( Yin platform SDL2 )
+target_link_libraries( Yin platform SDL2 SDL2main )

@@ -31,12 +31,12 @@ void Editor_Initialize( void ) {
 	PrintMsg( "Mounting textures\n" );
 	plScanDirectory( "Textures/", "pkg", Editor_MountTexturePackageCallback, false, NULL );
 
-	const char *mapPath = plGetCommandLineArgumentValue( "-map" );
-	if ( mapPath == NULL ) {
-		PrintError( "No map specified on command line!\n" );
-	}
+	Map_ClearData();
 
-	Map_Load( mapPath );
+	const char *mapPath = plGetCommandLineArgumentValue( "-map" );
+	if ( mapPath != NULL ) {
+		Map_Load( mapPath );
+	}
 
 	/* setup each of the editor cameras */
 	SysWindow *viewport = Sys_GetMainWindow(); /* for now all cameras just attach to the main viewport */

@@ -47,27 +47,16 @@ static void Game_Start( void ) {
 
 void Game_Tick( void ) {
 	if ( gameState == GAME_STATE_PAUSED ) {
+		if( Sys_GetKeyState( 'z' ) ) {
+			/* if any key was hit here, just switch to the game */
+			Game_Start();
+			gameState = GAME_STATE_ACTIVE;
+		}
+
 		return;
 	}
 
 	Act_TickActors();
-}
-
-void Game_Keyboard( unsigned char key ) {
-#if 1
-	if ( inputTarget == INPUT_TARGET_MENU ) {
-		switch( menuState ) {
-			case MENU_STATE_START:
-				/* if any key was hit here, just switch to the game */
-				Game_Start();
-				gameState = GAME_STATE_ACTIVE;
-				break;
-			default:
-			PrintError( "Unhandled menu state, %d!\n", menuState );
-		}
-		return;
-	}
-#endif
 }
 
 void Game_Display( void ) {
@@ -102,4 +91,5 @@ void Game_SetupInterface( EngineInterface *interface ) {
 	interface->Shutdown = Game_Shutdown;
 	interface->Initialize = Game_Initialize;
 	interface->Display = Game_Display;
+	//interface->Keyboard = Game_Keyboard;
 }
