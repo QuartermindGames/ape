@@ -11,29 +11,7 @@
 
 PLPackage *globalWad = NULL;
 
-typedef struct SysWindow {
-	SDL_Window      *sdlWindowPtr;
-	SDL_GLContext   *sdlGLContext;
-} SysWindow;
-static SysWindow *mainWindow = NULL;
-
-static SDL_TimerID timer = 0;
-static unsigned int numTicks = 0;
-
 static EngineInterface engineInterface;
-static LaunchMode launchMode = LAUNCH_MODE_DEFAULT;
-
-LaunchMode Sys_GetLaunchMode( void ) {
-	return launchMode;
-}
-
-SysWindow *Sys_GetMainWindow( void ) {
-	return mainWindow;
-}
-
-void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
-	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
-}
 
 SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 	SDL_Window *sdlWindowPtr = SDL_CreateWindow( title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );

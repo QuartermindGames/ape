@@ -14,25 +14,23 @@ set( CMAKE_C_STANDARD 11 )
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
 
-add_subdirectory( src/3rdparty/platform/platform )
+include_directories( src/ )
+
+add_subdirectory( src/3rdparty/platform/platform/ )
+add_subdirectory( src/launcher_sdl2/ )
 add_subdirectory( tools/pkgman/ )
 
 file( GLOB YIN_SOURCE_FILES
-        src/*.c
-        src/*.h )
+        src/engine/*.c
+        src/engine/*.h )
 
-add_executable( Yin ${YIN_SOURCE_FILES} )
+add_executable( Yin WIN32 ${YIN_SOURCE_FILES} )
 
 determine_target_architecture( Yin )
 
 if ( NOT UNIX )
     message( "Not Unix, assuming Win32 - " ${ARCH} )
-    target_include_directories( Yin PRIVATE src/3rdparty/sdl2/include/ )
-    #if ( ${ARCH} MATCHES x86_64 )
-        target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/x64/ )
-    #else()
-    #    target_link_directories( Yin PRIVATE src/3rdparty/sdl2/lib/x86/ )
-    #endif()
+    target_link_libraries( Yin mingw32 )
 endif()
 
-target_link_libraries( Yin platform SDL2 SDL2main )
+target_link_libraries( Yin platform )
