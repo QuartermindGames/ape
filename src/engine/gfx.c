@@ -108,7 +108,7 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 
 	/* read in the column offsets */
 
-	int16_t *columnOffsets = Sys_AllocateMemory( w, sizeof( int16_t ) );
+	int16_t *columnOffsets = g_system.calloc( w, sizeof( int16_t ) );
 	for ( unsigned int i = 0; i < w; ++i ) {
 		columnOffsets[ i ] = plReadInt16( filePtr, false, &status );
 	}
@@ -118,7 +118,7 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 		PrintError( "Failed to read in column offsets for picture %d!\nPL: %s\n", index, plGetError() );
 	}
 
-	PLColour *colourBuffer = Sys_AllocateMemory( (size_t) w * h, sizeof( PLColour ) );
+	PLColour *colourBuffer = g_system.calloc( (size_t) w * h, sizeof( PLColour ) );
 	for ( unsigned int i = 0; i < w; ++i ) {
 		plFileSeek( filePtr, columnOffsets[ i ], PL_SEEK_SET );
 
@@ -155,7 +155,7 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 	plCloseFile( filePtr );
 
 	/* setup the animation frame we're going to use */
-	GfxAnimationFrame *frame = Sys_AllocateMemory( 1, sizeof( GfxAnimationFrame ) );
+	GfxAnimationFrame *frame = g_system.calloc( 1, sizeof( GfxAnimationFrame ) );
 	frame->texture    = Gfx_GenerateTextureFromData(( uint8_t * ) colourBuffer, w, h, 4, false );
 	frame->leftOffset = leftOffset;
 	frame->topOffset  = topOffset;
@@ -190,7 +190,7 @@ void Gfx_LoadWallTextures( void ) {
 	}
 
 	numWallTextures = posEnd - posStart;
-	wallTextures = Sys_AllocateMemory( numWallTextures, sizeof( PLTexture* ) );
+	wallTextures = g_system.calloc( numWallTextures, sizeof( PLTexture* ) );
 
 	for ( unsigned int i = 0; i < numWallTextures; ++i ) {
 		unsigned int fileIndex = posStart + i;
@@ -218,7 +218,7 @@ PLTexture *Gfx_LoadFlatByIndex( const RGBMap *palette, unsigned int index ) {
 		return fallbackTexture;
 	}
 
-	PLColour *colourBuffer = Sys_AllocateMemory( flatSize, sizeof( PLColour ) );
+	PLColour *colourBuffer = g_system.calloc( flatSize, sizeof( PLColour ) );
 	for ( unsigned int i = 0; i < flatSize; ++i ) {
 		bool status;
 		uint8_t pixel = plReadInt8( filePtr, &status );
@@ -263,7 +263,7 @@ void Gfx_LoadFloorTextures( void ) {
 	}
 
 	numFloorTextures = posEnd - posStart;
-	floorTextures = Sys_AllocateMemory( numFloorTextures, sizeof( PLTexture* ) );
+	floorTextures = g_system.calloc( numFloorTextures, sizeof( PLTexture* ) );
 
 	for ( unsigned int i = 0; i < numFloorTextures; ++i ) {
 		unsigned int fileIndex = posStart + i;
@@ -347,7 +347,7 @@ PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
 	/* seems to be totally unused... */
 	plFileSeek( filePtr, 4, PL_SEEK_CUR );
 
-	uint8_t *imageBuffer = Sys_AllocateMemory( lumpDataSize, sizeof( uint8_t ) );
+	uint8_t *imageBuffer = g_system.calloc( lumpDataSize, sizeof( uint8_t ) );
 	if ( plReadFile( filePtr, imageBuffer, 1, lumpDataSize ) != lumpDataSize ) {
 		PrintError( "Failed to read in lump data for \"%s\"!\nPL: %s\n", indexName, plGetError());
 	}
@@ -355,7 +355,7 @@ PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
 	plCloseFile( filePtr );
 
 	/* now convert using the palette (I'm lazy, so we'll just convert to rgba) */
-	PLColour *colourBuffer = Sys_AllocateMemory( lumpDataSize, sizeof( PLColour ) );
+	PLColour *colourBuffer = g_system.calloc( lumpDataSize, sizeof( PLColour ) );
 	for ( unsigned int i = 0; i < lumpDataSize; ++i ) {
 		colourBuffer[ i ].r = palette[ imageBuffer[ i ] ].r;
 		colourBuffer[ i ].g = palette[ imageBuffer[ i ] ].g;
@@ -531,8 +531,8 @@ void Gfx_Initialize( void ) {
 	auxCamera->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
-	auxCamera->viewport.w = YIN_DISPLAY_WIDTH;
-	auxCamera->viewport.h = YIN_DISPLAY_HEIGHT;
+	auxCamera->viewport.w = DISPLAY_WIDTH;
+	auxCamera->viewport.h = DISPLAY_HEIGHT;
 
 	Gfx_InitializeCameras();
 
@@ -603,7 +603,7 @@ void Gfx_DrawMenu( void ) {
 
 		case MENU_STATE_START:
 			Gfx_EnableShaderProgram( SHADER_TEXTURE );
-			plDrawTexturedRectangle( &transform, 0, 0, YIN_DISPLAY_WIDTH, YIN_DISPLAY_HEIGHT, titlePicTexture );
+			plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
 			break;
 
 		case MENU_STATE_HUD:
@@ -650,9 +650,11 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 255, 0, 0, 255 ) );
 #endif
 
-	if ( ( Sys_GetLaunchMode() == LAUNCH_MODE_DEFAULT ) && ( Game_GetMenuState() == MENU_STATE_START ) ) {
+#if 0
+	if ( ( g_system.GetLaunchMode() == LAUNCH_MODE_DEFAULT ) && ( Game_GetMenuState() == MENU_STATE_START ) ) {
 		return;
 	}
+#endif
 
 	Map_Draw();
 	Act_DrawActors();

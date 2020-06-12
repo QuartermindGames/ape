@@ -26,7 +26,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 		PrintError( "Invalid viewport!\n" );
 	}
 
-	GfxCamera *gfxCamera = Sys_AllocateMemory( 1, sizeof( GfxCamera ) );
+	GfxCamera *gfxCamera = g_system.calloc( 1, sizeof( GfxCamera ) );
 
 	gfxCamera->cameraPtr = plCreateCamera();
 	if( gfxCamera->cameraPtr == NULL ) {
@@ -34,7 +34,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 	}
 
 	gfxCamera->viewportPtr = viewport;
-	Sys_GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->cameraPtr->viewport.w, &gfxCamera->cameraPtr->viewport.h );
+	g_system.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->cameraPtr->viewport.w, &gfxCamera->cameraPtr->viewport.h );
 
 	gfxCamera->perspective = perspective;
 	switch( gfxCamera->perspective ) {
@@ -75,7 +75,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
-	Sys_GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
+	g_system.GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
 
 	/* if we have a parent, follow them */
 	if( camera->parentActor != NULL ) {

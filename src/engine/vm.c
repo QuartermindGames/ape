@@ -118,7 +118,7 @@ VMProgram *VM_LoadProgram( const char *path ) {
 	/* read in all of the instructions */
 	bool status;
 	unsigned int numInstructions = plReadInt32( filePtr, false, &status );
-	VMInstruction *instructions = Sys_AllocateMemory( numInstructions, sizeof( VMInstruction ) );
+	VMInstruction *instructions = g_system.calloc( numInstructions, sizeof( VMInstruction ) );
 	for ( unsigned int i = 0; i < numInstructions; ++i ) {
 		instructions[ i ].opCode = plReadInt8( filePtr, &status );
 
@@ -130,7 +130,7 @@ VMProgram *VM_LoadProgram( const char *path ) {
 
 	/* now we can actually setup the VM */
 
-	VMProgram *program = Sys_AllocateMemory( 1, sizeof( VMProgram ) );
+	VMProgram *program = g_system.calloc( 1, sizeof( VMProgram ) );
 	program->clockSpeed = 0;
 	program->numInstructions = numInstructions;
 	program->instructions = instructions;

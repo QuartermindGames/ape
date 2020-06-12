@@ -40,7 +40,7 @@ static void Map_LoadTextures( PLPackage *mapPkg ) {
 
 	/* mount all of the packages we're going to use */
 	mapData.numTexturePackages = plArrayElements( texturePackagePaths );
-	PLFileSystemMount **texturePackages = Sys_AllocateMemory( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
+	PLFileSystemMount **texturePackages = g_system.calloc( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
 	for ( unsigned int i = 0; i < mapData.numTexturePackages; ++i ) {
 		texturePackages[ i ] = plMountLocation( texturePackagePaths[ i ] );
 	}
@@ -57,7 +57,7 @@ static void Map_LoadTextures( PLPackage *mapPkg ) {
 	};
 
 	mapData.numTextures = plArrayElements( textureNames );
-	mapData.textures = Sys_AllocateMemory( mapData.numTextures, sizeof( PLTexture* ) );
+	mapData.textures = g_system.calloc( mapData.numTextures, sizeof( PLTexture* ) );
 
 	for ( unsigned int i = 0; i < mapData.numTextures; ++i ) {
 		PLImage *image = Image_LoadPackedImage( textureNames[ i ] );
@@ -91,7 +91,7 @@ static void Map_LoadVertices( PLPackage *mapPkg ) {
 		PrintError( "Failed to fetch number of vertices in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
 	}
 
-	mapData.vertices = Sys_AllocateMemory( mapData.numVertices, sizeof( MapVertex ) );
+	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( MapVertex ) );
 	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
 		mapData.vertices[ i ].x = plReadInt32( filePtr, false, &status );
 		mapData.vertices[ i ].y = plReadInt32( filePtr, false, &status );
@@ -115,7 +115,7 @@ static void Map_LoadFaces( PLPackage *mapPkg ) {
 		PrintError( "Failed to fetch number of primitives!\nPL: %s\n", plGetError() );
 	}
 
-	mapData.faces = Sys_AllocateMemory( mapData.numFaces, sizeof( MapFace ) );
+	mapData.faces = g_system.calloc( mapData.numFaces, sizeof( MapFace ) );
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
 

@@ -84,11 +84,11 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 static unsigned int numPlayers = 0;
 
 void Player_Spawn( Actor *self ) {
-	APlayer* playerData = Sys_AllocateMemory( 1, sizeof( APlayer ) );
+	APlayer* playerData = g_system.calloc( 1, sizeof( APlayer ) );
 	Act_SetUserData( self, playerData );
 
 	if ( numPlayers == 0 ) { /* local player */
-		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ), Sys_GetMainWindow() );
+		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ), Engine_GetMainWindow() );
 		playerData->eyeCamera->parentActor = self;
 	}
 
@@ -100,18 +100,18 @@ void Player_Spawn( Actor *self ) {
 
 void Player_Tick( Actor *self, void *userData ) {
 	float nAngle = Act_GetAngle( self );
-	if ( Sys_GetButtonState( YIN_INPUT_LEFT ) ) {
+	if ( g_system.GetButtonState( INPUT_LEFT ) ) {
 		nAngle += PLAYER_TURN_SPEED;
-	} else if ( Sys_GetButtonState( YIN_INPUT_RIGHT ) ) {
+	} else if ( g_system.GetButtonState( INPUT_RIGHT ) ) {
 		nAngle -= PLAYER_TURN_SPEED;
 	}
 	Act_SetAngle( self, nAngle );
 
 	static const float incAmount = 0.25f;
 	APlayer *playerData = ( APlayer * ) userData;
-	if ( Sys_GetButtonState( YIN_INPUT_UP ) ) {
+	if ( g_system.GetButtonState( INPUT_UP ) ) {
 		playerData->forwardVelocity += incAmount;
-	} else if ( Sys_GetButtonState( YIN_INPUT_DOWN ) ) {
+	} else if ( g_system.GetButtonState( INPUT_DOWN ) ) {
 		playerData->forwardVelocity -= incAmount;
 	} else if ( playerData->forwardVelocity != 0.0f ) {
 		playerData->forwardVelocity = playerData->forwardVelocity > 0 ? playerData->forwardVelocity - incAmount : playerData->forwardVelocity + incAmount;
@@ -121,7 +121,7 @@ void Player_Tick( Actor *self, void *userData ) {
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = Sys_GetButtonState( YIN_INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity = g_system.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
 	PLVector3 curVelocity = Act_GetVelocity( self );
@@ -132,7 +132,7 @@ void Player_Tick( Actor *self, void *userData ) {
 
 	/* apply view bob */
 	float velocityVector = plVector3Length( &curVelocity );
-	playerData->viewBob += ( sinf( Sys_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
+	playerData->viewBob += ( sinf( Engine_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
 	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET + playerData->viewBob );
 }
 

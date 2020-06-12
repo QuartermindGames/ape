@@ -2,6 +2,8 @@
  * Project Yin
  * */
 
+#if 0
+
 #include <stdio.h>
 
 #include <SDL2/SDL.h>
@@ -234,4 +236,6 @@ int main( int argc, char **argv ) {
 	}
 	return result;
 }
+#endif
+
 #endif

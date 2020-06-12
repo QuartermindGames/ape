@@ -67,7 +67,7 @@ typedef struct Actor {
 static PLLinkedList *actorList;
 
 Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle ) {
-	Actor *actor = Sys_AllocateMemory( 1, sizeof( Actor ) );
+	Actor *actor = g_system.calloc( 1, sizeof( Actor ) );
 	actor->node     = plInsertLinkedListNode( actorList, actor );
 	actor->setup    = actorSpawnSetup[ type ];
 	actor->area     = 0;

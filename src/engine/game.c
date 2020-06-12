@@ -47,7 +47,7 @@ static void Game_Start( void ) {
 
 void Game_Tick( void ) {
 	if ( gameState == GAME_STATE_PAUSED ) {
-		if( Sys_GetKeyState( 'z' ) ) {
+		if( g_system.GetKeyState( 'z' ) ) {
 			/* if any key was hit here, just switch to the game */
 			Game_Start();
 			gameState = GAME_STATE_ACTIVE;
@@ -60,8 +60,8 @@ void Game_Tick( void ) {
 }
 
 void Game_Display( void ) {
-	SysWindow *window = Sys_GetMainWindow();
-	Sys_MakeWindowActive( window );
+	SysWindow *window = g_system.GetMainWindow();
+	g_system.MakeWindowActive( window );
 
 	Gfx_SetupDefaultState();
 
@@ -79,17 +79,9 @@ void Game_Display( void ) {
 	Gfx_DrawPerspective( playerCamera );
 	Gfx_DrawMenu();
 
-	Sys_SwapWindow( window );
+	g_system.SwapWindow( window );
 }
 
 void Game_Initialize( void ) {}
 
 void Game_Shutdown( void ) {}
-
-void Game_SetupInterface( EngineInterface *interface ) {
-	interface->Tick = Game_Tick;
-	interface->Shutdown = Game_Shutdown;
-	interface->Initialize = Game_Initialize;
-	interface->Display = Game_Display;
-	//interface->Keyboard = Game_Keyboard;
-}

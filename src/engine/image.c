@@ -91,7 +91,7 @@ PLImage *Image_LoadPackedImage( const char *path ) {
 
 			/* now fetch the offsets */
 			uint16_t numBlockPixels = plReadInt16( filePtr, false, &status );
-			uint16_t *pixelOffsets = Sys_AllocateMemory( numBlockPixels, sizeof( uint16_t ) );
+			uint16_t *pixelOffsets = g_system.calloc( numBlockPixels, sizeof( uint16_t ) );
 			if ( plReadFile( filePtr, pixelOffsets, sizeof( uint16_t ), numBlockPixels ) != numBlockPixels ) {
 				PrintError( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, plGetError() );
 			}

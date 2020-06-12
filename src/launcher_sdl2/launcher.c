@@ -50,10 +50,6 @@ typedef struct SysWindow {
 	SDL_GLContext   *sdlGLContext;
 } SysWindow;
 
-SysWindow *Sys_GetMainWindow( void ) {
-	return NULL;
-}
-
 void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
 	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
 }
@@ -191,12 +187,6 @@ static void *Sys_malloc( size_t size ) {
  ****************************************/
 
 static SDL_TimerID timer = 0;
-static unsigned int numTicks = 0;
-
-unsigned int Sys_GetNumTicks( void ) {
-	return numTicks;
-}
-
 static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
 	SDL_UserEvent userEvent;
 	userEvent.type = SDL_USEREVENT;
@@ -234,7 +224,7 @@ int Sys_Init( int argc, char **argv ) {
 
 	printf( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "engine", true );
+	dllEnginePtr = plLoadLibrary( "libengine", true );
 	if ( dllEnginePtr == NULL ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
@@ -286,7 +276,6 @@ int Sys_Init( int argc, char **argv ) {
 			switch ( event.type ) {
 				case SDL_USEREVENT:
 					g_engine.Tick();
-					numTicks++;
 					break;
 				case SDL_KEYUP:
 					Sys_KeyboardUp( event.key.keysym.sym, 0, 0 );
