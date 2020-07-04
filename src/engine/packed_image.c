@@ -3,7 +3,7 @@
  * */
 
 #include "yin.h"
-#include "image.h"
+#include "packed_image.h"
 
 /* Loader Packed Image Format data */
 

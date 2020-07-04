@@ -61,7 +61,7 @@ typedef struct SystemInterface {
 extern SystemInterface g_system;
 
 typedef struct EngineInterface {
-	void ( *Initialize )( void );
+	bool ( *Initialize )( int argc, char **argv );
 	void ( *Tick )( void );
 	void ( *Display )( void );
 	void ( *Keyboard )( unsigned char key, bool isDown );

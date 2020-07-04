@@ -57,3 +57,4 @@ dkms.conf
 # Generated Files
 *.gfx
 /build
+/bin/log.txt

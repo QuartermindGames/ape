@@ -220,6 +220,9 @@ int Sys_Init( int argc, char **argv ) {
 	freopen_s( &dummyFilePtr, "CONOUT$", "w", stdout );
 #endif
 
+	/* stop buffering stdout! */
+	setvbuf( stdout, NULL, _IONBF, 0 );
+
 	/* setup the engine interface */
 
 	printf( "Setting up engine interface\n" );
@@ -268,7 +271,9 @@ int Sys_Init( int argc, char **argv ) {
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
 	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 
-	g_engine.Initialize();
+	if ( !g_engine.Initialize( argc, argv ) ) {
+		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
+	}
 
 	while( g_engine.IsRunning() ) {
 		SDL_Event event;
@@ -288,6 +293,8 @@ int Sys_Init( int argc, char **argv ) {
 
 		g_engine.Display();
 	}
+
+	g_engine.Shutdown();
 
 	return EXIT_SUCCESS;
 }

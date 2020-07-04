@@ -7,7 +7,7 @@
 #include "game.h"
 #include "act.h"
 #include "map.h"
-#include "image.h"
+#include "packed_image.h"
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 

@@ -87,6 +87,14 @@ SysWindow *Engine_GetMainWindow( void ) {
 }
 
 /****************************************
+ * DISPLAY
+ ****************************************/
+
+static void Engine_Display( void ) {
+
+}
+
+/****************************************
  * TIMER MANAGEMENT
  ****************************************/
 
@@ -119,8 +127,9 @@ PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, 
 	g_system = *sysIn;
 
 	/* and now setup our engine interface */
+	engOut->Initialize = Engine_Initialize;
 	engOut->Shutdown = Engine_Shutdown;
-	//engOut->Display = Engine_Display;
+	engOut->Display = Engine_Display;
 	engOut->GetNumTicks = Engine_GetNumTicks;
 	engOut->IsRunning = Engine_IsRunning;
 	engOut->Tick = Engine_Tick;
