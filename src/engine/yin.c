@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "act.h"
 #include "pkg_loader.h"
+#include "editor.h"
 
 PLPackage *globalWad = NULL;
 
@@ -23,6 +24,7 @@ static SysWindow *mainWindow;
 static bool Engine_Initialize( int argc, char **argv ) {
 	pl_calloc = g_system.calloc;
 	pl_malloc = g_system.malloc;
+	pl_realloc = g_system.realloc;
 
 	/* initialize the platform library */
 	plInitialize( argc, argv );
@@ -70,7 +72,11 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	Gfx_Initialize();
 	Act_Initialize();
 
-	if( plHasCommandLineArgument( "editor" ) ) {}
+	if( plHasCommandLineArgument( "editor" ) ) {
+		Editor_Initialize();
+	}
+
+	return true;
 }
 
 static void Engine_Shutdown( void ) {
@@ -91,7 +97,9 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
+	Editor_Display();
 
+	g_system.SwapWindow( mainWindow );
 }
 
 /****************************************
@@ -105,6 +113,8 @@ unsigned int Engine_GetNumTicks( void ) {
 }
 
 static void Engine_Tick( void ) {
+	Editor_Tick();
+
 	numTicks++;
 }
 

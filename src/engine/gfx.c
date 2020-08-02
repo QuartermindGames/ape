@@ -374,7 +374,7 @@ PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
 static void Gfx_RegisterShaderStage( PLShaderProgram *program, PLShaderStageType type, const char *path ) {
 	PLFile *filePtr = plOpenFile( path, true );
 	if ( filePtr == NULL ) {
-		PrintError( "Failed to find shader \"%s\" in WAD!\nPL: %s\n", path, plGetError() );
+		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, plGetError() );
 	}
 
 	const char *buffer = ( const char* ) plGetFileData( filePtr );

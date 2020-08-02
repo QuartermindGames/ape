@@ -39,7 +39,7 @@ void Editor_Initialize( void ) {
 	}
 
 	/* setup each of the editor cameras */
-	SysWindow *viewport = g_system.GetMainWindow(); /* for now all cameras just attach to the main viewport */
+	SysWindow *viewport = Engine_GetMainWindow(); /* for now all cameras just attach to the main viewport */
 	editorCameras[ 0 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
 	editorCameras[ 1 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
 	editorCameras[ 2 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
@@ -121,8 +121,6 @@ void Editor_Display( void ) {
 	Gfx_DrawPerspective( curCamera );
 
 	plDrawGrid( plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
-
-	g_system.SwapWindow( curCamera->viewportPtr );
 }
 
 void Editor_Shutdown( void ) {

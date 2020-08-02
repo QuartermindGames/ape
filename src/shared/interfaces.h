@@ -55,6 +55,7 @@ typedef struct SystemInterface {
 	/* memory */
 	void *( *calloc )( size_t num, size_t size );
 	void *( *malloc )( size_t size );
+	void *( *realloc )( void *ptr, size_t newSize );
 
 	void ( *Shutdown )( void );
 } SystemInterface;

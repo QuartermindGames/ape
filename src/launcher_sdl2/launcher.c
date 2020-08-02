@@ -182,6 +182,16 @@ static void *Sys_malloc( size_t size ) {
 	return Sys_calloc( 1, size );
 }
 
+/* wrapper for realloc */
+static void *Sys_realloc( void *ptr, size_t newSize ) {
+	void *buf = realloc( ptr, newSize );
+	if ( buf == NULL ) {
+		PrintError( "Failed to allocate %lu bytes!\n", newSize );
+	}
+
+	return buf;
+}
+
 /****************************************
  * TIMER MANAGEMENT
  ****************************************/
@@ -249,6 +259,7 @@ int Sys_Init( int argc, char **argv ) {
 		.GetKeyState = Sys_GetKeyState,
 		.calloc = Sys_calloc,
 		.malloc = Sys_malloc,
+		.realloc = Sys_realloc,
 	};
 
 	/* initialize the interface */
