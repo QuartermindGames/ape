@@ -13,11 +13,15 @@
 
 /* Simple editor interface, for editing */
 
+static bool editorIsInitialized = false;
+
 static unsigned int editorGridSize = 10;
 
 static unsigned int numEditorCameras = 4;
 static unsigned int curEditorCamera = 0;
-static GfxCamera *editorCameras[ 4 ];
+
+static GfxCamera *editorCameras[ MAX_VIEW_PERSPECTIVES ];
+static SysWindow *editorViewports[ MAX_VIEW_PERSPECTIVES ];
 
 char texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
 static void Editor_MountTexturePackageCallback( const char *path, void *userData ) {
@@ -39,11 +43,19 @@ void Editor_Initialize( void ) {
 	}
 
 	/* setup each of the editor cameras */
-	SysWindow *viewport = Engine_GetMainWindow(); /* for now all cameras just attach to the main viewport */
-	editorCameras[ 0 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
-	editorCameras[ 1 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
-	editorCameras[ 2 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
-	editorCameras[ 3 ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), viewport );
+	editorViewports[ VIEW_PERSPECTIVE_EYE ] = Engine_GetMainWindow();
+	editorCameras[ VIEW_PERSPECTIVE_EYE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_EYE ] );
+
+	editorViewports[ VIEW_PERSPECTIVE_TOP ] = g_system.CreateWindow( "Top", 640, 480 );
+	editorCameras[ VIEW_PERSPECTIVE_TOP ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_TOP ] );
+
+	editorViewports[ VIEW_PERSPECTIVE_SIDE ] = g_system.CreateWindow( "Side", 640, 480 );
+	editorCameras[ VIEW_PERSPECTIVE_SIDE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_SIDE ] );
+
+	editorViewports[ VIEW_PERSPECTIVE_FRONT ] = g_system.CreateWindow( "Front", 640, 480 );
+	editorCameras[ VIEW_PERSPECTIVE_FRONT ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_FRONT ] );
+
+	editorIsInitialized = true;
 }
 
 static void Editor_Input( void ) {
@@ -107,30 +119,31 @@ static void Editor_Input( void ) {
 }
 
 void Editor_Tick( void ) {
+	if ( !editorIsInitialized ) {
+		return;
+	}
+
 	Editor_Input();
 }
 
 void Editor_Display( void ) {
-	GfxCamera *curCamera = editorCameras[ curEditorCamera ];
-	if ( curCamera == NULL ) {
-		PrintError( "Invalid camera!\n" );
+	if ( !editorIsInitialized ) {
+		return;
 	}
 
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+	for ( unsigned int i = 0; i < MAX_VIEW_PERSPECTIVES; ++i ) {
+		GfxCamera *curCamera = editorCameras[ i ];
+		if ( curCamera == NULL ) {
+			PrintError( "Invalid camera!\n" );
+		}
 
-	Gfx_DrawPerspective( curCamera );
+		Gfx_DrawPerspective( curCamera );
 
-	plDrawGrid( plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
+		plDrawGrid( plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
+	}
 }
 
 void Editor_Shutdown( void ) {
 	Act_Shutdown();
 	Gfx_Shutdown();
-}
-
-void Editor_SetupInterface( EngineInterface *interface ) {
-	interface->Tick 		= Editor_Tick;
-	interface->Display 		= Editor_Display;
-	interface->Initialize 	= Editor_Initialize;
-	interface->Shutdown 	= Editor_Shutdown;
 }

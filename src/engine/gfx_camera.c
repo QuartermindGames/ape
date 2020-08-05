@@ -75,6 +75,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
+	g_system.MakeWindowActive( camera->viewportPtr );
 	g_system.GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
 
 	/* if we have a parent, follow them */
@@ -100,6 +101,8 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 	}
 
 	plSetupCamera( camera->cameraPtr );
+
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
 
 	Gfx_DrawScene( camera );
 }
