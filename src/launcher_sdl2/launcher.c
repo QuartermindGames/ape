@@ -221,23 +221,16 @@ void Sys_Shutdown( void ) {
 
 int Sys_Init( int argc, char **argv ) {
 	/* if we're debugging on Win32 platforms, invoke the console */
-#if defined( _WIN32 ) && defined( _DEBUG )
-	AllocConsole();
-
-	FILE *dummyFilePtr;
-	freopen_s( &dummyFilePtr, "CONIN$", "r", stdin );
-	freopen_s( &dummyFilePtr, "CONOUT$", "w", stderr );
-	freopen_s( &dummyFilePtr, "CONOUT$", "w", stdout );
-#endif
-
+#if defined( _WIN32 )
 	/* stop buffering stdout! */
 	setvbuf( stdout, NULL, _IONBF, 0 );
+#endif
 
 	/* setup the engine interface */
 
 	printf( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "libengine", true );
+	dllEnginePtr = plLoadLibrary( "./libengine", true );
 	if ( dllEnginePtr == NULL ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}

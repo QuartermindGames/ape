@@ -289,6 +289,10 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 }
 
 void Map_Draw( void ) {
+	if ( renderMesh == NULL ) {
+		return;
+	}
+
 	Gfx_EnableShaderProgram( SHADER_LIT );
 
 	plMatrixMode( PL_MODELVIEW_MATRIX );

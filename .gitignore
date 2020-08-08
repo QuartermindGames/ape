@@ -58,3 +58,5 @@ dkms.conf
 *.gfx
 /build
 /bin/log.txt
+/bin/launcher_sdl2
+/bin/Textures/
