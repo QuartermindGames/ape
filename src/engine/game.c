@@ -60,13 +60,6 @@ void Game_Tick( void ) {
 }
 
 void Game_Display( void ) {
-	SysWindow *window = g_system.GetMainWindow();
-	g_system.MakeWindowActive( window );
-
-	Gfx_SetupDefaultState();
-
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
-
 	if ( playerActor == NULL ) {
 		return;
 	}
@@ -78,10 +71,13 @@ void Game_Display( void ) {
 
 	Gfx_DrawPerspective( playerCamera );
 	Gfx_DrawMenu();
-
-	g_system.SwapWindow( window );
 }
 
-void Game_Initialize( void ) {}
+void Game_Initialize( void ) {
+	//if( !plHasCommandLineArgument( "editor" ) ) {
+		/* if editor mode isn't specified, just launch the game */
+	//	Game_Start();
+	//}
+}
 
 void Game_Shutdown( void ) {}

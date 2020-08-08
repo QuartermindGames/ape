@@ -9,7 +9,7 @@
 #include "gfx.h"
 #include "act.h"
 #include "game.h"
-#include "packed_image.h"
+#include "image.h"
 
 static struct {
 	MapSector       *sectors;

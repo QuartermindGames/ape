@@ -9,6 +9,7 @@
 #include "act.h"
 #include "pkg_loader.h"
 #include "editor.h"
+#include "game.h"
 
 PLPackage *globalWad = NULL;
 
@@ -72,9 +73,13 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	Gfx_Initialize();
 	Act_Initialize();
 
+	Game_Initialize();
+
 	if( plHasCommandLineArgument( "editor" ) ) {
 		Editor_Initialize();
 	}
+
+	PrintMsg( "Initialization complete\n" );
 
 	return true;
 }
@@ -97,7 +102,15 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
+	SysWindow *window = Engine_GetMainWindow(); /* g_system.GetMainWindow(); */
+	g_system.MakeWindowActive( window );
+
+	Gfx_SetupDefaultState();
+
+	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+
 	Editor_Display();
+	Game_Display();
 
 	g_system.SwapWindow( mainWindow );
 }
@@ -114,6 +127,7 @@ unsigned int Engine_GetNumTicks( void ) {
 
 static void Engine_Tick( void ) {
 	Editor_Tick();
+	Game_Tick();
 
 	numTicks++;
 }

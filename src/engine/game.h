@@ -16,5 +16,6 @@ Actor *Game_GetPlayer( void );
 
 void Game_Initialize( void );
 void Game_Shutdown( void );
+void Game_Display( void );
 void Game_Tick( void );
 void Game_Keyboard( unsigned char key );
