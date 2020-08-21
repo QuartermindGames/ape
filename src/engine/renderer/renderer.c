@@ -3,11 +3,12 @@
  * */
 
 #include "yin.h"
-#include "gfx.h"
+#include "renderer.h"
 #include "game.h"
-#include "act.h"
+#include "actor.h"
 #include "map.h"
 #include "image.h"
+#include "font.h"
 
 static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
 
@@ -569,6 +570,8 @@ void Gfx_Initialize( void ) {
 		numTextureTable[ i ] = Gfx_LoadLumpTexture( titlePal, numName );
 	}
 
+	Font_Initialize();
+
 	Gfx_LoadWallTextures();
 	Gfx_LoadFloorTextures();
 
@@ -577,6 +580,8 @@ void Gfx_Initialize( void ) {
 
 void Gfx_Shutdown( void ) {
 	Gfx_ShutdownCameras();
+
+	Font_Shutdown();
 }
 
 static void Gfx_DrawViewSprite( void ) {
@@ -612,6 +617,10 @@ void Gfx_DrawMenu( void ) {
 			break;
 	}
 #endif
+
+	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
+
+	Font_DrawBitmapString( 2.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, "Hello World!" );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
@@ -658,36 +667,4 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 
 	Map_Draw();
 	Act_DrawActors();
-}
-
-/********************************************/
-/* Font Render */
-/********************************************/
-
-void Gfx_DrawCharacter( PLTexture *baseTexture, char character, float x, float y, float scale ) {
-	if ( baseTexture == NULL) {
-		baseTexture = defaultFont;
-	}
-
-	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
-
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-	plLoadIdentityMatrix();
-
-	plScaleMatrix( PLVector3( scale, scale, scale ) );
-
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, 8, 8, baseTexture );
-
-	plPopMatrix();
-}
-
-void Gfx_DrawString( PLTexture *baseTexture, const char *string, float x, float y, float scale ) {
-	if ( baseTexture == NULL ) {
-		baseTexture = defaultFont;
-	}
-
-	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
-
-
 }

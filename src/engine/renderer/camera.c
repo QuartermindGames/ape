@@ -1,8 +1,8 @@
 #include <PL/pl_llist.h>
 
 #include "yin.h"
-#include "gfx.h"
-#include "act.h"
+#include "renderer.h"
+#include "actor.h"
 
 /* Camera management fun! */
 

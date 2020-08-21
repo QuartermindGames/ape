@@ -3,13 +3,12 @@
  * */
 
 #include <PL/pl_llist.h>
-#include <PL/pl_window.h>
 
 #include "yin.h"
 #include "editor.h"
 #include "map.h"
-#include "gfx.h"
-#include "act.h"
+#include "renderer/renderer.h"
+#include "actor.h"
 
 /* Simple editor interface, for editing */
 

@@ -5,8 +5,8 @@
 #include <SDL2/SDL.h>
 
 #include "yin.h"
-#include "gfx.h"
-#include "act.h"
+#include "renderer/renderer.h"
+#include "actor.h"
 #include "pkg_loader.h"
 #include "editor.h"
 #include "game.h"

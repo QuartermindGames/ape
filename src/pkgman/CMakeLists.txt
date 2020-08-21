@@ -6,8 +6,6 @@ project( pkgman )
 
 set( CMAKE_C_STANDARD 11 )
 
-add_executable( pkgman main.c pack_image.c )
+add_executable( pkgman pkgman.c pack_image.c )
 
 target_link_libraries( pkgman platform )
-
-

@@ -6,7 +6,7 @@
 #include <PL/platform_filesystem.h>
 #include <PL/platform_image.h>
 
-#include "main.h"
+#include "pkgman.h"
 
 /* PkgMan, the shitty package generator! */
 

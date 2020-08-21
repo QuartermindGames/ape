@@ -8,6 +8,8 @@ typedef enum ActorType {
 	ACTOR_NONE,
 	ACTOR_PLAYER,
 
+	ACTOR_TRIGGER_VOLUME,
+
 	MAX_ACTOR_TYPES,
 } ActorType;
 
@@ -37,7 +39,7 @@ unsigned int Act_GetCurrentFrame( const Actor *self );
 void         Act_SetViewOffset( Actor *self, float viewOffset );
 float        Act_GetViewOffset( Actor *self );
 void         Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
-const PLAABB *Act_GetBounds( Actor *self );
+const PLCollisionAABB *Act_GetBounds( Actor *self );
 PLVector3    Act_GetForward( const Actor *self );
 
 /* generic monster functions */

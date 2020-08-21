@@ -6,9 +6,7 @@
 
 #include "yin.h"
 #include "map.h"
-#include "gfx.h"
-#include "act.h"
-#include "game.h"
+#include "renderer/renderer.h"
 #include "image.h"
 
 static struct {

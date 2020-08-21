@@ -5,8 +5,8 @@
 #include <PL/pl_llist.h>
 
 #include "yin.h"
-#include "act.h"
-#include "gfx.h"
+#include "actor.h"
+#include "renderer/renderer.h"
 #include "map.h"
 
 typedef struct ActorSetup {
@@ -45,13 +45,13 @@ ActorSetup actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 };
 
 typedef struct Actor {
-	PLVector3    position;
-	PLVector3    velocity;
-	PLVector3    forward;
-	float        angle;
-	float        viewOffset;
-	unsigned int area;
-	PLAABB       bounds;
+	PLVector3       position;
+	PLVector3       velocity;
+	PLVector3       forward;
+	float           angle;
+	float           viewOffset;
+	unsigned int    area;
+	PLCollisionAABB bounds;
 
 	/* animation */
 	unsigned int currentFrame;
@@ -126,7 +126,7 @@ void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs ) {
 	self->bounds.mins = mins;
 }
 
-const PLAABB *Act_GetBounds( Actor *self ) {
+const PLCollisionAABB *Act_GetBounds( Actor *self ) {
 	return &self->bounds;
 }
 

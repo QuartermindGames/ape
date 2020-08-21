@@ -4,7 +4,7 @@
 
 #include <PL/platform_image.h>
 
-#include "main.h"
+#include "pkgman.h"
 
 /* Future Improvements
  * - if the number of colours in the block are less than 16 bytes, we need to pack the data smaller

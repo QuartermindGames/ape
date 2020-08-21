@@ -4,9 +4,9 @@
 
 #include "yin.h"
 #include "game.h"
-#include "act.h"
+#include "actor.h"
 #include "map.h"
-#include "gfx.h"
+#include "renderer/renderer.h"
 
 /* game specific implementation goes here! */
 

@@ -85,3 +85,10 @@ typedef void ( *DllPluginInterface )( uint32_t version, EngineInterface *engIn )
 #define TICK_RATE 1000 / 60 /* ms */
 
 #define u_unused( a ) ( void )( ( a ) )
+
+#if defined( _DEBUG )
+#   include <assert.h>
+#   define u_assert( A ) assert( ( A ) )
+#else
+#   define u_assert( A )
+#endif

@@ -3,8 +3,8 @@
  * */
 
 #include "yin.h"
-#include "act.h"
-#include "gfx.h"
+#include "actor.h"
+#include "renderer/renderer.h"
 
 #define PLAYER_VIEW_OFFSET  75.0f
 
