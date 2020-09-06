@@ -620,7 +620,7 @@ void Gfx_DrawMenu( void ) {
 
 	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
 
-	Font_DrawBitmapString( 2.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, "Hello World!" );
+	Font_DrawBitmapString( 2.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, "Hello World!\nThis is some example text to make sure\nthe font rendering works." );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
@@ -633,9 +633,9 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 	transform = plMultiplyMatrix4( transform,
 								   plRotateMatrix4( plDegreesToRadians( rotation.z ), PLVector3( 0, 0, 1 ) ));
 	transform = plMultiplyMatrix4( transform, plTranslateMatrix4( position ) );
-	plDrawSimpleLine( &transform, &PLVector3( 0, 0, 0 ), &PLVector3( 10, 0, 0 ), &PLColour( 255, 0, 0, 255 ) );
-	plDrawSimpleLine( &transform, &PLVector3( 0, 0, 0 ), &PLVector3( 0, 10, 0 ), &PLColour( 0, 255, 0, 255 ) );
-	plDrawSimpleLine( &transform, &PLVector3( 0, 0, 0 ), &PLVector3( 0, 0, 10 ), &PLColour( 0, 0, 255, 255 ) );
+	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
+	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", plPrintVector3( &position, pl_int_var ) );
 }
 

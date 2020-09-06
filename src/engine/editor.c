@@ -138,7 +138,7 @@ void Editor_Display( void ) {
 
 		Gfx_DrawPerspective( curCamera );
 
-		plDrawGrid( plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
+		plDrawGrid( *plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
 	}
 }
 

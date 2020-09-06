@@ -29,7 +29,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	/* initialize the platform library */
 	plInitialize( argc, argv );
-	plInitializeSubSystems( PL_SUBSYSTEM_IO | PL_SUBSYSTEM_IMAGE );
+	plInitializeSubSystems( PL_SUBSYSTEM_IO );
 
 	plSetupLogOutput( "log.txt" );
 	plSetupLogLevel( LOG_LEVEL_ERROR, "error", PL_COLOUR_RED, true );
