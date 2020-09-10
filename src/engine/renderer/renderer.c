@@ -73,9 +73,10 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 
 	if ( !generateMipMap ) {
 		texture->flags &= PL_TEXTURE_FLAG_NOMIPS;
+		texture->filter = PL_TEXTURE_FILTER_LINEAR;
+	} else {
+		texture->filter = PL_TEXTURE_FILTER_MIPMAP_LINEAR;
 	}
-
-	texture->filter = PL_TEXTURE_FILTER_NEAREST;
 
 	if ( !plUploadTextureImage( texture, imageData )) {
 		PrintError( "Failed to generate texture from image!\nPL: %s\n", plGetError());
@@ -302,7 +303,7 @@ void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destin
 PLTexture *Gfx_LoadTexture( const char *path ) {
 	PLImage *image = Image_LoadPackedImage( path );
 	if ( image == NULL ) {
-		PLTexture *texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_NEAREST );
+		PLTexture *texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_LINEAR );
 		if ( texture == NULL ) {
 			PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
 			return fallbackTexture;
@@ -312,10 +313,20 @@ PLTexture *Gfx_LoadTexture( const char *path ) {
 	}
 
 	PLTexture *texture = plCreateTexture();
+	if ( texture == NULL ) {
+		plDestroyImage( image );
+
+		PrintWarn( "Failed to create texture handle for \"%s\"!\nPL: %s\n", path, plGetError() );
+		return fallbackTexture;
+	}
+
+	texture->filter = PL_TEXTURE_FILTER_MIPMAP_LINEAR;
+
 	if ( !plUploadTextureImage( texture, image ) ) {
-		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to upload texture \"%s\"!\nPL: %s\n", path, plGetError() );
 		texture = fallbackTexture;
 	}
+
 	plDestroyImage( image );
 
 	return texture;
