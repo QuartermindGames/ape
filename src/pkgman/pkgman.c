@@ -78,8 +78,8 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	/* see if it's a file we can pack */
 	const char *extension = plGetFileExtension( packPath );
 	if ( strcmp( extension, "png" ) == 0 || strcmp( extension, "gif" ) == 0 || strcmp( extension, "bmp" ) == 0 ) {
-		PLImage image;
-		if ( !plLoadImage( packPath, &image ) ) {
+		PLImage *image = plLoadImage( packPath );
+		if ( image == NULL ) {
 			Error( "Failed to load \"%s\"!\nPL: %s\n", packPath, plGetError() );
 		}
 
@@ -89,9 +89,9 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 
 		Print( "Converting \"%s\" to \"%s\"\n", filePath, packPath );
 
-		PackImage_Write( packPath, &image );
+		PackImage_Write( packPath, image );
 
-		plFreeImage( &image );
+		plDestroyImage( image );
 	}
 
 	PLFile *filePtr = plOpenFile( packPath, true );
