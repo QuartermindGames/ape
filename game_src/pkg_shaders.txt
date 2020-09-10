@@ -1,3 +1,0 @@
-; Generates BaseShaders.pkg file
-output ../bin/BaseShaders.pkg
-dir shaders/ glsl Shader
