@@ -24,7 +24,7 @@ enum {
 
 typedef struct SysWindow SysWindow;
 
-#define WINDOW_TITLE    "Daedalus"
+#define WINDOW_TITLE    "Yin Technology Demo"
 #define WINDOW_WIDTH    640
 #define WINDOW_HEIGHT   480
 
