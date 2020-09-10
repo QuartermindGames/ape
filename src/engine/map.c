@@ -6,8 +6,11 @@
 
 #include "yin.h"
 #include "map.h"
-#include "renderer/renderer.h"
 #include "image.h"
+#include "renderer/renderer.h"
+
+#define MAP_IDENTIFIER  "map"
+#define MAP_VERSION     "version 1"
 
 static struct {
 	MapSector       *sectors;
@@ -29,156 +32,216 @@ static struct {
 
 static PLMesh *renderMesh = NULL;
 
-static void Map_LoadTextures( PLPackage *mapPkg ) {
-	/* all of the texture packages this map is using, eventually
-	 * these will be loaded from the map itself */
-	static const char *texturePackagePaths[]={
-		"Textures/Blasphemer.pkg",
-	};
+/**
+ * Clears out the current map data.
+ */
+void Map_ClearData( void ) {
+	memset( &mapData, 0, sizeof( mapData ) );
+}
 
-	/* mount all of the packages we're going to use */
-	mapData.numTexturePackages = plArrayElements( texturePackagePaths );
-	PLFileSystemMount **texturePackages = g_system.calloc( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
-	for ( unsigned int i = 0; i < mapData.numTexturePackages; ++i ) {
-		texturePackages[ i ] = plMountLocation( texturePackagePaths[ i ] );
+/**********************************************************/
+/** Map File Reader **/
+
+static bool Map_ValidateFile( PLFile *file ) {
+	char buffer[ 256 ];
+
+	/* check the identifier */
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( strcmp( MAP_IDENTIFIER "\n", buffer ) != 0 ) {
+		PrintWarn( "Invalid identifier found, expected \"%s\" but found \"%s\"\n", MAP_IDENTIFIER, buffer );
+		return false;
 	}
 
-	/* all the textures the map is using, eventually these will be loaded
-	 * from the map itself */
-	static const char *textureNames[]={
-		"Engine:DefaultTile.gfx",
-		"Engine:Default.gfx",
-		"Walls:woodsl04.gif",
-		"Walls:wall515.gif",
-		"Walls:woodsl07.gif",
-		"Walls:woodsl10.gif",
-	};
+	/* and now check the version */
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( strcmp( MAP_VERSION "\n", buffer ) != 0 ) {
+		PrintWarn( "Invalid version found, expected \"%s\" but found \"%s\"\n", MAP_VERSION, buffer );
+		return false;
+	}
 
-	mapData.numTextures = plArrayElements( textureNames );
+	return true;
+}
+
+static void Map_ParseTextures( PLFile *file ) {
+	char buffer[ 256 ];
+
+	/* figure out how many packages we have on our hands */
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "texturepacks %d\n", &mapData.numTexturePackages ) != 1 ) {
+		PrintError( "Failed to fetch number of texture packages in \"%s\"!\n", plGetFilePath( file ) );
+	}
+
+	/* now mount all of the packages we're going to use */
+	PLFileSystemMount **texturePackages = g_system.calloc( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
+	for ( unsigned int i = 0; i < mapData.numTexturePackages; ++i ) {
+		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in texture package \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+
+		/* copy the texture name; excluding the line terminator */
+		char packagePath[ PL_SYSTEM_MAX_PATH ];
+		for ( unsigned int j = 0; j < sizeof( packagePath ); ++j ) {
+			if ( buffer[ j ] == '\n' ) {
+				packagePath[ j ] = '\0';
+				break;
+			}
+
+			packagePath[ j ] = buffer[ j ];
+		}
+
+		texturePackages[ i ] = plMountLocation( packagePath );
+		if ( texturePackages[ i ] == NULL ) {
+			PrintWarn( "Failed to mount the specified location, \"%s\"!\n", packagePath );
+		}
+	}
+
+	/* now fetch all the textures the map will be using */
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "textures %d\n", &mapData.numTextures ) != 1 ) {
+		PrintError( "Failed to fetch number of textures in \"%s\"!\n", plGetFilePath( file ) );
+	}
+
+	/* allocate storage for them */
 	mapData.textures = g_system.calloc( mapData.numTextures, sizeof( PLTexture* ) );
 
 	for ( unsigned int i = 0; i < mapData.numTextures; ++i ) {
-		PLImage *image = Image_LoadPackedImage( textureNames[ i ] );
-		if ( image == NULL ) {
-			mapData.textures[ i ] = Gfx_GetWallTexture( 10 );
-			continue;
+		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in texture \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 
-		mapData.textures[ i ] = plCreateTexture();
-		if ( mapData.textures[ i ] == NULL ) {
-			plDestroyImage( image );
-			mapData.textures[ i ] = Gfx_GetWallTexture( 10 );
-			continue;
-		}
-
-		plUploadTextureImage( mapData.textures[ i ], image );
-
-		plDestroyImage( image );
-	}
-}
-
-static void Map_LoadVertices( PLPackage *mapPkg ) {
-	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Vertices" );
-	if ( filePtr == NULL ) {
-		PrintError( "Failed to open vertex data in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
-	}
-
-	bool status;
-	mapData.numVertices = plReadInt32( filePtr, false, &status );
-	if ( !status ) {
-		PrintError( "Failed to fetch number of vertices in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
-	}
-
-	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( MapVertex ) );
-	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
-		mapData.vertices[ i ].x = plReadInt32( filePtr, false, &status );
-		mapData.vertices[ i ].y = plReadInt32( filePtr, false, &status );
-		mapData.vertices[ i ].z = plReadInt32( filePtr, false, &status );
-	}
-
-	if ( !status ) {
-		PrintError( "Failed to read in all vertices in \"%s\"!\nPL: %s\n", plGetPackagePath( mapPkg ), plGetError() );
-	}
-}
-
-static void Map_LoadFaces( PLPackage *mapPkg ) {
-	PLFile *filePtr = plLoadPackageFile( mapPkg, "Data:Polygons" );
-	if ( filePtr == NULL ) {
-		PrintError( "Failed to open primitive data!\nPL: %s\n", plGetError() );
-	}
-
-	bool status;
-	mapData.numFaces = plReadInt32( filePtr, false, &status );
-	if ( !status ) {
-		PrintError( "Failed to fetch number of primitives!\nPL: %s\n", plGetError() );
-	}
-
-	mapData.faces = g_system.calloc( mapData.numFaces, sizeof( MapFace ) );
-	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
-		MapFace *curFace = &mapData.faces[ i ];
-
-		curFace->flags = plReadInt8( filePtr, &status );
-
-		PLTexture *texturePtr;
-		uint32_t textureId = plReadInt32( filePtr, false, &status );
-		if ( textureId >= mapData.numTextures ) {
-			PrintWarn( "Invalid texture id %d for polygon %d!\n", textureId, i );
-			texturePtr = Gfx_GetFallbackTexture();
-		} else {
-			texturePtr = mapData.textures[ textureId ];
-		}
-
-		PLVector2 textureOffset;
-		textureOffset.x = ( float ) plReadInt32( filePtr, false, &status );
-		textureOffset.y = ( float ) plReadInt32( filePtr, false, &status );
-		PLVector2 textureScale;
-		textureScale.x = ( float ) plReadInt32( filePtr, false, &status );
-		textureScale.y = ( float ) plReadInt32( filePtr, false, &status );
-
-		if ( !status ) {
-			PrintError( "Failed to read in face %d!\nPL: %s\n", i, plGetError() );
-		}
-
-		uint8_t numVertices = plReadInt8( filePtr, &status );
-
-		curFace->polygon = plCreatePolygon( texturePtr, textureOffset, textureScale, 0.0f );
-		if ( curFace->polygon == NULL ) {
-			PrintError( "Failed to create polygon!\n" );
-		}
-
-		for ( unsigned int j = 0; j < numVertices; ++j ) {
-			uint32_t vertIndex = plReadInt32( filePtr, false, &status );
-			if ( !status ) {
-				PrintError( "Failed to read vertex %d!\n", j );
+		/* copy the texture name; excluding the line terminator */
+		char textureName[ 64 ];
+		for ( unsigned int j = 0; j < sizeof( textureName ); ++j ) {
+			if ( buffer[ j ] == '\n' ) {
+				textureName[ j ] = '\0';
+				break;
 			}
 
-			if ( vertIndex >= mapData.numVertices ) {
+			textureName[ j ] = buffer[ j ];
+		}
+
+		mapData.textures[ i ] = Gfx_LoadTexture( textureName );
+	}
+}
+
+static void Map_ParseVertices( PLFile *file ) {
+	char buffer[ 256 ];
+
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "vertices %d\n", &mapData.numVertices ) != 1 ) {
+		PrintError( "Failed to fetch number of vertices in \"%s\"!\n", plGetFilePath( file ) );
+	}
+
+	/* allocate buffer for vertices and then read them all in */
+	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( MapVertex ) );
+	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
+		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+
+		if ( sscanf( buffer, "%f %f %f", &mapData.vertices[ i ].x, &mapData.vertices[ i ].y, &mapData.vertices[ i ].z ) != 3 ) {
+			PrintError( "Failed to read in vertex \"%d\" elements in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+	}
+}
+
+static void Map_ParseFaces( PLFile *file ) {
+	char buffer[ 256 ];
+
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "faces %d\n", &mapData.numFaces ) != 1 ) {
+		PrintError( "Failed to fetch number of faces in \"%s\"!\n", plGetFilePath( file ) );
+	}
+
+	/* allocate buffer for faces and then read them all in */
+	mapData.faces = g_system.calloc( mapData.numFaces, sizeof( MapFace ) );
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
+		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+
+#define MAX_FACE_INDICES 16
+
+		char *token = strtok( buffer, " " );
+		unsigned int numIndices = strtol( token, NULL, 10 );
+		if ( numIndices == 0 || numIndices >= MAX_FACE_INDICES ) {
+			PrintError( "Invalid number of indices for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+
+		unsigned int faceIndices[ MAX_FACE_INDICES ];
+		for ( unsigned int j = 0; j < numIndices; ++j ) {
+			token = strtok( NULL, " " );
+			if ( token == NULL ) {
+				PrintError( "Failed to read in face \"%d\" elements in \"%s\"!\n", i, plGetFilePath( file ) );
+			}
+
+			faceIndices[ j ] = strtol( token, NULL, 10 );
+		}
+
+		/* now try to get the texture index and flags (these are optional, for now) */
+
+		unsigned int textureIndex = 0;
+
+		token = strtok( NULL, " " );
+		if ( token != NULL ) {
+			textureIndex = strtol( token, NULL, 10 );
+
+			token = strtok( NULL, " " );
+			if ( token != NULL ) {
+				mapData.faces[ i ].flags = strtol( token, NULL, 10 );
+			}
+		}
+
+		PLTexture *texturePtr;
+		if ( textureIndex >= mapData.numTextures ) {
+			PrintWarn( "Invalid texture id %d for polygon %d!\n", textureIndex, i );
+			texturePtr = Gfx_GetFallbackTexture();
+		} else {
+			texturePtr = mapData.textures[ textureIndex ];
+		}
+
+		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 1.0f, 1.0f ), 0.0f );
+		if ( mapData.faces[ i ].polygon == NULL ) {
+			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		}
+
+		for ( unsigned int j = 0; j < numIndices; ++j ) {
+			if ( faceIndices[ j ] >= mapData.numVertices ) {
 				PrintError( "Invalid vertex index!\n" );
 			}
 
 			PLVertex vertex;
 			memset( &vertex, 0, sizeof( PLVertex ) );
 
-			vertex.position.x = mapData.vertices[ vertIndex ].x * 100.0f;
-			vertex.position.y = mapData.vertices[ vertIndex ].y * 100.0f;
-			vertex.position.z = mapData.vertices[ vertIndex ].z * 100.0f;
+			vertex.position.x = mapData.vertices[ faceIndices[ j ] ].x * 30.0f;
+			vertex.position.y = mapData.vertices[ faceIndices[ j ] ].y * 30.0f;
+			vertex.position.z = mapData.vertices[ faceIndices[ j ] ].z * 30.0f;
 			vertex.colour = PLColour( 255, 255, 255, 255 );
 
-			plAddPolygonVertex( curFace->polygon, &vertex );
+			plAddPolygonVertex( mapData.faces[ i ].polygon, &vertex );
 		}
 
 		unsigned int numPolyVertices;
-		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numPolyVertices );
-		if ( numPolyVertices != numVertices ) {
+		PLVertex *vertices = plGetPolygonVertices( mapData.faces[ i ].polygon, &numPolyVertices );
+		if ( numPolyVertices != numIndices ) {
 			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
 
 		/* generate the bounds for cheap culling */
-		curFace->bounds = plGenerateAABB( vertices, numPolyVertices );
+		mapData.faces[ i ].bounds = plGenerateAABB( vertices, numPolyVertices, true );
 	}
 }
 
-void Map_LoadSectors( PLPackage *wad ) {
+void Map_ParseSectors( PLFile *file ) {
+	char buffer[ 256 ];
+
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "sectors %d\n", &mapData.numSectors ) != 1 ) {
+		PrintError( "Failed to fetch number of sectors in \"%s\"!\n", plGetFilePath( file ) );
+	}
+
+	mapData.sectors = g_system.calloc( mapData.numSectors, sizeof( MapSector ) );
+
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */
 
@@ -232,24 +295,31 @@ void Map_LoadSectors( PLPackage *wad ) {
 #endif
 }
 
-/**
- * Clears out the current map data.
- */
-void Map_ClearData( void ) {
-	memset( &mapData, 0, sizeof( mapData ) );
+void Map_ParseFile( PLFile *file ) {
+	if ( !Map_ValidateFile( file ) ) {
+		PrintWarn( "\"%s\" is not a valid map!\n", plGetFilePath( file ) );
+		return;
+	}
+
+	Map_ParseTextures( file );
+	Map_ParseVertices( file );
+	Map_ParseFaces( file );
+	Map_ParseSectors( file );
+	//Map_ParseActors( file );
 }
 
 void Map_Load( const char *path ) {
-	PLPackage *mapPkg = plLoadPackage( path );
-	if ( mapPkg == NULL ) {
+	PLFile *file = plOpenFile( path, false );
+	if ( file == NULL ) {
 		PrintWarn( "Failed to open map, \"%s\"!\nPL: %s\n", path, plGetError() );
 		return;
 	}
 
-	Map_LoadTextures( mapPkg );
-	Map_LoadVertices( mapPkg );
-	Map_LoadFaces( mapPkg );
-	//Map_LoadSectors( mapPkg );
+	/* now, let's make sure it's valid! */
+
+	Map_ParseFile( file );
+
+	plCloseFile( file );
 
 	/* create our mesh container for rendering */
 
@@ -286,21 +356,58 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 	return false;
 }
 
-void Map_Draw( void ) {
-	if ( renderMesh == NULL ) {
-		return;
-	}
+static PLVector3 GetOriginPointFromVertices( const PLVertex *vertices, unsigned int numVertices ) {
+	/* we can cheat this a little bit by depending on the bounding box we generate */
+	PLCollisionAABB bounds = plGenerateAABB( vertices, numVertices, true );
+	return bounds.origin;
+}
 
-	Gfx_EnableShaderProgram( SHADER_LIT );
+PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination ) {
+	/* so, this is a little awkward, but we need to figure out where each face is in the world
+	 * by averaging the vertex coords for each and then positioning the portal at each. */
 
+	typedef struct Portal {
+		PLVector3 origin;
+		PLVector3 rotation;
+	} Portal;
+	Portal portals[ 2 ];
+
+	/* first, figure it out for the source */
+	unsigned int numVertices;
+	PLVertex *vertices;
+
+	vertices = plGetPolygonVertices( source->polygon, &numVertices );
+	portals[ 0 ].origin = GetOriginPointFromVertices( vertices, numVertices );
+
+	vertices = plGetPolygonVertices( destination->polygon, &numVertices );
+	portals[ 1 ].origin = GetOriginPointFromVertices( vertices, numVertices );
+
+	Gfx_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
+	Gfx_DrawAxesPivot( portals[ 1 ].origin, portals[ 1 ].rotation );
+
+#if 0
 	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plLoadIdentityMatrix();
-	const PLMatrix4 *transform = plGetMatrix( PL_MODELVIEW_MATRIX );
-	plSetNamedShaderUniformMatrix4( NULL, "pl_model", *transform, true );
+	plPushMatrix();
 
+	plRotateMatrix( 180.0f, 0.0f, 1.0f, 0.0f );
+
+	plPopMatrix();
+
+	return *plGetMatrix( PL_MODELVIEW_MATRIX );
+#endif
+}
+
+void Map_DrawSector( const MapSector *sector ) {
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
+
+		if ( i == 0 ) {
+			Map_GetPortalView( NULL, curFace, curFace );
+		}
+
+		PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
+		plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
 
 		plClearMesh( renderMesh );
 
@@ -316,20 +423,41 @@ void Map_Draw( void ) {
 		unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
 		unsigned int *curIndex = indices;
 		for ( unsigned int j = 0; j < numTriangles; ++j ) {
-			plAddMeshTriangle( renderMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2] );
+			plAddMeshTriangle( renderMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );
 			curIndex += 3;
 		}
 
 		plUploadMesh( renderMesh );
 		plDrawMesh( renderMesh );
 	}
+}
+
+void Map_Draw( void ) {
+	if ( renderMesh == NULL ) {
+		return;
+	}
+
+	Gfx_EnableShaderProgram( SHADER_LIT );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+	plLoadIdentityMatrix();
+
+	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
+	plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
+
+	Map_DrawSector( &mapData.sectors[ 0 ] );
+
+	plPopMatrix();
 
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
+#if 0
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plLoadIdentityMatrix();
 
 	plDrawMeshNormals( transform, renderMesh );
+#endif
 
 #if 0
 	PLMatrix4 transform = plMatrix4Identity();

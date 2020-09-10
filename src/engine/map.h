@@ -4,21 +4,24 @@
 
 #pragma once
 
+enum MapFaceFlags {
+	PL_BITFLAG( MAP_FLAG_FACE_PORTAL, 0 ), /* face leads into other specified sector */
+	PL_BITFLAG( MAP_FLAG_FACE_MIRROR, 1 ), /* face leads into sector flipped */
+};
+
 typedef struct MapVertex {
-	int32_t x, y, z;
+	float x, y, z; /* vertex position */
+	float s, t;    /* these are used for the lightmap coords */
 } MapVertex;
 
 typedef struct MapFace {
-	PLPolygon   	*polygon;
-	PLCollisionAABB	bounds;
-	uint8_t     	flags;
+	PLPolygon *polygon;
+	PLCollisionAABB bounds;
+	uint8_t flags;
 } MapFace;
 
 typedef struct MapSector {
-	unsigned int numLines;
-	unsigned int *lineIndices;
-	int          max[ 2 ]; /* boundary maximum */
-	int          min[ 2 ]; /* boundary minimum */
+	unsigned int faceId;
 } MapSector;
 
 void Map_ClearData( void );
