@@ -133,7 +133,7 @@ void Font_Initialize( void ) {
 		PrintError( "Failed to create font mesh, %s, aborting!\n", plGetError() );
 	}
 
-	fontTextureSheet = Font_LoadBitmap( "Engine:DefaultFont.gfx" );
+	fontTextureSheet = Font_LoadBitmap( "global:font.gfx" );
 }
 
 void Font_Shutdown( void ) {
