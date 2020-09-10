@@ -32,6 +32,8 @@ void         Act_SetVelocity( Actor *self, const PLVector3 *velocity );
 PLVector3    Act_GetVelocity( const Actor *self );
 void         Act_SetAngle( Actor *self, float angle );
 float        Act_GetAngle( const Actor *self );
+void Act_SetViewPitch( Actor *self, float viewPitch );
+float Act_GetViewPitch( const Actor *self );
 void         Act_SetUserData( Actor *self, void *userData );
 void         *Act_GetUserData( Actor *self );
 void         Act_SetCurrentFrame( Actor *self, unsigned int frame );

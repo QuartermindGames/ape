@@ -11,6 +11,7 @@ file( GLOB ENGINE_SOURCE_FILES
         renderer/camera.c
         renderer/font.c
         renderer/renderer.c
+        renderer/scenegraph.c
         )
 
 add_library( engine SHARED ${ENGINE_SOURCE_FILES} )

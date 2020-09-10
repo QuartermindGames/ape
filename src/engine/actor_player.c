@@ -6,7 +6,8 @@
 #include "actor.h"
 #include "renderer/renderer.h"
 
-#define PLAYER_VIEW_OFFSET  75.0f
+#define PLAYER_VIEW_OFFSET      75.0f
+#define PLAYER_CROUCH_OFFSET    45.0f
 
 #define PLAYER_TURN_SPEED    2.0f
 #define PLAYER_WALK_SPEED    5.0f
@@ -120,6 +121,14 @@ void Player_Tick( Actor *self, void *userData ) {
 		}
 	}
 
+	float viewPitch = Act_GetViewPitch( self );
+	if ( g_system.GetKeyState( 'q' ) ) {
+		viewPitch += 1.0f;
+	} else if ( g_system.GetKeyState( 'e' ) ) {
+		viewPitch -= 1.0f;
+	}
+	Act_SetViewPitch( self, viewPitch );
+
 	/* clamp the velocity as necessary */
 	float maxVelocity = g_system.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
@@ -133,7 +142,12 @@ void Player_Tick( Actor *self, void *userData ) {
 	/* apply view bob */
 	float velocityVector = plVector3Length( &curVelocity );
 	playerData->viewBob += ( sinf( Engine_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
-	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET + playerData->viewBob );
+	float viewOffset = PLAYER_VIEW_OFFSET;
+	if ( g_system.GetKeyState( 'c' ) ) {
+		viewOffset = PLAYER_CROUCH_OFFSET;
+	}
+
+	Act_SetViewOffset( self, viewOffset + playerData->viewBob );
 }
 
 void Player_Collide( Actor *self, Actor *other, void *userData ) {

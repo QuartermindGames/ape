@@ -49,6 +49,7 @@ typedef struct Actor {
 	PLVector3       velocity;
 	PLVector3       forward;
 	float           angle;
+	float           viewPitch;
 	float           viewOffset;
 	unsigned int    area;
 	PLCollisionAABB bounds;
@@ -104,6 +105,15 @@ void      Act_SetVelocity( Actor *self, const PLVector3 *velocity ) { self->velo
 PLVector3 Act_GetVelocity( const Actor *self ) { return self->velocity; }
 void      Act_SetAngle( Actor *self, float angle ) { self->angle = angle; }
 float     Act_GetAngle( const Actor *self ) { return self->angle; }
+
+void Act_SetViewPitch( Actor *self, float viewPitch ) {
+	self->viewPitch = viewPitch;
+}
+
+float Act_GetViewPitch( const Actor *self ) {
+	return self->viewPitch;
+}
+
 void      Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float     Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
 void      Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }

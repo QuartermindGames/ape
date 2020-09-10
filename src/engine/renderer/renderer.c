@@ -22,7 +22,6 @@ typedef struct RGBMap {
 static RGBMap playPal[256], titlePal[256];
 
 static PLTexture *fallbackTexture = NULL;
-static PLTexture *titlePicTexture = NULL;
 
 static PLTexture *numTextureTable[10];
 static PLTexture *defaultFont;
@@ -526,6 +525,8 @@ void Gfx_SetupDefaultState( void ) {
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
 
+	plSetCullMode( PL_CULL_POSTIVE );
+
 	Gfx_EnableShaderProgram( SHADER_GENERIC );
 }
 
@@ -626,25 +627,51 @@ void Gfx_DrawMenu( void ) {
 	}
 #endif
 
+	SysWindow *window = Engine_GetMainWindow();
+	int w, h;
+	g_system.GetWindowSize( window, &w, &h );
+
 	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
 
-	Font_DrawBitmapString( 2.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, "Hello World!\nThis is some example text to make sure\nthe font rendering works." );
+	static const char spinning[]={
+	        '\\', '|', '/', '-', '/', '-'
+	};
+	static int pos = 0;
+
+	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PL_COLOUR_GREEN, spinning[ pos++ ] );
+	if ( pos >= sizeof( spinning ) ) {
+		pos = 0;
+	}
+
+	Font_DrawBitmapString( 16.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, "Hello World! This is some example text to make sure the font rendering works." );
+
+	plDrawRectangle( &transform, 0, 0, w, 16, PL_COLOUR_BLACK );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
-	PLMatrix4 transform;
-	transform = plMatrix4Identity();
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( rotation.x ), PLVector3( 1, 0, 0 ) ));
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( rotation.y ), PLVector3( 0, 1, 0 ) ));
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( rotation.z ), PLVector3( 0, 0, 1 ) ));
-	transform = plMultiplyMatrix4( transform, plTranslateMatrix4( position ) );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	PLVector3 angles;
+	angles.x = plDegreesToRadians( rotation.x );
+	angles.y = plDegreesToRadians( rotation.y );
+	angles.z = plDegreesToRadians( rotation.z );
+
+	plRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
+	plRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
+	plRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
+
+	plTranslateMatrix( position );
+
+	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
 	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
 	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
 	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", plPrintVector3( &position, pl_int_var ) );
+
+	plPopMatrix();
 }
 
 void Gfx_DrawScene( GfxCamera *camera ) {

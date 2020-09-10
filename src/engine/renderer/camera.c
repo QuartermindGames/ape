@@ -40,7 +40,8 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 	switch( gfxCamera->perspective ) {
 	default: PrintError( "Unsupported viewport type %d!\n", gfxCamera->perspective );
 	case VIEW_PERSPECTIVE_EYE:
-		gfxCamera->cameraPtr->fov = 75.0f;
+		gfxCamera->cameraPtr->fov = 90.0f;
+		gfxCamera->cameraPtr->far = 1000.0f;
 		break;
 	case VIEW_PERSPECTIVE_FRONT:
 	case VIEW_PERSPECTIVE_SIDE:
@@ -89,6 +90,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 				camera->cameraPtr->angles.x = -85.0f;
 				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
 #else
+			    camera->cameraPtr->angles.x = Act_GetViewPitch( camera->parentActor );
 				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
 				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
 				camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
