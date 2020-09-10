@@ -45,14 +45,15 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	PrintMsg( "Mounting VFS locations...\n" );
 
 	/* mount all the dirs and packages we need */
+
 	plMountLocation( plGetWorkingDirectory() );
-	const char *rPackages[]={
-		"BaseShaders.pkg",
-		"BaseTextures.pkg",
+
+	const char *packagesList[]={
+		"base.pkg",
 	};
-	for ( unsigned int i = 0; i < plArrayElements( rPackages ); ++i ) {
-		if ( plMountLocation( rPackages[ i ] ) == NULL ) {
-			PrintError( "Failed to mount required package \"%s\"!\nPL: %s\n", rPackages[ i ], plGetError() );
+	for ( unsigned int i = 0; i < plArrayElements( packagesList ); ++i ) {
+		if ( plMountLocation( packagesList[ i ] ) == NULL ) {
+			PrintError( "Failed to mount required package \"%s\"!\nPL: %s\n", packagesList[ i ], plGetError() );
 		}
 	}
 

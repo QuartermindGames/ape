@@ -57,6 +57,8 @@ void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, u
 
 void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destination, unsigned int numFrames );
 
+PLTexture *Gfx_LoadTexture( const char *path );
+
 PLTexture *Gfx_GetWallTexture( unsigned int index );
 PLTexture *Gfx_GetFloorTexture( unsigned int index );
 PLTexture *Gfx_GetFallbackTexture( void );

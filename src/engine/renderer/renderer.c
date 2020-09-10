@@ -549,10 +549,10 @@ void Gfx_Initialize( void ) {
 	Gfx_InitializeCameras();
 
 	/* create the default shader programs */
-	Gfx_RegisterShader( SHADER_GENERIC, "Shader:vertex.glsl", "Shader:colour.glsl" );
-	Gfx_RegisterShader( SHADER_TEXTURE, "Shader:vertex.glsl", "Shader:texture.glsl" );
-	Gfx_RegisterShader( SHADER_ALPHA_TEST, "Shader:vertex.glsl", "Shader:alpha.glsl" );
-	Gfx_RegisterShader( SHADER_LIT, "Shader:vertex.glsl", "Shader:lit.glsl" );
+	Gfx_RegisterShader( SHADER_GENERIC, "shaders/vertex.glsl", "shaders/colour.glsl" );
+	Gfx_RegisterShader( SHADER_TEXTURE, "shaders/vertex.glsl", "shaders/texture.glsl" );
+	Gfx_RegisterShader( SHADER_ALPHA_TEST, "shaders/vertex.glsl", "shaders/alpha.glsl" );
+	Gfx_RegisterShader( SHADER_LIT, "shaders/vertex.glsl", "shaders/lit.glsl" );
 
 	Gfx_LoadPalette( titlePal, "TITLEPAL" );
 	Gfx_LoadPalette( playPal, "PLAYPAL" );
@@ -569,10 +569,7 @@ void Gfx_Initialize( void ) {
 		PrintError( "Failed to create fallback texture!\n" );
 	}
 
-	defaultFont = Gfx_LoadTexture( "Engine:DefaultFont.gfx" );
-
-	/* and now, finally, load in the splash screen! */
-	titlePicTexture = Gfx_LoadLumpTexture( titlePal, "TITLEPIC" );
+	defaultFont = Gfx_LoadTexture( "global:font.gfx" );
 
 	/* load the numbers */
 	for ( unsigned int i = 0; i < 10; ++i ) {
@@ -583,8 +580,8 @@ void Gfx_Initialize( void ) {
 
 	Font_Initialize();
 
-	Gfx_LoadWallTextures();
-	Gfx_LoadFloorTextures();
+	//Gfx_LoadWallTextures();
+	//Gfx_LoadFloorTextures();
 
 	Gfx_SetupDefaultState();
 }
@@ -619,7 +616,7 @@ void Gfx_DrawMenu( void ) {
 
 		case MENU_STATE_START:
 			Gfx_EnableShaderProgram( SHADER_TEXTURE );
-			plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
+			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
 			break;
 
 		case MENU_STATE_HUD:
