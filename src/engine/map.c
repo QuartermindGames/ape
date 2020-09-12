@@ -200,7 +200,7 @@ static void Map_ParseFaces( PLFile *file ) {
 			texturePtr = mapData.textures[ textureIndex ];
 		}
 
-		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 1.0f, 1.0f ), 0.0f );
+		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 4.0f, 4.0f ), 0.0f );
 		if ( mapData.faces[ i ].polygon == NULL ) {
 			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
@@ -397,14 +397,22 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 #endif
 }
 
-void Map_DrawSector( const MapSector *sector ) {
+void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
 
+		if ( !plIsBoxInsideView( camera->cameraPtr, &curFace->bounds ) ) {
+			continue;
+		}
+
 		if ( i == 0 ) {
 			Map_GetPortalView( NULL, curFace, curFace );
 		}
+
+		curFace->bounds.origin = PLVector3( 0,0 ,0 );
+
+		//plDrawBoundingVolume( &curFace->bounds, PL_COLOUR_BLUE );
 
 		PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
 		plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
@@ -429,10 +437,12 @@ void Map_DrawSector( const MapSector *sector ) {
 
 		plUploadMesh( renderMesh );
 		plDrawMesh( renderMesh );
+
+		g_gfxPerfStats.numFacesDrawn++;
 	}
 }
 
-void Map_Draw( void ) {
+void Map_Draw( GfxCamera *camera ) {
 	if ( renderMesh == NULL ) {
 		return;
 	}
@@ -446,7 +456,58 @@ void Map_Draw( void ) {
 	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
 	plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
 
-	Map_DrawSector( &mapData.sectors[ 0 ] );
+#if 0
+	static PLVector3 sunPosition = PLVector3( 32.0f, -25.0f, 25.0f );
+	sunPosition.x = sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f;
+	plSetNamedShaderUniformVector3( NULL, "sun_position", sunPosition );
+#endif
+
+	plSetNamedShaderUniformInt( NULL, "numLights", 1 );
+
+	float brightness = 2.0f; //( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
+	if ( brightness < 0.0f ) {
+		brightness = 0.0f;
+	}
+
+	float radius = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
+	if ( radius < 0.0f ) {
+		radius = 0.0f;
+	}
+
+	plSetNamedShaderUniformVector4( NULL, "lights[0].colour", PLVector4( 1.0f, 1.0f, 1.0f, brightness ) );
+	PLVector3 lightPosition = {
+			-440, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			-440, //- sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	};
+	plSetNamedShaderUniformVector3( NULL, "lights[0].position", lightPosition );
+	plSetNamedShaderUniformFloat( NULL, "lights[0].radius", radius );
+
+	plSetNamedShaderUniformVector4( NULL, "lights[1].colour", PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ) );
+	lightPosition = PLVector3(
+			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	);
+	plSetNamedShaderUniformVector3( NULL, "lights[1].position", lightPosition );
+
+	plSetNamedShaderUniformVector4( NULL, "lights[2].colour", PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ) );
+	lightPosition = PLVector3(
+			-440 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
+			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	);
+	plSetNamedShaderUniformVector3( NULL, "lights[2].position", lightPosition );
+
+	plSetNamedShaderUniformVector4( NULL, "lights[3].colour", PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ) );
+	lightPosition = PLVector3(
+			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	);
+	plSetNamedShaderUniformVector3( NULL, "lights[3].position", lightPosition );
+
+	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
 
 	plPopMatrix();
 

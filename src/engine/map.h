@@ -24,8 +24,10 @@ typedef struct MapSector {
 	unsigned int faceId;
 } MapSector;
 
+typedef struct GfxCamera GfxCamera;
+
 void Map_ClearData( void );
 void Map_Load( const char *path );
-void Map_Draw( void );
+void Map_Draw( GfxCamera *camera );
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );

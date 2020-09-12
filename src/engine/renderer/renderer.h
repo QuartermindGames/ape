@@ -39,6 +39,11 @@ typedef struct GfxCamera {
 	struct PLLinkedListNode *node;				/* node representing this object in the linked list */
 } GfxCamera;
 
+struct {
+	PLVector3 cameraPos;
+	unsigned int numFacesDrawn;
+} g_gfxPerfStats;
+
 #define GFX_NUM_SPRITE_ANGLES 8
 
 void Gfx_Initialize( void );

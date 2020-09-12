@@ -643,9 +643,20 @@ void Gfx_DrawMenu( void ) {
 		pos = 0;
 	}
 
-	Font_DrawBitmapString( 16.0f, 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, "Hello World! This is some example text to make sure the font rendering works." );
-
 	plDrawRectangle( &transform, 0, 0, w, 16, PL_COLOUR_BLACK );
+
+	char buf[ 256 ];
+	snprintf( buf, sizeof( buf ),
+	          "Camera Position: %d %d %d\n"
+	          "Current Node: 0\n"
+	          "Num Faces Drawn: %d\n"
+	          "Num Actors Drawn: %d\n",
+	          (int)g_gfxPerfStats.cameraPos.x,
+	          (int)g_gfxPerfStats.cameraPos.y,
+	          (int)g_gfxPerfStats.cameraPos.z,
+	          g_gfxPerfStats.numFacesDrawn,
+	          0 );
+	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
@@ -700,6 +711,8 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 	}
 #endif
 
-	Map_Draw();
+	g_gfxPerfStats.cameraPos = camera->cameraPtr->position;
+
+	Map_Draw( camera );
 	Act_DrawActors();
 }

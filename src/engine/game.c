@@ -37,7 +37,7 @@ static void Game_Start( void ) {
 	menuState = MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
 
-	Map_Load( "Maps/test_mirror.map" ); /* load the map from the global wad */
+	Map_Load( "Maps/portaltest2.map" ); /* load the map from the global wad */
 
 	Act_SpawnActors();
 
@@ -68,6 +68,8 @@ void Game_Display( void ) {
 	if ( playerCamera == NULL ) {
 		return;
 	}
+
+	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
 
 	Gfx_DrawPerspective( playerCamera );
 	Gfx_DrawMenu();
