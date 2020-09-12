@@ -9,7 +9,6 @@
 
 # Linker output
 *.ilk
-*.map
 *.exp
 
 # Precompiled Headers
@@ -51,12 +50,11 @@ Module.symvers
 Mkfile.old
 dkms.conf
 /cmake-build-debug/
-/bin/pkgman
-/bin/Yin
 
 # Generated Files
 *.gfx
 /build
 /bin/log.txt
 /bin/launcher_sdl2
-/bin/Textures/
+/bin/pkgman
+/bin/Yin

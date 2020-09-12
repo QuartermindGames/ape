@@ -1,8 +1,0 @@
-; Generates Maps/Test.map file
-output ../bin/Maps/Test.map
-
-add Maps/Test/Vertices.dat Data Vertices
-add Maps/Test/Polygons.dat Data Polygons
-;add Maps/Test/Actors.dat Data Actors
-;add Maps/Test/Sectors.dat Data Sectors
-;add Maps/Test/SubSectors.dat Data SubSectors

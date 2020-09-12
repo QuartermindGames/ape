@@ -1,0 +1,16 @@
+; Generates BaseTextures.pkg
+output base.pkg
+
+; Default/fallback textures
+add develop/textures/base/default.bmp global default.gfx
+add develop/textures/base/default_tile.bmp global tile.gfx
+add develop/textures/base/default_font.bmp global font.gfx
+
+; Tests for the image compression
+;add develop/textures/test/multicolours.png test multicolours.gfx
+;add develop/textures/test/red.png test red.gfx
+;add develop/textures/test/green.png test green.gfx
+;add develop/textures/test/blue.png test blue.gfx
+
+; Editor textures
+add develop/textures/editor/trigger.bmp editor trigger.gfx

@@ -1,0 +1,19 @@
+; Generates textures/demo.pkg
+output textures/demo.pkg
+
+; floors
+add develop/materials/textures/world/STNTLE00.bmp t_demo_floor stntle00.gfx
+add develop/materials/textures/world/STNTLE00A.bmp t_demo_floor stntle00a.gfx
+add develop/materials/textures/world/STNTLE00B.bmp t_demo_floor stntle00b.gfx
+add develop/materials/textures/world/STNTLE03.bmp t_demo_floor stntle03.gfx
+
+; walls
+;add develop/materials/textures/world/MTLWLL01.bmp t_demo_wall mtlwll01.gfx
+;add develop/materials/textures/world/MTLWLL01A.bmp t_demo_wall mtlwll01a.gfx
+
+; detail
+add develop/materials/textures/world/detail/canvas.tga t_detail canvas.tga
+add develop/materials/textures/world/detail/canvas_rough.tga t_detail canvas_rough.tga
+add develop/materials/textures/world/detail/crosshatch.tga t_detail crosshatch.tga
+add develop/materials/textures/world/detail/fur.tga t_detail fur.tga
+add develop/materials/textures/world/detail/grain.tga t_detail grain.tga
