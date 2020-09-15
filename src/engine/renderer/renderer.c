@@ -2,15 +2,15 @@
  * Project Yin
  * */
 
-#include "yin.h"
-#include "renderer.h"
-#include "game.h"
-#include "actor.h"
-#include "map.h"
-#include "image.h"
-#include "font.h"
+#include <PL/pl_llist.h>
 
-static PLShaderProgram *shaderPrograms[MAX_SHADER_TYPES];
+#include "yin.h"
+#include "actor.h"
+#include "font.h"
+#include "game.h"
+#include "image.h"
+#include "map.h"
+#include "renderer.h"
 
 static PLCamera *auxCamera = NULL;
 
@@ -19,24 +19,28 @@ typedef struct RGBMap {
 	uint8_t g;
 	uint8_t b;
 } RGBMap;
-static RGBMap playPal[256], titlePal[256];
+static RGBMap playPal[ 256 ], titlePal[ 256 ];
+
+static PLLinkedList *textures;
 
 static PLTexture *fallbackTexture = NULL;
 
-static PLTexture *numTextureTable[10];
+static PLTexture *numTextureTable[ 10 ];
 static PLTexture *defaultFont;
 
+static PLTexture *demoOverlayLogo;
+
 static GfxAnimationFrame **wallTextures;
-static unsigned int      numWallTextures;
-static PLTexture         **floorTextures;
-static unsigned int      numFloorTextures;
+static unsigned int numWallTextures;
+static PLTexture **floorTextures;
+static unsigned int numFloorTextures;
 
 PLTexture *Gfx_GetFallbackTexture( void ) {
 	return fallbackTexture;
 }
 
 PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
-										bool generateMipMap ) {
+                                        bool generateMipMap ) {
 	PLColourFormat cFormat;
 	PLImageFormat iFormat;
 
@@ -55,8 +59,8 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 	}
 
 	PLImage *imageData = plCreateImage( data, w, h, cFormat, iFormat );
-	if ( imageData == NULL) {
-		PrintWarn( "Failed to generate image data!\nPL: %s\n", plGetError());
+	if ( imageData == NULL ) {
+		PrintWarn( "Failed to generate image data!\nPL: %s\n", plGetError() );
 	}
 
 #if 0
@@ -66,8 +70,8 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 #endif
 
 	PLTexture *texture = plCreateTexture();
-	if ( texture == NULL) {
-		PrintError( "Failed to create texture!\nPL: %s\n", plGetError());
+	if ( texture == NULL ) {
+		PrintError( "Failed to create texture!\nPL: %s\n", plGetError() );
 	}
 
 	if ( !generateMipMap ) {
@@ -77,13 +81,51 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 		texture->filter = PL_TEXTURE_FILTER_MIPMAP_LINEAR;
 	}
 
-	if ( !plUploadTextureImage( texture, imageData )) {
-		PrintError( "Failed to generate texture from image!\nPL: %s\n", plGetError());
+	if ( !plUploadTextureImage( texture, imageData ) ) {
+		PrintError( "Failed to generate texture from image!\nPL: %s\n", plGetError() );
 	}
 
 	plDestroyImage( imageData );
 
 	return texture;
+}
+
+static void Gfx_InitializeTextures( void ) {
+	textures = plCreateLinkedList();
+
+	/* generate fallback texture */
+	static PLColour fallbackData[] = {
+			{ 128, 0, 128, 255 },
+			{ 0, 128, 128, 255 },
+			{ 0, 128, 128, 255 },
+			{ 128, 0, 128, 255 },
+	};
+	fallbackTexture = Gfx_GenerateTextureFromData( ( uint8_t * ) fallbackData, 2, 2, 4, false );
+	if ( fallbackTexture == NULL ) {
+		PrintError( "Failed to create fallback texture!\n" );
+	}
+
+	/* register the standard image loaders, and our package image loader */
+	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+	plRegisterImageLoader( "gfx", Image_LoadPackedImage );
+
+	/* temporary! */
+	plMountLocation( "textures/demo.pkg" );
+
+	/* fetch our required texture set */
+	defaultFont = Gfx_LoadTexture( "global:font.gfx" );
+	demoOverlayLogo = Gfx_LoadTexture( "t_demo:logo.png" );
+
+	/* load the numbers */
+	/*
+	for ( unsigned int i = 0; i < 10; ++i ) {
+		char numName[ 16 ];
+		snprintf( numName, sizeof( numName ), "WNUMBER%d", i );
+		numTextureTable[ i ] = Gfx_LoadLumpTexture( titlePal, numName );
+	}
+	*/
+
+	Font_Initialize();
 }
 
 GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int index ) {
@@ -119,7 +161,7 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 		PrintError( "Failed to read in column offsets for picture %d!\nPL: %s\n", index, plGetError() );
 	}
 
-	PLColour *colourBuffer = g_system.calloc( (size_t) w * h, sizeof( PLColour ) );
+	PLColour *colourBuffer = g_system.calloc( ( size_t ) w * h, sizeof( PLColour ) );
 	for ( unsigned int i = 0; i < w; ++i ) {
 		plFileSeek( filePtr, columnOffsets[ i ], PL_SEEK_SET );
 
@@ -145,9 +187,9 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 
 				/* unlike others, cyan denotes transparency here */
 				bool isCyan =
-						colourBuffer[ pos ].r == 0 &&
-						colourBuffer[ pos ].g == 255 &&
-						colourBuffer[ pos ].b == 255;
+				        colourBuffer[ pos ].r == 0 &&
+				        colourBuffer[ pos ].g == 255 &&
+				        colourBuffer[ pos ].b == 255;
 				colourBuffer[ pos ].a = isCyan ? 0 : 255;
 			}
 		}
@@ -157,230 +199,57 @@ GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int i
 
 	/* setup the animation frame we're going to use */
 	GfxAnimationFrame *frame = g_system.calloc( 1, sizeof( GfxAnimationFrame ) );
-	frame->texture    = Gfx_GenerateTextureFromData(( uint8_t * ) colourBuffer, w, h, 4, false );
+	frame->texture = Gfx_GenerateTextureFromData( ( uint8_t * ) colourBuffer, w, h, 4, false );
 	frame->leftOffset = leftOffset;
-	frame->topOffset  = topOffset;
+	frame->topOffset = topOffset;
 
 	free( colourBuffer );
 
 	return frame;
 }
 
-GfxAnimationFrame *Gfx_LoadPictureByName( const RGBMap *palette, const char *indexName ) {
-	return Gfx_LoadPictureByIndex( palette, plGetPackageTableIndex( globalWad, indexName ) );
-}
-
-PLTexture *Gfx_GetWallTexture( unsigned int index ) {
-	if ( index >= numWallTextures ) {
-		PrintWarn( "Invalid wall texture slot (%d/%d)!\n", index, numWallTextures );
-		return fallbackTexture;
-	}
-
-	return wallTextures[ index ]->texture;
-}
-
-void Gfx_LoadWallTextures( void ) {
-	unsigned int posStart = plGetPackageTableIndex( globalWad, "P_START" ) + 1;
-	if ( plGetFunctionResult() != PL_RESULT_SUCCESS ) {
-		PrintError( "Failed to find the start of the wall table!\nPL: %s\n", plGetError() );
-	}
-
-	unsigned int posEnd = plGetPackageTableIndex( globalWad, "P_END" );
-	if ( plGetFunctionResult() != PL_RESULT_SUCCESS ) {
-		PrintError( "Failed to find the end of the wall table!\nPL: %s\n", plGetError() );
-	}
-
-	numWallTextures = posEnd - posStart;
-	wallTextures = g_system.calloc( numWallTextures, sizeof( PLTexture* ) );
-
-	for ( unsigned int i = 0; i < numWallTextures; ++i ) {
-		unsigned int fileIndex = posStart + i;
-		wallTextures[ i ] = Gfx_LoadPictureByIndex( playPal, fileIndex );
-	}
-}
-
-PLTexture *Gfx_LoadFlatByIndex( const RGBMap *palette, unsigned int index ) {
-	PLFile *filePtr = plLoadPackageFileByIndex( globalWad, index );
-	if ( filePtr == NULL ) {
-		const char *fileName = plGetPackageFileName( globalWad, index );
-		if ( fileName == NULL ) {
-			fileName = "Unknown";
+PLTexture *Gfx_GetTexture( const char *path ) {
+	PLLinkedListNode *node = plGetRootNode( textures );
+	while ( node != NULL ) {
+		PLTexture *texture = plGetLinkedListNodeUserData( node );
+		if ( pl_strcasecmp( path, texture->path ) == 0 ) {
+			return texture;
 		}
 
-		PrintWarn( "Failed to load flat %d (%s)!\nPL: %s\n", index, fileName, plGetError() );
-		return fallbackTexture;
+		node = plGetNextLinkedListNode( node );
 	}
 
-	/* all flats are assumed to be 64x64 */
-	size_t flatSize = plGetFileSize( filePtr );
-	if ( flatSize != 4096 ) {
-		PrintWarn( "Unexpected flat size for %d, %d/64!\n", index, flatSize );
-		plCloseFile( filePtr );
-		return fallbackTexture;
-	}
-
-	PLColour *colourBuffer = g_system.calloc( flatSize, sizeof( PLColour ) );
-	for ( unsigned int i = 0; i < flatSize; ++i ) {
-		bool status;
-		uint8_t pixel = plReadInt8( filePtr, &status );
-		if ( !status ) {
-			PrintError( "Failed to read pixel %d for flat %d!\nPL: %s\n", i, index, plGetError() );
-		}
-
-		colourBuffer[ i ].r = palette[ pixel ].r;
-		colourBuffer[ i ].g = palette[ pixel ].g;
-		colourBuffer[ i ].b = palette[ pixel ].b;
-		/* transparency isn't supported here? */
-		colourBuffer[ i ].a = 255;
-	}
-
-	plCloseFile( filePtr );
-
-	PLTexture *texture = Gfx_GenerateTextureFromData(( uint8_t * ) colourBuffer, 64, 64, 4, false );
-
-	free( colourBuffer );
-
-	return texture;
-}
-
-PLTexture *Gfx_GetFloorTexture( unsigned int index ) {
-	if ( index >= numFloorTextures ) {
-		PrintWarn( "Invalid floor texture slot (%d/%d)!\n", index, numFloorTextures );
-		return fallbackTexture;
-	}
-
-	return floorTextures[ index ];
-}
-
-void Gfx_LoadFloorTextures( void ) {
-	unsigned int posStart = plGetPackageTableIndex( globalWad, "F_START" ) + 1;
-	if ( plGetFunctionResult() != PL_RESULT_SUCCESS ) {
-		PrintError( "Failed to find the start of the floor table!\nPL: %s\n", plGetError() );
-	}
-
-	unsigned int posEnd = plGetPackageTableIndex( globalWad, "F_END" );
-	if ( plGetFunctionResult() != PL_RESULT_SUCCESS ) {
-		PrintError( "Failed to find the end of the floor table!\nPL: %s\n", plGetError() );
-	}
-
-	numFloorTextures = posEnd - posStart;
-	floorTextures = g_system.calloc( numFloorTextures, sizeof( PLTexture* ) );
-
-	for ( unsigned int i = 0; i < numFloorTextures; ++i ) {
-		unsigned int fileIndex = posStart + i;
-		floorTextures[ i ] = Gfx_LoadFlatByIndex( playPal, fileIndex );
-	}
-}
-
-void Gfx_LoadPalette( RGBMap *palette, const char *indexName ) {
-	/* clear out the palette before we continue */
-	memset( palette, 0, 256 );
-
-	PLFile *filePtr = plLoadPackageFile( globalWad, indexName );
-	if ( filePtr == NULL) {
-		PrintWarn( "Failed to find \"%s\"!\nPL: %s\n", indexName, plGetError());
-		return;
-	}
-
-	if ( plReadFile( filePtr, palette, sizeof( RGBMap ), 256 ) != 256 ) {
-		PrintWarn( "Failed to read in palette data for \"%s\"!\nPL: %s\n", indexName, plGetError());
-	}
-
-	plCloseFile( filePtr );
-}
-
-void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destination, unsigned int numFrames ) {
-	for ( unsigned int i = 0; i < numFrames; ++i ) {
-		PrintMsg( "Loading frame %d (%s)...\n", i, frameList[ i ] );
-		destination[ i ] = Gfx_LoadPictureByName( playPal, frameList[ i ] );
-		if ( destination[ i ] == NULL ) {
-			PrintError( "Failed to load frame %d (%s)!\n", i, frameList[ i ] );
-		}
-	}
+	return NULL;
 }
 
 PLTexture *Gfx_LoadTexture( const char *path ) {
-	PLImage *image = Image_LoadPackedImage( path );
-	if ( image == NULL ) {
-		PLTexture *texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_LINEAR );
-		if ( texture == NULL ) {
-			PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
-			return fallbackTexture;
-		}
-
+	/* check if it's already loaded */
+	PLTexture *texture = Gfx_GetTexture( path );
+	if ( texture != NULL ) {
 		return texture;
 	}
 
-	PLTexture *texture = plCreateTexture();
+	texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( texture == NULL ) {
-		plDestroyImage( image );
-
-		PrintWarn( "Failed to create texture handle for \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
 		return fallbackTexture;
 	}
 
-	texture->filter = PL_TEXTURE_FILTER_MIPMAP_LINEAR;
-
-	if ( !plUploadTextureImage( texture, image ) ) {
-		PrintWarn( "Failed to upload texture \"%s\"!\nPL: %s\n", path, plGetError() );
-		texture = fallbackTexture;
-	}
-
-	plDestroyImage( image );
-
+	plInsertLinkedListNode( textures, texture );
 	return texture;
 }
 
-PLTexture *Gfx_LoadLumpTexture( const RGBMap *palette, const char *indexName ) {
-	PLFile *filePtr = plLoadPackageFile( globalWad, indexName );
-	if ( filePtr == NULL) {
-		PrintWarn( "Failed to find \"%s\"!\nPL: %s\n", indexName, plGetError());
-		return fallbackTexture;
-	}
+/**********************************************************/
+/** Shaders **/
 
-	bool status;
-	uint16_t width = plReadInt16( filePtr, false, &status );
-	if ( width == 0 ) {
-		PrintError( "Invalid image width for \"%s\"!\n", indexName );
-	}
+typedef struct ShaderProgramIndex {
+	char internalName[ 64 ];
+	PLShaderProgram *internalPtr;
+	PLLinkedListNode *node;
+} ShaderProgramIndex;
 
-	uint16_t height = plReadInt16( filePtr, false, &status );
-	if ( height == 0 ) {
-		PrintError( "Invalid image height \"%s\"!\n", indexName );
-	}
-
-	if ( !status ) {
-		PrintError( "Failed to read in lump width and height for \"%s\"!\nPL: %s\n", indexName, plGetError());
-	}
-
-	unsigned int lumpDataSize = width * height;
-
-	/* seems to be totally unused... */
-	plFileSeek( filePtr, 4, PL_SEEK_CUR );
-
-	uint8_t *imageBuffer = g_system.calloc( lumpDataSize, sizeof( uint8_t ) );
-	if ( plReadFile( filePtr, imageBuffer, 1, lumpDataSize ) != lumpDataSize ) {
-		PrintError( "Failed to read in lump data for \"%s\"!\nPL: %s\n", indexName, plGetError());
-	}
-
-	plCloseFile( filePtr );
-
-	/* now convert using the palette (I'm lazy, so we'll just convert to rgba) */
-	PLColour *colourBuffer = g_system.calloc( lumpDataSize, sizeof( PLColour ) );
-	for ( unsigned int i = 0; i < lumpDataSize; ++i ) {
-		colourBuffer[ i ].r = palette[ imageBuffer[ i ] ].r;
-		colourBuffer[ i ].g = palette[ imageBuffer[ i ] ].g;
-		colourBuffer[ i ].b = palette[ imageBuffer[ i ] ].b;
-		colourBuffer[ i ].a = ( imageBuffer[ i ] == 255 ) ? 0 : 255;
-	}
-	free( imageBuffer );
-
-	PLTexture *texture = Gfx_GenerateTextureFromData(( uint8_t * ) colourBuffer, width, height, 4, false );
-
-	free( colourBuffer );
-
-	return texture;
-}
+static PLLinkedList *gfxShaderPrograms;
+PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 static void Gfx_RegisterShaderStage( PLShaderProgram *program, PLShaderStageType type, const char *path ) {
 	PLFile *filePtr = plOpenFile( path, true );
@@ -388,46 +257,133 @@ static void Gfx_RegisterShaderStage( PLShaderProgram *program, PLShaderStageType
 		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, plGetError() );
 	}
 
-	const char *buffer = ( const char* ) plGetFileData( filePtr );
+	const char *buffer = ( const char * ) plGetFileData( filePtr );
 	size_t length = plGetFileSize( filePtr );
 
 	if ( !plRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
-		PrintError( "Failed to register stage!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, plGetError() );
 	}
 
 	plCloseFile( filePtr );
 }
 
-static void Gfx_RegisterShader( GfxShaderType type, const char *vertPath, const char *fragPath ) {
-	shaderPrograms[ type ] = plCreateShaderProgram();
-	if ( shaderPrograms[ type ] == NULL) {
-		PrintError( "Failed to create shader program!\nPL: %s\n", plGetError());
+static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
+	ShaderProgramIndex program;
+
+	char buffer[ 256 ];
+
+	plReadString( file, buffer, sizeof( buffer ) );
+	if ( sscanf( buffer, "program %s\n", program.internalName ) != 1 ) {
+		PrintWarn( "Failed to fetch program name!\n" );
+		return NULL;
 	}
 
-	Gfx_RegisterShaderStage( shaderPrograms[ type ], PL_SHADER_TYPE_VERTEX, vertPath );
-	Gfx_RegisterShaderStage( shaderPrograms[ type ], PL_SHADER_TYPE_FRAGMENT, fragPath );
+	char vertexPath[ PL_SYSTEM_MAX_PATH ];
+	char fragmentPath[ PL_SYSTEM_MAX_PATH ];
 
-	if ( !plLinkShaderProgram( shaderPrograms[ type ] )) {
-		PrintError( "Failed to link shader stages!\nPL: %s\n", plGetError());
+	while ( plReadString( file, buffer, sizeof( buffer ) ) != NULL ) {
+		if ( pl_strncasecmp( buffer, "vertex ", 7 ) == 0 ) {
+			/* read in the vertex stage */
+			sscanf( buffer, "vertex %s\n", vertexPath );
+			continue;
+		} else if ( pl_strncasecmp( buffer, "fragment ", 9 ) == 0 ) {
+			/* read in the fragment stage */
+			sscanf( buffer, "fragment %s\n", fragmentPath );
+			continue;
+		}
+	}
+
+	if ( vertexPath[ 0 ] == '\0' || fragmentPath[ 0 ] == '\0' ) {
+		PrintWarn( "No vertex/fragment stage defined in program!\n" );
+		return NULL;
+	}
+
+	program.internalPtr = plCreateShaderProgram();
+	if ( program.internalPtr == NULL ) {
+		PrintWarn( "Failed to create shader program!\nPL: %s\n", plGetError() );
+		return NULL;
+	}
+
+	Gfx_RegisterShaderStage( program.internalPtr, PL_SHADER_TYPE_VERTEX, vertexPath );
+	Gfx_RegisterShaderStage( program.internalPtr, PL_SHADER_TYPE_FRAGMENT, fragmentPath );
+
+	if ( !plLinkShaderProgram( program.internalPtr ) ) {
+		PrintError( "Failed to link shader stages!\nPL: %s\n", plGetError() );
+	}
+
+	/* allocate and return our program index */
+	ShaderProgramIndex *out = g_system.malloc( sizeof( ShaderProgramIndex ) );
+	*out = program;
+	return out;
+}
+
+static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
+	PLFile *file = plOpenFile( path, false );
+	if ( file == NULL ) {
+		PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, plGetError() );
+		return;
+	}
+
+	ShaderProgramIndex *program = Gfx_ParseShaderProgram( file );
+
+	plCloseFile( file );
+
+	if ( program != NULL ) {
+		program->node = plInsertLinkedListNode( gfxShaderPrograms, program );
 	}
 }
 
-void Gfx_EnableShaderProgram( GfxShaderType type ) {
-	plSetShaderProgram( shaderPrograms[ type ] );
+PLShaderProgram *Gfx_GetShaderProgram( const char *name ) {
+	PLLinkedListNode *root = plGetRootNode( gfxShaderPrograms );
+	while ( root != NULL ) {
+		ShaderProgramIndex *programIndex = plGetLinkedListNodeUserData( root );
+		if ( strcmp( name, programIndex->internalName ) == 0 ) {
+			return programIndex->internalPtr;
+		}
+
+		root = plGetNextLinkedListNode( root );
+	}
+
+	return NULL;
 }
+
+static void Gfx_InitializeShaderPrograms( void ) {
+	gfxShaderPrograms = plCreateLinkedList();
+
+	plScanDirectory( "materials/shaders/", "prg", Gfx_LoadShaderProgram, false, NULL );
+
+	PrintMsg( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
+
+	/* now fetch the default programs */
+	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ]={
+	        [ GFX_SHADER_DEFAULT ] = "default",
+	        [ GFX_SHADER_DEFAULT_LIT ] = "default_lit",
+	        [ GFX_SHADER_DEFAULT_VERTEX ] = "default_vertex",
+	        [ GFX_SHADER_DEFAULT_ALPHA ] = "default_alpha",
+	};
+	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
+		gfxDefaultShaderPrograms[ i ] = Gfx_GetShaderProgram( defaultShaderNames[ i ] );
+		if ( gfxDefaultShaderPrograms[ i ] == NULL ) {
+			PrintError( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
+		}
+	}
+}
+
+/**********************************************************/
 
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle ) {
-	PLMatrix4 transform;
-	transform = plMatrix4Identity();
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( 0.0f ), PLVector3( 1, 0, 0 ) ));
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( spriteAngle ), PLVector3( 0, 1, 0 ) ));
-	transform = plMultiplyMatrix4( transform,
-								   plRotateMatrix4( plDegreesToRadians( 180.0f ), PLVector3( 0, 0, 1 ) ));
-	transform = plMultiplyMatrix4( transform, plTranslateMatrix4( *position ) );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
 
-	Gfx_EnableShaderProgram( SHADER_LIT );
+	plLoadIdentityMatrix();
+
+	plRotateMatrix( plDegreesToRadians( 0.0f ), 1.0f, 0.0f, 0.0f );
+	plRotateMatrix( plDegreesToRadians( spriteAngle ), 0.0f, 1.0f, 0.0f );
+	plRotateMatrix( plDegreesToRadians( 180.0f ), 0.0f, 0.0f, 1.0f );
+
+	plPopMatrix();
+
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
 
 #if 0
 	int w = frame->texture->w; //* 1.7;
@@ -441,7 +397,7 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 	float y = -h;
 #endif
 
-	plDrawTexturedRectangle( &transform, x, y, w, h, frame->texture );
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, frame->texture );
 }
 
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
@@ -490,8 +446,11 @@ void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, u
 }
 
 void Gfx_DrawDigit( float x, float y, int digit ) {
-	if ( digit < 0 ) { digit = 0; }
-	else if ( digit > 9 ) { digit = 9; }
+	if ( digit < 0 ) {
+		digit = 0;
+	} else if ( digit > 9 ) {
+		digit = 9;
+	}
 
 	PLMatrix4 transform = plMatrix4Identity();
 	plDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
@@ -517,17 +476,17 @@ void Gfx_DrawNumber( float x, float y, unsigned int number ) {
 }
 
 void Gfx_InitializeCameras( void ); /* gfx_camera.c */
-void Gfx_ShutdownCameras( void );	/* gfx_camera.c */
+void Gfx_ShutdownCameras( void );   /* gfx_camera.c */
 
 void Gfx_SetupDefaultState( void ) {
-	plSetClearColour(PLColour( 0, 0, 0, 255 ) );
+	plSetClearColour( PLColour( 128, 212, 255, 255 ) );
 
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
 
-	plSetCullMode( PL_CULL_POSTIVE );
+	//plSetCullMode( PL_CULL_POSTIVE );
 
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 }
 
 void Gfx_Initialize( void ) {
@@ -537,52 +496,19 @@ void Gfx_Initialize( void ) {
 
 	/* create both the interface camera and player camera */
 
+	Gfx_InitializeShaderPrograms();
+	Gfx_InitializeTextures();
+	Gfx_InitializeCameras();
+
 	auxCamera = plCreateCamera();
-	if ( auxCamera == NULL) {
-		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", plGetError());
+	if ( auxCamera == NULL ) {
+		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", plGetError() );
 	}
 	auxCamera->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
 	auxCamera->viewport.w = DISPLAY_WIDTH;
 	auxCamera->viewport.h = DISPLAY_HEIGHT;
-
-	Gfx_InitializeCameras();
-
-	/* create the default shader programs */
-	Gfx_RegisterShader( SHADER_GENERIC, "shaders/vertex.glsl", "shaders/colour.glsl" );
-	Gfx_RegisterShader( SHADER_TEXTURE, "shaders/vertex.glsl", "shaders/texture.glsl" );
-	Gfx_RegisterShader( SHADER_ALPHA_TEST, "shaders/vertex.glsl", "shaders/alpha.glsl" );
-	Gfx_RegisterShader( SHADER_LIT, "shaders/vertex.glsl", "shaders/lit.glsl" );
-
-	Gfx_LoadPalette( titlePal, "TITLEPAL" );
-	Gfx_LoadPalette( playPal, "PLAYPAL" );
-
-	/* generate fallback texture */
-	PLColour fallbackData[] = {
-			{ 128, 0, 128, 255 },
-			{ 0, 128, 128, 255 },
-			{ 0, 128, 128, 255 },
-			{ 128, 0, 128, 255 },
-	};
-	fallbackTexture = Gfx_GenerateTextureFromData(( uint8_t * ) fallbackData, 2, 2, 4, false );
-	if ( fallbackTexture == NULL) {
-		PrintError( "Failed to create fallback texture!\n" );
-	}
-
-	defaultFont = Gfx_LoadTexture( "global:font.gfx" );
-
-	/* load the numbers */
-	for ( unsigned int i = 0; i < 10; ++i ) {
-		char numName[16];
-		snprintf( numName, sizeof( numName ), "WNUMBER%d", i );
-		numTextureTable[ i ] = Gfx_LoadLumpTexture( titlePal, numName );
-	}
-
-	Font_Initialize();
-
-	//Gfx_LoadWallTextures();
-	//Gfx_LoadFloorTextures();
 
 	Gfx_SetupDefaultState();
 }
@@ -611,31 +537,31 @@ void Gfx_DrawMenu( void ) {
 	PLMatrix4 transform = plMatrix4Identity();
 
 #ifndef DEBUG_CAM
-	switch ( Game_GetMenuState()) {
+	switch ( Game_GetMenuState() ) {
 		default:
-		PrintError( "Invalid menu state!\n" );
+			PrintError( "Invalid menu state!\n" );
 
 		case MENU_STATE_START:
-			Gfx_EnableShaderProgram( SHADER_TEXTURE );
+			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
 			break;
 
 		case MENU_STATE_HUD:
-			Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
+			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_ALPHA ] );
 			Gfx_DrawViewSprite();
 			break;
 	}
 #endif
 
+#if 0
 	SysWindow *window = Engine_GetMainWindow();
 	int w, h;
 	g_system.GetWindowSize( window, &w, &h );
 
-	Gfx_EnableShaderProgram( SHADER_ALPHA_TEST );
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_ALPHA ] );
 
-	static const char spinning[]={
-	        '\\', '|', '/', '-', '/', '-'
-	};
+	static const char spinning[] = {
+	        '\\', '|', '/', '-', '/', '-' };
 	static int pos = 0;
 
 	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PL_COLOUR_GREEN, spinning[ pos++ ] );
@@ -651,12 +577,31 @@ void Gfx_DrawMenu( void ) {
 	          "Current Node: 0\n"
 	          "Num Faces Drawn: %d\n"
 	          "Num Actors Drawn: %d\n",
-	          (int)g_gfxPerfStats.cameraPos.x,
-	          (int)g_gfxPerfStats.cameraPos.y,
-	          (int)g_gfxPerfStats.cameraPos.z,
+	          ( int ) g_gfxPerfStats.cameraPos.x,
+	          ( int ) g_gfxPerfStats.cameraPos.y,
+	          ( int ) g_gfxPerfStats.cameraPos.z,
 	          g_gfxPerfStats.numFacesDrawn,
 	          0 );
 	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf );
+#endif
+
+	int w, h;
+	SysWindow *window = Engine_GetMainWindow();
+	g_system.GetWindowSize( window, &w, &h );
+
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	plSetBlendMode( PL_BLEND_DEFAULT );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
+
+	plPopMatrix();
+
+	plSetBlendMode( PL_BLEND_DISABLE );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {

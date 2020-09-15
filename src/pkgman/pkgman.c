@@ -75,6 +75,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 	char packName[ 64 ];
 	strncpy( packName, fileName, sizeof( packName ) );
 
+#if 0
 	/* see if it's a file we can pack */
 	const char *extension = plGetFileExtension( packPath );
 	if ( strcmp( extension, "png" ) == 0 || strcmp( extension, "gif" ) == 0 || strcmp( extension, "bmp" ) == 0 ) {
@@ -93,6 +94,7 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
 
 		plDestroyImage( image );
 	}
+#endif
 
 	PLFile *filePtr = plOpenFile( packPath, true );
 	if ( filePtr == NULL ) {
@@ -131,19 +133,7 @@ static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 		Error( "Failed to get valid file name from \"%s\"!\n", filePath );
 	}
 
-#if 0 /* nevermind, let's include extensions */
-	const char *fileExtension = plGetFileExtension( fileName );
-	if ( fileExtension == NULL ) {
-		Error( "Failed to get valid file extension from \"%s\"!\n", filePath );
-	}
-
-	size_t length = strlen( fileName ) - ( strlen( fileExtension ) + 1 );
-	if ( length >= 16 ) {
-		Error( "File name \"%s\" is too long!\n", fileName );
-	}
-#else
 	unsigned int length = strlen( fileName );
-#endif
 
 	/* now produce a copy of the filename without the extension... */
 	char packFileName[ 64 ];
@@ -225,7 +215,9 @@ static void ParseScript( const char *buffer, size_t length ) {
 int main( int argc, char **argv ) {
 	plInitialize( argc, argv );
 
-	Print( "Package Manager\nCopyright (C) 2020 Mark Sowden\n" );
+	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+
+	Print( "Package Manager\nCopyright (C) 2020 Mark E Sowden <markelswo@gmail.com>\n" );
 	if ( argc < 2 ) {
 		Print( "Please provide a package script!\nExample: pkgman myscript.txt\n" );
 		return EXIT_SUCCESS;

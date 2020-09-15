@@ -4,15 +4,6 @@
 
 #pragma once
 
-typedef enum GfxShaderType {
-	SHADER_GENERIC,
-	SHADER_TEXTURE,
-	SHADER_ALPHA_TEST,
-	SHADER_LIT,
-
-	MAX_SHADER_TYPES
-} GfxShaderType;
-
 /* todo: introduce container around this */
 typedef struct GfxAnimationFrame {
 	unsigned int leftOffset;
@@ -44,7 +35,19 @@ struct {
 	unsigned int numFacesDrawn;
 } g_gfxPerfStats;
 
+enum {
+	GFX_SHADER_DEFAULT,
+	GFX_SHADER_DEFAULT_LIT,
+	GFX_SHADER_DEFAULT_VERTEX,
+	GFX_SHADER_DEFAULT_ALPHA,
+
+	GFX_MAX_DEFAULT_SHADERS
+};
+extern PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+
 #define GFX_NUM_SPRITE_ANGLES 8
+
+#include "material.h"
 
 void Gfx_Initialize( void );
 void Gfx_Shutdown( void );
@@ -53,19 +56,15 @@ void Gfx_DrawMenu( void );
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport );
 
-void Gfx_EnableShaderProgram( GfxShaderType type );
+PLShaderProgram *Gfx_GetShaderProgram( const char *name );
 
 void Gfx_DrawPerspective( GfxCamera *camera );
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-void Gfx_LoadAnimationFrames( const char **frameList, GfxAnimationFrame **destination, unsigned int numFrames );
-
 PLTexture *Gfx_LoadTexture( const char *path );
 
-PLTexture *Gfx_GetWallTexture( unsigned int index );
-PLTexture *Gfx_GetFloorTexture( unsigned int index );
 PLTexture *Gfx_GetFallbackTexture( void );
 
 const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective );

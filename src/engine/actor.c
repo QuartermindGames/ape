@@ -18,7 +18,8 @@ typedef struct ActorSetup {
 } ActorSetup;
 
 static void Act_DrawBasic( Actor *self, void *userData ) {
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+
 	Gfx_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
 

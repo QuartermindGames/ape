@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
+# Copyright (C) 2020 Mark E Sowden <markelswo@gmail.com>
 
 cmake_minimum_required( VERSION 3.5.1 )
 
@@ -10,8 +10,11 @@ file( GLOB ENGINE_SOURCE_FILES
         *.c *.h
         renderer/camera.c
         renderer/font.c
+        renderer/material.c
+        renderer/material.h
         renderer/renderer.c
         renderer/scenegraph.c
+        renderer/scenegraph.h
         )
 
 add_library( engine SHARED ${ENGINE_SOURCE_FILES} )

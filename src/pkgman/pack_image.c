@@ -40,7 +40,7 @@ static void PackImage_WriteHeader( FILE *filePtr, uint8_t channels, uint16_t wid
 	fwrite( &numBlocks, sizeof( uint16_t ), 1, filePtr );
 }
 
-static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t channelFlags, uint8_t numChannels, const uint8_t *srcBuffer, uint16_t srcPixelSize ) {
+static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t channelFlags, uint8_t numChannels, const uint8_t *srcBuffer, uint32_t srcPixelSize ) {
 	/* figure out how many channels we need for this block */
 	uint8_t blockChannelFlags = 0;
 	for ( unsigned int i = 0; i < numChannels; ++i ) {
@@ -64,8 +64,8 @@ static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t 
 
 	/* now figure out how many pixels there are that we need in this block */
 	uint16_t numBlockPixels = 0;
-	uint16_t *pixelOffsets = malloc( sizeof( uint16_t ) * srcPixelSize );
-	for ( uint16_t i = 0; i < srcPixelSize; ++i ) {
+	uint32_t *pixelOffsets = malloc( sizeof( uint32_t ) * srcPixelSize );
+	for ( uint32_t i = 0; i < srcPixelSize; ++i ) {
 		uint8_t srcColour[ 4 ];
 		memcpy( srcColour, srcBuffer, sizeof( uint8_t ) * numChannels );
 
@@ -89,7 +89,13 @@ static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t 
 
 	/* and write out the pixel offsets */
 	fwrite( &numBlockPixels, sizeof( uint16_t ), 1, filePtr );
-	fwrite( pixelOffsets, sizeof( uint16_t ), numBlockPixels, filePtr );
+	if ( srcPixelSize < UINT8_MAX ) {
+		fwrite( pixelOffsets, sizeof( uint8_t ), numBlockPixels, filePtr );
+	} else if ( srcPixelSize < UINT16_MAX ) {
+		fwrite( pixelOffsets, sizeof( uint16_t ), numBlockPixels, filePtr );
+	} else {
+		fwrite( pixelOffsets, sizeof( uint32_t ), numBlockPixels, filePtr );
+	}
 
 	free( pixelOffsets );
 }
@@ -169,18 +175,6 @@ void PackImage_Write( const char *path, const PLImage *image ) {
 	Print( "Found %d unique pixels\n", numColours );
 
 	uint16_t numBlocks = numColours;
-#if 1
-	if ( numBlocks > 2048 ) {
-		Print( "Skipping optimisation!\n" );
-		numBlocks = 0;
-	} else {
-		Print( "Proceeding to pack image...\n" );
-	}
-#else
-	Print( "Proceeding to pack image...\n" );
-	numBlocks = 0;
-#endif
-
 	Print( "ChFl. %d, BlNum. %d, W. %d, H. %d\n", outputChannels, numBlocks, image->width, image->height );
 
 	/* go ahead and write out the header */

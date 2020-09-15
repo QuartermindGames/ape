@@ -16,7 +16,7 @@ static struct {
 	MapSector       *sectors;
 	unsigned int	maxSectors;
 	unsigned int    numSectors;
-	MapVertex       *vertices;
+	PLVertex        *vertices;
 	unsigned int	maxVertices;
 	unsigned int    numVertices;
 	MapFace         *faces;
@@ -133,14 +133,26 @@ static void Map_ParseVertices( PLFile *file ) {
 	}
 
 	/* allocate buffer for vertices and then read them all in */
-	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( MapVertex ) );
+	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( PLVertex ) );
 	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 
-		if ( sscanf( buffer, "%f %f %f", &mapData.vertices[ i ].x, &mapData.vertices[ i ].y, &mapData.vertices[ i ].z ) != 3 ) {
-			PrintError( "Failed to read in vertex \"%d\" elements in \"%s\"!\n", i, plGetFilePath( file ) );
+		if ( sscanf( buffer, "%f %f %f %f %f %f %f %f %d %d %d %d",
+		             &mapData.vertices[ i ].position.x,
+		             &mapData.vertices[ i ].position.y,
+		             &mapData.vertices[ i ].position.z,
+		             &mapData.vertices[ i ].normal.x,
+		             &mapData.vertices[ i ].normal.y,
+		             &mapData.vertices[ i ].normal.z,
+		             &mapData.vertices[ i ].st[ 0 ].x,
+		             &mapData.vertices[ i ].st[ 0 ].y,
+		             &mapData.vertices[ i ].colour.r,
+		             &mapData.vertices[ i ].colour.g,
+		             &mapData.vertices[ i ].colour.b,
+		             &mapData.vertices[ i ].colour.a ) < 3 ) {
+			PrintError( "Failed to read in vertex \"%d\" element in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 	}
 }
@@ -200,7 +212,7 @@ static void Map_ParseFaces( PLFile *file ) {
 			texturePtr = mapData.textures[ textureIndex ];
 		}
 
-		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 4.0f, 4.0f ), 0.0f );
+		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
 		if ( mapData.faces[ i ].polygon == NULL ) {
 			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
@@ -210,15 +222,7 @@ static void Map_ParseFaces( PLFile *file ) {
 				PrintError( "Invalid vertex index!\n" );
 			}
 
-			PLVertex vertex;
-			memset( &vertex, 0, sizeof( PLVertex ) );
-
-			vertex.position.x = mapData.vertices[ faceIndices[ j ] ].x * 30.0f;
-			vertex.position.y = mapData.vertices[ faceIndices[ j ] ].y * 30.0f;
-			vertex.position.z = mapData.vertices[ faceIndices[ j ] ].z * 30.0f;
-			vertex.colour = PLColour( 255, 255, 255, 255 );
-
-			plAddPolygonVertex( mapData.faces[ i ].polygon, &vertex );
+			plAddPolygonVertex( mapData.faces[ i ].polygon, &mapData.vertices[ faceIndices[ j ] ] );
 		}
 
 		unsigned int numPolyVertices;
@@ -235,11 +239,12 @@ static void Map_ParseFaces( PLFile *file ) {
 void Map_ParseSectors( PLFile *file ) {
 	char buffer[ 256 ];
 
-	plReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "sectors %d\n", &mapData.numSectors ) != 1 ) {
-		PrintError( "Failed to fetch number of sectors in \"%s\"!\n", plGetFilePath( file ) );
-	}
+	//plReadString( file, buffer, sizeof( buffer ) );
+	//if ( sscanf( buffer, "sectors %d\n", &mapData.numSectors ) != 1 ) {
+	//	PrintError( "Failed to fetch number of sectors in \"%s\"!\n", plGetFilePath( file ) );
+	//}
 
+	mapData.numSectors = 1;
 	mapData.sectors = g_system.calloc( mapData.numSectors, sizeof( MapSector ) );
 
 #if 0
@@ -397,6 +402,93 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 #endif
 }
 
+/**
+ * Draw scrolling clouds.
+ */
+static void Map_DrawSky( PLCamera *camera ) {
+	plSetTexture( mapData.textures[ 1 ], 0 );
+
+	static PLVertex vertices[] = {
+	        { .position = PLVector3( 10.0f, 100.f, 100.0f ),
+	          .colour = PL_COLOUR_WHITE }, /* top right */
+	        { .position = PLVector3( 10.0f, 200.0f, 200.0f ),
+	          .colour = PLColourA( 0 ) }, /* top right far */
+	        { .position = PLVector3( 10.0f, 100.0f, -100.0f ),
+	          .colour = PL_COLOUR_WHITE }, /* lower right */
+	        { .position = PLVector3( 10.0f, 200.0f, -200.0f ),
+	          .colour = PLColourA( 0 ) }, /* lower right far */
+	        { .position = PLVector3( 10.0f, -100.0f, -100.0f ),
+	          .colour = PL_COLOUR_WHITE }, /* lower left */
+	        { .position = PLVector3( 10.0f, -200.0f, -200.0f ),
+	          .colour = PLColourA( 0 ) }, /* lower left far */
+	        { .position = PLVector3( 10.0f, -100.0f, 100.0f ),
+	          .colour = PL_COLOUR_WHITE }, /* top left */
+	        { .position = PLVector3( 10.0f, -200.0f, 200.0f ),
+	          .colour = PLColourA( 0 ) } }; /* top left far */
+	static unsigned int indices[][3]={
+	        /* corners */
+	        { 0, 1, 2 },
+			{ 2, 1, 3 },
+			{ 2, 3, 4 },
+			{ 4, 3, 5 },
+			{ 4, 5, 6 },
+			{ 6, 5, 7 },
+			{ 6, 7, 0 },
+			{ 0, 7, 1 },
+	        /* middle */
+			{ 0, 2, 4 },
+			{ 0, 4, 6 },
+	};
+
+	static PLMesh *skyMesh = NULL;
+	if ( skyMesh == NULL ) {
+		skyMesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
+		if ( skyMesh == NULL ) {
+			PrintError( "Failed to create sky mesh!\nPL: %s\n", plGetError() );
+		}
+
+		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i ) {
+			plSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+		}
+	}
+
+	plSetDepthBufferMode( PL_DEPTHBUFFER_DISABLE );
+	plSetDepthMask( false );
+
+	for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i ) {
+		plSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
+		plSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
+	}
+
+	static PLVector2 skyOffset = PLVector2( 0.0f, 0.0f );
+	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.25f, 0.25f ) );
+	skyOffset.x = Engine_GetNumTicks() / 10000.0f;
+	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
+
+	PLShaderProgram *program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+	plSetShaderProgram( program );
+	plSetBlendMode( PL_BLEND_ADDITIVE );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	plTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
+
+	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), true );
+
+	plUploadMesh( skyMesh );
+	plDrawMesh( skyMesh );
+
+	plPopMatrix();
+
+	plSetBlendMode( PL_BLEND_DISABLE );
+
+	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
+	plSetDepthMask( true );
+}
+
 void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
@@ -414,8 +506,10 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 
 		//plDrawBoundingVolume( &curFace->bounds, PL_COLOUR_BLUE );
 
+		PLShaderProgram *curProgram = plGetCurrentShaderProgram();
+
 		PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
-		plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
+		plSetShaderUniformValue( curProgram, "pl_model", &transform, true );
 
 		plClearMesh( renderMesh );
 
@@ -442,29 +536,57 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 	}
 }
 
+static void Map_SetupScene( void ) {
+	PLShaderProgram *program = plGetCurrentShaderProgram();
+	if ( program == NULL ) {
+		return;
+	}
+
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 3.0f );
+	PLVector3 sunPosition = PLVector3(
+	        256.0f + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+	        -128.0f,
+	        -256.0f - sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	        );
+	PLVector4 ambience = PLVector4( 0.45f, 0.45f, 0.45f, 1.0f );
+
+	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
+	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
+	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
+}
+
 void Map_Draw( GfxCamera *camera ) {
 	if ( renderMesh == NULL ) {
 		return;
 	}
 
-	Gfx_EnableShaderProgram( SHADER_LIT );
+	Map_DrawSky( camera->cameraPtr );
+
+	PLShaderProgram *shaderProgram = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ]; //Gfx_GetShaderProgram( "blendtest" );
+
+	plSetShaderProgram( shaderProgram );
 
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();
 	plLoadIdentityMatrix();
 
+	plSetTexture( mapData.textures[ 1 ], 1 );
+
 	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
-	plSetNamedShaderUniformMatrix4( NULL, "pl_model", transform, true );
+	plSetShaderUniformValue( shaderProgram, "pl_model", &transform, true );
+
+	unsigned int textureSlot0 = 0;
+	unsigned int textureSlot1 = 1;
+	plSetShaderUniformValue( shaderProgram, "diffuse", &textureSlot0, false );
+	plSetShaderUniformValue( shaderProgram, "blended", &textureSlot1, false );
+
+	Map_SetupScene();
 
 #if 0
-	static PLVector3 sunPosition = PLVector3( 32.0f, -25.0f, 25.0f );
-	sunPosition.x = sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f;
-	plSetNamedShaderUniformVector3( NULL, "sun_position", sunPosition );
-#endif
+	int numLights = 4;
+	plSetShaderUniformValue( shaderProgram, "numLights", &numLights, false );
 
-	plSetNamedShaderUniformInt( NULL, "numLights", 1 );
-
-	float brightness = 2.0f; //( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
+	float brightness = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
 	if ( brightness < 0.0f ) {
 		brightness = 0.0f;
 	}
@@ -474,44 +596,43 @@ void Map_Draw( GfxCamera *camera ) {
 		radius = 0.0f;
 	}
 
-	plSetNamedShaderUniformVector4( NULL, "lights[0].colour", PLVector4( 1.0f, 1.0f, 1.0f, brightness ) );
+	plSetShaderUniformValue( shaderProgram, "lights[0].colour", &PLVector4( 1.0f, 1.0f, 1.0f, brightness ), false );
 	PLVector3 lightPosition = {
 			-440, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440, //- sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	};
-	plSetNamedShaderUniformVector3( NULL, "lights[0].position", lightPosition );
-	plSetNamedShaderUniformFloat( NULL, "lights[0].radius", radius );
+	plSetShaderUniformValue( shaderProgram, "lights[0].position", &lightPosition, false );
+	plSetShaderUniformValue( shaderProgram, "lights[0].radius", &radius, false );
 
-	plSetNamedShaderUniformVector4( NULL, "lights[1].colour", PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ) );
+	plSetShaderUniformValue( shaderProgram, "lights[1].colour", &PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetNamedShaderUniformVector3( NULL, "lights[1].position", lightPosition );
+	plSetShaderUniformValue( shaderProgram, "lights[1].position", &lightPosition, false );
 
-	plSetNamedShaderUniformVector4( NULL, "lights[2].colour", PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ) );
+	plSetShaderUniformValue( shaderProgram, "lights[2].colour", &PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
 			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetNamedShaderUniformVector3( NULL, "lights[2].position", lightPosition );
+	plSetShaderUniformValue( shaderProgram, "lights[2].position", &lightPosition, false );
 
-	plSetNamedShaderUniformVector4( NULL, "lights[3].colour", PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ) );
+	plSetShaderUniformValue( shaderProgram, "lights[3].colour", &PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetNamedShaderUniformVector3( NULL, "lights[3].position", lightPosition );
+	plSetShaderUniformValue( shaderProgram, "lights[3].position", &lightPosition, false );
+#endif
 
 	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
 
 	plPopMatrix();
-
-	Gfx_EnableShaderProgram( SHADER_GENERIC );
 
 #if 0
 	plMatrixMode( PL_MODELVIEW_MATRIX );

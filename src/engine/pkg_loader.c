@@ -51,7 +51,7 @@ PLPackage *Pkg_LoadPackage( const char *path ) {
 			PrintError( "Failed to seek to the next file within the \"%s\" package!\nPL: %s\n", path, plGetError() );
 		}
 
-		PrintMsg( " Registered %s\n", index->fileName );
+		//PrintMsg( " Registered %s\n", index->fileName );
 	}
 
 	plCloseFile( filePtr );

@@ -9,11 +9,6 @@ enum MapFaceFlags {
 	PL_BITFLAG( MAP_FLAG_FACE_MIRROR, 1 ), /* face leads into sector flipped */
 };
 
-typedef struct MapVertex {
-	float x, y, z; /* vertex position */
-	float s, t;    /* these are used for the lightmap coords */
-} MapVertex;
-
 typedef struct MapFace {
 	PLPolygon *polygon;
 	PLCollisionAABB bounds;
