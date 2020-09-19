@@ -19,6 +19,13 @@ enum {
 	LOG_LEVEL_INFO,
 };
 
+typedef enum CacheGroup {
+	CACHE_GROUP_STATIC, /* these exist from the start to the end of the application */
+	CACHE_GROUP_WORLD,  /* everything that is cached during level load */
+
+	MAX_CACHE_GROUPS
+} CacheGroup;
+
 //#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS
 
@@ -36,7 +43,7 @@ typedef struct SysWindow SysWindow;
 #define PrintMsg( ... )   plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 
 extern PLPackage *globalWad;
-#define YIN_GLOBAL_WAD "yin.wad"
+#define YIN_GLOBAL_WAD "base.pkg"
 
 SysWindow *Engine_GetMainWindow( void );
 

@@ -90,7 +90,7 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 	return texture;
 }
 
-static void Gfx_InitializeTextures( void ) {
+static void RT_InitializeTextures( void ) {
 	textures = plCreateLinkedList();
 
 	/* generate fallback texture */
@@ -243,7 +243,7 @@ PLTexture *Gfx_LoadTexture( const char *path ) {
 /** Shaders **/
 
 typedef struct ShaderProgramIndex {
-	char internalName[ 64 ];
+	char internalName[ GFX_PROGRAM_NAME_LENGTH ];
 	PLShaderProgram *internalPtr;
 	PLLinkedListNode *node;
 } ShaderProgramIndex;
@@ -497,7 +497,10 @@ void Gfx_Initialize( void ) {
 	/* create both the interface camera and player camera */
 
 	Gfx_InitializeShaderPrograms();
-	Gfx_InitializeTextures();
+
+	RT_InitializeTextures();
+	RM_InitializeMaterialSystem();
+
 	Gfx_InitializeCameras();
 
 	auxCamera = plCreateCamera();
@@ -507,16 +510,14 @@ void Gfx_Initialize( void ) {
 	auxCamera->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
-	auxCamera->viewport.w = DISPLAY_WIDTH;
-	auxCamera->viewport.h = DISPLAY_HEIGHT;
 
 	Gfx_SetupDefaultState();
 }
 
 void Gfx_Shutdown( void ) {
 	Gfx_ShutdownCameras();
-
 	Font_Shutdown();
+	RM_ShutdownMaterialSystem();
 }
 
 static void Gfx_DrawViewSprite( void ) {
@@ -532,6 +533,13 @@ static void Gfx_DrawViewSprite( void ) {
 }
 
 void Gfx_DrawMenu( void ) {
+	int w, h;
+	SysWindow *window = Engine_GetMainWindow();
+	g_system.GetWindowSize( window, &w, &h );
+
+	auxCamera->viewport.w = w;
+	auxCamera->viewport.h = h;
+
 	plSetupCamera( auxCamera );
 
 	PLMatrix4 transform = plMatrix4Identity();
@@ -584,10 +592,6 @@ void Gfx_DrawMenu( void ) {
 	          0 );
 	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf );
 #endif
-
-	int w, h;
-	SysWindow *window = Engine_GetMainWindow();
-	g_system.GetWindowSize( window, &w, &h );
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	plSetBlendMode( PL_BLEND_DEFAULT );

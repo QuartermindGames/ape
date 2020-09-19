@@ -6,10 +6,9 @@
 #include "pkg_loader.h"
 
 PLPackage *Pkg_LoadPackage( const char *path ) {
-	PrintMsg( "Loading %s...\n", path );
-
 	PLFile *filePtr = plOpenFile( path, false );
 	if ( filePtr == NULL ) {
+		PrintWarn( "Failed to open package \"%s\"!\nPL: %s\n", path, plGetError() );
 		return NULL;
 	}
 
@@ -17,6 +16,8 @@ PLPackage *Pkg_LoadPackage( const char *path ) {
 	char identifier[ 4 ];
 	if( plReadFile( filePtr, identifier, 1, sizeof( identifier ) ) != sizeof( identifier ) ) {
 		plCloseFile( filePtr );
+
+		PrintWarn( "Failed to read in identifier for \"%s\"!\nPL: %s\n", path, plGetError() );
 		return NULL;
 	}
 

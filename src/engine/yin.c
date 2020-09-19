@@ -48,18 +48,8 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	plMountLocation( plGetWorkingDirectory() );
 
-	const char *packagesList[]={
-		"base.pkg",
-	};
-	for ( unsigned int i = 0; i < plArrayElements( packagesList ); ++i ) {
-		if ( plMountLocation( packagesList[ i ] ) == NULL ) {
-			PrintError( "Failed to mount required package \"%s\"!\nPL: %s\n", packagesList[ i ], plGetError() );
-		}
-	}
-
-	/* ensure our wad is available */
-	globalWad = plLoadPackage( YIN_GLOBAL_WAD );
-	if( globalWad == NULL ) {
+	/* ensure our base wad is available */
+	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
 

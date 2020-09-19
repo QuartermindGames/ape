@@ -35,6 +35,8 @@ struct {
 	unsigned int numFacesDrawn;
 } g_gfxPerfStats;
 
+#define GFX_PROGRAM_NAME_LENGTH 64
+
 enum {
 	GFX_SHADER_DEFAULT,
 	GFX_SHADER_DEFAULT_LIT,

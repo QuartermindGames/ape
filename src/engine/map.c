@@ -450,15 +450,15 @@ static void Map_DrawSky( PLCamera *camera ) {
 		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i ) {
 			plSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
 		}
+
+		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i ) {
+			plSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
+			plSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
+		}
 	}
 
 	plSetDepthBufferMode( PL_DEPTHBUFFER_DISABLE );
 	plSetDepthMask( false );
-
-	for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i ) {
-		plSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
-		plSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
-	}
 
 	static PLVector2 skyOffset = PLVector2( 0.0f, 0.0f );
 	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.25f, 0.25f ) );
