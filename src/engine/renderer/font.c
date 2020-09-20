@@ -49,6 +49,11 @@ void Font_DrawBitmapCharacter( float x, float y, float scale, PLColour colour, c
 		return;
 	}
 
+	PLShaderProgram *program = plGetCurrentShaderProgram();
+	if ( program == NULL ) {
+		return;
+	}
+
 	/* todo: get the active viewport size, not the window size! */
 	int w, h;
 	g_system.GetWindowSize( window, &w, &h );
@@ -67,10 +72,17 @@ void Font_DrawBitmapCharacter( float x, float y, float scale, PLColour colour, c
 
 	Font_AddBitmapCharacterToPass( x, y, scale, colour, character );
 
-	plSetNamedShaderUniformMatrix4( NULL, "pl_model", plMatrix4Identity(), false );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	plUploadMesh( renderMesh );
 	plDrawMesh( renderMesh );
+
+	plPopMatrix();
 }
 
 void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColour colour, const char *msg ) {
@@ -80,6 +92,11 @@ void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColo
 
 	size_t numChars = strlen( msg );
 	if ( numChars == 0 ) {
+		return;
+	}
+
+	PLShaderProgram *program = plGetCurrentShaderProgram();
+	if ( program == NULL ) {
 		return;
 	}
 
@@ -100,29 +117,25 @@ void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColo
 		}
 	}
 
-	plSetNamedShaderUniformMatrix4( NULL, "pl_model", plMatrix4Identity(), false );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), false );
+
 	plUploadMesh( renderMesh );
 	plDrawMesh( renderMesh );
+
+	plPopMatrix();
 }
 
 static PLTexture *Font_LoadBitmap( const char *path ) {
-	/* load in the image */
-	PLImage *image = Image_LoadPackedImage( path );
-
-	/* turn pink to alpha */
-	plReplaceImageColour( image, PLColour( 255, 0, 255, 255 ), PLColour( 0, 0, 0, 0 ) );
-
 	/* upload the texture to the GPU */
-
-	PLTexture *texture = plCreateTexture();
+	PLTexture *texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_LINEAR );
 	if ( texture == NULL ) {
 		PrintError( "Failed to create texture for font, %s!\nPL: %s\n", path, plGetError() );
 	}
-
-	texture->filter = PL_TEXTURE_FILTER_LINEAR;
-
-	plUploadTextureImage( texture, image );
-	plDestroyImage( image );
 
 	return texture;
 }
@@ -133,7 +146,7 @@ void Font_Initialize( void ) {
 		PrintError( "Failed to create font mesh, %s, aborting!\n", plGetError() );
 	}
 
-	fontTextureSheet = Font_LoadBitmap( "global:font.gfx" );
+	fontTextureSheet = Font_LoadBitmap( "materials/textures/fonts/default.png" );
 }
 
 void Font_Shutdown( void ) {

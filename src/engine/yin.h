@@ -26,6 +26,17 @@ typedef enum CacheGroup {
 	MAX_CACHE_GROUPS
 } CacheGroup;
 
+typedef enum CPUTimeGroup {
+	CPUTIME_DRAW_MAP,
+
+	MAX_CPUTIME_GROUPS
+} CPUTimeGroup;
+
+void CPUTimer_Initialize( void );
+void CPUTimer_StartMeasure( CPUTimeGroup group );
+void CPUTimer_EndMeasure( CPUTimeGroup group );
+double CPUTimer_GetMeasure( CPUTimeGroup group );
+
 //#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS
 

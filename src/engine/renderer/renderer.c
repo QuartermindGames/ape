@@ -355,11 +355,11 @@ static void Gfx_InitializeShaderPrograms( void ) {
 	PrintMsg( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
 
 	/* now fetch the default programs */
-	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ]={
-	        [ GFX_SHADER_DEFAULT ] = "default",
-	        [ GFX_SHADER_DEFAULT_LIT ] = "default_lit",
-	        [ GFX_SHADER_DEFAULT_VERTEX ] = "default_vertex",
-	        [ GFX_SHADER_DEFAULT_ALPHA ] = "default_alpha",
+	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
+	        [GFX_SHADER_DEFAULT] = "default",
+	        [GFX_SHADER_LIGHTING_PASS] = "base_lighting",
+	        [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [GFX_SHADER_DEFAULT_ALPHA] = "default_alpha",
 	};
 	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
 		gfxDefaultShaderPrograms[ i ] = Gfx_GetShaderProgram( defaultShaderNames[ i ] );
@@ -372,6 +372,7 @@ static void Gfx_InitializeShaderPrograms( void ) {
 /**********************************************************/
 
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle ) {
+#if 0
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();
 
@@ -398,6 +399,7 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 #endif
 
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, frame->texture );
+#endif
 }
 
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
@@ -561,38 +563,6 @@ void Gfx_DrawMenu( void ) {
 	}
 #endif
 
-#if 0
-	SysWindow *window = Engine_GetMainWindow();
-	int w, h;
-	g_system.GetWindowSize( window, &w, &h );
-
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_ALPHA ] );
-
-	static const char spinning[] = {
-	        '\\', '|', '/', '-', '/', '-' };
-	static int pos = 0;
-
-	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PL_COLOUR_GREEN, spinning[ pos++ ] );
-	if ( pos >= sizeof( spinning ) ) {
-		pos = 0;
-	}
-
-	plDrawRectangle( &transform, 0, 0, w, 16, PL_COLOUR_BLACK );
-
-	char buf[ 256 ];
-	snprintf( buf, sizeof( buf ),
-	          "Camera Position: %d %d %d\n"
-	          "Current Node: 0\n"
-	          "Num Faces Drawn: %d\n"
-	          "Num Actors Drawn: %d\n",
-	          ( int ) g_gfxPerfStats.cameraPos.x,
-	          ( int ) g_gfxPerfStats.cameraPos.y,
-	          ( int ) g_gfxPerfStats.cameraPos.z,
-	          g_gfxPerfStats.numFacesDrawn,
-	          0 );
-	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf );
-#endif
-
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	plSetBlendMode( PL_BLEND_DEFAULT );
 
@@ -604,6 +574,27 @@ void Gfx_DrawMenu( void ) {
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
 
 	plPopMatrix();
+
+	static const char spinning[] = {
+			'\\', '|', '/', '-', '/', '-' };
+	static int pos = 0;
+	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
+	if ( pos >= sizeof( spinning ) ) {
+		pos = 0;
+	}
+
+	char buf[ 256 ];
+	snprintf( buf, sizeof( buf ),
+	          "Camera Position: %d %d %d\n"
+	          "Current Node: 0\n"
+	          "Num Faces Drawn: %d\n"
+	          "Map Draw Time: %.3f\n",
+	          ( int ) g_gfxPerfStats.cameraPos.x,
+	          ( int ) g_gfxPerfStats.cameraPos.y,
+	          ( int ) g_gfxPerfStats.cameraPos.z,
+	          g_gfxPerfStats.numFacesDrawn,
+	          CPUTimer_GetMeasure( CPUTIME_DRAW_MAP ) );
+	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf );
 
 	plSetBlendMode( PL_BLEND_DISABLE );
 }

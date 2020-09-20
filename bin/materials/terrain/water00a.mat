@@ -1,0 +1,5 @@
+material
+pass default_lit
+var texture diffuseMap materials/textures/terrain/grass00.png
+var texture blendMap materials/textures/terrain/rock00.png
+end

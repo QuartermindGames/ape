@@ -11,6 +11,7 @@ enum MapFaceFlags {
 
 typedef struct MapFace {
 	PLPolygon *polygon;
+	struct Material *material;
 	PLCollisionAABB bounds;
 	uint8_t flags;
 } MapFace;

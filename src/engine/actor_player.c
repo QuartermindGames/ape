@@ -15,6 +15,9 @@
 #define PLAYER_MAX_VELOCITY  PLAYER_RUN_SPEED
 #define PLAYER_MIN_VELOCITY  0.5f
 
+#define PLAYER_MAX_PITCH    85.0f
+#define PLAYER_MIN_PITCH    -85.0f
+
 typedef struct APlayer {
 	PLVector3 ulViewPos;
 	PLVector3 urViewPos;
@@ -127,6 +130,14 @@ void Player_Tick( Actor *self, void *userData ) {
 	} else if ( g_system.GetKeyState( 'e' ) ) {
 		viewPitch -= 1.0f;
 	}
+
+	/* clamp the view pitch */
+	if ( viewPitch < PLAYER_MIN_PITCH ) {
+		viewPitch = PLAYER_MIN_PITCH;
+	} else if ( viewPitch > PLAYER_MAX_PITCH ) {
+		viewPitch = PLAYER_MAX_PITCH;
+	}
+
 	Act_SetViewPitch( self, viewPitch );
 
 	/* clamp the velocity as necessary */

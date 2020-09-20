@@ -19,6 +19,33 @@ SystemInterface g_system;
 static SysWindow *mainWindow;
 
 /****************************************
+ * PERFORMANCE
+ * Move into performance.c
+ ****************************************/
+
+typedef struct CPUTime {
+	clock_t clock;
+	double secondsTaken;
+} CPUTime;
+static CPUTime cpuTimers[ MAX_CPUTIME_GROUPS ];
+
+void CPUTimer_Initialize( void ) {
+	memset( cpuTimers, 0, sizeof( CPUTime ) * MAX_CPUTIME_GROUPS );
+}
+
+void CPUTimer_StartMeasure( CPUTimeGroup group ) {
+	cpuTimers[ group ].clock = clock();
+}
+
+void CPUTimer_EndMeasure( CPUTimeGroup group ) {
+	cpuTimers[ group ].secondsTaken = ( ( double ) clock() - cpuTimers[ group ].clock ) / CLOCKS_PER_SEC;
+}
+
+double CPUTimer_GetMeasure( CPUTimeGroup group ) {
+	return cpuTimers[ group ].secondsTaken;
+}
+
+/****************************************
  * INITIALIZATION
  ****************************************/
 
@@ -61,6 +88,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
 
 	/* initialize core services */
+	CPUTimer_Initialize();
 	Gfx_Initialize();
 	Act_Initialize();
 

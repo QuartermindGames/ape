@@ -9,6 +9,8 @@
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 //static PLLinkedList *shaderPrograms;
 
+static Material *fallbackMaterial;
+
 typedef struct MaterialVariable {
 	char name[ PL_SYSTEM_MAX_PATH ];
 	int programSlot;
@@ -34,6 +36,7 @@ typedef struct MaterialPass {
 } MaterialPass;
 
 typedef struct Material {
+	char path[ PL_SYSTEM_MAX_PATH ];
 	MaterialPass passes[ MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	PLLinkedListNode *node;
@@ -48,6 +51,18 @@ void RM_InitializeMaterialSystem( void ) {
 			PrintError( "Failed to create materials list!\nPL: %s\n", plGetError() );
 		}
 	}
+
+	/* go ahead and create the fallback material */
+	fallbackMaterial = g_system.calloc( 1, sizeof( Material ) );
+	/* setup passes */
+	fallbackMaterial->numPasses = 1;
+	fallbackMaterial->passes[ 0 ].program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PL_BLEND_NONE;
+	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PL_BLEND_NONE;
+	/* setup variables */
+	fallbackMaterial->passes[ 0 ].numVariables = 1;
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].type = MATERIAL_VAR_TEXTURE;
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].value.texVar = Gfx_GetFallbackTexture();
 }
 
 void RM_ShutdownMaterialSystem( void ) {
@@ -167,6 +182,91 @@ static void RM_SetupMaterialPass( MaterialPass *pass, PLShaderProgram *program, 
 	memset( pass->variables, 0, sizeof( MaterialVariable ) * MAX_MATERIAL_VARIABLES );
 }
 
+static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
+	if ( pass == NULL ) {
+		PrintWarn( "Pass not specified in program, skipping variable!\n" );
+		return;
+	}
+
+	/* get the variable type */
+	char *token = strtok( line + 4, " " );
+	if ( token == NULL ) {
+		PrintWarn( "Failed to get variable type!\n" );
+		return;
+	}
+
+	unsigned int i = pass->numVariables;
+	pass->variables[ i ].type = RM_GetVariableTypeByTag( token );
+	if ( pass->variables[ i ].type == -1 ) {
+		PrintWarn( "Invalid variable type \"%s\"!\n", token );
+		return;
+	}
+
+	token = strtok( NULL, " " );
+	if ( token == NULL ) {
+		PrintWarn( "Failed to get variable name!\n" );
+		return;
+	}
+
+	/* copy it across */
+	snprintf( pass->variables[ i ].name, sizeof( pass->variables[ i ].name ), "%s", token );
+
+	pass->variables[ i ].programSlot = plGetShaderUniformSlot( pass->program, pass->variables[ i ].name );
+	if ( pass->variables[ i ].programSlot == -1 ) {
+		PrintWarn( "Failed to fetch uniform slot for variable \"%s\"!\n", pass->variables[ i ].name );
+		return;
+	}
+
+	/* fetch the uniform type so we can validate it, urgh */
+	unsigned int uniformType = plGetShaderUniformType( pass->program, pass->variables[ i ].programSlot );
+	if ( !RM_ValidateVariableType( pass->variables[ i ].type, uniformType ) ) {
+		PrintWarn( "Material variable \"%s\" type does not match uniform type!\n", pass->variables[ i ].name );
+		return;
+	}
+
+	/* and now, we need to read in the actual value */
+
+	token = strtok( NULL, " \n" );
+	if ( token == NULL ) {
+		PrintWarn( "Failed to get variable \"%s\" value!\n", pass->variables[ i ].name );
+		return;
+	}
+
+	/* handle built-in variables */
+	switch( pass->variables[ i ].type ) {
+		case MATERIAL_VAR_BUILTIN:
+			pass->variables[ i ].value.iVar = RM_GetBuiltInByTag( token );
+			if ( pass->variables[ i ].value.iVar == -1 ) {
+				PrintWarn( "Invalid built-in type \"%s\"!\n", token );
+			}
+			break;
+		case MATERIAL_VAR_DOUBLE:
+			pass->variables[ i ].value.dVar = strtod( token, NULL );
+			break;
+		case MATERIAL_VAR_BOOL:
+			if ( strcmp( token, "true" ) == 0 ) {
+				pass->variables[ i ].value.bVar = true;
+			} else {
+				pass->variables[ i ].value.bVar = false;
+			}
+			break;
+		case MATERIAL_VAR_FLOAT:
+			pass->variables[ i ].value.fVar = strtof( token, NULL );
+			break;
+		case MATERIAL_VAR_INT:
+			pass->variables[ i ].value.iVar = strtol( token, NULL, 10 );
+			break;
+		case MATERIAL_VAR_UINT:
+			pass->variables[ i ].value.uiVar = strtoul( token, NULL, 10 );
+			break;
+		case MATERIAL_VAR_TEXTURE:
+			pass->variables[ i ].value.texVar = Gfx_LoadTexture( token );
+			break;
+	}
+
+	pass->numVariables++;
+}
+
 static Material *RM_ParseMaterial( PLFile *file ) {
 	char buffer[ 1024 ];
 
@@ -178,6 +278,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 	}
 
 	Material mat;
+	memset( &mat, 0, sizeof( Material ) );
 
 	MaterialPass *curPass = NULL;
 
@@ -199,11 +300,9 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 
 			curPass = &mat.passes[ mat.numPasses++ ];
 			RM_SetupMaterialPass( curPass, program, PL_BLEND_DISABLE );
-			continue;
 		}
-
 		/* blend mode */
-		if ( strncmp( "blend ", r, 6 ) == 0 ) {
+		else if ( strncmp( "blend ", r, 6 ) == 0 ) {
 			char blendModeNames[ 2 ][ 32 ];
 			if ( sscanf( r, "blend %s %s\n", blendModeNames[ 0 ], blendModeNames[ 1 ] ) != 2 ) {
 				PrintWarn( "Failed to read in blend for pass %d\n", mat.numPasses + 1 );
@@ -212,96 +311,10 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 
 			curPass->blendMode[ 0 ] = RM_GetBlendModeByTag( blendModeNames[ 0 ] );
 			curPass->blendMode[ 1 ] = RM_GetBlendModeByTag( blendModeNames[ 1 ] );
-			continue;
 		}
-
 		/* variable */
-		if ( strncmp( "var ", r, 4 ) == 0 ) {
-			if ( curPass == NULL ) {
-				PrintWarn( "Pass not specified in program, skipping variable!\n" );
-				continue;
-			}
-
-			/* get the variable type */
-			char *token = strtok( r + 4, " " );
-			if ( token == NULL ) {
-				PrintWarn( "Failed to get variable type!\n" );
-				continue;
-			}
-
-			unsigned int i = curPass->numVariables;
-			curPass->variables[ i ].type = RM_GetVariableTypeByTag( token );
-			if ( curPass->variables[ i ].type == -1 ) {
-				PrintWarn( "Invalid variable type \"%s\"!\n", token );
-				continue;
-			}
-
-			token = strtok( NULL, " " );
-			if ( token == NULL ) {
-				PrintWarn( "Failed to get variable name!\n" );
-				continue;
-			}
-
-			/* copy it across */
-			snprintf( curPass->variables[ i ].name, sizeof( curPass->variables[ i ].name ), "%s", token );
-
-			curPass->variables[ i ].programSlot = plGetShaderUniformSlot( curPass->program, curPass->variables[ i ].name );
-			if ( curPass->variables[ i ].programSlot == -1 ) {
-				PrintWarn( "Failed to fetch uniform slot for variable \"%s\"!\n", curPass->variables[ i ].name );
-				continue;
-			}
-
-			/* fetch the uniform type so we can validate it, urgh */
-			unsigned int uniformType = plGetShaderUniformType( curPass->program, curPass->variables[ i ].programSlot );
-			if ( !RM_ValidateVariableType( curPass->variables[ i ].type, uniformType ) ) {
-				PrintWarn( "Material variable \"%s\" type does not match uniform type!\n", curPass->variables[ i ].name );
-				continue;
-			}
-
-			/* and now, we need to read in the actual value */
-
-			token = strtok( NULL, " \n" );
-			if ( token == NULL ) {
-				PrintWarn( "Failed to get variable \"%s\" value!\n", curPass->variables[ i ].name );
-				continue;
-			}
-
-			/* handle built-in variables */
-
-
-			switch( curPass->variables[ i ].type ) {
-				case MATERIAL_VAR_BUILTIN:
-					curPass->variables[ i ].value.iVar = RM_GetBuiltInByTag( token );
-					if ( curPass->variables[ i ].value.iVar == -1 ) {
-						PrintWarn( "Invalid built-in type \"%s\"!\n", token );
-					}
-					break;
-				case MATERIAL_VAR_DOUBLE:
-					curPass->variables[ i ].value.dVar = strtod( token, NULL );
-					break;
-				case MATERIAL_VAR_BOOL:
-					if ( strcmp( token, "true" ) == 0 ) {
-						curPass->variables[ i ].value.bVar = true;
-					} else {
-						curPass->variables[ i ].value.bVar = false;
-					}
-					break;
-				case MATERIAL_VAR_FLOAT:
-					curPass->variables[ i ].value.fVar = strtof( token, NULL );
-					break;
-				case MATERIAL_VAR_INT:
-					curPass->variables[ i ].value.iVar = strtol( token, NULL, 10 );
-					break;
-				case MATERIAL_VAR_UINT:
-					curPass->variables[ i ].value.uiVar = strtoul( token, NULL, 10 );
-					break;
-				case MATERIAL_VAR_TEXTURE:
-					curPass->variables[ i ].value.texVar = Gfx_LoadTexture( token );
-					break;
-			}
-
-			curPass->numVariables++;
-			continue;
+		else if ( strncmp( "var ", r, 4 ) == 0 ) {
+			RM_ParseMaterialVariable( curPass, r );
 		}
 
 		if ( strcmp( "end\n", r ) == 0 ) {
@@ -316,21 +329,43 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 	return out;
 }
 
+static Material *RM_GetMaterial( const char *path, CacheGroup group ) {
+	PLLinkedListNode *node = plGetRootNode( materials[ group ] );
+	while ( node != NULL ) {
+		Material *material = plGetLinkedListNodeUserData( node );
+		if ( strcmp( material->path, path ) == 0 ) {
+			return material;
+		}
+
+		node = plGetNextLinkedListNode( node );
+	}
+
+	return NULL;
+}
+
 Material *RM_CacheMaterial( const char *path, CacheGroup group ) {
+	/* check if it's already cached */
+	Material *material = RM_GetMaterial( path, group );
+	if ( material != NULL ) {
+		return material;
+	}
+
 	PLFile *file = plOpenFile( path, false );
 	if ( file == NULL ) {
 		PrintWarn( "Failed to load material, \"%s\"!\nPL: %s\n", path, plGetError() );
-		return NULL;
+		return fallbackMaterial;
 	}
 
-	Material *material = RM_ParseMaterial( file );
+	material = RM_ParseMaterial( file );
 
 	plCloseFile( file );
 
 	if ( material == NULL ) {
-		return NULL;
+		PrintWarn( "Failed to cache material, \"%s\"!\n", path );
+		return fallbackMaterial;
 	}
 
+	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = plInsertLinkedListNode( materials[ group ], material );
 
 	return material;
@@ -384,8 +419,9 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 		for ( unsigned int j = 0; j < curPass->numVariables; ++j ) {
 			/* textures just need to be set per their respective unit */
 			if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE ) {
+				plSetTexture( curPass->variables[ j ].value.texVar, curUnit );
 				plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
-				plSetTexture( curPass->variables[ j ].value.texVar, curUnit++ );
+				curUnit++;
 				continue;
 			}
 			/* built-in variables are special cases */

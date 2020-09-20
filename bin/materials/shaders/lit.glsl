@@ -2,8 +2,8 @@
 
 //uniform sampler2D textures[ 4 ];
 
-uniform sampler2D diffuse;
-uniform sampler2D blended;
+uniform sampler2D diffuseMap;
+uniform sampler2D blendMap;
 
 uniform float fog_far = 4.5;
 uniform float fog_near = 32.0;
@@ -52,7 +52,7 @@ vec4 CalculateLightTerm(uint index, vec3 n) {
 }
 
 void main() {
-    vec4 dsample = BlendTextures(blended, diffuse);
+    vec4 dsample = BlendTextures(blendMap, diffuseMap);
     if (dsample.a < 0.1) {
         discard;
     }

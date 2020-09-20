@@ -26,8 +26,8 @@ static struct {
 	/* textures */
 	PLFileSystemMount   **texturePackages;
 	unsigned int        numTexturePackages;
-	PLTexture           **textures;
-	unsigned int        numTextures;
+	Material            **materials;
+	unsigned int        numMaterials;
 } mapData;
 
 static PLMesh *renderMesh = NULL;
@@ -95,32 +95,32 @@ static void Map_ParseTextures( PLFile *file ) {
 		}
 	}
 
-	/* now fetch all the textures the map will be using */
+	/* now fetch all the materials the map will be using */
 	plReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "textures %d\n", &mapData.numTextures ) != 1 ) {
+	if ( sscanf( buffer, "textures %d\n", &mapData.numMaterials ) != 1 ) {
 		PrintError( "Failed to fetch number of textures in \"%s\"!\n", plGetFilePath( file ) );
 	}
 
 	/* allocate storage for them */
-	mapData.textures = g_system.calloc( mapData.numTextures, sizeof( PLTexture* ) );
+	mapData.materials = g_system.calloc( mapData.numMaterials, sizeof( Material* ) );
 
-	for ( unsigned int i = 0; i < mapData.numTextures; ++i ) {
+	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in texture \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 
-		/* copy the texture name; excluding the line terminator */
-		char textureName[ 64 ];
-		for ( unsigned int j = 0; j < sizeof( textureName ); ++j ) {
+		/* copy the material name; excluding the line terminator */
+		char materialName[ 64 ];
+		for ( unsigned int j = 0; j < sizeof( materialName ); ++j ) {
 			if ( buffer[ j ] == '\n' ) {
-				textureName[ j ] = '\0';
+				materialName[ j ] = '\0';
 				break;
 			}
 
-			textureName[ j ] = buffer[ j ];
+			materialName[ j ] = buffer[ j ];
 		}
 
-		mapData.textures[ i ] = Gfx_LoadTexture( textureName );
+		mapData.materials[ i ] = RM_CacheMaterial( materialName, CACHE_GROUP_WORLD );
 	}
 }
 
@@ -192,11 +192,11 @@ static void Map_ParseFaces( PLFile *file ) {
 
 		/* now try to get the texture index and flags (these are optional, for now) */
 
-		unsigned int textureIndex = 0;
+		unsigned int materialIndex = 0;
 
 		token = strtok( NULL, " " );
 		if ( token != NULL ) {
-			textureIndex = strtol( token, NULL, 10 );
+			materialIndex = strtol( token, NULL, 10 );
 
 			token = strtok( NULL, " " );
 			if ( token != NULL ) {
@@ -204,15 +204,13 @@ static void Map_ParseFaces( PLFile *file ) {
 			}
 		}
 
-		PLTexture *texturePtr;
-		if ( textureIndex >= mapData.numTextures ) {
-			PrintWarn( "Invalid texture id %d for polygon %d!\n", textureIndex, i );
-			texturePtr = Gfx_GetFallbackTexture();
+		if ( materialIndex >= mapData.numMaterials ) {
+			PrintError( "Invalid texture id %d for polygon %d!\n", materialIndex, i );
 		} else {
-			texturePtr = mapData.textures[ textureIndex ];
+			mapData.faces[ i ].material = mapData.materials[ materialIndex ];
 		}
 
-		mapData.faces[ i ].polygon = plCreatePolygon( texturePtr, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
+		mapData.faces[ i ].polygon = plCreatePolygon( NULL, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
 		if ( mapData.faces[ i ].polygon == NULL ) {
 			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
@@ -406,8 +404,7 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
  * Draw scrolling clouds.
  */
 static void Map_DrawSky( PLCamera *camera ) {
-	plSetTexture( mapData.textures[ 1 ], 0 );
-
+#if 0
 	static PLVertex vertices[] = {
 	        { .position = PLVector3( 10.0f, 100.f, 100.0f ),
 	          .colour = PL_COLOUR_WHITE }, /* top right */
@@ -487,9 +484,51 @@ static void Map_DrawSky( PLCamera *camera ) {
 
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
+#endif
 }
 
 void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
+#if 1
+	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
+		plClearMesh( renderMesh );
+
+		for ( unsigned int j = 0; j < mapData.numFaces; ++j ) {
+			MapFace *curFace = &mapData.faces[ j ];
+
+			curFace->bounds.origin = PLVector3( 0, 0, 0 );
+
+			if ( curFace->material != mapData.materials[ i ] ) {
+				continue;
+			}
+
+			/* check the face is actually visible */
+			if ( !plIsBoxInsideView( camera->cameraPtr, &curFace->bounds ) ) {
+				continue;
+			}
+
+			unsigned int numVertices;
+			PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
+			for( unsigned int k = 0; k < numVertices; ++k ) {
+				plAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
+			}
+
+			unsigned int numTriangles;
+			unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
+			unsigned int *curIndex = indices;
+			for ( unsigned int k = 0; k < numTriangles; ++k ) {
+				plAddMeshTriangle( renderMesh,
+				                   curIndex[ 0 ] + renderMesh->num_verts - numVertices,
+				                   curIndex[ 1 ] + renderMesh->num_verts - numVertices,
+				                   curIndex[ 2 ] + renderMesh->num_verts - numVertices );
+				curIndex += 3;
+			}
+
+			g_gfxPerfStats.numFacesDrawn++;
+		}
+
+		RM_DrawMesh( mapData.materials[ i ], renderMesh );
+	}
+#else
 	/* super duper slow inefficient rendering, wheeee */
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		MapFace *curFace = &mapData.faces[ i ];
@@ -504,16 +543,7 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 
 		curFace->bounds.origin = PLVector3( 0,0 ,0 );
 
-		//plDrawBoundingVolume( &curFace->bounds, PL_COLOUR_BLUE );
-
-		PLShaderProgram *curProgram = plGetCurrentShaderProgram();
-
-		PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
-		plSetShaderUniformValue( curProgram, "pl_model", &transform, true );
-
 		plClearMesh( renderMesh );
-
-		plSetTexture( plGetPolygonTexture( curFace->polygon ), 0 );
 
 		unsigned int numVertices;
 		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
@@ -529,25 +559,23 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			curIndex += 3;
 		}
 
-		plUploadMesh( renderMesh );
-		plDrawMesh( renderMesh );
+		RM_DrawMesh( curFace->material, renderMesh );
 
 		g_gfxPerfStats.numFacesDrawn++;
 	}
+#endif
 }
 
 static void Map_SetupScene( void ) {
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
+
 	PLShaderProgram *program = plGetCurrentShaderProgram();
 	if ( program == NULL ) {
 		return;
 	}
 
 	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 3.0f );
-	PLVector3 sunPosition = PLVector3(
-	        256.0f + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-	        -128.0f,
-	        -256.0f - sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
-	        );
+	PLVector3 sunPosition = PLVector3( -178.0f, -64.0f, 0.0f );
 	PLVector4 ambience = PLVector4( 0.45f, 0.45f, 0.45f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
@@ -560,30 +588,25 @@ void Map_Draw( GfxCamera *camera ) {
 		return;
 	}
 
+	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
+
 	Map_DrawSky( camera->cameraPtr );
-
-	PLShaderProgram *shaderProgram = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ]; //Gfx_GetShaderProgram( "blendtest" );
-
-	plSetShaderProgram( shaderProgram );
 
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();
 	plLoadIdentityMatrix();
 
-	plSetTexture( mapData.textures[ 1 ], 1 );
-
-	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
-	plSetShaderUniformValue( shaderProgram, "pl_model", &transform, true );
-
-	unsigned int textureSlot0 = 0;
-	unsigned int textureSlot1 = 1;
-	plSetShaderUniformValue( shaderProgram, "diffuse", &textureSlot0, false );
-	plSetShaderUniformValue( shaderProgram, "blended", &textureSlot1, false );
-
 	Map_SetupScene();
 
+	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
+
+	plPopMatrix();
+
+	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
+}
+
 #if 0
-	int numLights = 4;
+int numLights = 4;
 	plSetShaderUniformValue( shaderProgram, "numLights", &numLights, false );
 
 	float brightness = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
@@ -630,19 +653,8 @@ void Map_Draw( GfxCamera *camera ) {
 	plSetShaderUniformValue( shaderProgram, "lights[3].position", &lightPosition, false );
 #endif
 
-	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
-
-	plPopMatrix();
-
 #if 0
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plLoadIdentityMatrix();
-
-	plDrawMeshNormals( transform, renderMesh );
-#endif
-
-#if 0
-	PLMatrix4 transform = plMatrix4Identity();
+PLMatrix4 transform = plMatrix4Identity();
 
 	plSetTexture( mapData.staticMeshes[ 0 ]->texture, 0);
 	plSetNamedShaderUniformMatrix4(NULL, "pl_model", transform, true);
@@ -703,7 +715,7 @@ void Map_Draw( GfxCamera *camera ) {
 			PLVector2 linePos;
 			linePos = plAddVector2( PLVector2( startPoint->x, startPoint->y ), PLVector2( endPoint->x, endPoint->y ) );
 			linePos = plDivideVector2f( &linePos, 2.0f );
-			
+
 			PLVector2 lineEndPos;
 			lineEndPos = plAddVector2( linePos, plScaleVector2f( &mapData.lines[ area->lineIndices[ j ] ].normal, 64.0f ) );
 
@@ -735,4 +747,3 @@ void Map_Draw( GfxCamera *camera ) {
 #endif
 	}
 #endif
-}
