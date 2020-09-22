@@ -1,2 +1,0 @@
-Player [ Pos [ 0 0 0 ] Ang [ 0 0 0 ] ]
-ExaMon [ Pos [ 0 100 0 ] Ang [ 0 0 0 ] ]

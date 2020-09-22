@@ -1,13 +1,11 @@
 /* Copyright (C) 2020 Mark E Sowden <markelswo@gmail.com> */
 
-//uniform sampler2D textures[ 4 ];
-
 uniform sampler2D diffuseMap;
 uniform sampler2D blendMap;
 
-uniform float fog_far = 4.5;
-uniform float fog_near = 32.0;
-uniform vec4 fog_colour = vec4(0.50, 0.83, 1.0, 0.1);
+const float fogFar = 11.0;
+const float fogNear = 32.0;
+uniform vec4 fogColour = vec4(0.50, 0.83, 1.0, 0.1);
 
 struct Sun {
     vec4 colour;
@@ -21,7 +19,7 @@ struct Light {
     float radius;
     vec3 position;
 };
-uniform Light lights[16];
+uniform Light lights[8];
 uniform uint numLights = 0;
 
 struct Material {
@@ -64,11 +62,11 @@ void main() {
         lightTerm += CalculateLightTerm(i, n);
     }
 
-    vec4 diffuse_colour = lightTerm * dsample;
+    vec4 diffuse = lightTerm * dsample;
 
-    float fog_distance = (gl_FragCoord.z / gl_FragCoord.w) / (fog_far * 100.0);
-    float fog_amount = 1.0 - fog_distance;
-    fog_amount *= -(fog_near / 100.0);
+    float fogDistance = (gl_FragCoord.z / gl_FragCoord.w) / (fogFar * 100.0);
+    float fogAmount = 1.0 - fogDistance;
+    fogAmount *= -(fogNear / 100.0);
 
-    pl_frag = mix(diffuse_colour, fog_colour, clamp(fog_amount, 0.0, 1.0));
+    pl_frag = mix(diffuse, fogColour, clamp(fogAmount, 0.0, 1.0));
 }

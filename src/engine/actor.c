@@ -53,7 +53,10 @@ typedef struct Actor {
 	float           viewPitch;
 	float           viewOffset;
 	unsigned int    area;
+
+	/* collision/vis */
 	PLCollisionAABB bounds;
+	PLLinkedList *geoColliders; /* list of faces we're touching to test against */
 
 	/* animation */
 	unsigned int currentFrame;
@@ -77,6 +80,11 @@ Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle ) {
 	actor->position = position;
 	actor->angle    = angle;
 
+	actor->geoColliders = plCreateLinkedList();
+	if ( actor->geoColliders == NULL ) {
+		PrintError( "Failed to create colliders list!\nPL: %s\n", plGetError() );
+	}
+
 	/* give everything a set of basic bounds */
 	actor->bounds.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
 	actor->bounds.mins = PLVector3( -16.0f, -16.0f, -16.0f );
@@ -93,6 +101,8 @@ Actor *Act_DestroyActor( Actor *self ) {
 		self->setup.Destroy( self, self->userData );
 	}
 
+	plDestroyLinkedList( self->geoColliders );
+
 	plDestroyLinkedListNode( actorList, self->node );
 	free( self->userData );
 	free( self );
@@ -107,17 +117,30 @@ PLVector3 Act_GetVelocity( const Actor *self ) { return self->velocity; }
 void      Act_SetAngle( Actor *self, float angle ) { self->angle = angle; }
 float     Act_GetAngle( const Actor *self ) { return self->angle; }
 
+/**
+ * Up/down view angle, typically used for camera.
+ */
 void Act_SetViewPitch( Actor *self, float viewPitch ) {
 	self->viewPitch = viewPitch;
 }
 
+/**
+ * Fetch the current up/down view angle.
+ */
 float Act_GetViewPitch( const Actor *self ) {
 	return self->viewPitch;
 }
 
 void      Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float     Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
-void      Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
+
+/**
+ * Fetch the actor-specific data.
+ */
+void Act_SetUserData( Actor *self, void *userData ) {
+	self->userData = userData;
+}
+
 void      *Act_GetUserData( Actor *self ) { return self->userData; }
 
 void Act_SetCurrentFrame( Actor *self, unsigned int frame ) {
@@ -185,6 +208,10 @@ void Act_SpawnActors( void ) {
 #endif
 }
 
+/****************************************
+ * COLLISION
+ ****************************************/
+
 static bool Act_IsColliding( Actor *self, Actor *other ) {
 	if( self->area != other->area ) {
 		return false;
@@ -218,6 +245,10 @@ static Actor *Act_CheckCollisions( Actor *self ) {
 	return NULL;
 }
 
+/****************************************
+ * RENDERING
+ ****************************************/
+
 void Act_DrawActors( void ) {
 	PLLinkedListNode *curNode = plGetRootNode( actorList );
 	while ( curNode != NULL ) {
@@ -228,6 +259,19 @@ void Act_DrawActors( void ) {
 
 		if ( actor->setup.Draw ) {
 			actor->setup.Draw( actor, actor->userData );
+		}
+
+		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+
+		plDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
+
+		PLLinkedListNode *colliderNode = plGetRootNode( actor->geoColliders );
+		while( colliderNode != NULL ) {
+			MapFace *face = plGetLinkedListNodeUserData( colliderNode );
+
+			plDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
+
+			colliderNode = plGetNextLinkedListNode( colliderNode );
 		}
 
 		curNode = plGetNextLinkedListNode( curNode );
@@ -273,10 +317,34 @@ void Act_TickActors( void ) {
 			}
 
 			/* and now check actor vs world collision */
+
+			plDestroyLinkedListNodes( actor->geoColliders );
+
+			/* first need to figure out what faces we're intersecting with */
+			unsigned int numFaces;
+			MapFace *faces = Map_GetFacesForSector( actor->area, &numFaces );
+			for ( unsigned int i = 0; i < numFaces; ++i ) {
+				if ( !plIsAABBIntersecting( &actor->bounds, &faces[ i ].bounds ) ) {
+					continue;
+				}
+
+				PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
+				if ( node == NULL ) {
+					PrintError( "Failed to insert node into colliders list!\n" );
+				}
+			}
+
 			if( actor->type == ACTOR_PLAYER && Map_CheckCollisions( &actor->bounds, actor->area ) ) {
 				PrintMsg( "COLLIDING...\n" );
 				actor->setup.Collide( actor, NULL, actor->userData );
 			}
+
+#if 0 /* enable to print out number of colliders */
+			unsigned int curNodeNum = plGetNumLinkedListNodes( actor->geoColliders );
+			if ( curNodeNum > 0 ) {
+				PrintMsg( "Possible colliders %d\n", curNodeNum );
+			}
+#endif
 		}
 
 		curNode = plGetNextLinkedListNode( curNode );

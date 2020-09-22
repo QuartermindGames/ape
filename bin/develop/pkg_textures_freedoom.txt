@@ -1,4 +1,0 @@
-; Generates Textures/FreeDoom.pkg
-output ../bin/freedoom.pkg
-dir other/freedoom/flats/ png fdfloors
-dir other/freedoom/patches/ png fdwalls

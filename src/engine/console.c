@@ -4,4 +4,10 @@
 
 #include "yin.h"
 
-/* dummy */
+void Console_Initialize( void ) {
+
+}
+
+void Console_Shutdown( void ) {
+
+}

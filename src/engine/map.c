@@ -6,31 +6,36 @@
 
 #include "yin.h"
 #include "map.h"
-#include "image.h"
 #include "renderer/renderer.h"
 
 #define MAP_IDENTIFIER  "map"
 #define MAP_VERSION     "version 1"
 
 static struct {
-	MapSector       *sectors;
-	unsigned int	maxSectors;
-	unsigned int    numSectors;
-	PLVertex        *vertices;
-	unsigned int	maxVertices;
-	unsigned int    numVertices;
-	MapFace         *faces;
-	unsigned int	maxFaces;
-	unsigned int    numFaces;
+	PLVertex *vertices;
+	unsigned int numVertices;
+	MapFace *faces;
+	unsigned int numFaces;
+	MapSector *sectors;
+	unsigned int numSectors;
 
-	/* textures */
-	PLFileSystemMount   **texturePackages;
-	unsigned int        numTexturePackages;
-	Material            **materials;
-	unsigned int        numMaterials;
+	/* materials */
+	PLFileSystemMount **texturePackages;
+	unsigned int numTexturePackages;
+	Material **materials;
+	unsigned int numMaterials;
 } mapData;
 
 static PLMesh *renderMesh = NULL;
+
+/**
+ * Returns a list of faces for the specified sector.
+ */
+MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces ) {
+	/* for now, just return the entire list -_-; */
+	*numFaces = mapData.numFaces;
+	return mapData.faces;
+}
 
 /**
  * Clears out the current map data.
@@ -404,7 +409,14 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
  * Draw scrolling clouds.
  */
 static void Map_DrawSky( PLCamera *camera ) {
-#if 0
+	static Material *skyMaterial = NULL;
+	if ( skyMaterial == NULL ) {
+		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD );
+		if ( skyMaterial == NULL ) {
+			PrintError( "Failed to load cloud layer!\n" );
+		}
+	}
+
 	static PLVertex vertices[] = {
 	        { .position = PLVector3( 10.0f, 100.f, 100.0f ),
 	          .colour = PL_COLOUR_WHITE }, /* top right */
@@ -457,15 +469,6 @@ static void Map_DrawSky( PLCamera *camera ) {
 	plSetDepthBufferMode( PL_DEPTHBUFFER_DISABLE );
 	plSetDepthMask( false );
 
-	static PLVector2 skyOffset = PLVector2( 0.0f, 0.0f );
-	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.25f, 0.25f ) );
-	skyOffset.x = Engine_GetNumTicks() / 10000.0f;
-	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
-
-	PLShaderProgram *program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
-	plSetShaderProgram( program );
-	plSetBlendMode( PL_BLEND_ADDITIVE );
-
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();
 
@@ -473,22 +476,28 @@ static void Map_DrawSky( PLCamera *camera ) {
 
 	plTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
 
-	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), true );
+	/* todo: do this in shader... */
+	PLVector2 skyOffset;
+	skyOffset.x = Engine_GetNumTicks() / 10000.0f;
+	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
+	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
 
-	plUploadMesh( skyMesh );
-	plDrawMesh( skyMesh );
+	RM_DrawMesh( skyMaterial, skyMesh );
+
+	/* todo: do this in shader... */
+	skyOffset.x = ( Engine_GetNumTicks() / 10000.0f ) * -1;
+	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
+	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
+
+	RM_DrawMesh( skyMaterial, skyMesh );
 
 	plPopMatrix();
 
-	plSetBlendMode( PL_BLEND_DISABLE );
-
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
-#endif
 }
 
 void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
-#if 1
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
 		plClearMesh( renderMesh );
 
@@ -526,44 +535,14 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			g_gfxPerfStats.numFacesDrawn++;
 		}
 
-		RM_DrawMesh( mapData.materials[ i ], renderMesh );
-	}
-#else
-	/* super duper slow inefficient rendering, wheeee */
-	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
-		MapFace *curFace = &mapData.faces[ i ];
-
-		if ( !plIsBoxInsideView( camera->cameraPtr, &curFace->bounds ) ) {
+		if ( renderMesh->num_triangles == 0 ) {
 			continue;
 		}
 
-		if ( i == 0 ) {
-			Map_GetPortalView( NULL, curFace, curFace );
-		}
+		RM_DrawMesh( mapData.materials[ i ], renderMesh );
 
-		curFace->bounds.origin = PLVector3( 0,0 ,0 );
-
-		plClearMesh( renderMesh );
-
-		unsigned int numVertices;
-		PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
-		for( unsigned int j = 0; j < numVertices; ++j ) {
-			plAddMeshVertex( renderMesh, vertices[ j ].position, vertices[ j ].normal, vertices[ j ].colour, vertices[ j ].st[ 0 ] );
-		}
-
-		unsigned int numTriangles;
-		unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
-		unsigned int *curIndex = indices;
-		for ( unsigned int j = 0; j < numTriangles; ++j ) {
-			plAddMeshTriangle( renderMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );
-			curIndex += 3;
-		}
-
-		RM_DrawMesh( curFace->material, renderMesh );
-
-		g_gfxPerfStats.numFacesDrawn++;
+		g_gfxPerfStats.numBatches++;
 	}
-#endif
 }
 
 static void Map_SetupScene( void ) {

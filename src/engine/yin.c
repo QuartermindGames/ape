@@ -58,12 +58,20 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plInitialize( argc, argv );
 	plInitializeSubSystems( PL_SUBSYSTEM_IO );
 
-	plSetupLogOutput( "log.txt" );
+	if ( plHasCommandLineArgument( "-log" ) ) {
+		const char *path = plGetCommandLineArgumentValue( "-log" );
+		if ( path == NULL ) {
+			path = "log.txt";
+		}
+
+		plSetupLogOutput( path );
+	}
+
 	plSetupLogLevel( LOG_LEVEL_ERROR, "error", PL_COLOUR_RED, true );
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	PrintMsg( "Yin Engine, Copyright (C) 2020 OldTimes Software\n" );
+	PrintMsg( "Yin Engine, Copyright (C) 2020 Mark E Sowden\n" );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
@@ -71,11 +79,10 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	PrintMsg( "Mounting VFS locations...\n" );
 
-	/* mount all the dirs and packages we need */
-
-	plMountLocation( plGetWorkingDirectory() );
-
 	/* ensure our base wad is available */
+#if defined( YIN_ENABLE_LOCAL_FS )
+	plMountLocation( plGetWorkingDirectory() );
+#endif
 	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}

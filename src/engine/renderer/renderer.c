@@ -26,7 +26,6 @@ static PLLinkedList *textures;
 static PLTexture *fallbackTexture = NULL;
 
 static PLTexture *numTextureTable[ 10 ];
-static PLTexture *defaultFont;
 
 static PLTexture *demoOverlayLogo;
 
@@ -109,12 +108,8 @@ static void RT_InitializeTextures( void ) {
 	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 	plRegisterImageLoader( "gfx", Image_LoadPackedImage );
 
-	/* temporary! */
-	plMountLocation( "textures/demo.pkg" );
-
 	/* fetch our required texture set */
-	defaultFont = Gfx_LoadTexture( "global:font.gfx" );
-	demoOverlayLogo = Gfx_LoadTexture( "t_demo:logo.png" );
+	demoOverlayLogo = Gfx_LoadTexture( "materials/textures/ui/demo_logo.png" );
 
 	/* load the numbers */
 	/*
@@ -486,7 +481,7 @@ void Gfx_SetupDefaultState( void ) {
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
 
-	//plSetCullMode( PL_CULL_POSTIVE );
+	plSetCullMode( PL_CULL_POSTIVE );
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 }
@@ -585,14 +580,16 @@ void Gfx_DrawMenu( void ) {
 
 	char buf[ 256 ];
 	snprintf( buf, sizeof( buf ),
-	          "Camera Position: %d %d %d\n"
-	          "Current Node: 0\n"
+	          "Position:        %d %d %d\n"
+	          "Current Node:    0\n"
 	          "Num Faces Drawn: %d\n"
-	          "Map Draw Time: %.3f\n",
+	          "Num Batches:     %d\n"
+	          "Map Draw Time:   %.3f\n",
 	          ( int ) g_gfxPerfStats.cameraPos.x,
 	          ( int ) g_gfxPerfStats.cameraPos.y,
 	          ( int ) g_gfxPerfStats.cameraPos.z,
 	          g_gfxPerfStats.numFacesDrawn,
+	          g_gfxPerfStats.numBatches,
 	          CPUTimer_GetMeasure( CPUTIME_DRAW_MAP ) );
 	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf );
 

@@ -1,4 +1,0 @@
-; Generates Textures/Blasphemer.pkg
-output ../bin/Textures/Blasphemer.pkg
-dir other/blasphemer/flats/ gif Floors
-dir other/blasphemer/patches/ gif Walls

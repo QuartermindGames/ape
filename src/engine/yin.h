@@ -39,15 +39,13 @@ double CPUTimer_GetMeasure( CPUTimeGroup group );
 
 //#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS
+#define YIN_ENABLE_LOCAL_FS
 
 typedef struct SysWindow SysWindow;
 
 #define WINDOW_TITLE    "Yin Technology Demo"
 #define WINDOW_WIDTH    1024
 #define WINDOW_HEIGHT   768
-
-#define DISPLAY_WIDTH   1024
-#define DISPLAY_HEIGHT  768
 
 #define PrintError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )
 #define PrintWarn( ... )  plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )

@@ -1,16 +1,19 @@
-; Generates BaseTextures.pkg
+; Generates base.pkg
 output base.pkg
 
-; Default/fallback textures
-add develop/textures/base/default.bmp global default.gfx
-add develop/textures/base/default_tile.bmp global tile.gfx
-add develop/textures/base/default_font.bmp global font.gfx
+; Maps
+dir maps/prototyping map
+add maps/terrain_test.map
 
-; Tests for the image compression
-;add develop/textures/test/multicolours.png test multicolours.gfx
-;add develop/textures/test/red.png test red.gfx
-;add develop/textures/test/green.png test green.gfx
-;add develop/textures/test/blue.png test blue.gfx
-
-; Editor textures
-add develop/textures/editor/trigger.bmp editor trigger.gfx
+; Materials
+dir materials/shaders glsl
+dir materials/shaders prg
+dir materials/sky tga
+dir materials/sky mat
+dir materials/terrain tga
+dir materials/terrain mat
+dir materials/textures/detail tga
+dir materials/textures/editor tga
+dir materials/textures/fonts png
+dir materials/textures/ui png
+dir materials/textures/world/ray4/terrain png

@@ -32,6 +32,8 @@ typedef struct GfxCamera {
 
 struct {
 	PLVector3 cameraPos;
+
+	unsigned int numBatches;
 	unsigned int numFacesDrawn;
 } g_gfxPerfStats;
 

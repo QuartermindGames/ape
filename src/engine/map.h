@@ -17,12 +17,15 @@ typedef struct MapFace {
 } MapFace;
 
 typedef struct MapSector {
-	unsigned int faceId;
+	MapFace *faces;
+	unsigned int numFaces;
 } MapSector;
 
 typedef struct GfxCamera GfxCamera;
 
+MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces );
 void Map_ClearData( void );
+
 void Map_Load( const char *path );
 void Map_Draw( GfxCamera *camera );
 

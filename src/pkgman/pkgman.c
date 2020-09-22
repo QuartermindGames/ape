@@ -1,16 +1,20 @@
-/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
- * Project Yin
- * */
+/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com> */
 
 #include <PL/platform.h>
 #include <PL/platform_filesystem.h>
 #include <PL/platform_image.h>
 
 #include "pkgman.h"
+#include "parser.h"
+
+#define PKG_USE_COMPRESSION
+#if defined( PKG_USE_COMPRESSION )
+#include "miniz.h"
+#endif
 
 /* PkgMan, the shitty package generator! */
 
-#define PKG_IDENTIFIER	"PKG1"
+#define PKG_IDENTIFIER "PKG2"
 
 typedef struct PkgHeader {
 	char 		identifier[ 4 ];
@@ -24,100 +28,50 @@ static PkgHeader packageHeader = {
 static FILE *fileOutPtr = NULL;
 static char outputPath[ 32 ] = { '\0' };
 
-static const char *SkipSpaces( const char *buffer ) {
-	while( *buffer == ' ' ) {
-		buffer++;
-	}
+static void Pkg_AddFile( const char *filePath ) {
+	Print( "Adding %s...\n", filePath );
 
-	return buffer;
-}
-
-static const char *SkipLine( const char *buffer ) {
-	while( *buffer != '\0' && *buffer != '\n' ) {
-		buffer++;
-	}
-
-	return ( *buffer == '\n' ) ? ++buffer : buffer;
-}
-
-static const char *ReadString( const char *buffer, char *destination, size_t length ) {
-	bool isContained = false;
-	if ( *buffer == '"' ) {
-		isContained = true;
-		buffer++;
-	}
-
-	unsigned int destPos = 0;
-	while ( *buffer != '\0' ) {
-		if ( ( *buffer == '\r' || *buffer == '\n' ) || ( isContained && *buffer == '"' ) || ( !isContained && *buffer == ' ' ) ) {
-			buffer++;
-			break;
-		}
-
-		destination[ destPos++ ] = *buffer;
-		if ( destPos >= length ) {
-			Error( "Attempted to write string larger than destination size!\n" );
-		}
-
-		buffer++;
-	}
-
-	destination[ destPos ] = '\0';
-	return SkipSpaces( buffer );
-}
-
-static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *fileName ) {
-	Print( "Adding %s (%s)...\n", fileName, fileTag );
-
-	/* so we can do some path/name mangling */
-	char packPath[ PL_SYSTEM_MAX_PATH ];
-	strncpy( packPath, filePath, sizeof( packPath ) );
-	char packName[ 64 ];
-	strncpy( packName, fileName, sizeof( packName ) );
-
-#if 0
-	/* see if it's a file we can pack */
-	const char *extension = plGetFileExtension( packPath );
-	if ( strcmp( extension, "png" ) == 0 || strcmp( extension, "gif" ) == 0 || strcmp( extension, "bmp" ) == 0 ) {
-		PLImage *image = plLoadImage( packPath );
-		if ( image == NULL ) {
-			Error( "Failed to load \"%s\"!\nPL: %s\n", packPath, plGetError() );
-		}
-
-		size_t strPos;
-		strPos = strlen( packPath ) - 4;
-		strncpy( packPath + strPos, ".gfx", 4 );
-
-		Print( "Converting \"%s\" to \"%s\"\n", filePath, packPath );
-
-		PackImage_Write( packPath, image );
-
-		plDestroyImage( image );
-	}
-#endif
-
-	PLFile *filePtr = plOpenFile( packPath, true );
+	PLFile *filePtr = plOpenFile( filePath, true );
 	if ( filePtr == NULL ) {
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", packPath, plGetError() );
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, plGetError() );
 	}
 
 	const uint8_t *data = plGetFileData( filePtr );
-	size_t fileLength = plGetFileSize( filePtr );
+	unsigned long fileLength = plGetFileSize( filePtr );
 
-	char indexName[ 128 ];
-	snprintf( indexName, sizeof( indexName ), "%s:%s", fileTag, packName );
+#if defined( PKG_USE_COMPRESSION )
+	/* now compress it */
+	unsigned long compressedLength = mz_compressBound( fileLength );
+	uint8_t *compressedData = malloc( compressedLength );
+	int status = mz_compress( compressedData, &compressedLength, data, fileLength );
+	if ( status != Z_OK ) {
+		Error( "Failed to compress the given file, \"%s\"!\n", filePath );
+	}
+
+	/* check if it's actually worth it... */
+	if ( compressedLength > fileLength ) {
+		compressedLength = fileLength;
+	}
+#else
+	unsigned long compressedLength = fileLength;
+	const uint8_t *compressedData = data;
+#endif
 
 	/* write the index header */
-	uint8_t nameLength = ( uint8_t ) strlen( indexName );
+	uint8_t nameLength = ( uint8_t ) strlen( filePath );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, fileOutPtr );
-	char *name = malloc( nameLength );
-	strncpy( name, indexName, nameLength );
-	fwrite( name, sizeof( char ), nameLength, fileOutPtr );
-	free( name );
-	fwrite( &fileLength, sizeof( uint32_t ), 1, fileOutPtr );
+	fwrite( filePath, sizeof( char ), nameLength, fileOutPtr );
+	fwrite( &fileLength, sizeof( unsigned long ), 1, fileOutPtr );
+	fwrite( &compressedLength, sizeof( unsigned long ), 1, fileOutPtr );
 
 	/* and now write out the file itself */
-	fwrite( data, 1, fileLength, fileOutPtr );
+	if ( compressedLength == fileLength ) {
+		fwrite( data, 1, fileLength, fileOutPtr );
+	} else {
+		fwrite( compressedData, 1, compressedLength, fileOutPtr );
+	}
+
+	free( compressedData );
 
 	plCloseFile( filePtr );
 
@@ -128,38 +82,28 @@ static void Pkg_AddFile( const char *filePath, const char *fileTag, const char *
  * Callback used by ScanDirectory function.
  */
 static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
-	const char *fileName = plGetFileName( filePath );
-	if ( fileName == NULL ) {
-		Error( "Failed to get valid file name from \"%s\"!\n", filePath );
-	}
-
-	unsigned int length = strlen( fileName );
-
-	/* now produce a copy of the filename without the extension... */
-	char packFileName[ 64 ];
-	strncpy( packFileName, fileName, length );
-	packFileName[ length ] = '\0';
-
-	const char *tag = userData;
-	Pkg_AddFile( filePath, tag, packFileName );
+	Pkg_AddFile( filePath );
 }
 
 static void ParseScript( const char *buffer, size_t length ) {
 	const char *curPos = buffer;
 	while( curPos != NULL && *curPos != '\0' ) {
 		if ( *curPos == ';' ) { /* comment */
-			curPos = SkipLine( curPos );
+			curPos = EZP_SkipLine( curPos );
 			continue;
 		} else if ( strncmp( curPos, "output ", 7 ) == 0 ) { /* set output dir */
 			curPos += 7;
-			curPos = SkipSpaces( curPos );
+			curPos = EZP_SkipSpaces( curPos );
 
 			if ( outputPath[ 0 ] != '\0' ) {
 				Error( "Output was already specified previously in script!\n" );
 			}
 
 			/* fetch the output path we want */
-			curPos = ReadString( curPos, outputPath, sizeof( outputPath ) );
+			curPos = EZP_ReadString( curPos, outputPath, sizeof( outputPath ) );
+			if ( curPos == NULL ) {
+				Error( "Output path did not fit into destination!\n" );
+			}
 
 			Print( "OUTPUT: %s\n", outputPath );
 
@@ -174,33 +118,33 @@ static void ParseScript( const char *buffer, size_t length ) {
 			continue;
 		} else if ( strncmp( curPos, "add ", 4 ) == 0 ) { /* add file */
 			curPos += 4;
-			curPos = SkipSpaces(curPos);
+			curPos = EZP_SkipSpaces(curPos);
 
 			char filePath[PL_SYSTEM_MAX_PATH];
-			curPos = ReadString(curPos, filePath, sizeof(filePath));
+			curPos = EZP_ReadString(curPos, filePath, sizeof(filePath));
+			if ( curPos == NULL ) {
+				Error( "File path did not fit into destination!\n" );
+			}
 
-			char fileTag[64];
-			curPos = ReadString(curPos, fileTag, sizeof(fileTag));
-
-			char fileName[64];
-			curPos = ReadString(curPos, fileName, sizeof(fileName));
-
-			Pkg_AddFile(filePath, fileTag, fileName);
+			Pkg_AddFile(filePath);
 			continue;
 		} else if ( strncmp( curPos, "dir ", 4 ) == 0 ) {
 			curPos += 4;
-			curPos = SkipSpaces( curPos );
+			curPos = EZP_SkipSpaces( curPos );
 
 			char directory[ PL_SYSTEM_MAX_PATH ];
-			curPos = ReadString( curPos, directory, sizeof( directory ) );
+			curPos = EZP_ReadString( curPos, directory, sizeof( directory ) );
+			if ( curPos == NULL ) {
+				Error( "Directory path did not fit into destination!\n" );
+			}
 
 			char extension[ 8 ];
-			curPos = ReadString( curPos, extension, sizeof( extension ) );
+			curPos = EZP_ReadString( curPos, extension, sizeof( extension ) );
+			if ( curPos == NULL ) {
+				Error( "Extension did not fit into destination!\n" );
+			}
 
-			char tag[ 64 ];
-			curPos = ReadString( curPos, tag, sizeof( tag ) );
-
-			plScanDirectory( directory, extension, Pkg_AddFileCallback, false, tag );
+			plScanDirectory( directory, extension, Pkg_AddFileCallback, false, NULL );
 			continue;
 		}
 

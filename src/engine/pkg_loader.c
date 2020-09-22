@@ -1,9 +1,36 @@
-/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
- * Project Yin
- * */
+/* Copyright (C) 2020 Mark E Sowden <markelswo@gmail.com> */
 
 #include "yin.h"
 #include "pkg_loader.h"
+#include "miniz.h"
+
+uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index ) {
+	uint8_t *data = g_system.malloc( index->compressedSize );
+	if( !plFileSeek( file, (signed)index->offset, PL_SEEK_SET ) || plReadFile( file, data, index->compressedSize, 1 ) != 1 ) {
+		free( data );
+		return NULL;
+	}
+
+	if ( index->compressionType == PL_COMPRESSION_ZLIB ) {
+		/* go ahead and decompress it */
+		uint8_t *uncompressedData = g_system.malloc( index->fileSize );
+		unsigned long uncompressedLength;
+		int status = mz_uncompress( uncompressedData, &uncompressedLength, data, index->compressedSize );
+
+		/* don't need this anymore! */
+		free( data );
+
+		if ( status != MZ_OK ) {
+			free( uncompressedData );
+			PrintWarn( "Failed to decompress \"%s\" from package \"%s\"!\n", index->fileName, plGetFilePath( file ) );
+			return NULL;
+		}
+
+		data = uncompressedData;
+	}
+
+	return data;
+}
 
 PLPackage *Pkg_LoadPackage( const char *path ) {
 	PLFile *filePtr = plOpenFile( path, false );
@@ -21,8 +48,8 @@ PLPackage *Pkg_LoadPackage( const char *path ) {
 		return NULL;
 	}
 
-	if( !( identifier[ 0 ] == 'P' && identifier[ 1 ] == 'K' && identifier[ 2 ] == 'G' && identifier[ 3 ] == '1' ) ) {
-		PrintError( "Invalid package header, \"%s\", expected \"PKG1\"!\n", identifier );
+	if( !( identifier[ 0 ] == 'P' && identifier[ 1 ] == 'K' && identifier[ 2 ] == 'G' && identifier[ 3 ] == '2' ) ) {
+		PrintError( "Invalid package header, \"%s\", expected \"PKG2\"!\n", identifier );
 	}
 
 	bool status;
@@ -31,7 +58,7 @@ PLPackage *Pkg_LoadPackage( const char *path ) {
 		PrintError( "Failed to read in the number of files within the \"%s\" package!\nPL: %s\n", path, plGetError() );
 	}
 
-	PLPackage *package = plCreatePackageHandle( path, numFiles, NULL );
+	PLPackage *package = plCreatePackageHandle( path, numFiles, Pkg_OpenFile );
 	for ( unsigned int i = 0; i < numFiles; ++i ) {
 		PLPackageIndex *index = &package->table[ i ];
 
@@ -45,14 +72,23 @@ PLPackage *Pkg_LoadPackage( const char *path ) {
 
 		/* file length/size */
 		index->fileSize = plReadInt32( filePtr, false, &status );
+		index->compressedSize = plReadInt32( filePtr, false, &status );
+		if ( !status ) {
+			PrintError( "Failed to read in the file sizes for \"%s\" within the \"%s\" package!\nPL: %s\n", index->fileName, path, plGetError() );
+		}
+
+		if ( index->fileSize != index->compressedSize ) {
+			index->compressionType = PL_COMPRESSION_ZLIB;
+		}
+
 		index->offset = plGetFileOffset( filePtr );
 
 		/* now seek to the next file */
-		if ( !plFileSeek( filePtr, index->fileSize, PL_SEEK_CUR ) ) {
+		if ( !plFileSeek( filePtr, index->compressedSize, PL_SEEK_CUR ) ) {
 			PrintError( "Failed to seek to the next file within the \"%s\" package!\nPL: %s\n", path, plGetError() );
 		}
 
-		//PrintMsg( " Registered %s\n", index->fileName );
+		/* PrintMsg( " Registered %s\n", index->fileName ); */
 	}
 
 	plCloseFile( filePtr );

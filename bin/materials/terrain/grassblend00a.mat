@@ -1,5 +1,9 @@
 material
 pass base_lighting
 var texture diffuseMap materials/textures/world/ray4/terrain/ff813816_1621.png
-var texture blendMap materials/textures/world/ray4/terrain/ff813816_1629.png
+var texture blendMap materials/textures/world/ray4/terrain/ff800abb_1109.png
 end
+
+for testing
+var texture diffuseMap materials/textures/editor/dev_measure_00.tga
+var texture blendMap materials/textures/editor/dev_measure_01.tga
