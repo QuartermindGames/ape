@@ -46,7 +46,7 @@ ActorSetup actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 };
 
 typedef struct Actor {
-	PLVector3       position;
+	PLVector3       position, oldPosition;
 	PLVector3       velocity;
 	PLVector3       forward;
 	float           angle;
@@ -55,6 +55,8 @@ typedef struct Actor {
 	unsigned int    area;
 
 	/* collision/vis */
+	ActorMovementType movementType;
+	ActorCollisionGroup collisionGroup;
 	PLCollisionAABB bounds;
 	PLLinkedList *geoColliders; /* list of faces we're touching to test against */
 
@@ -72,7 +74,7 @@ typedef struct Actor {
 static PLLinkedList *actorList;
 
 Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle ) {
-	Actor *actor = g_system.calloc( 1, sizeof( Actor ) );
+	Actor *actor = Sys_calloc( 1, sizeof( Actor ) );
 	actor->node     = plInsertLinkedListNode( actorList, actor );
 	actor->setup    = actorSpawnSetup[ type ];
 	actor->area     = 0;
@@ -263,21 +265,38 @@ void Act_DrawActors( void ) {
 
 		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
+#if 1
+		PLVector3 absOrigin = plGetAABBAbsOrigin( &actor->bounds, actor->position );
 		plDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
+		plDrawBoundingVolume( &PLCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
 
 		PLLinkedListNode *colliderNode = plGetRootNode( actor->geoColliders );
 		while( colliderNode != NULL ) {
 			MapFace *face = plGetLinkedListNodeUserData( colliderNode );
 
-			plDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
+			PLCollisionPlane plane = PLCollisionPlane( face->bounds.absOrigin, plGetPolygonFaceNormal( face->polygon ) );
+			PLCollision collision = plIsSphereIntersectingPlane( &PLCollisionSphere( absOrigin, 16.0f ), &plane );
+			if ( collision.penetration > 0.0f ) {
+				plDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
+
+				Gfx_DrawAxesPivot( collision.contactPoint, plane.normal );
+
+				PLMatrix4 transform = plMatrix4Identity();
+				plDrawSimpleLine( transform, face->bounds.absOrigin, plAddVector3( face->bounds.absOrigin, plScaleVector3f( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
+				plDrawSimpleLine( transform, actor->bounds.origin, collision.contactPoint, PLColour( 0, 255, 0, 255 ) );
+			} else {
+				plDrawBoundingVolume( &face->bounds, PL_COLOUR_GREEN );
+			}
 
 			colliderNode = plGetNextLinkedListNode( colliderNode );
 		}
+#endif
 
 		curNode = plGetNextLinkedListNode( curNode );
 	}
 }
 
+#define GRAVITY 4.0f
 void Act_TickActors( void ) {
 	PLLinkedListNode *curNode = plGetRootNode( actorList );
 	while ( curNode != NULL ) {
@@ -292,25 +311,29 @@ void Act_TickActors( void ) {
 
 		plAnglesAxes( PLVector3( 0, actor->angle, 0 ), NULL, NULL, &actor->forward );
 
-		actor->position = plAddVector3( actor->position, actor->velocity );
-		if( actor->type != ACTOR_PLAYER ) {
-			static const float friction = 16.0f;
-			if( actor->velocity.x != 0 ) {
-				actor->velocity.x -= ( actor->velocity.x / friction );
-			}
-			if( actor->velocity.y != 0 ) {
-				actor->velocity.y -= ( actor->velocity.y / friction );
-			}
-			if( actor->velocity.z != 0 ) {
-				actor->velocity.z -= ( actor->velocity.z / friction );
-			}
+		static const float friction = 4.0f;
+		if( actor->velocity.x != 0 ) {
+			actor->velocity.x -= ( actor->velocity.x / friction );
+		}
+		if( actor->velocity.y != 0 ) {
+			actor->velocity.y -= ( actor->velocity.y / friction );
+		}
+		if( actor->velocity.z != 0 ) {
+			actor->velocity.z -= ( actor->velocity.z / friction );
 		}
 
-		/* ensure bounds origin is kept updated */
-		actor->bounds.origin = actor->position;
+		//if ( plGetNumLinkedListNodes( actor->geoColliders ) == 0 ) {
+		actor->velocity.y = -GRAVITY;
+		//}
+
+		actor->oldPosition = actor->position;
+		actor->position = plAddVector3( actor->position, actor->velocity );
 
 		/* check actor vs actor collision */
 		if( actor->setup.Collide != NULL ) {
+			/* ensure bounds origin is kept updated */
+			actor->bounds.origin = actor->position;
+
 			Actor *collider = Act_CheckCollisions( actor );
 			if( collider != NULL ) {
 				actor->setup.Collide( actor, collider, actor->userData );
@@ -328,23 +351,23 @@ void Act_TickActors( void ) {
 					continue;
 				}
 
-				PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
-				if ( node == NULL ) {
-					PrintError( "Failed to insert node into colliders list!\n" );
+				/* convert the face into a plane */
+				PLCollisionPlane plane = PLCollisionPlane( faces[ i ].bounds.absOrigin, plGetPolygonFaceNormal( faces[ i ].polygon ) );
+
+				/* now see if we're hitting anything */
+				PLVector3 absOrigin = plGetAABBAbsOrigin( &actor->bounds, actor->position );
+				PLCollisionSphere colSphere = PLCollisionSphere( absOrigin, 16.0f );
+				PLCollision collision = plIsSphereIntersectingPlane( &colSphere, &plane );
+				if ( collision.penetration > 0.0f ) {
+					printf( "penetration: %f\n", collision.penetration );
+					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / 2.0f ) );
+
+					PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
+					if ( node == NULL ) {
+						PrintError( "Failed to insert node into colliders list!\n" );
+					}
 				}
 			}
-
-			if( actor->type == ACTOR_PLAYER && Map_CheckCollisions( &actor->bounds, actor->area ) ) {
-				PrintMsg( "COLLIDING...\n" );
-				actor->setup.Collide( actor, NULL, actor->userData );
-			}
-
-#if 0 /* enable to print out number of colliders */
-			unsigned int curNodeNum = plGetNumLinkedListNodes( actor->geoColliders );
-			if ( curNodeNum > 0 ) {
-				PrintMsg( "Possible colliders %d\n", curNodeNum );
-			}
-#endif
 		}
 
 		curNode = plGetNextLinkedListNode( curNode );

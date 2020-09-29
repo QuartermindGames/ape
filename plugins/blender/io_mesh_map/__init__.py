@@ -55,11 +55,11 @@ from bpy_extras.io_utils import (
 
 @orientation_helper(axis_forward='X', axis_up='Y')
 class ExportMap(bpy.types.Operator, ExportHelper):
-    bl_idname = "export_map.map"
+    bl_idname = "export_map.geometry"
     bl_label = "Export MAP"
     bl_description = "Export as a MAP with normals, vertex colors and texture coordinates"
 
-    filename_ext = ".map"
+    filename_ext = ".geometry"
     filter_glob: StringProperty(default="*.map", options={'HIDDEN'})
 
     use_selection: BoolProperty(

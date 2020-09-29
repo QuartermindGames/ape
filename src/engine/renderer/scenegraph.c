@@ -30,7 +30,7 @@ void SG_Shutdown( void ) {
 }
 
 SGNode *SG_AddChildNode( SGNode *parent, unsigned int dataType, void *data ) {
-	SGNode *child = g_system.malloc( sizeof( SGNode ) );
+	SGNode *child = Sys_malloc( sizeof( SGNode ) );
 	child->data = data;
 	child->dataType = dataType;
 	child->node = plInsertLinkedListNode( parent->children, child );

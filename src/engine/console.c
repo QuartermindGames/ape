@@ -5,6 +5,7 @@
 #include "yin.h"
 
 void Console_Initialize( void ) {
+	plRegisterConsoleVariable( "map.sky.material", "materials/sky/cloudlayer00.mat", pl_string_var, NULL, "Sets the sky material." );
 
 }
 

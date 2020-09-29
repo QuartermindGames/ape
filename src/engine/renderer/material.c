@@ -5,6 +5,7 @@
 #include "yin.h"
 #include "renderer.h"
 #include "material.h"
+#include "script.h"
 
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 //static PLLinkedList *shaderPrograms;
@@ -12,20 +13,8 @@ static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 static Material *fallbackMaterial;
 
 typedef struct MaterialVariable {
-	char name[ PL_SYSTEM_MAX_PATH ];
 	int programSlot;
-	int type;
-	union {
-		float fVar;
-		int iVar;
-		unsigned int uiVar;
-		bool bVar;
-		double dVar;
-		PLVector2 v2Var;
-		PLVector3 v3Var;
-		PLVector4 v4Var;
-		PLTexture *texVar;
-	} value;
+	ScriptVariable varData;
 } MaterialVariable;
 
 typedef struct MaterialPass {
@@ -53,7 +42,7 @@ void RM_InitializeMaterialSystem( void ) {
 	}
 
 	/* go ahead and create the fallback material */
-	fallbackMaterial = g_system.calloc( 1, sizeof( Material ) );
+	fallbackMaterial = Sys_calloc( 1, sizeof( Material ) );
 	/* setup passes */
 	fallbackMaterial->numPasses = 1;
 	fallbackMaterial->passes[ 0 ].program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
@@ -61,8 +50,8 @@ void RM_InitializeMaterialSystem( void ) {
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PL_BLEND_NONE;
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables = 1;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].type = MATERIAL_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].value.texVar = Gfx_GetFallbackTexture();
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.type = SCRIPT_VAR_TEXTURE;
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.value.texVar = Gfx_GetFallbackTexture();
 }
 
 void RM_ShutdownMaterialSystem( void ) {
@@ -84,48 +73,26 @@ PLShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int p
 	return material->passes[ pass ].program;
 }
 
-static int RM_GetVariableTypeByTag( const char *tag ) {
-	static const char *materialVarTags[ MAX_MATERIAL_VAR_TYPES ]={
-			[ MATERIAL_VAR_FLOAT ] = "float",
-			[ MATERIAL_VAR_INT ] = "int",
-	        [ MATERIAL_VAR_UINT ] = "uint",
-			[ MATERIAL_VAR_BOOL ] = "bool",
-			[ MATERIAL_VAR_DOUBLE ] = "double",
-			[ MATERIAL_VAR_VEC2 ] = "vec2",
-			[ MATERIAL_VAR_VEC3 ] = "vec3",
-			[ MATERIAL_VAR_VEC4 ] = "vec4",
-			[ MATERIAL_VAR_TEXTURE ] = "texture",
-	        [ MATERIAL_VAR_BUILTIN ] = "builtin",
-	};
-
-	for ( int i = 0; i < MAX_MATERIAL_VAR_TYPES; ++i ) {
-		if ( strcmp( tag, materialVarTags[ i ] ) == 0 ) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-static bool RM_ValidateVariableType( unsigned int materialType, PLShaderUniformType uniformType ) {
-	static const PLShaderUniformType match[ MAX_MATERIAL_VAR_TYPES ] = {
-		[ MATERIAL_VAR_FLOAT ] = PL_UNIFORM_FLOAT,
-		[ MATERIAL_VAR_INT ] = PL_UNIFORM_INT,
-	    [ MATERIAL_VAR_UINT ] = PL_UNIFORM_UINT,
-		[ MATERIAL_VAR_BOOL ] = PL_UNIFORM_BOOL,
-		[ MATERIAL_VAR_DOUBLE ] = PL_UNIFORM_DOUBLE,
-		[ MATERIAL_VAR_VEC2 ] = PL_UNIFORM_VEC2,
-		[ MATERIAL_VAR_VEC3 ] = PL_UNIFORM_VEC3,
-		[ MATERIAL_VAR_VEC4 ] = PL_UNIFORM_VEC4,
-		[ MATERIAL_VAR_TEXTURE ] = PL_UNIFORM_SAMPLER2D,
-	};
+static bool RM_ValidateVariableType( ScriptVariableType varType, PLShaderUniformType uniformType ) {
+	static const PLShaderUniformType match[ MAX_SCRIPT_VAR_TYPES ] =
+	        {
+	                [SCRIPT_VAR_FLOAT] = PL_UNIFORM_FLOAT,
+	                [SCRIPT_VAR_INT] = PL_UNIFORM_INT,
+	                [SCRIPT_VAR_UINT] = PL_UNIFORM_UINT,
+	                [SCRIPT_VAR_BOOL] = PL_UNIFORM_BOOL,
+	                [SCRIPT_VAR_DOUBLE] = PL_UNIFORM_DOUBLE,
+	                [SCRIPT_VAR_VEC2] = PL_UNIFORM_VEC2,
+	                [SCRIPT_VAR_VEC3] = PL_UNIFORM_VEC3,
+	                [SCRIPT_VAR_VEC4] = PL_UNIFORM_VEC4,
+	                [SCRIPT_VAR_TEXTURE] = PL_UNIFORM_SAMPLER2D,
+	        };
 
 	/* built-in variables are special */
-	if ( materialType == MATERIAL_VAR_BUILTIN ) {
+	if ( varType == SCRIPT_VAR_BUILTIN ) {
 		return true;
 	}
 
-	if ( materialType >= MAX_MATERIAL_VAR_TYPES || match[ materialType ] != uniformType ) {
+	if ( varType >= MAX_SCRIPT_VAR_TYPES || match[ varType ] != uniformType ) {
 		return false;
 	}
 
@@ -134,18 +101,18 @@ static bool RM_ValidateVariableType( unsigned int materialType, PLShaderUniformT
 
 static int RM_GetBlendModeByTag( const char *tag ) {
 	static const char *blendModeTags[ PL_MAX_BLEND_MODES ] = {
-			[ PL_BLEND_NONE ] = "none",
-			[ PL_BLEND_ZERO ] = "zero",
-			[ PL_BLEND_ONE ] = "one",
-			[ PL_BLEND_SRC_COLOR ] = "src_color",
-			[ PL_BLEND_ONE_MINUS_SRC_COLOR ] = "one_minus_src_color",
-			[ PL_BLEND_SRC_ALPHA ] = "src_alpha",
-			[ PL_BLEND_ONE_MINUS_SRC_ALPHA ] = "one_minus_src_alpha",
-			[ PL_BLEND_DST_ALPHA ] = "dst_alpha",
-			[ PL_BLEND_ONE_MINUS_DST_ALPHA ] = "one_minus_dst_alpha",
-			[ PL_BLEND_DST_COLOR ] = "dst_color",
-			[ PL_BLEND_ONE_MINUS_DST_COLOR ] = "one_minus_dst_color",
-			[ PL_BLEND_SRC_ALPHA_SATURATE ] = "src_alpha_saturate",
+	        [PL_BLEND_NONE] = "none",
+	        [PL_BLEND_ZERO] = "zero",
+	        [PL_BLEND_ONE] = "one",
+	        [PL_BLEND_SRC_COLOR] = "src_color",
+	        [PL_BLEND_ONE_MINUS_SRC_COLOR] = "one_minus_src_color",
+	        [PL_BLEND_SRC_ALPHA] = "src_alpha",
+	        [PL_BLEND_ONE_MINUS_SRC_ALPHA] = "one_minus_src_alpha",
+	        [PL_BLEND_DST_ALPHA] = "dst_alpha",
+	        [PL_BLEND_ONE_MINUS_DST_ALPHA] = "one_minus_dst_alpha",
+	        [PL_BLEND_DST_COLOR] = "dst_color",
+	        [PL_BLEND_ONE_MINUS_DST_COLOR] = "one_minus_dst_color",
+	        [PL_BLEND_SRC_ALPHA_SATURATE] = "src_alpha_saturate",
 	};
 
 	for ( int i = 0; i < PL_MAX_BLEND_MODES; ++i ) {
@@ -196,8 +163,8 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
 	}
 
 	unsigned int i = pass->numVariables;
-	pass->variables[ i ].type = RM_GetVariableTypeByTag( token );
-	if ( pass->variables[ i ].type == -1 ) {
+	pass->variables[ i ].varData.type = SCR_GetVariableTypeByTag( token );
+	if ( pass->variables[ i ].varData.type == SCRIPT_VAR_INVALID ) {
 		PrintWarn( "Invalid variable type \"%s\"!\n", token );
 		return;
 	}
@@ -209,18 +176,18 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
 	}
 
 	/* copy it across */
-	snprintf( pass->variables[ i ].name, sizeof( pass->variables[ i ].name ), "%s", token );
+	snprintf( pass->variables[ i ].varData.name, sizeof( pass->variables[ i ].varData.name ), "%s", token );
 
-	pass->variables[ i ].programSlot = plGetShaderUniformSlot( pass->program, pass->variables[ i ].name );
+	pass->variables[ i ].programSlot = plGetShaderUniformSlot( pass->program, pass->variables[ i ].varData.name );
 	if ( pass->variables[ i ].programSlot == -1 ) {
-		PrintWarn( "Failed to fetch uniform slot for variable \"%s\"!\n", pass->variables[ i ].name );
+		PrintWarn( "Failed to fetch uniform slot for variable \"%s\"!\n", pass->variables[ i ].varData.name );
 		return;
 	}
 
 	/* fetch the uniform type so we can validate it, urgh */
 	unsigned int uniformType = plGetShaderUniformType( pass->program, pass->variables[ i ].programSlot );
-	if ( !RM_ValidateVariableType( pass->variables[ i ].type, uniformType ) ) {
-		PrintWarn( "Material variable \"%s\" type does not match uniform type!\n", pass->variables[ i ].name );
+	if ( !RM_ValidateVariableType( pass->variables[ i ].varData.type, uniformType ) ) {
+		PrintWarn( "Material variable \"%s\" type does not match uniform type!\n", pass->variables[ i ].varData.name );
 		return;
 	}
 
@@ -228,39 +195,39 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
 
 	token = strtok( NULL, " \n" );
 	if ( token == NULL ) {
-		PrintWarn( "Failed to get variable \"%s\" value!\n", pass->variables[ i ].name );
+		PrintWarn( "Failed to get variable \"%s\" value!\n", pass->variables[ i ].varData.name );
 		return;
 	}
 
 	/* handle built-in variables */
-	switch( pass->variables[ i ].type ) {
-		case MATERIAL_VAR_BUILTIN:
-			pass->variables[ i ].value.iVar = RM_GetBuiltInByTag( token );
-			if ( pass->variables[ i ].value.iVar == -1 ) {
+	switch( pass->variables[ i ].varData.type ) {
+		case SCRIPT_VAR_BUILTIN:
+			pass->variables[ i ].varData.value.iVar = RM_GetBuiltInByTag( token );
+			if ( pass->variables[ i ].varData.value.iVar == -1 ) {
 				PrintWarn( "Invalid built-in type \"%s\"!\n", token );
 			}
 			break;
-		case MATERIAL_VAR_DOUBLE:
-			pass->variables[ i ].value.dVar = strtod( token, NULL );
+		case SCRIPT_VAR_DOUBLE:
+			pass->variables[ i ].varData.value.dVar = strtod( token, NULL );
 			break;
-		case MATERIAL_VAR_BOOL:
+		case SCRIPT_VAR_BOOL:
 			if ( strcmp( token, "true" ) == 0 ) {
-				pass->variables[ i ].value.bVar = true;
+				pass->variables[ i ].varData.value.bVar = true;
 			} else {
-				pass->variables[ i ].value.bVar = false;
+				pass->variables[ i ].varData.value.bVar = false;
 			}
 			break;
-		case MATERIAL_VAR_FLOAT:
-			pass->variables[ i ].value.fVar = strtof( token, NULL );
+		case SCRIPT_VAR_FLOAT:
+			pass->variables[ i ].varData.value.fVar = strtof( token, NULL );
 			break;
-		case MATERIAL_VAR_INT:
-			pass->variables[ i ].value.iVar = strtol( token, NULL, 10 );
+		case SCRIPT_VAR_INT:
+			pass->variables[ i ].varData.value.iVar = strtol( token, NULL, 10 );
 			break;
-		case MATERIAL_VAR_UINT:
-			pass->variables[ i ].value.uiVar = strtoul( token, NULL, 10 );
+		case SCRIPT_VAR_UINT:
+			pass->variables[ i ].varData.value.uVar = strtoul( token, NULL, 10 );
 			break;
-		case MATERIAL_VAR_TEXTURE:
-			pass->variables[ i ].value.texVar = Gfx_LoadTexture( token );
+		case SCRIPT_VAR_TEXTURE:
+			pass->variables[ i ].varData.value.texVar = Gfx_LoadTexture( token );
 			break;
 	}
 
@@ -324,7 +291,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 		r = plReadString( file, buffer, sizeof( buffer ) );
 	}
 
-	Material *out = g_system.malloc( sizeof( Material ) );
+	Material *out = Sys_malloc( sizeof( Material ) );
 	memcpy( out, &mat, sizeof( Material ) );
 	return out;
 }
@@ -418,19 +385,19 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 		unsigned int curUnit = 0;
 		for ( unsigned int j = 0; j < curPass->numVariables; ++j ) {
 			/* textures just need to be set per their respective unit */
-			if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE ) {
-				plSetTexture( curPass->variables[ j ].value.texVar, curUnit );
+			if ( curPass->variables[ j ].varData.type == SCRIPT_VAR_TEXTURE ) {
+				plSetTexture( curPass->variables[ j ].varData.value.texVar, curUnit );
 				plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
 				curUnit++;
 				continue;
 			}
 			/* built-in variables are special cases */
-			else if ( curPass->variables[ j ].type == MATERIAL_VAR_BUILTIN ) {
-				RM_SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].value.iVar );
+			else if ( curPass->variables[ j ].varData.type == SCRIPT_VAR_BUILTIN ) {
+				RM_SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].varData.value.iVar );
 				continue;
 			}
 
-			plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].value, false );
+			plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].varData.value, false );
 		}
 
 		plUploadMesh( mesh );

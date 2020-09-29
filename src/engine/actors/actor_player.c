@@ -10,8 +10,8 @@
 #define PLAYER_CROUCH_OFFSET    45.0f
 
 #define PLAYER_TURN_SPEED    2.0f
-#define PLAYER_WALK_SPEED    5.0f
-#define PLAYER_RUN_SPEED     8.0f
+#define PLAYER_WALK_SPEED    2.0f
+#define PLAYER_RUN_SPEED     4.0f
 #define PLAYER_MAX_VELOCITY  PLAYER_RUN_SPEED
 #define PLAYER_MIN_VELOCITY  0.5f
 
@@ -19,7 +19,7 @@
 #define PLAYER_MIN_PITCH    -85.0f
 
 static const PLVector3 playerBoundsMins = PLVector3( -16.0f, 0.0f, -16.0f );
-static const PLVector3 playerBoundsMaxs = PLVector3( 16.0f, 95.0f, 16.0f );
+static const PLVector3 playerBoundsMaxs = PLVector3( 16.0f, 90.0f, 16.0f );
 
 typedef struct APlayer {
 	PLVector3 ulViewPos;
@@ -91,7 +91,7 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 static unsigned int numPlayers = 0;
 
 void Player_Spawn( Actor *self ) {
-	APlayer* playerData = g_system.calloc( 1, sizeof( APlayer ) );
+	APlayer* playerData = Sys_calloc( 1, sizeof( APlayer ) );
 	Act_SetUserData( self, playerData );
 
 	if ( numPlayers == 0 ) { /* local player */
@@ -108,6 +108,9 @@ void Player_Spawn( Actor *self ) {
 }
 
 void Player_Tick( Actor *self, void *userData ) {
+	PLVector3 curOrigin = Act_GetPosition( self );
+	PLVector3 curVelocity = Act_GetVelocity( self );
+
 	float nAngle = Act_GetAngle( self );
 	if ( g_system.GetButtonState( INPUT_LEFT ) ) {
 		nAngle += PLAYER_TURN_SPEED;
@@ -115,6 +118,10 @@ void Player_Tick( Actor *self, void *userData ) {
 		nAngle -= PLAYER_TURN_SPEED;
 	}
 	Act_SetAngle( self, nAngle );
+
+	if ( g_system.GetButtonState( INPUT_A ) ) {
+		curVelocity.y += 10.0f;
+	}
 
 	static const float incAmount = 0.25f;
 	APlayer *playerData = ( APlayer * ) userData;
@@ -149,21 +156,22 @@ void Player_Tick( Actor *self, void *userData ) {
 	float maxVelocity = g_system.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
-	PLVector3 curVelocity = Act_GetVelocity( self );
-	curVelocity = plScaleVector3f( Act_GetForward( self ), playerData->forwardVelocity );
+	curVelocity = plAddVector3( curVelocity, plScaleVector3f( Act_GetForward( self ), playerData->forwardVelocity ) );
 	Act_SetVelocity( self, &curVelocity );
 
 	Player_CalculateViewFrustum( self );
 
 	/* apply view bob */
-	float velocityVector = plVector3Length( &curVelocity );
+	float velocityVector = plVector3Length( curVelocity );
 	playerData->viewBob += ( sinf( Engine_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
-	float viewOffset = PLAYER_VIEW_OFFSET;
+
+	float viewOffset = curOrigin.y + PLAYER_VIEW_OFFSET;
 	if ( g_system.GetKeyState( 'c' ) ) {
-		viewOffset = PLAYER_CROUCH_OFFSET;
+		viewOffset = curOrigin.y + PLAYER_CROUCH_OFFSET;
 	}
 
-	Act_SetViewOffset( self, viewOffset + playerData->viewBob );
+	Act_SetViewOffset( self, viewOffset /*+ playerData->viewBob*/ );
+	Act_SetPosition( self, &curOrigin );
 }
 
 void Player_Collide( Actor *self, Actor *other, void *userData ) {

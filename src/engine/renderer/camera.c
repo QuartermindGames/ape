@@ -26,34 +26,33 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 		PrintError( "Invalid viewport!\n" );
 	}
 
-	GfxCamera *gfxCamera = g_system.calloc( 1, sizeof( GfxCamera ) );
+	GfxCamera *gfxCamera = Sys_calloc( 1, sizeof( GfxCamera ) );
 
-	gfxCamera->cameraPtr = plCreateCamera();
-	if( gfxCamera->cameraPtr == NULL ) {
+	gfxCamera->internalPtr = plCreateCamera();
+	if( gfxCamera->internalPtr == NULL ) {
 		PrintError( "Failed to create camera!\nPL: %s\n", plGetError() );
 	}
 
 	gfxCamera->viewportPtr = viewport;
-	g_system.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->cameraPtr->viewport.w, &gfxCamera->cameraPtr->viewport.h );
+	g_system.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->internalPtr->viewport.w, &gfxCamera->internalPtr->viewport.h );
 
 	gfxCamera->perspective = perspective;
 	switch( gfxCamera->perspective ) {
 	default: PrintError( "Unsupported viewport type %d!\n", gfxCamera->perspective );
 	case VIEW_PERSPECTIVE_EYE:
-		gfxCamera->cameraPtr->fov = 90.0f;
-		gfxCamera->cameraPtr->far = 1000.0f;
+		gfxCamera->internalPtr->fov = 75.0f;
 		break;
 	case VIEW_PERSPECTIVE_FRONT:
 	case VIEW_PERSPECTIVE_SIDE:
 	case VIEW_PERSPECTIVE_TOP:
-		gfxCamera->cameraPtr->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
-		gfxCamera->cameraPtr->near = 0.0f;
-		gfxCamera->cameraPtr->far = 1000.0f;
+		gfxCamera->internalPtr->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
+		gfxCamera->internalPtr->near = 0.0f;
+		gfxCamera->internalPtr->far = 1000.0f;
 		break;
 	}
 
-	gfxCamera->cameraPtr->position = position;
-	gfxCamera->cameraPtr->angles = angles;
+	gfxCamera->internalPtr->position = position;
+	gfxCamera->internalPtr->angles = angles;
 
 	gfxCamera->node = plInsertLinkedListNode( camerasList, gfxCamera );
 
@@ -76,25 +75,18 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
-	g_system.MakeWindowActive( camera->viewportPtr );
-	g_system.GetWindowSize( camera->viewportPtr, &camera->cameraPtr->viewport.w, &camera->cameraPtr->viewport.h );
+	SysWindow *window = Engine_GetMainWindow();
+	g_system.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
 
 	/* if we have a parent, follow them */
 	if( camera->parentActor != NULL ) {
 		switch( camera->perspective ) {
 			default: break;
 			case VIEW_PERSPECTIVE_EYE:
-#ifdef DEBUG_CAM
-				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
-				camera->cameraPtr->position.y = 512.0f;
-				camera->cameraPtr->angles.x = -85.0f;
-				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-#else
-			    camera->cameraPtr->angles.x = Act_GetViewPitch( camera->parentActor );
-				camera->cameraPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-				camera->cameraPtr->position = Act_GetPosition( camera->parentActor );
-				camera->cameraPtr->position.y = Act_GetViewOffset( camera->parentActor );
-#endif
+			    camera->internalPtr->angles.x = Act_GetViewPitch( camera->parentActor );
+				camera->internalPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
+				camera->internalPtr->position = Act_GetPosition( camera->parentActor );
+				camera->internalPtr->position.y = Act_GetViewOffset( camera->parentActor );
 				break;
 			case VIEW_PERSPECTIVE_TOP:
 			case VIEW_PERSPECTIVE_SIDE:
@@ -102,9 +94,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		}
 	}
 
-	plSetupCamera( camera->cameraPtr );
-
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+	plSetupCamera( camera->internalPtr );
 
 	Gfx_DrawScene( camera );
 }
@@ -118,7 +108,7 @@ void Gfx_ShutdownCameras( void ) {
 			continue;
 		}
 
-		plDestroyCamera( camera->cameraPtr );
+		plDestroyCamera( camera->internalPtr );
 		free( camera );
 
 		curNode = plGetNextLinkedListNode( curNode );

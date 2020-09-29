@@ -1,0 +1,5 @@
+material
+pass base_lighting
+var texture diffuseMap materials/textures/world/ray4/terrain/ff802c1d_1528.png
+var texture blendMap materials/textures/world/ray4/terrain/ff800abb_1109.png
+end

@@ -10,7 +10,7 @@ typedef struct ATriggerVolume {
 } ATriggerVolume;
 
 void TriggerVolume_Spawn( Actor *self ) {
-	ATriggerVolume *triggerData = g_system.calloc( 1, sizeof( ATriggerVolume ) );
+	ATriggerVolume *triggerData = Sys_calloc( 1, sizeof( ATriggerVolume ) );
 	Act_SetUserData( self, triggerData );
 }
 

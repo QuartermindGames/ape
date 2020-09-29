@@ -23,7 +23,7 @@ This script exports map files for project Yin.
 """
 
 
-def _write_ascii(fw, ply_verts, ply_faces, mesh_verts):
+def _write_ascii(fw, ply_verts, ply_faces, mesh_verts, mesh_polygons):
     # Vertex data
     # ---------------------------
 
@@ -39,12 +39,11 @@ def _write_ascii(fw, ply_verts, ply_faces, mesh_verts):
     # ---------------------------
 
     fw(b"faces %d\n" % len(ply_faces))
-    for pf in ply_faces:
+    for i, pf in enumerate(ply_faces):
         fw(b"%d" % len(pf))
         for index in pf:
             fw(b" %d" % index)
-        #fw(b" %d" % pf.material_index)
-        fw(b" 0")
+        fw(b" %d" % mesh_polygons[i].material_index)
         fw(b"\n")
 
 
@@ -71,6 +70,7 @@ def save_mesh(context, filepath, mesh, use_uv_coords, use_colors):
     color = uvcoord = uvcoord_key = normal = normal_key = None
 
     mesh_verts = mesh.vertices
+    mesh_polygons = mesh.polygons
     # vdict = {} # (index, normal, uv) -> new index
     vdict = [{} for i in range(len(mesh_verts))]
     ply_verts = []
@@ -133,13 +133,11 @@ def save_mesh(context, filepath, mesh, use_uv_coords, use_colors):
         # Header
         # ---------------------------
 
-        fw(b"map\n")
-        fw(b"version 1\n")
-        fw(b"texturepacks 1\n")
-        fw(b"textures/demo.pkg\n")
+        fw(b"geometry\n")
+        fw(b"version 2\n")
 
         obj = context.object
-        fw(b"textures %d\n" % len(obj.material_slots))
+        fw(b"materials %d\n" % len(obj.material_slots))
         for slot in obj.material_slots:
             fw(slot.material.name.encode())
             fw(b"\n")
@@ -147,7 +145,7 @@ def save_mesh(context, filepath, mesh, use_uv_coords, use_colors):
         # Geometry
         # ---------------------------
 
-        _write_ascii(fw, ply_verts, ply_faces, mesh_verts)
+        _write_ascii(fw, ply_verts, ply_faces, mesh_verts, mesh_polygons)
 
 
 def save(

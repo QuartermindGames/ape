@@ -66,9 +66,9 @@ static void Editor_Input( void ) {
 	if ( curCamera != NULL ) {
 		if ( g_system.GetButtonState( INPUT_UP ) ) {
 			if ( curCamera->perspective == VIEW_PERSPECTIVE_EYE ) {
-				curCamera->cameraPtr->position.x += 1.0f;
+				curCamera->internalPtr->position.x += 1.0f;
 			} else {
-				curCamera->cameraPtr->position.y += 1.0f;
+				curCamera->internalPtr->position.y += 1.0f;
 			}
 		} else if ( g_system.GetButtonState( INPUT_DOWN ) ) {
 

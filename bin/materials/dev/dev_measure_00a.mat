@@ -1,0 +1,5 @@
+material
+pass base_lighting
+var texture diffuseMap materials/dev/dev_measure_00a.tga
+var texture blendMap materials/dev/dev_measure_00a.tga
+end

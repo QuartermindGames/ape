@@ -123,86 +123,6 @@ static void RT_InitializeTextures( void ) {
 	Font_Initialize();
 }
 
-GfxAnimationFrame *Gfx_LoadPictureByIndex( const RGBMap *palette, unsigned int index ) {
-	PLFile *filePtr = plLoadPackageFileByIndex( globalWad, index );
-	if ( filePtr == NULL ) {
-		const char *fileName = plGetPackageFileName( globalWad, index );
-		if ( fileName == NULL ) {
-			fileName = "Unknown";
-		}
-
-		PrintError( "Failed to load picture %d (%s)!\nPL: %s\n", index, fileName, plGetError() );
-	}
-
-	bool status;
-	uint8_t w = plReadInt8( filePtr, &status );
-	uint8_t h = plReadInt8( filePtr, &status );
-	uint8_t leftOffset = plReadInt8( filePtr, &status );
-	uint8_t topOffset = plReadInt8( filePtr, &status );
-	if ( !status ) {
-		plCloseFile( filePtr );
-		PrintError( "Failed to read in width and height for picture %d!\nPL: %s\n", index, plGetError() );
-	}
-
-	/* read in the column offsets */
-
-	int16_t *columnOffsets = g_system.calloc( w, sizeof( int16_t ) );
-	for ( unsigned int i = 0; i < w; ++i ) {
-		columnOffsets[ i ] = plReadInt16( filePtr, false, &status );
-	}
-
-	if ( !status ) {
-		plCloseFile( filePtr );
-		PrintError( "Failed to read in column offsets for picture %d!\nPL: %s\n", index, plGetError() );
-	}
-
-	PLColour *colourBuffer = g_system.calloc( ( size_t ) w * h, sizeof( PLColour ) );
-	for ( unsigned int i = 0; i < w; ++i ) {
-		plFileSeek( filePtr, columnOffsets[ i ], PL_SEEK_SET );
-
-		uint8_t rowStart = 0;
-		while ( 1 ) {
-			rowStart = plReadInt8( filePtr, &status );
-			if ( rowStart == 255 ) {
-				break;
-			}
-
-			uint8_t pixelCount = plReadInt8( filePtr, &status );
-			if ( !status ) {
-				PrintError( "Failed to read pixel count (i=%d)\nPL: %s\n", i, plGetError() );
-			}
-
-			for ( unsigned int j = 0; j < pixelCount; ++j ) {
-				uint8_t pixel = plReadInt8( filePtr, &status );
-
-				unsigned int pos = ( j + rowStart ) * w + i;
-				colourBuffer[ pos ].r = playPal[ pixel ].r;
-				colourBuffer[ pos ].g = playPal[ pixel ].g;
-				colourBuffer[ pos ].b = playPal[ pixel ].b;
-
-				/* unlike others, cyan denotes transparency here */
-				bool isCyan =
-				        colourBuffer[ pos ].r == 0 &&
-				        colourBuffer[ pos ].g == 255 &&
-				        colourBuffer[ pos ].b == 255;
-				colourBuffer[ pos ].a = isCyan ? 0 : 255;
-			}
-		}
-	}
-
-	plCloseFile( filePtr );
-
-	/* setup the animation frame we're going to use */
-	GfxAnimationFrame *frame = g_system.calloc( 1, sizeof( GfxAnimationFrame ) );
-	frame->texture = Gfx_GenerateTextureFromData( ( uint8_t * ) colourBuffer, w, h, 4, false );
-	frame->leftOffset = leftOffset;
-	frame->topOffset = topOffset;
-
-	free( colourBuffer );
-
-	return frame;
-}
-
 PLTexture *Gfx_GetTexture( const char *path ) {
 	PLLinkedListNode *node = plGetRootNode( textures );
 	while ( node != NULL ) {
@@ -307,7 +227,7 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 	}
 
 	/* allocate and return our program index */
-	ShaderProgramIndex *out = g_system.malloc( sizeof( ShaderProgramIndex ) );
+	ShaderProgramIndex *out = Sys_malloc( sizeof( ShaderProgramIndex ) );
 	*out = program;
 	return out;
 }
@@ -584,7 +504,7 @@ void Gfx_DrawMenu( void ) {
 	          "Current Node:    0\n"
 	          "Num Faces Drawn: %d\n"
 	          "Num Batches:     %d\n"
-	          "Map Draw Time:   %.3f\n",
+	          "Map Draw Time:   %lf\n",
 	          ( int ) g_gfxPerfStats.cameraPos.x,
 	          ( int ) g_gfxPerfStats.cameraPos.y,
 	          ( int ) g_gfxPerfStats.cameraPos.z,
@@ -648,7 +568,7 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 	}
 #endif
 
-	g_gfxPerfStats.cameraPos = camera->cameraPtr->position;
+	g_gfxPerfStats.cameraPos = camera->internalPtr->position;
 
 	Map_Draw( camera );
 	Act_DrawActors();

@@ -165,34 +165,6 @@ static void Sys_KeyboardUp( unsigned char key, int x, int y ) {
 }
 
 /****************************************
- * MEMORY MANAGEMENT
- ****************************************/
-
-void *Sys_calloc( size_t num, size_t size ) {
-	void *mem = calloc( num, size );
-	if( mem == NULL ) {
-		PrintError( "Failed to allocate %d bytes!\n", num * size );
-	}
-
-	return mem;
-}
-
-/* wrapper for malloc */
-static void *Sys_malloc( size_t size ) {
-	return Sys_calloc( 1, size );
-}
-
-/* wrapper for realloc */
-static void *Sys_realloc( void *ptr, size_t newSize ) {
-	void *buf = realloc( ptr, newSize );
-	if ( buf == NULL ) {
-		PrintError( "Failed to allocate %lu bytes!\n", newSize );
-	}
-
-	return buf;
-}
-
-/****************************************
  * TIMER MANAGEMENT
  ****************************************/
 
@@ -250,9 +222,6 @@ int Sys_Init( int argc, char **argv ) {
 		.SwapWindow = Sys_SwapWindow,
 		.GetButtonState = Sys_GetButtonState,
 		.GetKeyState = Sys_GetKeyState,
-		.calloc = Sys_calloc,
-		.malloc = Sys_malloc,
-		.realloc = Sys_realloc,
 	};
 
 	/* initialize the interface */

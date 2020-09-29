@@ -52,11 +52,6 @@ typedef struct SystemInterface {
 	bool ( *GetButtonState )( InputButton inputIndex );
 	bool ( *GetKeyState )( unsigned char keyIndex );
 
-	/* memory */
-	void *( *calloc )( size_t num, size_t size );
-	void *( *malloc )( size_t size );
-	void *( *realloc )( void *ptr, size_t newSize );
-
 	void ( *Shutdown )( void );
 } SystemInterface;
 extern SystemInterface g_system;

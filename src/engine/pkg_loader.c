@@ -5,28 +5,31 @@
 #include "miniz.h"
 
 uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index ) {
-	uint8_t *data = g_system.malloc( index->compressedSize );
-	if( !plFileSeek( file, (signed)index->offset, PL_SEEK_SET ) || plReadFile( file, data, index->compressedSize, 1 ) != 1 ) {
+	if( !plFileSeek( file, (signed)index->offset, PL_SEEK_SET ) ) {
+		return NULL;
+	}
+
+	uint8_t *data = Sys_malloc( index->compressedSize );
+	if ( plReadFile( file, data, index->compressedSize, 1 ) != 1 ) {
 		free( data );
 		return NULL;
 	}
 
 	if ( index->compressionType == PL_COMPRESSION_ZLIB ) {
 		/* go ahead and decompress it */
-		uint8_t *uncompressedData = g_system.malloc( index->fileSize );
+		uint8_t *uncompressedData = Sys_malloc( index->fileSize );
 		unsigned long uncompressedLength;
 		int status = mz_uncompress( uncompressedData, &uncompressedLength, data, index->compressedSize );
 
 		/* don't need this anymore! */
 		free( data );
+		data = uncompressedData;
 
 		if ( status != MZ_OK ) {
 			free( uncompressedData );
 			PrintWarn( "Failed to decompress \"%s\" from package \"%s\"!\n", index->fileName, plGetFilePath( file ) );
 			return NULL;
 		}
-
-		data = uncompressedData;
 	}
 
 	return data;

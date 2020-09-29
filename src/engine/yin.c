@@ -10,6 +10,7 @@
 #include "pkg_loader.h"
 #include "editor.h"
 #include "game.h"
+#include "timespec.h"
 
 PLPackage *globalWad = NULL;
 
@@ -24,8 +25,8 @@ static SysWindow *mainWindow;
  ****************************************/
 
 typedef struct CPUTime {
-	clock_t clock;
-	double secondsTaken;
+	struct timespec clock;
+	double timeTaken;
 } CPUTime;
 static CPUTime cpuTimers[ MAX_CPUTIME_GROUPS ];
 
@@ -34,15 +35,46 @@ void CPUTimer_Initialize( void ) {
 }
 
 void CPUTimer_StartMeasure( CPUTimeGroup group ) {
-	cpuTimers[ group ].clock = clock();
+	clock_gettime( CLOCK_MONOTONIC, &cpuTimers[ group ].clock );
 }
 
 void CPUTimer_EndMeasure( CPUTimeGroup group ) {
-	cpuTimers[ group ].secondsTaken = ( ( double ) clock() - cpuTimers[ group ].clock ) / CLOCKS_PER_SEC;
+	struct timespec end;
+	clock_gettime( CLOCK_MONOTONIC, &end );
+
+	cpuTimers[ group ].timeTaken = timespec_to_double( timespec_sub( end, cpuTimers[ group ].clock ) );
 }
 
 double CPUTimer_GetMeasure( CPUTimeGroup group ) {
-	return cpuTimers[ group ].secondsTaken;
+	return cpuTimers[ group ].timeTaken;
+}
+
+/****************************************
+ * MEMORY MANAGEMENT
+ ****************************************/
+
+void *Sys_calloc( size_t num, size_t size ) {
+	void *mem = calloc( num, size );
+	if( mem == NULL ) {
+		PrintError( "Failed to allocate %d bytes!\n", num * size );
+	}
+
+	return mem;
+}
+
+/* wrapper for malloc */
+void *Sys_malloc( size_t size ) {
+	return Sys_calloc( 1, size );
+}
+
+/* wrapper for realloc */
+void *Sys_realloc( void *ptr, size_t newSize ) {
+	void *buf = realloc( ptr, newSize );
+	if ( buf == NULL ) {
+		PrintError( "Failed to allocate %lu bytes!\n", newSize );
+	}
+
+	return buf;
 }
 
 /****************************************
@@ -50,9 +82,9 @@ double CPUTimer_GetMeasure( CPUTimeGroup group ) {
  ****************************************/
 
 static bool Engine_Initialize( int argc, char **argv ) {
-	pl_calloc = g_system.calloc;
-	pl_malloc = g_system.malloc;
-	pl_realloc = g_system.realloc;
+	pl_calloc = Sys_calloc;
+	pl_malloc = Sys_malloc;
+	pl_realloc = Sys_realloc;
 
 	/* initialize the platform library */
 	plInitialize( argc, argv );

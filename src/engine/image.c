@@ -102,7 +102,7 @@ PLImage *Image_LoadPackedImage( const char *path ) {
 				offsetSize = sizeof( uint32_t );
 			}
 
-			void *pixelOffsets = g_system.calloc( numBlockPixels, offsetSize );
+			void *pixelOffsets = Sys_calloc( numBlockPixels, offsetSize );
 			if ( plReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels ) {
 				PrintError( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, plGetError() );
 			}

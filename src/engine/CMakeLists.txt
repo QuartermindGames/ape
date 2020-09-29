@@ -21,7 +21,7 @@ add_library( engine SHARED ${ENGINE_SOURCE_FILES}
         audio.c audio.h
 
         ../3rdparty/miniz/miniz.c
-        )
+        script.h script.c)
 
 determine_target_architecture( engine )
 

@@ -10,8 +10,21 @@ typedef enum ActorType {
 
 	ACTOR_TRIGGER_VOLUME,
 
-	MAX_ACTOR_TYPES,
+	MAX_ACTOR_TYPES
 } ActorType;
+
+typedef enum ActorMovementType {
+	ACTOR_MOVEMENT_CUSTOM,
+	ACTOR_MOVEMENT_PHYSICS,
+
+	MAX_ACTOR_MOVEMENT_TYPES
+} ActorMovementType;
+
+typedef enum ActorCollisionGroup {
+	PL_BITFLAG( ACTOR_COLLISION_GROUP_WORLD, 0 ),
+	PL_BITFLAG( ACTOR_COLLISION_GROUP_PLAYER, 1 ),
+	PL_BITFLAG( ACTOR_COLLISION_GROUP_MONSTER, 2 ),
+} ActorCollisionGroup;
 
 typedef struct Actor Actor;
 
@@ -25,24 +38,33 @@ void Act_TickActors( void );
 Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle );
 Actor *Act_DestroyActor( Actor *self );
 
-ActorType    Act_GetType( const Actor *self );
-void         Act_SetPosition( Actor *self, const PLVector3 *position );
-PLVector3    Act_GetPosition( const Actor *self );
-void         Act_SetVelocity( Actor *self, const PLVector3 *velocity );
-PLVector3    Act_GetVelocity( const Actor *self );
-void         Act_SetAngle( Actor *self, float angle );
-float        Act_GetAngle( const Actor *self );
+ActorType Act_GetType( const Actor *self );
+
+void Act_SetPosition( Actor *self, const PLVector3 *position );
+PLVector3 Act_GetPosition( const Actor *self );
+
+void Act_SetVelocity( Actor *self, const PLVector3 *velocity );
+PLVector3 Act_GetVelocity( const Actor *self );
+
+void Act_SetAngle( Actor *self, float angle );
+float Act_GetAngle( const Actor *self );
+
 void Act_SetViewPitch( Actor *self, float viewPitch );
 float Act_GetViewPitch( const Actor *self );
-void         Act_SetUserData( Actor *self, void *userData );
-void         *Act_GetUserData( Actor *self );
-void         Act_SetCurrentFrame( Actor *self, unsigned int frame );
+
+void Act_SetUserData( Actor *self, void *userData );
+void *Act_GetUserData( Actor *self );
+
+void Act_SetCurrentFrame( Actor *self, unsigned int frame );
 unsigned int Act_GetCurrentFrame( const Actor *self );
-void         Act_SetViewOffset( Actor *self, float viewOffset );
-float        Act_GetViewOffset( Actor *self );
-void         Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
+
+void Act_SetViewOffset( Actor *self, float viewOffset );
+float Act_GetViewOffset( Actor *self );
+
+void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
 const PLCollisionAABB *Act_GetBounds( Actor *self );
-PLVector3    Act_GetForward( const Actor *self );
+
+PLVector3 Act_GetForward( const Actor *self );
 
 /* generic monster functions */
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );

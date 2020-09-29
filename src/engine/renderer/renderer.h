@@ -24,7 +24,7 @@ typedef enum ViewPerspective {
 
 typedef struct GfxCamera {
 	SysWindow               *viewportPtr;
-	PLCamera			    *cameraPtr;			/* the camera used for this viewport */
+	PLCamera			    *internalPtr;			/* the camera used for this viewport */
 	ViewPerspective		    perspective;
 	struct Actor		    *parentActor;
 	struct PLLinkedListNode *node;				/* node representing this object in the linked list */

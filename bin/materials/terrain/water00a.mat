@@ -1,5 +1,5 @@
 material
-pass default_lit
+pass default
+blend src_alpha one
 var texture diffuseMap materials/textures/terrain/grass00.png
-var texture blendMap materials/textures/terrain/rock00.png
 end

@@ -8,8 +8,8 @@
 #include "map.h"
 #include "renderer/renderer.h"
 
-#define MAP_IDENTIFIER  "map"
-#define MAP_VERSION     "version 1"
+#define MAP_GEOMETRY_IDENTIFIER "geometry"
+#define MAP_GEOMETRY_VERSION    "version 2"
 
 static struct {
 	PLVertex *vertices;
@@ -20,8 +20,6 @@ static struct {
 	unsigned int numSectors;
 
 	/* materials */
-	PLFileSystemMount **texturePackages;
-	unsigned int numTexturePackages;
 	Material **materials;
 	unsigned int numMaterials;
 } mapData;
@@ -47,20 +45,20 @@ void Map_ClearData( void ) {
 /**********************************************************/
 /** Map File Reader **/
 
-static bool Map_ValidateFile( PLFile *file ) {
+static bool Map_ValidateGeometryFile( PLFile *file ) {
 	char buffer[ 256 ];
 
 	/* check the identifier */
 	plReadString( file, buffer, sizeof( buffer ) );
-	if ( strcmp( MAP_IDENTIFIER "\n", buffer ) != 0 ) {
-		PrintWarn( "Invalid identifier found, expected \"%s\" but found \"%s\"\n", MAP_IDENTIFIER, buffer );
+	if ( strcmp( MAP_GEOMETRY_IDENTIFIER "\n", buffer ) != 0 ) {
+		PrintWarn( "Invalid identifier found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_IDENTIFIER, buffer );
 		return false;
 	}
 
 	/* and now check the version */
 	plReadString( file, buffer, sizeof( buffer ) );
-	if ( strcmp( MAP_VERSION "\n", buffer ) != 0 ) {
-		PrintWarn( "Invalid version found, expected \"%s\" but found \"%s\"\n", MAP_VERSION, buffer );
+	if ( strcmp( MAP_GEOMETRY_VERSION "\n", buffer ) != 0 ) {
+		PrintWarn( "Invalid version found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_VERSION, buffer );
 		return false;
 	}
 
@@ -70,44 +68,14 @@ static bool Map_ValidateFile( PLFile *file ) {
 static void Map_ParseTextures( PLFile *file ) {
 	char buffer[ 256 ];
 
-	/* figure out how many packages we have on our hands */
+	/* fetch all the materials the map will be using */
 	plReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "texturepacks %d\n", &mapData.numTexturePackages ) != 1 ) {
-		PrintError( "Failed to fetch number of texture packages in \"%s\"!\n", plGetFilePath( file ) );
-	}
-
-	/* now mount all of the packages we're going to use */
-	PLFileSystemMount **texturePackages = g_system.calloc( mapData.numTexturePackages, sizeof( PLFileSystemMount* ) );
-	for ( unsigned int i = 0; i < mapData.numTexturePackages; ++i ) {
-		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
-			PrintError( "Failed to read in texture package \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
-		}
-
-		/* copy the texture name; excluding the line terminator */
-		char packagePath[ PL_SYSTEM_MAX_PATH ];
-		for ( unsigned int j = 0; j < sizeof( packagePath ); ++j ) {
-			if ( buffer[ j ] == '\n' ) {
-				packagePath[ j ] = '\0';
-				break;
-			}
-
-			packagePath[ j ] = buffer[ j ];
-		}
-
-		texturePackages[ i ] = plMountLocation( packagePath );
-		if ( texturePackages[ i ] == NULL ) {
-			PrintWarn( "Failed to mount the specified location, \"%s\"!\n", packagePath );
-		}
-	}
-
-	/* now fetch all the materials the map will be using */
-	plReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "textures %d\n", &mapData.numMaterials ) != 1 ) {
+	if ( sscanf( buffer, "materials %d\n", &mapData.numMaterials ) != 1 ) {
 		PrintError( "Failed to fetch number of textures in \"%s\"!\n", plGetFilePath( file ) );
 	}
 
 	/* allocate storage for them */
-	mapData.materials = g_system.calloc( mapData.numMaterials, sizeof( Material* ) );
+	mapData.materials = Sys_calloc( mapData.numMaterials, sizeof( Material* ) );
 
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
@@ -138,7 +106,7 @@ static void Map_ParseVertices( PLFile *file ) {
 	}
 
 	/* allocate buffer for vertices and then read them all in */
-	mapData.vertices = g_system.calloc( mapData.numVertices, sizeof( PLVertex ) );
+	mapData.vertices = Sys_calloc( mapData.numVertices, sizeof( PLVertex ) );
 	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
@@ -171,13 +139,13 @@ static void Map_ParseFaces( PLFile *file ) {
 	}
 
 	/* allocate buffer for faces and then read them all in */
-	mapData.faces = g_system.calloc( mapData.numFaces, sizeof( MapFace ) );
+	mapData.faces = Sys_calloc( mapData.numFaces, sizeof( MapFace ) );
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 
-#define MAX_FACE_INDICES 16
+#define MAX_FACE_INDICES 32
 
 		char *token = strtok( buffer, " " );
 		unsigned int numIndices = strtol( token, NULL, 10 );
@@ -248,7 +216,7 @@ void Map_ParseSectors( PLFile *file ) {
 	//}
 
 	mapData.numSectors = 1;
-	mapData.sectors = g_system.calloc( mapData.numSectors, sizeof( MapSector ) );
+	mapData.sectors = Sys_calloc( mapData.numSectors, sizeof( MapSector ) );
 
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */
@@ -303,31 +271,30 @@ void Map_ParseSectors( PLFile *file ) {
 #endif
 }
 
-void Map_ParseFile( PLFile *file ) {
-	if ( !Map_ValidateFile( file ) ) {
-		PrintWarn( "\"%s\" is not a valid map!\n", plGetFilePath( file ) );
-		return;
-	}
+void Map_LoadGeometryData( const char *mapName ) {
+	char path[ PL_SYSTEM_MAX_PATH ];
+	snprintf( path, sizeof( path ), "maps/%s.geometry", mapName );
 
-	Map_ParseTextures( file );
-	Map_ParseVertices( file );
-	Map_ParseFaces( file );
-	Map_ParseSectors( file );
-	//Map_ParseActors( file );
-}
-
-void Map_Load( const char *path ) {
 	PLFile *file = plOpenFile( path, false );
 	if ( file == NULL ) {
-		PrintWarn( "Failed to open map, \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to open \"geometry\" file, \"%s\"!\nPL: %s\n", path, plGetError() );
 		return;
 	}
 
-	/* now, let's make sure it's valid! */
-
-	Map_ParseFile( file );
+	if ( !Map_ValidateGeometryFile( file ) ) {
+		PrintWarn( "\"%s\" is not a valid \"geometry\" file!\n", plGetFilePath( file ) );
+	} else {
+		Map_ParseTextures( file );
+		Map_ParseVertices( file );
+		Map_ParseFaces( file );
+		Map_ParseSectors( file );
+	}
 
 	plCloseFile( file );
+}
+
+void Map_Load( const char *mapName ) {
+	Map_LoadGeometryData( mapName );
 
 	/* create our mesh container for rendering */
 
@@ -335,6 +302,9 @@ void Map_Load( const char *path ) {
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		maxTriangles += plGetNumOfPolygonTriangles( mapData.faces[ i ].polygon );
 	}
+
+	/* destroy it if it already exists */
+	plDestroyMesh( renderMesh );
 
 	renderMesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_DYNAMIC, maxTriangles, maxTriangles * 3 );
 	if ( renderMesh == NULL ) {
@@ -366,8 +336,7 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 
 static PLVector3 GetOriginPointFromVertices( const PLVertex *vertices, unsigned int numVertices ) {
 	/* we can cheat this a little bit by depending on the bounding box we generate */
-	PLCollisionAABB bounds = plGenerateAABB( vertices, numVertices, true );
-	return bounds.origin;
+	return plGenerateAABB( vertices, numVertices, true ).absOrigin;
 }
 
 PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination ) {
@@ -436,17 +405,17 @@ static void Map_DrawSky( PLCamera *camera ) {
 	          .colour = PLColourA( 0 ) } }; /* top left far */
 	static unsigned int indices[][3]={
 	        /* corners */
-	        { 0, 1, 2 },
-			{ 2, 1, 3 },
-			{ 2, 3, 4 },
-			{ 4, 3, 5 },
-			{ 4, 5, 6 },
-			{ 6, 5, 7 },
-			{ 6, 7, 0 },
-			{ 0, 7, 1 },
+	        { 2, 1, 0 },
+			{ 3, 1, 2 },
+			{ 4, 3, 2 },
+			{ 5, 3, 4 },
+			{ 6, 5, 4 },
+			{ 7, 5, 6 },
+			{ 0, 7, 6 },
+			{ 1, 7, 0 },
 	        /* middle */
-			{ 0, 2, 4 },
-			{ 0, 4, 6 },
+			{ 4, 2, 0 },
+			{ 6, 4, 0 },
 	};
 
 	static PLMesh *skyMesh = NULL;
@@ -511,7 +480,7 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			}
 
 			/* check the face is actually visible */
-			if ( !plIsBoxInsideView( camera->cameraPtr, &curFace->bounds ) ) {
+			if ( !plIsBoxInsideView( camera->internalPtr, &curFace->bounds ) ) {
 				continue;
 			}
 
@@ -545,7 +514,7 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 	}
 }
 
-static void Map_SetupScene( void ) {
+static void Map_SetupScene( GfxCamera *camera ) {
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
 
 	PLShaderProgram *program = plGetCurrentShaderProgram();
@@ -553,40 +522,17 @@ static void Map_SetupScene( void ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 3.0f );
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
 	PLVector3 sunPosition = PLVector3( -178.0f, -64.0f, 0.0f );
-	PLVector4 ambience = PLVector4( 0.45f, 0.45f, 0.45f, 1.0f );
+	PLVector4 ambience = PLVector4( 0.0f, 0.0f, 0.0f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
 	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
-}
 
-void Map_Draw( GfxCamera *camera ) {
-	if ( renderMesh == NULL ) {
-		return;
-	}
-
-	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
-
-	Map_DrawSky( camera->cameraPtr );
-
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-	plLoadIdentityMatrix();
-
-	Map_SetupScene();
-
-	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
-
-	plPopMatrix();
-
-	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
-}
-
-#if 0
-int numLights = 4;
-	plSetShaderUniformValue( shaderProgram, "numLights", &numLights, false );
+#if 1
+	int numLights = 4;
+	plSetShaderUniformValue( program, "numLights", &numLights, false );
 
 	float brightness = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
 	if ( brightness < 0.0f ) {
@@ -598,39 +544,62 @@ int numLights = 4;
 		radius = 0.0f;
 	}
 
-	plSetShaderUniformValue( shaderProgram, "lights[0].colour", &PLVector4( 1.0f, 1.0f, 1.0f, brightness ), false );
+	plSetShaderUniformValue( program, "lights[0].colour", &PLVector4( 1.0f, 1.0f, 1.0f, 2.0f ), false );
 	PLVector3 lightPosition = {
 			-440, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440, //- sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	};
-	plSetShaderUniformValue( shaderProgram, "lights[0].position", &lightPosition, false );
-	plSetShaderUniformValue( shaderProgram, "lights[0].radius", &radius, false );
+	plSetShaderUniformValue( program, "lights[0].position", &camera->internalPtr->position, false );
+	//plSetShaderUniformValue( program, "lights[0].radius", &radius, false );
 
-	plSetShaderUniformValue( shaderProgram, "lights[1].colour", &PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ), false );
+	plSetShaderUniformValue( program, "lights[1].colour", &PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetShaderUniformValue( shaderProgram, "lights[1].position", &lightPosition, false );
+	plSetShaderUniformValue( program, "lights[1].position", &lightPosition, false );
 
-	plSetShaderUniformValue( shaderProgram, "lights[2].colour", &PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ), false );
+	plSetShaderUniformValue( program, "lights[2].colour", &PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
 			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetShaderUniformValue( shaderProgram, "lights[2].position", &lightPosition, false );
+	plSetShaderUniformValue( program, "lights[2].position", &lightPosition, false );
 
-	plSetShaderUniformValue( shaderProgram, "lights[3].colour", &PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ), false );
+	plSetShaderUniformValue( program, "lights[3].colour", &PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ), false );
 	lightPosition = PLVector3(
 			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
-	plSetShaderUniformValue( shaderProgram, "lights[3].position", &lightPosition, false );
+	plSetShaderUniformValue( program, "lights[3].position", &lightPosition, false );
 #endif
+}
+
+void Map_Draw( GfxCamera *camera ) {
+	if ( renderMesh == NULL ) {
+		return;
+	}
+
+	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
+
+	Map_DrawSky( camera->internalPtr );
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+	plLoadIdentityMatrix();
+
+	Map_SetupScene( camera );
+
+	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
+
+	plPopMatrix();
+
+	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
+}
 
 #if 0
 PLMatrix4 transform = plMatrix4Identity();
