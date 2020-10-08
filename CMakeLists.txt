@@ -15,7 +15,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
 include_directories( src/ )
 
 add_subdirectory( src/3rdparty/platform/platform/ )
-add_subdirectory( src/3rdparty/platform/examples/pcmd/ )
 add_subdirectory( src/launcher_sdl2/ )
 add_subdirectory( src/engine/ )
 add_subdirectory( src/pkgman/ )
