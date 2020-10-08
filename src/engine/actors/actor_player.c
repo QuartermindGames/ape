@@ -18,12 +18,10 @@
 #define PLAYER_MAX_PITCH    85.0f
 #define PLAYER_MIN_PITCH    -85.0f
 
-static const PLVector3 playerBoundsMins = PLVector3( -16.0f, 0.0f, -16.0f );
-static const PLVector3 playerBoundsMaxs = PLVector3( 16.0f, 90.0f, 16.0f );
+#define PLAYER_BOUNDS_MAXS  PLVector3( 16.0f, 90.0f, 16.0f )
+#define PLAYER_BOUNDS_MINS  PLVector3( -16.0f, 0.0f, -16.0f )
 
 typedef struct APlayer {
-	PLVector3 ulViewPos;
-	PLVector3 urViewPos;
 	PLVector3 llViewPos;
 	PLVector3 lrViewPos;
 
@@ -99,7 +97,7 @@ void Player_Spawn( Actor *self ) {
 		playerData->eyeCamera->parentActor = self;
 	}
 
-	Act_SetBounds( self, playerBoundsMins, playerBoundsMaxs );
+	Act_SetBounds( self, PLAYER_BOUNDS_MINS, PLAYER_BOUNDS_MAXS );
 
 	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET );
 	Player_CalculateViewFrustum( self );
