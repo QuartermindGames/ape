@@ -22,9 +22,9 @@ struct Material {
 };
 uniform Material material;
 
-in vec3 interp_normal;
-in vec2 interp_UV;
-in vec4 interp_colour;
+in vec3 vsNormal;
+in vec2 vsUV;
+in vec4 vsColour;
 
 in vec3 frag_pos;
 
@@ -40,13 +40,13 @@ vec4 CalculateLightTerm(uint index, vec3 n) {
 
 void main() {
 	/*
-    vec4 dsample = texture( diffuse, interp_UV );
+    vec4 dsample = texture( diffuse, vsUV );
     if (dsample.a < 0.1) {
         discard;
     }
 	*/
 
-    vec3 n = normalize(interp_normal);
+    vec3 n = normalize(vsNormal);
     vec4 lightTerm = CalculateSunTerm(n);
     for (uint i = 0; i < numLights; ++i) {
         lightTerm += CalculateLightTerm(i, n);

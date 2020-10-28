@@ -1,14 +1,19 @@
-out vec3 interp_normal;
-out vec2 interp_UV;
-out vec4 interp_colour;
+out vec3 vsNormal;
+out vec2 vsUV;
+out vec4 vsColour;
+out mat3 vsTBN;
 
 out vec3 frag_pos;
 
 void main() {
     gl_Position = pl_proj * pl_view * pl_model * vec4(pl_vposition, 1.0f);
-    interp_normal = mat3(transpose(inverse(pl_model))) * pl_vnormal;
-    interp_UV = pl_vuv;
-    interp_colour = pl_vcolour;
-
     frag_pos = vec3(pl_model * vec4(pl_vposition, 1.0));
+
+    vsNormal = normalize(vec3(pl_model * vec4(pl_vnormal, 0.0))); //mat3(transpose(inverse(pl_model))) * pl_vnormal;
+    vec3 T = normalize(vec3(pl_model * vec4(pl_vtangent, 0.0))); //mat3(transpose(inverse(pl_model))) * pl_vtangent;
+    vec3 B = normalize(vec3(pl_model * vec4(pl_vbitangent, 0.0)));
+    vsTBN = mat3(T, B, vsNormal);
+
+    vsUV = pl_vuv;
+    vsColour = pl_vcolour;
 }

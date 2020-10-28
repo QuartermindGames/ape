@@ -202,6 +202,12 @@ static void Map_ParseFaces( PLFile *file ) {
 			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
 
+		/* generate tangets */
+		unsigned int numTriangles;
+		unsigned int *indices = plConvertPolygonToTriangles( mapData.faces[ i ].polygon, &numTriangles );
+		plGenerateTangentBasis( vertices, numPolyVertices, indices, numTriangles );
+		free( indices );
+
 		/* generate the bounds for cheap culling */
 		mapData.faces[ i ].bounds = plGenerateAABB( vertices, numPolyVertices, true );
 	}
@@ -487,7 +493,9 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			unsigned int numVertices;
 			PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
 			for( unsigned int k = 0; k < numVertices; ++k ) {
-				plAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
+				unsigned int v = plAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
+				/* this shit is generated earlier in the process, and right now I'm not sure if it's appropriate to add to AddMeshVertex */
+				renderMesh->vertices[ v ].tangent = renderMesh->vertices[ v ].bitangent = vertices[ k ].tangent;
 			}
 
 			unsigned int numTriangles;
@@ -523,68 +531,58 @@ static void Map_SetupScene( GfxCamera *camera ) {
 	}
 
 	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
-	PLVector3 sunPosition = PLVector3( -178.0f, -64.0f, 0.0f );
-	PLVector4 ambience = PLVector4( 0.0f, 0.0f, 0.0f, 1.0f );
+	float x = 128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f;
+	PLVector3 sunPosition = PLVector3( x, 0.0f, 0.0f );
+	PLVector4 ambience = PLVector4( 0.40f, 0.40f, 0.40f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
 	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
 
 #if 1
-	int numLights = 4;
+	int numLights = 3;
 	plSetShaderUniformValue( program, "numLights", &numLights, false );
 
-	float brightness = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
-	if ( brightness < 0.0f ) {
-		brightness = 0.0f;
+	srand( numLights );
+	for ( unsigned int i = 0; i < numLights; ++i ) {
+		char buf[ 32 ];
+		snprintf( buf, sizeof( buf ), "lights[%d].colour", i );
+		plSetShaderUniformValue( program, buf, &PLVector4(
+		                                               plByteToFloat( rand() % 255 ),
+		                                               plByteToFloat( rand() % 255 ),
+		                                               plByteToFloat( rand() % 255 ), 0.25f ), false );
 	}
 
-	float radius = ( sinf( Engine_GetNumTicks() / 100.0f ) * 4.0f ) / 1.0f;
-	if ( radius < 0.0f ) {
-		radius = 0.0f;
-	}
-
-	plSetShaderUniformValue( program, "lights[0].colour", &PLVector4( 1.0f, 1.0f, 1.0f, 2.0f ), false );
-	PLVector3 lightPosition = {
-			-440, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			-440, //- sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
-	};
-	plSetShaderUniformValue( program, "lights[0].position", &camera->internalPtr->position, false );
-	//plSetShaderUniformValue( program, "lights[0].radius", &radius, false );
-
-	plSetShaderUniformValue( program, "lights[1].colour", &PLVector4( 1.0f, 0.0f, 0.0f, 1.0f ), false );
+	PLVector3 lightPosition;
 	lightPosition = PLVector3(
 			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			128, // + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+	);
+	plSetShaderUniformValue( program, "lights[0].position", &lightPosition, false );
+
+	lightPosition = PLVector3(
+			-256 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
+			64,
+			440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[1].position", &lightPosition, false );
 
-	plSetShaderUniformValue( program, "lights[2].colour", &PLVector4( 0.0f, 1.0f, 0.0f, 1.0f ), false );
 	lightPosition = PLVector3(
-			-440 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
-			64, //+ cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			64,
 			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[2].position", &lightPosition, false );
-
-	plSetShaderUniformValue( program, "lights[3].colour", &PLVector4( 0.0f, 0.0f, 1.0f, 1.0f ), false );
-	lightPosition = PLVector3(
-			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			64,//128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f, //+ sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
-	);
-	plSetShaderUniformValue( program, "lights[3].position", &lightPosition, false );
 #endif
 }
 
 void Map_Draw( GfxCamera *camera ) {
+	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
+
 	if ( renderMesh == NULL ) {
 		return;
 	}
-
-	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
 
 	Map_DrawSky( camera->internalPtr );
 

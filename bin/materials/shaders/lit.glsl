@@ -1,6 +1,7 @@
 /* Copyright (C) 2020 Mark E Sowden <markelswo@gmail.com> */
 
 uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
 uniform sampler2D blendMap;
 
 const float fogFar = 11.0;
@@ -27,16 +28,16 @@ struct Material {
 };
 uniform Material material;
 
-in vec3 interp_normal;
-in vec2 interp_UV;
-in vec4 interp_colour;
-
+in vec3 vsNormal;
+in vec2 vsUV;
+in vec4 vsColour;
+in mat3 vsTBN;
 in vec3 frag_pos;
 
 vec4 BlendTextures(sampler2D t0, sampler2D t1) {
-    vec4 sampleA = texture(t0, interp_UV.st);
-    vec4 sampleB = texture(t1, interp_UV.st);
-    return sampleA * (1 - interp_colour.g) + sampleB * interp_colour.g;
+    vec4 sampleA = texture(t0, vsUV.st);
+    vec4 sampleB = texture(t1, vsUV.st);
+    return sampleA * (1 - vsColour.g) + sampleB * vsColour.g;
 }
 
 vec4 CalculateSunTerm(vec3 n) {
@@ -55,7 +56,8 @@ void main() {
         discard;
     }
 
-    vec3 n = normalize(interp_normal);
+    vec3 n = normalize(texture(normalMap, vsUV.st).rgb * 2.0 - 1.0);
+    n = normalize(vsTBN * n);
 
     vec4 lightTerm = CalculateSunTerm(n);
     for (uint i = 0; i < numLights; ++i) {

@@ -1,13 +1,13 @@
 uniform sampler2D diffuseMap;
 
-in vec2 interp_UV;
-in vec4 interp_colour;
+in vec2 vsUV;
+in vec4 vsColour;
 
 void main() {
-    vec4 samp = texture(diffuseMap, interp_UV);
+    vec4 samp = texture(diffuseMap, vsUV);
     if (samp.a < 0.1) {
         discard;
     }
 
-    pl_frag = interp_colour * samp;
+    pl_frag = vsColour * samp;
 }

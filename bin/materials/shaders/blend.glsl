@@ -3,16 +3,16 @@
 uniform sampler2D textureA;
 uniform sampler2D textureB;
 
-in vec2 interp_UV;
-in vec4 interp_colour;
+in vec2 vsUV;
+in vec4 vsColour;
 
 float x = 0.0;
 
 vec4 BlendedTextures( sampler2D t0, sampler2D t1 ) {
-    vec4 sampleA = texture( t0, interp_UV.st );
-    vec4 sampleB = texture( t1, interp_UV.st );
+    vec4 sampleA = texture( t0, vsUV.st );
+    vec4 sampleB = texture( t1, vsUV.st );
 
-    x = interp_colour.g;
+    x = vsColour.g;
     return sampleA * ( 1 - x ) + sampleB * x;
 }
 

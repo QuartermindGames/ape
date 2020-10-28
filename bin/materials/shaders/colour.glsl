@@ -1,5 +1,5 @@
-in vec4 interp_colour;
+in vec4 vsColour;
 
 void main() {
-    pl_frag = interp_colour;
+    pl_frag = vsColour;
 }
