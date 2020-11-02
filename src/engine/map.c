@@ -530,19 +530,18 @@ static void Map_SetupScene( GfxCamera *camera ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
-	float x = 128 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f;
-	PLVector3 sunPosition = PLVector3( x, 0.0f, 0.0f );
-	PLVector4 ambience = PLVector4( 0.40f, 0.40f, 0.40f, 1.0f );
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 1.0f );
+	PLVector3 sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
+	PLVector4 ambience = PLVector4( 0.10f, 0.10f, 0.10f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
 	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
 
-#if 1
-	int numLights = 3;
+	int numLights = 0;
 	plSetShaderUniformValue( program, "numLights", &numLights, false );
 
+#if 0
 	srand( numLights );
 	for ( unsigned int i = 0; i < numLights; ++i ) {
 		char buf[ 32 ];
@@ -555,9 +554,9 @@ static void Map_SetupScene( GfxCamera *camera ) {
 
 	PLVector3 lightPosition;
 	lightPosition = PLVector3(
-			-440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			128, // + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+			-128 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			32, // + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			-128 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[0].position", &lightPosition, false );
 
@@ -569,9 +568,9 @@ static void Map_SetupScene( GfxCamera *camera ) {
 	plSetShaderUniformValue( program, "lights[1].position", &lightPosition, false );
 
 	lightPosition = PLVector3(
-			440 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			64 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			64,
-			-440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+			-64 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[2].position", &lightPosition, false );
 #endif

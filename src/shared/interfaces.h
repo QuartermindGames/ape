@@ -56,6 +56,11 @@ typedef struct SystemInterface {
 } SystemInterface;
 extern SystemInterface g_system;
 
+typedef struct GameInterface {
+	unsigned int version;
+} GameInterface;
+extern GameInterface globalGame;
+
 typedef struct EngineInterface {
 	bool ( *Initialize )( int argc, char **argv );
 	void ( *Tick )( void );
@@ -75,7 +80,7 @@ extern EngineInterface g_engine;
 
 #define INTERFACE_PROCEDURE "GetDllInterface"
 typedef bool ( *DllLauncherInterface )( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut );
-typedef void ( *DllPluginInterface )( uint32_t version, EngineInterface *engIn );
+typedef void ( *DllGameInterface )( uint32_t version, const EngineInterface *engIn );
 
 #define TICK_RATE 1000 / 60 /* ms */
 

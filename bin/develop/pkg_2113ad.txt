@@ -1,0 +1,19 @@
+; Generates game.pkg
+output game_2113ad.pkg
+
+; Maps
+dir maps/prototyping map
+add maps/terrain_test.map
+
+; Materials
+dir materials/shaders glsl
+dir materials/shaders prg
+dir materials/sky tga
+dir materials/sky mat
+dir materials/terrain tga
+dir materials/terrain mat
+dir materials/textures/detail tga
+dir materials/textures/editor tga
+dir materials/textures/fonts png
+dir materials/textures/ui png
+dir materials/textures/world/ray4/terrain png

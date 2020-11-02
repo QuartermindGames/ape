@@ -1,0 +1,8 @@
+//
+// Created by mark- on 30/10/2020.
+//
+
+#ifndef YIN_SRC_GAME_GAME_INTERFACE_H_
+#define YIN_SRC_GAME_GAME_INTERFACE_H_
+
+#endif//YIN_SRC_GAME_GAME_INTERFACE_H_
