@@ -1,0 +1,5 @@
+/* Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com> */
+
+#pragma once
+
+#include <PL/platform.h>

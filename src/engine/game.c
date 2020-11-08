@@ -56,6 +56,12 @@ void Game_Tick( void ) {
 		return;
 	}
 
+	static unsigned int spawnDelay = 0;
+	if( g_system.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() ) {
+		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, 0 ), 0.0f );
+		spawnDelay = Engine_GetNumTicks() + 50;
+	}
+
 	Act_TickActors();
 }
 

@@ -24,13 +24,12 @@ static void Act_DrawBasic( Actor *self, void *userData ) {
 }
 
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData ) {
-	if( other != NULL ) {
-		/* probably colliding with another actor, give them a push... */
-		PLVector3 curVelocity = Act_GetVelocity( self );
-		Act_SetVelocity( other, &curVelocity );
-	}
-
-	/* otherwise, probably world collision */
+	/* decide what direction to push out from */
+	PLVector3 pushDir = plSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
+	/* need to this based on distance from center */
+	float length = plVector3Length( pushDir ) / 200.0f;
+	pushDir = plScaleVector3f( pushDir, length );
+	Act_SetVelocity( other, &pushDir );
 }
 
 void Player_Spawn( Actor *self );
@@ -359,7 +358,7 @@ void Act_TickActors( void ) {
 				PLCollisionSphere colSphere = PLCollisionSphere( absOrigin, 16.0f );
 				PLCollision collision = plIsSphereIntersectingPlane( &colSphere, &plane );
 				if ( collision.penetration > 0.0f ) {
-					printf( "penetration: %f\n", collision.penetration );
+					/* printf( "penetration: %f\n", collision.penetration ); */
 					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / 2.0f ) );
 
 					PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );

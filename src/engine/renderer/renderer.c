@@ -14,12 +14,15 @@
 
 static PLCamera *auxCamera = NULL;
 
+#define SHADOW_MAP_RESOLUTION 2048
+static PLFrameBuffer *bufferDepthMap;
+
 typedef struct RGBMap {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
 } RGBMap;
-static RGBMap playPal[ 256 ], titlePal[ 256 ];
+static RGBMap playPal[ 256 ];
 
 static PLLinkedList *textures;
 
@@ -29,7 +32,6 @@ static PLTexture *numTextureTable[ 10 ];
 
 static PLTexture *demoOverlayLogo;
 
-static GfxAnimationFrame **wallTextures;
 static unsigned int numWallTextures;
 static PLTexture **floorTextures;
 static unsigned int numFloorTextures;
@@ -428,6 +430,11 @@ void Gfx_Initialize( void ) {
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
 
+	bufferDepthMap = plCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PL_BUFFER_DEPTH );
+	if ( bufferDepthMap == NULL ) {
+		PrintError( "Failed to create depth buffer!\nPL: %s\n", plGetError() );
+	}
+
 	Gfx_SetupDefaultState();
 }
 
@@ -561,15 +568,9 @@ void Gfx_DrawScene( GfxCamera *camera ) {
 	endPos = plSubtractVector3( startPos, plScaleVector3f( left, 512.0f ) );
 	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 255, 0, 0, 255 ) );
 #endif
-
-#if 0
-	if ( ( g_system.GetLaunchMode() == LAUNCH_MODE_DEFAULT ) && ( Game_GetMenuState() == MENU_STATE_START ) ) {
-		return;
-	}
-#endif
-
 	g_gfxPerfStats.cameraPos = camera->internalPtr->position;
 
+	Map_DrawSky( camera->internalPtr );
 	Map_Draw( camera );
 	Act_DrawActors();
 }

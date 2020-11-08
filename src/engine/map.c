@@ -383,7 +383,7 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 /**
  * Draw scrolling clouds.
  */
-static void Map_DrawSky( PLCamera *camera ) {
+void Map_DrawSky( PLCamera *camera ) {
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL ) {
 		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD );
@@ -530,7 +530,7 @@ static void Map_SetupScene( GfxCamera *camera ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 1.0f );
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
 	PLVector3 sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
 	PLVector4 ambience = PLVector4( 0.10f, 0.10f, 0.10f, 1.0f );
 
@@ -538,10 +538,10 @@ static void Map_SetupScene( GfxCamera *camera ) {
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
 	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
 
-	int numLights = 0;
+	int numLights = 3;
 	plSetShaderUniformValue( program, "numLights", &numLights, false );
 
-#if 0
+#if 1
 	srand( numLights );
 	for ( unsigned int i = 0; i < numLights; ++i ) {
 		char buf[ 32 ];
@@ -555,15 +555,15 @@ static void Map_SetupScene( GfxCamera *camera ) {
 	PLVector3 lightPosition;
 	lightPosition = PLVector3(
 			-128 + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
-			32, // + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
+			32 + sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f,
 			-128 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[0].position", &lightPosition, false );
 
 	lightPosition = PLVector3(
-			-256 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
+			-32 - sinf( Engine_GetNumTicks() / 32.0f ) * 100.0f,
 			64,
-			440 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
+			32 - -sinf( Engine_GetNumTicks() / 64.0f ) * 100.0f + cosf( Engine_GetNumTicks() / 64.0f ) * 100.0f
 	);
 	plSetShaderUniformValue( program, "lights[1].position", &lightPosition, false );
 
@@ -582,8 +582,6 @@ void Map_Draw( GfxCamera *camera ) {
 	if ( renderMesh == NULL ) {
 		return;
 	}
-
-	Map_DrawSky( camera->internalPtr );
 
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();

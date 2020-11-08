@@ -27,6 +27,8 @@ MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces )
 void Map_ClearData( void );
 
 void Map_Load( const char *mapName );
+
+void Map_DrawSky( PLCamera *camera );
 void Map_Draw( GfxCamera *camera );
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );
