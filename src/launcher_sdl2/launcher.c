@@ -202,7 +202,13 @@ int Sys_Init( int argc, char **argv ) {
 
 	printf( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "./libengine", true );
+#if defined( __amd64__ ) || defined( __amd64 ) || defined( _M_AMD64 ) || defined( __x86_64__ ) || defined( __x86_64 )
+	const char *engineLibPath = "./OSEngine_x64";
+#else
+	const char *engineLibPath = "./OSEngine_x86";
+#endif
+
+	dllEnginePtr = plLoadLibrary( engineLibPath, true );
 	if ( dllEnginePtr == NULL ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
