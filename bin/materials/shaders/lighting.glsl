@@ -39,13 +39,6 @@ vec4 CalculateLightTerm(uint index, vec3 n) {
 }
 
 void main() {
-	/*
-    vec4 dsample = texture( diffuse, vsUV );
-    if (dsample.a < 0.1) {
-        discard;
-    }
-	*/
-
     vec3 n = normalize(vsNormal);
     vec4 lightTerm = CalculateSunTerm(n);
     for (uint i = 0; i < numLights; ++i) {
