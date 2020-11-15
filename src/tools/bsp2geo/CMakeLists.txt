@@ -10,8 +10,6 @@ add_executable(bsp2geo
         bsp.c bsp.h
         bsp2geo.c bsp2geo.h)
 
-determine_target_architecture(bsp2geo)
-
 # Setup link libraries
 if (NOT UNIX)
     target_link_libraries(bsp2geo mingw32)
