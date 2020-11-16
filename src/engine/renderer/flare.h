@@ -1,0 +1,8 @@
+//
+// Created by mark- on 15/11/2020.
+//
+
+#ifndef YIN_SRC_ENGINE_RENDERER_FLARE_H_
+#define YIN_SRC_ENGINE_RENDERER_FLARE_H_
+
+#endif//YIN_SRC_ENGINE_RENDERER_FLARE_H_

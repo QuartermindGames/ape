@@ -39,6 +39,7 @@ void Player_Collide( Actor *self, Actor *other, void *userData );
 ActorSetup actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ ACTOR_NONE   ] = { NULL, NULL, Act_DrawBasic, NULL, NULL },
 		[ ACTOR_PLAYER ] = { Player_Spawn, Player_Tick, NULL, Player_Collide, NULL },
+       // [ ACTOR_LIGHT ] = { Light_Spawn, Light_Tick, Light_Draw, NULL, NULL },
 		//[ ACTOR_BOSS   ] = { Boss_Spawn, Boss_Tick, Boss_Draw, Monster_Collide, NULL },
 		//[ ACTOR_SARG   ] = { Sarg_Spawn, Troo_Tick, Sarg_Draw, Monster_Collide, NULL },
 		//[ ACTOR_TROO   ] = { Troo_Spawn, Sarg_Tick, Troo_Draw, Monster_Collide, NULL },
@@ -65,6 +66,8 @@ typedef struct Actor {
 
 	ActorType  type;
 	ActorSetup setup;
+	
+	SGNode *graphNode;
 
 	PLLinkedListNode *node;
 	void             *userData;

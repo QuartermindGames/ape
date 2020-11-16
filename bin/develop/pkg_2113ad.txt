@@ -2,18 +2,18 @@
 output game_2113ad.pkg
 
 ; Maps
-dir maps/prototyping map
-add maps/terrain_test.map
+dir develop/2113ad/maps/prototyping map
+add develop/maps/terrain_test.map
 
 ; Materials
-dir materials/shaders glsl
-dir materials/shaders prg
-dir materials/sky tga
-dir materials/sky mat
-dir materials/terrain tga
-dir materials/terrain mat
-dir materials/textures/detail tga
-dir materials/textures/editor tga
-dir materials/textures/fonts png
-dir materials/textures/ui png
-dir materials/textures/world/ray4/terrain png
+dir develop/materials/shaders glsl
+dir develop/materials/shaders prg
+dir develop/materials/sky tga
+dir develop/materials/sky mat
+dir develop/materials/terrain tga
+dir develop/materials/terrain mat
+dir develop/materials/textures/detail tga
+dir develop/materials/textures/editor tga
+dir develop/materials/textures/fonts png
+dir develop/materials/textures/ui png
+dir develop/materials/textures/world/ray4/terrain png

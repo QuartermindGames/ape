@@ -11,9 +11,13 @@ file(GLOB ENGINE_SOURCE_FILES
         )
 
 add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
+        actors/actor_light.c
         actors/actor_player.c
         actors/actor_trigger_volume.c
+
         renderer/camera.c
+        renderer/flare.c
+        renderer/flare.h
         renderer/font.c
         renderer/material.c
         renderer/material.h

@@ -472,7 +472,7 @@ void Map_DrawSky( PLCamera *camera ) {
 	plSetDepthMask( true );
 }
 
-void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
+void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
 		plClearMesh( renderMesh );
 
@@ -486,7 +486,7 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			}
 
 			/* check the face is actually visible */
-			if ( !plIsBoxInsideView( camera->internalPtr, &curFace->bounds ) ) {
+			if ( !plIsBoxInsideView( camera, &curFace->bounds ) ) {
 				continue;
 			}
 
@@ -516,13 +516,18 @@ void Map_DrawSector( GfxCamera *camera, const MapSector *sector ) {
 			continue;
 		}
 
-		RM_DrawMesh( mapData.materials[ i ], renderMesh );
+		Material *material = mapData.materials[ i ];
+		if ( smPass ) {
+			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC );
+		}
+
+		RM_DrawMesh( material, renderMesh );
 
 		g_gfxPerfStats.numBatches++;
 	}
 }
 
-static void Map_SetupScene( GfxCamera *camera ) {
+static void Map_SetupScene( PLCamera *camera ) {
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
 
 	PLShaderProgram *program = plGetCurrentShaderProgram();
@@ -576,9 +581,7 @@ static void Map_SetupScene( GfxCamera *camera ) {
 #endif
 }
 
-void Map_Draw( GfxCamera *camera ) {
-	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
-
+void Map_Draw( PLCamera *camera, bool smPass ) {
 	if ( renderMesh == NULL ) {
 		return;
 	}
@@ -588,12 +591,9 @@ void Map_Draw( GfxCamera *camera ) {
 	plLoadIdentityMatrix();
 
 	Map_SetupScene( camera );
-
-	Map_DrawSector( camera, &mapData.sectors[ 0 ] );
+	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
 	plPopMatrix();
-
-	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
 }
 
 #if 0

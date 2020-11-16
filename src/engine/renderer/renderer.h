@@ -53,6 +53,7 @@ extern PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 #define GFX_NUM_SPRITE_ANGLES 8
 
+#include "scenegraph.h"
 #include "material.h"
 
 void Gfx_Initialize( void );

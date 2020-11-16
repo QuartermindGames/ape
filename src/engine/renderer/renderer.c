@@ -3,6 +3,7 @@
  * */
 
 #include <PL/pl_llist.h>
+#include <3rdparty/platform/platform/3rdparty/glew-2.2.0/include/GL/glew.h>
 
 #include "yin.h"
 #include "actor.h"
@@ -15,7 +16,9 @@
 static PLCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
-static PLFrameBuffer *bufferDepthMap;
+static PLFrameBuffer *smDepthBuffer;
+static PLTexture *smTexture;
+static PLCamera *smCamera;
 
 typedef struct RGBMap {
 	uint8_t r;
@@ -27,14 +30,8 @@ static RGBMap playPal[ 256 ];
 static PLLinkedList *textures;
 
 static PLTexture *fallbackTexture = NULL;
-
 static PLTexture *numTextureTable[ 10 ];
-
 static PLTexture *demoOverlayLogo;
-
-static unsigned int numWallTextures;
-static PLTexture **floorTextures;
-static unsigned int numFloorTextures;
 
 PLTexture *Gfx_GetFallbackTexture( void ) {
 	return fallbackTexture;
@@ -408,6 +405,27 @@ void Gfx_SetupDefaultState( void ) {
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 }
 
+static void Gfx_SetupShadowMap( void ) {
+	smDepthBuffer = plCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PL_BUFFER_DEPTH );
+	if ( smDepthBuffer == NULL ) {
+		PrintError( "Failed to create depth buffer!\nPL: %s\n", plGetError() );
+	}
+
+	glDrawBuffer( GL_NONE );
+
+	smTexture = plGetFrameBufferTextureAttachment( smDepthBuffer, PL_BUFFER_DEPTH, PL_TEXTURE_FILTER_LINEAR );
+	if ( smTexture == NULL ) {
+		PrintError( "Failed to get texture attachment of depth buffer!\nPL: %s\n", plGetError() );
+	}
+
+	/* unbind the buffer we just created */
+	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DEFAULT );
+
+	smCamera = plCreateCamera();
+	smCamera->viewport.w = SHADOW_MAP_RESOLUTION;
+	smCamera->viewport.h = SHADOW_MAP_RESOLUTION;
+}
+
 void Gfx_Initialize( void ) {
 	PrintMsg( "Initializing Gfx...\n" );
 
@@ -430,11 +448,7 @@ void Gfx_Initialize( void ) {
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
 
-	bufferDepthMap = plCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PL_BUFFER_DEPTH );
-	if ( bufferDepthMap == NULL ) {
-		PrintError( "Failed to create depth buffer!\nPL: %s\n", plGetError() );
-	}
-
+	Gfx_SetupShadowMap();
 	Gfx_SetupDefaultState();
 }
 
@@ -549,28 +563,48 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 	plPopMatrix();
 }
 
-void Gfx_DrawScene( GfxCamera *camera ) {
-#ifdef DEBUG_CAM
-	PLMatrix4 mat = plMatrix4Identity();
-
-	PLVector3 forward, left;
-	plAnglesAxes( PLVector3( 0, Act_GetAngle( player ), 0 ), &left, NULL, &forward );
-
-	PLVector3 startPos = Act_GetPosition( player );
-	startPos.y += Act_GetViewOffset( player );
-	PLVector3 endPos = plAddVector3( startPos, plScaleVector3f( forward, 64.0f ) );
-	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 0, 0, 255, 255 ) );
-
-	startPos = endPos;
-	endPos = plAddVector3( startPos, plScaleVector3f( left, 512.0f ) );
-	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 255, 0, 0, 255 ) );
-
-	endPos = plSubtractVector3( startPos, plScaleVector3f( left, 512.0f ) );
-	plDrawLine( &mat, &startPos, &PLColour( 0, 0, 255, 255 ), &endPos, &PLColour( 255, 0, 0, 255 ) );
-#endif
-	g_gfxPerfStats.cameraPos = camera->internalPtr->position;
-
-	Map_DrawSky( camera->internalPtr );
-	Map_Draw( camera );
+static void Gfx_RenderScene( PLCamera *camera, bool smPass ) {
+	/* Map_DrawSky( camera ); */
+	Map_Draw( camera, smPass );
 	Act_DrawActors();
+}
+
+static void Gfx_RenderSceneDepth( PLCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles ) {
+	smCamera->position = *lightPos;
+	smCamera->angles = *lightAngles;
+
+	plSetupCamera( smCamera );
+	plBindFrameBuffer( smDepthBuffer, PL_FRAMEBUFFER_DRAW );
+	plClearBuffers( PL_BUFFER_DEPTH );
+
+	Gfx_RenderScene( camera, true );
+
+	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DEFAULT );
+}
+
+static void Gfx_RenderSceneFinal( PLCamera *camera ) {
+	plSetupCamera( camera );
+	plClearBuffers( PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
+
+	Gfx_RenderScene( camera, false );
+}
+
+void Gfx_DrawScene( PLCamera *camera ) {
+	g_gfxPerfStats.cameraPos = camera->position;
+
+	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
+
+	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+	Gfx_RenderSceneFinal( camera );
+
+	/* draw buffer preview */
+	plSetupCamera( auxCamera );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+	plLoadIdentityMatrix();
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, 0, 256, 256, smTexture );
+	plPopMatrix();
+
+	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
 }

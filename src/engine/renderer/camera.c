@@ -68,7 +68,7 @@ void Gfx_InitializeCameras( void ) {
 	}
 }
 
-void Gfx_DrawScene( GfxCamera *camera );
+void Gfx_DrawScene( PLCamera *camera );
 void Gfx_DrawPerspective( GfxCamera *camera ) {
 	if ( camera->viewportPtr == NULL ) {
 		PrintWarn( "No viewport assigned to camera, skipping!\n" );
@@ -95,8 +95,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 	}
 
 	plSetupCamera( camera->internalPtr );
-
-	Gfx_DrawScene( camera );
+	Gfx_DrawScene( camera->internalPtr );
 }
 
 void Gfx_ShutdownCameras( void ) {

@@ -5,8 +5,7 @@
 #include <PL/pl_llist.h>
 
 #include "yin.h"
-#include "actor.h"
-#include "light.h"
+#include "scenegraph.h"
 
 typedef struct SGNode {
 	PLMatrix4 transform;
@@ -21,6 +20,9 @@ static PLLinkedListNode *rootNode = NULL;
 
 void SG_Initialize( void ) {
 	sceneGraph = plCreateLinkedList();
+	if ( sceneGraph == NULL ) {
+		PrintError( "Failed to create scene graph!\n" );
+	}
 }
 
 void SG_Shutdown( void ) {
@@ -29,10 +31,38 @@ void SG_Shutdown( void ) {
 	plDestroyLinkedList( sceneGraph );
 }
 
+const PLMatrix4 *SG_GetNodeTransform( const SGNode *node ) {
+	return &node->transform;
+}
+
+unsigned int SG_GetNodeType( const SGNode *node ) {
+	return node->dataType;
+}
+
+void *SG_GetNodeData( SGNode *node ) {
+	return node->data;
+}
+
+/*
+ * Typically a world instance.
+ */
+SGNode *SG_AddHeadNode( unsigned int dataType, void *data ) {
+	SGNode *head = Sys_calloc( 1, sizeof( SGNode ) );
+	head->data = data;
+	head->dataType = dataType;
+	head->node = plInsertLinkedListNode( sceneGraph, head );
+
+	return head;
+}
+
 SGNode *SG_AddChildNode( SGNode *parent, unsigned int dataType, void *data ) {
-	SGNode *child = Sys_malloc( sizeof( SGNode ) );
+	SGNode *child = Sys_calloc( 1, sizeof( SGNode ) );
 	child->data = data;
 	child->dataType = dataType;
+
+	if ( parent->children == NULL ) {
+		parent->children = plCreateLinkedList();
+	}
 	child->node = plInsertLinkedListNode( parent->children, child );
 
 	return child;
@@ -48,4 +78,8 @@ void SG_RemoveAllChildren( SGNode *parent ) {
 	//PLLinkedListNode *node =
 
 	plDestroyLinkedListNodes( parent->children );
+}
+
+void SG_SimpleTraversal( SGNode *start, PLCamera *camera ) {
+
 }
