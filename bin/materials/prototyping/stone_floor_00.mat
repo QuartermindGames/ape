@@ -1,0 +1,4 @@
+material
+pass base_lighting
+var texture diffuseMap materials/prototyping/stone_floor_00.gif
+end

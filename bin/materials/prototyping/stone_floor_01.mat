@@ -1,0 +1,5 @@
+material
+pass base_lighting
+var texture diffuseMap materials/prototyping/stone_floor_01.gif
+var texture normalMap materials/engine/normal.tga
+end
