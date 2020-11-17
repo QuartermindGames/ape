@@ -9,8 +9,7 @@
 
 typedef struct WLDHeader {
 	char        magic[ 4 ];
-	uint16_t    version;
-	uint16_t    fileRevision;
+	uint32_t    version;
 	uint32_t    createdTime;
 	uint32_t    modifiedTime;
 	char        author[ 256 ];
@@ -40,9 +39,22 @@ typedef struct WLDActor {
 	unsigned int numBrushes;
 } WLDActor;
 
+typedef enum WLDNodeType {
+	WLD_NODE_ACTOR,
+	WLD_NODE_BRUSH,
+} WLDNodeType;
+
+typedef struct WLDNode {
+	WLDNodeType nodeType;
+	union {
+		WLDBrush brush;
+		WLDActor actor;
+	};
+} WLDNode;
+
 typedef struct WLDSector {
-	WLDActor *actors;
-	unsigned int numActors;
+	WLDNode *children;
+	unsigned int numChildren;
 } WLDSector;
 
 typedef struct WLDHandle {
