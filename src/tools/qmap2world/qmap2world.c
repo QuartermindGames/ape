@@ -6,6 +6,8 @@
 
 #include "core/format_wld.h"
 
+#define version "0.1"
+
 #define error( ... )       \
 	printf( __VA_ARGS__ ); \
 	exit( EXIT_FAILURE )
@@ -55,9 +57,14 @@ void Q2W_ReadMap( const char *path ) {
 }
 
 int main( int argc, char **argv ) {
+#if defined( _WIN32 )
+	/* stop buffering stdout! */
+	setvbuf( stdout, NULL, _IONBF, 0 );
+#endif
+
 	plInitialize( argc, argv );
 
-	printf( "qmap2world\nCopyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n" );
+	printf( "qmap2world v" version " (" __DATE__ " " __TIME__ ")\nCopyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n" );
 
 	const char *inputPath = plGetCommandLineArgumentValue( "-map" );
 	if ( inputPath == NULL ) {
