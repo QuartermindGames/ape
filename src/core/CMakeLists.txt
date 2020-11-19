@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD 11)
 add_library(OSCore SHARED
         lightmapper.c
         include/core/core.h
-        include/core/format_wld.h
+        include/core/wld.h
         )
 
 target_include_directories(OSCore PRIVATE ./ ../3rdparty/miniz/)
