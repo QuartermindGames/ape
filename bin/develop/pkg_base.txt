@@ -2,18 +2,29 @@
 output base.pkg
 
 ; Maps
-dir maps/prototyping map
-add maps/terrain_test.map
+dir worlds wld
 
-; Materials
-dir materials/shaders glsl
+; shaders
 dir materials/shaders prg
-dir materials/sky tga
-dir materials/sky mat
-dir materials/terrain tga
-dir materials/terrain mat
-dir materials/textures/detail tga
-dir materials/textures/editor tga
+
+; engine or testing crap
+dir materials/engine mat
+dir materials/engine png
+dir materials/engine tga
+dir materials/engine/effects gif
+dir materials/engine/detail tga
+dir materials/engine/editor tga
 dir materials/textures/fonts png
 dir materials/textures/ui png
-dir materials/textures/world/ray4/terrain png
+dir materials/projected png
+
+; sky materials
+dir materials/sky tga
+dir materials/sky mat
+
+dir materials/terrain jpg
+dir materials/terrain mat
+
+dir materials/prototyping png
+dir materials/prototyping gif
+dir materials/prototyping mat

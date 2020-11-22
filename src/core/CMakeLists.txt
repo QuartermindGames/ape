@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD 11)
 
 add_library(OSCore SHARED
         lightmapper.c
+        wld.c
         include/core/core.h
         include/core/wld.h
         )

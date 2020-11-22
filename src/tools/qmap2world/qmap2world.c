@@ -4,12 +4,15 @@
 #include <PL/pl_llist.h>
 #include <PL/platform_filesystem.h>
 #include <PL/platform_math.h>
+#include <PL/pl_parse.h>
 
 #include "core/wld.h"
 
 #define VERSION "0.1"
-#define dprint( ... )   printf( __VA_ARGS__ )
-#define error( ... )    printf( __VA_ARGS__ ); exit( EXIT_FAILURE )
+#define dprint( ... ) printf( __VA_ARGS__ )
+#define error( ... )       \
+	printf( __VA_ARGS__ ); \
+	exit( EXIT_FAILURE )
 
 typedef struct IdBrushFace {
 	PLVector3 x, y, z;
@@ -24,6 +27,7 @@ typedef struct IdBrush {
 } IdBrush;
 
 typedef struct IdEntity {
+	WldTag name;
 	PLLinkedList *properties;
 	PLLinkedList *brushes;
 } IdEntity;
@@ -44,86 +48,9 @@ enum {
 };
 static unsigned int blockLevel = 0;
 
-static void SkipWhitespace( const char **p ) {
-	const char *pp = *p;
-	while ( *pp == ' ' && *pp != '\0' ) { ++pp; }
-	if ( *pp == ' ' ) ++pp;
-	*p = pp;
-}
-
-static const char *ParseEnclosedString( const char **p, char *dest, size_t size ) {
-	const char *pp = *p;
-	if ( *pp == '\"' ) { pp++; }
-	size_t i = 0;
-	while( *pp != '\0' && *pp != '\"') {
-		if ( !( i >= size ) ) {
-			dest[ i++ ] = *pp;
-		}
-		pp++;
-	}
-	if ( *pp == '\"' ) { pp++; }
-	*p = pp;
-	return dest;
-}
-
-static const char *ParseToken( const char **p, char *dest, size_t size ) {
-	const char *pp = *p;
-	memset( dest, 0, size );
-	SkipWhitespace( &pp );
-	size_t i = 0;
-	while( *pp != '\0' && *pp != ' ') {
-		if ( !( i >= size ) ) {
-			dest[ i++ ] = *pp;
-		}
-		pp++;
-	}
-
-	if ( *pp == ' ' ) { pp++; }
-	*p = pp;
-	return dest;
-}
-
-static int ParseInteger( const char **p ) {
-	const char *i = *p;
-
-	char num[ 32 ];
-	if ( !ParseToken( &i, num, sizeof( num ) ) ) {
-		printf( "Failed to parse integer!\n" );
-		return 0;
-	}
-
-	*p = i;
-	return strtol( num, NULL, 10 );
-}
-
-static float ParseFloat( const char **p ) {
-	const char *i = *p;
-
-	char num[ 32 ];
-	if ( !ParseToken( &i, num, sizeof( num ) ) ) {
-		printf( "Failed to parse float!\n" );
-		return 0;
-	}
-
-	*p = i;
-	return strtof( num, NULL );
-}
-
-static PLVector3 ParseVector( const char **p ) {
-	const char *i = *p;
-	SkipWhitespace( &i );
-	if ( *i == '(' ) { i++; }
-	float x = ParseInteger( &i );
-	float y = ParseInteger( &i );
-	float z = ParseInteger( &i );
-	if ( *i == ')' ) { i++; }
-	*p = i;
-	return PLVector3( x, y, z );
-}
-
 void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 	const char *p = buffer;
-	SkipWhitespace( &p );
+	plSkipWhitespace( &p );
 	if ( *p == '/' && *( p + 1 ) == '/' ) {
 		return;
 	}
@@ -138,7 +65,7 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 			error( "Invalid opening brace on line %d!\n", lineNum );
 		}
 
-		switch( blockLevel ) {
+		switch ( blockLevel ) {
 			case BLOCK_CONTEXT_ENTITY: {
 				dprint( "entity\n" );
 				IdEntity *entity = calloc( 1, sizeof( IdEntity ) );
@@ -176,7 +103,7 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 		blockLevel--;
 		/*dprint( "down: %d\n", blockLevel );*/
 
-		switch( blockLevel ) {
+		switch ( blockLevel ) {
 			case BLOCK_CONTEXT_NONE:
 				/*dprint( "none\n" );*/
 				currentEntity = NULL;
@@ -194,31 +121,41 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 		return;
 	}
 
-	switch( blockLevel ) {
+	switch ( blockLevel ) {
 		case BLOCK_CONTEXT_ENTITY: {
 			/* read in property */
-			WLDActorProperty *property = calloc( 1, sizeof( WLDActorProperty ) );
-			if ( !ParseEnclosedString( &p, property->name, sizeof( property->name ) ) ) {
+			WldProperty *property = calloc( 1, sizeof( WldProperty ) );
+			if ( !plParseEnclosedString( &p, property->name, sizeof( property->name ) ) ) {
 				error( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
-			SkipWhitespace( &p );
-			if ( !ParseEnclosedString( &p, property->value, sizeof( property->value ) ) ) {
+			plSkipWhitespace( &p );
+			if ( !plParseEnclosedString( &p, property->value, sizeof( property->value ) ) ) {
 				error( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
 			dprint( " %s %s\n", property->name, property->value );
+			if ( pl_strcasecmp( property->name, "wad" ) == 0 ||
+			     pl_strcasecmp( property->name, "mapversion" ) == 0 ||
+			     pl_strcasecmp( property->name, "_generator" ) == 0 ) {
+				free( property );
+				break;
+			} else if ( pl_strcasecmp( property->name, "classname" ) == 0 ) {
+				strncpy( currentEntity->name, property->value, sizeof( currentEntity->name ) );
+				free( property );
+				break;
+			}
 			plInsertLinkedListNode( currentEntity->properties, property );
 			break;
 		}
 		case BLOCK_CONTEXT_BRUSH: {
 			/* read in face */
 			IdBrushFace *face = calloc( 1, sizeof( IdBrushFace ) );
-			face->x = ParseVector( &p );
+			face->x = plParseVector( &p );
 			dprint( "%s ", plPrintVector3( &face->x, pl_int_var ) );
-			face->y = ParseVector( &p );
+			face->y = plParseVector( &p );
 			dprint( "%s ", plPrintVector3( &face->y, pl_int_var ) );
-			face->z = ParseVector( &p );
+			face->z = plParseVector( &p );
 			dprint( "%s ", plPrintVector3( &face->z, pl_int_var ) );
-			if ( !ParseToken( &p, face->textureName, sizeof( face->textureName ) ) ) {
+			if ( !plParseToken( &p, face->textureName, sizeof( face->textureName ) ) ) {
 				error( "Failed to fetch texture name on line %d!\n", lineNum );
 			}
 			dprint( "%s\n", face->textureName );
@@ -254,60 +191,138 @@ void Q2W_ReadMap( IdMap *map, const char *path ) {
 
 		Q2W_ParseLine( map, lineBuffer, lineNum );
 
-		if ( *p == '\r' && *( p + 1 ) == '\n' ) { p += 2; }
-		else if ( *p == '\n' ) { p++; }
+		if ( *p == '\r' && *( p + 1 ) == '\n' ) {
+			p += 2;
+		} else if ( *p == '\n' ) {
+			p++;
+		}
 	}
 
 	plCloseFile( file );
 }
 
-static void Q2W_WriteHeader( FILE *file, IdMap *map ) {
-	/* write out the header */
-	WLDHeader header = {
-			.magic = WORLD_MAGIC,
-			.version = WORLD_VERSION,
-			.createdTime = ( unsigned long ) time( NULL ),
-			.modifiedTime = ( unsigned long ) time( NULL ),
-	};
-	plGetUserName( header.author, sizeof( header.author ) );
-	fwrite( &header, sizeof( WLDHeader ), 1, file );
+/*****************************************************************************************/
+
+static void WriteSizedString( FILE *file, const char *msg ) {
+	size_t length = strlen( msg );
+	if ( length >= UINT8_MAX ) {
+		printf( "String \"%s\" is too long for WLD tag, truncating!\n", msg );
+		length = UINT8_MAX;
+	}
+	fwrite( &length, sizeof( uint8_t ), 1, file );
+	fwrite( msg, sizeof( char ), length, file );
 }
 
-static void Q2W_WriteChildNodes( FILE *file, IdMap *map ) {
-	PLLinkedListNode *node = plGetRootNode( map->textures );
-	while ( node != NULL ) {
-		static bool isWorldspawn = true;
-		if ( isWorldspawn ) {
-			/* skip worldspawn */
-			isWorldspawn = false;
-		} else {
-			IdEntity *entity = plGetLinkedListNodeUserData( node );
+static void WriteHeader( FILE *file, IdMap *map ) {
+	fwrite( WORLD_MAGIC, sizeof( char ), 4, file );
+	fwrite( &( int ){ WORLD_VERSION }, sizeof( uint32_t ), 1, file );
+}
 
+static void WriteNodeHeader( const char *tag, WldNodeType type, uint32_t numChildren, FILE *file ) {
+	WriteSizedString( file, tag );
+	fwrite( &type, sizeof( uint8_t ), 1, file );
+	fwrite( &numChildren, sizeof( uint32_t ), 1, file );
+}
 
+static void WriteProperties( PLLinkedList *propertyList, FILE *file ) {
+	uint16_t numProperties = plGetNumLinkedListNodes( propertyList );
+	fwrite( &numProperties, sizeof( uint16_t ), 1, file );
+	if ( numProperties == 0 ) {
+		return;
+	}
 
-			PLLinkedListNode *propertyNode = plGetRootNode( entity->properties );
+	PLLinkedListNode *root = plGetRootNode( propertyList );
+	while ( root != NULL ) {
+		WldProperty *property = plGetLinkedListNodeUserData( root );
+		WriteSizedString( file, property->name );
+		WriteSizedString( file, property->value );
+		root = plGetNextLinkedListNode( root );
+	}
+}
+
+/* https://github.com/stefanha/map-files/blob/master/MAPFiles.pdf */
+static bool GetIntersection( ) {
+
+}
+
+static void WriteBrush( IdBrush *brush, FILE *file ) {
+	static unsigned int numBrush = 0;
+
+	char tbuf[ WORLD_MAX_TAG ];
+	snprintf( tbuf, sizeof( tbuf ), "brush%d", numBrush );
+	WriteNodeHeader( tbuf, WLD_NODE_BRUSH, 0, file );
+
+	unsigned int numFaces = plGetNumLinkedListNodes( brush->faces );
+#if 0
+	/* move it all into a static array */
+	IdBrushFace *faces = calloc( numFaces, sizeof( IdBrushFace ) );
+
+	for ( unsigned int i = 0; i < numFaces - 3; ++i ) {
+		for ( unsigned int j = i; j < numFaces - 2; ++j ) {
+			for ( unsigned int k = j; k < numFaces - 1; ++k ) {
+				if ( !( i != j != k ) ) {
+					continue;
+				}
+
+				bool isLegal = true;
+				for ( unsigned int m = 0; m < numFaces - 1; ++m ) {
+					if ( plDotP)
+				}
+
+				if ( isLegal ) {
+
+				}
+			}
 		}
+	}
 
+	WldVector *vertices = calloc( numFaces * 16, sizeof( WldVector ) );
+#endif
+	numBrush++;
+}
+
+static void WriteEntity( IdEntity *entity, FILE *file ) {
+	WriteNodeHeader( entity->name, WLD_NODE_ENTITY, plGetNumLinkedListNodes( entity->brushes ), file );
+	WriteProperties( entity->properties, file );
+
+	PLLinkedListNode *node = plGetRootNode( entity->brushes );
+	while ( node != NULL ) {
+		IdBrush *brush = plGetLinkedListNodeUserData( node );
+		WriteBrush( brush, file );
 		node = plGetNextLinkedListNode( node );
 	}
 }
 
-static void Q2W_WriteNodes( FILE *file, IdMap *map ) {
-	/* for now just write one global sector */
-	uint32_t numSectors = 1;
-	fwrite( &numSectors, sizeof( uint32_t ), 1, file );
+static void WriteNodes( FILE *file, IdMap *map ) {
+	IdEntity *worldSpawn = plGetLinkedListNodeUserData( plGetRootNode( map->entities ) );
+	if ( worldSpawn == NULL ) {
+		error( "Failed to fetch worldspawn!\n" );
+	}
 
-	for ( unsigned int i = 0; i < numSectors; ++i ) {
-		WLDVector mins = { -99999, -99999, -99999 };
-		WLDVector maxs = { 99999, 99999, 99999 };
-		fwrite( &mins, sizeof( WLDVector ), 1, file );
-		fwrite( &maxs, sizeof( WLDVector ), 1, file );
+	/* first write out all of the world properties */
+	WriteProperties( worldSpawn->properties, file );
 
-		/* ignoring worldspawn, hence -1 */
-		uint32_t numChildren = plGetNumLinkedListNodes( map->entities ) - 1;
-		fwrite( &numChildren, sizeof( uint32_t ), 1, file );
+	/* write out the default room */
+	fwrite( &( int ){ 1 }, sizeof( uint32_t ), 1, file );
+	unsigned int numChildren = 0;
+	numChildren += plGetNumLinkedListNodes( worldSpawn->brushes );
+	numChildren += plGetNumLinkedListNodes( map->entities ) - 1; /* ignore worldspawn */
+	WriteNodeHeader( "room0", WLD_NODE_SECTOR, numChildren, file );
 
-		Q2W_WriteChildNodes( file, map );
+	PLLinkedListNode *node;
+	/* now write out all the brushes */
+	node = plGetRootNode( worldSpawn->brushes );
+	while ( node != NULL ) {
+		IdBrush *brush = plGetLinkedListNodeUserData( node );
+		WriteBrush( brush, file );
+		node = plGetNextLinkedListNode( node );
+	}
+	/* and all the entities */
+	node = plGetNextLinkedListNode( plGetRootNode( map->entities ) );
+	while ( node != NULL ) {
+		IdEntity *entity = plGetLinkedListNodeUserData( node );
+		WriteEntity( entity, file );
+		node = plGetNextLinkedListNode( node );
 	}
 }
 
@@ -317,8 +332,10 @@ static void Q2W_WriteWld( IdMap *map, const char *path ) {
 		error( "Failed to write file, \"%s\"!\n", path );
 	}
 
-	Q2W_WriteHeader( file, map );
-	Q2W_WriteNodes( file, map );
+	WriteHeader( file, map );
+	WriteNodes( file, map );
+
+	fclose( file );
 }
 
 int main( int argc, char **argv ) {
