@@ -252,10 +252,21 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 	snprintf( tbuf, sizeof( tbuf ), "brush%d", numBrush );
 	WriteNodeHeader( tbuf, WLD_NODE_BRUSH, 0, file );
 
+	/* move it all into an array */
 	unsigned int numFaces = plGetNumLinkedListNodes( brush->faces );
-#if 0
-	/* move it all into a static array */
 	IdBrushFace *faces = calloc( numFaces, sizeof( IdBrushFace ) );
+	{
+		unsigned int i = 0;
+		PLLinkedListNode *node = plGetRootNode( brush->faces );
+		while ( node != NULL ) {
+			IdBrushFace *face = plGetLinkedListNodeUserData( node );
+			faces[ i ] = *face;
+			free( face );
+
+			node = plGetNextLinkedListNode( node );
+		}
+		plDestroyLinkedList( brush->faces );
+	}
 
 	for ( unsigned int i = 0; i < numFaces - 3; ++i ) {
 		for ( unsigned int j = i; j < numFaces - 2; ++j ) {
@@ -266,7 +277,7 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 
 				bool isLegal = true;
 				for ( unsigned int m = 0; m < numFaces - 1; ++m ) {
-					if ( plDotP)
+
 				}
 
 				if ( isLegal ) {
@@ -277,7 +288,7 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 	}
 
 	WldVector *vertices = calloc( numFaces * 16, sizeof( WldVector ) );
-#endif
+
 	numBrush++;
 }
 
@@ -291,6 +302,7 @@ static void WriteEntity( IdEntity *entity, FILE *file ) {
 		WriteBrush( brush, file );
 		node = plGetNextLinkedListNode( node );
 	}
+	plDestroyLinkedList( entity->brushes );
 }
 
 static void WriteNodes( FILE *file, IdMap *map ) {
