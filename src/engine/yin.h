@@ -1,6 +1,4 @@
-/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
- * Project Yin
- * */
+/* Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com> */
 
 #include <PL/platform.h>
 #include <PL/platform_console.h>
@@ -22,20 +20,38 @@ enum {
 typedef enum CacheGroup {
 	CACHE_GROUP_STATIC, /* these exist from the start to the end of the application */
 	CACHE_GROUP_WORLD,  /* everything that is cached during level load */
-
 	MAX_CACHE_GROUPS
 } CacheGroup;
 
-typedef enum CPUTimeGroup {
-	CPUTIME_DRAW_MAP,
+#define ENABLE_PROFILER 1
 
-	MAX_CPUTIME_GROUPS
-} CPUTimeGroup;
-
+typedef enum CPUProfilerGroup {
+	PROFILE_DRAW_ALL,
+	PROFILE_DRAW_MAP,
+	MAX_PROFILER_GROUPS
+} CPUProfilerGroup;
+#if defined( ENABLE_PROFILER )
 void CPUTimer_Initialize( void );
-void CPUTimer_StartMeasure( CPUTimeGroup group );
-void CPUTimer_EndMeasure( CPUTimeGroup group );
-double CPUTimer_GetMeasure( CPUTimeGroup group );
+void CPUTimer_StartMeasure( CPUProfilerGroup group );
+void CPUTimer_EndMeasure( CPUProfilerGroup group );
+double CPUTimer_GetMeasure( CPUProfilerGroup group );
+#   define PROFILE_START( GROUP )  CPUTimer_StartMeasure( GROUP )
+#   define PROFILE_END( GROUP )    CPUTimer_EndMeasure( GROUP )
+#else
+#   define PROFILE_START( GROUP )
+#   define PROFILE_END( GROUP )
+#endif
+
+#include "scheduler.h"
+
+/* Console */
+void Con_Initialize( void );
+void Con_Shutdown( void );
+void Con_Toggle( void );
+void Con_ScrollForward( void );
+void Con_ScrollBackward( void );
+bool Con_GetState( void );
+void Con_Draw( const PLViewport *viewport );
 
 //#define DEBUG_CAM
 //#define DEBUG_WALL_NORMALS

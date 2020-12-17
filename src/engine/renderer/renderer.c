@@ -471,27 +471,27 @@ static void Gfx_DrawViewSprite( void ) {
 }
 
 void Gfx_DrawMenu( void ) {
-	int w, h;
 	SysWindow *window = Engine_GetMainWindow();
-	g_system.GetWindowSize( window, &w, &h );
+	if ( window == NULL ) {
+		return;
+	}
 
+	int w, h;
+	g_system.GetWindowSize( window, &w, &h );
 	auxCamera->viewport.w = w;
 	auxCamera->viewport.h = h;
 
 	plSetupCamera( auxCamera );
 
-	PLMatrix4 transform = plMatrix4Identity();
+	plSetDepthMask( false );
 
 #ifndef DEBUG_CAM
 	switch ( Game_GetMenuState() ) {
-		default:
-			PrintError( "Invalid menu state!\n" );
-
+		default: PrintError( "Invalid menu state!\n" );
 		case MENU_STATE_START:
 			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
 			break;
-
 		case MENU_STATE_HUD:
 			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_ALPHA ] );
 			Gfx_DrawViewSprite();
@@ -531,10 +531,12 @@ void Gfx_DrawMenu( void ) {
 	          ( int ) g_gfxPerfStats.cameraPos.z,
 	          g_gfxPerfStats.numFacesDrawn,
 	          g_gfxPerfStats.numBatches,
-	          CPUTimer_GetMeasure( CPUTIME_DRAW_MAP ) );
+	          CPUTimer_GetMeasure( PROFILE_DRAW_MAP ) );
 	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf );
 
 	plSetBlendMode( PL_BLEND_DISABLE );
+
+	Con_Draw( &auxCamera->viewport );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
@@ -592,7 +594,7 @@ static void Gfx_RenderSceneFinal( PLCamera *camera ) {
 void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
 
-	CPUTimer_StartMeasure( CPUTIME_DRAW_MAP );
+	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
 
 	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 	Gfx_RenderSceneFinal( camera );
@@ -606,5 +608,5 @@ void Gfx_DrawScene( PLCamera *camera ) {
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, 0, 256, 256, smTexture );
 	plPopMatrix();
 
-	CPUTimer_EndMeasure( CPUTIME_DRAW_MAP );
+	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
 }

@@ -32,12 +32,9 @@ typedef struct GfxCamera {
 
 struct {
 	PLVector3 cameraPos;
-
 	unsigned int numBatches;
 	unsigned int numFacesDrawn;
 } g_gfxPerfStats;
-
-#define GfxPerfStart( A )
 
 #define GFX_PROGRAM_NAME_LENGTH 64
 

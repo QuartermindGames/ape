@@ -75,10 +75,7 @@ void Game_Display( void ) {
 		return;
 	}
 
-	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
-
 	Gfx_DrawPerspective( playerCamera );
-	Gfx_DrawMenu();
 }
 
 void Game_Initialize( void ) {

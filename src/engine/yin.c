@@ -28,24 +28,24 @@ typedef struct CPUTime {
 	struct timespec clock;
 	double timeTaken;
 } CPUTime;
-static CPUTime cpuTimers[ MAX_CPUTIME_GROUPS ];
+static CPUTime cpuTimers[ MAX_PROFILER_GROUPS ];
 
 void CPUTimer_Initialize( void ) {
-	memset( cpuTimers, 0, sizeof( CPUTime ) * MAX_CPUTIME_GROUPS );
+	memset( cpuTimers, 0, sizeof( CPUTime ) * MAX_PROFILER_GROUPS );
 }
 
-void CPUTimer_StartMeasure( CPUTimeGroup group ) {
+void CPUTimer_StartMeasure( CPUProfilerGroup group ) {
 	clock_gettime( CLOCK_MONOTONIC, &cpuTimers[ group ].clock );
 }
 
-void CPUTimer_EndMeasure( CPUTimeGroup group ) {
+void CPUTimer_EndMeasure( CPUProfilerGroup group ) {
 	struct timespec end;
 	clock_gettime( CLOCK_MONOTONIC, &end );
 
 	cpuTimers[ group ].timeTaken = timespec_to_double( timespec_sub( end, cpuTimers[ group ].clock ) );
 }
 
-double CPUTimer_GetMeasure( CPUTimeGroup group ) {
+double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
 	return cpuTimers[ group ].timeTaken;
 }
 
@@ -128,11 +128,11 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	/* initialize core services */
 	CPUTimer_Initialize();
+	Con_Initialize();
 	Gfx_Initialize();
 	Act_Initialize();
 
 	Game_Initialize();
-
 	if( plHasCommandLineArgument( "editor" ) ) {
 		Editor_Initialize();
 	}
@@ -145,8 +145,11 @@ static bool Engine_Initialize( int argc, char **argv ) {
 static void Engine_Shutdown( void ) {
 	PrintMsg( "Shutting down...\n" );
 
+	Sch_FlushTasks();
+
 	Act_Shutdown();
 	Gfx_Shutdown();
+	Con_Shutdown();
 
 	g_system.Shutdown();
 }
@@ -160,8 +163,11 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
-	SysWindow *window = Engine_GetMainWindow(); /* g_system.GetMainWindow(); */
-	g_system.MakeWindowActive( window );
+	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
+
+	PROFILE_START( PROFILE_DRAW_ALL );
+
+	g_system.MakeWindowActive( mainWindow );
 
 	Gfx_SetupDefaultState();
 
@@ -169,6 +175,10 @@ static void Engine_Display( void ) {
 
 	Editor_Display();
 	Game_Display();
+
+	PROFILE_END( PROFILE_DRAW_ALL );
+
+	Gfx_DrawMenu();
 
 	g_system.SwapWindow( mainWindow );
 }
@@ -184,6 +194,16 @@ unsigned int Engine_GetNumTicks( void ) {
 }
 
 static void Engine_Tick( void ) {
+	if ( g_system.GetKeyState( '`' ) || g_system.GetKeyState( '~' ) ) {
+		Con_Toggle();
+	}
+
+	/* temp */
+	if ( g_system.GetKeyState( 'p' ) ) Con_ScrollForward();
+	if ( g_system.GetKeyState( 'l' ) ) Con_ScrollBackward();
+
+	Sch_RunTasks();
+
 	Editor_Tick();
 	Game_Tick();
 
