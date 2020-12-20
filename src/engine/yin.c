@@ -219,6 +219,10 @@ static bool Engine_IsRunning( void ) {
  * INTERFACE
  ****************************************/
 
+static void Engine_Keyboard( int key, bool isDown ) {
+
+}
+
 PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut ) {
 	if ( version != BASE_INTERFACE_VERSION ) {
 		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, BASE_INTERFACE_VERSION );
@@ -235,7 +239,7 @@ PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, 
 	engOut->GetNumTicks = Engine_GetNumTicks;
 	engOut->IsRunning = Engine_IsRunning;
 	engOut->Tick = Engine_Tick;
-	//engOut->Keyboard = Engine_Keyboard;
+	engOut->KeyboardEvent = Engine_Keyboard;
 
 	return true;
 }

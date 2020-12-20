@@ -30,6 +30,49 @@ typedef enum InputButton {
 	MAX_BUTTON_INPUTS
 } InputButton;
 
+typedef enum InputKey {
+	KEY_INVALID = -1,
+
+	KEY_CAPSLOCK = 128,
+	KEY_F1,
+	KEY_F2,
+	KEY_F3,
+	KEY_F4,
+	KEY_F5,
+	KEY_F6,
+	KEY_F7,
+	KEY_F8,
+	KEY_F9,
+	KEY_F10,
+	KEY_F11,
+	KEY_F12,
+
+	KEY_PRINTSCREEN,
+	KEY_SCROLLLOCK,
+	KEY_PAUSE,
+	KEY_INSERT,
+	KEY_HOME,
+	KEY_PAGEUP,
+	KEY_PAGEDOWN,
+	KEY_DELETE,
+	KEY_END,
+	KEY_TAB,
+
+	KEY_UP,
+	KEY_DOWN,
+	KEY_LEFT,
+	KEY_RIGHT,
+
+	KEY_LEFT_CTRL,
+	KEY_RIGHT_CTRL,
+	KEY_LEFT_SHIFT,
+	KEY_RIGHT_SHIFT,
+	KEY_LEFT_ALT,
+	KEY_RIGHT_ALT,
+
+	MAX_KEY_INPUTS
+} InputKey;
+
 typedef enum SysMessage {
 	SYS_MESSAGE_ERROR,
 	SYS_MESSAGE_WARNING,
@@ -50,7 +93,8 @@ typedef struct SystemInterface {
 
 	/* input */
 	bool ( *GetButtonState )( InputButton inputIndex );
-	bool ( *GetKeyState )( unsigned char keyIndex );
+	bool ( *GetKeyState )( int keyIndex );
+	bool ( *HasKeyboard )( void );
 
 	void ( *Shutdown )( void );
 } SystemInterface;
@@ -65,7 +109,7 @@ typedef struct EngineInterface {
 	bool ( *Initialize )( int argc, char **argv );
 	void ( *Tick )( void );
 	void ( *Display )( void );
-	void ( *Keyboard )( unsigned char key, bool isDown );
+	void ( *KeyboardEvent )( int key, bool isDown );
 	void ( *Shutdown )( void );
 
 	bool ( *IsRunning )( void );
@@ -74,9 +118,7 @@ typedef struct EngineInterface {
 } EngineInterface;
 extern EngineInterface g_engine;
 
-#define ENGINE_INTERFACE_VERSION    sizeof( EngineInterface )
-#define LAUNCHER_INTERFACE_VERSION  sizeof( LauncherInteface )
-#define BASE_INTERFACE_VERSION      sizeof( EngineInterface ) + sizeof( SystemInterface )
+#define BASE_INTERFACE_VERSION 1
 
 #define INTERFACE_PROCEDURE "GetDllInterface"
 typedef bool ( *DllLauncherInterface )( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut );
@@ -84,11 +126,11 @@ typedef void ( *DllGameInterface )( uint32_t version, const EngineInterface *eng
 
 #define TICK_RATE 1000 / 60 /* ms */
 
-#define u_unused( a ) ( void )( ( a ) )
+#define u_unused( a ) ( void ) ( ( a ) )
 
 #if defined( _DEBUG )
-#   include <assert.h>
-#   define u_assert( A ) assert( ( A ) )
+#include <assert.h>
+#define u_assert( A ) assert( ( A ) )
 #else
-#   define u_assert( A )
+#define u_assert( A )
 #endif

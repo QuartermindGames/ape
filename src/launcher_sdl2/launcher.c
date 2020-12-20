@@ -8,8 +8,10 @@
 EngineInterface g_engine;
 static PLLibrary *dllEnginePtr;
 
-#define PrintWarn( ... )    Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
-#define PrintError( ... )   Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); exit( 0 )
+#define PrintWarn( ... ) Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
+#define PrintError( ... )                                    \
+	Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); \
+	exit( 0 )
 
 /****************************************
  * WINDOW MANAGEMENT
@@ -18,7 +20,7 @@ static PLLibrary *dllEnginePtr;
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	const char *title;
 	SDL_MessageBoxFlags flags;
-	switch( messageType ) {
+	switch ( messageType ) {
 		case SYS_MESSAGE_ERROR:
 			title = "Error";
 			flags = SDL_MESSAGEBOX_ERROR;
@@ -37,7 +39,7 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	char msgBuf[ 4096 ];
 	va_list args;
 	va_start( args, message );
-	vsnprintf( msgBuf, sizeof( msgBuf ), message, args);
+	vsnprintf( msgBuf, sizeof( msgBuf ), message, args );
 	va_end( args );
 
 	printf( "%s", msgBuf );
@@ -46,8 +48,8 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 }
 
 typedef struct SysWindow {
-	SDL_Window      *sdlWindowPtr;
-	SDL_GLContext   *sdlGLContext;
+	SDL_Window *sdlWindowPtr;
+	SDL_GLContext *sdlGLContext;
 } SysWindow;
 
 void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
@@ -67,7 +69,6 @@ SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 	SDL_GLContext sdlGLContext = SDL_GL_CreateContext( sdlWindowPtr );
 	if ( sdlGLContext == NULL ) {
 		SDL_DestroyWindow( sdlWindowPtr );
-
 		PrintWarn( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
 		return NULL;
 	}
@@ -106,62 +107,112 @@ void Sys_SwapWindow( SysWindow *windowPtr ) {
  ****************************************/
 
 static bool buttonStates[ MAX_BUTTON_INPUTS ];
-static bool keyStates[ 256 ];
+bool Sys_GetButtonState( InputButton inputIndex ) {
+	if ( inputIndex >= MAX_BUTTON_INPUTS ) {
+		return false;
+	}
+	return buttonStates[ inputIndex ];
+}
+static bool keyStates[ MAX_KEY_INPUTS ];
+bool Sys_GetKeyState( int keyIndex ) {
+	if ( keyIndex >= MAX_KEY_INPUTS ) {
+		return false;
+	}
+	return keyStates[ keyIndex ];
+}
 
-bool Sys_GetButtonState( InputButton inputIndex ) { return buttonStates[ inputIndex ]; }
-bool Sys_GetKeyState( unsigned char keyIndex ) { return keyStates[ keyIndex ]; }
+static int Sys_TranslateSDLKeyInput( int key ) {
+	if ( key < 128 ) {
+		return key;
+	}
 
-static unsigned char Sys_TranslateSDLButtonInput( unsigned int key ) {
-	switch( key ) {
-		default: return INPUT_INVALID;
-		case 'w': return INPUT_UP;
-		case 's': return INPUT_DOWN;
-		case 'a': return INPUT_LEFT;
-		case 'd': return INPUT_RIGHT;
-		case ' ': return INPUT_A;
-		case 'z': return INPUT_LEFT_STICK;
-
-		case SDLK_UP:       return INPUT_UP;
-		case SDLK_DOWN:     return INPUT_DOWN;
-		case SDLK_LEFT:     return INPUT_LEFT;
-		case SDLK_RIGHT:    return INPUT_RIGHT;
+	switch ( key ) {
+		default:
+			return KEY_INVALID;
+		case SDLK_CAPSLOCK:
+			return KEY_CAPSLOCK;
+		case SDLK_F1:
+			return KEY_F1;
+		case SDLK_F2:
+			return KEY_F2;
+		case SDLK_F3:
+			return KEY_F3;
+		case SDLK_F4:
+			return KEY_F4;
+		case SDLK_F5:
+			return KEY_F5;
+		case SDLK_F6:
+			return KEY_F6;
+		case SDLK_F7:
+			return KEY_F7;
+		case SDLK_F8:
+			return KEY_F8;
+		case SDLK_F9:
+			return KEY_F9;
+		case SDLK_F10:
+			return KEY_F10;
+		case SDLK_F11:
+			return KEY_F11;
+		case SDLK_F12:
+			return KEY_F12;
+		case SDLK_PRINTSCREEN:
+			return KEY_PRINTSCREEN;
+		case SDLK_SCROLLLOCK:
+			return KEY_SCROLLLOCK;
+		case SDLK_PAUSE:
+			return KEY_PAUSE;
+		case SDLK_INSERT:
+			return KEY_INSERT;
+		case SDLK_HOME:
+			return KEY_HOME;
+		case SDLK_PAGEUP:
+			return KEY_PAGEUP;
+		case SDLK_PAGEDOWN:
+			return KEY_PAGEDOWN;
+		case SDLK_DELETE:
+			return KEY_DELETE;
+		case SDLK_END:
+			return KEY_END;
+		case SDLK_KP_TAB:
+		case SDLK_TAB:
+			return KEY_TAB;
+		case SDLK_UP:
+			return KEY_UP;
+		case SDLK_DOWN:
+			return KEY_DOWN;
+		case SDLK_LEFT:
+			return KEY_LEFT;
+		case SDLK_RIGHT:
+			return KEY_RIGHT;
+		case SDLK_LCTRL:
+			return KEY_LEFT_CTRL;
+		case SDLK_RCTRL:
+			return KEY_RIGHT_CTRL;
+		case SDLK_LSHIFT:
+			return KEY_LEFT_SHIFT;
+		case SDLK_RSHIFT:
+			return KEY_RIGHT_SHIFT;
+		case SDLK_LALT:
+			return KEY_LEFT_ALT;
+		case SDLK_RALT:
+			return KEY_RIGHT_ALT;
 
 			/* temp temp temp */
 		case SDLK_ESCAPE:
 			g_engine.Shutdown();
 			break;
 	}
-
-	return key;
 }
 
-static void Sys_Keyboard( unsigned char key, int x, int y ) {
-	u_unused( x );
-	u_unused( y );
-
-	keyStates[ key ] = true;
-
-	/* see if we can translate it to a button */
-	unsigned char button = Sys_TranslateSDLButtonInput( key );
-	if ( button == INPUT_INVALID ) {
+static void Sys_HandleKeyboardEvent( int key, bool isDown ) {
+	key = Sys_TranslateSDLKeyInput( key );
+	if ( key == KEY_INVALID ) {
+		PrintWarn( "Unhandled key, %d\n", key );
 		return;
 	}
 
-	buttonStates[ button ] = true;
-}
-
-static void Sys_KeyboardUp( unsigned char key, int x, int y ) {
-	u_unused( x );
-	u_unused( y );
-
-	keyStates[ key ] = false;
-
-	unsigned char button = Sys_TranslateSDLButtonInput( key );
-	if ( button == INPUT_INVALID ) {
-		return;
-	}
-
-	buttonStates[ button ] = false;
+	keyStates[ key ] = isDown;
+	g_engine.KeyboardEvent( key, isDown );
 }
 
 /****************************************
@@ -186,6 +237,18 @@ static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
 /****************************************
  * INITIALIZATION
  ****************************************/
+
+/**
+ * Return whether or not we consider the platform
+ * to have a keyboard.
+ */
+static bool Sys_HasKeyboard( void ) {
+#if defined( __ANDROID__ )
+	return false;
+#else
+	return true;
+#endif
+}
 
 void Sys_Shutdown( void ) {
 	exit( EXIT_SUCCESS );
@@ -219,15 +282,16 @@ int Sys_Init( int argc, char **argv ) {
 	}
 
 	SystemInterface systemInterface = {
-		.Shutdown = Sys_Shutdown,
-		.DisplayMessageBox = Sys_DisplayMessageBox,
-		.CreateWindow = Sys_CreateWindow,
-		.DestroyWindow = Sys_DestroyWindow,
-		.GetWindowSize = Sys_GetWindowSize,
-		.MakeWindowActive = Sys_MakeWindowActive,
-		.SwapWindow = Sys_SwapWindow,
-		.GetButtonState = Sys_GetButtonState,
-		.GetKeyState = Sys_GetKeyState,
+	        .Shutdown = Sys_Shutdown,
+	        .DisplayMessageBox = Sys_DisplayMessageBox,
+	        .CreateWindow = Sys_CreateWindow,
+	        .DestroyWindow = Sys_DestroyWindow,
+	        .GetWindowSize = Sys_GetWindowSize,
+	        .MakeWindowActive = Sys_MakeWindowActive,
+	        .SwapWindow = Sys_SwapWindow,
+	        .GetButtonState = Sys_GetButtonState,
+	        .GetKeyState = Sys_GetKeyState,
+	        .HasKeyboard = Sys_HasKeyboard,
 	};
 
 	/* initialize the interface */
@@ -254,18 +318,16 @@ int Sys_Init( int argc, char **argv ) {
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
 
-	while( g_engine.IsRunning() ) {
+	while ( g_engine.IsRunning() ) {
 		SDL_Event event;
-		while ( SDL_PollEvent( &event )) {
+		while ( SDL_PollEvent( &event ) ) {
 			switch ( event.type ) {
 				case SDL_USEREVENT:
 					g_engine.Tick();
 					break;
-				case SDL_KEYUP:
-					Sys_KeyboardUp( event.key.keysym.sym, 0, 0 );
-					break;
 				case SDL_KEYDOWN:
-					Sys_Keyboard( event.key.keysym.sym, 0, 0 );
+				case SDL_KEYUP:
+					Sys_HandleKeyboardEvent( event.key.keysym.sym, ( event.type == SDL_KEYDOWN ) );
 					break;
 			}
 		}

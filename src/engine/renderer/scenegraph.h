@@ -3,12 +3,12 @@
 #pragma once
 
 enum SGNodeType {
-	SG_NODE_TYPE_WORLD,         /* world node; each one has a list of sectors */
-	SG_NODE_TYPE_SECTOR,        /* sectors exist under each world */
+	SG_NODE_TYPE_WORLD,    /* world node; each one has a list of sectors */
+	SG_NODE_TYPE_SECTOR,   /* sectors exist under each world */
+	SG_NODE_TYPE_GEOMETRY, /* raw geometry */
 
-	SG_NODE_TYPE_ACTOR,         /* actors exist under the sectors */
-	SG_NODE_TYPE_PRIMITIVE,     /* used for rendering the world itself */
-	SG_NODE_TYPE_LIGHT,         /* and these, typically, also exist under the sectors */
+	SG_NODE_TYPE_ACTOR,     /* actors exist under the sectors */
+	SG_NODE_TYPE_LIGHT,     /* and these, typically, also exist under the sectors */
 };
 
 typedef struct SGNode SGNode;

@@ -14,13 +14,14 @@ static unsigned int scrollPos = 0;
 /* console buffer methods */
 #define CON_BUFFER_MAX_LENGTH 256
 #define CON_BUFFER_MAX_LINES 4096
+static char inputBuffer[ CON_BUFFER_MAX_LENGTH ] = { '\0' };
 static struct ConBuffer {
 	char buffer[ CON_BUFFER_MAX_LINES ][ CON_BUFFER_MAX_LENGTH ];
 	unsigned int numLines;
-} consoleBuffer = {
+} outputBuffer = {
         .numLines = 0,
 };
-static void Con_ClearBuffer( void ) { consoleBuffer.numLines = 0; }
+static void Con_ClearBuffer( void ) { outputBuffer.numLines = 0; }
 static void Con_PushLine( const char *msg ) {
 	size_t l = strlen( msg );
 	if ( l >= CON_BUFFER_MAX_LENGTH ) {
@@ -28,13 +29,13 @@ static void Con_PushLine( const char *msg ) {
 		l = CON_BUFFER_MAX_LENGTH - 2;
 	}
 
-	strncpy( consoleBuffer.buffer[ consoleBuffer.numLines ], msg, l );
-	consoleBuffer.buffer[ consoleBuffer.numLines ][ l ] = '\0';
+	strncpy( outputBuffer.buffer[ outputBuffer.numLines ], msg, l );
+	outputBuffer.buffer[ outputBuffer.numLines ][ l ] = '\0';
 
 	/* this is when we do what is probably going to be,
 	 * a dumb and expensive operation... */
-	consoleBuffer.numLines++;
-	if ( consoleBuffer.numLines >= CON_BUFFER_MAX_LINES ) {
+	outputBuffer.numLines++;
+	if ( outputBuffer.numLines >= CON_BUFFER_MAX_LINES ) {
 		//memmove_s()
 	}
 }
@@ -115,8 +116,8 @@ void Con_Toggle( void ) {
 
 void Con_ScrollForward( void ) {
 	scrollPos++;
-	if ( scrollPos > consoleBuffer.numLines - 1 ) {
-		scrollPos = consoleBuffer.numLines - 1;
+	if ( scrollPos > outputBuffer.numLines - 1 ) {
+		scrollPos = outputBuffer.numLines - 1;
 	}
 }
 
@@ -160,26 +161,36 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, w, consoleHeight, PLColour( 0, 0, 0, alpha->i_value ) );
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, 8, consoleHeight, PLColour( 128, 128, 128, 255 ) );
+#define CON_TEXT_COLOUR         PLColourRGB( 0, 255, 0 )
+#define CON_SIDE_COLOUR         PLColourRGB( 128, 128, 128 )
+#define CON_BACK_COLOUR         PLColour( 0, 0, 0, alpha->i_value )
+#define CON_INDICATOR_COLOUR    PLColourRGB( 255, 255, 255 )
 
-	if ( consoleBuffer.numLines > 0 ) {
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, w, consoleHeight, CON_BACK_COLOUR );
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, 8, consoleHeight, CON_SIDE_COLOUR );
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, viewport->h - 12.0f, viewport->w, 12.0f, CON_BACK_COLOUR );
+
+	if ( outputBuffer.numLines > 0 ) {
 		/* indicate where we are in the list */
-		float cH = ( consoleBuffer.numLines / consoleHeight ) + 1.0f;
-		float cY = consoleHeight - ( ( consoleBuffer.numLines / consoleHeight ) + scrollPos ) - cH;
-		plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, PLColour( 255, 255, 255, 255 ) );
+		float cH = ( outputBuffer.numLines / consoleHeight ) + 1.0f;
+		float cY = consoleHeight - ( ( outputBuffer.numLines / consoleHeight ) + scrollPos ) - cH;
+		plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
 		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 
 		float y = consoleHeight - 20.0f;
-		for ( unsigned int i = ( consoleBuffer.numLines - 1 ) - scrollPos; i > 0; --i ) {
-			Font_DrawBitmapString( 12.0f, y, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), consoleBuffer.buffer[ i ] );
+		for ( unsigned int i = ( outputBuffer.numLines - 1 ) - scrollPos; i > 0; --i ) {
+			Font_DrawBitmapString( 12.0f, y, 1.0f, 1.0f, CON_TEXT_COLOUR, outputBuffer.buffer[ i ] );
 			y -= 12.0f;
 			if ( y <= -12.0f ) {
 				break;
 			}
 		}
 	}
+
+	/* draw input field */
+	Font_DrawBitmapCharacter( 1.0f, viewport->h - 12.0f, 1.0f, CON_TEXT_COLOUR, '>' );
+	Font_DrawBitmapString( 2.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer );
 
 	plPopMatrix();
 
