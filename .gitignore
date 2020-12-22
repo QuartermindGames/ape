@@ -16,16 +16,16 @@
 *.pch
 
 # Libraries
-*.lib
-*.a
+#*.lib
+#*.a
 *.la
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+#*.dll
+#*.so
+#*.so.*
+#*.dylib
 
 # Executables
 *.exe
@@ -58,3 +58,5 @@ dkms.conf
 /bin/launcher_sdl2
 /bin/pkgman
 /bin/Yin
+/.vs
+/out/build/x64-Debug (default)

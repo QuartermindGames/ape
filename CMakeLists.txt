@@ -7,14 +7,33 @@ project(Yin)
 message("Configuring Yin...")
 
 # Set all of our output directories.
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
+
 
 include_directories(src/)
 include_directories(src/core/include/)
 
 include(DetermineTargetArchitecture.cmake)
 determine_target_architecture(YIN_SYSTEM_ARCH)
+
+if (NOT UNIX)
+    message("Not Unix, assuming Win32 - " ${YIN_SYSTEM_ARCH})
+    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x64/")
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x64/")
+    else ()
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x86/")
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x86/")
+    endif ()
+elif(NOT APPLE) # assume linux
+    message("Not Win32, assuming Linux - " ${YIN_SYSTEM_ARCH})
+    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x64/")
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x64/")
+    else ()
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x86/")
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x86/")
+    endif ()
+endif ()
 
 add_subdirectory(src/3rdparty/platform/platform/)
 add_subdirectory(src/launcher_sdl2/)
