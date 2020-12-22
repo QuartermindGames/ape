@@ -24,7 +24,7 @@ if (NOT UNIX)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x86/")
         set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/win32-x86/")
     endif ()
-elif(NOT APPLE) # assume linux
+elseif(NOT APPLE) # assume linux
     message("Not Win32, assuming Linux - " ${YIN_SYSTEM_ARCH})
     if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x64/")
