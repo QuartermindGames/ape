@@ -1,0 +1,6 @@
+material
+pass base_lighting
+var texture diffuseMap materials/terrain/rock_05_diff_1k.jpg
+var texture normalMap materials/terrain/rock_05_nor_1k.jpg
+var texture blendMap materials/terrain/rock_05_diff_1k.jpg
+end
