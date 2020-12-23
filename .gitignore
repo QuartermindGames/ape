@@ -40,6 +40,15 @@
 *.su
 *.idb
 *.pdb
+*.VC.db
+*.suo
+*.ipch
+*.tlog
+*.log
+*.recipe
+*.lastbuildstate
+*.vcxproj.FileListAbsolute.txt
+*unsuccessfulbuild
 
 # Kernel Module Compile Results
 *.mod*
@@ -49,9 +58,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+/Debug/
 /cmake-build-debug/
 
 # Generated Files
+*.user
 *.gfx
 /build
 /bin/log.txt
@@ -60,3 +72,6 @@ dkms.conf
 /bin/Yin
 /.vs
 /out/build/x64-Debug (default)
+/.idea
+/src/editor/Debug
+/src/editor/.vs/QEdit/v16

@@ -537,8 +537,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 		if (!QE_LoadProject(argv[1]))
 			Error ("Couldn't load %s project file", argv[1]);
 	}
-	else if (!QE_LoadProject("scripts/quake.qe4"))
-		Error ("Couldn't load scripts/quake.qe4 project file");
+	else if (!QE_LoadProject( EDITOR_CONFIG ))
+		Error ("Couldn't load \"" EDITOR_CONFIG "\" project file");
 
 	QE_Init ();
 

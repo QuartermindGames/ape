@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define EDITOR_VERSION	20200813
 #define EDITOR_TITLE	"FoxEd"
+#define EDITOR_CONFIG	"editor.cfg"
 
 #define QE3_STYLE (WS_OVERLAPPED| WS_CAPTION | WS_THICKFRAME | \
 		/* WS_MINIMIZEBOX | */ WS_MAXIMIZEBOX  | WS_CLIPSIBLINGS | \
