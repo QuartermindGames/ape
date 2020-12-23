@@ -1,0 +1,1266 @@
+/*
+===========================================================================
+Copyright (C) 1997-2006 Id Software, Inc.
+
+This file is part of Quake 2 Tools source code.
+
+Quake 2 Tools source code is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+Quake 2 Tools source code is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quake 2 Tools source code; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+===========================================================================
+*/
+
+#include "qe3.h"
+#include <process.h>
+#include "mru.h"
+#include "entityw.h"
+#include "MainWindow.h"
+#include "Viewport.h"
+
+BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize );
+BOOL LoadRegistryInfo( const char *pszName, void *pvBuf, long *plSize );
+
+static HWND CreateMyStatusWindow( HINSTANCE hInst );
+static HWND CreateToolBar( HINSTANCE hinst );
+
+extern void WXY_Print( void );
+
+/*
+==============================================================================
+
+  MENU
+
+==============================================================================
+*/
+
+void OpenDialog( void );
+void SaveAsDialog( void );
+qboolean ConfirmModified( void );
+void  Select_Ungroup( void );
+
+void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
+	char *in;
+	char	src[ 1024 ];
+	char	rsh[ 1024 ];
+	char	base[ 256 ];
+
+	ExtractFileName( mapname, base );
+	sprintf( src, "%s/maps/%s", ValueForKey( g_qeglobals.d_project_entity, "remotebasepath" ), base );
+	strcpy( rsh, ValueForKey( g_qeglobals.d_project_entity, "rshcmd" ) );
+
+	in = ValueForKey( g_qeglobals.d_project_entity, bspaction );
+	while( *in ) {
+		if( in[ 0 ] == '!' ) {
+			strcpy( out, rsh );
+			out += strlen( rsh );
+			in++;
+			continue;
+		}
+		if( in[ 0 ] == '$' ) {
+			strcpy( out, src );
+			out += strlen( src );
+			in++;
+			continue;
+		}
+		if( in[ 0 ] == '@' ) {
+			*out++ = '"';
+			in++;
+			continue;
+		}
+		*out++ = *in++;
+	}
+	*out = 0;
+}
+
+
+
+void RunBsp( char *command ) {
+	char	sys[ 1024 ];
+	char	batpath[ 1024 ];
+	char	outputpath[ 1024 ];
+	char	temppath[ 512 ];
+	char	name[ 1024 ];
+	FILE *hFile;
+	BOOL	ret;
+	PROCESS_INFORMATION ProcessInformation;
+	STARTUPINFO	startupinfo;
+
+	SetInspectorMode( W_CONSOLE );
+
+	if( bsp_process ) {
+		Sys_Printf( "BSP is still going...\n" );
+		return;
+	}
+
+	GetTempPath( 512, temppath );
+	sprintf( outputpath, "%sjunk.txt", temppath );
+
+	strcpy( name, currentmap );
+	if( region_active ) {
+		Map_SaveFile( name, false );
+		StripExtension( name );
+		strcat( name, ".reg" );
+	}
+
+	Map_SaveFile( name, region_active );
+
+
+	QE_ExpandBspString( command, sys, name );
+
+	Sys_ClearPrintf();
+	Sys_Printf( "======================================\nRunning bsp command...\n" );
+	Sys_Printf( "\n%s\n", sys );
+
+	//
+	// write qe3bsp.bat
+	//
+	sprintf( batpath, "%sqe3bsp.bat", temppath );
+	hFile = fopen( batpath, "w" );
+	if( !hFile )
+		Error( "Can't write to %s", batpath );
+	fprintf( hFile, sys );
+	fclose( hFile );
+
+	//
+	// write qe3bsp2.bat
+	//
+	sprintf( batpath, "%sqe3bsp2.bat", temppath );
+	hFile = fopen( batpath, "w" );
+	if( !hFile )
+		Error( "Can't write to %s", batpath );
+	fprintf( hFile, "%sqe3bsp.bat > %s", temppath, outputpath );
+	fclose( hFile );
+
+	Pointfile_Delete();
+
+	GetStartupInfo( &startupinfo );
+
+	ret = CreateProcess(
+		batpath,		// pointer to name of executable module
+		NULL,			// pointer to command line string
+		NULL,			// pointer to process security attributes
+		NULL,			// pointer to thread security attributes
+		FALSE,			// handle inheritance flag
+		0 /*DETACHED_PROCESS*/,		// creation flags
+		NULL,			// pointer to new environment block
+		NULL,			// pointer to current directory name
+		&startupinfo,	// pointer to STARTUPINFO
+		&ProcessInformation 	// pointer to PROCESS_INFORMATION
+	);
+
+	if( !ret )
+		Error( "CreateProcess failed" );
+
+	bsp_process = ProcessInformation.hProcess;
+
+	Sleep( 100 );	// give the new process a chance to open it's window
+
+	BringWindowToTop( g_qeglobals.d_hwndMain );	// pop us back on top
+	SetFocus( g_qeglobals.d_hwndCamera );
+}
+
+/*
+=============
+DoColor
+
+=============
+*/
+qboolean DoColor( int iIndex ) {
+	return false;
+}
+
+
+/* Copied from MSDN */
+
+BOOL DoMru( HWND hWnd, WORD wId ) {
+	char szFileName[ 128 ];
+	OFSTRUCT of;
+	BOOL fExist;
+
+	GetMenuItem( g_qeglobals.d_lpMruMenu, wId, TRUE, szFileName, sizeof( szFileName ) );
+
+	// Test if the file exists.
+
+	fExist = OpenFile( szFileName, &of, OF_EXIST ) != HFILE_ERROR;
+
+	if( fExist ) {
+
+		// Place the file on the top of MRU.
+		AddNewItem( g_qeglobals.d_lpMruMenu, (LPSTR)szFileName );
+
+		// Now perform opening this file !!!
+		Map_LoadFile( szFileName );
+	} else
+		// Remove the file on MRU.
+		DelMenuItem( g_qeglobals.d_lpMruMenu, wId, TRUE );
+
+	// Refresh the File menu.
+	PlaceMenuMRUItem( g_qeglobals.d_lpMruMenu, GetSubMenu( GetMenu( hWnd ), 0 ),
+		ID_FILE_EXIT );
+
+	return fExist;
+}
+
+
+/* handle all WM_COMMAND messages here */
+LONG WINAPI CommandHandler(
+	HWND    hWnd,
+	WPARAM  wParam,
+	LPARAM  lParam ) {
+	HMENU hMenu;
+
+	switch( LOWORD( wParam ) ) {
+		//
+		// file menu
+		//
+	case ID_FILE_EXIT:
+		/* exit application */
+		if( !ConfirmModified() )
+			return TRUE;
+
+		PostMessage( hWnd, WM_CLOSE, 0, 0L );
+		break;
+
+	case ID_FILE_OPEN:
+		if( !ConfirmModified() )
+			return TRUE;
+		OpenDialog();
+		break;
+
+	case ID_FILE_NEW:
+		if( !ConfirmModified() )
+			return TRUE;
+		Map_New();
+		break;
+	case ID_FILE_SAVE:
+		if( !strcmp( currentmap, "unnamed.map" ) )
+			SaveAsDialog();
+		else
+			Map_SaveFile( currentmap, false );	// ignore region
+		break;
+	case ID_FILE_SAVEAS:
+		SaveAsDialog();
+		break;
+
+	case ID_FILE_LOADPROJECT:
+		if( !ConfirmModified() )
+			return TRUE;
+		ProjectDialog();
+		break;
+
+	case ID_FILE_POINTFILE:
+		if( g_qeglobals.d_pointfile_display_list )
+			Pointfile_Clear();
+		else
+			Pointfile_Check();
+		break;
+
+		//
+		// view menu
+		//
+	case ID_VIEW_ENTITY:
+		SetInspectorMode( W_ENTITY );
+		break;
+	case ID_VIEW_CONSOLE:
+		SetInspectorMode( W_CONSOLE );
+		break;
+	case ID_VIEW_TEXTURE:
+		SetInspectorMode( W_TEXTURE );
+		break;
+
+	case ID_VIEW_100:
+		g_qeglobals.d_xy.scale = 1;
+		Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
+		break;
+	case ID_VIEW_Z100:
+		z.scale = 1;
+		Sys_UpdateWindows( W_Z | W_Z_OVERLAY );
+		break;
+
+#if 0 // TODO
+	case ID_VIEW_CENTER:
+		camera.angles[ ROLL ] = camera.angles[ PITCH ] = 0;
+		camera.angles[ YAW ] = 22.5f *
+			floorf( ( camera.angles[ YAW ] + 11.0f ) / 22.5f );
+		Sys_UpdateWindows( W_CAMERA | W_XY_OVERLAY );
+		break;
+
+	case ID_VIEW_UPFLOOR:
+		Cam_ChangeFloor( true );
+		break;
+	case ID_VIEW_DOWNFLOOR:
+		Cam_ChangeFloor( false );
+		break;
+#endif
+
+	case ID_VIEW_SHOWNAMES:
+		g_qeglobals.d_savedinfo.show_names = !g_qeglobals.d_savedinfo.show_names;
+		CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWNAMES, MF_BYCOMMAND | ( g_qeglobals.d_savedinfo.show_names ? MF_CHECKED : MF_UNCHECKED ) );
+		Map_BuildBrushData();
+		Sys_UpdateWindows( W_XY );
+		break;
+
+	case ID_VIEW_SHOWCOORDINATES:
+		g_qeglobals.d_savedinfo.show_coordinates ^= 1;
+		CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWCOORDINATES, MF_BYCOMMAND | ( g_qeglobals.d_savedinfo.show_coordinates ? MF_CHECKED : MF_UNCHECKED ) );
+		Sys_UpdateWindows( W_XY );
+		break;
+
+	case ID_VIEW_SHOWBLOCKS:
+		g_qeglobals.show_blocks ^= 1;
+		CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWBLOCKS, MF_BYCOMMAND | ( g_qeglobals.show_blocks ? MF_CHECKED : MF_UNCHECKED ) );
+		Sys_UpdateWindows( W_XY );
+		break;
+
+	case ID_VIEW_SHOWLIGHTS:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_LIGHTS ) & EXCLUDE_LIGHTS )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWLIGHTS, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWLIGHTS, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWPATH:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_PATHS ) & EXCLUDE_PATHS )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWPATH, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWPATH, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWENT:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_ENT ) & EXCLUDE_ENT )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWENT, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWENT, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWWATER:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_WATER ) & EXCLUDE_WATER )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWWATER, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWWATER, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWCLIP:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_CLIP ) & EXCLUDE_CLIP )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWCLIP, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWCLIP, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWDETAIL:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_DETAIL ) & EXCLUDE_DETAIL ) {
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWDETAIL, MF_BYCOMMAND | MF_UNCHECKED );
+			SetWindowText( g_qeglobals.d_hwndCamera, "Camera View (DETAIL EXCLUDED)" );
+		} else {
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWDETAIL, MF_BYCOMMAND | MF_CHECKED );
+			SetWindowText( g_qeglobals.d_hwndCamera, "Camera View" );
+		}
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+	case ID_VIEW_SHOWWORLD:
+		if( ( g_qeglobals.d_savedinfo.exclude ^= EXCLUDE_WORLD ) & EXCLUDE_WORLD )
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWWORLD, MF_BYCOMMAND | MF_UNCHECKED );
+		else
+			CheckMenuItem( GetMenu( g_qeglobals.d_hwndMain ), ID_VIEW_SHOWWORLD, MF_BYCOMMAND | MF_CHECKED );
+		Sys_UpdateWindows( W_XY | W_CAMERA );
+		break;
+
+		//
+		// texture menu
+		//
+	case ID_VIEW_NEAREST:
+	case ID_VIEW_NEARESTMIPMAP:
+	case ID_VIEW_LINEAR:
+	case ID_VIEW_BILINEAR:
+	case ID_VIEW_BILINEARMIPMAP:
+	case ID_VIEW_TRILINEAR:
+	case ID_TEXTURES_WIREFRAME:
+	case ID_TEXTURES_FLATSHADE:
+		Texture_SetMode( LOWORD( wParam ) );
+		break;
+
+	case ID_TEXTURES_SHOWINUSE:
+		Sys_BeginWait();
+		Texture_ShowInuse();
+		SetInspectorMode( W_TEXTURE );
+		break;
+
+	case ID_TEXTURES_INSPECTOR:
+		DoSurface();
+		break;
+
+	case CMD_TEXTUREWAD:
+	case CMD_TEXTUREWAD + 1:
+	case CMD_TEXTUREWAD + 2:
+	case CMD_TEXTUREWAD + 3:
+	case CMD_TEXTUREWAD + 4:
+	case CMD_TEXTUREWAD + 5:
+	case CMD_TEXTUREWAD + 6:
+	case CMD_TEXTUREWAD + 7:
+	case CMD_TEXTUREWAD + 8:
+	case CMD_TEXTUREWAD + 9:
+	case CMD_TEXTUREWAD + 10:
+	case CMD_TEXTUREWAD + 11:
+	case CMD_TEXTUREWAD + 12:
+	case CMD_TEXTUREWAD + 13:
+	case CMD_TEXTUREWAD + 14:
+	case CMD_TEXTUREWAD + 15:
+	case CMD_TEXTUREWAD + 16:
+	case CMD_TEXTUREWAD + 17:
+	case CMD_TEXTUREWAD + 18:
+	case CMD_TEXTUREWAD + 19:
+	case CMD_TEXTUREWAD + 20:
+	case CMD_TEXTUREWAD + 21:
+	case CMD_TEXTUREWAD + 22:
+	case CMD_TEXTUREWAD + 23:
+	case CMD_TEXTUREWAD + 24:
+	case CMD_TEXTUREWAD + 25:
+	case CMD_TEXTUREWAD + 26:
+	case CMD_TEXTUREWAD + 27:
+	case CMD_TEXTUREWAD + 28:
+	case CMD_TEXTUREWAD + 29:
+	case CMD_TEXTUREWAD + 30:
+	case CMD_TEXTUREWAD + 31:
+		Sys_BeginWait();
+		Texture_ShowDirectory( LOWORD( wParam ) );
+		SetInspectorMode( W_TEXTURE );
+		break;
+
+		//
+		// bsp menu
+		//
+	case CMD_BSPCOMMAND:
+	case CMD_BSPCOMMAND + 1:
+	case CMD_BSPCOMMAND + 2:
+	case CMD_BSPCOMMAND + 3:
+	case CMD_BSPCOMMAND + 4:
+	case CMD_BSPCOMMAND + 5:
+	case CMD_BSPCOMMAND + 6:
+	case CMD_BSPCOMMAND + 7:
+	case CMD_BSPCOMMAND + 8:
+	case CMD_BSPCOMMAND + 9:
+	case CMD_BSPCOMMAND + 10:
+	case CMD_BSPCOMMAND + 11:
+	case CMD_BSPCOMMAND + 12:
+	case CMD_BSPCOMMAND + 13:
+	case CMD_BSPCOMMAND + 14:
+	case CMD_BSPCOMMAND + 15:
+	case CMD_BSPCOMMAND + 16:
+	case CMD_BSPCOMMAND + 17:
+	case CMD_BSPCOMMAND + 18:
+	case CMD_BSPCOMMAND + 19:
+	case CMD_BSPCOMMAND + 20:
+	case CMD_BSPCOMMAND + 21:
+	case CMD_BSPCOMMAND + 22:
+	case CMD_BSPCOMMAND + 23:
+	case CMD_BSPCOMMAND + 24:
+	case CMD_BSPCOMMAND + 25:
+	case CMD_BSPCOMMAND + 26:
+	case CMD_BSPCOMMAND + 27:
+	case CMD_BSPCOMMAND + 28:
+	case CMD_BSPCOMMAND + 29:
+	case CMD_BSPCOMMAND + 30:
+	case CMD_BSPCOMMAND + 31:
+	{
+		extern	char *bsp_commands[ 256 ];
+
+		RunBsp( bsp_commands[ LOWORD( wParam - CMD_BSPCOMMAND ) ] );
+	}
+	break;
+
+	//
+	// misc menu
+	//
+	case ID_MISC_BENCHMARK:
+		SendMessage( g_qeglobals.d_hwndCamera,
+			WM_USER + 267, 0, 0 );
+		break;
+
+	case ID_TEXTUREBK:
+		DoColor( COLOR_TEXTUREBACK );
+		Sys_UpdateWindows( W_ALL );
+		break;
+
+	case ID_MISC_SELECTENTITYCOLOR:
+	{
+		extern int inspector_mode;
+
+		if( ( inspector_mode == W_ENTITY ) && DoColor( COLOR_ENTITY ) == true ) {
+			extern void AddProp( void );
+
+			char buffer[ 100 ];
+
+			sprintf( buffer, "%f %f %f", g_qeglobals.d_savedinfo.colors[ COLOR_ENTITY ][ 0 ],
+				g_qeglobals.d_savedinfo.colors[ COLOR_ENTITY ][ 1 ],
+				g_qeglobals.d_savedinfo.colors[ COLOR_ENTITY ][ 2 ] );
+
+			SetWindowText( hwndEnt[ EntValueField ], buffer );
+			SetWindowText( hwndEnt[ EntKeyField ], "_color" );
+			AddProp();
+		}
+		Sys_UpdateWindows( W_ALL );
+	}
+	break;
+
+	case ID_MISC_PRINTXY:
+		WXY_Print();
+		break;
+
+	case ID_COLORS_XYBK:
+		DoColor( COLOR_GRIDBACK );
+		Sys_UpdateWindows( W_ALL );
+		break;
+
+	case ID_COLORS_MAJOR:
+		DoColor( COLOR_GRIDMAJOR );
+		Sys_UpdateWindows( W_ALL );
+		break;
+
+	case ID_COLORS_MINOR:
+		DoColor( COLOR_GRIDMINOR );
+		Sys_UpdateWindows( W_ALL );
+		break;
+
+	case ID_MISC_GAMMA:
+		DoGamma();
+		break;
+
+	case ID_MISC_FINDBRUSH:
+		DoFind();
+		break;
+
+	case ID_MISC_NEXTLEAKSPOT:
+		Pointfile_Next();
+		break;
+	case ID_MISC_PREVIOUSLEAKSPOT:
+		Pointfile_Prev();
+		break;
+
+		//
+		// brush menu
+		//
+	case ID_BRUSH_3SIDED:
+		Brush_MakeSided( 3 );
+		break;
+	case ID_BRUSH_4SIDED:
+		Brush_MakeSided( 4 );
+		break;
+	case ID_BRUSH_5SIDED:
+		Brush_MakeSided( 5 );
+		break;
+	case ID_BRUSH_6SIDED:
+		Brush_MakeSided( 6 );
+		break;
+	case ID_BRUSH_7SIDED:
+		Brush_MakeSided( 7 );
+		break;
+	case ID_BRUSH_8SIDED:
+		Brush_MakeSided( 8 );
+		break;
+	case ID_BRUSH_9SIDED:
+		Brush_MakeSided( 9 );
+		break;
+	case ID_BRUSH_ARBITRARYSIDED:
+		DoSides();
+		break;
+
+		//
+		// select menu
+		//
+	case ID_BRUSH_FLIPX:
+		Select_FlipAxis( 0 );
+		break;
+	case ID_BRUSH_FLIPY:
+		Select_FlipAxis( 1 );
+		break;
+	case ID_BRUSH_FLIPZ:
+		Select_FlipAxis( 2 );
+		break;
+	case ID_BRUSH_ROTATEX:
+		Select_RotateAxis( 0, 90 );
+		break;
+	case ID_BRUSH_ROTATEY:
+		Select_RotateAxis( 1, 90 );
+		break;
+	case ID_BRUSH_ROTATEZ:
+		Select_RotateAxis( 2, 90 );
+		break;
+
+	case ID_SELECTION_ARBITRARYROTATION:
+		DoRotate();
+		break;
+
+	case ID_SELECTION_UNGROUPENTITY:
+		Select_Ungroup();
+		break;
+
+	case ID_SELECTION_CONNECT:
+		ConnectEntities();
+		break;
+
+	case ID_SELECTION_DRAGVERTECIES:
+		if( g_qeglobals.d_select_mode == sel_vertex ) {
+			g_qeglobals.d_select_mode = sel_brush;
+			Sys_UpdateWindows( W_ALL );
+		} else {
+			SetupVertexSelection();
+			if( g_qeglobals.d_numpoints )
+				g_qeglobals.d_select_mode = sel_vertex;
+		}
+		break;
+	case ID_SELECTION_DRAGEDGES:
+		if( g_qeglobals.d_select_mode == sel_edge ) {
+			g_qeglobals.d_select_mode = sel_brush;
+			Sys_UpdateWindows( W_ALL );
+		} else {
+			SetupVertexSelection();
+			if( g_qeglobals.d_numpoints )
+				g_qeglobals.d_select_mode = sel_edge;
+		}
+		break;
+
+	case ID_SELECTION_SELECTPARTIALTALL:
+		Select_PartialTall();
+		break;
+	case ID_SELECTION_SELECTCOMPLETETALL:
+		Select_CompleteTall();
+		break;
+	case ID_SELECTION_SELECTTOUCHING:
+		Select_Touching();
+		break;
+	case ID_SELECTION_SELECTINSIDE:
+		Select_Inside();
+		break;
+	case ID_SELECTION_CSGSUBTRACT:
+		CSG_Subtract();
+		break;
+	case ID_SELECTION_MAKEHOLLOW:
+		CSG_MakeHollow();
+		break;
+
+	case ID_SELECTION_CLONE:
+		Select_Clone();
+		break;
+	case ID_SELECTION_DELETE:
+		Select_Delete();
+		break;
+	case ID_SELECTION_DESELECT:
+		Select_Deselect();
+		break;
+
+	case ID_SELECTION_MAKE_DETAIL:
+		Select_MakeDetail();
+		break;
+	case ID_SELECTION_MAKE_STRUCTURAL:
+		Select_MakeStructural();
+		break;
+
+
+		//
+		// region menu
+		//
+	case ID_REGION_OFF:
+		Map_RegionOff();
+		break;
+	case ID_REGION_SETXY:
+		Map_RegionXY();
+		break;
+	case ID_REGION_SETTALLBRUSH:
+		Map_RegionTallBrush();
+		break;
+	case ID_REGION_SETBRUSH:
+		Map_RegionBrush();
+		break;
+	case ID_REGION_SETSELECTION:
+		Map_RegionSelectedBrushes();
+		break;
+
+	case IDMRU + 1:
+	case IDMRU + 2:
+	case IDMRU + 3:
+	case IDMRU + 4:
+	case IDMRU + 5:
+	case IDMRU + 6:
+	case IDMRU + 7:
+	case IDMRU + 8:
+	case IDMRU + 9:
+		DoMru( hWnd, LOWORD( wParam ) );
+		break;
+
+		//
+		// help menu
+		//
+
+	case ID_HELP_ABOUT:
+		DoAbout();
+		break;
+
+	default:
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/*
+============
+WMAIN_WndProc
+============
+*/
+LONG WINAPI WMAIN_WndProc(
+	HWND    hWnd,
+	UINT    uMsg,
+	WPARAM  wParam,
+	LPARAM  lParam ) {
+	LONG    lRet = 1;
+	RECT	rect;
+	HDC		maindc;
+
+	GetClientRect( hWnd, &rect );
+
+	switch( uMsg ) {
+	case WM_TIMER:
+		QE_CountBrushesAndUpdateStatusBar();
+		QE_CheckAutoSave();
+		return 0;
+
+	case WM_DESTROY:
+		SaveMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
+		DeleteMruMenu( g_qeglobals.d_lpMruMenu );
+		PostQuitMessage( 0 );
+		KillTimer( hWnd, QE_TIMER0 );
+		return 0;
+
+	case WM_CREATE:
+		maindc = GetDC( hWnd );
+		//	    QEW_SetupPixelFormat(maindc, false);
+		g_qeglobals.d_lpMruMenu = CreateMruMenuDefault();
+		LoadMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
+
+		// Refresh the File menu.
+		PlaceMenuMRUItem( g_qeglobals.d_lpMruMenu, GetSubMenu( GetMenu( hWnd ), 0 ),
+			ID_FILE_EXIT );
+
+		return 0;
+
+	case WM_SIZE:
+		// resize the status window
+		//MoveWindow( g_qeglobals.d_hwndStatus, -100, 100, 10, 10, true);
+		return 0;
+
+	case WM_KEYDOWN:
+		return QE_KeyDown( wParam );
+
+	case WM_CLOSE:
+		/* call destroy window to cleanup and go away */
+		//SaveWindowState(g_qeglobals.d_hwndXY, "xywindow");
+		SaveWindowState( g_qeglobals.d_hwndCamera, "camerawindow" );
+		//SaveWindowState(g_qeglobals.d_hwndZ, "zwindow");
+		//SaveWindowState(g_qeglobals.d_hwndEntity, "EntityWindow");
+		SaveWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
+
+		// FIXME: is this right?
+		SaveRegistryInfo( "SavedInfo", &g_qeglobals.d_savedinfo, sizeof( g_qeglobals.d_savedinfo ) );
+		DestroyWindow( hWnd );
+		return 0;
+
+	case WM_COMMAND:
+		return CommandHandler( hWnd, wParam, lParam );
+		return 0;
+	}
+
+	return DefWindowProc( hWnd, uMsg, wParam, lParam );
+}
+
+
+
+
+/*
+==============
+Main_Create
+==============
+*/
+void Main_Create( HINSTANCE hInstance ) {
+	WNDCLASS   wc;
+	long	i;
+	HMENU      hMenu;
+
+	/* Register the camera class */
+	memset( &wc, 0, sizeof( wc ) );
+
+	wc.style = 0;
+	wc.lpfnWndProc = (WNDPROC)WMAIN_WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = 0;
+	wc.hCursor = LoadCursor( NULL, IDC_ARROW );
+	wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
+	wc.lpszMenuName = MAKEINTRESOURCE( IDR_MENU1 );
+	wc.lpszClassName = "QUAKE_MAIN";
+
+	if( !RegisterClass( &wc ) )
+		Error( "WCam_Register: failed" );
+
+	g_qeglobals.d_hwndMain = CreateWindow( "QUAKE_MAIN",
+		EDITOR_TITLE,
+		WS_OVERLAPPEDWINDOW |
+		WS_CLIPSIBLINGS |
+		WS_CLIPCHILDREN,
+		0, 0, screen_width, screen_height + GetSystemMetrics( SM_CYSIZE ),	// size
+		0,
+		0,		// no menu
+		hInstance,
+		NULL );
+	if( !g_qeglobals.d_hwndMain )
+		Error( "Couldn't create main window" );
+
+	/* create a timer so that we can count brushes */
+	SetTimer( g_qeglobals.d_hwndMain,
+		QE_TIMER0,
+		1000,
+		NULL );
+
+	LoadWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
+
+	//g_qeglobals.d_hwndStatus = CreateMyStatusWindow(hInstance);
+
+	//
+	// load misc info from registry
+	//
+	i = sizeof( g_qeglobals.d_savedinfo );
+	LoadRegistryInfo( "SavedInfo", &g_qeglobals.d_savedinfo, &i );
+
+	if( g_qeglobals.d_savedinfo.iSize != sizeof( g_qeglobals.d_savedinfo ) ) {
+		// fill in new defaults
+
+		g_qeglobals.d_savedinfo.iSize = sizeof( g_qeglobals.d_savedinfo );
+		g_qeglobals.d_savedinfo.fGamma = 1.0;
+		g_qeglobals.d_savedinfo.iTexMenu = ID_VIEW_NEAREST;
+
+		g_qeglobals.d_savedinfo.exclude = 0;
+		g_qeglobals.d_savedinfo.show_coordinates = true;
+		g_qeglobals.d_savedinfo.show_names = true;
+
+		for( i = 0; i < 3; i++ ) {
+			g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ][ i ] = 0.25;
+			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ i ] = 0.25f;
+			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ][ i ] = 0.75;
+			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ][ i ] = 0.5;
+			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ][ i ] = 0.25f;
+			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ][ i ] = 1.0f;
+		}
+	}
+
+	if( ( hMenu = GetMenu( g_qeglobals.d_hwndMain ) ) != 0 ) {
+		/*
+		** by default all of these are checked because that's how they're defined in the menu editor
+		*/
+		if( !g_qeglobals.d_savedinfo.show_names )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWNAMES, MF_BYCOMMAND | MF_UNCHECKED );
+		if( !g_qeglobals.d_savedinfo.show_coordinates )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWCOORDINATES, MF_BYCOMMAND | MF_UNCHECKED );
+
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_LIGHTS )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWLIGHTS, MF_BYCOMMAND | MF_UNCHECKED );
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_ENT )
+			CheckMenuItem( hMenu, ID_VIEW_ENTITY, MF_BYCOMMAND | MF_UNCHECKED );
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWPATH, MF_BYCOMMAND | MF_UNCHECKED );
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WATER )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWWATER, MF_BYCOMMAND | MF_UNCHECKED );
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WORLD )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWWORLD, MF_BYCOMMAND | MF_UNCHECKED );
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CLIP )
+			CheckMenuItem( hMenu, ID_VIEW_SHOWCLIP, MF_BYCOMMAND | MF_UNCHECKED );
+	}
+
+	ShowWindow( g_qeglobals.d_hwndMain, SW_SHOWDEFAULT );
+}
+
+
+/*
+=============================================================
+
+REGISTRY INFO
+
+=============================================================
+*/
+
+BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize ) {
+	LONG lres;
+	DWORD dwDisp;
+	HKEY  hKeyId;
+
+	lres = RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\id\\QuakeEd4", 0, NULL,
+		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKeyId, &dwDisp );
+
+	if( lres != ERROR_SUCCESS )
+		return FALSE;
+
+	lres = RegSetValueEx( hKeyId, pszName, 0, REG_BINARY, (BYTE *)pvBuf, lSize );
+
+	RegCloseKey( hKeyId );
+
+	if( lres != ERROR_SUCCESS )
+		return FALSE;
+
+	return TRUE;
+}
+
+BOOL LoadRegistryInfo( const char *pszName, void *pvBuf, long *plSize ) {
+	HKEY  hKey;
+	long lres, lType, lSize;
+
+	if( plSize == NULL )
+		plSize = &lSize;
+
+	lres = RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\id\\QuakeEd4", 0, KEY_READ, &hKey );
+
+	if( lres != ERROR_SUCCESS )
+		return FALSE;
+
+	lres = RegQueryValueEx( hKey, pszName, NULL, (LPDWORD)&lType, (LPBYTE)pvBuf, (LPDWORD)plSize );
+
+	RegCloseKey( hKey );
+
+	if( lres != ERROR_SUCCESS )
+		return FALSE;
+
+	return TRUE;
+}
+
+BOOL SaveWindowState( HWND hWnd, const char *pszName ) {
+	RECT rc;
+
+	GetWindowRect( hWnd, &rc );
+	if( hWnd != g_qeglobals.d_hwndMain )
+		MapWindowPoints( NULL, g_qeglobals.d_hwndMain, (POINT *)&rc, 2 );
+	return SaveRegistryInfo( pszName, &rc, sizeof( rc ) );
+}
+
+
+BOOL LoadWindowState( HWND hWnd, const char *pszName ) {
+	RECT rc;
+	LONG lSize = sizeof( rc );
+
+	if( LoadRegistryInfo( pszName, &rc, &lSize ) ) {
+		if( rc.left < 0 )
+			rc.left = 0;
+		if( rc.top < 0 )
+			rc.top = 0;
+		if( rc.right < rc.left + 16 )
+			rc.right = rc.left + 16;
+		if( rc.bottom < rc.top + 16 )
+			rc.bottom = rc.top + 16;
+
+		MoveWindow( hWnd, rc.left, rc.top, rc.right - rc.left,
+			rc.bottom - rc.top, FALSE );
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/*
+===============================================================
+
+  STATUS WINDOW
+
+===============================================================
+*/
+
+void Sys_UpdateStatusBar( void ) {
+	extern int   g_numbrushes, g_numentities;
+
+	char numbrushbuffer[ 100 ] = "";
+
+	sprintf( numbrushbuffer, "Brushes: %d Entities: %d", g_numbrushes, g_numentities );
+
+	Sys_Status( numbrushbuffer, 2 );
+}
+
+void Sys_Status( const char *psz, int part ) {
+	//SendMessage(g_qeglobals.d_hwndStatus, SB_SETTEXT, part, (LPARAM)psz);
+}
+
+static HWND CreateMyStatusWindow( HINSTANCE hInst ) {
+	HWND hWnd;
+	int partsize[ 3 ] = { 300, 1100, -1 };
+
+	hWnd = CreateWindowEx( WS_EX_TOPMOST, // no extended styles
+		STATUSCLASSNAME,                 // status bar
+		"",                              // no text
+		WS_CHILD | WS_BORDER | WS_VISIBLE,  // styles
+		-100, -100, 10, 10,              // x, y, cx, cy
+		g_qeglobals.d_hwndMain,          // parent window
+		(HMENU)100,                      // window ID
+		hInst,                           // instance
+		NULL );							 // window data
+
+	SendMessage( hWnd, SB_SETPARTS, 3, (long)partsize );
+
+	return hWnd;
+}
+
+//==============================================================
+
+const FXuint TIMER_INTERVAL = 1;
+
+FXDEFMAP( huang::MainWindow ) MainWindowMap[] = {
+	FXMAPFUNC( SEL_CONFIGURE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnConfigure ),
+	FXMAPFUNC( SEL_PAINT, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnExpose ),
+	FXMAPFUNC( SEL_CHORE, huang::MainWindow::ID_TIMEOUT,  huang::MainWindow::OnTimeout ),
+
+	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_ABOUT, huang::MainWindow::OnCmdAbout ),
+
+	FXMAPFUNC( SEL_KEYRELEASE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnInput ),
+
+	FXMAPFUNC( SEL_CHANGED, huang::MainWindow::ID_GRID_SIZE_FIELD, huang::MainWindow::OnGridSize ),
+	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_GRID_TOGGLE, huang::MainWindow::OnGridToggle ),
+};
+
+// Object implementation
+FXIMPLEMENT( huang::MainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
+
+// Make some windows
+huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, NULL, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ) {
+	// Menu bar
+	menubar = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
+
+	{
+		toolBar = new FXToolBar( this, FRAME_NORMAL | LAYOUT_FILL_X );
+
+		FXIcon *icon;
+		// File options
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/save.gif" ) );
+		new FXVerticalSeparator( toolBar );
+		// Edit options
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/cut.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/copy.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/paste.gif" ) );
+		new FXVerticalSeparator( toolBar );
+		// Edit modes
+		editModeButtons[ EDIT_MODE_BRUSH ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/brush_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+		editModeButtons[ EDIT_MODE_VERTEX ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/vertex_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+		editModeButtons[ EDIT_MODE_EDGE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/edge_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+		editModeButtons[ EDIT_MODE_FACE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/face_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+		new FXVerticalSeparator( toolBar );
+		// Grouping
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/group.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/ungroup.gif" ) );
+		// Grid controls
+		new FXVerticalSeparator( toolBar );
+		{
+			FXToggleButton *gridToggle = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/grid.gif" ), 0, this, MainWindow::ID_GRID_TOGGLE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			gridToggle->setState( g_qeglobals.d_showgrid );
+
+			FXTextField *gridSizeField = new FXTextField( toolBar, 4, this, MainWindow::ID_GRID_SIZE_FIELD, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
+			char buf[ 8 ];
+			snprintf( buf, sizeof( buf ), "%d", g_qeglobals.d_gridsize );
+			gridSizeField->setText( buf );
+		}
+		// Play
+		new FXVerticalSeparator( toolBar );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/play.gif" ) );
+	}
+
+	// Status bar
+	new FXStatusBar( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
+
+	// File menu
+	util::MenuItem fileMenuCmds[] = {
+		{ "&New\t\tCreate a new map.", util::MenuType::COMMAND, MainWindow::ID_NEW },
+		{ "&Open\t\tOpen an existing map.", util::MenuType::COMMAND, MainWindow::ID_OPEN },
+		{ "&Quit\tCtl-Q\tQuit the application.", util::MenuType::COMMAND, FXApp::ID_QUIT },
+		{ nullptr }
+	};
+	filemenu = util::CreateMenus( getApp(), menubar, "&File", fileMenuCmds );
+
+	util::MenuItem editMenuCmds[] = {
+		{ "&Copy\tCtl-C\tCopy the current brush.", util::MenuType::COMMAND, MainWindow::ID_COPY },
+		{ "&Paste\tCtl-V\tPaste the current item.", util::MenuType::COMMAND, MainWindow::ID_PASTE },
+		{ nullptr }
+	};
+	editMenu = util::CreateMenus( getApp(), menubar, "&Edit", editMenuCmds );
+
+	FX4Splitter *viewportSplitter = new FX4Splitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
+	util::MenuItem viewMenuCmds[] = {
+		{ "All four\t\tAbout the about dialog.", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_ALL, viewportSplitter },
+		{ "Top/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPLEFT, viewportSplitter },
+		{ "Top/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPRIGHT, viewportSplitter },
+		{ "Bottom/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMLEFT, viewportSplitter },
+		{ "Bottom/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMRIGHT, viewportSplitter },
+		{ nullptr }
+	};
+	util::CreateMenus( getApp(), menubar, "&View", viewMenuCmds );
+
+	util::MenuItem aboutMenuCmds[] = {
+		{ "&About\t\tAbout the about dialog.", util::MenuType::COMMAND, MainWindow::ID_ABOUT, this },
+		{ nullptr }
+	};
+	util::CreateMenus( getApp(), menubar, "&Help", aboutMenuCmds );
+
+	ViewMode modes[] = {
+		VIEW_MODE_PERSPECTIVE,
+		VIEW_MODE_TOP,
+		VIEW_MODE_LEFT,
+		VIEW_MODE_FRONT,
+	};
+
+	glVisual = new FXGLVisual( getApp(), VISUAL_DOUBLEBUFFER /*| VISUAL_STEREO */ );
+	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
+		viewports[ i ] = new Viewport( viewportSplitter, glVisual, modes[ i ] );
+	}
+
+	new FXToolTip( getApp() );
+}
+
+// Clean up
+huang::MainWindow::~MainWindow() {
+	delete filemenu;
+	delete editMenu;
+	delete viewMenu;
+}
+
+long huang::MainWindow::OnExpose( FXObject *, FXSelector, void * ) {
+	return 1;
+}
+
+long huang::MainWindow::OnTimeout( FXObject *, FXSelector, void * ) {
+	return 1;
+}
+
+long huang::MainWindow::OnConfigure( FXObject *, FXSelector, void * ) {
+	return 1;
+}
+
+long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
+	static FXIcon *icon = nullptr;
+	if( icon == nullptr ) {
+		icon = huang::util::LoadImageIcon( getApp(), "icons/icon64.gif" );
+	}
+	FXMessageBox aboutBox(
+		this,
+		"About " EDITOR_TITLE,
+		EDITOR_TITLE " is a level editor created for the Yin Game Engine.\n"
+		"This software uses the FOX C++ GUI Library (http://www.fox-toolkit.org)\n\n"
+		"Copyright (C) 1997-2001 Id Software, Inc.\n"
+		"Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n",
+		icon,
+		MBOX_OK | DECOR_TITLE | DECOR_BORDER
+	);
+
+	aboutBox.execute();
+
+	return 1;
+}
+
+long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
+	if( !isEnabled() ) {
+		return 0;
+	}
+
+	FXEvent *ev = (FXEvent *)ptr;
+	switch( ev->type ) {
+	default: break;
+	case SEL_KEYPRESS:
+	{
+		switch( ev->code ) {
+		default: break;
+		case '0':
+			g_qeglobals.d_gridsize = 0;
+			break;
+		case KEY_2:
+			g_qeglobals.d_gridsize = 1;
+			break;
+		case KEY_3:
+			g_qeglobals.d_gridsize = 2;
+			break;
+		case KEY_4:
+			g_qeglobals.d_gridsize = 3;
+			break;
+		case KEY_5:
+			g_qeglobals.d_gridsize = 4;
+			break;
+		case KEY_6:
+			g_qeglobals.d_gridsize = 5;
+			break;
+		case KEY_7:
+			g_qeglobals.d_gridsize = 6;
+			break;
+		case KEY_8:
+			g_qeglobals.d_gridsize = 7;
+			break;
+		case KEY_9:
+			g_qeglobals.d_gridsize = 8;
+			break;
+		}
+	}
+	}
+
+	return 0;
+}
+
+long huang::MainWindow::OnGridSize( FXObject *obj, FXSelector selector, void * ) {
+	FXTextField *field = dynamic_cast<FXTextField *>( obj );
+	if( field == nullptr ) {
+		return 0;
+	}
+
+	const char *text = field->getText().text();
+	if( text == nullptr ) {
+		return 0;
+	}
+
+	g_qeglobals.d_gridsize = strtol( text, nullptr, 10 );
+
+	return 0;
+}
+
+long huang::MainWindow::OnGridToggle( FXObject *obj, FXSelector, void * ) {
+	FXToggleButton *button = dynamic_cast<FXToggleButton *>( obj );
+	if( button == nullptr ) {
+		return 0;
+	}
+
+	g_qeglobals.d_showgrid = button->getState();
+
+	return 0;
+}
+
+void huang::MainWindow::ResetViews() {
+	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
+		if( viewports[ i ] == nullptr ) {
+			continue;
+		}
+
+		viewports[ i ]->ResetViews();
+	}
+}
+
+// Start
+void huang::MainWindow::create() {
+	FXMainWindow::create();
+	show( PLACEMENT_SCREEN );
+}
+
+huang::MainWindow *g_mainWindow = nullptr;
