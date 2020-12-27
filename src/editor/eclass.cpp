@@ -247,7 +247,7 @@ void Eclass_InitForSourceDirectory (char *path)
 		_findclose (handle);
 	}
 
-	eclass_bad = Eclass_InitFromText ("/*QUAKED UNKNOWN_CLASS (0 0.5 0) ?");
+	eclass_bad = Eclass_InitFromText ("/*QUAKED UNKNOWN_CLASS (0.75 0.75 0.75) ?");
 }
 
 eclass_t *Eclass_ForName (char *name, qboolean has_brushes)
@@ -265,12 +265,12 @@ eclass_t *Eclass_ForName (char *name, qboolean has_brushes)
 	// create a new class for it
 	if (has_brushes)
 	{
-		sprintf (init, "/*QUAKED %s (0 0.5 0) ?\nNot found in source.\n", name);
+		sprintf (init, "/*QUAKED %s (0.75 0.75 0) ?\nNot found in source.\n", name);
 		e = Eclass_InitFromText (init);
 	}
 	else
 	{
-		sprintf (init, "/*QUAKED %s (0 0.5 0) (-8 -8 -8) (8 8 8)\nNot found in source.\n", name);
+		sprintf (init, "/*QUAKED %s (0 0.75 0.75) (-8 -8 -8) (8 8 8)\nNot found in source.\n", name);
 		e = Eclass_InitFromText (init);
 	}
 

@@ -64,6 +64,9 @@ namespace huang {
 
 		vec3_t	forward, right, up;	// move matrix
 
+		float forwardSpeed{ 32.0f };
+		float turnSpeed{ 22.5f };
+
 	private:
 		vec3_t	vup, vpn, vright;	// view matrix
 

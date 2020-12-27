@@ -1,29 +1,21 @@
-/**
-This is free and unencumbered software released into the public domain.
+/**********************************************************
+	Huang, level editor for the Yin Game Engine.
+	Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>
 
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
 
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <https://unlicense.org>
-**/
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+**********************************************************/
 
 #include "qe3.h"
 #include "Viewport.h"
@@ -53,7 +45,10 @@ FXDEFMAP( huang::Viewport ) ViewportMap[] = {
 FXIMPLEMENT( huang::Viewport, FXVerticalFrame, ViewportMap, ARRAYNUMBER( ViewportMap ) )
 
 huang::Viewport::Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode )
-	: FXVerticalFrame( p, FRAME_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ) {
+	: FXVerticalFrame( p, FRAME_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ),
+
+	myForwardSpeedTarget( camera.forwardSpeed ),
+	myTurnSpeedTarget( camera.turnSpeed ) {
 	currentViewMode = mode;
 
 	memset( mouseButtonStates, 0, sizeof( bool ) * input::MAX_MOUSE_BUTTONS );
@@ -69,8 +64,12 @@ huang::Viewport::Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode )
 	viewModeButtons[ VIEW_MODE_LEFT ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	icon = huang::util::LoadImageIcon( getApp(), "icons/front.gif" );
 	viewModeButtons[ VIEW_MODE_FRONT ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	new FXVerticalSeparator( toolBar );
 	viewModeButtons[ mode ]->setState( true );
+	new FXVerticalSeparator( toolBar );
+	//new FXButton( toolBar, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/cam_forward.gif" ), NULL, 0U, FRAME_NONE );
+	new FXTextField( toolBar, 4, &myForwardSpeedTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
+	//new FXButton( toolBar, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/cam_forward.gif" ), NULL, 0U, FRAME_NONE );
+	new FXTextField( toolBar, 4, &myTurnSpeedTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	glVisual = visual;
 	if( sharedDisplayList == nullptr ) {
@@ -146,15 +145,24 @@ long huang::Viewport::OnConfigure( FXObject *, FXSelector, void * ) {
 long huang::Viewport::OnMotion( FXObject *, FXSelector, void *ptr ) {
 	FXEvent *ev = (FXEvent *)ptr;
 
+	int x = ev->win_x;
+	int y = -ev->win_y + glCanvas->getHeight();
+
+#if 0
+	char b[ 32 ];
+	snprintf( b, sizeof( b ), "%dx%d - %dx%d\n", x, y, glCanvas->getWidth(), glCanvas->getHeight() );
+	OutputDebugString( b );
+#endif
+
 	switch( currentViewMode ) {
 	case VIEW_MODE_FRONT:
-		XY_MouseMoved( ev->root_x, ev->root_y, mouseButtonStates );
+		XY_MouseMoved( x, y, mouseButtonStates );
 		return 1;
 	case VIEW_MODE_LEFT:
 		//Z_MouseMoved( ev->win_x, -ev->win_y, ev->click_button );
 		return 1;
 	case VIEW_MODE_PERSPECTIVE:
-		camera.MouseMoved( ev->win_x, ev->win_y, mouseButtonStates );
+		camera.MouseMoved( x, y, mouseButtonStates );
 		return 1;
 	}
 
@@ -248,6 +256,7 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 		case VIEW_MODE_PERSPECTIVE:
 			camera.MouseDown( ev->win_x, ev->win_y, mouseButtonStates );
 			break;
+		case VIEW_MODE_FRONT:
 		case VIEW_MODE_TOP:
 			XY_MouseDown( ev->win_x, ev->win_y, mouseButtonStates );
 			break;
@@ -286,18 +295,18 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 
 long huang::Viewport::OnToggleView( FXObject *object, FXSelector, void *ptr ) {
 	if( !isEnabled() ) {
-		return 0;
+		return FALSE;
 	}
 
 	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
 	if( button == nullptr ) {
-		return 0;
+		return FALSE;
 	}
 
 	// Don't allow us to uncheck the same button without selecting a different one
 	if( viewModeButtons[ currentViewMode ] == button ) {
 		button->setState( true );
-		return 0;
+		return TRUE;
 	}
 
 	// Now figure out what mode we selected
@@ -310,7 +319,7 @@ long huang::Viewport::OnToggleView( FXObject *object, FXSelector, void *ptr ) {
 		viewModeButtons[ i ]->setState( false );
 	}
 
-	return 0;
+	return TRUE;
 }
 
 void huang::Viewport::ResetViews() {
@@ -329,13 +338,13 @@ void huang::Viewport::DrawScene() {
 
 	switch( currentViewMode ) {
 	case VIEW_MODE_FRONT:
-		XY_Draw();
+		XY_Draw( this );
 		break;
 	case VIEW_MODE_LEFT:
 		//Z_Draw();
 		break;
 	case VIEW_MODE_TOP:
-		XY_Draw();
+		XY_Draw( this );
 		break;
 	case VIEW_MODE_PERSPECTIVE:
 		camera.draw_mode = currentDrawMode;

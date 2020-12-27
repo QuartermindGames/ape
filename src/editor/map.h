@@ -40,7 +40,7 @@ extern	qboolean	modified;		// for quit confirmations
 extern	vec3_t	region_mins, region_maxs;
 extern	qboolean	region_active;
 
-void 	Map_LoadFile (char *filename);
+void 	Map_LoadFile (const char *filename);
 void 	Map_SaveFile (const char *filename, qboolean use_region);
 void	Map_New (void);
 void	Map_BuildBrushData(void);

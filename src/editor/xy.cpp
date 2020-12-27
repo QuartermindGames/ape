@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "qe3.h"
+#include "Viewport.h"
 
 #define	PAGEFLIPS	2
 
@@ -90,7 +91,8 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 
 	press_selection = ( selected_brushes.next != &selected_brushes );
 
-	Sys_GetCursorPos( &cursorx, &cursory );
+	FXuint temp;
+	g_mainWindow->getCursorPosition( cursorx, cursory, temp );
 
 	// lbutton = manipulate selection
 	// shift-LBUTTON = select
@@ -102,7 +104,7 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 		return;
 	}
 
-#if 0 // TODO
+#if 0 // TODO ???
 	// control mbutton = move camera
 	if( buttonstate == ( MK_CONTROL | MK_MBUTTON ) ) {
 		camera.origin[ 0 ] = point[ 0 ];
@@ -116,7 +118,6 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 			camera.angles[ YAW ] = 180 / Q_PI * atan2( point[ 1 ], point[ 0 ] );
 		}
 	}
-#endif
 
 	// shift mbutton = move z checker
 	if( buttons[ huang::input::BUTTON_MOD_SHIFT ] && buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] ) {
@@ -126,7 +127,7 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 		Sys_UpdateWindows( W_XY_OVERLAY | W_Z );
 		return;
 	}
-
+#endif
 }
 
 /*
@@ -204,9 +205,6 @@ void NewBrushDrag( int x, int y ) {
 	Entity_LinkBrush( world_entity, n );
 
 	Brush_Build( n );
-
-	//	Sys_UpdateWindows (W_ALL);
-	Sys_UpdateWindows( W_XY | W_CAMERA );
 }
 
 /*
@@ -263,12 +261,12 @@ void XY_MouseMoved( int x, int y, const bool buttons[] ) {
 
 	// rbutton = drag xy origin
 	if( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] ) {
-		Sys_GetCursorPos( &x, &y );
+		FXuint buttons;
+		g_mainWindow->getCursorPosition( x, y, buttons );
 		if( x != cursorx || y != cursory ) {
 			g_qeglobals.d_xy.origin[ 0 ] -= ( x - cursorx ) / g_qeglobals.d_xy.scale;
 			g_qeglobals.d_xy.origin[ 1 ] += ( y - cursory ) / g_qeglobals.d_xy.scale;
-			Sys_SetCursorPos( cursorx, cursory );
-			Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
+			g_mainWindow->setCursorPosition( cursorx, cursory );
 		}
 		return;
 	}
@@ -450,14 +448,10 @@ void XY_DrawBlockGrid( void ) {
 	glColor4f( 0, 0, 0, 0 );
 }
 
-
-void DrawCameraIcon( void ) {
-#if 0 // TODO
-	float	x, y, a;
-
-	x = camera.origin[ 0 ];
-	y = camera.origin[ 1 ];
-	a = camera.angles[ YAW ] / 180 * Q_PI;
+void DrawCameraIcon( const huang::Camera *camera ) {
+	float x = camera->origin[ 0 ];
+	float y = camera->origin[ 1 ];
+	float a = camera->angles[ YAW ] / 180 * Q_PI;
 
 	glColor3f( 0.0, 0.0, 1.0 );
 	glBegin( GL_LINE_STRIP );
@@ -474,10 +468,10 @@ void DrawCameraIcon( void ) {
 	glVertex3f( x, y, 0 );
 	glVertex3f( x + 48 * cos( a - Q_PI / 4 ), y + 48 * sin( a - Q_PI / 4 ), 0 );
 	glEnd();
-#endif
 }
 
 void DrawZIcon( void ) {
+#if 0
 	float	x, y;
 
 	x = z.origin[ 0 ];
@@ -512,6 +506,7 @@ void DrawZIcon( void ) {
 	glVertex3f( x - 4, y - 4, 0 );
 	glVertex3f( x + 4, y - 4, 0 );
 	glEnd();
+#endif
 }
 
 
@@ -666,7 +661,7 @@ void DrawPathLines( void ) {
 XY_Draw
 ==============
 */
-void XY_Draw( void ) {
+void XY_Draw( const huang::Viewport *viewport ) {
 	brush_t *brush;
 	float	w, h;
 	entity_t *e;
@@ -724,7 +719,6 @@ void XY_Draw( void ) {
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 	glColor3f( 0, 0, 0 );
-	//		glEnable (GL_LINE_SMOOTH);
 
 	drawn = culled = 0;
 
@@ -768,8 +762,8 @@ void XY_Draw( void ) {
 	glTranslatef( g_qeglobals.d_select_translate[ 0 ], g_qeglobals.d_select_translate[ 1 ], g_qeglobals.d_select_translate[ 2 ] );
 
 	glColor3f( 1.0, 0.0, 0.0 );
-	glEnable( GL_LINE_STIPPLE );
-	glLineStipple( 3, 0xaaaa );
+	//glEnable( GL_LINE_STIPPLE );
+	//glLineStipple( 3, 0xaaaa );
 	glLineWidth( 2 );
 
 	for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
@@ -777,7 +771,7 @@ void XY_Draw( void ) {
 		Brush_DrawXY( brush );
 	}
 
-	glDisable( GL_LINE_STIPPLE );
+	//glDisable( GL_LINE_STIPPLE );
 	glLineWidth( 1 );
 
 	// edge / vertex flags
@@ -809,8 +803,8 @@ void XY_Draw( void ) {
 	//
 	// now draw camera point
 	//
-	DrawCameraIcon();
-	DrawZIcon();
+	DrawCameraIcon( viewport->GetCamera() );
+	//DrawZIcon();
 
 	if( g_qeglobals.d_xy.timing ) {
 		end = Sys_DoubleTime();
@@ -893,8 +887,8 @@ void XY_Overlay( void ) {
 	glDisable( GL_BLEND );
 	glColor3f( 0, 0, 0 );
 
-	DrawCameraIcon();
-	DrawZIcon();
+	//DrawCameraIcon();
+	//DrawZIcon();
 
 	glDrawBuffer( GL_BACK );
 	glFinish();

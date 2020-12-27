@@ -90,7 +90,7 @@ typedef struct {
 	float	  fGamma;			// gamma for textures
 	char	  szProject[ 256 ];	// last project loaded
 	vec3_t	  colors[ COLOR_LAST ];
-	qboolean  show_names,
+	FXbool  show_names,
 		show_coordinates;
 	int       exclude;
 } SavedInfo_t;
@@ -115,8 +115,8 @@ void    Sys_Status( const char *psz, int part );
 ** most of the QE globals are stored in this structure
 */
 struct QEGlobals_t {
-	qboolean d_showgrid{ true };
-	int      d_gridsize{ 8 };
+	FXbool	d_showgrid{ true };
+	FXuint	d_gridsize{ 8 };
 
 	int      d_num_entities;
 

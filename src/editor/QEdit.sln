@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QEdit", "QEdit.vcxproj", "{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Huang", "QEdit.vcxproj", "{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fox", "..\3rdparty\fox-1.6.57\windows\vcpp\fox\fox.vcxproj", "{402E36E6-802D-44BD-8B34-52598C0BDB4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,6 +13,8 @@ Global
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Template|x64 = Template|x64
+		Template|x86 = Template|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Debug|x64.ActiveCfg = Debug|x64
@@ -21,6 +25,19 @@ Global
 		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Release|x64.Build.0 = Release|x64
 		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Release|x86.ActiveCfg = Release|Win32
 		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Release|x86.Build.0 = Release|Win32
+		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Template|x64.ActiveCfg = Release|x64
+		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Template|x64.Build.0 = Release|x64
+		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Template|x86.ActiveCfg = Release|Win32
+		{46515C38-4E2F-438D-A4B3-54FC8FF4EC70}.Template|x86.Build.0 = Release|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Debug|x64.ActiveCfg = Debug|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Debug|x86.ActiveCfg = Debug|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Debug|x86.Build.0 = Debug|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Release|x64.ActiveCfg = Release|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Release|x86.ActiveCfg = Release|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Release|x86.Build.0 = Release|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Template|x64.ActiveCfg = Template|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Template|x86.ActiveCfg = Template|Win32
+		{402E36E6-802D-44BD-8B34-52598C0BDB4E}.Template|x86.Build.0 = Template|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

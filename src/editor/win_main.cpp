@@ -82,8 +82,6 @@ void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
 	*out = 0;
 }
 
-
-
 void RunBsp( char *command ) {
 	char	sys[ 1024 ];
 	char	batpath[ 1024 ];
@@ -617,20 +615,18 @@ LONG WINAPI CommandHandler(
 	case ID_SELECTION_DRAGVERTECIES:
 		if( g_qeglobals.d_select_mode == sel_vertex ) {
 			g_qeglobals.d_select_mode = sel_brush;
-			Sys_UpdateWindows( W_ALL );
 		} else {
 			SetupVertexSelection();
-			if( g_qeglobals.d_numpoints )
+			//if( g_qeglobals.d_numpoints )
 				g_qeglobals.d_select_mode = sel_vertex;
 		}
 		break;
 	case ID_SELECTION_DRAGEDGES:
 		if( g_qeglobals.d_select_mode == sel_edge ) {
 			g_qeglobals.d_select_mode = sel_brush;
-			Sys_UpdateWindows( W_ALL );
 		} else {
 			SetupVertexSelection();
-			if( g_qeglobals.d_numpoints )
+			//if( g_qeglobals.d_numpoints )
 				g_qeglobals.d_select_mode = sel_edge;
 		}
 		break;
@@ -861,8 +857,8 @@ void Main_Create( HINSTANCE hInstance ) {
 		for( i = 0; i < 3; i++ ) {
 			g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ][ i ] = 0.25;
 			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ i ] = 0.25f;
-			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ][ i ] = 0.75;
-			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ][ i ] = 0.5;
+			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ][ i ] = 0.35f;
+			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ][ i ] = 0.45f;
 			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ][ i ] = 0.25f;
 			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ][ i ] = 1.0f;
 		}
@@ -1028,29 +1024,39 @@ FXDEFMAP( huang::MainWindow ) MainWindowMap[] = {
 	FXMAPFUNC( SEL_PAINT, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnExpose ),
 	FXMAPFUNC( SEL_CHORE, huang::MainWindow::ID_TIMEOUT,  huang::MainWindow::OnTimeout ),
 
+	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_NEW, huang::MainWindow::OnCmdNew ),
+	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_OPEN, huang::MainWindow::OnCmdOpen ),
 	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_ABOUT, huang::MainWindow::OnCmdAbout ),
 
-	FXMAPFUNC( SEL_KEYRELEASE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnInput ),
+	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_TOGGLE_EDIT, huang::MainWindow::OnToggleEdit ),
 
-	FXMAPFUNC( SEL_CHANGED, huang::MainWindow::ID_GRID_SIZE_FIELD, huang::MainWindow::OnGridSize ),
-	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_GRID_TOGGLE, huang::MainWindow::OnGridToggle ),
+	FXMAPFUNC( SEL_KEYRELEASE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnInput ),
 };
 
 // Object implementation
 FXIMPLEMENT( huang::MainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
 
 // Make some windows
-huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, NULL, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ) {
+huang::MainWindow::MainWindow( FXApp *a ) :
+	FXMainWindow( a, EDITOR_TITLE, NULL, NULL, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ),
+
+	myGridSizeTarget( g_qeglobals.d_gridsize ),
+	myGridStateTarget( g_qeglobals.d_showgrid ),
+
+	showNamesTarget( g_qeglobals.d_savedinfo.show_names ),
+	showCoordinatesTarget( g_qeglobals.d_savedinfo.show_coordinates )
+{
 	// Menu bar
 	menubar = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
 	{
-		toolBar = new FXToolBar( this, FRAME_NORMAL | LAYOUT_FILL_X );
+		toolBar = new FXToolBar( this, FRAME_RAISED | FRAME_THICK | LAYOUT_FILL_X );
+		new FXToolBarGrip( toolBar, toolBar, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE );
 
 		FXIcon *icon;
 		// File options
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ) );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ), this, MainWindow::ID_NEW );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ), this, MainWindow::ID_OPEN );
 		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/save.gif" ) );
 		new FXVerticalSeparator( toolBar );
 		// Edit options
@@ -1059,10 +1065,13 @@ huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, 
 		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/paste.gif" ) );
 		new FXVerticalSeparator( toolBar );
 		// Edit modes
-		editModeButtons[ EDIT_MODE_BRUSH ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/brush_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-		editModeButtons[ EDIT_MODE_VERTEX ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/vertex_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-		editModeButtons[ EDIT_MODE_EDGE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/edge_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-		editModeButtons[ EDIT_MODE_FACE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/face_mode.gif" ), 0, this, 0U, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+		{
+			editModeButtons[ EDIT_MODE_BRUSH ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/brush_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			editModeButtons[ EDIT_MODE_VERTEX ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/vertex_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			editModeButtons[ EDIT_MODE_EDGE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/edge_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			editModeButtons[ EDIT_MODE_FACE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/face_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			editModeButtons[ currentEditMode ]->setState( true );
+		}
 		new FXVerticalSeparator( toolBar );
 		// Grouping
 		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/group.gif" ) );
@@ -1070,17 +1079,12 @@ huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, 
 		// Grid controls
 		new FXVerticalSeparator( toolBar );
 		{
-			FXToggleButton *gridToggle = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/grid.gif" ), 0, this, MainWindow::ID_GRID_TOGGLE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-			gridToggle->setState( g_qeglobals.d_showgrid );
-
-			FXTextField *gridSizeField = new FXTextField( toolBar, 4, this, MainWindow::ID_GRID_SIZE_FIELD, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
-			char buf[ 8 ];
-			snprintf( buf, sizeof( buf ), "%d", g_qeglobals.d_gridsize );
-			gridSizeField->setText( buf );
+			new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/grid.gif" ), 0, &myGridStateTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+			new FXTextField( toolBar, 4, &myGridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 		}
 		// Play
 		new FXVerticalSeparator( toolBar );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/play.gif" ) );
+		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/play_controller.gif" ) );
 	}
 
 	// Status bar
@@ -1088,16 +1092,16 @@ huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, 
 
 	// File menu
 	util::MenuItem fileMenuCmds[] = {
-		{ "&New\t\tCreate a new map.", util::MenuType::COMMAND, MainWindow::ID_NEW },
-		{ "&Open\t\tOpen an existing map.", util::MenuType::COMMAND, MainWindow::ID_OPEN },
+		{ "&New\t\tCreate a new map.", util::MenuType::COMMAND, MainWindow::ID_NEW, this },
+		{ "&Open\t\tOpen an existing map.", util::MenuType::COMMAND, MainWindow::ID_OPEN, this },
 		{ "&Quit\tCtl-Q\tQuit the application.", util::MenuType::COMMAND, FXApp::ID_QUIT },
 		{ nullptr }
 	};
 	filemenu = util::CreateMenus( getApp(), menubar, "&File", fileMenuCmds );
 
 	util::MenuItem editMenuCmds[] = {
-		{ "&Copy\tCtl-C\tCopy the current brush.", util::MenuType::COMMAND, MainWindow::ID_COPY },
-		{ "&Paste\tCtl-V\tPaste the current item.", util::MenuType::COMMAND, MainWindow::ID_PASTE },
+		{ "&Copy\tCtl-C\tCopy the current brush.", util::MenuType::COMMAND, MainWindow::ID_COPY, this },
+		{ "&Paste\tCtl-V\tPaste the current item.", util::MenuType::COMMAND, MainWindow::ID_PASTE, this },
 		{ nullptr }
 	};
 	editMenu = util::CreateMenus( getApp(), menubar, "&Edit", editMenuCmds );
@@ -1109,6 +1113,9 @@ huang::MainWindow::MainWindow( FXApp *a ) :FXMainWindow( a, EDITOR_TITLE, NULL, 
 		{ "Top/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPRIGHT, viewportSplitter },
 		{ "Bottom/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMLEFT, viewportSplitter },
 		{ "Bottom/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMRIGHT, viewportSplitter },
+		{ "", util::MenuType::SEPERATOR },
+		{ "Show Names", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showNamesTarget },
+		{ "Show Coordinates", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showCoordinatesTarget },
 		{ nullptr }
 	};
 	util::CreateMenus( getApp(), menubar, "&View", viewMenuCmds );
@@ -1153,6 +1160,31 @@ long huang::MainWindow::OnConfigure( FXObject *, FXSelector, void * ) {
 	return 1;
 }
 
+long huang::MainWindow::OnCmdNew( FXObject *, FXSelector, void * ) {
+	// TODO: check if we need to save existing doc...
+	
+	CreateWorld();
+	
+	return TRUE;
+}
+
+long huang::MainWindow::OnCmdOpen( FXObject *, FXSelector, void * ) {
+	FXFileDialog openDialog( this, "Open File" );
+	openDialog.setSelectMode( SELECTFILE_EXISTING );
+	openDialog.setPatternList( 
+		"All Files (*)\n"
+		"Map Files (*.map)\n"
+		"World Files (*.wld)" );
+	openDialog.setCurrentPattern( 1 );
+	openDialog.setDirectory( "./worlds/" );
+	if( openDialog.execute() ) {
+		FXString filePath = openDialog.getFilename();
+		LoadWorld( filePath.text() );
+	}
+
+	return TRUE;
+}
+
 long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
 	static FXIcon *icon = nullptr;
 	if( icon == nullptr ) {
@@ -1174,11 +1206,45 @@ long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
 	return 1;
 }
 
-long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
-	if( !isEnabled() ) {
-		return 0;
+long huang::MainWindow::OnToggleEdit( FXObject *object, FXSelector, void * ) {
+	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
+	if( button == nullptr ) {
+		return FALSE;
 	}
 
+	// Don't allow us to uncheck the same button without selecting a different one
+	if( editModeButtons[ currentEditMode ] == button ) {
+		button->setState( true );
+		return TRUE;
+	}
+
+	// Now figure out what mode we selected
+	for( uint8_t i = 0; i < MAX_EDIT_MODES; ++i ) {
+		if( editModeButtons[ i ] == button ) {
+			currentEditMode = i;
+			continue;
+		}
+
+		editModeButtons[ i ]->setState( false );
+	}
+
+	switch( currentEditMode ) {
+	default:
+	case EDIT_MODE_BRUSH:
+		g_qeglobals.d_select_mode = sel_brush;
+		break;
+	case EDIT_MODE_EDGE:
+		g_qeglobals.d_select_mode = sel_edge;
+		break;
+	case EDIT_MODE_VERTEX:
+		g_qeglobals.d_select_mode = sel_vertex;
+		break;
+	}
+
+	return TRUE;
+}
+
+long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
 	FXEvent *ev = (FXEvent *)ptr;
 	switch( ev->type ) {
 	default: break;
@@ -1187,64 +1253,40 @@ long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
 		switch( ev->code ) {
 		default: break;
 		case '0':
-			g_qeglobals.d_gridsize = 0;
-			break;
-		case KEY_2:
+			g_qeglobals.d_showgrid = !g_qeglobals.d_showgrid;
+			return TRUE;
+		case KEY_1:
 			g_qeglobals.d_gridsize = 1;
-			break;
-		case KEY_3:
+			return TRUE;
+		case KEY_2:
 			g_qeglobals.d_gridsize = 2;
-			break;
-		case KEY_4:
-			g_qeglobals.d_gridsize = 3;
-			break;
-		case KEY_5:
+			return TRUE;
+		case KEY_3:
 			g_qeglobals.d_gridsize = 4;
-			break;
-		case KEY_6:
-			g_qeglobals.d_gridsize = 5;
-			break;
-		case KEY_7:
-			g_qeglobals.d_gridsize = 6;
-			break;
-		case KEY_8:
-			g_qeglobals.d_gridsize = 7;
-			break;
-		case KEY_9:
+			return TRUE;
+		case KEY_4:
 			g_qeglobals.d_gridsize = 8;
-			break;
+			return TRUE;
+		case KEY_5:
+			g_qeglobals.d_gridsize = 16;
+			return TRUE;
+		case KEY_6:
+			g_qeglobals.d_gridsize = 32;
+			return TRUE;
+		case KEY_7:
+			g_qeglobals.d_gridsize = 64;
+			return TRUE;
+		case KEY_8:
+			g_qeglobals.d_gridsize = 128;
+			return TRUE;
+		case KEY_9:
+			g_qeglobals.d_gridsize = 256;
+			return TRUE;
 		}
 	}
 	}
 
-	return 0;
-}
-
-long huang::MainWindow::OnGridSize( FXObject *obj, FXSelector selector, void * ) {
-	FXTextField *field = dynamic_cast<FXTextField *>( obj );
-	if( field == nullptr ) {
-		return 0;
-	}
-
-	const char *text = field->getText().text();
-	if( text == nullptr ) {
-		return 0;
-	}
-
-	g_qeglobals.d_gridsize = strtol( text, nullptr, 10 );
-
-	return 0;
-}
-
-long huang::MainWindow::OnGridToggle( FXObject *obj, FXSelector, void * ) {
-	FXToggleButton *button = dynamic_cast<FXToggleButton *>( obj );
-	if( button == nullptr ) {
-		return 0;
-	}
-
-	g_qeglobals.d_showgrid = button->getState();
-
-	return 0;
+	return FALSE;
 }
 
 void huang::MainWindow::ResetViews() {
@@ -1255,6 +1297,24 @@ void huang::MainWindow::ResetViews() {
 
 		viewports[ i ]->ResetViews();
 	}
+}
+
+void huang::MainWindow::CreateWorld() {
+	Map_New();
+
+	ResetViews();
+
+	setTitle( "Untitled - " EDITOR_TITLE );
+}
+
+void huang::MainWindow::LoadWorld( const char *path ) {
+	Map_LoadFile( path );
+
+	ResetViews();
+
+	char buf[ 512 ];
+	snprintf( buf, sizeof( buf ), "%s - " EDITOR_TITLE, path );
+	setTitle( buf );
 }
 
 // Start

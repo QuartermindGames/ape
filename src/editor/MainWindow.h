@@ -39,6 +39,17 @@ namespace huang {
 		FXToggleButton *editModeButtons[ MAX_EDIT_MODES ];
 		uint8_t currentEditMode{ EDIT_MODE_VERTEX };
 
+		FXDataTarget myGridSizeTarget;
+		FXDataTarget myGridStateTarget;
+
+		FXDataTarget showNamesTarget;
+		FXDataTarget showCoordinatesTarget;
+		FXDataTarget showLightsTarget;
+		FXDataTarget showPathsTarget;
+		FXDataTarget showWaterTarget;
+		FXDataTarget showWorldTarget;
+		FXDataTarget showActorsTarget;
+
 	protected:
 		FXToolBar *toolBar{ nullptr };
 		FXMenuBar *menubar{ nullptr };
@@ -62,7 +73,7 @@ namespace huang {
 		};
 
 		MainWindow() {}
-
+		
 	public:
 		MainWindow( FXApp *a );
 		virtual void create();
@@ -71,13 +82,19 @@ namespace huang {
 		long OnExpose( FXObject *, FXSelector, void * );
 		long OnTimeout( FXObject *, FXSelector, void * );
 		long OnConfigure( FXObject *, FXSelector, void * );
+
+		long OnCmdNew( FXObject *, FXSelector, void * );
+		long OnCmdOpen( FXObject *, FXSelector, void * );
 		long OnCmdAbout( FXObject *, FXSelector, void * );
+
+		long OnToggleEdit( FXObject *, FXSelector, void * );
+
 		long OnInput( FXObject *, FXSelector, void * );
 
-		long OnGridSize( FXObject *, FXSelector, void * );
-		long OnGridToggle( FXObject *, FXSelector, void * );
-
 		void ResetViews();
+
+		void CreateWorld();
+		void LoadWorld( const char *path );
 
 		uint8_t GetEditMode() const { return currentEditMode; }
 
@@ -90,8 +107,8 @@ namespace huang {
 			ID_COPY,
 			ID_PASTE,
 
-			ID_GRID_SIZE_FIELD,
 			ID_GRID_TOGGLE,
+			ID_TOGGLE_EDIT,
 
 			ID_TIMEOUT,
 			ID_OPENGL,

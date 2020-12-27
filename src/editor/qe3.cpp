@@ -133,7 +133,10 @@ qboolean QE_LoadProject (char *projectfile)
 		Error ("Couldn't parse %s", projectfile);
 	free (data);
 
-	Eclass_InitForSourceDirectory (ValueForKey (g_qeglobals.d_project_entity, "entitypath"));
+	char *entityPath = ValueForKey( g_qeglobals.d_project_entity, "entitypath" );
+	if( entityPath != '\0' ) {
+		Eclass_InitForSourceDirectory( entityPath );
+	}
 
 	FillClassList ();		// list in entity window
 
@@ -192,19 +195,6 @@ qboolean QE_KeyDown (int key)
 		break;
 	case 'V':
 		PostMessage (g_qeglobals.d_hwndMain, WM_COMMAND, ID_SELECTION_DRAGVERTECIES, 0);
-		break;
-
-	case 'N':
-		PostMessage (g_qeglobals.d_hwndMain, WM_COMMAND, ID_VIEW_ENTITY, 0);
-		break;
-	case 'O':
-		PostMessage (g_qeglobals.d_hwndMain, WM_COMMAND, ID_VIEW_CONSOLE, 0);
-		break;
-	case 'T':
-		PostMessage (g_qeglobals.d_hwndMain, WM_COMMAND, ID_VIEW_TEXTURE, 0);
-		break;
-	case 'S':
-		PostMessage (g_qeglobals.d_hwndMain, WM_COMMAND, ID_TEXTURES_INSPECTOR, 0);
 		break;
 
 	case ' ':

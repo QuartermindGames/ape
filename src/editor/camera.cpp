@@ -224,46 +224,43 @@ void huang::Camera::MouseMoved( int x, int y, const bool buttons[] ) {
 	}
 }
 
-#define	SPEED_MOVE	32
-#define	SPEED_TURN	22.5
-
 bool huang::Camera::HandleInput( int key ) {
 	switch( key ) {
 	case KEY_Up:
-		VectorMA( origin, SPEED_MOVE, forward, origin );
+		VectorMA( origin, forwardSpeed, forward, origin );
 		return true;
 	case KEY_Down:
-		VectorMA( origin, -SPEED_MOVE, forward, origin );
+		VectorMA( origin, -forwardSpeed, forward, origin );
 		return true;
 	case KEY_Left:
-		angles[ 1 ] += SPEED_TURN;
+		angles[ 1 ] += turnSpeed;
 		return true;
 	case KEY_Right:
-		angles[ 1 ] -= SPEED_TURN;
+		angles[ 1 ] -= turnSpeed;
 		return true;
 	case KEY_d:
-		origin[ 2 ] += SPEED_MOVE;
+		origin[ 2 ] += forwardSpeed;
 		return true;
 	case KEY_c:
-		origin[ 2 ] -= SPEED_MOVE;
+		origin[ 2 ] -= forwardSpeed;
 		return true;
 	case KEY_a:
-		angles[ 0 ] += SPEED_TURN;
+		angles[ 0 ] += turnSpeed;
 		if( angles[ 0 ] > 85.0f ) {
 			angles[ 0 ] = 85.0f;
 		}
 		return true;
 	case KEY_z:
-		angles[ 0 ] -= SPEED_TURN;
+		angles[ 0 ] -= turnSpeed;
 		if( angles[ 0 ] < -85.0f ) {
 			angles[ 0 ] = -85.0f;
 		}
 		return true;
 	case KEY_comma:
-		VectorMA( origin, -SPEED_MOVE, right, origin );
+		VectorMA( origin, -forwardSpeed, right, origin );
 		return true;
 	case KEY_period:
-		VectorMA( origin, SPEED_MOVE, right, origin );
+		VectorMA( origin, forwardSpeed, right, origin );
 		return true;
 	}
 
@@ -314,7 +311,6 @@ void huang::Camera::Draw() {
 	float	screenaspect;
 	float	yfov;
 	double	start, end;
-	int		i;
 
 	if( !active_brushes.next )
 		return;	// not valid yet
@@ -481,6 +477,7 @@ void huang::Camera::Draw() {
 
 	// edge / vertex flags
 
+	/*
 	if( g_qeglobals.d_select_mode == sel_vertex ) {
 		glPointSize( 4 );
 		glColor3f( 0, 1, 0 );
@@ -489,7 +486,8 @@ void huang::Camera::Draw() {
 			glVertex3fv( g_qeglobals.d_points[ i ] );
 		glEnd();
 		glPointSize( 1 );
-	} else if( g_qeglobals.d_select_mode == sel_edge ) {
+	} else 
+	if( g_qeglobals.d_select_mode == sel_edge ) {
 		float *v1, *v2;
 
 		glPointSize( 4 );
@@ -502,7 +500,7 @@ void huang::Camera::Draw() {
 		}
 		glEnd();
 		glPointSize( 1 );
-	}
+	}*/
 
 	//
 	// draw pointfile
@@ -558,11 +556,42 @@ void huang::Camera::DrawBrush( brush_t *b ) {
 		// draw the polygon
 		glBegin( GL_POLYGON );
 		for( i = 0; i < w->numpoints; i++ ) {
-			if( draw_mode == huang::DRAW_TEXTURED )
+			if( draw_mode == huang::DRAW_TEXTURED ) {
 				glTexCoord2fv( &w->points[ i ][ 3 ] );
+			}
 			glVertex3fv( w->points[ i ] );
 		}
 		glEnd();
+	}
+
+	if( g_qeglobals.d_select_mode == sel_vertex ) {
+		glPointSize( 4 );
+		glBegin( GL_POINTS );
+		glColor3f( 0.0f, 1.0f, 0.0f );
+		for( face = b->brush_faces, order = 0; face; face = face->next, order++ ) {
+			w = face->face_winding;
+			if( !w ) {
+				continue;		// freed face
+			}
+
+			for( i = 0; i < w->numpoints; i++ ) {
+				glVertex3fv( w->points[ i ] );
+			}
+		}
+		glEnd();
+		glPointSize( 1 );
+	} else if( g_qeglobals.d_select_mode == sel_edge ) {
+		float *v1, *v2;
+		glPointSize( 4 );
+		glColor3f( 0, 0, 1 );
+		glBegin( GL_POINTS );
+		for( i = 0; i < g_qeglobals.d_numedges; i++ ) {
+			v1 = g_qeglobals.d_points[ g_qeglobals.d_edges[ i ].p1 ];
+			v2 = g_qeglobals.d_points[ g_qeglobals.d_edges[ i ].p2 ];
+			glVertex3f( ( v1[ 0 ] + v2[ 0 ] ) * 0.5, ( v1[ 1 ] + v2[ 1 ] ) * 0.5, ( v1[ 2 ] + v2[ 2 ] ) * 0.5 );
+		}
+		glEnd();
+		glPointSize( 1 );
 	}
 
 	if( b->owner->eclass->fixedsize && draw_mode == huang::DRAW_TEXTURED )

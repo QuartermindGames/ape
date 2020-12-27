@@ -78,25 +78,6 @@ LONG WINAPI WXY_WndProc (
 
 		return 0;
 
-	case WM_PAINT:
-        {
-		    PAINTSTRUCT	ps;
-
-		    BeginPaint(hWnd, &ps);
-
-            if (!wglMakeCurrent( s_hdcXY, s_hglrcXY ))
-				Error ("wglMakeCurrent failed");
-
-			QE_CheckOpenGLForErrors();
-			XY_Draw ();
-			QE_CheckOpenGLForErrors();
-
-			SwapBuffers(s_hdcXY);
-
-			EndPaint(hWnd, &ps);
-        }
-		return 0;
-
 	case WM_KEYDOWN:
 		return QE_KeyDown (wParam);
 

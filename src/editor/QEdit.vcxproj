@@ -87,7 +87,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Kernel32.lib;user32.lib;Gdi32.lib;Advapi32.lib;Comdlg32.lib;FOXD-1.6.lib;glew32s.lib;opengl32.lib;glu32.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Kernel32.lib;user32.lib;Gdi32.lib;Advapi32.lib;Comdlg32.lib;FOXD-1.6.lib;glew32s.lib;opengl32.lib;glu32.lib;Comctl32.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>glew\lib\Release\Win32\;..\3rdparty\fox-1.6.57\lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -120,6 +120,7 @@
     <ClCompile Include="drag.cpp" />
     <ClCompile Include="eclass.cpp" />
     <ClCompile Include="entity.cpp" />
+    <ClCompile Include="Layer.cpp" />
     <ClCompile Include="lbmlib.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="mathlib.cpp" />
@@ -149,6 +150,7 @@
     <ClInclude Include="cmdlib.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="entityw.h" />
+    <ClInclude Include="Layer.h" />
     <ClInclude Include="lbmlib.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="map.h" />

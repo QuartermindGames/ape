@@ -216,7 +216,7 @@ void Map_Free (void)
 Map_LoadFile
 ================
 */
-void Map_LoadFile (char *filename)
+void Map_LoadFile (const char *filename)
 {
     char		*buf;
 	entity_t	*ent;

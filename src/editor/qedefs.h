@@ -23,11 +23,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
+#define STRINGIFY(num)   #num
+#define TOSTRING( A )    STRINGIFY( A )
+
 #define QE_VERSION  0x0401
 
-#define EDITOR_VERSION	20200813
-#define EDITOR_TITLE	"FoxEd"
-#define EDITOR_CONFIG	"editor.cfg"
+//20200813
+#define EDITOR_VERSION_MAJOR	0
+#define EDITOR_VERSION_MINOR	1
+#define EDITOR_VERSION_PATCH	4
+#define EDITOR_VERSION_STR	"v" TOSTRING( EDITOR_VERSION_MAJOR ) "." \
+								TOSTRING( EDITOR_VERSION_MINOR ) "." \
+								TOSTRING( EDITOR_VERSION_PATCH )
+#if defined( _DEBUG )
+#	define EDITOR_TITLE		"FoxEd [DEBUG] " EDITOR_VERSION_STR
+#else
+#	define EDITOR_TITLE		"FoxEd " EDITOR_VERSION_STR
+#endif
+#define EDITOR_CONFIG		"editor.cfg"
 
 #define QE3_STYLE (WS_OVERLAPPED| WS_CAPTION | WS_THICKFRAME | \
 		/* WS_MINIMIZEBOX | */ WS_MAXIMIZEBOX  | WS_CLIPSIBLINGS | \
