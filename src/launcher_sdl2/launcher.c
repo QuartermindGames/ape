@@ -8,7 +8,8 @@
 EngineInterface g_engine;
 static PLLibrary *dllEnginePtr;
 
-#define PrintWarn( ... ) Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
+#define Print( ... )        printf( __VA_ARGS__ )
+#define PrintWarn( ... )    Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
 #define PrintError( ... )                                    \
 	Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); \
 	exit( 0 )
@@ -263,7 +264,7 @@ int Sys_Init( int argc, char **argv ) {
 
 	/* setup the engine interface */
 
-	printf( "Setting up engine interface\n" );
+	Print( "Setting up engine interface\n" );
 
 #if defined( __amd64__ ) || defined( __amd64 ) || defined( _M_AMD64 ) || defined( __x86_64__ ) || defined( __x86_64 )
 	const char *engineLibPath = "./OSEngine_x64";
@@ -309,6 +310,7 @@ int Sys_Init( int argc, char **argv ) {
 	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
 	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
 	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
