@@ -115,6 +115,13 @@ static bool Engine_Initialize( int argc, char **argv ) {
 #if defined( YIN_ENABLE_LOCAL_FS )
 	plMountLocation( plGetWorkingDirectory() );
 #endif
+
+	/* check whether or not we're launching from the 'runtime' dir */
+	if ( !plFileExists( YIN_GLOBAL_WAD ) ) {
+		/* if not, mount it... */
+		plMountLocalLocation( "../../" );
+	}
+
 	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
