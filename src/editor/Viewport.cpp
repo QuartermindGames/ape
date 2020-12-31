@@ -204,6 +204,10 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 	}
 
 	FXEvent *ev = (FXEvent *)ptr;
+
+	int x = ev->win_x;
+	int y = -ev->win_y + glCanvas->getHeight();
+
 	switch( ev->type ) {
 	default:
 		break;
@@ -231,10 +235,10 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 
 		switch( currentViewMode ) {
 		case VIEW_MODE_PERSPECTIVE:
-			camera.MouseUp( ev->win_x, ev->win_y, mouseButtonStates );
+			camera.MouseUp( x, y, mouseButtonStates );
 			break;
 		case VIEW_MODE_TOP:
-			XY_MouseUp( ev->win_x, ev->win_y, mouseButtonStates );
+			XY_MouseUp( x, y, mouseButtonStates );
 			break;
 		}
 
@@ -254,11 +258,11 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 
 		switch( currentViewMode ) {
 		case VIEW_MODE_PERSPECTIVE:
-			camera.MouseDown( ev->win_x, ev->win_y, mouseButtonStates );
+			camera.MouseDown( x, y, mouseButtonStates );
 			break;
 		case VIEW_MODE_FRONT:
 		case VIEW_MODE_TOP:
-			XY_MouseDown( ev->win_x, ev->win_y, mouseButtonStates );
+			XY_MouseDown( x, y, mouseButtonStates );
 			break;
 		}
 
