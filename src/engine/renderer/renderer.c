@@ -532,7 +532,7 @@ void Gfx_DrawMenu( void ) {
 	          g_gfxPerfStats.numFacesDrawn,
 	          g_gfxPerfStats.numBatches,
 	          CPUTimer_GetMeasure( PROFILE_DRAW_MAP ) );
-	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf );
+	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
 
 	plSetBlendMode( PL_BLEND_DISABLE );
 

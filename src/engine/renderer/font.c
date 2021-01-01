@@ -85,7 +85,7 @@ void Font_DrawBitmapCharacter( float x, float y, float scale, PLColour colour, c
 	plPopMatrix();
 }
 
-void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColour colour, const char *msg ) {
+void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow ) {
 	if ( scale == 0.0f ) {
 		return;
 	}
@@ -100,15 +100,42 @@ void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColo
 		return;
 	}
 
-	plClearMesh( renderMesh );
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+
+	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	plSetTexture( fontTextureSheet, 0 );
 
-	float n_x = x;
-	float n_y = y;
+	plClearMesh( renderMesh );
+
+	float n_x;
+	float n_y;
+	if ( shadow ) {
+		n_x = x + 1;
+		n_y = y + 1;
+		for ( size_t i = 0; i < numChars; ++i ) {
+			Font_AddBitmapCharacterToPass( n_x, n_y, scale, PL_COLOUR_BLACK, ( uint8_t ) msg[ i ] );
+			if ( msg[ i ] == '\n' ) {
+				n_y += FONT_CHAR_H;
+				n_x = x;
+			} else {
+				n_x += FONT_CHAR_W;
+			}
+		}
+
+		plUploadMesh( renderMesh );
+		plDrawMesh( renderMesh );
+
+		plClearMesh( renderMesh );
+	}
+
+	n_x = x;
+	n_y = y;
 	for ( size_t i = 0; i < numChars; ++i ) {
 		Font_AddBitmapCharacterToPass( n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
-
 		if ( msg[ i ] == '\n' ) {
 			n_y += FONT_CHAR_H;
 			n_x = x;
@@ -116,13 +143,6 @@ void Font_DrawBitmapString( float x, float y, float spacing, float scale, PLColo
 			n_x += FONT_CHAR_W;
 		}
 	}
-
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-
-	plLoadIdentityMatrix();
-
-	plSetShaderUniformValue( program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	plUploadMesh( renderMesh );
 	plDrawMesh( renderMesh );

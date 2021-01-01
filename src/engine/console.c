@@ -180,7 +180,7 @@ void Con_Draw( const PLViewport *viewport ) {
 
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( outputBuffer.numLines - 1 ) - scrollPos; i > 0; --i ) {
-			Font_DrawBitmapString( 12.0f, y, 1.0f, 1.0f, CON_TEXT_COLOUR, outputBuffer.buffer[ i ] );
+			Font_DrawBitmapString( 12.0f, y, 1.0f, 1.0f, CON_TEXT_COLOUR, outputBuffer.buffer[ i ], true );
 			y -= 12.0f;
 			if ( y <= -12.0f ) {
 				break;
@@ -190,7 +190,7 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	/* draw input field */
 	Font_DrawBitmapCharacter( 1.0f, viewport->h - 12.0f, 1.0f, CON_TEXT_COLOUR, '>' );
-	Font_DrawBitmapString( 2.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer );
+	Font_DrawBitmapString( 2.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
 
 	plPopMatrix();
 
