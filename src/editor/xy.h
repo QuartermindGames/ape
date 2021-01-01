@@ -45,4 +45,4 @@ void XY_MouseMoved (int x, int y, const bool buttons[] );
 void XY_Draw ( const huang::Viewport *viewport );
 void XY_Overlay (void);
 
-BOOL FilterBrush(brush_t *pb);
+BOOL FilterBrush( const brush_t *pb);

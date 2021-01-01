@@ -341,18 +341,12 @@ void huang::Viewport::DrawScene() {
 	glScissor( 0, 0, glCanvas->getWidth(), glCanvas->getHeight() );
 
 	switch( currentViewMode ) {
-	case VIEW_MODE_FRONT:
-		XY_Draw( this );
-		break;
-	case VIEW_MODE_LEFT:
-		//Z_Draw();
-		break;
-	case VIEW_MODE_TOP:
-		XY_Draw( this );
-		break;
 	case VIEW_MODE_PERSPECTIVE:
 		camera.draw_mode = currentDrawMode;
 		camera.Draw();
+		break;
+	default:
+		XY_Draw( this );
 		break;
 	}
 

@@ -362,7 +362,7 @@ void XY_DrawGrid( void ) {
 	}
 
 	// draw coordinate text if needed
-
+#if 0 // todo: redo!
 	if( g_qeglobals.d_savedinfo.show_coordinates ) {
 		glColor4f( 0, 0, 0, 0 );
 
@@ -377,6 +377,7 @@ void XY_DrawGrid( void ) {
 			glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
 		}
 	}
+#endif
 }
 
 /*
@@ -470,52 +471,7 @@ void DrawCameraIcon( const huang::Camera *camera ) {
 	glEnd();
 }
 
-void DrawZIcon( void ) {
-#if 0
-	float	x, y;
-
-	x = z.origin[ 0 ];
-	y = z.origin[ 1 ];
-
-	glEnable( GL_BLEND );
-	glDisable( GL_TEXTURE_2D );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glDisable( GL_CULL_FACE );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glColor4f( 0.0, 0.0, 1.0, 0.25 );
-	glBegin( GL_QUADS );
-	glVertex3f( x - 8, y - 8, 0 );
-	glVertex3f( x + 8, y - 8, 0 );
-	glVertex3f( x + 8, y + 8, 0 );
-	glVertex3f( x - 8, y + 8, 0 );
-	glEnd();
-	glDisable( GL_BLEND );
-
-	glColor4f( 0.0, 0.0, 1.0, 1 );
-
-	glBegin( GL_LINE_LOOP );
-	glVertex3f( x - 8, y - 8, 0 );
-	glVertex3f( x + 8, y - 8, 0 );
-	glVertex3f( x + 8, y + 8, 0 );
-	glVertex3f( x - 8, y + 8, 0 );
-	glEnd();
-
-	glBegin( GL_LINE_STRIP );
-	glVertex3f( x - 4, y + 4, 0 );
-	glVertex3f( x + 4, y + 4, 0 );
-	glVertex3f( x - 4, y - 4, 0 );
-	glVertex3f( x + 4, y - 4, 0 );
-	glEnd();
-#endif
-}
-
-
-/*
-==================
-FilterBrush
-==================
-*/
-BOOL FilterBrush( brush_t *pb ) {
+BOOL FilterBrush( const brush_t *pb ) {
 	if( !pb->owner )
 		return FALSE;		// during construction
 
@@ -681,7 +637,6 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	//
 	g_qeglobals.d_xy.d_dirty = false;
 
-	//glViewport(0, 0, g_qeglobals.d_xy.width, g_qeglobals.d_xy.height);
 	glClearColor(
 		g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 0 ],
 		g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 1 ],
@@ -704,6 +659,18 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	maxs[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] + h;
 
 	glOrtho( mins[ 0 ], maxs[ 0 ], mins[ 1 ], maxs[ 1 ], -8000, 8000 );
+
+	switch( viewport->GetViewMode() ) {
+	default: break;
+	case huang::VIEW_MODE_FRONT:
+		glRotatef( -90, 1, 0, 0 );	    // put Z going up
+		glRotatef( 90, 0, 0, 1 );	    // put Z going up
+		break;
+	case huang::VIEW_MODE_LEFT:
+		glRotatef( -90, 1, 0, 0 );	    // put Z going up
+		//glRotatef( 90, 0, 0, 1 );	    // put Z going up
+		break;
+	}
 
 	//
 	// now draw the grid
@@ -732,8 +699,10 @@ void XY_Draw( const huang::Viewport *viewport ) {
 			continue;		// off screen
 		}
 
-		if( FilterBrush( brush ) )
+		if( FilterBrush( brush ) ) {
 			continue;
+		}
+
 		drawn++;
 		if( brush->owner != e ) {
 			e = brush->owner;
@@ -759,20 +728,16 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	//
 	// now draw selected brushes
 	//
-	glTranslatef( g_qeglobals.d_select_translate[ 0 ], g_qeglobals.d_select_translate[ 1 ], g_qeglobals.d_select_translate[ 2 ] );
-
-	glColor3f( 1.0, 0.0, 0.0 );
-	//glEnable( GL_LINE_STIPPLE );
-	//glLineStipple( 3, 0xaaaa );
-	glLineWidth( 2 );
-
-	for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
-		drawn++;
-		Brush_DrawXY( brush );
+	{
+		glTranslatef( g_qeglobals.d_select_translate[ 0 ], g_qeglobals.d_select_translate[ 1 ], g_qeglobals.d_select_translate[ 2 ] );
+		glColor3f( 1.0, 0.0, 0.0 );
+		glLineWidth( 2 );
+		for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
+			drawn++;
+			Brush_DrawXY( brush );
+		}
+		glLineWidth( 1 );
 	}
-
-	//glDisable( GL_LINE_STIPPLE );
-	glLineWidth( 1 );
 
 	// edge / vertex flags
 
@@ -800,11 +765,8 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	}
 	glTranslatef( -g_qeglobals.d_select_translate[ 0 ], -g_qeglobals.d_select_translate[ 1 ], -g_qeglobals.d_select_translate[ 2 ] );
 
-	//
 	// now draw camera point
-	//
 	DrawCameraIcon( viewport->GetCamera() );
-	//DrawZIcon();
 
 	if( g_qeglobals.d_xy.timing ) {
 		end = Sys_DoubleTime();
