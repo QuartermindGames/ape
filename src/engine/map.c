@@ -279,7 +279,7 @@ void Map_ParseSectors( PLFile *file ) {
 
 void Map_LoadGeometryData( const char *mapName ) {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "maps/%s.geometry", mapName );
+	snprintf( path, sizeof( path ), "worlds/%s.geometry", mapName );
 
 	PLFile *file = plOpenFile( path, false );
 	if ( file == NULL ) {

@@ -537,6 +537,8 @@ void Gfx_DrawMenu( void ) {
 	plSetBlendMode( PL_BLEND_DISABLE );
 
 	Con_Draw( &auxCamera->viewport );
+
+	plSetDepthMask( true );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
@@ -596,17 +598,20 @@ void Gfx_DrawScene( PLCamera *camera ) {
 
 	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
 
-	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+	//Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 	Gfx_RenderSceneFinal( camera );
 
 	/* draw buffer preview */
 	plSetupCamera( auxCamera );
 	plMatrixMode( PL_MODELVIEW_MATRIX );
+
+#if 0
 	plPushMatrix();
 	plLoadIdentityMatrix();
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, 0, 256, 256, smTexture );
 	plPopMatrix();
+#endif
 
 	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
 }
