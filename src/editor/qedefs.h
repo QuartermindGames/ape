@@ -23,6 +23,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
+#ifndef BOOL
+#   define BOOL bool
+#endif
+#ifndef TRUE
+#   define TRUE 1
+#endif
+#ifndef FALSE
+#   define FALSE 0
+#endif
+
 #define STRINGIFY(num)   #num
 #define TOSTRING( A )    STRINGIFY( A )
 
