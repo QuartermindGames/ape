@@ -17,13 +17,7 @@ target_include_directories(OSCore PRIVATE ./ ../3rdparty/miniz/)
 
 # Setup link libraries
 if (NOT UNIX)
-    message("Not Unix, assuming Win32 - " ${YIN_SYSTEM_ARCH})
     set_target_properties(OSCore PROPERTIES PREFIX "")
-    if (${YIN_SYSTEM_ARCH} MATCHES "x86_64")
-        set_target_properties(OSCore PROPERTIES OUTPUT_NAME OSCore_x64)
-    else()
-        set_target_properties(OSCore PROPERTIES OUTPUT_NAME OSCore_x86)
-    endif()
     target_link_libraries(OSCore mingw32)
 endif ()
 

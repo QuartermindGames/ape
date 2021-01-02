@@ -255,24 +255,13 @@ void Sys_Shutdown( void ) {
 	exit( EXIT_SUCCESS );
 }
 
-int Sys_Init( int argc, char **argv ) {
-	/* if we're debugging on Win32 platforms, invoke the console */
-#if defined( _WIN32 )
-	/* stop buffering stdout! */
-	setvbuf( stdout, NULL, _IONBF, 0 );
-#endif
-
-	/* setup the engine interface */
-
+/**
+ * Load in the DLL interface for the engine.
+ */
+static void Sys_SetupEngineInterface( void ) {
 	Print( "Setting up engine interface\n" );
 
-#if defined( __amd64__ ) || defined( __amd64 ) || defined( _M_AMD64 ) || defined( __x86_64__ ) || defined( __x86_64 )
-	const char *engineLibPath = "./OSEngine_x64";
-#else
-	const char *engineLibPath = "./OSEngine_x86";
-#endif
-
-	dllEnginePtr = plLoadLibrary( engineLibPath, true );
+	dllEnginePtr = plLoadLibrary( "./OSEngine", true );
 	if ( dllEnginePtr == NULL ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
@@ -283,22 +272,27 @@ int Sys_Init( int argc, char **argv ) {
 	}
 
 	SystemInterface systemInterface = {
-	        .Shutdown = Sys_Shutdown,
-	        .DisplayMessageBox = Sys_DisplayMessageBox,
-	        .CreateWindow = Sys_CreateWindow,
-	        .DestroyWindow = Sys_DestroyWindow,
-	        .GetWindowSize = Sys_GetWindowSize,
-	        .MakeWindowActive = Sys_MakeWindowActive,
-	        .SwapWindow = Sys_SwapWindow,
-	        .GetButtonState = Sys_GetButtonState,
-	        .GetKeyState = Sys_GetKeyState,
-	        .HasKeyboard = Sys_HasKeyboard,
+			.Shutdown = Sys_Shutdown,
+			.DisplayMessageBox = Sys_DisplayMessageBox,
+			.CreateWindow = Sys_CreateWindow,
+			.DestroyWindow = Sys_DestroyWindow,
+			.GetWindowSize = Sys_GetWindowSize,
+			.MakeWindowActive = Sys_MakeWindowActive,
+			.SwapWindow = Sys_SwapWindow,
+			.GetButtonState = Sys_GetButtonState,
+			.GetKeyState = Sys_GetKeyState,
+			.HasKeyboard = Sys_HasKeyboard,
 	};
 
 	/* initialize the interface */
 	GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface, &g_engine );
+}
 
-	/* and now setup sdl */
+int Sys_Init( int argc, char **argv ) {
+#if defined( _WIN32 )
+	/* stop buffering stdout! */
+	setvbuf( stdout, NULL, _IONBF, 0 );
+#endif
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 ) {
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
@@ -315,6 +309,8 @@ int Sys_Init( int argc, char **argv ) {
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
 	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
+
+	Sys_SetupEngineInterface();
 
 	if ( !g_engine.Initialize( argc, argv ) ) {
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );

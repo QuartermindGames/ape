@@ -81,6 +81,21 @@ void *Sys_realloc( void *ptr, size_t newSize ) {
  * INITIALIZATION
  ****************************************/
 
+static void Sys_SetupVFS( void ) {
+	PrintMsg( "Mounting VFS locations...\n" );
+
+	/* check whether or not we're launching from the 'runtime' dir */
+	PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
+	if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
+		PrintMsg( "Did not find \"" YIN_GLOBAL_WAD "\", attempting to mount data directory...\n" );
+		plMountLocalLocation( "../../" );
+	}
+
+	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
+		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
+	}
+}
+
 static bool Engine_Initialize( int argc, char **argv ) {
 	pl_calloc = Sys_calloc;
 	pl_malloc = Sys_malloc;
@@ -109,23 +124,10 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
 	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
-	PrintMsg( "Mounting VFS locations...\n" );
+	Sys_SetupVFS();
 
-	/* ensure our base wad is available */
-#if defined( YIN_ENABLE_LOCAL_FS )
-	plMountLocation( plGetWorkingDirectory() );
-#endif
-
-	/* check whether or not we're launching from the 'runtime' dir */
-	if ( !plFileExists( YIN_GLOBAL_WAD ) ) {
-		/* if not, mount it... */
-		plMountLocalLocation( "../../" );
-	}
-
-	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
-		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
-	}
-
+	/* create our main window
+	 * todo: this should be delegated to the launcher... */
 	mainWindow = g_system.CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
 	if ( mainWindow == NULL ) {
 		PrintError( "Failed to create main window!\n" );
