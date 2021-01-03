@@ -27,7 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma warning(disable : 4136)     // X86
 #pragma warning(disable : 4051)     // ALPHA
 
-#include <windows.h>
+#if defined( _WIN32 )
+#   include <windows.h>
+#endif
 
 #if defined( _WIN32 )
 #	define Q_stricmp	_stricmp
@@ -40,8 +42,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <fx.h>
 #include <fxkeys.h>
 
-#include <gl/glew.h>
-#include <gl/glu.h>
+#include <GL/glew.h>
+#include <GL/glu.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -52,9 +54,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "parse.h"
 #include "lbmlib.h"
 
-#include <commctrl.h>
-#include "afxres.h"
-#include "resource.h"
+#if defined( _WIN32 )
+#   include <commctrl.h>
+#   include "afxres.h"
+#   include "resource.h"
+#endif
 
 #include "qedefs.h"
 
@@ -102,7 +106,7 @@ void    Sys_UpdateStatusBar( void );
 void    Sys_UpdateWindows( int bits );
 void    Sys_Beep( void );
 void    Sys_ClearPrintf( void );
-void    Sys_Printf( char *text, ... );
+void    Sys_Printf( const char *text, ... );
 double	Sys_DoubleTime( void );
 void    Sys_GetCursorPos( int *x, int *y );
 void    Sys_SetCursorPos( int x, int y );
@@ -245,11 +249,6 @@ void WCam_Create( HINSTANCE hInstance );
 void WXY_Create( HINSTANCE hInstance );
 
 //
-// win_z.c
-//
-void WZ_Create( HINSTANCE hInstance );
-
-//
 // win_ent.c
 //
 
@@ -304,7 +303,6 @@ qboolean QE_SingleBrush( void );
 ** QE Win32 function declarations
 */
 int  QEW_SetupPixelFormat( HDC hDC, qboolean zbuffer );
-void QEW_StopGL( HWND hWnd, HGLRC hGLRC, HDC hDC );
 
 /*
 ** extern declarations

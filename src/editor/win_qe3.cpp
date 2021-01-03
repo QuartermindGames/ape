@@ -76,10 +76,11 @@ void Sys_UpdateWindows (int bits)
 //update_bits = -1;
 }
 
-
-void Sys_Beep (void)
+void Sys_Beep ()
 {
+#if defined( _WIN32 )
 	MessageBeep (MB_ICONASTERISK);
+#endif
 }
 
 char	*TranslateString (char *buf)
@@ -117,7 +118,7 @@ void Sys_ClearPrintf (void)
 	//	(LPARAM)text);
 }
 
-void Sys_Printf (char *text, ...)
+void Sys_Printf (const char *text, ...)
 {
 	va_list argptr;
 	char	buf[32768];
@@ -145,34 +146,9 @@ double Sys_DoubleTime (void)
 	return clock()/ 1000.0;
 }
 
-void PrintPixels (HDC hDC)
-{
-	int		i;
-	PIXELFORMATDESCRIPTOR p[64];
-
-	printf ("### flags color layer\n");
-	for (i=1 ; i<64 ; i++)
-	{
-		if (!DescribePixelFormat ( hDC, i, sizeof(p[0]), &p[i]))
-			break;
-		printf ("%3i %5i %5i %5i\n", i,
-			p[i].dwFlags,
-			p[i].cColorBits,
-			p[i].bReserved);
-	}
-	printf ("%i modes\n", i-1);
-}
-
 
 
 //==========================================================================
-
-void QEW_StopGL( HWND hWnd, HGLRC hGLRC, HDC hDC )
-{
-	wglMakeCurrent( NULL, NULL );
-	wglDeleteContext( hGLRC );
-	ReleaseDC( hWnd, hDC );
-}
 
 int QEW_SetupPixelFormat(HDC hDC, qboolean zbuffer )
 {
@@ -221,7 +197,7 @@ Error
 For abnormal program terminations
 =================
 */
-void Error (char *error, ...)
+void Error (const char *error, ...)
 {
 	va_list argptr;
 	char	text[1024];
@@ -237,7 +213,7 @@ void Error (char *error, ...)
 	sprintf (text2, "%s\nGetLastError() = %i", text, err);
     MessageBox(g_qeglobals.d_hwndMain, text2, "Error", 0 /* MB_OK */ );
 
-	exit (1);
+	exit (EXIT_FAILURE);
 }
 
 /*
@@ -525,7 +501,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 
 	WCam_Create (hInstance);
 	WXY_Create (hInstance);
-	WZ_Create (hInstance);
 
 	CreateEntityWindow(hInstance);
 

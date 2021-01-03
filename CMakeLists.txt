@@ -41,4 +41,5 @@ add_subdirectory(src/core/)
 add_subdirectory(src/engine/)
 
 # tools
+add_subdirectory(src/editor/)
 add_subdirectory(src/tools/qmap2world/)

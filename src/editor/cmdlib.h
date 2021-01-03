@@ -55,7 +55,7 @@ int Q_filelength (FILE *f);
 
 double I_FloatTime (void);
 
-void	Error (char *error, ...);
+void	Error (const char *error, ...);
 int		CheckParm (char *check);
 void ParseCommandLine (char *lpCmdLine);
 

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "qe3.h"
 
+#if 0 /* todo: delete me! */
+
 static HDC   s_hdcZ;
 static HGLRC s_hglrcZ;
 
@@ -147,46 +149,4 @@ LONG WINAPI WZ_WndProc (
 	return DefWindowProc (hWnd, uMsg, wParam, lParam);
 }
 
-
-/*
-==============
-WZ_Create
-==============
-*/
-void WZ_Create (HINSTANCE hInstance)
-{
-#if 0
-    WNDCLASS   wc;
-
-    /* Register the camera class */
-	memset (&wc, 0, sizeof(wc));
-
-    wc.style         = 0;
-    wc.lpfnWndProc   = (WNDPROC)WZ_WndProc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = hInstance;
-    wc.hIcon         = 0;
-    wc.hCursor       = LoadCursor (NULL,IDC_ARROW);
-    wc.hbrBackground = NULL;
-    wc.lpszMenuName  = NULL;
-    wc.lpszClassName = Z_WINDOW_CLASS;
-
-    if (!RegisterClass (&wc) )
-        Error ("WCam_Register: failed");
-
-	g_qeglobals.d_hwndZ = CreateWindow (Z_WINDOW_CLASS ,
-		"Z",
-		QE3_STYLE,
-		0,20,ZWIN_WIDTH,screen_height-38,	// size
-		g_qeglobals.d_hwndMain,	// parent
-		0,		// no menu
-		hInstance,
-		NULL);
-	if (!g_qeglobals.d_hwndZ)
-		Error ("Couldn't create zwindow");
-
-	LoadWindowState(g_qeglobals.d_hwndZ, "zwindow");
-    ShowWindow (g_qeglobals.d_hwndZ, SW_SHOWDEFAULT);
 #endif
-}
