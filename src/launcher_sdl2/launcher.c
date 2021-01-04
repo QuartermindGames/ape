@@ -53,6 +53,11 @@ typedef struct SysWindow {
 	SDL_GLContext *sdlGLContext;
 } SysWindow;
 
+static bool Sys_IsDisplayActive( SysWindow *windowPtr ) {
+	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
+	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
+}
+
 void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
 	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
 }
@@ -279,6 +284,7 @@ static void Sys_SetupEngineInterface( void ) {
 			.GetWindowSize = Sys_GetWindowSize,
 			.MakeWindowActive = Sys_MakeWindowActive,
 			.SwapWindow = Sys_SwapWindow,
+	        .IsDisplayActive = Sys_IsDisplayActive,
 			.GetButtonState = Sys_GetButtonState,
 			.GetKeyState = Sys_GetKeyState,
 			.HasKeyboard = Sys_HasKeyboard,

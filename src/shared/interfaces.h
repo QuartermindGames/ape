@@ -90,6 +90,7 @@ typedef struct SystemInterface {
 	void ( *MakeWindowActive )( SysWindow *windowPtr );
 	void ( *SwapWindow )( SysWindow *windowPtr );
 	void ( *GetWindowSize )( SysWindow *windowPtr, int *width, int *height );
+    bool ( *IsDisplayActive )( SysWindow *windowPtr );
 
 	/* input */
 	bool ( *GetButtonState )( InputButton inputIndex );
@@ -118,7 +119,7 @@ typedef struct EngineInterface {
 } EngineInterface;
 extern EngineInterface g_engine;
 
-#define BASE_INTERFACE_VERSION 1
+#define BASE_INTERFACE_VERSION 2
 
 #define INTERFACE_PROCEDURE "GetDllInterface"
 typedef bool ( *DllLauncherInterface )( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut );

@@ -172,6 +172,11 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
+	/* ensure we don't keep drawing in the background */
+    if ( !g_system.IsDisplayActive( mainWindow ) ) {
+        return;
+    }
+
 	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
 
 	PROFILE_START( PROFILE_DRAW_ALL );
