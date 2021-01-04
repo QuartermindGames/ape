@@ -8,7 +8,6 @@ message("Configuring Yin...")
 
 # Set all of our output directories.
 
-
 include_directories(src/)
 include_directories(src/core/include/)
 
@@ -41,5 +40,6 @@ add_subdirectory(src/core/)
 add_subdirectory(src/engine/)
 
 # tools
-add_subdirectory(src/editor/)
+#add_subdirectory(src/editor/)
+add_subdirectory(src/ycvm/)
 add_subdirectory(src/tools/qmap2world/)
