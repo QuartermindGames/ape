@@ -33,9 +33,10 @@ add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
 
 target_include_directories(OSEngine PRIVATE ./ ../3rdparty/miniz/)
 
+set_target_properties(OSEngine PROPERTIES PREFIX "")
+
 # Setup link libraries
 if (NOT UNIX)
-    set_target_properties(OSEngine PROPERTIES PREFIX "")
     target_include_directories(OSEngine PRIVATE src/3rdparty/sdl2/include/)
     if (${YIN_SYSTEM_ARCH} MATCHES "x86_64")
         target_link_directories(OSEngine PRIVATE src/3rdparty/sdl2/lib/x64/)
