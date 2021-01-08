@@ -20,10 +20,9 @@ void RM_ShutdownMaterialSystem( void );
 PLShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass );
 
 /* i/o */
-Material *RM_CacheMaterial( const char *path, CacheGroup group );
-void RM_DestroyMaterial( Material *material );
+Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback );
+void RM_DestroyMaterial( Material *material, bool force );
 void RM_ClearMaterials( CacheGroup group );
 
 /* drawing */
-void RM_SetMaterial( Material *material );
 void RM_DrawMesh( Material *material, PLMesh *mesh );

@@ -8,8 +8,6 @@
 #include "script.h"
 
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
-//static PLLinkedList *shaderPrograms;
-
 static Material *fallbackMaterial;
 
 typedef struct MaterialVariable {
@@ -310,17 +308,20 @@ static Material *RM_GetMaterial( const char *path, CacheGroup group ) {
 	return NULL;
 }
 
-Material *RM_CacheMaterial( const char *path, CacheGroup group ) {
+Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback ) {
 	/* check if it's already cached */
 	Material *material = RM_GetMaterial( path, group );
 	if ( material != NULL ) {
 		return material;
 	}
 
+	/* fallback should be optional, as in some cases we might actually care */
+	Material *fallbackPtr = useFallback ? fallbackMaterial : NULL;
+
 	PLFile *file = plOpenFile( path, false );
 	if ( file == NULL ) {
 		PrintWarn( "Failed to load material, \"%s\"!\nPL: %s\n", path, plGetError() );
-		return fallbackMaterial;
+		return fallbackPtr;
 	}
 
 	material = RM_ParseMaterial( file );
@@ -329,7 +330,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group ) {
 
 	if ( material == NULL ) {
 		PrintWarn( "Failed to cache material, \"%s\"!\n", path );
-		return fallbackMaterial;
+		return fallbackPtr;
 	}
 
 	snprintf( material->path, sizeof( material->path ), "%s", path );
@@ -338,7 +339,11 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group ) {
 	return material;
 }
 
-void RM_DestroyMaterial( Material *material ) {
+void RM_DestroyMaterial( Material *material, bool force ) {
+	if ( material == NULL || ( ( material == fallbackMaterial ) && !force ) ) {
+		return;
+	}
+
 	PLLinkedList *container = plGetLinkedListNodeContainer( material->node );
 	if ( container != NULL ) {
 		plDestroyLinkedListNode( container, material->node );

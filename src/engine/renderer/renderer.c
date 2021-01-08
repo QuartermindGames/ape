@@ -397,6 +397,8 @@ void Gfx_ShutdownCameras( void );   /* gfx_camera.c */
 void Gfx_SetupDefaultState( void ) {
 	plSetClearColour( PLColour( 128, 212, 255, 255 ) );
 
+	plEnableGraphicsState( PL_GFX_STATE_SCISSORTEST );
+
 	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
 	plSetDepthMask( true );
 

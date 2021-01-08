@@ -93,7 +93,7 @@ static void Map_ParseTextures( PLFile *file ) {
 			materialName[ j ] = buffer[ j ];
 		}
 
-		mapData.materials[ i ] = RM_CacheMaterial( materialName, CACHE_GROUP_WORLD );
+		mapData.materials[ i ] = RM_CacheMaterial( materialName, CACHE_GROUP_WORLD, true );
 	}
 }
 
@@ -386,7 +386,7 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 void Map_DrawSky( PLCamera *camera ) {
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL ) {
-		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD );
+		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
 		if ( skyMaterial == NULL ) {
 			PrintError( "Failed to load cloud layer!\n" );
 		}
@@ -518,7 +518,7 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 
 		Material *material = mapData.materials[ i ];
 		if ( smPass ) {
-			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC );
+			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC, true );
 		}
 
 		RM_DrawMesh( material, renderMesh );
