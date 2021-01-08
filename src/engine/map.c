@@ -535,9 +535,9 @@ static void Map_SetupScene( PLCamera *camera ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.25f );
 	PLVector3 sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
-	PLVector4 ambience = PLVector4( 0.10f, 0.10f, 0.10f, 1.0f );
+	PLVector4 ambience = PLVector4( 0.50f, 0.50f, 0.50f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
@@ -591,6 +591,9 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 	plLoadIdentityMatrix();
 
 	Map_SetupScene( camera );
+	Map_DrawSky( camera );
+
+	/* start drawing from the first sector that the camera is in */
 	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
 	plPopMatrix();
