@@ -110,9 +110,9 @@ void Player_Tick( Actor *self, void *userData ) {
 	PLVector3 curVelocity = Act_GetVelocity( self );
 
 	float nAngle = Act_GetAngle( self );
-	if ( g_system.GetButtonState( INPUT_LEFT ) ) {
+	if ( g_system.GetButtonState( INPUT_LEFT ) || g_system.GetKeyState( 'a' )  ) {
 		nAngle += PLAYER_TURN_SPEED;
-	} else if ( g_system.GetButtonState( INPUT_RIGHT ) ) {
+	} else if ( g_system.GetButtonState( INPUT_RIGHT ) || g_system.GetKeyState( 'd' )  ) {
 		nAngle -= PLAYER_TURN_SPEED;
 	}
 	Act_SetAngle( self, nAngle );
@@ -123,9 +123,9 @@ void Player_Tick( Actor *self, void *userData ) {
 
 	static const float incAmount = 0.25f;
 	APlayer *playerData = ( APlayer * ) userData;
-	if ( g_system.GetButtonState( INPUT_UP ) ) {
+	if ( g_system.GetButtonState( INPUT_UP ) || g_system.GetKeyState( 'w' ) ) {
 		playerData->forwardVelocity += incAmount;
-	} else if ( g_system.GetButtonState( INPUT_DOWN ) ) {
+	} else if ( g_system.GetButtonState( INPUT_DOWN ) || g_system.GetKeyState( 's' )  ) {
 		playerData->forwardVelocity -= incAmount;
 	} else if ( playerData->forwardVelocity != 0.0f ) {
 		playerData->forwardVelocity = playerData->forwardVelocity > 0 ? playerData->forwardVelocity - incAmount : playerData->forwardVelocity + incAmount;
