@@ -37,12 +37,12 @@ static void Game_Start( void ) {
 	menuState = MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
 
-	Map_Load( "terrain_test2" ); /* load the map from the global wad */
+	Map_Load( "castle" ); /* load the map from the global wad */
 
 	Act_SpawnActors();
 
 	/* spawn the player in */
-	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, 0 ), 0.0f );
+	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, -1024 ), 0.0f );
 }
 
 void Game_Tick( void ) {
