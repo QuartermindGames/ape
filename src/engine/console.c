@@ -16,9 +16,13 @@ static Material *backgroundMaterial = NULL;
 #define CON_TEXT_COLOUR PLColourRGB( 0, 255, 0 )
 
 /* console buffer methods */
+
 #define CON_BUFFER_MAX_LENGTH 256
 #define CON_BUFFER_MAX_LINES 4096
+
 static char inputBuffer[ CON_BUFFER_MAX_LENGTH ] = { '\0' };
+static unsigned int curInputBufferLength = 0;
+
 static struct ConBuffer {
 	struct {
 		char buffer[ CON_BUFFER_MAX_LENGTH ];
@@ -96,6 +100,8 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 void Con_Initialize( void ) {
 	plSetConsoleOutputCallback( Con_OutputCallback );
 
+	plRegisterConsoleVariable( "player.name", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
+
 	plRegisterConsoleVariable( "map.sky.material", "materials/sky/cloudlayer00.mat", pl_string_var, NULL, "Sets the sky material." );
 
 	plRegisterConsoleVariable( "console.background", "", pl_string_var, Con_UpdateBackground, "Background to use for the console." );
@@ -104,8 +110,6 @@ void Con_Initialize( void ) {
 
 	plRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );
 	plRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
-
-
 }
 
 void Con_Shutdown( void ) {
@@ -157,6 +161,61 @@ void Con_ScrollBackward( void ) {
 		return;
 	}
 	scrollPos--;
+}
+
+bool Con_HandleKeyboardEvent( int key, bool isDown ) {
+	/* only do anything if the console is open */
+    if ( !Con_GetState() ) {
+		return false;
+	}
+
+	if ( !isDown ) {
+		return true;
+	}
+
+	if ( key == KEY_ENTER ) {
+		if ( inputBuffer[ 0 ] != '\0' ) {
+			plParseConsoleString( inputBuffer );
+			inputBuffer[ 0 ] = '\0';
+			curInputBufferLength = 0;
+		}
+		return true;
+	}
+
+	if ( key == KEY_BACKSPACE ) {
+		if ( curInputBufferLength > 0 ) {
+			inputBuffer[ --curInputBufferLength ] = '\0';
+		}
+		return true;
+	}
+
+	/* autocompletion */
+	if ( key == KEY_TAB ) {
+		unsigned int numOptions;
+		const char **list = plAutocompleteConsoleString( inputBuffer, &numOptions );
+		if ( numOptions == 0 ) {
+			PrintMsg( "No matches found\n" );
+			return true;
+		}
+
+		/* print out all the options */
+		for ( unsigned int i = 0; i < numOptions; ++i ) {
+			PrintMsg( " %s\n", list[ i ] );
+		}
+
+        /* update to match the first result */
+        snprintf( inputBuffer, sizeof( inputBuffer ), "%s", list[ 0 ] );
+		curInputBufferLength = strlen( list[ 0 ] );
+		return true;
+	}
+
+	/* check length before appending so we can ensure
+	 * it's always null terminated */
+	if ( curInputBufferLength + 1 >= CON_BUFFER_MAX_LENGTH ) {
+		return true;
+	}
+	inputBuffer[ curInputBufferLength++ ] = ( char ) key;
+	inputBuffer[ curInputBufferLength ] = '\0';
 }
 
 /**
@@ -231,7 +290,7 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	/* draw input field */
 	Font_DrawBitmapCharacter( 1.0f, viewport->h - 12.0f, 1.0f, CON_TEXT_COLOUR, '>' );
-	Font_DrawBitmapString( 2.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
+	Font_DrawBitmapString( 4.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
 
 	plPopMatrix();
 
