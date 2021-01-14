@@ -34,6 +34,7 @@ FXDEFMAP( huang::Viewport ) ViewportMap[] = {
 	FXMAPFUNC( SEL_LEFTBUTTONPRESS, huang::Viewport::ID_CANVAS, huang::Viewport::OnInput ),
 
 	FXMAPFUNC( SEL_COMMAND, huang::Viewport::ID_TOGGLE_VIEW, huang::Viewport::OnToggleView ),
+	FXMAPFUNC( SEL_COMMAND, huang::Viewport::ID_TOGGLE_DRAW, huang::Viewport::OnToggleDraw ),
 
 	FXMAPFUNC( SEL_LEFTBUTTONRELEASE, huang::Viewport::ID_CANVAS, huang::Viewport::OnInput ),
 	FXMAPFUNC( SEL_KEYPRESS, huang::Viewport::ID_CANVAS, huang::Viewport::OnInput ),
@@ -55,16 +56,25 @@ huang::Viewport::Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode )
 
 	toolBar = new FXToolBar( this, LAYOUT_DOCK_SAME | FRAME_RAISED | LAYOUT_SIDE_TOP );
 	new FXToolBarGrip( toolBar, toolBar, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE );
-	FXIcon *icon;
-	icon = huang::util::LoadImageIcon( getApp(), "icons/perspective.gif" );
-	viewModeButtons[ VIEW_MODE_PERSPECTIVE ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	icon = huang::util::LoadImageIcon( getApp(), "icons/top.gif" );
-	viewModeButtons[ VIEW_MODE_TOP ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	icon = huang::util::LoadImageIcon( getApp(), "icons/left.gif" );
-	viewModeButtons[ VIEW_MODE_LEFT ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	icon = huang::util::LoadImageIcon( getApp(), "icons/front.gif" );
-	viewModeButtons[ VIEW_MODE_FRONT ] = new FXToggleButton( toolBar, FXString::null, FXString::null, icon, 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ VIEW_MODE_PERSPECTIVE ] = new FXToggleButton( 
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/perspective.gif" ), 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ VIEW_MODE_TOP ] = new FXToggleButton( 
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/top.gif" ), 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ VIEW_MODE_LEFT ] = new FXToggleButton( 
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/left.gif" ), 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ VIEW_MODE_FRONT ] = new FXToggleButton(
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/front.gif" ), 0, this, Viewport::ID_TOGGLE_VIEW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	viewModeButtons[ mode ]->setState( true );
+	new FXVerticalSeparator( toolBar );
+	drawModeButtons[ DRAW_WIREFRAME ] = new FXToggleButton(
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/wireframe.gif" ), 0, this, Viewport::ID_TOGGLE_DRAW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ DRAW_SOLID ] = new FXToggleButton(
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/solid.gif" ), 0, this, Viewport::ID_TOGGLE_DRAW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ DRAW_TEXTURED ] = new FXToggleButton(
+		toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/textured.gif" ), 0, this, Viewport::ID_TOGGLE_DRAW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	//drawModeButtons[ DRAW_BLEND ] = new FXToggleButton(
+	//	toolBar, FXString::null, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/perspective.gif" ), 0, this, Viewport::ID_TOGGLE_DRAW, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ currentDrawMode ]->setState( true );
 	new FXVerticalSeparator( toolBar );
 	//new FXButton( toolBar, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/cam_forward.gif" ), NULL, 0U, FRAME_NONE );
 	new FXTextField( toolBar, 4, &myForwardSpeedTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
@@ -321,6 +331,35 @@ long huang::Viewport::OnToggleView( FXObject *object, FXSelector, void *ptr ) {
 		}
 
 		viewModeButtons[ i ]->setState( false );
+	}
+
+	return TRUE;
+}
+
+long huang::Viewport::OnToggleDraw( FXObject *object, FXSelector, void *ptr ) {
+	if( !isEnabled() ) {
+		return FALSE;
+	}
+
+	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
+	if( button == nullptr ) {
+		return FALSE;
+	}
+
+	// Don't allow us to uncheck the same button without selecting a different one
+	if( drawModeButtons[ currentDrawMode ] == button ) {
+		button->setState( true );
+		return TRUE;
+	}
+
+	// Now figure out what mode we selected
+	for( uint8_t i = 0; i < MAX_DRAW_MODES; ++i ) {
+		if( drawModeButtons[ i ] == button ) {
+			currentDrawMode = i;
+			continue;
+		}
+
+		drawModeButtons[ i ]->setState( false );
 	}
 
 	return TRUE;

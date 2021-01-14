@@ -32,7 +32,7 @@ namespace huang {
 		FXGLVisual *glVisual{ nullptr };
 
 		FXToggleButton *viewModeButtons[ MAX_VIEW_MODES ];
-		FXMenuRadio *drawModeButtons[ MAX_DRAW_MODES ];
+		FXToggleButton *drawModeButtons[ MAX_DRAW_MODES ];
 
 		Viewport() {}
 
@@ -59,6 +59,7 @@ namespace huang {
 		FX_EVENT_FUNC( OnLeftButtonRelease );
 		FX_EVENT_FUNC( OnInput );
 		FX_EVENT_FUNC( OnToggleView );
+		FX_EVENT_FUNC( OnToggleDraw );
 
 		void ResetViews();
 
@@ -67,6 +68,7 @@ namespace huang {
 			ID_CANVAS,
 
 			ID_TOGGLE_VIEW,
+			ID_TOGGLE_DRAW,
 
 			ID_LAST
 		};

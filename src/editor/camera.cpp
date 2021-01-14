@@ -409,7 +409,7 @@ void huang::Camera::Draw() {
 
 #endif
 		break;
-
+#if 0
 	case DRAW_BLEND:
 		glCullFace( GL_FRONT );
 		glEnable( GL_CULL_FACE );
@@ -426,6 +426,7 @@ void huang::Camera::Draw() {
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		break;
+#endif
 	}
 
 	glMatrixMode( GL_TEXTURE );

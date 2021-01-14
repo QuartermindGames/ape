@@ -147,7 +147,7 @@ namespace huang {
 		DRAW_WIREFRAME,
 		DRAW_SOLID,
 		DRAW_TEXTURED,
-		DRAW_BLEND,
+		//DRAW_BLEND,
 
 		MAX_DRAW_MODES
 	};

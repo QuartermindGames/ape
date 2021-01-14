@@ -324,6 +324,12 @@ void Map_SaveFile (const char *filename, qboolean use_region )
 	char         temp[1024];
 	int			count;
 
+	// Fallback to unnamed.map if one doesn't exist
+	if( filename == nullptr ) {
+		// TODO: save into user dir!
+		filename = "unnamed.map";
+	}
+
 	QE_ConvertDOSToUnixName( temp, filename );
 
 	if (!use_region)
@@ -331,7 +337,7 @@ void Map_SaveFile (const char *filename, qboolean use_region )
 		char	backup[1024];
 
 		// rename current to .bak
-		strcpy (backup, filename);
+		strncpy (backup, filename, sizeof( backup ) - 4);
 		StripExtension (backup);
 		strcat (backup, ".bak");
 		_unlink (backup);
