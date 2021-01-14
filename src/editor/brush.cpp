@@ -341,9 +341,10 @@ void BeginTexturingFace (brush_t *b, face_t *f, qtexture_t *q)
 	else
 #endif
 	{
-		f->d_color[0] = shade*q->color[0];
-		f->d_color[1] = shade*q->color[1];
-		f->d_color[2] = shade*q->color[2];
+		srand( (intptr_t)b );
+		f->d_color[0] = shade * ( ( rand() % 255 ) / 255.0f );
+		f->d_color[1] = shade * ( ( rand() % 255 ) / 255.0f );
+		f->d_color[2] = shade * ( ( rand() % 255 ) / 255.0f );
 	}
 
 #if 0 // reintroduce??
