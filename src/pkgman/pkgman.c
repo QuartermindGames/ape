@@ -17,7 +17,7 @@
 
 /* PkgMan, the shitty package generator! */
 
-#define PKG_IDENTIFIER "PKG2"
+#define PKG_IDENTIFIER  "PKG2"
 
 typedef struct PkgHeader {
 	char 		identifier[ 4 ];
@@ -31,54 +31,55 @@ static PkgHeader packageHeader = {
 static FILE *fileOutPtr = NULL;
 static char outputPath[ 32 ] = { '\0' };
 
-static void Pkg_AddFile( const char *filePath ) {
-	Print( "Adding %s...\n", filePath );
-
-	PLFile *filePtr = plOpenFile( filePath, true );
-	if ( filePtr == NULL ) {
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, plGetError() );
-	}
-
-	const uint8_t *data = plGetFileData( filePtr );
-	unsigned long fileLength = plGetFileSize( filePtr );
-
-#if defined( PKG_USE_COMPRESSION )
-	/* now compress it */
-	unsigned long compressedLength = mz_compressBound( fileLength );
-	uint8_t *compressedData = malloc( compressedLength );
-	int status = mz_compress( compressedData, &compressedLength, data, fileLength );
-	if ( status != Z_OK ) {
-		Error( "Failed to compress the given file, \"%s\"!\n", filePath );
-	}
-
-	/* check if it's actually worth it... */
-	if ( compressedLength > fileLength ) {
-		compressedLength = fileLength;
-	}
-#else
-	unsigned long compressedLength = fileLength;
-	const uint8_t *compressedData = data;
-#endif
+static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long length, bool useCompression ) {
+	Print( "Adding %s...\n", path );
 
 	/* write the index header */
-	uint8_t nameLength = ( uint8_t ) strlen( filePath );
+	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, fileOutPtr );
-	fwrite( filePath, sizeof( char ), nameLength, fileOutPtr );
-	fwrite( &fileLength, sizeof( unsigned long ), 1, fileOutPtr );
-	fwrite( &compressedLength, sizeof( unsigned long ), 1, fileOutPtr );
+	fwrite( path, sizeof( char ), nameLength, fileOutPtr );
+	fwrite( &length, sizeof( unsigned long ), 1, fileOutPtr );
 
-	/* and now write out the file itself */
-	if ( compressedLength == fileLength ) {
-		fwrite( data, 1, fileLength, fileOutPtr );
-	} else {
-		fwrite( compressedData, 1, compressedLength, fileOutPtr );
+#if defined( PKG_USE_COMPRESSION )
+	uint8_t *compressedData = NULL;
+	if ( useCompression ) {
+		/* now compress it */
+		unsigned long compressedLength = mz_compressBound( length );
+		compressedData = malloc( compressedLength );
+		int status = mz_compress( compressedData, &compressedLength, buffer, length );
+		if ( status != Z_OK ) {
+			Error( "Failed to compress the given file, \"%s\"!\n", path );
+		}
+
+		/* check if it's actually worth it... */
+		if ( compressedLength > length ) {
+			compressedLength = length;
+		} else {
+			buffer = compressedData;
+			length = compressedLength;
+		}
 	}
+#endif
+
+	/* compressed length indicates if we're compressed or not, if it's the same as the actual file
+	 * length then it's assumed there is no compressed data */
+	fwrite( &length, sizeof( unsigned long ), 1, fileOutPtr );
+	fwrite( buffer, 1, length, fileOutPtr );
 
 	free( compressedData );
 
-	plCloseFile( filePtr );
-
 	packageHeader.numFiles++;
+}
+
+static void Pkg_AddFile( const char *path ) {
+	PLFile *filePtr = plOpenFile( path, true );
+	if ( filePtr == NULL ) {
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", path, plGetError() );
+	}
+
+	Pkg_AddData( path, plGetFileData( filePtr ), plGetFileSize( filePtr ), true );
+
+	plCloseFile( filePtr );
 }
 
 /**
@@ -131,6 +132,18 @@ static void ParseScript( const char *buffer, size_t length ) {
 
 			Pkg_AddFile(filePath);
 			continue;
+		} else if ( strncmp( curPos, "addimg ", 7 ) == 0 ) {
+			curPos += 7;
+			curPos = EZP_SkipSpaces(curPos);
+
+			char filePath[PL_SYSTEM_MAX_PATH];
+			curPos = EZP_ReadString(curPos, filePath, sizeof(filePath));
+			if ( curPos == NULL ) {
+				Error( "File path did not fit into destination!\n" );
+			}
+
+
+			continue;
 		} else if ( strncmp( curPos, "dir ", 4 ) == 0 ) {
 			curPos += 4;
 			curPos = EZP_SkipSpaces( curPos );
@@ -164,7 +177,7 @@ int main( int argc, char **argv ) {
 
 	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 
-	Print( "Package Manager\nCopyright (C) 2020 Mark E Sowden <markelswo@gmail.com>\n" );
+	Print( "Package Manager\nCopyright (C) 2020-2021 Mark E Sowden <markelswo@gmail.com>\n" );
 	if ( argc < 2 ) {
 		Print( "Please provide a package script!\nExample: pkgman myscript.txt\n" );
 		return EXIT_SUCCESS;

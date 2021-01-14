@@ -1,16 +1,22 @@
 # Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
 
-cmake_minimum_required( VERSION 3.5.1 )
+cmake_minimum_required(VERSION 3.5.1)
 
-project( pkgman )
+project(pkgman)
 
-set( CMAKE_C_STANDARD 11 )
+set(CMAKE_C_STANDARD 11)
 
-add_executable( pkgman
-        pkgman.c
+file(COPY pkgman_legal.txt DESTINATION ../docs/)
+
+add_executable(pkgman
         pack_image.c
-        ../3rdparty/miniz/miniz.c
-        parser.c parser.h)
+        pkgman.c
+        pkgman.h
+        parser.c
+        parser.h
+        txc_compress_dxtn.c
+        txc_dxtn.h
+        ../3rdparty/miniz/miniz.c)
 
-target_include_directories( pkgman PRIVATE ../3rdparty/miniz/ )
-target_link_libraries( pkgman platform )
+target_include_directories(pkgman PRIVATE ../3rdparty/miniz/)
+target_link_libraries(pkgman platform)
