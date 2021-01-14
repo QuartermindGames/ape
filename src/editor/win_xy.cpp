@@ -50,7 +50,7 @@ LONG WINAPI WXY_WndProc (
     WPARAM  wParam,
     LPARAM  lParam)
 {
-	int		fwKeys, xPos, yPos;
+	int		fwKeys;
     RECT	rect;
 
 

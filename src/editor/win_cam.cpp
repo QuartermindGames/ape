@@ -35,7 +35,6 @@ LONG WINAPI WCam_WndProc (
     WPARAM  wParam,
     LPARAM  lParam)
 {
-	int		fwKeys, xPos, yPos;
     RECT	rect;
 
     GetClientRect(hWnd, &rect);

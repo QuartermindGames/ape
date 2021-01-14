@@ -279,7 +279,6 @@ extern void BuildGammaTable( float g );
 
 // win_dlg.c
 
-void DoGamma( void );
 void DoFind( void );
 void DoRotate( void );
 void DoSides( void );

@@ -181,6 +181,7 @@ qboolean DoColor( int iIndex ) {
 /* Copied from MSDN */
 
 BOOL DoMru( HWND hWnd, WORD wId ) {
+#if 0
 	char szFileName[ 128 ];
 	OFSTRUCT of;
 	BOOL fExist;
@@ -207,6 +208,9 @@ BOOL DoMru( HWND hWnd, WORD wId ) {
 		ID_FILE_EXIT );
 
 	return fExist;
+#else
+	return false;
+#endif
 }
 
 
@@ -215,8 +219,6 @@ LONG WINAPI CommandHandler(
 	HWND    hWnd,
 	WPARAM  wParam,
 	LPARAM  lParam ) {
-	HMENU hMenu;
-
 	switch( LOWORD( wParam ) ) {
 		//
 		// file menu
@@ -535,10 +537,6 @@ LONG WINAPI CommandHandler(
 		Sys_UpdateWindows( W_ALL );
 		break;
 
-	case ID_MISC_GAMMA:
-		DoGamma();
-		break;
-
 	case ID_MISC_FINDBRUSH:
 		DoFind();
 		break;
@@ -737,22 +735,25 @@ LONG WINAPI WMAIN_WndProc(
 		return 0;
 
 	case WM_DESTROY:
+#if 0
 		SaveMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
 		DeleteMruMenu( g_qeglobals.d_lpMruMenu );
 		PostQuitMessage( 0 );
 		KillTimer( hWnd, QE_TIMER0 );
+#endif
 		return 0;
 
 	case WM_CREATE:
 		maindc = GetDC( hWnd );
 		//	    QEW_SetupPixelFormat(maindc, false);
+#if 0
 		g_qeglobals.d_lpMruMenu = CreateMruMenuDefault();
 		LoadMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
 
 		// Refresh the File menu.
 		PlaceMenuMRUItem( g_qeglobals.d_lpMruMenu, GetSubMenu( GetMenu( hWnd ), 0 ),
 			ID_FILE_EXIT );
-
+#endif
 		return 0;
 
 	case WM_SIZE:
@@ -1053,7 +1054,6 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 		toolBar = new FXToolBar( this, FRAME_RAISED | FRAME_THICK | LAYOUT_FILL_X );
 		new FXToolBarGrip( toolBar, toolBar, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE );
 
-		FXIcon *icon;
 		// File options
 		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ), this, MainWindow::ID_NEW );
 		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ), this, MainWindow::ID_OPEN );

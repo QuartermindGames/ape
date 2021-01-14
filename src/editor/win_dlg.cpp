@@ -55,23 +55,6 @@ BOOL CALLBACK GammaDlgProc (
 	return FALSE;
 }
 
-
-
-void DoGamma(void)
-{
-	char *psz, sz[256];
-	if ( DialogBox(g_qeglobals.d_hInstance, (char *)IDD_GAMMA, g_qeglobals.d_hwndMain, GammaDlgProc))
-	{
-		psz = ValueForKey(world_entity, "_wad");
-		if (psz)
-		{
-			strcpy(sz, psz);
-			Texture_Flush();
-			Texture_ShowInuse();
-		}
-	}
-}
-
 //================================================
 
 
@@ -204,7 +187,9 @@ BOOL CALLBACK FindBrushDlgProc (
 
 void DoFind(void)
 {
+#if 0
 	DialogBox(g_qeglobals.d_hInstance, (char *)IDD_FINDBRUSH, g_qeglobals.d_hwndMain, FindBrushDlgProc);
+#endif
 }
 
 /*
@@ -270,7 +255,9 @@ BOOL CALLBACK RotateDlgProc (
 
 void DoRotate(void)
 {
+#if 0
 	DialogBox(g_qeglobals.d_hInstance, (char *)IDD_ROTATE, g_qeglobals.d_hwndMain, RotateDlgProc);
+#endif
 }
 
 /*
@@ -322,7 +309,9 @@ BOOL CALLBACK SidesDlgProc (
 
 void DoSides(void)
 {
+#if 0
 	DialogBox(g_qeglobals.d_hInstance, (char *)IDD_SIDES, g_qeglobals.d_hwndMain, SidesDlgProc);
+#endif
 }
 
 //======================================================================
@@ -372,7 +361,9 @@ BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 
 void DoAbout(void)
 {
+#if 0
 	DialogBox( g_qeglobals.d_hInstance, ( char * ) IDD_ABOUT, g_qeglobals.d_hwndMain, AboutDlgProc );
+#endif
 }
 
 
@@ -649,7 +640,8 @@ void DoSurface (void)
 	// save current state for cancel
 	g_old_texdef = g_qeglobals.d_texturewin.texdef;
 	g_changed_surface = false;
-
+#if 0
 	DialogBox(g_qeglobals.d_hInstance, (char *)IDD_SURFACE, g_qeglobals.d_hwndMain, SurfaceDlgProc);
+#endif
 }
 
