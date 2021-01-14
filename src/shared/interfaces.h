@@ -1,5 +1,7 @@
-/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
- * */
+/* ======================================================================
+ * Project Yin, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller

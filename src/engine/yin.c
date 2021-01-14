@@ -1,6 +1,7 @@
-/* Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
- * Project Yin
- * */
+/* ======================================================================
+ * Project Yin, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
 #include <SDL2/SDL.h>
 

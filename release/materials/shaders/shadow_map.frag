@@ -1,4 +1,7 @@
-/* Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com> */
+/* ======================================================================
+ * Project Yin, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
 uniform sampler2D shadowMap;
 
