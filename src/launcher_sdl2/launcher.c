@@ -55,6 +55,11 @@ typedef struct SysWindow {
 	SDL_GLContext *sdlGLContext;
 } SysWindow;
 
+static bool Sys_IsDisplayActive( SysWindow *windowPtr ) {
+	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
+	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
+}
+
 void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
 	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
 }
@@ -109,19 +114,19 @@ void Sys_SwapWindow( SysWindow *windowPtr ) {
  * INPUT MANAGEMENT
  ****************************************/
 
-static bool buttonStates[ MAX_BUTTON_INPUTS ];
-bool Sys_GetButtonState( InputButton inputIndex ) {
-	if ( inputIndex >= MAX_BUTTON_INPUTS ) {
+static uint8_t buttonStates[ MAX_BUTTON_INPUTS ];
+bool Sys_GetButtonState( InputButton buttonIndex ) {
+	if ( buttonIndex >= MAX_BUTTON_INPUTS ) {
 		return false;
 	}
-	return buttonStates[ inputIndex ];
+	return ( ( buttonStates[ buttonIndex ] == INPUT_STATE_PRESSING ) || ( buttonStates[ buttonIndex ] == INPUT_STATE_DOWN ) );
 }
-static bool keyStates[ MAX_KEY_INPUTS ];
+static uint8_t keyStates[ MAX_KEY_INPUTS ];
 bool Sys_GetKeyState( int keyIndex ) {
 	if ( keyIndex >= MAX_KEY_INPUTS ) {
 		return false;
 	}
-	return keyStates[ keyIndex ];
+	return ( ( keyStates[ keyIndex ] == INPUT_STATE_PRESSING ) || ( keyStates[ keyIndex ] == INPUT_STATE_DOWN ) );
 }
 
 static int Sys_TranslateSDLKeyInput( int key ) {
@@ -179,6 +184,8 @@ static int Sys_TranslateSDLKeyInput( int key ) {
 		case SDLK_KP_TAB:
 		case SDLK_TAB:
 			return KEY_TAB;
+		case SDLK_KP_ENTER:
+			return KEY_ENTER;
 		case SDLK_UP:
 			return KEY_UP;
 		case SDLK_DOWN:
@@ -214,8 +221,30 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown ) {
 		return;
 	}
 
-	keyStates[ key ] = isDown;
-	g_engine.KeyboardEvent( key, isDown );
+	/* figure out what state the key is in now */
+
+	if ( keyStates[ key ] == INPUT_STATE_DOWN && isDown ) {
+		keyStates[ key ] = INPUT_STATE_PRESSING;
+	} else if ( keyStates[ key ] == INPUT_STATE_DOWN && !isDown ) {
+		keyStates[ key ] = INPUT_STATE_UP;
+	}
+
+	switch( keyStates[ key ] ) {
+		case INPUT_STATE_DOWN:
+			keyStates[ key ] = isDown ? INPUT_STATE_PRESSING : INPUT_STATE_UP;
+			break;
+		case INPUT_STATE_UP:
+			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_NONE;
+			break;
+		case INPUT_STATE_PRESSING:
+			keyStates[ key ] = isDown ? INPUT_STATE_PRESSING : INPUT_STATE_UP;
+			break;
+		case INPUT_STATE_NONE:
+			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_UP;
+			break;
+	}
+
+	g_engine.KeyboardEvent( key, keyStates[ key ] );
 }
 
 /****************************************
@@ -281,6 +310,7 @@ static void Sys_SetupEngineInterface( void ) {
 			.GetWindowSize = Sys_GetWindowSize,
 			.MakeWindowActive = Sys_MakeWindowActive,
 			.SwapWindow = Sys_SwapWindow,
+	        .IsDisplayActive = Sys_IsDisplayActive,
 			.GetButtonState = Sys_GetButtonState,
 			.GetKeyState = Sys_GetKeyState,
 			.HasKeyboard = Sys_HasKeyboard,

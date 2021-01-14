@@ -94,7 +94,7 @@ static void Map_ParseTextures( PLFile *file ) {
 			materialName[ j ] = buffer[ j ];
 		}
 
-		mapData.materials[ i ] = RM_CacheMaterial( materialName, CACHE_GROUP_WORLD );
+		mapData.materials[ i ] = RM_CacheMaterial( materialName, CACHE_GROUP_WORLD, true );
 	}
 }
 
@@ -387,7 +387,7 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 void Map_DrawSky( PLCamera *camera ) {
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL ) {
-		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD );
+		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
 		if ( skyMaterial == NULL ) {
 			PrintError( "Failed to load cloud layer!\n" );
 		}
@@ -519,7 +519,7 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 
 		Material *material = mapData.materials[ i ];
 		if ( smPass ) {
-			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC );
+			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC, true );
 		}
 
 		RM_DrawMesh( material, renderMesh );
@@ -536,9 +536,9 @@ static void Map_SetupScene( PLCamera *camera ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.0f );
+	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.25f );
 	PLVector3 sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
-	PLVector4 ambience = PLVector4( 0.10f, 0.10f, 0.10f, 1.0f );
+	PLVector4 ambience = PLVector4( 0.50f, 0.50f, 0.50f, 1.0f );
 
 	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
 	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
@@ -592,6 +592,9 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 	plLoadIdentityMatrix();
 
 	Map_SetupScene( camera );
+	Map_DrawSky( camera );
+
+	/* start drawing from the first sector that the camera is in */
 	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
 	plPopMatrix();

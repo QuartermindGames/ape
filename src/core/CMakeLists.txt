@@ -15,9 +15,10 @@ add_library(OSCore SHARED
 
 target_include_directories(OSCore PRIVATE ./ ../3rdparty/miniz/)
 
+set_target_properties(OSCore PROPERTIES PREFIX "")
+
 # Setup link libraries
 if (NOT UNIX)
-    set_target_properties(OSCore PROPERTIES PREFIX "")
     target_link_libraries(OSCore mingw32)
 endif ()
 

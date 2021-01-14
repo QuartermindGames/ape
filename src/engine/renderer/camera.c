@@ -41,6 +41,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 	default: PrintError( "Unsupported viewport type %d!\n", gfxCamera->perspective );
 	case VIEW_PERSPECTIVE_EYE:
 		gfxCamera->internalPtr->fov = 75.0f;
+		gfxCamera->internalPtr->far = 1000000.0f;
 		break;
 	case VIEW_PERSPECTIVE_FRONT:
 	case VIEW_PERSPECTIVE_SIDE:

@@ -173,6 +173,11 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
+	/* ensure we don't keep drawing in the background */
+    if ( !g_system.IsDisplayActive( mainWindow ) ) {
+        return;
+    }
+
 	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
 
 	PROFILE_START( PROFILE_DRAW_ALL );
@@ -229,8 +234,11 @@ static bool Engine_IsRunning( void ) {
  * INTERFACE
  ****************************************/
 
-static void Engine_Keyboard( int key, bool isDown ) {
-
+bool Con_HandleKeyboardEvent( int key, bool isDown );
+static void Engine_HandleKeyboardEvent( int key, bool isDown ) {
+    if ( Con_HandleKeyboardEvent( key, isDown ) ) {
+		return;
+	}
 }
 
 PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut ) {
@@ -249,7 +257,7 @@ PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, 
 	engOut->GetNumTicks = Engine_GetNumTicks;
 	engOut->IsRunning = Engine_IsRunning;
 	engOut->Tick = Engine_Tick;
-	engOut->KeyboardEvent = Engine_Keyboard;
+	engOut->KeyboardEvent = Engine_HandleKeyboardEvent;
 
 	return true;
 }

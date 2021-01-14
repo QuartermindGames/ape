@@ -24,7 +24,7 @@ struct Light {
     vec3 position;
 };
 uniform Light lights[8];
-uniform uint numLights = 0;
+uniform uint numLights = 0U;
 
 struct Material {
     float specularPower;
@@ -63,7 +63,7 @@ void main() {
     n = normalize(vsTBN * n);
 
     vec4 lightTerm = CalculateSunTerm(n);
-    for (uint i = 0; i < numLights; ++i) {
+    for (uint i = 0U; i < numLights; ++i) {
         lightTerm += CalculateLightTerm(i, n);
     }
 

@@ -5,16 +5,22 @@ Project Yin
 
 What is this?
 -----------------------------------------------------------------
-	This is a simplistic 3D engine that I've been developing
-	on and off for a while now in C. 
+	This is a simplistic 3D portal-based engine that I've been
+	developing on and off for a while now in C to use for game
+	jams and other personal projects.
 
 	What you're looking at is obviously a work-in-progress.
 
-	OSLauncherSDL2 - SDL2 input, windowing and other OS tasks
-	OSEngine       - The engine itself, Yin
-	OSCore         - Foundational systems shared between everything
-	pkgman         - Used to generate .pkg files (most files are automatically compressed)
-	qmap2world     - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
+    Runtime
+        platform        - Support library; provides graphics abstraction, file I/O and more
+	    launcher_sdl2   - SDL2 input, windowing and other OS tasks
+	    engine          - The engine itself, Yin
+	    core            - Foundational systems shared between everything
+
+	Tools
+	    ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
+	    pkgman          - Used to generate .pkg files (most files are automatically compressed)
+	    qmap2world      - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
 
 What can I do with it?
 -----------------------------------------------------------------
@@ -124,6 +130,10 @@ Using pkgman
 
 Technical
 -----------------------------------------------------------------
+
+CVM
+    Compiled bytecode to be loaded in by Yin's virtual machine.
+    You can compile your own bytecode by using the yc tool.
 
 PRG
 	Shader program files.

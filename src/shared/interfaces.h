@@ -35,6 +35,10 @@ typedef enum InputButton {
 typedef enum InputKey {
 	KEY_INVALID = -1,
 
+	KEY_BACKSPACE = 8,
+	KEY_TAB = 9,
+	KEY_ENTER = 13,
+
 	KEY_CAPSLOCK = 128,
 	KEY_F1,
 	KEY_F2,
@@ -58,7 +62,6 @@ typedef enum InputKey {
 	KEY_PAGEDOWN,
 	KEY_DELETE,
 	KEY_END,
-	KEY_TAB,
 
 	KEY_UP,
 	KEY_DOWN,
@@ -74,6 +77,13 @@ typedef enum InputKey {
 
 	MAX_KEY_INPUTS
 } InputKey;
+
+enum {
+	INPUT_STATE_NONE,       /* key has no state */
+	INPUT_STATE_DOWN,       /* key has been pressed */
+	INPUT_STATE_PRESSING,   /* key is still down */
+	INPUT_STATE_UP,         /* key is up */
+};
 
 typedef enum SysMessage {
 	SYS_MESSAGE_ERROR,
@@ -92,6 +102,7 @@ typedef struct SystemInterface {
 	void ( *MakeWindowActive )( SysWindow *windowPtr );
 	void ( *SwapWindow )( SysWindow *windowPtr );
 	void ( *GetWindowSize )( SysWindow *windowPtr, int *width, int *height );
+    bool ( *IsDisplayActive )( SysWindow *windowPtr );
 
 	/* input */
 	bool ( *GetButtonState )( InputButton inputIndex );
@@ -111,7 +122,7 @@ typedef struct EngineInterface {
 	bool ( *Initialize )( int argc, char **argv );
 	void ( *Tick )( void );
 	void ( *Display )( void );
-	void ( *KeyboardEvent )( int key, bool isDown );
+	void ( *KeyboardEvent )( int key, unsigned int keyState );
 	void ( *Shutdown )( void );
 
 	bool ( *IsRunning )( void );
@@ -120,7 +131,7 @@ typedef struct EngineInterface {
 } EngineInterface;
 extern EngineInterface g_engine;
 
-#define BASE_INTERFACE_VERSION 1
+#define BASE_INTERFACE_VERSION 2
 
 #define INTERFACE_PROCEDURE "GetDllInterface"
 typedef bool ( *DllLauncherInterface )( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut );
