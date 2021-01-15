@@ -360,7 +360,7 @@ void QE_CountBrushesAndUpdateStatusBar( void )
 	static qboolean s_didonce;
 
 	entity_t   *e;
-	brush_t	   *b, *next;
+	Brush *b, *next;
 
 	g_numbrushes = 0;
 	g_numentities = 0;
@@ -397,4 +397,3 @@ void QE_CountBrushesAndUpdateStatusBar( void )
 		s_didonce = true;
 	}
 }
-

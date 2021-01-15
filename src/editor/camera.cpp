@@ -72,7 +72,7 @@ void huang::Camera::BuildMatrix() {
 }
 
 void huang::Camera::ChangeFloor( bool up ) {
-	brush_t *b;
+	Brush *b;
 	float	d, bestd, current;
 	vec3_t	start, dir;
 
@@ -89,7 +89,7 @@ void huang::Camera::ChangeFloor( bool up ) {
 		bestd = 16384.0f;
 
 	for( b = active_brushes.next; b != &active_brushes; b = b->next ) {
-		if( !Brush_Ray( start, dir, b, &d ) )
+		if( !b->Ray( start, dir, &d ) )
 			continue;
 		if( up && d < current && d > bestd )
 			bestd = d;
@@ -283,7 +283,7 @@ void huang::Camera::InitCull() {
 	}
 }
 
-bool huang::Camera::CullBrush( brush_t *b ) {
+bool huang::Camera::CullBrush( Brush *b ) {
 	int		i;
 	vec3_t	point;
 	float	d;
@@ -306,7 +306,7 @@ bool huang::Camera::CullBrush( brush_t *b ) {
 }
 
 void huang::Camera::Draw() {
-	brush_t *brush;
+	Brush *brush;
 	face_t *face;
 	float	screenaspect;
 	float	yfov;
@@ -526,7 +526,7 @@ void huang::Camera::Draw() {
 	}
 }
 
-void huang::Camera::DrawBrush( brush_t *b ) {
+void huang::Camera::DrawBrush( Brush *b ) {
 	face_t *face;
 	int				i, order;
 	qtexture_t *prev = 0;

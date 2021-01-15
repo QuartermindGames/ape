@@ -48,6 +48,10 @@ qboolean VectorCompare (vec3_t v1, vec3_t v2);
 #define VectorAdd(a,b,c) {c[0]=a[0]+b[0];c[1]=a[1]+b[1];c[2]=a[2]+b[2];}
 #define VectorCopy(a,b) {b[0]=a[0];b[1]=a[1];b[2]=a[2];}
 
+inline void VectorSet( vec3_t out, float in ) {
+	out[ 0 ] = out[ 1 ] = out[ 2 ] = in;
+}
+
 vec_t Q_rint (vec_t in);
 vec_t _DotProduct (vec3_t v1, vec3_t v2);
 void _VectorSubtract (vec3_t va, vec3_t vb, vec3_t out);

@@ -51,7 +51,7 @@ LONG WINAPI WCam_WndProc (
             if (!wglMakeCurrent( g_qeglobals.d_hdcBase, g_qeglobals.d_hglrcBase ))
 				Error ("wglMakeCurrent failed");
 
-			Texture_SetMode(g_qeglobals.d_savedinfo.iTexMenu);
+			Texture_SetMode( ID_VIEW_TRILINEAR );
 
 			//
 			// create GL font

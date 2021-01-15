@@ -43,10 +43,10 @@ namespace huang {
 		bool HandleInput( int key );
 
 		void InitCull();
-		bool CullBrush( brush_t *b );
+		bool CullBrush( Brush *b );
 
 		void Draw();
-		void DrawBrush( brush_t *b );
+		void DrawBrush( Brush *b );
 
 		void ResetPosition();
 		void CenterView();

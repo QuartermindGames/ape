@@ -25,11 +25,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern	char		currentmap[1024];
 
 // head/tail of doubly linked lists
-extern	brush_t	active_brushes;	// brushes currently being displayed
-extern	brush_t	selected_brushes;	// highlighted
+extern	Brush	active_brushes;	// brushes currently being displayed
+extern	Brush	selected_brushes;	// highlighted
 extern	face_t	*selected_face;
-extern	brush_t	*selected_face_brush;
-extern	brush_t	filtered_brushes;	// brushes that have been filtered or regioned
+extern	Brush *selected_face_brush;
+extern	Brush	filtered_brushes;	// brushes that have been filtered or regioned
 
 extern	entity_t	entities;
 extern	entity_t	*world_entity;	// the world entity is NOT included in
@@ -50,6 +50,6 @@ void	Map_RegionXY (void);
 void	Map_RegionTallBrush (void);
 void	Map_RegionBrush (void);
 void	Map_RegionSelectedBrushes (void);
-qboolean Map_IsBrushFiltered (brush_t *b);
+qboolean Map_IsBrushFiltered ( Brush *b);
 
 entity_t *Map_FindClass( char *cname );

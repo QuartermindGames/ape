@@ -89,9 +89,9 @@ typedef struct {
 } pedge_t;
 
 typedef struct {
-	int		  iSize;
-	int		  iTexMenu;		// nearest, linear, etc
-	float	  fGamma;			// gamma for textures
+	//int		  iSize;
+	//int		  iTexMenu;		// nearest, linear, etc
+	//float	  fGamma;			// gamma for textures
 	char	  szProject[ 256 ];	// last project loaded
 	vec3_t	  colors[ COLOR_LAST ];
 	FXbool  show_names,
@@ -167,7 +167,7 @@ struct QEGlobals_t {
 
 	// connect entities uses the last two brushes selected
 	int			 d_select_count;
-	brush_t *d_select_order[ 2 ];
+	Brush *d_select_order[ 2 ];
 	vec3_t       d_select_translate;    // for dragging w/o making new display lists
 	select_t     d_select_mode;
 
@@ -328,6 +328,22 @@ namespace huang {
 		};
 
 		FXMenuPane *CreateMenus( FXApp *app, FXMenuBar *menuBar, const char *menuName, MenuItem *items );
+	
+		namespace reg {
+			const char *ReadString( const char *section, const char *key, const char *default = "" );
+			int ReadInt( const char *section, const char *key, int default = 0 );
+			bool ReadBool( const char *section, const char *key, bool default = false );
+			float ReadFloat( const char *section, const char *key, float default = 0.0f );
+			FXColor ReadColour( const char *section, const char *key, FXColor default = 0u );
+			int ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t default = vec3_origin );
+			
+			bool WriteString( const char *section, const char *key, const char *value );
+			bool WriteInt( const char *section, const char *key, int value );
+			bool WriteBool( const char *section, const char *key, bool value );
+			bool WriteFloat( const char *section, const char *key, float value );
+			bool WriteColour( const char *section, const char *key, FXColor value );
+			bool WriteColourF( const char *section, const char *key, const vec3_t value );
+		}
 	}
 }
 

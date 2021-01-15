@@ -31,7 +31,7 @@ typedef enum
 
 typedef struct
 {
-	brush_t		*brush;
+	Brush *brush;
 	face_t		*face;
 	float		dist;
 	qboolean	selected;
@@ -45,7 +45,7 @@ typedef struct
 trace_t Test_Ray (vec3_t origin, vec3_t dir, int flags);
 
 void Select_GetBounds (vec3_t mins, vec3_t maxs);
-void Select_Brush (brush_t *b);
+void Select_Brush ( Brush *b);
 void Select_Ray (vec3_t origin, vec3_t dir, int flags);
 void Select_Delete (void);
 void Select_Deselect (void);

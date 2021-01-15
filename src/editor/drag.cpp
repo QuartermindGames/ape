@@ -130,13 +130,13 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 
 		if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
 			Sys_Printf( "Shear dragging face\n" );
-			Brush_SelectFaceForDragging( t.brush, t.face, true );
+			t.brush->SelectFaceForDragging( t.face, true );
 		} else if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] &&
 			buttons[ huang::input::BUTTON_MOD_CONTROL ] &&
 			buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
 			Sys_Printf( "Sticky dragging brush\n" );
 			for( f = t.brush->brush_faces; f; f = f->next )
-				Brush_SelectFaceForDragging( t.brush, f, false );
+				t.brush->SelectFaceForDragging( f, false );
 		} else
 			Sys_Printf( "Dragging entire selection\n" );
 
@@ -160,9 +160,9 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 	}
 
 	if( buttons[ huang::input::BUTTON_MOD_CONTROL ] )
-		Brush_SideSelect( selected_brushes.next, origin, dir, true );
+		selected_brushes.next->SideSelect( origin, dir, true );
 	else
-		Brush_SideSelect( selected_brushes.next, origin, dir, false );
+		selected_brushes.next->SideSelect( origin, dir, false );
 
 	Sys_Printf( "Side stretch\n" );
 	drag_ok = true;
@@ -272,7 +272,7 @@ void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis,
 			if( t.brush->brush_faces->texdef.name[ 0 ] == '(' )
 				Sys_Printf( "Can't change an entity texture\n" );
 			else {
-				Brush_SetTexture( t.brush, &g_qeglobals.d_texturewin.texdef );
+				t.brush->SetTexture( &g_qeglobals.d_texturewin.texdef );
 				Sys_UpdateWindows( W_ALL );
 			}
 		} else
@@ -290,7 +290,7 @@ void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis,
 				Sys_Printf( "Can't change an entity texture\n" );
 			else {
 				t.face->texdef = g_qeglobals.d_texturewin.texdef;
-				Brush_Build( t.brush );
+				t.brush->Build();
 				Sys_UpdateWindows( W_ALL );
 			}
 		} else
@@ -306,7 +306,7 @@ MoveSelection
 */
 void MoveSelection( vec3_t move ) {
 	int		i;
-	brush_t *b;
+	Brush *b;
 
 	if( !move[ 0 ] && !move[ 1 ] && !move[ 2 ] )
 		return;
@@ -321,7 +321,7 @@ void MoveSelection( vec3_t move ) {
 			VectorAdd( g_qeglobals.d_move_points[ i ], move, g_qeglobals.d_move_points[ i ] );
 
 		for( b = selected_brushes.next; b != &selected_brushes; b = b->next ) {
-			Brush_Build( b );
+			b->Build();
 			for( i = 0; i < 3; i++ )
 				if( b->mins[ i ] > b->maxs[ i ]
 					|| b->maxs[ i ] - b->mins[ i ] > 4096 )
@@ -338,7 +338,7 @@ void MoveSelection( vec3_t move ) {
 				VectorSubtract( g_qeglobals.d_move_points[ i ], move, g_qeglobals.d_move_points[ i ] );
 
 			for( b = selected_brushes.next; b != &selected_brushes; b = b->next )
-				Brush_Build( b );
+				b->Build();
 		}
 
 	} else {

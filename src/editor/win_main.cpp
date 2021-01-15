@@ -27,8 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "MainWindow.h"
 #include "Viewport.h"
 
+using namespace huang::util;
+
 BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize );
-BOOL LoadRegistryInfo( const char *pszName, void *pvBuf, long *plSize );
 
 static HWND CreateMyStatusWindow( HINSTANCE hInst );
 static HWND CreateToolBar( HINSTANCE hinst );
@@ -406,37 +407,6 @@ LONG WINAPI CommandHandler(
 		break;
 
 	case CMD_TEXTUREWAD:
-	case CMD_TEXTUREWAD + 1:
-	case CMD_TEXTUREWAD + 2:
-	case CMD_TEXTUREWAD + 3:
-	case CMD_TEXTUREWAD + 4:
-	case CMD_TEXTUREWAD + 5:
-	case CMD_TEXTUREWAD + 6:
-	case CMD_TEXTUREWAD + 7:
-	case CMD_TEXTUREWAD + 8:
-	case CMD_TEXTUREWAD + 9:
-	case CMD_TEXTUREWAD + 10:
-	case CMD_TEXTUREWAD + 11:
-	case CMD_TEXTUREWAD + 12:
-	case CMD_TEXTUREWAD + 13:
-	case CMD_TEXTUREWAD + 14:
-	case CMD_TEXTUREWAD + 15:
-	case CMD_TEXTUREWAD + 16:
-	case CMD_TEXTUREWAD + 17:
-	case CMD_TEXTUREWAD + 18:
-	case CMD_TEXTUREWAD + 19:
-	case CMD_TEXTUREWAD + 20:
-	case CMD_TEXTUREWAD + 21:
-	case CMD_TEXTUREWAD + 22:
-	case CMD_TEXTUREWAD + 23:
-	case CMD_TEXTUREWAD + 24:
-	case CMD_TEXTUREWAD + 25:
-	case CMD_TEXTUREWAD + 26:
-	case CMD_TEXTUREWAD + 27:
-	case CMD_TEXTUREWAD + 28:
-	case CMD_TEXTUREWAD + 29:
-	case CMD_TEXTUREWAD + 30:
-	case CMD_TEXTUREWAD + 31:
 		Sys_BeginWait();
 		Texture_ShowDirectory( LOWORD( wParam ) );
 		SetInspectorMode( W_TEXTURE );
@@ -446,37 +416,6 @@ LONG WINAPI CommandHandler(
 		// bsp menu
 		//
 	case CMD_BSPCOMMAND:
-	case CMD_BSPCOMMAND + 1:
-	case CMD_BSPCOMMAND + 2:
-	case CMD_BSPCOMMAND + 3:
-	case CMD_BSPCOMMAND + 4:
-	case CMD_BSPCOMMAND + 5:
-	case CMD_BSPCOMMAND + 6:
-	case CMD_BSPCOMMAND + 7:
-	case CMD_BSPCOMMAND + 8:
-	case CMD_BSPCOMMAND + 9:
-	case CMD_BSPCOMMAND + 10:
-	case CMD_BSPCOMMAND + 11:
-	case CMD_BSPCOMMAND + 12:
-	case CMD_BSPCOMMAND + 13:
-	case CMD_BSPCOMMAND + 14:
-	case CMD_BSPCOMMAND + 15:
-	case CMD_BSPCOMMAND + 16:
-	case CMD_BSPCOMMAND + 17:
-	case CMD_BSPCOMMAND + 18:
-	case CMD_BSPCOMMAND + 19:
-	case CMD_BSPCOMMAND + 20:
-	case CMD_BSPCOMMAND + 21:
-	case CMD_BSPCOMMAND + 22:
-	case CMD_BSPCOMMAND + 23:
-	case CMD_BSPCOMMAND + 24:
-	case CMD_BSPCOMMAND + 25:
-	case CMD_BSPCOMMAND + 26:
-	case CMD_BSPCOMMAND + 27:
-	case CMD_BSPCOMMAND + 28:
-	case CMD_BSPCOMMAND + 29:
-	case CMD_BSPCOMMAND + 30:
-	case CMD_BSPCOMMAND + 31:
 	{
 		extern	char *bsp_commands[ 256 ];
 
@@ -734,59 +673,55 @@ LONG WINAPI WMAIN_WndProc(
 		QE_CheckAutoSave();
 		return 0;
 
-	case WM_DESTROY:
-#if 0
-		SaveMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
-		DeleteMruMenu( g_qeglobals.d_lpMruMenu );
-		PostQuitMessage( 0 );
-		KillTimer( hWnd, QE_TIMER0 );
-#endif
-		return 0;
-
 	case WM_CREATE:
 		maindc = GetDC( hWnd );
 		//	    QEW_SetupPixelFormat(maindc, false);
-#if 0
-		g_qeglobals.d_lpMruMenu = CreateMruMenuDefault();
-		LoadMruInReg( g_qeglobals.d_lpMruMenu, "Software\\id\\QuakeEd4\\MRU" );
-
-		// Refresh the File menu.
-		PlaceMenuMRUItem( g_qeglobals.d_lpMruMenu, GetSubMenu( GetMenu( hWnd ), 0 ),
-			ID_FILE_EXIT );
-#endif
-		return 0;
-
-	case WM_SIZE:
-		// resize the status window
-		//MoveWindow( g_qeglobals.d_hwndStatus, -100, 100, 10, 10, true);
 		return 0;
 
 	case WM_KEYDOWN:
 		return QE_KeyDown( wParam );
 
 	case WM_CLOSE:
-		/* call destroy window to cleanup and go away */
-		//SaveWindowState(g_qeglobals.d_hwndXY, "xywindow");
-		SaveWindowState( g_qeglobals.d_hwndCamera, "camerawindow" );
-		//SaveWindowState(g_qeglobals.d_hwndZ, "zwindow");
-		//SaveWindowState(g_qeglobals.d_hwndEntity, "EntityWindow");
-		SaveWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
-
-		// FIXME: is this right?
-		SaveRegistryInfo( "SavedInfo", &g_qeglobals.d_savedinfo, sizeof( g_qeglobals.d_savedinfo ) );
 		DestroyWindow( hWnd );
 		return 0;
 
 	case WM_COMMAND:
 		return CommandHandler( hWnd, wParam, lParam );
-		return 0;
 	}
 
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
 
+static void M_SaveGlobalRegistryData() {
+	reg::WriteInt( "Global", "exclude", g_qeglobals.d_savedinfo.exclude );
+	reg::WriteBool( "Global", "showCoordinates", g_qeglobals.d_savedinfo.show_coordinates );
+	reg::WriteBool( "Global", "showNames", g_qeglobals.d_savedinfo.show_names );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_TEXTUREBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ] );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_GRIDBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ] );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_CAMERABACK ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ] );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_GRIDMINOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ] );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_GRIDMAJOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ] );
+	reg::WriteColourF( "Global", STRINGIFY( COLOR_CAMERA_WIREFRAME ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ] );
+}
 
+static void M_LoadGlobalRegistryData() {
+	g_qeglobals.d_savedinfo.exclude = reg::ReadBool( "Global", "exclude" );
+	g_qeglobals.d_savedinfo.show_coordinates = reg::ReadBool( "Global", "showCoordinates", true );
+	g_qeglobals.d_savedinfo.show_names = reg::ReadBool( "Global", "showNames", true );
 
+	// Colours
+	vec3_t default;
+	VectorSet( default, 0.25f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_TEXTUREBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ], default );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ], default );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERABACK ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ], default );
+	VectorSet( default, 0.35f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMINOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ], default );
+	VectorSet( default, 0.45f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMAJOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ], default );
+	VectorSet( default, 1.0f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERA_WIREFRAME ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ], default );
+}
 
 /*
 ==============
@@ -795,7 +730,6 @@ Main_Create
 */
 void Main_Create( HINSTANCE hInstance ) {
 	WNDCLASS   wc;
-	long	i;
 	HMENU      hMenu;
 
 	/* Register the camera class */
@@ -829,41 +763,21 @@ void Main_Create( HINSTANCE hInstance ) {
 		Error( "Couldn't create main window" );
 
 	/* create a timer so that we can count brushes */
-	SetTimer( g_qeglobals.d_hwndMain,
-		QE_TIMER0,
-		1000,
-		NULL );
+	//SetTimer( g_qeglobals.d_hwndMain,
+	//	QE_TIMER0,
+	//	1000,
+	//	NULL );
 
-	LoadWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
+	//LoadWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
 
 	//g_qeglobals.d_hwndStatus = CreateMyStatusWindow(hInstance);
 
 	//
 	// load misc info from registry
 	//
-	i = sizeof( g_qeglobals.d_savedinfo );
-	LoadRegistryInfo( "SavedInfo", &g_qeglobals.d_savedinfo, &i );
 
-	if( g_qeglobals.d_savedinfo.iSize != sizeof( g_qeglobals.d_savedinfo ) ) {
-		// fill in new defaults
-
-		g_qeglobals.d_savedinfo.iSize = sizeof( g_qeglobals.d_savedinfo );
-		g_qeglobals.d_savedinfo.fGamma = 1.0;
-		g_qeglobals.d_savedinfo.iTexMenu = ID_VIEW_NEAREST;
-
-		g_qeglobals.d_savedinfo.exclude = 0;
-		g_qeglobals.d_savedinfo.show_coordinates = true;
-		g_qeglobals.d_savedinfo.show_names = true;
-
-		for( i = 0; i < 3; i++ ) {
-			g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ][ i ] = 0.25;
-			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ i ] = 0.25f;
-			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ][ i ] = 0.35f;
-			g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ][ i ] = 0.45f;
-			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ][ i ] = 0.25f;
-			g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ][ i ] = 1.0f;
-		}
-	}
+	M_LoadGlobalRegistryData();
+	M_SaveGlobalRegistryData();
 
 	if( ( hMenu = GetMenu( g_qeglobals.d_hwndMain ) ) != 0 ) {
 		/*
@@ -921,28 +835,6 @@ BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize ) {
 	return TRUE;
 }
 
-BOOL LoadRegistryInfo( const char *pszName, void *pvBuf, long *plSize ) {
-	HKEY  hKey;
-	long lres, lType, lSize;
-
-	if( plSize == NULL )
-		plSize = &lSize;
-
-	lres = RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\id\\QuakeEd4", 0, KEY_READ, &hKey );
-
-	if( lres != ERROR_SUCCESS )
-		return FALSE;
-
-	lres = RegQueryValueEx( hKey, pszName, NULL, (LPDWORD)&lType, (LPBYTE)pvBuf, (LPDWORD)plSize );
-
-	RegCloseKey( hKey );
-
-	if( lres != ERROR_SUCCESS )
-		return FALSE;
-
-	return TRUE;
-}
-
 BOOL SaveWindowState( HWND hWnd, const char *pszName ) {
 	RECT rc;
 
@@ -954,6 +846,7 @@ BOOL SaveWindowState( HWND hWnd, const char *pszName ) {
 
 
 BOOL LoadWindowState( HWND hWnd, const char *pszName ) {
+#if 0
 	RECT rc;
 	LONG lSize = sizeof( rc );
 
@@ -973,6 +866,9 @@ BOOL LoadWindowState( HWND hWnd, const char *pszName ) {
 	}
 
 	return FALSE;
+#else
+	return TRUE;
+#endif
 }
 
 /*

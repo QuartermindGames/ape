@@ -24,63 +24,77 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
-typedef struct
-{
+typedef struct {
 	int		numpoints;
 	int		maxpoints;
-	float 	points[8][5];			// variable sized
+	float 	points[ 8 ][ 5 ];			// variable sized
 } winding_t;
 
 
 // the normals on planes point OUT of the brush
 #define	MAXPOINTS	16
-typedef struct face_s
-{
-	struct face_s	*next;
-	vec3_t		planepts[3];
-    texdef_t	texdef;
+typedef struct face_s {
+	struct face_s *next;
+	vec3_t		planepts[ 3 ];
+	texdef_t	texdef;
 
-    plane_t		plane;
+	plane_t		plane;
 
-	winding_t  *face_winding;
+	winding_t *face_winding;
 
 	vec3_t		d_color;
 	qtexture_t *d_texture;
 
-//	int         d_numpoints;
-//	vec3_t     *d_points;
+	//	int         d_numpoints;
+	//	vec3_t     *d_points;
 } face_t;
 
 #define	MAX_FACES	16
-typedef struct brush_s
-{
-	struct brush_s	*prev, *next;	// links in active/selected
-	struct brush_s	*oprev, *onext;	// links in entity
-	struct entity_s	*owner;
+class Brush {
+public:
+	Brush();
+	Brush( vec3_t mins, vec3_t maxs, texdef_t *texdef );
+	~Brush();
+
+	Brush *prev{ nullptr }, *next{ nullptr };	// links in active/selected
+	Brush *oprev{ nullptr }, *onext{ nullptr };	// links in entity
+	struct entity_s *owner{ nullptr };
 	vec3_t	mins, maxs;
 
-	face_t     *brush_faces;
-} brush_t;
+	face_t *brush_faces{ nullptr };
 
-void     Brush_AddToList (brush_t *b, brush_t *list);
-void     Brush_Build(brush_t *b);
-void     Brush_BuildWindings( brush_t *b );
-brush_t *Brush_Clone (brush_t *b);
-brush_t	*Brush_Create (vec3_t mins, vec3_t maxs, texdef_t *texdef);
-void     Brush_DrawXY( brush_t *b );
-void     Brush_Free (brush_t *b);
-void     Brush_MakeSided (int sides);
-void     Brush_Move (brush_t *b, vec3_t move);
-brush_t *Brush_Parse (void);
-face_t  *Brush_Ray (vec3_t origin, vec3_t dir, brush_t *b, float *dist);
-void     Brush_RemoveFromList (brush_t *b);
-void     Brush_SelectFaceForDragging (brush_t *b, face_t *f, qboolean shear);
-void     Brush_SetTexture (brush_t *b, texdef_t *texdef);
-void     Brush_SideSelect (brush_t *b, vec3_t origin, vec3_t dir, qboolean shear);
-void     Brush_Write (brush_t *b, FILE *f);
-void	Brush_RemoveEmptyFaces ( brush_t *b );
+	void AddToList( Brush *list );
+	void RemoveFromList();
 
-int        AddPlanept (float *f);
-face_t	  *Face_Clone (face_t *f);
+	void Build();
+	void BuildWindings();
+
+	Brush *Clone();
+
+	void Draw( const huang::Viewport *viewport );
+
+	winding_t *MakeFaceWinding( face_t *face );
+
+	void Move( vec3_t move );
+
+	face_t *Ray( vec3_t origin, vec3_t dir, float *dist );
+
+	void SelectFaceForDragging( face_t *f, bool shear );
+	void SetTexture( texdef_t *texdef );
+	void SideSelect( vec3_t origin, vec3_t dir, bool shear );
+
+	void RemoveEmptyFaces();
+
+	static Brush *Parse();
+	void Write( FILE *f );
+
+private:
+	void MakeFacePlanes();
+	void DrawBrushEntityName();
+	void SnapPlanepts();
+};
+
+void     Brush_MakeSided( int sides );
+int        AddPlanept( float *f );
+face_t *Face_Clone( face_t *f );
 void       Face_Draw( face_t *face );
-winding_t *MakeFaceWinding (brush_t *b, face_t *face);

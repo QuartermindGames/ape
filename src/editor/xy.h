@@ -36,7 +36,7 @@ typedef struct
 	qboolean d_dirty;
 } xy_t;
 
-BOOL XYExcludeBrush(brush_t	*pb);
+BOOL XYExcludeBrush( Brush *pb);
 
 void XY_Init (void);
 void XY_MouseDown (int x, int y, const bool buttons[] );
@@ -45,4 +45,4 @@ void XY_MouseMoved (int x, int y, const bool buttons[] );
 void XY_Draw ( const huang::Viewport *viewport );
 void XY_Overlay (void);
 
-BOOL FilterBrush( const brush_t *pb);
+BOOL FilterBrush( const Brush *pb);

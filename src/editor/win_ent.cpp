@@ -537,7 +537,7 @@ void GetSpawnFlags(void)
 
 	if (multiple_entities)
 	{
-		brush_t	*b;
+		Brush	*b;
 
 		for (b=selected_brushes.next ; b != &selected_brushes ; b=b->next)
 			SetKeyValue(b->owner, "spawnflags", sz);
@@ -555,7 +555,7 @@ void GetSpawnFlags(void)
 BOOL UpdateSel(int iIndex, eclass_t *pec)
 {
 	int		i;
-	brush_t	*b;
+	Brush *b;
 
 	if (selected_brushes.next == &selected_brushes)
 	{
@@ -705,7 +705,7 @@ void AddProp(void)
 
 	if (multiple_entities)
 	{
-		brush_t	*b;
+		Brush *b;
 
 		for (b=selected_brushes.next ; b != &selected_brushes ; b=b->next)
 			SetKeyValue(b->owner, key, value);
@@ -737,7 +737,7 @@ void DelProp(void)
 
 	if (multiple_entities)
 	{
-		brush_t	*b;
+		Brush *b;
 
 		for (b=selected_brushes.next ; b != &selected_brushes ; b=b->next)
 			DeleteKey(b->owner, sz);

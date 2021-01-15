@@ -172,13 +172,13 @@ void NewBrushDrag( int x, int y ) {
 	vec3_t	mins, maxs, junk;
 	int		i;
 	float	temp;
-	brush_t *n;
+	Brush *n;
 
 	if( !DragDelta( x, y, junk ) )
 		return;
 	// delete the current selection
 	if( selected_brushes.next != &selected_brushes )
-		Brush_Free( selected_brushes.next );
+		delete( selected_brushes.next );
 	XY_ToGridPoint( pressx, pressy, mins );
 	mins[ 2 ] = g_qeglobals.d_gridsize * ( (int)( g_qeglobals.d_new_brush_bottom_z / g_qeglobals.d_gridsize ) );
 	XY_ToGridPoint( x, y, maxs );
@@ -196,15 +196,15 @@ void NewBrushDrag( int x, int y ) {
 		}
 	}
 
-	n = Brush_Create( mins, maxs, &g_qeglobals.d_texturewin.texdef );
+	n = new Brush( mins, maxs, &g_qeglobals.d_texturewin.texdef );
 	if( !n )
 		return;
-
-	Brush_AddToList( n, &selected_brushes );
+	
+	n->AddToList( &selected_brushes );
 
 	Entity_LinkBrush( world_entity, n );
 
-	Brush_Build( n );
+	n->Build();
 }
 
 /*
@@ -213,8 +213,6 @@ XY_MouseMoved
 ==============
 */
 void XY_MouseMoved( int x, int y, const bool buttons[] ) {
-	vec3_t	point;
-
 	// lbutton without selection = drag new brush
 	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection ) {
 		NewBrushDrag( x, y );
@@ -229,6 +227,7 @@ void XY_MouseMoved( int x, int y, const bool buttons[] ) {
 	}
 
 #if 0 // TODO
+	vec3_t	point;
 	// control mbutton = move camera
 	if( buttonstate == ( MK_CONTROL | MK_MBUTTON ) ) {
 		XY_ToPoint( x, y, point );
@@ -290,7 +289,6 @@ XY_DrawGrid
 void XY_DrawGrid( void ) {
 	float	x, y, xb, xe, yb, ye;
 	int		w, h;
-	char	text[ 32 ];
 
 	glDisable( GL_TEXTURE_2D );
 	glDisable( GL_TEXTURE_1D );
@@ -366,6 +364,7 @@ void XY_DrawGrid( void ) {
 	if( g_qeglobals.d_savedinfo.show_coordinates ) {
 		glColor4f( 0, 0, 0, 0 );
 
+		char	text[ 32 ];
 		for( x = xb; x < xe; x += 64 ) {
 			glRasterPos2f( x, g_qeglobals.d_xy.origin[ 1 ] + h - 6 / g_qeglobals.d_xy.scale );
 			sprintf( text, "%i", (int)x );
@@ -378,7 +377,7 @@ void XY_DrawGrid( void ) {
 		}
 	}
 #endif
-}
+	}
 
 /*
 ==============
@@ -471,7 +470,7 @@ void DrawCameraIcon( const huang::Camera *camera ) {
 	glEnd();
 }
 
-BOOL FilterBrush( const brush_t *pb ) {
+BOOL FilterBrush( const Brush *pb ) {
 	if( !pb->owner )
 		return FALSE;		// during construction
 
@@ -532,7 +531,7 @@ void DrawPathLines( void ) {
 	int		i, j, k;
 	vec3_t	mid, mid1;
 	entity_t *se, *te;
-	brush_t *sb, *tb;
+	Brush *sb, *tb;
 	char *psz;
 	vec3_t	dir, s1, s2;
 	vec_t	len, f;
@@ -618,7 +617,7 @@ XY_Draw
 ==============
 */
 void XY_Draw( const huang::Viewport *viewport ) {
-	brush_t *brush;
+	Brush *brush;
 	float	w, h;
 	entity_t *e;
 	double	start, end;
@@ -668,7 +667,6 @@ void XY_Draw( const huang::Viewport *viewport ) {
 		break;
 	case huang::VIEW_MODE_LEFT:
 		glRotatef( -90, 1, 0, 0 );	    // put Z going up
-		//glRotatef( 90, 0, 0, 1 );	    // put Z going up
 		break;
 	}
 
@@ -708,7 +706,7 @@ void XY_Draw( const huang::Viewport *viewport ) {
 			e = brush->owner;
 			glColor3fv( e->eclass->color );
 		}
-		Brush_DrawXY( brush );
+		brush->Draw( viewport );
 	}
 
 	DrawPathLines();
@@ -734,7 +732,7 @@ void XY_Draw( const huang::Viewport *viewport ) {
 		glLineWidth( 2 );
 		for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
 			drawn++;
-			Brush_DrawXY( brush );
+			brush->Draw( viewport );
 		}
 		glLineWidth( 1 );
 	}

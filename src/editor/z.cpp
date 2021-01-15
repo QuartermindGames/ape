@@ -272,7 +272,7 @@ Z_Draw
 */
 void Z_Draw (void)
 {
-    brush_t	*brush;
+	Brush *brush;
 	float	w, h;
 	double	start, end;
 	qtexture_t	*q;
@@ -353,10 +353,10 @@ void Z_Draw (void)
 			|| brush->maxs[1] <= z.origin[1])
 			continue;
 
-		if (!Brush_Ray (org_top, dir_down, brush, &top))
+		if (!brush->Ray (org_top, dir_down, &top))
 			continue;
 		top = org_top[2] - top;
-		if (!Brush_Ray (org_bottom, dir_up, brush, &bottom))
+		if (!brush->Ray (org_bottom, dir_up, &bottom))
 			continue;
 		bottom = org_bottom[2] + bottom;
 
@@ -388,10 +388,10 @@ void Z_Draw (void)
 			|| brush->mins[1] >= z.origin[1]
 			|| brush->maxs[1] <= z.origin[1]) )
 		{
-			if (Brush_Ray (org_top, dir_down, brush, &top))
+			if (brush->Ray (org_top, dir_down, &top))
 			{
 				top = org_top[2] - top;
-				if (Brush_Ray (org_bottom, dir_up, brush, &bottom))
+				if (brush->Ray (org_bottom, dir_up, &bottom))
 				{
 					bottom = org_bottom[2] + bottom;
 

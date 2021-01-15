@@ -126,54 +126,6 @@ void SortTextures(void)
 
 //=====================================================
 
-
-/*
-==============
-Texture_InitPalette
-==============
-*/
-void Texture_InitPalette (byte *pal)
-{
-    int		r,g,b,v;
-    int		i;
-	int		inf;
-	byte	gammatable[256];
-	float	gamma;
-
-	gamma = g_qeglobals.d_savedinfo.fGamma;
-
-	if (gamma == 1.0)
-	{
-		for (i=0 ; i<256 ; i++)
-			gammatable[i] = i;
-	}
-	else
-	{
-		for (i=0 ; i<256 ; i++)
-		{
-			inf = 255 * pow ( (i+0.5)/255.5 , gamma ) + 0.5;
-			if (inf < 0)
-				inf = 0;
-			if (inf > 255)
-				inf = 255;
-			gammatable[i] = inf;
-		}
-	}
-
-    for (i=0 ; i<256 ; i++)
-    {
-		r = gammatable[pal[0]];
-		g = gammatable[pal[1]];
-		b = gammatable[pal[2]];
-		pal += 3;
-
-		v = (r<<24) + (g<<16) + (b<<8) + 255;
-		v = BigLong (v);
-
-		tex_palette[i] = v;
-    }
-}
-
 void SetTexParameters (void)
 {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture_mode );
@@ -247,9 +199,6 @@ void Texture_SetMode(int iMenu)
 	CheckMenuItem(hMenu, ID_TEXTURES_WIREFRAME, MF_BYCOMMAND | MF_UNCHECKED);
 	CheckMenuItem(hMenu, ID_TEXTURES_FLATSHADE, MF_BYCOMMAND | MF_UNCHECKED);
 
-	CheckMenuItem(hMenu, iMenu, MF_BYCOMMAND | MF_CHECKED);
-
-	g_qeglobals.d_savedinfo.iTexMenu = iMenu;
 	texture_mode = iMode;
 	if ( texturing )
 		SetTexParameters ();
@@ -611,7 +560,7 @@ void	Texture_ShowInuse (void)
 {
 	char	name[1024];
 	face_t	*f;
-	brush_t	*b;
+	Brush *b;
 
 	texture_showinuse = true;
 

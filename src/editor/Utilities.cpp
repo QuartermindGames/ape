@@ -67,3 +67,70 @@ FXMenuPane *huang::util::CreateMenus( FXApp *app, FXMenuBar *menuBar, const char
 
 	return menu;
 }
+
+const char *huang::util::reg::ReadString( const char *section, const char *key, const char *default ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().readStringEntry( section, key, default );
+}
+
+int huang::util::reg::ReadInt( const char *section, const char *key, int default ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().readIntEntry( section, key, default );
+}
+
+bool huang::util::reg::ReadBool( const char *section, const char *key, bool default ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().readBoolEntry( section, key, default );
+}
+
+float huang::util::reg::ReadFloat( const char *section, const char *key, float default ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().readRealEntry( section, key, default );
+}
+
+FXColor huang::util::reg::ReadColour( const char *section, const char *key, FXColor default ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().readColorEntry( section, key, default );
+}
+
+int huang::util::reg::ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t default ) {
+	const char *str = ReadString( section, key );
+	if( *str == '\0' ) {
+		VectorCopy( default, out );
+		return 0;
+	}
+
+	// Return number of elements read, so caller can handle error in this case
+	return sscanf( str, "%f %f %f", &out[ 0 ], &out[ 1 ], &out[ 2 ] );
+}
+
+bool huang::util::reg::WriteString( const char *section, const char *key, const char *value ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().writeStringEntry( section, key, value );
+}
+
+bool huang::util::reg::WriteInt( const char *section, const char *key, int value ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().writeIntEntry( section, key, value );
+}
+
+bool huang::util::reg::WriteBool( const char *section, const char *key, bool value ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().writeBoolEntry( section, key, value );
+}
+
+bool huang::util::reg::WriteFloat( const char *section, const char *key, float value ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().writeRealEntry( section, key, value );
+}
+
+bool huang::util::reg::WriteColour( const char *section, const char *key, FXColor value ) {
+	FXApp *app = g_mainWindow->getApp();
+	return app->reg().writeColorEntry( section, key, value );
+}
+
+bool huang::util::reg::WriteColourF( const char *section, const char *key, const vec3_t value ) {
+	char buffer[ 256 ];
+	snprintf( buffer, sizeof( buffer ), "%f %f %f", value[ 0 ], value[ 1 ], value[ 2 ] );
+	return WriteString( section, key, buffer );
+}
