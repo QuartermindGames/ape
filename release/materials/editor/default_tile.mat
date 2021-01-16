@@ -1,0 +1,4 @@
+material
+pass base_lighting
+var texture diffuseMap materials/editor/default_tile.png
+end

@@ -1,4 +1,0 @@
-material
-pass default
-var texture diffuseMap materials/dev/lightmap.png
-end

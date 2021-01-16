@@ -1,6 +1,0 @@
-material
-pass base_lighting
-var texture diffuseMap materials/dev/dev_measure_00.tga
-var texture blendMap materials/dev/dev_measure_00.tga
-var texture normalMap materials/engine/black.png
-end

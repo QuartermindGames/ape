@@ -1,4 +1,0 @@
-material
-pass default
-var texture diffuseMap materials/dev/dev_measure_01.tga
-end
