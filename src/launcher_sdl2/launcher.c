@@ -214,6 +214,10 @@ static int Sys_TranslateSDLKeyInput( int key ) {
 	}
 }
 
+static void Sys_HandleTextEvent( const char *key ) {
+	g_engine.TextEvent( key );
+}
+
 static void Sys_HandleKeyboardEvent( int key, bool isDown ) {
 	key = Sys_TranslateSDLKeyInput( key );
 	if ( key == KEY_INVALID ) {
@@ -348,12 +352,17 @@ int Sys_Init( int argc, char **argv ) {
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
 
+	SDL_StartTextInput();
+
 	while ( g_engine.IsRunning() ) {
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) ) {
 			switch ( event.type ) {
 				case SDL_USEREVENT:
 					g_engine.Tick();
+					break;
+				case SDL_TEXTINPUT:
+                    Sys_HandleTextEvent( event.text.text );
 					break;
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
@@ -364,6 +373,8 @@ int Sys_Init( int argc, char **argv ) {
 
 		g_engine.Display();
 	}
+
+	SDL_StopTextInput();
 
 	g_engine.Shutdown();
 

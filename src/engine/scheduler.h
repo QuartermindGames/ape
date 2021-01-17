@@ -10,6 +10,7 @@
  ****************************************/
 
 typedef void (*SchedulerCallback)( void *userData, double delta );
+bool Sch_IsTaskRunning( const char *desc );
 void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay );
 void Sch_RunTasks( void );
 void Sch_FlushTasks( void );

@@ -35,17 +35,17 @@ static struct ConBuffer {
 };
 static void Con_ClearBuffer( void ) { outputBuffer.numLines = 0; }
 static void Con_OutputCallback( int level, const char *msg ) {
-    size_t l = strlen( msg );
-    if ( l >= CON_BUFFER_MAX_LENGTH ) {
-        PrintWarn( "Attempting to push message to console with an unexpected length!\n" );
-        l = CON_BUFFER_MAX_LENGTH - 2;
-    }
+	size_t l = strlen( msg );
+	if ( l >= CON_BUFFER_MAX_LENGTH ) {
+		PrintWarn( "Attempting to push message to console with an unexpected length!\n" );
+		l = CON_BUFFER_MAX_LENGTH - 2;
+	}
 
-    strncpy( outputBuffer.lines[ outputBuffer.numLines ].buffer, msg, l );
-    outputBuffer.lines[ outputBuffer.numLines ].buffer[ l ] = '\0';
+	strncpy( outputBuffer.lines[ outputBuffer.numLines ].buffer, msg, l );
+	outputBuffer.lines[ outputBuffer.numLines ].buffer[ l ] = '\0';
 
 	PLColour lineColour;
-	switch( level ) {
+	switch ( level ) {
 		default:
 			lineColour = PLColourRGB( 200, 200, 200 );
 			break;
@@ -59,14 +59,14 @@ static void Con_OutputCallback( int level, const char *msg ) {
 			lineColour = CON_TEXT_COLOUR;
 			break;
 	}
-    outputBuffer.lines[ outputBuffer.numLines ].colour = lineColour;
+	outputBuffer.lines[ outputBuffer.numLines ].colour = lineColour;
 
-    /* this is when we do what is probably going to be,
+	/* this is when we do what is probably going to be,
      * a dumb and expensive operation... */
-    outputBuffer.numLines++;
-    if ( outputBuffer.numLines >= CON_BUFFER_MAX_LINES ) {
-        //memmove_s()
-    }
+	outputBuffer.numLines++;
+	if ( outputBuffer.numLines >= CON_BUFFER_MAX_LINES ) {
+		//memmove_s()
+	}
 }
 
 /* CONSOLE COMMANDS */
@@ -85,6 +85,12 @@ CMD_CALLBACK( ToggleConsole ) {
 	Con_Toggle();
 }
 
+CMD_CALLBACK( Quit ) {
+	u_unused( argc );
+	u_unused( argv );
+	Engine_Shutdown();
+}
+
 static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 	RM_DestroyMaterial( backgroundMaterial, false );
 	backgroundMaterial = RM_CacheMaterial( var->s_value, CACHE_GROUP_STATIC, false );
@@ -101,9 +107,10 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 void Con_Initialize( void ) {
 	plSetConsoleOutputCallback( Con_OutputCallback );
 
-	plRegisterConsoleVariable( "player.name", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
+	plRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
+	plRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 
-	plRegisterConsoleVariable( "map.sky.material", "materials/sky/cloudlayer00.mat", pl_string_var, NULL, "Sets the sky material." );
+	plRegisterConsoleVariable( "player.name", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 
 	plRegisterConsoleVariable( "console.background", "", pl_string_var, Con_UpdateBackground, "Background to use for the console." );
 	plRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
@@ -111,6 +118,12 @@ void Con_Initialize( void ) {
 
 	plRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );
 	plRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
+
+	/* networking */
+	plRegisterConsoleVariable( "net.servername", "unnamed", pl_string_var, NULL, "Name to use for the server." );
+	plRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
+	plRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
+	plRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );
 }
 
 void Con_Shutdown( void ) {
@@ -122,7 +135,7 @@ static void Con_Animate( void *userData, double delta ) {
 	u_unused( userData );
 
 #define SPEED 16.0f
-	if ( isConsoleOpen && ( consoleHeight < 512.0f )  ) {
+	if ( isConsoleOpen && ( consoleHeight < 512.0f ) ) {
 		consoleHeight += SPEED;
 		Sch_PushTask( "conanim", Con_Animate, NULL, 1 );
 	} else if ( !isConsoleOpen && consoleHeight > 0.0f ) {
@@ -130,24 +143,24 @@ static void Con_Animate( void *userData, double delta ) {
 		Sch_PushTask( "conanim", Con_Animate, NULL, 1 );
 	}
 
-	if ( consoleHeight > 512.0f ) { consoleHeight = 512.0f; }
-	else if ( consoleHeight < 0.0f ) { consoleHeight = 0.0f; }
+	if ( consoleHeight > 512.0f ) {
+		consoleHeight = 512.0f;
+	} else if ( consoleHeight < 0.0f ) {
+		consoleHeight = 0.0f;
+	}
 }
 
 /**
  * Toggle the console state.
  */
 void Con_Toggle( void ) {
-	static unsigned int toggleTime = 0;
-	if ( toggleTime > Engine_GetNumTicks() ) {
+	if ( Sch_IsTaskRunning( "conanim" ) ) {
 		return;
 	}
 
 	isConsoleOpen = !isConsoleOpen;
 
 	Sch_PushTask( "conanim", Con_Animate, NULL, 2 );
-
-	toggleTime = Engine_GetNumTicks() + 16;
 }
 
 void Con_ScrollForward( void ) {
@@ -164,59 +177,66 @@ void Con_ScrollBackward( void ) {
 	scrollPos--;
 }
 
-bool Con_HandleKeyboardEvent( int key, bool isDown ) {
-	/* only do anything if the console is open */
-    if ( !Con_GetState() ) {
+bool Con_HandleTextEvent( const char *key ) {
+	if ( !Con_GetState() ) {
 		return false;
 	}
 
-	if ( !isDown ) {
-		return true;
-	}
-
-	if ( key == KEY_ENTER ) {
-		if ( inputBuffer[ 0 ] != '\0' ) {
-			plParseConsoleString( inputBuffer );
-			inputBuffer[ 0 ] = '\0';
-			curInputBufferLength = 0;
-		}
-		return true;
-	}
-
-	if ( key == KEY_BACKSPACE ) {
-		if ( curInputBufferLength > 0 ) {
-			inputBuffer[ --curInputBufferLength ] = '\0';
-		}
-		return true;
-	}
-
-	/* autocompletion */
-	if ( key == KEY_TAB ) {
-		unsigned int numOptions;
-		const char **list = plAutocompleteConsoleString( inputBuffer, &numOptions );
-		if ( numOptions == 0 ) {
-			PrintMsg( "No matches found\n" );
-			return true;
-		}
-
-		/* print out all the options */
-		for ( unsigned int i = 0; i < numOptions; ++i ) {
-			PrintMsg( " %s\n", list[ i ] );
-		}
-
-        /* update to match the first result */
-        snprintf( inputBuffer, sizeof( inputBuffer ), "%s", list[ 0 ] );
-		curInputBufferLength = strlen( list[ 0 ] );
-		return true;
-	}
-
 	/* check length before appending so we can ensure
-	 * it's always null terminated */
+     * it's always null terminated */
 	if ( curInputBufferLength + 1 >= CON_BUFFER_MAX_LENGTH ) {
 		return true;
 	}
-	inputBuffer[ curInputBufferLength++ ] = ( char ) key;
+
+	inputBuffer[ curInputBufferLength++ ] = *key;
 	inputBuffer[ curInputBufferLength ] = '\0';
+
+	return true;
+}
+
+bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
+	/* only do anything if the console is open */
+	if ( !Con_GetState() || keyState != INPUT_STATE_DOWN ) {
+		return false;
+	}
+
+	switch ( key ) {
+		default:
+			break;
+
+		case KEY_ENTER:
+			if ( inputBuffer[ 0 ] != '\0' ) {
+				plParseConsoleString( inputBuffer );
+				inputBuffer[ 0 ] = '\0';
+				curInputBufferLength = 0;
+			}
+			return true;
+		case KEY_BACKSPACE:
+			if ( curInputBufferLength > 0 ) {
+				inputBuffer[ --curInputBufferLength ] = '\0';
+			}
+			return true;
+		case KEY_TAB: { /* autocompletion */
+			unsigned int numOptions;
+			const char **list = plAutocompleteConsoleString( inputBuffer, &numOptions );
+			if ( numOptions == 0 ) {
+				PrintMsg( "No matches found\n" );
+				return true;
+			}
+
+			/* print out all the options */
+			for ( unsigned int i = 0; i < numOptions; ++i ) {
+				PrintMsg( " %s\n", list[ i ] );
+			}
+
+			/* update to match the first result */
+			snprintf( inputBuffer, sizeof( inputBuffer ), "%s", list[ 0 ] );
+			curInputBufferLength = strlen( list[ 0 ] );
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
@@ -224,6 +244,13 @@ bool Con_HandleKeyboardEvent( int key, bool isDown ) {
  */
 bool Con_GetState( void ) {
 	return isConsoleOpen;
+}
+
+static void Con_DrawInput( const PLViewport *viewport ) {
+	/* draw input field */
+	Font_DrawBitmapCharacter( 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
+	Font_DrawBitmapCharacter( ( float ) ( 12 + ( 8 * curInputBufferLength ) ), ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '_' );
+	Font_DrawBitmapString( 12.0f, ( float ) viewport->h - 12, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
 }
 
 /**
@@ -246,17 +273,15 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	plLoadIdentityMatrix();
 
-	float w = viewport->w - 4.0f;
-
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
-#define CON_SIDE_COLOUR         PLColourRGB( 128, 128, 128 )
-#define CON_BACK_COLOUR         PLColour( 0, 0, 0, alpha->i_value )
-#define CON_INDICATOR_COLOUR    PLColourRGB( 255, 255, 255 )
+#define CON_SIDE_COLOUR PLColourRGB( 128, 128, 128 )
+#define CON_BACK_COLOUR PLColour( 0, 0, 0, alpha->i_value )
+#define CON_INDICATOR_COLOUR PLColourRGB( 255, 255, 255 )
 
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, w, consoleHeight, CON_BACK_COLOUR );
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, 2.0f, 8, consoleHeight, CON_SIDE_COLOUR );
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, viewport->h - 12.0f, viewport->w, 12.0f, CON_BACK_COLOUR );
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, ( float ) viewport->w, consoleHeight, CON_BACK_COLOUR );
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, 8, consoleHeight, CON_SIDE_COLOUR );
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, CON_BACK_COLOUR );
 
 	/* todo: update viewport in platform lib to console dimensions so we don't draw outside
 	 *       the console space. */
@@ -289,9 +314,7 @@ void Con_Draw( const PLViewport *viewport ) {
 		}
 	}
 
-	/* draw input field */
-	Font_DrawBitmapCharacter( 1.0f, viewport->h - 12.0f, 1.0f, CON_TEXT_COLOUR, '>' );
-	Font_DrawBitmapString( 4.0f, viewport->h - 12.0f, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
+	Con_DrawInput( viewport );
 
 	plPopMatrix();
 

@@ -73,6 +73,8 @@ typedef struct SysWindow SysWindow;
 extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "base.pkg"
 
+void Engine_Shutdown( void );
+
 SysWindow *Engine_GetMainWindow( void );
 
 unsigned int Engine_GetNumTicks( void );
