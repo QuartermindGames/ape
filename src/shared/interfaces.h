@@ -122,6 +122,7 @@ typedef struct EngineInterface {
 	bool ( *Initialize )( int argc, char **argv );
 	void ( *Tick )( void );
 	void ( *Display )( void );
+	void ( *TextEvent )( const char *key );
 	void ( *KeyboardEvent )( int key, unsigned int keyState );
 	void ( *Shutdown )( void );
 

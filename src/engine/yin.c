@@ -147,12 +147,14 @@ static bool Engine_Initialize( int argc, char **argv ) {
 		Editor_Initialize();
 	}
 
-	PrintMsg( "Initialization complete\n" );
+	Con_Toggle();
+
+	PrintMsg( "Initialization complete - waiting for input\n" );
 
 	return true;
 }
 
-static void Engine_Shutdown( void ) {
+void Engine_Shutdown( void ) {
 	PrintMsg( "Shutting down...\n" );
 
 	Sch_FlushTasks();
@@ -234,9 +236,16 @@ static bool Engine_IsRunning( void ) {
  * INTERFACE
  ****************************************/
 
-bool Con_HandleKeyboardEvent( int key, bool isDown );
-static void Engine_HandleKeyboardEvent( int key, bool isDown ) {
-    if ( Con_HandleKeyboardEvent( key, isDown ) ) {
+bool Con_HandleKeyboardEvent( int key, unsigned int keyState );
+static void Engine_HandleKeyboardEvent( int key, unsigned int keyState ) {
+    if ( Con_HandleKeyboardEvent( key, keyState ) ) {
+		return;
+	}
+}
+
+bool Con_HandleTextEvent( const char *key );
+static void Engine_HandleTextEvent( const char *key ) {
+    if ( Con_HandleTextEvent( key ) ) {
 		return;
 	}
 }
@@ -258,6 +267,7 @@ PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, 
 	engOut->IsRunning = Engine_IsRunning;
 	engOut->Tick = Engine_Tick;
 	engOut->KeyboardEvent = Engine_HandleKeyboardEvent;
+	engOut->TextEvent = Engine_HandleTextEvent;
 
 	return true;
 }

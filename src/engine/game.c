@@ -34,23 +34,10 @@ Actor *Game_GetPlayer( void ) {
 	return playerActor;
 }
 
-static void Game_Start( void ) {
-	menuState = MENU_STATE_HUD;
-	inputTarget = INPUT_TARGET_GAME;
-
-	Map_Load( "castle" ); /* load the map from the global wad */
-
-	Act_SpawnActors();
-
-	/* spawn the player in */
-	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, -1024 ), 0.0f );
-}
-
 void Game_Tick( void ) {
 	if ( gameState == GAME_STATE_PAUSED ) {
 		if( g_system.GetKeyState( 'z' ) ) {
 			/* if any key was hit here, just switch to the game */
-			Game_Start();
 			gameState = GAME_STATE_ACTIVE;
 		}
 
@@ -79,11 +66,30 @@ void Game_Display( void ) {
 	Gfx_DrawPerspective( playerCamera );
 }
 
+void Game_SpawnWorld( const char *worldPath ) {
+    Map_Load( worldPath ); /* load the map from the global wad */
+
+    Act_SpawnActors();
+
+    /* spawn the player in */
+    playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, -1024 ), 0.0f );
+
+    gameState = GAME_STATE_ACTIVE;
+    menuState = MENU_STATE_HUD;
+    inputTarget = INPUT_TARGET_GAME;
+}
+
+static void Cmd_SpawnWorld( unsigned int argc, char **argv ) {
+	if ( argc <= 1 ) {
+		PrintWarn( "Invalid argument, please specify world!\n" );
+		return;
+	}
+
+	Game_SpawnWorld( argv[ 1 ] );
+}
+
 void Game_Initialize( void ) {
-	//if( !plHasCommandLineArgument( "editor" ) ) {
-		/* if editor mode isn't specified, just launch the game */
-	//	Game_Start();
-	//}
+	plRegisterConsoleCommand( "game.spawn", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 }
 
 void Game_Shutdown( void ) {}
