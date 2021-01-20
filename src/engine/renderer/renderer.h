@@ -31,7 +31,7 @@ typedef struct GfxCamera {
 	struct PLLinkedListNode *node;				/* node representing this object in the linked list */
 } GfxCamera;
 
-struct {
+static struct {
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numFacesDrawn;
