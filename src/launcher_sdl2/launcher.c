@@ -318,6 +318,9 @@ static void Sys_SetupEngineInterface( void ) {
 			.GetButtonState = Sys_GetButtonState,
 			.GetKeyState = Sys_GetKeyState,
 			.HasKeyboard = Sys_HasKeyboard,
+
+	        .GetPerformanceCounter = SDL_GetPerformanceCounter,
+	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
 	};
 
 	/* initialize the interface */

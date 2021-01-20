@@ -79,10 +79,10 @@ typedef enum InputKey {
 } InputKey;
 
 enum {
-	INPUT_STATE_NONE,       /* key has no state */
-	INPUT_STATE_DOWN,       /* key has been pressed */
-	INPUT_STATE_PRESSING,   /* key is still down */
-	INPUT_STATE_UP,         /* key is up */
+	INPUT_STATE_NONE,     /* key has no state */
+	INPUT_STATE_DOWN,     /* key has been pressed */
+	INPUT_STATE_PRESSING, /* key is still down */
+	INPUT_STATE_UP,       /* key is up */
 };
 
 typedef enum SysMessage {
@@ -102,12 +102,16 @@ typedef struct SystemInterface {
 	void ( *MakeWindowActive )( SysWindow *windowPtr );
 	void ( *SwapWindow )( SysWindow *windowPtr );
 	void ( *GetWindowSize )( SysWindow *windowPtr, int *width, int *height );
-    bool ( *IsDisplayActive )( SysWindow *windowPtr );
+	bool ( *IsDisplayActive )( SysWindow *windowPtr );
 
 	/* input */
 	bool ( *GetButtonState )( InputButton inputIndex );
 	bool ( *GetKeyState )( int keyIndex );
 	bool ( *HasKeyboard )( void );
+
+	/* timers */
+	uint64_t ( *GetPerformanceCounter )( void );
+	uint64_t ( *GetPerformanceFrequency )( void );
 
 	void ( *Shutdown )( void );
 } SystemInterface;

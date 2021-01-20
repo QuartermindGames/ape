@@ -11,7 +11,6 @@
 #include "pkg_loader.h"
 #include "editor.h"
 #include "game.h"
-#include "timespec.h"
 
 PLPackage *globalWad = NULL;
 
@@ -26,7 +25,7 @@ static SysWindow *mainWindow;
  ****************************************/
 
 typedef struct CPUTime {
-	struct timespec clock;
+	uint64_t clock;
 	double timeTaken;
 } CPUTime;
 static CPUTime cpuTimers[ MAX_PROFILER_GROUPS ];
@@ -36,14 +35,12 @@ void CPUTimer_Initialize( void ) {
 }
 
 void CPUTimer_StartMeasure( CPUProfilerGroup group ) {
-	clock_gettime( CLOCK_MONOTONIC, &cpuTimers[ group ].clock );
+	cpuTimers[ group ].clock = g_system.GetPerformanceCounter();
 }
 
 void CPUTimer_EndMeasure( CPUProfilerGroup group ) {
-	struct timespec end;
-	clock_gettime( CLOCK_MONOTONIC, &end );
-
-	cpuTimers[ group ].timeTaken = timespec_to_double( timespec_sub( end, cpuTimers[ group ].clock ) );
+	uint64_t now = g_system.GetPerformanceCounter();
+	cpuTimers[ group ].timeTaken = ( double )( ( now - cpuTimers[ group ].clock ) * 1000 ) / g_system.GetPerformanceFrequency();
 }
 
 double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
