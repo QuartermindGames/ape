@@ -1,5 +1,5 @@
 material
-pass base_lighting
+pass blend
 var texture diffuseMap materials/terrain/aerial_grass_rock_diff_1k.jpg
 var texture normalMap materials/terrain/aerial_grass_rock_nor_1k.jpg
 var texture blendMap materials/terrain/rock_05_diff_1k.jpg
