@@ -1,5 +1,5 @@
 material
-pass base_lighting
+pass blend
 var texture diffuseMap materials/terrain/rock_05_diff_1k.jpg
 var texture normalMap materials/terrain/rock_05_diff_1k.jpg
 var texture blendMap materials/engine/black.png
