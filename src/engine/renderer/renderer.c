@@ -239,6 +239,7 @@ static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
 		return;
 	}
 
+	PrintMsg( "Parsing \"%s\"\n", path );
 	ShaderProgramIndex *program = Gfx_ParseShaderProgram( file );
 
 	plCloseFile( file );
