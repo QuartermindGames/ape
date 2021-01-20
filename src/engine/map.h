@@ -34,4 +34,8 @@ void Map_Load( const char *mapName );
 void Map_DrawSky( PLCamera *camera );
 void Map_Draw( PLCamera *camera, bool smPass );
 
+PLVector4 World_GetAmbience( void );
+PLVector4 World_GetSunColour( void );
+PLVector3 World_GetSunPosition( void );
+
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );

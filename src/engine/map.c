@@ -536,18 +536,10 @@ static void Map_SetupScene( PLCamera *camera ) {
 		return;
 	}
 
-	PLVector4 sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 0.25f );
-	PLVector3 sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
-	PLVector4 ambience = PLVector4( 0.50f, 0.50f, 0.50f, 1.0f );
-
-	plSetShaderUniformValue( program, "sun.colour", &sunColour, false );
-	plSetShaderUniformValue( program, "sun.position", &sunPosition, false );
-	plSetShaderUniformValue( program, "sun.ambience", &ambience, false );
-
-	int numLights = 3;
+	int numLights = 0;
 	plSetShaderUniformValue( program, "numLights", &numLights, false );
 
-#if 1
+#if 0
 	srand( numLights );
 	for ( unsigned int i = 0; i < numLights; ++i ) {
 		char buf[ 32 ];
@@ -555,7 +547,7 @@ static void Map_SetupScene( PLCamera *camera ) {
 		plSetShaderUniformValue( program, buf, &PLVector4(
 		                                               plByteToFloat( rand() % 255 ),
 		                                               plByteToFloat( rand() % 255 ),
-		                                               plByteToFloat( rand() % 255 ), 0.25f ), false );
+		                                               plByteToFloat( rand() % 255 ), 1.5f ), false );
 	}
 
 	PLVector3 lightPosition;
@@ -598,6 +590,18 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
 	plPopMatrix();
+}
+
+PLVector4 World_GetAmbience( void ) {
+	return PLVector4( 0.4f, 0.4f, 0.4f, 1.0f );
+}
+
+PLVector4 World_GetSunColour( void ) {
+	return PLVector4( 1.0f, 1.0f, 1.0f, 1.25f );
+}
+
+PLVector3 World_GetSunPosition( void ) {
+	return PLVector3( 0.5f, -1.0f, 0.5f );
 }
 
 #if 0

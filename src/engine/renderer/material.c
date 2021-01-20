@@ -9,6 +9,7 @@
 #include "renderer.h"
 #include "material.h"
 #include "script.h"
+#include "map.h"
 
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 static Material *fallbackMaterial;
@@ -389,6 +390,20 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 		plSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
 		plSetShaderUniformValue( curPass->program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), true );
+
+		/* set global uniforms, if they exist */
+		if ( plGetShaderUniformSlot( curPass->program, "sun.colour" ) >= 0 ) {
+			PLVector4 sunColour = World_GetSunColour();
+			plSetShaderUniformValue( curPass->program, "sun.colour", &sunColour, false );
+		}
+		if ( plGetShaderUniformSlot( curPass->program, "sun.position" ) >= 0 ) {
+			PLVector3 sunPosition = World_GetSunPosition();
+			plSetShaderUniformValue( curPass->program, "sun.position", &sunPosition, false );
+		}
+		if ( plGetShaderUniformSlot( curPass->program, "sun.ambience" ) >= 0 ) {
+			PLVector4 ambience = World_GetAmbience();
+			plSetShaderUniformValue( curPass->program, "sun.ambience", &ambience, false );
+		}
 
 		unsigned int curUnit = 0;
 		for ( unsigned int j = 0; j < curPass->numVariables; ++j ) {
