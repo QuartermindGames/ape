@@ -496,7 +496,8 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 			for( unsigned int k = 0; k < numVertices; ++k ) {
 				unsigned int v = plAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's appropriate to add to AddMeshVertex */
-				renderMesh->vertices[ v ].tangent = renderMesh->vertices[ v ].bitangent = vertices[ k ].tangent;
+				renderMesh->vertices[ v ].tangent = vertices[ k ].tangent;
+				renderMesh->vertices[ v ].bitangent = vertices[ k ].bitangent;
 			}
 
 			unsigned int numTriangles;
