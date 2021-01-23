@@ -208,14 +208,6 @@ unsigned int Engine_GetNumTicks( void ) {
 }
 
 static void Engine_Tick( void ) {
-	if ( g_system.GetKeyState( '`' ) || g_system.GetKeyState( '~' ) ) {
-		Con_Toggle();
-	}
-
-	/* temp */
-	if ( g_system.GetKeyState( 'p' ) ) Con_ScrollForward();
-	if ( g_system.GetKeyState( 'l' ) ) Con_ScrollBackward();
-
 	Sch_RunTasks();
 
 	Editor_Tick();

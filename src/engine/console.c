@@ -9,7 +9,6 @@
 
 static bool isConsoleOpen = false;
 
-static float consoleHeight = 0.0f;
 static unsigned int scrollPos = 0;
 
 static Material *backgroundMaterial = NULL;
@@ -130,37 +129,11 @@ void Con_Shutdown( void ) {
 	Con_ClearBuffer();
 }
 
-static void Con_Animate( void *userData, double delta ) {
-	u_unused( delta );
-	u_unused( userData );
-
-#define SPEED 16.0f
-	if ( isConsoleOpen && ( consoleHeight < 512.0f ) ) {
-		consoleHeight += SPEED;
-		Sch_PushTask( "conanim", Con_Animate, NULL, 1 );
-	} else if ( !isConsoleOpen && consoleHeight > 0.0f ) {
-		consoleHeight -= SPEED;
-		Sch_PushTask( "conanim", Con_Animate, NULL, 1 );
-	}
-
-	if ( consoleHeight > 512.0f ) {
-		consoleHeight = 512.0f;
-	} else if ( consoleHeight < 0.0f ) {
-		consoleHeight = 0.0f;
-	}
-}
-
 /**
  * Toggle the console state.
  */
 void Con_Toggle( void ) {
-	if ( Sch_IsTaskRunning( "conanim" ) ) {
-		return;
-	}
-
 	isConsoleOpen = !isConsoleOpen;
-
-	Sch_PushTask( "conanim", Con_Animate, NULL, 2 );
 }
 
 void Con_ScrollForward( void ) {
@@ -195,14 +168,26 @@ bool Con_HandleTextEvent( const char *key ) {
 }
 
 bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
+    if ( keyState == INPUT_STATE_DOWN && ( key == '`' || key == '~' ) ) {
+        Con_Toggle();
+		return true;
+    }
+
 	/* only do anything if the console is open */
-	if ( !Con_GetState() || keyState != INPUT_STATE_DOWN ) {
+	if ( !Con_GetState() || keyState != INPUT_STATE_DOWN && keyState != INPUT_STATE_PRESSING ) {
 		return false;
 	}
 
 	switch ( key ) {
 		default:
 			break;
+
+		case KEY_PAGEUP:
+            Con_ScrollForward();
+			return true;
+		case KEY_PAGEDOWN:
+            Con_ScrollBackward();
+			return true;
 
 		case KEY_ENTER:
 			if ( inputBuffer[ 0 ] != '\0' ) {
@@ -257,9 +242,7 @@ static void Con_DrawInput( const PLViewport *viewport ) {
  * Draw the console panel.
  */
 void Con_Draw( const PLViewport *viewport ) {
-	static float oldConsoleHeight = 0.0f;
-
-	if ( consoleHeight <= 0.0f ) {
+	if ( !Con_GetState() ) {
 		return;
 	}
 
@@ -278,6 +261,8 @@ void Con_Draw( const PLViewport *viewport ) {
 #define CON_SIDE_COLOUR PLColourRGB( 128, 128, 128 )
 #define CON_BACK_COLOUR PLColour( 0, 0, 0, alpha->i_value )
 #define CON_INDICATOR_COLOUR PLColourRGB( 255, 255, 255 )
+
+	float consoleHeight = ( float ) ( viewport->h - 12 );
 
 	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, ( float ) viewport->w, consoleHeight, CON_BACK_COLOUR );
 	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, 8, consoleHeight, CON_SIDE_COLOUR );
