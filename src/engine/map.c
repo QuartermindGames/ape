@@ -146,8 +146,7 @@ static void Map_ParseFaces( PLFile *file ) {
 			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
 		}
 
-#define MAX_FACE_INDICES 32
-
+#define MAX_FACE_INDICES 64
 		char *token = strtok( buffer, " " );
 		unsigned int numIndices = strtol( token, NULL, 10 );
 		if ( numIndices == 0 || numIndices >= MAX_FACE_INDICES ) {
