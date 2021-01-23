@@ -335,8 +335,6 @@ void QE_Init (void)
 	** other stuff
 	*/
 	Texture_Init ();
-	XY_Init ();
-	Z_Init ();
 }
 
 void QE_ConvertDOSToUnixName( char *dst, const char *src )

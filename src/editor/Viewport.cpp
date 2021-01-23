@@ -142,14 +142,19 @@ long huang::Viewport::OnConfigure( FXObject *, FXSelector, void * ) {
 			camera.width = w;
 			camera.height = h;
 			break;
-		case VIEW_MODE_TOP:
-			g_qeglobals.d_xy.width = w;
-			g_qeglobals.d_xy.height = h;
+		default:
+			xyz.width = w;
+			xyz.height = h;
 			break;
 		}
 	}
 
 	return 1;
+}
+
+void huang::Viewport::CentreViewOnBrush( const Brush *brush ) {
+	for( uint8_t i = 0; i < 3; i++ )
+		xyz.origin[ i ] = ( brush->mins[ i ] + brush->maxs[ i ] ) / 2;
 }
 
 long huang::Viewport::OnMotion( FXObject *, FXSelector, void *ptr ) {
@@ -165,11 +170,8 @@ long huang::Viewport::OnMotion( FXObject *, FXSelector, void *ptr ) {
 #endif
 
 	switch( currentViewMode ) {
-	case VIEW_MODE_FRONT:
-		XY_MouseMoved( x, y, mouseButtonStates );
-		return 1;
-	case VIEW_MODE_LEFT:
-		//Z_MouseMoved( ev->win_x, -ev->win_y, ev->click_button );
+	default:
+		xyz.MouseMoved( x, y, mouseButtonStates );
 		return 1;
 	case VIEW_MODE_PERSPECTIVE:
 		camera.MouseMoved( x, y, mouseButtonStates );
@@ -247,8 +249,8 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 		case VIEW_MODE_PERSPECTIVE:
 			camera.MouseUp( x, y, mouseButtonStates );
 			break;
-		case VIEW_MODE_TOP:
-			XY_MouseUp( x, y, mouseButtonStates );
+		default:
+			xyz.MouseUp( x, y, mouseButtonStates );
 			break;
 		}
 
@@ -270,9 +272,8 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 		case VIEW_MODE_PERSPECTIVE:
 			camera.MouseDown( x, y, mouseButtonStates );
 			break;
-		case VIEW_MODE_FRONT:
-		case VIEW_MODE_TOP:
-			XY_MouseDown( x, y, mouseButtonStates );
+		default:
+			xyz.MouseDown( x, y, mouseButtonStates );
 			break;
 		}
 
@@ -294,11 +295,7 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 		}
 
 		// temporary hack!!!
-		if( currentViewMode == VIEW_MODE_FRONT ) {
-			g_qeglobals.d_xy.scale = zoomScale;
-		} else if( currentViewMode == VIEW_MODE_LEFT ) {
-			z.scale = zoomScale;
-		}
+		xyz.scale = zoomScale;
 		return 1;
 	}
 
@@ -367,6 +364,7 @@ long huang::Viewport::OnToggleDraw( FXObject *object, FXSelector, void *ptr ) {
 
 void huang::Viewport::ResetViews() {
 	camera.ResetPosition();
+	xyz.ResetPosition();
 }
 
 void huang::Viewport::DrawScene() {
@@ -382,10 +380,10 @@ void huang::Viewport::DrawScene() {
 	switch( currentViewMode ) {
 	case VIEW_MODE_PERSPECTIVE:
 		camera.draw_mode = currentDrawMode;
-		camera.Draw();
+		camera.Draw( this );
 		break;
 	default:
-		XY_Draw( this );
+		xyz.Draw( this );
 		break;
 	}
 

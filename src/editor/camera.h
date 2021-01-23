@@ -45,7 +45,7 @@ namespace huang {
 		void InitCull();
 		bool CullBrush( Brush *b );
 
-		void Draw();
+		void Draw( const Viewport *viewport );
 		void DrawBrush( Brush *b );
 
 		void ResetPosition();

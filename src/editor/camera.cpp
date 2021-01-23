@@ -305,7 +305,7 @@ bool huang::Camera::CullBrush( Brush *b ) {
 	return false;
 }
 
-void huang::Camera::Draw() {
+void huang::Camera::Draw( const Viewport *viewport ) {
 	Brush *brush;
 	face_t *face;
 	float	screenaspect;

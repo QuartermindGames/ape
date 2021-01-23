@@ -122,12 +122,6 @@ LONG WINAPI WXY_WndProc (
 #endif
 		return 0;
 
-    case WM_SIZE:
-		g_qeglobals.d_xy.width = rect.right;
-		g_qeglobals.d_xy.height = rect.bottom;
-		//InvalidateRect( g_qeglobals.d_hwndXY, NULL, false);
-		return 0;
-
 	case WM_NCCALCSIZE:// don't let windows copy pixels
 		DefWindowProc (hWnd, uMsg, wParam, lParam);
 		return WVR_REDRAW;

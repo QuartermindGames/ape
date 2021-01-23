@@ -31,6 +31,8 @@ For more information, please refer to <https://unlicense.org>
 
 #define MAX_VIEWPORTS 4
 
+class Brush;
+
 namespace huang {
 	class Viewport;
 	class MainWindow : public FXMainWindow {
@@ -95,6 +97,8 @@ namespace huang {
 
 		void CreateWorld();
 		void LoadWorld( const char *path );
+
+		void CentreViewsOnBrush( const Brush *b );
 
 		uint8_t GetEditMode() const { return currentEditMode; }
 

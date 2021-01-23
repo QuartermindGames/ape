@@ -258,19 +258,6 @@ void Map_LoadFile( const char *filename ) {
 	Sys_Printf( "Map_BuildAllDisplayLists\n" );
 	Map_BuildBrushData();
 
-	//
-	// move the view to a start position
-	//
-	ent = Map_FindClass( "info_player_start" );
-	if( !ent )
-		ent = Map_FindClass( "info_player_deathmatch" );
-
-	if( ent ) {
-		GetVectorForKey( ent, "origin", g_qeglobals.d_xy.origin );
-	} else {
-		VectorCopy( vec3_origin, g_qeglobals.d_xy.origin );
-	}
-
 	g_mainWindow->ResetViews();
 
 	Sys_UpdateWindows( W_ALL );
@@ -369,8 +356,6 @@ void Map_New( void ) {
 	world_entity->eclass = Eclass_ForName( "worldspawn", true );
 
 	g_mainWindow->ResetViews();
-
-	VectorCopy( vec3_origin, g_qeglobals.d_xy.origin );
 
 	Map_RestoreBetween();
 
@@ -543,11 +528,12 @@ Map_RegionXY
 */
 void Map_RegionXY( void ) {
 	Map_RegionOff();
-
+#if 0 // todo
 	region_mins[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] - 0.5 * g_qeglobals.d_xy.width / g_qeglobals.d_xy.scale;
 	region_maxs[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] + 0.5 * g_qeglobals.d_xy.width / g_qeglobals.d_xy.scale;
 	region_mins[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] - 0.5 * g_qeglobals.d_xy.height / g_qeglobals.d_xy.scale;
 	region_maxs[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] + 0.5 * g_qeglobals.d_xy.height / g_qeglobals.d_xy.scale;
+#endif
 	region_mins[ 2 ] = -4096;
 	region_maxs[ 2 ] = 4096;
 

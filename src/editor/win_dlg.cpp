@@ -25,7 +25,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 void SelectBrush( int entitynum, int brushnum ) {
 	entity_t *e;
 	Brush *b;
-	int			i;
 
 	if( entitynum == 0 )
 		e = world_entity;
@@ -56,10 +55,9 @@ void SelectBrush( int entitynum, int brushnum ) {
 	b->RemoveFromList();
 	b->AddToList( &selected_brushes );
 
-
 	Sys_UpdateWindows( W_ALL );
-	for( i = 0; i < 3; i++ )
-		g_qeglobals.d_xy.origin[ i ] = ( b->mins[ i ] + b->maxs[ i ] ) / 2;
+
+	g_mainWindow->CentreViewsOnBrush( b );
 
 	Sys_Status( "Selected.", 0 );
 }

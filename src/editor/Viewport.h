@@ -51,6 +51,8 @@ namespace huang {
 		uint8_t GetViewMode() const { return currentViewMode; }
 		uint8_t GetDrawMode() const { return currentDrawMode; }
 
+		void CentreViewOnBrush( const Brush *brush );
+
 		// Input
 		FX_EVENT_FUNC( OnMotion );
 		FX_EVENT_FUNC( OnRightButtonPress );
@@ -79,7 +81,8 @@ namespace huang {
 		FXDataTarget myForwardSpeedTarget;
 		FXDataTarget myTurnSpeedTarget;
 
-		Camera camera;
+		Camera		camera;
+		XYZView		xyz;
 
 		bool mouseButtonStates[ input::MAX_MOUSE_BUTTONS ];
 

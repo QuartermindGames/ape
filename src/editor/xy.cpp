@@ -25,18 +25,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	PAGEFLIPS	2
 
-/*
-============
-XY_Init
-============
-*/
-void XY_Init( void ) {
-	g_qeglobals.d_xy.origin[ 0 ] = 0;
-	g_qeglobals.d_xy.origin[ 1 ] = 20;
-	g_qeglobals.d_xy.origin[ 2 ] = 46;
-
-	g_qeglobals.d_xy.scale = 1;
+huang::XYZView::XYZView() {
+	origin[ 0 ] = 0.0f;
+	origin[ 1 ] = 20.0f;
+	origin[ 2 ] = 46.0f;
 }
+
+huang::XYZView::~XYZView() = default;
 
 
 /*
@@ -53,15 +48,15 @@ static	int	pressx, pressy;
 static	vec3_t	pressdelta;
 static	qboolean	press_selection;
 
-void XY_ToPoint( int x, int y, vec3_t point ) {
-	point[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] + ( x - g_qeglobals.d_xy.width / 2 ) / g_qeglobals.d_xy.scale;
-	point[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] + ( y - g_qeglobals.d_xy.height / 2 ) / g_qeglobals.d_xy.scale;
-	point[ 2 ] = 0;
+void huang::XYZView::ToPoint( int x, int y, vec3_t point ) {
+	point[ 0 ] = origin[ 0 ] + ( x - width / 2 ) / scale;
+	point[ 1 ] = origin[ 1 ] + ( y - height / 2 ) / scale;
+	point[ 2 ] = 0.0f;
 }
 
-void XY_ToGridPoint( int x, int y, vec3_t point ) {
-	point[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] + ( x - g_qeglobals.d_xy.width / 2 ) / g_qeglobals.d_xy.scale;
-	point[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] + ( y - g_qeglobals.d_xy.height / 2 ) / g_qeglobals.d_xy.scale;
+void huang::XYZView::ToGridPoint( int x, int y, vec3_t point ) {
+	point[ 0 ] = origin[ 0 ] + ( x - width / 2 ) / scale;
+	point[ 1 ] = origin[ 1 ] + ( y - height / 2 ) / scale;
 	point[ 2 ] = 0;
 	point[ 0 ] = floor( point[ 0 ] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 	point[ 1 ] = floor( point[ 1 ] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
@@ -72,7 +67,7 @@ void XY_ToGridPoint( int x, int y, vec3_t point ) {
 XY_MouseDown
 ==============
 */
-void XY_MouseDown( int x, int y, const bool buttons[] ) {
+void huang::XYZView::MouseDown( int x, int y, const bool buttons[] ) {
 	vec3_t	point;
 	vec3_t	origin, dir, right, up;
 
@@ -80,14 +75,14 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 	pressy = y;
 	VectorCopy( vec3_origin, pressdelta );
 
-	XY_ToPoint( x, y, point );
+	ToPoint( x, y, point );
 
 	VectorCopy( point, origin );
-	origin[ 2 ] = 8192;
+	origin[ 2 ] = 8192.0f;
 
 	dir[ 0 ] = 0; dir[ 1 ] = 0; dir[ 2 ] = -1;
-	right[ 0 ] = 1 / g_qeglobals.d_xy.scale; right[ 1 ] = 0; right[ 2 ] = 0;
-	up[ 0 ] = 0; up[ 1 ] = 1 / g_qeglobals.d_xy.scale; up[ 2 ] = 0;
+	right[ 0 ] = 1 / scale; right[ 1 ] = 0; right[ 2 ] = 0;
+	up[ 0 ] = 0; up[ 1 ] = 1 / scale; up[ 2 ] = 0;
 
 	press_selection = ( selected_brushes.next != &selected_brushes );
 
@@ -135,20 +130,20 @@ void XY_MouseDown( int x, int y, const bool buttons[] ) {
 XY_MouseUp
 ==============
 */
-void XY_MouseUp( int x, int y, const bool buttons[] ) {
+void huang::XYZView::MouseUp( int x, int y, const bool buttons[] ) {
 	Drag_MouseUp();
 
 	if( !press_selection )
 		Sys_UpdateWindows( W_ALL );
 }
 
-qboolean DragDelta( int x, int y, vec3_t move ) {
+bool huang::XYZView::DragDelta( int x, int y, vec3_t move ) {
 	vec3_t	xvec, yvec, delta;
 	int		i;
 
-	xvec[ 0 ] = 1 / g_qeglobals.d_xy.scale;
+	xvec[ 0 ] = 1.0f / scale;
 	xvec[ 1 ] = xvec[ 2 ] = 0;
-	yvec[ 1 ] = 1 / g_qeglobals.d_xy.scale;
+	yvec[ 1 ] = 1.0f / scale;
 	yvec[ 0 ] = yvec[ 2 ] = 0;
 
 	for( i = 0; i < 3; i++ ) {
@@ -168,7 +163,7 @@ qboolean DragDelta( int x, int y, vec3_t move ) {
 NewBrushDrag
 ==============
 */
-void NewBrushDrag( int x, int y ) {
+void huang::XYZView::NewBrushDrag( int x, int y ) {
 	vec3_t	mins, maxs, junk;
 	int		i;
 	float	temp;
@@ -179,9 +174,9 @@ void NewBrushDrag( int x, int y ) {
 	// delete the current selection
 	if( selected_brushes.next != &selected_brushes )
 		delete( selected_brushes.next );
-	XY_ToGridPoint( pressx, pressy, mins );
+	ToGridPoint( pressx, pressy, mins );
 	mins[ 2 ] = g_qeglobals.d_gridsize * ( (int)( g_qeglobals.d_new_brush_bottom_z / g_qeglobals.d_gridsize ) );
-	XY_ToGridPoint( x, y, maxs );
+	ToGridPoint( x, y, maxs );
 	maxs[ 2 ] = g_qeglobals.d_gridsize * ( (int)( g_qeglobals.d_new_brush_top_z / g_qeglobals.d_gridsize ) );
 	if( maxs[ 2 ] <= mins[ 2 ] )
 		maxs[ 2 ] = mins[ 2 ] + g_qeglobals.d_gridsize;
@@ -199,7 +194,7 @@ void NewBrushDrag( int x, int y ) {
 	n = new Brush( mins, maxs, &g_qeglobals.d_texturewin.texdef );
 	if( !n )
 		return;
-	
+
 	n->AddToList( &selected_brushes );
 
 	Entity_LinkBrush( world_entity, n );
@@ -207,12 +202,7 @@ void NewBrushDrag( int x, int y ) {
 	n->Build();
 }
 
-/*
-==============
-XY_MouseMoved
-==============
-*/
-void XY_MouseMoved( int x, int y, const bool buttons[] ) {
+void huang::XYZView::MouseMoved( int x, int y, const bool buttons[] ) {
 	// lbutton without selection = drag new brush
 	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection ) {
 		NewBrushDrag( x, y );
@@ -263,8 +253,8 @@ void XY_MouseMoved( int x, int y, const bool buttons[] ) {
 		FXuint buttons;
 		g_mainWindow->getCursorPosition( x, y, buttons );
 		if( x != cursorx || y != cursory ) {
-			g_qeglobals.d_xy.origin[ 0 ] -= ( x - cursorx ) / g_qeglobals.d_xy.scale;
-			g_qeglobals.d_xy.origin[ 1 ] += ( y - cursory ) / g_qeglobals.d_xy.scale;
+			origin[ 0 ] -= ( x - cursorx ) / scale;
+			origin[ 1 ] += ( y - cursory ) / scale;
 			g_mainWindow->setCursorPosition( cursorx, cursory );
 		}
 		return;
@@ -286,7 +276,7 @@ DRAWING
 XY_DrawGrid
 ==============
 */
-void XY_DrawGrid( void ) {
+void huang::XYZView::DrawGrid() {
 	float	x, y, xb, xe, yb, ye;
 	int		w, h;
 
@@ -295,25 +285,25 @@ void XY_DrawGrid( void ) {
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 
-	w = g_qeglobals.d_xy.width / 2 / g_qeglobals.d_xy.scale;
-	h = g_qeglobals.d_xy.height / 2 / g_qeglobals.d_xy.scale;
+	w = width / 2 / scale;
+	h = height / 2 / scale;
 
-	xb = g_qeglobals.d_xy.origin[ 0 ] - w;
+	xb = origin[ 0 ] - w;
 	if( xb < region_mins[ 0 ] )
 		xb = region_mins[ 0 ];
 	xb = 64 * floor( xb / 64 );
 
-	xe = g_qeglobals.d_xy.origin[ 0 ] + w;
+	xe = origin[ 0 ] + w;
 	if( xe > region_maxs[ 0 ] )
 		xe = region_maxs[ 0 ];
 	xe = 64 * ceil( xe / 64 );
 
-	yb = g_qeglobals.d_xy.origin[ 1 ] - h;
+	yb = origin[ 1 ] - h;
 	if( yb < region_mins[ 1 ] )
 		yb = region_mins[ 1 ];
 	yb = 64 * floor( yb / 64 );
 
-	ye = g_qeglobals.d_xy.origin[ 1 ] + h;
+	ye = origin[ 1 ] + h;
 	if( ye > region_maxs[ 1 ] )
 		ye = region_maxs[ 1 ];
 	ye = 64 * ceil( ye / 64 );
@@ -340,7 +330,7 @@ void XY_DrawGrid( void ) {
 	}
 
 	// draw minor blocks
-	if( g_qeglobals.d_showgrid && g_qeglobals.d_gridsize * g_qeglobals.d_xy.scale >= 4 ) {
+	if( g_qeglobals.d_showgrid && g_qeglobals.d_gridsize * scale >= 4 ) {
 		glColor3fv( g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ] );
 
 		glBegin( GL_LINES );
@@ -377,14 +367,14 @@ void XY_DrawGrid( void ) {
 		}
 	}
 #endif
-	}
+}
 
 /*
 ==============
 XY_DrawBlockGrid
 ==============
 */
-void XY_DrawBlockGrid( void ) {
+void huang::XYZView::DrawBlockGrid() {
 	float	x, y, xb, xe, yb, ye;
 	int		w, h;
 	char	text[ 32 ];
@@ -394,25 +384,25 @@ void XY_DrawBlockGrid( void ) {
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 
-	w = g_qeglobals.d_xy.width / 2 / g_qeglobals.d_xy.scale;
-	h = g_qeglobals.d_xy.height / 2 / g_qeglobals.d_xy.scale;
+	w = width / 2 / scale;
+	h = height / 2 / scale;
 
-	xb = g_qeglobals.d_xy.origin[ 0 ] - w;
+	xb = origin[ 0 ] - w;
 	if( xb < region_mins[ 0 ] )
 		xb = region_mins[ 0 ];
 	xb = 1024 * floor( xb / 1024 );
 
-	xe = g_qeglobals.d_xy.origin[ 0 ] + w;
+	xe = origin[ 0 ] + w;
 	if( xe > region_maxs[ 0 ] )
 		xe = region_maxs[ 0 ];
 	xe = 1024 * ceil( xe / 1024 );
 
-	yb = g_qeglobals.d_xy.origin[ 1 ] - h;
+	yb = origin[ 1 ] - h;
 	if( yb < region_mins[ 1 ] )
 		yb = region_mins[ 1 ];
 	yb = 1024 * floor( yb / 1024 );
 
-	ye = g_qeglobals.d_xy.origin[ 1 ] + h;
+	ye = origin[ 1 ] + h;
 	if( ye > region_maxs[ 1 ] )
 		ye = region_maxs[ 1 ];
 	ye = 1024 * ceil( ye / 1024 );
@@ -470,7 +460,7 @@ void DrawCameraIcon( const huang::Camera *camera ) {
 	glEnd();
 }
 
-BOOL FilterBrush( const Brush *pb ) {
+bool FilterBrush( const Brush *pb ) {
 	if( !pb->owner )
 		return FALSE;		// during construction
 
@@ -616,7 +606,7 @@ void DrawPathLines( void ) {
 XY_Draw
 ==============
 */
-void XY_Draw( const huang::Viewport *viewport ) {
+void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 	Brush *brush;
 	float	w, h;
 	entity_t *e;
@@ -628,13 +618,13 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	if( !active_brushes.next )
 		return;	// not valid yet
 
-	if( g_qeglobals.d_xy.timing )
+	if( timing )
 		start = Sys_DoubleTime();
 
 	//
 	// clear
 	//
-	g_qeglobals.d_xy.d_dirty = false;
+	d_dirty = false;
 
 	glClearColor(
 		g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 0 ],
@@ -650,12 +640,12 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 
-	w = g_qeglobals.d_xy.width / 2 / g_qeglobals.d_xy.scale;
-	h = g_qeglobals.d_xy.height / 2 / g_qeglobals.d_xy.scale;
-	mins[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] - w;
-	maxs[ 0 ] = g_qeglobals.d_xy.origin[ 0 ] + w;
-	mins[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] - h;
-	maxs[ 1 ] = g_qeglobals.d_xy.origin[ 1 ] + h;
+	w = width / 2 / scale;
+	h = height / 2 / scale;
+	mins[ 0 ] = origin[ 0 ] - w;
+	maxs[ 0 ] = origin[ 0 ] + w;
+	mins[ 1 ] = origin[ 1 ] - h;
+	maxs[ 1 ] = origin[ 1 ] + h;
 
 	glOrtho( mins[ 0 ], maxs[ 0 ], mins[ 1 ], maxs[ 1 ], -8000, 8000 );
 
@@ -673,7 +663,7 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	//
 	// now draw the grid
 	//
-	XY_DrawGrid();
+	DrawGrid();
 
 	//
 	// draw stuff
@@ -721,7 +711,7 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	// draw block grid
 	//
 	if( g_qeglobals.show_blocks )
-		XY_DrawBlockGrid();
+		DrawBlockGrid();
 
 	//
 	// now draw selected brushes
@@ -766,7 +756,7 @@ void XY_Draw( const huang::Viewport *viewport ) {
 	// now draw camera point
 	DrawCameraIcon( viewport->GetCamera() );
 
-	if( g_qeglobals.d_xy.timing ) {
+	if( timing ) {
 		end = Sys_DoubleTime();
 		Sys_Printf( "xy: %i ms\n", (int)( 1000 * ( end - start ) ) );
 	}
@@ -777,14 +767,14 @@ void XY_Draw( const huang::Viewport *viewport ) {
 XY_Overlay
 ==============
 */
-void XY_Overlay( void ) {
+void huang::XYZView::Overlay() {
 	int	w, h;
 	int	r[ 4 ];
 	static	vec3_t	lastz;
 	static	vec3_t	lastcamera;
 
 
-	glViewport( 0, 0, g_qeglobals.d_xy.width, g_qeglobals.d_xy.height );
+	glViewport( 0, 0, width, height );
 
 	//
 	// set up viewpoint
@@ -792,15 +782,15 @@ void XY_Overlay( void ) {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 
-	w = g_qeglobals.d_xy.width / 2 / g_qeglobals.d_xy.scale;
-	h = g_qeglobals.d_xy.height / 2 / g_qeglobals.d_xy.scale;
-	glOrtho( g_qeglobals.d_xy.origin[ 0 ] - w, g_qeglobals.d_xy.origin[ 0 ] + w
-		, g_qeglobals.d_xy.origin[ 1 ] - h, g_qeglobals.d_xy.origin[ 1 ] + h, -8000, 8000 );
+	w = width / 2 / scale;
+	h = height / 2 / scale;
+	glOrtho( origin[ 0 ] - w, origin[ 0 ] + w
+		, origin[ 1 ] - h, origin[ 1 ] + h, -8000, 8000 );
 	//
 	// erase the old camera and z checker positions
 	// if the entire xy hasn't been redrawn
 	//
-	if( g_qeglobals.d_xy.d_dirty ) {
+	if( d_dirty ) {
 		glReadBuffer( GL_BACK );
 		glDrawBuffer( GL_FRONT );
 
@@ -812,7 +802,7 @@ void XY_Overlay( void ) {
 		glGetIntegerv( GL_CURRENT_RASTER_POSITION, r );
 		glCopyPixels( r[ 0 ], r[ 1 ], 100, 100, GL_COLOR );
 	}
-	g_qeglobals.d_xy.d_dirty = true;
+	d_dirty = true;
 
 	//
 	// save off underneath where we are about to draw
@@ -854,3 +844,16 @@ void XY_Overlay( void ) {
 	glFinish();
 }
 
+void huang::XYZView::ResetPosition() {
+	// See if an entity exists that we can reset to
+	entity_t *entity = Map_FindClass( "info_player_start" );
+	if( entity == nullptr ) {
+		entity = Map_FindClass( "info_player_deathmatch" );
+		if( entity == nullptr ) {
+			VectorCopy( vec3_origin, origin );
+			return;
+		}
+	}
+
+	GetVectorForKey( entity, "origin", origin );
+}

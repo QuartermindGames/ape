@@ -278,7 +278,7 @@ LONG WINAPI CommandHandler(
 	case ID_VIEW_TEXTURE:
 		SetInspectorMode( W_TEXTURE );
 		break;
-
+#if 0
 	case ID_VIEW_100:
 		g_qeglobals.d_xy.scale = 1;
 		Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
@@ -288,7 +288,6 @@ LONG WINAPI CommandHandler(
 		Sys_UpdateWindows( W_Z | W_Z_OVERLAY );
 		break;
 
-#if 0 // TODO
 	case ID_VIEW_CENTER:
 		camera.angles[ ROLL ] = camera.angles[ PITCH ] = 0;
 		camera.angles[ YAW ] = 22.5f *
@@ -1211,6 +1210,12 @@ void huang::MainWindow::LoadWorld( const char *path ) {
 	char buf[ 512 ];
 	snprintf( buf, sizeof( buf ), "%s - " EDITOR_TITLE, path );
 	setTitle( buf );
+}
+
+void huang::MainWindow::CentreViewsOnBrush( const Brush *b ) {
+	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
+		viewports[ i ]->CentreViewOnBrush( b );
+	}
 }
 
 // Start

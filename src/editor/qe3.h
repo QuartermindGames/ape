@@ -157,8 +157,6 @@ struct QEGlobals_t {
 
 	int	         d_pointfile_display_list;
 
-	xy_t         d_xy;
-
 	LPMRUMENU    d_lpMruMenu;
 
 	SavedInfo_t  d_savedinfo;

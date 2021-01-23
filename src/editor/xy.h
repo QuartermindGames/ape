@@ -22,27 +22,49 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // window system independent camera view code
 
-typedef struct
-{
-	int		width, height;
+namespace huang {
+	class XYZView {
+	public:
+		enum class Angle {
+			TOP, LEFT, FRONT
+		};
 
-	qboolean	timing;
+		XYZView();
+		~XYZView();
 
-	vec3_t	origin;			// at center of window
-	float	scale;
+		void MouseDown( int x, int y, const bool buttons[] );
+		void MouseUp( int x, int y, const bool buttons[] );
+		void MouseMoved( int x, int y, const bool buttons[] );
 
-	float	topclip, bottomclip;
+		void Draw( const huang::Viewport *viewport );
+		void Overlay();
 
-	qboolean d_dirty;
-} xy_t;
+		void ResetPosition();
 
-BOOL XYExcludeBrush( Brush *pb);
+		vec3_t origin;
 
-void XY_Init (void);
-void XY_MouseDown (int x, int y, const bool buttons[] );
-void XY_MouseUp (int x, int y, const bool buttons[] );
-void XY_MouseMoved (int x, int y, const bool buttons[] );
-void XY_Draw ( const huang::Viewport *viewport );
-void XY_Overlay (void);
+		int width{ 640 }, height{ 480 };
+		
+		float scale{ 1.0f };
 
-BOOL FilterBrush( const Brush *pb);
+	protected:
+	private:
+		void ToPoint( int x, int y, vec3_t point );
+		void ToGridPoint( int x, int y, vec3_t point );
+
+		bool DragDelta( int x, int y, vec3_t move );
+
+		void NewBrushDrag( int x, int y );
+
+		void DrawGrid();
+		void DrawBlockGrid();
+
+		bool timing{ false };
+
+		float topClip{ 0.0f }, bottomClip{ 0.0f };
+
+		bool d_dirty{ false };
+	};
+}
+
+bool FilterBrush( const Brush *pb );
