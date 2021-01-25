@@ -214,7 +214,7 @@ void Eclass_ScanFile (char *filename)
 
 
 
-void Eclass_InitForSourceDirectory (char *path)
+void Eclass_InitForSourceDirectory (const char *path)
 {
 	struct _finddata_t fileinfo;
 	int		handle;
@@ -250,7 +250,7 @@ void Eclass_InitForSourceDirectory (char *path)
 	eclass_bad = Eclass_InitFromText ("/*QUAKED UNKNOWN_CLASS (0.75 0.75 0.75) ?");
 }
 
-eclass_t *Eclass_ForName (char *name, qboolean has_brushes)
+eclass_t *Eclass_ForName (const char *name, qboolean has_brushes)
 {
 	eclass_t	*e;
 	char		init[1024];

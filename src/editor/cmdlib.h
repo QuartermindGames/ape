@@ -65,7 +65,7 @@ void	SafeRead (FILE *f, void *buffer, int count);
 void	SafeWrite (FILE *f, void *buffer, int count);
 
 int		LoadFile (const char *filename, void **bufferptr);
-int		LoadFileNoCrash (char *filename, void **bufferptr);
+int		LoadFileNoCrash (const char *filename, void **bufferptr);
 void	SaveFile (char *filename, void *buffer, int count);
 
 void 	DefaultExtension (char *path, char *extension);
@@ -95,6 +95,6 @@ extern	qboolean	com_eof;
 
 #define	MAX_NUM_ARGVS	32
 extern	int		argc;
-extern	char	*argv[MAX_NUM_ARGVS];
+extern	const char	*argv[MAX_NUM_ARGVS];
 
 #endif

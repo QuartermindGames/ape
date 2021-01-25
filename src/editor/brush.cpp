@@ -82,7 +82,7 @@ winding_t *NewWinding( int points ) {
 	if( points > MAX_POINTS_ON_WINDING )
 		Error( "NewWinding: %i points", points );
 
-	size = (int)( (winding_t *)0 )->points[ points ];
+	size = (intptr_t)( (winding_t *)0 )->points[ points ];
 	w = (winding_t *)malloc( size );
 	memset( w, 0, size );
 	w->maxpoints = points;
@@ -105,7 +105,7 @@ winding_t *Winding_Clone( winding_t *w ) {
 	int			size;
 	winding_t *c;
 
-	size = (int)( (winding_t *)0 )->points[ w->numpoints ];
+	size = (intptr_t)( (winding_t *)0 )->points[ w->numpoints ];
 	c = (winding_t *)qmalloc( size );
 	memcpy( c, w, size );
 	return c;
@@ -589,7 +589,7 @@ void Brush::MakeFacePlanes() {
 }
 
 void Brush::DrawBrushEntityName() {
-	char *name;
+	const char *name;
 	float	a, s, c;
 	vec3_t	mid;
 	int		i;
@@ -824,7 +824,7 @@ Brush_Write
 */
 void Brush::Write( FILE *f ) {
 	face_t *fa;
-	char *pname;
+	const char *pname;
 	int		i;
 
 	fprintf( f, "{\n" );
@@ -1032,7 +1032,7 @@ Returns NULL and 0 if not hit at all
 ==============
 */
 face_t *Brush::Ray( vec3_t origin, vec3_t dir, float *dist ) {
-	face_t *f, *firstface;
+	face_t *f, *firstface = nullptr;
 	vec3_t	p1, p2;
 	float	frac, d1, d2;
 	int		i;

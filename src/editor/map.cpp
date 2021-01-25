@@ -145,7 +145,7 @@ void Map_BuildBrushData( void ) {
 	Sys_EndWait();
 }
 
-entity_t *Map_FindClass( char *cname ) {
+entity_t *Map_FindClass( const char *cname ) {
 	entity_t *ent;
 
 	for( ent = entities.next; ent != &entities; ent = ent->next ) {

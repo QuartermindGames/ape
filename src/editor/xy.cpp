@@ -522,12 +522,11 @@ void DrawPathLines( void ) {
 	vec3_t	mid, mid1;
 	entity_t *se, *te;
 	Brush *sb, *tb;
-	char *psz;
 	vec3_t	dir, s1, s2;
 	vec_t	len, f;
 	int		arrows;
 	int			num_entities;
-	char *ent_target[ MAX_MAP_ENTITIES ];
+	const char *ent_target[ MAX_MAP_ENTITIES ];
 	entity_t *ent_entity[ MAX_MAP_ENTITIES ];
 
 
@@ -541,8 +540,7 @@ void DrawPathLines( void ) {
 	}
 
 	for( se = entities.next; se != &entities; se = se->next ) {
-		psz = ValueForKey( se, "targetname" );
-
+		const char *psz = ValueForKey( se, "targetname" );
 		if( psz == NULL || psz[ 0 ] == '\0' )
 			continue;
 
@@ -649,6 +647,11 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 
 	glOrtho( mins[ 0 ], maxs[ 0 ], mins[ 1 ], maxs[ 1 ], -8000, 8000 );
 
+	//
+	// now draw the grid
+	//
+	DrawGrid();
+
 	switch( viewport->GetViewMode() ) {
 	default: break;
 	case huang::VIEW_MODE_FRONT:
@@ -659,11 +662,6 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 		glRotatef( -90, 1, 0, 0 );	    // put Z going up
 		break;
 	}
-
-	//
-	// now draw the grid
-	//
-	DrawGrid();
 
 	//
 	// draw stuff

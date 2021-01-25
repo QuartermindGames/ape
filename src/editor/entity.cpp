@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "qe3.h"
 
-char *ValueForKey( entity_t *ent, char *key ) {
+const char *ValueForKey( entity_t *ent, const char *key ) {
 	epair_t *ep;
 
 	for( ep = ent->epairs; ep; ep = ep->next )
@@ -31,7 +31,7 @@ char *ValueForKey( entity_t *ent, char *key ) {
 	return "";
 }
 
-void 	SetKeyValue( entity_t *ent, char *key, char *value ) {
+void 	SetKeyValue( entity_t *ent, const char *key, char *value ) {
 	epair_t *ep;
 
 	if( ent == NULL )
@@ -73,24 +73,18 @@ void 	DeleteKey( entity_t *ent, char *key ) {
 	}
 }
 
-float	FloatForKey( entity_t *ent, char *key ) {
-	char *k;
-
-	k = ValueForKey( ent, key );
+float	FloatForKey( entity_t *ent, const char *key ) {
+	const char *k = ValueForKey( ent, key );
 	return atof( k );
 }
 
-int IntForKey( entity_t *ent, char *key ) {
-	char *k;
-
-	k = ValueForKey( ent, key );
+int IntForKey( entity_t *ent, const char *key ) {
+	const char *k = ValueForKey( ent, key );
 	return atoi( k );
 }
 
-void 	GetVectorForKey( entity_t *ent, char *key, vec3_t vec ) {
-	char *k;
-
-	k = ValueForKey( ent, key );
+void 	GetVectorForKey( entity_t *ent, const char *key, vec3_t vec ) {
+	const char *k = ValueForKey( ent, key );
 	sscanf( k, "%f %f %f", &vec[ 0 ], &vec[ 1 ], &vec[ 2 ] );
 }
 
@@ -449,8 +443,8 @@ int GetUniqueTargetId( int iHint ) {
 	for( ; pe != NULL && pe != &entities; pe = pe->next ) {
 		i = IntForKey( pe, "target" );
 		if( i ) {
-			iMin = min( i, iMin );
-			iMax = max( i, iMax );
+			iMin = std::min<int>( i, iMin );
+			iMax = std::max<int>( i, iMax );
 			if( i == iHint )
 				fFound = TRUE;
 		}

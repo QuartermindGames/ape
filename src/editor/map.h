@@ -52,4 +52,4 @@ void	Map_RegionBrush (void);
 void	Map_RegionSelectedBrushes (void);
 qboolean Map_IsBrushFiltered ( Brush *b);
 
-entity_t *Map_FindClass( char *cname );
+entity_t *Map_FindClass( const char *cname );

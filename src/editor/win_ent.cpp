@@ -110,7 +110,7 @@ BOOL CALLBACK FieldWndProc(
 			return FALSE;
 		}
 		break;
-
+#if 0
 	case WM_KEYDOWN:
 		if (LOWORD(wParam) == VK_TAB)
 		{
@@ -136,6 +136,7 @@ BOOL CALLBACK FieldWndProc(
 			}
 		}
 		break;
+#endif
 //	case WM_NCHITTEST:
 	case WM_LBUTTONDOWN:
 		SetFocus (hwnd);

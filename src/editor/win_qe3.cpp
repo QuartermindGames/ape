@@ -249,6 +249,7 @@ static HANDLE hf;              /* file handle                   */
 
 void OpenDialog (void)
 {
+#if 0
 	/*
 	 * Obtain the system directory name and
 	 * store it in szDirName.
@@ -290,10 +291,12 @@ void OpenDialog (void)
 	/* Open the file. */
 
 	Map_LoadFile (ofn.lpstrFile);
+#endif
 }
 
 void ProjectDialog (void)
 {
+#if 0
 	/*
 	 * Obtain the system directory name and
 	 * store it in szDirName.
@@ -332,11 +335,13 @@ void ProjectDialog (void)
 	/* Open the file. */
 	if (!QE_LoadProject(ofn.lpstrFile))
 		Error ("Couldn't load project file");
+#endif
 }
 
 
 void SaveAsDialog (void)
 {
+#if 0
 	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
 	strcat (szDirName, "\\maps");
 
@@ -374,6 +379,7 @@ void SaveAsDialog (void)
 			ID_FILE_EXIT);
 
 	Map_SaveFile (ofn.lpstrFile, false);	// ignore region
+#endif
 }
 
 /*

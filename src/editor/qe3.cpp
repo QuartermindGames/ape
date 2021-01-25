@@ -43,7 +43,7 @@ void QE_CheckOpenGLForErrors(void)
 char *ExpandReletivePath (char *p)
 {
 	static char	temp[1024];
-	char	*base;
+	const char	*base;
 
 	if (!p || !p[0])
 		return NULL;
@@ -100,7 +100,7 @@ void QE_CheckAutoSave( void )
 
 		// Ensure we have a valid path set before attempting to save
 		const char *autosavePath = ValueForKey( g_qeglobals.d_project_entity, "autosave" );
-		if( autosavePath != '\0' ) {
+		if( *autosavePath != '\0' ) {
 			Sys_Status( "Autosaving...", 0 );
 			Map_SaveFile( autosavePath, false );
 			Sys_Status( "Autosaving...Saved.", 0 );
@@ -119,7 +119,7 @@ void QE_CheckAutoSave( void )
 QE_LoadProject
 ===========
 */
-qboolean QE_LoadProject (char *projectfile)
+qboolean QE_LoadProject (const char *projectfile)
 {
 	char	*data;
 
@@ -133,8 +133,8 @@ qboolean QE_LoadProject (char *projectfile)
 		Error ("Couldn't parse %s", projectfile);
 	free (data);
 
-	char *entityPath = ValueForKey( g_qeglobals.d_project_entity, "entitypath" );
-	if( entityPath != '\0' ) {
+	const char *entityPath = ValueForKey( g_qeglobals.d_project_entity, "entitypath" );
+	if( *entityPath != '\0' ) {
 		Eclass_InitForSourceDirectory( entityPath );
 	}
 
@@ -244,7 +244,6 @@ from the first selected to the secon
 void ConnectEntities (void)
 {
 	entity_t	*e1, *e2, *e;
-	char		*target, *tn;
 	int			maxtarg, targetnum;
 	char		newtarg[32];
 
@@ -272,7 +271,7 @@ void ConnectEntities (void)
 		return;
 	}
 
-	target = ValueForKey (e1, "target");
+	const char *target = ValueForKey (e1, "target");
 	if (target && target[0])
 		strcpy (newtarg, target);
 	else
@@ -286,7 +285,7 @@ void ConnectEntities (void)
 			maxtarg = 0;
 			for (e=entities.next ; e != &entities ; e=e->next)
 			{
-				tn = ValueForKey (e, "targetname");
+				const char *tn = ValueForKey (e, "targetname");
 				if (tn && tn[0])
 				{
 					targetnum = atoi(tn+1);

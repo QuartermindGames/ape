@@ -39,6 +39,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #	define Q_strcmpi	strcmpi
 #endif
 
+#include <algorithm>
+
 #include <fx.h>
 #include <fxkeys.h>
 
@@ -157,7 +159,7 @@ struct QEGlobals_t {
 
 	int	         d_pointfile_display_list;
 
-	LPMRUMENU    d_lpMruMenu;
+	//LPMRUMENU    d_lpMruMenu;
 
 	SavedInfo_t  d_savedinfo;
 
@@ -293,7 +295,7 @@ void     QE_CheckOpenGLForErrors( void );
 void     QE_ExpandBspString( char *bspaction, char *out, char *mapname );
 void     QE_Init( void );
 qboolean QE_KeyDown( int key );
-qboolean QE_LoadProject( char *projectfile );
+qboolean QE_LoadProject( const char *projectfile );
 qboolean QE_SingleBrush( void );
 
 /*
@@ -328,12 +330,12 @@ namespace huang {
 		FXMenuPane *CreateMenus( FXApp *app, FXMenuBar *menuBar, const char *menuName, MenuItem *items );
 	
 		namespace reg {
-			const char *ReadString( const char *section, const char *key, const char *default = "" );
-			int ReadInt( const char *section, const char *key, int default = 0 );
-			bool ReadBool( const char *section, const char *key, bool default = false );
-			float ReadFloat( const char *section, const char *key, float default = 0.0f );
-			FXColor ReadColour( const char *section, const char *key, FXColor default = 0u );
-			int ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t default = vec3_origin );
+			const char *ReadString( const char *section, const char *key, const char *def = "" );
+			int ReadInt( const char *section, const char *key, int def = 0 );
+			bool ReadBool( const char *section, const char *key, bool def = false );
+			float ReadFloat( const char *section, const char *key, float def = 0.0f );
+			FXColor ReadColour( const char *section, const char *key, FXColor def = 0u );
+			int ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t def = vec3_origin );
 			
 			bool WriteString( const char *section, const char *key, const char *value );
 			bool WriteInt( const char *section, const char *key, int value );

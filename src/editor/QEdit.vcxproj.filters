@@ -45,9 +45,6 @@
     <ClCompile Include="mathlib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mru.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="parse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -68,35 +68,35 @@ FXMenuPane *huang::util::CreateMenus( FXApp *app, FXMenuBar *menuBar, const char
 	return menu;
 }
 
-const char *huang::util::reg::ReadString( const char *section, const char *key, const char *default ) {
+const char *huang::util::reg::ReadString( const char *section, const char *key, const char *def ) {
 	FXApp *app = g_mainWindow->getApp();
-	return app->reg().readStringEntry( section, key, default );
+	return app->reg().readStringEntry( section, key, def );
 }
 
-int huang::util::reg::ReadInt( const char *section, const char *key, int default ) {
+int huang::util::reg::ReadInt( const char *section, const char *key, int def ) {
 	FXApp *app = g_mainWindow->getApp();
-	return app->reg().readIntEntry( section, key, default );
+	return app->reg().readIntEntry( section, key, def );
 }
 
-bool huang::util::reg::ReadBool( const char *section, const char *key, bool default ) {
+bool huang::util::reg::ReadBool( const char *section, const char *key, bool def ) {
 	FXApp *app = g_mainWindow->getApp();
-	return app->reg().readBoolEntry( section, key, default );
+	return app->reg().readBoolEntry( section, key, def );
 }
 
-float huang::util::reg::ReadFloat( const char *section, const char *key, float default ) {
+float huang::util::reg::ReadFloat( const char *section, const char *key, float def ) {
 	FXApp *app = g_mainWindow->getApp();
-	return app->reg().readRealEntry( section, key, default );
+	return app->reg().readRealEntry( section, key, def );
 }
 
-FXColor huang::util::reg::ReadColour( const char *section, const char *key, FXColor default ) {
+FXColor huang::util::reg::ReadColour( const char *section, const char *key, FXColor def ) {
 	FXApp *app = g_mainWindow->getApp();
-	return app->reg().readColorEntry( section, key, default );
+	return app->reg().readColorEntry( section, key, def );
 }
 
-int huang::util::reg::ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t default ) {
+int huang::util::reg::ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t def ) {
 	const char *str = ReadString( section, key );
 	if( *str == '\0' ) {
-		VectorCopy( default, out );
+		VectorCopy( def, out );
 		return 0;
 	}
 

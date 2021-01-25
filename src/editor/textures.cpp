@@ -444,7 +444,6 @@ void FillTextureMenu (void)
 	struct _finddata_t fileinfo;
 	int		handle;
 	char	dirstring[1024];
-	char	*path;
 
 	hmenu = GetSubMenu (GetMenu(g_qeglobals.d_hwndMain), MENU_TEXTURE);
 
@@ -453,7 +452,7 @@ void FillTextureMenu (void)
 		DeleteMenu (hmenu, CMD_TEXTUREWAD+i, MF_BYCOMMAND);
 
 	// add everything
-	path = ValueForKey (g_qeglobals.d_project_entity, "texturepath");
+	const char *path = ValueForKey (g_qeglobals.d_project_entity, "texturepath");
 
 	sprintf (dirstring, "%s/*.*", path);
 

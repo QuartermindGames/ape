@@ -186,7 +186,7 @@ int Q_strcasecmp (const char *s1, const char *s2)
 
 
 int		argc;
-char	*argv[MAX_NUM_ARGVS];
+const char	*argv[MAX_NUM_ARGVS];
 
 /*
 ============
@@ -340,7 +340,7 @@ LoadFileNoCrash
 returns -1 length if not present
 ==============
 */
-int    LoadFileNoCrash (char *filename, void **bufferptr)
+int    LoadFileNoCrash (const char *filename, void **bufferptr)
 {
 	FILE	*f;
 	int    length;

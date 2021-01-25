@@ -56,5 +56,6 @@ add_executable(FoxEd
         z.cpp
         z.h)
 
-target_include_directories(FoxEd PRIVATE ../3rdparty/fox-1.6.57/include/)
-target_link_libraries(FoxEd libfox-1.6 libglew)
+target_include_directories(FoxEd PRIVATE ../3rdparty/fox-1.6.57/include/ glew/include/)
+target_link_directories(FoxEd PRIVATE glew/lib/Release/x64/)
+target_link_libraries(FoxEd libfox-1.6 glew32s platform)

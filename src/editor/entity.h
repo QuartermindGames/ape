@@ -39,8 +39,8 @@ typedef struct eclass_s {
 
 extern	eclass_t *eclass;
 
-void Eclass_InitForSourceDirectory( char *path );
-eclass_t *Eclass_ForName( char *name, qboolean has_brushes );
+void Eclass_InitForSourceDirectory( const char *path );
+eclass_t *Eclass_ForName( const char *name, qboolean has_brushes );
 
 //===================================================
 
@@ -59,12 +59,12 @@ typedef struct entity_s {
 	epair_t *epairs;
 } entity_t;
 
-char *ValueForKey( entity_t *ent, char *key );
-void	SetKeyValue( entity_t *ent, char *key, char *value );
+const char *ValueForKey( entity_t *ent, const char *key );
+void	SetKeyValue( entity_t *ent, const char *key, char *value );
 void 	DeleteKey( entity_t *ent, char *key );
-float	FloatForKey( entity_t *ent, char *key );
-int		IntForKey( entity_t *ent, char *key );
-void 	GetVectorForKey( entity_t *ent, char *key, vec3_t vec );
+float	FloatForKey( entity_t *ent, const char *key );
+int		IntForKey( entity_t *ent, const char *key );
+void 	GetVectorForKey( entity_t *ent, const char *key, vec3_t vec );
 
 void		Entity_Free( entity_t *e );
 entity_t *Entity_Parse( qboolean onlypairs );

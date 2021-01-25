@@ -31,9 +31,6 @@ using namespace huang::util;
 
 BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize );
 
-static HWND CreateMyStatusWindow( HINSTANCE hInst );
-static HWND CreateToolBar( HINSTANCE hinst );
-
 extern void WXY_Print( void );
 
 /*
@@ -50,7 +47,6 @@ qboolean ConfirmModified( void );
 void  Select_Ungroup( void );
 
 void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
-	char *in;
 	char	src[ 1024 ];
 	char	rsh[ 1024 ];
 	char	base[ 256 ];
@@ -59,7 +55,7 @@ void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
 	sprintf( src, "%s/maps/%s", ValueForKey( g_qeglobals.d_project_entity, "remotebasepath" ), base );
 	strcpy( rsh, ValueForKey( g_qeglobals.d_project_entity, "rshcmd" ) );
 
-	in = ValueForKey( g_qeglobals.d_project_entity, bspaction );
+	const char *in = ValueForKey( g_qeglobals.d_project_entity, bspaction );
 	while( *in ) {
 		if( in[ 0 ] == '!' ) {
 			strcpy( out, rsh );
@@ -232,6 +228,7 @@ LONG WINAPI CommandHandler(
 		PostMessage( hWnd, WM_CLOSE, 0, 0L );
 		break;
 
+#if 0
 	case ID_FILE_OPEN:
 		if( !ConfirmModified() )
 			return TRUE;
@@ -249,6 +246,8 @@ LONG WINAPI CommandHandler(
 		else
 			Map_SaveFile( currentmap, false );	// ignore region
 		break;
+#endif
+
 	case ID_FILE_SAVEAS:
 		SaveAsDialog();
 		break;
@@ -623,6 +622,7 @@ LONG WINAPI CommandHandler(
 		Map_RegionSelectedBrushes();
 		break;
 
+#if 0
 	case IDMRU + 1:
 	case IDMRU + 2:
 	case IDMRU + 3:
@@ -634,6 +634,7 @@ LONG WINAPI CommandHandler(
 	case IDMRU + 9:
 		DoMru( hWnd, LOWORD( wParam ) );
 		break;
+#endif
 
 		//
 		// help menu
@@ -709,17 +710,17 @@ static void M_LoadGlobalRegistryData() {
 	g_qeglobals.d_savedinfo.show_names = reg::ReadBool( "Global", "showNames", true );
 
 	// Colours
-	vec3_t default;
-	VectorSet( default, 0.25f );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_TEXTUREBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ], default );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ], default );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERABACK ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ], default );
-	VectorSet( default, 0.35f );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMINOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ], default );
-	VectorSet( default, 0.45f );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMAJOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ], default );
-	VectorSet( default, 1.0f );
-	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERA_WIREFRAME ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ], default );
+	vec3_t def;
+	VectorSet( def, 0.25f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_TEXTUREBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_TEXTUREBACK ], def );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDBACK ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ], def );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERABACK ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERABACK ], def );
+	VectorSet( def, 0.35f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMINOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ], def );
+	VectorSet( def, 0.45f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_GRIDMAJOR ), g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ], def );
+	VectorSet( def, 1.0f );
+	reg::ReadColourF( "Global", STRINGIFY( COLOR_CAMERA_WIREFRAME ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ], def );
 }
 
 /*
@@ -890,25 +891,6 @@ void Sys_UpdateStatusBar( void ) {
 
 void Sys_Status( const char *psz, int part ) {
 	//SendMessage(g_qeglobals.d_hwndStatus, SB_SETTEXT, part, (LPARAM)psz);
-}
-
-static HWND CreateMyStatusWindow( HINSTANCE hInst ) {
-	HWND hWnd;
-	int partsize[ 3 ] = { 300, 1100, -1 };
-
-	hWnd = CreateWindowEx( WS_EX_TOPMOST, // no extended styles
-		STATUSCLASSNAME,                 // status bar
-		"",                              // no text
-		WS_CHILD | WS_BORDER | WS_VISIBLE,  // styles
-		-100, -100, 10, 10,              // x, y, cx, cy
-		g_qeglobals.d_hwndMain,          // parent window
-		(HMENU)100,                      // window ID
-		hInst,                           // instance
-		NULL );							 // window data
-
-	SendMessage( hWnd, SB_SETPARTS, 3, (long)partsize );
-
-	return hWnd;
 }
 
 //==============================================================

@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //      Gilles Vollant (100144.2636@compuserve.com)
 //
 //*************************************************************
-
+#if 0
 #ifndef __MRU_H__
 #define __MRU_H__
 
@@ -98,4 +98,5 @@ WIN32KIND GetWin32Kind();
 
 
 //////////////////////////////////////////////////////////////
+#endif
 #endif

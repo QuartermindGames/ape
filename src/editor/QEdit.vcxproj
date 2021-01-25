@@ -124,7 +124,6 @@
     <ClCompile Include="lbmlib.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="mathlib.cpp" />
-    <ClCompile Include="mru.cpp" />
     <ClCompile Include="parse.cpp" />
     <ClCompile Include="points.cpp" />
     <ClCompile Include="qe3.cpp" />
