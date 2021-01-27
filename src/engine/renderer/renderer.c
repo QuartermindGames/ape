@@ -572,7 +572,6 @@ void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
 }
 
 static void Gfx_RenderScene( PLCamera *camera, bool smPass ) {
-	/* Map_DrawSky( camera ); */
 	Map_Draw( camera, smPass );
 	Act_DrawActors();
 }

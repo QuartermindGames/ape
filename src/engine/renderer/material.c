@@ -12,7 +12,6 @@
 #include "map.h"
 
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
-static Material *fallbackMaterial;
 
 typedef struct MaterialVariable {
 	int programSlot;
@@ -32,6 +31,11 @@ typedef struct Material {
 	unsigned int numPasses;
 	PLLinkedListNode *node;
 } Material;
+
+static Material *fallbackMaterial;
+Material *RM_GetFallbackMaterial( void ) {
+    return fallbackMaterial;
+}
 
 void RM_InitializeMaterialSystem( void ) {
 	PrintMsg( "Initializing material system\n" );

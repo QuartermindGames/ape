@@ -29,3 +29,5 @@ void RM_ClearMaterials( CacheGroup group );
 
 /* drawing */
 void RM_DrawMesh( Material *material, PLMesh *mesh );
+
+Material *RM_GetFallbackMaterial( void );
