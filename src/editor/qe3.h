@@ -41,6 +41,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <algorithm>
 
+#include <GL/glew.h>
+#include <GL/glu.h>
+
 #if !defined( _WIN32 )
 #   include <fox-1.6/fx.h>
 #   include <fox-1.6/fxkeys.h>
@@ -50,9 +53,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #   include <fxkeys.h>
 #   include <fx3d.h>
 #endif
-
-#include <GL/glew.h>
-#include <GL/glu.h>
 
 #include <math.h>
 #include <stdlib.h>

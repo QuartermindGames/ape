@@ -34,7 +34,7 @@ void QE_CheckOpenGLForErrors(void)
 
 		sprintf( buffer, "OpenGL Error: %s", gluErrorString( i ) );
         printf( "%s\n", buffer );
-#if defined( _WIN32 )
+#if 0 // todo
 		MessageBox( g_qeglobals.d_hwndMain, buffer , "QuakeEd Error", MB_OK | MB_ICONEXCLAMATION );
 #endif
 		exit( 1 );

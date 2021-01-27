@@ -141,7 +141,7 @@ void Error( const char *error, ... ) {
     vsprintf( text, error, argptr );
     va_end( argptr );
 
-#if defined( _WIN32 )
+#if 0 // todo
 	int err = GetLastError();
 	char text2[ 1024 ];
 	sprintf( text2, "%s\nGetLastError() = %i", text, err );
@@ -399,8 +399,6 @@ WinMain
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
 	HACCEL accelerators;
 
-	g_qeglobals.d_hInstance = hInstance;
-
 	InitCommonControls();
 
 	screen_width = GetSystemMetrics( SM_CXFULLSCREEN );
@@ -422,13 +420,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	g_mainWindow = new huang::MainWindow( &app );
 	g_mainWindow->setIcon( icon );
 	// END NEW NEW NEW
-
-	Main_Create( hInstance );
-
-	WCam_Create( hInstance );
-	WXY_Create( hInstance );
-
-	CreateEntityWindow( hInstance );
 
 	// the project file can be specified on the command line,
 	// or implicitly found in the scripts directory
@@ -452,6 +443,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 
 	mainWindow->maximize();
+
+	extern void M_LoadGlobalRegistryData();
+	M_LoadGlobalRegistryData();
+	extern void M_SaveGlobalRegistryData();
+	M_SaveGlobalRegistryData();
 
 	return app.run();
 

@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // map.c
 
-#include <unistd.h>
 #include "qe3.h"
 
 qboolean	modified;		// for quit confirmation (0 = clean, 1 = unsaved,

@@ -660,7 +660,7 @@ LONG WINAPI WMAIN_WndProc(
 }
 #endif
 
-static void M_SaveGlobalRegistryData() {
+void M_SaveGlobalRegistryData() {
 	reg::WriteInt( "Global", "exclude", g_qeglobals.d_savedinfo.exclude );
 	reg::WriteBool( "Global", "showCoordinates", g_qeglobals.d_savedinfo.show_coordinates );
 	reg::WriteBool( "Global", "showNames", g_qeglobals.d_savedinfo.show_names );
@@ -672,7 +672,7 @@ static void M_SaveGlobalRegistryData() {
 	reg::WriteColourF( "Global", STRINGIFY( COLOR_CAMERA_WIREFRAME ), g_qeglobals.d_savedinfo.colors[ COLOR_CAMERA_WIREFRAME ] );
 }
 
-static void M_LoadGlobalRegistryData() {
+void M_LoadGlobalRegistryData() {
 	g_qeglobals.d_savedinfo.exclude = reg::ReadBool( "Global", "exclude" );
 	g_qeglobals.d_savedinfo.show_coordinates = reg::ReadBool( "Global", "showCoordinates", true );
 	g_qeglobals.d_savedinfo.show_names = reg::ReadBool( "Global", "showNames", true );
@@ -744,9 +744,6 @@ void Main_Create( HINSTANCE hInstance ) {
 	//
 	// load misc info from registry
 	//
-
-	M_LoadGlobalRegistryData();
-	M_SaveGlobalRegistryData();
 
 	if( ( hMenu = GetMenu( g_qeglobals.d_hwndMain ) ) != 0 ) {
 		/*

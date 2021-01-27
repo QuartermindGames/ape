@@ -182,7 +182,7 @@ qtexture_t *Texture_LoadTexture( miptex_t *qtex ) {
 
 	glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dest );
 
-    glGenerateMipmap( GL_TEXTURE_2D );
+    //glGenerateMipmap( GL_TEXTURE_2D );
 
 	free( dest );
 
