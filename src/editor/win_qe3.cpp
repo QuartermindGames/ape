@@ -23,94 +23,77 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qe3.h"
 #include "mru.h"
 
-int	screen_width;
-int	screen_height;
-qboolean	have_quit;
+int screen_width;
+int screen_height;
+qboolean have_quit;
 
-int	update_bits;
-
-HANDLE	bsp_process;
+int update_bits;
 
 //===========================================
 
-void Sys_SetTitle (char *text)
-{
-	SetWindowText (g_qeglobals.d_hwndMain, text);
+void Sys_SetTitle( char *text ) {
+	g_mainWindow->setTitle( text );
 }
 
-HCURSOR	waitcursor;
-
-void Sys_BeginWait (void)
-{
-	waitcursor = SetCursor (LoadCursor (NULL, IDC_WAIT));
-}
-
-void Sys_EndWait (void)
-{
-	if (waitcursor)
-	{
-		SetCursor (waitcursor);
-		waitcursor = NULL;
-	}
-}
-
-
-void Sys_GetCursorPos (int *x, int *y)
-{
-	POINT lpPoint;
-
-	GetCursorPos (&lpPoint);
-	*x = lpPoint.x;
-	*y = lpPoint.y;
-}
-
-void Sys_SetCursorPos (int x, int y)
-{
-	SetCursorPos (x, y);
-}
-
-void Sys_UpdateWindows (int bits)
-{
-//	Sys_Printf("updating 0x%X\n", bits);
-	update_bits |= bits;
-//update_bits = -1;
-}
-
-void Sys_Beep ()
-{
-#if defined( _WIN32 )
-	MessageBeep (MB_ICONASTERISK);
+void Sys_BeginWait( void ) {
+#if 0
+	waitcursor = SetCursor( LoadCursor( NULL, IDC_WAIT ) );
 #endif
 }
 
-char	*TranslateString (char *buf)
-{
-	static	char	buf2[32768];
-	int		i, l;
-	char	*out;
+void Sys_EndWait( void ) {
+#if 0
+	if ( waitcursor ) {
+		SetCursor( waitcursor );
+		waitcursor = NULL;
+	}
+#endif
+}
 
-	l = strlen(buf);
+void Sys_GetCursorPos( int *x, int *y ) {
+	unsigned int temp;
+	g_mainWindow->getCursorPosition( *x, *y, temp );
+}
+
+void Sys_SetCursorPos( int x, int y ) {
+	g_mainWindow->setCursorPosition( x, y );
+}
+
+void Sys_UpdateWindows( int bits ) {
+	//	Sys_Printf("updating 0x%X\n", bits);
+	update_bits |= bits;
+	//update_bits = -1;
+}
+
+void Sys_Beep() {
+#if defined( _WIN32 )
+	MessageBeep( MB_ICONASTERISK );
+#endif
+}
+
+char *TranslateString( char *buf ) {
+	static char buf2[ 32768 ];
+	int i, l;
+	char *out;
+
+	l = strlen( buf );
 	out = buf2;
-	for (i=0 ; i<l ; i++)
-	{
-		if (buf[i] == '\n')
-		{
+	for ( i = 0; i < l; i++ ) {
+		if ( buf[ i ] == '\n' ) {
 			*out++ = '\r';
 			*out++ = '\n';
-		}
-		else
-			*out++ = buf[i];
+		} else
+			*out++ = buf[ i ];
 	}
 	*out++ = 0;
 
 	return buf2;
 }
 
-void Sys_ClearPrintf (void)
-{
-	char	text[4];
+void Sys_ClearPrintf( void ) {
+	char text[ 4 ];
 
-	text[0] = 0;
+	text[ 0 ] = 0;
 
 	//SendMessage (g_qeglobals.d_hwndEdit,
 	//	WM_SETTEXT,
@@ -118,76 +101,29 @@ void Sys_ClearPrintf (void)
 	//	(LPARAM)text);
 }
 
-void Sys_Printf (const char *text, ...)
-{
+void Sys_Printf( const char *text, ... ) {
 	va_list argptr;
-	char	buf[32768];
-	char	*out;
+	char buf[ 32768 ];
+	char *out;
 
-	va_start (argptr,text);
-	vsprintf (buf, text,argptr);
-	va_end (argptr);
+	va_start( argptr, text );
+	vsprintf( buf, text, argptr );
+	va_end( argptr );
 
-	out = TranslateString (buf);
+	out = TranslateString( buf );
 
 #ifdef LATER
-	Sys_Status(out);
+	Sys_Status( out );
 #else
 	//SendMessage (g_qeglobals.d_hwndEdit,
 	//	EM_REPLACESEL,
 	//	0,
 	//	(LPARAM)out);
 #endif
-
 }
 
-double Sys_DoubleTime (void)
-{
-	return clock()/ 1000.0;
-}
-
-
-
-//==========================================================================
-
-int QEW_SetupPixelFormat(HDC hDC, qboolean zbuffer )
-{
-    static PIXELFORMATDESCRIPTOR pfd = {
-		sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd
-		1,								// version number
-		PFD_DRAW_TO_WINDOW |			// support window
-		PFD_SUPPORT_OPENGL |			// support OpenGL
-		PFD_DOUBLEBUFFER,				// double buffered
-		PFD_TYPE_RGBA,					// RGBA type
-		24,								// 24-bit color depth
-		0, 0, 0, 0, 0, 0,				// color bits ignored
-		0,								// no alpha buffer
-		0,								// shift bit ignored
-		0,								// no accumulation buffer
-		0, 0, 0, 0,						// accum bits ignored
-		32,							    // depth bits
-		0,								// no stencil buffer
-		0,								// no auxiliary buffer
-		PFD_MAIN_PLANE,					// main layer
-		0,								// reserved
-		0, 0, 0							// layer masks ignored
-    };
-    int pixelformat = 0;
-
-	zbuffer = true;
-	if ( !zbuffer )
-		pfd.cDepthBits = 0;
-
-    if ( (pixelformat = ChoosePixelFormat(hDC, &pfd)) == 0 )
-	{
-		printf("%d",GetLastError());
-        Error ("ChoosePixelFormat failed");
-	}
-
-    if (!SetPixelFormat(hDC, pixelformat, &pfd))
-        Error ("SetPixelFormat failed");
-
-	return pixelformat;
+double Sys_DoubleTime( void ) {
+	return clock() / 1000.0;
 }
 
 /*
@@ -197,23 +133,24 @@ Error
 For abnormal program terminations
 =================
 */
-void Error (const char *error, ...)
-{
+void Error( const char *error, ... ) {
 	va_list argptr;
-	char	text[1024];
-	char	text2[1024];
-	int		err;
+	char text[ 1024 ];
 
-	err = GetLastError ();
+    va_start( argptr, error );
+    vsprintf( text, error, argptr );
+    va_end( argptr );
 
-	va_start (argptr,error);
-	vsprintf (text, error,argptr);
-	va_end (argptr);
+#if defined( _WIN32 )
+	int err = GetLastError();
+	char text2[ 1024 ];
+	sprintf( text2, "%s\nGetLastError() = %i", text, err );
+	MessageBox( g_qeglobals.d_hwndMain, text2, "Error", 0 /* MB_OK */ );
+#else
+	printf( "Error: %s", text );
+#endif
 
-	sprintf (text2, "%s\nGetLastError() = %i", text, err);
-    MessageBox(g_qeglobals.d_hwndMain, text2, "Error", 0 /* MB_OK */ );
-
-	exit (EXIT_FAILURE);
+	exit( EXIT_FAILURE );
 }
 
 /*
@@ -224,31 +161,18 @@ FILE DIALOGS
 ======================================================================
 */
 
-qboolean ConfirmModified (void)
-{
-	if (!modified)
+qboolean ConfirmModified( void ) {
+#if 0
+	if ( !modified )
 		return true;
 
-	if (MessageBox (g_qeglobals.d_hwndMain, "This will lose changes to the map"
-		, "warning", MB_OKCANCEL) == IDCANCEL)
+	if ( MessageBox( g_qeglobals.d_hwndMain, "This will lose changes to the map", "warning", MB_OKCANCEL ) == IDCANCEL )
 		return false;
+#endif
 	return true;
 }
 
-static OPENFILENAME ofn;       /* common dialog box structure   */
-static char szDirName[MAX_PATH];    /* directory string              */
-static char szFile[260];       /* filename string               */
-static char szFileTitle[260];  /* file title string             */
-static char szFilter[260] =     /* filter string                 */
-	"QuakeEd file (*.map)\0*.map\0\0";
-static char szProjectFilter[260] =     /* filter string                 */
-	"QuakeEd project (*.qe4)\0*.qe4\0\0";
-static char chReplace;         /* string separator for szFilter */
-static int i, cbString;        /* integer count variables       */
-static HANDLE hf;              /* file handle                   */
-
-void OpenDialog (void)
-{
+void OpenDialog( void ) {
 #if 0
 	/*
 	 * Obtain the system directory name and
@@ -294,8 +218,7 @@ void OpenDialog (void)
 #endif
 }
 
-void ProjectDialog (void)
-{
+void ProjectDialog( void ) {
 #if 0
 	/*
 	 * Obtain the system directory name and
@@ -339,8 +262,7 @@ void ProjectDialog (void)
 }
 
 
-void SaveAsDialog (void)
-{
+void SaveAsDialog( void ) {
 #if 0
 	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
 	strcat (szDirName, "\\maps");
@@ -396,33 +318,32 @@ FillBSPMenu
 
 ==================
 */
-char	*bsp_commands[256];
+char *bsp_commands[ 256 ];
 
-void FillBSPMenu (void)
-{
-	HMENU	hmenu;
-	epair_t	*ep;
-	int		i;
+void FillBSPMenu( void ) {
+#if 0
+	HMENU hmenu;
+	epair_t *ep;
+	int i;
 	static int count;
 
-	hmenu = GetSubMenu (GetMenu(g_qeglobals.d_hwndMain), MENU_BSP);
+	hmenu = GetSubMenu( GetMenu( g_qeglobals.d_hwndMain ), MENU_BSP );
 
-	for (i=0 ; i<count ; i++)
-		DeleteMenu (hmenu, CMD_BSPCOMMAND+i, MF_BYCOMMAND);
+	for ( i = 0; i < count; i++ )
+		DeleteMenu( hmenu, CMD_BSPCOMMAND + i, MF_BYCOMMAND );
 	count = 0;
 
 	i = 0;
-	for (ep = g_qeglobals.d_project_entity->epairs ; ep ; ep=ep->next)
-	{
-		if (ep->key[0] == 'b' && ep->key[1] == 's' && ep->key[2] == 'p')
-		{
-			bsp_commands[i] = ep->key;
-			AppendMenu (hmenu, MF_ENABLED|MF_STRING,
-			CMD_BSPCOMMAND+i, (LPCTSTR)ep->key);
+	for ( ep = g_qeglobals.d_project_entity->epairs; ep; ep = ep->next ) {
+		if ( ep->key[ 0 ] == 'b' && ep->key[ 1 ] == 's' && ep->key[ 2 ] == 'p' ) {
+			bsp_commands[ i ] = ep->key;
+			AppendMenu( hmenu, MF_ENABLED | MF_STRING,
+			            CMD_BSPCOMMAND + i, ( LPCTSTR ) ep->key );
 			i++;
 		}
 	}
 	count = i;
+#endif
 }
 
 //==============================================
@@ -434,38 +355,39 @@ CheckBspProcess
 See if the BSP is done yet
 ===============
 */
-void CheckBspProcess (void)
-{
-	char	outputpath[1024];
-	char	temppath[512];
-	DWORD	exitcode;
-	char	*out;
-	BOOL	ret;
+void CheckBspProcess( void ) {
+#if 0
+	char outputpath[ 1024 ];
+	char temppath[ 512 ];
+	DWORD exitcode;
+	char *out;
+	BOOL ret;
 
-	if (!bsp_process)
+	if ( !bsp_process )
 		return;
 
-	ret = GetExitCodeProcess (bsp_process, &exitcode);
-	if (!ret)
-		Error ("GetExitCodeProcess failed");
-	if (exitcode == STILL_ACTIVE)
+	ret = GetExitCodeProcess( bsp_process, &exitcode );
+	if ( !ret )
+		Error( "GetExitCodeProcess failed" );
+	if ( exitcode == STILL_ACTIVE )
 		return;
 
 	bsp_process = 0;
 
-	GetTempPath(512, temppath);
-	sprintf (outputpath, "%sjunk.txt", temppath);
+	GetTempPath( 512, temppath );
+	sprintf( outputpath, "%sjunk.txt", temppath );
 
-	LoadFile (outputpath, (void **)&out);
-	Sys_Printf ("%s", out);
-	Sys_Printf ("\ncompleted.\n");
-	free (out);
-	Sys_Beep ();
+	LoadFile( outputpath, ( void ** ) &out );
+	Sys_Printf( "%s", out );
+	Sys_Printf( "\ncompleted.\n" );
+	free( out );
+	Sys_Beep();
 
-	Pointfile_Check ();
+	Pointfile_Check();
+#endif
 }
 
-extern int	cambuttonstate;
+extern int cambuttonstate;
 
 /*
 ==================
@@ -473,26 +395,24 @@ WinMain
 
 ==================
 */
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
-					,LPSTR lpCmdLine, int nCmdShow)
-{
-	HACCEL		accelerators;
+#if defined( _WIN32 )
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
+	HACCEL accelerators;
 
 	g_qeglobals.d_hInstance = hInstance;
 
-	InitCommonControls ();
+	InitCommonControls();
 
-	screen_width = GetSystemMetrics (SM_CXFULLSCREEN);
-	screen_height = GetSystemMetrics (SM_CYFULLSCREEN);
+	screen_width = GetSystemMetrics( SM_CXFULLSCREEN );
+	screen_height = GetSystemMetrics( SM_CYFULLSCREEN );
 
 	// hack for broken NT 4.0 dual screen
-	if (screen_width > 2*screen_height)
+	if ( screen_width > 2 * screen_height )
 		screen_width /= 2;
 
-	accelerators = LoadAccelerators (hInstance
-		, MAKEINTRESOURCE(IDR_ACCELERATOR1));
-	if (!accelerators)
-		Error ("LoadAccelerators failed");
+	accelerators = LoadAccelerators( hInstance, MAKEINTRESOURCE( IDR_ACCELERATOR1 ) );
+	if ( !accelerators )
+		Error( "LoadAccelerators failed" );
 
 	// START NEW NEW NEW
 	FXApp app( EDITOR_TITLE );
@@ -503,33 +423,31 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 	g_mainWindow->setIcon( icon );
 	// END NEW NEW NEW
 
-	Main_Create (hInstance);
+	Main_Create( hInstance );
 
-	WCam_Create (hInstance);
-	WXY_Create (hInstance);
+	WCam_Create( hInstance );
+	WXY_Create( hInstance );
 
-	CreateEntityWindow(hInstance);
+	CreateEntityWindow( hInstance );
 
 	// the project file can be specified on the command line,
 	// or implicitly found in the scripts directory
-	if (lpCmdLine && strlen(lpCmdLine))
-	{
-		ParseCommandLine (lpCmdLine);
-		if (!QE_LoadProject(argv[1]))
-			Error ("Couldn't load %s project file", argv[1]);
-	}
-	else if (!QE_LoadProject( EDITOR_CONFIG ))
-		Error ("Couldn't load \"" EDITOR_CONFIG "\" project file");
+	if ( lpCmdLine && strlen( lpCmdLine ) ) {
+		ParseCommandLine( lpCmdLine );
+		if ( !QE_LoadProject( argv[ 1 ] ) )
+			Error( "Couldn't load %s project file", argv[ 1 ] );
+	} else if ( !QE_LoadProject( EDITOR_CONFIG ) )
+		Error( "Couldn't load \"" EDITOR_CONFIG "\" project file" );
 
-	QE_Init ();
+	QE_Init();
 
-	Sys_Printf ("Entering message loop\n");
+	Sys_Printf( "Entering message loop\n" );
 
 	app.create();
 
 	// Ensure the main window is maximised after creation
 	huang::MainWindow *mainWindow = dynamic_cast< huang::MainWindow * >( app.getActiveWindow() );
-	if( mainWindow == nullptr ) {
+	if ( mainWindow == nullptr ) {
 		Error( "Failed to fetch main window!\n" );
 	}
 
@@ -601,4 +519,36 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
     return TRUE;
 #endif
 }
+#else
+int main( int argc, char **argv ) {
+    FXApp app( EDITOR_TITLE );
+    app.init( argc, argv );
 
+    FXIcon *icon = huang::util::LoadImageIcon( &app, "icons/app_icon.gif" );
+    g_mainWindow = new huang::MainWindow( &app );
+    g_mainWindow->setIcon( icon );
+
+    // the project file can be specified on the command line,
+    // or implicitly found in the scripts directory
+	const char *config = EDITOR_CONFIG;
+	if ( argc > 1 ) {
+		config = argv[ 1 ];
+	}
+
+    QE_Init();
+
+    Sys_Printf( "Entering message loop\n" );
+
+    app.create();
+
+    // Ensure the main window is maximised after creation
+    auto *mainWindow = dynamic_cast< huang::MainWindow * >( app.getActiveWindow() );
+    if ( mainWindow == nullptr ) {
+    //    Error( "Failed to fetch main window!\n" );
+    }
+
+   // mainWindow->maximize();
+
+    return app.run();
+}
+#endif

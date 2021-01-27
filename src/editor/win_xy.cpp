@@ -24,9 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "qe3.h"
 
-static HDC   s_hdcXY;
-static HGLRC s_hglrcXY;
-
 static unsigned s_stipple[32] =
 {
 	0xaaaaaaaa, 0x55555555,0xaaaaaaaa, 0x55555555,
@@ -39,6 +36,7 @@ static unsigned s_stipple[32] =
 	0xaaaaaaaa, 0x55555555,0xaaaaaaaa, 0x55555555,
 };
 
+#if 0
 /*
 ============
 WXY_WndProc
@@ -286,3 +284,4 @@ void WXY_Print( void )
 	}
 #endif
 }
+#endif

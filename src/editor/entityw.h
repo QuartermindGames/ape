@@ -60,7 +60,5 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define EntLast		31
 
-extern HWND hwndEnt[EntLast];
-
 extern int rgIds[EntLast];
 

@@ -21,7 +21,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "qe3.h"
-#include "io.h"
+
+#if defined( _WIN32 )
+#   include "io.h"
+#else
+#   include "findfirst.h"
+#endif
 
 eclass_t	*eclass;
 eclass_t	*eclass_bad;
@@ -176,7 +181,7 @@ void Eclass_InsertAlphabetized (eclass_t *e)
 			return;
 		}
 		s=s->next;
-	} while (1);
+	} while (true);
 }
 
 
@@ -233,14 +238,14 @@ void Eclass_InitForSourceDirectory (const char *path)
 		s--;
 	*s = 0;
 
-	eclass = NULL;
+	eclass = nullptr;
 
 	handle = _findfirst (path, &fileinfo);
 	if (handle != -1)
 	{
 		do
 		{
-			sprintf (filename, "%s\\%s", filebase, fileinfo.name);
+			snprintf (filename, sizeof( filename ), "%s\\%s", filebase, fileinfo.name);
 			Eclass_ScanFile (filename);
 		} while (_findnext( handle, &fileinfo ) != -1);
 

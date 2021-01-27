@@ -27,8 +27,6 @@ For more information, please refer to <https://unlicense.org>
 
 #pragma once
 
-#include <fx3d.h>
-
 #define MAX_VIEWPORTS 4
 
 class Brush;

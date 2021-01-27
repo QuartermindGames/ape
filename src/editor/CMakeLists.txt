@@ -54,8 +54,17 @@ add_executable(FoxEd
         xy.cpp
         xy.h
         z.cpp
-        z.h)
+        z.h
 
-target_include_directories(FoxEd PRIVATE ../3rdparty/fox-1.6.57/include/ glew/include/)
-target_link_directories(FoxEd PRIVATE glew/lib/Release/x64/)
-target_link_libraries(FoxEd libfox-1.6 glew32s platform)
+        findfirst.c findfirst.h
+        spec.c spec.h)
+
+if ( NOT UNIX )
+    target_include_directories(FoxEd PRIVATE ../3rdparty/fox-1.6.57/include/ glew/include/)
+    target_link_directories(FoxEd PRIVATE glew/lib/Release/x64/)
+    target_link_libraries(FoxEd libfox-1.6 glew32s)
+else()
+    target_link_libraries(FoxEd GLEW GLU FOX-1.6)
+endif()
+
+target_link_libraries(FoxEd platform)

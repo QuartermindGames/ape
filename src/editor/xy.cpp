@@ -613,9 +613,6 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 	int		drawn, culled;
 	int		i;
 
-	if( !active_brushes.next )
-		return;	// not valid yet
-
 	if( timing )
 		start = Sys_DoubleTime();
 
@@ -652,6 +649,9 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 	//
 	DrawGrid();
 
+    if( !active_brushes.next )
+        return;	// not valid yet
+
 	switch( viewport->GetViewMode() ) {
 	default: break;
 	case huang::VIEW_MODE_FRONT:
@@ -675,7 +675,7 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 
 	drawn = culled = 0;
 
-	e = NULL;
+	e = nullptr;
 	for( brush = active_brushes.next; brush != &active_brushes; brush = brush->next ) {
 		if( brush->mins[ 0 ] > maxs[ 0 ]
 			|| brush->mins[ 1 ] > maxs[ 1 ]

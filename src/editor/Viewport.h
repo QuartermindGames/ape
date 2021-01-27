@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <fx3d.h>
-
 namespace huang {
 	class Viewport : public FXVerticalFrame {
 		FXDECLARE( Viewport )

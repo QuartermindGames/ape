@@ -92,6 +92,7 @@ void GetSelectionIndex( int *ent, int *brush ) {
 		;
 }
 
+#if 0
 BOOL CALLBACK FindBrushDlgProc(
 	HWND hwndDlg,	// handle to dialog box
 	UINT uMsg,	// message
@@ -132,7 +133,7 @@ BOOL CALLBACK FindBrushDlgProc(
 	}
 	return FALSE;
 }
-
+#endif
 
 
 void DoFind( void ) {
@@ -149,7 +150,7 @@ void DoFind( void ) {
 ===================================================
 */
 
-
+#if 0
 BOOL CALLBACK RotateDlgProc(
 	HWND hwndDlg,	// handle to dialog box
 	UINT uMsg,	// message
@@ -196,7 +197,7 @@ BOOL CALLBACK RotateDlgProc(
 
 	return FALSE;
 }
-
+#endif
 
 
 void DoRotate( void ) {
@@ -213,7 +214,7 @@ void DoRotate( void ) {
 ===================================================
 */
 
-
+#if 0
 BOOL CALLBACK SidesDlgProc(
 	HWND hwndDlg,	// handle to dialog box
 	UINT uMsg,	// message
@@ -247,7 +248,7 @@ BOOL CALLBACK SidesDlgProc(
 		return FALSE;
 	}
 }
-
+#endif
 
 
 void DoSides( void ) {
@@ -263,6 +264,7 @@ void DoSides( void ) {
 DoAbout
 ===================
 */
+#if 0
 BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 	UINT uMsg,
 	WPARAM wParam,
@@ -298,6 +300,7 @@ BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 	}
 	return FALSE;
 }
+#endif
 
 void DoAbout( void ) {
 #if 0
@@ -314,6 +317,7 @@ void DoAbout( void ) {
 ===================================================
 */
 
+#if 0
 texdef_t	g_old_texdef;
 HWND		g_surfwin;
 qboolean	g_changed_surface;
@@ -570,3 +574,4 @@ void DoSurface( void ) {
 #endif
 }
 
+#endif

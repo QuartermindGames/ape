@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "qe3.h"
-#include <process.h>
 #include "mru.h"
 #include "entityw.h"
 #include "MainWindow.h"
@@ -80,6 +79,7 @@ void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
 }
 
 void RunBsp( char *command ) {
+#if 0
 	char	sys[ 1024 ];
 	char	batpath[ 1024 ];
 	char	outputpath[ 1024 ];
@@ -162,6 +162,7 @@ void RunBsp( char *command ) {
 
 	BringWindowToTop( g_qeglobals.d_hwndMain );	// pop us back on top
 	SetFocus( g_qeglobals.d_hwndCamera );
+#endif
 }
 
 /*
@@ -174,44 +175,8 @@ qboolean DoColor( int iIndex ) {
 	return false;
 }
 
-
-/* Copied from MSDN */
-
-BOOL DoMru( HWND hWnd, WORD wId ) {
-#if 0
-	char szFileName[ 128 ];
-	OFSTRUCT of;
-	BOOL fExist;
-
-	GetMenuItem( g_qeglobals.d_lpMruMenu, wId, TRUE, szFileName, sizeof( szFileName ) );
-
-	// Test if the file exists.
-
-	fExist = OpenFile( szFileName, &of, OF_EXIST ) != HFILE_ERROR;
-
-	if( fExist ) {
-
-		// Place the file on the top of MRU.
-		AddNewItem( g_qeglobals.d_lpMruMenu, (LPSTR)szFileName );
-
-		// Now perform opening this file !!!
-		Map_LoadFile( szFileName );
-	} else
-		// Remove the file on MRU.
-		DelMenuItem( g_qeglobals.d_lpMruMenu, wId, TRUE );
-
-	// Refresh the File menu.
-	PlaceMenuMRUItem( g_qeglobals.d_lpMruMenu, GetSubMenu( GetMenu( hWnd ), 0 ),
-		ID_FILE_EXIT );
-
-	return fExist;
-#else
-	return false;
-#endif
-}
-
-
 /* handle all WM_COMMAND messages here */
+#if 0
 LONG WINAPI CommandHandler(
 	HWND    hWnd,
 	WPARAM  wParam,
@@ -650,7 +615,9 @@ LONG WINAPI CommandHandler(
 
 	return TRUE;
 }
+#endif
 
+#if 0
 /*
 ============
 WMAIN_WndProc
@@ -691,6 +658,7 @@ LONG WINAPI WMAIN_WndProc(
 
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
+#endif
 
 static void M_SaveGlobalRegistryData() {
 	reg::WriteInt( "Global", "exclude", g_qeglobals.d_savedinfo.exclude );
@@ -728,6 +696,7 @@ static void M_LoadGlobalRegistryData() {
 Main_Create
 ==============
 */
+#if 0
 void Main_Create( HINSTANCE hInstance ) {
 	WNDCLASS   wc;
 	HMENU      hMenu;
@@ -804,72 +773,7 @@ void Main_Create( HINSTANCE hInstance ) {
 
 	ShowWindow( g_qeglobals.d_hwndMain, SW_SHOWDEFAULT );
 }
-
-
-/*
-=============================================================
-
-REGISTRY INFO
-
-=============================================================
-*/
-
-BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize ) {
-	LONG lres;
-	DWORD dwDisp;
-	HKEY  hKeyId;
-
-	lres = RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\id\\QuakeEd4", 0, NULL,
-		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKeyId, &dwDisp );
-
-	if( lres != ERROR_SUCCESS )
-		return FALSE;
-
-	lres = RegSetValueEx( hKeyId, pszName, 0, REG_BINARY, (BYTE *)pvBuf, lSize );
-
-	RegCloseKey( hKeyId );
-
-	if( lres != ERROR_SUCCESS )
-		return FALSE;
-
-	return TRUE;
-}
-
-BOOL SaveWindowState( HWND hWnd, const char *pszName ) {
-	RECT rc;
-
-	GetWindowRect( hWnd, &rc );
-	if( hWnd != g_qeglobals.d_hwndMain )
-		MapWindowPoints( NULL, g_qeglobals.d_hwndMain, (POINT *)&rc, 2 );
-	return SaveRegistryInfo( pszName, &rc, sizeof( rc ) );
-}
-
-
-BOOL LoadWindowState( HWND hWnd, const char *pszName ) {
-#if 0
-	RECT rc;
-	LONG lSize = sizeof( rc );
-
-	if( LoadRegistryInfo( pszName, &rc, &lSize ) ) {
-		if( rc.left < 0 )
-			rc.left = 0;
-		if( rc.top < 0 )
-			rc.top = 0;
-		if( rc.right < rc.left + 16 )
-			rc.right = rc.left + 16;
-		if( rc.bottom < rc.top + 16 )
-			rc.bottom = rc.top + 16;
-
-		MoveWindow( hWnd, rc.left, rc.top, rc.right - rc.left,
-			rc.bottom - rc.top, FALSE );
-		return TRUE;
-	}
-
-	return FALSE;
-#else
-	return TRUE;
 #endif
-}
 
 /*
 ===============================================================
@@ -916,7 +820,7 @@ FXIMPLEMENT( huang::MainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWi
 
 // Make some windows
 huang::MainWindow::MainWindow( FXApp *a ) :
-	FXMainWindow( a, EDITOR_TITLE, NULL, NULL, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ),
+	FXMainWindow( a, EDITOR_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ),
 
 	myGridSizeTarget( g_qeglobals.d_gridsize ),
 	myGridStateTarget( g_qeglobals.d_showgrid ),

@@ -33,8 +33,10 @@ void QE_CheckOpenGLForErrors(void)
 		char buffer[100];
 
 		sprintf( buffer, "OpenGL Error: %s", gluErrorString( i ) );
-
+        printf( "%s\n", buffer );
+#if defined( _WIN32 )
 		MessageBox( g_qeglobals.d_hwndMain, buffer , "QuakeEd Error", MB_OK | MB_ICONEXCLAMATION );
+#endif
 		exit( 1 );
     }
 }
@@ -138,7 +140,7 @@ qboolean QE_LoadProject (const char *projectfile)
 		Eclass_InitForSourceDirectory( entityPath );
 	}
 
-	FillClassList ();		// list in entity window
+//	FillClassList ();		// list in entity window
 
 	Map_New ();
 
@@ -158,6 +160,7 @@ QE_KeyDown
 
 qboolean QE_KeyDown (int key)
 {
+#if 0
 	switch (key)
 	{
 	case 'K':
@@ -231,6 +234,9 @@ qboolean QE_KeyDown (int key)
 	}
 
 	return true;
+#else
+return false;
+#endif
 }
 
 /*

@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // map.c
 
+#include <unistd.h>
 #include "qe3.h"
 
 qboolean	modified;		// for quit confirmation (0 = clean, 1 = unsaved,
@@ -163,8 +164,10 @@ Map_Free
 void Map_Free( void ) {
 	if( selected_brushes.next &&
 		( selected_brushes.next != &selected_brushes ) ) {
+#if 0
 		if( MessageBox( g_qeglobals.d_hwndMain, "Copy selection?", "", MB_YESNO ) == IDYES )
 			Map_SaveBetween();
+#endif
 	}
 
 	Texture_ClearInuse();
@@ -206,7 +209,7 @@ void Map_LoadFile( const char *filename ) {
 
 	Sys_BeginWait();
 
-	SetInspectorMode( W_CONSOLE );
+//	SetInspectorMode( W_CONSOLE );
 
 	QE_ConvertDOSToUnixName( temp, filename );
 	Sys_Printf( "Map_LoadFile: %s\n", temp );
@@ -299,7 +302,7 @@ void Map_SaveFile( const char *filename, qboolean use_region ) {
 		strncpy( backup, filename, sizeof( backup ) - 4 );
 		StripExtension( backup );
 		strcat( backup, ".bak" );
-		_unlink( backup );
+		Q_unlink( backup );
 		rename( filename, backup );
 	}
 

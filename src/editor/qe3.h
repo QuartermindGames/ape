@@ -29,20 +29,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined( _WIN32 )
 #   include <windows.h>
-#endif
 
-#if defined( _WIN32 )
 #	define Q_stricmp	_stricmp
-#	define Q_strcmpi	_strcmpi
+#   define Q_unlink     _unlink
 #else
-#	define Q_stricmp	stricmp
-#	define Q_strcmpi	strcmpi
+#   include <unistd.h>
+
+#	define Q_stricmp	strcasecmp
+#   define Q_unlink     unlink
 #endif
 
 #include <algorithm>
 
-#include <fx.h>
-#include <fxkeys.h>
+#if !defined( _WIN32 )
+#   include <fox-1.6/fx.h>
+#   include <fox-1.6/fxkeys.h>
+#   include <fox-1.6/fx3d.h>
+#else
+#   include <fx.h>
+#   include <fxkeys.h>
+#   include <fx3d.h>
+#endif
 
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -131,20 +138,6 @@ struct QEGlobals_t {
 	float     d_new_brush_bottom_z,
 		d_new_brush_top_z;
 
-	HINSTANCE d_hInstance;
-
-	HGLRC     d_hglrcBase;
-	HDC       d_hdcBase;
-
-	HWND      d_hwndMain;
-	HWND      d_hwndCamera;
-	//HWND      d_hwndEdit;
-	//HWND      d_hwndEntity;
-	//HWND      d_hwndTexture;
-	//HWND      d_hwndXY;
-	//HWND      d_hwndZ;
-	//HWND      d_hwndStatus;
-
 	vec3_t    d_points[ MAX_POINTS ];
 	int       d_numpoints;
 	pedge_t   d_edges[ MAX_EDGES ];
@@ -220,7 +213,7 @@ extern	int	update_bits;
 extern	int	screen_width;
 extern	int	screen_height;
 
-extern	HANDLE	bsp_process;
+extern	void*	bsp_process;
 
 char *TranslateString( char *buf );
 
@@ -229,48 +222,12 @@ void ProjectDialog( void );
 void FillTextureMenu( void );
 void FillBSPMenu( void );
 
-BOOL CALLBACK Win_Dialog(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-);
-
-
-//
-// win_cam.c
-//
-void WCam_Create( HINSTANCE hInstance );
-
-
-//
-// win_xy.c
-//
-void WXY_Create( HINSTANCE hInstance );
-
-//
-// win_ent.c
-//
-
-
-//
-// win_main.c
-//
-void Main_Create( HINSTANCE hInstance );
-extern BOOL SaveWindowState( HWND hWnd, const char *pszName );
-extern BOOL LoadWindowState( HWND hWnd, const char *pszName );
-
-extern BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize );
-extern BOOL loadRegistryInfo( const char *pszName, void *pvBuf, long *plSize );
-
 //
 // entityw.c
 //
-BOOL CreateEntityWindow( HINSTANCE hInstance );
 void FillClassList( void );
 BOOL UpdateEntitySel( eclass_t *pec );
 void SetInspectorMode( int iType );
-int DrawTexControls( HWND hWnd );
 void SetSpawnFlags( void );
 void GetSpawnFlags( void );
 void SetKeyValuePairs( void );
@@ -299,11 +256,6 @@ qboolean QE_LoadProject( const char *projectfile );
 qboolean QE_SingleBrush( void );
 
 /*
-** QE Win32 function declarations
-*/
-int  QEW_SetupPixelFormat( HDC hDC, qboolean zbuffer );
-
-/*
 ** extern declarations
 */
 extern QEGlobals_t   g_qeglobals;
@@ -320,7 +272,7 @@ namespace huang {
 		};
 
 		struct MenuItem {
-			const char *label;
+			const char *label{ nullptr };
 			MenuType	type{ MenuType::COMMAND };
 			FXSelector	selector{ 0 };
 			FXObject *target{ nullptr };

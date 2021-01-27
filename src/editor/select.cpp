@@ -109,7 +109,7 @@ void Select_Brush( Brush *brush ) {
 		}
 
 		if( e->eclass ) {
-			UpdateEntitySel( brush->owner->eclass );
+//			UpdateEntitySel( brush->owner->eclass );
 		}
 	}
 }

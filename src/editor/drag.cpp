@@ -227,7 +227,7 @@ void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis,
 	VectorCopy( vec3_origin, pressdelta );
 
 	drag_first = true;
-	peLink = NULL;
+	peLink = nullptr;
 
 	// shift LBUTTON = select entire brush
 	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {

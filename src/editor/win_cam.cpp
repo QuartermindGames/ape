@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 CameraWndProc
 ============
 */
+#if 0
 LONG WINAPI WCam_WndProc (
     HWND    hWnd,
     UINT    uMsg,
@@ -242,3 +243,4 @@ void WCam_Create (HINSTANCE hInstance)
     ShowWindow (g_qeglobals.d_hwndCamera, SW_SHOWDEFAULT);
 #endif
 }
+#endif
