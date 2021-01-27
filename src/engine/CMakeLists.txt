@@ -29,7 +29,11 @@ add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
         script.c
         script.h
 
-        ../3rdparty/miniz/miniz.c scheduler.h scheduler.c)
+        ../3rdparty/miniz/miniz.c
+
+        scheduler.h
+        scheduler.c
+        model_md2.c)
 
 target_include_directories(OSEngine PRIVATE ./ ../3rdparty/miniz/)
 
