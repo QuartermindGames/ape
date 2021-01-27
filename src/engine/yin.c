@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <SDL2/SDL.h>
+#include <PL/platform_model.h>
 
 #include "yin.h"
 #include "renderer/renderer.h"
@@ -146,6 +146,10 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	}
 
 	plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
+
+	/* register other various loaders */
+    PLModel *MD2_LoadFile( const char *path );
+	plRegisterModelLoader( "md2", MD2_LoadFile );
 
 	/* initialize core services */
 	CPUTimer_Initialize();
