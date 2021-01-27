@@ -453,15 +453,15 @@ void Map_DrawSky( PLCamera *camera ) {
 
 	/* todo: do this in shader... */
 	PLVector2 skyOffset;
-	skyOffset.x = Engine_GetNumTicks() / 10000.0f;
-	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
+	skyOffset.x = Engine_GetNumTicks() / 1000.0f;
+	skyOffset.y = Engine_GetNumTicks() / 1000.0f;
 	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
 
 	RM_DrawMesh( skyMaterial, skyMesh );
 
 	/* todo: do this in shader... */
-	skyOffset.x = ( Engine_GetNumTicks() / 10000.0f ) * -1;
-	skyOffset.y = Engine_GetNumTicks() / 10000.0f;
+	skyOffset.x = ( Engine_GetNumTicks() / 100.0f ) * -1;
+	skyOffset.y = Engine_GetNumTicks() / 100.0f;
 	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
 
 	RM_DrawMesh( skyMaterial, skyMesh );
