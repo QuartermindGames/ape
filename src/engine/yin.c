@@ -75,6 +75,20 @@ void *Sys_realloc( void *ptr, size_t newSize ) {
 	return buf;
 }
 
+/**
+ * Allocate a pool of zeroed memory.
+ * Aborts on error if abort is true.
+ */
+void *AllocMemory( size_t size, bool abort ) {
+    void *buf = calloc( 1, size );
+    if ( buf == NULL && abort ) {
+        PrintError( "Failed to allocate %du bytes!\n", size );
+    }
+
+    /* otherwise, it's the callers problem */
+    return buf;
+}
+
 /****************************************
  * INITIALIZATION
  ****************************************/

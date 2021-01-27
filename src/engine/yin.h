@@ -81,3 +81,4 @@ unsigned int Engine_GetNumTicks( void );
 
 void *Sys_calloc( size_t num, size_t size );
 void *Sys_malloc( size_t size );
+void *AllocMemory( size_t size, bool abort );
