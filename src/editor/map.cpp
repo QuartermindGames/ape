@@ -223,7 +223,7 @@ void Map_LoadFile( const char *filename ) {
 
 	g_qeglobals.d_num_entities = 0;
 
-	while( 1 ) {
+	while( true ) {
 		ent = Entity_Parse( false );
 		if( !ent )
 			break;

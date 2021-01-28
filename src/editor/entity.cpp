@@ -153,7 +153,7 @@ entity_t *Entity_Parse( qboolean onlypairs ) {
 	qboolean	has_brushes;
 
 	if( !GetToken( true ) )
-		return NULL;
+		return nullptr;
 
 	if( strcmp( token, "{" ) )
 		Error( "ParseEntity: { not found" );
@@ -180,7 +180,7 @@ entity_t *Entity_Parse( qboolean onlypairs ) {
 			ep->next = ent->epairs;
 			ent->epairs = ep;
 		}
-	} while( 1 );
+	} while( true );
 
 	if( onlypairs )
 		return ent;
