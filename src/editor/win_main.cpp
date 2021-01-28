@@ -692,87 +692,6 @@ void M_LoadGlobalRegistryData() {
 }
 
 /*
-==============
-Main_Create
-==============
-*/
-#if 0
-void Main_Create( HINSTANCE hInstance ) {
-	WNDCLASS   wc;
-	HMENU      hMenu;
-
-	/* Register the camera class */
-	memset( &wc, 0, sizeof( wc ) );
-
-	wc.style = 0;
-	wc.lpfnWndProc = (WNDPROC)WMAIN_WndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = 0;
-	wc.hCursor = LoadCursor( NULL, IDC_ARROW );
-	wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
-	wc.lpszMenuName = MAKEINTRESOURCE( IDR_MENU1 );
-	wc.lpszClassName = "QUAKE_MAIN";
-
-	if( !RegisterClass( &wc ) )
-		Error( "WCam_Register: failed" );
-
-	g_qeglobals.d_hwndMain = CreateWindow( "QUAKE_MAIN",
-		EDITOR_TITLE,
-		WS_OVERLAPPEDWINDOW |
-		WS_CLIPSIBLINGS |
-		WS_CLIPCHILDREN,
-		0, 0, screen_width, screen_height + GetSystemMetrics( SM_CYSIZE ),	// size
-		0,
-		0,		// no menu
-		hInstance,
-		NULL );
-	if( !g_qeglobals.d_hwndMain )
-		Error( "Couldn't create main window" );
-
-	/* create a timer so that we can count brushes */
-	//SetTimer( g_qeglobals.d_hwndMain,
-	//	QE_TIMER0,
-	//	1000,
-	//	NULL );
-
-	//LoadWindowState( g_qeglobals.d_hwndMain, "mainwindow" );
-
-	//g_qeglobals.d_hwndStatus = CreateMyStatusWindow(hInstance);
-
-	//
-	// load misc info from registry
-	//
-
-	if( ( hMenu = GetMenu( g_qeglobals.d_hwndMain ) ) != 0 ) {
-		/*
-		** by default all of these are checked because that's how they're defined in the menu editor
-		*/
-		if( !g_qeglobals.d_savedinfo.show_names )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWNAMES, MF_BYCOMMAND | MF_UNCHECKED );
-		if( !g_qeglobals.d_savedinfo.show_coordinates )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWCOORDINATES, MF_BYCOMMAND | MF_UNCHECKED );
-
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_LIGHTS )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWLIGHTS, MF_BYCOMMAND | MF_UNCHECKED );
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_ENT )
-			CheckMenuItem( hMenu, ID_VIEW_ENTITY, MF_BYCOMMAND | MF_UNCHECKED );
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWPATH, MF_BYCOMMAND | MF_UNCHECKED );
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WATER )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWWATER, MF_BYCOMMAND | MF_UNCHECKED );
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WORLD )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWWORLD, MF_BYCOMMAND | MF_UNCHECKED );
-		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CLIP )
-			CheckMenuItem( hMenu, ID_VIEW_SHOWCLIP, MF_BYCOMMAND | MF_UNCHECKED );
-	}
-
-	ShowWindow( g_qeglobals.d_hwndMain, SW_SHOWDEFAULT );
-}
-#endif
-
-/*
 ===============================================================
 
   STATUS WINDOW
@@ -787,11 +706,7 @@ void Sys_UpdateStatusBar( void ) {
 
 	sprintf( numbrushbuffer, "Brushes: %d Entities: %d", g_numbrushes, g_numentities );
 
-	Sys_Status( numbrushbuffer, 2 );
-}
-
-void Sys_Status( const char *psz, int part ) {
-	//SendMessage(g_qeglobals.d_hwndStatus, SB_SETTEXT, part, (LPARAM)psz);
+	g_mainWindow->SetStatus( numbrushbuffer, 2 );
 }
 
 //==============================================================
@@ -866,7 +781,10 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 	}
 
 	// Status bar
-	new FXStatusBar( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
+	FXHorizontalFrame *statusFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+	for( unsigned int i = 0; i < MAX_STATUS_SLOTS; ++i ) {
+		myStatusBar[ i ] = new FXStatusBar( statusFrame, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
+	}
 
 	// File menu
 	util::MenuItem fileMenuCmds[] = {
@@ -1065,6 +983,19 @@ long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
 	}
 
 	return FALSE;
+}
+
+void huang::MainWindow::SetStatus( const char *msg, unsigned int slot ) {
+	if( slot >= MAX_STATUS_SLOTS ) {
+		Error( "Attempted to set an invalid status slot in the status bar!\n" );
+	}
+
+	FXStatusLine *barLine = myStatusBar[ slot ]->getStatusLine();
+	if( barLine == nullptr ) {
+		return;
+	}
+
+	barLine->setNormalText( msg );
 }
 
 void huang::MainWindow::ResetViews() {

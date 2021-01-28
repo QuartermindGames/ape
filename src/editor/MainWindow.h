@@ -27,7 +27,8 @@ For more information, please refer to <https://unlicense.org>
 
 #pragma once
 
-#define MAX_VIEWPORTS 4
+#define MAX_VIEWPORTS		4
+#define MAX_STATUS_SLOTS	3
 
 class Brush;
 
@@ -49,6 +50,8 @@ namespace huang {
 		FXDataTarget showWaterTarget;
 		FXDataTarget showWorldTarget;
 		FXDataTarget showActorsTarget;
+
+		FXStatusBar *myStatusBar[ MAX_STATUS_SLOTS ];
 
 	protected:
 		FXToolBar *toolBar{ nullptr };
@@ -90,6 +93,8 @@ namespace huang {
 		long OnToggleEdit( FXObject *, FXSelector, void * );
 
 		long OnInput( FXObject *, FXSelector, void * );
+
+		void SetStatus( const char *msg, unsigned int slot = 0 );
 
 		void ResetViews();
 

@@ -46,7 +46,7 @@ void Pointfile_Next (void)
 
 	if (s_check_point >= s_num_points-2)
 	{
-		Sys_Status ("End of pointfile", 0);
+		g_mainWindow->SetStatus("End of pointfile", 0);
 		return;
 	}
 
@@ -71,7 +71,7 @@ void Pointfile_Prev (void)
 
 	if ( s_check_point == 0)
 	{
-		Sys_Status ("Start of pointfile", 0);
+		g_mainWindow->SetStatus("Start of pointfile", 0);
 		return;
 	}
 	s_check_point--;

@@ -586,7 +586,7 @@ void  Select_Ungroup( void ) {
 	e = selected_brushes.next->owner;
 
 	if( !e || e == world_entity || e->eclass->fixedsize ) {
-		Sys_Status( "Not a grouped entity.", 0 );
+		g_mainWindow->SetStatus( "Not a grouped entity.", 0 );
 		return;
 	}
 

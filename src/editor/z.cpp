@@ -232,7 +232,7 @@ void Z_DrawGrid (void)
 	{
 		glRasterPos2f (-w+1, zz);
 		sprintf (text, "%i",(int)zz);
-		glCallLists (strlen(text), GL_UNSIGNED_BYTE, text);
+		glCallLists ((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);
 	}
 }
 

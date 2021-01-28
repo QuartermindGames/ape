@@ -137,69 +137,6 @@ LONG WINAPI WXY_WndProc (
 	return DefWindowProc (hWnd, uMsg, wParam, lParam);
 }
 
-
-/*
-==============
-WXY_Create
-==============
-*/
-void WXY_Create (HINSTANCE hInstance)
-{
-#if 0
-    WNDCLASS   wc;
-
-    /* Register the camera class */
-	memset (&wc, 0, sizeof(wc));
-
-    wc.style         = 0;
-    wc.lpfnWndProc   = (WNDPROC)WXY_WndProc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = hInstance;
-    wc.hIcon         = 0;
-    wc.hCursor       = LoadCursor (NULL,IDC_ARROW);
-    wc.hbrBackground = NULL; //(HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszMenuName  = NULL;
-    wc.lpszClassName = XY_WINDOW_CLASS;
-
-    if (!RegisterClass (&wc) )
-        Error ("RegisterClass: failed");
-
-	g_qeglobals.d_hwndXY = CreateWindow (XY_WINDOW_CLASS ,
-		"XY View",
-		QE3_STYLE ,
-		ZWIN_WIDTH,
-		(int)(screen_height*CWIN_SIZE)-20,
-		screen_width-ZWIN_WIDTH,
-		(int)(screen_height*(1.0-CWIN_SIZE)-38),	// size
-
-		g_qeglobals.d_hwndMain,	// parent
-		0,		// no menu
-		hInstance,
-		NULL);
-
-	if (!g_qeglobals.d_hwndXY )
-		Error ("Couldn't create XY View");
-
-	LoadWindowState(g_qeglobals.d_hwndXY, "xywindow");
-    ShowWindow(g_qeglobals.d_hwndXY, SW_SHOWDEFAULT);
-#endif
-}
-
-static void WXY_InitPixelFormat( PIXELFORMATDESCRIPTOR *pPFD )
-{
-	memset( pPFD, 0, sizeof( *pPFD ) );
-
-	pPFD->nSize    = sizeof( PIXELFORMATDESCRIPTOR );
-	pPFD->nVersion = 1;
-	pPFD->dwFlags  = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-	pPFD->iPixelType = PFD_TYPE_RGBA;
-	pPFD->cColorBits = 24;
-	pPFD->cDepthBits = 32;
-	pPFD->iLayerType = PFD_MAIN_PLANE;
-
-}
-
 void WXY_Print( void )
 {
 #if 0

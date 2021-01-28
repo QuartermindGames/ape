@@ -432,7 +432,7 @@ void huang::XYZView::DrawBlockGrid() {
 		for( y = yb; y < ye; y += 1024 ) {
 			glRasterPos2f( x + 512, y + 512 );
 			sprintf( text, "%i,%i", (int)floor( x / 1024 ), (int)floor( y / 1024 ) );
-			glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
+			glCallLists( (GLsizei)strlen( text ), GL_UNSIGNED_BYTE, text );
 		}
 
 	glColor4f( 0, 0, 0, 0 );

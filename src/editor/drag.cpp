@@ -90,7 +90,7 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 	face_t *f;
 
 	if( selected_brushes.next == &selected_brushes ) {
-		Sys_Status( "No selection to drag\n", 0 );
+		g_mainWindow->SetStatus( "No selection to drag\n", 0 );
 		return;
 	}
 
@@ -386,8 +386,8 @@ void Drag_MouseMoved( int x, int y, const bool buttons[] ) {
 		move[ i ] = floor( move[ i ] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 	}
 
-	sprintf( movestring, "drag (%i %i %i)", (int)move[ 0 ], (int)move[ 1 ], (int)move[ 2 ] );
-	Sys_Status( movestring, 0 );
+	sprintf( movestring, "Dragging (%i %i %i)", (int)move[ 0 ], (int)move[ 1 ], (int)move[ 2 ] );
+	g_mainWindow->SetStatus( movestring, 0 );
 
 	VectorSubtract( move, pressdelta, delta );
 	MoveSelection( delta );
@@ -400,7 +400,7 @@ Drag_MouseUp
 ===========
 */
 void Drag_MouseUp( void ) {
-	Sys_Status( "drag completed.", 0 );
+	g_mainWindow->SetStatus( "drag completed.", 0 );
 	if( g_qeglobals.d_select_translate[ 0 ] || g_qeglobals.d_select_translate[ 1 ] || g_qeglobals.d_select_translate[ 2 ] ) {
 		Select_Move( g_qeglobals.d_select_translate );
 		VectorCopy( vec3_origin, g_qeglobals.d_select_translate );

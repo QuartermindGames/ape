@@ -410,9 +410,7 @@ void DefaultPath (char *path, char *basepath)
 
 void    StripFilename (char *path)
 {
-	int             length;
-
-	length = strlen(path)-1;
+	size_t length = strlen(path)-1;
 	while (length > 0 && path[length] != PATHSEPERATOR)
 		length--;
 	path[length] = 0;
@@ -420,9 +418,7 @@ void    StripFilename (char *path)
 
 void    StripExtension (char *path)
 {
-	int             length;
-
-	length = strlen(path)-1;
+	size_t length = strlen(path)-1;
 	while (length > 0 && path[length] != '.')
 	{
 		length--;

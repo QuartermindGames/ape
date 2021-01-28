@@ -103,9 +103,9 @@ void QE_CheckAutoSave( void )
 		// Ensure we have a valid path set before attempting to save
 		const char *autosavePath = ValueForKey( g_qeglobals.d_project_entity, "autosave" );
 		if( *autosavePath != '\0' ) {
-			Sys_Status( "Autosaving...", 0 );
+			g_mainWindow->SetStatus( "Autosaving...", 0 );
 			Map_SaveFile( autosavePath, false );
-			Sys_Status( "Autosaving...Saved.", 0 );
+			g_mainWindow->SetStatus( "Autosaving...Saved.", 0 );
 		} else {
 			Sys_Printf( "Attempted to autosave, but no path set!\n" );
 		}
@@ -255,7 +255,7 @@ void ConnectEntities (void)
 
 	if (g_qeglobals.d_select_count != 2)
 	{
-		Sys_Status ("Must have two brushes selected.", 0);
+		g_mainWindow->SetStatus("Must have two brushes selected.", 0);
 		Sys_Beep ();
 		return;
 	}
@@ -265,14 +265,14 @@ void ConnectEntities (void)
 
 	if (e1 == world_entity || e2 == world_entity)
 	{
-		Sys_Status ("Can't connect to the world.", 0);
+		g_mainWindow->SetStatus("Can't connect to the world.", 0);
 		Sys_Beep ();
 		return;
 	}
 
 	if (e1 == e2)
 	{
-		Sys_Status ("Brushes are from same entity.", 0);
+		g_mainWindow->SetStatus("Brushes are from same entity.", 0);
 		Sys_Beep ();
 		return;
 	}

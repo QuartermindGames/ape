@@ -73,12 +73,11 @@ void Sys_Beep() {
 
 char *TranslateString( char *buf ) {
 	static char buf2[ 32768 ];
-	int i, l;
 	char *out;
 
-	l = strlen( buf );
+	size_t l = strlen( buf );
 	out = buf2;
-	for ( i = 0; i < l; i++ ) {
+	for ( size_t i = 0; i < l; i++ ) {
 		if ( buf[ i ] == '\n' ) {
 			*out++ = '\r';
 			*out++ = '\n';

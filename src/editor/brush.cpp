@@ -639,7 +639,7 @@ void Brush::DrawBrushEntityName() {
 
 	name = ValueForKey( owner, "classname" );
 	glRasterPos2f( mins[ 0 ] + 4, mins[ 1 ] + 4 );
-	glCallLists( strlen( name ), GL_UNSIGNED_BYTE, name );
+	glCallLists( (GLsizei) strlen( name ), GL_UNSIGNED_BYTE, name );
 }
 
 /*
@@ -880,12 +880,12 @@ void Brush_MakeSided( int sides ) {
 	float	sv, cv;
 
 	if( sides < 3 ) {
-		Sys_Status( "Bad sides number", 0 );
+		g_mainWindow->SetStatus( "Bad sides number", 0 );
 		return;
 	}
 
 	if( !QE_SingleBrush() ) {
-		Sys_Status( "Must have a single brush selected", 0 );
+		g_mainWindow->SetStatus( "Must have a single brush selected", 0 );
 		return;
 	}
 

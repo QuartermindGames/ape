@@ -33,7 +33,7 @@ void SelectBrush( int entitynum, int brushnum ) {
 		while( --entitynum ) {
 			e = e->next;
 			if( e == &entities ) {
-				Sys_Status( "No such entity.", 0 );
+				g_mainWindow->SetStatus( "No such entity.", 0 );
 				return;
 			}
 		}
@@ -41,13 +41,13 @@ void SelectBrush( int entitynum, int brushnum ) {
 
 	b = e->brushes.onext;
 	if( b == &e->brushes ) {
-		Sys_Status( "No such brush.", 0 );
+		g_mainWindow->SetStatus( "No such brush.", 0 );
 		return;
 	}
 	while( brushnum-- ) {
 		b = b->onext;
 		if( b == &e->brushes ) {
-			Sys_Status( "No such brush.", 0 );
+			g_mainWindow->SetStatus( "No such brush.", 0 );
 			return;
 		}
 	}
@@ -59,7 +59,7 @@ void SelectBrush( int entitynum, int brushnum ) {
 
 	g_mainWindow->CentreViewsOnBrush( b );
 
-	Sys_Status( "Selected.", 0 );
+	g_mainWindow->SetStatus( "Selected.", 0 );
 }
 
 /*
