@@ -2,7 +2,7 @@
 
 #include <PL/platform_filesystem.h>
 
-#include "core/wld.h"
+#include "common/wld.h"
 
 WldHandle *WLD_ReadFile( PLFile *file ) {
 	return NULL;

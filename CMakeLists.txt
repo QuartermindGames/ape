@@ -9,7 +9,7 @@ message("Configuring Yin...")
 # Set all of our output directories.
 
 include_directories(src/)
-include_directories(src/core/include/)
+include_directories(src/common/include/)
 
 include(DetermineTargetArchitecture.cmake)
 determine_target_architecture(YIN_SYSTEM_ARCH)
@@ -39,7 +39,7 @@ endif ()
 
 add_subdirectory(src/3rdparty/platform/platform/)
 add_subdirectory(src/launcher_sdl2/)
-add_subdirectory(src/core/)
+add_subdirectory(src/common/)
 add_subdirectory(src/engine/)
 
 # tools
