@@ -17,8 +17,8 @@ in vec3 frag_pos;
 #include "materials/shaders/fog.inc"
 
 vec4 BlendTextures(sampler2D t0, sampler2D t1) {
-    vec4 sampleA = texture(t0, vsUV.st);
-    vec4 sampleB = texture(t1, vsUV.st);
+    vec4 sampleA = texture2D(t0, vsUV.st);
+    vec4 sampleB = texture2D(t1, vsUV.st);
     return sampleA * (1 - vsColour.g) + sampleB * vsColour.g;
 }
 
@@ -28,7 +28,7 @@ void main() {
         discard;
     }
 
-    vec3 n = normalize(texture(normalMap, vsUV.st).rgb * 2.0 - 1.0);
+    vec3 n = normalize(texture2D(normalMap, vsUV.st).rgb * 2.0 - 1.0);
     n = normalize(vsTBN * n);
 
     vec4 lightTerm = CalculateSunTerm(n);
