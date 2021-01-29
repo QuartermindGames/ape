@@ -19,3 +19,10 @@
 
 #include "qe3.h"
 #include "Layer.h"
+
+huang::LayerWidget::LayerWidget( FXComposite *p ) : FXPacker( p ) {
+
+}
+
+huang::LayerWidget::~LayerWidget() {
+}

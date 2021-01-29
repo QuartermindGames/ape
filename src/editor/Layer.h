@@ -25,4 +25,17 @@ namespace huang {
         bool isVisible{ false };
         FXColor colour;
     };
+
+    class LayerWidget : public FXPacker {
+        FXDECLARE( LayerWidget )
+
+    public:
+        LayerWidget( FXComposite *p );
+        virtual ~LayerWidget();
+
+        virtual void create();
+
+    protected:
+    private:
+    };
 }

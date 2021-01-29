@@ -34,6 +34,7 @@ class Brush;
 
 namespace huang {
 	class Viewport;
+	class LayerWidget;
 	class MainWindow : public FXMainWindow {
 		FXDECLARE( MainWindow )
 	private:
@@ -53,6 +54,8 @@ namespace huang {
 
 		FXStatusBar *myStatusBar[ MAX_STATUS_SLOTS ];
 
+		LayerWidget *myLayerWidget{ nullptr };
+
 	protected:
 		FXToolBar *toolBar{ nullptr };
 		FXMenuBar *menubar{ nullptr };
@@ -68,12 +71,7 @@ namespace huang {
 
 		FXGLVisual *glVisual{ nullptr };
 
-		Viewport *viewports[ MAX_VIEWPORTS ]{
-			nullptr, 
-			nullptr, 
-			nullptr, 
-			nullptr 
-		};
+		Viewport *viewports[ MAX_VIEWPORTS ];
 
 		MainWindow() {}
 		

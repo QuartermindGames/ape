@@ -49,7 +49,10 @@ huang::Viewport::Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode )
 	: FXVerticalFrame( p, FRAME_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ),
 
 	myForwardSpeedTarget( camera.forwardSpeed ),
-	myTurnSpeedTarget( camera.turnSpeed ) {
+	myTurnSpeedTarget( camera.turnSpeed ),
+
+	xyz( this )
+{
 	currentViewMode = mode;
 
 	memset( mouseButtonStates, 0, sizeof( bool ) * input::MAX_MOUSE_BUTTONS );
@@ -80,6 +83,8 @@ huang::Viewport::Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode )
 	new FXTextField( toolBar, 4, &myForwardSpeedTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 	//new FXButton( toolBar, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/cam_forward.gif" ), NULL, 0U, FRAME_NONE );
 	new FXTextField( toolBar, 4, &myTurnSpeedTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
+	new FXVerticalSeparator( toolBar );
+	new FXButton( toolBar, FXString::null, huang::util::LoadImageIcon( getApp(), "icons/popout_v3.gif" ) );
 
 	glVisual = visual;
 	if( sharedDisplayList == nullptr ) {
@@ -383,7 +388,7 @@ void huang::Viewport::DrawScene() {
 		camera.Draw( this );
 		break;
 	default:
-		xyz.Draw( this );
+		xyz.Draw();
 		break;
 	}
 

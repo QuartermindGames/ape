@@ -226,9 +226,11 @@ void huang::Camera::MouseMoved( int x, int y, const bool buttons[] ) {
 
 bool huang::Camera::HandleInput( int key ) {
 	switch( key ) {
+	case KEY_w:
 	case KEY_Up:
 		VectorMA( origin, forwardSpeed, forward, origin );
 		return true;
+	case KEY_s:
 	case KEY_Down:
 		VectorMA( origin, -forwardSpeed, forward, origin );
 		return true;
@@ -238,27 +240,31 @@ bool huang::Camera::HandleInput( int key ) {
 	case KEY_Right:
 		angles[ 1 ] -= turnSpeed;
 		return true;
+#if 0
 	case KEY_d:
 		origin[ 2 ] += forwardSpeed;
 		return true;
 	case KEY_c:
 		origin[ 2 ] -= forwardSpeed;
 		return true;
-	case KEY_a:
+#endif
+	case KEY_Page_Up:
 		angles[ 0 ] += turnSpeed;
 		if( angles[ 0 ] > 85.0f ) {
 			angles[ 0 ] = 85.0f;
 		}
 		return true;
-	case KEY_z:
+	case KEY_Page_Down:
 		angles[ 0 ] -= turnSpeed;
 		if( angles[ 0 ] < -85.0f ) {
 			angles[ 0 ] = -85.0f;
 		}
 		return true;
+	case KEY_a:
 	case KEY_comma:
 		VectorMA( origin, -forwardSpeed, right, origin );
 		return true;
+	case KEY_d:
 	case KEY_period:
 		VectorMA( origin, forwardSpeed, right, origin );
 		return true;
@@ -393,21 +399,6 @@ void huang::Camera::Draw( const Viewport *viewport ) {
 		glDisable( GL_BLEND );
 		glEnable( GL_DEPTH_TEST );
 		glDepthFunc( GL_LEQUAL );
-
-#if 0
-
-		{
-			GLfloat fogColor[ 4 ] = { 0.0, 1.0, 0.0, 0.25 };
-
-			glFogi( GL_FOG_MODE, GL_LINEAR );
-			glHint( GL_FOG_HINT, GL_NICEST );  /*  per pixel   */
-			glFogf( GL_FOG_START, -8192 );
-			glFogf( GL_FOG_END, 65536 );
-			glFogfv( GL_FOG_COLOR, fogColor );
-
-		}
-
-#endif
 		break;
 #if 0
 	case DRAW_BLEND:
@@ -621,4 +612,8 @@ void huang::Camera::ResetPosition() {
 void huang::Camera::CenterView() {
 	angles[ ROLL ] = angles[ PITCH ] = 0.0f;
 	angles[ YAW ] = 22.5f * floorf( ( angles[ YAW ] + 11.0f ) / 22.5f );
+}
+
+void huang::Camera::SetPosition( const vec3_t &newPos ) {
+	VectorCopy( newPos, origin );
 }

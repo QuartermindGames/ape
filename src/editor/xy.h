@@ -29,14 +29,14 @@ namespace huang {
 			TOP, LEFT, FRONT
 		};
 
-		XYZView();
+		XYZView( Viewport *parent );
 		~XYZView();
 
 		void MouseDown( int x, int y, const bool buttons[] );
 		void MouseUp( int x, int y, const bool buttons[] );
 		void MouseMoved( int x, int y, const bool buttons[] );
 
-		void Draw( const huang::Viewport *viewport );
+		void Draw();
 		void Overlay();
 
 		void ResetPosition();
@@ -59,9 +59,13 @@ namespace huang {
 		void DrawGrid();
 		void DrawBlockGrid();
 
+		Viewport *myParent;
+
 		bool timing{ false };
 
 		float topClip{ 0.0f }, bottomClip{ 0.0f };
+
+		int dragX{ 0 }, dragY{ 0 };
 
 		bool d_dirty{ false };
 	};

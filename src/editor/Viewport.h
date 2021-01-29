@@ -32,7 +32,7 @@ namespace huang {
 		FXToggleButton *viewModeButtons[ MAX_VIEW_MODES ];
 		FXToggleButton *drawModeButtons[ MAX_DRAW_MODES ];
 
-		Viewport() {}
+		Viewport() : xyz( this ) {}
 
 	public:
 		Viewport( FXComposite *p, FXGLVisual *visual, ViewMode mode );
@@ -44,7 +44,7 @@ namespace huang {
 		long OnExpose( FXObject *, FXSelector, void * );
 		long OnConfigure( FXObject *, FXSelector, void * );
 
-		const Camera *GetCamera() const { return &camera; }
+		Camera *GetCamera() { return &camera; }
 
 		uint8_t GetViewMode() const { return currentViewMode; }
 		uint8_t GetDrawMode() const { return currentDrawMode; }

@@ -51,6 +51,8 @@ namespace huang {
 		void ResetPosition();
 		void CenterView();
 
+		void SetPosition( const vec3_t &newPos );
+
 		int		width{ 0 }, height{ 0 };
 
 		qboolean	timing{ false };

@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	PAGEFLIPS	2
 
-huang::XYZView::XYZView() {
+huang::XYZView::XYZView( Viewport *viewport ) : myParent( viewport ) {
 	origin[ 0 ] = 0.0f;
 	origin[ 1 ] = 20.0f;
 	origin[ 2 ] = 46.0f;
@@ -42,7 +42,6 @@ huang::XYZView::~XYZView() = default;
 ============================================================================
 */
 
-static	int	cursorx, cursory;
 //static	int	buttonstate;
 static	int	pressx, pressy;
 static	vec3_t	pressdelta;
@@ -87,42 +86,31 @@ void huang::XYZView::MouseDown( int x, int y, const bool buttons[] ) {
 	press_selection = ( selected_brushes.next != &selected_brushes );
 
 	FXuint temp;
-	g_mainWindow->getCursorPosition( cursorx, cursory, temp );
+	g_mainWindow->getCursorPosition( dragX, dragY, temp );
 
-	// lbutton = manipulate selection
-	// shift-LBUTTON = select
-	if( ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] )
-		|| ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] )
-		|| ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] )
-		|| ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] ) ) {
+	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] ) {
+		if( buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+			return;
+		}
+
 		Drag_Begin( x, y, buttons, right, up, origin, dir );
 		return;
 	}
 
-#if 0 // TODO ???
-	// control mbutton = move camera
-	if( buttonstate == ( MK_CONTROL | MK_MBUTTON ) ) {
-		camera.origin[ 0 ] = point[ 0 ];
-		camera.origin[ 1 ] = point[ 1 ];
-	}
-
-	// mbutton = angle camera
-	if( buttonstate == MK_MBUTTON ) {
-		VectorSubtract( point, camera.origin, point );
-		if( point[ 1 ] || point[ 0 ] ) {
-			camera.angles[ YAW ] = 180 / Q_PI * atan2( point[ 1 ], point[ 0 ] );
-		}
-	}
-
-	// shift mbutton = move z checker
-	if( buttons[ huang::input::BUTTON_MOD_SHIFT ] && buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] ) {
-		XY_ToPoint( x, y, point );
-		z.origin[ 0 ] = point[ 0 ];
-		z.origin[ 1 ] = point[ 1 ];
-		Sys_UpdateWindows( W_XY_OVERLAY | W_Z );
+	Camera *camera = myParent->GetCamera();
+	if( camera == nullptr ) {
 		return;
 	}
-#endif
+
+	// control mbutton = move camera
+	if( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
+		camera->SetPosition( point );
+	} else if( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+		VectorSubtract( point, camera->origin, point );
+		if( point[ 1 ] > 0.0f || point[ 0 ] > 0.0f ) {
+			camera->angles[ YAW ] = 180.0f / Q_PI * atan2f( point[ 1 ], point[ 0 ] );
+		}
+	}
 }
 
 /*
@@ -252,10 +240,10 @@ void huang::XYZView::MouseMoved( int x, int y, const bool buttons[] ) {
 	if( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] ) {
 		FXuint buttons;
 		g_mainWindow->getCursorPosition( x, y, buttons );
-		if( x != cursorx || y != cursory ) {
-			origin[ 0 ] -= ( x - cursorx ) / scale;
-			origin[ 1 ] += ( y - cursory ) / scale;
-			g_mainWindow->setCursorPosition( cursorx, cursory );
+		if( x != dragX || y != dragY ) {
+			origin[ 0 ] -= ( x - dragX ) / scale;
+			origin[ 1 ] += ( y - dragY ) / scale;
+			g_mainWindow->setCursorPosition( dragX, dragY );
 		}
 		return;
 	}
@@ -604,7 +592,7 @@ void DrawPathLines( void ) {
 XY_Draw
 ==============
 */
-void huang::XYZView::Draw( const huang::Viewport *viewport ) {
+void huang::XYZView::Draw() {
 	Brush *brush;
 	float	w, h;
 	entity_t *e;
@@ -652,7 +640,7 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
     if( !active_brushes.next )
         return;	// not valid yet
 
-	switch( viewport->GetViewMode() ) {
+	switch( myParent->GetViewMode() ) {
 	default: break;
 	case huang::VIEW_MODE_FRONT:
 		glRotatef( -90, 1, 0, 0 );	    // put Z going up
@@ -694,7 +682,7 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 			e = brush->owner;
 			glColor3fv( e->eclass->color );
 		}
-		brush->Draw( viewport );
+		brush->Draw( myParent );
 	}
 
 	DrawPathLines();
@@ -720,7 +708,7 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 		glLineWidth( 2 );
 		for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
 			drawn++;
-			brush->Draw( viewport );
+			brush->Draw( myParent );
 		}
 		glLineWidth( 1 );
 	}
@@ -752,7 +740,7 @@ void huang::XYZView::Draw( const huang::Viewport *viewport ) {
 	glTranslatef( -g_qeglobals.d_select_translate[ 0 ], -g_qeglobals.d_select_translate[ 1 ], -g_qeglobals.d_select_translate[ 2 ] );
 
 	// now draw camera point
-	DrawCameraIcon( viewport->GetCamera() );
+	DrawCameraIcon( myParent->GetCamera() );
 
 	if( timing ) {
 		end = Sys_DoubleTime();

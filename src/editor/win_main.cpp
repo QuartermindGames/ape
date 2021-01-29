@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "entityw.h"
 #include "MainWindow.h"
 #include "Viewport.h"
+#include "Layer.h"
 
 using namespace huang::util;
 
@@ -748,16 +749,20 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 		new FXToolBarGrip( toolBar, toolBar, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE );
 
 		// File options
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ), this, MainWindow::ID_NEW );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ), this, MainWindow::ID_OPEN );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/save.gif" ) );
-		new FXVerticalSeparator( toolBar );
+		{
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/new.gif" ), this, MainWindow::ID_NEW );
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/open.gif" ), this, MainWindow::ID_OPEN );
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/save.gif" ) );
+		}
 		// Edit options
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/cut.gif" ) );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/copy.gif" ) );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/paste.gif" ) );
 		new FXVerticalSeparator( toolBar );
+		{
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/cut.gif" ) );
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/copy.gif" ) );
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/paste.gif" ) );
+		}
 		// Edit modes
+		new FXVerticalSeparator( toolBar );
 		{
 			editModeButtons[ EDIT_MODE_BRUSH ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/brush_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 			editModeButtons[ EDIT_MODE_VERTEX ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/vertex_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
@@ -765,10 +770,12 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 			editModeButtons[ EDIT_MODE_FACE ] = new FXToggleButton( toolBar, "", "", huang::util::LoadImageIcon( getApp(), "icons/face_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 			editModeButtons[ currentEditMode ]->setState( true );
 		}
-		new FXVerticalSeparator( toolBar );
 		// Grouping
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/group.gif" ) );
-		new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/ungroup.gif" ) );
+		new FXVerticalSeparator( toolBar );
+		{
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/group.gif" ) );
+			new FXButton( toolBar, "", huang::util::LoadImageIcon( getApp(), "icons/ungroup.gif" ) );
+		}
 		// Grid controls
 		new FXVerticalSeparator( toolBar );
 		{
@@ -802,7 +809,15 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 	};
 	editMenu = util::CreateMenus( getApp(), menubar, "&Edit", editMenuCmds );
 
-	FX4Splitter *viewportSplitter = new FX4Splitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
+	FXSplitter *hFrame = new FXSplitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL );
+
+	// Sidebar
+	{
+		FXVerticalFrame *sideBar = new FXVerticalFrame( hFrame, LAYOUT_SIDE_LEFT, 0, 0, 256, 0, 0, 0, 0, 0, 0, 0 );
+		myLayerWidget = new LayerWidget( sideBar );
+	}
+
+	FX4Splitter *viewportSplitter = new FX4Splitter( hFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
 	util::MenuItem viewMenuCmds[] = {
 		{ "All four\t\tAbout the about dialog.", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_ALL, viewportSplitter },
 		{ "Top/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPLEFT, viewportSplitter },

@@ -587,3 +587,18 @@ void Map_RegionBrush( void ) {
 	Map_ApplyRegion();
 }
 
+huang::World::World() {
+}
+
+huang::World::World( const char *fileName ) {
+}
+
+huang::World::~World() {
+}
+
+void huang::World::SaveFile( const char *fileName ) {
+}
+
+entity_t *huang::World::FindClass( const char *className ) {
+	return nullptr;
+}

@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // map.h -- the state of the current world that all views are displaying
 
+#pragma once
+
+#include <vector>
+
 extern	char		currentmap[1024];
 
 // head/tail of doubly linked lists
@@ -53,3 +57,29 @@ void	Map_RegionSelectedBrushes (void);
 qboolean Map_IsBrushFiltered ( Brush *b);
 
 entity_t *Map_FindClass( const char *cname );
+
+namespace huang {
+	class World {
+	public:
+		World();
+		World( const char *fileName );
+		~World();
+
+		void SaveFile( const char *fileName );
+
+		entity_t *FindClass( const char *className );
+
+		void AddVertex( const vec3_t pos );
+		void AddFace( const face_t &face );
+
+	protected:
+	private:
+		std::vector<vec3_t> vertices;
+		std::vector<face_t> faces;
+		std::vector<entity_t> entities;
+
+		bool isModified{ false };
+
+		char name[ 1024 ];
+	};
+}
