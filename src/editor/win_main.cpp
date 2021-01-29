@@ -1042,8 +1042,8 @@ void huang::MainWindow::LoadWorld( const char *path ) {
 }
 
 void huang::MainWindow::CentreViewsOnBrush( const Brush *b ) {
-	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
-		viewports[ i ]->CentreViewOnBrush( b );
+	for(auto & viewport : viewports) {
+		viewport->CentreViewOnBrush( b );
 	}
 }
 
