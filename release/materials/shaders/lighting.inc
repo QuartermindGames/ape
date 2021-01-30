@@ -3,6 +3,12 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
+uniform sampler2D specularMap;
+
+uniform vec3 cameraPos;
+
 struct Material {
     float specularPower;
 };
@@ -22,6 +28,20 @@ struct Light {
 };
 uniform Light lights[8];
 uniform uint numLights = 0U;
+
+/*
+vec3 CalcSpecReflection(vec3 lightDir, vec3 viewDir, vec3 specColour, float specPower, float attn, vec3 n) {
+    if(dot(n, lightDir) < 0.0) {
+        return vec3(0.0, 0.0, 0.0);
+    }
+
+    viewDir = normalize(vec3(pl_view * vec4(0.0, 0.0, 0.0, 1.0) - pl_model * pl_vposition));
+
+    vec3 shininess = texture2D(specularMap, vsUV.st).rgb;
+    return attn * specPower * specColour;// * pow(max(0.0, dot(reflect(-lightDir, n), viewDir)), shininess);
+    //return vec3(0.0, 0.0, 0.0);
+}
+*/
 
 vec4 CalculateSunTerm(vec3 n) {
     vec3 sunDirection = normalize(-sun.position);
