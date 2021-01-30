@@ -17,9 +17,38 @@
 static PLCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
-static PLFrameBuffer *smDepthBuffer;
+static PLFrameBuffer *smDepthBuffer = NULL;
 static PLTexture *smTexture;
 static PLCamera *smCamera;
+
+/* Post Processing */
+static PLFrameBuffer *screenBuffer = NULL;
+static PLTexture *screenTexAttachment = NULL;
+static void GenerateScreenBuffer( unsigned int w, unsigned int h ) {
+	unsigned int bw = 0, bh = 0;
+	if ( screenBuffer != NULL ) {
+		plGetFrameBufferResolution( screenBuffer, &bw, &bh );
+	}
+
+	/* need to rebuild the framebuffer object
+	 * todo: the library should provide us a func to perform a resize? */
+	if ( bw != w || bh != h ) {
+		plDestroyFrameBuffer( screenBuffer );
+		screenBuffer = plCreateFrameBuffer( w, h, PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
+		if ( screenBuffer == NULL ) {
+			PrintError( "Failed to create framebuffer!\nPL: %s\n", plGetError() );
+		}
+
+		plDestroyTexture( screenTexAttachment );
+		screenTexAttachment = plGetFrameBufferTextureAttachment( screenBuffer, PL_BUFFER_COLOUR, PL_TEXTURE_FILTER_LINEAR );
+		if ( screenTexAttachment == NULL ) {
+			PrintError( "Failed to create texture attachment!\nPL: %s\n", plGetError() );
+		}
+	}
+
+	/* reset */
+	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
+}
 
 typedef struct RGBMap {
 	uint8_t r;
@@ -276,6 +305,7 @@ static void Gfx_InitializeShaderPrograms( void ) {
 	        [GFX_SHADER_LIGHTING_PASS] = "base_lighting",
 	        [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
 	        [GFX_SHADER_DEFAULT_ALPHA] = "default_alpha",
+	        [GFX_SHADER_POST_PROCESS] = "postprocess",
 	};
 	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
 		gfxDefaultShaderPrograms[ i ] = Gfx_GetShaderProgram( defaultShaderNames[ i ] );
@@ -489,6 +519,15 @@ void Gfx_DrawMenu( void ) {
 
 	plSetDepthMask( false );
 
+	/* and now display the scene onto the screen */
+	plPushMatrix();
+	plLoadIdentityMatrix();
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
+	plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, screenTexAttachment );
+	plPopMatrix();
+
 #ifndef DEBUG_CAM
 	switch ( Game_GetMenuState() ) {
 		default: PrintError( "Invalid menu state!\n" );
@@ -599,22 +638,12 @@ static void Gfx_RenderSceneFinal( PLCamera *camera ) {
 void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
 
-	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
+	/* set everything up for post-processing */
+	GenerateScreenBuffer( camera->viewport.w, camera->viewport.h );
+	plBindFrameBuffer( screenBuffer, PL_FRAMEBUFFER_DRAW );
 
 	//Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 	Gfx_RenderSceneFinal( camera );
 
-	/* draw buffer preview */
-	plSetupCamera( auxCamera );
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-
-#if 0
-	plPushMatrix();
-	plLoadIdentityMatrix();
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, 0, 256, 256, smTexture );
-	plPopMatrix();
-#endif
-
-	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
+	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
 }
