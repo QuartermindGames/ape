@@ -25,26 +25,25 @@ static PLTexture *smTexture;
 static PLCamera *smCamera;
 
 /* Post Processing */
-static PLFrameBuffer *screenBuffer = NULL;
-static PLTexture *screenTexAttachment = NULL;
-static void GenerateScreenBuffer( unsigned int w, unsigned int h ) {
+
+static void GenerateScreenBuffer( PLFrameBuffer **buffer, PLTexture **attachment, unsigned int w, unsigned int h ) {
 	unsigned int bw = 0, bh = 0;
-	if ( screenBuffer != NULL ) {
-		plGetFrameBufferResolution( screenBuffer, &bw, &bh );
+	if ( *buffer != NULL ) {
+		plGetFrameBufferResolution( *buffer, &bw, &bh );
 	}
 
 	/* need to rebuild the framebuffer object
 	 * todo: the library should provide us a func to perform a resize? */
 	if ( bw != w || bh != h ) {
-		plDestroyFrameBuffer( screenBuffer );
-		screenBuffer = plCreateFrameBuffer( w, h, PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
-		if ( screenBuffer == NULL ) {
+		plDestroyFrameBuffer( *buffer );
+		*buffer = plCreateFrameBuffer( w, h, PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
+		if ( *buffer == NULL ) {
 			PrintError( "Failed to create framebuffer!\nPL: %s\n", plGetError() );
 		}
 
-		plDestroyTexture( screenTexAttachment );
-		screenTexAttachment = plGetFrameBufferTextureAttachment( screenBuffer, PL_BUFFER_COLOUR, PL_TEXTURE_FILTER_LINEAR );
-		if ( screenTexAttachment == NULL ) {
+		plDestroyTexture( *attachment );
+		*attachment = plGetFrameBufferTextureAttachment( *buffer, PL_BUFFER_COLOUR, PL_TEXTURE_FILTER_LINEAR );
+		if ( *attachment == NULL ) {
 			PrintError( "Failed to create texture attachment!\nPL: %s\n", plGetError() );
 		}
 	}
@@ -507,6 +506,9 @@ static void Gfx_DrawViewSprite( void ) {
 #endif
 }
 
+static PLFrameBuffer *ppBuffer = NULL;
+static PLTexture *ppAttachment = NULL;
+
 void Gfx_DrawMenu( void ) {
 	SysWindow *window = Engine_GetMainWindow();
 	if ( window == NULL ) {
@@ -532,7 +534,7 @@ void Gfx_DrawMenu( void ) {
 		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	}
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, screenTexAttachment );
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, ppAttachment );
 	plPopMatrix();
 
 #ifndef DEBUG_CAM
@@ -636,6 +638,10 @@ static void Gfx_RenderSceneDepth( PLCamera *camera, const PLVector3 *lightPos, c
 }
 
 static void Gfx_RenderSceneFinal( PLCamera *camera ) {
+	/* set everything up for post-processing */
+	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->viewport.w, camera->viewport.h );
+	plBindFrameBuffer( ppBuffer, PL_FRAMEBUFFER_DRAW );
+
 	plSetupCamera( camera );
 	plClearBuffers( PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
 
@@ -645,11 +651,7 @@ static void Gfx_RenderSceneFinal( PLCamera *camera ) {
 void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
 
-	/* set everything up for post-processing */
-	GenerateScreenBuffer( camera->viewport.w, camera->viewport.h );
-	plBindFrameBuffer( screenBuffer, PL_FRAMEBUFFER_DRAW );
-
-	//Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 	Gfx_RenderSceneFinal( camera );
 
 	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
