@@ -44,4 +44,4 @@ if (NOT UNIX)
     target_link_libraries(OSEngine mingw32)
 endif ()
 
-target_link_libraries(OSEngine OSCore platform SDL2)
+target_link_libraries(OSEngine common platform SDL2)
