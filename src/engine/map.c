@@ -579,6 +579,8 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 		return;
 	}
 
+	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
+
 	plMatrixMode( PL_MODELVIEW_MATRIX );
 	plPushMatrix();
 	plLoadIdentityMatrix();
@@ -590,6 +592,8 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
 	plPopMatrix();
+
+	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
 }
 
 PLVector4 World_GetAmbience( void ) {

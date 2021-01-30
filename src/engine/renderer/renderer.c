@@ -14,6 +14,9 @@
 #include "map.h"
 #include "renderer.h"
 
+/* config vars */
+extern PLConsoleVariable *gVarGraphicsFXAA;
+
 static PLCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
@@ -522,9 +525,13 @@ void Gfx_DrawMenu( void ) {
 	/* and now display the scene onto the screen */
 	plPushMatrix();
 	plLoadIdentityMatrix();
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+	if ( gVarGraphicsFXAA->b_value ) {
+		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+		plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+	} else {
+		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	}
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
-	plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, screenTexAttachment );
 	plPopMatrix();
 
