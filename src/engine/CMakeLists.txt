@@ -33,7 +33,7 @@ add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
 
         scheduler.h
         scheduler.c
-        model_md2.c)
+        model_md2.c model_gsmdl.c)
 
 target_include_directories(OSEngine PRIVATE ./ ../3rdparty/miniz/)
 
