@@ -6,8 +6,7 @@
 #include <PL/platform_model.h>
 
 #include "yin.h"
-
-#define MAGIC_TO_NUM( A, B, C, D ) ( ( D << 24 ) + ( C << 16 ) + ( B << 8 ) + A )
+#include "common/common.h"
 
 #define MD2_MAGIC MAGIC_TO_NUM( 'I', 'D', 'P', '2' )
 #define MD2_VERSION 8

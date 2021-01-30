@@ -17,3 +17,5 @@ enum { false, true };
 #else
 #   define COMMON_API PL_IMPORT
 #endif
+
+#define MAGIC_TO_NUM( A, B, C, D ) ( ( D << 24 ) + ( C << 16 ) + ( B << 8 ) + A )
