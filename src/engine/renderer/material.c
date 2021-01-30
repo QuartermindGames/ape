@@ -396,17 +396,21 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 		plSetShaderUniformValue( curPass->program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), true );
 
 		/* set global uniforms, if they exist */
-		if ( plGetShaderUniformSlot( curPass->program, "sun.colour" ) >= 0 ) {
+		int slot;
+		slot = plGetShaderUniformSlot( curPass->program, "sun.colour" );
+		if ( slot >= 0 ) {
 			PLVector4 sunColour = World_GetSunColour();
-			plSetShaderUniformValue( curPass->program, "sun.colour", &sunColour, false );
+			plSetShaderUniformValueByIndex( curPass->program, slot, &sunColour, false );
 		}
-		if ( plGetShaderUniformSlot( curPass->program, "sun.position" ) >= 0 ) {
+		slot = plGetShaderUniformSlot( curPass->program, "sun.position" );
+		if ( slot >= 0 ) {
 			PLVector3 sunPosition = World_GetSunPosition();
-			plSetShaderUniformValue( curPass->program, "sun.position", &sunPosition, false );
+			plSetShaderUniformValueByIndex( curPass->program, slot, &sunPosition, false );
 		}
-		if ( plGetShaderUniformSlot( curPass->program, "sun.ambience" ) >= 0 ) {
+		slot = plGetShaderUniformSlot( curPass->program, "sun.ambience" );
+		if ( slot >= 0 ) {
 			PLVector4 ambience = World_GetAmbience();
-			plSetShaderUniformValue( curPass->program, "sun.ambience", &ambience, false );
+			plSetShaderUniformValueByIndex( curPass->program, slot, &ambience, false );
 		}
 
 		unsigned int curUnit = 0;
