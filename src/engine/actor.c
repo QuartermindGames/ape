@@ -299,7 +299,7 @@ void Act_DrawActors( void ) {
 	}
 }
 
-#define GRAVITY 4.0f
+#define GRAVITY 7.0f
 void Act_TickActors( void ) {
 	PLLinkedListNode *curNode = plGetRootNode( actorList );
 	while ( curNode != NULL ) {
@@ -332,10 +332,13 @@ void Act_TickActors( void ) {
 		actor->oldPosition = actor->position;
 		actor->position = plAddVector3( actor->position, actor->velocity );
 
+		PLVector3 nPos = plSubtractVector3( actor->position, actor->oldPosition );
+		nPos = plSubtractVector3( actor->position, nPos );
+
 		/* check actor vs actor collision */
 		if( actor->setup.Collide != NULL ) {
 			/* ensure bounds origin is kept updated */
-			actor->bounds.origin = actor->position;
+			actor->bounds.origin = nPos;
 
 			Actor *collider = Act_CheckCollisions( actor );
 			if( collider != NULL ) {
@@ -358,12 +361,12 @@ void Act_TickActors( void ) {
 				PLCollisionPlane plane = PLCollisionPlane( faces[ i ].bounds.absOrigin, plGetPolygonFaceNormal( faces[ i ].polygon ) );
 
 				/* now see if we're hitting anything */
-				PLVector3 absOrigin = plGetAABBAbsOrigin( &actor->bounds, actor->position );
+				PLVector3 absOrigin = plGetAABBAbsOrigin( &actor->bounds, nPos );
 				PLCollisionSphere colSphere = PLCollisionSphere( absOrigin, 16.0f );
 				PLCollision collision = plIsSphereIntersectingPlane( &colSphere, &plane );
 				if ( collision.penetration > 0.0f ) {
 					/* printf( "penetration: %f\n", collision.penetration ); */
-					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / 2.0f ) );
+					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / GRAVITY ) );
 
 					PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
 					if ( node == NULL ) {
