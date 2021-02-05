@@ -130,6 +130,7 @@ void Con_Initialize( void ) {
 	/* rendering */
 	gVarGraphicsFXAA = plRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
 	gVarGraphicsSupersampling = plRegisterConsoleVariable( "graphics.supersampling", "1", pl_int_var, NULL, "Resolution multiplier. Anything higher than 1 essentially enables supersampling." );
+	plRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 }
 
 void Con_Shutdown( void ) {

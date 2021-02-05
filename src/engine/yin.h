@@ -12,6 +12,7 @@
 
 #include <assert.h>
 
+#include "common/common.h"
 #include "shared/interfaces.h"
 
 enum {

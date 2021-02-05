@@ -125,10 +125,10 @@ static void RT_InitializeTextures( void ) {
 
 	/* generate fallback texture */
 	static PLColour fallbackData[] = {
-			{ 128, 0, 128, 255 },
-			{ 0, 128, 128, 255 },
-			{ 0, 128, 128, 255 },
-			{ 128, 0, 128, 255 },
+	        { 128, 0, 128, 255 },
+	        { 0, 128, 128, 255 },
+	        { 0, 128, 128, 255 },
+	        { 128, 0, 128, 255 },
 	};
 	fallbackTexture = Gfx_GenerateTextureFromData( ( uint8_t * ) fallbackData, 2, 2, 4, false );
 	if ( fallbackTexture == NULL ) {
@@ -539,7 +539,8 @@ void Gfx_DrawMenu( void ) {
 
 #ifndef DEBUG_CAM
 	switch ( Game_GetMenuState() ) {
-		default: PrintError( "Invalid menu state!\n" );
+		default:
+			PrintError( "Invalid menu state!\n" );
 		case MENU_STATE_START:
 			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
@@ -564,7 +565,7 @@ void Gfx_DrawMenu( void ) {
 	plPopMatrix();
 
 	static const char spinning[] = {
-			'\\', '|', '/', '-', '/', '-' };
+	        '\\', '|', '/', '-', '/', '-' };
 	static int pos = 0;
 	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
 	if ( pos >= sizeof( spinning ) ) {
@@ -652,7 +653,17 @@ void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
 
 	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+
+	CVar( "graphics.wireframe", wireframeMode );
+	if ( wireframeMode->b_value ) {
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	}
+
 	Gfx_RenderSceneFinal( camera );
+
+	if ( wireframeMode->b_value ) {
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
 
 	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
 }
