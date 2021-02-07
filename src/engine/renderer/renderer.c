@@ -150,8 +150,6 @@ static void RT_InitializeTextures( void ) {
 		numTextureTable[ i ] = Gfx_LoadLumpTexture( titlePal, numName );
 	}
 	*/
-
-	Font_Initialize();
 }
 
 PLTexture *Gfx_GetTexture( const char *path ) {
@@ -474,6 +472,8 @@ void Gfx_Initialize( void ) {
 	RT_InitializeTextures();
 	RM_InitializeMaterialSystem();
 
+    Font_Initialize();
+
 	Gfx_InitializeCameras();
 
 	auxCamera = plCreateCamera();
@@ -567,7 +567,7 @@ void Gfx_DrawMenu( void ) {
 	static const char spinning[] = {
 	        '\\', '|', '/', '-', '/', '-' };
 	static int pos = 0;
-	Font_DrawBitmapCharacter( 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
+	Font_DrawBitmapCharacter( Font_GetDefault(), 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
 	if ( pos >= sizeof( spinning ) ) {
 		pos = 0;
 	}
@@ -585,7 +585,7 @@ void Gfx_DrawMenu( void ) {
 	          g_gfxPerfStats.numFacesDrawn,
 	          g_gfxPerfStats.numBatches,
 	          CPUTimer_GetMeasure( PROFILE_DRAW_MAP ) );
-	Font_DrawBitmapString( 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+	Font_DrawBitmapString( Font_GetDefault(), 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
 
 	plSetBlendMode( PL_BLEND_DISABLE );
 

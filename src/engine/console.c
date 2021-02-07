@@ -241,9 +241,9 @@ bool Con_GetState( void ) {
 
 static void Con_DrawInput( const PLViewport *viewport ) {
 	/* draw input field */
-	Font_DrawBitmapCharacter( 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
-	Font_DrawBitmapCharacter( ( float ) ( 12 + ( 8 * curInputBufferLength ) ), ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '_' );
-	Font_DrawBitmapString( 12.0f, ( float ) viewport->h - 12, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
+	Font_DrawBitmapCharacter( Font_GetDefault(), 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
+	Font_DrawBitmapCharacter( Font_GetDefault(), ( float ) ( 12 + ( 8 * curInputBufferLength ) ), ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '_' );
+	Font_DrawBitmapString( Font_GetDefault(), 12.0f, ( float ) viewport->h - 12, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
 }
 
 /**
@@ -285,12 +285,10 @@ void Con_Draw( const PLViewport *viewport ) {
 		float cY = consoleHeight - ( ( outputBuffer.numLines / consoleHeight ) + scrollPos ) - cH;
 		plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( outputBuffer.numLines - 1 ) - scrollPos; i > 0; --i ) {
 			/* draw the line we're currently at */
-			Font_DrawBitmapString( 12.0f, y, 1.0f, 1.0f, outputBuffer.lines[ i ].colour, outputBuffer.lines[ i ].buffer, true );
+			Font_DrawBitmapString( Font_GetDefault(), 12.0f, y, 1.0f, 1.0f, outputBuffer.lines[ i ].colour, outputBuffer.lines[ i ].buffer, true );
 
 			/* now decrement our y pos for as many new lines there were */
 			if ( i > 0 ) {
