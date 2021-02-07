@@ -3,8 +3,6 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
 uniform sampler2D blendMap;
 
 in vec3 vsNormal;

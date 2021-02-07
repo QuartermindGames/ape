@@ -100,6 +100,9 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 
 /*------------------------------------------------------------------*/
 
+PLConsoleVariable *gVarGraphicsFXAA;
+PLConsoleVariable *gVarGraphicsSupersampling;
+
 /**
  * Set the console up.
  */
@@ -123,6 +126,11 @@ void Con_Initialize( void ) {
 	plRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
 	plRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
 	plRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );
+
+	/* rendering */
+	gVarGraphicsFXAA = plRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
+	gVarGraphicsSupersampling = plRegisterConsoleVariable( "graphics.supersampling", "1", pl_int_var, NULL, "Resolution multiplier. Anything higher than 1 essentially enables supersampling." );
+	plRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 }
 
 void Con_Shutdown( void ) {

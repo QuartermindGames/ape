@@ -3,8 +3,6 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-uniform sampler2D diffuseMap;
-
 in vec3 vsNormal;
 in vec2 vsUV;
 in vec4 vsColour;

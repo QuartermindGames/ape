@@ -78,6 +78,9 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 
 	SysWindow *window = Engine_GetMainWindow();
 	g_system.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
+	extern PLConsoleVariable *gVarGraphicsSupersampling;
+	camera->internalPtr->viewport.w *= gVarGraphicsSupersampling->i_value;
+	camera->internalPtr->viewport.h *= gVarGraphicsSupersampling->i_value;
 
 	/* if we have a parent, follow them */
 	if( camera->parentActor != NULL ) {

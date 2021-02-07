@@ -124,6 +124,8 @@ Using pkgman
 		'output base.pkg'
 	add <path>
 		Adds the specified file to the package.
+	addv <path> <type> ...
+	    A slightly more
 	dir <path> <extension>
 		This will add all files with the extension 
 		provided found under the specified directory.

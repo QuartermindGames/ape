@@ -3,10 +3,14 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <sys/socket.h>
-
 #include "yin.h"
 #include "net.h"
+
+#ifndef _WIN32
+#   include <sys/socket.h>
+#else
+#   include <winsock.h>
+#endif
 
 #define NET_DEFAULT_ADDRESS 127.0.0.1
 #define NET_DEFAULT_PORT    8080

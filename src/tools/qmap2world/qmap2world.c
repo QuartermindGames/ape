@@ -1,4 +1,7 @@
-/* Copyright (C) Mark E Sowden <hogsy@oldtimes-software.com> */
+/* ======================================================================
+ * QMAP2WORLD, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
 #include <PL/platform.h>
 #include <PL/pl_llist.h>
@@ -6,7 +9,7 @@
 #include <PL/platform_math.h>
 #include <PL/pl_parse.h>
 
-#include "core/wld.h"
+#include "common/wld.h"
 
 #define VERSION "0.1"
 #define dprint( ... ) printf( __VA_ARGS__ )

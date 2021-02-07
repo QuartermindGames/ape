@@ -1,4 +1,6 @@
 material
 pass base_lighting
 var texture diffuseMap materials/editor/default.png
+var texture normalMap materials/editor/default_n.png
+var texture specularMap materials/editor/default_s.png
 end
