@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
-project(OSEngine)
+project(engine)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -10,7 +10,7 @@ file(GLOB ENGINE_SOURCE_FILES
         *.c *.h
         )
 
-add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
+add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         actors/actor_light.c
         actors/actor_player.c
         actors/actor_trigger_volume.c
@@ -35,13 +35,13 @@ add_library(OSEngine SHARED ${ENGINE_SOURCE_FILES}
         scheduler.c
         model_md2.c model_gsmdl.c)
 
-target_include_directories(OSEngine PRIVATE ./ ../3rdparty/miniz/)
+target_include_directories(engine PRIVATE ./ ../3rdparty/miniz/)
 
-set_target_properties(OSEngine PROPERTIES PREFIX "")
+set_target_properties(engine PROPERTIES PREFIX "")
 
 # Setup link libraries
 if (NOT UNIX)
-    target_link_libraries(OSEngine mingw32)
+    target_link_libraries(engine mingw32)
 endif ()
 
-target_link_libraries(OSEngine common platform SDL2)
+target_link_libraries(engine common platform SDL2)
