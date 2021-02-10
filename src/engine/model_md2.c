@@ -6,7 +6,6 @@
 #include <PL/platform_model.h>
 
 #include "yin.h"
-#include "common/common.h"
 
 #define MD2_MAGIC MAGIC_TO_NUM( 'I', 'D', 'P', '2' )
 #define MD2_VERSION 8
@@ -122,11 +121,18 @@ PLModel *MD2_LoadFile( const char *path ) {
 	MD2Header header;
 	memset( &header, 0, sizeof( MD2Header ) );
 	plReadFile( file, &header, sizeof( header ), 1 );
+
+	bool isValid = true;
 	if ( header.magic != MD2_MAGIC ) {
 		PrintWarn( "Invalid identifier for MD2: %d vs %d!\n", header.magic, MD2_MAGIC );
-		return NULL;
+		isValid = false;
 	} else if ( header.version != MD2_VERSION ) {
 		PrintWarn( "Invalid version for MD2: %d vs %d!\n", header.version, MD2_VERSION );
+		isValid = false;
+	}
+
+	if ( !isValid ) {
+		plCloseFile( file );
 		return NULL;
 	}
 
