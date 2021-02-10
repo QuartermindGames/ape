@@ -19,6 +19,8 @@ SystemInterface g_system;
 
 static SysWindow *mainWindow;
 
+const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_PATCH };
+
 /****************************************
  * PERFORMANCE
  * Move into performance.c
@@ -130,7 +132,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
 	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
 
-	PrintMsg( "Yin Engine, Copyright (C) 2020 Mark E Sowden\n" );
+	PrintMsg( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );

@@ -15,6 +15,17 @@
 #include "common/common.h"
 #include "shared/interfaces.h"
 
+#define ENGINE_APP_NAME "yin"
+
+#define ENGINE_VERSION_MAJOR 2
+#define ENGINE_VERSION_MINOR 0
+#define ENGINE_VERSION_PATCH 0
+
+extern const int ENGINE_VERSION[ 3 ];
+#define ENGINE_VERSION_STR              \
+	PL_TOSTRING( ENGINE_VERSION_MAJOR ) \
+	"." PL_TOSTRING( ENGINE_VERSION_MINOR ) "." PL_TOSTRING( ENGINE_VERSION_PATCH )
+
 enum {
 	LOG_LEVEL_ERROR,
 	LOG_LEVEL_WARN,
@@ -27,7 +38,9 @@ typedef enum CacheGroup {
 	MAX_CACHE_GROUPS
 } CacheGroup;
 
+#if !defined( NDEBUG )
 #define ENABLE_PROFILER 1
+#endif
 
 typedef enum CPUProfilerGroup {
 	PROFILE_DRAW_ALL,
@@ -39,11 +52,11 @@ void CPUTimer_Initialize( void );
 void CPUTimer_StartMeasure( CPUProfilerGroup group );
 void CPUTimer_EndMeasure( CPUProfilerGroup group );
 double CPUTimer_GetMeasure( CPUProfilerGroup group );
-#   define PROFILE_START( GROUP )  CPUTimer_StartMeasure( GROUP )
-#   define PROFILE_END( GROUP )    CPUTimer_EndMeasure( GROUP )
+#define PROFILE_START( GROUP ) CPUTimer_StartMeasure( GROUP )
+#define PROFILE_END( GROUP ) CPUTimer_EndMeasure( GROUP )
 #else
-#   define PROFILE_START( GROUP )
-#   define PROFILE_END( GROUP )
+#define PROFILE_START( GROUP )
+#define PROFILE_END( GROUP )
 #endif
 
 #include "scheduler.h"
@@ -63,13 +76,15 @@ void Con_Draw( const PLViewport *viewport );
 
 typedef struct SysWindow SysWindow;
 
-#define WINDOW_TITLE    "Yin Technology Demo"
-#define WINDOW_WIDTH    1024
-#define WINDOW_HEIGHT   768
+#define WINDOW_TITLE "Yin Technology Demo"
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
 
-#define PrintError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )
-#define PrintWarn( ... )  plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
-#define PrintMsg( ... )   plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define PrintError( ... )                         \
+	plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
+	exit( EXIT_FAILURE )
+#define PrintWarn( ... ) plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
+#define PrintMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 
 extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "base.pkg"
