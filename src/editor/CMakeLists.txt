@@ -2,9 +2,14 @@
 
 project(FoxEd)
 
-if(LINUX)
-    set(LINUX_ADDITIONAL "findfirst.c findfirst.h spec.c spec.h")
-endif()
+if (UNIX)
+    set(UNIX_ADDITIONAL)
+    file(GLOB UNIX_ADDITIONAL
+            findfirst.c
+            findfirst.h
+            spec.c
+            spec.h)
+endif ()
 
 add_executable(FoxEd
         brush.cpp
@@ -59,15 +64,15 @@ add_executable(FoxEd
         z.h
 
         # Mostly for dir search functions
-        ${LINUX_ADDITIONAL}
+        ${UNIX_ADDITIONAL}
         )
 
-if ( NOT UNIX )
+if (NOT UNIX)
     target_include_directories(FoxEd PRIVATE "../3rdparty/fox-1.6.57/include/" "glew/include/")
     target_link_directories(FoxEd PRIVATE "glew/lib/Release/x64/" "../3rdparty/fox-1.6.57/lib/")
     target_link_libraries(FoxEd FOXD-1.6 glew32s)
-else()
-    target_link_libraries(FoxEd GLEW GLU FOX-1.6)
-endif()
+else ()
+    target_link_libraries(FoxEd GLEW GL GLU FOX-1.6)
+endif ()
 
 target_link_libraries(FoxEd)

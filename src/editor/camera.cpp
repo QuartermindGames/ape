@@ -48,8 +48,8 @@ void huang::Camera::BuildMatrix() {
 	float	matrix[ 4 ][ 4 ];
 	int		i;
 
-	xa = angles[ 0 ] / 180 * Q_PI;
-	ya = angles[ 1 ] / 180 * Q_PI;
+	xa = angles[ 0 ] / 180.0f * Q_PI;
+	ya = angles[ 1 ] / 180.0f * Q_PI;
 
 	// the movement matrix is kept 2d
 

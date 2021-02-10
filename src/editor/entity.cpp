@@ -56,7 +56,7 @@ void 	SetKeyValue( entity_t *ent, const char *key, char *value ) {
 	strcpy( ep->value, value );
 }
 
-void 	DeleteKey( entity_t *ent, char *key ) {
+void 	DeleteKey( entity_t *ent, const char *key ) {
 	epair_t **ep, *next;
 
 	ep = &ent->epairs;

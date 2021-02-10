@@ -61,7 +61,7 @@ typedef struct entity_s {
 
 const char *ValueForKey( entity_t *ent, const char *key );
 void	SetKeyValue( entity_t *ent, const char *key, char *value );
-void 	DeleteKey( entity_t *ent, char *key );
+void 	DeleteKey( entity_t *ent, const char *key );
 float	FloatForKey( entity_t *ent, const char *key );
 int		IntForKey( entity_t *ent, const char *key );
 void 	GetVectorForKey( entity_t *ent, const char *key, vec3_t vec );
