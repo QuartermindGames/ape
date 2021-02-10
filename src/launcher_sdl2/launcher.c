@@ -296,7 +296,7 @@ void Sys_Shutdown( void ) {
 static void Sys_SetupEngineInterface( void ) {
 	Print( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "./OSEngine", true );
+	dllEnginePtr = plLoadLibrary( "./engine", true );
 	if ( dllEnginePtr == NULL ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
