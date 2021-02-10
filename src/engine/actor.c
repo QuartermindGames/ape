@@ -227,7 +227,7 @@ static bool Act_IsColliding( Actor *self, Actor *other ) {
 
 static Actor *Act_CheckCollisions( Actor *self ) {
 	/* in the future, perhaps it's worth tracking multiple lists per sector? */
-	PLLinkedListNode *curNode = plGetRootNode( actorList );
+	PLLinkedListNode *curNode = plGetFirstNode( actorList );
 	while( curNode != NULL ) {
 		Actor *actor = plGetLinkedListNodeUserData( curNode );
 		if( actor == NULL ) {
@@ -255,7 +255,7 @@ static Actor *Act_CheckCollisions( Actor *self ) {
  ****************************************/
 
 void Act_DrawActors( void ) {
-	PLLinkedListNode *curNode = plGetRootNode( actorList );
+	PLLinkedListNode *curNode = plGetFirstNode( actorList );
 	while ( curNode != NULL ) {
 		Actor *actor = plGetLinkedListNodeUserData( curNode );
 		if ( actor == NULL ) {
@@ -273,7 +273,7 @@ void Act_DrawActors( void ) {
 		plDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
 		plDrawBoundingVolume( &PLCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
 
-		PLLinkedListNode *colliderNode = plGetRootNode( actor->geoColliders );
+		PLLinkedListNode *colliderNode = plGetFirstNode( actor->geoColliders );
 		while( colliderNode != NULL ) {
 			MapFace *face = plGetLinkedListNodeUserData( colliderNode );
 
@@ -301,7 +301,7 @@ void Act_DrawActors( void ) {
 
 #define GRAVITY 7.0f
 void Act_TickActors( void ) {
-	PLLinkedListNode *curNode = plGetRootNode( actorList );
+	PLLinkedListNode *curNode = plGetFirstNode( actorList );
 	while ( curNode != NULL ) {
 		Actor *actor = plGetLinkedListNodeUserData( curNode );
 		if ( actor == NULL ) {

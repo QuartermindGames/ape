@@ -94,7 +94,7 @@ static uint32_t VM_ReadMemory( const VMProgram *program, uint32_t address ) {
  * */
 
 VMProgram *VM_GetProgramByName( const char *programName ) {
-	PLLinkedListNode *curNode = plGetRootNode( vmPrograms );
+	PLLinkedListNode *curNode = plGetFirstNode( vmPrograms );
 	while ( curNode != NULL ) {
 		VMProgram *program = ( VMProgram * ) plGetLinkedListNodeUserData( curNode );
 		if ( strcmp( program->name, programName ) == 0 ) {

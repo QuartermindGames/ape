@@ -103,7 +103,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 }
 
 void Gfx_ShutdownCameras( void ) {
-	PLLinkedListNode *curNode = plGetRootNode( camerasList );
+	PLLinkedListNode *curNode = plGetFirstNode( camerasList );
 	while( curNode != NULL ) {
 		GfxCamera *camera = plGetLinkedListNodeUserData( curNode );
 		if( camera == NULL ) {

@@ -153,7 +153,7 @@ static void RT_InitializeTextures( void ) {
 }
 
 PLTexture *Gfx_GetTexture( const char *path ) {
-	PLLinkedListNode *node = plGetRootNode( textures );
+	PLLinkedListNode *node = plGetFirstNode( textures );
 	while ( node != NULL ) {
 		PLTexture *texture = plGetLinkedListNodeUserData( node );
 		if ( pl_strcasecmp( path, texture->path ) == 0 ) {
@@ -279,7 +279,7 @@ static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
 }
 
 PLShaderProgram *Gfx_GetShaderProgram( const char *name ) {
-	PLLinkedListNode *root = plGetRootNode( gfxShaderPrograms );
+	PLLinkedListNode *root = plGetFirstNode( gfxShaderPrograms );
 	while ( root != NULL ) {
 		ShaderProgramIndex *programIndex = plGetLinkedListNodeUserData( root );
 		if ( strcmp( name, programIndex->internalName ) == 0 ) {
@@ -445,7 +445,7 @@ static void Gfx_SetupShadowMap( void ) {
 		PrintError( "Failed to create depth buffer!\nPL: %s\n", plGetError() );
 	}
 
-	glDrawBuffer( GL_NONE );
+	//glDrawBuffer( GL_NONE );
 
 	smTexture = plGetFrameBufferTextureAttachment( smDepthBuffer, PL_BUFFER_DEPTH, PL_TEXTURE_FILTER_LINEAR );
 	if ( smTexture == NULL ) {
@@ -546,8 +546,6 @@ void Gfx_DrawMenu( void ) {
 			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
 			break;
 		case MENU_STATE_HUD:
-			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_ALPHA ] );
-			Gfx_DrawViewSprite();
 			break;
 	}
 #endif

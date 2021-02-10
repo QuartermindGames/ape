@@ -234,7 +234,7 @@ static void WriteProperties( PLLinkedList *propertyList, FILE *file ) {
 		return;
 	}
 
-	PLLinkedListNode *root = plGetRootNode( propertyList );
+	PLLinkedListNode *root = plGetFirstNode( propertyList );
 	while ( root != NULL ) {
 		WldProperty *property = plGetLinkedListNodeUserData( root );
 		WriteSizedString( file, property->name );
@@ -260,7 +260,7 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 	IdBrushFace *faces = calloc( numFaces, sizeof( IdBrushFace ) );
 	{
 		unsigned int i = 0;
-		PLLinkedListNode *node = plGetRootNode( brush->faces );
+		PLLinkedListNode *node = plGetFirstNode( brush->faces );
 		while ( node != NULL ) {
 			IdBrushFace *face = plGetLinkedListNodeUserData( node );
 			faces[ i ] = *face;
@@ -299,7 +299,7 @@ static void WriteEntity( IdEntity *entity, FILE *file ) {
 	WriteNodeHeader( entity->name, WLD_NODE_ENTITY, plGetNumLinkedListNodes( entity->brushes ), file );
 	WriteProperties( entity->properties, file );
 
-	PLLinkedListNode *node = plGetRootNode( entity->brushes );
+	PLLinkedListNode *node = plGetFirstNode( entity->brushes );
 	while ( node != NULL ) {
 		IdBrush *brush = plGetLinkedListNodeUserData( node );
 		WriteBrush( brush, file );
@@ -309,7 +309,7 @@ static void WriteEntity( IdEntity *entity, FILE *file ) {
 }
 
 static void WriteNodes( FILE *file, IdMap *map ) {
-	IdEntity *worldSpawn = plGetLinkedListNodeUserData( plGetRootNode( map->entities ) );
+	IdEntity *worldSpawn = plGetLinkedListNodeUserData( plGetFirstNode( map->entities ) );
 	if ( worldSpawn == NULL ) {
 		error( "Failed to fetch worldspawn!\n" );
 	}
@@ -326,14 +326,14 @@ static void WriteNodes( FILE *file, IdMap *map ) {
 
 	PLLinkedListNode *node;
 	/* now write out all the brushes */
-	node = plGetRootNode( worldSpawn->brushes );
+	node = plGetFirstNode( worldSpawn->brushes );
 	while ( node != NULL ) {
 		IdBrush *brush = plGetLinkedListNodeUserData( node );
 		WriteBrush( brush, file );
 		node = plGetNextLinkedListNode( node );
 	}
 	/* and all the entities */
-	node = plGetNextLinkedListNode( plGetRootNode( map->entities ) );
+	node = plGetNextLinkedListNode( plGetFirstNode( map->entities ) );
 	while ( node != NULL ) {
 		IdEntity *entity = plGetLinkedListNodeUserData( node );
 		WriteEntity( entity, file );

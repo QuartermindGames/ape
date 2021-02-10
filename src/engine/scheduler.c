@@ -22,7 +22,7 @@ bool Sch_IsTaskRunning( const char *desc ) {
 		return false;
 	}
 
-    PLLinkedListNode *node = plGetRootNode( scheduleList );
+    PLLinkedListNode *node = plGetFirstNode( scheduleList );
     while ( node != NULL ) {
         SchTask *task = plGetLinkedListNodeUserData( node );
 		if ( strcmp( task->desc, desc ) == 0 ) {
@@ -52,7 +52,7 @@ void Sch_RunTasks( void ) {
 		return;
 	}
 
-	PLLinkedListNode *node = plGetRootNode( scheduleList );
+	PLLinkedListNode *node = plGetFirstNode( scheduleList );
 	while ( node != NULL ) {
 		PLLinkedListNode *nextNode = plGetNextLinkedListNode( node );
 		SchTask *task = plGetLinkedListNodeUserData( node );
@@ -78,7 +78,7 @@ void Sch_PrintPendingTasks( void ) {
 	}
 
 	unsigned int i = 0;
-	PLLinkedListNode *node = plGetRootNode( scheduleList );
+	PLLinkedListNode *node = plGetFirstNode( scheduleList );
 	while ( node != NULL ) {
 		SchTask *task = plGetLinkedListNodeUserData( node );
 		PrintMsg( " (%d) %s %f\n", i++, task->desc, task->delay - Engine_GetNumTicks() );

@@ -303,7 +303,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 }
 
 static Material *RM_GetMaterial( const char *path, CacheGroup group ) {
-	PLLinkedListNode *node = plGetRootNode( materials[ group ] );
+	PLLinkedListNode *node = plGetFirstNode( materials[ group ] );
 	while ( node != NULL ) {
 		Material *material = plGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 ) {
@@ -361,7 +361,7 @@ void RM_DestroyMaterial( Material *material, bool force ) {
 }
 
 void RM_ClearMaterials( CacheGroup group ) {
-	PLLinkedListNode *node = plGetRootNode( materials[ group ] );
+	PLLinkedListNode *node = plGetFirstNode( materials[ group ] );
 	while ( node != NULL ) {
 		free( plGetLinkedListNodeUserData( node ) );
 		node = plGetNextLinkedListNode( node );
@@ -433,5 +433,8 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 
 		plUploadMesh( mesh );
 		plDrawMesh( mesh );
+
+        g_gfxPerfStats.numBatches++;
+        g_gfxPerfStats.numFacesDrawn += mesh->num_triangles;
 	}
 }
