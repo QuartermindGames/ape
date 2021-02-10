@@ -103,6 +103,68 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 PLConsoleVariable *gVarGraphicsFXAA;
 PLConsoleVariable *gVarGraphicsSupersampling;
 
+#include "common/nodelst.h"
+
+static const char *defaultUsrCfg = "user" NL_DEFAULT_EXTENSION;
+
+static void LoadUserConfig( void ) {
+	PrintMsg( "Loading user config: \"%s\"\n", defaultUsrCfg );
+
+    NLNode *root = NL_LoadFile( defaultUsrCfg );
+	if ( root == NULL ) {
+		PrintWarn( "Failed to load user config: %s!\n", NL_GetError() );
+		return;
+	}
+
+	NLNode *child = NL_GetFirstChild( root );
+	while ( child != NULL ) {
+		const char *cvarName = NL_GetNodeName( child );
+		PLConsoleVariable *cvar = plGetConsoleVariable( cvarName );
+		if ( cvar != NULL ) {
+			plSetConsoleVariable( cvar, NL_GetNodeStringData( child ) );
+		} else {
+            PrintWarn( "Failed to find console variable, \"%s\"!\n", cvarName );
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	PrintMsg( "User config loaded.\n" );
+}
+
+static void SaveUserConfig( void ) {
+	PrintMsg( "Saving user config: \"%s\"\n", defaultUsrCfg );
+
+	PLConsoleVariable **cvars;
+	size_t numVars;
+	plGetConsoleVariables( &cvars, &numVars );
+
+    NLNode *root = NL_AddObject( NULL, "config" );
+	for ( unsigned int i = 0; i < numVars; ++i ) {
+		/* don't bother storing it if it matches the default */
+		//if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
+		//	continue;
+		//}
+
+		switch( cvars[ i ]->type ) {
+			case pl_float_var:
+            case pl_int_var:
+				NL_AddNumericVar( root, cvars[ i ]->var, cvars[ i ]->f_value );
+				break;
+			case pl_bool_var:
+				NL_AddBooleanVar( root, cvars[ i ]->var, cvars[ i ]->b_value );
+				break;
+			default:
+				NL_AddStringVar( root, cvars[ i ]->var, cvars[ i ]->s_value );
+				break;
+		}
+	}
+
+	NL_WriteFile( defaultUsrCfg, root, NL_FILE_BINARY );
+
+	PrintMsg( "User config saved.\n" );
+}
+
 /**
  * Set the console up.
  */
@@ -131,6 +193,9 @@ void Con_Initialize( void ) {
 	gVarGraphicsFXAA = plRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
 	gVarGraphicsSupersampling = plRegisterConsoleVariable( "graphics.supersampling", "1", pl_int_var, NULL, "Resolution multiplier. Anything higher than 1 essentially enables supersampling." );
 	plRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
+
+	LoadUserConfig();
+	SaveUserConfig();
 }
 
 void Con_Shutdown( void ) {
