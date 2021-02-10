@@ -133,14 +133,24 @@ Using pkgman
 Technical
 -----------------------------------------------------------------
 
+NODE
+    Node tree format, used for pretty much everything. There are
+    two types of the format, one is a binary format and the other
+    is a human readable text format.
+
+    The specs are a little lengthy, so check docs/node_format.md
+    if you want to learn more about it. To summarise however,
+    it's essentially a hierarchy made up of nodes of different
+    types (objects, strings, booleans, floats and arrays).
+
 CVM
     Compiled bytecode to be loaded in by Yin's virtual machine.
     You can compile your own bytecode by using the yc tool.
 
-PRG
+PRG [> NODE]
 	Shader program files.
 
-MAT
+MAT [> NODE]
 	Material files.
 
 PKG
@@ -148,7 +158,7 @@ PKG
 	pretty simplistic and utilise Deflate compression provided
 	by the miniz library.
 
-WLD
+WLD [> NODE]
 	Levels in Yin or "worlds" as they're referred to are
 	hierarchical, every brush can have a child entity/brush and
 	every entity could have a child entity/brush - there

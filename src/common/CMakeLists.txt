@@ -16,6 +16,7 @@ add_library(common SHARED
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 
 set_target_properties(common PROPERTIES PREFIX "")
+target_compile_definitions(common PRIVATE COMMON_DLL)
 
 # Setup link libraries
 if (NOT UNIX)
