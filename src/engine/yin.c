@@ -95,21 +95,6 @@ void *AllocMemory( size_t size, bool abort ) {
  * INITIALIZATION
  ****************************************/
 
-static void Sys_SetupVFS( void ) {
-	PrintMsg( "Mounting VFS locations...\n" );
-
-	/* check whether or not we're launching from the 'runtime' dir */
-	PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
-	if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
-		PrintMsg( "Did not find \"" YIN_GLOBAL_WAD "\", attempting to mount data directory...\n" );
-		plMountLocalLocation( "../../" );
-	}
-
-	if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
-		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
-	}
-}
-
 static bool Engine_Initialize( int argc, char **argv ) {
 	pl_calloc = Sys_calloc;
 	pl_malloc = Sys_malloc;
@@ -138,7 +123,18 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
 	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
-	Sys_SetupVFS();
+    PrintMsg( "Mounting VFS locations...\n" );
+
+    /* check whether or not we're launching from the 'runtime' dir */
+    PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
+    if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
+        PrintMsg( "Did not find \"" YIN_GLOBAL_WAD "\", attempting to mount data directory...\n" );
+        plMountLocalLocation( "../../" );
+    }
+
+    if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
+        PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
+    }
 
 	/* create our main window
 	 * todo: this should be delegated to the launcher... */
@@ -152,6 +148,8 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	/* register other various loaders */
     PLModel *MD2_LoadFile( const char *path );
 	plRegisterModelLoader( "md2", MD2_LoadFile );
+    PLModel *GSMDL_LoadFile( const char *path );
+	plRegisterModelLoader( "mdl", GSMDL_LoadFile );
 
 	/* initialize core services */
 	CPUTimer_Initialize();
@@ -196,8 +194,6 @@ static void Engine_Display( void ) {
     if ( !g_system.IsDisplayActive( mainWindow ) ) {
         return;
     }
-
-	memset( &g_gfxPerfStats, 0, sizeof( g_gfxPerfStats ) );
 
 	PROFILE_START( PROFILE_DRAW_ALL );
 
