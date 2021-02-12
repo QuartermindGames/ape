@@ -1,8 +1,6 @@
-//
-// Created by mark- on 30/10/2020.
-//
+/* ======================================================================
+ * Project Yin, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
-#ifndef YIN_SRC_GAME_GAME_INTERFACE_H_
-#define YIN_SRC_GAME_GAME_INTERFACE_H_
-
-#endif//YIN_SRC_GAME_GAME_INTERFACE_H_
+#pragma once
