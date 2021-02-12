@@ -85,6 +85,11 @@ typedef struct SysWindow SysWindow;
 	exit( EXIT_FAILURE )
 #define PrintWarn( ... ) plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
 #define PrintMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#if !defined( NDEBUG )
+#   define DebugMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#else
+#   define DebugMsg( ... )
+#endif
 
 extern PLPackage *globalWad;
 #define YIN_GLOBAL_WAD "base.pkg"
@@ -98,3 +103,5 @@ unsigned int Engine_GetNumTicks( void );
 void *Sys_calloc( size_t num, size_t size );
 void *Sys_malloc( size_t size );
 void *AllocMemory( size_t size, bool abort );
+
+const char *FS_GetDataDirectory( void );

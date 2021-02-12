@@ -95,6 +95,22 @@ void *AllocMemory( size_t size, bool abort ) {
  * INITIALIZATION
  ****************************************/
 
+const char *FS_GetDataDirectory( void ) {
+	static char dataPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
+	if ( dataPath[ 0 ] != '\0' ) {
+		return dataPath;
+	}
+
+    PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
+    if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
+		snprintf( dataPath, sizeof( dataPath ), "../../" );
+    } else {
+		snprintf( dataPath, sizeof( dataPath ), "./" );
+	}
+
+	return dataPath;
+}
+
 static bool Engine_Initialize( int argc, char **argv ) {
 	pl_calloc = Sys_calloc;
 	pl_malloc = Sys_malloc;
@@ -125,13 +141,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
     PrintMsg( "Mounting VFS locations...\n" );
 
-    /* check whether or not we're launching from the 'runtime' dir */
-    PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
-    if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
-        PrintMsg( "Did not find \"" YIN_GLOBAL_WAD "\", attempting to mount data directory...\n" );
-        plMountLocalLocation( "../../" );
-    }
-
+	plMountLocalLocation( FS_GetDataDirectory() );
     if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
         PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
     }
