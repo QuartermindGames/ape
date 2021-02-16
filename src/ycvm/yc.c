@@ -24,8 +24,8 @@ int main( int argc, char **argv ) {
 
 	plSetupLogOutput( YC_LOG_PATH );
 	plSetupLogLevel( LOG_LEVEL_DEFAULT, NULL, PL_COLOUR_GREEN, true );
-	plSetupLogLevel( LOG_LEVEL_WARNING, "warning", PL_COLOUR_ORANGE, true );
-	plSetupLogLevel( LOG_LEVEL_ERROR, "error", PL_COLOUR_RED, true );
+	plSetupLogLevel( LOG_LEVEL_WARNING, "yin/warning", PL_COLOUR_ORANGE, true );
+	plSetupLogLevel( LOG_LEVEL_ERROR, "yin/error", PL_COLOUR_RED, true );
 
 	Print( "Yin Compiler\n"
 	       "Written by Mark E Sowden for Project Yin\n"

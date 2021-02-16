@@ -129,9 +129,9 @@ static bool Engine_Initialize( int argc, char **argv ) {
 		plSetupLogOutput( path );
 	}
 
-	plSetupLogLevel( LOG_LEVEL_ERROR, "error", PL_COLOUR_RED, true );
-	plSetupLogLevel( LOG_LEVEL_WARN, "warning", PL_COLOUR_ORANGE, true );
-	plSetupLogLevel( LOG_LEVEL_INFO, NULL, PL_COLOUR_WHITE, true );
+	plSetupLogLevel( LOG_LEVEL_ERROR, "yin/error", PL_COLOUR_RED, true );
+	plSetupLogLevel( LOG_LEVEL_WARN, "yin/warning", PL_COLOUR_ORANGE, true );
+	plSetupLogLevel( LOG_LEVEL_INFO, "yin", PL_COLOUR_WHITE, true );
 
 	PrintMsg( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
 
