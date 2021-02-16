@@ -11,16 +11,16 @@ What is this?
 
 	What you're looking at is obviously a work-in-progress.
 
-    Runtime
-        platform        - Support library; provides graphics abstraction, file I/O and more
-	    launcher_sdl2   - SDL2 input, windowing and other OS tasks
-	    engine          - The engine itself, Yin
-	    core            - Foundational systems shared between everything
+	Runtime
+        	platform        - Support library; provides graphics abstraction, file I/O and more
+		launcher_sdl2   - SDL2 input, windowing and other OS tasks
+		engine          - The engine itself, Yin
+		common          - Foundational systems shared between everything
 
 	Tools
-	    ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
-	    pkgman          - Used to generate .pkg files (most files are automatically compressed)
-	    qmap2world      - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
+	    	ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
+	    	pkgman          - Used to generate .pkg files (most files are automatically compressed)
+	    	qmap2world      - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
 
 What can I do with it?
 -----------------------------------------------------------------
