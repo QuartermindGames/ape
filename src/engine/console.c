@@ -34,6 +34,7 @@ static struct ConBuffer {
 };
 static void Con_ClearBuffer( void ) { outputBuffer.numLines = 0; }
 static void Con_OutputCallback( int level, const char *msg ) {
+	/*msg += 20;*/
 	size_t l = strlen( msg );
 	if ( l >= CON_BUFFER_MAX_LENGTH ) {
 		PrintWarn( "Attempting to push message to console with an unexpected length!\n" );
@@ -103,25 +104,38 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 PLConsoleVariable *gVarGraphicsFXAA;
 PLConsoleVariable *gVarGraphicsSupersampling;
 
-#include "common/nodelst.h"
+#include "common/Node.h"
 
-static const char *defaultUsrCfg = "user" NL_DEFAULT_EXTENSION;
+#define USER_CONFIG "user" NL_DEFAULT_EXTENSION
 
 static void LoadUserConfig( void ) {
-	PrintMsg( "Loading user config: \"%s\"\n", defaultUsrCfg );
+	DebugMsg( "Loading user config: \"%s\"\n", USER_CONFIG );
 
-    NLNode *root = NL_LoadFile( defaultUsrCfg );
+    NLNode *root = NL_LoadFile( USER_CONFIG );
 	if ( root == NULL ) {
 		PrintWarn( "Failed to load user config: %s!\n", NL_GetError() );
 		return;
 	}
 
+	/* validate it */
+	const char *rootName = Node_GetName( root );
+	if ( strcmp( rootName, "config" ) != 0 ) {
+		PrintWarn( "Invalid config file, expected \"config\" but got \"%s\"!\n", rootName );
+		NL_DestroyNode( root );
+		return;
+	}
+
+#if !defined( NDEBUG )
+    NL_PrintNodeTree( root, 0 );
+#endif
+
+	/* now iterate through the list and update all our children */
 	NLNode *child = NL_GetFirstChild( root );
 	while ( child != NULL ) {
-		const char *cvarName = NL_GetNodeName( child );
+		const char *cvarName = Node_GetName( child );
 		PLConsoleVariable *cvar = plGetConsoleVariable( cvarName );
 		if ( cvar != NULL ) {
-			plSetConsoleVariable( cvar, NL_GetNodeStringData( child ) );
+			plSetConsoleVariable( cvar, Node_GetString( child ) );
 		} else {
             PrintWarn( "Failed to find console variable, \"%s\"!\n", cvarName );
 		}
@@ -133,8 +147,6 @@ static void LoadUserConfig( void ) {
 }
 
 static void SaveUserConfig( void ) {
-	PrintMsg( "Saving user config: \"%s\"\n", defaultUsrCfg );
-
 	PLConsoleVariable **cvars;
 	size_t numVars;
 	plGetConsoleVariables( &cvars, &numVars );
@@ -142,14 +154,16 @@ static void SaveUserConfig( void ) {
     NLNode *root = NL_AddObject( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i ) {
 		/* don't bother storing it if it matches the default */
-		//if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
-		//	continue;
-		//}
+		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
+			continue;
+		}
 
 		switch( cvars[ i ]->type ) {
 			case pl_float_var:
+                NL_AddNumericVar( root, cvars[ i ]->var, cvars[ i ]->f_value );
+                break;
             case pl_int_var:
-				NL_AddNumericVar( root, cvars[ i ]->var, cvars[ i ]->f_value );
+				NL_AddNumericVar( root, cvars[ i ]->var, ( float ) cvars[ i ]->i_value );
 				break;
 			case pl_bool_var:
 				NL_AddBooleanVar( root, cvars[ i ]->var, cvars[ i ]->b_value );
@@ -160,7 +174,15 @@ static void SaveUserConfig( void ) {
 		}
 	}
 
-	NL_WriteFile( defaultUsrCfg, root, NL_FILE_BINARY );
+#if !defined( NDEBUG )
+	NL_PrintNodeTree( root, 0 );
+#endif
+
+	char path[ PL_SYSTEM_MAX_PATH ];
+	snprintf( path, sizeof( path ), "%s%s", FS_GetDataDirectory(), USER_CONFIG );
+    DebugMsg( "Saving user config: \"%s\"\n", path );
+	NL_WriteFile( path, root, NL_FILE_BINARY );
+	NL_DestroyNode( root );
 
 	PrintMsg( "User config saved.\n" );
 }
@@ -195,11 +217,11 @@ void Con_Initialize( void ) {
 	plRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 
 	LoadUserConfig();
-	SaveUserConfig();
 }
 
 void Con_Shutdown( void ) {
 	Con_ClearBuffer();
+    SaveUserConfig();
 }
 
 /**
@@ -224,7 +246,7 @@ void Con_ScrollBackward( void ) {
 }
 
 bool Con_HandleTextEvent( const char *key ) {
-	if ( !Con_GetState() ) {
+	if ( !Con_GetState() || *key == '`' || *key == '~' ) {
 		return false;
 	}
 
@@ -305,6 +327,14 @@ bool Con_GetState( void ) {
 }
 
 static void Con_DrawInput( const PLViewport *viewport ) {
+	if ( !Con_GetState() ) {
+		return;
+	}
+
+	plSetTexture( NULL, 0 );
+
+    plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, PLColourRGB( 0, 0, 0 ) );
+
 	/* draw input field */
 	Font_DrawBitmapCharacter( Font_GetDefault(), 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
 	Font_DrawBitmapCharacter( Font_GetDefault(), ( float ) ( 12 + ( 8 * curInputBufferLength ) ), ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '_' );
@@ -339,7 +369,6 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, ( float ) viewport->w, consoleHeight, CON_BACK_COLOUR );
 	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, 8, consoleHeight, CON_SIDE_COLOUR );
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, CON_BACK_COLOUR );
 
 	/* todo: update viewport in platform lib to console dimensions so we don't draw outside
 	 *       the console space. */
