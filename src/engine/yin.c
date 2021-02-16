@@ -139,6 +139,8 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
 	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
+	CommonLibrary_Initialize();
+
     PrintMsg( "Mounting VFS locations...\n" );
 
 	plMountLocalLocation( FS_GetDataDirectory() );

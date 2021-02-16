@@ -7,14 +7,15 @@
 
 #include <PL/platform.h>
 
-#if !defined( __bool_true_false_are_defined )
-typedef unsigned char bool;
-enum { false,
-	   true };
-#endif
-
 #if defined( COMMON_DLL )
+#include <PL/platform_console.h>
+
 #define COMMON_API PL_EXPORT
+
+extern int logLevelPrint;
+extern int logLevelWarn;
+#define Message( ... ) plLogMessage( logLevelPrint, __VA_ARGS__ )
+#define Warning( ... ) plLogMessage( logLevelWarn, __VA_ARGS__ )
 #else
 #define COMMON_API PL_IMPORT
 #endif
@@ -28,3 +29,5 @@ enum { false,
 		u_assert( ( STORE ) != NULL );                \
 	}                                                 \
 	( STORE )
+
+extern void CommonLibrary_Initialize( void );

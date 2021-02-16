@@ -11,12 +11,15 @@ add_library(common SHARED
         wld.c
         include/common/common.h
         include/common/wld.h
-        nodelst.c include/common/nodelst.h)
+        Node.c
+        include/common/Node.h
+        NodePrivate.h
+        NodePreProcessor.c Common.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 
 set_target_properties(common PROPERTIES PREFIX "")
-target_compile_definitions(common PRIVATE COMMON_DLL)
+target_compile_definitions(common PRIVATE COMMON_DLL=1)
 
 # Setup link libraries
 if (NOT UNIX)
