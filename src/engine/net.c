@@ -6,10 +6,10 @@
 #include "yin.h"
 #include "net.h"
 
-#ifndef _WIN32
-#   include <sys/socket.h>
+#if defined( _WIN32 )
+#include <winsock.h>
 #else
-#   include <winsock.h>
+#include <sys/socket.h>
 #endif
 
 #define NET_DEFAULT_ADDRESS 127.0.0.1
