@@ -1,3 +1,4 @@
+- [ ] Font command to pkgman which will generate a `.bff`
 - [ ] Allow defaults to be specified in shader program
 - [ ] Add command to reload shader programs
 - [ ] Add command to reload textures

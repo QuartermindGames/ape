@@ -368,7 +368,10 @@ void Act_TickActors( void ) {
 					/* printf( "penetration: %f\n", collision.penetration ); */
 					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / GRAVITY ) );
 
-					PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
+					float d = plRadiansToDegrees( plVector3Length( plNormalizeVector3( collision.contactNormal ) ) );
+					printf( "%f\n", d );
+
+                    PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
 					if ( node == NULL ) {
 						PrintError( "Failed to insert node into colliders list!\n" );
 					}
