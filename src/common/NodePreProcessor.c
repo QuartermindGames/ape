@@ -47,7 +47,7 @@ typedef struct PreProcessorContext {
 
 static PreProcessorContext ctx;
 
-const PreProcessorMacro *GetPreprocessorMacroByName( const char *name ) {
+static const PreProcessorMacro *GetPreprocessorMacroByName( const char *name ) {
 	for ( unsigned int i = 0; i < ctx.numMacros; ++i ) {
 		if ( pl_strcasecmp( ctx.macros[ i ].name, name ) == 0 ) {
 			return &ctx.macros[ i ];
@@ -61,7 +61,7 @@ const PreProcessorMacro *GetPreprocessorMacroByName( const char *name ) {
  * Check if the specified macro exists. Typically going to be
  * used to avoid registering duplicates.
  */
-bool IsMacroRegistered( const char *name ) {
+static bool IsMacroRegistered( const char *name ) {
 	if ( GetPreprocessorMacroByName( name ) != NULL ) {
 		return true;
 	}

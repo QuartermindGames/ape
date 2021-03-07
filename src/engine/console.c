@@ -111,17 +111,9 @@ PLConsoleVariable *gVarGraphicsSupersampling;
 static void LoadUserConfig( void ) {
 	DebugMsg( "Loading user config: \"%s\"\n", USER_CONFIG );
 
-    NLNode *root = NL_LoadFile( USER_CONFIG );
+    NLNode *root = NL_LoadFile( USER_CONFIG, "config" );
 	if ( root == NULL ) {
-		PrintWarn( "Failed to load user config: %s!\n", NL_GetError() );
-		return;
-	}
-
-	/* validate it */
-	const char *rootName = Node_GetName( root );
-	if ( strcmp( rootName, "config" ) != 0 ) {
-		PrintWarn( "Invalid config file, expected \"config\" but got \"%s\"!\n", rootName );
-		NL_DestroyNode( root );
+		PrintWarn( "Failed to load user config: %s!\n", NL_GetErrorMessage() );
 		return;
 	}
 
@@ -132,10 +124,10 @@ static void LoadUserConfig( void ) {
 	/* now iterate through the list and update all our children */
 	NLNode *child = NL_GetFirstChild( root );
 	while ( child != NULL ) {
-		const char *cvarName = Node_GetName( child );
+		const char *cvarName = NL_GetName( child );
 		PLConsoleVariable *cvar = plGetConsoleVariable( cvarName );
 		if ( cvar != NULL ) {
-			plSetConsoleVariable( cvar, Node_GetString( child ) );
+			plSetConsoleVariable( cvar, NL_GetString( child ) );
 		} else {
             PrintWarn( "Failed to find console variable, \"%s\"!\n", cvarName );
 		}
@@ -151,7 +143,7 @@ static void SaveUserConfig( void ) {
 	size_t numVars;
 	plGetConsoleVariables( &cvars, &numVars );
 
-    NLNode *root = NL_AddObject( NULL, "config" );
+    NLNode *root = NL_PushBackObj( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i ) {
 		/* don't bother storing it if it matches the default */
 		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
@@ -160,16 +152,16 @@ static void SaveUserConfig( void ) {
 
 		switch( cvars[ i ]->type ) {
 			case pl_float_var:
-                NL_AddNumericVar( root, cvars[ i ]->var, cvars[ i ]->f_value );
+				NL_PushBackFloat( root, cvars[ i ]->var, cvars[ i ]->f_value );
                 break;
             case pl_int_var:
-				NL_AddNumericVar( root, cvars[ i ]->var, ( float ) cvars[ i ]->i_value );
+				NL_PushBackFloat( root, cvars[ i ]->var, ( float ) cvars[ i ]->i_value );
 				break;
 			case pl_bool_var:
-				NL_AddBooleanVar( root, cvars[ i ]->var, cvars[ i ]->b_value );
+				NL_PushBackBool( root, cvars[ i ]->var, cvars[ i ]->b_value );
 				break;
 			default:
-				NL_AddStringVar( root, cvars[ i ]->var, cvars[ i ]->s_value );
+				NL_PushBackString( root, cvars[ i ]->var, cvars[ i ]->s_value );
 				break;
 		}
 	}
@@ -181,7 +173,7 @@ static void SaveUserConfig( void ) {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	snprintf( path, sizeof( path ), "%s%s", FS_GetDataDirectory(), USER_CONFIG );
     DebugMsg( "Saving user config: \"%s\"\n", path );
-	NL_WriteFile( path, root, NL_FILE_BINARY );
+	NL_WriteFile( path, root, NL_FILE_ASCII );
 	NL_DestroyNode( root );
 
 	PrintMsg( "User config saved.\n" );
@@ -196,7 +188,8 @@ void Con_Initialize( void ) {
 	plRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 	plRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 
-	plRegisterConsoleVariable( "player.name", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
+	plRegisterConsoleVariable( "game.projectPath", "scripts/project.node", pl_string_var, NULL, "Sets the default path to load a GS project." );
+	plRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 
 	plRegisterConsoleVariable( "console.background", "", pl_string_var, Con_UpdateBackground, "Background to use for the console." );
 	plRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
@@ -206,7 +199,7 @@ void Con_Initialize( void ) {
 	plRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
 
 	/* networking */
-	plRegisterConsoleVariable( "net.servername", "unnamed", pl_string_var, NULL, "Name to use for the server." );
+	plRegisterConsoleVariable( "net.serverName", "unnamed", pl_string_var, NULL, "Name to use for the server." );
 	plRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
 	plRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
 	plRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );

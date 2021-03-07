@@ -10,6 +10,8 @@
 #if defined( COMMON_DLL )
 #include <PL/platform_console.h>
 
+#include <assert.h>
+
 #define COMMON_API PL_EXPORT
 
 extern int logLevelPrint;

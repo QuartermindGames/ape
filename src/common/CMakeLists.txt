@@ -11,10 +11,14 @@ add_library(common SHARED
         wld.c
         include/common/common.h
         include/common/wld.h
+        ##############################
         Node.c
         include/common/Node.h
+        NodeParser.c
+        NodePreProcessor.c
         NodePrivate.h
-        NodePreProcessor.c Common.c)
+        ##############################
+        Common.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 

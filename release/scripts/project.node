@@ -1,0 +1,18 @@
+node.ascii
+object project {
+    ; declare various properties for the project
+    string name "DumbGame"
+    integer version 0
+    string output "game.bin"
+
+    ; now all the paths to include for compilation
+    array string includePaths {
+        "scripts/"
+    }
+
+    ; and the actual files
+    array string files {
+        "Game.c"
+        "GameInterface.h"
+    }
+}

@@ -33,6 +33,7 @@ typedef struct NLVarString {
 typedef struct NLNode {
     NLVarString name;
     NLPropertyType type;
+	NLPropertyType childType; /* used for array types */
     NLVarString data;
     NLNode *parent;
 
