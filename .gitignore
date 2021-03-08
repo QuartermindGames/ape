@@ -66,12 +66,13 @@ dkms.conf
 *.user
 *.gfx
 /build
-/bin/log.txt
-/bin/launcher_sdl2
-/bin/pkgman
-/bin/Yin
 /.vs
 /out/build/x64-Debug (default)
 /.idea
 /src/editor/Debug
 /src/editor/.vs/QEdit/v16
+
+# Release
+/release/runtime/**/*/engine.dll
+/release/runtime/**/*/common.dll
+/release/runtime/**/*/libplatform.dll
