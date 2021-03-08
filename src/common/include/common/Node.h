@@ -50,11 +50,11 @@ typedef enum NLPropertyType {
 extern const char *NL_GetErrorMessage( void );
 extern NLErrorCode NL_GetError( void );
 
-extern unsigned int NL_GetNumOfChildren( const NLNode *parent );
-extern NLNode *NL_GetFirstChild( NLNode *root );
+extern unsigned int NL_GetNumOfChildren( const NLNode *parent ); /* only valid for object/array */
+extern NLNode *NL_GetFirstChild( NLNode *parent );
 extern NLNode *NL_GetNextChild( NLNode *node );
-extern NLNode *NL_GetChildByName( NLNode *parent, const char *name );
-extern NLNode *NL_GetChildByIndex( NLNode *parent, unsigned int i );
+extern NLNode *NL_GetChildByName( NLNode *parent, const char *name ); /* only valid for object */
+extern NLNode *NL_GetChildByIndex( NLNode *parent, unsigned int i ); /* only valid for array */
 extern NLNode *NL_GetParent( NLNode *node );
 
 extern const char *NL_GetName( const NLNode *node );
@@ -62,10 +62,8 @@ extern NLPropertyType NL_GetType( const NLNode *node );
 extern const char *NL_GetString( const NLNode *node );
 extern bool NL_GetBoolean( const NLNode *node );
 extern float NL_GetFloat( const NLNode *node );
-
 extern int *NL_GetIntArray( NLNode *parent, int *buf );
 extern float *NL_GetFloatArray( NLNode *parent, float *buf );
-
 extern PLVector2 NL_GetVec2( NLNode *node );
 extern PLVector3 NL_GetVec3( NLNode *node );
 extern PLVector4 NL_GetVec4( NLNode *node );

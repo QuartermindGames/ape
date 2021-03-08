@@ -69,7 +69,7 @@ static bool IsMacroRegistered( const char *name ) {
 	return false;
 }
 
-char *Node_PreProcessScript( char *buf, size_t *length, bool isHead ) {
+char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 	size_t actualLength = 0;
 	size_t maxLength = *length;
 	char *dstBuffer = pl_calloc( maxLength, sizeof( char ) );
@@ -108,7 +108,7 @@ char *Node_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 					plCloseFile( file );
 
 					/* now throw it into the pre-processor */
-					includeBody = Node_PreProcessScript( includeBody, &includeLength, false );
+					includeBody = xNL_PreProcessScript( includeBody, &includeLength, false );
 
 					/* and finally, push it into our destination */
 					dstPos = InsertString( includeBody, &dstBuffer, &actualLength, &maxLength );

@@ -77,8 +77,8 @@ unsigned int NL_GetNumOfChildren( const NLNode *parent ) {
 	return plGetNumLinkedListNodes( parent->linkedList );
 }
 
-NLNode *NL_GetFirstChild( NLNode *root ) {
-	PLLinkedListNode *n = plGetFirstNode( root->linkedList );
+NLNode *NL_GetFirstChild( NLNode *parent ) {
+	PLLinkedListNode *n = plGetFirstNode( parent->linkedList );
 	if ( n == NULL ) {
 		return NULL;
 	}
@@ -232,7 +232,7 @@ PLVector4 NL_GetVec4( NLNode *node ) {
 	        NL_GetFloat( wn ) );
 }
 
-static NLNode *InsertNode( NLNode *parent, const char *name, NLPropertyType propertyType ) {
+NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType propertyType ) {
 	/* arrays are special cases */
 	if ( parent != NULL && parent->type == NODE_PROPERTY_ARRAY && propertyType != parent->childType ) {
 		NL_SetErrorMessage( NL_ERROR_INVALID_TYPE, "Attempted to add " );
@@ -267,11 +267,11 @@ static NLNode *InsertNode( NLNode *parent, const char *name, NLPropertyType prop
 }
 
 NLNode *NL_PushBackObj( NLNode *node, const char *name ) {
-	return InsertNode( node, name, NODE_PROPERTY_OBJECT );
+	return xNL_PushBackNode( node, name, NODE_PROPERTY_OBJECT );
 }
 
 NLNode *NL_PushBackString( NLNode *parent, const char *name, const char *var ) {
-	NLNode *node = InsertNode( parent, name, NODE_PROPERTY_STRING );
+	NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_STRING );
 	if ( node != NULL ) {
 		node->data.strBuf = AllocVarString( var, &node->data.strBufLength );
 	}
@@ -279,7 +279,7 @@ NLNode *NL_PushBackString( NLNode *parent, const char *name, const char *var ) {
 }
 
 NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var ) {
-	NLNode *node = InsertNode( parent, name, NODE_PROPERTY_BOOLEAN );
+	NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_BOOLEAN );
 	if ( node != NULL ) {
 		node->data.strBuf = AllocVarString( var ? "true" : "false", &node->data.strBufLength );
 	}
@@ -287,7 +287,7 @@ NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var ) {
 }
 
 NLNode *NL_PushBackInt( NLNode *parent, const char *name, int var ) {
-	NLNode *node = InsertNode( parent, name, NODE_PROPERTY_INTEGER );
+	NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_INTEGER );
 	if ( node != NULL ) {
         char buf[ 32 ];
         snprintf( buf, sizeof( buf ), "%d", var );
@@ -297,7 +297,7 @@ NLNode *NL_PushBackInt( NLNode *parent, const char *name, int var ) {
 }
 
 NLNode *NL_PushBackFloat( NLNode *parent, const char *name, float var ) {
-	NLNode *node = InsertNode( parent, name, NODE_PROPERTY_FLOAT );
+	NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_FLOAT );
 	if ( node != NULL ) {
 		char buf[ 32 ];
 		snprintf( buf, sizeof( buf ), "%f", var );
@@ -307,7 +307,7 @@ NLNode *NL_PushBackFloat( NLNode *parent, const char *name, float var ) {
 }
 
 NLNode *NL_PushBackIntArray( NLNode *parent, const char *name, const int *array, unsigned int numElements ) {
-    NLNode *node = InsertNode( parent, name, NODE_PROPERTY_ARRAY );
+    NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_ARRAY );
     if ( node != NULL ) {
 		node->childType = NODE_PROPERTY_INTEGER;
         for ( unsigned int i = 0; i < numElements; ++i ) {
@@ -318,7 +318,7 @@ NLNode *NL_PushBackIntArray( NLNode *parent, const char *name, const int *array,
 }
 
 NLNode *NL_PushBackFloatArray( NLNode *parent, const char *name, const float *array, unsigned int numElements ) {
-	NLNode *node = InsertNode( parent, name, NODE_PROPERTY_ARRAY );
+	NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_ARRAY );
 	if ( node != NULL ) {
         node->childType = NODE_PROPERTY_FLOAT;
 		for ( unsigned int i = 0; i < numElements; ++i ) {
@@ -378,7 +378,7 @@ char *DeserializeStringVar( PLFile *file, unsigned int *length ) {
 
 static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent ) {
 	/* binary implementation is pretty damn straight forward */
-	NLNode *node = InsertNode( parent, NULL, NODE_PROPERTY_INVALID );
+	NLNode *node = xNL_PushBackNode( parent, NULL, NODE_PROPERTY_INVALID );
 	node->name.strBuf = DeserializeStringVar( file, &node->name.strBufLength );
 
 	node->type = ( NLPropertyType ) plReadInt8( file, NULL );
@@ -461,11 +461,12 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 	} else if ( fileType == NL_FILE_ASCII ) {
 		/* first need to run the pre-processor on it */
 		size_t length = plGetFileSize( file );
+        const char *data = ( const char* ) plGetFileData( file ) + strlen( NL_ASCII_HEADER );
 		char *buf = pl_malloc( length );
-		memcpy( buf, plGetFileData( file ), length );
+		memcpy( buf, data, length );
 
 		Message( "Preprocessing \"%s\"\n", path );
-		buf = Node_PreProcessScript( buf, &length, true );
+		buf = xNL_PreProcessScript( buf, &length, true );
 		Message( "Done\n" );
 
 		root = NL_ParseBuffer( buf, length );
