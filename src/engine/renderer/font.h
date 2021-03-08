@@ -10,7 +10,7 @@ typedef struct BitmapFont BitmapFont;
 void Font_Initialize( void );
 void Font_Shutdown( void );
 
-BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch );
+BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end );
 void Font_Destroy( BitmapFont *font );
 
 BitmapFont *Font_GetDefault( void );

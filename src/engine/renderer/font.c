@@ -5,21 +5,21 @@
 
 #include "yin.h"
 #include "font.h"
-#include "image.h"
 #include "renderer.h"
 
 typedef struct BitmapFont {
     Material *material;
     int w, h, cw, ch;
     char path[ PL_SYSTEM_MAX_PATH ];
+	unsigned int start, end;
 } BitmapFont;
 static BitmapFont *defaultFont;
 
 static PLMesh *renderMesh;
 
 static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character ) {
-	int row = character / (font->w / font->cw);
-	int col = character % (font->w / font->cw);
+	int row = ( character - font->start ) / (font->w / font->cw);
+	int col = ( character - font->start ) % (font->w / font->cw);
 
 	int cX = col * font->cw;
 	int cY = row * font->ch;
@@ -108,10 +108,10 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 		for ( size_t i = 0; i < numChars; ++i ) {
 			Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, PL_COLOUR_BLACK, ( uint8_t ) msg[ i ] );
 			if ( msg[ i ] == '\n' ) {
-				n_y += font->ch;
+				n_y += ( font->ch * scale );
 				n_x = x;
 			} else {
-				n_x += font->cw;
+				n_x += ( font->cw * scale );
 			}
 		}
 
@@ -125,10 +125,10 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 	for ( size_t i = 0; i < numChars; ++i ) {
 		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 		if ( msg[ i ] == '\n' ) {
-			n_y += font->ch;
+			n_y += ( font->ch * scale );
 			n_x = x;
 		} else {
-			n_x += font->cw;
+			n_x += ( font->cw * scale );
 		}
 	}
 
@@ -143,13 +143,13 @@ void Font_Initialize( void ) {
 		PrintError( "Failed to create font mesh, %s, aborting!\n", plGetError() );
 	}
 
-	defaultFont = Font_LoadBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12 );
+	defaultFont = Font_LoadBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
 }
 
 void Font_Shutdown( void ) {
 }
 
-BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch ) {
+BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end ) {
     BitmapFont *font = AllocMemory( sizeof( BitmapFont ), true );
     font->material = RM_CacheMaterial( materialPath, CACHE_GROUP_STATIC, false );
 	if ( font->material == NULL ) {
@@ -160,6 +160,8 @@ BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int
 	font->h = h;
 	font->cw = cw;
 	font->ch = ch;
+	font->start = start;
+	font->end = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 

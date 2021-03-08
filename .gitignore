@@ -73,6 +73,7 @@ dkms.conf
 /src/editor/.vs/QEdit/v16
 
 # Release
+/release/user.node
 /release/runtime/**/*/engine.dll
 /release/runtime/**/*/common.dll
 /release/runtime/**/*/libplatform.dll
