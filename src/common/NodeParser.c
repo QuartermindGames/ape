@@ -9,6 +9,18 @@
 #include "common/common.h"
 #include "NodePrivate.h"
 
+static void SkipToNextToken( const char **buf, unsigned int *line ) {
+    while( plIsEndOfLine( buf ) ) {
+        plSkipLine( buf );
+        *line++;
+    }
+}
+
+static const char *ParseToken( const char **buf, char *token, size_t size, unsigned int *line ) {
+    SkipToNextToken( buf, line );
+    return plParseToken( buf, token, size );
+}
+
 static NLPropertyType PropertyTypeForString( const char *type ) {
 	if ( pl_strcasecmp( type, "integer" ) == 0 )
 		return NODE_PROPERTY_INTEGER;
@@ -26,16 +38,16 @@ static NLPropertyType PropertyTypeForString( const char *type ) {
 	return NODE_PROPERTY_INVALID;
 }
 
-static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length );
-static NLNode *ParseArrayNode( NLNode *parent, const char *buf, size_t length ) {
+static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length, unsigned int currentLine );
+static NLNode *ParseArrayNode( NLNode *parent, const char *buf, size_t length, unsigned int currentLine ) {
 	char childType[ NL_MAX_TYPE_LENGTH ];
-	if ( plParseToken( &buf, childType, sizeof( childType ) ) == NULL ) {
+	if ( ParseToken( &buf, childType, sizeof( childType ), &currentLine ) == NULL ) {
 		Warning( "Failed to parse child type for array!\n" );
 		return NULL;
 	}
 
 	char name[ NL_MAX_NAME_LENGTH ];
-	if ( plParseToken( &buf, name, sizeof( name ) ) == NULL ) {
+	if ( ParseToken( &buf, name, sizeof( name ), &currentLine ) == NULL ) {
 		Warning( "Failed to parse name!\n" );
 		return NULL;
 	}
@@ -85,7 +97,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char *buf, size_t length ) 
 		}
 		case NODE_PROPERTY_OBJECT: {
 			while ( *buf != '\0' && *buf != '}' ) {
-				if ( ParseObjectNode( arrayNode, buf, length ) == NULL ) {
+				if ( ParseObjectNode( arrayNode, buf, length, 0 ) == NULL ) {
 					Warning( "Failed to parse object node for array, \"%s\"!\n", name );
 					break;
 				}
@@ -133,10 +145,10 @@ static NLNode *ParseArrayNode( NLNode *parent, const char *buf, size_t length ) 
 	return arrayNode;
 }
 
-static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length );
-static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length ) {
+static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length, unsigned int currentLine );
+static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length, unsigned int currentLine ) {
 	char name[ NL_MAX_NAME_LENGTH ];
-	if ( plParseToken( &buf, name, sizeof( name ) ) == NULL ) {
+	if ( ParseToken( &buf, name, sizeof( name ), &currentLine ) == NULL ) {
 		Warning( "Failed to parse name!\n" );
 		return NULL;
 	}
@@ -154,13 +166,15 @@ static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length )
 		return NULL;
 	}
 
+	SkipToNextToken( &buf, &currentLine );
+
 	/* read in all the children nodes */
 	while ( *buf != '\0' && *buf != '}' ) {
-		if ( ParseNode( objectNode, buf, length ) == NULL ) {
-			Warning( "Failed to parse child node for object, \"%s\"!\n", name );
+		if ( ParseNode( objectNode, buf, length, 0 ) == NULL ) {
+			Warning( "Failed to parse child node for object, \"%s\" [%d]!\n", name, currentLine );
 			break;
 		}
-		plSkipWhitespace( &buf );
+        SkipToNextToken( &buf, &currentLine );
 	}
 
     if ( *buf != '}' ) {
@@ -172,22 +186,23 @@ static NLNode *ParseObjectNode( NLNode *parent, const char *buf, size_t length )
 	return objectNode;
 }
 
-static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length ) {
+static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length, unsigned int currentLine ) {
+	/* now try reading in the type */
 	char type[ NL_MAX_TYPE_LENGTH ];
-	if ( plParseToken( &buf, type, sizeof( type ) ) == NULL ) {
+	if ( ParseToken( &buf, type, sizeof( type ), &currentLine ) == NULL ) {
 		return NULL;
 	}
 
 	NLPropertyType propertyType = PropertyTypeForString( type );
 	/* an array is a special case, parsing-wise */
 	if ( propertyType == NODE_PROPERTY_ARRAY ) {
-		return ParseArrayNode( parent, buf, length );
+		return ParseArrayNode( parent, buf, length, currentLine );
 	} else if ( propertyType == NODE_PROPERTY_OBJECT ) {
-		return ParseObjectNode( parent, buf, length );
+		return ParseObjectNode( parent, buf, length, currentLine );
 	} else {
 		char name[ NL_MAX_NAME_LENGTH ];
-		if ( plParseToken( &buf, name, sizeof( name ) ) == NULL ) {
-			Warning( "Failed to parse name!\n" );
+		if ( ParseToken( &buf, name, sizeof( name ), &currentLine ) == NULL ) {
+			Warning( "Failed to parse name [%d]!\n", currentLine );
 			return NULL;
 		}
 
@@ -197,7 +212,7 @@ static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length ) {
 				bool status;
 				int i = plParseInteger( &buf, &status );
 				if ( !status ) {
-					Warning( "Failed to parse integer, \"%s\"!\n", name );
+					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				return NL_PushBackInt( parent, name, i );
@@ -206,7 +221,7 @@ static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length ) {
 				bool status;
 				float i = plParseFloat( &buf, &status );
 				if ( !status ) {
-					Warning( "Failed to parse float, \"%s\"!\n", name );
+					Warning( "Failed to parse float, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				return NL_PushBackFloat( parent, name, i );
@@ -214,21 +229,21 @@ static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length ) {
 			case NODE_PROPERTY_STRING: {
 				char i[ NL_MAX_STRING_LENGTH ];
 				if ( plParseEnclosedString( &buf, i, sizeof( i ) ) == NULL ) {
-					Warning( "Failed to parse string, \"%s\"!\n", name );
+					Warning( "Failed to parse string, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				return NL_PushBackString( parent, name, i );
 			}
 			case NODE_PROPERTY_BOOLEAN: {
 				char i[ NL_MAX_BOOL_LENGTH ];
-				if ( plParseToken( &buf, i, sizeof( i ) ) == NULL ) {
-					Warning( "Failed to parse boolean, \"%s\"!\n", name );
+				if ( ParseToken( &buf, i, sizeof( i ), &currentLine ) == NULL ) {
+					Warning( "Failed to parse boolean, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				return NL_PushBackBool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
 			}
 			default:
-				Warning( "Unknown property type, \"%s\"!\n", type );
+				Warning( "Unknown property type, \"%s\" [%d]!\n", type, currentLine );
 				break;
 		}
 	}
@@ -237,5 +252,5 @@ static NLNode *ParseNode( NLNode *parent, const char *buf, size_t length ) {
 }
 
 NLNode *NL_ParseBuffer( const char *buf, size_t length ) {
-	return ParseNode( NULL, buf, length );
+	return ParseNode( NULL, buf, length, 1 );
 }

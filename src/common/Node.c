@@ -467,7 +467,7 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 
 		Message( "Preprocessing \"%s\"\n", path );
 		buf = xNL_PreProcessScript( buf, &length, true );
-		Message( "Done\n" );
+		Message( "Done\n%s", buf );
 
 		root = NL_ParseBuffer( buf, length );
 	} else {
