@@ -8,7 +8,7 @@ message("Configuring Yin...")
 
 # Set all of our output directories.
 
-include_directories(src/)
+include_directories(src/shared/)
 include_directories(src/common/include/)
 
 include(DetermineTargetArchitecture.cmake)

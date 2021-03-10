@@ -38,11 +38,7 @@ inline void MemRefCnt_RemoveReference( MemRefCnt *v ) {
 	v->numRefs--;
 }
 
-enum {
-	LOG_LEVEL_ERROR,
-	LOG_LEVEL_WARN,
-	LOG_LEVEL_INFO,
-};
+extern int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
 typedef enum CacheGroup {
 	CACHE_GROUP_STATIC, /* these exist from the start to the end of the application */

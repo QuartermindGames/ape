@@ -45,20 +45,16 @@ static void Con_OutputCallback( int level, const char *msg ) {
 	outputBuffer.lines[ outputBuffer.numLines ].buffer[ l ] = '\0';
 
 	PLColour lineColour;
-	switch ( level ) {
-		default:
-			lineColour = PLColourRGB( 200, 200, 200 );
-			break;
-		case LOG_LEVEL_ERROR:
-			lineColour = PL_COLOUR_RED;
-			break;
-		case LOG_LEVEL_WARN:
-			lineColour = PL_COLOUR_ORANGE;
-			break;
-		case LOG_LEVEL_INFO:
-			lineColour = CON_TEXT_COLOUR;
-			break;
+	if ( level == LOG_LEVEL_ERROR ) {
+        lineColour = PL_COLOUR_RED;
+	} else if ( level == LOG_LEVEL_WARN ) {
+        lineColour = PL_COLOUR_ORANGE;
+	} else if ( level == LOG_LEVEL_INFO ) {
+        lineColour = CON_TEXT_COLOUR;
+	} else {
+		lineColour = PLColourRGB( 200, 200, 200 );
 	}
+
 	outputBuffer.lines[ outputBuffer.numLines ].colour = lineColour;
 
 	/* this is when we do what is probably going to be,
@@ -155,7 +151,7 @@ static void SaveUserConfig( void ) {
 				NL_PushBackFloat( root, cvars[ i ]->var, cvars[ i ]->f_value );
                 break;
             case pl_int_var:
-				NL_PushBackFloat( root, cvars[ i ]->var, ( float ) cvars[ i ]->i_value );
+				NL_PushBackInt( root, cvars[ i ]->var, cvars[ i ]->i_value );
 				break;
 			case pl_bool_var:
 				NL_PushBackBool( root, cvars[ i ]->var, cvars[ i ]->b_value );

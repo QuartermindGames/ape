@@ -151,17 +151,23 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 		}
 		case BLOCK_CONTEXT_BRUSH: {
 			/* read in face */
+            bool status;
 			IdBrushFace *face = calloc( 1, sizeof( IdBrushFace ) );
-			face->x = plParseVector( &p );
+			face->x = plParseVector( &p, &status );
 			dprint( "%s ", plPrintVector3( &face->x, pl_int_var ) );
-			face->y = plParseVector( &p );
+			face->y = plParseVector( &p, &status );
 			dprint( "%s ", plPrintVector3( &face->y, pl_int_var ) );
-			face->z = plParseVector( &p );
+			face->z = plParseVector( &p, &status );
 			dprint( "%s ", plPrintVector3( &face->z, pl_int_var ) );
+			if ( !status ) {
+				error( "Failed to parse vector on line %d!\n", lineNum );
+			}
+
 			if ( !plParseToken( &p, face->textureName, sizeof( face->textureName ) ) ) {
 				error( "Failed to fetch texture name on line %d!\n", lineNum );
 			}
 			dprint( "%s\n", face->textureName );
+
 			plInsertLinkedListNode( currentBrush->faces, face );
 			break;
 		}

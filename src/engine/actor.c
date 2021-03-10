@@ -36,10 +36,11 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData ) 
 void Player_Spawn( Actor *self );
 void Player_Tick( Actor *self, void *userData );
 void Player_Collide( Actor *self, Actor *other, void *userData );
+void Player_Draw( Actor *self, void *userData );
 
 ActorSetup actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ ACTOR_NONE   ] = { NULL, NULL, Act_DrawBasic, NULL, NULL },
-		[ ACTOR_PLAYER ] = { Player_Spawn, Player_Tick, NULL, Player_Collide, NULL },
+		[ ACTOR_PLAYER ] = { Player_Spawn, Player_Tick, Player_Draw, Player_Collide, NULL },
        // [ ACTOR_LIGHT ] = { Light_Spawn, Light_Tick, Light_Draw, NULL, NULL },
 		//[ ACTOR_BOSS   ] = { Boss_Spawn, Boss_Tick, Boss_Draw, Monster_Collide, NULL },
 		//[ ACTOR_SARG   ] = { Sarg_Spawn, Troo_Tick, Sarg_Draw, Monster_Collide, NULL },
@@ -266,9 +267,9 @@ void Act_DrawActors( void ) {
 			actor->setup.Draw( actor, actor->userData );
 		}
 
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
-
 #if 1
+        plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+
 		PLVector3 absOrigin = plGetAABBAbsOrigin( &actor->bounds, actor->position );
 		plDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
 		plDrawBoundingVolume( &PLCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );

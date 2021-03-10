@@ -4,7 +4,7 @@
  * ====================================================================*/
 
 #include <PL/pl_llist.h>
-#include <3rdparty/platform/platform/3rdparty/glew-2.2.0/include/GL/glew.h>
+#include <GL/glew.h>
 
 #include "yin.h"
 #include "actor.h"
@@ -295,7 +295,7 @@ PLShaderProgram *Gfx_GetShaderProgram( const char *name ) {
 static void Gfx_InitializeShaderPrograms( void ) {
 	gfxShaderPrograms = plCreateLinkedList();
 
-	plScanDirectory( "materials/shaders/", "prg", Gfx_LoadShaderProgram, false, NULL );
+	plScanDirectory( "materials/shaders", "prg", Gfx_LoadShaderProgram, false, NULL );
 
 	PrintMsg( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
 
