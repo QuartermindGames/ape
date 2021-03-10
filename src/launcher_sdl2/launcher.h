@@ -1,8 +1,12 @@
+/* ======================================================================
+ * Project Yin, Confidential
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * ====================================================================*/
 
 #pragma once
 
 #include <PL/platform.h>
 
-#include "shared/interfaces.h"
+#include "interfaces.h"
 
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... );

@@ -13,7 +13,7 @@
 #include <assert.h>
 
 #include "common/common.h"
-#include "shared/interfaces.h"
+#include "interfaces.h"
 
 #define ENGINE_APP_NAME "yin"
 
