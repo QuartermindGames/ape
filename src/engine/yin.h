@@ -26,18 +26,6 @@ extern const int ENGINE_VERSION[ 3 ];
 	PL_TOSTRING( ENGINE_VERSION_MAJOR ) \
 	"." PL_TOSTRING( ENGINE_VERSION_MINOR ) "." PL_TOSTRING( ENGINE_VERSION_PATCH )
 
-typedef struct MemRefCnt {
-	int numRefs;    /* number of total references */
-	double ttl;     /* time to live */
-} MemRefCnt;
-#define INIT_REFERENCE_COUNTER( A ) memset( A, 0, sizeof( MemRefCnt ) )
-
-inline void MemRefCnt_AddReference( MemRefCnt *v ) { v->numRefs++; }
-inline void MemRefCnt_RemoveReference( MemRefCnt *v ) {
-	u_assert( v->numRefs > 0 );
-	v->numRefs--;
-}
-
 enum {
 	LOG_LEVEL_ERROR,
 	LOG_LEVEL_WARN,
@@ -117,3 +105,5 @@ void *Sys_malloc( size_t size );
 void *AllocMemory( size_t size, bool abort );
 
 const char *FS_GetDataDirectory( void );
+
+#include "MemoryManager.h"

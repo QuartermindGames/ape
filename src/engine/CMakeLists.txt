@@ -33,7 +33,7 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
 
         scheduler.h
         scheduler.c
-        model_md2.c model_gsmdl.c)
+        model_md2.c model_gsmdl.c MemoryManager.h MemoryManager.c)
 
 target_include_directories(engine PRIVATE ./ ../3rdparty/miniz/)
 
