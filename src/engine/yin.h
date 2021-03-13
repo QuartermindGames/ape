@@ -13,7 +13,7 @@
 #include <assert.h>
 
 #include "common/common.h"
-#include "shared/interfaces.h"
+#include "interfaces.h"
 
 #define ENGINE_APP_NAME "yin"
 
@@ -26,11 +26,7 @@ extern const int ENGINE_VERSION[ 3 ];
 	PL_TOSTRING( ENGINE_VERSION_MAJOR ) \
 	"." PL_TOSTRING( ENGINE_VERSION_MINOR ) "." PL_TOSTRING( ENGINE_VERSION_PATCH )
 
-enum {
-	LOG_LEVEL_ERROR,
-	LOG_LEVEL_WARN,
-	LOG_LEVEL_INFO,
-};
+extern int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
 typedef enum CacheGroup {
 	CACHE_GROUP_STATIC, /* these exist from the start to the end of the application */

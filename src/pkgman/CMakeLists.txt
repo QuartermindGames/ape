@@ -6,8 +6,6 @@ project(pkgman)
 
 set(CMAKE_C_STANDARD 11)
 
-file(COPY pkgman_legal.txt DESTINATION ../docs/)
-
 add_executable(pkgman
         pack_image.c
         pkgman.c
@@ -17,6 +15,8 @@ add_executable(pkgman
         txc_compress_dxtn.c
         txc_dxtn.h
         ../3rdparty/miniz/miniz.c)
+
+file(COPY pkgman_legal.txt DESTINATION ${CMAKE_HOME_DIRECTORY}/release/docs/)
 
 target_include_directories(pkgman PRIVATE ../3rdparty/miniz/)
 target_link_libraries(pkgman platform)

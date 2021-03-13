@@ -33,9 +33,15 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
 
         scheduler.h
         scheduler.c
-        model_md2.c model_gsmdl.c MemoryManager.h MemoryManager.c)
+        GameScript.c
+        GameScript.h
+        model_gsmdl.c
+        model_md2.c
+        MemoryManager.h MemoryManager.c
+        )
 
 target_include_directories(engine PRIVATE ./ ../3rdparty/miniz/)
+target_link_directories(engine PRIVATE ../3rdparty/tcc-0.9.27/)
 
 set_target_properties(engine PROPERTIES PREFIX "")
 
@@ -44,4 +50,6 @@ if (NOT UNIX)
     target_link_libraries(engine mingw32)
 endif ()
 
-target_link_libraries(engine common platform SDL2)
+target_link_libraries(engine common platform libtcc1.a SDL2)
+
+file(COPY public/GameInterface.h DESTINATION ${CMAKE_HOME_DIRECTORY}/release/scripts/)

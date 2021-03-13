@@ -111,6 +111,7 @@ const char *FS_GetDataDirectory( void ) {
 	return dataPath;
 }
 
+int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 static bool Engine_Initialize( int argc, char **argv ) {
 	pl_calloc = Sys_calloc;
 	pl_malloc = Sys_malloc;
@@ -129,9 +130,9 @@ static bool Engine_Initialize( int argc, char **argv ) {
 		plSetupLogOutput( path );
 	}
 
-	plSetupLogLevel( LOG_LEVEL_ERROR, "yin/error", PL_COLOUR_RED, true );
-	plSetupLogLevel( LOG_LEVEL_WARN, "yin/warning", PL_COLOUR_ORANGE, true );
-	plSetupLogLevel( LOG_LEVEL_INFO, "yin", PL_COLOUR_WHITE, true );
+	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_WARN = plAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_INFO = plAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
 	PrintMsg( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
 

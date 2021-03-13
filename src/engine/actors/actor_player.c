@@ -3,6 +3,8 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
+#include <PL/platform_model.h>
+
 #include "yin.h"
 #include "actor.h"
 #include "renderer/renderer.h"
@@ -89,9 +91,15 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 /* move this somewhere else... */
 static unsigned int numPlayers = 0;
 
+static PLModel *model = NULL;
+
 void Player_Spawn( Actor *self ) {
 	APlayer* playerData = Sys_calloc( 1, sizeof( APlayer ) );
 	Act_SetUserData( self, playerData );
+
+	if ( model == NULL ) {
+		model = plLoadModel( "models/temp/player/mach-body.md2" );
+	}
 
 	if ( numPlayers == 0 ) { /* local player */
 		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ), Engine_GetMainWindow() );
@@ -171,6 +179,24 @@ void Player_Tick( Actor *self, void *userData ) {
 
 	Act_SetViewOffset( self, viewOffset /*+ playerData->viewBob*/ );
 	Act_SetPosition( self, &curOrigin );
+}
+
+void Player_Draw( Actor *self, void *userData ) {
+	if ( model == NULL ) {
+		return;
+	}
+
+	plMatrixMode( PL_MODELVIEW_MATRIX );
+	plPushMatrix();
+
+	plLoadIdentityMatrix();
+	plTranslateMatrix( Act_GetPosition( self ) );
+
+	for ( unsigned int i = 0; i < model->levels[ 0 ].num_meshes; ++i ) {
+		RM_DrawMesh( RM_GetFallbackMaterial(), model->levels[ 0 ].meshes[ i ] );
+	}
+
+	plPopMatrix();
 }
 
 void Player_Collide( Actor *self, Actor *other, void *userData ) {

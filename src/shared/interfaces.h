@@ -119,6 +119,8 @@ extern SystemInterface g_system;
 
 typedef struct GameInterface {
 	unsigned int version;
+
+	int(*GameInit)( void );
 } GameInterface;
 extern GameInterface globalGame;
 
