@@ -435,14 +435,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	app.create();
 
-	// Ensure the main window is maximised after creation
-	huang::MainWindow *mainWindow = dynamic_cast< huang::MainWindow * >( app.getActiveWindow() );
-	if ( mainWindow == nullptr ) {
-		Error( "Failed to fetch main window!\n" );
-	}
-
-	mainWindow->maximize();
-
 	extern void M_LoadGlobalRegistryData();
 	M_LoadGlobalRegistryData();
 	extern void M_SaveGlobalRegistryData();

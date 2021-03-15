@@ -20,9 +20,19 @@
 #include "qe3.h"
 #include "Layer.h"
 
-huang::LayerWidget::LayerWidget( FXComposite *p ) : FXPacker( p ) {
+FXDEFMAP( huang::LayerWidget ) LayerWidgetMap[] = {
+	FXMAPFUNC( SEL_CONFIGURE, huang::LayerWidget::ID_CANVAS, huang::LayerWidget::onConfigure ),
+};
 
+FXIMPLEMENT( huang::LayerWidget, FXTreeListBox, LayerWidgetMap, ARRAYNUMBER( LayerWidgetMap ) )
+
+huang::LayerWidget::LayerWidget() {}
+
+huang::LayerWidget::LayerWidget( FXComposite *p ) : FXTreeListBox( p ) {
 }
 
 huang::LayerWidget::~LayerWidget() {
+}
+
+void huang::LayerWidget::create() {
 }

@@ -26,16 +26,22 @@ namespace huang {
         FXColor colour;
     };
 
-    class LayerWidget : public FXPacker {
+    class LayerWidget : public FXTreeListBox {
         FXDECLARE( LayerWidget )
 
     public:
+        LayerWidget();
         LayerWidget( FXComposite *p );
         virtual ~LayerWidget();
 
-        virtual void create();
+        void create() override;
+
+        enum {
+            ID_CANVAS = FXTreeListBox::ID_LAST,
+        };
 
     protected:
     private:
+        
     };
 }

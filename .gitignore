@@ -71,6 +71,8 @@ dkms.conf
 /.idea
 /src/editor/Debug
 /src/editor/.vs/QEdit/v16
+/src/editor/x64/Debug
+/src/editor/enc_temp_folder
 
 # Release
 /release/user.node
