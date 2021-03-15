@@ -82,7 +82,7 @@ static PLMesh *MD2_ConvertMD2ToMesh(
         pos.z = ( frames[ 0 ].scale.z * frames[ 0 ].vertices[ i ].v[ 2 ] ) + frames[ 0 ].translate.z;
 
 		plAddMeshVertex( mesh, pos, pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );
-        printf( "%s\n", plPrintVector3( &pos, pl_float_var ) );
+		DebugMsg( "%s\n", plPrintVector3( &pos, pl_float_var ) );
 	}
 
     for ( unsigned int i = 0; i < header->numTriangles; ++i ) {
@@ -94,7 +94,7 @@ static PLMesh *MD2_ConvertMD2ToMesh(
 			v->st[ 0 ].y = texCoords[ tri->st[ j ] ].t / h;
 		}
 		plAddMeshTriangle( mesh, tri->vertex[ 0 ], tri->vertex[ 1 ], tri->vertex[ 2 ] );
-		printf( "%d %d %d\n", tri->vertex[ 0 ], tri->vertex[ 1], tri->vertex[ 2 ] );
+		DebugMsg( "%d %d %d\n", tri->vertex[ 0 ], tri->vertex[ 1], tri->vertex[ 2 ] );
 	}
 
 	/* MD2 models don't really have normals, they instead use a pre-computed table

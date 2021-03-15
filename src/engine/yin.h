@@ -61,14 +61,11 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group );
 void Con_Initialize( void );
 void Con_Shutdown( void );
 void Con_Toggle( void );
-void Con_ScrollForward( void );
-void Con_ScrollBackward( void );
-bool Con_GetState( void );
 void Con_Draw( const PLViewport *viewport );
 
-//#define DEBUG_CAM
-//#define DEBUG_WALL_NORMALS
+#if !defined( NDEBUG )
 #define YIN_ENABLE_LOCAL_FS
+#endif
 
 typedef struct SysWindow SysWindow;
 
