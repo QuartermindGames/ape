@@ -38,6 +38,8 @@ elseif(NOT APPLE) # assume linux
 endif ()
 
 add_subdirectory(src/3rdparty/platform/platform/)
+add_subdirectory(src/3rdparty/fox-1.6.57/)
+
 add_subdirectory(src/launcher_sdl2/)
 add_subdirectory(src/common/)
 add_subdirectory(src/engine/)
