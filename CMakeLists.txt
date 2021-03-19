@@ -26,7 +26,7 @@ if (NOT UNIX)
         link_directories(src/3rdparty/sdl2/lib/x86/)
     endif ()
     include_directories(src/3rdparty/sdl2/include/)
-elseif(NOT APPLE) # assume linux
+elseif (NOT APPLE) # assume linux
     message("Not Win32, assuming Linux - " ${YIN_SYSTEM_ARCH})
     if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/release/runtime/linux-x64/")

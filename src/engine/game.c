@@ -46,7 +46,7 @@ void Game_Tick( void ) {
 
 	static unsigned int spawnDelay = 0;
 	if( g_system.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() ) {
-		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 0, 0 ), 0.0f );
+		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 16, 0 ), 0.0f );
 		spawnDelay = Engine_GetNumTicks() + 50;
 	}
 
@@ -72,7 +72,7 @@ void Game_SpawnWorld( const char *worldPath ) {
     Act_SpawnActors();
 
     /* spawn the player in */
-    playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 1024, 0 ), 0.0f );
+    playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 32, 0 ), 0.0f );
 
     gameState = GAME_STATE_ACTIVE;
     menuState = MENU_STATE_HUD;

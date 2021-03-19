@@ -71,7 +71,7 @@ void Con_Draw( const PLViewport *viewport );
 
 typedef struct SysWindow SysWindow;
 
-#define WINDOW_TITLE "Yin Technology Demo"
+#define WINDOW_TITLE "Yin Game Engine"
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
 
@@ -92,7 +92,6 @@ extern PLPackage *globalWad;
 void Engine_Shutdown( void );
 
 SysWindow *Engine_GetMainWindow( void );
-
 unsigned int Engine_GetNumTicks( void );
 
 void *Sys_calloc( size_t num, size_t size );

@@ -10,6 +10,7 @@
 
 #include "common/Node.h"
 
+#if 0
 static TCCState *tccState = NULL;
 
 GameInterface globalGame;
@@ -107,3 +108,4 @@ void GS_Cleanup( void ) {
 		tccState = NULL;
 	}
 }
+#endif

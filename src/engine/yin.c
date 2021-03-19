@@ -55,7 +55,7 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
 
 void *Sys_calloc( size_t num, size_t size ) {
 	void *mem = calloc( num, size );
-	if( mem == NULL ) {
+	if ( mem == NULL ) {
 		PrintError( "Failed to allocate %d bytes!\n", num * size );
 	}
 
@@ -159,9 +159,9 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
 
 	/* register other various loaders */
-    PLModel *MD2_LoadFile( const char *path );
+	PLModel *MD2_LoadFile( const char *path );
 	plRegisterModelLoader( "md2", MD2_LoadFile );
-    PLModel *GSMDL_LoadFile( const char *path );
+	PLModel *GSMDL_LoadFile( const char *path );
 	plRegisterModelLoader( "mdl", GSMDL_LoadFile );
 
 	/* initialize core services */
@@ -171,7 +171,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	Act_Initialize();
 
 	Game_Initialize();
-	if( plHasCommandLineArgument( "editor" ) ) {
+	if ( plHasCommandLineArgument( "editor" ) ) {
 		Editor_Initialize();
 	}
 
@@ -213,9 +213,9 @@ SysWindow *Engine_GetMainWindow( void ) {
 
 static void Engine_Display( void ) {
 	/* ensure we don't keep drawing in the background */
-    if ( !g_system.IsDisplayActive( mainWindow ) ) {
-        return;
-    }
+	if ( !g_system.IsDisplayActive( mainWindow ) ) {
+		return;
+	}
 
 	PROFILE_START( PROFILE_DRAW_ALL );
 
@@ -270,14 +270,14 @@ static bool Engine_IsRunning( void ) {
 
 bool Con_HandleKeyboardEvent( int key, unsigned int keyState );
 static void Engine_HandleKeyboardEvent( int key, unsigned int keyState ) {
-    if ( Con_HandleKeyboardEvent( key, keyState ) ) {
+	if ( Con_HandleKeyboardEvent( key, keyState ) ) {
 		return;
 	}
 }
 
 bool Con_HandleTextEvent( const char *key );
 static void Engine_HandleTextEvent( const char *key ) {
-    if ( Con_HandleTextEvent( key ) ) {
+	if ( Con_HandleTextEvent( key ) ) {
 		return;
 	}
 }
