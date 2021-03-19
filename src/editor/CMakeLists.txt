@@ -1,6 +1,6 @@
 # Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
 
-project(FoxEd)
+project(editor)
 
 if (UNIX)
     set(UNIX_ADDITIONAL)
@@ -11,7 +11,7 @@ if (UNIX)
             spec.h)
 endif ()
 
-add_executable(FoxEd
+add_executable(editor
         brush.cpp
         brush.h
         bspfile.h
@@ -68,11 +68,11 @@ add_executable(FoxEd
         )
 
 if (NOT UNIX)
-    target_include_directories(FoxEd PRIVATE "../3rdparty/fox-1.6.57/include/" "glew/include/")
-    target_link_directories(FoxEd PRIVATE "glew/lib/Release/x64/" "../3rdparty/fox-1.6.57/lib/")
-    target_link_libraries(FoxEd FOXD-1.6 glew32s)
+    target_include_directories(editor PRIVATE "../3rdparty/fox-1.6.57/include/" "glew/include/")
+    target_link_directories(editor PRIVATE "glew/lib/Release/x64/" "../3rdparty/fox-1.6.57/lib/")
+    target_link_libraries(editor glew32s)
 else ()
-    target_link_libraries(FoxEd GLEW GL GLU FOX-1.6)
+    target_link_libraries(editor GLEW GL GLU)
 endif ()
 
-target_link_libraries(FoxEd)
+target_link_libraries(editor platform common FOX-1.6)

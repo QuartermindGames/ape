@@ -812,9 +812,28 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 	FXSplitter *hFrame = new FXSplitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL );
 
 	// Sidebar
+	FXSplitter *sideBar = new FXSplitter( hFrame, LAYOUT_SIDE_RIGHT, 0, 0, 256, 0 );
 	{
-		FXVerticalFrame *sideBar = new FXVerticalFrame( hFrame, LAYOUT_SIDE_LEFT, 0, 0, 256, 0, 0, 0, 0, 0, 0, 0 );
-		myLayerWidget = new LayerWidget( sideBar );
+		FXTreeList *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
+		FXTreeItem *primList = new FXTreeItem( "World" );
+		treeBox->insertItem( nullptr, nullptr, primList );
+		for( unsigned int i = 0; i < 256; ++i ) {
+			treeBox->insertItem( nullptr, primList, new FXTreeItem( "Brush" ) );
+		}
+	}
+	{
+		FXTreeList *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
+
+		FXTreeItem *primList = new FXTreeItem( "Primitives" );
+		treeBox->insertItem( nullptr, nullptr, primList );
+		for( unsigned int i = 0; i < 256; ++i ) {
+			treeBox->insertItem( nullptr, primList, new FXTreeItem( "Hello" ) );
+		}
+		FXTreeItem *actorList = new FXTreeItem( "Actors" );
+		treeBox->insertItem( nullptr, nullptr, actorList );
+		for( unsigned int i = 0; i < 256; ++i ) {
+			treeBox->insertItem( nullptr, actorList, new FXTreeItem( "Hello" ) );
+		}
 	}
 
 	FX4Splitter *viewportSplitter = new FX4Splitter( hFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );

@@ -396,9 +396,15 @@ WinMain
 */
 #if defined( _WIN32 )
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
+#if 0
 	HACCEL accelerators;
 
 	InitCommonControls();
+
+	accelerators = LoadAccelerators( hInstance, MAKEINTRESOURCE( IDR_ACCELERATOR1 ) );
+	if ( !accelerators )
+		Error( "LoadAccelerators failed" );
+#endif
 
 	screen_width = GetSystemMetrics( SM_CXFULLSCREEN );
 	screen_height = GetSystemMetrics( SM_CYFULLSCREEN );
@@ -406,10 +412,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// hack for broken NT 4.0 dual screen
 	if ( screen_width > 2 * screen_height )
 		screen_width /= 2;
-
-	accelerators = LoadAccelerators( hInstance, MAKEINTRESOURCE( IDR_ACCELERATOR1 ) );
-	if ( !accelerators )
-		Error( "LoadAccelerators failed" );
 
 	// START NEW NEW NEW
 	FXApp app( EDITOR_TITLE );
