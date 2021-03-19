@@ -29,7 +29,7 @@ typedef struct Material {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	MaterialPass passes[ MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
-	MemRefCnt references;
+	MemRefCnt *references;
 	PLLinkedListNode *node;
 } Material;
 

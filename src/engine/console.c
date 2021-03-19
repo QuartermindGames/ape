@@ -234,6 +234,13 @@ void Con_ScrollBackward( void ) {
 	scrollPos--;
 }
 
+/**
+ * Returns the current console state, e.g. is it open?
+ */
+bool Con_GetState( void ) {
+	return isConsoleOpen;
+}
+
 bool Con_HandleTextEvent( const char *key ) {
 	if ( !Con_GetState() || *key == '`' || *key == '~' ) {
 		return false;
@@ -306,13 +313,6 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
 	}
 
 	return false;
-}
-
-/**
- * Returns the current console state, e.g. is it open?
- */
-bool Con_GetState( void ) {
-	return isConsoleOpen;
 }
 
 static void Con_DrawInput( const PLViewport *viewport ) {

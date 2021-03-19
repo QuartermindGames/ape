@@ -5,4 +5,6 @@
 
 #pragma once
 
+typedef struct MemRefCnt MemRefCnt;
+
 typedef void ( *MemRefCnt_CleanupFunction )( void *userData );

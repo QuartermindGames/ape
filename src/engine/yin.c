@@ -42,7 +42,7 @@ void CPUTimer_StartMeasure( CPUProfilerGroup group ) {
 
 void CPUTimer_EndMeasure( CPUProfilerGroup group ) {
 	uint64_t now = g_system.GetPerformanceCounter();
-	cpuTimers[ group ].timeTaken = ( double )( ( now - cpuTimers[ group ].clock ) * 1000 ) / g_system.GetPerformanceFrequency();
+	cpuTimers[ group ].timeTaken = ( double ) ( ( now - cpuTimers[ group ].clock ) * 1000 ) / g_system.GetPerformanceFrequency();
 }
 
 double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
@@ -82,13 +82,13 @@ void *Sys_realloc( void *ptr, size_t newSize ) {
  * Aborts on error if abort is true.
  */
 void *AllocMemory( size_t size, bool abort ) {
-    void *buf = calloc( 1, size );
-    if ( buf == NULL && abort ) {
-        PrintError( "Failed to allocate %du bytes!\n", size );
-    }
+	void *buf = calloc( 1, size );
+	if ( buf == NULL && abort ) {
+		PrintError( "Failed to allocate %du bytes!\n", size );
+	}
 
-    /* otherwise, it's the callers problem */
-    return buf;
+	/* otherwise, it's the callers problem */
+	return buf;
 }
 
 /****************************************
@@ -101,10 +101,10 @@ const char *FS_GetDataDirectory( void ) {
 		return dataPath;
 	}
 
-    PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
-    if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
+	PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
+	if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
 		snprintf( dataPath, sizeof( dataPath ), "../../" );
-    } else {
+	} else {
 		snprintf( dataPath, sizeof( dataPath ), "./" );
 	}
 
@@ -142,12 +142,12 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	CommonLibrary_Initialize();
 
-    PrintMsg( "Mounting VFS locations...\n" );
+	PrintMsg( "Mounting VFS locations...\n" );
 
 	plMountLocalLocation( FS_GetDataDirectory() );
-    if( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
-        PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
-    }
+	if ( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
+		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
+	}
 
 	/* create our main window
 	 * todo: this should be delegated to the launcher... */
@@ -175,6 +175,11 @@ static bool Engine_Initialize( int argc, char **argv ) {
 		Editor_Initialize();
 	}
 
+#if defined( DISCORD_INTEGRATION )
+	void DiscordIntegration_Initialize( void );
+	DiscordIntegration_Initialize();
+#endif
+
 	Con_Toggle();
 
 	PrintMsg( "Initialization complete - waiting for input\n" );
@@ -190,6 +195,10 @@ void Engine_Shutdown( void ) {
 	Act_Shutdown();
 	Gfx_Shutdown();
 	Con_Shutdown();
+#if defined( DISCORD_INTEGRATION )
+	void DiscordIntegration_Shutdown( void );
+	DiscordIntegration_Shutdown();
+#endif
 
 	g_system.Shutdown();
 }
@@ -237,6 +246,11 @@ unsigned int Engine_GetNumTicks( void ) {
 }
 
 static void Engine_Tick( void ) {
+#if defined( DISCORD_INTEGRATION )
+	void DiscordIntegration_Tick( void );
+	DiscordIntegration_Tick();
+#endif
+
 	Sch_RunTasks();
 
 	Editor_Tick();

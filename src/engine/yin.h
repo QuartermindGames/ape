@@ -15,6 +15,8 @@
 #include "common/common.h"
 #include "interfaces.h"
 
+//#define DISCORD_INTEGRATION
+
 #define ENGINE_APP_NAME "yin"
 
 #define ENGINE_VERSION_MAJOR 2

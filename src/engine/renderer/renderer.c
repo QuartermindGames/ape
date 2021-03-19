@@ -4,7 +4,6 @@
  * ====================================================================*/
 
 #include <PL/pl_llist.h>
-#include <GL/glew.h>
 
 #include "yin.h"
 #include "actor.h"
@@ -646,6 +645,8 @@ static void Gfx_RenderSceneFinal( PLCamera *camera ) {
 
 	Gfx_RenderScene( camera, false );
 }
+
+#include <GL/gl.h>
 
 void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;

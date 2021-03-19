@@ -38,6 +38,8 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         model_gsmdl.c
         model_md2.c
         MemoryManager.h MemoryManager.c
+
+        integrations/DiscordIntegration.c
         )
 
 target_include_directories(engine PRIVATE ./ ../3rdparty/miniz/)
