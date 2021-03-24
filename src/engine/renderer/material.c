@@ -39,7 +39,7 @@ Material *RM_GetFallbackMaterial( void ) {
 }
 
 void RM_InitializeMaterialSystem( void ) {
-	PrintMsg( "Initializing material system\n" );
+	Print( "Initializing material system\n" );
 
 	for ( unsigned int i = 0; i < MAX_CACHE_GROUPS; ++i ) {
 		materials[ i ] = plCreateLinkedList();
@@ -49,7 +49,7 @@ void RM_InitializeMaterialSystem( void ) {
 	}
 
 	/* go ahead and create the fallback material */
-	fallbackMaterial = Sys_calloc( 1, sizeof( Material ) );
+	fallbackMaterial = globalSystem.MAlloc( sizeof( Material ), true );
 	/* setup passes */
 	fallbackMaterial->numPasses = 1;
 	fallbackMaterial->passes[ 0 ].program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
@@ -298,7 +298,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 		r = plReadString( file, buffer, sizeof( buffer ) );
 	}
 
-	Material *out = Sys_malloc( sizeof( Material ) );
+	Material *out = globalSystem.MAlloc( sizeof( Material ), true );
 	memcpy( out, &mat, sizeof( Material ) );
 	return out;
 }

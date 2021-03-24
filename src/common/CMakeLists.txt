@@ -8,9 +8,9 @@ set(CMAKE_C_STANDARD 11)
 
 add_library(common SHARED
         lightmapper.c
-        wld.c
-        include/common/common.h
-        include/common/wld.h
+        World.c
+        include/common/Common.h
+        include/common/World.h
         ##############################
         Node.c
         include/common/Node.h

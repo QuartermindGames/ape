@@ -48,7 +48,7 @@ void *SG_GetNodeData( SGNode *node ) {
  * Typically a world instance.
  */
 SGNode *SG_AddHeadNode( unsigned int dataType, void *data ) {
-	SGNode *head = Sys_calloc( 1, sizeof( SGNode ) );
+	SGNode *head = globalSystem.MAlloc( sizeof( SGNode ), true );
 	head->data = data;
 	head->dataType = dataType;
 	head->node = plInsertLinkedListNode( sceneGraph, head );
@@ -57,7 +57,7 @@ SGNode *SG_AddHeadNode( unsigned int dataType, void *data ) {
 }
 
 SGNode *SG_AddChildNode( SGNode *parent, unsigned int dataType, void *data ) {
-	SGNode *child = Sys_calloc( 1, sizeof( SGNode ) );
+	SGNode *child = globalSystem.MAlloc( sizeof( SGNode ), true );
 	child->data = data;
 	child->dataType = dataType;
 

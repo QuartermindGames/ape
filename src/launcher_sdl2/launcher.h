@@ -6,7 +6,8 @@
 #pragma once
 
 #include <PL/platform.h>
+#include <PL/platform_console.h>
 
-#include "interfaces.h"
+#include "public/SharedBase.h"
 
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... );

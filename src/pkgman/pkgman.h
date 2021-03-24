@@ -7,4 +7,4 @@
 typedef struct PLImage PLImage;
 
 /* pack_image.c */
-void PackImage_Write( const char *path, const PLImage *image );
+void PackImage_Write( const char *path, const PLImage *image, uint8_t destFormat );

@@ -7,6 +7,8 @@
 #include <PL/platform_filesystem.h>
 #include <PL/platform_image.h>
 
+#include "../public/GFXFormat.h"
+
 #include "pkgman.h"
 #include "parser.h"
 
@@ -132,16 +134,64 @@ static void ParseScript( const char *buffer, size_t length ) {
 
 			Pkg_AddFile(filePath);
 			continue;
-		} else if ( strncmp( curPos, "addimg ", 7 ) == 0 ) {
-			curPos += 7;
+		} else if ( strncmp( curPos, "addv ", 5 ) == 0 ) {
+			curPos += 5;
 			curPos = EZP_SkipSpaces(curPos);
 
+			/* fetch the file path */
 			char filePath[PL_SYSTEM_MAX_PATH];
 			curPos = EZP_ReadString(curPos, filePath, sizeof(filePath));
 			if ( curPos == NULL ) {
 				Error( "File path did not fit into destination!\n" );
 			}
 
+			/* and now the data type */
+			char type[ 8 ];
+			curPos = EZP_ReadString( curPos, type, sizeof( type ) );
+			if ( curPos == NULL ) {
+				Error( "Type did not fit into the destination!\n" );
+			}
+
+			if ( strcmp( type, "tex" ) == 0 ) {
+				/* now fetch compression type we want */
+				curPos = EZP_ReadString( curPos, type, sizeof( type ) );
+				if ( curPos == NULL ) {
+					Error( "Storage type did not fit into the destination!\n" );
+				}
+
+				unsigned int dstFormat;
+				if ( strcmp( type, "dxt1" ) == 0 ) {
+					dstFormat = PGFX_FORMAT_DXT1;
+				} else if ( strcmp( type, "dxt1a" ) == 0 ) {
+					dstFormat = PGFX_FORMAT_DXT1_ALPHA;
+				} else if ( strcmp( type, "dxt3" ) == 0 ) {
+					dstFormat = PGFX_FORMAT_DXT3;
+				} else if ( strcmp( type, "dxt5" ) == 0 ) {
+					dstFormat = PGFX_FORMAT_DXT5;
+				} else if ( strcmp( type, "clu" ) == 0 ) {
+					dstFormat = PGFX_FORMAT_CLUSTER;
+				} else {
+					Error( "Unknown destination format, \"%s\"!\n", type );
+				}
+
+				PLImage *image = plLoadImage( filePath );
+				if ( image == NULL ) {
+					Error( "Failed to open the specified image, \"%s\"! : %s\n", filePath, plGetError() );
+				}
+
+				/* write out the converted image to disc */
+				char tempPath[ 256 ];
+				snprintf( tempPath, sizeof( tempPath ), "%s.gfx", filePath );
+				PackImage_Write( tempPath, image, dstFormat );
+
+				plDestroyImage( image );
+
+				/* and now add the converted image to the package
+				 * yin will automatically try to load the gfx file before falling back */
+				Pkg_AddFile( tempPath );
+			} else {
+				Error( "Unknown data type, \"%s\"!\n", type );
+			}
 
 			continue;
 		} else if ( strncmp( curPos, "dir ", 4 ) == 0 ) {

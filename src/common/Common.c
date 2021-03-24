@@ -5,7 +5,7 @@
 
 #include <PL/platform_console.h>
 
-#include "common/common.h"
+#include "common/Common.h"
 
 int logLevelPrint;
 int logLevelWarn;
@@ -13,4 +13,6 @@ int logLevelWarn;
 void CommonLibrary_Initialize( void ) {
     logLevelPrint = plAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	logLevelWarn = plAddLogLevel( "common/warning", PL_COLOUR_ORANGE, true );
+
+	plLogMessage( logLevelPrint, "Common Library initialized\n" );
 }

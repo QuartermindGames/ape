@@ -145,7 +145,6 @@ qboolean QE_LoadProject (const char *projectfile)
 	Map_New ();
 
 	FillTextureMenu ();
-	FillBSPMenu ();
 
 	return true;
 }
@@ -256,7 +255,6 @@ void ConnectEntities (void)
 	if (g_qeglobals.d_select_count != 2)
 	{
 		g_mainWindow->SetStatus("Must have two brushes selected.", 0);
-		Sys_Beep ();
 		return;
 	}
 
@@ -266,14 +264,12 @@ void ConnectEntities (void)
 	if (e1 == world_entity || e2 == world_entity)
 	{
 		g_mainWindow->SetStatus("Can't connect to the world.", 0);
-		Sys_Beep ();
 		return;
 	}
 
 	if (e1 == e2)
 	{
 		g_mainWindow->SetStatus("Brushes are from same entity.", 0);
-		Sys_Beep ();
 		return;
 	}
 

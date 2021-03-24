@@ -5,6 +5,7 @@
 
 #include <SDL2/SDL.h>
 
+#include "common/Common.h"
 #include "launcher.h"
 
 EngineInterface g_engine;
@@ -271,6 +272,48 @@ static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
 }
 
 /****************************************
+ * MEMORY MANAGEMENT
+ ****************************************/
+
+/* wrapper for calloc */
+void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
+	void *mem = calloc( num, size );
+	if ( mem == NULL ) {
+		if ( abortOnFail ) {
+			PrintError( "Failed to allocate %d bytes!\n", num * size );
+		} else {
+			PrintWarn( "Failed to allocate %d bytes!\n", num * size );
+		}
+	}
+
+	return mem;
+}
+
+/* wrapper for malloc */
+void *Sys_malloc( size_t size, bool abortOnFail ) {
+	return Sys_calloc( 1, size, abortOnFail );
+}
+
+/* wrapper for realloc */
+void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
+	void *buf = realloc( ptr, newSize );
+	if ( buf == NULL ) {
+		if ( abortOnFail ) {
+			PrintError( "Failed to allocate %d bytes!\n", newSize );
+		} else {
+			PrintWarn( "Failed to allocate %d bytes!\n", newSize );
+		}
+	}
+
+	return buf;
+}
+
+/* wrappers for platform lib */
+void *Sys_WMAlloc( size_t size ) { return Sys_malloc( size, true ); }
+void *Sys_WCAlloc( size_t num, size_t size ) { return Sys_calloc( num, size, true ); }
+void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSize, true ); }
+
+/****************************************
  * INITIALIZATION
  ****************************************/
 
@@ -301,12 +344,14 @@ static void Sys_SetupEngineInterface( void ) {
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
 
-	DllLauncherInterface GetDllInterface = ( DllLauncherInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
+	DllEngineInterface GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
 	if ( GetDllInterface == NULL ) {
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", plGetError() );
 	}
 
-	SystemInterface systemInterface = {
+	static SystemInterface systemInterface = {
+	        .version = BASE_INTERFACE_VERSION,
+
 			.Shutdown = Sys_Shutdown,
 			.DisplayMessageBox = Sys_DisplayMessageBox,
 			.CreateWindow = Sys_CreateWindow,
@@ -321,17 +366,46 @@ static void Sys_SetupEngineInterface( void ) {
 
 	        .GetPerformanceCounter = SDL_GetPerformanceCounter,
 	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
+
+	        .CAlloc = Sys_calloc,
+	        .MAlloc = Sys_malloc,
+	        .ReAlloc = Sys_realloc,
 	};
 
 	/* initialize the interface */
-	GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface, &g_engine );
+	g_engine = *GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface );
+	if ( g_engine.version != BASE_INTERFACE_VERSION ) {
+		PrintWarn( "Unexpected interface version (%d vs %d)!\n", g_engine.version, BASE_INTERFACE_VERSION );
+	}
 }
+
+/****************************************
+ ****************************************/
 
 int Sys_Init( int argc, char **argv ) {
 #if defined( _WIN32 )
 	/* stop buffering stdout! */
 	setvbuf( stdout, NULL, _IONBF, 0 );
 #endif
+
+	pl_calloc = Sys_WCAlloc;
+	pl_malloc = Sys_WMAlloc;
+	pl_realloc = Sys_WReAlloc;
+
+	/* initialize the platform library */
+	plInitialize( argc, argv );
+	plInitializeSubSystems( PL_SUBSYSTEM_IO );
+
+	if ( plHasCommandLineArgument( "-log" ) ) {
+		const char *path = plGetCommandLineArgumentValue( "-log" );
+		if ( path == NULL ) {
+			path = "log.txt";
+		}
+
+		plSetupLogOutput( path );
+	}
+
+	CommonLibrary_Initialize();
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 ) {
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );

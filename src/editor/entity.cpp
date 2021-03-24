@@ -312,8 +312,7 @@ entity_t *Entity_Create( eclass_t *c ) {
 
 	for( b = selected_brushes.next; b != &selected_brushes; b = b->next )
 		if( b->owner != world_entity ) {
-			Sys_Printf( "Entity NOT created, brushes not all from world\n" );
-			Sys_Beep();
+			LWarn( "Entity NOT created, brushes not all from world\n" );
 			return NULL;
 		}
 

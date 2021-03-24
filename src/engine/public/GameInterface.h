@@ -28,3 +28,7 @@ typedef unsigned char UINT8;
 typedef unsigned short UINT16;
 typedef unsigned int UINT32;
 typedef unsigned long long int UINT64;
+
+/* actor interface */
+
+typedef struct Actor Actor;

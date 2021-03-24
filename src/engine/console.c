@@ -91,7 +91,7 @@ static void Con_UpdateBackground( const PLConsoleVariable *var ) {
 	RM_DestroyMaterial( backgroundMaterial, false );
 	backgroundMaterial = RM_CacheMaterial( var->s_value, CACHE_GROUP_STATIC, false );
 	if ( backgroundMaterial == NULL ) {
-		PrintMsg( "Please provide a valid background path!\n" );
+		Print( "Please provide a valid background path!\n" );
 	}
 }
 
@@ -131,7 +131,7 @@ static void LoadUserConfig( void ) {
 		child = NL_GetNextChild( child );
 	}
 
-	PrintMsg( "User config loaded.\n" );
+	Print( "User config loaded.\n" );
 }
 
 static void SaveUserConfig( void ) {
@@ -172,7 +172,7 @@ static void SaveUserConfig( void ) {
 	NL_WriteFile( path, root, NL_FILE_ASCII );
 	NL_DestroyNode( root );
 
-	PrintMsg( "User config saved.\n" );
+	Print( "User config saved.\n" );
 }
 
 /**
@@ -296,13 +296,13 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
 			unsigned int numOptions;
 			const char **list = plAutocompleteConsoleString( inputBuffer, &numOptions );
 			if ( numOptions == 0 ) {
-				PrintMsg( "No matches found\n" );
+				Print( "No matches found\n" );
 				return true;
 			}
 
 			/* print out all the options */
 			for ( unsigned int i = 0; i < numOptions; ++i ) {
-				PrintMsg( " %s\n", list[ i ] );
+				Print( " %s\n", list[ i ] );
 			}
 
 			/* update to match the first result */

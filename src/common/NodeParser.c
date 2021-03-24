@@ -6,7 +6,7 @@
 #include <PL/pl_llist.h>
 #include <PL/pl_parse.h>
 
-#include "common/common.h"
+#include "common/Common.h"
 #include "NodePrivate.h"
 
 static void SkipToNextToken( const char **buf, unsigned int *line ) {

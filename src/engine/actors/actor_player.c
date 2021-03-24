@@ -94,7 +94,7 @@ static unsigned int numPlayers = 0;
 static PLModel *model = NULL;
 
 void Player_Spawn( Actor *self ) {
-	APlayer* playerData = Sys_calloc( 1, sizeof( APlayer ) );
+	APlayer* playerData = globalSystem.MAlloc( sizeof( APlayer ), true );
 	Act_SetUserData( self, playerData );
 
 	if ( model == NULL ) {
@@ -119,22 +119,22 @@ void Player_Tick( Actor *self, void *userData ) {
 	PLVector3 curVelocity = Act_GetVelocity( self );
 
 	float nAngle = Act_GetAngle( self );
-	if ( g_system.GetButtonState( INPUT_LEFT ) || g_system.GetKeyState( 'a' )  ) {
+	if ( globalSystem.GetButtonState( INPUT_LEFT ) || globalSystem.GetKeyState( 'a' )  ) {
 		nAngle += PLAYER_TURN_SPEED;
-	} else if ( g_system.GetButtonState( INPUT_RIGHT ) || g_system.GetKeyState( 'd' )  ) {
+	} else if ( globalSystem.GetButtonState( INPUT_RIGHT ) || globalSystem.GetKeyState( 'd' )  ) {
 		nAngle -= PLAYER_TURN_SPEED;
 	}
 	Act_SetAngle( self, nAngle );
 
-	if ( g_system.GetButtonState( INPUT_A ) ) {
+	if ( globalSystem.GetButtonState( INPUT_A ) ) {
 		curVelocity.y += 10.0f;
 	}
 
 	static const float incAmount = 0.25f;
 	APlayer *playerData = ( APlayer * ) userData;
-	if ( g_system.GetButtonState( INPUT_UP ) || g_system.GetKeyState( 'w' ) ) {
+	if ( globalSystem.GetButtonState( INPUT_UP ) || globalSystem.GetKeyState( 'w' ) ) {
 		playerData->forwardVelocity += incAmount;
-	} else if ( g_system.GetButtonState( INPUT_DOWN ) || g_system.GetKeyState( 's' )  ) {
+	} else if ( globalSystem.GetButtonState( INPUT_DOWN ) || globalSystem.GetKeyState( 's' )  ) {
 		playerData->forwardVelocity -= incAmount;
 	} else if ( playerData->forwardVelocity != 0.0f ) {
 		playerData->forwardVelocity = playerData->forwardVelocity > 0 ? playerData->forwardVelocity - incAmount : playerData->forwardVelocity + incAmount;
@@ -144,9 +144,9 @@ void Player_Tick( Actor *self, void *userData ) {
 	}
 
 	float viewPitch = Act_GetViewPitch( self );
-	if ( g_system.GetKeyState( 'q' ) ) {
+	if ( globalSystem.GetKeyState( 'q' ) ) {
 		viewPitch += 1.0f;
-	} else if ( g_system.GetKeyState( 'e' ) ) {
+	} else if ( globalSystem.GetKeyState( 'e' ) ) {
 		viewPitch -= 1.0f;
 	}
 
@@ -160,7 +160,7 @@ void Player_Tick( Actor *self, void *userData ) {
 	Act_SetViewPitch( self, viewPitch );
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = g_system.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity = globalSystem.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
 	curVelocity = plAddVector3( curVelocity, plScaleVector3f( Act_GetForward( self ), playerData->forwardVelocity ) );
@@ -173,7 +173,7 @@ void Player_Tick( Actor *self, void *userData ) {
 	playerData->viewBob += ( sinf( Engine_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = curOrigin.y + PLAYER_VIEW_OFFSET;
-	if ( g_system.GetKeyState( 'c' ) ) {
+	if ( globalSystem.GetKeyState( 'c' ) ) {
 		viewOffset = curOrigin.y + PLAYER_CROUCH_OFFSET;
 	}
 

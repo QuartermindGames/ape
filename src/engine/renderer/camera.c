@@ -20,13 +20,13 @@ const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective ) {
 static PLLinkedList *camerasList = NULL;
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
-	PrintMsg( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
+	Print( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
 
 	if ( viewport == NULL ) {
 		PrintError( "Invalid viewport!\n" );
 	}
 
-	GfxCamera *gfxCamera = Sys_calloc( 1, sizeof( GfxCamera ) );
+	GfxCamera *gfxCamera = globalSystem.MAlloc( sizeof( GfxCamera ), true );
 
 	gfxCamera->internalPtr = plCreateCamera();
 	if( gfxCamera->internalPtr == NULL ) {
@@ -34,7 +34,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 	}
 
 	gfxCamera->viewportPtr = viewport;
-	g_system.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->internalPtr->viewport.w, &gfxCamera->internalPtr->viewport.h );
+	globalSystem.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->internalPtr->viewport.w, &gfxCamera->internalPtr->viewport.h );
 
 	gfxCamera->perspective = perspective;
 	switch( gfxCamera->perspective ) {
@@ -61,7 +61,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 }
 
 void Gfx_InitializeCameras( void ) {
-	PrintMsg( "Initializing cameras...\n" );
+	Print( "Initializing cameras...\n" );
 
 	camerasList = plCreateLinkedList();
 	if( camerasList == NULL ) {
@@ -77,7 +77,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 	}
 
 	SysWindow *window = Engine_GetMainWindow();
-	g_system.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
+	globalSystem.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
 	extern PLConsoleVariable *gVarGraphicsSupersampling;
 	camera->internalPtr->viewport.w *= gVarGraphicsSupersampling->i_value;
 	camera->internalPtr->viewport.h *= gVarGraphicsSupersampling->i_value;

@@ -12,8 +12,7 @@
 
 #include <assert.h>
 
-#include "common/common.h"
-#include "interfaces.h"
+#include "common/Common.h"
 
 //#define DISCORD_INTEGRATION
 
@@ -79,7 +78,7 @@ typedef struct SysWindow SysWindow;
 	plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
 	exit( EXIT_FAILURE )
 #define PrintWarn( ... ) plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
-#define PrintMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define Print( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 #if !defined( NDEBUG )
 #   define DebugMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 #else
@@ -93,10 +92,6 @@ void Engine_Shutdown( void );
 
 SysWindow *Engine_GetMainWindow( void );
 unsigned int Engine_GetNumTicks( void );
-
-void *Sys_calloc( size_t num, size_t size );
-void *Sys_malloc( size_t size );
-void *AllocMemory( size_t size, bool abort );
 
 const char *FS_GetDataDirectory( void );
 

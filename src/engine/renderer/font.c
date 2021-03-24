@@ -54,7 +54,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	/* todo: get the active viewport size, not the window size! */
 	int w, h;
-	g_system.GetWindowSize( window, &w, &h );
+	globalSystem.GetWindowSize( window, &w, &h );
 
 	float dw = ( float ) w;
 	float dh = ( float ) h;
@@ -150,7 +150,7 @@ void Font_Shutdown( void ) {
 }
 
 BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end ) {
-    BitmapFont *font = AllocMemory( sizeof( BitmapFont ), true );
+    BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
     font->material = RM_CacheMaterial( materialPath, CACHE_GROUP_STATIC, false );
 	if ( font->material == NULL ) {
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );

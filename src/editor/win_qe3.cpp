@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qe3.h"
 #include "mru.h"
 
-int screen_width;
-int screen_height;
 qboolean have_quit;
 
 int update_bits;
@@ -36,18 +34,11 @@ void Sys_SetTitle( char *text ) {
 }
 
 void Sys_BeginWait( void ) {
-#if 0
-	waitcursor = SetCursor( LoadCursor( NULL, IDC_WAIT ) );
-#endif
+	g_mainWindow->getApp()->beginWaitCursor();
 }
 
 void Sys_EndWait( void ) {
-#if 0
-	if ( waitcursor ) {
-		SetCursor( waitcursor );
-		waitcursor = NULL;
-	}
-#endif
+	g_mainWindow->getApp()->endWaitCursor();
 }
 
 void Sys_GetCursorPos( int *x, int *y ) {
@@ -63,12 +54,6 @@ void Sys_UpdateWindows( int bits ) {
 	//	Sys_Printf("updating 0x%X\n", bits);
 	update_bits |= bits;
 	//update_bits = -1;
-}
-
-void Sys_Beep() {
-#if defined( _WIN32 )
-	MessageBeep( MB_ICONASTERISK );
-#endif
 }
 
 char *TranslateString( char *buf ) {
@@ -90,14 +75,7 @@ char *TranslateString( char *buf ) {
 }
 
 void Sys_ClearPrintf( void ) {
-	char text[ 4 ];
-
-	text[ 0 ] = 0;
-
-	//SendMessage (g_qeglobals.d_hwndEdit,
-	//	WM_SETTEXT,
-	//	0,
-	//	(LPARAM)text);
+	// stub
 }
 
 void Sys_Printf( const char *text, ... ) {
@@ -111,14 +89,7 @@ void Sys_Printf( const char *text, ... ) {
 
 	out = TranslateString( buf );
 
-#ifdef LATER
-	Sys_Status( out );
-#else
-	//SendMessage (g_qeglobals.d_hwndEdit,
-	//	EM_REPLACESEL,
-	//	0,
-	//	(LPARAM)out);
-#endif
+	LMsg( out );
 }
 
 double Sys_DoubleTime( void ) {
@@ -136,18 +107,11 @@ void Error( const char *error, ... ) {
 	va_list argptr;
 	char text[ 1024 ];
 
-    va_start( argptr, error );
-    vsprintf( text, error, argptr );
-    va_end( argptr );
+	va_start( argptr, error );
+	vsprintf( text, error, argptr );
+	va_end( argptr );
 
-#if 0 // todo
-	int err = GetLastError();
-	char text2[ 1024 ];
-	sprintf( text2, "%s\nGetLastError() = %i", text, err );
-	MessageBox( g_qeglobals.d_hwndMain, text2, "Error", 0 /* MB_OK */ );
-#else
-	printf( "Error: %s", text );
-#endif
+	LError( text );
 
 	exit( EXIT_FAILURE );
 }
@@ -161,60 +125,19 @@ FILE DIALOGS
 */
 
 qboolean ConfirmModified( void ) {
-#if 0
-	if ( !modified )
+	if ( !modified ) {
 		return true;
+	}
 
-	if ( MessageBox( g_qeglobals.d_hwndMain, "This will lose changes to the map", "warning", MB_OKCANCEL ) == IDCANCEL )
+	if ( FXMessageBox::warning(
+	             g_mainWindow,
+	             MBOX_OK_CANCEL,
+	             "Warning",
+	             "This will lose changes to the world!" ) == MBOX_CLICKED_YES ) {
 		return false;
-#endif
+	}
+
 	return true;
-}
-
-void OpenDialog( void ) {
-#if 0
-	/*
-	 * Obtain the system directory name and
-	 * store it in szDirName.
-	 */
-
-	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
-	strcat (szDirName, "\\maps");
-
-	/* Place the terminating null character in the szFile. */
-
-	szFile[0] = '\0';
-
-	/* Set the members of the OPENFILENAME structure. */
-
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = g_qeglobals.d_hwndCamera;
-	ofn.lpstrFilter = szFilter;
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFileTitle = szFileTitle;
-	ofn.nMaxFileTitle = sizeof(szFileTitle);
-	ofn.lpstrInitialDir = szDirName;
-	ofn.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST |
-		OFN_FILEMUSTEXIST;
-
-	/* Display the Open dialog box. */
-
-	if (!GetOpenFileName(&ofn))
-		return;	// canceled
-
-	// Add the file in MRU.
-	AddNewItem( g_qeglobals.d_lpMruMenu, ofn.lpstrFile);
-
-	// Refresh the File menu.
-	PlaceMenuMRUItem(g_qeglobals.d_lpMruMenu,GetSubMenu(GetMenu(g_qeglobals.d_hwndMain),0),
-			ID_FILE_EXIT);
-
-	/* Open the file. */
-
-	Map_LoadFile (ofn.lpstrFile);
-#endif
 }
 
 void ProjectDialog( void ) {
@@ -303,124 +226,141 @@ void SaveAsDialog( void ) {
 #endif
 }
 
-/*
-=======================================================
 
-Menu modifications
+/****************************************
+ * MEMORY MANAGEMENT
+ ****************************************/
 
-=======================================================
-*/
-
-/*
-==================
-FillBSPMenu
-
-==================
-*/
-char *bsp_commands[ 256 ];
-
-void FillBSPMenu( void ) {
-#if 0
-	HMENU hmenu;
-	epair_t *ep;
-	int i;
-	static int count;
-
-	hmenu = GetSubMenu( GetMenu( g_qeglobals.d_hwndMain ), MENU_BSP );
-
-	for ( i = 0; i < count; i++ )
-		DeleteMenu( hmenu, CMD_BSPCOMMAND + i, MF_BYCOMMAND );
-	count = 0;
-
-	i = 0;
-	for ( ep = g_qeglobals.d_project_entity->epairs; ep; ep = ep->next ) {
-		if ( ep->key[ 0 ] == 'b' && ep->key[ 1 ] == 's' && ep->key[ 2 ] == 'p' ) {
-			bsp_commands[ i ] = ep->key;
-			AppendMenu( hmenu, MF_ENABLED | MF_STRING,
-			            CMD_BSPCOMMAND + i, ( LPCTSTR ) ep->key );
-			i++;
+/* wrapper for calloc */
+void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
+	void *mem = calloc( num, size );
+	if ( mem == NULL ) {
+		if ( abortOnFail ) {
+			LError( "Failed to allocate %d bytes!\n", num * size );
+		} else {
+			LWarn( "Failed to allocate %d bytes!\n", num * size );
 		}
 	}
-	count = i;
-#endif
+
+	return mem;
 }
 
-//==============================================
+/* wrapper for malloc */
+void *Sys_malloc( size_t size, bool abortOnFail ) {
+	return Sys_calloc( 1, size, abortOnFail );
+}
 
-/*
-===============
-CheckBspProcess
+/* wrapper for realloc */
+void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
+	void *buf = realloc( ptr, newSize );
+	if ( buf == NULL ) {
+		if ( abortOnFail ) {
+			LError( "Failed to allocate %d bytes!\n", newSize );
+		} else {
+			LWarn( "Failed to allocate %d bytes!\n", newSize );
+		}
+	}
 
-See if the BSP is done yet
-===============
-*/
-void CheckBspProcess( void ) {
+	return buf;
+}
+
+/* wrappers for platform lib */
+void *Sys_WMAlloc( size_t size ) { return Sys_malloc( size, true ); }
+void *Sys_WCAlloc( size_t num, size_t size ) { return Sys_calloc( num, size, true ); }
+void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSize, true ); }
+
+/****************************************
+ ****************************************/
+
+EngineInterface globalEngine;
+static PLLibrary *dllEnginePtr;
+static void SetupEngineInterface() {
+	LMsg( "Setting up engine interface\n" );
+
+	dllEnginePtr = plLoadLibrary( "./engine", true );
+	if ( dllEnginePtr == nullptr ) {
+		LError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
+	}
+
+	DllEngineInterface GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
+	if ( GetDllInterface == nullptr ) {
+		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", plGetError() );
+	}
+
+	static SystemInterface systemInterface = {
 #if 0
-	char outputpath[ 1024 ];
-	char temppath[ 512 ];
-	DWORD exitcode;
-	char *out;
-	BOOL ret;
+			.version = BASE_INTERFACE_VERSION,
 
-	if ( !bsp_process )
-		return;
+			.Shutdown = nullptr,
+			.DisplayMessageBox = nullptr,
+			.CreateWindow = nullptr,
+			.DestroyWindow = nullptr,
+			.GetWindowSize = nullptr,
+			.MakeWindowActive = nullptr,
+			.SwapWindow = nullptr,
+			.IsDisplayActive = nullptr,
+			.GetButtonState = nullptr,
+			.GetKeyState = nullptr,
+			.HasKeyboard = nullptr,
 
-	ret = GetExitCodeProcess( bsp_process, &exitcode );
-	if ( !ret )
-		Error( "GetExitCodeProcess failed" );
-	if ( exitcode == STILL_ACTIVE )
-		return;
-
-	bsp_process = 0;
-
-	GetTempPath( 512, temppath );
-	sprintf( outputpath, "%sjunk.txt", temppath );
-
-	LoadFile( outputpath, ( void ** ) &out );
-	Sys_Printf( "%s", out );
-	Sys_Printf( "\ncompleted.\n" );
-	free( out );
-	Sys_Beep();
-
-	Pointfile_Check();
+			.GetPerformanceCounter = nullptr,
+			.GetPerformanceFrequency = nullptr,
 #endif
+			.CAlloc = Sys_calloc,
+			.MAlloc = Sys_malloc,
+			.ReAlloc = Sys_realloc,
+	};
+
+	/* initialize the interface */
+	globalEngine = *GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface );
+	if ( globalEngine.version != BASE_INTERFACE_VERSION ) {
+		LWarn( "Unexpected interface version (%d vs %d)!\n", globalEngine.version, BASE_INTERFACE_VERSION );
+	}
 }
 
-extern int cambuttonstate;
+unsigned int LOG_LEVEL_INFO, LOG_LEVEL_WARNING, LOG_LEVEL_ERROR;
 
-/*
-==================
-WinMain
-
-==================
-*/
 #if defined( _WIN32 )
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
-#if 0
-	HACCEL accelerators;
-
-	InitCommonControls();
-
-	accelerators = LoadAccelerators( hInstance, MAKEINTRESOURCE( IDR_ACCELERATOR1 ) );
-	if ( !accelerators )
-		Error( "LoadAccelerators failed" );
+	int vargc = __argc;
+	char **vargv = __argv;
+#else
+int main( int argc, char **argv ) {
+	int vargc = argc;
+	char **vargv = argv;
 #endif
 
-	screen_width = GetSystemMetrics( SM_CXFULLSCREEN );
-	screen_height = GetSystemMetrics( SM_CYFULLSCREEN );
+	pl_calloc = Sys_WCAlloc;
+	pl_malloc = Sys_WMAlloc;
+	pl_realloc = Sys_WReAlloc;
 
-	// hack for broken NT 4.0 dual screen
-	if ( screen_width > 2 * screen_height )
-		screen_width /= 2;
+	plInitialize( vargc, vargv );
 
-	// START NEW NEW NEW
+	// Setup logging
+	if ( plHasCommandLineArgument( "-log" ) ) {
+		const char *path = plGetCommandLineArgumentValue( "-log" );
+		if ( path == NULL ) {
+			path = EDITOR_LOG_PATH;
+		}
+
+		plSetupLogOutput( path );
+	}
+	LOG_LEVEL_INFO = plAddLogLevel( "editor", PL_COLOUR_WHITE, true );
+	LOG_LEVEL_WARNING = plAddLogLevel( "editor/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_ERROR = plAddLogLevel( "editor/error", PL_COLOUR_RED, true );
+
+	LMsg( "Log initialized\n" );
+
+	CommonLibrary_Initialize();
+
+	SetupEngineInterface();
+
 	FXApp app( EDITOR_TITLE );
 	app.init( __argc, __argv );
 
 	FXIcon *icon = huang::util::LoadImageIcon( &app, "icons/app_icon.gif" );
 	g_mainWindow = new huang::MainWindow( &app );
 	g_mainWindow->setIcon( icon );
-	// END NEW NEW NEW
 
 	// the project file can be specified on the command line,
 	// or implicitly found in the scripts directory
@@ -447,21 +387,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #if 0
 	while (!have_quit)
 	{
-		Sys_EndWait ();		// remove wait cursor if active
-
-		while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
-		{
-			if (!TranslateAccelerator(g_qeglobals.d_hwndMain, accelerators, &msg) )
-			{
-      			TranslateMessage (&msg);
-      			DispatchMessage (&msg);
-			}
-			if (msg.message == WM_QUIT)
-				have_quit = true;
-		}
-
-		CheckBspProcess ();
-
 		time = Sys_DoubleTime ();
 		delta = time - oldtime;
 		oldtime = time;
@@ -470,74 +395,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 		// run time dependant behavior
 		Cam_MouseControl (delta);
-
-		// update any windows now
-		if (update_bits & W_CAMERA)
-		{
-			InvalidateRect(g_qeglobals.d_hwndCamera, NULL, false);
-			UpdateWindow (g_qeglobals.d_hwndCamera);
-		}
-		if (update_bits & (W_Z | W_Z_OVERLAY) )
-		{
-			InvalidateRect(g_qeglobals.d_hwndZ, NULL, false);
-			UpdateWindow (g_qeglobals.d_hwndZ);
-		}
-
-		if ( update_bits & W_TEXTURE )
-		{
-			InvalidateRect(g_qeglobals.d_hwndTexture, NULL, false);
-			UpdateWindow (g_qeglobals.d_hwndEntity);
-		}
-
-		if (update_bits & (W_XY | W_XY_OVERLAY))
-		{
-			InvalidateRect(g_qeglobals.d_hwndXY, NULL, false);
-			UpdateWindow (g_qeglobals.d_hwndXY);
-		}
-
-		update_bits = 0;
-
-		if (!cambuttonstate && !have_quit)
-		{	// if not driving in the camera view, block
-			WaitMessage ();
-		}
-
 	}
 
     /* return success of application */
     return TRUE;
 #endif
 }
-#else
-int main( int argc, char **argv ) {
-    FXApp app( EDITOR_TITLE );
-    app.init( argc, argv );
-
-    FXIcon *icon = huang::util::LoadImageIcon( &app, "icons/app_icon.gif" );
-    g_mainWindow = new huang::MainWindow( &app );
-    g_mainWindow->setIcon( icon );
-
-    // the project file can be specified on the command line,
-    // or implicitly found in the scripts directory
-	const char *config = EDITOR_CONFIG;
-	if ( argc > 1 ) {
-		config = argv[ 1 ];
-	}
-
-    QE_Init();
-
-    Sys_Printf( "Entering message loop\n" );
-
-    app.create();
-
-    // Ensure the main window is maximised after creation
-    auto *mainWindow = dynamic_cast< huang::MainWindow * >( app.getActiveWindow() );
-    if ( mainWindow == nullptr ) {
-    //    Error( "Failed to fetch main window!\n" );
-    }
-
-   // mainWindow->maximize();
-
-    return app.run();
-}
-#endif

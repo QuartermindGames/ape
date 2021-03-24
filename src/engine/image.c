@@ -103,7 +103,7 @@ PLImage *Image_LoadPackedImage( const char *path ) {
 				offsetSize = sizeof( uint32_t );
 			}
 
-			void *pixelOffsets = Sys_calloc( numBlockPixels, offsetSize );
+			void *pixelOffsets = globalSystem.CAlloc( numBlockPixels, offsetSize, true );
 			if ( plReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels ) {
 				PrintError( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, plGetError() );
 			}

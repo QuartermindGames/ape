@@ -39,7 +39,7 @@ void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData,
 		scheduleList = plCreateLinkedList();
 	}
 
-	SchTask *task = Sys_malloc( sizeof( SchTask ) );
+	SchTask *task = globalSystem.MAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
 	task->delay = delay + Engine_GetNumTicks();
 	task->callback = callback;
@@ -67,7 +67,7 @@ void Sch_RunTasks( void ) {
 }
 
 void Sch_FlushTasks( void ) {
-	PrintMsg( "Flushing scheduled tasks...\n" );
+	Print( "Flushing scheduled tasks...\n" );
 	plDestroyLinkedList( scheduleList );
 	scheduleList = NULL;
 }
@@ -81,8 +81,8 @@ void Sch_PrintPendingTasks( void ) {
 	PLLinkedListNode *node = plGetFirstNode( scheduleList );
 	while ( node != NULL ) {
 		SchTask *task = plGetLinkedListNodeUserData( node );
-		PrintMsg( " (%d) %s %f\n", i++, task->desc, task->delay - Engine_GetNumTicks() );
+		Print( " (%d) %s %f\n", i++, task->desc, task->delay - Engine_GetNumTicks() );
 		node = plGetNextLinkedListNode( node );
 	}
-	PrintMsg( "%d scheduled tasks pending\n", i );
+	Print( "%d scheduled tasks pending\n", i );
 }

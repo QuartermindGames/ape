@@ -74,7 +74,7 @@ typedef struct Actor {
 static PLLinkedList *actorList;
 
 Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle ) {
-	Actor *actor = Sys_calloc( 1, sizeof( Actor ) );
+	Actor *actor = globalSystem.MAlloc( sizeof( Actor ), true );
 	actor->node     = plInsertLinkedListNode( actorList, actor );
 	actor->setup    = actorSpawnSetup[ type ];
 	actor->area     = 0;
@@ -171,7 +171,7 @@ PLVector3 Act_GetForward( const Actor *self ) {
 }
 
 void Act_SpawnActors( void ) {
-	PrintMsg( "Spawning actors...\n" );
+	Print( "Spawning actors...\n" );
 
 #if 0 /* todo: replace */
 	PLFile *filePtr = plLoadPackageFile( globalWad, "M_THINGS" );

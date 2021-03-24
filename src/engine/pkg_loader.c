@@ -12,7 +12,7 @@ uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index ) {
 		return NULL;
 	}
 
-	uint8_t *data = Sys_malloc( index->compressedSize );
+	uint8_t *data = globalSystem.MAlloc( index->compressedSize, true );
 	if ( plReadFile( file, data, index->compressedSize, 1 ) != 1 ) {
 		free( data );
 		return NULL;
@@ -20,7 +20,7 @@ uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index ) {
 
 	if ( index->compressionType == PL_COMPRESSION_ZLIB ) {
 		/* go ahead and decompress it */
-		uint8_t *uncompressedData = Sys_malloc( index->fileSize );
+		uint8_t *uncompressedData = globalSystem.MAlloc( index->fileSize, true );
 		unsigned long uncompressedLength;
 		int status = mz_uncompress( uncompressedData, &uncompressedLength, data, index->compressedSize );
 

@@ -10,12 +10,12 @@
 #include "actor.h"
 #include "pkg_loader.h"
 #include "editor.h"
-#include "game.h"
+#include "GameInterface.h"
 
 PLPackage *globalWad = NULL;
 
-EngineInterface g_engine;
-SystemInterface g_system;
+SystemInterface globalSystem;
+GameInterface globalGame;
 
 static SysWindow *mainWindow;
 
@@ -37,58 +37,16 @@ void CPUTimer_Initialize( void ) {
 }
 
 void CPUTimer_StartMeasure( CPUProfilerGroup group ) {
-	cpuTimers[ group ].clock = g_system.GetPerformanceCounter();
+	cpuTimers[ group ].clock = globalSystem.GetPerformanceCounter();
 }
 
 void CPUTimer_EndMeasure( CPUProfilerGroup group ) {
-	uint64_t now = g_system.GetPerformanceCounter();
-	cpuTimers[ group ].timeTaken = ( double ) ( ( now - cpuTimers[ group ].clock ) * 1000 ) / g_system.GetPerformanceFrequency();
+	uint64_t now = globalSystem.GetPerformanceCounter();
+	cpuTimers[ group ].timeTaken = ( double ) ( ( now - cpuTimers[ group ].clock ) * 1000 ) / globalSystem.GetPerformanceFrequency();
 }
 
 double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
 	return cpuTimers[ group ].timeTaken;
-}
-
-/****************************************
- * MEMORY MANAGEMENT
- ****************************************/
-
-void *Sys_calloc( size_t num, size_t size ) {
-	void *mem = calloc( num, size );
-	if ( mem == NULL ) {
-		PrintError( "Failed to allocate %d bytes!\n", num * size );
-	}
-
-	return mem;
-}
-
-/* wrapper for malloc */
-void *Sys_malloc( size_t size ) {
-	return Sys_calloc( 1, size );
-}
-
-/* wrapper for realloc */
-void *Sys_realloc( void *ptr, size_t newSize ) {
-	void *buf = realloc( ptr, newSize );
-	if ( buf == NULL ) {
-		PrintError( "Failed to allocate %lu bytes!\n", newSize );
-	}
-
-	return buf;
-}
-
-/**
- * Allocate a pool of zeroed memory.
- * Aborts on error if abort is true.
- */
-void *AllocMemory( size_t size, bool abort ) {
-	void *buf = calloc( 1, size );
-	if ( buf == NULL && abort ) {
-		PrintError( "Failed to allocate %du bytes!\n", size );
-	}
-
-	/* otherwise, it's the callers problem */
-	return buf;
 }
 
 /****************************************
@@ -101,7 +59,7 @@ const char *FS_GetDataDirectory( void ) {
 		return dataPath;
 	}
 
-	PrintMsg( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
+	Print( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
 	if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
 		snprintf( dataPath, sizeof( dataPath ), "../../" );
 	} else {
@@ -113,36 +71,17 @@ const char *FS_GetDataDirectory( void ) {
 
 int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 static bool Engine_Initialize( int argc, char **argv ) {
-	pl_calloc = Sys_calloc;
-	pl_malloc = Sys_malloc;
-	pl_realloc = Sys_realloc;
-
-	/* initialize the platform library */
-	plInitialize( argc, argv );
-	plInitializeSubSystems( PL_SUBSYSTEM_IO );
-
-	if ( plHasCommandLineArgument( "-log" ) ) {
-		const char *path = plGetCommandLineArgumentValue( "-log" );
-		if ( path == NULL ) {
-			path = "log.txt";
-		}
-
-		plSetupLogOutput( path );
-	}
-
 	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 	LOG_LEVEL_WARN = plAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
 	LOG_LEVEL_INFO = plAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
-	PrintMsg( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
+	Print( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
 
 	plRegisterStandardPackageLoaders();
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
 	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
-	CommonLibrary_Initialize();
-
-	PrintMsg( "Mounting VFS locations...\n" );
+	Print( "Mounting VFS locations...\n" );
 
 	plMountLocalLocation( FS_GetDataDirectory() );
 	if ( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
@@ -151,7 +90,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	/* create our main window
 	 * todo: this should be delegated to the launcher... */
-	mainWindow = g_system.CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
+	mainWindow = globalSystem.CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
 	if ( mainWindow == NULL ) {
 		PrintError( "Failed to create main window!\n" );
 	}
@@ -163,6 +102,8 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plRegisterModelLoader( "md2", MD2_LoadFile );
 	PLModel *GSMDL_LoadFile( const char *path );
 	plRegisterModelLoader( "mdl", GSMDL_LoadFile );
+
+	Print( "Initializing core services...\n" );
 
 	/* initialize core services */
 	CPUTimer_Initialize();
@@ -180,18 +121,17 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	DiscordIntegration_Initialize();
 #endif
 
-	Con_Toggle();
-
-	PrintMsg( "Initialization complete - waiting for input\n" );
+	Print( "Initialization complete!\n" );
 
 	return true;
 }
 
 void Engine_Shutdown( void ) {
-	PrintMsg( "Shutting down...\n" );
+	Print( "Shutting down...\n" );
 
 	Sch_FlushTasks();
 
+	Game_Shutdown();
 	Act_Shutdown();
 	Gfx_Shutdown();
 	Con_Shutdown();
@@ -200,7 +140,7 @@ void Engine_Shutdown( void ) {
 	DiscordIntegration_Shutdown();
 #endif
 
-	g_system.Shutdown();
+	globalSystem.Shutdown();
 }
 
 SysWindow *Engine_GetMainWindow( void ) {
@@ -213,13 +153,13 @@ SysWindow *Engine_GetMainWindow( void ) {
 
 static void Engine_Display( void ) {
 	/* ensure we don't keep drawing in the background */
-	if ( !g_system.IsDisplayActive( mainWindow ) ) {
+	if ( !globalSystem.IsDisplayActive( mainWindow ) ) {
 		return;
 	}
 
 	PROFILE_START( PROFILE_DRAW_ALL );
 
-	g_system.MakeWindowActive( mainWindow );
+	globalSystem.MakeWindowActive( mainWindow );
 
 	Gfx_SetupDefaultState();
 
@@ -232,7 +172,7 @@ static void Engine_Display( void ) {
 
 	Gfx_DrawMenu();
 
-	g_system.SwapWindow( mainWindow );
+	globalSystem.SwapWindow( mainWindow );
 }
 
 /****************************************
@@ -282,24 +222,32 @@ static void Engine_HandleTextEvent( const char *key ) {
 	}
 }
 
-PL_EXPORT bool GetDllInterface( uint32_t version, const SystemInterface *sysIn, EngineInterface *engOut ) {
+static SystemInterface *GetSystemInterface( void ) { return &globalSystem; }
+static GameInterface *GetGameInterface( void ) { return &globalGame; }
+
+PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const SystemInterface *sysIn ) {
 	if ( version != BASE_INTERFACE_VERSION ) {
 		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, BASE_INTERFACE_VERSION );
 		return false;
 	}
 
 	/* copy the system interface across */
-	g_system = *sysIn;
+	globalSystem = *sysIn;
 
 	/* and now setup our engine interface */
-	engOut->Initialize = Engine_Initialize;
-	engOut->Shutdown = Engine_Shutdown;
-	engOut->Display = Engine_Display;
-	engOut->GetNumTicks = Engine_GetNumTicks;
-	engOut->IsRunning = Engine_IsRunning;
-	engOut->Tick = Engine_Tick;
-	engOut->KeyboardEvent = Engine_HandleKeyboardEvent;
-	engOut->TextEvent = Engine_HandleTextEvent;
+	static EngineInterface engineInterface = {
+	        .version = BASE_INTERFACE_VERSION,
+	        .Initialize = Engine_Initialize,
+	        .Shutdown = Engine_Shutdown,
+	        .Display = Engine_Display,
+	        .GetNumTicks = Engine_GetNumTicks,
+	        .IsRunning = Engine_IsRunning,
+	        .Tick = Engine_Tick,
+	        .KeyboardEvent = Engine_HandleKeyboardEvent,
+	        .TextEvent = Engine_HandleTextEvent,
+	        .GetSystemInterface = GetSystemInterface,
+	        .GetGameInterface = GetGameInterface,
+	};
 
-	return true;
+	return &engineInterface;
 }

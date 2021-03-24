@@ -13,7 +13,7 @@ file(GLOB ENGINE_SOURCE_FILES
 add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         actors/actor_light.c
         actors/actor_player.c
-        actors/actor_trigger_volume.c
+        actors/TriggerVolume.c
 
         renderer/camera.c
         renderer/flare.c

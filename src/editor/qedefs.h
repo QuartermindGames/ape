@@ -45,12 +45,21 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define EDITOR_VERSION_STR	"v" TOSTRING( EDITOR_VERSION_MAJOR ) "." \
 								TOSTRING( EDITOR_VERSION_MINOR ) "." \
 								TOSTRING( EDITOR_VERSION_PATCH )
-#if defined( _DEBUG )
-#	define EDITOR_TITLE		"FoxEd [DEBUG] " EDITOR_VERSION_STR
+#if !defined( NDEBUG )
+#	define EDITOR_TITLE		"Yin World Editor [DEBUG " EDITOR_VERSION_STR "]"
 #else
-#	define EDITOR_TITLE		"FoxEd " EDITOR_VERSION_STR
+#	define EDITOR_TITLE		"FoxEd [" EDITOR_VERSION_STR "]"
 #endif
 #define EDITOR_CONFIG		"editor.cfg"
+#define EDITOR_LOG_PATH     "./log_editor.txt"
+
+extern unsigned int
+        LOG_LEVEL_INFO,
+        LOG_LEVEL_WARNING,
+        LOG_LEVEL_ERROR;
+#define LMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define LWarn( ... ) plLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
+#define LError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ )
 
 #define QE3_STYLE (WS_OVERLAPPED| WS_CAPTION | WS_THICKFRAME | \
 		/* WS_MINIMIZEBOX | */ WS_MAXIMIZEBOX  | WS_CLIPSIBLINGS | \

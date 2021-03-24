@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "Common.h"
 
 PL_EXTERN_C
 
@@ -100,7 +100,21 @@ extern NLNode *NL_PushBackVec4( NLNode *parent, const char *name, const PLVector
 	          : NL_PushBackVec3,               \
 	            PLVector4 *                    \
 	          : NL_PushBackVec4 )( ROOT, NAME, VAR )
-#else
+#endif
+
+extern void NL_DestroyNode( NLNode *node );
+
+extern NLNode *NL_LoadFile( const char *path, const char *objectType );
+extern void NL_WriteFile( const char *path, NLNode *root, NLFileType fileType );
+
+extern NLNode *NL_ParseBuffer( const char *buf, size_t length );
+
+/* debugging */
+extern void NL_PrintNodeTree( NLNode *node, int index );
+
+PL_EXTERN_C_END
+
+#ifdef __cplusplus
 static inline NLNode *NL_PushBackArray( NLNode *parent, const char *name, const int *array, unsigned int numElements ) {
 	return NL_PushBackIntArray( parent, name, array, numElements );
 }
@@ -129,15 +143,3 @@ static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, con
 	return NL_PushBackVec4( parent, name, var );
 }
 #endif
-
-extern void NL_DestroyNode( NLNode *node );
-
-extern NLNode *NL_LoadFile( const char *path, const char *objectType );
-extern void NL_WriteFile( const char *path, NLNode *root, NLFileType fileType );
-
-extern NLNode *NL_ParseBuffer( const char *buf, size_t length );
-
-/* debugging */
-extern void NL_PrintNodeTree( NLNode *node, int index );
-
-PL_EXTERN_C_END

@@ -8,7 +8,7 @@ message("Configuring Yin...")
 
 # Set all of our output directories.
 
-include_directories(src/shared/)
+include_directories(src/)
 include_directories(src/common/include/)
 
 include(DetermineTargetArchitecture.cmake)
@@ -37,12 +37,15 @@ elseif (NOT APPLE) # assume linux
     endif ()
 endif ()
 
+# external libraries
 add_subdirectory(src/3rdparty/platform/platform/)
 add_subdirectory(src/3rdparty/fox-1.6.57/)
 
+# main projects
 add_subdirectory(src/launcher_sdl2/)
 add_subdirectory(src/common/)
 add_subdirectory(src/engine/)
+add_subdirectory(src/game/)
 
 # tools
 add_subdirectory(src/pkgman/)

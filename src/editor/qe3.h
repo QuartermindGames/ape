@@ -52,6 +52,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdlib.h>
 #include <stdint.h>
 
+// Common Interface
+#include "common/Common.h"
+#include "common/Node.h"
+
+#include <PL/platform_console.h>
+
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "parse.h"
@@ -107,7 +113,6 @@ typedef struct {
 //
 void    Sys_UpdateStatusBar( void );
 void    Sys_UpdateWindows( int bits );
-void    Sys_Beep( void );
 void    Sys_ClearPrintf( void );
 void    Sys_Printf( const char *text, ... );
 double	Sys_DoubleTime( void );
@@ -203,9 +208,6 @@ void ConnectEntities( void );
 
 extern	int	update_bits;
 
-extern	int	screen_width;
-extern	int	screen_height;
-
 extern	void*	bsp_process;
 
 char *TranslateString( char *buf );
@@ -213,7 +215,6 @@ char *TranslateString( char *buf );
 void ProjectDialog( void );
 
 void FillTextureMenu( void );
-void FillBSPMenu( void );
 
 //
 // entityw.c

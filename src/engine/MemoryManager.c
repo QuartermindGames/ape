@@ -47,7 +47,7 @@ void Mem_Initialize( void ) {
 }
 
 MemRefCnt *MemRefCnt_Setup( MemRefCnt_CleanupFunction cleanupFunction, void *userData ) {
-    MemRefCnt *ref = AllocMemory( sizeof( MemRefCnt ), true );
+    MemRefCnt *ref = globalSystem.MAlloc( sizeof( MemRefCnt ), true );
     ref->userData = userData;
     ref->cleanupFunction = cleanupFunction;
     return ref;

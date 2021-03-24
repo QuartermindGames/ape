@@ -8,13 +8,10 @@
 #include "yin.h"
 #include "actor.h"
 #include "font.h"
-#include "game.h"
+#include "GameInterface.h"
 #include "image.h"
 #include "map.h"
 #include "renderer.h"
-
-/* config vars */
-extern PLConsoleVariable *gVarGraphicsFXAA;
 
 static PLCamera *auxCamera = NULL;
 
@@ -255,7 +252,7 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 	}
 
 	/* allocate and return our program index */
-	ShaderProgramIndex *out = Sys_malloc( sizeof( ShaderProgramIndex ) );
+	ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
 	*out = program;
 	return out;
 }
@@ -267,7 +264,7 @@ static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
 		return;
 	}
 
-	PrintMsg( "Parsing \"%s\"\n", path );
+	Print( "Parsing \"%s\"\n", path );
 	ShaderProgramIndex *program = Gfx_ParseShaderProgram( file );
 
 	plCloseFile( file );
@@ -296,7 +293,7 @@ static void Gfx_InitializeShaderPrograms( void ) {
 
 	plScanDirectory( "materials/shaders", "prg", Gfx_LoadShaderProgram, false, NULL );
 
-	PrintMsg( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
+	Print( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
 
 	/* now fetch the default programs */
 	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
@@ -460,7 +457,7 @@ static void Gfx_SetupShadowMap( void ) {
 }
 
 void Gfx_Initialize( void ) {
-	PrintMsg( "Initializing Gfx...\n" );
+	Print( "Initializing Gfx...\n" );
 
 	plSetGraphicsMode( PL_GFX_MODE_OPENGL_CORE );
 
@@ -508,6 +505,27 @@ static void Gfx_DrawViewSprite( void ) {
 static PLFrameBuffer *ppBuffer = NULL;
 static PLTexture *ppAttachment = NULL;
 
+/**
+ * Where the magic of post processing happens.
+ */
+static void Gfx_DrawScreenBuffer( int x, int y, int w, int h ) {
+	/* and now display the scene onto the screen */
+	plPushMatrix();
+	plLoadIdentityMatrix();
+
+	CVar( "graphics.fxaa", fxaaMode );
+	if ( fxaaMode->b_value ) {
+		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+		plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+	} else {
+		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	}
+	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
+
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, ppAttachment );
+	plPopMatrix();
+}
+
 void Gfx_DrawMenu( void ) {
 	SysWindow *window = Engine_GetMainWindow();
 	if ( window == NULL ) {
@@ -515,7 +533,7 @@ void Gfx_DrawMenu( void ) {
 	}
 
 	int w, h;
-	g_system.GetWindowSize( window, &w, &h );
+	globalSystem.GetWindowSize( window, &w, &h );
 	auxCamera->viewport.w = w;
 	auxCamera->viewport.h = h;
 
@@ -523,20 +541,8 @@ void Gfx_DrawMenu( void ) {
 
 	plSetDepthMask( false );
 
-	/* and now display the scene onto the screen */
-	plPushMatrix();
-	plLoadIdentityMatrix();
-	if ( gVarGraphicsFXAA->b_value ) {
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
-		plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
-	} else {
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-	}
-	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, ppAttachment );
-	plPopMatrix();
+	Gfx_DrawScreenBuffer( 0, 0, w, h );
 
-#ifndef DEBUG_CAM
 	switch ( Game_GetMenuState() ) {
 		default:
 			PrintError( "Invalid menu state!\n" );
@@ -547,7 +553,6 @@ void Gfx_DrawMenu( void ) {
 		case MENU_STATE_HUD:
 			break;
 	}
-#endif
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	plSetBlendMode( PL_BLEND_DEFAULT );

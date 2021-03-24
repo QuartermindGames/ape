@@ -144,24 +144,24 @@ PLModel *MD2_LoadFile( const char *path ) {
 	plReadFile( file, skin, sizeof( MD2Skin ), 1 );
 
 	/* and now read in all the tex coordinates */
-	MD2TexCoord *texCoords = ( MD2TexCoord * ) AllocMemory( sizeof( MD2TexCoord ) * header.numST, true );
+	MD2TexCoord *texCoords = ( MD2TexCoord * ) globalSystem.MAlloc( sizeof( MD2TexCoord ) * header.numST, true );
 	plFileSeek( file, header.offsetST, PL_SEEK_SET );
 	plReadFile( file, texCoords, sizeof( MD2TexCoord ), header.numST );
 
 	/* triangles */
-	MD2Triangle *triangles = ( MD2Triangle * ) AllocMemory( sizeof( MD2Triangle ) * header.numTriangles, true );
+	MD2Triangle *triangles = ( MD2Triangle * ) globalSystem.MAlloc( sizeof( MD2Triangle ) * header.numTriangles, true );
 	plFileSeek( file, header.offsetTriangles, PL_SEEK_SET );
 	plReadFile( file, triangles, sizeof( MD2Triangle ), header.numTriangles );
 
 	/* frames */
-	MD2Frame *frames = ( MD2Frame * ) AllocMemory( sizeof( MD2Frame ) * header.numFrames, true );
+	MD2Frame *frames = ( MD2Frame * ) globalSystem.MAlloc( sizeof( MD2Frame ) * header.numFrames, true );
 	plFileSeek( file, header.offsetFrames, PL_SEEK_SET );
 	for ( unsigned int i = 0; i < header.numFrames; ++i ) {
 		plReadFile( file, &frames[ i ].scale, sizeof( PLVector3 ), 1 );
 		plReadFile( file, &frames[ i ].translate, sizeof( PLVector3 ), 1 );
 		plReadFile( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
 
-        frames[ i ].vertices = ( MD2Vertex * ) AllocMemory( sizeof( MD2Vertex ) * header.numVertices, true );
+        frames[ i ].vertices = ( MD2Vertex * ) globalSystem.MAlloc( sizeof( MD2Vertex ) * header.numVertices, true );
 		plReadFile( file, frames[ i ].vertices, sizeof( MD2Vertex ), header.numVertices );
 	}
 

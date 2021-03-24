@@ -30,9 +30,9 @@ static void Editor_MountTexturePackageCallback( const char *path, void *userData
 }
 
 void Editor_Initialize( void ) {
-	PrintMsg( "Initializing Editor...\n" );
+	Print( "Initializing Editor...\n" );
 
-	PrintMsg( "Mounting textures\n" );
+	Print( "Mounting textures\n" );
 	plScanDirectory( "Textures/", "pkg", Editor_MountTexturePackageCallback, false, NULL );
 
 	Map_ClearData();
@@ -46,13 +46,13 @@ void Editor_Initialize( void ) {
 	editorViewports[ VIEW_PERSPECTIVE_EYE ] = Engine_GetMainWindow();
 	editorCameras[ VIEW_PERSPECTIVE_EYE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_EYE ] );
 
-	editorViewports[ VIEW_PERSPECTIVE_TOP ] = g_system.CreateWindow( "Top", 640, 480 );
+	editorViewports[ VIEW_PERSPECTIVE_TOP ] = globalSystem.CreateWindow( "Top", 640, 480 );
 	editorCameras[ VIEW_PERSPECTIVE_TOP ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_TOP ] );
 
-	editorViewports[ VIEW_PERSPECTIVE_SIDE ] = g_system.CreateWindow( "Side", 640, 480 );
+	editorViewports[ VIEW_PERSPECTIVE_SIDE ] = globalSystem.CreateWindow( "Side", 640, 480 );
 	editorCameras[ VIEW_PERSPECTIVE_SIDE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_SIDE ] );
 
-	editorViewports[ VIEW_PERSPECTIVE_FRONT ] = g_system.CreateWindow( "Front", 640, 480 );
+	editorViewports[ VIEW_PERSPECTIVE_FRONT ] = globalSystem.CreateWindow( "Front", 640, 480 );
 	editorCameras[ VIEW_PERSPECTIVE_FRONT ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_FRONT ] );
 
 	editorIsInitialized = true;
@@ -65,44 +65,44 @@ static void Editor_Input( void ) {
 	/* handle camera input */
 	GfxCamera *curCamera = editorCameras[ curEditorCamera ];
 	if ( curCamera != NULL ) {
-		if ( g_system.GetButtonState( INPUT_UP ) ) {
+		if ( globalSystem.GetButtonState( INPUT_UP ) ) {
 			if ( curCamera->perspective == VIEW_PERSPECTIVE_EYE ) {
 				curCamera->internalPtr->position.x += 1.0f;
 			} else {
 				curCamera->internalPtr->position.y += 1.0f;
 			}
-		} else if ( g_system.GetButtonState( INPUT_DOWN ) ) {
+		} else if ( globalSystem.GetButtonState( INPUT_DOWN ) ) {
 
-		} else if ( g_system.GetButtonState( INPUT_LEFT ) ) {
+		} else if ( globalSystem.GetButtonState( INPUT_LEFT ) ) {
 
-		} else if ( g_system.GetButtonState( INPUT_RIGHT ) ) {
+		} else if ( globalSystem.GetButtonState( INPUT_RIGHT ) ) {
 
 		}
 	}
 
-	if ( g_system.GetKeyState( '1' ) ) {
+	if ( globalSystem.GetKeyState( '1' ) ) {
 		editorGridSize = 1;
-	} else if ( g_system.GetKeyState( '2' ) ) {
+	} else if ( globalSystem.GetKeyState( '2' ) ) {
 		editorGridSize = 2;
-	} else if ( g_system.GetKeyState( '3' ) ) {
+	} else if ( globalSystem.GetKeyState( '3' ) ) {
 		editorGridSize = 3;
-	} else if ( g_system.GetKeyState( '4' ) ) {
+	} else if ( globalSystem.GetKeyState( '4' ) ) {
 		editorGridSize = 4;
-	} else if ( g_system.GetKeyState( '5' ) ) {
+	} else if ( globalSystem.GetKeyState( '5' ) ) {
 		editorGridSize = 5;
-	} else if ( g_system.GetKeyState( '6' ) ) {
+	} else if ( globalSystem.GetKeyState( '6' ) ) {
 		editorGridSize = 6;
-	} else if ( g_system.GetKeyState( '7' ) ) {
+	} else if ( globalSystem.GetKeyState( '7' ) ) {
 		editorGridSize = 7;
-	} else if ( g_system.GetKeyState( '8' ) ) {
+	} else if ( globalSystem.GetKeyState( '8' ) ) {
 		editorGridSize = 8;
-	} else if ( g_system.GetKeyState( '9' ) ) {
+	} else if ( globalSystem.GetKeyState( '9' ) ) {
 		editorGridSize = 9;
-	} else if ( g_system.GetKeyState( '0' ) ) {
+	} else if ( globalSystem.GetKeyState( '0' ) ) {
 		editorGridSize = 10;
 	}
 
-	if ( g_system.GetButtonState( INPUT_LEFT_STICK ) ) { /* swap between the cameras */
+	if ( globalSystem.GetButtonState( INPUT_LEFT_STICK ) ) { /* swap between the cameras */
 		if ( inputDelay >= Engine_GetNumTicks() ) {
 			return;
 		}
@@ -112,7 +112,7 @@ static void Editor_Input( void ) {
 			curEditorCamera = 0;
 		}
 
-		PrintMsg( "Selected camera %d (%s)\n", curEditorCamera, Gfx_GetPerspectiveDescription( editorCameras[ curEditorCamera ]->perspective ) );
+		Print( "Selected camera %d (%s)\n", curEditorCamera, Gfx_GetPerspectiveDescription( editorCameras[ curEditorCamera ]->perspective ) );
 
 		inputDelay = Engine_GetNumTicks() + maxDelay;
 	}

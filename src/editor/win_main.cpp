@@ -1,6 +1,7 @@
 /*
 ===========================================================================
 Copyright (C) 1997-2006 Id Software, Inc.
+Copyright (C) 2020-2021 OldTimes Software
 
 This file is part of Quake 2 Tools source code.
 
@@ -41,7 +42,6 @@ extern void WXY_Print( void );
 ==============================================================================
 */
 
-void OpenDialog( void );
 void SaveAsDialog( void );
 qboolean ConfirmModified( void );
 void  Select_Ungroup( void );
@@ -926,7 +926,7 @@ long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
 		EDITOR_TITLE " is a level editor created for the Yin Game Engine.\n"
 		"This software uses the FOX C++ GUI Library (http://www.fox-toolkit.org)\n\n"
 		"Copyright (C) 1997-2001 Id Software, Inc.\n"
-		"Copyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n",
+		"Copyright (C) 2020-2021 OldTimes Software\n",
 		icon,
 		MBOX_OK | DECOR_TITLE | DECOR_BORDER
 	);

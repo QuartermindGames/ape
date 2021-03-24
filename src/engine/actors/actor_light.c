@@ -7,7 +7,7 @@
 #include "actor_light.h"
 
 void Light_Spawn( Actor *self ) {
-	ALight *lightData = Sys_calloc( 1, sizeof( ALight ) );
+	ALight *lightData = globalSystem.MAlloc( sizeof( ALight ), true );
 	Act_SetUserData( self, lightData );
 
 	/* for now, just randomise the light colours */

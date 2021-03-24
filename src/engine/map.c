@@ -76,7 +76,7 @@ static void Map_ParseTextures( PLFile *file ) {
 	}
 
 	/* allocate storage for them */
-	mapData.materials = Sys_calloc( mapData.numMaterials, sizeof( Material* ) );
+	mapData.materials = globalSystem.CAlloc( mapData.numMaterials, sizeof( Material* ), true );
 
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
@@ -107,7 +107,7 @@ static void Map_ParseVertices( PLFile *file ) {
 	}
 
 	/* allocate buffer for vertices and then read them all in */
-	mapData.vertices = Sys_calloc( mapData.numVertices, sizeof( PLVertex ) );
+	mapData.vertices = globalSystem.CAlloc( mapData.numVertices, sizeof( PLVertex ), true );
 	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
@@ -140,7 +140,7 @@ static void Map_ParseFaces( PLFile *file ) {
 	}
 
 	/* allocate buffer for faces and then read them all in */
-	mapData.faces = Sys_calloc( mapData.numFaces, sizeof( MapFace ) );
+	mapData.faces = globalSystem.CAlloc( mapData.numFaces, sizeof( MapFace ), true );
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
 		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
 			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
@@ -222,7 +222,7 @@ void Map_ParseSectors( PLFile *file ) {
 	//}
 
 	mapData.numSectors = 1;
-	mapData.sectors = Sys_calloc( mapData.numSectors, sizeof( MapSector ) );
+	mapData.sectors = globalSystem.CAlloc( mapData.numSectors, sizeof( MapSector ), true );
 
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */

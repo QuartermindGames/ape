@@ -9,7 +9,7 @@
 #include <PL/platform_math.h>
 #include <PL/pl_parse.h>
 
-#include "common/wld.h"
+#include "common/World.h"
 
 #define VERSION "0.1"
 #define dprint( ... ) printf( __VA_ARGS__ )
