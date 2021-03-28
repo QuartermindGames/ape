@@ -123,6 +123,7 @@ typedef struct SystemInterface {
 	void *( *CAlloc )( size_t num, size_t size, bool abortOnFail );
 	void *( *MAlloc )( size_t size, bool abortOnFail );
 	void *( *ReAlloc )( void *ptr, size_t newSize, bool abortOnFail );
+	void ( *Free )( void *ptr );
 
 	void ( *Shutdown )( void );
 } SystemInterface;

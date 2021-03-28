@@ -20,6 +20,9 @@ static PLFrameBuffer *smDepthBuffer = NULL;
 static PLTexture *smTexture;
 static PLCamera *smCamera;
 
+#define NUM_GRAPH_POINTS 32
+static float msGraph[ NUM_GRAPH_POINTS ];
+
 /* Post Processing */
 
 static void GenerateScreenBuffer( PLFrameBuffer **buffer, PLTexture **attachment, unsigned int w, unsigned int h ) {
@@ -461,6 +464,8 @@ void Gfx_Initialize( void ) {
 
 	plSetGraphicsMode( PL_GFX_MODE_OPENGL_CORE );
 
+	memset( msGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
+
 	/* create both the interface camera and player camera */
 
 	Gfx_InitializeShaderPrograms();
@@ -468,7 +473,7 @@ void Gfx_Initialize( void ) {
 	RT_InitializeTextures();
 	RM_InitializeMaterialSystem();
 
-    Font_Initialize();
+	Font_Initialize();
 
 	Gfx_InitializeCameras();
 
@@ -484,7 +489,7 @@ void Gfx_Initialize( void ) {
 	Gfx_SetupDefaultState();
 }
 
-void Gfx_Shutdown( void ) {
+void R_Shutdown( void ) {
 	Gfx_ShutdownCameras();
 	Font_Shutdown();
 	RM_ShutdownMaterialSystem();
@@ -508,7 +513,7 @@ static PLTexture *ppAttachment = NULL;
 /**
  * Where the magic of post processing happens.
  */
-static void Gfx_DrawScreenBuffer( int x, int y, int w, int h ) {
+static void R_DrawScreenBuffer( int x, int y, int w, int h ) {
 	/* and now display the scene onto the screen */
 	plPushMatrix();
 	plLoadIdentityMatrix();
@@ -526,6 +531,63 @@ static void Gfx_DrawScreenBuffer( int x, int y, int w, int h ) {
 	plPopMatrix();
 }
 
+void R_DrawGraph( const char *heading, float x, float y, float w, float h, float *values, unsigned int numPoints, float min, float max ) {
+	if ( numPoints < 2 ) {
+		return;
+	}
+
+	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+
+	for ( unsigned int i = 0; i < numPoints; ++i ) {
+		if ( values[ i ] > max ) {
+			max = values[ i ];
+		}
+		if ( values[ i ] < min ) {
+			min = values[ i ];
+		}
+	}
+
+	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
+	PLVector3 *points = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
+
+	/* convert the values we've been provided into points in our graph */
+	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ ) {
+		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * (j-1) );
+		if ( min != max ) {
+			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
+		}
+		++i;
+
+		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * j );
+		if ( min != max ) {
+			points[ i ].y = y + h - 1 - ( ( values[ j ] - min ) * ( h / ( max - min ) ) );
+		}
+		/* leave z, it'll be initialized as 0 */
+	}
+
+	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 128, 0, 0, 128 ) );
+	plDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
+
+	BitmapFont *font = Font_GetDefault();
+	if ( font != NULL ) {
+		size_t len = strlen( heading );
+		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+		Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, true );
+
+		/* metrics */
+		char buf[ 128 ];
+		snprintf( buf, sizeof( buf ),
+		          "min: %02f\n"
+		          "max: %02f\n"
+		          "cur: %02f",
+		          min, max,
+		          values[ numPoints - 1 ] );
+		Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf, false );
+	}
+
+	globalSystem.Free( points );
+}
+
 void Gfx_DrawMenu( void ) {
 	SysWindow *window = Engine_GetMainWindow();
 	if ( window == NULL ) {
@@ -541,18 +603,7 @@ void Gfx_DrawMenu( void ) {
 
 	plSetDepthMask( false );
 
-	Gfx_DrawScreenBuffer( 0, 0, w, h );
-
-	switch ( Game_GetMenuState() ) {
-		default:
-			PrintError( "Invalid menu state!\n" );
-		case MENU_STATE_START:
-			plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-			//plDrawTexturedRectangle( &transform, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, titlePicTexture );
-			break;
-		case MENU_STATE_HUD:
-			break;
-	}
+	R_DrawScreenBuffer( 0, 0, w, h );
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	plSetBlendMode( PL_BLEND_DEFAULT );
@@ -562,32 +613,44 @@ void Gfx_DrawMenu( void ) {
 
 	plLoadIdentityMatrix();
 
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
+	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
+
+	for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) {
+		msGraph[ i ] = msGraph[ i + 1 ];
+	}
+	msGraph[ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( PROFILE_DRAW_MAP );
+	R_DrawGraph( PL_TOSTRING( PROFILE_DRAW_MAP ), w - 512.0f, 0.0f, 512.0f, 64.0f, msGraph, NUM_GRAPH_POINTS, 0.0f, 10.0f );
 
 	plPopMatrix();
 
-	static const char spinning[] = {
-	        '\\', '|', '/', '-', '/', '-' };
-	static int pos = 0;
-	Font_DrawBitmapCharacter( Font_GetDefault(), 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
-	if ( pos >= sizeof( spinning ) ) {
-		pos = 0;
-	}
+	BitmapFont *defaultFont = Font_GetDefault();
+	if ( defaultFont != NULL ) {
+		static const char spinning[] = {
+		        '\\', '|', '/', '-', '/', '-' };
+		static int pos = 0;
+		Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
+		if ( pos >= sizeof( spinning ) ) {
+			pos = 0;
+		}
 
-	char buf[ 256 ];
-	snprintf( buf, sizeof( buf ),
-	          "Position:        %d %d %d\n"
-	          "Current Node:    0\n"
-	          "Num Faces Drawn: %d\n"
-	          "Num Batches:     %d\n"
-	          "Map Draw Time:   %lf\n",
-	          ( int ) g_gfxPerfStats.cameraPos.x,
-	          ( int ) g_gfxPerfStats.cameraPos.y,
-	          ( int ) g_gfxPerfStats.cameraPos.z,
-	          g_gfxPerfStats.numFacesDrawn,
-	          g_gfxPerfStats.numBatches,
-	          CPUTimer_GetMeasure( PROFILE_DRAW_MAP ) );
-	Font_DrawBitmapString( Font_GetDefault(), 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+#if 0
+		char buf[ 256 ];
+		snprintf( buf, sizeof( buf ),
+		          "Position:        %d %d %d\n"
+		          "Current Node:    0\n"
+		          "Num Faces Drawn: %d\n"
+		          "Num Batches:     %d\n",
+		          ( int ) g_gfxPerfStats.cameraPos.x,
+		          ( int ) g_gfxPerfStats.cameraPos.y,
+		          ( int ) g_gfxPerfStats.cameraPos.z,
+		          g_gfxPerfStats.numFacesDrawn,
+		          g_gfxPerfStats.numBatches );
+		Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+#endif
+
+		Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+		                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
+	}
 
 	plSetBlendMode( PL_BLEND_DISABLE );
 

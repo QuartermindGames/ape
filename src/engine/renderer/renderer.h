@@ -56,7 +56,7 @@ extern PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 #include "material.h"
 
 void Gfx_Initialize( void );
-void Gfx_Shutdown( void );
+void R_Shutdown( void );
 void Gfx_SetupDefaultState( void );
 void Gfx_DrawMenu( void );
 

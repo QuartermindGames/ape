@@ -523,8 +523,6 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 		}
 
 		RM_DrawMesh( material, renderMesh );
-
-		g_gfxPerfStats.numBatches++;
 	}
 }
 

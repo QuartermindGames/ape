@@ -145,5 +145,5 @@ void Editor_Display( void ) {
 
 void Editor_Shutdown( void ) {
 	Act_Shutdown();
-	Gfx_Shutdown();
+	R_Shutdown();
 }

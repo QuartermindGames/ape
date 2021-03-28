@@ -5,7 +5,12 @@
 
 #pragma once
 
-typedef struct BitmapFont BitmapFont;
+typedef struct BitmapFont {
+	struct Material *material;
+	int w, h, cw, ch;
+	char path[ PL_SYSTEM_MAX_PATH ];
+	unsigned int start, end;
+} BitmapFont;
 
 void Font_Initialize( void );
 void Font_Shutdown( void );

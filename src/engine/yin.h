@@ -23,9 +23,8 @@
 #define ENGINE_VERSION_PATCH 0
 
 extern const int ENGINE_VERSION[ 3 ];
-#define ENGINE_VERSION_STR              \
-	PL_TOSTRING( ENGINE_VERSION_MAJOR ) \
-	"." PL_TOSTRING( ENGINE_VERSION_MINOR ) "." PL_TOSTRING( ENGINE_VERSION_PATCH )
+#define ENGINE_VERSION_STR PL_TOSTRING( ENGINE_VERSION_MAJOR ) \
+"." PL_TOSTRING( ENGINE_VERSION_MINOR ) "." PL_TOSTRING( ENGINE_VERSION_PATCH )
 
 extern int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
@@ -80,9 +79,9 @@ typedef struct SysWindow SysWindow;
 #define PrintWarn( ... ) plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
 #define Print( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 #if !defined( NDEBUG )
-#   define DebugMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define DebugMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 #else
-#   define DebugMsg( ... )
+#define DebugMsg( ... )
 #endif
 
 extern PLPackage *globalWad;

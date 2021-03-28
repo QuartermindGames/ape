@@ -133,7 +133,7 @@ void Engine_Shutdown( void ) {
 
 	Game_Shutdown();
 	Act_Shutdown();
-	Gfx_Shutdown();
+	R_Shutdown();
 	Con_Shutdown();
 #if defined( DISCORD_INTEGRATION )
 	void DiscordIntegration_Shutdown( void );

@@ -308,6 +308,10 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
 	return buf;
 }
 
+void Sys_free( void *ptr ) {
+	free( ptr );
+}
+
 /* wrappers for platform lib */
 void *Sys_WMAlloc( size_t size ) { return Sys_malloc( size, true ); }
 void *Sys_WCAlloc( size_t num, size_t size ) { return Sys_calloc( num, size, true ); }
@@ -370,6 +374,7 @@ static void Sys_SetupEngineInterface( void ) {
 	        .CAlloc = Sys_calloc,
 	        .MAlloc = Sys_malloc,
 	        .ReAlloc = Sys_realloc,
+	        .Free = Sys_free,
 	};
 
 	/* initialize the interface */
@@ -391,6 +396,7 @@ int Sys_Init( int argc, char **argv ) {
 	pl_calloc = Sys_WCAlloc;
 	pl_malloc = Sys_WMAlloc;
 	pl_realloc = Sys_WReAlloc;
+	pl_free = Sys_free;
 
 	/* initialize the platform library */
 	plInitialize( argc, argv );

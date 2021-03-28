@@ -366,7 +366,6 @@ void Act_TickActors( void ) {
 					actor->position = plAddVector3( actor->position, plScaleVector3f( plNormalizeVector3( collision.contactNormal ), collision.penetration / GRAVITY ) );
 
 					float d = plRadiansToDegrees( plVector3Length( plNormalizeVector3( collision.contactNormal ) ) );
-					printf( "%f\n", d );
 
                     PLLinkedListNode *node = plInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
 					if ( node == NULL ) {

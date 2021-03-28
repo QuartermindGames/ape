@@ -7,12 +7,6 @@
 #include "font.h"
 #include "renderer.h"
 
-typedef struct BitmapFont {
-    Material *material;
-    int w, h, cw, ch;
-    char path[ PL_SYSTEM_MAX_PATH ];
-	unsigned int start, end;
-} BitmapFont;
 static BitmapFont *defaultFont;
 
 static PLMesh *renderMesh;
