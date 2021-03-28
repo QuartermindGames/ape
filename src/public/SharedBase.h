@@ -165,7 +165,7 @@ typedef GameInterface *( *DllGameInterface )( uint32_t version, const SystemInte
 
 #define u_unused( a ) ( void ) ( ( a ) )
 
-#if defined( _DEBUG )
+#if !defined( NDEBUG )
 #include <assert.h>
 #define u_assert( A ) assert( ( A ) )
 #else

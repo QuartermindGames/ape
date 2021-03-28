@@ -509,6 +509,7 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 				                   curIndex[ 2 ] + renderMesh->num_verts - numVertices );
 				curIndex += 3;
 			}
+			globalSystem.Free( indices );
 
 			g_gfxPerfStats.numFacesDrawn++;
 		}
