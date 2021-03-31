@@ -81,6 +81,11 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
 	plRegisterPackageLoader( "map", Pkg_LoadPackage );
 
+	Print( "Registering plugins...\n" );
+
+	plRegisterPlugins( "./" );
+	plInitializePlugins();
+
 	Print( "Mounting VFS locations...\n" );
 
 	plMountLocalLocation( FS_GetDataDirectory() );

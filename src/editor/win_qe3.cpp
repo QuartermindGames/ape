@@ -368,8 +368,9 @@ int main( int argc, char **argv ) {
 		ParseCommandLine( lpCmdLine );
 		if ( !QE_LoadProject( argv[ 1 ] ) )
 			Error( "Couldn't load %s project file", argv[ 1 ] );
-	} else if ( !QE_LoadProject( EDITOR_CONFIG ) )
+	} else if ( !QE_LoadProject( EDITOR_CONFIG ) ) {
 		Error( "Couldn't load \"" EDITOR_CONFIG "\" project file" );
+	}
 
 	QE_Init();
 
