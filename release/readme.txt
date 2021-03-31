@@ -1,6 +1,6 @@
 =================================================================
 Project Yin
-	Written by Mark "hogsy" Sowden (markelswo@gmail.com)
+	Written by Mark Sowden (hogsy@oldtimes-software.com)
 =================================================================
 
 What is this?
@@ -12,15 +12,18 @@ What is this?
 	What you're looking at is obviously a work-in-progress.
 
 	Runtime
-        	platform        - Support library; provides graphics abstraction, file I/O and more
+        libplatform     - Support library; provides graphics abstraction, file I/O and more
+        libopengl       - Provides support for OpenGL for rendering
+        common          - Foundational systems shared between everything
 		launcher_sdl2   - SDL2 input, windowing and other OS tasks
 		engine          - The engine itself, Yin
-		common          - Foundational systems shared between everything
+		game            - Game sub-system; holds all the game-specific logic
 
 	Tools
-	    	ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
-	    	pkgman          - Used to generate .pkg files (most files are automatically compressed)
-	    	qmap2world      - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
+        ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
+        pkgman          - Used to generate .pkg files (most files are automatically compressed)
+        qmap2world      - Converts a .map file (exported from J.A.C.K.) to Yin's .wld format
+        editor          - World editor
 
 What can I do with it?
 -----------------------------------------------------------------
@@ -29,9 +32,8 @@ What can I do with it?
 	have mixed results until Yin's editor is finished.
 
 	I don't currently have plans to make the source code for
-	the engine available, however I do plan on supporting Lua
-	for scripting - when that arrives you will be able to do
-	lots more!
+	the engine available, however I do plan on supporting a
+	custom scripting language.
 
 Instructions
 -----------------------------------------------------------------
@@ -125,7 +127,8 @@ Using pkgman
 	add <path>
 		Adds the specified file to the package.
 	addv <path> <type> ...
-	    A slightly more
+	    A slightly more verbose version of add, which
+	    can be used to specify compression format etc.
 	dir <path> <extension>
 		This will add all files with the extension 
 		provided found under the specified directory.
@@ -160,7 +163,7 @@ PKG
 
 WLD [> NODE]
 	Levels in Yin or "worlds" as they're referred to are
-	hierarchical, every brush can have a child entity/brush and
+	hierarchical, every "brush" can have a child entity/brush and
 	every entity could have a child entity/brush - there
 	are no limitations (hell you could have an entire sector as a 
 	child to an entity).

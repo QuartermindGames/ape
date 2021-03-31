@@ -59,4 +59,4 @@ endif ()
 
 target_link_libraries(engine common platform SDL2)
 
-file(COPY public/GameInterface.h DESTINATION ${CMAKE_HOME_DIRECTORY}/release/scripts/)
+#file(COPY public/GameInterface.h DESTINATION ${CMAKE_HOME_DIRECTORY}/release/scripts/)

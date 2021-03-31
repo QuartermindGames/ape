@@ -8,7 +8,6 @@
 #include "yin.h"
 #include "actor.h"
 #include "font.h"
-#include "GameInterface.h"
 #include "image.h"
 #include "map.h"
 #include "renderer.h"
@@ -21,7 +20,8 @@ static PLTexture *smTexture;
 static PLCamera *smCamera;
 
 #define NUM_GRAPH_POINTS 32
-static float msGraph[ NUM_GRAPH_POINTS ];
+static float msWorldGraph[ NUM_GRAPH_POINTS ];
+static float memoryGraph[ NUM_GRAPH_POINTS ];
 
 /* Post Processing */
 
@@ -462,9 +462,10 @@ static void Gfx_SetupShadowMap( void ) {
 void Gfx_Initialize( void ) {
 	Print( "Initializing Gfx...\n" );
 
-	plSetGraphicsMode( PL_GFX_MODE_OPENGL_CORE );
+	plSetGraphicsMode( "opengl" );
 
-	memset( msGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
+	memset( msWorldGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
+	memset( memoryGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
 
 	/* create both the interface camera and player camera */
 
@@ -538,6 +539,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 
 	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
+	float oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i ) {
 		if ( values[ i ] > max ) {
 			max = values[ i ];
@@ -545,6 +547,11 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		if ( values[ i ] < min ) {
 			min = values[ i ];
 		}
+	}
+
+	bool outOfBounds = false;
+	if ( oa != min || max != ob ) {
+		outOfBounds = true;
 	}
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
@@ -582,7 +589,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		          "cur: %02f",
 		          min, max,
 		          values[ numPoints - 1 ] );
-		Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf, false );
+		Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
 	}
 
 	globalSystem.Free( points );
@@ -615,44 +622,50 @@ void Gfx_DrawMenu( void ) {
 
 	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
 
-	for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) {
-		msGraph[ i ] = msGraph[ i + 1 ];
-	}
-	msGraph[ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( PROFILE_DRAW_MAP );
-	R_DrawGraph( PL_TOSTRING( PROFILE_DRAW_MAP ), w - 512.0f, 0.0f, 512.0f, 64.0f, msGraph, NUM_GRAPH_POINTS, 0.0f, 10.0f );
+	CVar( "debug.overlay", debugOverlay );
+	if ( debugOverlay->i_value > 0 ) {
+		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) msWorldGraph[ i ] = msWorldGraph[ i + 1 ];
+		msWorldGraph[ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( PROFILE_DRAW_MAP );
+		R_DrawGraph( PL_TOSTRING( PROFILE_DRAW_MAP ), w - 512.0f, 0.0f, 512.0f, 64.0f, msWorldGraph, NUM_GRAPH_POINTS, 0.0f, 5.0f );
 
-	plPopMatrix();
+		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) memoryGraph[ i ] = memoryGraph[ i + 1 ];
+		memoryGraph[ NUM_GRAPH_POINTS - 1 ] = plBytesToMegabytes( plGetCurrentMemoryUsage() );
+		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, 1000.0f );
 
-	BitmapFont *defaultFont = Font_GetDefault();
-	if ( defaultFont != NULL ) {
-		static const char spinning[] = {
-		        '\\', '|', '/', '-', '/', '-' };
-		static int pos = 0;
-		Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
-		if ( pos >= sizeof( spinning ) ) {
-			pos = 0;
+		BitmapFont *defaultFont = Font_GetDefault();
+		if ( defaultFont != NULL ) {
+			static const char spinning[] = {
+			        '\\', '|', '/', '-', '/', '-' };
+			static int pos = 0;
+			Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
+			if ( pos >= sizeof( spinning ) ) {
+				pos = 0;
+			}
+
+			char buf[ 256 ];
+			snprintf( buf, sizeof( buf ),
+			          "Position:        %d %d %d\n"
+			          "Current Node:    0\n"
+			          "Num Faces Drawn: %d\n"
+			          "Num Batches:     %d\n"
+			          "Memory:          %.2lfmb (%.2lfmb available)",
+			          ( int ) g_gfxPerfStats.cameraPos.x,
+			          ( int ) g_gfxPerfStats.cameraPos.y,
+			          ( int ) g_gfxPerfStats.cameraPos.z,
+			          g_gfxPerfStats.numFacesDrawn,
+			          g_gfxPerfStats.numBatches,
+			          plBytesToMegabytes( plGetCurrentMemoryUsage() ),
+			          plBytesToMegabytes( plGetTotalSystemMemory() ) );
+			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+
+			Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+			                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 		}
-
-#if 0
-		char buf[ 256 ];
-		snprintf( buf, sizeof( buf ),
-		          "Position:        %d %d %d\n"
-		          "Current Node:    0\n"
-		          "Num Faces Drawn: %d\n"
-		          "Num Batches:     %d\n",
-		          ( int ) g_gfxPerfStats.cameraPos.x,
-		          ( int ) g_gfxPerfStats.cameraPos.y,
-		          ( int ) g_gfxPerfStats.cameraPos.z,
-		          g_gfxPerfStats.numFacesDrawn,
-		          g_gfxPerfStats.numBatches );
-		Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
-#endif
-
-		Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
-		                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 	}
 
 	plSetBlendMode( PL_BLEND_DISABLE );
+
+	plPopMatrix();
 
 	Con_Draw( &auxCamera->viewport );
 
@@ -714,7 +727,7 @@ static void Gfx_RenderSceneFinal( PLCamera *camera ) {
 	Gfx_RenderScene( camera, false );
 }
 
-#include <GL/gl.h>
+//#include <GL/gl.h>
 
 void Gfx_DrawScene( PLCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
@@ -722,15 +735,15 @@ void Gfx_DrawScene( PLCamera *camera ) {
 	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
 	CVar( "graphics.wireframe", wireframeMode );
-	if ( wireframeMode->b_value ) {
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	}
+	//if ( wireframeMode->b_value ) {
+	//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	//}
 
 	Gfx_RenderSceneFinal( camera );
 
-	if ( wireframeMode->b_value ) {
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	}
+	//if ( wireframeMode->b_value ) {
+	//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//}
 
 	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
 }

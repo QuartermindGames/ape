@@ -181,6 +181,9 @@ static void SaveUserConfig( void ) {
 void Con_Initialize( void ) {
 	plSetConsoleOutputCallback( Con_OutputCallback );
 
+	/* debugging */
+	plRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
+
 	plRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 	plRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 
@@ -190,7 +193,6 @@ void Con_Initialize( void ) {
 	plRegisterConsoleVariable( "console.background", "", pl_string_var, Con_UpdateBackground, "Background to use for the console." );
 	plRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
 	plRegisterConsoleVariable( "console.height", "512", pl_int_var, NULL, "Set the height of the console." );
-
 	plRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );
 	plRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
 
