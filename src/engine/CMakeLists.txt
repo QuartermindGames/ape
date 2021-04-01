@@ -43,18 +43,16 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         )
 
 target_include_directories(engine PRIVATE
-        ./ ../3rdparty/miniz/ ../3rdparty/tcc-0.9.27/)
-target_link_directories(engine PRIVATE
-        ../3rdparty/tcc-0.9.27/
-        ../3rdparty/tcc-0.9.27/lib/)
+        ./ ../3rdparty/miniz/)
+#target_link_directories(engine PRIVATE
+#        ../3rdparty/tcc-0.9.27/
+#        ../3rdparty/tcc-0.9.27/lib/)
 
 set_target_properties(engine PROPERTIES PREFIX "")
 
 # Setup link libraries
 if (NOT UNIX)
-    target_link_libraries(engine mingw32 libtcc1-64.a)
-else()
-    target_link_libraries(engine libtcc1.a)
+    target_link_libraries(engine mingw32)
 endif ()
 
 target_link_libraries(engine common platform SDL2)

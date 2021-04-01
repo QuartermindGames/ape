@@ -3,8 +3,6 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <libtcc.h>
-
 #include "yin.h"
 #include "GameScript.h"
 
