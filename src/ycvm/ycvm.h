@@ -8,11 +8,9 @@
 #include <PL/platform.h>
 #include <PL/platform_console.h>
 
-enum {
-    LOG_LEVEL_DEFAULT,
-    LOG_LEVEL_WARNING,
-    LOG_LEVEL_ERROR,
-};
+extern unsigned int LOG_LEVEL_DEFAULT;
+extern unsigned int LOG_LEVEL_WARNING;
+extern unsigned int LOG_LEVEL_ERROR;
 
 #define Print( ... ) plLogMessage( LOG_LEVEL_DEFAULT, __VA_ARGS__ )
 #define Warning( ... ) plLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
