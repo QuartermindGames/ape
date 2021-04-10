@@ -356,12 +356,13 @@ int main( int argc, char **argv ) {
 	SetupEngineInterface();
 
 	FXApp app( EDITOR_TITLE );
-	app.init( __argc, __argv );
+	app.init( vargc, vargv );
 
 	FXIcon *icon = huang::util::LoadImageIcon( &app, "icons/app_icon.gif" );
 	g_mainWindow = new huang::MainWindow( &app );
 	g_mainWindow->setIcon( icon );
 
+#if 0
 	// the project file can be specified on the command line,
 	// or implicitly found in the scripts directory
 	if ( lpCmdLine && strlen( lpCmdLine ) ) {
@@ -371,6 +372,7 @@ int main( int argc, char **argv ) {
 	} else if ( !QE_LoadProject( EDITOR_CONFIG ) ) {
 		Error( "Couldn't load \"" EDITOR_CONFIG "\" project file" );
 	}
+#endif
 
 	QE_Init();
 

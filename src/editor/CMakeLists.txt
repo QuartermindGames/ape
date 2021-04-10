@@ -67,8 +67,10 @@ add_executable(editor
         ${UNIX_ADDITIONAL}
         )
 
+target_include_directories(editor PRIVATE ../3rdparty/fox-1.6.57/include/)
+
 if (NOT UNIX)
-    target_include_directories(editor PRIVATE "../3rdparty/fox-1.6.57/include/" "glew/include/")
+    target_include_directories(editor PRIVATE "glew/include/")
     target_link_directories(editor PRIVATE "glew/lib/Release/x64/" "../3rdparty/fox-1.6.57/lib/")
     target_link_libraries(editor glew32s)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
