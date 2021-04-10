@@ -44,9 +44,6 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
 
 target_include_directories(engine PRIVATE
         ./ ../3rdparty/miniz/)
-#target_link_directories(engine PRIVATE
-#        ../3rdparty/tcc-0.9.27/
-#        ../3rdparty/tcc-0.9.27/lib/)
 
 set_target_properties(engine PROPERTIES PREFIX "")
 
@@ -56,5 +53,3 @@ if (NOT UNIX)
 endif ()
 
 target_link_libraries(engine common platform SDL2)
-
-#file(COPY public/GameInterface.h DESTINATION ${CMAKE_HOME_DIRECTORY}/release/scripts/)

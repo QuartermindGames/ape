@@ -22,7 +22,7 @@ extern int logLevelWarn;
 #define COMMON_API PL_IMPORT
 #endif
 
-#define MAGIC_TO_NUM( A, B, C, D ) ( ( D << 24 ) + ( C << 16 ) + ( B << 8 ) + A )
+#define MAGIC_TO_NUM( A, B, C, D ) ( ( (D) << 24 ) + ( (C) << 16 ) + ( (B) << 8 ) + (A) )
 
 #define CVar( NAME, STORE )                           \
 	static PLConsoleVariable *( STORE ) = NULL;       \
@@ -35,5 +35,7 @@ extern int logLevelWarn;
 PL_EXTERN_C
 
 extern void CommonLibrary_Initialize( void );
+
+extern const char *ComFS_GetDataDirectory( void );
 
 PL_EXTERN_C_END

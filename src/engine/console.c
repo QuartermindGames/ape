@@ -142,9 +142,9 @@ static void SaveUserConfig( void ) {
     NLNode *root = NL_PushBackObj( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i ) {
 		/* don't bother storing it if it matches the default */
-		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
-			continue;
-		}
+		//if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
+		//	continue;
+		//}
 
 		switch( cvars[ i ]->type ) {
 			case pl_float_var:
@@ -167,7 +167,7 @@ static void SaveUserConfig( void ) {
 #endif
 
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "%s%s", FS_GetDataDirectory(), USER_CONFIG );
+	snprintf( path, sizeof( path ), "%s%s", ComFS_GetDataDirectory(), USER_CONFIG );
     DebugMsg( "Saving user config: \"%s\"\n", path );
 	NL_WriteFile( path, root, NL_FILE_ASCII );
 	NL_DestroyNode( root );

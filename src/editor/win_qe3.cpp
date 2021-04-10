@@ -282,7 +282,7 @@ static void SetupEngineInterface() {
 		LError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
 	}
 
-	DllEngineInterface GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
+	auto GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
 	if ( GetDllInterface == nullptr ) {
 		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", plGetError() );
 	}
@@ -312,9 +312,9 @@ static void SetupEngineInterface() {
 	};
 
 	/* initialize the interface */
-	globalEngine = *GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface );
-	if ( globalEngine.version != BASE_INTERFACE_VERSION ) {
-		LWarn( "Unexpected interface version (%d vs %d)!\n", globalEngine.version, BASE_INTERFACE_VERSION );
+	globalEngine = *GetDllInterface( ENGINE_INTERFACE_VERSION, &systemInterface );
+	if ( globalEngine.version[ VERSION_MAJOR ] != ENGINE_INTERFACE_VERSION_MAJOR ) {
+		LWarn( "Unexpected major interface version (%d vs %d)!\n", globalEngine.version[ VERSION_MAJOR ], ENGINE_INTERFACE_VERSION_MAJOR );
 	}
 }
 
@@ -339,7 +339,7 @@ int main( int argc, char **argv ) {
 	// Setup logging
 	if ( plHasCommandLineArgument( "-log" ) ) {
 		const char *path = plGetCommandLineArgumentValue( "-log" );
-		if ( path == NULL ) {
+		if ( path == nullptr ) {
 			path = EDITOR_LOG_PATH;
 		}
 
@@ -362,17 +362,19 @@ int main( int argc, char **argv ) {
 	g_mainWindow = new huang::MainWindow( &app );
 	g_mainWindow->setIcon( icon );
 
-#if 0
-	// the project file can be specified on the command line,
-	// or implicitly found in the scripts directory
-	if ( lpCmdLine && strlen( lpCmdLine ) ) {
-		ParseCommandLine( lpCmdLine );
-		if ( !QE_LoadProject( argv[ 1 ] ) )
-			Error( "Couldn't load %s project file", argv[ 1 ] );
-	} else if ( !QE_LoadProject( EDITOR_CONFIG ) ) {
-		Error( "Couldn't load \"" EDITOR_CONFIG "\" project file" );
+    // the project file can be specified on the command line,
+    // or implicitly found in the scripts directory
+    char projectPath[ PL_SYSTEM_MAX_PATH ];
+    const char *arg = plGetCommandLineArgumentValue( "-config" );
+	if ( arg != nullptr ) {
+		snprintf( projectPath, sizeof( projectPath ), "%s", arg );
+	} else {
+		snprintf( projectPath, sizeof( projectPath ), "%s" EDITOR_CONFIG, ComFS_GetDataDirectory() );
 	}
-#endif
+
+    if ( !QE_LoadProject( projectPath ) ) {
+        Error( "Couldn't load %s project file", projectPath );
+    }
 
 	QE_Init();
 
@@ -399,8 +401,5 @@ int main( int argc, char **argv ) {
 		// run time dependant behavior
 		Cam_MouseControl (delta);
 	}
-
-    /* return success of application */
-    return TRUE;
 #endif
 }
