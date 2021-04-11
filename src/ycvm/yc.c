@@ -9,7 +9,9 @@
 #include "yc.h"
 
 static const char *specials[] = {
-        '$', '=', '.',
+        '$',
+        '=',
+        '.',
 };
 
 static const char *reservedWords[] = {
@@ -19,13 +21,18 @@ static const char *reservedWords[] = {
         "float",
         "" };
 
+unsigned int
+        LOG_LEVEL_DEFAULT,
+        LOG_LEVEL_WARNING,
+        LOG_LEVEL_ERROR;
+
 int main( int argc, char **argv ) {
 	plInitialize( argc, argv );
 
 	plSetupLogOutput( YC_LOG_PATH );
-	plSetupLogLevel( LOG_LEVEL_DEFAULT, NULL, PL_COLOUR_GREEN, true );
-	plSetupLogLevel( LOG_LEVEL_WARNING, "yin/warning", PL_COLOUR_ORANGE, true );
-	plSetupLogLevel( LOG_LEVEL_ERROR, "yin/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_DEFAULT = plAddLogLevel( NULL, PL_COLOUR_GREEN, true );
+	LOG_LEVEL_WARNING = plAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 
 	Print( "Yin Compiler\n"
 	       "Written by Mark E Sowden for Project Yin\n"
