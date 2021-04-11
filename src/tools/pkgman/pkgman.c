@@ -7,7 +7,7 @@
 #include <PL/platform_filesystem.h>
 #include <PL/platform_image.h>
 
-#include "../public/GFXFormat.h"
+#include "public/GFXFormat.h"
 
 #include "pkgman.h"
 #include "parser.h"

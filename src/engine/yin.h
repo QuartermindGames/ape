@@ -85,13 +85,10 @@ typedef struct SysWindow SysWindow;
 #endif
 
 extern PLPackage *globalWad;
-#define YIN_GLOBAL_WAD "base.pkg"
 
 void Engine_Shutdown( void );
 
 SysWindow *Engine_GetMainWindow( void );
 unsigned int Engine_GetNumTicks( void );
-
-const char *FS_GetDataDirectory( void );
 
 #include "MemoryManager.h"

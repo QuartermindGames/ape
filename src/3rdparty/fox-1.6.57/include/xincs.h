@@ -60,6 +60,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "FXBuildConfig.h"
+
 #ifndef WIN32
 
 #include <grp.h>

@@ -18,6 +18,7 @@ add_library(common SHARED
         NodePreProcessor.c
         NodePrivate.h
         ##############################
+        FileSystem.c
         Common.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)

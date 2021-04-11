@@ -13,7 +13,9 @@ unsigned int LOG_LEVEL_WARNING;
 unsigned int LOG_LEVEL_ERROR;
 
 static const char *specials[] = {
-        '$', '=', '.',
+        '$',
+        '=',
+        '.',
 };
 
 static const char *reservedWords[] = {
@@ -22,6 +24,11 @@ static const char *reservedWords[] = {
         "byte",
         "float",
         "" };
+
+unsigned int
+        LOG_LEVEL_DEFAULT,
+        LOG_LEVEL_WARNING,
+        LOG_LEVEL_ERROR;
 
 int main( int argc, char **argv ) {
 	plInitialize( argc, argv );

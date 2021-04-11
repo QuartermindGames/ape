@@ -354,7 +354,7 @@ static void Sys_SetupEngineInterface( void ) {
 	}
 
 	static SystemInterface systemInterface = {
-	        .version = BASE_INTERFACE_VERSION,
+	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
 			.Shutdown = Sys_Shutdown,
 			.DisplayMessageBox = Sys_DisplayMessageBox,
@@ -378,9 +378,9 @@ static void Sys_SetupEngineInterface( void ) {
 	};
 
 	/* initialize the interface */
-	g_engine = *GetDllInterface( BASE_INTERFACE_VERSION, &systemInterface );
-	if ( g_engine.version != BASE_INTERFACE_VERSION ) {
-		PrintWarn( "Unexpected interface version (%d vs %d)!\n", g_engine.version, BASE_INTERFACE_VERSION );
+	g_engine = *GetDllInterface( ENGINE_INTERFACE_VERSION, &systemInterface );
+	if ( g_engine.version[ VERSION_MAJOR ] != ENGINE_INTERFACE_VERSION_MAJOR ) {
+		PrintWarn( "Unexpected major interface version (%d vs %d)!\n", g_engine.version[ VERSION_MAJOR ], ENGINE_INTERFACE_VERSION );
 	}
 }
 

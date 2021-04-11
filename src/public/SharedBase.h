@@ -8,6 +8,8 @@
 #include <PL/platform.h>
 #include <PL/platform_math.h>
 
+#define YIN_GLOBAL_WAD "base.pkg"
+
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
@@ -98,68 +100,7 @@ typedef enum SysMessage {
 
 typedef struct SysWindow SysWindow;
 
-typedef struct SystemInterface {
-	uint32_t version;
-
-	/* windowing */
-	void ( *DisplayMessageBox )( SysMessage messageType, const char *message, ... );
-	SysWindow *( *CreateWindow )( const char *title, int width, int height );
-	void ( *DestroyWindow )( SysWindow *windowPtr );
-	void ( *MakeWindowActive )( SysWindow *windowPtr );
-	void ( *SwapWindow )( SysWindow *windowPtr );
-	void ( *GetWindowSize )( SysWindow *windowPtr, int *width, int *height );
-	bool ( *IsDisplayActive )( SysWindow *windowPtr );
-
-	/* input */
-	bool ( *GetButtonState )( InputButton inputIndex );
-	bool ( *GetKeyState )( int keyIndex );
-	bool ( *HasKeyboard )( void );
-
-	/* timers */
-	uint64_t ( *GetPerformanceCounter )( void );
-	uint64_t ( *GetPerformanceFrequency )( void );
-
-	/* memory */
-	void *( *CAlloc )( size_t num, size_t size, bool abortOnFail );
-	void *( *MAlloc )( size_t size, bool abortOnFail );
-	void *( *ReAlloc )( void *ptr, size_t newSize, bool abortOnFail );
-	void ( *Free )( void *ptr );
-
-	void ( *Shutdown )( void );
-} SystemInterface;
-extern SystemInterface globalSystem;
-
-typedef struct GameInterface {
-	uint32_t version;
-
-	bool ( *Initialize )( void );
-} GameInterface;
-extern GameInterface globalGame;
-
-typedef struct EngineInterface {
-	uint32_t version;
-
-	bool ( *Initialize )( int argc, char **argv );
-	void ( *Tick )( void );
-	void ( *Display )( void );
-	void ( *TextEvent )( const char *key );
-	void ( *KeyboardEvent )( int key, unsigned int keyState );
-	void ( *Shutdown )( void );
-
-	SystemInterface *( *GetSystemInterface )( void );
-	GameInterface *( *GetGameInterface )( void );
-
-	bool ( *IsRunning )( void );
-
-	unsigned int ( *GetNumTicks )( void );
-} EngineInterface;
-extern EngineInterface globalEngine;
-
-#define BASE_INTERFACE_VERSION 3
-
-#define INTERFACE_PROCEDURE "GetDllInterface"
-typedef EngineInterface *( *DllEngineInterface )( uint32_t version, const SystemInterface *sysIn );
-typedef GameInterface *( *DllGameInterface )( uint32_t version, const SystemInterface *sysIn, const EngineInterface *engIn );
+#include "SharedInterfaces.h"
 
 #define TICK_RATE 1000 / 60 /* ms */
 

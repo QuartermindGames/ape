@@ -53,22 +53,6 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
  * INITIALIZATION
  ****************************************/
 
-const char *FS_GetDataDirectory( void ) {
-	static char dataPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
-	if ( dataPath[ 0 ] != '\0' ) {
-		return dataPath;
-	}
-
-	Print( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
-	if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
-		snprintf( dataPath, sizeof( dataPath ), "../../" );
-	} else {
-		snprintf( dataPath, sizeof( dataPath ), "./" );
-	}
-
-	return dataPath;
-}
-
 int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 static bool Engine_Initialize( int argc, char **argv ) {
 	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
@@ -88,7 +72,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	Print( "Mounting VFS locations...\n" );
 
-	plMountLocalLocation( FS_GetDataDirectory() );
+	plMountLocalLocation( ComFS_GetDataDirectory() );
 	if ( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
@@ -231,9 +215,8 @@ static SystemInterface *GetSystemInterface( void ) { return &globalSystem; }
 static GameInterface *GetGameInterface( void ) { return &globalGame; }
 
 PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const SystemInterface *sysIn ) {
-	if ( version != BASE_INTERFACE_VERSION ) {
-		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, BASE_INTERFACE_VERSION );
-		return false;
+	if ( version != ENGINE_INTERFACE_VERSION ) {
+		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, ENGINE_INTERFACE_VERSION );
 	}
 
 	/* copy the system interface across */
@@ -241,7 +224,7 @@ PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const SystemInterf
 
 	/* and now setup our engine interface */
 	static EngineInterface engineInterface = {
-	        .version = BASE_INTERFACE_VERSION,
+	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 	        .Initialize = Engine_Initialize,
 	        .Shutdown = Engine_Shutdown,
 	        .Display = Engine_Display,

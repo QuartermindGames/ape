@@ -5,7 +5,7 @@
 
 #include <PL/platform_image.h>
 
-#include "../public/GFXFormat.h"
+#include "public/GFXFormat.h"
 
 #include "pkgman.h"
 #include "txc_dxtn.h"

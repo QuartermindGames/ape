@@ -14,9 +14,9 @@ add_executable(pkgman
         parser.h
         txc_compress_dxtn.c
         txc_dxtn.h
-        ../3rdparty/miniz/miniz.c)
+        ../../3rdparty/miniz/miniz.c)
 
 file(COPY pkgman_legal.txt DESTINATION ${CMAKE_HOME_DIRECTORY}/release/docs/)
 
-target_include_directories(pkgman PRIVATE ../3rdparty/miniz/)
+target_include_directories(pkgman PRIVATE ../../3rdparty/miniz)
 target_link_libraries(pkgman platform)
