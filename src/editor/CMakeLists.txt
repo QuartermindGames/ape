@@ -71,7 +71,7 @@ target_include_directories(editor PRIVATE ../3rdparty/fox-1.6.57/include/)
 
 if (NOT UNIX)
     target_include_directories(editor PRIVATE "glew/include/")
-    target_link_directories(editor PRIVATE "glew/lib/Release/x64/" "../3rdparty/fox-1.6.57/lib/")
+    target_link_directories(editor PRIVATE "glew/lib/Release/x64/")
     target_link_libraries(editor glew32s)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         target_compile_options(platform PRIVATE -static -static-libstdc++ -static-libgcc)
