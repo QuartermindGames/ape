@@ -357,7 +357,6 @@ static void Sys_SetupEngineInterface( void ) {
 	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
 			.Shutdown = Sys_Shutdown,
-			.DisplayMessageBox = Sys_DisplayMessageBox,
 			.CreateWindow = Sys_CreateWindow,
 			.DestroyWindow = Sys_DestroyWindow,
 			.GetWindowSize = Sys_GetWindowSize,

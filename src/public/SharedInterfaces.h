@@ -18,7 +18,6 @@ typedef struct SystemInterface {
 	uint16_t version[ 2 ];
 
     /* windowing */
-    void ( *DisplayMessageBox )( SysMessage messageType, const char *message, ... );
     SysWindow *( *CreateWindow )( const char *title, int width, int height );
     void ( *DestroyWindow )( SysWindow *windowPtr );
     void ( *MakeWindowActive )( SysWindow *windowPtr );

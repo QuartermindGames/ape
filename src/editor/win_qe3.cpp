@@ -124,7 +124,7 @@ FILE DIALOGS
 ======================================================================
 */
 
-qboolean ConfirmModified( void ) {
+qboolean ConfirmModified() {
 	if ( !modified ) {
 		return true;
 	}
@@ -140,7 +140,7 @@ qboolean ConfirmModified( void ) {
 	return true;
 }
 
-void ProjectDialog( void ) {
+void ProjectDialog() {
 #if 0
 	/*
 	 * Obtain the system directory name and
@@ -183,8 +183,7 @@ void ProjectDialog( void ) {
 #endif
 }
 
-
-void SaveAsDialog( void ) {
+void SaveAsDialog() {
 #if 0
 	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
 	strcat (szDirName, "\\maps");
@@ -234,12 +233,12 @@ void SaveAsDialog( void ) {
 /* wrapper for calloc */
 void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
 	void *mem = calloc( num, size );
-	if ( mem == NULL ) {
+	if ( mem == nullptr ) {
 		if ( abortOnFail ) {
 			LError( "Failed to allocate %d bytes!\n", num * size );
-		} else {
-			LWarn( "Failed to allocate %d bytes!\n", num * size );
 		}
+
+		LWarn( "Failed to allocate %d bytes!\n", num * size );
 	}
 
 	return mem;
@@ -253,12 +252,12 @@ void *Sys_malloc( size_t size, bool abortOnFail ) {
 /* wrapper for realloc */
 void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
 	void *buf = realloc( ptr, newSize );
-	if ( buf == NULL ) {
+	if ( buf == nullptr ) {
 		if ( abortOnFail ) {
 			LError( "Failed to allocate %d bytes!\n", newSize );
-		} else {
-			LWarn( "Failed to allocate %d bytes!\n", newSize );
 		}
+
+		LWarn( "Failed to allocate %d bytes!\n", newSize );
 	}
 
 	return buf;
@@ -288,11 +287,10 @@ static void SetupEngineInterface() {
 	}
 
 	static SystemInterface systemInterface = {
-#if 0
-			.version = BASE_INTERFACE_VERSION,
+		.version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
+#if 0
 			.Shutdown = nullptr,
-			.DisplayMessageBox = nullptr,
 			.CreateWindow = nullptr,
 			.DestroyWindow = nullptr,
 			.GetWindowSize = nullptr,

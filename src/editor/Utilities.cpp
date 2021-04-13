@@ -28,8 +28,12 @@ For more information, please refer to <https://unlicense.org>
 #include "qe3.h"
 
 FXIcon *huang::util::LoadImageIcon( FXApp *app, const char *path ) {
+	const char *dataDir = ComFS_GetDataDirectory();
+    char fullPath[ PL_SYSTEM_MAX_PATH ];
+	snprintf( fullPath, sizeof( fullPath ), "%s%s", dataDir, path );
+
 	FXIconSource iconSource( app );
-	return iconSource.loadIconFile( path );
+	return iconSource.loadIconFile( fullPath );
 }
 
 /**
