@@ -39,11 +39,11 @@ const float FXAA_SPAN_MAX = 8.0;
 vec4 applyFXAA(vec2 fragCoord, sampler2D tex) {
     vec4 color;
     vec2 inverseVP = vec2(1.0 / uViewportSize.x, 1.0 / uViewportSize.y);
-    vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * inverseVP).xyz;
-    vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * inverseVP).xyz;
-    vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * inverseVP).xyz;
-    vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * inverseVP).xyz;
-    vec3 rgbM  = texture2D(tex, fragCoord  * inverseVP).xyz;
+    vec3 rgbNW = texture(tex, (fragCoord + vec2(-1.0, -1.0)) * inverseVP).xyz;
+    vec3 rgbNE = texture(tex, (fragCoord + vec2(1.0, -1.0)) * inverseVP).xyz;
+    vec3 rgbSW = texture(tex, (fragCoord + vec2(-1.0, 1.0)) * inverseVP).xyz;
+    vec3 rgbSE = texture(tex, (fragCoord + vec2(1.0, 1.0)) * inverseVP).xyz;
+    vec3 rgbM  = texture(tex, fragCoord  * inverseVP).xyz;
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
     float lumaNE = dot(rgbNE, luma);
@@ -66,11 +66,11 @@ vec4 applyFXAA(vec2 fragCoord, sampler2D tex) {
     dir * rcpDirMin)) * inverseVP;
 
     vec3 rgbA = 0.5 * (
-    texture2D(tex, fragCoord * inverseVP + dir * (1.0 / 3.0 - 0.5)).xyz +
-    texture2D(tex, fragCoord * inverseVP + dir * (2.0 / 3.0 - 0.5)).xyz);
+    texture(tex, fragCoord * inverseVP + dir * (1.0 / 3.0 - 0.5)).xyz +
+    texture(tex, fragCoord * inverseVP + dir * (2.0 / 3.0 - 0.5)).xyz);
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-    texture2D(tex, fragCoord * inverseVP + dir * -0.5).xyz +
-    texture2D(tex, fragCoord * inverseVP + dir * 0.5).xyz);
+    texture(tex, fragCoord * inverseVP + dir * -0.5).xyz +
+    texture(tex, fragCoord * inverseVP + dir * 0.5).xyz);
 
     float lumaB = dot(rgbB, luma);
     if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
