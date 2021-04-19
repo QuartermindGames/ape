@@ -11,6 +11,10 @@
 EngineInterface g_engine;
 static PLLibrary *dllEnginePtr;
 
+#define WINDOW_TITLE "Yin Game Engine"
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
+
 #define Print( ... )        printf( __VA_ARGS__ )
 #define PrintWarn( ... )    Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
 #define PrintError( ... )                                    \
@@ -20,6 +24,8 @@ static PLLibrary *dllEnginePtr;
 /****************************************
  * WINDOW MANAGEMENT
  ****************************************/
+
+static SDL_Window *sdlWindow = NULL;
 
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	const char *title;
@@ -51,26 +57,32 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	SDL_ShowSimpleMessageBox( flags, title, msgBuf, NULL );
 }
 
-typedef struct SysWindow {
+typedef struct OSWindow {
 	SDL_Window *sdlWindowPtr;
 	SDL_GLContext *sdlGLContext;
-} SysWindow;
+} OSWindow;
 
-static bool Sys_IsDisplayActive( SysWindow *windowPtr ) {
+static bool Sys_IsDisplayActive( OSWindow *windowPtr ) {
 	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-void Sys_GetWindowSize( SysWindow *windowPtr, int *width, int *height ) {
+void Sys_GetWindowSize( OSWindow *windowPtr, int *width, int *height ) {
 	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
 }
 
-void Sys_MakeWindowActive( SysWindow *windowPtr ) {
+void Sys_MakeWindowActive( OSWindow *windowPtr ) {
+	sdlWindow = windowPtr->sdlWindowPtr;
 	SDL_GL_MakeCurrent( windowPtr->sdlWindowPtr, windowPtr->sdlGLContext );
 }
 
-SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
-	SDL_Window *sdlWindowPtr = SDL_CreateWindow( title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+OSWindow *Sys_CreateWindow( const char *title, int width, int height ) {
+	SDL_Window *sdlWindowPtr = SDL_CreateWindow(
+	        WINDOW_TITLE,
+	        SDL_WINDOWPOS_UNDEFINED,
+	        SDL_WINDOWPOS_UNDEFINED,
+	        WINDOW_WIDTH, WINDOW_HEIGHT,
+	        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	if ( sdlWindowPtr == NULL ) {
 		PrintError( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
 	}
@@ -82,7 +94,7 @@ SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 		return NULL;
 	}
 
-	SysWindow *window = calloc( 1, sizeof( SysWindow ) );
+	OSWindow *window = calloc( 1, sizeof( OSWindow ) );
 	window->sdlWindowPtr = sdlWindowPtr;
 	window->sdlGLContext = sdlGLContext;
 
@@ -91,7 +103,7 @@ SysWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 	return window;
 }
 
-void Sys_DestroyWindow( SysWindow *windowPtr ) {
+void Sys_DestroyWindow( OSWindow *windowPtr ) {
 	if ( windowPtr == NULL ) {
 		return;
 	}
@@ -107,7 +119,7 @@ void Sys_DestroyWindow( SysWindow *windowPtr ) {
 	free( windowPtr );
 }
 
-void Sys_SwapWindow( SysWindow *windowPtr ) {
+void Sys_SwapWindow( OSWindow *windowPtr ) {
 	SDL_GL_SwapWindow( windowPtr->sdlWindowPtr );
 }
 
@@ -358,11 +370,7 @@ static void Sys_SetupEngineInterface( void ) {
 
 			.Shutdown = Sys_Shutdown,
 			.CreateWindow = Sys_CreateWindow,
-			.DestroyWindow = Sys_DestroyWindow,
 			.GetWindowSize = Sys_GetWindowSize,
-			.MakeWindowActive = Sys_MakeWindowActive,
-			.SwapWindow = Sys_SwapWindow,
-	        .IsDisplayActive = Sys_IsDisplayActive,
 			.GetButtonState = Sys_GetButtonState,
 			.GetKeyState = Sys_GetKeyState,
 			.HasKeyboard = Sys_HasKeyboard,
@@ -454,6 +462,8 @@ int Sys_Init( int argc, char **argv ) {
 		}
 
 		g_engine.Display();
+
+		SDL_GL_SwapWindow( sdlWindow );
 	}
 
 	SDL_StopTextInput();

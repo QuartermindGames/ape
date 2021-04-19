@@ -19,7 +19,7 @@ const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective ) {
 
 static PLLinkedList *camerasList = NULL;
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport ) {
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport ) {
 	Print( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
 
 	if ( viewport == NULL ) {
@@ -76,7 +76,7 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 		return;
 	}
 
-	SysWindow *window = Engine_GetMainWindow();
+	OSWindow *window = Engine_GetMainWindow();
 	globalSystem.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
 	extern PLConsoleVariable *gVarGraphicsSupersampling;
 	camera->internalPtr->viewport.w *= gVarGraphicsSupersampling->i_value;

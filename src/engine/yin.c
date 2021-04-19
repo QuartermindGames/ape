@@ -17,7 +17,7 @@ PLPackage *globalWad = NULL;
 SystemInterface globalSystem;
 GameInterface globalGame;
 
-static SysWindow *mainWindow;
+static OSWindow *mainWindow;
 
 const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_PATCH };
 
@@ -77,15 +77,6 @@ static bool Engine_Initialize( int argc, char **argv ) {
 		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
 	}
 
-	/* create our main window
-	 * todo: this should be delegated to the launcher... */
-	mainWindow = globalSystem.CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
-	if ( mainWindow == NULL ) {
-		PrintError( "Failed to create main window!\n" );
-	}
-
-	plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
-
 	/* register other various loaders */
 	PLModel *MD2_LoadFile( const char *path );
 	plRegisterModelLoader( "md2", MD2_LoadFile );
@@ -94,7 +85,16 @@ static bool Engine_Initialize( int argc, char **argv ) {
 
 	Print( "Initializing core services...\n" );
 
-	/* initialize core services */
+    /* create our main window
+ * todo: this should be delegated to the launcher... */
+    mainWindow = globalSystem.CreateWindow( "", 0, 0 );
+    if ( mainWindow == NULL ) {
+        PrintError( "Failed to create main window!\n" );
+    }
+
+    plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
+
+    /* initialize core services */
 	CPUTimer_Initialize();
 	Con_Initialize();
 	Gfx_Initialize();
@@ -132,7 +132,7 @@ void Engine_Shutdown( void ) {
 	globalSystem.Shutdown();
 }
 
-SysWindow *Engine_GetMainWindow( void ) {
+OSWindow *Engine_GetMainWindow( void ) {
 	return mainWindow;
 }
 
@@ -141,14 +141,7 @@ SysWindow *Engine_GetMainWindow( void ) {
  ****************************************/
 
 static void Engine_Display( void ) {
-	/* ensure we don't keep drawing in the background */
-	if ( !globalSystem.IsDisplayActive( mainWindow ) ) {
-		return;
-	}
-
 	PROFILE_START( PROFILE_DRAW_ALL );
-
-	globalSystem.MakeWindowActive( mainWindow );
 
 	Gfx_SetupDefaultState();
 
@@ -160,8 +153,6 @@ static void Engine_Display( void ) {
 	PROFILE_END( PROFILE_DRAW_ALL );
 
 	Gfx_DrawMenu();
-
-	globalSystem.SwapWindow( mainWindow );
 }
 
 /****************************************

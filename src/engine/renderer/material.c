@@ -11,6 +11,8 @@
 #include "script.h"
 #include "map.h"
 
+#include "common/node.h"
+
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 
 typedef struct MaterialVariable {
@@ -20,6 +22,7 @@ typedef struct MaterialVariable {
 
 typedef struct MaterialPass {
 	PLShaderProgram *program;
+	char programName[ 64 ];
 	PLBlend blendMode[ 2 ];
 	MaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
@@ -273,6 +276,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 			}
 
 			curPass = &mat.passes[ mat.numPasses++ ];
+			strncpy( curPass->programName, programName, sizeof( curPass->programName ) );
 			RM_SetupMaterialPass( curPass, program, PL_BLEND_DISABLE );
 		}
 		/* blend mode */
@@ -317,6 +321,104 @@ static Material *RM_GetMaterial( const char *path, CacheGroup group ) {
 	return NULL;
 }
 
+static const char *BlendModeToString( PLBlend mode ) {
+	switch( mode ) {
+		case PL_BLEND_ONE_MINUS_DST_ALPHA: return "one_minus_dst_alpha";
+		case PL_BLEND_ONE_MINUS_DST_COLOR: return "one_minus_dst_color";
+		case PL_BLEND_ONE_MINUS_SRC_ALPHA: return "one_minus_src_alpha";
+		case PL_BLEND_ONE_MINUS_SRC_COLOR: return "one_minus_src_color";
+		case PL_BLEND_SRC_ALPHA: return "src_alpha";
+		case PL_BLEND_SRC_ALPHA_SATURATE: return "src_alpha_saturate";
+		case PL_BLEND_SRC_COLOR: return "src_color";
+		case PL_BLEND_DST_ALPHA: return "dst_alpha";
+		case PL_BLEND_DST_COLOR: return "dst_color";
+		case PL_BLEND_ONE: return "one";
+		default: return "zero";
+	}
+}
+
+/**
+ * Temporary; convert bulk of our old .mat files to
+ * the new .node format instead.
+ */
+static void ConvertMatToNode( const Material *material ) {
+	Print( "IN: \"%s\"\n", material->path );
+
+	char outPath[ PL_SYSTEM_MAX_PATH ];
+	snprintf( outPath, sizeof( outPath ), "%s", material->path );
+	outPath[ strlen( outPath ) - 3 ] = '\0';
+	strcat( outPath, "node" );
+
+	NLNode *root = NL_LoadFile( outPath, "material" );
+	if ( root != NULL ) {
+		NL_PrintNodeTree( root, 0 );
+		return;
+	}
+
+	char temp[ PL_SYSTEM_MAX_PATH ];
+	strcpy( temp, outPath );
+	snprintf( outPath, sizeof( outPath ), "%s%s", ComFS_GetDataDirectory(), temp );
+
+	root = NL_PushBackObj( NULL, "material" );
+	NLNode *passArray = NL_PushBackObjArray( root, "passes" );
+	for ( unsigned int i = 0; i < material->numPasses; ++i ) {
+        NLNode *pass = NL_PushBackObj( passArray, NULL );
+		NL_PushBackString( pass, "shaderProgram", material->passes[ i ].programName );
+		const char *blendMode[ 2 ] = {
+		        BlendModeToString( material->passes[ i ].blendMode[ 0 ] ),
+		        BlendModeToString( material->passes[ i ].blendMode[ 1 ] )
+		};
+		NL_PushBackStringArray( pass, "blendMode", blendMode, 2 );
+
+		NLNode *shaderParms = NL_PushBackObj( pass, "shaderParameters" );
+		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j ) {
+			const MaterialVariable *var = &material->passes[ i ].variables[ j ];
+            switch( var->varData.type ) {
+				case SCRIPT_VAR_TEXTURE:
+					NL_PushBackString( shaderParms, var->varData.name, var->varData.value.texVar->path );
+					break;
+				case SCRIPT_VAR_BUILTIN:
+					NL_PushBackInt( shaderParms, var->varData.name, var->varData.value.iVar );
+					break;
+				case SCRIPT_VAR_BOOL:
+					NL_PushBackBool( shaderParms, var->varData.name, var->varData.value.bVar );
+					break;
+				case SCRIPT_VAR_DOUBLE:
+                    NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.dVar );
+					break;
+				case SCRIPT_VAR_FLOAT:
+					NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.fVar );
+					break;
+				case SCRIPT_VAR_UINT:
+				case SCRIPT_VAR_INT:
+					NL_PushBackInt( shaderParms, var->varData.name, var->varData.value.iVar );
+					break;
+				case SCRIPT_VAR_STRING:
+					NL_PushBackString( shaderParms, var->varData.name, var->varData.value.strVar );
+					break;
+				case SCRIPT_VAR_VEC2:
+					NL_PushBackVec2( shaderParms, var->varData.name, &var->varData.value.v2Var );
+					break;
+				case SCRIPT_VAR_VEC3:
+					NL_PushBackVec3( shaderParms, var->varData.name, &var->varData.value.v3Var );
+					break;
+				case SCRIPT_VAR_VEC4:
+					NL_PushBackVec4( shaderParms, var->varData.name, &var->varData.value.v4Var );
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+    Print( "OUT: \"%s\"\n", outPath );
+
+	NL_WriteFile( outPath, root, NL_FILE_ASCII );
+
+    NL_PrintNodeTree( root, 0 );
+	NL_DestroyNode( root );
+}
+
 Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback ) {
 	/* check if it's already cached */
 	Material *material = RM_GetMaterial( path, group );
@@ -344,6 +446,10 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = plInsertLinkedListNode( materials[ group ], material );
+
+#if 1
+	ConvertMatToNode( material );
+#endif
 
 	return material;
 }

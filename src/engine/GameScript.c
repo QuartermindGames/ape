@@ -6,7 +6,7 @@
 #include "yin.h"
 #include "GameScript.h"
 
-#include "common/Node.h"
+#include "common/node.h"
 
 #if 0
 static TCCState *tccState = NULL;

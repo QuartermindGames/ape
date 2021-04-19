@@ -21,7 +21,7 @@ static unsigned int numEditorCameras = 4;
 static unsigned int curEditorCamera = 0;
 
 static GfxCamera *editorCameras[ MAX_VIEW_PERSPECTIVES ];
-static SysWindow *editorViewports[ MAX_VIEW_PERSPECTIVES ];
+static OSWindow *editorViewports[ MAX_VIEW_PERSPECTIVES ];
 
 char texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
 static void Editor_MountTexturePackageCallback( const char *path, void *userData ) {
