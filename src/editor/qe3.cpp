@@ -123,16 +123,18 @@ QE_LoadProject
 */
 qboolean QE_LoadProject (const char *projectfile)
 {
-	char	*data;
-
 	Sys_Printf ("QE_LoadProject (%s)\n", projectfile);
 
+    char	*data;
 	if ( LoadFileNoCrash (projectfile, (void **)&data) == -1)
 		return false;
+
 	StartTokenParsing (data);
+
 	g_qeglobals.d_project_entity = Entity_Parse (true);
 	if (!g_qeglobals.d_project_entity)
 		Error ("Couldn't parse %s", projectfile);
+
 	free (data);
 
 	const char *entityPath = ValueForKey( g_qeglobals.d_project_entity, "entitypath" );

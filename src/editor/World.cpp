@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 qboolean	modified;		// for quit confirmation (0 = clean, 1 = unsaved,
 							// 2 = autosaved, but not regular saved)
 
-char		currentmap[ 1024 ];
+char		currentmap[ PL_SYSTEM_MAX_PATH ];
 
 Brush	active_brushes;		// brushes currently being displayed
 Brush	selected_brushes;	// highlighted
@@ -170,7 +170,6 @@ void Map_Free( void ) {
 	}
 
 	Texture_ClearInuse();
-	Pointfile_Clear();
 	strcpy( currentmap, "unnamed.map" );
 	Sys_SetTitle( currentmap );
 	g_qeglobals.d_num_entities = 0;
@@ -590,13 +589,44 @@ void Map_RegionBrush( void ) {
 huang::World::World() {
 }
 
-huang::World::World( const char *fileName ) {
+huang::World::World( const char *path ) {
+	NLNode *root = NL_LoadFile( path, "world" );
+	if ( root == nullptr ) {
+		FXMessageBox::error( g_mainWindow, 0, "Error", "Failed to load world \"%s\"!", path );
+		return;
+	}
 }
 
 huang::World::~World() {
 }
 
-void huang::World::SaveFile( const char *fileName ) {
+void huang::World::SaveFile( const char *path ) {
+	Sys_Printf( "Saving world as \"%s\"\n", path );
+
+	NLNode *root = NL_PushBackObj( nullptr, "world" );
+
+	NLNode *materialsNode = NL_PushBackObj( root, "materials" );
+
+	// Serialise the vertices
+	NLNode *vertexNode = NL_PushBackObj( root, "vertices" );
+	for ( const auto &i : vertices ) {
+		NLNode *index = NL_PushBackObj( vertexNode, "vertex" );
+		NL_PushBackVec3( index, "position", &i.position );
+		NL_PushBackVec3( index, "normal", &i.normal );
+		PLVector4 colour = plColourToVector4( &i.colour );
+		NL_PushBackVec4( index, "colour", &colour );
+	}
+
+	// And now the faces
+	NLNode *faceNode = NL_PushBackObj( root, "faces" );
+    for ( const auto &i : faces ) {
+		NLNode *index = NL_PushBackObj( faceNode, "face" );
+		NL_PushBackIntArray( index, "vertices", i.vertexIndices, plArrayElements( i.vertexIndices ) );
+	}
+
+	NL_WriteFile( path, root, NL_FILE_BINARY );
+
+	isModified = false;
 }
 
 entity_t *huang::World::FindClass( const char *className ) {

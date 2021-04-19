@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <assert.h>
 
 #include "qe3.h"
-#include "camera.h"
+#include "CameraPerspective.h"
 
 #define MAX_POINTS_ON_WINDING	64
 

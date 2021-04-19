@@ -30,37 +30,6 @@ char		com_token[1024];
 qboolean	com_eof;
 
 /*
-================
-I_FloatTime
-================
-*/
-double I_FloatTime (void)
-{
-	time_t	t;
-
-	time (&t);
-
-	return (double)t;
-#if 0
-// more precise, less portable
-	struct timeval tp;
-	struct timezone tzp;
-	static int		secbase;
-
-	gettimeofday(&tp, &tzp);
-
-	if (!secbase)
-	{
-		secbase = tp.tv_sec;
-		return tp.tv_usec/1000000.0;
-	}
-
-	return (tp.tv_sec - secbase) + tp.tv_usec/1000000.0;
-#endif
-}
-
-
-/*
 ==============
 COM_Parse
 
@@ -183,68 +152,6 @@ int Q_strcasecmp (const char *s1, const char *s2)
 
 =============================================================================
 */
-
-
-int		argc;
-const char	*argv[MAX_NUM_ARGVS];
-
-/*
-============
-ParseCommandLine
-============
-*/
-void ParseCommandLine (char *lpCmdLine)
-{
-	argc = 1;
-	argv[0] = "programname";
-
-	while (*lpCmdLine && (argc < MAX_NUM_ARGVS))
-	{
-		while (*lpCmdLine && ((*lpCmdLine <= 32) || (*lpCmdLine > 126)))
-			lpCmdLine++;
-
-		if (*lpCmdLine)
-		{
-			argv[argc] = lpCmdLine;
-			argc++;
-
-			while (*lpCmdLine && ((*lpCmdLine > 32) && (*lpCmdLine <= 126)))
-				lpCmdLine++;
-
-			if (*lpCmdLine)
-			{
-				*lpCmdLine = 0;
-				lpCmdLine++;
-			}
-
-		}
-	}
-}
-
-
-
-/*
-=================
-CheckParm
-
-Checks for the given parameter in the program's command line arguments
-Returns the argument number (1 to argc-1) or 0 if not present
-=================
-*/
-int CheckParm (char *check)
-{
-	int             i;
-
-	for (i = 1;i<argc;i++)
-	{
-		if ( !Q_strcasecmp(check, argv[i]) )
-			return i;
-	}
-
-	return 0;
-}
-
-
 
 /*
 ================

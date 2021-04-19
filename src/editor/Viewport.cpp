@@ -113,6 +113,24 @@ void huang::Viewport::create() {
 	enable();
 }
 
+int huang::Viewport::GetCanvasWidth() const {
+	int w = glCanvas->getWidth();
+	if ( w <= 0 ) {
+		w = 2;
+	}
+
+	return w;
+}
+
+int huang::Viewport::GetCanvasHeight() const {
+	int h = glCanvas->getHeight();
+	if ( h <= 0 ) {
+		h = 2;
+	}
+
+	return h;
+}
+
 long huang::Viewport::OnChore( FXObject *, FXSelector, void * ) {
 	DrawScene();
 
@@ -142,16 +160,8 @@ long huang::Viewport::OnConfigure( FXObject *, FXSelector, void * ) {
 			h = 2;
 		}
 
-		switch( currentViewMode ) {
-		case VIEW_MODE_PERSPECTIVE:
-			camera.width = w;
-			camera.height = h;
-			break;
-		default:
-			xyz.width = w;
-			xyz.height = h;
-			break;
-		}
+		camera.width = w;
+		camera.height = h;
 	}
 
 	return 1;
@@ -163,7 +173,7 @@ void huang::Viewport::CentreViewOnBrush( const Brush *brush ) {
 }
 
 long huang::Viewport::OnMotion( FXObject *, FXSelector, void *ptr ) {
-	FXEvent *ev = (FXEvent *)ptr;
+	auto *ev = (FXEvent *)ptr;
 
 	int x = ev->win_x;
 	int y = -ev->win_y + glCanvas->getHeight();
@@ -210,6 +220,8 @@ static huang::input::Button TranslateButton( int fxButton ) {
 		return huang::input::MOUSE_BUTTON_RIGHT;
 	case FX::MIDDLEBUTTON:
 		return huang::input::MOUSE_BUTTON_MIDDLE;
+	default:
+		break;
 	}
 
 	return huang::input::BUTTON_INVALID;
@@ -220,7 +232,7 @@ long huang::Viewport::OnInput( FXObject *, FXSelector, void *ptr ) {
 		return 0;
 	}
 
-	FXEvent *ev = (FXEvent *)ptr;
+	auto *ev = (FXEvent *)ptr;
 
 	int x = ev->win_x;
 	int y = -ev->win_y + glCanvas->getHeight();
@@ -314,7 +326,7 @@ long huang::Viewport::OnToggleView( FXObject *object, FXSelector, void *ptr ) {
 		return FALSE;
 	}
 
-	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
+	auto *button = dynamic_cast<FXToggleButton *>( object );
 	if( button == nullptr ) {
 		return FALSE;
 	}
@@ -343,7 +355,7 @@ long huang::Viewport::OnToggleDraw( FXObject *object, FXSelector, void *ptr ) {
 		return FALSE;
 	}
 
-	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
+	auto *button = dynamic_cast<FXToggleButton *>( object );
 	if( button == nullptr ) {
 		return FALSE;
 	}

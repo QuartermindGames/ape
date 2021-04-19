@@ -74,10 +74,6 @@ char *TranslateString( char *buf ) {
 	return buf2;
 }
 
-void Sys_ClearPrintf( void ) {
-	// stub
-}
-
 void Sys_Printf( const char *text, ... ) {
 	va_list argptr;
 	char buf[ 32768 ];
@@ -140,49 +136,6 @@ qboolean ConfirmModified() {
 	return true;
 }
 
-void ProjectDialog() {
-#if 0
-	/*
-	 * Obtain the system directory name and
-	 * store it in szDirName.
-	 */
-
-	strcpy (szDirName, ValueForKey(g_qeglobals.d_project_entity, "basepath") );
-	strcat (szDirName, "\\scripts");
-
-	/* Place the terminating null character in the szFile. */
-
-	szFile[0] = '\0';
-
-	/* Set the members of the OPENFILENAME structure. */
-
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = g_qeglobals.d_hwndCamera;
-	ofn.lpstrFilter = szProjectFilter;
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFileTitle = szFileTitle;
-	ofn.nMaxFileTitle = sizeof(szFileTitle);
-	ofn.lpstrInitialDir = szDirName;
-	ofn.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST |
-		OFN_FILEMUSTEXIST;
-
-	/* Display the Open dialog box. */
-
-	if (!GetOpenFileName(&ofn))
-		return;	// canceled
-
-	// Refresh the File menu.
-	PlaceMenuMRUItem(g_qeglobals.d_lpMruMenu,GetSubMenu(GetMenu(g_qeglobals.d_hwndMain),0),
-			ID_FILE_EXIT);
-
-	/* Open the file. */
-	if (!QE_LoadProject(ofn.lpstrFile))
-		Error ("Couldn't load project file");
-#endif
-}
-
 void SaveAsDialog() {
 #if 0
 	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
@@ -224,7 +177,6 @@ void SaveAsDialog() {
 	Map_SaveFile (ofn.lpstrFile, false);	// ignore region
 #endif
 }
-
 
 /****************************************
  * MEMORY MANAGEMENT
@@ -292,11 +244,7 @@ static void SetupEngineInterface() {
 #if 0
 			.Shutdown = nullptr,
 			.CreateWindow = nullptr,
-			.DestroyWindow = nullptr,
 			.GetWindowSize = nullptr,
-			.MakeWindowActive = nullptr,
-			.SwapWindow = nullptr,
-			.IsDisplayActive = nullptr,
 			.GetButtonState = nullptr,
 			.GetKeyState = nullptr,
 			.HasKeyboard = nullptr,
@@ -333,6 +281,8 @@ int main( int argc, char **argv ) {
 	pl_realloc = Sys_WReAlloc;
 
 	plInitialize( vargc, vargv );
+
+    plRegisterPlugins( "./" );
 
 	// Setup logging
 	if ( plHasCommandLineArgument( "-log" ) ) {
@@ -379,6 +329,8 @@ int main( int argc, char **argv ) {
 	Sys_Printf( "Entering message loop\n" );
 
 	app.create();
+
+    plInitializePlugins();
 
 	extern void M_LoadGlobalRegistryData();
 	M_LoadGlobalRegistryData();

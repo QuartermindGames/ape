@@ -53,11 +53,7 @@ int Q_strcasecmp (const char *s1, const char *s2);
 
 int Q_filelength (FILE *f);
 
-double I_FloatTime (void);
-
 void	Error (const char *error, ...);
-int		CheckParm (char *check);
-void ParseCommandLine (char *lpCmdLine);
 
 FILE	*SafeOpenWrite (char *filename);
 FILE	*SafeOpenRead (char *filename);
@@ -92,9 +88,5 @@ char *COM_Parse (char *data);
 
 extern	char		com_token[1024];
 extern	qboolean	com_eof;
-
-#define	MAX_NUM_ARGVS	32
-extern	int		argc;
-extern	const char	*argv[MAX_NUM_ARGVS];
 
 #endif

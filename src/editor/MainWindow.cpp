@@ -32,7 +32,7 @@ using namespace huang::util;
 
 BOOL SaveRegistryInfo( const char *pszName, void *pvBuf, long lSize );
 
-extern void WXY_Print( void );
+extern void WXY_Print();
 
 /*
 ==============================================================================
@@ -42,34 +42,34 @@ extern void WXY_Print( void );
 ==============================================================================
 */
 
-void SaveAsDialog( void );
-qboolean ConfirmModified( void );
-void  Select_Ungroup( void );
+void SaveAsDialog();
+qboolean ConfirmModified();
+void Select_Ungroup();
 
 void QE_ExpandBspString( char *bspaction, char *out, char *mapname ) {
-	char	src[ 1024 ];
-	char	rsh[ 1024 ];
-	char	base[ 256 ];
+	char src[ 1024 ];
+	char rsh[ 1024 ];
+	char base[ 256 ];
 
 	ExtractFileName( mapname, base );
 	sprintf( src, "%s/maps/%s", ValueForKey( g_qeglobals.d_project_entity, "remotebasepath" ), base );
 	strcpy( rsh, ValueForKey( g_qeglobals.d_project_entity, "rshcmd" ) );
 
 	const char *in = ValueForKey( g_qeglobals.d_project_entity, bspaction );
-	while( *in ) {
-		if( in[ 0 ] == '!' ) {
+	while ( *in ) {
+		if ( in[ 0 ] == '!' ) {
 			strcpy( out, rsh );
 			out += strlen( rsh );
 			in++;
 			continue;
 		}
-		if( in[ 0 ] == '$' ) {
+		if ( in[ 0 ] == '$' ) {
 			strcpy( out, src );
 			out += strlen( src );
 			in++;
 			continue;
 		}
-		if( in[ 0 ] == '@' ) {
+		if ( in[ 0 ] == '@' ) {
 			*out++ = '"';
 			in++;
 			continue;
@@ -700,8 +700,8 @@ void M_LoadGlobalRegistryData() {
 ===============================================================
 */
 
-void Sys_UpdateStatusBar( void ) {
-	extern int   g_numbrushes, g_numentities;
+void Sys_UpdateStatusBar() {
+	extern int g_numbrushes, g_numentities;
 
 	char numbrushbuffer[ 100 ] = "";
 
@@ -714,33 +714,32 @@ void Sys_UpdateStatusBar( void ) {
 
 const FXuint TIMER_INTERVAL = 1;
 
-FXDEFMAP( huang::MainWindow ) MainWindowMap[] = {
-	FXMAPFUNC( SEL_CONFIGURE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnConfigure ),
-	FXMAPFUNC( SEL_PAINT, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnExpose ),
-	FXMAPFUNC( SEL_CHORE, huang::MainWindow::ID_TIMEOUT,  huang::MainWindow::OnTimeout ),
+FXDEFMAP( huang::MainWindow )
+MainWindowMap[] = {
+        FXMAPFUNC( SEL_CONFIGURE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnConfigure ),
+        FXMAPFUNC( SEL_PAINT, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnExpose ),
+        FXMAPFUNC( SEL_CHORE, huang::MainWindow::ID_TIMEOUT, huang::MainWindow::OnTimeout ),
 
-	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_NEW, huang::MainWindow::OnCmdNew ),
-	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_OPEN, huang::MainWindow::OnCmdOpen ),
-	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_ABOUT, huang::MainWindow::OnCmdAbout ),
+        FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_NEW, huang::MainWindow::OnCmdNew ),
+        FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_OPEN, huang::MainWindow::OnCmdOpen ),
+        FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_ABOUT, huang::MainWindow::OnCmdAbout ),
 
-	FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_TOGGLE_EDIT, huang::MainWindow::OnToggleEdit ),
+        FXMAPFUNC( SEL_COMMAND, huang::MainWindow::ID_TOGGLE_EDIT, huang::MainWindow::OnToggleEdit ),
 
-	FXMAPFUNC( SEL_KEYRELEASE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnInput ),
+        FXMAPFUNC( SEL_KEYRELEASE, huang::MainWindow::ID_CANVAS, huang::MainWindow::OnInput ),
 };
 
 // Object implementation
 FXIMPLEMENT( huang::MainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
 
 // Make some windows
-huang::MainWindow::MainWindow( FXApp *a ) :
-	FXMainWindow( a, EDITOR_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ),
+huang::MainWindow::MainWindow( FXApp *a ) : FXMainWindow( a, EDITOR_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 ),
 
-	myGridSizeTarget( g_qeglobals.d_gridsize ),
-	myGridStateTarget( g_qeglobals.d_showgrid ),
+                                            myGridSizeTarget( g_qeglobals.d_gridsize ),
+                                            myGridStateTarget( g_qeglobals.d_showgrid ),
 
-	showNamesTarget( g_qeglobals.d_savedinfo.show_names ),
-	showCoordinatesTarget( g_qeglobals.d_savedinfo.show_coordinates )
-{
+                                            showNamesTarget( g_qeglobals.d_savedinfo.show_names ),
+                                            showCoordinatesTarget( g_qeglobals.d_savedinfo.show_coordinates ) {
 	// Menu bar
 	menubar = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
@@ -788,83 +787,79 @@ huang::MainWindow::MainWindow( FXApp *a ) :
 	}
 
 	// Status bar
-	FXHorizontalFrame *statusFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-	for( unsigned int i = 0; i < MAX_STATUS_SLOTS; ++i ) {
-		myStatusBar[ i ] = new FXStatusBar( statusFrame, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
+	auto *statusFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+	for ( auto &i : myStatusBar ) {
+		i = new FXStatusBar( statusFrame, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
 	}
 
 	// File menu
 	util::MenuItem fileMenuCmds[] = {
-		{ "&New\t\tCreate a new map.", util::MenuType::COMMAND, MainWindow::ID_NEW, this },
-		{ "&Open\t\tOpen an existing map.", util::MenuType::COMMAND, MainWindow::ID_OPEN, this },
-		{ "&Quit\tCtl-Q\tQuit the application.", util::MenuType::COMMAND, FXApp::ID_QUIT },
-		{ nullptr }
-	};
+	        { "&New\t\tCreate a new map.", util::MenuType::COMMAND, MainWindow::ID_NEW, this },
+	        { "&Open\t\tOpen an existing map.", util::MenuType::COMMAND, MainWindow::ID_OPEN, this },
+	        { "&Quit\tCtl-Q\tQuit the application.", util::MenuType::COMMAND, FXApp::ID_QUIT },
+	        { nullptr } };
 	filemenu = util::CreateMenus( getApp(), menubar, "&File", fileMenuCmds );
 
 	util::MenuItem editMenuCmds[] = {
-		{ "&Copy\tCtl-C\tCopy the current brush.", util::MenuType::COMMAND, MainWindow::ID_COPY, this },
-		{ "&Paste\tCtl-V\tPaste the current item.", util::MenuType::COMMAND, MainWindow::ID_PASTE, this },
-		{ nullptr }
-	};
+	        { "&Copy\tCtl-C\tCopy the current brush.", util::MenuType::COMMAND, MainWindow::ID_COPY, this },
+	        { "&Paste\tCtl-V\tPaste the current item.", util::MenuType::COMMAND, MainWindow::ID_PASTE, this },
+	        { nullptr } };
 	editMenu = util::CreateMenus( getApp(), menubar, "&Edit", editMenuCmds );
 
-	FXSplitter *hFrame = new FXSplitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL );
+	auto *hFrame = new FXSplitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL );
 
 	// Sidebar
-	FXSplitter *sideBar = new FXSplitter( hFrame, LAYOUT_SIDE_RIGHT, 0, 0, 256, 0 );
+	auto *sideBar = new FXSplitter( hFrame, LAYOUT_SIDE_RIGHT, 0, 0, 256, 0 );
 	{
-		FXTreeList *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
-		FXTreeItem *primList = new FXTreeItem( "World" );
+		auto *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
+		auto *primList = new FXTreeItem( "World" );
 		treeBox->insertItem( nullptr, nullptr, primList );
-		for( unsigned int i = 0; i < 256; ++i ) {
+		for ( unsigned int i = 0; i < 256; ++i ) {
 			treeBox->insertItem( nullptr, primList, new FXTreeItem( "Brush" ) );
 		}
 	}
 	{
-		FXTreeList *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
+		auto *treeBox = new FXTreeList( sideBar, nullptr, 0U, LAYOUT_FILL );
 
-		FXTreeItem *primList = new FXTreeItem( "Primitives" );
+		auto *primList = new FXTreeItem( "Primitives" );
 		treeBox->insertItem( nullptr, nullptr, primList );
-		for( unsigned int i = 0; i < 256; ++i ) {
+		for ( unsigned int i = 0; i < 256; ++i ) {
 			treeBox->insertItem( nullptr, primList, new FXTreeItem( "Hello" ) );
 		}
-		FXTreeItem *actorList = new FXTreeItem( "Actors" );
+		auto *actorList = new FXTreeItem( "Actors" );
 		treeBox->insertItem( nullptr, nullptr, actorList );
-		for( unsigned int i = 0; i < 256; ++i ) {
+		for ( unsigned int i = 0; i < 256; ++i ) {
 			treeBox->insertItem( nullptr, actorList, new FXTreeItem( "Hello" ) );
 		}
 	}
 
-	FX4Splitter *viewportSplitter = new FX4Splitter( hFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
+	auto *viewportSplitter = new FX4Splitter( hFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
 	util::MenuItem viewMenuCmds[] = {
-		{ "All four\t\tAbout the about dialog.", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_ALL, viewportSplitter },
-		{ "Top/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPLEFT, viewportSplitter },
-		{ "Top/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPRIGHT, viewportSplitter },
-		{ "Bottom/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMLEFT, viewportSplitter },
-		{ "Bottom/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMRIGHT, viewportSplitter },
-		{ "", util::MenuType::SEPERATOR },
-		{ "Show Names", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showNamesTarget },
-		{ "Show Coordinates", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showCoordinatesTarget },
-		{ nullptr }
-	};
+	        { "All four\t\tAbout the about dialog.", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_ALL, viewportSplitter },
+	        { "Top/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPLEFT, viewportSplitter },
+	        { "Top/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_TOPRIGHT, viewportSplitter },
+	        { "Bottom/left", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMLEFT, viewportSplitter },
+	        { "Bottom/right", util::MenuType::CHECKBOX, FX4Splitter::ID_EXPAND_BOTTOMRIGHT, viewportSplitter },
+	        { "", util::MenuType::SEPERATOR },
+	        { "Show Names", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showNamesTarget },
+	        { "Show Coordinates", util::MenuType::CHECKBOX, FXDataTarget::ID_VALUE, &showCoordinatesTarget },
+	        { nullptr } };
 	util::CreateMenus( getApp(), menubar, "&View", viewMenuCmds );
 
 	util::MenuItem aboutMenuCmds[] = {
-		{ "&About\t\tAbout the about dialog.", util::MenuType::COMMAND, MainWindow::ID_ABOUT, this },
-		{ nullptr }
-	};
+	        { "&About\t\tAbout the about dialog.", util::MenuType::COMMAND, MainWindow::ID_ABOUT, this },
+	        { nullptr } };
 	util::CreateMenus( getApp(), menubar, "&Help", aboutMenuCmds );
 
 	ViewMode modes[] = {
-		VIEW_MODE_PERSPECTIVE,
-		VIEW_MODE_TOP,
-		VIEW_MODE_LEFT,
-		VIEW_MODE_FRONT,
+	        VIEW_MODE_PERSPECTIVE,
+	        VIEW_MODE_TOP,
+	        VIEW_MODE_LEFT,
+	        VIEW_MODE_FRONT,
 	};
 
 	glVisual = new FXGLVisual( getApp(), VISUAL_DOUBLEBUFFER /*| VISUAL_STEREO */ );
-	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
+	for ( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
 		viewports[ i ] = new Viewport( viewportSplitter, glVisual, modes[ i ] );
 	}
 
@@ -892,22 +887,23 @@ long huang::MainWindow::OnConfigure( FXObject *, FXSelector, void * ) {
 
 long huang::MainWindow::OnCmdNew( FXObject *, FXSelector, void * ) {
 	// TODO: check if we need to save existing doc...
-	
+
 	CreateWorld();
-	
+
 	return TRUE;
 }
 
 long huang::MainWindow::OnCmdOpen( FXObject *, FXSelector, void * ) {
 	FXFileDialog openDialog( this, "Open File" );
 	openDialog.setSelectMode( SELECTFILE_EXISTING );
-	openDialog.setPatternList( 
-		"All Files (*)\n"
-		"Map Files (*.map)\n"
-		"World Files (*.wld)" );
+	openDialog.setPatternList(
+	        "All Files (*)\n"
+	        "Map Files (*.map)\n"
+	        "World Files (*.wld)" );
 	openDialog.setCurrentPattern( 1 );
-	openDialog.setDirectory( "./worlds/" );
-	if( openDialog.execute() ) {
+
+	openDialog.setDirectory( util::GetWorldsDirectory() );
+	if ( openDialog.execute() ) {
 		FXString filePath = openDialog.getFilename();
 		LoadWorld( filePath.text() );
 	}
@@ -917,19 +913,18 @@ long huang::MainWindow::OnCmdOpen( FXObject *, FXSelector, void * ) {
 
 long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
 	static FXIcon *icon = nullptr;
-	if( icon == nullptr ) {
+	if ( icon == nullptr ) {
 		icon = huang::util::LoadImageIcon( getApp(), "icons/icon64.gif" );
 	}
 	FXMessageBox aboutBox(
-		this,
-		"About " EDITOR_TITLE,
-		EDITOR_TITLE " is a level editor created for the Yin Game Engine.\n"
-		"This software uses the FOX C++ GUI Library (http://www.fox-toolkit.org)\n\n"
-		"Copyright (C) 1997-2001 Id Software, Inc.\n"
-		"Copyright (C) 2020-2021 OldTimes Software\n",
-		icon,
-		MBOX_OK | DECOR_TITLE | DECOR_BORDER
-	);
+	        this,
+	        "About " EDITOR_TITLE,
+	        EDITOR_TITLE " is a level editor created for the Yin Game Engine.\n"
+	                     "This software uses the FOX C++ GUI Library (http://www.fox-toolkit.org)\n\n"
+	                     "Copyright (C) 1997-2001 Id Software, Inc.\n"
+	                     "Copyright (C) 2020-2021 OldTimes Software\n",
+	        icon,
+	        MBOX_OK | DECOR_TITLE | DECOR_BORDER );
 
 	aboutBox.execute();
 
@@ -937,20 +932,20 @@ long huang::MainWindow::OnCmdAbout( FXObject *, FXSelector, void * ) {
 }
 
 long huang::MainWindow::OnToggleEdit( FXObject *object, FXSelector, void * ) {
-	FXToggleButton *button = dynamic_cast<FXToggleButton *>( object );
-	if( button == nullptr ) {
+	auto *button = dynamic_cast< FXToggleButton * >( object );
+	if ( button == nullptr ) {
 		return FALSE;
 	}
 
 	// Don't allow us to uncheck the same button without selecting a different one
-	if( editModeButtons[ currentEditMode ] == button ) {
+	if ( editModeButtons[ currentEditMode ] == button ) {
 		button->setState( true );
 		return TRUE;
 	}
 
 	// Now figure out what mode we selected
-	for( uint8_t i = 0; i < MAX_EDIT_MODES; ++i ) {
-		if( editModeButtons[ i ] == button ) {
+	for ( uint8_t i = 0; i < MAX_EDIT_MODES; ++i ) {
+		if ( editModeButtons[ i ] == button ) {
 			currentEditMode = i;
 			continue;
 		}
@@ -958,74 +953,75 @@ long huang::MainWindow::OnToggleEdit( FXObject *object, FXSelector, void * ) {
 		editModeButtons[ i ]->setState( false );
 	}
 
-	switch( currentEditMode ) {
-	default:
-	case EDIT_MODE_BRUSH:
-		g_qeglobals.d_select_mode = sel_brush;
-		break;
-	case EDIT_MODE_EDGE:
-		g_qeglobals.d_select_mode = sel_edge;
-		break;
-	case EDIT_MODE_VERTEX:
-		g_qeglobals.d_select_mode = sel_vertex;
-		break;
+	switch ( currentEditMode ) {
+		default:
+		case EDIT_MODE_BRUSH:
+			g_qeglobals.d_select_mode = sel_brush;
+			break;
+		case EDIT_MODE_EDGE:
+			g_qeglobals.d_select_mode = sel_edge;
+			break;
+		case EDIT_MODE_VERTEX:
+			g_qeglobals.d_select_mode = sel_vertex;
+			break;
 	}
 
 	return TRUE;
 }
 
 long huang::MainWindow::OnInput( FXObject *, FXSelector, void *ptr ) {
-	FXEvent *ev = (FXEvent *)ptr;
-	switch( ev->type ) {
-	default: break;
-	case SEL_KEYPRESS:
-	{
-		switch( ev->code ) {
-		default: break;
-		case '0':
-			g_qeglobals.d_showgrid = !g_qeglobals.d_showgrid;
-			return TRUE;
-		case KEY_1:
-			g_qeglobals.d_gridsize = 1;
-			return TRUE;
-		case KEY_2:
-			g_qeglobals.d_gridsize = 2;
-			return TRUE;
-		case KEY_3:
-			g_qeglobals.d_gridsize = 4;
-			return TRUE;
-		case KEY_4:
-			g_qeglobals.d_gridsize = 8;
-			return TRUE;
-		case KEY_5:
-			g_qeglobals.d_gridsize = 16;
-			return TRUE;
-		case KEY_6:
-			g_qeglobals.d_gridsize = 32;
-			return TRUE;
-		case KEY_7:
-			g_qeglobals.d_gridsize = 64;
-			return TRUE;
-		case KEY_8:
-			g_qeglobals.d_gridsize = 128;
-			return TRUE;
-		case KEY_9:
-			g_qeglobals.d_gridsize = 256;
-			return TRUE;
+	auto *ev = ( FXEvent * ) ptr;
+	switch ( ev->type ) {
+		default:
+			break;
+		case SEL_KEYPRESS: {
+			switch ( ev->code ) {
+				default:
+					break;
+				case '0':
+					g_qeglobals.d_showgrid = !g_qeglobals.d_showgrid;
+					return TRUE;
+				case KEY_1:
+					g_qeglobals.d_gridsize = 1;
+					return TRUE;
+				case KEY_2:
+					g_qeglobals.d_gridsize = 2;
+					return TRUE;
+				case KEY_3:
+					g_qeglobals.d_gridsize = 4;
+					return TRUE;
+				case KEY_4:
+					g_qeglobals.d_gridsize = 8;
+					return TRUE;
+				case KEY_5:
+					g_qeglobals.d_gridsize = 16;
+					return TRUE;
+				case KEY_6:
+					g_qeglobals.d_gridsize = 32;
+					return TRUE;
+				case KEY_7:
+					g_qeglobals.d_gridsize = 64;
+					return TRUE;
+				case KEY_8:
+					g_qeglobals.d_gridsize = 128;
+					return TRUE;
+				case KEY_9:
+					g_qeglobals.d_gridsize = 256;
+					return TRUE;
+			}
 		}
-	}
 	}
 
 	return FALSE;
 }
 
 void huang::MainWindow::SetStatus( const char *msg, unsigned int slot ) {
-	if( slot >= MAX_STATUS_SLOTS ) {
+	if ( slot >= MAX_STATUS_SLOTS ) {
 		Error( "Attempted to set an invalid status slot in the status bar!\n" );
 	}
 
 	FXStatusLine *barLine = myStatusBar[ slot ]->getStatusLine();
-	if( barLine == nullptr ) {
+	if ( barLine == nullptr ) {
 		return;
 	}
 
@@ -1033,12 +1029,12 @@ void huang::MainWindow::SetStatus( const char *msg, unsigned int slot ) {
 }
 
 void huang::MainWindow::ResetViews() {
-	for( unsigned int i = 0; i < MAX_VIEWPORTS; ++i ) {
-		if( viewports[ i ] == nullptr ) {
+	for ( auto &viewport : viewports ) {
+		if ( viewport == nullptr ) {
 			continue;
 		}
 
-		viewports[ i ]->ResetViews();
+		viewport->ResetViews();
 	}
 }
 
@@ -1048,6 +1044,9 @@ void huang::MainWindow::CreateWorld() {
 	ResetViews();
 
 	setTitle( "Untitled - " EDITOR_TITLE );
+
+	delete world;
+	world = new World();
 }
 
 void huang::MainWindow::LoadWorld( const char *path ) {
@@ -1061,7 +1060,7 @@ void huang::MainWindow::LoadWorld( const char *path ) {
 }
 
 void huang::MainWindow::CentreViewsOnBrush( const Brush *b ) {
-	for(auto & viewport : viewports) {
+	for ( auto &viewport : viewports ) {
 		viewport->CentreViewOnBrush( b );
 	}
 }

@@ -22,29 +22,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // window system independent camera view code
 
+#pragma once
+
+#include "BasePerspective.h"
+
 namespace huang {
-	class XYZView {
+	class XYZPerspective : public BasePerspective {
 	public:
 		enum class Angle {
-			TOP, LEFT, FRONT
+			TOP,
+			LEFT,
+			FRONT
 		};
 
-		XYZView( Viewport *parent );
-		~XYZView();
+		explicit XYZPerspective( Viewport *parent );
+		~XYZPerspective();
 
 		void MouseDown( int x, int y, const bool buttons[] );
 		void MouseUp( int x, int y, const bool buttons[] );
 		void MouseMoved( int x, int y, const bool buttons[] );
 
 		void Draw();
-		void Overlay();
 
-		void ResetPosition();
-
-		vec3_t origin;
-
-		int width{ 640 }, height{ 480 };
-		
 		float scale{ 1.0f };
 
 	protected:
@@ -59,16 +58,8 @@ namespace huang {
 		void DrawGrid();
 		void DrawBlockGrid();
 
-		Viewport *myParent;
-
-		bool timing{ false };
-
-		float topClip{ 0.0f }, bottomClip{ 0.0f };
-
-		int dragX{ 0 }, dragY{ 0 };
-
 		bool d_dirty{ false };
 	};
-}
+}// namespace huang
 
 bool FilterBrush( const Brush *pb );
