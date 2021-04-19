@@ -69,12 +69,16 @@ extern PLVector3 NL_GetVec3( NLNode *node );
 extern PLVector4 NL_GetVec4( NLNode *node );
 
 extern NLNode *NL_PushBackObj( NLNode *node, const char *name );
+
 extern NLNode *NL_PushBackString( NLNode *parent, const char *name, const char *var );
+extern NLNode *NL_PushBackStringArray( NLNode *parent, const char *name, const char **array, unsigned int numElements );
+
 extern NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var );
 extern NLNode *NL_PushBackInt( NLNode *parent, const char *name, int var );
 extern NLNode *NL_PushBackFloat( NLNode *parent, const char *name, float var );
 extern NLNode *NL_PushBackIntArray( NLNode *parent, const char *name, const int *array, unsigned int numElements );
 extern NLNode *NL_PushBackFloatArray( NLNode *parent, const char *name, const float *array, unsigned int numElements );
+extern NLNode *NL_PushBackObjArray( NLNode *parent, const char *name );
 extern NLNode *NL_PushBackVec2( NLNode *parent, const char *name, const PLVector2 *var );
 extern NLNode *NL_PushBackVec3( NLNode *parent, const char *name, const PLVector3 *var );
 extern NLNode *NL_PushBackVec4( NLNode *parent, const char *name, const PLVector4 *var );

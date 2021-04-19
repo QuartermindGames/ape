@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "common/Node.h"
+#include "common/node.h"
 
 /* node structure
  *  string

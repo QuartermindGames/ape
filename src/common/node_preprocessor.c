@@ -8,7 +8,7 @@
 #include <PL/platform_filesystem.h>
 
 #include "common/Common.h"
-#include "NodePrivate.h"
+#include "node_private.h"
 
 /**
  * Inserts the given string into an existing string buffer.

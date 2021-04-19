@@ -7,7 +7,7 @@
 #include <PL/pl_parse.h>
 #include <PL/platform_filesystem.h>
 
-#include "NodePrivate.h"
+#include "node_private.h"
 
 #define NL_VERSION 1
 #define NL_BINARY_HEADER "node.bin"
@@ -249,7 +249,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 	}
 
 	/* assign the node name, if provided */
-	if ( name != NULL ) {
+	if ( ( parent == NULL || parent->type != NODE_PROPERTY_ARRAY ) && name != NULL ) {
 		node->name.strBuf = AllocVarString( name, &node->name.strBufLength );
 	}
 
@@ -279,6 +279,17 @@ NLNode *NL_PushBackString( NLNode *parent, const char *name, const char *var ) {
 		node->data.strBuf = AllocVarString( var, &node->data.strBufLength );
 	}
 	return node;
+}
+
+NLNode *NL_PushBackStringArray( NLNode *parent, const char *name, const char **array, unsigned int numElements ) {
+    NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_ARRAY );
+    if ( node != NULL ) {
+        node->childType = NODE_PROPERTY_STRING;
+        for ( unsigned int i = 0; i < numElements; ++i ) {
+            NL_PushBackString( node, NULL, array[ i ] );
+        }
+    }
+    return node;
 }
 
 NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var ) {
@@ -329,6 +340,14 @@ NLNode *NL_PushBackFloatArray( NLNode *parent, const char *name, const float *ar
 		}
 	}
 	return node;
+}
+
+NLNode *NL_PushBackObjArray( NLNode *parent, const char *name ) {
+    NLNode *node = xNL_PushBackNode( parent, name, NODE_PROPERTY_ARRAY );
+    if ( node != NULL ) {
+        node->childType = NODE_PROPERTY_OBJECT;
+    }
+    return node;
 }
 
 NLNode *NL_PushBackVec2( NLNode *parent, const char *name, const PLVector2 *var ) {
@@ -498,8 +517,12 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 /** Serialisation **/
 
 static unsigned int sDepth; /* serialisation depth */
-static void TabifyLine( FILE *file, const char *string ) {
-	for ( unsigned int i = 0; i < sDepth; ++i ) fputc( '\t', file );
+static void WriteLine( FILE *file, const char *string, bool tabify ) {
+	if ( tabify ) {
+		for ( unsigned int i = 0; i < sDepth; ++i ) {
+			fputc( '\t', file );
+		}
+	}
 	if ( string == NULL ) {
 		return;
 	}
@@ -551,54 +574,63 @@ static void SerializeNodeTree( FILE *file, NLNode *root, NLFileType fileType );
 static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType ) {
 	if ( fileType == NL_FILE_ASCII ) {
 		/* write out the line identifying this node */
-		TabifyLine( file, NULL );
-		fprintf( file, "%s ", StringForPropertyType( node->type ) );
-		SerializeStringVar( &node->name, fileType, file );
+		WriteLine( file, NULL, true );
+		NLNode *parent = NL_GetParent( node );
+		if ( parent == NULL || parent->type != NODE_PROPERTY_ARRAY ) {
+			fprintf( file, "%s ", StringForPropertyType( node->type ) );
+			if ( node->type == NODE_PROPERTY_ARRAY ) {
+                fprintf( file, "%s ", StringForPropertyType( node->childType ) );
+			}
+			SerializeStringVar( &node->name, fileType, file );
+		}
+
 		/* if this node has children, serialize all those */
 		if ( node->type == NODE_PROPERTY_OBJECT || node->type == NODE_PROPERTY_ARRAY ) {
-            TabifyLine( file, "{\n" );
+            WriteLine( file, "{\n", ( parent != NULL && parent->type == NODE_PROPERTY_ARRAY ) );
 			sDepth++;
 			SerializeNodeTree( file, node, fileType );
             sDepth--;
-            TabifyLine( file, "}\n\n" );
+			WriteLine( file, "}\n", true );
 		} else {
 			SerializeStringVar( &node->data, fileType, file );
 			fprintf( file, "\n" );
 		}
-	} else {
-		SerializeStringVar( &node->name, fileType, file );
-		fwrite( &node->type, sizeof( int8_t ), 1, file );
-		switch ( node->type ) {
-			case NODE_PROPERTY_FLOAT: {
-				float v = NL_GetFloat( node );
-				fwrite( &v, sizeof( float ), 1, file );
-				break;
-			}
-			case NODE_PROPERTY_INTEGER: {
-				int v = ( int ) NL_GetFloat( node );
-				fwrite( &v, sizeof( uint32_t ), 1, file );
-				break;
-			}
-			case NODE_PROPERTY_STRING: {
-				SerializeStringVar( &node->data, fileType, file );
-				break;
-			}
-			case NODE_PROPERTY_BOOLEAN: {
-				bool v = NL_GetBoolean( node );
-				fwrite( &v, sizeof( uint8_t ), 1, file );
-				break;
-			}
-			case NODE_PROPERTY_ARRAY:
-				/* only extra component here is the child type */
-				fwrite( &node->childType, sizeof( uint8_t ), 1, file );
-			case NODE_PROPERTY_OBJECT: {
-				uint32_t i = plGetNumLinkedListNodes( node->linkedList );
-				fwrite( &i, sizeof( uint32_t ), 1, file );
-				SerializeNodeTree( file, node, fileType );
-				break;
-			}
-		}
+
+		return;
 	}
+
+    SerializeStringVar( &node->name, fileType, file );
+    fwrite( &node->type, sizeof( int8_t ), 1, file );
+    switch ( node->type ) {
+        case NODE_PROPERTY_FLOAT: {
+            float v = NL_GetFloat( node );
+            fwrite( &v, sizeof( float ), 1, file );
+            break;
+        }
+        case NODE_PROPERTY_INTEGER: {
+            int v = ( int ) NL_GetFloat( node );
+            fwrite( &v, sizeof( uint32_t ), 1, file );
+            break;
+        }
+        case NODE_PROPERTY_STRING: {
+            SerializeStringVar( &node->data, fileType, file );
+            break;
+        }
+        case NODE_PROPERTY_BOOLEAN: {
+            bool v = NL_GetBoolean( node );
+            fwrite( &v, sizeof( uint8_t ), 1, file );
+            break;
+        }
+        case NODE_PROPERTY_ARRAY:
+            /* only extra component here is the child type */
+            fwrite( &node->childType, sizeof( uint8_t ), 1, file );
+        case NODE_PROPERTY_OBJECT: {
+            uint32_t i = plGetNumLinkedListNodes( node->linkedList );
+            fwrite( &i, sizeof( uint32_t ), 1, file );
+            SerializeNodeTree( file, node, fileType );
+            break;
+        }
+    }
 }
 
 static void SerializeNodeTree( FILE *file, NLNode *root, NLFileType fileType ) {
@@ -640,10 +672,11 @@ void NL_PrintNodeTree( NLNode *node, int index ) {
 	if ( node->type == NODE_PROPERTY_OBJECT || node->type == NODE_PROPERTY_ARRAY ) {
 		index++;
 
+		const char *name = ( node->name.strBuf != NULL ) ? node->name.strBuf : "";
 		if ( node->type == NODE_PROPERTY_OBJECT ) {
-			Message( "%s %s\n", node->name.strBuf, StringForPropertyType( node->type ) );
+			Message( "%s (%s)\n", name, StringForPropertyType( node->type ) );
 		} else {
-			Message( "%s %s\n", StringForPropertyType( node->type ), StringForPropertyType( node->childType ) );
+			Message( "%s (%s %s)\n", name, StringForPropertyType( node->type ), StringForPropertyType( node->childType ) );
 		}
 
 		NLNode *child = NL_GetFirstChild( node );

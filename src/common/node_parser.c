@@ -7,7 +7,7 @@
 #include <PL/pl_parse.h>
 
 #include "common/Common.h"
-#include "NodePrivate.h"
+#include "node_private.h"
 
 static void SkipToNextToken( const char **buf, unsigned int *line ) {
 	while ( plIsEndOfLine( buf ) ) {
@@ -54,7 +54,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 		return NULL;
 	}
 
-	plSkipWhitespace( buf );
+	SkipToNextToken( buf, &currentLine );
 	if ( *( *buf ) != '{' ) {
 		Warning( "No opening brace for array, \"%s\"!\n", name );
 		return NULL;
@@ -80,7 +80,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					break;
 				}
 				NL_PushBackInt( arrayNode, NULL, i );
-				plSkipWhitespace( buf );
+				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
@@ -93,7 +93,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					break;
 				}
 				NL_PushBackFloat( arrayNode, NULL, i );
-				plSkipWhitespace( buf );
+                SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
@@ -103,7 +103,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					Warning( "Failed to parse object node for array, \"%s\"!\n", name );
 					break;
 				}
-				plSkipWhitespace( buf );
+                SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
@@ -116,7 +116,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					break;
 				}
 				NL_PushBackInt( arrayNode, NULL, i );
-				plSkipWhitespace( buf );
+                SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
@@ -128,7 +128,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					break;
 				}
 				NL_PushBackString( arrayNode, NULL, i );
-				plSkipWhitespace( buf );
+				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
@@ -149,14 +149,16 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 
 static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine );
 static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine ) {
-	char name[ NL_MAX_NAME_LENGTH ];
-	if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL ) {
-		Warning( "Failed to parse name!\n" );
-		return NULL;
+	char name[ NL_MAX_NAME_LENGTH ] = { '\0' };
+	if ( parent == NULL || parent->type != NODE_PROPERTY_ARRAY ) {
+		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL ) {
+			Warning( "Failed to parse name!\n" );
+			return NULL;
+		}
 	}
 
 	/* make sure the object is followed by an opening brace */
-	plSkipWhitespace( buf );
+	SkipToNextToken( buf, &currentLine );
 	if ( *( *buf ) != '{' ) {
 		Warning( "No opening brace for object, \"%s\"!\n", name );
 		return NULL;
@@ -168,14 +170,14 @@ static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length,
 		return NULL;
 	}
 
-	SkipToNextToken( buf, &currentLine );
-
 	/* read in all the children nodes */
+    SkipToNextToken( buf, &currentLine );
 	while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 		if ( ParseNode( objectNode, buf, length, 0 ) == NULL ) {
 			Warning( "Failed to parse child node for object, \"%s\" [%d]!\n", name, currentLine );
 			break;
 		}
+
 		SkipToNextToken( buf, &currentLine );
 	}
 

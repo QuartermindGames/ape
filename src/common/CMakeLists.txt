@@ -12,11 +12,11 @@ add_library(common SHARED
         include/common/Common.h
         include/common/World.h
         ##############################
-        Node.c
-        include/common/Node.h
-        NodeParser.c
-        NodePreProcessor.c
-        NodePrivate.h
+        node.c
+        include/common/node.h
+        node_parser.c
+        node_preprocessor.c
+        node_private.h
         ##############################
         FileSystem.c
         Common.c)
