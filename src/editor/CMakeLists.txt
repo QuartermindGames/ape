@@ -53,8 +53,14 @@ if (NOT UNIX)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         target_compile_options(platform PRIVATE -static -static-libstdc++ -static-libgcc)
     endif ()
+
+    # link glew
+    target_include_directories(editor PRIVATE "glew/include/")
+    target_link_directories(editor PRIVATE "glew/lib/Release/x64/")
+    target_link_libraries(editor glew32s)
+
 else ()
     target_link_libraries(editor GLEW GL GLU)
 endif ()
 
-target_link_libraries(editor platform common FOX-1.6)
+target_link_libraries(editor FOX-1.6 platform common)

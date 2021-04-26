@@ -1,5 +1,5 @@
 [submodule "src/3rdparty/platform"]
-	path = src/3rdparty/platform
+	path = src/platform
 	url = https://github.com/TalonBraveInfo/platform.git
 [submodule "src/3rdparty/fox-1.6.57_cmake"]
 	path = src/3rdparty/fox-1.6.57_cmake
