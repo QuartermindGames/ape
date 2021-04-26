@@ -8,6 +8,8 @@ message("Configuring Yin...")
 
 # Set all of our output directories.
 
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
 include_directories(src/)
 include_directories(src/common/include/)
 
@@ -77,5 +79,5 @@ add_subdirectory(src/game/)
 add_subdirectory(src/editor/)
 add_subdirectory(src/ycvm/)
 
+#add_subdirectory(src/tools/qmap2world/)
 add_subdirectory(src/tools/pkgman/)
-add_subdirectory(src/tools/qmap2world/)
