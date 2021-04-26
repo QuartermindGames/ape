@@ -1,6 +1,6 @@
 /* ======================================================================
  * Project Yin, Confidential
- * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * Copyright (C) 2020-2021 OldTimes Software
  * ====================================================================*/
 
 #include <PL/pl_llist.h>
@@ -11,6 +11,8 @@
 #include "image.h"
 #include "map.h"
 #include "renderer.h"
+
+RendererStats g_gfxPerfStats;
 
 static PLCamera *auxCamera = NULL;
 
@@ -528,7 +530,7 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h ) {
 	}
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
 
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), w, h, -w, -h, ppAttachment );
+	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, ppAttachment );
 	plPopMatrix();
 }
 
@@ -596,7 +598,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 }
 
 void Gfx_DrawMenu( void ) {
-	SysWindow *window = Engine_GetMainWindow();
+	OSWindow *window = Engine_GetMainWindow();
 	if ( window == NULL ) {
 		return;
 	}
@@ -630,7 +632,7 @@ void Gfx_DrawMenu( void ) {
 
 		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) memoryGraph[ i ] = memoryGraph[ i + 1 ];
 		memoryGraph[ NUM_GRAPH_POINTS - 1 ] = plBytesToMegabytes( plGetCurrentMemoryUsage() );
-		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, 1000.0f );
+		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, plBytesToMegabytes( plGetTotalSystemMemory() ) );
 
 		BitmapFont *defaultFont = Font_GetDefault();
 		if ( defaultFont != NULL ) {
@@ -644,19 +646,36 @@ void Gfx_DrawMenu( void ) {
 
 			char buf[ 256 ];
 			snprintf( buf, sizeof( buf ),
-			          "Position:        %d %d %d\n"
-			          "Current Node:    0\n"
-			          "Num Faces Drawn: %d\n"
-			          "Num Batches:     %d\n"
-			          "Memory:          %.2lfmb (%.2lfmb available)",
-			          ( int ) g_gfxPerfStats.cameraPos.x,
-			          ( int ) g_gfxPerfStats.cameraPos.y,
-			          ( int ) g_gfxPerfStats.cameraPos.z,
+			          "Rendering State\n"
+                      "===================\n"
+			          "  Camera Position: %s\n"
+			          "  Num Faces Drawn: %d\n"
+			          "  Num Batches:     %d\n",
+			          plPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
 			          g_gfxPerfStats.numFacesDrawn,
-			          g_gfxPerfStats.numBatches,
-			          plBytesToMegabytes( plGetCurrentMemoryUsage() ),
-			          plBytesToMegabytes( plGetTotalSystemMemory() ) );
-			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+			          g_gfxPerfStats.numBatches );
+			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+
+			/* print out details regarding running tasks */
+			{
+				float y = 128.0f;
+				Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "Tasks\n===================", true );
+				y += defaultFont->ch * 2;
+
+				double taskDelay;
+				unsigned int index = 0;
+				const char *taskDesc = Sch_GetTaskDescription( index, &taskDelay );
+				if ( taskDesc == NULL ) {
+                    Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
+				} else {
+					while ( taskDesc != NULL ) {
+						snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay );
+						Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+						y += defaultFont->ch;
+						taskDesc = Sch_GetTaskDescription( ++index, &taskDelay );
+					}
+				}
+			}
 
 			Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
 			                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
@@ -670,6 +689,8 @@ void Gfx_DrawMenu( void ) {
 	Con_Draw( &auxCamera->viewport );
 
 	plSetDepthMask( true );
+
+	memset( &g_gfxPerfStats, 0, sizeof( RendererStats ) );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {

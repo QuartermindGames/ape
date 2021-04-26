@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include <fx.h>
+#include <FXVerticalFrame.h>
+
 namespace huang {
 	class Viewport : public FXVerticalFrame {
 		FXDECLARE( Viewport )
@@ -40,11 +43,14 @@ namespace huang {
 
 		virtual void create();
 
+		int GetCanvasWidth() const;
+		int GetCanvasHeight() const;
+
 		long OnChore( FXObject *, FXSelector, void * );
 		long OnExpose( FXObject *, FXSelector, void * );
 		long OnConfigure( FXObject *, FXSelector, void * );
 
-		Camera *GetCamera() { return &camera; }
+		CameraPerspective *GetCamera() { return &camera; }
 
 		uint8_t GetViewMode() const { return currentViewMode; }
 		uint8_t GetDrawMode() const { return currentDrawMode; }
@@ -79,8 +85,10 @@ namespace huang {
 		FXDataTarget myForwardSpeedTarget;
 		FXDataTarget myTurnSpeedTarget;
 
-		Camera		camera;
-		XYZView		xyz;
+		BasePerspective *currentPerspective;
+
+		CameraPerspective camera;
+		XYZPerspective xyz;
 
 		bool mouseButtonStates[ input::MAX_MOUSE_BUTTONS ];
 
@@ -91,4 +99,4 @@ namespace huang {
 
 		static FXGLCanvas *sharedDisplayList;
 	};
-}
+}// namespace huang

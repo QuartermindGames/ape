@@ -24,7 +24,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	PAGEFLIPS	2
 
-z_t		z;
+typedef struct
+{
+    int		width, height;
+
+    qboolean	timing;
+
+    vec3_t	origin;			// at center of window
+    float	scale;
+} z_t;
+
+static z_t		z;
 
 /*
 ============

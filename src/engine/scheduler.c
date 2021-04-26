@@ -17,6 +17,32 @@ typedef struct SchTask {
 	PLLinkedListNode *node;
 } SchTask;
 
+unsigned int Sch_GetNumTasks( void ) {
+	return plGetNumLinkedListNodes( scheduleList );
+}
+
+const char *Sch_GetTaskDescription( unsigned int index, double *delay ) {
+	if ( scheduleList == NULL ) {
+		return NULL;
+	}
+
+    PLLinkedListNode *node = plGetFirstNode( scheduleList );
+	for ( unsigned int i = 0; i < index; ++i ) {
+		node = plGetNextLinkedListNode( node );
+		if ( node == NULL ) {
+			return NULL;
+		}
+	}
+
+    const SchTask *task = plGetLinkedListNodeUserData( node );
+
+	if ( delay != NULL ) {
+		*delay = task->delay;
+	}
+
+	return task->desc;
+}
+
 bool Sch_IsTaskRunning( const char *desc ) {
 	if ( scheduleList == NULL ) {
 		return false;

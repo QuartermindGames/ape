@@ -11,8 +11,6 @@ static bool isConsoleOpen = false;
 
 static unsigned int scrollPos = 0;
 
-static Material *backgroundMaterial = NULL;
-
 #define CON_TEXT_COLOUR PLColourRGB( 0, 255, 0 )
 
 /* console buffer methods */
@@ -87,20 +85,12 @@ CMD_CALLBACK( Quit ) {
 	Engine_Shutdown();
 }
 
-static void Con_UpdateBackground( const PLConsoleVariable *var ) {
-	RM_DestroyMaterial( backgroundMaterial, false );
-	backgroundMaterial = RM_CacheMaterial( var->s_value, CACHE_GROUP_STATIC, false );
-	if ( backgroundMaterial == NULL ) {
-		Print( "Please provide a valid background path!\n" );
-	}
-}
-
 /*------------------------------------------------------------------*/
 
 PLConsoleVariable *gVarGraphicsFXAA;
 PLConsoleVariable *gVarGraphicsSupersampling;
 
-#include "common/Node.h"
+#include "common/node.h"
 
 #define USER_CONFIG "user" NL_DEFAULT_EXTENSION
 
@@ -142,9 +132,9 @@ static void SaveUserConfig( void ) {
     NLNode *root = NL_PushBackObj( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i ) {
 		/* don't bother storing it if it matches the default */
-		//if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
-		//	continue;
-		//}
+		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 ) {
+			continue;
+		}
 
 		switch( cvars[ i ]->type ) {
 			case pl_float_var:
@@ -190,7 +180,6 @@ void Con_Initialize( void ) {
 	plRegisterConsoleVariable( "game.projectPath", "scripts/project.node", pl_string_var, NULL, "Sets the default path to load a GS project." );
 	plRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 
-	plRegisterConsoleVariable( "console.background", "", pl_string_var, Con_UpdateBackground, "Background to use for the console." );
 	plRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
 	plRegisterConsoleVariable( "console.height", "512", pl_int_var, NULL, "Set the height of the console." );
 	plRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );

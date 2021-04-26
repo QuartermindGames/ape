@@ -33,6 +33,7 @@ For more information, please refer to <https://unlicense.org>
 class Brush;
 
 namespace huang {
+    class World;
 	class Viewport;
 	class LayerWidget;
 	class MainWindow : public FXMainWindow {
@@ -55,6 +56,8 @@ namespace huang {
 		FXStatusBar *myStatusBar[ MAX_STATUS_SLOTS ];
 
 		LayerWidget *myLayerWidget{ nullptr };
+
+        World *world{ nullptr };
 
 	protected:
 		FXToolBar *toolBar{ nullptr };
@@ -98,6 +101,7 @@ namespace huang {
 
 		void CreateWorld();
 		void LoadWorld( const char *path );
+		World *GetCurrentWorld() const { return world; }
 
 		void CentreViewsOnBrush( const Brush *b );
 

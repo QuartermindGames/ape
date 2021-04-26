@@ -41,7 +41,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 		return;
 	}
 
-	SysWindow *window = Engine_GetMainWindow();
+	OSWindow *window = Engine_GetMainWindow();
 	if ( window == NULL ) {
 		return;
 	}

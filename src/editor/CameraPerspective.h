@@ -24,42 +24,55 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
-#include "BasePerspective.h"
+#include "brush.h"
 
 namespace huang {
-	class XYZPerspective : public BasePerspective {
+	class CameraPerspective {
 	public:
-		enum class Angle {
-			TOP,
-			LEFT,
-			FRONT
-		};
+		CameraPerspective();
 
-		explicit XYZPerspective( Viewport *parent );
-		~XYZPerspective();
+		void BuildMatrix();
+		void ChangeFloor( bool up );
 
-		void MouseDown( int x, int y, const bool buttons[] );
+		void PositionDrag();
+		void MouseControl( float dtime, const bool buttons[] );
+		bool MouseDown( int x, int y, const bool buttons[] );
 		void MouseUp( int x, int y, const bool buttons[] );
 		void MouseMoved( int x, int y, const bool buttons[] );
 
-		void Draw();
+		bool HandleInput( int key );
 
-		float scale{ 1.0f };
+		void InitCull();
+		bool CullBrush( Brush *b );
 
-	protected:
+		void Draw( const Viewport *viewport );
+		void DrawBrush( Brush *b );
+
+		void ResetPosition();
+		void CenterView();
+
+		void SetPosition( const vec3_t &newPos );
+
+		int		width{ 0 }, height{ 0 };
+
+		qboolean	timing{ false };
+
+		vec3_t	origin{ 0.0f, 20.0f, 46.0f };
+		vec3_t	angles{ 0.0f, 0.0f, 0.0f };
+
+		uint8_t draw_mode{ DRAW_TEXTURED };
+
+		vec3_t	color{ 0.3f, 0.3f, 0.3f };			// background
+
+		vec3_t	forward, right, up;	// move matrix
+
+		float forwardSpeed{ 32.0f };
+		float turnSpeed{ 22.5f };
+
 	private:
-		void ToPoint( int x, int y, vec3_t point );
-		void ToGridPoint( int x, int y, vec3_t point );
+		vec3_t	vup, vpn, vright;	// view matrix
 
-		bool DragDelta( int x, int y, vec3_t move );
-
-		void NewBrushDrag( int x, int y );
-
-		void DrawGrid();
-		void DrawBlockGrid();
-
-		bool d_dirty{ false };
+		vec3_t	cull1, cull2;
+		int		cullv1[ 3 ], cullv2[ 3 ];
 	};
-}// namespace huang
-
-bool FilterBrush( const Brush *pb );
+}

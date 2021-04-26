@@ -24,18 +24,19 @@ typedef enum ViewPerspective {
 } ViewPerspective;
 
 typedef struct GfxCamera {
-	SysWindow               *viewportPtr;
+	OSWindow *viewportPtr;
 	PLCamera			    *internalPtr;			/* the camera used for this viewport */
 	ViewPerspective		    perspective;
 	struct Actor		    *parentActor;
 	struct PLLinkedListNode *node;				/* node representing this object in the linked list */
 } GfxCamera;
 
-static struct {
-	PLVector3 cameraPos;
-	unsigned int numBatches;
-	unsigned int numFacesDrawn;
-} g_gfxPerfStats;
+typedef struct RendererStats {
+    PLVector3 cameraPos;
+    unsigned int numBatches;
+    unsigned int numFacesDrawn;
+} RendererStats;
+extern RendererStats g_gfxPerfStats;
 
 #define GFX_PROGRAM_NAME_LENGTH 64
 
@@ -60,7 +61,7 @@ void R_Shutdown( void );
 void Gfx_SetupDefaultState( void );
 void Gfx_DrawMenu( void );
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, SysWindow *viewport );
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport );
 
 PLShaderProgram *Gfx_GetShaderProgram( const char *name );
 

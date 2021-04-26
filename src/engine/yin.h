@@ -67,11 +67,7 @@ void Con_Draw( const PLViewport *viewport );
 #define YIN_ENABLE_LOCAL_FS
 #endif
 
-typedef struct SysWindow SysWindow;
-
-#define WINDOW_TITLE "Yin Game Engine"
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
+typedef struct OSWindow OSWindow;
 
 #define PrintError( ... )                         \
 	plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
@@ -88,7 +84,7 @@ extern PLPackage *globalWad;
 
 void Engine_Shutdown( void );
 
-SysWindow *Engine_GetMainWindow( void );
+OSWindow *Engine_GetMainWindow( void );
 unsigned int Engine_GetNumTicks( void );
 
 #include "MemoryManager.h"

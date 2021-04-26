@@ -65,7 +65,7 @@ add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 # external libraries
 add_subdirectory(src/3rdparty/platform/platform/)
 add_subdirectory(src/3rdparty/platform/plugins/driver_opengl/)
-add_subdirectory(src/3rdparty/fox-1.6.57/)
+add_subdirectory(src/3rdparty/fox-1.6.57_cmake/)
 
 # main projects
 add_subdirectory(src/launcher_sdl2/)

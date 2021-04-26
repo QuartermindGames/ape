@@ -27,16 +27,36 @@ For more information, please refer to <https://unlicense.org>
 
 #include "qe3.h"
 
+const char *huang::util::GetMaterialsDirectory() {
+	static char materialsPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
+	if ( materialsPath[ 0 ] == '\0' ) {
+		snprintf( materialsPath, sizeof( materialsPath ), "%smaterials/", ComFS_GetDataDirectory() );
+	}
+    return materialsPath;
+}
+
+const char *huang::util::GetWorldsDirectory() {
+	static char worldsPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
+	if ( worldsPath[ 0 ] == '\0' ) {
+		snprintf( worldsPath, sizeof( worldsPath ), "%sworlds/", ComFS_GetDataDirectory() );
+	}
+    return worldsPath;
+}
+
 FXIcon *huang::util::LoadImageIcon( FXApp *app, const char *path ) {
+	const char *dataDir = ComFS_GetDataDirectory();
+    char fullPath[ PL_SYSTEM_MAX_PATH ];
+	snprintf( fullPath, sizeof( fullPath ), "%s%s", dataDir, path );
+
 	FXIconSource iconSource( app );
-	return iconSource.loadIconFile( path );
+	return iconSource.loadIconFile( fullPath );
 }
 
 /**
  * Pull in a list of menu items and add them onto the given menu bar.
  */
 FXMenuPane *huang::util::CreateMenus( FXApp *app, FXMenuBar *menuBar, const char *menuName, MenuItem *items ) {
-	FXMenuPane *menu = new FXMenuPane( menuBar->getParent() );
+	auto *menu = new FXMenuPane( menuBar->getParent() );
 	
 	MenuItem *curMenuItem = items;
 	while( curMenuItem->label != nullptr ) {

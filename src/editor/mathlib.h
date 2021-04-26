@@ -36,6 +36,7 @@ typedef vec_t vec3_t[3];
 #define	SIDE_CROSS		-2
 
 #define	Q_PI	3.14159265358979323846
+#define Q_PIF   ( float ) Q_PI
 
 extern vec3_t vec3_origin;
 

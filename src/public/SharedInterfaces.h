@@ -5,6 +5,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define INTERFACE_COMBINE_VERSION( X, Y ) ( ( ( X ) << 16 ) | ( ( Y ) & 0xFFFF ) )
 
 #define VERSION_MAJOR 0
@@ -18,13 +22,8 @@ typedef struct SystemInterface {
 	uint16_t version[ 2 ];
 
     /* windowing */
-    void ( *DisplayMessageBox )( SysMessage messageType, const char *message, ... );
-    SysWindow *( *CreateWindow )( const char *title, int width, int height );
-    void ( *DestroyWindow )( SysWindow *windowPtr );
-    void ( *MakeWindowActive )( SysWindow *windowPtr );
-    void ( *SwapWindow )( SysWindow *windowPtr );
-    void ( *GetWindowSize )( SysWindow *windowPtr, int *width, int *height );
-    bool ( *IsDisplayActive )( SysWindow *windowPtr );
+	OSWindow *( *CreateWindow )( const char *title, int width, int height );
+    void ( *GetWindowSize )( OSWindow *windowPtr, int *width, int *height );
 
     /* input */
     bool ( *GetButtonState )( InputButton inputIndex );
@@ -93,3 +92,7 @@ extern EngineInterface globalEngine;
 #define INTERFACE_PROCEDURE "GetDllInterface"
 typedef EngineInterface *( *DllEngineInterface )( uint32_t version, const SystemInterface *sysIn );
 typedef GameInterface *( *DllGameInterface )( uint32_t version, const SystemInterface *sysIn, const EngineInterface *engIn );
+
+#ifdef __cplusplus
+};
+#endif

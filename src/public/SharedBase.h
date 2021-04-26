@@ -98,7 +98,7 @@ typedef enum SysMessage {
 	SYS_MESSAGE_INFO,
 } SysMessage;
 
-typedef struct SysWindow SysWindow;
+typedef struct OSWindow OSWindow;
 
 #include "SharedInterfaces.h"
 

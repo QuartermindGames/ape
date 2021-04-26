@@ -42,6 +42,11 @@ object project {
         "Game.c"
         "GameInterface.h"
     }
+    
+    object exampleGroup {
+        string groupName Hello
+        float exampleVar 2.0
+    }
 }
 ```
 

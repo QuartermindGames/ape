@@ -103,7 +103,7 @@ void Game_Initialize( void ) {
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", plGetError() );
 	}
 
-	plRegisterConsoleCommand( "game.spawn", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	plRegisterConsoleCommand( "Game.SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 
 	/* initialize the interface */
 }

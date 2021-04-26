@@ -74,10 +74,6 @@ char *TranslateString( char *buf ) {
 	return buf2;
 }
 
-void Sys_ClearPrintf( void ) {
-	// stub
-}
-
 void Sys_Printf( const char *text, ... ) {
 	va_list argptr;
 	char buf[ 32768 ];
@@ -124,7 +120,7 @@ FILE DIALOGS
 ======================================================================
 */
 
-qboolean ConfirmModified( void ) {
+qboolean ConfirmModified() {
 	if ( !modified ) {
 		return true;
 	}
@@ -140,51 +136,7 @@ qboolean ConfirmModified( void ) {
 	return true;
 }
 
-void ProjectDialog( void ) {
-#if 0
-	/*
-	 * Obtain the system directory name and
-	 * store it in szDirName.
-	 */
-
-	strcpy (szDirName, ValueForKey(g_qeglobals.d_project_entity, "basepath") );
-	strcat (szDirName, "\\scripts");
-
-	/* Place the terminating null character in the szFile. */
-
-	szFile[0] = '\0';
-
-	/* Set the members of the OPENFILENAME structure. */
-
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = g_qeglobals.d_hwndCamera;
-	ofn.lpstrFilter = szProjectFilter;
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFileTitle = szFileTitle;
-	ofn.nMaxFileTitle = sizeof(szFileTitle);
-	ofn.lpstrInitialDir = szDirName;
-	ofn.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST |
-		OFN_FILEMUSTEXIST;
-
-	/* Display the Open dialog box. */
-
-	if (!GetOpenFileName(&ofn))
-		return;	// canceled
-
-	// Refresh the File menu.
-	PlaceMenuMRUItem(g_qeglobals.d_lpMruMenu,GetSubMenu(GetMenu(g_qeglobals.d_hwndMain),0),
-			ID_FILE_EXIT);
-
-	/* Open the file. */
-	if (!QE_LoadProject(ofn.lpstrFile))
-		Error ("Couldn't load project file");
-#endif
-}
-
-
-void SaveAsDialog( void ) {
+void SaveAsDialog() {
 #if 0
 	strcpy (szDirName, ValueForKey (g_qeglobals.d_project_entity, "basepath") );
 	strcat (szDirName, "\\maps");
@@ -226,7 +178,6 @@ void SaveAsDialog( void ) {
 #endif
 }
 
-
 /****************************************
  * MEMORY MANAGEMENT
  ****************************************/
@@ -234,12 +185,12 @@ void SaveAsDialog( void ) {
 /* wrapper for calloc */
 void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
 	void *mem = calloc( num, size );
-	if ( mem == NULL ) {
+	if ( mem == nullptr ) {
 		if ( abortOnFail ) {
 			LError( "Failed to allocate %d bytes!\n", num * size );
-		} else {
-			LWarn( "Failed to allocate %d bytes!\n", num * size );
 		}
+
+		LWarn( "Failed to allocate %d bytes!\n", num * size );
 	}
 
 	return mem;
@@ -253,12 +204,12 @@ void *Sys_malloc( size_t size, bool abortOnFail ) {
 /* wrapper for realloc */
 void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
 	void *buf = realloc( ptr, newSize );
-	if ( buf == NULL ) {
+	if ( buf == nullptr ) {
 		if ( abortOnFail ) {
 			LError( "Failed to allocate %d bytes!\n", newSize );
-		} else {
-			LWarn( "Failed to allocate %d bytes!\n", newSize );
 		}
+
+		LWarn( "Failed to allocate %d bytes!\n", newSize );
 	}
 
 	return buf;
@@ -288,17 +239,12 @@ static void SetupEngineInterface() {
 	}
 
 	static SystemInterface systemInterface = {
-#if 0
-			.version = BASE_INTERFACE_VERSION,
+		.version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
+#if 0
 			.Shutdown = nullptr,
-			.DisplayMessageBox = nullptr,
 			.CreateWindow = nullptr,
-			.DestroyWindow = nullptr,
 			.GetWindowSize = nullptr,
-			.MakeWindowActive = nullptr,
-			.SwapWindow = nullptr,
-			.IsDisplayActive = nullptr,
 			.GetButtonState = nullptr,
 			.GetKeyState = nullptr,
 			.HasKeyboard = nullptr,
@@ -335,6 +281,8 @@ int main( int argc, char **argv ) {
 	pl_realloc = Sys_WReAlloc;
 
 	plInitialize( vargc, vargv );
+
+    plRegisterPlugins( "./" );
 
 	// Setup logging
 	if ( plHasCommandLineArgument( "-log" ) ) {
@@ -381,6 +329,8 @@ int main( int argc, char **argv ) {
 	Sys_Printf( "Entering message loop\n" );
 
 	app.create();
+
+    plInitializePlugins();
 
 	extern void M_LoadGlobalRegistryData();
 	M_LoadGlobalRegistryData();
