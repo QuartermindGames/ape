@@ -80,3 +80,4 @@ dkms.conf
 /release/runtime/**/*/common.dll
 /release/runtime/**/*/libplatform.dll
 /release/runtime/win32-x64/game.dll
+/release/runtime/linux-x64/

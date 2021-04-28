@@ -26,6 +26,8 @@ typedef struct MaterialPass {
 	PLBlend blendMode[ 2 ];
 	MaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
+
+	bool depthTest;
 } MaterialPass;
 
 typedef struct Material {
@@ -154,6 +156,7 @@ static void RM_SetupMaterialPass( MaterialPass *pass, PLShaderProgram *program, 
 	pass->program = program;
 	pass->blendMode[ 0 ] = blendModeA;
 	pass->blendMode[ 1 ] = blendModeB;
+	pass->depthTest = true;
 	pass->numVariables = 0;
 
 	memset( pass->variables, 0, sizeof( MaterialVariable ) * MAX_MATERIAL_VARIABLES );
@@ -369,6 +372,8 @@ static void ConvertMatToNode( const Material *material ) {
 		        BlendModeToString( material->passes[ i ].blendMode[ 1 ] )
 		};
 		NL_PushBackStringArray( pass, "blendMode", blendMode, 2 );
+
+		NL_PushBackBool( pass, "depthTest", material->passes[ i ].depthTest );
 
 		NLNode *shaderParms = NL_PushBackObj( pass, "shaderParameters" );
 		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j ) {

@@ -486,12 +486,9 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 		const char *data = ( const char * ) plGetFileData( file ) + strlen( NL_ASCII_HEADER );
 		char *buf = pl_malloc( length );
 		memcpy( buf, data, length );
-
-		Message( "Preprocessing \"%s\"\n", path );
 		buf = xNL_PreProcessScript( buf, &length, true );
-		Message( "Done\n%s", buf );
-
 		root = NL_ParseBuffer( buf, length );
+		pl_free( buf );
 	} else {
 		/* assumes binary format */
 		root = DeserializeBinaryNode( file, NULL );

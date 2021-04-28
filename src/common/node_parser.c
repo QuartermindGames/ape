@@ -9,13 +9,23 @@
 #include "common/Common.h"
 #include "node_private.h"
 
+#define DEBUG_PARSER 0
+#if !defined( NDEBUG ) && DEBUG_PARSER
+#define DebugParser( FORMAT, ... ) Message( "PARSE: " FORMAT, ## __VA_ARGS__ )
+#else
+#define DebugParser( FORMAT, ... )
+#endif
+
 static void SkipToNextToken( const char **buf, unsigned int *line ) {
-	while ( plIsEndOfLine( buf ) ) {
-		plSkipLine( buf );
-		*line++;
+	while( *( *buf ) == ' ' || *( *buf ) == '\t' || *( *buf ) == '\n' || *( *buf ) == '\r' ) {
+		if ( *( *buf ) == '\n' ) {
+			*line++;
+		}
+
+        ( *buf )++;
 	}
 
-    plSkipWhitespace( buf );
+	DebugParser( "POS: %s\n", buf[ 0 ] );
 }
 
 static const char *ParseToken( const char **buf, char *token, size_t size, unsigned int *line ) {
@@ -42,17 +52,21 @@ static NLPropertyType PropertyTypeForString( const char *type ) {
 
 static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine );
 static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine ) {
+    DebugParser( "Entering ParseArrayNode\n" );
+
 	char childType[ NL_MAX_TYPE_LENGTH ];
 	if ( ParseToken( buf, childType, sizeof( childType ), &currentLine ) == NULL ) {
 		Warning( "Failed to parse child type for array!\n" );
 		return NULL;
 	}
+	DebugParser( "childType( %s )\n", childType );
 
 	char name[ NL_MAX_NAME_LENGTH ];
 	if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL ) {
 		Warning( "Failed to parse name!\n" );
 		return NULL;
 	}
+    DebugParser( "name( %s )\n", name );
 
 	SkipToNextToken( buf, &currentLine );
 	if ( *( *buf ) != '{' ) {
@@ -66,12 +80,15 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 		return NULL;
 	}
 
+    SkipToNextToken( buf, &currentLine );
+
 	arrayNode->childType = PropertyTypeForString( childType );
 	switch ( arrayNode->childType ) {
 		default:
 			Warning( "Invalid child type for array, \"%s\"!\n", name );
 			break;
 		case NODE_PROPERTY_INTEGER: {
+			DebugParser( "Reading integer\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
 				int i = plParseInteger( buf, &status );
@@ -79,12 +96,14 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
+                DebugParser( "PushBack Integer: %d\n", i );
 				NL_PushBackInt( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
 		case NODE_PROPERTY_FLOAT: {
+			DebugParser( "Reading float\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
 				float i = plParseFloat( buf, &status );
@@ -92,22 +111,25 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
+                DebugParser( "PushBack Float: %f\n", i );
 				NL_PushBackFloat( arrayNode, NULL, i );
-                SkipToNextToken( buf, &currentLine );
+				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
 		case NODE_PROPERTY_OBJECT: {
+			DebugParser( "Reading object\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				if ( ParseObjectNode( arrayNode, buf, length, 0 ) == NULL ) {
 					Warning( "Failed to parse object node for array, \"%s\"!\n", name );
 					break;
 				}
-                SkipToNextToken( buf, &currentLine );
+				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
 		case NODE_PROPERTY_BOOLEAN: {
+			DebugParser( "Reading boolean\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
 				int i = plParseInteger( buf, &status );
@@ -115,24 +137,28 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
+                DebugParser( "PushBack Boolean: %d\n", i );
 				NL_PushBackInt( arrayNode, NULL, i );
-                SkipToNextToken( buf, &currentLine );
+				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
 		case NODE_PROPERTY_STRING: {
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
+			DebugParser( "Reading string\n" );
+			do {
 				char i[ NL_MAX_STRING_LENGTH ];
 				if ( plParseEnclosedString( buf, i, sizeof( i ) ) == NULL ) {
 					Warning( "Failed to parse enclosed string for array, \"%s\"!\n", name );
 					break;
 				}
+                DebugParser( "PushBack String: %s\n", i );
 				NL_PushBackString( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
-			}
+			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
 			break;
 		}
 		case NODE_PROPERTY_LINK: {
+			DebugParser( "Reading link\n" );
 			assert( 0 );
 			break;
 		}
@@ -144,11 +170,14 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 	}
 	( *buf )++;
 
+    DebugParser( "Leaving ParseArrayNode\n" );
 	return arrayNode;
 }
 
 static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine );
 static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine ) {
+    DebugParser( "Entering ParseObjectNode\n" );
+
 	char name[ NL_MAX_NAME_LENGTH ] = { '\0' };
 	if ( parent == NULL || parent->type != NODE_PROPERTY_ARRAY ) {
 		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL ) {
@@ -156,6 +185,7 @@ static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length,
 			return NULL;
 		}
 	}
+    DebugParser( "name( %s )\n", name );
 
 	/* make sure the object is followed by an opening brace */
 	SkipToNextToken( buf, &currentLine );
@@ -171,7 +201,7 @@ static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length,
 	}
 
 	/* read in all the children nodes */
-    SkipToNextToken( buf, &currentLine );
+	SkipToNextToken( buf, &currentLine );
 	while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 		if ( ParseNode( objectNode, buf, length, 0 ) == NULL ) {
 			Warning( "Failed to parse child node for object, \"%s\" [%d]!\n", name, currentLine );
@@ -187,15 +217,19 @@ static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length,
 	}
 	( *buf )++;
 
+    DebugParser( "Leaving ParseObjectNode\n" );
 	return objectNode;
 }
 
 static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsigned int currentLine ) {
+    DebugParser( "Entering ParseNode\n" );
+
 	/* now try reading in the type */
 	char type[ NL_MAX_TYPE_LENGTH ];
 	if ( ParseToken( buf, type, sizeof( type ), &currentLine ) == NULL ) {
 		return NULL;
 	}
+    DebugParser( "type( %s )\n", type );
 
 	NLPropertyType propertyType = PropertyTypeForString( type );
 	/* an array is a special case, parsing-wise */
@@ -209,6 +243,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 			Warning( "Failed to parse name [%d]!\n", currentLine );
 			return NULL;
 		}
+        DebugParser( "name( %s )\n", name );
 
 		/* figure out what data type it is and read in it's result */
 		switch ( propertyType ) {
@@ -219,6 +254,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
+                DebugParser( "PushBack Integer: %d\n", i );
 				return NL_PushBackInt( parent, name, i );
 			}
 			case NODE_PROPERTY_FLOAT: {
@@ -228,6 +264,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 					Warning( "Failed to parse float, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
+                DebugParser( "PushBack Float: %f\n", i );
 				return NL_PushBackFloat( parent, name, i );
 			}
 			case NODE_PROPERTY_STRING: {
@@ -236,6 +273,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 					Warning( "Failed to parse string, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
+				DebugParser( "PushBack String: %s\n", i );
 				return NL_PushBackString( parent, name, i );
 			}
 			case NODE_PROPERTY_BOOLEAN: {
@@ -244,6 +282,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 					Warning( "Failed to parse boolean, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
+                DebugParser( "PushBack Boolean: %s\n", i );
 				return NL_PushBackBool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
 			}
 			default:
