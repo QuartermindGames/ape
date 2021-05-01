@@ -14,4 +14,4 @@ add_executable(qmap2world
 if (NOT UNIX)
     target_link_libraries(qmap2world mingw32)
 endif ()
-target_link_libraries(qmap2world platform)
+target_link_libraries(qmap2world plcore)

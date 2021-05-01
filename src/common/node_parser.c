@@ -3,8 +3,8 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
-#include <PL/pl_parse.h>
+#include <plcore/pl_linkedlist.h>
+#include <plcore/pl_parse.h>
 
 #include "common/Common.h"
 #include "node_private.h"
@@ -30,7 +30,7 @@ static void SkipToNextToken( const char **buf, unsigned int *line ) {
 
 static const char *ParseToken( const char **buf, char *token, size_t size, unsigned int *line ) {
 	SkipToNextToken( buf, line );
-	return plParseToken( buf, token, size );
+	return PlParseToken( buf, token, size );
 }
 
 static NLPropertyType PropertyTypeForString( const char *type ) {
@@ -91,7 +91,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 			DebugParser( "Reading integer\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
-				int i = plParseInteger( buf, &status );
+				int i = PlParseInteger( buf, &status );
 				if ( !status ) {
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
@@ -106,7 +106,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 			DebugParser( "Reading float\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
-				float i = plParseFloat( buf, &status );
+				float i = PlParseFloat( buf, &status );
 				if ( !status ) {
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
@@ -132,7 +132,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 			DebugParser( "Reading boolean\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' ) {
 				bool status;
-				int i = plParseInteger( buf, &status );
+				int i = PlParseInteger( buf, &status );
 				if ( !status ) {
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
@@ -147,7 +147,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 			DebugParser( "Reading string\n" );
 			do {
 				char i[ NL_MAX_STRING_LENGTH ];
-				if ( plParseEnclosedString( buf, i, sizeof( i ) ) == NULL ) {
+				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL ) {
 					Warning( "Failed to parse enclosed string for array, \"%s\"!\n", name );
 					break;
 				}
@@ -249,7 +249,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 		switch ( propertyType ) {
 			case NODE_PROPERTY_INTEGER: {
 				bool status;
-				int i = plParseInteger( buf, &status );
+				int i = PlParseInteger( buf, &status );
 				if ( !status ) {
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
@@ -259,7 +259,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 			}
 			case NODE_PROPERTY_FLOAT: {
 				bool status;
-				float i = plParseFloat( buf, &status );
+				float i = PlParseFloat( buf, &status );
 				if ( !status ) {
 					Warning( "Failed to parse float, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
@@ -269,7 +269,7 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 			}
 			case NODE_PROPERTY_STRING: {
 				char i[ NL_MAX_STRING_LENGTH ];
-				if ( plParseEnclosedString( buf, i, sizeof( i ) ) == NULL ) {
+				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL ) {
 					Warning( "Failed to parse string, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}

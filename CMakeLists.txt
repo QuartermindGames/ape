@@ -37,6 +37,13 @@ elseif (NOT APPLE) # assume linux
     endif ()
 endif ()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
+elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3")
+endif()
+
 # Get the current working branch
 execute_process(
         COMMAND git rev-parse --abbrev-ref HEAD
@@ -63,7 +70,9 @@ add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
 # external libraries
-add_subdirectory(src/3rdparty/platform/platform/)
+add_subdirectory(src/3rdparty/platform/plcore/)
+add_subdirectory(src/3rdparty/platform/plgraphics/)
+add_subdirectory(src/3rdparty/platform/plmodel/)
 add_subdirectory(src/3rdparty/platform/plugins/driver_opengl/)
 add_subdirectory(src/3rdparty/fox-1.6.57_cmake/)
 

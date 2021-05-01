@@ -1,11 +1,10 @@
 /* ======================================================================
- * Project Yin, Confidential
+ * PkgMan, Confidential
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "parser.h"
 

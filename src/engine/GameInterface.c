@@ -93,17 +93,17 @@ static PLLibrary *dllGamePtr = NULL;
 void Game_Initialize( void ) {
 	Print( "Setting up game interface\n" );
 
-	dllGamePtr = plLoadLibrary( "./game", true );
+	dllGamePtr = PlLoadLibrary( "./game", true );
 	if ( dllGamePtr == NULL ) {
-		PrintError( "Failed to load game module, aborting!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to load game module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	DllGameInterface GetDllInterface = ( DllGameInterface ) plGetLibraryProcedure( dllGamePtr, INTERFACE_PROCEDURE );
+	DllGameInterface GetDllInterface = ( DllGameInterface ) PlGetLibraryProcedure( dllGamePtr, INTERFACE_PROCEDURE );
 	if ( GetDllInterface == NULL ) {
-		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	plRegisterConsoleCommand( "Game.SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	PlRegisterConsoleCommand( "Game.SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 
 	/* initialize the interface */
 }

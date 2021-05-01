@@ -3,9 +3,9 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
-#include <PL/pl_parse.h>
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_linkedlist.h>
+#include <plcore/pl_parse.h>
+#include <plcore/pl_filesystem.h>
 
 #include "node_private.h"
 
@@ -77,25 +77,25 @@ static char *AllocVarString( const char *string, unsigned int *lengthOut ) {
 }
 
 unsigned int NL_GetNumOfChildren( const NLNode *parent ) {
-	return plGetNumLinkedListNodes( parent->linkedList );
+	return PlGetNumLinkedListNodes( parent->linkedList );
 }
 
 NLNode *NL_GetFirstChild( NLNode *parent ) {
-	PLLinkedListNode *n = plGetFirstNode( parent->linkedList );
+	PLLinkedListNode *n = PlGetFirstNode( parent->linkedList );
 	if ( n == NULL ) {
 		return NULL;
 	}
 
-	return plGetLinkedListNodeUserData( n );
+	return PlGetLinkedListNodeUserData( n );
 }
 
 NLNode *NL_GetNextChild( NLNode *node ) {
-	PLLinkedListNode *n = plGetNextLinkedListNode( node->linkedListNode );
+	PLLinkedListNode *n = PlGetNextLinkedListNode( node->linkedListNode );
 	if ( n == NULL ) {
 		return NULL;
 	}
 
-	return plGetLinkedListNodeUserData( n );
+	return PlGetLinkedListNodeUserData( n );
 }
 
 NLNode *NL_GetChildByName( NLNode *parent, const char *name ) {
@@ -254,15 +254,15 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 	}
 
 	node->type = propertyType;
-	node->linkedList = plCreateLinkedList();
+	node->linkedList = PlCreateLinkedList();
 
 	/* if root is provided, this is treated as a child of that node */
 	if ( parent != NULL ) {
 		if ( parent->linkedList == NULL ) {
-			parent->linkedList = plCreateLinkedList();
+			parent->linkedList = PlCreateLinkedList();
 		}
 
-		node->linkedListNode = plInsertLinkedListNode( parent->linkedList, node );
+		node->linkedListNode = PlInsertLinkedListNode( parent->linkedList, node );
 		node->parent = parent;
 	}
 
@@ -376,9 +376,9 @@ void NL_DestroyNode( NLNode *node ) {
 		}
 	}
 
-	plDestroyLinkedList( node->linkedList );
+	PlDestroyLinkedList( node->linkedList );
 	if ( node->parent != NULL ) {
-		plDestroyLinkedListNode( node->parent->linkedList, node->linkedListNode );
+		PlDestroyLinkedListNode( node->parent->linkedList, node->linkedListNode );
 	}
 
 	pl_free( node );
@@ -388,10 +388,10 @@ void NL_DestroyNode( NLNode *node ) {
 /** Deserialisation **/
 
 char *DeserializeStringVar( PLFile *file, unsigned int *length ) {
-	*length = plReadInt32( file, false, NULL );
+	*length = PlReadInt32( file, false, NULL );
 	if ( *length > 0 ) {
 		char *buf = malloc( *length );
-		plReadFile( file, buf, sizeof( char ), *length );
+		PlReadFile( file, buf, sizeof( char ), *length );
 		return buf;
 	}
 
@@ -403,19 +403,19 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent ) {
 	NLNode *node = xNL_PushBackNode( parent, NULL, NODE_PROPERTY_INVALID );
 	node->name.strBuf = DeserializeStringVar( file, &node->name.strBufLength );
 
-	node->type = ( NLPropertyType ) plReadInt8( file, NULL );
+	node->type = ( NLPropertyType ) PlReadInt8( file, NULL );
 	if ( node->type == NODE_PROPERTY_INVALID ) {
 		NL_DestroyNode( node );
-		Warning( "Encountered invalid node in \"%s\"!\n", plGetFilePath( file ) );
+		Warning( "Encountered invalid node in \"%s\"!\n", PlGetFilePath( file ) );
 		return NULL;
 	}
 
 	switch ( node->type ) {
 		case NODE_PROPERTY_ARRAY:
 			/* only extra component we get here is the child type */
-			node->childType = ( NLPropertyType ) plReadInt8( file, NULL );
+			node->childType = ( NLPropertyType ) PlReadInt8( file, NULL );
 		case NODE_PROPERTY_OBJECT: {
-			unsigned int numChildren = plReadInt32( file, false, NULL );
+			unsigned int numChildren = PlReadInt32( file, false, NULL );
 			for ( unsigned int i = 0; i < numChildren; ++i ) {
 				DeserializeBinaryNode( file, node );
 			}
@@ -426,19 +426,19 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent ) {
 			break;
 		}
 		case NODE_PROPERTY_BOOLEAN: {
-			bool v = plReadInt8( file, NULL );
+			bool v = PlReadInt8( file, NULL );
 			node->data.strBuf = AllocVarString( v ? "true" : "false", &node->data.strBufLength );
 			break;
 		}
 		case NODE_PROPERTY_FLOAT: {
-			float v = ( float ) plReadInt32( file, false, NULL );
+			float v = ( float ) PlReadInt32( file, false, NULL );
 			char str[ 32 ];
 			snprintf( str, sizeof( str ), "%f", v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
 		case NODE_PROPERTY_INTEGER: {
-			int v = plReadInt32( file, false, NULL );
+			int v = PlReadInt32( file, false, NULL );
 			char str[ 32 ];
 			snprintf( str, sizeof( str ), "%d", v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
@@ -451,8 +451,8 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent ) {
 
 static NLFileType ParseNodeFileType( PLFile *file ) {
 	char token[ 32 ];
-	if ( plReadString( file, token, sizeof( token ) ) == NULL ) {
-		NL_SetErrorMessage( NL_ERROR_IO_READ, "Failed to read in file type: %s", plGetError() );
+	if ( PlReadString( file, token, sizeof( token ) ) == NULL ) {
+		NL_SetErrorMessage( NL_ERROR_IO_READ, "Failed to read in file type: %s", PlGetError() );
 		return NL_FILE_INVALID;
 	}
 
@@ -469,9 +469,9 @@ static NLFileType ParseNodeFileType( PLFile *file ) {
 NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 	NL_ClearErrorMessage();
 
-	PLFile *file = plOpenFile( path, true );
+	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL ) {
-		Warning( "Failed to open \"%s\": %s\n", path, plGetError() );
+		Warning( "Failed to open \"%s\": %s\n", path, PlGetError() );
 		return NULL;
 	}
 
@@ -482,8 +482,8 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 		Warning( "Invalid node file type: %d\n", fileType );
 	} else if ( fileType == NL_FILE_ASCII ) {
 		/* first need to run the pre-processor on it */
-		size_t length = plGetFileSize( file );
-		const char *data = ( const char * ) plGetFileData( file ) + strlen( NL_ASCII_HEADER );
+		size_t length = PlGetFileSize( file );
+		const char *data = ( const char * ) PlGetFileData( file ) + strlen( NL_ASCII_HEADER );
 		char *buf = pl_malloc( length );
 		memcpy( buf, data, length );
 		buf = xNL_PreProcessScript( buf, &length, true );
@@ -494,7 +494,7 @@ NLNode *NL_LoadFile( const char *path, const char *objectType ) {
 		root = DeserializeBinaryNode( file, NULL );
 	}
 
-	plCloseFile( file );
+	PlCloseFile( file );
 
 	if ( root != NULL && objectType != NULL ) {
 		const char *rootName = NL_GetName( root );
@@ -622,7 +622,7 @@ static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType ) {
             /* only extra component here is the child type */
             fwrite( &node->childType, sizeof( uint8_t ), 1, file );
         case NODE_PROPERTY_OBJECT: {
-            uint32_t i = plGetNumLinkedListNodes( node->linkedList );
+            uint32_t i = PlGetNumLinkedListNodes( node->linkedList );
             fwrite( &i, sizeof( uint32_t ), 1, file );
             SerializeNodeTree( file, node, fileType );
             break;
@@ -631,11 +631,11 @@ static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType ) {
 }
 
 static void SerializeNodeTree( FILE *file, NLNode *root, NLFileType fileType ) {
-	PLLinkedListNode *i = plGetFirstNode( root->linkedList );
+	PLLinkedListNode *i = PlGetFirstNode( root->linkedList );
 	while ( i != NULL ) {
-		NLNode *node = plGetLinkedListNodeUserData( i );
+		NLNode *node = PlGetLinkedListNodeUserData( i );
 		SerializeNode( file, node, fileType );
-		i = plGetNextLinkedListNode( i );
+		i = PlGetNextLinkedListNode( i );
 	}
 }
 

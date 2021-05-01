@@ -57,9 +57,9 @@ extern unsigned int
         LOG_LEVEL_INFO,
         LOG_LEVEL_WARNING,
         LOG_LEVEL_ERROR;
-#define LMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
-#define LWarn( ... ) plLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
-#define LError( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )
+#define LMsg( ... ) PlLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define LWarn( ... ) PlLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
+#define LError( ... ) PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); exit( EXIT_FAILURE )
 
 #define QE3_STYLE (WS_OVERLAPPED| WS_CAPTION | WS_THICKFRAME | \
 		/* WS_MINIMIZEBOX | */ WS_MAXIMIZEBOX  | WS_CLIPSIBLINGS | \

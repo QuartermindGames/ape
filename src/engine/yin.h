@@ -3,12 +3,15 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform.h>
-#include <PL/platform_console.h>
-#include <PL/platform_filesystem.h>
-#include <PL/platform_package.h>
-#include <PL/pl_graphics.h>
-#include <PL/pl_graphics_camera.h>
+#include <plcore/pl.h>
+#include <plcore/pl_console.h>
+#include <plcore/pl_filesystem.h>
+#include <plcore/pl_package.h>
+#include <plcore/pl_linkedlist.h>
+
+#include <plgraphics/plg.h>
+#include <plgraphics/plg_camera.h>
+#include <plgraphics/plg_polygon.h>
 
 #include <assert.h>
 
@@ -61,7 +64,7 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group );
 void Con_Initialize( void );
 void Con_Shutdown( void );
 void Con_Toggle( void );
-void Con_Draw( const PLViewport *viewport );
+void Con_Draw( const PLGViewport *viewport );
 
 #if !defined( NDEBUG )
 #define YIN_ENABLE_LOCAL_FS
@@ -69,13 +72,13 @@ void Con_Draw( const PLViewport *viewport );
 
 typedef struct OSWindow OSWindow;
 
-#define PrintError( ... )                         \
-	plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
+#define PrintError( FORMAT, ... )                         \
+	PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ## __VA_ARGS__ ); \
 	exit( EXIT_FAILURE )
-#define PrintWarn( ... ) plLogMessage( LOG_LEVEL_WARN, __VA_ARGS__ )
-#define Print( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ## __VA_ARGS__ )
+#define Print( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ## __VA_ARGS__ )
 #if !defined( NDEBUG )
-#define DebugMsg( ... ) plLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
+#define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ## __VA_ARGS__ )
 #else
 #define DebugMsg( ... )
 #endif

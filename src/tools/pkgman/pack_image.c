@@ -1,9 +1,9 @@
 /* ======================================================================
- * Project Yin, Confidential
+ * PkgMan, Confidential
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform_image.h>
+#include <plcore/pl_image.h>
 
 #include "public/GFXFormat.h"
 
@@ -244,7 +244,7 @@ void PackImage_Write( const char *path, const PLImage *image, uint8_t destFormat
 
 		PackImage_WriteHeader( filePtr, destFormat, 0, image->width, image->height, 0 );
 
-		size_t dstSize = plGetImageSize( plFormat, image->width, image->height );
+		size_t dstSize = PlGetImageSize( plFormat, image->width, image->height );
 		uint8_t *dstBuf = calloc( dstSize, 1 );
 
 		//unsigned int srcComps = image->colour_format == PL_COLOURFORMAT_RGB ? 3 : 4;

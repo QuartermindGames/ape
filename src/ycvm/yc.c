@@ -3,12 +3,12 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================== */
 
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_filesystem.h>
 
 #include "ycvm.h"
 #include "yc.h"
 
-static const char *specials[] = {
+static char specials[] = {
         '$',
         '=',
         '.',
@@ -27,12 +27,12 @@ unsigned int
         LOG_LEVEL_ERROR;
 
 int main( int argc, char **argv ) {
-	plInitialize( argc, argv );
+	PlInitialize( argc, argv );
 
-	plSetupLogOutput( YC_LOG_PATH );
-	LOG_LEVEL_DEFAULT = plAddLogLevel( NULL, PL_COLOUR_GREEN, true );
-	LOG_LEVEL_WARNING = plAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	PlSetupLogOutput( YC_LOG_PATH );
+	LOG_LEVEL_DEFAULT = PlAddLogLevel( NULL, PL_COLOUR_GREEN, true );
+	LOG_LEVEL_WARNING = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 
 	Print( "Yin Compiler\n"
 	       "Written by Mark E Sowden for Project Yin\n"
@@ -43,10 +43,10 @@ int main( int argc, char **argv ) {
 		       " <project_path> [-<option> ...]" );
 	}
 
-	PLFile *file = plOpenFile( argv[ 1 ], true );
+	PLFile *file = PlOpenFile( argv[ 1 ], true );
 	if ( file == NULL ) {
 		Error( "Failed to open \"%s\"!\n", argv[ 1 ] );
 	}
 
-	const char *buf = plGetFileData( file );
+	const char *buf = PlGetFileData( file );
 }

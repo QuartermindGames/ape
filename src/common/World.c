@@ -1,6 +1,6 @@
 /* Copyright (C) Mark E Sowden <hogsy@oldtimes-software.com> */
 
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_filesystem.h>
 
 #include "common/World.h"
 
@@ -9,9 +9,9 @@ WLDHandle *WLD_ReadFile( PLFile *file ) {
 }
 
 WLDHandle *WLD_LoadFile( const char *path ) {
-	PLFile *file = plOpenFile( path, false );
+	PLFile *file = PlOpenFile( path, false );
 	WLDHandle *handle = WLD_ReadFile( file );
-	plCloseFile( file );
+	PlCloseFile( file );
 	return handle;
 }
 

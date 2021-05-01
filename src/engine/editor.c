@@ -3,8 +3,6 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
-
 #include "yin.h"
 #include "editor.h"
 #include "map.h"
@@ -26,18 +24,18 @@ static OSWindow *editorViewports[ MAX_VIEW_PERSPECTIVES ];
 char texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
 static void Editor_MountTexturePackageCallback( const char *path, void *userData ) {
 	u_unused( userData );
-	plMountLocation( path );
+	PlMountLocation( path );
 }
 
 void Editor_Initialize( void ) {
 	Print( "Initializing Editor...\n" );
 
 	Print( "Mounting textures\n" );
-	plScanDirectory( "Textures/", "pkg", Editor_MountTexturePackageCallback, false, NULL );
+	PlScanDirectory( "Textures/", "pkg", Editor_MountTexturePackageCallback, false, NULL );
 
 	Map_ClearData();
 
-	const char *mapPath = plGetCommandLineArgumentValue( "-map" );
+	const char *mapPath = PlGetCommandLineArgumentValue( "-map" );
 	if ( mapPath != NULL ) {
 		Map_Load( mapPath );
 	}
@@ -139,7 +137,7 @@ void Editor_Display( void ) {
 
 		Gfx_DrawPerspective( curCamera );
 
-		plDrawGrid( *plGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
+		PlgDrawGrid( *PlGetMatrix( PL_MODELVIEW_MATRIX ), -2048, -2048, 4096, 4096, editorGridSize );
 	}
 }
 

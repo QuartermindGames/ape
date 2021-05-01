@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <vector>
 
-#include <PL/pl_graphics.h>
+#include <plgraphics/plg.h>
 
 extern char currentmap[ PL_SYSTEM_MAX_PATH ];
 
@@ -78,11 +78,11 @@ namespace huang {
 			char materialPath[ 32 ];
 		};
 
-		std::vector< PLVertex > vertices;
+		std::vector< PLGVertex > vertices;
 		std::vector< Face > faces;
 		std::vector< entity_t > actors;
 
-		std::vector< PLVertex * > selectedVertices;
+		std::vector< PLGVertex * > selectedVertices;
 		std::vector< Face * > selectedFaces;
 		std::vector< entity_t * > selectedActors;
 

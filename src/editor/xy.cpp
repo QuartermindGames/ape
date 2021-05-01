@@ -206,7 +206,7 @@ void huang::XYZPerspective::MouseMoved( int x, int y, const bool buttons[] ) {
 				vec3_t pos;
 				ToGridPoint( x, y, pos );
 
-				PLVertex vertex = plInitializeVertex();
+				PLGVertex vertex = PlgInitializeVertex();
 				switch ( parentViewport->GetViewMode() ) {
 					case VIEW_MODE_FRONT:
 						vertex.position.x = pos[ 0 ];
@@ -604,7 +604,6 @@ void huang::XYZPerspective::Draw() {
 	Brush *brush;
 	float w, h;
 	entity_t *e;
-	double start, end;
 	vec3_t mins, maxs;
 	int drawn, culled;
 

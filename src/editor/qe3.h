@@ -56,7 +56,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "common/Common.h"
 #include "common/node.h"
 
-#include <PL/platform_console.h>
+#include <plcore/pl_console.h>
 
 #include "cmdlib.h"
 #include "mathlib.h"
@@ -136,7 +136,7 @@ struct QEGlobals_t {
 	int d_numpoints{ 0 };
 
 	pedge_t d_edges[ MAX_EDGES ];
-	int d_numedges{ 0 };
+	unsigned int d_numedges{ 0 };
 
 	int d_num_move_points{ 0 };
 	float *d_move_points[ 1024 ];

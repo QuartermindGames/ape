@@ -16,4 +16,4 @@ if (NOT UNIX)
     target_link_libraries(game mingw32)
 endif ()
 
-target_link_libraries(game platform common)
+target_link_libraries(game plcore common)

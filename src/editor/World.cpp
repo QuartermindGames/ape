@@ -613,7 +613,7 @@ void huang::World::SaveFile( const char *path ) {
 		NLNode *index = NL_PushBackObj( vertexNode, "vertex" );
 		NL_PushBackVec3( index, "position", &i.position );
 		NL_PushBackVec3( index, "normal", &i.normal );
-		PLVector4 colour = plColourToVector4( &i.colour );
+		PLVector4 colour = PlColourToVector4( &i.colour );
 		NL_PushBackVec4( index, "colour", &colour );
 	}
 

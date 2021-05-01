@@ -9,7 +9,7 @@
 typedef struct GfxAnimationFrame {
 	unsigned int leftOffset;
 	unsigned int topOffset;
-	PLTexture    *texture;
+	PLGTexture *texture;
 } GfxAnimationFrame;
 
 typedef enum ViewPerspective {
@@ -25,16 +25,16 @@ typedef enum ViewPerspective {
 
 typedef struct GfxCamera {
 	OSWindow *viewportPtr;
-	PLCamera			    *internalPtr;			/* the camera used for this viewport */
-	ViewPerspective		    perspective;
-	struct Actor		    *parentActor;
-	struct PLLinkedListNode *node;				/* node representing this object in the linked list */
+	PLGCamera *internalPtr; /* the camera used for this viewport */
+	ViewPerspective perspective;
+	struct Actor *parentActor;
+	struct PLLinkedListNode *node; /* node representing this object in the linked list */
 } GfxCamera;
 
 typedef struct RendererStats {
-    PLVector3 cameraPos;
-    unsigned int numBatches;
-    unsigned int numFacesDrawn;
+	PLVector3 cameraPos;
+	unsigned int numBatches;
+	unsigned int numFacesDrawn;
 } RendererStats;
 extern RendererStats g_gfxPerfStats;
 
@@ -49,7 +49,7 @@ enum {
 
 	GFX_MAX_DEFAULT_SHADERS
 };
-extern PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+extern PLGShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 #define GFX_NUM_SPRITE_ANGLES 8
 
@@ -63,18 +63,18 @@ void Gfx_DrawMenu( void );
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport );
 
-PLShaderProgram *Gfx_GetShaderProgram( const char *name );
+PLGShaderProgram *Gfx_GetShaderProgram( const char *name );
 
 void Gfx_DrawPerspective( GfxCamera *camera );
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
 void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLTexture *Gfx_LoadTexture( const char *path );
+PLGTexture *Gfx_LoadTexture( const char *path );
 
-PLTexture *Gfx_GetFallbackTexture( void );
+PLGTexture *Gfx_GetFallbackTexture( void );
 
 const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective );
 
-void Gfx_DrawCharacter( PLTexture *baseTexture, char character, float x, float y, float scale );
-void Gfx_DrawString( PLTexture *baseTexture, const char *string, float x, float y, float scale );
+void Gfx_DrawCharacter( PLGTexture *baseTexture, char character, float x, float y, float scale );
+void Gfx_DrawString( PLGTexture *baseTexture, const char *string, float x, float y, float scale );

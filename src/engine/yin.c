@@ -3,7 +3,8 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform_model.h>
+#include <plmodel/plm.h>
+#include <plgraphics/plg_driver_interface.h>
 
 #include "yin.h"
 #include "renderer/renderer.h"
@@ -55,33 +56,36 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group ) {
 
 int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 static bool Engine_Initialize( int argc, char **argv ) {
-	LOG_LEVEL_ERROR = plAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	LOG_LEVEL_WARN = plAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_INFO = plAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_WARN = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_INFO = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
 	Print( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
 
-	plRegisterStandardPackageLoaders();
-	plRegisterPackageLoader( "pkg", Pkg_LoadPackage );
-	plRegisterPackageLoader( "map", Pkg_LoadPackage );
+	PlRegisterStandardPackageLoaders();
+	PlRegisterPackageLoader( "pkg", Pkg_LoadPackage );
+	PlRegisterPackageLoader( "map", Pkg_LoadPackage );
 
 	Print( "Registering plugins...\n" );
 
-	plRegisterPlugins( "./" );
-	plInitializePlugins();
+	PlRegisterPlugins( "./" );
+	PlInitializePlugins();
+
+	PlgInitializeGraphics();
+	PlgScanForDrivers( "./" );
 
 	Print( "Mounting VFS locations...\n" );
 
-	plMountLocalLocation( ComFS_GetDataDirectory() );
-	if ( plMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
-		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", plGetError() );
+	PlMountLocalLocation( ComFS_GetDataDirectory() );
+	if ( PlMountLocation( YIN_GLOBAL_WAD ) == NULL ) {
+		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", PlGetError() );
 	}
 
 	/* register other various loaders */
-	PLModel *MD2_LoadFile( const char *path );
-	plRegisterModelLoader( "md2", MD2_LoadFile );
-	PLModel *GSMDL_LoadFile( const char *path );
-	plRegisterModelLoader( "mdl", GSMDL_LoadFile );
+	PLMModel *MD2_LoadFile( const char *path );
+	PlmRegisterModelLoader( "md2", MD2_LoadFile );
+	PLMModel *GSMDL_LoadFile( const char *path );
+	PlmRegisterModelLoader( "mdl", GSMDL_LoadFile );
 
 	Print( "Initializing core services...\n" );
 
@@ -92,8 +96,6 @@ static bool Engine_Initialize( int argc, char **argv ) {
         PrintError( "Failed to create main window!\n" );
     }
 
-    plInitializeSubSystems( PL_SUBSYSTEM_GRAPHICS );
-
     /* initialize core services */
 	CPUTimer_Initialize();
 	Con_Initialize();
@@ -101,7 +103,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	Act_Initialize();
 
 	Game_Initialize();
-	if ( plHasCommandLineArgument( "editor" ) ) {
+	if ( PlHasCommandLineArgument( "editor" ) ) {
 		Editor_Initialize();
 	}
 
@@ -145,7 +147,7 @@ static void Engine_Display( void ) {
 
 	Gfx_SetupDefaultState();
 
-	plClearBuffers( PL_BUFFER_DEPTH | PL_BUFFER_COLOUR );
+	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 
 	Editor_Display();
 	Game_Display();

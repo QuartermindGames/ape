@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform_model.h>
+#include <plmodel/plm.h>
 
 #include "yin.h"
 
@@ -53,13 +53,13 @@ typedef struct MD2Frame {
 	MD2Vertex *vertices;
 } MD2Frame;
 
-static PLMesh *MD2_ConvertMD2ToMesh(
+static PLGMesh *MD2_ConvertMD2ToMesh(
         const char *skinPath,
         const MD2Header *header,
         const MD2TexCoord *texCoords,
         const MD2Triangle *triangles,
         const MD2Frame *frames ) {
-	PLMesh *mesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_STATIC, header->numTriangles, header->numVertices );
+	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, header->numTriangles, header->numVertices );
 	if ( mesh == NULL ) {
 		return NULL;
 	}
@@ -67,11 +67,11 @@ static PLMesh *MD2_ConvertMD2ToMesh(
 	/* fetch the width and height, we'll need these to convert
 	 * uv coords */
 	int w = 256, h = 256;
-	PLImage *image = plLoadImage( skinPath );
+	PLImage *image = PlLoadImage( skinPath );
 	if ( image != NULL ) {
 		w = image->width;
 		h = image->height;
-		plDestroyImage( image );
+		PlDestroyImage( image );
 	}
 
 	/* setup the vertex table */
@@ -81,27 +81,27 @@ static PLMesh *MD2_ConvertMD2ToMesh(
         pos.y = ( frames[ 0 ].scale.y * frames[ 0 ].vertices[ i ].v[ 1 ] ) + frames[ 0 ].translate.y;
         pos.z = ( frames[ 0 ].scale.z * frames[ 0 ].vertices[ i ].v[ 2 ] ) + frames[ 0 ].translate.z;
 
-		plAddMeshVertex( mesh, pos, pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );
-		DebugMsg( "%s\n", plPrintVector3( &pos, pl_float_var ) );
+		PlgAddMeshVertex( mesh, pos, pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );
+		DebugMsg( "%s\n", PlPrintVector3( &pos, pl_float_var ) );
 	}
 
     for ( unsigned int i = 0; i < header->numTriangles; ++i ) {
 		const MD2Triangle *tri = &triangles[ i ];
 		/* setup the uv coords */
         for ( unsigned int j = 0; j < 3; ++j ) {
-			PLVertex *v = &mesh->vertices[ tri->vertex[ 0 ] ];
+			PLGVertex *v = &mesh->vertices[ tri->vertex[ 0 ] ];
 			v->st[ 0 ].x = texCoords[ tri->st[ j ] ].s / w;
 			v->st[ 0 ].y = texCoords[ tri->st[ j ] ].t / h;
 		}
-		plAddMeshTriangle( mesh, tri->vertex[ 0 ], tri->vertex[ 1 ], tri->vertex[ 2 ] );
+		PlgAddMeshTriangle( mesh, tri->vertex[ 0 ], tri->vertex[ 1 ], tri->vertex[ 2 ] );
 		DebugMsg( "%d %d %d\n", tri->vertex[ 0 ], tri->vertex[ 1], tri->vertex[ 2 ] );
 	}
 
 	/* MD2 models don't really have normals, they instead use a pre-computed table
 	 * so we'll generate them manually instead */
 
-	plGenerateMeshNormals( mesh, false );
-	plGenerateMeshTangentBasis( mesh );
+	PlgGenerateMeshNormals( mesh, false );
+	PlgGenerateMeshTangentBasis( mesh );
 
 	return mesh;
 }
@@ -110,8 +110,8 @@ static PLMesh *MD2_ConvertMD2ToMesh(
  * Loads in an MD2 mesh, currently just as a static thing.
  * This implementation currently doesn't account for endianness! :(
  */
-PLModel *MD2_LoadFile( const char *path ) {
-	PLFile *file = plOpenFile( path, false );
+PLMModel *MD2_LoadFile( const char *path ) {
+	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL ) {
 		return NULL;
 	}
@@ -120,7 +120,7 @@ PLModel *MD2_LoadFile( const char *path ) {
 	 * the whole header in */
 	MD2Header header;
 	memset( &header, 0, sizeof( MD2Header ) );
-	plReadFile( file, &header, sizeof( header ), 1 );
+	PlReadFile( file, &header, sizeof( header ), 1 );
 
 	bool isValid = true;
 	if ( header.magic != MD2_MAGIC ) {
@@ -132,7 +132,7 @@ PLModel *MD2_LoadFile( const char *path ) {
 	}
 
 	if ( !isValid ) {
-		plCloseFile( file );
+		PlCloseFile( file );
 		return NULL;
 	}
 
@@ -140,57 +140,57 @@ PLModel *MD2_LoadFile( const char *path ) {
 	 * this only loads in the first skin, as MD2s only actually use 1 skin
 	 * per mesh - we'll need to load this later to convert the uv coords */
 	MD2Skin skin;
-	plFileSeek( file, header.offsetSkins, PL_SEEK_SET );
-	plReadFile( file, skin, sizeof( MD2Skin ), 1 );
+	PlFileSeek( file, header.offsetSkins, PL_SEEK_SET );
+	PlReadFile( file, skin, sizeof( MD2Skin ), 1 );
 
 	/* and now read in all the tex coordinates */
 	MD2TexCoord *texCoords = ( MD2TexCoord * ) globalSystem.MAlloc( sizeof( MD2TexCoord ) * header.numST, true );
-	plFileSeek( file, header.offsetST, PL_SEEK_SET );
-	plReadFile( file, texCoords, sizeof( MD2TexCoord ), header.numST );
+	PlFileSeek( file, header.offsetST, PL_SEEK_SET );
+	PlReadFile( file, texCoords, sizeof( MD2TexCoord ), header.numST );
 
 	/* triangles */
 	MD2Triangle *triangles = ( MD2Triangle * ) globalSystem.MAlloc( sizeof( MD2Triangle ) * header.numTriangles, true );
-	plFileSeek( file, header.offsetTriangles, PL_SEEK_SET );
-	plReadFile( file, triangles, sizeof( MD2Triangle ), header.numTriangles );
+	PlFileSeek( file, header.offsetTriangles, PL_SEEK_SET );
+	PlReadFile( file, triangles, sizeof( MD2Triangle ), header.numTriangles );
 
 	/* frames */
 	MD2Frame *frames = ( MD2Frame * ) globalSystem.MAlloc( sizeof( MD2Frame ) * header.numFrames, true );
-	plFileSeek( file, header.offsetFrames, PL_SEEK_SET );
+	PlFileSeek( file, header.offsetFrames, PL_SEEK_SET );
 	for ( unsigned int i = 0; i < header.numFrames; ++i ) {
-		plReadFile( file, &frames[ i ].scale, sizeof( PLVector3 ), 1 );
-		plReadFile( file, &frames[ i ].translate, sizeof( PLVector3 ), 1 );
-		plReadFile( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
+		PlReadFile( file, &frames[ i ].scale, sizeof( PLVector3 ), 1 );
+        PlReadFile( file, &frames[ i ].translate, sizeof( PLVector3 ), 1 );
+        PlReadFile( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
 
         frames[ i ].vertices = ( MD2Vertex * ) globalSystem.MAlloc( sizeof( MD2Vertex ) * header.numVertices, true );
-		plReadFile( file, frames[ i ].vertices, sizeof( MD2Vertex ), header.numVertices );
+        PlReadFile( file, frames[ i ].vertices, sizeof( MD2Vertex ), header.numVertices );
 	}
 
-	plCloseFile( file );
+	PlCloseFile( file );
 
 	/* map the skin name to our materials/models/ directory */
 	char fileName[ 32 ];
-	plStripExtension( fileName, sizeof( fileName ), plGetFileName( path ) );
+	PlStripExtension( fileName, sizeof( fileName ), PlGetFileName( path ) );
     char fullSkinPath[ PL_SYSTEM_MAX_PATH ];
     snprintf( fullSkinPath, sizeof( fullSkinPath ), "materials/models/%s/%s", fileName, skin );
 	pl_strtolower( fullSkinPath );
 
 	/* and now we need to convert all this into a PLModel */
-	PLMesh *mesh = MD2_ConvertMD2ToMesh( fullSkinPath, &header, texCoords, triangles, frames );
+	PLGMesh *mesh = MD2_ConvertMD2ToMesh( fullSkinPath, &header, texCoords, triangles, frames );
 
 	/* free the original data */
 
-	free( texCoords );
-	free( triangles );
-	for ( unsigned int i = 0; i < header.numFrames; ++i ) free( frames[ i ].vertices );
-	free( frames );
+	globalSystem.Free( texCoords );
+    globalSystem.Free( triangles );
+	for ( unsigned int i = 0; i < header.numFrames; ++i ) globalSystem.Free( frames[ i ].vertices );
+    globalSystem.Free( frames );
 
 	if ( mesh == NULL ) {
 		PrintWarn( "Failed to generate mesh structure from MD2! Check log for details.\n" );
 		return NULL;
 	}
 
-	PLModel *model = plCreateBasicStaticModel( mesh );
-	plGenerateModelBounds( model );
+	PLMModel *model = PlmCreateBasicStaticModel( mesh );
+	PlmGenerateModelBounds( model );
 
 	return model;
 }

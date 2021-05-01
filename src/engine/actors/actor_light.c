@@ -12,7 +12,7 @@ void Light_Spawn( Actor *self ) {
 
 	/* for now, just randomise the light colours */
 	lightData->colour = PLColourRGB( rand() % 255, rand() % 255, rand() % 255 );
-	lightData->type = PL_LIGHT_TYPE_OMNI;
+	lightData->type = PLG_LIGHT_TYPE_OMNI;
 }
 
 void Light_Tick( Actor *self, void *userData ) {

@@ -111,9 +111,9 @@ static void LoadUserConfig( void ) {
 	NLNode *child = NL_GetFirstChild( root );
 	while ( child != NULL ) {
 		const char *cvarName = NL_GetName( child );
-		PLConsoleVariable *cvar = plGetConsoleVariable( cvarName );
+		PLConsoleVariable *cvar = PlGetConsoleVariable( cvarName );
 		if ( cvar != NULL ) {
-			plSetConsoleVariable( cvar, NL_GetString( child ) );
+			PlSetConsoleVariable( cvar, NL_GetString( child ) );
 		} else {
             PrintWarn( "Failed to find console variable, \"%s\"!\n", cvarName );
 		}
@@ -127,7 +127,7 @@ static void LoadUserConfig( void ) {
 static void SaveUserConfig( void ) {
 	PLConsoleVariable **cvars;
 	size_t numVars;
-	plGetConsoleVariables( &cvars, &numVars );
+	PlGetConsoleVariables( &cvars, &numVars );
 
     NLNode *root = NL_PushBackObj( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i ) {
@@ -169,32 +169,32 @@ static void SaveUserConfig( void ) {
  * Set the console up.
  */
 void Con_Initialize( void ) {
-	plSetConsoleOutputCallback( Con_OutputCallback );
+	PlSetConsoleOutputCallback( Con_OutputCallback );
 
 	/* debugging */
-	plRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
+	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
 
-	plRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
-	plRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
+	PlRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
+    PlRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 
-	plRegisterConsoleVariable( "game.projectPath", "scripts/project.node", pl_string_var, NULL, "Sets the default path to load a GS project." );
-	plRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
+    PlRegisterConsoleVariable( "game.projectPath", "scripts/project.node", pl_string_var, NULL, "Sets the default path to load a GS project." );
+    PlRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 
-	plRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
-	plRegisterConsoleVariable( "console.height", "512", pl_int_var, NULL, "Set the height of the console." );
-	plRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );
-	plRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
+    PlRegisterConsoleVariable( "console.alpha", "128", pl_int_var, NULL, "Level of transparency to use for the console background." );
+    PlRegisterConsoleVariable( "console.height", "512", pl_int_var, NULL, "Set the height of the console." );
+    PlRegisterConsoleCommand( "console.clear", Cmd_ClearConsole, "Clear the console buffer." );
+    PlRegisterConsoleCommand( "console.toggle", Cmd_ToggleConsole, "Toggle the console." );
 
 	/* networking */
-	plRegisterConsoleVariable( "net.serverName", "unnamed", pl_string_var, NULL, "Name to use for the server." );
-	plRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
-	plRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
-	plRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );
+    PlRegisterConsoleVariable( "net.serverName", "unnamed", pl_string_var, NULL, "Name to use for the server." );
+    PlRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
+    PlRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
+    PlRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );
 
 	/* rendering */
-	gVarGraphicsFXAA = plRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
-	gVarGraphicsSupersampling = plRegisterConsoleVariable( "graphics.supersampling", "1", pl_int_var, NULL, "Resolution multiplier. Anything higher than 1 essentially enables supersampling." );
-	plRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
+	gVarGraphicsFXAA = PlRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
+	gVarGraphicsSupersampling = PlRegisterConsoleVariable( "graphics.supersampling", "1", pl_int_var, NULL, "Resolution multiplier. Anything higher than 1 essentially enables supersampling." );
+    PlRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 
 	LoadUserConfig();
 }
@@ -273,7 +273,7 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
 
 		case KEY_ENTER:
 			if ( inputBuffer[ 0 ] != '\0' ) {
-				plParseConsoleString( inputBuffer );
+				PlParseConsoleString( inputBuffer );
 				inputBuffer[ 0 ] = '\0';
 				curInputBufferLength = 0;
 			}
@@ -285,7 +285,7 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
 			return true;
 		case KEY_TAB: { /* autocompletion */
 			unsigned int numOptions;
-			const char **list = plAutocompleteConsoleString( inputBuffer, &numOptions );
+			const char **list = PlAutocompleteConsoleString( inputBuffer, &numOptions );
 			if ( numOptions == 0 ) {
 				Print( "No matches found\n" );
 				return true;
@@ -306,14 +306,14 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState ) {
 	return false;
 }
 
-static void Con_DrawInput( const PLViewport *viewport ) {
+static void Con_DrawInput( const PLGViewport *viewport ) {
 	if ( !Con_GetState() ) {
 		return;
 	}
 
-	plSetTexture( NULL, 0 );
+	PlgSetTexture( NULL, 0 );
 
-    plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, PLColourRGB( 0, 0, 0 ) );
+    PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, PLColourRGB( 0, 0, 0 ) );
 
 	/* draw input field */
 	Font_DrawBitmapCharacter( Font_GetDefault(), 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
@@ -324,22 +324,21 @@ static void Con_DrawInput( const PLViewport *viewport ) {
 /**
  * Draw the console panel.
  */
-void Con_Draw( const PLViewport *viewport ) {
+void Con_Draw( const PLGViewport *viewport ) {
 	if ( !Con_GetState() ) {
 		return;
 	}
 
-	static PLConsoleVariable *alpha = NULL;
-	if ( alpha == NULL ) { alpha = plGetConsoleVariable( "console.alpha" ); }
+	CVar( "console.alpha", alpha );
 
-	plSetBlendMode( PL_BLEND_DEFAULT );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
+	PlLoadIdentityMatrix();
 
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
 #define CON_SIDE_COLOUR PLColourRGB( 128, 128, 128 )
 #define CON_BACK_COLOUR PLColour( 0, 0, 0, alpha->i_value )
@@ -347,8 +346,8 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	float consoleHeight = ( float ) ( viewport->h - 12 );
 
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, ( float ) viewport->w, consoleHeight, CON_BACK_COLOUR );
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, 8, consoleHeight, CON_SIDE_COLOUR );
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, ( float ) viewport->w, consoleHeight, CON_BACK_COLOUR );
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, 0.0f, 8, consoleHeight, CON_SIDE_COLOUR );
 
 	/* todo: update viewport in platform lib to console dimensions so we don't draw outside
 	 *       the console space. */
@@ -357,7 +356,7 @@ void Con_Draw( const PLViewport *viewport ) {
 		/* draw the indicator at the side of the console */
 		float cH = ( outputBuffer.numLines / consoleHeight ) + 1.0f;
 		float cY = consoleHeight - ( ( outputBuffer.numLines / consoleHeight ) + scrollPos ) - cH;
-		plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
+		PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( outputBuffer.numLines - 1 ) - scrollPos; i > 0; --i ) {
@@ -381,7 +380,7 @@ void Con_Draw( const PLViewport *viewport ) {
 
 	Con_DrawInput( viewport );
 
-	plPopMatrix();
+	PlPopMatrix();
 
-	plSetBlendMode( PL_BLEND_DISABLE );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }

@@ -228,14 +228,14 @@ static PLLibrary *dllEnginePtr;
 static void SetupEngineInterface() {
 	LMsg( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "./engine", true );
+	dllEnginePtr = PlLoadLibrary( "./engine", true );
 	if ( dllEnginePtr == nullptr ) {
-		LError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
+		LError( "Failed to load engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	auto GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
+	auto GetDllInterface = ( DllEngineInterface ) PlGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
 	if ( GetDllInterface == nullptr ) {
-		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", plGetError() );
+		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
 	static SystemInterface systemInterface = {
@@ -252,9 +252,9 @@ static void SetupEngineInterface() {
 			.GetPerformanceCounter = nullptr,
 			.GetPerformanceFrequency = nullptr,
 #endif
-			.CAlloc = Sys_calloc,
-			.MAlloc = Sys_malloc,
-			.ReAlloc = Sys_realloc,
+		.CAlloc = Sys_calloc,
+		.MAlloc = Sys_malloc,
+		.ReAlloc = Sys_realloc,
 	};
 
 	/* initialize the interface */
@@ -280,22 +280,22 @@ int main( int argc, char **argv ) {
 	pl_malloc = Sys_WMAlloc;
 	pl_realloc = Sys_WReAlloc;
 
-	plInitialize( vargc, vargv );
+	PlInitialize( vargc, vargv );
 
-    plRegisterPlugins( "./" );
+	PlRegisterPlugins( "./plugins/" );
 
 	// Setup logging
-	if ( plHasCommandLineArgument( "-log" ) ) {
-		const char *path = plGetCommandLineArgumentValue( "-log" );
+	if ( PlHasCommandLineArgument( "-log" ) ) {
+		const char *path = PlGetCommandLineArgumentValue( "-log" );
 		if ( path == nullptr ) {
 			path = EDITOR_LOG_PATH;
 		}
 
-		plSetupLogOutput( path );
+		PlSetupLogOutput( path );
 	}
-	LOG_LEVEL_INFO = plAddLogLevel( "editor", PL_COLOUR_WHITE, true );
-	LOG_LEVEL_WARNING = plAddLogLevel( "editor/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_ERROR = plAddLogLevel( "editor/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_INFO = PlAddLogLevel( "editor", PL_COLOUR_WHITE, true );
+	LOG_LEVEL_WARNING = PlAddLogLevel( "editor/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_ERROR = PlAddLogLevel( "editor/error", PL_COLOUR_RED, true );
 
 	LMsg( "Log initialized\n" );
 
@@ -310,19 +310,19 @@ int main( int argc, char **argv ) {
 	g_mainWindow = new huang::MainWindow( &app );
 	g_mainWindow->setIcon( icon );
 
-    // the project file can be specified on the command line,
-    // or implicitly found in the scripts directory
-    char projectPath[ PL_SYSTEM_MAX_PATH ];
-    const char *arg = plGetCommandLineArgumentValue( "-config" );
+	// the project file can be specified on the command line,
+	// or implicitly found in the scripts directory
+	char projectPath[ PL_SYSTEM_MAX_PATH ];
+	const char *arg = PlGetCommandLineArgumentValue( "-config" );
 	if ( arg != nullptr ) {
 		snprintf( projectPath, sizeof( projectPath ), "%s", arg );
 	} else {
 		snprintf( projectPath, sizeof( projectPath ), "%s" EDITOR_CONFIG, ComFS_GetDataDirectory() );
 	}
 
-    if ( !QE_LoadProject( projectPath ) ) {
-        Error( "Couldn't load %s project file", projectPath );
-    }
+	if ( !QE_LoadProject( projectPath ) ) {
+		Error( "Couldn't load %s project file", projectPath );
+	}
 
 	QE_Init();
 
@@ -330,7 +330,7 @@ int main( int argc, char **argv ) {
 
 	app.create();
 
-    plInitializePlugins();
+	PlInitializePlugins();
 
 	extern void M_LoadGlobalRegistryData();
 	M_LoadGlobalRegistryData();

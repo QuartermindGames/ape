@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 OldTimes Software
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
+#include <plgraphics/plg_driver_interface.h>
 
 #include "yin.h"
 #include "actor.h"
@@ -14,12 +14,12 @@
 
 RendererStats g_gfxPerfStats;
 
-static PLCamera *auxCamera = NULL;
+static PLGCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
-static PLFrameBuffer *smDepthBuffer = NULL;
-static PLTexture *smTexture;
-static PLCamera *smCamera;
+static PLGFrameBuffer *smDepthBuffer = NULL;
+static PLGTexture *smTexture;
+static PLGCamera *smCamera;
 
 #define NUM_GRAPH_POINTS 32
 static float msWorldGraph[ NUM_GRAPH_POINTS ];
@@ -27,30 +27,30 @@ static float memoryGraph[ NUM_GRAPH_POINTS ];
 
 /* Post Processing */
 
-static void GenerateScreenBuffer( PLFrameBuffer **buffer, PLTexture **attachment, unsigned int w, unsigned int h ) {
+static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachment, unsigned int w, unsigned int h ) {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL ) {
-		plGetFrameBufferResolution( *buffer, &bw, &bh );
+		PlgGetFrameBufferResolution( *buffer, &bw, &bh );
 	}
 
 	/* need to rebuild the framebuffer object
 	 * todo: the library should provide us a func to perform a resize? */
 	if ( bw != w || bh != h ) {
-		plDestroyFrameBuffer( *buffer );
-		*buffer = plCreateFrameBuffer( w, h, PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
+		PlgDestroyFrameBuffer( *buffer );
+		*buffer = PlgCreateFrameBuffer( w, h, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		if ( *buffer == NULL ) {
-			PrintError( "Failed to create framebuffer!\nPL: %s\n", plGetError() );
+			PrintError( "Failed to create framebuffer!\nPL: %s\n", PlGetError() );
 		}
 
-		plDestroyTexture( *attachment );
-		*attachment = plGetFrameBufferTextureAttachment( *buffer, PL_BUFFER_COLOUR, PL_TEXTURE_FILTER_LINEAR );
+		PlgDestroyTexture( *attachment );
+		*attachment = PlgGetFrameBufferTextureAttachment( *buffer, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 		if ( *attachment == NULL ) {
-			PrintError( "Failed to create texture attachment!\nPL: %s\n", plGetError() );
+			PrintError( "Failed to create texture attachment!\nPL: %s\n", PlGetError() );
 		}
 	}
 
 	/* reset */
-	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
+	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 }
 
 typedef struct RGBMap {
@@ -62,16 +62,16 @@ static RGBMap playPal[ 256 ];
 
 static PLLinkedList *textures;
 
-static PLTexture *fallbackTexture = NULL;
-static PLTexture *numTextureTable[ 10 ];
-static PLTexture *demoOverlayLogo;
+static PLGTexture *fallbackTexture = NULL;
+static PLGTexture *numTextureTable[ 10 ];
+static PLGTexture *demoOverlayLogo;
 
-PLTexture *Gfx_GetFallbackTexture( void ) {
+PLGTexture *Gfx_GetFallbackTexture( void ) {
 	return fallbackTexture;
 }
 
-PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
-                                        bool generateMipMap ) {
+PLGTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
+                                         bool generateMipMap ) {
 	PLColourFormat cFormat;
 	PLImageFormat iFormat;
 
@@ -89,9 +89,9 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 			break;
 	}
 
-	PLImage *imageData = plCreateImage( data, w, h, cFormat, iFormat );
+	PLImage *imageData = PlCreateImage( data, w, h, cFormat, iFormat );
 	if ( imageData == NULL ) {
-		PrintWarn( "Failed to generate image data!\nPL: %s\n", plGetError() );
+		PrintWarn( "Failed to generate image data!\nPL: %s\n", PlGetError() );
 	}
 
 #if 0
@@ -100,29 +100,29 @@ PLTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned 
 	plWriteImage( imageData, outName );
 #endif
 
-	PLTexture *texture = plCreateTexture();
+	PLGTexture *texture = PlgCreateTexture();
 	if ( texture == NULL ) {
-		PrintError( "Failed to create texture!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to create texture!\nPL: %s\n", PlGetError() );
 	}
 
 	if ( !generateMipMap ) {
-		texture->flags &= PL_TEXTURE_FLAG_NOMIPS;
-		texture->filter = PL_TEXTURE_FILTER_LINEAR;
+		texture->flags &= PLG_TEXTURE_FLAG_NOMIPS;
+		texture->filter = PLG_TEXTURE_FILTER_LINEAR;
 	} else {
-		texture->filter = PL_TEXTURE_FILTER_MIPMAP_LINEAR;
+		texture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 	}
 
-	if ( !plUploadTextureImage( texture, imageData ) ) {
-		PrintError( "Failed to generate texture from image!\nPL: %s\n", plGetError() );
+	if ( !PlgUploadTextureImage( texture, imageData ) ) {
+		PrintError( "Failed to generate texture from image!\nPL: %s\n", PlGetError() );
 	}
 
-	plDestroyImage( imageData );
+	PlDestroyImage( imageData );
 
 	return texture;
 }
 
 static void RT_InitializeTextures( void ) {
-	textures = plCreateLinkedList();
+	textures = PlCreateLinkedList();
 
 	/* generate fallback texture */
 	static PLColour fallbackData[] = {
@@ -137,8 +137,8 @@ static void RT_InitializeTextures( void ) {
 	}
 
 	/* register the standard image loaders, and our package image loader */
-	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
-	plRegisterImageLoader( "gfx", Image_LoadPackedImage );
+	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
 
 	/* fetch our required texture set */
 	demoOverlayLogo = Gfx_LoadTexture( "materials/textures/ui/demo_logo.png" );
@@ -153,34 +153,34 @@ static void RT_InitializeTextures( void ) {
 	*/
 }
 
-PLTexture *Gfx_GetTexture( const char *path ) {
-	PLLinkedListNode *node = plGetFirstNode( textures );
+PLGTexture *Gfx_GetTexture( const char *path ) {
+	PLLinkedListNode *node = PlGetFirstNode( textures );
 	while ( node != NULL ) {
-		PLTexture *texture = plGetLinkedListNodeUserData( node );
+		PLGTexture *texture = PlGetLinkedListNodeUserData( node );
 		if ( pl_strcasecmp( path, texture->path ) == 0 ) {
 			return texture;
 		}
 
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
 
 	return NULL;
 }
 
-PLTexture *Gfx_LoadTexture( const char *path ) {
+PLGTexture *Gfx_LoadTexture( const char *path ) {
 	/* check if it's already loaded */
-	PLTexture *texture = Gfx_GetTexture( path );
+	PLGTexture *texture = Gfx_GetTexture( path );
 	if ( texture != NULL ) {
 		return texture;
 	}
 
-	texture = plLoadTextureFromImage( path, PL_TEXTURE_FILTER_MIPMAP_LINEAR );
+	texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( texture == NULL ) {
-		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return fallbackTexture;
 	}
 
-	plInsertLinkedListNode( textures, texture );
+	PlInsertLinkedListNode( textures, texture );
 	return texture;
 }
 
@@ -189,27 +189,27 @@ PLTexture *Gfx_LoadTexture( const char *path ) {
 
 typedef struct ShaderProgramIndex {
 	char internalName[ GFX_PROGRAM_NAME_LENGTH ];
-	PLShaderProgram *internalPtr;
+	PLGShaderProgram *internalPtr;
 	PLLinkedListNode *node;
 } ShaderProgramIndex;
 
 static PLLinkedList *gfxShaderPrograms;
-PLShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
-static void Gfx_RegisterShaderStage( PLShaderProgram *program, PLShaderStageType type, const char *path ) {
-	PLFile *filePtr = plOpenFile( path, true );
+static void Gfx_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path ) {
+	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL ) {
-		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
-	const char *buffer = ( const char * ) plGetFileData( filePtr );
-	size_t length = plGetFileSize( filePtr );
+	const char *buffer = ( const char * ) PlGetFileData( filePtr );
+	size_t length = PlGetFileSize( filePtr );
 
-	if ( !plRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
-		PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, plGetError() );
+	if ( !PlgRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
+		PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
-	plCloseFile( filePtr );
+	PlCloseFile( filePtr );
 }
 
 static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
@@ -217,7 +217,7 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 
 	char buffer[ 256 ];
 
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( sscanf( buffer, "program %s\n", program.internalName ) != 1 ) {
 		PrintWarn( "Failed to fetch program name!\n" );
 		return NULL;
@@ -226,7 +226,7 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 	char vertexPath[ PL_SYSTEM_MAX_PATH ];
 	char fragmentPath[ PL_SYSTEM_MAX_PATH ];
 
-	while ( plReadString( file, buffer, sizeof( buffer ) ) != NULL ) {
+	while ( PlReadString( file, buffer, sizeof( buffer ) ) != NULL ) {
 		if ( pl_strncasecmp( buffer, "vertex ", 7 ) == 0 ) {
 			/* read in the vertex stage */
 			sscanf( buffer, "vertex %s\n", vertexPath );
@@ -243,17 +243,17 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 		return NULL;
 	}
 
-	program.internalPtr = plCreateShaderProgram();
+	program.internalPtr = PlgCreateShaderProgram();
 	if ( program.internalPtr == NULL ) {
-		PrintWarn( "Failed to create shader program!\nPL: %s\n", plGetError() );
+		PrintWarn( "Failed to create shader program!\nPL: %s\n", PlGetError() );
 		return NULL;
 	}
 
-	Gfx_RegisterShaderStage( program.internalPtr, PL_SHADER_TYPE_VERTEX, vertexPath );
-	Gfx_RegisterShaderStage( program.internalPtr, PL_SHADER_TYPE_FRAGMENT, fragmentPath );
+	Gfx_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath );
+	Gfx_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath );
 
-	if ( !plLinkShaderProgram( program.internalPtr ) ) {
-		PrintError( "Failed to link shader stages!\nPL: %s\n", plGetError() );
+	if ( !PlgLinkShaderProgram( program.internalPtr ) ) {
+		PrintError( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
 	}
 
 	/* allocate and return our program index */
@@ -263,42 +263,42 @@ static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
 }
 
 static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
-	PLFile *file = plOpenFile( path, false );
+	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL ) {
-		PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return;
 	}
 
 	Print( "Parsing \"%s\"\n", path );
 	ShaderProgramIndex *program = Gfx_ParseShaderProgram( file );
 
-	plCloseFile( file );
+	PlCloseFile( file );
 
 	if ( program != NULL ) {
-		program->node = plInsertLinkedListNode( gfxShaderPrograms, program );
+		program->node = PlInsertLinkedListNode( gfxShaderPrograms, program );
 	}
 }
 
-PLShaderProgram *Gfx_GetShaderProgram( const char *name ) {
-	PLLinkedListNode *root = plGetFirstNode( gfxShaderPrograms );
+PLGShaderProgram *Gfx_GetShaderProgram( const char *name ) {
+	PLLinkedListNode *root = PlGetFirstNode( gfxShaderPrograms );
 	while ( root != NULL ) {
-		ShaderProgramIndex *programIndex = plGetLinkedListNodeUserData( root );
+		ShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
 		if ( strcmp( name, programIndex->internalName ) == 0 ) {
 			return programIndex->internalPtr;
 		}
 
-		root = plGetNextLinkedListNode( root );
+		root = PlGetNextLinkedListNode( root );
 	}
 
 	return NULL;
 }
 
 static void Gfx_InitializeShaderPrograms( void ) {
-	gfxShaderPrograms = plCreateLinkedList();
+	gfxShaderPrograms = PlCreateLinkedList();
 
-	plScanDirectory( "materials/shaders", "prg", Gfx_LoadShaderProgram, false, NULL );
+	PlScanDirectory( "materials/shaders", "prg", Gfx_LoadShaderProgram, false, NULL );
 
-	Print( "%d shader programs indexed\n", plGetNumLinkedListNodes( gfxShaderPrograms ) );
+	Print( "%d shader programs indexed\n", PlGetNumLinkedListNodes( gfxShaderPrograms ) );
 
 	/* now fetch the default programs */
 	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
@@ -320,18 +320,18 @@ static void Gfx_InitializeShaderPrograms( void ) {
 
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle ) {
 #if 0
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
+	PlLoadIdentityMatrix();
 
-	plRotateMatrix( plDegreesToRadians( 0.0f ), 1.0f, 0.0f, 0.0f );
-	plRotateMatrix( plDegreesToRadians( spriteAngle ), 0.0f, 1.0f, 0.0f );
-	plRotateMatrix( plDegreesToRadians( 180.0f ), 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix( PlDegreesToRadians( 0.0f ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( PlDegreesToRadians( spriteAngle ), 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix( PlDegreesToRadians( 180.0f ), 0.0f, 0.0f, 1.0f );
 
-	plPopMatrix();
+	PlPopMatrix();
 
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
 
 #if 0
 	int w = frame->texture->w; //* 1.7;
@@ -401,8 +401,8 @@ void Gfx_DrawDigit( float x, float y, int digit ) {
 		digit = 9;
 	}
 
-	PLMatrix4 transform = plMatrix4Identity();
-	plDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
+	PLMatrix4 transform = PlMatrix4Identity();
+	PlgDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
 void Gfx_DrawNumber( float x, float y, unsigned int number ) {
@@ -428,35 +428,35 @@ void Gfx_InitializeCameras( void ); /* gfx_camera.c */
 void Gfx_ShutdownCameras( void );   /* gfx_camera.c */
 
 void Gfx_SetupDefaultState( void ) {
-	plSetClearColour( PLColour( 128, 212, 255, 255 ) );
+	PlgSetClearColour( PLColour( 128, 212, 255, 255 ) );
 
-	plEnableGraphicsState( PL_GFX_STATE_SCISSORTEST );
+	PlgEnableGraphicsState( PLG_GFX_STATE_SCISSORTEST );
 
-	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
-	plSetDepthMask( true );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+	PlgSetDepthMask( true );
 
-	plSetCullMode( PL_CULL_POSTIVE );
+	PlgSetCullMode( PLG_CULL_POSTIVE );
 
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 }
 
 static void Gfx_SetupShadowMap( void ) {
-	smDepthBuffer = plCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PL_BUFFER_DEPTH );
+	smDepthBuffer = PlgCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PLG_BUFFER_DEPTH );
 	if ( smDepthBuffer == NULL ) {
-		PrintError( "Failed to create depth buffer!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to create depth buffer!\nPL: %s\n", PlGetError() );
 	}
 
 	//glDrawBuffer( GL_NONE );
 
-	smTexture = plGetFrameBufferTextureAttachment( smDepthBuffer, PL_BUFFER_DEPTH, PL_TEXTURE_FILTER_LINEAR );
+	smTexture = PlgGetFrameBufferTextureAttachment( smDepthBuffer, PLG_BUFFER_DEPTH, PLG_TEXTURE_FILTER_LINEAR );
 	if ( smTexture == NULL ) {
-		PrintError( "Failed to get texture attachment of depth buffer!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to get texture attachment of depth buffer!\nPL: %s\n", PlGetError() );
 	}
 
 	/* unbind the buffer we just created */
-	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DEFAULT );
+	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	smCamera = plCreateCamera();
+	smCamera = PlgCreateCamera();
 	smCamera->viewport.w = SHADOW_MAP_RESOLUTION;
 	smCamera->viewport.h = SHADOW_MAP_RESOLUTION;
 }
@@ -464,7 +464,11 @@ static void Gfx_SetupShadowMap( void ) {
 void Gfx_Initialize( void ) {
 	Print( "Initializing Gfx...\n" );
 
-	plSetGraphicsMode( "opengl" );
+    if ( PlgSetDriver( "vulkan" ) != PL_RESULT_SUCCESS &&
+         PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
+	     PlgSetDriver( "software" ) != PL_RESULT_SUCCESS ) {
+		PrintError( "Failed to set graphics driver!\nPL: %s\n", PlGetError() );
+    }
 
 	memset( msWorldGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
 	memset( memoryGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
@@ -480,11 +484,11 @@ void Gfx_Initialize( void ) {
 
 	Gfx_InitializeCameras();
 
-	auxCamera = plCreateCamera();
+	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL ) {
-		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", PlGetError() );
 	}
-	auxCamera->mode = PL_CAMERA_MODE_ORTHOGRAPHIC;
+	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
 	auxCamera->far = 1000.0f;
 
@@ -510,28 +514,28 @@ static void Gfx_DrawViewSprite( void ) {
 #endif
 }
 
-static PLFrameBuffer *ppBuffer = NULL;
-static PLTexture *ppAttachment = NULL;
+static PLGFrameBuffer *ppBuffer = NULL;
+static PLGTexture *ppAttachment = NULL;
 
 /**
  * Where the magic of post processing happens.
  */
 static void R_DrawScreenBuffer( int x, int y, int w, int h ) {
 	/* and now display the scene onto the screen */
-	plPushMatrix();
-	plLoadIdentityMatrix();
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
 
 	CVar( "graphics.fxaa", fxaaMode );
 	if ( fxaaMode->b_value ) {
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
-		plSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+		PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+		PlgSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
 	} else {
-		plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+		PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	}
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
 
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, ppAttachment );
-	plPopMatrix();
+	PlgDrawTexturedRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, ppAttachment );
+	PlPopMatrix();
 }
 
 void R_DrawGraph( const char *heading, float x, float y, float w, float h, float *values, unsigned int numPoints, float min, float max ) {
@@ -539,7 +543,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		return;
 	}
 
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
 	float oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i ) {
@@ -561,7 +565,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ ) {
-		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * (j-1) );
+		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * ( j - 1 ) );
 		if ( min != max ) {
 			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
 		}
@@ -574,8 +578,8 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		/* leave z, it'll be initialized as 0 */
 	}
 
-	plDrawRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 128, 0, 0, 128 ) );
-	plDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 128, 0, 0, 128 ) );
+	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
 	BitmapFont *font = Font_GetDefault();
 	if ( font != NULL ) {
@@ -608,19 +612,19 @@ void Gfx_DrawMenu( void ) {
 	auxCamera->viewport.w = w;
 	auxCamera->viewport.h = h;
 
-	plSetupCamera( auxCamera );
+	PlgSetupCamera( auxCamera );
 
-	plSetDepthMask( false );
+	PlgSetDepthMask( false );
 
 	R_DrawScreenBuffer( 0, 0, w, h );
 
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-	plSetBlendMode( PL_BLEND_DEFAULT );
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
+	PlLoadIdentityMatrix();
 
 	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
 
@@ -631,8 +635,8 @@ void Gfx_DrawMenu( void ) {
 		R_DrawGraph( PL_TOSTRING( PROFILE_DRAW_MAP ), w - 512.0f, 0.0f, 512.0f, 64.0f, msWorldGraph, NUM_GRAPH_POINTS, 0.0f, 5.0f );
 
 		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) memoryGraph[ i ] = memoryGraph[ i + 1 ];
-		memoryGraph[ NUM_GRAPH_POINTS - 1 ] = plBytesToMegabytes( plGetCurrentMemoryUsage() );
-		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, plBytesToMegabytes( plGetTotalSystemMemory() ) );
+		memoryGraph[ NUM_GRAPH_POINTS - 1 ] = PlBytesToMegabytes( PlGetCurrentMemoryUsage() );
+		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, PlBytesToMegabytes( PlGetTotalSystemMemory() ) );
 
 		BitmapFont *defaultFont = Font_GetDefault();
 		if ( defaultFont != NULL ) {
@@ -647,11 +651,11 @@ void Gfx_DrawMenu( void ) {
 			char buf[ 256 ];
 			snprintf( buf, sizeof( buf ),
 			          "Rendering State\n"
-                      "===================\n"
+			          "===================\n"
 			          "  Camera Position: %s\n"
 			          "  Num Faces Drawn: %d\n"
 			          "  Num Batches:     %d\n",
-			          plPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
+			          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
 			          g_gfxPerfStats.numFacesDrawn,
 			          g_gfxPerfStats.numBatches );
 			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
@@ -666,7 +670,7 @@ void Gfx_DrawMenu( void ) {
 				unsigned int index = 0;
 				const char *taskDesc = Sch_GetTaskDescription( index, &taskDelay );
 				if ( taskDesc == NULL ) {
-                    Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
+					Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
 				} else {
 					while ( taskDesc != NULL ) {
 						snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay );
@@ -682,75 +686,75 @@ void Gfx_DrawMenu( void ) {
 		}
 	}
 
-	plSetBlendMode( PL_BLEND_DISABLE );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	plPopMatrix();
+	PlPopMatrix();
 
 	Con_Draw( &auxCamera->viewport );
 
-	plSetDepthMask( true );
+	PlgSetDepthMask( true );
 
 	memset( &g_gfxPerfStats, 0, sizeof( RendererStats ) );
 }
 
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation ) {
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
+	PlLoadIdentityMatrix();
 
 	PLVector3 angles;
-	angles.x = plDegreesToRadians( rotation.x );
-	angles.y = plDegreesToRadians( rotation.y );
-	angles.z = plDegreesToRadians( rotation.z );
+	angles.x = PlDegreesToRadians( rotation.x );
+	angles.y = PlDegreesToRadians( rotation.y );
+	angles.z = PlDegreesToRadians( rotation.z );
 
-	plRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
-	plRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
-	plRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
 
-	plTranslateMatrix( position );
+	PlTranslateMatrix( position );
 
-	PLMatrix4 transform = *plGetMatrix( PL_MODELVIEW_MATRIX );
-	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
-	plDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
-	//printf( "%s\n", plPrintVector3( &position, pl_int_var ) );
+	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
+	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
-	plPopMatrix();
+	PlPopMatrix();
 }
 
-static void Gfx_RenderScene( PLCamera *camera, bool smPass ) {
+static void Gfx_RenderScene( PLGCamera *camera, bool smPass ) {
 	Map_Draw( camera, smPass );
 	Act_DrawActors();
 }
 
-static void Gfx_RenderSceneDepth( PLCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles ) {
+static void Gfx_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles ) {
 	smCamera->position = *lightPos;
 	smCamera->angles = *lightAngles;
 
-	plSetupCamera( smCamera );
-	plBindFrameBuffer( smDepthBuffer, PL_FRAMEBUFFER_DRAW );
-	plClearBuffers( PL_BUFFER_DEPTH );
+	PlgSetupCamera( smCamera );
+	PlgBindFrameBuffer( smDepthBuffer, PLG_FRAMEBUFFER_DRAW );
+	PlgClearBuffers( PLG_BUFFER_DEPTH );
 
 	Gfx_RenderScene( camera, true );
 
-	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DEFAULT );
+	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 }
 
-static void Gfx_RenderSceneFinal( PLCamera *camera ) {
+static void Gfx_RenderSceneFinal( PLGCamera *camera ) {
 	/* set everything up for post-processing */
 	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->viewport.w, camera->viewport.h );
-	plBindFrameBuffer( ppBuffer, PL_FRAMEBUFFER_DRAW );
+	PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
 
-	plSetupCamera( camera );
-	plClearBuffers( PL_BUFFER_COLOUR | PL_BUFFER_DEPTH );
+	PlgSetupCamera( camera );
+	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 
 	Gfx_RenderScene( camera, false );
 }
 
 //#include <GL/gl.h>
 
-void Gfx_DrawScene( PLCamera *camera ) {
+void Gfx_DrawScene( PLGCamera *camera ) {
 	g_gfxPerfStats.cameraPos = camera->position;
 
 	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
@@ -766,5 +770,5 @@ void Gfx_DrawScene( PLCamera *camera ) {
 	//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	//}
 
-	plBindFrameBuffer( NULL, PL_FRAMEBUFFER_DRAW );
+	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 }

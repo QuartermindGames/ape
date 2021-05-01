@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 OldTimes Software
  * ====================================================================*/
 
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_filesystem.h>
 
 #include "common/Common.h"
 
@@ -14,11 +14,8 @@ const char *ComFS_GetDataDirectory( void ) {
     }
 
     Message( "Checking for \"" YIN_GLOBAL_WAD "\"\n" );
-    if ( !plLocalFileExists( YIN_GLOBAL_WAD ) ) {
-        snprintf( dataPath, sizeof( dataPath ), "../../" );
-    } else {
-        snprintf( dataPath, sizeof( dataPath ), "./" );
-    }
+
+	snprintf( dataPath, sizeof( dataPath ), PlLocalFileExists( YIN_GLOBAL_WAD ) ? "./" : "../../" );
 
     return dataPath;
 }

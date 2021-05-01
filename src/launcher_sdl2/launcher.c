@@ -355,14 +355,14 @@ void Sys_Shutdown( void ) {
 static void Sys_SetupEngineInterface( void ) {
 	Print( "Setting up engine interface\n" );
 
-	dllEnginePtr = plLoadLibrary( "./engine", true );
+	dllEnginePtr = PlLoadLibrary( "./engine", true );
 	if ( dllEnginePtr == NULL ) {
-		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	DllEngineInterface GetDllInterface = ( DllEngineInterface ) plGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
+	DllEngineInterface GetDllInterface = ( DllEngineInterface ) PlGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
 	if ( GetDllInterface == NULL ) {
-		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
 	static SystemInterface systemInterface = {
@@ -406,16 +406,16 @@ int Sys_Init( int argc, char **argv ) {
 	pl_free = Sys_free;
 
 	/* initialize the platform library */
-	plInitialize( argc, argv );
-	plInitializeSubSystems( PL_SUBSYSTEM_IO );
+	PlInitialize( argc, argv );
+	PlInitializeSubSystems( PL_SUBSYSTEM_IO );
 
-	if ( plHasCommandLineArgument( "-log" ) ) {
-		const char *path = plGetCommandLineArgumentValue( "-log" );
+	if ( PlHasCommandLineArgument( "-log" ) ) {
+		const char *path = PlGetCommandLineArgumentValue( "-log" );
 		if ( path == NULL ) {
 			path = "log.txt";
 		}
 
-		plSetupLogOutput( path );
+		PlSetupLogOutput( path );
 	}
 
 	CommonLibrary_Initialize();

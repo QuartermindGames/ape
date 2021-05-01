@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <PL/platform.h>
-#include <PL/platform_console.h>
+#include <plcore/pl.h>
+#include <plcore/pl_console.h>
 
 #include "public/SharedBase.h"
 

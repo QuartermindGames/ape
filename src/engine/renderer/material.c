@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
+#include <plcore/pl_linkedlist.h>
 
 #include "yin.h"
 #include "renderer.h"
@@ -21,9 +21,9 @@ typedef struct MaterialVariable {
 } MaterialVariable;
 
 typedef struct MaterialPass {
-	PLShaderProgram *program;
+	PLGShaderProgram *program;
 	char programName[ 64 ];
-	PLBlend blendMode[ 2 ];
+	PLGBlend blendMode[ 2 ];
 	MaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
 
@@ -40,16 +40,16 @@ typedef struct Material {
 
 static Material *fallbackMaterial;
 Material *RM_GetFallbackMaterial( void ) {
-    return fallbackMaterial;
+	return fallbackMaterial;
 }
 
 void RM_InitializeMaterialSystem( void ) {
 	Print( "Initializing material system\n" );
 
 	for ( unsigned int i = 0; i < MAX_CACHE_GROUPS; ++i ) {
-		materials[ i ] = plCreateLinkedList();
+		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL ) {
-			PrintError( "Failed to create materials list!\nPL: %s\n", plGetError() );
+			PrintError( "Failed to create materials list!\nPL: %s\n", PlGetError() );
 		}
 	}
 
@@ -58,8 +58,8 @@ void RM_InitializeMaterialSystem( void ) {
 	/* setup passes */
 	fallbackMaterial->numPasses = 1;
 	fallbackMaterial->passes[ 0 ].program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
-	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PL_BLEND_NONE;
-	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PL_BLEND_NONE;
+	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
+	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.type = SCRIPT_VAR_TEXTURE;
@@ -72,12 +72,12 @@ void RM_ShutdownMaterialSystem( void ) {
 		RM_ClearMaterials( i );
 
 		/* and now destroy the list */
-		plDestroyLinkedList( materials[ i ] );
+		PlDestroyLinkedList( materials[ i ] );
 		materials[ i ] = NULL;
 	}
 }
 
-PLShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass ) {
+PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass ) {
 	if ( pass >= material->numPasses ) {
 		return NULL;
 	}
@@ -85,18 +85,18 @@ PLShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int p
 	return material->passes[ pass ].program;
 }
 
-static bool RM_ValidateVariableType( ScriptVariableType varType, PLShaderUniformType uniformType ) {
-	static const PLShaderUniformType match[ MAX_SCRIPT_VAR_TYPES ] =
+static bool RM_ValidateVariableType( ScriptVariableType varType, PLGShaderUniformType uniformType ) {
+	static const PLGShaderUniformType match[ MAX_SCRIPT_VAR_TYPES ] =
 	        {
-	                [SCRIPT_VAR_FLOAT] = PL_UNIFORM_FLOAT,
-	                [SCRIPT_VAR_INT] = PL_UNIFORM_INT,
-	                [SCRIPT_VAR_UINT] = PL_UNIFORM_UINT,
-	                [SCRIPT_VAR_BOOL] = PL_UNIFORM_BOOL,
-	                [SCRIPT_VAR_DOUBLE] = PL_UNIFORM_DOUBLE,
-	                [SCRIPT_VAR_VEC2] = PL_UNIFORM_VEC2,
-	                [SCRIPT_VAR_VEC3] = PL_UNIFORM_VEC3,
-	                [SCRIPT_VAR_VEC4] = PL_UNIFORM_VEC4,
-	                [SCRIPT_VAR_TEXTURE] = PL_UNIFORM_SAMPLER2D,
+	                [SCRIPT_VAR_FLOAT] = PLG_UNIFORM_FLOAT,
+	                [SCRIPT_VAR_INT] = PLG_UNIFORM_INT,
+	                [SCRIPT_VAR_UINT] = PLG_UNIFORM_UINT,
+	                [SCRIPT_VAR_BOOL] = PLG_UNIFORM_BOOL,
+	                [SCRIPT_VAR_DOUBLE] = PLG_UNIFORM_DOUBLE,
+	                [SCRIPT_VAR_VEC2] = PLG_UNIFORM_VEC2,
+	                [SCRIPT_VAR_VEC3] = PLG_UNIFORM_VEC3,
+	                [SCRIPT_VAR_VEC4] = PLG_UNIFORM_VEC4,
+	                [SCRIPT_VAR_TEXTURE] = PLG_UNIFORM_SAMPLER2D,
 	        };
 
 	/* built-in variables are special */
@@ -112,22 +112,22 @@ static bool RM_ValidateVariableType( ScriptVariableType varType, PLShaderUniform
 }
 
 static int RM_GetBlendModeByTag( const char *tag ) {
-	static const char *blendModeTags[ PL_MAX_BLEND_MODES ] = {
-	        [PL_BLEND_NONE] = "none",
-	        [PL_BLEND_ZERO] = "zero",
-	        [PL_BLEND_ONE] = "one",
-	        [PL_BLEND_SRC_COLOR] = "src_color",
-	        [PL_BLEND_ONE_MINUS_SRC_COLOR] = "one_minus_src_color",
-	        [PL_BLEND_SRC_ALPHA] = "src_alpha",
-	        [PL_BLEND_ONE_MINUS_SRC_ALPHA] = "one_minus_src_alpha",
-	        [PL_BLEND_DST_ALPHA] = "dst_alpha",
-	        [PL_BLEND_ONE_MINUS_DST_ALPHA] = "one_minus_dst_alpha",
-	        [PL_BLEND_DST_COLOR] = "dst_color",
-	        [PL_BLEND_ONE_MINUS_DST_COLOR] = "one_minus_dst_color",
-	        [PL_BLEND_SRC_ALPHA_SATURATE] = "src_alpha_saturate",
+	static const char *blendModeTags[ PLG_MAX_BLEND_MODES ] = {
+	        [PLG_BLEND_NONE] = "none",
+	        [PLG_BLEND_ZERO] = "zero",
+	        [PLG_BLEND_ONE] = "one",
+	        [PLG_BLEND_SRC_COLOR] = "src_color",
+	        [PLG_BLEND_ONE_MINUS_SRC_COLOR] = "one_minus_src_color",
+	        [PLG_BLEND_SRC_ALPHA] = "src_alpha",
+	        [PLG_BLEND_ONE_MINUS_SRC_ALPHA] = "one_minus_src_alpha",
+	        [PLG_BLEND_DST_ALPHA] = "dst_alpha",
+	        [PLG_BLEND_ONE_MINUS_DST_ALPHA] = "one_minus_dst_alpha",
+	        [PLG_BLEND_DST_COLOR] = "dst_color",
+	        [PLG_BLEND_ONE_MINUS_DST_COLOR] = "one_minus_dst_color",
+	        [PLG_BLEND_SRC_ALPHA_SATURATE] = "src_alpha_saturate",
 	};
 
-	for ( int i = 0; i < PL_MAX_BLEND_MODES; ++i ) {
+	for ( int i = 0; i < PLG_MAX_BLEND_MODES; ++i ) {
 		if ( strcmp( tag, blendModeTags[ i ] ) == 0 ) {
 			return i;
 		}
@@ -135,12 +135,12 @@ static int RM_GetBlendModeByTag( const char *tag ) {
 
 	PrintWarn( "Invalid blend mode specified, defaulting to \"none\"!\n" );
 
-	return PL_BLEND_NONE;
+	return PLG_BLEND_NONE;
 }
 
 static int RM_GetBuiltInByTag( const char *tag ) {
 	static const char *builtInTags[ MAX_MATERIAL_BUILTINS ] = {
-		[ MATERIAL_BUILTIN_TIME ] = "time",
+	        [MATERIAL_BUILTIN_TIME] = "time",
 	};
 
 	for ( int i = 0; i < MAX_MATERIAL_BUILTINS; ++i ) {
@@ -152,7 +152,7 @@ static int RM_GetBuiltInByTag( const char *tag ) {
 	return -1;
 }
 
-static void RM_SetupMaterialPass( MaterialPass *pass, PLShaderProgram *program, PLBlend blendModeA, PLBlend blendModeB ) {
+static void RM_SetupMaterialPass( MaterialPass *pass, PLGShaderProgram *program, PLGBlend blendModeA, PLGBlend blendModeB ) {
 	pass->program = program;
 	pass->blendMode[ 0 ] = blendModeA;
 	pass->blendMode[ 1 ] = blendModeB;
@@ -191,14 +191,14 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
 	/* copy it across */
 	snprintf( pass->variables[ i ].varData.name, sizeof( pass->variables[ i ].varData.name ), "%s", token );
 
-	pass->variables[ i ].programSlot = plGetShaderUniformSlot( pass->program, pass->variables[ i ].varData.name );
+	pass->variables[ i ].programSlot = PlgGetShaderUniformSlot( pass->program, pass->variables[ i ].varData.name );
 	if ( pass->variables[ i ].programSlot == -1 ) {
 		PrintWarn( "Failed to fetch uniform slot for variable \"%s\"!\n", pass->variables[ i ].varData.name );
 		return;
 	}
 
 	/* fetch the uniform type so we can validate it, urgh */
-	unsigned int uniformType = plGetShaderUniformType( pass->program, pass->variables[ i ].programSlot );
+	unsigned int uniformType = PlgGetShaderUniformType( pass->program, pass->variables[ i ].programSlot );
 	if ( !RM_ValidateVariableType( pass->variables[ i ].varData.type, uniformType ) ) {
 		PrintWarn( "Material variable \"%s\" type does not match uniform type!\n", pass->variables[ i ].varData.name );
 		return;
@@ -213,7 +213,7 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line ) {
 	}
 
 	/* handle built-in variables */
-	switch( pass->variables[ i ].varData.type ) {
+	switch ( pass->variables[ i ].varData.type ) {
 		case SCRIPT_VAR_BUILTIN:
 			pass->variables[ i ].varData.value.iVar = RM_GetBuiltInByTag( token );
 			if ( pass->variables[ i ].varData.value.iVar == -1 ) {
@@ -251,7 +251,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 	char buffer[ 1024 ];
 
 	/* first thing we should find is the identifier */
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( strcmp( "material\n", buffer ) != 0 ) {
 		PrintWarn( "Invalid identifier for material!\n" );
 		return NULL;
@@ -262,8 +262,8 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 
 	MaterialPass *curPass = NULL;
 
-	char *r = plReadString( file, buffer, sizeof( buffer ) );
-	while( r != NULL ) {
+	char *r = PlReadString( file, buffer, sizeof( buffer ) );
+	while ( r != NULL ) {
 		/* render pass */
 		if ( strncmp( "pass ", r, 5 ) == 0 ) {
 			char programName[ GFX_PROGRAM_NAME_LENGTH ];
@@ -272,7 +272,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 				return NULL;
 			}
 
-			PLShaderProgram *program = Gfx_GetShaderProgram( programName );
+			PLGShaderProgram *program = Gfx_GetShaderProgram( programName );
 			if ( program == NULL ) {
 				program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
 				PrintWarn( "Failed to find program \"%s\", using fallback!\n" );
@@ -280,7 +280,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 
 			curPass = &mat.passes[ mat.numPasses++ ];
 			strncpy( curPass->programName, programName, sizeof( curPass->programName ) );
-			RM_SetupMaterialPass( curPass, program, PL_BLEND_DISABLE );
+			RM_SetupMaterialPass( curPass, program, PLG_BLEND_DISABLE );
 		}
 		/* blend mode */
 		else if ( strncmp( "blend ", r, 6 ) == 0 ) {
@@ -302,7 +302,7 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 			break;
 		}
 
-		r = plReadString( file, buffer, sizeof( buffer ) );
+		r = PlReadString( file, buffer, sizeof( buffer ) );
 	}
 
 	Material *out = globalSystem.MAlloc( sizeof( Material ), true );
@@ -311,32 +311,43 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 }
 
 static Material *RM_GetMaterial( const char *path, CacheGroup group ) {
-	PLLinkedListNode *node = plGetFirstNode( materials[ group ] );
+	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL ) {
-		Material *material = plGetLinkedListNodeUserData( node );
+		Material *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 ) {
 			return material;
 		}
 
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
 
 	return NULL;
 }
 
-static const char *BlendModeToString( PLBlend mode ) {
-	switch( mode ) {
-		case PL_BLEND_ONE_MINUS_DST_ALPHA: return "one_minus_dst_alpha";
-		case PL_BLEND_ONE_MINUS_DST_COLOR: return "one_minus_dst_color";
-		case PL_BLEND_ONE_MINUS_SRC_ALPHA: return "one_minus_src_alpha";
-		case PL_BLEND_ONE_MINUS_SRC_COLOR: return "one_minus_src_color";
-		case PL_BLEND_SRC_ALPHA: return "src_alpha";
-		case PL_BLEND_SRC_ALPHA_SATURATE: return "src_alpha_saturate";
-		case PL_BLEND_SRC_COLOR: return "src_color";
-		case PL_BLEND_DST_ALPHA: return "dst_alpha";
-		case PL_BLEND_DST_COLOR: return "dst_color";
-		case PL_BLEND_ONE: return "one";
-		default: return "zero";
+static const char *BlendModeToString( PLGBlend mode ) {
+	switch ( mode ) {
+		case PLG_BLEND_ONE_MINUS_DST_ALPHA:
+			return "one_minus_dst_alpha";
+		case PLG_BLEND_ONE_MINUS_DST_COLOR:
+			return "one_minus_dst_color";
+		case PLG_BLEND_ONE_MINUS_SRC_ALPHA:
+			return "one_minus_src_alpha";
+		case PLG_BLEND_ONE_MINUS_SRC_COLOR:
+			return "one_minus_src_color";
+		case PLG_BLEND_SRC_ALPHA:
+			return "src_alpha";
+		case PLG_BLEND_SRC_ALPHA_SATURATE:
+			return "src_alpha_saturate";
+		case PLG_BLEND_SRC_COLOR:
+			return "src_color";
+		case PLG_BLEND_DST_ALPHA:
+			return "dst_alpha";
+		case PLG_BLEND_DST_COLOR:
+			return "dst_color";
+		case PLG_BLEND_ONE:
+			return "one";
+		default:
+			return "zero";
 	}
 }
 
@@ -365,12 +376,11 @@ static void ConvertMatToNode( const Material *material ) {
 	root = NL_PushBackObj( NULL, "material" );
 	NLNode *passArray = NL_PushBackObjArray( root, "passes" );
 	for ( unsigned int i = 0; i < material->numPasses; ++i ) {
-        NLNode *pass = NL_PushBackObj( passArray, NULL );
+		NLNode *pass = NL_PushBackObj( passArray, NULL );
 		NL_PushBackString( pass, "shaderProgram", material->passes[ i ].programName );
 		const char *blendMode[ 2 ] = {
 		        BlendModeToString( material->passes[ i ].blendMode[ 0 ] ),
-		        BlendModeToString( material->passes[ i ].blendMode[ 1 ] )
-		};
+		        BlendModeToString( material->passes[ i ].blendMode[ 1 ] ) };
 		NL_PushBackStringArray( pass, "blendMode", blendMode, 2 );
 
 		NL_PushBackBool( pass, "depthTest", material->passes[ i ].depthTest );
@@ -378,7 +388,7 @@ static void ConvertMatToNode( const Material *material ) {
 		NLNode *shaderParms = NL_PushBackObj( pass, "shaderParameters" );
 		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j ) {
 			const MaterialVariable *var = &material->passes[ i ].variables[ j ];
-            switch( var->varData.type ) {
+			switch ( var->varData.type ) {
 				case SCRIPT_VAR_TEXTURE:
 					NL_PushBackString( shaderParms, var->varData.name, var->varData.value.texVar->path );
 					break;
@@ -389,7 +399,7 @@ static void ConvertMatToNode( const Material *material ) {
 					NL_PushBackBool( shaderParms, var->varData.name, var->varData.value.bVar );
 					break;
 				case SCRIPT_VAR_DOUBLE:
-                    NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.dVar );
+					NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.dVar );
 					break;
 				case SCRIPT_VAR_FLOAT:
 					NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.fVar );
@@ -416,11 +426,11 @@ static void ConvertMatToNode( const Material *material ) {
 		}
 	}
 
-    Print( "OUT: \"%s\"\n", outPath );
+	Print( "OUT: \"%s\"\n", outPath );
 
 	NL_WriteFile( outPath, root, NL_FILE_ASCII );
 
-    NL_PrintNodeTree( root, 0 );
+	NL_PrintNodeTree( root, 0 );
 	NL_DestroyNode( root );
 }
 
@@ -434,15 +444,15 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	/* fallback should be optional, as in some cases we might actually care */
 	Material *fallbackPtr = useFallback ? fallbackMaterial : NULL;
 
-	PLFile *file = plOpenFile( path, false );
+	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL ) {
-		PrintWarn( "Failed to load material, \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to load material, \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return fallbackPtr;
 	}
 
 	material = RM_ParseMaterial( file );
 
-	plCloseFile( file );
+	PlCloseFile( file );
 
 	if ( material == NULL ) {
 		PrintWarn( "Failed to cache material, \"%s\"!\n", path );
@@ -450,7 +460,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	}
 
 	snprintf( material->path, sizeof( material->path ), "%s", path );
-	material->node = plInsertLinkedListNode( materials[ group ], material );
+	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
 #if 1
 	ConvertMatToNode( material );
@@ -464,73 +474,74 @@ void RM_DestroyMaterial( Material *material, bool force ) {
 		return;
 	}
 
-	PLLinkedList *container = plGetLinkedListNodeContainer( material->node );
+	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
 	if ( container != NULL ) {
-		plDestroyLinkedListNode( container, material->node );
+		PlDestroyLinkedListNode( container, material->node );
 	}
 
-	free( material );
+	globalSystem.Free( material );
 }
 
 void RM_ClearMaterials( CacheGroup group ) {
-	PLLinkedListNode *node = plGetFirstNode( materials[ group ] );
+	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL ) {
-		free( plGetLinkedListNodeUserData( node ) );
-		node = plGetNextLinkedListNode( node );
+		globalSystem.Free( PlGetLinkedListNodeUserData( node ) );
+		node = PlGetNextLinkedListNode( node );
 	}
 
-	plDestroyLinkedListNodes( materials[ group ] );
+	PlDestroyLinkedListNodes( materials[ group ] );
 }
 
-static void RM_SetBuiltInVariable( PLShaderProgram *program, int uniformSlot, int variable ) {
+static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable ) {
 	if ( variable == -1 ) {
 		return;
 	}
 
-	switch( variable ) {
+	switch ( variable ) {
 		case MATERIAL_BUILTIN_TIME: {
 			unsigned int numTicks = Engine_GetNumTicks();
-			plSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
-		default: break;
+		default:
+			break;
 	}
 }
 
-void RM_DrawMesh( Material *material, PLMesh *mesh ) {
+void RM_DrawMesh( Material *material, PLGMesh *mesh ) {
 	for ( unsigned int i = 0; i < material->numPasses; ++i ) {
 		MaterialPass *curPass = &material->passes[ i ];
 
-		plSetShaderProgram( curPass->program );
-		plSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
+		PlgSetShaderProgram( curPass->program );
+		PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
-		plSetShaderUniformValue( curPass->program, "pl_model", plGetMatrix( PL_MODELVIEW_MATRIX ), true );
+		PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
 
 		/* set global uniforms, if they exist */
 		int slot;
-		slot = plGetShaderUniformSlot( curPass->program, "sun.colour" );
+		slot = PlgGetShaderUniformSlot( curPass->program, "sun.colour" );
 		if ( slot >= 0 ) {
 			PLVector4 sunColour = World_GetSunColour();
-			plSetShaderUniformValueByIndex( curPass->program, slot, &sunColour, false );
+			PlgSetShaderUniformValueByIndex( curPass->program, slot, &sunColour, false );
 		}
-		slot = plGetShaderUniformSlot( curPass->program, "sun.position" );
+		slot = PlgGetShaderUniformSlot( curPass->program, "sun.position" );
 		if ( slot >= 0 ) {
 			PLVector3 sunPosition = World_GetSunPosition();
-			plSetShaderUniformValueByIndex( curPass->program, slot, &sunPosition, false );
+            PlgSetShaderUniformValueByIndex( curPass->program, slot, &sunPosition, false );
 		}
-		slot = plGetShaderUniformSlot( curPass->program, "sun.ambience" );
+		slot = PlgGetShaderUniformSlot( curPass->program, "sun.ambience" );
 		if ( slot >= 0 ) {
 			PLVector4 ambience = World_GetAmbience();
-			plSetShaderUniformValueByIndex( curPass->program, slot, &ambience, false );
+            PlgSetShaderUniformValueByIndex( curPass->program, slot, &ambience, false );
 		}
 
 		unsigned int curUnit = 0;
 		for ( unsigned int j = 0; j < curPass->numVariables; ++j ) {
 			/* textures just need to be set per their respective unit */
 			if ( curPass->variables[ j ].varData.type == SCRIPT_VAR_TEXTURE ) {
-				plSetTexture( curPass->variables[ j ].varData.value.texVar, curUnit );
-				plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
+				PlgSetTexture( curPass->variables[ j ].varData.value.texVar, curUnit );
+                PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
 				curUnit++;
 				continue;
 			}
@@ -540,13 +551,13 @@ void RM_DrawMesh( Material *material, PLMesh *mesh ) {
 				continue;
 			}
 
-			plSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].varData.value, false );
+            PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].varData.value, false );
 		}
 
-		plUploadMesh( mesh );
-		plDrawMesh( mesh );
+		PlgUploadMesh( mesh );
+		PlgDrawMesh( mesh );
 
-        g_gfxPerfStats.numBatches++;
-        g_gfxPerfStats.numFacesDrawn += mesh->num_triangles;
+		g_gfxPerfStats.numBatches++;
+		g_gfxPerfStats.numFacesDrawn += mesh->num_triangles;
 	}
 }

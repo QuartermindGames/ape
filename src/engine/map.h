@@ -11,7 +11,7 @@ enum MapFaceFlags {
 };
 
 typedef struct MapFace {
-	PLPolygon *polygon;
+	PLGPolygon *polygon;
 	struct Material *material;
 	PLCollisionAABB bounds;
 	uint8_t flags;
@@ -31,8 +31,8 @@ void Map_ClearData( void );
 
 void Map_Load( const char *mapName );
 
-void Map_DrawSky( PLCamera *camera );
-void Map_Draw( PLCamera *camera, bool smPass );
+void Map_DrawSky( PLGCamera *camera );
+void Map_Draw( PLGCamera *camera, bool smPass );
 
 PLVector4 World_GetAmbience( void );
 PLVector4 World_GetSunColour( void );

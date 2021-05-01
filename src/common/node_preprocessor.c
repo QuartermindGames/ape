@@ -3,9 +3,9 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
-#include <PL/pl_parse.h>
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_linkedlist.h>
+#include <plcore/pl_parse.h>
+#include <plcore/pl_filesystem.h>
 
 #include "common/Common.h"
 #include "node_private.h"
@@ -83,29 +83,29 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 	char *srcEnd = buf + *length;
 	while ( srcPos < srcEnd && *srcPos != '\0' ) {
 		if ( *srcPos == ';' ) {
-			plSkipLine( &srcPos );
+			PlSkipLine( &srcPos );
 			continue;
 		} else if ( *srcPos == '$' ) {
 			srcPos++;
 			char token[ 32 ];
-			plParseToken( &srcPos, token, sizeof( token ) );
+			PlParseToken( &srcPos, token, sizeof( token ) );
 			if ( pl_strcasecmp( token, "include" ) == 0 ) {
-				plSkipWhitespace( &srcPos );
+				PlSkipWhitespace( &srcPos );
 
 				/* pull the path - needs to be enclosed otherwise this'll fail */
 				char path[ PL_SYSTEM_MAX_PATH ];
-				plParseEnclosedString( &srcPos, path, sizeof( path ) );
+				PlParseEnclosedString( &srcPos, path, sizeof( path ) );
 
-				PLFile *file = plOpenFile( path, true );
+				PLFile *file = PlOpenFile( path, true );
 				if ( file != NULL ) {
 					/* allocate a temporary buffer */
-					size_t includeLength = plGetFileSize( file );
+					size_t includeLength = PlGetFileSize( file );
 					char *includeBody = pl_malloc( includeLength );
-					memcpy( includeBody, plGetFileData( file ), includeLength );
+					memcpy( includeBody, PlGetFileData( file ), includeLength );
 
 					/* close the current file, to avoid recursively opening files
                      * and hitting any limits */
-					plCloseFile( file );
+					PlCloseFile( file );
 
 					/* now throw it into the pre-processor */
 					includeBody = xNL_PreProcessScript( includeBody, &includeLength, false );
@@ -114,14 +114,14 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 					dstPos = InsertString( includeBody, &dstBuffer, &actualLength, &maxLength );
 					pl_free( includeBody );
 				} else {
-					Warning( "Failed to load include \"%s\": %s\n", path, plGetError() );
+					Warning( "Failed to load include \"%s\": %s\n", path, PlGetError() );
 				}
 
-				plSkipLine( &srcPos );
+				PlSkipLine( &srcPos );
 				continue;
 			} else if ( pl_strcasecmp( token, "insert" ) == 0 ) {
-			    plSkipWhitespace( &srcPos );
-				plParseToken( &srcPos, token, sizeof( token ) );
+			    PlSkipWhitespace( &srcPos );
+				PlParseToken( &srcPos, token, sizeof( token ) );
 
 				const PreProcessorMacro *macro = GetPreprocessorMacroByName( token );
 				if ( macro == NULL ) {
@@ -132,13 +132,13 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 				dstPos = InsertString( macro->body, &dstBuffer, &actualLength, &maxLength );
 				continue;
 			} else if ( pl_strcasecmp( token, "define" ) == 0 ) {
-				plSkipWhitespace( &srcPos );
+				PlSkipWhitespace( &srcPos );
 
 				PreProcessorMacro *macro = &ctx.macros[ ctx.numMacros ];
 
 				/* read in the macro name */
-				plParseToken( &srcPos, macro->name, sizeof( macro->name ) );
-				plSkipWhitespace( &srcPos );
+				PlParseToken( &srcPos, macro->name, sizeof( macro->name ) );
+				PlSkipWhitespace( &srcPos );
 
 				/* if it's already registered, skip it */
 				if ( IsMacroRegistered( macro->name ) ) {
@@ -147,7 +147,7 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 						while ( *srcPos != '\0' && *srcPos != ')' ) srcPos++;
 						if ( *srcPos != '\0' ) srcPos++;
 					} else {
-						plSkipLine( &srcPos );
+						PlSkipLine( &srcPos );
 					}
 				} else if ( *srcPos == '(' ) {
 					srcPos++;
@@ -158,7 +158,7 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 					}
 					if ( *srcPos != '\0' ) srcPos++;
 				} else {
-					plParseToken( &srcPos, macro->body, sizeof( macro->body ) );
+					PlParseToken( &srcPos, macro->body, sizeof( macro->body ) );
 				}
 
 				continue;

@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform_model.h>
+#include <plmodel/plm.h>
 
 #include "yin.h"
 #include "actor.h"
@@ -49,15 +49,15 @@ static void Player_CalculateViewFrustum( Actor *self ) {
 	APlayer *playerData = Act_GetUserData( self );
 
 	PLVector3 forward, left;
-	plAnglesAxes( PLVector3( 0, Act_GetAngle( self ), 0 ), &left, NULL, &forward );
+	PlAnglesAxes( PLVector3( 0, Act_GetAngle( self ), 0 ), &left, NULL, &forward );
 
 	PLVector3 curPos = Act_GetPosition( self );
 	curPos.y += Act_GetViewOffset( self );
 
-	playerData->centerView = plAddVector3( curPos, plScaleVector3f( forward, 1000.0f ) );
+	playerData->centerView = PlAddVector3( curPos, PlScaleVector3F( forward, 1000.0f ) );
 
-	playerData->llViewPos = plAddVector3( curPos, plScaleVector3f( left, 64.0f ) );
-	playerData->lrViewPos = plSubtractVector3( curPos, plScaleVector3f( left, 64.0f ) );
+	playerData->llViewPos = PlAddVector3( curPos, PlScaleVector3F( left, 64.0f ) );
+	playerData->lrViewPos = PlSubtractVector3( curPos, PlScaleVector3F( left, 64.0f ) );
 
 	/* in future, set this up properly relative to view */
 }
@@ -80,7 +80,7 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 
 	/* in future, set this up properly relative to view */
 
-	float d = plTestPointLinePosition( point, &lineStart, &lineEnd );
+	float d = PlTestPointLinePosition( point, &lineStart, &lineEnd );
 	if( d > 0.0f ) {
 		return false;
 	}
@@ -91,14 +91,14 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 /* move this somewhere else... */
 static unsigned int numPlayers = 0;
 
-static PLModel *model = NULL;
+static PLMModel *model = NULL;
 
 void Player_Spawn( Actor *self ) {
 	APlayer* playerData = globalSystem.MAlloc( sizeof( APlayer ), true );
 	Act_SetUserData( self, playerData );
 
 	if ( model == NULL ) {
-		model = plLoadModel( "models/temp/player/mach-body.md2" );
+		model = PlmLoadModel( "models/temp/player/mach-body.md2" );
 	}
 
 	if ( numPlayers == 0 ) { /* local player */
@@ -161,15 +161,15 @@ void Player_Tick( Actor *self, void *userData ) {
 
 	/* clamp the velocity as necessary */
 	float maxVelocity = globalSystem.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
-	playerData->forwardVelocity = plClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
+	playerData->forwardVelocity = PlClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
-	curVelocity = plAddVector3( curVelocity, plScaleVector3f( Act_GetForward( self ), playerData->forwardVelocity ) );
+	curVelocity = PlAddVector3( curVelocity, PlScaleVector3F( Act_GetForward( self ), playerData->forwardVelocity ) );
 	Act_SetVelocity( self, &curVelocity );
 
 	Player_CalculateViewFrustum( self );
 
 	/* apply view bob */
-	float velocityVector = plVector3Length( curVelocity );
+	float velocityVector = PlVector3Length( curVelocity );
 	playerData->viewBob += ( sinf( Engine_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = curOrigin.y + PLAYER_VIEW_OFFSET;
@@ -186,17 +186,17 @@ void Player_Draw( Actor *self, void *userData ) {
 		return;
 	}
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
-	plTranslateMatrix( Act_GetPosition( self ) );
+	PlLoadIdentityMatrix();
+	PlTranslateMatrix( Act_GetPosition( self ) );
 
-	for ( unsigned int i = 0; i < model->levels[ 0 ].num_meshes; ++i ) {
-		RM_DrawMesh( RM_GetFallbackMaterial(), model->levels[ 0 ].meshes[ i ] );
+	for ( unsigned int i = 0; i < model->numMeshes; ++i ) {
+		RM_DrawMesh( RM_GetFallbackMaterial(), model->meshes[ i ] );
 	}
 
-	plPopMatrix();
+	PlPopMatrix();
 }
 
 void Player_Collide( Actor *self, Actor *other, void *userData ) {

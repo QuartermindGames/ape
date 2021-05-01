@@ -19,4 +19,4 @@ add_executable(pkgman
 file(COPY pkgman_legal.txt DESTINATION ${CMAKE_HOME_DIRECTORY}/release/docs/)
 
 target_include_directories(pkgman PRIVATE ../../3rdparty/miniz)
-target_link_libraries(pkgman platform)
+target_link_libraries(pkgman plcore)

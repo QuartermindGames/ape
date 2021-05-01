@@ -47,7 +47,7 @@ typedef struct ScriptVariable {
 		char strVar[ SCRIPT_STRING_LENGTH ];
 
 		/* special case for materials */
-		PLTexture *texVar;
+		PLGTexture *texVar;
 	} value;
 } ScriptVariable;
 

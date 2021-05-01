@@ -3,8 +3,6 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_graphics.h>
-
 #include "yin.h"
 #include "map.h"
 #include "renderer/renderer.h"
@@ -13,7 +11,7 @@
 #define MAP_GEOMETRY_VERSION    "version 2"
 
 static struct {
-	PLVertex *vertices;
+	PLGVertex *vertices;
 	unsigned int numVertices;
 	MapFace *faces;
 	unsigned int numFaces;
@@ -25,7 +23,7 @@ static struct {
 	unsigned int numMaterials;
 } mapData;
 
-static PLMesh *renderMesh = NULL;
+static PLGMesh *renderMesh = NULL;
 
 /**
  * Returns a list of faces for the specified sector.
@@ -50,14 +48,14 @@ static bool Map_ValidateGeometryFile( PLFile *file ) {
 	char buffer[ 256 ];
 
 	/* check the identifier */
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( strcmp( MAP_GEOMETRY_IDENTIFIER "\n", buffer ) != 0 ) {
 		PrintWarn( "Invalid identifier found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_IDENTIFIER, buffer );
 		return false;
 	}
 
 	/* and now check the version */
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( strcmp( MAP_GEOMETRY_VERSION "\n", buffer ) != 0 ) {
 		PrintWarn( "Invalid version found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_VERSION, buffer );
 		return false;
@@ -70,17 +68,17 @@ static void Map_ParseTextures( PLFile *file ) {
 	char buffer[ 256 ];
 
 	/* fetch all the materials the map will be using */
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( sscanf( buffer, "materials %d\n", &mapData.numMaterials ) != 1 ) {
-		PrintError( "Failed to fetch number of textures in \"%s\"!\n", plGetFilePath( file ) );
+		PrintError( "Failed to fetch number of textures in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate storage for them */
 	mapData.materials = globalSystem.CAlloc( mapData.numMaterials, sizeof( Material* ), true );
 
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
-		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
-			PrintError( "Failed to read in texture \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in texture \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		/* copy the material name; excluding the line terminator */
@@ -101,16 +99,16 @@ static void Map_ParseTextures( PLFile *file ) {
 static void Map_ParseVertices( PLFile *file ) {
 	char buffer[ 256 ];
 
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( sscanf( buffer, "vertices %d\n", &mapData.numVertices ) != 1 ) {
-		PrintError( "Failed to fetch number of vertices in \"%s\"!\n", plGetFilePath( file ) );
+		PrintError( "Failed to fetch number of vertices in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate buffer for vertices and then read them all in */
-	mapData.vertices = globalSystem.CAlloc( mapData.numVertices, sizeof( PLVertex ), true );
+	mapData.vertices = globalSystem.CAlloc( mapData.numVertices, sizeof( PLGVertex ), true );
 	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
-		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
-			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		if ( sscanf( buffer, "%f %f %f %f %f %f %f %f %d %d %d %d",
@@ -126,7 +124,7 @@ static void Map_ParseVertices( PLFile *file ) {
 		             &mapData.vertices[ i ].colour.g,
 		             &mapData.vertices[ i ].colour.b,
 		             &mapData.vertices[ i ].colour.a ) < 3 ) {
-			PrintError( "Failed to read in vertex \"%d\" element in \"%s\"!\n", i, plGetFilePath( file ) );
+			PrintError( "Failed to read in vertex \"%d\" element in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 	}
 }
@@ -134,30 +132,30 @@ static void Map_ParseVertices( PLFile *file ) {
 static void Map_ParseFaces( PLFile *file ) {
 	char buffer[ 256 ];
 
-	plReadString( file, buffer, sizeof( buffer ) );
+	PlReadString( file, buffer, sizeof( buffer ) );
 	if ( sscanf( buffer, "faces %d\n", &mapData.numFaces ) != 1 ) {
-		PrintError( "Failed to fetch number of faces in \"%s\"!\n", plGetFilePath( file ) );
+		PrintError( "Failed to fetch number of faces in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate buffer for faces and then read them all in */
 	mapData.faces = globalSystem.CAlloc( mapData.numFaces, sizeof( MapFace ), true );
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
-		if ( plReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
-			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 #define MAX_FACE_INDICES 64
 		char *token = strtok( buffer, " " );
 		unsigned int numIndices = strtol( token, NULL, 10 );
 		if ( numIndices == 0 || numIndices >= MAX_FACE_INDICES ) {
-			PrintError( "Invalid number of indices for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+			PrintError( "Invalid number of indices for face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		unsigned int faceIndices[ MAX_FACE_INDICES ];
 		for ( unsigned int j = 0; j < numIndices; ++j ) {
 			token = strtok( NULL, " " );
 			if ( token == NULL ) {
-				PrintError( "Failed to read in face \"%d\" elements in \"%s\"!\n", i, plGetFilePath( file ) );
+				PrintError( "Failed to read in face \"%d\" elements in \"%s\"!\n", i, PlGetFilePath( file ) );
 			}
 
 			faceIndices[ j ] = strtol( token, NULL, 10 );
@@ -183,9 +181,9 @@ static void Map_ParseFaces( PLFile *file ) {
 			mapData.faces[ i ].material = mapData.materials[ materialIndex ];
 		}
 
-		mapData.faces[ i ].polygon = plCreatePolygon( NULL, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
+		mapData.faces[ i ].polygon = PlgCreatePolygon( NULL, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
 		if ( mapData.faces[ i ].polygon == NULL ) {
-			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, plGetFilePath( file ) );
+			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		for ( unsigned int j = 0; j < numIndices; ++j ) {
@@ -193,32 +191,32 @@ static void Map_ParseFaces( PLFile *file ) {
 				PrintError( "Invalid vertex index!\n" );
 			}
 
-			plAddPolygonVertex( mapData.faces[ i ].polygon, &mapData.vertices[ faceIndices[ j ] ] );
+			PlgAddPolygonVertex( mapData.faces[ i ].polygon, &mapData.vertices[ faceIndices[ j ] ] );
 		}
 
 		unsigned int numPolyVertices;
-		PLVertex *vertices = plGetPolygonVertices( mapData.faces[ i ].polygon, &numPolyVertices );
+		PLGVertex *vertices = PlgGetPolygonVertices( mapData.faces[ i ].polygon, &numPolyVertices );
 		if ( numPolyVertices != numIndices ) {
 			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
 
 		/* generate tangets */
 		unsigned int numTriangles;
-		unsigned int *indices = plConvertPolygonToTriangles( mapData.faces[ i ].polygon, &numTriangles );
-		plGenerateTangentBasis( vertices, numPolyVertices, indices, numTriangles );
+		unsigned int *indices = PlgConvertPolygonToTriangles( mapData.faces[ i ].polygon, &numTriangles );
+		PlgGenerateTangentBasis( vertices, numPolyVertices, indices, numTriangles );
 		free( indices );
 
 		/* generate the bounds for cheap culling */
-		mapData.faces[ i ].bounds = plGenerateAABB( vertices, numPolyVertices, true );
+		mapData.faces[ i ].bounds = PlgGenerateAabbFromVertices( vertices, numPolyVertices, true );
 	}
 }
 
 void Map_ParseSectors( PLFile *file ) {
 	char buffer[ 256 ];
 
-	//plReadString( file, buffer, sizeof( buffer ) );
+	//PlReadString( file, buffer, sizeof( buffer ) );
 	//if ( sscanf( buffer, "sectors %d\n", &mapData.numSectors ) != 1 ) {
-	//	PrintError( "Failed to fetch number of sectors in \"%s\"!\n", plGetFilePath( file ) );
+	//	PrintError( "Failed to fetch number of sectors in \"%s\"!\n", PlGetFilePath( file ) );
 	//}
 
 	mapData.numSectors = 1;
@@ -227,7 +225,7 @@ void Map_ParseSectors( PLFile *file ) {
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */
 
-	mapData.numSectors = 1; //plReadInt32( filePtr, false, &status );
+	mapData.numSectors = 1; //PlReadInt32( filePtr, false, &status );
 	mapData.sectors = Sys_AllocateMemory( mapData.numSectors, sizeof( MapSector ) );
 	for ( unsigned int i = 0; i < mapData.numSectors; ++i ) {
 		MapSector *area = &mapData.sectors[ i ];
@@ -240,7 +238,7 @@ void Map_ParseSectors( PLFile *file ) {
 		area->min[ 0 ] = area->min[ 1 ] = INT32_MAX;
 
 		for ( unsigned int j = 0; j < mapData.sectors[ i ].numLines; ++j ) {
-			mapData.sectors[ i ].lineIndices[ j ] = j; //plReadInt16( filePtr, false, &status );
+			mapData.sectors[ i ].lineIndices[ j ] = j; //PlReadInt16( filePtr, false, &status );
 			if ( mapData.sectors[ i ].lineIndices[ j ] >= mapData.numPolygons ) {
 				PrintError( "Invalid line index %d in area %d!\n", mapData.sectors[ i ].lineIndices[ j ], i );
 			}
@@ -281,14 +279,14 @@ void Map_LoadGeometryData( const char *mapName ) {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	snprintf( path, sizeof( path ), "worlds/%s.geometry", mapName );
 
-	PLFile *file = plOpenFile( path, false );
+	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL ) {
-		PrintWarn( "Failed to open \"geometry\" file, \"%s\"!\nPL: %s\n", path, plGetError() );
+		PrintWarn( "Failed to open \"geometry\" file, \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return;
 	}
 
 	if ( !Map_ValidateGeometryFile( file ) ) {
-		PrintWarn( "\"%s\" is not a valid \"geometry\" file!\n", plGetFilePath( file ) );
+		PrintWarn( "\"%s\" is not a valid \"geometry\" file!\n", PlGetFilePath( file ) );
 	} else {
 		Map_ParseTextures( file );
 		Map_ParseVertices( file );
@@ -296,7 +294,7 @@ void Map_LoadGeometryData( const char *mapName ) {
 		Map_ParseSectors( file );
 	}
 
-	plCloseFile( file );
+	PlCloseFile( file );
 }
 
 void Map_Load( const char *mapName ) {
@@ -306,15 +304,15 @@ void Map_Load( const char *mapName ) {
 
 	unsigned int maxTriangles = 0;
 	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
-		maxTriangles += plGetNumOfPolygonTriangles( mapData.faces[ i ].polygon );
+		maxTriangles += PlgGetNumOfPolygonTriangles( mapData.faces[ i ].polygon );
 	}
 
 	/* destroy it if it already exists */
-	plDestroyMesh( renderMesh );
+	PlgDestroyMesh( renderMesh );
 
-	renderMesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_DYNAMIC, maxTriangles, maxTriangles * 3 );
+	renderMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, maxTriangles, maxTriangles * 3 );
 	if ( renderMesh == NULL ) {
-		PrintError( "Failed to create render mesh!\nPL: %s\n", plGetError() );
+		PrintError( "Failed to create render mesh!\nPL: %s\n", PlGetError() );
 	}
 }
 
@@ -340,9 +338,9 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 	return false;
 }
 
-static PLVector3 GetOriginPointFromVertices( const PLVertex *vertices, unsigned int numVertices ) {
+static PLVector3 GetOriginPointFromVertices( const PLGVertex *vertices, unsigned int numVertices ) {
 	/* we can cheat this a little bit by depending on the bounding box we generate */
-	return plGenerateAABB( vertices, numVertices, true ).absOrigin;
+	return PlgGenerateAabbFromVertices( vertices, numVertices, true ).absOrigin;
 }
 
 PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination ) {
@@ -357,12 +355,12 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 
 	/* first, figure it out for the source */
 	unsigned int numVertices;
-	PLVertex *vertices;
+	PLGVertex *vertices;
 
-	vertices = plGetPolygonVertices( source->polygon, &numVertices );
+	vertices = PlgGetPolygonVertices( source->polygon, &numVertices );
 	portals[ 0 ].origin = GetOriginPointFromVertices( vertices, numVertices );
 
-	vertices = plGetPolygonVertices( destination->polygon, &numVertices );
+	vertices = PlgGetPolygonVertices( destination->polygon, &numVertices );
 	portals[ 1 ].origin = GetOriginPointFromVertices( vertices, numVertices );
 
 	Gfx_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
@@ -376,14 +374,14 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 
 	plPopMatrix();
 
-	return *plGetMatrix( PL_MODELVIEW_MATRIX );
+	return *PlGetMatrix( PL_MODELVIEW_MATRIX );
 #endif
 }
 
 /**
  * Draw scrolling clouds.
  */
-void Map_DrawSky( PLCamera *camera ) {
+void Map_DrawSky( PLGCamera *camera ) {
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL ) {
 		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
@@ -392,7 +390,7 @@ void Map_DrawSky( PLCamera *camera ) {
 		}
 	}
 
-	static PLVertex vertices[] = {
+	static PLGVertex vertices[] = {
 	        { .position = PLVector3( 10.0f, 100.f, 100.0f ),
 	          .colour = PL_COLOUR_WHITE }, /* top right */
 	        { .position = PLVector3( 10.0f, 200.0f, 200.0f ),
@@ -424,57 +422,57 @@ void Map_DrawSky( PLCamera *camera ) {
 			{ 6, 4, 0 },
 	};
 
-	static PLMesh *skyMesh = NULL;
+	static PLGMesh *skyMesh = NULL;
 	if ( skyMesh == NULL ) {
-		skyMesh = plCreateMesh( PL_MESH_TRIANGLES, PL_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
+		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
 		if ( skyMesh == NULL ) {
-			PrintError( "Failed to create sky mesh!\nPL: %s\n", plGetError() );
+			PrintError( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
 		}
 
 		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i ) {
-			plSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+			PlgSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
 		}
 
 		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i ) {
-			plSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
-			plSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
+			PlgSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
+			PlgSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
 		}
 	}
 
-	plSetDepthBufferMode( PL_DEPTHBUFFER_DISABLE );
-	plSetDepthMask( false );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+	PlgSetDepthMask( false );
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
-	plLoadIdentityMatrix();
+	PlLoadIdentityMatrix();
 
-	plTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
+	PlTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
 
 	/* todo: do this in shader... */
 	PLVector2 skyOffset;
 	skyOffset.x = Engine_GetNumTicks() / 1000.0f;
 	skyOffset.y = Engine_GetNumTicks() / 1000.0f;
-	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
+	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
 
 	RM_DrawMesh( skyMaterial, skyMesh );
 
 	/* todo: do this in shader... */
 	skyOffset.x = ( Engine_GetNumTicks() / 100.0f ) * -1;
 	skyOffset.y = Engine_GetNumTicks() / 100.0f;
-	plGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
+	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
 
 	RM_DrawMesh( skyMaterial, skyMesh );
 
-	plPopMatrix();
+	PlPopMatrix();
 
-	plSetDepthBufferMode( PL_DEPTHBUFFER_ENABLE );
-	plSetDepthMask( true );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+	PlgSetDepthMask( true );
 }
 
-void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
+void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass ) {
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
-		plClearMesh( renderMesh );
+		PlgClearMesh( renderMesh );
 
 		for ( unsigned int j = 0; j < mapData.numFaces; ++j ) {
 			MapFace *curFace = &mapData.faces[ j ];
@@ -486,24 +484,24 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 			}
 
 			/* check the face is actually visible */
-			if ( !plIsBoxInsideView( camera, &curFace->bounds ) ) {
+			if ( !PlgIsBoxInsideView( camera, &curFace->bounds ) ) {
 				continue;
 			}
 
 			unsigned int numVertices;
-			PLVertex *vertices = plGetPolygonVertices( curFace->polygon, &numVertices );
+			PLGVertex *vertices = PlgGetPolygonVertices( curFace->polygon, &numVertices );
 			for( unsigned int k = 0; k < numVertices; ++k ) {
-				unsigned int v = plAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
+				unsigned int v = PlgAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's appropriate to add to AddMeshVertex */
 				renderMesh->vertices[ v ].tangent = vertices[ k ].tangent;
 				renderMesh->vertices[ v ].bitangent = vertices[ k ].bitangent;
 			}
 
 			unsigned int numTriangles;
-			unsigned int *indices = plConvertPolygonToTriangles( curFace->polygon, &numTriangles );
+			unsigned int *indices = PlgConvertPolygonToTriangles( curFace->polygon, &numTriangles );
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k ) {
-				plAddMeshTriangle( renderMesh,
+				PlgAddMeshTriangle( renderMesh,
 				                   curIndex[ 0 ] + renderMesh->num_verts - numVertices,
 				                   curIndex[ 1 ] + renderMesh->num_verts - numVertices,
 				                   curIndex[ 2 ] + renderMesh->num_verts - numVertices );
@@ -525,16 +523,16 @@ void Map_DrawSector( PLCamera *camera, const MapSector *sector, bool smPass ) {
 	}
 }
 
-static void Map_SetupScene( PLCamera *camera ) {
-	plSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
+static void Map_SetupScene( PLGCamera *camera ) {
+	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
 
-	PLShaderProgram *program = plGetCurrentShaderProgram();
+	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	if ( program == NULL ) {
 		return;
 	}
 
 	int numLights = 0;
-	plSetShaderUniformValue( program, "numLights", &numLights, false );
+	PlgSetShaderUniformValue( program, "numLights", &numLights, false );
 
 #if 0
 	srand( numLights );
@@ -571,16 +569,16 @@ static void Map_SetupScene( PLCamera *camera ) {
 #endif
 }
 
-void Map_Draw( PLCamera *camera, bool smPass ) {
+void Map_Draw( PLGCamera *camera, bool smPass ) {
 	if ( renderMesh == NULL ) {
 		return;
 	}
 
 	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-	plLoadIdentityMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
 
 	Map_SetupScene( camera );
 	Map_DrawSky( camera );
@@ -588,7 +586,7 @@ void Map_Draw( PLCamera *camera, bool smPass ) {
 	/* start drawing from the first sector that the camera is in */
 	Map_DrawSector( camera, &mapData.sectors[ 0 ], smPass );
 
-	plPopMatrix();
+	PlPopMatrix();
 
 	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
 }

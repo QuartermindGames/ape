@@ -3,11 +3,11 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform.h>
-#include <PL/pl_llist.h>
-#include <PL/platform_filesystem.h>
-#include <PL/platform_math.h>
-#include <PL/pl_parse.h>
+#include <plcore/pl.h>
+#include <plcore/pl_linkedlist.h>
+#include <plcore/pl_filesystem.h>
+#include <plcore/pl_math.h>
+#include <plcore/pl_parse.h>
 
 #include "common/World.h"
 
@@ -53,7 +53,7 @@ static unsigned int blockLevel = 0;
 
 void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 	const char *p = buffer;
-	plSkipWhitespace( &p );
+	PlSkipWhitespace( &p );
 	if ( *p == '/' && *( p + 1 ) == '/' ) {
 		return;
 	}
@@ -72,9 +72,9 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 			case BLOCK_CONTEXT_ENTITY: {
 				dprint( "entity\n" );
 				IdEntity *entity = calloc( 1, sizeof( IdEntity ) );
-				entity->brushes = plCreateLinkedList();
-				entity->properties = plCreateLinkedList();
-				plInsertLinkedListNode( map->entities, entity );
+				entity->brushes = PlCreateLinkedList();
+				entity->properties = PlCreateLinkedList();
+				PlInsertLinkedListNode( map->entities, entity );
 				currentEntity = entity;
 				break;
 			}
@@ -86,8 +86,8 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 				}
 
 				IdBrush *brush = calloc( 1, sizeof( IdBrush ) );
-				brush->faces = plCreateLinkedList();
-				plInsertLinkedListNode( currentEntity->brushes, brush );
+				brush->faces = PlCreateLinkedList();
+				PlInsertLinkedListNode( currentEntity->brushes, brush );
 				currentBrush = brush;
 				break;
 			}
@@ -128,11 +128,11 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 		case BLOCK_CONTEXT_ENTITY: {
 			/* read in property */
 			WldProperty *property = calloc( 1, sizeof( WldProperty ) );
-			if ( !plParseEnclosedString( &p, property->name, sizeof( property->name ) ) ) {
+			if ( !PlParseEnclosedString( &p, property->name, sizeof( property->name ) ) ) {
 				error( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
-			plSkipWhitespace( &p );
-			if ( !plParseEnclosedString( &p, property->value, sizeof( property->value ) ) ) {
+			PlSkipWhitespace( &p );
+			if ( !PlParseEnclosedString( &p, property->value, sizeof( property->value ) ) ) {
 				error( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
 			dprint( " %s %s\n", property->name, property->value );
@@ -146,29 +146,29 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 				free( property );
 				break;
 			}
-			plInsertLinkedListNode( currentEntity->properties, property );
+			PlInsertLinkedListNode( currentEntity->properties, property );
 			break;
 		}
 		case BLOCK_CONTEXT_BRUSH: {
 			/* read in face */
             bool status;
 			IdBrushFace *face = calloc( 1, sizeof( IdBrushFace ) );
-			face->x = plParseVector( &p, &status );
-			dprint( "%s ", plPrintVector3( &face->x, pl_int_var ) );
-			face->y = plParseVector( &p, &status );
-			dprint( "%s ", plPrintVector3( &face->y, pl_int_var ) );
-			face->z = plParseVector( &p, &status );
-			dprint( "%s ", plPrintVector3( &face->z, pl_int_var ) );
+			face->x = PlParseVector( &p, &status );
+			dprint( "%s ", PlPrintVector3( &face->x, pl_int_var ) );
+			face->y = PlParseVector( &p, &status );
+			dprint( "%s ", PlPrintVector3( &face->y, pl_int_var ) );
+			face->z = PlParseVector( &p, &status );
+			dprint( "%s ", PlPrintVector3( &face->z, pl_int_var ) );
 			if ( !status ) {
 				error( "Failed to parse vector on line %d!\n", lineNum );
 			}
 
-			if ( !plParseToken( &p, face->textureName, sizeof( face->textureName ) ) ) {
+			if ( !PlParseToken( &p, face->textureName, sizeof( face->textureName ) ) ) {
 				error( "Failed to fetch texture name on line %d!\n", lineNum );
 			}
 			dprint( "%s\n", face->textureName );
 
-			plInsertLinkedListNode( currentBrush->faces, face );
+			PlInsertLinkedListNode( currentBrush->faces, face );
 			break;
 		}
 		default:
@@ -177,14 +177,14 @@ void Q2W_ParseLine( IdMap *map, const char *buffer, unsigned int lineNum ) {
 }
 
 void Q2W_ReadMap( IdMap *map, const char *path ) {
-	PLFile *file = plOpenFile( path, true );
+	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL ) {
-		error( "Failed to open \"%s\"!\nPL: %s\n", path, plGetError() );
+		error( "Failed to open \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* now start reading through every line */
 	static unsigned int lineNum = 0;
-	const char *p = ( const char * ) plGetFileData( file );
+	const char *p = ( const char * ) PlGetFileData( file );
 	while ( *p != '\0' ) {
 		lineNum++;
 
@@ -207,7 +207,7 @@ void Q2W_ReadMap( IdMap *map, const char *path ) {
 		}
 	}
 
-	plCloseFile( file );
+	PlCloseFile( file );
 }
 
 /*****************************************************************************************/
@@ -234,18 +234,18 @@ static void WriteNodeHeader( const char *tag, WldNodeType type, uint32_t numChil
 }
 
 static void WriteProperties( PLLinkedList *propertyList, FILE *file ) {
-	uint16_t numProperties = plGetNumLinkedListNodes( propertyList );
+	uint16_t numProperties = PlGetNumLinkedListNodes( propertyList );
 	fwrite( &numProperties, sizeof( uint16_t ), 1, file );
 	if ( numProperties == 0 ) {
 		return;
 	}
 
-	PLLinkedListNode *root = plGetFirstNode( propertyList );
+	PLLinkedListNode *root = PlGetFirstNode( propertyList );
 	while ( root != NULL ) {
-		WldProperty *property = plGetLinkedListNodeUserData( root );
+		WldProperty *property = PlGetLinkedListNodeUserData( root );
 		WriteSizedString( file, property->name );
 		WriteSizedString( file, property->value );
-		root = plGetNextLinkedListNode( root );
+		root = PlGetNextLinkedListNode( root );
 	}
 }
 
@@ -262,19 +262,19 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 	WriteNodeHeader( tbuf, WLD_NODE_BRUSH, 0, file );
 
 	/* move it all into an array */
-	unsigned int numFaces = plGetNumLinkedListNodes( brush->faces );
+	unsigned int numFaces = PlGetNumLinkedListNodes( brush->faces );
 	IdBrushFace *faces = calloc( numFaces, sizeof( IdBrushFace ) );
 	{
 		unsigned int i = 0;
-		PLLinkedListNode *node = plGetFirstNode( brush->faces );
+		PLLinkedListNode *node = PlGetFirstNode( brush->faces );
 		while ( node != NULL ) {
-			IdBrushFace *face = plGetLinkedListNodeUserData( node );
+			IdBrushFace *face = PlGetLinkedListNodeUserData( node );
 			faces[ i ] = *face;
 			free( face );
 
-			node = plGetNextLinkedListNode( node );
+			node = PlGetNextLinkedListNode( node );
 		}
-		plDestroyLinkedList( brush->faces );
+		PlDestroyLinkedList( brush->faces );
 	}
 
 	for ( unsigned int i = 0; i < numFaces - 3; ++i ) {
@@ -302,20 +302,20 @@ static void WriteBrush( IdBrush *brush, FILE *file ) {
 }
 
 static void WriteEntity( IdEntity *entity, FILE *file ) {
-	WriteNodeHeader( entity->name, WLD_NODE_ENTITY, plGetNumLinkedListNodes( entity->brushes ), file );
+	WriteNodeHeader( entity->name, WLD_NODE_ENTITY, PlGetNumLinkedListNodes( entity->brushes ), file );
 	WriteProperties( entity->properties, file );
 
-	PLLinkedListNode *node = plGetFirstNode( entity->brushes );
+	PLLinkedListNode *node = PlGetFirstNode( entity->brushes );
 	while ( node != NULL ) {
-		IdBrush *brush = plGetLinkedListNodeUserData( node );
+		IdBrush *brush = PlGetLinkedListNodeUserData( node );
 		WriteBrush( brush, file );
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
-	plDestroyLinkedList( entity->brushes );
+	PlDestroyLinkedList( entity->brushes );
 }
 
 static void WriteNodes( FILE *file, IdMap *map ) {
-	IdEntity *worldSpawn = plGetLinkedListNodeUserData( plGetFirstNode( map->entities ) );
+	IdEntity *worldSpawn = PlGetLinkedListNodeUserData( PlGetFirstNode( map->entities ) );
 	if ( worldSpawn == NULL ) {
 		error( "Failed to fetch worldspawn!\n" );
 	}
@@ -326,24 +326,24 @@ static void WriteNodes( FILE *file, IdMap *map ) {
 	/* write out the default room */
 	fwrite( &( int ){ 1 }, sizeof( uint32_t ), 1, file );
 	unsigned int numChildren = 0;
-	numChildren += plGetNumLinkedListNodes( worldSpawn->brushes );
-	numChildren += plGetNumLinkedListNodes( map->entities ) - 1; /* ignore worldspawn */
+	numChildren += PlGetNumLinkedListNodes( worldSpawn->brushes );
+	numChildren += PlGetNumLinkedListNodes( map->entities ) - 1; /* ignore worldspawn */
 	WriteNodeHeader( "room0", WLD_NODE_SECTOR, numChildren, file );
 
 	PLLinkedListNode *node;
 	/* now write out all the brushes */
-	node = plGetFirstNode( worldSpawn->brushes );
+	node = PlGetFirstNode( worldSpawn->brushes );
 	while ( node != NULL ) {
-		IdBrush *brush = plGetLinkedListNodeUserData( node );
+		IdBrush *brush = PlGetLinkedListNodeUserData( node );
 		WriteBrush( brush, file );
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
 	/* and all the entities */
-	node = plGetNextLinkedListNode( plGetFirstNode( map->entities ) );
+	node = PlGetNextLinkedListNode( PlGetFirstNode( map->entities ) );
 	while ( node != NULL ) {
-		IdEntity *entity = plGetLinkedListNodeUserData( node );
+		IdEntity *entity = PlGetLinkedListNodeUserData( node );
 		WriteEntity( entity, file );
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
 }
 
@@ -365,17 +365,17 @@ int main( int argc, char **argv ) {
 	setvbuf( stdout, NULL, _IONBF, 0 );
 #endif
 
-	plInitialize( argc, argv );
+	PlInitialize( argc, argv );
 
 	printf( "qmap2world v" VERSION " (" __DATE__ " " __TIME__ ")\nCopyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n" );
 
-	const char *inputPath = plGetCommandLineArgumentValue( "-map" );
+	const char *inputPath = PlGetCommandLineArgumentValue( "-map" );
 	if ( inputPath == NULL ) {
 		printf( "No input path specified, using \"default.map\".\nSpecify using \"-map <path>\" argument.\n" );
 		inputPath = "default.map";
 	}
 
-	const char *outputPath = plGetCommandLineArgumentValue( "-out" );
+	const char *outputPath = PlGetCommandLineArgumentValue( "-out" );
 	if ( outputPath == NULL ) {
 		printf( "No output path specified, using \"default " WORLD_EXTENSION "\".\nSpecify using \"-out <path>\" argument.\n" );
 		outputPath = "default" WORLD_EXTENSION;
@@ -385,11 +385,11 @@ int main( int argc, char **argv ) {
 	printf( "OUTPUT: %s\n", outputPath );
 
 	IdMap *map = calloc( 1, sizeof( IdMap ) );
-	map->entities = plCreateLinkedList();
-	map->textures = plCreateLinkedList();
+	map->entities = PlCreateLinkedList();
+	map->textures = PlCreateLinkedList();
 
 	Q2W_ReadMap( map, inputPath );
 	Q2W_WriteWld( map, outputPath );
 
-	plShutdown();
+	PlShutdown();
 }

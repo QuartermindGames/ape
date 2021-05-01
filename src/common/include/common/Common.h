@@ -8,7 +8,7 @@
 #include "public/SharedBase.h"
 
 #if defined( COMMON_DLL )
-#include <PL/platform_console.h>
+#include <plcore/pl_console.h>
 
 #include <assert.h>
 
@@ -16,18 +16,18 @@
 
 extern int logLevelPrint;
 extern int logLevelWarn;
-#define Message( ... ) plLogMessage( logLevelPrint, __VA_ARGS__ )
-#define Warning( ... ) plLogMessage( logLevelWarn, __VA_ARGS__ )
+#define Message( FORMAT, ... ) PlLogWFunction( logLevelPrint, FORMAT, ##__VA_ARGS__ )
+#define Warning( FORMAT, ... ) PlLogWFunction( logLevelWarn, FORMAT, ##__VA_ARGS__ )
 #else
 #define COMMON_API PL_IMPORT
 #endif
 
-#define MAGIC_TO_NUM( A, B, C, D ) ( ( (D) << 24 ) + ( (C) << 16 ) + ( (B) << 8 ) + (A) )
+#define MAGIC_TO_NUM( A, B, C, D ) ( ( ( D ) << 24 ) + ( ( C ) << 16 ) + ( ( B ) << 8 ) + ( A ) )
 
 #define CVar( NAME, STORE )                           \
 	static PLConsoleVariable *( STORE ) = NULL;       \
 	if ( ( STORE ) == NULL ) {                        \
-		( STORE ) = plGetConsoleVariable( ( NAME ) ); \
+		( STORE ) = PlGetConsoleVariable( ( NAME ) ); \
 		u_assert( ( STORE ) != NULL );                \
 	}                                                 \
 	( STORE )

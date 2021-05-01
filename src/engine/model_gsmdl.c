@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform_model.h>
+#include <plmodel/plm.h>
 
 #include "yin.h"
 
@@ -92,14 +92,14 @@ typedef struct VMDLBoneController {
 	int32_t index;
 } VMDLBoneController;
 
-PLModel *GSMDL_LoadFile( const char *path ) {
-	PLFile *file = plOpenFile( path, false );
+PLMModel *GSMDL_LoadFile( const char *path ) {
+	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL ) {
 		return NULL;
 	}
 
 	VMDLHeader header;
-	plReadFile( file, &header, sizeof( VMDLHeader ), 1 );
+	PlReadFile( file, &header, sizeof( VMDLHeader ), 1 );
 	/* now carry out some basic validation */
 
 	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC ) {

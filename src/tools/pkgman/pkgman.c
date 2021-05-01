@@ -1,11 +1,11 @@
 /* ======================================================================
- * Project Yin, Confidential
+ * PkgMan, Confidential
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/platform.h>
-#include <PL/platform_filesystem.h>
-#include <PL/platform_image.h>
+#include <plcore/pl.h>
+#include <plcore/pl_filesystem.h>
+#include <plcore/pl_image.h>
 
 #include "public/GFXFormat.h"
 
@@ -74,14 +74,14 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long 
 }
 
 static void Pkg_AddFile( const char *path ) {
-	PLFile *filePtr = plOpenFile( path, true );
+	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL ) {
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", path, plGetError() );
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
-	Pkg_AddData( path, plGetFileData( filePtr ), plGetFileSize( filePtr ), true );
+	Pkg_AddData( path, PlGetFileData( filePtr ), PlGetFileSize( filePtr ), true );
 
-	plCloseFile( filePtr );
+	PlCloseFile( filePtr );
 }
 
 /**
@@ -174,17 +174,17 @@ static void ParseScript( const char *buffer, size_t length ) {
 					Error( "Unknown destination format, \"%s\"!\n", type );
 				}
 
-				PLImage *image = plLoadImage( filePath );
+				PLImage *image = PlLoadImage( filePath );
 				if ( image == NULL ) {
-					Error( "Failed to open the specified image, \"%s\"! : %s\n", filePath, plGetError() );
+					Error( "Failed to open the specified image, \"%s\"! : %s\n", filePath, PlGetError() );
 				}
 
 				/* write out the converted image to disc */
-				char tempPath[ 256 ];
+				char tempPath[ PL_SYSTEM_MAX_PATH + 4 ];
 				snprintf( tempPath, sizeof( tempPath ), "%s.gfx", filePath );
 				PackImage_Write( tempPath, image, dstFormat );
 
-				plDestroyImage( image );
+				PlDestroyImage( image );
 
 				/* and now add the converted image to the package
 				 * yin will automatically try to load the gfx file before falling back */
@@ -210,7 +210,7 @@ static void ParseScript( const char *buffer, size_t length ) {
 				Error( "Extension did not fit into destination!\n" );
 			}
 
-			plScanDirectory( directory, extension, Pkg_AddFileCallback, false, NULL );
+			PlScanDirectory( directory, extension, Pkg_AddFileCallback, false, NULL );
 			continue;
 		}
 
@@ -223,9 +223,9 @@ static void ParseScript( const char *buffer, size_t length ) {
 }
 
 int main( int argc, char **argv ) {
-	plInitialize( argc, argv );
+	PlInitialize( argc, argv );
 
-	plRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 
 	Print( "Package Manager\nCopyright (C) 2020-2021 Mark E Sowden <markelswo@gmail.com>\n" );
 	if ( argc < 2 ) {
@@ -235,17 +235,17 @@ int main( int argc, char **argv ) {
 
 	/* open the file and read it all into memory */
 	const char *input = argv[ 1 ];
-	PLFile *filePtr = plOpenFile( input, true );
+	PLFile *filePtr = PlOpenFile( input, true );
 	if ( filePtr == NULL ) {
-		Error( "Failed to open \"%s\"!\nPL: %s\n", argv[ 1 ], plGetError() );
+		Error( "Failed to open \"%s\"!\nPL: %s\n", argv[ 1 ], PlGetError() );
 	}
 
 	/* now fetch the buffer and length, and throw it to our parser */
-	const char *buffer = ( const char* ) plGetFileData( filePtr );
-	size_t length = plGetFileSize( filePtr );
+	const char *buffer = ( const char* ) PlGetFileData( filePtr );
+	size_t length = PlGetFileSize( filePtr );
 	ParseScript( buffer, length );
 
-	plCloseFile( filePtr );
+	PlCloseFile( filePtr );
 
 	Print( "Done!\n" );
 }

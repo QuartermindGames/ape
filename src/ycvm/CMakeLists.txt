@@ -10,4 +10,4 @@ add_executable(yc
         yc.c yc.h
         yvm.c yvm.h ycvm.h)
 
-target_link_libraries(yc platform)
+target_link_libraries(yc plcore)

@@ -20,7 +20,7 @@ typedef struct Material Material;
 void RM_InitializeMaterialSystem( void );
 void RM_ShutdownMaterialSystem( void );
 
-PLShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass );
+PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass );
 
 /* i/o */
 Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback );
@@ -28,6 +28,6 @@ void RM_DestroyMaterial( Material *material, bool force );
 void RM_ClearMaterials( CacheGroup group );
 
 /* drawing */
-void RM_DrawMesh( Material *material, PLMesh *mesh );
+void RM_DrawMesh( Material *material, PLGMesh *mesh );
 
 Material *RM_GetFallbackMaterial( void );

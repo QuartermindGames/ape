@@ -31,4 +31,4 @@ if (NOT UNIX)
     target_link_libraries(common mingw32)
 endif ()
 
-target_link_libraries(common platform)
+target_link_libraries(common plcore)

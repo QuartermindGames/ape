@@ -3,7 +3,7 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
+#include <plcore/pl_linkedlist.h>
 
 #include "yin.h"
 
@@ -22,14 +22,14 @@ static PLLinkedList *mmReferenceList;
 void Mem_CleanupCallback( void *userData, double delta ) {
 	DebugMsg( "Cleaning up unreferenced resources...\n" );
 
-    PLLinkedListNode *child = plGetFirstNode( mmReferenceList );
+    PLLinkedListNode *child = PlGetFirstNode( mmReferenceList );
 	while( child != NULL ) {
-        PLLinkedListNode *nextChild = plGetNextLinkedListNode( child );
-		MemRefCnt *refCnt = plGetLinkedListNodeUserData( child );
+        PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
+		MemRefCnt *refCnt = PlGetLinkedListNodeUserData( child );
 		if ( refCnt->numRefs <= 0 && refCnt->ttl < Engine_GetNumTicks() ) {
             refCnt->cleanupFunction( refCnt->userData );
-            plDestroyLinkedListNode( mmReferenceList, refCnt->node );
-			free( refCnt );
+            PlDestroyLinkedListNode( mmReferenceList, refCnt->node );
+			globalSystem.Free( refCnt );
 		}
 		child = nextChild;
 	}
@@ -38,7 +38,7 @@ void Mem_CleanupCallback( void *userData, double delta ) {
 }
 
 void Mem_Initialize( void ) {
-	mmReferenceList = plCreateLinkedList();
+	mmReferenceList = PlCreateLinkedList();
 	if ( mmReferenceList == NULL ) {
 		PrintError( "Failed to create memory manager linked list!\n" );
 	}

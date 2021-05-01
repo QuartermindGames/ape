@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include <PL/platform.h>
-#include <PL/platform_console.h>
+#include <plcore/pl.h>
+#include <plcore/pl_console.h>
 
 extern unsigned int
         LOG_LEVEL_DEFAULT,
         LOG_LEVEL_WARNING,
         LOG_LEVEL_ERROR;
 
-#define Print( ... ) plLogMessage( LOG_LEVEL_DEFAULT, __VA_ARGS__ )
-#define Warning( ... ) plLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
-#define Error( ... ) plLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ )
+#define Print( ... ) PlLogMessage( LOG_LEVEL_DEFAULT, __VA_ARGS__ )
+#define Warning( ... ) PlLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
+#define Error( ... ) PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ )

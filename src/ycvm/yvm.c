@@ -3,8 +3,8 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include <PL/pl_llist.h>
-#include <PL/platform_filesystem.h>
+#include <plcore/pl_linkedlist.h>
+#include <plcore/pl_filesystem.h>
 
 #include "ycvm.h"
 #include "yvm.h"
@@ -94,14 +94,14 @@ static uint32_t VM_ReadMemory( const VMProgram *program, uint32_t address ) {
  * */
 
 VMProgram *VM_GetProgramByName( const char *programName ) {
-	PLLinkedListNode *curNode = plGetFirstNode( vmPrograms );
+	PLLinkedListNode *curNode = PlGetFirstNode( vmPrograms );
 	while ( curNode != NULL ) {
-		VMProgram *program = ( VMProgram * ) plGetLinkedListNodeUserData( curNode );
+		VMProgram *program = ( VMProgram * ) PlGetLinkedListNodeUserData( curNode );
 		if ( strcmp( program->name, programName ) == 0 ) {
 			return program;
 		}
 
-		curNode = plGetNextLinkedListNode( curNode );
+		curNode = PlGetNextLinkedListNode( curNode );
 	}
 
 	Warning( "Failed to find the specified VM program!\n" );
@@ -114,17 +114,17 @@ void VM_ExecuteProgram( VMProgram *program ) {
 }
 
 VMProgram *VM_LoadProgram( const char *path ) {
-	PLFile *filePtr = plOpenFile( path, false );
+	PLFile *filePtr = PlOpenFile( path, false );
 	if ( filePtr == NULL ) {
-		Warning( "Failed to open CVM, \"%s\"!\nPL: %s\n", path, plGetError() );
+		Warning( "Failed to open CVM, \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return NULL;
 	}
 
 	/* validate it */
 
 	char identifier[ 4 ];
-	if ( plReadFile( filePtr, identifier, sizeof( char ), 4 ) != 4 ) {
-		Error( "Failed to read identifier for \"%s\"!\nPL: %s\n", path, plGetError() );
+	if ( PlReadFile( filePtr, identifier, sizeof( char ), 4 ) != 4 ) {
+		Error( "Failed to read identifier for \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	if ( identifier[ 0 ] != 'C' || identifier[ 1 ] != 'V' || identifier[ 2 ] != 'M' || identifier[ 3 ] != '0' ) {
@@ -132,20 +132,20 @@ VMProgram *VM_LoadProgram( const char *path ) {
 	}
 
 	char programName[ VM_PROGRAM_NAME_LENGTH ];
-	if ( plReadFile( filePtr, programName, sizeof( char ), VM_PROGRAM_NAME_LENGTH ) != VM_PROGRAM_NAME_LENGTH ) {
-		Error( "Failed to read in program name for \"%s\"!\nPL: %s\n", path, plGetError() );
+	if ( PlReadFile( filePtr, programName, sizeof( char ), VM_PROGRAM_NAME_LENGTH ) != VM_PROGRAM_NAME_LENGTH ) {
+		Error( "Failed to read in program name for \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* read in all of the instructions */
 	bool status;
-	unsigned int numInstructions = plReadInt32( filePtr, false, &status );
+	unsigned int numInstructions = PlReadInt32( filePtr, false, &status );
 	VMInstruction *instructions = calloc( numInstructions, sizeof( VMInstruction ) );
 	for ( unsigned int i = 0; i < numInstructions; ++i ) {
-		instructions[ i ].opCode = plReadInt8( filePtr, &status );
+		instructions[ i ].opCode = PlReadInt8( filePtr, &status );
 	}
 
 	if ( !status ) {
-		Error( "Failed to read in instructions for \"%s\"!\nPL: %s\n", path, plGetError() );
+		Error( "Failed to read in instructions for \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* now we can actually setup the VM */
@@ -154,7 +154,7 @@ VMProgram *VM_LoadProgram( const char *path ) {
 	program->clockSpeed = 0;
 	program->numInstructions = numInstructions;
 	program->instructions = instructions;
-	program->node = plInsertLinkedListNode( vmPrograms, program );
+	program->node = PlInsertLinkedListNode( vmPrograms, program );
 
 	return program;
 }
@@ -229,9 +229,9 @@ static void VM_AssembleCallback( unsigned int argc, char **argv ) {
 
 	Print( "Assembling \"%s\"...\n", asmPath );
 
-	PLFile *filePtr = plOpenLocalFile( asmPath, false );
+	PLFile *filePtr = PlOpenLocalFile( asmPath, false );
 	if ( filePtr == NULL ) {
-		Warning( "Failed to open \"%s\"!\nPL: %s\n", asmPath, plGetError() );
+		Warning( "Failed to open \"%s\"!\nPL: %s\n", asmPath, PlGetError() );
 		return;
 	}
 
@@ -241,18 +241,18 @@ static void VM_AssembleCallback( unsigned int argc, char **argv ) {
 void VM_Initialize( void ) {
 	Print( "Initializing Virtual Machine...\n" );
 
-	plRegisterConsoleCommand( "Vm.SetClockSpeed", VM_SetClockSpeed, "Set the clock speed of the specified program." );
-	plRegisterConsoleCommand( "Vm.Freeze", VM_FreezeCallback, "Freeze the specified program." );
-	plRegisterConsoleCommand( "Vm.Terminate", VM_TerminateCallback, "Terminate the specified program." );
-	plRegisterConsoleCommand( "Vm.Execute", VM_ExecuteCallback, "Execute the specified program." );
-	plRegisterConsoleCommand( "Vm.Assemble", VM_AssembleCallback, "Assembles the specified ASM." );
+	PlRegisterConsoleCommand( "Vm.SetClockSpeed", VM_SetClockSpeed, "Set the clock speed of the specified program." );
+    PlRegisterConsoleCommand( "Vm.Freeze", VM_FreezeCallback, "Freeze the specified program." );
+    PlRegisterConsoleCommand( "Vm.Terminate", VM_TerminateCallback, "Terminate the specified program." );
+    PlRegisterConsoleCommand( "Vm.Execute", VM_ExecuteCallback, "Execute the specified program." );
+    PlRegisterConsoleCommand( "Vm.Assemble", VM_AssembleCallback, "Assembles the specified ASM." );
 
-	vmPrograms = plCreateLinkedList();
+	vmPrograms = PlCreateLinkedList();
 	if ( vmPrograms == NULL ) {
-		Error( "Failed to create vmPrograms list!\nPL: %s\n", plGetError() );
+		Error( "Failed to create vmPrograms list!\nPL: %s\n", PlGetError() );
 	}
 }
 
 void VM_Shutdown( void ) {
-	plDestroyLinkedList( vmPrograms );
+	PlDestroyLinkedList( vmPrograms );
 }

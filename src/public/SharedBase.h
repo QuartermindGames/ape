@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <PL/platform.h>
-#include <PL/platform_math.h>
+#include <plcore/pl.h>
+#include <plcore/pl_math.h>
 
 #define YIN_GLOBAL_WAD "base.pkg"
 
@@ -102,7 +102,7 @@ typedef struct OSWindow OSWindow;
 
 #include "SharedInterfaces.h"
 
-#define TICK_RATE 1000 / 60 /* ms */
+#define TICK_RATE (1000 / 60) /* ms */
 
 #define u_unused( a ) ( void ) ( ( a ) )
 

@@ -3,9 +3,9 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================*/
 
-#include "yin.h"
+#include <plcore/pl_linkedlist.h>
 
-#include <PL/pl_llist.h>
+#include "yin.h"
 
 static PLLinkedList *scheduleList = NULL;
 
@@ -18,7 +18,7 @@ typedef struct SchTask {
 } SchTask;
 
 unsigned int Sch_GetNumTasks( void ) {
-	return plGetNumLinkedListNodes( scheduleList );
+	return PlGetNumLinkedListNodes( scheduleList );
 }
 
 const char *Sch_GetTaskDescription( unsigned int index, double *delay ) {
@@ -26,15 +26,15 @@ const char *Sch_GetTaskDescription( unsigned int index, double *delay ) {
 		return NULL;
 	}
 
-    PLLinkedListNode *node = plGetFirstNode( scheduleList );
+    PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	for ( unsigned int i = 0; i < index; ++i ) {
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 		if ( node == NULL ) {
 			return NULL;
 		}
 	}
 
-    const SchTask *task = plGetLinkedListNodeUserData( node );
+    const SchTask *task = PlGetLinkedListNodeUserData( node );
 
 	if ( delay != NULL ) {
 		*delay = task->delay;
@@ -48,13 +48,13 @@ bool Sch_IsTaskRunning( const char *desc ) {
 		return false;
 	}
 
-    PLLinkedListNode *node = plGetFirstNode( scheduleList );
+    PLLinkedListNode *node = PlGetFirstNode( scheduleList );
     while ( node != NULL ) {
-        SchTask *task = plGetLinkedListNodeUserData( node );
+        SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( task->desc, desc ) == 0 ) {
 			return true;
 		}
-        node = plGetNextLinkedListNode( node );
+        node = PlGetNextLinkedListNode( node );
     }
 
 	return false;
@@ -62,7 +62,7 @@ bool Sch_IsTaskRunning( const char *desc ) {
 
 void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay ) {
 	if ( scheduleList == NULL ) {
-		scheduleList = plCreateLinkedList();
+		scheduleList = PlCreateLinkedList();
 	}
 
 	SchTask *task = globalSystem.MAlloc( sizeof( SchTask ), true );
@@ -70,7 +70,7 @@ void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData,
 	task->delay = delay + Engine_GetNumTicks();
 	task->callback = callback;
 	task->userData = userData;
-	task->node = plInsertLinkedListNode( scheduleList, task );
+	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
 void Sch_RunTasks( void ) {
@@ -78,12 +78,12 @@ void Sch_RunTasks( void ) {
 		return;
 	}
 
-	PLLinkedListNode *node = plGetFirstNode( scheduleList );
+	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL ) {
-		PLLinkedListNode *nextNode = plGetNextLinkedListNode( node );
-		SchTask *task = plGetLinkedListNodeUserData( node );
+		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
+		SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( task->delay < Engine_GetNumTicks() ) {
-			plDestroyLinkedListNode( scheduleList, node );
+			PlDestroyLinkedListNode( scheduleList, node );
 			task->callback( task->userData, 0.0 );
 			free( task );
 		}
@@ -94,7 +94,7 @@ void Sch_RunTasks( void ) {
 
 void Sch_FlushTasks( void ) {
 	Print( "Flushing scheduled tasks...\n" );
-	plDestroyLinkedList( scheduleList );
+	PlDestroyLinkedList( scheduleList );
 	scheduleList = NULL;
 }
 
@@ -104,11 +104,11 @@ void Sch_PrintPendingTasks( void ) {
 	}
 
 	unsigned int i = 0;
-	PLLinkedListNode *node = plGetFirstNode( scheduleList );
+	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL ) {
-		SchTask *task = plGetLinkedListNodeUserData( node );
+		SchTask *task = PlGetLinkedListNodeUserData( node );
 		Print( " (%d) %s %f\n", i++, task->desc, task->delay - Engine_GetNumTicks() );
-		node = plGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 	}
 	Print( "%d scheduled tasks pending\n", i );
 }

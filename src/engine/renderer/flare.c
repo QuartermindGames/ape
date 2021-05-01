@@ -18,7 +18,7 @@ static const char *flarePaths[] = {
         "materials/engine/effects/Flare6.gif",
 };
 #define MAX_FLARE_TEXTURES plArrayElements( flarePaths )
-static PLTexture *flareTextures[ MAX_FLARE_TEXTURES ];
+static PLGTexture *flareTextures[ MAX_FLARE_TEXTURES ];
 
 static const char *shinePaths[] = {
         "materials/engine/effects/Shine0.gif",
@@ -33,7 +33,7 @@ static const char *shinePaths[] = {
         "materials/engine/effects/Shine9.gif",
 };
 #define MAX_SHINE_TEXTURES plArrayElements( shinePaths )
-static PLTexture *shineTextures[ MAX_SHINE_TEXTURES ];
+static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
 void Flare_Initialize( void ) {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i ) {
@@ -44,13 +44,13 @@ void Flare_Initialize( void ) {
 	}
 }
 
-void Flare_Render( PLTexture *texture, float diameter, float distance ) {
-	PLShaderProgram *program = plGetCurrentShaderProgram();
+void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
+	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	if ( program == NULL ) {
 		return;
 	}
 
-	plSetShaderUniformValue( program, "scale", &diameter, false );
+	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 
 
 }
@@ -58,9 +58,9 @@ void Flare_Render( PLTexture *texture, float diameter, float distance ) {
 void Flare_RenderFlares( const GfxCamera *camera ) {
 	Gfx_GetShaderProgram( "flare" );
 
-	plSetBlendMode( PL_BLEND_ADDITIVE );
+	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 
 
 
-	plSetBlendMode( PL_BLEND_DISABLE );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }
