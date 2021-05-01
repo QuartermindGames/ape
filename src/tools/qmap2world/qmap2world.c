@@ -9,8 +9,6 @@
 #include <plcore/pl_math.h>
 #include <plcore/pl_parse.h>
 
-#include "common/World.h"
-
 #define VERSION "0.1"
 #define dprint( ... ) printf( __VA_ARGS__ )
 #define error( ... )       \

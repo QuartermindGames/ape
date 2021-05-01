@@ -1,11 +1,14 @@
 /* Copyright (C) Mark E Sowden <hogsy@oldtimes-software.com> */
 
-#include <PL/platform_filesystem.h>
-#include <PL/pl_graphics.h>
+#include <plcore/pl_filesystem.h>
+
+#include <plgraphics/plg.h>
+#include <plgraphics/plg_mesh.h>
 
 #include "yin.h"
-#include "common/Node.h"
 #include "world.h"
+
+#include "common/node.h"
 
 #include "renderer/renderer.h"
 #include "renderer/material.h"
@@ -45,7 +48,7 @@ typedef struct World {
 	struct Material **materials;
 	unsigned int numMaterials;
 
-	struct PLVertex *vertices;
+	PLGVertex *vertices;
 	unsigned int numVertices;
 
 	WorldSector *sectors;
@@ -68,7 +71,7 @@ const char *W_GetGlobalPropertyValue( const World *world, const char *label ) {
 	return NULL;
 }
 
-static PLMesh *triangleMesh = NULL;
+static PLGMesh *triangleMesh = NULL;
 
 /**
  * Fetch the normal for the specified face.
@@ -121,7 +124,7 @@ static unsigned int *ConvertFaceToTriangles( const WorldFace *face, unsigned int
 	return indices;
 }
 
-void W_DrawSector( World *world, unsigned int sectorId, PLCamera *camera, bool simple ) {
+void W_DrawSector( World *world, unsigned int sectorId, PLGCamera *camera, bool simple ) {
 	unsigned int numFaces;
 	WorldFace *faces = W_GetFacesForSector( sectorId, &numFaces );
 	if ( faces == NULL || numFaces == 0 ) {
@@ -137,27 +140,27 @@ void W_DrawSector( World *world, unsigned int sectorId, PLCamera *camera, bool s
 			face->bounds.origin = PLVector3( 0.0f, 0.0f, 0.0f );
 
 			/* check the face is actually visible */
-			if ( !plIsBoxInsideView( camera, &face->bounds ) ) {
+			if ( !PlgIsBoxInsideView( camera, &face->bounds ) ) {
 				continue;
 			}
 
 			for ( unsigned int k = 0; k < face->numVertices; ++k ) {
-				PLVertex *vertex = &world->vertices[ face->vertices[ k ] ];
-				unsigned int v = plAddMeshVertex( triangleMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
+				PLGVertex *vertex = &world->vertices[ face->vertices[ k ] ];
+				unsigned int v = PlgAddMeshVertex( triangleMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's
 				 * appropriate to add to AddMeshVertex */
 				triangleMesh->vertices[ v ].tangent = vertex->tangent;
 				triangleMesh->vertices[ v ].bitangent = vertex->bitangent;
 			}
 
-			PLVertex vertices[ WORLD_FACE_MAX_SIDES ];
-			memset( vertices, 0, sizeof( PLVertex ) * WORLD_FACE_MAX_SIDES );
+			PLGVertex vertices[ WORLD_FACE_MAX_SIDES ];
+			memset( vertices, 0, sizeof( PLGVertex ) * WORLD_FACE_MAX_SIDES );
 
 			unsigned int numTriangles;
 			unsigned int *indices = ConvertFaceToTriangles( face, &numTriangles );
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k ) {
-				plAddMeshTriangle( triangleMesh,
+				PlgAddMeshTriangle( triangleMesh,
 				                   curIndex[ 0 ] + triangleMesh->num_verts - face->numVertices,
 				                   curIndex[ 1 ] + triangleMesh->num_verts - face->numVertices,
 				                   curIndex[ 2 ] + triangleMesh->num_verts - face->numVertices );
@@ -188,27 +191,27 @@ void W_DrawSector( World *world, unsigned int sectorId, PLCamera *camera, bool s
 			face->bounds.origin = PLVector3( 0.0f, 0.0f, 0.0f );
 
 			/* check the face is actually visible */
-			if ( !plIsBoxInsideView( camera, &face->bounds ) ) {
+			if ( !PlgIsBoxInsideView( camera, &face->bounds ) ) {
 				continue;
 			}
 
 			for ( unsigned int k = 0; k < face->numVertices; ++k ) {
-				PLVertex *vertex = &world->vertices[ face->vertices[ k ] ];
-				unsigned int v = plAddMeshVertex( triangleMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
+				PLGVertex *vertex = &world->vertices[ face->vertices[ k ] ];
+				unsigned int v = PlgAddMeshVertex( triangleMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's
 				 * appropriate to add to AddMeshVertex */
 				triangleMesh->vertices[ v ].tangent = vertex->tangent;
 				triangleMesh->vertices[ v ].bitangent = vertex->bitangent;
 			}
 
-			PLVertex vertices[ WORLD_FACE_MAX_SIDES ];
-			memset( vertices, 0, sizeof( PLVertex ) * WORLD_FACE_MAX_SIDES );
+			PLGVertex vertices[ WORLD_FACE_MAX_SIDES ];
+			memset( vertices, 0, sizeof( PLGVertex ) * WORLD_FACE_MAX_SIDES );
 
 			unsigned int numTriangles;
 			unsigned int *indices = ConvertFaceToTriangles( face, &numTriangles );
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k ) {
-				plAddMeshTriangle( triangleMesh,
+				PlgAddMeshTriangle( triangleMesh,
 				                   curIndex[ 0 ] + triangleMesh->num_verts - face->numVertices,
 				                   curIndex[ 1 ] + triangleMesh->num_verts - face->numVertices,
 				                   curIndex[ 2 ] + triangleMesh->num_verts - face->numVertices );
@@ -231,16 +234,16 @@ void W_DrawSector( World *world, unsigned int sectorId, PLCamera *camera, bool s
  * SECTOR
  ****************************************/
 
-void W_Draw( World *world, PLCamera *camera ) {
-	PROFILE_START( PROFILE_DRAW_WORLD );
+void W_Draw( World *world, PLGCamera *camera ) {
+	PROFILE_START( PROFILE_DRAW_MAP );
 
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-	plLoadIdentityMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
 
 
 
-	plPopMatrix();
+	PlPopMatrix();
 
-	PROFILE_END( PROFILE_DRAW_WORLD );
+	PROFILE_END( PROFILE_DRAW_MAP );
 }

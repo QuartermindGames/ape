@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <PL/platform_physics.h>
+#include <plcore/pl_physics.h>
 
 /*
  *  s      s
@@ -42,4 +42,4 @@ WorldFace *W_GetFacesForSector( uint32_t sectorId, uint32_t *numFaces );
 const char *W_GetGlobalPropertyValue( const World *world, const char *label );
 const char *W_GetSectorPropertyValue( const World *world, unsigned int sectorId, const char *label );
 
-void W_Draw( World *world, PLCamera *camera );
+void W_Draw( World *world, PLGCamera *camera );

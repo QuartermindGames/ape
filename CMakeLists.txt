@@ -87,4 +87,3 @@ add_subdirectory(src/editor/)
 add_subdirectory(src/ycvm/)
 
 add_subdirectory(src/tools/pkgman/)
-add_subdirectory(src/tools/qmap2world/)
