@@ -99,6 +99,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
     /* initialize core services */
 	CPUTimer_Initialize();
 	Con_Initialize();
+	Sch_Initialize();
 	Gfx_Initialize();
 	Act_Initialize();
 

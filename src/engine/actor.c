@@ -298,7 +298,10 @@ void Act_DrawActors( void ) {
 }
 
 #define GRAVITY 7.0f
-void Act_TickActors( void ) {
+void Act_TickActors( void *userData, double delta ) {
+	u_unused( userData );
+	u_unused( delta );
+
 	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
 	while ( curNode != NULL ) {
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
@@ -314,13 +317,13 @@ void Act_TickActors( void ) {
 
 		static const float friction = 4.0f;
 		if( actor->velocity.x != 0 ) {
-			actor->velocity.x -= ( actor->velocity.x / friction );
+			actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
 		}
 		if( actor->velocity.y != 0 ) {
-			actor->velocity.y -= ( actor->velocity.y / friction );
+			actor->velocity.y -= ( actor->velocity.y / ( friction - ( float ) delta ) );
 		}
 		if( actor->velocity.z != 0 ) {
-			actor->velocity.z -= ( actor->velocity.z / friction );
+			actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
 		}
 
 		//if ( plGetNumLinkedListNodes( actor->geoColliders ) == 0 ) {
@@ -378,6 +381,8 @@ void Act_TickActors( void ) {
 
 		curNode = PlGetNextLinkedListNode( curNode );
 	}
+
+    Sch_PushTask( "actor_tick", Act_TickActors, NULL, delta );
 }
 
 void Act_Initialize( void ) {

@@ -673,7 +673,7 @@ void Gfx_DrawMenu( void ) {
 					Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
 				} else {
 					while ( taskDesc != NULL ) {
-						snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay );
+						snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay - Engine_GetNumTicks() );
 						Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
 						y += defaultFont->ch;
 						taskDesc = Sch_GetTaskDescription( ++index, &taskDelay );

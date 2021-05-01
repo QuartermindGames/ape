@@ -34,7 +34,7 @@ void Act_Shutdown( void );
 
 void Act_SpawnActors( void );
 void Act_DrawActors( void );
-void Act_TickActors( void );
+void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle );
 Actor *Act_DestroyActor( Actor *self );

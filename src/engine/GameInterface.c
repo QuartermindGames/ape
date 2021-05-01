@@ -49,8 +49,6 @@ void Game_Tick( void ) {
 		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 16, 0 ), 0.0f );
 		spawnDelay = Engine_GetNumTicks() + 50;
 	}
-
-	Act_TickActors();
 }
 
 void Game_Display( void ) {
@@ -77,6 +75,8 @@ void Game_SpawnWorld( const char *worldPath ) {
     gameState = GAME_STATE_ACTIVE;
     menuState = MENU_STATE_HUD;
     inputTarget = INPUT_TARGET_GAME;
+
+    Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
 static void Cmd_SpawnWorld( unsigned int argc, char **argv ) {
@@ -103,7 +103,7 @@ void Game_Initialize( void ) {
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	PlRegisterConsoleCommand( "Game.SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 
 	/* initialize the interface */
 }
