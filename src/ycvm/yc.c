@@ -8,6 +8,10 @@
 #include "ycvm.h"
 #include "yc.h"
 
+unsigned int LOG_LEVEL_DEFAULT;
+unsigned int LOG_LEVEL_WARNING;
+unsigned int LOG_LEVEL_ERROR;
+
 static char specials[] = {
         '$',
         '=',
@@ -30,9 +34,9 @@ int main( int argc, char **argv ) {
 	PlInitialize( argc, argv );
 
 	PlSetupLogOutput( YC_LOG_PATH );
-	LOG_LEVEL_DEFAULT = PlAddLogLevel( NULL, PL_COLOUR_GREEN, true );
-	LOG_LEVEL_WARNING = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_DEFAULT = PlAddLogLevel( "yc", PL_COLOUR_GREEN, true );
+	LOG_LEVEL_WARNING = PlAddLogLevel( "yc/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_ERROR = PlAddLogLevel( "yc/error", PL_COLOUR_RED, true );
 
 	Print( "Yin Compiler\n"
 	       "Written by Mark E Sowden for Project Yin\n"

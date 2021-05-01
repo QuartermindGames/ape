@@ -8,10 +8,9 @@
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
 
-extern unsigned int
-        LOG_LEVEL_DEFAULT,
-        LOG_LEVEL_WARNING,
-        LOG_LEVEL_ERROR;
+extern unsigned int LOG_LEVEL_DEFAULT;
+extern unsigned int LOG_LEVEL_WARNING;
+extern unsigned int LOG_LEVEL_ERROR;
 
 #define Print( ... ) PlLogMessage( LOG_LEVEL_DEFAULT, __VA_ARGS__ )
 #define Warning( ... ) PlLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
