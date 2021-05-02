@@ -6,7 +6,7 @@
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_parse.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 #include "node_private.h"
 
 #define DEBUG_PARSER 0

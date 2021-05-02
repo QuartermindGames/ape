@@ -70,13 +70,13 @@ add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
 # external libraries
-add_subdirectory(src/3rdparty/platform/plcore/)
-add_subdirectory(src/3rdparty/platform/plgraphics/)
-add_subdirectory(src/3rdparty/platform/plmodel/)
-add_subdirectory(src/3rdparty/platform/plugins/driver_opengl/)
 add_subdirectory(src/3rdparty/fox-1.6.57_cmake/)
 
 # main projects
+add_subdirectory(src/platform/plcore/)
+add_subdirectory(src/platform/plgraphics/)
+add_subdirectory(src/platform/plmodel/)
+add_subdirectory(src/platform/plugins/driver_opengl/)
 add_subdirectory(src/launcher_sdl2/)
 add_subdirectory(src/common/)
 add_subdirectory(src/engine/)

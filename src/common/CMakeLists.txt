@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 
 add_library(common SHARED
         lightmapper.c
-        include/common/Common.h
+        include/common/common.h
         ##############################
         node.c
         include/common/node.h
@@ -17,7 +17,7 @@ add_library(common SHARED
         node_private.h
         ##############################
         FileSystem.c
-        Common.c)
+        common.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 

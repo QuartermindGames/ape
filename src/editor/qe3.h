@@ -53,7 +53,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdint.h>
 
 // Common Interface
-#include "common/Common.h"
+#include "common/common.h"
 #include "common/node.h"
 
 #include <plcore/pl_console.h>

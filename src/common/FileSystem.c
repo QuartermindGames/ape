@@ -5,7 +5,7 @@
 
 #include <plcore/pl_filesystem.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 
 const char *ComFS_GetDataDirectory( void ) {
     static char dataPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };

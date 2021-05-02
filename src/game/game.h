@@ -3,11 +3,13 @@
  * Copyright (C) 2020-2021 OldTimes Software
  * ====================================================================*/
 
-#include "Game.h"
+#pragma once
 
-SystemInterface globalSystem;
-EngineInterface globalEngine;
+#include <plcore/pl_console.h>
 
-PL_EXPORT GameInterface *GetDllInterface( uint32_t version, const SystemInterface *systemInterface, const EngineInterface *engineInterface ) {
+#include "common/common.h"
 
-}
+extern int globalGameLog;
+extern int globalGameDebugLog;
+extern int globalGameWarningLog;
+extern int globalGameErrorLog;

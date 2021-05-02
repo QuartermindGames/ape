@@ -7,7 +7,7 @@
 #include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 #include "node_private.h"
 
 /**

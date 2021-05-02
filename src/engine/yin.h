@@ -15,7 +15,7 @@
 
 #include <assert.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 
 //#define DISCORD_INTEGRATION
 

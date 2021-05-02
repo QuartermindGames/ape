@@ -5,7 +5,7 @@
 
 #include <plcore/pl_console.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 
 int logLevelPrint;
 int logLevelWarn;

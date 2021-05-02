@@ -5,7 +5,7 @@
 
 #include <SDL2/SDL.h>
 
-#include "common/Common.h"
+#include "common/common.h"
 #include "launcher.h"
 
 EngineInterface g_engine;
