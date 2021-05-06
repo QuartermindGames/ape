@@ -1,0 +1,7 @@
+node.ascii
+; this node file has been auto-generated!
+object program {
+	string description debug_lighting 
+	string vertexPath materials/shaders/vertex.glsl 
+	string fragmentPath materials/shaders/lighting_only.frag 
+}

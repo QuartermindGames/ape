@@ -1,0 +1,7 @@
+node.ascii
+; this node file has been auto-generated!
+object program {
+	string description flare 
+	string vertexPath materials/shaders/flare.vert 
+	string fragmentPath materials/shaders/texture.glsl 
+}

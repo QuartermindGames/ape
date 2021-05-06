@@ -524,7 +524,7 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass ) {
 }
 
 static void Map_SetupScene( PLGCamera *camera ) {
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	if ( program == NULL ) {

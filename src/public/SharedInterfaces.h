@@ -5,21 +5,23 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <plcore/pl.h>
+
+PL_EXTERN_C
 
 #define INTERFACE_COMBINE_VERSION( X, Y ) ( ( ( X ) << 16 ) | ( ( Y ) & 0xFFFF ) )
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
 
+typedef uint16_t InterfaceVersion[ 2 ];
+
 /* ======================================================================
  * SYSTEM INTERFACE
  * ====================================================================*/
 
 typedef struct SystemInterface {
-	uint16_t version[ 2 ];
+    InterfaceVersion version;
 
     /* windowing */
 	OSWindow *( *CreateWindow )( const char *title, int width, int height );
@@ -51,10 +53,17 @@ extern SystemInterface globalSystem;
  * GAME INTERFACE
  * ====================================================================*/
 
+typedef struct Actor Actor;
+
 typedef struct GameInterface {
-	uint16_t version[ 2 ];
+    InterfaceVersion version;
 
     bool ( *Initialize )( void );
+
+	Actor *( *SpawnActor )( unsigned int type, PLVector3 position, PLVector3 angles );
+
+	void ( *PlayerConnected )( const char *name, unsigned int id );
+	void ( *PlayerDisconnected )( unsigned int id );
 } GameInterface;
 extern GameInterface globalGame;
 
@@ -67,7 +76,7 @@ extern GameInterface globalGame;
  * ====================================================================*/
 
 typedef struct EngineInterface {
-	uint16_t version[ 2 ];
+    InterfaceVersion version;
 
     bool ( *Initialize )( int argc, char **argv );
     void ( *Tick )( void );
@@ -93,6 +102,4 @@ extern EngineInterface globalEngine;
 typedef EngineInterface *( *DllEngineInterface )( uint32_t version, const SystemInterface *sysIn );
 typedef GameInterface *( *DllGameInterface )( uint32_t version, const SystemInterface *sysIn, const EngineInterface *engIn );
 
-#ifdef __cplusplus
-};
-#endif
+PL_EXTERN_C_END

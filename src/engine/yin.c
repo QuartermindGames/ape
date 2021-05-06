@@ -11,7 +11,7 @@
 #include "actor.h"
 #include "pkg_loader.h"
 #include "editor.h"
-#include "GameInterface.h"
+#include "game_interface.h"
 
 PLPackage *globalWad = NULL;
 
@@ -100,7 +100,7 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	CPUTimer_Initialize();
 	Con_Initialize();
 	Sch_Initialize();
-	Gfx_Initialize();
+	R_Initialize();
 	Act_Initialize();
 
 	Game_Initialize();

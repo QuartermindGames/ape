@@ -17,13 +17,12 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
 
         renderer/camera.c
         renderer/flare.c
-        renderer/flare.h
         renderer/font.c
         renderer/material.c
-        renderer/material.h
         renderer/renderer.c
         renderer/scenegraph.c
-        renderer/scenegraph.h
+        renderer/shaders.c
+
         audio.c
         audio.h
         script.c
@@ -31,13 +30,10 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
 
         ../3rdparty/miniz/miniz.c
 
-        scheduler.h
         scheduler.c
-        GameScript.c
-        GameScript.h
         model_gsmdl.c
         model_md2.c
-        MemoryManager.h MemoryManager.c
+        memory_manager.c
 
         integrations/DiscordIntegration.c
         )

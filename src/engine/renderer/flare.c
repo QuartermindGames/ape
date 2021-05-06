@@ -56,7 +56,7 @@ void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
 }
 
 void Flare_RenderFlares( const GfxCamera *camera ) {
-	Gfx_GetShaderProgram( "flare" );
+	RS_GetShaderProgram( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 

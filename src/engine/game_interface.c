@@ -4,7 +4,7 @@
  * ====================================================================*/
 
 #include "yin.h"
-#include "GameInterface.h"
+#include "game_interface.h"
 #include "actor.h"
 #include "map.h"
 #include "renderer/renderer.h"

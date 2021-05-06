@@ -60,6 +60,7 @@ extern NLNode *NL_GetParent( NLNode *node );
 extern const char *NL_GetName( const NLNode *node );
 extern NLPropertyType NL_GetType( const NLNode *node );
 extern const char *NL_GetString( const NLNode *node );
+extern const char *NL_GetStringByName( NLNode *node, const char *name );
 extern bool NL_GetBoolean( const NLNode *node );
 extern float NL_GetFloat( const NLNode *node );
 extern int *NL_GetIntArray( NLNode *parent, int *buf );

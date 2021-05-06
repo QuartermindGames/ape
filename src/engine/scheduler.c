@@ -8,7 +8,6 @@
 #include "yin.h"
 #include "scheduler.h"
 
-
 static PLLinkedList *scheduleList = NULL;
 
 typedef struct SchTask {

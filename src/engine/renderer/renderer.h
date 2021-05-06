@@ -49,21 +49,21 @@ enum {
 
 	GFX_MAX_DEFAULT_SHADERS
 };
-extern PLGShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+extern PLGShaderProgram *defaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 #define GFX_NUM_SPRITE_ANGLES 8
 
 #include "scenegraph.h"
 #include "material.h"
 
-void Gfx_Initialize( void );
+void R_Initialize( void );
 void R_Shutdown( void );
 void Gfx_SetupDefaultState( void );
 void Gfx_DrawMenu( void );
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport );
 
-PLGShaderProgram *Gfx_GetShaderProgram( const char *name );
+PLGShaderProgram *RS_GetShaderProgram( const char *name );
 
 void Gfx_DrawPerspective( GfxCamera *camera );
 void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );

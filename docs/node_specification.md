@@ -50,13 +50,44 @@ object project {
 }
 ```
 
+Which translates into the following internal representation.
+
+```
+object "project"
+    string "name" "MyGame"
+    integer "version" "0"
+    string "output" "game.bin"
+    array string "includePaths"
+        string "scripts/"
+    array string "files"
+        string "Game.c"
+        string "GameInterface.h"
+    object "exampleGroup"
+        string "groupName" "Hello"
+        float "exampleVar" "2.0"
+```
+
+----
+
+Below is an example of the language being used in conjunction with the
+pre-processor.
+
+
+
 ## Types
 
 - `integer`; 32-bit/64-bit integer.
 - `float`; 32-bit floating-point.
+- `double`; 64-bit floating-point.
 - `string`; utf-8 char array.
 - `bool`; true/false value.
 - `object`; collection of child nodes.
 - `array`; similar to an object, but children can only be of a
     single specified type and have no name.
 - `link`; specifies that this node links to another file
+
+## Roadmap
+
+### 2.0.0
+
+- Explicitly sized types, i.e. int32, int64, float32, float64 etc.

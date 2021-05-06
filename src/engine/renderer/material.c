@@ -57,7 +57,7 @@ void RM_InitializeMaterialSystem( void ) {
 	fallbackMaterial = globalSystem.MAlloc( sizeof( Material ), true );
 	/* setup passes */
 	fallbackMaterial->numPasses = 1;
-	fallbackMaterial->passes[ 0 ].program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+	fallbackMaterial->passes[ 0 ].program = defaultShaderPrograms[ GFX_SHADER_DEFAULT ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
@@ -272,9 +272,9 @@ static Material *RM_ParseMaterial( PLFile *file ) {
 				return NULL;
 			}
 
-			PLGShaderProgram *program = Gfx_GetShaderProgram( programName );
+			PLGShaderProgram *program = RS_GetShaderProgram( programName );
 			if ( program == NULL ) {
-				program = gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+				program = defaultShaderPrograms[ GFX_SHADER_DEFAULT ];
 				PrintWarn( "Failed to find program \"%s\", using fallback!\n" );
 			}
 

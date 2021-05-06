@@ -338,7 +338,7 @@ void Con_Draw( const PLGViewport *viewport ) {
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
 #define CON_SIDE_COLOUR PLColourRGB( 128, 128, 128 )
 #define CON_BACK_COLOUR PLColour( 0, 0, 0, alpha->i_value )

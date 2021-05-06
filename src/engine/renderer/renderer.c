@@ -185,138 +185,6 @@ PLGTexture *Gfx_LoadTexture( const char *path ) {
 }
 
 /**********************************************************/
-/** Shaders **/
-
-typedef struct ShaderProgramIndex {
-	char internalName[ GFX_PROGRAM_NAME_LENGTH ];
-	PLGShaderProgram *internalPtr;
-	PLLinkedListNode *node;
-} ShaderProgramIndex;
-
-static PLLinkedList *gfxShaderPrograms;
-PLGShaderProgram *gfxDefaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
-
-static void Gfx_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path ) {
-	PLFile *filePtr = PlOpenFile( path, true );
-	if ( filePtr == NULL ) {
-		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
-
-	const char *buffer = ( const char * ) PlGetFileData( filePtr );
-	size_t length = PlGetFileSize( filePtr );
-
-	if ( !PlgRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
-		PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
-
-	PlCloseFile( filePtr );
-}
-
-static ShaderProgramIndex *Gfx_ParseShaderProgram( PLFile *file ) {
-	ShaderProgramIndex program;
-
-	char buffer[ 256 ];
-
-	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "program %s\n", program.internalName ) != 1 ) {
-		PrintWarn( "Failed to fetch program name!\n" );
-		return NULL;
-	}
-
-	char vertexPath[ PL_SYSTEM_MAX_PATH ];
-	char fragmentPath[ PL_SYSTEM_MAX_PATH ];
-
-	while ( PlReadString( file, buffer, sizeof( buffer ) ) != NULL ) {
-		if ( pl_strncasecmp( buffer, "vertex ", 7 ) == 0 ) {
-			/* read in the vertex stage */
-			sscanf( buffer, "vertex %s\n", vertexPath );
-			continue;
-		} else if ( pl_strncasecmp( buffer, "fragment ", 9 ) == 0 ) {
-			/* read in the fragment stage */
-			sscanf( buffer, "fragment %s\n", fragmentPath );
-			continue;
-		}
-	}
-
-	if ( vertexPath[ 0 ] == '\0' || fragmentPath[ 0 ] == '\0' ) {
-		PrintWarn( "No vertex/fragment stage defined in program!\n" );
-		return NULL;
-	}
-
-	program.internalPtr = PlgCreateShaderProgram();
-	if ( program.internalPtr == NULL ) {
-		PrintWarn( "Failed to create shader program!\nPL: %s\n", PlGetError() );
-		return NULL;
-	}
-
-	Gfx_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath );
-	Gfx_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath );
-
-	if ( !PlgLinkShaderProgram( program.internalPtr ) ) {
-		PrintError( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
-	}
-
-	/* allocate and return our program index */
-	ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
-	*out = program;
-	return out;
-}
-
-static void Gfx_LoadShaderProgram( const char *path, void *userData ) {
-	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL ) {
-		PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
-		return;
-	}
-
-	Print( "Parsing \"%s\"\n", path );
-	ShaderProgramIndex *program = Gfx_ParseShaderProgram( file );
-
-	PlCloseFile( file );
-
-	if ( program != NULL ) {
-		program->node = PlInsertLinkedListNode( gfxShaderPrograms, program );
-	}
-}
-
-PLGShaderProgram *Gfx_GetShaderProgram( const char *name ) {
-	PLLinkedListNode *root = PlGetFirstNode( gfxShaderPrograms );
-	while ( root != NULL ) {
-		ShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
-		if ( strcmp( name, programIndex->internalName ) == 0 ) {
-			return programIndex->internalPtr;
-		}
-
-		root = PlGetNextLinkedListNode( root );
-	}
-
-	return NULL;
-}
-
-static void Gfx_InitializeShaderPrograms( void ) {
-	gfxShaderPrograms = PlCreateLinkedList();
-
-	PlScanDirectory( "materials/shaders", "prg", Gfx_LoadShaderProgram, false, NULL );
-
-	Print( "%d shader programs indexed\n", PlGetNumLinkedListNodes( gfxShaderPrograms ) );
-
-	/* now fetch the default programs */
-	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
-	        [GFX_SHADER_DEFAULT] = "default",
-	        [GFX_SHADER_LIGHTING_PASS] = "base_lighting",
-	        [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [GFX_SHADER_DEFAULT_ALPHA] = "default_alpha",
-	        [GFX_SHADER_POST_PROCESS] = "postprocess",
-	};
-	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
-		gfxDefaultShaderPrograms[ i ] = Gfx_GetShaderProgram( defaultShaderNames[ i ] );
-		if ( gfxDefaultShaderPrograms[ i ] == NULL ) {
-			PrintError( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
-		}
-	}
-}
-
-/**********************************************************/
 
 void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle ) {
 #if 0
@@ -437,7 +305,7 @@ void Gfx_SetupDefaultState( void ) {
 
 	PlgSetCullMode( PLG_CULL_POSTIVE );
 
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 }
 
 static void Gfx_SetupShadowMap( void ) {
@@ -461,7 +329,8 @@ static void Gfx_SetupShadowMap( void ) {
 	smCamera->viewport.h = SHADOW_MAP_RESOLUTION;
 }
 
-void Gfx_Initialize( void ) {
+void RS_InitializeShaderPrograms( void ); /* renderer/shaders.c */
+void R_Initialize( void ) {
 	Print( "Initializing Gfx...\n" );
 
     if ( PlgSetDriver( "vulkan" ) != PL_RESULT_SUCCESS &&
@@ -475,9 +344,8 @@ void Gfx_Initialize( void ) {
 
 	/* create both the interface camera and player camera */
 
-	Gfx_InitializeShaderPrograms();
-
 	RT_InitializeTextures();
+    RS_InitializeShaderPrograms();
 	RM_InitializeMaterialSystem();
 
 	Font_Initialize();
@@ -527,10 +395,10 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h ) {
 
 	CVar( "graphics.fxaa", fxaaMode );
 	if ( fxaaMode->b_value ) {
-		PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
-		PlgSetShaderUniformValue( gfxDefaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+		PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
+		PlgSetShaderUniformValue( defaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
 	} else {
-		PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+		PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	}
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
 
@@ -543,7 +411,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		return;
 	}
 
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
 	float oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i ) {
@@ -618,7 +486,7 @@ void Gfx_DrawMenu( void ) {
 
 	R_DrawScreenBuffer( 0, 0, w, h );
 
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );

@@ -110,7 +110,7 @@ NLNode *NL_GetChildByName( NLNode *parent, const char *name ) {
 			return child;
 		}
 
-		child = NL_GetNextChild( parent );
+		child = NL_GetNextChild( child );
 	}
 
 	return NULL;
@@ -153,6 +153,15 @@ NLPropertyType NL_GetType( const NLNode *node ) {
 
 const char *NL_GetString( const NLNode *node ) {
 	return node->data.strBuf;
+}
+
+const char *NL_GetStringByName( NLNode *parent, const char *name ) {
+	NLNode *node = NL_GetChildByName( parent, name );
+	if ( node == NULL ) {
+		return NULL;
+	}
+
+	return NL_GetString( node );
 }
 
 bool NL_GetBoolean( const NLNode *node ) {

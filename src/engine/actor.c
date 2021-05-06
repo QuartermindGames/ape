@@ -19,7 +19,7 @@ typedef struct ActorSetup {
 } ActorSetup;
 
 static void Act_DrawBasic( Actor *self, void *userData ) {
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
 
 	Gfx_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
@@ -106,8 +106,8 @@ Actor *Act_DestroyActor( Actor *self ) {
 	PlDestroyLinkedList( self->geoColliders );
 	PlDestroyLinkedListNode( actorList, self->node );
 	
-	free( self->userData );
-	free( self );
+	globalSystem.Free( self->userData );
+    globalSystem.Free( self );
 	
 	return NULL;
 }
@@ -265,7 +265,7 @@ void Act_DrawActors( void ) {
 		}
 
 #if 1
-        PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+        PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
 
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
 		PlgDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
