@@ -13,53 +13,53 @@
 typedef struct ShaderProgramIndex {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
-    char internalName[ GFX_PROGRAM_NAME_LENGTH ];
-    PLGShaderProgram *internalPtr;
-    PLLinkedListNode *node;
+	char internalName[ GFX_PROGRAM_NAME_LENGTH ];
+	PLGShaderProgram *internalPtr;
+	PLLinkedListNode *node;
 } ShaderProgramIndex;
 
 static PLLinkedList *shaderPrograms;
 PLGShaderProgram *defaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path ) {
-    PLFile *filePtr = PlOpenFile( path, true );
-    if ( filePtr == NULL ) {
-        PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
-    }
+	PLFile *filePtr = PlOpenFile( path, true );
+	if ( filePtr == NULL ) {
+		PrintError( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
+	}
 
-    const char *buffer = ( const char * ) PlGetFileData( filePtr );
-    size_t length = PlGetFileSize( filePtr );
+	const char *buffer = ( const char * ) PlGetFileData( filePtr );
+	size_t length = PlGetFileSize( filePtr );
 
-    if ( !PlgRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
-        PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
-    }
+	if ( !PlgRegisterShaderStageFromMemory( program, buffer, length, type ) ) {
+		PrintError( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
+	}
 
-    PlCloseFile( filePtr );
+	PlCloseFile( filePtr );
 }
 
 static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root ) {
-    ShaderProgramIndex program;
+	ShaderProgramIndex program;
 
-    const char* vertexPath = NL_GetStringByName( root, "vertexPath" );
-    const char *fragmentPath = NL_GetStringByName( root, "fragmentPath" );
+	const char *vertexPath = NL_GetStringByName( root, "vertexPath" );
+	const char *fragmentPath = NL_GetStringByName( root, "fragmentPath" );
 
-    if ( vertexPath == NULL || fragmentPath == NULL ) {
-        PrintWarn( "No vertex/fragment stage defined in program!\n" );
-        return NULL;
-    }
+	if ( vertexPath == NULL || fragmentPath == NULL ) {
+		PrintWarn( "No vertex/fragment stage defined in program!\n" );
+		return NULL;
+	}
 
-    program.internalPtr = PlgCreateShaderProgram();
-    if ( program.internalPtr == NULL ) {
-        PrintWarn( "Failed to create shader program!\nPL: %s\n", PlGetError() );
-        return NULL;
-    }
+	program.internalPtr = PlgCreateShaderProgram();
+	if ( program.internalPtr == NULL ) {
+		PrintWarn( "Failed to create shader program!\nPL: %s\n", PlGetError() );
+		return NULL;
+	}
 
 	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath );
 	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath );
 
-    if ( !PlgLinkShaderProgram( program.internalPtr ) ) {
-        PrintError( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
-    }
+	if ( !PlgLinkShaderProgram( program.internalPtr ) ) {
+		PrintError( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
+	}
 
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_VERTEX ], PL_SYSTEM_MAX_PATH, "%s", vertexPath );
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_FRAGMENT ], PL_SYSTEM_MAX_PATH, "%s", fragmentPath );
@@ -71,10 +71,10 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root ) {
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-    /* allocate and return our program index */
-    ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
-    *out = program;
-    return out;
+	/* allocate and return our program index */
+	ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
+	*out = program;
+	return out;
 }
 
 #if 0
@@ -117,34 +117,34 @@ static void ConvertPlgToNode( const ShaderProgramIndex *programIndex ) {
 static void RS_LoadShaderProgram( const char *path, void *userData ) {
 	NLNode *root = NL_LoadFile( path, "program" );
 	if ( root == NULL ) {
-        PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
-        return;
+		PrintWarn( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
+		return;
 	}
 
 	NL_PrintNodeTree( root, 0 );
 
-    ShaderProgramIndex *program = RS_ParseShaderProgram( root );
+	ShaderProgramIndex *program = RS_ParseShaderProgram( root );
 
 	NL_DestroyNode( root );
 
-    if ( program != NULL ) {
+	if ( program != NULL ) {
 		strncpy( program->path, path, sizeof( program->path ) );
-        program->node = PlInsertLinkedListNode( shaderPrograms, program );
-    }
+		program->node = PlInsertLinkedListNode( shaderPrograms, program );
+	}
 }
 
 PLGShaderProgram *RS_GetShaderProgram( const char *name ) {
-    PLLinkedListNode *root = PlGetFirstNode( shaderPrograms );
-    while ( root != NULL ) {
-        ShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
-        if ( strcmp( name, programIndex->internalName ) == 0 ) {
-            return programIndex->internalPtr;
-        }
+	PLLinkedListNode *root = PlGetFirstNode( shaderPrograms );
+	while ( root != NULL ) {
+		ShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
+		if ( strcmp( name, programIndex->internalName ) == 0 ) {
+			return programIndex->internalPtr;
+		}
 
-        root = PlGetNextLinkedListNode( root );
-    }
+		root = PlGetNextLinkedListNode( root );
+	}
 
-    return NULL;
+	return NULL;
 }
 
 void RS_InitializeShaderPrograms( void ) {
@@ -152,20 +152,20 @@ void RS_InitializeShaderPrograms( void ) {
 
 	PlScanDirectory( "materials/shaders", "node", RS_LoadShaderProgram, false, NULL );
 
-    Print( "%d shader programs indexed\n", PlGetNumLinkedListNodes( shaderPrograms ) );
+	Print( "%d shader programs indexed\n", PlGetNumLinkedListNodes( shaderPrograms ) );
 
-    /* now fetch the default programs */
-    const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
-            [GFX_SHADER_DEFAULT] = "default",
-            [GFX_SHADER_LIGHTING_PASS] = "base_lighting",
-            [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
-            [GFX_SHADER_DEFAULT_ALPHA] = "default_alpha",
-            [GFX_SHADER_POST_PROCESS] = "postprocess",
-    };
-    for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
+	/* now fetch the default programs */
+	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
+	        [GFX_SHADER_DEFAULT] = "default",
+	        [GFX_SHADER_LIGHTING_PASS] = "base_lighting",
+	        [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [GFX_SHADER_DEFAULT_ALPHA] = "default_alpha",
+	        [GFX_SHADER_POST_PROCESS] = "postprocess",
+	};
+	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i ) {
 		defaultShaderPrograms[ i ] = RS_GetShaderProgram( defaultShaderNames[ i ] );
-        if ( defaultShaderPrograms[ i ] == NULL ) {
-            PrintError( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
-        }
-    }
+		if ( defaultShaderPrograms[ i ] == NULL ) {
+			PrintError( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
+		}
+	}
 }
