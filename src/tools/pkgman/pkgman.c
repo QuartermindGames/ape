@@ -6,6 +6,7 @@
 #include <plcore/pl.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_image.h>
+#include <common/node.h>
 
 #include "public/GFXFormat.h"
 
@@ -73,13 +74,30 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long 
 	packageHeader.numFiles++;
 }
 
-static void Pkg_AddFile( const char *path ) {
-	PLFile *filePtr = PlOpenFile( path, true );
-	if ( filePtr == NULL ) {
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", path, PlGetError() );
+static void Pkg_AddFile( const char *filePath ) {
+	const char *pkgPath = filePath;
+
+	/* nodes are a special case, should be converted into binary form before-hand */
+	const char *extension = PlGetFileExtension( filePath );
+	if ( extension != NULL && pl_strcasecmp( extension, "node" ) == 0 ) {
+		NLNode *root = NL_LoadFile( filePath, NULL );
+		if ( root != NULL ) {
+			char tempPath[ PL_SYSTEM_MAX_PATH ];
+			snprintf( tempPath, sizeof( tempPath ), "%s_c", filePath );
+			filePath = tempPath;
+			NL_WriteFile( tempPath, root, NL_FILE_BINARY );
+			NL_DestroyNode( root );
+		} else {
+			Print( "Picked up a \".node\" file that failed to load, just storing the origina instead!\n" );
+		}
 	}
 
-	Pkg_AddData( path, PlGetFileData( filePtr ), PlGetFileSize( filePtr ), true );
+	PLFile *filePtr = PlOpenFile( filePath, true );
+	if ( filePtr == NULL ) {
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, PlGetError() );
+	}
+
+	Pkg_AddData( pkgPath, PlGetFileData( filePtr ), PlGetFileSize( filePtr ), true );
 
 	PlCloseFile( filePtr );
 }
