@@ -8,6 +8,7 @@
 
 #include "yin.h"
 #include "renderer/renderer.h"
+#include "audio.h"
 #include "actor.h"
 #include "pkg_loader.h"
 #include "editor.h"
@@ -15,7 +16,7 @@
 
 PLPackage *globalWad = NULL;
 
-SystemInterface globalSystem;
+OSInterface globalSystem;
 GameInterface globalGame;
 
 static OSWindow *mainWindow;
@@ -34,6 +35,8 @@ typedef struct CPUTime {
 static CPUTime cpuTimers[ MAX_PROFILER_GROUPS ];
 
 void CPUTimer_Initialize( void ) {
+	Print( "Initializing timer\n" );
+
 	memset( cpuTimers, 0, sizeof( CPUTime ) * MAX_PROFILER_GROUPS );
 }
 
@@ -60,17 +63,17 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	LOG_LEVEL_WARN = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
 	LOG_LEVEL_INFO = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
-	Print( "Yin Engine (%s), Copyright (C) 2020 Mark E Sowden\n", ENGINE_VERSION_STR );
+	Print( "Yin Engine (%s), Copyright (C) 2020-2021 Mark E Sowden\n", ENGINE_VERSION_STR );
 
 	PlRegisterStandardPackageLoaders();
 	PlRegisterPackageLoader( "pkg", Pkg_LoadPackage );
-	PlRegisterPackageLoader( "map", Pkg_LoadPackage );
 
 	Print( "Registering plugins...\n" );
 
 	PlRegisterPlugins( "./" );
 	PlInitializePlugins();
 
+	/* todo: move into launcher */
 	PlgInitializeGraphics();
 	PlgScanForDrivers( "./" );
 
@@ -87,8 +90,6 @@ static bool Engine_Initialize( int argc, char **argv ) {
 	PLMModel *GSMDL_LoadFile( const char *path );
 	PlmRegisterModelLoader( "mdl", GSMDL_LoadFile );
 
-	Print( "Initializing core services...\n" );
-
     /* create our main window
  * todo: this should be delegated to the launcher... */
     mainWindow = globalSystem.CreateWindow( "", 0, 0 );
@@ -96,22 +97,21 @@ static bool Engine_Initialize( int argc, char **argv ) {
         PrintError( "Failed to create main window!\n" );
     }
 
+    Print( "Initializing core services...\n" );
+
     /* initialize core services */
 	CPUTimer_Initialize();
 	Con_Initialize();
 	Sch_Initialize();
+	Mem_Initialize();
 	R_Initialize();
+	A_Initialize();
+    Game_Initialize();
 	Act_Initialize();
 
-	Game_Initialize();
 	if ( PlHasCommandLineArgument( "editor" ) ) {
 		Editor_Initialize();
 	}
-
-#if defined( DISCORD_INTEGRATION )
-	void DiscordIntegration_Initialize( void );
-	DiscordIntegration_Initialize();
-#endif
 
 	Print( "Initialization complete!\n" );
 
@@ -125,12 +125,10 @@ void Engine_Shutdown( void ) {
 
 	Game_Shutdown();
 	Act_Shutdown();
+	A_Shutdown();
 	R_Shutdown();
 	Con_Shutdown();
-#if defined( DISCORD_INTEGRATION )
-	void DiscordIntegration_Shutdown( void );
-	DiscordIntegration_Shutdown();
-#endif
+	Mem_Shutdown();
 
 	globalSystem.Shutdown();
 }
@@ -205,10 +203,10 @@ static void Engine_HandleTextEvent( const char *key ) {
 	}
 }
 
-static SystemInterface *GetSystemInterface( void ) { return &globalSystem; }
+static OSInterface *GetSystemInterface( void ) { return &globalSystem; }
 static GameInterface *GetGameInterface( void ) { return &globalGame; }
 
-PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const SystemInterface *sysIn ) {
+PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const OSInterface *sysIn ) {
 	if ( version != ENGINE_INTERFACE_VERSION ) {
 		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, ENGINE_INTERFACE_VERSION );
 	}
@@ -227,7 +225,7 @@ PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const SystemInterf
 	        .Tick = Engine_Tick,
 	        .KeyboardEvent = Engine_HandleKeyboardEvent,
 	        .TextEvent = Engine_HandleTextEvent,
-	        .GetSystemInterface = GetSystemInterface,
+	        .GetOSInterface = GetSystemInterface,
 	        .GetGameInterface = GetGameInterface,
 	};
 

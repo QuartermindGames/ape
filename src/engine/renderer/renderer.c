@@ -8,7 +8,7 @@
 #include "yin.h"
 #include "actor.h"
 #include "font.h"
-#include "image.h"
+#include "engine/image.h"
 #include "map.h"
 #include "renderer.h"
 
@@ -331,7 +331,7 @@ static void Gfx_SetupShadowMap( void ) {
 
 void RS_InitializeShaderPrograms( void ); /* renderer/shaders.c */
 void R_Initialize( void ) {
-	Print( "Initializing Gfx...\n" );
+	Print( "Initializing renderer\n" );
 
     if ( PlgSetDriver( "vulkan" ) != PL_RESULT_SUCCESS &&
          PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
@@ -446,7 +446,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 		/* leave z, it'll be initialized as 0 */
 	}
 
-	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 128, 0, 0, 128 ) );
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 200 ) );
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
 	BitmapFont *font = Font_GetDefault();
@@ -476,7 +476,7 @@ void Gfx_DrawMenu( void ) {
 	}
 
 	int w, h;
-	globalSystem.GetWindowSize( window, &w, &h );
+	globalSystem.GetCurrentDisplaySize( &w, &h );
 	auxCamera->viewport.w = w;
 	auxCamera->viewport.h = h;
 
@@ -627,7 +627,7 @@ void Gfx_DrawScene( PLGCamera *camera ) {
 
 	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
-	CVar( "graphics.wireframe", wireframeMode );
+	CVar( "graphics.wireframeMode", wireframeMode );
 	//if ( wireframeMode->b_value ) {
 	//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	//}

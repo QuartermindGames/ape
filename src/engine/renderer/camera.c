@@ -24,12 +24,8 @@ const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective ) {
 
 static PLLinkedList *camerasList = NULL;
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport ) {
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles ) {
 	Print( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
-
-	if ( viewport == NULL ) {
-		PrintError( "Invalid viewport!\n" );
-	}
 
 	GfxCamera *gfxCamera = globalSystem.MAlloc( sizeof( GfxCamera ), true );
 
@@ -38,25 +34,20 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 		PrintError( "Failed to create camera!\nPL: %s\n", PlGetError() );
 	}
 
-	gfxCamera->viewportPtr = viewport;
-	globalSystem.GetWindowSize( gfxCamera->viewportPtr, &gfxCamera->internalPtr->viewport.w, &gfxCamera->internalPtr->viewport.h );
-
 	gfxCamera->perspective = perspective;
+    gfxCamera->internalPtr->fov = 75.0f;
+    gfxCamera->internalPtr->far = 1000000.0f;
+#if 0
 	switch ( gfxCamera->perspective ) {
-		default:
-			PrintError( "Unsupported viewport type %d!\n", gfxCamera->perspective );
-		case VIEW_PERSPECTIVE_EYE:
-			gfxCamera->internalPtr->fov = 75.0f;
-			gfxCamera->internalPtr->far = 1000000.0f;
-			break;
 		case VIEW_PERSPECTIVE_FRONT:
 		case VIEW_PERSPECTIVE_SIDE:
 		case VIEW_PERSPECTIVE_TOP:
-			gfxCamera->internalPtr->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
+			gfxCamera->internalPtr->mode = PLG_CAMERA_MODE_ISOMETRIC;
 			gfxCamera->internalPtr->near = 0.0f;
 			gfxCamera->internalPtr->far = 1000.0f;
 			break;
 	}
+#endif
 
 	gfxCamera->internalPtr->position = position;
 	gfxCamera->internalPtr->angles = angles;
@@ -77,13 +68,7 @@ void Gfx_InitializeCameras( void ) {
 
 void Gfx_DrawScene( PLGCamera *camera );
 void Gfx_DrawPerspective( GfxCamera *camera ) {
-	if ( camera->viewportPtr == NULL ) {
-		PrintWarn( "No viewport assigned to camera, skipping!\n" );
-		return;
-	}
-
-	OSWindow *window = Engine_GetMainWindow();
-	globalSystem.GetWindowSize( window, &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
+	globalSystem.GetCurrentDisplaySize( &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
 	extern PLConsoleVariable *gVarGraphicsSupersampling;
 	camera->internalPtr->viewport.w *= gVarGraphicsSupersampling->i_value;
 	camera->internalPtr->viewport.h *= gVarGraphicsSupersampling->i_value;
@@ -100,6 +85,11 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 				camera->internalPtr->position.y = Act_GetViewOffset( camera->parentActor );
 				break;
 			case VIEW_PERSPECTIVE_TOP:
+				camera->internalPtr->angles.x = -85.0f;
+				camera->internalPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
+				camera->internalPtr->position = Act_GetPosition( camera->parentActor );
+				camera->internalPtr->position.y += 1024.0f;
+				break;
 			case VIEW_PERSPECTIVE_SIDE:
 			case VIEW_PERSPECTIVE_FRONT:
 				break;

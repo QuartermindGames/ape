@@ -34,6 +34,8 @@ typedef struct APlayer {
 	float viewBob;
 
 	GfxCamera *eyeCamera;
+
+	PLMModel *model;
 } APlayer;
 
 GfxCamera *Player_GetCamera( Actor *self ) {
@@ -91,18 +93,14 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point ) {
 /* move this somewhere else... */
 static unsigned int numPlayers = 0;
 
-static PLMModel *model = NULL;
-
 void Player_Spawn( Actor *self ) {
 	APlayer* playerData = globalSystem.MAlloc( sizeof( APlayer ), true );
 	Act_SetUserData( self, playerData );
 
-	if ( model == NULL ) {
-		model = PlmLoadModel( "models/temp/player/mach-body.md2" );
-	}
+	playerData->model = PlmLoadModel( "models/test/md2/bird_final.md2" );
 
 	if ( numPlayers == 0 ) { /* local player */
-		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ), Engine_GetMainWindow() );
+		playerData->eyeCamera = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ) );
 		playerData->eyeCamera->parentActor = self;
 	}
 
@@ -182,7 +180,8 @@ void Player_Tick( Actor *self, void *userData ) {
 }
 
 void Player_Draw( Actor *self, void *userData ) {
-	if ( model == NULL ) {
+    APlayer *playerData = ( APlayer * ) userData;
+	if ( playerData->model == NULL ) {
 		return;
 	}
 
@@ -192,8 +191,8 @@ void Player_Draw( Actor *self, void *userData ) {
 	PlLoadIdentityMatrix();
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
-	for ( unsigned int i = 0; i < model->numMeshes; ++i ) {
-		RM_DrawMesh( RM_GetFallbackMaterial(), model->meshes[ i ] );
+	for ( unsigned int i = 0; i < playerData->model->numMeshes; ++i ) {
+		RM_DrawMesh( RM_GetFallbackMaterial(), playerData->model->meshes[ i ] );
 	}
 
 	PlPopMatrix();

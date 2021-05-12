@@ -207,7 +207,7 @@ LONG WINAPI CommandHandler(
 		Map_New();
 		break;
 	case ID_FILE_SAVE:
-		if( !strcmp( currentmap, "unnamed.map" ) )
+		if( !strcmp( currentmap, "unnamed.node" ) )
 			SaveAsDialog();
 		else
 			Map_SaveFile( currentmap, false );	// ignore region
@@ -809,9 +809,10 @@ huang::MainWindow::MainWindow( FXApp *a ) : FXMainWindow( a, EDITOR_TITLE, nullp
 	auto *hFrame = new FXSplitter( this, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL );
 
 	// Sidebar
+#if 0
 	auto *sideBar = new FXSplitter( hFrame, LAYOUT_SIDE_RIGHT, 0, 0, 256, 0 );
 	{
-		auto *treeBox = new FXTreeList( sideBar, NULL, 0U, LAYOUT_FILL );
+		auto *treeBox = new FXTreeList( sideBar, nullptr, 0U, LAYOUT_FILL );
 		auto *primList = new FXTreeItem( "World" );
 		treeBox->insertItem( nullptr, nullptr, primList );
 		for ( unsigned int i = 0; i < 256; ++i ) {
@@ -832,6 +833,7 @@ huang::MainWindow::MainWindow( FXApp *a ) : FXMainWindow( a, EDITOR_TITLE, nullp
 			treeBox->insertItem( nullptr, actorList, new FXTreeItem( "Hello" ) );
 		}
 	}
+#endif
 
 	auto *viewportSplitter = new FX4Splitter( hFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | FOURSPLITTER_TRACKING );
 	util::MenuItem viewMenuCmds[] = {
@@ -898,8 +900,8 @@ long huang::MainWindow::OnCmdOpen( FXObject *, FXSelector, void * ) {
 	openDialog.setSelectMode( SELECTFILE_EXISTING );
 	openDialog.setPatternList(
 	        "All Files (*)\n"
-	        "Map Files (*.map)\n"
-	        "World Files (*.wld)" );
+	        //"Map Files (*.map)\n"
+	        "World Files (*.node)" );
 	openDialog.setCurrentPattern( 1 );
 
 	openDialog.setDirectory( util::GetWorldsDirectory() );

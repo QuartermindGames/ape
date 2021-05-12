@@ -6,7 +6,7 @@ project(game)
 
 set(CMAKE_C_STANDARD 11)
 
-add_library(game SHARED
+add_library(game STATIC
         game.c game.h)
 
 set_target_properties(game PROPERTIES PREFIX "")

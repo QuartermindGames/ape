@@ -15,12 +15,6 @@ static PLLibrary *dllEnginePtr;
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
 
-#define Print( ... )        printf( __VA_ARGS__ )
-#define PrintWarn( ... )    Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ )
-#define PrintError( ... )                                    \
-	Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); \
-	exit( 0 )
-
 /****************************************
  * WINDOW MANAGEMENT
  ****************************************/
@@ -67,8 +61,8 @@ static bool Sys_IsDisplayActive( OSWindow *windowPtr ) {
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-void Sys_GetWindowSize( OSWindow *windowPtr, int *width, int *height ) {
-	SDL_GL_GetDrawableSize( windowPtr->sdlWindowPtr, width, height );
+void Sys_GetWindowSize( int *width, int *height ) {
+	SDL_GL_GetDrawableSize( sdlWindow, width, height );
 }
 
 void Sys_MakeWindowActive( OSWindow *windowPtr ) {
@@ -365,15 +359,14 @@ static void Sys_SetupEngineInterface( void ) {
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	static SystemInterface systemInterface = {
+	static OSInterface systemInterface = {
 	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
 			.Shutdown = Sys_Shutdown,
 			.CreateWindow = Sys_CreateWindow,
-			.GetWindowSize = Sys_GetWindowSize,
+			.GetCurrentDisplaySize = Sys_GetWindowSize,
 			.GetButtonState = Sys_GetButtonState,
 			.GetKeyState = Sys_GetKeyState,
-			.HasKeyboard = Sys_HasKeyboard,
 
 	        .GetPerformanceCounter = SDL_GetPerformanceCounter,
 	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
@@ -393,6 +386,8 @@ static void Sys_SetupEngineInterface( void ) {
 
 /****************************************
  ****************************************/
+
+int launcherLog;
 
 int Sys_Init( int argc, char **argv ) {
 #if defined( _WIN32 )
@@ -417,6 +412,9 @@ int Sys_Init( int argc, char **argv ) {
 
 		PlSetupLogOutput( path );
 	}
+
+	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
+    PlLogMessage( launcherLog, "Log output initialized!\n" );
 
 	CommonLibrary_Initialize();
 

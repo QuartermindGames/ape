@@ -170,7 +170,7 @@ void Map_Free( void ) {
 	}
 
 	Texture_ClearInuse();
-	strcpy( currentmap, "unnamed.map" );
+	strcpy( currentmap, "unnamed.node" );
 	Sys_SetTitle( currentmap );
 	g_qeglobals.d_num_entities = 0;
 
@@ -288,7 +288,7 @@ void Map_SaveFile( const char *filename, qboolean use_region ) {
 	// Fallback to unnamed.map if one doesn't exist
 	if( filename == nullptr ) {
 		// TODO: save into user dir!
-		filename = "unnamed.map";
+		filename = "unnamed.node";
 	}
 
 	QE_ConvertDOSToUnixName( temp, filename );

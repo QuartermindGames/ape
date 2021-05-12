@@ -24,7 +24,6 @@ typedef enum ViewPerspective {
 } ViewPerspective;
 
 typedef struct GfxCamera {
-	OSWindow *viewportPtr;
 	PLGCamera *internalPtr; /* the camera used for this viewport */
 	ViewPerspective perspective;
 	struct Actor *parentActor;
@@ -61,7 +60,7 @@ void R_Shutdown( void );
 void Gfx_SetupDefaultState( void );
 void Gfx_DrawMenu( void );
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles, OSWindow *viewport );
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles );
 
 PLGShaderProgram *RS_GetShaderProgram( const char *name );
 

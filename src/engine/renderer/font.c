@@ -41,14 +41,8 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 		return;
 	}
 
-	OSWindow *window = Engine_GetMainWindow();
-	if ( window == NULL ) {
-		return;
-	}
-
-	/* todo: get the active viewport size, not the window size! */
 	int w, h;
-	globalSystem.GetWindowSize( window, &w, &h );
+	globalSystem.GetCurrentDisplaySize( &w, &h );
 
 	float dw = ( float ) w;
 	float dh = ( float ) h;
@@ -141,6 +135,8 @@ void Font_Initialize( void ) {
 }
 
 void Font_Shutdown( void ) {
+	Font_Destroy( defaultFont );
+	defaultFont = NULL;
 }
 
 BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end ) {

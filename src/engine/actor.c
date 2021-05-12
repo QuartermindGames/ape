@@ -386,6 +386,8 @@ void Act_TickActors( void *userData, double delta ) {
 }
 
 void Act_Initialize( void ) {
+	Print( "Initializing actor manager\n" );
+
 	actorList = PlCreateLinkedList();
 	if ( actorList == NULL) {
 		PrintError( "Failed to create actor list!\nPL: %s\n", PlGetError());

@@ -40,19 +40,6 @@ void Editor_Initialize( void ) {
 		Map_Load( mapPath );
 	}
 
-	/* setup each of the editor cameras */
-	editorViewports[ VIEW_PERSPECTIVE_EYE ] = Engine_GetMainWindow();
-	editorCameras[ VIEW_PERSPECTIVE_EYE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_EYE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_EYE ] );
-
-	editorViewports[ VIEW_PERSPECTIVE_TOP ] = globalSystem.CreateWindow( "Top", 640, 480 );
-	editorCameras[ VIEW_PERSPECTIVE_TOP ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_TOP ] );
-
-	editorViewports[ VIEW_PERSPECTIVE_SIDE ] = globalSystem.CreateWindow( "Side", 640, 480 );
-	editorCameras[ VIEW_PERSPECTIVE_SIDE ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_SIDE, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_SIDE ] );
-
-	editorViewports[ VIEW_PERSPECTIVE_FRONT ] = globalSystem.CreateWindow( "Front", 640, 480 );
-	editorCameras[ VIEW_PERSPECTIVE_FRONT ] = Gfx_CreateCamera( VIEW_PERSPECTIVE_FRONT, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 0 ), editorViewports[ VIEW_PERSPECTIVE_FRONT ] );
-
 	editorIsInitialized = true;
 }
 

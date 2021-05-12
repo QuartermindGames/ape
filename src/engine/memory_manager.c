@@ -38,6 +38,8 @@ void Mem_CleanupCallback( void *userData, double delta ) {
 }
 
 void Mem_Initialize( void ) {
+	Print( "Initializing memory manager\n" );
+
 	mmReferenceList = PlCreateLinkedList();
 	if ( mmReferenceList == NULL ) {
 		PrintError( "Failed to create memory manager linked list!\n" );
@@ -46,18 +48,22 @@ void Mem_Initialize( void ) {
 	Sch_PushTask( "mem_cleanup", Mem_CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-MemRefCnt *MemRefCnt_Setup( MemRefCnt_CleanupFunction cleanupFunction, void *userData ) {
+void Mem_Shutdown( void ) {
+
+}
+
+MemRefCnt *Mem_SetupReferenceInstance( MemRefCnt_CleanupFunction cleanupFunction, void *userData ) {
     MemRefCnt *ref = globalSystem.MAlloc( sizeof( MemRefCnt ), true );
     ref->userData = userData;
     ref->cleanupFunction = cleanupFunction;
     return ref;
 }
 
-void MemRefCnt_AddReference( MemRefCnt *v ) {
+void Mem_AddReference( MemRefCnt *v ) {
     v->numRefs++;
 }
 
-void MemRefCnt_RemoveReference( MemRefCnt *v ) {
+void Mem_ReleaseReference( MemRefCnt *v ) {
     assert( v->numRefs > 0 );
     v->numRefs--;
     if ( v->numRefs <= 0 ) {
@@ -65,6 +71,6 @@ void MemRefCnt_RemoveReference( MemRefCnt *v ) {
     }
 }
 
-int MemRefCnt_GetNumOfReferences( const MemRefCnt *v ) {
+int Mem_GetNumberOfReferences( const MemRefCnt *v ) {
 	return v->numRefs;
 }

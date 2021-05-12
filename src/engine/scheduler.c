@@ -50,6 +50,8 @@ static void Cmd_SetTaskDelay( unsigned int argc, char **argv ) {
 }
 
 void Sch_Initialize( void ) {
+	Print( "Initializing scheduler\n" );
+
     PlRegisterConsoleCommand( "Sch.FlushTasks", Cmd_FlushTasks, "Flush all running tasks." );
 	PlRegisterConsoleCommand( "Sch.IsTaskRunning", Cmd_IsTaskRunning, "Displays 'true' if the specified task is running." );
 	PlRegisterConsoleCommand( "Sch.KillTask", Cmd_KillTask, "Kill the specified task." );

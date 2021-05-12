@@ -17,20 +17,19 @@ PL_EXTERN_C
 typedef uint16_t InterfaceVersion[ 2 ];
 
 /* ======================================================================
- * SYSTEM INTERFACE
+ * OS INTERFACE
  * ====================================================================*/
 
-typedef struct SystemInterface {
+typedef struct OSInterface {
     InterfaceVersion version;
 
     /* windowing */
 	OSWindow *( *CreateWindow )( const char *title, int width, int height );
-    void ( *GetWindowSize )( OSWindow *windowPtr, int *width, int *height );
+    void ( *GetCurrentDisplaySize )( int *width, int *height );
 
     /* input */
     bool ( *GetButtonState )( InputButton inputIndex );
     bool ( *GetKeyState )( int keyIndex );
-    bool ( *HasKeyboard )( void );
 
     /* timers */
     uint64_t ( *GetPerformanceCounter )( void );
@@ -43,8 +42,8 @@ typedef struct SystemInterface {
     void ( *Free )( void *ptr );
 
     void ( *Shutdown )( void );
-} SystemInterface;
-extern SystemInterface globalSystem;
+} OSInterface;
+extern OSInterface globalSystem;
 
 #define SYSTEM_INTERFACE_VERSION_MAJOR 1
 #define SYSTEM_INTERFACE_VERSION_MINOR 0
@@ -85,7 +84,7 @@ typedef struct EngineInterface {
     void ( *KeyboardEvent )( int key, unsigned int keyState );
     void ( *Shutdown )( void );
 
-    SystemInterface *( *GetSystemInterface )( void );
+	OSInterface *( *GetOSInterface )( void );
     GameInterface *( *GetGameInterface )( void );
 
     bool ( *IsRunning )( void );
@@ -99,7 +98,7 @@ extern EngineInterface globalEngine;
 #define ENGINE_INTERFACE_VERSION INTERFACE_COMBINE_VERSION( ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR )
 
 #define INTERFACE_PROCEDURE "GetDllInterface"
-typedef EngineInterface *( *DllEngineInterface )( uint32_t version, const SystemInterface *sysIn );
-typedef GameInterface *( *DllGameInterface )( uint32_t version, const SystemInterface *sysIn, const EngineInterface *engIn );
+typedef EngineInterface *( *DllEngineInterface )( uint32_t version, const OSInterface *sysIn );
+typedef GameInterface *( *DllGameInterface )( uint32_t version, const OSInterface *sysIn, const EngineInterface *engIn );
 
 PL_EXTERN_C_END

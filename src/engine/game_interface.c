@@ -91,7 +91,7 @@ static void Cmd_SpawnWorld( unsigned int argc, char **argv ) {
 static PLLibrary *dllGamePtr = NULL;
 
 void Game_Initialize( void ) {
-	Print( "Setting up game interface\n" );
+	Print( "Initializing game\n" );
 
 	dllGamePtr = PlLoadLibrary( "./game", true );
 	if ( dllGamePtr == NULL ) {

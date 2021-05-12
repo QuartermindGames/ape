@@ -326,7 +326,7 @@ qboolean QE_SingleBrush (void)
 	return true;
 }
 
-void QE_Init (void)
+void QE_Init ()
 {
 	/*
 	** initialize variables
@@ -355,7 +355,7 @@ void QE_ConvertDOSToUnixName( char *dst, const char *src )
 
 int g_numbrushes, g_numentities;
 
-void QE_CountBrushesAndUpdateStatusBar( void )
+void QE_CountBrushesAndUpdateStatusBar( )
 {
 	static int      s_lastbrushcount, s_lastentitycount;
 	static qboolean s_didonce;
@@ -366,9 +366,9 @@ void QE_CountBrushesAndUpdateStatusBar( void )
 	g_numbrushes = 0;
 	g_numentities = 0;
 
-	if ( active_brushes.next != NULL )
+	if ( active_brushes.next != nullptr )
 	{
-		for ( b = active_brushes.next ; b != NULL && b != &active_brushes ; b=next)
+		for ( b = active_brushes.next ; b != nullptr && b != &active_brushes ; b=next)
 		{
 			next = b->next;
 			if (b->brush_faces )
@@ -381,7 +381,7 @@ void QE_CountBrushesAndUpdateStatusBar( void )
 		}
 	}
 
-	if ( entities.next != NULL )
+	if ( entities.next != nullptr )
 	{
 		for ( e = entities.next ; e != &entities && g_numentities != MAX_MAP_ENTITIES ; e = e->next)
 		{

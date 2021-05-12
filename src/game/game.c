@@ -5,7 +5,7 @@
 
 #include "game.h"
 
-SystemInterface globalSystem;
+OSInterface globalSystem;
 EngineInterface globalEngine;
 
 int globalGameLog;
@@ -13,7 +13,7 @@ int globalGameDebugLog;
 int globalGameWarningLog;
 int globalGameErrorLog;
 
-PL_EXPORT GameInterface *GetDllInterface( uint32_t version, const SystemInterface *systemInterface, const EngineInterface *engineInterface ) {
+PL_EXPORT GameInterface *GetDllInterface( uint32_t version, const OSInterface *systemInterface, const EngineInterface *engineInterface ) {
 	globalGameLog = PlAddLogLevel( "game", PL_COLOUR_GREEN, true );
 	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_ORANGE, true );
 	globalGameErrorLog = PlAddLogLevel( "game/error", PL_COLOUR_RED, true );

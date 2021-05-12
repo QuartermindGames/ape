@@ -132,7 +132,7 @@ void W_DrawSector( World *world, unsigned int sectorId, PLGCamera *camera, bool 
 		return;
 	}
 
-	CVar( "world/force_simple", forceSimple );
+	CVar( "world.forceSimple", forceSimple );
 
 	if ( simple || forceSimple->b_value ) {
 		for ( unsigned int j = 0; j < numFaces; ++j ) {

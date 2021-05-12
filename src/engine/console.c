@@ -169,6 +169,8 @@ static void SaveUserConfig( void ) {
  * Set the console up.
  */
 void Con_Initialize( void ) {
+	Print( "Initializing console\n" );
+
 	PlSetConsoleOutputCallback( Con_OutputCallback );
 
 	/* debugging */

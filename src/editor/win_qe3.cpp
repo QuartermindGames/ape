@@ -238,19 +238,18 @@ static void SetupEngineInterface() {
 		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	static SystemInterface systemInterface = {
+	static OSInterface systemInterface = {
 		.version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
-#if 0
-			.Shutdown = nullptr,
-			.CreateWindow = nullptr,
-			.GetWindowSize = nullptr,
-			.GetButtonState = nullptr,
-			.GetKeyState = nullptr,
-			.HasKeyboard = nullptr,
+#if 1
+		.Shutdown = nullptr,
+		.CreateWindow = nullptr,
+		.GetCurrentDisplaySize = nullptr,
+		.GetButtonState = nullptr,
+		.GetKeyState = nullptr,
 
-			.GetPerformanceCounter = nullptr,
-			.GetPerformanceFrequency = nullptr,
+		.GetPerformanceCounter = nullptr,
+		.GetPerformanceFrequency = nullptr,
 #endif
 		.CAlloc = Sys_calloc,
 		.MAlloc = Sys_malloc,
