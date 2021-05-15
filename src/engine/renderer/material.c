@@ -11,7 +11,7 @@
 #include "script.h"
 #include "map.h"
 
-#include "common/node.h"
+#include "common/CFWNode.h"
 
 static PLLinkedList *materials[ MAX_CACHE_GROUPS ];
 
@@ -377,11 +377,11 @@ static void ConvertMatToNode( const Material *material ) {
 	NLNode *passArray = NL_PushBackObjArray( root, "passes" );
 	for ( unsigned int i = 0; i < material->numPasses; ++i ) {
 		NLNode *pass = NL_PushBackObj( passArray, NULL );
-		NL_PushBackString( pass, "shaderProgram", material->passes[ i ].programName );
+		NL_PushBackStr( pass, "shaderProgram", material->passes[ i ].programName );
 		const char *blendMode[ 2 ] = {
 		        BlendModeToString( material->passes[ i ].blendMode[ 0 ] ),
 		        BlendModeToString( material->passes[ i ].blendMode[ 1 ] ) };
-		NL_PushBackStringArray( pass, "blendMode", blendMode, 2 );
+		NL_PushBackStrArray( pass, "blendMode", blendMode, 2 );
 
 		NL_PushBackBool( pass, "depthTest", material->passes[ i ].depthTest );
 
@@ -390,35 +390,26 @@ static void ConvertMatToNode( const Material *material ) {
 			const MaterialVariable *var = &material->passes[ i ].variables[ j ];
 			switch ( var->varData.type ) {
 				case SCRIPT_VAR_TEXTURE:
-					NL_PushBackString( shaderParms, var->varData.name, var->varData.value.texVar->path );
+					NL_PushBackStr( shaderParms, var->varData.name, var->varData.value.texVar->path );
 					break;
 				case SCRIPT_VAR_BUILTIN:
-					NL_PushBackInt( shaderParms, var->varData.name, var->varData.value.iVar );
+					NL_PushBackI32( shaderParms, var->varData.name, var->varData.value.iVar );
 					break;
 				case SCRIPT_VAR_BOOL:
 					NL_PushBackBool( shaderParms, var->varData.name, var->varData.value.bVar );
 					break;
 				case SCRIPT_VAR_DOUBLE:
-					NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.dVar );
+					NL_PushBackF32( shaderParms, var->varData.name, var->varData.value.dVar );
 					break;
 				case SCRIPT_VAR_FLOAT:
-					NL_PushBackFloat( shaderParms, var->varData.name, var->varData.value.fVar );
+					NL_PushBackF32( shaderParms, var->varData.name, var->varData.value.fVar );
 					break;
 				case SCRIPT_VAR_UINT:
 				case SCRIPT_VAR_INT:
-					NL_PushBackInt( shaderParms, var->varData.name, var->varData.value.iVar );
+					NL_PushBackI32( shaderParms, var->varData.name, var->varData.value.iVar );
 					break;
 				case SCRIPT_VAR_STRING:
-					NL_PushBackString( shaderParms, var->varData.name, var->varData.value.strVar );
-					break;
-				case SCRIPT_VAR_VEC2:
-					NL_PushBackVec2( shaderParms, var->varData.name, &var->varData.value.v2Var );
-					break;
-				case SCRIPT_VAR_VEC3:
-					NL_PushBackVec3( shaderParms, var->varData.name, &var->varData.value.v3Var );
-					break;
-				case SCRIPT_VAR_VEC4:
-					NL_PushBackVec4( shaderParms, var->varData.name, &var->varData.value.v4Var );
+					NL_PushBackStr( shaderParms, var->varData.name, var->varData.value.strVar );
 					break;
 				default:
 					break;

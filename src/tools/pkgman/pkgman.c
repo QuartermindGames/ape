@@ -6,7 +6,7 @@
 #include <plcore/pl.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_image.h>
-#include <common/node.h>
+#include <common/CFWNode.h>
 
 #include "public/GFXFormat.h"
 

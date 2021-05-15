@@ -6,18 +6,17 @@ project(common)
 
 set(CMAKE_C_STANDARD 11)
 
-add_library(common SHARED
-        lightmapper.c
-        include/common/common.h
-        ##############################
-        node.c
-        include/common/node.h
-        node_parser.c
-        node_preprocessor.c
-        node_private.h
-        ##############################
-        FileSystem.c
-        common.c)
+add_library(common STATIC
+        CFWNode/CFWNode.c
+        CFWNode/CFWNodeParser.c
+        CFWNode/CFWNodePreProcessor.c
+        CFWNode/CFWNodePrivate.h
+
+        include/common/CFWCommon.h
+
+        CFWFileSystem.c
+        CFWCommon.c
+        CFWLightMapper.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 

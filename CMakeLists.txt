@@ -9,7 +9,7 @@ message("Configuring Yin...")
 # Set all of our output directories.
 
 include_directories(src/)
-include_directories(src/common/include/)
+include_directories(src/OSCommonFramework/include/)
 
 include(DetermineTargetArchitecture.cmake)
 determine_target_architecture(YIN_SYSTEM_ARCH)
@@ -78,7 +78,7 @@ add_subdirectory(src/platform/plgraphics/)
 add_subdirectory(src/platform/plmodel/)
 add_subdirectory(src/platform/plugins/driver_opengl/)
 add_subdirectory(src/launcher_sdl2/)
-add_subdirectory(src/common/)
+add_subdirectory(src/OSCommonFramework/)
 add_subdirectory(src/engine/)
 add_subdirectory(src/game/)
 

@@ -5,7 +5,7 @@
 #include "yin.h"
 #include "renderer.h"
 
-#include "common/node.h"
+#include "common/CFWNode.h"
 
 /**********************************************************/
 /** Shaders **/
@@ -40,8 +40,8 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root ) {
 	ShaderProgramIndex program;
 
-	const char *vertexPath = NL_GetStringByName( root, "vertexPath" );
-	const char *fragmentPath = NL_GetStringByName( root, "fragmentPath" );
+	const char *vertexPath = NL_GetStrByName( root, "vertexPath" );
+	const char *fragmentPath = NL_GetStrByName( root, "fragmentPath" );
 
 	if ( vertexPath == NULL || fragmentPath == NULL ) {
 		PrintWarn( "No vertex/fragment stage defined in program!\n" );
@@ -64,7 +64,7 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root ) {
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_VERTEX ], PL_SYSTEM_MAX_PATH, "%s", vertexPath );
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_FRAGMENT ], PL_SYSTEM_MAX_PATH, "%s", fragmentPath );
 
-	const char *internalName = NL_GetStringByName( root, "description" );
+	const char *internalName = NL_GetStrByName( root, "description" );
 	if ( internalName != NULL ) {
 		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
 	} else {

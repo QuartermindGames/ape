@@ -7,11 +7,23 @@ course have their own code style.
 
 ## Files
 
-Please use lower-case for file names, i.e.
-`model_loader.c`, `model_loader.h`, `shaders.c` etc.
+Please use Pascal case for file names, i.e.
+`ModelLoader.c`, `ModelLoader.h`, `Shaders.c` etc.
 
-An exception to this rule is the editor; file names should follow 
+In addition for the editor, file names should follow 
 the name of the class within.
+
+- `OSGame`
+  - `OSGGame_Blah.c`
+- `OSEditor`
+  - `MyClassName.cpp`
+  - `OSEditor_Blah.c`
+- `OSEngine`
+  - `OSEngine_Blah.c`
+  - `Renderer/OSEngine_Renderer_Shaders.c`
+  - `Network/OSEngine_Network_ClientServer.c`
+- `OSLauncher`
+  - `OSLauncher_Blah.c`
 
 ## Functions
 

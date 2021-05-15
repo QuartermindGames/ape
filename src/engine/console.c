@@ -90,7 +90,7 @@ CMD_CALLBACK( Quit ) {
 PLConsoleVariable *gVarGraphicsFXAA;
 PLConsoleVariable *gVarGraphicsSupersampling;
 
-#include "common/node.h"
+#include "common/CFWNode.h"
 
 #define USER_CONFIG "user" NL_DEFAULT_EXTENSION
 
@@ -113,7 +113,7 @@ static void LoadUserConfig( void ) {
 		const char *cvarName = NL_GetName( child );
 		PLConsoleVariable *cvar = PlGetConsoleVariable( cvarName );
 		if ( cvar != NULL ) {
-			PlSetConsoleVariable( cvar, NL_GetString( child ) );
+			PlSetConsoleVariable( cvar, NL_GetStr( child ) );
 		} else {
             PrintWarn( "Failed to find console variable, \"%s\"!\n", cvarName );
 		}
@@ -138,16 +138,16 @@ static void SaveUserConfig( void ) {
 
 		switch( cvars[ i ]->type ) {
 			case pl_float_var:
-				NL_PushBackFloat( root, cvars[ i ]->var, cvars[ i ]->f_value );
+				NL_PushBackF32( root, cvars[ i ]->var, cvars[ i ]->f_value );
                 break;
             case pl_int_var:
-				NL_PushBackInt( root, cvars[ i ]->var, cvars[ i ]->i_value );
+				NL_PushBackI32( root, cvars[ i ]->var, cvars[ i ]->i_value );
 				break;
 			case pl_bool_var:
 				NL_PushBackBool( root, cvars[ i ]->var, cvars[ i ]->b_value );
 				break;
 			default:
-				NL_PushBackString( root, cvars[ i ]->var, cvars[ i ]->s_value );
+				NL_PushBackStr( root, cvars[ i ]->var, cvars[ i ]->s_value );
 				break;
 		}
 	}

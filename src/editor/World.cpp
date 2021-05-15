@@ -611,17 +611,17 @@ void huang::World::SaveFile( const char *path ) {
 	NLNode *vertexNode = NL_PushBackObj( root, "vertices" );
 	for ( const auto &i : vertices ) {
 		NLNode *index = NL_PushBackObj( vertexNode, "vertex" );
-		NL_PushBackVec3( index, "position", &i.position );
-		NL_PushBackVec3( index, "normal", &i.normal );
-		PLVector4 colour = PlColourToVector4( &i.colour );
-		NL_PushBackVec4( index, "colour", &colour );
+		//NL_PushBackVec3( index, "position", &i.position );
+		//NL_PushBackVec3( index, "normal", &i.normal );
+		//PLVector4 colour = PlColourToVector4( &i.colour );
+		//NL_PushBackVec4( index, "colour", &colour );
 	}
 
 	// And now the faces
 	NLNode *faceNode = NL_PushBackObj( root, "faces" );
     for ( const auto &i : faces ) {
 		NLNode *index = NL_PushBackObj( faceNode, "face" );
-		NL_PushBackIntArray( index, "vertices", i.vertexIndices, plArrayElements( i.vertexIndices ) );
+		NL_PushBackI32Array( index, "vertices", i.vertexIndices, plArrayElements( i.vertexIndices ) );
 	}
 
 	NL_WriteFile( path, root, NL_FILE_BINARY );

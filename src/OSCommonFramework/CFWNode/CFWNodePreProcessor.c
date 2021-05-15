@@ -7,29 +7,7 @@
 #include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
-#include "common/common.h"
-#include "node_private.h"
-
-/**
- * Inserts the given string into an existing string buffer.
- * Automatically reallocs buffer if it doesn't fit.
- * todo: consider cleaning this up and making part of API?
- */
-static char *InsertString( const char *string, char **buf, size_t *bufSize, size_t *maxBufSize ) {
-	/* check if it's going to fit first */
-	size_t strLength = strlen( string );
-	size_t originalSize = *bufSize;
-	*bufSize += strLength;
-	if ( *bufSize >= *maxBufSize ) {
-		*maxBufSize = *bufSize + strLength;
-		*buf = pl_realloc( *buf, *maxBufSize );
-	}
-
-	/* now copy it into our buffer */
-	strncpy( *buf + originalSize, string, strLength );
-
-	return *buf + originalSize + strLength;
-}
+#include "CFWNodePrivate.h"
 
 #define MAX_MACROS 512
 #define MAX_MACRO_NAME_LENGTH 16
@@ -111,7 +89,7 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 					includeBody = xNL_PreProcessScript( includeBody, &includeLength, false );
 
 					/* and finally, push it into our destination */
-					dstPos = InsertString( includeBody, &dstBuffer, &actualLength, &maxLength );
+					dstPos = PlStrInsert( includeBody, &dstBuffer, &actualLength, &maxLength );
 					pl_free( includeBody );
 				} else {
 					Warning( "Failed to load include \"%s\": %s\n", path, PlGetError() );
@@ -129,7 +107,7 @@ char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead ) {
 					continue;
 				}
 
-				dstPos = InsertString( macro->body, &dstBuffer, &actualLength, &maxLength );
+				dstPos = PlStrInsert( macro->body, &dstBuffer, &actualLength, &maxLength );
 				continue;
 			} else if ( pl_strcasecmp( token, "define" ) == 0 ) {
 				PlSkipWhitespace( &srcPos );

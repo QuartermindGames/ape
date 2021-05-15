@@ -61,6 +61,8 @@ dkms.conf
 
 /Debug/
 /cmake-build-debug/
+/build/
+/cmake-build-release/
 
 # Generated Files
 *.user
