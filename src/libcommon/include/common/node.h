@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "CFWCommon.h"
+#include "common.h"
 
 PL_EXTERN_C
 
@@ -84,14 +84,24 @@ extern NLNode *NL_GetParent( NLNode *node );
 extern const char *NL_GetName( const NLNode *node );
 extern NLPropertyType NL_GetType( const NLNode *node );
 
-extern bool NL_GetBool( const NLNode *node );
-extern const char *NL_GetStr( const NLNode *node );
-extern float NL_GetF32( const NLNode *node );
+extern NLErrorCode NL_GetBool( const NLNode *node, bool *dest );
+extern NLErrorCode NL_GetStr( const NLNode *node, char *dest, size_t length );
+extern NLErrorCode NL_GetF32( const NLNode *node, float *dest );
+extern NLErrorCode NL_GetF64( const NLNode *node, double *dest );
+extern NLErrorCode NL_GetI8( const NLNode *node, int8_t *dest );
+extern NLErrorCode NL_GetI16( const NLNode *node, int16_t *dest );
+extern NLErrorCode NL_GetI32( const NLNode *node, int32_t *dest );
+extern NLErrorCode NL_GetI64( const NLNode *node, int64_t *dest );
+extern NLErrorCode NL_GetUI8( const NLNode *node, uint8_t *dest );
+extern NLErrorCode NL_GetUI16( const NLNode *node, uint16_t *dest );
+extern NLErrorCode NL_GetUI32( const NLNode *node, uint32_t *dest );
+extern NLErrorCode NL_GetUI64( const NLNode *node, uint64_t *dest );
 
-extern int8_t *NL_GetI8Array( NLNode *parent, int8_t *buf );
-extern int16_t *NL_GetI16Array( NLNode *parent, int16_t *buf );
-extern int32_t *NL_GetI32Array( NLNode *parent, int32_t *buf );
-extern float *NL_GetF32Array( NLNode *parent, float *buf );
+extern NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements );
+extern NLErrorCode NL_GetI16Array( NLNode *parent, int16_t *buf, unsigned int numElements );
+extern NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int numElements );
+extern NLErrorCode NL_GetUI32Array( NLNode *parent, uint32_t *buf, unsigned int numElements );
+extern NLErrorCode NL_GetF32Array( NLNode *parent, float *buf, unsigned int numElements );
 
 extern bool NL_GetBoolByName( NLNode *node, const char *name, bool fallback );
 extern const char *NL_GetStrByName( NLNode *node, const char *name, const char *fallback );

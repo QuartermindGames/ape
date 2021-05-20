@@ -7,7 +7,7 @@
 #include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
-#include "CFWNodePrivate.h"
+#include "node_private.h"
 
 #define NL_VERSION 1
 #define NL_BINARY_HEADER "node.bin"
@@ -26,9 +26,9 @@ static const char *StringForPropertyType( NLPropertyType propertyType ) {
 	        [NL_PROP_I16] = "int16",
 	        [NL_PROP_I32] = "integer",
 	        [NL_PROP_I64] = "int64",
-			[NL_PROP_UI8] = "uint8",
-			[NL_PROP_UI16] = "uint16",
-			[NL_PROP_UI32] = "uint32",
+	        [NL_PROP_UI8] = "uint8",
+	        [NL_PROP_UI16] = "uint16",
+	        [NL_PROP_UI32] = "uint32",
 	        [NL_PROP_UI64] = "uint64",
 	        [NL_PROP_F32] = "float",
 	        [NL_PROP_F64] = "float64",
@@ -168,23 +168,195 @@ NLPropertyType NL_GetType( const NLNode *node ) {
 	return node->type;
 }
 
-const char *NL_GetStr( const NLNode *node ) {
-	return node->data.strBuf;
+NLErrorCode NL_GetStr( const NLNode *node, char *dest, size_t length ) {
+	if ( node->type != NL_PROP_STR ) return NL_ERROR_INVALID_TYPE;
+	snprintf( dest, length, "%s", node->data.strBuf );
+	return NL_ERROR_SUCCESS;
 }
 
-bool NL_GetBool( const NLNode *node ) {
+NLErrorCode NL_GetBool( const NLNode *node, bool *dest ) {
+	if ( node->type != NL_PROP_BOOL ) return NL_ERROR_INVALID_TYPE;
+
 	if ( ( strcmp( node->data.strBuf, "true" ) == 0 ) || ( node->data.strBuf[ 0 ] == '1' && node->data.strBuf[ 1 ] == '\0' ) ) {
-		return true;
+		*dest = true;
+		return NL_ERROR_SUCCESS;
 	} else if ( ( strcmp( node->data.strBuf, "false" ) == 0 ) || ( node->data.strBuf[ 0 ] == '0' && node->data.strBuf[ 1 ] == '\0' ) ) {
-		return false;
+		*dest = false;
+		return NL_ERROR_SUCCESS;
 	}
 
 	NL_SetErrorMessage( NL_ERROR_INVALID_ARGUMENT, "Invalid data passed from var" );
-	return false;
+	return NL_ERROR_INVALID_ARGUMENT;
 }
 
-float NL_GetF32( const NLNode *node ) {
-	return strtof( node->data.strBuf, NULL );
+NLErrorCode NL_GetF32( const NLNode *node, float *dest ) {
+	if ( node->type != NL_PROP_F32 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtof( node->data.strBuf, NULL );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetF64( const NLNode *node, double *dest ) {
+	if ( node->type != NL_PROP_F64 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtod( node->data.strBuf, NULL );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI8( const NLNode *node, int8_t *dest ) {
+	if ( node->type != NL_PROP_I8 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtol( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI16( const NLNode *node, int16_t *dest ) {
+	if ( node->type != NL_PROP_I16 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtol( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI32( const NLNode *node, int32_t *dest ) {
+	if ( node->type != NL_PROP_I32 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtol( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI64( const NLNode *node, int64_t *dest ) {
+	if ( node->type != NL_PROP_I64 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtoll( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetUI8( const NLNode *node, uint8_t *dest ) {
+	if ( node->type != NL_PROP_UI8 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtoul( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetUI16( const NLNode *node, uint16_t *dest ) {
+	if ( node->type != NL_PROP_UI16 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtoul( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetUI32( const NLNode *node, uint32_t *dest ) {
+	if ( node->type != NL_PROP_UI32 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtoul( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetUI64( const NLNode *node, uint64_t *dest ) {
+	if ( node->type != NL_PROP_UI64 ) return NL_ERROR_INVALID_TYPE;
+	*dest = strtoull( node->data.strBuf, NULL, 10 );
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements ) {
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I8 ) {
+		return NL_ERROR_INVALID_TYPE;
+	}
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i ) {
+		if ( child == NULL ) {
+			return NL_ERROR_INVALID_ELEMENTS;
+		}
+
+		NLErrorCode errorCode = NL_GetI8( child, &buf[ i ] );
+		if ( errorCode != NL_ERROR_SUCCESS ) {
+			return errorCode;
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI16Array( NLNode *parent, int16_t *buf, unsigned int numElements ) {
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I16 ) {
+		return NL_ERROR_INVALID_TYPE;
+	}
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i ) {
+		if ( child == NULL ) {
+			return NL_ERROR_INVALID_ELEMENTS;
+		}
+
+		NLErrorCode errorCode = NL_GetI16( child, &buf[ i ] );
+		if ( errorCode != NL_ERROR_SUCCESS ) {
+			return errorCode;
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int numElements ) {
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I32 ) {
+		return NL_ERROR_INVALID_TYPE;
+	}
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i ) {
+		if ( child == NULL ) {
+			return NL_ERROR_INVALID_ELEMENTS;
+		}
+
+		NLErrorCode errorCode = NL_GetI32( child, &buf[ i ] );
+		if ( errorCode != NL_ERROR_SUCCESS ) {
+			return errorCode;
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetUI32Array( NLNode *parent, uint32_t *buf, unsigned int numElements ) {
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_UI32 ) {
+		return NL_ERROR_INVALID_TYPE;
+	}
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i ) {
+		if ( child == NULL ) {
+			return NL_ERROR_INVALID_ELEMENTS;
+		}
+
+		NLErrorCode errorCode = NL_GetUI32( child, &buf[ i ] );
+		if ( errorCode != NL_ERROR_SUCCESS ) {
+			return errorCode;
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
+}
+
+NLErrorCode NL_GetF32Array( NLNode *parent, float *buf, unsigned int numElements ) {
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_F32 ) {
+		return NL_ERROR_INVALID_TYPE;
+	}
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i ) {
+		if ( child == NULL ) {
+			return NL_ERROR_INVALID_ELEMENTS;
+		}
+
+		NLErrorCode errorCode = NL_GetF32( child, &buf[ i ] );
+		if ( errorCode != NL_ERROR_SUCCESS ) {
+			return errorCode;
+		}
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
 }
 
 /******************************************/
@@ -364,13 +536,12 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent ) {
 	node->name.strBuf = DeserializeStringVar( file, &node->name.strBufLength );
 
 	node->type = ( NLPropertyType ) PlReadInt8( file, NULL );
-	if ( node->type == NL_PROP_UNDEFINED ) {
-		NL_DestroyNode( node );
-		Warning( "Encountered invalid node in \"%s\"!\n", PlGetFilePath( file ) );
-		return NULL;
-	}
-
 	switch ( node->type ) {
+		default:
+			Warning( "Encountered unhandled node type: %d!\n", node->type );
+			NL_DestroyNode( node );
+			node = NULL;
+			break;
 		case NL_PROP_ARRAY:
 			/* only extra component we get here is the child type */
 			node->childType = ( NLPropertyType ) PlReadInt8( file, NULL );
@@ -581,13 +752,61 @@ static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType ) {
 	fwrite( &node->type, sizeof( int8_t ), 1, file );
 	switch ( node->type ) {
 		case NL_PROP_F32: {
-			float v = NL_GetF32( node );
+			float v;
+			NL_GetF32( node, &v );
 			fwrite( &v, sizeof( float ), 1, file );
 			break;
 		}
+		case NL_PROP_F64: {
+			double v;
+			NL_GetF64( node, &v );
+			fwrite( &v, sizeof( double ), 1, file );
+			break;
+		}
+		case NL_PROP_I8: {
+			int8_t v;
+			NL_GetI8( node, &v );
+			fwrite( &v, sizeof( int8_t ), 1, file );
+			break;
+		}
+		case NL_PROP_I16: {
+			int16_t v;
+			NL_GetI16( node, &v );
+			fwrite( &v, sizeof( int16_t ), 1, file );
+		}
 		case NL_PROP_I32: {
-			int v = ( int ) NL_GetF32( node );
+			int32_t v;
+			NL_GetI32( node, &v );
+			fwrite( &v, sizeof( int32_t ), 1, file );
+			break;
+		}
+		case NL_PROP_I64: {
+			int64_t v;
+			NL_GetI64( node, &v );
+			fwrite( &v, sizeof( int64_t ), 1, file );
+			break;
+		}
+		case NL_PROP_UI8: {
+			uint8_t v;
+			NL_GetUI8( node, &v );
+			fwrite( &v, sizeof( uint8_t ), 1, file );
+			break;
+		}
+		case NL_PROP_UI16: {
+			uint16_t v;
+			NL_GetUI16( node, &v );
+			fwrite( &v, sizeof( uint16_t ), 1, file );
+		}
+		case NL_PROP_UI32: {
+			uint32_t v;
+			NL_GetUI32( node, &v );
 			fwrite( &v, sizeof( uint32_t ), 1, file );
+			break;
+		}
+		case NL_PROP_UI64: {
+			uint64_t v;
+			NL_GetUI64( node, &v );
+			fwrite( &v, sizeof( uint64_t ), 1, file );
 			break;
 		}
 		case NL_PROP_STR: {
@@ -595,7 +814,8 @@ static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType ) {
 			break;
 		}
 		case NL_PROP_BOOL: {
-			bool v = NL_GetBool( node );
+			bool v;
+			NL_GetBool( node, &v );
 			fwrite( &v, sizeof( uint8_t ), 1, file );
 			break;
 		}

@@ -7,7 +7,7 @@
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_parse.h>
 
-#include "CFWNodePrivate.h"
+#include "node_private.h"
 
 #define DEBUG_PARSER 0
 #if !defined( NDEBUG ) && DEBUG_PARSER

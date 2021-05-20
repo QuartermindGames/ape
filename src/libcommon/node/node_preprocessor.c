@@ -7,7 +7,7 @@
 #include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
-#include "CFWNodePrivate.h"
+#include "node_private.h"
 
 #define MAX_MACROS 512
 #define MAX_MACRO_NAME_LENGTH 16

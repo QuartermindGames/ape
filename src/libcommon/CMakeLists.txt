@@ -7,16 +7,16 @@ project(common)
 set(CMAKE_C_STANDARD 11)
 
 add_library(common STATIC
-        CFWNode/CFWNode.c
-        CFWNode/CFWNodeParser.c
-        CFWNode/CFWNodePreProcessor.c
-        CFWNode/CFWNodePrivate.h
+        node/node.c
+        node/node_parser.c
+        node/node_preprocessor.c
+        node/node_private.h
 
-        include/common/CFWCommon.h
+        include/common/common.h
 
-        CFWFileSystem.c
-        CFWCommon.c
-        CFWLightMapper.c)
+        com_filesystem.c
+        common.c
+        )
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 
