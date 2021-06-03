@@ -5,8 +5,9 @@
 
 #pragma once
 
-typedef struct Light {
-	PLVector3 position;
-	PLColour colour;
+typedef struct Light
+{
+	PLVector3    position;
+	PLColour     colour;
 	unsigned int sector;
 } Light;

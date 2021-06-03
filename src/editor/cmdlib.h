@@ -36,57 +36,57 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 typedef unsigned char byte;
 
 #ifndef __cplusplus
-#	include <stdbool.h>
+#include <stdbool.h>
 #endif
 typedef bool qboolean;
 
 // the dec offsetof macro doesn't work very well...
-#define myoffsetof(type,identifier) ((size_t)&((type *)0)->identifier)
+#define myoffsetof( type, identifier ) ( ( size_t ) & ( ( type * ) 0 )->identifier )
 
 
 // set these before calling CheckParm
-extern int myargc;
+extern int    myargc;
 extern char **myargv;
 
-int Q_strncasecmp (const char *s1, const char *s2, int n);
-int Q_strcasecmp (const char *s1, const char *s2);
+int Q_strncasecmp( const char *s1, const char *s2, int n );
+int Q_strcasecmp( const char *s1, const char *s2 );
 
-int Q_filelength (FILE *f);
+int Q_filelength( FILE *f );
 
-void	Error (const char *error, ...);
+void Error( const char *error, ... );
 
-FILE	*SafeOpenWrite (char *filename);
-FILE	*SafeOpenRead (char *filename);
-void	SafeRead (FILE *f, void *buffer, int count);
-void	SafeWrite (FILE *f, void *buffer, int count);
+FILE *SafeOpenWrite( char *filename );
+FILE *SafeOpenRead( char *filename );
+void  SafeRead( FILE *f, void *buffer, int count );
+void  SafeWrite( FILE *f, void *buffer, int count );
 
-int		LoadFile (const char *filename, void **bufferptr);
-int		LoadFileNoCrash (const char *filename, void **bufferptr);
-void	SaveFile (char *filename, void *buffer, int count);
+int  LoadFile( const char *filename, void **bufferptr );
+int  LoadFileNoCrash( const char *filename, void **bufferptr );
+void SaveFile( char *filename, void *buffer, int count );
 
-void 	DefaultExtension (char *path, char *extension);
-void 	DefaultPath (char *path, char *basepath);
-void 	StripFilename (char *path);
-void 	StripExtension (char *path);
+void DefaultExtension( char *path, char *extension );
+void DefaultPath( char *path, char *basepath );
+void StripFilename( char *path );
+void StripExtension( char *path );
 
-void 	ExtractFilePath (char *path, char *dest);
-void	ExtractFileName (char *path, char *dest);
-void 	ExtractFileBase (char *path, char *dest);
-void	ExtractFileExtension (char *path, char *dest);
+void ExtractFilePath( char *path, char *dest );
+void ExtractFileName( char *path, char *dest );
+void ExtractFileBase( char *path, char *dest );
+void ExtractFileExtension( char *path, char *dest );
 
-int 	ParseNum (char *str);
+int ParseNum( char *str );
 
-short	BigShort (short l);
-short	LittleShort (short l);
-int		BigLong (int l);
-int		LittleLong (int l);
-float	BigFloat (float l);
-float	LittleFloat (float l);
+short BigShort( short l );
+short LittleShort( short l );
+int   BigLong( int l );
+int   LittleLong( int l );
+float BigFloat( float l );
+float LittleFloat( float l );
 
 
-char *COM_Parse (char *data);
+char *COM_Parse( char *data );
 
-extern	char		com_token[1024];
-extern	qboolean	com_eof;
+extern char     com_token[ 1024 ];
+extern qboolean com_eof;
 
 #endif

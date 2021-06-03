@@ -22,13 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // parse.h -- text file parsing routines
 
-#define	MAXTOKEN	1024
+#define MAXTOKEN 1024
 
-extern	char	token[MAXTOKEN];
-extern	int		scriptline;
+extern char token[ MAXTOKEN ];
+extern int  scriptline;
 
-void	StartTokenParsing (char *data);
-qboolean GetToken (qboolean crossline);
-void UngetToken (void);
-qboolean TokenAvailable (void);
-
+void     StartTokenParsing( char *data );
+qboolean GetToken( qboolean crossline );
+void     UngetToken( void );
+qboolean TokenAvailable( void );

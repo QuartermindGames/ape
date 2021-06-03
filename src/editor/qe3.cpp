@@ -22,46 +22,47 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "qe3.h"
 
-QEGlobals_t  g_qeglobals;
+QEGlobals_t g_qeglobals;
 
-void QE_CheckOpenGLForErrors(void)
+void QE_CheckOpenGLForErrors( void )
 {
-    int	    i;
+	int i;
 
-    while ( ( i = glGetError() ) != GL_NO_ERROR )
-    {
-		char buffer[100];
+	while ( ( i = glGetError() ) != GL_NO_ERROR )
+	{
+		char buffer[ 100 ];
 
 		sprintf( buffer, "OpenGL Error: %s", gluErrorString( i ) );
-        printf( "%s\n", buffer );
-#if 0 // todo
+		printf( "%s\n", buffer );
+#if 0// todo
 		MessageBox( g_qeglobals.d_hwndMain, buffer , "QuakeEd Error", MB_OK | MB_ICONEXCLAMATION );
 #endif
 		exit( 1 );
-    }
+	}
 }
 
 
-char *ExpandReletivePath (char *p)
+char *ExpandReletivePath( char *p )
 {
-	static char	temp[1024];
-	const char	*base;
+	static char temp[ 1024 ];
+	const char *base;
 
-	if (!p || !p[0])
+	if ( !p || !p[ 0 ] )
 		return NULL;
-	if (p[0] == '/' || p[0] == '\\')
+	if ( p[ 0 ] == '/' || p[ 0 ] == '\\' )
 		return p;
 
-	base = ValueForKey(g_qeglobals.d_project_entity, "basepath");
-	sprintf (temp, "%s/%s", base, p);
+	base = ValueForKey( g_qeglobals.d_project_entity, "basepath" );
+	sprintf( temp, "%s/%s", base, p );
 	return temp;
 }
 
 
-
-void *qmalloc( size_t size ) {
+void *qmalloc( size_t size )
+{
 	void *b = malloc( size );
-	if( b == nullptr ) {
+	if ( b == nullptr )
+	{
 		Error( "Failed to allocate %d bytes!\n", size );
 	}
 
@@ -69,8 +70,9 @@ void *qmalloc( size_t size ) {
 	return b;
 }
 
-char *copystring( char *s ) {
-	char *b = (char *)qmalloc( strlen( s ) + 1 );
+char *copystring( char *s )
+{
+	char *b = ( char * ) qmalloc( strlen( s ) + 1 );
 	strcpy( b, s );
 	return b;
 }
@@ -90,7 +92,7 @@ void QE_CheckAutoSave( void )
 
 	now = clock();
 
-	if ( modified != true || !s_start)
+	if ( modified != true || !s_start )
 	{
 		s_start = now;
 		return;
@@ -98,15 +100,18 @@ void QE_CheckAutoSave( void )
 
 	if ( now - s_start > ( CLOCKS_PER_SEC * 60 * QE_AUTOSAVE_INTERVAL ) )
 	{
-		Sys_Printf ("Autosaving...\n");
+		Sys_Printf( "Autosaving...\n" );
 
 		// Ensure we have a valid path set before attempting to save
 		const char *autosavePath = ValueForKey( g_qeglobals.d_project_entity, "autosave" );
-		if( *autosavePath != '\0' ) {
+		if ( *autosavePath != '\0' )
+		{
 			g_mainWindow->SetStatus( "Autosaving...", 0 );
 			Map_SaveFile( autosavePath, false );
 			g_mainWindow->SetStatus( "Autosaving...Saved.", 0 );
-		} else {
+		}
+		else
+		{
 			Sys_Printf( "Attempted to autosave, but no path set!\n" );
 		}
 
@@ -115,38 +120,38 @@ void QE_CheckAutoSave( void )
 }
 
 
-
 /*
 ===========
 QE_LoadProject
 ===========
 */
-qboolean QE_LoadProject (const char *projectfile)
+qboolean QE_LoadProject( const char *projectfile )
 {
-	Sys_Printf ("QE_LoadProject (%s)\n", projectfile);
+	Sys_Printf( "QE_LoadProject (%s)\n", projectfile );
 
-    char	*data;
-	if ( LoadFileNoCrash (projectfile, (void **)&data) == -1)
+	char *data;
+	if ( LoadFileNoCrash( projectfile, ( void ** ) &data ) == -1 )
 		return false;
 
-	StartTokenParsing (data);
+	StartTokenParsing( data );
 
-	g_qeglobals.d_project_entity = Entity_Parse (true);
-	if (!g_qeglobals.d_project_entity)
-		Error ("Couldn't parse %s", projectfile);
+	g_qeglobals.d_project_entity = Entity_Parse( true );
+	if ( !g_qeglobals.d_project_entity )
+		Error( "Couldn't parse %s", projectfile );
 
-	free (data);
+	free( data );
 
 	const char *entityPath = ValueForKey( g_qeglobals.d_project_entity, "entitypath" );
-	if( *entityPath != '\0' ) {
+	if ( *entityPath != '\0' )
+	{
 		Eclass_InitForSourceDirectory( entityPath );
 	}
 
-//	FillClassList ();		// list in entity window
+	//	FillClassList ();		// list in entity window
 
-	Map_New ();
+	Map_New();
 
-	FillTextureMenu ();
+	FillTextureMenu();
 
 	return true;
 }
@@ -156,10 +161,10 @@ qboolean QE_LoadProject (const char *projectfile)
 QE_KeyDown
 ===========
 */
-#define	SPEED_MOVE	32
-#define	SPEED_TURN	22.5
+#define SPEED_MOVE 32
+#define SPEED_TURN 22.5
 
-qboolean QE_KeyDown (int key)
+qboolean QE_KeyDown( int key )
 {
 #if 0
 	switch (key)
@@ -236,7 +241,7 @@ qboolean QE_KeyDown (int key)
 
 	return true;
 #else
-return false;
+	return false;
 #endif
 }
 
@@ -248,85 +253,84 @@ Sets target / targetname on the two entities selected
 from the first selected to the secon
 ===============
 */
-void ConnectEntities (void)
+void ConnectEntities( void )
 {
-	entity_t	*e1, *e2, *e;
-	int			maxtarg, targetnum;
-	char		newtarg[32];
+	entity_t *e1, *e2, *e;
+	int       maxtarg, targetnum;
+	char      newtarg[ 32 ];
 
-	if (g_qeglobals.d_select_count != 2)
+	if ( g_qeglobals.d_select_count != 2 )
 	{
-		g_mainWindow->SetStatus("Must have two brushes selected.", 0);
+		g_mainWindow->SetStatus( "Must have two brushes selected.", 0 );
 		return;
 	}
 
-	e1 = g_qeglobals.d_select_order[0]->owner;
-	e2 = g_qeglobals.d_select_order[1]->owner;
+	e1 = g_qeglobals.d_select_order[ 0 ]->owner;
+	e2 = g_qeglobals.d_select_order[ 1 ]->owner;
 
-	if (e1 == world_entity || e2 == world_entity)
+	if ( e1 == world_entity || e2 == world_entity )
 	{
-		g_mainWindow->SetStatus("Can't connect to the world.", 0);
+		g_mainWindow->SetStatus( "Can't connect to the world.", 0 );
 		return;
 	}
 
-	if (e1 == e2)
+	if ( e1 == e2 )
 	{
-		g_mainWindow->SetStatus("Brushes are from same entity.", 0);
+		g_mainWindow->SetStatus( "Brushes are from same entity.", 0 );
 		return;
 	}
 
-	const char *target = ValueForKey (e1, "target");
-	if (target && target[0])
-		strcpy (newtarg, target);
+	const char *target = ValueForKey( e1, "target" );
+	if ( target && target[ 0 ] )
+		strcpy( newtarg, target );
 	else
 	{
-		target = ValueForKey (e2, "targetname");
-		if (target && target[0])
-			strcpy (newtarg, target);
+		target = ValueForKey( e2, "targetname" );
+		if ( target && target[ 0 ] )
+			strcpy( newtarg, target );
 		else
 		{
 			// make a unique target value
 			maxtarg = 0;
-			for (e=entities.next ; e != &entities ; e=e->next)
+			for ( e = entities.next; e != &entities; e = e->next )
 			{
-				const char *tn = ValueForKey (e, "targetname");
-				if (tn && tn[0])
+				const char *tn = ValueForKey( e, "targetname" );
+				if ( tn && tn[ 0 ] )
 				{
-					targetnum = atoi(tn+1);
-					if (targetnum > maxtarg)
+					targetnum = atoi( tn + 1 );
+					if ( targetnum > maxtarg )
 						maxtarg = targetnum;
 				}
 			}
-			sprintf (newtarg, "t%i", maxtarg+1);
+			sprintf( newtarg, "t%i", maxtarg + 1 );
 		}
 	}
 
-	SetKeyValue (e1, "target", newtarg);
-	SetKeyValue (e2, "targetname", newtarg);
-	Sys_UpdateWindows (W_XY | W_CAMERA);
+	SetKeyValue( e1, "target", newtarg );
+	SetKeyValue( e2, "targetname", newtarg );
+	Sys_UpdateWindows( W_XY | W_CAMERA );
 
 	Select_Deselect();
-	Select_Brush (g_qeglobals.d_select_order[1]);
+	Select_Brush( g_qeglobals.d_select_order[ 1 ] );
 }
 
-qboolean QE_SingleBrush (void)
+qboolean QE_SingleBrush( void )
 {
-	if ( (selected_brushes.next == &selected_brushes)
-		|| (selected_brushes.next->next != &selected_brushes) )
+	if ( ( selected_brushes.next == &selected_brushes ) || ( selected_brushes.next->next != &selected_brushes ) )
 	{
-		Sys_Printf ("Error: you must have a single brush selected\n");
+		Sys_Printf( "Error: you must have a single brush selected\n" );
 		return false;
 	}
-	if (selected_brushes.next->owner->eclass->fixedsize)
+	if ( selected_brushes.next->owner->eclass->fixedsize )
 	{
-		Sys_Printf ("Error: you cannot manipulate fixed size entities\n");
+		Sys_Printf( "Error: you cannot manipulate fixed size entities\n" );
 		return false;
 	}
 
 	return true;
 }
 
-void QE_Init ()
+void QE_Init()
 {
 	/*
 	** initialize variables
@@ -337,7 +341,7 @@ void QE_Init ()
 	/*
 	** other stuff
 	*/
-	Texture_Init ();
+	Texture_Init();
 }
 
 void QE_ConvertDOSToUnixName( char *dst, const char *src )
@@ -348,32 +352,33 @@ void QE_ConvertDOSToUnixName( char *dst, const char *src )
 			*dst = '/';
 		else
 			*dst = *src;
-		dst++; src++;
+		dst++;
+		src++;
 	}
 	*dst = 0;
 }
 
 int g_numbrushes, g_numentities;
 
-void QE_CountBrushesAndUpdateStatusBar( )
+void QE_CountBrushesAndUpdateStatusBar()
 {
 	static int      s_lastbrushcount, s_lastentitycount;
 	static qboolean s_didonce;
 
-	entity_t   *e;
-	Brush *b, *next;
+	entity_t *e;
+	Brush *   b, *next;
 
-	g_numbrushes = 0;
+	g_numbrushes  = 0;
 	g_numentities = 0;
 
 	if ( active_brushes.next != nullptr )
 	{
-		for ( b = active_brushes.next ; b != nullptr && b != &active_brushes ; b=next)
+		for ( b = active_brushes.next; b != nullptr && b != &active_brushes; b = next )
 		{
 			next = b->next;
-			if (b->brush_faces )
+			if ( b->brush_faces )
 			{
-				if ( !b->owner->eclass->fixedsize)
+				if ( !b->owner->eclass->fixedsize )
 					g_numbrushes++;
 				else
 					g_numentities++;
@@ -383,7 +388,7 @@ void QE_CountBrushesAndUpdateStatusBar( )
 
 	if ( entities.next != nullptr )
 	{
-		for ( e = entities.next ; e != &entities && g_numentities != MAX_MAP_ENTITIES ; e = e->next)
+		for ( e = entities.next; e != &entities && g_numentities != MAX_MAP_ENTITIES; e = e->next )
 		{
 			g_numentities++;
 		}
@@ -393,8 +398,8 @@ void QE_CountBrushesAndUpdateStatusBar( )
 	{
 		Sys_UpdateStatusBar();
 
-		s_lastbrushcount = g_numbrushes;
+		s_lastbrushcount  = g_numbrushes;
 		s_lastentitycount = g_numentities;
-		s_didonce = true;
+		s_didonce         = true;
 	}
 }

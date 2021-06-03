@@ -15,9 +15,9 @@ What is this?
         libplatform     - Support library; provides graphics abstraction, file I/O and more
         libopengl       - Provides support for OpenGL for rendering
         common          - Foundational systems shared between everything
-		launcher_sdl2   - SDL2 input, windowing and other OS tasks
-		engine          - The engine itself, Yin
-		game            - Game sub-system; holds all the game-specific logic
+	launcher_sdl2   - SDL2 input, windowing and other OS tasks
+	engine          - The engine itself, Yin
+	game            - Game sub-system; holds all the game-specific logic
 
 	Tools
         ycvm            - Yin Compiler / Virtual Machine Suite (yc & yvm libraries)
@@ -137,23 +137,23 @@ Technical
 -----------------------------------------------------------------
 
 NODE
-    Node tree format, used for pretty much everything. There are
-    two types of the format, one is a binary format and the other
-    is a human readable text format.
+    	Node tree format, used for pretty much everything. There are
+    	two types of the format, one is a binary format and the other
+    	is a human readable text format.
 
-    The specs are a little lengthy, so check docs/node_format.md
-    if you want to learn more about it. To summarise however,
-    it's essentially a hierarchy made up of nodes of different
-    types (objects, strings, booleans, floats and arrays).
+    	The specs are a little lengthy, so check docs/node_format.md
+   	if you want to learn more about it. To summarise however,
+    	it's essentially a hierarchy made up of nodes of different
+    	types (objects, strings, booleans, floats and arrays).
 
 CVM
-    Compiled bytecode to be loaded in by Yin's virtual machine.
-    You can compile your own bytecode by using the yc tool.
+	Compiled bytecode to be loaded in by Yin's virtual machine.
+	You can compile your own bytecode by using the yc tool.
 
-PRG [> NODE]
+NODE/PROGRAM
 	Shader program files.
 
-MAT [> NODE]
+NODE/MATERIAL
 	Material files.
 
 PKG
@@ -161,7 +161,7 @@ PKG
 	pretty simplistic and utilise Deflate compression provided
 	by the miniz library.
 
-WLD [> NODE]
+NODE/WORLD
 	Levels in Yin or "worlds" as they're referred to are
 	hierarchical, every "brush" can have a child entity/brush and
 	every entity could have a child entity/brush - there

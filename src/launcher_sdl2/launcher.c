@@ -8,11 +8,11 @@
 #include "common/common.h"
 #include "launcher.h"
 
-EngineInterface g_engine;
+OSEngineInterface g_engine;
 static PLLibrary *dllEnginePtr;
 
-#define WINDOW_TITLE "Yin Game Engine"
-#define WINDOW_WIDTH 1024
+#define WINDOW_TITLE  "Yin Game Engine"
+#define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
 
 /****************************************
@@ -21,10 +21,12 @@ static PLLibrary *dllEnginePtr;
 
 static SDL_Window *sdlWindow = NULL;
 
-void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
-	const char *title;
+void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... )
+{
+	const char *        title;
 	SDL_MessageBoxFlags flags;
-	switch ( messageType ) {
+	switch ( messageType )
+	{
 		case SYS_MESSAGE_ERROR:
 			title = "Error";
 			flags = SDL_MESSAGEBOX_ERROR;
@@ -40,7 +42,7 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	}
 
 	/* todo, make this dynamically sized */
-	char msgBuf[ 4096 ];
+	char    msgBuf[ 4096 ];
 	va_list args;
 	va_start( args, message );
 	vsnprintf( msgBuf, sizeof( msgBuf ), message, args );
@@ -51,44 +53,51 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... ) {
 	SDL_ShowSimpleMessageBox( flags, title, msgBuf, NULL );
 }
 
-typedef struct OSWindow {
-	SDL_Window *sdlWindowPtr;
+typedef struct OSWindow
+{
+	SDL_Window *   sdlWindowPtr;
 	SDL_GLContext *sdlGLContext;
 } OSWindow;
 
-static bool Sys_IsDisplayActive( OSWindow *windowPtr ) {
+static bool Sys_IsDisplayActive( OSWindow *windowPtr )
+{
 	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-void Sys_GetWindowSize( int *width, int *height ) {
+void Sys_GetWindowSize( int *width, int *height )
+{
 	SDL_GL_GetDrawableSize( sdlWindow, width, height );
 }
 
-void Sys_MakeWindowActive( OSWindow *windowPtr ) {
+void Sys_MakeWindowActive( OSWindow *windowPtr )
+{
 	sdlWindow = windowPtr->sdlWindowPtr;
 	SDL_GL_MakeCurrent( windowPtr->sdlWindowPtr, windowPtr->sdlGLContext );
 }
 
-OSWindow *Sys_CreateWindow( const char *title, int width, int height ) {
+OSWindow *Sys_CreateWindow( const char *title, int width, int height )
+{
 	SDL_Window *sdlWindowPtr = SDL_CreateWindow(
 	        WINDOW_TITLE,
 	        SDL_WINDOWPOS_UNDEFINED,
 	        SDL_WINDOWPOS_UNDEFINED,
 	        WINDOW_WIDTH, WINDOW_HEIGHT,
 	        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
-	if ( sdlWindowPtr == NULL ) {
+	if ( sdlWindowPtr == NULL )
+	{
 		PrintError( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
 	}
 
 	SDL_GLContext sdlGLContext = SDL_GL_CreateContext( sdlWindowPtr );
-	if ( sdlGLContext == NULL ) {
+	if ( sdlGLContext == NULL )
+	{
 		SDL_DestroyWindow( sdlWindowPtr );
 		PrintWarn( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
 		return NULL;
 	}
 
-	OSWindow *window = calloc( 1, sizeof( OSWindow ) );
+	OSWindow *window     = calloc( 1, sizeof( OSWindow ) );
 	window->sdlWindowPtr = sdlWindowPtr;
 	window->sdlGLContext = sdlGLContext;
 
@@ -97,23 +106,28 @@ OSWindow *Sys_CreateWindow( const char *title, int width, int height ) {
 	return window;
 }
 
-void Sys_DestroyWindow( OSWindow *windowPtr ) {
-	if ( windowPtr == NULL ) {
+void Sys_DestroyWindow( OSWindow *windowPtr )
+{
+	if ( windowPtr == NULL )
+	{
 		return;
 	}
 
-	if ( windowPtr->sdlGLContext != NULL ) {
+	if ( windowPtr->sdlGLContext != NULL )
+	{
 		SDL_GL_DeleteContext( windowPtr->sdlGLContext );
 	}
 
-	if ( windowPtr->sdlWindowPtr != NULL ) {
+	if ( windowPtr->sdlWindowPtr != NULL )
+	{
 		SDL_DestroyWindow( windowPtr->sdlWindowPtr );
 	}
 
 	free( windowPtr );
 }
 
-void Sys_SwapWindow( OSWindow *windowPtr ) {
+void Sys_SwapWindow( OSWindow *windowPtr )
+{
 	SDL_GL_SwapWindow( windowPtr->sdlWindowPtr );
 }
 
@@ -122,26 +136,33 @@ void Sys_SwapWindow( OSWindow *windowPtr ) {
  ****************************************/
 
 static uint8_t buttonStates[ MAX_BUTTON_INPUTS ];
-bool Sys_GetButtonState( InputButton buttonIndex ) {
-	if ( buttonIndex >= MAX_BUTTON_INPUTS ) {
+bool           Sys_GetButtonState( InputButton buttonIndex )
+{
+	if ( buttonIndex >= MAX_BUTTON_INPUTS )
+	{
 		return false;
 	}
 	return ( ( buttonStates[ buttonIndex ] == INPUT_STATE_PRESSING ) || ( buttonStates[ buttonIndex ] == INPUT_STATE_DOWN ) );
 }
 static uint8_t keyStates[ MAX_KEY_INPUTS ];
-bool Sys_GetKeyState( int keyIndex ) {
-	if ( keyIndex >= MAX_KEY_INPUTS ) {
+bool           Sys_GetKeyState( int keyIndex )
+{
+	if ( keyIndex >= MAX_KEY_INPUTS )
+	{
 		return false;
 	}
 	return ( ( keyStates[ keyIndex ] == INPUT_STATE_PRESSING ) || ( keyStates[ keyIndex ] == INPUT_STATE_DOWN ) );
 }
 
-static int Sys_TranslateSDLKeyInput( int key ) {
-	if ( key < 128 ) {
+static int Sys_TranslateSDLKeyInput( int key )
+{
+	if ( key < 128 )
+	{
 		return key;
 	}
 
-	switch ( key ) {
+	switch ( key )
+	{
 		default:
 			return KEY_INVALID;
 		case SDLK_CAPSLOCK:
@@ -221,26 +242,33 @@ static int Sys_TranslateSDLKeyInput( int key ) {
 	}
 }
 
-static void Sys_HandleTextEvent( const char *key ) {
+static void Sys_HandleTextEvent( const char *key )
+{
 	g_engine.TextEvent( key );
 }
 
-static void Sys_HandleKeyboardEvent( int key, bool isDown ) {
+static void Sys_HandleKeyboardEvent( int key, bool isDown )
+{
 	key = Sys_TranslateSDLKeyInput( key );
-	if ( key == KEY_INVALID ) {
+	if ( key == KEY_INVALID )
+	{
 		PrintWarn( "Unhandled key, %d\n", key );
 		return;
 	}
 
 	/* figure out what state the key is in now */
 
-	if ( keyStates[ key ] == INPUT_STATE_DOWN && isDown ) {
+	if ( keyStates[ key ] == INPUT_STATE_DOWN && isDown )
+	{
 		keyStates[ key ] = INPUT_STATE_PRESSING;
-	} else if ( keyStates[ key ] == INPUT_STATE_DOWN && !isDown ) {
+	}
+	else if ( keyStates[ key ] == INPUT_STATE_DOWN && !isDown )
+	{
 		keyStates[ key ] = INPUT_STATE_UP;
 	}
 
-	switch( keyStates[ key ] ) {
+	switch ( keyStates[ key ] )
+	{
 		case INPUT_STATE_DOWN:
 			keyStates[ key ] = isDown ? INPUT_STATE_PRESSING : INPUT_STATE_UP;
 			break;
@@ -262,8 +290,9 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown ) {
  * TIMER MANAGEMENT
  ****************************************/
 
-static SDL_TimerID timer = 0;
-static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
+static SDL_TimerID  timer = 0;
+static unsigned int Sys_TimerCallback( unsigned int interval, void *param )
+{
 	SDL_UserEvent userEvent;
 	userEvent.type = SDL_USEREVENT;
 	userEvent.code = 0;
@@ -282,12 +311,17 @@ static unsigned int Sys_TimerCallback( unsigned int interval, void *param ) {
  ****************************************/
 
 /* wrapper for calloc */
-void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
+void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
+{
 	void *mem = calloc( num, size );
-	if ( mem == NULL ) {
-		if ( abortOnFail ) {
+	if ( mem == NULL )
+	{
+		if ( abortOnFail )
+		{
 			PrintError( "Failed to allocate %d bytes!\n", num * size );
-		} else {
+		}
+		else
+		{
 			PrintWarn( "Failed to allocate %d bytes!\n", num * size );
 		}
 	}
@@ -296,17 +330,23 @@ void *Sys_calloc( size_t num, size_t size, bool abortOnFail ) {
 }
 
 /* wrapper for malloc */
-void *Sys_malloc( size_t size, bool abortOnFail ) {
+void *Sys_malloc( size_t size, bool abortOnFail )
+{
 	return Sys_calloc( 1, size, abortOnFail );
 }
 
 /* wrapper for realloc */
-void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
+void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
+{
 	void *buf = realloc( ptr, newSize );
-	if ( buf == NULL ) {
-		if ( abortOnFail ) {
+	if ( buf == NULL )
+	{
+		if ( abortOnFail )
+		{
 			PrintError( "Failed to allocate %d bytes!\n", newSize );
-		} else {
+		}
+		else
+		{
 			PrintWarn( "Failed to allocate %d bytes!\n", newSize );
 		}
 	}
@@ -314,7 +354,8 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail ) {
 	return buf;
 }
 
-void Sys_free( void *ptr ) {
+void Sys_free( void *ptr )
+{
 	free( ptr );
 }
 
@@ -331,7 +372,8 @@ void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSi
  * Return whether or not we consider the platform
  * to have a keyboard.
  */
-static bool Sys_HasKeyboard( void ) {
+static bool Sys_HasKeyboard( void )
+{
 #if defined( __ANDROID__ )
 	return false;
 #else
@@ -339,47 +381,52 @@ static bool Sys_HasKeyboard( void ) {
 #endif
 }
 
-void Sys_Shutdown( void ) {
+void Sys_Shutdown( void )
+{
 	exit( EXIT_SUCCESS );
 }
 
 /**
  * Load in the DLL interface for the engine.
  */
-static void Sys_SetupEngineInterface( void ) {
+static void Sys_SetupEngineInterface( void )
+{
 	Print( "Setting up engine interface\n" );
 
 	dllEnginePtr = PlLoadLibrary( "./engine", true );
-	if ( dllEnginePtr == NULL ) {
+	if ( dllEnginePtr == NULL )
+	{
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
 	DllEngineInterface GetDllInterface = ( DllEngineInterface ) PlGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
-	if ( GetDllInterface == NULL ) {
+	if ( GetDllInterface == NULL )
+	{
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	static OSInterface systemInterface = {
+	static OSSystemInterface systemInterface = {
 	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
-			.Shutdown = Sys_Shutdown,
-			.CreateWindow = Sys_CreateWindow,
-			.GetCurrentDisplaySize = Sys_GetWindowSize,
-			.GetButtonState = Sys_GetButtonState,
-			.GetKeyState = Sys_GetKeyState,
+	        .Shutdown              = Sys_Shutdown,
+	        .CreateWindow          = Sys_CreateWindow,
+	        .GetCurrentDisplaySize = Sys_GetWindowSize,
+	        .GetButtonState        = Sys_GetButtonState,
+	        .GetKeyState           = Sys_GetKeyState,
 
-	        .GetPerformanceCounter = SDL_GetPerformanceCounter,
+	        .GetPerformanceCounter   = SDL_GetPerformanceCounter,
 	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
 
-	        .CAlloc = Sys_calloc,
-	        .MAlloc = Sys_malloc,
+	        .CAlloc  = Sys_calloc,
+	        .MAlloc  = Sys_malloc,
 	        .ReAlloc = Sys_realloc,
-	        .Free = Sys_free,
+	        .Free    = Sys_free,
 	};
 
 	/* initialize the interface */
 	g_engine = *GetDllInterface( ENGINE_INTERFACE_VERSION, &systemInterface );
-	if ( g_engine.version[ VERSION_MAJOR ] != ENGINE_INTERFACE_VERSION_MAJOR ) {
+	if ( g_engine.version[ VERSION_MAJOR ] != ENGINE_INTERFACE_VERSION_MAJOR )
+	{
 		PrintWarn( "Unexpected major interface version (%d vs %d)!\n", g_engine.version[ VERSION_MAJOR ], ENGINE_INTERFACE_VERSION );
 	}
 }
@@ -389,24 +436,27 @@ static void Sys_SetupEngineInterface( void ) {
 
 int launcherLog;
 
-int Sys_Init( int argc, char **argv ) {
+int Sys_Init( int argc, char **argv )
+{
 #if defined( _WIN32 )
 	/* stop buffering stdout! */
 	setvbuf( stdout, NULL, _IONBF, 0 );
 #endif
 
-	pl_calloc = Sys_WCAlloc;
-	pl_malloc = Sys_WMAlloc;
+	pl_calloc  = Sys_WCAlloc;
+	pl_malloc  = Sys_WMAlloc;
 	pl_realloc = Sys_WReAlloc;
-	pl_free = Sys_free;
+	pl_free    = Sys_free;
 
 	/* initialize the platform library */
 	PlInitialize( argc, argv );
 	PlInitializeSubSystems( PL_SUBSYSTEM_IO );
 
-	if ( PlHasCommandLineArgument( "-log" ) ) {
+	if ( PlHasCommandLineArgument( "-log" ) )
+	{
 		const char *path = PlGetCommandLineArgumentValue( "-log" );
-		if ( path == NULL ) {
+		if ( path == NULL )
+		{
 			path = "log.txt";
 		}
 
@@ -414,11 +464,12 @@ int Sys_Init( int argc, char **argv ) {
 	}
 
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
-    PlLogMessage( launcherLog, "Log output initialized!\n" );
+	PlLogMessage( launcherLog, "Log output initialized!\n" );
 
 	CommonLibrary_Initialize();
 
-	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 ) {
+	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
+	{
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
 	}
 
@@ -436,21 +487,25 @@ int Sys_Init( int argc, char **argv ) {
 
 	Sys_SetupEngineInterface();
 
-	if ( !g_engine.Initialize( argc, argv ) ) {
+	if ( !g_engine.Initialize( argc, argv ) )
+	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
 
 	SDL_StartTextInput();
 
-	while ( g_engine.IsRunning() ) {
+	while ( g_engine.IsRunning() )
+	{
 		SDL_Event event;
-		while ( SDL_PollEvent( &event ) ) {
-			switch ( event.type ) {
+		while ( SDL_PollEvent( &event ) )
+		{
+			switch ( event.type )
+			{
 				case SDL_USEREVENT:
 					g_engine.Tick();
 					break;
 				case SDL_TEXTINPUT:
-                    Sys_HandleTextEvent( event.text.text );
+					Sys_HandleTextEvent( event.text.text );
 					break;
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
@@ -471,6 +526,7 @@ int Sys_Init( int argc, char **argv ) {
 	return EXIT_SUCCESS;
 }
 
-int main( int argc, char **argv ) {
+int main( int argc, char **argv )
+{
 	return Sys_Init( argc, argv );
 }

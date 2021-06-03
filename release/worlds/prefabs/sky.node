@@ -1,0 +1,96 @@
+object mesh {
+	string identifier "skyBase"
+	
+	array string materials {
+		"materials/sky/cloudlayer00.node"
+	}
+	
+	array object vertices {
+		{
+			object position {
+				float x 10.0
+				float y 100.0
+				float z 100.0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y 200.0
+				float z 200.0
+			}
+			object colour {
+				integer a 0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y 100.0
+				float z -100.0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y 200.0
+				float z -200.0
+			}
+			object colour {
+				integer a 0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y -100.0
+				float z -100.0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y -200.0
+				float z -200.0
+			}
+			object colour {
+				integer a 0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y -100.0
+				float z 100.0
+			}
+		}
+		{
+			object position {
+				float x 10.0
+				float y -200.0
+				float z 200.0
+			}
+			object colour {
+				integer a 0
+			}
+		}
+	}
+	
+	array object faces
+	{
+		{
+			integer materialIndex 0
+			object materialOffset {
+				float x 0.0
+				float y 0.0
+			}
+			object materialScale {
+				float x 1.0
+				float y 1.0
+			}
+			array integer vertices {
+				
+			}
+		}
+	}
+}

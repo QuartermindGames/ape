@@ -6,9 +6,11 @@
 #include "yin.h"
 #include "script.h"
 
-ScriptVariableType SCR_GetVariableTypeByTag( const char *tag ) {
-	typedef struct VarTag {
-		const char *tag;
+ScriptVariableType SCR_GetVariableTypeByTag( const char *tag )
+{
+	typedef struct VarTag
+	{
+		const char *       tag;
 		ScriptVariableType type;
 	} VarTag;
 	static VarTag varTags[] = {
@@ -25,8 +27,10 @@ ScriptVariableType SCR_GetVariableTypeByTag( const char *tag ) {
 	        { "builtin", SCRIPT_VAR_BUILTIN },
 	};
 
-	for ( int i = 0; i < plArrayElements( varTags ); ++i ) {
-		if ( strcmp( tag, varTags[ i ].tag ) == 0 ) {
+	for ( int i = 0; i < plArrayElements( varTags ); ++i )
+	{
+		if ( strcmp( tag, varTags[ i ].tag ) == 0 )
+		{
 			return varTags[ i ].type;
 		}
 	}

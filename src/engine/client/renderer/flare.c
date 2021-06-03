@@ -35,31 +35,34 @@ static const char *shinePaths[] = {
 #define MAX_SHINE_TEXTURES plArrayElements( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
-void Flare_Initialize( void ) {
-	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i ) {
+void Flare_Initialize( void )
+{
+	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
+	{
 		flareTextures[ i ] = Gfx_LoadTexture( flarePaths[ i ] );
 	}
-	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i ) {
+	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
+	{
 		shineTextures[ i ] = Gfx_LoadTexture( shinePaths[ i ] );
 	}
 }
 
-void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
+void Flare_Render( PLGTexture *texture, float diameter, float distance )
+{
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL ) {
+	if ( program == NULL )
+	{
 		return;
 	}
 
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
-
-
 }
 
-void Flare_RenderFlares( const GfxCamera *camera ) {
+void Flare_RenderFlares( const GfxCamera *camera )
+{
 	RS_GetShaderProgram( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
-
 
 
 	PlgSetBlendMode( PLG_BLEND_DISABLE );

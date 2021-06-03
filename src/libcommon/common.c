@@ -10,9 +10,10 @@
 int logLevelPrint;
 int logLevelWarn;
 
-void CommonLibrary_Initialize( void ) {
-    logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
-	logLevelWarn = PlAddLogLevel( "common/warning", PL_COLOUR_ORANGE, true );
+void CommonLibrary_Initialize( void )
+{
+	logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
+	logLevelWarn  = PlAddLogLevel( "common/warning", PL_COLOUR_ORANGE, true );
 
 	Message( "Common Library initialized\n" );
 }

@@ -11,9 +11,10 @@ static BitmapFont *defaultFont;
 
 static PLGMesh *renderMesh;
 
-static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character ) {
-	int row = ( character - font->start ) / (font->w / font->cw);
-	int col = ( character - font->start ) % (font->w / font->cw);
+static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
+{
+	int row = ( character - font->start ) / ( font->w / font->cw );
+	int col = ( character - font->start ) % ( font->w / font->cw );
 
 	int cX = col * font->cw;
 	int cY = row * font->ch;
@@ -36,8 +37,10 @@ static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, f
 /**
  * Draw a single bitmap character at the specified coordinates.
  */
-void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, PLColour colour, char character ) {
-	if ( scale <= 0 ) {
+void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, PLColour colour, char character )
+{
+	if ( scale <= 0 )
+	{
 		return;
 	}
 
@@ -46,7 +49,8 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	float dw = ( float ) w;
 	float dh = ( float ) h;
-	if ( x > dw || y > dh ) {
+	if ( x > dw || y > dh )
+	{
 		return;
 	}
 
@@ -66,18 +70,22 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 	PlPopMatrix();
 }
 
-void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow ) {
-	if ( scale == 0.0f ) {
+void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
+{
+	if ( scale == 0.0f )
+	{
 		return;
 	}
 
 	size_t numChars = strlen( msg );
-	if ( numChars == 0 ) {
+	if ( numChars == 0 )
+	{
 		return;
 	}
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL ) {
+	if ( program == NULL )
+	{
 		return;
 	}
 
@@ -90,15 +98,20 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 
 	float n_x;
 	float n_y;
-	if ( shadow ) {
+	if ( shadow )
+	{
 		n_x = x + 1;
 		n_y = y + 1;
-		for ( size_t i = 0; i < numChars; ++i ) {
+		for ( size_t i = 0; i < numChars; ++i )
+		{
 			Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, PL_COLOUR_BLACK, ( uint8_t ) msg[ i ] );
-			if ( msg[ i ] == '\n' ) {
+			if ( msg[ i ] == '\n' )
+			{
 				n_y += ( font->ch * scale );
 				n_x = x;
-			} else {
+			}
+			else
+			{
 				n_x += ( font->cw * scale );
 			}
 		}
@@ -110,12 +123,16 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 
 	n_x = x;
 	n_y = y;
-	for ( size_t i = 0; i < numChars; ++i ) {
+	for ( size_t i = 0; i < numChars; ++i )
+	{
 		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
-		if ( msg[ i ] == '\n' ) {
+		if ( msg[ i ] == '\n' )
+		{
 			n_y += ( font->ch * scale );
 			n_x = x;
-		} else {
+		}
+		else
+		{
 			n_x += ( font->cw * scale );
 		}
 	}
@@ -125,48 +142,54 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 	PlPopMatrix();
 }
 
-void Font_Initialize( void ) {
+void Font_Initialize( void )
+{
 	renderMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 512, 256 );
-	if ( renderMesh == NULL ) {
+	if ( renderMesh == NULL )
+	{
 		PrintError( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
 	}
 
 	defaultFont = Font_LoadBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
 }
 
-void Font_Shutdown( void ) {
+void Font_Shutdown( void )
+{
 	Font_Destroy( defaultFont );
 	defaultFont = NULL;
 }
 
-BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end ) {
-    BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
-    font->material = RM_CacheMaterial( materialPath, CACHE_GROUP_STATIC, false );
-	if ( font->material == NULL ) {
+BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
+{
+	BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
+	font->material   = RM_CacheMaterial( materialPath, CACHE_GROUP_STATIC, false );
+	if ( font->material == NULL )
+	{
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );
 	}
 
-	font->w = w;
-	font->h = h;
-	font->cw = cw;
-	font->ch = ch;
+	font->w     = w;
+	font->h     = h;
+	font->cw    = cw;
+	font->ch    = ch;
 	font->start = start;
-	font->end = end;
+	font->end   = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
 	return font;
 }
 
-void Font_Destroy( BitmapFont *font ) {
-	if ( font == NULL ) {
+void Font_Destroy( BitmapFont *font )
+{
+	if ( font == NULL )
 		return;
-	}
 
-	RM_DestroyMaterial( font->material, false );
-	free( font );
+	RM_ReleaseMaterial( font->material );
+	globalSystem.Free( font );
 }
 
-BitmapFont *Font_GetDefault( void ) {
+BitmapFont *Font_GetDefault( void )
+{
 	return defaultFont;
 }

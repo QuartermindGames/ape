@@ -5,11 +5,12 @@
 
 #pragma once
 
-#define MAX_MATERIAL_PASSES 4
+#define MAX_MATERIAL_PASSES    4
 #define MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-enum {
+enum
+{
 	MATERIAL_BUILTIN_TIME,
 
 	MAX_MATERIAL_BUILTINS
@@ -24,8 +25,8 @@ PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int 
 
 /* i/o */
 Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback );
-void RM_DestroyMaterial( Material *material, bool force );
-void RM_ClearMaterials( CacheGroup group );
+void      RM_ReleaseMaterial( Material *material );
+void      RM_ClearMaterials( CacheGroup group );
 
 /* drawing */
 void RM_DrawMesh( Material *material, PLGMesh *mesh );

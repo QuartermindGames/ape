@@ -30,45 +30,52 @@ The incoming brush is NOT freed.
 The incoming face is NOT left referenced.
 ==============
 */
-void CSG_SplitBrushByFace( Brush *in, face_t *f, Brush **front, Brush **back ) {
-	Brush *b;
+void CSG_SplitBrushByFace( Brush *in, face_t *f, Brush **front, Brush **back )
+{
+	Brush * b;
 	face_t *nf;
-	vec3_t	temp;
+	vec3_t  temp;
 
-	b = in->Clone();
+	b  = in->Clone();
 	nf = Face_Clone( f );
 
-	nf->texdef = b->brush_faces->texdef;
-	nf->next = b->brush_faces;
+	nf->texdef     = b->brush_faces->texdef;
+	nf->next       = b->brush_faces;
 	b->brush_faces = nf;
 
 	b->Build();
 	b->RemoveEmptyFaces();
-	if( !b->brush_faces ) {	// completely clipped away
+	if ( !b->brush_faces )
+	{// completely clipped away
 		delete b;
 		*back = NULL;
-	} else {
+	}
+	else
+	{
 		Entity_LinkBrush( in->owner, b );
 		*back = b;
 	}
 
-	b = in->Clone();
+	b  = in->Clone();
 	nf = Face_Clone( f );
 	// swap the plane winding
 	VectorCopy( nf->planepts[ 0 ], temp );
 	VectorCopy( nf->planepts[ 1 ], nf->planepts[ 0 ] );
 	VectorCopy( temp, nf->planepts[ 1 ] );
 
-	nf->texdef = b->brush_faces->texdef;
-	nf->next = b->brush_faces;
+	nf->texdef     = b->brush_faces->texdef;
+	nf->next       = b->brush_faces;
 	b->brush_faces = nf;
 
 	b->Build();
 	b->RemoveEmptyFaces();
-	if( !b->brush_faces ) {	// completely clipped away
+	if ( !b->brush_faces )
+	{// completely clipped away
 		delete b;
 		*front = NULL;
-	} else {
+	}
+	else
+	{
 		Entity_LinkBrush( in->owner, b );
 		*front = b;
 	}
@@ -79,28 +86,31 @@ void CSG_SplitBrushByFace( Brush *in, face_t *f, Brush **front, Brush **back ) {
 CSG_MakeHollow
 =============
 */
-void CSG_MakeHollow( void ) {
-	Brush *b, *front, *back, *next;
+void CSG_MakeHollow( void )
+{
+	Brush * b, *front, *back, *next;
 	face_t *f;
-	face_t		split;
-	vec3_t		move;
-	int			i;
+	face_t  split;
+	vec3_t  move;
+	int     i;
 
-	for( b = selected_brushes.next; b != &selected_brushes; b = next ) {
+	for ( b = selected_brushes.next; b != &selected_brushes; b = next )
+	{
 		next = b->next;
-		for( f = b->brush_faces; f; f = f->next ) {
+		for ( f = b->brush_faces; f; f = f->next )
+		{
 			split = *f;
 			VectorScale( f->plane.normal, g_qeglobals.d_gridsize, move );
-			for( i = 0; i < 3; i++ )
+			for ( i = 0; i < 3; i++ )
 				VectorSubtract( split.planepts[ i ], move, split.planepts[ i ] );
 
 			CSG_SplitBrushByFace( b, &split, &front, &back );
-			if( back )
-				delete( back );
-			if( front )
+			if ( back )
+				delete ( back );
+			if ( front )
 				front->AddToList( &selected_brushes );
 		}
-		delete( b );
+		delete ( b );
 	}
 	Sys_UpdateWindows( W_ALL );
 }
@@ -111,41 +121,44 @@ void CSG_MakeHollow( void ) {
 CSG_Subtract
 =============
 */
-void CSG_Subtract( void ) {
-	Brush *b, *s, *frag, *front, *back, *next, *snext;
+void CSG_Subtract( void )
+{
+	Brush * b, *s, *frag, *front, *back, *next, *snext;
 	face_t *f;
-	int			i;
+	int     i;
 
 	Sys_Printf( "Subtracting...\n" );
 
-	for( b = selected_brushes.next; b != &selected_brushes; b = next ) {
+	for ( b = selected_brushes.next; b != &selected_brushes; b = next )
+	{
 		next = b->next;
 
-		if( b->owner->eclass->fixedsize )
-			continue;	// can't use texture from a fixed entity, so don't subtract
+		if ( b->owner->eclass->fixedsize )
+			continue;// can't use texture from a fixed entity, so don't subtract
 
-		for( s = active_brushes.next; s != &active_brushes; s = snext ) {
+		for ( s = active_brushes.next; s != &active_brushes; s = snext )
+		{
 			snext = s->next;
-			if( s->owner->eclass->fixedsize )
+			if ( s->owner->eclass->fixedsize )
 				continue;
 
-			for( i = 0; i < 3; i++ )
-				if( b->mins[ i ] >= s->maxs[ i ] - ON_EPSILON
-					|| b->maxs[ i ] <= s->mins[ i ] + ON_EPSILON )
+			for ( i = 0; i < 3; i++ )
+				if ( b->mins[ i ] >= s->maxs[ i ] - ON_EPSILON || b->maxs[ i ] <= s->mins[ i ] + ON_EPSILON )
 					break;
-			if( i != 3 )
-				continue;	// definately don't touch
+			if ( i != 3 )
+				continue;// definately don't touch
 
 			frag = s;
-			for( f = b->brush_faces; f && frag; f = f->next ) {
+			for ( f = b->brush_faces; f && frag; f = f->next )
+			{
 				CSG_SplitBrushByFace( frag, f, &front, &back );
-				delete( frag );
+				delete ( frag );
 				frag = back;
-				if( front )
+				if ( front )
 					front->AddToList( &active_brushes );
 			}
-			if( frag )
-				delete( frag );
+			if ( frag )
+				delete ( frag );
 		}
 	}
 

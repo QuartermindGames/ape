@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -17,29 +18,43 @@
 
 #define WORLD_VERSION 20210409
 
-#define WORLD_PROP_TAG_LENGTH 64
+#define WORLD_PROP_TAG_LENGTH   64
 #define WORLD_PROP_VALUE_LENGTH 256
 
-enum WorldFaceFlag {
+enum WorldFaceFlag
+{
 	PL_BITFLAG( WORLD_FACE_FLAG_PORTAL, 0U ), /* reflect portal */
 	PL_BITFLAG( WORLD_FACE_FLAG_MIRROR, 1U ), /* reflect back */
 	PL_BITFLAG( WORLD_FACE_FLAG_SKIP, 2U ),   /* skip face */
 };
 
+typedef enum WorldObjectCollisionType
+{
+	WORLD_OBJECT_COLLISION_POLY,
+	WORLD_OBJECT_COLLISION_SPHERE,
+	WORLD_OBJECT_COLLISION_AABB,
+} WorldObjectCollisionType;
+
 #define WORLD_FACE_MAX_SIDES 32
 
-typedef struct WorldFace WorldFace;
+typedef struct WorldFace   WorldFace;
+typedef struct WorldMesh   WorldMesh;
+typedef struct WorldObject WorldObject;
 typedef struct WorldSector WorldSector;
-typedef struct World World;
+typedef struct World       World;
 
-PLVector3 W_GetFaceNormal( const WorldFace *face );
-PLVector3 W_GetFaceOrigin( const WorldFace *face );
-uint8_t W_GetFaceFlags( const WorldFace *face );
+World *W_LoadWorld( const char *path );
+void   W_DestroyWorld( World *world );
+
+WorldMesh *W_LoadWorldMesh( const char *path );
+void       W_ReleaseWorldMesh( WorldMesh *worldMesh );
+
+PLVector3              W_GetFaceNormal( const WorldFace *face );
+PLVector3              W_GetFaceOrigin( const WorldFace *face );
+uint8_t                W_GetFaceFlags( const WorldFace *face );
 const PLCollisionAABB *W_GetFaceBounds( const WorldFace *face );
 
-WorldFace *W_GetFacesForSector( uint32_t sectorId, uint32_t *numFaces );
-
-const char *W_GetGlobalPropertyValue( const World *world, const char *label );
-const char *W_GetSectorPropertyValue( const World *world, unsigned int sectorId, const char *label );
+WorldMesh *W_GetMeshForSector( WorldSector *sector );
+WorldFace *W_GetFacesForSector( WorldSector *sector, uint32_t *numFaces );
 
 void W_Draw( World *world, PLGCamera *camera );

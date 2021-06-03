@@ -16,11 +16,11 @@
 	Simple command-line test player for micromod using SDL.
 */
 
-#define SAMPLING_FREQ  48000  /* 48khz. */
-#define REVERB_BUF_LEN 4800   /* 50ms. */
-#define OVERSAMPLE     2      /* 2x oversampling. */
-#define NUM_CHANNELS   2      /* Stereo. */
-#define BUFFER_SAMPLES 16384  /* 64k buffer. */
+#define SAMPLING_FREQ  48000 /* 48khz. */
+#define REVERB_BUF_LEN 4800  /* 50ms. */
+#define OVERSAMPLE     2     /* 2x oversampling. */
+#define NUM_CHANNELS   2     /* Stereo. */
+#define BUFFER_SAMPLES 16384 /* 64k buffer. */
 
 static SDL_sem *semaphore;
 static long samples_remaining;

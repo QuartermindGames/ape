@@ -7,36 +7,44 @@
 #include "game_interface.h"
 #include "actor.h"
 #include "map.h"
-#include "renderer/renderer.h"
+
+#include "client/renderer/renderer.h"
 
 /* game specific implementation goes here! */
 
-typedef enum InputTarget {
+typedef enum InputTarget
+{
 	INPUT_TARGET_MENU, /* menu mode */
 	INPUT_TARGET_GAME, /* game mode */
 } InputTarget;
 static InputTarget inputTarget = INPUT_TARGET_MENU;
-static MenuState menuState = MENU_STATE_START;
+static MenuState   menuState   = MENU_STATE_START;
 
-typedef enum GameState {
+typedef enum GameState
+{
 	GAME_STATE_PAUSED,
 	GAME_STATE_ACTIVE,
 } GameState;
 GameState gameState = GAME_STATE_PAUSED;
 
-MenuState Game_GetMenuState( void ) {
+MenuState Game_GetMenuState( void )
+{
 	return menuState;
 }
 
 static Actor *playerActor = NULL;
 
-Actor *Game_GetPlayer( void ) {
+Actor *Game_GetPlayer( void )
+{
 	return playerActor;
 }
 
-void Game_Tick( void ) {
-	if ( gameState == GAME_STATE_PAUSED ) {
-		if( globalSystem.GetKeyState( 'z' ) ) {
+void Game_Tick( void )
+{
+	if ( gameState == GAME_STATE_PAUSED )
+	{
+		if ( globalSystem.GetKeyState( 'z' ) )
+		{
 			/* if any key was hit here, just switch to the game */
 			gameState = GAME_STATE_ACTIVE;
 		}
@@ -45,42 +53,51 @@ void Game_Tick( void ) {
 	}
 
 	static unsigned int spawnDelay = 0;
-	if( globalSystem.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() ) {
+	if ( globalSystem.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() )
+	{
 		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 16, 0 ), 0.0f );
 		spawnDelay = Engine_GetNumTicks() + 50;
 	}
 }
 
-void Game_Display( void ) {
-	if ( playerActor == NULL ) {
+void Game_Display( void )
+{
+	if ( playerActor == NULL )
 		return;
-	}
 
 	GfxCamera *playerCamera = Player_GetCamera( playerActor );
-	if ( playerCamera == NULL ) {
+	if ( playerCamera == NULL )
 		return;
-	}
 
 	Gfx_DrawPerspective( playerCamera );
 }
 
-void Game_SpawnWorld( const char *worldPath ) {
-    Map_Load( worldPath ); /* load the map from the global wad */
+void Game_SpawnWorld( const char *worldPath )
+{
+	if ( !PlFileExists( worldPath ) )
+	{
+		PrintWarn( "World \"%s\" does not exist!\n", worldPath );
+		return;
+	}
 
-    Act_SpawnActors();
+	Map_Load( worldPath ); /* load the map from the global wad */
 
-    /* spawn the player in */
-    playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 32, 0 ), 0.0f );
+	Act_SpawnActors( worldPath );
 
-    gameState = GAME_STATE_ACTIVE;
-    menuState = MENU_STATE_HUD;
-    inputTarget = INPUT_TARGET_GAME;
+	/* spawn the player in */
+	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 32, 0 ), 0.0f );
 
-    Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
+	gameState   = GAME_STATE_ACTIVE;
+	menuState   = MENU_STATE_HUD;
+	inputTarget = INPUT_TARGET_GAME;
+
+	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
-static void Cmd_SpawnWorld( unsigned int argc, char **argv ) {
-	if ( argc <= 1 ) {
+static void Cmd_SpawnWorld( unsigned int argc, char **argv )
+{
+	if ( argc <= 1 )
+	{
 		PrintWarn( "Invalid argument, please specify world!\n" );
 		return;
 	}
@@ -90,23 +107,23 @@ static void Cmd_SpawnWorld( unsigned int argc, char **argv ) {
 
 static PLLibrary *dllGamePtr = NULL;
 
-void Game_Initialize( void ) {
+void Game_Initialize( void )
+{
 	Print( "Initializing game\n" );
 
 	dllGamePtr = PlLoadLibrary( "./game", true );
-	if ( dllGamePtr == NULL ) {
+	if ( dllGamePtr == NULL )
 		PrintError( "Failed to load game module, aborting!\nPL: %s\n", PlGetError() );
-	}
 
 	DllGameInterface GetDllInterface = ( DllGameInterface ) PlGetLibraryProcedure( dllGamePtr, INTERFACE_PROCEDURE );
-	if ( GetDllInterface == NULL ) {
+	if ( GetDllInterface == NULL )
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", PlGetError() );
-	}
 
 	PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 
 	/* initialize the interface */
 }
 
-void Game_Shutdown( void ) {
+void Game_Shutdown( void )
+{
 }

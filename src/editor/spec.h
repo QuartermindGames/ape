@@ -24,7 +24,6 @@
  * characters, but only one. Every other characters match themself.
  * To respect the Windows behavior, *.* matches everything.
  */
-int match_spec(const char* spec, const char* text);
+int match_spec( const char *spec, const char *text );
 
 #endif /* SPEC_H_ */
-

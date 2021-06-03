@@ -7,7 +7,8 @@
 
 #include "actor.h"
 
-typedef struct ALight {
-	PLColour colour;
+typedef struct ALight
+{
+	PLColour     colour;
 	PLGLightType type;
 } ALight;

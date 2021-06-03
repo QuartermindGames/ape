@@ -13,7 +13,8 @@
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
-typedef enum InputButton {
+typedef enum InputButton
+{
 	INPUT_INVALID,
 
 	INPUT_UP,
@@ -39,12 +40,13 @@ typedef enum InputButton {
 	MAX_BUTTON_INPUTS
 } InputButton;
 
-typedef enum InputKey {
+typedef enum InputKey
+{
 	KEY_INVALID = -1,
 
 	KEY_BACKSPACE = 8,
-	KEY_TAB = 9,
-	KEY_ENTER = 13,
+	KEY_TAB       = 9,
+	KEY_ENTER     = 13,
 
 	KEY_CAPSLOCK = 128,
 	KEY_F1,
@@ -85,14 +87,16 @@ typedef enum InputKey {
 	MAX_KEY_INPUTS
 } InputKey;
 
-enum {
+enum
+{
 	INPUT_STATE_NONE,     /* key has no state */
 	INPUT_STATE_DOWN,     /* key has been pressed */
 	INPUT_STATE_PRESSING, /* key is still down */
 	INPUT_STATE_UP,       /* key is up */
 };
 
-typedef enum SysMessage {
+typedef enum SysMessage
+{
 	SYS_MESSAGE_ERROR,
 	SYS_MESSAGE_WARNING,
 	SYS_MESSAGE_INFO,
@@ -102,7 +106,7 @@ typedef struct OSWindow OSWindow;
 
 #include "SharedInterfaces.h"
 
-#define TICK_RATE (1000 / 60) /* ms */
+#define TICK_RATE ( 1000 / 60 ) /* ms */
 
 #define u_unused( a ) ( void ) ( ( a ) )
 

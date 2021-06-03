@@ -16,18 +16,20 @@ static bool editorIsInitialized = false;
 static unsigned int editorGridSize = 10;
 
 static unsigned int numEditorCameras = 4;
-static unsigned int curEditorCamera = 0;
+static unsigned int curEditorCamera  = 0;
 
 static GfxCamera *editorCameras[ MAX_VIEW_PERSPECTIVES ];
-static OSWindow *editorViewports[ MAX_VIEW_PERSPECTIVES ];
+static OSWindow * editorViewports[ MAX_VIEW_PERSPECTIVES ];
 
-char texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
-static void Editor_MountTexturePackageCallback( const char *path, void *userData ) {
+char        texturePackages[ PL_SYSTEM_MAX_PATH ][ 256 ];
+static void Editor_MountTexturePackageCallback( const char *path, void *userData )
+{
 	u_unused( userData );
 	PlMountLocation( path );
 }
 
-void Editor_Initialize( void ) {
+void Editor_Initialize( void )
+{
 	Print( "Initializing Editor...\n" );
 
 	Print( "Mounting textures\n" );
@@ -36,64 +38,96 @@ void Editor_Initialize( void ) {
 	Map_ClearData();
 
 	const char *mapPath = PlGetCommandLineArgumentValue( "-map" );
-	if ( mapPath != NULL ) {
+	if ( mapPath != NULL )
+	{
 		Map_Load( mapPath );
 	}
 
 	editorIsInitialized = true;
 }
 
-static void Editor_Input( void ) {
-	static const unsigned int maxDelay = 10;
-	static unsigned int inputDelay = 0;
+static void Editor_Input( void )
+{
+	static const unsigned int maxDelay   = 10;
+	static unsigned int       inputDelay = 0;
 
 	/* handle camera input */
 	GfxCamera *curCamera = editorCameras[ curEditorCamera ];
-	if ( curCamera != NULL ) {
-		if ( globalSystem.GetButtonState( INPUT_UP ) ) {
-			if ( curCamera->perspective == VIEW_PERSPECTIVE_EYE ) {
+	if ( curCamera != NULL )
+	{
+		if ( globalSystem.GetButtonState( INPUT_UP ) )
+		{
+			if ( curCamera->perspective == VIEW_PERSPECTIVE_EYE )
+			{
 				curCamera->internalPtr->position.x += 1.0f;
-			} else {
+			}
+			else
+			{
 				curCamera->internalPtr->position.y += 1.0f;
 			}
-		} else if ( globalSystem.GetButtonState( INPUT_DOWN ) ) {
-
-		} else if ( globalSystem.GetButtonState( INPUT_LEFT ) ) {
-
-		} else if ( globalSystem.GetButtonState( INPUT_RIGHT ) ) {
-
+		}
+		else if ( globalSystem.GetButtonState( INPUT_DOWN ) )
+		{
+		}
+		else if ( globalSystem.GetButtonState( INPUT_LEFT ) )
+		{
+		}
+		else if ( globalSystem.GetButtonState( INPUT_RIGHT ) )
+		{
 		}
 	}
 
-	if ( globalSystem.GetKeyState( '1' ) ) {
+	if ( globalSystem.GetKeyState( '1' ) )
+	{
 		editorGridSize = 1;
-	} else if ( globalSystem.GetKeyState( '2' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '2' ) )
+	{
 		editorGridSize = 2;
-	} else if ( globalSystem.GetKeyState( '3' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '3' ) )
+	{
 		editorGridSize = 3;
-	} else if ( globalSystem.GetKeyState( '4' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '4' ) )
+	{
 		editorGridSize = 4;
-	} else if ( globalSystem.GetKeyState( '5' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '5' ) )
+	{
 		editorGridSize = 5;
-	} else if ( globalSystem.GetKeyState( '6' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '6' ) )
+	{
 		editorGridSize = 6;
-	} else if ( globalSystem.GetKeyState( '7' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '7' ) )
+	{
 		editorGridSize = 7;
-	} else if ( globalSystem.GetKeyState( '8' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '8' ) )
+	{
 		editorGridSize = 8;
-	} else if ( globalSystem.GetKeyState( '9' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '9' ) )
+	{
 		editorGridSize = 9;
-	} else if ( globalSystem.GetKeyState( '0' ) ) {
+	}
+	else if ( globalSystem.GetKeyState( '0' ) )
+	{
 		editorGridSize = 10;
 	}
 
-	if ( globalSystem.GetButtonState( INPUT_LEFT_STICK ) ) { /* swap between the cameras */
-		if ( inputDelay >= Engine_GetNumTicks() ) {
+	if ( globalSystem.GetButtonState( INPUT_LEFT_STICK ) )
+	{ /* swap between the cameras */
+		if ( inputDelay >= Engine_GetNumTicks() )
+		{
 			return;
 		}
 
 		curEditorCamera++;
-		if ( curEditorCamera >= 4 ) {
+		if ( curEditorCamera >= 4 )
+		{
 			curEditorCamera = 0;
 		}
 
@@ -103,22 +137,28 @@ static void Editor_Input( void ) {
 	}
 }
 
-void Editor_Tick( void ) {
-	if ( !editorIsInitialized ) {
+void Editor_Tick( void )
+{
+	if ( !editorIsInitialized )
+	{
 		return;
 	}
 
 	Editor_Input();
 }
 
-void Editor_Display( void ) {
-	if ( !editorIsInitialized ) {
+void Editor_Display( void )
+{
+	if ( !editorIsInitialized )
+	{
 		return;
 	}
 
-	for ( unsigned int i = 0; i < MAX_VIEW_PERSPECTIVES; ++i ) {
+	for ( unsigned int i = 0; i < MAX_VIEW_PERSPECTIVES; ++i )
+	{
 		GfxCamera *curCamera = editorCameras[ i ];
-		if ( curCamera == NULL ) {
+		if ( curCamera == NULL )
+		{
 			PrintError( "Invalid camera!\n" );
 		}
 
@@ -128,7 +168,8 @@ void Editor_Display( void ) {
 	}
 }
 
-void Editor_Shutdown( void ) {
+void Editor_Shutdown( void )
+{
 	Act_Shutdown();
 	R_Shutdown();
 }

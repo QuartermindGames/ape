@@ -6,13 +6,15 @@
 #pragma once
 
 /* todo: introduce container around this */
-typedef struct GfxAnimationFrame {
+typedef struct GfxAnimationFrame
+{
 	unsigned int leftOffset;
 	unsigned int topOffset;
-	PLGTexture *texture;
+	PLGTexture * texture;
 } GfxAnimationFrame;
 
-typedef enum ViewPerspective {
+typedef enum ViewPerspective
+{
 	VIEW_PERSPECTIVE_EYE,
 
 	/* editor modes */
@@ -23,15 +25,17 @@ typedef enum ViewPerspective {
 	MAX_VIEW_PERSPECTIVES
 } ViewPerspective;
 
-typedef struct GfxCamera {
-	PLGCamera *internalPtr; /* the camera used for this viewport */
-	ViewPerspective perspective;
-	struct Actor *parentActor;
+typedef struct GfxCamera
+{
+	PLGCamera *              internalPtr; /* the camera used for this viewport */
+	ViewPerspective          perspective;
+	struct Actor *           parentActor;
 	struct PLLinkedListNode *node; /* node representing this object in the linked list */
 } GfxCamera;
 
-typedef struct RendererStats {
-	PLVector3 cameraPos;
+typedef struct RendererStats
+{
+	PLVector3    cameraPos;
 	unsigned int numBatches;
 	unsigned int numFacesDrawn;
 } RendererStats;
@@ -39,7 +43,8 @@ extern RendererStats g_gfxPerfStats;
 
 #define GFX_PROGRAM_NAME_LENGTH 64
 
-enum {
+enum
+{
 	GFX_SHADER_DEFAULT,
 	GFX_SHADER_LIGHTING_PASS,
 	GFX_SHADER_DEFAULT_VERTEX,

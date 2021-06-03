@@ -22,34 +22,33 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "qe3.h"
 
-#define	PAGEFLIPS	2
+#define PAGEFLIPS 2
 
 typedef struct
 {
-    int		width, height;
+	int width, height;
 
-    qboolean	timing;
+	qboolean timing;
 
-    vec3_t	origin;			// at center of window
-    float	scale;
+	vec3_t origin;// at center of window
+	float  scale;
 } z_t;
 
-static z_t		z;
+static z_t z;
 
 /*
 ============
 Z_Init
 ============
 */
-void Z_Init (void)
+void Z_Init( void )
 {
-	z.origin[0] = 0;
-	z.origin[1] = 20;
-	z.origin[2] = 46;
+	z.origin[ 0 ] = 0;
+	z.origin[ 1 ] = 20;
+	z.origin[ 2 ] = 46;
 
 	z.scale = 1;
 }
-
 
 
 /*
@@ -60,16 +59,16 @@ void Z_Init (void)
 ============================================================================
 */
 
-static	int	cursorx, cursory;
+static int cursorx, cursory;
 
 /*
 ==============
 Z_MouseDown
 ==============
 */
-void Z_MouseDown (int x, int y, int buttons)
+void Z_MouseDown( int x, int y, int buttons )
 {
-#if 0 // TODO
+#if 0// TODO
 	vec3_t	org, dir, vup, vright;
 	brush_t	*b;
 
@@ -106,7 +105,7 @@ void Z_MouseDown (int x, int y, int buttons)
 		return;
 	}
 
-#if 0 // TODO
+#if 0// TODO
 	// control mbutton = move camera
 	if ((buttons == (MK_CONTROL|MK_MBUTTON) ) || (buttons == (MK_CONTROL|MK_LBUTTON)))
 	{
@@ -122,9 +121,9 @@ void Z_MouseDown (int x, int y, int buttons)
 Z_MouseUp
 ==============
 */
-void Z_MouseUp (int x, int y, int buttons)
+void Z_MouseUp( int x, int y, int buttons )
 {
-	Drag_MouseUp ();
+	Drag_MouseUp();
 }
 
 /*
@@ -132,9 +131,9 @@ void Z_MouseUp (int x, int y, int buttons)
 Z_MouseMoved
 ==============
 */
-void Z_MouseMoved (int x, int y, int buttons)
+void Z_MouseMoved( int x, int y, int buttons )
 {
-#if 0 // TODO
+#if 0// TODO
 	if (!buttons)
 		return;
 	if (buttons == MK_LBUTTON)
@@ -156,8 +155,8 @@ void Z_MouseMoved (int x, int y, int buttons)
 		return;
 	}
 
-#if 0 // TODO
-		// control mbutton = move camera
+#if 0   // TODO \
+        // control mbutton = move camera
 	if ((buttons == (MK_CONTROL|MK_MBUTTON) ) || (buttons == (MK_CONTROL|MK_LBUTTON)))
 	{
 		camera.origin[2] = (y - (z.height/2))/z.scale;
@@ -182,76 +181,76 @@ DRAWING
 Z_DrawGrid
 ==============
 */
-void Z_DrawGrid (void)
+void Z_DrawGrid( void )
 {
-	float	zz, zb, ze;
-	int		w, h;
-	char	text[32];
+	float zz, zb, ze;
+	int   w, h;
+	char  text[ 32 ];
 
-	w = z.width/2 / z.scale;
-	h = z.height/2 / z.scale;
+	w = z.width / 2 / z.scale;
+	h = z.height / 2 / z.scale;
 
-	zb = z.origin[2] - h;
-	if (zb < region_mins[2])
-		zb = region_mins[2];
-	zb = 64 * floor (zb/64);
+	zb = z.origin[ 2 ] - h;
+	if ( zb < region_mins[ 2 ] )
+		zb = region_mins[ 2 ];
+	zb = 64 * floor( zb / 64 );
 
-	ze = z.origin[2] + h;
-	if (ze > region_maxs[2])
-		ze = region_maxs[2];
-	ze = 64 * ceil (ze/64);
+	ze = z.origin[ 2 ] + h;
+	if ( ze > region_maxs[ 2 ] )
+		ze = region_maxs[ 2 ];
+	ze = 64 * ceil( ze / 64 );
 
 	// draw major blocks
 
-	glColor3fv(g_qeglobals.d_savedinfo.colors[COLOR_GRIDMAJOR]);
+	glColor3fv( g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ] );
 
-	glBegin (GL_LINES);
+	glBegin( GL_LINES );
 
-	glVertex2f (0, zb);
-	glVertex2f (0, ze);
+	glVertex2f( 0, zb );
+	glVertex2f( 0, ze );
 
-	for (zz=zb ; zz<ze ; zz+=64)
+	for ( zz = zb; zz < ze; zz += 64 )
 	{
-		glVertex2f (-w, zz);
-		glVertex2f (w, zz);
+		glVertex2f( -w, zz );
+		glVertex2f( w, zz );
 	}
 
-	glEnd ();
+	glEnd();
 
 	// draw minor blocks
-	if (g_qeglobals.d_showgrid && g_qeglobals.d_gridsize*z.scale >= 4)
+	if ( g_qeglobals.d_showgrid && g_qeglobals.d_gridsize * z.scale >= 4 )
 	{
-		glColor3fv(g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR]);
+		glColor3fv( g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ] );
 
-		glBegin (GL_LINES);
-		for (zz=zb ; zz<ze ; zz+=g_qeglobals.d_gridsize)
+		glBegin( GL_LINES );
+		for ( zz = zb; zz < ze; zz += g_qeglobals.d_gridsize )
 		{
-			if ( ! ((int)zz & 63) )
+			if ( !( ( int ) zz & 63 ) )
 				continue;
-			glVertex2f (-w, zz);
-			glVertex2f (w, zz);
+			glVertex2f( -w, zz );
+			glVertex2f( w, zz );
 		}
-		glEnd ();
+		glEnd();
 	}
 
 	// draw coordinate text if needed
 
-	glColor4f(0, 0, 0, 0);
+	glColor4f( 0, 0, 0, 0 );
 
-	for (zz=zb ; zz<ze ; zz+=64)
+	for ( zz = zb; zz < ze; zz += 64 )
 	{
-		glRasterPos2f (-w+1, zz);
-		sprintf (text, "%i",(int)zz);
-		glCallLists ((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);
+		glRasterPos2f( -w + 1, zz );
+		sprintf( text, "%i", ( int ) zz );
+		glCallLists( ( GLsizei ) strlen( text ), GL_UNSIGNED_BYTE, text );
 	}
 }
 
-#define CAM_HEIGHT		48 // height of main part
-#define CAM_GIZMO		8	// height of the gizmo
+#define CAM_HEIGHT 48// height of main part
+#define CAM_GIZMO  8 // height of the gizmo
 
-void ZDrawCameraIcon (void)
+void ZDrawCameraIcon( void )
 {
-#if 0 // TODO
+#if 0// TODO
 	float	x, y;
 	int	xCam = z.width/4;
 
@@ -273,169 +272,166 @@ void ZDrawCameraIcon (void)
 #endif
 }
 
-GLbitfield glbitClear = GL_COLOR_BUFFER_BIT; //HACK
+GLbitfield glbitClear = GL_COLOR_BUFFER_BIT;//HACK
 
 /*
 ==============
 Z_Draw
 ==============
 */
-void Z_Draw (void)
+void Z_Draw( void )
 {
-	Brush *brush;
-	float	w, h;
-	double	start, end;
-	qtexture_t	*q;
-	float	top, bottom;
-	vec3_t	org_top, org_bottom, dir_up, dir_down;
-	int xCam = z.width/3;
+	Brush *     brush;
+	float       w, h;
+	double      start, end;
+	qtexture_t *q;
+	float       top, bottom;
+	vec3_t      org_top, org_bottom, dir_up, dir_down;
+	int         xCam = z.width / 3;
 
-	if (!active_brushes.next)
-		return;	// not valid yet
+	if ( !active_brushes.next )
+		return;// not valid yet
 
-	if (z.timing)
-		start = Sys_DoubleTime ();
+	if ( z.timing )
+		start = Sys_DoubleTime();
 
 	//
 	// clear
 	//
-	glViewport(0, 0, z.width, z.height);
+	glViewport( 0, 0, z.width, z.height );
 
-	glClearColor (
-		g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK][0],
-		g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK][1],
-		g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK][2],
-		0);
+	glClearColor(
+	        g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 0 ],
+	        g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 1 ],
+	        g_qeglobals.d_savedinfo.colors[ COLOR_GRIDBACK ][ 2 ],
+	        0 );
 
-    /* GL Bug */
+	/* GL Bug */
 	/* When not using hw acceleration, gl will fault if we clear the depth
 	buffer bit on the first pass. The hack fix is to set the GL_DEPTH_BUFFER_BIT
 	only after Z_Draw() has been called once. Yeah, right. */
-	glClear(glbitClear);
+	glClear( glbitClear );
 	glbitClear |= GL_DEPTH_BUFFER_BIT;
 
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode( GL_PROJECTION );
 
-    glLoadIdentity ();
-	w = z.width/2 / z.scale;
-	h = z.height/2 / z.scale;
-	glOrtho (-w, w, z.origin[2]-h, z.origin[2]+h, -8, 8);
+	glLoadIdentity();
+	w = z.width / 2 / z.scale;
+	h = z.height / 2 / z.scale;
+	glOrtho( -w, w, z.origin[ 2 ] - h, z.origin[ 2 ] + h, -8, 8 );
 
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_TEXTURE_1D);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	glDisable( GL_TEXTURE_2D );
+	glDisable( GL_TEXTURE_1D );
+	glDisable( GL_DEPTH_TEST );
+	glDisable( GL_BLEND );
 
 
 	//
 	// now draw the grid
 	//
-	Z_DrawGrid ();
+	Z_DrawGrid();
 
 	//
 	// draw stuff
 	//
 
-	glDisable(GL_CULL_FACE);
+	glDisable( GL_CULL_FACE );
 
-	glShadeModel (GL_FLAT);
+	glShadeModel( GL_FLAT );
 
-	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
+	glDisable( GL_TEXTURE_2D );
+	glDisable( GL_BLEND );
+	glDisable( GL_DEPTH_TEST );
 
 
 	// draw filled interiors and edges
-	dir_up[0] = 0 ; dir_up[1] = 0; dir_up[2] = 1;
-	dir_down[0] = 0 ; dir_down[1] = 0; dir_down[2] = -1;
-	VectorCopy (z.origin, org_top);
-	org_top[2] = 4096;
-	VectorCopy (z.origin, org_bottom);
-	org_bottom[2] = -4096;
+	dir_up[ 0 ]   = 0;
+	dir_up[ 1 ]   = 0;
+	dir_up[ 2 ]   = 1;
+	dir_down[ 0 ] = 0;
+	dir_down[ 1 ] = 0;
+	dir_down[ 2 ] = -1;
+	VectorCopy( z.origin, org_top );
+	org_top[ 2 ] = 4096;
+	VectorCopy( z.origin, org_bottom );
+	org_bottom[ 2 ] = -4096;
 
-	for (brush = active_brushes.next ; brush != &active_brushes ; brush=brush->next)
+	for ( brush = active_brushes.next; brush != &active_brushes; brush = brush->next )
 	{
-		if (brush->mins[0] >= z.origin[0]
-			|| brush->maxs[0] <= z.origin[0]
-			|| brush->mins[1] >= z.origin[1]
-			|| brush->maxs[1] <= z.origin[1])
+		if ( brush->mins[ 0 ] >= z.origin[ 0 ] || brush->maxs[ 0 ] <= z.origin[ 0 ] || brush->mins[ 1 ] >= z.origin[ 1 ] || brush->maxs[ 1 ] <= z.origin[ 1 ] )
 			continue;
 
-		if (!brush->Ray (org_top, dir_down, &top))
+		if ( !brush->Ray( org_top, dir_down, &top ) )
 			continue;
-		top = org_top[2] - top;
-		if (!brush->Ray (org_bottom, dir_up, &bottom))
+		top = org_top[ 2 ] - top;
+		if ( !brush->Ray( org_bottom, dir_up, &bottom ) )
 			continue;
-		bottom = org_bottom[2] + bottom;
+		bottom = org_bottom[ 2 ] + bottom;
 
-		q = Texture_ForName (brush->brush_faces->texdef.name);
-		glColor3f (q->color[0], q->color[1], q->color[2]);
-		glBegin (GL_QUADS);
-		glVertex2f (-xCam, bottom);
-		glVertex2f (xCam, bottom);
-		glVertex2f (xCam, top);
-		glVertex2f (-xCam, top);
-		glEnd ();
+		q = Texture_ForName( brush->brush_faces->texdef.name );
+		glColor3f( q->color[ 0 ], q->color[ 1 ], q->color[ 2 ] );
+		glBegin( GL_QUADS );
+		glVertex2f( -xCam, bottom );
+		glVertex2f( xCam, bottom );
+		glVertex2f( xCam, top );
+		glVertex2f( -xCam, top );
+		glEnd();
 
-		glColor3f (1,1,1);
-		glBegin (GL_LINE_LOOP);
-		glVertex2f (-xCam, bottom);
-		glVertex2f (xCam, bottom);
-		glVertex2f (xCam, top);
-		glVertex2f (-xCam, top);
-		glEnd ();
+		glColor3f( 1, 1, 1 );
+		glBegin( GL_LINE_LOOP );
+		glVertex2f( -xCam, bottom );
+		glVertex2f( xCam, bottom );
+		glVertex2f( xCam, top );
+		glVertex2f( -xCam, top );
+		glEnd();
 	}
 
 	//
 	// now draw selected brushes
 	//
-	for (brush = selected_brushes.next ; brush != &selected_brushes ; brush=brush->next)
+	for ( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next )
 	{
-		if ( !(brush->mins[0] >= z.origin[0]
-			|| brush->maxs[0] <= z.origin[0]
-			|| brush->mins[1] >= z.origin[1]
-			|| brush->maxs[1] <= z.origin[1]) )
+		if ( !( brush->mins[ 0 ] >= z.origin[ 0 ] || brush->maxs[ 0 ] <= z.origin[ 0 ] || brush->mins[ 1 ] >= z.origin[ 1 ] || brush->maxs[ 1 ] <= z.origin[ 1 ] ) )
 		{
-			if (brush->Ray (org_top, dir_down, &top))
+			if ( brush->Ray( org_top, dir_down, &top ) )
 			{
-				top = org_top[2] - top;
-				if (brush->Ray (org_bottom, dir_up, &bottom))
+				top = org_top[ 2 ] - top;
+				if ( brush->Ray( org_bottom, dir_up, &bottom ) )
 				{
-					bottom = org_bottom[2] + bottom;
+					bottom = org_bottom[ 2 ] + bottom;
 
-					q = Texture_ForName (brush->brush_faces->texdef.name);
-					glColor3f (q->color[0], q->color[1], q->color[2]);
-					glBegin (GL_QUADS);
-					glVertex2f (-xCam, bottom);
-					glVertex2f (xCam, bottom);
-					glVertex2f (xCam, top);
-					glVertex2f (-xCam, top);
-					glEnd ();
+					q = Texture_ForName( brush->brush_faces->texdef.name );
+					glColor3f( q->color[ 0 ], q->color[ 1 ], q->color[ 2 ] );
+					glBegin( GL_QUADS );
+					glVertex2f( -xCam, bottom );
+					glVertex2f( xCam, bottom );
+					glVertex2f( xCam, top );
+					glVertex2f( -xCam, top );
+					glEnd();
 				}
 			}
 		}
 
-		glColor3f (1,0,0);
-		glBegin (GL_LINE_LOOP);
-		glVertex2f (-xCam, brush->mins[2]);
-		glVertex2f (xCam, brush->mins[2]);
-		glVertex2f (xCam, brush->maxs[2]);
-		glVertex2f (-xCam, brush->maxs[2]);
-		glEnd ();
+		glColor3f( 1, 0, 0 );
+		glBegin( GL_LINE_LOOP );
+		glVertex2f( -xCam, brush->mins[ 2 ] );
+		glVertex2f( xCam, brush->mins[ 2 ] );
+		glVertex2f( xCam, brush->maxs[ 2 ] );
+		glVertex2f( -xCam, brush->maxs[ 2 ] );
+		glEnd();
 	}
 
 
-	ZDrawCameraIcon ();
+	ZDrawCameraIcon();
 
-    glFinish();
+	glFinish();
 	QE_CheckOpenGLForErrors();
 
-	if (z.timing)
+	if ( z.timing )
 	{
-		end = Sys_DoubleTime ();
-		Sys_Printf ("z: %i ms\n", (int)(1000*(end-start)));
+		end = Sys_DoubleTime();
+		Sys_Printf( "z: %i ms\n", ( int ) ( 1000 * ( end - start ) ) );
 	}
 }
-

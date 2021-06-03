@@ -24,42 +24,45 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
-typedef struct {
-	int		numpoints;
-	int		maxpoints;
-	float 	points[ 8 ][ 5 ];			// variable sized
+typedef struct
+{
+	int   numpoints;
+	int   maxpoints;
+	float points[ 8 ][ 5 ];// variable sized
 } winding_t;
 
 
 // the normals on planes point OUT of the brush
-#define	MAXPOINTS	16
-typedef struct face_s {
+#define MAXPOINTS 16
+typedef struct face_s
+{
 	struct face_s *next;
-	vec3_t		planepts[ 3 ];
-	texdef_t	texdef;
+	vec3_t         planepts[ 3 ];
+	texdef_t       texdef;
 
-	plane_t		plane;
+	plane_t plane;
 
 	winding_t *face_winding;
 
-	vec3_t		d_color;
+	vec3_t      d_color;
 	qtexture_t *d_texture;
 
 	//	int         d_numpoints;
 	//	vec3_t     *d_points;
 } face_t;
 
-#define	MAX_FACES	16
-class Brush {
+#define MAX_FACES 16
+class Brush
+{
 public:
 	Brush();
 	Brush( vec3_t mins, vec3_t maxs, texdef_t *texdef );
 	~Brush();
 
-	Brush *prev{ nullptr }, *next{ nullptr };	// links in active/selected
-	Brush *oprev{ nullptr }, *onext{ nullptr };	// links in entity
+	Brush *          prev{ nullptr }, *next{ nullptr };  // links in active/selected
+	Brush *          oprev{ nullptr }, *onext{ nullptr };// links in entity
 	struct entity_s *owner{ nullptr };
-	vec3_t	mins, maxs;
+	vec3_t           mins, maxs;
 
 	face_t *brush_faces{ nullptr };
 
@@ -86,7 +89,7 @@ public:
 	void RemoveEmptyFaces();
 
 	static Brush *Parse();
-	void Write( FILE *f );
+	void          Write( FILE *f );
 
 private:
 	void MakeFacePlanes();
@@ -94,7 +97,7 @@ private:
 	void SnapPlanepts();
 };
 
-void     Brush_MakeSided( int sides );
-int        AddPlanept( float *f );
+void    Brush_MakeSided( int sides );
+int     AddPlanept( float *f );
 face_t *Face_Clone( face_t *f );
-void       Face_Draw( face_t *face );
+void    Face_Draw( face_t *face );

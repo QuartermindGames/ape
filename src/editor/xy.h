@@ -26,10 +26,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "BasePerspective.h"
 
-namespace huang {
-	class XYZPerspective : public BasePerspective {
+namespace huang
+{
+	class XYZPerspective : public BasePerspective
+	{
 	public:
-		enum class Angle {
+		enum class Angle
+		{
 			TOP,
 			LEFT,
 			FRONT

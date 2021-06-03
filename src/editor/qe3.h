@@ -31,12 +31,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <windows.h>
 
 #define Q_stricmp _stricmp
-#define Q_unlink _unlink
+#define Q_unlink  _unlink
 #else
 #include <unistd.h>
 
 #define Q_stricmp strcasecmp
-#define Q_unlink unlink
+#define Q_unlink  unlink
 #endif
 
 #include <algorithm>
@@ -54,7 +54,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // Common Interface
 #include "common/common.h"
-#include "common/CFWNode.h"
+#include "common/node.h"
 
 #include <plcore/pl_console.h>
 
@@ -74,10 +74,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Serialized.h"
 #include "MainWindow.h"
 
-typedef struct {
+typedef struct
+{
 	vec3_t normal;
 	double dist;
-	int type;
+	int    type;
 } plane_t;
 
 #include "qfiles.h"
@@ -93,13 +94,15 @@ typedef struct {
 #include "z.h"
 #include "mru.h"
 
-typedef struct {
-	int p1, p2;
+typedef struct
+{
+	int     p1, p2;
 	face_t *f1, *f2;
 } pedge_t;
 
-typedef struct {
-	char szProject[ 256 ];// last project loaded
+typedef struct
+{
+	char   szProject[ 256 ];// last project loaded
 	vec3_t colors[ COLOR_LAST ];
 	FXbool show_names,
 	        show_coordinates;
@@ -109,20 +112,21 @@ typedef struct {
 //
 // system functions
 //
-void Sys_UpdateStatusBar();
-void Sys_UpdateWindows( int bits );
-void Sys_Printf( const char *text, ... );
+void   Sys_UpdateStatusBar();
+void   Sys_UpdateWindows( int bits );
+void   Sys_Printf( const char *text, ... );
 double Sys_DoubleTime();
-void Sys_GetCursorPos( int *x, int *y );
-void Sys_SetCursorPos( int x, int y );
-void Sys_SetTitle( char *text );
-void Sys_BeginWait();
-void Sys_EndWait();
+void   Sys_GetCursorPos( int *x, int *y );
+void   Sys_SetCursorPos( int x, int y );
+void   Sys_SetTitle( char *text );
+void   Sys_BeginWait();
+void   Sys_EndWait();
 
 /*
 ** most of the QE globals are stored in this structure
 */
-struct QEGlobals_t {
+struct QEGlobals_t
+{
 	FXbool d_showgrid{ true };
 	FXuint d_gridsize{ 8 };
 
@@ -133,12 +137,12 @@ struct QEGlobals_t {
 	float d_new_brush_bottom_z, d_new_brush_top_z;
 
 	vec3_t d_points[ MAX_POINTS ];
-	int d_numpoints{ 0 };
+	int    d_numpoints{ 0 };
 
-	pedge_t d_edges[ MAX_EDGES ];
+	pedge_t      d_edges[ MAX_EDGES ];
 	unsigned int d_numedges{ 0 };
 
-	int d_num_move_points{ 0 };
+	int    d_num_move_points{ 0 };
 	float *d_move_points[ 1024 ];
 
 	qtexture_t *d_qtextures{ nullptr };
@@ -154,9 +158,9 @@ struct QEGlobals_t {
 	int d_workcount;
 
 	// connect entities uses the last two brushes selected
-	int d_select_count;
-	Brush *d_select_order[ 2 ];
-	vec3_t d_select_translate;// for dragging w/o making new display lists
+	int      d_select_count;
+	Brush *  d_select_order[ 2 ];
+	vec3_t   d_select_translate;// for dragging w/o making new display lists
 	select_t d_select_mode;
 
 	int d_font_list;
@@ -206,12 +210,12 @@ void FillTextureMenu( void );
 //
 // entityw.c
 //
-void FillClassList( void );
-BOOL UpdateEntitySel( eclass_t *pec );
-void SetInspectorMode( int iType );
-void SetSpawnFlags( void );
-void GetSpawnFlags( void );
-void SetKeyValuePairs( void );
+void        FillClassList( void );
+BOOL        UpdateEntitySel( eclass_t *pec );
+void        SetInspectorMode( int iType );
+void        SetSpawnFlags( void );
+void        GetSpawnFlags( void );
+void        SetKeyValuePairs( void );
 extern void BuildGammaTable( float g );
 
 
@@ -226,12 +230,12 @@ void DoSurface( void );
 /*
 ** QE function declarations
 */
-void QE_CheckAutoSave( void );
-void QE_ConvertDOSToUnixName( char *dst, const char *src );
-void QE_CountBrushesAndUpdateStatusBar( void );
-void QE_CheckOpenGLForErrors( void );
-void QE_ExpandBspString( char *bspaction, char *out, char *mapname );
-void QE_Init( void );
+void     QE_CheckAutoSave( void );
+void     QE_ConvertDOSToUnixName( char *dst, const char *src );
+void     QE_CountBrushesAndUpdateStatusBar( void );
+void     QE_CheckOpenGLForErrors( void );
+void     QE_ExpandBspString( char *bspaction, char *out, char *mapname );
+void     QE_Init( void );
 qboolean QE_KeyDown( int key );
 qboolean QE_LoadProject( const char *projectfile );
 qboolean QE_SingleBrush( void );
@@ -241,37 +245,42 @@ qboolean QE_SingleBrush( void );
 */
 extern QEGlobals_t g_qeglobals;
 
-namespace huang {
-	namespace util {
+namespace huang
+{
+	namespace util
+	{
 		const char *GetMaterialsDirectory();
 		const char *GetWorldsDirectory();
 
 		FXIcon *LoadImageIcon( FXApp *app, const char *path );
 
-		enum class MenuType {
+		enum class MenuType
+		{
 			COMMAND,
 			CHECKBOX,
 			SEPERATOR,
 			RADIO,
 		};
 
-		struct MenuItem {
+		struct MenuItem
+		{
 			const char *label{ nullptr };
-			MenuType type{ MenuType::COMMAND };
-			FXSelector selector{ 0 };
-			FXObject *target{ nullptr };
-			FXIcon *icon{ nullptr };
+			MenuType    type{ MenuType::COMMAND };
+			FXSelector  selector{ 0 };
+			FXObject *  target{ nullptr };
+			FXIcon *    icon{ nullptr };
 		};
 
 		FXMenuPane *CreateMenus( FXApp *app, FXMenuBar *menuBar, const char *menuName, MenuItem *items );
 
-		namespace reg {
+		namespace reg
+		{
 			const char *ReadString( const char *section, const char *key, const char *def = "" );
-			int ReadInt( const char *section, const char *key, int def = 0 );
-			bool ReadBool( const char *section, const char *key, bool def = false );
-			float ReadFloat( const char *section, const char *key, float def = 0.0f );
-			FXColor ReadColour( const char *section, const char *key, FXColor def = 0u );
-			int ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t def = vec3_origin );
+			int         ReadInt( const char *section, const char *key, int def = 0 );
+			bool        ReadBool( const char *section, const char *key, bool def = false );
+			float       ReadFloat( const char *section, const char *key, float def = 0.0f );
+			FXColor     ReadColour( const char *section, const char *key, FXColor def = 0u );
+			int         ReadColourF( const char *section, const char *key, vec3_t out, const vec3_t def = vec3_origin );
 
 			bool WriteString( const char *section, const char *key, const char *value );
 			bool WriteInt( const char *section, const char *key, int value );

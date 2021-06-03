@@ -1,0 +1,71 @@
+object world
+{
+	object properties
+	{
+		string author "Mark E Sowden"
+		string authorContact "hogsy@oldtimes-software.com"
+	}
+	
+	array object actors
+	{
+		{
+			string identifier "player"
+			object position
+			{
+				float x 0.0
+				float y 0.0
+				float z 0.0
+			}
+		}
+	}
+	
+	array object meshes
+	{
+		{
+			array string materials
+			{
+				"materials/world/space_background.node"
+			}
+			
+			string identifier "backdrop_00"
+			array object vertices
+			{
+				{
+					object position
+					{
+						float x 0.0
+						float y 0.0
+						float z 0.0
+					}
+					object colour
+					{
+						integer r 255
+						integer g 255
+						integer b 255
+						integer a 255
+					}
+				}
+			}
+			array object faces
+			{
+				{
+					integer materialIndex 0
+					integer numVertices 4
+				}
+			}
+		}
+	}
+	
+	array object sectors
+	{
+		{
+			string identifier "main_sector"
+			array object children
+			{
+				{
+					
+				}
+			}
+		}
+	}
+}

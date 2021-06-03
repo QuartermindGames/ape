@@ -223,7 +223,7 @@ void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSi
 /****************************************
  ****************************************/
 
-EngineInterface globalEngine;
+OSEngineInterface globalEngine;
 static PLLibrary *dllEnginePtr;
 static void SetupEngineInterface() {
 	LMsg( "Setting up engine interface\n" );
@@ -238,7 +238,7 @@ static void SetupEngineInterface() {
 		LError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
 	}
 
-	static OSInterface systemInterface = {
+	static OSSystemInterface systemInterface = {
 		.version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
 #if 1

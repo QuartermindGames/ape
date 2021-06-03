@@ -31,19 +31,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern char currentmap[ PL_SYSTEM_MAX_PATH ];
 
 // head/tail of doubly linked lists
-extern Brush active_brushes;  // brushes currently being displayed
-extern Brush selected_brushes;// highlighted
+extern Brush   active_brushes;  // brushes currently being displayed
+extern Brush   selected_brushes;// highlighted
 extern face_t *selected_face;
-extern Brush *selected_face_brush;
-extern Brush filtered_brushes;// brushes that have been filtered or regioned
+extern Brush * selected_face_brush;
+extern Brush   filtered_brushes;// brushes that have been filtered or regioned
 
-extern entity_t entities;
+extern entity_t  entities;
 extern entity_t *world_entity;// the world entity is NOT included in
                               // the entities chain
 
 extern qboolean modified;// for quit confirmations
 
-extern vec3_t region_mins, region_maxs;
+extern vec3_t   region_mins, region_maxs;
 extern qboolean region_active;
 
 void Map_LoadFile( const char *filename );
@@ -51,17 +51,19 @@ void Map_SaveFile( const char *filename, qboolean use_region );
 void Map_New( void );
 void Map_BuildBrushData( void );
 
-void Map_RegionOff( void );
-void Map_RegionXY( void );
-void Map_RegionTallBrush( void );
-void Map_RegionBrush( void );
-void Map_RegionSelectedBrushes( void );
+void     Map_RegionOff( void );
+void     Map_RegionXY( void );
+void     Map_RegionTallBrush( void );
+void     Map_RegionBrush( void );
+void     Map_RegionSelectedBrushes( void );
 qboolean Map_IsBrushFiltered( Brush *b );
 
 entity_t *Map_FindClass( const char *cname );
 
-namespace huang {
-	class World {
+namespace huang
+{
+	class World
+	{
 	public:
 		World();
 		explicit World( const char *path );
@@ -71,31 +73,34 @@ namespace huang {
 
 		entity_t *FindClass( const char *className );
 
-		struct Face {
-			int vertexIndices[ 32 ];
+		struct Face
+		{
+			int          vertexIndices[ 32 ];
 			unsigned int numEdges;
 
 			char materialPath[ 32 ];
 		};
 
 		std::vector< PLGVertex > vertices;
-		std::vector< Face > faces;
-		std::vector< entity_t > actors;
+		std::vector< Face >      faces;
+		std::vector< entity_t >  actors;
 
 		std::vector< PLGVertex * > selectedVertices;
-		std::vector< Face * > selectedFaces;
-		std::vector< entity_t * > selectedActors;
+		std::vector< Face * >      selectedFaces;
+		std::vector< entity_t * >  selectedActors;
 
 		/**
           * Returns true if nothing is selected.
           */
-		bool IsSelectionEmpty() const {
+		bool IsSelectionEmpty() const
+		{
 			return ( selectedVertices.empty() &&
 			         selectedFaces.empty() &&
 			         selectedActors.empty() );
 		}
 
-		void ClearSelection() {
+		void ClearSelection()
+		{
 			selectedVertices.clear();
 			selectedFaces.clear();
 			selectedActors.clear();

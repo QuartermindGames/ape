@@ -5,7 +5,8 @@
 
 #pragma once
 
-typedef enum MenuState {
+typedef enum MenuState
+{
 	MENU_STATE_START, /* draw start screen */
 	MENU_STATE_HUD,   /* hud/overlay mode */
 } MenuState;

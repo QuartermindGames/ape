@@ -1,0 +1,42 @@
+=================================================================
+Project Yin, Changelog
+=================================================================
+
+v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
+-----------------------------------------------------------------
+    - 'platform' has been split up into 'plcore', 'plgraphics' and 'plmodel'
+    - 'yin' has been split up into 'libcommon', 'launcher_sdl2', 'game' and 'engine'
+    - Binaries are now under runtime/<platform>/
+    - Console interface, which can be pulled down via ` key
+    - .node configuration language, for both serialisation and deserialisation
+    - User modified variables are now automatically saved/restored
+    - Discord integration (currently disabled)
+    - WAD replaced with new 'pkg' format, with support for compression
+        ~ Introduced 'pkgman' command-line utility for packaging content
+    - Automatic garbage collection based on references
+    - Scheduler, allowing multiple concurrent background events
+    - Introduced first interation of Yin World Editor
+    - New World format for storing sectors, portals, level meshes and more
+    - Significant improvements to collisions since last version (i.e. they exist now)
+    - Audio via SDL2 Audio
+    - Support for additional renderers via plugins
+    - Shader programs are now registered in via .node files provided under materials/shaders
+    - Materials are now supported; can specify specific shader, multiple passes, blend modes
+    - World and actors are now culled based sector/portal vis
+    - World geometry is now all batched, alongside any additional sub-meshes
+    - PNG, TGA, JPG, BMP and GIF image support
+    - Introduced own GFX image format which provides some reasonable compression
+    - MD2 and PLY model support
+    - Post-processing pipeline
+        ~ FXAA
+    - Supersampling up to 2x display resolution
+    - GLSL shaders are now pre-processed on load, with support for #include directive
+    - Texture-blending via blend and blend_3layer shaders
+    - Normal-maps are now supported; tangent/bitangents are now generated alongside normals for world
+    - There's now support for variably sized bitmap-based fonts
+    - Toggable debug overlays are now available for profiling
+    - Actors are now spawned by an id string, rather than by index
+
+v1.0.0 [2020-04-15] (aka, Buddy's Adventure)
+-----------------------------------------------------------------
+    - Initial release

@@ -9,9 +9,10 @@
 
 #define MODEL_MAX_MATERIALS 64
 
-typedef struct Model {
+typedef struct Model
+{
 	struct PLModel *pModelData;
 
-	Material *materials[ MODEL_MAX_MATERIALS ];
+	Material *   materials[ MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
 } Model;

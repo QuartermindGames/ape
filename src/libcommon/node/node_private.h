@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -26,26 +27,28 @@
  */
 
 /* upper limits used for the parser */
-#define NL_MAX_NAME_LENGTH 256
+#define NL_MAX_NAME_LENGTH   256
 #define NL_MAX_STRING_LENGTH 256
-#define NL_MAX_BOOL_LENGTH 8 /* 0, 1, true, false */
-#define NL_MAX_TYPE_LENGTH 16
+#define NL_MAX_BOOL_LENGTH   8 /* 0, 1, true, false */
+#define NL_MAX_TYPE_LENGTH   16
 
-typedef struct NLVarString {
-	char *strBuf;
+typedef struct NLVarString
+{
+	char *       strBuf;
 	unsigned int strBufLength;
 } NLVarString;
 
-typedef struct NLNode {
-	NLVarString name;
+typedef struct NLNode
+{
+	NLVarString    name;
 	NLPropertyType type;
 	NLPropertyType childType; /* used for array types */
-	NLVarString data;
-	NLNode *parent;
+	NLVarString    data;
+	NLNode *       parent;
 
 	PLLinkedListNode *linkedListNode;
-	PLLinkedList *linkedList;
+	PLLinkedList *    linkedList;
 } NLNode;
 
-char *xNL_PreProcessScript( char *buf, size_t *length, bool isHead );
+char *  xNL_PreProcessScript( char *buf, size_t *length, bool isHead );
 NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType propertyType );

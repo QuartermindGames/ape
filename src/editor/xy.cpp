@@ -38,21 +38,23 @@ huang::XYZPerspective::~XYZPerspective() = default;
 */
 
 //static	int	buttonstate;
-static int pressx, pressy;
-static vec3_t pressdelta;
+static int      pressx, pressy;
+static vec3_t   pressdelta;
 static qboolean press_selection;
 
-void huang::XYZPerspective::ToPoint( int x, int y, vec3_t point ) {
-	int width = parentViewport->GetCanvasWidth();
+void huang::XYZPerspective::ToPoint( int x, int y, vec3_t point )
+{
+	int width  = parentViewport->GetCanvasWidth();
 	int height = parentViewport->GetCanvasHeight();
 	point[ 0 ] = origin[ 0 ] + ( x - width / 2 ) / scale;
 	point[ 1 ] = origin[ 1 ] + ( y - height / 2 ) / scale;
 	point[ 2 ] = 0.0f;
 }
 
-void huang::XYZPerspective::ToGridPoint( int x, int y, vec3_t point ) {
-    int width = parentViewport->GetCanvasWidth();
-    int height = parentViewport->GetCanvasHeight();
+void huang::XYZPerspective::ToGridPoint( int x, int y, vec3_t point )
+{
+	int width  = parentViewport->GetCanvasWidth();
+	int height = parentViewport->GetCanvasHeight();
 	point[ 0 ] = origin[ 0 ] + ( x - width / 2 ) / scale;
 	point[ 1 ] = origin[ 1 ] + ( y - height / 2 ) / scale;
 	point[ 2 ] = 0;
@@ -65,7 +67,8 @@ void huang::XYZPerspective::ToGridPoint( int x, int y, vec3_t point ) {
 XY_MouseDown
 ==============
 */
-void huang::XYZPerspective::MouseDown( int x, int y, const bool buttons[] ) {
+void huang::XYZPerspective::MouseDown( int x, int y, const bool buttons[] )
+{
 	vec3_t point;
 	vec3_t origin, dir, right, up;
 
@@ -78,23 +81,25 @@ void huang::XYZPerspective::MouseDown( int x, int y, const bool buttons[] ) {
 	VectorCopy( point, origin );
 	origin[ 2 ] = 8192.0f;
 
-	dir[ 0 ] = 0;
-	dir[ 1 ] = 0;
-	dir[ 2 ] = -1;
+	dir[ 0 ]   = 0;
+	dir[ 1 ]   = 0;
+	dir[ 2 ]   = -1;
 	right[ 0 ] = 1 / scale;
 	right[ 1 ] = 0;
 	right[ 2 ] = 0;
-	up[ 0 ] = 0;
-	up[ 1 ] = 1 / scale;
-	up[ 2 ] = 0;
+	up[ 0 ]    = 0;
+	up[ 1 ]    = 1 / scale;
+	up[ 2 ]    = 0;
 
 	press_selection = ( selected_brushes.next != &selected_brushes );
 
 	FXuint temp;
 	g_mainWindow->getCursorPosition( dragX, dragY, temp );
 
-	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] ) {
-		if ( buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] )
+	{
+		if ( buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+		{
 			return;
 		}
 
@@ -103,16 +108,21 @@ void huang::XYZPerspective::MouseDown( int x, int y, const bool buttons[] ) {
 	}
 
 	CameraPerspective *camera = parentViewport->GetCamera();
-	if ( camera == nullptr ) {
+	if ( camera == nullptr )
+	{
 		return;
 	}
 
 	// control mbutton = move camera
-	if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] )
+	{
 		camera->SetPosition( point );
-	} else if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+	}
+	else if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+	{
 		VectorSubtract( point, camera->origin, point );
-		if ( point[ 1 ] > 0.0f || point[ 0 ] > 0.0f ) {
+		if ( point[ 1 ] > 0.0f || point[ 0 ] > 0.0f )
+		{
 			camera->angles[ YAW ] = 180.0f / Q_PIF * atan2f( point[ 1 ], point[ 0 ] );
 		}
 	}
@@ -123,23 +133,26 @@ void huang::XYZPerspective::MouseDown( int x, int y, const bool buttons[] ) {
 XY_MouseUp
 ==============
 */
-void huang::XYZPerspective::MouseUp( int x, int y, const bool buttons[] ) {
+void huang::XYZPerspective::MouseUp( int x, int y, const bool buttons[] )
+{
 	Drag_MouseUp();
 
 	if ( !press_selection )
 		Sys_UpdateWindows( W_ALL );
 }
 
-bool huang::XYZPerspective::DragDelta( int x, int y, vec3_t move ) {
+bool huang::XYZPerspective::DragDelta( int x, int y, vec3_t move )
+{
 	vec3_t xvec, yvec, delta;
-	int i;
+	int    i;
 
 	xvec[ 0 ] = 1.0f / scale;
 	xvec[ 1 ] = xvec[ 2 ] = 0;
-	yvec[ 1 ] = 1.0f / scale;
+	yvec[ 1 ]             = 1.0f / scale;
 	yvec[ 0 ] = yvec[ 2 ] = 0;
 
-	for ( i = 0; i < 3; i++ ) {
+	for ( i = 0; i < 3; i++ )
+	{
 		delta[ i ] = xvec[ i ] * ( x - pressx ) + yvec[ i ] * ( y - pressy );
 		delta[ i ] = floor( delta[ i ] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 	}
@@ -154,10 +167,11 @@ bool huang::XYZPerspective::DragDelta( int x, int y, vec3_t move ) {
 NewBrushDrag
 ==============
 */
-void huang::XYZPerspective::NewBrushDrag( int x, int y ) {
+void huang::XYZPerspective::NewBrushDrag( int x, int y )
+{
 	vec3_t mins, maxs, junk;
-	int i;
-	float temp;
+	int    i;
+	float  temp;
 	Brush *n;
 
 	if ( !DragDelta( x, y, junk ) )
@@ -172,11 +186,13 @@ void huang::XYZPerspective::NewBrushDrag( int x, int y ) {
 	if ( maxs[ 2 ] <= mins[ 2 ] )
 		maxs[ 2 ] = mins[ 2 ] + g_qeglobals.d_gridsize;
 
-	for ( i = 0; i < 3; i++ ) {
+	for ( i = 0; i < 3; i++ )
+	{
 		if ( mins[ i ] == maxs[ i ] )
 			return;// don't create a degenerate brush
-		if ( mins[ i ] > maxs[ i ] ) {
-			temp = mins[ i ];
+		if ( mins[ i ] > maxs[ i ] )
+		{
+			temp      = mins[ i ];
 			mins[ i ] = maxs[ i ];
 			maxs[ i ] = temp;
 		}
@@ -190,24 +206,29 @@ void huang::XYZPerspective::NewBrushDrag( int x, int y ) {
 	n->Build();
 }
 
-void huang::XYZPerspective::MouseMoved( int x, int y, const bool buttons[] ) {
+void huang::XYZPerspective::MouseMoved( int x, int y, const bool buttons[] )
+{
 	lastX = x;
 	lastY = y;
 
 	World *world = g_mainWindow->GetCurrentWorld();
-	if ( world == nullptr ) {
+	if ( world == nullptr )
+	{
 		return;
 	}
 
-	switch ( g_mainWindow->GetEditMode() ) {
+	switch ( g_mainWindow->GetEditMode() )
+	{
 		case EDIT_MODE_VERTEX:
 			// lbutton without selection = drag new brush
-			if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection ) {
+			if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection )
+			{
 				vec3_t pos;
 				ToGridPoint( x, y, pos );
 
 				PLGVertex vertex = PlgInitializeVertex();
-				switch ( parentViewport->GetViewMode() ) {
+				switch ( parentViewport->GetViewMode() )
+				{
 					case VIEW_MODE_FRONT:
 						vertex.position.x = pos[ 0 ];
 						vertex.position.y = pos[ 1 ];
@@ -230,7 +251,8 @@ void huang::XYZPerspective::MouseMoved( int x, int y, const bool buttons[] ) {
 			break;
 		case EDIT_MODE_BRUSH:
 			// lbutton without selection = drag new brush
-			if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection ) {
+			if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && !press_selection )
+			{
 				NewBrushDrag( x, y );
 				return;
 			}
@@ -241,16 +263,19 @@ void huang::XYZPerspective::MouseMoved( int x, int y, const bool buttons[] ) {
 
 	// lbutton (possibly with control and or shift)
 	// with selection = drag selection
-	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] )
+	{
 		Drag_MouseMoved( x, y, buttons );
 		return;
 	}
 
 	// rbutton = drag xy origin
-	if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_RIGHT ] )
+	{
 		FXuint buttons;
 		g_mainWindow->getCursorPosition( x, y, buttons );
-		if ( x != dragX || y != dragY ) {
+		if ( x != dragX || y != dragY )
+		{
 			origin[ 0 ] -= ( x - dragX ) / scale;
 			origin[ 1 ] += ( y - dragY ) / scale;
 			g_mainWindow->setCursorPosition( dragX, dragY );
@@ -297,9 +322,10 @@ DRAWING
 XY_DrawGrid
 ==============
 */
-void huang::XYZPerspective::DrawGrid() {
+void huang::XYZPerspective::DrawGrid()
+{
 	float x, y, xb, xe, yb, ye;
-	int w, h;
+	int   w, h;
 
 	glDisable( GL_TEXTURE_2D );
 	glDisable( GL_TEXTURE_1D );
@@ -333,15 +359,18 @@ void huang::XYZPerspective::DrawGrid() {
 
 	glColor3fv( g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMAJOR ] );
 
-	if ( g_qeglobals.d_showgrid ) {
+	if ( g_qeglobals.d_showgrid )
+	{
 
 		glBegin( GL_LINES );
 
-		for ( x = xb; x <= xe; x += 64 ) {
+		for ( x = xb; x <= xe; x += 64 )
+		{
 			glVertex2f( x, yb );
 			glVertex2f( x, ye );
 		}
-		for ( y = yb; y <= ye; y += 64 ) {
+		for ( y = yb; y <= ye; y += 64 )
+		{
 			glVertex2f( xb, y );
 			glVertex2f( xe, y );
 		}
@@ -350,17 +379,20 @@ void huang::XYZPerspective::DrawGrid() {
 	}
 
 	// draw minor blocks
-	if ( g_qeglobals.d_showgrid && g_qeglobals.d_gridsize * scale >= 4 ) {
+	if ( g_qeglobals.d_showgrid && g_qeglobals.d_gridsize * scale >= 4 )
+	{
 		glColor3fv( g_qeglobals.d_savedinfo.colors[ COLOR_GRIDMINOR ] );
 
 		glBegin( GL_LINES );
-		for ( x = xb; x < xe; x += g_qeglobals.d_gridsize ) {
+		for ( x = xb; x < xe; x += g_qeglobals.d_gridsize )
+		{
 			if ( !( ( int ) x & 63 ) )
 				continue;
 			glVertex2f( x, yb );
 			glVertex2f( x, ye );
 		}
-		for ( y = yb; y < ye; y += g_qeglobals.d_gridsize ) {
+		for ( y = yb; y < ye; y += g_qeglobals.d_gridsize )
+		{
 			if ( !( ( int ) y & 63 ) )
 				continue;
 			glVertex2f( xb, y );
@@ -394,10 +426,11 @@ void huang::XYZPerspective::DrawGrid() {
 XY_DrawBlockGrid
 ==============
 */
-void huang::XYZPerspective::DrawBlockGrid() {
+void huang::XYZPerspective::DrawBlockGrid()
+{
 	float x, y, xb, xe, yb, ye;
-	int w, h;
-	char text[ 32 ];
+	int   w, h;
+	char  text[ 32 ];
 
 	glDisable( GL_TEXTURE_2D );
 	glDisable( GL_TEXTURE_1D );
@@ -434,11 +467,13 @@ void huang::XYZPerspective::DrawBlockGrid() {
 
 	glBegin( GL_LINES );
 
-	for ( x = xb; x <= xe; x += 1024 ) {
+	for ( x = xb; x <= xe; x += 1024 )
+	{
 		glVertex2f( x, yb );
 		glVertex2f( x, ye );
 	}
-	for ( y = yb; y <= ye; y += 1024 ) {
+	for ( y = yb; y <= ye; y += 1024 )
+	{
 		glVertex2f( xb, y );
 		glVertex2f( xe, y );
 	}
@@ -449,7 +484,8 @@ void huang::XYZPerspective::DrawBlockGrid() {
 	// draw coordinate text if needed
 
 	for ( x = xb; x < xe; x += 1024 )
-		for ( y = yb; y < ye; y += 1024 ) {
+		for ( y = yb; y < ye; y += 1024 )
+		{
 			glRasterPos2f( x + 512, y + 512 );
 			sprintf( text, "%i,%i", ( int ) floor( x / 1024 ), ( int ) floor( y / 1024 ) );
 			glCallLists( ( GLsizei ) strlen( text ), GL_UNSIGNED_BYTE, text );
@@ -458,38 +494,46 @@ void huang::XYZPerspective::DrawBlockGrid() {
 	glColor4f( 0, 0, 0, 0 );
 }
 
-bool FilterBrush( const Brush *pb ) {
+bool FilterBrush( const Brush *pb )
+{
 	if ( !pb->owner )
 		return FALSE;// during construction
 
-	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CLIP ) {
+	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CLIP )
+	{
 		if ( !strncmp( pb->brush_faces->texdef.name, "clip", 4 ) )
 			return TRUE;
 	}
 
-	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WATER ) {
+	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WATER )
+	{
 		if ( pb->brush_faces->texdef.name[ 0 ] == '*' )
 			return TRUE;
 	}
 
-	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_DETAIL ) {
+	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_DETAIL )
+	{
 		if ( pb->brush_faces->texdef.contents & CONTENTS_DETAIL )
 			return TRUE;
 	}
 
-	if ( pb->owner == world_entity ) {
+	if ( pb->owner == world_entity )
+	{
 		if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WORLD )
 			return TRUE;
 		return FALSE;
-	} else if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_ENT )
+	}
+	else if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_ENT )
 		return TRUE;
 
-	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_LIGHTS ) {
+	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_LIGHTS )
+	{
 		if ( !strncmp( pb->owner->eclass->name, "light", 5 ) )
 			return TRUE;
 	}
 
-	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS ) {
+	if ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS )
+	{
 		if ( !strncmp( pb->owner->eclass->name, "path", 4 ) )
 			return TRUE;
 	}
@@ -515,29 +559,33 @@ because the lines can be visible when neither end is.
 Called for both camera view and xy view.
 ==================
 */
-void DrawPathLines() {
-	int i, j, k;
-	vec3_t mid, mid1;
-	entity_t *se, *te;
-	Brush *sb, *tb;
-	vec3_t dir, s1, s2;
-	vec_t len, f;
-	int arrows;
-	int num_entities;
+void DrawPathLines()
+{
+	int         i, j, k;
+	vec3_t      mid, mid1;
+	entity_t *  se, *te;
+	Brush *     sb, *tb;
+	vec3_t      dir, s1, s2;
+	vec_t       len, f;
+	int         arrows;
+	int         num_entities;
 	const char *ent_target[ MAX_MAP_ENTITIES ];
-	entity_t *ent_entity[ MAX_MAP_ENTITIES ];
+	entity_t *  ent_entity[ MAX_MAP_ENTITIES ];
 
 
 	num_entities = 0;
-	for ( te = entities.next; te != &entities && num_entities != MAX_MAP_ENTITIES; te = te->next ) {
+	for ( te = entities.next; te != &entities && num_entities != MAX_MAP_ENTITIES; te = te->next )
+	{
 		ent_target[ num_entities ] = ValueForKey( te, "target" );
-		if ( ent_target[ num_entities ][ 0 ] ) {
+		if ( ent_target[ num_entities ][ 0 ] )
+		{
 			ent_entity[ num_entities ] = te;
 			num_entities++;
 		}
 	}
 
-	for ( se = entities.next; se != &entities; se = se->next ) {
+	for ( se = entities.next; se != &entities; se = se->next )
+	{
 		const char *psz = ValueForKey( se, "targetname" );
 		if ( psz == NULL || psz[ 0 ] == '\0' )
 			continue;
@@ -546,7 +594,8 @@ void DrawPathLines() {
 		if ( sb == &se->brushes )
 			continue;
 
-		for ( k = 0; k < num_entities; k++ ) {
+		for ( k = 0; k < num_entities; k++ )
+		{
 			if ( strcmp( ent_target[ k ], psz ) )
 				continue;
 
@@ -562,7 +611,7 @@ void DrawPathLines() {
 				mid1[ i ] = ( tb->mins[ i ] + tb->maxs[ i ] ) * 0.5f;
 
 			VectorSubtract( mid1, mid, dir );
-			len = VectorNormalize( dir );
+			len     = VectorNormalize( dir );
 			s1[ 0 ] = -dir[ 1 ] * 8 + dir[ 0 ] * 8;
 			s2[ 0 ] = dir[ 1 ] * 8 + dir[ 0 ] * 8;
 			s1[ 1 ] = dir[ 0 ] * 8 + dir[ 1 ] * 8;
@@ -576,7 +625,8 @@ void DrawPathLines() {
 
 			arrows = ( int ) ( len / 256 ) + 1;
 
-			for ( i = 0; i < arrows; i++ ) {
+			for ( i = 0; i < arrows; i++ )
+			{
 				f = len * ( i + 0.5 ) / arrows;
 
 				for ( j = 0; j < 3; j++ )
@@ -600,12 +650,13 @@ void DrawPathLines() {
 XY_Draw
 ==============
 */
-void huang::XYZPerspective::Draw() {
-	Brush *brush;
-	float w, h;
+void huang::XYZPerspective::Draw()
+{
+	Brush *   brush;
+	float     w, h;
 	entity_t *e;
-	vec3_t mins, maxs;
-	int drawn, culled;
+	vec3_t    mins, maxs;
+	int       drawn, culled;
 
 	//
 	// clear
@@ -625,8 +676,8 @@ void huang::XYZPerspective::Draw() {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 
-	w = ( float ) parentViewport->GetCanvasWidth() / 2.0f / scale;
-	h = ( float ) parentViewport->GetCanvasHeight() / 2.0f / scale;
+	w         = ( float ) parentViewport->GetCanvasWidth() / 2.0f / scale;
+	h         = ( float ) parentViewport->GetCanvasHeight() / 2.0f / scale;
 	mins[ 0 ] = origin[ 0 ] - w;
 	maxs[ 0 ] = origin[ 0 ] + w;
 	mins[ 1 ] = origin[ 1 ] - h;
@@ -640,11 +691,13 @@ void huang::XYZPerspective::Draw() {
 	DrawGrid();
 
 	World *world = g_mainWindow->GetCurrentWorld();
-	if ( world == nullptr ) {
+	if ( world == nullptr )
+	{
 		return;
 	}
 
-	switch ( parentViewport->GetViewMode() ) {
+	switch ( parentViewport->GetViewMode() )
+	{
 		case huang::VIEW_MODE_FRONT:
 			glRotatef( -90, 1, 0, 0 );// put Z going up
 			glRotatef( 90, 0, 0, 1 ); // put Z going up
@@ -672,18 +725,22 @@ void huang::XYZPerspective::Draw() {
 		return;// not valid yet
 
 	e = nullptr;
-	for ( brush = active_brushes.next; brush != &active_brushes; brush = brush->next ) {
-		if ( brush->mins[ 0 ] > maxs[ 0 ] || brush->mins[ 1 ] > maxs[ 1 ] || brush->maxs[ 0 ] < mins[ 0 ] || brush->maxs[ 1 ] < mins[ 1 ] ) {
+	for ( brush = active_brushes.next; brush != &active_brushes; brush = brush->next )
+	{
+		if ( brush->mins[ 0 ] > maxs[ 0 ] || brush->mins[ 1 ] > maxs[ 1 ] || brush->maxs[ 0 ] < mins[ 0 ] || brush->maxs[ 1 ] < mins[ 1 ] )
+		{
 			culled++;
 			continue;// off screen
 		}
 
-		if ( FilterBrush( brush ) ) {
+		if ( FilterBrush( brush ) )
+		{
 			continue;
 		}
 
 		drawn++;
-		if ( brush->owner != e ) {
+		if ( brush->owner != e )
+		{
 			e = brush->owner;
 			glColor3fv( e->eclass->color );
 		}
@@ -711,25 +768,29 @@ void huang::XYZPerspective::Draw() {
 		glTranslatef( g_qeglobals.d_select_translate[ 0 ], g_qeglobals.d_select_translate[ 1 ], g_qeglobals.d_select_translate[ 2 ] );
 		glColor3f( 1.0, 0.0, 0.0 );
 		glLineWidth( 2 );
-		for ( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next ) {
+		for ( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next )
+		{
 			drawn++;
 			brush->Draw( parentViewport );
 		}
 		glLineWidth( 1 );
 	}
 
-	if ( !world->IsSelectionEmpty() ) {
+	if ( !world->IsSelectionEmpty() )
+	{
 		glPointSize( 4.0f );
 		glColor3f( 1.0f, 0.0f, 0.0f );
 
 		glBegin( GL_POINTS );
-		for ( const auto &vertex : world->selectedVertices ) {
+		for ( const auto &vertex : world->selectedVertices )
+		{
 			glVertex3f( vertex->position.x, vertex->position.y, vertex->position.z );
 		}
 		glEnd();
 
 		glBegin( GL_LINES );
-		for ( const auto &face : world->selectedFaces ) {
+		for ( const auto &face : world->selectedFaces )
+		{
 		}
 		glEnd();
 
@@ -738,13 +799,16 @@ void huang::XYZPerspective::Draw() {
 
 	// edge / vertex flags
 
-	switch ( g_mainWindow->GetEditMode() ) {
-		case EDIT_MODE_EDGE: {
+	switch ( g_mainWindow->GetEditMode() )
+	{
+		case EDIT_MODE_EDGE:
+		{
 			glPointSize( 4 );
 			glColor3f( 0, 0, 1 );
 			glBegin( GL_POINTS );
 			// Draw edge points
-			for ( unsigned int i = 0; i < g_qeglobals.d_numedges; i++ ) {
+			for ( unsigned int i = 0; i < g_qeglobals.d_numedges; i++ )
+			{
 				float *v1 = g_qeglobals.d_points[ g_qeglobals.d_edges[ i ].p1 ];
 				float *v2 = g_qeglobals.d_points[ g_qeglobals.d_edges[ i ].p2 ];
 				glVertex3f( ( v1[ 0 ] + v2[ 0 ] ) * 0.5f, ( v1[ 1 ] + v2[ 1 ] ) * 0.5f, ( v1[ 2 ] + v2[ 2 ] ) * 0.5f );
@@ -752,7 +816,8 @@ void huang::XYZPerspective::Draw() {
 			// Draw vertices
 			glPointSize( 2 );
 			glColor3f( 0, 0, 1 );
-			for ( const auto &i : world->vertices ) {
+			for ( const auto &i : world->vertices )
+			{
 				glVertex3f( i.position.x, i.position.y, i.position.z );
 			}
 			glEnd();
@@ -763,17 +828,20 @@ void huang::XYZPerspective::Draw() {
 			glPointSize( 2 );
 			glColor3f( 0, 0, 1 );
 			glBegin( GL_POINTS );
-			for ( const auto &i : world->vertices ) {
+			for ( const auto &i : world->vertices )
+			{
 				glVertex3f( i.position.x, i.position.y, i.position.z );
 			}
 			glEnd();
 			glPointSize( 1 );
 			break;
-		case EDIT_MODE_VERTEX: {
+		case EDIT_MODE_VERTEX:
+		{
 			glPointSize( 4 );
 			glColor3f( 0, 1, 0 );
 			glBegin( GL_POINTS );
-			for ( const auto &i : world->vertices ) {
+			for ( const auto &i : world->vertices )
+			{
 				glVertex3f( i.position.x, i.position.y, i.position.z );
 			}
 
@@ -793,7 +861,8 @@ void huang::XYZPerspective::Draw() {
 			break;
 	}
 
-	if ( g_qeglobals.d_select_mode == sel_vertex ) {
+	if ( g_qeglobals.d_select_mode == sel_vertex )
+	{
 	}
 	glTranslatef( -g_qeglobals.d_select_translate[ 0 ], -g_qeglobals.d_select_translate[ 1 ], -g_qeglobals.d_select_translate[ 2 ] );
 

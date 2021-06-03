@@ -12,31 +12,34 @@
 /* Camera management fun! */
 
 static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
-        [VIEW_PERSPECTIVE_EYE] = "Eye",
-        [VIEW_PERSPECTIVE_TOP] = "Top",
-        [VIEW_PERSPECTIVE_SIDE] = "Side",
+        [VIEW_PERSPECTIVE_EYE]   = "Eye",
+        [VIEW_PERSPECTIVE_TOP]   = "Top",
+        [VIEW_PERSPECTIVE_SIDE]  = "Side",
         [VIEW_PERSPECTIVE_FRONT] = "Front",
 };
 
-const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective ) {
+const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective )
+{
 	return perspectiveDescriptions[ perspective ];
 }
 
 static PLLinkedList *camerasList = NULL;
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles ) {
+GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles )
+{
 	Print( "Creating %s camera...\n", perspectiveDescriptions[ perspective ] );
 
 	GfxCamera *gfxCamera = globalSystem.MAlloc( sizeof( GfxCamera ), true );
 
 	gfxCamera->internalPtr = PlgCreateCamera();
-	if ( gfxCamera->internalPtr == NULL ) {
+	if ( gfxCamera->internalPtr == NULL )
+	{
 		PrintError( "Failed to create camera!\nPL: %s\n", PlGetError() );
 	}
 
-	gfxCamera->perspective = perspective;
-    gfxCamera->internalPtr->fov = 75.0f;
-    gfxCamera->internalPtr->far = 1000000.0f;
+	gfxCamera->perspective      = perspective;
+	gfxCamera->internalPtr->fov = 75.0f;
+	gfxCamera->internalPtr->far = 1000000.0f;
 #if 0
 	switch ( gfxCamera->perspective ) {
 		case VIEW_PERSPECTIVE_FRONT:
@@ -50,38 +53,44 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 #endif
 
 	gfxCamera->internalPtr->position = position;
-	gfxCamera->internalPtr->angles = angles;
+	gfxCamera->internalPtr->angles   = angles;
 
 	gfxCamera->node = PlInsertLinkedListNode( camerasList, gfxCamera );
 
 	return gfxCamera;
 }
 
-void Gfx_InitializeCameras( void ) {
+void Gfx_InitializeCameras( void )
+{
 	Print( "Initializing cameras...\n" );
 
 	camerasList = PlCreateLinkedList();
-	if ( camerasList == NULL ) {
+	if ( camerasList == NULL )
+	{
 		PrintError( "Failed to create camera list!\nPL: %s\n", PlGetError() );
 	}
 }
 
 void Gfx_DrawScene( PLGCamera *camera );
-void Gfx_DrawPerspective( GfxCamera *camera ) {
+void Gfx_DrawPerspective( GfxCamera *camera )
+{
 	globalSystem.GetCurrentDisplaySize( &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
-	extern PLConsoleVariable *gVarGraphicsSupersampling;
-	camera->internalPtr->viewport.w *= gVarGraphicsSupersampling->i_value;
-	camera->internalPtr->viewport.h *= gVarGraphicsSupersampling->i_value;
+
+	CVar( "graphics.superSampling", superSampling );
+	camera->internalPtr->viewport.w *= superSampling->i_value;
+	camera->internalPtr->viewport.h *= superSampling->i_value;
 
 	/* if we have a parent, follow them */
-	if ( camera->parentActor != NULL ) {
-		switch ( camera->perspective ) {
+	if ( camera->parentActor != NULL )
+	{
+		switch ( camera->perspective )
+		{
 			default:
 				break;
 			case VIEW_PERSPECTIVE_EYE:
-				camera->internalPtr->angles.x = Act_GetViewPitch( camera->parentActor );
-				camera->internalPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-				camera->internalPtr->position = Act_GetPosition( camera->parentActor );
+				camera->internalPtr->angles.x   = Act_GetViewPitch( camera->parentActor );
+				camera->internalPtr->angles.y   = -Act_GetAngle( camera->parentActor ) + 90.0f;
+				camera->internalPtr->position   = Act_GetPosition( camera->parentActor );
 				camera->internalPtr->position.y = Act_GetViewOffset( camera->parentActor );
 				break;
 			case VIEW_PERSPECTIVE_TOP:
@@ -100,11 +109,14 @@ void Gfx_DrawPerspective( GfxCamera *camera ) {
 	Gfx_DrawScene( camera->internalPtr );
 }
 
-void Gfx_ShutdownCameras( void ) {
+void Gfx_ShutdownCameras( void )
+{
 	PLLinkedListNode *curNode = PlGetFirstNode( camerasList );
-	while ( curNode != NULL ) {
+	while ( curNode != NULL )
+	{
 		GfxCamera *camera = PlGetLinkedListNodeUserData( curNode );
-		if ( camera == NULL ) {
+		if ( camera == NULL )
+		{
 			PrintWarn( "Uninitialized node, skipping!\n" );
 			continue;
 		}

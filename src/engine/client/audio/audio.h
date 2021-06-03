@@ -9,8 +9,9 @@
  * Public handle for a sound loaded
  * in by the audio system.
  */
-typedef struct ASoundReference {
-	int slot;
+typedef struct ASoundReference
+{
+	int  slot;
 	char path[ PL_SYSTEM_MAX_PATH ];
 } ASoundReference;
 
@@ -21,4 +22,4 @@ void A_CleanupSounds( bool force );
 bool A_IsValidSoundSlot( const ASoundReference *s );
 
 ASoundReference A_CacheSound( const char *path );
-void A_ReleaseSound( const ASoundReference *s );
+void            A_ReleaseSound( const ASoundReference *s );

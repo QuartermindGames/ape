@@ -29,52 +29,52 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
-qboolean	drag_ok;
-vec3_t	drag_xvec;
-vec3_t	drag_yvec;
+qboolean drag_ok;
+vec3_t   drag_xvec;
+vec3_t   drag_yvec;
 
-static	int	buttonstate;
-static	int	pressx, pressy;
-static	vec3_t	pressdelta;
-static	int	buttonx, buttony;
+static int    buttonstate;
+static int    pressx, pressy;
+static vec3_t pressdelta;
+static int    buttonx, buttony;
 
 
 //int		num_move_points;
 //float	*move_points[1024];
 
-int		lastx, lasty;
+int lastx, lasty;
 
-qboolean	drag_first;
+qboolean drag_first;
 
 
-void	AxializeVector( vec3_t v ) {
-	vec3_t	a;
-	float	o;
-	int		i;
+void AxializeVector( vec3_t v )
+{
+	vec3_t a;
+	float  o;
+	int    i;
 
-	if( !v[ 0 ] && !v[ 1 ] )
+	if ( !v[ 0 ] && !v[ 1 ] )
 		return;
-	if( !v[ 1 ] && !v[ 2 ] )
+	if ( !v[ 1 ] && !v[ 2 ] )
 		return;
-	if( !v[ 0 ] && !v[ 2 ] )
+	if ( !v[ 0 ] && !v[ 2 ] )
 		return;
 
-	for( i = 0; i < 3; i++ )
+	for ( i = 0; i < 3; i++ )
 		a[ i ] = fabs( v[ i ] );
-	if( a[ 0 ] > a[ 1 ] && a[ 0 ] > a[ 2 ] )
+	if ( a[ 0 ] > a[ 1 ] && a[ 0 ] > a[ 2 ] )
 		i = 0;
-	else if( a[ 1 ] > a[ 0 ] && a[ 1 ] > a[ 2 ] )
+	else if ( a[ 1 ] > a[ 0 ] && a[ 1 ] > a[ 2 ] )
 		i = 1;
 	else
 		i = 2;
 
 	o = v[ i ];
 	VectorCopy( vec3_origin, v );
-	if( o < 0 )
+	if ( o < 0 )
 		v[ i ] = -1;
 	else
 		v[ i ] = 1;
-
 }
 
 
@@ -84,17 +84,19 @@ Drag_Setup
 ===========
 */
 static void Drag_Setup( int x, int y, const bool buttons[],
-	vec3_t xaxis, vec3_t yaxis,
-	vec3_t origin, vec3_t dir ) {
-	trace_t	t;
+                        vec3_t xaxis, vec3_t yaxis,
+                        vec3_t origin, vec3_t dir )
+{
+	trace_t t;
 	face_t *f;
 
-	if( selected_brushes.next == &selected_brushes ) {
+	if ( selected_brushes.next == &selected_brushes )
+	{
 		g_mainWindow->SetStatus( "No selection to drag\n", 0 );
 		return;
 	}
 
-	drag_first = true;
+	drag_first                    = true;
 	g_qeglobals.d_num_move_points = 0;
 	VectorCopy( vec3_origin, pressdelta );
 	pressx = x;
@@ -105,16 +107,20 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 	VectorCopy( yaxis, drag_yvec );
 	AxializeVector( drag_yvec );
 
-	if( g_qeglobals.d_select_mode == sel_vertex ) {
+	if ( g_qeglobals.d_select_mode == sel_vertex )
+	{
 		SelectVertexByRay( origin, dir );
-		if( g_qeglobals.d_num_move_points ) {
+		if ( g_qeglobals.d_num_move_points )
+		{
 			drag_ok = true;
 			return;
 		}
 	}
-	if( g_qeglobals.d_select_mode == sel_edge ) {
+	if ( g_qeglobals.d_select_mode == sel_edge )
+	{
 		SelectEdgeByRay( origin, dir );
-		if( g_qeglobals.d_num_move_points ) {
+		if ( g_qeglobals.d_num_move_points )
+		{
 			drag_ok = true;
 			return;
 		}
@@ -125,41 +131,48 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 	// check for direct hit first
 	//
 	t = Test_Ray( origin, dir, true );
-	if( t.selected ) {
+	if ( t.selected )
+	{
 		drag_ok = true;
 
-		if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
+		if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] )
+		{
 			Sys_Printf( "Shear dragging face\n" );
 			t.brush->SelectFaceForDragging( t.face, true );
-		} else if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] &&
-			buttons[ huang::input::BUTTON_MOD_CONTROL ] &&
-			buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+		}
+		else if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] &&
+		          buttons[ huang::input::BUTTON_MOD_CONTROL ] &&
+		          buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+		{
 			Sys_Printf( "Sticky dragging brush\n" );
-			for( f = t.brush->brush_faces; f; f = f->next )
+			for ( f = t.brush->brush_faces; f; f = f->next )
 				t.brush->SelectFaceForDragging( f, false );
-		} else
+		}
+		else
 			Sys_Printf( "Dragging entire selection\n" );
 
 		return;
 	}
 
-	if( g_qeglobals.d_select_mode == sel_vertex || g_qeglobals.d_select_mode == sel_edge )
+	if ( g_qeglobals.d_select_mode == sel_vertex || g_qeglobals.d_select_mode == sel_edge )
 		return;
 
 	//
 	// check for side hit
 	//
-	if( selected_brushes.next->next != &selected_brushes ) {
+	if ( selected_brushes.next->next != &selected_brushes )
+	{
 		Sys_Printf( "Click isn't inside multiple selection\n" );
 		return;
 	}
 
-	if( selected_brushes.next->owner->eclass->fixedsize ) {
+	if ( selected_brushes.next->owner->eclass->fixedsize )
+	{
 		Sys_Printf( "Can't stretch fixed size entities\n" );
 		return;
 	}
 
-	if( buttons[ huang::input::BUTTON_MOD_CONTROL ] )
+	if ( buttons[ huang::input::BUTTON_MOD_CONTROL ] )
 		selected_brushes.next->SideSelect( origin, dir, true );
 	else
 		selected_brushes.next->SideSelect( origin, dir, false );
@@ -170,30 +183,33 @@ static void Drag_Setup( int x, int y, const bool buttons[],
 
 entity_t *peLink;
 
-void UpdateTarget( vec3_t origin, vec3_t dir ) {
-	trace_t	t;
+void UpdateTarget( vec3_t origin, vec3_t dir )
+{
+	trace_t   t;
 	entity_t *pe;
-	int i;
-	char sz[ 128 ];
+	int       i;
+	char      sz[ 128 ];
 
 	t = Test_Ray( origin, dir, 0 );
 
-	if( !t.brush )
+	if ( !t.brush )
 		return;
 
 	pe = t.brush->owner;
 
-	if( pe == NULL )
+	if ( pe == NULL )
 		return;
 
 	// is this the first?
-	if( peLink != NULL ) {
+	if ( peLink != NULL )
+	{
 
 		// Get the target id from out current target
 		// if there is no id, make one
 
 		i = IntForKey( pe, "target" );
-		if( i <= 0 ) {
+		if ( i <= 0 )
+		{
 			i = GetUniqueTargetId( 1 );
 			sprintf( sz, "%d", i );
 
@@ -206,13 +222,11 @@ void UpdateTarget( vec3_t origin, vec3_t dir ) {
 		SetKeyValue( peLink, "targetname", sz );
 
 		Sys_UpdateWindows( W_ENTITY );
-
 	}
 
 	// promote the target to the src
 
 	peLink = pe;
-
 }
 
 /*
@@ -220,80 +234,95 @@ void UpdateTarget( vec3_t origin, vec3_t dir ) {
 Drag_Begin
 ===========
 */
-void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis, vec3_t origin, vec3_t dir ) {
-	trace_t	t;
+void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis, vec3_t origin, vec3_t dir )
+{
+	trace_t t;
 
 	drag_ok = false;
 	VectorCopy( vec3_origin, pressdelta );
 
 	drag_first = true;
-	peLink = nullptr;
+	peLink     = nullptr;
 
 	// shift LBUTTON = select entire brush
-	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
-		if( !dir[ 0 ] && !dir[ 1 ] )
-			Select_Ray( origin, dir, SF_ENTITIES_FIRST );	// hack for XY
+	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] && buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+	{
+		if ( !dir[ 0 ] && !dir[ 1 ] )
+			Select_Ray( origin, dir, SF_ENTITIES_FIRST );// hack for XY
 		else
 			Select_Ray( origin, dir, 0 );
 		return;
 	}
 
 	// ctrl-shift LBUTTON = select single face
-	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] &&
-		buttons[ huang::input::BUTTON_MOD_CONTROL ] &&
-		buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] &&
+	     buttons[ huang::input::BUTTON_MOD_CONTROL ] &&
+	     buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+	{
 		Select_Deselect();
 		Select_Ray( origin, dir, SF_SINGLEFACE );
 		return;
 	}
 
 	// LBUTTON + all other modifiers = manipulate selection
-	if( buttons[ huang::input::MOUSE_BUTTON_LEFT ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_LEFT ] )
+	{
 		Drag_Setup( x, y, buttons, xaxis, yaxis, origin, dir );
 		return;
 	}
 
 	// middle button = grab texture
-	if( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] )
+	{
 		t = Test_Ray( origin, dir, false );
-		if( t.face ) {
+		if ( t.face )
+		{
 			g_qeglobals.d_new_brush_bottom_z = t.brush->mins[ 2 ];
-			g_qeglobals.d_new_brush_top_z = t.brush->maxs[ 2 ];
+			g_qeglobals.d_new_brush_top_z    = t.brush->maxs[ 2 ];
 			Texture_SetTexture( &t.face->texdef );
-		} else
+		}
+		else
 			Sys_Printf( "Did not select a texture\n" );
 		return;
 	}
 
 	// ctrl-middle button = set entire brush to texture
-	if( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] && buttons[ huang::input::BUTTON_MOD_CONTROL ] )
+	{
 		t = Test_Ray( origin, dir, false );
-		if( t.brush ) {
-			if( t.brush->brush_faces->texdef.name[ 0 ] == '(' )
+		if ( t.brush )
+		{
+			if ( t.brush->brush_faces->texdef.name[ 0 ] == '(' )
 				Sys_Printf( "Can't change an entity texture\n" );
-			else {
+			else
+			{
 				t.brush->SetTexture( &g_qeglobals.d_texturewin.texdef );
 				Sys_UpdateWindows( W_ALL );
 			}
-		} else
+		}
+		else
 			Sys_Printf( "Didn't hit a btrush\n" );
 		return;
 	}
 
 	// ctrl-shift-middle button = set single face to texture
-	if( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] &&
-		buttons[ huang::input::BUTTON_MOD_SHIFT ] &&
-		buttons[ huang::input::BUTTON_MOD_CONTROL ] ) {
+	if ( buttons[ huang::input::MOUSE_BUTTON_MIDDLE ] &&
+	     buttons[ huang::input::BUTTON_MOD_SHIFT ] &&
+	     buttons[ huang::input::BUTTON_MOD_CONTROL ] )
+	{
 		t = Test_Ray( origin, dir, false );
-		if( t.brush ) {
-			if( t.brush->brush_faces->texdef.name[ 0 ] == '(' )
+		if ( t.brush )
+		{
+			if ( t.brush->brush_faces->texdef.name[ 0 ] == '(' )
 				Sys_Printf( "Can't change an entity texture\n" );
-			else {
+			else
+			{
 				t.face->texdef = g_qeglobals.d_texturewin.texdef;
 				t.brush->Build();
 				Sys_UpdateWindows( W_ALL );
 			}
-		} else
+		}
+		else
 			Sys_Printf( "Didn't hit a btrush\n" );
 		return;
 	}
@@ -304,11 +333,12 @@ void Drag_Begin( int x, int y, const bool buttons[], vec3_t xaxis, vec3_t yaxis,
 MoveSelection
 ===========
 */
-void MoveSelection( vec3_t move ) {
-	int		i;
+void MoveSelection( vec3_t move )
+{
+	int    i;
 	Brush *b;
 
-	if( !move[ 0 ] && !move[ 1 ] && !move[ 2 ] )
+	if ( !move[ 0 ] && !move[ 1 ] && !move[ 2 ] )
 		return;
 
 	Sys_UpdateWindows( W_XY | W_CAMERA );
@@ -316,39 +346,45 @@ void MoveSelection( vec3_t move ) {
 	//
 	// dragging only a part of the selection
 	//
-	if( g_qeglobals.d_num_move_points ) {
-		for( i = 0; i < g_qeglobals.d_num_move_points; i++ )
+	if ( g_qeglobals.d_num_move_points )
+	{
+		for ( i = 0; i < g_qeglobals.d_num_move_points; i++ )
 			VectorAdd( g_qeglobals.d_move_points[ i ], move, g_qeglobals.d_move_points[ i ] );
 
-		for( b = selected_brushes.next; b != &selected_brushes; b = b->next ) {
+		for ( b = selected_brushes.next; b != &selected_brushes; b = b->next )
+		{
 			b->Build();
-			for( i = 0; i < 3; i++ )
-				if( b->mins[ i ] > b->maxs[ i ]
-					|| b->maxs[ i ] - b->mins[ i ] > 4096 )
-					break;	// dragged backwards or fucked up
-			if( i != 3 )
+			for ( i = 0; i < 3; i++ )
+				if ( b->mins[ i ] > b->maxs[ i ] || b->maxs[ i ] - b->mins[ i ] > 4096 )
+					break;// dragged backwards or fucked up
+			if ( i != 3 )
 				break;
 		}
 
 		// if any of the brushes were crushed out of existance
 		// calcel the entire move
-		if( b != &selected_brushes ) {
+		if ( b != &selected_brushes )
+		{
 			Sys_Printf( "Brush dragged backwards, move canceled\n" );
-			for( i = 0; i < g_qeglobals.d_num_move_points; i++ )
+			for ( i = 0; i < g_qeglobals.d_num_move_points; i++ )
 				VectorSubtract( g_qeglobals.d_move_points[ i ], move, g_qeglobals.d_move_points[ i ] );
 
-			for( b = selected_brushes.next; b != &selected_brushes; b = b->next )
+			for ( b = selected_brushes.next; b != &selected_brushes; b = b->next )
 				b->Build();
 		}
-
-	} else {
+	}
+	else
+	{
 		//
 		// if there are lots of brushes selected, just translate instead
 		// of rebuilding the brushes
 		//
-		if( drag_yvec[ 2 ] == 0 && selected_brushes.next->next != &selected_brushes ) {
+		if ( drag_yvec[ 2 ] == 0 && selected_brushes.next->next != &selected_brushes )
+		{
 			VectorAdd( g_qeglobals.d_select_translate, move, g_qeglobals.d_select_translate );
-		} else {
+		}
+		else
+		{
 			Select_Move( move );
 		}
 	}
@@ -359,34 +395,37 @@ void MoveSelection( vec3_t move ) {
 Drag_MouseMoved
 ===========
 */
-void Drag_MouseMoved( int x, int y, const bool buttons[] ) {
-	vec3_t	move, delta;
-	int		i;
-	char	movestring[ 128 ];
+void Drag_MouseMoved( int x, int y, const bool buttons[] )
+{
+	vec3_t move, delta;
+	int    i;
+	char   movestring[ 128 ];
 
-	if( !buttons ) {
+	if ( !buttons )
+	{
 		drag_ok = false;
 		return;
 	}
-	if( !drag_ok )
+	if ( !drag_ok )
 		return;
 
 	// clear along one axis
-	if( buttons[ huang::input::BUTTON_MOD_SHIFT ] ) {
+	if ( buttons[ huang::input::BUTTON_MOD_SHIFT ] )
+	{
 		drag_first = false;
-		if( abs( x - pressx ) > abs( y - pressy ) )
+		if ( abs( x - pressx ) > abs( y - pressy ) )
 			y = pressy;
 		else
 			x = pressx;
 	}
 
-	for( i = 0; i < 3; i++ ) {
-		move[ i ] = drag_xvec[ i ] * ( x - pressx )
-			+ drag_yvec[ i ] * ( y - pressy );
+	for ( i = 0; i < 3; i++ )
+	{
+		move[ i ] = drag_xvec[ i ] * ( x - pressx ) + drag_yvec[ i ] * ( y - pressy );
 		move[ i ] = floor( move[ i ] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 	}
 
-	sprintf( movestring, "Dragging (%i %i %i)", (int)move[ 0 ], (int)move[ 1 ], (int)move[ 2 ] );
+	sprintf( movestring, "Dragging (%i %i %i)", ( int ) move[ 0 ], ( int ) move[ 1 ], ( int ) move[ 2 ] );
 	g_mainWindow->SetStatus( movestring, 0 );
 
 	VectorSubtract( move, pressdelta, delta );
@@ -399,9 +438,11 @@ void Drag_MouseMoved( int x, int y, const bool buttons[] ) {
 Drag_MouseUp
 ===========
 */
-void Drag_MouseUp( void ) {
+void Drag_MouseUp( void )
+{
 	g_mainWindow->SetStatus( "drag completed.", 0 );
-	if( g_qeglobals.d_select_translate[ 0 ] || g_qeglobals.d_select_translate[ 1 ] || g_qeglobals.d_select_translate[ 2 ] ) {
+	if ( g_qeglobals.d_select_translate[ 0 ] || g_qeglobals.d_select_translate[ 1 ] || g_qeglobals.d_select_translate[ 2 ] )
+	{
 		Select_Move( g_qeglobals.d_select_translate );
 		VectorCopy( vec3_origin, g_qeglobals.d_select_translate );
 		Sys_UpdateWindows( W_CAMERA );

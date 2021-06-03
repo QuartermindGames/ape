@@ -19,29 +19,32 @@
 
 #pragma once
 
-namespace huang {
-    struct Layer {
-        char name[ 32 ]{ "Unnamed" };
-        bool isVisible{ false };
-        FXColor colour;
-    };
+namespace huang
+{
+	struct Layer
+	{
+		char    name[ 32 ]{ "Unnamed" };
+		bool    isVisible{ false };
+		FXColor colour;
+	};
 
-    class LayerWidget : public FXTreeListBox {
-        FXDECLARE( LayerWidget )
+	class LayerWidget : public FXTreeListBox
+	{
+		FXDECLARE( LayerWidget )
 
-    public:
-        LayerWidget();
-        LayerWidget( FXComposite *p );
-        virtual ~LayerWidget();
+	public:
+		LayerWidget();
+		LayerWidget( FXComposite *p );
+		virtual ~LayerWidget();
 
-        void create() override;
+		void create() override;
 
-        enum {
-            ID_CANVAS = FXTreeListBox::ID_LAST,
-        };
+		enum
+		{
+			ID_CANVAS = FXTreeListBox::ID_LAST,
+		};
 
-    protected:
-    private:
-        
-    };
-}
+	protected:
+	private:
+	};
+}// namespace huang

@@ -16,7 +16,7 @@ add_library(common STATIC
 
         com_filesystem.c
         common.c
-        )
+        node/node_ds_common.c)
 
 target_include_directories(common PRIVATE ./ ../3rdparty/miniz/)
 
@@ -28,4 +28,4 @@ if (NOT UNIX)
     target_link_libraries(common mingw32)
 endif ()
 
-target_link_libraries(common plcore)
+target_link_libraries(common plcore plgraphics)

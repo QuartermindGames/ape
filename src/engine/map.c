@@ -10,16 +10,17 @@
 #define MAP_GEOMETRY_IDENTIFIER "geometry"
 #define MAP_GEOMETRY_VERSION    "version 2"
 
-static struct {
-	PLGVertex *vertices;
+static struct
+{
+	PLGVertex *  vertices;
 	unsigned int numVertices;
-	MapFace *faces;
+	MapFace *    faces;
 	unsigned int numFaces;
-	MapSector *sectors;
+	MapSector *  sectors;
 	unsigned int numSectors;
 
 	/* materials */
-	Material **materials;
+	Material **  materials;
 	unsigned int numMaterials;
 } mapData;
 
@@ -28,7 +29,8 @@ static PLGMesh *renderMesh = NULL;
 /**
  * Returns a list of faces for the specified sector.
  */
-MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces ) {
+MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces )
+{
 	/* for now, just return the entire list -_-; */
 	*numFaces = mapData.numFaces;
 	return mapData.faces;
@@ -37,26 +39,30 @@ MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces )
 /**
  * Clears out the current map data.
  */
-void Map_ClearData( void ) {
+void Map_ClearData( void )
+{
 	memset( &mapData, 0, sizeof( mapData ) );
 }
 
 /**********************************************************/
 /** Map File Reader **/
 
-static bool Map_ValidateGeometryFile( PLFile *file ) {
+static bool Map_ValidateGeometryFile( PLFile *file )
+{
 	char buffer[ 256 ];
 
 	/* check the identifier */
 	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( strcmp( MAP_GEOMETRY_IDENTIFIER "\n", buffer ) != 0 ) {
+	if ( strcmp( MAP_GEOMETRY_IDENTIFIER "\n", buffer ) != 0 )
+	{
 		PrintWarn( "Invalid identifier found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_IDENTIFIER, buffer );
 		return false;
 	}
 
 	/* and now check the version */
 	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( strcmp( MAP_GEOMETRY_VERSION "\n", buffer ) != 0 ) {
+	if ( strcmp( MAP_GEOMETRY_VERSION "\n", buffer ) != 0 )
+	{
 		PrintWarn( "Invalid version found, expected \"%s\" but found \"%s\"\n", MAP_GEOMETRY_VERSION, buffer );
 		return false;
 	}
@@ -64,27 +70,33 @@ static bool Map_ValidateGeometryFile( PLFile *file ) {
 	return true;
 }
 
-static void Map_ParseTextures( PLFile *file ) {
+static void Map_ParseTextures( PLFile *file )
+{
 	char buffer[ 256 ];
 
 	/* fetch all the materials the map will be using */
 	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "materials %d\n", &mapData.numMaterials ) != 1 ) {
+	if ( sscanf( buffer, "materials %d\n", &mapData.numMaterials ) != 1 )
+	{
 		PrintError( "Failed to fetch number of textures in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate storage for them */
-	mapData.materials = globalSystem.CAlloc( mapData.numMaterials, sizeof( Material* ), true );
+	mapData.materials = globalSystem.CAlloc( mapData.numMaterials, sizeof( Material * ), true );
 
-	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
-		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+	for ( unsigned int i = 0; i < mapData.numMaterials; ++i )
+	{
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL )
+		{
 			PrintError( "Failed to read in texture \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		/* copy the material name; excluding the line terminator */
 		char materialName[ 64 ];
-		for ( unsigned int j = 0; j < sizeof( materialName ); ++j ) {
-			if ( buffer[ j ] == '\n' ) {
+		for ( unsigned int j = 0; j < sizeof( materialName ); ++j )
+		{
+			if ( buffer[ j ] == '\n' )
+			{
 				materialName[ j ] = '\0';
 				break;
 			}
@@ -96,18 +108,22 @@ static void Map_ParseTextures( PLFile *file ) {
 	}
 }
 
-static void Map_ParseVertices( PLFile *file ) {
+static void Map_ParseVertices( PLFile *file )
+{
 	char buffer[ 256 ];
 
 	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "vertices %d\n", &mapData.numVertices ) != 1 ) {
+	if ( sscanf( buffer, "vertices %d\n", &mapData.numVertices ) != 1 )
+	{
 		PrintError( "Failed to fetch number of vertices in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate buffer for vertices and then read them all in */
 	mapData.vertices = globalSystem.CAlloc( mapData.numVertices, sizeof( PLGVertex ), true );
-	for ( unsigned int i = 0; i < mapData.numVertices; ++i ) {
-		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+	for ( unsigned int i = 0; i < mapData.numVertices; ++i )
+	{
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL )
+		{
 			PrintError( "Failed to read in vertex \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
@@ -123,38 +139,46 @@ static void Map_ParseVertices( PLFile *file ) {
 		             &mapData.vertices[ i ].colour.r,
 		             &mapData.vertices[ i ].colour.g,
 		             &mapData.vertices[ i ].colour.b,
-		             &mapData.vertices[ i ].colour.a ) < 3 ) {
+		             &mapData.vertices[ i ].colour.a ) < 3 )
+		{
 			PrintError( "Failed to read in vertex \"%d\" element in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 	}
 }
 
-static void Map_ParseFaces( PLFile *file ) {
+static void Map_ParseFaces( PLFile *file )
+{
 	char buffer[ 256 ];
 
 	PlReadString( file, buffer, sizeof( buffer ) );
-	if ( sscanf( buffer, "faces %d\n", &mapData.numFaces ) != 1 ) {
+	if ( sscanf( buffer, "faces %d\n", &mapData.numFaces ) != 1 )
+	{
 		PrintError( "Failed to fetch number of faces in \"%s\"!\n", PlGetFilePath( file ) );
 	}
 
 	/* allocate buffer for faces and then read them all in */
 	mapData.faces = globalSystem.CAlloc( mapData.numFaces, sizeof( MapFace ), true );
-	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
-		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL ) {
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i )
+	{
+		if ( PlReadString( file, buffer, sizeof( buffer ) ) == NULL )
+		{
 			PrintError( "Failed to read in face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 #define MAX_FACE_INDICES 64
-		char *token = strtok( buffer, " " );
+		char *       token      = strtok( buffer, " " );
 		unsigned int numIndices = strtol( token, NULL, 10 );
-		if ( numIndices == 0 || numIndices >= MAX_FACE_INDICES ) {
+		if ( numIndices == 0 || numIndices >= MAX_FACE_INDICES )
+		{
 			PrintError( "Invalid number of indices for face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
 		unsigned int faceIndices[ MAX_FACE_INDICES ];
-		for ( unsigned int j = 0; j < numIndices; ++j ) {
+		for ( unsigned int j = 0; j < numIndices; ++j )
+		{
 			token = strtok( NULL, " " );
-			if ( token == NULL ) {
+			if ( token == NULL )
+			{
 				PrintError( "Failed to read in face \"%d\" elements in \"%s\"!\n", i, PlGetFilePath( file ) );
 			}
 
@@ -166,28 +190,36 @@ static void Map_ParseFaces( PLFile *file ) {
 		unsigned int materialIndex = 0;
 
 		token = strtok( NULL, " " );
-		if ( token != NULL ) {
+		if ( token != NULL )
+		{
 			materialIndex = strtol( token, NULL, 10 );
 
 			token = strtok( NULL, " " );
-			if ( token != NULL ) {
+			if ( token != NULL )
+			{
 				mapData.faces[ i ].flags = strtol( token, NULL, 10 );
 			}
 		}
 
-		if ( materialIndex >= mapData.numMaterials ) {
+		if ( materialIndex >= mapData.numMaterials )
+		{
 			PrintError( "Invalid texture id %d for polygon %d!\n", materialIndex, i );
-		} else {
+		}
+		else
+		{
 			mapData.faces[ i ].material = mapData.materials[ materialIndex ];
 		}
 
 		mapData.faces[ i ].polygon = PlgCreatePolygon( NULL, PLVector2( 0.0f, 0.0f ), PLVector2( 2.0f, 2.0f ), 0.0f );
-		if ( mapData.faces[ i ].polygon == NULL ) {
+		if ( mapData.faces[ i ].polygon == NULL )
+		{
 			PrintError( "Failed to create polygon for face \"%d\" in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 
-		for ( unsigned int j = 0; j < numIndices; ++j ) {
-			if ( faceIndices[ j ] >= mapData.numVertices ) {
+		for ( unsigned int j = 0; j < numIndices; ++j )
+		{
+			if ( faceIndices[ j ] >= mapData.numVertices )
+			{
 				PrintError( "Invalid vertex index!\n" );
 			}
 
@@ -195,13 +227,14 @@ static void Map_ParseFaces( PLFile *file ) {
 		}
 
 		unsigned int numPolyVertices;
-		PLGVertex *vertices = PlgGetPolygonVertices( mapData.faces[ i ].polygon, &numPolyVertices );
-		if ( numPolyVertices != numIndices ) {
+		PLGVertex *  vertices = PlgGetPolygonVertices( mapData.faces[ i ].polygon, &numPolyVertices );
+		if ( numPolyVertices != numIndices )
+		{
 			PrintError( "Number of vertices from polygon did not match vertices loaded!\n" );
 		}
 
 		/* generate tangets */
-		unsigned int numTriangles;
+		unsigned int  numTriangles;
 		unsigned int *indices = PlgConvertPolygonToTriangles( mapData.faces[ i ].polygon, &numTriangles );
 		PlgGenerateTangentBasis( vertices, numPolyVertices, indices, numTriangles );
 		free( indices );
@@ -211,7 +244,8 @@ static void Map_ParseFaces( PLFile *file ) {
 	}
 }
 
-void Map_ParseSectors( PLFile *file ) {
+void Map_ParseSectors( PLFile *file )
+{
 	char buffer[ 256 ];
 
 	//PlReadString( file, buffer, sizeof( buffer ) );
@@ -220,7 +254,7 @@ void Map_ParseSectors( PLFile *file ) {
 	//}
 
 	mapData.numSectors = 1;
-	mapData.sectors = globalSystem.CAlloc( mapData.numSectors, sizeof( MapSector ), true );
+	mapData.sectors    = globalSystem.CAlloc( mapData.numSectors, sizeof( MapSector ), true );
 
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */
@@ -275,19 +309,24 @@ void Map_ParseSectors( PLFile *file ) {
 #endif
 }
 
-void Map_LoadGeometryData( const char *mapName ) {
+void Map_LoadGeometryData( const char *mapName )
+{
 	char path[ PL_SYSTEM_MAX_PATH ];
 	snprintf( path, sizeof( path ), "worlds/%s.geometry", mapName );
 
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL ) {
+	if ( file == NULL )
+	{
 		PrintWarn( "Failed to open \"geometry\" file, \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return;
 	}
 
-	if ( !Map_ValidateGeometryFile( file ) ) {
+	if ( !Map_ValidateGeometryFile( file ) )
+	{
 		PrintWarn( "\"%s\" is not a valid \"geometry\" file!\n", PlGetFilePath( file ) );
-	} else {
+	}
+	else
+	{
 		Map_ParseTextures( file );
 		Map_ParseVertices( file );
 		Map_ParseFaces( file );
@@ -297,13 +336,15 @@ void Map_LoadGeometryData( const char *mapName ) {
 	PlCloseFile( file );
 }
 
-void Map_Load( const char *mapName ) {
+void Map_Load( const char *mapName )
+{
 	Map_LoadGeometryData( mapName );
 
 	/* create our mesh container for rendering */
 
 	unsigned int maxTriangles = 0;
-	for ( unsigned int i = 0; i < mapData.numFaces; ++i ) {
+	for ( unsigned int i = 0; i < mapData.numFaces; ++i )
+	{
 		maxTriangles += PlgGetNumOfPolygonTriangles( mapData.faces[ i ].polygon );
 	}
 
@@ -311,12 +352,14 @@ void Map_Load( const char *mapName ) {
 	PlgDestroyMesh( renderMesh );
 
 	renderMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, maxTriangles, maxTriangles * 3 );
-	if ( renderMesh == NULL ) {
+	if ( renderMesh == NULL )
+	{
 		PrintError( "Failed to create render mesh!\nPL: %s\n", PlGetError() );
 	}
 }
 
-bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) {
+bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea )
+{
 #if 0
 	const MapSector *area = &mapData.sectors[ curArea ];
 	for( unsigned int j = 0; j < area->numLines; ++j ) {
@@ -338,16 +381,19 @@ bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea ) 
 	return false;
 }
 
-static PLVector3 GetOriginPointFromVertices( const PLGVertex *vertices, unsigned int numVertices ) {
+static PLVector3 GetOriginPointFromVertices( const PLGVertex *vertices, unsigned int numVertices )
+{
 	/* we can cheat this a little bit by depending on the bounding box we generate */
 	return PlgGenerateAabbFromVertices( vertices, numVertices, true ).absOrigin;
 }
 
-PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination ) {
+PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination )
+{
 	/* so, this is a little awkward, but we need to figure out where each face is in the world
 	 * by averaging the vertex coords for each and then positioning the portal at each. */
 
-	typedef struct Portal {
+	typedef struct Portal
+	{
 		PLVector3 origin;
 		PLVector3 rotation;
 	} Portal;
@@ -355,12 +401,12 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 
 	/* first, figure it out for the source */
 	unsigned int numVertices;
-	PLGVertex *vertices;
+	PLGVertex *  vertices;
 
-	vertices = PlgGetPolygonVertices( source->polygon, &numVertices );
+	vertices            = PlgGetPolygonVertices( source->polygon, &numVertices );
 	portals[ 0 ].origin = GetOriginPointFromVertices( vertices, numVertices );
 
-	vertices = PlgGetPolygonVertices( destination->polygon, &numVertices );
+	vertices            = PlgGetPolygonVertices( destination->polygon, &numVertices );
 	portals[ 1 ].origin = GetOriginPointFromVertices( vertices, numVertices );
 
 	Gfx_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
@@ -381,59 +427,66 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 /**
  * Draw scrolling clouds.
  */
-void Map_DrawSky( PLGCamera *camera ) {
+void Map_DrawSky( PLGCamera *camera )
+{
 	static Material *skyMaterial = NULL;
-	if ( skyMaterial == NULL ) {
+	if ( skyMaterial == NULL )
+	{
 		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
-		if ( skyMaterial == NULL ) {
+		if ( skyMaterial == NULL )
+		{
 			PrintError( "Failed to load cloud layer!\n" );
 		}
 	}
 
 	static PLGVertex vertices[] = {
 	        { .position = PLVector3( 10.0f, 100.f, 100.0f ),
-	          .colour = PL_COLOUR_WHITE }, /* top right */
+	          .colour   = PL_COLOUR_WHITE }, /* top right */
 	        { .position = PLVector3( 10.0f, 200.0f, 200.0f ),
-	          .colour = PLColourA( 0 ) }, /* top right far */
+	          .colour   = PLColourA( 0 ) }, /* top right far */
 	        { .position = PLVector3( 10.0f, 100.0f, -100.0f ),
-	          .colour = PL_COLOUR_WHITE }, /* lower right */
+	          .colour   = PL_COLOUR_WHITE }, /* lower right */
 	        { .position = PLVector3( 10.0f, 200.0f, -200.0f ),
-	          .colour = PLColourA( 0 ) }, /* lower right far */
+	          .colour   = PLColourA( 0 ) }, /* lower right far */
 	        { .position = PLVector3( 10.0f, -100.0f, -100.0f ),
-	          .colour = PL_COLOUR_WHITE }, /* lower left */
+	          .colour   = PL_COLOUR_WHITE }, /* lower left */
 	        { .position = PLVector3( 10.0f, -200.0f, -200.0f ),
-	          .colour = PLColourA( 0 ) }, /* lower left far */
+	          .colour   = PLColourA( 0 ) }, /* lower left far */
 	        { .position = PLVector3( 10.0f, -100.0f, 100.0f ),
-	          .colour = PL_COLOUR_WHITE }, /* top left */
+	          .colour   = PL_COLOUR_WHITE }, /* top left */
 	        { .position = PLVector3( 10.0f, -200.0f, 200.0f ),
-	          .colour = PLColourA( 0 ) } }; /* top left far */
-	static unsigned int indices[][3]={
+	          .colour   = PLColourA( 0 ) } }; /* top left far */
+	static unsigned int indices[][ 3 ] = {
 	        /* corners */
 	        { 2, 1, 0 },
-			{ 3, 1, 2 },
-			{ 4, 3, 2 },
-			{ 5, 3, 4 },
-			{ 6, 5, 4 },
-			{ 7, 5, 6 },
-			{ 0, 7, 6 },
-			{ 1, 7, 0 },
+	        { 3, 1, 2 },
+	        { 4, 3, 2 },
+	        { 5, 3, 4 },
+	        { 6, 5, 4 },
+	        { 7, 5, 6 },
+	        { 0, 7, 6 },
+	        { 1, 7, 0 },
 	        /* middle */
-			{ 4, 2, 0 },
-			{ 6, 4, 0 },
+	        { 4, 2, 0 },
+	        { 6, 4, 0 },
 	};
 
 	static PLGMesh *skyMesh = NULL;
-	if ( skyMesh == NULL ) {
+	if ( skyMesh == NULL )
+	{
 		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
-		if ( skyMesh == NULL ) {
+		if ( skyMesh == NULL )
+		{
 			PrintError( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
 		}
 
-		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i ) {
+		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i )
+		{
 			PlgSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
 		}
 
-		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i ) {
+		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i )
+		{
 			PlgSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
 			PlgSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
 		}
@@ -470,52 +523,61 @@ void Map_DrawSky( PLGCamera *camera ) {
 	PlgSetDepthMask( true );
 }
 
-void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass ) {
-	for ( unsigned int i = 0; i < mapData.numMaterials; ++i ) {
+void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
+{
+	for ( unsigned int i = 0; i < mapData.numMaterials; ++i )
+	{
 		PlgClearMesh( renderMesh );
 
-		for ( unsigned int j = 0; j < mapData.numFaces; ++j ) {
+		for ( unsigned int j = 0; j < mapData.numFaces; ++j )
+		{
 			MapFace *curFace = &mapData.faces[ j ];
 
 			curFace->bounds.origin = PLVector3( 0, 0, 0 );
 
-			if ( curFace->material != mapData.materials[ i ] ) {
+			if ( curFace->material != mapData.materials[ i ] )
+			{
 				continue;
 			}
 
 			/* check the face is actually visible */
-			if ( !PlgIsBoxInsideView( camera, &curFace->bounds ) ) {
+			if ( !PlgIsBoxInsideView( camera, &curFace->bounds ) )
+			{
 				continue;
 			}
 
 			unsigned int numVertices;
-			PLGVertex *vertices = PlgGetPolygonVertices( curFace->polygon, &numVertices );
-			for( unsigned int k = 0; k < numVertices; ++k ) {
+			PLGVertex *  vertices = PlgGetPolygonVertices( curFace->polygon, &numVertices );
+			for ( unsigned int k = 0; k < numVertices; ++k )
+			{
 				unsigned int v = PlgAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's appropriate to add to AddMeshVertex */
-				renderMesh->vertices[ v ].tangent = vertices[ k ].tangent;
+				renderMesh->vertices[ v ].tangent   = vertices[ k ].tangent;
 				renderMesh->vertices[ v ].bitangent = vertices[ k ].bitangent;
 			}
 
-			unsigned int numTriangles;
-			unsigned int *indices = PlgConvertPolygonToTriangles( curFace->polygon, &numTriangles );
+			unsigned int  numTriangles;
+			unsigned int *indices  = PlgConvertPolygonToTriangles( curFace->polygon, &numTriangles );
 			unsigned int *curIndex = indices;
-			for ( unsigned int k = 0; k < numTriangles; ++k ) {
+			for ( unsigned int k = 0; k < numTriangles; ++k )
+			{
 				PlgAddMeshTriangle( renderMesh,
-				                   curIndex[ 0 ] + renderMesh->num_verts - numVertices,
-				                   curIndex[ 1 ] + renderMesh->num_verts - numVertices,
-				                   curIndex[ 2 ] + renderMesh->num_verts - numVertices );
+				                    curIndex[ 0 ] + renderMesh->num_verts - numVertices,
+				                    curIndex[ 1 ] + renderMesh->num_verts - numVertices,
+				                    curIndex[ 2 ] + renderMesh->num_verts - numVertices );
 				curIndex += 3;
 			}
 			globalSystem.Free( indices );
 		}
 
-		if ( renderMesh->num_triangles == 0 ) {
+		if ( renderMesh->num_triangles == 0 )
+		{
 			continue;
 		}
 
 		Material *material = mapData.materials[ i ];
-		if ( smPass ) {
+		if ( smPass )
+		{
 			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC, true );
 		}
 
@@ -523,11 +585,13 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass ) {
 	}
 }
 
-static void Map_SetupScene( PLGCamera *camera ) {
+static void Map_SetupScene( PLGCamera *camera )
+{
 	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL ) {
+	if ( program == NULL )
+	{
 		return;
 	}
 
@@ -569,8 +633,10 @@ static void Map_SetupScene( PLGCamera *camera ) {
 #endif
 }
 
-void Map_Draw( PLGCamera *camera, bool smPass ) {
-	if ( renderMesh == NULL ) {
+void Map_Draw( PLGCamera *camera, bool smPass )
+{
+	if ( renderMesh == NULL )
+	{
 		return;
 	}
 
@@ -591,15 +657,18 @@ void Map_Draw( PLGCamera *camera, bool smPass ) {
 	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
 }
 
-PLVector4 World_GetAmbience( void ) {
+PLVector4 World_GetAmbience( void )
+{
 	return PLVector4( 0.4f, 0.4f, 0.4f, 1.0f );
 }
 
-PLVector4 World_GetSunColour( void ) {
+PLVector4 World_GetSunColour( void )
+{
 	return PLVector4( 1.0f, 1.0f, 1.0f, 1.25f );
 }
 
-PLVector3 World_GetSunPosition( void ) {
+PLVector3 World_GetSunPosition( void )
+{
 	return PLVector3( 0.5f, -1.0f, 0.5f );
 }
 

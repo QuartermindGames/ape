@@ -3,7 +3,8 @@
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
  * ====================================================================== */
 
-typedef enum VMRegisterType {
+typedef enum VMRegisterType
+{
 	VM_REG_0,
 	VM_REG_1,
 	VM_REG_2,
@@ -19,7 +20,8 @@ typedef enum VMRegisterType {
 	VM_MAX_REGISTERS
 } VMRegisterType;
 
-typedef enum VMOpCode {
+typedef enum VMOpCode
+{
 	VM_OP_NOP, /* invalid instruction, throws error */
 	VM_OP_RETURN,
 	VM_OP_OR,
@@ -36,13 +38,15 @@ typedef enum VMOpCode {
 	VM_MAX_OPCODES
 } VMOpCode;
 
-enum {
+enum
+{
 	PL_BITFLAG( VM_FL_POS, 0 ),
 	PL_BITFLAG( VM_FL_ZRO, 1 ),
 	PL_BITFLAG( VM_FL_NEG, 2 ),
 };
 
-typedef struct VMInstruction {
+typedef struct VMInstruction
+{
 	uint8_t opCode;
 } VMInstruction;
 
@@ -51,15 +55,16 @@ typedef struct VMInstruction {
  * */
 
 #define VM_BIN_EXTENSION ".cvm"
-#define VM_BIN_MAGIC "CVM"
-#define VM_BIN_VERSION 2
+#define VM_BIN_MAGIC     "CVM"
+#define VM_BIN_VERSION   2
 
 #define VM_PROGRAM_NAME_LENGTH 16
 
-typedef struct CVMHeader {
-	char magic[ 4 ];
+typedef struct CVMHeader
+{
+	char    magic[ 4 ];
 	uint8_t version;
-	char name[ VM_PROGRAM_NAME_LENGTH ];
+	char    name[ VM_PROGRAM_NAME_LENGTH ];
 } CVMHeader;
 
 /*--------------------------
@@ -70,5 +75,5 @@ typedef struct VMProgram VMProgram;
 
 VMProgram *VM_GetProgramByName( const char *programName );
 VMProgram *VM_LoadCVM( const char *path, size_t memoryPoolSize );
-void VM_Tick( void );
-void VM_Initialize( void );
+void       VM_Tick( void );
+void       VM_Initialize( void );

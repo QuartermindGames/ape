@@ -8,7 +8,8 @@
 
 #include "yin.h"
 
-enum {
+enum
+{
 	PLY_VAR_INVALID,
 	PLY_VAR_FLOAT,
 	PLY_VAR_DOUBLE,
@@ -20,44 +21,50 @@ enum {
 	PLY_VAR_INT,
 };
 
-typedef struct PLYVariable {
+typedef struct PLYVariable
+{
 	unsigned int type;
-	union {
-		float f;
-		double f64;
-		double d;
-		unsigned char uc;
-		char c;
+	union
+	{
+		float          f;
+		double         f64;
+		double         d;
+		unsigned char  uc;
+		char           c;
 		unsigned short us;
-		short s;
-		unsigned int ui;
-		int i;
+		short          s;
+		unsigned int   ui;
+		int            i;
 	};
 } PLYVariable;
 
-typedef struct PLYVertexDescription {
+typedef struct PLYVertexDescription
+{
 	PLYVariable x, y, z;
 	PLYVariable nx, ny, nz;
 	PLYVariable s, t;
 	PLYVariable r, g, b;
 } PLYVertexDescription;
 
-typedef struct PLYFaceDescription {
+typedef struct PLYFaceDescription
+{
 	PLYVariable numVertices;
 	PLYVariable indices[ 32 ];
 } PLYFaceDescription;
 
-typedef struct PLYHeader {
+typedef struct PLYHeader
+{
 	PLYVertexDescription vertexDescription;
-	unsigned int numVertices;
-	PLGVertex *vertices;
+	unsigned int         numVertices;
+	PLGVertex *          vertices;
 
-	PLYFaceDescription faceDescription;
-	unsigned int numFaces;
+	PLYFaceDescription  faceDescription;
+	unsigned int        numFaces;
 	PLYFaceDescription *faces;
 } PLYHeader;
 
-static unsigned int GetTypeForToken( const char *p ) {
+static unsigned int GetTypeForToken( const char *p )
+{
 	/* old vs new, though ive seen old more regularly used by blender etc. */
 	if ( strcmp( p, "float" ) == 0 || strcmp( p, "float32" ) == 0 )
 		return PLY_VAR_FLOAT;
@@ -79,14 +86,17 @@ static unsigned int GetTypeForToken( const char *p ) {
 	return PLY_VAR_INVALID;
 }
 
-static PLMModel *ParseFile( const char *p ) {
+static PLMModel *ParseFile( const char *p )
+{
 	char token[ 64 ];
-	if ( PlParseToken( &p, token, sizeof( token ) ) == NULL ) {
+	if ( PlParseToken( &p, token, sizeof( token ) ) == NULL )
+	{
 		PrintWarn( "Failed to parse identifier!\n" );
 		return NULL;
 	}
 
-	if ( strncmp( token, "ply", 3 ) != 0 ) {
+	if ( strncmp( token, "ply", 3 ) != 0 )
+	{
 		PrintWarn( "Unexpected identifier, \"%s\"!\n", token );
 		return NULL;
 	}
@@ -95,54 +105,69 @@ static PLMModel *ParseFile( const char *p ) {
 	memset( &header, 0, sizeof( PLYHeader ) );
 
 	/* parse the header */
-	while( PlParseToken( &p, token, sizeof( token ) ) != NULL ) {
-		if ( strcmp( token, "comment" ) == 0 ) {
+	while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
+	{
+		if ( strcmp( token, "comment" ) == 0 )
+		{
 			PlSkipLine( &p );
 			continue;
-		} else if ( strcmp( token, "format" ) == 0 ) {
+		}
+		else if ( strcmp( token, "format" ) == 0 )
+		{
 			/* ensure the format is what we support */
 			PlParseToken( &p, token, sizeof( token ) );
-			if ( strcmp( token, "ascii" ) != 0 ) {
+			if ( strcmp( token, "ascii" ) != 0 )
+			{
 				PrintWarn( "Unexpected format, \"%s\"!\n", token );
 				break;
 			}
 
 			PlParseToken( &p, token, sizeof( token ) );
-			if ( strcmp( token, "1.0" ) != 0 ) {
+			if ( strcmp( token, "1.0" ) != 0 )
+			{
 				PrintWarn( "Unexpected version, \"%s\"!\n", token );
 				break;
 			}
 
 			PlSkipLine( &p );
 			continue;
-		} else if ( strcmp( token, "element" ) == 0 ) {
+		}
+		else if ( strcmp( token, "element" ) == 0 )
+		{
 			PlParseToken( &p, token, sizeof( token ) );
-			if ( strcmp( token, "vertex" ) == 0 ) {
+			if ( strcmp( token, "vertex" ) == 0 )
+			{
 				header.numVertices = PlParseInteger( &p, NULL );
-				if ( header.numVertices == 0 ) {
+				if ( header.numVertices == 0 )
+				{
 					break;
 				}
 
 				header.vertices = globalSystem.CAlloc( header.numVertices, sizeof( PLGVertex ), true );
 
 				PlSkipLine( &p );
-				while( PlParseToken( &p, token, sizeof( token ) ) != NULL ) {
-					if ( strcmp( token, "property" ) != 0 ) {
+				while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
+				{
+					if ( strcmp( token, "property" ) != 0 )
+					{
 						break;
 					}
 
 					PlParseToken( &p, token, sizeof( token ) );
 					unsigned int type = GetTypeForToken( token );
-					if ( type == PLY_VAR_INVALID ) {
+					if ( type == PLY_VAR_INVALID )
+					{
 						PrintWarn( "Unexpected variable type, \"%s\"!\n", token );
 						break;
 					}
 				}
-			} else if ( strcmp( token, "face" ) == 0 ) {
-
-			} else {
+			}
+			else if ( strcmp( token, "face" ) == 0 )
+			{
+			}
+			else
+			{
 				PrintWarn( "Unexpected element type, \"%s\"!\n", token );
-
 			}
 
 			PlSkipLine( &p );
@@ -150,25 +175,30 @@ static PLMModel *ParseFile( const char *p ) {
 		}
 	}
 
-	if ( header.numFaces == 0 || header.faces == NULL ) {
+	if ( header.numFaces == 0 || header.faces == NULL )
+	{
 		globalSystem.Free( header.vertices );
 		PrintWarn( "No faces outlined in ply header!\n" );
 		return NULL;
-	} else if ( header.numVertices == 0 || header.vertices == NULL ) {
+	}
+	else if ( header.numVertices == 0 || header.vertices == NULL )
+	{
 		globalSystem.Free( header.faces );
 		PrintWarn( "No vertices outlined in ply header!\n" );
 		return NULL;
 	}
 }
 
-PLMModel *PLY_LoadFile( const char *path ) {
+PLMModel *PLY_LoadFile( const char *path )
+{
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL ) {
+	if ( file == NULL )
+	{
 		return NULL;
 	}
 
-	const char *p = ( char * ) PlGetFileData( file );
-	PLMModel *model = ParseFile( p );
+	const char *p     = ( char * ) PlGetFileData( file );
+	PLMModel *  model = ParseFile( p );
 
 	PlCloseFile( file );
 

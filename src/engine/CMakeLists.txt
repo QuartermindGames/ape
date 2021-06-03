@@ -13,18 +13,18 @@ file(GLOB ENGINE_SOURCE_FILES
 add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         actors/actor_light.c
         actors/actor_player.c
-        actors/TriggerVolume.c
+        actors/actor_trigger_volume.c
 
-        renderer/camera.c
-        renderer/flare.c
-        renderer/font.c
-        renderer/material.c
-        renderer/renderer.c
-        renderer/scenegraph.c
-        renderer/shaders.c
+        client/audio/audio.c
+        client/audio/micromod.c
+        client/renderer/camera.c
+        client/renderer/flare.c
+        client/renderer/font.c
+        client/renderer/material.c
+        client/renderer/renderer.c
+        client/renderer/scenegraph.c
+        client/renderer/shaders.c
 
-        audio.c
-        audio.h
         script.c
         script.h
 
@@ -36,7 +36,7 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         memory_manager.c
 
         integrations/DiscordIntegration.c
-        )
+        client/sgui.c client/sgui.h net_server.c actors/actor_asteroid.c)
 
 target_include_directories(engine PRIVATE
         ./ ../3rdparty/miniz/)

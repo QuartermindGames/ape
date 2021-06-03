@@ -5,8 +5,10 @@
 
 #pragma once
 
-#define Print( ... )	printf( __VA_ARGS__ )
-#define Error( ... )	printf( __VA_ARGS__ ); exit( EXIT_FAILURE )
+#define Print( ... ) printf( __VA_ARGS__ )
+#define Error( ... )       \
+	printf( __VA_ARGS__ ); \
+	exit( EXIT_FAILURE )
 
 typedef struct PLImage PLImage;
 

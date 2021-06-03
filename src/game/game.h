@@ -7,7 +7,8 @@
 
 #include <plcore/pl_console.h>
 
-#include "common/common.h"
+#include "public/SharedBase.h"
+#include "public/SharedInterfaces.h"
 
 extern int globalGameLog;
 extern int globalGameDebugLog;
