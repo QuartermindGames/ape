@@ -241,16 +241,14 @@ static void SetupEngineInterface() {
 	static OSSystemInterface systemInterface = {
 		.version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
-#if 1
-		.Shutdown = nullptr,
-		.CreateWindow = nullptr,
-		.GetCurrentDisplaySize = nullptr,
-		.GetButtonState = nullptr,
-		.GetKeyState = nullptr,
+		//.Shutdown = nullptr,
 
-		.GetPerformanceCounter = nullptr,
-		.GetPerformanceFrequency = nullptr,
-#endif
+		//.GetButtonState = nullptr,
+		//.GetKeyState = nullptr,
+
+		//.GetPerformanceCounter = nullptr,
+		//.GetPerformanceFrequency = nullptr,
+
 		.CAlloc = Sys_calloc,
 		.MAlloc = Sys_malloc,
 		.ReAlloc = Sys_realloc,

@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Copyright (C) 1997-2006 Id Software, Inc.
-Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
+Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
 
 This file is part of Quake 2 Tools source code.
 
@@ -57,13 +57,11 @@ extern unsigned int
         LOG_LEVEL_ERROR;
 #define LMsg( ... )  PlLogMessage( LOG_LEVEL_INFO, __VA_ARGS__ )
 #define LWarn( ... ) PlLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
-#define LError( ... )                             \
-	PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
-	exit( EXIT_FAILURE )
-
-#define QE3_STYLE ( WS_OVERLAPPED | WS_CAPTION | WS_THICKFRAME |              \
-	                /* WS_MINIMIZEBOX | */ WS_MAXIMIZEBOX | WS_CLIPSIBLINGS | \
-	                WS_CLIPCHILDREN | WS_CHILD )
+#define LError( ... )                                 \
+	{                                                 \
+		PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
+		exit( EXIT_FAILURE );                         \
+	}
 
 #define QE_AUTOSAVE_INTERVAL 5// number of minutes between autosaves
 
@@ -74,7 +72,6 @@ extern unsigned int
 #define MAX_POINTS 512
 
 #define CMD_TEXTUREWAD 60000
-#define CMD_BSPCOMMAND 61000
 
 #define PITCH 0
 #define YAW   1
@@ -110,19 +107,6 @@ extern unsigned int
 #define EXCLUDE_WORLD  16
 #define EXCLUDE_CLIP   32
 #define EXCLUDE_DETAIL 64
-
-
-//
-// menu indexes for modifying menus
-//
-#define MENU_VIEW    2
-#define MENU_BSP     4
-#define MENU_TEXTURE 6
-
-
-// odd things not in windows header...
-#define VK_COMMA  188
-#define VK_PERIOD 190
 
 /*
 ** window bits
