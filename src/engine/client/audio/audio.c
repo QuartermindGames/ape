@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include <SDL2/SDL_audio.h>
 
@@ -28,9 +29,7 @@ static bool audioInitialized = false;
 void A_Initialize( void )
 {
 	if ( audioInitialized )
-	{
 		return;
-	}
 
 	Print( "Initializing audio\n" );
 
@@ -58,9 +57,7 @@ void A_Initialize( void )
 bool A_IsValidSoundSlot( const ASoundReference *s )
 {
 	if ( s->slot == -1 || s->slot >= maxSounds )
-	{
 		return false;
-	}
 
 	ASound *sound = &audioSounds[ s->slot ];
 	return ( strcmp( s->path, sound->path ) == 0 );
@@ -101,9 +98,7 @@ void A_CleanupSounds( bool force )
 		}
 
 		if ( force && audioSounds[ i ].numReferences > 0 )
-		{
 			PrintWarn( "Force cleaning dirty slot %d!\n", i );
-		}
 
 		SDL_FreeWAV( audioSounds[ i ].buffer );
 		audioSounds[ i ].buffer = NULL;
@@ -126,9 +121,7 @@ static int A_FetchCachedSoundSlotByPath( const char *path )
 	for ( int i = 0; i < numSounds; ++i )
 	{
 		if ( pl_strcasecmp( path, audioSounds[ i ].path ) != 0 )
-		{
 			continue;
-		}
 
 		return i;
 	}
@@ -142,9 +135,8 @@ static ASoundReference A_SetupReference( int slot, const char *path )
 	memset( &s, 0, sizeof( ASoundReference ) );
 	s.slot = slot;
 	if ( path != NULL )
-	{
 		strcpy( s.path, path );
-	}
+
 	return s;
 }
 
@@ -186,9 +178,7 @@ ASoundReference A_CacheSound( const char *path )
 	for ( ; freeSlot < maxSounds; ++freeSlot )
 	{
 		if ( audioSounds[ freeSlot ].reserved )
-		{
 			continue;
-		}
 
 		break;
 	}
@@ -216,6 +206,14 @@ ASoundReference A_CacheSound( const char *path )
 	return A_SetupReference( freeSlot, path );
 }
 
+void A_EmitSound( const ASoundReference *s, const PLVector3 *position, const PLVector3 *velocity )
+{
+	if ( !A_IsValidSoundSlot( s ) )
+		return;
+
+	SDL_QueueAudio( sdlAudioDeviceId, audioSounds[ s->slot ].buffer, audioSounds[ s->slot ].length );
+}
+
 void A_ReleaseSound( const ASoundReference *s )
 {
 	if ( !A_IsValidSoundSlot( s ) )
@@ -226,17 +224,13 @@ void A_ReleaseSound( const ASoundReference *s )
 
 	audioSounds[ s->slot ].numReferences--;
 	if ( audioSounds[ s->slot ].numReferences <= 0 )
-	{
 		A_FreeSound( s->slot );
-	}
 }
 
 void A_Shutdown( void )
 {
 	if ( !audioInitialized )
-	{
 		return;
-	}
 
 	SDL_CloseAudioDevice( sdlAudioDeviceId );
 	sdlAudioDeviceId = 0;

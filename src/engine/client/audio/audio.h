@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -22,4 +23,5 @@ void A_CleanupSounds( bool force );
 bool A_IsValidSoundSlot( const ASoundReference *s );
 
 ASoundReference A_CacheSound( const char *path );
+void            A_EmitSound( const ASoundReference *s, const PLVector3 *position, const PLVector3 *velocity );
 void            A_ReleaseSound( const ASoundReference *s );
