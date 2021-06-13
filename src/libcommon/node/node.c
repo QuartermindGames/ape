@@ -5,7 +5,6 @@
  */
 
 #include <plcore/pl_linkedlist.h>
-#include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
 #include "node_private.h"
@@ -62,9 +61,7 @@ static void NL_SetErrorMessage( NLErrorCode type, const char *msg, ... )
 
 	int length = pl_vscprintf( msg, args ) + 1;
 	if ( length <= 0 )
-	{
 		return;
-	}
 
 	nlErrorMsg = calloc( 1, length );
 	if ( nlErrorMsg == NULL )
@@ -99,9 +96,7 @@ NLNode *NL_GetFirstChild( NLNode *parent )
 {
 	PLLinkedListNode *n = PlGetFirstNode( parent->linkedList );
 	if ( n == NULL )
-	{
 		return NULL;
-	}
 
 	return PlGetLinkedListNodeUserData( n );
 }
@@ -110,9 +105,7 @@ NLNode *NL_GetNextChild( NLNode *node )
 {
 	PLLinkedListNode *n = PlGetNextLinkedListNode( node->linkedListNode );
 	if ( n == NULL )
-	{
 		return NULL;
-	}
 
 	return PlGetLinkedListNodeUserData( n );
 }
@@ -129,9 +122,7 @@ NLNode *NL_GetChildByName( NLNode *parent, const char *name )
 	while ( child != NULL )
 	{
 		if ( strcmp( name, child->name.strBuf ) == 0 )
-		{
 			return child;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -155,9 +146,7 @@ NLNode *NL_GetChildByIndex( NLNode *parent, unsigned int i )
 	while ( child != NULL )
 	{
 		if ( curPos == i )
-		{
 			return child;
-		}
 
 		child = NL_GetNextChild( parent );
 		curPos++;
@@ -170,9 +159,7 @@ static const NLVarString *GetValueByName( NLNode *root, const char *name )
 {
 	const NLNode *field = NL_GetChildByName( root, name );
 	if ( field == NULL )
-	{
 		return NULL;
-	}
 
 	return &field->data;
 }
@@ -291,23 +278,17 @@ NLErrorCode NL_GetUI64( const NLNode *node, uint64_t *dest )
 NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I8 )
-	{
 		return NL_ERROR_INVALID_TYPE;
-	}
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
-		{
 			return NL_ERROR_INVALID_ELEMENTS;
-		}
 
 		NLErrorCode errorCode = NL_GetI8( child, &buf[ i ] );
 		if ( errorCode != NL_ERROR_SUCCESS )
-		{
 			return errorCode;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -318,23 +299,17 @@ NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements
 NLErrorCode NL_GetI16Array( NLNode *parent, int16_t *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I16 )
-	{
 		return NL_ERROR_INVALID_TYPE;
-	}
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
-		{
 			return NL_ERROR_INVALID_ELEMENTS;
-		}
 
 		NLErrorCode errorCode = NL_GetI16( child, &buf[ i ] );
 		if ( errorCode != NL_ERROR_SUCCESS )
-		{
 			return errorCode;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -345,23 +320,17 @@ NLErrorCode NL_GetI16Array( NLNode *parent, int16_t *buf, unsigned int numElemen
 NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I32 )
-	{
 		return NL_ERROR_INVALID_TYPE;
-	}
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
-		{
 			return NL_ERROR_INVALID_ELEMENTS;
-		}
 
 		NLErrorCode errorCode = NL_GetI32( child, &buf[ i ] );
 		if ( errorCode != NL_ERROR_SUCCESS )
-		{
 			return errorCode;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -372,23 +341,17 @@ NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int numElemen
 NLErrorCode NL_GetUI32Array( NLNode *parent, uint32_t *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_UI32 )
-	{
 		return NL_ERROR_INVALID_TYPE;
-	}
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
-		{
 			return NL_ERROR_INVALID_ELEMENTS;
-		}
 
 		NLErrorCode errorCode = NL_GetUI32( child, &buf[ i ] );
 		if ( errorCode != NL_ERROR_SUCCESS )
-		{
 			return errorCode;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -399,23 +362,17 @@ NLErrorCode NL_GetUI32Array( NLNode *parent, uint32_t *buf, unsigned int numElem
 NLErrorCode NL_GetF32Array( NLNode *parent, float *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_F32 )
-	{
 		return NL_ERROR_INVALID_TYPE;
-	}
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
-		{
 			return NL_ERROR_INVALID_ELEMENTS;
-		}
 
 		NLErrorCode errorCode = NL_GetF32( child, &buf[ i ] );
 		if ( errorCode != NL_ERROR_SUCCESS )
-		{
 			return errorCode;
-		}
 
 		child = NL_GetNextChild( child );
 	}
@@ -464,9 +421,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 
 	/* assign the node name, if provided */
 	if ( ( parent == NULL || parent->type != NL_PROP_ARRAY ) && name != NULL )
-	{
 		node->name.strBuf = AllocVarString( name, &node->name.strBufLength );
-	}
 
 	node->type       = propertyType;
 	node->linkedList = PlCreateLinkedList();
@@ -475,9 +430,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 	if ( parent != NULL )
 	{
 		if ( parent->linkedList == NULL )
-		{
 			parent->linkedList = PlCreateLinkedList();
-		}
 
 		node->linkedListNode = PlInsertLinkedListNode( parent->linkedList, node );
 		node->parent         = parent;
@@ -495,9 +448,8 @@ NLNode *NL_PushBackStr( NLNode *parent, const char *name, const char *var )
 {
 	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_STR );
 	if ( node != NULL )
-	{
 		node->data.strBuf = AllocVarString( var, &node->data.strBufLength );
-	}
+
 	return node;
 }
 
@@ -508,9 +460,7 @@ NLNode *NL_PushBackStrArray( NLNode *parent, const char *name, const char **arra
 	{
 		node->childType = NL_PROP_STR;
 		for ( unsigned int i = 0; i < numElements; ++i )
-		{
 			NL_PushBackStr( node, NULL, array[ i ] );
-		}
 	}
 	return node;
 }
@@ -519,9 +469,8 @@ NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var )
 {
 	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_BOOL );
 	if ( node != NULL )
-	{
 		node->data.strBuf = AllocVarString( var ? "true" : "false", &node->data.strBufLength );
-	}
+
 	return node;
 }
 
@@ -556,9 +505,7 @@ NLNode *NL_PushBackI32Array( NLNode *parent, const char *name, const int *array,
 	{
 		node->childType = NL_PROP_I32;
 		for ( unsigned int i = 0; i < numElements; ++i )
-		{
 			NL_PushBackI32( node, NULL, array[ i ] );
-		}
 	}
 	return node;
 }
@@ -570,9 +517,7 @@ NLNode *NL_PushBackF32Array( NLNode *parent, const char *name, const float *arra
 	{
 		node->childType = NL_PROP_F32;
 		for ( unsigned int i = 0; i < numElements; ++i )
-		{
 			NL_PushBackF32( node, NULL, array[ i ] );
-		}
 	}
 	return node;
 }
@@ -581,16 +526,15 @@ NLNode *NL_PushBackObjArray( NLNode *parent, const char *name )
 {
 	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_ARRAY );
 	if ( node != NULL )
-	{
 		node->childType = NL_PROP_OBJ;
-	}
+
 	return node;
 }
 
 static char *CopyVarString( const NLVarString *varString, unsigned int *length )
 {
 	*length   = varString->strBufLength;
-	char *buf = globalSystem.MAlloc( *length, true );
+	char *buf = malloc( *length );
 	strncpy( buf, varString->strBuf, *length );
 	return buf;
 }
@@ -600,7 +544,7 @@ static char *CopyVarString( const NLVarString *varString, unsigned int *length )
  */
 NLNode *NL_CopyNode( NLNode *node )
 {
-	NLNode *newNode      = globalSystem.MAlloc( sizeof( NLNode ), true );
+	NLNode *newNode      = malloc( sizeof( NLNode ) );
 	newNode->type        = node->type;
 	newNode->childType   = node->childType;
 	newNode->data.strBuf = CopyVarString( &node->data, &newNode->data.strBufLength );
@@ -1030,9 +974,7 @@ void NL_WriteFile( const char *path, NLNode *root, NLFileType fileType )
 	}
 
 	if ( fileType == NL_FILE_BINARY )
-	{
 		fprintf( file, NL_BINARY_HEADER "\n" );
-	}
 	else
 	{
 		sDepth = 0;

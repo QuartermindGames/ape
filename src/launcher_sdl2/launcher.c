@@ -20,6 +20,7 @@ static PLLibrary *dllEnginePtr;
  ****************************************/
 
 static SDL_Window *sdlWindow = NULL;
+static OSViewport  osViewport;
 
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... )
 {
@@ -85,9 +86,7 @@ OSWindow *Sys_CreateWindow( const char *title, int width, int height )
 	        WINDOW_WIDTH, WINDOW_HEIGHT,
 	        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	if ( sdlWindowPtr == NULL )
-	{
 		PrintError( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
-	}
 
 	SDL_GLContext sdlGLContext = SDL_GL_CreateContext( sdlWindowPtr );
 	if ( sdlGLContext == NULL )
@@ -109,19 +108,13 @@ OSWindow *Sys_CreateWindow( const char *title, int width, int height )
 void Sys_DestroyWindow( OSWindow *windowPtr )
 {
 	if ( windowPtr == NULL )
-	{
 		return;
-	}
 
 	if ( windowPtr->sdlGLContext != NULL )
-	{
 		SDL_GL_DeleteContext( windowPtr->sdlGLContext );
-	}
 
 	if ( windowPtr->sdlWindowPtr != NULL )
-	{
 		SDL_DestroyWindow( windowPtr->sdlWindowPtr );
-	}
 
 	free( windowPtr );
 }
@@ -139,27 +132,24 @@ static uint8_t buttonStates[ MAX_BUTTON_INPUTS ];
 bool           Sys_GetButtonState( InputButton buttonIndex )
 {
 	if ( buttonIndex >= MAX_BUTTON_INPUTS )
-	{
 		return false;
-	}
+
 	return ( ( buttonStates[ buttonIndex ] == INPUT_STATE_PRESSING ) || ( buttonStates[ buttonIndex ] == INPUT_STATE_DOWN ) );
 }
+
 static uint8_t keyStates[ MAX_KEY_INPUTS ];
 bool           Sys_GetKeyState( int keyIndex )
 {
 	if ( keyIndex >= MAX_KEY_INPUTS )
-	{
 		return false;
-	}
+
 	return ( ( keyStates[ keyIndex ] == INPUT_STATE_PRESSING ) || ( keyStates[ keyIndex ] == INPUT_STATE_DOWN ) );
 }
 
 static int Sys_TranslateSDLKeyInput( int key )
 {
 	if ( key < 128 )
-	{
 		return key;
-	}
 
 	switch ( key )
 	{
@@ -290,7 +280,7 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown )
  * TIMER MANAGEMENT
  ****************************************/
 
-static SDL_TimerID  timer = 0;
+static SDL_TimerID  sdlTimer = 0;
 static unsigned int Sys_TimerCallback( unsigned int interval, void *param )
 {
 	SDL_UserEvent userEvent;
@@ -321,9 +311,7 @@ void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
 			PrintError( "Failed to allocate %d bytes!\n", num * size );
 		}
 		else
-		{
 			PrintWarn( "Failed to allocate %d bytes!\n", num * size );
-		}
 	}
 
 	return mem;
@@ -346,9 +334,7 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
 			PrintError( "Failed to allocate %d bytes!\n", newSize );
 		}
 		else
-		{
 			PrintWarn( "Failed to allocate %d bytes!\n", newSize );
-		}
 	}
 
 	return buf;
@@ -368,21 +354,11 @@ void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSi
  * INITIALIZATION
  ****************************************/
 
-/**
- * Return whether or not we consider the platform
- * to have a keyboard.
- */
-static bool Sys_HasKeyboard( void )
-{
-#if defined( __ANDROID__ )
-	return false;
-#else
-	return true;
-#endif
-}
-
 void Sys_Shutdown( void )
 {
+	if ( sdlTimer != 0 )
+		SDL_RemoveTimer( sdlTimer );
+
 	exit( EXIT_SUCCESS );
 }
 
@@ -395,24 +371,20 @@ static void Sys_SetupEngineInterface( void )
 
 	dllEnginePtr = PlLoadLibrary( "./engine", true );
 	if ( dllEnginePtr == NULL )
-	{
 		PrintError( "Failed to load engine module, aborting!\nPL: %s\n", PlGetError() );
-	}
 
 	DllEngineInterface GetDllInterface = ( DllEngineInterface ) PlGetLibraryProcedure( dllEnginePtr, "GetDllInterface" );
 	if ( GetDllInterface == NULL )
-	{
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from engine module, aborting!\nPL: %s\n", PlGetError() );
-	}
 
 	static OSSystemInterface systemInterface = {
 	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
-	        .Shutdown              = Sys_Shutdown,
-	        .CreateWindow          = Sys_CreateWindow,
-	        .GetCurrentDisplaySize = Sys_GetWindowSize,
-	        .GetButtonState        = Sys_GetButtonState,
-	        .GetKeyState           = Sys_GetKeyState,
+	        .viewport = &osViewport,
+
+	        .Shutdown       = Sys_Shutdown,
+	        .GetButtonState = Sys_GetButtonState,
+	        .GetKeyState    = Sys_GetKeyState,
 
 	        .GetPerformanceCounter   = SDL_GetPerformanceCounter,
 	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
@@ -426,9 +398,7 @@ static void Sys_SetupEngineInterface( void )
 	/* initialize the interface */
 	g_engine = *GetDllInterface( ENGINE_INTERFACE_VERSION, &systemInterface );
 	if ( g_engine.version[ VERSION_MAJOR ] != ENGINE_INTERFACE_VERSION_MAJOR )
-	{
 		PrintWarn( "Unexpected major interface version (%d vs %d)!\n", g_engine.version[ VERSION_MAJOR ], ENGINE_INTERFACE_VERSION );
-	}
 }
 
 /****************************************
@@ -456,9 +426,7 @@ int Sys_Init( int argc, char **argv )
 	{
 		const char *path = PlGetCommandLineArgumentValue( "-log" );
 		if ( path == NULL )
-		{
 			path = "log.txt";
-		}
 
 		PlSetupLogOutput( path );
 	}
@@ -469,12 +437,10 @@ int Sys_Init( int argc, char **argv )
 	CommonLibrary_Initialize();
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
-	{
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
-	}
 
 	/* setup our timers, in this case we're just setting up our tick */
-	timer = SDL_AddTimer( TICK_RATE, Sys_TimerCallback, NULL );
+	sdlTimer = SDL_AddTimer( TICK_RATE, Sys_TimerCallback, NULL );
 
 	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
 	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
@@ -485,12 +451,14 @@ int Sys_Init( int argc, char **argv )
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
 	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 
+	Sys_CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
+
+	SDL_GL_GetDrawableSize( sdlWindow, &osViewport.w, &osViewport.h );
+
 	Sys_SetupEngineInterface();
 
 	if ( !g_engine.Initialize( argc, argv ) )
-	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
-	}
 
 	SDL_StartTextInput();
 
@@ -511,6 +479,19 @@ int Sys_Init( int argc, char **argv )
 				case SDL_KEYUP:
 					Sys_HandleKeyboardEvent( event.key.keysym.sym, ( event.type == SDL_KEYDOWN ) );
 					break;
+
+				case SDL_WINDOWEVENT:
+				{
+					if ( sdlWindow != NULL && !( event.window.windowID == SDL_GetWindowID( sdlWindow ) ) )
+						break;
+
+					switch ( event.window.type )
+					{
+						case SDL_WINDOWEVENT_SIZE_CHANGED:
+							SDL_GL_GetDrawableSize( sdlWindow, &osViewport.w, &osViewport.h );
+							break;
+					}
+				}
 			}
 		}
 

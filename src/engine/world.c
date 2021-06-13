@@ -13,6 +13,7 @@
 
 #include "yin.h"
 #include "world.h"
+#include "actor.h"
 
 #include "common/node.h"
 
@@ -306,6 +307,23 @@ static void W_DeserializeSector( World *world, NLNode *sectorNode, WorldSector *
 	NLNode *actorList = NL_GetChildByName( sectorNode, "actors" );
 	if ( actorList != NULL )
 	{
+		NLNode *c = NL_GetFirstChild( actorList );
+		while ( c != NULL )
+		{
+			const char *actorId = NL_GetStrByName( c, "id", NULL );
+			if ( actorId == NULL )
+			{
+				PrintWarn( "Failed to get id for actor!\n" );
+				c = NL_GetNextChild( c );
+				continue;
+			}
+
+			Actor *actor = Act_SpawnActorById( actorId, c );
+			if ( actor != NULL )
+				Act_SetWorldSector( actor, sectorPtr );
+
+			c = NL_GetNextChild( c );
+		}
 	}
 }
 
@@ -727,7 +745,7 @@ void W_Draw( World *world, PLGCamera *camera )
 		if ( originSector != NULL )
 		{
 			unsigned int  numVisibleSectors;
-			WorldSector **visibleSectors = GetVisibleSectors( world, camera, &numVisibleSectors );
+			WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
 			for ( unsigned int i = 0; i < numVisibleSectors; ++i )
 				DrawSector( visibleSectors[ i ], camera, false );
 

@@ -70,9 +70,8 @@ static PLLinkedList *textures;
 
 static PLGTexture *fallbackTexture = NULL;
 static PLGTexture *numTextureTable[ 10 ];
-static PLGTexture *demoOverlayLogo;
 
-PLGTexture *Gfx_GetFallbackTexture( void )
+PLGTexture *R_GetFallbackTexture( void )
 {
 	return fallbackTexture;
 }
@@ -157,9 +156,6 @@ static void RT_InitializeTextures( void )
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
 
-	/* fetch our required texture set */
-	demoOverlayLogo = Gfx_LoadTexture( "materials/textures/ui/demo_logo.png" );
-
 	/* load the numbers */
 	/*
 	for ( unsigned int i = 0; i < 10; ++i ) {
@@ -187,7 +183,7 @@ PLGTexture *Gfx_GetTexture( const char *path )
 	return NULL;
 }
 
-PLGTexture *Gfx_LoadTexture( const char *path )
+PLGTexture *R_LoadTexture( const char *path )
 {
 	/* check if it's already loaded */
 	PLGTexture *texture = Gfx_GetTexture( path );
@@ -209,7 +205,7 @@ PLGTexture *Gfx_LoadTexture( const char *path )
 
 /**********************************************************/
 
-void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle )
+void RSpr_DrawAnimationFrame( SprAnimationFrame *frame, const PLVector3 *position, float spriteAngle )
 {
 #if 0
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -241,7 +237,7 @@ void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position
 #endif
 }
 
-void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
+void RSpr_DrawAnimation( SprAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
 {
 #if 0
 	const GfxCamera *camera = Gfx_GetCurrentCamera();
@@ -290,13 +286,9 @@ void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, u
 void Gfx_DrawDigit( float x, float y, int digit )
 {
 	if ( digit < 0 )
-	{
 		digit = 0;
-	}
 	else if ( digit > 9 )
-	{
 		digit = 9;
-	}
 
 	PLMatrix4 transform = PlMatrix4Identity();
 	PlgDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
@@ -327,7 +319,7 @@ void Gfx_DrawNumber( float x, float y, unsigned int number )
 void Gfx_InitializeCameras( void ); /* gfx_camera.c */
 void Gfx_ShutdownCameras( void );   /* gfx_camera.c */
 
-void Gfx_SetupDefaultState( void )
+void R_SetupDefaultState( void )
 {
 	PlgSetClearColour( PLColour( 128, 212, 255, 255 ) );
 
@@ -338,24 +330,20 @@ void Gfx_SetupDefaultState( void )
 
 	PlgSetCullMode( PLG_CULL_POSTIVE );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
 }
 
 static void Gfx_SetupShadowMap( void )
 {
 	smDepthBuffer = PlgCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PLG_BUFFER_DEPTH );
 	if ( smDepthBuffer == NULL )
-	{
 		PrintError( "Failed to create depth buffer!\nPL: %s\n", PlGetError() );
-	}
 
 	//glDrawBuffer( GL_NONE );
 
 	smTexture = PlgGetFrameBufferTextureAttachment( smDepthBuffer, PLG_BUFFER_DEPTH, PLG_TEXTURE_FILTER_LINEAR );
 	if ( smTexture == NULL )
-	{
 		PrintError( "Failed to get texture attachment of depth buffer!\nPL: %s\n", PlGetError() );
-	}
 
 	/* unbind the buffer we just created */
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
@@ -373,9 +361,7 @@ void R_Initialize( void )
 	if ( PlgSetDriver( "vulkan" ) != PL_RESULT_SUCCESS &&
 	     PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
 	     PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
-	{
 		PrintError( "Failed to set graphics driver!\nPL: %s\n", PlGetError() );
-	}
 
 	memset( msWorldGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
 	memset( memoryGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
@@ -392,15 +378,14 @@ void R_Initialize( void )
 
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
-	{
 		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", PlGetError() );
-	}
+
 	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
 	auxCamera->far  = 1000.0f;
 
 	Gfx_SetupShadowMap();
-	Gfx_SetupDefaultState();
+	R_SetupDefaultState();
 }
 
 void R_Shutdown( void )
@@ -408,19 +393,6 @@ void R_Shutdown( void )
 	Gfx_ShutdownCameras();
 	Font_Shutdown();
 	RM_ShutdownMaterialSystem();
-}
-
-static void Gfx_DrawViewSprite( void )
-{
-#if 0
-	int gunWidth = 320 / 1.5;
-	int gunHeight = 200 / 1.5;
-	plDrawTexturedRectangle(
-		YIN_DISPLAY_WIDTH / 2 - ( gunWidth / 2 ),
-		YIN_DISPLAY_HEIGHT - gunHeight,
-		gunWidth, gunHeight,
-		testSprite );
-#endif
 }
 
 static PLGFrameBuffer *ppBuffer     = NULL;
@@ -438,13 +410,12 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h )
 	CVar( "graphics.fxaa", fxaaMode );
 	if ( fxaaMode->b_value )
 	{
-		PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_POST_PROCESS ] );
-		PlgSetShaderUniformValue( defaultShaderPrograms[ GFX_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
+		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_POST_PROCESS ] );
+		PlgSetShaderUniformValue( defaultShaderPrograms[ RS_SHADER_POST_PROCESS ], "uViewportSize", &PLVector2( w, h ), false );
 	}
 	else
-	{
-		PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
-	}
+		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+
 	/* todo: TEMP HACK HERE WITH SCALE, FIX UV COORDS!!!! */
 
 	PlgDrawTexturedRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, ppAttachment );
@@ -454,30 +425,22 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h )
 void R_DrawGraph( const char *heading, float x, float y, float w, float h, float *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
-	{
 		return;
-	}
 
-	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 	float oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
 	{
 		if ( values[ i ] > max )
-		{
 			max = values[ i ];
-		}
 		if ( values[ i ] < min )
-		{
 			min = values[ i ];
-		}
 	}
 
 	bool outOfBounds = false;
 	if ( oa != min || max != ob )
-	{
 		outOfBounds = true;
-	}
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
 	PLVector3 *  points       = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
@@ -487,16 +450,14 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 	{
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * ( j - 1 ) );
 		if ( min != max )
-		{
 			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
-		}
+
 		++i;
 
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * j );
 		if ( min != max )
-		{
 			points[ i ].y = y + h - 1 - ( ( values[ j ] - min ) * ( h / ( max - min ) ) );
-		}
+
 		/* leave z, it'll be initialized as 0 */
 	}
 
@@ -524,16 +485,11 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 	globalSystem.Free( points );
 }
 
-void Gfx_DrawMenu( void )
+void R_DrawMenu( void )
 {
-	OSWindow *window = Engine_GetMainWindow();
-	if ( window == NULL )
-	{
-		return;
-	}
+	int w = globalSystem.viewport->w;
+	int h = globalSystem.viewport->h;
 
-	int w, h;
-	globalSystem.GetCurrentDisplaySize( &w, &h );
 	auxCamera->viewport.w = w;
 	auxCamera->viewport.h = h;
 
@@ -543,7 +499,7 @@ void Gfx_DrawMenu( void )
 
 	R_DrawScreenBuffer( 0, 0, w, h );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -572,9 +528,7 @@ void Gfx_DrawMenu( void )
 			static int pos = 0;
 			Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
 			if ( pos >= sizeof( spinning ) )
-			{
 				pos = 0;
-			}
 
 			char buf[ 256 ];
 			snprintf( buf, sizeof( buf ),
@@ -598,9 +552,7 @@ void Gfx_DrawMenu( void )
 				unsigned int index    = 0;
 				const char * taskDesc = Sch_GetTaskDescription( index, &taskDelay );
 				if ( taskDesc == NULL )
-				{
 					Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
-				}
 				else
 				{
 					while ( taskDesc != NULL )
@@ -629,7 +581,7 @@ void Gfx_DrawMenu( void )
 	memset( &g_gfxPerfStats, 0, sizeof( RendererStats ) );
 }
 
-void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
+void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -687,8 +639,6 @@ static void Gfx_RenderSceneFinal( PLGCamera *camera )
 
 	Gfx_RenderScene( camera, false );
 }
-
-//#include <GL/gl.h>
 
 void Gfx_DrawScene( PLGCamera *camera )
 {

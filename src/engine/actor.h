@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -14,6 +15,10 @@ typedef enum ActorType
 	ACTOR_LIGHT,
 	ACTOR_TRIGGER_VOLUME,
 
+	// qciaj 2021
+	ACTOR_SG_ASTEROID,
+	ACTOR_SG_PROJECTILE,
+
 	MAX_ACTOR_TYPES
 } ActorType;
 
@@ -21,6 +26,8 @@ typedef enum ActorMovementType
 {
 	ACTOR_MOVEMENT_CUSTOM,
 	ACTOR_MOVEMENT_PHYSICS,
+
+	ACTOR_MOVEMENT_SG,
 
 	MAX_ACTOR_MOVEMENT_TYPES
 } ActorMovementType;
@@ -36,14 +43,14 @@ typedef struct Actor Actor;
 typedef struct ActorSetup
 {
 	const char *id;
-	void ( *Spawn )( struct Actor *self );
-	void ( *Tick )( struct Actor *self, void *userData );
-	void ( *Draw )( struct Actor *self, void *userData );
-	void ( *Collide )( struct Actor *self, struct Actor *other, void *userData );
-	void ( *Destroy )( struct Actor *self, void *userData );
+	void ( *Spawn )( Actor *self );
+	void ( *Tick )( Actor *self, void *userData );
+	void ( *Draw )( Actor *self, void *userData );
+	void ( *Collide )( Actor *self, Actor *other, void *userData );
+	void ( *Destroy )( Actor *self, void *userData );
 
-	NLNode *( *Serialize )( struct Actor *self, NLNode *nodeTree );
-	void ( *Deserialize )( struct Actor *self, NLNode *nodeTree );
+	NLNode *( *Serialize )( Actor *self, NLNode *nodeTree );
+	void ( *Deserialize )( Actor *self, NLNode *nodeTree );
 } ActorSetup;
 
 typedef struct ActInterface
@@ -61,11 +68,11 @@ void Act_Shutdown( void );
 
 void Act_RegisterActorType( ActorSetup *actorSetup );
 
-void Act_SpawnActors( const char *worldPath );
 void Act_DrawActors( void );
 void Act_TickActors( void *userData, double delta );
 
-Actor *Act_SpawnActor( const char *id, const PLVector3 *position, const PLVector3 *angles );
+Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree );
+Actor *Act_SpawnActorById( const char *id, NLNode *nodeTree );
 Actor *Act_DestroyActor( Actor *self );
 
 ActorType Act_GetType( const Actor *self );
@@ -78,6 +85,12 @@ PLVector3 Act_GetVelocity( const Actor *self );
 
 void  Act_SetAngle( Actor *self, float angle );
 float Act_GetAngle( const Actor *self );
+
+void Act_SetAngles( Actor *self, const PLVector3 *angles );
+PLVector3 Act_GetAngles( const Actor *self );
+
+struct WorldSector *Act_GetWorldSector( Actor *self );
+void Act_SetWorldSector( Actor *self, struct WorldSector *sector );
 
 void  Act_SetViewPitch( Actor *self, float viewPitch );
 float Act_GetViewPitch( const Actor *self );
@@ -101,4 +114,3 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );
 
 /* player functions */
 struct GfxCamera *Player_GetCamera( Actor *self );
-bool              Player_IsPointVisible( Actor *self, const PLVector2 *point );

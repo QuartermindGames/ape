@@ -71,6 +71,7 @@ static void Player_CalculateViewFrustum( Actor *self )
 /**
  * Ensure the 2D point provided is forward of the player's position
  */
+#if 0// unused
 bool Player_IsPointVisible( Actor *self, const PLVector2 *point )
 {
 	if ( Act_GetType( self ) != ACTOR_PLAYER )
@@ -91,11 +92,12 @@ bool Player_IsPointVisible( Actor *self, const PLVector2 *point )
 
 	return true;
 }
+#endif
 
 /* move this somewhere else... */
 static unsigned int numPlayers = 0;
 
-void Player_Spawn( Actor *self )
+static void Player_Spawn( Actor *self )
 {
 	APlayer *playerData = globalSystem.MAlloc( sizeof( APlayer ), true );
 	Act_SetUserData( self, playerData );
@@ -116,7 +118,7 @@ void Player_Spawn( Actor *self )
 	numPlayers++;
 }
 
-void Player_Tick( Actor *self, void *userData )
+static void Player_Tick( Actor *self, void *userData )
 {
 	PLVector3 curOrigin   = Act_GetPosition( self );
 	PLVector3 curVelocity = Act_GetVelocity( self );
@@ -180,7 +182,7 @@ void Player_Tick( Actor *self, void *userData )
 	Act_SetPosition( self, &curOrigin );
 }
 
-void Player_Draw( Actor *self, void *userData )
+static void Player_Draw( Actor *self, void *userData )
 {
 	APlayer *playerData = ( APlayer * ) userData;
 	if ( playerData->model == NULL )
@@ -198,10 +200,21 @@ void Player_Draw( Actor *self, void *userData )
 	PlPopMatrix();
 }
 
-void Player_Collide( Actor *self, Actor *other, void *userData )
+static void Player_Collide( Actor *self, Actor *other, void *userData )
 {
 	Monster_Collide( self, other, userData );
 
 	APlayer *playerData         = ( APlayer * ) userData;
 	playerData->forwardVelocity = ( playerData->forwardVelocity / 2.0f ) * -1.0f;
 }
+
+const ActorSetup actorPlayerSetup = {
+        .id          = "point.player",
+        .Spawn       = Player_Spawn,
+        .Tick        = Player_Tick,
+        .Draw        = Player_Draw,
+        .Collide     = Player_Collide,
+        .Destroy     = NULL,
+        .Serialize   = NULL,
+        .Deserialize = NULL,
+};

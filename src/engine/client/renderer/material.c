@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include <plcore/pl_linkedlist.h>
 
@@ -56,22 +57,20 @@ void RM_InitializeMaterialSystem( void )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
-		{
 			PrintError( "Failed to create materials list!\nPL: %s\n", PlGetError() );
-		}
 	}
 
 	/* go ahead and create the fallback material */
 	fallbackMaterial = globalSystem.MAlloc( sizeof( Material ), true );
 	/* setup passes */
 	fallbackMaterial->numPasses                  = 1;
-	fallbackMaterial->passes[ 0 ].program        = defaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+	fallbackMaterial->passes[ 0 ].program        = defaultShaderPrograms[ RS_SHADER_DEFAULT ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables                        = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.type         = SCRIPT_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.value.texVar = Gfx_GetFallbackTexture();
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.value.texVar = R_GetFallbackTexture();
 }
 
 void RM_ShutdownMaterialSystem( void )
@@ -90,9 +89,7 @@ void RM_ShutdownMaterialSystem( void )
 PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass )
 {
 	if ( pass >= material->numPasses )
-	{
 		return NULL;
-	}
 
 	return material->passes[ pass ].program;
 }
@@ -114,14 +111,10 @@ static bool RM_ValidateVariableType( ScriptVariableType varType, PLGShaderUnifor
 
 	/* built-in variables are special */
 	if ( varType == SCRIPT_VAR_BUILTIN )
-	{
 		return true;
-	}
 
 	if ( varType >= MAX_SCRIPT_VAR_TYPES || match[ varType ] != uniformType )
-	{
 		return false;
-	}
 
 	return true;
 }
@@ -144,12 +137,8 @@ static int RM_GetBlendModeByTag( const char *tag )
 	};
 
 	for ( int i = 0; i < PLG_MAX_BLEND_MODES; ++i )
-	{
 		if ( strcmp( tag, blendModeTags[ i ] ) == 0 )
-		{
 			return i;
-		}
-	}
 
 	PrintWarn( "Invalid blend mode specified, defaulting to \"none\"!\n" );
 
@@ -163,12 +152,8 @@ static int RM_GetBuiltInByTag( const char *tag )
 	};
 
 	for ( int i = 0; i < MAX_MATERIAL_BUILTINS; ++i )
-	{
 		if ( strcmp( tag, builtInTags[ i ] ) == 0 )
-		{
 			return i;
-		}
-	}
 
 	return -1;
 }
@@ -248,22 +233,16 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line )
 		case SCRIPT_VAR_BUILTIN:
 			pass->variables[ i ].varData.value.iVar = RM_GetBuiltInByTag( token );
 			if ( pass->variables[ i ].varData.value.iVar == -1 )
-			{
 				PrintWarn( "Invalid built-in type \"%s\"!\n", token );
-			}
 			break;
 		case SCRIPT_VAR_DOUBLE:
 			pass->variables[ i ].varData.value.dVar = strtod( token, NULL );
 			break;
 		case SCRIPT_VAR_BOOL:
 			if ( strcmp( token, "true" ) == 0 )
-			{
 				pass->variables[ i ].varData.value.bVar = true;
-			}
 			else
-			{
 				pass->variables[ i ].varData.value.bVar = false;
-			}
 			break;
 		case SCRIPT_VAR_FLOAT:
 			pass->variables[ i ].varData.value.fVar = strtof( token, NULL );
@@ -275,7 +254,7 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line )
 			pass->variables[ i ].varData.value.uVar = strtoul( token, NULL, 10 );
 			break;
 		case SCRIPT_VAR_TEXTURE:
-			pass->variables[ i ].varData.value.texVar = Gfx_LoadTexture( token );
+			pass->variables[ i ].varData.value.texVar = R_LoadTexture( token );
 			break;
 	}
 
@@ -305,7 +284,7 @@ static Material *RM_ParseMaterial( PLFile *file )
 		/* render pass */
 		if ( strncmp( "pass ", r, 5 ) == 0 )
 		{
-			char programName[ GFX_PROGRAM_NAME_LENGTH ];
+			char programName[ RS_PROGRAM_NAME_LENGTH ];
 			if ( sscanf( r, "pass %s\n", programName ) != 1 )
 			{
 				PrintWarn( "Failed to read in program for pass %d\n", mat.numPasses + 1 );
@@ -315,7 +294,7 @@ static Material *RM_ParseMaterial( PLFile *file )
 			PLGShaderProgram *program = RS_GetShaderProgram( programName );
 			if ( program == NULL )
 			{
-				program = defaultShaderPrograms[ GFX_SHADER_DEFAULT ];
+				program = defaultShaderPrograms[ RS_SHADER_DEFAULT ];
 				PrintWarn( "Failed to find program \"%s\", using fallback!\n" );
 			}
 
@@ -338,14 +317,10 @@ static Material *RM_ParseMaterial( PLFile *file )
 		}
 		/* variable */
 		else if ( strncmp( "var ", r, 4 ) == 0 )
-		{
 			RM_ParseMaterialVariable( curPass, r );
-		}
 
 		if ( strcmp( "end\n", r ) == 0 )
-		{
 			break;
-		}
 
 		r = PlReadString( file, buffer, sizeof( buffer ) );
 	}
@@ -362,9 +337,7 @@ static Material *RM_GetMaterial( const char *path, CacheGroup group )
 	{
 		Material *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 )
-		{
 			return material;
-		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -529,7 +502,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	ConvertMatToNode( material );
 #endif
 
-	Mem_SetupReferenceInstance( &material->mem, , material );
+	//Mem_SetupReferenceInstance( &material->mem, , material );
 
 	return material;
 }

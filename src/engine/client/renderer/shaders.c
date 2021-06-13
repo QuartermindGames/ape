@@ -14,13 +14,13 @@ typedef struct ShaderProgramIndex
 {
 	char              path[ PL_SYSTEM_MAX_PATH ];
 	char              shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
-	char              internalName[ GFX_PROGRAM_NAME_LENGTH ];
+	char              internalName[ RS_PROGRAM_NAME_LENGTH ];
 	PLGShaderProgram *internalPtr;
 	PLLinkedListNode *node;
 } ShaderProgramIndex;
 
 static PLLinkedList *shaderPrograms;
-PLGShaderProgram *   defaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *   defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path )
 {
@@ -173,14 +173,14 @@ void RS_InitializeShaderPrograms( void )
 	Print( "%d shader programs indexed\n", PlGetNumLinkedListNodes( shaderPrograms ) );
 
 	/* now fetch the default programs */
-	const char *defaultShaderNames[ GFX_MAX_DEFAULT_SHADERS ] = {
-	        [GFX_SHADER_DEFAULT]        = "default",
-	        [GFX_SHADER_LIGHTING_PASS]  = "base_lighting",
-	        [GFX_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [GFX_SHADER_DEFAULT_ALPHA]  = "default_alpha",
-	        [GFX_SHADER_POST_PROCESS]   = "postprocess",
+	const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
+	        [RS_SHADER_DEFAULT]        = "default",
+	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
+	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	        [RS_SHADER_POST_PROCESS]   = "postprocess",
 	};
-	for ( unsigned int i = 0; i < GFX_MAX_DEFAULT_SHADERS; ++i )
+	for ( unsigned int i = 0; i < RS_MAX_DEFAULT_SHADERS; ++i )
 	{
 		defaultShaderPrograms[ i ] = RS_GetShaderProgram( defaultShaderNames[ i ] );
 		if ( defaultShaderPrograms[ i ] == NULL )

@@ -1,7 +1,10 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
+
+#pragma once
 
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
@@ -18,6 +21,8 @@
 #include "common/common.h"
 
 //#define DISCORD_INTEGRATION
+
+#define ENGINE_APP_NAME "yin"
 
 #define ENGINE_VERSION_MAJOR 2
 #define ENGINE_VERSION_MINOR 0
@@ -65,7 +70,6 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group );
 /* Console */
 void Con_Initialize( void );
 void Con_Shutdown( void );
-void Con_Toggle( void );
 void Con_Draw( const PLGViewport *viewport );
 
 #if !defined( NDEBUG )
@@ -74,9 +78,11 @@ void Con_Draw( const PLGViewport *viewport );
 
 typedef struct OSWindow OSWindow;
 
-#define PrintError( FORMAT, ... )                             \
-	PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
-	exit( EXIT_FAILURE )
+#define PrintError( FORMAT, ... )                                 \
+	{                                                             \
+		PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
+		exit( EXIT_FAILURE );                                     \
+	}
 #define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
 #define Print( FORMAT, ... )     PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #if !defined( NDEBUG )
@@ -89,5 +95,4 @@ extern PLPackage *globalWad;
 
 void Engine_Shutdown( void );
 
-OSWindow *   Engine_GetMainWindow( void );
 unsigned int Engine_GetNumTicks( void );

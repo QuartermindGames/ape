@@ -44,10 +44,8 @@ void Game_Tick( void )
 	if ( gameState == GAME_STATE_PAUSED )
 	{
 		if ( globalSystem.GetKeyState( 'z' ) )
-		{
 			/* if any key was hit here, just switch to the game */
 			gameState = GAME_STATE_ACTIVE;
-		}
 
 		return;
 	}
@@ -55,7 +53,9 @@ void Game_Tick( void )
 	static unsigned int spawnDelay = 0;
 	if ( globalSystem.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() )
 	{
-		Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 16, 0 ), 0.0f );
+		Actor *dummyPlayer = Act_SpawnActor( ACTOR_PLAYER, NULL );
+		Act_SetPosition( dummyPlayer, &pl_vecOrigin3 );
+
 		spawnDelay = Engine_GetNumTicks() + 50;
 	}
 }
@@ -69,7 +69,7 @@ void Game_Display( void )
 	if ( playerCamera == NULL )
 		return;
 
-	Gfx_DrawPerspective( playerCamera );
+	R_DrawPerspective( playerCamera );
 }
 
 void Game_SpawnWorld( const char *worldPath )
@@ -82,10 +82,9 @@ void Game_SpawnWorld( const char *worldPath )
 
 	Map_Load( worldPath ); /* load the map from the global wad */
 
-	Act_SpawnActors( worldPath );
-
 	/* spawn the player in */
-	playerActor = Act_SpawnActor( ACTOR_PLAYER, PLVector3( 0, 32, 0 ), 0.0f );
+	playerActor = Act_SpawnActor( ACTOR_PLAYER, NULL );
+	Act_SetPosition( playerActor, &PLVector3( 0, 32, 0 ) );
 
 	gameState   = GAME_STATE_ACTIVE;
 	menuState   = MENU_STATE_HUD;

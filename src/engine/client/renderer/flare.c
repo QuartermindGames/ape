@@ -39,11 +39,11 @@ void Flare_Initialize( void )
 {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
 	{
-		flareTextures[ i ] = Gfx_LoadTexture( flarePaths[ i ] );
+		flareTextures[ i ] = R_LoadTexture( flarePaths[ i ] );
 	}
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
 	{
-		shineTextures[ i ] = Gfx_LoadTexture( shinePaths[ i ] );
+		shineTextures[ i ] = R_LoadTexture( shinePaths[ i ] );
 	}
 }
 

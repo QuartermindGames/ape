@@ -1,17 +1,18 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
 /* todo: introduce container around this */
-typedef struct GfxAnimationFrame
+typedef struct SprAnimationFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture * texture;
-} GfxAnimationFrame;
+} SprAnimationFrame;
 
 typedef enum ViewPerspective
 {
@@ -41,19 +42,19 @@ typedef struct RendererStats
 } RendererStats;
 extern RendererStats g_gfxPerfStats;
 
-#define GFX_PROGRAM_NAME_LENGTH 64
+#define RS_PROGRAM_NAME_LENGTH 64
 
 enum
 {
-	GFX_SHADER_DEFAULT,
-	GFX_SHADER_LIGHTING_PASS,
-	GFX_SHADER_DEFAULT_VERTEX,
-	GFX_SHADER_DEFAULT_ALPHA,
-	GFX_SHADER_POST_PROCESS,
+	RS_SHADER_DEFAULT,
+	RS_SHADER_LIGHTING_PASS,
+	RS_SHADER_DEFAULT_VERTEX,
+	RS_SHADER_DEFAULT_ALPHA,
+	RS_SHADER_POST_PROCESS,
 
-	GFX_MAX_DEFAULT_SHADERS
+	RS_MAX_DEFAULT_SHADERS
 };
-extern PLGShaderProgram *defaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
+extern PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 #define GFX_NUM_SPRITE_ANGLES 8
 
@@ -62,23 +63,19 @@ extern PLGShaderProgram *defaultShaderPrograms[ GFX_MAX_DEFAULT_SHADERS ];
 
 void R_Initialize( void );
 void R_Shutdown( void );
-void Gfx_SetupDefaultState( void );
-void Gfx_DrawMenu( void );
+
+void R_SetupDefaultState( void );
+void R_DrawMenu( void );
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles );
 
 PLGShaderProgram *RS_GetShaderProgram( const char *name );
 
-void Gfx_DrawPerspective( GfxCamera *camera );
-void Gfx_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
-void Gfx_DrawAnimationFrame( GfxAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
-void Gfx_DrawAnimation( GfxAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+void R_DrawPerspective( GfxCamera *camera );
+void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 
-PLGTexture *Gfx_LoadTexture( const char *path );
+void RSpr_DrawAnimationFrame( SprAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
+void RSpr_DrawAnimation( SprAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLGTexture *Gfx_GetFallbackTexture( void );
-
-const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective );
-
-void Gfx_DrawCharacter( PLGTexture *baseTexture, char character, float x, float y, float scale );
-void Gfx_DrawString( PLGTexture *baseTexture, const char *string, float x, float y, float scale );
+PLGTexture *R_LoadTexture( const char *path );
+PLGTexture *R_GetFallbackTexture( void );

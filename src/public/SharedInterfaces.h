@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -20,13 +21,17 @@ typedef uint16_t InterfaceVersion[ 2 ];
  * OS INTERFACE
  * ====================================================================*/
 
+typedef struct OSViewport
+{
+	int x, y;
+	int w, h;
+} OSViewport;
+
 typedef struct OSInterface
 {
 	InterfaceVersion version;
 
-	/* windowing */
-	OSWindow *( *CreateWindow )( const char *title, int width, int height );
-	void ( *GetCurrentDisplaySize )( int *width, int *height );
+	OSViewport *viewport;
 
 	/* input */
 	bool ( *GetButtonState )( InputButton inputIndex );
@@ -42,6 +47,7 @@ typedef struct OSInterface
 	void *( *ReAlloc )( void *ptr, size_t newSize, bool abortOnFail );
 	void ( *Free )( void *ptr );
 
+	void ( *Error )( const char *message );
 	void ( *Shutdown )( void );
 } OSSystemInterface;
 extern OSSystemInterface globalSystem;

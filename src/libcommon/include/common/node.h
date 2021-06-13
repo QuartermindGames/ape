@@ -176,40 +176,35 @@ struct PLGVertex *NL_DS_DeserializeVertex( NLNode *in, struct PLGVertex *out );
 PL_EXTERN_C_END
 
 #ifdef __cplusplus
-static inline NLNode *NL_PushBackArray( NLNode *parent, const char *name, const int *array, unsigned int numElements )
+
+static inline NLNode *NL_PushBackArray( NLNode *parent, const char *name, const int32_t *array, unsigned int numElements )
 {
-	return NL_PushBackIntArray( parent, name, array, numElements );
+	return NL_PushBackI32Array( parent, name, array, numElements );
 }
+
 static inline NLNode *NL_PushBackArray( NLNode *parent, const char *name, const float *array, unsigned int numElements )
 {
-	return NL_PushBackFloatArray( parent, name, array, numElements );
+	return NL_PushBackF32Array( parent, name, array, numElements );
 }
+
 static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, const char *var )
 {
-	return NL_PushBackString( parent, name, var );
+	return NL_PushBackStr( parent, name, var );
 }
+
 static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, bool var )
 {
 	return NL_PushBackBool( parent, name, var );
 }
-static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, int var )
+
+static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, int32_t var )
 {
-	return NL_PushBackInt( parent, name, var );
+	return NL_PushBackI32( parent, name, var );
 }
+
 static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, float var )
 {
-	return NL_PushBackFloat( parent, name, var );
+	return NL_PushBackF32( parent, name, var );
 }
-static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, const PLVector2 *var )
-{
-	return NL_PushBackVec2( parent, name, var );
-}
-static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, const PLVector3 *var )
-{
-	return NL_PushBackVec3( parent, name, var );
-}
-static inline NLNode *NL_PushBackVariable( NLNode *parent, const char *name, const PLVector4 *var )
-{
-	return NL_PushBackVec4( parent, name, var );
-}
+
 #endif

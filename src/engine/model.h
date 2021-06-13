@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "renderer/material.h"
+#include "client/renderer/material.h"
 
 #define MODEL_MAX_MATERIALS 64
 

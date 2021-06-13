@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <plcore/pl_linkedlist.h>
+
 #include "common/node.h"
+
 
 /* node structure
  *  string

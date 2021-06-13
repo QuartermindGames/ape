@@ -36,7 +36,7 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         memory_manager.c
 
         integrations/DiscordIntegration.c
-        client/sgui.c client/sgui.h net_server.c actors/actor_asteroid.c)
+        client/sgui.c client/sgui.h net_server.c actors/sg_actors.c actors/actor_rpg_shared.h)
 
 target_include_directories(engine PRIVATE
         ./ ../3rdparty/miniz/)

@@ -102,12 +102,11 @@ PLMModel *GSMDL_LoadFile( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
-	{
 		return NULL;
-	}
 
 	VMDLHeader header;
 	PlReadFile( file, &header, sizeof( VMDLHeader ), 1 );
+
 	/* now carry out some basic validation */
 
 	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC )

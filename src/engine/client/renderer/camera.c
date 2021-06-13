@@ -18,11 +18,6 @@ static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
         [VIEW_PERSPECTIVE_FRONT] = "Front",
 };
 
-const char *Gfx_GetPerspectiveDescription( ViewPerspective perspective )
-{
-	return perspectiveDescriptions[ perspective ];
-}
-
 static PLLinkedList *camerasList = NULL;
 
 GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles )
@@ -72,7 +67,7 @@ void Gfx_InitializeCameras( void )
 }
 
 void Gfx_DrawScene( PLGCamera *camera );
-void Gfx_DrawPerspective( GfxCamera *camera )
+void R_DrawPerspective( GfxCamera *camera )
 {
 	globalSystem.GetCurrentDisplaySize( &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
 

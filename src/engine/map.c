@@ -5,7 +5,7 @@
 
 #include "yin.h"
 #include "map.h"
-#include "renderer/renderer.h"
+#include "client/renderer/renderer.h"
 
 #define MAP_GEOMETRY_IDENTIFIER "geometry"
 #define MAP_GEOMETRY_VERSION    "version 2"
@@ -409,8 +409,8 @@ PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destin
 	vertices            = PlgGetPolygonVertices( destination->polygon, &numVertices );
 	portals[ 1 ].origin = GetOriginPointFromVertices( vertices, numVertices );
 
-	Gfx_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
-	Gfx_DrawAxesPivot( portals[ 1 ].origin, portals[ 1 ].rotation );
+	R_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
+	R_DrawAxesPivot( portals[ 1 ].origin, portals[ 1 ].rotation );
 
 #if 0
 	plMatrixMode( PL_MODELVIEW_MATRIX );
@@ -587,7 +587,7 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
 
 static void Map_SetupScene( PLGCamera *camera )
 {
-	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_LIGHTING_PASS ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_LIGHTING_PASS ] );
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	if ( program == NULL )

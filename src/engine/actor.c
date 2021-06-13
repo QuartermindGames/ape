@@ -16,9 +16,9 @@
 
 static void Act_DrawBasic( Actor *self, void *userData )
 {
-	PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
 
-	Gfx_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
+	R_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
 
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
@@ -31,27 +31,44 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
 	Act_SetVelocity( other, &pushDir );
 }
 
-void Player_Spawn( Actor *self );
-void Player_Tick( Actor *self, void *userData );
-void Player_Collide( Actor *self, Actor *other, void *userData );
-void Player_Draw( Actor *self, void *userData );
+static ActorSetup actorDefault = {
+        .id          = "point.null",
+        .Spawn       = NULL,
+        .Tick        = NULL,
+        .Draw        = Act_DrawBasic,
+        .Collide     = NULL,
+        .Destroy     = NULL,
+        .Serialize   = NULL,
+        .Deserialize = NULL,
+};
 
-ActorSetup actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
-        [ACTOR_NONE]   = { NULL, NULL, Act_DrawBasic, NULL, NULL },
-        [ACTOR_PLAYER] = { "point.player", Player_Spawn, Player_Tick, Player_Draw, Player_Collide, NULL },
+extern const ActorSetup actorPlayerSetup;// actor_player.c
+
+extern const ActorSetup actorAsteroidSetup;  // sg_actors.c
+extern const ActorSetup actorProjectileSetup;// sg_actors.c
+
+const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
+        [ACTOR_NONE]           = &actorDefault,
+        [ACTOR_PLAYER]         = &actorPlayerSetup,
+        [ACTOR_LIGHT]          = NULL,
+        [ACTOR_TRIGGER_VOLUME] = NULL,
+        // sg
+        [ACTOR_SG_ASTEROID]   = &actorAsteroidSetup,
+        [ACTOR_SG_PROJECTILE] = &actorProjectileSetup,
 };
 
 typedef struct Actor
 {
-	PLVector3    position, oldPosition;
-	PLVector3    velocity;
-	PLVector3    forward;
-	float        angle;
-	float        viewPitch;
-	float        viewOffset;
-	unsigned int area;
+	PLVector3 position, oldPosition;
+	PLVector3 angles, oldAngles;
+	PLVector3 velocity;
+	PLVector3 forward;
+	float     angle;
+	float     viewPitch;
+	float     viewOffset;
 
 	/* collision/vis */
+	struct WorldSector *sector;
 	ActorMovementType   movementType;
 	ActorCollisionGroup collisionGroup;
 	PLCollisionAABB     bounds;
@@ -66,43 +83,21 @@ typedef struct Actor
 
 	SGNode *graphNode;
 
+	// temporary
+	int16_t health;
+
 	PLLinkedListNode *node;
 	void *            userData;
 } Actor;
 
 static PLLinkedList *actorList;
-static PLLinkedList *actorSetupList;
 
-void Act_RegisterActorType( ActorSetup *actorSetup )
+Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 {
-	// Ensure that it's not been added already
-	PLLinkedListNode *node = PlGetFirstNode( actorSetupList );
-	while ( node != NULL )
-	{
-		ActorSetup *curSetup = PlGetLinkedListNodeUserData( node );
-		if ( strcmp( curSetup->id, actorSetup->id ) == 0 )
-		{
-			PrintWarn( "Actor already registered: %s\n", actorSetup->id );
-			return;
-		}
-
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	node = PlInsertLinkedListNode( actorSetupList, actorSetup );
-	if ( node == NULL )
-		PrintWarn( "Failed to insert actor setup node!\nPL: %s\n", PlGetError() );
-}
-
-Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle )
-{
-	Actor *actor    = globalSystem.MAlloc( sizeof( Actor ), true );
-	actor->node     = PlInsertLinkedListNode( actorList, actor );
-	actor->setup    = actorSpawnSetup[ type ];
-	actor->area     = 0;
-	actor->type     = type;
-	actor->position = position;
-	actor->angle    = angle;
+	Actor *actor = globalSystem.MAlloc( sizeof( Actor ), true );
+	actor->node  = PlInsertLinkedListNode( actorList, actor );
+	actor->setup = *actorSpawnSetup[ type ];
+	actor->type  = type;
 
 	actor->geoColliders = PlCreateLinkedList();
 	if ( actor->geoColliders == NULL )
@@ -115,15 +110,30 @@ Actor *Act_SpawnActor( ActorType type, PLVector3 position, float angle )
 	if ( actor->setup.Spawn != NULL )
 		actor->setup.Spawn( actor );
 
+	if ( actor->setup.Deserialize != NULL && nodeTree != NULL )
+		actor->setup.Deserialize( actor, nodeTree );
+
 	return actor;
+}
+
+Actor *Act_SpawnActorById( const char *id, NLNode *nodeTree )
+{
+	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
+	{
+		if ( strcmp( actorSpawnSetup[ i ]->id, id ) != 0 )
+			continue;
+
+		return Act_SpawnActor( i, nodeTree );
+	}
+
+	PrintWarn( "Failed to find actor by id: %s\n", id );
+	return NULL;
 }
 
 Actor *Act_DestroyActor( Actor *self )
 {
 	if ( self->setup.Destroy != NULL )
-	{
 		self->setup.Destroy( self, self->userData );
-	}
 
 	PlDestroyLinkedList( self->geoColliders );
 	PlDestroyLinkedListNode( actorList, self->node );
@@ -134,150 +144,47 @@ Actor *Act_DestroyActor( Actor *self )
 	return NULL;
 }
 
-ActorType Act_GetType( const Actor *self )
-{
-	return self->type;
-}
-void Act_SetPosition( Actor *self, const PLVector3 *position )
-{
-	self->position = *position;
-}
-PLVector3 Act_GetPosition( const Actor *self )
-{
-	return self->position;
-}
-void Act_SetVelocity( Actor *self, const PLVector3 *velocity )
-{
-	self->velocity = *velocity;
-}
-PLVector3 Act_GetVelocity( const Actor *self )
-{
-	return self->velocity;
-}
-void Act_SetAngle( Actor *self, float angle )
-{
-	self->angle = angle;
-}
-float Act_GetAngle( const Actor *self )
-{
-	return self->angle;
-}
+ActorType Act_GetType( const Actor *self ) { return self->type; }
 
-/**
- * Up/down view angle, typically used for camera.
- */
-void Act_SetViewPitch( Actor *self, float viewPitch )
-{
-	self->viewPitch = viewPitch;
-}
+void      Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
+PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
-/**
- * Fetch the current up/down view angle.
- */
-float Act_GetViewPitch( const Actor *self )
-{
-	return self->viewPitch;
-}
+void      Act_SetVelocity( Actor *self, const PLVector3 *velocity ) { self->velocity = *velocity; }
+PLVector3 Act_GetVelocity( const Actor *self ) { return self->velocity; }
 
-void Act_SetViewOffset( Actor *self, float viewOffset )
-{
-	self->viewOffset = viewOffset;
-}
-float Act_GetViewOffset( Actor *self )
-{
-	return self->viewOffset;
-}
+void  Act_SetAngle( Actor *self, float angle ) { self->angle = angle; }
+float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-/**
- * Fetch the actor-specific data.
- */
-void Act_SetUserData( Actor *self, void *userData )
-{
-	self->userData = userData;
-}
+void      Act_SetAngles( Actor *self, const PLVector3 *angles ) { self->angles = *angles; }
+PLVector3 Act_GetAngles( const Actor *self ) { return self->angles; }
 
-void *Act_GetUserData( Actor *self )
-{
-	return self->userData;
-}
+struct WorldSector *Act_GetWorldSector( Actor *self ) { return self->sector; }
+void                Act_SetWorldSector( Actor *self, struct WorldSector *sector ) { self->sector = sector; }
 
-void Act_SetCurrentFrame( Actor *self, unsigned int frame )
-{
-	self->currentFrame = frame;
-}
+void  Act_SetViewPitch( Actor *self, float viewPitch ) { self->viewPitch = viewPitch; }
+float Act_GetViewPitch( const Actor *self ) { return self->viewPitch; }
 
-unsigned int Act_GetCurrentFrame( const Actor *self )
-{
-	return self->currentFrame;
-}
+void  Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
+float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
+
+void  Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
+void *Act_GetUserData( Actor *self ) { return self->userData; }
+
+void         Act_SetCurrentFrame( Actor *self, unsigned int frame ) { self->currentFrame = frame; }
+unsigned int Act_GetCurrentFrame( const Actor *self ) { return self->currentFrame; }
 
 void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
 {
 	if ( mins.x > maxs.x || mins.y > maxs.y || mins.z > maxs.z )
-	{
 		PrintError( "Invalid bounds for actor (mins %s, maxs %s)!\n", PlPrintVector3( &mins, pl_int_var ), PlPrintVector3( &maxs, pl_int_var ) );
-	}
 
 	self->bounds.maxs = maxs;
 	self->bounds.mins = mins;
 }
 
-const PLCollisionAABB *Act_GetBounds( Actor *self )
-{
-	return &self->bounds;
-}
+const PLCollisionAABB *Act_GetBounds( Actor *self ) { return &self->bounds; }
 
-PLVector3 Act_GetForward( const Actor *self )
-{
-	return self->forward;
-}
-
-void Act_SpawnActors( const char *worldPath )
-{
-	Print( "Spawning actors...\n" );
-
-	NLNode *node = NL_LoadFile( worldPath, "world" );
-	if ( node == NULL )
-	{
-		PrintWarn( "Failed to load")
-	}
-
-#if 0 /* todo: replace */
-	PLFile *filePtr = plLoadPackageFile( globalWad, "M_THINGS" );
-	if ( filePtr == NULL) {
-		PrintError( "Failed to find \"M_THINGS\" block!\nPL: %s\n", plGetError());
-	}
-
-	bool status;
-	uint32_t numThings = plReadInt32( filePtr, false, &status );
-	if ( !status ) {
-		PrintError( "Failed to get number of things!\nPL: %s\n", plGetError());
-	}
-
-	for ( unsigned int i = 0; i < numThings; ++i ) {
-		struct {
-			int16_t xPos;
-			int16_t yPos;
-			uint16_t type;
-			uint16_t flags;
-		} thing;
-
-		PrintMsg( "Spawning actor %d/%d...\n", i + 1, numThings );
-
-		/* these are intentionally flipped... */
-		thing.yPos = ( int16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 ) * 2;
-		thing.xPos = ( int16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 ) * 2;
-		thing.type = ( uint16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 );
-		thing.flags = ( uint16_t ) ( plReadInt32( filePtr, false, &status ) >> 16 );
-
-		if ( !status ) {
-			PrintError( "Failed to get thing data!\nPL: %s\n", plGetError());
-		}
-
-		Act_SpawnActor( thing.type, PLVector3( thing.xPos, 0, thing.yPos ), 0.0f );
-	}
-#endif
-}
+PLVector3 Act_GetForward( const Actor *self ) { return self->forward; }
 
 /****************************************
  * COLLISION
@@ -285,10 +192,10 @@ void Act_SpawnActors( const char *worldPath )
 
 static bool Act_IsColliding( Actor *self, Actor *other )
 {
-	if ( self->area != other->area )
-	{
-		return false;
-	}
+	// todo: we need to be smarter, what about cases where an actor is crossing
+	//  the boundary?
+	//if ( self->area != other->area )
+	//	return false;
 
 	return PlIsAabbIntersecting( &self->bounds, &other->bounds );
 }
@@ -301,9 +208,7 @@ static Actor *Act_CheckCollisions( Actor *self )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
 		if ( actor == NULL )
-		{
 			PrintError( "Invalid actor data in node!\n" );
-		}
 
 		/* "don't have time to play with myself" */
 		if ( actor == self )
@@ -313,9 +218,7 @@ static Actor *Act_CheckCollisions( Actor *self )
 		}
 
 		if ( Act_IsColliding( self, actor ) )
-		{
 			return actor;
-		}
 
 		curNode = PlGetNextLinkedListNode( curNode );
 	}
@@ -333,18 +236,12 @@ void Act_DrawActors( void )
 	while ( curNode != NULL )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
-		if ( actor == NULL )
-		{
-			PrintError( "Invalid actor data in node!\n" );
-		}
 
 		if ( actor->setup.Draw )
-		{
 			actor->setup.Draw( actor, actor->userData );
-		}
 
 #if 1
-		PlgSetShaderProgram( defaultShaderPrograms[ GFX_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
 		PlgDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
@@ -361,16 +258,14 @@ void Act_DrawActors( void )
 			{
 				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
 
-				Gfx_DrawAxesPivot( collision.contactPoint, plane.normal );
+				R_DrawAxesPivot( collision.contactPoint, plane.normal );
 
 				PLMatrix4 transform = PlMatrix4Identity();
 				PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
 				PlgDrawSimpleLine( transform, actor->bounds.origin, collision.contactPoint, PLColour( 0, 255, 0, 255 ) );
 			}
 			else
-			{
 				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_GREEN );
-			}
 
 			colliderNode = PlGetNextLinkedListNode( colliderNode );
 		}
@@ -391,34 +286,22 @@ void Act_TickActors( void *userData, double delta )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
 		if ( actor == NULL )
-		{
 			PrintError( "Invalid actor data in node!\n" );
-		}
 
 		if ( actor->setup.Tick != NULL )
-		{
 			actor->setup.Tick( actor, actor->userData );
-		}
 
 		PlAnglesAxes( PLVector3( 0, actor->angle, 0 ), NULL, NULL, &actor->forward );
 
 		static const float friction = 4.0f;
 		if ( actor->velocity.x != 0 )
-		{
 			actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
-		}
 		if ( actor->velocity.y != 0 )
-		{
 			actor->velocity.y -= ( actor->velocity.y / ( friction - ( float ) delta ) );
-		}
 		if ( actor->velocity.z != 0 )
-		{
 			actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
-		}
 
-		//if ( plGetNumLinkedListNodes( actor->geoColliders ) == 0 ) {
 		actor->velocity.y = -GRAVITY;
-		//}
 
 		actor->oldPosition = actor->position;
 		actor->position    = PlAddVector3( actor->position, actor->velocity );
@@ -434,23 +317,20 @@ void Act_TickActors( void *userData, double delta )
 
 			Actor *collider = Act_CheckCollisions( actor );
 			if ( collider != NULL )
-			{
 				actor->setup.Collide( actor, collider, actor->userData );
-			}
 
 			/* and now check actor vs world collision */
 
 			PlDestroyLinkedListNodes( actor->geoColliders );
 
 			/* first need to figure out what faces we're intersecting with */
+#if 0// todo: revisit...
 			unsigned int numFaces;
 			MapFace *    faces = Map_GetFacesForSector( actor->area, &numFaces );
 			for ( unsigned int i = 0; i < numFaces; ++i )
 			{
 				if ( !PlIsAabbIntersecting( &actor->bounds, &faces[ i ].bounds ) )
-				{
 					continue;
-				}
 
 				/* convert the face into a plane */
 				PLCollisionPlane plane = PLCollisionPlane( faces[ i ].bounds.absOrigin, PlgGetPolygonFaceNormal( faces[ i ].polygon ) );
@@ -468,11 +348,10 @@ void Act_TickActors( void *userData, double delta )
 
 					PLLinkedListNode *node = PlInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
 					if ( node == NULL )
-					{
 						PrintError( "Failed to insert node into colliders list!\n" );
-					}
 				}
 			}
+#endif
 		}
 
 		curNode = PlGetNextLinkedListNode( curNode );
@@ -488,12 +367,6 @@ void Act_Initialize( void )
 	actorList = PlCreateLinkedList();
 	if ( actorList == NULL )
 		PrintError( "Failed to create actor list!\nPL: %s\n", PlGetError() );
-
-	actorSetupList = PlCreateLinkedList();
-	if ( actorSetupList == NULL )
-	{
-		PrintError( "Failed to create actor setup list!\nPL: %s\n", PlGetError() );
-	}
 }
 
 void Act_Shutdown( void )
