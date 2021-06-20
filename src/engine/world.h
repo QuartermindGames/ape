@@ -59,4 +59,4 @@ const PLCollisionAABB *W_GetFaceBounds( const WorldFace *face );
 WorldMesh *W_GetMeshForSector( WorldSector *sector );
 WorldFace *W_GetFacesForSector( WorldSector *sector, uint32_t *numFaces );
 
-void W_Draw( PLGCamera *camera, WorldSector *originSector );
+void W_Draw( PLGCamera *camera, World *world, WorldSector *originSector );

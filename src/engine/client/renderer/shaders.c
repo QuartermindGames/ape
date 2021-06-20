@@ -45,8 +45,8 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root )
 {
 	ShaderProgramIndex program;
 
-	const char *vertexPath   = NL_GetStrByName( root, "vertexPath" );
-	const char *fragmentPath = NL_GetStrByName( root, "fragmentPath" );
+	const char *vertexPath   = NL_GetStrByName( root, "vertexPath", NULL );
+	const char *fragmentPath = NL_GetStrByName( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
@@ -72,15 +72,11 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root )
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_VERTEX ], PL_SYSTEM_MAX_PATH, "%s", vertexPath );
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_FRAGMENT ], PL_SYSTEM_MAX_PATH, "%s", fragmentPath );
 
-	const char *internalName = NL_GetStrByName( root, "description" );
+	const char *internalName = NL_GetStrByName( root, "description", NULL );
 	if ( internalName != NULL )
-	{
 		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
-	}
 	else
-	{
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
-	}
 
 	/* allocate and return our program index */
 	ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
@@ -154,9 +150,7 @@ PLGShaderProgram *RS_GetShaderProgram( const char *name )
 	{
 		ShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
 		if ( strcmp( name, programIndex->internalName ) == 0 )
-		{
 			return programIndex->internalPtr;
-		}
 
 		root = PlGetNextLinkedListNode( root );
 	}
@@ -184,8 +178,6 @@ void RS_InitializeShaderPrograms( void )
 	{
 		defaultShaderPrograms[ i ] = RS_GetShaderProgram( defaultShaderNames[ i ] );
 		if ( defaultShaderPrograms[ i ] == NULL )
-		{
 			PrintError( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
-		}
 	}
 }

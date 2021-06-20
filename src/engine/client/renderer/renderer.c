@@ -602,7 +602,7 @@ static void R_RenderScene( PLGCamera *camera, bool smPass )
 	if ( player != NULL )
 		curSector = Act_GetWorldSector( player );
 
-	W_Draw( camera, curSector );
+	W_Draw( camera, NULL, curSector );
 
 	Act_DrawActors();
 }

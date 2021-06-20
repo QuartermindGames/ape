@@ -657,21 +657,6 @@ void Map_Draw( PLGCamera *camera, bool smPass )
 	CPUTimer_EndMeasure( PROFILE_DRAW_WORLD );
 }
 
-PLVector4 W_GetAmbience( void )
-{
-	return PLVector4( 0.4f, 0.4f, 0.4f, 1.0f );
-}
-
-PLVector4 W_GetSunColour( void )
-{
-	return PLVector4( 1.0f, 1.0f, 1.0f, 1.25f );
-}
-
-PLVector3 W_GetSunPosition( void )
-{
-	return PLVector3( 0.5f, -1.0f, 0.5f );
-}
-
 #if 0
 PLMatrix4 transform = plMatrix4Identity();
 

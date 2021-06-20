@@ -56,6 +56,8 @@ typedef struct WorldMesh
 
 	PLCollisionAABB bounds;
 
+	PLGMesh *drawMesh; /* what actually gets rendered */
+
 	PLLinkedListNode *node;
 
 	MemRefCnt mem;
@@ -63,7 +65,7 @@ typedef struct WorldMesh
 
 typedef struct WorldObject
 {
-	WorldMesh *mesh;// pointer to mesh in worldMeshes list
+	WorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
 	SGTransform transform;
 
@@ -233,15 +235,24 @@ static void W_CB_DestroyWorldMesh( void *userData )
 {
 	WorldMesh *worldMesh = ( WorldMesh * ) userData;
 
+	PlgDestroyMesh( worldMesh->drawMesh );
+
 	PlDestroyLinkedListNode( worldMeshes, worldMesh->node );
 }
 
+/**
+ * Deserialise a mesh from the given node.
+ */
 static WorldMesh *W_DeserializeWorldMesh( NLNode *meshNode, WorldMesh *meshPtr )
 {
 	W_DeserializeIdentifierTag( meshNode, meshPtr->id );
 	W_DeserializeMaterials( meshNode, meshPtr );
 	W_DeserializeVertices( meshNode, meshPtr );
 	W_DeserializeFaces( meshNode, meshPtr );
+
+	meshPtr->drawMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, meshPtr->numFaces, meshPtr->numVertices );
+	if ( meshPtr->drawMesh == NULL )
+		PrintError( "Failed to create internal mesh for world mesh!\n" );
 
 	Mem_SetupReferenceInstance( &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
 
@@ -356,7 +367,27 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 
 	NLNode *propertyList = NL_GetChildByName( in, "properties" );
 	if ( propertyList != NULL )
+	{
 		out->globalProperties = NL_CopyNode( propertyList );
+
+		/* set some of the global defaults */
+
+		NLNode *childProperty;
+		if ( ( childProperty = NL_GetChildByName( out->globalProperties, "ambience" ) ) != NULL )
+			NL_DS_DeserializeVector4( childProperty, &out->ambience );
+		else
+			out->ambience = PLVector4( 0.4f, 0.4f, 0.4f, 1.0f );
+
+		if ( ( childProperty = NL_GetChildByName( out->globalProperties, "sunColour" ) ) != NULL )
+			NL_DS_DeserializeVector4( childProperty, &out->sunColour );
+		else
+			out->sunColour = PLVector4( 1.0f, 1.0f, 1.0f, 1.25f );
+
+		if ( ( childProperty = NL_GetChildByName( out->globalProperties, "sunPosition" ) ) != NULL )
+			NL_DS_DeserializeVector3( childProperty, &out->sunPosition );
+		else
+			out->sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
+	}
 
 	NLNode *meshList = NL_GetChildByName( in, "meshes" );
 	if ( meshList != NULL )
@@ -630,11 +661,12 @@ static WorldMesh **GetVisibleSubMeshesForSector( WorldSector *sector, const PLGC
 	return visibleMeshes;
 }
 
-static PLGMesh *triangleMesh = NULL;
-static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
+static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
 {
+#if 0
 	unsigned int numVisibleMeshes;
 	WorldMesh ** visibleMeshes = GetVisibleSubMeshesForSector( sector, camera, &numVisibleMeshes );
+#endif
 
 	unsigned int numFaces;
 	WorldFace *  faces = W_GetFacesForSector( sector, &numFaces );
@@ -659,11 +691,11 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
 			{
 				PLGVertex *  vertex = &sector->mesh->vertices[ face->vertices[ k ] ];
-				unsigned int v      = PlgAddMeshVertex( triangleMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
+				unsigned int v      = PlgAddMeshVertex( sector->mesh->drawMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's
 				 * appropriate to add to AddMeshVertex */
-				triangleMesh->vertices[ v ].tangent   = vertex->tangent;
-				triangleMesh->vertices[ v ].bitangent = vertex->bitangent;
+				sector->mesh->drawMesh->vertices[ v ].tangent   = vertex->tangent;
+				sector->mesh->drawMesh->vertices[ v ].bitangent = vertex->bitangent;
 			}
 
 			PLGVertex vertices[ WORLD_FACE_MAX_SIDES ];
@@ -674,10 +706,10 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k )
 			{
-				PlgAddMeshTriangle( triangleMesh,
-				                    curIndex[ 0 ] + triangleMesh->num_verts - face->numVertices,
-				                    curIndex[ 1 ] + triangleMesh->num_verts - face->numVertices,
-				                    curIndex[ 2 ] + triangleMesh->num_verts - face->numVertices );
+				PlgAddMeshTriangle( sector->mesh->drawMesh,
+				                    curIndex[ 0 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
+				                    curIndex[ 1 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
+				                    curIndex[ 2 ] + sector->mesh->drawMesh->num_verts - face->numVertices );
 				curIndex += 3;
 			}
 			globalSystem.Free( indices );
@@ -685,14 +717,15 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
 			g_gfxPerfStats.numFacesDrawn++;
 		}
 
-		if ( triangleMesh->num_triangles == 0 )
+		if ( sector->mesh->drawMesh->num_triangles == 0 )
 			return;
 
 		Material *material = RM_CacheMaterial( "materials/engine/simple.mat", 0, true );
-		RM_DrawMesh( material, triangleMesh );
+		RM_DrawMesh( material, sector->mesh->drawMesh );
 		return;
 	}
 
+#if 0
 	/* batch everything by material */
 	for ( unsigned int i = 0; i < world->numMaterials; ++i )
 	{
@@ -742,6 +775,7 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
 
 		RM_DrawMesh( world->materials[ i ], triangleMesh );
 	}
+#endif
 }
 
 /****************************************
@@ -765,11 +799,8 @@ static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, 
 	}
 }
 
-void W_Draw( PLGCamera *camera, WorldSector *originSector )
+void W_Draw( PLGCamera *camera, World *world, WorldSector *originSector )
 {
-	if ( currentWorld != NULL )
-		return;
-
 	PROFILE_START( PROFILE_DRAW_WORLD );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -779,16 +810,16 @@ void W_Draw( PLGCamera *camera, WorldSector *originSector )
 	CVar( "world.drawSectorVolumes", drawSectorVolumes );
 
 	if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
-		W_Debug_DrawSectorVolumes( currentWorld, originSector, camera );
+		W_Debug_DrawSectorVolumes( world, originSector, camera );
 	else
 	{
 		if ( originSector == NULL )
-			originSector = W_GetSectorByGlobalOrigin( currentWorld, &camera->position );
+			originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
 
 		if ( originSector != NULL )
 		{
 			unsigned int  numVisibleSectors;
-			WorldSector **visibleSectors = GetVisibleSectors( currentWorld, originSector, camera, &numVisibleSectors );
+			WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
 			for ( unsigned int i = 0; i < numVisibleSectors; ++i )
 				DrawSector( visibleSectors[ i ], camera, false );
 

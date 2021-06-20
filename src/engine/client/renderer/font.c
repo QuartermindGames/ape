@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include "yin.h"
 #include "font.h"
@@ -40,19 +41,15 @@ static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, f
 void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, PLColour colour, char character )
 {
 	if ( scale <= 0 )
-	{
 		return;
-	}
 
-	int w, h;
-	globalSystem.GetCurrentDisplaySize( &w, &h );
+	int w = globalSystem.viewport->w;
+	int h = globalSystem.viewport->h;
 
 	float dw = ( float ) w;
 	float dh = ( float ) h;
 	if ( x > dw || y > dh )
-	{
 		return;
-	}
 
 	/* setup our render pass */
 
@@ -73,21 +70,15 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
 {
 	if ( scale == 0.0f )
-	{
 		return;
-	}
 
 	size_t numChars = strlen( msg );
 	if ( numChars == 0 )
-	{
 		return;
-	}
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	if ( program == NULL )
-	{
 		return;
-	}
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -111,9 +102,7 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 				n_x = x;
 			}
 			else
-			{
 				n_x += ( font->cw * scale );
-			}
 		}
 
 		RM_DrawMesh( font->material, renderMesh );
@@ -132,9 +121,7 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 			n_x = x;
 		}
 		else
-		{
 			n_x += ( font->cw * scale );
-		}
 	}
 
 	RM_DrawMesh( font->material, renderMesh );
@@ -146,9 +133,7 @@ void Font_Initialize( void )
 {
 	renderMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 512, 256 );
 	if ( renderMesh == NULL )
-	{
 		PrintError( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
-	}
 
 	defaultFont = Font_LoadBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
 }
@@ -164,9 +149,7 @@ BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int
 	BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
 	font->material   = RM_CacheMaterial( materialPath, 0, false );
 	if ( font->material == NULL )
-	{
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );
-	}
 
 	font->w     = w;
 	font->h     = h;
