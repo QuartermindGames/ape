@@ -232,6 +232,8 @@ static Actor *Act_CheckCollisions( Actor *self )
 
 void Act_DrawActors( void )
 {
+	PROFILE_START( PROFILE_DRAW_ACTORS );
+
 	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
 	while ( curNode != NULL )
 	{
@@ -273,6 +275,8 @@ void Act_DrawActors( void )
 
 		curNode = PlGetNextLinkedListNode( curNode );
 	}
+
+	PROFILE_END( PROFILE_DRAW_ACTORS );
 }
 
 #define GRAVITY 7.0f

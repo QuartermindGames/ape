@@ -1,16 +1,20 @@
-/* ======================================================================
- * Project Yin, Confidential
- * Copyright (C) 2020-2021 OldTimes Software
- * ====================================================================*/
+/**
+ * Yin Game Engine
+ * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include <plgraphics/plg_driver_interface.h>
 
 #include "yin.h"
 #include "actor.h"
 #include "font.h"
-#include "engine/image.h"
-#include "map.h"
+#include "image.h"
+#include "world.h"
+#include "game_interface.h"
 #include "renderer.h"
+
+#include "client/sgui.h"
 
 RendererStats g_gfxPerfStats;
 
@@ -21,19 +25,13 @@ static PLGFrameBuffer *smDepthBuffer = NULL;
 static PLGTexture *    smTexture;
 static PLGCamera *     smCamera;
 
-#define NUM_GRAPH_POINTS 32
-static float msWorldGraph[ NUM_GRAPH_POINTS ];
-static float memoryGraph[ NUM_GRAPH_POINTS ];
-
 /* Post Processing */
 
 static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachment, unsigned int w, unsigned int h )
 {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL )
-	{
 		PlgGetFrameBufferResolution( *buffer, &bw, &bh );
-	}
 
 	/* need to rebuild the framebuffer object
 	 * todo: the library should provide us a func to perform a resize? */
@@ -42,16 +40,12 @@ static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachme
 		PlgDestroyFrameBuffer( *buffer );
 		*buffer = PlgCreateFrameBuffer( w, h, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		if ( *buffer == NULL )
-		{
 			PrintError( "Failed to create framebuffer!\nPL: %s\n", PlGetError() );
-		}
 
 		PlgDestroyTexture( *attachment );
 		*attachment = PlgGetFrameBufferTextureAttachment( *buffer, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 		if ( *attachment == NULL )
-		{
 			PrintError( "Failed to create texture attachment!\nPL: %s\n", PlGetError() );
-		}
 	}
 
 	/* reset */
@@ -111,9 +105,7 @@ PLGTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned
 
 	PLGTexture *texture = PlgCreateTexture();
 	if ( texture == NULL )
-	{
 		PrintError( "Failed to create texture!\nPL: %s\n", PlGetError() );
-	}
 
 	if ( !generateMipMap )
 	{
@@ -121,14 +113,10 @@ PLGTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned
 		texture->filter = PLG_TEXTURE_FILTER_LINEAR;
 	}
 	else
-	{
 		texture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-	}
 
 	if ( !PlgUploadTextureImage( texture, imageData ) )
-	{
 		PrintError( "Failed to generate texture from image!\nPL: %s\n", PlGetError() );
-	}
 
 	PlDestroyImage( imageData );
 
@@ -148,9 +136,7 @@ static void RT_InitializeTextures( void )
 	};
 	fallbackTexture = Gfx_GenerateTextureFromData( ( uint8_t * ) fallbackData, 2, 2, 4, false );
 	if ( fallbackTexture == NULL )
-	{
 		PrintError( "Failed to create fallback texture!\n" );
-	}
 
 	/* register the standard image loaders, and our package image loader */
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
@@ -173,9 +159,7 @@ PLGTexture *Gfx_GetTexture( const char *path )
 	{
 		PLGTexture *texture = PlGetLinkedListNodeUserData( node );
 		if ( pl_strcasecmp( path, texture->path ) == 0 )
-		{
 			return texture;
-		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -188,9 +172,7 @@ PLGTexture *R_LoadTexture( const char *path )
 	/* check if it's already loaded */
 	PLGTexture *texture = Gfx_GetTexture( path );
 	if ( texture != NULL )
-	{
 		return texture;
-	}
 
 	texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( texture == NULL )
@@ -363,9 +345,6 @@ void R_Initialize( void )
 	     PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
 		PrintError( "Failed to set graphics driver!\nPL: %s\n", PlGetError() );
 
-	memset( msWorldGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
-	memset( memoryGraph, 0, sizeof( float ) * NUM_GRAPH_POINTS );
-
 	/* create both the interface camera and player camera */
 
 	RT_InitializeTextures();
@@ -422,14 +401,14 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h )
 	PlPopMatrix();
 }
 
-void R_DrawGraph( const char *heading, float x, float y, float w, float h, float *values, unsigned int numPoints, float min, float max )
+void R_DrawGraph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
 		return;
 
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
-	float oa = min, ob = max;
+	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
 	{
 		if ( values[ i ] > max )
@@ -487,6 +466,8 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, float
 
 void R_DrawMenu( void )
 {
+	PROFILE_START( PROFILE_DRAW_UI );
+
 	int w = globalSystem.viewport->w;
 	int h = globalSystem.viewport->h;
 
@@ -510,15 +491,15 @@ void R_DrawMenu( void )
 	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
 
 	CVar( "debug.overlay", debugOverlay );
-	if ( debugOverlay->i_value > 0 )
+	if ( debugOverlay != NULL && debugOverlay->i_value > 0 )
 	{
-		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) msWorldGraph[ i ] = msWorldGraph[ i + 1 ];
-		msWorldGraph[ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( PROFILE_DRAW_MAP );
-		R_DrawGraph( PL_TOSTRING( PROFILE_DRAW_MAP ), w - 512.0f, 0.0f, 512.0f, 64.0f, msWorldGraph, NUM_GRAPH_POINTS, 0.0f, 5.0f );
-
-		for ( unsigned int i = 0; i < NUM_GRAPH_POINTS - 1; ++i ) memoryGraph[ i ] = memoryGraph[ i + 1 ];
-		memoryGraph[ NUM_GRAPH_POINTS - 1 ] = PlBytesToMegabytes( PlGetCurrentMemoryUsage() );
-		R_DrawGraph( PL_TOSTRING( MEMORY_USAGE ), w - 512.0f, 64.0f, 512.0f, 64.0f, memoryGraph, NUM_GRAPH_POINTS, 0.0f, PlBytesToMegabytes( PlGetTotalSystemMemory() ) );
+		float y = 0.0f;
+		for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i )
+		{
+			uint8_t       numPoints;
+			const double *graph = PF_GetGraph( i, &numPoints );
+			R_DrawGraph( cpuProfilerDescriptions[ i ], w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
+		}
 
 		BitmapFont *defaultFont = Font_GetDefault();
 		if ( defaultFont != NULL )
@@ -535,16 +516,18 @@ void R_DrawMenu( void )
 			          "Rendering State\n"
 			          "===================\n"
 			          "  Camera Position: %s\n"
-			          "  Num Faces Drawn: %d\n"
-			          "  Num Batches:     %d\n",
+			          "  Num Faces Drawn:" COM_FMT_uint32 "\n"
+			          "  Num Batches:    " COM_FMT_uint32 "\n"
+			          "  Memory Usage:   " COM_FMT_uint64 "mb\n",
 			          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
 			          g_gfxPerfStats.numFacesDrawn,
-			          g_gfxPerfStats.numBatches );
+			          g_gfxPerfStats.numBatches,
+			          PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
 			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
 
 			/* print out details regarding running tasks */
 			{
-				float y = 128.0f;
+				y = 128.0f;
 				Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "Tasks\n===================", true );
 				y += defaultFont->ch * 2;
 
@@ -574,9 +557,12 @@ void R_DrawMenu( void )
 
 	PlPopMatrix();
 
+	Menu_Draw();
 	Con_Draw( &auxCamera->viewport );
 
 	PlgSetDepthMask( true );
+
+	PROFILE_END( PROFILE_DRAW_UI );
 
 	memset( &g_gfxPerfStats, 0, sizeof( RendererStats ) );
 }
@@ -608,13 +594,20 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlPopMatrix();
 }
 
-static void Gfx_RenderScene( PLGCamera *camera, bool smPass )
+static void R_RenderScene( PLGCamera *camera, bool smPass )
 {
-	Map_Draw( camera, smPass );
+	WorldSector *curSector = NULL;
+
+	Actor *player = Game_GetPlayer();
+	if ( player != NULL )
+		curSector = Act_GetWorldSector( player );
+
+	W_Draw( camera, curSector );
+
 	Act_DrawActors();
 }
 
-static void Gfx_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )
+static void R_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )
 {
 	smCamera->position = *lightPos;
 	smCamera->angles   = *lightAngles;
@@ -623,12 +616,12 @@ static void Gfx_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, 
 	PlgBindFrameBuffer( smDepthBuffer, PLG_FRAMEBUFFER_DRAW );
 	PlgClearBuffers( PLG_BUFFER_DEPTH );
 
-	Gfx_RenderScene( camera, true );
+	R_RenderScene( camera, true );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 }
 
-static void Gfx_RenderSceneFinal( PLGCamera *camera )
+static void R_RenderSceneFinal( PLGCamera *camera )
 {
 	/* set everything up for post-processing */
 	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->viewport.w, camera->viewport.h );
@@ -637,21 +630,21 @@ static void Gfx_RenderSceneFinal( PLGCamera *camera )
 	PlgSetupCamera( camera );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 
-	Gfx_RenderScene( camera, false );
+	R_RenderScene( camera, false );
 }
 
-void Gfx_DrawScene( PLGCamera *camera )
+void R_DrawScene( PLGCamera *camera )
 {
 	g_gfxPerfStats.cameraPos = camera->position;
 
-	Gfx_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
-	CVar( "graphics.wireframeMode", wireframeMode );
+	//CVar( "graphics.wireframeMode", wireframeMode );
 	//if ( wireframeMode->b_value ) {
 	//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	//}
 
-	Gfx_RenderSceneFinal( camera );
+	R_RenderSceneFinal( camera );
 
 	//if ( wireframeMode->b_value ) {
 	//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );

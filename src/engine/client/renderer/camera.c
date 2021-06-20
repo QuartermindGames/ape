@@ -28,9 +28,7 @@ GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PL
 
 	gfxCamera->internalPtr = PlgCreateCamera();
 	if ( gfxCamera->internalPtr == NULL )
-	{
 		PrintError( "Failed to create camera!\nPL: %s\n", PlGetError() );
-	}
 
 	gfxCamera->perspective      = perspective;
 	gfxCamera->internalPtr->fov = 75.0f;
@@ -66,14 +64,20 @@ void Gfx_InitializeCameras( void )
 	}
 }
 
-void Gfx_DrawScene( PLGCamera *camera );
+void R_DrawScene( PLGCamera *camera );
 void R_DrawPerspective( GfxCamera *camera )
 {
-	globalSystem.GetCurrentDisplaySize( &camera->internalPtr->viewport.w, &camera->internalPtr->viewport.h );
+	camera->internalPtr->viewport.w = globalSystem.viewport->w;
+	camera->internalPtr->viewport.h = globalSystem.viewport->h;
+	camera->internalPtr->viewport.x = globalSystem.viewport->x;
+	camera->internalPtr->viewport.y = globalSystem.viewport->y;
 
 	CVar( "graphics.superSampling", superSampling );
-	camera->internalPtr->viewport.w *= superSampling->i_value;
-	camera->internalPtr->viewport.h *= superSampling->i_value;
+	if ( superSampling != NULL )
+	{
+		camera->internalPtr->viewport.w *= superSampling->i_value;
+		camera->internalPtr->viewport.h *= superSampling->i_value;
+	}
 
 	/* if we have a parent, follow them */
 	if ( camera->parentActor != NULL )
@@ -101,7 +105,9 @@ void R_DrawPerspective( GfxCamera *camera )
 	}
 
 	PlgSetupCamera( camera->internalPtr );
-	Gfx_DrawScene( camera->internalPtr );
+	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
+
+	R_DrawScene( camera->internalPtr );
 }
 
 void Gfx_ShutdownCameras( void )

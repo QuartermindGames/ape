@@ -434,7 +434,7 @@ int Sys_Init( int argc, char **argv )
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
 	PlLogMessage( launcherLog, "Log output initialized!\n" );
 
-	CommonLibrary_Initialize();
+	ComLib_Initialize();
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );

@@ -19,7 +19,7 @@ v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
     - New World format for storing sectors, portals, level meshes and more
     - Significant improvements to collisions since last version (i.e. they exist now)
     - Audio via SDL2 Audio
-    - Support for additional renderers via plugins
+    - Support for additional graphics APIs via plugins
     - Shader programs are now registered in via .node files provided under materials/shaders
     - Materials are now supported; can specify specific shader, multiple passes, blend modes
     - World and actors are now culled based sector/portal vis

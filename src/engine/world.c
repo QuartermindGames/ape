@@ -64,7 +64,8 @@ typedef struct WorldMesh
 typedef struct WorldObject
 {
 	WorldMesh *mesh;// pointer to mesh in worldMeshes list
-	PLMatrix4  transform;
+
+	SGTransform transform;
 
 	WorldObjectCollisionType collisionType;
 	union
@@ -96,11 +97,14 @@ typedef struct World
 	WorldSector *sectors;
 	unsigned int numSectors;
 
+	PLVector4 ambience;
+	PLVector4 sunColour;
+	PLVector3 sunPosition;
+
 	/* additional generic properties */
 	NLNode *globalProperties;
 } World;
 
-static PLLinkedList *worlds;
 static PLLinkedList *worldMeshes;
 
 static void W_DeserializeIdentifierTag( NLNode *node, char *dest )
@@ -115,13 +119,6 @@ static void W_DeserializeIdentifierTag( NLNode *node, char *dest )
 	}
 
 	strncpy( dest, id, WORLD_PROP_TAG_LENGTH - 1 );
-}
-
-static void W_WorldMeshCleanupCB( void *userData )
-{
-	WorldMesh *worldMesh = ( WorldMesh * ) userData;
-
-	PlDestroyLinkedListNode( worldMeshes, worldMesh->node );
 }
 
 void W_DeserializeMaterials( NLNode *meshNode, WorldMesh *meshPtr )
@@ -229,6 +226,16 @@ void W_DeserializeFaces( NLNode *meshNode, WorldMesh *meshPtr )
 	}
 }
 
+/**
+ * Free the mesh from memory.
+ */
+static void W_CB_DestroyWorldMesh( void *userData )
+{
+	WorldMesh *worldMesh = ( WorldMesh * ) userData;
+
+	PlDestroyLinkedListNode( worldMeshes, worldMesh->node );
+}
+
 static WorldMesh *W_DeserializeWorldMesh( NLNode *meshNode, WorldMesh *meshPtr )
 {
 	W_DeserializeIdentifierTag( meshNode, meshPtr->id );
@@ -236,7 +243,7 @@ static WorldMesh *W_DeserializeWorldMesh( NLNode *meshNode, WorldMesh *meshPtr )
 	W_DeserializeVertices( meshNode, meshPtr );
 	W_DeserializeFaces( meshNode, meshPtr );
 
-	Mem_SetupReferenceInstance( &meshPtr->mem, W_WorldMeshCleanupCB, meshPtr );
+	Mem_SetupReferenceInstance( &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
 
 	return meshPtr;
 }
@@ -296,9 +303,13 @@ static void W_DeserializeSector( World *world, NLNode *sectorNode, WorldSector *
 					PrintWarn( "Failed to get mesh for object: %s\n", tag );
 			}
 
-			NLNode *matrix = NL_GetChildByName( c, "transform" );
-			if ( matrix != NULL )
-				NL_DS_DeserializeMatrix4( matrix, &sectorPtr->staticObjects[ i ].transform );
+			NLNode *transform;
+			if ( ( transform = NL_GetChildByName( c, "translation" ) ) != NULL )
+				NL_DS_DeserializeVector3( transform, &sectorPtr->staticObjects[ i ].transform.translation );
+			if ( ( transform = NL_GetChildByName( c, "scale" ) ) != NULL )
+				NL_DS_DeserializeVector3( transform, &sectorPtr->staticObjects[ i ].transform.scale );
+			if ( ( transform = NL_GetChildByName( c, "rotation" ) ) != NULL )
+				NL_DS_DeserializeVector4( transform, ( PLVector4 * ) &sectorPtr->staticObjects[ i ].transform.rotation );
 
 			c = NL_GetNextChild( c );
 		}
@@ -425,7 +436,7 @@ World *W_LoadWorld( const char *path )
 	World *world = globalSystem.MAlloc( sizeof( World ), true );
 	if ( W_DeserializeWorld( node, world ) == NULL )
 	{
-		W_DestroyWorld( world );
+		W_DestroyWorld( NULL );
 		world = NULL;
 	}
 
@@ -440,13 +451,27 @@ void W_ReleaseWorldMesh( WorldMesh *worldMesh )
 	Mem_ReleaseReference( &worldMesh->mem );
 }
 
+/**
+ * Clears the current assigned mesh and all static
+ * objects for the given sector.
+ */
+static void W_ClearSector( WorldSector *sector )
+{
+	for ( unsigned int i = 0; i < sector->numStaticObjects; ++i )
+		W_ReleaseWorldMesh( sector->staticObjects[ i ].mesh );
+
+	globalSystem.Free( sector->staticObjects );
+
+	W_ReleaseWorldMesh( sector->mesh );
+}
+
 void W_DestroyWorld( World *world )
 {
 	if ( world == NULL )
 		return;
 
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
-		globalSystem.Free( world->sectors[ i ].subMeshes );
+		W_ClearSector( &world->sectors[ i ] );
 
 	globalSystem.Free( world->sectors );
 
@@ -456,6 +481,15 @@ void W_DestroyWorld( World *world )
 	globalSystem.Free( world->meshes );
 	globalSystem.Free( world );
 }
+
+NLNode *W_GetWorldProperty( World *world, const char *propertyName )
+{
+	return NL_GetChildByName( world->globalProperties, propertyName );
+}
+
+PLVector4 W_GetAmbience( World *world ) { return world->ambience; }
+PLVector4 W_GetSunColour( World *world ) { return world->sunColour; }
+PLVector3 W_GetSunPosition( World *world ) { return world->sunPosition; }
 
 /**
  * Fetch the normal for the specified face.
@@ -516,20 +550,26 @@ static unsigned int *ConvertFaceToTriangles( const WorldFace *face, unsigned int
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-static WorldSector *W_GetSectorByAbsOrigin( World *world, const PLVector3 *absOrigin )
+static WorldSector *W_GetSectorByGlobalOrigin( World *world, const PLVector3 *globalOrigin )
 {
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
 		WorldSector *sector = &world->sectors[ i ];
-		if ( !PlIsPointIntersectingAabb( &sector->bounds, *absOrigin ) )
+		if ( !PlIsPointIntersectingAabb( &sector->bounds, *globalOrigin ) )
 			continue;
 
 		return sector;
 	}
 
-	return NULL;
+	PrintWarn( "Failed to find sector by origin, returning first!\n" );
+
+	return &world->sectors[ 0 ];
 }
 
+/**
+ * Get the primary mesh for the given sector, this
+ * is essentially the sector's body.
+ */
 WorldMesh *W_GetMeshForSector( WorldSector *sector )
 {
 	return sector->mesh;
@@ -550,7 +590,6 @@ static WorldSector **GetVisibleSectors( World *world, WorldSector *originSector,
 	WorldSector **visibleSectors = globalSystem.CAlloc( world->numSectors, sizeof( WorldSector * ), true );
 
 	/* todo
-	 *  1. find cur sector player is within
 	 *  2. test whether or not player can see portal
 	 *  3. get portal destination, do 2. again but from portal
 	 */
@@ -578,7 +617,7 @@ static WorldMesh **GetVisibleSubMeshesForSector( WorldSector *sector, const PLGC
 	for ( unsigned int i = 0; i < sector->numStaticObjects; ++i )
 	{
 		PLCollisionAABB bounds = sector->staticObjects[ i ].mesh->bounds;
-		bounds.origin          = PlGetMatrix4Translation( &sector->staticObjects[ i ].transform );
+		bounds.origin          = sector->staticObjects[ i ].transform.translation;
 		if ( !PlgIsBoxInsideView( camera, &sector->staticObjects[ i ].mesh->bounds ) )
 			continue;
 
@@ -649,7 +688,7 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
 		if ( triangleMesh->num_triangles == 0 )
 			return;
 
-		Material *material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC, true );
+		Material *material = RM_CacheMaterial( "materials/engine/simple.mat", 0, true );
 		RM_DrawMesh( material, triangleMesh );
 		return;
 	}
@@ -709,11 +748,10 @@ static void     DrawSector( WorldSector *sector, PLGCamera *camera, bool simple 
  * WORLD
  ****************************************/
 
-static void W_Debug_DrawSectorVolumes( World *world, PLGCamera *camera )
+static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, PLGCamera *camera )
 {
-	WorldSector *originSector = W_GetSectorByAbsOrigin( world, &camera->position );
 	if ( originSector == NULL )
-		return;
+		originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
 
 	unsigned int  numVisibleSectors;
 	WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
@@ -727,9 +765,12 @@ static void W_Debug_DrawSectorVolumes( World *world, PLGCamera *camera )
 	}
 }
 
-void W_Draw( World *world, PLGCamera *camera )
+void W_Draw( PLGCamera *camera, WorldSector *originSector )
 {
-	PROFILE_START( PROFILE_DRAW_MAP );
+	if ( currentWorld != NULL )
+		return;
+
+	PROFILE_START( PROFILE_DRAW_WORLD );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -738,14 +779,16 @@ void W_Draw( World *world, PLGCamera *camera )
 	CVar( "world.drawSectorVolumes", drawSectorVolumes );
 
 	if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
-		W_Debug_DrawSectorVolumes( world, camera );
+		W_Debug_DrawSectorVolumes( currentWorld, originSector, camera );
 	else
 	{
-		WorldSector *originSector = W_GetSectorByAbsOrigin( world, &camera->position );
+		if ( originSector == NULL )
+			originSector = W_GetSectorByGlobalOrigin( currentWorld, &camera->position );
+
 		if ( originSector != NULL )
 		{
 			unsigned int  numVisibleSectors;
-			WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
+			WorldSector **visibleSectors = GetVisibleSectors( currentWorld, originSector, camera, &numVisibleSectors );
 			for ( unsigned int i = 0; i < numVisibleSectors; ++i )
 				DrawSector( visibleSectors[ i ], camera, false );
 
@@ -755,5 +798,5 @@ void W_Draw( World *world, PLGCamera *camera )
 
 	PlPopMatrix();
 
-	PROFILE_END( PROFILE_DRAW_MAP );
+	PROFILE_END( PROFILE_DRAW_WORLD );
 }

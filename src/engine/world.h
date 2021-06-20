@@ -8,14 +8,6 @@
 
 #include <plcore/pl_physics.h>
 
-/*
- *  s      s
- *   \      \
- *    a - a  b - b - b
- *   /
- *  b - b - b - b
- */
-
 #define WORLD_VERSION 20210409
 
 #define WORLD_PROP_TAG_LENGTH   64
@@ -43,11 +35,21 @@ typedef struct WorldObject WorldObject;
 typedef struct WorldSector WorldSector;
 typedef struct World       World;
 
-World *W_LoadWorld( const char *path );
-void   W_DestroyWorld( World *world );
+/* World */
+
+World *        W_LoadWorld( const char *path );
+void           W_DestroyWorld( World *world );
+struct NLNode *W_GetWorldProperty( World *world, const char *propertyName );
+PLVector4      W_GetAmbience( World *world );
+PLVector4      W_GetSunColour( World *world );
+PLVector3      W_GetSunPosition( World *world );
+
+/* WorldMesh */
 
 WorldMesh *W_LoadWorldMesh( const char *path );
 void       W_ReleaseWorldMesh( WorldMesh *worldMesh );
+
+/* WorldFace */
 
 PLVector3              W_GetFaceNormal( const WorldFace *face );
 PLVector3              W_GetFaceOrigin( const WorldFace *face );
@@ -57,4 +59,4 @@ const PLCollisionAABB *W_GetFaceBounds( const WorldFace *face );
 WorldMesh *W_GetMeshForSector( WorldSector *sector );
 WorldFace *W_GetFacesForSector( WorldSector *sector, uint32_t *numFaces );
 
-void W_Draw( World *world, PLGCamera *camera );
+void W_Draw( PLGCamera *camera, WorldSector *originSector );

@@ -21,3 +21,6 @@ void Game_Shutdown( void );
 void Game_Display( void );
 void Game_Tick( void );
 void Game_Keyboard( unsigned char key );
+
+void          Game_SpawnWorld( const char *worldPath );
+struct World *Game_GetCurrentWorld( void );

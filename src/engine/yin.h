@@ -37,7 +37,6 @@ extern int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
 typedef enum CacheGroup
 {
-	CACHE_GROUP_STATIC, /* these exist from the start to the end of the application */
 	CACHE_GROUP_WORLD,  /* everything that is cached during level load */
 	MAX_CACHE_GROUPS
 } CacheGroup;
@@ -49,9 +48,12 @@ typedef enum CacheGroup
 typedef enum CPUProfilerGroup
 {
 	PROFILE_DRAW_ALL,
-	PROFILE_DRAW_MAP,
+	PROFILE_DRAW_WORLD,
+	PROFILE_DRAW_ACTORS,
+	PROFILE_DRAW_UI,
 	MAX_PROFILER_GROUPS
 } CPUProfilerGroup;
+extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 #if defined( ENABLE_PROFILER )
 void   CPUTimer_Initialize( void );
 void   CPUTimer_StartMeasure( CPUProfilerGroup group );
@@ -63,6 +65,7 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group );
 #define PROFILE_START( GROUP )
 #define PROFILE_END( GROUP )
 #endif
+const double *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints );
 
 #include "scheduler.h"
 #include "memory_manager.h"

@@ -14,9 +14,13 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         actors/actor_light.c
         actors/actor_player.c
         actors/actor_trigger_volume.c
+        actors/sg_actors.c
 
+        client/client.c
+        client/sgui.c
         client/audio/audio.c
         client/audio/micromod.c
+        client/audio/sdlplayer.c
         client/renderer/camera.c
         client/renderer/flare.c
         client/renderer/font.c
@@ -26,17 +30,16 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         client/renderer/shaders.c
 
         script.c
-        script.h
+        scheduler.c
 
         ../3rdparty/miniz/miniz.c
 
-        scheduler.c
         model_gsmdl.c
         model_md2.c
         memory_manager.c
+        net_server.c
 
-        integrations/DiscordIntegration.c
-        client/sgui.c client/sgui.h net_server.c actors/sg_actors.c actors/actor_rpg_shared.h)
+        integrations/DiscordIntegration.c)
 
 target_include_directories(engine PRIVATE
         ./ ../3rdparty/miniz/)

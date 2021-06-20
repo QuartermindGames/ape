@@ -31,8 +31,7 @@ extern int logLevelWarn;
 	{                                                 \
 		( STORE ) = PlGetConsoleVariable( ( NAME ) ); \
 		u_assert( ( STORE ) != NULL );                \
-	}                                                 \
-	( STORE )
+	}
 
 #define COM_FMT_float   "%f"
 #define COM_FMT_double  "%lf"
@@ -48,7 +47,7 @@ extern int logLevelWarn;
 
 PL_EXTERN_C
 
-extern void CommonLibrary_Initialize( void );
+extern void ComLib_Initialize( void );
 
 extern const char *ComFS_GetDataDirectory( void );
 

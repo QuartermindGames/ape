@@ -162,7 +162,7 @@ void Font_Shutdown( void )
 BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
 	BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
-	font->material   = RM_CacheMaterial( materialPath, CACHE_GROUP_STATIC, false );
+	font->material   = RM_CacheMaterial( materialPath, 0, false );
 	if ( font->material == NULL )
 	{
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );

@@ -13,8 +13,6 @@
 #include <sys/socket.h>
 #endif
 
-
-
 /* setup a server */
 void Net_SetupServer( void )
 {

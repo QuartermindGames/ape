@@ -10,7 +10,8 @@
 #include "renderer.h"
 #include "material.h"
 #include "script.h"
-#include "map.h"
+#include "world.h"
+#include "game_interface.h"
 
 #include "common/node.h"
 
@@ -544,6 +545,34 @@ static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, i
 	}
 }
 
+static void RM_SetWorldVariables( PLGShaderProgram *program )
+{
+	World *world = Game_GetCurrentWorld();
+	if ( world == NULL )
+		return;
+
+	/* set global uniforms, if they exist */
+	int slot;
+	slot = PlgGetShaderUniformSlot( program, "sun.colour" );
+	if ( slot >= 0 )
+	{
+		PLVector4 sunColour = W_GetSunColour( world );
+		PlgSetShaderUniformValueByIndex( program, slot, &sunColour, false );
+	}
+	slot = PlgGetShaderUniformSlot( program, "sun.position" );
+	if ( slot >= 0 )
+	{
+		PLVector3 sunPosition = W_GetSunPosition( world );
+		PlgSetShaderUniformValueByIndex( program, slot, &sunPosition, false );
+	}
+	slot = PlgGetShaderUniformSlot( program, "sun.ambience" );
+	if ( slot >= 0 )
+	{
+		PLVector4 ambience = W_GetAmbience( world );
+		PlgSetShaderUniformValueByIndex( program, slot, &ambience, false );
+	}
+}
+
 void RM_DrawMesh( Material *material, PLGMesh *mesh )
 {
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
@@ -555,26 +584,7 @@ void RM_DrawMesh( Material *material, PLGMesh *mesh )
 
 		PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
 
-		/* set global uniforms, if they exist */
-		int slot;
-		slot = PlgGetShaderUniformSlot( curPass->program, "sun.colour" );
-		if ( slot >= 0 )
-		{
-			PLVector4 sunColour = World_GetSunColour();
-			PlgSetShaderUniformValueByIndex( curPass->program, slot, &sunColour, false );
-		}
-		slot = PlgGetShaderUniformSlot( curPass->program, "sun.position" );
-		if ( slot >= 0 )
-		{
-			PLVector3 sunPosition = World_GetSunPosition();
-			PlgSetShaderUniformValueByIndex( curPass->program, slot, &sunPosition, false );
-		}
-		slot = PlgGetShaderUniformSlot( curPass->program, "sun.ambience" );
-		if ( slot >= 0 )
-		{
-			PLVector4 ambience = World_GetAmbience();
-			PlgSetShaderUniformValueByIndex( curPass->program, slot, &ambience, false );
-		}
+		RM_SetWorldVariables( curPass->program );
 
 		unsigned int curUnit = 0;
 		for ( unsigned int j = 0; j < curPass->numVariables; ++j )

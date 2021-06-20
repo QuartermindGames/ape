@@ -10,16 +10,14 @@
 #include "yin.h"
 #include "actor.h"
 #include "pkg_loader.h"
-#include "editor.h"
 #include "game_interface.h"
 
-#include "client/renderer/renderer.h"
-#include "client/audio/audio.h"
+#include "client/client.h"
 
 PLPackage *globalWad = NULL;
 
-OSInterface   globalSystem;
-GameInterface globalGame;
+OSSystemInterface globalSystem;
+GameInterface     globalGame;
 
 const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_PATCH };
 
@@ -28,6 +26,9 @@ const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, EN
  * Move into performance.c
  ****************************************/
 
+#define NUM_GRAPH_POINTS 32
+static double cpuPerfGraphs[ MAX_PROFILER_GROUPS ][ NUM_GRAPH_POINTS ];
+
 typedef struct CPUTime
 {
 	uint64_t clock;
@@ -35,11 +36,19 @@ typedef struct CPUTime
 } CPUTime;
 static CPUTime cpuTimers[ MAX_PROFILER_GROUPS ];
 
+const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ] = {
+        PL_TOSTRING( PROFILE_DRAW_ALL ),
+        PL_TOSTRING( PROFILE_DRAW_WORLD ),
+        PL_TOSTRING( PROFILE_DRAW_ACTORS ),
+        PL_TOSTRING( PROFILE_DRAW_UI ),
+};
+
 void CPUTimer_Initialize( void )
 {
-	Print( "Initializing timer\n" );
+	Print( "Initializing profiler\n" );
 
 	memset( cpuTimers, 0, sizeof( CPUTime ) * MAX_PROFILER_GROUPS );
+	memset( cpuPerfGraphs, 0, sizeof( float ) * MAX_PROFILER_GROUPS * NUM_GRAPH_POINTS );
 }
 
 void CPUTimer_StartMeasure( CPUProfilerGroup group )
@@ -56,6 +65,31 @@ void CPUTimer_EndMeasure( CPUProfilerGroup group )
 double CPUTimer_GetMeasure( CPUProfilerGroup group )
 {
 	return cpuTimers[ group ].timeTaken;
+}
+
+void PF_UpdateGraphs( void )
+{
+	static unsigned int refreshTime = 0;
+	if ( refreshTime > Engine_GetNumTicks() )
+		return;
+
+	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i )
+	{
+		// Shuffle the list along
+		for ( uint8_t j = 0; j < NUM_GRAPH_POINTS - 1; ++j )
+			cpuPerfGraphs[ i ][ j ] = cpuPerfGraphs[ i ][ j + 1 ];
+
+		cpuPerfGraphs[ i ][ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( i );
+	}
+
+	CVar( "debug.profilerFrequency", profilerFrequency );
+	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
+}
+
+const double *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints )
+{
+	*numPoints = NUM_GRAPH_POINTS;
+	return cpuPerfGraphs[ group ];
 }
 
 /****************************************
@@ -116,8 +150,7 @@ static bool Engine_Initialize( int argc, char **argv )
 	Con_Initialize();
 	Sch_Initialize();
 	Mem_Initialize();
-	R_Initialize();
-	A_Initialize();
+	CL_Initialize();
 	Game_Initialize();
 	Act_Initialize();
 
@@ -134,31 +167,11 @@ void Engine_Shutdown( void )
 
 	Game_Shutdown();
 	Act_Shutdown();
-	A_Shutdown();
-	R_Shutdown();
+	CL_Shutdown();
 	Con_Shutdown();
 	Mem_Shutdown();
 
 	globalSystem.Shutdown();
-}
-
-/****************************************
- * DISPLAY
- ****************************************/
-
-static void Engine_Display( void )
-{
-	PROFILE_START( PROFILE_DRAW_ALL );
-
-	R_SetupDefaultState();
-
-	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
-
-	Game_Display();
-
-	PROFILE_END( PROFILE_DRAW_ALL );
-
-	R_DrawMenu();
 }
 
 /****************************************
@@ -181,7 +194,10 @@ static void Engine_Tick( void )
 
 	Sch_RunTasks();
 
+	/* todo: split between CL and SV */
 	Game_Tick();
+
+	PF_UpdateGraphs();
 
 	numTicks++;
 }
@@ -212,10 +228,10 @@ static void Engine_HandleTextEvent( const char *key )
 		return;
 }
 
-static OSInterface *  GetSystemInterface( void ) { return &globalSystem; }
-static GameInterface *GetGameInterface( void ) { return &globalGame; }
+static OSSystemInterface *GetSystemInterface( void ) { return &globalSystem; }
+static GameInterface *    GetGameInterface( void ) { return &globalGame; }
 
-PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const OSInterface *sysIn )
+PL_EXPORT OSEngineInterface *GetDllInterface( uint32_t version, const OSSystemInterface *sysIn )
 {
 	if ( version != ENGINE_INTERFACE_VERSION )
 		PrintWarn( "Unexpected interface version (%d vs %d)!\n", version, ENGINE_INTERFACE_VERSION );
@@ -224,11 +240,11 @@ PL_EXPORT EngineInterface *GetDllInterface( uint32_t version, const OSInterface 
 	globalSystem = *sysIn;
 
 	/* and now setup our engine interface */
-	static EngineInterface engineInterface = {
+	static OSEngineInterface engineInterface = {
 	        .version          = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 	        .Initialize       = Engine_Initialize,
 	        .Shutdown         = Engine_Shutdown,
-	        .Display          = Engine_Display,
+	        .Display          = CL_Display,
 	        .GetNumTicks      = Engine_GetNumTicks,
 	        .IsRunning        = Engine_IsRunning,
 	        .Tick             = Engine_Tick,

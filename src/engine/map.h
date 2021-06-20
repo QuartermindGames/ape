@@ -28,17 +28,7 @@ typedef struct MapSector
 	unsigned int    numFaces;
 } MapSector;
 
-MapFace *Map_GetFacesForSector( unsigned int sectorNum, unsigned int *numFaces );
-
-void Map_ClearData( void );
-
-void Map_Load( const char *mapName );
-
 void Map_DrawSky( PLGCamera *camera );
 void Map_Draw( PLGCamera *camera, bool smPass );
-
-PLVector4 World_GetAmbience( void );
-PLVector4 World_GetSunColour( void );
-PLVector3 World_GetSunPosition( void );
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );

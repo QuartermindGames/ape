@@ -10,27 +10,27 @@
 /* Prey '98 inspired flares! */
 
 static const char *flarePaths[] = {
-        "materials/engine/effects/Flare1.gif",
-        "materials/engine/effects/Flare2.gif",
-        "materials/engine/effects/Flare3.gif",
-        "materials/engine/effects/Flare4.gif",
-        "materials/engine/effects/Flare5.gif",
-        "materials/engine/effects/Flare6.gif",
+        "materials/effects/Flare1.gif",
+        "materials/effects/Flare2.gif",
+        "materials/effects/Flare3.gif",
+        "materials/effects/Flare4.gif",
+        "materials/effects/Flare5.gif",
+        "materials/effects/Flare6.gif",
 };
 #define MAX_FLARE_TEXTURES plArrayElements( flarePaths )
 static PLGTexture *flareTextures[ MAX_FLARE_TEXTURES ];
 
 static const char *shinePaths[] = {
-        "materials/engine/effects/Shine0.gif",
-        "materials/engine/effects/Shine1.gif",
-        "materials/engine/effects/Shine2.gif",
-        "materials/engine/effects/Shine3.gif",
-        "materials/engine/effects/Shine4.gif",
-        "materials/engine/effects/Shine5.gif",
-        "materials/engine/effects/Shine6.gif",
-        "materials/engine/effects/Shine7.gif",
-        "materials/engine/effects/Shine8.gif",
-        "materials/engine/effects/Shine9.gif",
+        "materials/effects/Shine0.gif",
+        "materials/effects/Shine1.gif",
+        "materials/effects/Shine2.gif",
+        "materials/effects/Shine3.gif",
+        "materials/effects/Shine4.gif",
+        "materials/effects/Shine5.gif",
+        "materials/effects/Shine6.gif",
+        "materials/effects/Shine7.gif",
+        "materials/effects/Shine8.gif",
+        "materials/effects/Shine9.gif",
 };
 #define MAX_SHINE_TEXTURES plArrayElements( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
@@ -38,13 +38,9 @@ static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 void Flare_Initialize( void )
 {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
-	{
 		flareTextures[ i ] = R_LoadTexture( flarePaths[ i ] );
-	}
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
-	{
 		shineTextures[ i ] = R_LoadTexture( shinePaths[ i ] );
-	}
 }
 
 void Flare_Render( PLGTexture *texture, float diameter, float distance )

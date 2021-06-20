@@ -6,7 +6,7 @@
 #include "yin.h"
 #include "game_interface.h"
 #include "actor.h"
-#include "map.h"
+#include "world.h"
 
 #include "client/renderer/renderer.h"
 
@@ -19,6 +19,8 @@ typedef enum InputTarget
 } InputTarget;
 static InputTarget inputTarget = INPUT_TARGET_MENU;
 static MenuState   menuState   = MENU_STATE_START;
+
+static World *currentWorld = NULL;
 
 typedef enum GameState
 {
@@ -74,13 +76,17 @@ void Game_Display( void )
 
 void Game_SpawnWorld( const char *worldPath )
 {
-	if ( !PlFileExists( worldPath ) )
+	World *world = W_LoadWorld( worldPath );
+	if ( world == NULL )
 	{
-		PrintWarn( "World \"%s\" does not exist!\n", worldPath );
+		PrintWarn( "Failed to load world, aborting game spawn!\n" );
 		return;
 	}
 
-	Map_Load( worldPath ); /* load the map from the global wad */
+	if ( currentWorld != NULL )
+		W_DestroyWorld( currentWorld );
+
+	currentWorld = world;
 
 	/* spawn the player in */
 	playerActor = Act_SpawnActor( ACTOR_PLAYER, NULL );
@@ -92,6 +98,8 @@ void Game_SpawnWorld( const char *worldPath )
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
+
+World *Game_GetCurrentWorld( void ) { return currentWorld; }
 
 static void Cmd_SpawnWorld( unsigned int argc, char **argv )
 {

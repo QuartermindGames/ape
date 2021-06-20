@@ -578,7 +578,7 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
 		Material *material = mapData.materials[ i ];
 		if ( smPass )
 		{
-			material = RM_CacheMaterial( "materials/engine/simple.mat", CACHE_GROUP_STATIC, true );
+			material = RM_CacheMaterial( "materials/engine/simple.mat", 0, true );
 		}
 
 		RM_DrawMesh( material, renderMesh );
@@ -640,7 +640,7 @@ void Map_Draw( PLGCamera *camera, bool smPass )
 		return;
 	}
 
-	CPUTimer_StartMeasure( PROFILE_DRAW_MAP );
+	CPUTimer_StartMeasure( PROFILE_DRAW_WORLD );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -654,20 +654,20 @@ void Map_Draw( PLGCamera *camera, bool smPass )
 
 	PlPopMatrix();
 
-	CPUTimer_EndMeasure( PROFILE_DRAW_MAP );
+	CPUTimer_EndMeasure( PROFILE_DRAW_WORLD );
 }
 
-PLVector4 World_GetAmbience( void )
+PLVector4 W_GetAmbience( void )
 {
 	return PLVector4( 0.4f, 0.4f, 0.4f, 1.0f );
 }
 
-PLVector4 World_GetSunColour( void )
+PLVector4 W_GetSunColour( void )
 {
 	return PLVector4( 1.0f, 1.0f, 1.0f, 1.25f );
 }
 
-PLVector3 World_GetSunPosition( void )
+PLVector3 W_GetSunPosition( void )
 {
 	return PLVector3( 0.5f, -1.0f, 0.5f );
 }

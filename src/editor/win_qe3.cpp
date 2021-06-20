@@ -296,7 +296,7 @@ int main( int argc, char **argv ) {
 
 	LMsg( "Log initialized\n" );
 
-	CommonLibrary_Initialize();
+	ComLib_Initialize();
 
 	SetupEngineInterface();
 

@@ -93,6 +93,21 @@ CMD_CALLBACK( Quit )
 	Engine_Shutdown();
 }
 
+/**
+ * Pipes a command to either the shell or command.
+ */
+CMD_CALLBACK( OSCommand )
+{
+	if ( argc == 1 )
+	{
+		PrintWarn( "Usage: oscmd echo \"Hello World!\"\n" );
+		return;
+	}
+
+	if ( system( argv[ 0 ] ) == -1 )
+		PrintWarn( "Failed to issue command, an error occurred!\n" );
+}
+
 /*------------------------------------------------------------------*/
 
 #include "common/node.h"
@@ -182,11 +197,12 @@ void Con_Initialize( void )
 
 	PlSetConsoleOutputCallback( OutputCallback );
 
-	/* debugging */
-	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
-
 	PlRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 	PlRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
+	PlRegisterConsoleCommand( "oscmd", Cmd_OSCommand, "Pipes the given command to the host platform." );
+
+	/* debugging */
+	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
 
 	PlRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 

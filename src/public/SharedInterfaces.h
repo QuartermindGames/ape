@@ -27,7 +27,7 @@ typedef struct OSViewport
 	int w, h;
 } OSViewport;
 
-typedef struct OSInterface
+typedef struct OSSystemInterface
 {
 	InterfaceVersion version;
 
@@ -82,7 +82,7 @@ extern GameInterface globalGame;
  * ENGINE INTERFACE
  * ====================================================================*/
 
-typedef struct EngineInterface
+typedef struct OSEngineInterface
 {
 	InterfaceVersion version;
 

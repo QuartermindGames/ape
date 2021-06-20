@@ -6,4 +6,7 @@
 
 #pragma once
 
-PLPackage *Pkg_LoadPackage( const char *path );
+void CL_Initialize( void );
+void CL_Shutdown( void );
+
+void CL_Display( void );

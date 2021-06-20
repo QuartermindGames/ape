@@ -11,7 +11,7 @@ The Node format is essentially the result of my frustrations
 with using JSON for video-games from a user perspective, but
 it doesn't seek to be a replacement for JSON.
 
-Compared to JSON, some of the key features of the Node format are...
+Compared to JSON, some key features of the Node format are...
 
 - **Statically typed**
 - **Pre-processor with support for comments, macros and more**
@@ -19,8 +19,8 @@ Compared to JSON, some of the key features of the Node format are...
 - **Both binary and text representations**
 
 I don't place any restrictions on the usage of this specification. 
-So if you want write your own parser/loader for the format, all I ask
-for is a mention and I'd love to hear from you! ❤️
+So if you want to write your own parser/loader for the format, all I ask
+for is a mention, and I'd love to hear from you! ❤️
 
 ## Examples
 
@@ -76,18 +76,28 @@ pre-processor.
 
 ## Types
 
-- `integer`; 32-bit/64-bit integer.
+- `integer`; 32-bit integer.
 - `float`; 32-bit floating-point.
-- `double`; 64-bit floating-point.
 - `string`; utf-8 char array.
 - `bool`; true/false value.
 - `object`; collection of child nodes.
 - `array`; similar to an object, but children can only be of a
     single specified type and have no name.
-- `link`; specifies that this node links to another file
+
+Explicitly sized types are also available.
+
+- `int8`
+- `int16`
+- `int64`
+- `uint8`
+- `uint16`
+- `uint32`
+- `uint64`
+- `float64`
 
 ## Roadmap
 
 ### 2.0.0
 
-- Explicitly sized types, i.e. int32, int64, float32, float64 etc.
+- [ ] Replace `integer` with `int32`
+- [ ] Finalise implementation of `link` type

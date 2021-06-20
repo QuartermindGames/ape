@@ -8,7 +8,7 @@
 
 typedef struct SGNode
 {
-	PLMatrix4         transform;
+	SGTransform       transform;
 	unsigned int      dataType;
 	void *            data;
 	PLLinkedListNode *node;
@@ -22,9 +22,7 @@ void SG_Initialize( void )
 {
 	sceneGraph = PlCreateLinkedList();
 	if ( sceneGraph == NULL )
-	{
 		PrintError( "Failed to create scene graph!\n" );
-	}
 }
 
 void SG_Shutdown( void )
@@ -34,7 +32,7 @@ void SG_Shutdown( void )
 	PlDestroyLinkedList( sceneGraph );
 }
 
-const PLMatrix4 *SG_GetNodeTransform( const SGNode *node )
+const SGTransform *SG_GetNodeTransform( const SGNode *node )
 {
 	return &node->transform;
 }
@@ -69,9 +67,8 @@ SGNode *SG_AddChildNode( SGNode *parent, unsigned int dataType, void *data )
 	child->dataType = dataType;
 
 	if ( parent->children == NULL )
-	{
 		parent->children = PlCreateLinkedList();
-	}
+
 	child->node = PlInsertLinkedListNode( parent->children, child );
 
 	return child;
