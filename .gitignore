@@ -80,6 +80,6 @@ dkms.conf
 /release/user.node
 /release/runtime/**/*/engine.dll
 /release/runtime/**/*/common.dll
-/release/runtime/**/*/libplcore.dll
+/release/runtime/**/*/libpl**.dll
 /release/runtime/**/*/game.dll
-/release/runtime/**/*/libopengl_plugin.dll
+/release/runtime/**/*/libopengl_driver.dll

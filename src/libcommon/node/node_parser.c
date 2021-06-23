@@ -20,11 +20,7 @@ static void SkipToNextToken( const char **buf, unsigned int *line )
 {
 	while ( *( *buf ) == ' ' || *( *buf ) == '\t' || *( *buf ) == '\n' || *( *buf ) == '\r' )
 	{
-		if ( *( *buf ) == '\n' )
-		{
-			*line++;
-		}
-
+		if ( *( *buf ) == '\n' ) *line++;
 		( *buf )++;
 	}
 
@@ -99,9 +95,7 @@ static NLNode *ParseArrayNode( NLNode *parent, const char **buf, size_t length, 
 
 	NLNode *arrayNode = xNL_PushBackNode( parent, name, NL_PROP_ARRAY );
 	if ( arrayNode == NULL )
-	{
 		return NULL;
-	}
 
 	SkipToNextToken( buf, &currentLine );
 
@@ -241,9 +235,7 @@ static NLNode *ParseObjectNode( NLNode *parent, const char **buf, size_t length,
 
 	NLNode *objectNode = NL_PushBackObj( parent, name );
 	if ( objectNode == NULL )
-	{
 		return NULL;
-	}
 
 	/* read in all the children nodes */
 	SkipToNextToken( buf, &currentLine );
@@ -276,21 +268,15 @@ static NLNode *ParseNode( NLNode *parent, const char **buf, size_t length, unsig
 	/* now try reading in the type */
 	char type[ NL_MAX_TYPE_LENGTH ];
 	if ( ParseToken( buf, type, sizeof( type ), &currentLine ) == NULL )
-	{
 		return NULL;
-	}
 	DebugParser( "type( %s )\n", type );
 
 	NLPropertyType propertyType = PropertyTypeForString( type );
 	/* an array is a special case, parsing-wise */
 	if ( propertyType == NL_PROP_ARRAY )
-	{
 		return ParseArrayNode( parent, buf, length, currentLine );
-	}
 	else if ( propertyType == NL_PROP_OBJ )
-	{
 		return ParseObjectNode( parent, buf, length, currentLine );
-	}
 	else
 	{
 		char name[ NL_MAX_NAME_LENGTH ];
