@@ -1,5 +1,0 @@
-# Yin Script Outline
-
-```c
-
-```
