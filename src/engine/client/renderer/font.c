@@ -10,9 +10,7 @@
 
 static BitmapFont *defaultFont;
 
-static PLGMesh *renderMesh;
-
-static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
+void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
 {
 	int row = ( character - font->start ) / ( font->w / font->cw );
 	int col = ( character - font->start ) % ( font->w / font->cw );
@@ -26,13 +24,39 @@ static void Font_AddBitmapCharacterToPass( BitmapFont *font, float x, float y, f
 	float tx = ( float ) cX / ( float ) font->w;
 	float ty = ( float ) cY / ( float ) font->h;
 
-	unsigned int vX = PlgAddMeshVertex( renderMesh, PLVector3( x, y, 0 ), pl_vecOrigin3, colour, PLVector2( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( renderMesh, PLVector3( x, y + ( ( float ) font->ch * scale ), 0 ), pl_vecOrigin3, colour, PLVector2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( renderMesh, PLVector3( x + ( ( float ) font->cw * scale ), y, 0 ), pl_vecOrigin3, colour, PLVector2( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( renderMesh, PLVector3( x + ( ( float ) font->cw * scale ), y + ( ( float ) font->ch * scale ), 0 ), pl_vecOrigin3, colour, PLVector2( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( font->mesh, PLVector3( x, y, 0 ), pl_vecOrigin3, colour, PLVector2( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( font->mesh, PLVector3( x, y + ( ( float ) font->ch * scale ), 0 ), pl_vecOrigin3, colour, PLVector2( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( font->mesh, PLVector3( x + ( ( float ) font->cw * scale ), y, 0 ), pl_vecOrigin3, colour, PLVector2( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( font->mesh, PLVector3( x + ( ( float ) font->cw * scale ), y + ( ( float ) font->ch * scale ), 0 ), pl_vecOrigin3, colour, PLVector2( tx + tw, ty + th ) );
 
-	PlgAddMeshTriangle( renderMesh, vX, vY, vZ );
-	PlgAddMeshTriangle( renderMesh, vZ, vY, vW );
+	PlgAddMeshTriangle( font->mesh, vX, vY, vZ );
+	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
+}
+
+void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length )
+{
+	if ( length == 0 )
+		return;
+
+	float n_x = x;
+	float n_y = y;
+	for ( size_t i = 0; i < length; ++i )
+	{
+		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
+		if ( msg[ i ] == '\n' )
+		{
+			n_y += ( font->ch * scale );
+			n_x = x;
+			continue;
+		}
+		else if ( msg[ i ] == '\t' )
+		{
+			n_x += ( font->cw * scale ) * 4.0f;
+			continue;
+		}
+
+		n_x += ( font->cw * scale );
+	}
 }
 
 /**
@@ -53,7 +77,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	/* setup our render pass */
 
-	PlgClearMesh( renderMesh );
+	Font_BeginDraw( font );
 
 	Font_AddBitmapCharacterToPass( font, x, y, scale, colour, character );
 
@@ -62,7 +86,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	PlLoadIdentityMatrix();
 
-	RM_DrawMesh( font->material, renderMesh );
+	RM_DrawMesh( font->material, font->mesh );
 
 	PlPopMatrix();
 }
@@ -76,80 +100,69 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 	if ( numChars == 0 )
 		return;
 
-	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL )
-		return;
+	Font_BeginDraw( font );
 
+	if ( shadow )
+		Font_AddBitmapStringToPass( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars );
+
+	Font_AddBitmapStringToPass( font, x, y, scale, colour, msg, numChars );
+
+	Font_Draw( font );
+}
+
+void Font_BeginDraw( BitmapFont *font )
+{
+	PlgClearMesh( font->mesh );
+}
+
+void Font_Draw( BitmapFont *font )
+{
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
 
-	PlgClearMesh( renderMesh );
-
-	float n_x;
-	float n_y;
-	if ( shadow )
-	{
-		n_x = x + 1;
-		n_y = y + 1;
-		for ( size_t i = 0; i < numChars; ++i )
-		{
-			Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, PL_COLOUR_BLACK, ( uint8_t ) msg[ i ] );
-			if ( msg[ i ] == '\n' )
-			{
-				n_y += ( font->ch * scale );
-				n_x = x;
-			}
-			else
-				n_x += ( font->cw * scale );
-		}
-
-		RM_DrawMesh( font->material, renderMesh );
-
-		PlgClearMesh( renderMesh );
-	}
-
-	n_x = x;
-	n_y = y;
-	for ( size_t i = 0; i < numChars; ++i )
-	{
-		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
-		if ( msg[ i ] == '\n' )
-		{
-			n_y += ( font->ch * scale );
-			n_x = x;
-		}
-		else
-			n_x += ( font->cw * scale );
-	}
-
-	RM_DrawMesh( font->material, renderMesh );
+	RM_DrawMesh( font->material, font->mesh );
 
 	PlPopMatrix();
 }
 
 void Font_Initialize( void )
 {
-	renderMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 512, 256 );
-	if ( renderMesh == NULL )
-		PrintError( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
-
-	defaultFont = Font_LoadBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
+	defaultFont = Font_CacheBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
 }
 
 void Font_Shutdown( void )
 {
-	Font_Destroy( defaultFont );
+	Font_ReleaseBitmap( defaultFont );
 	defaultFont = NULL;
 }
 
-BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
+static void Font_CB_DestroyBitmap( void *userData )
+{
+	BitmapFont *font = userData;
+	u_assert( font != NULL );
+	if ( font == NULL )
+		return;
+
+	RM_ReleaseMaterial( font->material );
+
+	PlgDestroyMesh( font->mesh );
+
+	globalSystem.Free( font );
+}
+
+BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
 	BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
-	font->material   = RM_CacheMaterial( materialPath, 0, false );
+
+	font->material = RM_CacheMaterial( materialPath, 0, false );
 	if ( font->material == NULL )
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );
+
+	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
+	if ( font->mesh == NULL )
+		PrintError( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
 
 	font->w     = w;
 	font->h     = h;
@@ -160,16 +173,15 @@ BitmapFont *Font_LoadBitmap( const char *materialPath, int w, int h, int cw, int
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
+	Mem_SetupReferenceInstance( "bitmapFont", &font->mem, Font_CB_DestroyBitmap, font );
+	Mem_AddReference( &font->mem );
+
 	return font;
 }
 
-void Font_Destroy( BitmapFont *font )
+void Font_ReleaseBitmap( BitmapFont *font )
 {
-	if ( font == NULL )
-		return;
-
-	RM_ReleaseMaterial( font->material );
-	globalSystem.Free( font );
+	Mem_ReleaseReference( &font->mem );
 }
 
 BitmapFont *Font_GetDefault( void )

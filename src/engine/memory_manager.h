@@ -20,11 +20,9 @@ typedef struct MemRefCnt
 	struct PLLinkedListNode * node;             // Index into the memory reference list
 } MemRefCnt;
 
-MemRefCnt *Mem_SetupReferenceInstance( MemRefCnt *memHandle, MemRefCnt_CleanupFunction cleanupFunction, void *userData );
+MemRefCnt *Mem_SetupReferenceInstance( const char *description, MemRefCnt *memHandle, MemRefCnt_CleanupFunction cleanupFunction, void *userData );
 
 void Mem_AddReference( MemRefCnt *v );
 void Mem_ReleaseReference( MemRefCnt *v );
 
 int Mem_GetNumberOfReferences( const MemRefCnt *v );
-
-void Mem_ForceMemoryFlush( void );

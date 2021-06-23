@@ -254,7 +254,8 @@ static WorldMesh *W_DeserializeWorldMesh( NLNode *meshNode, WorldMesh *meshPtr )
 	if ( meshPtr->drawMesh == NULL )
 		PrintError( "Failed to create internal mesh for world mesh!\n" );
 
-	Mem_SetupReferenceInstance( &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
+	Mem_SetupReferenceInstance( "world", &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
+	Mem_AddReference( &meshPtr->mem );
 
 	return meshPtr;
 }

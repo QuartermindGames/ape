@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include <plcore/pl_linkedlist.h>
 
@@ -61,10 +62,10 @@ void Sch_Initialize( void )
 {
 	Print( "Initializing scheduler\n" );
 
-	PlRegisterConsoleCommand( "Sch.FlushTasks", Cmd_FlushTasks, "Flush all running tasks." );
-	PlRegisterConsoleCommand( "Sch.IsTaskRunning", Cmd_IsTaskRunning, "Displays 'true' if the specified task is running." );
-	PlRegisterConsoleCommand( "Sch.KillTask", Cmd_KillTask, "Kill the specified task." );
-	PlRegisterConsoleCommand( "Sch.SetTaskDelay", Cmd_SetTaskDelay, "Set the delay for the specified task." );
+	PlRegisterConsoleCommand( "sch.flushtasks", Cmd_FlushTasks, "Flush all running tasks." );
+	PlRegisterConsoleCommand( "sch.istaskrunning", Cmd_IsTaskRunning, "Displays 'true' if the specified task is running." );
+	PlRegisterConsoleCommand( "sch.killtask", Cmd_KillTask, "Kill the specified task." );
+	PlRegisterConsoleCommand( "sch.settaskdelay", Cmd_SetTaskDelay, "Set the delay for the specified task." );
 }
 
 unsigned int Sch_GetNumTasks( void )

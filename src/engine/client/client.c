@@ -31,6 +31,8 @@ void CL_Display( void )
 
 	R_SetupDefaultState();
 
+	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
+
 	Game_Display();
 
 	PROFILE_END( PROFILE_DRAW_ALL );

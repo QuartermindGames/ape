@@ -105,7 +105,6 @@ void R_DrawPerspective( GfxCamera *camera )
 	}
 
 	PlgSetupCamera( camera->internalPtr );
-	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 
 	R_DrawScene( camera->internalPtr );
 }

@@ -494,7 +494,7 @@ void R_DrawMenu( void )
 	if ( debugOverlay != NULL && debugOverlay->i_value > 0 )
 	{
 		float y = 0.0f;
-		for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i )
+		for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i, y += 64.0f )
 		{
 			uint8_t       numPoints;
 			const double *graph = PF_GetGraph( i, &numPoints );

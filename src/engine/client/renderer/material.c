@@ -454,10 +454,12 @@ static void ConvertMatToNode( const Material *material )
 	NL_DestroyNode( root );
 }
 
-static void RM_DestroyMaterial( void *userData )
+static void RM_CB_DestroyMaterial( void *userData )
 {
 	Material *material = userData;
 	u_assert( material != NULL );
+	if ( material == NULL )
+		return;
 
 	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
 	if ( container != NULL )
@@ -503,7 +505,8 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	ConvertMatToNode( material );
 #endif
 
-	//Mem_SetupReferenceInstance( &material->mem, , material );
+	Mem_SetupReferenceInstance( "material", &material->mem, RM_CB_DestroyMaterial, material );
+	Mem_AddReference( &material->mem );
 
 	return material;
 }

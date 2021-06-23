@@ -45,6 +45,13 @@ static void OutputCallback( int level, const char *msg )
 		l = CON_BUFFER_MAX_LENGTH - 2;
 	}
 
+	if ( outputBuffer.numLines >= CON_BUFFER_MAX_LINES )
+	{
+#define CON_JUMP 256
+		memmove( outputBuffer.lines, &outputBuffer.lines[ CON_JUMP ], CON_BUFFER_MAX_LINES - CON_JUMP );
+		outputBuffer.numLines -= CON_JUMP;
+	}
+
 	strncpy( outputBuffer.lines[ outputBuffer.numLines ].buffer, msg, l );
 	outputBuffer.lines[ outputBuffer.numLines ].buffer[ l ] = '\0';
 
@@ -57,14 +64,7 @@ static void OutputCallback( int level, const char *msg )
 		lineColour = PLColourRGB( 200, 200, 200 );
 
 	outputBuffer.lines[ outputBuffer.numLines ].colour = lineColour;
-
-	/* this is when we do what is probably going to be,
-     * a dumb and expensive operation... */
 	outputBuffer.numLines++;
-	if ( outputBuffer.numLines >= CON_BUFFER_MAX_LINES )
-	{
-		//memmove_s()
-	}
 }
 
 /* CONSOLE COMMANDS */
@@ -104,7 +104,7 @@ CMD_CALLBACK( OSCommand )
 		return;
 	}
 
-	if ( system( argv[ 0 ] ) == -1 )
+	if ( system( argv[ 1 ] ) == -1 )
 		PrintWarn( "Failed to issue command, an error occurred!\n" );
 }
 
@@ -203,6 +203,7 @@ void Con_Initialize( void )
 
 	/* debugging */
 	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
+	PlRegisterConsoleVariable( "debug.profilerFrequency", "16", pl_int_var, NULL, "Set frequency at which profile graph updates." );
 
 	PlRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
 
@@ -420,11 +421,14 @@ void Con_Draw( const PLGViewport *viewport )
 		float cY = consoleHeight - ( ( outputBuffer.numLines / consoleHeight ) + scrollPos ) - cH;
 		PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 2.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
+		BitmapFont *consoleFont = Font_GetDefault();
+		Font_BeginDraw( consoleFont );
+
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( outputBuffer.numLines - 1 ) - scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			Font_DrawBitmapString( Font_GetDefault(), 12.0f, y, 1.0f, 1.0f, outputBuffer.lines[ i ].colour, outputBuffer.lines[ i ].buffer, true );
+			Font_AddBitmapStringToPass( consoleFont, 12.0f, y, 1.0f, outputBuffer.lines[ i ].colour, outputBuffer.lines[ i ].buffer, strlen( outputBuffer.lines[ i ].buffer ) );
 
 			/* now decrement our y pos for as many new lines there were */
 			if ( i > 0 )
@@ -438,6 +442,8 @@ void Con_Draw( const PLGViewport *viewport )
 			if ( y <= -12.0f )
 				break;
 		}
+
+		Font_Draw( consoleFont );
 	}
 
 	DrawInput( viewport );

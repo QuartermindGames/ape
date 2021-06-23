@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #include <SDL2/SDL.h>
 
@@ -64,11 +65,6 @@ static bool Sys_IsDisplayActive( OSWindow *windowPtr )
 {
 	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
-}
-
-void Sys_GetWindowSize( int *width, int *height )
-{
-	SDL_GL_GetDrawableSize( sdlWindow, width, height );
 }
 
 void Sys_MakeWindowActive( OSWindow *windowPtr )
@@ -249,13 +245,9 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown )
 	/* figure out what state the key is in now */
 
 	if ( keyStates[ key ] == INPUT_STATE_DOWN && isDown )
-	{
 		keyStates[ key ] = INPUT_STATE_PRESSING;
-	}
 	else if ( keyStates[ key ] == INPUT_STATE_DOWN && !isDown )
-	{
 		keyStates[ key ] = INPUT_STATE_UP;
-	}
 
 	switch ( keyStates[ key ] )
 	{
