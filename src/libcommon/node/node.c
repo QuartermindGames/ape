@@ -81,8 +81,10 @@ NLErrorCode NL_GetError( void ) { return nlErrorType; }
 
 static char *AllocVarString( const char *string, unsigned int *lengthOut )
 {
-	*lengthOut = strlen( string ) + 1;
+	*lengthOut = ( unsigned int ) strlen( string ) + 1;
 	char *buf  = calloc( 1, *lengthOut );
+	if ( buf == NULL )
+		abort();
 	strcpy( buf, string );
 	return buf;
 }
@@ -222,14 +224,14 @@ NLErrorCode NL_GetF64( const NLNode *node, double *dest )
 NLErrorCode NL_GetI8( const NLNode *node, int8_t *dest )
 {
 	if ( node->type != NL_PROP_I8 ) return NL_ERROR_INVALID_TYPE;
-	*dest = strtol( node->data.strBuf, NULL, 10 );
+	*dest = ( int8_t ) strtol( node->data.strBuf, NULL, 10 );
 	return NL_ERROR_SUCCESS;
 }
 
 NLErrorCode NL_GetI16( const NLNode *node, int16_t *dest )
 {
 	if ( node->type != NL_PROP_I16 ) return NL_ERROR_INVALID_TYPE;
-	*dest = strtol( node->data.strBuf, NULL, 10 );
+	*dest = ( int16_t ) strtol( node->data.strBuf, NULL, 10 );
 	return NL_ERROR_SUCCESS;
 }
 
@@ -250,14 +252,14 @@ NLErrorCode NL_GetI64( const NLNode *node, int64_t *dest )
 NLErrorCode NL_GetUI8( const NLNode *node, uint8_t *dest )
 {
 	if ( node->type != NL_PROP_UI8 ) return NL_ERROR_INVALID_TYPE;
-	*dest = strtoul( node->data.strBuf, NULL, 10 );
+	*dest = ( uint8_t ) strtoul( node->data.strBuf, NULL, 10 );
 	return NL_ERROR_SUCCESS;
 }
 
 NLErrorCode NL_GetUI16( const NLNode *node, uint16_t *dest )
 {
 	if ( node->type != NL_PROP_UI16 ) return NL_ERROR_INVALID_TYPE;
-	*dest = strtoul( node->data.strBuf, NULL, 10 );
+	*dest = ( uint16_t ) strtoul( node->data.strBuf, NULL, 10 );
 	return NL_ERROR_SUCCESS;
 }
 
@@ -646,7 +648,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		{
 			float v = ( float ) PlReadInt32( file, false, NULL );
 			char  str[ 32 ];
-			snprintf( str, sizeof( str ), "%f", v );
+			snprintf( str, sizeof( str ), COM_FMT_float, v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
@@ -654,7 +656,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		{
 			double v = ( double ) PlReadInt64( file, false, NULL );
 			char   str[ 32 ];
-			snprintf( str, sizeof( str ), "%lf", v );
+			snprintf( str, sizeof( str ), COM_FMT_double, v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
@@ -662,7 +664,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		{
 			int8_t v = PlReadInt8( file, NULL );
 			char   str[ 32 ];
-			snprintf( str, sizeof( str ), "%d", v );
+			snprintf( str, sizeof( str ), COM_FMT_int32, v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
@@ -670,7 +672,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		{
 			int32_t v = PlReadInt32( file, false, NULL );
 			char    str[ 32 ];
-			snprintf( str, sizeof( str ), "%d", v );
+			snprintf( str, sizeof( str ), COM_FMT_int32, v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
@@ -678,7 +680,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		{
 			int64_t v = PlReadInt64( file, false, NULL );
 			char    str[ 32 ];
-			snprintf( str, sizeof( str ), "%d", v );
+			snprintf( str, sizeof( str ), COM_FMT_int64, v );
 			node->data.strBuf = AllocVarString( str, &node->data.strBufLength );
 			break;
 		}
@@ -991,7 +993,7 @@ void NL_WriteFile( const char *path, NLNode *root, NLFileType fileType )
 
 void NL_PrintNodeTree( NLNode *node, int index )
 {
-	for ( unsigned int i = 0; i < index; ++i ) printf( "\t" );
+	for ( int i = 0; i < index; ++i ) printf( "\t" );
 	if ( node->type == NL_PROP_OBJ || node->type == NL_PROP_ARRAY )
 	{
 		index++;

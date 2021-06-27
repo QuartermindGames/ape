@@ -14,4 +14,8 @@ extern unsigned int LOG_LEVEL_ERROR;
 
 #define Print( ... )   PlLogMessage( LOG_LEVEL_DEFAULT, __VA_ARGS__ )
 #define Warning( ... ) PlLogMessage( LOG_LEVEL_WARNING, __VA_ARGS__ )
-#define Error( ... )   PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ )
+#define Error( ... )                                  \
+	{                                                 \
+		PlLogMessage( LOG_LEVEL_ERROR, __VA_ARGS__ ); \
+		abort();                                      \
+	}

@@ -597,8 +597,7 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 static void R_RenderScene( PLGCamera *camera, bool smPass )
 {
 	WorldSector *curSector = NULL;
-
-	Actor *player = Game_GetPlayer();
+	Actor *      player    = Game_GetPlayer();
 	if ( player != NULL )
 		curSector = Act_GetWorldSector( player );
 

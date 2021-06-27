@@ -26,6 +26,9 @@
 #define _TXC_DXTN_H
 
 /* todo: remove the dependence on gl.h */
+#if defined( _MSC_VER )
+#include <Windows.h>
+#endif
 #include <GL/gl.h>
 /* define some GL macros we need if they're not available */
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT

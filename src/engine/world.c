@@ -780,8 +780,102 @@ static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
 }
 
 /****************************************
- * WORLD
+ * RENDERING
  ****************************************/
+
+
+/**
+ * Draw scrolling clouds.
+ */
+void W_DrawSky( PLGCamera *camera )
+{
+	static Material *skyMaterial = NULL;
+	if ( skyMaterial == NULL )
+	{
+		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
+		if ( skyMaterial == NULL )
+			PrintError( "Failed to load cloud layer!\n" );
+	}
+
+	static PLGVertex vertices[] = {
+	        { .position = { 10.0f, 100.f, 100.0f },
+					.colour   = PL_COLOUR_WHITE }, /* top right */
+			{ .position = PLVector3( 10.0f, 200.0f, 200.0f ),
+					.colour   = PLColourA( 0 ) }, /* top right far */
+			{ .position = PLVector3( 10.0f, 100.0f, -100.0f ),
+					.colour   = PL_COLOUR_WHITE }, /* lower right */
+			{ .position = PLVector3( 10.0f, 200.0f, -200.0f ),
+					.colour   = PLColourA( 0 ) }, /* lower right far */
+			{ .position = PLVector3( 10.0f, -100.0f, -100.0f ),
+					.colour   = PL_COLOUR_WHITE }, /* lower left */
+			{ .position = PLVector3( 10.0f, -200.0f, -200.0f ),
+					.colour   = PLColourA( 0 ) }, /* lower left far */
+			{ .position = PLVector3( 10.0f, -100.0f, 100.0f ),
+					.colour   = PL_COLOUR_WHITE }, /* top left */
+			{ .position = PLVector3( 10.0f, -200.0f, 200.0f ),
+					.colour   = PLColourA( 0 ) } }; /* top left far */
+	static unsigned int indices[][ 3 ] = {
+			/* corners */
+			{ 2, 1, 0 },
+			{ 3, 1, 2 },
+			{ 4, 3, 2 },
+			{ 5, 3, 4 },
+			{ 6, 5, 4 },
+			{ 7, 5, 6 },
+			{ 0, 7, 6 },
+			{ 1, 7, 0 },
+			/* middle */
+			{ 4, 2, 0 },
+			{ 6, 4, 0 },
+	};
+
+	static PLGMesh *skyMesh = NULL;
+	if ( skyMesh == NULL )
+	{
+		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
+		if ( skyMesh == NULL )
+			PrintError( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
+
+		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i )
+			PlgSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+
+		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i )
+		{
+			PlgSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
+			PlgSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
+		}
+	}
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+	PlgSetDepthMask( false );
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	PlTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
+
+	/* todo: do this in shader... */
+	PLVector2 skyOffset;
+	skyOffset.x = Engine_GetNumTicks() / 1000.0f;
+	skyOffset.y = Engine_GetNumTicks() / 1000.0f;
+	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
+
+	RM_DrawMesh( skyMaterial, skyMesh );
+
+	/* todo: do this in shader... */
+	skyOffset.x = ( Engine_GetNumTicks() / 100.0f ) * -1;
+	skyOffset.y = Engine_GetNumTicks() / 100.0f;
+	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
+
+	RM_DrawMesh( skyMaterial, skyMesh );
+
+	PlPopMatrix();
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+	PlgSetDepthMask( true );
+}
 
 static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, PLGCamera *camera )
 {
@@ -808,23 +902,27 @@ void W_Draw( PLGCamera *camera, World *world, WorldSector *originSector )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	CVar( "world.drawSectorVolumes", drawSectorVolumes );
+	W_DrawSky( camera );
 
-	if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
-		W_Debug_DrawSectorVolumes( world, originSector, camera );
-	else
+	if ( world != NULL )
 	{
-		if ( originSector == NULL )
-			originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
-
-		if ( originSector != NULL )
+		CVar( "world.drawSectorVolumes", drawSectorVolumes );
+		if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
+			W_Debug_DrawSectorVolumes( world, originSector, camera );
+		else
 		{
-			unsigned int  numVisibleSectors;
-			WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
-			for ( unsigned int i = 0; i < numVisibleSectors; ++i )
-				DrawSector( visibleSectors[ i ], camera, false );
+			if ( originSector == NULL )
+				originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
 
-			globalSystem.Free( visibleSectors );
+			if ( originSector != NULL )
+			{
+				unsigned int  numVisibleSectors;
+				WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
+				for ( unsigned int i = 0; i < numVisibleSectors; ++i )
+					DrawSector( visibleSectors[ i ], camera, false );
+
+				globalSystem.Free( visibleSectors );
+			}
 		}
 	}
 

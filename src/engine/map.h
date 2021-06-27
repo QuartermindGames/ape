@@ -28,7 +28,6 @@ typedef struct MapSector
 	unsigned int    numFaces;
 } MapSector;
 
-void Map_DrawSky( PLGCamera *camera );
 void Map_Draw( PLGCamera *camera, bool smPass );
 
 bool Map_CheckCollisions( const PLCollisionAABB *bounds, unsigned int curArea );

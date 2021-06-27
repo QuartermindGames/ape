@@ -12,9 +12,10 @@ declare bool literally 'uchar';
 declare true literally '1', false literally '0';
 
 // <function-name>: procedure <argument-list> <return-type>;
-procedure MyFunction (string name, int number) string;
-    return "Hello World";
-end;
+MyFunction: procedure (name, number) string;
+    declare name string, number int;
+    return name + number;
+end MyFunction;
 ```
 
 ## References

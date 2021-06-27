@@ -47,7 +47,7 @@ target_include_directories(engine PRIVATE
 set_target_properties(engine PROPERTIES PREFIX "")
 
 # Setup link libraries
-if (NOT UNIX)
+if (NOT UNIX AND NOT MSVC)
     target_link_libraries(engine mingw32)
 endif ()
 

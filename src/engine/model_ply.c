@@ -4,11 +4,11 @@
  * ====================================================================*/
 
 #include <plcore/pl_parse.h>
-#include <plmodel/plm.h>
 
 #include "yin.h"
+#include "model.h"
 
-enum
+typedef enum PLYVariableType
 {
 	PLY_VAR_INVALID,
 	PLY_VAR_FLOAT,
@@ -19,11 +19,11 @@ enum
 	PLY_VAR_SHORT,
 	PLY_VAR_UINT,
 	PLY_VAR_INT,
-};
+} PLYVariableType;
 
 typedef struct PLYVariable
 {
-	unsigned int type;
+	PLYVariableType type;
 	union
 	{
 		float          f;
@@ -139,9 +139,7 @@ static PLMModel *ParseFile( const char *p )
 			{
 				header.numVertices = PlParseInteger( &p, NULL );
 				if ( header.numVertices == 0 )
-				{
 					break;
-				}
 
 				header.vertices = globalSystem.CAlloc( header.numVertices, sizeof( PLGVertex ), true );
 
@@ -149,9 +147,7 @@ static PLMModel *ParseFile( const char *p )
 				while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
 				{
 					if ( strcmp( token, "property" ) != 0 )
-					{
 						break;
-					}
 
 					PlParseToken( &p, token, sizeof( token ) );
 					unsigned int type = GetTypeForToken( token );
@@ -166,9 +162,7 @@ static PLMModel *ParseFile( const char *p )
 			{
 			}
 			else
-			{
 				PrintWarn( "Unexpected element type, \"%s\"!\n", token );
-			}
 
 			PlSkipLine( &p );
 			continue;
@@ -193,12 +187,21 @@ PLMModel *PLY_LoadFile( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
-	{
 		return NULL;
-	}
 
-	const char *p     = ( char * ) PlGetFileData( file );
-	PLMModel *  model = ParseFile( p );
+	PLMModel *model = ParseFile( ( char * ) PlGetFileData( file ) );
+	if ( model != NULL )
+	{
+		/* in the case of the PLY format, it doesn't support
+		 * any sort of material/texture indicators, so we
+		 * need to rather awkwardly sort those out here. */
+
+		model->numMaterials = 1;
+		model->materials    = globalSystem.CAlloc( 1, sizeof( PLPath ), true );
+		snprintf( model->materials[ 0 ], sizeof( PLPath ), "materials/models/ply/%s.node", PlGetFileName( path ) );
+
+		Model_SetupUserData( model );
+	}
 
 	PlCloseFile( file );
 

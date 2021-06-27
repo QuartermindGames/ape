@@ -24,7 +24,7 @@ set_target_properties(common PROPERTIES PREFIX "")
 target_compile_definitions(common PRIVATE COMMON_DLL=1)
 
 # Setup link libraries
-if (NOT UNIX)
+if (NOT UNIX AND NOT MSVC)
     target_link_libraries(common mingw32)
 endif ()
 

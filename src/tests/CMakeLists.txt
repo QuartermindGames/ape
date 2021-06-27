@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD 11)
 add_executable(tests tests.c)
 
 # Setup link libraries
-if (NOT UNIX)
+if (NOT UNIX AND NOT MSVC)
     target_link_libraries(tests mingw32)
 endif ()
 target_link_libraries(tests plcore common)

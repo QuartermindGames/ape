@@ -12,7 +12,7 @@ add_library(game STATIC
 set_target_properties(game PROPERTIES PREFIX "")
 
 # Setup link libraries
-if (NOT UNIX)
+if (NOT UNIX AND NOT MSVC)
     target_link_libraries(game mingw32)
 endif ()
 

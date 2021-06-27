@@ -162,30 +162,21 @@ VMProgram *VM_LoadProgram( const char *path )
 
 	char identifier[ 4 ];
 	if ( PlReadFile( filePtr, identifier, sizeof( char ), 4 ) != 4 )
-	{
 		Error( "Failed to read identifier for \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
 
 	if ( identifier[ 0 ] != 'C' || identifier[ 1 ] != 'V' || identifier[ 2 ] != 'M' || identifier[ 3 ] != '0' )
-	{
 		Error( "Unexpected identifier \"%s\", expected CVM0!\n", identifier );
-	}
 
 	char programName[ VM_PROGRAM_NAME_LENGTH ];
 	if ( PlReadFile( filePtr, programName, sizeof( char ), VM_PROGRAM_NAME_LENGTH ) != VM_PROGRAM_NAME_LENGTH )
-	{
 		Error( "Failed to read in program name for \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
 
 	/* read in all of the instructions */
 	bool           status;
 	unsigned int   numInstructions = PlReadInt32( filePtr, false, &status );
 	VMInstruction *instructions    = calloc( numInstructions, sizeof( VMInstruction ) );
 	if ( instructions == NULL )
-	{
 		Error( "Failed to allocate instruction buffer!\n" );
-		return;
-	}
 
 	for ( unsigned int i = 0; i < numInstructions; ++i )
 	{
@@ -193,18 +184,13 @@ VMProgram *VM_LoadProgram( const char *path )
 	}
 
 	if ( !status )
-	{
 		Error( "Failed to read in instructions for \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
 
 	/* now we can actually setup the VM */
 
 	VMProgram *program = calloc( 1, sizeof( VMProgram ) );
 	if ( program == NULL )
-	{
 		Error( "Failed to allocate program!\n" );
-		return;
-	}
 
 	program->numInstructions = numInstructions;
 	program->instructions    = instructions;
@@ -323,7 +309,7 @@ void VM_Initialize( void )
 		Error( "Failed to create vmPrograms list!\nPL: %s\n", PlGetError() );
 	}
 
-	VM_LoadCVM
+	//VM_LoadCVM
 }
 
 void VM_Shutdown( void )
