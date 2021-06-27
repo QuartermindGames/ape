@@ -789,6 +789,7 @@ static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
  */
 void W_DrawSky( PLGCamera *camera )
 {
+#if 0
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL )
 	{
@@ -875,6 +876,7 @@ void W_DrawSky( PLGCamera *camera )
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 	PlgSetDepthMask( true );
+#endif
 }
 
 static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, PLGCamera *camera )

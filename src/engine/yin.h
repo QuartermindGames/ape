@@ -65,7 +65,7 @@ double CPUTimer_GetMeasure( CPUProfilerGroup group );
 #define PROFILE_START( GROUP )
 #define PROFILE_END( GROUP )
 #endif
-const double *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints );
+const float *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints );
 
 #include "scheduler.h"
 #include "memory_manager.h"

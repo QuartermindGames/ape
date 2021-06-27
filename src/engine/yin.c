@@ -27,7 +27,7 @@ const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, EN
  ****************************************/
 
 #define NUM_GRAPH_POINTS 32
-static double cpuPerfGraphs[ MAX_PROFILER_GROUPS ][ NUM_GRAPH_POINTS ];
+static float cpuPerfGraphs[ MAX_PROFILER_GROUPS ][ NUM_GRAPH_POINTS ];
 
 typedef struct CPUTime
 {
@@ -79,14 +79,14 @@ void PF_UpdateGraphs( void )
 		for ( uint8_t j = 0; j < NUM_GRAPH_POINTS - 1; ++j )
 			cpuPerfGraphs[ i ][ j ] = cpuPerfGraphs[ i ][ j + 1 ];
 
-		cpuPerfGraphs[ i ][ NUM_GRAPH_POINTS - 1 ] = CPUTimer_GetMeasure( i );
+		cpuPerfGraphs[ i ][ NUM_GRAPH_POINTS - 1 ] = ( float ) CPUTimer_GetMeasure( i );
 	}
 
 	CVar( "debug.profilerFrequency", profilerFrequency );
 	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 }
 
-const double *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints )
+const float *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints )
 {
 	*numPoints = NUM_GRAPH_POINTS;
 	return cpuPerfGraphs[ group ];

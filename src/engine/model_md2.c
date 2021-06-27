@@ -83,7 +83,7 @@ static PLGMesh *MD2_ConvertMD2ToMesh(
 	}
 
 	/* setup the vertex table */
-	for ( unsigned int i = 0; i < header->numVertices; ++i )
+	for ( int32_t i = 0; i < header->numVertices; ++i )
 	{
 		PLVector3 pos;
 		pos.x = ( frames[ 0 ].scale.x * frames[ 0 ].vertices[ i ].v[ 0 ] ) + frames[ 0 ].translate.x;
@@ -94,15 +94,15 @@ static PLGMesh *MD2_ConvertMD2ToMesh(
 		DebugMsg( "%s\n", PlPrintVector3( &pos, pl_float_var ) );
 	}
 
-	for ( unsigned int i = 0; i < header->numTriangles; ++i )
+	for ( int32_t i = 0; i < header->numTriangles; ++i )
 	{
 		const MD2Triangle *tri = &triangles[ i ];
 		/* setup the uv coords */
-		for ( unsigned int j = 0; j < 3; ++j )
+		for ( uint8_t j = 0; j < 3; ++j )
 		{
 			PLGVertex *v = &mesh->vertices[ tri->vertex[ 0 ] ];
-			v->st[ 0 ].x = texCoords[ tri->st[ j ] ].s / w;
-			v->st[ 0 ].y = texCoords[ tri->st[ j ] ].t / h;
+			v->st[ 0 ].x = ( float ) ( texCoords[ tri->st[ j ] ].s / w );
+			v->st[ 0 ].y = ( float ) ( texCoords[ tri->st[ j ] ].t / h );
 		}
 		PlgAddMeshTriangle( mesh, tri->vertex[ 0 ], tri->vertex[ 1 ], tri->vertex[ 2 ] );
 		DebugMsg( "%d %d %d\n", tri->vertex[ 0 ], tri->vertex[ 1 ], tri->vertex[ 2 ] );
@@ -173,7 +173,7 @@ PLMModel *MD2_LoadFile( const char *path )
 	/* frames */
 	MD2Frame *frames = ( MD2Frame * ) globalSystem.MAlloc( sizeof( MD2Frame ) * header.numFrames, true );
 	PlFileSeek( file, header.offsetFrames, PL_SEEK_SET );
-	for ( unsigned int i = 0; i < header.numFrames; ++i )
+	for ( int32_t i = 0; i < header.numFrames; ++i )
 	{
 		PlReadFile( file, &frames[ i ].scale, sizeof( PLVector3 ), 1 );
 		PlReadFile( file, &frames[ i ].translate, sizeof( PLVector3 ), 1 );
@@ -199,7 +199,7 @@ PLMModel *MD2_LoadFile( const char *path )
 
 	globalSystem.Free( texCoords );
 	globalSystem.Free( triangles );
-	for ( unsigned int i = 0; i < header.numFrames; ++i ) globalSystem.Free( frames[ i ].vertices );
+	for ( int32_t i = 0; i < header.numFrames; ++i ) globalSystem.Free( frames[ i ].vertices );
 	globalSystem.Free( frames );
 
 	if ( mesh == NULL )

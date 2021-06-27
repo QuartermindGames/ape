@@ -476,13 +476,25 @@ NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var )
 	return node;
 }
 
+NLNode *NL_PushBackI16( NLNode *parent, const char *name, int16_t var )
+{
+	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I16 );
+	if ( node != NULL )
+	{
+		char buf[ 32 ];
+		snprintf( buf, sizeof( buf ), COM_FMT_int16, var );
+		node->data.strBuf = AllocVarString( buf, &node->data.strBufLength );
+	}
+	return node;
+}
+
 NLNode *NL_PushBackI32( NLNode *parent, const char *name, int32_t var )
 {
 	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I32 );
 	if ( node != NULL )
 	{
 		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), "%d", var );
+		snprintf( buf, sizeof( buf ), COM_FMT_int32, var );
 		node->data.strBuf = AllocVarString( buf, &node->data.strBufLength );
 	}
 	return node;
@@ -494,7 +506,19 @@ NLNode *NL_PushBackF32( NLNode *parent, const char *name, float var )
 	if ( node != NULL )
 	{
 		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), "%f", var );
+		snprintf( buf, sizeof( buf ), COM_FMT_float, var );
+		node->data.strBuf = AllocVarString( buf, &node->data.strBufLength );
+	}
+	return node;
+}
+
+NLNode *NL_PushBackF64( NLNode *parent, const char *name, double var )
+{
+	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_F64 );
+	if ( node != NULL )
+	{
+		char buf[ 32 ];
+		snprintf( buf, sizeof( buf ), COM_FMT_double, var );
 		node->data.strBuf = AllocVarString( buf, &node->data.strBufLength );
 	}
 	return node;

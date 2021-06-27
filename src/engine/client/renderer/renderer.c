@@ -380,7 +380,7 @@ static PLGTexture *    ppAttachment = NULL;
 /**
  * Where the magic of post processing happens.
  */
-static void R_DrawScreenBuffer( int x, int y, int w, int h )
+static void R_DrawScreenBuffer( float x, float y, float w, float h )
 {
 	/* and now display the scene onto the screen */
 	PlPushMatrix();
@@ -401,14 +401,14 @@ static void R_DrawScreenBuffer( int x, int y, int w, int h )
 	PlPopMatrix();
 }
 
-void R_DrawGraph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
+void R_DrawGraph( const char *heading, float x, float y, float w, float h, const float *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
 		return;
 
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
-	double oa = min, ob = max;
+	float oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
 	{
 		if ( values[ i ] > max )
@@ -478,7 +478,7 @@ void R_DrawMenu( void )
 
 	PlgSetDepthMask( false );
 
-	R_DrawScreenBuffer( 0, 0, w, h );
+	R_DrawScreenBuffer( 0.0f, 0.0f, ( float ) w, ( float ) h );
 
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
@@ -496,8 +496,8 @@ void R_DrawMenu( void )
 		float y = 0.0f;
 		for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i, y += 64.0f )
 		{
-			uint8_t       numPoints;
-			const double *graph = PF_GetGraph( i, &numPoints );
+			uint8_t      numPoints;
+			const float *graph = PF_GetGraph( i, &numPoints );
 			R_DrawGraph( cpuProfilerDescriptions[ i ], w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
 		}
 
@@ -518,7 +518,7 @@ void R_DrawMenu( void )
 			          "  Camera Position: %s\n"
 			          "  Num Faces Drawn:" COM_FMT_uint32 "\n"
 			          "  Num Batches:    " COM_FMT_uint32 "\n"
-			          "  Memory Usage:   " COM_FMT_uint64 "mb\n",
+			          "  Memory Usage:   " COM_FMT_double "mb\n",
 			          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
 			          g_gfxPerfStats.numFacesDrawn,
 			          g_gfxPerfStats.numBatches,

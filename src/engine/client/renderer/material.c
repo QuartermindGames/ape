@@ -428,7 +428,7 @@ static void ConvertMatToNode( const Material *material )
 					NL_PushBackBool( shaderParms, var->varData.name, var->varData.value.bVar );
 					break;
 				case SCRIPT_VAR_DOUBLE:
-					NL_PushBackF32( shaderParms, var->varData.name, var->varData.value.dVar );
+					NL_PushBackF64( shaderParms, var->varData.name, var->varData.value.dVar );
 					break;
 				case SCRIPT_VAR_FLOAT:
 					NL_PushBackF32( shaderParms, var->varData.name, var->varData.value.fVar );

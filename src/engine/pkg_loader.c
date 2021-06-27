@@ -25,7 +25,7 @@ uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index )
 		/* go ahead and decompress it */
 		uint8_t *     uncompressedData = globalSystem.MAlloc( index->fileSize, true );
 		unsigned long uncompressedLength;
-		int           status = mz_uncompress( uncompressedData, &uncompressedLength, data, index->compressedSize );
+		int           status = mz_uncompress( uncompressedData, &uncompressedLength, data, ( mz_ulong ) index->compressedSize );
 
 		/* don't need this anymore! */
 		globalSystem.Free( data );
