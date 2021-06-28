@@ -150,7 +150,7 @@ static int Sys_TranslateSDLKeyInput( int key )
 	switch ( key )
 	{
 		default:
-			return KEY_INVALID;
+			break;
 		case SDLK_CAPSLOCK:
 			return KEY_CAPSLOCK;
 		case SDLK_F1:
@@ -226,6 +226,8 @@ static int Sys_TranslateSDLKeyInput( int key )
 			g_engine.Shutdown();
 			break;
 	}
+
+	return KEY_INVALID;
 }
 
 static void Sys_HandleTextEvent( const char *key )
