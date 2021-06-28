@@ -433,29 +433,6 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 	return out;
 }
 
-WorldMesh *W_LoadWorldMesh( const char *path )
-{
-	NLNode *node = NL_LoadFile( path, "mesh" );
-	if ( node == NULL )
-	{
-		PrintWarn( "Failed to load mesh: %s\n", path );
-		return NULL;
-	}
-
-	WorldMesh *mesh = globalSystem.MAlloc( sizeof( WorldMesh ), true );
-	if ( W_DeserializeWorldMesh( node, mesh ) == NULL )
-	{
-		W_ReleaseWorldMesh( mesh );
-		mesh = NULL;
-	}
-
-	return mesh;
-}
-
-WorldMesh *W_CacheWorldMesh( const char *path )
-{
-}
-
 World *W_LoadWorld( const char *path )
 {
 	NLNode *node = NL_LoadFile( path, "world" );
@@ -473,6 +450,10 @@ World *W_LoadWorld( const char *path )
 	}
 
 	return world;
+}
+
+WorldMesh *W_CacheWorldMesh( const char *path )
+{
 }
 
 void W_ReleaseWorldMesh( WorldMesh *worldMesh )

@@ -330,7 +330,6 @@ void Map_LoadGeometryData( const char *mapName )
 		Map_ParseTextures( file );
 		Map_ParseVertices( file );
 		Map_ParseFaces( file );
-		Map_ParseSectors( file );
 	}
 
 	PlCloseFile( file );

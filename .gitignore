@@ -85,3 +85,4 @@ dkms.conf
 /release/runtime/**/*/pl**.dll
 /release/runtime/**/*/game.dll
 /release/runtime/**/*/**_driver.dll
+/out/build/x64-Debug
