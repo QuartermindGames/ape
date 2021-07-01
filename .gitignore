@@ -67,9 +67,12 @@ dkms.conf
 # Generated Files
 *.user
 *.gfx
+*.node_c
+
 /build
 /.vs
 /out/build/x64-Debug (default)
+/out/build/x64-Debug
 /.idea
 /src/editor/Debug
 /src/editor/.vs/QEdit/v16
@@ -85,4 +88,3 @@ dkms.conf
 /release/runtime/**/*/pl**.dll
 /release/runtime/**/*/game.dll
 /release/runtime/**/*/**_driver.dll
-/out/build/x64-Debug
