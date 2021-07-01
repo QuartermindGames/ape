@@ -1,0 +1,35 @@
+; Generates base.pkg
+output base.pkg
+
+; shaders
+dir materials/shaders node
+dir materials/shaders glsl
+dir materials/shaders frag
+dir materials/shaders vert
+dir materials/shaders inc
+
+; base
+dir materials/engine node
+dir materials/engine png
+dir materials/engine tga
+dir materials/effects gif
+dir materials/detail tga
+
+dir materials/textures/fonts png
+dir materials/textures/ui png
+dir materials/projected png
+
+; sky materials
+dir materials/sky tga
+dir materials/sky node
+
+;addv materials/terrain/aerial_grass_rock_ao_1k.jpg tex dxt1
+;addv materials/terrain/aerial_grass_rock_nor_1k.jpg tex dxt1
+
+dir materials/world png
+dir materials/world gif
+dir materials/world mat
+
+; testing crap...
+;dir models/test/md2 md2
+;dir models/test/stl stl

@@ -1,2 +1,3 @@
-"%~dp0runtime/win32-x64/pkgman.exe" ./develop/base_pkg.scr
+@echo off
+for %%I in (develop\*.pms) do "%~dp0runtime\win32-x86_64\pkgman.exe" %%I
 pause
