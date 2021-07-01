@@ -10,10 +10,7 @@
 
 const char *EZP_SkipSpaces( const char *buffer )
 {
-	while ( *buffer == ' ' )
-	{
-		buffer++;
-	}
+	while ( *buffer == ' ' ) buffer++;
 
 	return buffer;
 }

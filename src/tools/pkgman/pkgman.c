@@ -6,6 +6,7 @@
 #include <plcore/pl.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_image.h>
+#include <plmodel/plm.h>
 #include <common/node.h>
 
 #include "public/GFXFormat.h"
@@ -29,7 +30,8 @@ typedef struct PkgHeader
 } PkgHeader;
 static PkgHeader packageHeader = {
         .identifier = PKG_IDENTIFIER,
-        .numFiles   = 0 };
+        .numFiles   = 0,
+};
 
 static FILE *fileOutPtr       = NULL;
 static char  outputPath[ 32 ] = { '\0' };
@@ -59,9 +61,7 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long 
 
 		/* check if it's actually worth it... */
 		if ( compressedLength > length )
-		{
 			compressedLength = length;
-		}
 		else
 		{
 			buffer = compressedData;
@@ -89,25 +89,43 @@ static void Pkg_AddFile( const char *filePath )
 	if ( extension != NULL && pl_strcasecmp( extension, "node" ) == 0 )
 	{
 		NLNode *root = NL_LoadFile( filePath, NULL );
-		if ( root != NULL )
-		{
-			char tempPath[ PL_SYSTEM_MAX_PATH ];
-			snprintf( tempPath, sizeof( tempPath ), "%s_c", filePath );
-			filePath = tempPath;
-			NL_WriteFile( tempPath, root, NL_FILE_BINARY );
-			NL_DestroyNode( root );
-		}
-		else
-		{
-			Print( "Picked up a \".node\" file that failed to load, just storing the origina instead!\n" );
-		}
+		if ( root == NULL )
+			Error( "Failed to load node: %s\n", filePath );
+
+        char tempPath[ PL_SYSTEM_MAX_PATH ];
+        snprintf( tempPath, strlen( filePath ) - 3, "%s", filePath );
+        strcat( tempPath, "node_c" );
+        NL_WriteFile( tempPath, root, NL_FILE_BINARY );
+        NL_DestroyNode( root );
+        filePath = tempPath;
+	}
+	/* convert models to uniform format before packing */
+	else if ( pl_strcasecmp( extension, "mdl" ) == 0 ||
+	          pl_strcasecmp( extension, "md2" ) == 0 ||
+	          pl_strcasecmp( extension, "stl" ) == 0 ||
+	          pl_strcasecmp( extension, "ply" ) == 0 )
+	{
+		Print( "Converting model: %s\n", filePath );
+
+		PLMModel *model = PlmLoadModel( filePath );
+		if ( model == NULL )
+			Error( "Failed to load model: %s\nPL: %s\n", filePath, PlGetError() );
+
+		NLNode *root = MDL_ConvertPlatformModelToNodeModel( model );
+		if ( root == NULL )
+			Error( "Failed to convert model: %s\n", filePath );
+
+		char tempPath[ PL_SYSTEM_MAX_PATH ];
+		snprintf( tempPath, strlen( filePath ) - 2, "%s", filePath );
+		strcat( tempPath, "node_c" );
+		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
+		NL_DestroyNode( root );
+		filePath = tempPath;
 	}
 
 	PLFile *filePtr = PlOpenFile( filePath, true );
 	if ( filePtr == NULL )
-	{
 		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, PlGetError() );
-	}
 
 	Pkg_AddData( pkgPath, PlGetFileData( filePtr ), PlGetFileSize( filePtr ), true );
 
@@ -138,24 +156,18 @@ static void ParseScript( const char *buffer, size_t length )
 			curPos = EZP_SkipSpaces( curPos );
 
 			if ( outputPath[ 0 ] != '\0' )
-			{
 				Error( "Output was already specified previously in script!\n" );
-			}
 
 			/* fetch the output path we want */
 			curPos = EZP_ReadString( curPos, outputPath, sizeof( outputPath ) );
 			if ( curPos == NULL )
-			{
 				Error( "Output path did not fit into destination!\n" );
-			}
 
 			Print( "OUTPUT: %s\n", outputPath );
 
 			fileOutPtr = fopen( outputPath, "wb" );
 			if ( fileOutPtr == NULL )
-			{
 				Error( "Failed to open \"%s\" for writing!\n", outputPath );
-			}
 
 			/* write out the file header */
 			fwrite( &packageHeader, sizeof( PkgHeader ), 1, fileOutPtr );
@@ -170,9 +182,7 @@ static void ParseScript( const char *buffer, size_t length )
 			char filePath[ PL_SYSTEM_MAX_PATH ];
 			curPos = EZP_ReadString( curPos, filePath, sizeof( filePath ) );
 			if ( curPos == NULL )
-			{
 				Error( "File path did not fit into destination!\n" );
-			}
 
 			Pkg_AddFile( filePath );
 			continue;
@@ -186,58 +196,38 @@ static void ParseScript( const char *buffer, size_t length )
 			char filePath[ PL_SYSTEM_MAX_PATH ];
 			curPos = EZP_ReadString( curPos, filePath, sizeof( filePath ) );
 			if ( curPos == NULL )
-			{
 				Error( "File path did not fit into destination!\n" );
-			}
 
 			/* and now the data type */
 			char type[ 8 ];
 			curPos = EZP_ReadString( curPos, type, sizeof( type ) );
 			if ( curPos == NULL )
-			{
 				Error( "Type did not fit into the destination!\n" );
-			}
 
 			if ( strcmp( type, "tex" ) == 0 )
 			{
 				/* now fetch compression type we want */
 				curPos = EZP_ReadString( curPos, type, sizeof( type ) );
 				if ( curPos == NULL )
-				{
 					Error( "Storage type did not fit into the destination!\n" );
-				}
 
 				unsigned int dstFormat;
 				if ( strcmp( type, "dxt1" ) == 0 )
-				{
 					dstFormat = PGFX_FORMAT_DXT1;
-				}
 				else if ( strcmp( type, "dxt1a" ) == 0 )
-				{
 					dstFormat = PGFX_FORMAT_DXT1_ALPHA;
-				}
 				else if ( strcmp( type, "dxt3" ) == 0 )
-				{
 					dstFormat = PGFX_FORMAT_DXT3;
-				}
 				else if ( strcmp( type, "dxt5" ) == 0 )
-				{
 					dstFormat = PGFX_FORMAT_DXT5;
-				}
 				else if ( strcmp( type, "clu" ) == 0 )
-				{
 					dstFormat = PGFX_FORMAT_CLUSTER;
-				}
 				else
-				{
 					Error( "Unknown destination format, \"%s\"!\n", type );
-				}
 
 				PLImage *image = PlLoadImage( filePath );
 				if ( image == NULL )
-				{
 					Error( "Failed to open the specified image, \"%s\"! : %s\n", filePath, PlGetError() );
-				}
 
 				/* write out the converted image to disc */
 				char tempPath[ PL_SYSTEM_MAX_PATH + 4 ];
@@ -251,9 +241,7 @@ static void ParseScript( const char *buffer, size_t length )
 				Pkg_AddFile( tempPath );
 			}
 			else
-			{
 				Error( "Unknown data type, \"%s\"!\n", type );
-			}
 
 			continue;
 		}
@@ -265,16 +253,12 @@ static void ParseScript( const char *buffer, size_t length )
 			char directory[ PL_SYSTEM_MAX_PATH ];
 			curPos = EZP_ReadString( curPos, directory, sizeof( directory ) );
 			if ( curPos == NULL )
-			{
 				Error( "Directory path did not fit into destination!\n" );
-			}
 
 			char extension[ 8 ];
 			curPos = EZP_ReadString( curPos, extension, sizeof( extension ) );
 			if ( curPos == NULL )
-			{
 				Error( "Extension did not fit into destination!\n" );
-			}
 
 			PlScanDirectory( directory, extension, Pkg_AddFileCallback, false, NULL );
 			continue;
@@ -290,9 +274,21 @@ static void ParseScript( const char *buffer, size_t length )
 
 int main( int argc, char **argv )
 {
+#if defined( _WIN32 )
+    /* stop buffering stdout! */
+    setvbuf( stdout, NULL, _IONBF, 0 );
+#endif
+
 	PlInitialize( argc, argv );
 
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+	PlmRegisterStandardModelLoaders( PLM_MODEL_FILEFORMAT_ALL );
+
+	/* register our custom loaders... */
+	PlmRegisterModelLoader( "mdl", MDL_MDL_LoadFile );
+	PlmRegisterModelLoader( "ply", MDL_PLY_LoadFile );
+	PlmRegisterModelLoader( "stl", MDL_STL_LoadFile );
+	PlmRegisterModelLoader( "md2", MDL_MD2_LoadFile );
 
 	Print( "Package Manager\nCopyright (C) 2020-2021 Mark E Sowden <markelswo@gmail.com>\n" );
 	if ( argc < 2 )
@@ -305,9 +301,7 @@ int main( int argc, char **argv )
 	const char *input   = argv[ 1 ];
 	PLFile *    filePtr = PlOpenFile( input, true );
 	if ( filePtr == NULL )
-	{
 		Error( "Failed to open \"%s\"!\nPL: %s\n", argv[ 1 ], PlGetError() );
-	}
 
 	/* now fetch the buffer and length, and throw it to our parser */
 	const char *buffer = ( const char * ) PlGetFileData( filePtr );

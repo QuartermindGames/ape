@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(pkgman
         pack_image.c
+        pack_model.c
         pkgman.c
         pkgman.h
         parser.c
@@ -19,4 +20,4 @@ add_executable(pkgman
 file(COPY pkgman_legal.txt DESTINATION ${CMAKE_HOME_DIRECTORY}/release/docs/)
 
 target_include_directories(pkgman PRIVATE ../../3rdparty/miniz)
-target_link_libraries(pkgman plcore common)
+target_link_libraries(pkgman plcore plmodel common)
