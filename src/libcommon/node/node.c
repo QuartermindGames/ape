@@ -476,6 +476,18 @@ NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var )
 	return node;
 }
 
+NLNode *NL_PushBackI8( NLNode *parent, const char *name, int8_t var )
+{
+    NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I8 );
+    if ( node != NULL )
+    {
+        char buf[ 4 ];
+        snprintf( buf, sizeof( buf ), COM_FMT_int16, var );
+        node->data.strBuf = AllocVarString( buf, &node->data.strBufLength );
+    }
+    return node;
+}
+
 NLNode *NL_PushBackI16( NLNode *parent, const char *name, int16_t var )
 {
 	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I16 );
