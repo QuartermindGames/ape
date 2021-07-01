@@ -10,7 +10,7 @@
 /**
  * Callback for garbage day.
  */
-static void Model_CB_Destroy( void *userData )
+static void MDL_CB_Destroy( void *userData )
 {
 	PLMModel *model = userData;
 	u_assert( model != NULL );
@@ -30,10 +30,10 @@ static void Model_CB_Destroy( void *userData )
 /**
  * Setup the additional data we need.
  */
-void Model_SetupUserData( PLMModel *model )
+static void MDL_SetupUserData( PLMModel *model )
 {
 	ModelUserData *userData = globalSystem.MAlloc( sizeof( ModelUserData ), true );
-	userData->numMaterials = model->numMaterials;
+	userData->numMaterials  = model->numMaterials;
 	if ( userData->numMaterials > MODEL_MAX_MATERIALS )
 	{
 		PrintWarn( "Invalid number of materials: " COM_FMT_uint32 " vs " COM_FMT_uint32 "\n",
@@ -44,7 +44,12 @@ void Model_SetupUserData( PLMModel *model )
 	for ( unsigned int i = 0; i < userData->numMaterials; ++i )
 		userData->materials[ i ] = RM_CacheMaterial( model->materials[ i ], CACHE_GROUP_WORLD, true );
 
-	Mem_SetupReferenceInstance( "model", &userData->mem, Model_CB_Destroy, model );
+	Mem_SetupReferenceInstance( "model", &userData->mem, MDL_CB_Destroy, model );
+}
+
+PLMModel *MDL_CacheModel( const char *path )
+{
+	return NULL;
 }
 
 /**
@@ -53,7 +58,7 @@ void Model_SetupUserData( PLMModel *model )
  * manager then it'll be immediately
  * destroyed.
  */
-void Model_Release( PLMModel *model )
+void MDL_Release( PLMModel *model )
 {
 	ModelUserData *additionalData = model->userData;
 	if ( additionalData == NULL )

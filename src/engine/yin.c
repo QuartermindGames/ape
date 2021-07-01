@@ -11,6 +11,7 @@
 #include "actor.h"
 #include "pkg_loader.h"
 #include "game_interface.h"
+#include "model.h"
 
 #include "client/client.h"
 
@@ -137,15 +138,10 @@ static bool Engine_Initialize( int argc, char **argv )
 		break;
 	}
 
-	/* register other various loaders */
-	PLMModel *MD2_LoadFile( const char *path );
-	PlmRegisterModelLoader( "md2", MD2_LoadFile );
-	PLMModel *GSMDL_LoadFile( const char *path );
-	PlmRegisterModelLoader( "mdl", GSMDL_LoadFile );
+	PlmRegisterModelLoader( "node", MDL_CacheModel );
 
 	Print( "Initializing core services...\n" );
 
-	/* initialize core services */
 	CPUTimer_Initialize();
 	Con_Initialize();
 	Sch_Initialize();

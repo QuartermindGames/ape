@@ -19,4 +19,4 @@ typedef struct ModelUserData
 	MemRefCnt    mem;
 } ModelUserData;
 
-void Model_SetupUserData( PLMModel *model );
+PLMModel *MDL_CacheModel( const char *path );
