@@ -53,9 +53,9 @@ void huang::BasePerspective::DrawCameraIcon() {
 	glEnd();
 
     glBegin( GL_LINE_STRIP );
-    glVertex3f( x + 48.0f * std::cos( yaw + Q_PIF / 4 ), y + 48.0f * std::sin( yaw + Q_PIF / 4.0f ), 0.0f );
+    glVertex3f( x + 48.0f * cosf( yaw + Q_PIF / 4 ), y + 48.0f * sinf( yaw + Q_PIF / 4.0f ), 0.0f );
     glVertex3f( x, y, 0 );
-    glVertex3f( x + 48.0f * std::cos( yaw - Q_PIF / 4 ), y + 48.0f * std::sin( yaw - Q_PIF / 4.0f ), 0.0f );
+    glVertex3f( x + 48.0f * cosf( yaw - Q_PIF / 4 ), y + 48.0f * sinf( yaw - Q_PIF / 4.0f ), 0.0f );
     glEnd();
 }
 

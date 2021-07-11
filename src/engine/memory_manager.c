@@ -8,13 +8,109 @@
 
 #include "yin.h"
 
+/* ======================================================================
+ * Cache Pools
+ * ====================================================================*/
+
+static PLLinkedList *memCachePools[ MEM_CACHE_END ];
+
+static void MEM_InitializeCachePools( void )
+{
+	for ( uint8_t i = 0; i < MEM_CACHE_END; ++i )
+	{
+		memCachePools[ i ] = PlCreateLinkedList();
+		if ( memCachePools[ i ] == NULL )
+			PrintError( "Failed to create cache pool: " COM_FMT_int32 "\nPL: %s\n", i, PlGetError() );
+	}
+}
+
+void MEM_CacheData( const char *id, uint8_t pool, void *data )
+{
+	/* ensure the data hasn't been cached already */
+	void *cachedData = MEM_GetCachedData( id, pool );
+	if ( cachedData != NULL )
+		PrintError( "Attempted to cache duplicate data: %s\n", id );
+	
+	MEMCacheHeader *header = globalSystem.MAlloc( sizeof( MEMCacheHeader ), true );
+	snprintf( header->id, sizeof( header->id ), "%s", id );
+	header->pool = pool;
+    header->userData = data;
+	
+	PLLinkedListNode *node = PlInsertLinkedListNode( memCachePools[ pool ], header );
+	if ( node == NULL )
+		PrintError( "Failed to insert node for cache pool!\n" );
+}
+
+void *MEM_GetCachedData( const char *id, uint8_t pool )
+{
+	PLLinkedListNode *node = PlGetFirstNode( memCachePools[ pool ] );
+	while ( node != NULL )
+	{
+		MEMCacheHeader *header = PlGetLinkedListNodeUserData( node );
+		if ( strncmp( header->id, id, MEM_MAX_ID ) == 0 )
+			return header->userData;
+		
+		node = PlGetNextLinkedListNode( node );
+	}
+
+	return NULL;
+}
+
+static void MEM_RemoveCachedData( const char *id, uint8_t pool )
+{
+    PLLinkedListNode *node = PlGetFirstNode( memCachePools[ pool ] );
+    while ( node != NULL )
+    {
+        MEMCacheHeader *header = PlGetLinkedListNodeUserData( node );
+        if ( strncmp( header->id, id, MEM_MAX_ID ) == 0 )
+        {
+			PlDestroyLinkedListNode( memCachePools[ pool ], node );
+			globalSystem.Free( header );
+			return;
+		}
+
+        node = PlGetNextLinkedListNode( node );
+    }
+
+	PrintWarn( "Attempted to remove node from cache pool, but failed: %s\n", id );
+}
+
+/* ======================================================================
+ * Reference Counting and Garbage Collection
+ * ====================================================================*/
+
 static PLLinkedList *mmReferenceList;
 
 #define MEM_CLEANUP_DELAY 200.0
 
 #define DEBUG_MEMORY
 
-static void Mem_Cleanup( bool force )
+bool MEM_FreeReference( MEMReference *m, bool force )
+{
+#if defined( DEBUG_MEMORY )
+    DebugMsg( "%s, numRefs = %d, ttl = %u\n",
+              m->description[ 0 ] == '\0' ? "unknown" : m->description,
+              m->numRefs,
+              m->ttl );
+#endif
+
+    if ( m->numRefs <= 0 && ( force || m->ttl < Engine_GetNumTicks() ) )
+    {
+		/* remove it from whatever cached list it exists in */
+		//MEM_RemoveCachedData( )
+
+        //printf( " %p\n", child );
+        m->cleanupFunction( m->userData );
+
+        PlDestroyLinkedListNode( mmReferenceList, m->node );
+        globalSystem.Free( m );
+		return true;
+    }
+
+	return false;
+}
+
+static void CleanupUnreferencedResources( bool force )
 {
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Cleaning up unreferenced resources...\n" );
@@ -24,53 +120,45 @@ static void Mem_Cleanup( bool force )
 	while ( child != NULL )
 	{
 		PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
-		MemRefCnt *       refCnt    = PlGetLinkedListNodeUserData( child );
+		MEMReference *       m         = PlGetLinkedListNodeUserData( child );
 
-#if defined( DEBUG_MEMORY )
-		DebugMsg( "%s, numRefs = %d, ttl = %u\n",
-		          refCnt->description[ 0 ] == '\0' ? "unknown" : refCnt->description,
-		          refCnt->numRefs,
-		          refCnt->ttl );
-#endif
+		MEM_FreeReference( m, force );
 
-		if ( refCnt->numRefs <= 0 && ( force || refCnt->ttl < Engine_GetNumTicks() ) )
-		{
-			//printf( " %p\n", child );
-			refCnt->cleanupFunction( refCnt->userData );
-			PlDestroyLinkedListNode( mmReferenceList, refCnt->node );
-			globalSystem.Free( refCnt );
-		}
 		child = nextChild;
 	}
 }
 
-static void Mem_CB_Cleanup( void *unused0, double unused1 )
+#define MEM_CLEANUP_TASK_NAME "mem_cleanup"
+
+static void MEM_CB_Cleanup( void *unused0, double unused1 )
 {
 	u_unused( unused0 );
 	u_unused( unused1 );
 
-	Mem_Cleanup( false );
+	CleanupUnreferencedResources( false );
 
-	Sch_PushTask( "mem_cleanup", Mem_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
+	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
 }
 
-void Mem_Initialize( void )
+void MEM_Initialize( void )
 {
 	Print( "Initializing memory manager\n" );
+
+	MEM_InitializeCachePools();
 
 	mmReferenceList = PlCreateLinkedList();
 	if ( mmReferenceList == NULL )
 		PrintError( "Failed to create memory manager linked list!\n" );
 
-	Sch_PushTask( "mem_cleanup", Mem_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
+	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
 }
 
-void Mem_Shutdown( void )
+void MEM_Shutdown( void )
 {
 	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
 	while ( danglingReferences > 0 )
 	{
-		Mem_Cleanup( true );
+		CleanupUnreferencedResources( true );
 
 		unsigned int n = PlGetNumLinkedListNodes( mmReferenceList );
 		if ( n == danglingReferences )
@@ -82,45 +170,77 @@ void Mem_Shutdown( void )
 		PrintWarn( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
 }
 
-MemRefCnt *Mem_SetupReferenceInstance( const char *description, MemRefCnt *memHandle, MemRefCnt_CleanupFunction cleanupFunction, void *userData )
+MEMReference *MEM_SetupReferenceInstance( const char *description, MEMReference *m, MEMReference_CleanupFunction cleanupFunction, void *userData )
 {
-	snprintf( memHandle->description, sizeof( memHandle->description ), "%s", description );
+	snprintf( m->description, sizeof( m->description ), "%s", description );
 
-	memHandle->userData        = userData;
-	memHandle->cleanupFunction = cleanupFunction;
+	m->userData        = userData;
+	m->cleanupFunction = cleanupFunction;
+	m->isInitialized   = true;
 
-	PlInsertLinkedListNode( mmReferenceList, memHandle );
-	return memHandle;
+	PlInsertLinkedListNode( mmReferenceList, m );
+	return m;
 }
 
-void Mem_AddReference( MemRefCnt *v )
+void MEM_AddReference( MEMReference *m )
 {
-	v->numRefs++;
+	m->numRefs++;
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          v->description[ 0 ] == '\0' ? "unknown" : v->description,
-	          v->numRefs,
-	          v->ttl );
+	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
+	          m->numRefs,
+	          m->ttl );
 #endif
 }
 
-void Mem_ReleaseReference( MemRefCnt *v )
+void MEM_ReleaseReference( MEMReference *m )
 {
-	assert( v->numRefs > 0 );
+	assert( m->numRefs > 0 );
 
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Releasing reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          v->description[ 0 ] == '\0' ? "unknown" : v->description,
-	          v->numRefs,
-	          v->ttl );
+	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
+	          m->numRefs,
+	          m->ttl );
 #endif
 
-	v->numRefs--;
-	if ( v->numRefs <= 0 )
-		v->ttl = ( Engine_GetNumTicks() + 1024 );
+	m->numRefs--;
+	if ( m->numRefs <= 0 )
+		m->ttl = ( Engine_GetNumTicks() + 1024 );
 }
 
-int Mem_GetNumberOfReferences( const MemRefCnt *v )
+int MEM_GetNumberOfReferences( const MEMReference *m )
 {
-	return v->numRefs;
+    return m->numRefs;
+}
+
+static void MEM_CB_CleanupTempAlloc( void *userData )
+{
+	globalSystem.Free( userData );
+}
+
+/* ======================================================================
+ * Temporary Buffer Allocation
+ * ====================================================================*/
+
+/**
+ * Allocates a pool of memory that will be automatically
+ * cleaned up.
+ */
+void *MEM_TempAlloc( MEMReference *m, size_t size )
+{
+	void *buf = globalSystem.MAlloc( size, true );
+	MEM_SetupReferenceInstance( "temp", m, MEM_CB_CleanupTempAlloc, buf );
+	return buf;
+}
+
+/**
+ * Attempts to immediately free the given resource.
+ * If this isn't called, resource will be cleaned
+ * up automatically later.
+ */
+void MEM_TempFree( MEMReference *m )
+{
+	if ( !MEM_FreeReference( m, false ) )
+		PrintWarn( "Failed to cleanup temporary pool!\n" );
 }

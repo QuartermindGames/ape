@@ -101,6 +101,7 @@ extern NLErrorCode NL_GetUI16( const NLNode *node, uint16_t *dest );
 extern NLErrorCode NL_GetUI32( const NLNode *node, uint32_t *dest );
 extern NLErrorCode NL_GetUI64( const NLNode *node, uint64_t *dest );
 
+extern NLErrorCode NL_GetStrArray( NLNode *parent, const char **buf, unsigned int numElements );
 extern NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements );
 extern NLErrorCode NL_GetI16Array( NLNode *parent, int16_t *buf, unsigned int numElements );
 extern NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int numElements );

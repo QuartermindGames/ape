@@ -14,7 +14,7 @@ typedef struct BitmapFont
 	char             path[ PL_SYSTEM_MAX_PATH ];
 	unsigned int     start, end;
 
-	MemRefCnt mem;
+	MEMReference mem;
 } BitmapFont;
 
 void Font_Initialize( void );

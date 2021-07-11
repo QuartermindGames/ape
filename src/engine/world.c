@@ -60,7 +60,7 @@ typedef struct WorldMesh
 
 	PLLinkedListNode *node;
 
-	MemRefCnt mem;
+	MEMReference mem;
 } WorldMesh;
 
 typedef struct WorldObject
@@ -254,8 +254,8 @@ static WorldMesh *W_DeserializeWorldMesh( NLNode *meshNode, WorldMesh *meshPtr )
 	if ( meshPtr->drawMesh == NULL )
 		PrintError( "Failed to create internal mesh for world mesh!\n" );
 
-	Mem_SetupReferenceInstance( "world", &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
-	Mem_AddReference( &meshPtr->mem );
+	MEM_SetupReferenceInstance( "world", &meshPtr->mem, W_CB_DestroyWorldMesh, meshPtr );
+	MEM_AddReference( &meshPtr->mem );
 
 	return meshPtr;
 }
@@ -461,7 +461,7 @@ void W_ReleaseWorldMesh( WorldMesh *worldMesh )
 	if ( worldMesh == NULL )
 		return;
 
-	Mem_ReleaseReference( &worldMesh->mem );
+	MEM_ReleaseReference( &worldMesh->mem );
 }
 
 /**

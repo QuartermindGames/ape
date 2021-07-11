@@ -47,11 +47,11 @@ if(WIN32)
     include_directories(src/3rdparty/sdl2/include/)
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
+else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
-elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3")
 endif()
 
 # Get the current working branch
@@ -80,7 +80,7 @@ add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
 # external libraries
-add_subdirectory(src/3rdparty/fox-1.6.57_cmake/)
+#add_subdirectory(src/3rdparty/fox-1.6.57_cmake/)
 
 # main projects
 add_subdirectory(src/platform/plcore/)
@@ -93,7 +93,7 @@ add_subdirectory(src/engine/)
 add_subdirectory(src/game/)
 
 # tools
-add_subdirectory(src/editor/)
+#add_subdirectory(src/editor/)
 add_subdirectory(src/tests/)
 add_subdirectory(src/ycvm/)
 

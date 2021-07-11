@@ -386,43 +386,6 @@ static PLVector3 GetOriginPointFromVertices( const PLGVertex *vertices, unsigned
 	return PlgGenerateAabbFromVertices( vertices, numVertices, true ).absOrigin;
 }
 
-PLMatrix4 Map_GetPortalView( GfxCamera *camera, MapFace *source, MapFace *destination )
-{
-	/* so, this is a little awkward, but we need to figure out where each face is in the world
-	 * by averaging the vertex coords for each and then positioning the portal at each. */
-
-	typedef struct Portal
-	{
-		PLVector3 origin;
-		PLVector3 rotation;
-	} Portal;
-	Portal portals[ 2 ];
-
-	/* first, figure it out for the source */
-	unsigned int numVertices;
-	PLGVertex *  vertices;
-
-	vertices            = PlgGetPolygonVertices( source->polygon, &numVertices );
-	portals[ 0 ].origin = GetOriginPointFromVertices( vertices, numVertices );
-
-	vertices            = PlgGetPolygonVertices( destination->polygon, &numVertices );
-	portals[ 1 ].origin = GetOriginPointFromVertices( vertices, numVertices );
-
-	R_DrawAxesPivot( portals[ 0 ].origin, portals[ 1 ].rotation );
-	R_DrawAxesPivot( portals[ 1 ].origin, portals[ 1 ].rotation );
-
-#if 0
-	plMatrixMode( PL_MODELVIEW_MATRIX );
-	plPushMatrix();
-
-	plRotateMatrix( 180.0f, 0.0f, 1.0f, 0.0f );
-
-	plPopMatrix();
-
-	return *PlGetMatrix( PL_MODELVIEW_MATRIX );
-#endif
-}
-
 void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
 {
 	for ( unsigned int i = 0; i < mapData.numMaterials; ++i )

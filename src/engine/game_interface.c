@@ -126,9 +126,12 @@ void Game_Initialize( void )
 	if ( GetDllInterface == NULL )
 		PrintError( "Failed to fetch \"" INTERFACE_PROCEDURE "\" from game module, aborting!\nPL: %s\n", PlGetError() );
 
-	PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
-
 	/* initialize the interface */
+	//globalGame = GetDllInterface( GAME_INTERFACE_VERSION, &globalSystem, &globalEngine );
+
+    Act_Initialize();
+
+    PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 }
 
 void Game_Shutdown( void )

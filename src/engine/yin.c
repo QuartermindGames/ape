@@ -145,10 +145,10 @@ static bool Engine_Initialize( int argc, char **argv )
 	CPUTimer_Initialize();
 	Con_Initialize();
 	Sch_Initialize();
-	Mem_Initialize();
+	MEM_Initialize();
 	CL_Initialize();
+
 	Game_Initialize();
-	Act_Initialize();
 
 	Print( "Initialization complete!\n" );
 
@@ -165,7 +165,7 @@ void Engine_Shutdown( void )
 	Act_Shutdown();
 	CL_Shutdown();
 	Con_Shutdown();
-	Mem_Shutdown();
+	MEM_Shutdown();
 
 	globalSystem.Shutdown();
 }

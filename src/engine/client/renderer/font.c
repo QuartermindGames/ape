@@ -154,8 +154,14 @@ static void Font_CB_DestroyBitmap( void *userData )
 
 BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	BitmapFont *font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
+	BitmapFont *font = MEM_GetCachedData( materialPath, MEM_CACHE_FONT );
+	if ( font != NULL )
+	{
+		MEM_AddReference( &font->mem );
+		return font;
+	}
 
+	font           = globalSystem.MAlloc( sizeof( BitmapFont ), true );
 	font->material = RM_CacheMaterial( materialPath, 0, false );
 	if ( font->material == NULL )
 		PrintError( "Failed to load font material \"%s\"!\n", materialPath );
@@ -173,15 +179,17 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	Mem_SetupReferenceInstance( "bitmapFont", &font->mem, Font_CB_DestroyBitmap, font );
-	Mem_AddReference( &font->mem );
+	MEM_SetupReferenceInstance( "bitmapFont", &font->mem, Font_CB_DestroyBitmap, font );
+	MEM_AddReference( &font->mem );
+
+	MEM_CacheData( materialPath, MEM_CACHE_FONT, font );
 
 	return font;
 }
 
 void Font_ReleaseBitmap( BitmapFont *font )
 {
-	Mem_ReleaseReference( &font->mem );
+	MEM_ReleaseReference( &font->mem );
 }
 
 BitmapFont *Font_GetDefault( void )

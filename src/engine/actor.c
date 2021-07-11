@@ -247,15 +247,15 @@ void Act_DrawActors( void )
 
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
 		PlgDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
-		PlgDrawBoundingVolume( &PLCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
+		PlgDrawBoundingVolume( &PlSetupCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
 
 		PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
 		while ( colliderNode != NULL )
 		{
 			MapFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
-			PLCollisionPlane plane     = PLCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
-			PLCollision      collision = PlIsSphereIntersectingPlane( &PLCollisionSphere( absOrigin, 16.0f ), &plane );
+			PLCollisionPlane plane     = PlSetupCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
+			PLCollision      collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( absOrigin, 16.0f ), &plane );
 			if ( collision.penetration > 0.0f )
 			{
 				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );

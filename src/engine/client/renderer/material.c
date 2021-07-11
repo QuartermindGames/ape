@@ -41,7 +41,7 @@ typedef struct Material
 	unsigned int      numPasses;
 	PLLinkedListNode *node;
 
-	MemRefCnt mem;
+	MEMReference mem;
 } Material;
 
 static Material *fallbackMaterial;
@@ -474,7 +474,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	Material *material = RM_GetMaterial( path, group );
 	if ( material != NULL )
 	{
-		Mem_AddReference( &material->mem );
+		MEM_AddReference( &material->mem );
 		return material;
 	}
 
@@ -505,8 +505,8 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	ConvertMatToNode( material );
 #endif
 
-	Mem_SetupReferenceInstance( "material", &material->mem, RM_CB_DestroyMaterial, material );
-	Mem_AddReference( &material->mem );
+	MEM_SetupReferenceInstance( "material", &material->mem, RM_CB_DestroyMaterial, material );
+	MEM_AddReference( &material->mem );
 
 	return material;
 }
@@ -514,7 +514,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 void RM_ReleaseMaterial( Material *material )
 {
 	u_assert( material != NULL );
-	Mem_ReleaseReference( &material->mem );
+	MEM_ReleaseReference( &material->mem );
 }
 
 void RM_ClearMaterials( CacheGroup group )

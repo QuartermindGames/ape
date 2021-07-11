@@ -277,6 +277,25 @@ NLErrorCode NL_GetUI64( const NLNode *node, uint64_t *dest )
 	return NL_ERROR_SUCCESS;
 }
 
+NLErrorCode NL_GetStrArray( NLNode *parent, const char **buf, unsigned int numElements )
+{
+	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_STR )
+		return NL_ERROR_INVALID_TYPE;
+
+	NLNode *child = NL_GetFirstChild( parent );
+	for ( unsigned int i = 0; i < numElements; ++i )
+    {
+		if ( child == NULL )
+			return NL_ERROR_INVALID_ELEMENTS;
+
+		buf[ i ] = child->data.strBuf;
+
+		child = NL_GetNextChild( child );
+	}
+
+	return NL_ERROR_SUCCESS;
+}
+
 NLErrorCode NL_GetI8Array( NLNode *parent, int8_t *buf, unsigned int numElements )
 {
 	if ( parent->type != NL_PROP_ARRAY || parent->childType != NL_PROP_I8 )
@@ -410,7 +429,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 	/* arrays are special cases */
 	if ( parent != NULL && parent->type == NL_PROP_ARRAY && propertyType != parent->childType )
 	{
-		NL_SetErrorMessage( NL_ERROR_INVALID_TYPE, "Attempted to add " );
+		NL_SetErrorMessage( NL_ERROR_INVALID_TYPE, "attempted to add invalid type" );
 		return NULL;
 	}
 

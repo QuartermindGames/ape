@@ -5,7 +5,7 @@ Project Yin, Changelog
 v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
 -----------------------------------------------------------------
     - 'platform' has been split up into 'plcore', 'plgraphics' and 'plmodel'
-    - 'yin' has been split up into 'libcommon', 'launcher_sdl2', 'game' and 'engine'
+    - 'yin' has been split up into 'common', 'launcher_sdl2', 'game' and 'engine'
     - Binaries are now under runtime/<platform>/
     - Console interface, which can be pulled down via ` key
     - .node configuration language, for both serialisation and deserialisation
@@ -15,7 +15,7 @@ v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
         ~ Introduced 'pkgman' command-line utility for packaging content
     - Automatic garbage collection based on references
     - Scheduler, allowing multiple concurrent background events
-    - Introduced first interation of Yin World Editor
+    - Introduced first iteration of Yin World Editor
     - New World format for storing sectors, portals, level meshes and more
     - Significant improvements to collisions since last version (i.e. they exist now)
     - Audio via SDL2 Audio

@@ -17,6 +17,61 @@ static PLMModel *MLD_ConvertNodeModelToPlatformModel( NLNode *root )
 	/* todo */
 }
 
+void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
+{
+	NLNode *node = NL_PushBackObj( parent, "mesh" );
+
+	NL_PushBackI32( node, "materialIndex", mesh->materialIndex );
+
+	NLNode *vertexArray = NL_PushBackObjArray( node, "vertices" );
+	for ( uint32_t j = 0; j < mesh->num_verts; ++j )
+	{
+		NLNode *vertex = NL_PushBackObj( vertexArray, "vertex" );
+
+		NLNode *vertexChild;
+		vertexChild = NL_PushBackObj( vertex, "position" );
+		{
+			NL_PushBackF32( vertexChild, "x", mesh->vertices[ j ].position.x );
+			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].position.y );
+			NL_PushBackF32( vertexChild, "z", mesh->vertices[ j ].position.z );
+		}
+		vertexChild = NL_PushBackObj( vertex, "textureCoords" );
+		{
+			NL_PushBackF32( vertexChild, "u", mesh->vertices[ j ].st[ 0 ].x );
+			NL_PushBackF32( vertexChild, "v", mesh->vertices[ j ].st[ 0 ].y );
+		}
+		if ( !PlCompareVector3( &mesh->vertices[ j ].normal, &pl_vecOrigin3 ) )
+		{
+			vertexChild = NL_PushBackObj( vertex, "normal" );
+			NL_PushBackF32( vertexChild, "x", mesh->vertices[ j ].normal.x );
+			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].normal.y );
+			NL_PushBackF32( vertexChild, "z", mesh->vertices[ j ].normal.z );
+		}
+		if ( !PlCompareColour( mesh->vertices[ j ].colour, PLColour( 255, 255, 255, 255 ) ) )
+		{
+			vertexChild = NL_PushBackObj( vertex, "colour" );
+			NL_PushBackI8( vertexChild, "r", mesh->vertices[ j ].colour.r );
+			NL_PushBackI8( vertexChild, "g", mesh->vertices[ j ].colour.g );
+			NL_PushBackI8( vertexChild, "b", mesh->vertices[ j ].colour.b );
+			NL_PushBackI8( vertexChild, "a", mesh->vertices[ j ].colour.a );
+		}
+		if ( mesh->vertices[ j ].bone_weight != 0.0f )
+		{
+			NL_PushBackF32( vertex, "boneWeight", mesh->vertices[ j ].bone_weight );
+			NL_PushBackI32( vertex, "boneIndex", mesh->vertices[ j ].bone_index );
+		}
+	}
+
+	/* todo: this makes a rather crude assumption that all loaded meshes are
+     *  made up of triangles... */
+	NLNode *triangleArray = NL_PushBackObjArray( node, "faces" );
+	for ( uint32_t j = 0; j < mesh->num_indices; j += 3 )
+	{
+		NLNode *face = NL_PushBackObj( triangleArray, "face" );
+		NL_PushBackI32Array( face, "indices", ( int32_t * ) ( mesh->indices + j ), 3 );
+	}
+}
+
 NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model )
 {
 	NLNode *root = NL_PushBackObj( NULL, "model" );
@@ -25,60 +80,7 @@ NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model )
 
 	NLNode *meshArray = NL_PushBackObjArray( root, "meshes" );
 	for ( uint8_t i = 0; i < model->numMeshes; ++i )
-	{
-		NLNode *mesh = NL_PushBackObj( meshArray, "mesh" );
-		{
-			NL_PushBackI32( mesh, "materialIndex", model->meshes[ i ]->materialIndex );
-
-			NLNode *vertexArray   = NL_PushBackObjArray( mesh, "vertices" );
-			for ( uint32_t j = 0; j < model->meshes[ i ]->num_verts; ++j )
-            {
-                NLNode *vertex = NL_PushBackObj( vertexArray, "vertex" );
-                {
-                    NLNode *vertexChild;
-                    vertexChild = NL_PushBackObj( vertex, "position" );
-                    {
-                        NL_PushBackF32( vertexChild, "x", model->meshes[ i ]->vertices[ j ].position.x );
-                        NL_PushBackF32( vertexChild, "y", model->meshes[ i ]->vertices[ j ].position.y );
-                        NL_PushBackF32( vertexChild, "z", model->meshes[ i ]->vertices[ j ].position.z );
-                    }
-                    if ( !PlCompareVector3( &model->meshes[ i ]->vertices[ j ].normal, &pl_vecOrigin3 ) )
-                    {
-                        vertexChild = NL_PushBackObj( vertex, "normal" );
-                        {
-                            NL_PushBackF32( vertexChild, "x", model->meshes[ i ]->vertices[ j ].normal.x );
-                            NL_PushBackF32( vertexChild, "y", model->meshes[ i ]->vertices[ j ].normal.y );
-                            NL_PushBackF32( vertexChild, "z", model->meshes[ i ]->vertices[ j ].normal.z );
-                        }
-                    }
-                    if ( !PlCompareColour( model->meshes[ i ]->vertices[ j ].colour, PLColour( 255, 255, 255, 255 ) ) )
-                    {
-                        vertexChild = NL_PushBackObj( vertex, "colour" );
-                        {
-                            NL_PushBackI8( vertexChild, "r", model->meshes[ i ]->vertices[ j ].colour.r );
-                            NL_PushBackI8( vertexChild, "g", model->meshes[ i ]->vertices[ j ].colour.g );
-                            NL_PushBackI8( vertexChild, "b", model->meshes[ i ]->vertices[ j ].colour.b );
-                            NL_PushBackI8( vertexChild, "a", model->meshes[ i ]->vertices[ j ].colour.a );
-                        }
-                    }
-                    if ( model->meshes[ i ]->vertices[ j ].bone_weight != 0.0f )
-                    {
-                        NL_PushBackF32( vertex, "boneWeight", model->meshes[ i ]->vertices[ j ].bone_weight );
-                        NL_PushBackI32( vertex, "boneIndex", model->meshes[ i ]->vertices[ j ].bone_index );
-                    }
-                }
-			}
-
-			/* todo: this makes a rather crude assumption that all loaded meshes are
-			 *  made up of triangles... */
-			NLNode *triangleArray = NL_PushBackObjArray( mesh, "faces" );
-			for ( uint32_t j = 0; j < model->meshes[ i ]->num_indices; j += 3 )
-			{
-				NLNode *face = NL_PushBackObj( triangleArray, "face" );
-				NL_PushBackI32Array( face, "indices", ( int32_t * ) ( model->meshes[ i ]->indices + j ), 3 );
-			}
-		}
-	}
+		MDL_SerializePlatformMesh( meshArray, model->meshes[ i ] );
 
 	return root;
 }
@@ -578,77 +580,77 @@ static unsigned int GetTypeForToken( const char *p )
 
 static PLMModel *ParseFile( const char *p )
 {
-    char token[ 64 ];
-    if ( PlParseToken( &p, token, sizeof( token ) ) == NULL )
-        Error( "Failed to parse identifier!\n" );
+	char token[ 64 ];
+	if ( PlParseToken( &p, token, sizeof( token ) ) == NULL )
+		Error( "Failed to parse identifier!\n" );
 
-    if ( strncmp( token, "ply", 3 ) != 0 )
-        Error( "Unexpected identifier, \"%s\"!\n", token );
+	if ( strncmp( token, "ply", 3 ) != 0 )
+		Error( "Unexpected identifier, \"%s\"!\n", token );
 
-    PLYHeader header;
-    memset( &header, 0, sizeof( PLYHeader ) );
+	PLYHeader header;
+	memset( &header, 0, sizeof( PLYHeader ) );
 
-    /* parse the header */
-    while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
-    {
-        if ( strcmp( token, "comment" ) == 0 )
-        {
-            PlSkipLine( &p );
-            continue;
-        }
-        else if ( strcmp( token, "format" ) == 0 )
-        {
-            /* ensure the format is what we support */
-            PlParseToken( &p, token, sizeof( token ) );
-            if ( strcmp( token, "ascii" ) != 0 )
-                Error( "Unexpected format, \"%s\"!\n", token );
+	/* parse the header */
+	while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
+	{
+		if ( strcmp( token, "comment" ) == 0 )
+		{
+			PlSkipLine( &p );
+			continue;
+		}
+		else if ( strcmp( token, "format" ) == 0 )
+		{
+			/* ensure the format is what we support */
+			PlParseToken( &p, token, sizeof( token ) );
+			if ( strcmp( token, "ascii" ) != 0 )
+				Error( "Unexpected format, \"%s\"!\n", token );
 
-            PlParseToken( &p, token, sizeof( token ) );
-            if ( strcmp( token, "1.0" ) != 0 )
-                Error( "Unexpected version, \"%s\"!\n", token );
+			PlParseToken( &p, token, sizeof( token ) );
+			if ( strcmp( token, "1.0" ) != 0 )
+				Error( "Unexpected version, \"%s\"!\n", token );
 
-            PlSkipLine( &p );
-            continue;
-        }
-        else if ( strcmp( token, "element" ) == 0 )
-        {
-            PlParseToken( &p, token, sizeof( token ) );
-            if ( strcmp( token, "vertex" ) == 0 )
-            {
-                header.numVertices = PlParseInteger( &p, NULL );
-                if ( header.numVertices == 0 )
-                    break;
+			PlSkipLine( &p );
+			continue;
+		}
+		else if ( strcmp( token, "element" ) == 0 )
+		{
+			PlParseToken( &p, token, sizeof( token ) );
+			if ( strcmp( token, "vertex" ) == 0 )
+			{
+				header.numVertices = PlParseInteger( &p, NULL );
+				if ( header.numVertices == 0 )
+					break;
 
-                header.vertices = calloc( header.numVertices, sizeof( PLGVertex ) );
+				header.vertices = calloc( header.numVertices, sizeof( PLGVertex ) );
 
-                PlSkipLine( &p );
-                while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
-                {
-                    if ( strcmp( token, "property" ) != 0 )
-                        break;
+				PlSkipLine( &p );
+				while ( PlParseToken( &p, token, sizeof( token ) ) != NULL )
+				{
+					if ( strcmp( token, "property" ) != 0 )
+						break;
 
-                    PlParseToken( &p, token, sizeof( token ) );
-                    unsigned int type = GetTypeForToken( token );
-                    if ( type == PLY_VAR_INVALID )
-                        Error( "Unexpected variable type, \"%s\"!\n", token );
-                }
-            }
-            else if ( strcmp( token, "face" ) == 0 )
-            {
-            }
-            else
-                Error( "Unexpected element type, \"%s\"!\n", token );
+					PlParseToken( &p, token, sizeof( token ) );
+					unsigned int type = GetTypeForToken( token );
+					if ( type == PLY_VAR_INVALID )
+						Error( "Unexpected variable type, \"%s\"!\n", token );
+				}
+			}
+			else if ( strcmp( token, "face" ) == 0 )
+			{
+			}
+			else
+				Error( "Unexpected element type, \"%s\"!\n", token );
 
-            PlSkipLine( &p );
-            continue;
-        }
-    }
+			PlSkipLine( &p );
+			continue;
+		}
+	}
 
-    if ( header.numFaces == 0 || header.faces == NULL )
-        Error( "No faces outlined in ply header!\n" );
+	if ( header.numFaces == 0 || header.faces == NULL )
+		Error( "No faces outlined in ply header!\n" );
 
-    if ( header.numVertices == 0 || header.vertices == NULL )
-        Error( "No vertices outlined in ply header!\n" );
+	if ( header.numVertices == 0 || header.vertices == NULL )
+		Error( "No vertices outlined in ply header!\n" );
 }
 
 PLMModel *MDL_PLY_LoadFile( const char *path )
