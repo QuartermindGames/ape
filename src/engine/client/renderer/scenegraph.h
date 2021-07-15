@@ -1,7 +1,8 @@
-/* ======================================================================
- * Project Yin, Confidential
+/**
+ * Yin Game Engine
  * Copyright (C) 2020-2021 Mark E Sowden <hogsy@oldtimes-software.com>
- * ====================================================================*/
+ * This software is closed-source, do not publish without express permission.
+ */
 
 #pragma once
 
@@ -13,6 +14,8 @@ enum SGNodeType
 
 	SG_NODE_TYPE_ACTOR, /* actors exist under the sectors */
 	SG_NODE_TYPE_LIGHT, /* and these, typically, also exist under the sectors */
+	SG_NODE_TYPE_PARTICLE_EMITTER,
+	SG_NODE_TYPE_PARTICLE,
 };
 
 /**
@@ -24,8 +27,18 @@ typedef struct SGTransform
 	PLVector3    scale;
 	PLQuaternion rotation;
 } SGTransform;
+#define SG_InitializeTransform( TRANSFORM ) memset( ( TRANSFORM ), 0, sizeof( SGTransform ) )
 
 typedef struct SGNode SGNode;
+
+/* ======================================================================
+ * Serialisation/Deserialisation
+ * ====================================================================*/
+
+SGTransform *SG_DS_Transform( struct NLNode *root, const char *childName, SGTransform *out );
+
+/* ======================================================================
+ * ====================================================================*/
 
 void SG_Initialize( void );
 

@@ -130,6 +130,8 @@ void Font_Draw( BitmapFont *font )
 void Font_Initialize( void )
 {
 	defaultFont = Font_CacheBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
+	if ( defaultFont == NULL )
+		PrintError( "Failed to load default font!\n" );
 }
 
 void Font_Shutdown( void )
@@ -161,21 +163,30 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return font;
 	}
 
-	font           = globalSystem.MAlloc( sizeof( BitmapFont ), true );
-	font->material = RM_CacheMaterial( materialPath, 0, false );
-	if ( font->material == NULL )
-		PrintError( "Failed to load font material \"%s\"!\n", materialPath );
+	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
+	if ( mesh == NULL )
+	{
+		PrintWarn( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
+		return NULL;
+	}
 
-	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
-	if ( font->mesh == NULL )
-		PrintError( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
+	Material *material = RM_CacheMaterial( materialPath, 0, false );
+	if ( material == NULL )
+	{
+		PlgDestroyMesh( mesh );
+		PrintWarn( "Failed to load font material \"%s\"!\n", materialPath );
+		return NULL;
+	}
 
-	font->w     = w;
-	font->h     = h;
-	font->cw    = cw;
-	font->ch    = ch;
-	font->start = start;
-	font->end   = end;
+	font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
+	font->material = material;
+	font->mesh     = mesh;
+	font->w        = w;
+	font->h        = h;
+	font->cw       = cw;
+	font->ch       = ch;
+	font->start    = start;
+	font->end      = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 

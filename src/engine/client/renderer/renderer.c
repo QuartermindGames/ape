@@ -13,6 +13,7 @@
 #include "world.h"
 #include "game_interface.h"
 #include "renderer.h"
+#include "particle.h"
 
 #include "client/sgui.h"
 
@@ -548,7 +549,7 @@ void R_DrawMenu( void )
 				}
 			}
 
-			Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+			Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
 			                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 		}
 	}
@@ -557,7 +558,7 @@ void R_DrawMenu( void )
 
 	PlPopMatrix();
 
-	Menu_Draw();
+	Menu_Draw( &auxCamera->viewport );
 	Con_Draw( &auxCamera->viewport );
 
 	PlgSetDepthMask( true );
@@ -601,9 +602,15 @@ static void R_RenderScene( PLGCamera *camera, bool smPass )
 	if ( player != NULL )
 		curSector = Act_GetWorldSector( player );
 
-	W_Draw( camera, NULL, curSector );
+	/* todo:	
+		this needs to be restructured, as drawing is going to
+		depend on whatever sector is currently being drawn.
+		but for v2, this'll suffice...
+	*/
 
+	W_Draw( camera, NULL, curSector );
 	Act_DrawActors();
+	PS_Draw( camera );
 }
 
 static void R_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )

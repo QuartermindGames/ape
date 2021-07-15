@@ -5,6 +5,7 @@
 
 #include "yin.h"
 #include "scenegraph.h"
+#include "common/node.h"
 
 typedef struct SGNode
 {
@@ -17,6 +18,25 @@ typedef struct SGNode
 
 static PLLinkedList *    sceneGraph = NULL;
 static PLLinkedListNode *rootNode   = NULL;
+
+SGTransform *SG_DS_Transform( NLNode *root, const char *childName, SGTransform *out )
+{
+	SG_InitializeTransform( out );
+
+	NLNode *child = NL_GetChildByName( root, childName );
+	if ( child == NULL )
+		return NULL;
+
+	NLNode *n;
+	if ( ( n = NL_GetChildByName( child, "rotation" ) ) != NULL )
+		NL_DS_DeserializeQuaternion( n, &out->rotation );
+	if ( ( n = NL_GetChildByName( child, "scale" ) ) != NULL )
+		NL_DS_DeserializeVector3( n, &out->scale );
+	if ( ( n = NL_GetChildByName( child, "translation" ) ) != NULL )
+		NL_DS_DeserializeVector3( n, &out->translation );
+
+	return out;
+}
 
 void SG_Initialize( void )
 {
