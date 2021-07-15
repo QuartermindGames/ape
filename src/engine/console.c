@@ -115,12 +115,14 @@ CMD_CALLBACK( OSCommand )
 #define USER_CONFIG "user" NL_DEFAULT_EXTENSION
 static char configPath[ PL_SYSTEM_MAX_PATH ];
 
+static void SaveUserConfig( void );
 static void LoadUserConfig( void )
 {
 	NLNode *root = NL_LoadFile( configPath, "config" );
 	if ( root == NULL )
 	{
-		PrintWarn( "Failed to load user config: %s!\n", NL_GetErrorMessage() );
+		Print( "No existing user config, generating default.\n" );
+		SaveUserConfig();
 		return;
 	}
 
@@ -309,14 +311,14 @@ bool Con_HandleTextEvent( const char *key )
 
 bool Con_HandleKeyboardEvent( int key, unsigned int keyState )
 {
-	if ( keyState == INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
+	if ( keyState == INPUT_STATE_PRESSED && ( key == '`' || key == '~' ) )
 	{
 		ToggleConsole();
 		return true;
 	}
 
 	/* only do anything if the console is open */
-	if ( !Con_GetState() || keyState != INPUT_STATE_DOWN && keyState != INPUT_STATE_PRESSING )
+	if ( !Con_GetState() || keyState != INPUT_STATE_PRESSED && keyState != INPUT_STATE_DOWN )
 		return false;
 
 	switch ( key )
@@ -435,11 +437,11 @@ void Con_Draw( const PLGViewport *viewport )
 			{
 				unsigned int nl = pl_strncnt( outputBuffer.lines[ i - 1 ].buffer, '\n', CON_BUFFER_MAX_LENGTH );
 				for ( unsigned int j = 0; j < nl; ++j )
-					y -= 12.0f;
+					y -= consoleFont->ch;
 			}
 
 			/* and make sure we don't go off screen */
-			if ( y <= -12.0f )
+			if ( y <= -consoleFont->ch )
 				break;
 		}
 

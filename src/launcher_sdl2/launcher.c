@@ -124,22 +124,22 @@ void Sys_SwapWindow( OSWindow *windowPtr )
  * INPUT MANAGEMENT
  ****************************************/
 
-static uint8_t buttonStates[ MAX_BUTTON_INPUTS ];
-bool           Sys_GetButtonState( InputButton buttonIndex )
+static OSInputState buttonStates[ MAX_BUTTON_INPUTS ];
+OSInputState        Sys_GetButtonState( InputButton buttonIndex )
 {
 	if ( buttonIndex >= MAX_BUTTON_INPUTS )
-		return false;
+		return INPUT_STATE_NONE;
 
-	return ( ( buttonStates[ buttonIndex ] == INPUT_STATE_PRESSING ) || ( buttonStates[ buttonIndex ] == INPUT_STATE_DOWN ) );
+	return buttonStates[ buttonIndex ];
 }
 
-static uint8_t keyStates[ MAX_KEY_INPUTS ];
-bool           Sys_GetKeyState( int keyIndex )
+static OSInputState keyStates[ MAX_KEY_INPUTS ];
+OSInputState        Sys_GetKeyState( int keyIndex )
 {
 	if ( keyIndex >= MAX_KEY_INPUTS )
-		return false;
+		return INPUT_STATE_NONE;
 
-	return ( ( keyStates[ keyIndex ] == INPUT_STATE_PRESSING ) || ( keyStates[ keyIndex ] == INPUT_STATE_DOWN ) );
+	return keyStates[ keyIndex ];
 }
 
 static int Sys_TranslateSDLKeyInput( int key )
@@ -237,7 +237,6 @@ static void Sys_HandleTextEvent( const char *key )
 
 static void Sys_HandleKeyboardEvent( int key, bool isDown )
 {
-	key = Sys_TranslateSDLKeyInput( key );
 	if ( key == KEY_INVALID )
 	{
 		PrintWarn( "Unhandled key, %d\n", key );
@@ -245,25 +244,24 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown )
 	}
 
 	/* figure out what state the key is in now */
-
-	if ( keyStates[ key ] == INPUT_STATE_DOWN && isDown )
-		keyStates[ key ] = INPUT_STATE_PRESSING;
-	else if ( keyStates[ key ] == INPUT_STATE_DOWN && !isDown )
-		keyStates[ key ] = INPUT_STATE_UP;
+	if ( keyStates[ key ] == INPUT_STATE_PRESSED && isDown )
+		keyStates[ key ] = INPUT_STATE_DOWN;
+	else if ( keyStates[ key ] == INPUT_STATE_PRESSED && !isDown )
+		keyStates[ key ] = INPUT_STATE_RELEASED;
 
 	switch ( keyStates[ key ] )
 	{
+		case INPUT_STATE_PRESSED:
+			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_RELEASED;
+			break;
+		case INPUT_STATE_RELEASED:
+			keyStates[ key ] = isDown ? INPUT_STATE_PRESSED : INPUT_STATE_NONE;
+			break;
 		case INPUT_STATE_DOWN:
-			keyStates[ key ] = isDown ? INPUT_STATE_PRESSING : INPUT_STATE_UP;
-			break;
-		case INPUT_STATE_UP:
-			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_NONE;
-			break;
-		case INPUT_STATE_PRESSING:
-			keyStates[ key ] = isDown ? INPUT_STATE_PRESSING : INPUT_STATE_UP;
+			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_RELEASED;
 			break;
 		case INPUT_STATE_NONE:
-			keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_UP;
+			keyStates[ key ] = isDown ? INPUT_STATE_PRESSED : INPUT_STATE_RELEASED;
 			break;
 	}
 
@@ -465,13 +463,26 @@ int Sys_Init( int argc, char **argv )
 			{
 				case SDL_USEREVENT:
 					g_engine.Tick();
+
+#if 0
+					/* hack: need to update state to down if pressed */
+					for ( unsigned int i = 0; i < MAX_KEY_INPUTS; ++i )
+					{
+						if ( keyStates[ i ] != INPUT_STATE_PRESSED )
+							continue;
+
+						Sys_HandleKeyboardEvent( i, true );
+					}
+#endif
 					break;
+
 				case SDL_TEXTINPUT:
 					Sys_HandleTextEvent( event.text.text );
 					break;
+
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
-					Sys_HandleKeyboardEvent( event.key.keysym.sym, ( event.type == SDL_KEYDOWN ) );
+					Sys_HandleKeyboardEvent( Sys_TranslateSDLKeyInput( event.key.keysym.sym ), ( event.type == SDL_KEYDOWN ) );
 					break;
 
 				case SDL_WINDOWEVENT:
@@ -479,8 +490,9 @@ int Sys_Init( int argc, char **argv )
 					if ( sdlWindow != NULL && !( event.window.windowID == SDL_GetWindowID( sdlWindow ) ) )
 						break;
 
-					switch ( event.window.type )
+					switch ( event.window.event )
 					{
+						case SDL_WINDOWEVENT_RESIZED:
 						case SDL_WINDOWEVENT_SIZE_CHANGED:
 							SDL_GL_GetDrawableSize( sdlWindow, &osViewport.w, &osViewport.h );
 							break;

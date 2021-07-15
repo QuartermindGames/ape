@@ -87,13 +87,13 @@ typedef enum InputKey
 	MAX_KEY_INPUTS
 } InputKey;
 
-enum
+typedef enum OSInputState
 {
 	INPUT_STATE_NONE,     /* key has no state */
-	INPUT_STATE_DOWN,     /* key has been pressed */
-	INPUT_STATE_PRESSING, /* key is still down */
-	INPUT_STATE_UP,       /* key is up */
-};
+	INPUT_STATE_PRESSED,  /* key has been pressed */
+	INPUT_STATE_DOWN,     /* key is still down */
+	INPUT_STATE_RELEASED, /* key is up */
+} OSInputState;
 
 typedef enum SysMessage
 {

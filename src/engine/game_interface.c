@@ -8,6 +8,7 @@
 #include "actor.h"
 #include "world.h"
 
+#include "client/sgui.h"
 #include "client/renderer/renderer.h"
 
 /* game specific implementation goes here! */
@@ -43,6 +44,8 @@ Actor *Game_GetPlayer( void )
 
 void Game_Tick( void )
 {
+	Menu_Tick();
+
 	if ( gameState == GAME_STATE_PAUSED )
 	{
 		if ( globalSystem.GetKeyState( 'z' ) )

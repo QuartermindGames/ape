@@ -25,6 +25,7 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         client/renderer/flare.c
         client/renderer/font.c
         client/renderer/material.c
+        client/renderer/particle.c
         client/renderer/renderer.c
         client/renderer/scenegraph.c
         client/renderer/shaders.c

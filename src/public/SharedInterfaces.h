@@ -34,8 +34,8 @@ typedef struct OSSystemInterface
 	OSViewport *viewport;
 
 	/* input */
-	bool ( *GetButtonState )( InputButton inputIndex );
-	bool ( *GetKeyState )( int keyIndex );
+	OSInputState ( *GetButtonState )( InputButton inputIndex );
+	OSInputState ( *GetKeyState )( int keyIndex );
 
 	/* timers */
 	uint64_t ( *GetPerformanceCounter )( void );

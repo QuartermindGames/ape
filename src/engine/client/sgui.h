@@ -10,4 +10,4 @@
 
 void Menu_Initialize( void );
 void Menu_Tick( void );
-void Menu_Draw( void );
+void Menu_Draw( const struct PLGViewport *viewport );
