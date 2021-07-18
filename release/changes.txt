@@ -13,7 +13,9 @@ v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
     - Discord integration (currently disabled)
     - WAD replaced with new 'pkg' format, with support for compression
         ~ Introduced 'pkgman' command-line utility for packaging content
-    - Automatic garbage collection based on references
+    - New memory manager
+        ~ Automatic garbage collection based on references
+        ~ Debugging functionality for tracking memory usage
     - Scheduler, allowing multiple concurrent background events
     - Introduced first iteration of Yin World Editor
     - New World format for storing sectors, portals, level meshes and more
@@ -36,6 +38,7 @@ v2.0.0 [2021-09-xx] (aka, Space Ranger: Asteroid Attack)
     - There's now support for variably sized bitmap-based fonts
     - Toggable debug overlays are now available for profiling
     - Actors are now spawned by an id string, rather than by index
+    - Simple particle system
 
 v1.0.0 [2020-04-15] (aka, Buddy's Adventure)
 -----------------------------------------------------------------

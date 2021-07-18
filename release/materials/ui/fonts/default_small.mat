@@ -1,0 +1,5 @@
+material
+pass default
+blend src_alpha one_minus_src_alpha
+var texture diffuseMap materials/ui/fonts/default_small.png
+end
