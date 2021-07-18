@@ -102,26 +102,8 @@ static PLFileSystemMount *gamePackages[ MAX_GAME_PACKAGES ];
 
 int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
-static bool Engine_Initialize( int argc, char **argv )
+static void Engine_SetupFileSystem( void )
 {
-	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	LOG_LEVEL_WARN  = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_INFO  = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
-
-	Print( "Yin Engine (%s), Copyright (C) 2020-2021 Mark E Sowden\n", ENGINE_VERSION_STR );
-
-	PlRegisterStandardPackageLoaders();
-	PlRegisterPackageLoader( "pkg", Pkg_LoadPackage );
-
-	Print( "Registering plugins...\n" );
-
-	PlRegisterPlugins( "./" );
-	PlInitializePlugins();
-
-	/* todo: move into launcher */
-	PlgInitializeGraphics();
-	PlgScanForDrivers( "./" );
-
 	Print( "Mounting VFS locations...\n" );
 
 	PlMountLocalLocation( ComFS_GetDataDirectory() );
@@ -137,6 +119,20 @@ static bool Engine_Initialize( int argc, char **argv )
 
 		break;
 	}
+}
+
+static bool Engine_Initialize( int argc, char **argv )
+{
+	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	LOG_LEVEL_WARN  = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_INFO  = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+
+	Print( "Yin Engine (%s), Copyright (C) 2020-2021 Mark E Sowden\n", ENGINE_VERSION_STR );
+
+	PlRegisterStandardPackageLoaders();
+	PlRegisterPackageLoader( "pkg", Pkg_LoadPackage );
+
+	Engine_SetupFileSystem();
 
 	PlmRegisterModelLoader( "node", MDL_CacheModel );
 
@@ -166,6 +162,8 @@ void Engine_Shutdown( void )
 	CL_Shutdown();
 	Con_Shutdown();
 	MEM_Shutdown();
+
+	PlClearMountedLocations();
 
 	globalSystem.Shutdown();
 }
@@ -209,10 +207,13 @@ static bool Engine_IsRunning( void )
  ****************************************/
 
 bool Con_HandleKeyboardEvent( int key, unsigned int keyState );
+bool Menu_HandleKeyboardEvent( int key, OSInputState keyState );
 
 static void Engine_HandleKeyboardEvent( int key, unsigned int keyState )
 {
 	if ( Con_HandleKeyboardEvent( key, keyState ) )
+		return;
+	if ( Menu_HandleKeyboardEvent( key, keyState ) )
 		return;
 }
 

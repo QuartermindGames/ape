@@ -108,6 +108,13 @@ CMD_CALLBACK( OSCommand )
 		PrintWarn( "Failed to issue command, an error occurred!\n" );
 }
 
+CMD_CALLBACK( Version )
+{
+	u_unused( argc );
+	u_unused( argv );
+	Print( "Version: v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n" );
+}
+
 /*------------------------------------------------------------------*/
 
 #include "common/node.h"
@@ -127,7 +134,7 @@ static void LoadUserConfig( void )
 	}
 
 #if !defined( NDEBUG )
-	NL_PrintNodeTree( root, 0 );
+	//NL_PrintNodeTree( root, 0 );
 #endif
 
 	/* now iterate through the list and update all our children */
@@ -178,7 +185,7 @@ static void SaveUserConfig( void )
 	}
 
 #if !defined( NDEBUG )
-	NL_PrintNodeTree( root, 0 );
+	//NL_PrintNodeTree( root, 0 );
 #endif
 
 	char path[ PL_SYSTEM_MAX_PATH ];
@@ -202,6 +209,7 @@ void Con_Initialize( void )
 	PlRegisterConsoleCommand( "quit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 	PlRegisterConsoleCommand( "exit", Cmd_Quit, "Shutdown any existing server and terminate the application." );
 	PlRegisterConsoleCommand( "oscmd", Cmd_OSCommand, "Pipes the given command to the host platform." );
+	PlRegisterConsoleCommand( "version", Cmd_Version, "Prints out the current engine version." );
 
 	/* debugging */
 	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
@@ -217,8 +225,9 @@ void Con_Initialize( void )
 	/* networking */
 	PlRegisterConsoleVariable( "net.serverName", "unnamed", pl_string_var, NULL, "Name to use for the server." );
 	PlRegisterConsoleVariable( "net.password", "", pl_string_var, NULL, "Password to access server functions." );
-	PlRegisterConsoleCommand( "net.connect", NULL, "Connect to the specified server." );
-	PlRegisterConsoleCommand( "net.disconnect", NULL, "Disconnect from the current server." );
+	PlRegisterConsoleCommand( "connect", NULL, "Connect to the specified server." );
+	PlRegisterConsoleCommand( "reconnect", NULL, "Reconnect to the current server." );
+	PlRegisterConsoleCommand( "disconnect", NULL, "Disconnect from the current server." );
 
 	/* rendering */
 	PlRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );

@@ -37,7 +37,7 @@ extern int LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO;
 
 typedef enum CacheGroup
 {
-	CACHE_GROUP_WORLD,  /* everything that is cached during level load */
+	CACHE_GROUP_WORLD, /* everything that is cached during level load */
 	MAX_CACHE_GROUPS
 } CacheGroup;
 
@@ -81,16 +81,23 @@ void Con_Draw( const PLGViewport *viewport );
 
 typedef struct OSWindow OSWindow;
 
+#if 0
+#define Print( FORMAT, ... )     PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+#define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
 #define PrintError( FORMAT, ... )                                 \
 	{                                                             \
 		PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
 		exit( EXIT_FAILURE );                                     \
 	}
-#define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
-#define Print( FORMAT, ... )     PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
-#if !defined( NDEBUG )
 #define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #else
+#define Print( FORMAT, ... )     PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+#define PrintWarn( FORMAT, ... ) PlLogMessage( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
+#define PrintError( FORMAT, ... )                               \
+	{                                                           \
+		PlLogMessage( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
+		exit( EXIT_FAILURE );                                   \
+	}
 #define DebugMsg( ... )
 #endif
 

@@ -44,8 +44,6 @@ Actor *Game_GetPlayer( void )
 
 void Game_Tick( void )
 {
-	Menu_Tick();
-
 	if ( gameState == GAME_STATE_PAUSED )
 	{
 		if ( globalSystem.GetKeyState( 'z' ) )

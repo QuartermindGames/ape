@@ -129,7 +129,7 @@ void Font_Draw( BitmapFont *font )
 
 void Font_Initialize( void )
 {
-	defaultFont = Font_CacheBitmap( "materials/engine/default_font.mat", 256, 48, 8, 12, 0, 128 );
+	defaultFont = Font_CacheBitmap( "materials/ui/fonts/default_small.mat", 128, 24, 4, 6, 0, 128 );
 	if ( defaultFont == NULL )
 		PrintError( "Failed to load default font!\n" );
 }

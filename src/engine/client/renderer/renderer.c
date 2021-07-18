@@ -465,32 +465,8 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 	globalSystem.Free( points );
 }
 
-void R_DrawMenu( void )
+static void R_DrawDebugOverlay( const PLGViewport *viewport )
 {
-	PROFILE_START( PROFILE_DRAW_UI );
-
-	int w = globalSystem.viewport->w;
-	int h = globalSystem.viewport->h;
-
-	auxCamera->viewport.w = w;
-	auxCamera->viewport.h = h;
-
-	PlgSetupCamera( auxCamera );
-
-	PlgSetDepthMask( false );
-
-	R_DrawScreenBuffer( 0.0f, 0.0f, ( float ) w, ( float ) h );
-
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
-	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	PlLoadIdentityMatrix();
-
-	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
-
 	CVar( "debug.overlay", debugOverlay );
 	if ( debugOverlay != NULL && debugOverlay->i_value > 0 )
 	{
@@ -499,7 +475,7 @@ void R_DrawMenu( void )
 		{
 			uint8_t      numPoints;
 			const float *graph = PF_GetGraph( i, &numPoints );
-			R_DrawGraph( cpuProfilerDescriptions[ i ], w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
+			R_DrawGraph( cpuProfilerDescriptions[ i ], viewport->w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
 		}
 
 		BitmapFont *defaultFont = Font_GetDefault();
@@ -549,17 +525,44 @@ void R_DrawMenu( void )
 				}
 			}
 
-			Font_DrawBitmapString( defaultFont, 2.0f, h - defaultFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+			Font_DrawBitmapString( defaultFont, 2.0f, viewport->h - defaultFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
 			                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 		}
 	}
 
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
+	
+}
 
-	PlPopMatrix();
+void R_DrawMenu( void )
+{
+	PROFILE_START( PROFILE_DRAW_UI );
+
+	int w = globalSystem.viewport->w;
+	int h = globalSystem.viewport->h;
+
+	auxCamera->viewport.w = w;
+	auxCamera->viewport.h = h;
+
+	PlgSetupCamera( auxCamera );
+
+	PlgSetDepthMask( false );
+
+	R_DrawScreenBuffer( 0.0f, 0.0f, ( float ) w, ( float ) h );
+
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	//plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), 0, h - demoOverlayLogo->h + 32, demoOverlayLogo->w, demoOverlayLogo->h, demoOverlayLogo );
 
 	Menu_Draw( &auxCamera->viewport );
+	R_DrawDebugOverlay( &auxCamera->viewport );
 	Con_Draw( &auxCamera->viewport );
+
+	PlPopMatrix();
 
 	PlgSetDepthMask( true );
 

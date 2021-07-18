@@ -32,6 +32,7 @@ typedef struct OSSystemInterface
 	InterfaceVersion version;
 
 	OSViewport *viewport;
+	bool ( *SetDisplaySize )( int *width, int *height ); /* request a display size */
 
 	/* input */
 	OSInputState ( *GetButtonState )( InputButton inputIndex );
@@ -51,6 +52,10 @@ typedef struct OSSystemInterface
 	void ( *Shutdown )( void );
 } OSSystemInterface;
 extern OSSystemInterface globalSystem;
+
+#define CallSystemFunction( FUNCTION, ... )  \
+	if ( globalSystem.FUNCTION != NULL ) \
+	globalSystem.FUNCTION( __VA_ARGS__ )
 
 #define SYSTEM_INTERFACE_VERSION_MAJOR 1
 #define SYSTEM_INTERFACE_VERSION_MINOR 0

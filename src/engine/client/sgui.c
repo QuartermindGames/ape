@@ -42,9 +42,9 @@ void SGUI_Draw( void )
 {
 }
 
-/****************************************
- * Temporary Menu System ...
- ****************************************/
+/* ======================================================================
+ * Temporary menu system...
+ * ====================================================================*/
 
 #define MAX_MENU_ITEMS 32
 
@@ -66,26 +66,68 @@ typedef struct Menu
 	uint8_t curSelection;
 } Menu;
 
+static Menu  mainMenu;
+static Menu *currentMenu = &mainMenu;
+
 static Menu newGameMenu;
 static Menu settingsMenu;
 static Menu quitMenu;
 static Menu mainMenu = {
         "MAIN MENU",
         {
-                { "NEW GAME", &newGameMenu, NULL },
+                { "START GAME", &newGameMenu, NULL },
                 { "SETTINGS", &settingsMenu, NULL },
                 { "QUIT", &quitMenu, NULL },
         },
         3,
 };
 
+static void Menu_CB_StartGame( void )
+{
+}
+
 static Menu newGameMenu = {
-        "NEW GAME",
+        "START GAME",
         {
-                { "EASY" },
-                { "NORMAL" },
-                { "HARD" },
+                { "EASY", NULL, Menu_CB_StartGame },
+                { "NORMAL", NULL, Menu_CB_StartGame },
+                { "HARD", NULL, Menu_CB_StartGame },
                 { "BACK...", &mainMenu },
+        },
+        4,
+};
+
+static void Menu_CB_SetResolution( void )
+{
+	int w;
+	int h;
+
+	switch ( currentMenu->curSelection )
+	{
+		case 0:
+			w = 1920;
+			h = 1080;
+			break;
+		case 1:
+			w = 1280;
+			h = 720;
+			break;
+		case 2:
+			w = 1024;
+			h = 768;
+			break;
+	}
+
+	CallSystemFunction( SetDisplaySize, &w, &h );
+}
+
+static Menu resolutionMenu = {
+        "RESOLUTION",
+        {
+                { "1920X1080", NULL, Menu_CB_SetResolution },
+                { "1280X720", NULL, Menu_CB_SetResolution },
+                { "1024X768", NULL, Menu_CB_SetResolution },
+                { "BACK...", &settingsMenu },
         },
         4,
 };
@@ -93,25 +135,15 @@ static Menu newGameMenu = {
 static Menu settingsMenu = {
         "SETTINGS",
         {
-                { "RESOLUTION" },
+                { "RESOLUTION", &resolutionMenu },
+                { "BACK...", &mainMenu },
         },
-        1,
-};
-
-static Menu resolutionMenu = {
-        "RESOLUTION",
-        {
-                { "1920X1080" },
-                { "1280X720" },
-                { "1024X768" },
-                { "BACK...", &settingsMenu },
-        },
-        4,
+        2,
 };
 
 // Quit Menu
 
-static void Menu_Callback_Quit( void )
+static void Menu_CB_Quit( void )
 {
 	Engine_Shutdown();
 }
@@ -119,37 +151,70 @@ static void Menu_Callback_Quit( void )
 static Menu quitMenu = {
         "ARE YOU SURE?",
         {
-                { "YES", NULL, Menu_Callback_Quit },
+                { "YES", NULL, Menu_CB_Quit },
                 { "NO", &mainMenu, NULL },
         },
-        plArrayElements( quitMenu.options ),
+        2,
 };
 
-static Menu *      currentMenu = &mainMenu;
-static BitmapFont *menuFont    = NULL;
+static BitmapFont *menuFont;
+static BitmapFont *hudFont;
+
+static Material *hudMaterial;
 
 void Menu_Initialize( void )
 {
 	currentMenu = &mainMenu;
 
-	menuFont = Font_CacheBitmap( "materials/ui/fonts/fontx1.mat", 320, 80, 16, 16, 32, 131 );//Font_CacheBitmap( "materials/fonts/font_big_00.mat", 320, 192, 32, 32, 32, 91 );
-	if ( menuFont == NULL )
-	{
-		PrintWarn( "Failed to load default font for menu, using fallback instead!\n" );
-		menuFont = Font_GetDefault();
-	}
+	menuFont = Font_CacheBitmap( "materials/fonts/font_big_00.mat", 320, 192, 32, 32, 32, 91 );
+	hudFont  = Font_CacheBitmap( "materials/ui/fonts/fontx1.mat", 320, 80, 16, 16, 32, 131 );
+
+	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
 }
 
 void Menu_Shutdown( void )
 {
 	Font_ReleaseBitmap( menuFont );
+	Font_ReleaseBitmap( hudFont );
 }
 
-void Menu_Tick( void )
+bool Menu_HandleKeyboardEvent( int key, OSInputState keyState )
 {
 	if ( Game_GetMenuState() != MENU_STATE_START )
-		return;
+		return false;
 
+	if ( keyState != INPUT_STATE_PRESSED )
+		return false;
+
+	switch ( key )
+	{
+		default: break;
+		case KEY_DOWN:
+			currentMenu->curSelection++;
+			if ( currentMenu->curSelection >= currentMenu->numMenuOptions )
+				currentMenu->curSelection = 0;
+			return true;
+		case KEY_UP:
+			if ( currentMenu->curSelection == 0 )
+				currentMenu->curSelection = currentMenu->numMenuOptions - 1;
+			else
+				currentMenu->curSelection--;
+			return true;
+		case KEY_ENTER:
+			if ( currentMenu->options[ currentMenu->curSelection ].callback != NULL )
+				currentMenu->options[ currentMenu->curSelection ].callback();
+			if ( currentMenu->options[ currentMenu->curSelection ].nextMenu != NULL )
+				currentMenu = currentMenu->options[ currentMenu->curSelection ].nextMenu;
+
+			return true;
+	}
+
+	return false;
+}
+
+#if 0 /* todo: reintroduce once input shit is better */
+void Menu_Tick( void )
+{
 	if ( ( globalSystem.GetKeyState( KEY_DOWN ) && INPUT_STATE_PRESSED ) || 
 		 ( globalSystem.GetButtonState( INPUT_DOWN ) && INPUT_STATE_PRESSED ) )
 	{
@@ -181,6 +246,7 @@ void Menu_Tick( void )
 		return;
 	}
 }
+#endif
 
 void Menu_Draw( const PLGViewport *viewport )
 {
@@ -197,9 +263,7 @@ void Menu_Draw( const PLGViewport *viewport )
 	{
 		x = STR_CENTER( menuFont, strlen( currentMenu->options[ i ].string ) );
 		if ( i == currentMenu->curSelection )
-		{
 			Font_DrawBitmapCharacter( menuFont, x - menuFont->cw, y, 1.0f, PL_COLOUR_WHITE, '(' );
-		}
 
 		Font_DrawBitmapString( menuFont, x, y, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->options[ i ].string, false );
 		y += menuFont->ch;

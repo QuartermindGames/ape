@@ -16,6 +16,9 @@ static PLLibrary *dllEnginePtr;
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
 
+void *Sys_calloc( size_t num, size_t size, bool abortOnFail );
+void  Sys_free( void *ptr );
+
 /****************************************
  * WINDOW MANAGEMENT
  ****************************************/
@@ -92,7 +95,7 @@ OSWindow *Sys_CreateWindow( const char *title, int width, int height )
 		return NULL;
 	}
 
-	OSWindow *window     = calloc( 1, sizeof( OSWindow ) );
+	OSWindow *window     = Sys_calloc( 1, sizeof( OSWindow ), true );
 	window->sdlWindowPtr = sdlWindowPtr;
 	window->sdlGLContext = sdlGLContext;
 
@@ -112,12 +115,34 @@ void Sys_DestroyWindow( OSWindow *windowPtr )
 	if ( windowPtr->sdlWindowPtr != NULL )
 		SDL_DestroyWindow( windowPtr->sdlWindowPtr );
 
-	free( windowPtr );
+	Sys_free( windowPtr );
 }
 
 void Sys_SwapWindow( OSWindow *windowPtr )
 {
 	SDL_GL_SwapWindow( windowPtr->sdlWindowPtr );
+}
+
+static bool Sys_SetWindowSize( int *width, int *height )
+{
+	if ( sdlWindow == NULL )
+	{
+		*width  = 0;
+		*height = 0;
+		return false;
+	}
+
+	SDL_SetWindowSize( sdlWindow, *width, *height );
+
+	int nW, nH;
+	SDL_GetWindowSize( sdlWindow, &nW, &nH );
+
+	if ( *width == nW && *height == nH )
+		return true;
+
+	*width  = nW;
+	*height = nH;
+	return false;
 }
 
 /****************************************
@@ -292,21 +317,52 @@ static unsigned int Sys_TimerCallback( unsigned int interval, void *param )
  * MEMORY MANAGEMENT
  ****************************************/
 
+//#define DEBUG_MEMORY
+
+#ifdef DEBUG_MEMORY
+/* description of what's been allocated, for debugging */
+typedef struct AllocHeader
+{
+	char   id[ 32 ]; /* unique identifier */
+	size_t length;   /* allocated size in bytes */
+} AllocHeader;
+static size_t totalRAMUsage = 0;
+#endif
+
 /* wrapper for calloc */
 void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
 {
-	void *mem = calloc( num, size );
-	if ( mem == NULL )
+	size_t totalSize = num * size;
+
+#ifdef DEBUG_MEMORY
+	totalSize += sizeof( AllocHeader );
+#endif
+
+	char *buf = calloc( 1, totalSize );
+	if ( buf == NULL )
 	{
 		if ( abortOnFail )
-		{
-			PrintError( "Failed to allocate %d bytes!\n", num * size );
-		}
-		else
-			PrintWarn( "Failed to allocate %d bytes!\n", num * size );
+			PrintError( "Failed to allocate %d bytes!\n", totalSize );
+
+		PrintWarn( "Failed to allocate %d bytes!\n", totalSize );
+		return NULL;
 	}
 
-	return mem;
+#ifdef DEBUG_MEMORY
+	AllocHeader *header = ( AllocHeader * ) buf;
+	PlGenerateUniqueIdentifier( header->id, sizeof( header->id ) - 1 );
+	header->length = totalSize;
+
+	totalRAMUsage += totalSize;
+
+	printf( "ALLOC: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
+	        header->length, header->id,
+	        PlBytesToMegabytes( totalRAMUsage ) );
+
+	buf += sizeof( AllocHeader );
+#endif
+
+	return buf;
 }
 
 /* wrapper for malloc */
@@ -318,23 +374,66 @@ void *Sys_malloc( size_t size, bool abortOnFail )
 /* wrapper for realloc */
 void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
 {
-	void *buf = realloc( ptr, newSize );
+	char *buf = ptr;
+
+#ifdef DEBUG_MEMORY
+	if ( buf == NULL )
+		return Sys_malloc( newSize, abortOnFail );
+
+	buf -= sizeof( AllocHeader );
+	newSize += sizeof( AllocHeader ); /* maybe... ? */
+#endif
+
+	buf = realloc( buf, newSize );
 	if ( buf == NULL )
 	{
 		if ( abortOnFail )
-		{
 			PrintError( "Failed to allocate %d bytes!\n", newSize );
-		}
-		else
-			PrintWarn( "Failed to allocate %d bytes!\n", newSize );
+
+		PrintWarn( "Failed to allocate %d bytes!\n", newSize );
+		return NULL;
 	}
+
+#ifdef DEBUG_MEMORY
+	AllocHeader *header    = ( AllocHeader * ) buf;
+	size_t       oldLength = header->length;
+	header->length         = newSize;
+
+	totalRAMUsage -= oldLength;
+	totalRAMUsage += newSize;
+
+	printf( "REALLOC: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
+	        header->length, header->id,
+	        PlBytesToMegabytes( totalRAMUsage ) );
+
+	buf += sizeof( AllocHeader );
+#endif
 
 	return buf;
 }
 
 void Sys_free( void *ptr )
 {
-	free( ptr );
+	char *buf = ptr;
+
+#ifdef DEBUG_MEMORY
+	if ( buf != NULL )
+	{
+		buf -= sizeof( AllocHeader );
+		AllocHeader *header = ( AllocHeader * ) buf;
+		u_assert( header != NULL );
+		if ( header != NULL )
+		{
+			totalRAMUsage -= header->length;
+
+			printf( "FREE: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
+			        header->length, header->id,
+			        PlBytesToMegabytes( totalRAMUsage ) );
+		}
+	}
+#endif
+
+	free( buf );
 }
 
 /* wrappers for platform lib */
@@ -372,7 +471,8 @@ static void Sys_SetupEngineInterface( void )
 	static OSSystemInterface systemInterface = {
 	        .version = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
 
-	        .viewport = &osViewport,
+	        .viewport       = &osViewport,
+	        .SetDisplaySize = Sys_SetWindowSize,
 
 	        .Shutdown       = Sys_Shutdown,
 	        .GetButtonState = Sys_GetButtonState,
@@ -446,6 +546,9 @@ int Sys_Init( int argc, char **argv )
 	Sys_CreateWindow( WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT );
 
 	SDL_GL_GetDrawableSize( sdlWindow, &osViewport.w, &osViewport.h );
+
+	PlgInitializeGraphics();
+	PlgScanForDrivers( "./" );
 
 	Sys_SetupEngineInterface();
 

@@ -130,7 +130,7 @@ static void RS_LoadShaderProgram( const char *path, void *userData )
 		return;
 	}
 
-	NL_PrintNodeTree( root, 0 );
+	//NL_PrintNodeTree( root, 0 );
 
 	ShaderProgramIndex *program = RS_ParseShaderProgram( root );
 

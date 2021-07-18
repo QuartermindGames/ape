@@ -391,7 +391,7 @@ static void ConvertMatToNode( const Material *material )
 	NLNode *root = NL_LoadFile( outPath, "material" );
 	if ( root != NULL )
 	{
-		NL_PrintNodeTree( root, 0 );
+		//NL_PrintNodeTree( root, 0 );
 		return;
 	}
 
@@ -450,7 +450,7 @@ static void ConvertMatToNode( const Material *material )
 
 	NL_WriteFile( outPath, root, NL_FILE_ASCII );
 
-	NL_PrintNodeTree( root, 0 );
+	//NL_PrintNodeTree( root, 0 );
 	NL_DestroyNode( root );
 }
 

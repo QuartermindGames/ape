@@ -17,11 +17,7 @@ typedef struct SprAnimationFrame
 typedef enum ViewPerspective
 {
 	VIEW_PERSPECTIVE_EYE,
-
-	/* editor modes */
 	VIEW_PERSPECTIVE_TOP,
-	VIEW_PERSPECTIVE_SIDE,
-	VIEW_PERSPECTIVE_FRONT,
 
 	MAX_VIEW_PERSPECTIVES
 } ViewPerspective;

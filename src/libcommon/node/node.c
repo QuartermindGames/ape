@@ -45,7 +45,7 @@ static char *      nlErrorMsg  = NULL;
 static NLErrorCode nlErrorType = NL_ERROR_SUCCESS;
 static void        NL_ClearErrorMessage( void )
 {
-	free( nlErrorMsg );
+	pl_free( nlErrorMsg );
 	nlErrorMsg  = NULL;
 	nlErrorType = NL_ERROR_SUCCESS;
 }
@@ -63,7 +63,7 @@ static void NL_SetErrorMessage( NLErrorCode type, const char *msg, ... )
 	if ( length <= 0 )
 		return;
 
-	nlErrorMsg = calloc( 1, length );
+	nlErrorMsg = pl_calloc( 1, length );
 	if ( nlErrorMsg == NULL )
 	{
 		Warning( "Failed to allocate error message buffer: %d bytes!\n", length );
@@ -82,7 +82,7 @@ NLErrorCode NL_GetError( void ) { return nlErrorType; }
 static char *AllocVarString( const char *string, unsigned int *lengthOut )
 {
 	*lengthOut = ( unsigned int ) strlen( string ) + 1;
-	char *buf  = calloc( 1, *lengthOut );
+	char *buf  = pl_calloc( 1, *lengthOut );
 	if ( buf == NULL )
 		abort();
 	strcpy( buf, string );
@@ -433,7 +433,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 		return NULL;
 	}
 
-	NLNode *node = calloc( 1, sizeof( NLNode ) );
+	NLNode *node = pl_calloc( 1, sizeof( NLNode ) );
 	if ( node == NULL )
 	{
 		NL_SetErrorMessage( NL_ERROR_MEM_ALLOC, "failed to allocate node" );
@@ -591,7 +591,7 @@ NLNode *NL_PushBackObjArray( NLNode *parent, const char *name )
 static char *CopyVarString( const NLVarString *varString, unsigned int *length )
 {
 	*length   = varString->strBufLength;
-	char *buf = malloc( *length );
+	char *buf = pl_malloc( *length );
 	strncpy( buf, varString->strBuf, *length );
 	return buf;
 }
@@ -601,7 +601,7 @@ static char *CopyVarString( const NLVarString *varString, unsigned int *length )
  */
 NLNode *NL_CopyNode( NLNode *node )
 {
-	NLNode *newNode      = malloc( sizeof( NLNode ) );
+	NLNode *newNode      = pl_malloc( sizeof( NLNode ) );
 	newNode->type        = node->type;
 	newNode->childType   = node->childType;
 	newNode->data.strBuf = CopyVarString( &node->data, &newNode->data.strBufLength );
@@ -656,7 +656,7 @@ char *DeserializeStringVar( PLFile *file, unsigned int *length )
 	*length = PlReadInt32( file, false, NULL );
 	if ( *length > 0 )
 	{
-		char *buf = malloc( *length );
+		char *buf = pl_malloc( *length );
 		PlReadFile( file, buf, sizeof( char ), *length );
 		return buf;
 	}

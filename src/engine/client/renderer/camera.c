@@ -14,8 +14,6 @@
 static const char *perspectiveDescriptions[ MAX_VIEW_PERSPECTIVES ] = {
         [VIEW_PERSPECTIVE_EYE]   = "Eye",
         [VIEW_PERSPECTIVE_TOP]   = "Top",
-        [VIEW_PERSPECTIVE_SIDE]  = "Side",
-        [VIEW_PERSPECTIVE_FRONT] = "Front",
 };
 
 static PLLinkedList *camerasList = NULL;
@@ -97,9 +95,6 @@ void R_DrawPerspective( GfxCamera *camera )
 				camera->internalPtr->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
 				camera->internalPtr->position = Act_GetPosition( camera->parentActor );
 				camera->internalPtr->position.y += 1024.0f;
-				break;
-			case VIEW_PERSPECTIVE_SIDE:
-			case VIEW_PERSPECTIVE_FRONT:
 				break;
 		}
 	}

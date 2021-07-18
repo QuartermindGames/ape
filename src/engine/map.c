@@ -237,7 +237,7 @@ static void Map_ParseFaces( PLFile *file )
 		unsigned int  numTriangles;
 		unsigned int *indices = PlgConvertPolygonToTriangles( mapData.faces[ i ].polygon, &numTriangles );
 		PlgGenerateTangentBasis( vertices, numPolyVertices, indices, numTriangles );
-		free( indices );
+		globalSystem.Free( indices );
 
 		/* generate the bounds for cheap culling */
 		mapData.faces[ i ].bounds = PlgGenerateAabbFromVertices( vertices, numPolyVertices, true );
