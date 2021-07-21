@@ -166,8 +166,8 @@ void Menu_Initialize( void )
 {
 	currentMenu = &mainMenu;
 
-	menuFont = Font_CacheBitmap( "materials/fonts/font_big_00.mat", 320, 192, 32, 32, 32, 91 );
-	hudFont  = Font_CacheBitmap( "materials/ui/fonts/fontx1.mat", 320, 80, 16, 16, 32, 131 );
+	menuFont = Font_CacheBitmap( "materials/ui/fonts/big_00.mat", 320, 192, 32, 32, 32, 91 );
+	hudFont  = Font_CacheBitmap( "materials/ui/fonts/x1.mat", 320, 80, 16, 16, 32, 131 );
 
 	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
 }
@@ -250,6 +250,7 @@ void Menu_Tick( void )
 
 void Menu_Draw( const PLGViewport *viewport )
 {
+	return;
 	if ( currentMenu == NULL )
 		return;
 

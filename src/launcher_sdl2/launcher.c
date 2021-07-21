@@ -23,8 +23,10 @@ void  Sys_free( void *ptr );
  * WINDOW MANAGEMENT
  ****************************************/
 
-static SDL_Window *sdlWindow = NULL;
-static OSViewport  osViewport;
+static SDL_Window *   sdlWindow = NULL;
+static SDL_GLContext *sdlGLContext;
+
+static OSViewport osViewport;
 
 void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... )
 {
@@ -58,69 +60,50 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... )
 	SDL_ShowSimpleMessageBox( flags, title, msgBuf, NULL );
 }
 
-typedef struct OSWindow
+static bool Sys_IsDisplayActive( void )
 {
-	SDL_Window *   sdlWindowPtr;
-	SDL_GLContext *sdlGLContext;
-} OSWindow;
-
-static bool Sys_IsDisplayActive( OSWindow *windowPtr )
-{
-	uint32_t flags = SDL_GetWindowFlags( windowPtr->sdlWindowPtr );
+	uint32_t flags = SDL_GetWindowFlags( sdlWindow );
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-void Sys_MakeWindowActive( OSWindow *windowPtr )
+void Sys_MakeWindowActive( void )
 {
-	sdlWindow = windowPtr->sdlWindowPtr;
-	SDL_GL_MakeCurrent( windowPtr->sdlWindowPtr, windowPtr->sdlGLContext );
+	SDL_GL_MakeCurrent( sdlWindow, sdlGLContext );
 }
 
-OSWindow *Sys_CreateWindow( const char *title, int width, int height )
+static void Sys_CreateWindow( const char *title, int width, int height )
 {
-	SDL_Window *sdlWindowPtr = SDL_CreateWindow(
+	sdlWindow = SDL_CreateWindow(
 	        WINDOW_TITLE,
 	        SDL_WINDOWPOS_UNDEFINED,
 	        SDL_WINDOWPOS_UNDEFINED,
 	        WINDOW_WIDTH, WINDOW_HEIGHT,
 	        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
-	if ( sdlWindowPtr == NULL )
+	if ( sdlWindow == NULL )
 		PrintError( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
 
-	SDL_GLContext sdlGLContext = SDL_GL_CreateContext( sdlWindowPtr );
+	sdlGLContext = SDL_GL_CreateContext( sdlWindow );
 	if ( sdlGLContext == NULL )
 	{
-		SDL_DestroyWindow( sdlWindowPtr );
-		PrintWarn( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
-		return NULL;
+		SDL_DestroyWindow( sdlWindow );
+		PrintError( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
 	}
 
-	OSWindow *window     = Sys_calloc( 1, sizeof( OSWindow ), true );
-	window->sdlWindowPtr = sdlWindowPtr;
-	window->sdlGLContext = sdlGLContext;
-
-	Sys_MakeWindowActive( window );
-
-	return window;
+	Sys_MakeWindowActive();
 }
 
-void Sys_DestroyWindow( OSWindow *windowPtr )
+static void Sys_DestroyWindow( void )
 {
-	if ( windowPtr == NULL )
-		return;
+	if ( sdlGLContext != NULL )
+		SDL_GL_DeleteContext( sdlGLContext );
 
-	if ( windowPtr->sdlGLContext != NULL )
-		SDL_GL_DeleteContext( windowPtr->sdlGLContext );
-
-	if ( windowPtr->sdlWindowPtr != NULL )
-		SDL_DestroyWindow( windowPtr->sdlWindowPtr );
-
-	Sys_free( windowPtr );
+	if ( sdlWindow != NULL )
+		SDL_DestroyWindow( sdlWindow );
 }
 
-void Sys_SwapWindow( OSWindow *windowPtr )
+static void Sys_SwapWindow( void )
 {
-	SDL_GL_SwapWindow( windowPtr->sdlWindowPtr );
+	SDL_GL_SwapWindow( sdlWindow );
 }
 
 static bool Sys_SetWindowSize( int *width, int *height )

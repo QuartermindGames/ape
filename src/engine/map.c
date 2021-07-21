@@ -110,6 +110,7 @@ static void Map_ParseTextures( PLFile *file )
 
 static void Map_ParseVertices( PLFile *file )
 {
+#if 0
 	char buffer[ 256 ];
 
 	PlReadString( file, buffer, sizeof( buffer ) );
@@ -144,10 +145,12 @@ static void Map_ParseVertices( PLFile *file )
 			PrintError( "Failed to read in vertex \"%d\" element in \"%s\"!\n", i, PlGetFilePath( file ) );
 		}
 	}
+#endif
 }
 
 static void Map_ParseFaces( PLFile *file )
 {
+#if 0
 	char buffer[ 256 ];
 
 	PlReadString( file, buffer, sizeof( buffer ) );
@@ -242,6 +245,7 @@ static void Map_ParseFaces( PLFile *file )
 		/* generate the bounds for cheap culling */
 		mapData.faces[ i ].bounds = PlgGenerateAabbFromVertices( vertices, numPolyVertices, true );
 	}
+#endif
 }
 
 void Map_ParseSectors( PLFile *file )

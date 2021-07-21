@@ -35,7 +35,7 @@ void CL_Display( void )
 
 	Game_Display();
 
-	PROFILE_END( PROFILE_DRAW_ALL );
-
 	R_DrawMenu();
+
+    PROFILE_END( PROFILE_DRAW_ALL );
 }

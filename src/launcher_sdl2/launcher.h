@@ -8,7 +8,9 @@
 
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
+
 #include <plgraphics/plg.h>
+#include <plgraphics/plg_driver_interface.h>
 
 #include "public/SharedBase.h"
 

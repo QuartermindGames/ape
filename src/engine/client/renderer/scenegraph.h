@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "common/node.h"
+
 enum SGNodeType
 {
 	SG_NODE_TYPE_WORLD,    /* world node; each one has a list of sectors */
@@ -35,7 +37,7 @@ typedef struct SGNode SGNode;
  * Serialisation/Deserialisation
  * ====================================================================*/
 
-SGTransform *SG_DS_Transform( struct NLNode *root, const char *childName, SGTransform *out );
+SGTransform *SG_DS_Transform( NLNode *root, const char *childName, SGTransform *out );
 
 /* ======================================================================
  * ====================================================================*/

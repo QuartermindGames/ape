@@ -132,9 +132,7 @@ bool Sch_IsTaskRunning( const char *desc )
 void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay )
 {
 	if ( scheduleList == NULL )
-	{
 		scheduleList = PlCreateLinkedList();
-	}
 
 	SchTask *task = globalSystem.MAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
@@ -147,9 +145,7 @@ void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData,
 void Sch_RunTasks( void )
 {
 	if ( scheduleList == NULL )
-	{
 		return;
-	}
 
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )

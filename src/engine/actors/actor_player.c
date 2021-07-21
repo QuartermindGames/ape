@@ -36,12 +36,12 @@ typedef struct APlayer
 	float forwardVelocity;
 	float viewBob;
 
-	GfxCamera *eyeCamera;
+	Camera *eyeCamera;
 
 	PLMModel *model;
 } APlayer;
 
-GfxCamera *Player_GetCamera( Actor *self )
+Camera *Player_GetCamera( Actor *self )
 {
 	APlayer *playerData = Act_GetUserData( self );
 	if ( playerData == NULL )
@@ -106,8 +106,8 @@ static void Player_Spawn( Actor *self )
 
 	if ( numPlayers == 0 )
 	{ /* local player */
-		playerData->eyeCamera              = Gfx_CreateCamera( VIEW_PERSPECTIVE_TOP, Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ) );
-		playerData->eyeCamera->parentActor = self;
+		//playerData->eyeCamera              = R_CreateCamera( Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ) );
+		//playerData->eyeCamera->parentActor = self;
 	}
 
 	Act_SetBounds( self, PLAYER_BOUNDS_MINS, PLAYER_BOUNDS_MAXS );

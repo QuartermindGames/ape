@@ -594,7 +594,7 @@ WorldFace *W_GetFacesForSector( WorldSector *sector, uint32_t *numFaces )
 	return sector->mesh->faces;
 }
 
-static WorldSector **GetVisibleSectors( World *world, WorldSector *originSector, const PLGCamera *camera, unsigned int *numSectors )
+static WorldSector **GetVisibleSectors( World *world, WorldSector *originSector, const Camera *camera, unsigned int *numSectors )
 {
 	CVar( "world.drawSectors", drawSectors );
 	if ( drawSectors != NULL && !drawSectors->b_value )
@@ -613,7 +613,7 @@ static WorldSector **GetVisibleSectors( World *world, WorldSector *originSector,
 		if ( !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_PORTAL ) && !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_MIRROR ) )
 			continue;
 
-		if ( !PlgIsBoxInsideView( camera, &sectorMesh->faces[ i ].bounds ) )
+		if ( !PlgIsBoxInsideView( camera->internal, &sectorMesh->faces[ i ].bounds ) )
 			continue;
 	}
 }
@@ -643,7 +643,7 @@ static WorldMesh **GetVisibleSubMeshesForSector( WorldSector *sector, const PLGC
 	return visibleMeshes;
 }
 
-static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
+static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 {
 #if 0
 	unsigned int numVisibleMeshes;
@@ -667,7 +667,7 @@ static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
 			face->bounds.origin = PLVector3( 0.0f, 0.0f, 0.0f );
 
 			/* check the face is actually visible */
-			if ( !PlgIsBoxInsideView( camera, &face->bounds ) )
+			if ( !PlgIsBoxInsideView( camera->internal, &face->bounds ) )
 				continue;
 
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
@@ -768,7 +768,7 @@ static void DrawSector( WorldSector *sector, PLGCamera *camera, bool simple )
 /**
  * Draw scrolling clouds.
  */
-void W_DrawSky( PLGCamera *camera )
+void W_DrawSky( Camera *camera )
 {
 #if 0
 	static Material *skyMaterial = NULL;
@@ -860,10 +860,10 @@ void W_DrawSky( PLGCamera *camera )
 #endif
 }
 
-static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, PLGCamera *camera )
+static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, Camera *camera )
 {
 	if ( originSector == NULL )
-		originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
+		originSector = W_GetSectorByGlobalOrigin( world, &camera->internal->position );
 
 	unsigned int  numVisibleSectors;
 	WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
@@ -877,7 +877,7 @@ static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, 
 	}
 }
 
-void W_Draw( PLGCamera *camera, World *world, WorldSector *originSector )
+void W_Draw( Camera *camera, World *world, WorldSector *originSector )
 {
 	PROFILE_START( PROFILE_DRAW_WORLD );
 
@@ -895,7 +895,7 @@ void W_Draw( PLGCamera *camera, World *world, WorldSector *originSector )
 		else
 		{
 			if ( originSector == NULL )
-				originSector = W_GetSectorByGlobalOrigin( world, &camera->position );
+				originSector = W_GetSectorByGlobalOrigin( world, &camera->internal->position );
 
 			if ( originSector != NULL )
 			{

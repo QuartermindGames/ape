@@ -299,9 +299,6 @@ void Gfx_DrawNumber( float x, float y, unsigned int number )
 	Gfx_DrawDigit( x, y, number % 10 );
 }
 
-void Gfx_InitializeCameras( void ); /* gfx_camera.c */
-void Gfx_ShutdownCameras( void );   /* gfx_camera.c */
-
 void R_SetupDefaultState( void )
 {
 	PlgSetClearColour( PLColour( 128, 212, 255, 255 ) );
@@ -354,8 +351,6 @@ void R_Initialize( void )
 
 	Font_Initialize();
 
-	Gfx_InitializeCameras();
-
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
 		PrintError( "Failed to create auxiliary camera!\nPL: %s\n", PlGetError() );
@@ -370,7 +365,6 @@ void R_Initialize( void )
 
 void R_Shutdown( void )
 {
-	Gfx_ShutdownCameras();
 	Font_Shutdown();
 	RM_ShutdownMaterialSystem();
 }
@@ -598,7 +592,7 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlPopMatrix();
 }
 
-static void R_RenderScene( PLGCamera *camera, bool smPass )
+static void R_RenderScene( Camera *camera, bool smPass )
 {
 	WorldSector *curSector = NULL;
 	Actor *      player    = Game_GetPlayer();
@@ -616,7 +610,7 @@ static void R_RenderScene( PLGCamera *camera, bool smPass )
 	PS_Draw( camera );
 }
 
-static void R_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )
+static void R_RenderSceneDepth( Camera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )
 {
 	smCamera->position = *lightPos;
 	smCamera->angles   = *lightAngles;
@@ -630,21 +624,21 @@ static void R_RenderSceneDepth( PLGCamera *camera, const PLVector3 *lightPos, co
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 }
 
-static void R_RenderSceneFinal( PLGCamera *camera )
+static void R_RenderSceneFinal( Camera *camera )
 {
 	/* set everything up for post-processing */
-	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->viewport.w, camera->viewport.h );
+	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
 	PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
 
-	PlgSetupCamera( camera );
+	PlgSetupCamera( camera->internal );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 
 	R_RenderScene( camera, false );
 }
 
-void R_DrawScene( PLGCamera *camera )
+void R_DrawScene( Camera *camera )
 {
-	g_gfxPerfStats.cameraPos = camera->position;
+	g_gfxPerfStats.cameraPos = camera->internal->position;
 
 	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
