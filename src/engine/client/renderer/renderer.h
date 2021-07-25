@@ -14,21 +14,20 @@ typedef struct SprAnimationFrame
 	PLGTexture * texture;
 } SprAnimationFrame;
 
-typedef enum ViewPerspective
+typedef enum CameraMode
 {
-	VIEW_PERSPECTIVE_EYE,
-	VIEW_PERSPECTIVE_TOP,
+	CAMERA_MODE_EYE,
+	CAMERA_MODE_TOPDOWN,
 
-	MAX_VIEW_PERSPECTIVES
-} ViewPerspective;
+	MAX_CAMERA_MODES
+} CameraMode;
 
-typedef struct GfxCamera
+typedef struct Camera
 {
-	PLGCamera *              internalPtr; /* the camera used for this viewport */
-	ViewPerspective          perspective;
-	struct Actor *           parentActor;
-	struct PLLinkedListNode *node; /* node representing this object in the linked list */
-} GfxCamera;
+	PLGCamera *   internal; /* the camera used for this viewport */
+	CameraMode    followMode;
+	struct Actor *parentActor;
+} Camera;
 
 typedef struct RendererStats
 {
@@ -63,11 +62,14 @@ void R_Shutdown( void );
 void R_SetupDefaultState( void );
 void R_DrawMenu( void );
 
-GfxCamera *Gfx_CreateCamera( ViewPerspective perspective, PLVector3 position, PLVector3 angles );
+Camera *R_GetGlobalCamera( void );
+
+Camera *R_CreateCamera( const PLVector3 *position, const PLVector3 *angles );
+void R_DestroyCamera( Camera *camera );
 
 PLGShaderProgram *RS_GetShaderProgram( const char *name );
 
-void R_DrawPerspective( GfxCamera *camera );
+void R_DrawPerspective( Camera *camera );
 void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 
 void RSpr_DrawAnimationFrame( SprAnimationFrame *frame, const PLVector3 *position, float spriteAngle );

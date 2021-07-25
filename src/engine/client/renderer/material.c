@@ -458,8 +458,6 @@ static void RM_CB_DestroyMaterial( void *userData )
 {
 	Material *material = userData;
 	u_assert( material != NULL );
-	if ( material == NULL )
-		return;
 
 	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
 	if ( container != NULL )

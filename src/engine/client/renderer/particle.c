@@ -38,7 +38,7 @@ void PS_CacheEmitterTemplate( const char *path )
 {
 	PSEmitter *emitter = MEM_GetCachedData( path, MEM_CACHE_PARTICLES );
 	if ( emitter != NULL )
-		return emitter;
+		return;
 
 	NLNode *root = NL_LoadFile( path, "particleEmitter" );
 	if ( root == NULL )
@@ -75,12 +75,11 @@ void PS_CacheEmitterTemplate( const char *path )
 	MEM_AddReference( &emitter->mem );
 
 	MEM_CacheData( path, MEM_CACHE_PARTICLES, emitter );
-
-	return emitter;
 }
 
 PSEmitter *PS_SpawnEmitter( const char *path )
 {
+#if 0
 	PSEmitter *emitterTemplate = MEM_GetCachedData( path, MEM_CACHE_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
@@ -92,6 +91,9 @@ PSEmitter *PS_SpawnEmitter( const char *path )
 	memcpy( emitter, emitterTemplate, sizeof( PSEmitter ) );
 
 	return emitter;
+#else
+    return globalSystem.MAlloc( sizeof( PSEmitter ), true );
+#endif
 }
 
 static void PS_TickParticle( PSParticle *particle )
@@ -123,6 +125,6 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 }
 
-void PS_Draw( const PLGCamera *camera )
+void PS_Draw( const Camera *camera )
 {
 }

@@ -8,6 +8,8 @@
 
 #include "scenegraph.h"
 
+typedef struct Camera Camera;
+
 typedef struct PSEmitter
 {
 	SGTransform  transform, transformVar;
@@ -38,8 +40,8 @@ typedef struct PSParticle
 void PS_Initialize( void );
 void PS_Shutdown( void );
 
-void       PS_CacheEmitterTemplate( const char *path );
+//void       PS_CacheEmitterTemplate( const char *path );
 PSEmitter *PS_SpawnEmitter( const char *path );
 
 void PS_TickEmitter( PSEmitter *emitter );
-void PS_Draw( const struct PLGCamera *camera );
+void PS_Draw( const Camera *camera );

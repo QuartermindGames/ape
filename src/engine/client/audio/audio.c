@@ -84,9 +84,7 @@ void A_CleanupSounds( bool force )
 	maxSounds = numSounds;
 	ASound *newAudioSounds;
 	if ( !force )
-	{
 		newAudioSounds = globalSystem.CAlloc( maxSounds, sizeof( ASound ), true );
-	}
 
 	unsigned int j = 0;
 	for ( unsigned int i = 0; i < numSounds; ++i )
@@ -135,7 +133,7 @@ static ASoundReference A_SetupReference( int slot, const char *path )
 	memset( &s, 0, sizeof( ASoundReference ) );
 	s.slot = slot;
 	if ( path != NULL )
-		strcpy( s.path, path );
+		strncpy( s.path, path, sizeof( s.path ) - 1 );
 
 	return s;
 }

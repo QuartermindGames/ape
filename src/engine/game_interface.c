@@ -23,6 +23,8 @@ static MenuState   menuState   = MENU_STATE_START;
 
 static World *currentWorld = NULL;
 
+static Camera *gameCamera = NULL;
+
 typedef enum GameState
 {
 	GAME_STATE_PAUSED,
@@ -65,14 +67,7 @@ void Game_Tick( void )
 
 void Game_Display( void )
 {
-	if ( playerActor == NULL )
-		return;
-
-	GfxCamera *playerCamera = Player_GetCamera( playerActor );
-	if ( playerCamera == NULL )
-		return;
-
-	R_DrawPerspective( playerCamera );
+	R_DrawPerspective( R_GetGlobalCamera() );
 }
 
 void Game_SpawnWorld( const char *worldPath )
@@ -92,6 +87,9 @@ void Game_SpawnWorld( const char *worldPath )
 	/* spawn the player in */
 	playerActor = Act_SpawnActor( ACTOR_PLAYER, NULL );
 	Act_SetPosition( playerActor, &PLVector3( 0, 32, 0 ) );
+
+	Camera *camera = R_GetGlobalCamera();
+	camera->parentActor = playerActor;
 
 	gameState   = GAME_STATE_ACTIVE;
 	menuState   = MENU_STATE_HUD;

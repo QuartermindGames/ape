@@ -16,8 +16,6 @@ static void MDL_CB_Destroy( void *userData )
 {
 	PLMModel *model = userData;
 	u_assert( model != NULL );
-	if ( model == NULL )
-		return;
 
     MDLUserData *additionalData = model->userData;
 	if ( additionalData != NULL )

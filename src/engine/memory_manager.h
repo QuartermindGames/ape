@@ -59,7 +59,6 @@ MEMReference *MEM_SetupReferenceInstance( const char *description, MEMReference 
 
 void MEM_AddReference( MEMReference *m );
 void MEM_ReleaseReference( MEMReference *m );
-bool MEM_FreeReference( MEMReference *m, bool force );
 int  MEM_GetNumberOfReferences( const MEMReference *m );
 
 void *MEM_TempAlloc( MEMReference *m, size_t size );

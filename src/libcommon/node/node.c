@@ -783,7 +783,7 @@ NLNode *NL_LoadFile( const char *path, const char *objectType )
 		/* first need to run the pre-processor on it */
 		size_t      length = PlGetFileSize( file );
 		const char *data   = ( const char * ) PlGetFileData( file ) + strlen( NL_ASCII_HEADER );
-		char *      buf    = pl_malloc( length );
+		char *      buf    = pl_malloc( length + 1 );
 		memcpy( buf, data, length );
 		buf  = xNL_PreProcessScript( buf, &length, true );
 		root = NL_ParseBuffer( buf, length );

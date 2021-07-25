@@ -5,7 +5,6 @@
 
 #include "yin.h"
 #include "scenegraph.h"
-#include "common/node.h"
 
 typedef struct SGNode
 {

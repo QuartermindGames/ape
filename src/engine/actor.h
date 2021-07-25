@@ -113,4 +113,4 @@ PLVector3 Act_GetForward( const Actor *self );
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );
 
 /* player functions */
-struct GfxCamera *Player_GetCamera( Actor *self );
+struct Camera *Player_GetCamera( Actor *self );
