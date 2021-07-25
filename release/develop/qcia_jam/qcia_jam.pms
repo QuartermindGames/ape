@@ -1,0 +1,15 @@
+output ../../game0.pkg
+
+dir materials/fonts png
+dir materials/fonts mat
+dir materials/ui png
+dir materials/ui node
+dir materials/ui mat
+dir materials/models png
+;dir materials/models node
+
+dir materials/terrain node
+dir materials/terrain/background png
+
+;dir models ply
+dir models png
