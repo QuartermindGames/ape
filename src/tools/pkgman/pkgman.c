@@ -36,15 +36,13 @@ static PkgHeader packageHeader = {
 static FILE *fileOutPtr       = NULL;
 static char  outputPath[ 32 ] = { '\0' };
 
-static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long length, bool useCompression )
+static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t length, bool useCompression )
 {
-	Print( "Adding %s...\n", path );
-
 	/* write the index header */
 	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, fileOutPtr );
 	fwrite( path, sizeof( char ), nameLength, fileOutPtr );
-	fwrite( &length, sizeof( unsigned long ), 1, fileOutPtr );
+	fwrite( &length, sizeof( uint32_t ), 1, fileOutPtr );
 
 #if defined( PKG_USE_COMPRESSION )
 	uint8_t *compressedData = NULL;
@@ -55,9 +53,7 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long 
 		compressedData                 = malloc( compressedLength );
 		int status                     = mz_compress( compressedData, &compressedLength, buffer, length );
 		if ( status != Z_OK )
-		{
 			Error( "Failed to compress the given file, \"%s\"!\n", path );
-		}
 
 		/* check if it's actually worth it... */
 		if ( compressedLength > length )
@@ -72,12 +68,14 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, unsigned long 
 
 	/* compressed length indicates if we're compressed or not, if it's the same as the actual file
 	 * length then it's assumed there is no compressed data */
-	fwrite( &length, sizeof( unsigned long ), 1, fileOutPtr );
+	fwrite( &length, sizeof( uint32_t ), 1, fileOutPtr );
 	fwrite( buffer, 1, length, fileOutPtr );
 
 	free( compressedData );
 
 	packageHeader.numFiles++;
+
+    Print( "Added %s...\n", path );
 }
 
 static void Pkg_AddFile( const char *filePath )
@@ -127,7 +125,9 @@ static void Pkg_AddFile( const char *filePath )
 	if ( filePtr == NULL )
 		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, PlGetError() );
 
-	Pkg_AddData( pkgPath, PlGetFileData( filePtr ), PlGetFileSize( filePtr ), true );
+	uint32_t length = ( uint32_t ) PlGetFileSize( filePtr );
+	const uint8_t *data = PlGetFileData( filePtr );
+	Pkg_AddData( pkgPath, data, length, true );
 
 	PlCloseFile( filePtr );
 }
