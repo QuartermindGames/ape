@@ -11,5 +11,6 @@ dir materials/models png
 dir materials/terrain node
 dir materials/terrain/background png
 
-;dir models ply
+dir models stl
 dir models png
+
