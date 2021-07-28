@@ -37,8 +37,8 @@
 
 typedef struct NLVarString
 {
-	char *       strBuf;
-	unsigned int strBufLength;
+	char *   buf;
+	uint16_t length;
 } NLVarString;
 
 typedef struct NLNode
