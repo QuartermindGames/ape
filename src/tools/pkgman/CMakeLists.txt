@@ -9,6 +9,10 @@ set(CMAKE_C_STANDARD 11)
 add_executable(pkgman
         pack_image.c
         pack_model.c
+        pack_model_md2.c
+        pack_model_ply.c
+        pack_model_stl.c
+        pack_model_vmdl1.c
         pkgman.c
         pkgman.h
         parser.c
