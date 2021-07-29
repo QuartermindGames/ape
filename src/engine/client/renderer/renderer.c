@@ -53,220 +53,11 @@ static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachme
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 }
 
-typedef struct RGBMap
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-} RGBMap;
-static RGBMap playPal[ 256 ];
-
-static PLLinkedList *textures;
-
-static PLGTexture *fallbackTexture = NULL;
-static PLGTexture *numTextureTable[ 10 ];
-
-PLGTexture *R_GetFallbackTexture( void )
-{
-	return fallbackTexture;
-}
-
-PLGTexture *Gfx_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
-                                         bool generateMipMap )
-{
-	PLColourFormat cFormat;
-	PLImageFormat  iFormat;
-
-	switch ( numChannels )
-	{
-		default:
-			PrintWarn( "Invalid number of colour channels specified!\n" );
-			return NULL;
-		case 3:
-			cFormat = PL_COLOURFORMAT_RGB;
-			iFormat = PL_IMAGEFORMAT_RGB8;
-			break;
-		case 4:
-			cFormat = PL_COLOURFORMAT_RGBA;
-			iFormat = PL_IMAGEFORMAT_RGBA8;
-			break;
-	}
-
-	PLImage *imageData = PlCreateImage( data, w, h, cFormat, iFormat );
-	if ( imageData == NULL )
-	{
-		PrintWarn( "Failed to generate image data!\nPL: %s\n", PlGetError() );
-	}
-
-#if 0
-	char outName[ 64 ];
-	snprintf( outName, sizeof( outName ), "test_%dx%d-%d.png", w, h, numChannels );
-	plWriteImage( imageData, outName );
-#endif
-
-	PLGTexture *texture = PlgCreateTexture();
-	if ( texture == NULL )
-		PrintError( "Failed to create texture!\nPL: %s\n", PlGetError() );
-
-	if ( !generateMipMap )
-	{
-		texture->flags &= PLG_TEXTURE_FLAG_NOMIPS;
-		texture->filter = PLG_TEXTURE_FILTER_LINEAR;
-	}
-	else
-		texture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-
-	if ( !PlgUploadTextureImage( texture, imageData ) )
-		PrintError( "Failed to generate texture from image!\nPL: %s\n", PlGetError() );
-
-	PlDestroyImage( imageData );
-
-	return texture;
-}
-
-static void RT_InitializeTextures( void )
-{
-	textures = PlCreateLinkedList();
-
-	/* generate fallback texture */
-	static PLColour fallbackData[] = {
-	        { 128, 0, 128, 255 },
-	        { 0, 128, 128, 255 },
-	        { 0, 128, 128, 255 },
-	        { 128, 0, 128, 255 },
-	};
-	fallbackTexture = Gfx_GenerateTextureFromData( ( uint8_t * ) fallbackData, 2, 2, 4, false );
-	if ( fallbackTexture == NULL )
-		PrintError( "Failed to create fallback texture!\n" );
-
-	/* register the standard image loaders, and our package image loader */
-	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
-	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
-
-	/* load the numbers */
-	/*
-	for ( unsigned int i = 0; i < 10; ++i ) {
-		char numName[ 16 ];
-		snprintf( numName, sizeof( numName ), "WNUMBER%d", i );
-		numTextureTable[ i ] = Gfx_LoadLumpTexture( titlePal, numName );
-	}
-	*/
-}
-
-PLGTexture *Gfx_GetTexture( const char *path )
-{
-	PLLinkedListNode *node = PlGetFirstNode( textures );
-	while ( node != NULL )
-	{
-		PLGTexture *texture = PlGetLinkedListNodeUserData( node );
-		if ( pl_strcasecmp( path, texture->path ) == 0 )
-			return texture;
-
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	return NULL;
-}
-
-PLGTexture *R_LoadTexture( const char *path )
-{
-	/* check if it's already loaded */
-	PLGTexture *texture = Gfx_GetTexture( path );
-	if ( texture != NULL )
-		return texture;
-
-	texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
-	if ( texture == NULL )
-	{
-		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, PlGetError() );
-		return fallbackTexture;
-	}
-
-	PlInsertLinkedListNode( textures, texture );
-	return texture;
-}
-
 /**********************************************************/
 
-void RSpr_DrawAnimationFrame( SprAnimationFrame *frame, const PLVector3 *position, float spriteAngle )
-{
-#if 0
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
+static PLGTexture *numTextureTable[ 10 ];
 
-	PlLoadIdentityMatrix();
-
-	PlRotateMatrix( PlDegreesToRadians( 0.0f ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( PlDegreesToRadians( spriteAngle ), 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix( PlDegreesToRadians( 180.0f ), 0.0f, 0.0f, 1.0f );
-
-	PlPopMatrix();
-
-	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
-
-#if 0
-	int w = frame->texture->w; //* 1.7;
-	int h = frame->texture->h; //* 1.7;
-	int x = -frame->leftOffset;
-	int y = -frame->topOffset;
-#else /* for the sake of time, let's botch it! */
-	float w = frame->texture->w * 1.7f;
-	float h = frame->texture->h * 1.7f;
-	float x = -( w / 2.0f );
-	float y = -h;
-#endif
-
-	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, frame->texture );
-#endif
-}
-
-void RSpr_DrawAnimation( SprAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
-{
-#if 0
-	const GfxCamera *camera = Gfx_GetCurrentCamera();
-	if( camera == NULL ) {
-		return;
-	}
-
-	/* here we go, dumb maths written by dumb me... */
-	PLVector2 a = PLVector2( position->x, position->z );
-	PLVector2 b = PLVector2( camera->cameraPtr->position.x, camera->cameraPtr->position.z );
-	PLVector2 normal = plComputeLineNormal( &a, &b );
-
-	float spriteAngle = atan2f( normal.y, normal.x ) * PL_180_DIV_PI;
-
-	/* should really account for the intended angle, but hey ho...
-	 * there are some further improvements to make here - again, running out of time! */
-	unsigned int frameColumn = 1;
-	float frameAngle = spriteAngle < 0 ? spriteAngle + 360 : spriteAngle;
-	if( frameAngle > 315.0f ) {
-		frameColumn = 2;
-	} else if( frameAngle > 270.0f ) {
-		frameColumn = 3;
-	} else if( frameAngle > 225.0f ) {
-		frameColumn = 4;
-	} else if( frameAngle > 180.0f ) {
-		frameColumn = 5;
-	} else if( frameAngle > 135.0f ) {
-		frameColumn = 6;
-	} else if( frameAngle > 90.0f ) {
-		frameColumn = 7;
-	} else if( frameAngle > 45.0f ) {
-		frameColumn = 8;
-	}
-
-	curFrame *= GFX_NUM_SPRITE_ANGLES;
-	unsigned int actualFrame = curFrame + ( frameColumn - 1 );
-	if( actualFrame > numFrames ) {
-		PrintWarn( "Out of scope frame, %d/%d!\n", actualFrame, numFrames );
-		actualFrame = numFrames;
-	}
-
-	Gfx_DrawAnimationFrame( animation[ actualFrame ], position, spriteAngle );
-#endif
-}
-
-void Gfx_DrawDigit( float x, float y, int digit )
+void R_DrawDigit( float x, float y, int digit )
 {
 	if ( digit < 0 )
 		digit = 0;
@@ -277,26 +68,29 @@ void Gfx_DrawDigit( float x, float y, int digit )
 	PlgDrawTexturedRectangle( &transform, x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
-void Gfx_DrawNumber( float x, float y, unsigned int number )
+void R_DrawNumber( float x, float y, int number )
 {
-	/* restrict it to 999 for sanity */
-	if ( number > 999 ) { number = 999; }
+	/* restrict it for sanity */
+	if ( number < 0 )
+		number = 0;
+	else if ( number > 999 )
+		number = 999;
 
 	if ( number >= 100 )
 	{
 		int digit = number / 100;
-		Gfx_DrawDigit( x, y, digit );
-		x += ( signed ) numTextureTable[ digit ]->w + 1;
+		R_DrawDigit( x, y, digit );
+		x += ( float ) numTextureTable[ digit ]->w + 1;
 	}
 
 	if ( number >= 10 )
 	{
 		int digit = ( number / 10 ) % 10;
-		Gfx_DrawDigit( x, y, digit );
-		x += ( signed ) numTextureTable[ digit ]->w + 1;
+		R_DrawDigit( x, y, digit );
+		x += ( float ) numTextureTable[ digit ]->w + 1;
 	}
 
-	Gfx_DrawDigit( x, y, number % 10 );
+	R_DrawDigit( x, y, number % 10 );
 }
 
 void R_SetupDefaultState( void )
@@ -334,6 +128,7 @@ static void Gfx_SetupShadowMap( void )
 }
 
 void RS_InitializeShaderPrograms( void ); /* renderer/shaders.c */
+void RT_InitializeTextures( void ); /* texture.c */
 void R_Initialize( void )
 {
 	Print( "Initializing renderer\n" );
@@ -342,8 +137,6 @@ void R_Initialize( void )
 	     PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
 	     PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
 		PrintError( "Failed to set graphics driver!\nPL: %s\n", PlGetError() );
-
-	/* create both the interface camera and player camera */
 
 	RT_InitializeTextures();
 	RS_InitializeShaderPrograms();
@@ -367,6 +160,16 @@ void R_Shutdown( void )
 {
 	Font_Shutdown();
 	RM_ShutdownMaterialSystem();
+}
+
+static PLGFrameBuffer *auxBuffer        = NULL;
+static PLGTexture *    auxBufferTexture = NULL;
+
+/**
+ * Draw the auxillary buffer.
+ */
+static void R_DrawAuxBuffer( float x, float y, float w, float h )
+{
 }
 
 static PLGFrameBuffer *ppBuffer     = NULL;
@@ -438,7 +241,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 200 ) );
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
-	BitmapFont *font = Font_GetDefault();
+	BitmapFont *font = Font_GetDefaultSmall();
 	if ( font != NULL )
 	{
 		size_t len  = strlen( heading );
@@ -462,69 +265,70 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 static void R_DrawDebugOverlay( const PLGViewport *viewport )
 {
 	CVar( "debug.overlay", debugOverlay );
-	if ( debugOverlay != NULL && debugOverlay->i_value > 0 )
+	if ( debugOverlay != NULL && debugOverlay->i_value <= 0 )
+		return;
+
+	float y = 0.0f;
+	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i, y += 64.0f )
 	{
-		float y = 0.0f;
-		for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i, y += 64.0f )
+		uint8_t      numPoints;
+		const float *graph = PF_GetGraph( i, &numPoints );
+		R_DrawGraph( cpuProfilerDescriptions[ i ], viewport->w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
+	}
+
+	BitmapFont *defaultFont = Font_GetDefault();
+	if ( defaultFont == NULL )
+		return;
+
+	Font_BeginDraw( defaultFont );
+
+	static const char spinning[] = {
+	        '\\', '|', '/', '-', '/', '-' };
+	static int pos = 0;
+	Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
+	if ( pos >= sizeof( spinning ) )
+		pos = 0;
+
+	char buf[ 256 ];
+	snprintf( buf, sizeof( buf ),
+	          "  Camera Position: %s\n"
+	          "  Num Faces Drawn: " COM_FMT_uint32 "\n"
+	          "  Num Batches:     " COM_FMT_uint32 "\n"
+	          "  OS Memory Usage: %.2lfMB\n"
+	          "  Internal Memory: %.2lfMB\n",
+	          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
+	          g_gfxPerfStats.numFacesDrawn,
+	          g_gfxPerfStats.numBatches,
+	          PlBytesToMegabytes( PlGetCurrentMemoryUsage() ),
+	          PlBytesToMegabytes( globalSystem.GetInternalAllocatedMemory() ) );
+	Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+
+	/* print out details regarding running tasks */
+	{
+		y = 128.0f;
+		Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "Task Manager\n===================", true );
+		y += defaultFont->ch * 2;
+
+		double       taskDelay;
+		unsigned int index    = 0;
+		const char * taskDesc = Sch_GetTaskDescription( index, &taskDelay );
+		if ( taskDesc == NULL )
+			Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
+		else
 		{
-			uint8_t      numPoints;
-			const float *graph = PF_GetGraph( i, &numPoints );
-			R_DrawGraph( cpuProfilerDescriptions[ i ], viewport->w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
-		}
-
-		BitmapFont *defaultFont = Font_GetDefault();
-		if ( defaultFont != NULL )
-		{
-			static const char spinning[] = {
-			        '\\', '|', '/', '-', '/', '-' };
-			static int pos = 0;
-			Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
-			if ( pos >= sizeof( spinning ) )
-				pos = 0;
-
-			char buf[ 256 ];
-			snprintf( buf, sizeof( buf ),
-			          "Rendering State\n"
-			          "===================\n"
-			          "  Camera Position: %s\n"
-			          "  Num Faces Drawn:" COM_FMT_uint32 "\n"
-			          "  Num Batches:    " COM_FMT_uint32 "\n"
-			          "  Memory Usage:   " COM_FMT_double "mb\n",
-			          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
-			          g_gfxPerfStats.numFacesDrawn,
-			          g_gfxPerfStats.numBatches,
-			          PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-			Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
-
-			/* print out details regarding running tasks */
+			while ( taskDesc != NULL )
 			{
-				y = 128.0f;
-				Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "Tasks\n===================", true );
-				y += defaultFont->ch * 2;
-
-				double       taskDelay;
-				unsigned int index    = 0;
-				const char * taskDesc = Sch_GetTaskDescription( index, &taskDelay );
-				if ( taskDesc == NULL )
-					Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
-				else
-				{
-					while ( taskDesc != NULL )
-					{
-						snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay - Engine_GetNumTicks() );
-						Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
-						y += defaultFont->ch;
-						taskDesc = Sch_GetTaskDescription( ++index, &taskDelay );
-					}
-				}
+				snprintf( buf, sizeof( buf ), "  %s : %lf", taskDesc, taskDelay - Engine_GetNumTicks() );
+				Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+				y += defaultFont->ch;
+				taskDesc = Sch_GetTaskDescription( ++index, &taskDelay );
 			}
-
-			Font_DrawBitmapString( defaultFont, 2.0f, viewport->h - defaultFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
-			                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 		}
 	}
 
-	
+	BitmapFont *smallFont = Font_GetDefaultSmall();
+	Font_DrawBitmapString( smallFont, 2.0f, viewport->h - smallFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+	                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 }
 
 void R_DrawMenu( void )

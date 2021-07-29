@@ -71,7 +71,7 @@ void RM_InitializeMaterialSystem( void )
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables                        = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.type         = SCRIPT_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.value.texVar = R_GetFallbackTexture();
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.value.texVar = RT_GetFallbackTexture();
 }
 
 void RM_ShutdownMaterialSystem( void )
@@ -255,7 +255,7 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line )
 			pass->variables[ i ].varData.value.uVar = strtoul( token, NULL, 10 );
 			break;
 		case SCRIPT_VAR_TEXTURE:
-			pass->variables[ i ].varData.value.texVar = R_LoadTexture( token );
+			pass->variables[ i ].varData.value.texVar = RT_LoadTexture( token );
 			break;
 	}
 

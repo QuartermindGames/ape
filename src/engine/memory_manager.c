@@ -16,7 +16,7 @@ static PLLinkedList *memCachePools[ MEM_CACHE_END ];
 
 static void MEM_InitializeCachePools( void )
 {
-	for ( uint8_t i = 0; i < MEM_CACHE_END; ++i )
+	for ( unsigned int i = 0; i < MEM_CACHE_END; ++i )
 	{
 		memCachePools[ i ] = PlCreateLinkedList();
 		if ( memCachePools[ i ] == NULL )
@@ -83,7 +83,7 @@ static PLLinkedList *mmReferenceList;
 
 #define MEM_CLEANUP_DELAY 200.0
 
-#define DEBUG_MEMORY
+//#define DEBUG_MEMORY
 
 static bool MEM_FreeReference( MEMReference *m, bool force )
 {

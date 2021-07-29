@@ -75,5 +75,5 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 void RSpr_DrawAnimationFrame( SprAnimationFrame *frame, const PLVector3 *position, float spriteAngle );
 void RSpr_DrawAnimation( SprAnimationFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLGTexture *R_LoadTexture( const char *path );
-PLGTexture *R_GetFallbackTexture( void );
+PLGTexture *RT_LoadTexture( const char *path );
+PLGTexture *RT_GetFallbackTexture( void );

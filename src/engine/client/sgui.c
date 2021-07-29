@@ -250,7 +250,6 @@ void Menu_Tick( void )
 
 void Menu_Draw( const PLGViewport *viewport )
 {
-	return;
 	if ( currentMenu == NULL )
 		return;
 

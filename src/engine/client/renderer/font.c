@@ -8,7 +8,7 @@
 #include "font.h"
 #include "renderer.h"
 
-static BitmapFont *defaultFont;
+static BitmapFont *defaultFont, *defaultFontSmall;
 
 void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
 {
@@ -42,7 +42,6 @@ void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float
 	float n_y = y;
 	for ( size_t i = 0; i < length; ++i )
 	{
-		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 		if ( msg[ i ] == '\n' )
 		{
 			n_y += ( font->ch * scale );
@@ -55,6 +54,7 @@ void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float
 			continue;
 		}
 
+		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 		n_x += ( font->cw * scale );
 	}
 }
@@ -129,9 +129,11 @@ void Font_Draw( BitmapFont *font )
 
 void Font_Initialize( void )
 {
-	defaultFont = Font_CacheBitmap( "materials/ui/fonts/default_small.mat", 128, 24, 4, 6, 0, 128 );
-	if ( defaultFont == NULL )
-		PrintError( "Failed to load default font!\n" );
+	defaultFont      = Font_CacheBitmap( "materials/ui/fonts/default.mat", 256, 48, 8, 12, 0, 128  );
+	defaultFontSmall = Font_CacheBitmap( "materials/ui/fonts/default_small.mat", 128, 24, 4, 6, 0, 128 );
+
+	if ( defaultFont == NULL || defaultFontSmall == NULL )
+		PrintError( "Failed to load default fonts!\n" );
 }
 
 void Font_Shutdown( void )
@@ -144,8 +146,6 @@ static void Font_CB_DestroyBitmap( void *userData )
 {
 	BitmapFont *font = userData;
 	u_assert( font != NULL );
-	if ( font == NULL )
-		return;
 
 	RM_ReleaseMaterial( font->material );
 
@@ -178,7 +178,7 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return NULL;
 	}
 
-	font = globalSystem.MAlloc( sizeof( BitmapFont ), true );
+	font           = globalSystem.MAlloc( sizeof( BitmapFont ), true );
 	font->material = material;
 	font->mesh     = mesh;
 	font->w        = w;
@@ -203,7 +203,5 @@ void Font_ReleaseBitmap( BitmapFont *font )
 	MEM_ReleaseReference( &font->mem );
 }
 
-BitmapFont *Font_GetDefault( void )
-{
-	return defaultFont;
-}
+BitmapFont *Font_GetDefault( void ) { return defaultFont; }
+BitmapFont *Font_GetDefaultSmall( void ) { return defaultFontSmall; }

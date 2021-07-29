@@ -24,6 +24,7 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 void        Font_ReleaseBitmap( BitmapFont *font );
 
 BitmapFont *Font_GetDefault( void );
+BitmapFont *Font_GetDefaultSmall( void );
 
 void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character );
 void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length );

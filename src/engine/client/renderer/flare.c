@@ -38,9 +38,9 @@ static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 void Flare_Initialize( void )
 {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
-		flareTextures[ i ] = R_LoadTexture( flarePaths[ i ] );
+		flareTextures[ i ] = RT_LoadTexture( flarePaths[ i ] );
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
-		shineTextures[ i ] = R_LoadTexture( shinePaths[ i ] );
+		shineTextures[ i ] = RT_LoadTexture( shinePaths[ i ] );
 }
 
 void Flare_Render( PLGTexture *texture, float diameter, float distance )
