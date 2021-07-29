@@ -386,12 +386,18 @@ static void DrawInput( const PLGViewport *viewport )
 
 	PlgSetTexture( NULL, 0 );
 
-	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - 12.0f, ( float ) viewport->w, 12.0f, PLColourRGB( 0, 0, 0 ) );
+    BitmapFont *font = Font_GetDefault();
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - font->ch, ( float ) viewport->w, font->ch, PLColourRGB( 0, 0, 0 ) );
 
 	/* draw input field */
-	Font_DrawBitmapCharacter( Font_GetDefault(), 1.0f, ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '>' );
-	Font_DrawBitmapCharacter( Font_GetDefault(), ( float ) ( 12 + ( 8 * curInputBufferLength ) ), ( float ) viewport->h - 12, 1.0f, CON_TEXT_COLOUR, '_' );
-	Font_DrawBitmapString( Font_GetDefault(), 12.0f, ( float ) viewport->h - 12, 1.0f, 1.0f, CON_TEXT_COLOUR, inputBuffer, 0 );
+	Font_BeginDraw( font );
+
+	Font_AddBitmapCharacterToPass( font, 1.0f, ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, '>' );
+    Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + ( font->cw * curInputBufferLength ) ), ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, '_' );
+
+	Font_AddBitmapStringToPass( Font_GetDefault(), font->cw, ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, inputBuffer, curInputBufferLength );
+
+	Font_Draw( font );
 }
 
 /**
