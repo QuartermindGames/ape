@@ -29,6 +29,8 @@ add_library(engine SHARED ${ENGINE_SOURCE_FILES}
         client/renderer/renderer.c
         client/renderer/scenegraph.c
         client/renderer/shaders.c
+        client/renderer/sprite.c
+        client/renderer/texture.c
 
         script.c
         scheduler.c
