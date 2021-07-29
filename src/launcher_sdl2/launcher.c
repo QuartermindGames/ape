@@ -16,8 +16,8 @@ static PLLibrary *dllEnginePtr;
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
 
-void *Sys_calloc( size_t num, size_t size, bool abortOnFail );
-void  Sys_free( void *ptr );
+void *OS_calloc( size_t num, size_t size, bool abortOnFail );
+void  OS_free( void *ptr );
 
 /****************************************
  * WINDOW MANAGEMENT
@@ -301,23 +301,28 @@ static unsigned int Sys_TimerCallback( unsigned int interval, void *param )
  ****************************************/
 
 //#define DEBUG_MEMORY
+#define TRACK_MEMORY
 
-#ifdef DEBUG_MEMORY
 /* description of what's been allocated, for debugging */
+#if defined( TRACK_MEMORY )
 typedef struct AllocHeader
 {
 	char   id[ 32 ]; /* unique identifier */
 	size_t length;   /* allocated size in bytes */
 } AllocHeader;
-static size_t totalRAMUsage = 0;
 #endif
+static size_t totalRAMUsage = 0;
+
+/**
+ * For public interface.
+ */
+static size_t OS_GetTotalAllocatedMemory( void ) { return totalRAMUsage; }
 
 /* wrapper for calloc */
-void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
+void *OS_calloc( size_t num, size_t size, bool abortOnFail )
 {
 	size_t totalSize = num * size;
-
-#ifdef DEBUG_MEMORY
+#if defined( TRACK_MEMORY )
 	totalSize += sizeof( AllocHeader );
 #endif
 
@@ -331,16 +336,18 @@ void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
 		return NULL;
 	}
 
-#ifdef DEBUG_MEMORY
+#if defined( TRACK_MEMORY )
 	AllocHeader *header = ( AllocHeader * ) buf;
 	PlGenerateUniqueIdentifier( header->id, sizeof( header->id ) - 1 );
 	header->length = totalSize;
 
 	totalRAMUsage += totalSize;
 
+#ifdef DEBUG_MEMORY
 	printf( "ALLOC: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
 	        header->length, header->id,
 	        PlBytesToMegabytes( totalRAMUsage ) );
+#endif
 
 	buf += sizeof( AllocHeader );
 #endif
@@ -349,20 +356,19 @@ void *Sys_calloc( size_t num, size_t size, bool abortOnFail )
 }
 
 /* wrapper for malloc */
-void *Sys_malloc( size_t size, bool abortOnFail )
+void *OS_malloc( size_t size, bool abortOnFail )
 {
-	return Sys_calloc( 1, size, abortOnFail );
+	return OS_calloc( 1, size, abortOnFail );
 }
 
 /* wrapper for realloc */
-void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
+void *OS_realloc( void *ptr, size_t newSize, bool abortOnFail )
 {
 	char *buf = ptr;
-
-#ifdef DEBUG_MEMORY
 	if ( buf == NULL )
-		return Sys_malloc( newSize, abortOnFail );
+		return OS_malloc( newSize, abortOnFail );
 
+#if defined( TRACK_MEMORY )
 	buf -= sizeof( AllocHeader );
 	newSize += sizeof( AllocHeader ); /* maybe... ? */
 #endif
@@ -377,7 +383,7 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
 		return NULL;
 	}
 
-#ifdef DEBUG_MEMORY
+#if defined( TRACK_MEMORY )
 	AllocHeader *header    = ( AllocHeader * ) buf;
 	size_t       oldLength = header->length;
 	header->length         = newSize;
@@ -385,9 +391,11 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
 	totalRAMUsage -= oldLength;
 	totalRAMUsage += newSize;
 
+#ifdef DEBUG_MEMORY
 	printf( "REALLOC: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
 	        header->length, header->id,
 	        PlBytesToMegabytes( totalRAMUsage ) );
+#endif
 
 	buf += sizeof( AllocHeader );
 #endif
@@ -395,11 +403,10 @@ void *Sys_realloc( void *ptr, size_t newSize, bool abortOnFail )
 	return buf;
 }
 
-void Sys_free( void *ptr )
+void OS_free( void *ptr )
 {
 	char *buf = ptr;
-
-#ifdef DEBUG_MEMORY
+#if defined( TRACK_MEMORY )
 	if ( buf != NULL )
 	{
 		buf -= sizeof( AllocHeader );
@@ -408,10 +415,11 @@ void Sys_free( void *ptr )
 		if ( header != NULL )
 		{
 			totalRAMUsage -= header->length;
-
+#ifdef DEBUG_MEMORY
 			printf( "FREE: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
 			        header->length, header->id,
 			        PlBytesToMegabytes( totalRAMUsage ) );
+#endif
 		}
 	}
 #endif
@@ -420,9 +428,9 @@ void Sys_free( void *ptr )
 }
 
 /* wrappers for platform lib */
-void *Sys_WMAlloc( size_t size ) { return Sys_malloc( size, true ); }
-void *Sys_WCAlloc( size_t num, size_t size ) { return Sys_calloc( num, size, true ); }
-void *Sys_WReAlloc( void *ptr, size_t newSize ) { return Sys_realloc( ptr, newSize, true ); }
+void *Sys_WMAlloc( size_t size ) { return OS_malloc( size, true ); }
+void *Sys_WCAlloc( size_t num, size_t size ) { return OS_calloc( num, size, true ); }
+void *Sys_WReAlloc( void *ptr, size_t newSize ) { return OS_realloc( ptr, newSize, true ); }
 
 /****************************************
  * INITIALIZATION
@@ -464,10 +472,11 @@ static void Sys_SetupEngineInterface( void )
 	        .GetPerformanceCounter   = SDL_GetPerformanceCounter,
 	        .GetPerformanceFrequency = SDL_GetPerformanceFrequency,
 
-	        .CAlloc  = Sys_calloc,
-	        .MAlloc  = Sys_malloc,
-	        .ReAlloc = Sys_realloc,
-	        .Free    = Sys_free,
+	        .CAlloc                     = OS_calloc,
+	        .MAlloc                     = OS_malloc,
+	        .ReAlloc                    = OS_realloc,
+	        .Free                       = OS_free,
+	        .GetInternalAllocatedMemory = OS_GetTotalAllocatedMemory,
 	};
 
 	/* initialize the interface */
@@ -491,7 +500,7 @@ int Sys_Init( int argc, char **argv )
 	pl_calloc  = Sys_WCAlloc;
 	pl_malloc  = Sys_WMAlloc;
 	pl_realloc = Sys_WReAlloc;
-	pl_free    = Sys_free;
+	pl_free    = OS_free;
 
 	/* initialize the platform library */
 	PlInitialize( argc, argv );

@@ -47,17 +47,18 @@ typedef struct OSSystemInterface
 	void *( *MAlloc )( size_t size, bool abortOnFail );
 	void *( *ReAlloc )( void *ptr, size_t newSize, bool abortOnFail );
 	void ( *Free )( void *ptr );
+	size_t ( *GetInternalAllocatedMemory )( void );
 
 	void ( *Error )( const char *message );
 	void ( *Shutdown )( void );
 } OSSystemInterface;
 extern OSSystemInterface globalSystem;
 
-#define CallSystemFunction( FUNCTION, ... )  \
-	if ( globalSystem.FUNCTION != NULL ) \
+#define CallSystemFunction( FUNCTION, ... ) \
+	if ( globalSystem.FUNCTION != NULL )    \
 	globalSystem.FUNCTION( __VA_ARGS__ )
 
-#define SYSTEM_INTERFACE_VERSION_MAJOR 1
+#define SYSTEM_INTERFACE_VERSION_MAJOR 2
 #define SYSTEM_INTERFACE_VERSION_MINOR 0
 
 /* ======================================================================
