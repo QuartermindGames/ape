@@ -26,7 +26,7 @@ PLGTexture *RT_GetFallbackTexture( void )
 }
 
 static PLGTexture *RT_GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels,
-                                               bool generateMipMap )
+											   bool generateMipMap )
 {
 	PLColourFormat cFormat;
 	PLImageFormat  iFormat;
@@ -82,10 +82,10 @@ void RT_InitializeTextures( void )
 
 	/* generate fallback texture */
 	static PLColour fallbackData[] = {
-	        { 128, 0, 128, 255 },
-	        { 0, 128, 128, 255 },
-	        { 0, 128, 128, 255 },
-	        { 128, 0, 128, 255 },
+			{ 128, 0, 128, 255 },
+			{ 0, 128, 128, 255 },
+			{ 0, 128, 128, 255 },
+			{ 128, 0, 128, 255 },
 	};
 	fallbackTexture = RT_GenerateTextureFromData( ( uint8_t * ) fallbackData, 2, 2, 4, false );
 	if ( fallbackTexture == NULL )

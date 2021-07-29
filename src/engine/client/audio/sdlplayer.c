@@ -18,9 +18,9 @@
 */
 
 #define SAMPLING_FREQ  48000 /* 48khz. */
-#define REVERB_BUF_LEN 4800  /* 50ms. */
-#define OVERSAMPLE     2     /* 2x oversampling. */
-#define NUM_CHANNELS   2     /* Stereo. */
+#define REVERB_BUF_LEN 4800	 /* 50ms. */
+#define OVERSAMPLE	   2	 /* 2x oversampling. */
+#define NUM_CHANNELS   2	 /* Stereo. */
 #define BUFFER_SAMPLES 16384 /* 64k buffer. */
 
 static SDL_sem *semaphore;

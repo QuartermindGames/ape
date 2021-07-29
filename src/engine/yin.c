@@ -18,7 +18,7 @@
 PLPackage *globalWad = NULL;
 
 OSSystemInterface globalSystem;
-GameInterface     globalGame;
+GameInterface	  globalGame;
 
 const int ENGINE_VERSION[ 3 ] = { ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_PATCH };
 
@@ -33,15 +33,15 @@ static float cpuPerfGraphs[ MAX_PROFILER_GROUPS ][ NUM_GRAPH_POINTS ];
 typedef struct CPUTime
 {
 	uint64_t clock;
-	double   timeTaken;
+	double	 timeTaken;
 } CPUTime;
 static CPUTime cpuTimers[ MAX_PROFILER_GROUPS ];
 
 const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ] = {
-        PL_TOSTRING( PROFILE_DRAW_ALL ),
-        PL_TOSTRING( PROFILE_DRAW_WORLD ),
-        PL_TOSTRING( PROFILE_DRAW_ACTORS ),
-        PL_TOSTRING( PROFILE_DRAW_UI ),
+		PL_TOSTRING( PROFILE_DRAW_ALL ),
+		PL_TOSTRING( PROFILE_DRAW_WORLD ),
+		PL_TOSTRING( PROFILE_DRAW_ACTORS ),
+		PL_TOSTRING( PROFILE_DRAW_UI ),
 };
 
 void CPUTimer_Initialize( void )
@@ -59,7 +59,7 @@ void CPUTimer_StartMeasure( CPUProfilerGroup group )
 
 void CPUTimer_EndMeasure( CPUProfilerGroup group )
 {
-	uint64_t now                 = globalSystem.GetPerformanceCounter();
+	uint64_t now				 = globalSystem.GetPerformanceCounter();
 	cpuTimers[ group ].timeTaken = ( double ) ( ( now - cpuTimers[ group ].clock ) * 1000 ) / globalSystem.GetPerformanceFrequency();
 }
 
@@ -124,8 +124,8 @@ static void Engine_SetupFileSystem( void )
 static bool Engine_Initialize( int argc, char **argv )
 {
 	LOG_LEVEL_ERROR = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	LOG_LEVEL_WARN  = PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
-	LOG_LEVEL_INFO  = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+	LOG_LEVEL_WARN	= PlAddLogLevel( "yin/warning", PL_COLOUR_ORANGE, true );
+	LOG_LEVEL_INFO	= PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
 	Print( "Yin Engine (%s), Copyright (C) 2020-2021 Mark E Sowden\n", ENGINE_VERSION_STR );
 
@@ -226,7 +226,7 @@ static void Engine_HandleTextEvent( const char *key )
 }
 
 static OSSystemInterface *GetSystemInterface( void ) { return &globalSystem; }
-static GameInterface *    GetGameInterface( void ) { return &globalGame; }
+static GameInterface *	  GetGameInterface( void ) { return &globalGame; }
 
 PL_EXPORT OSEngineInterface *GetDllInterface( uint32_t version, const OSSystemInterface *sysIn )
 {
@@ -238,17 +238,17 @@ PL_EXPORT OSEngineInterface *GetDllInterface( uint32_t version, const OSSystemIn
 
 	/* and now setup our engine interface */
 	static OSEngineInterface engineInterface = {
-	        .version          = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
-	        .Initialize       = Engine_Initialize,
-	        .Shutdown         = Engine_Shutdown,
-	        .Display          = CL_Display,
-	        .GetNumTicks      = Engine_GetNumTicks,
-	        .IsRunning        = Engine_IsRunning,
-	        .Tick             = Engine_Tick,
-	        .KeyboardEvent    = Engine_HandleKeyboardEvent,
-	        .TextEvent        = Engine_HandleTextEvent,
-	        .GetOSInterface   = GetSystemInterface,
-	        .GetGameInterface = GetGameInterface,
+			.version		  = { ENGINE_INTERFACE_VERSION_MAJOR, ENGINE_INTERFACE_VERSION_MINOR },
+			.Initialize		  = Engine_Initialize,
+			.Shutdown		  = Engine_Shutdown,
+			.Display		  = CL_Display,
+			.GetNumTicks	  = Engine_GetNumTicks,
+			.IsRunning		  = Engine_IsRunning,
+			.Tick			  = Engine_Tick,
+			.KeyboardEvent	  = Engine_HandleKeyboardEvent,
+			.TextEvent		  = Engine_HandleTextEvent,
+			.GetOSInterface	  = GetSystemInterface,
+			.GetGameInterface = GetGameInterface,
 	};
 
 	return &engineInterface;

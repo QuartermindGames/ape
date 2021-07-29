@@ -82,7 +82,7 @@ void Con_Draw( const PLGViewport *viewport );
 typedef struct OSWindow OSWindow;
 
 #if !defined( NDEBUG )
-#define Print( FORMAT, ... )     PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+#define Print( FORMAT, ... )	 PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
 #define PrintError( FORMAT, ... )                                 \
 	{                                                             \
@@ -91,7 +91,7 @@ typedef struct OSWindow OSWindow;
 	}
 #define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #else
-#define Print( FORMAT, ... )     PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+#define Print( FORMAT, ... )	 PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #define PrintWarn( FORMAT, ... ) PlLogMessage( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
 #define PrintError( FORMAT, ... )                               \
 	{                                                           \

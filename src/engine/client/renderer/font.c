@@ -129,7 +129,7 @@ void Font_Draw( BitmapFont *font )
 
 void Font_Initialize( void )
 {
-	defaultFont      = Font_CacheBitmap( "materials/ui/fonts/default.mat", 256, 48, 8, 12, 0, 128  );
+	defaultFont		 = Font_CacheBitmap( "materials/ui/fonts/default.mat", 256, 48, 8, 12, 0, 128 );
 	defaultFontSmall = Font_CacheBitmap( "materials/ui/fonts/default_small.mat", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
@@ -178,15 +178,15 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return NULL;
 	}
 
-	font           = globalSystem.MAlloc( sizeof( BitmapFont ), true );
+	font		   = globalSystem.MAlloc( sizeof( BitmapFont ), true );
 	font->material = material;
-	font->mesh     = mesh;
-	font->w        = w;
-	font->h        = h;
-	font->cw       = cw;
-	font->ch       = ch;
-	font->start    = start;
-	font->end      = end;
+	font->mesh	   = mesh;
+	font->w		   = w;
+	font->h		   = h;
+	font->cw	   = cw;
+	font->ch	   = ch;
+	font->start	   = start;
+	font->end	   = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 

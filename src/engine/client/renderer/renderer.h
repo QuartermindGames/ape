@@ -24,14 +24,14 @@ typedef enum CameraMode
 
 typedef struct Camera
 {
-	PLGCamera *   internal; /* the camera used for this viewport */
-	CameraMode    followMode;
+	PLGCamera *	  internal; /* the camera used for this viewport */
+	CameraMode	  followMode;
 	struct Actor *parentActor;
 } Camera;
 
 typedef struct RendererStats
 {
-	PLVector3    cameraPos;
+	PLVector3	 cameraPos;
 	unsigned int numBatches;
 	unsigned int numFacesDrawn;
 } RendererStats;
@@ -65,7 +65,7 @@ void R_DrawMenu( void );
 Camera *R_GetGlobalCamera( void );
 
 Camera *R_CreateCamera( const PLVector3 *position, const PLVector3 *angles );
-void R_DestroyCamera( Camera *camera );
+void	R_DestroyCamera( Camera *camera );
 
 PLGShaderProgram *RS_GetShaderProgram( const char *name );
 

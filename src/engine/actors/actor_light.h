@@ -9,6 +9,6 @@
 
 typedef struct ALight
 {
-	PLColour     colour;
+	PLColour	 colour;
 	PLGLightType type;
 } ALight;

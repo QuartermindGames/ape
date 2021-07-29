@@ -55,9 +55,9 @@ void PS_CacheEmitterTemplate( const char *path )
 	emitter->emissionRate = NL_GetI32ByName( root, "emissionRate", 0 );
 	emitter->emissionVar  = NL_GetI32ByName( root, "emissionVar", 0 );
 
-	emitter->particleLife    = NL_GetI32ByName( root, "particleLife", 0 );
+	emitter->particleLife	 = NL_GetI32ByName( root, "particleLife", 0 );
 	emitter->particleLifeVar = NL_GetI32ByName( root, "particleLifeVar", 0 );
-	emitter->maxParticles    = NL_GetI32ByName( root, "maxParticles", 0 );
+	emitter->maxParticles	 = NL_GetI32ByName( root, "maxParticles", 0 );
 
 	emitter->life = NL_GetI32ByName( root, "life", 0 );
 
@@ -92,7 +92,7 @@ PSEmitter *PS_SpawnEmitter( const char *path )
 
 	return emitter;
 #else
-    return globalSystem.MAlloc( sizeof( PSEmitter ), true );
+	return globalSystem.MAlloc( sizeof( PSEmitter ), true );
 #endif
 }
 
@@ -120,7 +120,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 	while ( node != NULL )
 	{
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		node                 = PlGetNextLinkedListNode( node );
+		node				 = PlGetNextLinkedListNode( node );
 		PS_TickParticle( particle );
 	}
 }

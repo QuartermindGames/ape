@@ -8,15 +8,15 @@
 
 typedef struct SGNode
 {
-	SGTransform       transform;
-	unsigned int      dataType;
-	void *            data;
+	SGTransform		  transform;
+	unsigned int	  dataType;
+	void *			  data;
 	PLLinkedListNode *node;
-	PLLinkedList *    children;
+	PLLinkedList *	  children;
 } SGNode;
 
-static PLLinkedList *    sceneGraph = NULL;
-static PLLinkedListNode *rootNode   = NULL;
+static PLLinkedList *	 sceneGraph = NULL;
+static PLLinkedListNode *rootNode	= NULL;
 
 SGTransform *SG_DS_Transform( NLNode *root, const char *childName, SGTransform *out )
 {
@@ -72,17 +72,17 @@ void *SG_GetNodeData( SGNode *node )
 SGNode *SG_AddHeadNode( unsigned int dataType, void *data )
 {
 	SGNode *head   = globalSystem.MAlloc( sizeof( SGNode ), true );
-	head->data     = data;
+	head->data	   = data;
 	head->dataType = dataType;
-	head->node     = PlInsertLinkedListNode( sceneGraph, head );
+	head->node	   = PlInsertLinkedListNode( sceneGraph, head );
 
 	return head;
 }
 
 SGNode *SG_AddChildNode( SGNode *parent, unsigned int dataType, void *data )
 {
-	SGNode *child   = globalSystem.MAlloc( sizeof( SGNode ), true );
-	child->data     = data;
+	SGNode *child	= globalSystem.MAlloc( sizeof( SGNode ), true );
+	child->data		= data;
 	child->dataType = dataType;
 
 	if ( parent->children == NULL )

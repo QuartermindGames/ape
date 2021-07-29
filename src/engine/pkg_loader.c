@@ -23,9 +23,9 @@ uint8_t *Pkg_OpenFile( PLFile *file, PLPackageIndex *index )
 	if ( index->compressionType == PL_COMPRESSION_ZLIB )
 	{
 		/* go ahead and decompress it */
-		uint8_t *     uncompressedData = globalSystem.MAlloc( index->fileSize, true );
+		uint8_t *	  uncompressedData = globalSystem.MAlloc( index->fileSize, true );
 		unsigned long uncompressedLength;
-		int           status = mz_uncompress( uncompressedData, &uncompressedLength, data, ( mz_ulong ) index->compressedSize );
+		int			  status = mz_uncompress( uncompressedData, &uncompressedLength, data, ( mz_ulong ) index->compressedSize );
 
 		/* don't need this anymore! */
 		globalSystem.Free( data );
@@ -64,7 +64,7 @@ PLPackage *Pkg_LoadPackage( const char *path )
 	if ( !( identifier[ 0 ] == 'P' && identifier[ 1 ] == 'K' && identifier[ 2 ] == 'G' && identifier[ 3 ] == '2' ) )
 		PrintError( "Invalid package header, \"%s\", expected \"PKG2\"!\n", identifier );
 
-	bool     status;
+	bool	 status;
 	uint32_t numFiles = PlReadInt32( filePtr, false, &status );
 	if ( !status )
 		PrintError( "Failed to read in the number of files within the \"%s\" package!\nPL: %s\n", path, PlGetError() );
@@ -82,7 +82,7 @@ PLPackage *Pkg_LoadPackage( const char *path )
 		index->fileName[ nameLength + 1 ] = '\0';
 
 		/* file length/size */
-		index->fileSize       = PlReadInt32( filePtr, false, &status );
+		index->fileSize		  = PlReadInt32( filePtr, false, &status );
 		index->compressedSize = PlReadInt32( filePtr, false, &status );
 		if ( !status )
 			PrintError( "Failed to read in the file sizes for \"%s\" within the \"%s\" package!\nPL: %s\n", index->fileName, path, PlGetError() );

@@ -37,5 +37,5 @@ void CL_Display( void )
 
 	R_DrawMenu();
 
-    PROFILE_END( PROFILE_DRAW_ALL );
+	PROFILE_END( PROFILE_DRAW_ALL );
 }

@@ -79,14 +79,14 @@ static void Asteroid_Tick( Actor *self, void *userData )
 }
 
 const ActorSetup actorAsteroidSetup = {
-        .id          = "point.sg.asteroid",
-        .Spawn       = Asteroid_Spawn,
-        .Tick        = Asteroid_Tick,
-        .Draw        = NULL,
-        .Collide     = SGActor_Generic_Collide,
-        .Destroy     = SGActor_Generic_Destroy,
-        .Serialize   = NULL,
-        .Deserialize = NULL,
+		.id			 = "point.sg.asteroid",
+		.Spawn		 = Asteroid_Spawn,
+		.Tick		 = Asteroid_Tick,
+		.Draw		 = NULL,
+		.Collide	 = SGActor_Generic_Collide,
+		.Destroy	 = SGActor_Generic_Destroy,
+		.Serialize	 = NULL,
+		.Deserialize = NULL,
 };
 
 /****************************************
@@ -110,12 +110,12 @@ static void Projectile_Tick( Actor *self, void *userData )
 }
 
 const ActorSetup actorProjectileSetup = {
-        .id          = "point.sg.projectile",
-        .Spawn       = Projectile_Spawn,
-        .Tick        = Projectile_Tick,
-        .Draw        = NULL,
-        .Collide     = SGActor_Generic_Collide,
-        .Destroy     = SGActor_Generic_Destroy,
-        .Serialize   = NULL,
-        .Deserialize = NULL,
+		.id			 = "point.sg.projectile",
+		.Spawn		 = Projectile_Spawn,
+		.Tick		 = Projectile_Tick,
+		.Draw		 = NULL,
+		.Collide	 = SGActor_Generic_Collide,
+		.Destroy	 = SGActor_Generic_Destroy,
+		.Serialize	 = NULL,
+		.Deserialize = NULL,
 };

@@ -30,22 +30,22 @@ typedef enum ScriptVariableType
 } ScriptVariableType;
 
 #define SCRIPT_VARIABLE_NAME_LENGTH 64
-#define SCRIPT_STRING_LENGTH        512
+#define SCRIPT_STRING_LENGTH		512
 
 typedef struct ScriptVariable
 {
-	char               name[ SCRIPT_VARIABLE_NAME_LENGTH ];
+	char			   name[ SCRIPT_VARIABLE_NAME_LENGTH ];
 	ScriptVariableType type;
 	union
 	{
-		float        fVar;
-		double       dVar;
-		int          iVar;
+		float		 fVar;
+		double		 dVar;
+		int			 iVar;
 		unsigned int uVar;
-		bool         bVar;
-		PLVector2    v2Var;
-		PLVector3    v3Var;
-		PLVector4    v4Var;
+		bool		 bVar;
+		PLVector2	 v2Var;
+		PLVector3	 v3Var;
+		PLVector4	 v4Var;
 
 		char strVar[ SCRIPT_STRING_LENGTH ];
 

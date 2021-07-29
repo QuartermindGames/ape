@@ -23,8 +23,8 @@ static PLGCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
 static PLGFrameBuffer *smDepthBuffer = NULL;
-static PLGTexture *    smTexture;
-static PLGCamera *     smCamera;
+static PLGTexture *	   smTexture;
+static PLGCamera *	   smCamera;
 
 /* Post Processing */
 
@@ -122,20 +122,20 @@ static void Gfx_SetupShadowMap( void )
 	/* unbind the buffer we just created */
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	smCamera             = PlgCreateCamera();
+	smCamera			 = PlgCreateCamera();
 	smCamera->viewport.w = SHADOW_MAP_RESOLUTION;
 	smCamera->viewport.h = SHADOW_MAP_RESOLUTION;
 }
 
 void RS_InitializeShaderPrograms( void ); /* renderer/shaders.c */
-void RT_InitializeTextures( void ); /* texture.c */
+void RT_InitializeTextures( void );		  /* texture.c */
 void R_Initialize( void )
 {
 	Print( "Initializing renderer\n" );
 
 	if ( PlgSetDriver( "vulkan" ) != PL_RESULT_SUCCESS &&
-	     PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
-	     PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
+		 PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS &&
+		 PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
 		PrintError( "Failed to set graphics driver!\nPL: %s\n", PlGetError() );
 
 	RT_InitializeTextures();
@@ -150,7 +150,7 @@ void R_Initialize( void )
 
 	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = 0.0f;
-	auxCamera->far  = 1000.0f;
+	auxCamera->far	= 1000.0f;
 
 	Gfx_SetupShadowMap();
 	R_SetupDefaultState();
@@ -162,8 +162,8 @@ void R_Shutdown( void )
 	RM_ShutdownMaterialSystem();
 }
 
-static PLGFrameBuffer *auxBuffer        = NULL;
-static PLGTexture *    auxBufferTexture = NULL;
+static PLGFrameBuffer *auxBuffer		= NULL;
+static PLGTexture *	   auxBufferTexture = NULL;
 
 /**
  * Draw the auxillary buffer.
@@ -172,8 +172,8 @@ static void R_DrawAuxBuffer( float x, float y, float w, float h )
 {
 }
 
-static PLGFrameBuffer *ppBuffer     = NULL;
-static PLGTexture *    ppAttachment = NULL;
+static PLGFrameBuffer *ppBuffer		= NULL;
+static PLGTexture *	   ppAttachment = NULL;
 
 /**
  * Where the magic of post processing happens.
@@ -220,7 +220,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 		outOfBounds = true;
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	PLVector3 *  points       = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
+	PLVector3 *	 points		  = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
@@ -244,18 +244,18 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 	BitmapFont *font = Font_GetDefaultSmall();
 	if ( font != NULL )
 	{
-		size_t len  = strlen( heading );
+		size_t len	= strlen( heading );
 		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
 		Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, true );
 
 		/* metrics */
 		char buf[ 128 ];
 		snprintf( buf, sizeof( buf ),
-		          "min: %02f\n"
-		          "max: %02f\n"
-		          "cur: %02f",
-		          min, max,
-		          values[ numPoints - 1 ] );
+				  "min: %02f\n"
+				  "max: %02f\n"
+				  "cur: %02f",
+				  min, max,
+				  values[ numPoints - 1 ] );
 		Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
 	}
 
@@ -271,7 +271,7 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 	float y = 0.0f;
 	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i, y += 64.0f )
 	{
-		uint8_t      numPoints;
+		uint8_t		 numPoints;
 		const float *graph = PF_GetGraph( i, &numPoints );
 		R_DrawGraph( cpuProfilerDescriptions[ i ], viewport->w - 512.0f, y, 512.0f, 64.0f, graph, numPoints, -100.0f, 100.0f );
 	}
@@ -283,7 +283,7 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 	Font_BeginDraw( defaultFont );
 
 	static const char spinning[] = {
-	        '\\', '|', '/', '-', '/', '-' };
+			'\\', '|', '/', '-', '/', '-' };
 	static int pos = 0;
 	Font_DrawBitmapCharacter( defaultFont, 2.0f, 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), spinning[ pos++ ] );
 	if ( pos >= sizeof( spinning ) )
@@ -291,16 +291,16 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 
 	char buf[ 256 ];
 	snprintf( buf, sizeof( buf ),
-	          "  Camera Position: %s\n"
-	          "  Num Faces Drawn: " COM_FMT_uint32 "\n"
-	          "  Num Batches:     " COM_FMT_uint32 "\n"
-	          "  OS Memory Usage: %.2lfMB\n"
-	          "  Internal Memory: %.2lfMB\n",
-	          PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
-	          g_gfxPerfStats.numFacesDrawn,
-	          g_gfxPerfStats.numBatches,
-	          PlBytesToMegabytes( PlGetCurrentMemoryUsage() ),
-	          PlBytesToMegabytes( globalSystem.GetInternalAllocatedMemory() ) );
+			  "  Camera Position: %s\n"
+			  "  Num Faces Drawn: " COM_FMT_uint32 "\n"
+			  "  Num Batches:     " COM_FMT_uint32 "\n"
+			  "  OS Memory Usage: %.2lfMB\n"
+			  "  Internal Memory: %.2lfMB\n",
+			  PlPrintVector3( &g_gfxPerfStats.cameraPos, pl_int_var ),
+			  g_gfxPerfStats.numFacesDrawn,
+			  g_gfxPerfStats.numBatches,
+			  PlBytesToMegabytes( PlGetCurrentMemoryUsage() ),
+			  PlBytesToMegabytes( globalSystem.GetInternalAllocatedMemory() ) );
 	Font_DrawBitmapString( defaultFont, 2.0f, 16.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
 
 	/* print out details regarding running tasks */
@@ -309,8 +309,8 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 		Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "Task Manager\n===================", true );
 		y += defaultFont->ch * 2;
 
-		double       taskDelay;
-		unsigned int index    = 0;
+		double		 taskDelay;
+		unsigned int index	  = 0;
 		const char * taskDesc = Sch_GetTaskDescription( index, &taskDelay );
 		if ( taskDesc == NULL )
 			Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
@@ -328,7 +328,7 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 
 	BitmapFont *smallFont = Font_GetDefaultSmall();
 	Font_DrawBitmapString( smallFont, 2.0f, viewport->h - smallFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
-	                       "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
+						   "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 }
 
 void R_DrawMenu( void )
@@ -399,7 +399,7 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 static void R_RenderScene( Camera *camera, bool smPass )
 {
 	WorldSector *curSector = NULL;
-	Actor *      player    = Game_GetPlayer();
+	Actor *		 player	   = Game_GetPlayer();
 	if ( player != NULL )
 		curSector = Act_GetWorldSector( player );
 

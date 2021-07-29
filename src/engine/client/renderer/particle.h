@@ -12,17 +12,17 @@ typedef struct Camera Camera;
 
 typedef struct PSEmitter
 {
-	SGTransform  transform, transformVar;
-	unsigned int emissionRate, emissionVar;     /* how many particles to emit per tick */
-	int          particleLife, particleLifeVar; /* how long the particles spawned by the emitter will live until they die */
-	int          life;                          /* how long this emitter will live until it's removed */
-	PLColour     startColour, startColourVar;
-	PLColour     endColour, endColourVar;
+	SGTransform	 transform, transformVar;
+	unsigned int emissionRate, emissionVar;		/* how many particles to emit per tick */
+	int			 particleLife, particleLifeVar; /* how long the particles spawned by the emitter will live until they die */
+	int			 life;							/* how long this emitter will live until it's removed */
+	PLColour	 startColour, startColourVar;
+	PLColour	 endColour, endColourVar;
 	unsigned int maxParticles; /* maximum number of particles at a time */
 
 	struct PLGMesh * mesh;
 	struct Material *material;
-	MEMReference     mem;
+	MEMReference	 mem;
 
 	struct PLLinkedList *particles;
 } PSEmitter;
@@ -30,8 +30,8 @@ typedef struct PSEmitter
 typedef struct PSParticle
 {
 	SGTransform transform, oldTransform;
-	PLColour    colour, oldColour, deltaColour;
-	int         life;
+	PLColour	colour, oldColour, deltaColour;
+	int			life;
 	PSEmitter * emitter;
 
 	struct PLLinkedListNode *node;

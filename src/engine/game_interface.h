@@ -8,7 +8,7 @@
 typedef enum MenuState
 {
 	MENU_STATE_START, /* draw start screen */
-	MENU_STATE_HUD,   /* hud/overlay mode */
+	MENU_STATE_HUD,	  /* hud/overlay mode */
 } MenuState;
 MenuState Game_GetMenuState( void );
 
@@ -22,5 +22,5 @@ void Game_Display( void );
 void Game_Tick( void );
 void Game_Keyboard( unsigned char key );
 
-void          Game_SpawnWorld( const char *worldPath );
+void		  Game_SpawnWorld( const char *worldPath );
 struct World *Game_GetCurrentWorld( void );

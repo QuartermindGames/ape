@@ -13,9 +13,9 @@ static PLLinkedList *scheduleList = NULL;
 
 typedef struct SchTask
 {
-	double            delay;
-	char              desc[ 32 ];
-	void *            userData;
+	double			  delay;
+	char			  desc[ 32 ];
+	void *			  userData;
 	SchedulerCallback callback;
 	PLLinkedListNode *node;
 } SchTask;
@@ -136,10 +136,10 @@ void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData,
 
 	SchTask *task = globalSystem.MAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay    = delay + Engine_GetNumTicks();
+	task->delay	   = delay + Engine_GetNumTicks();
 	task->callback = callback;
 	task->userData = userData;
-	task->node     = PlInsertLinkedListNode( scheduleList, task );
+	task->node	   = PlInsertLinkedListNode( scheduleList, task );
 }
 
 void Sch_RunTasks( void )
@@ -151,7 +151,7 @@ void Sch_RunTasks( void )
 	while ( node != NULL )
 	{
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
-		SchTask *         task     = PlGetLinkedListNodeUserData( node );
+		SchTask *		  task	   = PlGetLinkedListNodeUserData( node );
 		if ( task->delay < Engine_GetNumTicks() )
 		{
 			PlDestroyLinkedListNode( scheduleList, node );
@@ -178,7 +178,7 @@ void Sch_PrintPendingTasks( void )
 		return;
 	}
 
-	unsigned int      i    = 0;
+	unsigned int	  i	   = 0;
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )
 	{

@@ -10,9 +10,9 @@ typedef struct BitmapFont
 {
 	struct PLGMesh * mesh; /* for batching */
 	struct Material *material;
-	int              w, h, cw, ch;
-	char             path[ PL_SYSTEM_MAX_PATH ];
-	unsigned int     start, end;
+	int				 w, h, cw, ch;
+	char			 path[ PL_SYSTEM_MAX_PATH ];
+	unsigned int	 start, end;
 
 	MEMReference mem;
 } BitmapFont;
@@ -21,7 +21,7 @@ void Font_Initialize( void );
 void Font_Shutdown( void );
 
 BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end );
-void        Font_ReleaseBitmap( BitmapFont *font );
+void		Font_ReleaseBitmap( BitmapFont *font );
 
 BitmapFont *Font_GetDefault( void );
 BitmapFont *Font_GetDefaultSmall( void );

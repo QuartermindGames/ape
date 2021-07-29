@@ -18,19 +18,19 @@
 #pragma pack( pop )
 #endif
 
-#define DISCORD_DLL               "discord_game_sdk"
+#define DISCORD_DLL				  "discord_game_sdk"
 #define DISCORD_DEFAULT_CLIENT_ID 822170320169074719
 
 typedef struct DApplication
 {
-	struct IDiscordCore *               core;
-	struct IDiscordUserManager *        users;
+	struct IDiscordCore *				core;
+	struct IDiscordUserManager *		users;
 	struct IDiscordAchievementManager * achievements;
-	struct IDiscordActivityManager *    activities;
+	struct IDiscordActivityManager *	activities;
 	struct IDiscordRelationshipManager *relationships;
 	struct IDiscordApplicationManager * application;
-	struct IDiscordLobbyManager *       lobbies;
-	DiscordUserId                       user_id;
+	struct IDiscordLobbyManager *		lobbies;
+	DiscordUserId						user_id;
 } DApplication;
 static DApplication app;
 
@@ -59,12 +59,12 @@ static bool InitializeDiscordInterface( void )
 
 	struct DiscordCreateParams params;
 	DiscordCreateParamsSetDefault( &params );
-	params.client_id           = DISCORD_DEFAULT_CLIENT_ID; /* todo: request ID from game */
-	params.flags               = DiscordCreateFlags_Default;
-	params.event_data          = &app;
-	params.activity_events     = &activitiesEvents;
+	params.client_id		   = DISCORD_DEFAULT_CLIENT_ID; /* todo: request ID from game */
+	params.flags			   = DiscordCreateFlags_Default;
+	params.event_data		   = &app;
+	params.activity_events	   = &activitiesEvents;
 	params.relationship_events = &relationshipsEvents;
-	params.user_events         = &userEvents;
+	params.user_events		   = &userEvents;
 
 	if ( IDiscordCreate( DISCORD_VERSION, &params, &app.core ) != DiscordResult_Ok )
 	{
@@ -72,11 +72,11 @@ static bool InitializeDiscordInterface( void )
 		return false;
 	}
 
-	app.users         = app.core->get_user_manager( app.core );
+	app.users		  = app.core->get_user_manager( app.core );
 	app.achievements  = app.core->get_achievement_manager( app.core );
-	app.activities    = app.core->get_activity_manager( app.core );
-	app.application   = app.core->get_application_manager( app.core );
-	app.lobbies       = app.core->get_lobby_manager( app.core );
+	app.activities	  = app.core->get_activity_manager( app.core );
+	app.application	  = app.core->get_application_manager( app.core );
+	app.lobbies		  = app.core->get_lobby_manager( app.core );
 	app.relationships = app.core->get_relationship_manager( app.core );
 
 	return true;

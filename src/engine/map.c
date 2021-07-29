@@ -8,19 +8,19 @@
 #include "client/renderer/renderer.h"
 
 #define MAP_GEOMETRY_IDENTIFIER "geometry"
-#define MAP_GEOMETRY_VERSION    "version 2"
+#define MAP_GEOMETRY_VERSION	"version 2"
 
 static struct
 {
-	PLGVertex *  vertices;
+	PLGVertex *	 vertices;
 	unsigned int numVertices;
-	MapFace *    faces;
+	MapFace *	 faces;
 	unsigned int numFaces;
-	MapSector *  sectors;
+	MapSector *	 sectors;
 	unsigned int numSectors;
 
 	/* materials */
-	Material **  materials;
+	Material **	 materials;
 	unsigned int numMaterials;
 } mapData;
 
@@ -258,7 +258,7 @@ void Map_ParseSectors( PLFile *file )
 	//}
 
 	mapData.numSectors = 1;
-	mapData.sectors    = globalSystem.CAlloc( mapData.numSectors, sizeof( MapSector ), true );
+	mapData.sectors	   = globalSystem.CAlloc( mapData.numSectors, sizeof( MapSector ), true );
 
 #if 0
 	/* all this for now is just dummy code. everything is treated as one sector */
@@ -414,12 +414,12 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
 			}
 
 			unsigned int numVertices;
-			PLGVertex *  vertices = PlgGetPolygonVertices( curFace->polygon, &numVertices );
+			PLGVertex *	 vertices = PlgGetPolygonVertices( curFace->polygon, &numVertices );
 			for ( unsigned int k = 0; k < numVertices; ++k )
 			{
 				unsigned int v = PlgAddMeshVertex( renderMesh, vertices[ k ].position, vertices[ k ].normal, vertices[ k ].colour, vertices[ k ].st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's appropriate to add to AddMeshVertex */
-				renderMesh->vertices[ v ].tangent   = vertices[ k ].tangent;
+				renderMesh->vertices[ v ].tangent	= vertices[ k ].tangent;
 				renderMesh->vertices[ v ].bitangent = vertices[ k ].bitangent;
 			}
 
@@ -429,9 +429,9 @@ void Map_DrawSector( PLGCamera *camera, const MapSector *sector, bool smPass )
 			for ( unsigned int k = 0; k < numTriangles; ++k )
 			{
 				PlgAddMeshTriangle( renderMesh,
-				                    curIndex[ 0 ] + renderMesh->num_verts - numVertices,
-				                    curIndex[ 1 ] + renderMesh->num_verts - numVertices,
-				                    curIndex[ 2 ] + renderMesh->num_verts - numVertices );
+									curIndex[ 0 ] + renderMesh->num_verts - numVertices,
+									curIndex[ 1 ] + renderMesh->num_verts - numVertices,
+									curIndex[ 2 ] + renderMesh->num_verts - numVertices );
 				curIndex += 3;
 			}
 			globalSystem.Free( indices );

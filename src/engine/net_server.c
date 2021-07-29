@@ -7,7 +7,7 @@
 #include "yin.h"
 
 #define NET_DEFAULT_ADDRESS 127.0.0.1
-#define NET_DEFAULT_PORT    8080
+#define NET_DEFAULT_PORT	8080
 
 void NS_Initialize( void )
 {

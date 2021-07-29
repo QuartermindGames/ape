@@ -12,7 +12,7 @@
  */
 typedef struct ASoundReference
 {
-	int  slot;
+	int	 slot;
 	char path[ PL_SYSTEM_MAX_PATH ];
 } ASoundReference;
 
@@ -23,5 +23,5 @@ void A_CleanupSounds( bool force );
 bool A_IsValidSoundSlot( const ASoundReference *s );
 
 ASoundReference A_CacheSound( const char *path );
-void            A_EmitSound( const ASoundReference *s, const PLVector3 *position, const PLVector3 *velocity );
-void            A_ReleaseSound( const ASoundReference *s );
+void			A_EmitSound( const ASoundReference *s, const PLVector3 *position, const PLVector3 *velocity );
+void			A_ReleaseSound( const ASoundReference *s );

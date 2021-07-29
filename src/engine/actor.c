@@ -27,34 +27,34 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
 	float length = PlVector3Length( pushDir ) / 200.0f;
-	pushDir      = PlScaleVector3F( pushDir, length );
+	pushDir		 = PlScaleVector3F( pushDir, length );
 	Act_SetVelocity( other, &pushDir );
 }
 
 static ActorSetup actorDefault = {
-        .id          = "point.null",
-        .Spawn       = NULL,
-        .Tick        = NULL,
-        .Draw        = Act_DrawBasic,
-        .Collide     = NULL,
-        .Destroy     = NULL,
-        .Serialize   = NULL,
-        .Deserialize = NULL,
+		.id			 = "point.null",
+		.Spawn		 = NULL,
+		.Tick		 = NULL,
+		.Draw		 = Act_DrawBasic,
+		.Collide	 = NULL,
+		.Destroy	 = NULL,
+		.Serialize	 = NULL,
+		.Deserialize = NULL,
 };
 
 extern const ActorSetup actorPlayerSetup;// actor_player.c
 
-extern const ActorSetup actorAsteroidSetup;  // sg_actors.c
+extern const ActorSetup actorAsteroidSetup;	 // sg_actors.c
 extern const ActorSetup actorProjectileSetup;// sg_actors.c
 
 const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
-        [ACTOR_NONE]           = &actorDefault,
-        [ACTOR_PLAYER]         = &actorPlayerSetup,
-        [ACTOR_LIGHT]          = NULL,
-        [ACTOR_TRIGGER_VOLUME] = NULL,
-        // sg
-        [ACTOR_SG_ASTEROID]   = &actorAsteroidSetup,
-        [ACTOR_SG_PROJECTILE] = &actorProjectileSetup,
+		[ACTOR_NONE]		   = &actorDefault,
+		[ACTOR_PLAYER]		   = &actorPlayerSetup,
+		[ACTOR_LIGHT]		   = NULL,
+		[ACTOR_TRIGGER_VOLUME] = NULL,
+		// sg
+		[ACTOR_SG_ASTEROID]	  = &actorAsteroidSetup,
+		[ACTOR_SG_PROJECTILE] = &actorProjectileSetup,
 };
 
 typedef struct Actor
@@ -63,16 +63,16 @@ typedef struct Actor
 	PLVector3 angles, oldAngles;
 	PLVector3 velocity;
 	PLVector3 forward;
-	float     angle;
-	float     viewPitch;
-	float     viewOffset;
+	float	  angle;
+	float	  viewPitch;
+	float	  viewOffset;
 
 	/* collision/vis */
 	struct WorldSector *sector;
-	ActorMovementType   movementType;
+	ActorMovementType	movementType;
 	ActorCollisionGroup collisionGroup;
-	PLCollisionAABB     bounds;
-	PLLinkedList *      geoColliders; /* list of faces we're touching to test against */
+	PLCollisionAABB		bounds;
+	PLLinkedList *		geoColliders; /* list of faces we're touching to test against */
 
 	/* animation */
 	unsigned int currentFrame;
@@ -87,7 +87,7 @@ typedef struct Actor
 	int16_t health;
 
 	PLLinkedListNode *node;
-	void *            userData;
+	void *			  userData;
 } Actor;
 
 static PLLinkedList *actorList;
@@ -95,9 +95,9 @@ static PLLinkedList *actorList;
 Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 {
 	Actor *actor = globalSystem.MAlloc( sizeof( Actor ), true );
-	actor->node  = PlInsertLinkedListNode( actorList, actor );
+	actor->node	 = PlInsertLinkedListNode( actorList, actor );
 	actor->setup = *actorSpawnSetup[ type ];
-	actor->type  = type;
+	actor->type	 = type;
 
 	actor->geoColliders = PlCreateLinkedList();
 	if ( actor->geoColliders == NULL )
@@ -146,20 +146,20 @@ Actor *Act_DestroyActor( Actor *self )
 
 ActorType Act_GetType( const Actor *self ) { return self->type; }
 
-void      Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
+void	  Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
 PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
-void      Act_SetVelocity( Actor *self, const PLVector3 *velocity ) { self->velocity = *velocity; }
+void	  Act_SetVelocity( Actor *self, const PLVector3 *velocity ) { self->velocity = *velocity; }
 PLVector3 Act_GetVelocity( const Actor *self ) { return self->velocity; }
 
 void  Act_SetAngle( Actor *self, float angle ) { self->angle = angle; }
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void      Act_SetAngles( Actor *self, const PLVector3 *angles ) { self->angles = *angles; }
+void	  Act_SetAngles( Actor *self, const PLVector3 *angles ) { self->angles = *angles; }
 PLVector3 Act_GetAngles( const Actor *self ) { return self->angles; }
 
 struct WorldSector *Act_GetWorldSector( Actor *self ) { return self->sector; }
-void                Act_SetWorldSector( Actor *self, struct WorldSector *sector ) { self->sector = sector; }
+void				Act_SetWorldSector( Actor *self, struct WorldSector *sector ) { self->sector = sector; }
 
 void  Act_SetViewPitch( Actor *self, float viewPitch ) { self->viewPitch = viewPitch; }
 float Act_GetViewPitch( const Actor *self ) { return self->viewPitch; }
@@ -170,7 +170,7 @@ float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
 void  Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
 void *Act_GetUserData( Actor *self ) { return self->userData; }
 
-void         Act_SetCurrentFrame( Actor *self, unsigned int frame ) { self->currentFrame = frame; }
+void		 Act_SetCurrentFrame( Actor *self, unsigned int frame ) { self->currentFrame = frame; }
 unsigned int Act_GetCurrentFrame( const Actor *self ) { return self->currentFrame; }
 
 void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
@@ -254,8 +254,8 @@ void Act_DrawActors( void )
 		{
 			MapFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
-			PLCollisionPlane plane     = PlSetupCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
-			PLCollision      collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( absOrigin, 16.0f ), &plane );
+			PLCollisionPlane plane	   = PlSetupCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
+			PLCollision		 collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( absOrigin, 16.0f ), &plane );
 			if ( collision.penetration > 0.0f )
 			{
 				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
@@ -308,10 +308,10 @@ void Act_TickActors( void *userData, double delta )
 		actor->velocity.y = -GRAVITY;
 
 		actor->oldPosition = actor->position;
-		actor->position    = PlAddVector3( actor->position, actor->velocity );
+		actor->position	   = PlAddVector3( actor->position, actor->velocity );
 
 		PLVector3 nPos = PlSubtractVector3( actor->position, actor->oldPosition );
-		nPos           = PlSubtractVector3( actor->position, nPos );
+		nPos		   = PlSubtractVector3( actor->position, nPos );
 
 		/* check actor vs actor collision */
 		if ( actor->setup.Collide != NULL )

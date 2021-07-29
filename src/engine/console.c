@@ -20,19 +20,19 @@ static unsigned int scrollPos = 0;
 #define CON_BUFFER_MAX_LENGTH 256
 #define CON_BUFFER_MAX_LINES  4096
 
-static char         inputBuffer[ CON_BUFFER_MAX_LENGTH ] = { '\0' };
-static unsigned int curInputBufferLength                 = 0;
+static char			inputBuffer[ CON_BUFFER_MAX_LENGTH ] = { '\0' };
+static unsigned int curInputBufferLength				 = 0;
 
 static struct ConBuffer
 {
 	struct
 	{
-		char     buffer[ CON_BUFFER_MAX_LENGTH ];
+		char	 buffer[ CON_BUFFER_MAX_LENGTH ];
 		PLColour colour;
 	} lines[ CON_BUFFER_MAX_LINES ];
 	unsigned int numLines;
 } outputBuffer = {
-        .numLines = 0,
+		.numLines = 0,
 };
 static void ClearBuffer( void ) { outputBuffer.numLines = 0; }
 static void OutputCallback( int level, const char *msg )
@@ -142,7 +142,7 @@ static void LoadUserConfig( void )
 	while ( child != NULL )
 	{
 		const char *cvarName = NL_GetName( child );
-		char cvarValue[ PL_SYSTEM_MAX_PATH ];
+		char		cvarValue[ PL_SYSTEM_MAX_PATH ];
 		if ( NL_GetStr( child, cvarValue, sizeof( cvarValue ) ) == NL_ERROR_SUCCESS )
 			PlSetConsoleVariableByName( cvarName, cvarValue );
 		else
@@ -157,7 +157,7 @@ static void LoadUserConfig( void )
 static void SaveUserConfig( void )
 {
 	PLConsoleVariable **cvars;
-	size_t              numVars;
+	size_t				numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
 	NLNode *root = NL_PushBackObj( NULL, "config" );
@@ -232,7 +232,7 @@ void Con_Initialize( void )
 	/* rendering */
 	PlRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
 	PlRegisterConsoleVariable( "graphics.superSampling", "1", pl_int_var, NULL, "Resolution multiplier. "
-	                                                                            "Anything higher than 1 essentially enables supersampling." );
+																				"Anything higher than 1 essentially enables supersampling." );
 	PlRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 
 	PlRegisterConsoleVariable( "world.drawSectorVolumes", "false", pl_bool_var, NULL, "Toggle rendering of sector volumes." );
@@ -313,7 +313,7 @@ bool Con_HandleTextEvent( const char *key )
 		return true;
 
 	inputBuffer[ curInputBufferLength++ ] = *key;
-	inputBuffer[ curInputBufferLength ]   = '\0';
+	inputBuffer[ curInputBufferLength ]	  = '\0';
 
 	return true;
 }
@@ -346,7 +346,7 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState )
 			if ( inputBuffer[ 0 ] != '\0' )
 			{
 				PlParseConsoleString( inputBuffer );
-				inputBuffer[ 0 ]     = '\0';
+				inputBuffer[ 0 ]	 = '\0';
 				curInputBufferLength = 0;
 			}
 			return true;
@@ -386,14 +386,14 @@ static void DrawInput( const PLGViewport *viewport )
 
 	PlgSetTexture( NULL, 0 );
 
-    BitmapFont *font = Font_GetDefault();
+	BitmapFont *font = Font_GetDefault();
 	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), 0.0f, ( float ) viewport->h - font->ch, ( float ) viewport->w, font->ch, PLColourRGB( 0, 0, 0 ) );
 
 	/* draw input field */
 	Font_BeginDraw( font );
 
 	Font_AddBitmapCharacterToPass( font, 1.0f, ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, '>' );
-    Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + ( font->cw * curInputBufferLength ) ), ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, '_' );
+	Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + ( font->cw * curInputBufferLength ) ), ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, '_' );
 
 	Font_AddBitmapStringToPass( Font_GetDefault(), font->cw, ( float ) viewport->h - font->ch, 1.0f, CON_TEXT_COLOUR, inputBuffer, curInputBufferLength );
 
@@ -419,8 +419,8 @@ void Con_Draw( const PLGViewport *viewport )
 
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
-#define CON_SIDE_COLOUR      PLColourRGB( 128, 128, 128 )
-#define CON_BACK_COLOUR      PLColour( 0, 0, 0, alpha->i_value )
+#define CON_SIDE_COLOUR		 PLColourRGB( 128, 128, 128 )
+#define CON_BACK_COLOUR		 PLColour( 0, 0, 0, alpha->i_value )
 #define CON_INDICATOR_COLOUR PLColourRGB( 255, 255, 255 )
 
 	float consoleHeight = ( float ) ( viewport->h - 12 );

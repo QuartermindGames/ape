@@ -26,17 +26,17 @@ typedef struct WorldFace
 
 	Material *material;
 	// todo: reduce the below to transform matrix???
-	float     materialAngle;
+	float	  materialAngle;
 	PLVector2 materialOffset;
 	PLVector2 materialScale;
 
 	unsigned int vertices[ WORLD_FACE_MAX_SIDES ];
-	uint8_t      numVertices;
+	uint8_t		 numVertices;
 
 	uint8_t flags; /* portal, mirror, skip etc. */
 
 	WorldSector *parentSector;
-	WorldFace *  targetSectorFace; /* if portal */
+	WorldFace *	 targetSectorFace; /* if portal */
 
 	PLCollisionAABB bounds;
 } WorldFace;
@@ -45,13 +45,13 @@ typedef struct WorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	Material **  materials;
+	Material **	 materials;
 	unsigned int numMaterials;
 
-	PLGVertex *  vertices;
+	PLGVertex *	 vertices;
 	unsigned int numVertices;
 
-	WorldFace *  faces;
+	WorldFace *	 faces;
 	unsigned int numFaces;
 
 	PLCollisionAABB bounds;
@@ -72,7 +72,7 @@ typedef struct WorldObject
 	WorldObjectCollisionType collisionType;
 	union
 	{
-		const WorldMesh *      collisionMesh;
+		const WorldMesh *	   collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } WorldObject;
@@ -93,7 +93,7 @@ typedef struct WorldSector
 
 typedef struct World
 {
-	WorldMesh *  meshes;
+	WorldMesh *	 meshes;
 	unsigned int numMeshes;
 
 	WorldSector *sectors;
@@ -133,7 +133,7 @@ void W_DeserializeMaterials( NLNode *meshNode, WorldMesh *meshPtr )
 	}
 
 	meshPtr->numMaterials = NL_GetNumOfChildren( materialsList );
-	meshPtr->materials    = globalSystem.CAlloc( meshPtr->numMaterials, sizeof( Material * ), true );
+	meshPtr->materials	  = globalSystem.CAlloc( meshPtr->numMaterials, sizeof( Material * ), true );
 	NLNode *materialNode  = NL_GetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
@@ -147,7 +147,7 @@ void W_DeserializeMaterials( NLNode *meshNode, WorldMesh *meshPtr )
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
 		NL_GetStr( materialNode, materialPath, sizeof( materialPath ) );
 		meshPtr->materials[ i ] = RM_CacheMaterial( materialPath, CACHE_GROUP_WORLD, true );
-		materialNode            = NL_GetNextChild( materialNode );
+		materialNode			= NL_GetNextChild( materialNode );
 	}
 }
 
@@ -161,8 +161,8 @@ void W_DeserializeVertices( NLNode *meshNode, WorldMesh *meshPtr )
 	}
 
 	meshPtr->numVertices = NL_GetNumOfChildren( verticesList );
-	meshPtr->vertices    = globalSystem.CAlloc( meshPtr->numVertices, sizeof( PLGVertex ), true );
-	NLNode *vertexNode   = NL_GetFirstChild( verticesList );
+	meshPtr->vertices	 = globalSystem.CAlloc( meshPtr->numVertices, sizeof( PLGVertex ), true );
+	NLNode *vertexNode	 = NL_GetFirstChild( verticesList );
 	for ( unsigned int i = 0; i < meshPtr->numVertices; ++i )
 	{
 		if ( vertexNode == NULL )
@@ -186,7 +186,7 @@ void W_DeserializeFaces( NLNode *meshNode, WorldMesh *meshPtr )
 	}
 
 	meshPtr->numFaces = NL_GetNumOfChildren( facesList );
-	meshPtr->faces    = globalSystem.CAlloc( meshPtr->numFaces, sizeof( WorldFace ), true );
+	meshPtr->faces	  = globalSystem.CAlloc( meshPtr->numFaces, sizeof( WorldFace ), true );
 	NLNode *faceNode  = NL_GetFirstChild( facesList );
 	for ( unsigned int i = 0; i < meshPtr->numFaces; ++i )
 	{
@@ -294,8 +294,8 @@ static void W_DeserializeSector( World *world, NLNode *sectorNode, WorldSector *
 	if ( staticObjectList != NULL )
 	{
 		sectorPtr->numStaticObjects = NL_GetNumOfChildren( staticObjectList );
-		sectorPtr->staticObjects    = globalSystem.CAlloc( sectorPtr->numStaticObjects, sizeof( WorldObject ), true );
-		NLNode *c                   = NL_GetFirstChild( staticObjectList );
+		sectorPtr->staticObjects	= globalSystem.CAlloc( sectorPtr->numStaticObjects, sizeof( WorldObject ), true );
+		NLNode *c					= NL_GetFirstChild( staticObjectList );
 		for ( unsigned int i = 0; i < sectorPtr->numStaticObjects; ++i )
 		{
 			if ( c == NULL )
@@ -394,8 +394,8 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 	if ( meshList != NULL )
 	{
 		out->numMeshes = NL_GetNumOfChildren( meshList );
-		out->meshes    = globalSystem.CAlloc( out->numMeshes, sizeof( WorldMesh ), true );
-		NLNode *c      = NL_GetFirstChild( meshList );
+		out->meshes	   = globalSystem.CAlloc( out->numMeshes, sizeof( WorldMesh ), true );
+		NLNode *c	   = NL_GetFirstChild( meshList );
 		for ( unsigned int i = 0; i < out->numMeshes; ++i )
 		{
 			if ( c == NULL )
@@ -413,8 +413,8 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 	if ( sectorList != NULL )
 	{
 		out->numSectors = NL_GetNumOfChildren( sectorList );
-		out->sectors    = globalSystem.CAlloc( out->numSectors, sizeof( WorldSector ), true );
-		NLNode *c       = NL_GetFirstChild( sectorList );
+		out->sectors	= globalSystem.CAlloc( out->numSectors, sizeof( WorldSector ), true );
+		NLNode *c		= NL_GetFirstChild( sectorList );
 		for ( unsigned int i = 0; i < out->numSectors; ++i )
 		{
 			if ( c == NULL )
@@ -547,7 +547,7 @@ static unsigned int *ConvertFaceToTriangles( const WorldFace *face, unsigned int
 		return NULL;
 
 	unsigned int *indices = pl_malloc( sizeof( unsigned int ) * ( *numTriangles * 3 ) );
-	unsigned int *index   = indices;
+	unsigned int *index	  = indices;
 	for ( unsigned int i = 1; i + 1 < face->numVertices; ++i )
 	{
 		index[ 0 ] = 0;
@@ -630,7 +630,7 @@ static WorldMesh **GetVisibleSubMeshesForSector( WorldSector *sector, const PLGC
 	for ( unsigned int i = 0; i < sector->numStaticObjects; ++i )
 	{
 		PLCollisionAABB bounds = sector->staticObjects[ i ].mesh->bounds;
-		bounds.origin          = sector->staticObjects[ i ].transform.translation;
+		bounds.origin		   = sector->staticObjects[ i ].transform.translation;
 		if ( !PlgIsBoxInsideView( camera, &sector->staticObjects[ i ].mesh->bounds ) )
 			continue;
 
@@ -651,7 +651,7 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 #endif
 
 	unsigned int numFaces;
-	WorldFace *  faces = W_GetFacesForSector( sector, &numFaces );
+	WorldFace *	 faces = W_GetFacesForSector( sector, &numFaces );
 	if ( faces == NULL || numFaces == 0 )
 	{
 		PrintWarn( "Invalid number of faces in sector!\n" );
@@ -663,7 +663,7 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 	{
 		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
-			WorldFace *face     = &faces[ j ];
+			WorldFace *face		= &faces[ j ];
 			face->bounds.origin = PLVector3( 0.0f, 0.0f, 0.0f );
 
 			/* check the face is actually visible */
@@ -672,11 +672,11 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
 			{
-				PLGVertex *  vertex = &sector->mesh->vertices[ face->vertices[ k ] ];
-				unsigned int v      = PlgAddMeshVertex( sector->mesh->drawMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
+				PLGVertex *	 vertex = &sector->mesh->vertices[ face->vertices[ k ] ];
+				unsigned int v		= PlgAddMeshVertex( sector->mesh->drawMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's
 				 * appropriate to add to AddMeshVertex */
-				sector->mesh->drawMesh->vertices[ v ].tangent   = vertex->tangent;
+				sector->mesh->drawMesh->vertices[ v ].tangent	= vertex->tangent;
 				sector->mesh->drawMesh->vertices[ v ].bitangent = vertex->bitangent;
 			}
 
@@ -689,9 +689,9 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 			for ( unsigned int k = 0; k < numTriangles; ++k )
 			{
 				PlgAddMeshTriangle( sector->mesh->drawMesh,
-				                    curIndex[ 0 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
-				                    curIndex[ 1 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
-				                    curIndex[ 2 ] + sector->mesh->drawMesh->num_verts - face->numVertices );
+									curIndex[ 0 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
+									curIndex[ 1 ] + sector->mesh->drawMesh->num_verts - face->numVertices,
+									curIndex[ 2 ] + sector->mesh->drawMesh->num_verts - face->numVertices );
 				curIndex += 3;
 			}
 			globalSystem.Free( indices );

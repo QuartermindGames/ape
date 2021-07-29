@@ -12,15 +12,15 @@
 
 typedef struct ShaderProgramIndex
 {
-	char              path[ PL_SYSTEM_MAX_PATH ];
-	char              shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
-	char              internalName[ RS_PROGRAM_NAME_LENGTH ];
+	char			  path[ PL_SYSTEM_MAX_PATH ];
+	char			  shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
+	char			  internalName[ RS_PROGRAM_NAME_LENGTH ];
 	PLGShaderProgram *internalPtr;
 	PLLinkedListNode *node;
 } ShaderProgramIndex;
 
 static PLLinkedList *shaderPrograms;
-PLGShaderProgram *   defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *	 defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path )
 {
@@ -31,7 +31,7 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 	}
 
 	const char *buffer = ( const char * ) PlGetFileData( filePtr );
-	size_t      length = PlGetFileSize( filePtr );
+	size_t		length = PlGetFileSize( filePtr );
 
 	if ( !PlgRegisterShaderStageFromMemory( program, buffer, length, type ) )
 	{
@@ -45,7 +45,7 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root )
 {
 	ShaderProgramIndex program;
 
-	const char *vertexPath   = NL_GetStrByName( root, "vertexPath", NULL );
+	const char *vertexPath	 = NL_GetStrByName( root, "vertexPath", NULL );
 	const char *fragmentPath = NL_GetStrByName( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
@@ -80,7 +80,7 @@ static ShaderProgramIndex *RS_ParseShaderProgram( NLNode *root )
 
 	/* allocate and return our program index */
 	ShaderProgramIndex *out = globalSystem.MAlloc( sizeof( ShaderProgramIndex ), true );
-	*out                    = program;
+	*out					= program;
 	return out;
 }
 
@@ -168,11 +168,11 @@ void RS_InitializeShaderPrograms( void )
 
 	/* now fetch the default programs */
 	const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
-	        [RS_SHADER_DEFAULT]        = "default",
-	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
-	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
-	        [RS_SHADER_POST_PROCESS]   = "postprocess",
+			[RS_SHADER_DEFAULT]		   = "default",
+			[RS_SHADER_LIGHTING_PASS]  = "base_lighting",
+			[RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
+			[RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+			[RS_SHADER_POST_PROCESS]   = "postprocess",
 	};
 	for ( unsigned int i = 0; i < RS_MAX_DEFAULT_SHADERS; ++i )
 	{

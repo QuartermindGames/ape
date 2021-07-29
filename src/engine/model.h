@@ -14,10 +14,10 @@
 
 typedef struct MDLUserData
 {
-	Material *   materials[ MODEL_MAX_MATERIALS ];
+	Material *	 materials[ MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
 	MEMReference mem;
 } MDLUserData;
 
 PLMModel *MDL_CacheModel( const char *path );
-void MDL_ReleaseModel( PLMModel *model );
+void	  MDL_ReleaseModel( PLMModel *model );

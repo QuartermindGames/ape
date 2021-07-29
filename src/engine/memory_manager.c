@@ -33,7 +33,7 @@ void MEM_CacheData( const char *id, uint8_t pool, void *data )
 
 	MEMCacheHeader *header = globalSystem.MAlloc( sizeof( MEMCacheHeader ), true );
 	snprintf( header->id, sizeof( header->id ), "%s", id );
-	header->pool     = pool;
+	header->pool	 = pool;
 	header->userData = data;
 
 	PLLinkedListNode *node = PlInsertLinkedListNode( memCachePools[ pool ], header );
@@ -89,9 +89,9 @@ static bool MEM_FreeReference( MEMReference *m, bool force )
 {
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "%s, numRefs = %d, ttl = %u\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+			  m->description[ 0 ] == '\0' ? "unknown" : m->description,
+			  m->numRefs,
+			  m->ttl );
 #endif
 
 	if ( m->numRefs <= 0 && ( force || m->ttl < Engine_GetNumTicks() ) )
@@ -99,9 +99,9 @@ static bool MEM_FreeReference( MEMReference *m, bool force )
 		/* remove it from whatever cached list it exists in */
 		//MEM_RemoveCachedData( )
 
-        PLLinkedListNode *node = m->node;
+		PLLinkedListNode *node = m->node;
 		m->cleanupFunction( m->userData );
-        PlDestroyLinkedListNode( mmReferenceList, node );
+		PlDestroyLinkedListNode( mmReferenceList, node );
 		return true;
 	}
 
@@ -114,10 +114,10 @@ static void CleanupUnreferencedResources( bool force )
 	while ( child != NULL )
 	{
 		PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
-		MEMReference *    m         = PlGetLinkedListNodeUserData( child );
+		MEMReference *	  m			= PlGetLinkedListNodeUserData( child );
 
 #if defined( DEBUG_MEMORY )
-        DebugMsg( " %s (" COM_FMT_int32 ")\n", m->description, m->numRefs );
+		DebugMsg( " %s (" COM_FMT_int32 ")\n", m->description, m->numRefs );
 #endif
 
 		MEM_FreeReference( m, force );
@@ -157,7 +157,7 @@ void MEM_Shutdown( void )
 	while ( danglingReferences > 0 )
 	{
 #if defined( DEBUG_MEMORY )
-        DebugMsg( " dangling references: " COM_FMT_uint32 "\n", danglingReferences );
+		DebugMsg( " dangling references: " COM_FMT_uint32 "\n", danglingReferences );
 #endif
 
 		CleanupUnreferencedResources( true );
@@ -178,10 +178,10 @@ MEMReference *MEM_SetupReferenceInstance( const char *description, MEMReference 
 {
 	snprintf( m->description, sizeof( m->description ), "%s", description );
 
-	m->userData        = userData;
+	m->userData		   = userData;
 	m->cleanupFunction = cleanupFunction;
 	m->isInitialized   = true;
-	m->node            = PlInsertLinkedListNode( mmReferenceList, m );
+	m->node			   = PlInsertLinkedListNode( mmReferenceList, m );
 
 	return m;
 }
@@ -191,9 +191,9 @@ void MEM_AddReference( MEMReference *m )
 	m->numRefs++;
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+			  m->description[ 0 ] == '\0' ? "unknown" : m->description,
+			  m->numRefs,
+			  m->ttl );
 #endif
 }
 
@@ -203,9 +203,9 @@ void MEM_ReleaseReference( MEMReference *m )
 
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Releasing reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+			  m->description[ 0 ] == '\0' ? "unknown" : m->description,
+			  m->numRefs,
+			  m->ttl );
 #endif
 
 	m->numRefs--;

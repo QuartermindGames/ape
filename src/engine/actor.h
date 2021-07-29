@@ -77,20 +77,20 @@ Actor *Act_DestroyActor( Actor *self );
 
 ActorType Act_GetType( const Actor *self );
 
-void      Act_SetPosition( Actor *self, const PLVector3 *position );
+void	  Act_SetPosition( Actor *self, const PLVector3 *position );
 PLVector3 Act_GetPosition( const Actor *self );
 
-void      Act_SetVelocity( Actor *self, const PLVector3 *velocity );
+void	  Act_SetVelocity( Actor *self, const PLVector3 *velocity );
 PLVector3 Act_GetVelocity( const Actor *self );
 
 void  Act_SetAngle( Actor *self, float angle );
 float Act_GetAngle( const Actor *self );
 
-void Act_SetAngles( Actor *self, const PLVector3 *angles );
+void	  Act_SetAngles( Actor *self, const PLVector3 *angles );
 PLVector3 Act_GetAngles( const Actor *self );
 
 struct WorldSector *Act_GetWorldSector( Actor *self );
-void Act_SetWorldSector( Actor *self, struct WorldSector *sector );
+void				Act_SetWorldSector( Actor *self, struct WorldSector *sector );
 
 void  Act_SetViewPitch( Actor *self, float viewPitch );
 float Act_GetViewPitch( const Actor *self );
@@ -98,13 +98,13 @@ float Act_GetViewPitch( const Actor *self );
 void  Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
 
-void         Act_SetCurrentFrame( Actor *self, unsigned int frame );
+void		 Act_SetCurrentFrame( Actor *self, unsigned int frame );
 unsigned int Act_GetCurrentFrame( const Actor *self );
 
 void  Act_SetViewOffset( Actor *self, float viewOffset );
 float Act_GetViewOffset( Actor *self );
 
-void                   Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
+void				   Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
 const PLCollisionAABB *Act_GetBounds( Actor *self );
 
 PLVector3 Act_GetForward( const Actor *self );

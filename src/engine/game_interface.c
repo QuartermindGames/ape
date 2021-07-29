@@ -88,11 +88,11 @@ void Game_SpawnWorld( const char *worldPath )
 	playerActor = Act_SpawnActor( ACTOR_PLAYER, NULL );
 	Act_SetPosition( playerActor, &PLVector3( 0, 32, 0 ) );
 
-	Camera *camera = R_GetGlobalCamera();
+	Camera *camera		= R_GetGlobalCamera();
 	camera->parentActor = playerActor;
 
-	gameState   = GAME_STATE_ACTIVE;
-	menuState   = MENU_STATE_HUD;
+	gameState	= GAME_STATE_ACTIVE;
+	menuState	= MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
@@ -128,9 +128,9 @@ void Game_Initialize( void )
 	/* initialize the interface */
 	//globalGame = GetDllInterface( GAME_INTERFACE_VERSION, &globalSystem, &globalEngine );
 
-    Act_Initialize();
+	Act_Initialize();
 
-    PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 }
 
 void Game_Shutdown( void )

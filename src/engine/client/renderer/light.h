@@ -7,7 +7,7 @@
 
 typedef struct Light
 {
-	PLVector3    position;
-	PLColour     colour;
+	PLVector3	 position;
+	PLColour	 colour;
 	unsigned int sector;
 } Light;

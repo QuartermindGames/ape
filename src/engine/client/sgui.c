@@ -59,27 +59,27 @@ typedef struct MenuOption
 
 typedef struct Menu
 {
-	const char *     heading;
+	const char *	 heading;
 	const MenuOption options[ MAX_MENU_ITEMS ];
-	uint8_t          numMenuOptions;
+	uint8_t			 numMenuOptions;
 
 	uint8_t curSelection;
 } Menu;
 
-static Menu  mainMenu;
+static Menu	 mainMenu;
 static Menu *currentMenu = &mainMenu;
 
 static Menu newGameMenu;
 static Menu settingsMenu;
 static Menu quitMenu;
 static Menu mainMenu = {
-        "MAIN MENU",
-        {
-                { "START GAME", &newGameMenu, NULL },
-                { "SETTINGS", &settingsMenu, NULL },
-                { "QUIT", &quitMenu, NULL },
-        },
-        3,
+		"MAIN MENU",
+		{
+				{ "START GAME", &newGameMenu, NULL },
+				{ "SETTINGS", &settingsMenu, NULL },
+				{ "QUIT", &quitMenu, NULL },
+		},
+		3,
 };
 
 static void Menu_CB_StartGame( void )
@@ -87,14 +87,14 @@ static void Menu_CB_StartGame( void )
 }
 
 static Menu newGameMenu = {
-        "START GAME",
-        {
-                { "EASY", NULL, Menu_CB_StartGame },
-                { "NORMAL", NULL, Menu_CB_StartGame },
-                { "HARD", NULL, Menu_CB_StartGame },
-                { "BACK...", &mainMenu },
-        },
-        4,
+		"START GAME",
+		{
+				{ "EASY", NULL, Menu_CB_StartGame },
+				{ "NORMAL", NULL, Menu_CB_StartGame },
+				{ "HARD", NULL, Menu_CB_StartGame },
+				{ "BACK...", &mainMenu },
+		},
+		4,
 };
 
 static void Menu_CB_SetResolution( void )
@@ -122,23 +122,23 @@ static void Menu_CB_SetResolution( void )
 }
 
 static Menu resolutionMenu = {
-        "RESOLUTION",
-        {
-                { "1920X1080", NULL, Menu_CB_SetResolution },
-                { "1280X720", NULL, Menu_CB_SetResolution },
-                { "1024X768", NULL, Menu_CB_SetResolution },
-                { "BACK...", &settingsMenu },
-        },
-        4,
+		"RESOLUTION",
+		{
+				{ "1920X1080", NULL, Menu_CB_SetResolution },
+				{ "1280X720", NULL, Menu_CB_SetResolution },
+				{ "1024X768", NULL, Menu_CB_SetResolution },
+				{ "BACK...", &settingsMenu },
+		},
+		4,
 };
 
 static Menu settingsMenu = {
-        "SETTINGS",
-        {
-                { "RESOLUTION", &resolutionMenu },
-                { "BACK...", &mainMenu },
-        },
-        2,
+		"SETTINGS",
+		{
+				{ "RESOLUTION", &resolutionMenu },
+				{ "BACK...", &mainMenu },
+		},
+		2,
 };
 
 // Quit Menu
@@ -149,12 +149,12 @@ static void Menu_CB_Quit( void )
 }
 
 static Menu quitMenu = {
-        "ARE YOU SURE?",
-        {
-                { "YES", NULL, Menu_CB_Quit },
-                { "NO", &mainMenu, NULL },
-        },
-        2,
+		"ARE YOU SURE?",
+		{
+				{ "YES", NULL, Menu_CB_Quit },
+				{ "NO", &mainMenu, NULL },
+		},
+		2,
 };
 
 static BitmapFont *menuFont;
@@ -167,7 +167,7 @@ void Menu_Initialize( void )
 	currentMenu = &mainMenu;
 
 	menuFont = Font_CacheBitmap( "materials/ui/fonts/big_00.mat", 320, 192, 32, 32, 32, 91 );
-	hudFont  = Font_CacheBitmap( "materials/ui/fonts/x1.mat", 320, 80, 16, 16, 32, 131 );
+	hudFont	 = Font_CacheBitmap( "materials/ui/fonts/x1.mat", 320, 80, 16, 16, 32, 131 );
 
 	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
 }

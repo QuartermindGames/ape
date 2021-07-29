@@ -11,12 +11,12 @@
 
 #include "client/renderer/renderer.h"
 
-#define PLAYER_VIEW_OFFSET   75.0f
+#define PLAYER_VIEW_OFFSET	 75.0f
 #define PLAYER_CROUCH_OFFSET 45.0f
 
-#define PLAYER_TURN_SPEED   2.0f
-#define PLAYER_WALK_SPEED   2.0f
-#define PLAYER_RUN_SPEED    4.0f
+#define PLAYER_TURN_SPEED	2.0f
+#define PLAYER_WALK_SPEED	2.0f
+#define PLAYER_RUN_SPEED	4.0f
 #define PLAYER_MAX_VELOCITY PLAYER_RUN_SPEED
 #define PLAYER_MIN_VELOCITY 0.5f
 
@@ -105,7 +105,7 @@ static void Player_Spawn( Actor *self )
 	playerData->model = PlmLoadModel( "models/test/md2/bird_final.md2" );
 
 	if ( numPlayers == 0 )
-	{ /* local player */
+	{	/* local player */
 		//playerData->eyeCamera              = R_CreateCamera( Act_GetPosition( self ), PLVector3( 0, Act_GetAngle( self ), 0 ) );
 		//playerData->eyeCamera->parentActor = self;
 	}
@@ -120,7 +120,7 @@ static void Player_Spawn( Actor *self )
 
 static void Player_Tick( Actor *self, void *userData )
 {
-	PLVector3 curOrigin   = Act_GetPosition( self );
+	PLVector3 curOrigin	  = Act_GetPosition( self );
 	PLVector3 curVelocity = Act_GetVelocity( self );
 
 	float nAngle = Act_GetAngle( self );
@@ -135,7 +135,7 @@ static void Player_Tick( Actor *self, void *userData )
 		curVelocity.y += 10.0f;
 
 	static const float incAmount  = 0.25f;
-	APlayer *          playerData = ( APlayer * ) userData;
+	APlayer *		   playerData = ( APlayer * ) userData;
 	if ( globalSystem.GetButtonState( INPUT_UP ) || globalSystem.GetKeyState( 'w' ) )
 		playerData->forwardVelocity += incAmount;
 	else if ( globalSystem.GetButtonState( INPUT_DOWN ) || globalSystem.GetKeyState( 's' ) )
@@ -162,7 +162,7 @@ static void Player_Tick( Actor *self, void *userData )
 	Act_SetViewPitch( self, viewPitch );
 
 	/* clamp the velocity as necessary */
-	float maxVelocity           = globalSystem.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity			= globalSystem.GetButtonState( INPUT_LEFT_STICK ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	playerData->forwardVelocity = PlClamp( -maxVelocity, playerData->forwardVelocity, maxVelocity );
 
 	curVelocity = PlAddVector3( curVelocity, PlScaleVector3F( Act_GetForward( self ), playerData->forwardVelocity ) );
@@ -204,17 +204,17 @@ static void Player_Collide( Actor *self, Actor *other, void *userData )
 {
 	Monster_Collide( self, other, userData );
 
-	APlayer *playerData         = ( APlayer * ) userData;
+	APlayer *playerData			= ( APlayer * ) userData;
 	playerData->forwardVelocity = ( playerData->forwardVelocity / 2.0f ) * -1.0f;
 }
 
 const ActorSetup actorPlayerSetup = {
-        .id          = "point.player",
-        .Spawn       = Player_Spawn,
-        .Tick        = Player_Tick,
-        .Draw        = Player_Draw,
-        .Collide     = Player_Collide,
-        .Destroy     = NULL,
-        .Serialize   = NULL,
-        .Deserialize = NULL,
+		.id			 = "point.player",
+		.Spawn		 = Player_Spawn,
+		.Tick		 = Player_Tick,
+		.Draw		 = Player_Draw,
+		.Collide	 = Player_Collide,
+		.Destroy	 = NULL,
+		.Serialize	 = NULL,
+		.Deserialize = NULL,
 };

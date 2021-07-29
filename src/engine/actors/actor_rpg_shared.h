@@ -16,8 +16,8 @@ enum
 
 typedef struct ARPGCharacterStats
 {
-	unsigned int lvl;   // Level
-	unsigned int exp;   // Experience
+	unsigned int lvl;	// Level
+	unsigned int exp;	// Experience
 	unsigned int maxExp;// Maximum Experience
 
 	// Stats

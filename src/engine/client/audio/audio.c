@@ -11,17 +11,17 @@
 
 typedef struct ASound
 {
-	char         path[ PL_SYSTEM_MAX_PATH ];
-	bool         reserved;
+	char		 path[ PL_SYSTEM_MAX_PATH ];
+	bool		 reserved;
 	unsigned int length;
-	uint8_t *    buffer;
-	int          numReferences;
+	uint8_t *	 buffer;
+	int			 numReferences;
 } ASound;
-ASound *     audioSounds = NULL;
-unsigned int numSounds   = 0;
-unsigned int maxSounds   = 4096;
+ASound *	 audioSounds = NULL;
+unsigned int numSounds	 = 0;
+unsigned int maxSounds	 = 4096;
 
-static SDL_AudioSpec     sdlAudioSpec;
+static SDL_AudioSpec	 sdlAudioSpec;
 static SDL_AudioDeviceID sdlAudioDeviceId;
 
 static bool audioInitialized = false;
@@ -36,9 +36,9 @@ void A_Initialize( void )
 	SDL_AudioSpec desiredSpec;
 	SDL_zero( desiredSpec );
 	desiredSpec.channels = 2;
-	desiredSpec.format   = AUDIO_F32;
-	desiredSpec.freq     = 48000;
-	desiredSpec.samples  = 4096;
+	desiredSpec.format	 = AUDIO_F32;
+	desiredSpec.freq	 = 48000;
+	desiredSpec.samples	 = 4096;
 	desiredSpec.callback = NULL;
 
 	sdlAudioDeviceId = SDL_OpenAudioDevice( NULL, 0, &desiredSpec, &sdlAudioSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE );
@@ -163,7 +163,7 @@ ASoundReference A_CacheSound( const char *path )
 		return A_SetupReference( -1, NULL );
 	}
 
-	int      length = ( int ) PlGetFileSize( file );
+	int		 length = ( int ) PlGetFileSize( file );
 	uint8_t *buffer = globalSystem.MAlloc( length, true );
 	memcpy( buffer, PlGetFileData( file ), length );
 

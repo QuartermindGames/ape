@@ -13,19 +13,19 @@ enum MapFaceFlags
 
 typedef struct MapFace
 {
-	PLGPolygon *     polygon;
+	PLGPolygon *	 polygon;
 	struct Material *material;
-	PLCollisionAABB  bounds;
-	uint8_t          flags;
+	PLCollisionAABB	 bounds;
+	uint8_t			 flags;
 } MapFace;
 
 typedef struct SGNode SGNode;
 typedef struct MapSector
 {
 	PLCollisionAABB bounds;
-	SGNode *        node;
-	MapFace *       faces;
-	unsigned int    numFaces;
+	SGNode *		node;
+	MapFace *		faces;
+	unsigned int	numFaces;
 } MapSector;
 
 void Map_Draw( PLGCamera *camera, bool smPass );

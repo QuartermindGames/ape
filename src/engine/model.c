@@ -17,7 +17,7 @@ static void MDL_CB_Destroy( void *userData )
 	PLMModel *model = userData;
 	u_assert( model != NULL );
 
-    MDLUserData *additionalData = model->userData;
+	MDLUserData *additionalData = model->userData;
 	if ( additionalData != NULL )
 	{
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
@@ -32,12 +32,12 @@ static void MDL_CB_Destroy( void *userData )
  */
 static void MDL_SetupUserData( PLMModel *model )
 {
-    MDLUserData *userData = globalSystem.MAlloc( sizeof( MDLUserData ), true );
-	userData->numMaterials  = model->numMaterials;
+	MDLUserData *userData  = globalSystem.MAlloc( sizeof( MDLUserData ), true );
+	userData->numMaterials = model->numMaterials;
 	if ( userData->numMaterials > MODEL_MAX_MATERIALS )
 	{
 		PrintWarn( "Invalid number of materials: " COM_FMT_uint32 " vs " COM_FMT_uint32 "\n",
-		           userData->numMaterials, MODEL_MAX_MATERIALS );
+				   userData->numMaterials, MODEL_MAX_MATERIALS );
 		userData->numMaterials = MODEL_MAX_MATERIALS;
 	}
 
@@ -51,18 +51,18 @@ PLMModel *MDL_CacheModel( const char *path )
 {
 	NLNode *root = NL_LoadFile( path, "model" );
 	if ( root == NULL )
-    {
+	{
 		PrintWarn( "Invalid model: %s (%s)\n", NL_GetErrorMessage() );
 		return NULL;
 	}
 
 	unsigned int numMeshes;
-    NLNode *meshArray = NL_GetChildByName( root, "meshes" );
-    if ( meshArray == NULL || ( numMeshes = NL_GetNumOfChildren( meshArray ) == 0 ) )
-    {
-        PrintWarn( "No meshes: %s\n", path );
-        return NULL;
-    }
+	NLNode *	 meshArray = NL_GetChildByName( root, "meshes" );
+	if ( meshArray == NULL || ( numMeshes = NL_GetNumOfChildren( meshArray ) == 0 ) )
+	{
+		PrintWarn( "No meshes: %s\n", path );
+		return NULL;
+	}
 
 	MDLUserData userData;
 
@@ -70,66 +70,66 @@ PLMModel *MDL_CacheModel( const char *path )
 	if ( materialArray == NULL )
 	{
 		PrintWarn( "No materials for \"%s\", using fallback!\n", path );
-		userData.numMaterials = 1;
+		userData.numMaterials	= 1;
 		userData.materials[ 0 ] = RM_CacheMaterial( "materials/engine/fallback_mesh.node", 0, true );
 	}
 	else
-    {
-        userData.numMaterials = NL_GetNumOfChildren( materialArray );
-        NLNode *n = NL_GetFirstChild( materialArray );
+	{
+		userData.numMaterials = NL_GetNumOfChildren( materialArray );
+		NLNode *n			  = NL_GetFirstChild( materialArray );
 		for ( unsigned int i = 0; i < userData.numMaterials; ++i )
-        {
+		{
 			u_assert( n != NULL );
 
-            char materialPath[ PL_SYSTEM_MAX_PATH ];
+			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( NL_GetStr( n, materialPath, sizeof( materialPath ) ) != NL_ERROR_SUCCESS )
-            {
-			    userData.materials[ i ] = RM_CacheMaterial( "materials/engine/fallback_mesh.node", 0, false );
+			{
+				userData.materials[ i ] = RM_CacheMaterial( "materials/engine/fallback_mesh.node", 0, false );
 				if ( userData.materials[ i ] == NULL )
 					PrintError( "Failed to cache fallback material for mesh!\n" );
 			}
 			else
 				userData.materials[ i ] = RM_CacheMaterial( materialPath, 0, true );
 
-            n = NL_GetNextChild( n );
+			n = NL_GetNextChild( n );
 		}
 	}
 
-	PLGMesh **meshes = globalSystem.MAlloc( sizeof( *meshes ) * numMeshes, true );
-	NLNode *meshNode = NL_GetFirstChild( meshArray );
+	PLGMesh **meshes   = globalSystem.MAlloc( sizeof( *meshes ) * numMeshes, true );
+	NLNode *  meshNode = NL_GetFirstChild( meshArray );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
-    {
+	{
 		u_assert( meshNode != NULL );
 
 		NLNode *vertexArray = NL_GetChildByName( meshNode, "vertices" );
 		if ( vertexArray == NULL )
-            PrintError( "No vertices for mesh: %s\n", path );
+			PrintError( "No vertices for mesh: %s\n", path );
 
 		NLNode *faceArray = NL_GetChildByName( meshNode, "faces" );
 		if ( faceArray == NULL )
 			PrintError( "No faces for mesh: %s\n", path );
 
 		unsigned int numVertices = NL_GetNumOfChildren( vertexArray );
-		unsigned int numFaces = NL_GetNumOfChildren( faceArray );
+		unsigned int numFaces	 = NL_GetNumOfChildren( faceArray );
 
 		meshes[ i ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, numFaces / 3, numVertices );
 		if ( meshes[ i ] == NULL )
 			PrintError( "Failed to create mesh %d: %s\n", i, path );
 
-        meshes[ i ]->materialIndex = NL_GetI32ByName( meshNode, "materialIndex", 0 );
+		meshes[ i ]->materialIndex = NL_GetI32ByName( meshNode, "materialIndex", 0 );
 
 		NLNode *vertexNode = NL_GetFirstChild( vertexArray );
 		for ( unsigned int j = 0; j < numVertices; ++j )
-        {
+		{
 			NLNode *n;
 
-            PLVector3 position = pl_vecOrigin3;
+			PLVector3 position = pl_vecOrigin3;
 			if ( ( n = NL_GetChildByName( vertexNode, "position" ) ) != NULL )
-                 NL_DS_DeserializeVector3( n, &position );
+				NL_DS_DeserializeVector3( n, &position );
 
 			PLVector3 normal = pl_vecOrigin3;
-            if ( ( n = NL_GetChildByName( vertexNode, "normal" ) ) != NULL )
-                NL_DS_DeserializeVector3( n, &normal );
+			if ( ( n = NL_GetChildByName( vertexNode, "normal" ) ) != NULL )
+				NL_DS_DeserializeVector3( n, &normal );
 
 			PLColour colour = PLColourRGB( 255, 255, 255 );
 			if ( ( n = NL_GetChildByName( vertexNode, "colour" ) ) != NULL )
@@ -144,7 +144,7 @@ PLMModel *MDL_CacheModel( const char *path )
 			vertexNode = NL_GetNextChild( vertexNode );
 		}
 
-        meshNode = NL_GetNextChild( meshNode );
+		meshNode = NL_GetNextChild( meshNode );
 	}
 
 	return NULL;
@@ -158,7 +158,7 @@ PLMModel *MDL_CacheModel( const char *path )
  */
 void MDL_ReleaseModel( PLMModel *model )
 {
-    MDLUserData *additionalData = model->userData;
+	MDLUserData *additionalData = model->userData;
 	if ( additionalData == NULL )
 	{
 		PrintWarn( "Destroying model not tracked by memory manager!\n" );
