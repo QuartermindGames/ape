@@ -79,9 +79,9 @@ static void NL_SetErrorMessage( NLErrorCode type, const char *msg, ... )
 const char *NL_GetErrorMessage( void ) { return nlErrorMsg; }
 NLErrorCode NL_GetError( void ) { return nlErrorType; }
 
-static char *AllocVarString( const char *string, unsigned int *lengthOut )
+static char *AllocVarString( const char *string, uint16_t *lengthOut )
 {
-	*lengthOut = ( unsigned int ) strlen( string ) + 1;
+	*lengthOut = ( uint16_t ) strlen( string ) + 1;
 	char *buf  = pl_calloc( 1, *lengthOut );
 	if ( buf == NULL )
 		abort();
@@ -588,7 +588,7 @@ NLNode *NL_PushBackObjArray( NLNode *parent, const char *name )
 	return node;
 }
 
-static char *CopyVarString( const NLVarString *varString, unsigned int *length )
+static char *CopyVarString( const NLVarString *varString, uint16_t *length )
 {
 	*length   = varString->length;
 	char *buf = pl_malloc( *length );
