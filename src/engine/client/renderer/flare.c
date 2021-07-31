@@ -17,7 +17,7 @@ static const char *flarePaths[] = {
         "materials/effects/Flare5.gif",
         "materials/effects/Flare6.gif",
 };
-#define MAX_FLARE_TEXTURES plArrayElements( flarePaths )
+#define MAX_FLARE_TEXTURES PL_ARRAY_ELEMENTS( flarePaths )
 static PLGTexture *flareTextures[ MAX_FLARE_TEXTURES ];
 
 static const char *shinePaths[] = {
@@ -32,7 +32,7 @@ static const char *shinePaths[] = {
         "materials/effects/Shine8.gif",
         "materials/effects/Shine9.gif",
 };
-#define MAX_SHINE_TEXTURES plArrayElements( shinePaths )
+#define MAX_SHINE_TEXTURES PL_ARRAY_ELEMENTS( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
 void Flare_Initialize( void )
