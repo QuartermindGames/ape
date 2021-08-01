@@ -231,9 +231,8 @@ void Con_Initialize( void )
 
 	/* rendering */
 	PlRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
-	PlRegisterConsoleVariable( "graphics.superSampling", "1", pl_int_var, NULL, "Resolution multiplier. "
-																				"Anything higher than 1 essentially enables supersampling." );
-	PlRegisterConsoleVariable( "graphics.wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
+	PlRegisterConsoleVariable( "graphics.superSampling", "1", pl_int_var, NULL, "Resolution multiplier. ""Anything higher than 1 essentially enables supersampling." );
+	PlRegisterConsoleVariable( "r_wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
 
 	PlRegisterConsoleVariable( "world.drawSectorVolumes", "false", pl_bool_var, NULL, "Toggle rendering of sector volumes." );
 	PlRegisterConsoleVariable( "world.drawSectors", "true", pl_bool_var, NULL, "Toggle rendering of sectors." );

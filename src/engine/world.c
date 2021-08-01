@@ -770,7 +770,6 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
  */
 void W_DrawSky( Camera *camera )
 {
-#if 0
 	static Material *skyMaterial = NULL;
 	if ( skyMaterial == NULL )
 	{
@@ -814,14 +813,14 @@ void W_DrawSky( Camera *camera )
 	static PLGMesh *skyMesh = NULL;
 	if ( skyMesh == NULL )
 	{
-		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, plArrayElements( indices ), plArrayElements( vertices ) );
+		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, PL_ARRAY_ELEMENTS( indices ), PL_ARRAY_ELEMENTS( vertices ) );
 		if ( skyMesh == NULL )
 			PrintError( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
 
-		for ( unsigned int i = 0, curIndex = 0; i < plArrayElements( indices ); ++i )
+		for ( unsigned int i = 0, curIndex = 0; i < PL_ARRAY_ELEMENTS( indices ); ++i )
 			PlgSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
 
-		for ( unsigned int i = 0; i < plArrayElements( vertices ); ++i )
+		for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( vertices ); ++i )
 		{
 			PlgSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
 			PlgSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
@@ -836,7 +835,7 @@ void W_DrawSky( Camera *camera )
 
 	PlLoadIdentityMatrix();
 
-	PlTranslateMatrix( PLVector3( camera->position.x, camera->position.y + 10.0f, camera->position.z ) );
+	PlTranslateMatrix( PLVector3( camera->internal->position.x, camera->internal->position.y + 10.0f, camera->internal->position.z ) );
 
 	/* todo: do this in shader... */
 	PLVector2 skyOffset;
@@ -857,7 +856,6 @@ void W_DrawSky( Camera *camera )
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 	PlgSetDepthMask( true );
-#endif
 }
 
 static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, Camera *camera )

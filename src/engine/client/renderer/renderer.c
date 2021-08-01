@@ -446,16 +446,16 @@ void R_DrawScene( Camera *camera )
 
 	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
-	//CVar( "graphics.wireframeMode", wireframeMode );
-	//if ( wireframeMode->b_value ) {
-	//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	//}
+	CVar( "r_wireframe", wireframeMode );
+	if ( wireframeMode->b_value ) {
+        PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 
 	R_RenderSceneFinal( camera );
 
-	//if ( wireframeMode->b_value ) {
-	//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	//}
+	if ( wireframeMode->b_value ) {
+        PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 }
