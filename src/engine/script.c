@@ -28,7 +28,7 @@ ScriptVariableType SCR_GetVariableTypeByTag( const char *tag )
 			{ "builtin", SCRIPT_VAR_BUILTIN },
 	};
 
-	for ( int i = 0; i < plArrayElements( varTags ); ++i )
+	for ( int i = 0; i < PL_ARRAY_ELEMENTS( varTags ); ++i )
 	{
 		if ( strcmp( tag, varTags[ i ].tag ) == 0 )
 		{
