@@ -1,7 +1,8 @@
 # Yin Engine
 
-Yin is a custom game engine developed
-for game jams and prototyping.
+![Logo](resources/logo_128.png)
+
+Yin is a custom game engine developed for game jams and prototyping.
 
 Not recommended for use in your own projects.
 
