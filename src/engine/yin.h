@@ -87,7 +87,7 @@ typedef struct OSWindow OSWindow;
 #define PrintError( FORMAT, ... )                                 \
 	{                                                             \
 		PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
-		exit( EXIT_FAILURE );                                     \
+		abort();                                                  \
 	}
 #define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #else
