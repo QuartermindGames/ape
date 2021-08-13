@@ -4,3 +4,6 @@
 [submodule "src/3rdparty/fox-1.6.57_cmake"]
 	path = src/3rdparty/fox-1.6.57_cmake
 	url = https://github.com/OldTimes-Software/fox-1.6.57_cmake.git
+[submodule "release/base"]
+	path = release/base
+	url = https://github.com/OldTimes-Software/yin-base.git
