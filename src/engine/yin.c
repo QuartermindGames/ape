@@ -108,10 +108,19 @@ static void Engine_SetupFileSystem( void )
 
 	PlMountLocalLocation( ComFS_GetDataDirectory() );
 
-	/* attempt to mount local base dir */
-	static const char *baseDir = "base/";
-	if ( PlMountLocation( baseDir ) == NULL )
-		PrintWarn( "Failed to mount \"%s\"!\nPL: %s\n", baseDir, PlGetError() );
+	/* attempt to mount local base dirs
+	 * todo: hand this off to a script... */
+	static const char *baseDirs[] = {
+			"base/",
+			"qcia_jam/",
+	};
+	for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( baseDirs ); ++i )
+	{
+		if ( PlMountLocation( baseDirs[ i ] ) != NULL )
+			continue;
+
+		PrintWarn( "Failed to mount \"%s\"!\nPL: %s\n", baseDirs[ i ], PlGetError() );
+	}
 
 	/* and now the base package */
 	if ( PlMountLocation( YIN_GLOBAL_WAD ) == NULL )
@@ -235,7 +244,7 @@ static void Engine_HandleTextEvent( const char *key )
 }
 
 static OSSystemInterface *GetSystemInterface( void ) { return &globalSystem; }
-static GameInterface *	  GetGameInterface( void ) { return &globalGame; }
+static GameInterface	 *GetGameInterface( void ) { return &globalGame; }
 
 PL_EXPORT OSEngineInterface *GetDllInterface( uint32_t version, const OSSystemInterface *sysIn )
 {
