@@ -51,7 +51,7 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-variable -Wno-unused-function -Werror=implicit-function-declaration")
 endif()
 
 # Get the current working branch
@@ -95,6 +95,6 @@ add_subdirectory(src/game/)
 # tools
 #add_subdirectory(src/editor/)
 add_subdirectory(src/tests/)
-add_subdirectory(src/ycvm/)
+#add_subdirectory(src/ycvm/)
 
 add_subdirectory(src/tools/pkgman/)
