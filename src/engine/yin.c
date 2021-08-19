@@ -107,8 +107,15 @@ static void Engine_SetupFileSystem( void )
 	Print( "Mounting VFS locations...\n" );
 
 	PlMountLocalLocation( ComFS_GetDataDirectory() );
+
+	/* attempt to mount local base dir */
+	static const char *baseDir = "base/";
+	if ( PlMountLocation( baseDir ) == NULL )
+		PrintWarn( "Failed to mount \"%s\"!\nPL: %s\n", baseDir, PlGetError() );
+
+	/* and now the base package */
 	if ( PlMountLocation( YIN_GLOBAL_WAD ) == NULL )
-		PrintError( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", PlGetError() );
+		PrintWarn( "Failed to load \"" YIN_GLOBAL_WAD "\"!\nPL: %s\n", PlGetError() );
 
 	for ( uint8_t i = 0; i < MAX_GAME_PACKAGES; ++i )
 	{
@@ -119,6 +126,8 @@ static void Engine_SetupFileSystem( void )
 
 		break;
 	}
+
+	PlParseConsoleString( "fsListMounted" );
 }
 
 static bool Engine_Initialize( int argc, char **argv )
