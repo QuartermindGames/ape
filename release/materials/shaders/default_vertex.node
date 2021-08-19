@@ -1,7 +1,0 @@
-node.ascii
-; this node file has been auto-generated!
-object program {
-	string description default_vertex 
-	string vertexPath materials/shaders/vertex.glsl 
-	string fragmentPath materials/shaders/colour.glsl 
-}

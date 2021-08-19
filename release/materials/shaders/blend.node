@@ -1,7 +1,0 @@
-node.ascii
-; this node file has been auto-generated!
-object program {
-	string description blend 
-	string vertexPath materials/shaders/vertex.glsl 
-	string fragmentPath materials/shaders/blend.frag 
-}
