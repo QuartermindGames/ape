@@ -127,7 +127,7 @@ static void Pkg_AddFile( const char *filePath )
 
 	uint32_t length = ( uint32_t ) PlGetFileSize( filePtr );
 	const uint8_t *data = PlGetFileData( filePtr );
-	Pkg_AddData( pkgPath, data, length, true );
+	Pkg_AddData( pkgPath, data, length, false );
 
 	PlCloseFile( filePtr );
 }

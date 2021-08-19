@@ -52,6 +52,8 @@ typedef struct ActorSetup
 	NLNode *( *Serialize )( Actor *self, NLNode *nodeTree );
 	void ( *Deserialize )( Actor *self, NLNode *nodeTree );
 } ActorSetup;
+#define ACTOR_SETUP( ID, SPAWN, TICK, DRAW, COLLIDE, DESTROY, SERIALIZE, DESERIALIZE ) \
+	ActorSetup##ID { #ID, SPAWN, TICK, DRAW, COLLIDE, DESTROY, SERIALIZE, DESERIALIZE }
 
 typedef struct ActInterface
 {
@@ -74,6 +76,7 @@ void Act_TickActors( void *userData, double delta );
 Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree );
 Actor *Act_SpawnActorById( const char *id, NLNode *nodeTree );
 Actor *Act_DestroyActor( Actor *self );
+void   Act_DestroyActors( void );
 
 ActorType Act_GetType( const Actor *self );
 

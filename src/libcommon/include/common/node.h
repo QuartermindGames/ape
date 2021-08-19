@@ -23,7 +23,7 @@ typedef enum NLErrorCode
 	NL_ERROR_MEM_ALLOC, /* alloc failure */
 
 	NL_ERROR_INVALID_ARGUMENT,
-	NL_ERROR_INVALID_TYPE,     /* invalid node parent/child type */
+	NL_ERROR_INVALID_TYPE,	   /* invalid node parent/child type */
 	NL_ERROR_INVALID_ELEMENTS, /* unexpected number of elements */
 } NLErrorCode;
 
@@ -49,7 +49,7 @@ typedef enum NLPropertyType
 
 	NL_PROP_F32, // float
 	NL_PROP_F64, // double
-	NL_PROP_I8,  // int8
+	NL_PROP_I8,	 // int8
 	NL_PROP_I16, // int16
 	NL_PROP_I32, // int32
 	NL_PROP_I64, // int64
@@ -63,13 +63,13 @@ typedef enum NLPropertyType
 
 typedef union NLPropertyData_U
 {
-	float    f32;
-	double   f64;
-	int8_t   i8;
-	int16_t  i16;
-	int32_t  i32;
-	int64_t  i64;
-	uint8_t  ui8;
+	float	 f32;
+	double	 f64;
+	int8_t	 i8;
+	int16_t	 i16;
+	int32_t	 i32;
+	int64_t	 i64;
+	uint8_t	 ui8;
 	uint16_t ui16;
 	uint32_t ui32;
 	uint64_t ui64;
@@ -79,13 +79,13 @@ extern const char *NL_GetErrorMessage( void );
 extern NLErrorCode NL_GetError( void );
 
 extern unsigned int NL_GetNumOfChildren( const NLNode *parent ); /* only valid for object/array */
-extern NLNode *     NL_GetFirstChild( NLNode *parent );
-extern NLNode *     NL_GetNextChild( NLNode *node );
-extern NLNode *     NL_GetChildByName( NLNode *parent, const char *name ); /* only valid for object */
-extern NLNode *     NL_GetChildByIndex( NLNode *parent, unsigned int i );  /* only valid for array */
-extern NLNode *     NL_GetParent( NLNode *node );
+extern NLNode	  *NL_GetFirstChild( NLNode *parent );
+extern NLNode	  *NL_GetNextChild( NLNode *node );
+extern NLNode	  *NL_GetChildByName( NLNode *parent, const char *name ); /* only valid for object */
+extern NLNode	  *NL_GetChildByIndex( NLNode *parent, unsigned int i );  /* only valid for array */
+extern NLNode	  *NL_GetParent( NLNode *node );
 
-extern const char *   NL_GetName( const NLNode *node );
+extern const char	  *NL_GetName( const NLNode *node );
 extern NLPropertyType NL_GetType( const NLNode *node );
 
 extern NLErrorCode NL_GetBool( const NLNode *node, bool *dest );
@@ -108,13 +108,13 @@ extern NLErrorCode NL_GetI32Array( NLNode *parent, int32_t *buf, unsigned int nu
 extern NLErrorCode NL_GetUI32Array( NLNode *parent, uint32_t *buf, unsigned int numElements );
 extern NLErrorCode NL_GetF32Array( NLNode *parent, float *buf, unsigned int numElements );
 
-extern bool        NL_GetBoolByName( NLNode *node, const char *name, bool fallback );
+extern bool		   NL_GetBoolByName( NLNode *node, const char *name, bool fallback );
 extern const char *NL_GetStrByName( NLNode *node, const char *name, const char *fallback );
-extern int8_t      NL_GetI8ByName( NLNode *node, const char *name, int8_t fallback );
-extern int16_t     NL_GetI16ByName( NLNode *node, const char *name, int16_t fallback );
-extern int32_t     NL_GetI32ByName( NLNode *node, const char *name, int32_t fallback );
-extern float       NL_GetF32ByName( NLNode *node, const char *name, float fallback );
-extern double      NL_GetF64ByName( NLNode *node, const char *name, double fallback );
+extern int8_t	   NL_GetI8ByName( NLNode *node, const char *name, int8_t fallback );
+extern int16_t	   NL_GetI16ByName( NLNode *node, const char *name, int16_t fallback );
+extern int32_t	   NL_GetI32ByName( NLNode *node, const char *name, int32_t fallback );
+extern float	   NL_GetF32ByName( NLNode *node, const char *name, float fallback );
+extern double	   NL_GetF64ByName( NLNode *node, const char *name, double fallback );
 
 extern NLNode *NL_PushBackObj( NLNode *node, const char *name );
 extern NLNode *NL_PushBackStr( NLNode *parent, const char *name, const char *var );
@@ -133,31 +133,31 @@ extern NLNode *NL_PushBackF32Array( NLNode *parent, const char *name, const floa
 #ifndef __cplusplus
 #define NL_PushBackArray( PARENT, NAME, ARRAY, NUM ) \
 	_Generic( ( ARRAY ),                             \
-	          int                                    \
-	          : NL_PushBackIntArray,                 \
-	            float                                \
-	          : NL_PushBackFloatArray )( PARENT, NAME, ARRAY, NUM )
+			  int                                    \
+			  : NL_PushBackIntArray,                 \
+				float                                \
+			  : NL_PushBackFloatArray )( PARENT, NAME, ARRAY, NUM )
 #define NL_PushBackVariable( ROOT, NAME, VAR ) \
 	_Generic( ( VAR ),                         \
-	          bool                             \
-	          : NL_PushBackBool,               \
-	            int                            \
-	          : NL_PushBackInt,                \
-	            float                          \
-	          : NL_PushBackFloat,              \
-	            PLVector2 *                    \
-	          : NL_PushBackVec2,               \
-	            PLVector3 *                    \
-	          : NL_PushBackVec3,               \
-	            PLVector4 *                    \
-	          : NL_PushBackVec4 )( ROOT, NAME, VAR )
+			  bool                             \
+			  : NL_PushBackBool,               \
+				int                            \
+			  : NL_PushBackInt,                \
+				float                          \
+			  : NL_PushBackFloat,              \
+				PLVector2 *                    \
+			  : NL_PushBackVec2,               \
+				PLVector3 *                    \
+			  : NL_PushBackVec3,               \
+				PLVector4 *                    \
+			  : NL_PushBackVec4 )( ROOT, NAME, VAR )
 #endif
 
 extern NLNode *NL_CopyNode( NLNode *node );
-extern void    NL_DestroyNode( NLNode *node );
+extern void	   NL_DestroyNode( NLNode *node );
 
 extern NLNode *NL_LoadFile( const char *path, const char *objectType );
-extern void    NL_WriteFile( const char *path, NLNode *root, NLFileType fileType );
+extern void	   NL_WriteFile( const char *path, NLNode *root, NLFileType fileType );
 
 extern NLNode *NL_ParseBuffer( const char *buf, size_t length );
 
@@ -165,13 +165,14 @@ extern NLNode *NL_ParseBuffer( const char *buf, size_t length );
 extern void NL_PrintNodeTree( NLNode *node, int index );
 
 /* deserialisation */
-PLMatrix4 *       NL_DS_DeserializeMatrix4( NLNode *in, PLMatrix4 *out );
-float *           NL_DS_DeserializeVector( NLNode *in, float *out, uint8_t numElements );
-PLVector2 *       NL_DS_DeserializeVector2( NLNode *in, PLVector2 *out );
-PLVector3 *       NL_DS_DeserializeVector3( NLNode *in, PLVector3 *out );
-PLVector4 *       NL_DS_DeserializeVector4( NLNode *in, PLVector4 *out );
-PLQuaternion *    NL_DS_DeserializeQuaternion( NLNode *in, PLQuaternion *out );
-PLColour *        NL_DS_DeserializeColour( NLNode *in, PLColour *out );
+PLMatrix4		  *NL_DS_DeserializeMatrix4( NLNode *in, PLMatrix4 *out );
+float			  *NL_DS_DeserializeVector( NLNode *in, float *out, uint8_t numElements );
+PLVector2		  *NL_DS_DeserializeVector2( NLNode *in, PLVector2 *out );
+PLVector3		  *NL_DS_DeserializeVector3( NLNode *in, PLVector3 *out );
+PLVector4		  *NL_DS_DeserializeVector4( NLNode *in, PLVector4 *out );
+PLQuaternion	 *NL_DS_DeserializeQuaternion( NLNode *in, PLQuaternion *out );
+PLColour		 *NL_DS_DeserializeColour( NLNode *in, PLColour *out );
+PLColourF32		*NL_DS_DeserializeColourF32( NLNode *in, PLColourF32 *out );
 struct PLGVertex *NL_DS_DeserializeVertex( NLNode *in, struct PLGVertex *out );
 
 PL_EXTERN_C_END

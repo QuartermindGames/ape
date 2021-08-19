@@ -20,7 +20,7 @@ typedef struct ShaderProgramIndex
 } ShaderProgramIndex;
 
 static PLLinkedList *shaderPrograms;
-PLGShaderProgram *	 defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram	 *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path )
 {

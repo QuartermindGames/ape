@@ -95,7 +95,7 @@ void R_DrawNumber( float x, float y, int number )
 
 void R_SetupDefaultState( void )
 {
-	PlgSetClearColour( PLColour( 128, 212, 255, 255 ) );
+	PlgSetClearColour( PLColour( 0, 0, 0, 255 ) ); //PLColour( 128, 212, 255, 255 ) );
 
 	PlgEnableGraphicsState( PLG_GFX_STATE_SCISSORTEST );
 
@@ -107,7 +107,7 @@ void R_SetupDefaultState( void )
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
 }
 
-static void Gfx_SetupShadowMap( void )
+static void R_SetupShadowMap( void )
 {
 	smDepthBuffer = PlgCreateFrameBuffer( SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, PLG_BUFFER_DEPTH );
 	if ( smDepthBuffer == NULL )
@@ -152,7 +152,7 @@ void R_Initialize( void )
 	auxCamera->near = 0.0f;
 	auxCamera->far	= 1000.0f;
 
-	Gfx_SetupShadowMap();
+	R_SetupShadowMap();
 	R_SetupDefaultState();
 }
 
@@ -242,22 +242,19 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
 	BitmapFont *font = Font_GetDefaultSmall();
-	if ( font != NULL )
-	{
-		size_t len	= strlen( heading );
-		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, true );
+    size_t len	= strlen( heading );
+    float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+    Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, true );
 
-		/* metrics */
-		char buf[ 128 ];
-		snprintf( buf, sizeof( buf ),
-				  "min: %02f\n"
-				  "max: %02f\n"
-				  "cur: %02f",
-				  min, max,
-				  values[ numPoints - 1 ] );
-		Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
-	}
+    /* metrics */
+    char buf[ 128 ];
+    snprintf( buf, sizeof( buf ),
+              "min: %02f\n"
+              "max: %02f\n"
+              "cur: %02f",
+              min, max,
+              values[ numPoints - 1 ] );
+    Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
 
 	globalSystem.Free( points );
 }
@@ -376,6 +373,8 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 
 	PlLoadIdentityMatrix();
 
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+
 	PLVector3 angles;
 	angles.x = PlDegreesToRadians( rotation.x );
 	angles.y = PlDegreesToRadians( rotation.y );
@@ -409,9 +408,16 @@ static void R_RenderScene( Camera *camera, bool smPass )
 		but for v2, this'll suffice...
 	*/
 
-	W_Draw( camera, NULL, curSector );
+	W_Draw( Game_GetCurrentWorld(), curSector, camera );
 	Act_DrawActors();
-	PS_Draw( camera );
+
+#if 0
+	static PLVector3 rotation = PLVector3( 0.0f, 0.0f, 0.0f );
+	R_DrawAxesPivot( PLVector3( 16.0f, -0.0f, 0.0f ), rotation );
+	rotation.x += 0.5f;
+	rotation.y += 0.5f;
+	rotation.z += 0.5f;
+#endif
 }
 
 static void R_RenderSceneDepth( Camera *camera, const PLVector3 *lightPos, const PLVector3 *lightAngles )
@@ -431,8 +437,8 @@ static void R_RenderSceneDepth( Camera *camera, const PLVector3 *lightPos, const
 static void R_RenderSceneFinal( Camera *camera )
 {
 	/* set everything up for post-processing */
-	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
-	PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
+	//GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
+	//PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera->internal );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
@@ -444,7 +450,7 @@ void R_DrawScene( Camera *camera )
 {
 	g_gfxPerfStats.cameraPos = camera->internal->position;
 
-	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+//	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
 	CVar( "r_wireframe", wireframeMode );
 	if ( wireframeMode->b_value ) {

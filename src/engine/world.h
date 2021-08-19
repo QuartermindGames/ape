@@ -61,4 +61,4 @@ WorldFace *W_GetFacesForSector( WorldSector *sector, uint32_t *numFaces );
 
 typedef struct Camera Camera;
 
-void W_Draw( Camera *camera, World *world, WorldSector *originSector );
+void W_Draw( World *world, WorldSector *originSector, Camera *camera );

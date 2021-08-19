@@ -212,7 +212,7 @@ void Con_Initialize( void )
 	PlRegisterConsoleCommand( "version", Cmd_Version, "Prints out the current engine version." );
 
 	/* debugging */
-	PlRegisterConsoleVariable( "debug.overlay", "1", pl_int_var, NULL, "Enable/disable debug overlays." );
+	PlRegisterConsoleVariable( "debug.overlay", "0", pl_int_var, NULL, "Enable/disable debug overlays." );
 	PlRegisterConsoleVariable( "debug.profilerFrequency", "16", pl_int_var, NULL, "Set frequency at which profile graph updates." );
 
 	PlRegisterConsoleVariable( "game.playerName", "unnamed", pl_string_var, NULL, "Set the name of the local player." );
@@ -326,7 +326,7 @@ bool Con_HandleKeyboardEvent( int key, unsigned int keyState )
 	}
 
 	/* only do anything if the console is open */
-	if ( !Con_GetState() || keyState != INPUT_STATE_PRESSED && keyState != INPUT_STATE_DOWN )
+	if ( !Con_GetState() || ( keyState != INPUT_STATE_PRESSED && keyState != INPUT_STATE_DOWN ) )
 		return false;
 
 	switch ( key )

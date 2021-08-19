@@ -23,14 +23,19 @@ static MenuState   menuState   = MENU_STATE_START;
 
 static World *currentWorld = NULL;
 
-static Camera *gameCamera = NULL;
-
 typedef enum GameState
 {
 	GAME_STATE_PAUSED,
 	GAME_STATE_ACTIVE,
 } GameState;
 GameState gameState = GAME_STATE_PAUSED;
+
+typedef enum GameConnectionType {
+	GAME_CONNECTION_LOCAL,
+	GAME_CONNECTION_LAN,
+	GAME_CONNECTION_NET,
+} GameConnectionType;
+static GameConnectionType gameConnectionType = GAME_CONNECTION_LOCAL;
 
 MenuState Game_GetMenuState( void )
 {
@@ -94,11 +99,28 @@ void Game_SpawnWorld( const char *worldPath )
 	gameState	= GAME_STATE_ACTIVE;
 	menuState	= MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
-
-	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
-World *Game_GetCurrentWorld( void ) { return currentWorld; }
+void Game_Disconnect( void )
+{
+	if ( currentWorld != NULL )
+	{
+		W_DestroyWorld( currentWorld );
+		currentWorld = NULL;
+	}
+
+	Act_DestroyActors();
+}
+
+static void Game_Cmd_Disconnect( unsigned int argc, char **argv )
+{
+	Game_Disconnect();
+}
+
+World *Game_GetCurrentWorld( void )
+{
+	return currentWorld;
+}
 
 static void Cmd_SpawnWorld( unsigned int argc, char **argv )
 {
@@ -130,9 +152,22 @@ void Game_Initialize( void )
 
 	Act_Initialize();
 
-	PlRegisterConsoleCommand( "SpawnWorld", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	PlRegisterConsoleCommand( "world", Cmd_SpawnWorld, "Load in and spawn the specified world." );
+	PlRegisterConsoleCommand( "disconnect", Game_Cmd_Disconnect, "Disconnect from the current game." );
+
+	Actor *test = Act_SpawnActorById( "point.sg.asteroid", NULL );
+	if ( test == NULL )
+		PrintError( "Failed to spawn test actor!\n" );
+
+	PLVector3 pos = PLVector3( 64.0f, 0.0f, 0.0f ) ;
+	Act_SetPosition( test, &pos );
+
+	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
 void Game_Shutdown( void )
 {
+	Game_Disconnect();
+
+	Act_Shutdown();
 }

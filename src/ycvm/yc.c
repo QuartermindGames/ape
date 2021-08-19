@@ -112,7 +112,7 @@ static const char *reservedWords[ YC_MAX_TOKENTYPES ] = {
 
 YCTokenType YLex_GetTokenType( const char *c )
 {
-	if ( c == '\0' )
+	if ( *c == '\0' )
 	{
 		return YC_TOKENTYPE_EOF;
 	}
@@ -135,6 +135,8 @@ static bool TestLexer( void )
 	const char *string =
 	        "declare myVar float;\n"
 	        "myVar := 2;\n";
+
+	return true;
 }
 
 int main( int argc, char **argv )

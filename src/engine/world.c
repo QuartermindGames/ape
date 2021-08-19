@@ -36,7 +36,7 @@ typedef struct WorldFace
 	uint8_t flags; /* portal, mirror, skip etc. */
 
 	WorldSector *parentSector;
-	WorldFace *	 targetSectorFace; /* if portal */
+	WorldFace	  *targetSectorFace; /* if portal */
 
 	PLCollisionAABB bounds;
 } WorldFace;
@@ -45,13 +45,13 @@ typedef struct WorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	Material **	 materials;
+	Material	 **materials;
 	unsigned int numMaterials;
 
-	PLGVertex *	 vertices;
+	PLGVertex	  *vertices;
 	unsigned int numVertices;
 
-	WorldFace *	 faces;
+	WorldFace	  *faces;
 	unsigned int numFaces;
 
 	PLCollisionAABB bounds;
@@ -72,7 +72,7 @@ typedef struct WorldObject
 	WorldObjectCollisionType collisionType;
 	union
 	{
-		const WorldMesh *	   collisionMesh;
+		const WorldMesh		*collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } WorldObject;
@@ -93,7 +93,7 @@ typedef struct WorldSector
 
 typedef struct World
 {
-	WorldMesh *	 meshes;
+	WorldMesh	  *meshes;
 	unsigned int numMeshes;
 
 	WorldSector *sectors;
@@ -102,6 +102,8 @@ typedef struct World
 	PLVector4 ambience;
 	PLVector4 sunColour;
 	PLVector3 sunPosition;
+
+	Material *skyMaterial;
 
 	/* additional generic properties */
 	NLNode *globalProperties;
@@ -133,7 +135,7 @@ void W_DeserializeMaterials( NLNode *meshNode, WorldMesh *meshPtr )
 	}
 
 	meshPtr->numMaterials = NL_GetNumOfChildren( materialsList );
-	meshPtr->materials	  = globalSystem.CAlloc( meshPtr->numMaterials, sizeof( Material * ), true );
+	meshPtr->materials	  = globalSystem.CAlloc( meshPtr->numMaterials, sizeof( Material	 *), true );
 	NLNode *materialNode  = NL_GetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
@@ -388,6 +390,18 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 			NL_DS_DeserializeVector3( childProperty, &out->sunPosition );
 		else
 			out->sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
+
+		static const char *skyPath;
+		if ( ( childProperty = NL_GetChildByName( out->globalProperties, "skyMaterial" ) ) != NULL )
+		{
+			char buf[ PL_SYSTEM_MAX_PATH ];
+			NL_GetStr( childProperty, buf, sizeof( buf ) );
+			skyPath = &buf[ 0 ];
+		}
+		else
+			skyPath = "materials/sky/cloudlayer00.mat";
+
+		out->skyMaterial = RM_CacheMaterial( skyPath, CACHE_GROUP_WORLD, true );
 	}
 
 	NLNode *meshList = NL_GetChildByName( in, "meshes" );
@@ -651,7 +665,7 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 #endif
 
 	unsigned int numFaces;
-	WorldFace *	 faces = W_GetFacesForSector( sector, &numFaces );
+	WorldFace	  *faces = W_GetFacesForSector( sector, &numFaces );
 	if ( faces == NULL || numFaces == 0 )
 	{
 		PrintWarn( "Invalid number of faces in sector!\n" );
@@ -672,8 +686,8 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
 
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
 			{
-				PLGVertex *	 vertex = &sector->mesh->vertices[ face->vertices[ k ] ];
-				unsigned int v		= PlgAddMeshVertex( sector->mesh->drawMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
+				PLGVertex	  *vertex								= &sector->mesh->vertices[ face->vertices[ k ] ];
+				unsigned int v									= PlgAddMeshVertex( sector->mesh->drawMesh, vertex->position, vertex->normal, vertex->colour, vertex->st[ 0 ] );
 				/* this shit is generated earlier in the process, and right now I'm not sure if it's
 				 * appropriate to add to AddMeshVertex */
 				sector->mesh->drawMesh->vertices[ v ].tangent	= vertex->tangent;
@@ -764,67 +778,50 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
  * RENDERING
  ****************************************/
 
-
 /**
  * Draw scrolling clouds.
  */
-void W_DrawSky( Camera *camera )
+static void W_DrawSky( World *world, Camera *camera )
 {
-	static Material *skyMaterial = NULL;
-	if ( skyMaterial == NULL )
-	{
-		skyMaterial = RM_CacheMaterial( "materials/sky/cloudlayer00.mat", CACHE_GROUP_WORLD, true );
-		if ( skyMaterial == NULL )
-			PrintError( "Failed to load cloud layer!\n" );
-	}
-
-	static PLGVertex vertices[] = {
-	        { .position = { 10.0f, 100.f, 100.0f },
-					.colour   = PL_COLOUR_WHITE }, /* top right */
-			{ .position = PLVector3( 10.0f, 200.0f, 200.0f ),
-					.colour   = PLColourA( 0 ) }, /* top right far */
-			{ .position = PLVector3( 10.0f, 100.0f, -100.0f ),
-					.colour   = PL_COLOUR_WHITE }, /* lower right */
-			{ .position = PLVector3( 10.0f, 200.0f, -200.0f ),
-					.colour   = PLColourA( 0 ) }, /* lower right far */
-			{ .position = PLVector3( 10.0f, -100.0f, -100.0f ),
-					.colour   = PL_COLOUR_WHITE }, /* lower left */
-			{ .position = PLVector3( 10.0f, -200.0f, -200.0f ),
-					.colour   = PLColourA( 0 ) }, /* lower left far */
-			{ .position = PLVector3( 10.0f, -100.0f, 100.0f ),
-					.colour   = PL_COLOUR_WHITE }, /* top left */
-			{ .position = PLVector3( 10.0f, -200.0f, 200.0f ),
-					.colour   = PLColourA( 0 ) } }; /* top left far */
-	static unsigned int indices[][ 3 ] = {
-			/* corners */
-			{ 2, 1, 0 },
-			{ 3, 1, 2 },
-			{ 4, 3, 2 },
-			{ 5, 3, 4 },
-			{ 6, 5, 4 },
-			{ 7, 5, 6 },
-			{ 0, 7, 6 },
-			{ 1, 7, 0 },
-			/* middle */
-			{ 4, 2, 0 },
-			{ 6, 4, 0 },
-	};
+	if ( world->skyMaterial == NULL )
+		return;
 
 	static PLGMesh *skyMesh = NULL;
 	if ( skyMesh == NULL )
 	{
-		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, PL_ARRAY_ELEMENTS( indices ), PL_ARRAY_ELEMENTS( vertices ) );
+		static unsigned int indices[][ 3 ] = {
+				/* corners */
+				{ 2, 1, 0 },
+				{ 3, 1, 2 },
+				{ 4, 3, 2 },
+				{ 5, 3, 4 },
+				{ 6, 5, 4 },
+				{ 7, 5, 6 },
+				{ 0, 7, 6 },
+				{ 1, 7, 0 },
+				/* middle */
+				{ 4, 2, 0 },
+				{ 6, 4, 0 },
+		};
+		unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
+
+		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
 		if ( skyMesh == NULL )
 			PrintError( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
 
-		for ( unsigned int i = 0, curIndex = 0; i < PL_ARRAY_ELEMENTS( indices ); ++i )
-			PlgSetMeshTrianglePosition( skyMesh, &curIndex, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+		PlgAddMeshVertex( skyMesh, PLVector3( 100.0f, 10.0f, 100.0f ), pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );	  /* top right */
+		PlgAddMeshVertex( skyMesh, PLVector3( 200.0f, 10.0f, 200.0f ), pl_vecOrigin3, PLColourA( 0 ), pl_vecOrigin2 );	  /* top right far */
+		PlgAddMeshVertex( skyMesh, PLVector3( 100.0f, 10.0f, -100.0f ), pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );  /* lower right */
+		PlgAddMeshVertex( skyMesh, PLVector3( 200.0f, 10.0f, -200.0f ), pl_vecOrigin3, PLColourA( 0 ), pl_vecOrigin2 );	  /* lower right far */
+		PlgAddMeshVertex( skyMesh, PLVector3( -100.0f, 10.0f, -100.0f ), pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 ); /* lower left */
+		PlgAddMeshVertex( skyMesh, PLVector3( -200.0f, 10.0f, -200.0f ), pl_vecOrigin3, PLColourA( 0 ), pl_vecOrigin2 );  /* lower left far */
+		PlgAddMeshVertex( skyMesh, PLVector3( -100.0f, 10.0f, 100.0f ), pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );  /* top left */
+		PlgAddMeshVertex( skyMesh, PLVector3( -200.0f, 10.0f, 200.0f ), pl_vecOrigin3, PLColourA( 0 ), pl_vecOrigin2 );	  /* top left far */
 
-		for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( vertices ); ++i )
-		{
-			PlgSetMeshVertexPosition( skyMesh, i, PLVector3( vertices[ i ].position.y, vertices[ i ].position.x, vertices[ i ].position.z ) );
-			PlgSetMeshVertexColour( skyMesh, i, vertices[ i ].colour );
-		}
+		for ( unsigned int i = 0; i < numTriangles; ++i )
+			PlgAddMeshTriangle( skyMesh, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+
+		PlgUploadMesh( skyMesh );
 	}
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
@@ -842,15 +839,15 @@ void W_DrawSky( Camera *camera )
 	skyOffset.x = Engine_GetNumTicks() / 1000.0f;
 	skyOffset.y = Engine_GetNumTicks() / 1000.0f;
 	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
-
-	RM_DrawMesh( skyMaterial, skyMesh );
+	skyMesh->isDirty = true;
+	RM_DrawMesh( world->skyMaterial, skyMesh );
 
 	/* todo: do this in shader... */
 	skyOffset.x = ( Engine_GetNumTicks() / 100.0f ) * -1;
 	skyOffset.y = Engine_GetNumTicks() / 100.0f;
 	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
-
-	RM_DrawMesh( skyMaterial, skyMesh );
+	skyMesh->isDirty = true;
+	RM_DrawMesh( world->skyMaterial, skyMesh );
 
 	PlPopMatrix();
 
@@ -875,15 +872,18 @@ static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, 
 	}
 }
 
-void W_Draw( Camera *camera, World *world, WorldSector *originSector )
+void W_Draw( World *world, WorldSector *originSector, Camera *camera )
 {
 	PROFILE_START( PROFILE_DRAW_WORLD );
+
+	if ( world == NULL )
+		return;
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	W_DrawSky( camera );
+	W_DrawSky( world, camera );
 
 	if ( world != NULL )
 	{

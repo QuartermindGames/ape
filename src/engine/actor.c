@@ -120,7 +120,7 @@ Actor *Act_SpawnActorById( const char *id, NLNode *nodeTree )
 {
 	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
 	{
-		if ( strcmp( actorSpawnSetup[ i ]->id, id ) != 0 )
+		if ( actorSpawnSetup[ i ] == NULL || strcmp( actorSpawnSetup[ i ]->id, id ) != 0 )
 			continue;
 
 		return Act_SpawnActor( i, nodeTree );
@@ -142,6 +142,19 @@ Actor *Act_DestroyActor( Actor *self )
 	globalSystem.Free( self );
 
 	return NULL;
+}
+
+void Act_DestroyActors( void )
+{
+	Print( "Destroying actors\n" );
+
+	PLLinkedListNode *node = PlGetFirstNode( actorList );
+	while( node != NULL ) {
+		Actor *actor = PlGetLinkedListNodeUserData( node );
+		node = PlGetNextLinkedListNode( node );
+
+		Act_DestroyActor( actor );
+	}
 }
 
 ActorType Act_GetType( const Actor *self ) { return self->type; }
@@ -305,7 +318,9 @@ void Act_TickActors( void *userData, double delta )
 		if ( actor->velocity.z != 0 )
 			actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
 
+#if 0
 		actor->velocity.y = -GRAVITY;
+#endif
 
 		actor->oldPosition = actor->position;
 		actor->position	   = PlAddVector3( actor->position, actor->velocity );

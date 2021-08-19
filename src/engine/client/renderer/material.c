@@ -45,7 +45,7 @@ typedef struct Material
 } Material;
 
 static Material *fallbackMaterial;
-Material *		 RM_GetFallbackMaterial( void )
+Material		 *RM_GetFallbackMaterial( void )
 {
 	return fallbackMaterial;
 }
@@ -63,11 +63,13 @@ void RM_InitializeMaterialSystem( void )
 
 	/* go ahead and create the fallback material */
 	fallbackMaterial = globalSystem.MAlloc( sizeof( Material ), true );
+
 	/* setup passes */
 	fallbackMaterial->numPasses					 = 1;
 	fallbackMaterial->passes[ 0 ].program		 = defaultShaderPrograms[ RS_SHADER_DEFAULT ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
+
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables						  = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].varData.type		  = SCRIPT_VAR_TEXTURE;

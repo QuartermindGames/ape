@@ -914,6 +914,9 @@ static void SerializeNode( FILE *file, NLNode *node, NLFileType fileType )
 	fwrite( &node->type, sizeof( int8_t ), 1, file );
 	switch ( node->type )
 	{
+		default:
+			Warning( "Invalid node type: " COM_FMT_uint32 "/n", node->type );
+			abort();
 		case NL_PROP_F32:
 		{
 			float v;

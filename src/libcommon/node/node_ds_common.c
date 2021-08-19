@@ -53,6 +53,15 @@ PLColour *NL_DS_DeserializeColour( NLNode *in, PLColour *out )
 	return out;
 }
 
+PLColourF32 *NL_DS_DeserializeColourF32( NLNode *in, PLColourF32 *out )
+{
+	const char *elements[] = { "r", "g", "b", "a" };
+	for ( uint8_t i = 0; i < 4; ++i )
+		PlColourF32Index( out, i ) = NL_GetF32ByName( in, elements[ i ], 1.0f );
+
+	return out;
+}
+
 PLGVertex *NL_DS_DeserializeVertex( NLNode *in, PLGVertex *out )
 {
 	NLNode *n;

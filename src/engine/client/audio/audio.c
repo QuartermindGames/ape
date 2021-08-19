@@ -169,7 +169,7 @@ ASoundReference A_CacheSound( const char *path )
 
 	PlCloseFile( file );
 
-	SDL_RWops *rw = SDL_RWFromMem( buffer, length );
+	SDL_RWops *rw = SDL_RWFromConstMem( buffer, length );
 
 	/* setup our new sound slot */
 	int freeSlot = 0;
@@ -189,9 +189,11 @@ ASoundReference A_CacheSound( const char *path )
 
 	ASound *newSound = &audioSounds[ freeSlot ];
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
-	bool status = ( SDL_LoadWAV_RW( rw, SDL_TRUE, NULL, &newSound->buffer, &newSound->length ) != NULL );
+	SDL_AudioSpec wavSpec;
+	bool status = ( SDL_LoadWAV_RW( rw, SDL_TRUE, &wavSpec, &newSound->buffer, &newSound->length ) != NULL );
 
 	SDL_RWclose( rw );
+	globalSystem.Free( buffer );
 
 	if ( !status )
 	{

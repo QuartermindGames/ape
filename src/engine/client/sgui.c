@@ -250,22 +250,23 @@ void Menu_Tick( void )
 
 void Menu_Draw( const PLGViewport *viewport )
 {
+	return;
 	if ( currentMenu == NULL )
 		return;
 
-#define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2.0f ) - ( ( menuFont->cw * ( STRLEN ) ) / 2.0f );
-	float x = STR_CENTER( menuFont, strlen( currentMenu->heading ) );
-	Font_DrawBitmapString( menuFont, x, 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->heading, false );
+#define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 );
+	int x = STR_CENTER( menuFont, strlen( currentMenu->heading ) );
+	Font_DrawBitmapString( menuFont, ( float ) x, 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->heading, false );
 
 	/* make sure the options are aligned to the middle of the screen */
-	float y = ( viewport->h / 2.0f ) - menuFont->ch * currentMenu->numMenuOptions;
+	int y = ( viewport->h / 2 ) - menuFont->ch * currentMenu->numMenuOptions;
 	for ( uint8_t i = 0; i < currentMenu->numMenuOptions; ++i )
 	{
 		x = STR_CENTER( menuFont, strlen( currentMenu->options[ i ].string ) );
 		if ( i == currentMenu->curSelection )
-			Font_DrawBitmapCharacter( menuFont, x - menuFont->cw, y, 1.0f, PL_COLOUR_WHITE, '(' );
+			Font_DrawBitmapCharacter( menuFont, ( float ) ( x - menuFont->cw ), ( float ) y, 1.0f, PL_COLOUR_WHITE, '(' );
 
-		Font_DrawBitmapString( menuFont, x, y, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->options[ i ].string, false );
+		Font_DrawBitmapString( menuFont, ( float ) x, ( float ) y, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->options[ i ].string, false );
 		y += menuFont->ch;
 	}
 }

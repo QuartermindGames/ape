@@ -42,7 +42,7 @@ typedef enum CacheGroup
 } CacheGroup;
 
 #if !defined( NDEBUG )
-#define ENABLE_PROFILER 1
+#	define ENABLE_PROFILER 1
 #endif
 
 typedef enum CPUProfilerGroup
@@ -59,11 +59,11 @@ void   CPUTimer_Initialize( void );
 void   CPUTimer_StartMeasure( CPUProfilerGroup group );
 void   CPUTimer_EndMeasure( CPUProfilerGroup group );
 double CPUTimer_GetMeasure( CPUProfilerGroup group );
-#define PROFILE_START( GROUP ) CPUTimer_StartMeasure( GROUP )
-#define PROFILE_END( GROUP )   CPUTimer_EndMeasure( GROUP )
+#	define PROFILE_START( GROUP ) CPUTimer_StartMeasure( GROUP )
+#	define PROFILE_END( GROUP )   CPUTimer_EndMeasure( GROUP )
 #else
-#define PROFILE_START( GROUP )
-#define PROFILE_END( GROUP )
+#	define PROFILE_START( GROUP )
+#	define PROFILE_END( GROUP )
 #endif
 const float *PF_GetGraph( CPUProfilerGroup group, uint8_t *numPoints );
 
@@ -76,29 +76,29 @@ void Con_Shutdown( void );
 void Con_Draw( const PLGViewport *viewport );
 
 #if !defined( NDEBUG )
-#define YIN_ENABLE_LOCAL_FS
+#	define YIN_ENABLE_LOCAL_FS
 #endif
 
 typedef struct OSWindow OSWindow;
 
-#if !defined( NDEBUG )
-#define Print( FORMAT, ... )	 PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
-#define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
-#define PrintError( FORMAT, ... )                                 \
-	{                                                             \
-		PlLogWFunction( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
-		abort();                                                  \
-	}
-#define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+#define Print( FORMAT, ... ) PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
+
+#if 0 // !defined( NDEBUG )
+#	define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, "WARNING: " FORMAT, ##__VA_ARGS__ )
+#	define PrintError( FORMAT, ... )                                           \
+		{                                                                       \
+			PlLogWFunction( LOG_LEVEL_ERROR, "ERROR: " FORMAT, ##__VA_ARGS__ ); \
+			abort();                                                            \
+		}
+#	define DebugMsg( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 #else
-#define Print( FORMAT, ... )	 PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
-#define PrintWarn( FORMAT, ... ) PlLogMessage( LOG_LEVEL_WARN, FORMAT, ##__VA_ARGS__ )
-#define PrintError( FORMAT, ... )                               \
-	{                                                           \
-		PlLogMessage( LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__ ); \
-		exit( EXIT_FAILURE );                                   \
-	}
-#define DebugMsg( ... )
+#	define PrintWarn( FORMAT, ... ) PlLogMessage( LOG_LEVEL_WARN, "WARNING: " FORMAT, ##__VA_ARGS__ )
+#	define PrintError( FORMAT, ... )                                         \
+		{                                                                     \
+			PlLogMessage( LOG_LEVEL_ERROR, "ERROR: " FORMAT, ##__VA_ARGS__ ); \
+			exit( EXIT_FAILURE );                                             \
+		}
+#	define DebugMsg( ... )
 #endif
 
 extern PLPackage *globalWad;
