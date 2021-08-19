@@ -1,5 +1,0 @@
-material
-pass default
-blend src_alpha one
-var texture diffuseMap materials/textures/terrain/grass00.png
-end

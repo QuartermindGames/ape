@@ -1,8 +1,0 @@
-; Generates editor.pkg
-output editor.pkg
-
-dir materials/editor tga
-dir materials/editor png
-dir materials/editor node
-
-dir icons gif

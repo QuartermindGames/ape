@@ -1,5 +1,0 @@
-material
-pass default
-blend src_alpha one
-var texture diffuseMap materials/sky/cloudlayer00a.tga
-end

@@ -7,3 +7,6 @@
 [submodule "release/base"]
 	path = release/base
 	url = https://github.com/OldTimes-Software/yin-base.git
+[submodule "release/walpole"]
+	path = release/walpole
+	url = git@github.com:OldTimes-Software/yin-walpole.git

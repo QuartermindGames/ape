@@ -12,3 +12,6 @@ dir materials/terrain/background png
 
 ;dir models stl
 ;dir models png
+
+dir sounds/sg wav
+
