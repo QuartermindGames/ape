@@ -1,0 +1,46 @@
+node.ascii
+object world {
+    integer version 20210409
+
+    object properties {
+      array string skyMaterials {
+        "materials/sky/space.mat"
+        "materials/sky/space1.mat"
+      }
+    }
+
+    array object sectors {
+      {
+        string id "main.sector"
+        object boundsMin {
+          float x -1024
+          float y -1024
+          float z -1024
+        }
+        object boundsMax {
+          float x 1024
+          float y 1024
+          float z 1024
+        }
+
+        array object actors {
+          {
+            string id "sg.menu"
+            object position {
+              float x 0.0
+              float y 0.0
+              float z 0.0
+            }
+          }
+          {
+            string id "point.sg.asteroid"
+            object position {
+              float x 0.0
+              float y 0.0
+              float z 0.0
+            }
+          }
+        }
+      }
+    }
+}

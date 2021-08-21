@@ -103,7 +103,8 @@ typedef struct World
 	PLVector4 sunColour;
 	PLVector3 sunPosition;
 
-	Material *skyMaterial;
+	Material *skyMaterials[ 2 ];
+	unsigned int numSkyMaterials;
 
 	/* additional generic properties */
 	NLNode *globalProperties;
@@ -292,6 +293,12 @@ static void W_DeserializeSector( World *world, NLNode *sectorNode, WorldSector *
 			PrintWarn( "Failed to get mesh for sector: %s\n", tag );
 	}
 
+	NLNode *child;
+	if ( ( child = NL_GetChildByName( sectorNode, "boundsMin" ) ) != NULL )
+		NL_DS_DeserializeVector3( child, &sectorPtr->bounds.mins );
+	if ( ( child = NL_GetChildByName( sectorNode, "boundsMax" ) ) != NULL )
+		NL_DS_DeserializeVector3( child, &sectorPtr->bounds.maxs );
+
 	NLNode *staticObjectList = NL_GetChildByName( sectorNode, "staticObjects" );
 	if ( staticObjectList != NULL )
 	{
@@ -391,17 +398,22 @@ static World *W_DeserializeWorld( NLNode *in, World *out )
 		else
 			out->sunPosition = PLVector3( 0.5f, -1.0f, 0.5f );
 
-		static const char *skyPath;
-		if ( ( childProperty = NL_GetChildByName( out->globalProperties, "skyMaterial" ) ) != NULL )
+		childProperty = NL_GetChildByName( out->globalProperties, "skyMaterials" );
+		if ( childProperty != NULL )
 		{
-			char buf[ PL_SYSTEM_MAX_PATH ];
-			NL_GetStr( childProperty, buf, sizeof( buf ) );
-			skyPath = &buf[ 0 ];
-		}
-		else
-			skyPath = "materials/sky/cloudlayer00.mat";
+			out->numSkyMaterials = NL_GetNumOfChildren( childProperty );
 
-		out->skyMaterial = RM_CacheMaterial( skyPath, CACHE_GROUP_WORLD, true );
+			unsigned int i = 0;
+			NLNode *childIndex = NL_GetFirstChild( childProperty );
+			while ( childIndex != NULL )
+			{
+				char buf[ PL_SYSTEM_MAX_PATH ];
+				NL_GetStr( childIndex, buf, sizeof( buf ) );
+				out->skyMaterials[ i++ ] = RM_CacheMaterial( buf, CACHE_GROUP_WORLD, true );
+
+				childIndex = NL_GetNextChild( childIndex );
+			}
+		}
 	}
 
 	NLNode *meshList = NL_GetChildByName( in, "meshes" );
@@ -588,8 +600,6 @@ static WorldSector *W_GetSectorByGlobalOrigin( World *world, const PLVector3 *gl
 		return sector;
 	}
 
-	PrintWarn( "Failed to find sector by origin, returning first!\n" );
-
 	return &world->sectors[ 0 ];
 }
 
@@ -616,20 +626,29 @@ static WorldSector **GetVisibleSectors( World *world, WorldSector *originSector,
 
 	WorldSector **visibleSectors = globalSystem.CAlloc( world->numSectors, sizeof( WorldSector * ), true );
 
+	/* we'll assume the sector we're in is visible (seems like a safe assumption) */
+	*numSectors = 0;
+	visibleSectors[ *numSectors++ ] = originSector;
+
 	/* todo
 	 *  2. test whether or not player can see portal
 	 *  3. get portal destination, do 2. again but from portal
 	 */
 
 	WorldMesh *sectorMesh = originSector->mesh;
-	for ( unsigned int i = 0; i < sectorMesh->numFaces; ++i )
+	if ( sectorMesh != NULL )
 	{
-		if ( !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_PORTAL ) && !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_MIRROR ) )
-			continue;
+		for ( unsigned int i = 0; i < sectorMesh->numFaces; ++i )
+		{
+			if ( !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_PORTAL ) && !( sectorMesh->faces[ i ].flags & WORLD_FACE_FLAG_MIRROR ) )
+				continue;
 
-		if ( !PlgIsBoxInsideView( camera->internal, &sectorMesh->faces[ i ].bounds ) )
-			continue;
+			if ( !PlgIsBoxInsideView( camera->internal, &sectorMesh->faces[ i ].bounds ) )
+				continue;
+		}
 	}
+
+	return visibleSectors;
 }
 
 static WorldMesh **GetVisibleSubMeshesForSector( WorldSector *sector, const PLGCamera *camera, unsigned int *numMeshes )
@@ -778,12 +797,29 @@ static void DrawSector( WorldSector *sector, Camera *camera, bool simple )
  * RENDERING
  ****************************************/
 
+void W_DrawSkyLayer( PLGMesh *mesh, Material *material, const PLVector3 *location, float x, float y, float scale )
+{
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	PlTranslateMatrix( *location );
+
+	/* todo: do this in shader... */
+	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
+	mesh->isDirty = true;
+	RM_DrawMesh( material, mesh );
+
+	PlPopMatrix();
+}
+
 /**
  * Draw scrolling clouds.
  */
 static void W_DrawSky( World *world, Camera *camera )
 {
-	if ( world->skyMaterial == NULL )
+	if ( world->numSkyMaterials == 0 )
 		return;
 
 	static PLGMesh *skyMesh = NULL;
@@ -827,32 +863,35 @@ static void W_DrawSky( World *world, Camera *camera )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 	PlgSetDepthMask( false );
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
+	CVar( "r_skyheightoffset", skyHeightOffset );
+	CVar( "r_skyCull", r_skyCull );
 
-	PlLoadIdentityMatrix();
+	if ( !r_skyCull->b_value )
+		PlgSetCullMode( PLG_CULL_NONE );
 
-	PlTranslateMatrix( PLVector3( camera->internal->position.x, camera->internal->position.y + 10.0f, camera->internal->position.z ) );
+	PLVector3 location;
+	location = camera->internal->position;
+	location.y += skyHeightOffset->f_value;
 
-	/* todo: do this in shader... */
-	PLVector2 skyOffset;
-	skyOffset.x = Engine_GetNumTicks() / 1000.0f;
-	skyOffset.y = Engine_GetNumTicks() / 1000.0f;
-	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.75f, 0.75f ) );
-	skyMesh->isDirty = true;
-	RM_DrawMesh( world->skyMaterial, skyMesh );
+	float ticks = ( float ) Engine_GetNumTicks();
 
-	/* todo: do this in shader... */
-	skyOffset.x = ( Engine_GetNumTicks() / 100.0f ) * -1;
-	skyOffset.y = Engine_GetNumTicks() / 100.0f;
-	PlgGenerateTextureCoordinates( skyMesh->vertices, skyMesh->num_verts, skyOffset, PLVector2( 0.45f, 0.45f ) );
-	skyMesh->isDirty = true;
-	RM_DrawMesh( world->skyMaterial, skyMesh );
+	W_DrawSkyLayer( skyMesh, world->skyMaterials[ 0 ], &location, ticks / 700.0f, ticks / 400.0f, 0.15f );
 
-	PlPopMatrix();
+	if ( world->numSkyMaterials > 1 )
+	{
+#if 0
+		location.y += 2.0f;
+		W_DrawSkyLayer( skyMesh, world->skyMaterial, &location, ( ticks / 100.0f ) * -1, ticks / 100.0f, 0.45f );
+#else
+		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &PLVector3( 0.0f, camera->internal->position.y + skyHeightOffset->f_value - 30.0f, 0.0f ), ( ticks / 500.0f ) * -1, ticks / 500.0f, 0.45f );
+#endif
+	}
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 	PlgSetDepthMask( true );
+
+	if ( !r_skyCull->b_value )
+		PlgSetCullMode( PLG_CULL_POSTIVE );
 }
 
 static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, Camera *camera )
@@ -874,10 +913,10 @@ static void W_Debug_DrawSectorVolumes( World *world, WorldSector *originSector, 
 
 void W_Draw( World *world, WorldSector *originSector, Camera *camera )
 {
-	PROFILE_START( PROFILE_DRAW_WORLD );
-
 	if ( world == NULL )
 		return;
+
+	PROFILE_START( PROFILE_DRAW_WORLD );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -885,25 +924,22 @@ void W_Draw( World *world, WorldSector *originSector, Camera *camera )
 
 	W_DrawSky( world, camera );
 
-	if ( world != NULL )
+	CVar( "world.drawSectorVolumes", drawSectorVolumes );
+	if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
+		W_Debug_DrawSectorVolumes( world, originSector, camera );
+	else
 	{
-		CVar( "world.drawSectorVolumes", drawSectorVolumes );
-		if ( drawSectorVolumes != NULL && drawSectorVolumes->b_value )
-			W_Debug_DrawSectorVolumes( world, originSector, camera );
-		else
+		if ( originSector == NULL )
+			originSector = W_GetSectorByGlobalOrigin( world, &camera->internal->position );
+
+		if ( originSector != NULL )
 		{
-			if ( originSector == NULL )
-				originSector = W_GetSectorByGlobalOrigin( world, &camera->internal->position );
+			unsigned int  numVisibleSectors;
+			WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
+			for ( unsigned int i = 0; i < numVisibleSectors; ++i )
+				DrawSector( visibleSectors[ i ], camera, false );
 
-			if ( originSector != NULL )
-			{
-				unsigned int  numVisibleSectors;
-				WorldSector **visibleSectors = GetVisibleSectors( world, originSector, camera, &numVisibleSectors );
-				for ( unsigned int i = 0; i < numVisibleSectors; ++i )
-					DrawSector( visibleSectors[ i ], camera, false );
-
-				globalSystem.Free( visibleSectors );
-			}
+			globalSystem.Free( visibleSectors );
 		}
 	}
 

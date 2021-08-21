@@ -26,8 +26,8 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
-	float length = PlVector3Length( pushDir ) / 200.0f;
-	pushDir		 = PlScaleVector3F( pushDir, length );
+	float	  length  = PlVector3Length( pushDir ) / 200.0f;
+	pushDir			  = PlScaleVector3F( pushDir, length );
 	Act_SetVelocity( other, &pushDir );
 }
 
@@ -44,8 +44,9 @@ static ActorSetup actorDefault = {
 
 extern const ActorSetup actorPlayerSetup;// actor_player.c
 
-extern const ActorSetup actorAsteroidSetup;	 // sg_actors.c
-extern const ActorSetup actorProjectileSetup;// sg_actors.c
+extern const ActorSetup sg_actorShip;			// sg_actors.c
+extern const ActorSetup sg_actorAsteroidSetup;	// sg_actors.c
+extern const ActorSetup sg_actorProjectileSetup;// sg_actors.c
 
 const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ACTOR_NONE]		   = &actorDefault,
@@ -53,42 +54,10 @@ const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ACTOR_LIGHT]		   = NULL,
 		[ACTOR_TRIGGER_VOLUME] = NULL,
 		// sg
-		[ACTOR_SG_ASTEROID]	  = &actorAsteroidSetup,
-		[ACTOR_SG_PROJECTILE] = &actorProjectileSetup,
+		[ACTOR_SG_SHIP]		   = &sg_actorShip,
+		[ACTOR_SG_ASTEROID]	   = &sg_actorAsteroidSetup,
+		[ACTOR_SG_PROJECTILE]  = &sg_actorProjectileSetup,
 };
-
-typedef struct Actor
-{
-	PLVector3 position, oldPosition;
-	PLVector3 angles, oldAngles;
-	PLVector3 velocity;
-	PLVector3 forward;
-	float	  angle;
-	float	  viewPitch;
-	float	  viewOffset;
-
-	/* collision/vis */
-	struct WorldSector *sector;
-	ActorMovementType	movementType;
-	ActorCollisionGroup collisionGroup;
-	PLCollisionAABB		bounds;
-	PLLinkedList *		geoColliders; /* list of faces we're touching to test against */
-
-	/* animation */
-	unsigned int currentFrame;
-	unsigned int frameSwapTime;
-
-	ActorType  type;
-	ActorSetup setup;
-
-	SGNode *graphNode;
-
-	// temporary
-	int16_t health;
-
-	PLLinkedListNode *node;
-	void *			  userData;
-} Actor;
 
 static PLLinkedList *actorList;
 
@@ -149,9 +118,10 @@ void Act_DestroyActors( void )
 	Print( "Destroying actors\n" );
 
 	PLLinkedListNode *node = PlGetFirstNode( actorList );
-	while( node != NULL ) {
+	while ( node != NULL )
+	{
 		Actor *actor = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
+		node		 = PlGetNextLinkedListNode( node );
 
 		Act_DestroyActor( actor );
 	}
@@ -310,17 +280,20 @@ void Act_TickActors( void *userData, double delta )
 
 		PlAnglesAxes( PLVector3( 0, actor->angle, 0 ), NULL, NULL, &actor->forward );
 
-		static const float friction = 4.0f;
-		if ( actor->velocity.x != 0 )
-			actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
-		if ( actor->velocity.y != 0 )
-			actor->velocity.y -= ( actor->velocity.y / ( friction - ( float ) delta ) );
-		if ( actor->velocity.z != 0 )
-			actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
+		if ( actor->movementType == ACTOR_MOVEMENT_PHYSICS )
+		{
+			static const float friction = 4.0f;
+			if ( actor->velocity.x != 0 )
+				actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
+			if ( actor->velocity.y != 0 )
+				actor->velocity.y -= ( actor->velocity.y / ( friction - ( float ) delta ) );
+			if ( actor->velocity.z != 0 )
+				actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
 
 #if 0
 		actor->velocity.y = -GRAVITY;
 #endif
+		}
 
 		actor->oldPosition = actor->position;
 		actor->position	   = PlAddVector3( actor->position, actor->velocity );

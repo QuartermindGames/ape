@@ -231,8 +231,10 @@ void Con_Initialize( void )
 
 	/* rendering */
 	PlRegisterConsoleVariable( "graphics.fxaa", "1", pl_bool_var, NULL, "Enable FXAA anti-aliasing." );
-	PlRegisterConsoleVariable( "graphics.superSampling", "1", pl_int_var, NULL, "Resolution multiplier. ""Anything higher than 1 essentially enables supersampling." );
+	PlRegisterConsoleVariable( "graphics.superSampling", "1", pl_int_var, NULL, "Resolution multiplier." );
 	PlRegisterConsoleVariable( "r_wireframe", "0", pl_bool_var, NULL, "Enable wireframe mode." );
+	PlRegisterConsoleVariable( "r_skyHeightOffset", /*"10"*/ "-70", pl_float_var, NULL, "Height of the sky relative to the camera." );
+	PlRegisterConsoleVariable( "r_skyCull", "0", pl_bool_var, NULL, "Cull backfaces for the sky. Only useful if you set the offset lower than the camera." );
 
 	PlRegisterConsoleVariable( "world.drawSectorVolumes", "false", pl_bool_var, NULL, "Toggle rendering of sector volumes." );
 	PlRegisterConsoleVariable( "world.drawSectors", "true", pl_bool_var, NULL, "Toggle rendering of sectors." );

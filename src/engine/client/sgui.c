@@ -52,14 +52,14 @@ typedef void ( *MenuCallback )( void );
 
 typedef struct MenuOption
 {
-	const char * string;
+	const char  *string;
 	struct Menu *nextMenu;
 	MenuCallback callback;
 } MenuOption;
 
 typedef struct Menu
 {
-	const char *	 heading;
+	const char	   *heading;
 	const MenuOption options[ MAX_MENU_ITEMS ];
 	uint8_t			 numMenuOptions;
 
@@ -158,9 +158,10 @@ static Menu quitMenu = {
 };
 
 static BitmapFont *menuFont;
-static BitmapFont *hudFont;
 
-static Material *hudMaterial;
+static BitmapFont *hudFont;
+static Material	*hudMaterial;
+static PLGMesh	   *hudMesh;
 
 void Menu_Initialize( void )
 {
@@ -170,6 +171,7 @@ void Menu_Initialize( void )
 	hudFont	 = Font_CacheBitmap( "materials/ui/fonts/x1.mat", 320, 80, 16, 16, 32, 131 );
 
 	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
+	hudMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 100, 100 );
 }
 
 void Menu_Shutdown( void )
@@ -248,9 +250,123 @@ void Menu_Tick( void )
 }
 #endif
 
+/* texture width and height, crudely hard-coded here... */
+static const int hudSheetW = 256;
+static const int hudSheetH = 256;
+
+typedef struct HUDElementLayout
+{
+	int x, y, w, h;
+} HUDElementLayout;
+
+typedef enum HUDElement
+{
+	HUD_ELEMENT_BAR_BG_L,
+	HUD_ELEMENT_BAR_BG_M,
+	HUD_ELEMENT_BAR_BG_R,
+
+	HUD_ELEMENT_BAR_HP_L,
+	HUD_ELEMENT_BAR_HP_M,
+	HUD_ELEMENT_BAR_HP_R,
+
+	HUD_ELEMENT_BAR_DMG_L,
+	HUD_ELEMENT_BAR_DMG_M,
+	HUD_ELEMENT_BAR_DMG_R,
+
+	HUD_ELEMENT_ICON_HP,
+	HUD_ELEMENT_ICON_CHAR,
+
+	MAX_HUD_ELEMENTS
+} HUDElement;
+
+static const HUDElementLayout hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
+		[HUD_ELEMENT_BAR_BG_L] = { 8, 8, 8 ,32 },
+		[HUD_ELEMENT_BAR_BG_M] = { 16, 8, 16, 32 },
+		[HUD_ELEMENT_BAR_BG_R] = { 32, 8, 8, 32 },
+
+		[HUD_ELEMENT_BAR_HP_L] = { 48, 8, 8, 32 },
+		[HUD_ELEMENT_BAR_HP_M] = { 56, 8, 16, 32 },
+		[HUD_ELEMENT_BAR_HP_R] = { 72, 8, 8, 32 },
+
+		[HUD_ELEMENT_BAR_DMG_L] = { 88, 8, 8, 32 },
+		[HUD_ELEMENT_BAR_DMG_M] = { 96, 8, 16, 32 },
+		[HUD_ELEMENT_BAR_DMG_R] = { 112, 8, 8, 32 },
+
+		[HUD_ELEMENT_ICON_HP]	= { 120, 8, 40, 32 },
+		[HUD_ELEMENT_ICON_CHAR] = { 8, 40, 104, 112 },
+};
+
+static void GetUVCoordsForElement( HUDElement element, float *tw, float *th, float *tx, float *ty )
+{
+	*tw = ( float ) hudElementLayouts[ element ].w / ( float ) hudSheetW;
+	*th = ( float ) hudElementLayouts[ element ].h / ( float ) hudSheetH;
+	*tx = ( float ) hudElementLayouts[ element ].x / ( float ) hudSheetW;
+	*ty = ( float ) hudElementLayouts[ element ].y / ( float ) hudSheetH;
+}
+
+static void Menu_DrawElement( HUDElement element, int x, int y, int w, int h )
+{
+	float tw, th, tx, ty;
+	GetUVCoordsForElement( element, &tw, &th, &tx, &ty );
+
+	unsigned int vX = PlgAddMeshVertex( hudMesh, PLVector3( x, y, 0 ), pl_vecOrigin3, PLColourRGB( 255, 255, 255 ), PLVector2( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( hudMesh, PLVector3( x, y + h, 0 ), pl_vecOrigin3, PLColourRGB( 255, 255, 255 ), PLVector2( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( hudMesh, PLVector3( x + w, y, 0 ), pl_vecOrigin3, PLColourRGB( 255, 255, 255 ), PLVector2( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( hudMesh, PLVector3( x + w, y + h, 0 ), pl_vecOrigin3, PLColourRGB( 255, 255, 255 ), PLVector2( tx + tw, ty + th ) );
+
+	PlgAddMeshTriangle( hudMesh, vX, vY, vZ );
+	PlgAddMeshTriangle( hudMesh, vZ, vY, vW );
+}
+
+static void Menu_DrawHUDBar( HUDElement element, int x, int y, int w, int h )
+{
+	Menu_DrawElement( element, x, y, hudElementLayouts[ element ].w, h );
+	x += hudElementLayouts[ element ].w;
+
+	Menu_DrawElement( element + 1, x, y, w, h );
+	x += w;
+
+	Menu_DrawElement( element + 2, x, y, hudElementLayouts[ element + 2 ].w, h );
+}
+
+#define BORDER_MARGIN 20
+
+static void Menu_BeginDrawHUD( void )
+{
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	PlgClearMesh( hudMesh );
+}
+
+static void Menu_EndDrawHUD( void )
+{
+	RM_DrawMesh( hudMaterial, hudMesh );
+
+	PlPopMatrix();
+}
+
+static void Menu_DrawHUD( const PLGViewport *viewport )
+{
+	Menu_BeginDrawHUD();
+
+	Menu_DrawElement( HUD_ELEMENT_ICON_CHAR, BORDER_MARGIN, viewport->h - hudElementLayouts[ HUD_ELEMENT_ICON_CHAR ].h - BORDER_MARGIN, 104, 112 );
+
+	Menu_DrawHUDBar( HUD_ELEMENT_BAR_BG_L, BORDER_MARGIN + 72, viewport->h - 90 - BORDER_MARGIN, 242, hudElementLayouts[ HUD_ELEMENT_BAR_BG_L ].h );
+	Menu_DrawElement( HUD_ELEMENT_ICON_HP, BORDER_MARGIN + 72, viewport->h - 90 - BORDER_MARGIN, hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, hudElementLayouts[ HUD_ELEMENT_ICON_HP ].h );
+
+	Menu_DrawHUDBar( HUD_ELEMENT_BAR_DMG_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 200, hudElementLayouts[ HUD_ELEMENT_BAR_DMG_L ].h - 5 );
+	Menu_DrawHUDBar( HUD_ELEMENT_BAR_HP_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 100, hudElementLayouts[ HUD_ELEMENT_BAR_HP_L ].h - 5 );
+
+	Menu_EndDrawHUD();
+}
+
 void Menu_Draw( const PLGViewport *viewport )
 {
-	return;
+	Menu_DrawHUD( viewport );
+
 	if ( currentMenu == NULL )
 		return;
 

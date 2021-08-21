@@ -12,7 +12,7 @@
 /* Camera management fun! */
 
 static Camera *globalCamera;
-Camera *	   R_GetGlobalCamera( void )
+Camera		   *R_GetGlobalCamera( void )
 {
 	if ( globalCamera == NULL )
 		globalCamera = R_CreateCamera( &pl_vecOrigin3, &pl_vecOrigin3 );
@@ -71,25 +71,36 @@ void R_DrawPerspective( Camera *camera )
 		camera->internal->viewport.h *= superSampling->i_value;
 	}
 
+	PLVector3 angles;
+	PLVector3 position;
+
 	/* if we have a parent, follow them */
 	if ( camera->parentActor != NULL )
 	{
-		switch ( camera->followMode )
-		{
-			default: break;
-			case CAMERA_MODE_EYE:
-				camera->internal->angles.x	 = Act_GetViewPitch( camera->parentActor );
-				camera->internal->angles.y	 = -Act_GetAngle( camera->parentActor ) + 90.0f;
-				camera->internal->position	 = Act_GetPosition( camera->parentActor );
-				camera->internal->position.y = Act_GetViewOffset( camera->parentActor );
-				break;
-			case CAMERA_MODE_TOPDOWN:
-				camera->internal->angles.x = -85.0f;
-				camera->internal->angles.y = -Act_GetAngle( camera->parentActor ) + 90.0f;
-				camera->internal->position = Act_GetPosition( camera->parentActor );
-				camera->internal->position.y += 1024.0f;
-				break;
-		}
+		angles.x   = Act_GetViewPitch( camera->parentActor );
+		angles.y   = -Act_GetAngle( camera->parentActor ) + 90.0f;
+		position   = Act_GetPosition( camera->parentActor );
+		position.y = Act_GetViewOffset( camera->parentActor );
+	}
+	else
+	{
+		angles	 = pl_vecOrigin3;
+		position = pl_vecOrigin3;
+	}
+
+	switch ( camera->followMode )
+	{
+		default: break;
+		case CAMERA_MODE_EYE:
+			camera->internal->angles   = angles;
+			camera->internal->position = position;
+			break;
+		case CAMERA_MODE_TOPDOWN:
+			camera->internal->angles.x = -85.0f;
+			camera->internal->angles.y = angles.y;
+			camera->internal->position = position;
+			camera->internal->position.y += 1024.0f;
+			break;
 	}
 
 	PlgSetupCamera( camera->internal );

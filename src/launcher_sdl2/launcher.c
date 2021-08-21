@@ -549,6 +549,8 @@ int Sys_Init( int argc, char **argv )
 
 	SDL_StartTextInput();
 
+	PlParseConsoleString( "world worlds/menu.node" );
+
 	while ( g_engine.IsRunning() )
 	{
 		SDL_Event event;

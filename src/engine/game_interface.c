@@ -30,7 +30,8 @@ typedef enum GameState
 } GameState;
 GameState gameState = GAME_STATE_PAUSED;
 
-typedef enum GameConnectionType {
+typedef enum GameConnectionType
+{
 	GAME_CONNECTION_LOCAL,
 	GAME_CONNECTION_LAN,
 	GAME_CONNECTION_NET,
@@ -89,16 +90,11 @@ void Game_SpawnWorld( const char *worldPath )
 
 	currentWorld = world;
 
-	/* spawn the player in */
-	playerActor = Act_SpawnActor( ACTOR_PLAYER, NULL );
-	Act_SetPosition( playerActor, &PLVector3( 0, 32, 0 ) );
-
-	Camera *camera		= R_GetGlobalCamera();
-	camera->parentActor = playerActor;
-
 	gameState	= GAME_STATE_ACTIVE;
 	menuState	= MENU_STATE_HUD;
 	inputTarget = INPUT_TARGET_GAME;
+
+	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
 void Game_Disconnect( void )
@@ -155,6 +151,7 @@ void Game_Initialize( void )
 	PlRegisterConsoleCommand( "world", Cmd_SpawnWorld, "Load in and spawn the specified world." );
 	PlRegisterConsoleCommand( "disconnect", Game_Cmd_Disconnect, "Disconnect from the current game." );
 
+#if 0
 	Actor *test = Act_SpawnActorById( "point.sg.asteroid", NULL );
 	if ( test == NULL )
 		PrintError( "Failed to spawn test actor!\n" );
@@ -163,6 +160,7 @@ void Game_Initialize( void )
 	Act_SetPosition( test, &pos );
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
+#endif
 }
 
 void Game_Shutdown( void )

@@ -16,6 +16,7 @@ typedef enum ActorType
 	ACTOR_TRIGGER_VOLUME,
 
 	// qciaj 2021
+	ACTOR_SG_SHIP,
 	ACTOR_SG_ASTEROID,
 	ACTOR_SG_PROJECTILE,
 
@@ -54,6 +55,39 @@ typedef struct ActorSetup
 } ActorSetup;
 #define ACTOR_SETUP( ID, SPAWN, TICK, DRAW, COLLIDE, DESTROY, SERIALIZE, DESERIALIZE ) \
 	ActorSetup##ID { #ID, SPAWN, TICK, DRAW, COLLIDE, DESTROY, SERIALIZE, DESERIALIZE }
+
+typedef struct Actor
+{
+	PLVector3 position, oldPosition;
+	PLVector3 angles, oldAngles;
+	PLVector3 velocity;
+	PLVector3 forward;
+	float	  angle;
+	float	  viewPitch;
+	float	  viewOffset;
+
+	/* collision/vis */
+	struct WorldSector *sector;
+	ActorMovementType	movementType;
+	ActorCollisionGroup collisionGroup;
+	PLCollisionAABB		bounds;
+	PLLinkedList		 *geoColliders; /* list of faces we're touching to test against */
+
+	/* animation */
+	unsigned int currentFrame;
+	unsigned int frameSwapTime;
+
+	ActorType  type;
+	ActorSetup setup;
+
+	struct SGNode *graphNode;
+
+	// temporary
+	int16_t health;
+
+	PLLinkedListNode *node;
+	void			 *userData;
+} Actor;
 
 typedef struct ActInterface
 {

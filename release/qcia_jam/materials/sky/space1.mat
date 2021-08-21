@@ -1,0 +1,5 @@
+material
+pass default
+blend src_alpha one
+var texture diffuseMap materials/sky/layer_01.png
+end

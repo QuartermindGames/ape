@@ -23,8 +23,8 @@ static PLGCamera *auxCamera = NULL;
 
 #define SHADOW_MAP_RESOLUTION 2048
 static PLGFrameBuffer *smDepthBuffer = NULL;
-static PLGTexture *	   smTexture;
-static PLGCamera *	   smCamera;
+static PLGTexture	  *smTexture;
+static PLGCamera		 *smCamera;
 
 /* Post Processing */
 
@@ -95,7 +95,7 @@ void R_DrawNumber( float x, float y, int number )
 
 void R_SetupDefaultState( void )
 {
-	PlgSetClearColour( PLColour( 0, 0, 0, 255 ) ); //PLColour( 128, 212, 255, 255 ) );
+	PlgSetClearColour( PLColour( 0, 0, 0, 255 ) );//PLColour( 128, 212, 255, 255 ) );
 
 	PlgEnableGraphicsState( PLG_GFX_STATE_SCISSORTEST );
 
@@ -163,7 +163,7 @@ void R_Shutdown( void )
 }
 
 static PLGFrameBuffer *auxBuffer		= NULL;
-static PLGTexture *	   auxBufferTexture = NULL;
+static PLGTexture	  *auxBufferTexture = NULL;
 
 /**
  * Draw the auxillary buffer.
@@ -173,7 +173,7 @@ static void R_DrawAuxBuffer( float x, float y, float w, float h )
 }
 
 static PLGFrameBuffer *ppBuffer		= NULL;
-static PLGTexture *	   ppAttachment = NULL;
+static PLGTexture	  *ppAttachment = NULL;
 
 /**
  * Where the magic of post processing happens.
@@ -220,7 +220,7 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 		outOfBounds = true;
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	PLVector3 *	 points		  = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
+	PLVector3	  *points		  = globalSystem.CAlloc( numOutPoints, sizeof( PLVector3 ), true );
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
@@ -238,23 +238,23 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 		/* leave z, it'll be initialized as 0 */
 	}
 
-	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 200 ) );
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 255 ) );
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
 	BitmapFont *font = Font_GetDefaultSmall();
-    size_t len	= strlen( heading );
-    float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-    Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, true );
+	size_t		len	 = strlen( heading );
+	float		cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+	Font_DrawBitmapString( font, cPos, y + 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, false );
 
-    /* metrics */
-    char buf[ 128 ];
-    snprintf( buf, sizeof( buf ),
-              "min: %02f\n"
-              "max: %02f\n"
-              "cur: %02f",
-              min, max,
-              values[ numPoints - 1 ] );
-    Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
+	/* metrics */
+	char buf[ 128 ];
+	snprintf( buf, sizeof( buf ),
+			  "min: %02f\n"
+			  "max: %02f\n"
+			  "cur: %02f",
+			  min, max,
+			  values[ numPoints - 1 ] );
+	Font_DrawBitmapString( font, x + 2.0f, y + 2.0f, 1.0f, 1.0f, outOfBounds ? PL_COLOUR_RED : PL_COLOUR_GREEN, buf, false );
 
 	globalSystem.Free( points );
 }
@@ -308,7 +308,7 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 
 		double		 taskDelay;
 		unsigned int index	  = 0;
-		const char * taskDesc = Sch_GetTaskDescription( index, &taskDelay );
+		const char  *taskDesc = Sch_GetTaskDescription( index, &taskDelay );
 		if ( taskDesc == NULL )
 			Font_DrawBitmapString( defaultFont, 2.0f, y, 1.0f, 1.0f, PL_COLOUR_WHITE, "  No active tasks!", true );
 		else
@@ -322,10 +322,6 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 			}
 		}
 	}
-
-	BitmapFont *smallFont = Font_GetDefaultSmall();
-	Font_DrawBitmapString( smallFont, 2.0f, viewport->h - smallFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
-						   "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
 }
 
 void R_DrawMenu( void )
@@ -355,6 +351,11 @@ void R_DrawMenu( void )
 
 	Menu_Draw( &auxCamera->viewport );
 	R_DrawDebugOverlay( &auxCamera->viewport );
+
+	BitmapFont *smallFont = Font_GetDefaultSmall();
+	Font_DrawBitmapString( smallFont, 2.0f, auxCamera->viewport.h - smallFont->ch - 2.0f, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ),
+						   "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]", true );
+
 	Con_Draw( &auxCamera->viewport );
 
 	PlPopMatrix();
@@ -398,7 +399,7 @@ void R_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 static void R_RenderScene( Camera *camera, bool smPass )
 {
 	WorldSector *curSector = NULL;
-	Actor *		 player	   = Game_GetPlayer();
+	Actor		  *player	   = Game_GetPlayer();
 	if ( player != NULL )
 		curSector = Act_GetWorldSector( player );
 
@@ -450,17 +451,19 @@ void R_DrawScene( Camera *camera )
 {
 	g_gfxPerfStats.cameraPos = camera->internal->position;
 
-//	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
+	//	R_RenderSceneDepth( camera, &PLVector3( 0, 128, -128 ), &PLVector3( 10, 128, 0 ) );
 
 	CVar( "r_wireframe", wireframeMode );
-	if ( wireframeMode->b_value ) {
-        PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	if ( wireframeMode->b_value )
+	{
+		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
 	R_RenderSceneFinal( camera );
 
-	if ( wireframeMode->b_value ) {
-        PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	if ( wireframeMode->b_value )
+	{
+		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
