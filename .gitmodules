@@ -10,3 +10,6 @@
 [submodule "release/walpole"]
 	path = release/walpole
 	url = git@github.com:OldTimes-Software/yin-walpole.git
+[submodule "release/qcia21"]
+	path = release/qcia21
+	url = https://github.com/OldTimes-Software/yin-qcia21.git
