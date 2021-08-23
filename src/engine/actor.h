@@ -18,6 +18,7 @@ typedef enum ActorType
 	// qciaj 2021
 	ACTOR_SG_SHIP,
 	ACTOR_SG_ASTEROID,
+	ACTOR_SG_ASTEROID_MANAGER,
 	ACTOR_SG_PROJECTILE,
 
 	MAX_ACTOR_TYPES
@@ -65,6 +66,8 @@ typedef struct Actor
 	float	  angle;
 	float	  viewPitch;
 	float	  viewOffset;
+
+	char tagName[ 64 ];
 
 	/* collision/vis */
 	struct WorldSector *sector;
@@ -143,8 +146,14 @@ float Act_GetViewOffset( Actor *self );
 
 void				   Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
 const PLCollisionAABB *Act_GetBounds( Actor *self );
+bool				   Act_IsColliding( Actor *self, Actor *other );
+Actor				  *Act_CheckCollisions( Actor *self );
+
+bool Act_IsVisible( Actor *self );
 
 PLVector3 Act_GetForward( const Actor *self );
+
+Actor *Act_GetByTag( const char *tag );
 
 /* generic monster functions */
 void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );

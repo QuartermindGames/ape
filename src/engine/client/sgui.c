@@ -8,6 +8,7 @@
 
 #include "sgui.h"
 #include "game_interface.h"
+#include "actor.h"
 
 #include <plgraphics/plg_camera.h>
 
@@ -84,6 +85,24 @@ static Menu mainMenu = {
 
 static void Menu_CB_StartGame( void )
 {
+	GameDifficulty difficulty;
+	switch( currentMenu->curSelection )
+	{
+		default:
+		case 0:
+			difficulty = GAME_DIFFICULTY_EASY;
+			break;
+		case 1:
+			difficulty = GAME_DIFFICULTY_NORMAL;
+			break;
+		case 2:
+			difficulty = GAME_DIFFICULTY_HARD;
+			break;
+	}
+
+	Game_SetDifficultyMode( difficulty );
+
+	PlParseConsoleString( "world worlds/arena.node" );
 }
 
 static Menu newGameMenu = {
@@ -320,6 +339,9 @@ static void Menu_DrawElement( HUDElement element, int x, int y, int w, int h )
 
 static void Menu_DrawHUDBar( HUDElement element, int x, int y, int w, int h )
 {
+	if ( w <= 0 )
+		return;
+
 	Menu_DrawElement( element, x, y, hudElementLayouts[ element ].w, h );
 	x += hudElementLayouts[ element ].w;
 
@@ -348,6 +370,8 @@ static void Menu_EndDrawHUD( void )
 	PlPopMatrix();
 }
 
+#define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 )
+
 static void Menu_DrawHUD( const PLGViewport *viewport )
 {
 	Menu_BeginDrawHUD();
@@ -358,19 +382,40 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 	Menu_DrawElement( HUD_ELEMENT_ICON_HP, BORDER_MARGIN + 72, viewport->h - 90 - BORDER_MARGIN, hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, hudElementLayouts[ HUD_ELEMENT_ICON_HP ].h );
 
 	Menu_DrawHUDBar( HUD_ELEMENT_BAR_DMG_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 200, hudElementLayouts[ HUD_ELEMENT_BAR_DMG_L ].h - 5 );
-	Menu_DrawHUDBar( HUD_ELEMENT_BAR_HP_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 100, hudElementLayouts[ HUD_ELEMENT_BAR_HP_L ].h - 5 );
+
+	int16_t health = 0;
+	Actor *player = Act_GetByTag( "player" );
+	if ( player != NULL )
+	{
+		health = player->health;
+		if ( health < 0 )
+			health = 0;
+		else if ( health > 100 )
+			health = 100;
+	}
+
+	Menu_DrawHUDBar( HUD_ELEMENT_BAR_HP_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 200 / 100 * health, hudElementLayouts[ HUD_ELEMENT_BAR_HP_L ].h - 5 );
 
 	Menu_EndDrawHUD();
+
+	if ( health <= 0 )
+	{
+		static const char *deathMsg = "YOU DIED.";
+		Font_DrawBitmapString( menuFont, ( float ) STR_CENTER( menuFont, strlen( deathMsg ) ), 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, deathMsg, false );
+	}
 }
 
 void Menu_Draw( const PLGViewport *viewport )
 {
-	Menu_DrawHUD( viewport );
+	if ( Game_GetMenuState() == MENU_STATE_HUD )
+	{
+		Menu_DrawHUD( viewport );
+		return;
+	}
 
 	if ( currentMenu == NULL )
 		return;
 
-#define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 );
 	int x = STR_CENTER( menuFont, strlen( currentMenu->heading ) );
 	Font_DrawBitmapString( menuFont, ( float ) x, 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->heading, false );
 

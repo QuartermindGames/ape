@@ -47,16 +47,18 @@ extern const ActorSetup actorPlayerSetup;// actor_player.c
 extern const ActorSetup sg_actorShip;			// sg_actors.c
 extern const ActorSetup sg_actorAsteroidSetup;	// sg_actors.c
 extern const ActorSetup sg_actorProjectileSetup;// sg_actors.c
+extern const ActorSetup sg_actorAsteroidManagerSetup;
 
 const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
-		[ACTOR_NONE]		   = &actorDefault,
-		[ACTOR_PLAYER]		   = &actorPlayerSetup,
-		[ACTOR_LIGHT]		   = NULL,
-		[ACTOR_TRIGGER_VOLUME] = NULL,
+		[ACTOR_NONE]				= &actorDefault,
+		[ACTOR_PLAYER]				= &actorPlayerSetup,
+		[ACTOR_LIGHT]				= NULL,
+		[ACTOR_TRIGGER_VOLUME]		= NULL,
 		// sg
-		[ACTOR_SG_SHIP]		   = &sg_actorShip,
-		[ACTOR_SG_ASTEROID]	   = &sg_actorAsteroidSetup,
-		[ACTOR_SG_PROJECTILE]  = &sg_actorProjectileSetup,
+		[ACTOR_SG_SHIP]				= &sg_actorShip,
+		[ACTOR_SG_ASTEROID]			= &sg_actorAsteroidSetup,
+		[ACTOR_SG_ASTEROID_MANAGER] = &sg_actorAsteroidManagerSetup,
+		[ACTOR_SG_PROJECTILE]		= &sg_actorProjectileSetup,
 };
 
 static PLLinkedList *actorList;
@@ -79,8 +81,17 @@ Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 	if ( actor->setup.Spawn != NULL )
 		actor->setup.Spawn( actor );
 
-	if ( actor->setup.Deserialize != NULL && nodeTree != NULL )
-		actor->setup.Deserialize( actor, nodeTree );
+	if ( nodeTree != NULL )
+	{
+		NLNode *node;
+		if ( ( node = NL_GetChildByName( nodeTree, "tagName" ) ) != NULL )
+			NL_GetStr( node, actor->tagName, sizeof( actor->tagName ) );
+		if ( ( node = NL_GetChildByName( nodeTree, "position" ) ) != NULL )
+			NL_DS_DeserializeVector3( node, &actor->position );
+
+		if ( actor->setup.Deserialize != NULL )
+			actor->setup.Deserialize( actor, nodeTree );
+	}
 
 	return actor;
 }
@@ -173,17 +184,14 @@ PLVector3 Act_GetForward( const Actor *self ) { return self->forward; }
  * COLLISION
  ****************************************/
 
-static bool Act_IsColliding( Actor *self, Actor *other )
+bool Act_IsColliding( Actor *self, Actor *other )
 {
 	// todo: we need to be smarter, what about cases where an actor is crossing
 	//  the boundary?
-	//if ( self->area != other->area )
-	//	return false;
-
 	return PlIsAabbIntersecting( &self->bounds, &other->bounds );
 }
 
-static Actor *Act_CheckCollisions( Actor *self )
+Actor *Act_CheckCollisions( Actor *self )
 {
 	/* in the future, perhaps it's worth tracking multiple lists per sector? */
 	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
@@ -213,6 +221,15 @@ static Actor *Act_CheckCollisions( Actor *self )
  * RENDERING
  ****************************************/
 
+bool Act_IsVisible( Actor *self )
+{
+	Camera *camera = R_GetGlobalCamera();
+	if ( camera == NULL )
+		return false;
+
+	return PlgIsBoxInsideView( camera->internal, &self->bounds );
+}
+
 void Act_DrawActors( void )
 {
 	PROFILE_START( PROFILE_DRAW_ACTORS );
@@ -224,6 +241,9 @@ void Act_DrawActors( void )
 
 		if ( actor->setup.Draw )
 			actor->setup.Draw( actor, actor->userData );
+
+		//if ( !Act_IsVisible( actor ) )
+		//	return;
 
 #if 1
 		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
@@ -282,7 +302,11 @@ void Act_TickActors( void *userData, double delta )
 
 		if ( actor->movementType == ACTOR_MOVEMENT_PHYSICS )
 		{
+#if 0
 			static const float friction = 4.0f;
+#else
+			static const float friction = 10.0f;
+#endif
 			if ( actor->velocity.x != 0 )
 				actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
 			if ( actor->velocity.y != 0 )
@@ -308,7 +332,7 @@ void Act_TickActors( void *userData, double delta )
 			actor->bounds.origin = nPos;
 
 			Actor *collider = Act_CheckCollisions( actor );
-			if ( collider != NULL )
+			if ( collider != NULL && collider->setup.Collide != NULL )
 				actor->setup.Collide( actor, collider, actor->userData );
 
 			/* and now check actor vs world collision */
@@ -350,6 +374,21 @@ void Act_TickActors( void *userData, double delta )
 	}
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, delta );
+}
+
+Actor *Act_GetByTag( const char *tag )
+{
+	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
+	while ( curNode != NULL )
+	{
+		Actor *actor = PlGetLinkedListNodeUserData( curNode );
+		if ( strncmp( tag, actor->tagName, sizeof( actor->tagName ) ) == 0 )
+			return actor;
+
+		curNode = PlGetNextLinkedListNode( curNode );
+	}
+
+	return NULL;
 }
 
 void Act_Initialize( void )

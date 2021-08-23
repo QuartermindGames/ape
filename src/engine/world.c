@@ -879,9 +879,9 @@ static void W_DrawSky( World *world, Camera *camera )
 
 	if ( world->numSkyMaterials > 1 )
 	{
-#if 0
+#if 1
 		location.y += 2.0f;
-		W_DrawSkyLayer( skyMesh, world->skyMaterial, &location, ( ticks / 100.0f ) * -1, ticks / 100.0f, 0.45f );
+		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &location, ( ticks / 100.0f ) * -1, ticks / 100.0f, 0.45f );
 #else
 		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &PLVector3( 0.0f, camera->internal->position.y + skyHeightOffset->f_value - 30.0f, 0.0f ), ( ticks / 500.0f ) * -1, ticks / 500.0f, 0.45f );
 #endif

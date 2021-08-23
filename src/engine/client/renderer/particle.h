@@ -35,6 +35,8 @@ typedef struct PSEmitter
 	PLColourF32 startColour, startColourVar;
 	PLColourF32 endColour, endColourVar;
 
+	float startScale, endScale, scaleVar;
+
 	int maxParticles; /* maximum number of particles at a time */
 
 	PLCollisionAABB bounds;
@@ -55,6 +57,8 @@ typedef struct PSParticle
 	PLColourF32 colour;
 	PLColourF32 oldColour;
 	PLColourF32 deltaColour;
+
+	float scale, oldScale, deltaScale;
 
 	int		   life;
 	PSEmitter *emitter;

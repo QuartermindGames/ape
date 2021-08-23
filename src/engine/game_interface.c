@@ -61,6 +61,7 @@ void Game_Tick( void )
 		return;
 	}
 
+#if 0
 	static unsigned int spawnDelay = 0;
 	if ( globalSystem.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() )
 	{
@@ -69,32 +70,12 @@ void Game_Tick( void )
 
 		spawnDelay = Engine_GetNumTicks() + 50;
 	}
+#endif
 }
 
 void Game_Display( void )
 {
 	R_DrawPerspective( R_GetGlobalCamera() );
-}
-
-void Game_SpawnWorld( const char *worldPath )
-{
-	World *world = W_LoadWorld( worldPath );
-	if ( world == NULL )
-	{
-		PrintWarn( "Failed to load world, aborting game spawn!\n" );
-		return;
-	}
-
-	if ( currentWorld != NULL )
-		W_DestroyWorld( currentWorld );
-
-	currentWorld = world;
-
-	gameState	= GAME_STATE_ACTIVE;
-	menuState	= MENU_STATE_HUD;
-	inputTarget = INPUT_TARGET_GAME;
-
-	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
 void Game_Disconnect( void )
@@ -106,6 +87,34 @@ void Game_Disconnect( void )
 	}
 
 	Act_DestroyActors();
+
+	Sch_KillTask( "actor_tick" );
+}
+
+void Game_SpawnWorld( const char *worldPath )
+{
+	Game_Disconnect();
+
+	World *world = W_LoadWorld( worldPath );
+	if ( world == NULL )
+	{
+		PrintWarn( "Failed to load world, aborting game spawn!\n" );
+		return;
+	}
+
+	currentWorld = world;
+
+	/* todo: HACK, if it's the menu, force menu mode!! */
+	const char *fileName = PlGetFileName( worldPath );
+	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 )
+		menuState = MENU_STATE_START;
+	else
+		menuState = MENU_STATE_HUD;
+
+	gameState	= GAME_STATE_ACTIVE;
+	inputTarget = INPUT_TARGET_GAME;
+
+	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
 
 static void Game_Cmd_Disconnect( unsigned int argc, char **argv )
@@ -169,3 +178,11 @@ void Game_Shutdown( void )
 
 	Act_Shutdown();
 }
+
+/* ======================================================================
+ * Game Difficulty Management
+ * ====================================================================*/
+
+static GameDifficulty gameDifficulty = GAME_DIFFICULTY_NORMAL;
+void				  Game_SetDifficultyMode( const GameDifficulty difficulty ) { gameDifficulty = difficulty; }
+GameDifficulty		  Game_GetDifficultyMode( void ) { return gameDifficulty; }

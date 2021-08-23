@@ -24,3 +24,14 @@ void Game_Keyboard( unsigned char key );
 
 void		  Game_SpawnWorld( const char *worldPath );
 struct World *Game_GetCurrentWorld( void );
+
+typedef enum GameDifficulty
+{
+	GAME_DIFFICULTY_NORMAL,
+	GAME_DIFFICULTY_EASY,
+	GAME_DIFFICULTY_HARD,
+
+	GAME_MAX_DIFFICULTY_MODES
+} GameDifficulty;
+void Game_SetDifficultyMode( const GameDifficulty difficulty );
+GameDifficulty Game_GetDifficultyMode( void );

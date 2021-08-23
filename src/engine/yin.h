@@ -21,6 +21,7 @@
 #include "common/common.h"
 
 //#define DISCORD_INTEGRATION
+#define GAME_SG
 
 #define ENGINE_APP_NAME "yin"
 

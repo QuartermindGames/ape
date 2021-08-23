@@ -115,6 +115,13 @@ PSEmitter *PS_SpawnEmitter( void )
 	PSEmitter *emitter = globalSystem.MAlloc( sizeof( PSEmitter ), true );
 	emitter->particles = PlCreateLinkedList();
 
+	emitter->mesh = PlgCreateMesh( /*PLG_MESH_TRIANGLE_STRIP*/ PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 1000, 1000 );
+	if ( emitter->mesh == NULL )
+		PrintError( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
+
+	emitter->startScale = 10.0f;
+	emitter->endScale	= 0.0f;
+
 	return emitter;
 }
 
@@ -131,6 +138,9 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 		node				 = PlGetNextLinkedListNode( node );
 		globalSystem.Free( particle );
 	}
+
+	if ( emitter->material != NULL )
+		RM_ReleaseMaterial( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	globalSystem.Free( emitter );
@@ -163,6 +173,8 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 
 	particle->oldColour = particle->colour;
 	particle->colour	= PlAddColourF32( &particle->colour, &particle->deltaColour );
+
+	particle->scale += particle->deltaScale;
 
 	/* keep the emitter bounds updated */
 	if ( emitter->bounds.maxs.x < particle->transform.translation.x ) emitter->bounds.maxs.x = particle->transform.translation.x;
@@ -207,6 +219,10 @@ void PS_TickEmitter( PSEmitter *emitter )
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
+		float startScale	 = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float endScale		 = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
+
 		particle->bounds.maxs = PLVector3( 2.0f, 2.0f, 2.0f );
 		particle->bounds.mins = PLVector3( -2.0f, -2.0f, -2.0f );
 
@@ -244,16 +260,43 @@ void PS_Draw( const PSEmitter *emitter, const Camera *camera )
 {
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_ALPHA ] );
 
-	R_DrawAxesPivot( emitter->transform.translation, PlQuaternionToEuler( &emitter->transform.rotation ) );
-	PlgDrawBoundingVolume( &emitter->bounds, PLColour( 255, 0, 255, 255 ) );
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	//R_DrawAxesPivot( emitter->transform.translation, PlQuaternionToEuler( &emitter->transform.rotation ) );
+	//PlgDrawBoundingVolume( &emitter->bounds, PLColour( 255, 0, 255, 255 ) );
+
+	PlgClearMesh( emitter->mesh );
 
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
 
-		PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
+		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
+
+		float x = particle->transform.translation.x;
+		float y = particle->transform.translation.y;
+		float z = particle->transform.translation.z;
+
+		PLColour colour = PlColourF32ToU8( &particle->colour );
+
+		particle->scale = 16.0f;
+
+		unsigned int a = PlgAddMeshVertex( emitter->mesh, PLVector3( x, y, z ), pl_vecOrigin3, colour, PLVector2( 0.0f, 0.0f ) );
+		unsigned int b = PlgAddMeshVertex( emitter->mesh, PLVector3( x, y, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 1.0f ) );
+		unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y, z ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
+		unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
+
+		PlgAddMeshTriangle( emitter->mesh, a, b, c );
+		PlgAddMeshTriangle( emitter->mesh, c, b, d );
 
 		node = PlGetNextLinkedListNode( node );
 	}
+
+	RM_DrawMesh( emitter->material, emitter->mesh );
+
+	PlPopMatrix();
 }

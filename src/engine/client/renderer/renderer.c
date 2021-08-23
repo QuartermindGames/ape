@@ -438,8 +438,8 @@ static void R_RenderSceneDepth( Camera *camera, const PLVector3 *lightPos, const
 static void R_RenderSceneFinal( Camera *camera )
 {
 	/* set everything up for post-processing */
-	//GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
-	//PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
+	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
+	PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera->internal );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
