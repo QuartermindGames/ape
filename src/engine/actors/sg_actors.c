@@ -38,7 +38,7 @@ typedef struct AsteroidManager
 	ASGActor	 base;
 	unsigned int numAsteroids;
 } AsteroidManager;
-static AsteroidManager *asteroidManager;
+static AsteroidManager *asteroidManager = NULL;
 
 #define MAX_ASTEROIDS 100
 
@@ -106,7 +106,8 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 
 	other->health -= 2;
 
-	Act_DestroyActor( other );
+	if ( other->type != ACTOR_SG_SHIP )
+		Act_DestroyActor( other );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -138,7 +139,9 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 static void SGActor_Generic_Destroy( Actor *self, void *userData )
 {
 	ASGActor *sgActor = userData;
-	A_ReleaseSound( &sgActor->impactSound );
+	//A_ReleaseSound( &sgActor->impactSound );
+
+	PS_DestroyEmitter( sgActor->particleEmitter );
 
 	if ( asteroidManager == NULL )
 		return;
@@ -193,7 +196,7 @@ static void Ship_Spawn( Actor *self )
 	ship->particleEmitter->forceVar					= PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->particleEmitter->transform.translation	= Act_GetPosition( self );
 	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->particleEmitter->material					= RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
+	ship->particleEmitter->material					= RM_CacheMaterial( "materials/effects/particles/test.mat", CACHE_GROUP_WORLD, true );
 
 	Camera *camera		= R_GetGlobalCamera();
 	camera->followMode	= CAMERA_MODE_TOPDOWN;
@@ -300,7 +303,7 @@ static void Asteroid_Spawn( Actor *self )
 	asteroid->particleEmitter->forceVar					= PLVector3( 0.0f, 0.05f, 0.0f );
 	asteroid->particleEmitter->transform.translation	= Act_GetPosition( self );
 	asteroid->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	asteroid->particleEmitter->material					= RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
+	asteroid->particleEmitter->material					= RM_CacheMaterial( "materials/effects/particles/test.mat", CACHE_GROUP_WORLD, true );
 
 	self->health = 25;
 
