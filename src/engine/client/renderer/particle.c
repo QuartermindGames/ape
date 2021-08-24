@@ -129,6 +129,8 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 {
 	/* todo: 	push it into a queue to be removed once
 	 * 			all the particles are dead */
+	if ( emitter == NULL )
+		return;
 
 	/* free all the particles we've created */
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );

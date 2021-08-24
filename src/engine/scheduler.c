@@ -191,6 +191,9 @@ void Sch_PrintPendingTasks( void )
 
 static SchTask *GetTaskByDescription( const char *desc )
 {
+	if ( scheduleList == NULL )
+		return NULL;
+
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )
 	{
