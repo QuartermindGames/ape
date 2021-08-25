@@ -125,7 +125,10 @@ NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model )
 	NLNode *root = NL_PushBackObj( NULL, "model" );
 
 	NL_PushBackI8( root, "version", 1 );
-	NL_PushBackStrArray( root, "materials", ( const char ** ) model->materials, model->numMaterials );
+
+	NLNode *materialArray = NL_PushBackStrArray( root, "materials", NULL, 0 );
+	for ( unsigned int i = 0; i < model->numMaterials; ++i )
+		NL_PushBackStr( materialArray, NULL, model->materials[ i ] );
 
 	NLNode *meshArray = NL_PushBackObjArray( root, "meshes" );
 	for ( uint8_t i = 0; i < model->numMeshes; ++i )

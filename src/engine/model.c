@@ -65,6 +65,7 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 	}
 
 	MDLUserData userData;
+	memset( &userData, 0, sizeof( MDLUserData ) );
 
 	NLNode *materialArray = NL_GetChildByName( root, "materials" );
 	if ( materialArray == NULL )

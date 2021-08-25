@@ -116,5 +116,15 @@ PLMModel *MDL_STL_LoadFile( const char *path )
 		PlgAddMeshTriangle( mesh, indices[ 0 ], indices[ 1 ], indices[ 2 ] );
 	}
 
-	return PlmCreateBasicStaticModel( mesh );
+	PLMModel *model = PlmCreateBasicStaticModel( mesh );
+
+	char modelName[ 32 ];
+	snprintf( modelName, sizeof( modelName ), "%s", PlGetFileName( path ) );
+	modelName[ strlen( modelName ) - 4 ] = '\0';
+
+	model->numMaterials = 1;
+	model->materials = calloc( model->numMaterials, sizeof( PLPath ) );
+	snprintf( model->materials[ 0 ], sizeof( PLPath ), "materials/models/%s.mat", modelName );
+
+	return model;
 }
