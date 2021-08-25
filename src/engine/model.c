@@ -47,12 +47,12 @@ static void MDL_SetupUserData( PLMModel *model )
 	MEM_SetupReferenceInstance( "model", &userData->mem, MDL_CB_Destroy, model );
 }
 
-PLMModel *MDL_CacheModel( const char *path )
+PLMModel *MDL_DeserializeModel( NLNode *root )
 {
-	NLNode *root = NL_LoadFile( path, "model" );
-	if ( root == NULL )
+	int version = NL_GetI32ByName( root, "version", -1 );
+	if ( version == -1 || version > 1 )
 	{
-		PrintWarn( "Invalid model: %s (%s)\n", NL_GetErrorMessage() );
+		PrintWarn( "Invalid model version, %d, expected 1!\n", version );
 		return NULL;
 	}
 
@@ -60,7 +60,7 @@ PLMModel *MDL_CacheModel( const char *path )
 	NLNode *	 meshArray = NL_GetChildByName( root, "meshes" );
 	if ( meshArray == NULL || ( numMeshes = NL_GetNumOfChildren( meshArray ) == 0 ) )
 	{
-		PrintWarn( "No meshes: %s\n", path );
+		PrintWarn( "No meshes for model!\n" );
 		return NULL;
 	}
 
@@ -69,7 +69,7 @@ PLMModel *MDL_CacheModel( const char *path )
 	NLNode *materialArray = NL_GetChildByName( root, "materials" );
 	if ( materialArray == NULL )
 	{
-		PrintWarn( "No materials for \"%s\", using fallback!\n", path );
+		PrintWarn( "No materials for model, using fallback!\n" );
 		userData.numMaterials	= 1;
 		userData.materials[ 0 ] = RM_CacheMaterial( "materials/engine/fallback_mesh.node", 0, true );
 	}
@@ -103,18 +103,18 @@ PLMModel *MDL_CacheModel( const char *path )
 
 		NLNode *vertexArray = NL_GetChildByName( meshNode, "vertices" );
 		if ( vertexArray == NULL )
-			PrintError( "No vertices for mesh: %s\n", path );
+			PrintError( "No vertices for mesh\n" );
 
 		NLNode *faceArray = NL_GetChildByName( meshNode, "faces" );
 		if ( faceArray == NULL )
-			PrintError( "No faces for mesh: %s\n", path );
+			PrintError( "No faces for mesh\n" );
 
 		unsigned int numVertices = NL_GetNumOfChildren( vertexArray );
 		unsigned int numFaces	 = NL_GetNumOfChildren( faceArray );
 
 		meshes[ i ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, numFaces / 3, numVertices );
 		if ( meshes[ i ] == NULL )
-			PrintError( "Failed to create mesh %d: %s\n", i, path );
+			PrintError( "Failed to create mesh %d\n", i );
 
 		meshes[ i ]->materialIndex = NL_GetI32ByName( meshNode, "materialIndex", 0 );
 
@@ -147,7 +147,25 @@ PLMModel *MDL_CacheModel( const char *path )
 		meshNode = NL_GetNextChild( meshNode );
 	}
 
-	return NULL;
+	return PlmCreateStaticModel( meshes, numMeshes );
+}
+
+PLMModel *MDL_CacheModel( const char *path )
+{
+	NLNode *root = NL_LoadFile( path, "model" );
+	if ( root == NULL )
+	{
+		PrintWarn( "Invalid model: %s (%s)\n", NL_GetErrorMessage() );
+		return NULL;
+	}
+
+	PLMModel *model = MDL_DeserializeModel( root );
+	if ( model == NULL )
+		PrintWarn( "Failed to load model, \"%s\"!\n", path );
+
+	NL_DestroyNode( root );
+
+	return model;
 }
 
 /**

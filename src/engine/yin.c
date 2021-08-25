@@ -153,6 +153,7 @@ static bool Engine_Initialize( int argc, char **argv )
 	Engine_SetupFileSystem();
 
 	PlmRegisterModelLoader( "node", MDL_CacheModel );
+	PlmRegisterModelLoader( "node_c", MDL_CacheModel );
 
 	Print( "Initializing core services...\n" );
 
