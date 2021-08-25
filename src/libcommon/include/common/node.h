@@ -110,8 +110,6 @@ extern NLErrorCode NL_GetF32Array( NLNode *parent, float *buf, unsigned int numE
 
 extern bool		   NL_GetBoolByName( NLNode *node, const char *name, bool fallback );
 extern const char *NL_GetStrByName( NLNode *node, const char *name, const char *fallback );
-extern int8_t	   NL_GetI8ByName( NLNode *node, const char *name, int8_t fallback );
-extern int16_t	   NL_GetI16ByName( NLNode *node, const char *name, int16_t fallback );
 extern int32_t	   NL_GetI32ByName( NLNode *node, const char *name, int32_t fallback );
 extern float	   NL_GetF32ByName( NLNode *node, const char *name, float fallback );
 extern double	   NL_GetF64ByName( NLNode *node, const char *name, double fallback );

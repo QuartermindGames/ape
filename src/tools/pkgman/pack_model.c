@@ -67,7 +67,6 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 {
 	NLNode *node = NL_PushBackObj( parent, "mesh" );
 
-	NL_PushBackI8( node, "version", 1 );
 	NL_PushBackI32( node, "materialIndex", mesh->materialIndex );
 
 #if 0
@@ -125,6 +124,7 @@ NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model )
 {
 	NLNode *root = NL_PushBackObj( NULL, "model" );
 
+	NL_PushBackI8( root, "version", 1 );
 	NL_PushBackStrArray( root, "materials", ( const char ** ) model->materials, model->numMaterials );
 
 	NLNode *meshArray = NL_PushBackObjArray( root, "meshes" );
