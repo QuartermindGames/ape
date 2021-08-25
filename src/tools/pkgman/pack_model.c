@@ -87,8 +87,8 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 		}
 		vertexChild = NL_PushBackObj( vertex, "textureCoords" );
 		{
-			NL_PushBackF32( vertexChild, "u", mesh->vertices[ j ].st[ 0 ].x );
-			NL_PushBackF32( vertexChild, "v", mesh->vertices[ j ].st[ 0 ].y );
+			NL_PushBackF32( vertexChild, "x", mesh->vertices[ j ].st[ 0 ].x );
+			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].st[ 0 ].y );
 		}
 		if ( !PlCompareVector3( &mesh->vertices[ j ].normal, &pl_vecOrigin3 ) )
 		{

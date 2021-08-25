@@ -57,8 +57,8 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 	}
 
 	unsigned int numMeshes;
-	NLNode *	 meshArray = NL_GetChildByName( root, "meshes" );
-	if ( meshArray == NULL || ( numMeshes = NL_GetNumOfChildren( meshArray ) == 0 ) )
+	NLNode	   *meshArray = NL_GetChildByName( root, "meshes" );
+	if ( meshArray == NULL || ( ( numMeshes = NL_GetNumOfChildren( meshArray ) ) == 0 ) )
 	{
 		PrintWarn( "No meshes for model!\n" );
 		return NULL;
@@ -97,7 +97,7 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 	}
 
 	PLGMesh **meshes   = globalSystem.MAlloc( sizeof( *meshes ) * numMeshes, true );
-	NLNode *  meshNode = NL_GetFirstChild( meshArray );
+	NLNode   *meshNode = NL_GetFirstChild( meshArray );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
 		u_assert( meshNode != NULL );
@@ -110,10 +110,11 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 		if ( faceArray == NULL )
 			PrintError( "No faces for mesh\n" );
 
-		unsigned int numVertices = NL_GetNumOfChildren( vertexArray );
-		unsigned int numFaces	 = NL_GetNumOfChildren( faceArray );
+		unsigned int numVertices  = NL_GetNumOfChildren( vertexArray );
+		unsigned int numFaces	  = NL_GetNumOfChildren( faceArray );
+		unsigned int numTriangles = numFaces / 3;
 
-		meshes[ i ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, numFaces / 3, numVertices );
+		meshes[ i ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, numTriangles, numVertices );
 		if ( meshes[ i ] == NULL )
 			PrintError( "Failed to create mesh %d\n", i );
 
@@ -145,10 +146,31 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 			vertexNode = NL_GetNextChild( vertexNode );
 		}
 
+		NLNode *faceNode = NL_GetFirstChild( faceArray );
+		for ( unsigned int j = 0; j < numFaces; ++j )
+		{
+			NLNode *n;
+			if ( ( n = NL_GetChildByName( faceNode, "indices" ) ) != NULL )
+			{
+				int indices[ 3 ];
+				if ( NL_GetI32Array( n, indices, 3 ) == NL_ERROR_SUCCESS )
+					PlgAddMeshTriangle( meshes[ i ], indices[ 0 ], indices[ 1 ], indices[ 2 ] );
+				else
+					PrintWarn( "Failed to fetch indices for face " COM_FMT_int32 "\n", j );
+			}
+
+			faceNode = NL_GetNextChild( faceNode );
+		}
+
 		meshNode = NL_GetNextChild( meshNode );
 	}
 
-	return PlmCreateStaticModel( meshes, numMeshes );
+	PLMModel *model = PlmCreateStaticModel( meshes, numMeshes );
+
+	model->userData							   = globalSystem.MAlloc( sizeof( MDLUserData ), true );
+	*( ( MDLUserData * ) ( model->userData ) ) = userData;
+
+	return model;
 }
 
 PLMModel *MDL_CacheModel( const char *path )
