@@ -400,7 +400,7 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 
 	if ( health <= 0 )
 	{
-		static const char *deathMsg = "YOU DIED.";
+		static const char *deathMsg = "SHIP DESTROYED";
 		Font_DrawBitmapString( menuFont, ( float ) STR_CENTER( menuFont, strlen( deathMsg ) ), 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, deathMsg, false );
 	}
 }

@@ -118,7 +118,6 @@ Actor *Act_DestroyActor( Actor *self )
 	PlDestroyLinkedList( self->geoColliders );
 	PlDestroyLinkedListNode( actorList, self->node );
 
-	globalSystem.Free( self->userData );
 	globalSystem.Free( self );
 
 	return NULL;
@@ -227,7 +226,14 @@ bool Act_IsVisible( Actor *self )
 	if ( camera == NULL )
 		return false;
 
+#if 1
+	self->bounds.origin = self->position;
 	return PlgIsBoxInsideView( camera->internal, &self->bounds );
+#else
+	return PlgIsSphereInsideView( camera->internal, &( PLCollisionSphere ){
+															.origin = self->position,
+															.radius = 128.0f } );
+#endif
 }
 
 void Act_DrawActors( void )
@@ -242,14 +248,18 @@ void Act_DrawActors( void )
 		if ( actor->setup.Draw )
 			actor->setup.Draw( actor, actor->userData );
 
-		//if ( !Act_IsVisible( actor ) )
-		//	return;
-
 #if 1
 		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
-		PlgDrawBoundingVolume( &actor->bounds, PL_COLOUR_BLUE );
+
+		PLColour boxColour;
+		if ( Act_IsVisible( actor ) )
+		    boxColour = PL_COLOUR_GREEN;
+		else
+			boxColour = PL_COLOUR_RED;
+
+		PlgDrawBoundingVolume( &actor->bounds, boxColour );
 		PlgDrawBoundingVolume( &PlSetupCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
 
 		PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );

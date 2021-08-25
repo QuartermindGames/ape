@@ -389,7 +389,7 @@ static void AManager_Tick( Actor *self, void *userData )
 		return;
 
 	Actor *asteroid	   = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
-	asteroid->position = PLVector3( -SG_BOUNDS + ( rand() % SG_BOUNDS ), 0.0f, -SG_BOUNDS + ( rand() % SG_BOUNDS ) );
+	asteroid->position = PLVector3( -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ), 0.0f, -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ) );
 
 	//if ( Act_IsVisible( asteroid ) /*|| ( Act_CheckCollisions( asteroid ) != NULL )*/ )
 	//{
@@ -397,10 +397,7 @@ static void AManager_Tick( Actor *self, void *userData )
 	//		return;
 	//	}
 
-	asteroid->velocity = PLVector3(
-			-2.0f + PlGenerateRandomFloat( 2.0f ),
-			0.0f,
-			-2.0f + PlGenerateRandomFloat( 2.0f ) );
+	asteroid->velocity = PLVector3( -2.0f + ( ( rand() % 400 ) / 400.0f ), 0.0f, -2.0f + ( ( rand() % 400 ) / 400.0f ) );
 }
 
 const ActorSetup sg_actorAsteroidManagerSetup = {

@@ -85,19 +85,12 @@ void R_DrawPerspective( Camera *camera )
 		angles.y   = -Act_GetAngle( camera->parentActor ) + 90.0f;
 		position   = Act_GetPosition( camera->parentActor );
 		position.y = Act_GetViewOffset( camera->parentActor );
-
-		PLVector3 v = camera->parentActor->velocity;
-		speed		= PlVector3Length( v ) / 16.0f;
-		if ( speed > 1.0f ) speed = 1.0f;
 	}
 	else
 	{
 		angles	 = pl_vecOrigin3;
 		position = pl_vecOrigin3;
-		speed	 = 0.0f;
 	}
-
-	float height = PlCosineInterpolate( minHeight, maxHeight, speed );
 
 	switch ( camera->followMode )
 	{
@@ -107,11 +100,25 @@ void R_DrawPerspective( Camera *camera )
 			camera->internal->position = position;
 			break;
 		case CAMERA_MODE_TOPDOWN:
+		{
+			if ( camera->parentActor != NULL )
+			{
+				speed = PlVector3Length( camera->parentActor->velocity ) / 16.0f;
+				if ( speed > 1.0f )
+					speed = 1.0f;
+			}
+			else
+				speed = 0.0f;
+
 			camera->internal->angles.x = -75.0f;
 			camera->internal->position = position;
 			camera->internal->position.x -= 150.0f;
+
+			float height = PlCosineInterpolate( minHeight, maxHeight, speed );
 			camera->internal->position.y += minHeight + height;
+
 			break;
+		}
 	}
 
 	PlgSetupCamera( camera->internal );
