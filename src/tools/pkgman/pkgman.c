@@ -119,6 +119,10 @@ static void Pkg_AddFile( const char *filePath )
 		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
 		NL_DestroyNode( root );
 		filePath = tempPath;
+
+		char ppath[ PL_SYSTEM_MAX_PATH ];
+		snprintf( ppath, strlen( tempPath ) - 1, "%s", tempPath );
+		pkgPath = ppath;
 	}
 
 	PLFile *filePtr = PlOpenFile( filePath, true );
