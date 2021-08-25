@@ -139,15 +139,14 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 static void SGActor_Generic_Destroy( Actor *self, void *userData )
 {
 	ASGActor *sgActor = userData;
-	//A_ReleaseSound( &sgActor->impactSound );
+	A_ReleaseSound( &sgActor->impactSound );
 
 	PS_DestroyEmitter( sgActor->particleEmitter );
 
-	if ( asteroidManager == NULL )
-		return;
-
-	if ( self->type == ACTOR_SG_ASTEROID )
+	if ( asteroidManager != NULL && self->type == ACTOR_SG_ASTEROID )
 		asteroidManager->numAsteroids--;
+
+	globalSystem.Free( sgActor );
 }
 
 static void SGActor_Generic_SetModel( Actor *self, const char *path )
@@ -368,14 +367,18 @@ const ActorSetup sg_actorAsteroidSetup = {
 
 static void AManager_Spawn( Actor *self )
 {
+	assert( asteroidManager == NULL );
+
 	asteroidManager = globalSystem.MAlloc( sizeof( AsteroidManager ), true );
 	self->userData	= asteroidManager;
 
 	asteroidManager->base.isSolid = false;
 }
 
-static void AManager_Destroy( Actor *self )
+static void AManager_Destroy( Actor *self, void *userData )
 {
+	assert( asteroidManager != NULL );
+
 	globalSystem.Free( asteroidManager );
 	asteroidManager = NULL;
 }
@@ -406,7 +409,7 @@ const ActorSetup sg_actorAsteroidManagerSetup = {
 		.Tick		 = AManager_Tick,
 		.Draw		 = NULL,
 		.Collide	 = NULL,
-		.Destroy	 = NULL,
+		.Destroy	 = AManager_Destroy,
 		.Serialize	 = NULL,
 		.Deserialize = NULL,
 };

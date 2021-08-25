@@ -402,6 +402,9 @@ void Act_Initialize( void )
 
 void Act_Shutdown( void )
 {
+	if ( actorList == NULL )
+		return;
+
 	PLLinkedListNode *node = PlGetFirstNode( actorList );
 	while ( node != NULL )
 	{
@@ -410,4 +413,5 @@ void Act_Shutdown( void )
 	}
 
 	PlDestroyLinkedList( actorList );
+	actorList = NULL;
 }

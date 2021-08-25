@@ -8,6 +8,7 @@
 
 void MEM_Initialize( void );
 void MEM_Shutdown( void );
+void MEM_FlushUnreferencedResources( void );
 
 #define MEM_MAX_ID PL_SYSTEM_MAX_PATH
 

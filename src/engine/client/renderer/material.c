@@ -78,15 +78,29 @@ void RM_InitializeMaterialSystem( void )
 
 void RM_ShutdownMaterialSystem( void )
 {
+	/* Flush any objects pending deletion in case they are holding a material handle. */
+	MEM_FlushUnreferencedResources();
+
+	unsigned int total_cached_materials = 0;
+	unsigned int orphaned_caches = 0;
+
 	for ( unsigned int i = 0; i < MAX_CACHE_GROUPS; ++i )
 	{
-		/* clear all the cached materials for that group */
-		RM_ClearMaterials( i );
+		unsigned int cached_materials = PlGetNumLinkedListNodes(materials[i]);
+		total_cached_materials += cached_materials;
 
-		/* and now destroy the list */
-		PlDestroyLinkedList( materials[ i ] );
-		materials[ i ] = NULL;
+		if(cached_materials == 0)
+		{
+			/* and now destroy the list */
+			PlDestroyLinkedList( materials[ i ] );
+			materials[ i ] = NULL;
+		}
+		else ++orphaned_caches;
 	}
+
+	if(total_cached_materials > 0)
+		PrintWarn( "Shutting down material system with %u active materials, orphaned %u caches!\n",
+			total_cached_materials, orphaned_caches );
 }
 
 PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int pass )
@@ -514,19 +528,12 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 void RM_ReleaseMaterial( Material *material )
 {
 	u_assert( material != NULL );
+
+	if( material == fallbackMaterial )
+		/* Fallback material isn't owned by the memory manager. */
+		return;
+
 	MEM_ReleaseReference( &material->mem );
-}
-
-void RM_ClearMaterials( CacheGroup group )
-{
-	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
-	while ( node != NULL )
-	{
-		globalSystem.Free( PlGetLinkedListNodeUserData( node ) );
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	PlDestroyLinkedListNodes( materials[ group ] );
 }
 
 static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable )

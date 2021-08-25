@@ -174,6 +174,21 @@ void MEM_Shutdown( void )
 		PrintWarn( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
 }
 
+void MEM_FlushUnreferencedResources( void )
+{
+	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
+	while ( danglingReferences > 0 )
+	{
+		CleanupUnreferencedResources( true );
+
+		unsigned int n = PlGetNumLinkedListNodes( mmReferenceList );
+		if ( n == danglingReferences )
+			break;
+
+		danglingReferences = n;
+	}
+}
+
 MEMReference *MEM_SetupReferenceInstance( const char *description, MEMReference *m, MEMReference_CleanupFunction cleanupFunction, void *userData )
 {
 	snprintf( m->description, sizeof( m->description ), "%s", description );

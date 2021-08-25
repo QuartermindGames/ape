@@ -416,8 +416,8 @@ void OS_free( void *ptr )
 		{
 			totalRAMUsage -= header->length;
 #ifdef DEBUG_MEMORY
-			printf( "FREE: " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
-			        header->length, header->id,
+			printf( "FREE: %p | " COM_FMT_uint64 " bytes (%s)\t\t | TOTAL: " COM_FMT_double "mb\n",
+			        ptr, header->length, header->id,
 			        PlBytesToMegabytes( totalRAMUsage ) );
 #endif
 		}

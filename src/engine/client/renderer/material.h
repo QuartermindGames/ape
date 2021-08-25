@@ -26,7 +26,6 @@ PLGShaderProgram *RM_GetMaterialShaderProgram( Material *material, unsigned int 
 /* i/o */
 Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback );
 void	  RM_ReleaseMaterial( Material *material );
-void	  RM_ClearMaterials( CacheGroup group );
 
 /* drawing */
 void RM_DrawMesh( Material *material, PLGMesh *mesh );
