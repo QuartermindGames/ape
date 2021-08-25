@@ -9,30 +9,30 @@
 
 #include "node_private.h"
 
-#define NL_VERSION       1
+#define NL_VERSION		 1
 #define NL_BINARY_HEADER "node.bin"
-#define NL_ASCII_HEADER  "node.ascii"
-#define NL_UTF8_HEADER   "node.utf8"
+#define NL_ASCII_HEADER	 "node.ascii"
+#define NL_UTF8_HEADER	 "node.utf8"
 
 static const char *StringForPropertyType( NLPropertyType propertyType )
 {
 	const char *propToStr[ NL_MAX_PROPERTYTYPES ] = {
-	        // Special types
-	        [NL_PROP_OBJ]   = "object",
-	        [NL_PROP_STR]   = "string",
-	        [NL_PROP_BOOL]  = "bool",
-	        [NL_PROP_ARRAY] = "array",
-	        // Generic types
-	        [NL_PROP_I8]   = "int8",
-	        [NL_PROP_I16]  = "int16",
-	        [NL_PROP_I32]  = "integer",
-	        [NL_PROP_I64]  = "int64",
-	        [NL_PROP_UI8]  = "uint8",
-	        [NL_PROP_UI16] = "uint16",
-	        [NL_PROP_UI32] = "uint32",
-	        [NL_PROP_UI64] = "uint64",
-	        [NL_PROP_F32]  = "float",
-	        [NL_PROP_F64]  = "float64",
+			// Special types
+			[NL_PROP_OBJ]	= "object",
+			[NL_PROP_STR]	= "string",
+			[NL_PROP_BOOL]	= "bool",
+			[NL_PROP_ARRAY] = "array",
+			// Generic types
+			[NL_PROP_I8]	= "int8",
+			[NL_PROP_I16]	= "int16",
+			[NL_PROP_I32]	= "integer",
+			[NL_PROP_I64]	= "int64",
+			[NL_PROP_UI8]	= "uint8",
+			[NL_PROP_UI16]	= "uint16",
+			[NL_PROP_UI32]	= "uint32",
+			[NL_PROP_UI64]	= "uint64",
+			[NL_PROP_F32]	= "float",
+			[NL_PROP_F64]	= "float64",
 	};
 
 	if ( propertyType == NL_PROP_UNDEFINED )
@@ -41,12 +41,12 @@ static const char *StringForPropertyType( NLPropertyType propertyType )
 	return propToStr[ propertyType ];
 }
 
-static char *      nlErrorMsg  = NULL;
+static char		*nlErrorMsg  = NULL;
 static NLErrorCode nlErrorType = NL_ERROR_SUCCESS;
-static void        NL_ClearErrorMessage( void )
+static void		   NL_ClearErrorMessage( void )
 {
 	pl_free( nlErrorMsg );
-	nlErrorMsg  = NULL;
+	nlErrorMsg	= NULL;
 	nlErrorType = NL_ERROR_SUCCESS;
 }
 
@@ -284,7 +284,7 @@ NLErrorCode NL_GetStrArray( NLNode *parent, const char **buf, unsigned int numEl
 
 	NLNode *child = NL_GetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
-    {
+	{
 		if ( child == NULL )
 			return NL_ERROR_INVALID_ELEMENTS;
 
@@ -444,7 +444,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 	if ( ( parent == NULL || parent->type != NL_PROP_ARRAY ) && name != NULL )
 		node->name.buf = AllocVarString( name, &node->name.length );
 
-	node->type       = propertyType;
+	node->type		 = propertyType;
 	node->linkedList = PlCreateLinkedList();
 
 	/* if root is provided, this is treated as a child of that node */
@@ -454,7 +454,7 @@ NLNode *xNL_PushBackNode( NLNode *parent, const char *name, NLPropertyType prope
 			parent->linkedList = PlCreateLinkedList();
 
 		node->linkedListNode = PlInsertLinkedListNode( parent->linkedList, node );
-		node->parent         = parent;
+		node->parent		 = parent;
 	}
 
 	return node;
@@ -497,14 +497,14 @@ NLNode *NL_PushBackBool( NLNode *parent, const char *name, bool var )
 
 NLNode *NL_PushBackI8( NLNode *parent, const char *name, int8_t var )
 {
-    NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I8 );
-    if ( node != NULL )
-    {
-        char buf[ 4 ];
-        snprintf( buf, sizeof( buf ), COM_FMT_int16, var );
-        node->data.buf = AllocVarString( buf, &node->data.length );
-    }
-    return node;
+	NLNode *node = xNL_PushBackNode( parent, name, NL_PROP_I8 );
+	if ( node != NULL )
+	{
+		char buf[ 4 ];
+		snprintf( buf, sizeof( buf ), COM_FMT_int16, var );
+		node->data.buf = AllocVarString( buf, &node->data.length );
+	}
+	return node;
 }
 
 NLNode *NL_PushBackI16( NLNode *parent, const char *name, int16_t var )
@@ -590,7 +590,7 @@ NLNode *NL_PushBackObjArray( NLNode *parent, const char *name )
 
 static char *CopyVarString( const NLVarString *varString, uint16_t *length )
 {
-	*length   = varString->length;
+	*length	  = varString->length;
 	char *buf = pl_malloc( *length );
 	strncpy( buf, varString->buf, *length );
 	return buf;
@@ -601,11 +601,11 @@ static char *CopyVarString( const NLVarString *varString, uint16_t *length )
  */
 NLNode *NL_CopyNode( NLNode *node )
 {
-	NLNode *newNode      = pl_malloc( sizeof( NLNode ) );
-	newNode->type        = node->type;
-	newNode->childType   = node->childType;
-	newNode->data.buf    = CopyVarString( &node->data, &newNode->data.length );
-	newNode->name.buf    = CopyVarString( &node->name, &newNode->name.length );
+	NLNode *newNode	   = pl_malloc( sizeof( NLNode ) );
+	newNode->type	   = node->type;
+	newNode->childType = node->childType;
+	newNode->data.buf  = CopyVarString( &node->data, &newNode->data.length );
+	newNode->name.buf  = CopyVarString( &node->name, &newNode->name.length );
 	// Not setting the parent is intentional here, since we likely don't want that link
 
 	NLNode *child = NL_GetFirstChild( node );
@@ -614,9 +614,9 @@ NLNode *NL_CopyNode( NLNode *node )
 		if ( newNode->linkedList == NULL )
 			newNode->linkedList = PlCreateLinkedList();
 
-		NLNode *newChild         = NL_CopyNode( child );
+		NLNode *newChild		 = NL_CopyNode( child );
 		newChild->linkedListNode = PlInsertLinkedListNode( newNode->linkedList, newChild );
-		newChild->parent         = newNode;
+		newChild->parent		 = newNode;
 
 		child = NL_GetNextChild( child );
 	}
@@ -666,11 +666,31 @@ static char *DeserializeStringVar( PLFile *file, uint16_t *length )
 
 static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 {
-	/* binary implementation is pretty damn straight forward */
-	NLNode *node      = xNL_PushBackNode( parent, NULL, NL_PROP_UNDEFINED );
-	node->name.buf    = DeserializeStringVar( file, &node->name.length );
+	/* try to fetch the name, not all nodes necessarily have a name... */
+	NLVarString name;
+	name.buf		  = DeserializeStringVar( file, &name.length );
+	const char *dname = ( name.buf != NULL ) ? name.buf : "unknown";
 
-	node->type = ( NLPropertyType ) PlReadInt8( file, NULL );
+	bool		   status;
+	NLPropertyType type = ( NLPropertyType ) PlReadInt8( file, &status );
+	if ( !status )
+	{
+		Warning( "Failed to read property type for \"%s\"!\n", dname );
+		pl_free( name.buf );
+		return NULL;
+	}
+
+	/* binary implementation is pretty damn straight forward */
+	NLNode *node = xNL_PushBackNode( parent, NULL, type );
+	if ( node == NULL )
+	{
+		pl_free( name.buf );
+		return NULL;
+	}
+
+	/* node now takes ownership of name */
+	node->name = name;
+
 	switch ( node->type )
 	{
 		default:
@@ -695,8 +715,8 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		}
 		case NL_PROP_BOOL:
 		{
-			bool v            = PlReadInt8( file, NULL );
-			node->data.buf    = AllocVarString( v ? "true" : "false", &node->data.length );
+			bool v		   = PlReadInt8( file, NULL );
+			node->data.buf = AllocVarString( v ? "true" : "false", &node->data.length );
 			break;
 		}
 		case NL_PROP_F32:
@@ -726,7 +746,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		case NL_PROP_I32:
 		{
 			int32_t v = PlReadInt32( file, false, NULL );
-			char    str[ 32 ];
+			char	str[ 32 ];
 			snprintf( str, sizeof( str ), COM_FMT_int32, v );
 			node->data.buf = AllocVarString( str, &node->data.length );
 			break;
@@ -734,7 +754,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		case NL_PROP_I64:
 		{
 			int64_t v = PlReadInt64( file, false, NULL );
-			char    str[ 32 ];
+			char	str[ 32 ];
 			snprintf( str, sizeof( str ), COM_FMT_int64, v );
 			node->data.buf = AllocVarString( str, &node->data.length );
 			break;
@@ -781,11 +801,11 @@ NLNode *NL_LoadFile( const char *path, const char *objectType )
 	else if ( fileType == NL_FILE_ASCII )
 	{
 		/* first need to run the pre-processor on it */
-		size_t      length = PlGetFileSize( file );
-		const char *data   = ( const char * ) PlGetFileData( file ) + strlen( NL_ASCII_HEADER );
-		char *      buf    = pl_malloc( length + 1 );
+		size_t		length = PlGetFileSize( file );
+		const char *data   = ( const char	  *) PlGetFileData( file ) + strlen( NL_ASCII_HEADER );
+		char		 *buf	   = pl_malloc( length + 1 );
 		memcpy( buf, data, length );
-		buf  = xNL_PreProcessScript( buf, &length, true );
+		buf	 = xNL_PreProcessScript( buf, &length, true );
 		root = NL_ParseBuffer( buf, length );
 		pl_free( buf );
 	}
@@ -846,8 +866,8 @@ static void SerializeStringVar( const NLVarString *string, NLFileType fileType, 
 	if ( string->length == 0 )
 		return;
 
-	bool        encloseString = false;
-	const char *c             = string->buf;
+	bool		encloseString = false;
+	const char *c			  = string->buf;
 	if ( *c == '\0' )
 	{
 		/* enclose an empty string!!! */
