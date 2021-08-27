@@ -21,12 +21,6 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
-#*.dll
-#*.so
-#*.so.*
-#*.dylib
-
 # Executables
 *.exe
 *.out
@@ -88,5 +82,6 @@ dkms.conf
 /release/runtime/**/*/pl**.dll
 /release/runtime/**/*/game.dll
 /release/runtime/**/*/**_driver.dll
+/release/runtime/**/*/*.so
 
 /CMakeSettings.json
