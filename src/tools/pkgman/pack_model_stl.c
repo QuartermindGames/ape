@@ -67,7 +67,7 @@ PLMModel *MDL_STL_LoadFile( const char *path )
 		bool status;
 		for ( uint8_t j = 0; j < 3; ++j )
 		{
-			PlVectorIndex( triangles[ 0 ].normal, j ) = ( float ) PlReadInt32( file, false, &status );
+			PlVectorIndex( triangles[ i ].normal, j ) = PlReadFloat32( file, false, &status );
 			if ( !status )
 				Error( "Failed to load in normal component: " COM_FMT_uint32 " " COM_FMT_uint16 "\n", i, j );
 		}
@@ -75,29 +75,29 @@ PLMModel *MDL_STL_LoadFile( const char *path )
 		{
 			for ( uint8_t k = 0; k < 3; ++k )
 			{
-				PlVectorIndex( triangles[ 0 ].vertices[ j ], k ) = ( float ) PlReadInt32( file, false, &status );
+				PlVectorIndex( triangles[ i ].vertices[ j ], k ) = PlReadFloat32( file, false, &status );
 				if ( !status )
 					Error( "Failed to load in vertex component: " COM_FMT_uint32 " " COM_FMT_uint16 "\n", i, j );
 			}
 		}
 
-		triangles[ 0 ].attribute = PlReadInt16( file, false, &status );
+		triangles[ i ].attribute = PlReadInt16( file, false, &status );
 		if ( !status )
 			Error( "Failed to load in attribute component: " COM_FMT_uint32 "\n", i );
 
-		triangles[ 0 ].colour.a = 255;
-		if ( triangles[ 0 ].attribute != 0 )
+		triangles[ i ].colour.a = 255;
+		if ( triangles[ i ].attribute != 0 )
 		{
 			/* todo: viscam/solidview encode the colours within the attribute var */
-			triangles[ 0 ].colour.r = triangles[ 0 ].attribute;
-			triangles[ 0 ].colour.g = triangles[ 0 ].attribute;
-			triangles[ 0 ].colour.b = triangles[ 0 ].attribute;
+			triangles[ i ].colour.r = triangles[ 0 ].attribute;
+			triangles[ i ].colour.g = triangles[ 0 ].attribute;
+			triangles[ i ].colour.b = triangles[ 0 ].attribute;
 		}
 		else
 		{
-			triangles[ 0 ].colour.r = 255;
-			triangles[ 0 ].colour.g = 255;
-			triangles[ 0 ].colour.b = 255;
+			triangles[ i ].colour.r = 255;
+			triangles[ i ].colour.g = 255;
+			triangles[ i ].colour.b = 255;
 		}
 	}
 
