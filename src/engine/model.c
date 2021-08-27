@@ -127,7 +127,10 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 
 			PLVector3 position = pl_vecOrigin3;
 			if ( ( n = NL_GetChildByName( vertexNode, "position" ) ) != NULL )
+			{
 				NL_DS_DeserializeVector3( n, &position );
+				//Print( "p %d : %s\n", j, PlPrintVector3( &position, pl_float_var ) );
+			}
 
 			PLVector3 normal = pl_vecOrigin3;
 			if ( ( n = NL_GetChildByName( vertexNode, "normal" ) ) != NULL )
@@ -154,13 +157,18 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 			{
 				int indices[ 3 ];
 				if ( NL_GetI32Array( n, indices, 3 ) == NL_ERROR_SUCCESS )
+				{
+					//Print( "xi %d yi %d zi %d\n", indices[ 0 ], indices[ 1 ], indices[ 2 ] );
 					PlgAddMeshTriangle( meshes[ i ], indices[ 0 ], indices[ 1 ], indices[ 2 ] );
+				}
 				else
 					PrintWarn( "Failed to fetch indices for face " COM_FMT_int32 "\n", j );
 			}
 
 			faceNode = NL_GetNextChild( faceNode );
 		}
+
+		PlgUploadMesh( meshes[ i ] );
 
 		meshNode = NL_GetNextChild( meshNode );
 	}

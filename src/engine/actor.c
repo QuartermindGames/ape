@@ -48,6 +48,7 @@ extern const ActorSetup sg_actorShip;			// sg_actors.c
 extern const ActorSetup sg_actorAsteroidSetup;	// sg_actors.c
 extern const ActorSetup sg_actorProjectileSetup;// sg_actors.c
 extern const ActorSetup sg_actorAsteroidManagerSetup;
+extern const ActorSetup sg_actorPropSetup;
 
 const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ACTOR_NONE]				= &actorDefault,
@@ -59,6 +60,7 @@ const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 		[ACTOR_SG_ASTEROID]			= &sg_actorAsteroidSetup,
 		[ACTOR_SG_ASTEROID_MANAGER] = &sg_actorAsteroidManagerSetup,
 		[ACTOR_SG_PROJECTILE]		= &sg_actorProjectileSetup,
+		[ACTOR_SG_PROP]				= &sg_actorPropSetup,
 };
 
 static PLLinkedList *actorList;
@@ -248,7 +250,7 @@ void Act_DrawActors( void )
 		if ( actor->setup.Draw )
 			actor->setup.Draw( actor, actor->userData );
 
-#if 1
+#if 0
 		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );

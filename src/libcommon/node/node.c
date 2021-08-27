@@ -721,7 +721,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		}
 		case NL_PROP_F32:
 		{
-			float v = ( float ) PlReadInt32( file, false, NULL );
+			float v = PlReadFloat32( file, false, NULL );
 			char  str[ 32 ];
 			snprintf( str, sizeof( str ), COM_FMT_float, v );
 			node->data.buf = AllocVarString( str, &node->data.length );
@@ -729,7 +729,7 @@ static NLNode *DeserializeBinaryNode( PLFile *file, NLNode *parent )
 		}
 		case NL_PROP_F64:
 		{
-			double v = ( double ) PlReadInt64( file, false, NULL );
+			double v = PlReadFloat64( file, false, NULL );
 			char   str[ 32 ];
 			snprintf( str, sizeof( str ), COM_FMT_double, v );
 			node->data.buf = AllocVarString( str, &node->data.length );

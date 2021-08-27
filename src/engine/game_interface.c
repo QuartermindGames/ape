@@ -78,6 +78,9 @@ void Game_Display( void )
 	R_DrawPerspective( R_GetGlobalCamera() );
 }
 
+void SG_PrecacheData( void );
+void SG_DestroyCachedData( void );
+
 void Game_Disconnect( void )
 {
 	if ( currentWorld != NULL )
@@ -89,6 +92,8 @@ void Game_Disconnect( void )
 	Act_DestroyActors();
 
 	Sch_KillTask( "actor_tick" );
+
+	SG_DestroyCachedData();
 }
 
 void Game_SpawnWorld( const char *worldPath )
@@ -113,6 +118,8 @@ void Game_SpawnWorld( const char *worldPath )
 
 	gameState	= GAME_STATE_ACTIVE;
 	inputTarget = INPUT_TARGET_GAME;
+
+	SG_PrecacheData();
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
 }
