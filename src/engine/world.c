@@ -103,7 +103,7 @@ typedef struct World
 	PLVector4 sunColour;
 	PLVector3 sunPosition;
 
-	Material *skyMaterials[ 2 ];
+	Material *skyMaterials[ 4 ];
 	unsigned int numSkyMaterials;
 
 	/* additional generic properties */
@@ -885,6 +885,12 @@ static void W_DrawSky( World *world, Camera *camera )
 #else
 		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &PLVector3( 0.0f, camera->internal->position.y + skyHeightOffset->f_value - 30.0f, 0.0f ), ( ticks / 500.0f ) * -1, ticks / 500.0f, 0.45f );
 #endif
+	}
+
+	if ( world->numSkyMaterials > 2 )
+	{
+		location.y += 4.0f;
+		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 2 ], &location, camera->internal->position.x / 100.0f, camera->internal->position.z / 100.0f, 0.01f );
 	}
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
