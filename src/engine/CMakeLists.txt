@@ -52,4 +52,4 @@ if (NOT UNIX AND NOT MSVC)
     target_link_libraries(engine mingw32)
 endif ()
 
-target_link_libraries(engine common plcore plgraphics plmodel SDL2)
+target_link_libraries(engine common plcore plgraphics plmodel SDL2 SDL2_mixer)
