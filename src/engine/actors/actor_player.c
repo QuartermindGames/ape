@@ -52,6 +52,7 @@ Camera *Player_GetCamera( Actor *self )
 
 static void Player_CalculateViewFrustum( Actor *self )
 {
+#if 0
 	APlayer *playerData = Act_GetUserData( self );
 
 	PLVector3 forward, left;
@@ -66,6 +67,7 @@ static void Player_CalculateViewFrustum( Actor *self )
 	playerData->lrViewPos = PlSubtractVector3( curPos, PlScaleVector3F( left, 64.0f ) );
 
 	/* in future, set this up properly relative to view */
+#endif
 }
 
 /**

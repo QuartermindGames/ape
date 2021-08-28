@@ -115,7 +115,7 @@ PSEmitter *PS_SpawnEmitter( void )
 	PSEmitter *emitter = globalSystem.MAlloc( sizeof( PSEmitter ), true );
 	emitter->particles = PlCreateLinkedList();
 
-	emitter->mesh = PlgCreateMesh( /*PLG_MESH_TRIANGLE_STRIP*/ PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 1000, 1000 );
+	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
 	if ( emitter->mesh == NULL )
 		PrintError( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 
@@ -272,6 +272,8 @@ void PS_Draw( const PSEmitter *emitter, const Camera *camera )
 
 	PlgClearMesh( emitter->mesh );
 
+	PlgSetCullMode( PLG_CULL_NONE );
+
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
@@ -287,16 +289,18 @@ void PS_Draw( const PSEmitter *emitter, const Camera *camera )
 
 		unsigned int a = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 0.0f ) );
 		unsigned int b = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 1.0f ) );
-		unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
-		unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
+		//unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
+		//unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
 
-		PlgAddMeshTriangle( emitter->mesh, a, b, c );
-		PlgAddMeshTriangle( emitter->mesh, c, b, d );
+		//PlgAddMeshTriangle( emitter->mesh, a, b, c );
+		//PlgAddMeshTriangle( emitter->mesh, c, b, d );
 
 		node = PlGetNextLinkedListNode( node );
 	}
 
 	RM_DrawMesh( emitter->material, emitter->mesh );
+
+	PlgSetCullMode( PLG_CULL_POSTIVE );
 
 	PlPopMatrix();
 }
