@@ -4,25 +4,23 @@
  * This software is closed-source, do not publish without express permission.
  */
 
-#include <SDL2/SDL_audio.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "yin.h"
 #include "audio.h"
+
+static const int MAX_PLAYING_SOUNDS = 16;
 
 typedef struct ASound
 {
 	char		 path[ PL_SYSTEM_MAX_PATH ];
 	bool		 reserved;
-	unsigned int length;
-	uint8_t *	 buffer;
+	Mix_Chunk *sample;
 	int			 numReferences;
 } ASound;
 ASound *	 audioSounds = NULL;
 unsigned int numSounds	 = 0;
 unsigned int maxSounds	 = 4096;
-
-static SDL_AudioSpec	 sdlAudioSpec;
-static SDL_AudioDeviceID sdlAudioDeviceId;
 
 static bool audioInitialized = false;
 
@@ -33,20 +31,13 @@ void A_Initialize( void )
 
 	Print( "Initializing audio\n" );
 
-	SDL_AudioSpec desiredSpec;
-	SDL_zero( desiredSpec );
-	desiredSpec.channels = 2;
-	desiredSpec.format	 = AUDIO_F32;
-	desiredSpec.freq	 = 48000;
-	desiredSpec.samples	 = 4096;
-	desiredSpec.callback = NULL;
-
-	sdlAudioDeviceId = SDL_OpenAudioDevice( NULL, 0, &desiredSpec, &sdlAudioSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE );
-	if ( sdlAudioDeviceId == 0 )
+	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
 	{
-		PrintWarn( "Failed to open audio device!\nSDL: %s\n", SDL_GetError() );
+		PrintWarn( "Failed to open audio device!\nSDL: %s\n", Mix_GetError() );
 		return;
 	}
+
+	Mix_AllocateChannels(MAX_PLAYING_SOUNDS);
 
 	/* allocate storage for our samples */
 	audioSounds = globalSystem.CAlloc( maxSounds, sizeof( ASound ), true );
@@ -69,9 +60,8 @@ static void A_FreeSound( unsigned int s )
 {
 	audioSounds[ s ].path[ 0 ] = '\0';
 
-	SDL_FreeWAV( audioSounds[ s ].buffer );
-	audioSounds[ s ].buffer = NULL;
-	audioSounds[ s ].length = 0;
+	Mix_FreeChunk( audioSounds[ s ].sample );
+	audioSounds[ s ].sample = NULL;
 
 	audioSounds[ s ].reserved = false;
 
@@ -100,9 +90,8 @@ void A_CleanupSounds( bool force )
 		if ( force && audioSounds[ i ].numReferences > 0 )
 			PrintWarn( "Force cleaning dirty slot %d!\n", i );
 
-		SDL_FreeWAV( audioSounds[ i ].buffer );
-		audioSounds[ i ].buffer = NULL;
-		audioSounds[ i ].length = 0;
+		Mix_FreeChunk( audioSounds[ i ].sample );
+		audioSounds[ i ].sample = NULL;
 
 		/* mark it as unreserved, so we can utilise it again later */
 		audioSounds[ i ].reserved = false;
@@ -120,6 +109,9 @@ static int A_FetchCachedSoundSlotByPath( const char *path )
 {
 	for ( int i = 0; i < numSounds; ++i )
 	{
+		if( !audioSounds[ i ].reserved )
+			continue;
+
 		if ( pl_strcasecmp( path, audioSounds[ i ].path ) != 0 )
 			continue;
 
@@ -154,12 +146,6 @@ ASound *A_CacheSound( const char *path )
 		return NULL;
 	}
 
-	int		 length = ( int ) PlGetFileSize( file );
-	uint8_t *buffer = globalSystem.MAlloc( length, true );
-	memcpy( buffer, PlGetFileData( file ), length );
-
-	PlCloseFile( file );
-
 	/* setup our new sound slot */
 	int freeSlot = 0;
 	for ( ; freeSlot < maxSounds; ++freeSlot )
@@ -176,23 +162,24 @@ ASound *A_CacheSound( const char *path )
 		audioSounds = globalSystem.ReAlloc( audioSounds, maxSounds, true );
 	}
 
-	SDL_RWops *rw = SDL_RWFromConstMem( buffer, length );
-
 	ASound *newSound = &audioSounds[ freeSlot ];
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
 
-	SDL_AudioSpec wavSpec;
-	bool status = ( SDL_LoadWAV_RW( rw, SDL_TRUE, &wavSpec, &newSound->buffer, &newSound->length ) != NULL );
+	int wav_length = PlGetFileSize(file);
+	const void *wav_data = PlGetFileData(file);
 
-	//SDL_RWclose( rw );
-	//globalSystem.Free( buffer );
-
-	if ( !status )
+	newSound->sample = Mix_LoadWAV_RW(SDL_RWFromConstMem( wav_data, wav_length ), 1);
+	if(newSound->sample == NULL)
 	{
-		PrintWarn( "Failed to load wav, \"%s\"!\nSDL: %s\n", path, SDL_GetError() );
+		PrintWarn( "Failed to load wav, \"%s\"!\nMix_LoadWAV_RW: %s\n", path, Mix_GetError() );
+
+		PlCloseFile(file);
 		return NULL;
 	}
 
+	PlCloseFile(file);
+
+	newSound->reserved = true;
 	numSounds++;
 
 	Print( "Cached sound, \"%s\"\n", path );
@@ -206,7 +193,10 @@ void A_EmitSound( ASound *s, const PLVector3 *position, const PLVector3 *velocit
 	if ( !A_IsValidSoundSlot( s ) )
 		return;
 #endif
-	SDL_QueueAudio( sdlAudioDeviceId, s->buffer, s->length );
+	if(Mix_PlayChannel(-1, s->sample, 0) == -1)
+	{
+		PrintWarn( "Mix_PlayChannel: %s\n", Mix_GetError() );
+	}
 }
 
 #if 0
@@ -229,8 +219,7 @@ void A_Shutdown( void )
 	if ( !audioInitialized )
 		return;
 
-	SDL_CloseAudioDevice( sdlAudioDeviceId );
-	sdlAudioDeviceId = 0;
+	Mix_CloseAudio();
 
 	audioInitialized = false;
 }
