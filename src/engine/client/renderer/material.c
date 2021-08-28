@@ -515,7 +515,7 @@ Material *RM_CacheMaterial( const char *path, CacheGroup group, bool useFallback
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
-#if 1
+#if 0
 	ConvertMatToNode( material );
 #endif
 

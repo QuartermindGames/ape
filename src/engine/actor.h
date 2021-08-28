@@ -88,6 +88,7 @@ typedef struct Actor
 
 	// temporary
 	int16_t health;
+	int16_t score;
 
 	PLLinkedListNode *node;
 	void			 *userData;

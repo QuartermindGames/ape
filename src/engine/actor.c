@@ -26,7 +26,7 @@ void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
-	float	  length  = PlVector3Length( pushDir ) / 200.0f;
+	float	  length  = PlVector3Length( pushDir ) / 10000.0f;
 	pushDir			  = PlScaleVector3F( pushDir, length );
 	Act_SetVelocity( other, &pushDir );
 }
@@ -77,8 +77,8 @@ Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 		PrintError( "Failed to create colliders list!\nPL: %s\n", PlGetError() );
 
 	/* give everything a set of basic bounds */
-	actor->bounds.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
-	actor->bounds.mins = PLVector3( -16.0f, -16.0f, -16.0f );
+	actor->bounds.maxs	 = PLVector3( 16.0f, 16.0f, 16.0f );
+	actor->bounds.mins	 = PLVector3( -16.0f, -16.0f, -16.0f );
 
 	if ( actor->setup.Spawn != NULL )
 		actor->setup.Spawn( actor );
@@ -247,17 +247,19 @@ void Act_DrawActors( void )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
 
-		if ( actor->setup.Draw )
-			actor->setup.Draw( actor, actor->userData );
-
-#if 0
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-
 		PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
+		if ( Act_IsVisible( actor ) )
+		{
+			if ( actor->setup.Draw )
+				actor->setup.Draw( actor, actor->userData );
+		}
+
+#if 1
+		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 		PLColour boxColour;
 		if ( Act_IsVisible( actor ) )
-		    boxColour = PL_COLOUR_GREEN;
+			boxColour = PL_COLOUR_GREEN;
 		else
 			boxColour = PL_COLOUR_RED;
 

@@ -20,8 +20,8 @@
 #define MAX_ASTEROID_MODELS 2
 static PLMModel *asteroidModels[ MAX_ASTEROID_MODELS ] = { NULL, NULL };
 
-ASoundReference impactSound = { .slot = -1 };
-ASoundReference thrustSound = { .slot = -1 };
+ASound *impactSound = NULL;
+ASound *thrustSound = NULL;
 
 void SG_PrecacheData( void )
 {
@@ -34,7 +34,8 @@ void SG_PrecacheData( void )
 
 void SG_DestroyCachedData( void )
 {
-	for ( unsigned int i = 0; i < MAX_ASTEROID_MODELS; ++i ) {
+	for ( unsigned int i = 0; i < MAX_ASTEROID_MODELS; ++i )
+	{
 		PlmDestroyModel( asteroidModels[ i ] );
 	}
 }
@@ -115,21 +116,27 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	 *  - emit explosion effect
 	 */
 	ASGActor *sgActor = self->userData;
-	ASGActor *otherSG = other->userData;
 
-	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sgActor->isSolid || !otherSG->isSolid )
+	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sgActor->isSolid )
 		return;
 
-	A_EmitSound( &impactSound, &self->position, &self->velocity );
+	A_EmitSound( impactSound, &self->position, &self->velocity );
 
 	// If we hit a player, there's a slim chance we'll just bounce off
 	//if ( /*( Act_GetType( self ) == ACTOR_SG_ASTEROID && Act_GetType( other ) == ACTOR_SG_SHIP ) &&*/ ( rand() % 10 == 0 ) )
 	//other->velocity = PlInverseVector3( self->velocity );
 
 	other->health -= 2;
+	if ( other->type != ACTOR_SG_SHIP )
+	{
+		if ( other->health <= 0 )
+		{
+			Act_DestroyActor( other );
+			return;
+		}
 
-	//if ( other->type != ACTOR_SG_SHIP )
-	//	Act_DestroyActor( other );
+		Monster_Collide( self, other, userData );
+	}
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -139,7 +146,6 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 		return;
 
 	ASGActor *sgActor = userData;
-
 	if ( sgActor->model != NULL )
 	{
 		PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -165,7 +171,7 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 		}
 
 		PlPopMatrix();
-	} /* todo */
+	}
 
 	if ( sgActor->particleEmitter != NULL )
 		PS_Draw( sgActor->particleEmitter, camera );
@@ -174,7 +180,7 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 static void SGActor_Generic_Destroy( Actor *self, void *userData )
 {
 	ASGActor *sgActor = userData;
-	A_ReleaseSound( &impactSound );
+	//A_ReleaseSound( impactSound );
 
 	PS_DestroyEmitter( sgActor->particleEmitter );
 
@@ -284,6 +290,13 @@ static void Ship_Tick( Actor *self, void *userData )
 
 		sgActor->fireDelay = Engine_GetNumTicks() + 15;
 	}
+
+	static unsigned int scoreDelay = 0;
+	if ( self->health > 0 && scoreDelay < Engine_GetNumTicks() )
+	{
+		self->score++;
+		scoreDelay = Engine_GetNumTicks() + 35;
+	}
 }
 
 static void Ship_Collide( Actor *self, Actor *other, void *userData )
@@ -319,6 +332,9 @@ static void Asteroid_Spawn( Actor *self )
 	asteroid->isSolid = true;
 	asteroid->model	  = ( rand() % MAX_ASTEROID_MODELS == 0 ) ? asteroidModels[ 0 ] : asteroidModels[ 1 ];
 	asteroid->scale	  = PlGenerateRandomFloat( 30.0f );
+
+	self->bounds.mins = PlSubtractVector3F( self->bounds.mins, asteroid->scale );
+	self->bounds.maxs = PlAddVector3F( self->bounds.maxs, asteroid->scale );
 
 	//asteroid->impactSound = A_CacheSound( "sounds/sg/exxplosion0.wav" );
 
@@ -382,7 +398,7 @@ static void Asteroid_Tick( Actor *self, void *userData )
 	static bool playSoundCheck = false;
 	if ( !playSoundCheck )
 	{
-		A_EmitSound( &impactSound, &self->position, &pl_vecOrigin3 );
+		A_EmitSound( impactSound, &self->position, &pl_vecOrigin3 );
 		playSoundCheck = true;
 	}
 }
@@ -425,16 +441,20 @@ static void AManager_Tick( Actor *self, void *userData )
 	if ( asteroidManager->numAsteroids >= MAX_ASTEROIDS )
 		return;
 
-	Actor *asteroid	   = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
-	asteroid->position = PLVector3( -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ), 0.0f, -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ) );
+	Actor *asteroid			= Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
+	asteroid->position		= PLVector3( -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ), 0.0f, -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ) );
+	asteroid->bounds.origin = asteroid->position;
 
-	//if ( Act_IsVisible( asteroid ) /*|| ( Act_CheckCollisions( asteroid ) != NULL )*/ )
-	//{
-	//		Act_DestroyActor( asteroid );
-	//		return;
-	//	}
+	if ( Act_IsVisible( asteroid ) || ( Act_CheckCollisions( asteroid ) != NULL ) )
+	{
+		Act_DestroyActor( asteroid );
+		return;
+	}
 
-	asteroid->velocity = PLVector3( -2.0f + ( ( rand() % 400 ) / 400.0f ), 0.0f, -2.0f + ( ( rand() % 400 ) / 400.0f ) );
+	asteroid->velocity = PLVector3(
+			PlGenerateRandomFloat( 2.0f ) - PlGenerateRandomFloat( 2.0f ),
+			0.0f,
+			PlGenerateRandomFloat( 2.0f ) - PlGenerateRandomFloat( 2.0f ) );
 }
 
 const ActorSetup sg_actorAsteroidManagerSetup = {
@@ -502,6 +522,23 @@ static void Projectile_Spawn( Actor *self )
 
 	SGActor_Generic_SetModel( self, "models/asteroid_00.node" );
 
+#if 1
+	projectile->particleEmitter							  = PS_SpawnEmitter();
+	projectile->particleEmitter->emissionRate			  = 1;
+	projectile->particleEmitter->emissionVar			  = 0;
+	projectile->particleEmitter->speed					  = 2;
+	projectile->particleEmitter->speedVar				  = 5;
+	projectile->particleEmitter->particleLife			  = 4;
+	projectile->particleEmitter->particleLifeVar		  = 1;
+	projectile->particleEmitter->startScale				  = 1.0f;
+	projectile->particleEmitter->maxParticles			  = 128;
+	projectile->particleEmitter->startColour			  = PlColourF32( 1.0f, 0.0f, 0.0f, 1.0f );
+	projectile->particleEmitter->endColour				  = PlColourF32( 1.0f, 0.0f, 0.0f, 0.0f );
+	projectile->particleEmitter->transform.translation	  = Act_GetPosition( self );
+	projectile->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	projectile->particleEmitter->material				  = RM_CacheMaterial( "materials/effects/particles/test.mat", CACHE_GROUP_WORLD, true );
+#endif
+
 	//	projectile->impactSound = A_CacheSound( "sounds/sg/projectile_impact.wav" );
 }
 
@@ -514,6 +551,8 @@ static void Projectile_Tick( Actor *self, void *userData )
 		Act_DestroyActor( self );
 		return;
 	}
+
+	SGActor_Generic_UpdateParticleEmitter( self, userData );
 }
 
 const ActorSetup sg_actorProjectileSetup = {

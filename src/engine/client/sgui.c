@@ -178,7 +178,6 @@ static Menu quitMenu = {
 
 static BitmapFont *menuFont;
 
-static BitmapFont *hudFont;
 static Material	*hudMaterial;
 static PLGMesh	   *hudMesh;
 
@@ -187,7 +186,6 @@ void Menu_Initialize( void )
 	currentMenu = &mainMenu;
 
 	menuFont = Font_CacheBitmap( "materials/ui/fonts/big_00.mat", 320, 192, 32, 32, 32, 91 );
-	hudFont	 = Font_CacheBitmap( "materials/ui/fonts/x1.mat", 320, 80, 16, 16, 32, 131 );
 
 	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
 	hudMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 100, 100 );
@@ -196,7 +194,6 @@ void Menu_Initialize( void )
 void Menu_Shutdown( void )
 {
 	Font_ReleaseBitmap( menuFont );
-	Font_ReleaseBitmap( hudFont );
 }
 
 bool Menu_HandleKeyboardEvent( int key, OSInputState keyState )
@@ -383,6 +380,8 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 
 	Menu_DrawHUDBar( HUD_ELEMENT_BAR_DMG_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 200, hudElementLayouts[ HUD_ELEMENT_BAR_DMG_L ].h - 5 );
 
+	char scoreBuf[ 32 ] = "SCORE: ";
+
 	int16_t health = 0;
 	Actor *player = Act_GetByTag( "player" );
 	if ( player != NULL )
@@ -392,6 +391,10 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 			health = 0;
 		else if ( health > 100 )
 			health = 100;
+
+		char num[ 8 ];
+		pl_itoa( player->score, num, sizeof( num ), 10 );
+		strcat( scoreBuf, num );
 	}
 
 	Menu_DrawHUDBar( HUD_ELEMENT_BAR_HP_L, BORDER_MARGIN + 72 + hudElementLayouts[ HUD_ELEMENT_ICON_HP ].w, viewport->h - 87 - BORDER_MARGIN, 200 / 100 * health, hudElementLayouts[ HUD_ELEMENT_BAR_HP_L ].h - 5 );
@@ -403,6 +406,8 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 		static const char *deathMsg = "SHIP DESTROYED";
 		Font_DrawBitmapString( menuFont, ( float ) STR_CENTER( menuFont, strlen( deathMsg ) ), 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, deathMsg, false );
 	}
+
+	Font_DrawBitmapString( menuFont, 5.0f, 5.0f, 1.0f, 0.5f, PL_COLOUR_CYAN, scoreBuf, true );
 }
 
 void Menu_Draw( const PLGViewport *viewport )

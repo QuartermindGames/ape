@@ -2,10 +2,10 @@
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: AcrossComments
+#AlignConsecutiveAssignments: AcrossComments
 AlignConsecutiveBitFields: AcrossComments
 AlignConsecutiveMacros: AcrossComments
-AlignConsecutiveDeclarations: AcrossComments
+#AlignConsecutiveDeclarations: AcrossComments
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
 AlignOperands: true

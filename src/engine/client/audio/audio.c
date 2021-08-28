@@ -54,6 +54,7 @@ void A_Initialize( void )
 	audioInitialized = true;
 }
 
+#if 0
 bool A_IsValidSoundSlot( const ASoundReference *s )
 {
 	if ( s->slot == -1 || s->slot >= maxSounds )
@@ -62,6 +63,7 @@ bool A_IsValidSoundSlot( const ASoundReference *s )
 	ASound *sound = &audioSounds[ s->slot ];
 	return ( strcmp( s->path, sound->path ) == 0 );
 }
+#endif
 
 static void A_FreeSound( unsigned int s )
 {
@@ -127,17 +129,6 @@ static int A_FetchCachedSoundSlotByPath( const char *path )
 	return -1;
 }
 
-static ASoundReference A_SetupReference( int slot, const char *path )
-{
-	ASoundReference s;
-	memset( &s, 0, sizeof( ASoundReference ) );
-	s.slot = slot;
-	if ( path != NULL )
-		strncpy( s.path, path, sizeof( s.path ) - 1 );
-
-	return s;
-}
-
 /**
  * Fetches and adds the specified sound to memory,
  * if it's not in there already.
@@ -145,14 +136,14 @@ static ASoundReference A_SetupReference( int slot, const char *path )
  * Be sure to release the sound once you're done with
  * it!
  */
-ASoundReference A_CacheSound( const char *path )
+ASound *A_CacheSound( const char *path )
 {
 	/* check if it's cached already */
 	int s = A_FetchCachedSoundSlotByPath( path );
 	if ( s != -1 )
 	{
 		audioSounds[ s ].numReferences++;
-		return A_SetupReference( s, path );
+		return &audioSounds[ s ];
 	}
 
 	/* attempt to load the sample into memory */
@@ -160,7 +151,7 @@ ASoundReference A_CacheSound( const char *path )
 	if ( file == NULL )
 	{
 		PrintWarn( "Failed to cache sound, \"%s\"!\nPL: %s\n", path, PlGetError() );
-		return A_SetupReference( -1, NULL );
+		return NULL;
 	}
 
 	int		 length = ( int ) PlGetFileSize( file );
@@ -168,8 +159,6 @@ ASoundReference A_CacheSound( const char *path )
 	memcpy( buffer, PlGetFileData( file ), length );
 
 	PlCloseFile( file );
-
-	SDL_RWops *rw = SDL_RWFromConstMem( buffer, length );
 
 	/* setup our new sound slot */
 	int freeSlot = 0;
@@ -187,33 +176,40 @@ ASoundReference A_CacheSound( const char *path )
 		audioSounds = globalSystem.ReAlloc( audioSounds, maxSounds, true );
 	}
 
+	SDL_RWops *rw = SDL_RWFromConstMem( buffer, length );
+
 	ASound *newSound = &audioSounds[ freeSlot ];
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
+
 	SDL_AudioSpec wavSpec;
 	bool status = ( SDL_LoadWAV_RW( rw, SDL_TRUE, &wavSpec, &newSound->buffer, &newSound->length ) != NULL );
 
-	SDL_RWclose( rw );
-	globalSystem.Free( buffer );
+	//SDL_RWclose( rw );
+	//globalSystem.Free( buffer );
 
 	if ( !status )
 	{
 		PrintWarn( "Failed to load wav, \"%s\"!\nSDL: %s\n", path, SDL_GetError() );
-		return A_SetupReference( -1, NULL );
+		return NULL;
 	}
 
 	numSounds++;
 
-	return A_SetupReference( freeSlot, path );
+	Print( "Cached sound, \"%s\"\n", path );
+
+	return newSound;
 }
 
-void A_EmitSound( const ASoundReference *s, const PLVector3 *position, const PLVector3 *velocity )
+void A_EmitSound( ASound *s, const PLVector3 *position, const PLVector3 *velocity )
 {
+#if 0
 	if ( !A_IsValidSoundSlot( s ) )
 		return;
-
-	SDL_QueueAudio( sdlAudioDeviceId, audioSounds[ s->slot ].buffer, audioSounds[ s->slot ].length );
+#endif
+	SDL_QueueAudio( sdlAudioDeviceId, s->buffer, s->length );
 }
 
+#if 0
 void A_ReleaseSound( const ASoundReference *s )
 {
 	if ( !A_IsValidSoundSlot( s ) )
@@ -226,6 +222,7 @@ void A_ReleaseSound( const ASoundReference *s )
 	if ( audioSounds[ s->slot ].numReferences <= 0 )
 		A_FreeSound( s->slot );
 }
+#endif
 
 void A_Shutdown( void )
 {
