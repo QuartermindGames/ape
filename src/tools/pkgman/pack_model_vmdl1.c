@@ -117,4 +117,6 @@ PLMModel *MDL_MDL_LoadFile( const char *path )
 
     if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC )
         Error( "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
+
+	return NULL;
 }

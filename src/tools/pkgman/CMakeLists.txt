@@ -11,6 +11,7 @@ add_executable(pkgman
         pack_model.c
         pack_model_md2.c
         pack_model_ply.c
+        pack_model_smd.c
         pack_model_stl.c
         pack_model_vmdl1.c
         pkgman.c

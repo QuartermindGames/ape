@@ -12,11 +12,6 @@
  * PLMModel > Node Conversion
  * ====================================================================*/
 
-static PLMModel *MLD_ConvertNodeModelToPlatformModel( NLNode *root )
-{
-	/* todo */
-}
-
 #if 0 /* todo: return to this... */
 void MDL_OutlineVertexDescriptor( NLNode *parent, const PLGMesh *mesh )
 {

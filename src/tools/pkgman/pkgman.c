@@ -16,7 +16,7 @@
 
 #define PKG_USE_COMPRESSION
 #if defined( PKG_USE_COMPRESSION )
-#include "miniz.h"
+#	include "miniz.h"
 #endif
 
 /* PkgMan, the shitty package generator! */
@@ -25,16 +25,16 @@
 
 typedef struct PkgHeader
 {
-	char     identifier[ 4 ];
+	char identifier[ 4 ];
 	uint32_t numFiles;
 } PkgHeader;
 static PkgHeader packageHeader = {
-        .identifier = PKG_IDENTIFIER,
-        .numFiles   = 0,
+		.identifier = PKG_IDENTIFIER,
+		.numFiles = 0,
 };
 
-static FILE *fileOutPtr       = NULL;
-static char  outputPath[ 32 ] = { '\0' };
+static FILE *fileOutPtr = NULL;
+static char outputPath[ 32 ] = { '\0' };
 
 static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t length, bool useCompression )
 {
@@ -50,8 +50,8 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t lengt
 	{
 		/* now compress it */
 		unsigned long compressedLength = mz_compressBound( length );
-		compressedData                 = malloc( compressedLength );
-		int status                     = mz_compress( compressedData, &compressedLength, buffer, length );
+		compressedData = malloc( compressedLength );
+		int status = mz_compress( compressedData, &compressedLength, buffer, length );
 		if ( status != Z_OK )
 			Error( "Failed to compress the given file, \"%s\"!\n", path );
 
@@ -75,7 +75,7 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t lengt
 
 	packageHeader.numFiles++;
 
-    Print( "Added %s...\n", path );
+	Print( "Added %s...\n", path );
 }
 
 static void Pkg_AddFile( const char *filePath )
@@ -90,18 +90,15 @@ static void Pkg_AddFile( const char *filePath )
 		if ( root == NULL )
 			Error( "Failed to load node: %s\n", filePath );
 
-        char tempPath[ PL_SYSTEM_MAX_PATH ];
-        snprintf( tempPath, strlen( filePath ) - 3, "%s", filePath );
-        strcat( tempPath, "node_c" );
-        NL_WriteFile( tempPath, root, NL_FILE_BINARY );
-        NL_DestroyNode( root );
-        filePath = tempPath;
+		char tempPath[ PL_SYSTEM_MAX_PATH ];
+		snprintf( tempPath, strlen( filePath ) - 3, "%s", filePath );
+		strcat( tempPath, "node_c" );
+		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
+		NL_DestroyNode( root );
+		filePath = tempPath;
 	}
 	/* convert models to uniform format before packing */
-	else if ( pl_strcasecmp( extension, "mdl" ) == 0 ||
-	          pl_strcasecmp( extension, "md2" ) == 0 ||
-	          pl_strcasecmp( extension, "stl" ) == 0 ||
-	          pl_strcasecmp( extension, "ply" ) == 0 )
+	else if ( pl_strcasecmp( extension, "smd" ) == 0 )
 	{
 		Print( "Converting model: %s\n", filePath );
 
@@ -279,20 +276,21 @@ static void ParseScript( const char *buffer, size_t length )
 int main( int argc, char **argv )
 {
 #if defined( _WIN32 )
-    /* stop buffering stdout! */
-    setvbuf( stdout, NULL, _IONBF, 0 );
+	/* stop buffering stdout! */
+	setvbuf( stdout, NULL, _IONBF, 0 );
 #endif
 
 	PlInitialize( argc, argv );
 
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
-	PlmRegisterStandardModelLoaders( PLM_MODEL_FILEFORMAT_ALL );
+	//PlmRegisterStandardModelLoaders( PLM_MODEL_FILEFORMAT_ALL );
 
 	/* register our custom loaders... */
-	PlmRegisterModelLoader( "mdl", MDL_MDL_LoadFile );
-	PlmRegisterModelLoader( "ply", MDL_PLY_LoadFile );
-	PlmRegisterModelLoader( "stl", MDL_STL_LoadFile );
-	PlmRegisterModelLoader( "md2", MDL_MD2_LoadFile );
+	//PlmRegisterModelLoader( "mdl", MDL_MDL_LoadFile );
+	//PlmRegisterModelLoader( "ply", MDL_PLY_LoadFile );
+	//PlmRegisterModelLoader( "stl", MDL_STL_LoadFile );
+	//PlmRegisterModelLoader( "md2", MDL_MD2_LoadFile );
+	PlmRegisterModelLoader( "smd", MDL_SMD_LoadFile );
 
 	Print( "Package Manager\nCopyright (C) 2020-2021 Mark E Sowden <markelswo@gmail.com>\n" );
 	if ( argc < 2 )
@@ -302,14 +300,14 @@ int main( int argc, char **argv )
 	}
 
 	/* open the file and read it all into memory */
-	const char *input   = argv[ 1 ];
-	PLFile *    filePtr = PlOpenFile( input, true );
+	const char *input = argv[ 1 ];
+	PLFile *filePtr = PlOpenFile( input, true );
 	if ( filePtr == NULL )
 		Error( "Failed to open \"%s\"!\nPL: %s\n", argv[ 1 ], PlGetError() );
 
 	/* now fetch the buffer and length, and throw it to our parser */
 	const char *buffer = ( const char * ) PlGetFileData( filePtr );
-	size_t      length = PlGetFileSize( filePtr );
+	size_t length = PlGetFileSize( filePtr );
 	ParseScript( buffer, length );
 
 	PlCloseFile( filePtr );
