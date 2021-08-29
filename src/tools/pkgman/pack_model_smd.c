@@ -177,7 +177,7 @@ static PLMModel *MDL_SMD_ParseFile( const char *p )
 
 					PLVector2 uv;
 					uv.x = PlParseFloat( &p, NULL );
-					uv.y = PlParseFloat( &p, NULL );
+					uv.y = PlParseFloat( &p, NULL ) * -1; /* inverse, because aaargh */
 
 					indices[ i ] = PlgAddMeshVertex( smdMesh->mesh, position, normal, PL_COLOUR_WHITE, uv );
 
@@ -193,8 +193,6 @@ static PLMModel *MDL_SMD_ParseFile( const char *p )
 		Print( "Unhandled token, \"%s\"! Skipping line\n", token );
 		PlSkipLine( &p );
 	}
-
-	Print( "Successfully parsed SMD! Converting output into PLM structure...\n" );
 
 	PLGMesh **meshes = calloc( sizeof( PLGMesh * ), numMeshes );
 	if ( meshes == NULL )
@@ -219,15 +217,11 @@ static PLMModel *MDL_SMD_ParseFile( const char *p )
 		snprintf( model->materials[ i ], sizeof( PLPath ), "materials/models/%s.mat", smdMeshes[ i ].material );
 	}
 
-	Print( "Finalised PLM structure\n" );
-
 	return model;
 }
 
 PLMModel *MDL_SMD_LoadFile( const char *path )
 {
-	Print( "Loading SMD \"%s\"\n", path );
-
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
 	{
@@ -241,10 +235,6 @@ PLMModel *MDL_SMD_LoadFile( const char *path )
 	}
 
 	PLMModel *model = MDL_SMD_ParseFile( p );
-	if ( model == NULL )
-	{
-		Error( "Failed to parse SMD \"%s\"!\n", path );
-	}
 
 	PlCloseFile( file );
 
