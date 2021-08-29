@@ -524,8 +524,8 @@ static void Prop_Spawn( Actor *self )
 
 static void Prop_Tick( Actor *self, void *userData )
 {
-	self->position.y = ( ( 1.0f + sinf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 24.0f;
-	self->position.z = ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;
+	//self->position.y = ( ( 1.0f + sinf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 24.0f;
+	//self->position.z = ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;
 
 	self->angles.x = ( ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f );
 	//self->angles.y -= ( ( 1.0f + sinf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;

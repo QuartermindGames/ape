@@ -87,9 +87,17 @@ Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 	{
 		NLNode *node;
 		if ( ( node = NL_GetChildByName( nodeTree, "tagName" ) ) != NULL )
+		{
 			NL_GetStr( node, actor->tagName, sizeof( actor->tagName ) );
+		}
 		if ( ( node = NL_GetChildByName( nodeTree, "position" ) ) != NULL )
+		{
 			NL_DS_DeserializeVector3( node, &actor->position );
+		}
+		if ( ( node = NL_GetChildByName( nodeTree, "angles" ) ) != NULL )
+		{
+			NL_DS_DeserializeVector3( node, &actor->angles );
+		}
 
 		if ( actor->setup.Deserialize != NULL )
 			actor->setup.Deserialize( actor, nodeTree );
