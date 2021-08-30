@@ -191,7 +191,7 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 
 void PS_TickEmitter( PSEmitter *emitter )
 {
-	unsigned int numParticles = PlGetNumLinkedListNodes( emitter->particles );
+	int numParticles = ( int ) PlGetNumLinkedListNodes( emitter->particles );
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
 		PSParticle *particle = globalSystem.MAlloc( sizeof( PSParticle ), true );
