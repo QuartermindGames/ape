@@ -181,6 +181,7 @@ void Engine_Shutdown( void )
 	CL_Shutdown();
 	Con_Shutdown();
 	MEM_Shutdown();
+	Sch_Shutdown();
 
 	PlClearMountedLocations();
 

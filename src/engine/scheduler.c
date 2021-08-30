@@ -13,9 +13,9 @@ static PLLinkedList *scheduleList = NULL;
 
 typedef struct SchTask
 {
-	double			  delay;
-	char			  desc[ 32 ];
-	void *			  userData;
+	double delay;
+	char desc[ 32 ];
+	void *userData;
 	SchedulerCallback callback;
 	PLLinkedListNode *node;
 } SchTask;
@@ -66,6 +66,19 @@ void Sch_Initialize( void )
 	PlRegisterConsoleCommand( "sch.istaskrunning", Cmd_IsTaskRunning, "Displays 'true' if the specified task is running." );
 	PlRegisterConsoleCommand( "sch.killtask", Cmd_KillTask, "Kill the specified task." );
 	PlRegisterConsoleCommand( "sch.settaskdelay", Cmd_SetTaskDelay, "Set the delay for the specified task." );
+
+	scheduleList = PlCreateLinkedList();
+	if ( scheduleList == NULL )
+	{
+		PrintError( "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
+	}
+}
+
+void Sch_Shutdown( void )
+{
+	Print( "Shutting down scheduler\n" );
+
+	PlDestroyLinkedList( scheduleList );
 }
 
 unsigned int Sch_GetNumTasks( void )
@@ -131,15 +144,12 @@ bool Sch_IsTaskRunning( const char *desc )
 
 void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay )
 {
-	if ( scheduleList == NULL )
-		scheduleList = PlCreateLinkedList();
-
 	SchTask *task = globalSystem.MAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay	   = delay + Engine_GetNumTicks();
+	task->delay = delay + Engine_GetNumTicks();
 	task->callback = callback;
 	task->userData = userData;
-	task->node	   = PlInsertLinkedListNode( scheduleList, task );
+	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
 void Sch_RunTasks( void )
@@ -151,7 +161,7 @@ void Sch_RunTasks( void )
 	while ( node != NULL )
 	{
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
-		SchTask *		  task	   = PlGetLinkedListNodeUserData( node );
+		SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( task->delay < Engine_GetNumTicks() )
 		{
 			PlDestroyLinkedListNode( scheduleList, node );
@@ -166,19 +176,14 @@ void Sch_RunTasks( void )
 
 void Sch_FlushTasks( void )
 {
-	Print( "Flushing scheduled tasks...\n" );
-	PlDestroyLinkedList( scheduleList );
-	scheduleList = NULL;
+	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
+	PlDestroyLinkedListNodes( scheduleList );
+	Print( "Flushed " COM_FMT_uint32 " tasks\n", numTasks );
 }
 
 void Sch_PrintPendingTasks( void )
 {
-	if ( scheduleList == NULL )
-	{
-		return;
-	}
-
-	unsigned int	  i	   = 0;
+	unsigned int i = 0;
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )
 	{
@@ -191,9 +196,6 @@ void Sch_PrintPendingTasks( void )
 
 static SchTask *GetTaskByDescription( const char *desc )
 {
-	if ( scheduleList == NULL )
-		return NULL;
-
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )
 	{
