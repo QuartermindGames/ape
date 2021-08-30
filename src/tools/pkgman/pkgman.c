@@ -111,14 +111,18 @@ static void Pkg_AddFile( const char *filePath )
 			Error( "Failed to convert model: %s\n", filePath );
 
 		char tempPath[ PL_SYSTEM_MAX_PATH ];
-		snprintf( tempPath, strlen( filePath ) - 2, "%s", filePath );
+		snprintf( tempPath, sizeof( tempPath ), "%s", filePath );
+		tempPath[ strlen( filePath ) - 3 ] = '\0';
 		strcat( tempPath, "node_c" );
+
 		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
 		NL_DestroyNode( root );
 		filePath = tempPath;
 
 		char ppath[ PL_SYSTEM_MAX_PATH ];
-		snprintf( ppath, strlen( tempPath ) - 1, "%s", tempPath );
+		snprintf( ppath, sizeof( ppath ), "%s", tempPath );
+		ppath[ strlen( tempPath ) - 2 ] = '\0';
+
 		pkgPath = ppath;
 	}
 
