@@ -158,7 +158,7 @@ PLVector3 Act_GetForward( const Actor *self );
 Actor *Act_GetByTag( const char *tag );
 
 /* generic monster functions */
-void Monster_Collide( struct Actor *self, struct Actor *other, void *userData );
+void Monster_Collide( struct Actor *self, struct Actor *other, float force );
 
 /* player functions */
 struct Camera *Player_GetCamera( Actor *self );

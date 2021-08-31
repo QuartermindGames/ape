@@ -47,27 +47,30 @@ void SGUI_Draw( void )
  * Temporary menu system...
  * ====================================================================*/
 
+#define MENU_WIDTH	640
+#define MENU_HEIGHT 480
+
 #define MAX_MENU_ITEMS 32
 
 typedef void ( *MenuCallback )( void );
 
 typedef struct MenuOption
 {
-	const char  *string;
+	const char *string;
 	struct Menu *nextMenu;
 	MenuCallback callback;
 } MenuOption;
 
 typedef struct Menu
 {
-	const char	   *heading;
+	const char *heading;
 	const MenuOption options[ MAX_MENU_ITEMS ];
-	uint8_t			 numMenuOptions;
+	uint8_t numMenuOptions;
 
 	uint8_t curSelection;
 } Menu;
 
-static Menu	 mainMenu;
+static Menu mainMenu;
 static Menu *currentMenu = &mainMenu;
 
 static Menu newGameMenu;
@@ -86,7 +89,7 @@ static Menu mainMenu = {
 static void Menu_CB_StartGame( void )
 {
 	GameDifficulty difficulty;
-	switch( currentMenu->curSelection )
+	switch ( currentMenu->curSelection )
 	{
 		default:
 		case 0:
@@ -178,8 +181,15 @@ static Menu quitMenu = {
 
 static BitmapFont *menuFont;
 
-static Material	*hudMaterial;
-static PLGMesh	   *hudMesh;
+static Material *hudMaterial;
+static PLGMesh *hudMesh;
+
+static PLGFrameBuffer *mRTBuffer = NULL;
+static PLGTexture *mRTAttachment = NULL;
+PLGTexture *Menu_GetRenderTargetAttachment( void )
+{
+	return mRTAttachment;
+}
 
 void Menu_Initialize( void )
 {
@@ -189,6 +199,8 @@ void Menu_Initialize( void )
 
 	hudMaterial = RM_CacheMaterial( "materials/ui/hud.mat", CACHE_GROUP_WORLD, true );
 	hudMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 100, 100 );
+
+	R_SetupRenderTarget( &mRTBuffer, &mRTAttachment, MENU_WIDTH, MENU_HEIGHT );
 }
 
 void Menu_Shutdown( void )
@@ -296,7 +308,7 @@ typedef enum HUDElement
 } HUDElement;
 
 static const HUDElementLayout hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
-		[HUD_ELEMENT_BAR_BG_L] = { 8, 8, 8 ,32 },
+		[HUD_ELEMENT_BAR_BG_L] = { 8, 8, 8, 32 },
 		[HUD_ELEMENT_BAR_BG_M] = { 16, 8, 16, 32 },
 		[HUD_ELEMENT_BAR_BG_R] = { 32, 8, 8, 32 },
 
@@ -308,7 +320,7 @@ static const HUDElementLayout hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
 		[HUD_ELEMENT_BAR_DMG_M] = { 96, 8, 16, 32 },
 		[HUD_ELEMENT_BAR_DMG_R] = { 112, 8, 8, 32 },
 
-		[HUD_ELEMENT_ICON_HP]	= { 120, 8, 40, 32 },
+		[HUD_ELEMENT_ICON_HP] = { 120, 8, 40, 32 },
 		[HUD_ELEMENT_ICON_CHAR] = { 8, 40, 104, 112 },
 };
 
@@ -410,7 +422,7 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 	Font_DrawBitmapString( menuFont, 5.0f, 5.0f, 1.0f, 0.5f, PL_COLOUR_CYAN, scoreBuf, true );
 }
 
-void Menu_Draw( const PLGViewport *viewport )
+void Menu_Draw( PLGViewport *viewport )
 {
 	if ( Game_GetMenuState() == MENU_STATE_HUD )
 	{
@@ -418,21 +430,30 @@ void Menu_Draw( const PLGViewport *viewport )
 		return;
 	}
 
+	R_Set2DViewportSize( MENU_WIDTH, MENU_HEIGHT );
+
+	PlgBindFrameBuffer( mRTBuffer, PLG_FRAMEBUFFER_DRAW );
+	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
+
 	if ( currentMenu == NULL )
 		return;
 
-	int x = STR_CENTER( menuFont, strlen( currentMenu->heading ) );
+	int x = STR_CENTER( menuFont, ( int ) strlen( currentMenu->heading ) );
 	Font_DrawBitmapString( menuFont, ( float ) x, 50.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->heading, false );
 
 	/* make sure the options are aligned to the middle of the screen */
 	int y = ( viewport->h / 2 ) - menuFont->ch * currentMenu->numMenuOptions;
 	for ( uint8_t i = 0; i < currentMenu->numMenuOptions; ++i )
 	{
-		x = STR_CENTER( menuFont, strlen( currentMenu->options[ i ].string ) );
+		x = STR_CENTER( menuFont, ( int ) strlen( currentMenu->options[ i ].string ) );
 		if ( i == currentMenu->curSelection )
 			Font_DrawBitmapCharacter( menuFont, ( float ) ( x - menuFont->cw ), ( float ) y, 1.0f, PL_COLOUR_WHITE, '(' );
 
 		Font_DrawBitmapString( menuFont, ( float ) x, ( float ) y, 1.0f, 1.0f, PL_COLOUR_WHITE, currentMenu->options[ i ].string, false );
 		y += menuFont->ch;
 	}
+
+	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
+
+	R_Restore2DViewportSize();
 }

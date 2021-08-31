@@ -59,7 +59,12 @@ extern PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 void R_Initialize( void );
 void R_Shutdown( void );
 
+void R_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, unsigned int w, unsigned int h );
+
 void R_SetupDefaultState( void );
+
+void R_Set2DViewportSize( int w, int h );
+void R_Restore2DViewportSize( void );
 void R_DrawMenu( void );
 
 Camera *R_GetGlobalCamera( void );

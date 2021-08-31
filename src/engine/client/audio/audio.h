@@ -19,5 +19,5 @@ void A_CleanupSounds( bool force );
 //bool A_IsValidSoundSlot( const ASoundReference *s );
 
 ASound *A_CacheSound( const char *path );
-void	A_EmitSound( ASound *s, const PLVector3 *position, const PLVector3 *velocity );
+void	A_EmitSound( ASound *s, int8_t volume );
 void	A_ReleaseSound( ASound *s );

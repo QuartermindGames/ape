@@ -13,14 +13,15 @@ static const int MAX_PLAYING_SOUNDS = 16;
 
 typedef struct ASound
 {
-	char		 path[ PL_SYSTEM_MAX_PATH ];
-	bool		 reserved;
+	char path[ PL_SYSTEM_MAX_PATH ];
+	bool reserved;
 	Mix_Chunk *sample;
-	int			 numReferences;
+	int numReferences;
+	int channel;
 } ASound;
-ASound *	 audioSounds = NULL;
-unsigned int numSounds	 = 0;
-unsigned int maxSounds	 = 4096;
+ASound *audioSounds = NULL;
+unsigned int numSounds = 0;
+unsigned int maxSounds = 4096;
 
 static bool audioInitialized = false;
 
@@ -31,13 +32,13 @@ void A_Initialize( void )
 
 	Print( "Initializing audio\n" );
 
-	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
+	if ( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) != 0 )
 	{
 		PrintWarn( "Failed to open audio device!\nSDL: %s\n", Mix_GetError() );
 		return;
 	}
 
-	Mix_AllocateChannels(MAX_PLAYING_SOUNDS);
+	Mix_AllocateChannels( MAX_PLAYING_SOUNDS );
 
 	/* allocate storage for our samples */
 	audioSounds = globalSystem.CAlloc( maxSounds, sizeof( ASound ), true );
@@ -109,7 +110,7 @@ static int A_FetchCachedSoundSlotByPath( const char *path )
 {
 	for ( int i = 0; i < numSounds; ++i )
 	{
-		if( !audioSounds[ i ].reserved )
+		if ( !audioSounds[ i ].reserved )
 			continue;
 
 		if ( pl_strcasecmp( path, audioSounds[ i ].path ) != 0 )
@@ -165,19 +166,19 @@ ASound *A_CacheSound( const char *path )
 	ASound *newSound = &audioSounds[ freeSlot ];
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
 
-	int wav_length = PlGetFileSize(file);
-	const void *wav_data = PlGetFileData(file);
+	int wav_length = PlGetFileSize( file );
+	const void *wav_data = PlGetFileData( file );
 
-	newSound->sample = Mix_LoadWAV_RW(SDL_RWFromConstMem( wav_data, wav_length ), 1);
-	if(newSound->sample == NULL)
+	newSound->sample = Mix_LoadWAV_RW( SDL_RWFromConstMem( wav_data, wav_length ), 1 );
+	if ( newSound->sample == NULL )
 	{
 		PrintWarn( "Failed to load wav, \"%s\"!\nMix_LoadWAV_RW: %s\n", path, Mix_GetError() );
 
-		PlCloseFile(file);
+		PlCloseFile( file );
 		return NULL;
 	}
 
-	PlCloseFile(file);
+	PlCloseFile( file );
 
 	newSound->reserved = true;
 	numSounds++;
@@ -187,32 +188,17 @@ ASound *A_CacheSound( const char *path )
 	return newSound;
 }
 
-void A_EmitSound( ASound *s, const PLVector3 *position, const PLVector3 *velocity )
+void A_EmitSound( ASound *s, int8_t volume )
 {
-#if 0
-	if ( !A_IsValidSoundSlot( s ) )
-		return;
-#endif
-	if(Mix_PlayChannel(-1, s->sample, 0) == -1)
+	s->channel = Mix_PlayChannel( -1, s->sample, 0 );
+	if ( s->channel == -1 )
 	{
 		PrintWarn( "Mix_PlayChannel: %s\n", Mix_GetError() );
-	}
-}
-
-#if 0
-void A_ReleaseSound( const ASoundReference *s )
-{
-	if ( !A_IsValidSoundSlot( s ) )
-	{
-		PrintWarn( "Cannot release sound, invalid slot %d!\n", s );
 		return;
 	}
 
-	audioSounds[ s->slot ].numReferences--;
-	if ( audioSounds[ s->slot ].numReferences <= 0 )
-		A_FreeSound( s->slot );
+	Mix_Volume( s->channel, volume );
 }
-#endif
 
 void A_Shutdown( void )
 {
@@ -222,4 +208,29 @@ void A_Shutdown( void )
 	Mix_CloseAudio();
 
 	audioInitialized = false;
+}
+
+/****************************************
+ * Music Player
+ ****************************************/
+
+static ASound *music = NULL;
+
+void A_DestroyMusic( void )
+{
+	if ( music == NULL )
+	{
+		return;
+	}
+
+	A_FreeSound( A_FetchCachedSoundSlotByPath( music->path ) );
+	music = NULL;
+}
+
+void A_CacheMusic( const char *path )
+{
+	/* free up anything we cached already */
+	A_DestroyMusic();
+
+	music = A_CacheSound( path );
 }

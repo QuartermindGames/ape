@@ -21,13 +21,13 @@ static void Act_DrawBasic( Actor *self, void *userData )
 	R_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
 
-void Monster_Collide( struct Actor *self, struct Actor *other, void *userData )
+void Monster_Collide( struct Actor *self, struct Actor *other, float force )
 {
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
 	float length = PlVector3Length( pushDir ) / 10000.0f;
-	pushDir = PlScaleVector3F( pushDir, length );
+	pushDir = PlScaleVector3F( pushDir, length * force );
 	Act_SetVelocity( other, &pushDir );
 }
 
@@ -312,15 +312,15 @@ void Act_TickActors( void *userData, double delta )
 	u_unused( userData );
 	u_unused( delta );
 
-	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
-	while ( curNode != NULL )
+	PLLinkedListNode *index = PlGetFirstNode( actorList );
+	while ( index != NULL )
 	{
-		Actor *actor = PlGetLinkedListNodeUserData( curNode );
+		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
+		Actor *actor = PlGetLinkedListNodeUserData( index );
 		if ( actor == NULL )
+		{
 			PrintError( "Invalid actor data in node!\n" );
-
-		if ( actor->setup.Tick != NULL )
-			actor->setup.Tick( actor, actor->userData );
+		}
 
 		PlAnglesAxes( actor->angles, NULL, NULL, &actor->forward );
 
@@ -339,7 +339,7 @@ void Act_TickActors( void *userData, double delta )
 				actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
 
 #if 0
-		actor->velocity.y = -GRAVITY;
+			actor->velocity.y = -GRAVITY;
 #endif
 		}
 
@@ -394,7 +394,12 @@ void Act_TickActors( void *userData, double delta )
 #endif
 		}
 
-		curNode = PlGetNextLinkedListNode( curNode );
+		if ( actor->setup.Tick != NULL )
+		{
+			actor->setup.Tick( actor, actor->userData );
+		}
+
+		index = next;
 	}
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, delta );

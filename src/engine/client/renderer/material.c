@@ -166,6 +166,7 @@ static int RM_GetBuiltInByTag( const char *tag )
 {
 	static const char *builtInTags[ MAX_MATERIAL_BUILTINS ] = {
 			[MATERIAL_BUILTIN_TIME] = "time",
+			[MATERIAL_BUILTIN_RTSCREEN] = "rt",
 	};
 
 	for ( int i = 0; i < MAX_MATERIAL_BUILTINS; ++i )
@@ -536,7 +537,7 @@ void RM_ReleaseMaterial( Material *material )
 	MEM_ReleaseReference( &material->mem );
 }
 
-static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable )
+static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
 {
 	if ( variable == -1 )
 		return;
@@ -547,6 +548,21 @@ static void RM_SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, i
 		{
 			unsigned int numTicks = Engine_GetNumTicks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
+			break;
+		}
+
+		case MATERIAL_BUILTIN_RTSCREEN:
+		{
+			PLGTexture *Menu_GetRenderTargetAttachment( void );
+			PLGTexture *rt = Menu_GetRenderTargetAttachment();
+			if ( rt == NULL )
+			{
+				break;
+			}
+
+			PlgSetTexture( rt, *curUnit );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &curUnit, false );
+			curUnit++;
 			break;
 		}
 
@@ -610,7 +626,7 @@ void RM_DrawMesh( Material *material, PLGMesh *mesh )
 			/* built-in variables are special cases */
 			else if ( curPass->variables[ j ].varData.type == SCRIPT_VAR_BUILTIN )
 			{
-				RM_SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].varData.value.iVar );
+				RM_SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].varData.value.iVar, &curUnit );
 				continue;
 			}
 

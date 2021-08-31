@@ -127,7 +127,7 @@ PLGTexture *RT_LoadTexture( const char *path )
 	if ( texture != NULL )
 		return texture;
 
-	texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+	texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_NEAREST );
 	if ( texture == NULL )
 	{
 		PrintWarn( "Failed to load texture \"%s\"!\nPL: %s\n", path, PlGetError() );

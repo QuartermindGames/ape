@@ -28,11 +28,13 @@ static PLGCamera		 *smCamera;
 
 /* Post Processing */
 
-static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachment, unsigned int w, unsigned int h )
+void R_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, unsigned int w, unsigned int h )
 {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL )
+	{
 		PlgGetFrameBufferResolution( *buffer, &bw, &bh );
+	}
 
 	/* need to rebuild the framebuffer object
 	 * todo: the library should provide us a func to perform a resize? */
@@ -41,12 +43,16 @@ static void GenerateScreenBuffer( PLGFrameBuffer **buffer, PLGTexture **attachme
 		PlgDestroyFrameBuffer( *buffer );
 		*buffer = PlgCreateFrameBuffer( w, h, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		if ( *buffer == NULL )
+		{
 			PrintError( "Failed to create framebuffer!\nPL: %s\n", PlGetError() );
+		}
 
 		PlgDestroyTexture( *attachment );
 		*attachment = PlgGetFrameBufferTextureAttachment( *buffer, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 		if ( *attachment == NULL )
+		{
 			PrintError( "Failed to create texture attachment!\nPL: %s\n", PlGetError() );
+		}
 	}
 
 	/* reset */
@@ -238,7 +244,12 @@ void R_DrawGraph( const char *heading, float x, float y, float w, float h, const
 		/* leave z, it'll be initialized as 0 */
 	}
 
-	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 255 ) );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
+
+	PlgDrawRectangle( PlGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, PLColour( 0, 0, 0, 100 ) );
+
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
+
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
 
 	BitmapFont *font = Font_GetDefaultSmall();
@@ -322,6 +333,24 @@ static void R_DrawDebugOverlay( const PLGViewport *viewport )
 			}
 		}
 	}
+}
+
+void R_Set2DViewportSize( int w, int h )
+{
+	auxCamera->viewport.oldW = auxCamera->viewport.w;
+	auxCamera->viewport.oldH = auxCamera->viewport.h;
+	auxCamera->viewport.w = w;
+	auxCamera->viewport.h = h;
+
+	PlgSetupCamera( auxCamera );
+}
+
+void R_Restore2DViewportSize( void )
+{
+	auxCamera->viewport.w = auxCamera->viewport.oldW;
+	auxCamera->viewport.h = auxCamera->viewport.oldH;
+
+	PlgSetupCamera( auxCamera );
 }
 
 void R_DrawMenu( void )
@@ -438,13 +467,18 @@ static void R_RenderSceneDepth( Camera *camera, const PLVector3 *lightPos, const
 static void R_RenderSceneFinal( Camera *camera )
 {
 	/* set everything up for post-processing */
-	GenerateScreenBuffer( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
+	R_SetupRenderTarget( &ppBuffer, &ppAttachment, camera->internal->viewport.w, camera->internal->viewport.h );
 	PlgBindFrameBuffer( ppBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera->internal );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 
 	R_RenderScene( camera, false );
+}
+
+PLGTexture *R_GetPostProcessAttachment( void )
+{
+	return ppAttachment;
 }
 
 void R_DrawScene( Camera *camera )

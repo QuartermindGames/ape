@@ -204,7 +204,7 @@ static void Player_Draw( Actor *self, void *userData )
 
 static void Player_Collide( Actor *self, Actor *other, void *userData )
 {
-	Monster_Collide( self, other, userData );
+	Monster_Collide( self, other, 0.0f );
 
 	APlayer *playerData			= ( APlayer * ) userData;
 	playerData->forwardVelocity = ( playerData->forwardVelocity / 2.0f ) * -1.0f;

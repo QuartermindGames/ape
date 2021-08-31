@@ -9,4 +9,4 @@
 #include "yin.h"
 
 void Menu_Initialize( void );
-void Menu_Draw( const struct PLGViewport *viewport );
+void Menu_Draw( struct PLGViewport *viewport );

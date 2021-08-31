@@ -96,6 +96,19 @@ void Game_Disconnect( void )
 	SG_DestroyCachedData();
 }
 
+void Game_SetupWorldProperties( World *world )
+{
+	NLNode *prop;
+	if ( ( prop = W_GetWorldProperty( world, "music" ) ) != NULL )
+	{
+		PLPath musicPath;
+		if ( NL_GetStr( prop, musicPath, sizeof( PLPath ) ) == NL_ERROR_SUCCESS )
+		{
+
+		}
+	}
+}
+
 void Game_SpawnWorld( const char *worldPath )
 {
 	Game_Disconnect();
@@ -122,6 +135,8 @@ void Game_SpawnWorld( const char *worldPath )
 	SG_PrecacheData();
 
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, 0.0 );
+
+	Game_SetupWorldProperties( world );
 }
 
 static void Game_Cmd_Disconnect( unsigned int argc, char **argv )
