@@ -395,7 +395,7 @@ static void Menu_DrawHUD( const PLGViewport *viewport )
 	char scoreBuf[ 32 ] = "SCORE: ";
 
 	int16_t health = 0;
-	Actor *player = Act_GetByTag( "player" );
+	Actor *player = Act_GetByTag( "player", NULL );
 	if ( player != NULL )
 	{
 		health = player->health;

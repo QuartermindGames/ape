@@ -155,7 +155,7 @@ bool Act_IsVisible( Actor *self );
 
 PLVector3 Act_GetForward( const Actor *self );
 
-Actor *Act_GetByTag( const char *tag );
+Actor *Act_GetByTag( const char *tag, Actor *start );
 
 /* generic monster functions */
 void Monster_Collide( struct Actor *self, struct Actor *other, float force );

@@ -405,16 +405,16 @@ void Act_TickActors( void *userData, double delta )
 	Sch_PushTask( "actor_tick", Act_TickActors, NULL, delta );
 }
 
-Actor *Act_GetByTag( const char *tag )
+Actor *Act_GetByTag( const char *tag, Actor *start )
 {
-	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
-	while ( curNode != NULL )
+	PLLinkedListNode *node = ( start == NULL ) ? PlGetFirstNode( actorList ) : PlGetNextLinkedListNode( start->node );
+	while ( node != NULL )
 	{
-		Actor *actor = PlGetLinkedListNodeUserData( curNode );
+		Actor *actor = PlGetLinkedListNodeUserData( node );
 		if ( strncmp( tag, actor->tagName, sizeof( actor->tagName ) ) == 0 )
 			return actor;
 
-		curNode = PlGetNextLinkedListNode( curNode );
+		node = PlGetNextLinkedListNode( node );
 	}
 
 	return NULL;
