@@ -219,17 +219,20 @@ bool Menu_HandleKeyboardEvent( int key, OSInputState keyState )
 	switch ( key )
 	{
 		default: break;
+		case 's':
 		case KEY_DOWN:
 			currentMenu->curSelection++;
 			if ( currentMenu->curSelection >= currentMenu->numMenuOptions )
 				currentMenu->curSelection = 0;
 			return true;
+		case 'w':
 		case KEY_UP:
 			if ( currentMenu->curSelection == 0 )
 				currentMenu->curSelection = currentMenu->numMenuOptions - 1;
 			else
 				currentMenu->curSelection--;
 			return true;
+		case KEY_LEFT_CTRL:
 		case KEY_ENTER:
 			if ( currentMenu->options[ currentMenu->curSelection ].callback != NULL )
 				currentMenu->options[ currentMenu->curSelection ].callback();

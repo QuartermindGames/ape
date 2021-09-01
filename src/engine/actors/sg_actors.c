@@ -318,17 +318,21 @@ static void Ship_Spawn( Actor *self )
 
 static void Ship_Tick( Actor *self, void *userData )
 {
-	if ( globalSystem.GetButtonState( INPUT_LEFT ) || globalSystem.GetKeyState( 'a' ) )
+	if ( globalSystem.GetKeyState( KEY_LEFT ) ||
+		 globalSystem.GetKeyState( 'a' ) )
 		self->angles.y += TURN_SPEED;
-	else if ( globalSystem.GetButtonState( INPUT_RIGHT ) || globalSystem.GetKeyState( 'd' ) )
+	else if ( globalSystem.GetKeyState( KEY_RIGHT ) ||
+			  globalSystem.GetKeyState( 'd' ) )
 		self->angles.y -= TURN_SPEED;
 
 	static const float incAmount = 0.0015f;
 
 	ASGActor *sgActor = userData;
-	if ( globalSystem.GetButtonState( INPUT_UP ) || globalSystem.GetKeyState( 'w' ) )
+	if ( globalSystem.GetKeyState( KEY_UP ) ||
+		 globalSystem.GetKeyState( 'w' ) )
 		sgActor->forwardVelocity += incAmount;
-	else if ( globalSystem.GetButtonState( INPUT_DOWN ) || globalSystem.GetKeyState( 's' ) )
+	else if ( globalSystem.GetKeyState( KEY_DOWN ) ||
+			  globalSystem.GetKeyState( 's' ) )
 		sgActor->forwardVelocity -= incAmount;
 	else if ( sgActor->forwardVelocity != 0.0f )
 	{
@@ -474,9 +478,9 @@ static void AManager_Tick( Actor *self, void *userData )
 	}
 
 	asteroid->velocity = PLVector3(
-			PlGenerateRandomFloat( 2.0f ) - PlGenerateRandomFloat( 2.0f ),
+			PlGenerateRandomFloat( 4.0f ) - PlGenerateRandomFloat( 4.0f ),
 			0.0f,
-			PlGenerateRandomFloat( 2.0f ) - PlGenerateRandomFloat( 2.0f ) );
+			PlGenerateRandomFloat( 4.0f ) - PlGenerateRandomFloat( 4.0f ) );
 }
 
 const ActorSetup sg_actorAsteroidManagerSetup = {
