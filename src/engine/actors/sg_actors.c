@@ -22,11 +22,11 @@
 static PLMModel *asteroidModels[ MAX_ASTEROID_MODELS ] = { NULL, NULL };
 static PLMModel *projectileModel = NULL;
 
-ASound *impactSound = NULL;
-ASound *thrustSound = NULL;
-ASound *fireSound = NULL;
-ASound *gameEndSound = NULL;
-ASound *gameStartSound = NULL;
+static ASound *impactSound = NULL;
+static ASound *thrustSound = NULL;
+static ASound *fireSound = NULL;
+static ASound *gameEndSound = NULL;
+static ASound *gameStartSound = NULL;
 
 void SG_PrecacheData( void )
 {
@@ -151,7 +151,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 		return;
 
 	int damageAmount;
-	switch( Game_GetDifficultyMode() )
+	switch ( Game_GetDifficultyMode() )
 	{
 		default:
 		case GAME_DIFFICULTY_NORMAL:
@@ -267,6 +267,8 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
  * point.sg.ship
  ****************************************/
 
+static int gameRestartCountdown = 0; /* timer before map respawn */
+
 #define SHIP_BOUNDS_MAXS PLVector3( 16.0f, 90.0f, 16.0f )
 #define SHIP_BOUNDS_MINS PLVector3( -16.0f, 0.0f, -16.0f )
 
@@ -331,6 +333,8 @@ static void Ship_Spawn( Actor *self )
 	Camera *camera = R_GetGlobalCamera();
 	camera->followMode = CAMERA_MODE_TOPDOWN;
 	camera->parentActor = self;
+
+	gameRestartCountdown = 100;
 }
 
 #define TURN_SPEED	 5.0f
@@ -345,6 +349,13 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	if ( self->health <= 0 )
 	{
+		if ( gameRestartCountdown <= 0 )
+		{
+			PlParseConsoleString( "world worlds/menu.node" );
+			return;
+		}
+
+		gameRestartCountdown--;
 		return;
 	}
 
