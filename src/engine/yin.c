@@ -112,7 +112,7 @@ static void Engine_SetupFileSystem( void )
 	 * todo: hand this off to a script... */
 	static const char *baseDirs[] = {
 			"base/",
-			"qcia21/",
+			//"qcia21/",
 	};
 	for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( baseDirs ); ++i )
 	{
