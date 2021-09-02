@@ -10,6 +10,7 @@
 
 #include "yin.h"
 #include "actor.h"
+#include "game_interface.h"
 
 #include "client/audio/audio.h"
 #include "client/renderer/renderer.h"
@@ -148,11 +149,22 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sgActor->isSolid )
 		return;
 
-	// If we hit a player, there's a slim chance we'll just bounce off
-	//if ( /*( Act_GetType( self ) == ACTOR_SG_ASTEROID && Act_GetType( other ) == ACTOR_SG_SHIP ) &&*/ ( rand() % 10 == 0 ) )
-	//other->velocity = PlInverseVector3( self->velocity );
+	static int damageAmount;
+	switch( Game_GetDifficultyMode() )
+	{
+		default:
+		case GAME_DIFFICULTY_NORMAL:
+			damageAmount = 8;
+			break;
+		case GAME_DIFFICULTY_EASY:
+			damageAmount = 2;
+			break;
+		case GAME_DIFFICULTY_HARD:
+			damageAmount = 15;
+			break;
+	}
 
-	other->health -= 2;
+	other->health -= damageAmount;
 	if ( other->type != ACTOR_SG_SHIP )
 	{
 		if ( other->health <= 0 )
@@ -162,7 +174,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 			return;
 		}
 
-		Monster_Collide( self, other, 0.0f );
+		Monster_Collide( self, other, PlVector3Length( self->velocity ) * 2.0f );
 	}
 }
 
@@ -384,7 +396,7 @@ static void Ship_Collide( Actor *self, Actor *other, void *userData )
 		sgActor->forwardVelocity /= 2.0f;
 	}
 
-	Monster_Collide( self, other, 100.0f );
+	Monster_Collide( self, other, 20.0f );
 }
 
 const ActorSetup sg_actorShip = {
@@ -427,6 +439,21 @@ static void Asteroid_Tick( Actor *self, void *userData )
 
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 	SGActor_Generic_Wrap( self );
+
+	float x, y;
+	GameDifficulty difficulty = Game_GetDifficultyMode();
+	if ( difficulty == GAME_DIFFICULTY_HARD )
+	{
+		x = -4.0f;
+		y = 4.0f;
+	}
+	else
+	{
+		x = -2.0f;
+		y = 2.0f;
+	}
+
+	self->velocity = PlClampVector3( &self->velocity, x, y );
 }
 
 const ActorSetup sg_actorAsteroidSetup = {
