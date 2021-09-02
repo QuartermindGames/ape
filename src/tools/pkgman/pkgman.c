@@ -53,11 +53,15 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t lengt
 		compressedData = malloc( compressedLength );
 		int status = mz_compress( compressedData, &compressedLength, buffer, length );
 		if ( status != Z_OK )
+		{
 			Error( "Failed to compress the given file, \"%s\"!\n", path );
+		}
 
 		/* check if it's actually worth it... */
 		if ( compressedLength > length )
+		{
 			compressedLength = length;
+		}
 		else
 		{
 			buffer = compressedData;
@@ -78,61 +82,115 @@ static void Pkg_AddData( const char *path, const uint8_t *buffer, uint32_t lengt
 	Print( "Added %s...\n", path );
 }
 
-static void Pkg_AddFile( const char *filePath )
+static void PrepareNodeFile( const char *path, PLPath loadPath )
 {
-	const char *pkgPath = filePath;
+	Print( "Converting node: %s\n", path );
 
-	/* nodes are a special case, should be converted into binary form before-hand */
-	const char *extension = PlGetFileExtension( filePath );
-	if ( extension != NULL && pl_strcasecmp( extension, "node" ) == 0 )
+	/* urgh, let's load the first part of the file to see
+	 * if we need to convert it first */
+
+	FILE *file = fopen( path, "rb" );
+	if ( file == NULL )
 	{
-		NLNode *root = NL_LoadFile( filePath, NULL );
-		if ( root == NULL )
-			Error( "Failed to load node: %s\n", filePath );
-
-		char tempPath[ PL_SYSTEM_MAX_PATH ];
-		snprintf( tempPath, strlen( filePath ) - 3, "%s", filePath );
-		strcat( tempPath, "node_c" );
-		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
-		NL_DestroyNode( root );
-		filePath = tempPath;
-	}
-	/* convert models to uniform format before packing */
-	else if ( pl_strcasecmp( extension, "smd" ) == 0 )
-	{
-		Print( "Converting model: %s\n", filePath );
-
-		PLMModel *model = PlmLoadModel( filePath );
-		if ( model == NULL )
-			Error( "Failed to load model: %s\nPL: %s\n", filePath, PlGetError() );
-
-		NLNode *root = MDL_ConvertPlatformModelToNodeModel( model );
-		if ( root == NULL )
-			Error( "Failed to convert model: %s\n", filePath );
-
-		char tempPath[ PL_SYSTEM_MAX_PATH ];
-		snprintf( tempPath, sizeof( tempPath ), "%s", filePath );
-		tempPath[ strlen( filePath ) - 3 ] = '\0';
-		strcat( tempPath, "node_c" );
-
-		NL_WriteFile( tempPath, root, NL_FILE_BINARY );
-		NL_DestroyNode( root );
-		filePath = tempPath;
-
-		char ppath[ PL_SYSTEM_MAX_PATH ];
-		snprintf( ppath, sizeof( ppath ), "%s", tempPath );
-		ppath[ strlen( tempPath ) - 2 ] = '\0';
-
-		pkgPath = ppath;
+		Error( "Failed to open file: %s\n", path );
 	}
 
-	PLFile *filePtr = PlOpenFile( filePath, true );
+	char header[ 8 ];
+	fread( header, sizeof( char ), sizeof( header ), file );
+
+	fclose( file );
+
+	if ( strncmp( header, "node.bin", 8 ) == 0 )
+	{
+		/* no conversion is necessary, yay! */
+		return;
+	}
+
+	/* now we have to load the file up via the node api and
+	 * then write it out again as a binary file, but appended with
+	 * _c at the end of the name. the destination path is updated
+	 * with this so we know what file we need to actually pack. */
+
+	NLNode *root = NL_LoadFile( path, NULL );
+	if ( root == NULL )
+	{
+		Error( "Failed to load node: %s\n", path );
+	}
+
+	snprintf( loadPath, sizeof( PLPath ), "%s", path );
+	loadPath[ strlen( path ) - 4 ] = '\0';
+	strcat( loadPath, "node_c" );
+
+	NL_WriteFile( loadPath, root, NL_FILE_BINARY );
+	NL_DestroyNode( root );
+}
+
+static void PrepareModelFile( const char *path, PLPath loadPath, PLPath packPath )
+{
+	Print( "Converting model: %s\n", path );
+
+	PLMModel *model = PlmLoadModel( path );
+	if ( model == NULL )
+	{
+		Error( "Failed to load model: %s\nPL: %s\n", path, PlGetError() );
+	}
+
+	NLNode *root = MDL_ConvertPlatformModelToNodeModel( model );
+	if ( root == NULL )
+	{
+		Error( "Failed to convert model: %s\n", path );
+	}
+
+	snprintf( loadPath, sizeof( PLPath ), "%s", path );
+	loadPath[ strlen( path ) - 3 ] = '\0';
+	strcat( loadPath, "node_c" );
+
+	NL_WriteFile( loadPath, root, NL_FILE_BINARY );
+	NL_DestroyNode( root );
+
+	snprintf( packPath, sizeof( PLPath ), "%s", loadPath );
+	packPath[ strlen( loadPath ) - 2 ] = '\0';
+}
+
+static void Pkg_AddFile( const char *path )
+{
+	PLPath
+			packPath, /* path we use in the pack */
+			loadPath; /* path we use to load the file */
+
+	packPath[ 0 ] = '\0';
+	loadPath[ 0 ] = '\0';
+
+	/* some files are special cases and need to be converted */
+	const char *extension = PlGetFileExtension( path );
+	if ( extension != NULL )
+	{
+		if ( pl_strcasecmp( extension, "node" ) == 0 )
+		{
+			PrepareNodeFile( path, loadPath );
+		}
+		else if ( pl_strcasecmp( extension, "smd" ) == 0 )
+		{
+			PrepareModelFile( path, loadPath, packPath );
+		}
+	}
+
+	if ( *loadPath == '\0' )
+	{
+		snprintf( loadPath, sizeof( loadPath ), "%s", path );
+	}
+	if ( *packPath == '\0' )
+	{
+		snprintf( packPath, sizeof( packPath ), "%s", path );
+	}
+
+	PLFile *filePtr = PlOpenFile( loadPath, true );
 	if ( filePtr == NULL )
-		Error( "Failed to add file \"%s\"!\nPL: %s\n", filePath, PlGetError() );
+	{
+		Error( "Failed to add file \"%s\"!\nPL: %s\n", loadPath, PlGetError() );
+	}
 
-	uint32_t length = ( uint32_t ) PlGetFileSize( filePtr );
-	const uint8_t *data = PlGetFileData( filePtr );
-	Pkg_AddData( pkgPath, data, length, false );
+	Pkg_AddData( packPath, PlGetFileData( filePtr ), ( uint32_t ) PlGetFileSize( filePtr ), true );
 
 	PlCloseFile( filePtr );
 }
@@ -142,6 +200,8 @@ static void Pkg_AddFile( const char *filePath )
  */
 static void Pkg_AddFileCallback( const char *filePath, void *userData )
 {
+	u_unused( userData );
+
 	Pkg_AddFile( filePath );
 }
 
