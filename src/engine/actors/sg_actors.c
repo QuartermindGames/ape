@@ -544,11 +544,11 @@ static void Prop_Tick( Actor *self, void *userData )
 
 static void Prop_Deserialize( Actor *self, NLNode *nodeTree )
 {
-	ASGActor *sg = self->userData;
-
 	const char *modelPath = NL_GetStrByName( nodeTree, "modelPath", NULL );
 	if ( modelPath != NULL )
+	{
 		SGActor_Generic_SetModel( self, modelPath );
+	}
 }
 
 const ActorSetup sg_actorPropSetup = {
@@ -574,18 +574,14 @@ static void Projectile_Spawn( Actor *self )
 	projectile->model = projectileModel;
 
 	Act_SetBounds( self, PLVector3( -3.0f, -3.0f, -3.0f ), PLVector3( 3.0f, 3.0f, 3.0f ) );
-
-	//	projectile->impactSound = A_CacheSound( "sounds/sg/projectile_impact.wav" );
 }
 
 static void Projectile_Tick( Actor *self, void *userData )
 {
-	// todo: rotate projectile relative to velocity, so it's always facing the right way
-
 	if ( !SGActor_Generic_InsideBounds( self ) )
 	{
-		//	Act_DestroyActor( self );
-		//	return;
+		Act_DestroyActor( self );
+		return;
 	}
 
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
