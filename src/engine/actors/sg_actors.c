@@ -141,15 +141,16 @@ static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf
 
 static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 {
-	/* todo
-	 *  - emit explosion effect
-	 */
-	ASGActor *sgActor = self->userData;
+	ASGActor *selfExtra = self->userData;
+	if ( selfExtra == NULL )
+	{
+		return;
+	}
 
-	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sgActor->isSolid )
+	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !selfExtra->isSolid )
 		return;
 
-	static int damageAmount;
+	int damageAmount;
 	switch( Game_GetDifficultyMode() )
 	{
 		default:
@@ -164,17 +165,26 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 			break;
 	}
 
+	int oldHealth = other->health;
 	other->health -= damageAmount;
 	if ( other->type != ACTOR_SG_SHIP )
 	{
 		if ( other->health <= 0 )
 		{
-			//A_EmitSound( impactSound, 10 );
+			if ( Act_IsVisible( other ) )
+			{
+				A_EmitSound( impactSound, 15 );
+			}
+
 			Act_DestroyActor( other );
 			return;
 		}
 
 		Monster_Collide( self, other, PlVector3Length( self->velocity ) * 2.0f );
+	}
+	else if ( oldHealth > 0 && other->health <= 0 )
+	{
+		A_EmitSound( gameEndSound, 100 );
 	}
 }
 
@@ -330,6 +340,14 @@ static void Ship_Spawn( Actor *self )
 
 static void Ship_Tick( Actor *self, void *userData )
 {
+	SGActor_Generic_Wrap( self );
+	SGActor_Generic_UpdateParticleEmitter( self, userData );
+
+	if ( self->health <= 0 )
+	{
+		return;
+	}
+
 	if ( globalSystem.GetKeyState( KEY_LEFT ) ||
 		 globalSystem.GetKeyState( 'a' ) )
 		self->angles.y += TURN_SPEED;
@@ -358,9 +376,6 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sgActor->forwardVelocity ) );
 
-	SGActor_Generic_UpdateParticleEmitter( self, userData );
-	SGActor_Generic_Wrap( self );
-
 	if ( globalSystem.GetKeyState( KEY_LEFT_CTRL ) && ( sgActor->fireDelay < Engine_GetNumTicks() ) )
 	{
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
@@ -385,11 +400,16 @@ static void Ship_Tick( Actor *self, void *userData )
 
 static void Ship_Collide( Actor *self, Actor *other, void *userData )
 {
-	//SGActor_Generic_Collide( self, other, userData );
+	if ( self->health <= 0 )
+	{
+		return;
+	}
 
 	ASGActor *sgActor = self->userData;
-	if ( other->type == ACTOR_SG_PROJECTILE || !sgActor->isSolid )
+	if ( sgActor == NULL || other->type == ACTOR_SG_PROJECTILE || !sgActor->isSolid )
+	{
 		return;
+	}
 
 	if ( sgActor->forwardVelocity > 0.0f )
 	{
