@@ -371,7 +371,15 @@ void Act_TickActors( void *userData, double delta )
 
 			Actor *collider = Act_CheckCollisions( actor );
 			if ( collider != NULL && collider->setup.Collide != NULL )
+			{
 				actor->setup.Collide( actor, collider, actor->userData );
+
+				if(PlGetLinkedListNodeUserData( index ) == NULL)
+				{
+					/* Actor was destroyed by collision. */
+					continue;
+				}
+			}
 
 			/* and now check actor vs world collision */
 
