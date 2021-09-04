@@ -267,10 +267,10 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
  * point.sg.ship
  ****************************************/
 
-static int gameRestartCountdown = 0; /* timer before map respawn */
-
 #define SHIP_BOUNDS_MAXS PLVector3( 16.0f, 90.0f, 16.0f )
 #define SHIP_BOUNDS_MINS PLVector3( -16.0f, 0.0f, -16.0f )
+
+#define SHIP_MAX_PARTICLES 100
 
 static void Ship_Spawn( Actor *self )
 {
@@ -291,7 +291,7 @@ static void Ship_Spawn( Actor *self )
 	ship->particleEmitter->speedVar = 5;
 	ship->particleEmitter->particleLife = 2;
 	ship->particleEmitter->particleLifeVar = 1;
-	ship->particleEmitter->maxParticles = 100;
+	ship->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
 	ship->particleEmitter->startColour = PlColourF32( 1.0f, 0.5f, 0.5f, 1.0f );
 	//ship->particleEmitter->startColourVar			= PlColourF32( 0.02f, 0.05f, 0.1f, 0.0f );
 	ship->particleEmitter->endColour = PlColourF32( 1.0f, 0.2f, 0.2f, 0.0f );
@@ -307,7 +307,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitLeft->speedVar = 5;
 	ship->emitLeft->particleLife = 2;
 	ship->emitLeft->particleLifeVar = 1;
-	ship->emitLeft->maxParticles = 100;
+	ship->emitLeft->maxParticles = SHIP_MAX_PARTICLES;
 	ship->emitLeft->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
 	ship->emitLeft->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
 	ship->emitLeft->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
@@ -322,7 +322,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->speedVar = 5;
 	ship->emitRight->particleLife = 2;
 	ship->emitRight->particleLifeVar = 1;
-	ship->emitRight->maxParticles = 100;
+	ship->emitRight->maxParticles = SHIP_MAX_PARTICLES;
 	ship->emitRight->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
 	ship->emitRight->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
 	ship->emitRight->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
@@ -333,8 +333,6 @@ static void Ship_Spawn( Actor *self )
 	Camera *camera = R_GetGlobalCamera();
 	camera->followMode = CAMERA_MODE_TOPDOWN;
 	camera->parentActor = self;
-
-	gameRestartCountdown = 100;
 }
 
 #define TURN_SPEED	 5.0f
@@ -347,15 +345,22 @@ static void Ship_Tick( Actor *self, void *userData )
 	SGActor_Generic_Wrap( self );
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 
+	ASGActor *sg = userData;
+	if ( PlVector3Length( self->velocity ) == 0.f )
+	{
+		sg->emitLeft->maxParticles = 0;
+		sg->emitRight->maxParticles = 0;
+		sg->particleEmitter->maxParticles = 0;
+	}
+	else
+	{
+		sg->emitLeft->maxParticles = SHIP_MAX_PARTICLES;
+		sg->emitRight->maxParticles = SHIP_MAX_PARTICLES;
+		sg->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
+	}
+
 	if ( self->health <= 0 )
 	{
-		if ( gameRestartCountdown <= 0 )
-		{
-			PlParseConsoleString( "world worlds/menu.node" );
-			return;
-		}
-
-		gameRestartCountdown--;
 		return;
 	}
 
@@ -368,26 +373,25 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	static const float incAmount = 0.0015f;
 
-	ASGActor *sgActor = userData;
 	if ( globalSystem.GetKeyState( KEY_UP ) ||
 		 globalSystem.GetKeyState( 'w' ) )
-		sgActor->forwardVelocity += incAmount;
+		sg->forwardVelocity += incAmount;
 	else if ( globalSystem.GetKeyState( KEY_DOWN ) ||
 			  globalSystem.GetKeyState( 's' ) )
-		sgActor->forwardVelocity -= incAmount;
-	else if ( sgActor->forwardVelocity != 0.0f )
+		sg->forwardVelocity -= incAmount;
+	else if ( sg->forwardVelocity != 0.0f )
 	{
-		sgActor->forwardVelocity = sgActor->forwardVelocity > 0 ? sgActor->forwardVelocity - incAmount : sgActor->forwardVelocity + incAmount;
-		if ( sgActor->forwardVelocity < 0.1f && sgActor->forwardVelocity > -0.1f )
-			sgActor->forwardVelocity = 0.0f;
+		sg->forwardVelocity = sg->forwardVelocity > 0 ? sg->forwardVelocity - incAmount : sg->forwardVelocity + incAmount;
+		if ( sg->forwardVelocity < 0.1f && sg->forwardVelocity > -0.1f )
+			sg->forwardVelocity = 0.0f;
 	}
 
 	/* clamp the velocity as necessary */
-	sgActor->forwardVelocity = PlClamp( -MAX_SPEED, sgActor->forwardVelocity, MAX_SPEED );
+	sg->forwardVelocity = PlClamp( -MAX_SPEED, sg->forwardVelocity, MAX_SPEED );
 
-	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sgActor->forwardVelocity ) );
+	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( globalSystem.GetKeyState( KEY_LEFT_CTRL ) && ( sgActor->fireDelay < Engine_GetNumTicks() ) )
+	if ( globalSystem.GetKeyState( KEY_LEFT_CTRL ) && ( sg->fireDelay < Engine_GetNumTicks() ) )
 	{
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
@@ -398,7 +402,7 @@ static void Ship_Tick( Actor *self, void *userData )
 
 		A_EmitSound( fireSound, 50 );
 
-		sgActor->fireDelay = Engine_GetNumTicks() + 15;
+		sg->fireDelay = Engine_GetNumTicks() + 15;
 	}
 
 	static unsigned int scoreDelay = 0;

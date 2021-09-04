@@ -72,9 +72,11 @@ Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 	actor->setup = *actorSpawnSetup[ type ];
 	actor->type = type;
 
+#if 0
 	actor->geoColliders = PlCreateLinkedList();
 	if ( actor->geoColliders == NULL )
 		PrintError( "Failed to create colliders list!\nPL: %s\n", PlGetError() );
+#endif
 
 	/* give everything a set of basic bounds */
 	actor->bounds.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
@@ -125,7 +127,9 @@ Actor *Act_DestroyActor( Actor *self )
 	if ( self->setup.Destroy != NULL )
 		self->setup.Destroy( self, self->userData );
 
+#if 0
 	PlDestroyLinkedList( self->geoColliders );
+#endif
 	PlSetLinkedListNodeUserData( self->node, NULL );
 
 	globalSystem.Free( self );
@@ -383,10 +387,10 @@ void Act_TickActors( void *userData, double delta )
 
 			/* and now check actor vs world collision */
 
-			PlDestroyLinkedListNodes( actor->geoColliders );
-
 			/* first need to figure out what faces we're intersecting with */
 #if 0// todo: revisit...
+			PlDestroyLinkedListNodes( actor->geoColliders );
+
 			unsigned int numFaces;
 			MapFace *    faces = Map_GetFacesForSector( actor->area, &numFaces );
 			for ( unsigned int i = 0; i < numFaces; ++i )

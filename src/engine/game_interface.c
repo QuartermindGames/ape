@@ -50,27 +50,26 @@ Actor *Game_GetPlayer( void )
 	return playerActor;
 }
 
+static int gameRestartCountdown = 0; /* timer before map respawn */
+
 void Game_Tick( void )
 {
-	if ( gameState == GAME_STATE_PAUSED )
+	Actor *player = Act_GetByTag( "player", NULL );
+	if ( player == NULL )
 	{
-		if ( globalSystem.GetKeyState( 'z' ) )
-			/* if any key was hit here, just switch to the game */
-			gameState = GAME_STATE_ACTIVE;
-
 		return;
 	}
 
-#if 0
-	static unsigned int spawnDelay = 0;
-	if ( globalSystem.GetKeyState( 'z' ) && spawnDelay < Engine_GetNumTicks() )
+	if ( player->health <= 0 )
 	{
-		Actor *dummyPlayer = Act_SpawnActor( ACTOR_PLAYER, NULL );
-		Act_SetPosition( dummyPlayer, &pl_vecOrigin3 );
+		if ( gameRestartCountdown <= 0 )
+		{
+			PlParseConsoleString( "world worlds/menu.node" );
+			return;
+		}
 
-		spawnDelay = Engine_GetNumTicks() + 50;
+		gameRestartCountdown--;
 	}
-#endif
 }
 
 void Game_Display( void )
@@ -93,6 +92,13 @@ void Game_Disconnect( void )
 
 	Sch_KillTask( "actor_tick" );
 
+	/* reset the camera state */
+	Camera *camera = R_GetGlobalCamera();
+	camera->followMode = CAMERA_MODE_EYE;
+	camera->parentActor = NULL;
+	camera->internal->position = pl_vecOrigin3;
+	camera->internal->angles = pl_vecOrigin3;
+
 	SG_DestroyCachedData();
 }
 
@@ -107,6 +113,8 @@ void Game_SetupWorldProperties( World *world )
 
 		}
 	}
+
+	gameRestartCountdown = 100;
 }
 
 void Game_SpawnWorld( const char *worldPath )
