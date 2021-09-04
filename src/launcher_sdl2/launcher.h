@@ -24,9 +24,19 @@ void Sys_DisplayMessageBox( SysMessage messageType, const char *message, ... );
 		PlLogMessage( launcherLog, __VA_ARGS__ );                  \
 		Sys_DisplayMessageBox( SYS_MESSAGE_WARNING, __VA_ARGS__ ); \
 	}
+
+#ifdef NDEBUG
 #define PrintError( ... )                                        \
 	{                                                            \
 		PlLogMessage( launcherLog, __VA_ARGS__ );                \
 		Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); \
 		exit( EXIT_FAILURE );                                    \
 	}
+#else
+#define PrintError( ... )                                        \
+	{                                                            \
+		PlLogMessage( launcherLog, __VA_ARGS__ );                \
+		Sys_DisplayMessageBox( SYS_MESSAGE_ERROR, __VA_ARGS__ ); \
+		abort();                                                 \
+	}
+#endif
