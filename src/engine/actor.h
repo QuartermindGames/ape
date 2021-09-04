@@ -64,24 +64,25 @@ typedef struct Actor
 	PLVector3 angles, oldAngles;
 	PLVector3 velocity;
 	PLVector3 forward;
-	float	  angle;
-	float	  viewPitch;
-	float	  viewOffset;
+	float angle;
+	float viewPitch;
+	float viewOffset;
 
 	char tagName[ 64 ];
 
 	/* collision/vis */
 	struct WorldSector *sector;
-	ActorMovementType	movementType;
+	ActorMovementType movementType;
 	ActorCollisionGroup collisionGroup;
-	PLCollisionAABB		bounds;
-	PLLinkedList		 *geoColliders; /* list of faces we're touching to test against */
+	PLCollisionAABB collisionVolume;
+	PLCollisionAABB visibilityVolume;
+	PLLinkedList *geoColliders; /* list of faces we're touching to test against */
 
 	/* animation */
 	unsigned int currentFrame;
 	unsigned int frameSwapTime;
 
-	ActorType  type;
+	ActorType type;
 	ActorSetup setup;
 
 	struct SGNode *graphNode;
@@ -91,7 +92,7 @@ typedef struct Actor
 	int16_t score;
 
 	PLLinkedListNode *node;
-	void			 *userData;
+	void *userData;
 } Actor;
 
 typedef struct ActInterface
@@ -115,42 +116,43 @@ void Act_TickActors( void *userData, double delta );
 Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree );
 Actor *Act_SpawnActorById( const char *id, NLNode *nodeTree );
 Actor *Act_DestroyActor( Actor *self );
-void   Act_DestroyActors( void );
+void Act_DestroyActors( void );
 
 ActorType Act_GetType( const Actor *self );
 
-void	  Act_SetPosition( Actor *self, const PLVector3 *position );
+void Act_SetPosition( Actor *self, const PLVector3 *position );
 PLVector3 Act_GetPosition( const Actor *self );
 
-void	  Act_SetVelocity( Actor *self, const PLVector3 *velocity );
+void Act_SetVelocity( Actor *self, const PLVector3 *velocity );
 PLVector3 Act_GetVelocity( const Actor *self );
 
-void  Act_SetAngle( Actor *self, float angle );
+void Act_SetAngle( Actor *self, float angle );
 float Act_GetAngle( const Actor *self );
 
-void	  Act_SetAngles( Actor *self, const PLVector3 *angles );
+void Act_SetAngles( Actor *self, const PLVector3 *angles );
 PLVector3 Act_GetAngles( const Actor *self );
 
 struct WorldSector *Act_GetWorldSector( Actor *self );
-void				Act_SetWorldSector( Actor *self, struct WorldSector *sector );
+void Act_SetWorldSector( Actor *self, struct WorldSector *sector );
 
-void  Act_SetViewPitch( Actor *self, float viewPitch );
+void Act_SetViewPitch( Actor *self, float viewPitch );
 float Act_GetViewPitch( const Actor *self );
 
-void  Act_SetUserData( Actor *self, void *userData );
+void Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
 
-void		 Act_SetCurrentFrame( Actor *self, unsigned int frame );
+void Act_SetCurrentFrame( Actor *self, unsigned int frame );
 unsigned int Act_GetCurrentFrame( const Actor *self );
 
-void  Act_SetViewOffset( Actor *self, float viewOffset );
+void Act_SetViewOffset( Actor *self, float viewOffset );
 float Act_GetViewOffset( Actor *self );
 
-void				   Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
+void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
 const PLCollisionAABB *Act_GetBounds( Actor *self );
-bool				   Act_IsColliding( Actor *self, Actor *other );
-Actor				  *Act_CheckCollisions( Actor *self );
+bool Act_IsColliding( Actor *self, Actor *other );
+Actor *Act_CheckCollisions( Actor *self );
 
+void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
 bool Act_IsVisible( Actor *self );
 
 PLVector3 Act_GetForward( const Actor *self );

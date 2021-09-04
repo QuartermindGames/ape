@@ -62,6 +62,9 @@ typedef struct ASGActor
 	PSEmitter *particleEmitter;
 	PSEmitter *emitLeft, *emitRight;
 
+	PLVector3 spawnPosition;
+	PLVector3 spawnAngles;
+
 	PLVector3 variance;
 
 	unsigned int fireDelay;
@@ -141,13 +144,13 @@ static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf
 
 static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 {
-	ASGActor *selfExtra = self->userData;
-	if ( selfExtra == NULL )
+	ASGActor *sg = self->userData;
+	if ( sg == NULL )
 	{
 		return;
 	}
 
-	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !selfExtra->isSolid )
+	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sg->isSolid )
 		return;
 
 	int damageAmount;
@@ -166,7 +169,11 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	}
 
 	int oldHealth = other->health;
-	other->health -= damageAmount;
+	if ( other->health > 0 )
+	{
+		other->health -= damageAmount;
+	}
+
 	if ( other->type != ACTOR_SG_SHIP )
 	{
 		if ( other->health <= 0 )
@@ -179,13 +186,13 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 			Act_DestroyActor( other );
 			return;
 		}
-
-		Monster_Collide( self, other, PlVector3Length( self->velocity ) * 2.0f );
 	}
 	else if ( oldHealth > 0 && other->health <= 0 )
 	{
 		A_EmitSound( gameEndSound, 100 );
 	}
+
+	Monster_Collide( self, other, 2.0f + sg->scale );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -261,6 +268,7 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
 	}
 
 	Act_SetBounds( self, sgActor->model->bounds.mins, sgActor->model->bounds.maxs );
+	Act_SetVisibilityVolume( self, &sgActor->model->bounds.mins, &sgActor->model->bounds.maxs );
 }
 
 /****************************************
@@ -335,6 +343,14 @@ static void Ship_Spawn( Actor *self )
 	camera->parentActor = self;
 }
 
+static void Ship_Destroy( Actor *self, void *userData )
+{
+	ASGActor *sg = userData;
+	PlmDestroyModel( sg->model );
+
+	SGActor_Generic_Destroy( self, userData );
+}
+
 #define TURN_SPEED	 5.0f
 #define MAX_SPEED	 4.0f
 #define MAX_VELOCITY PLAYER_RUN_SPEED
@@ -346,7 +362,7 @@ static void Ship_Tick( Actor *self, void *userData )
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 
 	ASGActor *sg = userData;
-	if ( PlVector3Length( self->velocity ) == 0.f )
+	if ( PlVector3Length( self->velocity ) <= 1.0f )
 	{
 		sg->emitLeft->maxParticles = 0;
 		sg->emitRight->maxParticles = 0;
@@ -440,7 +456,7 @@ const ActorSetup sg_actorShip = {
 		.Tick = Ship_Tick,
 		.Draw = SGActor_Generic_Draw,
 		.Collide = Ship_Collide,
-		.Destroy = SGActor_Generic_Destroy,
+		.Destroy = Ship_Destroy,
 		.Serialize = NULL,
 		.Deserialize = NULL,
 };
@@ -457,8 +473,11 @@ static void Asteroid_Spawn( Actor *self )
 	asteroid->model = ( rand() % MAX_ASTEROID_MODELS == 0 ) ? asteroidModels[ 0 ] : asteroidModels[ 1 ];
 	asteroid->scale = PlGenerateRandomFloat( 30.0f );
 
-	self->bounds.mins = PlSubtractVector3F( self->bounds.mins, asteroid->scale );
-	self->bounds.maxs = PlAddVector3F( self->bounds.maxs, asteroid->scale );
+	self->collisionVolume.mins = PlSubtractVector3F( self->collisionVolume.mins, asteroid->scale );
+	self->collisionVolume.maxs = PlAddVector3F( self->collisionVolume.maxs, asteroid->scale );
+
+	self->visibilityVolume.mins = PlSubtractVector3F( self->visibilityVolume.mins, asteroid->scale * 2.0f );
+	self->visibilityVolume.maxs = PlAddVector3F( self->visibilityVolume.maxs, asteroid->scale * 2.0f );
 
 	self->health = 25;
 
@@ -531,7 +550,7 @@ static void AManager_Tick( Actor *self, void *userData )
 
 	Actor *asteroid = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
 	asteroid->position = PLVector3( -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ), 0.0f, -SG_BOUNDS + ( rand() % ( SG_BOUNDS * 2 ) ) );
-	asteroid->bounds.origin = asteroid->position;
+	asteroid->collisionVolume.origin = asteroid->position;
 
 	if ( Act_IsVisible( asteroid ) || ( Act_CheckCollisions( asteroid ) != NULL ) )
 	{
@@ -569,10 +588,11 @@ static void Prop_Spawn( Actor *self )
 
 static void Prop_Tick( Actor *self, void *userData )
 {
-	//self->position.y = ( ( 1.0f + sinf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 24.0f;
-	//self->position.z = ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;
+	ASGActor *sg = Act_GetUserData( self );
+	self->position.y = sg->spawnPosition.y + ( ( 1.0f + sinf( ( Engine_GetNumTicks() + sg->variance.y ) / 100.0f ) ) / 10.0f ) * sg->variance.y;
+	self->position.z = sg->spawnPosition.z + ( ( 1.0f + cosf( ( Engine_GetNumTicks() + sg->variance.z ) / 100.0f ) ) / 10.0f ) * sg->variance.z;
 
-	self->angles.x = ( ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f );
+	self->angles.x = ( ( ( 1.0f + cosf( ( Engine_GetNumTicks() + sg->variance.x ) / 100.0f ) ) / 10.0f ) * ( sg->variance.x * 2.0f ) );
 	//self->angles.y -= ( ( 1.0f + sinf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;
 	//self->angles.z -= ( ( 1.0f + cosf( Engine_GetNumTicks() / 100.0f ) ) / 10.0f ) * 16.0f;
 }
@@ -584,6 +604,14 @@ static void Prop_Deserialize( Actor *self, NLNode *nodeTree )
 	{
 		SGActor_Generic_SetModel( self, modelPath );
 	}
+
+	ASGActor *sg = Act_GetUserData( self );
+	sg->spawnPosition = self->position;
+	sg->spawnAngles = self->oldPosition;
+
+	sg->variance.x = rand() % 5;
+	sg->variance.y = rand() % 5;
+	sg->variance.z = rand() % 5;
 }
 
 const ActorSetup sg_actorPropSetup = {

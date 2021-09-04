@@ -168,6 +168,7 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 			faceNode = NL_GetNextChild( faceNode );
 		}
 
+		PlgGenerateTangentBasis( meshes[ i ]->vertices, meshes[ i ]->num_verts, meshes[ i ]->indices, meshes[ i ]->num_triangles );
 		PlgUploadMesh( meshes[ i ] );
 
 		meshNode = NL_GetNextChild( meshNode );

@@ -26,9 +26,10 @@ void Monster_Collide( struct Actor *self, struct Actor *other, float force )
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
-	float length = PlVector3Length( pushDir ) / 10000.0f;
-	pushDir = PlScaleVector3F( pushDir, length * force );
-	Act_SetVelocity( other, &pushDir );
+	float length = PlVector3Length( pushDir );
+	pushDir = PlScaleVector3F( pushDir, ( length / 10000.0f ) * force );
+	other->velocity = PlAddVector3( other->velocity, pushDir );
+	//Act_SetVelocity( other, &pushDir );
 }
 
 static ActorSetup actorDefault = {
@@ -79,8 +80,9 @@ Actor *Act_SpawnActor( ActorType type, NLNode *nodeTree )
 #endif
 
 	/* give everything a set of basic bounds */
-	actor->bounds.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
-	actor->bounds.mins = PLVector3( -16.0f, -16.0f, -16.0f );
+	actor->collisionVolume.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
+	actor->collisionVolume.mins = PLVector3( -16.0f, -16.0f, -16.0f );
+	actor->visibilityVolume = actor->collisionVolume;
 
 	if ( actor->setup.Spawn != NULL )
 		actor->setup.Spawn( actor );
@@ -192,11 +194,22 @@ void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
 	if ( mins.x > maxs.x || mins.y > maxs.y || mins.z > maxs.z )
 		PrintError( "Invalid bounds for actor (mins %s, maxs %s)!\n", PlPrintVector3( &mins, pl_int_var ), PlPrintVector3( &maxs, pl_int_var ) );
 
-	self->bounds.maxs = maxs;
-	self->bounds.mins = mins;
+	self->collisionVolume.maxs = maxs;
+	self->collisionVolume.mins = mins;
 }
 
-const PLCollisionAABB *Act_GetBounds( Actor *self ) { return &self->bounds; }
+void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs )
+{
+	if ( mins->x > maxs->x || mins->y > maxs->y || mins->z > maxs->z )
+	{
+		PrintError( "Invalid visibility volume for actor (mins %s, maxs %s)!\n", PlPrintVector3( mins, pl_int_var ), PlPrintVector3( maxs, pl_int_var ) );
+	}
+	
+	self->visibilityVolume.maxs = *maxs;
+	self->visibilityVolume.mins = *mins;
+}
+
+const PLCollisionAABB *Act_GetBounds( Actor *self ) { return &self->collisionVolume; }
 
 PLVector3 Act_GetForward( const Actor *self )
 {
@@ -211,7 +224,7 @@ bool Act_IsColliding( Actor *self, Actor *other )
 {
 	// todo: we need to be smarter, what about cases where an actor is crossing
 	//  the boundary?
-	return PlIsAabbIntersecting( &self->bounds, &other->bounds );
+	return PlIsAabbIntersecting( &self->collisionVolume, &other->collisionVolume );
 }
 
 Actor *Act_CheckCollisions( Actor *self )
@@ -255,8 +268,8 @@ bool Act_IsVisible( Actor *self )
 		return false;
 
 #if 1
-	self->bounds.origin = self->position;
-	return PlgIsBoxInsideView( camera->internal, &self->bounds );
+	self->visibilityVolume.origin = self->position;
+	return PlgIsBoxInsideView( camera->internal, &self->visibilityVolume );
 #else
 	return PlgIsSphereInsideView( camera->internal, &( PLCollisionSphere ){
 															.origin = self->position,
@@ -268,29 +281,42 @@ void Act_DrawActors( void )
 {
 	PROFILE_START( PROFILE_DRAW_ACTORS );
 
-	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
-	while ( curNode != NULL )
+	PLLinkedListNode *index = PlGetFirstNode( actorList );
+	while ( index != NULL )
 	{
-		Actor *actor = PlGetLinkedListNodeUserData( curNode );
-		if ( actor != NULL && Act_IsVisible( actor ) )
+		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
+		Actor *actor = PlGetLinkedListNodeUserData( index );
+		if ( actor == NULL )
+		{
+			index = next;
+			continue;
+		}
+
+		if ( Act_IsVisible( actor ) )
 		{
 			if ( actor->setup.Draw )
 				actor->setup.Draw( actor, actor->userData );
 		}
 
 #if 0
-PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
 		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
 		PLColour boxColour;
 		if ( Act_IsVisible( actor ) )
+		{
 			boxColour = PL_COLOUR_GREEN;
+		}
 		else
+		{
 			boxColour = PL_COLOUR_RED;
+		}
 
-		PlgDrawBoundingVolume( &actor->bounds, boxColour );
-		PlgDrawBoundingVolume( &PlSetupCollisionAABB( absOrigin, PLVector3( -16.0f, -16.0f, -16.0f ), PLVector3( 16.0f, 16.0f, 16.0f ) ), PL_COLOUR_BLUE );
+		PlgDrawBoundingVolume( &actor->visibilityVolume, boxColour );
+		PlgDrawBoundingVolume( &actor->collisionVolume, PL_COLOUR_WHITE );
 
+		PlgDrawBoundingVolume( &PlSetupCollisionAABB( actor->position, PLVector3( -8.0f, -8.0f, -8.0f ), PLVector3( 8.0f, 8.0f, 8.0f ) ), PL_COLOUR_BLUE );
+
+#if 0
 		PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
 		while ( colliderNode != NULL )
 		{
@@ -314,8 +340,9 @@ PLVector3 absOrigin = PlGetAabbAbsOrigin( &actor->bounds, actor->position );
 			colliderNode = PlGetNextLinkedListNode( colliderNode );
 		}
 #endif
+#endif
 
-		curNode = PlGetNextLinkedListNode( curNode );
+		index = next;
 	}
 
 	PROFILE_END( PROFILE_DRAW_ACTORS );
@@ -371,7 +398,7 @@ void Act_TickActors( void *userData, double delta )
 		if ( actor->setup.Collide != NULL )
 		{
 			/* ensure bounds origin is kept updated */
-			actor->bounds.origin = nPos;
+			actor->collisionVolume.origin = nPos;
 
 			Actor *collider = Act_CheckCollisions( actor );
 			if ( collider != NULL && collider->setup.Collide != NULL )

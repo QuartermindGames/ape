@@ -456,6 +456,27 @@ void Menu_Draw( PLGViewport *viewport )
 		y += menuFont->ch;
 	}
 
+	/* scanline noise and other tv-like effects */
+
+	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+
+	if ( rand() % 65 == 0 )
+	{
+		int l = rand() % 4;
+		for ( unsigned int i = 0; i < l; ++i )
+		{
+			PLRectangle2D rectangle2D;
+			rectangle2D.ll = PL_COLOUR_WHITE;
+			rectangle2D.lr = PL_COLOUR_WHITE;
+			rectangle2D.ul = PL_COLOUR_WHITE;
+			rectangle2D.ur = PL_COLOUR_WHITE;
+			y = rand() % viewport->h;
+			rectangle2D.xy = PLVector2( 0.0f, y );
+			rectangle2D.wh = PLVector2( viewport->w, rand() % 5 + 2 );
+			PlgDrawFilledRectangle( &rectangle2D );
+		}
+	}
+
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
 	R_Restore2DViewportSize();

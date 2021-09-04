@@ -578,27 +578,26 @@ static void RM_SetWorldVariables( PLGShaderProgram *program )
 {
 	World *world = Game_GetCurrentWorld();
 	if ( world == NULL )
+	{
 		return;
+	}
 
 	/* set global uniforms, if they exist */
 	int slot;
-	slot = PlgGetShaderUniformSlot( program, "sun.colour" );
-	if ( slot >= 0 )
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
 	{
 		PLVector4 sunColour = W_GetSunColour( world );
 		PlgSetShaderUniformValueByIndex( program, slot, &sunColour, false );
 	}
-	slot = PlgGetShaderUniformSlot( program, "sun.position" );
-	if ( slot >= 0 )
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
 	{
 		PLVector3 sunPosition = W_GetSunPosition( world );
 		PlgSetShaderUniformValueByIndex( program, slot, &sunPosition, false );
 	}
-	slot = PlgGetShaderUniformSlot( program, "sun.ambience" );
-	if ( slot >= 0 )
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
 	{
 		PLVector4 ambience = W_GetAmbience( world );
-		PlgSetShaderUniformValueByIndex( program, slot, &ambience, false );
+		PlgSetShaderUniformValue( program, "sun.ambience", &ambience, false );
 	}
 }
 
