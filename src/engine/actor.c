@@ -126,7 +126,7 @@ Actor *Act_DestroyActor( Actor *self )
 		self->setup.Destroy( self, self->userData );
 
 	PlDestroyLinkedList( self->geoColliders );
-	PlDestroyLinkedListNode( actorList, self->node );
+	PlSetLinkedListNodeUserData( self->node, NULL );
 
 	globalSystem.Free( self );
 
@@ -140,10 +140,17 @@ void Act_DestroyActors( void )
 	PLLinkedListNode *node = PlGetFirstNode( actorList );
 	while ( node != NULL )
 	{
+		PLLinkedListNode *next = PlGetNextLinkedListNode( node );
 		Actor *actor = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
-
-		Act_DestroyActor( actor );
+		
+		if(actor != NULL)
+		{
+			Act_DestroyActor( actor );
+		}
+		
+		PlDestroyLinkedListNode(actorList, node);
+		
+		node = next;
 	}
 }
 
@@ -211,7 +218,11 @@ Actor *Act_CheckCollisions( Actor *self )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
 		if ( actor == NULL )
-			PrintError( "Invalid actor data in node!\n" );
+		{
+			/* Destroyed actor */
+			curNode = PlGetNextLinkedListNode( curNode );
+			continue;
+		}
 
 		/* "don't have time to play with myself" */
 		if ( actor == self )
@@ -257,7 +268,7 @@ void Act_DrawActors( void )
 	while ( curNode != NULL )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
-		if ( Act_IsVisible( actor ) )
+		if ( actor != NULL && Act_IsVisible( actor ) )
 		{
 			if ( actor->setup.Draw )
 				actor->setup.Draw( actor, actor->userData );
@@ -319,7 +330,10 @@ void Act_TickActors( void *userData, double delta )
 		Actor *actor = PlGetLinkedListNodeUserData( index );
 		if ( actor == NULL )
 		{
-			PrintError( "Invalid actor data in node!\n" );
+			PlDestroyLinkedListNode(actorList, index);
+			index = next;
+			
+			continue;
 		}
 
 		PlAnglesAxes( actor->angles, NULL, NULL, &actor->forward );
@@ -357,7 +371,15 @@ void Act_TickActors( void *userData, double delta )
 
 			Actor *collider = Act_CheckCollisions( actor );
 			if ( collider != NULL && collider->setup.Collide != NULL )
+			{
 				actor->setup.Collide( actor, collider, actor->userData );
+
+				if(PlGetLinkedListNodeUserData( index ) == NULL)
+				{
+					/* Actor was destroyed by collision. */
+					continue;
+				}
+			}
 
 			/* and now check actor vs world collision */
 
@@ -411,7 +433,7 @@ Actor *Act_GetByTag( const char *tag, Actor *start )
 	while ( node != NULL )
 	{
 		Actor *actor = PlGetLinkedListNodeUserData( node );
-		if ( strncmp( tag, actor->tagName, sizeof( actor->tagName ) ) == 0 )
+		if ( actor != NULL && strncmp( tag, actor->tagName, sizeof( actor->tagName ) ) == 0 )
 			return actor;
 
 		node = PlGetNextLinkedListNode( node );
@@ -437,8 +459,17 @@ void Act_Shutdown( void )
 	PLLinkedListNode *node = PlGetFirstNode( actorList );
 	while ( node != NULL )
 	{
-		Act_DestroyActor( PlGetLinkedListNodeUserData( node ) );
-		node = PlGetNextLinkedListNode( node );
+		PLLinkedListNode *next = PlGetNextLinkedListNode( node );
+		
+		Actor *actor = PlGetLinkedListNodeUserData( node );
+		if(actor != NULL)
+		{
+			Act_DestroyActor( actor );
+		}
+		
+		PlDestroyLinkedListNode(actorList, node);
+		
+		node = next;
 	}
 
 	PlDestroyLinkedList( actorList );

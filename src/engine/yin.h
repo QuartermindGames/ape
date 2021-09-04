@@ -84,7 +84,7 @@ typedef struct OSWindow OSWindow;
 
 #define Print( FORMAT, ... ) PlLogMessage( LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__ )
 
-#if 0 // !defined( NDEBUG )
+#if !defined( NDEBUG )
 #	define PrintWarn( FORMAT, ... ) PlLogWFunction( LOG_LEVEL_WARN, "WARNING: " FORMAT, ##__VA_ARGS__ )
 #	define PrintError( FORMAT, ... )                                           \
 		{                                                                       \
