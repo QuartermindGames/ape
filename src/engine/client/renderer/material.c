@@ -248,6 +248,9 @@ static void RM_ParseMaterialVariable( MaterialPass *pass, char *line )
 	/* handle built-in variables */
 	switch ( pass->variables[ i ].varData.type )
 	{
+		default:
+			PrintWarn( "Unhandled variable type \"%d\"!\n", pass->variables[ i ].varData.type );
+			break;
 		case SCRIPT_VAR_BUILTIN:
 			pass->variables[ i ].varData.value.iVar = RM_GetBuiltInByTag( token );
 			if ( pass->variables[ i ].varData.value.iVar == -1 )
