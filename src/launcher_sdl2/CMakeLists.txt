@@ -6,7 +6,7 @@ project(launcher_sdl2)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(launcher_sdl2 launcher.c)
+add_executable(launcher_sdl2 WIN32 launcher.c)
 
 # Setup link libraries
 #[[
