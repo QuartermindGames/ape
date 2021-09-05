@@ -213,7 +213,7 @@ bool Menu_HandleKeyboardEvent( int key, OSInputState keyState )
 	if ( Game_GetMenuState() != MENU_STATE_START )
 		return false;
 
-	if ( keyState != INPUT_STATE_PRESSED )
+	if ( keyState != INPUT_STATE_NONE )
 		return false;
 
 	switch ( key )

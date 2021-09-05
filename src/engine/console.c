@@ -321,7 +321,7 @@ bool Con_HandleTextEvent( const char *key )
 
 bool Con_HandleKeyboardEvent( int key, unsigned int keyState )
 {
-	if ( keyState == INPUT_STATE_PRESSED && ( key == '`' || key == '~' ) )
+	if ( keyState == INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
 	{
 		ToggleConsole();
 		return true;

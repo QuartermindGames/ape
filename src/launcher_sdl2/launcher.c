@@ -251,6 +251,9 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown )
 		return;
 	}
 
+#if 1
+	keyStates[ key ] = isDown ? INPUT_STATE_DOWN : INPUT_STATE_NONE;
+#else
 	/* figure out what state the key is in now */
 	if ( keyStates[ key ] == INPUT_STATE_PRESSED && isDown )
 		keyStates[ key ] = INPUT_STATE_DOWN;
@@ -272,6 +275,7 @@ static void Sys_HandleKeyboardEvent( int key, bool isDown )
 			keyStates[ key ] = isDown ? INPUT_STATE_PRESSED : INPUT_STATE_RELEASED;
 			break;
 	}
+#endif
 
 	g_engine.KeyboardEvent( key, keyStates[ key ] );
 }
