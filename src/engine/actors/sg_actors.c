@@ -18,8 +18,13 @@
 
 #include "model.h"
 
+#define MODEL_SCALE 10.0f
+
 #define MAX_ASTEROID_MODELS 2
 static PLMModel *asteroidModels[ MAX_ASTEROID_MODELS ] = { NULL, NULL };
+
+static void Asteroid_SetScale( Actor *self, float scale );
+
 static PLMModel *projectileModel = NULL;
 
 static ASound *impactSound = NULL;
@@ -183,6 +188,32 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 				A_EmitSound( impactSound, 15 );
 			}
 
+			/* special logic for asteroids shoved in here,
+			 * so they break up if smashed into a *bigger*
+			 * asteroid */
+			if ( other->type == ACTOR_SG_ASTEROID )
+			{
+				if ( self->type == ACTOR_SG_PROJECTILE )
+				{
+					self->parent->score += 10;
+				}
+
+#if 0
+				if ( sg->scale > 1.0f )
+				{
+					for ( unsigned int i = 0; i < 3; ++i )
+					{
+						Actor *asteroid = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
+
+						Asteroid_SetScale( asteroid, sg->scale / 3.0f );
+
+						asteroid->position = other->position;
+						asteroid->collisionVolume.origin = asteroid->position;
+					}
+				}
+#endif
+			}
+
 			Act_DestroyActor( other );
 			return;
 		}
@@ -192,7 +223,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 		A_EmitSound( gameEndSound, 100 );
 	}
 
-	Monster_Collide( self, other, 2.0f + sg->scale );
+	Monster_Collide( self, other, 1.0f ); //2.0f + sg->scale );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -209,7 +240,7 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 
 		PlLoadIdentityMatrix();
 
-		PlScaleMatrix( PLVector3( 10.0f + sgActor->scale, 10.0f + sgActor->scale, 10.0f + sgActor->scale ) );
+		PlScaleMatrix( PLVector3( MODEL_SCALE + sgActor->scale, MODEL_SCALE + sgActor->scale, MODEL_SCALE + sgActor->scale ) );
 
 		float x = PlDegreesToRadians( self->angles.x - 90.0f );
 		PlRotateMatrix( x, 1.0f, 0.0f, 0.0f );
@@ -353,8 +384,6 @@ static void Ship_Destroy( Actor *self, void *userData )
 
 #define TURN_SPEED	 5.0f
 #define MAX_SPEED	 4.0f
-#define MAX_VELOCITY PLAYER_RUN_SPEED
-#define MIN_VELOCITY 0.5f
 
 static void Ship_Tick( Actor *self, void *userData )
 {
@@ -416,16 +445,18 @@ static void Ship_Tick( Actor *self, void *userData )
 		projectile->angles = self->angles;
 		projectile->angles.y += -90.0f;
 
+		projectile->parent = self;
+
 		A_EmitSound( fireSound, 50 );
 
 		sg->fireDelay = Engine_GetNumTicks() + 15;
 	}
 
-	static unsigned int scoreDelay = 0;
-	if ( self->health > 0 && scoreDelay < Engine_GetNumTicks() )
+	static unsigned int survivalScoreTimer = 0;
+	if ( self->health > 0 && survivalScoreTimer < Engine_GetNumTicks() )
 	{
 		self->score++;
-		scoreDelay = Engine_GetNumTicks() + 35;
+		survivalScoreTimer = Engine_GetNumTicks() + 145;
 	}
 }
 
@@ -436,15 +467,15 @@ static void Ship_Collide( Actor *self, Actor *other, void *userData )
 		return;
 	}
 
-	ASGActor *sgActor = self->userData;
-	if ( sgActor == NULL || other->type == ACTOR_SG_PROJECTILE || !sgActor->isSolid )
+	ASGActor *sg = self->userData;
+	if ( other->type == ACTOR_SG_PROJECTILE || !sg->isSolid )
 	{
 		return;
 	}
 
-	if ( sgActor->forwardVelocity > 0.0f )
+	if ( sg->forwardVelocity > 0.0f )
 	{
-		sgActor->forwardVelocity /= 2.0f;
+		sg->forwardVelocity /= 2.0f;
 	}
 
 	Monster_Collide( self, other, 20.0f );
@@ -465,21 +496,29 @@ const ActorSetup sg_actorShip = {
  * point.sg.asteroid
  ****************************************/
 
+static void Asteroid_SetScale( Actor *self, float scale )
+{
+	ASGActor *sg = Act_GetUserData( self );
+
+	sg->scale = scale;
+	scale += MODEL_SCALE;
+
+	self->collisionVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale );
+	self->collisionVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale );
+	self->visibilityVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale * 2.0f );
+	self->visibilityVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale * 2.0f );
+}
+
 static void Asteroid_Spawn( Actor *self )
 {
-	ASGActor *asteroid = SGActor_Generic_Spawn( self );
+	ASGActor *sg = SGActor_Generic_Spawn( self );
 
-	asteroid->isSolid = true;
-	asteroid->model = ( rand() % MAX_ASTEROID_MODELS == 0 ) ? asteroidModels[ 0 ] : asteroidModels[ 1 ];
-	asteroid->scale = PlGenerateRandomFloat( 30.0f );
+	sg->isSolid = true;
+	sg->model = ( rand() % MAX_ASTEROID_MODELS == 0 ) ? asteroidModels[ 0 ] : asteroidModels[ 1 ];
 
-	self->collisionVolume.mins = PlSubtractVector3F( self->collisionVolume.mins, asteroid->scale );
-	self->collisionVolume.maxs = PlAddVector3F( self->collisionVolume.maxs, asteroid->scale );
+	self->health = rand() % 15 + 1;
 
-	self->visibilityVolume.mins = PlSubtractVector3F( self->visibilityVolume.mins, asteroid->scale * 2.0f );
-	self->visibilityVolume.maxs = PlAddVector3F( self->visibilityVolume.maxs, asteroid->scale * 2.0f );
-
-	self->health = 25;
+	Asteroid_SetScale( self, self->health * 2 );
 
 	if ( asteroidManager != NULL )
 		asteroidManager->numAsteroids++;
@@ -487,6 +526,8 @@ static void Asteroid_Spawn( Actor *self )
 
 static void Asteroid_Tick( Actor *self, void *userData )
 {
+	//Asteroid_SetScale( self, self->health * 2 );
+
 	// Make the asteroid spin based on it's given velocity
 	PLVector3 spinAngles = PlAddVector3( Act_GetAngles( self ), Act_GetVelocity( self ) );
 	Act_SetAngles( self, &spinAngles );

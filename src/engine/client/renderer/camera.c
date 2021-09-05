@@ -64,7 +64,7 @@ void R_DrawPerspective( Camera *camera )
 	camera->internal->viewport.x = globalSystem.viewport->x;
 	camera->internal->viewport.y = globalSystem.viewport->y;
 
-	CVar( "graphics.superSampling", superSampling );
+	CVar( "r_superSampling", superSampling );
 	if ( superSampling != NULL && superSampling->i_value > 1 )
 	{
 		camera->internal->viewport.w *= superSampling->i_value;

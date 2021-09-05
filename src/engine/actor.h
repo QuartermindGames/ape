@@ -87,6 +87,8 @@ typedef struct Actor
 
 	struct SGNode *graphNode;
 
+	Actor *parent;
+
 	// temporary
 	int16_t health;
 	int16_t score;

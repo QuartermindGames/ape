@@ -190,7 +190,7 @@ static void R_DrawScreenBuffer( float x, float y, float w, float h )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	CVar( "graphics.fxaa", fxaaMode );
+	CVar( "r_fxaa", fxaaMode );
 	if ( fxaaMode->b_value )
 	{
 		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_POST_PROCESS ] );

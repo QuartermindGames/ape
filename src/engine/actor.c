@@ -148,14 +148,14 @@ void Act_DestroyActors( void )
 	{
 		PLLinkedListNode *next = PlGetNextLinkedListNode( node );
 		Actor *actor = PlGetLinkedListNodeUserData( node );
-		
-		if(actor != NULL)
+
+		if ( actor != NULL )
 		{
 			Act_DestroyActor( actor );
 		}
-		
-		PlDestroyLinkedListNode(actorList, node);
-		
+
+		PlDestroyLinkedListNode( actorList, node );
+
 		node = next;
 	}
 }
@@ -204,7 +204,7 @@ void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector
 	{
 		PrintError( "Invalid visibility volume for actor (mins %s, maxs %s)!\n", PlPrintVector3( mins, pl_int_var ), PlPrintVector3( maxs, pl_int_var ) );
 	}
-	
+
 	self->visibilityVolume.maxs = *maxs;
 	self->visibilityVolume.mins = *mins;
 }
@@ -298,49 +298,53 @@ void Act_DrawActors( void )
 				actor->setup.Draw( actor, actor->userData );
 		}
 
-#if 0
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-
-		PLColour boxColour;
-		if ( Act_IsVisible( actor ) )
+#if 1
+		CVar( "r_showActorBounds", showActorBounds );
+		if ( showActorBounds->b_value )
 		{
-			boxColour = PL_COLOUR_GREEN;
-		}
-		else
-		{
-			boxColour = PL_COLOUR_RED;
-		}
+			PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 
-		PlgDrawBoundingVolume( &actor->visibilityVolume, boxColour );
-		PlgDrawBoundingVolume( &actor->collisionVolume, PL_COLOUR_WHITE );
-
-		PlgDrawBoundingVolume( &PlSetupCollisionAABB( actor->position, PLVector3( -8.0f, -8.0f, -8.0f ), PLVector3( 8.0f, 8.0f, 8.0f ) ), PL_COLOUR_BLUE );
-
-#if 0
-		PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
-		while ( colliderNode != NULL )
-		{
-			MapFace *face = PlGetLinkedListNodeUserData( colliderNode );
-
-			PLCollisionPlane plane	   = PlSetupCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
-			PLCollision		 collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( absOrigin, 16.0f ), &plane );
-			if ( collision.penetration > 0.0f )
+			PLColour boxColour;
+			if ( Act_IsVisible( actor ) )
 			{
-				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
-
-				R_DrawAxesPivot( collision.contactPoint, plane.normal );
-
-				PLMatrix4 transform = PlMatrix4Identity();
-				PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
-				PlgDrawSimpleLine( transform, actor->bounds.origin, collision.contactPoint, PLColour( 0, 255, 0, 255 ) );
+				boxColour = PL_COLOUR_GREEN;
 			}
 			else
-				PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_GREEN );
+			{
+				boxColour = PL_COLOUR_RED;
+			}
 
-			colliderNode = PlGetNextLinkedListNode( colliderNode );
+			PlgDrawBoundingVolume( &actor->visibilityVolume, boxColour );
+			PlgDrawBoundingVolume( &actor->collisionVolume, PL_COLOUR_WHITE );
+
+			PlgDrawBoundingVolume( &PlSetupCollisionAABB( actor->position, PLVector3( -8.0f, -8.0f, -8.0f ), PLVector3( 8.0f, 8.0f, 8.0f ) ), PL_COLOUR_BLUE );
+
+#	if 0
+			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
+			while ( colliderNode != NULL )
+			{
+				MapFace *face = PlGetLinkedListNodeUserData( colliderNode );
+
+				PLCollisionPlane plane	   = PlSetupCollisionPlane( face->bounds.absOrigin, PlgGetPolygonFaceNormal( face->polygon ) );
+				PLCollision		 collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( absOrigin, 16.0f ), &plane );
+				if ( collision.penetration > 0.0f )
+				{
+					PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_RED );
+
+					R_DrawAxesPivot( collision.contactPoint, plane.normal );
+
+					PLMatrix4 transform = PlMatrix4Identity();
+					PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
+					PlgDrawSimpleLine( transform, actor->bounds.origin, collision.contactPoint, PLColour( 0, 255, 0, 255 ) );
+				}
+				else
+					PlgDrawBoundingVolume( &face->bounds, PL_COLOUR_GREEN );
+
+				colliderNode = PlGetNextLinkedListNode( colliderNode );
+			}
+#	endif
+#endif
 		}
-#endif
-#endif
 
 		index = next;
 	}
@@ -361,9 +365,9 @@ void Act_TickActors( void *userData, double delta )
 		Actor *actor = PlGetLinkedListNodeUserData( index );
 		if ( actor == NULL )
 		{
-			PlDestroyLinkedListNode(actorList, index);
+			PlDestroyLinkedListNode( actorList, index );
 			index = next;
-			
+
 			continue;
 		}
 
@@ -405,7 +409,7 @@ void Act_TickActors( void *userData, double delta )
 			{
 				actor->setup.Collide( actor, collider, actor->userData );
 
-				if(PlGetLinkedListNodeUserData( index ) == NULL)
+				if ( PlGetLinkedListNodeUserData( index ) == NULL )
 				{
 					/* Actor was destroyed by collision. */
 					continue;
@@ -491,15 +495,15 @@ void Act_Shutdown( void )
 	while ( node != NULL )
 	{
 		PLLinkedListNode *next = PlGetNextLinkedListNode( node );
-		
+
 		Actor *actor = PlGetLinkedListNodeUserData( node );
-		if(actor != NULL)
+		if ( actor != NULL )
 		{
 			Act_DestroyActor( actor );
 		}
-		
-		PlDestroyLinkedListNode(actorList, node);
-		
+
+		PlDestroyLinkedListNode( actorList, node );
+
 		node = next;
 	}
 
