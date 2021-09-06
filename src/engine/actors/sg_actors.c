@@ -176,18 +176,22 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	int oldHealth = other->health;
 	if ( other->health > 0 )
 	{
-		other->health -= damageAmount;
+		if ( other->type == ACTOR_SG_SHIP )
+		{
+			other->health -= damageAmount;
+			A_EmitSound( impactSound, 45 );
+		}
+		else if ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_ASTEROID )
+		{
+			other->health -= 10;
+			A_EmitSound( impactSound, 35 );
+		}
 	}
 
 	if ( other->type != ACTOR_SG_SHIP )
 	{
 		if ( other->health <= 0 )
 		{
-			if ( Act_IsVisible( other ) )
-			{
-				A_EmitSound( impactSound, 15 );
-			}
-
 			/* special logic for asteroids shoved in here,
 			 * so they break up if smashed into a *bigger*
 			 * asteroid */
@@ -223,7 +227,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 		A_EmitSound( gameEndSound, 100 );
 	}
 
-	Monster_Collide( self, other, 1.0f ); //2.0f + sg->scale );
+	Monster_Collide( self, other, 2.0f ); //2.0f + sg->scale );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -297,6 +301,9 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
 		PrintWarn( "Failed to load model, \"%s\", for actor!\n", path );
 		return;
 	}
+
+	sgActor->model->bounds.mins = PlSubtractVector3F( sgActor->model->bounds.mins, MODEL_SCALE );
+	sgActor->model->bounds.maxs = PlAddVector3F( sgActor->model->bounds.maxs, MODEL_SCALE );
 
 	Act_SetBounds( self, sgActor->model->bounds.mins, sgActor->model->bounds.maxs );
 	Act_SetVisibilityVolume( self, &sgActor->model->bounds.mins, &sgActor->model->bounds.maxs );
@@ -449,7 +456,7 @@ static void Ship_Tick( Actor *self, void *userData )
 
 		A_EmitSound( fireSound, 50 );
 
-		sg->fireDelay = Engine_GetNumTicks() + 15;
+		sg->fireDelay = Engine_GetNumTicks() + 25;
 	}
 
 	static unsigned int survivalScoreTimer = 0;
@@ -501,12 +508,15 @@ static void Asteroid_SetScale( Actor *self, float scale )
 	ASGActor *sg = Act_GetUserData( self );
 
 	sg->scale = scale;
-	scale += MODEL_SCALE;
+	//scale += MODEL_SCALE;
 
-	self->collisionVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale );
-	self->collisionVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale );
-	self->visibilityVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale * 2.0f );
-	self->visibilityVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale * 2.0f );
+	//sg->model->bounds.mins = PlSubtractVector3F( sg->model->bounds.mins, scale );
+	//sg->model->bounds.maxs = PlAddVector3F( sg->model->bounds.maxs, scale );
+
+	self->collisionVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale + MODEL_SCALE );
+	self->collisionVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale + MODEL_SCALE );
+	self->visibilityVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale + MODEL_SCALE * 4.0f );
+	self->visibilityVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale + MODEL_SCALE * 4.0f );
 }
 
 static void Asteroid_Spawn( Actor *self )
@@ -526,8 +536,6 @@ static void Asteroid_Spawn( Actor *self )
 
 static void Asteroid_Tick( Actor *self, void *userData )
 {
-	//Asteroid_SetScale( self, self->health * 2 );
-
 	// Make the asteroid spin based on it's given velocity
 	PLVector3 spinAngles = PlAddVector3( Act_GetAngles( self ), Act_GetVelocity( self ) );
 	Act_SetAngles( self, &spinAngles );
@@ -539,13 +547,13 @@ static void Asteroid_Tick( Actor *self, void *userData )
 	GameDifficulty difficulty = Game_GetDifficultyMode();
 	if ( difficulty == GAME_DIFFICULTY_HARD )
 	{
-		x = -4.0f;
-		y = 4.0f;
+		x = -5.0f;
+		y = 5.0f;
 	}
 	else
 	{
-		x = -2.0f;
-		y = 2.0f;
+		x = -3.0f;
+		y = 3.0f;
 	}
 
 	self->velocity = PlClampVector3( &self->velocity, x, y );
