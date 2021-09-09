@@ -13,6 +13,7 @@ typedef struct Camera Camera;
 typedef enum PSParticleDrawType
 {
 	PS_DRAW_SPRITE,
+	PS_DRAW_TRAIL,
 	PS_DRAW_MODEL,
 } PSParticleDrawType;
 
@@ -34,6 +35,8 @@ typedef struct PSEmitter
 	/* particle colour */
 	PLColourF32 startColour, startColourVar;
 	PLColourF32 endColour, endColourVar;
+
+	PSParticleDrawType drawType;
 
 	float startScale, endScale, scaleVar;
 
@@ -72,7 +75,7 @@ void PS_Initialize( void );
 void PS_Shutdown( void );
 
 void	   PS_CacheEmitterTemplate( const char *path );
-PSEmitter *PS_SpawnEmitter( void );
+PSEmitter *PS_SpawnEmitter( PSParticleDrawType drawType );
 void	   PS_DestroyEmitter( PSEmitter *emitter );
 
 void PS_TickEmitter( PSEmitter *emitter );

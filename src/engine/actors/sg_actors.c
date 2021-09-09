@@ -75,6 +75,7 @@ typedef struct ASGActor
 	unsigned int fireDelay;
 
 	bool isSolid;
+	bool shouldDraw;
 } ASGActor;
 
 typedef struct AsteroidManager
@@ -114,10 +115,12 @@ static void SGActor_Generic_Wrap( Actor *self )
 
 static ASGActor *SGActor_Generic_Spawn( Actor *self )
 {
-	ASGActor *sgActor = globalSystem.MAlloc( sizeof( ASGActor ), true );
-	Act_SetUserData( self, sgActor );
+	ASGActor *sg = globalSystem.MAlloc( sizeof( ASGActor ), true );
+	Act_SetUserData( self, sg );
 
-	return sgActor;
+	sg->shouldDraw = true;
+
+	return sg;
 }
 
 static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf )
@@ -227,7 +230,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 		A_EmitSound( gameEndSound, 100 );
 	}
 
-	Monster_Collide( self, other, 2.0f ); //2.0f + sg->scale );
+	Monster_Collide( self, other, 2.0f );//2.0f + sg->scale );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -236,15 +239,15 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 	if ( camera == NULL )
 		return;
 
-	ASGActor *sgActor = userData;
-	if ( sgActor->model != NULL )
+	ASGActor *sg = userData;
+	if ( sg->model != NULL && sg->shouldDraw )
 	{
 		PlMatrixMode( PL_MODELVIEW_MATRIX );
 		PlPushMatrix();
 
 		PlLoadIdentityMatrix();
 
-		PlScaleMatrix( PLVector3( MODEL_SCALE + sgActor->scale, MODEL_SCALE + sgActor->scale, MODEL_SCALE + sgActor->scale ) );
+		PlScaleMatrix( PLVector3( MODEL_SCALE + sg->scale, MODEL_SCALE + sg->scale, MODEL_SCALE + sg->scale ) );
 
 		float x = PlDegreesToRadians( self->angles.x - 90.0f );
 		PlRotateMatrix( x, 1.0f, 0.0f, 0.0f );
@@ -255,26 +258,26 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 
 		PlTranslateMatrix( Act_GetPosition( self ) );
 
-		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i )
+		for ( unsigned int i = 0; i < sg->model->numMeshes; ++i )
 		{
-			MDLUserData *modelData = sgActor->model->userData;
-			RM_DrawMesh( modelData->materials[ i ], sgActor->model->meshes[ i ] );
+			MDLUserData *modelData = sg->model->userData;
+			RM_DrawMesh( modelData->materials[ i ], sg->model->meshes[ i ] );
 		}
 
 		PlPopMatrix();
 	}
 
-	if ( sgActor->particleEmitter != NULL )
+	if ( sg->particleEmitter != NULL )
 	{
-		PS_Draw( sgActor->particleEmitter, camera );
+		PS_Draw( sg->particleEmitter, camera );
 	}
-	if ( sgActor->emitRight != NULL )
+	if ( sg->emitRight != NULL )
 	{
-		PS_Draw( sgActor->emitRight, camera );
+		PS_Draw( sg->emitRight, camera );
 	}
-	if ( sgActor->emitLeft != NULL )
+	if ( sg->emitLeft != NULL )
 	{
-		PS_Draw( sgActor->emitLeft, camera );
+		PS_Draw( sg->emitLeft, camera );
 	}
 }
 
@@ -330,7 +333,7 @@ static void Ship_Spawn( Actor *self )
 	self->health = 100;
 	self->movementType = ACTOR_MOVEMENT_PHYSICS;
 
-	ship->particleEmitter = PS_SpawnEmitter();
+	ship->particleEmitter = PS_SpawnEmitter( PS_DRAW_SPRITE );
 	ship->particleEmitter->emissionRate = 0;
 	ship->particleEmitter->emissionVar = 0;
 	ship->particleEmitter->speed = 2;
@@ -339,14 +342,13 @@ static void Ship_Spawn( Actor *self )
 	ship->particleEmitter->particleLifeVar = 1;
 	ship->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
 	ship->particleEmitter->startColour = PlColourF32( 1.0f, 0.5f, 0.5f, 1.0f );
-	//ship->particleEmitter->startColourVar			= PlColourF32( 0.02f, 0.05f, 0.1f, 0.0f );
 	ship->particleEmitter->endColour = PlColourF32( 1.0f, 0.2f, 0.2f, 0.0f );
 	ship->particleEmitter->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->particleEmitter->transform.translation = Act_GetPosition( self );
 	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->particleEmitter->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
 
-	ship->emitLeft = PS_SpawnEmitter();
+	ship->emitLeft = PS_SpawnEmitter( PS_DRAW_TRAIL );
 	ship->emitLeft->emissionRate = 4;
 	ship->emitLeft->emissionVar = 0;
 	ship->emitLeft->speed = 2;
@@ -361,7 +363,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitLeft->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
 
-	ship->emitRight = PS_SpawnEmitter();
+	ship->emitRight = PS_SpawnEmitter( PS_DRAW_TRAIL );
 	ship->emitRight->emissionRate = 4;
 	ship->emitRight->emissionVar = 0;
 	ship->emitRight->speed = 2;
@@ -389,8 +391,9 @@ static void Ship_Destroy( Actor *self, void *userData )
 	SGActor_Generic_Destroy( self, userData );
 }
 
-#define TURN_SPEED	 5.0f
-#define MAX_SPEED	 4.0f
+#define TURN_SPEED	5.0f
+#define MAX_SPEED	4.0f
+#define ACCEL_SPEED 0.0055f
 
 static void Ship_Tick( Actor *self, void *userData )
 {
@@ -413,6 +416,7 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	if ( self->health <= 0 )
 	{
+		sg->shouldDraw = false;
 		return;
 	}
 
@@ -423,7 +427,7 @@ static void Ship_Tick( Actor *self, void *userData )
 			  globalSystem.GetKeyState( 'd' ) )
 		self->angles.y -= TURN_SPEED;
 
-	static const float incAmount = 0.0015f;
+	static const float incAmount = ACCEL_SPEED;
 
 	if ( globalSystem.GetKeyState( KEY_UP ) ||
 		 globalSystem.GetKeyState( 'w' ) )

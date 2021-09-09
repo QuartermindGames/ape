@@ -110,15 +110,18 @@ PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 	return emitter;
 }
 
-PSEmitter *PS_SpawnEmitter( void )
+PSEmitter *PS_SpawnEmitter( PSParticleDrawType drawType )
 {
 	PSEmitter *emitter = globalSystem.MAlloc( sizeof( PSEmitter ), true );
 	emitter->particles = PlCreateLinkedList();
 
-	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
+	emitter->mesh = PlgCreateMesh( drawType == PS_DRAW_TRAIL ? PLG_MESH_TRIANGLE_STRIP : PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 1000, 1000 );
 	if ( emitter->mesh == NULL )
+	{
 		PrintError( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
+	}
 
+	emitter->drawType = drawType;
 	emitter->startScale = 10.0f;
 	emitter->endScale	= 0.0f;
 
@@ -279,21 +282,36 @@ void PS_Draw( const PSEmitter *emitter, const Camera *camera )
 	{
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
 
-		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
-
 		float x = particle->transform.translation.x;
 		float y = particle->transform.translation.y;
 		float z = particle->transform.translation.z;
 
 		PLColour colour = PlColourF32ToU8( &particle->colour );
 
-		unsigned int a = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 0.0f ) );
-		unsigned int b = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 1.0f ) );
-		//unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
-		//unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
+		switch( emitter->drawType )
+		{
+			case PS_DRAW_SPRITE:
+			{
+				unsigned int a = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 0.0f ) );
+				unsigned int b = PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 1.0f ) );
+				unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
+				unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
 
-		//PlgAddMeshTriangle( emitter->mesh, a, b, c );
-		//PlgAddMeshTriangle( emitter->mesh, c, b, d );
+				PlgAddMeshTriangle( emitter->mesh, a, b, c );
+				PlgAddMeshTriangle( emitter->mesh, c, b, d );
+				break;
+			}
+			case PS_DRAW_TRAIL:
+			{
+				PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 0.0f ) );
+				PlgAddMeshVertex( emitter->mesh, PLVector3( x - particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 0.0f, 1.0f ) );
+				break;
+			}
+			case PS_DRAW_MODEL:
+			{
+				break;
+			}
+		}
 
 		node = PlGetNextLinkedListNode( node );
 	}

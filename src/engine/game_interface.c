@@ -114,7 +114,7 @@ void Game_SetupWorldProperties( World *world )
 		}
 	}
 
-	gameRestartCountdown = 100;
+	gameRestartCountdown = 200;
 }
 
 void Game_SpawnWorld( const char *worldPath )
