@@ -75,15 +75,17 @@ static Menu *currentMenu = &mainMenu;
 
 static Menu newGameMenu;
 static Menu settingsMenu;
+static Menu creditsMenu;
 static Menu quitMenu;
 static Menu mainMenu = {
 		"MAIN MENU",
 		{
 				{ "START GAME", &newGameMenu, NULL },
 				{ "SETTINGS", &settingsMenu, NULL },
+				{ "CREDITS", &creditsMenu, NULL },
 				{ "QUIT", &quitMenu, NULL },
 		},
-		3,
+		4,
 };
 
 static void Menu_CB_StartGame( void )
@@ -161,6 +163,20 @@ static Menu settingsMenu = {
 				{ "BACK...", &mainMenu },
 		},
 		2,
+};
+
+// Credits Menu
+
+static Menu creditsMenu = {
+		"CREDITS",
+		{
+			{ "CREATED BY", NULL, NULL },
+			{ "  MARK SOWDEN", NULL, NULL },
+			{ "SPECIAL THANKS", NULL, NULL },
+			{ "  DANIEL COLLINS", NULL, NULL },
+			{ "BACK...", &mainMenu },
+		},
+		5,
 };
 
 // Quit Menu

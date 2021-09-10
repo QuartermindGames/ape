@@ -35,7 +35,7 @@ static ASound *gameStartSound = NULL;
 
 void SG_PrecacheData( void )
 {
-	asteroidModels[ 0 ] = PlmLoadModel( "models/asteroid_00.node" );
+	asteroidModels[ 0 ] = PlmLoadModel( "models/asteroid_01.node" );
 	asteroidModels[ 1 ] = PlmLoadModel( "models/asteroid_01.node" );
 
 	projectileModel = PlmLoadModel( "models/projectile.node" );
@@ -152,6 +152,11 @@ static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf
 
 static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 {
+	if ( other->health <= 0 )
+	{
+		return;
+	}
+
 	ASGActor *sg = self->userData;
 	if ( sg == NULL )
 	{
@@ -182,12 +187,12 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 		if ( other->type == ACTOR_SG_SHIP )
 		{
 			other->health -= damageAmount;
-			A_EmitSound( impactSound, 45 );
+			A_EmitSound( impactSound, 25 );
 		}
 		else if ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_ASTEROID )
 		{
 			other->health -= 10;
-			A_EmitSound( impactSound, 35 );
+			A_EmitSound( impactSound, 15 );
 		}
 	}
 
@@ -202,7 +207,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 			{
 				if ( self->type == ACTOR_SG_PROJECTILE )
 				{
-					self->parent->score += 10;
+					self->parent->score += 5;
 				}
 
 #if 0
@@ -305,19 +310,19 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
 		return;
 	}
 
-	sgActor->model->bounds.mins = PlSubtractVector3F( sgActor->model->bounds.mins, MODEL_SCALE );
-	sgActor->model->bounds.maxs = PlAddVector3F( sgActor->model->bounds.maxs, MODEL_SCALE );
+	PLVector3 mins = PlSubtractVector3F( sgActor->model->bounds.mins, MODEL_SCALE );
+	PLVector3 maxs = PlAddVector3F( sgActor->model->bounds.maxs, MODEL_SCALE );
 
-	Act_SetBounds( self, sgActor->model->bounds.mins, sgActor->model->bounds.maxs );
-	Act_SetVisibilityVolume( self, &sgActor->model->bounds.mins, &sgActor->model->bounds.maxs );
+	Act_SetBounds( self, mins, maxs );
+	Act_SetVisibilityVolume( self, &mins, &maxs );
 }
 
 /****************************************
  * point.sg.ship
  ****************************************/
 
-#define SHIP_BOUNDS_MAXS PLVector3( 16.0f, 90.0f, 16.0f )
-#define SHIP_BOUNDS_MINS PLVector3( -16.0f, 0.0f, -16.0f )
+#define SHIP_BOUNDS_MAXS PLVector3( 25.0f, 25.0f, 25.0f )
+#define SHIP_BOUNDS_MINS PLVector3( -25.0f, -25.0f, -25.0f )
 
 #define SHIP_MAX_PARTICLES 100
 
@@ -326,9 +331,9 @@ static void Ship_Spawn( Actor *self )
 	ASGActor *ship = SGActor_Generic_Spawn( self );
 	ship->isSolid = true;
 
-	Act_SetBounds( self, SHIP_BOUNDS_MINS, SHIP_BOUNDS_MAXS );
-
 	SGActor_Generic_SetModel( self, "models/player_ship.node" );
+
+	Act_SetBounds( self, SHIP_BOUNDS_MINS, SHIP_BOUNDS_MAXS );
 
 	self->health = 100;
 	self->movementType = ACTOR_MOVEMENT_PHYSICS;
@@ -381,6 +386,8 @@ static void Ship_Spawn( Actor *self )
 	Camera *camera = R_GetGlobalCamera();
 	camera->followMode = CAMERA_MODE_TOPDOWN;
 	camera->parentActor = self;
+
+	A_EmitSound( gameStartSound, 100 );
 }
 
 static void Ship_Destroy( Actor *self, void *userData )
@@ -401,6 +408,7 @@ static void Ship_Tick( Actor *self, void *userData )
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 
 	ASGActor *sg = userData;
+
 	if ( PlVector3Length( self->velocity ) <= 1.0f )
 	{
 		sg->emitLeft->maxParticles = 0;
@@ -458,9 +466,9 @@ static void Ship_Tick( Actor *self, void *userData )
 
 		projectile->parent = self;
 
-		A_EmitSound( fireSound, 50 );
+		A_EmitSound( fireSound, 15 );
 
-		sg->fireDelay = Engine_GetNumTicks() + 25;
+		sg->fireDelay = Engine_GetNumTicks() + 15;
 	}
 
 	static unsigned int survivalScoreTimer = 0;
@@ -512,15 +520,15 @@ static void Asteroid_SetScale( Actor *self, float scale )
 	ASGActor *sg = Act_GetUserData( self );
 
 	sg->scale = scale;
-	//scale += MODEL_SCALE;
+	scale += MODEL_SCALE;
 
-	//sg->model->bounds.mins = PlSubtractVector3F( sg->model->bounds.mins, scale );
-	//sg->model->bounds.maxs = PlAddVector3F( sg->model->bounds.maxs, scale );
+	PLVector3 mins = PlSubtractVector3F( sg->model->bounds.mins, scale );
+	PLVector3 maxs = PlAddVector3F( sg->model->bounds.maxs, scale );
+	Act_SetBounds( self, mins, maxs );
 
-	self->collisionVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale + MODEL_SCALE );
-	self->collisionVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale + MODEL_SCALE );
-	self->visibilityVolume.mins = PlSubtractVector3F( sg->model->bounds.mins, scale + MODEL_SCALE * 4.0f );
-	self->visibilityVolume.maxs = PlAddVector3F( sg->model->bounds.maxs, scale + MODEL_SCALE * 4.0f );
+	mins = PlSubtractVector3F( sg->model->bounds.mins, scale * 4.0f );
+	maxs = PlAddVector3F( sg->model->bounds.maxs, scale * 4.0f );
+	Act_SetVisibilityVolume( self, &mins, &maxs );
 }
 
 static void Asteroid_Spawn( Actor *self )

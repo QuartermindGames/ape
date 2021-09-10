@@ -27,9 +27,8 @@ void Monster_Collide( struct Actor *self, struct Actor *other, float force )
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
 	float length = PlVector3Length( pushDir );
-	pushDir = PlScaleVector3F( pushDir, ( length / 10000.0f ) * force );
+	pushDir = PlScaleVector3F( pushDir, length / ( 10000.0f / force ) );
 	other->velocity = PlAddVector3( other->velocity, pushDir );
-	//Act_SetVelocity( other, &pushDir );
 }
 
 static ActorSetup actorDefault = {

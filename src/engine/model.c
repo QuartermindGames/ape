@@ -175,6 +175,7 @@ PLMModel *MDL_DeserializeModel( NLNode *root )
 	}
 
 	PLMModel *model = PlmCreateStaticModel( meshes, numMeshes );
+	PlmGenerateModelBounds( model );
 
 	model->userData							   = globalSystem.MAlloc( sizeof( MDLUserData ), true );
 	*( ( MDLUserData * ) ( model->userData ) ) = userData;
