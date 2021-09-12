@@ -737,7 +737,7 @@ static void Projectile_Collide( Actor *self, Actor *other, void *userData )
 		return;
 	}
 
-	other->health -= 10;
+	other->health -= 1000;
 	if ( other->type == ACTOR_SG_ASTEROID )
 	{
 		/* only provide additional score if the target was actually destroyed */
