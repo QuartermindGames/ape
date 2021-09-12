@@ -313,6 +313,8 @@ void Act_DrawActors( void )
 				boxColour = PL_COLOUR_RED;
 			}
 
+			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
 			PlgDrawBoundingVolume( &actor->visibilityVolume, boxColour );
 			PlgDrawBoundingVolume( &actor->collisionVolume, PL_COLOUR_WHITE );
 
@@ -343,6 +345,8 @@ void Act_DrawActors( void )
 			}
 #	endif
 #endif
+
+			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 		}
 
 		index = next;

@@ -35,8 +35,16 @@ static ASound *gameStartSound = NULL;
 
 void SG_PrecacheData( void )
 {
-	asteroidModels[ 0 ] = PlmLoadModel( "models/asteroid_01.node" );
+	asteroidModels[ 0 ] = PlmLoadModel( "models/asteroid_00.node" );
 	asteroidModels[ 1 ] = PlmLoadModel( "models/asteroid_01.node" );
+
+	/* !!hack hack!!
+	 * bounds are not being calculated correctly for asteroid_00,
+	 * but bouth are roughly the same size. to work around this
+	 * we'll just reuse the bounds from asteroid_01 for asteroid_00.
+	 */
+	asteroidModels[ 0 ]->bounds.mins = PlSubtractVector3F( asteroidModels[ 0 ]->bounds.mins, 14.0f );
+	asteroidModels[ 0 ]->bounds.maxs = PlAddVector3F( asteroidModels[ 0 ]->bounds.maxs, 14.0f );
 
 	projectileModel = PlmLoadModel( "models/projectile.node" );
 
@@ -71,6 +79,8 @@ typedef struct ASGActor
 	PLVector3 spawnAngles;
 
 	PLVector3 variance;
+
+	int16_t oldHealth;
 
 	unsigned int fireDelay;
 
@@ -166,76 +176,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	if ( ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_SHIP ) || !sg->isSolid )
 		return;
 
-	int damageAmount;
-	switch ( Game_GetDifficultyMode() )
-	{
-		default:
-		case GAME_DIFFICULTY_NORMAL:
-			damageAmount = 8;
-			break;
-		case GAME_DIFFICULTY_EASY:
-			damageAmount = 2;
-			break;
-		case GAME_DIFFICULTY_HARD:
-			damageAmount = 15;
-			break;
-	}
-
-	int oldHealth = other->health;
-	if ( other->health > 0 )
-	{
-		if ( other->type == ACTOR_SG_SHIP )
-		{
-			other->health -= damageAmount;
-			A_EmitSound( impactSound, 25 );
-		}
-		else if ( self->type == ACTOR_SG_PROJECTILE && other->type == ACTOR_SG_ASTEROID )
-		{
-			other->health -= 10;
-			A_EmitSound( impactSound, 15 );
-		}
-	}
-
-	if ( other->type != ACTOR_SG_SHIP )
-	{
-		if ( other->health <= 0 )
-		{
-			/* special logic for asteroids shoved in here,
-			 * so they break up if smashed into a *bigger*
-			 * asteroid */
-			if ( other->type == ACTOR_SG_ASTEROID )
-			{
-				if ( self->type == ACTOR_SG_PROJECTILE )
-				{
-					self->parent->score += 5;
-				}
-
-#if 0
-				if ( sg->scale > 1.0f )
-				{
-					for ( unsigned int i = 0; i < 3; ++i )
-					{
-						Actor *asteroid = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
-
-						Asteroid_SetScale( asteroid, sg->scale / 3.0f );
-
-						asteroid->position = other->position;
-						asteroid->collisionVolume.origin = asteroid->position;
-					}
-				}
-#endif
-			}
-
-			Act_DestroyActor( other );
-			return;
-		}
-	}
-	else if ( oldHealth > 0 && other->health <= 0 )
-	{
-		A_EmitSound( gameEndSound, 100 );
-	}
-
-	Monster_Collide( self, other, 2.0f );//2.0f + sg->scale );
+	Monster_Collide( self, other, 2.0f );
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
@@ -328,60 +269,61 @@ static void SGActor_Generic_SetModel( Actor *self, const char *path )
 
 static void Ship_Spawn( Actor *self )
 {
-	ASGActor *ship = SGActor_Generic_Spawn( self );
-	ship->isSolid = true;
+	ASGActor *sg = SGActor_Generic_Spawn( self );
+	sg->isSolid = true;
 
 	SGActor_Generic_SetModel( self, "models/player_ship.node" );
 
 	Act_SetBounds( self, SHIP_BOUNDS_MINS, SHIP_BOUNDS_MAXS );
 
 	self->health = 100;
+	sg->oldHealth = self->health;
 	self->movementType = ACTOR_MOVEMENT_PHYSICS;
 
-	ship->particleEmitter = PS_SpawnEmitter( PS_DRAW_SPRITE );
-	ship->particleEmitter->emissionRate = 0;
-	ship->particleEmitter->emissionVar = 0;
-	ship->particleEmitter->speed = 2;
-	ship->particleEmitter->speedVar = 5;
-	ship->particleEmitter->particleLife = 2;
-	ship->particleEmitter->particleLifeVar = 1;
-	ship->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
-	ship->particleEmitter->startColour = PlColourF32( 1.0f, 0.5f, 0.5f, 1.0f );
-	ship->particleEmitter->endColour = PlColourF32( 1.0f, 0.2f, 0.2f, 0.0f );
-	ship->particleEmitter->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
-	ship->particleEmitter->transform.translation = Act_GetPosition( self );
-	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->particleEmitter->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
+	sg->particleEmitter = PS_SpawnEmitter( PS_DRAW_SPRITE );
+	sg->particleEmitter->emissionRate = 0;
+	sg->particleEmitter->emissionVar = 0;
+	sg->particleEmitter->speed = 2;
+	sg->particleEmitter->speedVar = 5;
+	sg->particleEmitter->particleLife = 2;
+	sg->particleEmitter->particleLifeVar = 1;
+	sg->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
+	sg->particleEmitter->startColour = PlColourF32( 1.0f, 0.5f, 0.5f, 1.0f );
+	sg->particleEmitter->endColour = PlColourF32( 1.0f, 0.2f, 0.2f, 0.0f );
+	sg->particleEmitter->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
+	sg->particleEmitter->transform.translation = Act_GetPosition( self );
+	sg->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	sg->particleEmitter->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
 
-	ship->emitLeft = PS_SpawnEmitter( PS_DRAW_TRAIL );
-	ship->emitLeft->emissionRate = 4;
-	ship->emitLeft->emissionVar = 0;
-	ship->emitLeft->speed = 2;
-	ship->emitLeft->speedVar = 5;
-	ship->emitLeft->particleLife = 2;
-	ship->emitLeft->particleLifeVar = 1;
-	ship->emitLeft->maxParticles = SHIP_MAX_PARTICLES;
-	ship->emitLeft->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
-	ship->emitLeft->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
-	ship->emitLeft->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
-	ship->emitLeft->transform.translation = Act_GetPosition( self );
-	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitLeft->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
+	sg->emitLeft = PS_SpawnEmitter( PS_DRAW_TRAIL );
+	sg->emitLeft->emissionRate = 4;
+	sg->emitLeft->emissionVar = 0;
+	sg->emitLeft->speed = 2;
+	sg->emitLeft->speedVar = 5;
+	sg->emitLeft->particleLife = 2;
+	sg->emitLeft->particleLifeVar = 1;
+	sg->emitLeft->maxParticles = SHIP_MAX_PARTICLES;
+	sg->emitLeft->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
+	sg->emitLeft->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
+	sg->emitLeft->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
+	sg->emitLeft->transform.translation = Act_GetPosition( self );
+	sg->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	sg->emitLeft->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
 
-	ship->emitRight = PS_SpawnEmitter( PS_DRAW_TRAIL );
-	ship->emitRight->emissionRate = 4;
-	ship->emitRight->emissionVar = 0;
-	ship->emitRight->speed = 2;
-	ship->emitRight->speedVar = 5;
-	ship->emitRight->particleLife = 2;
-	ship->emitRight->particleLifeVar = 1;
-	ship->emitRight->maxParticles = SHIP_MAX_PARTICLES;
-	ship->emitRight->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
-	ship->emitRight->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
-	ship->emitRight->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
-	ship->emitRight->transform.translation = Act_GetPosition( self );
-	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitRight->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
+	sg->emitRight = PS_SpawnEmitter( PS_DRAW_TRAIL );
+	sg->emitRight->emissionRate = 4;
+	sg->emitRight->emissionVar = 0;
+	sg->emitRight->speed = 2;
+	sg->emitRight->speedVar = 5;
+	sg->emitRight->particleLife = 2;
+	sg->emitRight->particleLifeVar = 1;
+	sg->emitRight->maxParticles = SHIP_MAX_PARTICLES;
+	sg->emitRight->startColour = PlColourF32( 1.0f, 1.0f, 1.0f, 1.0f );
+	sg->emitRight->endColour = PlColourF32( 0.2f, 0.2f, 0.2f, 0.0f );
+	sg->emitRight->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
+	sg->emitRight->transform.translation = Act_GetPosition( self );
+	sg->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	sg->emitRight->material = RM_CacheMaterial( "materials/effects/particle.mat", CACHE_GROUP_WORLD, true );
 
 	Camera *camera = R_GetGlobalCamera();
 	camera->followMode = CAMERA_MODE_TOPDOWN;
@@ -424,6 +366,11 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	if ( self->health <= 0 )
 	{
+		if ( sg->oldHealth > 0 )
+		{
+			A_EmitSound( gameEndSound, 100 );
+			sg->oldHealth = 0;
+		}
 		sg->shouldDraw = false;
 		return;
 	}
@@ -497,6 +444,24 @@ static void Ship_Collide( Actor *self, Actor *other, void *userData )
 		sg->forwardVelocity /= 2.0f;
 	}
 
+	int damageAmount;
+	switch ( Game_GetDifficultyMode() )
+	{
+		default:
+		case GAME_DIFFICULTY_NORMAL:
+			damageAmount = 8;
+			break;
+		case GAME_DIFFICULTY_EASY:
+			damageAmount = 2;
+			break;
+		case GAME_DIFFICULTY_HARD:
+			damageAmount = 15;
+			break;
+	}
+
+	self->health -= damageAmount;
+	A_EmitSound( impactSound, 25 );
+
 	Monster_Collide( self, other, 20.0f );
 }
 
@@ -546,8 +511,56 @@ static void Asteroid_Spawn( Actor *self )
 		asteroidManager->numAsteroids++;
 }
 
+static void Asteroid_Collide( Actor *self, Actor *other, void *userData )
+{
+	ASGActor *sg = other->userData;
+	if ( sg != NULL && !sg->isSolid )
+	{
+		return;
+	}
+
+	A_EmitSound( impactSound, 15 );
+}
+
 static void Asteroid_Tick( Actor *self, void *userData )
 {
+	ASGActor *sg = userData;
+	if ( self->health <= 0 )
+	{
+		if ( sg->scale > 10.0f && sg->scale - ( rand() % ( ( int ) sg->scale ) ) != 0 )
+		{
+			unsigned int maxAsteroids = rand() % 3 + 1;
+			for ( unsigned int i = 0; i < maxAsteroids; ++i )
+			{
+				Actor *asteroid = Act_SpawnActor( ACTOR_SG_ASTEROID, NULL );
+
+				Asteroid_SetScale( asteroid, sg->scale / 2.0f );
+
+				asteroid->position = self->position;
+				asteroid->collisionVolume.origin = asteroid->position;
+
+				float x = rand() % 1 == 1 ? 1.0f + PlGenerateRandomFloat( 4.0f ) : -1.0f - PlGenerateRandomFloat( 4.0f );
+				float z = rand() % 1 == 1 ? 1.0f + PlGenerateRandomFloat( 4.0f ) : -1.0f - PlGenerateRandomFloat( 4.0f );
+				asteroid->velocity = PLVector3( x, 0.0f, z );
+
+				PLMModel *curModel = sg->model;
+
+				sg = asteroid->userData;
+				sg->model = curModel;
+				sg->isSolid = false;
+				sg = userData;
+			}
+		}
+
+		Act_DestroyActor( self );
+		return;
+	}
+
+	if ( !sg->isSolid )
+	{
+		sg->isSolid = true;
+	}
+
 	// Make the asteroid spin based on it's given velocity
 	PLVector3 spinAngles = PlAddVector3( Act_GetAngles( self ), Act_GetVelocity( self ) );
 	Act_SetAngles( self, &spinAngles );
@@ -711,12 +724,37 @@ static void Projectile_Tick( Actor *self, void *userData )
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 }
 
+static void Projectile_Collide( Actor *self, Actor *other, void *userData )
+{
+	if ( other->type == ACTOR_SG_SHIP || other->type == ACTOR_SG_PROJECTILE )
+	{
+		return;
+	}
+
+	ASGActor *sg = other->userData;
+	if ( sg != NULL && !sg->isSolid )
+	{
+		return;
+	}
+
+	other->health -= 10;
+	if ( other->type == ACTOR_SG_ASTEROID )
+	{
+		/* only provide additional score if the target was actually destroyed */
+		self->parent->score += other->health <= 0 ? 5 : 1;
+	}
+
+	A_EmitSound( impactSound, 15 );
+
+	Act_DestroyActor( self );
+}
+
 const ActorSetup sg_actorProjectileSetup = {
 		.id = "point.sg.projectile",
 		.Spawn = Projectile_Spawn,
 		.Tick = Projectile_Tick,
 		.Draw = SGActor_Generic_Draw,
-		.Collide = SGActor_Generic_Collide,
+		.Collide = Projectile_Collide,
 		.Destroy = SGActor_Generic_Destroy,
 		.Serialize = NULL,
 		.Deserialize = NULL,
