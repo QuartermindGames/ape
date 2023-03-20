@@ -4,6 +4,8 @@
 #include <yin/node.h>
 
 #include "fw_game.h"
+#include "fw_terrain.h"
+
 #include "menu/fw_menu.h"
 
 FWGameState fwGameState;
@@ -20,11 +22,14 @@ static void FW_Game_Initialize( void )
 	YnCore_EntityManager_RegisterComponent( "fw.weapon", NULL );
 
 	FW_Menu_Initialize();
+	FW_Terrain_Initialize();
 }
 
 static void FW_Game_Shutdown( void )
 {
 	//TODO: need mechanism for removing components
+
+	FW_Terrain_Shutdown();
 }
 
 static void FW_Game_NewGame( const char *path )

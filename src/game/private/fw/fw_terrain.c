@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
+#include <plmodel/plm.h>
+
 #include "fw_terrain.h"
 
 #define TERRAIN_HM_WIDTH  256
@@ -17,36 +19,23 @@ static unsigned char terrainMinHeight, terrainMaxHeight;
 #endif
 
 static YNCoreMaterial *terrainMaterial = NULL;
-static PLGMesh *terrainMesh            = NULL;
-static PLGVertex vertices[ TERRAIN_HM_SIZE ];
+static PLMModel *terrainModel          = NULL;
 
-static PLGMesh *GenerateTerrainMesh( void )
-{
-	terrainMesh = PlgCreateMesh( PLG_MESH_POINTS, PLG_DRAW_STATIC, 0, TERRAIN_HM_SIZE );
-
-	// setup the vertex table
-	for ( unsigned int y = 0; y < TERRAIN_HM_HEIGHT; ++y )
-	{
-		for ( unsigned int x = 0; x < TERRAIN_HM_WIDTH; ++x )
-		{
-			PLVector3 position;
-
-			//PlgAddMeshVertex( terrainMesh, )
-		}
-	}
-}
+#define TERRAIN_TILE_SPACING 64
 
 void FW_Terrain_Initialize( void )
 {
-	// generate proc mesh for terrain
-	terrainMesh = GenerateTerrainMesh();
-	if ( terrainMesh == NULL )
-		Game_Error( "Failed to create terrain mesh!\n" );
+	terrainModel = PlmLoadModel( "models/terrain.ply" );
+	if ( terrainModel == NULL )
+	{
+		Game_Error( "Failed to load terrain: %s\n", PlGetError() );
+		return;
+	}
 }
 
 void FW_Terrain_Shutdown( void )
 {
-	PlgDestroyMesh( terrainMesh );
+	PlmDestroyModel( terrainModel );
 
 	YnCore_Material_Release( terrainMaterial );
 }
