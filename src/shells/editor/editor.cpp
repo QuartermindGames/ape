@@ -209,9 +209,6 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	// init libgit
-	git_libgit2_init();
-
 	// now init common library and fetch the editor config
 	Common_Initialize();
 

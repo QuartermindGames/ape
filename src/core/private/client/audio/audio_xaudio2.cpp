@@ -134,15 +134,15 @@ static void Audio_XAudio2_Pause( bool pause )
 	audioEngineInstance->StartEngine();
 }
 
-static void Audio_XAudio2_CacheSample( AudioSample *audioSample )
+static void Audio_XAudio2_CacheSample( YNCoreAudioSample *audioSample )
 {
 }
 
-static void Audio_XAudio2_FreeSample( AudioSample *audioSample )
+static void Audio_XAudio2_FreeSample( YNCoreAudioSample *audioSample )
 {
 }
 
-static void Audio_XAudio2_EmitSample( AudioSample *audioSample, int8_t volume )
+static void Audio_XAudio2_EmitSample( YNCoreAudioSample *audioSample, int8_t volume )
 {
 	XAUDIO2_BUFFER buffer;
 	PL_ZERO_( buffer );
@@ -151,7 +151,7 @@ static void Audio_XAudio2_EmitSample( AudioSample *audioSample, int8_t volume )
 	buffer.Flags = XAUDIO2_END_OF_STREAM;
 }
 
-static bool Audio_XAudio2_CreateSource( AudioSource *source )
+static bool Audio_XAudio2_CreateSource( YNCoreAudioSource *source )
 {
 	WAVEFORMATEX waveFormat;
 	PL_ZERO_( waveFormat );
@@ -168,15 +168,15 @@ static bool Audio_XAudio2_CreateSource( AudioSource *source )
 	return true;
 }
 
-static void Audio_XAudio2_DestroySource( AudioSource *source )
+static void Audio_XAudio2_DestroySource( YNCoreAudioSource *source )
 {
 	IXAudio2SourceVoice *voice = ( IXAudio2SourceVoice * ) source->user;
 	voice->DestroyVoice();
 }
 
-extern "C" const AudioDriverInterface *Audio_XAudio2_GetDriverInterface()
+extern "C" const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 {
-	static AudioDriverInterface driverInterface;
+	static YNCoreAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 
 	driverInterface.Initialize = Audio_XAudio2_Initialize;

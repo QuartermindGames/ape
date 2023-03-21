@@ -26,7 +26,7 @@ set_target_properties(yin-editor PROPERTIES
 if (NOT UNIX)
     target_include_directories(yin-editor PRIVATE "glew/include/")
     target_link_directories(yin-editor PRIVATE "glew/lib/Release/x64/")
-    target_link_libraries(yin-editor glew_s)
+    target_link_libraries(yin-editor OpenGL32)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         target_compile_options(yin-editor PRIVATE -static -static-libstdc++ -static-libgcc)
     endif ()
@@ -36,5 +36,4 @@ endif ()
 
 target_link_libraries(yin-editor
         yin-core
-        FOX-1.6
-        git2)
+        FOX-1.6)

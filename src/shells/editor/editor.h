@@ -21,8 +21,6 @@
 // FOX Toolkit
 #include <fx.h>
 
-#include <git2.h>
-
 #define EDITOR_APP_NAME    "yin-editor"
 #define EDITOR_APP_TITLE   "Yin Editor"
 #define EDITOR_APP_VERSION "v0.1.0"
@@ -61,9 +59,6 @@ namespace os::editor
 		YNNodeBranch *config{ nullptr };
 		PLFileSystemMount *mount{ nullptr };
 		const char *name{ nullptr };
-
-		git_repository *repository{ nullptr };
-		bool usingVersionControl{ false };
 	};
 	extern Project editorProject;
 

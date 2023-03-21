@@ -23,7 +23,9 @@ set_target_properties(yin-shell_sdl2 PROPERTIES
 # Setup link libraries
 
 if (MINGW)
-    target_link_libraries(yin-shell_sdl2 mingw32)
+    target_link_libraries(yin-shell_sdl2
+            mingw32
+            Imm32)
 endif ()
 
 target_link_libraries(yin-shell_sdl2
