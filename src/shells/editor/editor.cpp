@@ -65,6 +65,7 @@ os::editor::Project *os::editor::CreateProject( const char *name, const char *fo
 
 	return true;
 #endif
+    return nullptr;
 }
 
 os::editor::Project *os::editor::OpenProject( const char *path )
@@ -108,6 +109,7 @@ os::editor::Project *os::editor::OpenProject( const char *path )
 
 	return true;
 #endif
+    return nullptr;
 }
 
 static void SetupPaths( const char *exePath )
@@ -163,7 +165,12 @@ static void SetupConfig()
 		}
 	}
 
-	snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", YnNode_GetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" ) );
+    const char *projectPath = YnNode_GetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
+    if ( projectPath != nullptr )
+        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
+    else
+        // no project path provided, just use a fallback
+        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects", projectPath );
 }
 
 FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
@@ -177,6 +184,10 @@ FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
 
 int main( int argc, char **argv )
 {
+#if !defined( NDEBUG ) && defined( WIN32 )
+    setvbuf( stdout, nullptr, _IONBF, 0 );
+#endif
+
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
 	{
 		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );

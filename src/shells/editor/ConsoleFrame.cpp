@@ -4,7 +4,7 @@
 #include "ConsoleFrame.h"
 
 FXDEFMAP( os::editor::ConsoleFrame )
-consoleFrameMap[] = {};
+consoleFrameMap[] = { {}};
 
 FXIMPLEMENT( os::editor::ConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
 

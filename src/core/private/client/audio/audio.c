@@ -56,7 +56,7 @@ void YnCore_InitializeAudio( void )
 
 	/* initialize the driver interface */
 #if ( PL_SYSTEM_OS == PL_SYSTEM_OS_WINDOWS ) && defined( _MSC_VER )
-	const AudioDriverInterface *Audio_XAudio2_GetDriverInterface( void );
+	const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface( void );
 	audioDriverInterface = Audio_XAudio2_GetDriverInterface();
 	if ( audioDriverInterface == NULL || !audioDriverInterface->Initialize() )
 	{

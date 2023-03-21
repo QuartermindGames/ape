@@ -118,6 +118,19 @@ endfunction()
 
 build_openal()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+
+if(MSVC)
+    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+        link_directories(src/3rdparty/sdl2/lib/x64)
+    else()
+        link_directories(src/3rdparty/sdl2/lib/x86)
+    endif()
+elseif(MINGW)
+    link_directories(src/3rdparty/sdl2/lib/x64_mingw)
+endif()
+
 add_subdirectory(src/common/)
 
 add_subdirectory(src/core/)
