@@ -11,6 +11,7 @@
 namespace os::editor
 {
 	class ModelWindow;
+	class MaterialWindow;
 
 	class MainWindow : public FXMainWindow
 	{
@@ -26,10 +27,12 @@ namespace os::editor
 		long OnTick( FXObject *, FXSelector, void *ptr );
 		long OnNew( FXObject *, FXSelector, void *ptr );
 		long OnOpen( FXObject *, FXSelector, void *ptr );
-		long OnAbout( FXObject *, FXSelector, void *ptr );
-		long OnPackageProject( FXObject *, FXSelector, void * );
 
 		long OpenModel( FXObject *, FXSelector, void * );
+		long OpenMaterial( FXObject *, FXSelector, void * );
+
+		long OnAbout( FXObject *, FXSelector, void *ptr );
+		long OnPackageProject( FXObject *, FXSelector, void * );
 
 		os::editor::Project *GetProject() { return currentProject; }
 
@@ -47,6 +50,7 @@ namespace os::editor
 			ID_WORLD_CLOSE,
 
 			ID_MODEL_OPEN,
+			ID_MATERIAL_OPEN,
 
 			ID_COPY,
 			ID_PASTE,
@@ -87,10 +91,11 @@ namespace os::editor
 
 		os::editor::ConsoleFrame *consoleFrame;
 
-		EditorViewportFrame *viewportFrame;
+		ViewportFrame *viewportFrame;
 		EditorFaceInspector *faceInspectorWindow;
 
 		ModelWindow *modelWindow;
+		MaterialWindow *materialWindow{ nullptr };
 	};
 
 	extern MainWindow *mainWindow;

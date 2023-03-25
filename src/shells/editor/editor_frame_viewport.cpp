@@ -11,17 +11,19 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
-FXGLCanvas *EditorViewportFrame::displayList_ = nullptr;
+using namespace os::editor;
 
-FXDEFMAP( EditorViewportFrame )
+FXGLCanvas *ViewportFrame::displayList_ = nullptr;
+
+FXDEFMAP( ViewportFrame )
 editorViewportMap[] = {
-        FXMAPFUNC( SEL_CHORE, EditorViewportFrame::ID_CHORE, EditorViewportFrame::OnChore ),
-        FXMAPFUNC( SEL_MOTION, EditorViewportFrame::ID_CANVAS, EditorViewportFrame::OnMotion ),
+        FXMAPFUNC( SEL_CHORE, ViewportFrame::ID_CHORE, ViewportFrame::OnChore ),
+        FXMAPFUNC( SEL_MOTION, ViewportFrame::ID_CANVAS, ViewportFrame::OnMotion ),
 };
 
-FXIMPLEMENT( EditorViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
+FXIMPLEMENT( ViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-EditorViewportFrame::EditorViewportFrame( FXComposite *composite, FXGLVisual *visual, YNCoreCameraMode viewMode )
+ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, YNCoreCameraMode viewMode )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
@@ -59,7 +61,7 @@ EditorViewportFrame::EditorViewportFrame( FXComposite *composite, FXGLVisual *vi
 	getApp()->addChore( this, ID_CHORE );
 }
 
-EditorViewportFrame::~EditorViewportFrame()
+ViewportFrame::~ViewportFrame()
 {
 	getApp()->removeChore( this, ID_CHORE );
 
@@ -69,7 +71,7 @@ EditorViewportFrame::~EditorViewportFrame()
 	delete canvas_;
 }
 
-void EditorViewportFrame::create()
+void ViewportFrame::create()
 {
 	FXVerticalFrame::create();
 
@@ -79,7 +81,7 @@ void EditorViewportFrame::create()
 	canvas_->makeCurrent();
 }
 
-void EditorViewportFrame::Draw()
+void ViewportFrame::Draw()
 {
 	canvas_->makeCurrent();
 
@@ -108,7 +110,7 @@ void EditorViewportFrame::Draw()
 		canvas_->swapBuffers();
 }
 
-long EditorViewportFrame::OnChore( FXObject *, FXSelector, void * )
+long ViewportFrame::OnChore( FXObject *, FXSelector, void * )
 {
 	Draw();
 
@@ -116,7 +118,7 @@ long EditorViewportFrame::OnChore( FXObject *, FXSelector, void * )
 	return 1;
 }
 
-long EditorViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
+long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
 {
 	auto *event = ( FXEvent * ) ptr;
 	int const x = event->win_x;

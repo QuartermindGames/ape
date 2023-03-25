@@ -2,6 +2,8 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "editor_window_main.h"
+#include "editor_window_material.h"
+#include "editor_window_model.h"
 
 #include <FXGLVisual.h>
 
@@ -14,6 +16,10 @@ MainWindowMap[] = {
         //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_PROJECT_NEW, os::editor::MainWindow::OnNew ),
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_PROJECT_OPEN, os::editor::MainWindow::OnOpen ),
+
+        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_MODEL_OPEN, os::editor::MainWindow::OpenModel ),
+        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_MATERIAL_OPEN, os::editor::MainWindow::OpenMaterial ),
+
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_ABOUT, os::editor::MainWindow::OnAbout ),
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_PROJECT_PACKAGE, os::editor::MainWindow::OnPackageProject ),
         //FXMAPFUNC( SEL_COMMAND, MainWindow::ID_TOGGLE_EDIT, mao::MainWindow::OnToggleEdit ),
@@ -36,6 +42,7 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCommand( menuPane, "Close World\t\tClose the current world.", nullptr, this, ID_WORLD_CLOSE );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Open Model\t\tOpen an existing model.", nullptr, this, ID_MODEL_OPEN );
+	new FXMenuCommand( menuPane, "Open Material\t\tOpen an existing material.", nullptr, this, ID_MATERIAL_OPEN );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Package Project\t\tPackage the current project.", nullptr, this, ID_PROJECT_PACKAGE );
 	new FXMenuSeparator( menuPane );
@@ -83,7 +90,7 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 
 	auto *hs = new FXSplitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 	new FXTabBook( new FXVerticalFrame( hs, LAYOUT_SIDE_TOP | LAYOUT_FILL_Y ) );
-	viewportFrame = new EditorViewportFrame( hs, glVisual_, ( YNCoreCameraMode ) YN_CORE_CAMERA_MODE_PERSPECTIVE );
+	viewportFrame = new ViewportFrame( hs, glVisual_, ( YNCoreCameraMode ) YN_CORE_CAMERA_MODE_PERSPECTIVE );
 	viewportFrame->setHeight( 768 );
 
 	// Add the console at the bottom
@@ -119,6 +126,43 @@ long os::editor::MainWindow::OnNew( FXObject *, FXSelector, void * )
 long os::editor::MainWindow::OnOpen( FXObject *, FXSelector, void * )
 {
 	return 0;
+}
+
+long os::editor::MainWindow::OpenModel( FXObject *, FXSelector, void * )
+{
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", "./", "*.model.n" );
+	if ( filename.empty() )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
+{
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", "./", "*.mat.n" );
+	if ( filename.empty() )
+	{
+		return false;
+	}
+
+	YNCoreMaterial *material = YnCore_Material_Cache( filename.text(), YN_CORE_CACHE_GROUP_WORLD, false, false );
+	if ( material == nullptr )
+	{
+		return false;
+	}
+
+	if ( materialWindow != nullptr )
+	{
+		materialWindow->destroy();
+		delete materialWindow;
+	}
+
+	materialWindow = new MaterialWindow( getApp(), material );
+	materialWindow->show();
+
+	return true;
 }
 
 long os::editor::MainWindow::OnAbout( FXObject *, FXSelector, void * )

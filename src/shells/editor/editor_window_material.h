@@ -5,16 +5,23 @@
 
 #include "editor.h"
 
-class EditorMainWindow;
-class EditorMaterialWindow : FXWindow
+namespace os::editor
 {
-	FXDECLARE( EditorMaterialWindow )
+	class ViewportFrame;
 
-	inline EditorMaterialWindow() = default;
+	class MaterialWindow : public FXTopWindow
+	{
+		FXDECLARE( MaterialWindow )
 
-public:
-	EditorMaterialWindow( EditorMainWindow *parent );
+	public:
+		explicit MaterialWindow( FXApp *app, YNCoreMaterial *material );
+		~MaterialWindow();
 
-private:
+	protected:
+		inline MaterialWindow() = default;
 
-};
+	private:
+		ViewportFrame *viewportFrame;
+		YNCoreMaterial *material;
+	};
+}// namespace os::editor
