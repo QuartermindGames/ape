@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "MainWindow.h"
+#include "editor_window_main.h"
 
 #include <FXGLVisual.h>
 
@@ -28,12 +28,14 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 {
 	menuBar_ = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
-	FXMenuPane *menuPane = new FXMenuPane( menuBar_->getParent() );
+	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", nullptr, this, ID_WORLD_NEW );
 	new FXMenuCommand( menuPane, "Open World\t\tOpen an existing world.", nullptr, this, ID_WORLD_OPEN );
 	new FXMenuCommand( menuPane, "Save World\t\tSave the world.", nullptr, this, ID_WORLD_SAVE );
 	new FXMenuCommand( menuPane, "Save World As...\t\tSave the world to the specified destination.", nullptr, this, ID_WORLD_SAVEAS );
 	new FXMenuCommand( menuPane, "Close World\t\tClose the current world.", nullptr, this, ID_WORLD_CLOSE );
+	new FXMenuSeparator( menuPane );
+	new FXMenuCommand( menuPane, "Open Model\t\tOpen an existing model.", nullptr, this, ID_MODEL_OPEN );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Package Project\t\tPackage the current project.", nullptr, this, ID_PROJECT_PACKAGE );
 	new FXMenuSeparator( menuPane );
@@ -77,9 +79,9 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 
 	mainFrame = new FXVerticalFrame( this, LAYOUT_FILL );
 
-	FXSplitter *vs = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
+	auto *vs = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
 
-	FXSplitter *hs = new FXSplitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+	auto *hs = new FXSplitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 	new FXTabBook( new FXVerticalFrame( hs, LAYOUT_SIDE_TOP | LAYOUT_FILL_Y ) );
 	viewportFrame = new EditorViewportFrame( hs, glVisual_, ( YNCoreCameraMode ) YN_CORE_CAMERA_MODE_PERSPECTIVE );
 	viewportFrame->setHeight( 768 );

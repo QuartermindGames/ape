@@ -8,14 +8,16 @@
 #include <plgraphics/plg_driver_interface.h>
 
 #include "editor.h"
-#include "MainWindow.h"
+#include "editor_window_main.h"
 #include "yin/core_input.h"
 
 // Override C++ new/delete operators, so we can track memory usage
+#if 0 //TODO: causing pain on win32 target, let's not bother for now
 void *operator new( size_t size ) { return PL_NEW_( char, size ); }
 void *operator new[]( size_t size ) { return PL_NEW_( char, size ); }
 void operator delete( void *p ) noexcept { PL_DELETE( p ); }
 void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
+#endif
 
 unsigned int editorLogMsgId;
 unsigned int editorLogWarnId;
@@ -170,7 +172,7 @@ static void SetupConfig()
         snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
     else
         // no project path provided, just use a fallback
-        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects", projectPath );
+        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
 }
 
 FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
@@ -202,7 +204,7 @@ int main( int argc, char **argv )
 
 	// attempt to fetch the driver directly from the executable location if possible
 	PLPath exePath;
-	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
+	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
 	{
 		size_t const size = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
 		char *driverPath  = PL_NEW_( char, size );

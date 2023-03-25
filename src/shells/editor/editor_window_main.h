@@ -4,13 +4,14 @@
 #pragma once
 
 #include "editor.h"
-#include "editor_viewport_frame.h"
+#include "editor_frame_viewport.h"
 #include "editor_face_inspector.h"
-
-#include "ConsoleFrame.h"
+#include "editor_frame_console.h"
 
 namespace os::editor
 {
+	class ModelWindow;
+
 	class MainWindow : public FXMainWindow
 	{
 		FXDECLARE( MainWindow )
@@ -28,6 +29,8 @@ namespace os::editor
 		long OnAbout( FXObject *, FXSelector, void *ptr );
 		long OnPackageProject( FXObject *, FXSelector, void * );
 
+		long OpenModel( FXObject *, FXSelector, void * );
+
 		os::editor::Project *GetProject() { return currentProject; }
 
 		enum
@@ -36,15 +39,14 @@ namespace os::editor
 
 			ID_PROJECT_NEW,
 			ID_PROJECT_OPEN,
-			ID_PROJECT_SAVE,
-			ID_PROJECT_SAVEAS,
-			ID_PROJECT_CLOSE,
 
 			ID_WORLD_NEW,
 			ID_WORLD_OPEN,
 			ID_WORLD_SAVE,
 			ID_WORLD_SAVEAS,
 			ID_WORLD_CLOSE,
+
+			ID_MODEL_OPEN,
 
 			ID_COPY,
 			ID_PASTE,
@@ -87,6 +89,8 @@ namespace os::editor
 
 		EditorViewportFrame *viewportFrame;
 		EditorFaceInspector *faceInspectorWindow;
+
+		ModelWindow *modelWindow;
 	};
 
 	extern MainWindow *mainWindow;

@@ -7,10 +7,11 @@ project(yin-editor
         LANGUAGES C CXX)
 
 add_executable(yin-editor WIN32
-        ConsoleFrame.cpp
         editor.cpp
-        MainWindow.cpp
-        editor_viewport_frame.cpp)
+        editor_frame_console.cpp
+        editor_frame_viewport.cpp
+        editor_window_main.cpp
+        editor_window_model.cpp)
 
 add_dependencies(yin-editor
         plcore

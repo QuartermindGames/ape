@@ -15,7 +15,15 @@ namespace os::editor
 		ConsoleFrame( FXComposite *composite );
 		virtual ~ConsoleFrame();
 
+		enum
+		{
+			ID_SUBMIT = FXVerticalFrame::ID_LAST,
+			ID_SUBMIT_FIELD,
+		};
+
 		void PushMessage( int level, const char *msg, const PLColour &colour );
+        long SubmitCommand( FXObject *, FXSelector, void * );
+		long SubmitKey( FXObject *, FXSelector, void * );
 
 	protected:
 	private:

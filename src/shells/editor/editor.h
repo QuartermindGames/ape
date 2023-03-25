@@ -20,6 +20,7 @@
 
 // FOX Toolkit
 #include <fx.h>
+#include <fxkeys.h>
 
 #define EDITOR_APP_NAME    "yin-editor"
 #define EDITOR_APP_TITLE   "Yin Editor"

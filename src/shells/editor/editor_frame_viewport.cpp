@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_viewport_frame.h"
+#include "editor_frame_viewport.h"
 
 #include <yin/core_renderer.h>
 
