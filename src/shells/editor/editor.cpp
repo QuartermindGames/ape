@@ -12,7 +12,7 @@
 #include "yin/core_input.h"
 
 // Override C++ new/delete operators, so we can track memory usage
-#if 0 //TODO: causing pain on win32 target, let's not bother for now
+#if 0//TODO: causing pain on win32 target, let's not bother for now
 void *operator new( size_t size ) { return PL_NEW_( char, size ); }
 void *operator new[]( size_t size ) { return PL_NEW_( char, size ); }
 void operator delete( void *p ) noexcept { PL_DELETE( p ); }
@@ -67,7 +67,7 @@ os::editor::Project *os::editor::CreateProject( const char *name, const char *fo
 
 	return true;
 #endif
-    return nullptr;
+	return nullptr;
 }
 
 os::editor::Project *os::editor::OpenProject( const char *path )
@@ -111,7 +111,7 @@ os::editor::Project *os::editor::OpenProject( const char *path )
 
 	return true;
 #endif
-    return nullptr;
+	return nullptr;
 }
 
 static void SetupPaths( const char *exePath )
@@ -119,46 +119,47 @@ static void SetupPaths( const char *exePath )
 	PL_ZERO( os::editor::cachedPaths, sizeof( PLPath ) * os::editor::MAX_CACHED_PATHS );
 
 	// copy the exe path and ensure it doesn't end in a slash
-	PlSetPath( os::editor::cachedPaths[ os::editor::PATH_EXE ], exePath, true );
+	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_EXE ], true, "%s", exePath );
 
 	// resources location - where editor icons are stored
-	PlSetPath( os::editor::cachedPaths[ os::editor::PATH_RESOURCES ], os::editor::cachedPaths[ os::editor::PATH_EXE ], true );
-	PlAppendPath( os::editor::cachedPaths[ os::editor::PATH_RESOURCES ], "/../../resources", true );
+	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_RESOURCES ], true, "%s/../../resources", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
 
 	// projects location - where new projects will be created by default
-	PlSetPath( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], os::editor::cachedPaths[ os::editor::PATH_EXE ], true );
-	PlAppendPath( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], "/../../projects", true );
+	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], true, "%s/../../projects", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
 
 	PLPath tmp;
 	if ( PlGetApplicationDataDirectory( "yin", tmp, sizeof( tmp ) ) != nullptr )
 	{
 		if ( PlCreateDirectory( tmp ) )
-			PlSetPath( os::editor::cachedPaths[ os::editor::PATH_CONFIG ], tmp, true );
+		{
+			PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_CONFIG ], true, "%s", tmp );
+		}
 		else
+		{
 			FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to create config location (%s)!", PlGetError() );
+		}
 	}
 	else
+	{
 		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to get config location (%s)!", PlGetError() );
+	}
 
 	// fallback to local location if it failed...
 	if ( *os::editor::cachedPaths[ os::editor::PATH_CONFIG ] == '\0' )
+	{
 		os::editor::cachedPaths[ os::editor::PATH_CONFIG ][ 0 ] = '.';
+	}
 }
 
 static void SetupConfig()
 {
-	PLPath path = "local://";
-	PlAppendPath( path, os::editor::cachedPaths[ os::editor::PATH_EXE ], true );
-	PlAppendPath( path, "/editor.cfg.n", true );
-
 	// first try and load it locally
+	PLPath path;
+	PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
 	if ( ( os::editor::editorConfig = YnNode_LoadFile( path, "config" ) ) == nullptr )
 	{
 		// try again, but from config location
-		PlSetPath( path, "local://", true );
-		PlAppendPath( path, os::editor::cachedPaths[ os::editor::PATH_CONFIG ], true );
-		PlAppendPath( path, "/editor.cfg.n", true );
-
+		PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_CONFIG ] );
 		if ( ( os::editor::editorConfig = YnNode_LoadFile( path, "config" ) ) == nullptr )
 		{
 			// uh oh! just append an object and return
@@ -167,12 +168,16 @@ static void SetupConfig()
 		}
 	}
 
-    const char *projectPath = YnNode_GetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
-    if ( projectPath != nullptr )
-        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
-    else
-        // no project path provided, just use a fallback
-        snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
+	const char *projectPath = YnNode_GetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
+	if ( projectPath != nullptr )
+	{
+		snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
+	}
+	else
+	{
+		// no project path provided, just use a fallback
+		snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
+	}
 }
 
 FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
@@ -187,7 +192,7 @@ FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
 int main( int argc, char **argv )
 {
 #if !defined( NDEBUG ) && defined( WIN32 )
-    setvbuf( stdout, nullptr, _IONBF, 0 );
+	setvbuf( stdout, nullptr, _IONBF, 0 );
 #endif
 
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
