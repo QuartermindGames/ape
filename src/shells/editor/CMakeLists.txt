@@ -8,6 +8,8 @@ project(yin-editor
 
 add_executable(yin-editor WIN32
         editor.cpp
+        editor_dialog_about.cpp
+        editor_dialog_project.cpp
         editor_frame_console.cpp
         editor_frame_viewport.cpp
         editor_window_main.cpp

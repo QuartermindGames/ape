@@ -9,6 +9,8 @@
 
 #include "editor.h"
 #include "editor_window_main.h"
+#include "editor_dialog_project.h"
+
 #include "yin/core_input.h"
 
 // Override C++ new/delete operators, so we can track memory usage
@@ -236,6 +238,18 @@ int main( int argc, char **argv )
 	FXApp app( EDITOR_APP_TITLE, FXString::null );
 	app.init( argc, argv );
 
+	static constexpr FXColor baseColour   = FXRGB( 40, 40, 40 );
+	static constexpr FXColor foreColour   = FXRGB( 200, 200, 250 );
+	static constexpr FXColor hiliteColour = FXRGB( 100, 100, 150 );
+
+	app.setBackColor( FXRGB( 10, 10, 10 ) );
+	app.setBaseColor( baseColour );
+	app.setForeColor( foreColour );
+
+	app.setBorderColor( baseColour );
+	app.setHiliteColor( hiliteColour );
+	app.setShadowColor( hiliteColour );
+
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
 	os::editor::mainWindow = new os::editor::MainWindow( &app );
 
@@ -246,6 +260,13 @@ int main( int argc, char **argv )
 		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
+
+	// now let us pick a project before we init the engine
+	// (for now, changing project will probably require us to restart)
+	os::editor::ProjectDialog *projectDialog = new os::editor::ProjectDialog( os::editor::mainWindow );
+	projectDialog->execute();
+
+	os::editor::mainWindow->show();
 
 	if ( !YnCore_Initialize( "editor.cfg.n" ) )
 	{

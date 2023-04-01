@@ -4,6 +4,7 @@
 #include "editor_window_main.h"
 #include "editor_window_material.h"
 #include "editor_window_model.h"
+#include "editor_dialog_about.h"
 
 #include <FXGLVisual.h>
 
@@ -78,9 +79,7 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 	new FXButton( toolBar_, "", os::editor::LoadFXIcon( getApp(), "resources/play.gif" ) );
 #endif
 
-	auto *statusFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-	for ( auto &i : statusBars_ )
-		i = new FXStatusBar( statusFrame, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
+	new FXStatusBar( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
 
 	glVisual_ = new FXGLVisual( getApp(), VISUAL_DOUBLEBUFFER );
 
@@ -88,15 +87,15 @@ os::editor::MainWindow::MainWindow( FXApp *app )
 
 	auto *vs = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
 
-	auto *hs = new FXSplitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	new FXTabBook( new FXVerticalFrame( hs, LAYOUT_SIDE_TOP | LAYOUT_FILL_Y ) );
-	viewportFrame = new ViewportFrame( hs, glVisual_, ( YNCoreCameraMode ) YN_CORE_CAMERA_MODE_PERSPECTIVE );
-	viewportFrame->setHeight( 768 );
+	auto *hs = new FX4Splitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+	for ( auto &i : viewportFrame )
+	{
+		i = new ViewportFrame( hs, glVisual_, ( YNCoreCameraMode ) YN_CORE_CAMERA_MODE_PERSPECTIVE );
+	}
+	hs->setHeight( 720 );
 
 	// Add the console at the bottom
 	consoleFrame = new os::editor::ConsoleFrame( vs );
-
-	//mainFrame->hide();
 
 	getApp()->addTimeout( this, MainWindow::ID_TICK, YN_CORE_TICK_RATE );
 }
@@ -130,7 +129,7 @@ long os::editor::MainWindow::OnOpen( FXObject *, FXSelector, void * )
 
 long os::editor::MainWindow::OpenModel( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", "./", "*.model.n" );
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ] ) + "/", "*.model.n" );
 	if ( filename.empty() )
 	{
 		return false;
@@ -141,7 +140,7 @@ long os::editor::MainWindow::OpenModel( FXObject *, FXSelector, void * )
 
 long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", "./", "*.mat.n" );
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ] ) + "/", "*.mat.n" );
 	if ( filename.empty() )
 	{
 		return false;
@@ -150,6 +149,7 @@ long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
 	YNCoreMaterial *material = YnCore_Material_Cache( filename.text(), YN_CORE_CACHE_GROUP_WORLD, false, false );
 	if ( material == nullptr )
 	{
+		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to load material (%s)!", filename.text() );
 		return false;
 	}
 
@@ -167,14 +167,20 @@ long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
 
 long os::editor::MainWindow::OnAbout( FXObject *, FXSelector, void * )
 {
-	return 0;
+	editor::AboutDialog *aboutDialog = new editor::AboutDialog( this );
+	aboutDialog->execute();
+	return true;
 }
 
 long os::editor::MainWindow::OnPackageProject( FXObject *, FXSelector, void * )
 {
-	mainFrame->show();
-	mainFrame->recalc();
-	return 0;
+	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ] ) + "/", "*.pkg" );
+	if ( filename.empty() )
+	{
+		return false;
+	}
+
+	return true;
 }
 
 /**

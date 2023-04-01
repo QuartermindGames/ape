@@ -3,6 +3,8 @@
 #pragma once
 
 #include <vector>
+#include <map>
+#include <string>
 
 // Hei Library
 #include <plcore/pl.h>
@@ -54,12 +56,14 @@ namespace os::editor
 
 	struct Project
 	{
-		Project( const char *name ) {}
-
+		explicit Project( const std::string &name ) : name( name )
+		{
+		}
+		
+		std::string name;
 		PLPath path{};
 		YNNodeBranch *config{ nullptr };
 		PLFileSystemMount *mount{ nullptr };
-		const char *name{ nullptr };
 	};
 	extern Project editorProject;
 
@@ -70,11 +74,11 @@ namespace os::editor
 
 	enum
 	{
-		PATH_EXE,
-		PATH_RESOURCES,
-		PATH_CONFIG,
-		PATH_PROJECTS,
-		PATH_REPO,
+		PATH_EXE,      // where the exe is located
+		PATH_RESOURCES,// general resources
+		PATH_CONFIG,   // location of our config
+		PATH_PROJECTS, // location where *all* projects are stored
+		PATH_PROJECT,  // current project
 
 		MAX_CACHED_PATHS
 	};

@@ -77,10 +77,6 @@ namespace os::editor
 		FXDataTarget gridHideTarget;
 		FXDataTarget gridSizeTarget;
 
-		FXMenuPane *fileMenu_;
-		FXMenuPane *editMenu_;
-		FXMenuPane *viewMenu_;
-
 		FXVerticalFrame *mainFrame;
 
 		FXToggleButton *editModeButtons[ EDITOR_MAX_GEOMETRYMODES ];
@@ -91,9 +87,9 @@ namespace os::editor
 
 		os::editor::ConsoleFrame *consoleFrame;
 
-		ViewportFrame *viewportFrame;
-		EditorFaceInspector *faceInspectorWindow;
+		ViewportFrame *viewportFrame[ 4 ];
 
+		EditorFaceInspector *faceInspectorWindow;
 		ModelWindow *modelWindow;
 		MaterialWindow *materialWindow{ nullptr };
 	};
