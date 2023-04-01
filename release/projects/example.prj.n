@@ -1,0 +1,17 @@
+node.utf8
+object project
+{
+    string name "Example Project"
+    string author "Mark Sowden"
+    array int version { 0 0 0 }
+
+    ; all paths are relative to 'projects' location
+
+    string rootDir "base"
+    array string mountLocations
+    {
+        "base"
+        "base/dev"
+        "base/ship"
+    }
+}

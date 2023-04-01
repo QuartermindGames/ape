@@ -56,16 +56,17 @@ namespace os::editor
 
 	struct Project
 	{
-		explicit Project( const std::string &name ) : name( name )
+		explicit Project( const std::string &name )
+		    : name( name )
 		{
 		}
-		
+
 		std::string name;
-		PLPath path{};
+		std::string rootDir;
 		YNNodeBranch *config{ nullptr };
 		PLFileSystemMount *mount{ nullptr };
 	};
-	extern Project editorProject;
+	extern Project *editorProject;
 
 	Project *CreateProject( const char *name, const char *folderName );
 	Project *OpenProject( const char *path );

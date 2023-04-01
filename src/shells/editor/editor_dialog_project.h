@@ -16,6 +16,8 @@ namespace os::editor
 	protected:
 	private:
 		static void RegisterProjectCallback( const char *, void * );
-		std::map< std::string, editor::Project > projects;
+		static std::map< std::string, editor::Project * > projects;
+
+		FXListBox *listBox;
 	};
 }// namespace os::editor

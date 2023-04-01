@@ -28,6 +28,8 @@ unsigned int editorLogErrorId;
 PLPath os::editor::cachedPaths[ MAX_CACHED_PATHS ];
 YNNodeBranch *os::editor::editorConfig;
 
+os::editor::Project *os::editor::editorProject = nullptr;
+
 static void GenerateProjectConfig( const char *name, const char *path )
 {
 	YNNodeBranch *root = YnNode_PushBackObject( nullptr, "config" );
@@ -220,12 +222,14 @@ int main( int argc, char **argv )
 		PL_DELETE( driverPath );
 	}
 	else
+	{
 		PlgScanForDrivers( "." );
+	}
 
 	PLPath tmp;
 	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to get executable location (%s)!", PlGetError() );
+		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to get executable location (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -257,7 +261,7 @@ int main( int argc, char **argv )
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
+		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -266,11 +270,18 @@ int main( int argc, char **argv )
 	os::editor::ProjectDialog *projectDialog = new os::editor::ProjectDialog( os::editor::mainWindow );
 	projectDialog->execute();
 
+	if ( os::editor::editorProject == nullptr )
+	{
+		FXMessageBox::error( FXApp::instance(), 0, "Error", "No project selected, aborting!" );
+		return EXIT_FAILURE;
+	}
+	delete projectDialog;
+
 	os::editor::mainWindow->show();
 
 	if ( !YnCore_Initialize( "editor.cfg.n" ) )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to initialize Yin!" );
+		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to initialize Yin!" );
 		return EXIT_FAILURE;
 	}
 

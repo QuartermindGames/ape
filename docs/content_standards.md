@@ -14,6 +14,7 @@ Any legacy documents might use `node` or `world.n` - these should be updated to 
 | `model`          | `.mdl.n`  |
 | `world`          | `.wld.n`  |
 | `worldMesh`      | `.wsm.n`  |
+| `project`        | `.prj.n`  |
 
 Any binary forms should use the same convention going forward.
 To avoid any conflicts, these should ideally be generated into an alternate root location.
