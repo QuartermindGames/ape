@@ -66,21 +66,6 @@ CMD_CALLBACK( Quit )
     YnCore_Shutdown();
 }
 
-/**
- * Pipes a command to either the shell or command.
- */
-CMD_CALLBACK( OSCommand )
-{
-	if ( argc == 1 )
-	{
-		PRINT_WARNING( "Usage: oscmd echo \"Hello World!\"\n" );
-		return;
-	}
-
-	if ( system( argv[ 1 ] ) == -1 )
-		PRINT_WARNING( "Failed to issue command, an error occurred!\n" );
-}
-
 CMD_CALLBACK( Version )
 {
 	( void ) ( argc );
@@ -168,7 +153,6 @@ void YnCore_RegisterConsoleCommands( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "Quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "Exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
-	PlRegisterConsoleCommand( "OSCmd", "Pipes the given command to the host platform.", -1, Cmd_OSCommand );
 	PlRegisterConsoleCommand( "Version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "Clear", "Clear the console buffer.", 0, ClearConsoleCommand );
 	PlRegisterConsoleCommand( "CLS", "Clear the console buffer.", 0, ClearConsoleCommand );
