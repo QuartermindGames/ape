@@ -102,7 +102,7 @@ void ViewportFrame::Draw()
 	}
 	else
 	{
-		PlgSetClearColour( PLColourRGB( 100, 0, 0 ) );
+		PlgSetClearColour( PLColourRGB( 30, 30, 30 ) );
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	}
 

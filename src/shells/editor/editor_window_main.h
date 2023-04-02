@@ -18,20 +18,20 @@ namespace os::editor
 		FXDECLARE( MainWindow )
 
 	public:
-		MainWindow( FXApp *app );
+		explicit MainWindow( FXApp *app );
 
 	protected:
 		inline MainWindow() = default;
 
 	public:
-		long OnTick( FXObject *, FXSelector, void *ptr );
-		long OnNew( FXObject *, FXSelector, void *ptr );
-		long OnOpen( FXObject *, FXSelector, void *ptr );
+		long OnTick( FXObject *, FXSelector, void * );
+		long OnNew( FXObject *, FXSelector, void * );
+		long OnOpen( FXObject *, FXSelector, void * );
 
 		long OpenModel( FXObject *, FXSelector, void * );
 		long OpenMaterial( FXObject *, FXSelector, void * );
 
-		long OnAbout( FXObject *, FXSelector, void *ptr );
+		long OnAbout( FXObject *, FXSelector, void * );
 		long OnPackageProject( FXObject *, FXSelector, void * );
 
 		os::editor::Project *GetProject() { return currentProject; }
@@ -71,26 +71,26 @@ namespace os::editor
 
 		os::editor::Project *currentProject{ nullptr };
 
-		FXToolBar *toolBar_;
-		FXMenuBar *menuBar_;
+		FXToolBar *toolBar_{};
+		FXMenuBar *menuBar_{};
 
 		FXDataTarget gridHideTarget;
 		FXDataTarget gridSizeTarget;
 
-		FXVerticalFrame *mainFrame;
+		FXVerticalFrame *mainFrame{};
 
-		FXToggleButton *editModeButtons[ EDITOR_MAX_GEOMETRYMODES ];
+		FXToggleButton *editModeButtons[ EDITOR_MAX_GEOMETRYMODES ]{};
 
-		FXStatusBar *statusBars_[ 3 ];
+		FXStatusBar *statusBars_[ 3 ]{};
 
-		FXGLVisual *glVisual_;
+		FXGLVisual *glVisual_{};
 
-		os::editor::ConsoleFrame *consoleFrame;
+		os::editor::ConsoleFrame *consoleFrame{};
 
-		ViewportFrame *viewportFrame[ 4 ];
+		ViewportFrame *viewportFrame[ 4 ]{};
 
-		EditorFaceInspector *faceInspectorWindow;
-		ModelWindow *modelWindow;
+		EditorFaceInspector *faceInspectorWindow{};
+		ModelWindow *modelWindow{};
 		MaterialWindow *materialWindow{ nullptr };
 	};
 

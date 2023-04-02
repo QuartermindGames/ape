@@ -11,8 +11,6 @@
 #include "editor_window_main.h"
 #include "editor_dialog_project.h"
 
-#include "yin/core_input.h"
-
 // Override C++ new/delete operators, so we can track memory usage
 #if 0//TODO: causing pain on win32 target, let's not bother for now
 void *operator new( size_t size ) { return PL_NEW_( char, size ); }
@@ -45,33 +43,27 @@ static void GenerateProjectConfig( const char *name, const char *path )
  */
 os::editor::Project *os::editor::CreateProject( const char *name, const char *folderName )
 {
-#if 0
 	PLPath projectPath;
-	PlSetPath( projectPath, os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], true );
-	PlAppendPath( projectPath, FXString( FXString( "/" ) + folderName ).text(), true );
+	PlSetupPath( projectPath, true, "%s/%s", os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], folderName );
 
 	if ( PlLocalPathExists( projectPath ) )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to create project, path (%s) already exists!", projectPath );
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create project, path (%s) already exists!", projectPath );
 		return nullptr;
 	}
 
 	if ( !PlCreatePath( projectPath ) )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to create project path (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create project path (%s)!", PlGetError() );
 		return nullptr;
 	}
 
 	// and now create our placeholder node file
 
 	PLPath nodePath;
-	PlSetPath( nodePath, projectPath, true );
-	PlAppendPath( nodePath, "/project.cfg.n", true );
-	GenerateProjectConfig( name, nodePath );
+	GenerateProjectConfig( name, PlSetupPath( nodePath, true, "%s/project.cfg.n", projectPath ) );
 
 	return true;
-#endif
-	return nullptr;
 }
 
 os::editor::Project *os::editor::OpenProject( const char *path )
@@ -140,12 +132,12 @@ static void SetupPaths( const char *exePath )
 		}
 		else
 		{
-			FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to create config location (%s)!", PlGetError() );
+			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
 		}
 	}
 	else
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to get config location (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
 	}
 
 	// fallback to local location if it failed...
@@ -201,13 +193,13 @@ int main( int argc, char **argv )
 
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
 	if ( PlgInitializeGraphics() != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -229,7 +221,7 @@ int main( int argc, char **argv )
 	PLPath tmp;
 	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
 	{
-		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to get executable location (%s)!", PlGetError() );
+		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to get executable location (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -261,7 +253,7 @@ int main( int argc, char **argv )
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
+		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -272,7 +264,7 @@ int main( int argc, char **argv )
 
 	if ( os::editor::editorProject == nullptr )
 	{
-		FXMessageBox::error( FXApp::instance(), 0, "Error", "No project selected, aborting!" );
+		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
 	delete projectDialog;
@@ -281,7 +273,7 @@ int main( int argc, char **argv )
 
 	if ( !YnCore_Initialize( "editor.cfg.n" ) )
 	{
-		FXMessageBox::error( FXApp::instance(), 0, "Error", "Failed to initialize Yin!" );
+		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Yin!" );
 		return EXIT_FAILURE;
 	}
 
