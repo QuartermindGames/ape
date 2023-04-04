@@ -87,7 +87,7 @@ bool YnCore_Initialize( const char *config )
 	PRINT( "Initializing core services...\n" );
 
 	// TODO: move these somewhere more appropriate??
-	PlmRegisterModelLoader( "mdl.n", Model_Cache );
+	PlmRegisterModelLoader( "mdl.n", Model_Cache, NULL );
 
 	YnCore_InitializeProfiler();
 	YnCore_InitializeScheduler();
