@@ -328,11 +328,11 @@ void Client_Console_Draw( const YNCoreViewport *viewport )
 	PlgDrawRectangle( 0.0f, height - ( float ) font->ch, width, ( float ) font->ch, CON_INPUT_COLOUR );
 	PlgDrawRectangle( 0.0f, 0.0f, consoleScrollBarWidth, consoleHeight, CON_SIDE_COLOUR );
 
-	Font_BeginDraw( font );
-
-	ConsoleOutput *output = Console_GetOutput();
+	const ConsoleOutput *output = Console_GetOutput();
 	if ( output->numLines > 0 )
 	{
+		Font_BeginDraw( font );
+
 		/* draw the indicator at the side of the console */
 		float cH = ( ( font->ch * output->numLines ) / consoleHeight ) + 1.0f;
 		float cY = consoleHeight - ( ( output->numLines / consoleHeight ) + output->scrollPos ) - cH;
@@ -356,9 +356,9 @@ void Client_Console_Draw( const YNCoreViewport *viewport )
 			if ( y <= -font->ch )
 				break;
 		}
-	}
 
-	Font_Draw( font );
+		Font_Draw( font );
+	}
 
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
 	PlgSetTexture( NULL, 0 );
