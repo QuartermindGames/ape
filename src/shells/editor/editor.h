@@ -68,7 +68,7 @@ namespace os::editor
 	};
 	extern Project *editorProject;
 
-	Project *CreateProject( const char *name, const char *folderName );
+	Project *CreateProject( const std::string &name, const std::string &folderName );
 	Project *OpenProject( const char *path );
 
 	/////////////////////////////////////////////////////////////////////////

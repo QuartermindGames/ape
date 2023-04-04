@@ -114,9 +114,10 @@ long os::editor::ProjectDialog::OnAccept( FXObject *obj, FXSelector sel, void *p
 	editor::editorProject = ( Project * ) listBox->getItemData( listBox->getCurrentItem() );
 	if ( ( editor::editorProject == nullptr ) && ( projectNameField->getText() != defaultName ) )
 	{
-		const char *projectName = projectNameField->getText().text();
 		PLPath folderName;
-		editor::editorProject = editor::CreateProject( projectName, PlSetupPath( folderName, true, "%s", projectName ) );
+		editor::editorProject = editor::CreateProject(
+		        std::string( projectNameField->getText().text() ),
+		        PlSetupPath( folderName, true, "%s", projectNameField->getText().text() ) );
 	}
 
 	return FXDialogBox::onCmdAccept( obj, sel, ptr );

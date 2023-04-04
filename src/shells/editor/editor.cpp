@@ -28,23 +28,25 @@ YNNodeBranch *os::editor::editorConfig;
 
 os::editor::Project *os::editor::editorProject = nullptr;
 
-static void GenerateProjectConfig( const char *name, const char *path )
+static YNNodeBranch *GenerateProjectConfig( const char *name, const char *path )
 {
 	YNNodeBranch *root = YnNode_PushBackObject( nullptr, "config" );
 	YnNode_PushBackString( root, "title", name );
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
 	YnNode_PushBackI32Array( root, "version", version, 3 );
 	YnNode_WriteFile( path, root, YN_NODE_FILE_UTF8 );
-	YnNode_DestroyBranch( root );
+	return root;
 }
 
 /**
  * Creates a new project.
  */
-os::editor::Project *os::editor::CreateProject( const char *name, const char *folderName )
+os::editor::Project *os::editor::CreateProject( const std::string &name, const std::string &folderName )
 {
+	auto *project = PL_NEW( Project );
+
 	PLPath projectPath;
-	PlSetupPath( projectPath, true, "%s/%s", os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], folderName );
+	PlSetupPath( projectPath, true, "%s/%s", os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], folderName.c_str() );
 
 	if ( PlLocalPathExists( projectPath ) )
 	{
@@ -58,12 +60,18 @@ os::editor::Project *os::editor::CreateProject( const char *name, const char *fo
 		return nullptr;
 	}
 
+	project->rootDir = folderName;
+	project->name    = name;
+
 	// and now create our placeholder node file
 
 	PLPath nodePath;
-	GenerateProjectConfig( name, PlSetupPath( nodePath, true, "%s/project.cfg.n", projectPath ) );
+	project->config = GenerateProjectConfig( name.c_str(),
+	                                         PlSetupPath( nodePath, true, "%s/%s.prj.n",
+	                                                      os::editor::cachedPaths[ os::editor::PATH_PROJECTS ],
+	                                                      folderName.c_str() ) );
 
-	return true;
+	return project;
 }
 
 os::editor::Project *os::editor::OpenProject( const char *path )
@@ -259,7 +267,7 @@ int main( int argc, char **argv )
 
 	// now let us pick a project before we init the engine
 	// (for now, changing project will probably require us to restart)
-	os::editor::ProjectDialog *projectDialog = new os::editor::ProjectDialog( os::editor::mainWindow );
+	auto *projectDialog = new os::editor::ProjectDialog( os::editor::mainWindow );
 	projectDialog->execute();
 
 	if ( os::editor::editorProject == nullptr )
