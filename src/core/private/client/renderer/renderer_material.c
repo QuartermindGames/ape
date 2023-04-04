@@ -606,7 +606,7 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 
 			PlgSetTexture( depthTexture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
-			*curUnit++;
+			( *curUnit )++;
 			break;
 		}
 
