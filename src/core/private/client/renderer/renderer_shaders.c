@@ -10,27 +10,41 @@
 /** Shaders **/
 
 static PLLinkedList *shaderPrograms;
-PLGShaderProgram	 *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
 	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL )
+	{
 		PRINT_ERROR( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
+	}
 
 	PLGShaderStage *stage = PlgCreateShaderStage( type );
 	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
 
 	size_t length = PlGetFileSize( filePtr );
-	char	 *buffer = PlMAllocA( length + 1 );
+	char *buffer  = PlMAllocA( length + 1 );
 	PlReadFile( filePtr, buffer, length, 1 );
 	buffer[ length ] = '\0';
 
 	PlCloseFile( filePtr );
 
-	PlgCompileShaderStage( stage, buffer, length );
+	// get the directory we're loading the file from,
+	// so we can use include relative to the original file
+	PLPath directory;
+	PlSetupPath( directory, true, "%s", path );
+	char *sep = strrchr( directory, '/' );
+	if ( sep != NULL )
+	{
+		*sep = '\0';
+	}
+
+	PlgCompileShaderStage( stage, buffer, length, directory );
 	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS )
+	{
 		PRINT_ERROR( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
+	}
 
 	PlgAttachShaderStage( program, stage );
 
@@ -42,7 +56,7 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 	YNCoreShaderProgramIndex program;
 	memset( &program, 0, sizeof( YNCoreShaderProgramIndex ) );
 
-	const char *vertexPath = YnNode_GetStringByName( root, "vertexPath", NULL );
+	const char *vertexPath   = YnNode_GetStringByName( root, "vertexPath", NULL );
 	const char *fragmentPath = YnNode_GetStringByName( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
@@ -153,7 +167,7 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 
 	/* allocate and return our program index */
 	YNCoreShaderProgramIndex *out = PlMAlloc( sizeof( YNCoreShaderProgramIndex ), true );
-	*out = program;
+	*out                          = program;
 	return out;
 }
 
@@ -212,10 +226,10 @@ void YR_Shader_Initialize( void )
 
 	/* now fetch the default programs */
 	const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
-			[RS_SHADER_DEFAULT] = "default",
-			[RS_SHADER_LIGHTING_PASS] = "base_lighting",
-			[RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
-			[RS_SHADER_DEFAULT_ALPHA] = "default_alpha",
+	        [RS_SHADER_DEFAULT]        = "default",
+	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
+	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
 	};
 	for ( unsigned int i = 0; i < RS_MAX_DEFAULT_SHADERS; ++i )
 	{
