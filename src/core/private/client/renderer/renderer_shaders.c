@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
+#include <plcore/pl_hashtable.h>
+
 #include "core_private.h"
 #include "renderer.h"
 
@@ -9,7 +11,7 @@
 /**********************************************************/
 /** Shaders **/
 
-static PLLinkedList *shaderPrograms;
+static PLHashTable *shaderProgramTable;
 PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
 
 static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
@@ -54,7 +56,24 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 {
 	YNCoreShaderProgramIndex program;
-	memset( &program, 0, sizeof( YNCoreShaderProgramIndex ) );
+	PL_ZERO_( program );
+
+	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
+	if ( internalName != NULL )
+	{
+		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
+	}
+	else
+	{
+		PRINT_WARNING( "Shader program with no internal name provided!\n" );
+		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
+	}
+
+	if ( YnCore_GetShaderProgramByName( internalName ) != NULL )
+	{
+		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
+		return NULL;
+	}
 
 	const char *vertexPath   = YnNode_GetStringByName( root, "vertexPath", NULL );
 	const char *fragmentPath = YnNode_GetStringByName( root, "fragmentPath", NULL );
@@ -74,15 +93,6 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_VERTEX ], PL_SYSTEM_MAX_PATH, "%s", vertexPath );
 	snprintf( program.shaderPaths[ PLG_SHADER_TYPE_FRAGMENT ], PL_SYSTEM_MAX_PATH, "%s", fragmentPath );
-
-	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
-	if ( internalName != NULL )
-		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
-	else
-	{
-		PRINT_WARNING( "Shader program with no internal name provided!\n" );
-		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
-	}
 
 	/* these allow for the program to specify what
 	 * definitions should be set prior to compiling
@@ -171,7 +181,7 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 	return out;
 }
 
-static void RS_LoadShaderProgram( const char *path, void *userData )
+static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 {
 	PRINT( "Loading program: \"%s\"\n", path );
 
@@ -193,39 +203,32 @@ static void RS_LoadShaderProgram( const char *path, void *userData )
 	}
 
 	strncpy( program->path, path, sizeof( program->path ) );
-	program->node = PlInsertLinkedListNode( shaderPrograms, program );
+
+	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
 YNCoreShaderProgramIndex *YnCore_GetShaderProgramByName( const char *name )
 {
-	PLLinkedListNode *root = PlGetFirstNode( shaderPrograms );
-	while ( root != NULL )
-	{
-		YNCoreShaderProgramIndex *programIndex = PlGetLinkedListNodeUserData( root );
-		if ( strcmp( name, programIndex->internalName ) == 0 )
-			return programIndex;
-
-		root = PlGetNextLinkedListNode( root );
-	}
-
-	return NULL;
+	return ( YNCoreShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
 void YR_Shader_Initialize( void )
 {
-	shaderPrograms = PlCreateLinkedList();
-	if ( shaderPrograms == NULL )
+	shaderProgramTable = PlCreateHashTable();
+	if ( shaderProgramTable == NULL )
+	{
 		PRINT_ERROR( "Failed to create shader program list: %s\n", PlGetError() );
+	}
 
 	PRINT( "Scanning for shader programs...\n" );
 
 	PlScanDirectory( "materials/shaders", "node", RS_LoadShaderProgram, false, NULL );
 	PlScanDirectory( "materials/shaders", "n", RS_LoadShaderProgram, false, NULL );
 
-	PRINT( "%d shader programs indexed\n", PlGetNumLinkedListNodes( shaderPrograms ) );
+	PRINT( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
 	/* now fetch the default programs */
-	const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
+	static const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
 	        [RS_SHADER_DEFAULT]        = "default",
 	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
 	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
@@ -235,7 +238,9 @@ void YR_Shader_Initialize( void )
 	{
 		YNCoreShaderProgramIndex *programIndex = YnCore_GetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
+		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
+		}
 
 		defaultShaderPrograms[ i ] = programIndex->internalPtr;
 	}
