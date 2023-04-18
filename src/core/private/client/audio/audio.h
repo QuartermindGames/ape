@@ -7,6 +7,12 @@
 
 PL_EXTERN_C
 
+typedef struct YNCoreAudioXWBRecord YNCoreAudioXWBRecord;
+typedef struct YNCoreAudioXWB YNCoreAudioXWB;
+
+YNCoreAudioXWB *YnCore_Audio_XWB_Load( const char *path );
+void YnCore_Audio_XWB_Destroy( YNCoreAudioXWB *xwb );
+
 /**
  * This list provides a number of
  * somewhat standard presets for
