@@ -64,8 +64,8 @@ void YnCore_InitializeAudio( void )
 		return;
 	}
 #else
-	const YNCoreAudioDriverInterface *Audio_OpenAL_GetDriverInterface( void );
-	audioDriverInterface = Audio_OpenAL_GetDriverInterface();
+	const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void );
+	audioDriverInterface = YnCore_Audio_OpenAL_GetDriverInterface();
 	if ( audioDriverInterface == NULL || !audioDriverInterface->Initialize() )
 	{
 		PRINT_WARNING( "Failed to initialize audio driver!\n" );

@@ -218,7 +218,7 @@ static void DestroySource( YNCoreAudioSource *source )
 	source->user = NULL;
 }
 
-const YNCoreAudioDriverInterface *Audio_OpenAL_GetDriverInterface( void )
+const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void )
 {
 	static YNCoreAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
