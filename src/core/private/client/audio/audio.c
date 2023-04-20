@@ -33,7 +33,7 @@ static struct
 	PLVector3 velocity;
 } audioListener;
 
-static void TestAudioCommand( unsigned int argc, char **argv )
+static void TestAudioCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	YNCoreAudioSample *sample = Audio_CacheSample( "sounds/testing/ping.wav" );
 	if ( sample == NULL )

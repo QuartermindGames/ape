@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: OpenAL driver for Yin
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -9,7 +10,6 @@
 #include "audio.h"
 
 /**
- * OpenAL driver for Yin
  * Cheekily based on the work I'd previously done here...
  * 	https://github.com/TalonBraveInfo/OpenHoW/blob/master/src/engine/audio/AudioManager.cpp
  */
@@ -65,7 +65,6 @@ static void Audio_OpenAL_Shutdown( void );
 
 static bool Initialize( void )
 {
-	return false;
 	xalDevice = alcOpenDevice( NULL );
 	if ( xalDevice == NULL )
 	{
