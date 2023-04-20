@@ -124,6 +124,14 @@ long os::editor::MainWindow::OnNew( FXObject *, FXSelector, void * )
 
 long os::editor::MainWindow::OnOpen( FXObject *, FXSelector, void * )
 {
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ] ) + "/", "*.wld.n" );
+	if ( filename.empty() )
+	{
+		return false;
+	}
+
+	YnCore_World_Load( filename.text() );
+
 	return 0;
 }
 

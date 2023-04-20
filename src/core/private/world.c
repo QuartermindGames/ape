@@ -35,24 +35,34 @@ YNCoreWorld *YnCore_World_Create( void )
 	return world;
 }
 
-YNCoreWorld *YnCore_World_Load( const char *path )
+YNCoreWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
 {
-	YNNodeBranch *node = YnNode_LoadFile( path, "world" );
-	if ( node == NULL )
-	{
-		PRINT_WARNING( "Failed to load world: %s\n", path );
-		return NULL;
-	}
-
 	YNCoreWorld *world = YnCore_World_Create();
-	snprintf( world->path, sizeof( world->path ), "%s", path );
-	if ( YnCore_WorldDeserialiser_Begin( node, world ) == NULL )
+	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
 	{
 		YnCore_World_Destroy( world );
 		world = NULL;
 	}
 
-	YnNode_DestroyBranch( node );
+	return world;
+}
+
+YNCoreWorld *YnCore_World_Load( const char *path )
+{
+	YNNodeBranch *root = YnNode_LoadFile( path, "world" );
+	if ( root == NULL )
+	{
+		PRINT_WARNING( "Failed to load world (%s): %s\n", path, YnNode_GetErrorMessage() );
+		return NULL;
+	}
+
+	YNCoreWorld *world = YnCore_World_LoadFromNode( root );
+	if ( world != NULL )
+	{
+		snprintf( world->path, sizeof( world->path ), "%s", path );
+	}
+
+	YnNode_DestroyBranch( root );
 
 	return world;
 }
@@ -251,7 +261,7 @@ YNCoreWorldFace **YnCore_WorldSector_GetMeshFaces( YNCoreWorldSector *sector, ui
 		return NULL;
 	}
 
-	*numFaces         = PlGetNumLinkedListNodes( sector->mesh->faces );
+	*numFaces               = PlGetNumLinkedListNodes( sector->mesh->faces );
 	YNCoreWorldFace **faces = PL_NEW_( YNCoreWorldFace *, *numFaces );
 
 	PLLinkedListNode *faceNode = PlGetFirstNode( sector->mesh->faces );
