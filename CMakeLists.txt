@@ -138,7 +138,6 @@ add_subdirectory(src/node/)
 add_subdirectory(src/game/)
 add_subdirectory(src/gui/)
 
-add_subdirectory(src/lisp/)
 add_subdirectory(src/dickens/lib/)
 add_subdirectory(src/dickens/dcmd/)
 

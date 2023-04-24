@@ -14,8 +14,6 @@
 
 #include "server/server.h"
 
-#include "scripting/lisp_interface.h"
-
 /****************************************
  * PRIVATE
  ****************************************/
@@ -62,9 +60,6 @@ void YnCore_InitializeGame( void )
 
 	PL_ZERO_( gameState );
 
-	Lisp_Interface_Initialize();
-	Lisp_Interface_CompileScript( "test.lisp" );
-
 	YnCore_EntityManager_Initialize();
 
 	const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
@@ -92,7 +87,6 @@ void YnCore_ShutdownGame( void )
 	gameModeInterface = NULL;
 
 	YnCore_EntityManager_Shutdown();
-	Lisp_Interface_Shutdown();
 }
 
 MenuState Game_GetMenuState( void )

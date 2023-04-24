@@ -64,7 +64,6 @@ add_library(yin-core STATIC
         private/legacy/actors/actor_player.c
         private/legacy/actors/sg_actors.c
 
-        private/scripting/lisp_interface.c
         private/server/server.c
         )
 add_dependencies(yin-core
@@ -108,5 +107,4 @@ target_link_libraries(yin-core
         plcore
         plgraphics
         plmodel
-        lisp
         )
