@@ -6,20 +6,25 @@
 
 PL_EXTERN_C
 
-void Editor_Initialize( void );
+typedef enum EditorStatus
+{
+	EDITOR_CLOSED,
+	EDITOR_CLOSING,
+	EDITOR_OPEN,
+} EditorStatus;
+EditorStatus YnCore_GetEditorStatus( void );
+
+void YnCore_RegisterEditorConsoleVariables( void );
+
+void YnCore_InitializeEditor( void );
 void YnCore_ShutdownEditor( void );
-void Editor_Tick( void );
-void Editor_Draw( const YNCoreViewport *viewport );
+void YnCore_TickEditor( void );
 
-void Editor_Commands_Register( void );
+void YnCore_DrawEditorGUI( const YNCoreViewport *viewport );
 
-void Editor_MaterialSelector_Initialize( void );
-void Editor_MaterialSelector_Shutdown( void );
-void Editor_MaterialSelector_Draw( const YNCoreViewport *viewport );
-
-YNCoreEditorInstance *Editor_GetCurrentInstance( void );
-void            Editor_SetCurrentInstance( YNCoreEditorInstance *instance );
-YNCoreEditorInstance *Editor_CreateInstance( YNCoreEditorMode mode );
-void            Editor_DestroyInstance( YNCoreEditorInstance *instance );
+YNCoreEditorContext *YnCore_GetCurrentEditorContext( void );
+YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier );
+YNCoreEditorContext *YnCore_SetEditorContext( YNCoreEditorContextType type );
+bool YnCore_IsEditorContextActive( const char *identifier );
 
 PL_EXTERN_C_END

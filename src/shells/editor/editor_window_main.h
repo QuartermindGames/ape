@@ -58,7 +58,6 @@ namespace os::editor
 			ID_TOGGLE_EDIT,
 			ID_TIMEOUT,
 			ID_TICK,
-			ID_OPENGL,
 			ID_ABOUT,
 
 			ID_PROJECT_PACKAGE,

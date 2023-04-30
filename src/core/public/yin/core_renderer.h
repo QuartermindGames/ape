@@ -14,7 +14,9 @@ typedef struct YNCoreMaterial YNCoreMaterial;
 // TODO: retire this...
 typedef enum YNCoreCacheGroup
 {
+	YN_CORE_CACHE_GROUP_EDITOR,
 	YN_CORE_CACHE_GROUP_WORLD, /* everything that is cached during level load */
+
 	YN_CORE_MAX_CACHE_GROUPS
 } YNCoreCacheGroup;
 

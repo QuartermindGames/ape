@@ -92,6 +92,8 @@ typedef struct YNCoreAudioSource
 void YnCore_InitializeAudio( void );
 void YnCore_ShutdownAudio( void );
 
+void Audio_RegisterConsoleVariables( void );
+
 void YnCore_TickAudio( void );
 void Audio_Pause( bool pause );
 

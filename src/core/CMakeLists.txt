@@ -25,8 +25,9 @@ add_library(yin-core STATIC
         private/core.c
 
         private/editor/editor.c
-        private/editor/editor_commands.c
+        private/editor/editor_lightmapper.c
         private/editor/editor_material_selector.c
+        private/editor/editor_world.c
 
         private/client/client.c
         private/client/client_console.c

@@ -17,7 +17,7 @@ static unsigned int numMaterials, maxMaterials;
 
 static void CacheMaterialPreviewCallback( const char *path, void *user )
 {
-	YNCoreMaterial *material = YnCore_Material_Cache( path, YN_CORE_CACHE_GROUP_WORLD, false, true );
+	YNCoreMaterial *material = YnCore_Material_Cache( path, YN_CORE_CACHE_GROUP_EDITOR, false, true );
 	if ( material == NULL )
 		return;
 
@@ -64,7 +64,6 @@ void Editor_MaterialSelector_Shutdown( void )
  */
 void Editor_MaterialSelector_Draw( const YNCoreViewport *viewport )
 {
-	return;
 	static const unsigned int mw = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int mh = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int sp = MATERIAL_DEFAULT_WIDTH / 8;

@@ -1,87 +1,178 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
-
-#include <plmodel/plm.h>
+// Purpose: Primary code for dealing with editor functionality.
 
 #include "core_private.h"
 #include "editor.h"
+#include "client/renderer/renderer.h"
 
-static PLVectorArray  *instances;
-static YNCoreEditorInstance *currentInstance = NULL;
+static YNCoreEditorContext *contexts[ YN_CORE_EDITOR_MAX_CONTEXTS ];
+static YNCoreEditorContext *currentContext = NULL;
 
-void Editor_Initialize( void )
+static EditorStatus editorStatus = EDITOR_CLOSED;
+EditorStatus YnCore_GetEditorStatus( void ) { return editorStatus; }
+
+void YnCore_RegisterEditorConsoleVariables( void )
 {
-	instances = PlCreateVectorArray( 4 );
+	YNCoreEditorContext *YnCore_RegisterWorldEditorContext( void );
+	contexts[ YN_CORE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
 
-	Editor_Commands_Register();
+	// setup shared vars per context
+	for ( unsigned int i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	{
+		char buf[ 64 ];
+
+		snprintf( buf, sizeof( buf ), "editor.%s.hideGrid", contexts[ i ]->identifier );
+		PlRegisterConsoleVariable( buf,
+		                           "Toggles grid for editor.",
+		                           "false", PL_VAR_BOOL,
+		                           &contexts[ i ]->hideGrid,
+		                           NULL, true );
+		snprintf( buf, sizeof( buf ), "editor.%s.useLineGrid", contexts[ i ]->identifier );
+		PlRegisterConsoleVariable( buf,
+		                           "Toggles between a dotted grid and line grid.",
+		                           "true", PL_VAR_BOOL,
+		                           &contexts[ i ]->useLineGrid,
+		                           NULL, true );
+		snprintf( buf, sizeof( buf ), "editor.%s.gridScale", contexts[ i ]->identifier );
+		PlRegisterConsoleVariable( buf,
+		                           "Sets the scale of the grid.",
+		                           "4", PL_VAR_I32,
+		                           &contexts[ i ]->gridScale,
+		                           NULL, true );
+	}
+}
+
+static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+{
+	if ( YnCore_GetCurrentEditorContext() != NULL )
+	{
+		//TODO: check status, do we need to save?
+		editorStatus   = EDITOR_CLOSED;
+		currentContext = NULL;
+		return;
+	}
+
+	YnCore_SetEditorContext( YN_CORE_EDITOR_CONTEXT_WORLD );
+}
+
+void YnCore_InitializeEditor( void )
+{
+	PlRegisterConsoleCommand( "editor",
+	                          "Enable/disable editor mode.",
+	                          0, ToggleEditorCallback );
+
+	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	{
+		assert( contexts[ i ]->Initialize != NULL );
+		if ( contexts[ i ]->Initialize == NULL )
+		{
+			continue;
+		}
+
+		contexts[ i ]->Initialize();
+	}
 }
 
 void YnCore_ShutdownEditor( void )
 {
-	Editor_MaterialSelector_Shutdown();
-}
-
-static void TickEditorInstance( YNCoreEditorInstance *instance )
-{
-	switch ( instance->mode )
+	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
 	{
-		case YN_CORE_EDITOR_MODE_WORLD:
-			break;
-		case YN_CORE_EDITOR_MODE_MODEL:
+		assert( contexts[ i ]->Shutdown != NULL );
+		if ( contexts[ i ]->Shutdown == NULL )
 		{
-			PLMModel *model = instance->modelMode.model;
-			if ( model == NULL )
-			{
-				break;
-			}
-			break;
+			continue;
 		}
-		case YN_CORE_EDITOR_MODE_MATERIAL:
-			break;
-		default:
-			break;
+
+		contexts[ i ]->Shutdown();
 	}
 }
 
-void Editor_Tick( void )
+void YnCore_TickEditor( void )
 {
-	unsigned int numInstances = PlGetNumVectorArrayElements( instances );
-	for ( unsigned int i = 0; i < numInstances; ++i )
+	if ( currentContext == NULL )
 	{
-		TickEditorInstance( PlGetVectorArrayElementAt( instances, i ) );
+		return;
 	}
-}
 
-static void DrawEditorInstance( YNCoreEditorInstance *instance, const YNCoreViewport *viewport )
-{
-}
-
-void Editor_Draw( const YNCoreViewport *viewport )
-{
-	unsigned int numInstances = PlGetNumVectorArrayElements( instances );
-	for ( unsigned int i = 0; i < numInstances; ++i )
+	assert( currentContext->Tick != NULL );
+	if ( currentContext->Tick == NULL )
 	{
+		return;
 	}
+
+	currentContext->Tick();
 }
 
-YNCoreEditorInstance *Editor_GetCurrentInstance( void )
+void YnCore_DrawEditor( void )
 {
-	return currentInstance;
+	if ( currentContext == NULL )
+	{
+		return;
+	}
+
+	assert( currentContext->Draw != NULL );
+	if ( currentContext->Draw == NULL )
+	{
+		return;
+	}
+
+	currentContext->Draw();
 }
 
-void Editor_SetCurrentInstance( YNCoreEditorInstance *instance )
+void YnCore_DrawEditorGUI( const YNCoreViewport *viewport )
 {
-	currentInstance = instance;
+	if ( currentContext == NULL )
+	{
+		return;
+	}
+
+	assert( currentContext->DrawGUI != NULL );
+	if ( currentContext->DrawGUI == NULL )
+	{
+		return;
+	}
+
+	currentContext->DrawGUI();
 }
 
-YNCoreEditorInstance *Editor_CreateInstance( YNCoreEditorMode mode )
+YNCoreEditorContext *YnCore_GetCurrentEditorContext( void )
 {
-	YNCoreEditorInstance *instance = PL_NEW( YNCoreEditorInstance );
-	instance->mode           = mode;
-	instance->gridScale      = 8;
-	PlPushBackVectorArrayElement( instances, instance );
-	return instance;
+	return currentContext;
 }
 
-void Editor_DestroyInstance( YNCoreEditorInstance *instance )
+YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier )
 {
+	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	{
+		if ( strcmp( contexts[ i ]->identifier, identifier ) != 0 )
+		{
+			continue;
+		}
+
+		return contexts[ i ];
+	}
+
+	return NULL;
+}
+
+YNCoreEditorContext *YnCore_SetEditorContext( YNCoreEditorContextType type )
+{
+	currentContext = contexts[ type ];
+	editorStatus   = EDITOR_OPEN;
+	if ( currentContext->OnActive != NULL )
+	{
+		currentContext->OnActive();
+	}
+	return currentContext;
+}
+
+bool YnCore_IsEditorContextActive( const char *identifier )
+{
+	if ( currentContext == NULL )
+	{
+		return false;
+	}
+
+	return ( strcmp( currentContext->name, identifier ) == 0 );
 }

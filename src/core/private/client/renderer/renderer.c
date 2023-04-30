@@ -20,6 +20,7 @@ YNCoreRendererStats g_gfxPerfStats;
 YNCoreRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
+PLGCamera *YnCore_Rend_GetAuxCamera( void ) { return auxCamera; }
 
 static PLGFrameBuffer *fboBuffer;
 
@@ -138,6 +139,8 @@ void YnCore_BeginDraw( YNCoreViewport *viewport )
 
 void YnCore_EndDraw( YNCoreViewport *viewport )
 {
+	PL_ZERO_( g_gfxPerfStats );
+
 	viewport->perf.numBatches   = 0;
 	viewport->perf.numTriangles = 0;
 	viewport->perf.numPolygons  = 0;
@@ -214,7 +217,9 @@ static void DrawScenePost( const YNCoreViewport *viewport )
 {
 	PL_GET_CVAR( "r.postProcessing", postProcessingVar );
 	if ( postProcessingVar == NULL || !postProcessingVar->b_value )
+	{
 		return;
+	}
 
 	R_PP_Draw( viewport );
 }
@@ -240,7 +245,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 		outOfBounds = true;
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	PLVector3   *points       = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
+	PLVector3 *points         = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
@@ -283,8 +288,8 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 
 	if ( heading != NULL )
 	{
-		size_t len  = strlen( heading );
-		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+		size_t len = strlen( heading );
+		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
 		Font_AddBitmapStringToPass( font, cPos, y + 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, len, false );
 	}
 
@@ -312,121 +317,27 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	PlFree( points );
 }
 
-static void DrawEditorOverlay( const YNCoreViewport *viewport )
-{
-	YNCoreEditorInstance *editorInstance = Editor_GetCurrentInstance();
-	if ( editorInstance == NULL )
-		return;
-
-	const YNCoreCamera *camera = viewport->camera;
-	if ( camera != NULL && ( camera->mode != YN_CORE_CAMERA_MODE_PERSPECTIVE ) && ( editorInstance->gridScale > 0 ) )
-	{
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-
-		static float z    = 16.0f;
-		float        zoom = roundf( z ) / 2.0f;
-
-		float x = 500.0f + sinf( zoom * 2.0f ) * 100.0f;
-		float y = 200.0f + cosf( zoom * 2.0f ) * 100.0f;
-
-		PLMatrix4 transform = PlMatrix4Identity();
-		transform           = PlScaleMatrix4( transform, ( PLVector3 ){ zoom, zoom, zoom } );
-
-		// stupid matrix bollocks, blargh
-		transform = PlTransposeMatrix4( &transform );
-		PlgSetViewMatrix( &transform );
-
-		//todo: hook these up with vars...
-		int m = ( viewport->width > viewport->height ) ? viewport->width : viewport->height;
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, editorInstance->gridScale / 2, &( PLColour ){ 70, 70, 70, 255 } );
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( editorInstance->gridScale / 2 ) * 4, &( PLColour ){ 100, 100, 100, 255 } );
-
-		switch ( camera->mode )
-		{
-			default:
-				break;
-			case YN_CORE_CAMERA_MODE_TOP:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
-				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ 0.0f, -y, -x } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
-				break;
-			case YN_CORE_CAMERA_MODE_FRONT:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
-				break;
-		}
-
-		// stupid matrix bollocks, blargh
-		transform = PlTransposeMatrix4( &transform );
-		PlgSetViewMatrix( &transform );
-
-		YNCoreCamera tmp;
-		PL_ZERO_( tmp );
-		tmp.internal = auxCamera;
-		YnCore_World_DrawWireframe( Game_GetCurrentWorld(), &tmp );
-
-		// reset the view matrix back to it's original state
-		PlgSetViewMatrix( &auxCamera->internal.view );
-	}
-
-	BitmapFont *defaultFont = Font_GetDefault();
-	if ( defaultFont == NULL )
-		return;
-
-	Font_BeginDraw( defaultFont );
-
-	const char *label;
-	if ( camera != NULL )
-	{
-		switch ( camera->mode )
-		{
-			default:
-			case YN_CORE_CAMERA_MODE_FRONT:
-				label = "Front";
-				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
-				label = "Left";
-				break;
-			case YN_CORE_CAMERA_MODE_PERSPECTIVE:
-				label = "Perspective";
-				break;
-			case YN_CORE_CAMERA_MODE_TOP:
-				label = "Top";
-				break;
-		}
-	}
-	else
-		label = "No camera!";
-
-	Font_AddBitmapStringToPass( defaultFont,
-	                            ( float ) ( ( viewport->width - ( defaultFont->cw * 2 ) ) - ( defaultFont->cw * strlen( label ) ) ),
-	                            ( float ) ( viewport->height - ( defaultFont->ch * 2 ) ),
-	                            1.0f, PL_COLOUR_GOLD, label, strlen( label ), true );
-
-	Font_Draw( defaultFont );
-}
-
 static void DrawDebugOverlay( const YNCoreViewport *viewport )
 {
 	PL_GET_CVAR( "debug.overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
+	{
 		return;
+	}
 
 	BitmapFont *defaultFont = Font_GetDefaultSmall();
 	assert( defaultFont != NULL );
 	if ( defaultFont == NULL )
+	{
 		return;
+	}
 
 	Font_BeginDraw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
 	static const float tx = 8 + 4;
-	float              y  = sy;
+	float y               = sy;
 
 	const YNCoreCamera *camera = viewport->camera;
 	if ( camera != NULL )
@@ -465,7 +376,7 @@ static void DrawDebugOverlay( const YNCoreViewport *viewport )
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
-		double      taskDelay;
+		double taskDelay;
 		const char *taskDescription = Sch_GetTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
 		Font_AddBitmapStringToPass( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
@@ -494,7 +405,7 @@ static void DrawDebugOverlay( const YNCoreViewport *viewport )
 				x += bw;
 			}
 
-			uint8_t       numPoints;
+			uint8_t numPoints;
 			const double *graph = Profiler_GetGraph( i, &numPoints );
 			YR_DrawGraph( cpuProfilerDescriptions[ i ], x, y, bw, graphHeight, graph, numPoints, .0f, 1.0f );
 			y += graphHeight;
@@ -510,13 +421,15 @@ void YnCore_Set2DViewportSize( int w, int h )
 
 void YnCore_Get2DViewportSize( int *width, int *height )
 {
-	*width  = 640;
-	*height = 480;
+	PlgGetViewport( NULL, NULL, width, height );
 }
 
 void YnCore_DrawMenu( const YNCoreViewport *viewport )
 {
-	YN_CORE_PROFILE_START( PROFILE_DRAW_UI );
+	if ( viewport == NULL )
+	{
+		return;
+	}
 
 	YnCore_Set2DViewportSize( viewport->width, viewport->height );
 
@@ -526,7 +439,7 @@ void YnCore_DrawMenu( const YNCoreViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	DrawScenePost( NULL );
+	DrawScenePost( viewport );
 
 	//YRCamera camera;
 	//PL_ZERO_( camera );
@@ -534,9 +447,7 @@ void YnCore_DrawMenu( const YNCoreViewport *viewport )
 	//YR_World_DrawWireframe( Game_GetCurrentWorld(), &camera );
 
 	YnCore_DrawGUI( viewport );
-
-	if ( viewport != NULL )
-		DrawEditorOverlay( viewport );
+	YnCore_DrawEditorGUI( viewport );
 
 	DrawDebugOverlay( viewport );
 
@@ -545,17 +456,15 @@ void YnCore_DrawMenu( const YNCoreViewport *viewport )
 	PlPopMatrix();
 
 	PlgSetDepthMask( true );
-
-	YN_CORE_PROFILE_END( PROFILE_DRAW_UI );
-
-	PL_ZERO_( g_gfxPerfStats );
 }
 
 void YnCore_Draw2DQuad( YNCoreMaterial *material, int x, int y, int w, int h )
 {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
+	{
 		mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 2, 4 );
+	}
 
 	PlgClearMesh( mesh );
 
@@ -599,9 +508,11 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
 {
 	YNCoreWorldSector *currentSector = NULL;
-	YNCoreWorld *world         = Game_GetCurrentWorld();
+	YNCoreWorld *world               = Game_GetCurrentWorld();
 	if ( world != NULL )
+	{
 		currentSector = YnCore_World_GetSectorByGlobalOrigin( world, &camera->internal->position );
+	}
 
 	/* todo:	
 		this needs to be restructured, as drawing is going to
@@ -609,16 +520,22 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 		but for v2, this'll suffice...
 	*/
 
+	YN_CORE_PROFILE_START( PROFILE_DRAW_WORLD );
+
 	if ( viewport != NULL )
 	{
 		if ( camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE )
 		{
 			if ( camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME )
+			{
 				YnCore_World_DrawWireframe( world, camera );
+			}
 			else
+			{
 				YnCore_World_Draw( world, currentSector, camera );
+			}
 
-			YNCoreEditorInstance *editorInstance = Editor_GetCurrentInstance();
+			YNCoreEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
 			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
 			{
 				PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -645,25 +562,21 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 		}
 	}
 	else
+	{
 		YnCore_World_Draw( world, currentSector, camera );
+	}
 
-#if 0
-	static PLVector3 rotation = PLVector3( 0.0f, 0.0f, 0.0f );
-	R_DrawAxesPivot( PLVector3( 16.0f, -0.0f, 0.0f ), rotation );
-	rotation.x += 0.5f;
-	rotation.y += 0.5f;
-	rotation.z += 0.5f;
-#endif
+	YN_CORE_PROFILE_END( PROFILE_DRAW_WORLD );
 }
 
 static PLGTexture *colourTexture;
-PLGTexture        *YnCore_GetPrimaryColourAttachment( void )
+PLGTexture *YnCore_GetPrimaryColourAttachment( void )
 {
 	return colourTexture;
 }
 
 static PLGTexture *depthTexture;
-PLGTexture        *YnCore_GetPrimaryDepthAttachment( void )
+PLGTexture *YnCore_GetPrimaryDepthAttachment( void )
 {
 	return depthTexture;
 }
@@ -680,12 +593,16 @@ void YR_DrawScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
 
 	PL_GET_CVAR( "r.wireframe", wireframeMode );
 	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 
 	YR_RenderScene( camera, viewport );
 
 	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 }

@@ -47,6 +47,11 @@ static void TestAudioCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv
 	YnCore_AudioSample_Release( sample );
 }
 
+static void PlayAudioCommand( unsigned int argc, char **argv )
+{
+
+}
+
 void YnCore_InitializeAudio( void )
 {
 	if ( audioInitialized )
@@ -77,6 +82,7 @@ void YnCore_InitializeAudio( void )
 	audioSamples = PlCAlloc( maxSamples, sizeof( YNCoreAudioSample ), true );
 
 	PlRegisterConsoleCommand( "audio.test", "Test the audio system.", 0, TestAudioCommand );
+	PlRegisterConsoleCommand( "audio.play", "Play a specific sound.", 1, PlayAudioCommand );
 
 	// reset listener
 	Audio_ClearListener();

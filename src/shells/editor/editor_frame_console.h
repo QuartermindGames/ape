@@ -12,8 +12,8 @@ namespace os::editor
 		FXDECLARE( ConsoleFrame )
 
 	public:
-		ConsoleFrame( FXComposite *composite );
-		virtual ~ConsoleFrame();
+		explicit ConsoleFrame( FXComposite *composite );
+		~ConsoleFrame() override;
 
 		enum
 		{
@@ -29,8 +29,8 @@ namespace os::editor
 	private:
 		inline ConsoleFrame() = default;
 
-		FXText *logField;
-		FXButton *submitButton;
-		FXTextField *submitField;
+		FXText *logField{};
+		FXButton *submitButton{};
+		FXTextField *submitField{};
 	};
 }// namespace os::editor

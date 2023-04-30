@@ -579,7 +579,9 @@ void YnCore_Material_Release( YNCoreMaterial *material )
 
 	/* Fallback material isn't owned by the memory manager. */
 	if ( material == fallbackMaterial )
+	{
 		return;
+	}
 
 	MemoryManager_ReleaseReference( &material->mem );
 }

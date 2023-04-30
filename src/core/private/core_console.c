@@ -6,6 +6,7 @@
 #include <yin/node.h>
 
 #include "client/client_input.h"
+#include "editor/editor.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -172,6 +173,8 @@ void YnCore_RegisterConsoleVariables( bool isDedicated )
 	// Client variables
 	if ( !isDedicated )
 		Client_Console_RegisterConsoleVariables();
+
+	YnCore_RegisterEditorConsoleVariables();
 }
 
 static int logLevels[ YINENGINE_LOG_LEVELS ];

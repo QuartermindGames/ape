@@ -8,13 +8,14 @@
 
 PL_EXTERN_C
 
-typedef enum YNCoreEditorMode
+typedef enum YNCoreEditorContextType
 {
-	YN_CORE_EDITOR_MODE_WORLD,
-	YN_CORE_EDITOR_MODE_MODEL,
-	YN_CORE_EDITOR_MODE_MATERIAL,
-	YN_CORE_EDITOR_MAX_MODES
-} YNCoreEditorMode;
+	YN_CORE_EDITOR_CONTEXT_WORLD,
+	//YN_CORE_EDITOR_CONTEXT_MODEL,
+	//YN_CORE_EDITOR_CONTEXT_MATERIAL,
+
+	YN_CORE_EDITOR_MAX_CONTEXTS
+} YNCoreEditorContextType;
 
 #define YN_CORE_EDITOR_MAX_VIEWPORTS      4
 #define YN_CORE_EDITOR_MAX_VIEW_BOOKMARKS 16
@@ -55,37 +56,39 @@ typedef enum YNCoreEditorGeometryMode
 	EDITOR_MAX_GEOMETRYMODES
 } YNCoreEditorGeometryMode;
 
+typedef struct YNCoreEditorGlobalContext
+{
+	YNCoreWorld *world;
+} YNCoreEditorGlobalContext;
+YNCoreEditorGlobalContext *YnCore_GetGlobalEditorContext( void );
+
 /* An instance represents literally a unique instance
  * of an editing state, which can have it's own world, model
  * or whatever resource open.
  * */
-typedef struct YNCoreEditorInstance
+typedef struct YNCoreEditorContext
 {
-	YNCoreEditorMode mode;
-	union
-	{
-		struct
-		{
-			YNCoreWorld *world;
-		} worldMode;
-		struct
-		{
-			struct PLMModel *model;
-		} modelMode;
-		struct
-		{
-			struct Material *material;
-			struct PLGMesh *mesh;
-		} materialMode;
-	};
+	const char *name, *identifier;
+
+	// required
+	void ( *RegisterConsoleVariables )( void );
+	void ( *Initialize )( void );
+	void ( *Shutdown )( void );
+	void ( *Draw )( void );
+	void ( *DrawGUI )( void );
+	void ( *Tick )( void );
+	// optionals
+	void ( *OnActive )( void );
+
+	YNCoreEditorContextType mode;
 
 	bool hideGrid;
 	bool useLineGrid;
 	PLMatrix4 gridTransform;
-	unsigned int gridScale;
+	int32_t gridScale;
 
 	YNCoreViewport *viewports[ YN_CORE_EDITOR_MAX_VIEWPORTS ];
 	YNCoreCamera *camera;
-} YNCoreEditorInstance;
+} YNCoreEditorContext;
 
 PL_EXTERN_C_END

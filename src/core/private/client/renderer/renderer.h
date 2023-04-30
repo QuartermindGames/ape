@@ -106,6 +106,8 @@ extern YNCoreRendererPassState rendererState;
 void YnCore_InitializeRenderer( void );
 void YnCore_ShutdownRenderer( void );
 
+PLGCamera *YnCore_Rend_GetAuxCamera( void );
+
 void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
 PLGTexture *YnCore_GetPrimaryColourAttachment( void );
 PLGTexture *YnCore_GetPrimaryDepthAttachment( void );

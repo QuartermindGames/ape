@@ -14,20 +14,28 @@
  * particular window.
  */
 
-#define MAX_VIEWPORTS 4
-static YNCoreViewport *viewports[ MAX_VIEWPORTS ] =
-        { NULL, NULL, NULL, NULL };
+#define MAX_VIEWPORTS 16
+static YNCoreViewport *viewports[ MAX_VIEWPORTS ];
+static bool isInitialized = false;
 
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
 YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle )
 {
+	if ( !isInitialized )
+	{
+		PL_ZERO( viewports, sizeof( YNCoreViewport * ) * MAX_VIEWPORTS );
+		isInitialized = true;
+	}
+
 	unsigned int i = 0;
 	for ( ; i < MAX_VIEWPORTS; ++i )
 	{
 		if ( viewports[ i ] != NULL )
+		{
 			continue;
+		}
 
 		break;
 	}
@@ -52,7 +60,9 @@ YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, voi
 void YnCore_Viewport_Destroy( YNCoreViewport *viewport )
 {
 	if ( viewport == NULL )
+	{
 		return;
+	}
 
 	unsigned int index = viewport->index;
 	PL_DELETE( viewports[ index ] );
@@ -98,7 +108,9 @@ unsigned int YnCore_Viewport_GetAverageFPS( const YNCoreViewport *viewport )
 {
 	double t = 0.0;
 	for ( unsigned int i = 0; i < YN_CORE_MAX_FPS_READINGS; ++i )
+	{
 		t += viewport->perf.frameReadings[ i ];
+	}
 
 	return ( unsigned int ) ( t / YN_CORE_MAX_FPS_READINGS );
 }

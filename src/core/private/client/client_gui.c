@@ -15,8 +15,8 @@
 static GUICanvas *canvas;
 
 static const GUIStyleSheet *defaultStyle;
-static GUIPanel            *rootPanel;
-static GUIPanel            *cursor;
+static GUIPanel *rootPanel;
+static GUIPanel *cursor;
 
 static int guiWidth  = 800;
 static int guiHeight = 600;
@@ -33,31 +33,43 @@ void YnCore_InitializeGUI( void )
 
 	YNCoreRenderTarget *guiTarget = YnCore_RenderTarget_Create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	if ( guiTarget == NULL )
+	{
 		PRINT_ERROR( "Failed to create default render target for GUI!\n" );
+	}
 
 	baseGuiMat = YnCore_Material_Cache( "materials/ui/ui_rt_base.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
 	if ( baseGuiMat == NULL )
+	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
+	}
 
 	GUI_Initialize();
 
 	defaultStyle = GUI_CacheStyleSheet( "guis/styles/default.n" );
 	if ( defaultStyle == NULL )
+	{
 		PRINT_ERROR( "Failed to cache base style for GUI!\n" );
+	}
 
 	GUI_SetStyleSheet( defaultStyle );
 
 	canvas = GUI_CreateCanvas( guiWidth, guiHeight );
 	if ( canvas == NULL )
+	{
 		PRINT_ERROR( "Failed to create GUI canvas!\n" );
+	}
 
 	rootPanel = GUI_Panel_Create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 	if ( rootPanel == NULL )
+	{
 		PRINT_ERROR( "Failed to create base panel!\n" );
+	}
 
 	cursor = GUI_Cursor_Create( rootPanel, 0, 0 );
 	if ( cursor == NULL )
+	{
 		PRINT_ERROR( "Failed to create cursor!\n" );
+	}
 
 	GUI_Panel_SetVisible( rootPanel, true );
 }
@@ -124,10 +136,13 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 	YN_CORE_PROFILE_END( PROFILE_DRAW_GUI );
 
 	if ( gameModeInterface->DrawMenu != NULL )
+	{
 		gameModeInterface->DrawMenu( viewport );
+	}
 
-	Editor_MaterialSelector_Draw( viewport );
+	YnCore_DrawEditorGUI( viewport );
 
+	// todo: this should use GUI
 	PL_GET_CVAR( "debug.overlay", debugOverlay );
 	PL_GET_CVAR( "r.showFPS", showFPS );
 	if ( showFPS->b_value && debugOverlay->i_value == 0 )

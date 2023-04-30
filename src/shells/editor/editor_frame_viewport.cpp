@@ -95,7 +95,7 @@ void ViewportFrame::Draw()
 
 	PlgSetViewport( 0, 0, w, h );
 
-	if ( YnCore_IsEngineRunning() )
+	if ( YnCore_IsEngineRunning() && engineViewportHandle != nullptr )
 	{
 		YnCore_Viewport_SetSize( engineViewportHandle, w, h );
 		YnCore_RenderFrame( engineViewportHandle );
@@ -106,7 +106,7 @@ void ViewportFrame::Draw()
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	}
 
-	if ( visual_->isDoubleBuffer() )
+	if ( visual_ != nullptr && visual_->isDoubleBuffer() )
 		canvas_->swapBuffers();
 }
 

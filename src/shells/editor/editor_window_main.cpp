@@ -154,7 +154,7 @@ long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	YNCoreMaterial *material = YnCore_Material_Cache( filename.text(), YN_CORE_CACHE_GROUP_WORLD, false, false );
+	YNCoreMaterial *material = YnCore_Material_Cache( filename.text(), YN_CORE_CACHE_GROUP_EDITOR, false, false );
 	if ( material == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to load material (%s)!", filename.text() );

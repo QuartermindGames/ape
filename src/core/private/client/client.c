@@ -17,7 +17,7 @@
 typedef struct ClientState
 {
 	NetSocket *netSocket;
-	bool       isConnected;
+	bool isConnected;
 
 	bool isEditMode;
 
@@ -33,7 +33,7 @@ void YnCore_InitializeClient( void )
 
 	YnCore_InitializeRenderer();
 	YnCore_InitializeAudio();
-	Editor_Initialize();
+	YnCore_InitializeEditor();
 
 	YnCore_InitializeGUI();
 
@@ -55,7 +55,9 @@ void YnCore_DrawClient( YNCoreViewport *viewport )
 
 	YnCore_DrawPerspective( viewport->camera, viewport );
 
+	YN_CORE_PROFILE_START( PROFILE_DRAW_UI );
 	YnCore_DrawMenu( viewport );
+	YN_CORE_PROFILE_END( PROFILE_DRAW_UI );
 
 	YnCore_EndDraw( viewport );
 }
@@ -91,13 +93,7 @@ void YnCore_TickClient( void )
 
 	Client_Input_Tick();
 
-	/* edit mode is it's own special thing */
-	if ( clientState.isEditMode )
-	{
-		Editor_Tick();
-		return;
-	}
-
+	YnCore_TickEditor();
 	YnCore_TickGUI();
 
 	Client_HandleConnectionState();

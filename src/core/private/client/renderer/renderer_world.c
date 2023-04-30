@@ -34,7 +34,9 @@ static void DrawSkyLayer( PLGMesh *mesh, YNCoreMaterial *material, const PLVecto
 static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
 {
 	if ( world->numSkyMaterials == 0 )
+	{
 		return;
+	}
 
 	static PLGMesh *skyMesh = NULL;
 	if ( skyMesh == NULL )
@@ -57,7 +59,9 @@ static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
 
 		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
 		if ( skyMesh == NULL )
+		{
 			PRINT_ERROR( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
+		}
 
 		PlgAddMeshVertex( skyMesh, &PLVector3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );   /* top right */
 		PlgAddMeshVertex( skyMesh, &PLVector3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );    /* top right far */
@@ -69,7 +73,9 @@ static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
 		PlgAddMeshVertex( skyMesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );   /* top left far */
 
 		for ( unsigned int i = 0; i < numTriangles; ++i )
+		{
 			PlgAddMeshTriangle( skyMesh, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
+		}
 
 		PlgUploadMesh( skyMesh );
 	}
@@ -121,8 +127,9 @@ static void DrawFace( YNCoreWorldMesh *mesh, YNCoreWorldFace *face )
 	unsigned int *indices  = YnCore_World_ConvertFaceToTriangles( face, &numTriangles );
 	unsigned int *curIndex = indices;
 	for ( unsigned int k = 0; k < numTriangles; ++k, curIndex += 3 )
+	{
 		PlgAddMeshTriangle( mesh->drawMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );
-
+	}
 	PL_DELETE( indices );
 
 	g_gfxPerfStats.numFacesDrawn++;
@@ -142,7 +149,9 @@ static void DrawFaces( YNCoreWorldMesh *sectorBody, PLLinkedList *visibleFaces, 
 
 		YNCoreMaterial *material = ( i < sectorBody->numMaterials ) ? sectorBody->materials[ i ] : YnCore_GetFallbackMaterial();
 		if ( i < sectorBody->numMaterials && ( material == YnCore_GetFallbackMaterial() ) )
+		{
 			continue;
+		}
 
 		PLLinkedListNode *faceNode = PlGetFirstNode( visibleFaces );
 		while ( faceNode != NULL )
@@ -175,11 +184,15 @@ static void DrawSector( YNCoreWorld *world, YNCoreWorldSector *sector, YNCoreCam
 static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMesh, YNCoreCamera *camera )
 {
 	if ( worldMesh == NULL )
+	{
 		return;
+	}
 
 	PLLinkedList *visibleFaces = VIS_GetVisibleFaces( camera, worldMesh->faces );
 	if ( PlGetNumLinkedListNodes( visibleFaces ) == 0 )
+	{
 		return;
+	}
 
 	// Now check for portals - we'll draw these first
 	PLLinkedList *visiblePortals = VIS_GetVisiblePortals( camera, visibleFaces );
@@ -320,7 +333,9 @@ static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMes
 static void DrawSector( YNCoreWorld *world, YNCoreWorldSector *sector, YNCoreCamera *camera )
 {
 	if ( sector == NULL )
+	{
 		return;
+	}
 
 	DrawSectorBody( sector, sector->mesh, camera );
 
@@ -351,7 +366,9 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
 		if ( world->sectors[ i ].mesh == NULL )
+		{
 			continue;
+		}
 
 		YNCoreWorldMesh *mesh  = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
@@ -365,15 +382,23 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 
 				PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
 				if ( face->targetSector != NULL )
+				{
 					PlgImmColour( 255, 0, 255, 255 );
+				}
 				else
+				{
 					PlgImmColour( 255, 255, 255, 255 );
+				}
 
 				PlgImmPushVertex( b->position.x, b->position.y, b->position.z );
 				if ( face->targetSector != NULL )
+				{
 					PlgImmColour( 255, 0, 255, 255 );
+				}
 				else
+				{
 					PlgImmColour( 255, 255, 255, 255 );
+				}
 			}
 
 			node = PlGetNextLinkedListNode( node );
@@ -386,7 +411,9 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
 		if ( world->sectors[ i ].mesh == NULL )
+		{
 			continue;
+		}
 
 		YNCoreWorldMesh *mesh  = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
@@ -411,9 +438,9 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 void YnCore_World_Draw( YNCoreWorld *world, YNCoreWorldSector *originSector, YNCoreCamera *camera )
 {
 	if ( world == NULL )
+	{
 		return;
-
-	YN_CORE_PROFILE_START( PROFILE_DRAW_WORLD );
+	}
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -425,6 +452,4 @@ void YnCore_World_Draw( YNCoreWorld *world, YNCoreWorldSector *originSector, YNC
 	DrawSector( world, originSector, camera );
 
 	PlPopMatrix();
-
-	YN_CORE_PROFILE_END( PROFILE_DRAW_WORLD );
 }
