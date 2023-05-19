@@ -10,7 +10,6 @@ object config
         array string mountLocations
         {
             "projects/base"
-            "scripts"
         }
 
         array string aliases

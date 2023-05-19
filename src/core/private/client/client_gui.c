@@ -97,7 +97,7 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 
 		PlgSetCullMode( PLG_CULL_NEGATIVE );
 
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
 		PlgSetTexture( texture, 0 );
 
 		PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
@@ -127,7 +127,7 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 	if ( drawGUI )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 		GUI_SetCanvasSize( canvas, guiWidth, guiHeight );
 		GUI_Draw( canvas, rootPanel );
 
@@ -149,7 +149,12 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 	{
 		char tmp[ 32 ];
 		snprintf( tmp, sizeof( tmp ), "FPS: %u", YnCore_Viewport_GetAverageFPS( viewport ) );
-		Font_DrawBitmapString( Font_GetDefaultSmall(), 10, 10, 1.0f, 1.0f, PL_COLOUR_GOLD, tmp, true );
+		GUI_Font_DrawString( GUI_Font_GetDefault( GUI_FONT_DEFAULT_MEDIUM ),
+		                     10.0f, 10.0f, NULL, NULL,
+		                     1.0f,
+		                     &PL_COLOUR_GOLD,
+		                     tmp, strlen( tmp ),
+		                     false );
 	}
 
 	// todo: this should use GUI

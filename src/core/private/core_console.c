@@ -64,7 +64,7 @@ CMD_CALLBACK( Quit )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-    YnCore_Shutdown();
+	ogeShutdown();
 }
 
 CMD_CALLBACK( Version )

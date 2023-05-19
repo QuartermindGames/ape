@@ -120,7 +120,7 @@ void YnCore_Set2DViewportSize( int w, int h );
 void YnCore_Get2DViewportSize( int *width, int *height );
 void YnCore_DrawMenu( const YNCoreViewport *viewport );
 
-struct YNCoreShaderProgramIndex *YnCore_GetShaderProgramByName( const char *name );
+struct OGEShaderProgramIndex *ogeGetShaderProgramByName( const char *name );
 
 void YnCore_DrawPerspective( YNCoreCamera *camera, const YNCoreViewport *viewport );
 
@@ -130,7 +130,7 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
 void YnCore_Sprite_DrawAnimation( YNCoreSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLGTexture *YnCore_LoadTexture( const char *path, PLGTextureFilter filterMode );
+PLGTexture *ogeLoadTexture( const char *path, PLGTextureFilter filterMode );
 PLGTexture *YnCore_GetFallbackTexture( void );
 
 #if 0

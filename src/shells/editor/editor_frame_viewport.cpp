@@ -95,10 +95,10 @@ void ViewportFrame::Draw()
 
 	PlgSetViewport( 0, 0, w, h );
 
-	if ( YnCore_IsEngineRunning() && engineViewportHandle != nullptr )
+	if ( ogeIsEngineRunning() && engineViewportHandle != nullptr )
 	{
-		YnCore_Viewport_SetSize( engineViewportHandle, w, h );
-		YnCore_RenderFrame( engineViewportHandle );
+		ogeViewport_SetSize( engineViewportHandle, w, h );
+		ogeRenderFrame( engineViewportHandle );
 	}
 	else
 	{
@@ -124,7 +124,7 @@ long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
 	int const x = event->win_x;
 	int const y = event->win_y;
 
-	YnCore_HandleMouseMotionEvent( x, y );
+	ogeHandleMouseMotionEvent( x, y );
 
 	return 0;
 }

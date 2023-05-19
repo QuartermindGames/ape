@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -8,6 +8,8 @@
 #include <plgraphics/plg_texture.h>
 
 #include <yin/core_renderer.h>
+
+PL_EXTERN_C
 
 typedef struct GUIVector2
 {
@@ -20,25 +22,25 @@ typedef struct GUIVector2
 
 typedef struct GUICanvas GUICanvas;// represents what the GUI draws to
 
-GUICanvas  *GUI_CreateCanvas( int width, int height );
-void        GUI_DestroyCanvas( GUICanvas *canvas );
-void        GUI_SetCanvasSize( GUICanvas *canvas, int width, int height );
-void        GUI_GetCanvasSize( GUICanvas *canvas, int *width, int *height );
+GUICanvas *GUI_CreateCanvas( int width, int height );
+void GUI_DestroyCanvas( GUICanvas *canvas );
+void GUI_SetCanvasSize( GUICanvas *canvas, int width, int height );
+void GUI_GetCanvasSize( GUICanvas *canvas, int *width, int *height );
 PLGTexture *GUI_GetCanvasTexture( GUICanvas *canvas );
 
 /****************************************
  ****************************************/
 
-typedef struct GUIBitmapFont GUIBitmapFont;
+typedef struct GUIFont GUIFont;
 typedef struct GUIStyleSheet GUIStyleSheet;
 
 typedef struct GUIPanel GUIPanel;
 
-void GUI_Initialize( void );
+bool GUI_Initialize( void );
 void GUI_Shutdown( void );
 
 const GUIStyleSheet *GUI_CacheStyleSheet( const char *path );
-void                 GUI_SetStyleSheet( const GUIStyleSheet *styleSheet );
+void GUI_SetStyleSheet( const GUIStyleSheet *styleSheet );
 const GUIStyleSheet *GUI_GetActiveStyleSheet( void );
 
 void GUI_Tick( GUIPanel *root );
@@ -77,7 +79,7 @@ typedef enum GUIPanelBorder
 } GUIPanelBorder;
 
 GUIPanel *GUI_Panel_Create( GUIPanel *parent, int x, int y, int w, int h, GUIPanelBackground background, GUIPanelBorder border );
-void      GUI_Panel_Destroy( GUIPanel *self );
+void GUI_Panel_Destroy( GUIPanel *self );
 
 void GUI_Panel_SetStyleSheet( GUIPanel *self, const GUIStyleSheet *styleSheet );
 
@@ -85,7 +87,7 @@ void GUI_Panel_Draw( GUIPanel *self );
 void GUI_Panel_DrawBackground( GUIPanel *self );
 void GUI_Panel_Tick( GUIPanel *self );
 
-void     GUI_Panel_SetBackgroundColour( GUIPanel *self, const PLColour *colour );
+void GUI_Panel_SetBackgroundColour( GUIPanel *self, const PLColour *colour );
 PLColour GUI_Panel_GetBackgroundColour( GUIPanel *self );
 
 void GUI_Panel_SetBorder( GUIPanel *self, GUIPanelBorder border );
@@ -116,7 +118,35 @@ void GUI_Panel_SetVisible( GUIPanel *self, bool flag );
  ****************************************/
 
 GUIPanel *GUI_Cursor_Create( GUIPanel *parent, int x, int y );
-void      GUI_Cursor_Destroy( GUIPanel *self );
+void GUI_Cursor_Destroy( GUIPanel *self );
 
 /****************************************
  ****************************************/
+
+/****************************************
+ * Font
+ ****************************************/
+
+typedef enum GUIFontDefaultType
+{
+	GUI_FONT_DEFAULT_LARGE,
+	GUI_FONT_DEFAULT_MEDIUM,
+	GUI_FONT_DEFAULT_SMALL,
+	GUI_FONT_DEFAULT_TINY,
+
+	GUI_MAX_FONT_DEFAULTS
+} GUIFontDefaultType;
+
+GUIFont *GUI_Font_GetDefault( GUIFontDefaultType defaultType );
+
+void GUI_Font_Destroy( GUIFont *font );
+
+GUIFont *GUI_Font_Deserialize( PLFile *file );
+GUIFont *GUI_Font_LoadFile( const char *path );
+
+void GUI_Font_GetStringPixelSize( const GUIFont *font, float scale, const char *string, size_t length, float *dw, float *dh );
+void GUI_Font_DrawCharacter( const GUIFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
+void GUI_Font_DrawString( const GUIFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
+void GUI_Font_Display( GUIFont *font );
+
+PL_EXTERN_C_END

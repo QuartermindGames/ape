@@ -10,7 +10,8 @@
 #include "game_interface.h"
 
 #include <yin/node.h>
-#include "gui_public.h"
+
+#include "../gui/gui_private.h"
 
 static PLLinkedList *materials[ YN_CORE_MAX_CACHE_GROUPS ];
 
@@ -21,7 +22,7 @@ static PLGTexture *previewFallbackTexture;
 typedef struct YNCoreMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	YNCoreMaterialPass passes[ MAX_MATERIAL_PASSES ];
+	OGEMaterialPass passes[ MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
@@ -37,7 +38,7 @@ YNCoreMaterial *YnCore_GetFallbackMaterial( void )
 	return fallbackMaterial;
 }
 
-void YnCore_InitializeMaterialSystem( void )
+void ogeInitializeMaterialSystem( void )
 {
 	PRINT( "Initializing material system\n" );
 
@@ -48,9 +49,9 @@ void YnCore_InitializeMaterialSystem( void )
 			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
 	}
 
-	normalFallbackTexture   = YnCore_LoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
-	specularFallbackTexture = YnCore_LoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
-	previewFallbackTexture  = YnCore_LoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
+	normalFallbackTexture   = ogeLoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
+	specularFallbackTexture = ogeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
+	previewFallbackTexture  = ogeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	/* go ahead and create the fallback material */
 	fallbackMaterial = PL_NEW( YNCoreMaterial );
@@ -58,7 +59,7 @@ void YnCore_InitializeMaterialSystem( void )
 	fallbackMaterial->numPasses                  = 1;
 	fallbackMaterial->preview                    = previewFallbackTexture;
 	fallbackMaterial->isCached                   = true;
-	fallbackMaterial->passes[ 0 ].program        = defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ];
+	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
@@ -67,7 +68,7 @@ void YnCore_InitializeMaterialSystem( void )
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = YnCore_GetFallbackTexture();
 }
 
-void YnCore_ShutdownMaterialSystem( void )
+void ogeShutdownMaterialSystem( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	MemoryManager_FlushUnreferencedResources();
@@ -141,7 +142,7 @@ static int RM_GetBlendModeByTag( const char *tag )
 /**
  * Convert the given tag into it's built-in type.
  */
-static MaterialBuiltinVar GetBuiltInByTag( const char *tag )
+static OGEMaterialBuiltinVar GetBuiltInByTag( const char *tag )
 {
 	static const char *builtInTags[] = {
 	        [MATERIAL_BUILTIN_TIME]          = "time",
@@ -166,7 +167,7 @@ static MaterialBuiltinVar GetBuiltInByTag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool ValidateMaterialVariable( MaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool ValidateMaterialVariable( OGEMaterialVariable *variable, PLGShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
@@ -209,7 +210,7 @@ static bool ValidateMaterialVariable( MaterialVariable *variable, PLGShaderUnifo
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void ParseShaderParameters( YNCoreMaterialPass *materialPass, YNNodeBranch *root )
+static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *root )
 {
 	YNNodeBranch *node = YnNode_GetFirstChild( root );
 	while ( node != NULL )
@@ -217,7 +218,7 @@ static void ParseShaderParameters( YNCoreMaterialPass *materialPass, YNNodeBranc
 		/* fetch the next node, so we can roll onto the next element early */
 		YNNodeBranch *next = YnNode_GetNextChild( node );
 
-		MaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
+		OGEMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
@@ -259,7 +260,7 @@ static void ParseShaderParameters( YNCoreMaterialPass *materialPass, YNNodeBranc
 				else
 				{
 					/* lookup what it actually is */
-					MaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
+					OGEMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
 					if ( materialBuiltinVar == MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
@@ -347,7 +348,7 @@ static void ParseShaderParameters( YNCoreMaterialPass *materialPass, YNNodeBranc
 						materialVariable->hint = RM_VAR_HINT_SPECULAR;
 
 					materialVariable->type         = MATERIAL_VAR_TEXTURE;
-					materialVariable->data.userPtr = YnCore_LoadTexture( texturePath, materialPass->textureFilter );
+					materialVariable->data.userPtr = ogeLoadTexture( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
@@ -373,7 +374,7 @@ static void ParseShaderParameters( YNCoreMaterialPass *materialPass, YNNodeBranc
 	}
 }
 
-void YnCore_Material_ParsePass( YNNodeBranch *root, YNCoreMaterialPass *materialPass )
+void ogeMaterial_ParsePass( struct YNNodeBranch *root, OGEMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	YNNodeBranch *subNode;
@@ -430,7 +431,7 @@ static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *ro
 		material->preview          = previewFallbackTexture;
 		const char *previewTexture = YnNode_GetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
-			material->preview = YnCore_LoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+			material->preview = ogeLoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	}
 
 	// If it's just the preview we want, then stop here
@@ -445,16 +446,16 @@ static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *ro
 		node = YnNode_GetFirstChild( node );
 		while ( node != NULL )
 		{
-			YNCoreMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
+			OGEMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
 			/* current pass should've already been cleared by prior memset,
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName          = YnNode_GetStringByName( node, "shaderProgram", "default" );
-			YNCoreShaderProgramIndex *programIndex = YnCore_GetShaderProgramByName( programName );
+			OGEShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
-				currentPass->program = defaultShaderPrograms[ RS_SHADER_DEFAULT ];
+				currentPass->program = oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ];
 				PRINT_WARNING( "Failed to find program \"%s\", using fallback!\n", programName );
 			}
 			else
@@ -463,7 +464,7 @@ static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *ro
 				currentPass->program = programIndex->internalPtr;
 			}
 
-			YnCore_Material_ParsePass( node, currentPass );
+			ogeMaterial_ParsePass( node, currentPass );
 
 			node = YnNode_GetNextChild( node );
 		}
@@ -576,6 +577,10 @@ YNCoreMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group,
 void YnCore_Material_Release( YNCoreMaterial *material )
 {
 	assert( material != NULL );
+	if ( material == NULL )
+	{
+		return;
+	}
 
 	/* Fallback material isn't owned by the memory manager. */
 	if ( material == fallbackMaterial )
@@ -682,7 +687,7 @@ void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLi
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		YNCoreMaterialPass *curPass = &material->passes[ i ];
+		OGEMaterialPass *curPass = &material->passes[ i ];
 
 		PlgSetShaderProgram( curPass->program );
 		PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );

@@ -75,11 +75,11 @@ void Editor_MaterialSelector_Draw( const YNCoreViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PlgDrawRectangle( 0, 0, ( float ) viewport->width, ( float ) viewport->height, PL_COLOUR_DARK_SLATE_GRAY );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
 
 	BitmapFont *font = Font_GetDefaultSmall();
 	for ( unsigned int i = 0; i < numMaterials; ++i )

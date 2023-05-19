@@ -12,9 +12,9 @@
 /** Shaders **/
 
 static PLHashTable *shaderProgramTable;
-PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *oge_defaultShaderPrograms[ OGE_MAX_DEFAULT_SHADERS ];
 
-static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
+static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
 	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL )
@@ -53,9 +53,9 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 	PlFree( buffer );
 }
 
-static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
+static OGEShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 {
-	YNCoreShaderProgramIndex program;
+	OGEShaderProgramIndex program;
 	PL_ZERO_( program );
 
 	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
@@ -69,7 +69,7 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-	if ( YnCore_GetShaderProgramByName( internalName ) != NULL )
+	if ( ogeGetShaderProgramByName( internalName ) != NULL )
 	{
 		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
 		return NULL;
@@ -153,8 +153,8 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 		}
 	}
 
-	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
-	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
+	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
+	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
 
 	if ( !PlgLinkShaderProgram( program.internalPtr ) )
 	{
@@ -172,16 +172,16 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 		/* need to assign this for variable validation */
 		program.defaultPass.program = program.internalPtr;
 		/* and now we can fill this out */
-		YnCore_Material_ParsePass( child, &program.defaultPass );
+		ogeMaterial_ParsePass( child, &program.defaultPass );
 	}
 
 	/* allocate and return our program index */
-	YNCoreShaderProgramIndex *out = PlMAlloc( sizeof( YNCoreShaderProgramIndex ), true );
-	*out                          = program;
+	OGEShaderProgramIndex *out = PL_NEW( OGEShaderProgramIndex );
+	*out                       = program;
 	return out;
 }
 
-static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
+static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 {
 	PRINT( "Loading program: \"%s\"\n", path );
 
@@ -192,7 +192,7 @@ static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 		return;
 	}
 
-	YNCoreShaderProgramIndex *program = RS_ParseShaderProgram( root );
+	OGEShaderProgramIndex *program = ParseShaderProgram( root );
 
 	YnNode_DestroyBranch( root );
 
@@ -207,12 +207,12 @@ static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-YNCoreShaderProgramIndex *YnCore_GetShaderProgramByName( const char *name )
+OGEShaderProgramIndex *ogeGetShaderProgramByName( const char *name )
 {
-	return ( YNCoreShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	return ( OGEShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void YR_Shader_Initialize( void )
+void ogeInitializeShaders( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
@@ -222,26 +222,27 @@ void YR_Shader_Initialize( void )
 
 	PRINT( "Scanning for shader programs...\n" );
 
-	PlScanDirectory( "materials/shaders", "node", RS_LoadShaderProgram, false, NULL );
-	PlScanDirectory( "materials/shaders", "n", RS_LoadShaderProgram, false, NULL );
+	PlScanDirectory( "materials/shaders", "node", LoadShaderProgram, false, NULL );
+	PlScanDirectory( "materials/shaders", "n", LoadShaderProgram, false, NULL );
 
 	PRINT( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
 	/* now fetch the default programs */
-	static const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
-	        [RS_SHADER_DEFAULT]        = "default",
-	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
-	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	static const char *defaultShaderNames[ OGE_MAX_DEFAULT_SHADERS ] = {
+	        [OGE_SHADER_DEFAULT]        = "default",
+	        [OGE_SHADER_LIGHTING_PASS]  = "base_lighting",
+	        [OGE_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [OGE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	        [OGE_SHADER_DEFAULT_FONT]   = "font",
 	};
-	for ( unsigned int i = 0; i < RS_MAX_DEFAULT_SHADERS; ++i )
+	for ( unsigned int i = 0; i < OGE_MAX_DEFAULT_SHADERS; ++i )
 	{
-		YNCoreShaderProgramIndex *programIndex = YnCore_GetShaderProgramByName( defaultShaderNames[ i ] );
+		OGEShaderProgramIndex *programIndex = ogeGetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
 		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 		}
 
-		defaultShaderPrograms[ i ] = programIndex->internalPtr;
+		oge_defaultShaderPrograms[ i ] = programIndex->internalPtr;
 	}
 }

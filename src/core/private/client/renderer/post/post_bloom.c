@@ -12,9 +12,9 @@
  * PRIVATE
  ****************************************/
 
-static YNCoreShaderProgramIndex *bloomFilterShader;
-static YNCoreShaderProgramIndex *bloomBlurXShader;
-static YNCoreShaderProgramIndex *bloomBlurYShader;
+static OGEShaderProgramIndex *bloomFilterShader;
+static OGEShaderProgramIndex *bloomBlurXShader;
+static OGEShaderProgramIndex *bloomBlurYShader;
 
 static PLConsoleVariable *bloomEnabled;
 static PLConsoleVariable *bloomIntensity;
@@ -31,13 +31,13 @@ static void RegisterBloomConsoleVariables( void )
 
 static bool SetupBloomEffect( void )
 {
-	bloomFilterShader = YnCore_GetShaderProgramByName( "post_bloom_filter" );
+	bloomFilterShader = ogeGetShaderProgramByName( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = YnCore_GetShaderProgramByName( "post_blur_x" );
+	bloomBlurXShader = ogeGetShaderProgramByName( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = YnCore_GetShaderProgramByName( "post_blur_y" );
+	bloomBlurYShader = ogeGetShaderProgramByName( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 
@@ -76,7 +76,7 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomTexture );
 }

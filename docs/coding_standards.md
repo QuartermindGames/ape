@@ -40,7 +40,7 @@ bool YnGUI_Window_GetState( const YNGUIWindow *window ) { return window->state; 
 // use typedef ...
 
 // public struct
-typedef struct YNGUIInstance
+typedef struct SGUIInstance
 {
     int blah;
 } YNGUIInstance;

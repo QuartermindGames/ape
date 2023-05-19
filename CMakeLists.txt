@@ -139,7 +139,6 @@ add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/game/)
-add_subdirectory(src/gui/)
 
 add_subdirectory(src/dickens/lib/)
 add_subdirectory(src/dickens/dcmd/)
@@ -150,5 +149,6 @@ add_subdirectory(src/shells/launcher_sdl2/)
 add_subdirectory(src/shells/editor/)
 
 # tools
+add_subdirectory(src/tools/fonttool)
 add_subdirectory(src/tests/)
 add_subdirectory(src/pkgman/)

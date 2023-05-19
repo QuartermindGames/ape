@@ -9,20 +9,20 @@
 
 PL_EXTERN_C
 
-bool YnCore_Initialize( const char *config );
-void YnCore_Shutdown( void );
+bool ogeInitialize( const char *config );
+void ogeShutdown( void );
 
-void YnCore_RenderFrame( YNCoreViewport *viewport );
-void YnCore_TickFrame( void );
+void ogeRenderFrame( YNCoreViewport *viewport );
+void ogeTickFrame( void );
 
 unsigned int YnCore_GetNumTicks( void );
 
-bool YnCore_IsEngineRunning( void );
+bool ogeIsEngineRunning( void );
 
-void YnCore_HandleKeyboardEvent( int key, unsigned int keyState );
-void YnCore_HandleTextEvent( const char *key );
-void YnCore_HandleMouseButtonEvent( int button, YNCoreInputState buttonState );
-void YnCore_HandleMouseWheelEvent( float x, float y );
-void YnCore_HandleMouseMotionEvent( int x, int y );
+void ogeHandleKeyboardEvent( int key, unsigned int keyState );
+void ogeHandleTextEvent( const char *key );
+void ogeHandleMouseButtonEvent( int button, YNCoreInputState buttonState );
+void ogeHandleMouseWheelEvent( float x, float y );
+void ogeHandleMouseMotionEvent( int x, int y );
 
 PL_EXTERN_C_END

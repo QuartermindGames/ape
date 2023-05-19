@@ -5,6 +5,7 @@
 
 #include "renderer/renderer.h"
 #include "renderer/renderer_font.h"
+#include "gui/gui_private.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow    = false;
@@ -305,11 +306,16 @@ void Client_Console_Draw( const YNCoreViewport *viewport )
 	if ( !consoleIsOpen )
 		return;
 
-	BitmapFont *font = Font_GetDefault();
+	GUIFont *font = GUI_Font_GetDefault( GUI_FONT_DEFAULT_SMALL );
+	assert( font != NULL );
+	if ( font == NULL )
+	{
+		return;
+	}
 
 	PlgSetTexture( NULL, 0 );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -324,46 +330,35 @@ void Client_Console_Draw( const YNCoreViewport *viewport )
 	float height        = ( float ) viewport->height;
 	float consoleHeight = height - 12.0f;
 
-	PlgDrawRectangle( 0.0f, 0.0f, width, height - font->ch, CON_BACK_COLOUR );
-	PlgDrawRectangle( 0.0f, height - ( float ) font->ch, width, ( float ) font->ch, CON_INPUT_COLOUR );
+	//PlgDrawRectangle( 0.0f, 0.0f, width, height - font->ch, CON_BACK_COLOUR );
+	//PlgDrawRectangle( 0.0f, height - ( float ) font->ch, width, ( float ) font->ch, CON_INPUT_COLOUR );
 	PlgDrawRectangle( 0.0f, 0.0f, consoleScrollBarWidth, consoleHeight, CON_SIDE_COLOUR );
 
 	const ConsoleOutput *output = Console_GetOutput();
 	if ( output->numLines > 0 )
 	{
-		Font_BeginDraw( font );
-
+#if 0
 		/* draw the indicator at the side of the console */
 		float cH = ( ( font->ch * output->numLines ) / consoleHeight ) + 1.0f;
 		float cY = consoleHeight - ( ( output->numLines / consoleHeight ) + output->scrollPos ) - cH;
 		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
+#endif
 
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			Font_AddBitmapStringToPass( font, 12.0f, y, 1.0f, output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
-
-			/* now decrement our y pos for as many new lines there were */
-			if ( i > 0 )
-			{
-				unsigned int nl = pl_strncnt( output->lines[ i - 1 ].buffer, '\n', CONSOLE_BUFFER_MAX_LENGTH );
-				for ( unsigned int j = 0; j < nl; ++j )
-					y -= font->ch;
-			}
-
-			/* and make sure we don't go off screen */
-			if ( y <= -font->ch )
-				break;
+			float oy;
+			GUI_Font_DrawString( font, 12.0f, y, NULL, &oy, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			y -= 20;
 		}
-
-		Font_Draw( font );
 	}
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetTexture( NULL, 0 );
 
 	// auto-completion list
+#if 0
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
 	{
 		float autoCompleteHeight = 0.0f;
@@ -380,25 +375,29 @@ void Client_Console_Draw( const YNCoreViewport *viewport )
 			++i;
 		}
 	}
+#endif
 
-	Font_BeginDraw( font );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+	PlgSetTexture( NULL, 0 );
+
+	GUI_Font_Display( font );
 
 	Client_Console_DrawInputField( viewport );
 
-	Font_Draw( font );
-
 	/* draw version info */
+	GUIFont *tinyFont = GUI_Font_GetDefault( GUI_FONT_DEFAULT_TINY );
+	if ( tinyFont != NULL )
 	{
-		BitmapFont *smallFont = Font_GetDefaultSmall();
+		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
 
-		static char buf[ 64 ]  = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
-		static unsigned int bl = 0;
-		if ( bl == 0 )
-			bl = strlen( buf );
+		float strW, strH;
+		GUI_Font_GetStringPixelSize( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
 
-		float x = width - ( ( float ) smallFont->cw * ( float ) bl ) - 2.0f;
-		float y = height - ( float ) smallFont->ch - 2.0f;
-		Font_DrawBitmapString( smallFont, x, y, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+		float x = width - strW - 2.0f;
+		float y = height - strH - 2.0f;
+		GUI_Font_DrawString( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+
+		GUI_Font_Display( tinyFont );
 	}
 
 	PlPopMatrix();
@@ -415,7 +414,7 @@ static void CreateViewportCommand( unsigned int argc, char **argv )
 	int width  = strtol( argv[ 1 ], NULL, 10 );
 	int height = strtol( argv[ 2 ], NULL, 10 );
 
-	if ( !YnCore_ShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) )
+	if ( !ogeShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) )
 	{
 		PRINT_WARNING( "Failed to create viewport!\n" );
 		return;

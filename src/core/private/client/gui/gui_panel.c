@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
+#include "gui_private.h"
 #include "gui_panel.h"
-#include "gui_public.h"
 
 /****************************************
  * GUI PANEL
@@ -11,7 +11,9 @@
 static void DrawBorder( GUIPanel *self )
 {
 	if ( self->border == GUI_PANEL_BORDER_NONE )
+	{
 		return;
+	}
 
 	PLGMesh *mesh = GUI_Draw_GetBatchQueueMesh( NULL );
 
@@ -95,7 +97,9 @@ GUIPanel *GUI_Panel_Create( GUIPanel *parent, int x, int y, int w, int h, GUIPan
 	self->isVisible = true;
 
 	if ( parent == NULL )
+	{
 		return self;
+	}
 
 	self->parent = parent;
 	self->node   = PlInsertLinkedListNode( parent->children, self );
@@ -110,11 +114,15 @@ GUIPanel *GUI_Panel_Create( GUIPanel *parent, int x, int y, int w, int h, GUIPan
 void GUI_Panel_Destroy( GUIPanel *self )
 {
 	if ( self == NULL )
+	{
 		return;
+	}
 
 	/* be sure to remove us from the parent */
 	if ( self->parent != NULL )
+	{
 		PlDestroyLinkedListNode( self->node );
+	}
 
 	/* and now cull all our children */
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
@@ -139,9 +147,9 @@ void GUI_Panel_SetStyleSheet( GUIPanel *self, const GUIStyleSheet *styleSheet )
 void GUI_Panel_Draw( GUIPanel *self )
 {
 	if ( !self->isDrawing )
+	{
 		return;
-
-	PlgSetTexture( NULL, 0 );
+	}
 
 	GUI_Panel_DrawBackground( self );
 
@@ -152,7 +160,9 @@ void GUI_Panel_Draw( GUIPanel *self )
 		bool override;
 		self->PreDraw( self, &override );
 		if ( override )
+		{
 			return;
+		}
 	}
 
 	/* draw all the children */
@@ -165,7 +175,9 @@ void GUI_Panel_Draw( GUIPanel *self )
 	}
 
 	if ( self->PostDraw != NULL )
+	{
 		self->PostDraw( self );
+	}
 }
 
 void GUI_Panel_DrawBackground( GUIPanel *self )
@@ -175,7 +187,9 @@ void GUI_Panel_DrawBackground( GUIPanel *self )
 		bool override;
 		self->DrawBackground( self, &override );
 		if ( override )
+		{
 			return;
+		}
 	}
 
 	PLColour colour;
@@ -202,7 +216,9 @@ void GUI_Panel_DrawBackground( GUIPanel *self )
 	PLGMesh *mesh = GUI_Draw_GetBatchQueueMesh( NULL );
 	assert( mesh != NULL );
 	if ( mesh == NULL )
+	{
 		return;
+	}
 
 	GUI_Draw_FilledRectangle( mesh, x, y, w, h, self->z, &colour );
 }
@@ -211,11 +227,15 @@ void GUI_Panel_Tick( GUIPanel *self )
 {
 	assert( self != NULL );
 	if ( self == NULL )
+	{
 		return;
+	}
 
 	// Make sure the cursor is always updated/drawn last
 	if ( self->cursor != NULL )
+	{
 		PlMoveLinkedListNodeToBack( self->cursor->node );
+	}
 
 	self->isDrawing = self->isVisible;
 
@@ -224,7 +244,9 @@ void GUI_Panel_Tick( GUIPanel *self )
 	{
 		self->Tick( self, &override );
 		if ( override )
+		{
 			return;
+		}
 	}
 
 	/* Tick all children */
@@ -374,13 +396,17 @@ bool GUI_Panel_HandleMouseEvent( GUIPanel *self, int mx, int my, int wheel, int 
 	{
 		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
 		if ( GUI_Panel_HandleMouseEvent( childPanel, mx, my, wheel, button, buttonUp ) )
+		{
 			return true;
+		}
 
 		childNode = PlGetNextLinkedListNode( childNode );
 	}
 
 	if ( self->HandleMouseEvent != NULL && self->HandleMouseEvent( self, mx, my, wheel, button, buttonUp ) )
+	{
 		return true;
+	}
 
 	return false;
 }
@@ -392,13 +418,17 @@ bool GUI_Panel_HandleKeyboardEvent( GUIPanel *self, int button, bool buttonUp )
 	{
 		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
 		if ( GUI_Panel_HandleKeyboardEvent( childPanel, button, buttonUp ) )
+		{
 			return true;
+		}
 
 		childNode = PlGetNextLinkedListNode( childNode );
 	}
 
 	if ( self->HandleKeyboardEvent != NULL && self->HandleKeyboardEvent( self, button, buttonUp ) )
+	{
 		return true;
+	}
 
 	return false;
 }

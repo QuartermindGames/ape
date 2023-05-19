@@ -17,11 +17,11 @@ static PLLinkedList *cachedTextures;
 typedef struct GUICachedTexture
 {
 	unsigned int hash;
-	PLGTexture  *texture;
+	PLGTexture *texture;
 } GUICachedTexture;
 PLGTexture *GUI_CacheTexture( const char *path )
 {
-	unsigned int      hash = PlGenerateHashSDBM( path );
+	unsigned int hash      = PlGenerateHashSDBM( path );
 	PLLinkedListNode *node = PlGetFirstNode( cachedTextures );
 	while ( node != NULL )
 	{
@@ -37,16 +37,16 @@ PLGTexture *GUI_CacheTexture( const char *path )
 		return NULL;
 
 	GUICachedTexture *cachedTexture = PL_NEW( GUICachedTexture );
-	cachedTexture->texture = texture;
-	cachedTexture->hash = hash;
+	cachedTexture->texture          = texture;
+	cachedTexture->hash             = hash;
 	PlInsertLinkedListNode( cachedTextures, cachedTexture );
 	return cachedTexture->texture;
 }
 
 #define MAX_STYLE_SHEETS 16
-GUIStyleSheet        styleSheets[ MAX_STYLE_SHEETS ];
-const GUIStyleSheet *activeSheet = NULL;
-static unsigned int  numStyleSheets = 0;
+GUIStyleSheet styleSheets[ MAX_STYLE_SHEETS ];
+const GUIStyleSheet *activeSheet   = NULL;
+static unsigned int numStyleSheets = 0;
 
 #define GUI_STYLESHEET_VERSION 1
 
@@ -125,14 +125,14 @@ int guiLogLevels[ GUI_MAX_LOG_LEVELS ];
 /**
  * Initialize the GUI sub-system.
  */
-void GUI_Initialize( void )
+bool GUI_Initialize( void )
 {
 	PL_ZERO_( guiState );
 
 	guiLogLevels[ GUI_LOGLEVEL_DEFAULT ] = PlAddLogLevel( "gui", PL_COLOUR_LIGHT_CORAL, true );
 	guiLogLevels[ GUI_LOGLEVEL_WARNING ] = PlAddLogLevel( "gui/warning", PL_COLOUR_YELLOW, true );
-	guiLogLevels[ GUI_LOGLEVEL_ERROR ] = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
-	guiLogLevels[ GUI_LOGLEVEL_DEBUG ] = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
+	guiLogLevels[ GUI_LOGLEVEL_ERROR ]   = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
+	guiLogLevels[ GUI_LOGLEVEL_DEBUG ]   = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
 #ifndef NDEBUG
 	                                                    true
 #else
@@ -141,9 +141,14 @@ void GUI_Initialize( void )
 	);
 
 	GUI_Draw_Initialize();
-	GUI_BitmapFont_Initialize();
+	if ( !GUI_Font_Initialize() )
+	{
+		GUI_Error( "Font initialization failed!\n" );
+		return false;
+	}
 
 	GUI_Print( "GUI initialized!\n" );
+	return true;
 }
 
 void GUI_Shutdown( void )
@@ -162,15 +167,15 @@ void GUI_Tick( GUIPanel *root )
 void GUI_UpdateMousePosition( int x, int y )
 {
 	guiState.mouseOldPos = guiState.mousePos;
-	guiState.mousePos.x = x;
-	guiState.mousePos.y = y;
+	guiState.mousePos.x  = x;
+	guiState.mousePos.y  = y;
 }
 
 void GUI_UpdateMouseWheel( float x, float y )
 {
 	guiState.mouseOldWheel = guiState.mouseWheel;
-	guiState.mouseWheel.x = x;
-	guiState.mouseWheel.y = y;
+	guiState.mouseWheel.x  = x;
+	guiState.mouseWheel.y  = y;
 }
 
 void GUI_UpdateMouseButton( GUIMouseButton button, bool isDown )

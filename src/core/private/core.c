@@ -38,7 +38,7 @@ static bool engineInitialized  = false;
 YNNodeBranch *YnCore_GetConfig( void ) { return engineConfig; }
 YNNodeBranch *YnCore_GetUserConfig( void ) { return userConfig; }
 
-bool YnCore_Initialize( const char *config )
+bool ogeInitialize( const char *config )
 {
 	// Call this first, so we can buffer console output
 	YnCore_InitializeConsole();
@@ -106,7 +106,7 @@ bool YnCore_Initialize( const char *config )
 	return true;
 }
 
-void YnCore_Shutdown( void )
+void ogeShutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
@@ -124,7 +124,7 @@ void YnCore_Shutdown( void )
 
 	YnCore_FileSystem_ClearMountedLocations();
 
-	YnCore_ShellInterface_Shutdown();
+	ogeShellInterface_Shutdown();
 
 	engineInitialized = false;
 }
@@ -134,7 +134,7 @@ unsigned int YnCore_GetNumTicks( void )
 	return numTicks;
 }
 
-void YnCore_TickFrame( void )
+void ogeTickFrame( void )
 {
 	if ( !engineInitialized )
 		return;
@@ -159,13 +159,13 @@ void YnCore_TickFrame( void )
 	YnCore_Profiler_EndFrame();
 }
 
-bool YnCore_IsEngineRunning( void )
+bool ogeIsEngineRunning( void )
 {
 	/* always running */
 	return engineInitialized;
 }
 
-void YnCore_RenderFrame( YNCoreViewport *viewport )
+void ogeRenderFrame( YNCoreViewport *viewport )
 {
 	if ( !engineInitialized )
 		return;
@@ -185,30 +185,30 @@ void YnCore_RenderFrame( YNCoreViewport *viewport )
 	YnCore_Profiler_EndFrame();
 }
 
-void YnCore_HandleKeyboardEvent( int key, unsigned int keyState )
+void ogeHandleKeyboardEvent( int key, unsigned int keyState )
 {
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
 bool YnCore_Console_HandleTextEvent( const char *key );
 
-void YnCore_HandleTextEvent( const char *key )
+void ogeHandleTextEvent( const char *key )
 {
 	if ( YnCore_Console_HandleTextEvent( key ) )
 		return;
 }
 
-void YnCore_HandleMouseButtonEvent( int button, YNCoreInputState buttonState )
+void ogeHandleMouseButtonEvent( int button, YNCoreInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void YnCore_HandleMouseWheelEvent( float x, float y )
+void ogeHandleMouseWheelEvent( float x, float y )
 {
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void YnCore_HandleMouseMotionEvent( int x, int y )
+void ogeHandleMouseMotionEvent( int x, int y )
 {
 	Client_Input_HandleMouseMotionEvent( x, y );
 }

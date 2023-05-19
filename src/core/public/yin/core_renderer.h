@@ -26,7 +26,7 @@ YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, voi
 void YnCore_Viewport_Destroy( YNCoreViewport *viewport );
 YNCoreViewport *YnCore_Viewport_GetBySlot( unsigned int slot );
 void YnCore_Viewport_SetCamera( YNCoreViewport *viewport, YNCoreCamera *camera );
-void YnCore_Viewport_SetSize( YNCoreViewport *viewport, int width, int height );
+void ogeViewport_SetSize( YNCoreViewport *viewport, int width, int height );
 void YnCore_Viewport_GetSize( const YNCoreViewport *viewport, int *width, int *height );
 unsigned int YnCore_Viewport_GetAverageFPS( const YNCoreViewport *viewport );
 

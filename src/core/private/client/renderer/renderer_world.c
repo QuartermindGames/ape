@@ -354,7 +354,7 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 	if ( world == NULL )
 		return;
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

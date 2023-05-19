@@ -78,6 +78,59 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	YNCoreWorldMesh *mesh = YnCore_WorldMesh_Create( world );
 }
 
+static void IncreaseGridSize( YNCoreInputState state )
+{
+	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	{
+		return;
+	}
+
+	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	{
+		return;
+	}
+
+	context.gridScale += 2;
+}
+
+static void DecreaseGridSize( YNCoreInputState state )
+{
+	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	{
+		return;
+	}
+
+	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	{
+		return;
+	}
+
+	context.gridScale -= 2;
+	if ( context.gridScale <= 0 )
+	{
+		context.gridScale = 1;
+	}
+}
+
+static void ToggleView( YNCoreInputState state )
+{
+	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	{
+		return;
+	}
+
+	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	{
+		return;
+	}
+
+	context.camera->mode++;
+	if ( context.camera->mode >= YN_CORE_CAMERA_MAX_MODES )
+	{
+		context.camera->mode = YN_CORE_CAMERA_MODE_PERSPECTIVE;
+	}
+}
+
 static void InitializeWorldEditor( void )
 {
 	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i )
@@ -90,6 +143,10 @@ static void InitializeWorldEditor( void )
 	context.camera           = cameras[ 0 ];
 	context.camera->mode     = YN_CORE_CAMERA_MODE_TOP;
 	context.camera->drawMode = YN_CORE_CAMERA_DRAW_MODE_WIREFRAME;
+
+	YnCore_Input_RegisterAction( "editor.world.gridUp", NULL, 0, ( YNCoreInputKey[] ){ '[' }, 1, IncreaseGridSize );
+	YnCore_Input_RegisterAction( "editor.world.gridDown", NULL, 0, ( YNCoreInputKey[] ){ ']' }, 1, DecreaseGridSize );
+	YnCore_Input_RegisterAction( "editor.world.toggleView", NULL, 0, ( YNCoreInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
 static void ShutdownWorldEditor( void )
@@ -107,7 +164,7 @@ static void DrawWorldEditorGUI( void )
 
 	if ( context.camera != NULL && ( context.camera->mode != YN_CORE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
 	{
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
 		float zoom     = roundf( z ) / 2.0f;
@@ -209,7 +266,7 @@ static void DrawWorldEditorGUI( void )
 
 	Font_Draw( defaultFont );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 	static const float CURSOR_SIZE = 8.0f;
 	PlgDrawRectangle( ( float ) ( mouseCursorX ) - ( CURSOR_SIZE / 2 ), ( float ) ( mouseCursorY ) - ( CURSOR_SIZE / 2 ),
 	                  CURSOR_SIZE, CURSOR_SIZE,

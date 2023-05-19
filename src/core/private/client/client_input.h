@@ -27,7 +27,11 @@ void Client_Input_HandleMouseMotionEvent( int x, int y );
 void Client_Input_GetMousePosition( int *x, int *y );
 void Client_Input_GetMouseDelta( int *x, int *y );
 
-bool Client_Input_GetActionState( );
+void YnCore_Input_RegisterAction( const char *id,
+                                  YNCoreInputButton buttons[], unsigned int numDefaultButtons,
+                                  YNCoreInputKey keys[], unsigned int numDefaultKeys,
+                                  ClientInputActionCallback actionCallback );
+YNCoreInputState Client_Input_GetActionState( const char *id );
 
 void Client_Input_BeginFrame( void );
 void Client_Input_Tick( void );

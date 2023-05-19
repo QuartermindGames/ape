@@ -36,9 +36,9 @@ static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 void Flare_Initialize( void )
 {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
-		flareTextures[ i ] = YnCore_LoadTexture( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		flareTextures[ i ] = ogeLoadTexture( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
-		shineTextures[ i ] = YnCore_LoadTexture( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		shineTextures[ i ] = ogeLoadTexture( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 }
 
 void Flare_Render( PLGTexture *texture, float diameter, float distance )
@@ -54,7 +54,7 @@ void Flare_Render( PLGTexture *texture, float diameter, float distance )
 
 void Flare_RenderFlares( const YNCoreCamera *camera )
 {
-	YnCore_GetShaderProgramByName( "flare" );
+	ogeGetShaderProgramByName( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 

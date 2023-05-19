@@ -17,7 +17,7 @@ extern int launcherLog;
 #define PrintWarn( ... )                                         \
 	{                                                            \
 		PlLogMessage( launcherLog, __VA_ARGS__ );                \
-		YnCore_ShellInterface_DisplayMessageBox( YN_CORE_MESSAGE_WARNING, __VA_ARGS__ ); \
+		YnCore_ShellInterface_DisplayMessageBox( OGE_MESSAGE_WARNING, __VA_ARGS__ ); \
 	}
 
 #ifdef NDEBUG
@@ -31,7 +31,7 @@ extern int launcherLog;
 #	define PrintError( ... )                                      \
 		{                                                          \
 			PlLogMessage( launcherLog, __VA_ARGS__ );              \
-			YnCore_ShellInterface_DisplayMessageBox( YN_CORE_MESSAGE_ERROR, __VA_ARGS__ ); \
+			YnCore_ShellInterface_DisplayMessageBox( OGE_MESSAGE_ERROR, __VA_ARGS__ ); \
 			abort();                                               \
 		}
 #endif

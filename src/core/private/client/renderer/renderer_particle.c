@@ -252,7 +252,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 
 void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
 {
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_ALPHA ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

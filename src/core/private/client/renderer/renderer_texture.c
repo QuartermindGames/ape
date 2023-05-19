@@ -124,7 +124,7 @@ static PLGTexture *GetTexture( const char *path )
 	return NULL;
 }
 
-PLGTexture *YnCore_LoadTexture( const char *path, PLGTextureFilter filterMode )
+PLGTexture *ogeLoadTexture( const char *path, PLGTextureFilter filterMode )
 {
 	/* check if it's already loaded */
 	PLGTexture *texture = GetTexture( path );

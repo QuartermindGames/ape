@@ -8,7 +8,7 @@ static Menu mainMenu;
 
 static void QuitOption( void )
 {
-	YnCore_Shutdown();
+	ogeShutdown();
 }
 
 static MenuOption quitMenuOptions[] = {

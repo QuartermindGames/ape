@@ -1,3 +1,41 @@
+set(YIN_CORE_CLIENT
+        private/client/client.c
+        private/client/client_console.c
+        private/client/client_input.c
+        private/client/client_gui.c
+        private/client/audio/audio.c
+        private/client/audio/audio_openal.c
+        private/client/audio/audio_wav.c
+        private/client/audio/audio_xaudio2.cpp
+        private/client/audio/audio_xwb.c
+        private/client/audio/micromod.c
+        private/client/audio/sdlplayer.c
+        private/client/gui/gui.c
+        private/client/gui/gui_button.c
+        private/client/gui/gui_cursor.c
+        private/client/gui/gui_draw.c
+        private/client/gui/gui_font.c
+        private/client/gui/gui_image.c
+        private/client/gui/gui_panel.c
+        private/client/renderer/post/post_bloom.c
+        private/client/renderer/post/post_fxaa.c
+        private/client/renderer/post/post.c
+        private/client/renderer/renderer_camera.c
+        private/client/renderer/renderer_flare.c
+        private/client/renderer/renderer_font.c
+        private/client/renderer/renderer_particle.c
+        private/client/renderer/renderer.c
+        private/client/renderer/renderer_draw.c
+        private/client/renderer/renderer_material.c
+        private/client/renderer/renderer_rendertarget.c
+        private/client/renderer/renderer_texture.c
+        private/client/renderer/renderer_viewport.c
+        private/client/renderer/renderer_world.c
+        private/client/renderer/renderer_scenegraph.c
+        private/client/renderer/renderer_shaders.c
+        private/client/renderer/renderer_sprite.c
+        private/client/renderer/renderer_visibility.c)
+
 add_library(yin-core STATIC
         private/core_console.c
 
@@ -29,37 +67,7 @@ add_library(yin-core STATIC
         private/editor/editor_material_selector.c
         private/editor/editor_world.c
 
-        private/client/client.c
-        private/client/client_console.c
-        private/client/client_input.c
-        private/client/client_gui.c
-
-        private/client/audio/audio.c
-        private/client/audio/audio_openal.c
-        private/client/audio/audio_wav.c
-        private/client/audio/audio_xaudio2.cpp
-        private/client/audio/audio_xwb.c
-        private/client/audio/micromod.c
-        private/client/audio/sdlplayer.c
-
-        private/client/renderer/post/post_bloom.c
-        private/client/renderer/post/post_fxaa.c
-        private/client/renderer/post/post.c
-        private/client/renderer/renderer_camera.c
-        private/client/renderer/renderer_flare.c
-        private/client/renderer/renderer_font.c
-        private/client/renderer/renderer_particle.c
-        private/client/renderer/renderer.c
-        private/client/renderer/renderer_draw.c
-        private/client/renderer/renderer_material.c
-        private/client/renderer/renderer_rendertarget.c
-        private/client/renderer/renderer_texture.c
-        private/client/renderer/renderer_viewport.c
-        private/client/renderer/renderer_world.c
-        private/client/renderer/renderer_scenegraph.c
-        private/client/renderer/renderer_shaders.c
-        private/client/renderer/renderer_sprite.c
-        private/client/renderer/renderer_visibility.c
+        ${YIN_CORE_CLIENT}
 
         private/legacy/actor.c
         private/legacy/actors/actor_player.c
@@ -103,7 +111,6 @@ target_link_libraries(yin-core
         SDL2
         yin-common
         yin-node
-        yin-gui
         yin-game
         plcore
         plgraphics

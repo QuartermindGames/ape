@@ -89,7 +89,7 @@ void YnCore_Viewport_SetCamera( YNCoreViewport *viewport, YNCoreCamera *camera )
 	viewport->camera = camera;
 }
 
-void YnCore_Viewport_SetSize( YNCoreViewport *viewport, int width, int height )
+void ogeViewport_SetSize( YNCoreViewport *viewport, int width, int height )
 {
 	viewport->width  = width;
 	viewport->height = height;

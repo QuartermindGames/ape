@@ -5,7 +5,7 @@
 
 #include "core_private.h"
 #include "client_input.h"
-#include "gui_public.h"
+#include "gui/gui_private.h"
 
 #include <yin/node.h>
 
@@ -17,7 +17,7 @@
 
 typedef struct ClientInputAction
 {
-	char description[ 32 ];
+	char id[ 32 ];
 	ClientInputActionCallback callback;
 
 	YNCoreInputButton buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
@@ -73,14 +73,16 @@ static ClientInputController *GetEmptyController( unsigned int *id )
 	return NULL;
 }
 
-static void IterateAction( void *userData, bool *breakEarly )
+static void IterateAction( void *userData, PL_UNUSED bool *breakEarly )
 {
 	ClientInputAction *action = ( ClientInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
 		YNCoreInputState state = YnCore_ShellInterface_GetButtonState( action->buttons[ i ] );
 		if ( ( state != YN_CORE_INPUT_STATE_DOWN ) && ( state != YN_CORE_INPUT_STATE_PRESSED ) )
+		{
 			continue;
+		}
 
 		action->callback( state );
 	}
@@ -88,7 +90,9 @@ static void IterateAction( void *userData, bool *breakEarly )
 	{
 		YNCoreInputState state = YnCore_ShellInterface_GetKeyState( action->keys[ i ] );
 		if ( ( state != YN_CORE_INPUT_STATE_DOWN ) && ( state != YN_CORE_INPUT_STATE_PRESSED ) )
+		{
 			continue;
+		}
 
 		action->callback( state );
 	}
@@ -203,45 +207,6 @@ void Client_Input_Initialize( void )
 void Client_Input_Shutdown( void )
 {
 	Client_Input_ClearDevices();
-}
-
-void Client_Input_RegisterAction( const char *description,
-                                  YNCoreInputButton buttons[],
-                                  unsigned int numDefaultButtons,
-                                  YNCoreInputKey keys[],
-                                  unsigned int numDefaultKeys,
-                                  ClientInputActionCallback actionCallback )
-{
-	/* if the list has not been allocated yet, do the deed */
-	if ( actionableList == NULL )
-	{
-		actionableList = PlCreateLinkedList();
-		if ( actionableList == NULL )
-			PRINT_ERROR( "Failed to create actionable list: %s\n", PlGetError() );
-	}
-
-	if ( numDefaultButtons > YN_CORE_MAX_BUTTON_INPUTS )
-	{
-		numDefaultButtons = YN_CORE_MAX_BUTTON_INPUTS;
-		PRINT_WARNING( "Too many default button inputs for action!\n" );
-	}
-	if ( numDefaultKeys > YN_CORE_MAX_KEY_INPUTS )
-	{
-		numDefaultKeys = YN_CORE_MAX_KEY_INPUTS;
-		PRINT_WARNING( "Too many default key inputs for action!\n" );
-	}
-
-	ClientInputAction *inputAction = PlMAllocA( sizeof( ClientInputAction ) );
-	snprintf( inputAction->description, sizeof( inputAction->description ), "%s", description );
-	inputAction->callback = actionCallback;
-
-	memcpy( inputAction->buttons, buttons, sizeof( YNCoreInputButton ) * numDefaultButtons );
-	inputAction->numButtonBinds = numDefaultButtons;
-
-	memcpy( inputAction->keys, keys, sizeof( YNCoreInputKey ) * numDefaultKeys );
-	inputAction->numKeyBinds = numDefaultKeys;
-
-	inputAction->node = PlInsertLinkedListNode( actionableList, inputAction );
 }
 
 void Client_Input_SerializeConfig( YNNodeBranch *root )
@@ -362,7 +327,7 @@ void Client_Input_BeginFrame( void )
 	//int oy = inputMouse.y;
 
 	int w, h;
-	YnCore_ShellInterface_GetWindowSize( &w, &h );
+	ogeShellInterface_GetWindowSize( &w, &h );
 	int cx = w / 2;
 	int cy = h / 2;
 
@@ -479,7 +444,9 @@ void Client_Input_Tick( void )
 	//PRINT( "R: %s\n", PlPrintVector2( &controllers[ 0 ].stickR, PL_VAR_F32 ) );
 
 	if ( actionableList != NULL )
+	{
 		PlIterateLinkedList( actionableList, IterateAction, true );
+	}
 
 	// poll for new devices
 	// FYI: rewrote this so that it doesn't interrupt keyboard input used for console etc., as PollEvent *will* unfortunately
@@ -493,7 +460,7 @@ void Client_Input_EndFrame( void )
 		return;
 
 	int w, h;
-	YnCore_ShellInterface_GetWindowSize( &w, &h );
+	ogeShellInterface_GetWindowSize( &w, &h );
 	YnCore_ShellInterface_SetMousePosition( w / 2, h / 2 );
 }
 
@@ -515,4 +482,43 @@ PLVector2 YnCore_Input_GetStickStatus( unsigned int slot, unsigned int stickNum 
 		return pl_vecOrigin2;
 
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
+}
+
+void YnCore_Input_RegisterAction( const char *id,
+                                  YNCoreInputButton buttons[], unsigned int numDefaultButtons,
+                                  YNCoreInputKey keys[], unsigned int numDefaultKeys,
+                                  ClientInputActionCallback actionCallback )
+{
+	/* if the list has not been allocated yet, do the deed */
+	if ( actionableList == NULL )
+	{
+		actionableList = PlCreateLinkedList();
+		if ( actionableList == NULL )
+		{
+			PRINT_ERROR( "Failed to create actionable list: %s\n", PlGetError() );
+		}
+	}
+
+	if ( numDefaultButtons > YN_CORE_MAX_BUTTON_INPUTS )
+	{
+		numDefaultButtons = YN_CORE_MAX_BUTTON_INPUTS;
+		PRINT_WARNING( "Too many default button inputs for action!\n" );
+	}
+	if ( numDefaultKeys > YN_CORE_MAX_KEY_INPUTS )
+	{
+		numDefaultKeys = YN_CORE_MAX_KEY_INPUTS;
+		PRINT_WARNING( "Too many default key inputs for action!\n" );
+	}
+
+	ClientInputAction *inputAction = PL_NEW( ClientInputAction );
+	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
+	inputAction->callback = actionCallback;
+
+	memcpy( inputAction->buttons, buttons, sizeof( YNCoreInputButton ) * numDefaultButtons );
+	inputAction->numButtonBinds = numDefaultButtons;
+
+	memcpy( inputAction->keys, keys, sizeof( YNCoreInputKey ) * numDefaultKeys );
+	inputAction->numKeyBinds = numDefaultKeys;
+
+	inputAction->node = PlInsertLinkedListNode( actionableList, inputAction );
 }

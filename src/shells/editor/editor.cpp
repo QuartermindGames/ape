@@ -279,7 +279,7 @@ int main( int argc, char **argv )
 
 	os::editor::mainWindow->show();
 
-	if ( !YnCore_Initialize( "editor.cfg.n" ) )
+	if ( !ogeInitialize( "editor.cfg.n" ) )
 	{
 		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Yin!" );
 		return EXIT_FAILURE;
@@ -290,19 +290,19 @@ int main( int argc, char **argv )
 
 extern "C"
 {
-	YNCoreViewport *YnCore_ShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+	YNCoreViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 	{
 		return nullptr;
 	}
 
-	void YnCore_ShellInterface_GetWindowSize( int *width, int *height ) {}
+	void ogeShellInterface_GetWindowSize( int *width, int *height ) {}
 	void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, const char *message, ... )
 	{
 	}
 
 	YNCoreInputState YnCore_ShellInterface_GetButtonState( YNCoreInputButton inputButton ) { return YN_CORE_INPUT_STATE_NONE; }
 	YNCoreInputState YnCore_ShellInterface_GetKeyState( int key ) { return YN_CORE_INPUT_STATE_NONE; }
-	void YnCore_ShellInterface_GetMousePosition( int *x, int *y ) {}
+	void ogeShellInterface_GetMousePosition( int *x, int *y ) {}
 	void YnCore_ShellInterface_SetMousePosition( int x, int y ) {}
 	void YnCore_ShellInterface_GrabMouse( bool grab ) {}
 
@@ -311,5 +311,5 @@ extern "C"
 		os::editor::mainWindow->PushMessage( level, msg, *colour );
 	}
 
-	void YnCore_ShellInterface_Shutdown( void ) {}
+	void ogeShellInterface_Shutdown( void ) {}
 }

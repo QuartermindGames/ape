@@ -7,7 +7,7 @@
 #define MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-typedef enum MaterialBuiltinVar
+typedef enum OGEMaterialBuiltinVar
 {
 	MATERIAL_BUILTIN_INVALID = -1,
 	MATERIAL_BUILTIN_TIME,
@@ -15,14 +15,14 @@ typedef enum MaterialBuiltinVar
 	MATERIAL_BUILTIN_VIEWPORT_SIZE,
 
 	MAX_MATERIAL_BUILTINS
-} MaterialBuiltinVar;
+} OGEMaterialBuiltinVar;
 
 typedef struct YNCoreMaterial YNCoreMaterial;
 
 #define MATERIAL_VAR_NAME_LENGTH   64
 #define MATERIAL_VAR_STRING_LENGTH 256
 
-typedef enum MaterialVariableType
+typedef enum OGEMaterialVariableType
 {
 	MATERIAL_VAR_INVALID,
 
@@ -46,27 +46,27 @@ typedef enum MaterialVariableType
 	MATERIAL_VAR_RENDERTARGET,
 
 	MAX_MATERIAL_VAR_TYPES
-} MaterialVariableType;
+} OGEMaterialVariableType;
 
 /**
  * Hints for standard material variables, so
  * that we can toggle their state.
  */
-typedef enum MaterialVariableHint
+typedef enum OGEMaterialVariableHint
 {
 	RM_VAR_HINT_DIFFUSE,
 	RM_VAR_HINT_NORMAL,
 	RM_VAR_HINT_SPECULAR,
-} MaterialVariableHint;
+} OGEMaterialVariableHint;
 
-typedef union MaterialVariableData
+typedef union OGEMaterialVariableData
 {
-	float  f32;
+	float f32;
 	double f64;
 
 	bool boolean;
 
-	int32_t  i32;
+	int32_t i32;
 	uint32_t ui32;
 
 	PLVector2 vec2;
@@ -79,58 +79,59 @@ typedef union MaterialVariableData
 	char str[ MATERIAL_VAR_STRING_LENGTH ];
 
 	void *userPtr;
-} MaterialVariableData;
+} OGEMaterialVariableData;
 
-typedef struct MaterialVariable
+typedef struct OGEMaterialVariable
 {
-	int                  programSlot;
-	char                 name[ MATERIAL_VAR_NAME_LENGTH ];
-	MaterialVariableType type;
-	MaterialVariableData data;
-	MaterialVariableHint hint;
-} MaterialVariable;
+	int programSlot;
+	char name[ MATERIAL_VAR_NAME_LENGTH ];
+	OGEMaterialVariableType type;
+	OGEMaterialVariableData data;
+	OGEMaterialVariableHint hint;
+} OGEMaterialVariable;
 
-typedef struct MaterialPass
+typedef struct OGEMaterialPass
 {
 	PLGShaderProgram *program;
-	PLGTextureFilter  textureFilter;
-	PLGBlend          blendMode[ 2 ];
-	MaterialVariable  variables[ MAX_MATERIAL_VARIABLES ];
-	unsigned int      numVariables;
+	PLGTextureFilter textureFilter;
+	PLGBlend blendMode[ 2 ];
+	OGEMaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
+	unsigned int numVariables;
 
 	bool depthTest;
-	int  cullMode;
-} YNCoreMaterialPass;
+	int cullMode;
+} OGEMaterialPass;
 
 #define RS_PROGRAM_NAME_LENGTH 64
 
-enum
+typedef enum OGEDefaultShaderProgram
 {
-	RS_SHADER_DEFAULT,
-	RS_SHADER_LIGHTING_PASS,
-	RS_SHADER_DEFAULT_VERTEX,
-	RS_SHADER_DEFAULT_ALPHA,
+	OGE_SHADER_DEFAULT,
+	OGE_SHADER_LIGHTING_PASS,
+	OGE_SHADER_DEFAULT_VERTEX,
+	OGE_SHADER_DEFAULT_ALPHA,
+	OGE_SHADER_DEFAULT_FONT,
 
-	RS_MAX_DEFAULT_SHADERS
-};
-extern PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+	OGE_MAX_DEFAULT_SHADERS
+} OGEDefaultShaderProgram;
+extern PLGShaderProgram *oge_defaultShaderPrograms[ OGE_MAX_DEFAULT_SHADERS ];
 
-typedef struct YNCoreShaderProgramIndex
+typedef struct OGEShaderProgramIndex
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
 
-	YNCoreMaterialPass defaultPass;
+	OGEMaterialPass defaultPass;
 
-	PLGShaderProgram        *internalPtr;
+	PLGShaderProgram *internalPtr;
 	struct PLLinkedListNode *node;
-} YNCoreShaderProgramIndex;
+} OGEShaderProgramIndex;
 
-void YnCore_Material_ParsePass( struct YNNodeBranch *root, YNCoreMaterialPass *materialPass );
+void ogeMaterial_ParsePass( struct YNNodeBranch *root, OGEMaterialPass *materialPass );
 
-void YnCore_InitializeMaterialSystem( void );
-void YnCore_ShutdownMaterialSystem( void );
+void ogeInitializeMaterialSystem( void );
+void ogeShutdownMaterialSystem( void );
 
 PLGTexture *YnCore_Material_GetPreviewTexture( YNCoreMaterial *material );
 

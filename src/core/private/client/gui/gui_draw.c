@@ -11,9 +11,9 @@
 
 typedef struct GUIDrawBatch
 {
-	PLGMesh    *mesh;
+	PLGMesh *mesh;
 	PLGTexture *texture;
-	bool        usedThisFrame;
+	bool usedThisFrame;
 } GUIDrawBatch;
 
 /****************************************
@@ -23,10 +23,10 @@ typedef struct GUIDrawBatch
 typedef struct GUICanvas
 {
 	PLGFrameBuffer *buffer;
-	PLGTexture     *texture;
-	bool            filter;
-	int             width;
-	int             height;
+	PLGTexture *texture;
+	bool filter;
+	int width;
+	int height;
 } GUICanvas;
 
 GUICanvas *GUI_CreateCanvas( int width, int height )
@@ -175,6 +175,8 @@ void GUI_Draw( GUICanvas *canvas, GUIPanel *root )
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
+
+	PlgSetTexture( NULL, 0 );
 
 	GUI_Panel_Draw( root );
 

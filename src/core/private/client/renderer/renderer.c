@@ -117,7 +117,7 @@ void YnCore_SetupDefaultRenderState( const YNCoreViewport *viewport )
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
 }
 
 void YnCore_BeginDraw( YNCoreViewport *viewport )
@@ -149,7 +149,7 @@ void YnCore_EndDraw( YNCoreViewport *viewport )
 
 static YNCoreMaterial *ppFXAAMaterial = NULL;
 
-void YR_Shader_Initialize( void );  /* renderer/shaders.c */
+void ogeInitializeShaders( void );  /* renderer/shaders.c */
 void RT_InitializeTextures( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
@@ -184,9 +184,9 @@ void YnCore_InitializeRenderer( void )
 
 	RT_InitializeTextures();
 
-	YR_Shader_Initialize();
+	ogeInitializeShaders();
 	YnCore_InitializeRenderTargets();
-	YnCore_InitializeMaterialSystem();
+	ogeInitializeMaterialSystem();
 	YR_Font_Initialize();
 
 	auxCamera = PlgCreateCamera();
@@ -206,7 +206,7 @@ void YnCore_InitializeRenderer( void )
 void YnCore_ShutdownRenderer( void )
 {
 	Font_Shutdown();
-	YnCore_ShutdownMaterialSystem();
+	ogeShutdownMaterialSystem();
 	YnCore_ShutdownRenderTargets();
 }
 
@@ -229,7 +229,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	if ( numPoints < 2 )
 		return;
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
@@ -385,7 +385,7 @@ static void DrawDebugOverlay( const YNCoreViewport *viewport )
 
 	static const float bw = 128;
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
@@ -483,7 +483,7 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PLVector3 angles;
 	angles.x = PL_DEG2RAD( rotation.x );
@@ -554,7 +554,7 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 
 				static const unsigned int gridW = 256;
 
-				PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+				PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
 				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
 
 				PlPopMatrix();

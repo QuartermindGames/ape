@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../public/gui_public.h"
+#include "yin/gui_public.h"
 
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_console.h>
@@ -114,7 +114,7 @@ typedef struct GUIStyleSheet
 
 PLGTexture *GUI_CacheTexture( const char *path );
 
-void GUI_BitmapFont_Initialize( void );
+bool GUI_Font_Initialize( void );
 
 void     GUI_Draw_Initialize( void );
 void     GUI_Draw_Shutdown( void );

@@ -10,7 +10,7 @@ static void HandleMouseLook( GameMovementComponent *movementComponent )
 		return;
 
 	int mx, my;
-	YnCore_ShellInterface_GetMousePosition( &mx, &my );//TODO: should use Client_Input_GetMouseDelta ...
+	ogeShellInterface_GetMousePosition( &mx, &my );//TODO: should use Client_Input_GetMouseDelta ...
 
 	//TODO
 }

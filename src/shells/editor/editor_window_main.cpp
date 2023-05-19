@@ -15,8 +15,8 @@ MainWindowMap[] = {
         //FXMAPFUNC( SEL_CONFIGURE, MainWindow::ID_CANVAS, mao::MainWindow::OnConfigure ),
         //FXMAPFUNC( SEL_PAINT, MainWindow::ID_CANVAS, mao::MainWindow::OnExpose ),
         //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
-        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_PROJECT_NEW, os::editor::MainWindow::OnNew ),
-        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_PROJECT_OPEN, os::editor::MainWindow::OnOpen ),
+        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_WORLD_NEW, os::editor::MainWindow::OnNew ),
+        FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_WORLD_OPEN, os::editor::MainWindow::OnOpen ),
 
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_MODEL_OPEN, os::editor::MainWindow::OpenModel ),
         FXMAPFUNC( SEL_COMMAND, os::editor::MainWindow::ID_MATERIAL_OPEN, os::editor::MainWindow::OpenMaterial ),
@@ -110,7 +110,7 @@ void os::editor::MainWindow::create()
 
 long os::editor::MainWindow::OnTick( FXObject *, FXSelector, void * )
 {
-	YnCore_TickFrame();
+	ogeTickFrame();
 
 	getApp()->addTimeout( this, MainWindow::ID_TICK, YN_CORE_TICK_RATE );
 	return 0;

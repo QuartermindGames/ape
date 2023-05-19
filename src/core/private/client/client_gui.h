@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "gui_public.h"
+#include "gui/gui_private.h"
 
 PL_EXTERN_C
 
