@@ -20,7 +20,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 void ogeInitializeNet( void );
-void YnCore_ShutdownNet( void );
+void ogeShutdownNet( void );
 NetSocket         *Net_OpenSocket( const char *ip, unsigned short port, bool isHost );
 void               Net_CloseSocket( NetSocket *netSocket );
 ssize_t            Net_Send( NetSocket *netSocket, const void *buf, ssize_t length );

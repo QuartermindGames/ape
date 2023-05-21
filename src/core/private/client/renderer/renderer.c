@@ -16,17 +16,17 @@
 
 #include "post/post.h"
 
-YNCoreRendererStats g_gfxPerfStats;
-YNCoreRendererPassState rendererState;
+OgeRendererStats g_gfxPerfStats;
+OgeRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
-PLGCamera *YnCore_Rend_GetAuxCamera( void ) { return auxCamera; }
+PLGCamera *ogeGetAuxCamera( void ) { return auxCamera; }
 
 static PLGFrameBuffer *fboBuffer;
 
 /* Post Processing */
 
-void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
+void ogeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
 {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL )
@@ -98,11 +98,11 @@ void R_DrawNumber( float x, float y, int number )
 	R_DrawDigit( x, y, number % 10 );
 }
 
-void YnCore_SetupDefaultRenderState( const YNCoreViewport *viewport )
+void YnCore_SetupDefaultRenderState( const OgeViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	YNCoreWorld *world = Game_GetCurrentWorld();
+	OgeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE ) )
 	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
@@ -120,7 +120,7 @@ void YnCore_SetupDefaultRenderState( const YNCoreViewport *viewport )
 	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
 }
 
-void YnCore_BeginDraw( YNCoreViewport *viewport )
+void YnCore_BeginDraw( OgeViewport *viewport )
 {
 	double newTime = PlGetCurrentSeconds();
 
@@ -137,7 +137,7 @@ void YnCore_BeginDraw( YNCoreViewport *viewport )
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 }
 
-void YnCore_EndDraw( YNCoreViewport *viewport )
+void YnCore_EndDraw( OgeViewport *viewport )
 {
 	PL_ZERO_( g_gfxPerfStats );
 
@@ -147,14 +147,14 @@ void YnCore_EndDraw( YNCoreViewport *viewport )
 	viewport->perf.numPortals   = 0;
 }
 
-static YNCoreMaterial *ppFXAAMaterial = NULL;
+static OgeMaterial *ppFXAAMaterial = NULL;
 
 void ogeInitializeShaders( void );  /* renderer/shaders.c */
 void RT_InitializeTextures( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void YnCore_InitializeRenderTargets( void );
-void YnCore_ShutdownRenderTargets( void );
+void ogeInitializeRenderTargets( void );
+void ogeShutdownRenderTargets( void );
 
 void Renderer_RegisterConsoleVariables( void )
 {
@@ -176,7 +176,7 @@ void Renderer_RegisterConsoleVariables( void )
 	PlRegisterConsoleVariable( "r.far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
 }
 
-void YnCore_InitializeRenderer( void )
+void ogeInitializeRenderer( void )
 {
 	PRINT( "Initializing renderer\n" );
 
@@ -185,7 +185,7 @@ void YnCore_InitializeRenderer( void )
 	RT_InitializeTextures();
 
 	ogeInitializeShaders();
-	YnCore_InitializeRenderTargets();
+	ogeInitializeRenderTargets();
 	ogeInitializeMaterialSystem();
 	YR_Font_Initialize();
 
@@ -203,17 +203,17 @@ void YnCore_InitializeRenderer( void )
 	R_PP_SetupEffects();
 }
 
-void YnCore_ShutdownRenderer( void )
+void ogeShutdownRenderer( void )
 {
 	Font_Shutdown();
 	ogeShutdownMaterialSystem();
-	YnCore_ShutdownRenderTargets();
+	ogeShutdownRenderTargets();
 }
 
 /**
  * Where the magic of post processing happens.
  */
-static void DrawScenePost( const YNCoreViewport *viewport )
+static void DrawScenePost( const OgeViewport *viewport )
 {
 	PL_GET_CVAR( "r.postProcessing", postProcessingVar );
 	if ( postProcessingVar == NULL || !postProcessingVar->b_value )
@@ -317,7 +317,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	PlFree( points );
 }
 
-static void DrawDebugOverlay( const YNCoreViewport *viewport )
+static void DrawDebugOverlay( const OgeViewport *viewport )
 {
 	PL_GET_CVAR( "debug.overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
@@ -339,7 +339,7 @@ static void DrawDebugOverlay( const YNCoreViewport *viewport )
 	static const float tx = 8 + 4;
 	float y               = sy;
 
-	const YNCoreCamera *camera = viewport->camera;
+	const OgeCamera *camera = viewport->camera;
 	if ( camera != NULL )
 	{
 		// Draw camera position
@@ -419,12 +419,12 @@ void YnCore_Set2DViewportSize( int w, int h )
 	PlgSetupCamera( auxCamera );
 }
 
-void YnCore_Get2DViewportSize( int *width, int *height )
+void ogeGet2DViewportSize( int *width, int *height )
 {
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void YnCore_DrawMenu( const YNCoreViewport *viewport )
+void YnCore_DrawMenu( const OgeViewport *viewport )
 {
 	if ( viewport == NULL )
 	{
@@ -458,7 +458,7 @@ void YnCore_DrawMenu( const YNCoreViewport *viewport )
 	PlgSetDepthMask( true );
 }
 
-void YnCore_Draw2DQuad( YNCoreMaterial *material, int x, int y, int w, int h )
+void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h )
 {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
@@ -473,7 +473,7 @@ void YnCore_Draw2DQuad( YNCoreMaterial *material, int x, int y, int w, int h )
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 0 ) );
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 1 ) );
 
-	YnCore_Material_DrawMesh( material, mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( material, mesh, NULL, 0 );
 }
 
 void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
@@ -505,10 +505,10 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlPopMatrix();
 }
 
-static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
+static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 {
-	YNCoreWorldSector *currentSector = NULL;
-	YNCoreWorld *world               = Game_GetCurrentWorld();
+	OgeWorldSector *currentSector = NULL;
+	OgeWorld *world               = Game_GetCurrentWorld();
 	if ( world != NULL )
 	{
 		currentSector = YnCore_World_GetSectorByGlobalOrigin( world, &camera->internal->position );
@@ -520,7 +520,7 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 		but for v2, this'll suffice...
 	*/
 
-	YN_CORE_PROFILE_START( PROFILE_DRAW_WORLD );
+	OGE_PROFILE_START( PROFILE_DRAW_WORLD );
 
 	if ( viewport != NULL )
 	{
@@ -566,27 +566,27 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 		YnCore_World_Draw( world, currentSector, camera );
 	}
 
-	YN_CORE_PROFILE_END( PROFILE_DRAW_WORLD );
+	OGE_PROFILE_END( PROFILE_DRAW_WORLD );
 }
 
 static PLGTexture *colourTexture;
-PLGTexture *YnCore_GetPrimaryColourAttachment( void )
+PLGTexture *ogeGetPrimaryColourAttachment( void )
 {
 	return colourTexture;
 }
 
 static PLGTexture *depthTexture;
-PLGTexture *YnCore_GetPrimaryDepthAttachment( void )
+PLGTexture *ogeGetPrimaryDepthAttachment( void )
 {
 	return depthTexture;
 }
 
-void YR_DrawScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
+void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport )
 {
 	g_gfxPerfStats.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
-	YnCore_SetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
+	ogeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
 	PlgBindFrameBuffer( fboBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );

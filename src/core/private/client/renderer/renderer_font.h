@@ -6,12 +6,12 @@
 typedef struct BitmapFont
 {
 	struct PLGMesh * mesh; /* for batching */
-	struct YNCoreMaterial *material;
+	struct OgeMaterial *material;
 	int				 w, h, cw, ch;
 	char			 path[ PL_SYSTEM_MAX_PATH ];
 	unsigned int	 start, end;
 
-	YNCoreMemoryReference mem;
+	OgeMemoryReference mem;
 } BitmapFont;
 
 void YR_Font_Initialize( void );

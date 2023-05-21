@@ -193,7 +193,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
 {
-	YNCoreCamera *camera = YnCore_GetActiveCamera();
+	OgeCamera *camera = YnCore_GetActiveCamera();
 	if ( camera == NULL )
 		return;
 
@@ -226,7 +226,7 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
 		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i )
 		{
 			MDLUserData *modelData = sgActor->model->userData;
-			YnCore_Material_DrawMesh( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
+			ogeMaterial_DrawMesh( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
 		}
 
 		PlPopMatrix();
@@ -344,7 +344,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitRight->material                 = YnCore_Material_Cache( "materials/effects/particle.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false );
 
-	YNCoreCamera *camera      = YnCore_GetActiveCamera();
+	OgeCamera *camera      = YnCore_GetActiveCamera();
 	camera->mode        = YN_CORE_CAMERA_MODE_TOP;
 	camera->parentActor = self;
 }
@@ -411,7 +411,7 @@ static void Ship_Tick( Actor *self, void *userData )
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( YnCore_ShellInterface_GetKeyState( KEY_LEFT_CTRL ) && ( sg->fireDelay < YnCore_GetNumTicks() ) )
+	if ( YnCore_ShellInterface_GetKeyState( KEY_LEFT_CTRL ) && ( sg->fireDelay < ogeGetNumTicks() ) )
 	{
 		Actor *projectile    = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
@@ -422,14 +422,14 @@ static void Ship_Tick( Actor *self, void *userData )
 
 		projectile->parent = self;
 
-		sg->fireDelay = YnCore_GetNumTicks() + 25;
+		sg->fireDelay = ogeGetNumTicks() + 25;
 	}
 
 	static unsigned int survivalScoreTimer = 0;
-	if ( self->health > 0 && survivalScoreTimer < YnCore_GetNumTicks() )
+	if ( self->health > 0 && survivalScoreTimer < ogeGetNumTicks() )
 	{
 		self->score++;
-		survivalScoreTimer = YnCore_GetNumTicks() + 145;
+		survivalScoreTimer = ogeGetNumTicks() + 145;
 	}
 }
 

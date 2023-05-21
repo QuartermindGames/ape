@@ -146,7 +146,7 @@ void ogeInitializeNet( void )
 #endif
 }
 
-void YnCore_ShutdownNet( void )
+void ogeShutdownNet( void )
 {
 #if defined( _WIN32 )
 	WSACleanup();

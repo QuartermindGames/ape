@@ -11,7 +11,7 @@
 
 #define WORLD_VERTEX_ELEMENTS 12// pos, norm, uv, colour
 
-bool YnCore_World_IsFaceVisible( YNCoreWorldFace *face, const YNCoreCamera *camera )
+bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera )
 {
 	// Check the face is actually visible
 	face->bounds.origin = pl_vecOrigin3;
@@ -21,7 +21,7 @@ bool YnCore_World_IsFaceVisible( YNCoreWorldFace *face, const YNCoreCamera *came
 	return true;
 }
 
-unsigned int *YnCore_World_ConvertFaceToTriangles( const YNCoreWorldFace *face, unsigned int *numTriangles )
+unsigned int *YnCore_World_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles )
 {
 	if ( face->numVertices < 3 )
 		return NULL;
@@ -42,7 +42,7 @@ unsigned int *YnCore_World_ConvertFaceToTriangles( const YNCoreWorldFace *face, 
 	return indices;
 }
 
-static void GenerateFaceNormal( const YNCoreWorldMesh *mesh, YNCoreWorldFace *face )
+static void GenerateFaceNormal( const OgeWorldMesh *mesh, OgeWorldFace *face )
 {
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 		face->normal = PlAddVector3( face->normal, mesh->vertices[ face->vertices[ i ] ].normal );
@@ -50,7 +50,7 @@ static void GenerateFaceNormal( const YNCoreWorldMesh *mesh, YNCoreWorldFace *fa
 	face->normal = PlNormalizeVector3( face->normal );
 }
 
-static void DeserializeMaterials( YNNodeBranch *meshNode, YNCoreWorldMesh *meshPtr )
+static void DeserializeMaterials( YNNodeBranch *meshNode, OgeWorldMesh *meshPtr )
 {
 	YNNodeBranch *materialsList = YnNode_GetChildByName( meshNode, "materials" );
 	if ( materialsList == NULL )
@@ -60,7 +60,7 @@ static void DeserializeMaterials( YNNodeBranch *meshNode, YNCoreWorldMesh *meshP
 	}
 
 	meshPtr->numMaterials      = YnNode_GetNumOfChildren( materialsList );
-	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( YNCoreMaterial         *), true );
+	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( OgeMaterial         *), true );
 	YNNodeBranch *materialNode = YnNode_GetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
@@ -78,7 +78,7 @@ static void DeserializeMaterials( YNNodeBranch *meshNode, YNCoreWorldMesh *meshP
 	}
 }
 
-static YNCoreWorldVertex *DeserializeVertices( YNNodeBranch *meshNode, unsigned int *numVertices )
+static OgeWorldVertex *DeserializeVertices( YNNodeBranch *meshNode, unsigned int *numVertices )
 {
 	YNNodeBranch *verticesList = YnNode_GetChildByName( meshNode, "vertices" );
 	if ( verticesList == NULL )
@@ -93,11 +93,11 @@ static YNCoreWorldVertex *DeserializeVertices( YNNodeBranch *meshNode, unsigned 
 		return NULL;
 	}
 
-	*numVertices = numChildren / sizeof( YNCoreWorldVertex );
-	return ( YNCoreWorldVertex * ) data;
+	*numVertices = numChildren / sizeof( OgeWorldVertex );
+	return ( OgeWorldVertex * ) data;
 }
 
-static void DeserializeFaces( YNNodeBranch *meshNode, YNCoreWorldMesh *worldMesh )
+static void DeserializeFaces( YNNodeBranch *meshNode, OgeWorldMesh *worldMesh )
 {
 	YNNodeBranch *facesList = YnNode_GetChildByName( meshNode, "faces" );
 	if ( facesList == NULL )
@@ -116,7 +116,7 @@ static void DeserializeFaces( YNNodeBranch *meshNode, YNCoreWorldMesh *worldMesh
 			break;
 		}
 
-		YNCoreWorldFace *face = PL_NEW( YNCoreWorldFace );
+		OgeWorldFace *face = PL_NEW( OgeWorldFace );
 
 		int materialIndex = YnNode_GetI32ByName( faceNode, "material", -1 );
 		if ( materialIndex >= 0 && materialIndex < worldMesh->numMaterials )
@@ -154,12 +154,12 @@ static void DeserializeFaces( YNNodeBranch *meshNode, YNCoreWorldMesh *worldMesh
 /**
  * Deserialise a mesh from the given node.
  */
-YNCoreWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, YNCoreWorldMesh *worldMesh )
+OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, OgeWorldMesh *worldMesh )
 {
 	DeserializeMaterials( root, worldMesh );
 
 	unsigned int numVertices;
-	YNCoreWorldVertex *vertices = DeserializeVertices( root, &numVertices );
+	OgeWorldVertex *vertices = DeserializeVertices( root, &numVertices );
 	if ( vertices == NULL )
 	{
 		PRINT_WARNING( "Failed to fetch vertices for mesh: %s\n", worldMesh->id );
@@ -173,7 +173,7 @@ YNCoreWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, YNCoreW
 	return worldMesh;
 }
 
-static void GenerateBounds( YNCoreWorldMesh *mesh )
+static void GenerateBounds( OgeWorldMesh *mesh )
 {
 	PLVector3 *coords = PL_NEW_( PLVector3, mesh->numVertices );
 	for ( unsigned int i = 0; i < mesh->numVertices; ++i )
@@ -185,7 +185,7 @@ static void GenerateBounds( YNCoreWorldMesh *mesh )
 	PLLinkedListNode *faceNode = PlGetFirstNode( mesh->faces );
 	while ( faceNode != NULL )
 	{
-		YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+		OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 		coords                = PL_NEW_( PLVector3, face->numVertices );
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 			coords[ j ] = mesh->vertices[ face->vertices[ j ] ].position;
@@ -202,32 +202,32 @@ static void GenerateBounds( YNCoreWorldMesh *mesh )
 /**
  * Free the mesh from memory.
  */
-void DestroyWorldMesh( YNCoreWorldMesh *mesh )
+void DestroyWorldMesh( OgeWorldMesh *mesh )
 {
 	PlgDestroyMesh( mesh->drawMesh );
 }
 
-YNCoreWorldMesh *YnCore_WorldMesh_Create( YNCoreWorld *parent )
+OgeWorldMesh *YnCore_WorldMesh_Create( OgeWorld *parent )
 {
-	YNCoreWorldMesh *mesh = PL_NEW( YNCoreWorldMesh );
+	OgeWorldMesh *mesh = PL_NEW( OgeWorldMesh );
 	mesh->faces           = PlCreateLinkedList();
 
 	if ( parent != NULL )
 		PlPushBackVectorArrayElement( parent->meshes, mesh );
 
-	MemoryManager_SetupReference( "WorldMesh", MEM_CACHE_WORLD_MESH, &mesh->mem, ( MMReference_CleanupFunction ) DestroyWorldMesh, mesh );
-	MemoryManager_AddReference( &mesh->mem );
+	ogeMemoryManager_SetupReference( "WorldMesh", MEM_CACHE_WORLD_MESH, &mesh->mem, ( MMReference_CleanupFunction ) DestroyWorldMesh, mesh );
+	ogeMemoryManager_AddReference( &mesh->mem );
 
 	return mesh;
 }
 
-YNCoreWorldMesh *YnCore_WorldMesh_Load( const char *path )
+OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 {
 	// Check to see if it's cached already
-	YNCoreWorldMesh *worldMesh = MM_GetCachedData( path, MEM_CACHE_WORLD_MESH );
+	OgeWorldMesh *worldMesh = ogeMM_GetCachedData( path, MEM_CACHE_WORLD_MESH );
 	if ( worldMesh != NULL )
 	{
-		MemoryManager_AddReference( &worldMesh->mem );
+		ogeMemoryManager_AddReference( &worldMesh->mem );
 		return worldMesh;
 	}
 
@@ -270,7 +270,7 @@ YNCoreWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		PLLinkedListNode *faceNode = PlGetFirstNode( worldMesh->faces );
 		while ( faceNode != NULL )
 		{
-			YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+			OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 
 			unsigned int numTriangles;
 			unsigned int *indices  = YnCore_World_ConvertFaceToTriangles( face, &numTriangles );
@@ -288,16 +288,16 @@ YNCoreWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		PlgGenerateVertexTangentBasis( worldMesh->drawMesh->vertices, worldMesh->drawMesh->num_verts );
 		//PlgGenerateMeshTangentBasis( worldMesh->drawMesh );
 
-		MM_AddToCache( path, MEM_CACHE_WORLD_MESH, worldMesh );
+		ogeMM_AddToCache( path, MEM_CACHE_WORLD_MESH, worldMesh );
 	}
 
 	return worldMesh;
 }
 
-void YnCore_WorldMesh_Release( YNCoreWorldMesh *worldMesh )
+void YnCore_WorldMesh_Release( OgeWorldMesh *worldMesh )
 {
 	if ( worldMesh == NULL )
 		return;
 
-	MemoryManager_ReleaseReference( &worldMesh->mem );
+	ogeMemoryManager_ReleaseReference( &worldMesh->mem );
 }

@@ -290,7 +290,7 @@ int main( int argc, char **argv )
 
 extern "C"
 {
-	YNCoreViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+	OgeViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 	{
 		return nullptr;
 	}

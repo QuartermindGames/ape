@@ -19,21 +19,21 @@ static PLGTexture *specularFallbackTexture;
 static PLGTexture *normalFallbackTexture;
 static PLGTexture *previewFallbackTexture;
 
-typedef struct YNCoreMaterial
+typedef struct OgeMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	OGEMaterialPass passes[ MAX_MATERIAL_PASSES ];
+	OgeMaterialPass passes[ MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
 	PLLinkedListNode *node;
 
-	YNCoreMemoryReference mem;
-} YNCoreMaterial;
+	OgeMemoryReference mem;
+} OgeMaterial;
 
-static YNCoreMaterial *fallbackMaterial;
+static OgeMaterial *fallbackMaterial;
 
-YNCoreMaterial *YnCore_GetFallbackMaterial( void )
+OgeMaterial *ogeGetFallbackMaterial( void )
 {
 	return fallbackMaterial;
 }
@@ -54,7 +54,7 @@ void ogeInitializeMaterialSystem( void )
 	previewFallbackTexture  = ogeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	/* go ahead and create the fallback material */
-	fallbackMaterial = PL_NEW( YNCoreMaterial );
+	fallbackMaterial = PL_NEW( OgeMaterial );
 	/* setup passes */
 	fallbackMaterial->numPasses                  = 1;
 	fallbackMaterial->preview                    = previewFallbackTexture;
@@ -65,13 +65,13 @@ void ogeInitializeMaterialSystem( void )
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables                = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].type         = MATERIAL_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = YnCore_GetFallbackTexture();
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = ogeGetFallbackTexture();
 }
 
 void ogeShutdownMaterialSystem( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
-	MemoryManager_FlushUnreferencedResources();
+	ogeMemoryManager_FlushUnreferencedResources();
 
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;
@@ -96,12 +96,12 @@ void ogeShutdownMaterialSystem( void )
 		               totalCachedMaterials, orphanedCaches );
 }
 
-const char *YnCore_Material_GetPath( const YNCoreMaterial *material )
+const char *ogeMaterial_GetPath( const OgeMaterial *material )
 {
 	return material->path;
 }
 
-PLGTexture *YnCore_Material_GetPreviewTexture( YNCoreMaterial *material )
+PLGTexture *ogeMaterial_GetPreviewTexture( OgeMaterial *material )
 {
 	return material->preview;
 }
@@ -109,7 +109,7 @@ PLGTexture *YnCore_Material_GetPreviewTexture( YNCoreMaterial *material )
 /**
  * Convert the given tag into a blend mode type.
  */
-static int RM_GetBlendModeByTag( const char *tag )
+static int GetBlendModeByTag( const char *tag )
 {
 	static const char *blendModeTags[] = {
 	        [PLG_BLEND_NONE]                = "none",
@@ -142,7 +142,7 @@ static int RM_GetBlendModeByTag( const char *tag )
 /**
  * Convert the given tag into it's built-in type.
  */
-static OGEMaterialBuiltinVar GetBuiltInByTag( const char *tag )
+static OgeMaterialBuiltinVar GetBuiltInByTag( const char *tag )
 {
 	static const char *builtInTags[] = {
 	        [MATERIAL_BUILTIN_TIME]          = "time",
@@ -167,7 +167,7 @@ static OGEMaterialBuiltinVar GetBuiltInByTag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool ValidateMaterialVariable( OGEMaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool ValidateMaterialVariable( OgeMaterialVariable *variable, PLGShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
@@ -210,7 +210,7 @@ static bool ValidateMaterialVariable( OGEMaterialVariable *variable, PLGShaderUn
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *root )
+static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *root )
 {
 	YNNodeBranch *node = YnNode_GetFirstChild( root );
 	while ( node != NULL )
@@ -218,7 +218,7 @@ static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *
 		/* fetch the next node, so we can roll onto the next element early */
 		YNNodeBranch *next = YnNode_GetNextChild( node );
 
-		OGEMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
+		OgeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
@@ -248,10 +248,10 @@ static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					YNCoreRenderTarget *renderTarget = YnCore_RenderTarget_GetByKey( p );
+					OgeRenderTarget *renderTarget = ogeRenderTarget_GetByKey( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = YnCore_RenderTarget_Create( p, 64, 64, 0 );
+						renderTarget = ogeRenderTarget_Create( p, 64, 64, 0 );
 					}
 
 					materialVariable->type         = MATERIAL_VAR_RENDERTARGET;
@@ -260,7 +260,7 @@ static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *
 				else
 				{
 					/* lookup what it actually is */
-					OGEMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
+					OgeMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
 					if ( materialBuiltinVar == MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
@@ -374,7 +374,7 @@ static void ParseShaderParameters( OGEMaterialPass *materialPass, YNNodeBranch *
 	}
 }
 
-void ogeMaterial_ParsePass( struct YNNodeBranch *root, OGEMaterialPass *materialPass )
+void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	YNNodeBranch *subNode;
@@ -383,8 +383,8 @@ void ogeMaterial_ParsePass( struct YNNodeBranch *root, OGEMaterialPass *material
 		const char *blendModesArray[ 2 ];
 		if ( YnNode_GetStrArray( subNode, blendModesArray, 2 ) == YN_NODE_ERROR_SUCCESS )
 		{
-			materialPass->blendMode[ 0 ] = RM_GetBlendModeByTag( blendModesArray[ 0 ] );
-			materialPass->blendMode[ 1 ] = RM_GetBlendModeByTag( blendModesArray[ 1 ] );
+			materialPass->blendMode[ 0 ] = GetBlendModeByTag( blendModesArray[ 0 ] );
+			materialPass->blendMode[ 1 ] = GetBlendModeByTag( blendModesArray[ 1 ] );
 		}
 		else
 			PRINT_WARNING( "Invalid blend mode array in material!\n" );
@@ -423,7 +423,7 @@ void ogeMaterial_ParsePass( struct YNNodeBranch *root, OGEMaterialPass *material
 	 * a case where we only want to use the shader defaults? */
 }
 
-static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *root, bool preview )
+static OgeMaterial *ParseMaterial( OgeMaterial *material, YNNodeBranch *root, bool preview )
 {
 	// see if the preview texture is specified
 	if ( material->preview == NULL )
@@ -446,13 +446,13 @@ static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *ro
 		node = YnNode_GetFirstChild( node );
 		while ( node != NULL )
 		{
-			OGEMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
+			OgeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
 			/* current pass should've already been cleared by prior memset,
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName          = YnNode_GetStringByName( node, "shaderProgram", "default" );
-			OGEShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
+			OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
 				currentPass->program = oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ];
@@ -478,12 +478,12 @@ static YNCoreMaterial *ParseMaterial( YNCoreMaterial *material, YNNodeBranch *ro
 	return material;
 }
 
-static YNCoreMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
+static OgeMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
 {
 	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL )
 	{
-		YNCoreMaterial *material = PlGetLinkedListNodeUserData( node );
+		OgeMaterial *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 )
 			return material;
 
@@ -493,7 +493,7 @@ static YNCoreMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
 	return NULL;
 }
 
-static void DestroyMaterial( YNCoreMaterial *material )
+static void DestroyMaterial( OgeMaterial *material )
 {
 	if ( material == NULL )
 		return;
@@ -508,7 +508,7 @@ static void DestroyMaterial( YNCoreMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case MATERIAL_VAR_RENDERTARGET:
-					YnCore_RenderTarget_Release( ( YNCoreRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
+					ogeRenderTarget_Release( ( OgeRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
 					break;
 				default:
 					break;
@@ -525,13 +525,13 @@ static void DestroyMaterial( YNCoreMaterial *material )
 
 static void DestroyMaterialCallback( void *userData )
 {
-	DestroyMaterial( ( YNCoreMaterial * ) userData );
+	DestroyMaterial( ( OgeMaterial * ) userData );
 }
 
-YNCoreMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
+OgeMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
-	YNCoreMaterial *material = GetMaterial( path, group );
+	OgeMaterial *material = GetMaterial( path, group );
 	if ( material != NULL )
 	{
 		// If it's not cached, and we're not asking for the preview, load the full thing
@@ -546,12 +546,12 @@ YNCoreMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group,
 			else
 				PRINT_WARNING( "Failed to cache material, \"%s\" (%s)!\n", path, YnNode_GetErrorMessage() );
 		}
-		MemoryManager_AddReference( &material->mem );
+		ogeMemoryManager_AddReference( &material->mem );
 		return material;
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	YNCoreMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
+	OgeMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
 
 	YNNodeBranch *root = YnNode_LoadFile( path, "material" );
 	if ( root == NULL )
@@ -560,7 +560,7 @@ YNCoreMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group,
 		return fallbackPtr;
 	}
 
-	material = PL_NEW( YNCoreMaterial );
+	material = PL_NEW( OgeMaterial );
 	ParseMaterial( material, root, preview );
 
 	YnNode_DestroyBranch( root );
@@ -568,13 +568,13 @@ YNCoreMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group,
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
-	MemoryManager_SetupReference( "material", MEM_CACHE_MATERIALS, &material->mem, DestroyMaterialCallback, material );
-	MemoryManager_AddReference( &material->mem );
+	ogeMemoryManager_SetupReference( "material", MEM_CACHE_MATERIALS, &material->mem, DestroyMaterialCallback, material );
+	ogeMemoryManager_AddReference( &material->mem );
 
 	return material;
 }
 
-void YnCore_Material_Release( YNCoreMaterial *material )
+void ogeMaterial_Release( OgeMaterial *material )
 {
 	assert( material != NULL );
 	if ( material == NULL )
@@ -588,7 +588,7 @@ void YnCore_Material_Release( YNCoreMaterial *material )
 		return;
 	}
 
-	MemoryManager_ReleaseReference( &material->mem );
+	ogeMemoryManager_ReleaseReference( &material->mem );
 }
 
 static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
@@ -600,14 +600,14 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	{
 		case MATERIAL_BUILTIN_TIME:
 		{
-			unsigned int numTicks = YnCore_GetNumTicks();
+			unsigned int numTicks = ogeGetNumTicks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
 		case MATERIAL_BUILTIN_DEPTH:
 		{
-			PLGTexture *depthTexture = YnCore_GetPrimaryDepthAttachment();
+			PLGTexture *depthTexture = ogeGetPrimaryDepthAttachment();
 			if ( depthTexture == NULL )
 				break;
 
@@ -620,7 +620,7 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 		case MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
-			YnCore_Get2DViewportSize( &w, &h );
+			ogeGet2DViewportSize( &w, &h );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
 			break;
 		}
@@ -630,11 +630,11 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	}
 }
 
-static void SetGlobalUniforms( PLGShaderProgram *program, YNCoreLight *lights, unsigned int numLights )
+static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight *lights, unsigned int numLights )
 {
 	int slot;
 
-	YNCoreWorld *world = Game_GetCurrentWorld();
+	OgeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL )
 	{
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
@@ -674,7 +674,7 @@ static void SetGlobalUniforms( PLGShaderProgram *program, YNCoreLight *lights, u
 	}
 }
 
-void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLight *lights, unsigned int numLights )
+void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight *lights, unsigned int numLights )
 {
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!
@@ -687,7 +687,7 @@ void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLi
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		OGEMaterialPass *curPass = &material->passes[ i ];
+		OgeMaterialPass *curPass = &material->passes[ i ];
 
 		PlgSetShaderProgram( curPass->program );
 		PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
@@ -698,14 +698,22 @@ void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLi
 		if ( rendererState.mirror && ( rendererState.depth % 2 ) )
 		{
 			if ( curPass->cullMode == PLG_CULL_NEGATIVE )
+			{
 				cullMode = PLG_CULL_POSITIVE;
+			}
 			else if ( curPass->cullMode == PLG_CULL_POSITIVE )
+			{
 				cullMode = PLG_CULL_NEGATIVE;
+			}
 			else
+			{
 				cullMode = curPass->cullMode;
+			}
 		}
 		else
+		{
 			cullMode = curPass->cullMode;
+		}
 
 		PlgSetCullMode( cullMode );
 
@@ -726,27 +734,35 @@ void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLi
 			{
 				PL_GET_CVAR( "r.skipDiffuse", skipDiffuse );
 				if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+				{
 					continue;
+				}
 
 				PLGTexture *texture;
 				if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
 				{
-					texture = YnCore_RenderTarget_GetTextureAttachment( ( YNCoreRenderTarget * ) curPass->variables[ j ].data.userPtr );
+					texture = ogeRenderTarget_GetTextureAttachment( ( OgeRenderTarget * ) curPass->variables[ j ].data.userPtr );
 					if ( texture == NULL )
-						texture = YnCore_GetFallbackTexture();
+					{
+						texture = ogeGetFallbackTexture();
+					}
 				}
 				else
+				{
 					texture = ( PLGTexture * ) curPass->variables[ j ].data.userPtr;
-
+				}
 				assert( texture != NULL );
 
 				PL_GET_CVAR( "r.skipNormal", skipNormal );
 				if ( skipNormal != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_NORMAL && skipNormal->b_value ) )
+				{
 					texture = normalFallbackTexture;
-
+				}
 				PL_GET_CVAR( "r.skipSpecular", skipSpecular );
 				if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+				{
 					texture = specularFallbackTexture;
+				}
 
 				PlgSetTexture( texture, curUnit );
 				PlgSetTextureFilter( texture, curPass->textureFilter );
@@ -764,13 +780,19 @@ void YnCore_Material_DrawMesh( YNCoreMaterial *material, PLGMesh *mesh, YNCoreLi
 
 		g_gfxPerfStats.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
+		{
 			g_gfxPerfStats.numTriangles += mesh->num_triangles;
+		}
 		else
+		{
 			g_gfxPerfStats.numTriangles += ( mesh->num_verts / 2 );
+		}
 	}
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 
 	if ( !material->isCached )
-		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = YnCore_GetFallbackTexture();
+	{
+		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = ogeGetFallbackTexture();
+	}
 }

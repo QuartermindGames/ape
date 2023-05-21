@@ -27,7 +27,7 @@ void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColo
 static SDL_Window *sdlWindow      = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static YNCoreViewport *windowViewport = NULL;
+static OgeViewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
@@ -76,7 +76,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-YNCoreViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+OgeViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 #if !NDEBUG

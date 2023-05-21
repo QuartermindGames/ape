@@ -74,7 +74,7 @@ void YnCore_InitializeEditor( void )
 	}
 }
 
-void YnCore_ShutdownEditor( void )
+void ogeShutdownEditor( void )
 {
 	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
 	{
@@ -120,7 +120,7 @@ void YnCore_DrawEditor( void )
 	currentContext->Draw();
 }
 
-void YnCore_DrawEditorGUI( const YNCoreViewport *viewport )
+void YnCore_DrawEditorGUI( const OgeViewport *viewport )
 {
 	if ( currentContext == NULL )
 	{

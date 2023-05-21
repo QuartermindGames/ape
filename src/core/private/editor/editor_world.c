@@ -18,9 +18,9 @@ static YNCoreEditorContext context;
 static YNCoreEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
 
 #define MAX_CAMERA_SLOTS 16
-static YNCoreCamera *cameras[ MAX_CAMERA_SLOTS ];
+static OgeCamera *cameras[ MAX_CAMERA_SLOTS ];
 
-static YNCoreWorld *world = NULL;
+static OgeWorld *world = NULL;
 
 static int mouseCursorX = 0,
            mouseCursorY = 0;
@@ -75,7 +75,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	        strtof( argv[ 2 ], NULL ),
 	        strtof( argv[ 3 ], NULL ) };
 
-	YNCoreWorldMesh *mesh = YnCore_WorldMesh_Create( world );
+	OgeWorldMesh *mesh = YnCore_WorldMesh_Create( world );
 }
 
 static void IncreaseGridSize( YNCoreInputState state )
@@ -206,9 +206,9 @@ static void DrawWorldEditorGUI( void )
 		transform = PlTransposeMatrix4( &transform );
 		PlgSetViewMatrix( &transform );
 
-		YNCoreCamera tmp;
+		OgeCamera tmp;
 		PL_ZERO_( tmp );
-		tmp.internal = YnCore_Rend_GetAuxCamera();
+		tmp.internal = ogeGetAuxCamera();
 		switch ( context.camera->drawMode )
 		{
 			case YN_CORE_CAMERA_DRAW_MODE_WIREFRAME:
@@ -282,7 +282,7 @@ static void TickWorldEditor( void )
 
 static void OnWorldEditorActive( void )
 {
-	YNCoreViewport *viewport = YnCore_Viewport_GetBySlot( 0 );
+	OgeViewport *viewport = YnCore_Viewport_GetBySlot( 0 );
 	assert( viewport != NULL );
 	if ( viewport == NULL )
 	{

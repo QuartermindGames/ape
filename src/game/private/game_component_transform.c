@@ -42,12 +42,12 @@ static YNNodeBranch *Deserialize( YNCoreEntityComponent *self, YNNodeBranch *roo
 static void Tick( YNCoreEntityComponent *self )
 {
 	// if we're in the world, ensure we're attached to a valid sector
-	YNCoreWorld *world = Game_GetCurrentWorld();
+	OgeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL && ECTRANSFORM( self )->sectorNum == -1 )
 	{
 		Game_Warning( "Entity outside of world, attempting to relocate!\n" );
 
-		YNCoreWorldSector *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
+		OgeWorldSector *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
 		if ( sector != NULL )
 		{
 			//TODO: what fucking index is it!?

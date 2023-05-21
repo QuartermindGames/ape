@@ -66,7 +66,7 @@ typedef struct Actor
 	char tagName[ 64 ];
 
 	/* collision/vis */
-	struct YNCoreWorldSector *sector;
+	struct OgeWorldSector *sector;
 	ActorMovementType    movementType;
 	ActorCollisionGroup  collisionGroup;
 	PLCollisionAABB      collisionVolume;
@@ -92,7 +92,7 @@ typedef struct Actor
 	void                    *userData;
 } Actor;
 
-void Act_DrawActors( YNCoreCamera *camera, YNCoreWorldSector *sector );
+void Act_DrawActors( OgeCamera *camera, OgeWorldSector *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, YNNodeBranch *nodeTree );
@@ -106,7 +106,7 @@ PLVector3 Act_GetPosition( const Actor *self );
 
 float Act_GetAngle( const Actor *self );
 
-void Act_SetWorldSector( Actor *self, struct YNCoreWorldSector *sector );
+void Act_SetWorldSector( Actor *self, struct OgeWorldSector *sector );
 
 void  Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
@@ -119,7 +119,7 @@ bool   Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-bool Act_IsVisible( Actor *self, YNCoreCamera *camera );
+bool Act_IsVisible( Actor *self, OgeCamera *camera );
 
 PLVector3 Act_GetForward( const Actor *self );
 

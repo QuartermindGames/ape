@@ -6,9 +6,9 @@
 PL_EXTERN_C
 
 void ogeInitializeClient( void );
-void YnCore_ShutdownClient( void );
-void YnCore_DrawClient( YNCoreViewport *viewport );
-void YnCore_TickClient( void );
+void ogeShutdownClient( void );
+void ogeDrawClient( OgeViewport *viewport );
+void ogeTickClient( void );
 
 void YnCore_Client_InitiateConnection( const char *ip, unsigned short port );
 void YnCore_Client_Disconnect( void );

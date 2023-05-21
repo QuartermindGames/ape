@@ -52,7 +52,7 @@ void Flare_Render( PLGTexture *texture, float diameter, float distance )
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 }
 
-void Flare_RenderFlares( const YNCoreCamera *camera )
+void Flare_RenderFlares( const OgeCamera *camera )
 {
 	ogeGetShaderProgramByName( "flare" );
 

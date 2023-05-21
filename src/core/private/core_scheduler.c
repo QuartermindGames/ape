@@ -61,7 +61,7 @@ void ogeInitializeScheduler( void )
 		PRINT_ERROR( "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
 }
 
-void YnCore_ShutdownScheduler( void )
+void ogeShutdownScheduler( void )
 {
 	PRINT( "Shutting down scheduler\n" );
 
@@ -122,13 +122,13 @@ void Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData,
 {
 	SchTask *task = PlMAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay = delay + YnCore_GetNumTicks();
+	task->delay = delay + ogeGetNumTicks();
 	task->callback = callback;
 	task->userData = userData;
 	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
-void YinCore_TickTasks( void )
+void ogeTickTasks( void )
 {
 	if ( scheduleList == NULL )
 		return;
@@ -138,10 +138,10 @@ void YinCore_TickTasks( void )
 	{
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
 		SchTask          *task = PlGetLinkedListNodeUserData( node );
-		if ( task->delay < YnCore_GetNumTicks() )
+		if ( task->delay < ogeGetNumTicks() )
 		{
 			PlDestroyLinkedListNode( node );
-			task->callback( task->userData, ( task->delay - YnCore_GetNumTicks() ) + 1 );
+			task->callback( task->userData, ( task->delay - ogeGetNumTicks() ) + 1 );
 			task->delay = 0.0;
 			PlFree( task );
 		}
@@ -164,7 +164,7 @@ void Sch_PrintPendingTasks( void )
 	while ( node != NULL )
 	{
 		SchTask *task = PlGetLinkedListNodeUserData( node );
-		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - YnCore_GetNumTicks() );
+		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - ogeGetNumTicks() );
 		node = PlGetNextLinkedListNode( node );
 	}
 	PRINT( "%d scheduled tasks pending\n", i );
@@ -200,5 +200,5 @@ void Sch_SetTaskDelay( const char *desc, double delay )
 	if ( task == NULL )
 		return;
 
-	task->delay = delay + YnCore_GetNumTicks();
+	task->delay = delay + ogeGetNumTicks();
 }

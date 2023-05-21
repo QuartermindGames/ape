@@ -12,47 +12,47 @@
 
 #include "renderer_texture.h"
 
-typedef struct YNCoreRendererStats
+typedef struct OgeRendererStats
 {
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numTriangles;
 	unsigned int numFacesDrawn;
 	unsigned int numVisiblePortals;
-} YNCoreRendererStats;
-extern YNCoreRendererStats g_gfxPerfStats;
+} OgeRendererStats;
+extern OgeRendererStats g_gfxPerfStats;
 
 /* todo: introduce container around this */
-typedef struct YNCoreSpriteFrame
+typedef struct OgeSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
-} YNCoreSpriteFrame;
+} OgeSpriteFrame;
 
-typedef struct YNCoreCamera
+typedef struct OgeCamera
 {
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
-	YNCoreCameraMode mode;
-	YNCoreCameraDrawMode drawMode;
+	OgeCameraMode mode;
+	OgeCameraDrawMode drawMode;
 	struct Actor *parentActor;
 	bool enablePostProcessing;
 	PLLinkedListNode *node;
-} YNCoreCamera;
+} OgeCamera;
 
 ////////////////////////////////////////////////////////////////////
 
 #define YN_CORE_MAX_FPS_READINGS 64
 
-typedef struct YNCoreViewport
+typedef struct OgeViewport
 {
 	unsigned int index;
 	int x, y;
 	int width, height;
 
-	YNCoreCamera *camera;
+	OgeCamera *camera;
 
 	struct
 	{
@@ -67,71 +67,71 @@ typedef struct YNCoreViewport
 	} perf;
 
 	void *windowHandle;
-} YNCoreViewport;
+} OgeViewport;
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum YNCoreLightType
+typedef enum OgeLightType
 {
-	YN_CORE_LIGHT_TYPE_OMNI,
-	YN_CORE_LIGHT_TYPE_SPOT,
-	YN_CORE_LIGHT_TYPE_SUN,
+	OGE_LIGHT_TYPE_OMNI,
+	OGE_LIGHT_TYPE_SPOT,
+	OGE_LIGHT_TYPE_SUN,
 
-	YN_CORE_MAX_LIGHT_TYPES
-} YNCoreLightType;
+	OGE_MAX_LIGHT_TYPES
+} OgeLightType;
 
-#define YN_CORE_MAX_LIGHTS_PER_PASS 8
-typedef struct YNCoreLight
+#define OGE_MAX_LIGHTS_PER_PASS 8
+typedef struct OgeLight
 {
-	YNCoreLightType type;
+	OgeLightType type;
 	PLVector3 position;
 	PLVector3 angles;
 	PLColourF32 colour;
 	float radius;
-} YNCoreLight;
-typedef YNCoreLight YNCoreLightArray[ YN_CORE_MAX_LIGHTS_PER_PASS ];
+} OgeLight;
+typedef OgeLight OgeLightArray[ OGE_MAX_LIGHTS_PER_PASS ];
 
-typedef struct YNCoreRendererPassState
+typedef struct OgeRendererPassState
 {
 	bool mirror;
 	unsigned int depth;
-} YNCoreRendererPassState;
-extern YNCoreRendererPassState rendererState;
+} OgeRendererPassState;
+extern OgeRendererPassState rendererState;
 
-#define YR_NUM_SPRITE_ANGLES 8
+#define OGE_NUM_SPRITE_ANGLES 8
 
 #include "renderer_scenegraph.h"
 #include "renderer_material.h"
 
-void YnCore_InitializeRenderer( void );
-void YnCore_ShutdownRenderer( void );
+void ogeInitializeRenderer( void );
+void ogeShutdownRenderer( void );
 
-PLGCamera *YnCore_Rend_GetAuxCamera( void );
+PLGCamera *ogeGetAuxCamera( void );
 
-void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
-PLGTexture *YnCore_GetPrimaryColourAttachment( void );
-PLGTexture *YnCore_GetPrimaryDepthAttachment( void );
+void ogeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
+PLGTexture *ogeGetPrimaryColourAttachment( void );
+PLGTexture *ogeGetPrimaryDepthAttachment( void );
 
-void YnCore_SetupDefaultRenderState( const YNCoreViewport *viewport );
-void YnCore_BeginDraw( YNCoreViewport *viewport );
-void YnCore_EndDraw( YNCoreViewport *viewport );
+void YnCore_SetupDefaultRenderState( const OgeViewport *viewport );
+void YnCore_BeginDraw( OgeViewport *viewport );
+void YnCore_EndDraw( OgeViewport *viewport );
 
 void YnCore_Set2DViewportSize( int w, int h );
-void YnCore_Get2DViewportSize( int *width, int *height );
-void YnCore_DrawMenu( const YNCoreViewport *viewport );
+void ogeGet2DViewportSize( int *width, int *height );
+void YnCore_DrawMenu( const OgeViewport *viewport );
 
-struct OGEShaderProgramIndex *ogeGetShaderProgramByName( const char *name );
+struct OgeShaderProgramIndex *ogeGetShaderProgramByName( const char *name );
 
-void YnCore_DrawPerspective( YNCoreCamera *camera, const YNCoreViewport *viewport );
+void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport );
 
-void YnCore_Draw2DQuad( YNCoreMaterial *material, int x, int y, int w, int h );
+void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h );
 void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
 
-void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
-void YnCore_Sprite_DrawAnimation( YNCoreSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+void YnCore_Sprite_DrawAnimationFrame( OgeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
+void YnCore_Sprite_DrawAnimation( OgeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
 PLGTexture *ogeLoadTexture( const char *path, PLGTextureFilter filterMode );
-PLGTexture *YnCore_GetFallbackTexture( void );
+PLGTexture *ogeGetFallbackTexture( void );
 
 #if 0
 typedef struct Texture Texture;
@@ -142,10 +142,10 @@ PLGTexture            *Renderer_Texture_GetInternal( Texture *texture );
 
 ////////////////////////////////////////////////////////////////////
 
-typedef struct YNCoreRenderTarget YNCoreRenderTarget;
+typedef struct OgeRenderTarget OgeRenderTarget;
 
-YNCoreRenderTarget *YnCore_RenderTarget_GetByKey( const char *key );
-YNCoreRenderTarget *YnCore_RenderTarget_Create( const char *key, unsigned int width, unsigned int height, unsigned int flags );
-void YnCore_RenderTarget_Release( YNCoreRenderTarget *renderTarget );
-void YnCore_RenderTarget_SetSize( YNCoreRenderTarget *renderTarget, unsigned int width, unsigned int height );
-PLGTexture *YnCore_RenderTarget_GetTextureAttachment( YNCoreRenderTarget *renderTarget );
+OgeRenderTarget *ogeRenderTarget_GetByKey( const char *key );
+OgeRenderTarget *ogeRenderTarget_Create( const char *key, unsigned int width, unsigned int height, unsigned int flags );
+void ogeRenderTarget_Release( OgeRenderTarget *renderTarget );
+void ogeRenderTarget_SetSize( OgeRenderTarget *renderTarget, unsigned int width, unsigned int height );
+PLGTexture *ogeRenderTarget_GetTextureAttachment( OgeRenderTarget *renderTarget );

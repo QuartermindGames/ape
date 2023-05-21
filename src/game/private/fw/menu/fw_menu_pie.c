@@ -23,7 +23,7 @@ typedef struct FWPieMenuOption
 {
 	PLLinkedListNode *node;
 	char label[ 64 ];
-	struct YNCoreMaterial *icon;
+	struct OgeMaterial *icon;
 	FWPieMenuOptionCallback callback;
 	FWPieMenu *parent;
 } FWPieMenuOption;
@@ -189,7 +189,7 @@ static void DrawPieOption( FWPieMenuOption *option, float x, float y, bool isSel
 		return;
 	}
 
-	YnCore_Material_DrawMesh( option->icon, mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( option->icon, mesh, NULL, 0 );
 }
 
 static FWPieMenuOption *GetSelectedOption( FWPieMenu *menu )
@@ -250,7 +250,7 @@ void FW_Menu_SetPieActive( FWPieMenu *menu, bool active )
 	menu->scale    = 0.0f;
 }
 
-FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct YNCoreMaterial *icon, FWPieMenuOptionCallback callback )
+FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct OgeMaterial *icon, FWPieMenuOptionCallback callback )
 {
 	FWPieMenuOption *option = PL_NEW( FWPieMenuOption );
 	option->node            = PlInsertLinkedListNode( menu->options, option );
@@ -289,7 +289,7 @@ void FW_Menu_DestroyPieOption( FWPieMenuOption *option )
 		Game_Warning( "Encountered a pie option with no parent!\n" );
 
 	if ( option->icon != NULL )
-		YnCore_Material_Release( option->icon );
+		ogeMaterial_Release( option->icon );
 
 	PL_DELETE( option );
 }

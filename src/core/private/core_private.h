@@ -35,8 +35,6 @@ PL_EXTERN_C
 	PL_TOSTRING( VERSION_MAJOR ) \
 	"." PL_TOSTRING( VERSION_MINOR ) "." PL_TOSTRING( VERSION_PATCH ) " (" VERSION_CODENAME ")"
 
-struct YNNodeBranch *YnCore_GetConfig( void );
-
 #if !defined( NDEBUG )
 #	define ENABLE_PROFILER 1
 #endif
@@ -59,12 +57,12 @@ typedef enum CPUProfilerGroup
 extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 #if defined( ENABLE_PROFILER )
 void ogeInitializeProfiler( void );
-void YnCore_Profiler_EndFrame( void );
+void ogeProfiler_EndFrame( void );
 void   Profiler_StartMeasure( ProfilerGroup group );
 void   Profiler_EndMeasure( ProfilerGroup group );
 double Profiler_GetMeasure( ProfilerGroup group );
-#	define YN_CORE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
-#	define YN_CORE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
+#	define OGE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
+#	define OGE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
 #else
 #	define Profiler_Initialize()
 #	define Profiler_StartMeasure()
@@ -73,7 +71,7 @@ double Profiler_GetMeasure( ProfilerGroup group );
 #	define PROFILE_START( GROUP )
 #	define PROFILE_END( GROUP )
 #endif
-void YnCore_Profiler_UpdateGraphs( void );
+void ogeProfiler_UpdateGraphs( void );
 const double *Profiler_GetGraph( ProfilerGroup group, uint8_t *numPoints );
 double        Profiler_GetGraphValue( ProfilerGroup group );
 double        Profiler_GetGraphAverage( ProfilerGroup group );
@@ -121,15 +119,15 @@ typedef struct ConsoleOutput
 ConsoleOutput *Console_GetOutput( void );
 
 void ogeInitializeConsole( void );
-void YnCore_ShutdownConsole( void );
+void ogeShutdownConsole( void );
 
 int  Console_GetLogLevel( ConsoleLogLevel level );
 void Console_Print( ConsoleLogLevel level, const char *message, ... );
 
-void YnCore_RegisterConsoleCommands( bool isDedicated );
-void YnCore_RegisterConsoleVariables( bool isDedicated );
+void ogeRegisterConsoleCommands( bool isDedicated );
+void ogeRegisterConsoleVariables( bool isDedicated );
 
-void Client_Console_Draw( const YNCoreViewport *viewport );
+void Client_Console_Draw( const OgeViewport *viewport );
 bool Client_Console_IsOpen( void );
 void Client_Console_RegisterConsoleCommands( void );
 void Client_Console_RegisterConsoleVariables( void );

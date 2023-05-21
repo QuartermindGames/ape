@@ -83,12 +83,12 @@ static void FW_Game_Draw( void )
 {
 }
 
-static void FW_Game_DrawMenu( const YNCoreViewport *viewport )
+static void FW_Game_DrawMenu( const OgeViewport *viewport )
 {
 	FW_Menu_Draw( viewport );
 }
 
-static void SpawnWorld( YNCoreWorld *world )
+static void SpawnWorld( OgeWorld *world )
 {
 	YNNodeBranch *propertyNode;
 	if ( ( propertyNode = YnCore_World_GetProperty( world, "heightmap" ) ) != NULL )
@@ -118,7 +118,7 @@ static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user 
 		case GAMEMODE_REQUEST_HANDLEINPUT:
 			break;
 		case GAMEMODE_REQUEST_SPAWNWORLD:
-			SpawnWorld( ( YNCoreWorld * ) user );
+			SpawnWorld( ( OgeWorld * ) user );
 			break;
 		default:
 			break;

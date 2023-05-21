@@ -35,8 +35,8 @@ static bool engineInitialized  = false;
  * PUBLIC
  ****************************************/
 
-YNNodeBranch *YnCore_GetConfig( void ) { return engineConfig; }
-YNNodeBranch *YnCore_GetUserConfig( void ) { return userConfig; }
+YNNodeBranch *ogeGetConfig( void ) { return engineConfig; }
+YNNodeBranch *ogeGetUserConfig( void ) { return userConfig; }
 
 bool ogeInitialize( const char *config )
 {
@@ -51,13 +51,15 @@ bool ogeInitialize( const char *config )
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );
 	if ( engineTerminalMode )
+	{
 		PRINT( "Operating in command-line mode!\n" );
+	}
 
-	YnCore_RegisterConsoleVariables( engineTerminalMode );
-	YnCore_RegisterConsoleCommands( engineTerminalMode );
+	ogeRegisterConsoleVariables( engineTerminalMode );
+	ogeRegisterConsoleCommands( engineTerminalMode );
 
 	// Need to do this before anything else IO related
-	YnCore_FileSystem_MountBaseLocations();
+	ogeFileSystem_MountBaseLocations();
 
 	// And now we can fetch the engine config that provides mount locations, aliases and more
 	if ( config == NULL )
@@ -112,24 +114,24 @@ void ogeShutdown( void )
 
 	ogeFlushTasks();
 
-	YnCore_ShutdownGame();
-	YnCore_ShutdownEditor();
+	ogeShutdownGame();
+	ogeShutdownEditor();
 
-	YnCore_ShutdownClient();
-	YnCore_ShutdownServer();
-	YnCore_ShutdownConsole();
-	YnCore_ShutdownMemoryManager();
-	YnCore_ShutdownScheduler();
-	YnCore_ShutdownNet();
+	ogeShutdownClient();
+	ogeShutdownServer();
+	ogeShutdownConsole();
+	ogeShutdownMemoryManager();
+	ogeShutdownScheduler();
+	ogeShutdownNet();
 
-	YnCore_FileSystem_ClearMountedLocations();
+	ogeFileSystem_ClearMountedLocations();
 
 	ogeShellInterface_Shutdown();
 
 	engineInitialized = false;
 }
 
-unsigned int YnCore_GetNumTicks( void )
+unsigned int ogeGetNumTicks( void )
 {
 	return numTicks;
 }
@@ -137,26 +139,28 @@ unsigned int YnCore_GetNumTicks( void )
 void ogeTickFrame( void )
 {
 	if ( !engineInitialized )
+	{
 		return;
+	}
 
-	YN_CORE_PROFILE_START( PROFILE_SIM_ALL );
+	OGE_PROFILE_START( PROFILE_SIM_ALL );
 
-	YinCore_TickTasks();
+	ogeTickTasks();
 
-	YN_CORE_PROFILE_START( PROFILE_TICK_CLIENT );
-	YnCore_TickClient();
-	YN_CORE_PROFILE_END( PROFILE_TICK_CLIENT );
+	OGE_PROFILE_START( PROFILE_TICK_CLIENT );
+	ogeTickClient();
+	OGE_PROFILE_END( PROFILE_TICK_CLIENT );
 
-	YN_CORE_PROFILE_START( PROFILE_TICK_SERVER );
-	YnCore_TickServer();
-	YN_CORE_PROFILE_END( PROFILE_TICK_SERVER );
+	OGE_PROFILE_START( PROFILE_TICK_SERVER );
+	ogeTickServer();
+	OGE_PROFILE_END( PROFILE_TICK_SERVER );
 
 	numTicks++;
 
-	YN_CORE_PROFILE_END( PROFILE_SIM_ALL );
+	OGE_PROFILE_END( PROFILE_SIM_ALL );
 
-	YnCore_Profiler_UpdateGraphs();
-	YnCore_Profiler_EndFrame();
+	ogeProfiler_UpdateGraphs();
+	ogeProfiler_EndFrame();
 }
 
 bool ogeIsEngineRunning( void )
@@ -165,10 +169,12 @@ bool ogeIsEngineRunning( void )
 	return engineInitialized;
 }
 
-void ogeRenderFrame( YNCoreViewport *viewport )
+void ogeRenderFrame( OgeViewport *viewport )
 {
 	if ( !engineInitialized )
+	{
 		return;
+	}
 
 	assert( viewport != NULL );
 	if ( viewport == NULL )
@@ -177,12 +183,12 @@ void ogeRenderFrame( YNCoreViewport *viewport )
 		return;
 	}
 
-	YN_CORE_PROFILE_START( PROFILE_DRAW_ALL );
-	YnCore_DrawClient( viewport );
-	YN_CORE_PROFILE_END( PROFILE_DRAW_ALL );
+	OGE_PROFILE_START( PROFILE_DRAW_ALL );
+	ogeDrawClient( viewport );
+	OGE_PROFILE_END( PROFILE_DRAW_ALL );
 
-	YnCore_Profiler_UpdateGraphs();
-	YnCore_Profiler_EndFrame();
+	ogeProfiler_UpdateGraphs();
+	ogeProfiler_EndFrame();
 }
 
 void ogeHandleKeyboardEvent( int key, unsigned int keyState )
@@ -190,12 +196,14 @@ void ogeHandleKeyboardEvent( int key, unsigned int keyState )
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
-bool YnCore_Console_HandleTextEvent( const char *key );
+bool ogeConsole_HandleTextEvent( const char *key );
 
 void ogeHandleTextEvent( const char *key )
 {
-	if ( YnCore_Console_HandleTextEvent( key ) )
+	if ( ogeConsole_HandleTextEvent( key ) )
+	{
 		return;
+	}
 }
 
 void ogeHandleMouseButtonEvent( int button, YNCoreInputState buttonState )

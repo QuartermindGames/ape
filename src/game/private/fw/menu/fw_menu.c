@@ -41,7 +41,7 @@ typedef enum FWPieMenuIcon
 
 	FW_MAX_PIEMENU_ICONS
 } FWPieMenuIcon;
-static YNCoreMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
+static OgeMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
 
 void FW_Menu_Initialize( void )
 {
@@ -55,7 +55,7 @@ void FW_Menu_Initialize( void )
 	Game_Menu_SetCurrent( &mainMenu );
 }
 
-static void DrawHUD( const YNCoreViewport *viewport )
+static void DrawHUD( const OgeViewport *viewport )
 {
 }
 
@@ -64,7 +64,7 @@ void FW_Menu_Tick( void )
 	FW_Menu_TickPie( interactPie );
 }
 
-void FW_Menu_Draw( const YNCoreViewport *viewport )
+void FW_Menu_Draw( const OgeViewport *viewport )
 {
 	// get the centre of the screen
 	int w, h;

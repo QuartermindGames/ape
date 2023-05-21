@@ -17,10 +17,10 @@ EditorStatus YnCore_GetEditorStatus( void );
 void YnCore_RegisterEditorConsoleVariables( void );
 
 void YnCore_InitializeEditor( void );
-void YnCore_ShutdownEditor( void );
+void ogeShutdownEditor( void );
 void YnCore_TickEditor( void );
 
-void YnCore_DrawEditorGUI( const YNCoreViewport *viewport );
+void YnCore_DrawEditorGUI( const OgeViewport *viewport );
 
 YNCoreEditorContext *YnCore_GetCurrentEditorContext( void );
 YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier );

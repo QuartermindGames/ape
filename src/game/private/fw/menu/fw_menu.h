@@ -10,5 +10,5 @@
 
 void FW_Menu_Initialize( void );
 void FW_Menu_Tick( void );
-void FW_Menu_Draw( const YNCoreViewport *viewport );
+void FW_Menu_Draw( const OgeViewport *viewport );
 bool FW_Menu_HandleInput( void );

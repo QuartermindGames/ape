@@ -20,7 +20,7 @@ static void DeserializeIdentifierTag( YNNodeBranch *node, char *dest )
 	strncpy( dest, id, WORLD_PROP_TAG_LENGTH - 1 );
 }
 
-static void DeserialiseSector( YNCoreWorld *world, YNNodeBranch *sectorNode, YNCoreWorldSector *sectorPtr )
+static void DeserialiseSector( OgeWorld *world, YNNodeBranch *sectorNode, OgeWorldSector *sectorPtr )
 {
 	DeserializeIdentifierTag( sectorNode, sectorPtr->id );
 
@@ -28,7 +28,7 @@ static void DeserialiseSector( YNCoreWorld *world, YNNodeBranch *sectorNode, YNC
 	int          meshIndex = YnNode_GetI32ByName( sectorNode, "mesh", -1 );
 	if ( meshIndex >= 0 && meshIndex < numMeshes )
 	{
-		sectorPtr->mesh = ( YNCoreWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, meshIndex );
+		sectorPtr->mesh = ( OgeWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, meshIndex );
 	}
 	else
 	{
@@ -42,7 +42,7 @@ static void DeserialiseSector( YNCoreWorld *world, YNNodeBranch *sectorNode, YNC
 	if ( staticObjectList != NULL )
 	{
 		sectorPtr->numStaticObjects = YnNode_GetNumOfChildren( staticObjectList );
-		sectorPtr->staticObjects    = PlCAlloc( sectorPtr->numStaticObjects, sizeof( YNCoreWorldObject ), true );
+		sectorPtr->staticObjects    = PlCAlloc( sectorPtr->numStaticObjects, sizeof( OgeWorldObject ), true );
 		YNNodeBranch *c                   = YnNode_GetFirstChild( staticObjectList );
 		for ( unsigned int i = 0; i < sectorPtr->numStaticObjects; ++i )
 		{
@@ -56,7 +56,7 @@ static void DeserialiseSector( YNCoreWorld *world, YNNodeBranch *sectorNode, YNC
 			meshIndex = YnNode_GetI32ByName( sectorNode, "mesh", -1 );
 			if ( meshIndex >= 0 && meshIndex < numMeshes )
 			{
-				sectorPtr->staticObjects[ i ].mesh = ( YNCoreWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, meshIndex );
+				sectorPtr->staticObjects[ i ].mesh = ( OgeWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, meshIndex );
 			}
 			else
 			{
@@ -72,7 +72,7 @@ static void DeserialiseSector( YNCoreWorld *world, YNNodeBranch *sectorNode, YNC
 	}
 }
 
-static void DeserialiseEntities( YNCoreWorld *world, YNNodeBranch *root )
+static void DeserialiseEntities( OgeWorld *world, YNNodeBranch *root )
 {
 	if ( root == NULL )
 	{
@@ -90,7 +90,7 @@ static void DeserialiseEntities( YNCoreWorld *world, YNNodeBranch *root )
 			const YNCoreEntityPrefab *entityTemplate = YnCore_EntityManager_GetPrefabByName( templateName );
 			if ( entityTemplate != NULL )
 			{
-				YNCoreWorldEntity *worldEntity    = PL_NEW( YNCoreWorldEntity );
+				OgeWorldEntity *worldEntity    = PL_NEW( OgeWorldEntity );
 				worldEntity->entityTemplate = entityTemplate;
 
 				YNNodeBranch *properties = YnNode_GetChildByName( child, "properties" );
@@ -110,7 +110,7 @@ static void DeserialiseEntities( YNCoreWorld *world, YNNodeBranch *root )
 	}
 }
 
-YNCoreWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, YNCoreWorld *out )
+OgeWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, OgeWorld *out )
 {
 	int version = YnNode_GetI32ByName( root, "version", -1 );
 	if ( version == -1 )
@@ -145,10 +145,10 @@ YNCoreWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, YNCoreWorld *ou
 		if ( childProperty != NULL )
 		{
 			out->numSkyMaterials = YnNode_GetNumOfChildren( childProperty );
-			if ( out->numSkyMaterials > YN_CORE_MAX_SKY_LAYERS )
+			if ( out->numSkyMaterials > OGE_MAX_SKY_LAYERS )
 			{
-				PRINT_WARNING( "Only a maximum of %d sky layers are supported!\n", YN_CORE_MAX_SKY_LAYERS );
-				out->numSkyMaterials = YN_CORE_MAX_SKY_LAYERS;
+				PRINT_WARNING( "Only a maximum of %d sky layers are supported!\n", OGE_MAX_SKY_LAYERS );
+				out->numSkyMaterials = OGE_MAX_SKY_LAYERS;
 			}
 
 			unsigned int i          = 0;
@@ -183,7 +183,7 @@ YNCoreWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, YNCoreWorld *ou
 			PLPath path;
 			YnNode_GetStr( c, path, sizeof( path ) );
 
-			YNCoreWorldMesh *mesh = YnCore_WorldMesh_Load( path );
+			OgeWorldMesh *mesh = YnCore_WorldMesh_Load( path );
 			if ( mesh == NULL )
 				continue;
 
@@ -198,7 +198,7 @@ YNCoreWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, YNCoreWorld *ou
 	if ( sectorList != NULL )
 	{
 		out->numSectors = YnNode_GetNumOfChildren( sectorList );
-		out->sectors    = PlCAlloc( out->numSectors, sizeof( YNCoreWorldSector ), true );
+		out->sectors    = PlCAlloc( out->numSectors, sizeof( OgeWorldSector ), true );
 		YNNodeBranch *c       = YnNode_GetFirstChild( sectorList );
 		for ( unsigned int i = 0; i < out->numSectors; ++i )
 		{

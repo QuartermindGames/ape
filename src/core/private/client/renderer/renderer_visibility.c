@@ -5,13 +5,13 @@
 #include "world.h"
 #include "renderer_visibility.h"
 
-PLLinkedList *VIS_GetVisibleFaces( YNCoreCamera *camera, PLLinkedList *faces )
+PLLinkedList *VIS_GetVisibleFaces( OgeCamera *camera, PLLinkedList *faces )
 {
 	PLLinkedList     *visibleFaces = PlCreateLinkedList();
 	PLLinkedListNode *faceNode = PlGetFirstNode( faces );
 	while ( faceNode != NULL )
 	{
-		YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+		OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 		if ( face->flags & WORLD_FACE_FLAG_SKIP )
 		{
 			faceNode = PlGetNextLinkedListNode( faceNode );
@@ -35,13 +35,13 @@ PLLinkedList *VIS_GetVisibleFaces( YNCoreCamera *camera, PLLinkedList *faces )
 	return visibleFaces;
 }
 
-PLLinkedList *VIS_GetVisiblePortals( YNCoreCamera *camera, PLLinkedList *faces )
+PLLinkedList *VIS_GetVisiblePortals( OgeCamera *camera, PLLinkedList *faces )
 {
 	PLLinkedList     *visiblePortals = PlCreateLinkedList();
 	PLLinkedListNode *faceNode = PlGetFirstNode( faces );
 	while ( faceNode != NULL )
 	{
-		YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+		OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 		if ( !YnCore_World_IsFacePortal( face ) )
 		{
 			faceNode = PlGetNextLinkedListNode( faceNode );

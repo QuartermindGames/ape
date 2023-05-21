@@ -60,7 +60,7 @@ static void UpdateAutoCompleteResult( const char *input )
 
 /////////////////////////////////////////////////////////////////
 
-bool YnCore_Console_HandleTextEvent( const char *key )
+bool ogeConsole_HandleTextEvent( const char *key )
 {
 	// todo y3: allow this key to be customised
 	if ( !consoleIsOpen || *key == '`' || *key == '~' )
@@ -254,7 +254,7 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
  * RENDERING
  ****************************************/
 
-static void Client_Console_DrawInputField( const YNCoreViewport *viewport )
+static void Client_Console_DrawInputField( const OgeViewport *viewport )
 {
 	BitmapFont *font = Font_GetDefault();
 
@@ -264,10 +264,10 @@ static void Client_Console_DrawInputField( const YNCoreViewport *viewport )
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < YnCore_GetNumTicks() )
-		v = YnCore_GetNumTicks() + 20;
+	if ( v < ogeGetNumTicks() )
+		v = ogeGetNumTicks() + 20;
 
-	char c = ( v > YnCore_GetNumTicks() + 10 ) ? '_' : ' ';
+	char c = ( v > ogeGetNumTicks() + 10 ) ? '_' : ' ';
 	Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + SPACER + ( font->cw * conInputBufferLength ) ), ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, c );
 
 	/* input buffer */
@@ -301,7 +301,7 @@ static const float consoleScrollBarWidth = 8.0f;
 /**
  * Draw the console panel.
  */
-void Client_Console_Draw( const YNCoreViewport *viewport )
+void Client_Console_Draw( const OgeViewport *viewport )
 {
 	if ( !consoleIsOpen )
 		return;

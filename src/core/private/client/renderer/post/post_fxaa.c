@@ -9,7 +9,7 @@
  * PRIVATE
  ****************************************/
 
-static YNCoreMaterial *fxaaMaterial = NULL;
+static OgeMaterial *fxaaMaterial = NULL;
 
 static bool fxaaEnabled = false;
 
@@ -29,10 +29,10 @@ static bool SetupFXAAEffect( void )
 
 static void CleanupFXAAEffect( void )
 {
-	YnCore_Material_Release( fxaaMaterial );
+	ogeMaterial_Release( fxaaMaterial );
 }
 
-static void DrawFXAAEffect( const YNCoreViewport *viewport )
+static void DrawFXAAEffect( const OgeViewport *viewport )
 {
 	if ( fxaaEnabled )
 		return;

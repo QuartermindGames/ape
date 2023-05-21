@@ -35,14 +35,14 @@ typedef struct APlayer
 
 	PLVector3 viewAngles;
 
-	YNCoreCamera *eyeCamera;
+	OgeCamera *eyeCamera;
 
 	PLMModel *model;
 } APlayer;
 
 #define APLAYER( X ) ( ( APlayer * ) ( X )->userData )
 
-YNCoreCamera *Player_GetCamera( Actor *self )
+OgeCamera *Player_GetCamera( Actor *self )
 {
 	APlayer *playerData = Act_GetUserData( self );
 	if ( playerData == NULL )
@@ -121,7 +121,7 @@ static void Player_ApplyViewBob( Actor *self )
 {
 	/* apply view bob */
 	float velocityVector = PlVector3Length( self->velocity );
-	APLAYER( self )->viewBob += ( sinf( YnCore_GetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
+	APLAYER( self )->viewBob += ( sinf( ogeGetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = self->position.y + PLAYER_VIEW_OFFSET;
 	if ( YnCore_ShellInterface_GetKeyState( 'c' ) )
@@ -210,7 +210,7 @@ static void Player_Draw( Actor *self, void *userData )
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
 	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		YnCore_Material_DrawMesh( YnCore_GetFallbackMaterial(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
+		ogeMaterial_DrawMesh( ogeGetFallbackMaterial(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
 
 	PlPopMatrix();
 }

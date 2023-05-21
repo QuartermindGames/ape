@@ -26,7 +26,7 @@ typedef enum InputTarget
 static InputTarget inputTarget = INPUT_TARGET_MENU;
 static MenuState   menuState   = MENU_STATE_START;
 
-static YNCoreWorld *currentWorld = NULL;
+static OgeWorld *currentWorld = NULL;
 
 static void SpawnWorldCommand( unsigned int argc, char **argv )
 {
@@ -81,7 +81,7 @@ void ogeInitializeGame( void )
 	PRINT( "Game initialized!\n" );
 }
 
-void YnCore_ShutdownGame( void )
+void ogeShutdownGame( void )
 {
 	gameModeInterface->Shutdown();
 	gameModeInterface = NULL;
@@ -118,7 +118,7 @@ void Game_Disconnect( void )
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void Game_SetupWorldProperties( YNCoreWorld *world )
+void Game_SetupWorldProperties( OgeWorld *world )
 {
 	YNNodeBranch *prop;
 	if ( ( prop = YnCore_World_GetProperty( world, "music" ) ) != NULL )
@@ -140,7 +140,7 @@ void Game_SpawnWorld( const char *worldPath )
 
 	Game_Disconnect();
 
-	YNCoreWorld *world = YnCore_World_Load( worldPath );
+	OgeWorld *world = YnCore_World_Load( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
@@ -172,7 +172,7 @@ void Game_SpawnWorld( const char *worldPath )
 	YnCore_Client_InitiateConnection( "localhost", Server_GetPort() );
 }
 
-YNCoreWorld *Game_GetCurrentWorld( void )
+OgeWorld *Game_GetCurrentWorld( void )
 {
 	return currentWorld;
 }

@@ -29,7 +29,7 @@ typedef struct GameModeInterface
 	void ( *Precache )( void );
 
 	void ( *Draw )( void );
-	void ( *DrawMenu )( const struct YNCoreViewport *viewport );
+	void ( *DrawMenu )( const struct OgeViewport *viewport );
 
 	// This is basically a replacement for the above - just slightly less fussy
 	bool ( *RequestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
@@ -70,4 +70,4 @@ MenuState Game_GetMenuState( void );
 typedef struct Actor Actor;
 
 void Game_SpawnWorld( const char *worldPath );
-struct YNCoreWorld *Game_GetCurrentWorld( void );
+struct OgeWorld *Game_GetCurrentWorld( void );

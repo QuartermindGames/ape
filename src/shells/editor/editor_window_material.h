@@ -14,7 +14,7 @@ namespace os::editor
 		FXDECLARE( MaterialWindow )
 
 	public:
-		explicit MaterialWindow( FXApp *app, YNCoreMaterial *material );
+		explicit MaterialWindow( FXApp *app, OgeMaterial *material );
 		~MaterialWindow();
 
 	protected:
@@ -22,6 +22,6 @@ namespace os::editor
 
 	private:
 		ViewportFrame *viewportFrame;
-		YNCoreMaterial *material;
+		OgeMaterial *material;
 	};
 }// namespace os::editor

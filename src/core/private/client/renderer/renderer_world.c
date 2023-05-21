@@ -11,7 +11,7 @@
  * SKY
  ****************************************/
 
-static void DrawSkyLayer( PLGMesh *mesh, YNCoreMaterial *material, const PLVector3 *location, float x, float y, float scale )
+static void DrawSkyLayer( PLGMesh *mesh, OgeMaterial *material, const PLVector3 *location, float x, float y, float scale )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -23,7 +23,7 @@ static void DrawSkyLayer( PLGMesh *mesh, YNCoreMaterial *material, const PLVecto
 	/* todo: do this in shader... */
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
 	mesh->isDirty = true;
-	YnCore_Material_DrawMesh( material, mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( material, mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -31,7 +31,7 @@ static void DrawSkyLayer( PLGMesh *mesh, YNCoreMaterial *material, const PLVecto
 /**
  * Draw scrolling clouds.
  */
-static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
+static void DrawSky( OgeWorld *world, OgeCamera *camera )
 {
 	if ( world->numSkyMaterials == 0 )
 	{
@@ -89,7 +89,7 @@ static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
 	location = camera->internal->position;
 	location.y += skyHeightOffset->f_value;
 
-	float ticks = ( float ) YnCore_GetNumTicks();
+	float ticks = ( float ) ogeGetNumTicks();
 
 	DrawSkyLayer( skyMesh, world->skyMaterials[ 0 ], &location, ticks / 700.0f, ticks / 400.0f, 0.15f );
 
@@ -116,7 +116,7 @@ static void DrawSky( YNCoreWorld *world, YNCoreCamera *camera )
 /****************************************
  ****************************************/
 
-static void DrawFace( YNCoreWorldMesh *mesh, YNCoreWorldFace *face )
+static void DrawFace( OgeWorldMesh *mesh, OgeWorldFace *face )
 {
 	/* Gee, this sure isn't efficient, is it?
 	 * In the long-term I want to store triangulated geom
@@ -140,15 +140,15 @@ static void DrawFace( YNCoreWorldMesh *mesh, YNCoreWorldFace *face )
 #endif
 }
 
-static void DrawFaces( YNCoreWorldMesh *sectorBody, PLLinkedList *visibleFaces, YNCoreLight *lights, unsigned int numLights, bool drawTransparent )
+static void DrawFaces( OgeWorldMesh *sectorBody, PLLinkedList *visibleFaces, OgeLight *lights, unsigned int numLights, bool drawTransparent )
 {
 	unsigned int numBatches = sectorBody->numMaterials + 1;// Extra batch for fallback pass
 	for ( unsigned int i = 0; i < numBatches; ++i )
 	{
 		PlgClearMeshTriangles( sectorBody->drawMesh );
 
-		YNCoreMaterial *material = ( i < sectorBody->numMaterials ) ? sectorBody->materials[ i ] : YnCore_GetFallbackMaterial();
-		if ( i < sectorBody->numMaterials && ( material == YnCore_GetFallbackMaterial() ) )
+		OgeMaterial *material = ( i < sectorBody->numMaterials ) ? sectorBody->materials[ i ] : ogeGetFallbackMaterial();
+		if ( i < sectorBody->numMaterials && ( material == ogeGetFallbackMaterial() ) )
 		{
 			continue;
 		}
@@ -156,7 +156,7 @@ static void DrawFaces( YNCoreWorldMesh *sectorBody, PLLinkedList *visibleFaces, 
 		PLLinkedListNode *faceNode = PlGetFirstNode( visibleFaces );
 		while ( faceNode != NULL )
 		{
-			YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+			OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 			if ( material != face->material || ( YnCore_World_IsFacePortal( face ) && !drawTransparent ) )// for now, skip portals...
 			{
 				faceNode = PlGetNextLinkedListNode( faceNode );
@@ -171,7 +171,7 @@ static void DrawFaces( YNCoreWorldMesh *sectorBody, PLLinkedList *visibleFaces, 
 		if ( sectorBody->drawMesh->num_triangles == 0 )
 			continue;
 
-		YnCore_Material_DrawMesh( material, sectorBody->drawMesh, lights, 0 );
+		ogeMaterial_DrawMesh( material, sectorBody->drawMesh, lights, 0 );
 	}
 
 #if 0
@@ -180,8 +180,8 @@ static void DrawFaces( YNCoreWorldMesh *sectorBody, PLLinkedList *visibleFaces, 
 #endif
 }
 
-static void DrawSector( YNCoreWorld *world, YNCoreWorldSector *sector, YNCoreCamera *camera );
-static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMesh, YNCoreCamera *camera )
+static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *camera );
+static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, OgeCamera *camera )
 {
 	if ( worldMesh == NULL )
 	{
@@ -199,7 +199,7 @@ static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMes
 	g_gfxPerfStats.numVisiblePortals += PlGetNumLinkedListNodes( visiblePortals );
 
 	unsigned int numLights;
-	YNCoreLight *lights = YnCore_WorldSector_GetVisibleLights( sector, &numLights );
+	OgeLight *lights = YnCore_WorldSector_GetVisibleLights( sector, &numLights );
 
 	// Draw transparent surfaces
 	//DrawFaces( worldMesh, visiblePortals, lights, numLights, true );
@@ -207,7 +207,7 @@ static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMes
 	PLLinkedListNode *faceNode = PlGetFirstNode( visiblePortals );
 	while ( faceNode != NULL )
 	{
-		YNCoreWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+		OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 		if ( face->isPortalClosed )
 		{
 			faceNode = PlGetNextLinkedListNode( faceNode );
@@ -330,7 +330,7 @@ static void DrawSectorBody( YNCoreWorldSector *sector, YNCoreWorldMesh *worldMes
 	visibleFaces = NULL;
 }
 
-static void DrawSector( YNCoreWorld *world, YNCoreWorldSector *sector, YNCoreCamera *camera )
+static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *camera )
 {
 	if ( sector == NULL )
 	{
@@ -349,7 +349,7 @@ static void DrawSector( YNCoreWorld *world, YNCoreWorldSector *sector, YNCoreCam
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
+void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 {
 	if ( world == NULL )
 		return;
@@ -370,15 +370,15 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 			continue;
 		}
 
-		YNCoreWorldMesh *mesh  = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh  = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{
-			YNCoreWorldFace *face = PlGetLinkedListNodeUserData( node );
+			OgeWorldFace *face = PlGetLinkedListNodeUserData( node );
 			for ( unsigned int j = 0; j < face->numVertices; ++j )
 			{
-				YNCoreWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
-				YNCoreWorldVertex *b = ( ( j + 1 ) < face->numVertices ) ? &mesh->vertices[ face->vertices[ j + 1 ] ] : &mesh->vertices[ face->vertices[ 0 ] ];
+				OgeWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
+				OgeWorldVertex *b = ( ( j + 1 ) < face->numVertices ) ? &mesh->vertices[ face->vertices[ j + 1 ] ] : &mesh->vertices[ face->vertices[ 0 ] ];
 
 				PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
 				if ( face->targetSector != NULL )
@@ -415,14 +415,14 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 			continue;
 		}
 
-		YNCoreWorldMesh *mesh  = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh  = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{
-			YNCoreWorldFace *face = PlGetLinkedListNodeUserData( node );
+			OgeWorldFace *face = PlGetLinkedListNodeUserData( node );
 			for ( unsigned int j = 0; j < face->numVertices; ++j )
 			{
-				YNCoreWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
+				OgeWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
 				PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
 				PlgImmColour( 0, 255, 0, 255 );
 			}
@@ -435,7 +435,7 @@ void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera )
 	PlPopMatrix();
 }
 
-void YnCore_World_Draw( YNCoreWorld *world, YNCoreWorldSector *originSector, YNCoreCamera *camera )
+void YnCore_World_Draw( OgeWorld *world, OgeWorldSector *originSector, OgeCamera *camera )
 {
 	if ( world == NULL )
 	{

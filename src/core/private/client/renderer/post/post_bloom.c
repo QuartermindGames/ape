@@ -12,9 +12,9 @@
  * PRIVATE
  ****************************************/
 
-static OGEShaderProgramIndex *bloomFilterShader;
-static OGEShaderProgramIndex *bloomBlurXShader;
-static OGEShaderProgramIndex *bloomBlurYShader;
+static OgeShaderProgramIndex *bloomFilterShader;
+static OgeShaderProgramIndex *bloomBlurXShader;
+static OgeShaderProgramIndex *bloomBlurYShader;
 
 static PLConsoleVariable *bloomEnabled;
 static PLConsoleVariable *bloomIntensity;
@@ -48,7 +48,7 @@ static void CleanupBloomEffect( void )
 {
 }
 
-static void DrawBloomEffect( const YNCoreViewport *viewport )
+static void DrawBloomEffect( const OgeViewport *viewport )
 {
 	if ( !bloomEnabled->b_value )
 		return;
@@ -56,7 +56,7 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
 	int bw = viewport->width / 2;
 	int bh = viewport->height / 2;
 
-	YnCore_SetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
+	ogeSetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
@@ -64,7 +64,7 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
 
 	PlgSetShaderProgram( bloomFilterShader->internalPtr );
 	PlgSetShaderUniformValue( bloomFilterShader->internalPtr, "threshold", &bloomIntensity->f_value, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, YnCore_GetPrimaryColourAttachment() );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, ogeGetPrimaryColourAttachment() );
 
 	PlgSetShaderProgram( bloomBlurXShader->internalPtr );
 	PlgSetShaderUniformValue( bloomBlurXShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );

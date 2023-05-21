@@ -53,9 +53,9 @@ static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType t
 	PlFree( buffer );
 }
 
-static OGEShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
+static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 {
-	OGEShaderProgramIndex program;
+	OgeShaderProgramIndex program;
 	PL_ZERO_( program );
 
 	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
@@ -176,7 +176,7 @@ static OGEShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 	}
 
 	/* allocate and return our program index */
-	OGEShaderProgramIndex *out = PL_NEW( OGEShaderProgramIndex );
+	OgeShaderProgramIndex *out = PL_NEW( OgeShaderProgramIndex );
 	*out                       = program;
 	return out;
 }
@@ -192,7 +192,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 		return;
 	}
 
-	OGEShaderProgramIndex *program = ParseShaderProgram( root );
+	OgeShaderProgramIndex *program = ParseShaderProgram( root );
 
 	YnNode_DestroyBranch( root );
 
@@ -207,9 +207,9 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-OGEShaderProgramIndex *ogeGetShaderProgramByName( const char *name )
+OgeShaderProgramIndex *ogeGetShaderProgramByName( const char *name )
 {
-	return ( OGEShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	return ( OgeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
 void ogeInitializeShaders( void )
@@ -237,7 +237,7 @@ void ogeInitializeShaders( void )
 	};
 	for ( unsigned int i = 0; i < OGE_MAX_DEFAULT_SHADERS; ++i )
 	{
-		OGEShaderProgramIndex *programIndex = ogeGetShaderProgramByName( defaultShaderNames[ i ] );
+		OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
 		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );

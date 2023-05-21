@@ -12,10 +12,13 @@ PL_EXTERN_C
 bool ogeInitialize( const char *config );
 void ogeShutdown( void );
 
-void ogeRenderFrame( YNCoreViewport *viewport );
+void ogeRenderFrame( OgeViewport *viewport );
 void ogeTickFrame( void );
 
-unsigned int YnCore_GetNumTicks( void );
+struct YNNodeBranch *ogeGetConfig( void );
+struct YNNodeBranch *ogeGetUserConfig( void );
+
+unsigned int ogeGetNumTicks( void );
 
 bool ogeIsEngineRunning( void );
 

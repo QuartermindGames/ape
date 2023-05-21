@@ -13,9 +13,9 @@ typedef struct ServerClient ServerClient;
 bool Server_Start( const char *ip, unsigned short port );
 
 void ogeInitializeServer( void );
-void YnCore_ShutdownServer( void );
+void ogeShutdownServer( void );
 void Server_DropClient( ServerClient *serverClient );
-void YnCore_TickServer( void );
+void ogeTickServer( void );
 
 unsigned short Server_GetPort( void );
 

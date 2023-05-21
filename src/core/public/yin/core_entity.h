@@ -48,7 +48,7 @@ typedef struct YNCoreEntityComponentCallbackTable
 void YnCore_EntityManager_Initialize( void );
 void YnCore_EntityManager_Shutdown( void );
 void YnCore_EntityManager_Tick( void );
-void YnCore_EntityManager_Draw( YNCoreCamera *camera, YNCoreWorldSector *sector );
+void YnCore_EntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector );
 void YnCore_EntityManager_Save( YNNodeBranch *root );
 void YnCore_EntityManager_Restore( YNNodeBranch *root );
 

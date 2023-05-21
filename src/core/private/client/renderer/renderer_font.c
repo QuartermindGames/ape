@@ -87,7 +87,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	PlLoadIdentityMatrix();
 
-	YnCore_Material_DrawMesh( font->material, font->mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( font->material, font->mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -123,7 +123,7 @@ void Font_Draw( BitmapFont *font )
 
 	PlLoadIdentityMatrix();
 
-	YnCore_Material_DrawMesh( font->material, font->mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( font->material, font->mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -148,7 +148,7 @@ static void Font_CB_DestroyBitmap( void *userData )
 	BitmapFont *font = userData;
 	assert( font != NULL );
 
-	YnCore_Material_Release( font->material );
+	ogeMaterial_Release( font->material );
 
 	PlgDestroyMesh( font->mesh );
 
@@ -157,10 +157,10 @@ static void Font_CB_DestroyBitmap( void *userData )
 
 BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	BitmapFont *font = MM_GetCachedData( materialPath, MEM_CACHE_FONT );
+	BitmapFont *font = ogeMM_GetCachedData( materialPath, MEM_CACHE_FONT );
 	if ( font != NULL )
 	{
-		MemoryManager_AddReference( &font->mem );
+		ogeMemoryManager_AddReference( &font->mem );
 		return font;
 	}
 
@@ -171,7 +171,7 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return NULL;
 	}
 
-	YNCoreMaterial *material = YnCore_Material_Cache( materialPath, 0, false, false );
+	OgeMaterial *material = YnCore_Material_Cache( materialPath, 0, false, false );
 	if ( material == NULL )
 	{
 		PlgDestroyMesh( mesh );
@@ -191,17 +191,17 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	MM_AddToCache( materialPath, MEM_CACHE_FONT, font );
+	ogeMM_AddToCache( materialPath, MEM_CACHE_FONT, font );
 
-	MemoryManager_SetupReference( "bitmapFont", MEM_CACHE_FONT, &font->mem, Font_CB_DestroyBitmap, font );
-	MemoryManager_AddReference( &font->mem );
+	ogeMemoryManager_SetupReference( "bitmapFont", MEM_CACHE_FONT, &font->mem, Font_CB_DestroyBitmap, font );
+	ogeMemoryManager_AddReference( &font->mem );
 
 	return font;
 }
 
 void Font_ReleaseBitmap( BitmapFont *font )
 {
-	MemoryManager_ReleaseReference( &font->mem );
+	ogeMemoryManager_ReleaseReference( &font->mem );
 }
 
 BitmapFont *Font_GetDefault( void ) { return defaultFont; }

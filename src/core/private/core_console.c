@@ -150,7 +150,7 @@ static void SaveUserConfig( void )
 	PRINT( "User config saved.\n" );
 }
 
-void YnCore_RegisterConsoleCommands( bool isDedicated )
+void ogeRegisterConsoleCommands( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "Quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "Exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -164,7 +164,7 @@ void YnCore_RegisterConsoleCommands( bool isDedicated )
 	}
 }
 
-void YnCore_RegisterConsoleVariables( bool isDedicated )
+void ogeRegisterConsoleVariables( bool isDedicated )
 {
 	// server
 	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
@@ -223,7 +223,7 @@ void ogeInitializeConsole( void )
 	logLevels[ YINENGINE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 
-void YnCore_ShutdownConsole( void )
+void ogeShutdownConsole( void )
 {
 	ClearOutputBuffer();
 	SaveUserConfig();

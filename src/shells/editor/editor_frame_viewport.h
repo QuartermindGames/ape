@@ -12,7 +12,7 @@ namespace os::editor
 		FXDECLARE( ViewportFrame )
 
 	public:
-		ViewportFrame( FXComposite *composite, FXGLVisual *visual, YNCoreCameraMode viewMode );
+		ViewportFrame( FXComposite *composite, FXGLVisual *visual, OgeCameraMode viewMode );
 		virtual ~ViewportFrame();
 
 		void create() override;
@@ -42,12 +42,12 @@ namespace os::editor
 		FXToggleButton *viewModeButtons_[ YN_CORE_CAMERA_MAX_MODES ];
 		FXToggleButton *drawModeButtons_[ YN_CORE_CAMERA_MAX_DRAW_MODES ];
 
-		YNCoreCameraDrawMode drawMode_{ YN_CORE_CAMERA_DRAW_MODE_WIREFRAME };
+		OgeCameraDrawMode drawMode_{ YN_CORE_CAMERA_DRAW_MODE_WIREFRAME };
 
 		float zoomScale_{ 1.0f };
 
 	public:
-		YNCoreViewport *engineViewportHandle;
+		OgeViewport *engineViewportHandle;
 
 	private:
 		FXDataTarget forwardSpeedTarget_;

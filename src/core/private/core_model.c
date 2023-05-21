@@ -20,7 +20,7 @@ static void DestroyModel( void *userData )
 	if ( additionalData != NULL )
 	{
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
-			YnCore_Material_Release( additionalData->materials[ i ] );
+			ogeMaterial_Release( additionalData->materials[ i ] );
 	}
 
 	PlmDestroyModel( model );
@@ -238,5 +238,5 @@ void Model_Release( PLMModel *model )
 		return;
 	}
 
-	MemoryManager_ReleaseReference( &additionalData->mem );
+	ogeMemoryManager_ReleaseReference( &additionalData->mem );
 }

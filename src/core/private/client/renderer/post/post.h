@@ -12,7 +12,7 @@ typedef struct PostProcessEffect
 	void ( *RegisterConsoleVariables )( void );
 	bool ( *Setup )( void );
 	void ( *Cleanup )( void );
-	void ( *Draw )( const YNCoreViewport *viewport );
+	void ( *Draw )( const OgeViewport *viewport );
 } PostProcessEffect;
 
 void R_PP_Cleanup( void );
@@ -21,4 +21,4 @@ void R_PP_SetupEffects( void );
 void R_PP_RegisterConsoleVariables( void );
 
 void R_PP_PreDraw( void );
-void R_PP_Draw( const YNCoreViewport *viewport );
+void R_PP_Draw( const OgeViewport *viewport );

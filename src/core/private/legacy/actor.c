@@ -136,7 +136,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct YNCoreWorldSector *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct OgeWorldSector *sector ) { self->sector = sector; }
 
 void  Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -212,7 +212,7 @@ Actor *Act_CheckCollisions( Actor *self )
  * RENDERING
  ****************************************/
 
-bool Act_IsVisible( Actor *self, YNCoreCamera *camera )
+bool Act_IsVisible( Actor *self, OgeCamera *camera )
 {
 	if ( camera == NULL )
 		return false;
@@ -227,9 +227,9 @@ bool Act_IsVisible( Actor *self, YNCoreCamera *camera )
 #endif
 }
 
-void Act_DrawActors( YNCoreCamera *camera, YNCoreWorldSector *sector )
+void Act_DrawActors( OgeCamera *camera, OgeWorldSector *sector )
 {
-	YN_CORE_PROFILE_START( PROFILE_DRAW_ACTORS );
+	OGE_PROFILE_START( PROFILE_DRAW_ACTORS );
 
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL )
@@ -273,7 +273,7 @@ void Act_DrawActors( YNCoreCamera *camera, YNCoreWorldSector *sector )
 			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
 			while ( colliderNode != NULL )
 			{
-				YNCoreWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
+				OgeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
 				PLCollisionPlane plane     = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
 				PLCollision      collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );
@@ -301,7 +301,7 @@ void Act_DrawActors( YNCoreCamera *camera, YNCoreWorldSector *sector )
 		index = next;
 	}
 
-	YN_CORE_PROFILE_END( PROFILE_DRAW_ACTORS );
+	OGE_PROFILE_END( PROFILE_DRAW_ACTORS );
 }
 
 #define GRAVITY 7.0f
@@ -374,7 +374,7 @@ void Act_TickActors( void *userData, double delta )
 		if ( actor->sector != NULL )
 		{
 			unsigned int numFaces;
-			YNCoreWorldFace **faces = YnCore_WorldSector_GetMeshFaces( actor->sector, &numFaces );
+			OgeWorldFace **faces = YnCore_WorldSector_GetMeshFaces( actor->sector, &numFaces );
 			for ( unsigned int i = 0; i < numFaces; ++i )
 			{
 				if ( !PlIsAabbIntersecting( &actor->collisionVolume, &faces[ i ]->bounds ) )

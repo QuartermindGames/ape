@@ -15,17 +15,17 @@
  */
 
 #define MAX_VIEWPORTS 16
-static YNCoreViewport *viewports[ MAX_VIEWPORTS ];
+static OgeViewport *viewports[ MAX_VIEWPORTS ];
 static bool isInitialized = false;
 
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
-YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle )
+OgeViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle )
 {
 	if ( !isInitialized )
 	{
-		PL_ZERO( viewports, sizeof( YNCoreViewport * ) * MAX_VIEWPORTS );
+		PL_ZERO( viewports, sizeof( OgeViewport * ) * MAX_VIEWPORTS );
 		isInitialized = true;
 	}
 
@@ -46,7 +46,7 @@ YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, voi
 		return NULL;
 	}
 
-	viewports[ i ]               = PL_NEW( YNCoreViewport );
+	viewports[ i ]               = PL_NEW( OgeViewport );
 	viewports[ i ]->x            = x;
 	viewports[ i ]->y            = y;
 	viewports[ i ]->width        = width;
@@ -57,7 +57,7 @@ YNCoreViewport *YnCore_Viewport_Create( int x, int y, int width, int height, voi
 	return viewports[ i ];
 }
 
-void YnCore_Viewport_Destroy( YNCoreViewport *viewport )
+void YnCore_Viewport_Destroy( OgeViewport *viewport )
 {
 	if ( viewport == NULL )
 	{
@@ -72,7 +72,7 @@ void YnCore_Viewport_Destroy( YNCoreViewport *viewport )
 /**
  * Returns the viewport by the given slot.
  */
-YNCoreViewport *YnCore_Viewport_GetBySlot( unsigned int slot )
+OgeViewport *YnCore_Viewport_GetBySlot( unsigned int slot )
 {
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS )
@@ -84,18 +84,18 @@ YNCoreViewport *YnCore_Viewport_GetBySlot( unsigned int slot )
 	return viewports[ slot ];
 }
 
-void YnCore_Viewport_SetCamera( YNCoreViewport *viewport, YNCoreCamera *camera )
+void YnCore_Viewport_SetCamera( OgeViewport *viewport, OgeCamera *camera )
 {
 	viewport->camera = camera;
 }
 
-void ogeViewport_SetSize( YNCoreViewport *viewport, int width, int height )
+void ogeViewport_SetSize( OgeViewport *viewport, int width, int height )
 {
 	viewport->width  = width;
 	viewport->height = height;
 }
 
-void YnCore_Viewport_GetSize( const YNCoreViewport *viewport, int *width, int *height )
+void YnCore_Viewport_GetSize( const OgeViewport *viewport, int *width, int *height )
 {
 	*width  = viewport->width;
 	*height = viewport->height;
@@ -104,7 +104,7 @@ void YnCore_Viewport_GetSize( const YNCoreViewport *viewport, int *width, int *h
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int YnCore_Viewport_GetAverageFPS( const YNCoreViewport *viewport )
+unsigned int YnCore_Viewport_GetAverageFPS( const OgeViewport *viewport )
 {
 	double t = 0.0;
 	for ( unsigned int i = 0; i < YN_CORE_MAX_FPS_READINGS; ++i )

@@ -11,7 +11,7 @@ typedef enum YNCoreCameraMode
 	YN_CORE_CAMERA_MODE_FRONT,
 
 	YN_CORE_CAMERA_MAX_MODES
-} YNCoreCameraMode;
+} OgeCameraMode;
 
 typedef enum YNCoreCameraDrawMode
 {
@@ -20,18 +20,18 @@ typedef enum YNCoreCameraDrawMode
 	YN_CORE_CAMERA_DRAW_MODE_TEXTURED,
 
 	YN_CORE_CAMERA_MAX_DRAW_MODES
-} YNCoreCameraDrawMode;
+} OgeCameraDrawMode;
 
-typedef struct YNCoreCamera YNCoreCamera;
+typedef struct OgeCamera OgeCamera;
 
 PL_EXTERN_C
 
-YNCoreCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
-void YnCore_Camera_Destroy( YNCoreCamera *camera );
-void YnCore_Camera_SetPosition( YNCoreCamera *camera, const PLVector3 *position );
-void YnCore_Camera_SetAngles( YNCoreCamera *camera, const PLVector3 *angles );
+OgeCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+void YnCore_Camera_Destroy( OgeCamera *camera );
+void YnCore_Camera_SetPosition( OgeCamera *camera, const PLVector3 *position );
+void YnCore_Camera_SetAngles( OgeCamera *camera, const PLVector3 *angles );
 
-YNCoreCamera *YnCore_GetActiveCamera( void );
-void YnCore_MakeCameraActive( YNCoreCamera *camera );
+OgeCamera *YnCore_GetActiveCamera( void );
+void YnCore_MakeCameraActive( OgeCamera *camera );
 
 PL_EXTERN_C_END

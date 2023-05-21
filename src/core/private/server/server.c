@@ -64,7 +64,7 @@ void ogeInitializeServer( void )
 	}
 }
 
-void YnCore_ShutdownServer( void )
+void ogeShutdownServer( void )
 {
 	/* drop all connected clients */
 	PlIterateLinkedList( connectedClients, DropClientCallback, true );
@@ -97,7 +97,7 @@ static void TickServerClient( void *userData, bool *breakEarly )
 	}
 	else if ( r > 0 )
 	{
-		serverClient->lastMessageTick = YnCore_GetNumTicks();
+		serverClient->lastMessageTick = ogeGetNumTicks();
 	}
 
 	serverClient->receivedBytes += r;
@@ -124,7 +124,7 @@ static void TickServerClient( void *userData, bool *breakEarly )
 	}
 }
 
-void YnCore_TickServer( void )
+void ogeTickServer( void )
 {
 	if ( hostSocket != NULL )
 	{ /* check if a new connection is being established */

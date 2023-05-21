@@ -10,12 +10,12 @@
 typedef void ( *SchedulerCallback )( void *userData, double delta );
 
 void ogeInitializeScheduler( void );
-void YnCore_ShutdownScheduler( void );
+void ogeShutdownScheduler( void );
 unsigned int Sch_GetNumTasks( void );
 const char  *Sch_GetTaskDescription( unsigned int index, double *delay );
 bool         Sch_IsTaskRunning( const char *desc );
 void         Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay );
-void YinCore_TickTasks( void );
+void ogeTickTasks( void );
 void ogeFlushTasks( void );
 void         Sch_PrintPendingTasks( void );
 void         Sch_KillTask( const char *desc );

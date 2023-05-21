@@ -23,14 +23,14 @@ static void InitializeCachePools( void )
 	}
 }
 
-void MM_AddToCache( const char *id, uint8_t pool, void *data )
+void ogeMM_AddToCache( const char *id, uint8_t pool, void *data )
 {
 	/* ensure the data hasn't been cached already */
-	void *cachedData = MM_GetCachedData( id, pool );
+	void *cachedData = ogeMM_GetCachedData( id, pool );
 	if ( cachedData != NULL )
 		PRINT_ERROR( "Attempted to cache duplicate data: %s\n", id );
 
-	MMCacheHeader *header = PL_NEW( MMCacheHeader );
+	OgeMemoryCacheHeader *header = PL_NEW( OgeMemoryCacheHeader );
 	header->id            = PlGenerateHashSDBM( id );
 	header->pool          = pool;
 	header->userData      = data;
@@ -43,12 +43,12 @@ void MM_AddToCache( const char *id, uint8_t pool, void *data )
 	PRINT( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
 }
 
-static MMCacheHeader *GetCache( uint32_t id, uint8_t pool )
+static OgeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool )
 {
 	PLLinkedListNode *node = PlGetFirstNode( memCachePools[ pool ] );
 	while ( node != NULL )
 	{
-		MMCacheHeader *header = PlGetLinkedListNodeUserData( node );
+		OgeMemoryCacheHeader *header = PlGetLinkedListNodeUserData( node );
 		if ( header->id == id )
 			return header;
 
@@ -58,10 +58,10 @@ static MMCacheHeader *GetCache( uint32_t id, uint8_t pool )
 	return NULL;
 }
 
-void *MM_GetCachedData( const char *id, uint8_t pool )
+void *ogeMM_GetCachedData( const char *id, uint8_t pool )
 {
 	uint32_t       hashedName = PlGenerateHashSDBM( id );
-	MMCacheHeader *header     = GetCache( hashedName, pool );
+	OgeMemoryCacheHeader *header     = GetCache( hashedName, pool );
 	if ( header != NULL )
 		return header->userData;
 
@@ -70,7 +70,7 @@ void *MM_GetCachedData( const char *id, uint8_t pool )
 
 static void RemoveFromCache( uint32_t id, uint8_t pool )
 {
-	MMCacheHeader *header = GetCache( id, pool );
+	OgeMemoryCacheHeader *header = GetCache( id, pool );
 	if ( header == NULL )
 	{
 		PRINT_WARNING( "Attempted to remove node from cache pool, but failed: %s\n", id );
@@ -94,7 +94,7 @@ static PLLinkedList *mmReferenceList;
 
 //#define DEBUG_MEMORY
 
-static bool FreeReference( YNCoreMemoryReference *m, bool force )
+static bool FreeReference( OgeMemoryReference *m, bool force )
 {
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "%s, numRefs = %d, ttl = %u\n",
@@ -103,7 +103,7 @@ static bool FreeReference( YNCoreMemoryReference *m, bool force )
 	          m->ttl );
 #endif
 
-	if ( m->numReferences <= 0 && ( force || m->timeToLive < YnCore_GetNumTicks() ) )
+	if ( m->numReferences <= 0 && ( force || m->timeToLive < ogeGetNumTicks() ) )
 	{
 		/* remove it from whatever cached list it exists in */
 		if ( m->cache != NULL )
@@ -128,7 +128,7 @@ static void CleanupUnreferencedResources( bool force )
 	while ( child != NULL )
 	{
 		PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
-		YNCoreMemoryReference *m         = PlGetLinkedListNodeUserData( child );
+		OgeMemoryReference *m         = PlGetLinkedListNodeUserData( child );
 
 #if defined( DEBUG_MEMORY )
 		DebugMsg( " %s (" COM_FMT_int32 ")\n", m->description, m->numRefs );
@@ -168,9 +168,9 @@ void ogeInitializeMemoryManager( void )
 	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
 }
 
-void YnCore_ShutdownMemoryManager( void )
+void ogeShutdownMemoryManager( void )
 {
-	MemoryManager_FlushUnreferencedResources();
+	ogeMemoryManager_FlushUnreferencedResources();
 
 	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
 	if ( danglingReferences > 0 )
@@ -180,7 +180,7 @@ void YnCore_ShutdownMemoryManager( void )
 		PlDestroyMemoryGroup( memoryGroups[ i ] );
 }
 
-unsigned int MemoryManager_FlushUnreferencedResources( void )
+unsigned int ogeMemoryManager_FlushUnreferencedResources( void )
 {
 	unsigned int references = PlGetNumLinkedListNodes( mmReferenceList );
 	while ( references > 0 )
@@ -201,10 +201,10 @@ unsigned int MemoryManager_FlushUnreferencedResources( void )
 	return references;
 }
 
-YNCoreMemoryReference *MemoryManager_SetupReference( const char *id, uint8_t pool, YNCoreMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
+OgeMemoryReference *ogeMemoryManager_SetupReference( const char *id, uint8_t pool, OgeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
 {
 	if ( id != NULL )
-		m->cache = MM_GetCachedData( id, pool );
+		m->cache = ogeMM_GetCachedData( id, pool );
 
 	m->userData        = userData;
 	m->cleanupFunction = cleanupFunction;
@@ -213,10 +213,10 @@ YNCoreMemoryReference *MemoryManager_SetupReference( const char *id, uint8_t poo
 	return m;
 }
 
-void MemoryManager_AddReference( YNCoreMemoryReference *m )
+void ogeMemoryManager_AddReference( OgeMemoryReference *m )
 {
 	m->numReferences++;
-	m->timeToLive = ( YnCore_GetNumTicks() + 1024 );
+	m->timeToLive = ( ogeGetNumTicks() + 1024 );
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
 	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
@@ -225,7 +225,7 @@ void MemoryManager_AddReference( YNCoreMemoryReference *m )
 #endif
 }
 
-void MemoryManager_ReleaseReference( YNCoreMemoryReference *m )
+void ogeMemoryManager_ReleaseReference( OgeMemoryReference *m )
 {
 	assert( m->numReferences > 0 );
 
@@ -239,11 +239,11 @@ void MemoryManager_ReleaseReference( YNCoreMemoryReference *m )
 	m->numReferences--;
 	if ( m->numReferences <= 0 )
 	{
-		m->timeToLive = ( YnCore_GetNumTicks() + 1024 );
+		m->timeToLive = ( ogeGetNumTicks() + 1024 );
 	}
 }
 
-int MemoryManager_GetNumberOfReferences( const YNCoreMemoryReference *m )
+int ogeMemoryManager_GetNumberOfReferences( const OgeMemoryReference *m )
 {
 	return m->numReferences;
 }
@@ -261,10 +261,10 @@ static void MEM_CB_CleanupTempAlloc( void *userData )
  * Allocates a pool of memory that will be automatically
  * cleaned up.
  */
-void *MM_TempAlloc( YNCoreMemoryReference *m, size_t size )
+void *ogeTempAlloc( OgeMemoryReference *m, size_t size )
 {
 	void *buf = PlMAllocA( size );
-	MemoryManager_SetupReference( "temp", 0, m, MEM_CB_CleanupTempAlloc, buf );
+	ogeMemoryManager_SetupReference( "temp", 0, m, MEM_CB_CleanupTempAlloc, buf );
 	return buf;
 }
 
@@ -273,7 +273,7 @@ void *MM_TempAlloc( YNCoreMemoryReference *m, size_t size )
  * If this isn't called, resource will be cleaned
  * up automatically later.
  */
-void MM_TempFree( YNCoreMemoryReference *m )
+void ogeTempFree( OgeMemoryReference *m )
 {
 	if ( !FreeReference( m, false ) )
 	{

@@ -12,7 +12,7 @@ typedef struct FWInventoryItem
 	char *name;// name of the item
 	char *description;
 	char *spawnName;
-	struct YNCoreMaterial *icon;
+	struct OgeMaterial *icon;
 	unsigned int quantity;
 	float weight;
 } FWInventoryItem;

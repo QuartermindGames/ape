@@ -9,6 +9,6 @@ const char *FileSystem_GetUserConfigLocation( void );
 
 void ogeFileSystem_SetupConfig( YNNodeBranch *root );
 
-void YnCore_FileSystem_MountBaseLocations( void );
+void ogeFileSystem_MountBaseLocations( void );
 void ogeFileSystem_MountLocations( void );
-void YnCore_FileSystem_ClearMountedLocations( void );
+void ogeFileSystem_ClearMountedLocations( void );

@@ -12,7 +12,7 @@ typedef struct GameState
 extern GameState gameState;
 
 void ogeInitializeGame( void );
-void YnCore_ShutdownGame( void );
+void ogeShutdownGame( void );
 void Game_Tick( void );
 void Game_Disconnect( void );
 

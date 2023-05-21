@@ -26,32 +26,32 @@
 #	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f )
 #endif
 
-enum YNCoreWorldFaceFlag
+enum OgeWorldFaceFlag
 {
 	PL_BITFLAG( WORLD_FACE_FLAG_PORTAL, 0U ), /* reflect portal */
 	PL_BITFLAG( WORLD_FACE_FLAG_MIRROR, 1U ), /* reflect back */
 	PL_BITFLAG( WORLD_FACE_FLAG_SKIP, 2U ),   /* skip face */
 };
 
-typedef enum YNCoreWorldObjectCollisionType
+typedef enum OgeWorldObjectCollisionType
 {
 	WORLD_OBJECT_COLLISION_POLY,
 	WORLD_OBJECT_COLLISION_SPHERE,
 	WORLD_OBJECT_COLLISION_AABB,
-} YNCoreWorldObjectCollisionType;
+} OgeWorldObjectCollisionType;
 
 #define WORLD_FACE_MAX_SIDES 32
 
-typedef struct YNCoreWorldSector YNCoreWorldSector;
-typedef struct YNCoreWorldFace YNCoreWorldFace;
-typedef struct YNCoreWorldMesh YNCoreWorldMesh;
+typedef struct OgeWorldSector OgeWorldSector;
+typedef struct OgeWorldFace OgeWorldFace;
+typedef struct OgeWorldMesh OgeWorldMesh;
 
-typedef struct YNCoreWorldFace
+typedef struct OgeWorldFace
 {
 	PLVector3 normal;
 	PLVector3 origin;
 
-	struct YNCoreMaterial *material;
+	struct OgeMaterial *material;
 	// todo: reduce the below to transform matrix???
 	float materialAngle;
 	PLVector2 materialOffset;
@@ -62,33 +62,33 @@ typedef struct YNCoreWorldFace
 
 	uint8_t flags; /* portal, mirror, skip etc. */
 
-	YNCoreWorldMesh *parentMesh;
-	YNCoreWorldSector *parentSector;
+	OgeWorldMesh *parentMesh;
+	OgeWorldSector *parentSector;
 
 	// if it's a portal
-	bool isPortalClosed;              // if true, we can't see through the portal
-	YNCoreWorldSector *targetSector;  // the sector this portal connects to
-	YNCoreWorldFace *targetSectorFace;// the 'door' on the other side
+	bool isPortalClosed;           // if true, we can't see through the portal
+	OgeWorldSector *targetSector;  // the sector this portal connects to
+	OgeWorldFace *targetSectorFace;// the 'door' on the other side
 
 	PLCollisionAABB bounds;
-} YNCoreWorldFace;
+} OgeWorldFace;
 
-typedef struct YNCoreWorldVertex
+typedef struct OgeWorldVertex
 {
 	PLVector3 position;
 	PLVector3 normal;
 	PLVector2 uv;
 	PLColourF32 colour;
-} YNCoreWorldVertex;
+} OgeWorldVertex;
 
-typedef struct YNCoreWorldMesh
+typedef struct OgeWorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	struct YNCoreMaterial **materials;
+	struct OgeMaterial **materials;
 	unsigned int numMaterials;
 
-	YNCoreWorldVertex *vertices;
+	OgeWorldVertex *vertices;
 	unsigned int numVertices;
 	unsigned int maxVertices;
 
@@ -100,41 +100,41 @@ typedef struct YNCoreWorldMesh
 
 	PLLinkedListNode *node;
 
-	YNCoreMemoryReference mem;
-} YNCoreWorldMesh;
+	OgeMemoryReference mem;
+} OgeWorldMesh;
 
-typedef struct YNCoreWorldObject
+typedef struct OgeWorldObject
 {
-	YNCoreWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
+	OgeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
 	SGTransform transform;
 
-	YNCoreWorldObjectCollisionType collisionType;
+	OgeWorldObjectCollisionType collisionType;
 	union
 	{
-		const YNCoreWorldMesh *collisionMesh;
+		const OgeWorldMesh *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
-} YNCoreWorldObject;
+} OgeWorldObject;
 
-typedef struct YNCoreWorldSector
+typedef struct OgeWorldSector
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	YNCoreWorldMesh *mesh;
+	OgeWorldMesh *mesh;
 
-	YNCoreWorldObject *staticObjects;
+	OgeWorldObject *staticObjects;
 	unsigned int numStaticObjects;
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
 
 	PLCollisionAABB bounds;
-} YNCoreWorldSector;
+} OgeWorldSector;
 
-#define YN_CORE_MAX_SKY_LAYERS 4
+#define OGE_MAX_SKY_LAYERS 4
 
-typedef struct YNCoreWorld
+typedef struct OgeWorld
 {
 	PLPath path;
 
@@ -142,7 +142,7 @@ typedef struct YNCoreWorld
 
 	PLLinkedList *entities;
 
-	YNCoreWorldSector *sectors;
+	OgeWorldSector *sectors;
 	unsigned int numSectors;
 
 	PLColourF32 ambience;
@@ -155,7 +155,7 @@ typedef struct YNCoreWorld
 	float fogNear;
 	float fogFar;
 
-	struct YNCoreMaterial *skyMaterials[ YN_CORE_MAX_SKY_LAYERS ];
+	struct OgeMaterial *skyMaterials[ OGE_MAX_SKY_LAYERS ];
 	unsigned int numSkyMaterials;
 
 	/* additional generic properties */
@@ -163,28 +163,28 @@ typedef struct YNCoreWorld
 
 	uint64_t lastSaveTime;
 	bool isDirty;
-} YNCoreWorld;
+} OgeWorld;
 
-typedef struct YNCoreWorldEntity
+typedef struct OgeWorldEntity
 {
 	const YNCoreEntityPrefab *entityTemplate;
 	YNNodeBranch *properties;
-} YNCoreWorldEntity;
+} OgeWorldEntity;
 
 #include <yin/core_world.h>
 
-void YnCore_WorldSerialiser_Begin( const YNCoreWorld *world, YNNodeBranch *root );
-YNCoreWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, YNCoreWorld *out );
+void YnCore_WorldSerialiser_Begin( const OgeWorld *world, YNNodeBranch *root );
+OgeWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, OgeWorld *out );
 
-YNCoreWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, YNCoreWorldMesh *worldMesh );
+OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, OgeWorldMesh *worldMesh );
 
-PLLinkedList *YnCore_World_GetLights( const YNCoreWorld *world );
-PLLinkedList *YnCore_World_GetSectorLights( const YNCoreWorldSector *sector );
+PLLinkedList *YnCore_World_GetLights( const OgeWorld *world );
+PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector );
 
-void YnCore_World_SpawnEntities( YNCoreWorld *world );
+void YnCore_World_SpawnEntities( OgeWorld *world );
 
-bool YnCore_World_IsFaceVisible( YNCoreWorldFace *face, const YNCoreCamera *camera );
-unsigned int *YnCore_World_ConvertFaceToTriangles( const YNCoreWorldFace *face, unsigned int *numTriangles );
-bool YnCore_World_IsFacePortal( const YNCoreWorldFace *face );
+bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera );
+unsigned int *YnCore_World_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles );
+bool YnCore_World_IsFacePortal( const OgeWorldFace *face );
 
-YNCoreWorldSector *YnCore_World_GetSectorByNum( YNCoreWorld *world, int sectorNum );
+OgeWorldSector *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum );

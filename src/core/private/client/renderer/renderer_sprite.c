@@ -4,7 +4,7 @@
 #include "core_private.h"
 #include "renderer.h"
 
-void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3 *position, float spriteAngle )
+void YnCore_Sprite_DrawAnimationFrame( OgeSpriteFrame *frame, const PLVector3 *position, float spriteAngle )
 {
 #if 0
     PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -36,7 +36,7 @@ void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3
 #endif
 }
 
-void YnCore_Sprite_DrawAnimation( YNCoreSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
+void YnCore_Sprite_DrawAnimation( OgeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
 {
 #if 0
     const GfxCamera *camera = Gfx_GetCurrentCamera();

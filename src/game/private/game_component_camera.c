@@ -6,7 +6,7 @@
 
 typedef struct GameComponentCamera
 {
-	YNCoreCamera *camera;
+	OgeCamera *camera;
 	bool             isActive;
 	YNCoreEntityComponent *transform;
 } GameComponentCamera;

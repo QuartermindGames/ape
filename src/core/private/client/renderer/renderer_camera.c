@@ -12,14 +12,14 @@
 
 static PLLinkedList *cameras;
 
-static YNCoreCamera *activeCamera = NULL;
+static OgeCamera *activeCamera = NULL;
 
-YNCoreCamera *YnCore_GetActiveCamera( void )
+OgeCamera *YnCore_GetActiveCamera( void )
 {
 	return activeCamera;
 }
 
-void YnCore_MakeCameraActive( YNCoreCamera *camera )
+void YnCore_MakeCameraActive( OgeCamera *camera )
 {
 	activeCamera = camera;
 }
@@ -27,9 +27,9 @@ void YnCore_MakeCameraActive( YNCoreCamera *camera )
 /****************************************
  ****************************************/
 
-YNCoreCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+OgeCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
-	YNCoreCamera *camera = PL_NEW( YNCoreCamera );
+	OgeCamera *camera = PL_NEW( OgeCamera );
 
 	camera->mode = YN_CORE_CAMERA_MODE_PERSPECTIVE;
 
@@ -64,7 +64,7 @@ YNCoreCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, 
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void YnCore_Camera_Destroy( YNCoreCamera *camera )
+void YnCore_Camera_Destroy( OgeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -90,18 +90,18 @@ void YnCore_Camera_Destroy( YNCoreCamera *camera )
 	}
 }
 
-void YnCore_Camera_SetPosition( YNCoreCamera *camera, const PLVector3 *position )
+void YnCore_Camera_SetPosition( OgeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 }
 
-void YnCore_Camera_SetAngles( YNCoreCamera *camera, const PLVector3 *angles )
+void YnCore_Camera_SetAngles( OgeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 }
 
-void YR_DrawScene( YNCoreCamera *camera, const YNCoreViewport *viewport );
-void YnCore_DrawPerspective( YNCoreCamera *camera, const YNCoreViewport *viewport )
+void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport );
+void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport )
 {
 	if ( camera == NULL )
 	{

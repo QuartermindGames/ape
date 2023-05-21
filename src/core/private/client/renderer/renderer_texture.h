@@ -7,6 +7,6 @@
 
 typedef struct YNCoreTexture
 {
-	YNCoreMemoryReference reference;
+	OgeMemoryReference reference;
 	PLGTexture *internal;
 } YNCoreTexture;

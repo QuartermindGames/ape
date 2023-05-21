@@ -18,7 +18,7 @@ static unsigned char terrainMinHeight, terrainMaxHeight;
 #	define TERRAIN_NUM_CHUNKS  ( TERRAIN_CHUNK_NUM_X * TERRAIN_CHUNK_NUM_Y )
 #endif
 
-static YNCoreMaterial *terrainMaterial = NULL;
+static OgeMaterial *terrainMaterial = NULL;
 static PLMModel *terrainModel          = NULL;
 
 #define TERRAIN_TILE_SPACING 64
@@ -37,7 +37,7 @@ void FW_Terrain_Shutdown( void )
 {
 	PlmDestroyModel( terrainModel );
 
-	YnCore_Material_Release( terrainMaterial );
+	ogeMaterial_Release( terrainMaterial );
 }
 
 /****************************************/

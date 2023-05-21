@@ -139,7 +139,7 @@ void ogeFileSystem_SetupConfig( YNNodeBranch *root )
 {
 	PlClearFileAliases();
 
-	YnCore_FileSystem_ClearMountedLocations();
+	ogeFileSystem_ClearMountedLocations();
 
 	fileSystemConfig = YnNode_GetChildByName( root, "fileSystem" );
 	if ( fileSystemConfig == NULL )
@@ -154,7 +154,7 @@ void ogeFileSystem_SetupConfig( YNNodeBranch *root )
 		ParseAliases( child );
 }
 
-void YnCore_FileSystem_MountBaseLocations( void )
+void ogeFileSystem_MountBaseLocations( void )
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
@@ -217,7 +217,7 @@ void ogeFileSystem_MountLocations( void )
 	}
 }
 
-void YnCore_FileSystem_ClearMountedLocations( void )
+void ogeFileSystem_ClearMountedLocations( void )
 {
 	for ( unsigned int i = 0; i < numMountedLocations; ++i )
 	{

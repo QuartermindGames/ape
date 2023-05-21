@@ -144,7 +144,7 @@ void YnCore_EntityManager_Tick( void )
 	IterateEntities( CallEntityTick, NULL );
 }
 
-void YnCore_EntityManager_Draw( YNCoreCamera *camera, YNCoreWorldSector *sector )
+void YnCore_EntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector )
 {
 	IterateEntities( CallEntityDraw, NULL );
 }

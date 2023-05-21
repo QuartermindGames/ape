@@ -85,9 +85,9 @@ void R_PP_RegisterConsoleVariables( void )
 	}
 }
 
-void R_PP_Draw( const YNCoreViewport *viewport )
+void R_PP_Draw( const OgeViewport *viewport )
 {
-	YnCore_SetupRenderTarget( &ppBuffer, &ppAttachment, NULL, viewport->width, viewport->height );
+	ogeSetupRenderTarget( &ppBuffer, &ppAttachment, NULL, viewport->width, viewport->height );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{

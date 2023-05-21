@@ -41,7 +41,7 @@ void ogeInitializeProfiler( void )
 	cpuProfilerDescriptions[ PROFILE_DRAW_GUI ]    = "DRAW_GUI";
 }
 
-void YnCore_Profiler_EndFrame( void )
+void ogeProfiler_EndFrame( void )
 {
 	// todo: for now we've gone back to resetting this on StartMeasure call
 	//for ( unsigned int i = 0; i < MAX_PROFILER_GROUPS; ++i )
@@ -65,10 +65,10 @@ double Profiler_GetMeasure( ProfilerGroup group )
 	return timers[ group ].timeTaken;
 }
 
-void YnCore_Profiler_UpdateGraphs( void )
+void ogeProfiler_UpdateGraphs( void )
 {
 	static unsigned int refreshTime = 0;
-	if ( refreshTime > YnCore_GetNumTicks() )
+	if ( refreshTime > ogeGetNumTicks() )
 		return;
 
 	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i )

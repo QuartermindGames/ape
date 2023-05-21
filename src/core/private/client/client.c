@@ -31,7 +31,7 @@ void ogeInitializeClient( void )
 
 	PL_ZERO_( clientState );
 
-	YnCore_InitializeRenderer();
+	ogeInitializeRenderer();
 	YnCore_InitializeAudio();
 	YnCore_InitializeEditor();
 
@@ -40,24 +40,24 @@ void ogeInitializeClient( void )
 	Client_Input_Initialize();
 }
 
-void YnCore_ShutdownClient( void )
+void ogeShutdownClient( void )
 {
 	YnCore_ShutdownGUI();
 
-	YnCore_ShutdownEditor();
+	ogeShutdownEditor();
 	YnCore_ShutdownAudio();
-	YnCore_ShutdownRenderer();
+	ogeShutdownRenderer();
 }
 
-void YnCore_DrawClient( YNCoreViewport *viewport )
+void ogeDrawClient( OgeViewport *viewport )
 {
 	YnCore_BeginDraw( viewport );
 
 	YnCore_DrawPerspective( viewport->camera, viewport );
 
-	YN_CORE_PROFILE_START( PROFILE_DRAW_UI );
+	OGE_PROFILE_START( PROFILE_DRAW_UI );
 	YnCore_DrawMenu( viewport );
-	YN_CORE_PROFILE_END( PROFILE_DRAW_UI );
+	OGE_PROFILE_END( PROFILE_DRAW_UI );
 
 	YnCore_EndDraw( viewport );
 }
@@ -87,7 +87,7 @@ static void Client_HandleConnectionState( void )
 	}
 }
 
-void YnCore_TickClient( void )
+void ogeTickClient( void )
 {
 	Client_Input_BeginFrame();
 

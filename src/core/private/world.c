@@ -12,7 +12,7 @@
 
 #include "client/renderer/renderer.h"
 
-void YnCore_World_SetupGlobalDefaults( YNCoreWorld *world )
+void YnCore_World_SetupGlobalDefaults( OgeWorld *world )
 {
 	world->ambience    = WORLD_DEFAULT_AMBIENCE;
 	world->sunColour   = WORLD_DEFAULT_SUNCOLOUR;
@@ -20,9 +20,9 @@ void YnCore_World_SetupGlobalDefaults( YNCoreWorld *world )
 	world->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-YNCoreWorld *YnCore_World_Create( void )
+OgeWorld *YnCore_World_Create( void )
 {
-	YNCoreWorld *world = PlMAllocA( sizeof( YNCoreWorld ) );
+	OgeWorld *world = PlMAllocA( sizeof( OgeWorld ) );
 
 	world->globalProperties = YnNode_PushBackObject( NULL, "properties" );
 	YnNode_PushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
@@ -35,9 +35,9 @@ YNCoreWorld *YnCore_World_Create( void )
 	return world;
 }
 
-YNCoreWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
+OgeWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
 {
-	YNCoreWorld *world = YnCore_World_Create();
+	OgeWorld *world = YnCore_World_Create();
 	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
 	{
 		YnCore_World_Destroy( world );
@@ -47,7 +47,7 @@ YNCoreWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
 	return world;
 }
 
-YNCoreWorld *YnCore_World_Load( const char *path )
+OgeWorld *YnCore_World_Load( const char *path )
 {
 	YNNodeBranch *root = YnNode_LoadFile( path, "world" );
 	if ( root == NULL )
@@ -56,7 +56,7 @@ YNCoreWorld *YnCore_World_Load( const char *path )
 		return NULL;
 	}
 
-	YNCoreWorld *world = YnCore_World_LoadFromNode( root );
+	OgeWorld *world = YnCore_World_LoadFromNode( root );
 	if ( world != NULL )
 	{
 		snprintf( world->path, sizeof( world->path ), "%s", path );
@@ -67,7 +67,7 @@ YNCoreWorld *YnCore_World_Load( const char *path )
 	return world;
 }
 
-bool YnCore_World_Save( YNCoreWorld *world, const char *path )
+bool YnCore_World_Save( OgeWorld *world, const char *path )
 {
 	world->lastSaveTime = time( NULL );
 
@@ -89,7 +89,7 @@ bool YnCore_World_Save( YNCoreWorld *world, const char *path )
  * Clears the current assigned mesh and all static
  * objects for the given sector.
  */
-static void ClearSector( YNCoreWorldSector *sector )
+static void ClearSector( OgeWorldSector *sector )
 {
 	for ( unsigned int i = 0; i < sector->numStaticObjects; ++i )
 		YnCore_WorldMesh_Release( sector->staticObjects[ i ].mesh );
@@ -99,7 +99,7 @@ static void ClearSector( YNCoreWorldSector *sector )
 	YnCore_WorldMesh_Release( sector->mesh );
 }
 
-static void DestroyWorldEntities( YNCoreWorld *world )
+static void DestroyWorldEntities( OgeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entities );
 	while ( node != NULL )
@@ -109,7 +109,7 @@ static void DestroyWorldEntities( YNCoreWorld *world )
 	}
 }
 
-void YnCore_World_Destroy( YNCoreWorld *world )
+void YnCore_World_Destroy( OgeWorld *world )
 {
 	if ( world == NULL )
 		return;
@@ -121,7 +121,7 @@ void YnCore_World_Destroy( YNCoreWorld *world )
 
 	unsigned int numMeshes = PlGetNumVectorArrayElements( world->meshes );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
-		YnCore_WorldMesh_Release( ( YNCoreWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, i ) );
+		YnCore_WorldMesh_Release( ( OgeWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, i ) );
 
 	DestroyWorldEntities( world );
 
@@ -129,7 +129,7 @@ void YnCore_World_Destroy( YNCoreWorld *world )
 	PlFree( world );
 }
 
-PLLinkedList *YnCore_World_GetLights( const YNCoreWorld *world )
+PLLinkedList *YnCore_World_GetLights( const OgeWorld *world )
 {
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
@@ -138,17 +138,17 @@ PLLinkedList *YnCore_World_GetLights( const YNCoreWorld *world )
 	return NULL;
 }
 
-PLLinkedList *YnCore_World_GetSectorLights( const YNCoreWorldSector *sector )
+PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector )
 {
 	return sector->lights;
 }
 
-void YnCore_World_SpawnEntities( YNCoreWorld *world )
+void YnCore_World_SpawnEntities( OgeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entities );
 	while ( node != NULL )
 	{
-		YNCoreWorldEntity *worldEntity = ( YNCoreWorldEntity * ) PlGetLinkedListNodeUserData( node );
+		OgeWorldEntity *worldEntity = ( OgeWorldEntity * ) PlGetLinkedListNodeUserData( node );
 		YnCore_EntityManager_CreateEntityFromPrefab( worldEntity->entityTemplate->name );
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -158,7 +158,7 @@ void YnCore_World_SpawnEntities( YNCoreWorld *world )
  * Global World Properties
  ****************************************/
 
-YNNodeBranch *YnCore_World_GetProperty( YNCoreWorld *world, const char *propertyName )
+YNNodeBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
 		return NULL;
@@ -166,14 +166,14 @@ YNNodeBranch *YnCore_World_GetProperty( YNCoreWorld *world, const char *property
 	return YnNode_GetChildByName( world->globalProperties, propertyName );
 }
 
-PLColourF32 YnCore_World_GetAmbience( YNCoreWorld *world ) { return world->ambience; }
-PLColourF32 YnCore_World_GetSunColour( YNCoreWorld *world ) { return world->sunColour; }
-PLVector3 YnCore_World_GetSunPosition( YNCoreWorld *world ) { return world->sunPosition; }
+PLColourF32 YnCore_World_GetAmbience( OgeWorld *world ) { return world->ambience; }
+PLColourF32 YnCore_World_GetSunColour( OgeWorld *world ) { return world->sunColour; }
+PLVector3 YnCore_World_GetSunPosition( OgeWorld *world ) { return world->sunPosition; }
 
 /****************************************
  ****************************************/
 
-uint64_t YnCore_World_GetLastSaveTime( const YNCoreWorld *world )
+uint64_t YnCore_World_GetLastSaveTime( const OgeWorld *world )
 {
 	return world->lastSaveTime;
 }
@@ -181,7 +181,7 @@ uint64_t YnCore_World_GetLastSaveTime( const YNCoreWorld *world )
 /**
  * Fetch the normal for the specified face.
  */
-PLVector3 YnCore_WorldFace_GetNormal( const YNCoreWorldFace *face )
+PLVector3 YnCore_WorldFace_GetNormal( const OgeWorldFace *face )
 {
 	return face->normal;
 }
@@ -189,7 +189,7 @@ PLVector3 YnCore_WorldFace_GetNormal( const YNCoreWorldFace *face )
 /**
  * Fetch the origin point of the face in world-coordinates.
  */
-PLVector3 YnCore_WorldFace_GetOrigin( const YNCoreWorldFace *face )
+PLVector3 YnCore_WorldFace_GetOrigin( const OgeWorldFace *face )
 {
 	return face->bounds.absOrigin;
 }
@@ -197,7 +197,7 @@ PLVector3 YnCore_WorldFace_GetOrigin( const YNCoreWorldFace *face )
 /**
  * Fetch the flags specified for the face.
  */
-uint8_t YnCore_WorldFace_GetFlags( const YNCoreWorldFace *face )
+uint8_t YnCore_WorldFace_GetFlags( const OgeWorldFace *face )
 {
 	return face->flags;
 }
@@ -206,10 +206,10 @@ uint8_t YnCore_WorldFace_GetFlags( const YNCoreWorldFace *face )
  * SECTOR
  ****************************************/
 
-YNCoreLight *YnCore_WorldSector_GetVisibleLights( YNCoreWorldSector *sector, unsigned int *numLights )
+OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldSector *sector, unsigned int *numLights )
 {
 	// TODO: for now we're just going to return this static list...
-	static YNCoreLight lights[] = {
+	static OgeLight lights[] = {
 	        {
              .position = { 10.0f, 10.0f, 10.0f },
              .colour   = { 1.0f, 0.0f, 0.0f, 16.0f },
@@ -225,11 +225,11 @@ YNCoreLight *YnCore_WorldSector_GetVisibleLights( YNCoreWorldSector *sector, uns
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-YNCoreWorldSector *YnCore_World_GetSectorByGlobalOrigin( YNCoreWorld *world, const PLVector3 *globalOrigin )
+OgeWorldSector *YnCore_World_GetSectorByGlobalOrigin( OgeWorld *world, const PLVector3 *globalOrigin )
 {
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
-		YNCoreWorldSector *sector = &world->sectors[ i ];
+		OgeWorldSector *sector = &world->sectors[ i ];
 		if ( !PlIsPointIntersectingAabb( &sector->bounds, *globalOrigin ) )
 			continue;
 
@@ -239,7 +239,7 @@ YNCoreWorldSector *YnCore_World_GetSectorByGlobalOrigin( YNCoreWorld *world, con
 	return &world->sectors[ 0 ];
 }
 
-const char *YnCore_World_GetPath( const YNCoreWorld *world )
+const char *YnCore_World_GetPath( const OgeWorld *world )
 {
 	return world->path;
 }
@@ -248,12 +248,12 @@ const char *YnCore_World_GetPath( const YNCoreWorld *world )
  * Get the primary mesh for the given sector, this
  * is essentially the sector's body.
  */
-YNCoreWorldMesh *YnCore_WorldSector_GetMesh( YNCoreWorldSector *sector )
+OgeWorldMesh *YnCore_WorldSector_GetMesh( OgeWorldSector *sector )
 {
 	return sector->mesh;
 }
 
-YNCoreWorldFace **YnCore_WorldSector_GetMeshFaces( YNCoreWorldSector *sector, uint32_t *numFaces )
+OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldSector *sector, uint32_t *numFaces )
 {
 	if ( sector->mesh == NULL )
 	{
@@ -262,25 +262,25 @@ YNCoreWorldFace **YnCore_WorldSector_GetMeshFaces( YNCoreWorldSector *sector, ui
 	}
 
 	*numFaces               = PlGetNumLinkedListNodes( sector->mesh->faces );
-	YNCoreWorldFace **faces = PL_NEW_( YNCoreWorldFace *, *numFaces );
+	OgeWorldFace **faces = PL_NEW_( OgeWorldFace *, *numFaces );
 
 	PLLinkedListNode *faceNode = PlGetFirstNode( sector->mesh->faces );
 	for ( unsigned int i = 0; i < *numFaces; ++i )
 	{
-		faces[ i ] = ( YNCoreWorldFace * ) PlGetLinkedListNodeUserData( faceNode );
+		faces[ i ] = ( OgeWorldFace * ) PlGetLinkedListNodeUserData( faceNode );
 		faceNode   = PlGetNextLinkedListNode( faceNode );
 	}
 
 	return faces;
 }
 
-static YNCoreWorldSector **GetVisibleSectors( YNCoreWorld *world, YNCoreWorldSector *originSector, const YNCoreCamera *camera, unsigned int *numSectors )
+static OgeWorldSector **GetVisibleSectors( OgeWorld *world, OgeWorldSector *originSector, const OgeCamera *camera, unsigned int *numSectors )
 {
 	PL_GET_CVAR( "world.drawSectors", drawSectors );
 	if ( drawSectors != NULL && !drawSectors->b_value )
 		return NULL;
 
-	YNCoreWorldSector **visibleSectors = PlCAllocA( world->numSectors, sizeof( YNCoreWorldSector * ) );
+	OgeWorldSector **visibleSectors = PlCAllocA( world->numSectors, sizeof( OgeWorldSector * ) );
 
 	/* we'll assume the sector we're in is visible (seems like a safe assumption) */
 	*numSectors                     = 0;
@@ -313,13 +313,13 @@ static YNCoreWorldSector **GetVisibleSectors( YNCoreWorld *world, YNCoreWorldSec
 	return visibleSectors;
 }
 
-static YNCoreWorldMesh **GetVisibleSubMeshesForSector( YNCoreWorldSector *sector, const PLGCamera *camera, unsigned int *numMeshes )
+static OgeWorldMesh **GetVisibleSubMeshesForSector( OgeWorldSector *sector, const PLGCamera *camera, unsigned int *numMeshes )
 {
 	PL_GET_CVAR( "world.drawSubMeshes", drawSubMeshes );
 	if ( drawSubMeshes != NULL && !drawSubMeshes->b_value )
 		return NULL;
 
-	YNCoreWorldMesh **visibleMeshes = PlCAlloc( sector->numStaticObjects, sizeof( YNCoreWorldMesh * ), true );
+	OgeWorldMesh **visibleMeshes = PlCAlloc( sector->numStaticObjects, sizeof( OgeWorldMesh * ), true );
 
 	// Go through and generate a list of visible meshes within the sector
 	for ( unsigned int i = 0; i < sector->numStaticObjects; ++i )
@@ -334,19 +334,19 @@ static YNCoreWorldMesh **GetVisibleSubMeshesForSector( YNCoreWorldSector *sector
 	}
 
 	// Shrink the array down before passing it back
-	visibleMeshes = PlReAlloc( visibleMeshes, sizeof( YNCoreWorldMesh * ) * *numMeshes, true );
+	visibleMeshes = PlReAlloc( visibleMeshes, sizeof( OgeWorldMesh * ) * *numMeshes, true );
 	return visibleMeshes;
 }
 
 /**
  * This is a little bit silly, but we're considering mirrors as a valid portal too...
  */
-bool YnCore_World_IsFacePortal( const YNCoreWorldFace *face )
+bool YnCore_World_IsFacePortal( const OgeWorldFace *face )
 {
 	return ( ( face->flags & WORLD_FACE_FLAG_MIRROR ) || ( face->flags & WORLD_FACE_FLAG_PORTAL ) );
 }
 
-YNCoreWorldSector *YnCore_World_GetSectorByNum( YNCoreWorld *world, int sectorNum )
+OgeWorldSector *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum )
 {
 	if ( sectorNum < 0 || sectorNum >= world->numSectors )
 		return NULL;

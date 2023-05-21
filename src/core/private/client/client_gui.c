@@ -23,7 +23,7 @@ static int guiHeight = 600;
 
 static bool drawGUI = false;
 
-static YNCoreMaterial *baseGuiMat;
+static OgeMaterial *baseGuiMat;
 
 void YnCore_InitializeGUI( void )
 {
@@ -31,7 +31,7 @@ void YnCore_InitializeGUI( void )
 	PlRegisterConsoleVariable( "gui.width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
 	PlRegisterConsoleVariable( "gui.height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
-	YNCoreRenderTarget *guiTarget = YnCore_RenderTarget_Create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
+	OgeRenderTarget *guiTarget = ogeRenderTarget_Create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	if ( guiTarget == NULL )
 	{
 		PRINT_ERROR( "Failed to create default render target for GUI!\n" );
@@ -80,7 +80,7 @@ void YnCore_ShutdownGUI( void )
 	GUI_Shutdown();
 }
 
-void YnCore_DrawGUI( const YNCoreViewport *viewport )
+void YnCore_DrawGUI( const OgeViewport *viewport )
 {
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
@@ -88,7 +88,7 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 	YnCore_Set2DViewportSize( viewport->width, viewport->height );
 
 	PLGTexture *texture;
-	if ( ( texture = YnCore_GetPrimaryColourAttachment() ) != NULL )
+	if ( ( texture = ogeGetPrimaryColourAttachment() ) != NULL )
 	{
 		float x = ( float ) viewport->x;
 		float y = ( float ) viewport->y;
@@ -123,7 +123,7 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 		PlgSetCullMode( PLG_CULL_POSITIVE );
 	}
 
-	YN_CORE_PROFILE_START( PROFILE_DRAW_GUI );
+	OGE_PROFILE_START( PROFILE_DRAW_GUI );
 	if ( drawGUI )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
@@ -133,7 +133,7 @@ void YnCore_DrawGUI( const YNCoreViewport *viewport )
 
 		YnCore_Draw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
 	}
-	YN_CORE_PROFILE_END( PROFILE_DRAW_GUI );
+	OGE_PROFILE_END( PROFILE_DRAW_GUI );
 
 	if ( gameModeInterface->DrawMenu != NULL )
 	{

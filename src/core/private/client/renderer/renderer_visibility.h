@@ -3,5 +3,5 @@
 
 #pragma once
 
-PLLinkedList *VIS_GetVisibleFaces( YNCoreCamera *camera, PLLinkedList *faces );
-PLLinkedList *VIS_GetVisiblePortals( YNCoreCamera *camera, PLLinkedList *faces );
+PLLinkedList *VIS_GetVisibleFaces( OgeCamera *camera, PLLinkedList *faces );
+PLLinkedList *VIS_GetVisiblePortals( OgeCamera *camera, PLLinkedList *faces );

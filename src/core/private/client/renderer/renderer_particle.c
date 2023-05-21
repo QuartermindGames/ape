@@ -22,7 +22,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	YnCore_Material_Release( emitter->material );
+	ogeMaterial_Release( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -51,7 +51,7 @@ YNNodeBranch *PS_SerializeEmitter( const PSEmitter *emitter )
 
 void PS_CacheEmitterTemplate( const char *path )
 {
-	PSEmitter *emitter = MM_GetCachedData( path, MEM_CACHE_PARTICLES );
+	PSEmitter *emitter = ogeMM_GetCachedData( path, MEM_CACHE_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
@@ -81,15 +81,15 @@ void PS_CacheEmitterTemplate( const char *path )
 	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "startColourVar" ), &emitter->startColourVar );
 	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "endColourVar" ), &emitter->endColourVar );
 
-	MM_AddToCache( path, MEM_CACHE_PARTICLES, emitter );
+	ogeMM_AddToCache( path, MEM_CACHE_PARTICLES, emitter );
 
-	MemoryManager_SetupReference( "psemitter", MEM_CACHE_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
-	MemoryManager_AddReference( &emitter->mem );
+	ogeMemoryManager_SetupReference( "psemitter", MEM_CACHE_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	ogeMemoryManager_AddReference( &emitter->mem );
 }
 
 PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 {
-	PSEmitter *emitterTemplate = MM_GetCachedData( path, MEM_CACHE_PARTICLES );
+	PSEmitter *emitterTemplate = ogeMM_GetCachedData( path, MEM_CACHE_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
@@ -134,7 +134,7 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 	}
 
 	if ( emitter->material != NULL )
-		YnCore_Material_Release( emitter->material );
+		ogeMaterial_Release( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );
@@ -250,7 +250,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
+void PS_Draw( const PSEmitter *emitter, const OgeCamera *camera )
 {
 	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_ALPHA ] );
 
@@ -290,7 +290,7 @@ void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	YnCore_Material_DrawMesh( emitter->material, emitter->mesh, NULL, 0 );
+	ogeMaterial_DrawMesh( emitter->material, emitter->mesh, NULL, 0 );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

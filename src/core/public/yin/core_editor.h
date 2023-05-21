@@ -58,7 +58,7 @@ typedef enum YNCoreEditorGeometryMode
 
 typedef struct YNCoreEditorGlobalContext
 {
-	YNCoreWorld *world;
+	OgeWorld *world;
 } YNCoreEditorGlobalContext;
 YNCoreEditorGlobalContext *YnCore_GetGlobalEditorContext( void );
 
@@ -87,8 +87,8 @@ typedef struct YNCoreEditorContext
 	PLMatrix4 gridTransform;
 	int32_t gridScale;
 
-	YNCoreViewport *viewports[ YN_CORE_EDITOR_MAX_VIEWPORTS ];
-	YNCoreCamera *camera;
+	OgeViewport *viewports[ YN_CORE_EDITOR_MAX_VIEWPORTS ];
+	OgeCamera *camera;
 } YNCoreEditorContext;
 
 PL_EXTERN_C_END

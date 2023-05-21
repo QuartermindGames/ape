@@ -11,9 +11,9 @@
 
 typedef struct MDLUserData
 {
-	YNCoreMaterial *	 materials[ MODEL_MAX_MATERIALS ];
+	OgeMaterial *	 materials[ MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
-	YNCoreMemoryReference mem;
+	OgeMemoryReference mem;
 } MDLUserData;
 
 PLMModel *Model_Cache( const char *path );

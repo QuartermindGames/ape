@@ -23,7 +23,7 @@ editorViewportMap[] = {
 
 FXIMPLEMENT( ViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, YNCoreCameraMode viewMode )
+ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, OgeCameraMode viewMode )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {

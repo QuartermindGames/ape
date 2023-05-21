@@ -11,7 +11,7 @@ materialWindowMap[] = {
 
 FXIMPLEMENT( os::editor::MaterialWindow, FXTopWindow, materialWindowMap, ARRAYNUMBER( materialWindowMap ) )
 
-os::editor::MaterialWindow::MaterialWindow( FXApp *app, YNCoreMaterial *material )
+os::editor::MaterialWindow::MaterialWindow( FXApp *app, OgeMaterial *material )
     : FXTopWindow(
               app,
               "Material Editor",
@@ -30,6 +30,6 @@ os::editor::MaterialWindow::~MaterialWindow()
 {
 	if ( material != nullptr )
 	{
-		YnCore_Material_Release( material );
+		ogeMaterial_Release( material );
 	}
 }
