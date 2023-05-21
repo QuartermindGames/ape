@@ -152,7 +152,7 @@ static void MEM_CB_Cleanup( void *unused0, double unused1 )
 	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
 }
 
-void YnCore_InitializeMemoryManager( void )
+void ogeInitializeMemoryManager( void )
 {
 	PRINT( "Initializing memory manager\n" );
 

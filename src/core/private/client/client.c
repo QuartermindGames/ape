@@ -25,7 +25,7 @@ typedef struct ClientState
 } ClientState;
 static ClientState clientState;
 
-void YnCore_InitializeClient( void )
+void ogeInitializeClient( void )
 {
 	CLIENT_PRINT( "Initializing client\n" );
 

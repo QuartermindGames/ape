@@ -41,7 +41,7 @@ YNNodeBranch *YnCore_GetUserConfig( void ) { return userConfig; }
 bool ogeInitialize( const char *config )
 {
 	// Call this first, so we can buffer console output
-	YnCore_InitializeConsole();
+	ogeInitializeConsole();
 
 	PRINT( "Yin %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
 	       VERSION_MAJOR,
@@ -81,23 +81,23 @@ bool ogeInitialize( const char *config )
 		userConfig = YnNode_PushBackObject( NULL, "config" );
 	}
 
-	FileSystem_SetupConfig( engineConfig );
-	FileSystem_MountLocations();
+	ogeFileSystem_SetupConfig( engineConfig );
+	ogeFileSystem_MountLocations();
 
 	PRINT( "Initializing core services...\n" );
 
 	// TODO: move these somewhere more appropriate??
 	PlmRegisterModelLoader( "mdl.n", Model_Cache, NULL );
 
-	YnCore_InitializeProfiler();
-	YnCore_InitializeScheduler();
-	YnCore_InitializeMemoryManager();
-	YnCore_InitializeNet();
+	ogeInitializeProfiler();
+	ogeInitializeScheduler();
+	ogeInitializeMemoryManager();
+	ogeInitializeNet();
 
-	YnCore_InitializeServer();
-	YnCore_InitializeClient();
+	ogeInitializeServer();
+	ogeInitializeClient();
 
-	YnCore_InitializeGame();
+	ogeInitializeGame();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -110,7 +110,7 @@ void ogeShutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
-	YnCore_FlushTasks();
+	ogeFlushTasks();
 
 	YnCore_ShutdownGame();
 	YnCore_ShutdownEditor();

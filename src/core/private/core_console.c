@@ -206,7 +206,7 @@ void Console_Print( ConsoleLogLevel level, const char *message, ... )
 /**
  * Set the console up.
  */
-void YnCore_InitializeConsole( void )
+void ogeInitializeConsole( void )
 {
 	PlSetConsoleOutputCallback( OutputCallback );
 

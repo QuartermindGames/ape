@@ -55,7 +55,7 @@ bool Server_Start( const char *ip, unsigned short port )
 	return true;
 }
 
-void YnCore_InitializeServer( void )
+void ogeInitializeServer( void )
 {
 	connectedClients = PlCreateLinkedList();
 	if ( connectedClients == NULL )

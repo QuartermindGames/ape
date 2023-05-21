@@ -5,7 +5,7 @@
 
 PL_EXTERN_C
 
-void YnCore_InitializeClient( void );
+void ogeInitializeClient( void );
 void YnCore_ShutdownClient( void );
 void YnCore_DrawClient( YNCoreViewport *viewport );
 void YnCore_TickClient( void );

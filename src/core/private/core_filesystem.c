@@ -135,7 +135,7 @@ const char *FileSystem_GetUserConfigLocation( void )
 	return configPath;
 }
 
-void FileSystem_SetupConfig( YNNodeBranch *root )
+void ogeFileSystem_SetupConfig( YNNodeBranch *root )
 {
 	PlClearFileAliases();
 
@@ -167,7 +167,7 @@ void YnCore_FileSystem_MountBaseLocations( void )
 	PlMountLocalLocation( GetDataDirectory() );
 }
 
-void FileSystem_MountLocations( void )
+void ogeFileSystem_MountLocations( void )
 {
 	PlRegisterStandardPackageLoaders();
 

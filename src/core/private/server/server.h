@@ -12,7 +12,7 @@ typedef struct ServerClient ServerClient;
 
 bool Server_Start( const char *ip, unsigned short port );
 
-void YnCore_InitializeServer( void );
+void ogeInitializeServer( void );
 void YnCore_ShutdownServer( void );
 void Server_DropClient( ServerClient *serverClient );
 void YnCore_TickServer( void );

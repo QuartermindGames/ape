@@ -19,7 +19,7 @@ typedef struct SchTask
 
 static void Cmd_FlushTasks( unsigned int argc, char **argv )
 {
-	YnCore_FlushTasks();
+	ogeFlushTasks();
 }
 
 static void Cmd_IsTaskRunning( unsigned int argc, char **argv )
@@ -47,7 +47,7 @@ static void Cmd_SetTaskDelay( unsigned int argc, char **argv )
 	Sch_SetTaskDelay( argv[ 1 ], delay );
 }
 
-void YnCore_InitializeScheduler( void )
+void ogeInitializeScheduler( void )
 {
 	PRINT( "Initializing scheduler\n" );
 
@@ -150,7 +150,7 @@ void YinCore_TickTasks( void )
 	}
 }
 
-void YnCore_FlushTasks( void )
+void ogeFlushTasks( void )
 {
 	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
 	PlDestroyLinkedListNodes( scheduleList );

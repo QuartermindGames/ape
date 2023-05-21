@@ -7,8 +7,8 @@ typedef struct YNNodeBranch YNNodeBranch;
 
 const char *FileSystem_GetUserConfigLocation( void );
 
-void FileSystem_SetupConfig( YNNodeBranch *root );
+void ogeFileSystem_SetupConfig( YNNodeBranch *root );
 
 void YnCore_FileSystem_MountBaseLocations( void );
-void FileSystem_MountLocations( void );
+void ogeFileSystem_MountLocations( void );
 void YnCore_FileSystem_ClearMountedLocations( void );

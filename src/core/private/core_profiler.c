@@ -24,7 +24,7 @@ static ProfilerTimer timers[ MAX_PROFILER_GROUPS ];
 
 const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 
-void YnCore_InitializeProfiler( void )
+void ogeInitializeProfiler( void )
 {
 	PRINT( "Initializing profiler\n" );
 

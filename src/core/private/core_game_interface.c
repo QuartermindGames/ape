@@ -41,7 +41,7 @@ static void SpawnWorldCommand( unsigned int argc, char **argv )
 
 GameState gameState;
 
-void YnCore_InitializeGame( void )
+void ogeInitializeGame( void )
 {
 	PRINT( "Initializing Game...\n" );
 

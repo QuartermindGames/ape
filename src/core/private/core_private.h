@@ -58,7 +58,7 @@ typedef enum CPUProfilerGroup
 } ProfilerGroup;
 extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 #if defined( ENABLE_PROFILER )
-void YnCore_InitializeProfiler( void );
+void ogeInitializeProfiler( void );
 void YnCore_Profiler_EndFrame( void );
 void   Profiler_StartMeasure( ProfilerGroup group );
 void   Profiler_EndMeasure( ProfilerGroup group );
@@ -120,7 +120,7 @@ typedef struct ConsoleOutput
 
 ConsoleOutput *Console_GetOutput( void );
 
-void YnCore_InitializeConsole( void );
+void ogeInitializeConsole( void );
 void YnCore_ShutdownConsole( void );
 
 int  Console_GetLogLevel( ConsoleLogLevel level );

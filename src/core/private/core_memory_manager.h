@@ -3,7 +3,7 @@
 
 #pragma once
 
-void YnCore_InitializeMemoryManager( void );
+void ogeInitializeMemoryManager( void );
 void YnCore_ShutdownMemoryManager( void );
 
 /* ======================================================================
