@@ -491,9 +491,9 @@ static void Prop_Tick( Actor *self, void *userData )
 #endif
 }
 
-static void Prop_Deserialize( Actor *self, YNNodeBranch *nodeTree )
+static void Prop_Deserialize( Actor *self, NdBranch *nodeTree )
 {
-	const char *modelPath = YnNode_GetStringByName( nodeTree, "modelPath", NULL );
+	const char *modelPath = ndGetStringByName( nodeTree, "modelPath", NULL );
 	if ( modelPath != NULL )
 	{
 		SGActor_Generic_SetModel( self, modelPath );

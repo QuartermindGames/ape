@@ -24,9 +24,9 @@ OgeWorld *YnCore_World_Create( void )
 {
 	OgeWorld *world = PlMAllocA( sizeof( OgeWorld ) );
 
-	world->globalProperties = YnNode_PushBackObject( NULL, "properties" );
-	YnNode_PushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	YnNode_PushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	world->globalProperties = ndPushBackObject( NULL, "properties" );
+	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 	//NL_PushBackStrArray( world->globalProperties, "skyMaterials", ( const char ** ) WORLD_DEFAULT_SKY, 1 );
 
 	world->meshes   = PlCreateVectorArray( 0 );
@@ -35,7 +35,7 @@ OgeWorld *YnCore_World_Create( void )
 	return world;
 }
 
-OgeWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
+OgeWorld *YnCore_World_LoadFromNode( NdBranch *root )
 {
 	OgeWorld *world = YnCore_World_Create();
 	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
@@ -49,10 +49,10 @@ OgeWorld *YnCore_World_LoadFromNode( YNNodeBranch *root )
 
 OgeWorld *YnCore_World_Load( const char *path )
 {
-	YNNodeBranch *root = YnNode_LoadFile( path, "world" );
+	NdBranch *root = ndLoadFile( path, "world" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Failed to load world (%s): %s\n", path, YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Failed to load world (%s): %s\n", path, ndGetErrorMessage() );
 		return NULL;
 	}
 
@@ -62,7 +62,7 @@ OgeWorld *YnCore_World_Load( const char *path )
 		snprintf( world->path, sizeof( world->path ), "%s", path );
 	}
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 
 	return world;
 }
@@ -71,14 +71,14 @@ bool YnCore_World_Save( OgeWorld *world, const char *path )
 {
 	world->lastSaveTime = time( NULL );
 
-	YNNodeBranch *root = YnNode_PushBackObject( NULL, "world" );
+	NdBranch *root = ndPushBackObject( NULL, "world" );
 
 	YnCore_WorldSerialiser_Begin( world, root );
 	snprintf( world->path, sizeof( world->path ), "%s", path );
 
-	if ( !YnNode_WriteFile( path, root, YN_NODE_FILE_BINARY ) )
+	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 	{
-		PRINT_WARNING( "Failed to save world (%s): %s\n", path, YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Failed to save world (%s): %s\n", path, ndGetErrorMessage() );
 		return false;
 	}
 
@@ -158,12 +158,12 @@ void YnCore_World_SpawnEntities( OgeWorld *world )
  * Global World Properties
  ****************************************/
 
-YNNodeBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName )
+NdBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
 		return NULL;
 
-	return YnNode_GetChildByName( world->globalProperties, propertyName );
+	return ndGetChildByName( world->globalProperties, propertyName );
 }
 
 PLColourF32 YnCore_World_GetAmbience( OgeWorld *world ) { return world->ambience; }

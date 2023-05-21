@@ -3,7 +3,7 @@
 
 #pragma once
 
-typedef struct YNNodeBranch YNNodeBranch;// common/node
+typedef struct NdBranch NdBranch;// common/node
 
 typedef enum ActorType
 {
@@ -49,8 +49,8 @@ typedef struct ActorSetup
 	void ( *Collide )( Actor *self, Actor *other, void *userData );
 	void ( *Destroy )( Actor *self, void *userData );
 
-	YNNodeBranch *( *Serialize )( Actor *self, YNNodeBranch *nodeTree );
-	void ( *Deserialize )( Actor *self, YNNodeBranch *nodeTree );
+	NdBranch *( *Serialize )( Actor *self, NdBranch *nodeTree );
+	void ( *Deserialize )( Actor *self, NdBranch *nodeTree );
 } ActorSetup;
 
 typedef struct Actor
@@ -95,8 +95,8 @@ typedef struct Actor
 void Act_DrawActors( OgeCamera *camera, OgeWorldSector *sector );
 void Act_TickActors( void *userData, double delta );
 
-Actor *Act_SpawnActor( ActorType type, YNNodeBranch *nodeTree );
-Actor *Act_SpawnActorById( const char *id, YNNodeBranch *nodeTree );
+Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree );
+Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree );
 Actor *Act_DestroyActor( Actor *self );
 
 ActorType Act_GetType( const Actor *self );

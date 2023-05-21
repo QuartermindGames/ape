@@ -10,22 +10,22 @@
  * PRIVATE
  ****************************************/
 
-static YNNodeBranch *fileSystemConfig;
+static NdBranch *fileSystemConfig;
 
 #define MAX_FILESYSTEM_MOUNTS 255
 static PLFileSystemMount *fileSystemMounts[ MAX_FILESYSTEM_MOUNTS ];
 static unsigned int       numMountedLocations = 0;
 
-static void ParseMountConfig( YNNodeBranch *root )
+static void ParseMountConfig( NdBranch *root )
 {
-	unsigned int numChildren = YnNode_GetNumOfChildren( root );
+	unsigned int numChildren = ndGetNumOfChildren( root );
 	if ( numChildren == 0 )
 	{ /* nothing to mount, okay then */
 		return;
 	}
 
-	YNNodeBranch *child = YnNode_GetFirstChild( root );
-	if ( YnNode_GetType( child ) != YN_NODE_PROP_STR )
+	NdBranch *child = ndGetFirstChild( root );
+	if ( ndGetType( child ) != ND_PROPERTY_STRING )
 	{
 		PRINT_WARNING( "Invalid child type found in config!\n" );
 		return;
@@ -34,8 +34,8 @@ static void ParseMountConfig( YNNodeBranch *root )
 	for ( unsigned int i = 0; i < numChildren; ++i )
 	{
 		PLPath path;
-		YnNode_GetStr( child, path, sizeof( PLPath ) );
-		child = YnNode_GetNextChild( child );
+		ndGetStr( child, path, sizeof( PLPath ) );
+		child = ndGetNextChild( child );
 
 		if ( ( fileSystemMounts[ numMountedLocations ] = PlMountLocation( path ) ) == NULL )
 		{
@@ -63,16 +63,16 @@ static const char *GetDataDirectory( void )
 	return dataPath;
 }
 
-static void ParseAliases( YNNodeBranch *root )
+static void ParseAliases( NdBranch *root )
 {
-	unsigned int numAliases = YnNode_GetNumOfChildren( root ) / 2;
+	unsigned int numAliases = ndGetNumOfChildren( root ) / 2;
 	if ( numAliases == 0 )
 	{
 		return;
 	}
 
-	YNNodeBranch *child = YnNode_GetFirstChild( root );
-	if ( YnNode_GetType( child ) != YN_NODE_PROP_STR )
+	NdBranch *child = ndGetFirstChild( root );
+	if ( ndGetType( child ) != ND_PROPERTY_STRING )
 	{
 		PRINT_WARNING( "Invalid child type found in config!\n" );
 		return;
@@ -81,8 +81,8 @@ static void ParseAliases( YNNodeBranch *root )
 	for ( unsigned int i = 0; i < numAliases; i++ )
 	{
 		PLPath aliasPath;
-		YnNode_GetStr( child, aliasPath, sizeof( PLPath ) );
-		child = YnNode_GetNextChild( child );
+		ndGetStr( child, aliasPath, sizeof( PLPath ) );
+		child = ndGetNextChild( child );
 		if ( child == NULL )
 		{
 			PRINT_WARNING( "Encountered alias with no path: %u\n", i );
@@ -90,16 +90,16 @@ static void ParseAliases( YNNodeBranch *root )
 		}
 
 		PLPath targetPath;
-		YnNode_GetStr( child, targetPath, sizeof( PLPath ) );
+		ndGetStr( child, targetPath, sizeof( PLPath ) );
 
 		PlAddFileAlias( aliasPath, targetPath );
 		PRINT( "Registered alias: \"%s\" > \"%s\"\n", aliasPath, targetPath );
 
-		child = YnNode_GetNextChild( child );
+		child = ndGetNextChild( child );
 	}
 }
 
-#define USER_CONFIG "user" YN_NODE_DEFAULT_EXTENSION
+#define USER_CONFIG "user" ND_DEFAULT_EXTENSION
 static char configPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
 
 /****************************************
@@ -135,22 +135,22 @@ const char *FileSystem_GetUserConfigLocation( void )
 	return configPath;
 }
 
-void ogeFileSystem_SetupConfig( YNNodeBranch *root )
+void ogeFileSystem_SetupConfig( NdBranch *root )
 {
 	PlClearFileAliases();
 
 	ogeFileSystem_ClearMountedLocations();
 
-	fileSystemConfig = YnNode_GetChildByName( root, "fileSystem" );
+	fileSystemConfig = ndGetChildByName( root, "fileSystem" );
 	if ( fileSystemConfig == NULL )
 	{
 		// If it's not found, push it on
-		fileSystemConfig = YnNode_PushBackObject( root, "fileSystem" );
+		fileSystemConfig = ndPushBackObject( root, "fileSystem" );
 		return;
 	}
 
-	YNNodeBranch *child;
-	if ( ( child = YnNode_GetChildByName( fileSystemConfig, "aliases" ) ) != NULL )
+	NdBranch *child;
+	if ( ( child = ndGetChildByName( fileSystemConfig, "aliases" ) ) != NULL )
 		ParseAliases( child );
 }
 
@@ -174,11 +174,11 @@ void ogeFileSystem_MountLocations( void )
 	PL_ZERO( fileSystemMounts, sizeof( PLFileSystemMount * ) * MAX_FILESYSTEM_MOUNTS );
 
 	/* now attempt to load in the mount config file, and mount */
-	YNNodeBranch *mountRoot = YnNode_GetChildByName( fileSystemConfig, "mountLocations" );
+	NdBranch *mountRoot = ndGetChildByName( fileSystemConfig, "mountLocations" );
 	if ( mountRoot != NULL )
 	{
 		ParseMountConfig( mountRoot );
-		YnNode_DestroyBranch( mountRoot );
+		ndDestroyBranch( mountRoot );
 	}
 
 	/* mount any packages under each of our mounted locations */

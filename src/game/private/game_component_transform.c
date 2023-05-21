@@ -11,31 +11,31 @@ static void Spawn( YNCoreEntityComponent *self )
 	self->userData = PL_NEW( ECTransform );
 }
 
-static YNNodeBranch *Serialize( YNCoreEntityComponent *self, YNNodeBranch *root )
+static NdBranch *Serialize( YNCoreEntityComponent *self, NdBranch *root )
 {
-	YnNode_PushBackF32Array( root, "translation", ( float * ) &ECTRANSFORM( self )->translation, 3 );
-	YnNode_PushBackF32Array( root, "scale", ( float * ) &ECTRANSFORM( self )->scale, 3 );
-	YnNode_PushBackF32Array( root, "angles", ( float * ) &ECTRANSFORM( self )->angles, 3 );
-	YnNode_PushBackI32( root, "sectorNum", ECTRANSFORM( self )->sectorNum );
+	ndPushBackF32Array( root, "translation", ( float * ) &ECTRANSFORM( self )->translation, 3 );
+	ndPushBackF32Array( root, "scale", ( float * ) &ECTRANSFORM( self )->scale, 3 );
+	ndPushBackF32Array( root, "angles", ( float * ) &ECTRANSFORM( self )->angles, 3 );
+	ndPushBackI32( root, "sectorNum", ECTRANSFORM( self )->sectorNum );
 	return root;
 }
 
-static YNNodeBranch *Deserialize( YNCoreEntityComponent *self, YNNodeBranch *root )
+static NdBranch *Deserialize( YNCoreEntityComponent *self, NdBranch *root )
 {
-	YNNodeBranch *child;
-	if ( ( child = YnNode_GetChildByName( root, "translation" ) ) != NULL )
+	NdBranch *child;
+	if ( ( child = ndGetChildByName( root, "translation" ) ) != NULL )
 	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->translation, 3 );
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->translation, 3 );
 	}
-	if ( ( child = YnNode_GetChildByName( root, "scale" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "scale" ) ) != NULL )
 	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->scale, 3 );
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->scale, 3 );
 	}
-	if ( ( child = YnNode_GetChildByName( root, "angles" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "angles" ) ) != NULL )
 	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->angles, 3 );
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->angles, 3 );
 	}
-	ECTRANSFORM( self )->sectorNum = YnNode_GetI32ByName( root, "sectorNum", -1 );
+	ECTRANSFORM( self )->sectorNum = ndGetI32ByName( root, "sectorNum", -1 );
 	return root;
 }
 

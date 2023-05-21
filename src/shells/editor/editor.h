@@ -63,7 +63,7 @@ namespace os::editor
 
 		std::string name;
 		std::string rootDir;
-		YNNodeBranch *config{ nullptr };
+		NdBranch *config{ nullptr };
 		PLFileSystemMount *mount{ nullptr };
 	};
 	extern Project *editorProject;
@@ -85,5 +85,5 @@ namespace os::editor
 	};
 	extern PLPath cachedPaths[];
 
-	extern YNNodeBranch *editorConfig;
+	extern NdBranch *editorConfig;
 }// namespace os::editor

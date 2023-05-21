@@ -210,20 +210,20 @@ static bool ValidateMaterialVariable( OgeMaterialVariable *variable, PLGShaderUn
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *root )
+static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root )
 {
-	YNNodeBranch *node = YnNode_GetFirstChild( root );
+	NdBranch *node = ndGetFirstChild( root );
 	while ( node != NULL )
 	{
 		/* fetch the next node, so we can roll onto the next element early */
-		YNNodeBranch *next = YnNode_GetNextChild( node );
+		NdBranch *next = ndGetNextChild( node );
 
 		OgeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
 		 * for now, just do it directly against the shader itself */
-		const char *propertyName      = YnNode_GetName( node );
+		const char *propertyName      = ndGetName( node );
 		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
@@ -237,10 +237,10 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
-		if ( YnNode_GetType( node ) == YN_NODE_PROP_STR )
+		if ( ndGetType( node ) == ND_PROPERTY_STRING )
 		{
 			PLPath value;
-			YnNode_GetStr( node, value, sizeof( value ) );
+			ndGetStr( node, value, sizeof( value ) );
 			if ( *value == '_' )
 			{
 				const char *p = ( value + 1 );
@@ -288,7 +288,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 
 				case PLG_UNIFORM_BOOL:
 				{
-					if ( YnNode_GetBool( node, &materialVariable->data.boolean ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetBool( node, &materialVariable->data.boolean ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = MATERIAL_VAR_BOOL;
@@ -297,7 +297,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 
 				case PLG_UNIFORM_FLOAT:
 				{
-					if ( YnNode_GetF32( node, &materialVariable->data.f32 ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetF32( node, &materialVariable->data.f32 ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = MATERIAL_VAR_FLOAT;
@@ -305,7 +305,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 				}
 				case PLG_UNIFORM_DOUBLE:
 				{
-					if ( YnNode_GetF64( node, &materialVariable->data.f64 ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetF64( node, &materialVariable->data.f64 ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = MATERIAL_VAR_DOUBLE;
@@ -314,7 +314,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 
 				case PLG_UNIFORM_UINT:
 				{
-					if ( YnNode_GetUI32( node, &materialVariable->data.ui32 ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetUI32( node, &materialVariable->data.ui32 ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = MATERIAL_VAR_UINT;
@@ -322,7 +322,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 				}
 				case PLG_UNIFORM_INT:
 				{
-					if ( YnNode_GetI32( node, &materialVariable->data.i32 ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetI32( node, &materialVariable->data.i32 ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = MATERIAL_VAR_INT;
@@ -337,7 +337,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 				case PLG_UNIFORM_SAMPLER2DSHADOW:
 				{
 					PLPath texturePath;
-					if ( YnNode_GetStr( node, texturePath, sizeof( PLPath ) ) != YN_NODE_ERROR_SUCCESS )
+					if ( ndGetStr( node, texturePath, sizeof( PLPath ) ) != ND_ERROR_SUCCESS )
 						break;
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
@@ -374,14 +374,14 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, YNNodeBranch *
 	}
 }
 
-void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *materialPass )
+void ogeMaterial_ParsePass( struct NdBranch *root, OgeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
-	YNNodeBranch *subNode;
-	if ( ( subNode = YnNode_GetChildByName( root, "blendMode" ) ) != NULL )
+	NdBranch *subNode;
+	if ( ( subNode = ndGetChildByName( root, "blendMode" ) ) != NULL )
 	{
 		const char *blendModesArray[ 2 ];
-		if ( YnNode_GetStrArray( subNode, blendModesArray, 2 ) == YN_NODE_ERROR_SUCCESS )
+		if ( ndGetStringArray( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
 		{
 			materialPass->blendMode[ 0 ] = GetBlendModeByTag( blendModesArray[ 0 ] );
 			materialPass->blendMode[ 1 ] = GetBlendModeByTag( blendModesArray[ 1 ] );
@@ -390,10 +390,10 @@ void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *material
 			PRINT_WARNING( "Invalid blend mode array in material!\n" );
 	}
 
-	materialPass->depthTest = YnNode_GetBoolByName( root, "depthTest", materialPass->depthTest );
-	materialPass->cullMode  = YnNode_GetI32ByName( root, "cullMode", materialPass->cullMode );
+	materialPass->depthTest = ndGetBoolByName( root, "depthTest", materialPass->depthTest );
+	materialPass->cullMode  = ndGetI32ByName( root, "cullMode", materialPass->cullMode );
 
-	const char *textureFilterPtr = YnNode_GetStringByName( root, "textureFilterMode", NULL );
+	const char *textureFilterPtr = ndGetStringByName( root, "textureFilterMode", NULL );
 	if ( textureFilterPtr != NULL )
 	{
 		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
@@ -413,7 +413,7 @@ void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *material
 		materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 	/* now handle any specific parameters the material provides */
-	if ( ( subNode = YnNode_GetChildByName( root, "shaderParameters" ) ) != NULL )
+	if ( ( subNode = ndGetChildByName( root, "shaderParameters" ) ) != NULL )
 	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
@@ -423,13 +423,13 @@ void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *material
 	 * a case where we only want to use the shader defaults? */
 }
 
-static OgeMaterial *ParseMaterial( OgeMaterial *material, YNNodeBranch *root, bool preview )
+static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool preview )
 {
 	// see if the preview texture is specified
 	if ( material->preview == NULL )
 	{
 		material->preview          = previewFallbackTexture;
-		const char *previewTexture = YnNode_GetStringByName( root, "previewTexture", NULL );
+		const char *previewTexture = ndGetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
 			material->preview = ogeLoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	}
@@ -440,10 +440,10 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, YNNodeBranch *root, bo
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
-	YNNodeBranch *node;
-	if ( ( node = YnNode_GetChildByName( root, "passes" ) ) != NULL )
+	NdBranch *node;
+	if ( ( node = ndGetChildByName( root, "passes" ) ) != NULL )
 	{
-		node = YnNode_GetFirstChild( node );
+		node = ndGetFirstChild( node );
 		while ( node != NULL )
 		{
 			OgeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
@@ -451,7 +451,7 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, YNNodeBranch *root, bo
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
-			const char *programName          = YnNode_GetStringByName( node, "shaderProgram", "default" );
+			const char *programName          = ndGetStringByName( node, "shaderProgram", "default" );
 			OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
@@ -466,7 +466,7 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, YNNodeBranch *root, bo
 
 			ogeMaterial_ParsePass( node, currentPass );
 
-			node = YnNode_GetNextChild( node );
+			node = ndGetNextChild( node );
 		}
 	}
 
@@ -537,14 +537,14 @@ OgeMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bo
 		// If it's not cached, and we're not asking for the preview, load the full thing
 		if ( !material->isCached && !preview )
 		{
-			YNNodeBranch *root = YnNode_LoadFile( path, "material" );
+			NdBranch *root = ndLoadFile( path, "material" );
 			if ( root != NULL )
 			{
 				ParseMaterial( material, root, false );
-				YnNode_DestroyBranch( root );
+				ndDestroyBranch( root );
 			}
 			else
-				PRINT_WARNING( "Failed to cache material, \"%s\" (%s)!\n", path, YnNode_GetErrorMessage() );
+				PRINT_WARNING( "Failed to cache material, \"%s\" (%s)!\n", path, ndGetErrorMessage() );
 		}
 		ogeMemoryManager_AddReference( &material->mem );
 		return material;
@@ -553,17 +553,17 @@ OgeMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bo
 	/* fallback should be optional, as in some cases we might actually care */
 	OgeMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
 
-	YNNodeBranch *root = YnNode_LoadFile( path, "material" );
+	NdBranch *root = ndLoadFile( path, "material" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Failed to load material, \"%s\" (%s)!\n", path, YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Failed to load material, \"%s\" (%s)!\n", path, ndGetErrorMessage() );
 		return fallbackPtr;
 	}
 
 	material = PL_NEW( OgeMaterial );
 	ParseMaterial( material, root, preview );
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );

@@ -15,8 +15,8 @@ void ogeShutdown( void );
 void ogeRenderFrame( OgeViewport *viewport );
 void ogeTickFrame( void );
 
-struct YNNodeBranch *ogeGetConfig( void );
-struct YNNodeBranch *ogeGetUserConfig( void );
+struct NdBranch *ogeGetConfig( void );
+struct NdBranch *ogeGetUserConfig( void );
 
 unsigned int ogeGetNumTicks( void );
 

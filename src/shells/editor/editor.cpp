@@ -24,17 +24,17 @@ unsigned int editorLogWarnId;
 unsigned int editorLogErrorId;
 
 PLPath os::editor::cachedPaths[ MAX_CACHED_PATHS ];
-YNNodeBranch *os::editor::editorConfig;
+NdBranch *os::editor::editorConfig;
 
 os::editor::Project *os::editor::editorProject = nullptr;
 
-static YNNodeBranch *GenerateProjectConfig( const char *name, const char *path )
+static NdBranch *GenerateProjectConfig( const char *name, const char *path )
 {
-	YNNodeBranch *root = YnNode_PushBackObject( nullptr, "config" );
-	YnNode_PushBackString( root, "title", name );
+	NdBranch *root = ndPushBackObject( nullptr, "config" );
+	ndPushBackString( root, "title", name );
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
-	YnNode_PushBackI32Array( root, "version", version, 3 );
-	YnNode_WriteFile( path, root, YN_NODE_FILE_UTF8 );
+	ndPushBackI32Array( root, "version", version, 3 );
+	ndWriteFile( path, root, ND_FILE_UTF8 );
 	return root;
 }
 
@@ -160,19 +160,19 @@ static void SetupConfig()
 	// first try and load it locally
 	PLPath path;
 	PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
-	if ( ( os::editor::editorConfig = YnNode_LoadFile( path, "config" ) ) == nullptr )
+	if ( ( os::editor::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
 	{
 		// try again, but from config location
 		PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_CONFIG ] );
-		if ( ( os::editor::editorConfig = YnNode_LoadFile( path, "config" ) ) == nullptr )
+		if ( ( os::editor::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
 		{
 			// uh oh! just append an object and return
-			os::editor::editorConfig = YnNode_PushBackObject( nullptr, "config" );
+			os::editor::editorConfig = ndPushBackObject( nullptr, "config" );
 			return;
 		}
 	}
 
-	const char *projectPath = YnNode_GetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
+	const char *projectPath = ndGetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
 	if ( projectPath != nullptr )
 	{
 		snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
@@ -234,7 +234,7 @@ int main( int argc, char **argv )
 	}
 
 	// now init common library and fetch the editor config
-	Common_Initialize();
+	cmnInitialize();
 
 	SetupPaths( tmp );
 	SetupConfig();

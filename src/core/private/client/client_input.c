@@ -209,13 +209,13 @@ void Client_Input_Shutdown( void )
 	Client_Input_ClearDevices();
 }
 
-void Client_Input_SerializeConfig( YNNodeBranch *root )
+void Client_Input_SerializeConfig( NdBranch *root )
 {
 	/* nothing to serialise */
 	if ( actionableList == NULL )
 		return;
 
-	YNNodeBranch *inputNode = YnNode_PushBackObjectArray( root, SERIALISATION_NODE_NAME );
+	NdBranch *inputNode = ndPushBackObjectArray( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 	{
 		PRINT_WARNING( "Failed to attach \"" SERIALISATION_NODE_NAME "\" for config!\n" );
@@ -225,9 +225,9 @@ void Client_Input_SerializeConfig( YNNodeBranch *root )
 	//PlIterateLinkedList( actionableList, NULL, NULL );
 }
 
-void Client_Input_DeserializeConfig( YNNodeBranch *root )
+void Client_Input_DeserializeConfig( NdBranch *root )
 {
-	YNNodeBranch *inputNode = YnNode_GetChildByName( root, SERIALISATION_NODE_NAME );
+	NdBranch *inputNode = ndGetChildByName( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 		return;
 }

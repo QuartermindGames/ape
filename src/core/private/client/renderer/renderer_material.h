@@ -128,7 +128,7 @@ typedef struct OgeShaderProgramIndex
 	struct PLLinkedListNode *node;
 } OgeShaderProgramIndex;
 
-void ogeMaterial_ParsePass( struct YNNodeBranch *root, OgeMaterialPass *materialPass );
+void ogeMaterial_ParsePass( struct NdBranch *root, OgeMaterialPass *materialPass );
 
 void ogeInitializeMaterialSystem( void );
 void ogeShutdownMaterialSystem( void );

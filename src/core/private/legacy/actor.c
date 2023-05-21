@@ -54,7 +54,7 @@ const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 
 static PLLinkedList *actorList;
 
-Actor *Act_SpawnActor( ActorType type, YNNodeBranch *nodeTree )
+Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
 {
 	Actor *actor = PL_NEW( Actor );
 	actor->node  = PlInsertLinkedListNode( actorList, actor );
@@ -77,18 +77,18 @@ Actor *Act_SpawnActor( ActorType type, YNNodeBranch *nodeTree )
 
 	if ( nodeTree != NULL )
 	{
-		YNNodeBranch *node;
-		if ( ( node = YnNode_GetChildByName( nodeTree, "tagName" ) ) != NULL )
+		NdBranch *node;
+		if ( ( node = ndGetChildByName( nodeTree, "tagName" ) ) != NULL )
 		{
-			YnNode_GetStr( node, actor->tagName, sizeof( actor->tagName ) );
+			ndGetStr( node, actor->tagName, sizeof( actor->tagName ) );
 		}
-		if ( ( node = YnNode_GetChildByName( nodeTree, "position" ) ) != NULL )
+		if ( ( node = ndGetChildByName( nodeTree, "position" ) ) != NULL )
 		{
-			YnNode_DS_DeserializeVector3( node, &actor->position );
+			ndDS_DeserializeVector3( node, &actor->position );
 		}
-		if ( ( node = YnNode_GetChildByName( nodeTree, "angles" ) ) != NULL )
+		if ( ( node = ndGetChildByName( nodeTree, "angles" ) ) != NULL )
 		{
-			YnNode_DS_DeserializeVector3( node, &actor->angles );
+			ndDS_DeserializeVector3( node, &actor->angles );
 		}
 
 		if ( actor->setup.Deserialize != NULL )
@@ -98,7 +98,7 @@ Actor *Act_SpawnActor( ActorType type, YNNodeBranch *nodeTree )
 	return actor;
 }
 
-Actor *Act_SpawnActorById( const char *id, YNNodeBranch *nodeTree )
+Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree )
 {
 	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
 	{

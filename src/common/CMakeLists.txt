@@ -1,6 +1,7 @@
 add_library(yin-common STATIC
         private/common.c
-        private/common_pkg.c)
+        private/pack/pack_pkg.c
+        private/pack/pack_vpp.c)
 
 target_include_directories(yin-common PRIVATE ../3rdparty/miniz/)
 target_include_directories(yin-common PUBLIC public/)

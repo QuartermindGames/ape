@@ -11,23 +11,23 @@
 int logLevelPrint;
 int logLevelWarn;
 
-void Common_Pkg_RegisterInterface( void );
+void cmnPkg_RegisterInterface( void );
 
-void Common_Initialize( void )
+void cmnInitialize( void )
 {
 	logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	logLevelWarn  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 
 	Message( "Common Library initialized\n" );
 
-	YnNode_SetupLogs();
+	ndSetupLogs();
 
-	Common_Pkg_RegisterInterface();
+	cmnPkg_RegisterInterface();
 }
 
 static PLPath appDataPath = "";
 
-const char *Common_GetAppDataDirectory( void )
+const char *cmnGetAppDataDirectory( void )
 {
 	if ( *appDataPath != '\0' )
 	{
@@ -45,12 +45,12 @@ const char *Common_GetAppDataDirectory( void )
 	return appDataPath;
 }
 
-YNNodeBranch *Common_GetConfig( const char *name )
+NdBranch *cmnGetConfig( const char *name )
 {
 	// first attempt to load from local dir
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", Common_GetAppDataDirectory(), name );
-	YNNodeBranch *root = YnNode_LoadFile( configPath, "config" );
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", cmnGetAppDataDirectory(), name );
+	NdBranch *root = ndLoadFile( configPath, "config" );
 	if ( root != NULL )
 	{
 		return root;
@@ -58,22 +58,22 @@ YNNodeBranch *Common_GetConfig( const char *name )
 
 	// otherwise attempt to load from app data dir instead
 	snprintf( configPath, sizeof( configPath ), "%s.cfg.n", name );
-	root = YnNode_LoadFile( configPath, "config" );
+	root = ndLoadFile( configPath, "config" );
 	if ( root == NULL )
 	{
 		Warning( "Failed to load user config file: %s\n"
 		         "Creating empty config.\n",
-		         YnNode_GetErrorMessage() );
-		root = YnNode_PushBackObject( NULL, "config" );
+		         ndGetErrorMessage() );
+		root = ndPushBackObject( NULL, "config" );
 	}
 
 	return root;
 }
 
-bool Common_WriteConfig( YNNodeBranch *root, const char *name )
+bool cmnWriteConfig( struct NdBranch *root, const char *name )
 {
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", Common_GetAppDataDirectory(), name );
-	YnNode_WriteFile( configPath, root, YN_NODE_FILE_UTF8 );
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", cmnGetAppDataDirectory(), name );
+	ndWriteFile( configPath, root, ND_FILE_UTF8 );
 	return true;
 }

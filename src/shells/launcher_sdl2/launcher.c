@@ -14,7 +14,7 @@
 #include "common.h"
 #include "launcher.h"
 
-static YNNodeBranch *shellConfig;
+static NdBranch *shellConfig;
 
 void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour )
 {
@@ -341,7 +341,7 @@ static unsigned int OS_TimerCallback( unsigned int interval, void *param )
 
 void ogeShellInterface_Shutdown( void )
 {
-	Common_WriteConfig( shellConfig, "shell" );
+	cmnWriteConfig( shellConfig, "shell" );
 
 	if ( sdlTimer != 0 )
 		SDL_RemoveTimer( sdlTimer );
@@ -372,7 +372,7 @@ static bool InitializeDisplay( void )
 	}
 
 	unsigned int driverMode;
-	const char *driverName = YnNode_GetStringByName( shellConfig, "shell.driver", "opengl" );
+	const char *driverName = ndGetStringByName( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
 		driverMode = OGE_GRAPHICS_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
@@ -450,9 +450,9 @@ int Launcher_Initialize( int argc, char **argv )
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
 	}
 
-	Common_Initialize();
+	cmnInitialize();
 
-	shellConfig = Common_GetConfig( "shell" );
+	shellConfig = cmnGetConfig( "shell" );
 
 	if ( !InitializeDisplay() )
 	{

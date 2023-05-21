@@ -18,21 +18,21 @@ typedef struct SGNode
 static PLLinkedList *	 sceneGraph = NULL;
 static PLLinkedListNode *rootNode	= NULL;
 
-SGTransform *SG_DS_Transform( YNNodeBranch *root, const char *childName, SGTransform *out )
+SGTransform *SG_DS_Transform( NdBranch *root, const char *childName, SGTransform *out )
 {
 	SG_InitializeTransform( out );
 
-	YNNodeBranch *child = YnNode_GetChildByName( root, childName );
+	NdBranch *child = ndGetChildByName( root, childName );
 	if ( child == NULL )
 		return NULL;
 
-	YNNodeBranch *n;
-	if ( ( n = YnNode_GetChildByName( child, "rotation" ) ) != NULL )
-		NL_DS_DeserializeQuaternion( n, &out->rotation );
-	if ( ( n = YnNode_GetChildByName( child, "scale" ) ) != NULL )
-		YnNode_DS_DeserializeVector3( n, &out->scale );
-	if ( ( n = YnNode_GetChildByName( child, "translation" ) ) != NULL )
-		YnNode_DS_DeserializeVector3( n, &out->translation );
+	NdBranch *n;
+	if ( ( n = ndGetChildByName( child, "rotation" ) ) != NULL )
+		ndDS_DeserializeQuaternion( n, &out->rotation );
+	if ( ( n = ndGetChildByName( child, "scale" ) ) != NULL )
+		ndDS_DeserializeVector3( n, &out->scale );
+	if ( ( n = ndGetChildByName( child, "translation" ) ) != NULL )
+		ndDS_DeserializeVector3( n, &out->translation );
 
 	return out;
 }

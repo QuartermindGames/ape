@@ -8,18 +8,18 @@
 
 #include "client/renderer/renderer_material.h"
 
-static void SerialiseFace( const OgeWorldFace *face, const OgeWorldMesh *mesh, YNNodeBranch *root, const char *name )
+static void SerialiseFace( const OgeWorldFace *face, const OgeWorldMesh *mesh, NdBranch *root, const char *name )
 {
-	YNNodeBranch *node = YnNode_PushBackObject( root, name );
-	YnNode_PushBackString( node, "material", ogeMaterial_GetPath( face->material ) );
-	YnNode_PushBackF32( node, "materialAngle", face->materialAngle );
-	NL_DS_SerializeVector2( node, "materialOffset", &face->materialOffset );
-	NL_DS_SerializeVector2( node, "materialScale", &face->materialScale );
-	YnNode_PushBackI8( node, "flags", ( int8_t ) face->flags );
-	NL_DS_SerializeVector3( node, "normal", &face->normal );
+	NdBranch *node = ndPushBackObject( root, name );
+	ndPushBackString( node, "material", ogeMaterial_GetPath( face->material ) );
+	ndPushBackF32( node, "materialAngle", face->materialAngle );
+	ndDS_SerializeVector2( node, "materialOffset", &face->materialOffset );
+	ndDS_SerializeVector2( node, "materialScale", &face->materialScale );
+	ndPushBackI8( node, "flags", ( int8_t ) face->flags );
+	ndDS_SerializeVector3( node, "normal", &face->normal );
 }
 
-static void SerialiseFaces( const OgeWorldMesh *mesh, YNNodeBranch *root )
+static void SerialiseFaces( const OgeWorldMesh *mesh, NdBranch *root )
 {
 #if 0
 	NLNode *faceListNode = NL_PushBackObjArray( root, "faces" );
@@ -30,20 +30,20 @@ static void SerialiseFaces( const OgeWorldMesh *mesh, YNNodeBranch *root )
 #endif
 }
 
-static void SerialiseMesh( const OgeWorldMesh *mesh, YNNodeBranch *root, const char *name )
+static void SerialiseMesh( const OgeWorldMesh *mesh, NdBranch *root, const char *name )
 {
-	YNNodeBranch *meshNode = YnNode_PushBackObject( root, name );
+	NdBranch *meshNode = ndPushBackObject( root, name );
 	if ( *mesh->id != '\0' )
-		YnNode_PushBackString( meshNode, "id", mesh->id );
+		ndPushBackString( meshNode, "id", mesh->id );
 
-	NL_DS_SerializeCollisionAABB( meshNode, "bounds", &mesh->bounds );
+	ndDS_SerializeCollisionAABB( meshNode, "bounds", &mesh->bounds );
 
 	SerialiseFaces( mesh, meshNode );
 }
 
-static void SerialiseMeshes( const OgeWorld *world, YNNodeBranch *root )
+static void SerialiseMeshes( const OgeWorld *world, NdBranch *root )
 {
-	YNNodeBranch *meshListNode = YnNode_PushBackObjectArray( root, "meshes" );
+	NdBranch *meshListNode = ndPushBackObjectArray( root, "meshes" );
 
 	unsigned int numMeshes = PlGetNumVectorArrayElements( world->meshes );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
@@ -52,27 +52,27 @@ static void SerialiseMeshes( const OgeWorld *world, YNNodeBranch *root )
 	}
 }
 
-static void SerialiseSectors( const OgeWorld *world, YNNodeBranch *root )
+static void SerialiseSectors( const OgeWorld *world, NdBranch *root )
 {
-	YNNodeBranch *sectorListNode = YnNode_PushBackObjectArray( root, "sectors" );
+	NdBranch *sectorListNode = ndPushBackObjectArray( root, "sectors" );
 	for ( unsigned int i = 0; i < world->numSectors; ++i )
 	{
-		YNNodeBranch *sectorNode = YnNode_PushBackObject( sectorListNode, NULL );
+		NdBranch *sectorNode = ndPushBackObject( sectorListNode, NULL );
 
 		if ( *world->sectors[ i ].id != '\0' )
-			YnNode_PushBackString( sectorNode, "id", world->sectors[ i ].id );
+			ndPushBackString( sectorNode, "id", world->sectors[ i ].id );
 
 		if ( world->sectors[ i ].mesh != NULL && *world->sectors[ i ].mesh->id != '\0' )
-			YnNode_PushBackString( sectorNode, "meshId", world->sectors[ i ].mesh->id );
+			ndPushBackString( sectorNode, "meshId", world->sectors[ i ].mesh->id );
 
-		NL_DS_SerializeCollisionAABB( sectorNode, "bounds", &world->sectors[ i ].bounds );
+		ndDS_SerializeCollisionAABB( sectorNode, "bounds", &world->sectors[ i ].bounds );
 	}
 }
 
-void YnCore_WorldSerialiser_Begin( const OgeWorld *world, YNNodeBranch *root )
+void YnCore_WorldSerialiser_Begin( const OgeWorld *world, NdBranch *root )
 {
-	YnNode_PushBackI32( root, "version", YN_CORE_WORLD_VERSION );
-	YnNode_PushBackBranch( root, world->globalProperties );
+	ndPushBackI32( root, "version", YN_CORE_WORLD_VERSION );
+	ndPushBackBranch( root, world->globalProperties );
 
 	SerialiseMeshes( world, root );
 	SerialiseSectors( world, root );

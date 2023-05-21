@@ -120,11 +120,11 @@ void Game_Disconnect( void )
 
 void Game_SetupWorldProperties( OgeWorld *world )
 {
-	YNNodeBranch *prop;
+	NdBranch *prop;
 	if ( ( prop = YnCore_World_GetProperty( world, "music" ) ) != NULL )
 	{
 		PLPath musicPath;
-		if ( YnNode_GetStr( prop, musicPath, sizeof( PLPath ) ) == YN_NODE_ERROR_SUCCESS )
+		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS )
 		{
 		}
 	}

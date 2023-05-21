@@ -77,7 +77,7 @@ void YnCore_EntityManager_Shutdown( void )
 
 			// Iterate over and clear out all the component references
 			for ( unsigned int i = 0; i < template->numComponents; ++i )
-				YnNode_DestroyBranch( template->components[ i ].properties );
+				ndDestroyBranch( template->components[ i ].properties );
 			PL_DELETE( template->components );
 
 			PL_DELETE( template );
@@ -128,7 +128,7 @@ static void SerializeEntityCallback( YNCoreEntityComponent *component, YNCoreEnt
 	if ( componentTemplate->callbackTable->serializeFunction == NULL )
 		return;
 
-	componentTemplate->callbackTable->serializeFunction( component, ( YNNodeBranch * ) user );
+	componentTemplate->callbackTable->serializeFunction( component, ( NdBranch * ) user );
 }
 
 static void DeserializeEntityCallback( YNCoreEntityComponent *component, YNCoreEntityComponentBase *componentTemplate, void *user )
@@ -136,7 +136,7 @@ static void DeserializeEntityCallback( YNCoreEntityComponent *component, YNCoreE
 	if ( componentTemplate->callbackTable->deserializeFunction == NULL )
 		return;
 
-	componentTemplate->callbackTable->deserializeFunction( component, ( YNNodeBranch * ) user );
+	componentTemplate->callbackTable->deserializeFunction( component, ( NdBranch * ) user );
 }
 
 void YnCore_EntityManager_Tick( void )
@@ -149,12 +149,12 @@ void YnCore_EntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector )
 	IterateEntities( CallEntityDraw, NULL );
 }
 
-void YnCore_EntityManager_Save( YNNodeBranch *root )
+void YnCore_EntityManager_Save( NdBranch *root )
 {
 	IterateEntities( SerializeEntityCallback, root );
 }
 
-void YnCore_EntityManager_Restore( YNNodeBranch *root )
+void YnCore_EntityManager_Restore( NdBranch *root )
 {
 	IterateEntities( DeserializeEntityCallback, root );
 }
@@ -167,10 +167,10 @@ unsigned int YnCore_EntityManager_GetNumOfEntities( void )
 /////////////////////////////////////////////////////////////////
 // Entity Prefabs
 
-static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *root )
+static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 {
 	const char *str;
-	str = YnNode_GetStringByName( root, "name", NULL );
+	str = ndGetStringByName( root, "name", NULL );
 	assert( str != NULL );
 	if ( str == NULL )
 	{
@@ -178,8 +178,8 @@ static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *ro
 		return NULL;
 	}
 
-	YNNodeBranch *node;
-	node = YnNode_GetChildByName( root, "components" );
+	NdBranch *node;
+	node = ndGetChildByName( root, "components" );
 	assert( node != NULL );
 	if ( node == NULL )
 	{
@@ -193,15 +193,15 @@ static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *ro
 
 	// description is a field we'll display in the editor,
 	// just essentially an explanation of what the entity does
-	str = YnNode_GetStringByName( root, "description", NULL );
+	str = ndGetStringByName( root, "description", NULL );
 	if ( str != NULL )
 		snprintf( prefab->description, sizeof( prefab->description ), "%s", str );
 
-	prefab->numComponents = YnNode_GetNumOfChildren( node );
+	prefab->numComponents = ndGetNumOfChildren( node );
 	prefab->components    = PL_NEW_( YNCoreEntityPrefabComponent, prefab->numComponents );
 
 	// Get the first child of the components list
-	node = YnNode_GetFirstChild( node );
+	node = ndGetFirstChild( node );
 	for ( unsigned int i = 0; i < prefab->numComponents; ++i )
 	{
 		assert( node != NULL );
@@ -211,12 +211,12 @@ static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *ro
 			break;
 		}
 
-		const char *name = YnNode_GetStringByName( node, "name", NULL );
+		const char *name = ndGetStringByName( node, "name", NULL );
 		assert( name != NULL );
 		if ( name == NULL )
 		{
 			PRINT_WARNING( "Component listed for prefab without a name!\n" );
-			node = YnNode_GetNextChild( node );
+			node = ndGetNextChild( node );
 			continue;
 		}
 
@@ -224,18 +224,18 @@ static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *ro
 		if ( base == NULL )
 		{
 			PRINT_WARNING( "\"%s\" is not a valid entity component!\n", name );
-			node = YnNode_GetNextChild( node );
+			node = ndGetNextChild( node );
 			continue;
 		}
 
 		prefab->components[ i ].base = base;
 
 		// Attempt to fetch the properties so we can hand it over to the component later
-		YNNodeBranch *propertiesNode = YnNode_GetChildByName( node, "properties" );
+		NdBranch *propertiesNode = ndGetChildByName( node, "properties" );
 		if ( propertiesNode != NULL )
-			prefab->components[ i ].properties = YnNode_CopyBranch( propertiesNode );
+			prefab->components[ i ].properties = ndCopyBranch( propertiesNode );
 
-		node = YnNode_GetNextChild( node );
+		node = ndGetNextChild( node );
 	}
 
 	return prefab;
@@ -243,10 +243,10 @@ static YNCoreEntityPrefab *ParseEntityPrefab( const char *path, YNNodeBranch *ro
 
 void YnCore_EntityManager_RegisterEntityPrefab( const char *path )
 {
-	YNNodeBranch *root = YnNode_LoadFile( path, "entityPrefab" );
+	NdBranch *root = ndLoadFile( path, "entityPrefab" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Failed to open entity template, \"%s\": %s\n", path, YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Failed to open entity template, \"%s\": %s\n", path, ndGetErrorMessage() );
 		return;
 	}
 
@@ -261,7 +261,7 @@ void YnCore_EntityManager_RegisterEntityPrefab( const char *path )
 	else
 		PRINT_WARNING( "Failed to register entity template: %s\nSee log for details!\n", path );
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 }
 
 /**

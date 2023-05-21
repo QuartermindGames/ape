@@ -3,11 +3,11 @@
 
 #pragma once
 
-typedef struct YNNodeBranch YNNodeBranch;
+typedef struct NdBranch NdBranch;
 
 const char *FileSystem_GetUserConfigLocation( void );
 
-void ogeFileSystem_SetupConfig( YNNodeBranch *root );
+void ogeFileSystem_SetupConfig( NdBranch *root );
 
 void ogeFileSystem_MountBaseLocations( void );
 void ogeFileSystem_MountLocations( void );

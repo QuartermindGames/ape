@@ -20,18 +20,18 @@ static unsigned int numTotalSpawns;
  * ENTITY
  ****************************************/
 
-YNNodeBranch *YnCore_Entity_Serialize( YNCoreEntity *self, YNNodeBranch *root )
+NdBranch *YnCore_Entity_Serialize( YNCoreEntity *self, NdBranch *root )
 {
-	YNNodeBranch *entityNode     = YnNode_PushBackObject( root, "entity" );
-	YNNodeBranch *componentsNode = YnNode_PushBackObjectArray( entityNode, "components" );
+	NdBranch *entityNode     = ndPushBackObject( root, "entity" );
+	NdBranch *componentsNode = ndPushBackObjectArray( entityNode, "components" );
 
 	PLLinkedListNode *node = PlGetFirstNode( self->components );
 	while ( node != NULL )
 	{
-		YNNodeBranch *componentNode = YnNode_PushBackObject( componentsNode, NULL );
+		NdBranch *componentNode = ndPushBackObject( componentsNode, NULL );
 
 		YNCoreEntityComponent *entityComponent = ( YNCoreEntityComponent * ) PlGetLinkedListNodeUserData( node );
-		YnNode_PushBackString( componentNode, "id", entityComponent->base->name );
+		ndPushBackString( componentNode, "id", entityComponent->base->name );
 
 		const YNCoreEntityComponentBase *entityComponentTemplate = entityComponent->base;
 		if ( entityComponentTemplate->callbackTable->serializeFunction != NULL )

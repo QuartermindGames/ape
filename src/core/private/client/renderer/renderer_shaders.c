@@ -53,12 +53,12 @@ static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType t
 	PlFree( buffer );
 }
 
-static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
+static OgeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 {
 	OgeShaderProgramIndex program;
 	PL_ZERO_( program );
 
-	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
+	const char *internalName = ndGetStringByName( root, "description", NULL );
 	if ( internalName != NULL )
 	{
 		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
@@ -75,8 +75,8 @@ static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 		return NULL;
 	}
 
-	const char *vertexPath   = YnNode_GetStringByName( root, "vertexPath", NULL );
-	const char *fragmentPath = YnNode_GetStringByName( root, "fragmentPath", NULL );
+	const char *vertexPath   = ndGetStringByName( root, "vertexPath", NULL );
+	const char *fragmentPath = ndGetStringByName( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
@@ -107,17 +107,17 @@ static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
 	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
 
-	YNNodeBranch *child = YnNode_GetChildByName( root, "definitions" );
+	NdBranch *child = ndGetChildByName( root, "definitions" );
 	if ( child != NULL )
 	{
-		YNNodeBranch *subChild;
-		if ( ( subChild = YnNode_GetChildByName( child, "fragment" ) ) != NULL )
+		NdBranch *subChild;
+		if ( ( subChild = ndGetChildByName( child, "fragment" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = YnNode_GetNumOfChildren( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = ndGetNumOfChildren( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
 
-			subChild = YnNode_GetFirstChild( subChild );
+			subChild = ndGetFirstChild( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -127,17 +127,17 @@ static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 					break;
 				}
 
-				YnNode_GetStr( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = YnNode_GetNextChild( subChild );
+				ndGetStr( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = ndGetNextChild( subChild );
 			}
 		}
-		if ( ( subChild = YnNode_GetChildByName( child, "vertex" ) ) != NULL )
+		if ( ( subChild = ndGetChildByName( child, "vertex" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = YnNode_GetNumOfChildren( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = ndGetNumOfChildren( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
 
-			subChild = YnNode_GetFirstChild( subChild );
+			subChild = ndGetFirstChild( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -147,8 +147,8 @@ static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 					break;
 				}
 
-				YnNode_GetStr( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = YnNode_GetNextChild( subChild );
+				ndGetStr( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = ndGetNextChild( subChild );
 			}
 		}
 	}
@@ -166,7 +166,7 @@ static OgeShaderProgramIndex *ParseShaderProgram( YNNodeBranch *root )
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can of course overwrite these. */
-	child = YnNode_GetChildByName( root, "defaultPass" );
+	child = ndGetChildByName( root, "defaultPass" );
 	if ( child != NULL )
 	{
 		/* need to assign this for variable validation */
@@ -185,7 +185,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 {
 	PRINT( "Loading program: \"%s\"\n", path );
 
-	YNNodeBranch *root = YnNode_LoadFile( path, "program" );
+	NdBranch *root = ndLoadFile( path, "program" );
 	if ( root == NULL )
 	{
 		PRINT_WARNING( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -194,7 +194,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 
 	OgeShaderProgramIndex *program = ParseShaderProgram( root );
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 
 	if ( program == NULL )
 	{

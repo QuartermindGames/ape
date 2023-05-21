@@ -159,7 +159,7 @@ typedef struct OgeWorld
 	unsigned int numSkyMaterials;
 
 	/* additional generic properties */
-	struct YNNodeBranch *globalProperties;
+	struct NdBranch *globalProperties;
 
 	uint64_t lastSaveTime;
 	bool isDirty;
@@ -168,15 +168,15 @@ typedef struct OgeWorld
 typedef struct OgeWorldEntity
 {
 	const YNCoreEntityPrefab *entityTemplate;
-	YNNodeBranch *properties;
+	NdBranch *properties;
 } OgeWorldEntity;
 
 #include <yin/core_world.h>
 
-void YnCore_WorldSerialiser_Begin( const OgeWorld *world, YNNodeBranch *root );
-OgeWorld *YnCore_WorldDeserialiser_Begin( YNNodeBranch *root, OgeWorld *out );
+void YnCore_WorldSerialiser_Begin( const OgeWorld *world, NdBranch *root );
+OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out );
 
-OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, OgeWorldMesh *worldMesh );
+OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *worldMesh );
 
 PLLinkedList *YnCore_World_GetLights( const OgeWorld *world );
 PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector );

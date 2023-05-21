@@ -50,18 +50,18 @@ static void GenerateFaceNormal( const OgeWorldMesh *mesh, OgeWorldFace *face )
 	face->normal = PlNormalizeVector3( face->normal );
 }
 
-static void DeserializeMaterials( YNNodeBranch *meshNode, OgeWorldMesh *meshPtr )
+static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
 {
-	YNNodeBranch *materialsList = YnNode_GetChildByName( meshNode, "materials" );
+	NdBranch *materialsList = ndGetChildByName( meshNode, "materials" );
 	if ( materialsList == NULL )
 	{
 		PRINT_WARNING( "No materials for mesh: %s!\n", meshPtr->id );
 		return;
 	}
 
-	meshPtr->numMaterials      = YnNode_GetNumOfChildren( materialsList );
+	meshPtr->numMaterials      = ndGetNumOfChildren( materialsList );
 	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( OgeMaterial         *), true );
-	YNNodeBranch *materialNode = YnNode_GetFirstChild( materialsList );
+	NdBranch *materialNode = ndGetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
 		if ( materialNode == NULL )
@@ -72,21 +72,21 @@ static void DeserializeMaterials( YNNodeBranch *meshNode, OgeWorldMesh *meshPtr 
 		}
 
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
-		YnNode_GetStr( materialNode, materialPath, sizeof( materialPath ) );
+		ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
 		meshPtr->materials[ i ] = YnCore_Material_Cache( materialPath, YN_CORE_CACHE_GROUP_WORLD, true, false );
-		materialNode            = YnNode_GetNextChild( materialNode );
+		materialNode            = ndGetNextChild( materialNode );
 	}
 }
 
-static OgeWorldVertex *DeserializeVertices( YNNodeBranch *meshNode, unsigned int *numVertices )
+static OgeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *numVertices )
 {
-	YNNodeBranch *verticesList = YnNode_GetChildByName( meshNode, "vertices" );
+	NdBranch *verticesList = ndGetChildByName( meshNode, "vertices" );
 	if ( verticesList == NULL )
 		return NULL;
 
-	unsigned int numChildren = YnNode_GetNumOfChildren( verticesList );
+	unsigned int numChildren = ndGetNumOfChildren( verticesList );
 	float *data              = PL_NEW_( float, numChildren );
-	if ( YnNode_GetF32Array( verticesList, ( float * ) data, numChildren ) != YN_NODE_ERROR_SUCCESS )
+	if ( ndGetF32Array( verticesList, ( float * ) data, numChildren ) != ND_ERROR_SUCCESS )
 	{
 		PRINT_WARNING( "Failed to fetch all vertices for mesh!\n" );
 		PL_DELETE( data );
@@ -97,17 +97,17 @@ static OgeWorldVertex *DeserializeVertices( YNNodeBranch *meshNode, unsigned int
 	return ( OgeWorldVertex * ) data;
 }
 
-static void DeserializeFaces( YNNodeBranch *meshNode, OgeWorldMesh *worldMesh )
+static void DeserializeFaces( NdBranch *meshNode, OgeWorldMesh *worldMesh )
 {
-	YNNodeBranch *facesList = YnNode_GetChildByName( meshNode, "faces" );
+	NdBranch *facesList = ndGetChildByName( meshNode, "faces" );
 	if ( facesList == NULL )
 	{
 		PRINT_WARNING( "No faces for mesh: %s!\n", worldMesh->id );
 		return;
 	}
 
-	unsigned int numFaces  = YnNode_GetNumOfChildren( facesList );
-	YNNodeBranch *faceNode = YnNode_GetFirstChild( facesList );
+	unsigned int numFaces  = ndGetNumOfChildren( facesList );
+	NdBranch *faceNode = ndGetFirstChild( facesList );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( faceNode == NULL )
@@ -118,19 +118,19 @@ static void DeserializeFaces( YNNodeBranch *meshNode, OgeWorldMesh *worldMesh )
 
 		OgeWorldFace *face = PL_NEW( OgeWorldFace );
 
-		int materialIndex = YnNode_GetI32ByName( faceNode, "material", -1 );
+		int materialIndex = ndGetI32ByName( faceNode, "material", -1 );
 		if ( materialIndex >= 0 && materialIndex < worldMesh->numMaterials )
 			face->material = worldMesh->materials[ materialIndex ];
 
-		face->materialAngle = YnNode_GetF32ByName( faceNode, "materialAngle", 0.0f );
+		face->materialAngle = ndGetF32ByName( faceNode, "materialAngle", 0.0f );
 
-		NL_DS_DeserializeVector2( YnNode_GetChildByName( faceNode, "materialOffset" ), &face->materialOffset );
-		NL_DS_DeserializeVector2( YnNode_GetChildByName( faceNode, "materialScale" ), &face->materialScale );
+		ndDS_DeserializeVector2( ndGetChildByName( faceNode, "materialOffset" ), &face->materialOffset );
+		ndDS_DeserializeVector2( ndGetChildByName( faceNode, "materialScale" ), &face->materialScale );
 
-		YNNodeBranch *n;
-		if ( ( n = YnNode_GetChildByName( faceNode, "vertices" ) ) != NULL )
+		NdBranch *n;
+		if ( ( n = ndGetChildByName( faceNode, "vertices" ) ) != NULL )
 		{
-			face->numVertices = YnNode_GetNumOfChildren( n );
+			face->numVertices = ndGetNumOfChildren( n );
 			if ( face->numVertices >= WORLD_FACE_MAX_SIDES )
 			{
 				PRINT_WARNING( "Too many vertices for face: %d!\n", i );
@@ -138,23 +138,23 @@ static void DeserializeFaces( YNNodeBranch *meshNode, OgeWorldMesh *worldMesh )
 			}
 
 			if ( face->numVertices > 0 )
-				YnNode_GetUI32Array( n, face->vertices, face->numVertices );
+				ndGetUI32Array( n, face->vertices, face->numVertices );
 		}
 
-		face->flags = YnNode_GetI32ByName( faceNode, "flags", 0 );
+		face->flags = ndGetI32ByName( faceNode, "flags", 0 );
 
 		GenerateFaceNormal( worldMesh, face );
 
 		PlInsertLinkedListNode( worldMesh->faces, face );
 
-		faceNode = YnNode_GetNextChild( faceNode );
+		faceNode = ndGetNextChild( faceNode );
 	}
 }
 
 /**
  * Deserialise a mesh from the given node.
  */
-OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( YNNodeBranch *root, OgeWorldMesh *worldMesh )
+OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *worldMesh )
 {
 	DeserializeMaterials( root, worldMesh );
 
@@ -231,7 +231,7 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		return worldMesh;
 	}
 
-	YNNodeBranch *node = YnNode_LoadFile( path, "worldMesh" );
+	NdBranch *node = ndLoadFile( path, "worldMesh" );
 	if ( node == NULL )
 	{
 		PRINT_WARNING( "Failed to load world mesh: %s\n", path );
@@ -245,7 +245,7 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		worldMesh = NULL;
 	}
 
-	YnNode_DestroyBranch( node );
+	ndDestroyBranch( node );
 
 	// If it loaded fine, be sure we start tracking it
 	if ( worldMesh != NULL )

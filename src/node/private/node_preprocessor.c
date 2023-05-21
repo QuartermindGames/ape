@@ -45,7 +45,7 @@ static bool IsMacroRegistered( const char *name )
 	return false;
 }
 
-char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
+char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
 {
 	size_t actualLength = 0;
 	size_t maxLength = *length;
@@ -90,7 +90,7 @@ char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
 					PlCloseFile( file );
 
 					/* now throw it into the pre-processor */
-					includeBody = YnNode_PreProcessScript( includeBody, &includeLength, false );
+					includeBody = ndPreProcessScript( includeBody, &includeLength, false );
 
 					/* and finally, push it into our destination */
 					dstPos = pl_strinsert( includeBody, &dstBuffer, &actualLength, &maxLength );

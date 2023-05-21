@@ -26,34 +26,34 @@ static void DestroyModel( void *userData )
 	PlmDestroyModel( model );
 }
 
-static PLGMesh *DeserializeMesh( YNNodeBranch *root )
+static PLGMesh *DeserializeMesh( NdBranch *root )
 {
-	uint32_t numVertices = ( uint32_t ) YnNode_GetI32ByName( root, "numVertices", 0 );
+	uint32_t numVertices = ( uint32_t ) ndGetI32ByName( root, "numVertices", 0 );
 	if ( numVertices == 0 )
 	{
 		PRINT_WARNING( "Invalid mesh, no vertices!\n" );
 		return NULL;
 	}
 
-	YNNodeBranch *child;
+	NdBranch *child;
 
-	child = YnNode_GetChildByName( root, "triangles" );
+	child = ndGetChildByName( root, "triangles" );
 	if ( child == NULL )
 	{
 		PRINT_WARNING( "Invalid mesh, no triangles!\n" );
 		return NULL;
 	}
-	uint32_t numIndices = YnNode_GetNumOfChildren( child );
+	uint32_t numIndices = ndGetNumOfChildren( child );
 	uint32_t *indices   = PL_NEW_( uint32_t, numIndices );
-	YnNode_GetI32Array( child, ( int32_t * ) indices, numIndices );
+	ndGetI32Array( child, ( int32_t * ) indices, numIndices );
 	uint32_t numTriangles = numIndices / 3;
 
 	// vertex positions are required
 	PLVector3 *positions;
-	if ( ( child = YnNode_GetChildByName( root, "positions" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "positions" ) ) != NULL )
 	{
 		positions = PL_NEW_( PLVector3, numVertices );
-		YnNode_GetF32Array( child, ( float * ) positions, numVertices / 3 );
+		ndGetF32Array( child, ( float * ) positions, numVertices / 3 );
 	}
 	else
 	{
@@ -65,24 +65,24 @@ static PLGMesh *DeserializeMesh( YNNodeBranch *root )
 	// the rest are optional
 
 	PLVector3 *normals = NULL;
-	if ( ( child = YnNode_GetChildByName( root, "normals" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL )
 	{
 		normals = PL_NEW_( PLVector3, numVertices );
-		YnNode_GetF32Array( child, ( float * ) normals, numVertices / 3 );
+		ndGetF32Array( child, ( float * ) normals, numVertices / 3 );
 	}
 
 	PLVector2 *uvs = NULL;
-	if ( ( child = YnNode_GetChildByName( root, "uvs" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL )
 	{
 		uvs = PL_NEW_( PLVector2, numVertices );
-		YnNode_GetF32Array( child, ( float * ) uvs, numVertices / 2 );
+		ndGetF32Array( child, ( float * ) uvs, numVertices / 2 );
 	}
 
 	PLColourF32 *colours = NULL;
-	if ( ( child = YnNode_GetChildByName( root, "colours" ) ) != NULL )
+	if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL )
 	{
 		colours = PL_NEW_( PLColourF32, numVertices );
-		YnNode_GetF32Array( child, ( float * ) colours, numVertices / 4 );
+		ndGetF32Array( child, ( float * ) colours, numVertices / 4 );
 	}
 
 	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
@@ -92,7 +92,7 @@ static PLGMesh *DeserializeMesh( YNNodeBranch *root )
 		return NULL;
 	}
 
-	mesh->materialIndex = YnNode_GetI32ByName( root, "materialIndex", 0 );
+	mesh->materialIndex = ndGetI32ByName( root, "materialIndex", 0 );
 
 	for ( uint32_t i = 0; i < numVertices; ++i )
 	{
@@ -114,9 +114,9 @@ static PLGMesh *DeserializeMesh( YNNodeBranch *root )
 	return mesh;
 }
 
-static PLMModel *DeserializeModel( YNNodeBranch *root )
+static PLMModel *DeserializeModel( NdBranch *root )
 {
-	int version = YnNode_GetI32ByName( root, "version", -1 );
+	int version = ndGetI32ByName( root, "version", -1 );
 	if ( version == -1 || version > MDL_VERSION )
 	{
 		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, MDL_VERSION );
@@ -124,8 +124,8 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 	}
 
 	unsigned int numMeshes;
-	YNNodeBranch *meshArray = YnNode_GetChildByName( root, "meshes" );
-	if ( meshArray == NULL || ( ( numMeshes = YnNode_GetNumOfChildren( meshArray ) ) == 0 ) )
+	NdBranch *meshArray = ndGetChildByName( root, "meshes" );
+	if ( meshArray == NULL || ( ( numMeshes = ndGetNumOfChildren( meshArray ) ) == 0 ) )
 	{
 		PRINT_WARNING( "No meshes for model!\n" );
 		return NULL;
@@ -135,7 +135,7 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 	PL_ZERO_( userData );
 
 	// Iterate over all the materials under the root and attempt to load them all in
-	YNNodeBranch *materialArray = YnNode_GetChildByName( root, "materials" );
+	NdBranch *materialArray = ndGetChildByName( root, "materials" );
 	if ( materialArray == NULL )
 	{
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
@@ -144,13 +144,13 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 	}
 	else
 	{
-		userData.numMaterials = YnNode_GetNumOfChildren( materialArray );
-		YNNodeBranch *n       = YnNode_GetFirstChild( materialArray );
+		userData.numMaterials = ndGetNumOfChildren( materialArray );
+		NdBranch *n       = ndGetFirstChild( materialArray );
 		for ( unsigned int i = 0; i < userData.numMaterials; ++i )
 		{
 			assert( n != NULL );
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
-			if ( YnNode_GetStr( n, materialPath, sizeof( materialPath ) ) != YN_NODE_ERROR_SUCCESS )
+			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
 				userData.materials[ i ] = YnCore_Material_Cache( "materials/engine/fallback_mesh.mat.n", 0, false, false );
 				if ( userData.materials[ i ] == NULL )
@@ -163,12 +163,12 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 				userData.materials[ i ] = YnCore_Material_Cache( materialPath, 0, true, false );
 			}
 
-			n = YnNode_GetNextChild( n );
+			n = ndGetNextChild( n );
 		}
 	}
 
 	PLGMesh **meshes       = PL_NEW_( PLGMesh *, numMeshes );
-	YNNodeBranch *meshNode = YnNode_GetFirstChild( meshArray );
+	NdBranch *meshNode = ndGetFirstChild( meshArray );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
 		assert( meshNode != NULL );
@@ -176,16 +176,16 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 		if ( meshes[ i ] == NULL )
 			PRINT_ERROR( "Failed to load mesh %u from model!\n" );
 
-		meshNode = YnNode_GetNextChild( meshNode );
+		meshNode = ndGetNextChild( meshNode );
 	}
 
 	PLMModel *model;
-	if ( YnNode_GetBoolByName( root, "isAnimated", false ) )
+	if ( ndGetBoolByName( root, "isAnimated", false ) )
 	{
-		YNNodeBranch *bonesList = YnNode_GetChildByName( root, "bones" );
-		uint32_t numBones       = YnNode_GetNumOfChildren( bonesList );
+		NdBranch *bonesList = ndGetChildByName( root, "bones" );
+		uint32_t numBones       = ndGetNumOfChildren( bonesList );
 
-		uint32_t rootBone = ( uint32_t ) YnNode_GetI32ByName( root, "rootBone", 0 );
+		uint32_t rootBone = ( uint32_t ) ndGetI32ByName( root, "rootBone", 0 );
 		assert( rootBone < numBones );
 		if ( rootBone >= numBones )
 			PRINT_WARNING( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
@@ -206,10 +206,10 @@ static PLMModel *DeserializeModel( YNNodeBranch *root )
 
 PLMModel *Model_Cache( const char *path )
 {
-	YNNodeBranch *root = YnNode_LoadFile( path, "model" );
+	NdBranch *root = ndLoadFile( path, "model" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Invalid model: %s (%s)\n", YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Invalid model: %s (%s)\n", ndGetErrorMessage() );
 		return NULL;
 	}
 
@@ -217,7 +217,7 @@ PLMModel *Model_Cache( const char *path )
 	if ( model == NULL )
 		PRINT_WARNING( "Failed to load model, \"%s\"!\n", path );
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 
 	return model;
 }

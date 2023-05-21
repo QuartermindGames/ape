@@ -80,7 +80,7 @@ static PLPackage *LoadPkgFile( const char *path )
 	return package;
 }
 
-void Common_Pkg_RegisterInterface( void )
+void cmnPkg_RegisterInterface( void )
 {
 	PlRegisterPackageLoader( "pkg", LoadPkgFile, NULL );
 }
@@ -88,7 +88,7 @@ void Common_Pkg_RegisterInterface( void )
 /////////////////////////////////////////////////////////////////
 // WRITE
 
-void Common_Pkg_WriteHeader( FILE *pack, unsigned int numFiles )
+void cmnPkg_WriteHeader( FILE *pack, unsigned int numFiles )
 {
 	fseek( pack, 0, SEEK_SET );
 	fwrite( &( PkgHeader ){ .magic = PKG_MAGIC,
@@ -96,7 +96,7 @@ void Common_Pkg_WriteHeader( FILE *pack, unsigned int numFiles )
 	        PKG_HEADER_SIZE, 1, pack );
 }
 
-void Common_Pkg_AddData( FILE *pack, const char *path, const void *buf, size_t size )
+void cmnPkg_AddData( FILE *pack, const char *path, const void *buf, size_t size )
 {
 	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, pack );

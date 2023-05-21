@@ -34,42 +34,42 @@ static const char *ParseToken( const char **buf, char *token, size_t size, unsig
 	return p;
 }
 
-static YNNodePropertyType PropertyTypeForString( const char *type )
+static NdPropertyType PropertyTypeForString( const char *type )
 {
 	if ( pl_strcasecmp( type, "string" ) == 0 )
-		return YN_NODE_PROP_STR;
+		return ND_PROPERTY_STRING;
 	if ( pl_strcasecmp( type, "bool" ) == 0 )
-		return YN_NODE_PROP_BOOL;
+		return ND_PROPERTY_BOOL;
 	if ( pl_strcasecmp( type, "object" ) == 0 )
-		return YN_NODE_PROP_OBJ;
+		return ND_PROPERTY_OBJECT;
 	if ( pl_strcasecmp( type, "array" ) == 0 )
-		return YN_NODE_PROP_ARRAY;
+		return ND_PROPERTY_ARRAY;
 	if ( pl_strcasecmp( type, "uint8" ) == 0 )
-		return YN_NODE_PROP_UI8;
+		return ND_PROPERTY_UI8;
 	if ( pl_strcasecmp( type, "uint" ) == 0 || pl_strcasecmp( type, "uint32" ) == 0 )
-		return YN_NODE_PROP_UI32;
+		return ND_PROPERTY_UI32;
 	if ( pl_strcasecmp( type, "uint64" ) == 0 )
-		return YN_NODE_PROP_UI64;
+		return ND_PROPERTY_UI64;
 	if ( pl_strcasecmp( type, "int8" ) == 0 )
-		return YN_NODE_PROP_I8;
+		return ND_PROPERTY_I8;
 	if ( pl_strcasecmp( type, "int" ) == 0 || pl_strcasecmp( type, "int32" ) == 0 )
-		return YN_NODE_PROP_I32;
+		return ND_PROPERTY_I32;
 	if ( pl_strcasecmp( type, "int64" ) == 0 )
-		return YN_NODE_PROP_I64;
+		return ND_PROPERTY_I64;
 	if ( pl_strcasecmp( type, "float" ) == 0 )
-		return YN_NODE_PROP_F32;
+		return ND_PROPERTY_F32;
 	if ( pl_strcasecmp( type, "float64" ) == 0 )
-		return YN_NODE_PROP_F64;
+		return ND_PROPERTY_F64;
 
-	return YN_NODE_PROP_UNDEFINED;
+	return ND_PROPERTY_INVALID;
 }
 
-static YNNodeBranch *ParseObjectNode( YNNodeBranch *parent, const char **buf, size_t length, unsigned int currentLine );
-static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, size_t length, unsigned int currentLine )
+static NdBranch *ParseObjectNode( NdBranch *parent, const char **buf, size_t length, unsigned int currentLine );
+static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t length, unsigned int currentLine )
 {
 	DEBUG_PARSER( "Entering ParseArrayNode\n" );
 
-	char childType[ NL_MAX_TYPE_LENGTH ];
+	char childType[ ND_MAX_TYPE_LENGTH ];
 	if ( ParseToken( buf, childType, sizeof( childType ), &currentLine ) == NULL )
 	{
 		Warning( "Failed to parse child type for array!\n" );
@@ -77,7 +77,7 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 	}
 	DEBUG_PARSER( "childType( %s )\n", childType );
 
-	char name[ NL_MAX_NAME_LENGTH ];
+	char name[ ND_MAX_NAME_LENGTH ];
 	if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
 	{
 		Warning( "Failed to parse name!\n" );
@@ -93,7 +93,7 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 	}
 	( *buf )++;
 
-	YNNodeBranch *arrayNode = YnNode_PushBackNewBranch( parent, name, YN_NODE_PROP_ARRAY );
+	NdBranch *arrayNode = ndPushBackNewBranch( parent, name, ND_PROPERTY_ARRAY );
 	if ( arrayNode == NULL )
 		return NULL;
 
@@ -107,7 +107,7 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 			Warning( "Invalid child type for array, \"%s\"!\n", name );
 			break;
 		}
-		case YN_NODE_PROP_UI32:
+		case ND_PROPERTY_UI32:
 		{
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
 			{
@@ -118,12 +118,12 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
-				YnNode_PushBackUI32( arrayNode, NULL, i );
+				ndPushBackUI32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case YN_NODE_PROP_I32:
+		case ND_PROPERTY_I32:
 		{
 			DEBUG_PARSER( "Reading I32\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -136,12 +136,12 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 					break;
 				}
 				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-				YnNode_PushBackI32( arrayNode, NULL, i );
+				ndPushBackI32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case YN_NODE_PROP_F32:
+		case ND_PROPERTY_F32:
 		{
 			DEBUG_PARSER( "Reading float\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -154,12 +154,12 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 					break;
 				}
 				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				YnNode_PushBackF32( arrayNode, NULL, i );
+				ndPushBackF32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case YN_NODE_PROP_OBJ:
+		case ND_PROPERTY_OBJECT:
 		{
 			DEBUG_PARSER( "Reading object\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -173,7 +173,7 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 			}
 			break;
 		}
-		case YN_NODE_PROP_BOOL:
+		case ND_PROPERTY_BOOL:
 		{
 			DEBUG_PARSER( "Reading boolean\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -186,28 +186,28 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 					break;
 				}
 				DEBUG_PARSER( "PushBack Boolean: %d\n", i );
-				YnNode_PushBackI32( arrayNode, NULL, i );
+				ndPushBackI32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case YN_NODE_PROP_STR:
+		case ND_PROPERTY_STRING:
 		{
 			DEBUG_PARSER( "Reading string\n" );
 			do {
-				char i[ NL_MAX_STRING_LENGTH ];
+				char i[ ND_MAX_STRING_LENGTH ];
 				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL )
 				{
 					Warning( "Failed to parse enclosed string for array, \"%s\"!\n", name );
 					break;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				YnNode_PushBackString( arrayNode, NULL, i );
+				ndPushBackString( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
 			break;
 		}
-		case NL_PROP_LINK:
+		case ND_PROPERTY_LINK:
 		{
 			DEBUG_PARSER( "Reading link\n" );
 			assert( 0 );
@@ -226,13 +226,13 @@ static YNNodeBranch *ParseArrayNode( YNNodeBranch *parent, const char **buf, siz
 	return arrayNode;
 }
 
-static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t length, unsigned int currentLine );
-static YNNodeBranch *ParseObjectNode( YNNodeBranch *parent, const char **buf, size_t length, unsigned int currentLine )
+static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, unsigned int currentLine );
+static NdBranch *ParseObjectNode( NdBranch *parent, const char **buf, size_t length, unsigned int currentLine )
 {
 	DEBUG_PARSER( "Entering ParseObjectNode\n" );
 
-	char name[ NL_MAX_NAME_LENGTH ] = { '\0' };
-	if ( parent == NULL || parent->type != YN_NODE_PROP_ARRAY )
+	char name[ ND_MAX_NAME_LENGTH ] = { '\0' };
+	if ( parent == NULL || parent->type != ND_PROPERTY_ARRAY )
 	{
 		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
 		{
@@ -251,7 +251,7 @@ static YNNodeBranch *ParseObjectNode( YNNodeBranch *parent, const char **buf, si
 	}
 	( *buf )++;
 
-	YNNodeBranch *objectNode = YnNode_PushBackObject( parent, name );
+	NdBranch *objectNode = ndPushBackObject( parent, name );
 	if ( objectNode == NULL )
 		return NULL;
 
@@ -279,25 +279,25 @@ static YNNodeBranch *ParseObjectNode( YNNodeBranch *parent, const char **buf, si
 	return objectNode;
 }
 
-static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t length, unsigned int currentLine )
+static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, unsigned int currentLine )
 {
 	DEBUG_PARSER( "Entering ParseNode\n" );
 
 	/* now try reading in the type */
-	char type[ NL_MAX_TYPE_LENGTH ];
+	char type[ ND_MAX_TYPE_LENGTH ];
 	if ( ParseToken( buf, type, sizeof( type ), &currentLine ) == NULL )
 		return NULL;
 	DEBUG_PARSER( "type( %s )\n", type );
 
-	YNNodePropertyType propertyType = PropertyTypeForString( type );
+	NdPropertyType propertyType = PropertyTypeForString( type );
 	/* an array is a special case, parsing-wise */
-	if ( propertyType == YN_NODE_PROP_ARRAY )
+	if ( propertyType == ND_PROPERTY_ARRAY )
 		return ParseArrayNode( parent, buf, length, currentLine );
-	else if ( propertyType == YN_NODE_PROP_OBJ )
+	else if ( propertyType == ND_PROPERTY_OBJECT )
 		return ParseObjectNode( parent, buf, length, currentLine );
 	else
 	{
-		char name[ NL_MAX_NAME_LENGTH ];
+		char name[ ND_MAX_NAME_LENGTH ];
 		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
 		{
 			Warning( "Failed to parse name [%d]!\n", currentLine );
@@ -308,7 +308,7 @@ static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t l
 		/* figure out what data type it is and read in it's result */
 		switch ( propertyType )
 		{
-			case YN_NODE_PROP_UI32:
+			case ND_PROPERTY_UI32:
 			{
 				bool     status;
 				uint32_t i = PlParseInteger( buf, &status );
@@ -317,9 +317,9 @@ static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t l
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
-				return YnNode_PushBackUI32( parent, name, i );
+				return ndPushBackUI32( parent, name, i );
 			}
-			case YN_NODE_PROP_I32:
+			case ND_PROPERTY_I32:
 			{
 				bool status;
 				int  i = PlParseInteger( buf, &status );
@@ -330,9 +330,9 @@ static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t l
 				}
 				DEBUG_PARSER( "PushBack Integer: %d\n", i );
 
-				return YnNode_PushBackI32( parent, name, i );
+				return ndPushBackI32( parent, name, i );
 			}
-			case YN_NODE_PROP_F32:
+			case ND_PROPERTY_F32:
 			{
 				bool  status;
 				float i = PlParseFloat( buf, &status );
@@ -342,29 +342,29 @@ static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t l
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				return YnNode_PushBackF32( parent, name, i );
+				return ndPushBackF32( parent, name, i );
 			}
-			case YN_NODE_PROP_STR:
+			case ND_PROPERTY_STRING:
 			{
-				char i[ NL_MAX_STRING_LENGTH ];
+				char i[ ND_MAX_STRING_LENGTH ];
 				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL )
 				{
 					Warning( "Failed to parse string, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				return YnNode_PushBackString( parent, name, i );
+				return ndPushBackString( parent, name, i );
 			}
-			case YN_NODE_PROP_BOOL:
+			case ND_PROPERTY_BOOL:
 			{
-				char i[ NL_MAX_BOOL_LENGTH ];
+				char i[ ND_MAX_BOOL_LENGTH ];
 				if ( ParseToken( buf, i, sizeof( i ), &currentLine ) == NULL )
 				{
 					Warning( "Failed to parse boolean, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Boolean: %s\n", i );
-				return YnNode_PushBackBool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
+				return ndPushBackBool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
 			}
 			default:
 				Warning( "Unknown property type, \"%s\" [%d]!\n", type, currentLine );
@@ -375,7 +375,7 @@ static YNNodeBranch *ParseNode( YNNodeBranch *parent, const char **buf, size_t l
 	return NULL;
 }
 
-YNNodeBranch *YnNode_ParseBuffer( const char *buf, size_t length )
+NdBranch *ndParseBuffer( const char *buf, size_t length )
 {
 	return ParseNode( NULL, &buf, length, 1 );
 }

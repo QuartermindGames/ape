@@ -39,7 +39,7 @@ OgeWorld *YnCore_World_Load( const char *path );
 bool YnCore_World_Save( OgeWorld *world, const char *path );
 
 void YnCore_World_Destroy( OgeWorld *world );
-struct YNNodeBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName );
+struct NdBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName );
 PLColourF32 YnCore_World_GetAmbience( OgeWorld *world );
 PLColourF32 YnCore_World_GetSunColour( OgeWorld *world );
 PLVector3 YnCore_World_GetSunPosition( OgeWorld *world );

@@ -24,7 +24,7 @@ typedef struct YNCoreEditorField
 {
 	char name[ 64 ];
 	char description[ 128 ];
-	CommonDataType type;
+	CmnDataType type;
 	uintptr_t varOffset;
 } YNCoreEditorField;
 

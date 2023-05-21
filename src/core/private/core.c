@@ -25,8 +25,8 @@
 
 static unsigned int numTicks = 0;
 
-static YNNodeBranch *engineConfig;
-static YNNodeBranch *userConfig;
+static NdBranch *engineConfig;
+static NdBranch *userConfig;
 
 static bool engineTerminalMode = false;
 static bool engineInitialized  = false;
@@ -35,8 +35,8 @@ static bool engineInitialized  = false;
  * PUBLIC
  ****************************************/
 
-YNNodeBranch *ogeGetConfig( void ) { return engineConfig; }
-YNNodeBranch *ogeGetUserConfig( void ) { return userConfig; }
+NdBranch *ogeGetConfig( void ) { return engineConfig; }
+NdBranch *ogeGetUserConfig( void ) { return userConfig; }
 
 bool ogeInitialize( const char *config )
 {
@@ -69,18 +69,18 @@ bool ogeInitialize( const char *config )
 		config = ENGINE_BASE_CONFIG;
 	}
 	const char *configPath = PlGetCommandLineArgumentValue( "-config" );
-	engineConfig           = YnNode_LoadFile( configPath != NULL ? configPath : config, "config" );
+	engineConfig           = ndLoadFile( configPath != NULL ? configPath : config, "config" );
 	if ( engineConfig == NULL )
 	{
-		PRINT_WARNING( "Failed to open engine config: %s\n", YnNode_GetErrorMessage() );
+		PRINT_WARNING( "Failed to open engine config: %s\n", ndGetErrorMessage() );
 		return false;
 	}
 
-	userConfig = YnNode_LoadFile( FileSystem_GetUserConfigLocation(), "config" );
+	userConfig = ndLoadFile( FileSystem_GetUserConfigLocation(), "config" );
 	if ( userConfig == NULL )
 	{
 		PRINT( "No existing user config found, will use defaults.\n" );
-		userConfig = YnNode_PushBackObject( NULL, "config" );
+		userConfig = ndPushBackObject( NULL, "config" );
 	}
 
 	ogeFileSystem_SetupConfig( engineConfig );

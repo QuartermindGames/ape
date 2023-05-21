@@ -27,7 +27,7 @@ int main( int argc, char **argv )
 
 	PlInitialize( argc, argv );
 
-	Common_Initialize();
+	cmnInitialize();
 
 #define CALL_FUNC_TEST( NAME )                                       \
 	{                                                                \

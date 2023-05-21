@@ -52,13 +52,13 @@ os::editor::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 
 void os::editor::ProjectDialog::RegisterProjectCallback( const char *path, void *data )
 {
-	YNNodeBranch *root = YnNode_LoadFile( path, "project" );
+	NdBranch *root = ndLoadFile( path, "project" );
 	if ( root == nullptr )
 	{
 		return;
 	}
 
-	const char *name = YnNode_GetStringByName( root, "name", nullptr );
+	const char *name = ndGetStringByName( root, "name", nullptr );
 	if ( name == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), 0,
@@ -69,7 +69,7 @@ void os::editor::ProjectDialog::RegisterProjectCallback( const char *path, void 
 		return;
 	}
 
-	const char *dir = YnNode_GetStringByName( root, "rootDir", nullptr );
+	const char *dir = ndGetStringByName( root, "rootDir", nullptr );
 	if ( dir == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), 0,

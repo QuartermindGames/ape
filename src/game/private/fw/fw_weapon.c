@@ -19,20 +19,20 @@ typedef struct FWWeapon
 
 void FW_Weapon_LoadTypes( void )
 {
-	YNNodeBranch *node = YnNode_LoadFile( "config/weapons.cfg.n", "weapons" );
+	NdBranch *node = ndLoadFile( "config/weapons.cfg.n", "weapons" );
 	if ( node == NULL )
 	{
-		Game_Warning( "Failed to open weapons config: %s\n", YnNode_GetErrorMessage() );
+		Game_Warning( "Failed to open weapons config: %s\n", ndGetErrorMessage() );
 		return;
 	}
 
-	YNNodeBranch *weaponObject = YnNode_GetFirstChild( node );
+	NdBranch *weaponObject = ndGetFirstChild( node );
 	while ( weaponObject != NULL )
 	{
-		const char *c = YnNode_GetStringByName( weaponObject, "name", NULL );
+		const char *c = ndGetStringByName( weaponObject, "name", NULL );
 
-		weaponObject = YnNode_GetNextChild( weaponObject );
+		weaponObject = ndGetNextChild( weaponObject );
 	}
 
-	YnNode_DestroyBranch( node );
+	ndDestroyBranch( node );
 }
