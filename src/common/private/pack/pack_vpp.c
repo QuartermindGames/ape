@@ -5,10 +5,17 @@
 
 #include "../common_private.h"
 
+// format is optimized for DVD streaming,
+// so we'll need to respect that
 #define BLOCK_SIZE 2048
 
 static const int VPP_MAGIC   = 0x51890ace;
 static const int VPP_VERSION = 1;
+
+static uint32_t CalculateStreamLength( uint32_t dataSize )
+{
+	return ( uint32_t ) ceil( ( double ) dataSize / BLOCK_SIZE ) * BLOCK_SIZE;
+}
 
 static PLPackage *ParseVPPFile( PLFile *file )
 {
@@ -57,17 +64,30 @@ static PLPackage *ParseVPPFile( PLFile *file )
 		char name[ 60 ];
 		int32_t size;
 	} VppEntry;
-	VppEntry *entries = PL_NEW_( VppEntry, header->numFiles );
-	if ( PlReadFile( file, entries, sizeof( VppEntry ), header->numFiles ) == header->numFiles )
-	{
+	PL_STATIC_ASSERT( sizeof( VppEntry ) == 64, "needs to be 64 bytes" );
 
+	uint32_t streamSize = CalculateStreamLength( sizeof( VppEntry ) * header->numFiles );
+	uint8_t *stream     = PL_NEW_( uint8_t, streamSize );
+	if ( PlReadFile( file, stream, sizeof( uint8_t ), streamSize ) == streamSize )
+	{
+		PLFileOffset baseOffset = PlGetFileOffset( file );
+
+		package = PlCreatePackageHandle( PlGetFilePath( file ), header->numFiles, NULL );
+		for ( unsigned int i = 0; i < package->table_size; ++i )
+		{
+			VppEntry *entry = ( ( VppEntry * ) stream ) + i;
+			strcpy( package->table[ i ].fileName, entry->name );
+			package->table[ i ].fileSize = entry->size;
+			package->table[ i ].offset   = baseOffset;
+			baseOffset += CalculateStreamLength( entry->size );
+		}
 	}
 	else
 	{
-		Warning( "Failed to read VPP entries: %s\n", PlGetError() );
+		Warning( "Failed to read in directory table for VPP\n" );
 	}
 
-	PL_DELETE( entries );
+	PL_DELETE( stream );
 
 	return package;
 }
