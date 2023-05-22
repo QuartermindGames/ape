@@ -20,7 +20,7 @@ typedef struct OgeRendererStats
 	unsigned int numFacesDrawn;
 	unsigned int numVisiblePortals;
 } OgeRendererStats;
-extern OgeRendererStats g_gfxPerfStats;
+extern OgeRendererStats oge_RendererPerformance_;
 
 /* todo: introduce container around this */
 typedef struct OgeSpriteFrame

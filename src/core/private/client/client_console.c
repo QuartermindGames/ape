@@ -90,7 +90,9 @@ static void ToggleConsole( void )
 	// Release the mouse if the console is open
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
-		YnCore_ShellInterface_GrabMouse( !consoleIsOpen );
+	{
+		ogeShellInterface_GrabMouse( !consoleIsOpen );
+	}
 }
 
 static void ToggleConsoleCommand( unsigned int argc, char **argv )
@@ -104,13 +106,17 @@ static void ScrollForward( ConsoleOutput *output )
 {
 	output->scrollPos++;
 	if ( output->scrollPos > output->numLines - 1 )
+	{
 		output->scrollPos = output->numLines - 1;
+	}
 }
 
 static void ScrollBackward( ConsoleOutput *output )
 {
 	if ( output->scrollPos == 0 )
+	{
 		return;
+	}
 
 	output->scrollPos--;
 }
@@ -118,13 +124,19 @@ static void ScrollBackward( ConsoleOutput *output )
 bool Client_Console_HandleMouseWheelEvent( float x, float y )
 {
 	if ( !Client_Console_IsOpen() )
+	{
 		return false;
+	}
 
 	ConsoleOutput *output = Console_GetOutput();
 	if ( y > 0.0f )
+	{
 		ScrollForward( output );
+	}
 	else if ( y < 0.0f )
+	{
 		ScrollBackward( output );
+	}
 
 	return true;
 }
@@ -147,10 +159,14 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 
 	/* only do anything if the console is open */
 	if ( !consoleIsOpen )
+	{
 		return false;
+	}
 	/* but we don't care about these... */
 	if ( keyState != YN_CORE_INPUT_STATE_PRESSED && keyState != YN_CORE_INPUT_STATE_DOWN )
+	{
 		return true;
+	}
 
 	ConsoleOutput *output = Console_GetOutput();
 	switch ( key )
@@ -196,7 +212,9 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 		case KEY_DOWN:
 		{
 			if ( autoComplete[ 0 ] == NULL )
+			{
 				break;
+			}
 
 			if ( autoCompleteSelection == 0 )
 			{
@@ -228,7 +246,9 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 		case KEY_BACKSPACE:
 		{
 			if ( conInputBufferLength > 0 )
+			{
 				conInputBuffer[ --conInputBufferLength ] = '\0';
+			}
 
 			UpdateAutoCompleteResult( conInputBuffer );
 			break;
@@ -254,29 +274,34 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
  * RENDERING
  ****************************************/
 
-static void Client_Console_DrawInputField( const OgeViewport *viewport )
+static void DrawInputField( const OgeViewport *viewport, GUIFont *font )
 {
-	BitmapFont *font = Font_GetDefault();
-
 	/* cursor */
-	Font_AddBitmapCharacterToPass( font, 1.0f, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, '>' );
+	//float ch = GUI_Font_GetLineSpacing( font );
+	//GUI_Font_DrawCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
 	if ( v < ogeGetNumTicks() )
+	{
 		v = ogeGetNumTicks() + 20;
+	}
 
 	char c = ( v > ogeGetNumTicks() + 10 ) ? '_' : ' ';
-	Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + SPACER + ( font->cw * conInputBufferLength ) ), ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, c );
+	//GUI_Font_DrawCharacter( font, ( float ) ( font->cw + SPACER + ( font->cw * conInputBufferLength ) ), ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	/* input buffer */
+
+	float w, h;
 
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		float x                   = ( font->cw + SPACER ) + ( font->cw * conInputBufferLength );
-		Font_AddBitmapStringToPass( font, x, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+		GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ 0 ], autoCompleteLength, &w, &h );
+
+		float x = ( w + SPACER ) + ( w * ( float ) conInputBufferLength );
+		GUI_Font_DrawString( font, x, ( float ) viewport->height - h, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 
 		if ( enableAutoCompleteList )
 		{
@@ -284,14 +309,17 @@ static void Client_Console_DrawInputField( const OgeViewport *viewport )
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				Font_AddBitmapStringToPass( font, font->cw + SPACER, ( float ) viewport->height - ( font->ch * ( i + 1 ) ), 1.0f, PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				Font_AddBitmapStringToPass( font, x, ( float ) viewport->height - ( font->ch * ( i + 1 ) ), 1.0f, PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &w, &h );
+				GUI_Font_DrawString( font, w + SPACER, ( float ) viewport->height - ( h * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+				GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, &w, &h );
+				GUI_Font_DrawString( font, x, ( float ) viewport->height - ( h * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	Font_AddBitmapStringToPass( font, font->cw + SPACER, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &w, &h );
+	GUI_Font_DrawString( font, w + SPACER, ( float ) viewport->height - h, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
 bool Client_Console_IsOpen( void ) { return consoleIsOpen; }
@@ -315,7 +343,7 @@ void Client_Console_Draw( const OgeViewport *viewport )
 
 	PlgSetTexture( NULL, 0 );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -354,11 +382,10 @@ void Client_Console_Draw( const OgeViewport *viewport )
 		}
 	}
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetTexture( NULL, 0 );
 
 	// auto-completion list
-#if 0
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
 	{
 		float autoCompleteHeight = 0.0f;
@@ -368,21 +395,21 @@ void Client_Console_Draw( const OgeViewport *viewport )
 		unsigned int i = 1;
 		while ( autoComplete[ i ] != NULL )
 		{
-			float w = ( float ) ( font->cw * ( strlen( autoComplete[ i ] ) + 1 ) );
-			if ( w > autoCompleteWidth ) autoCompleteWidth = w;
-			autoCompleteHeight += font->ch;
-			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) font->ch ) - autoCompleteHeight, w, font->ch, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
+			float w, h;
+			GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
+			if ( w > autoCompleteWidth ) { autoCompleteWidth = w; }
+			autoCompleteHeight += h;
+			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) h ) - autoCompleteHeight, w, h, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
 			++i;
 		}
 	}
-#endif
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
 	PlgSetTexture( NULL, 0 );
 
 	GUI_Font_Display( font );
 
-	Client_Console_DrawInputField( viewport );
+	DrawInputField( viewport, font );
 
 	/* draw version info */
 	GUIFont *tinyFont = GUI_Font_GetDefault( GUI_FONT_DEFAULT_TINY );

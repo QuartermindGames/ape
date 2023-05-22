@@ -97,7 +97,7 @@ void YnCore_DrawGUI( const OgeViewport *viewport )
 
 		PlgSetCullMode( PLG_CULL_NEGATIVE );
 
-		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
 		PlgSetTexture( texture, 0 );
 
 		PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
@@ -127,7 +127,7 @@ void YnCore_DrawGUI( const OgeViewport *viewport )
 	if ( drawGUI )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
-		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 		GUI_SetCanvasSize( canvas, guiWidth, guiHeight );
 		GUI_Draw( canvas, rootPanel );
 

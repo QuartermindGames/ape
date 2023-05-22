@@ -304,7 +304,7 @@ extern "C"
 	YNCoreInputState YnCore_ShellInterface_GetKeyState( int key ) { return YN_CORE_INPUT_STATE_NONE; }
 	void ogeShellInterface_GetMousePosition( int *x, int *y ) {}
 	void YnCore_ShellInterface_SetMousePosition( int x, int y ) {}
-	void YnCore_ShellInterface_GrabMouse( bool grab ) {}
+	void ogeShellInterface_GrabMouse( bool grab ) {}
 
 	void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour )
 	{

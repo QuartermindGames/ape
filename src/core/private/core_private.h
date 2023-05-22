@@ -21,7 +21,8 @@
 
 #include <yin/core.h>
 
-#define ENGINE_APP_NAME    "yin"
+#define ENGINE_NAME        "Orcus"
+#define ENGINE_APP_NAME    "orcus"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
 #define VERSION_MAJOR    3
@@ -58,9 +59,9 @@ extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 #if defined( ENABLE_PROFILER )
 void ogeInitializeProfiler( void );
 void ogeProfiler_EndFrame( void );
-void   Profiler_StartMeasure( ProfilerGroup group );
-void   Profiler_EndMeasure( ProfilerGroup group );
-double Profiler_GetMeasure( ProfilerGroup group );
+void Profiler_StartMeasure( ProfilerGroup group );
+void Profiler_EndMeasure( ProfilerGroup group );
+double ogeProfiler_GetMeasure( ProfilerGroup group );
 #	define OGE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
 #	define OGE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
 #else
@@ -72,9 +73,9 @@ double Profiler_GetMeasure( ProfilerGroup group );
 #	define PROFILE_END( GROUP )
 #endif
 void ogeProfiler_UpdateGraphs( void );
-const double *Profiler_GetGraph( ProfilerGroup group, uint8_t *numPoints );
-double        Profiler_GetGraphValue( ProfilerGroup group );
-double        Profiler_GetGraphAverage( ProfilerGroup group );
+const double *ogeProfiler_GetGraph( ProfilerGroup group, uint8_t *numPoints );
+double Profiler_GetGraphValue( ProfilerGroup group );
+double Profiler_GetGraphAverage( ProfilerGroup group );
 
 #include "core_scheduler.h"
 #include "core_memory_manager.h"
@@ -105,13 +106,13 @@ typedef enum ConsoleLogLevel
 
 typedef struct ConsoleLine
 {
-	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+	char buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 	PLColour colour;
 } ConsoleLine;
 
 typedef struct ConsoleOutput
 {
-	ConsoleLine  lines[ CONSOLE_BUFFER_MAX_LINES ];
+	ConsoleLine lines[ CONSOLE_BUFFER_MAX_LINES ];
 	unsigned int numLines;
 	unsigned int scrollPos;
 } ConsoleOutput;
@@ -121,7 +122,7 @@ ConsoleOutput *Console_GetOutput( void );
 void ogeInitializeConsole( void );
 void ogeShutdownConsole( void );
 
-int  Console_GetLogLevel( ConsoleLogLevel level );
+int Console_GetLogLevel( ConsoleLogLevel level );
 void Console_Print( ConsoleLogLevel level, const char *message, ... );
 
 void ogeRegisterConsoleCommands( bool isDedicated );

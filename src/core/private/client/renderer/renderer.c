@@ -16,7 +16,7 @@
 
 #include "post/post.h"
 
-OgeRendererStats g_gfxPerfStats;
+OgeRendererStats oge_RendererPerformance_;
 OgeRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
@@ -117,7 +117,7 @@ void YnCore_SetupDefaultRenderState( const OgeViewport *viewport )
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
 }
 
 void YnCore_BeginDraw( OgeViewport *viewport )
@@ -139,7 +139,7 @@ void YnCore_BeginDraw( OgeViewport *viewport )
 
 void YnCore_EndDraw( OgeViewport *viewport )
 {
-	PL_ZERO_( g_gfxPerfStats );
+	PL_ZERO_( oge_RendererPerformance_ );
 
 	viewport->perf.numBatches   = 0;
 	viewport->perf.numTriangles = 0;
@@ -229,7 +229,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	if ( numPoints < 2 )
 		return;
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
@@ -358,13 +358,13 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 	char buf[ 64 ];
 	snprintf( buf, sizeof( buf ), "FPS:           " PL_FMT_uint32 "\n", YnCore_Viewport_GetAverageFPS( viewport ) );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num faces:     " PL_FMT_uint32 "\n", g_gfxPerfStats.numFacesDrawn );
+	snprintf( buf, sizeof( buf ), "Num faces:     " PL_FMT_uint32 "\n", oge_RendererPerformance_.numFacesDrawn );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num portals:   " PL_FMT_uint32 "\n", g_gfxPerfStats.numVisiblePortals );
+	snprintf( buf, sizeof( buf ), "Num portals:   " PL_FMT_uint32 "\n", oge_RendererPerformance_.numVisiblePortals );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num triangles: " PL_FMT_uint32 "\n", g_gfxPerfStats.numTriangles );
+	snprintf( buf, sizeof( buf ), "Num triangles: " PL_FMT_uint32 "\n", oge_RendererPerformance_.numTriangles );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num batches:   " PL_FMT_uint32 "\n", g_gfxPerfStats.numBatches );
+	snprintf( buf, sizeof( buf ), "Num batches:   " PL_FMT_uint32 "\n", oge_RendererPerformance_.numBatches );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Alloc memory:  %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
@@ -385,7 +385,7 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 
 	static const float bw = 128;
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
@@ -406,7 +406,7 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 			}
 
 			uint8_t numPoints;
-			const double *graph = Profiler_GetGraph( i, &numPoints );
+			const double *graph = ogeProfiler_GetGraph( i, &numPoints );
 			YR_DrawGraph( cpuProfilerDescriptions[ i ], x, y, bw, graphHeight, graph, numPoints, .0f, 1.0f );
 			y += graphHeight;
 		}
@@ -483,7 +483,7 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PLVector3 angles;
 	angles.x = PL_DEG2RAD( rotation.x );
@@ -554,7 +554,7 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 
 				static const unsigned int gridW = 256;
 
-				PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+				PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
 
 				PlPopMatrix();
@@ -583,7 +583,7 @@ PLGTexture *ogeGetPrimaryDepthAttachment( void )
 
 void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport )
 {
-	g_gfxPerfStats.cameraPos = camera->internal->position;
+	oge_RendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
 	ogeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );

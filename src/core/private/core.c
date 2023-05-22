@@ -43,7 +43,7 @@ bool ogeInitialize( const char *config )
 	// Call this first, so we can buffer console output
 	ogeInitializeConsole();
 
-	PRINT( "Yin %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
+	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
 	       VERSION_MAJOR,
 	       ENGINE_VERSION_STR,
 	       GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );

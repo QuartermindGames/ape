@@ -6,12 +6,10 @@
 
 #include <yin/node.h>
 
-#include "common.h"
+#include "common_private.h"
 
 int logLevelPrint;
 int logLevelWarn;
-
-void cmnPkg_RegisterInterface( void );
 
 void cmnInitialize( void )
 {
@@ -22,7 +20,8 @@ void cmnInitialize( void )
 
 	ndSetupLogs();
 
-	cmnPkg_RegisterInterface();
+	cmnPack_RegisterPkgInterface_();
+	cmnPack_RegisterVppInterface_();
 }
 
 static PLPath appDataPath = "";

@@ -60,7 +60,7 @@ void Profiler_EndMeasure( ProfilerGroup group )
 	timers[ group ].timeTaken += ( PlGetCurrentSeconds() * 1000 ) - timers[ group ].startTime;
 }
 
-double Profiler_GetMeasure( ProfilerGroup group )
+double ogeProfiler_GetMeasure( ProfilerGroup group )
 {
 	return timers[ group ].timeTaken;
 }
@@ -77,14 +77,14 @@ void ogeProfiler_UpdateGraphs( void )
 		for ( uint8_t j = 0; j < NUM_GRAPH_POINTS - 1; ++j )
 			timers[ i ].results[ j ] = timers[ i ].results[ j + 1 ];
 
-		timers[ i ].results[ NUM_GRAPH_POINTS - 1 ] = ( float ) Profiler_GetMeasure( i );
+		timers[ i ].results[ NUM_GRAPH_POINTS - 1 ] = ( float ) ogeProfiler_GetMeasure( i );
 	}
 
 	PL_GET_CVAR( "debug.profilerFrequency", profilerFrequency );
 	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 }
 
-const double *Profiler_GetGraph( ProfilerGroup group, uint8_t *numPoints )
+const double *ogeProfiler_GetGraph( ProfilerGroup group, uint8_t *numPoints )
 {
 	*numPoints = NUM_GRAPH_POINTS;
 	return timers[ group ].results;

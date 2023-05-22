@@ -4,9 +4,12 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_array_vector.h>
 
+#include "../../core_private.h"
+
 #include "gui_private.h"
 #include "common_format_fnt.h"
 #include "client/renderer/renderer_material.h"
+#include "client/renderer/renderer.h"
 
 /****************************************
  * GUI BITMAP FONT API
@@ -29,6 +32,8 @@ typedef struct GUIFont
 static PLVectorArray *cachedFonts;
 static PLHashTable *cachedFontsTable;
 static GUIFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
+
+float GUI_Font_GetLineSpacing( const GUIFont *font ) { return font->lineSpacing; }
 
 GUIFont *GUI_Font_GetDefault( GUIFontDefaultType defaultType )
 {
@@ -119,7 +124,7 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 
 	PlDestroyImage( bitmapImage );
 
-	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
+	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 32, 32 );
 
 	return font;
 }
@@ -284,8 +289,8 @@ void GUI_Font_Display( GUIFont *font )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_FONT ] );
-	PlgSetShaderUniformValue( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_FONT ] );
+	PlgSetShaderUniformValue( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
 
 	PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
 
@@ -293,6 +298,9 @@ void GUI_Font_Display( GUIFont *font )
 
 	PlgUploadMesh( font->mesh );
 	PlgDrawMesh( font->mesh );
+
+	oge_RendererPerformance_.numTriangles += font->mesh->num_triangles;
+	oge_RendererPerformance_.numBatches++;
 
 	PlgDisableGraphicsState( PLG_GFX_STATE_BLEND );
 

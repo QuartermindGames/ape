@@ -164,7 +164,7 @@ static void DrawWorldEditorGUI( void )
 
 	if ( context.camera != NULL && ( context.camera->mode != YN_CORE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
 	{
-		PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
 		float zoom     = roundf( z ) / 2.0f;
@@ -266,7 +266,7 @@ static void DrawWorldEditorGUI( void )
 
 	Font_Draw( defaultFont );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 	static const float CURSOR_SIZE = 8.0f;
 	PlgDrawRectangle( ( float ) ( mouseCursorX ) - ( CURSOR_SIZE / 2 ), ( float ) ( mouseCursorY ) - ( CURSOR_SIZE / 2 ),
 	                  CURSOR_SIZE, CURSOR_SIZE,

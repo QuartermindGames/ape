@@ -80,9 +80,9 @@ static PLPackage *LoadPkgFile( const char *path )
 	return package;
 }
 
-void cmnPkg_RegisterInterface( void )
+void cmnPack_RegisterPkgInterface_( void )
 {
-	PlRegisterPackageLoader( "pkg", LoadPkgFile, NULL );
+	PlRegisterPackageLoader( "pkg", LoadPkgFile, ParsePkgFile );
 }
 
 /////////////////////////////////////////////////////////////////

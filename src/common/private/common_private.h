@@ -4,3 +4,6 @@
 #pragma once
 
 #include "common.h"
+
+void cmnPack_RegisterPkgInterface_( void );
+void cmnPack_RegisterVppInterface_( void );

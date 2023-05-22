@@ -59,7 +59,7 @@ void ogeInitializeMaterialSystem( void )
 	fallbackMaterial->numPasses                  = 1;
 	fallbackMaterial->preview                    = previewFallbackTexture;
 	fallbackMaterial->isCached                   = true;
-	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ];
+	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
@@ -455,7 +455,7 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 			OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
-				currentPass->program = oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ];
+				currentPass->program = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ];
 				PRINT_WARNING( "Failed to find program \"%s\", using fallback!\n", programName );
 			}
 			else
@@ -778,14 +778,14 @@ void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight *light
 		PlgUploadMesh( mesh );
 		PlgDrawMesh( mesh );
 
-		g_gfxPerfStats.numBatches++;
+		oge_RendererPerformance_.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
 		{
-			g_gfxPerfStats.numTriangles += mesh->num_triangles;
+			oge_RendererPerformance_.numTriangles += mesh->num_triangles;
 		}
 		else
 		{
-			g_gfxPerfStats.numTriangles += ( mesh->num_verts / 2 );
+			oge_RendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
 		}
 	}
 

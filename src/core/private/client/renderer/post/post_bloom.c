@@ -76,7 +76,7 @@ static void DrawBloomEffect( const OgeViewport *viewport )
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomTexture );
 }

@@ -114,7 +114,7 @@ typedef enum OgeDefaultShaderProgram
 
 	OGE_MAX_DEFAULT_SHADERS
 } OgeDefaultShaderProgram;
-extern PLGShaderProgram *oge_defaultShaderPrograms[ OGE_MAX_DEFAULT_SHADERS ];
+extern PLGShaderProgram *oge_defaultShaderPrograms_[ OGE_MAX_DEFAULT_SHADERS ];
 
 typedef struct OgeShaderProgramIndex
 {

@@ -215,7 +215,7 @@ void YnCore_ShellInterface_SetMousePosition( int x, int y )
 
 static bool grabState = false;
 
-void YnCore_ShellInterface_GrabMouse( bool grab )
+void ogeShellInterface_GrabMouse( bool grab )
 {
 	SDL_SetWindowGrab( sdlWindow, grab );
 	SDL_SetRelativeMouseMode( grab );
@@ -413,9 +413,6 @@ static bool InitializeDisplay( void )
 int Launcher_Initialize( int argc, char **argv )
 {
 #if defined( _WIN32 ) && !defined( NDEBUG )
-	/* stop buffering stdout! */
-	setvbuf( stdout, NULL, _IONBF, 0 );
-
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 

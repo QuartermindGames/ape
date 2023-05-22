@@ -12,7 +12,7 @@
 /** Shaders **/
 
 static PLHashTable *shaderProgramTable;
-PLGShaderProgram *oge_defaultShaderPrograms[ OGE_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *oge_defaultShaderPrograms_[ OGE_MAX_DEFAULT_SHADERS ];
 
 static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
@@ -243,6 +243,6 @@ void ogeInitializeShaders( void )
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 		}
 
-		oge_defaultShaderPrograms[ i ] = programIndex->internalPtr;
+		oge_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
 	}
 }

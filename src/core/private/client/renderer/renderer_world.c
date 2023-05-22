@@ -132,7 +132,7 @@ static void DrawFace( OgeWorldMesh *mesh, OgeWorldFace *face )
 	}
 	PL_DELETE( indices );
 
-	g_gfxPerfStats.numFacesDrawn++;
+	oge_RendererPerformance_.numFacesDrawn++;
 
 #if 0// draw face normal
 	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
@@ -196,7 +196,7 @@ static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, Oge
 
 	// Now check for portals - we'll draw these first
 	PLLinkedList *visiblePortals = VIS_GetVisiblePortals( camera, visibleFaces );
-	g_gfxPerfStats.numVisiblePortals += PlGetNumLinkedListNodes( visiblePortals );
+	oge_RendererPerformance_.numVisiblePortals += PlGetNumLinkedListNodes( visiblePortals );
 
 	unsigned int numLights;
 	OgeLight *lights = YnCore_WorldSector_GetVisibleLights( sector, &numLights );
@@ -354,7 +354,7 @@ void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 	if ( world == NULL )
 		return;
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

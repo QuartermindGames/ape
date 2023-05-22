@@ -185,11 +185,15 @@ void ogeFileSystem_MountLocations( void )
 	for ( unsigned int i = 0; i < numMountedLocations; ++i )
 	{
 		if ( PlGetMountLocationType( fileSystemMounts[ i ] ) != PL_FS_MOUNT_DIR )
+		{
 			continue;
+		}
 
 		const char *mountPath = PlGetMountLocationPath( fileSystemMounts[ i ] );
 		if ( mountPath == NULL )
+		{
 			continue;
+		}
 
 		/* attempt to automatically mount any packages */
 		unsigned int max = ( MAX_FILESYSTEM_MOUNTS - numMountedLocations ) - 1;
@@ -198,7 +202,9 @@ void ogeFileSystem_MountLocations( void )
 			PLPath pkgPath;
 			snprintf( pkgPath, sizeof( pkgPath ), "%s/data%d.pkg", mountPath, j );
 			if ( PlFileExists( pkgPath ) && ( fileSystemMounts[ j ] = PlMountLocalLocation( pkgPath ) ) != NULL )
+			{
 				continue;
+			}
 
 			break;
 		}
@@ -211,7 +217,9 @@ void ogeFileSystem_MountLocations( void )
 		PLPath pkgPath;
 		snprintf( pkgPath, sizeof( pkgPath ), "base%d.pkg", i );
 		if ( PlFileExists( pkgPath ) && ( fileSystemMounts[ i ] = PlMountLocation( pkgPath ) ) != NULL )
+		{
 			continue;
+		}
 
 		break;
 	}

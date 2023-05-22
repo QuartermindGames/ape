@@ -252,7 +252,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 
 void PS_Draw( const PSEmitter *emitter, const OgeCamera *camera )
 {
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_ALPHA ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

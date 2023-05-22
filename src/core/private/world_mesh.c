@@ -280,7 +280,7 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 
 			PL_DELETE( indices );
 
-			g_gfxPerfStats.numFacesDrawn++;
+			oge_RendererPerformance_.numFacesDrawn++;
 
 			faceNode = PlGetNextLinkedListNode( faceNode );
 		}

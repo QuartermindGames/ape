@@ -13,7 +13,7 @@
 
 static void Act_DrawBasic( Actor *self, void *userData )
 {
-	PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
 
 	YnCore_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
@@ -252,7 +252,7 @@ void Act_DrawActors( OgeCamera *camera, OgeWorldSector *sector )
 		PL_GET_CVAR( "r.showActorBounds", showActorBounds );
 		if ( showActorBounds->b_value )
 		{
-			PlgSetShaderProgram( oge_defaultShaderPrograms[ OGE_SHADER_DEFAULT_VERTEX ] );
+			PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
 			PLColour boxColour;
 			if ( Act_IsVisible( actor, camera ) )

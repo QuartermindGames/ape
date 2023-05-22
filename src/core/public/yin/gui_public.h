@@ -137,6 +137,8 @@ typedef enum GUIFontDefaultType
 	GUI_MAX_FONT_DEFAULTS
 } GUIFontDefaultType;
 
+float GUI_Font_GetLineSpacing( const GUIFont *font );
+
 GUIFont *GUI_Font_GetDefault( GUIFontDefaultType defaultType );
 
 void GUI_Font_Destroy( GUIFont *font );

@@ -47,7 +47,7 @@ YNCoreInputState YnCore_ShellInterface_GetButtonState( YNCoreInputButton inputBu
 YNCoreInputState YnCore_ShellInterface_GetKeyState( int key );
 void ogeShellInterface_GetMousePosition( int *x, int *y );
 void YnCore_ShellInterface_SetMousePosition( int x, int y );
-void YnCore_ShellInterface_GrabMouse( bool grab );
+void ogeShellInterface_GrabMouse( bool grab );
 void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
 void ogeShellInterface_Shutdown( void );
 
