@@ -103,7 +103,7 @@ void YnCore_SetupDefaultRenderState( const OgeViewport *viewport )
 	PLColour clearColour = { 50, 50, 50, 255 };
 
 	OgeWorld *world = Game_GetCurrentWorld();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE ) )
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == OGE_CAMERA_MODE_PERSPECTIVE ) )
 	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
 	}
@@ -524,11 +524,11 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 
 	if ( viewport != NULL )
 	{
-		if ( camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE )
+		if ( camera->mode == OGE_CAMERA_MODE_PERSPECTIVE )
 		{
-			if ( camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME )
+			if ( camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME )
 			{
-				YnCore_World_DrawWireframe( world, camera );
+				ogeWorld_DrawWireframe( world, camera );
 			}
 			else
 			{
@@ -581,7 +581,7 @@ PLGTexture *ogeGetPrimaryDepthAttachment( void )
 	return depthTexture;
 }
 
-void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport )
+void ogeDrawScene_( OgeCamera *camera, const OgeViewport *viewport )
 {
 	oge_RendererPerformance_.cameraPos = camera->internal->position;
 
@@ -592,14 +592,14 @@ void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport )
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	PL_GET_CVAR( "r.wireframe", wireframeMode );
-	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
 	YR_RenderScene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}

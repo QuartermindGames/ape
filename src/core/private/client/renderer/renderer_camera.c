@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: Core camera implementation.
 
 #include <plcore/pl_linkedlist.h>
 
@@ -14,12 +14,12 @@ static PLLinkedList *cameras;
 
 static OgeCamera *activeCamera = NULL;
 
-OgeCamera *YnCore_GetActiveCamera( void )
+OgeCamera *ogeGetActiveCamera( void )
 {
 	return activeCamera;
 }
 
-void YnCore_MakeCameraActive( OgeCamera *camera )
+void ogeMakeCameraActive( OgeCamera *camera )
 {
 	activeCamera = camera;
 }
@@ -27,18 +27,23 @@ void YnCore_MakeCameraActive( OgeCamera *camera )
 /****************************************
  ****************************************/
 
-OgeCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+OgeCamera *ogeCamera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
 	OgeCamera *camera = PL_NEW( OgeCamera );
 
-	camera->mode = YN_CORE_CAMERA_MODE_PERSPECTIVE;
+	camera->mode     = OGE_CAMERA_MODE_PERSPECTIVE;
+	camera->drawMode = OGE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == NULL )
+	{
 		PRINT_ERROR( "Failed to create camera!\nPL: %s\n", PlGetError() );
+	}
 
 	if ( tag != NULL )
+	{
 		strncpy( camera->tag, tag, sizeof( camera->tag ) - 1 );
+	}
 
 	camera->internal->fov      = 75.0f;
 	camera->internal->far      = 1000000.0f;
@@ -64,7 +69,7 @@ OgeCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, con
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void YnCore_Camera_Destroy( OgeCamera *camera )
+void ogeCamera_Destroy( OgeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -90,22 +95,22 @@ void YnCore_Camera_Destroy( OgeCamera *camera )
 	}
 }
 
-void YnCore_Camera_SetPosition( OgeCamera *camera, const PLVector3 *position )
+void ogeCamera_SetPosition( OgeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 }
 
-void YnCore_Camera_SetAngles( OgeCamera *camera, const PLVector3 *angles )
+void ogeCamera_SetAngles( OgeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 }
 
-void YR_DrawScene( OgeCamera *camera, const OgeViewport *viewport );
-void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport )
+void ogeDrawScene_( OgeCamera *camera, const OgeViewport *viewport );
+void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport )
 {
 	if ( camera == NULL )
 	{
-		camera = YnCore_GetActiveCamera();
+		camera = ogeGetActiveCamera();
 		if ( camera == NULL )
 		{
 			return;
@@ -164,11 +169,11 @@ void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport )
 	switch ( camera->mode )
 	{
 		default: break;
-		case YN_CORE_CAMERA_MODE_PERSPECTIVE:
+		case OGE_CAMERA_MODE_PERSPECTIVE:
 			camera->internal->angles   = angles;
 			camera->internal->position = position;
 			break;
-		case YN_CORE_CAMERA_MODE_TOP:
+		case OGE_CAMERA_MODE_TOP:
 		{
 			if ( camera->parentActor != NULL )
 			{
@@ -190,5 +195,5 @@ void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport )
 	PlgSetupCamera( camera->internal );
 
 	// Draw the scene into a buffer
-	YR_DrawScene( camera, viewport );
+	ogeDrawScene_( camera, viewport );
 }

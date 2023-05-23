@@ -181,10 +181,10 @@ OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *
 PLLinkedList *YnCore_World_GetLights( const OgeWorld *world );
 PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector );
 
-void YnCore_World_SpawnEntities( OgeWorld *world );
+void ogeWorld_SpawnEntities( OgeWorld *world );
 
 bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera );
-unsigned int *YnCore_World_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles );
+unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles );
 bool YnCore_World_IsFacePortal( const OgeWorldFace *face );
 
 OgeWorldSector *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum );

@@ -17,9 +17,9 @@ static void FW_Game_Initialize( void )
 	Game_RegisterStandardEntityComponents();
 
 	// Register our FW specific components
-	YnCore_EntityManager_RegisterComponent( "fw.character", NULL );
-	YnCore_EntityManager_RegisterComponent( "fw.projectile", NULL );
-	YnCore_EntityManager_RegisterComponent( "fw.weapon", NULL );
+	ogeEntityManager_RegisterComponent( "fw.character", NULL );
+	ogeEntityManager_RegisterComponent( "fw.projectile", NULL );
+	ogeEntityManager_RegisterComponent( "fw.weapon", NULL );
 
 	FW_Menu_Initialize();
 	FW_Terrain_Initialize();
@@ -63,7 +63,9 @@ static void FW_Game_RestoreGame( const char *path )
 
 	NdBranch *entityNode = ndGetChildByName( root, "entityData" );
 	if ( entityNode != NULL )
-		YnCore_EntityManager_Restore( NULL );
+	{
+		ogeEntityManager_Restore( NULL );
+	}
 
 	ndDestroyBranch( entityNode );
 }
@@ -91,7 +93,7 @@ static void FW_Game_DrawMenu( const OgeViewport *viewport )
 static void SpawnWorld( OgeWorld *world )
 {
 	NdBranch *propertyNode;
-	if ( ( propertyNode = YnCore_World_GetProperty( world, "heightmap" ) ) != NULL )
+	if ( ( propertyNode = ogeWorld_GetProperty( world, "heightmap" ) ) != NULL )
 	{
 		PLPath path;
 		if ( ndGetStr( propertyNode, path, sizeof( path ) ) == ND_ERROR_SUCCESS )
@@ -99,13 +101,19 @@ static void SpawnWorld( OgeWorld *world )
 
 		}
 		else
+		{
 			Game_Warning( "Invalid heightmap property encountered for world (%s)!\n", YnCore_World_GetPath( world ) );
+		}
 	}
 	else
+	{
 		Game_Warning( "No heightmap provided for world (%s)!\n", YnCore_World_GetPath( world ) );
+	}
 
-	if ( ( propertyNode = YnCore_World_GetProperty( world, "waterLevel" ) ) != NULL )
+	if ( ( propertyNode = ogeWorld_GetProperty( world, "waterLevel" ) ) != NULL )
+	{
 		ndGetF32( propertyNode, &fwGameState.simState.waterHeight );
+	}
 }
 
 static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user )

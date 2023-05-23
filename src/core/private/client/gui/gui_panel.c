@@ -128,8 +128,9 @@ void GUI_Panel_Destroy( GUIPanel *self )
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUI_Panel_Destroy( PlGetLinkedListNodeUserData( childNode ) );
-		childNode = PlGetNextLinkedListNode( childNode );
+		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		childNode            = PlGetNextLinkedListNode( childNode );
+		GUI_Panel_Destroy( childPanel );
 	}
 	PlDestroyLinkedList( self->children );
 
@@ -308,7 +309,7 @@ void GUI_Panel_GetContentPosition( GUIPanel *self, int *x, int *y )
  */
 void GUI_Panel_GetAbsolutePosition( GUIPanel *self, int *x, int *y )
 {
-	int       bx = 0, by = 0;
+	int bx = 0, by = 0;
 	GUIPanel *parent = self->parent;
 	while ( parent != NULL )
 	{

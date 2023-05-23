@@ -5,8 +5,8 @@
 
 #include <yin/core_renderer.h>
 
-typedef struct YNCoreTexture
+typedef struct OgeTexture
 {
 	OgeMemoryReference reference;
 	PLGTexture *internal;
-} YNCoreTexture;
+} OgeTexture;

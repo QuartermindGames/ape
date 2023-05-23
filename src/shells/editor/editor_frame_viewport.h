@@ -39,10 +39,10 @@ namespace os::editor
 		FXGLVisual *visual_;
 		FXGLContext *context_;
 
-		FXToggleButton *viewModeButtons_[ YN_CORE_CAMERA_MAX_MODES ];
-		FXToggleButton *drawModeButtons_[ YN_CORE_CAMERA_MAX_DRAW_MODES ];
+		FXToggleButton *viewModeButtons_[ OGE_CAMERA_MAX_MODES ];
+		FXToggleButton *drawModeButtons_[ OGE_CAMERA_MAX_DRAW_MODES ];
 
-		OgeCameraDrawMode drawMode_{ YN_CORE_CAMERA_DRAW_MODE_WIREFRAME };
+		OgeCameraDrawMode drawMode_{ OGE_CAMERA_DRAW_MODE_WIREFRAME };
 
 		float zoomScale_{ 1.0f };
 

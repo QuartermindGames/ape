@@ -8,7 +8,7 @@
 typedef struct OgeCamera OgeCamera;
 typedef struct OgeViewport OgeViewport;
 typedef struct OgeLight OgeLight;
-typedef struct YNCoreTexture YNCoreTexture;
+typedef struct OgeTexture OgeTexture;
 typedef struct OgeMaterial OgeMaterial;
 
 // TODO: retire this...
@@ -39,12 +39,12 @@ unsigned int YnCore_Viewport_GetAverageFPS( const OgeViewport *viewport );
  * If it's already cached, will return the existing instance.
  * Will return NULL on fail.
  */
-YNCoreTexture *YnCore_Texture_Load( const char *path );
+OgeTexture *YnCore_Texture_Load( const char *path );
 
 /**
  * Releases the reference for the given texture.
  */
-void YnCore_Texture_Release( YNCoreTexture *texture );
+void YnCore_Texture_Release( OgeTexture *texture );
 
 /**********************************************************/
 // Materials

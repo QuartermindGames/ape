@@ -2,6 +2,8 @@
 
 cmake_minimum_required(VERSION 3.23)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 project(Yin
         LANGUAGES C CXX
         )
@@ -101,25 +103,6 @@ add_subdirectory(src/kernel/plmodel/)
 set_target_properties(plmodel PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
-
-function(build_openal)
-    set(LIBTYPE "STATIC")
-    add_definitions("-DAL_LIBTYPE_STATIC")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/3rdparty/openal-soft/lib/")
-    set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs")
-    set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs")
-    set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs")
-    add_subdirectory(src/3rdparty/openal-soft)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        target_compile_options(OpenAL PRIVATE "-w")
-    endif()
-    set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(common PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(ex-common PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(build_version PROPERTIES FOLDER "3rdParty/OpenAL")
-endfunction()
-
-build_openal()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)

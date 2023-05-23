@@ -21,7 +21,7 @@ bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera )
 	return true;
 }
 
-unsigned int *YnCore_World_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles )
+unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles )
 {
 	if ( face->numVertices < 3 )
 		return NULL;
@@ -273,7 +273,7 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 			OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 
 			unsigned int numTriangles;
-			unsigned int *indices  = YnCore_World_ConvertFaceToTriangles( face, &numTriangles );
+			unsigned int *indices  = ogeWorld_ConvertFaceToTriangles( face, &numTriangles );
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k, curIndex += 3 )
 				PlgAddMeshTriangle( worldMesh->drawMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );

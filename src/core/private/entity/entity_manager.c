@@ -30,7 +30,7 @@ static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 	YnCore_EntityManager_DestroyEntity( entity );
 }
 
-void YnCore_EntityManager_Initialize( void )
+void ogeEntityManager_Initialize( void )
 {
 	PlRegisterConsoleCommand( "entity.test", "Test the entity system.", 0, TestCommand );
 
@@ -49,7 +49,7 @@ void YnCore_EntityManager_Initialize( void )
 	PRINT( "Entity Manager initialized\n" );
 }
 
-void YnCore_EntityManager_Shutdown( void )
+void ogeEntityManager_Shutdown( void )
 {
 	// Clear up all entities first
 	if ( entityList != NULL )
@@ -139,12 +139,12 @@ static void DeserializeEntityCallback( YNCoreEntityComponent *component, YNCoreE
 	componentTemplate->callbackTable->deserializeFunction( component, ( NdBranch * ) user );
 }
 
-void YnCore_EntityManager_Tick( void )
+void ogeEntityManager_Tick( void )
 {
 	IterateEntities( CallEntityTick, NULL );
 }
 
-void YnCore_EntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector )
+void ogeEntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector )
 {
 	IterateEntities( CallEntityDraw, NULL );
 }
@@ -154,7 +154,7 @@ void YnCore_EntityManager_Save( NdBranch *root )
 	IterateEntities( SerializeEntityCallback, root );
 }
 
-void YnCore_EntityManager_Restore( NdBranch *root )
+void ogeEntityManager_Restore( NdBranch *root )
 {
 	IterateEntities( DeserializeEntityCallback, root );
 }
@@ -272,7 +272,7 @@ static void RegisterEntityPrefab( const char *path, PL_UNUSED void *userData )
 	YnCore_EntityManager_RegisterEntityPrefab( path );
 }
 
-void YnCore_EntityManager_RegisterEntityPrefabs( void )
+void ogeEntityManager_RegisterEntityPrefabs( void )
 {
 	PRINT( "Registering entity prefabs...\n" );
 
@@ -295,7 +295,7 @@ const YNCoreEntityComponentBase *YnCore_EntityManager_GetComponentBaseByName( co
 	return PlLookupHashTableUserData( componentSpawnTable, name, strlen( name ) );
 }
 
-bool YnCore_EntityManager_RegisterComponent( const char *name, const YNCoreEntityComponentCallbackTable *callbackTable )
+bool ogeEntityManager_RegisterComponent( const char *name, const YNCoreEntityComponentCallbackTable *callbackTable )
 {
 	// check if it's been registered already
 	if ( YnCore_EntityManager_GetComponentBaseByName( name ) != NULL )

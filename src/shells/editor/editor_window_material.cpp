@@ -23,7 +23,7 @@ os::editor::MaterialWindow::MaterialWindow( FXApp *app, OgeMaterial *material )
 {
 	this->material = material;
 
-	viewportFrame = new ViewportFrame( this, nullptr, YN_CORE_CAMERA_MODE_PERSPECTIVE );
+	viewportFrame = new ViewportFrame( this, nullptr, OGE_CAMERA_MODE_PERSPECTIVE );
 }
 
 os::editor::MaterialWindow::~MaterialWindow()

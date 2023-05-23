@@ -30,7 +30,7 @@ typedef struct OgeWorld OgeWorld;
 /* World */
 
 OgeWorld *YnCore_World_Create( void );
-OgeWorld *YnCore_World_Load( const char *path );
+OgeWorld *ogeWorld_Load( const char *path );
 
 /**
  * Attempts to save the given world to the destination.
@@ -38,12 +38,12 @@ OgeWorld *YnCore_World_Load( const char *path );
  */
 bool YnCore_World_Save( OgeWorld *world, const char *path );
 
-void YnCore_World_Destroy( OgeWorld *world );
-struct NdBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName );
+void ogeWorld_Destroy( OgeWorld *world );
+struct NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName );
 PLColourF32 YnCore_World_GetAmbience( OgeWorld *world );
 PLColourF32 YnCore_World_GetSunColour( OgeWorld *world );
 PLVector3 YnCore_World_GetSunPosition( OgeWorld *world );
-void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera );
+void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera );
 void YnCore_World_Draw( OgeWorld *world, OgeWorldSector *originSector, OgeCamera *camera );
 void YnCore_World_SetupGlobalDefaults( OgeWorld *world );
 

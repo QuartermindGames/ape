@@ -477,7 +477,7 @@ void Client_Console_RegisterConsoleVariables( void )
 	PlRegisterConsoleVariable( "console.drawBackground", "Whether or not to display background.", "true", PL_VAR_BOOL, NULL, NULL, true );
 	PlRegisterConsoleVariable( "console.drawShadow", "Shadow for text, which will improve legibility. "
 	                                                 "Disabling might yield a slight performance boost on slower machines.",
-	                           "true", PL_VAR_BOOL, &drawShadow, NULL, true );
+	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
 	Renderer_RegisterConsoleVariables();
 

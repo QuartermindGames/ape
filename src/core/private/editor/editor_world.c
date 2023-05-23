@@ -46,7 +46,7 @@ static void DestroyWorldCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	YnCore_World_Destroy( world );
+	ogeWorld_Destroy( world );
 	world = NULL;
 }
 
@@ -125,9 +125,9 @@ static void ToggleView( YNCoreInputState state )
 	}
 
 	context.camera->mode++;
-	if ( context.camera->mode >= YN_CORE_CAMERA_MAX_MODES )
+	if ( context.camera->mode >= OGE_CAMERA_MAX_MODES )
 	{
-		context.camera->mode = YN_CORE_CAMERA_MODE_PERSPECTIVE;
+		context.camera->mode = OGE_CAMERA_MODE_PERSPECTIVE;
 	}
 }
 
@@ -137,12 +137,12 @@ static void InitializeWorldEditor( void )
 	{
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = YnCore_Camera_Create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = ogeCamera_Create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera           = cameras[ 0 ];
-	context.camera->mode     = YN_CORE_CAMERA_MODE_TOP;
-	context.camera->drawMode = YN_CORE_CAMERA_DRAW_MODE_WIREFRAME;
+	context.camera->mode     = OGE_CAMERA_MODE_TOP;
+	context.camera->drawMode = OGE_CAMERA_DRAW_MODE_WIREFRAME;
 
 	YnCore_Input_RegisterAction( "editor.world.gridUp", NULL, 0, ( YNCoreInputKey[] ){ '[' }, 1, IncreaseGridSize );
 	YnCore_Input_RegisterAction( "editor.world.gridDown", NULL, 0, ( YNCoreInputKey[] ){ ']' }, 1, DecreaseGridSize );
@@ -162,7 +162,7 @@ static void DrawWorldEditorGUI( void )
 	int w, h;
 	PlgGetViewport( NULL, NULL, &w, &h );
 
-	if ( context.camera != NULL && ( context.camera->mode != YN_CORE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
+	if ( context.camera != NULL && ( context.camera->mode != OGE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
 	{
 		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
@@ -187,16 +187,16 @@ static void DrawWorldEditorGUI( void )
 		{
 			default:
 				break;
-			case YN_CORE_CAMERA_MODE_TOP:
+			case OGE_CAMERA_MODE_TOP:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
 				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
+			case OGE_CAMERA_MODE_LEFT:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ 0.0f, -y, -x } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
 				break;
-			case YN_CORE_CAMERA_MODE_FRONT:
+			case OGE_CAMERA_MODE_FRONT:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
 				break;
@@ -211,11 +211,11 @@ static void DrawWorldEditorGUI( void )
 		tmp.internal = ogeGetAuxCamera();
 		switch ( context.camera->drawMode )
 		{
-			case YN_CORE_CAMERA_DRAW_MODE_WIREFRAME:
-				YnCore_World_DrawWireframe( world, &tmp );
+			case OGE_CAMERA_DRAW_MODE_WIREFRAME:
+				ogeWorld_DrawWireframe( world, &tmp );
 				break;
-			case YN_CORE_CAMERA_DRAW_MODE_SOLID:
-			case YN_CORE_CAMERA_DRAW_MODE_TEXTURED:
+			case OGE_CAMERA_DRAW_MODE_SOLID:
+			case OGE_CAMERA_DRAW_MODE_TEXTURED:
 				YnCore_World_Draw( world, NULL, &tmp );
 				break;
 			default:
@@ -240,16 +240,16 @@ static void DrawWorldEditorGUI( void )
 		switch ( context.camera->mode )
 		{
 			default:
-			case YN_CORE_CAMERA_MODE_FRONT:
+			case OGE_CAMERA_MODE_FRONT:
 				label = "Front";
 				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
+			case OGE_CAMERA_MODE_LEFT:
 				label = "Left";
 				break;
-			case YN_CORE_CAMERA_MODE_PERSPECTIVE:
+			case OGE_CAMERA_MODE_PERSPECTIVE:
 				label = "Perspective";
 				break;
-			case YN_CORE_CAMERA_MODE_TOP:
+			case OGE_CAMERA_MODE_TOP:
 				label = "Top";
 				break;
 		}

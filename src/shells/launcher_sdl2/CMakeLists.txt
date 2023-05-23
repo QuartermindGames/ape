@@ -10,9 +10,7 @@ add_dependencies(yin-shell_sdl2
         plcore
         plgraphics
         plmodel
-
         pl_gl_driver
-
         yin-core
         )
 
@@ -24,12 +22,8 @@ set_target_properties(yin-shell_sdl2 PROPERTIES
 
 if (MINGW)
     target_link_libraries(yin-shell_sdl2
-            mingw32
-            Imm32)
+            -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive)
 endif ()
 
 target_link_libraries(yin-shell_sdl2
-        SDL2main
-        SDL2
-        yin-core
-        )
+        yin-core)

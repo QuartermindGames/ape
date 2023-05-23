@@ -17,16 +17,16 @@ void Game_Display( void )
 void Game_RegisterStandardEntityComponents( void )
 {
 	const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
 
 	const YNCoreEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "movement", Game_Component_Movement_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "movement", Game_Component_Movement_GetCallbackTable() );
 
 	const YNCoreEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "camera", Game_Component_Camera_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "camera", Game_Component_Camera_GetCallbackTable() );
 
 	const YNCoreEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 }
 
 void Game_PlayerConnected( const char *name, unsigned int id )

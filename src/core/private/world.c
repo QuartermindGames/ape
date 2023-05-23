@@ -40,14 +40,14 @@ OgeWorld *YnCore_World_LoadFromNode( NdBranch *root )
 	OgeWorld *world = YnCore_World_Create();
 	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
 	{
-		YnCore_World_Destroy( world );
+		ogeWorld_Destroy( world );
 		world = NULL;
 	}
 
 	return world;
 }
 
-OgeWorld *YnCore_World_Load( const char *path )
+OgeWorld *ogeWorld_Load( const char *path )
 {
 	NdBranch *root = ndLoadFile( path, "world" );
 	if ( root == NULL )
@@ -109,7 +109,7 @@ static void DestroyWorldEntities( OgeWorld *world )
 	}
 }
 
-void YnCore_World_Destroy( OgeWorld *world )
+void ogeWorld_Destroy( OgeWorld *world )
 {
 	if ( world == NULL )
 		return;
@@ -143,7 +143,7 @@ PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector )
 	return sector->lights;
 }
 
-void YnCore_World_SpawnEntities( OgeWorld *world )
+void ogeWorld_SpawnEntities( OgeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entities );
 	while ( node != NULL )
@@ -158,7 +158,7 @@ void YnCore_World_SpawnEntities( OgeWorld *world )
  * Global World Properties
  ****************************************/
 
-NdBranch *YnCore_World_GetProperty( OgeWorld *world, const char *propertyName )
+NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
 		return NULL;

@@ -10,7 +10,7 @@ void ogeShutdownClient( void );
 void ogeDrawClient( OgeViewport *viewport );
 void ogeTickClient( void );
 
-void YnCore_Client_InitiateConnection( const char *ip, unsigned short port );
+void ogeClient_InitiateConnection( const char *ip, unsigned short port );
 void YnCore_Client_Disconnect( void );
 
 #define CLIENT_PRINT( FORMAT, ... ) \

@@ -45,16 +45,16 @@ typedef struct YNCoreEntityComponentCallbackTable
 	unsigned int numEditorFields;
 } YNCoreEntityComponentCallbackTable;
 
-void YnCore_EntityManager_Initialize( void );
-void YnCore_EntityManager_Shutdown( void );
-void YnCore_EntityManager_Tick( void );
-void YnCore_EntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector );
+void ogeEntityManager_Initialize( void );
+void ogeEntityManager_Shutdown( void );
+void ogeEntityManager_Tick( void );
+void ogeEntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector );
 void YnCore_EntityManager_Save( NdBranch *root );
-void YnCore_EntityManager_Restore( NdBranch *root );
+void ogeEntityManager_Restore( NdBranch *root );
 
 // Prefabs
 void YnCore_EntityManager_RegisterEntityPrefab( const char *path );
-void YnCore_EntityManager_RegisterEntityPrefabs( void );
+void ogeEntityManager_RegisterEntityPrefabs( void );
 const YNCoreEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
 
 YNCoreEntity *YnCore_EntityManager_CreateEntity( void );
@@ -66,7 +66,7 @@ void YnCore_EntityManager_DestroyEntity( YNCoreEntity *entity );
  */
 unsigned int YnCore_EntityManager_GetNumOfEntities( void );
 
-bool YnCore_EntityManager_RegisterComponent( const char *name, const YNCoreEntityComponentCallbackTable *callbackTable );
+bool ogeEntityManager_RegisterComponent( const char *name, const YNCoreEntityComponentCallbackTable *callbackTable );
 const YNCoreEntityComponentBase *YnCore_EntityManager_GetComponentBaseByName( const char *name );
 YNCoreEntityComponent *YnCore_EntityManager_AddComponentToEntity( YNCoreEntity *entity, const char *name );
 

@@ -145,6 +145,7 @@ OgeViewport *ogeShellInterface_CreateWindow( const char *title, int width, int h
 	return YnCore_Viewport_Create( 0, 0, width, height, sdlWindow );
 }
 
+#if 0
 static void DestroyWindow( void )
 {
 	if ( sdlGLContext != NULL )
@@ -153,6 +154,7 @@ static void DestroyWindow( void )
 	if ( sdlWindow != NULL )
 		SDL_DestroyWindow( sdlWindow );
 }
+#endif
 
 bool ogeShellInterface_SetWindowSize( int *width, int *height )
 {
@@ -546,7 +548,20 @@ int Launcher_Initialize( int argc, char **argv )
 	return EXIT_SUCCESS;
 }
 
+#if defined( _WIN32 )
+
+#include <windows.h>
+
+int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+{
+	return Launcher_Initialize( __argc, __argv );
+}
+
+#else
+
 int main( int argc, char **argv )
 {
 	return Launcher_Initialize( argc, argv );
 }
+
+#endif

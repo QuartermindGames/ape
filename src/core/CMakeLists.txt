@@ -94,25 +94,20 @@ set_target_properties(yin-core PROPERTIES
         PREFIX ""
         )
 
-# Setup link libraries
-if (NOT UNIX AND NOT MSVC)
+if(WIN32)
     target_link_libraries(yin-core
-            mingw32
-            )
-endif ()
-if (MSVC)
+            SDL2_dll)
+else()
     target_link_libraries(yin-core
-            XAudio2
-            )
-endif ()
+            SDL2
+            OpenAL)
+endif()
 
 target_link_libraries(yin-core
-        OpenAL
-        SDL2
-        yin-common
-        yin-node
-        yin-game
         plcore
         plgraphics
         plmodel
+        yin-common
+        yin-node
+        yin-game
         )

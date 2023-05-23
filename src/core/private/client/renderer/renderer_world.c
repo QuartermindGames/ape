@@ -124,7 +124,7 @@ static void DrawFace( OgeWorldMesh *mesh, OgeWorldFace *face )
 	 * fast enough for what I need
 	 * */
 	unsigned int numTriangles;
-	unsigned int *indices  = YnCore_World_ConvertFaceToTriangles( face, &numTriangles );
+	unsigned int *indices  = ogeWorld_ConvertFaceToTriangles( face, &numTriangles );
 	unsigned int *curIndex = indices;
 	for ( unsigned int k = 0; k < numTriangles; ++k, curIndex += 3 )
 	{
@@ -339,8 +339,7 @@ static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *came
 
 	DrawSectorBody( sector, sector->mesh, camera );
 
-	Act_DrawActors( camera, sector );
-	YnCore_EntityManager_Draw( camera, sector );
+	ogeEntityManager_Draw( camera, sector );
 }
 
 /**
@@ -349,10 +348,12 @@ static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *came
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera )
+void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 {
 	if ( world == NULL )
+	{
 		return;
+	}
 
 	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
 
@@ -370,7 +371,7 @@ void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 			continue;
 		}
 
-		OgeWorldMesh *mesh  = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh     = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{
@@ -415,7 +416,7 @@ void YnCore_World_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 			continue;
 		}
 
-		OgeWorldMesh *mesh  = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh     = world->sectors[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{

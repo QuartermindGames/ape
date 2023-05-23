@@ -2,6 +2,8 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 // Purpose: OpenAL driver for Yin
 
+#if !defined( _WIN32 )
+
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/efx.h>
@@ -234,3 +236,11 @@ const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void )
 
 	return &driverInterface;
 }
+
+#else
+
+#include "audio.h"
+
+const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void ) { return NULL; }
+
+#endif

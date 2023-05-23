@@ -9,16 +9,16 @@ static PLLinkedList *textures;
 
 static void CleanupTexture( void *user )
 {
-	PlgDestroyTexture( ( ( YNCoreTexture * ) user )->internal );
+	PlgDestroyTexture( ( ( OgeTexture * ) user )->internal );
 }
 
-YNCoreTexture *YnCore_Texture_Load( const char *path )
+OgeTexture *YnCore_Texture_Load( const char *path )
 {
 	PLGTexture *internal = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( internal == NULL )
 		return NULL;
 
-	YNCoreTexture *texture  = PL_NEW( YNCoreTexture );
+	OgeTexture *texture  = PL_NEW( OgeTexture );
 	texture->internal = internal;
 
 	ogeMemoryManager_SetupReference( "texture", MEM_CACHE_TEXTURES, &texture->reference, CleanupTexture, texture );
@@ -26,7 +26,7 @@ YNCoreTexture *YnCore_Texture_Load( const char *path )
 	return texture;
 }
 
-void YnCore_Texture_Release( YNCoreTexture *texture )
+void YnCore_Texture_Release( OgeTexture *texture )
 {
 	ogeMemoryManager_ReleaseReference( &texture->reference );
 }

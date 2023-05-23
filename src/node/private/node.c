@@ -635,6 +635,11 @@ NdBranch *ndCopyBranch( NdBranch *node )
 
 void ndDestroyBranch( NdBranch *node )
 {
+	if ( node == NULL )
+	{
+		return;
+	}
+
 	PlFree( node->name.buf );
 	PlFree( node->data.buf );
 

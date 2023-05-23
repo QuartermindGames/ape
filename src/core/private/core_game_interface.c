@@ -39,7 +39,7 @@ static void SpawnWorldCommand( unsigned int argc, char **argv )
  * PUBLIC
  ****************************************/
 
-GameState gameState;
+GameState oge_gameState_;
 
 void ogeInitializeGame( void )
 {
@@ -58,14 +58,14 @@ void ogeInitializeGame( void )
 
 	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, SpawnWorldCommand );
 
-	PL_ZERO_( gameState );
+	PL_ZERO_( oge_gameState_ );
 
-	YnCore_EntityManager_Initialize();
+	ogeEntityManager_Initialize();
 
 	const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
 	const YNCoreEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
-	YnCore_EntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
+	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 
 	gameModeInterface = Game_GetModeInterface();
 	if ( gameModeInterface == NULL )
@@ -76,7 +76,7 @@ void ogeInitializeGame( void )
 	gameModeInterface->Initialize();
 
 	// has to come last, otherwise we won't find the components!
-	YnCore_EntityManager_RegisterEntityPrefabs();
+	ogeEntityManager_RegisterEntityPrefabs();
 
 	PRINT( "Game initialized!\n" );
 }
@@ -86,7 +86,7 @@ void ogeShutdownGame( void )
 	gameModeInterface->Shutdown();
 	gameModeInterface = NULL;
 
-	YnCore_EntityManager_Shutdown();
+	ogeEntityManager_Shutdown();
 }
 
 MenuState Game_GetMenuState( void )
@@ -96,7 +96,7 @@ MenuState Game_GetMenuState( void )
 
 void Game_Tick( void )
 {
-	YnCore_EntityManager_Tick();
+	ogeEntityManager_Tick();
 
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 }
@@ -111,7 +111,7 @@ void Game_Disconnect( void )
 			 *  might be lost! */
 		}
 
-		YnCore_World_Destroy( currentWorld );
+		ogeWorld_Destroy( currentWorld );
 		currentWorld = NULL;
 	}
 
@@ -121,7 +121,7 @@ void Game_Disconnect( void )
 void Game_SetupWorldProperties( OgeWorld *world )
 {
 	NdBranch *prop;
-	if ( ( prop = YnCore_World_GetProperty( world, "music" ) ) != NULL )
+	if ( ( prop = ogeWorld_GetProperty( world, "music" ) ) != NULL )
 	{
 		PLPath musicPath;
 		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS )
@@ -140,7 +140,7 @@ void Game_SpawnWorld( const char *worldPath )
 
 	Game_Disconnect();
 
-	OgeWorld *world = YnCore_World_Load( worldPath );
+	OgeWorld *world = ogeWorld_Load( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
@@ -165,11 +165,11 @@ void Game_SpawnWorld( const char *worldPath )
 
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
 
-	YnCore_World_SpawnEntities( world );
+	ogeWorld_SpawnEntities( world );
 
 	Server_Start( "localhost", 0 );
 
-	YnCore_Client_InitiateConnection( "localhost", Server_GetPort() );
+	ogeClient_InitiateConnection( "localhost", Server_GetPort() );
 }
 
 OgeWorld *Game_GetCurrentWorld( void )

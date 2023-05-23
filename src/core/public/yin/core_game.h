@@ -9,7 +9,7 @@ typedef struct GameState
 {
 	int mode, oldMode;
 } GameState;
-extern GameState gameState;
+extern GameState oge_gameState_;
 
 void ogeInitializeGame( void );
 void ogeShutdownGame( void );

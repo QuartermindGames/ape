@@ -122,7 +122,7 @@ void YnCore_DrawMenu( const OgeViewport *viewport );
 
 struct OgeShaderProgramIndex *ogeGetShaderProgramByName( const char *name );
 
-void YnCore_DrawPerspective( OgeCamera *camera, const OgeViewport *viewport );
+void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport );
 
 void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h );
 void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation );

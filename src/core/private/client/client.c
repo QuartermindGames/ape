@@ -53,7 +53,7 @@ void ogeDrawClient( OgeViewport *viewport )
 {
 	YnCore_BeginDraw( viewport );
 
-	YnCore_DrawPerspective( viewport->camera, viewport );
+	ogeDrawPerspective_( viewport->camera, viewport );
 
 	OGE_PROFILE_START( PROFILE_DRAW_UI );
 	YnCore_DrawMenu( viewport );
@@ -107,7 +107,7 @@ void ogeTickClient( void )
  * Begin connection process - client will continue connecting per
  * tick until success or failure, and then begin handshake process.
  */
-void YnCore_Client_InitiateConnection( const char *ip, unsigned short port )
+void ogeClient_InitiateConnection( const char *ip, unsigned short port )
 {
 	clientState.netSocket = Net_OpenSocket( ip, port, false );
 	if ( clientState.netSocket == NULL )

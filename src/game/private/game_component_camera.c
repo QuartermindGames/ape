@@ -34,12 +34,12 @@ static void Spawn( YNCoreEntityComponent *self )
 		angles   = &pl_vecOrigin3;
 	}
 
-	GCCAMERA( self )->camera = YnCore_Camera_Create( "dummy", position, angles );
+	GCCAMERA( self )->camera = ogeCamera_Create( "dummy", position, angles );
 }
 
 static void Destroy( YNCoreEntityComponent *self )
 {
-	YnCore_Camera_Destroy( GCCAMERA( self )->camera );
+	ogeCamera_Destroy( GCCAMERA( self )->camera );
 
 	PL_DELETE( GCCAMERA( self ) );
 }
@@ -52,11 +52,11 @@ static void Tick( YNCoreEntityComponent *self )
 	if ( GCCAMERA( self )->transform == NULL )
 		return;
 
-	YnCore_Camera_SetPosition( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->translation );
-	YnCore_Camera_SetAngles( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->angles );
+	ogeCamera_SetPosition( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->translation );
+	ogeCamera_SetAngles( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->angles );
 
 	if ( GCCAMERA( self )->isActive )
-		YnCore_MakeCameraActive( GCCAMERA( self )->camera );
+		ogeMakeCameraActive( GCCAMERA( self )->camera );
 }
 
 const YNCoreEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void )
