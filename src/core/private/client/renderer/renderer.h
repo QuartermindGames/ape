@@ -39,6 +39,7 @@ typedef struct OgeCamera
 	OgeCameraDrawMode drawMode;
 	struct Actor *parentActor;
 	bool enablePostProcessing;
+	PLVector3 forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
 } OgeCamera;
 

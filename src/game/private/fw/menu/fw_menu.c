@@ -47,9 +47,9 @@ void FW_Menu_Initialize( void )
 {
 	// mmm delicious pie
 	interactPie = FW_Menu_CreatePie();
-	FW_Menu_AddPieOption( interactPie, "testing 1", YnCore_Material_Cache( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 2", YnCore_Material_Cache( "materials/ui/pie/icon_mouth.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 3", YnCore_Material_Cache( "materials/ui/pie/icon_tape.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 1", ogeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 2", ogeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 3", ogeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
 	//FW_Menu_SetPieActive( interactPie, true );
 
 	Game_Menu_SetCurrent( &mainMenu );
@@ -96,7 +96,7 @@ bool FW_Menu_HandleInput( void )
 	}
 	if ( YnCore_Input_GetButtonStatus( 0, INPUT_X ) == YN_CORE_INPUT_STATE_PRESSED )
 	{
-		FW_Menu_AddPieOption( interactPie, "testing 4", YnCore_Material_Cache( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+		FW_Menu_AddPieOption( interactPie, "testing 4", ogeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
 		return true;
 	}
 

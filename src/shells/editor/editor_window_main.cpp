@@ -130,7 +130,7 @@ long os::editor::MainWindow::OnOpen( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	ogeWorld_Load( filename.text() );
+	ogeLoadWorld( filename.text() );
 
 	return 0;
 }
@@ -154,7 +154,7 @@ long os::editor::MainWindow::OpenMaterial( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	OgeMaterial *material = YnCore_Material_Cache( filename.text(), YN_CORE_CACHE_GROUP_EDITOR, false, false );
+	OgeMaterial *material = ogeCacheMaterial( filename.text(), YN_CORE_CACHE_GROUP_EDITOR, false, false );
 	if ( material == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to load material (%s)!", filename.text() );

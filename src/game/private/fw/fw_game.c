@@ -92,6 +92,7 @@ static void FW_Game_DrawMenu( const OgeViewport *viewport )
 
 static void SpawnWorld( OgeWorld *world )
 {
+#if 0
 	NdBranch *propertyNode;
 	if ( ( propertyNode = ogeWorld_GetProperty( world, "heightmap" ) ) != NULL )
 	{
@@ -114,6 +115,7 @@ static void SpawnWorld( OgeWorld *world )
 	{
 		ndGetF32( propertyNode, &fwGameState.simState.waterHeight );
 	}
+#endif
 }
 
 static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user )

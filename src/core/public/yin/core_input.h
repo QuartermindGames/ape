@@ -6,7 +6,7 @@
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
-typedef enum YNCoreInputButton
+typedef enum OgeInputButton
 {
 	YN_CORE_INPUT_INVALID,
 
@@ -32,18 +32,18 @@ typedef enum YNCoreInputButton
 	INPUT_RT,
 
 	YN_CORE_MAX_BUTTON_INPUTS
-} YNCoreInputButton;
+} OgeInputButton;
 
-typedef enum YNCoreInputMouseButton
+typedef enum OgeInputMouseButton
 {
 	CLIENT_INPUT_MOUSE_BUTTON_LEFT,
 	CLIENT_INPUT_MOUSE_BUTTON_RIGHT,
 	CLIENT_INPUT_MOUSE_BUTTON_MIDDLE,
 
 	YN_CORE_MAX_INPUT_MOUSE_BUTTONS
-} YNCoreInputMouseButton;
+} OgeInputMouseButton;
 
-typedef enum YNCoreInputKey
+typedef enum OgeInputKey
 {
 	KEY_INVALID = -1,
 
@@ -88,42 +88,56 @@ typedef enum YNCoreInputKey
 	KEY_RIGHT_ALT,
 
 	YN_CORE_MAX_KEY_INPUTS
-} YNCoreInputKey;
+} OgeInputKey;
 
-typedef enum YNCoreInputState
+typedef enum OgeInputState
 {
-	YN_CORE_INPUT_STATE_NONE,     /* key has no state */
-	YN_CORE_INPUT_STATE_PRESSED,  /* key has been pressed */
-	YN_CORE_INPUT_STATE_DOWN,     /* key is still down */
-	YN_CORE_INPUT_STATE_RELEASED, /* key is up */
-} YNCoreInputState;
+	OGE_INPUT_STATE_NONE,     /* key has no state */
+	OGE_INPUT_STATE_PRESSED,  /* key has been pressed */
+	OGE_INPUT_STATE_DOWN,     /* key is still down */
+	OGE_INPUT_STATE_RELEASED, /* key is up */
+} OgeInputState;
 
 PL_EXTERN_C
 
-typedef enum ClientInputDeviceType
+typedef enum OgeInputDeviceType
 {
 	CLIENT_INPUT_DEVICE_NONE,
 	CLIENT_INPUT_DEVICE_KEYBOARD,
 	CLIENT_INPUT_DEVICE_MOUSE,
 	CLIENT_INPUT_DEVICE_TOUCH,
 	CLIENT_INPUT_DEVICE_CONTROLLER,
-} ClientInputDeviceType;
+} OgeInputDeviceType;
 
 // Controller API
 
 /**
  * Returns the number of available controllers.
  */
-unsigned int YnCore_Input_GetNumControllers( void );
+unsigned int ogeGetNumControllers( void );
 
 /**
  * Returns the button state for the given slot.
  */
-YNCoreInputState YnCore_Input_GetButtonStatus( unsigned int slot, YNCoreInputButton button );
+OgeInputState ogeGetButtonStatus( unsigned int slot, OgeInputButton button );
 
 /**
  * Returns the analogue stick state for the given slot.
  */
-PLVector2 YnCore_Input_GetStickStatus( unsigned int slot, unsigned int stickNum );
+PLVector2 ogeGetJoystickStatus( unsigned int slot, unsigned int stickNum );
+
+// Mouse
+void ogeGetMousePosition( int *x, int *y );
+void ogeGetMouseDelta( int *x, int *y );
+
+// Actions
+
+typedef void ( *OgeInputActionCallback )( OgeInputState state, const char *id );
+
+void ogeRegisterInputAction( const char *id,
+                             OgeInputButton buttons[], unsigned int numDefaultButtons,
+                             OgeInputKey keys[], unsigned int numDefaultKeys,
+                             OgeInputActionCallback actionCallback );
+OgeInputState ogeGetInputActionState( const char *id );
 
 PL_EXTERN_C_END

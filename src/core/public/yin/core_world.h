@@ -19,37 +19,37 @@ typedef struct OgeViewport OgeViewport;
 typedef struct OgeWorldFace OgeWorldFace;
 typedef struct OgeWorldMesh OgeWorldMesh;
 typedef struct OgeWorldObject OgeWorldObject;
-typedef struct OgeWorldSector OgeWorldSector;
+typedef struct OgeWorldRoom OgeWorldRoom;
 typedef struct OgeWorld OgeWorld;
 
 #define YN_CORE_WORLD_VERSION 2
 
-#define YN_CORE_WORLD_EXTENSION      "wld.n"
+#define OGE_WORLD_EXTENSION          "wld.n"
 #define YN_CORE_WORLD_EXTENSION_MESH "wsm.n"
 
 /* World */
 
-OgeWorld *YnCore_World_Create( void );
-OgeWorld *ogeWorld_Load( const char *path );
+OgeWorld *ogeCreateWorld( void );
+OgeWorld *ogeLoadWorld( const char *path );
 
 /**
  * Attempts to save the given world to the destination.
  * On success, returns true but false otherwise.
  */
-bool YnCore_World_Save( OgeWorld *world, const char *path );
+bool ogeSaveWorld( OgeWorld *world, const char *path );
 
-void ogeWorld_Destroy( OgeWorld *world );
+void ogeDestroyWorld( OgeWorld *world );
 struct NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName );
 PLColourF32 YnCore_World_GetAmbience( OgeWorld *world );
 PLColourF32 YnCore_World_GetSunColour( OgeWorld *world );
 PLVector3 YnCore_World_GetSunPosition( OgeWorld *world );
-void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera );
-void YnCore_World_Draw( OgeWorld *world, OgeWorldSector *originSector, OgeCamera *camera );
-void YnCore_World_SetupGlobalDefaults( OgeWorld *world );
+void ogeDrawWorldWireframe( OgeWorld *world, OgeCamera *camera );
+void ogeDrawWorld( OgeWorld *world, OgeWorldRoom *originSector, OgeCamera *camera );
+void ogeSetupGlobalWorldDefaults( OgeWorld *world );
 
 uint64_t YnCore_World_GetLastSaveTime( const OgeWorld *world );
 
-OgeWorldSector *YnCore_World_GetSectorByGlobalOrigin( OgeWorld *world, const PLVector3 *globalOrigin );
+OgeWorldRoom *YnCore_World_GetSectorByGlobalOrigin( OgeWorld *world, const PLVector3 *globalOrigin );
 
 const char *YnCore_World_GetPath( const OgeWorld *world );
 
@@ -68,8 +68,8 @@ const PLCollisionAABB *YnCore_WorldFace_GetBounds( const OgeWorldFace *face );
 
 /* Sector */
 
-struct OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldSector *sector, unsigned int *numLights );
-OgeWorldMesh *YnCore_WorldSector_GetMesh( OgeWorldSector *sector );
-OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldSector *sector, uint32_t *numFaces );
+struct OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldRoom *sector, unsigned int *numLights );
+OgeWorldMesh *YnCore_WorldSector_GetMesh( OgeWorldRoom *sector );
+OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldRoom *sector, uint32_t *numFaces );
 
 PL_EXTERN_C_END

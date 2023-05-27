@@ -2,7 +2,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "core_private.h"
-#include "world.h"
+#include "world/world.h"
 #include "renderer_visibility.h"
 
 PLLinkedList *VIS_GetVisibleFaces( OgeCamera *camera, PLLinkedList *faces )

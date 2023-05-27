@@ -43,8 +43,8 @@ void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, con
 
 ////////////////////////////////////////////////////////////////////
 // Low Level Input
-YNCoreInputState YnCore_ShellInterface_GetButtonState( YNCoreInputButton inputButton );
-YNCoreInputState YnCore_ShellInterface_GetKeyState( int key );
+OgeInputState YnCore_ShellInterface_GetButtonState( OgeInputButton inputButton );
+OgeInputState YnCore_ShellInterface_GetKeyState( int key );
 void ogeShellInterface_GetMousePosition( int *x, int *y );
 void YnCore_ShellInterface_SetMousePosition( int x, int y );
 void ogeShellInterface_GrabMouse( bool grab );

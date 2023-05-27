@@ -90,7 +90,7 @@ void YnCore_InitializeAudio( void )
 	audioInitialized = true;
 }
 
-void Audio_RegisterConsoleVariables( void )
+void ogeRegisterAudioConsoleVariables_( void )
 {
 	PlRegisterConsoleVariable( "audio.volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
 }

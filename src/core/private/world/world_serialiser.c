@@ -52,28 +52,10 @@ static void SerialiseMeshes( const OgeWorld *world, NdBranch *root )
 	}
 }
 
-static void SerialiseSectors( const OgeWorld *world, NdBranch *root )
-{
-	NdBranch *sectorListNode = ndPushBackObjectArray( root, "sectors" );
-	for ( unsigned int i = 0; i < world->numSectors; ++i )
-	{
-		NdBranch *sectorNode = ndPushBackObject( sectorListNode, NULL );
-
-		if ( *world->sectors[ i ].id != '\0' )
-			ndPushBackString( sectorNode, "id", world->sectors[ i ].id );
-
-		if ( world->sectors[ i ].mesh != NULL && *world->sectors[ i ].mesh->id != '\0' )
-			ndPushBackString( sectorNode, "meshId", world->sectors[ i ].mesh->id );
-
-		ndDS_SerializeCollisionAABB( sectorNode, "bounds", &world->sectors[ i ].bounds );
-	}
-}
-
 void YnCore_WorldSerialiser_Begin( const OgeWorld *world, NdBranch *root )
 {
 	ndPushBackI32( root, "version", YN_CORE_WORLD_VERSION );
 	ndPushBackBranch( root, world->globalProperties );
 
 	SerialiseMeshes( world, root );
-	SerialiseSectors( world, root );
 }

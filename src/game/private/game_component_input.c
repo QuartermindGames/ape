@@ -6,7 +6,7 @@
 typedef struct ECInputComponent
 {
 	unsigned int controllerSlot;
-	YNCoreInputState inputStates[ YN_CORE_MAX_BUTTON_INPUTS ];
+	OgeInputState inputStates[ YN_CORE_MAX_BUTTON_INPUTS ];
 } ECInputComponent;
 
 static void Spawn( YNCoreEntityComponent *self )

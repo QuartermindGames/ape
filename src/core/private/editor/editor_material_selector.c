@@ -17,7 +17,7 @@ static unsigned int numMaterials, maxMaterials;
 
 static void CacheMaterialPreviewCallback( const char *path, void *user )
 {
-	OgeMaterial *material = YnCore_Material_Cache( path, YN_CORE_CACHE_GROUP_EDITOR, false, true );
+	OgeMaterial *material = ogeCacheMaterial( path, YN_CORE_CACHE_GROUP_EDITOR, false, true );
 	if ( material == NULL )
 		return;
 

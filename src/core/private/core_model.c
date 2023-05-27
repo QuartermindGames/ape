@@ -140,7 +140,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	{
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
 		userData.numMaterials   = 1;
-		userData.materials[ 0 ] = YnCore_Material_Cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
+		userData.materials[ 0 ] = ogeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 	}
 	else
 	{
@@ -152,7 +152,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
-				userData.materials[ i ] = YnCore_Material_Cache( "materials/engine/fallback_mesh.mat.n", 0, false, false );
+				userData.materials[ i ] = ogeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, false, false );
 				if ( userData.materials[ i ] == NULL )
 				{
 					PRINT_ERROR( "Failed to cache fallback material for mesh!\n" );
@@ -160,7 +160,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 			}
 			else
 			{
-				userData.materials[ i ] = YnCore_Material_Cache( materialPath, 0, true, false );
+				userData.materials[ i ] = ogeCacheMaterial( materialPath, 0, true, false );
 			}
 
 			n = ndGetNextChild( n );

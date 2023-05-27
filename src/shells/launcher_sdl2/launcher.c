@@ -187,20 +187,20 @@ void ogeShellInterface_GetWindowSize( int *width, int *height )
  * INPUT MANAGEMENT
  ****************************************/
 
-static YNCoreInputState buttonStates[ YN_CORE_MAX_BUTTON_INPUTS ];
-YNCoreInputState YnCore_ShellInterface_GetButtonState( YNCoreInputButton inputButton )
+static OgeInputState buttonStates[ YN_CORE_MAX_BUTTON_INPUTS ];
+OgeInputState YnCore_ShellInterface_GetButtonState( OgeInputButton inputButton )
 {
 	if ( inputButton >= YN_CORE_MAX_BUTTON_INPUTS )
-		return YN_CORE_INPUT_STATE_NONE;
+		return OGE_INPUT_STATE_NONE;
 
 	return buttonStates[ inputButton ];
 }
 
-static YNCoreInputState keyStates[ YN_CORE_MAX_KEY_INPUTS ];
-YNCoreInputState YnCore_ShellInterface_GetKeyState( int key )
+static OgeInputState keyStates[ YN_CORE_MAX_KEY_INPUTS ];
+OgeInputState YnCore_ShellInterface_GetKeyState( int key )
 {
 	if ( key >= YN_CORE_MAX_KEY_INPUTS )
-		return YN_CORE_INPUT_STATE_NONE;
+		return OGE_INPUT_STATE_NONE;
 
 	return keyStates[ key ];
 }
@@ -510,7 +510,7 @@ int Launcher_Initialize( int argc, char **argv )
 						break;
 					}
 
-					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? YN_CORE_INPUT_STATE_DOWN : YN_CORE_INPUT_STATE_NONE;
+					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_NONE;
 
 					ogeHandleKeyboardEvent( key, keyStates[ key ] );
 					break;

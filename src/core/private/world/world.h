@@ -6,6 +6,8 @@
 #include <plcore/pl_physics.h>
 #include <plcore/pl_array_vector.h>
 
+#include "core_memory_manager.h"
+
 #include "client/renderer/renderer_scenegraph.h"
 #include "entity/entity.h"
 
@@ -42,36 +44,11 @@ typedef enum OgeWorldObjectCollisionType
 
 #define WORLD_FACE_MAX_SIDES 32
 
-typedef struct OgeWorldSector OgeWorldSector;
+typedef struct OgeWorldRoom OgeWorldRoom;
+typedef struct OgeWorldFaceVertex OgeWorldFaceVertex;
 typedef struct OgeWorldFace OgeWorldFace;
 typedef struct OgeWorldMesh OgeWorldMesh;
-
-typedef struct OgeWorldFace
-{
-	PLVector3 normal;
-	PLVector3 origin;
-
-	struct OgeMaterial *material;
-	// todo: reduce the below to transform matrix???
-	float materialAngle;
-	PLVector2 materialOffset;
-	PLVector2 materialScale;
-
-	unsigned int vertices[ WORLD_FACE_MAX_SIDES ];
-	uint8_t numVertices;
-
-	uint8_t flags; /* portal, mirror, skip etc. */
-
-	OgeWorldMesh *parentMesh;
-	OgeWorldSector *parentSector;
-
-	// if it's a portal
-	bool isPortalClosed;           // if true, we can't see through the portal
-	OgeWorldSector *targetSector;  // the sector this portal connects to
-	OgeWorldFace *targetSectorFace;// the 'door' on the other side
-
-	PLCollisionAABB bounds;
-} OgeWorldFace;
+typedef struct OgeWorldPortal OgeWorldPortal;
 
 typedef struct OgeWorldVertex
 {
@@ -79,7 +56,55 @@ typedef struct OgeWorldVertex
 	PLVector3 normal;
 	PLVector2 uv;
 	PLColourF32 colour;
+	PLVectorArray *adjacentFaces;
 } OgeWorldVertex;
+
+typedef struct OgeWorldFaceVertex
+{
+	float textureU, textureV;
+	float lightmapU, lightmapV;
+
+	OgeWorldVertex *u;
+} OgeWorldFaceVertex;
+
+#define OGE_WORLD_FACE_FLAG_SKY        0x01
+#define OGE_WORLD_FACE_FLAG_MIRRORED   0x02
+#define OGE_WORLD_FACE_FLAG_LIQUID     0x04
+#define OGE_WORLD_FACE_FLAG_DETAIL     0x08
+#define OGE_WORLD_FACE_FLAG_SCROLL     0x10
+#define OGE_WORLD_FACE_FLAG_FULLBRIGHT 0x20
+#define OGE_WORLD_FACE_FLAG_ALPHA      0x40
+#define OGE_WORLD_FACE_FLAG_HOLES      0x80
+#define OGE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
+#define OGE_WORLD_FACE_FLAG_INVISIBLE  0x2000
+
+typedef struct OgeWorldFace
+{
+	PLVector3 normal;
+	PLVector3 origin;
+
+	OgeWorldPortal *portal;
+
+	struct OgeMaterial *material;
+	// todo: reduce the below to transform matrix???
+	float materialAngle;
+	PLVector2 materialOffset;
+	PLVector2 materialScale;
+
+	PLVectorArray *vertices;// OgeWorldFaceVertex
+	PLLinkedList *edgeLoop; // OgeWorldFaceVertex
+
+	uint8_t flags;          /* portal, mirror, skip etc. */
+
+	OgeWorldMesh *parentMesh;
+	OgeWorldRoom *parentSector;
+
+	// if it's a portal
+	bool isPortalClosed;       // if true, we can't see through the portal
+	OgeWorldRoom *targetSector;// the sector this portal connects to
+
+	PLCollisionAABB bounds;
+} OgeWorldFace;
 
 typedef struct OgeWorldMesh
 {
@@ -96,7 +121,7 @@ typedef struct OgeWorldMesh
 
 	PLCollisionAABB bounds;
 
-	PLGMesh *drawMesh; /* what actually gets rendered */
+	struct PLGMesh *drawMesh; /* what actually gets rendered */
 
 	PLLinkedListNode *node;
 
@@ -117,9 +142,54 @@ typedef struct OgeWorldObject
 	} collisionPtr;
 } OgeWorldObject;
 
-typedef struct OgeWorldSector
+typedef struct OgeWorldPortal
+{
+	PLVector3 mins;
+	PLVector3 maxs;
+
+	OgeWorldRoom *roomA;
+	OgeWorldRoom *roomB;
+
+	bool canSeeThrough;
+} OgeWorldPortal;
+
+typedef struct OgeWorldRoom
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
+	int32_t uid;
+
+	bool isSky;
+	bool isCold;
+	bool isOutside;
+	bool isAirLock;
+	bool containsLiquid;
+
+	bool ambientLightDefined;
+	PLColour ambientLight;
+
+	bool hasAlpha;
+	bool isDetail;
+	bool isInvincible;
+
+	float life;
+
+	struct
+	{
+		float depth;
+		PLColour colour;
+		float visibility;
+		int32_t type;
+		int32_t alpha;
+		bool plankton;
+		int32_t ppmU, ppmV;
+		float angle;
+		int32_t waveform;
+		float panU, panV;
+	} liquid;
+
+	PLVectorArray *detailRooms;// OgeWorldRoom
+	PLVectorArray *portals;    // OgeWorldPortal
+	PLVectorArray *faces;      // OgeWorldFace
 
 	OgeWorldMesh *mesh;
 
@@ -130,20 +200,27 @@ typedef struct OgeWorldSector
 	PLLinkedList *lights;// Lights in this sector
 
 	PLCollisionAABB bounds;
-} OgeWorldSector;
+} OgeWorldRoom;
+
+OgeWorldRoom *ogeCreateWorldRoom( void );
+void ogeDestroyWorldRoom( OgeWorldRoom *room );
 
 #define OGE_MAX_SKY_LAYERS 4
 
 typedef struct OgeWorld
 {
+	char *name;
 	PLPath path;
 
 	PLVectorArray *meshes;
 
 	PLLinkedList *entities;
 
-	OgeWorldSector *sectors;
-	unsigned int numSectors;
+	PLVectorArray *materials;// OgeMaterial
+	PLVectorArray *rooms;    // OgeWorldRoom
+	PLVectorArray *portals;  // OgeWorldPortal
+	PLVectorArray *vertices; // OgeWorldVertex
+	PLVectorArray *faces;    // OgeWorldFace
 
 	PLColourF32 ambience;
 	PLColourF32 sunColour;
@@ -155,8 +232,7 @@ typedef struct OgeWorld
 	float fogNear;
 	float fogFar;
 
-	struct OgeMaterial *skyMaterials[ OGE_MAX_SKY_LAYERS ];
-	unsigned int numSkyMaterials;
+	PLCollisionAABB bounds;
 
 	/* additional generic properties */
 	struct NdBranch *globalProperties;
@@ -179,7 +255,7 @@ OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out );
 OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *worldMesh );
 
 PLLinkedList *YnCore_World_GetLights( const OgeWorld *world );
-PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldSector *sector );
+PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldRoom *sector );
 
 void ogeWorld_SpawnEntities( OgeWorld *world );
 
@@ -187,4 +263,4 @@ bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera );
 unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles );
 bool YnCore_World_IsFacePortal( const OgeWorldFace *face );
 
-OgeWorldSector *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum );
+OgeWorldRoom *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum );

@@ -65,7 +65,7 @@ const char *YnCore_Material_GetName( const OgeMaterial *material );
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
  */
-OgeMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview );
+OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview );
 
 /**
  * Releases a reference to the material, allowing it to clean up.

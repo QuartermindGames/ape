@@ -27,7 +27,7 @@ void ogeMakeCameraActive( OgeCamera *camera )
 /****************************************
  ****************************************/
 
-OgeCamera *ogeCamera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+OgeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
 	OgeCamera *camera = PL_NEW( OgeCamera );
 
@@ -45,10 +45,10 @@ OgeCamera *ogeCamera_Create( const char *tag, const PLVector3 *position, const P
 		strncpy( camera->tag, tag, sizeof( camera->tag ) - 1 );
 	}
 
-	camera->internal->fov      = 75.0f;
-	camera->internal->far      = 1000000.0f;
-	camera->internal->position = *position;
-	camera->internal->angles   = *angles;
+	camera->internal->fov = 75.0f;
+	camera->internal->far = 1000000.0f;
+	ogeSetCameraPosition( camera, position );
+	ogeSetCameraAngles( camera, angles );
 
 	if ( cameras == NULL )
 	{
@@ -69,7 +69,7 @@ OgeCamera *ogeCamera_Create( const char *tag, const PLVector3 *position, const P
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void ogeCamera_Destroy( OgeCamera *camera )
+void ogeDestroyCamera( OgeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -95,14 +95,30 @@ void ogeCamera_Destroy( OgeCamera *camera )
 	}
 }
 
-void ogeCamera_SetPosition( OgeCamera *camera, const PLVector3 *position )
+void ogeSetCameraPosition( OgeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 }
 
-void ogeCamera_SetAngles( OgeCamera *camera, const PLVector3 *angles )
+void ogeSetCameraAngles( OgeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
+	PlAnglesAxes( camera->internal->angles, NULL, NULL, &camera->forward );
+}
+
+PLVector3 ogeGetCameraPosition( OgeCamera *camera )
+{
+	return camera->internal->position;
+}
+
+PLVector3 ogeGetCameraAngles( OgeCamera *camera )
+{
+	return camera->internal->angles;
+}
+
+PLVector3 ogeGetCameraForward( OgeCamera *camera )
+{
+	return camera->forward;
 }
 
 void ogeDrawScene_( OgeCamera *camera, const OgeViewport *viewport );
@@ -162,8 +178,8 @@ void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport )
 	}
 	else
 	{
-		angles   = pl_vecOrigin3;
-		position = pl_vecOrigin3;
+		angles   = camera->internal->angles;
+		position = camera->internal->position;
 	}
 
 	switch ( camera->mode )

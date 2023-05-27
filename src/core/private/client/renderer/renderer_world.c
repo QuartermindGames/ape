@@ -3,115 +3,8 @@
 
 #include "core_private.h"
 #include "renderer.h"
-#include "world.h"
-#include "renderer_visibility.h"
+#include "world/world.h"
 #include "legacy/actor.h"
-
-/****************************************
- * SKY
- ****************************************/
-
-static void DrawSkyLayer( PLGMesh *mesh, OgeMaterial *material, const PLVector3 *location, float x, float y, float scale )
-{
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	PlLoadIdentityMatrix();
-
-	PlTranslateMatrix( *location );
-
-	/* todo: do this in shader... */
-	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
-	mesh->isDirty = true;
-	ogeMaterial_DrawMesh( material, mesh, NULL, 0 );
-
-	PlPopMatrix();
-}
-
-/**
- * Draw scrolling clouds.
- */
-static void DrawSky( OgeWorld *world, OgeCamera *camera )
-{
-	if ( world->numSkyMaterials == 0 )
-	{
-		return;
-	}
-
-	static PLGMesh *skyMesh = NULL;
-	if ( skyMesh == NULL )
-	{
-		static unsigned int indices[][ 3 ] = {
-  /* corners */
-		        {2,  1, 0},
-		        { 3, 1, 2},
-		        { 4, 3, 2},
-		        { 5, 3, 4},
-		        { 6, 5, 4},
-		        { 7, 5, 6},
-		        { 0, 7, 6},
-		        { 1, 7, 0},
- /* middle */
-		        { 4, 2, 0},
-		        { 6, 4, 0},
-		};
-		unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
-
-		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
-		if ( skyMesh == NULL )
-		{
-			PRINT_ERROR( "Failed to create sky mesh!\nPL: %s\n", PlGetError() );
-		}
-
-		PlgAddMeshVertex( skyMesh, &PLVector3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );   /* top right */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );    /* top right far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );  /* lower right */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );   /* lower right far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 ); /* lower left */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );  /* lower left far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );  /* top left */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );   /* top left far */
-
-		for ( unsigned int i = 0; i < numTriangles; ++i )
-		{
-			PlgAddMeshTriangle( skyMesh, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
-		}
-
-		PlgUploadMesh( skyMesh );
-	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-	PlgSetDepthMask( false );
-
-	PL_GET_CVAR( "r.skyheightoffset", skyHeightOffset );
-
-	PLVector3 location;
-	location = camera->internal->position;
-	location.y += skyHeightOffset->f_value;
-
-	float ticks = ( float ) ogeGetNumTicks();
-
-	DrawSkyLayer( skyMesh, world->skyMaterials[ 0 ], &location, ticks / 700.0f, ticks / 400.0f, 0.15f );
-
-	if ( world->numSkyMaterials > 1 )
-	{
-#if 1
-		location.y += 2.0f;
-		DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &location, ( ticks / 100.0f ) * -1, ticks / 100.0f, 0.45f );
-#else
-		W_DrawSkyLayer( skyMesh, world->skyMaterials[ 1 ], &PLVector3( 0.0f, camera->internal->position.y + skyHeightOffset->f_value - 30.0f, 0.0f ), ( ticks / 500.0f ) * -1, ticks / 500.0f, 0.45f );
-#endif
-	}
-
-	if ( world->numSkyMaterials > 2 )
-	{
-		location.y += 4.0f;
-		DrawSkyLayer( skyMesh, world->skyMaterials[ 2 ], &location, camera->internal->position.x / 100.0f, camera->internal->position.z / 100.0f, 0.01f );
-	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-	PlgSetDepthMask( true );
-}
 
 /****************************************
  ****************************************/
@@ -180,8 +73,9 @@ static void DrawFaces( OgeWorldMesh *sectorBody, PLLinkedList *visibleFaces, Oge
 #endif
 }
 
-static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *camera );
-static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, OgeCamera *camera )
+#if 0
+static void DrawSector( OgeWorld *world, OgeWorldRoom *sector, OgeCamera *camera );
+static void DrawSectorBody( OgeWorldRoom *sector, OgeWorldMesh *worldMesh, OgeCamera *camera )
 {
 	if ( worldMesh == NULL )
 	{
@@ -224,7 +118,7 @@ static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, Oge
 			rendererState.depth++;
 			rendererState.mirror = true;
 
-#if 0
+#	if 0
 			//PlMatrixMode( PL_MODELVIEW_MATRIX );
 
 			//PLMatrix4 om = camera->internal->internal.proj;
@@ -266,7 +160,7 @@ static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, Oge
 
 			// Restore it
 			PlgSetupCamera( camera->internal );
-#else
+#	else
 			PlMatrixMode( PL_MODELVIEW_MATRIX );
 
 			int x, y;
@@ -302,7 +196,7 @@ static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, Oge
 			DrawSector( NULL, sector, camera );
 
 			PlPopMatrix();
-#endif
+#	endif
 
 			rendererState.depth--;
 			rendererState.mirror = false;
@@ -329,18 +223,7 @@ static void DrawSectorBody( OgeWorldSector *sector, OgeWorldMesh *worldMesh, Oge
 	PlDestroyLinkedList( visibleFaces );
 	visibleFaces = NULL;
 }
-
-static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *camera )
-{
-	if ( sector == NULL )
-	{
-		return;
-	}
-
-	DrawSectorBody( sector, sector->mesh, camera );
-
-	ogeEntityManager_Draw( camera, sector );
-}
+#endif
 
 /**
  * World is drawn using polygons, rather than straight up triangles,
@@ -348,8 +231,9 @@ static void DrawSector( OgeWorld *world, OgeWorldSector *sector, OgeCamera *came
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera )
+void ogeDrawWorldWireframe( OgeWorld *world, OgeCamera *camera )
 {
+#if 0
 	if ( world == NULL )
 	{
 		return;
@@ -364,14 +248,14 @@ void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 	PlgSetTexture( NULL, 0 );
 
 	PlgImmBegin( PLG_MESH_LINES );
-	for ( unsigned int i = 0; i < world->numSectors; ++i )
+	for ( unsigned int i = 0; i < world->numRooms; ++i )
 	{
-		if ( world->sectors[ i ].mesh == NULL )
+		if ( world->rooms[ i ].mesh == NULL )
 		{
 			continue;
 		}
 
-		OgeWorldMesh *mesh     = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh     = world->rooms[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{
@@ -409,14 +293,14 @@ void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 
 	PlgImmBegin( PLG_MESH_POINTS );
 	PlgImmSetPrimitiveScale( 4.0f );
-	for ( unsigned int i = 0; i < world->numSectors; ++i )
+	for ( unsigned int i = 0; i < world->numRooms; ++i )
 	{
-		if ( world->sectors[ i ].mesh == NULL )
+		if ( world->rooms[ i ].mesh == NULL )
 		{
 			continue;
 		}
 
-		OgeWorldMesh *mesh     = world->sectors[ i ].mesh;
+		OgeWorldMesh *mesh     = world->rooms[ i ].mesh;
 		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
 		while ( node != NULL )
 		{
@@ -434,11 +318,83 @@ void ogeWorld_DrawWireframe( OgeWorld *world, OgeCamera *camera )
 	PlgImmDraw();
 
 	PlPopMatrix();
+#endif
 }
 
-void YnCore_World_Draw( OgeWorld *world, OgeWorldSector *originSector, OgeCamera *camera )
+static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
 {
-	if ( world == NULL )
+	OgeCamera *camera = ogeGetActiveCamera();
+	if ( camera == NULL )
+	{
+		return;
+	}
+
+	PL_GET_CVAR( "world.showRoomColours", showRoomColours );
+	PLColour roomColour;
+	if ( showRoomColours != NULL && showRoomColours->b_value )
+	{
+		roomColour = PlCreateColour4B( rand() % 255, rand() % 255, rand() % 255, 255 );
+	}
+	else
+	{
+		roomColour = PlCreateColour4B( 255, 255, 255, 255 );
+	}
+
+	PL_GET_CVAR( "world.showRoomVolumes", showRoomVolumes );
+	if ( showRoomVolumes != NULL && showRoomVolumes->b_value )
+	{
+		PlgDrawBoundingVolume( &room->bounds, &roomColour );
+	}
+
+	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
+	{
+		return;
+	}
+
+	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+	{
+		OgeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+		assert( face != NULL );
+
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+
+		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+		while ( faceVertexNode != NULL )
+		{
+			OgeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+			assert( vertex->u != NULL );
+
+			PlgImmPushVertex( vertex->u->position.x,
+			                  vertex->u->position.y,
+			                  vertex->u->position.z );
+			PlgImmTextureCoord( vertex->textureU, vertex->textureV );
+			PlgImmColour( roomColour.r, roomColour.g, roomColour.b, 255 );
+
+			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
+		}
+
+
+		if ( face->material != NULL )
+		{
+			ogeMaterial_DrawMesh( face->material, mesh, NULL, 0 );
+		}
+		else
+		{
+			oge_RendererPerformance_.numTriangles = mesh->num_verts / 2;
+			oge_RendererPerformance_.numBatches++;
+
+			PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
+			PlgSetTexture( ogeGetFallbackTexture(), 0 );
+
+			PlgImmDraw();
+		}
+	}
+}
+
+void ogeDrawWorld( OgeWorld *world, OgeWorldRoom *originSector, OgeCamera *camera )
+{
+	PL_GET_CVAR( "world.draw", drawWorld );
+	if ( world == NULL || ( drawWorld != NULL && !drawWorld->b_value ) )
 	{
 		return;
 	}
@@ -447,10 +403,34 @@ void YnCore_World_Draw( OgeWorld *world, OgeWorldSector *originSector, OgeCamera
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	DrawSky( world, camera );
+	PL_GET_CVAR( "world.showRoomColours", showRoomColours );
+	if ( showRoomColours != NULL && showRoomColours->b_value )
+	{
+		srand( PlGetNumVectorArrayElements( world->rooms ) );
+		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+		PlgSetTexture( NULL, 0 );
+	}
+	else
+	{
+		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
+		PlgSetTexture( ogeGetFallbackTexture(), 0 );
+	}
 
-	PL_GET_CVAR( "world.drawSectorVolumes", drawSectorVolumes );
-	DrawSector( world, originSector, camera );
+	PL_GET_CVAR( "world.drawRooms", drawRooms );
+	if ( drawRooms != NULL && drawRooms->b_value && world->rooms != NULL )
+	{
+		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+		{
+			OgeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			assert( room != NULL );
+			if ( room == NULL )
+			{
+				continue;
+			}
+
+			DrawRoom( world, room );
+		}
+	}
 
 	PlPopMatrix();
 }

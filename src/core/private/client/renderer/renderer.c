@@ -6,7 +6,7 @@
 #include "core_private.h"
 #include "legacy/actor.h"
 #include "renderer_font.h"
-#include "world.h"
+#include "world/world.h"
 #include "game_interface.h"
 #include "renderer.h"
 #include "renderer_particle.h"
@@ -507,7 +507,7 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 
 static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 {
-	OgeWorldSector *currentSector = NULL;
+	OgeWorldRoom *currentSector = NULL;
 	OgeWorld *world               = Game_GetCurrentWorld();
 	if ( world != NULL )
 	{
@@ -528,11 +528,11 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 		{
 			if ( camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME )
 			{
-				ogeWorld_DrawWireframe( world, camera );
+				ogeDrawWorldWireframe( world, camera );
 			}
 			else
 			{
-				YnCore_World_Draw( world, currentSector, camera );
+				ogeDrawWorld( world, currentSector, camera );
 			}
 
 			YNCoreEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
@@ -563,7 +563,7 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 	}
 	else
 	{
-		YnCore_World_Draw( world, currentSector, camera );
+		ogeDrawWorld( world, currentSector, camera );
 	}
 
 	OGE_PROFILE_END( PROFILE_DRAW_WORLD );

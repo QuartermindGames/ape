@@ -125,13 +125,13 @@ void ogeShutdownConsole( void );
 int Console_GetLogLevel( ConsoleLogLevel level );
 void Console_Print( ConsoleLogLevel level, const char *message, ... );
 
-void ogeRegisterConsoleCommands( bool isDedicated );
+void ogeRegisterConsoleCommands_( bool isDedicated );
 void ogeRegisterConsoleVariables( bool isDedicated );
 
-void Client_Console_Draw( const OgeViewport *viewport );
-bool Client_Console_IsOpen( void );
+void ogeDrawConsole_( const OgeViewport *viewport );
+bool ogeIsConsoleOpen( void );
 void Client_Console_RegisterConsoleCommands( void );
-void Client_Console_RegisterConsoleVariables( void );
+void ogeRegisterClientConsoleVariables_( void );
 
 #define PRINT( FORMAT, ... ) \
 	Console_Print( YINENGINE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )

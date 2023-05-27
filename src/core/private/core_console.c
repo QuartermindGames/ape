@@ -103,7 +103,7 @@ static void LoadUserConfig( void )
 		child = ndGetNextChild( child );
 	}
 
-	Client_Input_DeserializeConfig( root );
+	ogeDeserializeInputConfig_( root );
 
 	PRINT( "User config loaded.\n" );
 }
@@ -142,7 +142,7 @@ static void SaveUserConfig( void )
 		}
 	}
 
-	Client_Input_SerializeConfig( root );
+	ogeSerializeInputConfig_( root );
 
 	ndWriteFile( path, root, ND_FILE_UTF8 );
 	ndDestroyBranch( root );
@@ -150,7 +150,7 @@ static void SaveUserConfig( void )
 	PRINT( "User config saved.\n" );
 }
 
-void ogeRegisterConsoleCommands( bool isDedicated )
+void ogeRegisterConsoleCommands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "Quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "Exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -172,9 +172,11 @@ void ogeRegisterConsoleVariables( bool isDedicated )
 
 	// Client variables
 	if ( !isDedicated )
-		Client_Console_RegisterConsoleVariables();
+	{
+		ogeRegisterClientConsoleVariables_();
+	}
 
-	YnCore_RegisterEditorConsoleVariables();
+	ogeRegisterEditorConsoleVariables_();
 }
 
 static int logLevels[ YINENGINE_LOG_LEVELS ];

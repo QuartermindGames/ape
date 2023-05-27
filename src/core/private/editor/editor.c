@@ -12,7 +12,7 @@ static YNCoreEditorContext *currentContext = NULL;
 static EditorStatus editorStatus = EDITOR_CLOSED;
 EditorStatus YnCore_GetEditorStatus( void ) { return editorStatus; }
 
-void YnCore_RegisterEditorConsoleVariables( void )
+void ogeRegisterEditorConsoleVariables_( void )
 {
 	YNCoreEditorContext *YnCore_RegisterWorldEditorContext( void );
 	contexts[ YN_CORE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();

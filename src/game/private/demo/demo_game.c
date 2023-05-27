@@ -3,37 +3,71 @@
 
 #include "demo_game.h"
 
-static const char *baseVppPaths[] = {
-        "RF_PS2.VPP",
-};
-static PLFileSystemMount *baseVpps[ PL_ARRAY_ELEMENTS( baseVppPaths ) ];
+static OgeCamera *playerCamera = NULL;
+
+static void MoveCameraCallback( OgeInputState state, const char *id )
+{
+	if ( state != OGE_INPUT_STATE_DOWN )
+	{
+		return;
+	}
+
+	PLVector3 pos = ogeGetCameraPosition( playerCamera );
+	PLVector3 ang = ogeGetCameraAngles( playerCamera );
+	if ( strcmp( id, "rotateLeft" ) == 0 )
+	{
+		ang.y += 0.5f;
+	}
+	else if ( strcmp( id, "rotateRight" ) == 0 )
+	{
+		ang.y -= 0.5f;
+	}
+
+	PLVector3 forward, left;
+	PlAnglesAxes( ang, &left, NULL, &forward );
+
+	if ( strcmp( id, "moveForward" ) == 0 )
+	{
+		pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+	}
+	else if ( strcmp( id, "moveBackward" ) == 0 )
+	{
+		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+	}
+	else if ( strcmp( id, "moveLeft" ) == 0 )
+	{
+		pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) );
+	}
+	else if ( strcmp( id, "moveRight" ) == 0 )
+	{
+		pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) );
+	}
+
+	ogeSetCameraPosition( playerCamera, &pos );
+	ogeSetCameraAngles( playerCamera, &ang );
+}
 
 static void InitializeDemoGame( void )
 {
-	for ( uint32_t i = 0; i < PL_ARRAY_ELEMENTS( baseVppPaths ); ++i )
-	{
-		baseVpps[ i ] = PlMountLocation( baseVppPaths[ i ] );
-		if ( baseVpps[ i ] == NULL )
-		{
-			Game_Warning( "Failed to mount base VPP: %s\n", PlGetError() );
-		}
-	}
-
 	Game_RegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world test" );
+	PlParseConsoleString( "world worlds/ps2_L3S4.rfl" );
 
-	OgeCamera *camera = ogeCamera_Create( "test", &pl_vecOrigin3, &pl_vecOrigin3 );
-	ogeMakeCameraActive( camera );
+	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 10.0f, 0.0f ), &pl_vecOrigin3 );
+	ogeMakeCameraActive( playerCamera );
+
+	ogeRegisterInputAction( "moveForward", NULL, 0, ( OgeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
+	ogeRegisterInputAction( "moveBackward", NULL, 0, ( OgeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
+	ogeRegisterInputAction( "moveLeft", NULL, 0, ( OgeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
+	ogeRegisterInputAction( "moveRight", NULL, 0, ( OgeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
+	ogeRegisterInputAction( "rotateLeft", NULL, 0, ( OgeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
+	ogeRegisterInputAction( "rotateRight", NULL, 0, ( OgeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
 }
 
 static void ShutdownDemoGame( void )
 {
-	for ( uint32_t i = 0; i < PL_ARRAY_ELEMENTS( baseVppPaths ); ++i )
-	{
-		PlClearMountedLocation( baseVpps[ i ] );
-		baseVpps[ i ] = NULL;
-	}
+	ogeDestroyCamera( playerCamera );
+	playerCamera = NULL;
 }
 
 static void TickDemoGame( void )
@@ -45,12 +79,18 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_TICK:
+		{
 			TickDemoGame();
 			break;
+		}
 		case GAMEMODE_REQUEST_HANDLEINPUT:
+		{
 			break;
+		}
 		case GAMEMODE_REQUEST_SPAWNWORLD:
+		{
 			break;
+		}
 		default:
 			break;
 	}

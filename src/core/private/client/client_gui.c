@@ -37,7 +37,7 @@ void YnCore_InitializeGUI( void )
 		PRINT_ERROR( "Failed to create default render target for GUI!\n" );
 	}
 
-	baseGuiMat = YnCore_Material_Cache( "materials/ui/ui_rt_base.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
+	baseGuiMat = ogeCacheMaterial( "materials/ui/ui_rt_base.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
 	if ( baseGuiMat == NULL )
 	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
@@ -158,7 +158,7 @@ void YnCore_DrawGUI( const OgeViewport *viewport )
 	}
 
 	// todo: this should use GUI
-	Client_Console_Draw( viewport );
+	ogeDrawConsole_( viewport );
 }
 
 void YnCore_TickGUI( void )

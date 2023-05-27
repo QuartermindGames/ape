@@ -144,7 +144,7 @@ void ogeEntityManager_Tick( void )
 	IterateEntities( CallEntityTick, NULL );
 }
 
-void ogeEntityManager_Draw( OgeCamera *camera, OgeWorldSector *sector )
+void ogeEntityManager_Draw( OgeCamera *camera, OgeWorldRoom *sector )
 {
 	IterateEntities( CallEntityDraw, NULL );
 }

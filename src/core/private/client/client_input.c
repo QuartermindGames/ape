@@ -15,19 +15,19 @@
 
 #define SERIALISATION_NODE_NAME "input"
 
-typedef struct ClientInputAction
+typedef struct OgeInputAction
 {
 	char id[ 32 ];
-	ClientInputActionCallback callback;
+	OgeInputActionCallback callback;
 
-	YNCoreInputButton buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
+	OgeInputButton buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
 	unsigned int numButtonBinds;
 
-	YNCoreInputKey keys[ YN_CORE_MAX_KEY_INPUTS ];
+	OgeInputKey keys[ YN_CORE_MAX_KEY_INPUTS ];
 	unsigned int numKeyBinds;
 
 	PLLinkedListNode *node;
-} ClientInputAction;
+} OgeInputAction;
 
 static PLLinkedList *actionableList = NULL;
 
@@ -36,30 +36,30 @@ static struct
 	int x, y;
 	int ox, oy;
 	int dx, dy;
-	YNCoreInputState buttons[ YN_CORE_MAX_INPUT_MOUSE_BUTTONS ];
+	OgeInputState buttons[ YN_CORE_MAX_INPUT_MOUSE_BUTTONS ];
 
 	PLVector2 wheel, oldWheel;
 } inputMouse;
 
 static struct
 {
-	YNCoreInputState keys[ YN_CORE_MAX_KEY_INPUTS ];
+	OgeInputState keys[ YN_CORE_MAX_KEY_INPUTS ];
 } inputKeyboard;
 
-typedef struct ClientInputController
+typedef struct OgeInputController
 {
 	bool isActive;
-	YNCoreInputState buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
+	OgeInputState buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
 	PLVector2 stickL, stickLOld, stickLDelta;
 	PLVector2 stickR, stickROld, stickRDelta;
 	SDL_GameController *sdlGameController;
-} ClientInputController;
+} OgeInputController;
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
-static ClientInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
+static OgeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
 static unsigned int numControllers = 0;
 
-static ClientInputController *GetEmptyController( unsigned int *id )
+static OgeInputController *GetEmptyController( unsigned int *id )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
@@ -75,26 +75,26 @@ static ClientInputController *GetEmptyController( unsigned int *id )
 
 static void IterateAction( void *userData, PL_UNUSED bool *breakEarly )
 {
-	ClientInputAction *action = ( ClientInputAction * ) userData;
+	OgeInputAction *action = ( OgeInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
-		YNCoreInputState state = YnCore_ShellInterface_GetButtonState( action->buttons[ i ] );
-		if ( ( state != YN_CORE_INPUT_STATE_DOWN ) && ( state != YN_CORE_INPUT_STATE_PRESSED ) )
+		OgeInputState state = YnCore_ShellInterface_GetButtonState( action->buttons[ i ] );
+		if ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) )
 		{
 			continue;
 		}
 
-		action->callback( state );
+		action->callback( state, action->id );
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i )
 	{
-		YNCoreInputState state = YnCore_ShellInterface_GetKeyState( action->keys[ i ] );
-		if ( ( state != YN_CORE_INPUT_STATE_DOWN ) && ( state != YN_CORE_INPUT_STATE_PRESSED ) )
+		OgeInputState state = YnCore_ShellInterface_GetKeyState( action->keys[ i ] );
+		if ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) )
 		{
 			continue;
 		}
 
-		action->callback( state );
+		action->callback( state, action->id );
 	}
 }
 
@@ -117,12 +117,16 @@ static void CheckForControllers( void )
 		return;
 	}
 	else if ( num > CLIENT_INPUT_MAX_CONTROLLERS )
+	{
 		num = CLIENT_INPUT_MAX_CONTROLLERS;
+	}
 
 	for ( int i = 0; i < num; ++i )
 	{
 		if ( !SDL_IsGameController( i ) )
+		{
 			continue;
+		}
 
 		// right, uh, check if it's already open
 		SDL_JoystickID joyId = SDL_JoystickGetDeviceInstanceID( i );
@@ -130,7 +134,9 @@ static void CheckForControllers( void )
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
 			if ( controllers[ j ].sdlGameController == NULL )
+			{
 				continue;
+			}
 
 			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( SDL_GameControllerGetJoystick( controllers[ j ].sdlGameController ) );
 			if ( compareJoyId == joyId )
@@ -141,14 +147,17 @@ static void CheckForControllers( void )
 		}
 
 		if ( isMatched )
-			// nah, not new
+		{// nah, not new
 			continue;
+		}
 
 		// try and fetch an empty slot - break if one isn't available
 		unsigned int id;
-		ClientInputController *controller = GetEmptyController( &id );
+		OgeInputController *controller = GetEmptyController( &id );
 		if ( controller == NULL )
+		{
 			break;
+		}
 
 		if ( ( controller->sdlGameController = SDL_GameControllerOpen( i ) ) == NULL )
 		{
@@ -158,10 +167,14 @@ static void CheckForControllers( void )
 
 		const char *name = SDL_GameControllerName( controller->sdlGameController );
 		if ( name == NULL )
+		{
 			name = "Unknown";
+		}
 		const char *serial = SDL_GameControllerGetSerial( controller->sdlGameController );
 		if ( serial == NULL )
+		{
 			serial = "Unknown";
+		}
 
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
@@ -171,10 +184,10 @@ static void CheckForControllers( void )
 	}
 }
 
-void Client_Input_Initialize( void )
+void ogeInitializeInput_( void )
 {
 	// initialize the controller structure
-	Client_Input_ClearDevices();
+	ogeClearInputDevices_();
 
 	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
 	{
@@ -194,22 +207,26 @@ void Client_Input_Initialize( void )
 
 		SDL_RWops *rw = SDL_RWFromMem( buf, ( int ) ( size + 1 ) );
 		if ( SDL_GameControllerAddMappingsFromRW( rw, true ) == -1 )
+		{
 			PRINT_WARNING( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
+		}
 	}
 	else
+	{
 		PRINT_WARNING( "Failed to load game controller mappings: %s\n", PlGetError() );
+	}
 
 	CheckForControllers();
 
 	sdlInputInitialized = true;
 }
 
-void Client_Input_Shutdown( void )
+void ogeShutdownInput_( void )
 {
-	Client_Input_ClearDevices();
+	ogeClearInputDevices_();
 }
 
-void Client_Input_SerializeConfig( NdBranch *root )
+void ogeSerializeInputConfig_( NdBranch *root )
 {
 	/* nothing to serialise */
 	if ( actionableList == NULL )
@@ -225,11 +242,13 @@ void Client_Input_SerializeConfig( NdBranch *root )
 	//PlIterateLinkedList( actionableList, NULL, NULL );
 }
 
-void Client_Input_DeserializeConfig( NdBranch *root )
+void ogeDeserializeInputConfig_( NdBranch *root )
 {
 	NdBranch *inputNode = ndGetChildByName( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
+	{
 		return;
+	}
 }
 
 static void UnregisterController( unsigned int id )
@@ -243,23 +262,23 @@ static void UnregisterController( unsigned int id )
 	numControllers--;
 }
 
-void Client_Input_ClearDevices( void )
+void ogeClearInputDevices_( void )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 		UnregisterController( i );
 }
 
-unsigned int Client_Input_RegisterController( ClientInputDeviceType type )
+unsigned int ogeRegisterInputDevice_( OgeInputDeviceType type )
 {
 	unsigned int id;
-	ClientInputController *device = GetEmptyController( &id );
+	OgeInputController *device = GetEmptyController( &id );
 	if ( device == NULL )
 	{
 		PRINT_WARNING( "Failed to find an empty input device slot!\n" );
 		return ( unsigned int ) -1;
 	}
 
-	PL_ZERO( device, sizeof( ClientInputController ) );
+	PL_ZERO( device, sizeof( OgeInputController ) );
 
 	device->isActive = true;
 
@@ -269,17 +288,17 @@ unsigned int Client_Input_RegisterController( ClientInputDeviceType type )
 }
 
 bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState );
-void Client_Input_HandleKeyboardEvent( int key, YNCoreInputState keyState )
+void Client_Input_HandleKeyboardEvent( int key, OgeInputState keyState )
 {
 	if ( Client_Console_HandleKeyboardEvent( key, keyState ) )
 		return;
 }
 
-void Client_Input_HandleMouseButtonEvent( int button, YNCoreInputState buttonState )
+void Client_Input_HandleMouseButtonEvent( int button, OgeInputState buttonState )
 {
-	GUI_UpdateMouseButton( button, ( buttonState == YN_CORE_INPUT_STATE_DOWN ) );
+	GUI_UpdateMouseButton( button, ( buttonState == OGE_INPUT_STATE_DOWN ) );
 
-	if ( buttonState != YN_CORE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == YN_CORE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == YN_CORE_INPUT_STATE_DOWN ) )
+	if ( buttonState != OGE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == OGE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == OGE_INPUT_STATE_DOWN ) )
 		return;
 
 	inputMouse.buttons[ button ] = buttonState;
@@ -308,19 +327,19 @@ void Client_Input_HandleMouseMotionEvent( int x, int y )
 	GUI_UpdateMousePosition( inputMouse.x, inputMouse.y );
 }
 
-void Client_Input_GetMousePosition( int *x, int *y )
+void ogeGetMousePosition( int *x, int *y )
 {
 	*x = inputMouse.x;
 	*y = inputMouse.y;
 }
 
-void Client_Input_GetMouseDelta( int *x, int *y )
+void ogeGetMouseDelta( int *x, int *y )
 {
 	*x = inputMouse.dx;
 	*y = inputMouse.dy;
 }
 
-void Client_Input_BeginFrame( void )
+void ogeBeginInputFrame_( void )
 {
 	// Ensure we store the old x/y
 	//int ox = inputMouse.x;
@@ -336,7 +355,7 @@ void Client_Input_BeginFrame( void )
 	inputMouse.dy = ( cy - inputMouse.y );
 }
 
-static bool GetSDLButtonState( SDL_GameController *gameController, YNCoreInputButton button )
+static bool GetSDLButtonState( SDL_GameController *gameController, OgeInputButton button )
 {
 	SDL_GameControllerButton sdlButton;
 	switch ( button )
@@ -395,7 +414,7 @@ static bool GetSDLButtonState( SDL_GameController *gameController, YNCoreInputBu
 	return SDL_GameControllerGetButton( gameController, sdlButton );
 }
 
-void Client_Input_Tick( void )
+void ogeTickInput_( void )
 {
 	if ( !sdlInputInitialized )
 		return;
@@ -418,14 +437,14 @@ void Client_Input_Tick( void )
 			bool state = GetSDLButtonState( controllers[ i ].sdlGameController, j );
 			if ( !state )
 			{
-				controllers[ i ].buttons[ j ] = YN_CORE_INPUT_STATE_NONE;
+				controllers[ i ].buttons[ j ] = OGE_INPUT_STATE_NONE;
 				continue;
 			}
 
-			if ( controllers[ i ].buttons[ j ] == YN_CORE_INPUT_STATE_DOWN )
+			if ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_DOWN )
 				continue;
 
-			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == YN_CORE_INPUT_STATE_PRESSED ) ? YN_CORE_INPUT_STATE_DOWN : YN_CORE_INPUT_STATE_PRESSED;
+			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_PRESSED ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_PRESSED;
 		}
 
 		controllers[ i ].stickLOld = controllers[ i ].stickL;
@@ -453,7 +472,7 @@ void Client_Input_Tick( void )
 	CheckForControllers();
 }
 
-void Client_Input_EndFrame( void )
+void ogeEndInputFrame_( void )
 {
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
@@ -464,18 +483,18 @@ void Client_Input_EndFrame( void )
 	YnCore_ShellInterface_SetMousePosition( w / 2, h / 2 );
 }
 
-unsigned int YnCore_Input_GetNumControllers( void ) { return numControllers; }
+unsigned int ogeGetNumControllers( void ) { return numControllers; }
 
-YNCoreInputState YnCore_Input_GetButtonStatus( unsigned int slot, YNCoreInputButton button )
+OgeInputState ogeGetButtonStatus( unsigned int slot, OgeInputButton button )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
-		return YN_CORE_INPUT_STATE_NONE;
+		return OGE_INPUT_STATE_NONE;
 
 	return controllers[ slot ].buttons[ button ];
 }
 
-PLVector2 YnCore_Input_GetStickStatus( unsigned int slot, unsigned int stickNum )
+PLVector2 ogeGetJoystickStatus( unsigned int slot, unsigned int stickNum )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
@@ -484,10 +503,10 @@ PLVector2 YnCore_Input_GetStickStatus( unsigned int slot, unsigned int stickNum 
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
 }
 
-void YnCore_Input_RegisterAction( const char *id,
-                                  YNCoreInputButton buttons[], unsigned int numDefaultButtons,
-                                  YNCoreInputKey keys[], unsigned int numDefaultKeys,
-                                  ClientInputActionCallback actionCallback )
+void ogeRegisterInputAction( const char *id,
+                             OgeInputButton buttons[], unsigned int numDefaultButtons,
+                             OgeInputKey keys[], unsigned int numDefaultKeys,
+                             OgeInputActionCallback actionCallback )
 {
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL )
@@ -510,14 +529,14 @@ void YnCore_Input_RegisterAction( const char *id,
 		PRINT_WARNING( "Too many default key inputs for action!\n" );
 	}
 
-	ClientInputAction *inputAction = PL_NEW( ClientInputAction );
+	OgeInputAction *inputAction = PL_NEW( OgeInputAction );
 	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
 	inputAction->callback = actionCallback;
 
-	memcpy( inputAction->buttons, buttons, sizeof( YNCoreInputButton ) * numDefaultButtons );
+	memcpy( inputAction->buttons, buttons, sizeof( OgeInputButton ) * numDefaultButtons );
 	inputAction->numButtonBinds = numDefaultButtons;
 
-	memcpy( inputAction->keys, keys, sizeof( YNCoreInputKey ) * numDefaultKeys );
+	memcpy( inputAction->keys, keys, sizeof( OgeInputKey ) * numDefaultKeys );
 	inputAction->numKeyBinds = numDefaultKeys;
 
 	inputAction->node = PlInsertLinkedListNode( actionableList, inputAction );

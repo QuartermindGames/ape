@@ -24,7 +24,7 @@ bool ogeIsEngineRunning( void );
 
 void ogeHandleKeyboardEvent( int key, unsigned int keyState );
 void ogeHandleTextEvent( const char *key );
-void ogeHandleMouseButtonEvent( int button, YNCoreInputState buttonState );
+void ogeHandleMouseButtonEvent( int button, OgeInputState buttonState );
 void ogeHandleMouseWheelEvent( float x, float y );
 void ogeHandleMouseMotionEvent( int x, int y );
 

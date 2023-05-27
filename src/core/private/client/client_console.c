@@ -4,8 +4,8 @@
 #include "core_private.h"
 
 #include "renderer/renderer.h"
-#include "renderer/renderer_font.h"
 #include "gui/gui_private.h"
+#include "client/audio/audio.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow    = false;
@@ -60,16 +60,20 @@ static void UpdateAutoCompleteResult( const char *input )
 
 /////////////////////////////////////////////////////////////////
 
-bool ogeConsole_HandleTextEvent( const char *key )
+bool ogeHandleConsoleTextEvent_( const char *key )
 {
 	// todo y3: allow this key to be customised
 	if ( !consoleIsOpen || *key == '`' || *key == '~' )
+	{
 		return false;
+	}
 
 	/* check length before appending so we can ensure
      * it's always null terminated */
 	if ( conInputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH )
+	{
 		return true;
+	}
 
 	conInputBuffer[ conInputBufferLength++ ] = *key;
 	conInputBuffer[ conInputBufferLength ]   = '\0';
@@ -123,7 +127,7 @@ static void ScrollBackward( ConsoleOutput *output )
 
 bool Client_Console_HandleMouseWheelEvent( float x, float y )
 {
-	if ( !Client_Console_IsOpen() )
+	if ( !ogeIsConsoleOpen() )
 	{
 		return false;
 	}
@@ -151,7 +155,7 @@ static void ClearInputBuffer( void )
 
 bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 {
-	if ( keyState == YN_CORE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
+	if ( keyState == OGE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
 	{
 		ToggleConsole();
 		return true;
@@ -163,7 +167,7 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 		return false;
 	}
 	/* but we don't care about these... */
-	if ( keyState != YN_CORE_INPUT_STATE_PRESSED && keyState != YN_CORE_INPUT_STATE_DOWN )
+	if ( keyState != OGE_INPUT_STATE_PRESSED && keyState != OGE_INPUT_STATE_DOWN )
 	{
 		return true;
 	}
@@ -322,14 +326,14 @@ static void DrawInputField( const OgeViewport *viewport, GUIFont *font )
 	GUI_Font_DrawString( font, w + SPACER, ( float ) viewport->height - h, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
-bool Client_Console_IsOpen( void ) { return consoleIsOpen; }
+bool ogeIsConsoleOpen( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
 /**
  * Draw the console panel.
  */
-void Client_Console_Draw( const OgeViewport *viewport )
+void ogeDrawConsole_( const OgeViewport *viewport )
 {
 	if ( !consoleIsOpen )
 		return;
@@ -460,7 +464,7 @@ void Client_Console_RegisterConsoleCommands( void )
 
 void Renderer_RegisterConsoleVariables( void );
 
-void Client_Console_RegisterConsoleVariables( void )
+void ogeRegisterClientConsoleVariables_( void )
 {
 	PlRegisterConsoleVariable( "client.name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
@@ -485,11 +489,12 @@ void Client_Console_RegisterConsoleVariables( void )
 	void R_PP_RegisterConsoleVariables( void );
 	R_PP_RegisterConsoleVariables();
 
-	void Audio_RegisterConsoleVariables( void );
-	Audio_RegisterConsoleVariables();
+	ogeRegisterAudioConsoleVariables_();
 
-	PlRegisterConsoleVariable( "world.drawSectorVolumes", "Toggle rendering of sector volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawSectors", "Toggle rendering of sectors.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.drawRooms", "Toggle rendering of rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world.drawSubMeshes", "Toggle rendering of sub-meshes within sectors.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world.forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 }

@@ -47,7 +47,7 @@ static void Tick( YNCoreEntityComponent *self )
 	{
 		Game_Warning( "Entity outside of world, attempting to relocate!\n" );
 
-		OgeWorldSector *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
+		OgeWorldRoom *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
 		if ( sector != NULL )
 		{
 			//TODO: what fucking index is it!?

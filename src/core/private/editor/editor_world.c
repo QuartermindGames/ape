@@ -5,7 +5,7 @@
 #include "core_private.h"
 
 #include "editor.h"
-#include "world.h"
+#include "world/world.h"
 
 #include "client/client_input.h"
 #include "client/renderer/renderer.h"
@@ -36,7 +36,7 @@ static void CreateWorldCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	world = YnCore_World_Create();
+	world = ogeCreateWorld();
 }
 
 static void DestroyWorldCommand( unsigned int argc, char **argv )
@@ -46,7 +46,7 @@ static void DestroyWorldCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	ogeWorld_Destroy( world );
+	ogeDestroyWorld( world );
 	world = NULL;
 }
 
@@ -78,14 +78,14 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	OgeWorldMesh *mesh = YnCore_WorldMesh_Create( world );
 }
 
-static void IncreaseGridSize( YNCoreInputState state )
+static void IncreaseGridSize( OgeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
 
-	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	if ( state != OGE_INPUT_STATE_PRESSED )
 	{
 		return;
 	}
@@ -93,14 +93,14 @@ static void IncreaseGridSize( YNCoreInputState state )
 	context.gridScale += 2;
 }
 
-static void DecreaseGridSize( YNCoreInputState state )
+static void DecreaseGridSize( OgeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
 
-	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	if ( state != OGE_INPUT_STATE_PRESSED )
 	{
 		return;
 	}
@@ -112,14 +112,14 @@ static void DecreaseGridSize( YNCoreInputState state )
 	}
 }
 
-static void ToggleView( YNCoreInputState state )
+static void ToggleView( OgeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
 
-	if ( state != YN_CORE_INPUT_STATE_PRESSED )
+	if ( state != OGE_INPUT_STATE_PRESSED )
 	{
 		return;
 	}
@@ -137,16 +137,16 @@ static void InitializeWorldEditor( void )
 	{
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = ogeCamera_Create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = ogeCreateCamera( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera           = cameras[ 0 ];
 	context.camera->mode     = OGE_CAMERA_MODE_TOP;
 	context.camera->drawMode = OGE_CAMERA_DRAW_MODE_WIREFRAME;
 
-	YnCore_Input_RegisterAction( "editor.world.gridUp", NULL, 0, ( YNCoreInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	YnCore_Input_RegisterAction( "editor.world.gridDown", NULL, 0, ( YNCoreInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	YnCore_Input_RegisterAction( "editor.world.toggleView", NULL, 0, ( YNCoreInputKey[] ){ KEY_TAB }, 1, ToggleView );
+	ogeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( OgeInputKey[] ){ '[' }, 1, IncreaseGridSize );
+	ogeRegisterInputAction( "editor.world.gridDown", NULL, 0, ( OgeInputKey[] ){ ']' }, 1, DecreaseGridSize );
+	ogeRegisterInputAction( "editor.world.toggleView", NULL, 0, ( OgeInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
 static void ShutdownWorldEditor( void )
@@ -212,11 +212,11 @@ static void DrawWorldEditorGUI( void )
 		switch ( context.camera->drawMode )
 		{
 			case OGE_CAMERA_DRAW_MODE_WIREFRAME:
-				ogeWorld_DrawWireframe( world, &tmp );
+				ogeDrawWorldWireframe( world, &tmp );
 				break;
 			case OGE_CAMERA_DRAW_MODE_SOLID:
 			case OGE_CAMERA_DRAW_MODE_TEXTURED:
-				YnCore_World_Draw( world, NULL, &tmp );
+				ogeDrawWorld( world, NULL, &tmp );
 				break;
 			default:
 				break;
@@ -275,7 +275,7 @@ static void DrawWorldEditorGUI( void )
 
 static void TickWorldEditor( void )
 {
-	Client_Input_GetMousePosition( &mouseCursorX, &mouseCursorY );
+	ogeGetMousePosition( &mouseCursorX, &mouseCursorY );
 	mouseCursorX = PlRoundUp( mouseCursorX, context.gridScale * 4 );
 	mouseCursorY = PlRoundUp( mouseCursorY, context.gridScale * 4 );
 }

@@ -6,7 +6,7 @@
 #include "core_private.h"
 #include "renderer.h"
 #include "renderer_material.h"
-#include "world.h"
+#include "world/world.h"
 #include "game_interface.h"
 
 #include <yin/node.h>
@@ -59,7 +59,7 @@ void ogeInitializeMaterialSystem( void )
 	fallbackMaterial->numPasses                  = 1;
 	fallbackMaterial->preview                    = previewFallbackTexture;
 	fallbackMaterial->isCached                   = true;
-	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ];
+	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
@@ -528,7 +528,7 @@ static void DestroyMaterialCallback( void *userData )
 	DestroyMaterial( ( OgeMaterial * ) userData );
 }
 
-OgeMaterial *YnCore_Material_Cache( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
+OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
 	OgeMaterial *material = GetMaterial( path, group );

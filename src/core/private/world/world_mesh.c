@@ -23,6 +23,7 @@ bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera )
 
 unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles )
 {
+#if 0
 	if ( face->numVertices < 3 )
 		return NULL;
 
@@ -40,14 +41,19 @@ unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigne
 	}
 
 	return indices;
+#else
+	return NULL;
+#endif
 }
 
 static void GenerateFaceNormal( const OgeWorldMesh *mesh, OgeWorldFace *face )
 {
+#if 0
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 		face->normal = PlAddVector3( face->normal, mesh->vertices[ face->vertices[ i ] ].normal );
 
 	face->normal = PlNormalizeVector3( face->normal );
+#endif
 }
 
 static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
@@ -73,7 +79,7 @@ static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
 
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
 		ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
-		meshPtr->materials[ i ] = YnCore_Material_Cache( materialPath, YN_CORE_CACHE_GROUP_WORLD, true, false );
+		meshPtr->materials[ i ] = ogeCacheMaterial( materialPath, YN_CORE_CACHE_GROUP_WORLD, true, false );
 		materialNode            = ndGetNextChild( materialNode );
 	}
 }
@@ -97,60 +103,6 @@ static OgeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *nu
 	return ( OgeWorldVertex * ) data;
 }
 
-static void DeserializeFaces( NdBranch *meshNode, OgeWorldMesh *worldMesh )
-{
-	NdBranch *facesList = ndGetChildByName( meshNode, "faces" );
-	if ( facesList == NULL )
-	{
-		PRINT_WARNING( "No faces for mesh: %s!\n", worldMesh->id );
-		return;
-	}
-
-	unsigned int numFaces  = ndGetNumOfChildren( facesList );
-	NdBranch *faceNode = ndGetFirstChild( facesList );
-	for ( unsigned int i = 0; i < numFaces; ++i )
-	{
-		if ( faceNode == NULL )
-		{
-			PRINT_WARNING( "Hit an invalid face index!\n" );
-			break;
-		}
-
-		OgeWorldFace *face = PL_NEW( OgeWorldFace );
-
-		int materialIndex = ndGetI32ByName( faceNode, "material", -1 );
-		if ( materialIndex >= 0 && materialIndex < worldMesh->numMaterials )
-			face->material = worldMesh->materials[ materialIndex ];
-
-		face->materialAngle = ndGetF32ByName( faceNode, "materialAngle", 0.0f );
-
-		ndDS_DeserializeVector2( ndGetChildByName( faceNode, "materialOffset" ), &face->materialOffset );
-		ndDS_DeserializeVector2( ndGetChildByName( faceNode, "materialScale" ), &face->materialScale );
-
-		NdBranch *n;
-		if ( ( n = ndGetChildByName( faceNode, "vertices" ) ) != NULL )
-		{
-			face->numVertices = ndGetNumOfChildren( n );
-			if ( face->numVertices >= WORLD_FACE_MAX_SIDES )
-			{
-				PRINT_WARNING( "Too many vertices for face: %d!\n", i );
-				face->numVertices = WORLD_FACE_MAX_SIDES;
-			}
-
-			if ( face->numVertices > 0 )
-				ndGetUI32Array( n, face->vertices, face->numVertices );
-		}
-
-		face->flags = ndGetI32ByName( faceNode, "flags", 0 );
-
-		GenerateFaceNormal( worldMesh, face );
-
-		PlInsertLinkedListNode( worldMesh->faces, face );
-
-		faceNode = ndGetNextChild( faceNode );
-	}
-}
-
 /**
  * Deserialise a mesh from the given node.
  */
@@ -168,8 +120,6 @@ OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *
 	worldMesh->maxVertices = worldMesh->numVertices = numVertices;
 	worldMesh->vertices                             = vertices;
 
-	DeserializeFaces( root, worldMesh );
-
 	return worldMesh;
 }
 
@@ -182,6 +132,7 @@ static void GenerateBounds( OgeWorldMesh *mesh )
 	mesh->bounds = PlGenerateAabbFromCoords( coords, mesh->numVertices, true );
 	PL_DELETE( coords );
 
+#if 0
 	PLLinkedListNode *faceNode = PlGetFirstNode( mesh->faces );
 	while ( faceNode != NULL )
 	{
@@ -197,6 +148,7 @@ static void GenerateBounds( OgeWorldMesh *mesh )
 
 		faceNode = PlGetNextLinkedListNode( faceNode );
 	}
+#endif
 }
 
 /**

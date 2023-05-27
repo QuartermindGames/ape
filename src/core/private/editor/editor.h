@@ -14,7 +14,7 @@ typedef enum EditorStatus
 } EditorStatus;
 EditorStatus YnCore_GetEditorStatus( void );
 
-void YnCore_RegisterEditorConsoleVariables( void );
+void ogeRegisterEditorConsoleVariables_( void );
 
 void YnCore_InitializeEditor( void );
 void ogeShutdownEditor( void );

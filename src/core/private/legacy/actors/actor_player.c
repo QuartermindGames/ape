@@ -71,32 +71,6 @@ static void Player_CalculateViewFrustum( Actor *self )
 #endif
 }
 
-/**
- * Ensure the 2D point provided is forward of the player's position
- */
-#if 0// unused
-bool Player_IsPointVisible( Actor *self, const PLVector2 *point )
-{
-	if ( Act_GetType( self ) != ACTOR_PLAYER )
-		return false;
-
-	APlayer *playerData = Act_GetUserData( self );
-	if ( playerData == NULL )
-		return false;
-
-	PLVector2 lineStart = PLVector2( playerData->llViewPos.x, playerData->llViewPos.z );
-	PLVector2 lineEnd   = PLVector2( playerData->lrViewPos.x, playerData->lrViewPos.z );
-
-	/* in future, set this up properly relative to view */
-
-	float d = PlTestPointLinePosition( point, &lineStart, &lineEnd );
-	if ( d > 0.0f )
-		return false;
-
-	return true;
-}
-#endif
-
 /* move this somewhere else... */
 static unsigned int numPlayers = 0;
 
@@ -137,7 +111,7 @@ static void Player_HandleMouseLook( Actor *self )
 		return;
 
 	int mx, my;
-	Client_Input_GetMouseDelta( &mx, &my );
+	ogeGetMouseDelta( &mx, &my );
 
 	self->angles.y += mx;
 

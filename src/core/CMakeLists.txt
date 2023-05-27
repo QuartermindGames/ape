@@ -56,11 +56,14 @@ add_library(yin-core STATIC
         private/core_profiler.c
         private/core_scheduler.c
         private/core_binary_serializer.c
-        private/world.c
-        private/world_deserialiser.c
-        private/world_mesh.c
-        private/world_serialiser.c
+
         private/core.c
+
+        private/world/world.c
+        private/world/world_deserialiser.c
+        private/world/world_mesh.c
+        private/world/world_room.c
+        private/world/world_serialiser.c
 
         private/editor/editor.c
         private/editor/editor_lightmapper.c
@@ -94,14 +97,14 @@ set_target_properties(yin-core PROPERTIES
         PREFIX ""
         )
 
-if(WIN32)
+if (WIN32)
     target_link_libraries(yin-core
             SDL2_dll)
-else()
+else ()
     target_link_libraries(yin-core
             SDL2
             OpenAL)
-endif()
+endif ()
 
 target_link_libraries(yin-core
         plcore

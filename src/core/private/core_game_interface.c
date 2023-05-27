@@ -2,7 +2,7 @@
 
 #include "core_private.h"
 #include "game_interface.h"
-#include "world.h"
+#include "world/world.h"
 
 #include <yin/node.h>
 #include <yin/core_game.h>
@@ -31,7 +31,7 @@ static OgeWorld *currentWorld = NULL;
 static void SpawnWorldCommand( unsigned int argc, char **argv )
 {
 	PLPath path;
-	snprintf( path, sizeof( path ), "worlds/%s/%s." YN_CORE_WORLD_EXTENSION, argv[ 1 ], argv[ 1 ] );
+	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
 	Game_SpawnWorld( path );
 }
 
@@ -111,7 +111,7 @@ void Game_Disconnect( void )
 			 *  might be lost! */
 		}
 
-		ogeWorld_Destroy( currentWorld );
+		ogeDestroyWorld( currentWorld );
 		currentWorld = NULL;
 	}
 
@@ -140,7 +140,7 @@ void Game_SpawnWorld( const char *worldPath )
 
 	Game_Disconnect();
 
-	OgeWorld *world = ogeWorld_Load( worldPath );
+	OgeWorld *world = ogeLoadWorld( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );

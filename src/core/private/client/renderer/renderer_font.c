@@ -171,7 +171,7 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return NULL;
 	}
 
-	OgeMaterial *material = YnCore_Material_Cache( materialPath, 0, false, false );
+	OgeMaterial *material = ogeCacheMaterial( materialPath, 0, false, false );
 	if ( material == NULL )
 	{
 		PlgDestroyMesh( mesh );

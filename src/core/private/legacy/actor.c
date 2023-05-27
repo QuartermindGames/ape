@@ -7,7 +7,7 @@
 
 #include "core_private.h"
 #include "actor.h"
-#include "world.h"
+#include "world/world.h"
 
 #include "client/renderer/renderer.h"
 
@@ -136,7 +136,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct OgeWorldSector *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct OgeWorldRoom *sector ) { self->sector = sector; }
 
 void  Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -227,7 +227,7 @@ bool Act_IsVisible( Actor *self, OgeCamera *camera )
 #endif
 }
 
-void Act_DrawActors( OgeCamera *camera, OgeWorldSector *sector )
+void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector )
 {
 	OGE_PROFILE_START( PROFILE_DRAW_ACTORS );
 

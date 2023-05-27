@@ -29,10 +29,14 @@ typedef struct OgeCamera OgeCamera;
 
 PL_EXTERN_C
 
-OgeCamera *ogeCamera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
-void ogeCamera_Destroy( OgeCamera *camera );
-void ogeCamera_SetPosition( OgeCamera *camera, const PLVector3 *position );
-void ogeCamera_SetAngles( OgeCamera *camera, const PLVector3 *angles );
+OgeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+void ogeDestroyCamera( OgeCamera *camera );
+void ogeSetCameraPosition( OgeCamera *camera, const PLVector3 *position );
+void ogeSetCameraAngles( OgeCamera *camera, const PLVector3 *angles );
+
+PLVector3 ogeGetCameraPosition( OgeCamera *camera );
+PLVector3 ogeGetCameraAngles( OgeCamera *camera );
+PLVector3 ogeGetCameraForward( OgeCamera *camera );
 
 OgeCamera *ogeGetActiveCamera( void );
 void ogeMakeCameraActive( OgeCamera *camera );

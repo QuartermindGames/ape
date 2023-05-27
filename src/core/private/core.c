@@ -56,7 +56,7 @@ bool ogeInitialize( const char *config )
 	}
 
 	ogeRegisterConsoleVariables( engineTerminalMode );
-	ogeRegisterConsoleCommands( engineTerminalMode );
+	ogeRegisterConsoleCommands_( engineTerminalMode );
 
 	// Need to do this before anything else IO related
 	ogeFileSystem_MountBaseLocations();
@@ -196,17 +196,17 @@ void ogeHandleKeyboardEvent( int key, unsigned int keyState )
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
-bool ogeConsole_HandleTextEvent( const char *key );
+bool ogeHandleConsoleTextEvent_( const char *key );
 
 void ogeHandleTextEvent( const char *key )
 {
-	if ( ogeConsole_HandleTextEvent( key ) )
+	if ( ogeHandleConsoleTextEvent_( key ) )
 	{
 		return;
 	}
 }
 
-void ogeHandleMouseButtonEvent( int button, YNCoreInputState buttonState )
+void ogeHandleMouseButtonEvent( int button, OgeInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }

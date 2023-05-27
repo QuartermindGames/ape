@@ -37,7 +37,7 @@ void ogeInitializeClient( void )
 
 	YnCore_InitializeGUI();
 
-	Client_Input_Initialize();
+	ogeInitializeInput_();
 }
 
 void ogeShutdownClient( void )
@@ -89,16 +89,16 @@ static void Client_HandleConnectionState( void )
 
 void ogeTickClient( void )
 {
-	Client_Input_BeginFrame();
+	ogeBeginInputFrame_();
 
-	Client_Input_Tick();
+	ogeTickInput_();
 
 	YnCore_TickEditor();
 	YnCore_TickGUI();
 
 	Client_HandleConnectionState();
 
-	Client_Input_EndFrame();
+	ogeEndInputFrame_();
 
 	YnCore_TickAudio();
 }
