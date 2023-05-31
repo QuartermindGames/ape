@@ -26,22 +26,12 @@ static void MoveCameraCallback( OgeInputState state, const char *id )
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
-	if ( strcmp( id, "moveForward" ) == 0 )
-	{
-		pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) );
-	}
-	else if ( strcmp( id, "moveBackward" ) == 0 )
-	{
-		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) );
-	}
-	else if ( strcmp( id, "moveLeft" ) == 0 )
-	{
-		pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) );
-	}
-	else if ( strcmp( id, "moveRight" ) == 0 )
-	{
-		pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) );
-	}
+	if ( strcmp( id, "moveForward" ) == 0 ) { pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) ); }
+	else if ( strcmp( id, "moveBackward" ) == 0 ) { pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) ); }
+	else if ( strcmp( id, "moveLeft" ) == 0 ) { pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) ); }
+	else if ( strcmp( id, "moveRight" ) == 0 ) { pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) ); }
+	else if ( strcmp( id, "moveUp" ) == 0 ) { pos.y += 0.5f; }
+	else if ( strcmp( id, "moveDown" ) == 0 ) { pos.y -= 0.5f; }
 
 	ogeSetCameraPosition( playerCamera, &pos );
 	ogeSetCameraAngles( playerCamera, &ang );
@@ -51,15 +41,17 @@ static void InitializeDemoGame( void )
 {
 	Game_RegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world worlds/ps2_L3S4.rfl" );
+	PlParseConsoleString( "world worlds/l1s3.rfl" );
 
-	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 10.0f, 0.0f ), &pl_vecOrigin3 );
+	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	ogeMakeCameraActive( playerCamera );
 
 	ogeRegisterInputAction( "moveForward", NULL, 0, ( OgeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
 	ogeRegisterInputAction( "moveBackward", NULL, 0, ( OgeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
 	ogeRegisterInputAction( "moveLeft", NULL, 0, ( OgeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
 	ogeRegisterInputAction( "moveRight", NULL, 0, ( OgeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
+	ogeRegisterInputAction( "moveDown", NULL, 0, ( OgeInputKey[] ){ 'q' }, 1, MoveCameraCallback );
+	ogeRegisterInputAction( "moveUp", NULL, 0, ( OgeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
 	ogeRegisterInputAction( "rotateLeft", NULL, 0, ( OgeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
 	ogeRegisterInputAction( "rotateRight", NULL, 0, ( OgeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
 }

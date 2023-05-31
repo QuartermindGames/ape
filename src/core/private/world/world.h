@@ -21,7 +21,7 @@
 #	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
 #	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.25f )
 #else
-#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
+#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.1f, 0.1f, 0.1f, 1.0f )
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
 #	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
 #	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
@@ -221,6 +221,7 @@ typedef struct OgeWorld
 	PLVectorArray *portals;  // OgeWorldPortal
 	PLVectorArray *vertices; // OgeWorldVertex
 	PLVectorArray *faces;    // OgeWorldFace
+	PLVectorArray *lights;   // OgeLight
 
 	PLColourF32 ambience;
 	PLColourF32 sunColour;

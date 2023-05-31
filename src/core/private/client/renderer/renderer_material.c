@@ -451,7 +451,7 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
-			const char *programName          = ndGetStringByName( node, "shaderProgram", "default" );
+			const char *programName             = ndGetStringByName( node, "shaderProgram", "default" );
 			OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
@@ -630,7 +630,7 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	}
 }
 
-static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight *lights, unsigned int numLights )
+static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight **lights, unsigned int numLights )
 {
 	int slot;
 
@@ -654,6 +654,11 @@ static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight *lights, unsi
 
 	if ( ( slot = PlgGetShaderUniformSlot( program, "numLights" ) ) >= 0 )
 	{
+		if ( numLights > 8 )
+		{
+			numLights = 8;
+		}
+
 		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
 		for ( unsigned int i = 0; i < numLights; ++i )
 		{
@@ -663,18 +668,18 @@ static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight *lights, unsi
 			char *p        = &buf[ 10 ];
 
 			strcpy( p, "colour" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ].colour, false );
+			PlgSetShaderUniformValue( program, buf, &lights[ i ]->colour, false );
 
 			strcpy( p, "position" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ].position, false );
+			PlgSetShaderUniformValue( program, buf, &lights[ i ]->position, false );
 
 			strcpy( p, "radius" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ].radius, false );
+			PlgSetShaderUniformValue( program, buf, &lights[ i ]->radius, false );
 		}
 	}
 }
 
-void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight *lights, unsigned int numLights )
+void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **lights, unsigned int numLights )
 {
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!

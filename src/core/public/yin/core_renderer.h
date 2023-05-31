@@ -76,6 +76,6 @@ void ogeMaterial_Release( OgeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight *lights, unsigned int numLights );
+void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **lights, unsigned int numLights );
 
 PL_EXTERN_C_END

@@ -364,20 +364,61 @@ static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
 			OgeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			assert( vertex->u != NULL );
 
-			PlgImmPushVertex( vertex->u->position.x,
-			                  vertex->u->position.y,
-			                  vertex->u->position.z );
+			PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
+			PlgImmNormal( face->normal.x, face->normal.y, face->normal.z );
 			PlgImmTextureCoord( vertex->textureU, vertex->textureV );
 			PlgImmColour( roomColour.r, roomColour.g, roomColour.b, 255 );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
 
-
 		if ( face->material != NULL )
 		{
-			ogeMaterial_DrawMesh( face->material, mesh, NULL, 0 );
+#if 0
+			static OgeLight lights[] = {
+			        {
+                     .position = { 10.0f, 10.0f, 10.0f },
+                     .colour   = { 1.0f, 0.0f, 0.0f, 16.0f },
+                     .radius   = 4.0f,
+			         },
+			        {
+                     .position = { 10.0f, 10.0f, 10.0f },
+                     .colour   = { 0.0f, 1.0f, 0.0f, 16.0f },
+                     .radius   = 4.0f,
+			         },
+			        {
+                     .position = { 10.0f, 10.0f, 10.0f },
+                     .colour   = { 0.0f, 0.0f, 1.0f, 16.0f },
+                     .radius   = 4.0f,
+			         },
+			};
+
+			lights[ 0 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 2.0f ) );
+			lights[ 1 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 4.0f ) );
+			lights[ 2 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 6.0f ) );
+#else
+			PLVectorArray *tmp = PlCreateVectorArray( 8 );
+			for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
+			{
+				OgeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+				if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+				{
+					continue;
+				}
+
+				PlPushBackVectorArrayElement( tmp, light );
+				if ( PlGetNumVectorArrayElements( tmp ) >= 8 )
+				{
+					break;
+				}
+			}
+#endif
+
+			ogeMaterial_DrawMesh( face->material, mesh, ( OgeLight ** ) PlGetVectorArrayData( tmp ), PlGetNumVectorArrayElements( tmp ) );
+
+			PlDestroyVectorArray( tmp );
 		}
+#if 0
 		else
 		{
 			oge_RendererPerformance_.numTriangles = mesh->num_verts / 2;
@@ -388,6 +429,7 @@ static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
 
 			PlgImmDraw();
 		}
+#endif
 	}
 }
 

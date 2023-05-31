@@ -10,7 +10,6 @@
 #include <yin/node.h>
 
 #include "client/renderer/renderer.h"
-#include "client/renderer/renderer_material.h"
 
 void ogeSetupGlobalWorldDefaults( OgeWorld *world )
 {
@@ -27,12 +26,11 @@ OgeWorld *ogeCreateWorld( void )
 	world->globalProperties = ndPushBackObject( NULL, "properties" );
 	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
 	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
-	//NL_PushBackStrArray( world->globalProperties, "skyMaterials", ( const char ** ) WORLD_DEFAULT_SKY, 1 );
 
 	world->meshes   = PlCreateVectorArray( 0 );
 	world->entities = PlCreateLinkedList();
 
-	world->ambience = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+	ogeSetupGlobalWorldDefaults( world );
 
 	return world;
 }
@@ -84,6 +82,24 @@ static PLVector3 ParseVector( PLFile *file )
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ) };
+}
+
+static PLMatrix3 ParseMat3( PLFile *file )
+{
+	return ( PLMatrix3 ){
+	        // forward
+	        .m[ 0 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 1 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 2 ] = PlReadFloat32( file, false, NULL ),
+	        // right
+	        .m[ 3 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 4 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 5 ] = PlReadFloat32( file, false, NULL ),
+	        // up
+	        .m[ 6 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 7 ] = PlReadFloat32( file, false, NULL ),
+	        .m[ 8 ] = PlReadFloat32( file, false, NULL ),
+	};
 }
 
 static PLColour ParseColour( PLFile *file )
@@ -139,9 +155,9 @@ static void ParseStaticGeometryRooms( OgeWorld *world, PLFile *file, int32_t ver
 		room->uid = PlReadInt32( file, false, NULL );
 
 		room->bounds.mins = ParseVector( file );
-		assert( !PlIsVectorNaN( ( float * ) &room->bounds.mins, PL_MVECNUM( room->bounds.mins ) ) );
+		assert( !PlIsVector3NaN( &room->bounds.mins ) );
 		room->bounds.maxs = ParseVector( file );
-		assert( !PlIsVectorNaN( ( float * ) &room->bounds.maxs, PL_MVECNUM( room->bounds.maxs ) ) );
+		assert( !PlIsVector3NaN( &room->bounds.maxs ) );
 
 		room->isSky               = ( bool ) PL_READUINT8( file, NULL );
 		room->isCold              = ( bool ) PL_READUINT8( file, NULL );
@@ -241,9 +257,9 @@ static void ParseStaticGeometryPortals( OgeWorld *world, PLFile *file )
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
 		PLVector3 mins = ParseVector( file );
-		assert( !PlIsVectorNaN( ( float * ) &mins, PL_MVECNUM( mins ) ) );
+		assert( !PlIsVector3NaN( &mins ) );
 		PLVector3 maxs = ParseVector( file );
-		assert( !PlIsVectorNaN( ( float * ) &maxs, PL_MVECNUM( maxs ) ) );
+		assert( !PlIsVector3NaN( &maxs ) );
 
 		OgeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
 		OgeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
@@ -274,7 +290,7 @@ static void ParseStaticGeometryVertices( OgeWorld *world, PLFile *file )
 	{
 		OgeWorldVertex *vertex = PL_NEW( OgeWorldVertex );
 		vertex->position       = ParseVector( file );
-		assert( !PlIsVectorNaN( ( float * ) &vertex->position, PL_MVECNUM( vertex->position ) ) );
+		assert( !PlIsVector3NaN( &vertex->position ) );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
@@ -291,7 +307,7 @@ static void ParseStaticGeometryFaces( OgeWorld *world, PLFile *file, int32_t ver
 		if ( version >= 180 )
 		{
 			// plane
-			ParseVector( file );               // normal
+			face->normal = ParseVector( file );// normal
 			PlReadFloat32( file, false, NULL );// offset
 		}
 
@@ -383,9 +399,9 @@ static void ParseStaticGeometryLightmaps( OgeWorld *world, PLFile *file )
 		assert( !isnan( yPerMeter ) );
 
 		PLVector3 min = ParseVector( file );// min
-		assert( !PlIsVectorNaN( ( float * ) &min, PL_MVECNUM( min ) ) );
+		assert( !PlIsVector3NaN( &min ) );
 		PLVector3 max = ParseVector( file );// max
-		assert( !PlIsVectorNaN( ( float * ) &max, PL_MVECNUM( max ) ) );
+		assert( !PlIsVector3NaN( &max ) );
 
 		ParseVector( file );                                 // eq
 		PlReadFloat32( file, false, NULL );                  // offset
@@ -455,6 +471,52 @@ static OgeWorld *ParseStaticGeometryChunk( OgeWorld *world, PLFile *file, int32_
 	return NULL;
 }
 
+static void ParseLightsChunk( OgeWorld *world, PLFile *file, int32_t version )
+{
+	int32_t numLights = PlReadInt32( file, false, NULL );
+	world->lights     = PlCreateVectorArray( numLights );
+	for ( int32_t i = 0; i < numLights; ++i )
+	{
+		OgeLight *light = PL_NEW( OgeLight );
+
+		PlReadInt32( file, false, NULL );// id
+
+		uint16_t size;
+		char *tmp = ParseString( file, &size );// class name
+		PL_DELETE( tmp );
+
+		light->position = ParseVector( file );
+		assert( !PlIsVector3NaN( &light->position ) );
+
+		ParseMat3( file );               // rotation
+
+		tmp = ParseString( file, &size );// script name
+		PL_DELETE( tmp );
+
+		PL_READUINT8( file, NULL );        // hidden in editor
+		PL_READUINT32( file, false, NULL );// flags
+
+		PLColour colour = ParseColour( file );
+		light->colour   = PlColourU8ToF32( &colour );
+
+		light->radius = PlReadFloat32( file, false, NULL );
+
+		PlReadFloat32( file, false, NULL );// fov
+		PlReadFloat32( file, false, NULL );// fov dropoff
+		PlReadFloat32( file, false, NULL );// intensity at max range
+		PlReadInt32( file, false, NULL );  // dropoff type
+		PlReadFloat32( file, false, NULL );// tube light width
+		PlReadFloat32( file, false, NULL );// on intensity
+		PlReadFloat32( file, false, NULL );// on time
+		PlReadFloat32( file, false, NULL );// on time variation
+		PlReadFloat32( file, false, NULL );// off intensity
+		PlReadFloat32( file, false, NULL );// off time
+		PlReadFloat32( file, false, NULL );// off time variation
+
+		PlPushBackVectorArrayElement( world->lights, light );
+	}
+}
+
 static OgeWorld *ParseWorldFile( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
@@ -507,6 +569,9 @@ static OgeWorld *ParseWorldFile( PLFile *file )
 		{
 			case OGE_WORLD_CHUNK_GEOMETRY:
 				ParseStaticGeometryChunk( world, file, version );
+				break;
+			case OGE_WORLD_CHUNK_LIGHTS:
+				ParseLightsChunk( world, file, version );
 				break;
 			default:
 				PRINT_DEBUG( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );

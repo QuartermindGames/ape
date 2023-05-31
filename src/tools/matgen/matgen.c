@@ -8,8 +8,24 @@
 
 static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 {
-	printf( "generating material for \"%s\"\n", path );
+	printf( "Generating material for \"%s\"\n", path );
 
+	// copy the name into a buffer we can switch out the extension
+	char *name = PL_NEW_( char, strlen( PlGetFileName( path ) ) + 1 );
+	strcpy( name, PlGetFileName( path ) );
+
+	// search for the extension
+	char *c = strrchr( name, '.' );
+	if ( c == NULL )
+	{
+		printf( "Failed to fetch file extension! Skipping...\n" );
+		PL_DELETE( name );
+		return;
+	}
+
+	*c = '\0';
+
+	// now build the node tree for the material
 	NdBranch *root = ndPushBackObject( NULL, "material" );
 	{
 		NdBranch *passesArray = ndPushBackObjectArray( root, "passes" );
@@ -25,17 +41,14 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 		}
 	}
 
-	char *name = PL_NEW_( char, strlen( PlGetFileName( path ) ) + 1 );
-	strcpy( name, PlGetFileName( path ) );
-	char *c = strrchr( name, '.' );
-	*c      = '\0';
-
 	PLPath writePath;
 	PlSetupPath( writePath, true, "materials/world/%s.mat.n", name );
 
 	PL_DELETE( name );
 
+	// write it out and destroy it
 	ndWriteFile( writePath, root, ND_FILE_UTF8 );
+	ndDestroyBranch( root );
 }
 
 int main( int argc, char **argv )

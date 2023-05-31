@@ -65,7 +65,6 @@ OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out )
 		out->globalProperties = ndCopyBranch( propertyList );
 
 		/* set some of the global defaults */
-		ogeSetupGlobalWorldDefaults( out );
 
 		ndDS_DeserializeColourF32( ndGetChildByName( out->globalProperties, "ambience" ), &out->ambience );
 		ndDS_DeserializeColourF32( ndGetChildByName( out->globalProperties, "sunColour" ), &out->sunColour );
