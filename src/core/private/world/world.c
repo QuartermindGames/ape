@@ -53,16 +53,16 @@ static const uint32_t WORLD_MAGIC = 0xd4bada55;
 static const int32_t WORLD_VERSION_MIN = 161;
 static const int32_t WORLD_VERSION_MAX = 180;
 
-#define OGE_WORLD_CHUNK_GEOMETRY        0x100
-#define OGE_WORLD_CHUNK_GEOREGIONS      0x200
-#define OGE_WORLD_CHUNK_LIGHTS          0x300
-#define OGE_WORLD_CHUNK_CUTSCENECAMERAS 0x400
-#define OGE_WORLD_CHUNK_AMBIENTSOUNDS   0x500
-#define OGE_WORLD_CHUNK_EVENTS          0x600
-#define OGE_WORLD_CHUNK_EMITTERS        0xa00
-#define OGE_WORLD_CHUNK_DECALS          0x1000
-#define OGE_WORLD_CHUNK_LIGHTMAP        0x1200
-#define OGE_WORLD_CHUNK_BRUSH           0x2000
+#define APE_WORLD_CHUNK_GEOMETRY        0x100
+#define APE_WORLD_CHUNK_GEOREGIONS      0x200
+#define APE_WORLD_CHUNK_LIGHTS          0x300
+#define APE_WORLD_CHUNK_CUTSCENECAMERAS 0x400
+#define APE_WORLD_CHUNK_AMBIENTSOUNDS   0x500
+#define APE_WORLD_CHUNK_EVENTS          0x600
+#define APE_WORLD_CHUNK_EMITTERS        0xa00
+#define APE_WORLD_CHUNK_DECALS          0x1000
+#define APE_WORLD_CHUNK_LIGHTMAP        0x1200
+#define APE_WORLD_CHUNK_BRUSH           0x2000
 
 static char *ParseString( PLFile *file, uint16_t *size )
 {
@@ -580,10 +580,10 @@ static ApeWorld *ParseWorldFile( PLFile *file )
 
 		switch ( chunkId )
 		{
-			case OGE_WORLD_CHUNK_GEOMETRY:
+			case APE_WORLD_CHUNK_GEOMETRY:
 				ParseStaticGeometryChunk( world, file, version );
 				break;
-			case OGE_WORLD_CHUNK_LIGHTS:
+			case APE_WORLD_CHUNK_LIGHTS:
 				ParseLightsChunk( world, file, version );
 				break;
 			default:

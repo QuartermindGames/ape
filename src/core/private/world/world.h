@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -91,8 +90,8 @@ typedef struct ApeWorldFace
 	PLVector2 materialOffset;
 	PLVector2 materialScale;
 
-	PLVectorArray *vertices;// OgeWorldFaceVertex
-	PLLinkedList *edgeLoop; // OgeWorldFaceVertex
+	PLVectorArray *vertices;// ApeWorldFaceVertex
+	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
 
 	uint8_t flags;          /* portal, mirror, skip etc. */
 
@@ -187,9 +186,9 @@ typedef struct ApeWorldRoom
 		float panU, panV;
 	} liquid;
 
-	PLVectorArray *detailRooms;// OgeWorldRoom
-	PLVectorArray *portals;    // OgeWorldPortal
-	PLVectorArray *faces;      // OgeWorldFace
+	PLVectorArray *detailRooms;// ApeWorldRoom
+	PLVectorArray *portals;    // ApeWorldPortal
+	PLVectorArray *faces;      // ApeWorldFace
 
 	ApeWorldMesh *mesh;
 
