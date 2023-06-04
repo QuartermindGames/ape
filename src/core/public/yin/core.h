@@ -25,7 +25,7 @@ bool apeIsConsoleOpen( void );
 
 void apeHandleKeyboardEvent( int key, unsigned int keyState );
 void apeHandleTextEvent( const char *key );
-void apeHandleMouseButtonEvent( int button, OgeInputState buttonState );
+void apeHandleMouseButtonEvent( int button, ApeInputState buttonState );
 void apeHandleMouseWheelEvent( float x, float y );
 void apeHandleMouseMotionEvent( int x, int y );
 

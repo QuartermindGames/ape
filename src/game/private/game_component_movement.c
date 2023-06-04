@@ -10,23 +10,23 @@ static void HandleMouseLook( GameMovementComponent *movementComponent )
 		return;
 
 	int mx, my;
-	ogeShellInterface_GetMousePosition( &mx, &my );//TODO: should use Client_Input_GetMouseDelta ...
+	apeShellInterface_GetMousePosition( &mx, &my );//TODO: should use Client_Input_GetMouseDelta ...
 
 	//TODO
 }
 
 static void Tick( ApeEntityComponent *self )
 {
-	if ( YnCore_ShellInterface_GetButtonState( INPUT_A ) )
+	if ( apeShellInterface_GetButtonState( INPUT_A ) )
 		GAME_MOVEMENT_COMPONENT( self )->velocity.y += 10.0f;
 
 	HandleMouseLook( GAME_MOVEMENT_COMPONENT( self ) );
 
 	static const float gain = 0.25f;
 
-	if ( YnCore_ShellInterface_GetButtonState( YN_CORE_INPUT_UP ) || YnCore_ShellInterface_GetKeyState( 'w' ) )
+	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) )
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity += gain;
-	else if ( YnCore_ShellInterface_GetButtonState( YN_CORE_INPUT_DOWN ) || YnCore_ShellInterface_GetKeyState( 's' ) )
+	else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) )
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity -= gain;
 	else if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity != 0.0f )
 	{
@@ -36,9 +36,9 @@ static void Tick( ApeEntityComponent *self )
 	}
 
 	// strafing
-	if ( YnCore_ShellInterface_GetKeyState( 'a' ) )
+	if ( apeShellInterface_GetKeyState( 'a' ) )
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity += gain;
-	else if ( YnCore_ShellInterface_GetKeyState( 'd' ) )
+	else if ( apeShellInterface_GetKeyState( 'd' ) )
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity -= gain;
 	else if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity != 0.0f )
 	{
@@ -48,7 +48,7 @@ static void Tick( ApeEntityComponent *self )
 	}
 
 	// clamp the velocity as necessary
-	float maxVelocity = YnCore_ShellInterface_GetButtonState( INPUT_LEFT_STICK ) || YnCore_ShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? GAME_MOVEMENT_COMPONENT( self )->maxRunSpeed : GAME_MOVEMENT_COMPONENT( self )->maxWalkSpeed;
+	float maxVelocity = apeShellInterface_GetButtonState( INPUT_LEFT_STICK ) || apeShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? GAME_MOVEMENT_COMPONENT( self )->maxRunSpeed : GAME_MOVEMENT_COMPONENT( self )->maxWalkSpeed;
 	GAME_MOVEMENT_COMPONENT( self )->forwardVelocity = PlClamp( -maxVelocity, GAME_MOVEMENT_COMPONENT( self )->forwardVelocity, maxVelocity );
 	GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = PlClamp( -maxVelocity, GAME_MOVEMENT_COMPONENT( self )->strafeVelocity, maxVelocity );
 

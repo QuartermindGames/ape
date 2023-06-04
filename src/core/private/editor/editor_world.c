@@ -78,7 +78,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
 }
 
-static void IncreaseGridSize( OgeInputState state )
+static void IncreaseGridSize( ApeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
@@ -93,7 +93,7 @@ static void IncreaseGridSize( OgeInputState state )
 	context.gridScale += 2;
 }
 
-static void DecreaseGridSize( OgeInputState state )
+static void DecreaseGridSize( ApeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
@@ -112,7 +112,7 @@ static void DecreaseGridSize( OgeInputState state )
 	}
 }
 
-static void ToggleView( OgeInputState state )
+static void ToggleView( ApeInputState state )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
@@ -144,9 +144,9 @@ static void InitializeWorldEditor( void )
 	context.camera->mode     = OGE_CAMERA_MODE_TOP;
 	context.camera->drawMode = OGE_CAMERA_DRAW_MODE_WIREFRAME;
 
-	ogeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( OgeInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	ogeRegisterInputAction( "editor.world.gridDown", NULL, 0, ( OgeInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	ogeRegisterInputAction( "editor.world.toggleView", NULL, 0, ( OgeInputKey[] ){ KEY_TAB }, 1, ToggleView );
+	apeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
+	apeRegisterInputAction( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
+	apeRegisterInputAction( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
 static void ShutdownWorldEditor( void )
@@ -275,7 +275,7 @@ static void DrawWorldEditorGUI( void )
 
 static void TickWorldEditor( void )
 {
-	ogeGetMousePosition( &mouseCursorX, &mouseCursorY );
+	apeGetMousePosition( &mouseCursorX, &mouseCursorY );
 	mouseCursorX = PlRoundUp( mouseCursorX, context.gridScale * 4 );
 	mouseCursorY = PlRoundUp( mouseCursorY, context.gridScale * 4 );
 }

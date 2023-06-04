@@ -5,7 +5,7 @@
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( OgeInputState state, const char *id )
+static void MoveCameraCallback( ApeInputState state, const char *id )
 {
 	if ( state != OGE_INPUT_STATE_DOWN )
 	{
@@ -46,14 +46,14 @@ static void InitializeDemoGame( void )
 	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	ogeMakeCameraActive( playerCamera );
 
-	ogeRegisterInputAction( "moveForward", NULL, 0, ( OgeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
-	ogeRegisterInputAction( "moveBackward", NULL, 0, ( OgeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
-	ogeRegisterInputAction( "moveLeft", NULL, 0, ( OgeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
-	ogeRegisterInputAction( "moveRight", NULL, 0, ( OgeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
-	ogeRegisterInputAction( "moveDown", NULL, 0, ( OgeInputKey[] ){ 'q' }, 1, MoveCameraCallback );
-	ogeRegisterInputAction( "moveUp", NULL, 0, ( OgeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
-	ogeRegisterInputAction( "rotateLeft", NULL, 0, ( OgeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
-	ogeRegisterInputAction( "rotateRight", NULL, 0, ( OgeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
+	apeRegisterInputAction( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
+	apeRegisterInputAction( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
 }
 
 static void ShutdownDemoGame( void )

@@ -53,7 +53,7 @@ static void OutputCallback( int level, const char *message, PLColour colour )
 	conOutputBuffer.lines[ conOutputBuffer.numLines ].colour = colour;
 	conOutputBuffer.numLines++;
 
-	YnCore_ShellInterface_PushMessage( level, message, &colour );
+	apeShellInterface_PushMessage( level, message, &colour );
 }
 
 /* CONSOLE COMMANDS */

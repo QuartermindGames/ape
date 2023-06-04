@@ -98,7 +98,7 @@ static void Player_ApplyViewBob( Actor *self )
 	APLAYER( self )->viewBob += ( sinf( apeGetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = self->position.y + PLAYER_VIEW_OFFSET;
-	if ( YnCore_ShellInterface_GetKeyState( 'c' ) )
+	if ( apeShellInterface_GetKeyState( 'c' ) )
 		viewOffset = self->position.y + PLAYER_CROUCH_OFFSET;
 
 	self->viewOffset = viewOffset + APLAYER( self )->viewBob;
@@ -111,7 +111,7 @@ static void Player_HandleMouseLook( Actor *self )
 		return;
 
 	int mx, my;
-	ogeGetMouseDelta( &mx, &my );
+	apeGetMouseDelta( &mx, &my );
 
 	self->angles.y += mx;
 
@@ -122,7 +122,7 @@ static void Player_HandleMouseLook( Actor *self )
 
 static void Player_Tick( Actor *self, void *userData )
 {
-	if ( YnCore_ShellInterface_GetButtonState( INPUT_A ) )
+	if ( apeShellInterface_GetButtonState( INPUT_A ) )
 		self->velocity.y += 10.0f;
 
 	Player_HandleMouseLook( self );
@@ -130,9 +130,9 @@ static void Player_Tick( Actor *self, void *userData )
 	static const float incAmount = 0.25f;
 
 	// Forward/backward
-	if ( YnCore_ShellInterface_GetButtonState( YN_CORE_INPUT_UP ) || YnCore_ShellInterface_GetKeyState( 'w' ) )
+	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) )
 		APLAYER( self )->forwardVelocity += incAmount;
-	else if ( YnCore_ShellInterface_GetButtonState( YN_CORE_INPUT_DOWN ) || YnCore_ShellInterface_GetKeyState( 's' ) )
+	else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) )
 		APLAYER( self )->forwardVelocity -= incAmount;
 	else if ( APLAYER( self )->forwardVelocity != 0.0f )
 	{
@@ -142,9 +142,9 @@ static void Player_Tick( Actor *self, void *userData )
 	}
 
 	// Strafing
-	if ( YnCore_ShellInterface_GetKeyState( 'a' ) )
+	if ( apeShellInterface_GetKeyState( 'a' ) )
 		APLAYER( self )->strafeVelocity += incAmount;
-	else if ( YnCore_ShellInterface_GetKeyState( 'd' ) )
+	else if ( apeShellInterface_GetKeyState( 'd' ) )
 		APLAYER( self )->strafeVelocity -= incAmount;
 	else if ( APLAYER( self )->strafeVelocity != 0.0f )
 	{
@@ -154,7 +154,7 @@ static void Player_Tick( Actor *self, void *userData )
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = YnCore_ShellInterface_GetButtonState( INPUT_LEFT_STICK ) || YnCore_ShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity = apeShellInterface_GetButtonState( INPUT_LEFT_STICK ) || apeShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	APLAYER( self )->forwardVelocity = PlClamp( -maxVelocity, APLAYER( self )->forwardVelocity, maxVelocity );
 	APLAYER( self )->strafeVelocity = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
 

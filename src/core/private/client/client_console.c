@@ -98,7 +98,7 @@ static void ToggleConsole( void )
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
-		ogeShellInterface_GrabMouse( !consoleIsOpen );
+		apeShellInterface_GrabMouse( !consoleIsOpen );
 	}
 }
 

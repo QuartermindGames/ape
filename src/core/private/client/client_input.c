@@ -15,19 +15,19 @@
 
 #define SERIALISATION_NODE_NAME "input"
 
-typedef struct OgeInputAction
+typedef struct ApeInputAction
 {
 	char id[ 32 ];
-	OgeInputActionCallback callback;
+	ApeInputActionCallback callback;
 
-	OgeInputButton buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
+	ApeInputButton buttons[ APE_MAX_BUTTON_INPUTS ];
 	unsigned int numButtonBinds;
 
-	OgeInputKey keys[ YN_CORE_MAX_KEY_INPUTS ];
+	ApeInputKey keys[ APE_MAX_KEY_INPUTS ];
 	unsigned int numKeyBinds;
 
 	PLLinkedListNode *node;
-} OgeInputAction;
+} ApeInputAction;
 
 static PLLinkedList *actionableList = NULL;
 
@@ -36,35 +36,37 @@ static struct
 	int x, y;
 	int ox, oy;
 	int dx, dy;
-	OgeInputState buttons[ YN_CORE_MAX_INPUT_MOUSE_BUTTONS ];
+	ApeInputState buttons[ APE_MAX_INPUT_MOUSE_BUTTONS ];
 
 	PLVector2 wheel, oldWheel;
 } inputMouse;
 
 static struct
 {
-	OgeInputState keys[ YN_CORE_MAX_KEY_INPUTS ];
+	ApeInputState keys[ APE_MAX_KEY_INPUTS ];
 } inputKeyboard;
 
-typedef struct OgeInputController
+typedef struct ApeInputController
 {
 	bool isActive;
-	OgeInputState buttons[ YN_CORE_MAX_BUTTON_INPUTS ];
+	ApeInputState buttons[ APE_MAX_BUTTON_INPUTS ];
 	PLVector2 stickL, stickLOld, stickLDelta;
 	PLVector2 stickR, stickROld, stickRDelta;
 	SDL_GameController *sdlGameController;
-} OgeInputController;
+} ApeInputController;
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
-static OgeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
+static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
 static unsigned int numControllers = 0;
 
-static OgeInputController *GetEmptyController( unsigned int *id )
+static ApeInputController *GetEmptyController( unsigned int *id )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
 		if ( controllers[ i ].isActive )
+		{
 			continue;
+		}
 
 		*id = i;
 		return &controllers[ i ];
@@ -75,10 +77,10 @@ static OgeInputController *GetEmptyController( unsigned int *id )
 
 static void IterateAction( void *userData, PL_UNUSED bool *breakEarly )
 {
-	OgeInputAction *action = ( OgeInputAction * ) userData;
+	ApeInputAction *action = ( ApeInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
-		OgeInputState state = YnCore_ShellInterface_GetButtonState( action->buttons[ i ] );
+		ApeInputState state = apeShellInterface_GetButtonState( action->buttons[ i ] );
 		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) )
 		{
 			continue;
@@ -86,9 +88,9 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly )
 
 		action->callback( state, action->id );
 	}
-	for( unsigned int i = 0; i < action->numKeyBinds; ++i )
+	for ( unsigned int i = 0; i < action->numKeyBinds; ++i )
 	{
-		OgeInputState state = YnCore_ShellInterface_GetKeyState( action->keys[ i ] );
+		ApeInputState state = apeShellInterface_GetKeyState( action->keys[ i ] );
 		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) )
 		{
 			continue;
@@ -153,7 +155,7 @@ static void CheckForControllers( void )
 
 		// try and fetch an empty slot - break if one isn't available
 		unsigned int id;
-		OgeInputController *controller = GetEmptyController( &id );
+		ApeInputController *controller = GetEmptyController( &id );
 		if ( controller == NULL )
 		{
 			break;
@@ -230,7 +232,9 @@ void apeSerializeInputConfig_( NdBranch *root )
 {
 	/* nothing to serialise */
 	if ( actionableList == NULL )
+	{
 		return;
+	}
 
 	NdBranch *inputNode = ndPushBackObjectArray( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
@@ -265,20 +269,22 @@ static void UnregisterController( unsigned int id )
 void apeClearInputDevices_( void )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
+	{
 		UnregisterController( i );
+	}
 }
 
-unsigned int ogeRegisterInputDevice_( OgeInputDeviceType type )
+unsigned int ogeRegisterInputDevice_( ApeInputDeviceType type )
 {
 	unsigned int id;
-	OgeInputController *device = GetEmptyController( &id );
+	ApeInputController *device = GetEmptyController( &id );
 	if ( device == NULL )
 	{
 		PRINT_WARNING( "Failed to find an empty input device slot!\n" );
 		return ( unsigned int ) -1;
 	}
 
-	PL_ZERO( device, sizeof( OgeInputController ) );
+	PL_ZERO( device, sizeof( ApeInputController ) );
 
 	device->isActive = true;
 
@@ -288,18 +294,22 @@ unsigned int ogeRegisterInputDevice_( OgeInputDeviceType type )
 }
 
 bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState );
-void Client_Input_HandleKeyboardEvent( int key, OgeInputState keyState )
+void Client_Input_HandleKeyboardEvent( int key, ApeInputState keyState )
 {
 	if ( Client_Console_HandleKeyboardEvent( key, keyState ) )
+	{
 		return;
+	}
 }
 
-void Client_Input_HandleMouseButtonEvent( int button, OgeInputState buttonState )
+void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState )
 {
 	GUI_UpdateMouseButton( button, ( buttonState == OGE_INPUT_STATE_DOWN ) );
 
 	if ( buttonState != OGE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == OGE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == OGE_INPUT_STATE_DOWN ) )
+	{
 		return;
+	}
 
 	inputMouse.buttons[ button ] = buttonState;
 }
@@ -312,7 +322,9 @@ void Client_Input_HandleMouseWheelEvent( float x, float y )
 	inputMouse.wheel.y  = y;
 
 	if ( Client_Console_HandleMouseWheelEvent( x, y ) )
+	{
 		return;
+	}
 
 	GUI_UpdateMouseWheel( x, y );
 }
@@ -327,13 +339,13 @@ void Client_Input_HandleMouseMotionEvent( int x, int y )
 	GUI_UpdateMousePosition( inputMouse.x, inputMouse.y );
 }
 
-void ogeGetMousePosition( int *x, int *y )
+void apeGetMousePosition( int *x, int *y )
 {
 	*x = inputMouse.x;
 	*y = inputMouse.y;
 }
 
-void ogeGetMouseDelta( int *x, int *y )
+void apeGetMouseDelta( int *x, int *y )
 {
 	*x = inputMouse.dx;
 	*y = inputMouse.dy;
@@ -346,7 +358,7 @@ void apeBeginInputFrame_( void )
 	//int oy = inputMouse.y;
 
 	int w, h;
-	ogeShellInterface_GetWindowSize( &w, &h );
+	apeShellInterface_GetWindowSize( &w, &h );
 	int cx = w / 2;
 	int cy = h / 2;
 
@@ -355,15 +367,15 @@ void apeBeginInputFrame_( void )
 	inputMouse.dy = ( cy - inputMouse.y );
 }
 
-static bool GetSDLButtonState( SDL_GameController *gameController, OgeInputButton button )
+static bool GetSDLButtonState( SDL_GameController *gameController, ApeInputButton button )
 {
 	SDL_GameControllerButton sdlButton;
 	switch ( button )
 	{
-		case YN_CORE_INPUT_UP:
+		case APE_INPUT_UP:
 			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_UP;
 			break;
-		case YN_CORE_INPUT_DOWN:
+		case APE_INPUT_DOWN:
 			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_DOWN;
 			break;
 		case INPUT_LEFT:
@@ -417,13 +429,17 @@ static bool GetSDLButtonState( SDL_GameController *gameController, OgeInputButto
 void apeTickInput_( void )
 {
 	if ( !sdlInputInitialized )
+	{
 		return;
+	}
 
 	// now update the state of all the connected devices
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
 		if ( controllers[ i ].sdlGameController == NULL )
+		{
 			continue;
+		}
 
 		if ( !SDL_GameControllerGetAttached( controllers[ i ].sdlGameController ) )
 		{
@@ -432,7 +448,7 @@ void apeTickInput_( void )
 			continue;
 		}
 
-		for ( unsigned int j = 0; j < YN_CORE_MAX_BUTTON_INPUTS; ++j )
+		for ( unsigned int j = 0; j < APE_MAX_BUTTON_INPUTS; ++j )
 		{
 			bool state = GetSDLButtonState( controllers[ i ].sdlGameController, j );
 			if ( !state )
@@ -442,7 +458,9 @@ void apeTickInput_( void )
 			}
 
 			if ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_DOWN )
+			{
 				continue;
+			}
 
 			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_PRESSED ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_PRESSED;
 		}
@@ -476,37 +494,43 @@ void apeEndInputFrame_( void )
 {
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
+	{
 		return;
+	}
 
 	int w, h;
-	ogeShellInterface_GetWindowSize( &w, &h );
-	YnCore_ShellInterface_SetMousePosition( w / 2, h / 2 );
+	apeShellInterface_GetWindowSize( &w, &h );
+	apeShellInterface_SetMousePosition( w / 2, h / 2 );
 }
 
-unsigned int ogeGetNumControllers( void ) { return numControllers; }
+unsigned int apeGetNumControllers( void ) { return numControllers; }
 
-OgeInputState ogeGetButtonStatus( unsigned int slot, OgeInputButton button )
+ApeInputState apeGetButtonStatus( unsigned int slot, ApeInputButton button )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
+	{
 		return OGE_INPUT_STATE_NONE;
+	}
 
 	return controllers[ slot ].buttons[ button ];
 }
 
-PLVector2 ogeGetJoystickStatus( unsigned int slot, unsigned int stickNum )
+PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
+	{
 		return pl_vecOrigin2;
+	}
 
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
 }
 
-void ogeRegisterInputAction( const char *id,
-                             OgeInputButton buttons[], unsigned int numDefaultButtons,
-                             OgeInputKey keys[], unsigned int numDefaultKeys,
-                             OgeInputActionCallback actionCallback )
+void apeRegisterInputAction( const char *id,
+                             ApeInputButton buttons[], unsigned int numDefaultButtons,
+                             ApeInputKey keys[], unsigned int numDefaultKeys,
+                             ApeInputActionCallback actionCallback )
 {
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL )
@@ -518,25 +542,25 @@ void ogeRegisterInputAction( const char *id,
 		}
 	}
 
-	if ( numDefaultButtons > YN_CORE_MAX_BUTTON_INPUTS )
+	if ( numDefaultButtons > APE_MAX_BUTTON_INPUTS )
 	{
-		numDefaultButtons = YN_CORE_MAX_BUTTON_INPUTS;
+		numDefaultButtons = APE_MAX_BUTTON_INPUTS;
 		PRINT_WARNING( "Too many default button inputs for action!\n" );
 	}
-	if ( numDefaultKeys > YN_CORE_MAX_KEY_INPUTS )
+	if ( numDefaultKeys > APE_MAX_KEY_INPUTS )
 	{
-		numDefaultKeys = YN_CORE_MAX_KEY_INPUTS;
+		numDefaultKeys = APE_MAX_KEY_INPUTS;
 		PRINT_WARNING( "Too many default key inputs for action!\n" );
 	}
 
-	OgeInputAction *inputAction = PL_NEW( OgeInputAction );
+	ApeInputAction *inputAction = PL_NEW( ApeInputAction );
 	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
 	inputAction->callback = actionCallback;
 
-	memcpy( inputAction->buttons, buttons, sizeof( OgeInputButton ) * numDefaultButtons );
+	memcpy( inputAction->buttons, buttons, sizeof( ApeInputButton ) * numDefaultButtons );
 	inputAction->numButtonBinds = numDefaultButtons;
 
-	memcpy( inputAction->keys, keys, sizeof( OgeInputKey ) * numDefaultKeys );
+	memcpy( inputAction->keys, keys, sizeof( ApeInputKey ) * numDefaultKeys );
 	inputAction->numKeyBinds = numDefaultKeys;
 
 	inputAction->node = PlInsertLinkedListNode( actionableList, inputAction );

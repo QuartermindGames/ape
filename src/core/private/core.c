@@ -126,7 +126,7 @@ void apeShutdown( void )
 
 	ogeFileSystem_ClearMountedLocations();
 
-	ogeShellInterface_Shutdown();
+	apeShellInterface_Shutdown();
 
 	engineInitialized = false;
 }
@@ -206,7 +206,7 @@ void apeHandleTextEvent( const char *key )
 	}
 }
 
-void apeHandleMouseButtonEvent( int button, OgeInputState buttonState )
+void apeHandleMouseButtonEvent( int button, ApeInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }

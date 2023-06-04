@@ -17,8 +17,8 @@ void apeDeserializeInputConfig_( NdBranch *root );
 
 void apeClearInputDevices_( void );
 
-void Client_Input_HandleKeyboardEvent( int key, OgeInputState keyState );
-void Client_Input_HandleMouseButtonEvent( int button, OgeInputState buttonState );
+void Client_Input_HandleKeyboardEvent( int key, ApeInputState keyState );
+void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState );
 void Client_Input_HandleMouseWheelEvent( float x, float y );
 void Client_Input_HandleMouseMotionEvent( int x, int y );
 

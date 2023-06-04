@@ -15,40 +15,40 @@
 
 PL_EXTERN_C
 
-#define YN_CORE_TICK_RATE ( 1000 / 60 ) /* ms */
+#define APE_TICK_RATE ( 1000 / 60 ) /* ms */
 
-typedef enum YNCoreMessageType
+typedef enum ApeMessageBoxType
 {
 	OGE_MESSAGE_ERROR,
 	OGE_MESSAGE_WARNING,
 	OGE_MESSAGE_INFO,
-} YNCoreMessageType;
+} ApeMessageBoxType;
 
 enum
 {
-	OGE_GRAPHICS_SOFTWARE,
-	OGE_GRAPHICS_OPENGL,
-	OGE_GRAPHICS_VULKAN,
-	OGE_GRAPHICS_OTHER,
+	APE_GRAPHICS_SOFTWARE,
+	APE_GRAPHICS_OPENGL,
+	APE_GRAPHICS_VULKAN,
+	APE_GRAPHICS_OTHER,
 
-	YN_CORE_MAX_GRAPHICS_MODES
+	APE_MAX_GRAPHICS_MODES
 };
 
 ////////////////////////////////////////////////////////////////////
 // Window Management
 ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode );
-bool ogeShellInterface_SetWindowSize( int *width, int *height );
-void ogeShellInterface_GetWindowSize( int *width, int *height );
-void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, const char *message, ... );
+bool apeShellInterface_SetWindowSize( int *width, int *height );
+void apeShellInterface_GetWindowSize( int *width, int *height );
+void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, const char *message, ... );
 
 ////////////////////////////////////////////////////////////////////
 // Low Level Input
-OgeInputState YnCore_ShellInterface_GetButtonState( OgeInputButton inputButton );
-OgeInputState YnCore_ShellInterface_GetKeyState( int key );
-void ogeShellInterface_GetMousePosition( int *x, int *y );
-void YnCore_ShellInterface_SetMousePosition( int x, int y );
-void ogeShellInterface_GrabMouse( bool grab );
-void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
-void ogeShellInterface_Shutdown( void );
+ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton );
+ApeInputState apeShellInterface_GetKeyState( int key );
+void apeShellInterface_GetMousePosition( int *x, int *y );
+void apeShellInterface_SetMousePosition( int x, int y );
+void apeShellInterface_GrabMouse( bool grab );
+void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
+void apeShellInterface_Shutdown( void );
 
 PL_EXTERN_C_END

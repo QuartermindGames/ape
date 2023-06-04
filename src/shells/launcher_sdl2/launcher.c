@@ -16,7 +16,7 @@
 
 static NdBranch *shellConfig;
 
-void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour )
+void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *colour )
 {
 }
 
@@ -31,7 +31,7 @@ static ApeViewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
-void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, const char *message, ... )
+void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, const char *message, ... )
 {
 	const char *title;
 	SDL_MessageBoxFlags flags;
@@ -90,7 +90,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 		default:
 			PrintWarn( "Unknown graphics mode (%d)!\n", mode );
 			break;
-		case OGE_GRAPHICS_OPENGL:
+		case APE_GRAPHICS_OPENGL:
 			flags |= SDL_WINDOW_OPENGL;
 			SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
 			SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
@@ -101,7 +101,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
 			SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 			break;
-		case OGE_GRAPHICS_VULKAN:
+		case APE_GRAPHICS_VULKAN:
 			flags |= SDL_WINDOW_VULKAN;
 			break;
 	}
@@ -128,7 +128,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 #	endif
 #endif
 
-	if ( mode == OGE_GRAPHICS_OPENGL )
+	if ( mode == APE_GRAPHICS_OPENGL )
 	{
 		sdlGLContext = SDL_GL_CreateContext( sdlWindow );
 		if ( sdlGLContext == NULL )
@@ -156,7 +156,7 @@ static void DestroyWindow( void )
 }
 #endif
 
-bool ogeShellInterface_SetWindowSize( int *width, int *height )
+bool apeShellInterface_SetWindowSize( int *width, int *height )
 {
 	if ( sdlWindow == NULL )
 	{
@@ -178,7 +178,7 @@ bool ogeShellInterface_SetWindowSize( int *width, int *height )
 	return false;
 }
 
-void ogeShellInterface_GetWindowSize( int *width, int *height )
+void apeShellInterface_GetWindowSize( int *width, int *height )
 {
 	SDL_GetWindowSize( sdlWindow, width, height );
 }
@@ -187,37 +187,37 @@ void ogeShellInterface_GetWindowSize( int *width, int *height )
  * INPUT MANAGEMENT
  ****************************************/
 
-static OgeInputState buttonStates[ YN_CORE_MAX_BUTTON_INPUTS ];
-OgeInputState YnCore_ShellInterface_GetButtonState( OgeInputButton inputButton )
+static ApeInputState buttonStates[ APE_MAX_BUTTON_INPUTS ];
+ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton )
 {
-	if ( inputButton >= YN_CORE_MAX_BUTTON_INPUTS )
+	if ( inputButton >= APE_MAX_BUTTON_INPUTS )
 		return OGE_INPUT_STATE_NONE;
 
 	return buttonStates[ inputButton ];
 }
 
-static OgeInputState keyStates[ YN_CORE_MAX_KEY_INPUTS ];
-OgeInputState YnCore_ShellInterface_GetKeyState( int key )
+static ApeInputState keyStates[ APE_MAX_KEY_INPUTS ];
+ApeInputState apeShellInterface_GetKeyState( int key )
 {
-	if ( key >= YN_CORE_MAX_KEY_INPUTS )
+	if ( key >= APE_MAX_KEY_INPUTS )
 		return OGE_INPUT_STATE_NONE;
 
 	return keyStates[ key ];
 }
 
-void ogeShellInterface_GetMousePosition( int *x, int *y )
+void apeShellInterface_GetMousePosition( int *x, int *y )
 {
 	SDL_GetMouseState( x, y );
 }
 
-void YnCore_ShellInterface_SetMousePosition( int x, int y )
+void apeShellInterface_SetMousePosition( int x, int y )
 {
 	SDL_WarpMouseInWindow( sdlWindow, x, y );
 }
 
 static bool grabState = false;
 
-void ogeShellInterface_GrabMouse( bool grab )
+void apeShellInterface_GrabMouse( bool grab )
 {
 	SDL_SetWindowGrab( sdlWindow, grab );
 	SDL_SetRelativeMouseMode( grab );
@@ -341,7 +341,7 @@ static unsigned int OS_TimerCallback( unsigned int interval, void *param )
  * INITIALIZATION
  ****************************************/
 
-void ogeShellInterface_Shutdown( void )
+void apeShellInterface_Shutdown( void )
 {
 	cmnWriteConfig( shellConfig, "shell" );
 
@@ -376,13 +376,21 @@ static bool InitializeDisplay( void )
 	unsigned int driverMode;
 	const char *driverName = ndGetStringByName( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
-		driverMode = OGE_GRAPHICS_OPENGL;
+	{
+		driverMode = APE_GRAPHICS_OPENGL;
+	}
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
-		driverMode = OGE_GRAPHICS_VULKAN;
+	{
+		driverMode = APE_GRAPHICS_VULKAN;
+	}
 	else if ( strcmp( driverName, "software" ) == 0 )
-		driverMode = OGE_GRAPHICS_SOFTWARE;
+	{
+		driverMode = APE_GRAPHICS_SOFTWARE;
+	}
 	else
-		driverMode = OGE_GRAPHICS_OTHER;
+	{
+		driverMode = APE_GRAPHICS_OTHER;
+	}
 
 	if ( ( windowViewport = apeShellInterface_CreateWindow( "APE - Another Portal Engine", 1024, 768, false, driverMode ) ) == NULL )
 	{
@@ -464,7 +472,7 @@ int Launcher_Initialize( int argc, char **argv )
 	}
 
 	// setup our timers, in this case we're just setting up our tick
-	sdlTimer = SDL_AddTimer( YN_CORE_TICK_RATE, OS_TimerCallback, NULL );
+	sdlTimer = SDL_AddTimer( APE_TICK_RATE, OS_TimerCallback, NULL );
 
 	SDL_StartTextInput();
 
