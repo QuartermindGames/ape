@@ -20,11 +20,11 @@ void YnCore_InitializeEditor( void );
 void ogeShutdownEditor( void );
 void YnCore_TickEditor( void );
 
-void YnCore_DrawEditorGUI( const OgeViewport *viewport );
+void YnCore_DrawEditorGUI( const ApeViewport *viewport );
 
-YNCoreEditorContext *YnCore_GetCurrentEditorContext( void );
-YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier );
-YNCoreEditorContext *YnCore_SetEditorContext( YNCoreEditorContextType type );
+ApeEditorContext *YnCore_GetCurrentEditorContext( void );
+ApeEditorContext *YnCore_GetEditorContext( const char *identifier );
+ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type );
 bool YnCore_IsEditorContextActive( const char *identifier );
 
 PL_EXTERN_C_END

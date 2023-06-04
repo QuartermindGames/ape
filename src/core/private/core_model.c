@@ -20,7 +20,7 @@ static void DestroyModel( void *userData )
 	if ( additionalData != NULL )
 	{
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
-			ogeMaterial_Release( additionalData->materials[ i ] );
+			apeReleaseMaterial( additionalData->materials[ i ] );
 	}
 
 	PlmDestroyModel( model );
@@ -140,7 +140,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	{
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
 		userData.numMaterials   = 1;
-		userData.materials[ 0 ] = ogeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, true, false );
+		userData.materials[ 0 ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 	}
 	else
 	{
@@ -152,7 +152,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
-				userData.materials[ i ] = ogeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, false, false );
+				userData.materials[ i ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, false, false );
 				if ( userData.materials[ i ] == NULL )
 				{
 					PRINT_ERROR( "Failed to cache fallback material for mesh!\n" );
@@ -160,7 +160,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 			}
 			else
 			{
-				userData.materials[ i ] = ogeCacheMaterial( materialPath, 0, true, false );
+				userData.materials[ i ] = apeCacheMaterial( materialPath, 0, true, false );
 			}
 
 			n = ndGetNextChild( n );
@@ -204,7 +204,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	return model;
 }
 
-PLMModel *Model_Cache( const char *path )
+PLMModel *apeCacheModel( const char *path )
 {
 	NdBranch *root = ndLoadFile( path, "model" );
 	if ( root == NULL )
@@ -228,7 +228,7 @@ PLMModel *Model_Cache( const char *path )
  * manager then it'll be immediately
  * destroyed.
  */
-void Model_Release( PLMModel *model )
+void apeReleaseModel( PLMModel *model )
 {
 	MDLUserData *additionalData = model->userData;
 	if ( additionalData == NULL )
@@ -238,5 +238,5 @@ void Model_Release( PLMModel *model )
 		return;
 	}
 
-	ogeMemoryManager_ReleaseReference( &additionalData->mem );
+	apeReleaseReference( &additionalData->mem );
 }

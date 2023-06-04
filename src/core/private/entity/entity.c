@@ -20,7 +20,7 @@ static unsigned int numTotalSpawns;
  * ENTITY
  ****************************************/
 
-NdBranch *YnCore_Entity_Serialize( YNCoreEntity *self, NdBranch *root )
+NdBranch *YnCore_Entity_Serialize( ApeEntity *self, NdBranch *root )
 {
 	NdBranch *entityNode     = ndPushBackObject( root, "entity" );
 	NdBranch *componentsNode = ndPushBackObjectArray( entityNode, "components" );
@@ -30,10 +30,10 @@ NdBranch *YnCore_Entity_Serialize( YNCoreEntity *self, NdBranch *root )
 	{
 		NdBranch *componentNode = ndPushBackObject( componentsNode, NULL );
 
-		YNCoreEntityComponent *entityComponent = ( YNCoreEntityComponent * ) PlGetLinkedListNodeUserData( node );
+		ApeEntityComponent *entityComponent = ( ApeEntityComponent * ) PlGetLinkedListNodeUserData( node );
 		ndPushBackString( componentNode, "id", entityComponent->base->name );
 
-		const YNCoreEntityComponentBase *entityComponentTemplate = entityComponent->base;
+		const ApeEntityComponentBase *entityComponentTemplate = entityComponent->base;
 		if ( entityComponentTemplate->callbackTable->serializeFunction != NULL )
 			entityComponentTemplate->callbackTable->serializeFunction( entityComponent, componentNode );
 
@@ -43,12 +43,12 @@ NdBranch *YnCore_Entity_Serialize( YNCoreEntity *self, NdBranch *root )
 	return entityNode;
 }
 
-YNCoreEntityComponent *YnCore_Entity_GetComponentByName( YNCoreEntity *self, const char *name )
+ApeEntityComponent *YnCore_Entity_GetComponentByName( ApeEntity *self, const char *name )
 {
 	PLLinkedListNode *node = PlGetFirstNode( self->components );
 	while ( node != NULL )
 	{
-		YNCoreEntityComponent *entityComponent = PlGetLinkedListNodeUserData( node );
+		ApeEntityComponent *entityComponent = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( entityComponent->base->name, name ) == 0 )
 			return entityComponent;
 
@@ -58,7 +58,7 @@ YNCoreEntityComponent *YnCore_Entity_GetComponentByName( YNCoreEntity *self, con
 	return NULL;
 }
 
-YNCoreEntityComponent *YnCore_Entity_AttachComponentByName( YNCoreEntity *self, const char *name )
+ApeEntityComponent *YnCore_Entity_AttachComponentByName( ApeEntity *self, const char *name )
 {
 	if ( YnCore_Entity_GetComponentByName( self, name ) != NULL )
 	{
@@ -69,11 +69,11 @@ YNCoreEntityComponent *YnCore_Entity_AttachComponentByName( YNCoreEntity *self, 
 	return YnCore_EntityManager_AddComponentToEntity( self, name );
 }
 
-void YnCore_Entity_RemoveComponent( YNCoreEntity *self, YNCoreEntityComponent *component )
+void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component )
 {
 	PlDestroyLinkedListNode( component->listNode );
 
-	const YNCoreEntityComponentBase *base = component->base;
+	const ApeEntityComponentBase *base = component->base;
 	if ( base->callbackTable->destroyFunction != NULL )
 		base->callbackTable->destroyFunction( component );
 
@@ -82,13 +82,13 @@ void YnCore_Entity_RemoveComponent( YNCoreEntity *self, YNCoreEntityComponent *c
 	PRINT_DEBUG( "Removed component (%s) from entity (%u)\n", base->name, self->id );
 }
 
-void YnCore_Entity_RemoveAllComponents( YNCoreEntity *self )
+void apeRemoveAllEntityComponents( ApeEntity *self )
 {
 	PLLinkedListNode *node = PlGetFirstNode( self->components );
 	while ( node != NULL )
 	{
-		YNCoreEntityComponent *component = PlGetLinkedListNodeUserData( node );
+		ApeEntityComponent *component = PlGetLinkedListNodeUserData( node );
 		node                       = PlGetNextLinkedListNode( node );
-		YnCore_Entity_RemoveComponent( self, component );
+		apeRemoveEntityComponent( self, component );
 	}
 }

@@ -154,7 +154,7 @@ void ogeFileSystem_SetupConfig( NdBranch *root )
 		ParseAliases( child );
 }
 
-void ogeFileSystem_MountBaseLocations( void )
+void apeMountBaseLocations( void )
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
@@ -167,7 +167,7 @@ void ogeFileSystem_MountBaseLocations( void )
 	PlMountLocalLocation( GetDataDirectory() );
 }
 
-void ogeFileSystem_MountLocations( void )
+void apeMountLocations( void )
 {
 	PlRegisterStandardPackageLoaders();
 

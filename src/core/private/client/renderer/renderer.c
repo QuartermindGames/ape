@@ -16,17 +16,17 @@
 
 #include "post/post.h"
 
-OgeRendererStats oge_RendererPerformance_;
-OgeRendererPassState rendererState;
+ApeRendererStats ape_RendererPerformance_;
+ApeRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
-PLGCamera *ogeGetAuxCamera( void ) { return auxCamera; }
+PLGCamera *apeGetAuxCamera( void ) { return auxCamera; }
 
 static PLGFrameBuffer *fboBuffer;
 
 /* Post Processing */
 
-void ogeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
+void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
 {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL )
@@ -98,11 +98,11 @@ void R_DrawNumber( float x, float y, int number )
 	R_DrawDigit( x, y, number % 10 );
 }
 
-void YnCore_SetupDefaultRenderState( const OgeViewport *viewport )
+void apeSetupDefaultRenderState( const ApeViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	OgeWorld *world = Game_GetCurrentWorld();
+	ApeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == OGE_CAMERA_MODE_PERSPECTIVE ) )
 	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
@@ -117,29 +117,29 @@ void YnCore_SetupDefaultRenderState( const OgeViewport *viewport )
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void YnCore_BeginDraw( OgeViewport *viewport )
+void apeBeginDraw( ApeViewport *viewport )
 {
 	double newTime = PlGetCurrentSeconds();
 
 	viewport->perf.frameReadings[ viewport->perf.frameIndex++ ] = 1.0 / ( newTime - viewport->perf.oldTime );
-	if ( viewport->perf.frameIndex >= YN_CORE_MAX_FPS_READINGS )
+	if ( viewport->perf.frameIndex >= APE_MAX_FPS_READINGS )
 	{
 		viewport->perf.frameIndex = 0;
 	}
 	viewport->perf.oldTime = newTime;
 
-	YnCore_SetupDefaultRenderState( viewport );
+	apeSetupDefaultRenderState( viewport );
 
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 }
 
-void YnCore_EndDraw( OgeViewport *viewport )
+void apeEndDraw( ApeViewport *viewport )
 {
-	PL_ZERO_( oge_RendererPerformance_ );
+	PL_ZERO_( ape_RendererPerformance_ );
 
 	viewport->perf.numBatches   = 0;
 	viewport->perf.numTriangles = 0;
@@ -147,21 +147,27 @@ void YnCore_EndDraw( OgeViewport *viewport )
 	viewport->perf.numPortals   = 0;
 }
 
-static OgeMaterial *ppFXAAMaterial = NULL;
+static ApeMaterial *ppFXAAMaterial = NULL;
 
-void ogeInitializeShaders( void );  /* renderer/shaders.c */
+void apeInitializeShaders( void );  /* renderer/shaders.c */
 void RT_InitializeTextures( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void ogeInitializeRenderTargets( void );
-void ogeShutdownRenderTargets( void );
+void apeInitializeRenderTargets( void );
+void apeShutdownRenderTargets( void );
 
 void Renderer_RegisterConsoleVariables( void )
 {
 	PlRegisterConsoleVariable( "r.cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r.superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r.showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.showFPS", "Toggle FPS counter.", "false", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r.showFPS", "Toggle FPS counter.",
+#if !defined( NDEBUG )
+	                           "true",
+#else
+	                           "false",
+#endif
+	                           PL_VAR_BOOL, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r.skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r.skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
@@ -176,7 +182,7 @@ void Renderer_RegisterConsoleVariables( void )
 	PlRegisterConsoleVariable( "r.far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
 }
 
-void ogeInitializeRenderer( void )
+void apeInitializeRenderer( void )
 {
 	PRINT( "Initializing renderer\n" );
 
@@ -184,9 +190,9 @@ void ogeInitializeRenderer( void )
 
 	RT_InitializeTextures();
 
-	ogeInitializeShaders();
-	ogeInitializeRenderTargets();
-	ogeInitializeMaterialSystem();
+	apeInitializeShaders();
+	apeInitializeRenderTargets();
+	apeInitializeMaterialSystem();
 	YR_Font_Initialize();
 
 	auxCamera = PlgCreateCamera();
@@ -198,22 +204,22 @@ void ogeInitializeRenderer( void )
 	auxCamera->far  = 10000.0f;
 
 	//SetupShadowMap();
-	YnCore_SetupDefaultRenderState( NULL );
+	apeSetupDefaultRenderState( NULL );
 
 	R_PP_SetupEffects();
 }
 
-void ogeShutdownRenderer( void )
+void apeShutdownRenderer( void )
 {
 	Font_Shutdown();
-	ogeShutdownMaterialSystem();
-	ogeShutdownRenderTargets();
+	apeShutdownMaterialSystem();
+	apeShutdownRenderTargets();
 }
 
 /**
  * Where the magic of post processing happens.
  */
-static void DrawScenePost( const OgeViewport *viewport )
+static void DrawScenePost( const ApeViewport *viewport )
 {
 	PL_GET_CVAR( "r.postProcessing", postProcessingVar );
 	if ( postProcessingVar == NULL || !postProcessingVar->b_value )
@@ -229,7 +235,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	if ( numPoints < 2 )
 		return;
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
@@ -317,7 +323,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	PlFree( points );
 }
 
-static void DrawDebugOverlay( const OgeViewport *viewport )
+static void DrawDebugOverlay( const ApeViewport *viewport )
 {
 	PL_GET_CVAR( "debug.overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
@@ -339,7 +345,7 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 	static const float tx = 8 + 4;
 	float y               = sy;
 
-	const OgeCamera *camera = viewport->camera;
+	const ApeCamera *camera = viewport->camera;
 	if ( camera != NULL )
 	{
 		// Draw camera position
@@ -358,26 +364,26 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 	char buf[ 64 ];
 	snprintf( buf, sizeof( buf ), "FPS:           " PL_FMT_uint32 "\n", YnCore_Viewport_GetAverageFPS( viewport ) );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num faces:     " PL_FMT_uint32 "\n", oge_RendererPerformance_.numFacesDrawn );
+	snprintf( buf, sizeof( buf ), "Num faces:     " PL_FMT_uint32 "\n", ape_RendererPerformance_.numFacesDrawn );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num portals:   " PL_FMT_uint32 "\n", oge_RendererPerformance_.numVisiblePortals );
+	snprintf( buf, sizeof( buf ), "Num portals:   " PL_FMT_uint32 "\n", ape_RendererPerformance_.numVisiblePortals );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num triangles: " PL_FMT_uint32 "\n", oge_RendererPerformance_.numTriangles );
+	snprintf( buf, sizeof( buf ), "Num triangles: " PL_FMT_uint32 "\n", ape_RendererPerformance_.numTriangles );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num batches:   " PL_FMT_uint32 "\n", oge_RendererPerformance_.numBatches );
+	snprintf( buf, sizeof( buf ), "Num batches:   " PL_FMT_uint32 "\n", ape_RendererPerformance_.numBatches );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Alloc memory:  %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Total memory:  %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 
-	unsigned int numTasks = Sch_GetNumTasks();
+	unsigned int numTasks = apeGetNumScheduledTasks();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
 	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
 		double taskDelay;
-		const char *taskDescription = Sch_GetTaskDescription( i, &taskDelay );
+		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
 		Font_AddBitmapStringToPass( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
@@ -385,7 +391,7 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 
 	static const float bw = 128;
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
@@ -406,34 +412,36 @@ static void DrawDebugOverlay( const OgeViewport *viewport )
 			}
 
 			uint8_t numPoints;
-			const double *graph = ogeProfiler_GetGraph( i, &numPoints );
+			const double *graph = apeGetProfilerGraph( i, &numPoints );
 			YR_DrawGraph( cpuProfilerDescriptions[ i ], x, y, bw, graphHeight, graph, numPoints, .0f, 1.0f );
 			y += graphHeight;
 		}
 	}
 }
 
-void YnCore_Set2DViewportSize( int w, int h )
+void apeSet2DViewportSize( int w, int h )
 {
 	PlgSetViewport( 0, 0, w, h );
 	PlgSetupCamera( auxCamera );
 }
 
-void ogeGet2DViewportSize( int *width, int *height )
+void apeGet2DViewportSize( int *width, int *height )
 {
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void YnCore_DrawMenu( const OgeViewport *viewport )
+void apeDrawMenu( const ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 	{
 		return;
 	}
 
-	YnCore_Set2DViewportSize( viewport->width, viewport->height );
+	apeSet2DViewportSize( viewport->width, viewport->height );
 
-	PlgSetDepthMask( false );
+	//PlgSetDepthMask( false );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -446,7 +454,7 @@ void YnCore_DrawMenu( const OgeViewport *viewport )
 	//camera.internal = auxCamera;
 	//YR_World_DrawWireframe( Game_GetCurrentWorld(), &camera );
 
-	YnCore_DrawGUI( viewport );
+	ogeDrawGUI_( viewport );
 	YnCore_DrawEditorGUI( viewport );
 
 	DrawDebugOverlay( viewport );
@@ -455,10 +463,11 @@ void YnCore_DrawMenu( const OgeViewport *viewport )
 
 	PlPopMatrix();
 
-	PlgSetDepthMask( true );
+	//PlgSetDepthMask( true );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h )
+void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h )
 {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
@@ -473,17 +482,17 @@ void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h )
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 0 ) );
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 1 ) );
 
-	ogeMaterial_DrawMesh( material, mesh, NULL, 0 );
+	apeDrawMesh( material, mesh, NULL, 0 );
 }
 
-void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
+void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	PLVector3 angles;
 	angles.x = PL_DEG2RAD( rotation.x );
@@ -505,13 +514,13 @@ void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlPopMatrix();
 }
 
-static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
+static void YR_RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 {
-	OgeWorldRoom *currentSector = NULL;
-	OgeWorld *world               = Game_GetCurrentWorld();
+	ApeWorldRoom *currentSector = NULL;
+	ApeWorld *world             = Game_GetCurrentWorld();
 	if ( world != NULL )
 	{
-		currentSector = YnCore_World_GetSectorByGlobalOrigin( world, &camera->internal->position );
+		currentSector = apeGetRoomAtPosition( world, &camera->internal->position );
 	}
 
 	/* todo:	
@@ -528,14 +537,14 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 		{
 			if ( camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME )
 			{
-				ogeDrawWorldWireframe( world, camera );
+				apeDrawWorldWireframe_( world, camera );
 			}
 			else
 			{
-				ogeDrawWorld( world, currentSector, camera );
+				apeDrawWorld_( world );
 			}
 
-			YNCoreEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
+			ApeEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
 			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
 			{
 				PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -554,7 +563,7 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 
 				static const unsigned int gridW = 256;
 
-				PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+				PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
 
 				PlPopMatrix();
@@ -563,30 +572,30 @@ static void YR_RenderScene( OgeCamera *camera, const OgeViewport *viewport )
 	}
 	else
 	{
-		ogeDrawWorld( world, currentSector, camera );
+		apeDrawWorld_( world );
 	}
 
 	OGE_PROFILE_END( PROFILE_DRAW_WORLD );
 }
 
 static PLGTexture *colourTexture;
-PLGTexture *ogeGetPrimaryColourAttachment( void )
+PLGTexture *apeGetPrimaryColourAttachment( void )
 {
 	return colourTexture;
 }
 
 static PLGTexture *depthTexture;
-PLGTexture *ogeGetPrimaryDepthAttachment( void )
+PLGTexture *apeGetPrimaryDepthAttachment( void )
 {
 	return depthTexture;
 }
 
-void ogeDrawScene_( OgeCamera *camera, const OgeViewport *viewport )
+void ogeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 {
-	oge_RendererPerformance_.cameraPos = camera->internal->position;
+	ape_RendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
-	ogeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
+	apeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
 	PlgBindFrameBuffer( fboBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );

@@ -21,14 +21,14 @@ OgeTexture *YnCore_Texture_Load( const char *path )
 	OgeTexture *texture  = PL_NEW( OgeTexture );
 	texture->internal = internal;
 
-	ogeMemoryManager_SetupReference( "texture", MEM_CACHE_TEXTURES, &texture->reference, CleanupTexture, texture );
+	apeSetupReference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, CleanupTexture, texture );
 
 	return texture;
 }
 
 void YnCore_Texture_Release( OgeTexture *texture )
 {
-	ogeMemoryManager_ReleaseReference( &texture->reference );
+	apeReleaseReference( &texture->reference );
 }
 
 /////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@ void YnCore_Texture_Release( OgeTexture *texture )
 
 static PLGTexture *fallbackTexture = NULL;
 
-PLGTexture *ogeGetFallbackTexture( void )
+PLGTexture *apeGetFallbackTexture( void )
 {
 	return fallbackTexture;
 }
@@ -124,7 +124,7 @@ static PLGTexture *GetTexture( const char *path )
 	return NULL;
 }
 
-PLGTexture *ogeLoadTexture( const char *path, PLGTextureFilter filterMode )
+PLGTexture *apeLoadTexture( const char *path, PLGTextureFilter filterMode )
 {
 	/* check if it's already loaded */
 	PLGTexture *texture = GetTexture( path );

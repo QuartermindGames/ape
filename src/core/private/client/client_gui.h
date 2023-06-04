@@ -9,7 +9,7 @@ PL_EXTERN_C
 
 void YnCore_InitializeGUI( void );
 void YnCore_ShutdownGUI( void );
-void YnCore_DrawGUI( const OgeViewport *viewport );
+void ogeDrawGUI_( const ApeViewport *viewport );
 void YnCore_TickGUI( void );
 void YnCore_ResizeGUI( int w, int h );
 GUIPanel *YnCore_GetGUIRootPanel( void );

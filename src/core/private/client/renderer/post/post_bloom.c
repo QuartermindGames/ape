@@ -12,9 +12,9 @@
  * PRIVATE
  ****************************************/
 
-static OgeShaderProgramIndex *bloomFilterShader;
-static OgeShaderProgramIndex *bloomBlurXShader;
-static OgeShaderProgramIndex *bloomBlurYShader;
+static ApeShaderProgramIndex *bloomFilterShader;
+static ApeShaderProgramIndex *bloomBlurXShader;
+static ApeShaderProgramIndex *bloomBlurYShader;
 
 static PLConsoleVariable *bloomEnabled;
 static PLConsoleVariable *bloomIntensity;
@@ -31,13 +31,13 @@ static void RegisterBloomConsoleVariables( void )
 
 static bool SetupBloomEffect( void )
 {
-	bloomFilterShader = ogeGetShaderProgramByName( "post_bloom_filter" );
+	bloomFilterShader = apeGetShaderProgramByName( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = ogeGetShaderProgramByName( "post_blur_x" );
+	bloomBlurXShader = apeGetShaderProgramByName( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = ogeGetShaderProgramByName( "post_blur_y" );
+	bloomBlurYShader = apeGetShaderProgramByName( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 
@@ -48,7 +48,7 @@ static void CleanupBloomEffect( void )
 {
 }
 
-static void DrawBloomEffect( const OgeViewport *viewport )
+static void DrawBloomEffect( const ApeViewport *viewport )
 {
 	if ( !bloomEnabled->b_value )
 		return;
@@ -56,7 +56,7 @@ static void DrawBloomEffect( const OgeViewport *viewport )
 	int bw = viewport->width / 2;
 	int bh = viewport->height / 2;
 
-	ogeSetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
+	apeSetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
@@ -64,7 +64,7 @@ static void DrawBloomEffect( const OgeViewport *viewport )
 
 	PlgSetShaderProgram( bloomFilterShader->internalPtr );
 	PlgSetShaderUniformValue( bloomFilterShader->internalPtr, "threshold", &bloomIntensity->f_value, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, ogeGetPrimaryColourAttachment() );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, apeGetPrimaryColourAttachment() );
 
 	PlgSetShaderProgram( bloomBlurXShader->internalPtr );
 	PlgSetShaderUniformValue( bloomBlurXShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
@@ -76,7 +76,7 @@ static void DrawBloomEffect( const OgeViewport *viewport )
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomTexture );
 }

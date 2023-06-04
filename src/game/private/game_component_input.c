@@ -9,6 +9,6 @@ typedef struct ECInputComponent
 	OgeInputState inputStates[ YN_CORE_MAX_BUTTON_INPUTS ];
 } ECInputComponent;
 
-static void Spawn( YNCoreEntityComponent *self )
+static void Spawn( ApeEntityComponent *self )
 {
 }

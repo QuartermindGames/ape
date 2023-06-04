@@ -3,16 +3,16 @@
 
 #include "world.h"
 
-OgeWorldRoom *ogeCreateWorldRoom( void )
+ApeWorldRoom *apeCreateWorldRoom( void )
 {
-	OgeWorldRoom *room = PL_NEW( OgeWorldRoom );
+	ApeWorldRoom *room = PL_NEW( ApeWorldRoom );
 	room->detailRooms  = PlCreateVectorArray( 0 );
 	room->faces        = PlCreateVectorArray( 0 );
 	room->portals      = PlCreateVectorArray( 0 );
 	return room;
 }
 
-void ogeDestroyWorldRoom( OgeWorldRoom *room )
+void apeDestroyWorldRoom( ApeWorldRoom *room )
 {
 	PlDestroyVectorArray( room->detailRooms );
 	PlDestroyVectorArray( room->faces );

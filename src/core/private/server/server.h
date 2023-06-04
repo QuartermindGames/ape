@@ -8,15 +8,15 @@
 
 PL_EXTERN_C
 
-typedef struct ServerClient ServerClient;
+typedef struct ApeServerClient ApeServerClient;
 
-bool Server_Start( const char *ip, unsigned short port );
+bool apeStartServer( const char *ip, unsigned short port );
 
-void ogeInitializeServer( void );
-void ogeShutdownServer( void );
-void Server_DropClient( ServerClient *serverClient );
-void ogeTickServer( void );
+void apeInitializeServer( void );
+void apeShutdownServer( void );
+void apeDropServerClient( ApeServerClient *serverClient );
+void apeTickServer( void );
 
-unsigned short Server_GetPort( void );
+unsigned short apeGetServerPort( void );
 
 PL_EXTERN_C_END

@@ -15,7 +15,6 @@ typedef enum ActorType
 	// qciaj 2021
 	ACTOR_SG_SHIP,
 	ACTOR_SG_ASTEROID,
-	ACTOR_SG_ASTEROID_MANAGER,
 	ACTOR_SG_PROJECTILE,
 	ACTOR_SG_PROP,
 
@@ -24,10 +23,7 @@ typedef enum ActorType
 
 typedef enum ActorMovementType
 {
-	ACTOR_MOVEMENT_CUSTOM,
 	ACTOR_MOVEMENT_PHYSICS,
-
-	ACTOR_MOVEMENT_SG,
 
 	MAX_ACTOR_MOVEMENT_TYPES
 } ActorMovementType;
@@ -66,7 +62,7 @@ typedef struct Actor
 	char tagName[ 64 ];
 
 	/* collision/vis */
-	struct OgeWorldRoom *sector;
+	struct ApeWorldRoom *sector;
 	ActorMovementType    movementType;
 	ActorCollisionGroup  collisionGroup;
 	PLCollisionAABB      collisionVolume;
@@ -92,7 +88,7 @@ typedef struct Actor
 	void                    *userData;
 } Actor;
 
-void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector );
+void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree );
@@ -106,7 +102,7 @@ PLVector3 Act_GetPosition( const Actor *self );
 
 float Act_GetAngle( const Actor *self );
 
-void Act_SetWorldSector( Actor *self, struct OgeWorldRoom *sector );
+void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector );
 
 void  Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
@@ -119,7 +115,7 @@ bool   Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-bool Act_IsVisible( Actor *self, OgeCamera *camera );
+bool Act_IsVisible( Actor *self, ApeCamera *camera );
 
 PLVector3 Act_GetForward( const Actor *self );
 

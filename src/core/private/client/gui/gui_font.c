@@ -170,6 +170,28 @@ bool GUI_Font_Initialize( void )
 	return true;
 }
 
+void GUI_Font_GetCharacterPixelSize( const GUIFont *font, float scale, uint32_t character, float *dw, float *dh )
+{
+	const OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
+	assert( glyph != NULL );
+	if ( glyph == NULL )
+	{
+		if ( dw != NULL ) { *dw = 0.0f; }
+		if ( dh != NULL ) { *dh = 0.0f; }
+		return;
+	}
+
+	if ( dw != NULL ) { *dw = glyph->w; }
+	if ( dh != NULL ) { *dh = glyph->h; }
+}
+
+float GUI_Font_GetCharacterPixelWidth( const GUIFont *font, float scale, uint32_t character )
+{
+	float w;
+	GUI_Font_GetCharacterPixelSize( font, scale, character, &w, NULL );
+	return w;
+}
+
 void GUI_Font_GetStringPixelSize( const GUIFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
@@ -289,24 +311,23 @@ void GUI_Font_Display( GUIFont *font )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_FONT ] );
-	PlgSetShaderUniformValue( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ] );
+	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
 
-	PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
 	PlgSetTexture( font->texture, 0 );
 
 	PlgUploadMesh( font->mesh );
 	PlgDrawMesh( font->mesh );
 
-	oge_RendererPerformance_.numTriangles += font->mesh->num_triangles;
-	oge_RendererPerformance_.numBatches++;
-
-	PlgDisableGraphicsState( PLG_GFX_STATE_BLEND );
+	ape_RendererPerformance_.numTriangles += font->mesh->num_triangles;
+	ape_RendererPerformance_.numBatches++;
 
 	PlPopMatrix();
 
 	PlgClearMesh( font->mesh );
 
 	PlgSetShaderProgram( NULL );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }

@@ -7,16 +7,16 @@
  * SCHEDULER
  ****************************************/
 
-typedef void ( *SchedulerCallback )( void *userData, double delta );
+typedef void ( *ApeSchedulerCallback )( void *userData, double delta );
 
-void ogeInitializeScheduler( void );
-void ogeShutdownScheduler( void );
-unsigned int Sch_GetNumTasks( void );
-const char  *Sch_GetTaskDescription( unsigned int index, double *delay );
-bool         Sch_IsTaskRunning( const char *desc );
-void         Sch_PushTask( const char *desc, SchedulerCallback callback, void *userData, double delay );
-void ogeTickTasks( void );
-void ogeFlushTasks( void );
-void         Sch_PrintPendingTasks( void );
-void         Sch_KillTask( const char *desc );
-void         Sch_SetTaskDelay( const char *desc, double delay );
+void apeInitializeScheduler( void );
+void apeShutdownScheduler( void );
+unsigned int apeGetNumScheduledTasks( void );
+const char *apeGetScheduledTaskDescription( unsigned int index, double *delay );
+bool apeIsScheduledTaskRunning( const char *desc );
+void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay );
+void apeTickTasks( void );
+void apeFlushTasks( void );
+void apePrintPendingTasks( void );
+void apeKillScheduledTask( const char *desc );
+void apeSetScheduledTaskDelay( const char *desc, double delay );

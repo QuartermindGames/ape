@@ -6,9 +6,12 @@
 #include "renderer/renderer.h"
 #include "gui/gui_private.h"
 #include "client/audio/audio.h"
+#include "world/world.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow    = false;
+
+static int consoleAlpha = 200;
 
 /****************************************
  * CONSOLE INPUT BUFFER
@@ -60,7 +63,7 @@ static void UpdateAutoCompleteResult( const char *input )
 
 /////////////////////////////////////////////////////////////////
 
-bool ogeHandleConsoleTextEvent_( const char *key )
+bool apeHandleConsoleTextEvent_( const char *key )
 {
 	// todo y3: allow this key to be customised
 	if ( !consoleIsOpen || *key == '`' || *key == '~' )
@@ -106,7 +109,7 @@ static void ToggleConsoleCommand( unsigned int argc, char **argv )
 	ToggleConsole();
 }
 
-static void ScrollForward( ConsoleOutput *output )
+static void ScrollForward( ApeConsoleOutput *output )
 {
 	output->scrollPos++;
 	if ( output->scrollPos > output->numLines - 1 )
@@ -115,7 +118,7 @@ static void ScrollForward( ConsoleOutput *output )
 	}
 }
 
-static void ScrollBackward( ConsoleOutput *output )
+static void ScrollBackward( ApeConsoleOutput *output )
 {
 	if ( output->scrollPos == 0 )
 	{
@@ -127,12 +130,12 @@ static void ScrollBackward( ConsoleOutput *output )
 
 bool Client_Console_HandleMouseWheelEvent( float x, float y )
 {
-	if ( !ogeIsConsoleOpen() )
+	if ( !apeIsConsoleOpen() )
 	{
 		return false;
 	}
 
-	ConsoleOutput *output = Console_GetOutput();
+	ApeConsoleOutput *output = apeGetConsoleOutput();
 	if ( y > 0.0f )
 	{
 		ScrollForward( output );
@@ -172,7 +175,7 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 		return true;
 	}
 
-	ConsoleOutput *output = Console_GetOutput();
+	ApeConsoleOutput *output = apeGetConsoleOutput();
 	switch ( key )
 	{
 		default:
@@ -278,65 +281,62 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
  * RENDERING
  ****************************************/
 
-static void DrawInputField( const OgeViewport *viewport, GUIFont *font )
+static void DrawInputField( const ApeViewport *viewport, GUIFont *font )
 {
-	/* cursor */
-	//float ch = GUI_Font_GetLineSpacing( font );
-	//GUI_Font_DrawCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
+	const float ch = GUI_Font_GetLineSpacing( font );
+	float cw       = GUI_Font_GetCharacterPixelWidth( font, 1.0f, '>' );
+	GUI_Font_DrawCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < ogeGetNumTicks() )
+	if ( v < apeGetNumTicks() )
 	{
-		v = ogeGetNumTicks() + 20;
+		v = apeGetNumTicks() + 20;
 	}
 
-	char c = ( v > ogeGetNumTicks() + 10 ) ? '_' : ' ';
-	//GUI_Font_DrawCharacter( font, ( float ) ( font->cw + SPACER + ( font->cw * conInputBufferLength ) ), ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
+	float bufPixW;
+	GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
 
-	/* input buffer */
+	const float x = ( 1.0f + cw );
 
-	float w, h;
+	// cursor
+	char c = ( v > apeGetNumTicks() + 10 ) ? '_' : ' ';
+	GUI_Font_DrawCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ 0 ], autoCompleteLength, &w, &h );
-
-		float x = ( w + SPACER ) + ( w * ( float ) conInputBufferLength );
-		GUI_Font_DrawString( font, x, ( float ) viewport->height - h, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
-
+		GUI_Font_DrawString( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
 			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &w, &h );
-				GUI_Font_DrawString( font, w + SPACER, ( float ) viewport->height - ( h * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, &w, &h );
-				GUI_Font_DrawString( font, x, ( float ) viewport->height - ( h * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				GUI_Font_DrawString( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+				GUI_Font_DrawString( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &w, &h );
-	GUI_Font_DrawString( font, w + SPACER, ( float ) viewport->height - h, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	GUI_Font_DrawString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
-bool ogeIsConsoleOpen( void ) { return consoleIsOpen; }
+bool apeIsConsoleOpen( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
 /**
  * Draw the console panel.
  */
-void ogeDrawConsole_( const OgeViewport *viewport )
+void apeDrawConsole_( const ApeViewport *viewport )
 {
-	if ( !consoleIsOpen )
+	if ( !apeIsConsoleOpen() )
+	{
 		return;
+	}
 
 	GUIFont *font = GUI_Font_GetDefault( GUI_FONT_DEFAULT_SMALL );
 	assert( font != NULL );
@@ -346,54 +346,64 @@ void ogeDrawConsole_( const OgeViewport *viewport )
 	}
 
 	PlgSetTexture( NULL, 0 );
-	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
 #define CON_SIDE_COLOUR      PLColourRGB( 128, 128, 128 )
-#define CON_BACK_COLOUR      PLColour( 0, 0, 0, 128 )
+#define CON_BACK_COLOUR      PLColour( 0, 0, 0, consoleAlpha )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
 
+	float lineSpacing   = GUI_Font_GetLineSpacing( font );
 	float width         = ( float ) viewport->width;
 	float height        = ( float ) viewport->height;
-	float consoleHeight = height - 12.0f;
+	float consoleHeight = height - lineSpacing;
 
-	//PlgDrawRectangle( 0.0f, 0.0f, width, height - font->ch, CON_BACK_COLOUR );
-	//PlgDrawRectangle( 0.0f, height - ( float ) font->ch, width, ( float ) font->ch, CON_INPUT_COLOUR );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
+
+	PlgDrawRectangle( 0.0f, 0.0f, width, height - lineSpacing, CON_BACK_COLOUR );
+	PlgDrawRectangle( 0.0f, height - lineSpacing, width, lineSpacing, CON_INPUT_COLOUR );
 	PlgDrawRectangle( 0.0f, 0.0f, consoleScrollBarWidth, consoleHeight, CON_SIDE_COLOUR );
 
-	const ConsoleOutput *output = Console_GetOutput();
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
+
+	const ApeConsoleOutput *output = apeGetConsoleOutput();
 	if ( output->numLines > 0 )
 	{
-#if 0
 		/* draw the indicator at the side of the console */
-		float cH = ( ( font->ch * output->numLines ) / consoleHeight ) + 1.0f;
-		float cY = consoleHeight - ( ( output->numLines / consoleHeight ) + output->scrollPos ) - cH;
+		float cH = ( ( ( lineSpacing * ( float ) output->numLines ) / consoleHeight ) + 1.0f );
+		float cY = consoleHeight - ( ( ( float ) output->numLines / consoleHeight ) + ( float ) output->scrollPos ) - cH;
 		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
-#endif
 
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			float oy;
-			GUI_Font_DrawString( font, 12.0f, y, NULL, &oy, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
-			y -= 20;
+			GUI_Font_DrawString( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+
+			y -= lineSpacing;
+			if ( y < 0 )
+			{
+				break;
+			}
 		}
 	}
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetTexture( NULL, 0 );
+
+	GUI_Font_Display( font );
 
 	// auto-completion list
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
 	{
 		float autoCompleteHeight = 0.0f;
 		float autoCompleteWidth  = 0.0f;
+
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		// iterate over the options to determine height, width
 		unsigned int i = 1;
@@ -407,11 +417,6 @@ void ogeDrawConsole_( const OgeViewport *viewport )
 			++i;
 		}
 	}
-
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
-	PlgSetTexture( NULL, 0 );
-
-	GUI_Font_Display( font );
 
 	DrawInputField( viewport, font );
 
@@ -432,8 +437,6 @@ void ogeDrawConsole_( const OgeViewport *viewport )
 	}
 
 	PlPopMatrix();
-
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }
 
 /****************************************
@@ -445,14 +448,14 @@ static void CreateViewportCommand( unsigned int argc, char **argv )
 	int width  = strtol( argv[ 1 ], NULL, 10 );
 	int height = strtol( argv[ 2 ], NULL, 10 );
 
-	if ( !ogeShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) )
+	if ( !apeShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) )
 	{
 		PRINT_WARNING( "Failed to create viewport!\n" );
 		return;
 	}
 }
 
-void Client_Console_RegisterConsoleCommands( void )
+void apeRegisterClientConsoleCommands_( void )
 {
 	PlRegisterConsoleCommand( "Toggle", "Toggle the console.", 0, ToggleConsoleCommand );
 	PlRegisterConsoleCommand( "client.create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
@@ -464,7 +467,7 @@ void Client_Console_RegisterConsoleCommands( void )
 
 void Renderer_RegisterConsoleVariables( void );
 
-void ogeRegisterClientConsoleVariables_( void )
+void apeRegisterClientConsoleVariables_( void )
 {
 	PlRegisterConsoleVariable( "client.name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
@@ -477,8 +480,7 @@ void ogeRegisterClientConsoleVariables_( void )
 	PlRegisterConsoleVariable( "debug.profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
 
 	PlRegisterConsoleVariable( "console.autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "console.alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "console.drawBackground", "Whether or not to display background.", "true", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "console.alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
 	PlRegisterConsoleVariable( "console.drawShadow", "Shadow for text, which will improve legibility. "
 	                                                 "Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
@@ -490,11 +492,5 @@ void ogeRegisterClientConsoleVariables_( void )
 	R_PP_RegisterConsoleVariables();
 
 	ogeRegisterAudioConsoleVariables_();
-
-	PlRegisterConsoleVariable( "world.draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawRooms", "Toggle rendering of rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawSubMeshes", "Toggle rendering of sub-meshes within sectors.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	apeRegisterWorldConsoleVariables_();
 }

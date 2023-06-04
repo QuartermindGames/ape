@@ -11,10 +11,10 @@
 
 typedef struct MDLUserData
 {
-	OgeMaterial *	 materials[ MODEL_MAX_MATERIALS ];
+	ApeMaterial *materials[ MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
-	OgeMemoryReference mem;
+	ApeMemoryReference mem;
 } MDLUserData;
 
-PLMModel *Model_Cache( const char *path );
-void      Model_Release( PLMModel *model );
+PLMModel *apeCacheModel( const char *path );
+void apeReleaseModel( PLMModel *model );

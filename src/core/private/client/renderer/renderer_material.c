@@ -19,26 +19,26 @@ static PLGTexture *specularFallbackTexture;
 static PLGTexture *normalFallbackTexture;
 static PLGTexture *previewFallbackTexture;
 
-typedef struct OgeMaterial
+typedef struct ApeMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	OgeMaterialPass passes[ MAX_MATERIAL_PASSES ];
+	ApeMaterialPass passes[ MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
 	PLLinkedListNode *node;
 
-	OgeMemoryReference mem;
-} OgeMaterial;
+	ApeMemoryReference mem;
+} ApeMaterial;
 
-static OgeMaterial *fallbackMaterial;
+static ApeMaterial *fallbackMaterial;
 
-OgeMaterial *ogeGetFallbackMaterial( void )
+ApeMaterial *apeGetFallbackMaterial( void )
 {
 	return fallbackMaterial;
 }
 
-void ogeInitializeMaterialSystem( void )
+void apeInitializeMaterialSystem( void )
 {
 	PRINT( "Initializing material system\n" );
 
@@ -49,29 +49,29 @@ void ogeInitializeMaterialSystem( void )
 			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
 	}
 
-	normalFallbackTexture   = ogeLoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
-	specularFallbackTexture = ogeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
-	previewFallbackTexture  = ogeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
+	normalFallbackTexture   = apeLoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
+	specularFallbackTexture = apeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
+	previewFallbackTexture  = apeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	/* go ahead and create the fallback material */
-	fallbackMaterial = PL_NEW( OgeMaterial );
+	fallbackMaterial = PL_NEW( ApeMaterial );
 	/* setup passes */
 	fallbackMaterial->numPasses                  = 1;
 	fallbackMaterial->preview                    = previewFallbackTexture;
 	fallbackMaterial->isCached                   = true;
-	fallbackMaterial->passes[ 0 ].program        = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ];
+	fallbackMaterial->passes[ 0 ].program        = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
 	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
 	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
 	/* setup variables */
 	fallbackMaterial->passes[ 0 ].numVariables                = 1;
 	fallbackMaterial->passes[ 0 ].variables[ 0 ].type         = MATERIAL_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = ogeGetFallbackTexture();
+	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
 }
 
-void ogeShutdownMaterialSystem( void )
+void apeShutdownMaterialSystem( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
-	ogeMemoryManager_FlushUnreferencedResources();
+	apeFlushUnreferencedResources();
 
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;
@@ -96,12 +96,12 @@ void ogeShutdownMaterialSystem( void )
 		               totalCachedMaterials, orphanedCaches );
 }
 
-const char *ogeMaterial_GetPath( const OgeMaterial *material )
+const char *apeGetMaterialPath( const ApeMaterial *material )
 {
 	return material->path;
 }
 
-PLGTexture *ogeMaterial_GetPreviewTexture( OgeMaterial *material )
+PLGTexture *apeGetMaterialPreviewTexture( ApeMaterial *material )
 {
 	return material->preview;
 }
@@ -142,7 +142,7 @@ static int GetBlendModeByTag( const char *tag )
 /**
  * Convert the given tag into it's built-in type.
  */
-static OgeMaterialBuiltinVar GetBuiltInByTag( const char *tag )
+static ApeMaterialBuiltinVar GetBuiltInByTag( const char *tag )
 {
 	static const char *builtInTags[] = {
 	        [MATERIAL_BUILTIN_TIME]          = "time",
@@ -167,7 +167,7 @@ static OgeMaterialBuiltinVar GetBuiltInByTag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool ValidateMaterialVariable( OgeMaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool ValidateMaterialVariable( ApeMaterialVariable *variable, PLGShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
@@ -210,7 +210,7 @@ static bool ValidateMaterialVariable( OgeMaterialVariable *variable, PLGShaderUn
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root )
+static void ParseShaderParameters( ApeMaterialPass *materialPass, NdBranch *root )
 {
 	NdBranch *node = ndGetFirstChild( root );
 	while ( node != NULL )
@@ -218,7 +218,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root
 		/* fetch the next node, so we can roll onto the next element early */
 		NdBranch *next = ndGetNextChild( node );
 
-		OgeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
+		ApeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
@@ -248,10 +248,10 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					OgeRenderTarget *renderTarget = ogeRenderTarget_GetByKey( p );
+					ApeRenderTarget *renderTarget = apeGetRenderTargetByKey( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = ogeRenderTarget_Create( p, 64, 64, 0 );
+						renderTarget = apeCreateRenderTarget( p, 64, 64, 0 );
 					}
 
 					materialVariable->type         = MATERIAL_VAR_RENDERTARGET;
@@ -260,7 +260,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root
 				else
 				{
 					/* lookup what it actually is */
-					OgeMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
+					ApeMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
 					if ( materialBuiltinVar == MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
@@ -341,14 +341,14 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root
 						break;
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
-						materialVariable->hint = RM_VAR_HINT_DIFFUSE;
+						materialVariable->hint = APE_MAT_VAR_HINT_DIFFUSE;
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
-						materialVariable->hint = RM_VAR_HINT_NORMAL;
+						materialVariable->hint = APE_MAT_VAR_HINT_NORMAL;
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
-						materialVariable->hint = RM_VAR_HINT_SPECULAR;
+						materialVariable->hint = APE_MAT_VAR_HINT_SPECULAR;
 
 					materialVariable->type         = MATERIAL_VAR_TEXTURE;
-					materialVariable->data.userPtr = ogeLoadTexture( texturePath, materialPass->textureFilter );
+					materialVariable->data.userPtr = apeLoadTexture( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
@@ -374,7 +374,7 @@ static void ParseShaderParameters( OgeMaterialPass *materialPass, NdBranch *root
 	}
 }
 
-void ogeMaterial_ParsePass( struct NdBranch *root, OgeMaterialPass *materialPass )
+void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	NdBranch *subNode;
@@ -423,7 +423,7 @@ void ogeMaterial_ParsePass( struct NdBranch *root, OgeMaterialPass *materialPass
 	 * a case where we only want to use the shader defaults? */
 }
 
-static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool preview )
+static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool preview )
 {
 	// see if the preview texture is specified
 	if ( material->preview == NULL )
@@ -431,12 +431,16 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 		material->preview          = previewFallbackTexture;
 		const char *previewTexture = ndGetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
-			material->preview = ogeLoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+		{
+			material->preview = apeLoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+		}
 	}
 
 	// If it's just the preview we want, then stop here
 	if ( preview )
+	{
 		return material;
+	}
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
@@ -446,16 +450,16 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 		node = ndGetFirstChild( node );
 		while ( node != NULL )
 		{
-			OgeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
+			ApeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
 			/* current pass should've already been cleared by prior memset,
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName             = ndGetStringByName( node, "shaderProgram", "default" );
-			OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( programName );
+			ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( programName );
 			if ( programIndex == NULL )
 			{
-				currentPass->program = oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ];
+				currentPass->program = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
 				PRINT_WARNING( "Failed to find program \"%s\", using fallback!\n", programName );
 			}
 			else
@@ -464,7 +468,7 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 				currentPass->program = programIndex->internalPtr;
 			}
 
-			ogeMaterial_ParsePass( node, currentPass );
+			apeParseMaterialPass( node, currentPass );
 
 			node = ndGetNextChild( node );
 		}
@@ -478,12 +482,12 @@ static OgeMaterial *ParseMaterial( OgeMaterial *material, NdBranch *root, bool p
 	return material;
 }
 
-static OgeMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
+static ApeMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
 {
 	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL )
 	{
-		OgeMaterial *material = PlGetLinkedListNodeUserData( node );
+		ApeMaterial *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 )
 			return material;
 
@@ -493,7 +497,7 @@ static OgeMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
 	return NULL;
 }
 
-static void DestroyMaterial( OgeMaterial *material )
+static void DestroyMaterial( ApeMaterial *material )
 {
 	if ( material == NULL )
 		return;
@@ -508,7 +512,7 @@ static void DestroyMaterial( OgeMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case MATERIAL_VAR_RENDERTARGET:
-					ogeRenderTarget_Release( ( OgeRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
+					apeReleaseRenderTarget( ( ApeRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
 					break;
 				default:
 					break;
@@ -518,20 +522,22 @@ static void DestroyMaterial( OgeMaterial *material )
 
 	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
 	if ( container != NULL )
+	{
 		PlDestroyLinkedListNode( material->node );
+	}
 
 	PL_DELETE( material );
 }
 
 static void DestroyMaterialCallback( void *userData )
 {
-	DestroyMaterial( ( OgeMaterial * ) userData );
+	DestroyMaterial( ( ApeMaterial * ) userData );
 }
 
-OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
+ApeMaterial *apeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
-	OgeMaterial *material = GetMaterial( path, group );
+	ApeMaterial *material = GetMaterial( path, group );
 	if ( material != NULL )
 	{
 		// If it's not cached, and we're not asking for the preview, load the full thing
@@ -544,14 +550,16 @@ OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool us
 				ndDestroyBranch( root );
 			}
 			else
+			{
 				PRINT_WARNING( "Failed to cache material, \"%s\" (%s)!\n", path, ndGetErrorMessage() );
+			}
 		}
-		ogeMemoryManager_AddReference( &material->mem );
+		apeAddReference( &material->mem );
 		return material;
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	OgeMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
+	ApeMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
 
 	NdBranch *root = ndLoadFile( path, "material" );
 	if ( root == NULL )
@@ -560,7 +568,7 @@ OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool us
 		return fallbackPtr;
 	}
 
-	material = PL_NEW( OgeMaterial );
+	material = PL_NEW( ApeMaterial );
 	ParseMaterial( material, root, preview );
 
 	ndDestroyBranch( root );
@@ -568,13 +576,13 @@ OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool us
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
-	ogeMemoryManager_SetupReference( "material", MEM_CACHE_MATERIALS, &material->mem, DestroyMaterialCallback, material );
-	ogeMemoryManager_AddReference( &material->mem );
+	apeSetupReference( "material", APE_CACHE_POOL_MATERIALS, &material->mem, DestroyMaterialCallback, material );
+	apeAddReference( &material->mem );
 
 	return material;
 }
 
-void ogeMaterial_Release( OgeMaterial *material )
+void apeReleaseMaterial( ApeMaterial *material )
 {
 	assert( material != NULL );
 	if ( material == NULL )
@@ -588,28 +596,32 @@ void ogeMaterial_Release( OgeMaterial *material )
 		return;
 	}
 
-	ogeMemoryManager_ReleaseReference( &material->mem );
+	apeReleaseReference( &material->mem );
 }
 
 static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
 {
 	if ( variable == -1 )
+	{
 		return;
+	}
 
 	switch ( variable )
 	{
 		case MATERIAL_BUILTIN_TIME:
 		{
-			unsigned int numTicks = ogeGetNumTicks();
+			unsigned int numTicks = apeGetNumTicks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
 		case MATERIAL_BUILTIN_DEPTH:
 		{
-			PLGTexture *depthTexture = ogeGetPrimaryDepthAttachment();
+			PLGTexture *depthTexture = apeGetPrimaryDepthAttachment();
 			if ( depthTexture == NULL )
+			{
 				break;
+			}
 
 			PlgSetTexture( depthTexture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
@@ -620,7 +632,7 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 		case MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
-			ogeGet2DViewportSize( &w, &h );
+			apeGet2DViewportSize( &w, &h );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
 			break;
 		}
@@ -630,11 +642,11 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	}
 }
 
-static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight **lights, unsigned int numLights )
+static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, unsigned int numLights )
 {
 	int slot;
 
-	OgeWorld *world = Game_GetCurrentWorld();
+	ApeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL )
 	{
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
@@ -679,7 +691,7 @@ static void SetGlobalUniforms( PLGShaderProgram *program, OgeLight **lights, uns
 	}
 }
 
-void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **lights, unsigned int numLights )
+void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!
@@ -692,10 +704,7 @@ void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **ligh
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		OgeMaterialPass *curPass = &material->passes[ i ];
-
-		PlgSetShaderProgram( curPass->program );
-		PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
+		ApeMaterialPass *curPass = &material->passes[ i ];
 
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
@@ -722,75 +731,88 @@ void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **ligh
 
 		PlgSetCullMode( cullMode );
 
-		PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
-
-		SetGlobalUniforms( curPass->program, lights, numLights );
-
-		unsigned int curUnit = 0;
-		for ( unsigned int j = 0; j < curPass->numVariables; ++j )
+		// we have an awkward check for wireframe here because we don't want to just blindly handle it globally,
+		// otherwise UI elements will be wireframe too, so instead we'll just check the plg state flag
+		if ( PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME ) )
 		{
-			if ( curPass->variables[ j ].type == MATERIAL_VAR_BUILTIN )
+			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+			PlgSetTexture( NULL, 0 );
+		}
+		else
+		{
+			PlgSetShaderProgram( curPass->program );
+			PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
+
+			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
+
+			SetGlobalUniforms( curPass->program, lights, numLights );
+
+			unsigned int curUnit = 0;
+			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
 			{
-				SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.i32, &curUnit );
-				continue;
-			}
-			// textures just need to be set per their respective unit
-			else if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
-			{
-				PL_GET_CVAR( "r.skipDiffuse", skipDiffuse );
-				if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+				if ( curPass->variables[ j ].type == MATERIAL_VAR_BUILTIN )
 				{
+					SetBuiltInVariable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.i32, &curUnit );
+					continue;
+				}
+				// textures just need to be set per their respective unit
+				else if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
+				{
+					PL_GET_CVAR( "r.skipDiffuse", skipDiffuse );
+					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+					{
+						continue;
+					}
+
+					PLGTexture *texture;
+					if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
+					{
+						texture = apeGetRenderTargetTextureAttachment( ( ApeRenderTarget * ) curPass->variables[ j ].data.userPtr );
+						if ( texture == NULL )
+						{
+							texture = apeGetFallbackTexture();
+						}
+					}
+					else
+					{
+						texture = ( PLGTexture * ) curPass->variables[ j ].data.userPtr;
+					}
+					assert( texture != NULL );
+
+					PL_GET_CVAR( "r.skipNormal", skipNormal );
+					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_NORMAL && skipNormal->b_value ) )
+					{
+						texture = normalFallbackTexture;
+					}
+					PL_GET_CVAR( "r.skipSpecular", skipSpecular );
+					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+					{
+						texture = specularFallbackTexture;
+					}
+
+					PlgSetTexture( texture, curUnit );
+					PlgSetTextureFilter( texture, curPass->textureFilter );
+
+					PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
+					curUnit++;
 					continue;
 				}
 
-				PLGTexture *texture;
-				if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
-				{
-					texture = ogeRenderTarget_GetTextureAttachment( ( OgeRenderTarget * ) curPass->variables[ j ].data.userPtr );
-					if ( texture == NULL )
-					{
-						texture = ogeGetFallbackTexture();
-					}
-				}
-				else
-				{
-					texture = ( PLGTexture * ) curPass->variables[ j ].data.userPtr;
-				}
-				assert( texture != NULL );
-
-				PL_GET_CVAR( "r.skipNormal", skipNormal );
-				if ( skipNormal != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_NORMAL && skipNormal->b_value ) )
-				{
-					texture = normalFallbackTexture;
-				}
-				PL_GET_CVAR( "r.skipSpecular", skipSpecular );
-				if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == RM_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
-				{
-					texture = specularFallbackTexture;
-				}
-
-				PlgSetTexture( texture, curUnit );
-				PlgSetTextureFilter( texture, curPass->textureFilter );
-
-				PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
-				curUnit++;
-				continue;
+				PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].data, false );
 			}
-
-			PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].data, false );
 		}
 
 		PlgUploadMesh( mesh );
 		PlgDrawMesh( mesh );
 
-		oge_RendererPerformance_.numBatches++;
+		ape_RendererPerformance_.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
 		{
-			oge_RendererPerformance_.numTriangles += mesh->num_triangles;
+			ape_RendererPerformance_.numTriangles += mesh->num_triangles;
 		}
 		else
 		{
-			oge_RendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
+			ape_RendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
 		}
 	}
 
@@ -798,6 +820,6 @@ void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **ligh
 
 	if ( !material->isCached )
 	{
-		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = ogeGetFallbackTexture();
+		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
 	}
 }

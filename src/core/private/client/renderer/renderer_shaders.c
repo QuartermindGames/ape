@@ -12,7 +12,7 @@
 /** Shaders **/
 
 static PLHashTable *shaderProgramTable;
-PLGShaderProgram *oge_defaultShaderPrograms_[ OGE_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
 static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
@@ -53,9 +53,9 @@ static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType t
 	PlFree( buffer );
 }
 
-static OgeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
+static ApeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 {
-	OgeShaderProgramIndex program;
+	ApeShaderProgramIndex program;
 	PL_ZERO_( program );
 
 	const char *internalName = ndGetStringByName( root, "description", NULL );
@@ -69,7 +69,7 @@ static OgeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-	if ( ogeGetShaderProgramByName( internalName ) != NULL )
+	if ( apeGetShaderProgramByName( internalName ) != NULL )
 	{
 		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
 		return NULL;
@@ -172,11 +172,11 @@ static OgeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 		/* need to assign this for variable validation */
 		program.defaultPass.program = program.internalPtr;
 		/* and now we can fill this out */
-		ogeMaterial_ParsePass( child, &program.defaultPass );
+		apeParseMaterialPass( child, &program.defaultPass );
 	}
 
 	/* allocate and return our program index */
-	OgeShaderProgramIndex *out = PL_NEW( OgeShaderProgramIndex );
+	ApeShaderProgramIndex *out = PL_NEW( ApeShaderProgramIndex );
 	*out                       = program;
 	return out;
 }
@@ -192,7 +192,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 		return;
 	}
 
-	OgeShaderProgramIndex *program = ParseShaderProgram( root );
+	ApeShaderProgramIndex *program = ParseShaderProgram( root );
 
 	ndDestroyBranch( root );
 
@@ -207,12 +207,12 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-OgeShaderProgramIndex *ogeGetShaderProgramByName( const char *name )
+ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name )
 {
-	return ( OgeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	return ( ApeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void ogeInitializeShaders( void )
+void apeInitializeShaders( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
@@ -228,21 +228,21 @@ void ogeInitializeShaders( void )
 	PRINT( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
 	/* now fetch the default programs */
-	static const char *defaultShaderNames[ OGE_MAX_DEFAULT_SHADERS ] = {
-	        [OGE_SHADER_DEFAULT]        = "default",
-	        [OGE_SHADER_LIGHTING_PASS]  = "base_lighting",
-	        [OGE_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [OGE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
-	        [OGE_SHADER_DEFAULT_FONT]   = "font",
+	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
+	        [APE_SHADER_DEFAULT]        = "default",
+	        [APE_SHADER_LIGHTING_PASS]  = "base_lighting",
+	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [APE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	        [APE_SHADER_DEFAULT_FONT]   = "font",
 	};
-	for ( unsigned int i = 0; i < OGE_MAX_DEFAULT_SHADERS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
 	{
-		OgeShaderProgramIndex *programIndex = ogeGetShaderProgramByName( defaultShaderNames[ i ] );
+		ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
 		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 		}
 
-		oge_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
+		ape_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
 	}
 }

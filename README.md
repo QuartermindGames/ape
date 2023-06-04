@@ -1,19 +1,17 @@
-<div align="center">
+# APE (Another Portal Engine)
 
-![Logo](resources/logo.png)
-
-</div>
-
-Yin is a 3D game engine, being developed by 
+**APE** is a simplistic 3D game engine, being developed by 
 [Mark "hogsy" Sowden](https://hogsy.me/), 
-for game jams and prototyping.
+for game jams and prototyping. 
+
+APE is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as other engines such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 
 The third iteration of the engine is currently under development 
-and **it is not currently ready for production use!** 
+and **is not currently ready for production use!** 
 And is available here with absolutely no support whatsoever. 
 You're welcome to email me for help, just don't expect any.
 
-Additionally, Yin is not intended as a professional grade engine but instead just 
+Additionally, APE is not intended as a professional grade engine but instead just 
 something that's easy to throw things at and modify. 
 It's being developed primarily for **fun**, hence why you're not necessarily
 going to receive any support from me.

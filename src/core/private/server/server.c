@@ -18,7 +18,7 @@ typedef enum ServerClientState
 	SERVER_CLIENT_STATE_VALIDATED,  /* connection validated */
 } ServerClientState;
 
-typedef struct ServerClient
+typedef struct ApeServerClient
 {
 	NetSocket *netSocket;
 	PLLinkedListNode *node;
@@ -29,15 +29,15 @@ typedef struct ServerClient
 	size_t receivedBytes;
 
 	unsigned int lastMessageTick;
-} ServerClient;
+} ApeServerClient;
 static PLLinkedList *connectedClients = NULL;
 
 static void DropClientCallback( void *userData, bool *breakEarly )
 {
-	Server_DropClient( ( ServerClient * ) userData );
+	apeDropServerClient( ( ApeServerClient * ) userData );
 }
 
-bool Server_Start( const char *ip, unsigned short port )
+bool apeStartServer( const char *ip, unsigned short port )
 {
 	PRINT( "Opening socket: %s:" PL_FMT_uint16 "\n", ip, port );
 
@@ -55,7 +55,7 @@ bool Server_Start( const char *ip, unsigned short port )
 	return true;
 }
 
-void ogeInitializeServer( void )
+void apeInitializeServer( void )
 {
 	connectedClients = PlCreateLinkedList();
 	if ( connectedClients == NULL )
@@ -64,13 +64,13 @@ void ogeInitializeServer( void )
 	}
 }
 
-void ogeShutdownServer( void )
+void apeShutdownServer( void )
 {
 	/* drop all connected clients */
 	PlIterateLinkedList( connectedClients, DropClientCallback, true );
 }
 
-void Server_DropClient( ServerClient *serverClient )
+void apeDropServerClient( ApeServerClient *serverClient )
 {
 	PRINT( "Dropping client...\n" );
 
@@ -79,32 +79,32 @@ void Server_DropClient( ServerClient *serverClient )
 	PlFree( serverClient );
 }
 
-static void ProcessClientMessage( ServerClient *client, const void *buf )
+static void ProcessClientMessage( ApeServerClient *client, const void *buf )
 {
 }
 
 static void TickServerClient( void *userData, bool *breakEarly )
 {
-	ServerClient *serverClient = ( ServerClient * ) userData;
+	ApeServerClient *serverClient = ( ApeServerClient * ) userData;
 
 	ssize_t r = Net_Receive( serverClient->netSocket,
 	                         serverClient->receiveBuffer + serverClient->receivedBytes,
 	                         sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
 	if ( r == -1 )
 	{
-		Server_DropClient( serverClient );
+		apeDropServerClient( serverClient );
 		return;
 	}
 	else if ( r > 0 )
 	{
-		serverClient->lastMessageTick = ogeGetNumTicks();
+		serverClient->lastMessageTick = apeGetNumTicks();
 	}
 
 	serverClient->receivedBytes += r;
 
-	if ( serverClient->receivedBytes >= sizeof( ProtocolMessageHeader ) )
+	if ( serverClient->receivedBytes >= sizeof( ApeProtocolMessageHeader ) )
 	{
-		const ProtocolMessageHeader *messageHeader = ( ProtocolMessageHeader * ) serverClient->receiveBuffer;
+		const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) serverClient->receiveBuffer;
 
 		uint32_t l = messageHeader->length;
 		if ( serverClient->receivedBytes >= l )
@@ -119,21 +119,21 @@ static void TickServerClient( void *userData, bool *breakEarly )
 		{
 			/* boom */
 			PRINT_WARNING( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, PROTOCOL_MESSAGESIZE );
-			Server_DropClient( serverClient );
+			apeDropServerClient( serverClient );
 		}
 	}
 }
 
-void ogeTickServer( void )
+void apeTickServer( void )
 {
 	if ( hostSocket != NULL )
 	{ /* check if a new connection is being established */
 		NetSocket *connectedSocket = Net_Accept( hostSocket );
 		if ( connectedSocket != NULL )
 		{
-			ServerClient *serverClient = PlMAllocA( sizeof( ServerClient ) );
-			serverClient->netSocket    = connectedSocket;
-			serverClient->node         = PlInsertLinkedListNode( connectedClients, serverClient );
+			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
+			serverClient->netSocket       = connectedSocket;
+			serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
 			/* validation still needs to be performed */
 			PRINT( "Client connected, awaiting validation...\n" );
 		}
@@ -141,13 +141,13 @@ void ogeTickServer( void )
 		PlIterateLinkedList( connectedClients, TickServerClient, true );
 	}
 
-	Game_Tick();
+	apeTickGame();
 }
 
 /**
  * Return port of local server instance.
  */
-unsigned short Server_GetPort( void )
+unsigned short apeGetServerPort( void )
 {
 	assert( hostSocket != NULL );
 	if ( hostSocket == NULL )

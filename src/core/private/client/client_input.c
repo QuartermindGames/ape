@@ -79,17 +79,17 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly )
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
 		OgeInputState state = YnCore_ShellInterface_GetButtonState( action->buttons[ i ] );
-		if ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) )
+		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) )
 		{
 			continue;
 		}
 
 		action->callback( state, action->id );
 	}
-	for ( unsigned int i = 0; i < action->numKeyBinds; ++i )
+	for( unsigned int i = 0; i < action->numKeyBinds; ++i )
 	{
 		OgeInputState state = YnCore_ShellInterface_GetKeyState( action->keys[ i ] );
-		if ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) )
+		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) )
 		{
 			continue;
 		}
@@ -184,10 +184,10 @@ static void CheckForControllers( void )
 	}
 }
 
-void ogeInitializeInput_( void )
+void apeInitializeInput_( void )
 {
 	// initialize the controller structure
-	ogeClearInputDevices_();
+	apeClearInputDevices_();
 
 	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
 	{
@@ -221,12 +221,12 @@ void ogeInitializeInput_( void )
 	sdlInputInitialized = true;
 }
 
-void ogeShutdownInput_( void )
+void apeShutdownInput_( void )
 {
-	ogeClearInputDevices_();
+	apeClearInputDevices_();
 }
 
-void ogeSerializeInputConfig_( NdBranch *root )
+void apeSerializeInputConfig_( NdBranch *root )
 {
 	/* nothing to serialise */
 	if ( actionableList == NULL )
@@ -242,7 +242,7 @@ void ogeSerializeInputConfig_( NdBranch *root )
 	//PlIterateLinkedList( actionableList, NULL, NULL );
 }
 
-void ogeDeserializeInputConfig_( NdBranch *root )
+void apeDeserializeInputConfig_( NdBranch *root )
 {
 	NdBranch *inputNode = ndGetChildByName( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
@@ -262,7 +262,7 @@ static void UnregisterController( unsigned int id )
 	numControllers--;
 }
 
-void ogeClearInputDevices_( void )
+void apeClearInputDevices_( void )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 		UnregisterController( i );
@@ -339,7 +339,7 @@ void ogeGetMouseDelta( int *x, int *y )
 	*y = inputMouse.dy;
 }
 
-void ogeBeginInputFrame_( void )
+void apeBeginInputFrame_( void )
 {
 	// Ensure we store the old x/y
 	//int ox = inputMouse.x;
@@ -414,7 +414,7 @@ static bool GetSDLButtonState( SDL_GameController *gameController, OgeInputButto
 	return SDL_GameControllerGetButton( gameController, sdlButton );
 }
 
-void ogeTickInput_( void )
+void apeTickInput_( void )
 {
 	if ( !sdlInputInitialized )
 		return;
@@ -472,7 +472,7 @@ void ogeTickInput_( void )
 	CheckForControllers();
 }
 
-void ogeEndInputFrame_( void )
+void apeEndInputFrame_( void )
 {
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )

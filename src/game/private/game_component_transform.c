@@ -6,12 +6,12 @@
 #include "game_private.h"
 #include "game_component_transform.h"
 
-static void Spawn( YNCoreEntityComponent *self )
+static void Spawn( ApeEntityComponent *self )
 {
 	self->userData = PL_NEW( ECTransform );
 }
 
-static NdBranch *Serialize( YNCoreEntityComponent *self, NdBranch *root )
+static NdBranch *Serialize( ApeEntityComponent *self, NdBranch *root )
 {
 	ndPushBackF32Array( root, "translation", ( float * ) &ECTRANSFORM( self )->translation, 3 );
 	ndPushBackF32Array( root, "scale", ( float * ) &ECTRANSFORM( self )->scale, 3 );
@@ -20,7 +20,7 @@ static NdBranch *Serialize( YNCoreEntityComponent *self, NdBranch *root )
 	return root;
 }
 
-static NdBranch *Deserialize( YNCoreEntityComponent *self, NdBranch *root )
+static NdBranch *Deserialize( ApeEntityComponent *self, NdBranch *root )
 {
 	NdBranch *child;
 	if ( ( child = ndGetChildByName( root, "translation" ) ) != NULL )
@@ -39,15 +39,15 @@ static NdBranch *Deserialize( YNCoreEntityComponent *self, NdBranch *root )
 	return root;
 }
 
-static void Tick( YNCoreEntityComponent *self )
+static void Tick( ApeEntityComponent *self )
 {
 	// if we're in the world, ensure we're attached to a valid sector
-	OgeWorld *world = Game_GetCurrentWorld();
+	ApeWorld *world = Game_GetCurrentWorld();
 	if ( world != NULL && ECTRANSFORM( self )->sectorNum == -1 )
 	{
 		Game_Warning( "Entity outside of world, attempting to relocate!\n" );
 
-		OgeWorldRoom *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
+		ApeWorldRoom *sector = apeGetRoomAtPosition( world, &ECTRANSFORM( self )->translation );
 		if ( sector != NULL )
 		{
 			//TODO: what fucking index is it!?
@@ -64,9 +64,9 @@ static void Tick( YNCoreEntityComponent *self )
 	}
 }
 
-const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void )
+const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void )
 {
-	static YNCoreEntityComponentCallbackTable callbackTable;
+	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 
 	callbackTable.spawnFunction       = Spawn;

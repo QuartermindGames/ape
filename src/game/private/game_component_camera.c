@@ -6,17 +6,17 @@
 
 typedef struct GameComponentCamera
 {
-	OgeCamera *camera;
+	ApeCamera *camera;
 	bool             isActive;
-	YNCoreEntityComponent *transform;
+	ApeEntityComponent *transform;
 } GameComponentCamera;
 #define GCCAMERA( SELF ) ENTITY_COMPONENT_CAST( ( SELF ), GameComponentCamera )
 
-YN_CORE_ENTITY_COMPONENT_BEGIN_PROPERTIES()
-YN_CORE_ENTITY_COMPONENT_PROPERTY( GameComponentCamera, isActive, "Indicates if the camera should be active or not.", CMN_DATATYPE_BOOL )
-YN_CORE_ENTITY_COMPONENT_END_PROPERTIES()
+APE_ENTITY_COMPONENT_BEGIN_PROPERTIES()
+APE_ENTITY_COMPONENT_PROPERTY( GameComponentCamera, isActive, "Indicates if the camera should be active or not.", CMN_DATATYPE_BOOL )
+APE_ENTITY_COMPONENT_END_PROPERTIES()
 
-static void Spawn( YNCoreEntityComponent *self )
+static void Spawn( ApeEntityComponent *self )
 {
 	self->userData = PL_NEW( GameComponentCamera );
 
@@ -37,14 +37,14 @@ static void Spawn( YNCoreEntityComponent *self )
 	GCCAMERA( self )->camera = ogeCreateCamera( "dummy", position, angles );
 }
 
-static void Destroy( YNCoreEntityComponent *self )
+static void Destroy( ApeEntityComponent *self )
 {
 	ogeDestroyCamera( GCCAMERA( self )->camera );
 
 	PL_DELETE( GCCAMERA( self ) );
 }
 
-static void Tick( YNCoreEntityComponent *self )
+static void Tick( ApeEntityComponent *self )
 {
 	// if there's no transform component, try checking again...
 	if ( GCCAMERA( self )->transform == NULL )
@@ -59,15 +59,15 @@ static void Tick( YNCoreEntityComponent *self )
 		ogeMakeCameraActive( GCCAMERA( self )->camera );
 }
 
-const YNCoreEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void )
+const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void )
 {
-	static YNCoreEntityComponentCallbackTable callbackTable;
+	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 	callbackTable.spawnFunction   = Spawn;
 	callbackTable.destroyFunction = Destroy;
 	callbackTable.tickFunction    = Tick;
 
-	YN_CORE_ENTITY_HOOK_PROPERTIES( callbackTable );
+	APE_ENTITY_HOOK_PROPERTIES( callbackTable );
 
 	return &callbackTable;
 }

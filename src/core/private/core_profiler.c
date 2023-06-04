@@ -11,7 +11,7 @@
 
 typedef struct ProfilerTimer
 {
-	char   description[ 64 ];
+	char description[ 64 ];
 	double startTime;
 	double timeTaken;
 	double results[ NUM_GRAPH_POINTS ];
@@ -24,7 +24,7 @@ static ProfilerTimer timers[ MAX_PROFILER_GROUPS ];
 
 const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 
-void ogeInitializeProfiler( void )
+void apeInitializeProfiler( void )
 {
 	PRINT( "Initializing profiler\n" );
 
@@ -41,50 +41,54 @@ void ogeInitializeProfiler( void )
 	cpuProfilerDescriptions[ PROFILE_DRAW_GUI ]    = "DRAW_GUI";
 }
 
-void ogeProfiler_EndFrame( void )
+void apeEndProfilerFrame( void )
 {
 	// todo: for now we've gone back to resetting this on StartMeasure call
 	//for ( unsigned int i = 0; i < MAX_PROFILER_GROUPS; ++i )
 	//	timers[ i ].timeTaken = 0;
 }
 
-void Profiler_StartMeasure( ProfilerGroup group )
+void Profiler_StartMeasure( ApeProfilerGroup group )
 {
 	timers[ group ].startTime = PlGetCurrentSeconds() * 1000;
 	timers[ group ].timeTaken = 0;
 }
 
-void Profiler_EndMeasure( ProfilerGroup group )
+void Profiler_EndMeasure( ApeProfilerGroup group )
 {
 	// inc. as we have some cases of recursion
 	timers[ group ].timeTaken += ( PlGetCurrentSeconds() * 1000 ) - timers[ group ].startTime;
 }
 
-double ogeProfiler_GetMeasure( ProfilerGroup group )
+double apeGetProfilerMeasure( ApeProfilerGroup group )
 {
 	return timers[ group ].timeTaken;
 }
 
-void ogeProfiler_UpdateGraphs( void )
+void apeUpdateProfilerGraphs( void )
 {
 	static unsigned int refreshTime = 0;
-	if ( refreshTime > ogeGetNumTicks() )
+	if ( refreshTime > apeGetNumTicks() )
+	{
 		return;
+	}
 
 	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i )
 	{
 		// Shuffle the list along
 		for ( uint8_t j = 0; j < NUM_GRAPH_POINTS - 1; ++j )
+		{
 			timers[ i ].results[ j ] = timers[ i ].results[ j + 1 ];
+		}
 
-		timers[ i ].results[ NUM_GRAPH_POINTS - 1 ] = ( float ) ogeProfiler_GetMeasure( i );
+		timers[ i ].results[ NUM_GRAPH_POINTS - 1 ] = ( float ) apeGetProfilerMeasure( i );
 	}
 
 	PL_GET_CVAR( "debug.profilerFrequency", profilerFrequency );
 	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 }
 
-const double *ogeProfiler_GetGraph( ProfilerGroup group, uint8_t *numPoints )
+const double *apeGetProfilerGraph( ApeProfilerGroup group, uint8_t *numPoints )
 {
 	*numPoints = NUM_GRAPH_POINTS;
 	return timers[ group ].results;
@@ -93,16 +97,18 @@ const double *ogeProfiler_GetGraph( ProfilerGroup group, uint8_t *numPoints )
 /**
  * Return a single value from the head of the performance graph.
  */
-double Profiler_GetGraphValue( ProfilerGroup group )
+double apeGetProfilerGraphValue( ApeProfilerGroup group )
 {
 	return timers[ group ].results[ NUM_GRAPH_POINTS - 1 ];
 }
 
-double Profiler_GetGraphAverage( ProfilerGroup group )
+double apeGetProfilerGraphAverage( ApeProfilerGroup group )
 {
 	double t = 0.0;
 	for ( unsigned int i = 0; i < NUM_GRAPH_POINTS; ++i )
+	{
 		t += timers[ group ].results[ i ];
+	}
 
 	return ( t / NUM_GRAPH_POINTS );
 }

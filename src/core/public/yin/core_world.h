@@ -9,67 +9,51 @@
 PL_EXTERN_C
 
 /* external elements */
-typedef struct OgeCamera OgeCamera;
-typedef struct OgeViewport OgeViewport;
+typedef struct ApeCamera ApeCamera;
+typedef struct ApeViewport ApeViewport;
 
 /* ======================================================================
  * WORLD INTERFACE
  * ====================================================================*/
 
-typedef struct OgeWorldFace OgeWorldFace;
-typedef struct OgeWorldMesh OgeWorldMesh;
-typedef struct OgeWorldObject OgeWorldObject;
-typedef struct OgeWorldRoom OgeWorldRoom;
-typedef struct OgeWorld OgeWorld;
+typedef struct ApeWorldFace ApeWorldFace;
+typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct ApeWorldObject ApeWorldObject;
+typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeWorld ApeWorld;
 
-#define YN_CORE_WORLD_VERSION 2
-
-#define OGE_WORLD_EXTENSION          "wld.n"
-#define YN_CORE_WORLD_EXTENSION_MESH "wsm.n"
+#define APE_WORLD_VERSION        2
+#define APE_WORLD_EXTENSION      "wld.n"
+#define APE_WORLD_EXTENSION_MESH "wsm.n"
 
 /* World */
 
-OgeWorld *ogeCreateWorld( void );
-OgeWorld *ogeLoadWorld( const char *path );
+ApeWorld *apeCreateWorld( void );
+ApeWorld *apeLoadWorld( const char *path );
 
 /**
  * Attempts to save the given world to the destination.
  * On success, returns true but false otherwise.
  */
-bool ogeSaveWorld( OgeWorld *world, const char *path );
+bool apeSaveWorld( ApeWorld *world, const char *path );
 
-void ogeDestroyWorld( OgeWorld *world );
-struct NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName );
-PLColourF32 YnCore_World_GetAmbience( OgeWorld *world );
-PLColourF32 YnCore_World_GetSunColour( OgeWorld *world );
-PLVector3 YnCore_World_GetSunPosition( OgeWorld *world );
-void ogeDrawWorldWireframe( OgeWorld *world, OgeCamera *camera );
-void ogeDrawWorld( OgeWorld *world, OgeWorldRoom *originSector, OgeCamera *camera );
-void ogeSetupGlobalWorldDefaults( OgeWorld *world );
+void apeDestroyWorld( ApeWorld *world );
+struct NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
+void apeDrawWorld_( ApeWorld *world );
+void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
-uint64_t YnCore_World_GetLastSaveTime( const OgeWorld *world );
-
-OgeWorldRoom *YnCore_World_GetSectorByGlobalOrigin( OgeWorld *world, const PLVector3 *globalOrigin );
-
-const char *YnCore_World_GetPath( const OgeWorld *world );
+ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );
 
 /* Mesh */
 
-OgeWorldMesh *YnCore_WorldMesh_Create( OgeWorld *parent );
-OgeWorldMesh *YnCore_WorldMesh_Load( const char *path );
-void YnCore_WorldMesh_Release( OgeWorldMesh *worldMesh );
-
-/* Face */
-
-PLVector3 YnCore_WorldFace_GetNormal( const OgeWorldFace *face );
-PLVector3 YnCore_WorldFace_GetOrigin( const OgeWorldFace *face );
-uint8_t YnCore_WorldFace_GetFlags( const OgeWorldFace *face );
-const PLCollisionAABB *YnCore_WorldFace_GetBounds( const OgeWorldFace *face );
+ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
+ApeWorldMesh *apeLoadWorldMesh( const char *path );
+void apeReleaseWorldMesh( ApeWorldMesh *worldMesh );
 
 /* Sector */
 
-struct OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldRoom *sector, unsigned int *numLights );
-OgeWorldMesh *YnCore_WorldSector_GetMesh( OgeWorldRoom *sector );
-OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldRoom *sector, uint32_t *numFaces );
+struct ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights );
+ApeWorldFace **YnCore_WorldSector_GetMeshFaces( ApeWorldRoom *sector, uint32_t *numFaces );
 
 PL_EXTERN_C_END

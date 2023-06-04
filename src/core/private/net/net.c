@@ -132,7 +132,7 @@ static void TestNetCommand( unsigned int argc, char **argv )
 
 #endif
 
-void ogeInitializeNet( void )
+void apeInitializeNet( void )
 {
 #if defined( _WIN32 )
 	WSADATA data;

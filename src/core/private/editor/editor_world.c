@@ -14,13 +14,13 @@
 
 #define WORLD_CONTEXT_IDENTIFIER "world"
 
-static YNCoreEditorContext context;
-static YNCoreEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
+static ApeEditorContext context;
+static ApeEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
 
 #define MAX_CAMERA_SLOTS 16
-static OgeCamera *cameras[ MAX_CAMERA_SLOTS ];
+static ApeCamera *cameras[ MAX_CAMERA_SLOTS ];
 
-static OgeWorld *world = NULL;
+static ApeWorld *world = NULL;
 
 static int mouseCursorX = 0,
            mouseCursorY = 0;
@@ -36,7 +36,7 @@ static void CreateWorldCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	world = ogeCreateWorld();
+	world = apeCreateWorld();
 }
 
 static void DestroyWorldCommand( unsigned int argc, char **argv )
@@ -46,13 +46,13 @@ static void DestroyWorldCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	ogeDestroyWorld( world );
+	apeDestroyWorld( world );
 	world = NULL;
 }
 
 static void CreateMeshCommand( unsigned int argc, char **argv )
 {
-	YNCoreEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
+	ApeEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
 	if ( editorInstance == NULL )
 	{
 		PRINT_WARNING( "Command failed - no active instance!\n" );
@@ -75,7 +75,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	        strtof( argv[ 2 ], NULL ),
 	        strtof( argv[ 3 ], NULL ) };
 
-	OgeWorldMesh *mesh = YnCore_WorldMesh_Create( world );
+	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
 }
 
 static void IncreaseGridSize( OgeInputState state )
@@ -164,7 +164,7 @@ static void DrawWorldEditorGUI( void )
 
 	if ( context.camera != NULL && ( context.camera->mode != OGE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
 	{
-		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
 		float zoom     = roundf( z ) / 2.0f;
@@ -206,17 +206,17 @@ static void DrawWorldEditorGUI( void )
 		transform = PlTransposeMatrix4( &transform );
 		PlgSetViewMatrix( &transform );
 
-		OgeCamera tmp;
+		ApeCamera tmp;
 		PL_ZERO_( tmp );
-		tmp.internal = ogeGetAuxCamera();
+		tmp.internal = apeGetAuxCamera();
 		switch ( context.camera->drawMode )
 		{
 			case OGE_CAMERA_DRAW_MODE_WIREFRAME:
-				ogeDrawWorldWireframe( world, &tmp );
+				apeDrawWorldWireframe_( world, &tmp );
 				break;
 			case OGE_CAMERA_DRAW_MODE_SOLID:
 			case OGE_CAMERA_DRAW_MODE_TEXTURED:
-				ogeDrawWorld( world, NULL, &tmp );
+				apeDrawWorld_( world );
 				break;
 			default:
 				break;
@@ -266,7 +266,7 @@ static void DrawWorldEditorGUI( void )
 
 	Font_Draw( defaultFont );
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	static const float CURSOR_SIZE = 8.0f;
 	PlgDrawRectangle( ( float ) ( mouseCursorX ) - ( CURSOR_SIZE / 2 ), ( float ) ( mouseCursorY ) - ( CURSOR_SIZE / 2 ),
 	                  CURSOR_SIZE, CURSOR_SIZE,
@@ -282,7 +282,7 @@ static void TickWorldEditor( void )
 
 static void OnWorldEditorActive( void )
 {
-	OgeViewport *viewport = YnCore_Viewport_GetBySlot( 0 );
+	ApeViewport *viewport = YnCore_Viewport_GetBySlot( 0 );
 	assert( viewport != NULL );
 	if ( viewport == NULL )
 	{
@@ -294,7 +294,7 @@ static void OnWorldEditorActive( void )
 	world = Game_GetCurrentWorld();
 }
 
-YNCoreEditorContext *YnCore_RegisterWorldEditorContext( void )
+ApeEditorContext *YnCore_RegisterWorldEditorContext( void )
 {
 	PL_ZERO_( context );
 

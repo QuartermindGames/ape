@@ -11,7 +11,7 @@ typedef enum OgeCameraMode
 	OGE_CAMERA_MODE_FRONT,
 
 	OGE_CAMERA_MAX_MODES
-} OgeCameraMode;
+} ApeCameraMode;
 
 typedef enum OgeCameraDrawMode
 {
@@ -23,22 +23,22 @@ typedef enum OgeCameraDrawMode
 	OGE_CAMERA_DRAW_MODE_SHADED,
 
 	OGE_CAMERA_MAX_DRAW_MODES
-} OgeCameraDrawMode;
+} ApeCameraDrawMode;
 
-typedef struct OgeCamera OgeCamera;
+typedef struct ApeCamera ApeCamera;
 
 PL_EXTERN_C
 
-OgeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles );
-void ogeDestroyCamera( OgeCamera *camera );
-void ogeSetCameraPosition( OgeCamera *camera, const PLVector3 *position );
-void ogeSetCameraAngles( OgeCamera *camera, const PLVector3 *angles );
+ApeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+void ogeDestroyCamera( ApeCamera *camera );
+void ogeSetCameraPosition( ApeCamera *camera, const PLVector3 *position );
+void ogeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles );
 
-PLVector3 ogeGetCameraPosition( OgeCamera *camera );
-PLVector3 ogeGetCameraAngles( OgeCamera *camera );
-PLVector3 ogeGetCameraForward( OgeCamera *camera );
+PLVector3 ogeGetCameraPosition( ApeCamera *camera );
+PLVector3 ogeGetCameraAngles( ApeCamera *camera );
+PLVector3 ogeGetCameraForward( ApeCamera *camera );
 
-OgeCamera *ogeGetActiveCamera( void );
-void ogeMakeCameraActive( OgeCamera *camera );
+ApeCamera *ogeGetActiveCamera( void );
+void ogeMakeCameraActive( ApeCamera *camera );
 
 PL_EXTERN_C_END

@@ -10,13 +10,13 @@ typedef struct ECMesh
 	PLMModel *model;
 } ECMesh;
 
-static void EntityComponent_Mesh_Spawn( YNCoreEntityComponent *self )
+static void EntityComponent_Mesh_Spawn( ApeEntityComponent *self )
 {
 	ECMesh *mesh = PlMAllocA( sizeof( ECMesh ) );
 	self->userData = mesh;
 }
 
-static void EntityComponent_Mesh_Destroy( YNCoreEntityComponent *self )
+static void EntityComponent_Mesh_Destroy( ApeEntityComponent *self )
 {
 	ECMesh *mesh = self->userData;
 
@@ -25,10 +25,10 @@ static void EntityComponent_Mesh_Destroy( YNCoreEntityComponent *self )
 	PlFree( mesh );
 }
 
-const YNCoreEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void )
+const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void )
 {
-	static YNCoreEntityComponentCallbackTable callbackTable;
-	memset( &callbackTable, 0, sizeof( YNCoreEntityComponentCallbackTable ) );
+	static ApeEntityComponentCallbackTable callbackTable;
+	memset( &callbackTable, 0, sizeof( ApeEntityComponentCallbackTable ) );
 
 	callbackTable.spawnFunction = EntityComponent_Mesh_Spawn;
 

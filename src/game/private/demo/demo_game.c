@@ -3,7 +3,7 @@
 
 #include "demo_game.h"
 
-static OgeCamera *playerCamera = NULL;
+static ApeCamera *playerCamera = NULL;
 
 static void MoveCameraCallback( OgeInputState state, const char *id )
 {
@@ -41,7 +41,7 @@ static void InitializeDemoGame( void )
 {
 	Game_RegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world worlds/l1s3.rfl" );
+	PlParseConsoleString( "world worlds/glass_house.rfl" );
 
 	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	ogeMakeCameraActive( playerCamera );

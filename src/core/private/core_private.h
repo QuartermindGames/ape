@@ -21,14 +21,14 @@
 
 #include <yin/core.h>
 
-#define ENGINE_NAME        "Orcus"
-#define ENGINE_APP_NAME    "orcus"
+#define ENGINE_NAME        "APE"
+#define ENGINE_APP_NAME    "ape"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
 #define VERSION_MAJOR    3
 #define VERSION_MINOR    0
 #define VERSION_PATCH    0
-#define VERSION_CODENAME "LUNA"
+#define VERSION_CODENAME "Amber"
 
 PL_EXTERN_C
 
@@ -40,7 +40,7 @@ PL_EXTERN_C
 #	define ENABLE_PROFILER 1
 #endif
 
-typedef enum CPUProfilerGroup
+typedef enum ApeProfilerGroup
 {
 	PROFILE_SIM_ALL,
 
@@ -54,14 +54,14 @@ typedef enum CPUProfilerGroup
 	PROFILE_DRAW_GUI,
 
 	MAX_PROFILER_GROUPS
-} ProfilerGroup;
+} ApeProfilerGroup;
 extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
 #if defined( ENABLE_PROFILER )
-void ogeInitializeProfiler( void );
-void ogeProfiler_EndFrame( void );
-void Profiler_StartMeasure( ProfilerGroup group );
-void Profiler_EndMeasure( ProfilerGroup group );
-double ogeProfiler_GetMeasure( ProfilerGroup group );
+void apeInitializeProfiler( void );
+void apeEndProfilerFrame( void );
+void Profiler_StartMeasure( ApeProfilerGroup group );
+void Profiler_EndMeasure( ApeProfilerGroup group );
+double apeGetProfilerMeasure( ApeProfilerGroup group );
 #	define OGE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
 #	define OGE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
 #else
@@ -72,10 +72,10 @@ double ogeProfiler_GetMeasure( ProfilerGroup group );
 #	define PROFILE_START( GROUP )
 #	define PROFILE_END( GROUP )
 #endif
-void ogeProfiler_UpdateGraphs( void );
-const double *ogeProfiler_GetGraph( ProfilerGroup group, uint8_t *numPoints );
-double Profiler_GetGraphValue( ProfilerGroup group );
-double Profiler_GetGraphAverage( ProfilerGroup group );
+void apeUpdateProfilerGraphs( void );
+const double *apeGetProfilerGraph( ApeProfilerGroup group, uint8_t *numPoints );
+double apeGetProfilerGraphValue( ApeProfilerGroup group );
+double apeGetProfilerGraphAverage( ApeProfilerGroup group );
 
 #include "core_scheduler.h"
 #include "core_memory_manager.h"
@@ -84,67 +84,66 @@ double Profiler_GetGraphAverage( ProfilerGroup group );
  * CONSOLE
  ****************************************/
 
-typedef enum ConsoleLogLevel
+typedef enum ApeConsoleLogLevel
 {
-	YINENGINE_LOG_ERROR,
-	YINENGINE_LOG_WARNING,
-	YINENGINE_LOG_INFORMATION,
+	APE_LOG_ERROR,
+	APE_LOG_WARNING,
+	APE_LOG_INFORMATION,
 
-	YINENGINE_LOG_CLIENT_ERROR,
-	YINENGINE_LOG_CLIENT_WARNING,
-	YINENGINE_LOG_CLIENT_INFORMATION,
+	APE_LOG_CLIENT_ERROR,
+	APE_LOG_CLIENT_WARNING,
+	APE_LOG_CLIENT_INFORMATION,
 
-	YINENGINE_LOG_SERVER_ERROR,
-	YINENGINE_LOG_SERVER_WARNING,
-	YINENGINE_LOG_SERVER_INFORMATION,
+	APE_LOG_SERVER_ERROR,
+	APE_LOG_SERVER_WARNING,
+	APE_LOG_SERVER_INFORMATION,
 
-	YINENGINE_LOG_LEVELS
-} ConsoleLogLevel;
+	APE_LOG_LEVELS
+} ApeConsoleLogLevel;
 
 #define CONSOLE_BUFFER_MAX_LENGTH 256
 #define CONSOLE_BUFFER_MAX_LINES  2048
 
-typedef struct ConsoleLine
+typedef struct ApeConsoleLine
 {
 	char buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 	PLColour colour;
-} ConsoleLine;
+} ApeConsoleLine;
 
-typedef struct ConsoleOutput
+typedef struct ApeConsoleOutput
 {
-	ConsoleLine lines[ CONSOLE_BUFFER_MAX_LINES ];
+	ApeConsoleLine lines[ CONSOLE_BUFFER_MAX_LINES ];
 	unsigned int numLines;
 	unsigned int scrollPos;
-} ConsoleOutput;
+} ApeConsoleOutput;
 
-ConsoleOutput *Console_GetOutput( void );
+ApeConsoleOutput *apeGetConsoleOutput( void );
 
-void ogeInitializeConsole( void );
-void ogeShutdownConsole( void );
+void apeInitializeConsole( void );
+void apeShutdownConsole( void );
 
-int Console_GetLogLevel( ConsoleLogLevel level );
-void Console_Print( ConsoleLogLevel level, const char *message, ... );
+int Console_GetLogLevel( ApeConsoleLogLevel level );
+void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 
-void ogeRegisterConsoleCommands_( bool isDedicated );
-void ogeRegisterConsoleVariables( bool isDedicated );
+void apeRegisterConsoleCommands_( bool isDedicated );
+void apeRegisterConsoleVariables_( bool isDedicated );
 
-void ogeDrawConsole_( const OgeViewport *viewport );
-bool ogeIsConsoleOpen( void );
-void Client_Console_RegisterConsoleCommands( void );
-void ogeRegisterClientConsoleVariables_( void );
+void apeDrawConsole_( const ApeViewport *viewport );
+void apeRegisterClientConsoleCommands_( void );
+void apeRegisterClientConsoleVariables_( void );
 
 #define PRINT( FORMAT, ... ) \
-	Console_Print( YINENGINE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
+	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
 #define PRINT_WARNING( FORMAT, ... ) \
-	Console_Print( YINENGINE_LOG_WARNING, "WARNING: " FORMAT, ##__VA_ARGS__ )
-#define PRINT_ERROR( FORMAT, ... )                                                         \
-	{                                                                                      \
-		PlLogMessage( Console_GetLogLevel( YINENGINE_LOG_ERROR ), FORMAT, ##__VA_ARGS__ ); \
-		abort();                                                                           \
+	Console_Print( APE_LOG_WARNING, "WARNING: " FORMAT, ##__VA_ARGS__ )
+#define PRINT_ERROR( FORMAT, ... )                                                   \
+	{                                                                                \
+		PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), FORMAT, ##__VA_ARGS__ ); \
+		abort();                                                                     \
 	}
 
 #if !defined( NDEBUG )
-#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( YINENGINE_LOG_INFORMATION ), FORMAT, ##__VA_ARGS__ )
+#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( APE_LOG_INFORMATION ), FORMAT, ##__VA_ARGS__ )
 #else
 #	define PRINT_DEBUG( FORMAT, ... )
 #endif

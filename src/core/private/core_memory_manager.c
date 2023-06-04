@@ -5,52 +5,60 @@
 
 #include "core_private.h"
 
-static PLMemoryGroup *memoryGroups[ MEM_CACHE_END ];
+static PLMemoryGroup *memoryGroups[ APE_MAX_CACHE_POOLS ];
 
 /* ======================================================================
  * Cache Pools
  * ====================================================================*/
 
-static PLLinkedList *memCachePools[ MEM_CACHE_END ];
+static PLLinkedList *memCachePools[ APE_MAX_CACHE_POOLS ];
 
 static void InitializeCachePools( void )
 {
-	for ( unsigned int i = 0; i < MEM_CACHE_END; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
 	{
 		memCachePools[ i ] = PlCreateLinkedList();
 		if ( memCachePools[ i ] == NULL )
+		{
 			PRINT_ERROR( "Failed to create cache pool: " PL_FMT_int32 "\nPL: %s\n", i, PlGetError() );
+		}
 	}
 }
 
-void ogeMM_AddToCache( const char *id, uint8_t pool, void *data )
+void apeAddToCachePool( const char *id, ApeCachePool pool, void *data )
 {
 	/* ensure the data hasn't been cached already */
-	void *cachedData = ogeMM_GetCachedData( id, pool );
+	void *cachedData = apeGetCachedData( id, pool );
 	if ( cachedData != NULL )
+	{
 		PRINT_ERROR( "Attempted to cache duplicate data: %s\n", id );
+	}
 
-	OgeMemoryCacheHeader *header = PL_NEW( OgeMemoryCacheHeader );
-	header->id            = PlGenerateHashSDBM( id );
-	header->pool          = pool;
-	header->userData      = data;
+	ApeMemoryCacheHeader *header = PL_NEW( ApeMemoryCacheHeader );
+	header->id                   = PlGenerateHashSDBM( id );
+	header->pool                 = pool;
+	header->userData             = data;
 	snprintf( header->description, sizeof( header->description ), "%s", id );
 
 	PLLinkedListNode *node = PlInsertLinkedListNode( memCachePools[ pool ], header );
 	if ( node == NULL )
+	{
 		PRINT_ERROR( "Failed to insert node for cache pool!\n" );
+	}
 
 	PRINT( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
 }
 
-static OgeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool )
+static ApeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool )
 {
 	PLLinkedListNode *node = PlGetFirstNode( memCachePools[ pool ] );
 	while ( node != NULL )
 	{
-		OgeMemoryCacheHeader *header = PlGetLinkedListNodeUserData( node );
+		ApeMemoryCacheHeader *header = PlGetLinkedListNodeUserData( node );
 		if ( header->id == id )
+		{
 			return header;
+		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -58,19 +66,21 @@ static OgeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool )
 	return NULL;
 }
 
-void *ogeMM_GetCachedData( const char *id, uint8_t pool )
+void *apeGetCachedData( const char *id, ApeCachePool pool )
 {
-	uint32_t       hashedName = PlGenerateHashSDBM( id );
-	OgeMemoryCacheHeader *header     = GetCache( hashedName, pool );
+	uint32_t hashedName          = PlGenerateHashSDBM( id );
+	ApeMemoryCacheHeader *header = GetCache( hashedName, pool );
 	if ( header != NULL )
+	{
 		return header->userData;
+	}
 
 	return NULL;
 }
 
 static void RemoveFromCache( uint32_t id, uint8_t pool )
 {
-	OgeMemoryCacheHeader *header = GetCache( id, pool );
+	ApeMemoryCacheHeader *header = GetCache( id, pool );
 	if ( header == NULL )
 	{
 		PRINT_WARNING( "Attempted to remove node from cache pool, but failed: %s\n", id );
@@ -94,7 +104,7 @@ static PLLinkedList *mmReferenceList;
 
 //#define DEBUG_MEMORY
 
-static bool FreeReference( OgeMemoryReference *m, bool force )
+static bool FreeReference( ApeMemoryReference *m, bool force )
 {
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "%s, numRefs = %d, ttl = %u\n",
@@ -103,7 +113,7 @@ static bool FreeReference( OgeMemoryReference *m, bool force )
 	          m->ttl );
 #endif
 
-	if ( m->numReferences <= 0 && ( force || m->timeToLive < ogeGetNumTicks() ) )
+	if ( m->numReferences <= 0 && ( force || m->timeToLive < apeGetNumTicks() ) )
 	{
 		/* remove it from whatever cached list it exists in */
 		if ( m->cache != NULL )
@@ -128,7 +138,7 @@ static void CleanupUnreferencedResources( bool force )
 	while ( child != NULL )
 	{
 		PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
-		OgeMemoryReference *m         = PlGetLinkedListNodeUserData( child );
+		ApeMemoryReference *m       = PlGetLinkedListNodeUserData( child );
 
 #if defined( DEBUG_MEMORY )
 		DebugMsg( " %s (" COM_FMT_int32 ")\n", m->description, m->numRefs );
@@ -142,45 +152,48 @@ static void CleanupUnreferencedResources( bool force )
 
 #define MEM_CLEANUP_TASK_NAME "mem_cleanup"
 
-static void MEM_CB_Cleanup( void *unused0, double unused1 )
+static void CleanupCallback( PL_UNUSED void *unused0, PL_UNUSED double unused1 )
 {
-	( void )( unused0 );
-	( void )( unused1 );
-
 	CleanupUnreferencedResources( false );
 
-	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
+	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void ogeInitializeMemoryManager( void )
+void apeInitializeMemoryManager( void )
 {
 	PRINT( "Initializing memory manager\n" );
 
-	for ( unsigned int i = 0; i < MEM_CACHE_END; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
 		memoryGroups[ i ] = PlCreateMemoryGroup();
 
 	InitializeCachePools();
 
 	mmReferenceList = PlCreateLinkedList();
 	if ( mmReferenceList == NULL )
+	{
 		PRINT_ERROR( "Failed to create memory manager linked list!\n" );
+	}
 
-	Sch_PushTask( MEM_CLEANUP_TASK_NAME, MEM_CB_Cleanup, NULL, MEM_CLEANUP_DELAY );
+	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void ogeShutdownMemoryManager( void )
+void apeShutdownMemoryManager( void )
 {
-	ogeMemoryManager_FlushUnreferencedResources();
+	apeFlushUnreferencedResources();
 
 	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
 	if ( danglingReferences > 0 )
+	{
 		PRINT_WARNING( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
+	}
 
-	for ( unsigned int i = 0; i < MEM_CACHE_END; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
+	{
 		PlDestroyMemoryGroup( memoryGroups[ i ] );
+	}
 }
 
-unsigned int ogeMemoryManager_FlushUnreferencedResources( void )
+unsigned int apeFlushUnreferencedResources( void )
 {
 	unsigned int references = PlGetNumLinkedListNodes( mmReferenceList );
 	while ( references > 0 )
@@ -193,7 +206,9 @@ unsigned int ogeMemoryManager_FlushUnreferencedResources( void )
 
 		unsigned int n = PlGetNumLinkedListNodes( mmReferenceList );
 		if ( n == references )
+		{
 			break;
+		}
 
 		references = n;
 	}
@@ -201,10 +216,10 @@ unsigned int ogeMemoryManager_FlushUnreferencedResources( void )
 	return references;
 }
 
-OgeMemoryReference *ogeMemoryManager_SetupReference( const char *id, uint8_t pool, OgeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
+ApeMemoryReference *apeSetupReference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
 {
 	if ( id != NULL )
-		m->cache = ogeMM_GetCachedData( id, pool );
+		m->cache = apeGetCachedData( id, pool );
 
 	m->userData        = userData;
 	m->cleanupFunction = cleanupFunction;
@@ -213,10 +228,10 @@ OgeMemoryReference *ogeMemoryManager_SetupReference( const char *id, uint8_t poo
 	return m;
 }
 
-void ogeMemoryManager_AddReference( OgeMemoryReference *m )
+void apeAddReference( ApeMemoryReference *m )
 {
 	m->numReferences++;
-	m->timeToLive = ( ogeGetNumTicks() + 1024 );
+	m->timeToLive = ( apeGetNumTicks() + 1024 );
 #if defined( DEBUG_MEMORY )
 	DebugMsg( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
 	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
@@ -225,7 +240,7 @@ void ogeMemoryManager_AddReference( OgeMemoryReference *m )
 #endif
 }
 
-void ogeMemoryManager_ReleaseReference( OgeMemoryReference *m )
+void apeReleaseReference( ApeMemoryReference *m )
 {
 	assert( m->numReferences > 0 );
 
@@ -239,11 +254,11 @@ void ogeMemoryManager_ReleaseReference( OgeMemoryReference *m )
 	m->numReferences--;
 	if ( m->numReferences <= 0 )
 	{
-		m->timeToLive = ( ogeGetNumTicks() + 1024 );
+		m->timeToLive = ( apeGetNumTicks() + 1024 );
 	}
 }
 
-int ogeMemoryManager_GetNumberOfReferences( const OgeMemoryReference *m )
+int apeGetNumberOfReferences( const ApeMemoryReference *m )
 {
 	return m->numReferences;
 }
@@ -252,7 +267,7 @@ int ogeMemoryManager_GetNumberOfReferences( const OgeMemoryReference *m )
  * Temporary Buffer Allocation
  * ====================================================================*/
 
-static void MEM_CB_CleanupTempAlloc( void *userData )
+static void CleanupTempAllocCallback( void *userData )
 {
 	PL_DELETE( userData );
 }
@@ -261,10 +276,10 @@ static void MEM_CB_CleanupTempAlloc( void *userData )
  * Allocates a pool of memory that will be automatically
  * cleaned up.
  */
-void *ogeTempAlloc( OgeMemoryReference *m, size_t size )
+void *apeTempAlloc( ApeMemoryReference *m, size_t size )
 {
 	void *buf = PlMAllocA( size );
-	ogeMemoryManager_SetupReference( "temp", 0, m, MEM_CB_CleanupTempAlloc, buf );
+	apeSetupReference( "temp", 0, m, CleanupTempAllocCallback, buf );
 	return buf;
 }
 
@@ -273,7 +288,7 @@ void *ogeTempAlloc( OgeMemoryReference *m, size_t size )
  * If this isn't called, resource will be cleaned
  * up automatically later.
  */
-void ogeTempFree( OgeMemoryReference *m )
+void apeTempFree( ApeMemoryReference *m )
 {
 	if ( !FreeReference( m, false ) )
 	{

@@ -9,9 +9,9 @@
 
 #include "entity.h"
 
-const struct YNCoreEditorField *YnCore_EntityComponent_GetEditableProperties( const YNCoreEntityComponent *entityComponent, unsigned int *num )
+const struct ApeEditorField *YnCore_EntityComponent_GetEditableProperties( const ApeEntityComponent *entityComponent, unsigned int *num )
 {
-	const YNCoreEntityComponentBase *base = entityComponent->base;
+	const ApeEntityComponentBase *base = entityComponent->base;
 	assert( base != NULL );
 	if ( base == NULL )
 		return NULL;

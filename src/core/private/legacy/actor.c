@@ -13,9 +13,9 @@
 
 static void Act_DrawBasic( Actor *self, void *userData )
 {
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 
-	YnCore_DrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
+	apeDrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
 }
 
 void Monster_Collide( struct Actor *self, struct Actor *other, float force )
@@ -136,7 +136,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct OgeWorldRoom *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
 
 void  Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -212,7 +212,7 @@ Actor *Act_CheckCollisions( Actor *self )
  * RENDERING
  ****************************************/
 
-bool Act_IsVisible( Actor *self, OgeCamera *camera )
+bool Act_IsVisible( Actor *self, ApeCamera *camera )
 {
 	if ( camera == NULL )
 		return false;
@@ -227,7 +227,7 @@ bool Act_IsVisible( Actor *self, OgeCamera *camera )
 #endif
 }
 
-void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector )
+void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 {
 	OGE_PROFILE_START( PROFILE_DRAW_ACTORS );
 
@@ -252,7 +252,7 @@ void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector )
 		PL_GET_CVAR( "r.showActorBounds", showActorBounds );
 		if ( showActorBounds->b_value )
 		{
-			PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 			PLColour boxColour;
 			if ( Act_IsVisible( actor, camera ) )
@@ -273,7 +273,7 @@ void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector )
 			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
 			while ( colliderNode != NULL )
 			{
-				OgeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
+				ApeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
 				PLCollisionPlane plane     = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
 				PLCollision      collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );
@@ -281,7 +281,7 @@ void Act_DrawActors( OgeCamera *camera, OgeWorldRoom *sector )
 				{
 					PlgDrawBoundingVolume( &face->bounds, &PL_COLOUR_RED );
 
-					YnCore_DrawAxesPivot( collision.contactPoint, plane.normal );
+					apeDrawAxesPivot( collision.contactPoint, plane.normal );
 
 					PLMatrix4 transform = PlMatrix4Identity();
 					PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
@@ -374,7 +374,7 @@ void Act_TickActors( void *userData, double delta )
 		if ( actor->sector != NULL )
 		{
 			unsigned int numFaces;
-			OgeWorldFace **faces = YnCore_WorldSector_GetMeshFaces( actor->sector, &numFaces );
+			ApeWorldFace **faces = YnCore_WorldSector_GetMeshFaces( actor->sector, &numFaces );
 			for ( unsigned int i = 0; i < numFaces; ++i )
 			{
 				if ( !PlIsAabbIntersecting( &actor->collisionVolume, &faces[ i ]->bounds ) )
@@ -414,7 +414,7 @@ void Act_TickActors( void *userData, double delta )
 		index = next;
 	}
 
-	Sch_PushTask( "actor_tick", Act_TickActors, NULL, delta );
+	apePushScheduledTask( "actor_tick", Act_TickActors, NULL, delta );
 }
 
 Actor *Act_GetByTag( const char *tag, Actor *start )

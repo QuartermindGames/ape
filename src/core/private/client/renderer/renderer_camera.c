@@ -7,19 +7,20 @@
 #include "renderer.h"
 #include "post/post.h"
 #include "legacy/actor.h"
+#include "game_interface.h"
 
 /* Camera management fun! */
 
 static PLLinkedList *cameras;
 
-static OgeCamera *activeCamera = NULL;
+static ApeCamera *activeCamera = NULL;
 
-OgeCamera *ogeGetActiveCamera( void )
+ApeCamera *ogeGetActiveCamera( void )
 {
 	return activeCamera;
 }
 
-void ogeMakeCameraActive( OgeCamera *camera )
+void ogeMakeCameraActive( ApeCamera *camera )
 {
 	activeCamera = camera;
 }
@@ -27,9 +28,9 @@ void ogeMakeCameraActive( OgeCamera *camera )
 /****************************************
  ****************************************/
 
-OgeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+ApeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
-	OgeCamera *camera = PL_NEW( OgeCamera );
+	ApeCamera *camera = PL_NEW( ApeCamera );
 
 	camera->mode     = OGE_CAMERA_MODE_PERSPECTIVE;
 	camera->drawMode = OGE_CAMERA_DRAW_MODE_SHADED;
@@ -69,7 +70,7 @@ OgeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PL
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void ogeDestroyCamera( OgeCamera *camera )
+void ogeDestroyCamera( ApeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -95,34 +96,45 @@ void ogeDestroyCamera( OgeCamera *camera )
 	}
 }
 
-void ogeSetCameraPosition( OgeCamera *camera, const PLVector3 *position )
+void ogeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
+
+	if ( camera->room == NULL )
+	{
+		ApeWorld *world = Game_GetCurrentWorld();
+		if ( world == NULL )
+		{
+			return;
+		}
+
+		camera->room = apeGetRoomAtPosition( world, &camera->internal->position );
+	}
 }
 
-void ogeSetCameraAngles( OgeCamera *camera, const PLVector3 *angles )
+void ogeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 	PlAnglesAxes( camera->internal->angles, NULL, NULL, &camera->forward );
 }
 
-PLVector3 ogeGetCameraPosition( OgeCamera *camera )
+PLVector3 ogeGetCameraPosition( ApeCamera *camera )
 {
 	return camera->internal->position;
 }
 
-PLVector3 ogeGetCameraAngles( OgeCamera *camera )
+PLVector3 ogeGetCameraAngles( ApeCamera *camera )
 {
 	return camera->internal->angles;
 }
 
-PLVector3 ogeGetCameraForward( OgeCamera *camera )
+PLVector3 ogeGetCameraForward( ApeCamera *camera )
 {
 	return camera->forward;
 }
 
-void ogeDrawScene_( OgeCamera *camera, const OgeViewport *viewport );
-void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport )
+void ogeDrawScene_( ApeCamera *camera, const ApeViewport *viewport );
+void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	if ( camera == NULL )
 	{
@@ -198,7 +210,9 @@ void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport )
 					speed = 1.0f;
 			}
 			else
+			{
 				speed = 0.0f;
+			}
 
 			camera->internal->angles.x = -75.0f;
 			camera->internal->position = position;

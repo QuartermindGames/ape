@@ -8,10 +8,10 @@
 
 #include "client/renderer/renderer_material.h"
 
-static void SerialiseFace( const OgeWorldFace *face, const OgeWorldMesh *mesh, NdBranch *root, const char *name )
+static void SerialiseFace( const ApeWorldFace *face, const ApeWorldMesh *mesh, NdBranch *root, const char *name )
 {
 	NdBranch *node = ndPushBackObject( root, name );
-	ndPushBackString( node, "material", ogeMaterial_GetPath( face->material ) );
+	ndPushBackString( node, "material", apeGetMaterialPath( face->material ) );
 	ndPushBackF32( node, "materialAngle", face->materialAngle );
 	ndDS_SerializeVector2( node, "materialOffset", &face->materialOffset );
 	ndDS_SerializeVector2( node, "materialScale", &face->materialScale );
@@ -19,7 +19,7 @@ static void SerialiseFace( const OgeWorldFace *face, const OgeWorldMesh *mesh, N
 	ndDS_SerializeVector3( node, "normal", &face->normal );
 }
 
-static void SerialiseFaces( const OgeWorldMesh *mesh, NdBranch *root )
+static void SerialiseFaces( const ApeWorldMesh *mesh, NdBranch *root )
 {
 #if 0
 	NLNode *faceListNode = NL_PushBackObjArray( root, "faces" );
@@ -30,7 +30,7 @@ static void SerialiseFaces( const OgeWorldMesh *mesh, NdBranch *root )
 #endif
 }
 
-static void SerialiseMesh( const OgeWorldMesh *mesh, NdBranch *root, const char *name )
+static void SerialiseMesh( const ApeWorldMesh *mesh, NdBranch *root, const char *name )
 {
 	NdBranch *meshNode = ndPushBackObject( root, name );
 	if ( *mesh->id != '\0' )
@@ -41,20 +41,20 @@ static void SerialiseMesh( const OgeWorldMesh *mesh, NdBranch *root, const char 
 	SerialiseFaces( mesh, meshNode );
 }
 
-static void SerialiseMeshes( const OgeWorld *world, NdBranch *root )
+static void SerialiseMeshes( const ApeWorld *world, NdBranch *root )
 {
 	NdBranch *meshListNode = ndPushBackObjectArray( root, "meshes" );
 
 	unsigned int numMeshes = PlGetNumVectorArrayElements( world->meshes );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
-		SerialiseMesh( ( OgeWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, i ), meshListNode, NULL );
+		SerialiseMesh( ( ApeWorldMesh * ) PlGetVectorArrayElementAt( world->meshes, i ), meshListNode, NULL );
 	}
 }
 
-void YnCore_WorldSerialiser_Begin( const OgeWorld *world, NdBranch *root )
+void YnCore_WorldSerialiser_Begin( const ApeWorld *world, NdBranch *root )
 {
-	ndPushBackI32( root, "version", YN_CORE_WORLD_VERSION );
+	ndPushBackI32( root, "version", APE_WORLD_VERSION );
 	ndPushBackBranch( root, world->globalProperties );
 
 	SerialiseMeshes( world, root );

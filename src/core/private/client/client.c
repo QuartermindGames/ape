@@ -25,19 +25,19 @@ typedef struct ClientState
 } ClientState;
 static ClientState clientState;
 
-void ogeInitializeClient( void )
+void apeInitializeClient( void )
 {
 	CLIENT_PRINT( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
 
-	ogeInitializeRenderer();
+	apeInitializeRenderer();
 	YnCore_InitializeAudio();
 	YnCore_InitializeEditor();
 
 	YnCore_InitializeGUI();
 
-	ogeInitializeInput_();
+	apeInitializeInput_();
 }
 
 void ogeShutdownClient( void )
@@ -46,20 +46,20 @@ void ogeShutdownClient( void )
 
 	ogeShutdownEditor();
 	YnCore_ShutdownAudio();
-	ogeShutdownRenderer();
+	apeShutdownRenderer();
 }
 
-void ogeDrawClient( OgeViewport *viewport )
+void apeDrawClient( ApeViewport *viewport )
 {
-	YnCore_BeginDraw( viewport );
+	apeBeginDraw( viewport );
 
-	ogeDrawPerspective_( viewport->camera, viewport );
+	apeDrawPerspective_( viewport->camera, viewport );
 
 	OGE_PROFILE_START( PROFILE_DRAW_UI );
-	YnCore_DrawMenu( viewport );
+	apeDrawMenu( viewport );
 	OGE_PROFILE_END( PROFILE_DRAW_UI );
 
-	YnCore_EndDraw( viewport );
+	apeEndDraw( viewport );
 }
 
 static void Client_HandleConnectionState( void )
@@ -87,18 +87,18 @@ static void Client_HandleConnectionState( void )
 	}
 }
 
-void ogeTickClient( void )
+void apeTickClient( void )
 {
-	ogeBeginInputFrame_();
+	apeBeginInputFrame_();
 
-	ogeTickInput_();
+	apeTickInput_();
 
 	YnCore_TickEditor();
 	YnCore_TickGUI();
 
 	Client_HandleConnectionState();
 
-	ogeEndInputFrame_();
+	apeEndInputFrame_();
 
 	YnCore_TickAudio();
 }

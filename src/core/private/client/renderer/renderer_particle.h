@@ -5,7 +5,7 @@
 
 #include "renderer_scenegraph.h"
 
-typedef struct OgeCamera OgeCamera;
+typedef struct ApeCamera ApeCamera;
 
 typedef enum PSParticleDrawType
 {
@@ -39,8 +39,8 @@ typedef struct PSEmitter
 	PLCollisionAABB bounds;
 
 	struct PLGMesh  *mesh;
-	struct OgeMaterial *material;
-	OgeMemoryReference mem;
+	struct ApeMaterial *material;
+	ApeMemoryReference mem;
 
 	struct PLLinkedList *particles;
 } PSEmitter;
@@ -73,4 +73,4 @@ PSEmitter *PS_SpawnEmitter( void );
 void	   PS_DestroyEmitter( PSEmitter *emitter );
 
 void PS_TickEmitter( PSEmitter *emitter );
-void PS_Draw( const PSEmitter *emitter, const OgeCamera *camera );
+void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera );

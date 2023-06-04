@@ -12,9 +12,9 @@
  * CONSOLE OUTPUT BUFFER
  ****************************************/
 
-static ConsoleOutput conOutputBuffer;
+static ApeConsoleOutput conOutputBuffer;
 
-ConsoleOutput *Console_GetOutput( void )
+ApeConsoleOutput *apeGetConsoleOutput( void )
 {
 	return &conOutputBuffer;
 }
@@ -64,7 +64,7 @@ CMD_CALLBACK( Quit )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	ogeShutdown();
+	apeShutdown();
 }
 
 CMD_CALLBACK( Version )
@@ -103,7 +103,7 @@ static void LoadUserConfig( void )
 		child = ndGetNextChild( child );
 	}
 
-	ogeDeserializeInputConfig_( root );
+	apeDeserializeInputConfig_( root );
 
 	PRINT( "User config loaded.\n" );
 }
@@ -142,7 +142,7 @@ static void SaveUserConfig( void )
 		}
 	}
 
-	ogeSerializeInputConfig_( root );
+	apeSerializeInputConfig_( root );
 
 	ndWriteFile( path, root, ND_FILE_UTF8 );
 	ndDestroyBranch( root );
@@ -150,7 +150,7 @@ static void SaveUserConfig( void )
 	PRINT( "User config saved.\n" );
 }
 
-void ogeRegisterConsoleCommands_( bool isDedicated )
+void apeRegisterConsoleCommands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "Quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "Exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -160,11 +160,11 @@ void ogeRegisterConsoleCommands_( bool isDedicated )
 
 	if ( !isDedicated )
 	{
-		Client_Console_RegisterConsoleCommands();
+		apeRegisterClientConsoleCommands_();
 	}
 }
 
-void ogeRegisterConsoleVariables( bool isDedicated )
+void apeRegisterConsoleVariables_( bool isDedicated )
 {
 	// server
 	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
@@ -173,20 +173,20 @@ void ogeRegisterConsoleVariables( bool isDedicated )
 	// Client variables
 	if ( !isDedicated )
 	{
-		ogeRegisterClientConsoleVariables_();
+		apeRegisterClientConsoleVariables_();
 	}
 
 	ogeRegisterEditorConsoleVariables_();
 }
 
-static int logLevels[ YINENGINE_LOG_LEVELS ];
+static int logLevels[ APE_LOG_LEVELS ];
 
-int Console_GetLogLevel( ConsoleLogLevel level )
+int Console_GetLogLevel( ApeConsoleLogLevel level )
 {
 	return logLevels[ level ];
 }
 
-void Console_Print( ConsoleLogLevel level, const char *message, ... )
+void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
 {
 	va_list args;
 	va_start( args, message );
@@ -208,24 +208,24 @@ void Console_Print( ConsoleLogLevel level, const char *message, ... )
 /**
  * Set the console up.
  */
-void ogeInitializeConsole( void )
+void apeInitializeConsole( void )
 {
 	PlSetConsoleOutputCallback( OutputCallback );
 
-	logLevels[ YINENGINE_LOG_ERROR ]       = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	logLevels[ YINENGINE_LOG_WARNING ]     = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ YINENGINE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_ERROR ]       = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_WARNING ]     = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
 
-	logLevels[ YINENGINE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
-	logLevels[ YINENGINE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ YINENGINE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "yin/client", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "yin/client", PL_COLOUR_WHITE, true );
 
-	logLevels[ YINENGINE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "yin/server/error", PL_COLOUR_RED, true );
-	logLevels[ YINENGINE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "yin/server/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ YINENGINE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "yin/server/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "yin/server/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 
-void ogeShutdownConsole( void )
+void apeShutdownConsole( void )
 {
 	ClearOutputBuffer();
 	SaveUserConfig();

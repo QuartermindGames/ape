@@ -5,11 +5,11 @@
 
 #include <plgraphics/plg_mesh.h>
 
-typedef struct OgeCamera OgeCamera;
-typedef struct OgeViewport OgeViewport;
-typedef struct OgeLight OgeLight;
+typedef struct ApeCamera ApeCamera;
+typedef struct ApeViewport ApeViewport;
+typedef struct ApeLight ApeLight;
 typedef struct OgeTexture OgeTexture;
-typedef struct OgeMaterial OgeMaterial;
+typedef struct ApeMaterial ApeMaterial;
 
 // TODO: retire this...
 typedef enum YNCoreCacheGroup
@@ -22,13 +22,13 @@ typedef enum YNCoreCacheGroup
 
 PL_EXTERN_C
 
-OgeViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle );
-void YnCore_Viewport_Destroy( OgeViewport *viewport );
-OgeViewport *YnCore_Viewport_GetBySlot( unsigned int slot );
-void YnCore_Viewport_SetCamera( OgeViewport *viewport, OgeCamera *camera );
-void ogeViewport_SetSize( OgeViewport *viewport, int width, int height );
-void YnCore_Viewport_GetSize( const OgeViewport *viewport, int *width, int *height );
-unsigned int YnCore_Viewport_GetAverageFPS( const OgeViewport *viewport );
+ApeViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle );
+void YnCore_Viewport_Destroy( ApeViewport *viewport );
+ApeViewport *YnCore_Viewport_GetBySlot( unsigned int slot );
+void YnCore_Viewport_SetCamera( ApeViewport *viewport, ApeCamera *camera );
+void ogeViewport_SetSize( ApeViewport *viewport, int width, int height );
+void YnCore_Viewport_GetSize( const ApeViewport *viewport, int *width, int *height );
+unsigned int YnCore_Viewport_GetAverageFPS( const ApeViewport *viewport );
 
 /**********************************************************/
 // Textures
@@ -53,29 +53,29 @@ void YnCore_Texture_Release( OgeTexture *texture );
 /**
  * Returns the original path the material was loaded from.
  */
-const char *ogeMaterial_GetPath( const OgeMaterial *material );
+const char *apeGetMaterialPath( const ApeMaterial *material );
 
 /**
  * Returns the filename for the material.
  */
-const char *YnCore_Material_GetName( const OgeMaterial *material );
+const char *YnCore_Material_GetName( const ApeMaterial *material );
 
 /**
  * Cache a new material into memory if not so already, otherwise
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
  */
-OgeMaterial *ogeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview );
+ApeMaterial *apeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview );
 
 /**
  * Releases a reference to the material, allowing it to clean up.
  */
-void ogeMaterial_Release( OgeMaterial *material );
+void apeReleaseMaterial( ApeMaterial *material );
 
 /**
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ogeMaterial_DrawMesh( OgeMaterial *material, PLGMesh *mesh, OgeLight **lights, unsigned int numLights );
+void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights );
 
 PL_EXTERN_C_END

@@ -33,8 +33,7 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_world.c
         private/client/renderer/renderer_scenegraph.c
         private/client/renderer/renderer_shaders.c
-        private/client/renderer/renderer_sprite.c
-        private/client/renderer/renderer_visibility.c)
+        private/client/renderer/renderer_sprite.c)
 
 add_library(yin-core STATIC
         private/core_console.c
@@ -64,6 +63,7 @@ add_library(yin-core STATIC
         private/world/world_mesh.c
         private/world/world_room.c
         private/world/world_serialiser.c
+        private/world/world_visibility.c
 
         private/editor/editor.c
         private/editor/editor_lightmapper.c

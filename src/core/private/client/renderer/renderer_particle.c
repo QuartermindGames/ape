@@ -22,7 +22,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	ogeMaterial_Release( emitter->material );
+	apeReleaseMaterial( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -51,7 +51,7 @@ NdBranch *PS_SerializeEmitter( const PSEmitter *emitter )
 
 void PS_CacheEmitterTemplate( const char *path )
 {
-	PSEmitter *emitter = ogeMM_GetCachedData( path, MEM_CACHE_PARTICLES );
+	PSEmitter *emitter = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
@@ -81,15 +81,15 @@ void PS_CacheEmitterTemplate( const char *path )
 	ndDS_DeserializeColourF32( ndGetChildByName( root, "startColourVar" ), &emitter->startColourVar );
 	ndDS_DeserializeColourF32( ndGetChildByName( root, "endColourVar" ), &emitter->endColourVar );
 
-	ogeMM_AddToCache( path, MEM_CACHE_PARTICLES, emitter );
+	apeAddToCachePool( path, APE_CACHE_POOL_PARTICLES, emitter );
 
-	ogeMemoryManager_SetupReference( "psemitter", MEM_CACHE_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
-	ogeMemoryManager_AddReference( &emitter->mem );
+	apeSetupReference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	apeAddReference( &emitter->mem );
 }
 
 PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 {
-	PSEmitter *emitterTemplate = ogeMM_GetCachedData( path, MEM_CACHE_PARTICLES );
+	PSEmitter *emitterTemplate = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
@@ -134,7 +134,7 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 	}
 
 	if ( emitter->material != NULL )
-		ogeMaterial_Release( emitter->material );
+		apeReleaseMaterial( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );
@@ -250,9 +250,9 @@ void PS_TickEmitter( PSEmitter *emitter )
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const OgeCamera *camera )
+void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera )
 {
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_ALPHA ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -290,7 +290,7 @@ void PS_Draw( const PSEmitter *emitter, const OgeCamera *camera )
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	ogeMaterial_DrawMesh( emitter->material, emitter->mesh, NULL, 0 );
+	apeDrawMesh( emitter->material, emitter->mesh, NULL, 0 );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

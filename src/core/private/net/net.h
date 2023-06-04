@@ -19,7 +19,7 @@ typedef enum NetConnectionState
 typedef SSIZE_T ssize_t;
 #endif
 
-void ogeInitializeNet( void );
+void apeInitializeNet( void );
 void ogeShutdownNet( void );
 NetSocket         *Net_OpenSocket( const char *ip, unsigned short port, bool isHost );
 void               Net_CloseSocket( NetSocket *netSocket );

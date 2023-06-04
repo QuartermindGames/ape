@@ -35,13 +35,13 @@ static bool engineInitialized  = false;
  * PUBLIC
  ****************************************/
 
-NdBranch *ogeGetConfig( void ) { return engineConfig; }
-NdBranch *ogeGetUserConfig( void ) { return userConfig; }
+NdBranch *apeGetConfig( void ) { return engineConfig; }
+NdBranch *apeGetUserConfig( void ) { return userConfig; }
 
-bool ogeInitialize( const char *config )
+bool apeInitialize( const char *config )
 {
 	// Call this first, so we can buffer console output
-	ogeInitializeConsole();
+	apeInitializeConsole();
 
 	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
 	       VERSION_MAJOR,
@@ -55,11 +55,11 @@ bool ogeInitialize( const char *config )
 		PRINT( "Operating in command-line mode!\n" );
 	}
 
-	ogeRegisterConsoleVariables( engineTerminalMode );
-	ogeRegisterConsoleCommands_( engineTerminalMode );
+	apeRegisterConsoleVariables_( engineTerminalMode );
+	apeRegisterConsoleCommands_( engineTerminalMode );
 
 	// Need to do this before anything else IO related
-	ogeFileSystem_MountBaseLocations();
+	apeMountBaseLocations();
 
 	// And now we can fetch the engine config that provides mount locations, aliases and more
 	if ( config == NULL )
@@ -84,22 +84,22 @@ bool ogeInitialize( const char *config )
 	}
 
 	ogeFileSystem_SetupConfig( engineConfig );
-	ogeFileSystem_MountLocations();
+	apeMountLocations();
 
 	PRINT( "Initializing core services...\n" );
 
 	// TODO: move these somewhere more appropriate??
-	PlmRegisterModelLoader( "mdl.n", Model_Cache, NULL );
+	PlmRegisterModelLoader( "mdl.n", apeCacheModel, NULL );
 
-	ogeInitializeProfiler();
-	ogeInitializeScheduler();
-	ogeInitializeMemoryManager();
-	ogeInitializeNet();
+	apeInitializeProfiler();
+	apeInitializeScheduler();
+	apeInitializeMemoryManager();
+	apeInitializeNet();
 
-	ogeInitializeServer();
-	ogeInitializeClient();
+	apeInitializeServer();
+	apeInitializeClient();
 
-	ogeInitializeGame();
+	apeInitializeGame();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -108,20 +108,20 @@ bool ogeInitialize( const char *config )
 	return true;
 }
 
-void ogeShutdown( void )
+void apeShutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
-	ogeFlushTasks();
+	apeFlushTasks();
 
-	ogeShutdownGame();
+	apeShutdownGame();
 	ogeShutdownEditor();
 
 	ogeShutdownClient();
-	ogeShutdownServer();
-	ogeShutdownConsole();
-	ogeShutdownMemoryManager();
-	ogeShutdownScheduler();
+	apeShutdownServer();
+	apeShutdownConsole();
+	apeShutdownMemoryManager();
+	apeShutdownScheduler();
 	ogeShutdownNet();
 
 	ogeFileSystem_ClearMountedLocations();
@@ -131,12 +131,12 @@ void ogeShutdown( void )
 	engineInitialized = false;
 }
 
-unsigned int ogeGetNumTicks( void )
+unsigned int apeGetNumTicks( void )
 {
 	return numTicks;
 }
 
-void ogeTickFrame( void )
+void apeTickFrame( void )
 {
 	if ( !engineInitialized )
 	{
@@ -145,31 +145,31 @@ void ogeTickFrame( void )
 
 	OGE_PROFILE_START( PROFILE_SIM_ALL );
 
-	ogeTickTasks();
+	apeTickTasks();
 
 	OGE_PROFILE_START( PROFILE_TICK_CLIENT );
-	ogeTickClient();
+	apeTickClient();
 	OGE_PROFILE_END( PROFILE_TICK_CLIENT );
 
 	OGE_PROFILE_START( PROFILE_TICK_SERVER );
-	ogeTickServer();
+	apeTickServer();
 	OGE_PROFILE_END( PROFILE_TICK_SERVER );
 
 	numTicks++;
 
 	OGE_PROFILE_END( PROFILE_SIM_ALL );
 
-	ogeProfiler_UpdateGraphs();
-	ogeProfiler_EndFrame();
+	apeUpdateProfilerGraphs();
+	apeEndProfilerFrame();
 }
 
-bool ogeIsEngineRunning( void )
+bool apeIsEngineRunning( void )
 {
 	/* always running */
 	return engineInitialized;
 }
 
-void ogeRenderFrame( OgeViewport *viewport )
+void apeRenderFrame( ApeViewport *viewport )
 {
 	if ( !engineInitialized )
 	{
@@ -184,39 +184,39 @@ void ogeRenderFrame( OgeViewport *viewport )
 	}
 
 	OGE_PROFILE_START( PROFILE_DRAW_ALL );
-	ogeDrawClient( viewport );
+	apeDrawClient( viewport );
 	OGE_PROFILE_END( PROFILE_DRAW_ALL );
 
-	ogeProfiler_UpdateGraphs();
-	ogeProfiler_EndFrame();
+	apeUpdateProfilerGraphs();
+	apeEndProfilerFrame();
 }
 
-void ogeHandleKeyboardEvent( int key, unsigned int keyState )
+void apeHandleKeyboardEvent( int key, unsigned int keyState )
 {
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
-bool ogeHandleConsoleTextEvent_( const char *key );
+bool apeHandleConsoleTextEvent_( const char *key );
 
-void ogeHandleTextEvent( const char *key )
+void apeHandleTextEvent( const char *key )
 {
-	if ( ogeHandleConsoleTextEvent_( key ) )
+	if ( apeHandleConsoleTextEvent_( key ) )
 	{
 		return;
 	}
 }
 
-void ogeHandleMouseButtonEvent( int button, OgeInputState buttonState )
+void apeHandleMouseButtonEvent( int button, OgeInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void ogeHandleMouseWheelEvent( float x, float y )
+void apeHandleMouseWheelEvent( float x, float y )
 {
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void ogeHandleMouseMotionEvent( int x, int y )
+void apeHandleMouseMotionEvent( int x, int y )
 {
 	Client_Input_HandleMouseMotionEvent( x, y );
 }

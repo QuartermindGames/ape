@@ -11,7 +11,7 @@
 
 #define WORLD_VERTEX_ELEMENTS 12// pos, norm, uv, colour
 
-bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera )
+bool YnCore_World_IsFaceVisible( ApeWorldFace *face, const ApeCamera *camera )
 {
 	// Check the face is actually visible
 	face->bounds.origin = pl_vecOrigin3;
@@ -21,7 +21,7 @@ bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera )
 	return true;
 }
 
-unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles )
+unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles )
 {
 #if 0
 	if ( face->numVertices < 3 )
@@ -46,7 +46,7 @@ unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigne
 #endif
 }
 
-static void GenerateFaceNormal( const OgeWorldMesh *mesh, OgeWorldFace *face )
+static void GenerateFaceNormal( const ApeWorldMesh *mesh, ApeWorldFace *face )
 {
 #if 0
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
@@ -56,7 +56,7 @@ static void GenerateFaceNormal( const OgeWorldMesh *mesh, OgeWorldFace *face )
 #endif
 }
 
-static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
+static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr )
 {
 	NdBranch *materialsList = ndGetChildByName( meshNode, "materials" );
 	if ( materialsList == NULL )
@@ -66,7 +66,7 @@ static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
 	}
 
 	meshPtr->numMaterials      = ndGetNumOfChildren( materialsList );
-	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( OgeMaterial         *), true );
+	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( ApeMaterial         *), true );
 	NdBranch *materialNode = ndGetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
@@ -79,12 +79,12 @@ static void DeserializeMaterials( NdBranch *meshNode, OgeWorldMesh *meshPtr )
 
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
 		ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
-		meshPtr->materials[ i ] = ogeCacheMaterial( materialPath, YN_CORE_CACHE_GROUP_WORLD, true, false );
+		meshPtr->materials[ i ] = apeCacheMaterial( materialPath, YN_CORE_CACHE_GROUP_WORLD, true, false );
 		materialNode            = ndGetNextChild( materialNode );
 	}
 }
 
-static OgeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *numVertices )
+static ApeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *numVertices )
 {
 	NdBranch *verticesList = ndGetChildByName( meshNode, "vertices" );
 	if ( verticesList == NULL )
@@ -99,19 +99,19 @@ static OgeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *nu
 		return NULL;
 	}
 
-	*numVertices = numChildren / sizeof( OgeWorldVertex );
-	return ( OgeWorldVertex * ) data;
+	*numVertices = numChildren / sizeof( ApeWorldVertex );
+	return ( ApeWorldVertex * ) data;
 }
 
 /**
  * Deserialise a mesh from the given node.
  */
-OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *worldMesh )
+ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh )
 {
 	DeserializeMaterials( root, worldMesh );
 
 	unsigned int numVertices;
-	OgeWorldVertex *vertices = DeserializeVertices( root, &numVertices );
+	ApeWorldVertex *vertices = DeserializeVertices( root, &numVertices );
 	if ( vertices == NULL )
 	{
 		PRINT_WARNING( "Failed to fetch vertices for mesh: %s\n", worldMesh->id );
@@ -123,7 +123,7 @@ OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *
 	return worldMesh;
 }
 
-static void GenerateBounds( OgeWorldMesh *mesh )
+static void GenerateBounds( ApeWorldMesh *mesh )
 {
 	PLVector3 *coords = PL_NEW_( PLVector3, mesh->numVertices );
 	for ( unsigned int i = 0; i < mesh->numVertices; ++i )
@@ -154,32 +154,32 @@ static void GenerateBounds( OgeWorldMesh *mesh )
 /**
  * Free the mesh from memory.
  */
-void DestroyWorldMesh( OgeWorldMesh *mesh )
+void DestroyWorldMesh( ApeWorldMesh *mesh )
 {
 	PlgDestroyMesh( mesh->drawMesh );
 }
 
-OgeWorldMesh *YnCore_WorldMesh_Create( OgeWorld *parent )
+ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent )
 {
-	OgeWorldMesh *mesh = PL_NEW( OgeWorldMesh );
+	ApeWorldMesh *mesh = PL_NEW( ApeWorldMesh );
 	mesh->faces           = PlCreateLinkedList();
 
 	if ( parent != NULL )
 		PlPushBackVectorArrayElement( parent->meshes, mesh );
 
-	ogeMemoryManager_SetupReference( "WorldMesh", MEM_CACHE_WORLD_MESH, &mesh->mem, ( MMReference_CleanupFunction ) DestroyWorldMesh, mesh );
-	ogeMemoryManager_AddReference( &mesh->mem );
+	apeSetupReference( "WorldMesh", APE_CACHE_POOL_WORLD_MESHES, &mesh->mem, ( MMReference_CleanupFunction ) DestroyWorldMesh, mesh );
+	apeAddReference( &mesh->mem );
 
 	return mesh;
 }
 
-OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
+ApeWorldMesh *apeLoadWorldMesh( const char *path )
 {
 	// Check to see if it's cached already
-	OgeWorldMesh *worldMesh = ogeMM_GetCachedData( path, MEM_CACHE_WORLD_MESH );
+	ApeWorldMesh *worldMesh = apeGetCachedData( path, APE_CACHE_POOL_WORLD_MESHES );
 	if ( worldMesh != NULL )
 	{
-		ogeMemoryManager_AddReference( &worldMesh->mem );
+		apeAddReference( &worldMesh->mem );
 		return worldMesh;
 	}
 
@@ -190,10 +190,10 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		return NULL;
 	}
 
-	worldMesh = YnCore_WorldMesh_Create( NULL );
+	worldMesh = apeCreateWorldMesh( NULL );
 	if ( YnCore_WorldDeserialiser_BeginMesh( node, worldMesh ) == NULL )
 	{
-		YnCore_WorldMesh_Release( worldMesh );
+		apeReleaseWorldMesh( worldMesh );
 		worldMesh = NULL;
 	}
 
@@ -222,17 +222,17 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		PLLinkedListNode *faceNode = PlGetFirstNode( worldMesh->faces );
 		while ( faceNode != NULL )
 		{
-			OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
+			ApeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
 
 			unsigned int numTriangles;
-			unsigned int *indices  = ogeWorld_ConvertFaceToTriangles( face, &numTriangles );
+			unsigned int *indices  = apeConvertWorldFaceToTriangles( face, &numTriangles );
 			unsigned int *curIndex = indices;
 			for ( unsigned int k = 0; k < numTriangles; ++k, curIndex += 3 )
 				PlgAddMeshTriangle( worldMesh->drawMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );
 
 			PL_DELETE( indices );
 
-			oge_RendererPerformance_.numFacesDrawn++;
+			ape_RendererPerformance_.numFacesDrawn++;
 
 			faceNode = PlGetNextLinkedListNode( faceNode );
 		}
@@ -240,16 +240,16 @@ OgeWorldMesh *YnCore_WorldMesh_Load( const char *path )
 		PlgGenerateVertexTangentBasis( worldMesh->drawMesh->vertices, worldMesh->drawMesh->num_verts );
 		//PlgGenerateMeshTangentBasis( worldMesh->drawMesh );
 
-		ogeMM_AddToCache( path, MEM_CACHE_WORLD_MESH, worldMesh );
+		apeAddToCachePool( path, APE_CACHE_POOL_WORLD_MESHES, worldMesh );
 	}
 
 	return worldMesh;
 }
 
-void YnCore_WorldMesh_Release( OgeWorldMesh *worldMesh )
+void apeReleaseWorldMesh( ApeWorldMesh *worldMesh )
 {
 	if ( worldMesh == NULL )
 		return;
 
-	ogeMemoryManager_ReleaseReference( &worldMesh->mem );
+	apeReleaseReference( &worldMesh->mem );
 }

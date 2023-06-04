@@ -8,17 +8,17 @@
 #include "core_private.h"
 #include "renderer.h"
 
-typedef struct OgeRenderTarget
+typedef struct ApeRenderTarget
 {
-	char            id[ 16 ];// 'rt_menu_0'
-	PLGTexture     *texture;
+	char id[ 16 ];// 'rt_menu_0'
+	PLGTexture *texture;
 	PLGFrameBuffer *frameBuffer;
-	OgeMemoryReference reference;
-} OgeRenderTarget;
+	ApeMemoryReference reference;
+} ApeRenderTarget;
 
 static PLHashTable *renderTargets;
 
-void ogeInitializeRenderTargets( void )
+void apeInitializeRenderTargets( void )
 {
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL )
@@ -27,16 +27,16 @@ void ogeInitializeRenderTargets( void )
 	}
 }
 
-void ogeShutdownRenderTargets( void )
+void apeShutdownRenderTargets( void )
 {
-	ogeMemoryManager_FlushUnreferencedResources();
+	apeFlushUnreferencedResources();
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( renderTargets );
 	while ( node != NULL )
 	{
-		OgeRenderTarget *renderTarget = ( OgeRenderTarget * ) PlGetHashTableNodeUserData( node );
+		ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) PlGetHashTableNodeUserData( node );
 
-		int numReferences = ogeMemoryManager_GetNumberOfReferences( &renderTarget->reference );
+		int numReferences = apeGetNumberOfReferences( &renderTarget->reference );
 		if ( numReferences > 0 )
 		{
 			PRINT( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
@@ -48,9 +48,9 @@ void ogeShutdownRenderTargets( void )
 	PlDestroyHashTable( renderTargets );
 }
 
-OgeRenderTarget *ogeRenderTarget_GetByKey( const char *key )
+ApeRenderTarget *apeGetRenderTargetByKey( const char *key )
 {
-	return ( OgeRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
+	return ( ApeRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
 static PLGFrameBuffer *CreateFrameBuffer( unsigned int width, unsigned int height, unsigned int flags )
@@ -67,20 +67,20 @@ static PLGFrameBuffer *CreateFrameBuffer( unsigned int width, unsigned int heigh
 
 static void DestroyRenderTarget( void *user )
 {
-	OgeRenderTarget *renderTarget = ( OgeRenderTarget * ) user;
+	ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) user;
 	PlgDestroyTexture( renderTarget->texture );
 }
 
-OgeRenderTarget *ogeRenderTarget_Create( const char *key, unsigned int width, unsigned int height, unsigned int flags )
+ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags )
 {
 	// Check if it's already been created, and if so, update size to match
-	OgeRenderTarget *renderTarget = ogeRenderTarget_GetByKey( key );
+	ApeRenderTarget *renderTarget = apeGetRenderTargetByKey( key );
 	if ( renderTarget != NULL )
 	{
 		if ( flags == 0 )
 		{
 			PRINT_DEBUG( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
-			ogeMemoryManager_AddReference( &renderTarget->reference );
+			apeAddReference( &renderTarget->reference );
 			return renderTarget;
 		}
 
@@ -95,8 +95,8 @@ OgeRenderTarget *ogeRenderTarget_Create( const char *key, unsigned int width, un
 		}
 
 		PRINT_DEBUG( "Render target already exists, updating size\n" );
-		ogeRenderTarget_SetSize( renderTarget, width, height );
-		ogeMemoryManager_AddReference( &renderTarget->reference );
+		apeSetRenderTargetSize( renderTarget, width, height );
+		apeAddReference( &renderTarget->reference );
 		return renderTarget;
 	}
 
@@ -116,31 +116,33 @@ OgeRenderTarget *ogeRenderTarget_Create( const char *key, unsigned int width, un
 		frameBuffer = NULL;
 	}
 
-	renderTarget              = PL_NEW( OgeRenderTarget );
+	renderTarget              = PL_NEW( ApeRenderTarget );
 	renderTarget->frameBuffer = frameBuffer;
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
-	ogeMemoryManager_SetupReference( "RenderTarget", MEM_CACHE_TEXTURES, &renderTarget->reference, DestroyRenderTarget, renderTarget );
-	ogeMemoryManager_AddReference( &renderTarget->reference );
+	apeSetupReference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, DestroyRenderTarget, renderTarget );
+	apeAddReference( &renderTarget->reference );
 
 	PlInsertHashTableNode( renderTargets, key, strlen( key ), renderTarget );
 
 	return renderTarget;
 }
 
-void ogeRenderTarget_Release( OgeRenderTarget *renderTarget )
+void apeReleaseRenderTarget( ApeRenderTarget *renderTarget )
 {
-	ogeMemoryManager_ReleaseReference( &renderTarget->reference );
+	apeReleaseReference( &renderTarget->reference );
 }
 
-void ogeRenderTarget_SetSize( OgeRenderTarget *renderTarget, unsigned int width, unsigned int height )
+void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height )
 {
 	PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height );
 	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS )
+	{
 		PRINT_WARNING( "Failed to resize framebuffer: %s\n", PlGetError() );
+	}
 }
 
-PLGTexture *ogeRenderTarget_GetTextureAttachment( OgeRenderTarget *renderTarget )
+PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget )
 {
 	return renderTarget->texture;
 }

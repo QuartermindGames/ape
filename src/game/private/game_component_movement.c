@@ -15,7 +15,7 @@ static void HandleMouseLook( GameMovementComponent *movementComponent )
 	//TODO
 }
 
-static void Tick( YNCoreEntityComponent *self )
+static void Tick( ApeEntityComponent *self )
 {
 	if ( YnCore_ShellInterface_GetButtonState( INPUT_A ) )
 		GAME_MOVEMENT_COMPONENT( self )->velocity.y += 10.0f;
@@ -62,9 +62,9 @@ static void Tick( YNCoreEntityComponent *self )
 #endif
 }
 
-const YNCoreEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void )
+const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void )
 {
-	static YNCoreEntityComponentCallbackTable callbackTable;
+	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 
 	callbackTable.tickFunction = Tick;

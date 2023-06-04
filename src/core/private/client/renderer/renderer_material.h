@@ -7,7 +7,7 @@
 #define MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-typedef enum OgeMaterialBuiltinVar
+typedef enum ApeMaterialBuiltinVar
 {
 	MATERIAL_BUILTIN_INVALID = -1,
 	MATERIAL_BUILTIN_TIME,
@@ -15,14 +15,14 @@ typedef enum OgeMaterialBuiltinVar
 	MATERIAL_BUILTIN_VIEWPORT_SIZE,
 
 	MAX_MATERIAL_BUILTINS
-} OgeMaterialBuiltinVar;
+} ApeMaterialBuiltinVar;
 
-typedef struct OgeMaterial OgeMaterial;
+typedef struct ApeMaterial ApeMaterial;
 
 #define MATERIAL_VAR_NAME_LENGTH   64
 #define MATERIAL_VAR_STRING_LENGTH 256
 
-typedef enum OgeMaterialVariableType
+typedef enum ApeMaterialVariableType
 {
 	MATERIAL_VAR_INVALID,
 
@@ -46,20 +46,20 @@ typedef enum OgeMaterialVariableType
 	MATERIAL_VAR_RENDERTARGET,
 
 	MAX_MATERIAL_VAR_TYPES
-} OgeMaterialVariableType;
+} ApeMaterialVariableType;
 
 /**
  * Hints for standard material variables, so
  * that we can toggle their state.
  */
-typedef enum OgeMaterialVariableHint
+typedef enum ApeMaterialVariableHint
 {
-	RM_VAR_HINT_DIFFUSE,
-	RM_VAR_HINT_NORMAL,
-	RM_VAR_HINT_SPECULAR,
-} OgeMaterialVariableHint;
+	APE_MAT_VAR_HINT_DIFFUSE,
+	APE_MAT_VAR_HINT_NORMAL,
+	APE_MAT_VAR_HINT_SPECULAR,
+} ApeMaterialVariableHint;
 
-typedef union OgeMaterialVariableData
+typedef union ApeMaterialVariableData
 {
 	float f32;
 	double f64;
@@ -79,60 +79,64 @@ typedef union OgeMaterialVariableData
 	char str[ MATERIAL_VAR_STRING_LENGTH ];
 
 	void *userPtr;
-} OgeMaterialVariableData;
+} ApeMaterialVariableData;
 
-typedef struct OgeMaterialVariable
+typedef struct ApeMaterialVariable
 {
 	int programSlot;
 	char name[ MATERIAL_VAR_NAME_LENGTH ];
-	OgeMaterialVariableType type;
-	OgeMaterialVariableData data;
-	OgeMaterialVariableHint hint;
-} OgeMaterialVariable;
+	ApeMaterialVariableType type;
+	ApeMaterialVariableData data;
+	ApeMaterialVariableHint hint;
+} ApeMaterialVariable;
 
-typedef struct OgeMaterialPass
+typedef struct ApeMaterialPass
 {
 	PLGShaderProgram *program;
 	PLGTextureFilter textureFilter;
 	PLGBlend blendMode[ 2 ];
-	OgeMaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
+	ApeMaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
 
 	bool depthTest;
 	int cullMode;
-} OgeMaterialPass;
+} ApeMaterialPass;
 
 #define RS_PROGRAM_NAME_LENGTH 64
 
-typedef enum OgeDefaultShaderProgram
+typedef enum ApeDefaultShaderProgram
 {
-	OGE_SHADER_DEFAULT,
-	OGE_SHADER_LIGHTING_PASS,
-	OGE_SHADER_DEFAULT_VERTEX,
-	OGE_SHADER_DEFAULT_ALPHA,
-	OGE_SHADER_DEFAULT_FONT,
+	APE_SHADER_DEFAULT,
+	APE_SHADER_LIGHTING_PASS,
+	APE_SHADER_DEFAULT_VERTEX,
+	APE_SHADER_DEFAULT_ALPHA,
+	APE_SHADER_DEFAULT_FONT,
 
-	OGE_MAX_DEFAULT_SHADERS
-} OgeDefaultShaderProgram;
-extern PLGShaderProgram *oge_defaultShaderPrograms_[ OGE_MAX_DEFAULT_SHADERS ];
+	APE_MAX_DEFAULT_SHADERS
+} ApeDefaultShaderProgram;
+extern PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
-typedef struct OgeShaderProgramIndex
+typedef struct ApeShaderProgramIndex
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
 
-	OgeMaterialPass defaultPass;
+	ApeMaterialPass defaultPass;
 
 	PLGShaderProgram *internalPtr;
 	struct PLLinkedListNode *node;
-} OgeShaderProgramIndex;
+} ApeShaderProgramIndex;
 
-void ogeMaterial_ParsePass( struct NdBranch *root, OgeMaterialPass *materialPass );
+PL_EXTERN_C
 
-void ogeInitializeMaterialSystem( void );
-void ogeShutdownMaterialSystem( void );
+void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass );
 
-PLGTexture *ogeMaterial_GetPreviewTexture( OgeMaterial *material );
+void apeInitializeMaterialSystem( void );
+void apeShutdownMaterialSystem( void );
 
-OgeMaterial *ogeGetFallbackMaterial( void );
+PLGTexture *apeGetMaterialPreviewTexture( ApeMaterial *material );
+
+ApeMaterial *apeGetFallbackMaterial( void );
+
+PL_EXTERN_C_END

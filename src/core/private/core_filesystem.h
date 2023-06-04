@@ -9,6 +9,6 @@ const char *FileSystem_GetUserConfigLocation( void );
 
 void ogeFileSystem_SetupConfig( NdBranch *root );
 
-void ogeFileSystem_MountBaseLocations( void );
-void ogeFileSystem_MountLocations( void );
+void apeMountBaseLocations( void );
+void apeMountLocations( void );
 void ogeFileSystem_ClearMountedLocations( void );

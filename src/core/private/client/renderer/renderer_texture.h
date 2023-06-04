@@ -7,6 +7,6 @@
 
 typedef struct OgeTexture
 {
-	OgeMemoryReference reference;
+	ApeMemoryReference reference;
 	PLGTexture *internal;
 } OgeTexture;

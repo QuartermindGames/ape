@@ -8,10 +8,11 @@
 #include "world.h"
 
 #include <yin/node.h>
+#include <float.h>
 
 #include "client/renderer/renderer.h"
 
-void ogeSetupGlobalWorldDefaults( OgeWorld *world )
+void apeSetupGlobalWorldDefaults( ApeWorld *world )
 {
 	world->ambience    = WORLD_DEFAULT_AMBIENCE;
 	world->sunColour   = WORLD_DEFAULT_SUNCOLOUR;
@@ -19,9 +20,9 @@ void ogeSetupGlobalWorldDefaults( OgeWorld *world )
 	world->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-OgeWorld *ogeCreateWorld( void )
+ApeWorld *apeCreateWorld( void )
 {
-	OgeWorld *world = PlMAllocA( sizeof( OgeWorld ) );
+	ApeWorld *world = PlMAllocA( sizeof( ApeWorld ) );
 
 	world->globalProperties = ndPushBackObject( NULL, "properties" );
 	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
@@ -30,17 +31,17 @@ OgeWorld *ogeCreateWorld( void )
 	world->meshes   = PlCreateVectorArray( 0 );
 	world->entities = PlCreateLinkedList();
 
-	ogeSetupGlobalWorldDefaults( world );
+	apeSetupGlobalWorldDefaults( world );
 
 	return world;
 }
 
-OgeWorld *YnCore_World_LoadFromNode( NdBranch *root )
+ApeWorld *YnCore_World_LoadFromNode( NdBranch *root )
 {
-	OgeWorld *world = ogeCreateWorld();
+	ApeWorld *world = apeCreateWorld();
 	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
 	{
-		ogeDestroyWorld( world );
+		apeDestroyWorld( world );
 		world = NULL;
 	}
 
@@ -111,7 +112,7 @@ static PLColour ParseColour( PLFile *file )
 	        PL_READUINT8( file, NULL ) };
 }
 
-static void ParseStaticGeometryTextures( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryTextures( ApeWorld *world, PLFile *file )
 {
 	// fetch all the textures we'll be using
 	uint32_t numTextures = PL_READUINT32( file, false, NULL );
@@ -137,20 +138,20 @@ static void ParseStaticGeometryTextures( OgeWorld *world, PLFile *file )
 		PLPath path;
 		PlSetupPath( path, true, "materials/world/%s.mat.n", textureName );
 
-		PlPushBackVectorArrayElement( world->materials, ogeCacheMaterial( path, YN_CORE_CACHE_GROUP_WORLD, true, false ) );
+		PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, YN_CORE_CACHE_GROUP_WORLD, true, false ) );
 
 		PL_DELETE( textureName );
 	}
 }
 
-static void ParseStaticGeometryRooms( OgeWorld *world, PLFile *file, int32_t version )
+static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t version )
 {
 	// fetch and populate room list
 	uint32_t numRooms = PL_READUINT32( file, false, NULL );
 	world->rooms      = PlCreateVectorArray( numRooms );
 	for ( uint32_t i = 0; i < numRooms; ++i )
 	{
-		OgeWorldRoom *room = ogeCreateWorldRoom();
+		ApeWorldRoom *room = apeCreateWorldRoom();
 
 		room->uid = PlReadInt32( file, false, NULL );
 
@@ -218,7 +219,7 @@ static void ParseStaticGeometryRooms( OgeWorld *world, PLFile *file, int32_t ver
 	}
 }
 
-static void ParseStaticGeometryDetailRooms( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryDetailRooms( ApeWorld *world, PLFile *file )
 {
 	// something about sorting rooms into detail rooms list???
 	uint32_t numRooms = PL_READUINT32( file, false, NULL );
@@ -226,7 +227,7 @@ static void ParseStaticGeometryDetailRooms( OgeWorld *world, PLFile *file )
 	for ( uint32_t i = 0; i < numRooms; ++i )
 	{
 		uint32_t roomIndex = PL_READUINT32( file, false, NULL );
-		OgeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
 		uint32_t numDetailRooms = PL_READUINT32( file, false, NULL );
@@ -237,17 +238,18 @@ static void ParseStaticGeometryDetailRooms( OgeWorld *world, PLFile *file )
 		for ( uint32_t j = 0; j < numDetailRooms; ++j )
 		{
 			uint32_t detailRoomIndex = PL_READUINT32( file, false, NULL );
-			OgeWorldRoom *detailRoom = PlGetVectorArrayElementAt( world->rooms, detailRoomIndex );
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( world->rooms, detailRoomIndex );
 			assert( detailRoom != NULL );
-			if ( room != NULL )
+			if ( room != NULL && detailRoom != NULL )
 			{
+				detailRoom->isDetail = true;
 				PlPushBackVectorArrayElement( room->detailRooms, detailRoom );
 			}
 		}
 	}
 }
 
-static void ParseStaticGeometryPortals( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryPortals( ApeWorld *world, PLFile *file )
 {
 	uint32_t numPortals = PL_READUINT32( file, false, NULL );
 	world->portals      = PlCreateVectorArray( numPortals );
@@ -261,8 +263,8 @@ static void ParseStaticGeometryPortals( OgeWorld *world, PLFile *file )
 		PLVector3 maxs = ParseVector( file );
 		assert( !PlIsVector3NaN( &maxs ) );
 
-		OgeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
-		OgeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
+		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
+		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
 		assert( roomA != NULL && roomB != NULL );
 		if ( roomA == NULL || roomB == NULL )
 		{
@@ -270,7 +272,7 @@ static void ParseStaticGeometryPortals( OgeWorld *world, PLFile *file )
 			continue;
 		}
 
-		OgeWorldPortal *portal = PL_NEW( OgeWorldPortal );
+		ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
 		portal->roomA          = roomA;
 		portal->roomB          = roomB;
 		portal->mins           = mins;
@@ -282,26 +284,26 @@ static void ParseStaticGeometryPortals( OgeWorld *world, PLFile *file )
 	}
 }
 
-static void ParseStaticGeometryVertices( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file )
 {
 	uint32_t numVertices = PL_READUINT32( file, false, NULL );
 	world->vertices      = PlCreateVectorArray( numVertices );
 	for ( uint32_t i = 0; i < numVertices; ++i )
 	{
-		OgeWorldVertex *vertex = PL_NEW( OgeWorldVertex );
+		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
 		vertex->position       = ParseVector( file );
 		assert( !PlIsVector3NaN( &vertex->position ) );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
 
-static void ParseStaticGeometryFaces( OgeWorld *world, PLFile *file, int32_t version )
+static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t version )
 {
 	uint32_t numFaces = PL_READUINT32( file, false, NULL );
 	world->faces      = PlCreateVectorArray( numFaces );
 	for ( uint32_t i = 0; i < numFaces; ++i )
 	{
-		OgeWorldFace *face = PL_NEW( OgeWorldFace );
+		ApeWorldFace *face = PL_NEW( ApeWorldFace );
 		face->edgeLoop     = PlCreateLinkedList();
 
 		if ( version >= 180 )
@@ -340,21 +342,32 @@ static void ParseStaticGeometryFaces( OgeWorld *world, PLFile *file, int32_t ver
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );
 		assert( roomIndex >= 0 );
-		OgeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
+
+		face->bounds.mins = ( PLVector3 ){ FLT_MAX, FLT_MAX, FLT_MAX };
+		face->bounds.maxs = ( PLVector3 ){ FLT_MIN, FLT_MIN, FLT_MIN };
 
 		uint32_t numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices           = PlCreateVectorArray( numFaceVertices );
 		for ( uint32_t j = 0; j < numFaceVertices; ++j )
 		{
-			OgeWorldFaceVertex *faceVertex = PL_NEW( OgeWorldFaceVertex );
+			ApeWorldFaceVertex *faceVertex = PL_NEW( ApeWorldFaceVertex );
 
 			int32_t worldVertexIndex = PlReadInt32( file, false, NULL );
 			assert( worldVertexIndex >= 0 );
 			if ( worldVertexIndex >= 0 )
 			{
-				faceVertex->u = ( OgeWorldVertex * ) PlGetVectorArrayElementAt( world->vertices, worldVertexIndex );
+				faceVertex->u = ( ApeWorldVertex * ) PlGetVectorArrayElementAt( world->vertices, worldVertexIndex );
 				assert( faceVertex->u != NULL );
+
+				if ( faceVertex->u->position.x > face->bounds.maxs.x ) { face->bounds.maxs.x = faceVertex->u->position.x; }
+				if ( faceVertex->u->position.y > face->bounds.maxs.y ) { face->bounds.maxs.y = faceVertex->u->position.y; }
+				if ( faceVertex->u->position.z > face->bounds.maxs.z ) { face->bounds.maxs.z = faceVertex->u->position.z; }
+
+				if ( faceVertex->u->position.x < face->bounds.mins.x ) { face->bounds.mins.x = faceVertex->u->position.x; }
+				if ( faceVertex->u->position.y < face->bounds.mins.y ) { face->bounds.mins.y = faceVertex->u->position.y; }
+				if ( faceVertex->u->position.z < face->bounds.mins.z ) { face->bounds.mins.z = faceVertex->u->position.z; }
 			}
 
 			faceVertex->textureU = PlReadFloat32( file, false, NULL );
@@ -379,7 +392,7 @@ static void ParseStaticGeometryFaces( OgeWorld *world, PLFile *file, int32_t ver
 	}
 }
 
-static void ParseStaticGeometryLightmaps( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryLightmaps( ApeWorld *world, PLFile *file )
 {
 	int32_t numLightmaps = PlReadInt32( file, false, NULL );
 	for ( int32_t i = 0; i < numLightmaps; ++i )
@@ -420,7 +433,7 @@ static void ParseStaticGeometryLightmaps( OgeWorld *world, PLFile *file )
 	}
 }
 
-static void ParseStaticGeometryTextureMovers( OgeWorld *world, PLFile *file )
+static void ParseStaticGeometryTextureMovers( ApeWorld *world, PLFile *file )
 {
 	// texture movers
 	uint32_t numTextureMovers = PL_READUINT32( file, false, NULL );
@@ -429,10 +442,10 @@ static void ParseStaticGeometryTextureMovers( OgeWorld *world, PLFile *file )
 		int32_t faceIndex = PlReadInt32( file, false, NULL );
 		assert( faceIndex >= 0 );
 
-		OgeWorldFace *face;
+		ApeWorldFace *face;
 		if ( faceIndex >= 0 )
 		{
-			face = ( OgeWorldFace * ) PlGetVectorArrayElementAt( world->faces, faceIndex );
+			face = ( ApeWorldFace * ) PlGetVectorArrayElementAt( world->faces, faceIndex );
 			assert( face != NULL );
 		}
 
@@ -443,7 +456,7 @@ static void ParseStaticGeometryTextureMovers( OgeWorld *world, PLFile *file )
 	}
 }
 
-static OgeWorld *ParseStaticGeometryChunk( OgeWorld *world, PLFile *file, int32_t version )
+static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_t version )
 {
 	uint16_t size;
 	char *name = ParseString( file, &size );
@@ -471,13 +484,13 @@ static OgeWorld *ParseStaticGeometryChunk( OgeWorld *world, PLFile *file, int32_
 	return NULL;
 }
 
-static void ParseLightsChunk( OgeWorld *world, PLFile *file, int32_t version )
+static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 {
 	int32_t numLights = PlReadInt32( file, false, NULL );
 	world->lights     = PlCreateVectorArray( numLights );
 	for ( int32_t i = 0; i < numLights; ++i )
 	{
-		OgeLight *light = PL_NEW( OgeLight );
+		ApeLight *light = PL_NEW( ApeLight );
 
 		PlReadInt32( file, false, NULL );// id
 
@@ -499,7 +512,7 @@ static void ParseLightsChunk( OgeWorld *world, PLFile *file, int32_t version )
 		PLColour colour = ParseColour( file );
 		light->colour   = PlColourU8ToF32( &colour );
 
-		light->radius = PlReadFloat32( file, false, NULL );
+		light->radius = PlReadFloat32( file, false, NULL ) * 2.0f;
 
 		PlReadFloat32( file, false, NULL );// fov
 		PlReadFloat32( file, false, NULL );// fov dropoff
@@ -517,7 +530,7 @@ static void ParseLightsChunk( OgeWorld *world, PLFile *file, int32_t version )
 	}
 }
 
-static OgeWorld *ParseWorldFile( PLFile *file )
+static ApeWorld *ParseWorldFile( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != WORLD_MAGIC )
@@ -540,7 +553,7 @@ static OgeWorld *ParseWorldFile( PLFile *file )
 	uint32_t objectOffset = PL_READUINT32( file, false, NULL );
 	uint32_t editorOffset = PL_READUINT32( file, false, NULL );
 
-	OgeWorld *world = ogeCreateWorld();
+	ApeWorld *world = apeCreateWorld();
 
 	// read in all the chunks
 	uint32_t numChunks      = PL_READUINT32( file, false, NULL );
@@ -585,7 +598,7 @@ static OgeWorld *ParseWorldFile( PLFile *file )
 	return world;
 }
 
-OgeWorld *ogeLoadWorld( const char *path )
+ApeWorld *apeLoadWorld( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
@@ -594,14 +607,14 @@ OgeWorld *ogeLoadWorld( const char *path )
 		return NULL;
 	}
 
-	OgeWorld *world = ParseWorldFile( file );
+	ApeWorld *world = ParseWorldFile( file );
 
 	PlCloseFile( file );
 
 	return world;
 }
 
-bool ogeSaveWorld( OgeWorld *world, const char *path )
+bool apeSaveWorld( ApeWorld *world, const char *path )
 {
 	world->lastSaveTime = time( NULL );
 
@@ -619,7 +632,7 @@ bool ogeSaveWorld( OgeWorld *world, const char *path )
 	return true;
 }
 
-void ogeDestroyWorld( OgeWorld *world )
+void apeDestroyWorld( ApeWorld *world )
 {
 	if ( world == NULL )
 	{
@@ -629,12 +642,12 @@ void ogeDestroyWorld( OgeWorld *world )
 	assert( 0 );
 }
 
-void ogeWorld_SpawnEntities( OgeWorld *world )
+void apeSpawnWorldEntities( ApeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entities );
 	while ( node != NULL )
 	{
-		OgeWorldEntity *worldEntity = ( OgeWorldEntity * ) PlGetLinkedListNodeUserData( node );
+		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
 		YnCore_EntityManager_CreateEntityFromPrefab( worldEntity->entityTemplate->name );
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -644,7 +657,7 @@ void ogeWorld_SpawnEntities( OgeWorld *world )
  * Global World Properties
  ****************************************/
 
-NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName )
+NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
 	{
@@ -658,10 +671,10 @@ NdBranch *ogeWorld_GetProperty( OgeWorld *world, const char *propertyName )
  * SECTOR
  ****************************************/
 
-OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldRoom *sector, unsigned int *numLights )
+ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights )
 {
 	// TODO: for now we're just going to return this static list...
-	static OgeLight lights[] = {
+	static ApeLight lights[] = {
 	        {
              .position = { 10.0f, 10.0f, 10.0f },
              .colour   = { 1.0f, 0.0f, 0.0f, 16.0f },
@@ -677,12 +690,23 @@ OgeLight *YnCore_WorldSector_GetVisibleLights( OgeWorldRoom *sector, unsigned in
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-OgeWorldRoom *YnCore_World_GetSectorByGlobalOrigin( OgeWorld *world, const PLVector3 *globalOrigin )
+ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position )
 {
+	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+	{
+		ApeWorldRoom *room = ( ApeWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
+		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
+		{
+			continue;
+		}
+
+		return room;
+	}
+
 	return NULL;
 }
 
-OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldRoom *sector, uint32_t *numFaces )
+ApeWorldFace **YnCore_WorldSector_GetMeshFaces( ApeWorldRoom *sector, uint32_t *numFaces )
 {
 	if ( sector->mesh == NULL )
 	{
@@ -691,22 +715,24 @@ OgeWorldFace **YnCore_WorldSector_GetMeshFaces( OgeWorldRoom *sector, uint32_t *
 	}
 
 	*numFaces            = PlGetNumLinkedListNodes( sector->mesh->faces );
-	OgeWorldFace **faces = PL_NEW_( OgeWorldFace *, *numFaces );
+	ApeWorldFace **faces = PL_NEW_( ApeWorldFace *, *numFaces );
 
 	PLLinkedListNode *faceNode = PlGetFirstNode( sector->mesh->faces );
 	for ( unsigned int i = 0; i < *numFaces; ++i )
 	{
-		faces[ i ] = ( OgeWorldFace * ) PlGetLinkedListNodeUserData( faceNode );
+		faces[ i ] = ( ApeWorldFace * ) PlGetLinkedListNodeUserData( faceNode );
 		faceNode   = PlGetNextLinkedListNode( faceNode );
 	}
 
 	return faces;
 }
 
-/**
- * This is a little bit silly, but we're considering mirrors as a valid portal too...
- */
-bool YnCore_World_IsFacePortal( const OgeWorldFace *face )
+void apeRegisterWorldConsoleVariables_( void )
 {
-	return ( ( face->flags & WORLD_FACE_FLAG_MIRROR ) || ( face->flags & WORLD_FACE_FLAG_PORTAL ) );
+	PlRegisterConsoleVariable( "world.draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.drawRooms", "Toggle rendering of rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.drawDetailRooms", "Toggle rendering of detail rooms within rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world.forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 }

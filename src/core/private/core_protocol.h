@@ -6,8 +6,8 @@
 #define PROTOCOL_VERSION     1
 #define PROTOCOL_MESSAGESIZE 4096
 
-typedef struct ProtocolMessageHeader
+typedef struct ApeProtocolMessageHeader
 {
 	uint32_t length;
 	uint32_t type;
-} ProtocolMessageHeader;
+} ApeProtocolMessageHeader;

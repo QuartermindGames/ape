@@ -9,7 +9,7 @@
  * PRIVATE
  ****************************************/
 
-static OgeMaterial *fxaaMaterial = NULL;
+static ApeMaterial *fxaaMaterial = NULL;
 
 static bool fxaaEnabled = false;
 
@@ -20,7 +20,7 @@ static void RegisterFXAAConsoleVariables( void )
 
 static bool SetupFXAAEffect( void )
 {
-	fxaaMaterial = ogeCacheMaterial( "materials/post/fxaa.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
+	fxaaMaterial = apeCacheMaterial( "materials/post/fxaa.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
 	if ( fxaaMaterial == NULL )
 		return false;
 
@@ -29,15 +29,15 @@ static bool SetupFXAAEffect( void )
 
 static void CleanupFXAAEffect( void )
 {
-	ogeMaterial_Release( fxaaMaterial );
+	apeReleaseMaterial( fxaaMaterial );
 }
 
-static void DrawFXAAEffect( const OgeViewport *viewport )
+static void DrawFXAAEffect( const ApeViewport *viewport )
 {
 	if ( fxaaEnabled )
 		return;
 
-	YnCore_Draw2DQuad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height );
+	apeDraw2DQuad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height );
 }
 
 /****************************************

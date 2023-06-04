@@ -28,64 +28,64 @@
 #	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f )
 #endif
 
-enum OgeWorldFaceFlag
+enum ApeWorldFaceFlag
 {
 	PL_BITFLAG( WORLD_FACE_FLAG_PORTAL, 0U ), /* reflect portal */
 	PL_BITFLAG( WORLD_FACE_FLAG_MIRROR, 1U ), /* reflect back */
 	PL_BITFLAG( WORLD_FACE_FLAG_SKIP, 2U ),   /* skip face */
 };
 
-typedef enum OgeWorldObjectCollisionType
+typedef enum ApeWorldObjectCollisionType
 {
 	WORLD_OBJECT_COLLISION_POLY,
 	WORLD_OBJECT_COLLISION_SPHERE,
 	WORLD_OBJECT_COLLISION_AABB,
-} OgeWorldObjectCollisionType;
+} ApeWorldObjectCollisionType;
 
 #define WORLD_FACE_MAX_SIDES 32
 
-typedef struct OgeWorldRoom OgeWorldRoom;
-typedef struct OgeWorldFaceVertex OgeWorldFaceVertex;
-typedef struct OgeWorldFace OgeWorldFace;
-typedef struct OgeWorldMesh OgeWorldMesh;
-typedef struct OgeWorldPortal OgeWorldPortal;
+typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
+typedef struct ApeWorldFace ApeWorldFace;
+typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct ApeWorldPortal ApeWorldPortal;
 
-typedef struct OgeWorldVertex
+typedef struct ApeWorldVertex
 {
 	PLVector3 position;
 	PLVector3 normal;
 	PLVector2 uv;
 	PLColourF32 colour;
 	PLVectorArray *adjacentFaces;
-} OgeWorldVertex;
+} ApeWorldVertex;
 
-typedef struct OgeWorldFaceVertex
+typedef struct ApeWorldFaceVertex
 {
 	float textureU, textureV;
 	float lightmapU, lightmapV;
 
-	OgeWorldVertex *u;
-} OgeWorldFaceVertex;
+	ApeWorldVertex *u;
+} ApeWorldFaceVertex;
 
-#define OGE_WORLD_FACE_FLAG_SKY        0x01
-#define OGE_WORLD_FACE_FLAG_MIRRORED   0x02
-#define OGE_WORLD_FACE_FLAG_LIQUID     0x04
-#define OGE_WORLD_FACE_FLAG_DETAIL     0x08
-#define OGE_WORLD_FACE_FLAG_SCROLL     0x10
-#define OGE_WORLD_FACE_FLAG_FULLBRIGHT 0x20
-#define OGE_WORLD_FACE_FLAG_ALPHA      0x40
-#define OGE_WORLD_FACE_FLAG_HOLES      0x80
-#define OGE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
-#define OGE_WORLD_FACE_FLAG_INVISIBLE  0x2000
+#define APE_WORLD_FACE_FLAG_SKY        0x01
+#define APE_WORLD_FACE_FLAG_MIRRORED   0x02
+#define APE_WORLD_FACE_FLAG_LIQUID     0x04
+#define APE_WORLD_FACE_FLAG_DETAIL     0x08
+#define APE_WORLD_FACE_FLAG_SCROLL     0x10
+#define APE_WORLD_FACE_FLAG_FULLBRIGHT 0x20
+#define APE_WORLD_FACE_FLAG_ALPHA      0x40
+#define APE_WORLD_FACE_FLAG_HOLES      0x80
+#define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
+#define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
 
-typedef struct OgeWorldFace
+typedef struct ApeWorldFace
 {
 	PLVector3 normal;
 	PLVector3 origin;
 
-	OgeWorldPortal *portal;
+	ApeWorldPortal *portal;
 
-	struct OgeMaterial *material;
+	struct ApeMaterial *material;
 	// todo: reduce the below to transform matrix???
 	float materialAngle;
 	PLVector2 materialOffset;
@@ -96,24 +96,24 @@ typedef struct OgeWorldFace
 
 	uint8_t flags;          /* portal, mirror, skip etc. */
 
-	OgeWorldMesh *parentMesh;
-	OgeWorldRoom *parentSector;
+	ApeWorldMesh *parentMesh;
+	ApeWorldRoom *parentSector;
 
 	// if it's a portal
 	bool isPortalClosed;       // if true, we can't see through the portal
-	OgeWorldRoom *targetSector;// the sector this portal connects to
+	ApeWorldRoom *targetSector;// the sector this portal connects to
 
 	PLCollisionAABB bounds;
-} OgeWorldFace;
+} ApeWorldFace;
 
-typedef struct OgeWorldMesh
+typedef struct ApeWorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	struct OgeMaterial **materials;
+	struct ApeMaterial **materials;
 	unsigned int numMaterials;
 
-	OgeWorldVertex *vertices;
+	ApeWorldVertex *vertices;
 	unsigned int numVertices;
 	unsigned int maxVertices;
 
@@ -125,35 +125,35 @@ typedef struct OgeWorldMesh
 
 	PLLinkedListNode *node;
 
-	OgeMemoryReference mem;
-} OgeWorldMesh;
+	ApeMemoryReference mem;
+} ApeWorldMesh;
 
-typedef struct OgeWorldObject
+typedef struct ApeWorldObject
 {
-	OgeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
+	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
 	SGTransform transform;
 
-	OgeWorldObjectCollisionType collisionType;
+	ApeWorldObjectCollisionType collisionType;
 	union
 	{
-		const OgeWorldMesh *collisionMesh;
+		const ApeWorldMesh *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
-} OgeWorldObject;
+} ApeWorldObject;
 
-typedef struct OgeWorldPortal
+typedef struct ApeWorldPortal
 {
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	OgeWorldRoom *roomA;
-	OgeWorldRoom *roomB;
+	ApeWorldRoom *roomA;
+	ApeWorldRoom *roomB;
 
 	bool canSeeThrough;
-} OgeWorldPortal;
+} ApeWorldPortal;
 
-typedef struct OgeWorldRoom
+typedef struct ApeWorldRoom
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 	int32_t uid;
@@ -191,23 +191,20 @@ typedef struct OgeWorldRoom
 	PLVectorArray *portals;    // OgeWorldPortal
 	PLVectorArray *faces;      // OgeWorldFace
 
-	OgeWorldMesh *mesh;
+	ApeWorldMesh *mesh;
 
-	OgeWorldObject *staticObjects;
+	ApeWorldObject *staticObjects;
 	unsigned int numStaticObjects;
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
 
 	PLCollisionAABB bounds;
-} OgeWorldRoom;
+} ApeWorldRoom;
 
-OgeWorldRoom *ogeCreateWorldRoom( void );
-void ogeDestroyWorldRoom( OgeWorldRoom *room );
+#define APE_MAX_SKY_LAYERS 4
 
-#define OGE_MAX_SKY_LAYERS 4
-
-typedef struct OgeWorld
+typedef struct ApeWorld
 {
 	char *name;
 	PLPath path;
@@ -216,12 +213,12 @@ typedef struct OgeWorld
 
 	PLLinkedList *entities;
 
-	PLVectorArray *materials;// OgeMaterial
-	PLVectorArray *rooms;    // OgeWorldRoom
-	PLVectorArray *portals;  // OgeWorldPortal
-	PLVectorArray *vertices; // OgeWorldVertex
-	PLVectorArray *faces;    // OgeWorldFace
-	PLVectorArray *lights;   // OgeLight
+	PLVectorArray *materials;// ApeMaterial
+	PLVectorArray *rooms;    // ApeWorldRoom
+	PLVectorArray *portals;  // ApeWorldPortal
+	PLVectorArray *vertices; // ApeWorldVertex
+	PLVectorArray *faces;    // ApeWorldFace
+	PLVectorArray *lights;   // ApeLight
 
 	PLColourF32 ambience;
 	PLColourF32 sunColour;
@@ -240,28 +237,30 @@ typedef struct OgeWorld
 
 	uint64_t lastSaveTime;
 	bool isDirty;
-} OgeWorld;
+} ApeWorld;
 
-typedef struct OgeWorldEntity
+typedef struct ApeWorldEntity
 {
-	const YNCoreEntityPrefab *entityTemplate;
+	const ApeEntityPrefab *entityTemplate;
 	NdBranch *properties;
-} OgeWorldEntity;
+} ApeWorldEntity;
 
 #include <yin/core_world.h>
 
-void YnCore_WorldSerialiser_Begin( const OgeWorld *world, NdBranch *root );
-OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out );
+PL_EXTERN_C
 
-OgeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, OgeWorldMesh *worldMesh );
+ApeWorldRoom *apeCreateWorldRoom( void );
+void apeDestroyWorldRoom( ApeWorldRoom *room );
 
-PLLinkedList *YnCore_World_GetLights( const OgeWorld *world );
-PLLinkedList *YnCore_World_GetSectorLights( const OgeWorldRoom *sector );
+void YnCore_WorldSerialiser_Begin( const ApeWorld *world, NdBranch *root );
+ApeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, ApeWorld *out );
 
-void ogeWorld_SpawnEntities( OgeWorld *world );
+ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
 
-bool YnCore_World_IsFaceVisible( OgeWorldFace *face, const OgeCamera *camera );
-unsigned int *ogeWorld_ConvertFaceToTriangles( const OgeWorldFace *face, unsigned int *numTriangles );
-bool YnCore_World_IsFacePortal( const OgeWorldFace *face );
+void apeSpawnWorldEntities( ApeWorld *world );
 
-OgeWorldRoom *ogeWorld_GetSectorByNum( OgeWorld *world, int sectorNum );
+unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
+
+void apeRegisterWorldConsoleVariables_( void );
+
+PL_EXTERN_C_END

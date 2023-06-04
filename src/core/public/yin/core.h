@@ -9,23 +9,24 @@
 
 PL_EXTERN_C
 
-bool ogeInitialize( const char *config );
-void ogeShutdown( void );
+bool apeInitialize( const char *config );
+void apeShutdown( void );
 
-void ogeRenderFrame( OgeViewport *viewport );
-void ogeTickFrame( void );
+void apeRenderFrame( ApeViewport *viewport );
+void apeTickFrame( void );
 
-struct NdBranch *ogeGetConfig( void );
-struct NdBranch *ogeGetUserConfig( void );
+struct NdBranch *apeGetConfig( void );
+struct NdBranch *apeGetUserConfig( void );
 
-unsigned int ogeGetNumTicks( void );
+unsigned int apeGetNumTicks( void );
 
-bool ogeIsEngineRunning( void );
+bool apeIsEngineRunning( void );
+bool apeIsConsoleOpen( void );
 
-void ogeHandleKeyboardEvent( int key, unsigned int keyState );
-void ogeHandleTextEvent( const char *key );
-void ogeHandleMouseButtonEvent( int button, OgeInputState buttonState );
-void ogeHandleMouseWheelEvent( float x, float y );
-void ogeHandleMouseMotionEvent( int x, int y );
+void apeHandleKeyboardEvent( int key, unsigned int keyState );
+void apeHandleTextEvent( const char *key );
+void apeHandleMouseButtonEvent( int button, OgeInputState buttonState );
+void apeHandleMouseWheelEvent( float x, float y );
+void apeHandleMouseMotionEvent( int x, int y );
 
 PL_EXTERN_C_END

@@ -9,21 +9,21 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-void ogeInitializeInput_( void );
-void ogeShutdownInput_( void );
+void apeInitializeInput_( void );
+void apeShutdownInput_( void );
 
-void ogeSerializeInputConfig_( NdBranch *root );
-void ogeDeserializeInputConfig_( NdBranch *root );
+void apeSerializeInputConfig_( NdBranch *root );
+void apeDeserializeInputConfig_( NdBranch *root );
 
-void ogeClearInputDevices_( void );
+void apeClearInputDevices_( void );
 
 void Client_Input_HandleKeyboardEvent( int key, OgeInputState keyState );
 void Client_Input_HandleMouseButtonEvent( int button, OgeInputState buttonState );
 void Client_Input_HandleMouseWheelEvent( float x, float y );
 void Client_Input_HandleMouseMotionEvent( int x, int y );
 
-void ogeBeginInputFrame_( void );
-void ogeTickInput_( void );
-void ogeEndInputFrame_( void );
+void apeBeginInputFrame_( void );
+void apeTickInput_( void );
+void apeEndInputFrame_( void );
 
 PL_EXTERN_C_END

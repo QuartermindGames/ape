@@ -6,73 +6,6 @@
 #include "world/world.h"
 #include "legacy/actor.h"
 
-/****************************************
- ****************************************/
-
-static void DrawFace( OgeWorldMesh *mesh, OgeWorldFace *face )
-{
-	/* Gee, this sure isn't efficient, is it?
-	 * In the long-term I want to store triangulated geom
-	 * on the GPU as chunks, but for now this seems to be
-	 * fast enough for what I need
-	 * */
-	unsigned int numTriangles;
-	unsigned int *indices  = ogeWorld_ConvertFaceToTriangles( face, &numTriangles );
-	unsigned int *curIndex = indices;
-	for ( unsigned int k = 0; k < numTriangles; ++k, curIndex += 3 )
-	{
-		PlgAddMeshTriangle( mesh->drawMesh, curIndex[ 0 ], curIndex[ 1 ], curIndex[ 2 ] );
-	}
-	PL_DELETE( indices );
-
-	oge_RendererPerformance_.numFacesDrawn++;
-
-#if 0// draw face normal
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-	PlgDrawLine( *PlGetMatrix( PL_MODELVIEW_MATRIX ), face->origin, PL_COLOUR_BLUE, PlAddVector3( face->origin, PlScaleVector3F( face->normal, 4.0f ) ), PL_COLOUR_BLUE );
-#endif
-}
-
-static void DrawFaces( OgeWorldMesh *sectorBody, PLLinkedList *visibleFaces, OgeLight *lights, unsigned int numLights, bool drawTransparent )
-{
-	unsigned int numBatches = sectorBody->numMaterials + 1;// Extra batch for fallback pass
-	for ( unsigned int i = 0; i < numBatches; ++i )
-	{
-		PlgClearMeshTriangles( sectorBody->drawMesh );
-
-		OgeMaterial *material = ( i < sectorBody->numMaterials ) ? sectorBody->materials[ i ] : ogeGetFallbackMaterial();
-		if ( i < sectorBody->numMaterials && ( material == ogeGetFallbackMaterial() ) )
-		{
-			continue;
-		}
-
-		PLLinkedListNode *faceNode = PlGetFirstNode( visibleFaces );
-		while ( faceNode != NULL )
-		{
-			OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
-			if ( material != face->material || ( YnCore_World_IsFacePortal( face ) && !drawTransparent ) )// for now, skip portals...
-			{
-				faceNode = PlGetNextLinkedListNode( faceNode );
-				continue;
-			}
-
-			DrawFace( sectorBody, face );
-
-			faceNode = PlGetNextLinkedListNode( faceNode );
-		}
-
-		if ( sectorBody->drawMesh->num_triangles == 0 )
-			continue;
-
-		ogeMaterial_DrawMesh( material, sectorBody->drawMesh, lights, 0 );
-	}
-
-#if 0
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-	PlgDrawMeshNormals( sectorBody->drawMesh );
-#endif
-}
-
 #if 0
 static void DrawSector( OgeWorld *world, OgeWorldRoom *sector, OgeCamera *camera );
 static void DrawSectorBody( OgeWorldRoom *sector, OgeWorldMesh *worldMesh, OgeCamera *camera )
@@ -225,13 +158,15 @@ static void DrawSectorBody( OgeWorldRoom *sector, OgeWorldMesh *worldMesh, OgeCa
 }
 #endif
 
+static PLVectorArray *lights = NULL;
+
 /**
  * World is drawn using polygons, rather than straight up triangles,
  * so to more accuratly display it in wireframe, we'll need to render
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void ogeDrawWorldWireframe( OgeWorld *world, OgeCamera *camera )
+void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera )
 {
 #if 0
 	if ( world == NULL )
@@ -321,9 +256,123 @@ void ogeDrawWorldWireframe( OgeWorld *world, OgeCamera *camera )
 #endif
 }
 
-static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
+/**
+ * Batches all of the detail room draws together for the given room,
+ * which sadly isn't super efficient but it'll do for now.
+ */
+static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 {
-	OgeCamera *camera = ogeGetActiveCamera();
+	PL_GET_CVAR( "world.drawDetailRooms", drawDetailRooms );
+	if ( drawDetailRooms == NULL || !drawDetailRooms->b_value )
+	{
+		return;
+	}
+
+	ApeCamera *camera = ogeGetActiveCamera();
+	if ( camera == NULL )
+	{
+		return;
+	}
+
+	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( room->detailRooms ); ++i )
+	{
+		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, i );
+		assert( detailRoom != NULL );
+		if ( detailRoom == NULL )
+		{
+			continue;
+		}
+
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( world->materials ); ++j )
+		{
+			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, j );
+			assert( material != NULL );
+			if ( material == NULL )
+			{
+				continue;
+			}
+
+			uint32_t numFaces = PlGetNumVectorArrayElements( room->faces );
+
+			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+
+			if ( mesh->subMeshes == NULL )
+			{
+				mesh->maxSubMeshes   = ( numFaces * 2 );
+				mesh->subMeshes      = PL_NEW_( int32_t, mesh->maxSubMeshes );
+				mesh->firstSubMeshes = PL_NEW_( int32_t, mesh->maxSubMeshes );
+			}
+			else if ( numFaces > mesh->maxSubMeshes )
+			{
+				mesh->maxSubMeshes   = ( numFaces * 2 );
+				mesh->subMeshes      = PL_REALLOCA( mesh->subMeshes, numFaces );
+				mesh->firstSubMeshes = PL_REALLOCA( mesh->firstSubMeshes, numFaces );
+			}
+			mesh->numSubMeshes = 0;
+
+#if 0
+			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k )
+			{
+				OgeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
+				assert( face != NULL );
+				if ( face == NULL || face->material != material || !PlgIsBoxInsideView( camera->internal, &face->bounds ) )
+				{
+					continue;
+				}
+
+				PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+				while ( faceVertexNode != NULL )
+				{
+					OgeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+					assert( vertex->u != NULL );
+
+					PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
+					PlgImmNormal( face->normal.x, face->normal.y, face->normal.z );
+					PlgImmTextureCoord( vertex->textureU, vertex->textureV );
+					PlgImmColour( 255, 255, 255, 255 );
+
+					faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
+				}
+
+				unsigned int numVertices                   = PlGetNumLinkedListNodes( face->edgeLoop );
+				mesh->firstSubMeshes[ mesh->numSubMeshes ] = ( mesh->numSubMeshes > 0 ) ? ( mesh->firstSubMeshes[ mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
+				mesh->subMeshes[ mesh->numSubMeshes ]      = ( int ) numVertices;
+
+				mesh->numSubMeshes++;
+			}
+#endif
+
+			PlClearVectorArray( lights );
+			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k )
+			{
+				ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
+				if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+				{
+					continue;
+				}
+
+				PlPushBackVectorArrayElement( lights, light );
+				if ( PlGetNumVectorArrayElements( lights ) >= 8 )
+				{
+					break;
+				}
+			}
+
+			apeDrawMesh( material, mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
+
+			mesh->numSubMeshes = 0;
+		}
+	}
+}
+
+static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
+{
+	if ( PlIsVectorArrayEmpty( room->faces ) )
+	{
+		return;
+	}
+
+	ApeCamera *camera = ogeGetActiveCamera();
 	if ( camera == NULL )
 	{
 		return;
@@ -343,6 +392,7 @@ static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
 	PL_GET_CVAR( "world.showRoomVolumes", showRoomVolumes );
 	if ( showRoomVolumes != NULL && showRoomVolumes->b_value )
 	{
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 		PlgDrawBoundingVolume( &room->bounds, &roomColour );
 	}
 
@@ -351,89 +401,105 @@ static void DrawRoom( OgeWorld *world, OgeWorldRoom *room )
 		return;
 	}
 
-	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+	if ( lights == NULL )
 	{
-		OgeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
-		assert( face != NULL );
+		lights = PlCreateVectorArray( 8 );
+	}
+
+	// TODO: gross, we should handle this better rather than just overriding the world ambience
+	if ( room->ambientLightDefined )
+	{
+		world->ambience = PlColourU8ToF32( &room->ambientLight );
+	}
+	else
+	{
+		world->ambience = WORLD_DEFAULT_AMBIENCE;
+	}
+
+	//DrawDetailRooms( world, room );
+
+	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	{
+		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
+		assert( material != NULL );
+		if ( material == NULL )
+		{
+			continue;
+		}
+
+		uint32_t numFaces = PlGetNumVectorArrayElements( room->faces );
 
 		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 
-		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
-		while ( faceVertexNode != NULL )
-		{
-			OgeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-			assert( vertex->u != NULL );
-
-			PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
-			PlgImmNormal( face->normal.x, face->normal.y, face->normal.z );
-			PlgImmTextureCoord( vertex->textureU, vertex->textureV );
-			PlgImmColour( roomColour.r, roomColour.g, roomColour.b, 255 );
-
-			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
-		}
-
-		if ( face->material != NULL )
-		{
 #if 0
-			static OgeLight lights[] = {
-			        {
-                     .position = { 10.0f, 10.0f, 10.0f },
-                     .colour   = { 1.0f, 0.0f, 0.0f, 16.0f },
-                     .radius   = 4.0f,
-			         },
-			        {
-                     .position = { 10.0f, 10.0f, 10.0f },
-                     .colour   = { 0.0f, 1.0f, 0.0f, 16.0f },
-                     .radius   = 4.0f,
-			         },
-			        {
-                     .position = { 10.0f, 10.0f, 10.0f },
-                     .colour   = { 0.0f, 0.0f, 1.0f, 16.0f },
-                     .radius   = 4.0f,
-			         },
-			};
+		mesh->numSubMeshes = 0;
+		if ( mesh->subMeshes == NULL )
+		{
+			mesh->maxSubMeshes   = numFaces;
+			mesh->subMeshes      = PL_NEW_( int32_t, mesh->maxSubMeshes );
+			mesh->firstSubMeshes = PL_NEW_( int32_t, mesh->maxSubMeshes );
+		}
+		else if ( numFaces > mesh->maxSubMeshes )
+		{
+			mesh->maxSubMeshes   = numFaces;
+			mesh->subMeshes      = PL_REALLOCA( mesh->subMeshes, numFaces );
+			mesh->firstSubMeshes = PL_REALLOCA( mesh->firstSubMeshes, numFaces );
+		}
+#endif
 
-			lights[ 0 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 2.0f ) );
-			lights[ 1 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 4.0f ) );
-			lights[ 2 ].position = PlAddVector3( ogeGetCameraPosition( camera ), PlScaleVector3F( ogeGetCameraForward( camera ), 6.0f ) );
-#else
-			PLVectorArray *tmp = PlCreateVectorArray( 8 );
-			for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+		{
+			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+			assert( face != NULL );
+			if ( face->material != material || !PlgIsBoxInsideView( camera->internal, &face->bounds ) )
 			{
-				OgeLight *light = PlGetVectorArrayElementAt( world->lights, i );
-				if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
-				{
-					continue;
-				}
-
-				PlPushBackVectorArrayElement( tmp, light );
-				if ( PlGetNumVectorArrayElements( tmp ) >= 8 )
-				{
-					break;
-				}
+				continue;
 			}
-#endif
 
-			ogeMaterial_DrawMesh( face->material, mesh, ( OgeLight ** ) PlGetVectorArrayData( tmp ), PlGetNumVectorArrayElements( tmp ) );
+			uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
-			PlDestroyVectorArray( tmp );
+			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+			while ( faceVertexNode != NULL )
+			{
+				ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+				assert( vertex->u != NULL );
+
+				PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
+				PlgImmNormal( face->normal.x, face->normal.y, face->normal.z );
+				PlgImmTextureCoord( vertex->textureU, vertex->textureV );
+				PlgImmColour( roomColour.r, roomColour.g, roomColour.b, 255 );
+
+				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
+			}
+
+			//mesh->firstSubMeshes[ mesh->numSubMeshes ] = ( mesh->numSubMeshes > 0 ) ? ( mesh->firstSubMeshes[ mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
+			//mesh->subMeshes[ mesh->numSubMeshes ]      = ( int ) numVertices;
+			//mesh->numSubMeshes++;
 		}
-#if 0
-		else
+
+		PlClearVectorArray( lights );
+		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k )
 		{
-			oge_RendererPerformance_.numTriangles = mesh->num_verts / 2;
-			oge_RendererPerformance_.numBatches++;
+			ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
+			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+			{
+				continue;
+			}
 
-			PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
-			PlgSetTexture( ogeGetFallbackTexture(), 0 );
-
-			PlgImmDraw();
+			PlPushBackVectorArrayElement( lights, light );
+			if ( PlGetNumVectorArrayElements( lights ) >= 8 )
+			{
+				break;
+			}
 		}
-#endif
+
+		apeDrawMesh( material, mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
+
+		//mesh->numSubMeshes = 0;
 	}
 }
 
-void ogeDrawWorld( OgeWorld *world, OgeWorldRoom *originSector, OgeCamera *camera )
+void apeDrawWorld_( ApeWorld *world )
 {
 	PL_GET_CVAR( "world.draw", drawWorld );
 	if ( world == NULL || ( drawWorld != NULL && !drawWorld->b_value ) )
@@ -449,23 +515,25 @@ void ogeDrawWorld( OgeWorld *world, OgeWorldRoom *originSector, OgeCamera *camer
 	if ( showRoomColours != NULL && showRoomColours->b_value )
 	{
 		srand( PlGetNumVectorArrayElements( world->rooms ) );
-		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 		PlgSetTexture( NULL, 0 );
 	}
 	else
 	{
-		PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT ] );
-		PlgSetTexture( ogeGetFallbackTexture(), 0 );
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+		PlgSetTexture( apeGetFallbackTexture(), 0 );
 	}
+
+	// TODO: generate a list of visible rooms based on camera position
 
 	PL_GET_CVAR( "world.drawRooms", drawRooms );
 	if ( drawRooms != NULL && drawRooms->b_value && world->rooms != NULL )
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			OgeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
-			if ( room == NULL )
+			if ( room == NULL || room->isDetail )
 			{
 				continue;
 			}

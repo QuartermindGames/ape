@@ -26,7 +26,7 @@ typedef enum InputTarget
 static InputTarget inputTarget = INPUT_TARGET_MENU;
 static MenuState   menuState   = MENU_STATE_START;
 
-static OgeWorld *currentWorld = NULL;
+static ApeWorld *currentWorld = NULL;
 
 static void SpawnWorldCommand( unsigned int argc, char **argv )
 {
@@ -41,7 +41,7 @@ static void SpawnWorldCommand( unsigned int argc, char **argv )
 
 GameState oge_gameState_;
 
-void ogeInitializeGame( void )
+void apeInitializeGame( void )
 {
 	PRINT( "Initializing Game...\n" );
 
@@ -62,9 +62,9 @@ void ogeInitializeGame( void )
 
 	ogeEntityManager_Initialize();
 
-	const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
+	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
 	ogeEntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
-	const YNCoreEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
+	const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
 	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 
 	gameModeInterface = Game_GetModeInterface();
@@ -81,7 +81,7 @@ void ogeInitializeGame( void )
 	PRINT( "Game initialized!\n" );
 }
 
-void ogeShutdownGame( void )
+void apeShutdownGame( void )
 {
 	gameModeInterface->Shutdown();
 	gameModeInterface = NULL;
@@ -94,14 +94,14 @@ MenuState Game_GetMenuState( void )
 	return menuState;
 }
 
-void Game_Tick( void )
+void apeTickGame( void )
 {
 	ogeEntityManager_Tick();
 
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 }
 
-void Game_Disconnect( void )
+void apeDisconnectGame( void )
 {
 	if ( currentWorld != NULL )
 	{
@@ -111,17 +111,17 @@ void Game_Disconnect( void )
 			 *  might be lost! */
 		}
 
-		ogeDestroyWorld( currentWorld );
+		apeDestroyWorld( currentWorld );
 		currentWorld = NULL;
 	}
 
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void Game_SetupWorldProperties( OgeWorld *world )
+void Game_SetupWorldProperties( ApeWorld *world )
 {
 	NdBranch *prop;
-	if ( ( prop = ogeWorld_GetProperty( world, "music" ) ) != NULL )
+	if ( ( prop = apeGetWorldProperty( world, "music" ) ) != NULL )
 	{
 		PLPath musicPath;
 		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS )
@@ -138,9 +138,9 @@ void Game_SpawnWorld( const char *worldPath )
 		return;
 	}
 
-	Game_Disconnect();
+	apeDisconnectGame();
 
-	OgeWorld *world = ogeLoadWorld( worldPath );
+	ApeWorld *world = apeLoadWorld( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
@@ -165,14 +165,14 @@ void Game_SpawnWorld( const char *worldPath )
 
 	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
 
-	ogeWorld_SpawnEntities( world );
+	apeSpawnWorldEntities( world );
 
-	Server_Start( "localhost", 0 );
+	apeStartServer( "localhost", 0 );
 
-	ogeClient_InitiateConnection( "localhost", Server_GetPort() );
+	ogeClient_InitiateConnection( "localhost", apeGetServerPort() );
 }
 
-OgeWorld *Game_GetCurrentWorld( void )
+ApeWorld *Game_GetCurrentWorld( void )
 {
 	return currentWorld;
 }

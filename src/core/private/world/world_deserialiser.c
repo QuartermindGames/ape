@@ -7,7 +7,7 @@
 #include "world.h"
 #include "entity/entity.h"
 
-static void DeserialiseEntities( OgeWorld *world, NdBranch *root )
+static void DeserialiseEntities( ApeWorld *world, NdBranch *root )
 {
 	if ( root == NULL )
 	{
@@ -22,10 +22,10 @@ static void DeserialiseEntities( OgeWorld *world, NdBranch *root )
 		const char *templateName = ndGetStringByName( child, "templateName", NULL );
 		if ( templateName != NULL )
 		{
-			const YNCoreEntityPrefab *entityTemplate = YnCore_EntityManager_GetPrefabByName( templateName );
+			const ApeEntityPrefab *entityTemplate = YnCore_EntityManager_GetPrefabByName( templateName );
 			if ( entityTemplate != NULL )
 			{
-				OgeWorldEntity *worldEntity    = PL_NEW( OgeWorldEntity );
+				ApeWorldEntity *worldEntity    = PL_NEW( ApeWorldEntity );
 				worldEntity->entityTemplate = entityTemplate;
 
 				NdBranch *properties = ndGetChildByName( child, "properties" );
@@ -45,7 +45,7 @@ static void DeserialiseEntities( OgeWorld *world, NdBranch *root )
 	}
 }
 
-OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out )
+ApeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, ApeWorld *out )
 {
 	int version = ndGetI32ByName( root, "version", -1 );
 	if ( version == -1 )
@@ -53,9 +53,9 @@ OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out )
 		PRINT_WARNING( "Failed to find world version!\n" );
 		return NULL;
 	}
-	else if ( version > YN_CORE_WORLD_VERSION )
+	else if ( version > APE_WORLD_VERSION )
 	{
-		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, YN_CORE_WORLD_VERSION );
+		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
 		return NULL;
 	}
 
@@ -95,7 +95,7 @@ OgeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, OgeWorld *out )
 			PLPath path;
 			ndGetStr( c, path, sizeof( path ) );
 
-			OgeWorldMesh *mesh = YnCore_WorldMesh_Load( path );
+			ApeWorldMesh *mesh = apeLoadWorldMesh( path );
 			if ( mesh == NULL )
 				continue;
 

@@ -36,7 +36,7 @@ enum
 
 ////////////////////////////////////////////////////////////////////
 // Window Management
-OgeViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode );
+ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode );
 bool ogeShellInterface_SetWindowSize( int *width, int *height );
 void ogeShellInterface_GetWindowSize( int *width, int *height );
 void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, const char *message, ... );

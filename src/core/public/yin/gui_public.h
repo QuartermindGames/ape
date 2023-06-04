@@ -146,6 +146,9 @@ void GUI_Font_Destroy( GUIFont *font );
 GUIFont *GUI_Font_Deserialize( PLFile *file );
 GUIFont *GUI_Font_LoadFile( const char *path );
 
+void GUI_Font_GetCharacterPixelSize( const GUIFont *font, float scale, uint32_t character, float *dw, float *dh );
+float GUI_Font_GetCharacterPixelWidth( const GUIFont *font, float scale, uint32_t character );
+
 void GUI_Font_GetStringPixelSize( const GUIFont *font, float scale, const char *string, size_t length, float *dw, float *dh );
 void GUI_Font_DrawCharacter( const GUIFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
 void GUI_Font_DrawString( const GUIFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );

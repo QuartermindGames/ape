@@ -6,15 +6,15 @@
 #include "editor.h"
 #include "client/renderer/renderer.h"
 
-static YNCoreEditorContext *contexts[ YN_CORE_EDITOR_MAX_CONTEXTS ];
-static YNCoreEditorContext *currentContext = NULL;
+static ApeEditorContext *contexts[ YN_CORE_EDITOR_MAX_CONTEXTS ];
+static ApeEditorContext *currentContext = NULL;
 
 static EditorStatus editorStatus = EDITOR_CLOSED;
 EditorStatus YnCore_GetEditorStatus( void ) { return editorStatus; }
 
 void ogeRegisterEditorConsoleVariables_( void )
 {
-	YNCoreEditorContext *YnCore_RegisterWorldEditorContext( void );
+	ApeEditorContext *YnCore_RegisterWorldEditorContext( void );
 	contexts[ YN_CORE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
 
 	// setup shared vars per context
@@ -120,7 +120,7 @@ void YnCore_DrawEditor( void )
 	currentContext->Draw();
 }
 
-void YnCore_DrawEditorGUI( const OgeViewport *viewport )
+void YnCore_DrawEditorGUI( const ApeViewport *viewport )
 {
 	if ( currentContext == NULL )
 	{
@@ -136,12 +136,12 @@ void YnCore_DrawEditorGUI( const OgeViewport *viewport )
 	currentContext->DrawGUI();
 }
 
-YNCoreEditorContext *YnCore_GetCurrentEditorContext( void )
+ApeEditorContext *YnCore_GetCurrentEditorContext( void )
 {
 	return currentContext;
 }
 
-YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier )
+ApeEditorContext *YnCore_GetEditorContext( const char *identifier )
 {
 	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
 	{
@@ -156,7 +156,7 @@ YNCoreEditorContext *YnCore_GetEditorContext( const char *identifier )
 	return NULL;
 }
 
-YNCoreEditorContext *YnCore_SetEditorContext( YNCoreEditorContextType type )
+ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type )
 {
 	currentContext = contexts[ type ];
 	editorStatus   = EDITOR_OPEN;

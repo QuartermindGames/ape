@@ -3,64 +3,64 @@
 
 #pragma once
 
-void ogeInitializeMemoryManager( void );
-void ogeShutdownMemoryManager( void );
+void apeInitializeMemoryManager( void );
+void apeShutdownMemoryManager( void );
 
 /* ======================================================================
  * Active Cache
  * ====================================================================*/
 
-enum MMCachePool
+typedef enum ApeCachePool
 {
-	MEM_CACHE_FONT,
-	MEM_CACHE_TEXTURES,
-	MEM_CACHE_MATERIALS,
-	MEM_CACHE_MODELS,
-	MEM_CACHE_PARTICLES,
+	APE_CACHE_POOL_FONTS,
+	APE_CACHE_POOL_TEXTURES,
+	APE_CACHE_POOL_MATERIALS,
+	APE_CACHE_POOL_MODELS,
+	APE_CACHE_POOL_PARTICLES,
 
-	MEM_CACHE_WORLD,
-	MEM_CACHE_WORLD_MESH,
+	APE_CACHE_POOL_WORLDS,
+	APE_CACHE_POOL_WORLD_MESHES,
 
-	MEM_CACHE_END
-};
+	APE_MAX_CACHE_POOLS
+} ApeCachePool;
 
 /**
  * Header for cached data item.
  */
-typedef struct ogeMemoryCacheHeader
+typedef struct ApeMemoryCacheHeader
 {
 	uint32_t id;                   /* identifier (hashed string) */
 	char description[ 256 ];       //
 	uint8_t pool;                  /* pool we're cached into */
 	void *userData;                /* pointer to user allocated data */
 	struct PLLinkedListNode *node; /* index in pool */
-} OgeMemoryCacheHeader;
+} ApeMemoryCacheHeader;
 
-void ogeMM_AddToCache( const char *id, uint8_t pool, void *data );
-void *ogeMM_GetCachedData( const char *id, uint8_t pool );
+void apeAddToCachePool( const char *id, ApeCachePool pool, void *data );
+void *apeGetCachedData( const char *id, ApeCachePool pool );
 
 /* ======================================================================
  * Reference Counting and Garbage Collection
  * ====================================================================*/
 
 typedef void ( *MMReference_CleanupFunction )( void *userData );
-typedef struct OgeMemoryReference
+typedef struct ApeMemoryReference
 {
 	bool isInitialized;                         // Indicates whether the handle was set up
 	int numReferences;                          // Number of total references
 	unsigned int timeToLive;                    // Time to live
 	void *userData;                             // Pointer to original data struct
-	OgeMemoryCacheHeader *cache;                // Pointer to sample on cache
+	ApeMemoryCacheHeader *cache;                // Pointer to sample on cache
 	MMReference_CleanupFunction cleanupFunction;// Function that deals with the *real* cleanup
 	struct PLLinkedListNode *node;              // Index into the memory reference list
-} OgeMemoryReference;
+} ApeMemoryReference;
 
-OgeMemoryReference *ogeMemoryManager_SetupReference( const char *id, uint8_t pool, OgeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
+ApeMemoryReference *apeSetupReference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
 
-void ogeMemoryManager_AddReference( OgeMemoryReference *m );
-void ogeMemoryManager_ReleaseReference( OgeMemoryReference *m );
-int ogeMemoryManager_GetNumberOfReferences( const OgeMemoryReference *m );
-unsigned int ogeMemoryManager_FlushUnreferencedResources( void );
+void apeAddReference( ApeMemoryReference *m );
+void apeReleaseReference( ApeMemoryReference *m );
+int apeGetNumberOfReferences( const ApeMemoryReference *m );
+unsigned int apeFlushUnreferencedResources( void );
 
-void *ogeTempAlloc( OgeMemoryReference *m, size_t size );
-void ogeTempFree( OgeMemoryReference *m );
+void *apeTempAlloc( ApeMemoryReference *m, size_t size );
+void apeTempFree( ApeMemoryReference *m );

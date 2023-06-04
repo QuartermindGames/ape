@@ -12,53 +12,54 @@
 
 #include "renderer_texture.h"
 
-typedef struct OgeRendererStats
+typedef struct ApeRendererStats
 {
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numTriangles;
 	unsigned int numFacesDrawn;
 	unsigned int numVisiblePortals;
-} OgeRendererStats;
-extern OgeRendererStats oge_RendererPerformance_;
+} ApeRendererStats;
+extern ApeRendererStats ape_RendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct OgeSpriteFrame
+typedef struct ApeSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
-} OgeSpriteFrame;
+} ApeSpriteFrame;
 
-typedef struct OgeCamera
+typedef struct ApeCamera
 {
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
-	OgeCameraMode mode;
-	OgeCameraDrawMode drawMode;
+	ApeCameraMode mode;
+	ApeCameraDrawMode drawMode;
+	ApeWorldRoom *room;
 	struct Actor *parentActor;
 	bool enablePostProcessing;
 	PLVector3 forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
-} OgeCamera;
+} ApeCamera;
 
 ////////////////////////////////////////////////////////////////////
 
-#define YN_CORE_MAX_FPS_READINGS 64
+#define APE_MAX_FPS_READINGS 64
 
-typedef struct OgeViewport
+typedef struct ApeViewport
 {
 	unsigned int index;
 	int x, y;
 	int width, height;
 
-	OgeCamera *camera;
+	ApeCamera *camera;
 
 	struct
 	{
 		double frameTime, oldTime;
-		double frameReadings[ YN_CORE_MAX_FPS_READINGS ];
+		double frameReadings[ APE_MAX_FPS_READINGS ];
 		unsigned int frameIndex;
 
 		unsigned int numBatches;
@@ -68,71 +69,71 @@ typedef struct OgeViewport
 	} perf;
 
 	void *windowHandle;
-} OgeViewport;
+} ApeViewport;
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum OgeLightType
+typedef enum ApeLightType
 {
 	OGE_LIGHT_TYPE_OMNI,
 	OGE_LIGHT_TYPE_SPOT,
 	OGE_LIGHT_TYPE_SUN,
 
 	OGE_MAX_LIGHT_TYPES
-} OgeLightType;
+} ApeLightType;
 
-#define OGE_MAX_LIGHTS_PER_PASS 8
-typedef struct OgeLight
+#define APE_MAX_LIGHTS_PER_PASS 8
+typedef struct ApeLight
 {
-	OgeLightType type;
+	ApeLightType type;
 	PLVector3 position;
 	PLVector3 angles;
 	PLColourF32 colour;
 	float radius;
-} OgeLight;
-typedef OgeLight OgeLightArray[ OGE_MAX_LIGHTS_PER_PASS ];
+} ApeLight;
+typedef ApeLight OgeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 
-typedef struct OgeRendererPassState
+typedef struct ApeRendererPassState
 {
 	bool mirror;
 	unsigned int depth;
-} OgeRendererPassState;
-extern OgeRendererPassState rendererState;
+} ApeRendererPassState;
+extern ApeRendererPassState rendererState;
 
-#define OGE_NUM_SPRITE_ANGLES 8
+#define APE_NUM_SPRITE_ANGLES 8
 
 #include "renderer_scenegraph.h"
 #include "renderer_material.h"
 
-void ogeInitializeRenderer( void );
-void ogeShutdownRenderer( void );
+void apeInitializeRenderer( void );
+void apeShutdownRenderer( void );
 
-PLGCamera *ogeGetAuxCamera( void );
+PLGCamera *apeGetAuxCamera( void );
 
-void ogeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
-PLGTexture *ogeGetPrimaryColourAttachment( void );
-PLGTexture *ogeGetPrimaryDepthAttachment( void );
+void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
+PLGTexture *apeGetPrimaryColourAttachment( void );
+PLGTexture *apeGetPrimaryDepthAttachment( void );
 
-void YnCore_SetupDefaultRenderState( const OgeViewport *viewport );
-void YnCore_BeginDraw( OgeViewport *viewport );
-void YnCore_EndDraw( OgeViewport *viewport );
+void apeSetupDefaultRenderState( const ApeViewport *viewport );
+void apeBeginDraw( ApeViewport *viewport );
+void apeEndDraw( ApeViewport *viewport );
 
-void YnCore_Set2DViewportSize( int w, int h );
-void ogeGet2DViewportSize( int *width, int *height );
-void YnCore_DrawMenu( const OgeViewport *viewport );
+void apeSet2DViewportSize( int w, int h );
+void apeGet2DViewportSize( int *width, int *height );
+void apeDrawMenu( const ApeViewport *viewport );
 
-struct OgeShaderProgramIndex *ogeGetShaderProgramByName( const char *name );
+struct ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name );
 
-void ogeDrawPerspective_( OgeCamera *camera, const OgeViewport *viewport );
+void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport );
 
-void YnCore_Draw2DQuad( OgeMaterial *material, int x, int y, int w, int h );
-void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation );
+void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h );
+void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation );
 
-void YnCore_Sprite_DrawAnimationFrame( OgeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
-void YnCore_Sprite_DrawAnimation( OgeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
+void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLGTexture *ogeLoadTexture( const char *path, PLGTextureFilter filterMode );
-PLGTexture *ogeGetFallbackTexture( void );
+PLGTexture *apeLoadTexture( const char *path, PLGTextureFilter filterMode );
+PLGTexture *apeGetFallbackTexture( void );
 
 #if 0
 typedef struct Texture Texture;
@@ -143,10 +144,10 @@ PLGTexture            *Renderer_Texture_GetInternal( Texture *texture );
 
 ////////////////////////////////////////////////////////////////////
 
-typedef struct OgeRenderTarget OgeRenderTarget;
+typedef struct ApeRenderTarget ApeRenderTarget;
 
-OgeRenderTarget *ogeRenderTarget_GetByKey( const char *key );
-OgeRenderTarget *ogeRenderTarget_Create( const char *key, unsigned int width, unsigned int height, unsigned int flags );
-void ogeRenderTarget_Release( OgeRenderTarget *renderTarget );
-void ogeRenderTarget_SetSize( OgeRenderTarget *renderTarget, unsigned int width, unsigned int height );
-PLGTexture *ogeRenderTarget_GetTextureAttachment( OgeRenderTarget *renderTarget );
+ApeRenderTarget *apeGetRenderTargetByKey( const char *key );
+ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags );
+void apeReleaseRenderTarget( ApeRenderTarget *renderTarget );
+void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
+PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget );

@@ -11,9 +11,9 @@ typedef struct GameState
 } GameState;
 extern GameState oge_gameState_;
 
-void ogeInitializeGame( void );
-void ogeShutdownGame( void );
-void Game_Tick( void );
-void Game_Disconnect( void );
+void apeInitializeGame( void );
+void apeShutdownGame( void );
+void apeTickGame( void );
+void apeDisconnectGame( void );
 
 PL_EXTERN_C_END

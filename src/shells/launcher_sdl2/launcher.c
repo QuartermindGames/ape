@@ -27,7 +27,7 @@ void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColo
 static SDL_Window *sdlWindow      = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static OgeViewport *windowViewport = NULL;
+static ApeViewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
@@ -76,7 +76,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-OgeViewport *ogeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 #if !NDEBUG
@@ -306,7 +306,7 @@ static int Sys_TranslateSDLKeyInput( int key )
 
 			/* temp temp temp */
 		case SDLK_ESCAPE:
-			ogeShutdown();
+			apeShutdown();
 			break;
 	}
 
@@ -384,7 +384,7 @@ static bool InitializeDisplay( void )
 	else
 		driverMode = OGE_GRAPHICS_OTHER;
 
-	if ( ( windowViewport = ogeShellInterface_CreateWindow( "Orcus Game Engine", 1024, 768, false, driverMode ) ) == NULL )
+	if ( ( windowViewport = apeShellInterface_CreateWindow( "APE - Another Portal Engine", 1024, 768, false, driverMode ) ) == NULL )
 	{
 		YnCore_ShellInterface_DisplayMessageBox( OGE_MESSAGE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
@@ -458,7 +458,7 @@ int Launcher_Initialize( int argc, char **argv )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 	}
 
-	if ( !ogeInitialize( NULL ) )
+	if ( !apeInitialize( NULL ) )
 	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
@@ -468,7 +468,7 @@ int Launcher_Initialize( int argc, char **argv )
 
 	SDL_StartTextInput();
 
-	while ( ogeIsEngineRunning() )
+	while ( apeIsEngineRunning() )
 	{
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
@@ -476,11 +476,11 @@ int Launcher_Initialize( int argc, char **argv )
 			switch ( event.type )
 			{
 				case SDL_USEREVENT:
-					ogeTickFrame();
+					apeTickFrame();
 					break;
 
 				case SDL_TEXTINPUT:
-					ogeHandleTextEvent( event.text.text );
+					apeHandleTextEvent( event.text.text );
 					break;
 
 				case SDL_MOUSEWHEEL:
@@ -489,15 +489,15 @@ int Launcher_Initialize( int argc, char **argv )
 					                                                               : 0.0f;
 					float y = ( event.wheel.y > 0 ) ? 1.0f : ( event.wheel.y < 0 ) ? -1.0f
 					                                                               : 0.0f;
-					ogeHandleMouseWheelEvent( x, y );
+					apeHandleMouseWheelEvent( x, y );
 					break;
 				}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					ogeHandleMouseButtonEvent( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
+					apeHandleMouseButtonEvent( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
 					break;
 				case SDL_MOUSEMOTION:
-					ogeHandleMouseMotionEvent( event.motion.x, event.motion.y );
+					apeHandleMouseMotionEvent( event.motion.x, event.motion.y );
 					break;
 
 				case SDL_KEYDOWN:
@@ -512,7 +512,7 @@ int Launcher_Initialize( int argc, char **argv )
 
 					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_NONE;
 
-					ogeHandleKeyboardEvent( key, keyStates[ key ] );
+					apeHandleKeyboardEvent( key, keyStates[ key ] );
 					break;
 				}
 
@@ -536,23 +536,23 @@ int Launcher_Initialize( int argc, char **argv )
 			}
 		}
 
-		ogeRenderFrame( windowViewport );
+		apeRenderFrame( windowViewport );
 
 		SDL_GL_SwapWindow( sdlWindow );
 	}
 
 	SDL_StopTextInput();
 
-	ogeShutdown();
+	apeShutdown();
 
 	return EXIT_SUCCESS;
 }
 
 #if defined( _WIN32 )
 
-#include <windows.h>
+#	include <windows.h>
 
-int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+int APIENTRY WinMain( HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow )
 {
 	return Launcher_Initialize( __argc, __argv );
 }
