@@ -84,12 +84,12 @@ static void FW_Game_Draw( void )
 {
 }
 
-static void FW_Game_DrawMenu( const OgeViewport *viewport )
+static void FW_Game_DrawMenu( const ApeViewport *viewport )
 {
 	FW_Menu_Draw( viewport );
 }
 
-static void SpawnWorld( OgeWorld *world )
+static void SpawnWorld( ApeWorld *world )
 {
 #if 0
 	NdBranch *propertyNode;
@@ -127,7 +127,7 @@ static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user 
 		case GAMEMODE_REQUEST_HANDLEINPUT:
 			break;
 		case GAMEMODE_REQUEST_SPAWNWORLD:
-			SpawnWorld( ( OgeWorld * ) user );
+			SpawnWorld( ( ApeWorld * ) user );
 			break;
 		default:
 			break;

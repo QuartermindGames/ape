@@ -4,13 +4,13 @@
 
 PL_EXTERN_C
 
-void apeInitializeClient( void );
-void ogeShutdownClient( void );
+void apeInitializeClient_( void );
+void apeShutdownClient_( void );
 void apeDrawClient( ApeViewport *viewport );
 void apeTickClient( void );
 
-void ogeClient_InitiateConnection( const char *ip, unsigned short port );
-void YnCore_Client_Disconnect( void );
+void apeInitiateClientConnection_( const char *ip, unsigned short port );
+void apeDisconnectClient_( void );
 
 #define CLIENT_PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_CLIENT_INFORMATION, FORMAT, ##__VA_ARGS__ )

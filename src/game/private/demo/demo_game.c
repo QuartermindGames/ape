@@ -12,8 +12,8 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 		return;
 	}
 
-	PLVector3 pos = ogeGetCameraPosition( playerCamera );
-	PLVector3 ang = ogeGetCameraAngles( playerCamera );
+	PLVector3 pos = apeGetCameraPosition( playerCamera );
+	PLVector3 ang = apeGetCameraAngles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
 	{
 		ang.y += 0.5f;
@@ -33,8 +33,8 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	else if ( strcmp( id, "moveUp" ) == 0 ) { pos.y += 0.5f; }
 	else if ( strcmp( id, "moveDown" ) == 0 ) { pos.y -= 0.5f; }
 
-	ogeSetCameraPosition( playerCamera, &pos );
-	ogeSetCameraAngles( playerCamera, &ang );
+	apeSetCameraPosition( playerCamera, &pos );
+	apeSetCameraAngles( playerCamera, &ang );
 }
 
 static void InitializeDemoGame( void )
@@ -43,8 +43,8 @@ static void InitializeDemoGame( void )
 
 	PlParseConsoleString( "world worlds/glass_house.rfl" );
 
-	playerCamera = ogeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
-	ogeMakeCameraActive( playerCamera );
+	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
+	apeMakeCameraActive( playerCamera );
 
 	apeRegisterInputAction( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
 	apeRegisterInputAction( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
@@ -58,7 +58,7 @@ static void InitializeDemoGame( void )
 
 static void ShutdownDemoGame( void )
 {
-	ogeDestroyCamera( playerCamera );
+	apeDestroyCamera( playerCamera );
 	playerCamera = NULL;
 }
 

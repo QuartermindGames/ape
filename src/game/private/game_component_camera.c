@@ -33,12 +33,12 @@ static void Spawn( ApeEntityComponent *self )
 		angles   = &pl_vecOrigin3;
 	}
 
-	GCCAMERA( self )->camera = ogeCreateCamera( "dummy", position, angles );
+	GCCAMERA( self )->camera = apeCreateCamera( "dummy", position, angles );
 }
 
 static void Destroy( ApeEntityComponent *self )
 {
-	ogeDestroyCamera( GCCAMERA( self )->camera );
+	apeDestroyCamera( GCCAMERA( self )->camera );
 
 	PL_DELETE( GCCAMERA( self ) );
 }
@@ -51,11 +51,11 @@ static void Tick( ApeEntityComponent *self )
 	if ( GCCAMERA( self )->transform == NULL )
 		return;
 
-	ogeSetCameraPosition( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->translation );
-	ogeSetCameraAngles( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->angles );
+	apeSetCameraPosition( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->translation );
+	apeSetCameraAngles( GCCAMERA( self )->camera, &ECTRANSFORM( GCCAMERA( self )->transform )->angles );
 
 	if ( GCCAMERA( self )->isActive )
-		ogeMakeCameraActive( GCCAMERA( self )->camera );
+		apeMakeCameraActive( GCCAMERA( self )->camera );
 }
 
 const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void )

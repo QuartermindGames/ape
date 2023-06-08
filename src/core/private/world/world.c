@@ -36,18 +36,6 @@ ApeWorld *apeCreateWorld( void )
 	return world;
 }
 
-ApeWorld *YnCore_World_LoadFromNode( NdBranch *root )
-{
-	ApeWorld *world = apeCreateWorld();
-	if ( world != NULL && YnCore_WorldDeserialiser_Begin( root, world ) == NULL )
-	{
-		apeDestroyWorld( world );
-		world = NULL;
-	}
-
-	return world;
-}
-
 static const uint32_t WORLD_MAGIC = 0xd4bada55;
 
 static const int32_t WORLD_VERSION_MIN = 161;
@@ -481,6 +469,106 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	ParseStaticGeometryLightmaps( world, file );
 	ParseStaticGeometryTextureMovers( world, file );
 
+	// create cached room geometry
+	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+	{
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+		assert( room != NULL );
+		if ( room == NULL || room->isCached )
+		{
+			continue;
+		}
+
+		// determine how many batches we'll need to draw the room
+		uint32_t numBatches = 0;
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( world->materials ); ++j )
+		{
+			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, j );
+			assert( material != NULL );
+			if ( material == NULL )
+			{
+				continue;
+			}
+
+			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( room->faces ); ++k )
+			{
+
+			}
+		}
+
+		// determine total number of vertices
+		uint32_t numVerts = 0;
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+		{
+			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+			assert( face != NULL );
+			if ( face == NULL )
+			{
+				continue;
+			}
+
+			numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
+		}
+
+		room->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, numVerts * 2, numVerts );
+		assert( room->mesh != NULL );
+		if ( room->mesh == NULL )
+		{
+			PRINT_WARNING( "Failed to create mesh for room (%u): %s\n", i, PlGetError() );
+			continue;
+		}
+
+		room->mesh->numSubMeshes = 0;
+		if ( room->mesh->subMeshes == NULL )
+		{
+			room->mesh->maxSubMeshes   = PlGetNumVectorArrayElements( room->faces );
+			room->mesh->subMeshes      = PL_NEW_( int32_t, room->mesh->maxSubMeshes );
+			room->mesh->firstSubMeshes = PL_NEW_( int32_t, room->mesh->maxSubMeshes );
+		}
+
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+		{
+			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+			assert( face != NULL );
+			if ( face == NULL )
+			{
+				continue;
+			}
+
+			PLColour roomColour;
+			if ( room->ambientLightDefined )
+			{
+				roomColour = room->ambientLight;
+			}
+			else
+			{
+				roomColour = PlColourF32ToU8( &WORLD_DEFAULT_AMBIENCE );
+			}
+
+			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+			while ( faceVertexNode != NULL )
+			{
+				ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+				assert( vertex->u != NULL );
+
+				PlgAddMeshVertex( room->mesh,
+				                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
+				                  &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
+				                  &( PLColour ){ roomColour.r, roomColour.g, roomColour.b, 255 },
+				                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
+
+				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
+			}
+
+			uint32_t numVertices                                   = PlGetNumLinkedListNodes( face->edgeLoop );
+			room->mesh->firstSubMeshes[ room->mesh->numSubMeshes ] = ( room->mesh->numSubMeshes > 0 ) ? ( room->mesh->firstSubMeshes[ room->mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
+			room->mesh->subMeshes[ room->mesh->numSubMeshes ]      = ( int ) numVertices;
+			room->mesh->numSubMeshes++;
+		}
+
+		room->isCached = true;
+	}
+
 	return NULL;
 }
 
@@ -506,8 +594,8 @@ static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 		tmp = ParseString( file, &size );// script name
 		PL_DELETE( tmp );
 
-		PL_READUINT8( file, NULL );        // hidden in editor
-		PL_READUINT32( file, false, NULL );// flags
+		light->isHidden = PL_READUINT8( file, NULL );        // hidden in editor
+		light->flags    = PL_READUINT32( file, false, NULL );// flags
 
 		PLColour colour = ParseColour( file );
 		light->colour   = PlColourU8ToF32( &colour );
@@ -704,27 +792,6 @@ ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position )
 	}
 
 	return NULL;
-}
-
-ApeWorldFace **YnCore_WorldSector_GetMeshFaces( ApeWorldRoom *sector, uint32_t *numFaces )
-{
-	if ( sector->mesh == NULL )
-	{
-		*numFaces = 0;
-		return NULL;
-	}
-
-	*numFaces            = PlGetNumLinkedListNodes( sector->mesh->faces );
-	ApeWorldFace **faces = PL_NEW_( ApeWorldFace *, *numFaces );
-
-	PLLinkedListNode *faceNode = PlGetFirstNode( sector->mesh->faces );
-	for ( unsigned int i = 0; i < *numFaces; ++i )
-	{
-		faces[ i ] = ( ApeWorldFace * ) PlGetLinkedListNodeUserData( faceNode );
-		faceNode   = PlGetNextLinkedListNode( faceNode );
-	}
-
-	return faces;
 }
 
 void apeRegisterWorldConsoleVariables_( void )

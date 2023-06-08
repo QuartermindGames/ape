@@ -5,9 +5,12 @@
 #include <plcore/pl_physics.h>
 #include <plcore/pl_array_vector.h>
 
+#include <plgraphics/plg_mesh.h>
+
 #include "core_memory_manager.h"
 
 #include "client/renderer/renderer_scenegraph.h"
+
 #include "entity/entity.h"
 
 #define WORLD_PROP_TAG_LENGTH   64
@@ -152,6 +155,14 @@ typedef struct ApeWorldPortal
 	bool canSeeThrough;
 } ApeWorldPortal;
 
+typedef struct ApeWorldDrawBatch
+{
+	uint32_t *firstSubMeshes;
+	uint32_t *subMeshes;
+	struct ApeMaterial *material;
+	uint32_t numSubMeshes;
+} ApeWorldDrawBatch;
+
 typedef struct ApeWorldRoom
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
@@ -190,7 +201,9 @@ typedef struct ApeWorldRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	ApeWorldMesh *mesh;
+	PLGMesh *mesh;             // cached mesh
+	bool isCached;             // if false, mesh cache will be updated
+	uint32_t numBatches;
 
 	ApeWorldObject *staticObjects;
 	unsigned int numStaticObjects;

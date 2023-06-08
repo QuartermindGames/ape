@@ -9,6 +9,7 @@ ApeWorldRoom *apeCreateWorldRoom( void )
 	room->detailRooms  = PlCreateVectorArray( 0 );
 	room->faces        = PlCreateVectorArray( 0 );
 	room->portals      = PlCreateVectorArray( 0 );
+
 	return room;
 }
 

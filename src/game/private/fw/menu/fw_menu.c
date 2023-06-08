@@ -7,7 +7,7 @@ static Menu mainMenu;
 
 static void QuitOption( void )
 {
-	ogeShutdown();
+	apeShutdown();
 }
 
 static MenuOption quitMenuOptions[] = {
@@ -40,21 +40,21 @@ typedef enum FWPieMenuIcon
 
 	FW_MAX_PIEMENU_ICONS
 } FWPieMenuIcon;
-static OgeMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
+static ApeMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
 
 void FW_Menu_Initialize( void )
 {
 	// mmm delicious pie
 	interactPie = FW_Menu_CreatePie();
-	FW_Menu_AddPieOption( interactPie, "testing 1", ogeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 2", ogeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 3", ogeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 1", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 2", apeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	FW_Menu_AddPieOption( interactPie, "testing 3", apeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
 	//FW_Menu_SetPieActive( interactPie, true );
 
 	Game_Menu_SetCurrent( &mainMenu );
 }
 
-static void DrawHUD( const OgeViewport *viewport )
+static void DrawHUD( const ApeViewport *viewport )
 {
 }
 
@@ -63,7 +63,7 @@ void FW_Menu_Tick( void )
 	FW_Menu_TickPie( interactPie );
 }
 
-void FW_Menu_Draw( const OgeViewport *viewport )
+void FW_Menu_Draw( const ApeViewport *viewport )
 {
 	// get the centre of the screen
 	int w, h;
@@ -87,20 +87,22 @@ void FW_Menu_Draw( const OgeViewport *viewport )
 bool FW_Menu_HandleInput( void )
 {
 	static bool blah = true;
-	if ( YnCore_Input_GetButtonStatus( 0, INPUT_START ) == YN_CORE_INPUT_STATE_PRESSED )
+	if ( apeGetButtonStatus( 0, INPUT_START ) == OGE_INPUT_STATE_PRESSED )
 	{
 		blah = !blah;
 		FW_Menu_SetPieActive( interactPie, blah );
 		return true;
 	}
-	if ( YnCore_Input_GetButtonStatus( 0, INPUT_X ) == YN_CORE_INPUT_STATE_PRESSED )
+	if ( apeGetButtonStatus( 0, INPUT_X ) == OGE_INPUT_STATE_PRESSED )
 	{
-		FW_Menu_AddPieOption( interactPie, "testing 4", ogeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+		FW_Menu_AddPieOption( interactPie, "testing 4", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
 		return true;
 	}
 
 	if ( FW_Menu_HandlePieInput( interactPie ) )
+	{
 		return true;
+	}
 
 	return false;
 }

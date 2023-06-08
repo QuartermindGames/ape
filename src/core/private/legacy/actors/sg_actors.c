@@ -193,7 +193,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 
 static void SGActor_Generic_Draw( Actor *self, void *userData )
 {
-	ApeCamera *camera = ogeGetActiveCamera();
+	ApeCamera *camera = apeGetActiveCamera();
 	if ( camera == NULL )
 		return;
 
@@ -344,8 +344,8 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitRight->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false );
 
-	ApeCamera *camera      = ogeGetActiveCamera();
-	camera->mode        = OGE_CAMERA_MODE_TOP;
+	ApeCamera *camera      = apeGetActiveCamera();
+	camera->mode        = APE_CAMERA_MODE_TOP;
 	camera->parentActor = self;
 }
 

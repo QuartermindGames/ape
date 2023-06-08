@@ -81,6 +81,13 @@ typedef enum ApeLightType
 	OGE_MAX_LIGHT_TYPES
 } ApeLightType;
 
+// GM flags, do not change!!
+#define APE_LIGHT_FLAG_DYNAMIC         0x1U
+#define APE_LIGHT_FLAG_FADE            0x2U
+#define APE_LIGHT_FLAG_SHADOWS         0x4U
+#define APE_LIGHT_FLAG_ENABLED         0x8U
+#define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
+
 #define APE_MAX_LIGHTS_PER_PASS 8
 typedef struct ApeLight
 {
@@ -89,6 +96,12 @@ typedef struct ApeLight
 	PLVector3 angles;
 	PLColourF32 colour;
 	float radius;
+
+	bool isHidden;
+
+	uint32_t flags;
+
+	int32_t state;
 } ApeLight;
 typedef ApeLight OgeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 
@@ -104,8 +117,8 @@ extern ApeRendererPassState rendererState;
 #include "renderer_scenegraph.h"
 #include "renderer_material.h"
 
-void apeInitializeRenderer( void );
-void apeShutdownRenderer( void );
+void apeInitializeRenderer_( void );
+void apeShutdownRenderer_( void );
 
 PLGCamera *apeGetAuxCamera( void );
 

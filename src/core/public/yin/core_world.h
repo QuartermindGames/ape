@@ -53,6 +53,5 @@ void apeReleaseWorldMesh( ApeWorldMesh *worldMesh );
 /* Sector */
 
 struct ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights );
-ApeWorldFace **YnCore_WorldSector_GetMeshFaces( ApeWorldRoom *sector, uint32_t *numFaces );
 
 PL_EXTERN_C_END

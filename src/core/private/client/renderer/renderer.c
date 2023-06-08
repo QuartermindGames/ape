@@ -103,7 +103,7 @@ void apeSetupDefaultRenderState( const ApeViewport *viewport )
 	PLColour clearColour = { 50, 50, 50, 255 };
 
 	ApeWorld *world = Game_GetCurrentWorld();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == OGE_CAMERA_MODE_PERSPECTIVE ) )
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
 	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
 	}
@@ -147,8 +147,6 @@ void apeEndDraw( ApeViewport *viewport )
 	viewport->perf.numPortals   = 0;
 }
 
-static ApeMaterial *ppFXAAMaterial = NULL;
-
 void apeInitializeShaders( void );  /* renderer/shaders.c */
 void RT_InitializeTextures( void ); /* texture.c */
 
@@ -156,8 +154,16 @@ void RT_InitializeTextures( void ); /* texture.c */
 void apeInitializeRenderTargets( void );
 void apeShutdownRenderTargets( void );
 
+static bool isScreenshotPending = false;
+static void PrepareScreenshotCapture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+{
+	isScreenshotPending = true;
+}
+
 void Renderer_RegisterConsoleVariables( void )
 {
+	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, PrepareScreenshotCapture );
+
 	PlRegisterConsoleVariable( "r.cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r.superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r.showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
@@ -182,7 +188,7 @@ void Renderer_RegisterConsoleVariables( void )
 	PlRegisterConsoleVariable( "r.far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
 }
 
-void apeInitializeRenderer( void )
+void apeInitializeRenderer_( void )
 {
 	PRINT( "Initializing renderer\n" );
 
@@ -209,7 +215,7 @@ void apeInitializeRenderer( void )
 	R_PP_SetupEffects();
 }
 
-void apeShutdownRenderer( void )
+void apeShutdownRenderer_( void )
 {
 	Font_Shutdown();
 	apeShutdownMaterialSystem();
@@ -514,7 +520,7 @@ void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlPopMatrix();
 }
 
-static void YR_RenderScene( ApeCamera *camera, const ApeViewport *viewport )
+static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ApeWorldRoom *currentSector = NULL;
 	ApeWorld *world             = Game_GetCurrentWorld();
@@ -529,13 +535,13 @@ static void YR_RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 		but for v2, this'll suffice...
 	*/
 
-	OGE_PROFILE_START( PROFILE_DRAW_WORLD );
+	APE_PROFILE_START( PROFILE_DRAW_WORLD );
 
 	if ( viewport != NULL )
 	{
-		if ( camera->mode == OGE_CAMERA_MODE_PERSPECTIVE )
+		if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
 		{
-			if ( camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME )
+			if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME )
 			{
 				apeDrawWorldWireframe_( world, camera );
 			}
@@ -544,7 +550,7 @@ static void YR_RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 				apeDrawWorld_( world );
 			}
 
-			ApeEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
+			ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
 			{
 				PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -575,7 +581,7 @@ static void YR_RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 		apeDrawWorld_( world );
 	}
 
-	OGE_PROFILE_END( PROFILE_DRAW_WORLD );
+	APE_PROFILE_END( PROFILE_DRAW_WORLD );
 }
 
 static PLGTexture *colourTexture;
@@ -590,7 +596,44 @@ PLGTexture *apeGetPrimaryDepthAttachment( void )
 	return depthTexture;
 }
 
-void ogeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
+static void WriteScreenshot( void )
+{
+	uint32_t w, h;
+	PlgGetFrameBufferResolution( fboBuffer, &w, &h );
+
+	size_t bufSize = ( ( w * h ) * 4 );
+	uint8_t *buf   = PL_NEW_( uint8_t, bufSize );
+	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL )
+	{
+		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		assert( image != NULL );
+		if ( image != NULL )
+		{
+			uint16_t num = 0;
+			PLPath path;
+			PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), num );
+			while ( PlFileExists( path ) )
+			{
+				PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), ++num );
+			}
+
+			PlWriteImage( image, path );
+			PlDestroyImage( image );
+		}
+		else
+		{
+			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
+		}
+	}
+	else
+	{
+		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+	}
+
+	PL_DELETE( buf );
+}
+
+void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_RendererPerformance_.cameraPos = camera->internal->position;
 
@@ -601,16 +644,22 @@ void ogeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	PL_GET_CVAR( "r.wireframe", wireframeMode );
-	if ( ( camera != NULL && camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
-	YR_RenderScene( camera, viewport );
+	RenderScene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == OGE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
+
+	if ( isScreenshotPending )
+	{
+		WriteScreenshot();
+		isScreenshotPending = false;
 	}
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );

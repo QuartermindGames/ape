@@ -88,12 +88,12 @@ typedef struct YNCoreAudioSource
 	void *user;
 } YNCoreAudioSource;
 
-void YnCore_InitializeAudio( void );
-void YnCore_ShutdownAudio( void );
+void apeInitializeAudio_( void );
+void apeShutdownAudio_( void );
 
 void ogeRegisterAudioConsoleVariables_( void );
 
-void YnCore_TickAudio( void );
+void apeTickAudio_( void );
 void Audio_Pause( bool pause );
 
 void Audio_UpdateListener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity );

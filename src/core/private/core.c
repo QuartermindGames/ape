@@ -96,7 +96,7 @@ bool apeInitialize( const char *config )
 	apeInitializeNet();
 
 	apeInitializeServer();
-	apeInitializeClient();
+	apeInitializeClient_();
 
 	apeInitializeGame();
 
@@ -114,9 +114,9 @@ void apeShutdown( void )
 	apeFlushTasks();
 
 	apeShutdownGame();
-	ogeShutdownEditor();
+	apeShutdownEditor_();
 
-	ogeShutdownClient();
+	apeShutdownClient_();
 	apeShutdownServer();
 	apeShutdownConsole();
 	apeShutdownMemoryManager();
@@ -142,21 +142,21 @@ void apeTickFrame( void )
 		return;
 	}
 
-	OGE_PROFILE_START( PROFILE_SIM_ALL );
+	APE_PROFILE_START( PROFILE_SIM_ALL );
 
 	apeTickTasks();
 
-	OGE_PROFILE_START( PROFILE_TICK_CLIENT );
+	APE_PROFILE_START( PROFILE_TICK_CLIENT );
 	apeTickClient();
-	OGE_PROFILE_END( PROFILE_TICK_CLIENT );
+	APE_PROFILE_END( PROFILE_TICK_CLIENT );
 
-	OGE_PROFILE_START( PROFILE_TICK_SERVER );
+	APE_PROFILE_START( PROFILE_TICK_SERVER );
 	apeTickServer();
-	OGE_PROFILE_END( PROFILE_TICK_SERVER );
+	APE_PROFILE_END( PROFILE_TICK_SERVER );
 
 	numTicks++;
 
-	OGE_PROFILE_END( PROFILE_SIM_ALL );
+	APE_PROFILE_END( PROFILE_SIM_ALL );
 
 	apeUpdateProfilerGraphs();
 	apeEndProfilerFrame();
@@ -182,9 +182,9 @@ void apeRenderFrame( ApeViewport *viewport )
 		return;
 	}
 
-	OGE_PROFILE_START( PROFILE_DRAW_ALL );
+	APE_PROFILE_START( PROFILE_DRAW_ALL );
 	apeDrawClient( viewport );
-	OGE_PROFILE_END( PROFILE_DRAW_ALL );
+	APE_PROFILE_END( PROFILE_DRAW_ALL );
 
 	apeUpdateProfilerGraphs();
 	apeEndProfilerFrame();

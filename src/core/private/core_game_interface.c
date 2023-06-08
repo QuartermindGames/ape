@@ -169,7 +169,7 @@ void Game_SpawnWorld( const char *worldPath )
 
 	apeStartServer( "localhost", 0 );
 
-	ogeClient_InitiateConnection( "localhost", apeGetServerPort() );
+	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
 ApeWorld *Game_GetCurrentWorld( void )

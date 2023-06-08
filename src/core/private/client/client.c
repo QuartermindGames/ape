@@ -24,28 +24,25 @@ typedef struct ClientState
 } ClientState;
 static ClientState clientState;
 
-void apeInitializeClient( void )
+void apeInitializeClient_( void )
 {
 	CLIENT_PRINT( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
 
-	apeInitializeRenderer();
-	YnCore_InitializeAudio();
-	YnCore_InitializeEditor();
-
-	YnCore_InitializeGUI();
-
+	apeInitializeRenderer_();
+	apeInitializeAudio_();
+	apeInitializeEditor_();
+	apeInitializeGUI_();
 	apeInitializeInput_();
 }
 
-void ogeShutdownClient( void )
+void apeShutdownClient_( void )
 {
-	YnCore_ShutdownGUI();
-
-	ogeShutdownEditor();
-	YnCore_ShutdownAudio();
-	apeShutdownRenderer();
+	apeShutdownGUI_();
+	apeShutdownEditor_();
+	apeShutdownAudio_();
+	apeShutdownRenderer_();
 }
 
 void apeDrawClient( ApeViewport *viewport )
@@ -54,28 +51,30 @@ void apeDrawClient( ApeViewport *viewport )
 
 	apeDrawPerspective_( viewport->camera, viewport );
 
-	OGE_PROFILE_START( PROFILE_DRAW_UI );
+	APE_PROFILE_START( PROFILE_DRAW_UI );
 	apeDrawMenu( viewport );
-	OGE_PROFILE_END( PROFILE_DRAW_UI );
+	APE_PROFILE_END( PROFILE_DRAW_UI );
 
 	apeEndDraw( viewport );
 }
 
-static void Client_HandleConnectionState( void )
+static void apeHandleClientConnectionState_( void )
 {
 	/* check if the client is connected to anything */
 	if ( !clientState.isConnected )
 	{
 		/* socket hasn't been created, so... */
 		if ( clientState.netSocket == NULL )
+		{
 			return;
+		}
 
 		NetConnectionState state = Net_GetConnectionStatus( clientState.netSocket );
 		if ( state != NET_CONNECTION_CONNECTED )
 		{
 			if ( state == NET_CONNECTION_FAILED )
 			{
-				YnCore_Client_Disconnect();
+				apeDisconnectClient_();
 				CLIENT_PRINT_WARNING( "Connection failed!\n" );
 			}
 			return;
@@ -91,22 +90,21 @@ void apeTickClient( void )
 	apeBeginInputFrame_();
 
 	apeTickInput_();
+	apeTickEditor_();
+	apeTickGUI_();
 
-	YnCore_TickEditor();
-	YnCore_TickGUI();
-
-	Client_HandleConnectionState();
+	apeHandleClientConnectionState_();
 
 	apeEndInputFrame_();
 
-	YnCore_TickAudio();
+	apeTickAudio_();
 }
 
 /**
  * Begin connection process - client will continue connecting per
  * tick until success or failure, and then begin handshake process.
  */
-void ogeClient_InitiateConnection( const char *ip, unsigned short port )
+void apeInitiateClientConnection_( const char *ip, unsigned short port )
 {
 	clientState.netSocket = Net_OpenSocket( ip, port, false );
 	if ( clientState.netSocket == NULL )
@@ -118,7 +116,7 @@ void ogeClient_InitiateConnection( const char *ip, unsigned short port )
 	CLIENT_PRINT( "Initiated connection to %s, pending...\n", ip );
 }
 
-void YnCore_Client_Disconnect( void )
+void apeDisconnectClient_( void )
 {
 	if ( clientState.netSocket != NULL )
 	{

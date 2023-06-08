@@ -24,7 +24,7 @@ static bool drawGUI = false;
 
 static ApeMaterial *baseGuiMat;
 
-void YnCore_InitializeGUI( void )
+void apeInitializeGUI_( void )
 {
 	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
 	PlRegisterConsoleVariable( "gui.width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
@@ -73,7 +73,7 @@ void YnCore_InitializeGUI( void )
 	GUI_Panel_SetVisible( rootPanel, true );
 }
 
-void YnCore_ShutdownGUI( void )
+void apeShutdownGUI_( void )
 {
 	GUI_Panel_Destroy( rootPanel );
 	GUI_Shutdown();
@@ -122,7 +122,7 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 		PlgSetCullMode( PLG_CULL_POSITIVE );
 	}
 
-	OGE_PROFILE_START( PROFILE_DRAW_GUI );
+	APE_PROFILE_START( PROFILE_DRAW_GUI );
 	if ( drawGUI )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
@@ -132,7 +132,7 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 
 		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
 	}
-	OGE_PROFILE_END( PROFILE_DRAW_GUI );
+	APE_PROFILE_END( PROFILE_DRAW_GUI );
 
 	if ( gameModeInterface->DrawMenu != NULL )
 	{
@@ -161,7 +161,7 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 	apeDrawConsole_( viewport );
 }
 
-void YnCore_TickGUI( void )
+void apeTickGUI_( void )
 {
 	GUI_Tick( rootPanel );
 }

@@ -44,7 +44,7 @@ void ogeRegisterEditorConsoleVariables_( void )
 
 static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
-	if ( YnCore_GetCurrentEditorContext() != NULL )
+	if ( apeGetCurrentEditorContext() != NULL )
 	{
 		//TODO: check status, do we need to save?
 		editorStatus   = EDITOR_CLOSED;
@@ -55,7 +55,7 @@ static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **
 	YnCore_SetEditorContext( YN_CORE_EDITOR_CONTEXT_WORLD );
 }
 
-void YnCore_InitializeEditor( void )
+void apeInitializeEditor_( void )
 {
 	PlRegisterConsoleCommand( "editor",
 	                          "Enable/disable editor mode.",
@@ -73,7 +73,7 @@ void YnCore_InitializeEditor( void )
 	}
 }
 
-void ogeShutdownEditor( void )
+void apeShutdownEditor_( void )
 {
 	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
 	{
@@ -87,7 +87,7 @@ void ogeShutdownEditor( void )
 	}
 }
 
-void YnCore_TickEditor( void )
+void apeTickEditor_( void )
 {
 	if ( currentContext == NULL )
 	{
@@ -135,7 +135,7 @@ void YnCore_DrawEditorGUI( const ApeViewport *viewport )
 	currentContext->DrawGUI();
 }
 
-ApeEditorContext *YnCore_GetCurrentEditorContext( void )
+ApeEditorContext *apeGetCurrentEditorContext( void )
 {
 	return currentContext;
 }

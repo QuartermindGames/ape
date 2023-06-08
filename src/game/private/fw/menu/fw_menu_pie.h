@@ -44,7 +44,7 @@ void FW_Menu_SetPieActive( FWPieMenu *menu, bool active );
 /**
  * Adds an option to the pie menu.
  */
-FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct OgeMaterial *icon, FWPieMenuOptionCallback callback );
+FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct ApeMaterial *icon, FWPieMenuOptionCallback callback );
 
 /**
  * Destroys the specific pie menu option.

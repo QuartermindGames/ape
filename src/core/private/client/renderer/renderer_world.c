@@ -267,7 +267,7 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 		return;
 	}
 
-	ApeCamera *camera = ogeGetActiveCamera();
+	ApeCamera *camera = apeGetActiveCamera();
 	if ( camera == NULL )
 	{
 		return;
@@ -282,64 +282,14 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 			continue;
 		}
 
-		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( world->materials ); ++j )
+		//for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( world->materials ); ++j )
 		{
-			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, j );
+			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, 1 );
 			assert( material != NULL );
 			if ( material == NULL )
 			{
 				continue;
 			}
-
-			uint32_t numFaces = PlGetNumVectorArrayElements( room->faces );
-
-			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-
-			if ( mesh->subMeshes == NULL )
-			{
-				mesh->maxSubMeshes   = ( numFaces * 2 );
-				mesh->subMeshes      = PL_NEW_( int32_t, mesh->maxSubMeshes );
-				mesh->firstSubMeshes = PL_NEW_( int32_t, mesh->maxSubMeshes );
-			}
-			else if ( numFaces > mesh->maxSubMeshes )
-			{
-				mesh->maxSubMeshes   = ( numFaces * 2 );
-				mesh->subMeshes      = PL_REALLOCA( mesh->subMeshes, numFaces );
-				mesh->firstSubMeshes = PL_REALLOCA( mesh->firstSubMeshes, numFaces );
-			}
-			mesh->numSubMeshes = 0;
-
-#if 0
-			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k )
-			{
-				OgeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
-				assert( face != NULL );
-				if ( face == NULL || face->material != material || !PlgIsBoxInsideView( camera->internal, &face->bounds ) )
-				{
-					continue;
-				}
-
-				PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
-				while ( faceVertexNode != NULL )
-				{
-					OgeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-					assert( vertex->u != NULL );
-
-					PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
-					PlgImmNormal( face->normal.x, face->normal.y, face->normal.z );
-					PlgImmTextureCoord( vertex->textureU, vertex->textureV );
-					PlgImmColour( 255, 255, 255, 255 );
-
-					faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
-				}
-
-				unsigned int numVertices                   = PlGetNumLinkedListNodes( face->edgeLoop );
-				mesh->firstSubMeshes[ mesh->numSubMeshes ] = ( mesh->numSubMeshes > 0 ) ? ( mesh->firstSubMeshes[ mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
-				mesh->subMeshes[ mesh->numSubMeshes ]      = ( int ) numVertices;
-
-				mesh->numSubMeshes++;
-			}
-#endif
 
 			PlClearVectorArray( lights );
 			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k )
@@ -357,9 +307,7 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 				}
 			}
 
-			apeDrawMesh( material, mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
-
-			mesh->numSubMeshes = 0;
+			apeDrawMesh( material, detailRoom->mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
 		}
 	}
 }
@@ -371,7 +319,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 		return;
 	}
 
-	ApeCamera *camera = ogeGetActiveCamera();
+	ApeCamera *camera = apeGetActiveCamera();
 	if ( camera == NULL )
 	{
 		return;
@@ -415,6 +363,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 		world->ambience = WORLD_DEFAULT_AMBIENCE;
 	}
 
+#if 0
 	//DrawDetailRooms( world, room );
 
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
@@ -430,7 +379,6 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 
 		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 
-#if 0
 		mesh->numSubMeshes = 0;
 		if ( mesh->subMeshes == NULL )
 		{
@@ -441,10 +389,9 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 		else if ( numFaces > mesh->maxSubMeshes )
 		{
 			mesh->maxSubMeshes   = numFaces;
-			mesh->subMeshes      = PL_REALLOCA( mesh->subMeshes, numFaces );
-			mesh->firstSubMeshes = PL_REALLOCA( mesh->firstSubMeshes, numFaces );
+			mesh->subMeshes      = PL_REALLOCA( mesh->subMeshes, ( numFaces * sizeof( int32_t ) ) );
+			mesh->firstSubMeshes = PL_REALLOCA( mesh->firstSubMeshes, ( numFaces * sizeof( int32_t ) ) );
 		}
-#endif
 
 		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
 		{
@@ -454,8 +401,6 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 			{
 				continue;
 			}
-
-			uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
@@ -471,9 +416,10 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}
 
-			//mesh->firstSubMeshes[ mesh->numSubMeshes ] = ( mesh->numSubMeshes > 0 ) ? ( mesh->firstSubMeshes[ mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
-			//mesh->subMeshes[ mesh->numSubMeshes ]      = ( int ) numVertices;
-			//mesh->numSubMeshes++;
+			uint32_t numVertices                       = PlGetNumLinkedListNodes( face->edgeLoop );
+			mesh->firstSubMeshes[ mesh->numSubMeshes ] = ( mesh->numSubMeshes > 0 ) ? ( mesh->firstSubMeshes[ mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
+			mesh->subMeshes[ mesh->numSubMeshes ]      = ( int ) numVertices;
+			mesh->numSubMeshes++;
 		}
 
 		PlClearVectorArray( lights );
@@ -494,8 +440,41 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 
 		apeDrawMesh( material, mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
 
-		//mesh->numSubMeshes = 0;
+		mesh->numSubMeshes = 0;
 	}
+#else
+
+	//DrawDetailRooms( world, room );
+
+	//for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	{
+		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, 1 );
+		assert( material != NULL );
+		//if ( material == NULL )
+		//{
+		//	continue;
+		//}
+
+		PlClearVectorArray( lights );
+		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k )
+		{
+			ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
+			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+			{
+				continue;
+			}
+
+			PlPushBackVectorArrayElement( lights, light );
+			if ( PlGetNumVectorArrayElements( lights ) >= 8 )
+			{
+				break;
+			}
+		}
+
+		apeDrawMesh( material, room->mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
+	}
+
+#endif
 }
 
 void apeDrawWorld_( ApeWorld *world )

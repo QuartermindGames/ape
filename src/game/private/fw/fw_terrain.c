@@ -17,7 +17,7 @@ static unsigned char terrainMinHeight, terrainMaxHeight;
 #	define TERRAIN_NUM_CHUNKS  ( TERRAIN_CHUNK_NUM_X * TERRAIN_CHUNK_NUM_Y )
 #endif
 
-static OgeMaterial *terrainMaterial = NULL;
+static ApeMaterial *terrainMaterial = NULL;
 static PLMModel *terrainModel          = NULL;
 
 #define TERRAIN_TILE_SPACING 64
@@ -36,7 +36,7 @@ void FW_Terrain_Shutdown( void )
 {
 	PlmDestroyModel( terrainModel );
 
-	ogeMaterial_Release( terrainMaterial );
+	apeReleaseMaterial( terrainMaterial );
 }
 
 /****************************************/
@@ -82,9 +82,13 @@ static bool ParseTerrainFile( PLFile *file )
 	for ( unsigned int i = 0; i < TERRAIN_HM_SIZE; ++i )
 	{
 		if ( terrainHeightmap[ i ] > terrainMaxHeight )
+		{
 			terrainMaxHeight = terrainHeightmap[ i ];
+		}
 		if ( terrainHeightmap[ i ] < terrainMinHeight )
+		{
 			terrainMinHeight = terrainHeightmap[ i ];
+		}
 	}
 
 	UpdateOverview();
@@ -103,7 +107,9 @@ bool FW_Terrain_Load( const char *path )
 
 	bool status = ParseTerrainFile( file );
 	if ( !status )
+	{
 		Game_Warning( "Failed to load terrain (%s)!\n", path );
+	}
 
 	PlCloseFile( file );
 

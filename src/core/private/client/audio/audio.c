@@ -51,7 +51,7 @@ static void PlayAudioCommand( unsigned int argc, char **argv )
 
 }
 
-void YnCore_InitializeAudio( void )
+void apeInitializeAudio_( void )
 {
 	if ( audioInitialized )
 		return;
@@ -241,7 +241,7 @@ void YnCore_AudioSample_Emit( YNCoreAudioSample *audioSample, int8_t volume )
 	CallAudioDriverFunction( EmitSample, audioSample, volume );
 }
 
-void YnCore_ShutdownAudio( void )
+void apeShutdownAudio_( void )
 {
 	if ( !audioInitialized )
 		return;
@@ -251,7 +251,7 @@ void YnCore_ShutdownAudio( void )
 	audioInitialized = false;
 }
 
-void YnCore_TickAudio( void )
+void apeTickAudio_( void )
 {
 	if ( !audioInitialized )
 		return;

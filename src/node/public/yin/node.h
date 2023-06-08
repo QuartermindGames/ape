@@ -5,8 +5,6 @@
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_math.h>
 
-#include "common.h"
-
 PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;

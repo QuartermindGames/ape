@@ -22,7 +22,7 @@ typedef struct FWPieMenuOption
 {
 	PLLinkedListNode *node;
 	char label[ 64 ];
-	struct OgeMaterial *icon;
+	struct ApeMaterial *icon;
 	FWPieMenuOptionCallback callback;
 	FWPieMenu *parent;
 } FWPieMenuOption;
@@ -40,7 +40,9 @@ FWPieMenu *FW_Menu_CreatePie( void )
 void FW_Menu_DestroyPie( FWPieMenu *menu )
 {
 	if ( menu == NULL )
+	{
 		return;
+	}
 
 	// destroy all the pie options
 	PLLinkedListNode *node = PlGetFirstNode( menu->options );
@@ -59,25 +61,32 @@ void FW_Menu_TickPie( FWPieMenu *menu )
 	//menu->angle += 0.5f;
 
 	if ( menu->velocity != 0 )
+	{
 		menu->velocity -= menu->velocity / 8.0f;
+	}
 	menu->angle += menu->velocity;
 
 	if ( menu->scale < 1.0f )
+	{
 		menu->scale += 0.05f;
+	}
 }
 
 bool FW_Menu_HandlePieInput( FWPieMenu *menu )
 {
 	if ( !menu->isActive )
+	{
 		return false;
+	}
 
 	// if the active option is null, reset it to the first slot
 	if ( menu->activeOption == NULL )
 	{
 		menu->activeOption = PlGetFirstNode( menu->options );
 		if ( menu->activeOption == NULL )
-			// probably no options available, just return...
+		{// probably no options available, just return...
 			return false;
+		}
 	}
 
 #if 0// why would you do a pie menu this way... ? dummy
@@ -115,37 +124,42 @@ bool FW_Menu_HandlePieInput( FWPieMenu *menu )
 	else
 #endif
 
-	PLVector2 joyPos = YnCore_Input_GetStickStatus( 0, 0 );
+	PLVector2 joyPos = apeGetJoystickStatus( 0, 0 );
 	menu->cursor     = joyPos;
 
-	if ( YnCore_Input_GetButtonStatus( 0, INPUT_A ) == YN_CORE_INPUT_STATE_PRESSED )
+	if ( apeGetButtonStatus( 0, INPUT_A ) == OGE_INPUT_STATE_PRESSED )
 	{
 		Game_Debug( "Selected item...\n" );
 
 		FWPieMenuOption *option;
 		if ( menu->targetOption != NULL )
-			// option we're trying to get to
+		{// option we're trying to get to
 			option = PlGetLinkedListNodeUserData( menu->targetOption );
+		}
 		else if ( menu->activeOption != NULL )
-			// option we're currently at
+		{// option we're currently at
 			option = PlGetLinkedListNodeUserData( menu->activeOption );
+		}
 		else
-			// nothing to select!
+		{// nothing to select!
 			return true;
+		}
 
 		if ( option->callback == NULL )
+		{
 			return true;
+		}
 
 		option->callback( menu, option, NULL );
 		return true;
 	}
 
-	if ( YnCore_Input_GetButtonStatus( 0, INPUT_RB ) != YN_CORE_INPUT_STATE_NONE )
+	if ( apeGetButtonStatus( 0, INPUT_RB ) != OGE_INPUT_STATE_NONE )
 	{
 		menu->velocity -= 1.5f;
 		return true;
 	}
-	else if ( YnCore_Input_GetButtonStatus( 0, INPUT_LB ) != YN_CORE_INPUT_STATE_NONE )
+	else if ( apeGetButtonStatus( 0, INPUT_LB ) != OGE_INPUT_STATE_NONE )
 	{
 		menu->velocity += 1.5f;
 		return true;
@@ -188,7 +202,7 @@ static void DrawPieOption( FWPieMenuOption *option, float x, float y, bool isSel
 		return;
 	}
 
-	ogeMaterial_DrawMesh( option->icon, mesh, NULL, 0 );
+	apeDrawMesh( option->icon, mesh, NULL, 0 );
 }
 
 static FWPieMenuOption *GetSelectedOption( FWPieMenu *menu )
@@ -249,7 +263,7 @@ void FW_Menu_SetPieActive( FWPieMenu *menu, bool active )
 	menu->scale    = 0.0f;
 }
 
-FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct OgeMaterial *icon, FWPieMenuOptionCallback callback )
+FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct ApeMaterial *icon, FWPieMenuOptionCallback callback )
 {
 	FWPieMenuOption *option = PL_NEW( FWPieMenuOption );
 	option->node            = PlInsertLinkedListNode( menu->options, option );
@@ -276,19 +290,27 @@ void FW_Menu_DestroyPieOption( FWPieMenuOption *option )
 	{
 		// Just reset the target option back to NULL
 		if ( menu->targetOption != NULL )
+		{
 			menu->targetOption = NULL;
+		}
 		// And reset the active option to the first node if it's the same as our selection
 		if ( menu->activeOption != NULL && ( ( FWPieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option )
+		{
 			menu->activeOption = PlGetFirstNode( menu->options );
+		}
 
 		menu->w -= 32;
 		menu->h -= 32;
 	}
 	else
+	{
 		Game_Warning( "Encountered a pie option with no parent!\n" );
+	}
 
 	if ( option->icon != NULL )
-		ogeMaterial_Release( option->icon );
+	{
+		apeReleaseMaterial( option->icon );
+	}
 
 	PL_DELETE( option );
 }

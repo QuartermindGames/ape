@@ -16,13 +16,13 @@ EditorStatus YnCore_GetEditorStatus( void );
 
 void ogeRegisterEditorConsoleVariables_( void );
 
-void YnCore_InitializeEditor( void );
-void ogeShutdownEditor( void );
-void YnCore_TickEditor( void );
+void apeInitializeEditor_( void );
+void apeShutdownEditor_( void );
+void apeTickEditor_( void );
 
 void YnCore_DrawEditorGUI( const ApeViewport *viewport );
 
-ApeEditorContext *YnCore_GetCurrentEditorContext( void );
+ApeEditorContext *apeGetCurrentEditorContext( void );
 ApeEditorContext *YnCore_GetEditorContext( const char *identifier );
 ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type );
 bool YnCore_IsEditorContextActive( const char *identifier );

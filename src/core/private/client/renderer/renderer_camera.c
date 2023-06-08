@@ -15,12 +15,12 @@ static PLLinkedList *cameras;
 
 static ApeCamera *activeCamera = NULL;
 
-ApeCamera *ogeGetActiveCamera( void )
+ApeCamera *apeGetActiveCamera( void )
 {
 	return activeCamera;
 }
 
-void ogeMakeCameraActive( ApeCamera *camera )
+void apeMakeCameraActive( ApeCamera *camera )
 {
 	activeCamera = camera;
 }
@@ -28,12 +28,12 @@ void ogeMakeCameraActive( ApeCamera *camera )
 /****************************************
  ****************************************/
 
-ApeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
 
-	camera->mode     = OGE_CAMERA_MODE_PERSPECTIVE;
-	camera->drawMode = OGE_CAMERA_DRAW_MODE_SHADED;
+	camera->mode     = APE_CAMERA_MODE_PERSPECTIVE;
+	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == NULL )
@@ -48,8 +48,8 @@ ApeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PL
 
 	camera->internal->fov = 75.0f;
 	camera->internal->far = 1000000.0f;
-	ogeSetCameraPosition( camera, position );
-	ogeSetCameraAngles( camera, angles );
+	apeSetCameraPosition( camera, position );
+	apeSetCameraAngles( camera, angles );
 
 	if ( cameras == NULL )
 	{
@@ -70,7 +70,7 @@ ApeCamera *ogeCreateCamera( const char *tag, const PLVector3 *position, const PL
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void ogeDestroyCamera( ApeCamera *camera )
+void apeDestroyCamera( ApeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -96,7 +96,7 @@ void ogeDestroyCamera( ApeCamera *camera )
 	}
 }
 
-void ogeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
+void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 
@@ -112,33 +112,33 @@ void ogeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 	}
 }
 
-void ogeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
+void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 	PlAnglesAxes( camera->internal->angles, NULL, NULL, &camera->forward );
 }
 
-PLVector3 ogeGetCameraPosition( ApeCamera *camera )
+PLVector3 apeGetCameraPosition( ApeCamera *camera )
 {
 	return camera->internal->position;
 }
 
-PLVector3 ogeGetCameraAngles( ApeCamera *camera )
+PLVector3 apeGetCameraAngles( ApeCamera *camera )
 {
 	return camera->internal->angles;
 }
 
-PLVector3 ogeGetCameraForward( ApeCamera *camera )
+PLVector3 apeGetCameraForward( ApeCamera *camera )
 {
 	return camera->forward;
 }
 
-void ogeDrawScene_( ApeCamera *camera, const ApeViewport *viewport );
+void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport );
 void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	if ( camera == NULL )
 	{
-		camera = ogeGetActiveCamera();
+		camera = apeGetActiveCamera();
 		if ( camera == NULL )
 		{
 			return;
@@ -175,7 +175,6 @@ void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 
 	PLVector3 angles;
 	PLVector3 position;
-	float speed;
 
 	/* if we have a parent, follow them */
 	Actor *parent = camera->parentActor;
@@ -194,14 +193,15 @@ void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 		position = camera->internal->position;
 	}
 
+	float speed;
 	switch ( camera->mode )
 	{
 		default: break;
-		case OGE_CAMERA_MODE_PERSPECTIVE:
+		case APE_CAMERA_MODE_PERSPECTIVE:
 			camera->internal->angles   = angles;
 			camera->internal->position = position;
 			break;
-		case OGE_CAMERA_MODE_TOP:
+		case APE_CAMERA_MODE_TOP:
 		{
 			if ( camera->parentActor != NULL )
 			{
@@ -225,5 +225,5 @@ void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 	PlgSetupCamera( camera->internal );
 
 	// Draw the scene into a buffer
-	ogeDrawScene_( camera, viewport );
+	apeDrawScene_( camera, viewport );
 }

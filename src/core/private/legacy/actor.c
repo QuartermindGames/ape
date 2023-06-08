@@ -229,7 +229,7 @@ bool Act_IsVisible( Actor *self, ApeCamera *camera )
 
 void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 {
-	OGE_PROFILE_START( PROFILE_DRAW_ACTORS );
+	APE_PROFILE_START( PROFILE_DRAW_ACTORS );
 
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL )
@@ -301,7 +301,7 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 		index = next;
 	}
 
-	OGE_PROFILE_END( PROFILE_DRAW_ACTORS );
+	APE_PROFILE_END( PROFILE_DRAW_ACTORS );
 }
 
 #define GRAVITY 7.0f
@@ -370,6 +370,7 @@ void Act_TickActors( void *userData, double delta )
 
 		/* first need to figure out what faces we're intersecting with */
 
+#if 0
 		PlDestroyLinkedListNodes( actor->geoColliders );
 		if ( actor->sector != NULL )
 		{
@@ -405,6 +406,7 @@ void Act_TickActors( void *userData, double delta )
 			}
 			PL_DELETE( faces );
 		}
+#endif
 
 		if ( actor->setup.Tick != NULL )
 		{

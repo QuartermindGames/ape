@@ -51,7 +51,7 @@ static void DestroyWorldCommand( unsigned int argc, char **argv )
 
 static void CreateMeshCommand( unsigned int argc, char **argv )
 {
-	ApeEditorContext *editorInstance = YnCore_GetCurrentEditorContext();
+	ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 	if ( editorInstance == NULL )
 	{
 		PRINT_WARNING( "Command failed - no active instance!\n" );
@@ -124,9 +124,9 @@ static void ToggleView( ApeInputState state )
 	}
 
 	context.camera->mode++;
-	if ( context.camera->mode >= OGE_CAMERA_MAX_MODES )
+	if ( context.camera->mode >= APE_CAMERA_MAX_MODES )
 	{
-		context.camera->mode = OGE_CAMERA_MODE_PERSPECTIVE;
+		context.camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
 	}
 }
 
@@ -136,12 +136,12 @@ static void InitializeWorldEditor( void )
 	{
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = ogeCreateCamera( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = apeCreateCamera( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera           = cameras[ 0 ];
-	context.camera->mode     = OGE_CAMERA_MODE_TOP;
-	context.camera->drawMode = OGE_CAMERA_DRAW_MODE_WIREFRAME;
+	context.camera->mode     = APE_CAMERA_MODE_TOP;
+	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
 
 	apeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
 	apeRegisterInputAction( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
@@ -161,7 +161,7 @@ static void DrawWorldEditorGUI( void )
 	int w, h;
 	PlgGetViewport( NULL, NULL, &w, &h );
 
-	if ( context.camera != NULL && ( context.camera->mode != OGE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
+	if ( context.camera != NULL && ( context.camera->mode != APE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
@@ -186,16 +186,16 @@ static void DrawWorldEditorGUI( void )
 		{
 			default:
 				break;
-			case OGE_CAMERA_MODE_TOP:
+			case APE_CAMERA_MODE_TOP:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
 				break;
-			case OGE_CAMERA_MODE_LEFT:
+			case APE_CAMERA_MODE_LEFT:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ 0.0f, -y, -x } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
 				break;
-			case OGE_CAMERA_MODE_FRONT:
+			case APE_CAMERA_MODE_FRONT:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
 				break;
@@ -210,11 +210,11 @@ static void DrawWorldEditorGUI( void )
 		tmp.internal = apeGetAuxCamera();
 		switch ( context.camera->drawMode )
 		{
-			case OGE_CAMERA_DRAW_MODE_WIREFRAME:
+			case APE_CAMERA_DRAW_MODE_WIREFRAME:
 				apeDrawWorldWireframe_( world, &tmp );
 				break;
-			case OGE_CAMERA_DRAW_MODE_SOLID:
-			case OGE_CAMERA_DRAW_MODE_TEXTURED:
+			case APE_CAMERA_DRAW_MODE_SOLID:
+			case APE_CAMERA_DRAW_MODE_TEXTURED:
 				apeDrawWorld_( world );
 				break;
 			default:
@@ -239,16 +239,16 @@ static void DrawWorldEditorGUI( void )
 		switch ( context.camera->mode )
 		{
 			default:
-			case OGE_CAMERA_MODE_FRONT:
+			case APE_CAMERA_MODE_FRONT:
 				label = "Front";
 				break;
-			case OGE_CAMERA_MODE_LEFT:
+			case APE_CAMERA_MODE_LEFT:
 				label = "Left";
 				break;
-			case OGE_CAMERA_MODE_PERSPECTIVE:
+			case APE_CAMERA_MODE_PERSPECTIVE:
 				label = "Perspective";
 				break;
-			case OGE_CAMERA_MODE_TOP:
+			case APE_CAMERA_MODE_TOP:
 				label = "Top";
 				break;
 		}

@@ -61,15 +61,15 @@ void apeEndProfilerFrame( void );
 void Profiler_StartMeasure( ApeProfilerGroup group );
 void Profiler_EndMeasure( ApeProfilerGroup group );
 double apeGetProfilerMeasure( ApeProfilerGroup group );
-#	define OGE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
-#	define OGE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
+#	define APE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
+#	define APE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
 #else
 #	define Profiler_Initialize()
 #	define Profiler_StartMeasure()
 #	define Profiler_EndMeasure()
 #	define Profiler_GetMeasure() 0
-#	define PROFILE_START( GROUP )
-#	define PROFILE_END( GROUP )
+#	define APE_PROFILE_START( GROUP )
+#	define APE_PROFILE_END( GROUP )
 #endif
 void apeUpdateProfilerGraphs( void );
 const double *apeGetProfilerGraph( ApeProfilerGroup group, uint8_t *numPoints );

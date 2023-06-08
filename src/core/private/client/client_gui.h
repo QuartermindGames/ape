@@ -6,10 +6,10 @@
 
 PL_EXTERN_C
 
-void YnCore_InitializeGUI( void );
-void YnCore_ShutdownGUI( void );
+void apeInitializeGUI_( void );
+void apeShutdownGUI_( void );
 void ogeDrawGUI_( const ApeViewport *viewport );
-void YnCore_TickGUI( void );
+void apeTickGUI_( void );
 void YnCore_ResizeGUI( int w, int h );
 GUIPanel *YnCore_GetGUIRootPanel( void );
 
