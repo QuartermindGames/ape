@@ -345,7 +345,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
 	{
-		return;
+		//return;
 	}
 
 	if ( lights == NULL )
@@ -444,7 +444,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 	}
 #else
 
-	//DrawDetailRooms( world, room );
+	DrawDetailRooms( world, room );
 
 	//for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{

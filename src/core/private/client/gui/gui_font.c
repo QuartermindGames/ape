@@ -311,7 +311,7 @@ void GUI_Font_Display( GUIFont *font )
 	PlLoadIdentityMatrix();
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ] );
-	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
+	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 

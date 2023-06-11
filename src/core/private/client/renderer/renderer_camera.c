@@ -115,7 +115,6 @@ void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
-	PlAnglesAxes( camera->internal->angles, NULL, NULL, &camera->forward );
 }
 
 PLVector3 apeGetCameraPosition( ApeCamera *camera )

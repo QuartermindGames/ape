@@ -40,6 +40,10 @@ static const uint32_t WORLD_MAGIC = 0xd4bada55;
 
 static const int32_t WORLD_VERSION_MIN = 161;
 static const int32_t WORLD_VERSION_MAX = 180;
+// version history...
+//	161				Red Faction (PS2 Prototype)
+//
+// 	482 (TODO)		The Punisher (PS2)
 
 #define APE_WORLD_CHUNK_GEOMETRY        0x100
 #define APE_WORLD_CHUNK_GEOREGIONS      0x200
@@ -51,6 +55,8 @@ static const int32_t WORLD_VERSION_MAX = 180;
 #define APE_WORLD_CHUNK_DECALS          0x1000
 #define APE_WORLD_CHUNK_LIGHTMAP        0x1200
 #define APE_WORLD_CHUNK_BRUSH           0x2000
+#define APE_WORLD_CHUNK_ENTITIES        0x30000
+#define APE_WORLD_CHUNK_PLAYERSTART     0x70000
 
 static char *ParseString( PLFile *file, uint16_t *size )
 {
@@ -67,15 +73,17 @@ static char *ParseString( PLFile *file, uint16_t *size )
 
 static PLVector3 ParseVector( PLFile *file )
 {
-	return ( PLVector3 ){
+	PLVector3 v = ( PLVector3 ){
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ) };
+	assert( !PlIsVector3NaN( &v ) );
+	return v;
 }
 
 static PLMatrix3 ParseMat3( PLFile *file )
 {
-	return ( PLMatrix3 ){
+	PLMatrix3 m = ( PLMatrix3 ){
 	        // forward
 	        .m[ 0 ] = PlReadFloat32( file, false, NULL ),
 	        .m[ 1 ] = PlReadFloat32( file, false, NULL ),
@@ -89,6 +97,8 @@ static PLMatrix3 ParseMat3( PLFile *file )
 	        .m[ 7 ] = PlReadFloat32( file, false, NULL ),
 	        .m[ 8 ] = PlReadFloat32( file, false, NULL ),
 	};
+	assert( !PlIsVectorNaN( m.m, 9 ) );
+	return m;
 }
 
 static PLColour ParseColour( PLFile *file )
@@ -144,9 +154,7 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 		room->uid = PlReadInt32( file, false, NULL );
 
 		room->bounds.mins = ParseVector( file );
-		assert( !PlIsVector3NaN( &room->bounds.mins ) );
 		room->bounds.maxs = ParseVector( file );
-		assert( !PlIsVector3NaN( &room->bounds.maxs ) );
 
 		room->isSky               = ( bool ) PL_READUINT8( file, NULL );
 		room->isCold              = ( bool ) PL_READUINT8( file, NULL );
@@ -247,9 +255,7 @@ static void ParseStaticGeometryPortals( ApeWorld *world, PLFile *file )
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
 		PLVector3 mins = ParseVector( file );
-		assert( !PlIsVector3NaN( &mins ) );
 		PLVector3 maxs = ParseVector( file );
-		assert( !PlIsVector3NaN( &maxs ) );
 
 		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
 		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
@@ -280,7 +286,6 @@ static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file )
 	{
 		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
 		vertex->position       = ParseVector( file );
-		assert( !PlIsVector3NaN( &vertex->position ) );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
@@ -399,10 +404,8 @@ static void ParseStaticGeometryLightmaps( ApeWorld *world, PLFile *file )
 		float yPerMeter = PlReadFloat32( file, false, NULL );// y pixels per meter
 		assert( !isnan( yPerMeter ) );
 
-		PLVector3 min = ParseVector( file );// min
-		assert( !PlIsVector3NaN( &min ) );
-		PLVector3 max = ParseVector( file );// max
-		assert( !PlIsVector3NaN( &max ) );
+		PLVector3 min = ParseVector( file );                 // min
+		PLVector3 max = ParseVector( file );                 // max
 
 		ParseVector( file );                                 // eq
 		PlReadFloat32( file, false, NULL );                  // offset
@@ -492,7 +495,6 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 
 			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( room->faces ); ++k )
 			{
-
 			}
 		}
 
@@ -535,6 +537,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 				continue;
 			}
 
+#if 0
 			PLColour roomColour;
 			if ( room->ambientLightDefined )
 			{
@@ -544,6 +547,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			{
 				roomColour = PlColourF32ToU8( &WORLD_DEFAULT_AMBIENCE );
 			}
+#endif
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
@@ -554,7 +558,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 				PlgAddMeshVertex( room->mesh,
 				                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
 				                  &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
-				                  &( PLColour ){ roomColour.r, roomColour.g, roomColour.b, 255 },
+				                  &( PLColour ){ 255, 255, 255, 255 },
 				                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
@@ -587,7 +591,6 @@ static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 		PL_DELETE( tmp );
 
 		light->position = ParseVector( file );
-		assert( !PlIsVector3NaN( &light->position ) );
 
 		ParseMat3( file );               // rotation
 
@@ -616,6 +619,12 @@ static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 
 		PlPushBackVectorArrayElement( world->lights, light );
 	}
+}
+
+static void ParsePlayerStart( ApeWorld *world, PLFile *file, int32_t version )
+{
+	world->startPosition    = ParseVector( file );
+	world->startOrientation = ParseMat3( file );
 }
 
 static ApeWorld *ParseWorldFile( PLFile *file )
@@ -673,6 +682,9 @@ static ApeWorld *ParseWorldFile( PLFile *file )
 				break;
 			case APE_WORLD_CHUNK_LIGHTS:
 				ParseLightsChunk( world, file, version );
+				break;
+			case APE_WORLD_CHUNK_PLAYERSTART:
+				ParsePlayerStart( world, file, version );
 				break;
 			default:
 				PRINT_DEBUG( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );

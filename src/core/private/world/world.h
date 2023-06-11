@@ -225,6 +225,9 @@ typedef struct ApeWorld
 
 	PLLinkedList *entities;
 
+	PLVector3 startPosition;
+	PLMatrix3 startOrientation;
+
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *portals;  // ApeWorldPortal
