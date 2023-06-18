@@ -2,8 +2,8 @@
 
 #include <plcore/pl_filesystem.h>
 
-#include "core_private.h"
-#include "core_binary_serializer.h"
+#include "ape_private.h"
+#include "ape_binary_serializer.h"
 
 // Carried over from Compton, 2022-03-16
 

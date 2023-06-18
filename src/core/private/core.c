@@ -2,15 +2,15 @@
 
 #include <plmodel/plm.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include <yin/core_game.h>
 
-#include "core_filesystem.h"
-#include "core_model.h"
+#include "ape_filesystem.h"
+#include "ape_model.h"
 
-#include "client/client.h"
-#include "client/client_input.h"
+#include "client/ape_client.h"
+#include "client/ape_client_input.h"
 #include "editor/editor.h"
 
 #include "server/server.h"

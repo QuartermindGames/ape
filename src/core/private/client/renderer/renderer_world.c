@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 #include "world/world.h"
 #include "legacy/actor.h"
@@ -277,7 +277,7 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 	{
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, i );
 		assert( detailRoom != NULL );
-		if ( detailRoom == NULL )
+		if ( detailRoom == NULL || !PlgIsBoxInsideView( camera->internal, &detailRoom->bounds ) )
 		{
 			continue;
 		}
@@ -309,6 +309,8 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 
 			apeDrawMesh( material, detailRoom->mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
 		}
+
+		ape_RendererPerformance_.numDetailRooms++;
 	}
 }
 
@@ -345,7 +347,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
 	{
-		//return;
+		return;
 	}
 
 	if ( lights == NULL )
@@ -475,6 +477,8 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 	}
 
 #endif
+
+	ape_RendererPerformance_.numRooms++;
 }
 
 void apeDrawWorld_( ApeWorld *world )

@@ -2,8 +2,8 @@
 
 #include <SDL2/SDL.h>
 
-#include "core_private.h"
-#include "client_input.h"
+#include "ape_private.h"
+#include "ape_client_input.h"
 #include "gui/gui_private.h"
 
 #include <yin/node.h>
@@ -303,7 +303,7 @@ void Client_Input_HandleKeyboardEvent( int key, ApeInputState keyState )
 
 void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState )
 {
-	GUI_UpdateMouseButton( button, ( buttonState == OGE_INPUT_STATE_DOWN ) );
+	guiUpdateMouseButton( button, ( buttonState == OGE_INPUT_STATE_DOWN ) );
 
 	if ( buttonState != OGE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == OGE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == OGE_INPUT_STATE_DOWN ) )
 	{
@@ -325,7 +325,7 @@ void Client_Input_HandleMouseWheelEvent( float x, float y )
 		return;
 	}
 
-	GUI_UpdateMouseWheel( x, y );
+	guiUpdateMouseWheel( x, y );
 }
 
 void Client_Input_HandleMouseMotionEvent( int x, int y )
@@ -335,7 +335,7 @@ void Client_Input_HandleMouseMotionEvent( int x, int y )
 	inputMouse.x  = x;
 	inputMouse.y  = y;
 
-	GUI_UpdateMousePosition( inputMouse.x, inputMouse.y );
+	guiUpdateMousePosition( inputMouse.x, inputMouse.y );
 }
 
 void apeGetMousePosition( int *x, int *y )
@@ -356,14 +356,15 @@ void apeBeginInputFrame_( void )
 	//int ox = inputMouse.x;
 	//int oy = inputMouse.y;
 
-	int w, h;
-	apeShellInterface_GetWindowSize( &w, &h );
-	int cx = w / 2;
-	int cy = h / 2;
-
 	// Calculate delta
-	inputMouse.dx = ( cx - inputMouse.x );
-	inputMouse.dy = ( cy - inputMouse.y );
+	if ( !apeIsConsoleOpen() )
+	{
+		int w, h;
+		apeShellInterface_GetWindowSize( &w, &h );
+
+		inputMouse.dx = ( ( w / 2 ) - inputMouse.x );
+		inputMouse.dy = ( ( h / 2 ) - inputMouse.y );
+	}
 }
 
 static bool GetSDLButtonState( SDL_GameController *gameController, ApeInputButton button )
@@ -499,7 +500,14 @@ void apeEndInputFrame_( void )
 
 	int w, h;
 	apeShellInterface_GetWindowSize( &w, &h );
-	apeShellInterface_SetMousePosition( w / 2, h / 2 );
+
+	if ( !apeIsConsoleOpen() )
+	{
+		apeShellInterface_SetMousePosition( w / 2, h / 2 );
+	}
+
+	inputMouse.x = ( w / 2 );
+	inputMouse.y = ( h / 2 );
 }
 
 unsigned int apeGetNumControllers( void ) { return numControllers; }

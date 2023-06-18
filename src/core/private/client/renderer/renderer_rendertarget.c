@@ -4,7 +4,7 @@
 
 #include <plgraphics/plg_framebuffer.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 
 typedef struct ApeRenderTarget

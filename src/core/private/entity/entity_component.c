@@ -4,7 +4,7 @@
 
 #include <plcore/pl_hashtable.h>
 
-#include "../core_private.h"
+#include "../ape_private.h"
 
 #include "entity.h"
 

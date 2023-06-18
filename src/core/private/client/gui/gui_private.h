@@ -10,15 +10,15 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_texture.h>
 
-typedef struct GUIState
+typedef struct GuiState
 {
 	GUIVector2 mousePos, mouseOldPos;
-	PLVector2  mouseWheel, mouseOldWheel;
+	PLVector2 mouseWheel, mouseOldWheel;
 
 	unsigned int numBatches, lastNumBatches;    // number of batches this frame
 	unsigned int numTriangles, lastNumTriangles;// number of triangles drawn this frame
-} GUIState;
-extern GUIState guiState;
+} GuiState;
+extern GuiState guiState;
 
 /****************************************
  * Logging
@@ -34,12 +34,12 @@ enum
 	GUI_MAX_LOG_LEVELS
 };
 
-extern int guiLogLevels[ GUI_MAX_LOG_LEVELS ];
+extern int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 
-#define GUI_Print( ... )   PlLogMessage( guiLogLevels[ GUI_LOGLEVEL_DEFAULT ], __VA_ARGS__ )
-#define GUI_Warning( ... ) PlLogMessage( guiLogLevels[ GUI_LOGLEVEL_WARNING ], __VA_ARGS__ )
-#define GUI_Error( ... )   PlLogMessage( guiLogLevels[ GUI_LOGLEVEL_ERROR ], __VA_ARGS__ )
-#define GUI_Debug( ... )   PlLogMessage( guiLogLevels[ GUI_LOGLEVEL_DEBUG ], __VA_ARGS__ )
+#define GUI_PRINT( ... )   PlLogMessage( gui_LogLevels_[ GUI_LOGLEVEL_DEFAULT ], __VA_ARGS__ )
+#define GUI_WARNING( ... ) PlLogMessage( gui_LogLevels_[ GUI_LOGLEVEL_WARNING ], __VA_ARGS__ )
+#define GUI_ERROR( ... )   PlLogMessage( gui_LogLevels_[ GUI_LOGLEVEL_ERROR ], __VA_ARGS__ )
+#define GUI_DEBUG( ... )   PlLogMessage( guiLogLevels[ GUI_LOGLEVEL_DEBUG ], __VA_ARGS__ )
 
 /****************************************
  ****************************************/
@@ -91,32 +91,32 @@ enum
 	GUI_MAX_BORDER_ELEMENTS
 };
 
-typedef struct GUIStyleElement
+typedef struct GuiStyleElement
 {
 	int tl, tr;
 	int ll, lr;
-} GUIStyleElement;
+} GuiStyleElement;
 
-typedef struct GUIStyleSheet
+typedef struct GuiStyleSheet
 {
 	PLGTexture *texture;
-	PLPath      path;
+	PLPath path;
 
 	PLColourF32 colours[ GUI_MAX_DEFAULT_COLOURS ];
 
-	GUIPanelBorder borderStyle;
-	int            borderPadding[ GUI_MAX_BORDER_ELEMENTS ];
+	GuiPanelBorder borderStyle;
+	int borderPadding[ GUI_MAX_BORDER_ELEMENTS ];
 
-	GUIStyleElement frameElements[ GUI_MAX_FRAME_ELEMENTS ];
-	GUIStyleElement cursorElements[ GUI_MAX_CURSOR_STATES ];
-} GUIStyleSheet;
+	GuiStyleElement frameElements[ GUI_MAX_FRAME_ELEMENTS ];
+	GuiStyleElement cursorElements[ GUI_MAX_CURSOR_STATES ];
+} GuiStyleSheet;
 
-PLGTexture *GUI_CacheTexture( const char *path );
+PLGTexture *guiCacheTexture( const char *path );
 
-bool GUI_Font_Initialize( void );
+bool guiInitializeFonts_( void );
 
-void     GUI_Draw_Initialize( void );
-void     GUI_Draw_Shutdown( void );
+void guiInitializeDraw_( void );
+void guiShutdownDraw_( void );
 PLGMesh *GUI_Draw_GetBatchQueueMesh( PLGTexture *texture );
-void     GUI_Draw_FilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour );
-void     GUI_Draw_Quad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour );
+void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour );
+void guiDrawQuad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour );

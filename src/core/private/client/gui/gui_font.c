@@ -3,7 +3,7 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_array_vector.h>
 
-#include "../../core_private.h"
+#include "../../ape_private.h"
 
 #include "gui_private.h"
 #include "common_format_fnt.h"
@@ -14,7 +14,7 @@
  * GUI BITMAP FONT API
  ****************************************/
 
-typedef struct GUIFont
+typedef struct GuiFont
 {
 	PLGTexture *texture;
 
@@ -26,20 +26,20 @@ typedef struct GUIFont
 	float tabWidth;
 
 	PLGMesh *mesh;
-} GUIFont;
+} GuiFont;
 
 static PLVectorArray *cachedFonts;
 static PLHashTable *cachedFontsTable;
-static GUIFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
+static GuiFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
-float GUI_Font_GetLineSpacing( const GUIFont *font ) { return font->lineSpacing; }
+float guiGetFontLineSpacing( const GuiFont *font ) { return font->lineSpacing; }
 
-GUIFont *GUI_Font_GetDefault( GUIFontDefaultType defaultType )
+GuiFont *guiGetDefaultFont( GuiFontDefaultType defaultType )
 {
 	return defaultFonts[ defaultType ];
 }
 
-void GUI_Font_Destroy( GUIFont *font )
+void guiDestroyFont( GuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
 	PlgDestroyTexture( font->texture );
@@ -48,13 +48,13 @@ void GUI_Font_Destroy( GUIFont *font )
 	PL_DELETE( font );
 }
 
-GUIFont *GUI_Font_Deserialize( PLFile *file )
+GuiFont *guiDeserializeFont( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	assert( magic == OSW_FONT_MAGIC );
 	if ( magic != OSW_FONT_MAGIC )
 	{
-		GUI_Warning( "Invalid font file!\n" );
+		GUI_WARNING( "Invalid font file!\n" );
 		return NULL;
 	}
 
@@ -62,7 +62,7 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 	assert( version <= OSW_FONT_VERSION );
 	if ( version > OSW_FONT_VERSION )
 	{
-		GUI_Warning( "Unsupported font version (%u)!\n", version );
+		GUI_WARNING( "Unsupported font version (%u)!\n", version );
 		return NULL;
 	}
 
@@ -70,11 +70,11 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 	assert( numGlyphs != 0 );
 	if ( numGlyphs == 0 )
 	{
-		GUI_Warning( "Empty font file!\n" );
+		GUI_WARNING( "Empty font file!\n" );
 		return NULL;
 	}
 
-	GUIFont *font    = PL_NEW( GUIFont );
+	GuiFont *font    = PL_NEW( GuiFont );
 	font->glyphTable = PlCreateHashTable();
 	font->glyphs     = PL_NEW_( OSWFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i )
@@ -99,8 +99,8 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 	assert( bitmapW != 0 && bitmapH != 0 );
 	if ( bitmapW == 0 || bitmapH == 0 )
 	{
-		GUI_Font_Destroy( font );
-		GUI_Warning( "Invalid bitmap size for font!\n" );
+		guiDestroyFont( font );
+		GUI_WARNING( "Invalid bitmap size for font!\n" );
 		return NULL;
 	}
 
@@ -108,16 +108,16 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 	PLImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
 	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
-		GUI_Font_Destroy( font );
-		GUI_Warning( "Failed to load entirity of bitmap image from font!\n" );
+		guiDestroyFont( font );
+		GUI_WARNING( "Failed to load entirity of bitmap image from font!\n" );
 		return NULL;
 	}
 
 	font->texture = PlgCreateTexture();
 	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
 	{
-		GUI_Font_Destroy( font );
-		GUI_Warning( "Failed to upload texture data for font!\n" );
+		guiDestroyFont( font );
+		GUI_WARNING( "Failed to upload texture data for font!\n" );
 		return NULL;
 	}
 
@@ -128,23 +128,23 @@ GUIFont *GUI_Font_Deserialize( PLFile *file )
 	return font;
 }
 
-GUIFont *GUI_Font_LoadFile( const char *path )
+GuiFont *guiLoadFontFile( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		GUI_Warning( "Failed to load font: %s\n", PlGetError() );
+		GUI_WARNING( "Failed to load font: %s\n", PlGetError() );
 		return NULL;
 	}
 
-	GUIFont *font = GUI_Font_Deserialize( file );
+	GuiFont *font = guiDeserializeFont( file );
 
 	PlCloseFile( file );
 
 	return font;
 }
 
-bool GUI_Font_Initialize( void )
+bool guiInitializeFonts_( void )
 {
 	cachedFonts      = PlCreateVectorArray( GUI_MAX_FONT_DEFAULTS );
 	cachedFontsTable = PlCreateHashTable();
@@ -157,11 +157,11 @@ bool GUI_Font_Initialize( void )
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{
-		defaultFonts[ i ] = GUI_Font_LoadFile( fontPaths[ i ] );
+		defaultFonts[ i ] = guiLoadFontFile( fontPaths[ i ] );
 		assert( defaultFonts[ i ] != NULL );
 		if ( defaultFonts[ i ] == NULL )
 		{
-			GUI_Error( "Failed to load default font (%s)!\n", fontPaths[ i ] );
+			GUI_ERROR( "Failed to load default font (%s)!\n", fontPaths[ i ] );
 			return false;
 		}
 	}
@@ -169,7 +169,7 @@ bool GUI_Font_Initialize( void )
 	return true;
 }
 
-void GUI_Font_GetCharacterPixelSize( const GUIFont *font, float scale, uint32_t character, float *dw, float *dh )
+void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh )
 {
 	const OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	assert( glyph != NULL );
@@ -184,14 +184,14 @@ void GUI_Font_GetCharacterPixelSize( const GUIFont *font, float scale, uint32_t 
 	if ( dh != NULL ) { *dh = glyph->h; }
 }
 
-float GUI_Font_GetCharacterPixelWidth( const GUIFont *font, float scale, uint32_t character )
+float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character )
 {
 	float w;
-	GUI_Font_GetCharacterPixelSize( font, scale, character, &w, NULL );
+	guiGetCharacterPixelSize( font, scale, character, &w, NULL );
 	return w;
 }
 
-void GUI_Font_GetStringPixelSize( const GUIFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
+void guiGetStringPixelSize( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
 	float h = 0;
@@ -231,7 +231,7 @@ void GUI_Font_GetStringPixelSize( const GUIFont *font, float scale, const char *
 	if ( dh != NULL ) *dh = h;
 }
 
-void GUI_Font_DrawGlyph( const GUIFont *font, float x, float y, float scale, const PLColour *colour, const OSWFontGlyph *glyph )
+void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const OSWFontGlyph *glyph )
 {
 	float tw = ( float ) glyph->w / ( float ) font->texture->w;
 	float th = ( float ) glyph->h / ( float ) font->texture->h;
@@ -247,7 +247,7 @@ void GUI_Font_DrawGlyph( const GUIFont *font, float x, float y, float scale, con
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void GUI_Font_DrawCharacter( const GUIFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
+void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
 {
 	OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )
@@ -255,10 +255,10 @@ void GUI_Font_DrawCharacter( const GUIFont *font, float x, float y, float scale,
 		return;
 	}
 
-	GUI_Font_DrawGlyph( font, x, y, scale, colour, glyph );
+	guiDrawFontGlyph( font, x, y, scale, colour, glyph );
 }
 
-void GUI_Font_DrawString( const GUIFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
+void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
@@ -291,10 +291,10 @@ void GUI_Font_DrawString( const GUIFont *font, float x, float y, float *ox, floa
 
 		if ( shadow )
 		{
-			GUI_Font_DrawGlyph( font, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
+			guiDrawFontGlyph( font, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
 		}
 
-		GUI_Font_DrawGlyph( font, nx, ny, scale, colour, glyph );
+		guiDrawFontGlyph( font, nx, ny, scale, colour, glyph );
 
 		nx += ( ( float ) glyph->w ) * scale;
 	}
@@ -303,7 +303,7 @@ void GUI_Font_DrawString( const GUIFont *font, float x, float y, float *ox, floa
 	if ( oy != NULL ) *oy = ny;
 }
 
-void GUI_Font_Display( GUIFont *font )
+void guiDisplayFont( GuiFont *font )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

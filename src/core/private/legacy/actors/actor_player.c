@@ -3,10 +3,10 @@
 
 #include <plmodel/plm.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "../actor.h"
 
-#include "client/client_input.h"
+#include "client/ape_client_input.h"
 #include "client/renderer/renderer.h"
 
 #define PLAYER_VIEW_OFFSET   0.0f

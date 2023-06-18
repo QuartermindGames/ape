@@ -7,9 +7,9 @@ typedef struct GUIImage
 	PLGTexture *texture;
 } GUIImage;
 
-GUIPanel *GUI_Image_Create( GUIPanel *parent, int x, int y, int w, int h, PLGTexture *texture )
+GuiPanel *GUI_Image_Create( GuiPanel *parent, int x, int y, int w, int h, PLGTexture *texture )
 {
-	GUIPanel *panel = GUI_Panel_Create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
+	GuiPanel *panel = guiCreatePanel( parent, x, y, w, h, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 
 	GUIImage *image = PL_NEW( GUIImage );
 	image->texture = texture;

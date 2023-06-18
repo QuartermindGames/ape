@@ -2,7 +2,7 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 #include "renderer_material.h"
 #include "world/world.h"
@@ -670,6 +670,7 @@ static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, uns
 			numLights = 8;
 		}
 
+		ape_RendererPerformance_.numLights += numLights;
 		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
 		for ( unsigned int i = 0; i < numLights; ++i )
 		{

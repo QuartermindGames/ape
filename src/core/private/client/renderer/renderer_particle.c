@@ -2,7 +2,7 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer_particle.h"
 #include "renderer.h"
 

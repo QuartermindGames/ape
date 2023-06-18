@@ -4,7 +4,7 @@
 
 #include <yin/node.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "entity.h"
 
 #define ENT_INTERNAL_TAG 32 /* maximum length of an internal tag */

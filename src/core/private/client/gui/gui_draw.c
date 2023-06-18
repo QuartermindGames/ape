@@ -19,18 +19,18 @@ typedef struct GUIDrawBatch
  * Canvas
  ****************************************/
 
-typedef struct GUICanvas
+typedef struct GuiCanvas
 {
 	PLGFrameBuffer *buffer;
 	PLGTexture *texture;
 	bool filter;
 	int width;
 	int height;
-} GUICanvas;
+} GuiCanvas;
 
-GUICanvas *GUI_CreateCanvas( int width, int height )
+GuiCanvas *guiCreateCanvas( int width, int height )
 {
-	GUICanvas *canvas = PL_NEW( GUICanvas );
+	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width     = width;
 	canvas->height    = height;
 	canvas->buffer    = PlgCreateFrameBuffer( canvas->width, canvas->height, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
@@ -38,7 +38,7 @@ GUICanvas *GUI_CreateCanvas( int width, int height )
 	return canvas;
 }
 
-void GUI_DestroyCanvas( GUICanvas *canvas )
+void guiDestroyCanvas( GuiCanvas *canvas )
 {
 	if ( canvas == NULL )
 	{
@@ -49,7 +49,7 @@ void GUI_DestroyCanvas( GUICanvas *canvas )
 	PL_DELETE( canvas );
 }
 
-void GUI_SetCanvasSize( GUICanvas *canvas, int width, int height )
+void guiSetCanvasSize( GuiCanvas *canvas, int width, int height )
 {
 	if ( canvas->width == width && canvas->height == height )
 	{
@@ -64,7 +64,7 @@ void GUI_SetCanvasSize( GUICanvas *canvas, int width, int height )
 	}
 }
 
-void GUI_GetCanvasSize( GUICanvas *canvas, int *width, int *height )
+void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height )
 {
 	if ( width != NULL )
 	{
@@ -76,7 +76,7 @@ void GUI_GetCanvasSize( GUICanvas *canvas, int *width, int *height )
 	}
 }
 
-PLGTexture *GUI_GetCanvasTexture( GUICanvas *canvas )
+PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas )
 {
 	return canvas->texture;
 }
@@ -90,7 +90,7 @@ static PLLinkedList *batches;
 
 static bool hasBegun = false;
 
-void GUI_Draw_Initialize( void )
+void guiInitializeDraw_( void )
 {
 	batches = PlCreateLinkedList();
 
@@ -100,7 +100,7 @@ void GUI_Draw_Initialize( void )
 	camera->far  = 1000.0f;
 }
 
-void GUI_Draw_Shutdown( void )
+void guiShutdownDraw_( void )
 {
 }
 
@@ -154,7 +154,7 @@ static void CleanupBatchQueue( void )
 	guiState.numBatches       = 0;
 }
 
-void GUI_Draw( GUICanvas *canvas, GUIPanel *root )
+void guiDraw( GuiCanvas *canvas, GuiPanel *root )
 {
 	// save old state
 	int ox, oy, ow, oh;
@@ -177,7 +177,7 @@ void GUI_Draw( GUICanvas *canvas, GUIPanel *root )
 
 	PlgSetTexture( NULL, 0 );
 
-	GUI_Panel_Draw( root );
+	guiDrawPanel( root );
 
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
 	PlgSetShaderUniformValue( program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
@@ -209,7 +209,7 @@ void GUI_Draw( GUICanvas *canvas, GUIPanel *root )
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
 }
 
-void GUI_Draw_FilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
+void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
 {
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &PLVector3( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
@@ -225,7 +225,7 @@ void GUI_Draw_FilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z,
 /**
  * Similar to Draw_FilledRectangle, only more explicit for the frame coords.
  */
-void GUI_Draw_Quad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour )
+void guiDrawQuad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour )
 {
 	// todo: drawing API should take floating-point colours!
 	PLColour bColour = PlColourF32ToU8( colour );

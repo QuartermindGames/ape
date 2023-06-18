@@ -1,8 +1,9 @@
 set(YIN_CORE_CLIENT
-        private/client/client.c
+        private/client/ape_client.c
+        private/client/ape_client_decal.c
         private/client/client_console.c
-        private/client/client_input.c
-        private/client/client_gui.c
+        private/client/ape_client_input.c
+        private/client/ape_client_gui.c
         private/client/audio/audio.c
         private/client/audio/audio_openal.c
         private/client/audio/audio_wav.c
@@ -36,7 +37,7 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_sprite.c)
 
 add_library(yin-core STATIC
-        private/core_console.c
+        private/ape_console.c
 
         # Entity System
         private/entity/entity.c
@@ -47,14 +48,14 @@ add_library(yin-core STATIC
         private/net/net.c
         private/net/net_var.c
 
-        private/core_filesystem.c
-        private/core_game_interface.c
-        private/core_image.c
-        private/core_memory_manager.c
-        private/core_model.c
-        private/core_profiler.c
-        private/core_scheduler.c
-        private/core_binary_serializer.c
+        private/ape_filesystem.c
+        private/ape_game_interface.c
+        private/ape_image.c
+        private/ape_memory_manager.c
+        private/ape_model.c
+        private/ape_profiler.c
+        private/ape_scheduler.c
+        private/ape_binary_serializer.c
 
         private/core.c
 

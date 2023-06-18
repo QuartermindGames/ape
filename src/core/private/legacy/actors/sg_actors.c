@@ -5,14 +5,14 @@
 
 #include <yin/node.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "../actor.h"
 #include "game_interface.h"
 
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_particle.h"
 
-#include "core_model.h"
+#include "ape_model.h"
 
 #define MODEL_SCALE 10.0f
 

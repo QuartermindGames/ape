@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include "renderer/renderer.h"
 #include "gui/gui_private.h"
@@ -280,11 +280,11 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
  * RENDERING
  ****************************************/
 
-static void DrawInputField( const ApeViewport *viewport, GUIFont *font )
+static void DrawInputField( const ApeViewport *viewport, GuiFont *font )
 {
-	const float ch = GUI_Font_GetLineSpacing( font );
-	float cw       = GUI_Font_GetCharacterPixelWidth( font, 1.0f, '>' );
-	GUI_Font_DrawCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
+	const float ch = guiGetFontLineSpacing( font );
+	float cw       = guiGetCharacterPixelWidth( font, 1.0f, '>' );
+	guiDrawFontCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 #define SPACER 4.0f
@@ -295,32 +295,32 @@ static void DrawInputField( const ApeViewport *viewport, GUIFont *font )
 	}
 
 	float bufPixW;
-	GUI_Font_GetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
+	guiGetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
 
 	const float x = ( 1.0f + cw );
 
 	// cursor
 	char c = ( v > apeGetNumTicks() + 10 ) ? '_' : ' ';
-	GUI_Font_DrawCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
+	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		GUI_Font_DrawString( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+		guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
 			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				GUI_Font_DrawString( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				GUI_Font_DrawString( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				guiDrawFontString( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+				guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	GUI_Font_DrawString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	guiDrawFontString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
 bool apeIsConsoleOpen( void ) { return consoleIsOpen; }
@@ -337,7 +337,7 @@ void apeDrawConsole_( const ApeViewport *viewport )
 		return;
 	}
 
-	GUIFont *font = GUI_Font_GetDefault( GUI_FONT_DEFAULT_SMALL );
+	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );
 	assert( font != NULL );
 	if ( font == NULL )
 	{
@@ -356,7 +356,7 @@ void apeDrawConsole_( const ApeViewport *viewport )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
 
-	float lineSpacing   = GUI_Font_GetLineSpacing( font );
+	float lineSpacing   = guiGetFontLineSpacing( font );
 	float width         = ( float ) viewport->width;
 	float height        = ( float ) viewport->height;
 	float consoleHeight = height - lineSpacing;
@@ -381,7 +381,7 @@ void apeDrawConsole_( const ApeViewport *viewport )
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			GUI_Font_DrawString( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			guiDrawFontString( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
 
 			y -= lineSpacing;
 			if ( y < 0 )
@@ -394,7 +394,7 @@ void apeDrawConsole_( const ApeViewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetTexture( NULL, 0 );
 
-	GUI_Font_Display( font );
+	guiDisplayFont( font );
 
 	// auto-completion list
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
@@ -409,7 +409,7 @@ void apeDrawConsole_( const ApeViewport *viewport )
 		while ( autoComplete[ i ] != NULL )
 		{
 			float w, h;
-			GUI_Font_GetStringPixelSize( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
+			guiGetStringPixelSize( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
 			if ( w > autoCompleteWidth ) { autoCompleteWidth = w; }
 			autoCompleteHeight += h;
 			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) h ) - autoCompleteHeight, w, h, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
@@ -420,19 +420,19 @@ void apeDrawConsole_( const ApeViewport *viewport )
 	DrawInputField( viewport, font );
 
 	/* draw version info */
-	GUIFont *tinyFont = GUI_Font_GetDefault( GUI_FONT_DEFAULT_TINY );
+	GuiFont *tinyFont = guiGetDefaultFont( GUI_FONT_DEFAULT_TINY );
 	if ( tinyFont != NULL )
 	{
 		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
 
 		float strW, strH;
-		GUI_Font_GetStringPixelSize( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
+		guiGetStringPixelSize( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
 
 		float x = width - strW - 2.0f;
 		float y = height - strH - 2.0f;
-		GUI_Font_DrawString( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+		guiDrawFontString( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
 
-		GUI_Font_Display( tinyFont );
+		guiDisplayFont( tinyFont );
 	}
 
 	PlPopMatrix();

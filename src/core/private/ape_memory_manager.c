@@ -3,7 +3,7 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 
 static PLMemoryGroup *memoryGroups[ APE_MAX_CACHE_POOLS ];
 

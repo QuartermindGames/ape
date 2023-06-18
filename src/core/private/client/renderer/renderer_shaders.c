@@ -2,7 +2,7 @@
 
 #include <plcore/pl_hashtable.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 
 #include <yin/node.h>
@@ -114,7 +114,9 @@ static ApeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 		{
 			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = ndGetNumOfChildren( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
+			{
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
+			}
 
 			subChild = ndGetFirstChild( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
@@ -134,7 +136,9 @@ static ApeShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 		{
 			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = ndGetNumOfChildren( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
+			{
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
+			}
 
 			subChild = ndGetFirstChild( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
@@ -211,7 +215,7 @@ ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name )
 	return ( ApeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void apeInitializeShaders( void )
+void apeInitializeShaders_( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )

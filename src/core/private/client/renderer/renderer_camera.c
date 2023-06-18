@@ -3,7 +3,7 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 #include "post/post.h"
 #include "legacy/actor.h"

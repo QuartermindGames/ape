@@ -3,8 +3,8 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
-#include "core_scheduler.h"
+#include "ape_private.h"
+#include "ape_scheduler.h"
 
 static PLLinkedList *scheduleList = NULL;
 

@@ -16,37 +16,37 @@
 		192, 192, 192, 255        \
 	}
 
-typedef struct GUIPanel
+typedef struct GuiPanel
 {
-	int  x, y;
-	int  w, h;
+	int x, y;
+	int w, h;
 	bool isDrawing;// Flag on whether the panel is actually in view
 	bool isVisible;// User flag, specifying if the panel should show or not
 
 	int z;
 
-	GUIPanelBorder     border;
-	GUIPanelBackground background;
+	GuiPanelBorder border;
+	GuiPanelBackground background;
 
-	const GUIStyleSheet *styleSheet;
+	const GuiStyleSheet *styleSheet;
 
-	bool     bgColourOverride;
+	bool bgColourOverride;
 	PLColour backgroundColour;
 
-	GUIPanel         *parent;
-	PLLinkedList     *children;
+	GuiPanel *parent;
+	PLLinkedList *children;
 	PLLinkedListNode *node;
 
-	GUIPanel *cursor;
+	GuiPanel *cursor;
 
-	void ( *Destroy )( GUIPanel *self );                 /* called on destruction */
-	void ( *PreDraw )( GUIPanel *self, bool *override ); /* called before all children are drawn */
-	void ( *PostDraw )( GUIPanel *self );                /* called after all children are drawn */
-	void ( *DrawBackground )( GUIPanel *self, bool *override );
-	void ( *Tick )( GUIPanel *self, bool *override );
+	void ( *Destroy )( GuiPanel *self );                 /* called on destruction */
+	void ( *PreDraw )( GuiPanel *self, bool *override ); /* called before all children are drawn */
+	void ( *PostDraw )( GuiPanel *self );                /* called after all children are drawn */
+	void ( *DrawBackground )( GuiPanel *self, bool *override );
+	void ( *Tick )( GuiPanel *self, bool *override );
 
-	bool ( *HandleMouseEvent )( GUIPanel *self, int mx, int my, int wheel, int button, bool buttonUp );
-	bool ( *HandleKeyboardEvent )( GUIPanel *self, int button, bool buttonUp );
+	bool ( *HandleMouseEvent )( GuiPanel *self, int mx, int my, int wheel, int button, bool buttonUp );
+	bool ( *HandleKeyboardEvent )( GuiPanel *self, int button, bool buttonUp );
 
 	void *extendedData;
-} GUIPanel;
+} GuiPanel;

@@ -1,7 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 // Purpose: Primary code for dealing with editor functionality.
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "editor.h"
 #include "client/renderer/renderer.h"
 

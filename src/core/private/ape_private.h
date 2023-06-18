@@ -76,8 +76,8 @@ const double *apeGetProfilerGraph( ApeProfilerGroup group, uint8_t *numPoints );
 double apeGetProfilerGraphValue( ApeProfilerGroup group );
 double apeGetProfilerGraphAverage( ApeProfilerGroup group );
 
-#include "core_scheduler.h"
-#include "core_memory_manager.h"
+#include "ape_scheduler.h"
+#include "ape_memory_manager.h"
 
 /****************************************
  * CONSOLE

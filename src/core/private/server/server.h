@@ -4,7 +4,7 @@
 #pragma once
 
 #include "net/net.h"
-#include "core_protocol.h"
+#include "ape_protocol.h"
 
 PL_EXTERN_C
 

@@ -2,7 +2,7 @@
 
 #include <yin/node.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "world.h"
 
 #include "client/renderer/renderer.h"

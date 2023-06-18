@@ -8,13 +8,13 @@ typedef struct GUIButton
 	GUIButtonCallback callback;
 } GUIButton;
 
-GUIPanel *GUI_Button_Create( GUIPanel *parent, const char *label, int x, int y, int w, int h )
+GuiPanel *GUI_Button_Create( GuiPanel *parent, const char *label, int x, int y, int w, int h )
 {
-	GUIPanel *panel = GUI_Panel_Create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_OUTSET );
+	GuiPanel *panel = guiCreatePanel( parent, x, y, w, h, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_OUTSET );
 
 	return panel;
 }
 
-void GUI_Button_SetCallback( GUIPanel *panel, GUIButtonCallback callback )
+void GUI_Button_SetCallback( GuiPanel *panel, GUIButtonCallback callback )
 {
 }

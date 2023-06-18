@@ -1,12 +1,12 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 // Purpose: World editor specific functionality.
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include "editor.h"
 #include "world/world.h"
 
-#include "client/client_input.h"
+#include "client/ape_client_input.h"
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_font.h"
 #include "game_interface.h"
@@ -77,7 +77,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
 }
 
-static void IncreaseGridSize( ApeInputState state )
+static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
@@ -92,7 +92,7 @@ static void IncreaseGridSize( ApeInputState state )
 	context.gridScale += 2;
 }
 
-static void DecreaseGridSize( ApeInputState state )
+static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
@@ -111,7 +111,7 @@ static void DecreaseGridSize( ApeInputState state )
 	}
 }
 
-static void ToggleView( ApeInputState state )
+static void ToggleView( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{

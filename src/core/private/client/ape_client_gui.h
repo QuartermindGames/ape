@@ -11,6 +11,6 @@ void apeShutdownGUI_( void );
 void ogeDrawGUI_( const ApeViewport *viewport );
 void apeTickGUI_( void );
 void YnCore_ResizeGUI( int w, int h );
-GUIPanel *YnCore_GetGUIRootPanel( void );
+GuiPanel *YnCore_GetGUIRootPanel( void );
 
 PL_EXTERN_C_END

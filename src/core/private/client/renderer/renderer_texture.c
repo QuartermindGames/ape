@@ -1,23 +1,23 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
-#include "core_image.h"
+#include "ape_image.h"
 
 static PLLinkedList *textures;
 
 static void CleanupTexture( void *user )
 {
-	PlgDestroyTexture( ( ( OgeTexture * ) user )->internal );
+	PlgDestroyTexture( ( ( ApeTexture * ) user )->internal );
 }
 
-OgeTexture *YnCore_Texture_Load( const char *path )
+ApeTexture *YnCore_Texture_Load( const char *path )
 {
 	PLGTexture *internal = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( internal == NULL )
 		return NULL;
 
-	OgeTexture *texture  = PL_NEW( OgeTexture );
+	ApeTexture *texture  = PL_NEW( ApeTexture );
 	texture->internal = internal;
 
 	apeSetupReference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, CleanupTexture, texture );
@@ -25,7 +25,7 @@ OgeTexture *YnCore_Texture_Load( const char *path )
 	return texture;
 }
 
-void YnCore_Texture_Release( OgeTexture *texture )
+void apeReleaseTexture( ApeTexture *texture )
 {
 	apeReleaseReference( &texture->reference );
 }
@@ -90,7 +90,7 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	return texture;
 }
 
-void RT_InitializeTextures( void )
+void apeInitializeTextures_( void )
 {
 	textures = PlCreateLinkedList();
 

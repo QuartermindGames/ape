@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "game_interface.h"
 #include "world/world.h"
 
@@ -9,7 +9,7 @@
 
 #include "legacy/actor.h"
 
-#include "client/client.h"
+#include "client/ape_client.h"
 #include "client/renderer/renderer.h"
 
 #include "server/server.h"

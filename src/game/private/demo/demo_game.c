@@ -16,11 +16,11 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	PLVector3 ang = apeGetCameraAngles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
 	{
-		ang.y += 0.5f;
+		ang.y += 1.5f;
 	}
 	else if ( strcmp( id, "rotateRight" ) == 0 )
 	{
-		ang.y -= 0.5f;
+		ang.y -= 1.5f;
 	}
 
 	PLVector3 forward, left;
@@ -37,8 +37,30 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	apeSetCameraAngles( playerCamera, &ang );
 }
 
+static const char *vppPaths[] = {
+        "pc_rf_demo/audio.vpp",
+        "pc_rf_demo/levels1.vpp",
+        "pc_rf_demo/maps.vpp",
+        "pc_rf_demo/meshes.vpp",
+        "pc_rf_demo/motions.vpp",
+        "pc_rf_demo/music.vpp",
+        "pc_rf_demo/tables.vpp",
+        "pc_rf_demo/ui.vpp",
+};
+#define NUM_VPP_PACKS PL_ARRAY_ELEMENTS( vppPaths )
+static PLFileSystemMount *vppPackages[ NUM_VPP_PACKS ];
+
 static void InitializeDemoGame( void )
 {
+	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i )
+	{
+		vppPackages[ i ] = PlMountLocation( vppPaths[ i ] );
+		if ( vppPackages[ i ] == NULL )
+		{
+			Game_Warning( "Failed to open package (%s): %s\n", vppPaths[ i ], PlGetError() );
+		}
+	}
+
 	Game_RegisterStandardEntityComponents();
 
 	PlParseConsoleString( "world worlds/glass_house.rfl" );
@@ -64,6 +86,18 @@ static void ShutdownDemoGame( void )
 
 static void TickDemoGame( void )
 {
+	PL_GET_CVAR( "input.mlook", mouseLook );
+	if ( mouseLook != NULL && mouseLook->b_value )
+	{
+		int mx, my;
+		apeGetMouseDelta( &mx, &my );
+
+		PLVector3 ang = apeGetCameraAngles( playerCamera );
+		ang.y += mx;
+		ang.x += my;
+		ang.x = PlClamp( -85.0f, ang.z, 85.0f );
+		apeSetCameraAngles( playerCamera, &ang );
+	}
 }
 
 static bool HandleRequest( GameModeRequest modeRequest, void *user )

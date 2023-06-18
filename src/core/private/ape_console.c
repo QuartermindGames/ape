@@ -1,10 +1,10 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include <yin/node.h>
 
-#include "client/client_input.h"
+#include "client/ape_client_input.h"
 #include "editor/editor.h"
 
 /****************************************
@@ -75,7 +75,7 @@ CMD_CALLBACK( Version )
 
 /*------------------------------------------------------------------*/
 
-#include "core_filesystem.h"
+#include "ape_filesystem.h"
 
 static void SaveUserConfig( void );
 static void LoadUserConfig( void )

@@ -1,13 +1,13 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "../core_private.h"
+#include "../ape_private.h"
 #include "../net/net.h"
 
-#include "client.h"
-#include "client_input.h"
+#include "ape_client.h"
+#include "ape_client_input.h"
 
 #include "game_interface.h"
-#include "client_gui.h"
+#include "ape_client_gui.h"
 
 #include "editor/editor.h"
 #include "renderer/renderer.h"

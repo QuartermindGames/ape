@@ -18,6 +18,9 @@ typedef struct ApeRendererStats
 	unsigned int numTriangles;
 	unsigned int numFacesDrawn;
 	unsigned int numVisiblePortals;
+	unsigned int numRooms;
+	unsigned int numDetailRooms;
+	unsigned int numLights;
 } ApeRendererStats;
 extern ApeRendererStats ape_RendererPerformance_;
 

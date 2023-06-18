@@ -4,7 +4,7 @@
 #include <plcore/pl_filesystem.h>
 #include <plgraphics/plg_mesh.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "world.h"
 
 #include <yin/node.h>
@@ -39,24 +39,39 @@ ApeWorld *apeCreateWorld( void )
 static const uint32_t WORLD_MAGIC = 0xd4bada55;
 
 static const int32_t WORLD_VERSION_MIN = 161;
-static const int32_t WORLD_VERSION_MAX = 180;
+static const int32_t WORLD_VERSION_MAX = 295;
 // version history...
-//	161				Red Faction (PS2 Prototype)
-//
-// 	482 (TODO)		The Punisher (PS2)
+//	161	Red Faction (PS2 Prototype)
+//	180	Red Faction (PC Demo)
+//	272	Red Faction 2 (PS2 Demo)
+// 	482	The Punisher (PS2)
 
-#define APE_WORLD_CHUNK_GEOMETRY        0x100
-#define APE_WORLD_CHUNK_GEOREGIONS      0x200
-#define APE_WORLD_CHUNK_LIGHTS          0x300
-#define APE_WORLD_CHUNK_CUTSCENECAMERAS 0x400
-#define APE_WORLD_CHUNK_AMBIENTSOUNDS   0x500
-#define APE_WORLD_CHUNK_EVENTS          0x600
-#define APE_WORLD_CHUNK_EMITTERS        0xa00
-#define APE_WORLD_CHUNK_DECALS          0x1000
-#define APE_WORLD_CHUNK_LIGHTMAP        0x1200
-#define APE_WORLD_CHUNK_BRUSH           0x2000
-#define APE_WORLD_CHUNK_ENTITIES        0x30000
-#define APE_WORLD_CHUNK_PLAYERSTART     0x70000
+#define APE_WORLD_CHUNK_GEOMETRY          0x100
+#define APE_WORLD_CHUNK_GEOREGIONS        0x200
+#define APE_WORLD_CHUNK_LIGHTS            0x300
+#define APE_WORLD_CHUNK_CUTSCENECAMERAS   0x400
+#define APE_WORLD_CHUNK_AMBIENTSOUNDS     0x500
+#define APE_WORLD_CHUNK_EVENTS            0x600
+#define APE_WORLD_CHUNK_UNKNOWN0          0x900
+#define APE_WORLD_CHUNK_EMITTERS          0xa00
+#define APE_WORLD_CHUNK_CLIMBREGIONS      0xd00
+#define APE_WORLD_CHUNK_BOLTEMITTERS      0xe00
+#define APE_WORLD_CHUNK_TARGETS           0xf00
+#define APE_WORLD_CHUNK_DECALS            0x1000
+#define APE_WORLD_CHUNK_PUSHREGIONS       0x1100
+#define APE_WORLD_CHUNK_LIGHTMAP          0x1200
+#define APE_WORLD_CHUNK_BRUSH             0x2000
+#define APE_WORLD_CHUNK_MOVINGGROUP       0x3000
+#define APE_WORLD_CHUNK_CUTSCENES         0x4000
+#define APE_WORLD_CHUNK_CUTSCENEPATHNODES 0x5000
+#define APE_WORLD_CHUNK_CUTSCENEPATHS     0x6000
+#define APE_WORLD_CHUNK_WAYPOINTS         0x10000
+#define APE_WORLD_CHUNK_NAVPOINTS         0x20000
+#define APE_WORLD_CHUNK_ENTITIES          0x30000
+#define APE_WORLD_CHUNK_ITEMS             0x40000
+#define APE_WORLD_CHUNK_CLUTTER           0x50000
+#define APE_WORLD_CHUNK_TRIGGERS          0x60000
+#define APE_WORLD_CHUNK_PLAYERSTART       0x70000
 
 static char *ParseString( PLFile *file, uint16_t *size )
 {
@@ -331,7 +346,7 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 
 		face->flags = PL_READUINT32( file, false, NULL );
 
-		int32_t smoothingGroup = PlReadInt32( file, false, NULL );
+		face->smoothingGroup = PlReadInt32( file, false, NULL );
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );
 		assert( roomIndex >= 0 );
@@ -453,15 +468,34 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	char *name = ParseString( file, &size );
 	PL_DELETE( name );
 
-	uint32_t modifiability = PL_READUINT32( file, false, NULL );
+	PL_READUINT32( file, false, NULL );// "modifiability" - unused
 
 	ParseStaticGeometryTextures( world, file );
 
-	uint32_t unkNum0 = PL_READUINT32( file, false, NULL );
-	for ( uint32_t i = 0; i < unkNum0; ++i )
+	uint32_t numScrollingFaces = PL_READUINT32( file, false, NULL );
+	for ( uint32_t i = 0; i < numScrollingFaces; ++i )
 	{
-		assert( 0 );
+		//assert( 0 );
 		// todo
+
+		if ( version >= 272 )
+		{
+			PlFileSeek( file, 80, PL_SEEK_CUR );
+		}
+		else
+		{
+			PlReadInt32( file, false, NULL );
+			PlReadInt32( file, false, NULL );
+			PlReadFloat32( file, false, NULL );//x
+			PlReadFloat32( file, false, NULL );//y
+			PlReadFloat32( file, false, NULL );//x
+			PlReadFloat32( file, false, NULL );//y
+			PlReadFloat32( file, false, NULL );//x
+			PlReadFloat32( file, false, NULL );//y
+			PlReadFloat32( file, false, NULL );//x
+			PlReadFloat32( file, false, NULL );//y
+			PlReadInt8( file, NULL );
+		}
 	}
 
 	ParseStaticGeometryRooms( world, file, version );
@@ -512,7 +546,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
 		}
 
-		room->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, numVerts * 2, numVerts );
+		room->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVerts );
 		assert( room->mesh != NULL );
 		if ( room->mesh == NULL )
 		{
@@ -557,7 +591,8 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 
 				PlgAddMeshVertex( room->mesh,
 				                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
-				                  &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
+				                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
+				                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
 				                  &( PLColour ){ 255, 255, 255, 255 },
 				                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
 
@@ -660,7 +695,7 @@ static ApeWorld *ParseWorldFile( PLFile *file )
 		uint16_t size;
 		world->name = ParseString( file, &size );
 	}
-	if ( version >= 178 )
+	if ( version >= 178 && version < 272 )
 	{
 		uint16_t size;
 		char *modName = ParseString( file, &size );

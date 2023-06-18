@@ -7,7 +7,7 @@
  * GUI PANEL
  ****************************************/
 
-static void DrawBorder( GUIPanel *self )
+static void DrawBorder( GuiPanel *self )
 {
 	if ( self->border == GUI_PANEL_BORDER_NONE )
 	{
@@ -33,16 +33,16 @@ static void DrawBorder( GUIPanel *self )
 	}
 
 	int x, y;
-	GUI_Panel_GetAbsolutePosition( self, &x, &y );
+	guiGetPanelAbsolutePosition( self, &x, &y );
 
 	// top
-	GUI_Draw_Quad( mesh,
-	               ( GUIVector2 ){ x - self->styleSheet->borderPadding[ 0 ], y },
-	               ( GUIVector2 ){ x + self->w + self->styleSheet->borderPadding[ 1 ], y },
-	               ( GUIVector2 ){ x, y + self->styleSheet->borderPadding[ 2 ] },
-	               ( GUIVector2 ){ x + self->w, y + self->styleSheet->borderPadding[ 3 ] },
-	               self->z,
-	               &topColour );
+	guiDrawQuad( mesh,
+	             ( GUIVector2 ){ x - self->styleSheet->borderPadding[ 0 ], y },
+	             ( GUIVector2 ){ x + self->w + self->styleSheet->borderPadding[ 1 ], y },
+	             ( GUIVector2 ){ x, y + self->styleSheet->borderPadding[ 2 ] },
+	             ( GUIVector2 ){ x + self->w, y + self->styleSheet->borderPadding[ 3 ] },
+	             self->z,
+	             &topColour );
 
 #if 0
 	GUI_Draw_Quad( mesh,
@@ -78,16 +78,16 @@ static void DrawBorder( GUIPanel *self )
  * @param border
  * @return
  */
-GUIPanel *GUI_Panel_Create( GUIPanel *parent, int x, int y, int w, int h, GUIPanelBackground background, GUIPanelBorder border )
+GuiPanel *guiCreatePanel( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border )
 {
-	GUIPanel *self         = PlMAllocA( sizeof( GUIPanel ) );
+	GuiPanel *self         = PlMAllocA( sizeof( GuiPanel ) );
 	self->x                = x;
 	self->y                = y;
 	self->w                = w;
 	self->h                = h;
 	self->background       = background;
 	self->border           = border;
-	self->styleSheet       = GUI_GetActiveStyleSheet();// todo: revisit, either set via parameter or other...
+	self->styleSheet       = guiGetActiveStyleSheet();// todo: revisit, either set via parameter or other...
 	self->backgroundColour = PL_COLOURU8( 255, 255, 255, 255 );
 
 	self->children = PlCreateLinkedList();
@@ -110,7 +110,7 @@ GUIPanel *GUI_Panel_Create( GUIPanel *parent, int x, int y, int w, int h, GUIPan
  * Destroy the given panel. Automatically culls all
  * children of the given panel too.
  */
-void GUI_Panel_Destroy( GUIPanel *self )
+void guiDestroyPanel( GuiPanel *self )
 {
 	if ( self == NULL )
 	{
@@ -127,9 +127,9 @@ void GUI_Panel_Destroy( GUIPanel *self )
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
 		childNode            = PlGetNextLinkedListNode( childNode );
-		GUI_Panel_Destroy( childPanel );
+		guiDestroyPanel( childPanel );
 	}
 	PlDestroyLinkedList( self->children );
 
@@ -139,19 +139,19 @@ void GUI_Panel_Destroy( GUIPanel *self )
 /**
  * This makes it possible for panels to use their own independent styles.
  */
-void GUI_Panel_SetStyleSheet( GUIPanel *self, const GUIStyleSheet *styleSheet )
+void guiSetPanelStyleSheet( GuiPanel *self, const GuiStyleSheet *styleSheet )
 {
 	self->styleSheet = styleSheet;
 }
 
-void GUI_Panel_Draw( GUIPanel *self )
+void guiDrawPanel( GuiPanel *self )
 {
 	if ( !self->isDrawing )
 	{
 		return;
 	}
 
-	GUI_Panel_DrawBackground( self );
+	guiDrawPanelBackground( self );
 
 	DrawBorder( self );
 
@@ -169,8 +169,8 @@ void GUI_Panel_Draw( GUIPanel *self )
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
-		GUI_Panel_Draw( childPanel );
+		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		guiDrawPanel( childPanel );
 		childNode = PlGetNextLinkedListNode( childNode );
 	}
 
@@ -180,7 +180,7 @@ void GUI_Panel_Draw( GUIPanel *self )
 	}
 }
 
-void GUI_Panel_DrawBackground( GUIPanel *self )
+void guiDrawPanelBackground( GuiPanel *self )
 {
 	if ( self->DrawBackground != NULL )
 	{
@@ -210,8 +210,8 @@ void GUI_Panel_DrawBackground( GUIPanel *self )
 	}
 
 	int x, y, w, h;
-	GUI_Panel_GetContentPosition( self, &x, &y );
-	GUI_Panel_GetContentSize( self, &w, &h );
+	guiGetPanelContentPosition( self, &x, &y );
+	guiGetPanelContentSize( self, &w, &h );
 
 	PLGMesh *mesh = GUI_Draw_GetBatchQueueMesh( NULL );
 	assert( mesh != NULL );
@@ -220,10 +220,10 @@ void GUI_Panel_DrawBackground( GUIPanel *self )
 		return;
 	}
 
-	GUI_Draw_FilledRectangle( mesh, x, y, w, h, self->z, &colour );
+	guiDrawFilledRectangle( mesh, x, y, w, h, self->z, &colour );
 }
 
-void GUI_Panel_Tick( GUIPanel *self )
+void guiTickPanel( GuiPanel *self )
 {
 	assert( self != NULL );
 	if ( self == NULL )
@@ -253,48 +253,48 @@ void GUI_Panel_Tick( GUIPanel *self )
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
-		GUI_Panel_Tick( childPanel );
+		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		guiTickPanel( childPanel );
 		childNode = PlGetNextLinkedListNode( childNode );
 	}
 }
 
-void GUI_Panel_SetBackgroundColour( GUIPanel *self, const PLColour *colour )
+void GUI_Panel_SetBackgroundColour( GuiPanel *self, const PLColour *colour )
 {
 	self->backgroundColour = *colour;
 }
 
-PLColour GUI_Panel_GetBackgroundColour( GUIPanel *self )
+PLColour GUI_Panel_GetBackgroundColour( GuiPanel *self )
 {
 	return self->backgroundColour;
 }
 
-void GUI_Panel_SetBorder( GUIPanel *self, GUIPanelBorder border )
+void guiSetPanelBorder( GuiPanel *self, GuiPanelBorder border )
 {
 	self->border = border;
 }
 
-void GUI_Panel_SetBackground( GUIPanel *self, GUIPanelBackground background )
+void guiSetPanelBackground( GuiPanel *self, GuiPanelBackground background )
 {
 	self->background = background;
 }
 
-GUIPanel *GUI_Panel_GetParent( GUIPanel *self )
+GuiPanel *guiGetPanelParent( GuiPanel *self )
 {
 	return self->parent;
 }
 
-void GUI_Panel_GetPosition( GUIPanel *self, int *x, int *y )
+void guiGetPanelPosition( GuiPanel *self, int *x, int *y )
 {
 	if ( x != NULL ) *x = self->x;
 	if ( y != NULL ) *y = self->y;
 }
 
-void GUI_Panel_GetContentPosition( GUIPanel *self, int *x, int *y )
+void guiGetPanelContentPosition( GuiPanel *self, int *x, int *y )
 {
 	if ( self->border == GUI_PANEL_BORDER_NONE )
 	{
-		GUI_Panel_GetPosition( self, x, y );
+		guiGetPanelPosition( self, x, y );
 		return;
 	}
 
@@ -306,10 +306,10 @@ void GUI_Panel_GetContentPosition( GUIPanel *self, int *x, int *y )
 /**
  * Returns the absolute position of the element relative to it's parent.
  */
-void GUI_Panel_GetAbsolutePosition( GUIPanel *self, int *x, int *y )
+void guiGetPanelAbsolutePosition( GuiPanel *self, int *x, int *y )
 {
 	int bx = 0, by = 0;
-	GUIPanel *parent = self->parent;
+	GuiPanel *parent = self->parent;
 	while ( parent != NULL )
 	{
 		bx += parent->x;
@@ -325,14 +325,14 @@ void GUI_Panel_GetAbsolutePosition( GUIPanel *self, int *x, int *y )
  * Sets the position of the panel. Keep in mind this is relative
  * to it's parent (if it has one).
  */
-void GUI_Panel_SetPosition( GUIPanel *self, int x, int y )
+void guiSetPanelPosition( GuiPanel *self, int x, int y )
 {
 	/* be sure it respects the parent location */
-	GUIPanel *parent = self->parent;
+	GuiPanel *parent = self->parent;
 	if ( parent != NULL )
 	{
 		int cx, cy;
-		GUI_Panel_GetContentPosition( parent, &cx, &cy );
+		guiGetPanelContentPosition( parent, &cx, &cy );
 		if ( x < cx ) x = cx;
 		if ( y < cy ) y = cy;
 	}
@@ -352,17 +352,17 @@ void GUI_Panel_SetPosition( GUIPanel *self, int x, int y )
 #endif
 }
 
-void GUI_Panel_GetSize( GUIPanel *self, int *w, int *h )
+void guiGetPanelSize( GuiPanel *self, int *w, int *h )
 {
 	if ( w != NULL ) *w = self->w;
 	if ( h != NULL ) *h = self->h;
 }
 
-void GUI_Panel_GetContentSize( GUIPanel *self, int *w, int *h )
+void guiGetPanelContentSize( GuiPanel *self, int *w, int *h )
 {
 	if ( self->border == GUI_PANEL_BORDER_NONE )
 	{
-		GUI_Panel_GetSize( self, w, h );
+		guiGetPanelSize( self, w, h );
 		return;
 	}
 
@@ -371,14 +371,14 @@ void GUI_Panel_GetContentSize( GUIPanel *self, int *w, int *h )
 	if ( h != NULL ) *h = self->h - GUI_PANEL_BORDER_SIZE;
 }
 
-void GUI_Panel_SetSize( GUIPanel *self, int w, int h )
+void guiSetPanelSize( GuiPanel *self, int w, int h )
 {
 	self->w = w;
 	self->h = h;
 	// todo: recurse over children?
 }
 
-bool GUI_Panel_IsMouseOver( GUIPanel *self, int mx, int my )
+bool guiIsMouseOverPanel( GuiPanel *self, int mx, int my )
 {
 	// Back in ye olden days, this was simple because we had explicit positions, but no more!
 	int x, y;
@@ -386,16 +386,16 @@ bool GUI_Panel_IsMouseOver( GUIPanel *self, int mx, int my )
 	return !( mx < self->x || mx > self->x + self->w || my < self->y || my > self->y + self->h );
 }
 
-bool GUI_Panel_HandleMouseEvent( GUIPanel *self, int mx, int my, int wheel, int button, bool buttonUp )
+bool guiHandleMousePanelEvent( GuiPanel *self, int mx, int my, int wheel, int button, bool buttonUp )
 {
-	if ( !GUI_Panel_IsMouseOver( self, mx, my ) )
+	if ( !guiIsMouseOverPanel( self, mx, my ) )
 		return false;
 
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
-		if ( GUI_Panel_HandleMouseEvent( childPanel, mx, my, wheel, button, buttonUp ) )
+		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		if ( guiHandleMousePanelEvent( childPanel, mx, my, wheel, button, buttonUp ) )
 		{
 			return true;
 		}
@@ -411,13 +411,13 @@ bool GUI_Panel_HandleMouseEvent( GUIPanel *self, int mx, int my, int wheel, int 
 	return false;
 }
 
-bool GUI_Panel_HandleKeyboardEvent( GUIPanel *self, int button, bool buttonUp )
+bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp )
 {
 	PLLinkedListNode *childNode = PlGetFirstNode( self->children );
 	while ( childNode != NULL )
 	{
-		GUIPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
-		if ( GUI_Panel_HandleKeyboardEvent( childPanel, button, buttonUp ) )
+		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
+		if ( guiHandleKeyboardPanelEvent( childPanel, button, buttonUp ) )
 		{
 			return true;
 		}
@@ -433,7 +433,7 @@ bool GUI_Panel_HandleKeyboardEvent( GUIPanel *self, int button, bool buttonUp )
 	return false;
 }
 
-void GUI_Panel_SetVisible( GUIPanel *self, bool flag )
+void guiSetPanelVisible( GuiPanel *self, bool flag )
 {
 	self->isVisible = flag;
 }

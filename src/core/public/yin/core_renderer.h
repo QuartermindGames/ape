@@ -7,7 +7,7 @@
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
 typedef struct ApeLight ApeLight;
-typedef struct OgeTexture OgeTexture;
+typedef struct ApeTexture ApeTexture;
 typedef struct ApeMaterial ApeMaterial;
 
 // TODO: retire this...
@@ -38,12 +38,12 @@ unsigned int YnCore_Viewport_GetAverageFPS( const ApeViewport *viewport );
  * If it's already cached, will return the existing instance.
  * Will return NULL on fail.
  */
-OgeTexture *YnCore_Texture_Load( const char *path );
+ApeTexture *YnCore_Texture_Load( const char *path );
 
 /**
  * Releases the reference for the given texture.
  */
-void YnCore_Texture_Release( OgeTexture *texture );
+void apeReleaseTexture( ApeTexture *texture );
 
 /**********************************************************/
 // Materials

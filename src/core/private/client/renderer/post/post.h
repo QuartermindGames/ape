@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include "../renderer.h"
 

@@ -7,7 +7,7 @@
 
 #include <plgraphics/plg_mesh.h>
 
-#include "core_memory_manager.h"
+#include "ape_memory_manager.h"
 
 #include "client/renderer/renderer_scenegraph.h"
 
@@ -84,6 +84,8 @@ typedef struct ApeWorldFace
 {
 	PLVector3 normal;
 	PLVector3 origin;
+
+	int32_t smoothingGroup;
 
 	ApeWorldPortal *portal;
 

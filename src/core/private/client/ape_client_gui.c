@@ -1,7 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
-#include "client_gui.h"
+#include "ape_private.h"
+#include "ape_client_gui.h"
 
 #include "editor/editor.h"
 
@@ -11,11 +11,11 @@
 #include "client/renderer/renderer_font.h"
 #include "legacy/actor.h"
 
-static GUICanvas *canvas;
+static GuiCanvas *canvas;
 
-static const GUIStyleSheet *defaultStyle;
-static GUIPanel *rootPanel;
-static GUIPanel *cursor;
+static const GuiStyleSheet *defaultStyle;
+static GuiPanel *rootPanel;
+static GuiPanel *cursor;
 
 static int guiWidth  = 800;
 static int guiHeight = 600;
@@ -42,41 +42,41 @@ void apeInitializeGUI_( void )
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
 	}
 
-	GUI_Initialize();
+	guiInitialize();
 
-	defaultStyle = GUI_CacheStyleSheet( "guis/styles/default.n" );
+	defaultStyle = guiCacheStyleSheet( "guis/styles/default.n" );
 	if ( defaultStyle == NULL )
 	{
 		PRINT_ERROR( "Failed to cache base style for GUI!\n" );
 	}
 
-	GUI_SetStyleSheet( defaultStyle );
+	guiSetStyleSheet( defaultStyle );
 
-	canvas = GUI_CreateCanvas( guiWidth, guiHeight );
+	canvas = guiCreateCanvas( guiWidth, guiHeight );
 	if ( canvas == NULL )
 	{
 		PRINT_ERROR( "Failed to create GUI canvas!\n" );
 	}
 
-	rootPanel = GUI_Panel_Create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
+	rootPanel = guiCreatePanel( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 	if ( rootPanel == NULL )
 	{
 		PRINT_ERROR( "Failed to create base panel!\n" );
 	}
 
-	cursor = GUI_Cursor_Create( rootPanel, 0, 0 );
+	cursor = guiCreateCursor( rootPanel, 0, 0 );
 	if ( cursor == NULL )
 	{
 		PRINT_ERROR( "Failed to create cursor!\n" );
 	}
 
-	GUI_Panel_SetVisible( rootPanel, true );
+	guiSetPanelVisible( rootPanel, true );
 }
 
 void apeShutdownGUI_( void )
 {
-	GUI_Panel_Destroy( rootPanel );
-	GUI_Shutdown();
+	guiDestroyPanel( rootPanel );
+	guiShutdown();
 }
 
 void ogeDrawGUI_( const ApeViewport *viewport )
@@ -127,8 +127,8 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-		GUI_SetCanvasSize( canvas, guiWidth, guiHeight );
-		GUI_Draw( canvas, rootPanel );
+		guiSetCanvasSize( canvas, guiWidth, guiHeight );
+		guiDraw( canvas, rootPanel );
 
 		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
 	}
@@ -146,14 +146,14 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 	PL_GET_CVAR( "r.showFPS", showFPS );
 	if ( showFPS->b_value && debugOverlay->i_value == 0 )
 	{
-		GUIFont *font = GUI_Font_GetDefault( GUI_FONT_DEFAULT_MEDIUM );
+		GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
 		assert( font != NULL );
 		if ( font != NULL )
 		{
 			char tmp[ 32 ];
 			snprintf( tmp, sizeof( tmp ), "FPS: %u", YnCore_Viewport_GetAverageFPS( viewport ) );
-			GUI_Font_DrawString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
-			GUI_Font_Display( font );
+			guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
+			guiDisplayFont( font );
 		}
 	}
 
@@ -163,15 +163,15 @@ void ogeDrawGUI_( const ApeViewport *viewport )
 
 void apeTickGUI_( void )
 {
-	GUI_Tick( rootPanel );
+	guiTick( rootPanel );
 }
 
 void YnCore_ResizeGUI( int w, int h )
 {
-	GUI_Panel_SetSize( rootPanel, w, h );
+	guiSetPanelSize( rootPanel, w, h );
 }
 
-GUIPanel *YnCore_GetGUIRootPanel( void )
+GuiPanel *YnCore_GetGUIRootPanel( void )
 {
 	return rootPanel;
 }
