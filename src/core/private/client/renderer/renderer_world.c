@@ -356,7 +356,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 	}
 
 	// TODO: gross, we should handle this better rather than just overriding the world ambience
-	if ( room->ambientLightDefined )
+	if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
 	{
 		world->ambience = PlColourU8ToF32( &room->ambientLight );
 	}

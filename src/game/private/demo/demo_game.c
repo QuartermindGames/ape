@@ -46,6 +46,11 @@ static const char *vppPaths[] = {
         "pc_rf_demo/music.vpp",
         "pc_rf_demo/tables.vpp",
         "pc_rf_demo/ui.vpp",
+
+        "ps2_rf2_demo/L01S2.VPP",
+        "ps2_rf2_demo/L01S3.VPP",
+        "ps2_rf2_demo/L01S4.VPP",
+        "ps2_rf2_demo/L01S5.VPP",
 };
 #define NUM_VPP_PACKS PL_ARRAY_ELEMENTS( vppPaths )
 static PLFileSystemMount *vppPackages[ NUM_VPP_PACKS ];
@@ -63,7 +68,7 @@ static void InitializeDemoGame( void )
 
 	Game_RegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world worlds/glass_house.rfl" );
+	//PlParseConsoleString( "world L01S2.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );

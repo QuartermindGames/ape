@@ -30,22 +30,6 @@
 #	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f )
 #endif
 
-enum ApeWorldFaceFlag
-{
-	PL_BITFLAG( WORLD_FACE_FLAG_PORTAL, 0U ), /* reflect portal */
-	PL_BITFLAG( WORLD_FACE_FLAG_MIRROR, 1U ), /* reflect back */
-	PL_BITFLAG( WORLD_FACE_FLAG_SKIP, 2U ),   /* skip face */
-};
-
-typedef enum ApeWorldObjectCollisionType
-{
-	WORLD_OBJECT_COLLISION_POLY,
-	WORLD_OBJECT_COLLISION_SPHERE,
-	WORLD_OBJECT_COLLISION_AABB,
-} ApeWorldObjectCollisionType;
-
-#define WORLD_FACE_MAX_SIDES 32
-
 typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
 typedef struct ApeWorldFace ApeWorldFace;
@@ -138,7 +122,6 @@ typedef struct ApeWorldObject
 
 	SGTransform transform;
 
-	ApeWorldObjectCollisionType collisionType;
 	union
 	{
 		const ApeWorldMesh *collisionMesh;
@@ -165,23 +148,27 @@ typedef struct ApeWorldDrawBatch
 	uint32_t numSubMeshes;
 } ApeWorldDrawBatch;
 
+#define APE_WORLD_ROOM_FLAG_COLD     0x2
+#define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
+#define APE_WORLD_ROOM_FLAG_AIRLOCK  0x8
+#define APE_WORLD_ROOM_FLAG_AMBIENT  0x20
+#define APE_WORLD_ROOM_FLAG_ALPHA    0x40
+#define APE_WORLD_ROOM_FLAG_LIFE     0x80
+#define APE_WORLD_ROOM_FLAG_PLANKTON 0x1000
+#define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
+#define APE_WORLD_ROOM_FLAG_SKY      0x40000000
+
 typedef struct ApeWorldRoom
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 	int32_t uid;
 
-	bool isSky;
-	bool isCold;
-	bool isOutside;
-	bool isAirLock;
+	bool isDetail;
 	bool containsLiquid;
 
-	bool ambientLightDefined;
-	PLColour ambientLight;
+	uint32_t flags;
 
-	bool hasAlpha;
-	bool isDetail;
-	bool isInvincible;
+	PLColour ambientLight;
 
 	float life;
 
@@ -269,8 +256,8 @@ PL_EXTERN_C
 ApeWorldRoom *apeCreateWorldRoom( void );
 void apeDestroyWorldRoom( ApeWorldRoom *room );
 
-void YnCore_WorldSerialiser_Begin( const ApeWorld *world, NdBranch *root );
-ApeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, ApeWorld *out );
+void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
+ApeWorld *apeDeserializeWorld( NdBranch *root, ApeWorld *out );
 
 ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
 

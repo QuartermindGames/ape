@@ -44,7 +44,7 @@ static void DeserialiseEntities( ApeWorld *world, NdBranch *root )
 	}
 }
 
-ApeWorld *YnCore_WorldDeserialiser_Begin( NdBranch *root, ApeWorld *out )
+ApeWorld *apeDeserializeWorld( NdBranch *root, ApeWorld *out )
 {
 	int version = ndGetI32ByName( root, "version", -1 );
 	if ( version == -1 )

@@ -171,20 +171,24 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 		room->bounds.mins = ParseVector( file );
 		room->bounds.maxs = ParseVector( file );
 
-		room->isSky               = ( bool ) PL_READUINT8( file, NULL );
-		room->isCold              = ( bool ) PL_READUINT8( file, NULL );
-		room->isOutside           = ( bool ) PL_READUINT8( file, NULL );
-		room->isAirLock           = ( bool ) PL_READUINT8( file, NULL );
-		room->containsLiquid      = ( bool ) PL_READUINT8( file, NULL );
-		room->ambientLightDefined = ( bool ) PL_READUINT8( file, NULL );
-		room->isDetail            = ( bool ) PL_READUINT8( file, NULL );
-		room->hasAlpha            = ( bool ) PL_READUINT8( file, NULL );
+		if ( version >= 234 )
+		{
+			room->flags = PL_READUINT32( file, false, NULL );
+		}
+		else
+		{
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_SKY; }
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_COLD; }
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_OUTSIDE; }
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_AIRLOCK; }
+			room->containsLiquid = ( bool ) PL_READUINT8( file, NULL );
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_AMBIENT; }
+			room->isDetail = ( bool ) PL_READUINT8( file, NULL );
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_ALPHA; }
+		}
 
 		room->life = PlReadFloat32( file, false, NULL );
-		if ( room->life <= 0.0f )
-		{
-			room->isInvincible = true;
-		}
+		assert( !isnan( room->life ) );
 
 		if ( version >= 180 )
 		{
@@ -193,37 +197,91 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 			PL_DELETE( eaxEffect );
 		}
 
-		if ( room->containsLiquid )
+		if ( version >= 234 )
 		{
-			room->liquid.depth = PlReadFloat32( file, false, NULL );
-			assert( !isnan( room->liquid.depth ) );
-			room->liquid.colour = ParseColour( file );
+			float x = PlReadFloat32( file, false, NULL );
+			assert( !isnan( x ) );
+			float y = PlReadFloat32( file, false, NULL );
+			assert( !isnan( y ) );
+			float z = PlReadFloat32( file, false, NULL );
+			assert( !isnan( z ) );
 
-			uint16_t size;
-			char *liquidTextureName = ParseString( file, &size );
-			assert( liquidTextureName != NULL && *liquidTextureName != '\0' );
-			PL_DELETE( liquidTextureName );
+			room->liquid.colour = ParseColour( file );
 
 			room->liquid.visibility = PlReadFloat32( file, false, NULL );
 			assert( !isnan( room->liquid.visibility ) );
 
-			room->liquid.type     = PlReadInt32( file, false, NULL );
-			room->liquid.alpha    = PlReadInt32( file, false, NULL );
-			room->liquid.plankton = ( bool ) PL_READUINT8( file, NULL );
-			room->liquid.ppmU     = PlReadInt32( file, false, NULL );
-			room->liquid.ppmV     = PlReadInt32( file, false, NULL );
+			room->liquid.type = PlReadInt32( file, false, NULL );
 
-			room->liquid.angle = PlReadFloat32( file, false, NULL );
-			assert( !isnan( room->liquid.angle ) );
+			if ( version < 284 )
+			{
+				room->liquid.ppmU = PlReadInt32( file, false, NULL );
+				room->liquid.ppmV = PlReadInt32( file, false, NULL );
 
-			room->liquid.waveform = PlReadInt32( file, false, NULL );
-			room->liquid.panU     = PlReadFloat32( file, false, NULL );
-			room->liquid.panV     = PlReadFloat32( file, false, NULL );
+				room->liquid.angle = PlReadFloat32( file, false, NULL );
+				assert( !isnan( room->liquid.angle ) );
+
+				room->liquid.waveform = PlReadInt32( file, false, NULL );
+			}
+
+			room->liquid.panU = PlReadFloat32( file, false, NULL );
+			assert( !isnan( room->liquid.panU ) );
+			room->liquid.panV = PlReadFloat32( file, false, NULL );
+			assert( !isnan( room->liquid.panV ) );
+
+			if ( version >= 284 )
+			{
+				PlReadFloat32( file, false, NULL );
+				PlReadFloat32( file, false, NULL );
+			}
+
+			if ( version < 284 )
+			{
+				ParseColour( file );
+				PlReadInt32( file, false, NULL );
+
+				if ( room->flags & APE_WORLD_ROOM_FLAG_UNKNOWN0 )
+				{
+					uint16_t size;
+					char *tmp = ParseString( file, &size );
+					PL_DELETE( tmp );
+				}
+			}
 		}
-
-		if ( room->ambientLightDefined )
+		else
 		{
-			room->ambientLight = ParseColour( file );
+			if ( room->containsLiquid )
+			{
+				room->liquid.depth = PlReadFloat32( file, false, NULL );
+				assert( !isnan( room->liquid.depth ) );
+				room->liquid.colour = ParseColour( file );
+
+				uint16_t size;
+				char *liquidTextureName = ParseString( file, &size );
+				assert( liquidTextureName != NULL && *liquidTextureName != '\0' );
+				PL_DELETE( liquidTextureName );
+
+				room->liquid.visibility = PlReadFloat32( file, false, NULL );
+				assert( !isnan( room->liquid.visibility ) );
+
+				room->liquid.type  = PlReadInt32( file, false, NULL );
+				room->liquid.alpha = PlReadInt32( file, false, NULL );
+				if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_PLANKTON; }
+				room->liquid.ppmU = PlReadInt32( file, false, NULL );
+				room->liquid.ppmV = PlReadInt32( file, false, NULL );
+
+				room->liquid.angle = PlReadFloat32( file, false, NULL );
+				assert( !isnan( room->liquid.angle ) );
+
+				room->liquid.waveform = PlReadInt32( file, false, NULL );
+				room->liquid.panU     = PlReadFloat32( file, false, NULL );
+				room->liquid.panV     = PlReadFloat32( file, false, NULL );
+			}
+
+			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
+			{
+				room->ambientLight = ParseColour( file );
+			}
 		}
 
 		PlPushBackVectorArrayElement( world->rooms, room );
@@ -464,6 +522,12 @@ static void ParseStaticGeometryTextureMovers( ApeWorld *world, PLFile *file )
 
 static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_t version )
 {
+	if ( version == 200 )
+	{
+		// unused?
+		PL_READUINT32( file, false, NULL );
+	}
+
 	uint16_t size;
 	char *name = ParseString( file, &size );
 	PL_DELETE( name );
@@ -472,18 +536,15 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 
 	ParseStaticGeometryTextures( world, file );
 
-	uint32_t numScrollingFaces = PL_READUINT32( file, false, NULL );
-	for ( uint32_t i = 0; i < numScrollingFaces; ++i )
+	if ( version < 200 )
 	{
-		//assert( 0 );
-		// todo
+		// this crud seems to be unused??
+		uint32_t numScrollingFaces = PL_READUINT32( file, false, NULL );
+		for ( uint32_t i = 0; i < numScrollingFaces; ++i )
+		{
+			assert( 0 );
+			// todo
 
-		if ( version >= 272 )
-		{
-			PlFileSeek( file, 80, PL_SEEK_CUR );
-		}
-		else
-		{
 			PlReadInt32( file, false, NULL );
 			PlReadInt32( file, false, NULL );
 			PlReadFloat32( file, false, NULL );//x
@@ -755,7 +816,7 @@ bool apeSaveWorld( ApeWorld *world, const char *path )
 
 	NdBranch *root = ndPushBackObject( NULL, "world" );
 
-	YnCore_WorldSerialiser_Begin( world, root );
+	apeSerializeWorld( world, root );
 	snprintf( world->path, sizeof( world->path ), "%s", path );
 
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
