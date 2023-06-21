@@ -85,6 +85,17 @@ static void InitializeDemoGame( void )
 
 static void ShutdownDemoGame( void )
 {
+	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i )
+	{
+		if ( vppPackages[ i ] == NULL )
+		{
+			continue;
+		}
+
+		PlClearMountedLocation( vppPackages[ i ] );
+		vppPackages[ i ] = NULL;
+	}
+
 	apeDestroyCamera( playerCamera );
 	playerCamera = NULL;
 }
