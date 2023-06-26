@@ -32,7 +32,7 @@ const char *cmnGetAppDataDirectory( void )
 		return appDataPath;
 	}
 
-	if ( PlGetApplicationDataDirectory( "yin", appDataPath, sizeof( appDataPath ) ) != NULL )
+	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL )
 	{
 		return appDataPath;
 	}

@@ -70,3 +70,5 @@ typedef struct Actor Actor;
 
 void Game_SpawnWorld( const char *worldPath );
 struct ApeWorld *Game_GetCurrentWorld( void );
+
+

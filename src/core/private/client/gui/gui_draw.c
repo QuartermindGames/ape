@@ -49,6 +49,11 @@ void guiDestroyCanvas( GuiCanvas *canvas )
 	PL_DELETE( canvas );
 }
 
+GuiCanvas *guiGetDefaultCanvas( void )
+{
+
+}
+
 void guiSetCanvasSize( GuiCanvas *canvas, int width, int height )
 {
 	if ( canvas->width == width && canvas->height == height )

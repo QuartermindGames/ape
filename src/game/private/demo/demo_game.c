@@ -69,6 +69,7 @@ static void InitializeDemoGame( void )
 	Game_RegisterStandardEntityComponents();
 
 	//PlParseConsoleString( "world L01S2.rfl" );
+	PlParseConsoleString( "world train01.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );
@@ -111,7 +112,7 @@ static void TickDemoGame( void )
 		PLVector3 ang = apeGetCameraAngles( playerCamera );
 		ang.y += mx;
 		ang.x += my;
-		ang.x = PlClamp( -85.0f, ang.z, 85.0f );
+		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 		apeSetCameraAngles( playerCamera, &ang );
 	}
 }

@@ -79,7 +79,7 @@ void apeShutdownGUI_( void )
 	guiShutdown();
 }
 
-void ogeDrawGUI_( const ApeViewport *viewport )
+void apeDrawGUI_( const ApeViewport *viewport )
 {
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
@@ -166,12 +166,12 @@ void apeTickGUI_( void )
 	guiTick( rootPanel );
 }
 
-void YnCore_ResizeGUI( int w, int h )
+void apeResizeGUI( int w, int h )
 {
 	guiSetPanelSize( rootPanel, w, h );
 }
 
-GuiPanel *YnCore_GetGUIRootPanel( void )
+GuiPanel *apeGetDefaultRootPanel( void )
 {
 	return rootPanel;
 }

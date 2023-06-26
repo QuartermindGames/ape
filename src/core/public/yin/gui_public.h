@@ -153,4 +153,15 @@ void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, c
 void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
 void guiDisplayFont( GuiFont *font );
 
+/****************************************
+ * Desktop
+ * A simplified GUI environment for
+ * tooling.
+ ****************************************/
+
+typedef struct GuiDesktop GuiDesktop;
+
+GuiDesktop *guiCreateDesktop( GuiPanel *parent );
+void guiDestroyDesktop( GuiDesktop *desktop );
+
 PL_EXTERN_C_END

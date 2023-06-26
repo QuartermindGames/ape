@@ -277,7 +277,7 @@ static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 	{
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, i );
 		assert( detailRoom != NULL );
-		if ( detailRoom == NULL || !PlgIsBoxInsideView( camera->internal, &detailRoom->bounds ) )
+		if ( detailRoom == NULL || detailRoom->mesh == NULL || !PlgIsBoxInsideView( camera->internal, &detailRoom->bounds ) )
 		{
 			continue;
 		}
@@ -446,7 +446,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 	}
 #else
 
-	DrawDetailRooms( world, room );
+	//DrawDetailRooms( world, room );
 
 	//for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{

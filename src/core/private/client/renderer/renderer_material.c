@@ -743,7 +743,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 			PlgSetShaderProgram( curPass->program );
 			PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
-			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), true );
+			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 			SetGlobalUniforms( curPass->program, lights, numLights );
 

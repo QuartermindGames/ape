@@ -24,6 +24,8 @@ PLGCamera *apeGetAuxCamera( void ) { return auxCamera; }
 
 static PLGFrameBuffer *fboBuffer;
 
+static bool isScreenshotPending = false;
+
 /* Post Processing */
 
 void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
@@ -137,6 +139,45 @@ void apeBeginDraw( ApeViewport *viewport )
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 }
 
+static void WriteScreenshot( void )
+{
+	uint32_t w, h;
+	PlgGetFrameBufferResolution( fboBuffer, &w, &h );
+
+	size_t bufSize = ( ( w * h ) * 4 );
+	uint8_t *buf   = PL_NEW_( uint8_t, bufSize );
+	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL )
+	{
+		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		assert( image != NULL );
+		if ( image != NULL )
+		{
+			uint16_t num = 0;
+			PLPath path;
+			PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), num );
+			while ( PlFileExists( path ) )
+			{
+				PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), ++num );
+			}
+
+			PlFlipImageVertical( image );
+
+			PlWriteImage( image, path );
+			PlDestroyImage( image );
+		}
+		else
+		{
+			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
+		}
+	}
+	else
+	{
+		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+	}
+
+	PL_DELETE( buf );
+}
+
 void apeEndDraw( ApeViewport *viewport )
 {
 	PL_ZERO_( ape_RendererPerformance_ );
@@ -145,6 +186,12 @@ void apeEndDraw( ApeViewport *viewport )
 	viewport->perf.numTriangles = 0;
 	viewport->perf.numPolygons  = 0;
 	viewport->perf.numPortals   = 0;
+
+	if ( isScreenshotPending )
+	{
+		WriteScreenshot();
+		isScreenshotPending = false;
+	}
 }
 
 void apeInitializeShaders_( void );  /* renderer/shaders.c */
@@ -154,7 +201,6 @@ void apeInitializeTextures_( void ); /* texture.c */
 void apeInitializeRenderTargets( void );
 void apeShutdownRenderTargets( void );
 
-static bool isScreenshotPending = false;
 static void PrepareScreenshotCapture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	isScreenshotPending = true;
@@ -239,7 +285,9 @@ static void DrawScenePost( const ApeViewport *viewport )
 void YR_DrawGraph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
+	{
 		return;
+	}
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
@@ -247,14 +295,22 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	for ( unsigned int i = 0; i < numPoints; ++i )
 	{
 		if ( values[ i ] > max )
+		{
 			max = values[ i ];
+		}
 		if ( values[ i ] < min )
+		{
 			min = values[ i ];
+		}
 	}
 
+#if 0
 	bool outOfBounds = false;
 	if ( oa != min || max != ob )
+	{
 		outOfBounds = true;
+	}
+#endif
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
 	PLVector3 *points         = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
@@ -264,14 +320,16 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	{
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * ( j - 1 ) );
 		if ( min != max )
+		{
 			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
-
+		}
 		++i;
 
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * j );
 		if ( min != max )
+		{
 			points[ i ].y = y + h - 1 - ( ( values[ j ] - min ) * ( h / ( max - min ) ) );
-
+		}
 		/* leave z, it'll be initialized as 0 */
 	}
 
@@ -290,10 +348,10 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	        { x + w, y + h, 0 },
 	        { x + w, y, 0 },// right
 	};
-	PlgDrawLines( border, PL_ARRAY_ELEMENTS( border ), PL_COLOUR_GOLD );
+	PlgDrawLines( border, PL_ARRAY_ELEMENTS( border ), PL_COLOUR_GOLD, 1.0f );
 #endif
 
-	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
+	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
 	BitmapFont *font = Font_GetDefaultSmall();
 	Font_BeginDraw( font );
@@ -302,31 +360,35 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	{
 		size_t len = strlen( heading );
 		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		Font_AddBitmapStringToPass( font, cPos, y + 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, len, false );
+		Font_AddBitmapStringToPass( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
 	// Calculate the average sum of all the points
 	double avg = 0.0;
 	for ( unsigned int i = 0; i < numPoints; ++i )
+	{
 		avg += values[ i ];
+	}
 	avg /= numPoints;
 
 	char buf[ 128 ];
 
 	// Current and average readings
 	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 
+#if 0
 	snprintf( buf, sizeof( buf ), "y+:%02f", max );
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "y-:%02f", min );
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+#endif
 
 	Font_Draw( font );
 
-	PlFree( points );
+	PL_DELETE( points );
 }
 
 static void DrawDebugOverlay( const ApeViewport *viewport )
@@ -416,7 +478,7 @@ static void DrawDebugOverlay( const ApeViewport *viewport )
 	{
 		float x = sx;
 
-		static const float graphHeight = 64;
+		static const float graphHeight = 32;
 		for ( unsigned int i = 0; i < MAX_PROFILER_GROUPS; ++i )
 		{
 			if ( y + graphHeight >= ( float ) viewport->height )
@@ -468,7 +530,7 @@ void apeDrawMenu( const ApeViewport *viewport )
 	//camera.internal = auxCamera;
 	//YR_World_DrawWireframe( Game_GetCurrentWorld(), &camera );
 
-	ogeDrawGUI_( viewport );
+	apeDrawGUI_( viewport );
 	YnCore_DrawEditorGUI( viewport );
 
 	DrawDebugOverlay( viewport );
@@ -604,43 +666,6 @@ PLGTexture *apeGetPrimaryDepthAttachment( void )
 	return depthTexture;
 }
 
-static void WriteScreenshot( void )
-{
-	uint32_t w, h;
-	PlgGetFrameBufferResolution( fboBuffer, &w, &h );
-
-	size_t bufSize = ( ( w * h ) * 4 );
-	uint8_t *buf   = PL_NEW_( uint8_t, bufSize );
-	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL )
-	{
-		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
-		assert( image != NULL );
-		if ( image != NULL )
-		{
-			uint16_t num = 0;
-			PLPath path;
-			PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), num );
-			while ( PlFileExists( path ) )
-			{
-				PlSetupPath( path, true, "%s/screen%u.png", cmnGetAppDataDirectory(), ++num );
-			}
-
-			PlWriteImage( image, path );
-			PlDestroyImage( image );
-		}
-		else
-		{
-			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
-		}
-	}
-	else
-	{
-		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
-	}
-
-	PL_DELETE( buf );
-}
-
 void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_RendererPerformance_.cameraPos = camera->internal->position;
@@ -662,12 +687,6 @@ void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-	}
-
-	if ( isScreenshotPending )
-	{
-		WriteScreenshot();
-		isScreenshotPending = false;
 	}
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );

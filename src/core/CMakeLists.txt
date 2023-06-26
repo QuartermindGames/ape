@@ -4,20 +4,6 @@ set(YIN_CORE_CLIENT
         private/client/client_console.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
-        private/client/audio/audio.c
-        private/client/audio/audio_openal.c
-        private/client/audio/audio_wav.c
-        private/client/audio/audio_xaudio2.cpp
-        private/client/audio/audio_xwb.c
-        private/client/audio/micromod.c
-        private/client/audio/sdlplayer.c
-        private/client/gui/gui.c
-        private/client/gui/gui_button.c
-        private/client/gui/gui_cursor.c
-        private/client/gui/gui_draw.c
-        private/client/gui/gui_font.c
-        private/client/gui/gui_image.c
-        private/client/gui/gui_panel.c
         private/client/renderer/post/post_bloom.c
         private/client/renderer/post/post_fxaa.c
         private/client/renderer/post/post.c
@@ -35,6 +21,25 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_scenegraph.c
         private/client/renderer/renderer_shaders.c
         private/client/renderer/renderer_sprite.c)
+
+set(APE_SOURCE_AUDIO
+        private/client/audio/audio.c
+        private/client/audio/audio_openal.c
+        private/client/audio/audio_wav.c
+        private/client/audio/audio_xaudio2.cpp
+        private/client/audio/audio_xwb.c
+        private/client/audio/micromod.c
+        private/client/audio/sdlplayer.c)
+
+set(APE_SOURCE_GUI
+        private/client/gui/gui.c
+        private/client/gui/gui_button.c
+        private/client/gui/gui_desktop.c
+        private/client/gui/gui_cursor.c
+        private/client/gui/gui_draw.c
+        private/client/gui/gui_font.c
+        private/client/gui/gui_image.c
+        private/client/gui/gui_panel.c)
 
 add_library(yin-core STATIC
         private/ape_console.c
@@ -72,6 +77,8 @@ add_library(yin-core STATIC
         private/editor/editor_world.c
 
         ${YIN_CORE_CLIENT}
+        ${APE_SOURCE_AUDIO}
+        ${APE_SOURCE_GUI}
 
         private/legacy/actor.c
         private/legacy/actors/actor_player.c

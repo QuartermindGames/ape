@@ -5,6 +5,11 @@
 
 uint8_t menuOptionSelection = 0;
 
+void gamInitializeMenu( void )
+{
+
+}
+
 static Menu *currentMenu = NULL;
 
 void Game_Menu_SetCurrent( Menu *menu )
@@ -16,30 +21,6 @@ void Game_Menu_SetCurrent( Menu *menu )
 Menu *Game_Menu_GetCurrent( void )
 {
 	return currentMenu;
-}
-
-static void Menu_CB_StartGame( void )
-{
-#if 0
-	GameDifficulty difficulty;
-	switch ( currentMenu->curSelection )
-	{
-		default:
-		case 0:
-			difficulty = GAME_DIFFICULTY_EASY;
-			break;
-		case 1:
-			difficulty = GAME_DIFFICULTY_NORMAL;
-			break;
-		case 2:
-			difficulty = GAME_DIFFICULTY_HARD;
-			break;
-	}
-
-	Game_SetDifficultyMode( difficulty );
-#endif
-
-	PlParseConsoleString( "world arena" );
 }
 
 typedef enum HUDElement

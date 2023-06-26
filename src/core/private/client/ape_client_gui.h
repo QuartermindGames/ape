@@ -8,9 +8,8 @@ PL_EXTERN_C
 
 void apeInitializeGUI_( void );
 void apeShutdownGUI_( void );
-void ogeDrawGUI_( const ApeViewport *viewport );
+void apeDrawGUI_( const ApeViewport *viewport );
 void apeTickGUI_( void );
-void YnCore_ResizeGUI( int w, int h );
-GuiPanel *YnCore_GetGUIRootPanel( void );
+void apeResizeGUI( int w, int h );
 
 PL_EXTERN_C_END

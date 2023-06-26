@@ -28,4 +28,6 @@ void apeHandleMouseButtonEvent( int button, ApeInputState buttonState );
 void apeHandleMouseWheelEvent( float x, float y );
 void apeHandleMouseMotionEvent( int x, int y );
 
+struct GuiPanel *apeGetDefaultRootPanel( void );
+
 PL_EXTERN_C_END

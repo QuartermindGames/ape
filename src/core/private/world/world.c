@@ -520,6 +520,73 @@ static void ParseStaticGeometryTextureMovers( ApeWorld *world, PLFile *file )
 	}
 }
 
+static uint32_t GetTotalVertsForRoom( ApeWorldRoom *room, bool detail )
+{
+	// determine total number of vertices
+
+	uint32_t numVerts = 0;
+	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+	{
+		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+		assert( face != NULL );
+		if ( face == NULL )
+		{
+			continue;
+		}
+
+		numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
+	}
+
+	if ( detail )
+	{
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
+		{
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			assert( detailRoom != NULL );
+			if ( detailRoom == NULL )
+			{
+				continue;
+			}
+
+			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k )
+			{
+				ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
+				assert( face != NULL );
+				if ( face == NULL )
+				{
+					continue;
+				}
+
+				numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
+			}
+		}
+	}
+
+	return numVerts;
+}
+
+static uint32_t GetTotalFacesForRoom( ApeWorldRoom *room, bool detail )
+{
+	uint32_t numFaces = PlGetNumVectorArrayElements( room->faces );
+
+	if ( detail )
+	{
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
+		{
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			assert( detailRoom != NULL );
+			if ( detailRoom == NULL )
+			{
+				continue;
+			}
+
+			numFaces += PlGetNumVectorArrayElements( detailRoom->faces );
+		}
+	}
+
+	return numFaces;
+}
+
 static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_t version )
 {
 	if ( version == 200 )
@@ -572,7 +639,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	{
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 		assert( room != NULL );
-		if ( room == NULL || room->isCached )
+		if ( room == NULL || room->isDetail || room->isMeshCached )
 		{
 			continue;
 		}
@@ -593,21 +660,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			}
 		}
 
-		// determine total number of vertices
-		uint32_t numVerts = 0;
-		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
-		{
-			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
-			assert( face != NULL );
-			if ( face == NULL )
-			{
-				continue;
-			}
-
-			numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
-		}
-
-		room->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVerts );
+		room->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, GetTotalVertsForRoom( room, true ) );
 		assert( room->mesh != NULL );
 		if ( room->mesh == NULL )
 		{
@@ -615,15 +668,19 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			continue;
 		}
 
+		uint32_t numTotalFaces = GetTotalFacesForRoom( room, true );
+		uint32_t numFaces      = GetTotalFacesForRoom( room, false );
+
 		room->mesh->numSubMeshes = 0;
 		if ( room->mesh->subMeshes == NULL )
 		{
-			room->mesh->maxSubMeshes   = PlGetNumVectorArrayElements( room->faces );
+			room->mesh->maxSubMeshes   = numTotalFaces;
 			room->mesh->subMeshes      = PL_NEW_( int32_t, room->mesh->maxSubMeshes );
 			room->mesh->firstSubMeshes = PL_NEW_( int32_t, room->mesh->maxSubMeshes );
 		}
 
-		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
+		uint32_t total = 0;
+		for ( uint32_t j = 0; j < numFaces; ++j )
 		{
 			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 			assert( face != NULL );
@@ -661,12 +718,60 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			}
 
 			uint32_t numVertices                                   = PlGetNumLinkedListNodes( face->edgeLoop );
-			room->mesh->firstSubMeshes[ room->mesh->numSubMeshes ] = ( room->mesh->numSubMeshes > 0 ) ? ( room->mesh->firstSubMeshes[ room->mesh->numSubMeshes - 1 ] + ( int ) numVertices ) : 0;
-			room->mesh->subMeshes[ room->mesh->numSubMeshes ]      = ( int ) numVertices;
+			room->mesh->subMeshes[ room->mesh->numSubMeshes ]      = ( int32_t ) numVertices;
+			room->mesh->firstSubMeshes[ room->mesh->numSubMeshes ] = ( int32_t ) total;
 			room->mesh->numSubMeshes++;
+
+			total += numVertices;
 		}
 
-		room->isCached = true;
+		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
+		{
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			assert( detailRoom != NULL );
+			if ( detailRoom == NULL )
+			{
+				continue;
+			}
+
+			numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
+			for ( uint32_t k = 0; k < numFaces; ++k )
+			{
+				ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
+				assert( face != NULL );
+				if ( face == NULL )
+				{
+					continue;
+				}
+
+				PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+				while ( faceVertexNode != NULL )
+				{
+					ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+					assert( vertex->u != NULL );
+
+					PlgAddMeshVertex( room->mesh,
+					                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
+					                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
+					                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
+					                  &( PLColour ){ 255, 255, 255, 255 },
+					                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
+
+					faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
+				}
+
+				uint32_t numVertices                                   = PlGetNumLinkedListNodes( face->edgeLoop );
+				room->mesh->subMeshes[ room->mesh->numSubMeshes ]      = ( int32_t ) numVertices;
+				room->mesh->firstSubMeshes[ room->mesh->numSubMeshes ] = ( int32_t ) total;
+				room->mesh->numSubMeshes++;
+
+				total += numVertices;
+			}
+		}
+
+		PlgUploadMesh( room->mesh );
+
+		room->isMeshCached = true;
 	}
 
 	return NULL;

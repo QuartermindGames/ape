@@ -191,7 +191,7 @@ typedef struct ApeWorldRoom
 	PLVectorArray *faces;      // ApeWorldFace
 
 	PLGMesh *mesh;             // cached mesh
-	bool isCached;             // if false, mesh cache will be updated
+	bool isMeshCached;             // if false, mesh cache will be updated
 	uint32_t numBatches;
 
 	ApeWorldObject *staticObjects;
