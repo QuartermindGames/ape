@@ -769,6 +769,9 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 			}
 		}
 
+		PlgGenerateMeshNormals( room->mesh, true );
+		PlgGenerateVertexTangentBasis( room->mesh->vertices, room->mesh->num_verts );
+
 		PlgUploadMesh( room->mesh );
 
 		room->isMeshCached = true;
