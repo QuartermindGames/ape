@@ -9,7 +9,7 @@
 #include "client/ape_client_input.h"
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_font.h"
-#include "game_interface.h"
+#include "game/game_interface.h"
 
 #define WORLD_CONTEXT_IDENTIFIER "world"
 

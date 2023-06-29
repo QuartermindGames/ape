@@ -1,7 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "ape_private.h"
-#include "game_interface.h"
+#include "game/game_interface.h"
 #include "world/world.h"
 
 #include <yin/node.h>

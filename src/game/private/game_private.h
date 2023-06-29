@@ -12,7 +12,7 @@
 #include <yin/core_input.h>
 #include <yin/gui_public.h>
 
-#include "game_interface.h"
+#include "game/game_interface.h"
 
 #define Game_Print( ... )   PlLogMessage( globalGameLog, __VA_ARGS__ )
 #define Game_Warning( ... ) PlLogMessage( globalGameWarningLog, __VA_ARGS__ )
