@@ -403,9 +403,19 @@ const char *ndGetStringByName( NdBranch *node, const char *name, const char *fal
 
 float ndGetF32ByName( NdBranch *node, const char *name, float fallback )
 {
+	return ( float ) ndGetF64ByName( node, name, fallback );
+}
+
+double ndGetF64ByName( NdBranch *node, const char *name, double fallback )
+{
 	/* todo: warning on fail */
 	const NdVarString *var = GetValueByName( node, name );
-	return ( var != NULL ) ? strtof( var->buf, NULL ) : fallback;
+	return ( var != NULL ) ? strtod( var->buf, NULL ) : fallback;
+}
+
+int8_t ndGetI8ByName( NdBranch *node, const char *name, int8_t fallback )
+{
+	return ( int8_t ) ndGetI32ByName( node, name, fallback );
 }
 
 int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback )

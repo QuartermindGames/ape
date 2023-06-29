@@ -109,6 +109,7 @@ NdErrorCode ndGetF32Array( NdBranch *parent, float *buf, unsigned int numElement
 
 bool ndGetBoolByName( NdBranch *root, const char *name, bool fallback );
 const char *ndGetStringByName( NdBranch *node, const char *name, const char *fallback );
+int8_t ndGetI8ByName( NdBranch *node, const char *name, int8_t fallback );
 int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback );
 float ndGetF32ByName( NdBranch *node, const char *name, float fallback );
 double ndGetF64ByName( NdBranch *node, const char *name, double fallback );
