@@ -55,11 +55,6 @@ void apeReleaseTexture( ApeTexture *texture );
 const char *apeGetMaterialPath( const ApeMaterial *material );
 
 /**
- * Returns the filename for the material.
- */
-const char *YnCore_Material_GetName( const ApeMaterial *material );
-
-/**
  * Cache a new material into memory if not so already, otherwise
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
@@ -70,6 +65,11 @@ ApeMaterial *apeCacheMaterial( const char *path, YNCoreCacheGroup group, bool us
  * Releases a reference to the material, allowing it to clean up.
  */
 void apeReleaseMaterial( ApeMaterial *material );
+
+/**
+ * Returns the surface type for the material.
+ */
+int8_t apeGetMaterialSurfaceType( const ApeMaterial *material );
 
 /**
  * Draws the given mesh with the given material. This also updates the peformance tracking,

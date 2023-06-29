@@ -6,7 +6,7 @@
 #include "renderer.h"
 #include "renderer_material.h"
 #include "world/world.h"
-#include "game_interface.h"
+#include "game/game_interface.h"
 
 #include <yin/node.h>
 
@@ -26,6 +26,8 @@ typedef struct ApeMaterial
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
 	PLLinkedListNode *node;
+
+	int8_t surfaceType;
 
 	ApeMemoryReference mem;
 } ApeMaterial;
@@ -473,8 +475,12 @@ static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool p
 		}
 	}
 
+	material->surfaceType = ndGetI8ByName( root, "surfaceType", 0 );
+
 	if ( material->numPasses == 0 )
+	{
 		PRINT_WARNING( "No passes specified for material!\n" );
+	}
 
 	material->isCached = true;
 
@@ -596,6 +602,11 @@ void apeReleaseMaterial( ApeMaterial *material )
 	}
 
 	apeReleaseReference( &material->mem );
+}
+
+int8_t apeGetMaterialSurfaceType( const ApeMaterial *material )
+{
+	return material->surfaceType;
 }
 
 static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )

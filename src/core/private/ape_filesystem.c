@@ -135,7 +135,7 @@ const char *FileSystem_GetUserConfigLocation( void )
 	return configPath;
 }
 
-void ogeFileSystem_SetupConfig( NdBranch *root )
+void apeSetupConfig( NdBranch *root )
 {
 	PlClearFileAliases();
 

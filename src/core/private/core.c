@@ -82,7 +82,7 @@ bool apeInitialize( const char *config )
 		userConfig = ndPushBackObject( NULL, "config" );
 	}
 
-	ogeFileSystem_SetupConfig( engineConfig );
+	apeSetupConfig( engineConfig );
 	apeMountLocations();
 
 	PRINT( "Initializing core services...\n" );

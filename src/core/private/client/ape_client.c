@@ -6,7 +6,7 @@
 #include "ape_client.h"
 #include "ape_client_input.h"
 
-#include "game_interface.h"
+#include "game/game_interface.h"
 #include "ape_client_gui.h"
 
 #include "editor/editor.h"

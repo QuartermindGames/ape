@@ -7,7 +7,7 @@
 #include "renderer.h"
 #include "post/post.h"
 #include "legacy/actor.h"
-#include "game_interface.h"
+#include "game/game_interface.h"
 
 /* Camera management fun! */
 

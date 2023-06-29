@@ -6,7 +6,7 @@ typedef struct NdBranch NdBranch;
 
 const char *FileSystem_GetUserConfigLocation( void );
 
-void ogeFileSystem_SetupConfig( NdBranch *root );
+void apeSetupConfig( NdBranch *root );
 
 void apeMountBaseLocations( void );
 void apeMountLocations( void );
