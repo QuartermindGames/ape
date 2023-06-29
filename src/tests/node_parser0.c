@@ -3,7 +3,7 @@
 
 static unsigned char node_parser_test( const char *buf, size_t length )
 {
-	NdBranch *root = NL_ParseBuffer( buf, strlen( buf ) );
+	NdBranch *root = ndParseBuffer( buf, strlen( buf ) );
 	if ( root == NULL )
 	{
 		printf( "Failed to node from buffer!\n" );
@@ -11,7 +11,7 @@ static unsigned char node_parser_test( const char *buf, size_t length )
 	}
 
 	NdBranch *v;
-	v = NL_GetChildByName( root, "exampleMember" );
+	v = ndGetChildByName( root, "exampleMember" );
 	if ( v == NULL )
 	{
 		printf( "Failed to fetch child 'exampleMember'!\n" );
@@ -19,7 +19,7 @@ static unsigned char node_parser_test( const char *buf, size_t length )
 	}
 
 	char dst[ 64 ];
-	if ( NL_GetStr( v, dst, sizeof( dst ) ) != NL_ERROR_SUCCESS )
+	if ( ndGetStr( v, dst, sizeof( dst ) ) != ND_ERROR_SUCCESS )
 	{
 		printf( "Failed to fetch string from 'exampleMember'!\n" );
 		return TEST_RETURN_FAILURE;
@@ -31,9 +31,9 @@ static unsigned char node_parser_test( const char *buf, size_t length )
 		return TEST_RETURN_FAILURE;
 	}
 
-	NL_PrintNodeTree( root, 0 );
+	ndPrintTree( root, 0 );
 
-	NL_DestroyNode( root );
+	ndDestroyBranch( root );
 
 	return TEST_RETURN_SUCCESS;
 }
