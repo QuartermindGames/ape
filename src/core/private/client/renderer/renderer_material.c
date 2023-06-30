@@ -381,14 +381,18 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 	NdBranch *subNode;
 	if ( ( subNode = ndGetChildByName( root, "blendMode" ) ) != NULL )
 	{
-		const char *blendModesArray[ 2 ];
+		char *blendModesArray[ 2 ];
 		if ( ndGetStringArray( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
 		{
 			materialPass->blendMode[ 0 ] = GetBlendModeByTag( blendModesArray[ 0 ] );
+			PL_DELETE( blendModesArray[ 0 ] );
 			materialPass->blendMode[ 1 ] = GetBlendModeByTag( blendModesArray[ 1 ] );
+			PL_DELETE( blendModesArray[ 1 ] );
 		}
 		else
+		{
 			PRINT_WARNING( "Invalid blend mode array in material!\n" );
+		}
 	}
 
 	materialPass->depthTest = ndGetBoolByName( root, "depthTest", materialPass->depthTest );

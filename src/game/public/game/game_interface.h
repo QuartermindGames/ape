@@ -71,6 +71,8 @@ typedef struct Actor Actor;
 void Game_SpawnWorld( const char *worldPath );
 struct ApeWorld *Game_GetCurrentWorld( void );
 
+////////////////////////////////////////////////////////////////////
+
 typedef enum GameMaterialSurfaceType
 {
 	GAME_MATERIAL_SURFACE_TYPE_NONE,
@@ -83,6 +85,13 @@ typedef enum GameMaterialSurfaceType
 	GAME_MATERIAL_SURFACE_TYPE_GLASS,
 	GAME_MATERIAL_SURFACE_TYPE_SAND,
 	GAME_MATERIAL_SURFACE_TYPE_ICE,
-	
+
 	GAME_MAX_MATERIAL_SURFACE_TYPES
 } GameMaterialSurfaceType;
+
+typedef struct GameMaterialSurface
+{
+	char description[ 32 ];
+	char **aliases;
+	uint8_t numAliases;
+} GameMaterialSurface;

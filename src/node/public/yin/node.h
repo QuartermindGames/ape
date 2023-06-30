@@ -100,7 +100,7 @@ NdErrorCode ndGetUI16( const NdBranch *node, uint16_t *dest );
 NdErrorCode ndGetUI32( const NdBranch *node, uint32_t *dest );
 NdErrorCode ndGetUI64( const NdBranch *node, uint64_t *dest );
 
-NdErrorCode ndGetStringArray( NdBranch *parent, const char **buf, unsigned int numElements );
+NdErrorCode ndGetStringArray( NdBranch *parent, char **buf, unsigned int numElements );
 NdErrorCode ndGetI8Array( NdBranch *parent, int8_t *buf, unsigned int numElements );
 NdErrorCode ndGetI16Array( NdBranch *parent, int16_t *buf, unsigned int numElements );
 NdErrorCode ndGetI32Array( NdBranch *parent, int32_t *buf, unsigned int numElements );

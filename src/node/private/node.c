@@ -254,18 +254,23 @@ NdErrorCode ndGetUI64( const NdBranch *node, uint64_t *dest )
 	return ND_ERROR_SUCCESS;
 }
 
-NdErrorCode ndGetStringArray( NdBranch *parent, const char **buf, unsigned int numElements )
+NdErrorCode ndGetStringArray( NdBranch *parent, char **buf, unsigned int numElements )
 {
 	if ( parent->type != ND_PROPERTY_ARRAY || parent->childType != ND_PROPERTY_STRING )
+	{
 		return ND_ERROR_INVALID_TYPE;
+	}
 
 	NdBranch *child = ndGetFirstChild( parent );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
+		{
 			return ND_ERROR_INVALID_ELEMENTS;
+		}
 
-		buf[ i ] = child->data.buf;
+		buf[ i ] = PL_NEW_( char, child->data.length + 1 );
+		strncpy( buf[ i ], child->data.buf, child->data.length );
 
 		child = ndGetNextChild( child );
 	}
