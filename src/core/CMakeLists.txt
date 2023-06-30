@@ -111,7 +111,7 @@ if (WIN32)
 else ()
     target_link_libraries(yin-core
             SDL2
-            OpenAL)
+            openal)
 endif ()
 
 target_link_libraries(yin-core
