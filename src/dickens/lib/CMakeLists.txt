@@ -21,4 +21,4 @@ target_include_directories(dickens
         PRIVATE private/
         PUBLIC public/
         )
-target_link_libraries(dickens plcore yin-common yin-node)
+target_link_libraries(dickens plcore ape-common ape-node)

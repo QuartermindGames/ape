@@ -4,13 +4,11 @@ cmake_minimum_required(VERSION 3.23)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-project(Yin
+project(Ape
         LANGUAGES C CXX
         )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-message("Configuring Yin...")
 
 # Set all of our output directories.
 
@@ -18,34 +16,34 @@ include_directories(src/)
 include_directories(src/libcommon/include/)
 
 include(DetermineTargetArchitecture.cmake)
-determine_target_architecture(YIN_SYSTEM_ARCH)
+determine_target_architecture(APE_SYSTEM_ARCH)
 
 if (UNIX AND NOT APPLE)
-    message("Assuming Unix - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/unix-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Unix - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/unix-${APE_SYSTEM_ARCH}/")
 elseif (WIN32)
-    message("Assuming Win32 - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/win32-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Win32 - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/win32-${APE_SYSTEM_ARCH}/")
 elseif (APPLE)
-    message("Assuming Apple - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/apple-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Apple - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/apple-${APE_SYSTEM_ARCH}/")
 else ()
-    message("Unknown platform - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/${YIN_SYSTEM_ARCH}/")
+    message("Unknown platform - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/${APE_SYSTEM_ARCH}/")
 endif ()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${YIN_OUTPUT_DIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${YIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${APE_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${APE_OUTPUT_DIR}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
 endforeach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
 
 if (WIN32)
-    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+    if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         if (MINGW)
             link_directories(src/3rdparty/sdl2/lib/x64_mingw/)
         else ()
@@ -112,7 +110,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 
 if(MSVC)
-    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+    if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         link_directories(src/3rdparty/sdl2/lib/x64)
     else()
         link_directories(src/3rdparty/sdl2/lib/x86)

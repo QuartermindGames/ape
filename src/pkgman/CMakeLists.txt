@@ -14,4 +14,4 @@ add_executable(pkgman
 #file(COPY pkgman_legal.txt DESTINATION ${CMAKE_HOME_DIRECTORY}/release/docs/)
 
 set_target_properties(pkgman PROPERTIES FOLDER "Utilities")
-target_link_libraries(pkgman plcore plmodel yin-common yin-node)
+target_link_libraries(pkgman plcore plmodel ApeCommon ApeNode)

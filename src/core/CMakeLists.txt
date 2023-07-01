@@ -41,7 +41,7 @@ set(APE_SOURCE_GUI
         private/client/gui/gui_image.c
         private/client/gui/gui_panel.c)
 
-add_library(yin-core STATIC
+add_library(ApeCore STATIC
         private/ape_console.c
 
         # Entity System
@@ -86,39 +86,39 @@ add_library(yin-core STATIC
 
         private/server/server.c
         )
-add_dependencies(yin-core
+add_dependencies(ApeCore
         plcore
         plgraphics
         plmodel
         pl_gl_driver
         )
 
-target_include_directories(yin-core PRIVATE
+target_include_directories(ApeCore PRIVATE
         private/
         )
-target_include_directories(yin-core PUBLIC
+target_include_directories(ApeCore PUBLIC
         public/
         )
 
-set_target_properties(yin-core PROPERTIES
+set_target_properties(ApeCore PROPERTIES
         FOLDER "Engine"
         PREFIX ""
         )
 
 if (WIN32)
-    target_link_libraries(yin-core
+    target_link_libraries(ApeCore
             SDL2_dll)
 else ()
-    target_link_libraries(yin-core
+    target_link_libraries(ApeCore
             SDL2
             openal)
 endif ()
 
-target_link_libraries(yin-core
+target_link_libraries(ApeCore
         plcore
         plgraphics
         plmodel
-        yin-common
-        yin-node
-        yin-game
+        ApeCommon
+        ApeNode
+        ApeGame
         )

@@ -7,5 +7,5 @@ if(GTK2_FOUND)
 
     target_link_libraries(fonttool ${GTK2_LIBRARIES}
             plcore
-            yin-common)
+            ApeCommon)
 endif()

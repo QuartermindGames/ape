@@ -15,8 +15,8 @@ set(GAME_LINK_LIBS
         plcore
         plgraphics
         plmodel
-        yin-common
-        yin-core
+        ApeCommon
+        ApeCore
         )
 set(GAME_INCLUDE_DIRS
         public/
@@ -56,17 +56,17 @@ endif ()
 
 #############################################
 
-add_library(yin-game STATIC
+add_library(ApeGame STATIC
         ${GAME_SHARED_FILES}
         ${GAME_TARGET}
         )
 
-set_target_properties(yin-game PROPERTIES PREFIX "")
+set_target_properties(ApeGame PROPERTIES PREFIX "")
 
 # Setup link libraries
 if (NOT UNIX AND NOT MSVC)
-    target_link_libraries(yin-game mingw32)
+    target_link_libraries(ApeGame mingw32)
 endif ()
 
-target_link_libraries(yin-game ${GAME_LINK_LIBS})
-target_include_directories(yin-game PUBLIC public/)
+target_link_libraries(ApeGame ${GAME_LINK_LIBS})
+target_include_directories(ApeGame PUBLIC public/)
