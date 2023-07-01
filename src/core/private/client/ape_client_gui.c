@@ -3,7 +3,7 @@
 #include "ape_private.h"
 #include "ape_client_gui.h"
 #include "yin/core_interfaces.h"
-#include "editor/editor.h"
+#include "editors/editors.h"
 #include "game/game_interface.h"
 #include "client/renderer/renderer.h"
 #include "legacy/actor.h"
@@ -136,7 +136,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 		game_modeInterface->DrawMenu( viewport );
 	}
 
-	YnCore_DrawEditorGUI( viewport );
+	apeDrawEditorGUI_( viewport );
 
 	// todo: this should use GUI
 	PL_GET_CVAR( "debug.overlay", debugOverlay );

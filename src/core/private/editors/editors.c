@@ -2,16 +2,16 @@
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "ape_private.h"
-#include "editor.h"
+#include "editors.h"
 #include "client/renderer/renderer.h"
 
 static ApeEditorContext *contexts[ YN_CORE_EDITOR_MAX_CONTEXTS ];
 static ApeEditorContext *currentContext = NULL;
 
 static EditorStatus editorStatus = EDITOR_CLOSED;
-EditorStatus YnCore_GetEditorStatus( void ) { return editorStatus; }
+EditorStatus apeGetEditorStatus( void ) { return editorStatus; }
 
-void ogeRegisterEditorConsoleVariables_( void )
+void apeRegisterEditorConsoleVariables_( void )
 {
 	ApeEditorContext *YnCore_RegisterWorldEditorContext( void );
 	contexts[ YN_CORE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
@@ -52,7 +52,7 @@ static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **
 		return;
 	}
 
-	YnCore_SetEditorContext( YN_CORE_EDITOR_CONTEXT_WORLD );
+	apeSetEditorContext( YN_CORE_EDITOR_CONTEXT_WORLD );
 }
 
 void apeInitializeEditor_( void )
@@ -119,7 +119,7 @@ void YnCore_DrawEditor( void )
 	currentContext->Draw();
 }
 
-void YnCore_DrawEditorGUI( const ApeViewport *viewport )
+void apeDrawEditorGUI_( const ApeViewport *viewport )
 {
 	if ( currentContext == NULL )
 	{
@@ -140,7 +140,7 @@ ApeEditorContext *apeGetCurrentEditorContext( void )
 	return currentContext;
 }
 
-ApeEditorContext *YnCore_GetEditorContext( const char *identifier )
+ApeEditorContext *apeGetEditorContext( const char *identifier )
 {
 	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
 	{
@@ -155,7 +155,7 @@ ApeEditorContext *YnCore_GetEditorContext( const char *identifier )
 	return NULL;
 }
 
-ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type )
+ApeEditorContext *apeSetEditorContext( ApeEditorContextType type )
 {
 	currentContext = contexts[ type ];
 	editorStatus   = EDITOR_OPEN;
@@ -166,7 +166,7 @@ ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type )
 	return currentContext;
 }
 
-bool YnCore_IsEditorContextActive( const char *identifier )
+bool apeIsEditorContextActive( const char *identifier )
 {
 	if ( currentContext == NULL )
 	{

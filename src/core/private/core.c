@@ -11,7 +11,7 @@
 
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
-#include "editor/editor.h"
+#include "editors/editors.h"
 
 #include "server/server.h"
 #include "net/net.h"

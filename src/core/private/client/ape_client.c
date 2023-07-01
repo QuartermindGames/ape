@@ -9,7 +9,7 @@
 #include "game/game_interface.h"
 #include "ape_client_gui.h"
 
-#include "editor/editor.h"
+#include "editors/editors.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
 

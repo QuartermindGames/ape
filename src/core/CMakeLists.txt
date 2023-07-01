@@ -71,10 +71,10 @@ add_library(ApeCore STATIC
         private/world/world_serialiser.c
         private/world/world_visibility.c
 
-        private/editor/editor.c
-        private/editor/editor_lightmapper.c
-        private/editor/editor_material_selector.c
-        private/editor/editor_world.c
+        private/editors/editors.c
+        private/editors/editor_lightmapper.c
+        private/editors/editor_material_selector.c
+        private/editors/editor_world.c
 
         ${YIN_CORE_CLIENT}
         ${APE_SOURCE_AUDIO}

@@ -3,7 +3,7 @@
 
 #include "ape_private.h"
 
-#include "editor.h"
+#include "editors.h"
 #include "world/world.h"
 
 #include "client/ape_client_input.h"
@@ -30,7 +30,7 @@ static void RegisterWorldEditorVariables( void )
 
 static void CreateWorldCommand( unsigned int argc, char **argv )
 {
-	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
@@ -40,7 +40,7 @@ static void CreateWorldCommand( unsigned int argc, char **argv )
 
 static void DestroyWorldCommand( unsigned int argc, char **argv )
 {
-	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
@@ -79,7 +79,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 
 static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 {
-	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
@@ -94,7 +94,7 @@ static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 
 static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 {
-	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}
@@ -113,7 +113,7 @@ static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
 
 static void ToggleView( ApeInputState state, PL_UNUSED const char *id )
 {
-	if ( !YnCore_IsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
 	{
 		return;
 	}

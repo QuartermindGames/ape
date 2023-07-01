@@ -12,19 +12,19 @@ typedef enum EditorStatus
 	EDITOR_CLOSING,
 	EDITOR_OPEN,
 } EditorStatus;
-EditorStatus YnCore_GetEditorStatus( void );
+EditorStatus apeGetEditorStatus( void );
 
-void ogeRegisterEditorConsoleVariables_( void );
+void apeRegisterEditorConsoleVariables_( void );
 
 void apeInitializeEditor_( void );
 void apeShutdownEditor_( void );
 void apeTickEditor_( void );
 
-void YnCore_DrawEditorGUI( const ApeViewport *viewport );
+void apeDrawEditorGUI_( const ApeViewport *viewport );
 
 ApeEditorContext *apeGetCurrentEditorContext( void );
-ApeEditorContext *YnCore_GetEditorContext( const char *identifier );
-ApeEditorContext *YnCore_SetEditorContext( ApeEditorContextType type );
-bool YnCore_IsEditorContextActive( const char *identifier );
+ApeEditorContext *apeGetEditorContext( const char *identifier );
+ApeEditorContext *apeSetEditorContext( ApeEditorContextType type );
+bool apeIsEditorContextActive( const char *identifier );
 
 PL_EXTERN_C_END

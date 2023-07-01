@@ -12,7 +12,7 @@
 #include "renderer_particle.h"
 
 #include "client/ape_client_gui.h"
-#include "editor/editor.h"
+#include "editors/editors.h"
 
 #include "post/post.h"
 
@@ -531,7 +531,7 @@ void apeDrawMenu( const ApeViewport *viewport )
 	//YR_World_DrawWireframe( Game_GetCurrentWorld(), &camera );
 
 	apeDrawGUI_( viewport );
-	YnCore_DrawEditorGUI( viewport );
+	apeDrawEditorGUI_( viewport );
 
 	DrawDebugOverlay( viewport );
 

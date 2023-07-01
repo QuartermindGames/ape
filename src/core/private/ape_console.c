@@ -5,7 +5,7 @@
 #include <yin/node.h>
 
 #include "client/ape_client_input.h"
-#include "editor/editor.h"
+#include "editors/editors.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -175,7 +175,7 @@ void apeRegisterConsoleVariables_( bool isDedicated )
 		apeRegisterClientConsoleVariables_();
 	}
 
-	ogeRegisterEditorConsoleVariables_();
+	apeRegisterEditorConsoleVariables_();
 }
 
 static int logLevels[ APE_LOG_LEVELS ];
