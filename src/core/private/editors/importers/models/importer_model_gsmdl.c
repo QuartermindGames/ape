@@ -3,7 +3,8 @@
  * GoldSrc MDL Loader
  * ====================================================================*/
 
-#include "modelconv.h"
+#include "ape_private.h"
+#include "importer_model.h"
 
 #define MDL_NAME                 64
 #define MDL_LABEL                32
@@ -107,14 +108,14 @@ PLMModel *MDL_MDL_LoadFile( const char *path )
 	VMDLHeader header;
 	if ( PlReadFile( file, &header, sizeof( VMDLHeader ), 1 ) != 1 )
 	{
-		Error( "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
+		PRINT_WARNING( "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* now carry out some basic validation */
 
 	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC )
 	{
-		Error( "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
+		PRINT_WARNING( "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
 	}
 
 	return NULL;

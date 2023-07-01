@@ -1,6 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "modelconv.h"
+#include "ape_private.h"
+#include "importer_model.h"
 
 #define OC_MAGIC PL_MAGIC_TO_NUM( 'q', 'n', '\0', '\0' )
 
@@ -20,18 +21,18 @@ static void OC_MSH_ParseVertices( PLFile *file, int32_t *verticesNum )
 	int32_t magic = PlReadInt32( file, false, NULL );
 	if ( magic != OC_MAGIC )
 	{
-		Error( "Unexpected magic: %d vs %d\n", magic, OC_MAGIC );
+		PRINT_WARNING( "Unexpected magic: %d vs %d\n", magic, OC_MAGIC );
 	}
 
 	if ( !PlFileSeek( file, 24, PL_SEEK_CUR ) )
 	{
-		Error( "Failed to seek to vertices!\n" );
+		PRINT_WARNING( "Failed to seek to vertices!\n" );
 	}
 
 	int32_t numVertices = PlReadInt32( file, false, NULL );
 	if ( numVertices <= 0 || numVertices >= MAX_VERTICES )
 	{
-		Error( "Invalid number of vertices in msh!\n" );
+		PRINT_WARNING( "Invalid number of vertices in msh!\n" );
 	}
 
 	for ( int32_t i = 0; i < numVertices; ++i )
@@ -61,7 +62,7 @@ static void OC_MSH_ParseFaces( PLFile *file, int32_t *facesNum )
 	int32_t numFaces = PlReadInt32( file, false, NULL );
 	if ( numFaces <= 0 || numFaces >= MAX_FACES )
 	{
-		Error( "Invalid number of faces in msh!\n" );
+		PRINT_WARNING( "Invalid number of faces in msh!\n" );
 	}
 
 	for ( int32_t i = 0; i < numFaces; ++i )
@@ -111,7 +112,7 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	PLMModel *model = PlmCreateStaticModel( meshes, 1 );
 	if ( model == NULL )
 	{
-		Error( "Failed to create model container!\nPL: %s\n", PlGetError() );
+		PRINT_WARNING( "Failed to create model container!\nPL: %s\n", PlGetError() );
 	}
 
 	meshes[ 0 ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
@@ -122,13 +123,13 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	for ( int32_t i = 0; i < numVertices; ++i )
 	{
 		PlgAddMeshVertex( meshes[ 0 ],
-		                  PLVector3(
+		                  &PLVector3(
 		                          ocVertices[ i ].x,
 		                          ocVertices[ i ].z,
 		                          ocVertices[ i ].y ),
-		                  pl_vecOrigin3,
-		                  PLColourRGB( 255, 255, 255 ),
-		                  PLVector2( PlByteToFloat( rand() % 255 ), PlByteToFloat( rand() % 255 ) ) );
+		                  &pl_vecOrigin3,
+		                  &PLColourRGB( 255, 255, 255 ),
+		                  &PLVector2( PlByteToFloat( rand() % 255 ), PlByteToFloat( rand() % 255 ) ) );
 	}
 
 	for ( int32_t i = 0; i < numTriangles; ++i )
@@ -150,13 +151,13 @@ PLMModel *OC_MSH_LoadFile( const char *path )
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		Error( "Failed to load MSH \"%s\"!\nPL: %s\n", path, PlGetError() );
+		PRINT_WARNING( "Failed to load MSH \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	PLMModel *model = OC_MSH_ParseFile( file );
 	if ( model == NULL )
 	{
-		Error( "Failed to parse MSH \"%s\"!\n", PlGetError() );
+		PRINT_WARNING( "Failed to parse MSH \"%s\"!\n", PlGetError() );
 	}
 
 	PlCloseFile( file );

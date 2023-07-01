@@ -41,6 +41,16 @@ set(APE_SOURCE_GUI
         private/client/gui/gui_image.c
         private/client/gui/gui_panel.c)
 
+set(APE_SOURCE_EDITORS
+        private/editors/editor_lightmapper.c
+        private/editors/editor_material_selector.c
+        private/editors/editor_world.c
+        private/editors/editors.c
+        private/editors/importers/models/importer_model.c
+        private/editors/importers/models/importer_model_gsmdl.c
+        private/editors/importers/models/importer_model_ocmsh.c
+        private/editors/importers/models/importer_model_q2md2.c)
+
 add_library(ApeCore STATIC
         private/ape_console.c
 
@@ -71,21 +81,16 @@ add_library(ApeCore STATIC
         private/world/world_serialiser.c
         private/world/world_visibility.c
 
-        private/editors/editors.c
-        private/editors/editor_lightmapper.c
-        private/editors/editor_material_selector.c
-        private/editors/editor_world.c
-
         ${YIN_CORE_CLIENT}
         ${APE_SOURCE_AUDIO}
         ${APE_SOURCE_GUI}
+        ${APE_SOURCE_EDITORS}
 
         private/legacy/actor.c
         private/legacy/actors/actor_player.c
         private/legacy/actors/sg_actors.c
 
-        private/server/server.c
-        )
+        private/server/server.c)
 add_dependencies(ApeCore
         plcore
         plgraphics

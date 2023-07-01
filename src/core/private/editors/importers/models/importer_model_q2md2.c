@@ -3,7 +3,8 @@
  * MD2 Loader
  * ====================================================================*/
 
-#include "modelconv.h"
+#include "ape_private.h"
+#include "importer_model.h"
 
 #define MD2_MAGIC   PL_MAGIC_TO_NUM( 'I', 'D', 'P', '2' )
 #define MD2_VERSION 8
@@ -86,7 +87,7 @@ static PLGMesh *MDL_MD2_ConvertMD2ToMesh(
 		pos.y = ( frames[ 0 ].scale.y * frames[ 0 ].vertices[ i ].v[ 1 ] ) + frames[ 0 ].translate.y;
 		pos.z = ( frames[ 0 ].scale.z * frames[ 0 ].vertices[ i ].v[ 2 ] ) + frames[ 0 ].translate.z;
 
-		PlgAddMeshVertex( mesh, pos, pl_vecOrigin3, PL_COLOUR_WHITE, pl_vecOrigin2 );
+		PlgAddMeshVertex( mesh, &pos, &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );
 		//Print( "%s\n", PlPrintVector3( &pos, pl_float_var ) );
 	}
 
@@ -118,7 +119,7 @@ PLMModel *MDL_MD2_LoadFile( const char *path )
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		Error( "Failed to load MD2: %s\nPL: %s\n", path, PlGetError() );
+		PRINT_WARNING( "Failed to load MD2: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* there shouldn't be any padding here, so just read
@@ -127,16 +128,16 @@ PLMModel *MDL_MD2_LoadFile( const char *path )
 	memset( &header, 0, sizeof( MD2Header ) );
 	if ( PlReadFile( file, &header, sizeof( header ), 1 ) != 1 )
 	{
-		Error( "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
+		PRINT_WARNING( "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	if ( header.magic != MD2_MAGIC )
 	{
-		Error( "Invalid identifier for MD2: %d vs %d!\n", header.magic, MD2_MAGIC );
+		PRINT_WARNING( "Invalid identifier for MD2: %d vs %d!\n", header.magic, MD2_MAGIC );
 	}
 	if ( header.version != MD2_VERSION )
 	{
-		Error( "Invalid version for MD2: %d vs %d!\n", header.version, MD2_VERSION );
+		PRINT_WARNING( "Invalid version for MD2: %d vs %d!\n", header.version, MD2_VERSION );
 	}
 
 	/* read in all the skins
@@ -160,7 +161,7 @@ PLMModel *MDL_MD2_LoadFile( const char *path )
 	MD2Frame *frames = ( MD2Frame * ) malloc( sizeof( MD2Frame ) * header.numFrames );
 	if ( frames == NULL )
 	{
-		Error( "Failed to allocate frames: %s\n", path );
+		PRINT_WARNING( "Failed to allocate frames: %s\n", path );
 	}
 	PlFileSeek( file, header.offsetFrames, PL_SEEK_SET );
 	for ( int32_t i = 0; i < header.numFrames; ++i )
@@ -186,7 +187,7 @@ PLMModel *MDL_MD2_LoadFile( const char *path )
 	PLGMesh *mesh = MDL_MD2_ConvertMD2ToMesh( fullSkinPath, &header, texCoords, triangles, frames );
 	if ( mesh == NULL )
 	{
-		Error( "Failed to create mesh: %s\nPL: %s\n", path, PlGetError() );
+		PRINT_WARNING( "Failed to create mesh: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* free the original data */
