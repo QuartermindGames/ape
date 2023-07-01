@@ -2,13 +2,10 @@
 
 #include "ape_private.h"
 #include "ape_client_gui.h"
-
+#include "yin/core_interfaces.h"
 #include "editor/editor.h"
-
 #include "game/game_interface.h"
-
 #include "client/renderer/renderer.h"
-#include "client/renderer/renderer_font.h"
 #include "legacy/actor.h"
 
 static GuiCanvas *canvas;
@@ -134,9 +131,9 @@ void apeDrawGUI_( const ApeViewport *viewport )
 	}
 	APE_PROFILE_END( PROFILE_DRAW_GUI );
 
-	if ( gameModeInterface->DrawMenu != NULL )
+	if ( game_modeInterface->DrawMenu != NULL )
 	{
-		gameModeInterface->DrawMenu( viewport );
+		game_modeInterface->DrawMenu( viewport );
 	}
 
 	YnCore_DrawEditorGUI( viewport );

@@ -10,9 +10,17 @@ extern int globalGameErrorLog;
 
 typedef enum GameModeRequest
 {
-	GAMEMODE_REQUEST_TICK,
+	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation
+	GAMEMODE_REQUEST_SHUTDOWN,  // called when shutting down engine
+
+	GAMEMODE_REQUEST_NEWGAME,
+	GAMEMODE_REQUEST_SAVEGAME,
+	GAMEMODE_REQUEST_RESTOREGAME,
+
+	GAMEMODE_REQUEST_TICK,      // called after entity tick
 	GAMEMODE_REQUEST_HANDLEINPUT,
-	GAMEMODE_REQUEST_SPAWNWORLD,
+	GAMEMODE_REQUEST_SPAWNWORLD,// called before entities are spawned in and
+	                            // before starting and connecting to server
 	GAMEMODE_REQUEST_DISCONNECT,
 } GameModeRequest;
 
@@ -33,8 +41,7 @@ typedef struct GameModeInterface
 	// This is basically a replacement for the above - just slightly less fussy
 	bool ( *RequestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
 } GameModeInterface;
-const GameModeInterface *Game_GetModeInterface( void );
-extern const GameModeInterface *gameModeInterface;
+const GameModeInterface *gameGetModeInterface( void );
 
 typedef enum GameDifficulty
 {
@@ -44,8 +51,8 @@ typedef enum GameDifficulty
 
 	GAME_MAX_DIFFICULTY_MODES
 } GameDifficulty;
-void Game_SetDifficultyMode( GameDifficulty difficulty );
-GameDifficulty Game_GetDifficultyMode( void );
+void gameSetDifficultyMode( GameDifficulty difficulty );
+GameDifficulty gameGetDifficultyMode( void );
 
 typedef enum GameConnectionType
 {
@@ -54,22 +61,22 @@ typedef enum GameConnectionType
 	GAME_CONNECTION_LAN,
 	GAME_CONNECTION_NET,
 } GameConnectionType;
-GameConnectionType Game_GetConnectionType( void );
+GameConnectionType gameGetConnectionType( void );
 
-void Game_PlayerConnected( const char *name, unsigned int id );
-void Game_PlayerDisconnected( unsigned int id );
+void gamePlayerConnected( const char *name, unsigned int id );
+void gamePlayerDisconnected( unsigned int id );
 
 typedef enum MenuState
 {
 	MENU_STATE_START, /* draw start screen */
 	MENU_STATE_HUD,   /* hud/overlay mode */
 } MenuState;
-MenuState Game_GetMenuState( void );
+MenuState gameGetMenuState( void );
 
 typedef struct Actor Actor;
 
-void Game_SpawnWorld( const char *worldPath );
-struct ApeWorld *Game_GetCurrentWorld( void );
+void gameSpawnWorld( const char *worldPath );
+struct ApeWorld *gameGetCurrentWorld( void );
 
 ////////////////////////////////////////////////////////////////////
 

@@ -10,6 +10,8 @@ typedef struct GameState
 } GameState;
 extern GameState oge_gameState_;
 
+extern const struct GameModeInterface *game_modeInterface;
+
 void apeInitializeGame( void );
 void apeShutdownGame( void );
 void apeTickGame( void );

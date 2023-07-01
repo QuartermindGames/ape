@@ -32,12 +32,14 @@ static void SpawnWorldCommand( unsigned int argc, char **argv )
 {
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
-	Game_SpawnWorld( path );
+	gameSpawnWorld( path );
 }
 
 /****************************************
  * PUBLIC
  ****************************************/
+
+const GameModeInterface *game_modeInterface;
 
 GameState oge_gameState_;
 
@@ -67,29 +69,32 @@ void apeInitializeGame( void )
 	const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
 	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 
-	gameModeInterface = Game_GetModeInterface();
-	if ( gameModeInterface == NULL )
+	game_modeInterface = gameGetModeInterface();
+	if ( game_modeInterface == NULL )
 	{
 		PRINT_ERROR( "Failed to get game interface!\n" );
 	}
 
-	gameModeInterface->Initialize();
+	if ( !game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) )
+	{
+		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
+	}
 
 	// has to come last, otherwise we won't find the components!
-	ogeEntityManager_RegisterEntityPrefabs();
+	apeRegisterEntityPrefabs();
 
 	PRINT( "Game initialized!\n" );
 }
 
 void apeShutdownGame( void )
 {
-	gameModeInterface->Shutdown();
-	gameModeInterface = NULL;
+	game_modeInterface->Shutdown();
+	game_modeInterface = NULL;
 
 	ogeEntityManager_Shutdown();
 }
 
-MenuState Game_GetMenuState( void )
+MenuState gameGetMenuState( void )
 {
 	return menuState;
 }
@@ -98,7 +103,7 @@ void apeTickGame( void )
 {
 	ogeEntityManager_Tick();
 
-	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
+	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 }
 
 void apeDisconnectGame( void )
@@ -115,7 +120,7 @@ void apeDisconnectGame( void )
 		currentWorld = NULL;
 	}
 
-	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
+	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
 void Game_SetupWorldProperties( ApeWorld *world )
@@ -130,7 +135,7 @@ void Game_SetupWorldProperties( ApeWorld *world )
 	}
 }
 
-void Game_SpawnWorld( const char *worldPath )
+void gameSpawnWorld( const char *worldPath )
 {
 	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 )
 	{
@@ -163,7 +168,7 @@ void Game_SpawnWorld( const char *worldPath )
 	//gameState	= GAME_STATE_ACTIVE;
 	inputTarget = INPUT_TARGET_GAME;
 
-	gameModeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
+	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
 
 	apeSpawnWorldEntities( world );
 
@@ -172,7 +177,7 @@ void Game_SpawnWorld( const char *worldPath )
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *Game_GetCurrentWorld( void )
+ApeWorld *gameGetCurrentWorld( void )
 {
 	return currentWorld;
 }

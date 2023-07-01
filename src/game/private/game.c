@@ -29,19 +29,19 @@ void Game_RegisterStandardEntityComponents( void )
 	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 }
 
-void Game_PlayerConnected( const char *name, unsigned int id )
+void gamePlayerConnected( const char *name, unsigned int id )
 {
 }
 
-void Game_PlayerDisconnected( unsigned int id )
+void gamePlayerDisconnected( unsigned int id )
 {
 }
 
 static GameDifficulty gameDifficulty         = GAME_DIFFICULTY_NORMAL;
 static GameConnectionType gameConnectionType = GAME_CONNECTION_LOCAL;
 
-void Game_SetDifficultyMode( const GameDifficulty difficulty ) { gameDifficulty = difficulty; }
-GameDifficulty Game_GetDifficultyMode( void ) { return gameDifficulty; }
+void gameSetDifficultyMode( GameDifficulty difficulty ) { gameDifficulty = difficulty; }
+GameDifficulty gameGetDifficultyMode( void ) { return gameDifficulty; }
 
 void Game_SetConnection( const GameConnectionType connectionType )
 {
@@ -52,7 +52,7 @@ void Game_SetConnection( const GameConnectionType connectionType )
 	gameConnectionType = connectionType;
 }
 
-GameConnectionType Game_GetConnectionType( void )
+GameConnectionType gameGetConnectionType( void )
 {
 	return gameConnectionType;
 }

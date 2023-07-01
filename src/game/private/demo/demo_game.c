@@ -142,7 +142,7 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 }
 
 const GameModeInterface *gameModeInterface;
-const GameModeInterface *Game_GetModeInterface( void )
+const GameModeInterface *gameGetModeInterface( void )
 {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );

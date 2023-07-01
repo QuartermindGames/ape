@@ -271,7 +271,7 @@ static void RegisterEntityPrefab( const char *path, PL_UNUSED void *userData )
 	YnCore_EntityManager_RegisterEntityPrefab( path );
 }
 
-void ogeEntityManager_RegisterEntityPrefabs( void )
+void apeRegisterEntityPrefabs( void )
 {
 	PRINT( "Registering entity prefabs...\n" );
 

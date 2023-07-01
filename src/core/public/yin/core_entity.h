@@ -53,7 +53,7 @@ void ogeEntityManager_Restore( NdBranch *root );
 
 // Prefabs
 void YnCore_EntityManager_RegisterEntityPrefab( const char *path );
-void ogeEntityManager_RegisterEntityPrefabs( void );
+void apeRegisterEntityPrefabs( void );
 const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
 
 ApeEntity *YnCore_EntityManager_CreateEntity( void );

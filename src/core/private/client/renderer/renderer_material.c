@@ -660,7 +660,7 @@ static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, uns
 {
 	int slot;
 
-	ApeWorld *world = Game_GetCurrentWorld();
+	ApeWorld *world = gameGetCurrentWorld();
 	if ( world != NULL )
 	{
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
