@@ -25,12 +25,14 @@ set(GAME_INCLUDE_DIRS
 #############################################
 # Target Games
 
-set(GAME_USER_TARGET "feral" CACHE STRING "Game to build.")
+set(GAME_USER_TARGET "mag" CACHE STRING "Game to build.")
 
 set(GAME_TARGET_DEMO
         private/demo/demo_game.c)
-set(GAME_TARGET_SIM
-        private/sim/sim_game.c)
+set(GAME_TARGET_MAG
+        private/mag/mag_character.c
+        private/mag/mag_game.c
+        private/mag/mag_world.c)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
         private/fw/menu/fw_menu_pie.c
@@ -44,8 +46,8 @@ set(GAME_TARGET_FERAL
         private/fw/fw_weapon.c)
 
 #todo: need a better way of setting targets...
-if (${GAME_USER_TARGET} STREQUAL "sim")
-    set(GAME_TARGET ${GAME_TARGET_SIM})
+if (${GAME_USER_TARGET} STREQUAL "mag")
+    set(GAME_TARGET ${GAME_TARGET_MAG})
 elseif (${GAME_USER_TARGET} STREQUAL "demo")
     set(GAME_TARGET ${GAME_TARGET_DEMO})
 elseif (${GAME_USER_TARGET} STREQUAL "feral")
