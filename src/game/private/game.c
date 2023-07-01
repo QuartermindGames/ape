@@ -17,16 +17,16 @@ void Game_Display( void )
 void Game_RegisterStandardEntityComponents( void )
 {
 	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
+	apeRegisterEntityComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
 
 	const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "movement", Game_Component_Movement_GetCallbackTable() );
+	apeRegisterEntityComponent( "movement", Game_Component_Movement_GetCallbackTable() );
 
 	const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "camera", Game_Component_Camera_GetCallbackTable() );
+	apeRegisterEntityComponent( "camera", Game_Component_Camera_GetCallbackTable() );
 
 	const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
+	apeRegisterEntityComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 }
 
 void gamePlayerConnected( const char *name, unsigned int id )

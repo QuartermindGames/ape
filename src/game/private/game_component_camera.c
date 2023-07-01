@@ -21,7 +21,7 @@ static void Spawn( ApeEntityComponent *self )
 
 	const PLVector3 *position, *angles;
 
-	GCCAMERA( self )->transform = YnCore_Entity_GetComponentByName( self->entity, "transform" );
+	GCCAMERA( self )->transform = apeGetEntityComponentByName( self->entity, "transform" );
 	if ( GCCAMERA( self )->transform != NULL )
 	{
 		position = &ECTRANSFORM( GCCAMERA( self )->transform )->translation;
@@ -47,7 +47,7 @@ static void Tick( ApeEntityComponent *self )
 {
 	// if there's no transform component, try checking again...
 	if ( GCCAMERA( self )->transform == NULL )
-		GCCAMERA( self )->transform = YnCore_Entity_GetComponentByName( self->entity, "transform" );
+		GCCAMERA( self )->transform = apeGetEntityComponentByName( self->entity, "transform" );
 	if ( GCCAMERA( self )->transform == NULL )
 		return;
 

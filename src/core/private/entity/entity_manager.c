@@ -16,20 +16,20 @@ static PLHashTable *componentSpawnTable = NULL;
 
 static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
-	ApeEntity *entity = YnCore_EntityManager_CreateEntity();
+	ApeEntity *entity = apeCreateEntity();
 	if ( entity == NULL )
 	{
 		PRINT_WARNING( "Failed to create entity!\n" );
 		return;
 	}
 
-	if ( YnCore_Entity_AttachComponentByName( entity, "transform" ) == NULL )
+	if ( apeAttachEntityComponentByName( entity, "transform" ) == NULL )
 		PRINT_WARNING( "Failed to attach \"transform\" component to entity!\n" );
 
-	YnCore_EntityManager_DestroyEntity( entity );
+	apeDestroyEntity( entity );
 }
 
-void ogeEntityManager_Initialize( void )
+void apeInitializeEntityManager( void )
 {
 	PlRegisterConsoleCommand( "entity.test", "Test the entity system.", 0, TestCommand );
 
@@ -58,7 +58,7 @@ void apeShutdownEntityManager( void )
 		{
 			ApeEntity *entity = PlGetLinkedListNodeUserData( node );
 			node                 = PlGetNextLinkedListNode( node );
-			YnCore_EntityManager_DestroyEntity( entity );
+			apeDestroyEntity( entity );
 		}
 		PlDestroyLinkedList( entityList );
 	}
@@ -219,7 +219,7 @@ static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 			continue;
 		}
 
-		const ApeEntityComponentBase *base = YnCore_EntityManager_GetComponentBaseByName( name );
+		const ApeEntityComponentBase *base = apeGetEntityComponentBaseByName( name );
 		if ( base == NULL )
 		{
 			PRINT_WARNING( "\"%s\" is not a valid entity component!\n", name );
@@ -240,7 +240,7 @@ static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 	return prefab;
 }
 
-void YnCore_EntityManager_RegisterEntityPrefab( const char *path )
+void apeRegisterEntityPrefab( const char *path )
 {
 	NdBranch *root = ndLoadFile( path, "entityPrefab" );
 	if ( root == NULL )
@@ -268,7 +268,7 @@ void YnCore_EntityManager_RegisterEntityPrefab( const char *path )
  */
 static void RegisterEntityPrefab( const char *path, PL_UNUSED void *userData )
 {
-	YnCore_EntityManager_RegisterEntityPrefab( path );
+	apeRegisterEntityPrefab( path );
 }
 
 void apeRegisterEntityPrefabs( void )
@@ -289,15 +289,15 @@ const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name )
 /**
  * Attempt to find the specified template by name.
  */
-const ApeEntityComponentBase *YnCore_EntityManager_GetComponentBaseByName( const char *name )
+const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name )
 {
 	return PlLookupHashTableUserData( componentSpawnTable, name, strlen( name ) );
 }
 
-bool ogeEntityManager_RegisterComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable )
+bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable )
 {
 	// check if it's been registered already
-	if ( YnCore_EntityManager_GetComponentBaseByName( name ) != NULL )
+	if ( apeGetEntityComponentBaseByName( name ) != NULL )
 	{
 		PRINT_WARNING( "Component \"%s\" was already registered!\n", name );
 		return false;
@@ -313,9 +313,9 @@ bool ogeEntityManager_RegisterComponent( const char *name, const ApeEntityCompon
 	return true;
 }
 
-ApeEntityComponent *YnCore_EntityManager_AddComponentToEntity( ApeEntity *entity, const char *name )
+ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name )
 {
-	const ApeEntityComponentBase *componentTemplate = YnCore_EntityManager_GetComponentBaseByName( name );
+	const ApeEntityComponentBase *componentTemplate = apeGetEntityComponentBaseByName( name );
 	if ( componentTemplate == NULL )
 	{
 		PRINT_WARNING( "Attempted to add an invalid component, \"%s\", onto an entity!\n", name );
@@ -333,7 +333,7 @@ ApeEntityComponent *YnCore_EntityManager_AddComponentToEntity( ApeEntity *entity
 /////////////////////////////////////////////////////////////////
 // Entitys
 
-ApeEntity *YnCore_EntityManager_CreateEntity( void )
+ApeEntity *apeCreateEntity( void )
 {
 	ApeEntity *entity = PL_NEW( ApeEntity );
 	PlGenerateUniqueIdentifier( entity->name, sizeof( entity->name ) );
@@ -350,7 +350,7 @@ ApeEntity *YnCore_EntityManager_CreateEntity( void )
  * @param name Name of the prefab to lookup.
  * @return NULL on fail, otherwise a pointer to the newly allocated entity.
  */
-ApeEntity *YnCore_EntityManager_CreateEntityFromPrefab( const char *name )
+ApeEntity *apeCreateEntityFromPrefab( const char *name )
 {
 	const ApeEntityPrefab *prefab = YnCore_EntityManager_GetPrefabByName( name );
 	if ( prefab == NULL )
@@ -359,7 +359,7 @@ ApeEntity *YnCore_EntityManager_CreateEntityFromPrefab( const char *name )
 		return NULL;
 	}
 
-	ApeEntity *entity = YnCore_EntityManager_CreateEntity();
+	ApeEntity *entity = apeCreateEntity();
 
 	for ( unsigned int i = 0; i < prefab->numComponents; ++i )
 	{
@@ -372,7 +372,7 @@ ApeEntity *YnCore_EntityManager_CreateEntityFromPrefab( const char *name )
 	return entity;
 }
 
-void YnCore_EntityManager_DestroyEntity( ApeEntity *entity )
+void apeDestroyEntity( ApeEntity *entity )
 {
 	apeRemoveAllEntityComponents( entity );
 	PlDestroyLinkedList( entity->components );

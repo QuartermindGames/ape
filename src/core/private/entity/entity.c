@@ -19,7 +19,7 @@ static unsigned int numTotalSpawns;
  * ENTITY
  ****************************************/
 
-NdBranch *YnCore_Entity_Serialize( ApeEntity *self, NdBranch *root )
+NdBranch *apeSerializeEntity( ApeEntity *self, NdBranch *root )
 {
 	NdBranch *entityNode     = ndPushBackObject( root, "entity" );
 	NdBranch *componentsNode = ndPushBackObjectArray( entityNode, "components" );
@@ -42,7 +42,7 @@ NdBranch *YnCore_Entity_Serialize( ApeEntity *self, NdBranch *root )
 	return entityNode;
 }
 
-ApeEntityComponent *YnCore_Entity_GetComponentByName( ApeEntity *self, const char *name )
+ApeEntityComponent *apeGetEntityComponentByName( ApeEntity *self, const char *name )
 {
 	PLLinkedListNode *node = PlGetFirstNode( self->components );
 	while ( node != NULL )
@@ -57,15 +57,15 @@ ApeEntityComponent *YnCore_Entity_GetComponentByName( ApeEntity *self, const cha
 	return NULL;
 }
 
-ApeEntityComponent *YnCore_Entity_AttachComponentByName( ApeEntity *self, const char *name )
+ApeEntityComponent *apeAttachEntityComponentByName( ApeEntity *self, const char *name )
 {
-	if ( YnCore_Entity_GetComponentByName( self, name ) != NULL )
+	if ( apeGetEntityComponentByName( self, name ) != NULL )
 	{
 		PRINT_WARNING( "Entity already has a component of type \"%s\"!\n", name );
 		return NULL;
 	}
 
-	return YnCore_EntityManager_AddComponentToEntity( self, name );
+	return apeAddEntityComponentToEntity( self, name );
 }
 
 void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component )

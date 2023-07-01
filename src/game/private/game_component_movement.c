@@ -6,7 +6,9 @@ static void HandleMouseLook( GameMovementComponent *movementComponent )
 {
 	PL_GET_CVAR( "input.mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
+	{
 		return;
+	}
 
 	int mx, my;
 	apeShellInterface_GetMousePosition( &mx, &my );//TODO: should use Client_Input_GetMouseDelta ...
@@ -17,33 +19,47 @@ static void HandleMouseLook( GameMovementComponent *movementComponent )
 static void Tick( ApeEntityComponent *self )
 {
 	if ( apeShellInterface_GetButtonState( INPUT_A ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->velocity.y += 10.0f;
+	}
 
 	HandleMouseLook( GAME_MOVEMENT_COMPONENT( self ) );
 
 	static const float gain = 0.25f;
 
 	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity += gain;
+	}
 	else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity -= gain;
+	}
 	else if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity != 0.0f )
 	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity = GAME_MOVEMENT_COMPONENT( self )->forwardVelocity > 0 ? GAME_MOVEMENT_COMPONENT( self )->forwardVelocity - gain : GAME_MOVEMENT_COMPONENT( self )->forwardVelocity + gain;
 		if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->forwardVelocity > -0.1f )
+		{
 			GAME_MOVEMENT_COMPONENT( self )->forwardVelocity = 0.0f;
+		}
 	}
 
 	// strafing
 	if ( apeShellInterface_GetKeyState( 'a' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity += gain;
+	}
 	else if ( apeShellInterface_GetKeyState( 'd' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity -= gain;
+	}
 	else if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity != 0.0f )
 	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = GAME_MOVEMENT_COMPONENT( self )->strafeVelocity > 0 ? GAME_MOVEMENT_COMPONENT( self )->strafeVelocity - gain : GAME_MOVEMENT_COMPONENT( self )->strafeVelocity + gain;
 		if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->strafeVelocity > -0.1f )
+		{
 			GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = 0.0f;
+		}
 	}
 
 	// clamp the velocity as necessary

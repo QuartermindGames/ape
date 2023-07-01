@@ -44,7 +44,7 @@ typedef struct ApeEntityComponentCallbackTable
 	unsigned int numEditorFields;
 } ApeEntityComponentCallbackTable;
 
-void ogeEntityManager_Initialize( void );
+void apeInitializeEntityManager( void );
 void apeShutdownEntityManager( void );
 void apeTickEntityManager( void );
 void ogeEntityManager_Draw( struct ApeCamera *camera, struct ApeWorldRoom *sector );
@@ -52,37 +52,37 @@ void YnCore_EntityManager_Save( NdBranch *root );
 void ogeEntityManager_Restore( NdBranch *root );
 
 // Prefabs
-void YnCore_EntityManager_RegisterEntityPrefab( const char *path );
+void apeRegisterEntityPrefab( const char *path );
 void apeRegisterEntityPrefabs( void );
 const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
 
-ApeEntity *YnCore_EntityManager_CreateEntity( void );
-ApeEntity *YnCore_EntityManager_CreateEntityFromPrefab( const char *name );
-void YnCore_EntityManager_DestroyEntity( ApeEntity *entity );
+ApeEntity *apeCreateEntity( void );
+ApeEntity *apeCreateEntityFromPrefab( const char *name );
+void apeDestroyEntity( ApeEntity *entity );
 
 /**
  * Returns the total number of active entities.
  */
 unsigned int YnCore_EntityManager_GetNumOfEntities( void );
 
-bool ogeEntityManager_RegisterComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable );
-const ApeEntityComponentBase *YnCore_EntityManager_GetComponentBaseByName( const char *name );
-ApeEntityComponent *YnCore_EntityManager_AddComponentToEntity( ApeEntity *entity, const char *name );
+bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable );
+const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name );
+ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name );
 
 /**
  * Returns a list of properties that can be modified for the component.
  */
-const struct ApeEditorField *YnCore_EntityComponent_GetEditableProperties( const ApeEntityComponent *entityComponent, unsigned int *num );
+const struct ApeEditorField *apeGetEditableEntityComponentProperties( const ApeEntityComponent *entityComponent, unsigned int *num );
 
 /****************************************
  * ENTITY
  ****************************************/
 
-NdBranch *YnCore_Entity_Serialize( ApeEntity *self, NdBranch *root );
-ApeEntity *YnCore_Entity_Deserialize( NdBranch *root );
+NdBranch *apeSerializeEntity( ApeEntity *self, NdBranch *root );
+ApeEntity *apeDeserializeEntity( NdBranch *root );
 
-ApeEntityComponent *YnCore_Entity_GetComponentByName( ApeEntity *self, const char *name );
-ApeEntityComponent *YnCore_Entity_AttachComponentByName( ApeEntity *self, const char *name );
+ApeEntityComponent *apeGetEntityComponentByName( ApeEntity *self, const char *name );
+ApeEntityComponent *apeAttachEntityComponentByName( ApeEntity *self, const char *name );
 void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component );
 void apeRemoveAllEntityComponents( ApeEntity *self );
 

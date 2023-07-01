@@ -62,12 +62,12 @@ void apeInitializeGame( void )
 
 	PL_ZERO_( oge_gameState_ );
 
-	ogeEntityManager_Initialize();
+	apeInitializeEntityManager();
 
 	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
+	apeRegisterEntityComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
 	const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
-	ogeEntityManager_RegisterComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
+	apeRegisterEntityComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
 
 	game_modeInterface = gameGetModeInterface();
 	if ( game_modeInterface == NULL )

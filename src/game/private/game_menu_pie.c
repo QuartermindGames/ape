@@ -1,13 +1,15 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: Delicious pie menu!
 
-#include "fw_menu_pie.h"
+#include "game_private.h"
+#include "game_menu_pie.h"
 
 #define PIE_MENU_WIDTH         128
 #define PIE_MENU_HEIGHT        128
 #define PIE_MENU_OPTION_WIDTH  128
 #define PIE_MENU_OPTION_HEIGHT 128
 
-typedef struct FWPieMenu
+typedef struct GamePieMenu
 {
 	PLLinkedList *options;
 	PLLinkedListNode *activeOption;// option we're currently selecting
@@ -16,28 +18,28 @@ typedef struct FWPieMenu
 	float angle, scale, velocity;
 	PLVector2 cursor;
 	int w, h;
-} FWPieMenu;
+} GamePieMenu;
 
-typedef struct FWPieMenuOption
+typedef struct GamePieMenuOption
 {
 	PLLinkedListNode *node;
 	char label[ 64 ];
 	struct ApeMaterial *icon;
-	FWPieMenuOptionCallback callback;
-	FWPieMenu *parent;
-} FWPieMenuOption;
+	GamePieMenuOptionCallback callback;
+	GamePieMenu *parent;
+} GamePieMenuOption;
 
-FWPieMenu *FW_Menu_CreatePie( void )
+GamePieMenu *gameCreatePieMenu( void )
 {
 	// don't need to do much here, just allocate and return
-	FWPieMenu *menu = PL_NEW( FWPieMenu );
-	menu->options   = PlCreateLinkedList();
-	menu->w         = PIE_MENU_WIDTH;
-	menu->h         = PIE_MENU_HEIGHT;
+	GamePieMenu *menu = PL_NEW( GamePieMenu );
+	menu->options     = PlCreateLinkedList();
+	menu->w           = PIE_MENU_WIDTH;
+	menu->h           = PIE_MENU_HEIGHT;
 	return menu;
 }
 
-void FW_Menu_DestroyPie( FWPieMenu *menu )
+void gameDestroyPieMenu( GamePieMenu *menu )
 {
 	if ( menu == NULL )
 	{
@@ -56,7 +58,7 @@ void FW_Menu_DestroyPie( FWPieMenu *menu )
 	PL_DELETE( menu );
 }
 
-void FW_Menu_TickPie( FWPieMenu *menu )
+void gameTickPieMenu( GamePieMenu *menu )
 {
 	//menu->angle += 0.5f;
 
@@ -72,7 +74,7 @@ void FW_Menu_TickPie( FWPieMenu *menu )
 	}
 }
 
-bool FW_Menu_HandlePieInput( FWPieMenu *menu )
+bool gameHandlePieMenuInput( GamePieMenu *menu )
 {
 	if ( !menu->isActive )
 	{
@@ -131,7 +133,7 @@ bool FW_Menu_HandlePieInput( FWPieMenu *menu )
 	{
 		Game_Debug( "Selected item...\n" );
 
-		FWPieMenuOption *option;
+		GamePieMenuOption *option;
 		if ( menu->targetOption != NULL )
 		{// option we're trying to get to
 			option = PlGetLinkedListNodeUserData( menu->targetOption );
@@ -168,7 +170,7 @@ bool FW_Menu_HandlePieInput( FWPieMenu *menu )
 	return false;
 }
 
-static void DrawPieOption( FWPieMenuOption *option, float x, float y, bool isSelected, float scale )
+static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isSelected, float scale )
 {
 	float w = PIE_MENU_OPTION_WIDTH * scale;
 	float h = PIE_MENU_OPTION_HEIGHT * scale;
@@ -205,7 +207,7 @@ static void DrawPieOption( FWPieMenuOption *option, float x, float y, bool isSel
 	apeDrawMesh( option->icon, mesh, NULL, 0 );
 }
 
-static FWPieMenuOption *GetSelectedOption( FWPieMenu *menu )
+static GamePieMenuOption *GetSelectedOption( GamePieMenu *menu )
 {
 	if ( menu->targetOption != NULL )
 		return PlGetLinkedListNodeUserData( menu->targetOption );
@@ -215,11 +217,11 @@ static FWPieMenuOption *GetSelectedOption( FWPieMenu *menu )
 	return NULL;
 }
 
-static void GetOptionAngle( FWPieMenu *menu, FWPieMenuOption *option )
+static void GetOptionAngle( GamePieMenu *menu, GamePieMenuOption *option )
 {
 }
 
-void FW_Menu_DrawPie( FWPieMenu *menu, float x, float y )
+void gameDrawPieMenu( GamePieMenu *menu, float x, float y )
 {
 	if ( !menu->isActive )
 		return;
@@ -245,8 +247,8 @@ void FW_Menu_DrawPie( FWPieMenu *menu, float x, float y )
 		// and now the scale
 		float dc = menu->scale * ( PlGetVector2Length( &PLVector2( 1.0f, 1.0f ) ) - PlGetVector2Length( &PLVector2( xc, yc ) ) );
 
-		FWPieMenuOption *option = PlGetLinkedListNodeUserData( node );
-		bool isSelected         = ( option == GetSelectedOption( menu ) );
+		GamePieMenuOption *option = PlGetLinkedListNodeUserData( node );
+		bool isSelected           = ( option == GetSelectedOption( menu ) );
 		DrawPieOption( option, xo, yo, isSelected, dc );
 		if ( isSelected )
 			PlgDrawSimpleLine( PlMatrix4Identity(), PLVector3( x, y, 0.0f ), PLVector3( xo, yo, 0.0f ), PL_COLOUR_RED );
@@ -257,19 +259,19 @@ void FW_Menu_DrawPie( FWPieMenu *menu, float x, float y )
 	DrawPieOption( PlGetLinkedListNodeUserData( PlGetFirstNode( menu->options ) ), cursorX, cursorY, false, 1.0f );
 }
 
-void FW_Menu_SetPieActive( FWPieMenu *menu, bool active )
+void gameSetActivePieMenu( GamePieMenu *menu, bool active )
 {
 	menu->isActive = active;
 	menu->scale    = 0.0f;
 }
 
-FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struct ApeMaterial *icon, FWPieMenuOptionCallback callback )
+GamePieMenuOption *gameAddPieMenuOption( GamePieMenu *menu, const char *label, struct ApeMaterial *icon, GamePieMenuOptionCallback callback )
 {
-	FWPieMenuOption *option = PL_NEW( FWPieMenuOption );
-	option->node            = PlInsertLinkedListNode( menu->options, option );
-	option->callback        = callback;
-	option->icon            = icon;
-	option->parent          = menu;
+	GamePieMenuOption *option = PL_NEW( GamePieMenuOption );
+	option->node              = PlInsertLinkedListNode( menu->options, option );
+	option->callback          = callback;
+	option->icon              = icon;
+	option->parent            = menu;
 	snprintf( option->label, sizeof( option->label ), "%s", label );
 
 	menu->w += 32;
@@ -282,9 +284,9 @@ FWPieMenuOption *FW_Menu_AddPieOption( FWPieMenu *menu, const char *label, struc
 	return option;
 }
 
-void FW_Menu_DestroyPieOption( FWPieMenuOption *option )
+void gameDestroyPieMenuOption( GamePieMenuOption *option )
 {
-	FWPieMenu *menu = option->parent;
+	GamePieMenu *menu = option->parent;
 	assert( menu != NULL );
 	if ( menu != NULL )
 	{
@@ -294,7 +296,7 @@ void FW_Menu_DestroyPieOption( FWPieMenuOption *option )
 			menu->targetOption = NULL;
 		}
 		// And reset the active option to the first node if it's the same as our selection
-		if ( menu->activeOption != NULL && ( ( FWPieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option )
+		if ( menu->activeOption != NULL && ( ( GamePieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option )
 		{
 			menu->activeOption = PlGetFirstNode( menu->options );
 		}

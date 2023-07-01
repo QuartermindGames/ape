@@ -8,7 +8,7 @@
 
 #include "entity.h"
 
-const struct ApeEditorField *YnCore_EntityComponent_GetEditableProperties( const ApeEntityComponent *entityComponent, unsigned int *num )
+const struct ApeEditorField *apeGetEditableEntityComponentProperties( const ApeEntityComponent *entityComponent, unsigned int *num )
 {
 	const ApeEntityComponentBase *base = entityComponent->base;
 	assert( base != NULL );

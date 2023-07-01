@@ -10,6 +10,7 @@ set(GAME_SHARED_FILES
         private/game_component_movement.c
         private/game_component_transform.c
         private/game_menu.c
+        private/game_menu_pie.c
         )
 set(GAME_LINK_LIBS
         plcore

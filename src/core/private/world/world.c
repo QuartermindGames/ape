@@ -952,7 +952,7 @@ void apeSpawnWorldEntities( ApeWorld *world )
 	while ( node != NULL )
 	{
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		YnCore_EntityManager_CreateEntityFromPrefab( worldEntity->entityTemplate->name );
+		apeCreateEntityFromPrefab( worldEntity->entityTemplate->name );
 		node = PlGetNextLinkedListNode( node );
 	}
 }

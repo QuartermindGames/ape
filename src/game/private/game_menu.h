@@ -2,6 +2,9 @@
 
 #pragma once
 
+void gameInitializeMenu( void );
+void gameShutdownMenu( void );
+
 typedef void ( *MenuCallback )( void );
 
 typedef enum MenuOptionType
@@ -15,20 +18,20 @@ typedef enum MenuOptionType
 
 typedef struct MenuOption
 {
-	const char    *string;
-	struct Menu   *nextMenu;
-	MenuCallback   callback;
+	const char *string;
+	struct Menu *nextMenu;
+	MenuCallback callback;
 	MenuOptionType type;
 } MenuOption;
 
 typedef struct Menu
 {
-	const char       *heading;
+	const char *heading;
 	const MenuOption *options;
-	uint8_t           numOptions;
+	uint8_t numOptions;
 } Menu;
 
 extern uint8_t menuOptionSelection;
 
-void  Game_Menu_SetCurrent( Menu *menu );
+void Game_Menu_SetCurrent( Menu *menu );
 Menu *Game_Menu_GetCurrent( void );

@@ -5,9 +5,12 @@
 
 uint8_t menuOptionSelection = 0;
 
-void gamInitializeMenu( void )
+void gameInitializeMenu( void )
 {
+}
 
+void gameShutdownMenu( void )
+{
 }
 
 static Menu *currentMenu = NULL;
