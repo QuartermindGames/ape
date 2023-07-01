@@ -41,7 +41,7 @@ static NdBranch *Deserialize( ApeEntityComponent *self, NdBranch *root )
 static void Tick( ApeEntityComponent *self )
 {
 	// if we're in the world, ensure we're attached to a valid sector
-	ApeWorld *world = gameGetCurrentWorld();
+	ApeWorld *world = apeGetCurrentWorld();
 	if ( world != NULL && ECTRANSFORM( self )->sectorNum == -1 )
 	{
 		Game_Warning( "Entity outside of world, attempting to relocate!\n" );

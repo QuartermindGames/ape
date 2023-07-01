@@ -75,9 +75,6 @@ MenuState gameGetMenuState( void );
 
 typedef struct Actor Actor;
 
-void gameSpawnWorld( const char *worldPath );
-struct ApeWorld *gameGetCurrentWorld( void );
-
 ////////////////////////////////////////////////////////////////////
 
 typedef enum GameMaterialSurfaceType

@@ -290,7 +290,7 @@ static void OnWorldEditorActive( void )
 
 	YnCore_Viewport_SetCamera( viewport, context.camera );
 
-	world = gameGetCurrentWorld();
+	world = apeGetCurrentWorld();
 }
 
 ApeEditorContext *YnCore_RegisterWorldEditorContext( void )

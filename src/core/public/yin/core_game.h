@@ -16,5 +16,6 @@ void apeInitializeGame( void );
 void apeShutdownGame( void );
 void apeTickGame( void );
 void apeDisconnectGame( void );
+void apeSpawnWorld( const char *worldPath );
 
 PL_EXTERN_C_END

@@ -30,6 +30,8 @@ typedef struct ApeWorld ApeWorld;
 ApeWorld *apeCreateWorld( void );
 ApeWorld *apeLoadWorld( const char *path );
 
+struct ApeWorld *apeGetCurrentWorld( void );
+
 /**
  * Attempts to save the given world to the destination.
  * On success, returns true but false otherwise.

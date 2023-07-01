@@ -104,7 +104,7 @@ void apeSetupDefaultRenderState( const ApeViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	ApeWorld *world = gameGetCurrentWorld();
+	ApeWorld *world = apeGetCurrentWorld();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
 	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
@@ -593,7 +593,7 @@ void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
 static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ApeWorldRoom *currentSector = NULL;
-	ApeWorld *world             = gameGetCurrentWorld();
+	ApeWorld *world             = apeGetCurrentWorld();
 	if ( world != NULL )
 	{
 		currentSector = apeGetRoomAtPosition( world, &camera->internal->position );

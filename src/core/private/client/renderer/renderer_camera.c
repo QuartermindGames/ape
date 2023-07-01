@@ -102,7 +102,7 @@ void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 
 	if ( camera->room == NULL )
 	{
-		ApeWorld *world = gameGetCurrentWorld();
+		ApeWorld *world = apeGetCurrentWorld();
 		if ( world == NULL )
 		{
 			return;

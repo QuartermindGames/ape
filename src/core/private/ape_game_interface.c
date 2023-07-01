@@ -32,7 +32,7 @@ static void SpawnWorldCommand( unsigned int argc, char **argv )
 {
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
-	gameSpawnWorld( path );
+	apeSpawnWorld( path );
 }
 
 /****************************************
@@ -135,7 +135,7 @@ void Game_SetupWorldProperties( ApeWorld *world )
 	}
 }
 
-void gameSpawnWorld( const char *worldPath )
+void apeSpawnWorld( const char *worldPath )
 {
 	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 )
 	{
@@ -177,7 +177,7 @@ void gameSpawnWorld( const char *worldPath )
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *gameGetCurrentWorld( void )
+ApeWorld *apeGetCurrentWorld( void )
 {
 	return currentWorld;
 }
