@@ -45,8 +45,8 @@ typedef struct ApeEntityComponentCallbackTable
 } ApeEntityComponentCallbackTable;
 
 void ogeEntityManager_Initialize( void );
-void ogeEntityManager_Shutdown( void );
-void ogeEntityManager_Tick( void );
+void apeShutdownEntityManager( void );
+void apeTickEntityManager( void );
 void ogeEntityManager_Draw( struct ApeCamera *camera, struct ApeWorldRoom *sector );
 void YnCore_EntityManager_Save( NdBranch *root );
 void ogeEntityManager_Restore( NdBranch *root );

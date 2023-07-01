@@ -24,7 +24,7 @@ typedef enum InputTarget
 	INPUT_TARGET_GAME, /* game mode */
 } InputTarget;
 static InputTarget inputTarget = INPUT_TARGET_MENU;
-static MenuState   menuState   = MENU_STATE_START;
+static MenuState menuState     = MENU_STATE_START;
 
 static ApeWorld *currentWorld = NULL;
 
@@ -88,10 +88,10 @@ void apeInitializeGame( void )
 
 void apeShutdownGame( void )
 {
-	game_modeInterface->Shutdown();
+	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 
-	ogeEntityManager_Shutdown();
+	apeShutdownEntityManager();
 }
 
 MenuState gameGetMenuState( void )
@@ -101,7 +101,7 @@ MenuState gameGetMenuState( void )
 
 void apeTickGame( void )
 {
-	ogeEntityManager_Tick();
+	apeTickEntityManager();
 
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 }

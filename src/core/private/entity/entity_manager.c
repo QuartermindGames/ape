@@ -48,7 +48,7 @@ void ogeEntityManager_Initialize( void )
 	PRINT( "Entity Manager initialized\n" );
 }
 
-void ogeEntityManager_Shutdown( void )
+void apeShutdownEntityManager( void )
 {
 	// Clear up all entities first
 	if ( entityList != NULL )
@@ -138,7 +138,7 @@ static void DeserializeEntityCallback( ApeEntityComponent *component, ApeEntityC
 	componentTemplate->callbackTable->deserializeFunction( component, ( NdBranch * ) user );
 }
 
-void ogeEntityManager_Tick( void )
+void apeTickEntityManager( void )
 {
 	IterateEntities( CallEntityTick, NULL );
 }
