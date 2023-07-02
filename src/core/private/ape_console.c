@@ -151,11 +151,10 @@ static void SaveUserConfig( void )
 
 void apeRegisterConsoleCommands_( bool isDedicated )
 {
-	PlRegisterConsoleCommand( "Quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
-	PlRegisterConsoleCommand( "Exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
-	PlRegisterConsoleCommand( "Version", "Prints out the current engine version.", 0, Cmd_Version );
-	PlRegisterConsoleCommand( "Clear", "Clear the console buffer.", 0, ClearConsoleCommand );
-	PlRegisterConsoleCommand( "CLS", "Clear the console buffer.", 0, ClearConsoleCommand );
+	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
+	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
+	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
+	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, ClearConsoleCommand );
 
 	if ( !isDedicated )
 	{
@@ -166,8 +165,8 @@ void apeRegisterConsoleCommands_( bool isDedicated )
 void apeRegisterConsoleVariables_( bool isDedicated )
 {
 	// server
-	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
-	PlRegisterConsoleVariable( "server.password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
+	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
+	PlRegisterConsoleVariable( "server/password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
 
 	// Client variables
 	if ( !isDedicated )

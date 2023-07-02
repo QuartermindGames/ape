@@ -14,6 +14,7 @@ static PLLinkedList *entityList = NULL;
 static PLHashTable *entityPrefabTable   = NULL;
 static PLHashTable *componentSpawnTable = NULL;
 
+#if !defined( NDEBUG )
 static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	ApeEntity *entity = apeCreateEntity();
@@ -24,26 +25,37 @@ static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 	}
 
 	if ( apeAttachEntityComponentByName( entity, "transform" ) == NULL )
+	{
 		PRINT_WARNING( "Failed to attach \"transform\" component to entity!\n" );
+	}
 
 	apeDestroyEntity( entity );
 }
+#endif
 
 void apeInitializeEntityManager( void )
 {
-	PlRegisterConsoleCommand( "entity.test", "Test the entity system.", 0, TestCommand );
+#if !defined( NDEBUG )
+	PlRegisterConsoleCommand( "entity/test", "Test the entity system.", 0, TestCommand );
+#endif
 
 	entityList = PlCreateLinkedList();
 	if ( entityList == NULL )
+	{
 		PRINT_ERROR( "Failed to create entity list: %s\n", PlGetError() );
+	}
 
 	entityPrefabTable = PlCreateHashTable();
 	if ( entityPrefabTable == NULL )
+	{
 		PRINT_ERROR( "Failed to create entity prefab list: %s\n", PlGetError() );
+	}
 
 	componentSpawnTable = PlCreateHashTable();
 	if ( componentSpawnTable == NULL )
+	{
 		PRINT_ERROR( "Failed to create entity component list: %s\n", PlGetError() );
+	}
 
 	PRINT( "Entity Manager initialized\n" );
 }
@@ -57,7 +69,7 @@ void apeShutdownEntityManager( void )
 		while ( node != NULL )
 		{
 			ApeEntity *entity = PlGetLinkedListNodeUserData( node );
-			node                 = PlGetNextLinkedListNode( node );
+			node              = PlGetNextLinkedListNode( node );
 			apeDestroyEntity( entity );
 		}
 		PlDestroyLinkedList( entityList );
@@ -98,7 +110,7 @@ static void IterateEntities( void ( *callbackHandler )( ApeEntityComponent *comp
 			while ( subNode != NULL )
 			{
 				ApeEntityComponent *component = PlGetLinkedListNodeUserData( subNode );
-				subNode                          = PlGetNextLinkedListNode( subNode );
+				subNode                       = PlGetNextLinkedListNode( subNode );
 				callbackHandler( component, componentTemplate, user );
 			}
 		}
@@ -323,9 +335,9 @@ ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	component->entity                = entity;
-	component->base                  = componentTemplate;
-	component->listNode              = PlInsertLinkedListNode( entity->components, component );
+	component->entity             = entity;
+	component->base               = componentTemplate;
+	component->listNode           = PlInsertLinkedListNode( entity->components, component );
 
 	return component;
 }
@@ -364,9 +376,9 @@ ApeEntity *apeCreateEntityFromPrefab( const char *name )
 	for ( unsigned int i = 0; i < prefab->numComponents; ++i )
 	{
 		ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-		component->entity                = entity;
-		component->base                  = prefab->components[ i ].base;
-		component->listNode              = PlInsertLinkedListNode( entity->components, component );
+		component->entity             = entity;
+		component->base               = prefab->components[ i ].base;
+		component->listNode           = PlInsertLinkedListNode( entity->components, component );
 	}
 
 	return entity;

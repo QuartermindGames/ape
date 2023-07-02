@@ -23,9 +23,9 @@ static ApeMaterial *baseGuiMat;
 
 void apeInitializeGUI_( void )
 {
-	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
-	PlRegisterConsoleVariable( "gui.width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
-	PlRegisterConsoleVariable( "gui.height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
+	PlRegisterConsoleVariable( "gui/draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
+	PlRegisterConsoleVariable( "gui/width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
+	PlRegisterConsoleVariable( "gui/height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
 	ApeRenderTarget *guiTarget = apeCreateRenderTarget( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	if ( guiTarget == NULL )

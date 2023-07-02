@@ -15,7 +15,7 @@ static bool fxaaEnabled = false;
 
 static void RegisterFXAAConsoleVariables( void )
 {
-	PlRegisterConsoleVariable( "r.fxaa", "Enable FXAA anti-aliasing.", "1", PL_VAR_BOOL, &fxaaEnabled, NULL, true );
+	PlRegisterConsoleVariable( "r/fxaa", "Enable FXAA anti-aliasing.", "1", PL_VAR_BOOL, &fxaaEnabled, NULL, true );
 }
 
 static bool SetupFXAAEffect( void )

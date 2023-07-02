@@ -51,10 +51,10 @@ void apeInitializeScheduler( void )
 {
 	PRINT( "Initializing scheduler\n" );
 
-	PlRegisterConsoleCommand( "sch.flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
-	PlRegisterConsoleCommand( "sch.istaskrunning", "Displays 'true' if the specified task is running.", 1, Cmd_IsTaskRunning );
-	PlRegisterConsoleCommand( "sch.killtask", "Kill the specified task.", 1, Cmd_KillTask );
-	PlRegisterConsoleCommand( "sch.settaskdelay", "Set the delay for the specified task.", 1, Cmd_SetTaskDelay );
+	PlRegisterConsoleCommand( "sch/flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
+	PlRegisterConsoleCommand( "sch/istaskrunning", "Displays 'true' if the specified task is running.", 1, Cmd_IsTaskRunning );
+	PlRegisterConsoleCommand( "sch/killtask", "Kill the specified task.", 1, Cmd_KillTask );
+	PlRegisterConsoleCommand( "sch/settaskdelay", "Set the delay for the specified task.", 1, Cmd_SetTaskDelay );
 
 	scheduleList = PlCreateLinkedList();
 	if ( scheduleList == NULL )

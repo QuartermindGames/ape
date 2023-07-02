@@ -1012,10 +1012,10 @@ ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position )
 
 void apeRegisterWorldConsoleVariables_( void )
 {
-	PlRegisterConsoleVariable( "world.draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawRooms", "Toggle rendering of rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawDetailRooms", "Toggle rendering of detail rooms within rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/drawRooms", "Toggle rendering of rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/drawDetailRooms", "Toggle rendering of detail rooms within rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 }

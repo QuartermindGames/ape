@@ -80,8 +80,8 @@ void apeInitializeAudio_( void )
 	/* allocate storage for our samples */
 	audioSamples = PlCAlloc( maxSamples, sizeof( YNCoreAudioSample ), true );
 
-	PlRegisterConsoleCommand( "audio.test", "Test the audio system.", 0, TestAudioCommand );
-	PlRegisterConsoleCommand( "audio.play", "Play a specific sound.", 1, PlayAudioCommand );
+	PlRegisterConsoleCommand( "audio/test", "Test the audio system.", 0, TestAudioCommand );
+	PlRegisterConsoleCommand( "audio/play", "Play a specific sound.", 1, PlayAudioCommand );
 
 	// reset listener
 	Audio_ClearListener();
@@ -91,7 +91,7 @@ void apeInitializeAudio_( void )
 
 void ogeRegisterAudioConsoleVariables_( void )
 {
-	PlRegisterConsoleVariable( "audio.volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
+	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
 }
 
 static void Audio_FreeSample( uint32_t s )

@@ -457,7 +457,7 @@ static void CreateViewportCommand( unsigned int argc, char **argv )
 void apeRegisterClientConsoleCommands_( void )
 {
 	PlRegisterConsoleCommand( "Toggle", "Toggle the console.", 0, ToggleConsoleCommand );
-	PlRegisterConsoleCommand( "client.create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
+	PlRegisterConsoleCommand( "client/create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
 
 	//PlRegisterConsoleCommand( "Connect", NULL, "Connect to the specified server." );
 	//PlRegisterConsoleCommand( "Reconnect", NULL, "Reconnect to the current server." );
@@ -468,19 +468,19 @@ void Renderer_RegisterConsoleVariables( void );
 
 void apeRegisterClientConsoleVariables_( void )
 {
-	PlRegisterConsoleVariable( "client.name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
-	PlRegisterConsoleVariable( "input.mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
 
 	// editor
-	PlRegisterConsoleVariable( "edit.gridSize", "Set the maximum grid size.", "128", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "edit/gridSize", "Set the maximum grid size.", "128", PL_VAR_I32, NULL, NULL, true );
 
-	PlRegisterConsoleVariable( "debug.overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "debug.profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
 
-	PlRegisterConsoleVariable( "console.autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "console.alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
-	PlRegisterConsoleVariable( "console.drawShadow", "Shadow for text, which will improve legibility. "
+	PlRegisterConsoleVariable( "console/autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
+	PlRegisterConsoleVariable( "console/alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
+	PlRegisterConsoleVariable( "console/drawShadow", "Shadow for text, which will improve legibility. "
 	                                                 "Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 

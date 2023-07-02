@@ -74,7 +74,7 @@ void R_PP_RegisterConsoleVariables( void )
 	/* urrrughgdshghfhksd, but yeah... */
 	RegisterPostEffects();
 
-	PlRegisterConsoleVariable( "r.postProcessing", "Toggles post-processing pipeline.", "0", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/postProcessing", "Toggles post-processing pipeline.", "0", PL_VAR_BOOL, NULL, NULL, true );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{

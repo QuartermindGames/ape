@@ -210,28 +210,28 @@ void Renderer_RegisterConsoleVariables( void )
 {
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, PrepareScreenshotCapture );
 
-	PlRegisterConsoleVariable( "r.cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.showFPS", "Toggle FPS counter.",
+	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/showFPS", "Toggle FPS counter.",
 #if !defined( NDEBUG )
 	                           "true",
 #else
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
 
 	// Camera
-	PlRegisterConsoleVariable( "r.fov", "", "75", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
 }
 
 void apeInitializeRenderer_( void )

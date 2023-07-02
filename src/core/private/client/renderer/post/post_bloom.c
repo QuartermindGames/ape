@@ -25,8 +25,8 @@ static PLGTexture *bloomTexture;
 
 static void RegisterBloomConsoleVariables( void )
 {
-	bloomEnabled   = PlRegisterConsoleVariable( "r.bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
-	bloomIntensity = PlRegisterConsoleVariable( "r.bloomIntensity", "Set the intensity of the bloom effect.", "0.35", PL_VAR_F32, NULL, NULL, true );
+	bloomEnabled   = PlRegisterConsoleVariable( "r/bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
+	bloomIntensity = PlRegisterConsoleVariable( "r/bloomIntensity", "Set the intensity of the bloom effect.", "0.35", PL_VAR_F32, NULL, NULL, true );
 }
 
 static bool SetupBloomEffect( void )
