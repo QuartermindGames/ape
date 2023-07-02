@@ -47,7 +47,9 @@ void Editor_MaterialSelector_Initialize( void )
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), CompareMaterials );
 	for ( unsigned int i = 0; i < numMaterials; ++i )
+	{
 		PRINT( "\t%s\n", apeGetMaterialPath( materials[ i ] ) );
+	}
 }
 
 void Editor_MaterialSelector_Shutdown( void )
@@ -99,7 +101,9 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 		}
 
 		if ( y >= viewport->height )
+		{
 			break;
+		}
 	}
 
 	PlPopMatrix();

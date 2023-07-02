@@ -19,6 +19,7 @@ void apeRegisterEditorConsoleVariables_( void );
 void apeInitializeEditor_( void );
 void apeShutdownEditor_( void );
 void apeTickEditor_( void );
+void apeDrawEditor_( void );
 
 void apeDrawEditorGUI_( const ApeViewport *viewport );
 

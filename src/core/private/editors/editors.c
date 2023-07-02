@@ -103,7 +103,7 @@ void apeTickEditor_( void )
 	currentContext->Tick();
 }
 
-void YnCore_DrawEditor( void )
+void apeDrawEditor_( void )
 {
 	if ( currentContext == NULL )
 	{
