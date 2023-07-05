@@ -80,7 +80,7 @@ CMD_CALLBACK( Version )
 static void SaveUserConfig( void );
 static void LoadUserConfig( void )
 {
-	NdBranch *root = ndLoadFile( FileSystem_GetUserConfigLocation(), "config" );
+	NdBranch *root = ndLoadFile( apeGetUserConfigLocation(), "config" );
 	if ( root == NULL )
 	{
 		PRINT( "No existing user config, generating default.\n" );
@@ -110,7 +110,7 @@ static void LoadUserConfig( void )
 static void SaveUserConfig( void )
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "%s", FileSystem_GetUserConfigLocation() );
+	snprintf( path, sizeof( path ), "%s", apeGetUserConfigLocation() );
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;

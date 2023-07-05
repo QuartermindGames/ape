@@ -2,11 +2,11 @@ if(WIN32 AND MSVC)
     set(APP_ICON_RESOURCE_WINDOWS "launcher.rc")
 endif()
 
-add_executable(ApeShellSDL2 WIN32
+add_executable(ApeSDL2Shell WIN32
     launcher.c
     ${APP_ICON_RESOURCE_WINDOWS}
 )
-add_dependencies(ApeShellSDL2
+add_dependencies(ApeSDL2Shell
         plcore
         plgraphics
         plmodel
@@ -14,15 +14,15 @@ add_dependencies(ApeShellSDL2
         ApeCore
         )
 
-set_target_properties(ApeShellSDL2 PROPERTIES
+set_target_properties(ApeSDL2Shell PROPERTIES
     FOLDER "Shells"
 )
 
 # Setup link libraries
 
 if (MINGW)
-    target_link_libraries(ApeShellSDL2
+    target_link_libraries(ApeSDL2Shell
             -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive)
 endif ()
 
-target_link_libraries(ApeShellSDL2 ApeCore)
+target_link_libraries(ApeSDL2Shell ApeCore)

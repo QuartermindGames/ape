@@ -19,14 +19,52 @@ void cmnInitialize( void )
 
 	ndSetupLogs();
 
-	cmnPack_RegisterPkgInterface_();
-	cmnPack_RegisterVppInterface_();
+	cmnRegisterPkgInterface_();
+	cmnRegisterVppInterface_();
 }
 
-static PLPath appDataPath = "";
+const char *cmnGetDataDirectory( void )
+{
+	// cache it
+	static PLPath dataPath = { '\0' };
+	if ( *dataPath != '\0' )
+	{
+		return dataPath;
+	}
+
+	PLPath exeDir;
+	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL )
+	{
+		PlSetupPath( dataPath, true, "%s/../../runtime", exeDir );
+		if ( PlPathExists( dataPath ) )
+		{
+			PlSetupPath( dataPath, true, "%s/../..", exeDir );
+			return dataPath;
+		}
+
+		PlSetupPath( dataPath, true, "%s", exeDir );
+		return dataPath;
+	}
+
+	// oh dear oh dear...
+
+	const char *cwd = PlGetWorkingDirectory();
+	PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
+	if ( PlPathExists( dataPath ) )
+	{
+		PlSetupPath( dataPath, true, "%s/../..", cwd );
+	}
+	else
+	{
+		PlSetupPath( dataPath, true, "%s", cwd );
+	}
+
+	return dataPath;
+}
 
 const char *cmnGetAppDataDirectory( void )
 {
+	static PLPath appDataPath = "";
 	if ( *appDataPath != '\0' )
 	{
 		return appDataPath;

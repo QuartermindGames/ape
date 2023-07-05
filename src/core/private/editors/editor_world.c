@@ -58,7 +58,7 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 		return;
 	}
 
-	if ( editorInstance->mode != YN_CORE_EDITOR_CONTEXT_WORLD )
+	if ( editorInstance->mode != APE_EDITOR_CONTEXT_WORLD )
 	{
 		PRINT_WARNING( "Command failed - invalid active instance mode!\n" );
 		return;
@@ -299,7 +299,7 @@ ApeEditorContext *YnCore_RegisterWorldEditorContext( void )
 
 	context.name       = "World Editor";
 	context.identifier = WORLD_CONTEXT_IDENTIFIER;
-	context.mode       = YN_CORE_EDITOR_CONTEXT_WORLD;
+	context.mode       = APE_EDITOR_CONTEXT_WORLD;
 
 	context.RegisterConsoleVariables = RegisterWorldEditorVariables;
 	context.Initialize               = InitializeWorldEditor;

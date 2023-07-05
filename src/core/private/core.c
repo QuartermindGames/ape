@@ -75,7 +75,7 @@ bool apeInitialize( const char *config )
 		return false;
 	}
 
-	userConfig = ndLoadFile( FileSystem_GetUserConfigLocation(), "config" );
+	userConfig = ndLoadFile( apeGetUserConfigLocation(), "config" );
 	if ( userConfig == NULL )
 	{
 		PRINT( "No existing user config found, will use defaults.\n" );
@@ -123,7 +123,7 @@ void apeShutdown( void )
 	apeShutdownScheduler();
 	ogeShutdownNet();
 
-	ogeFileSystem_ClearMountedLocations();
+	apeClearMountedLocations();
 
 	apeShellInterface_Shutdown();
 

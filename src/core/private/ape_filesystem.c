@@ -47,22 +47,6 @@ static void ParseMountConfig( NdBranch *root )
 	}
 }
 
-static const char *GetDataDirectory( void )
-{
-	static PLPath dataPath = { '\0' };
-	if ( *dataPath != '\0' )
-		return dataPath;
-
-	if ( PlLocalFileExists( "./" ENGINE_BASE_CONFIG ) )
-	{
-		snprintf( dataPath, sizeof( dataPath ), "./" );
-		return dataPath;
-	}
-
-	snprintf( dataPath, sizeof( dataPath ), "../../" );
-	return dataPath;
-}
-
 static void ParseAliases( NdBranch *root )
 {
 	unsigned int numAliases = ndGetNumOfChildren( root ) / 2;
@@ -106,7 +90,7 @@ static char configPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
  * PUBLIC
  ****************************************/
 
-const char *FileSystem_GetUserConfigLocation( void )
+const char *apeGetUserConfigLocation( void )
 {
 	if ( *configPath == '\0' )
 	{
@@ -139,7 +123,7 @@ void apeSetupConfig( NdBranch *root )
 {
 	PlClearFileAliases();
 
-	ogeFileSystem_ClearMountedLocations();
+	apeClearMountedLocations();
 
 	fileSystemConfig = ndGetChildByName( root, "fileSystem" );
 	if ( fileSystemConfig == NULL )
@@ -151,7 +135,9 @@ void apeSetupConfig( NdBranch *root )
 
 	NdBranch *child;
 	if ( ( child = ndGetChildByName( fileSystemConfig, "aliases" ) ) != NULL )
+	{
 		ParseAliases( child );
+	}
 }
 
 void apeMountBaseLocations( void )
@@ -164,7 +150,7 @@ void apeMountBaseLocations( void )
 	}
 
 	PlMountLocalLocation( exePath );
-	PlMountLocalLocation( GetDataDirectory() );
+	PlMountLocalLocation( cmnGetDataDirectory() );
 }
 
 void apeMountLocations( void )
@@ -225,7 +211,7 @@ void apeMountLocations( void )
 	}
 }
 
-void ogeFileSystem_ClearMountedLocations( void )
+void apeClearMountedLocations( void )
 {
 	for ( unsigned int i = 0; i < numMountedLocations; ++i )
 	{

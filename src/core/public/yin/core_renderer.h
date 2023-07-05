@@ -13,7 +13,7 @@ typedef struct ApeMaterial ApeMaterial;
 // TODO: retire this...
 typedef enum YNCoreCacheGroup
 {
-	YN_CORE_CACHE_GROUP_EDITOR,
+	APE_CACHE_EDITOR,
 	YN_CORE_CACHE_GROUP_WORLD, /* everything that is cached during level load */
 
 	YN_CORE_MAX_CACHE_GROUPS

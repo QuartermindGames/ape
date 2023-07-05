@@ -14,6 +14,11 @@ typedef enum EditorStatus
 } EditorStatus;
 EditorStatus apeGetEditorStatus( void );
 
+/**
+ * Helper function for fetching icons specific to the editor.
+ */
+ApeMaterial *apeGetEditorIconMaterial( const char *name );
+
 void apeRegisterEditorConsoleVariables_( void );
 
 void apeInitializeEditor_( void );

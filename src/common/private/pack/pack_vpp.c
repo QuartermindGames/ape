@@ -134,7 +134,7 @@ static PLPackage *ParseVPPFile( PLFile *file )
 	return package;
 }
 
-void cmnPack_RegisterVppInterface_( void )
+void cmnRegisterVppInterface_( void )
 {
 	PlRegisterPackageLoader( "vpp", NULL, ParseVPPFile );
 }

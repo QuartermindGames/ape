@@ -5,19 +5,21 @@
 #include "editors.h"
 #include "client/renderer/renderer.h"
 
-static ApeEditorContext *contexts[ YN_CORE_EDITOR_MAX_CONTEXTS ];
+static ApeEditorContext *contexts[ APE_EDITOR_MAX_CONTEXTS ];
 static ApeEditorContext *currentContext = NULL;
 
 static EditorStatus editorStatus = EDITOR_CLOSED;
 EditorStatus apeGetEditorStatus( void ) { return editorStatus; }
 
+static bool firstTimeInitialization = true;
+
 void apeRegisterEditorConsoleVariables_( void )
 {
 	ApeEditorContext *YnCore_RegisterWorldEditorContext( void );
-	contexts[ YN_CORE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
+	contexts[ APE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
 
 	// setup shared vars per context
-	for ( unsigned int i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	for ( unsigned int i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		char buf[ 64 ];
 
@@ -52,16 +54,14 @@ static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **
 		return;
 	}
 
-	apeSetEditorContext( YN_CORE_EDITOR_CONTEXT_WORLD );
+	apeSetEditorContext( APE_EDITOR_CONTEXT_WORLD );
 }
 
 void apeInitializeEditor_( void )
 {
-	PlRegisterConsoleCommand( "editor",
-	                          "Enable/disable editor mode.",
-	                          0, ToggleEditorCallback );
+	PlRegisterConsoleCommand( "editor", "Enable/disable editor mode.", 0, ToggleEditorCallback );
 
-	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		assert( contexts[ i ]->Initialize != NULL );
 		if ( contexts[ i ]->Initialize == NULL )
@@ -75,7 +75,7 @@ void apeInitializeEditor_( void )
 
 void apeShutdownEditor_( void )
 {
-	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		assert( contexts[ i ]->Shutdown != NULL );
 		if ( contexts[ i ]->Shutdown == NULL )
@@ -142,7 +142,7 @@ ApeEditorContext *apeGetCurrentEditorContext( void )
 
 ApeEditorContext *apeGetEditorContext( const char *identifier )
 {
-	for ( uint32_t i = 0; i < YN_CORE_EDITOR_MAX_CONTEXTS; ++i )
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		if ( strcmp( contexts[ i ]->identifier, identifier ) != 0 )
 		{
@@ -174,4 +174,11 @@ bool apeIsEditorContextActive( const char *identifier )
 	}
 
 	return ( strcmp( currentContext->name, identifier ) == 0 );
+}
+
+ApeMaterial *apeGetEditorIconMaterial( const char *name )
+{
+	PLPath path;
+	PlSetupPath( path, true, "editor/icons/%s.mat.n", name );
+	return apeCacheMaterial( path, APE_CACHE_EDITOR, true, false );
 }

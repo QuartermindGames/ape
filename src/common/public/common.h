@@ -41,6 +41,7 @@ extern int logLevelWarn;
 PL_EXTERN_C
 
 void cmnInitialize( void );
+const char *cmnGetDataDirectory( void );
 const char *cmnGetAppDataDirectory( void );
 struct NdBranch *cmnGetConfig( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool cmnWriteConfig( struct NdBranch *root, const char *name );

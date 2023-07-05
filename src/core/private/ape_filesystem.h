@@ -4,10 +4,10 @@
 
 typedef struct NdBranch NdBranch;
 
-const char *FileSystem_GetUserConfigLocation( void );
+const char *apeGetUserConfigLocation( void );
 
 void apeSetupConfig( NdBranch *root );
 
 void apeMountBaseLocations( void );
 void apeMountLocations( void );
-void ogeFileSystem_ClearMountedLocations( void );
+void apeClearMountedLocations( void );

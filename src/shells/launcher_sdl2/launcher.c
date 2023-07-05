@@ -36,16 +36,16 @@ void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, con
 	SDL_MessageBoxFlags flags;
 	switch ( messageType )
 	{
-		case OGE_MESSAGE_ERROR:
+		case APE_MESSAGE_ERROR:
 			title = "Error";
 			flags = SDL_MESSAGEBOX_ERROR;
 			break;
-		case OGE_MESSAGE_WARNING:
+		case APE_MESSAGE_WARNING:
 			title = "Warning";
 			flags = SDL_MESSAGEBOX_WARNING;
 			break;
 		default:
-		case OGE_MESSAGE_INFO:
+		case APE_MESSAGE_INFO:
 			title = "Info";
 			flags = SDL_MESSAGEBOX_INFORMATION;
 			break;
@@ -393,7 +393,7 @@ static bool InitializeDisplay( void )
 
 	if ( ( windowViewport = apeShellInterface_CreateWindow( "APE - Another Portal Engine", 1024, 768, false, driverMode ) ) == NULL )
 	{
-		YnCore_ShellInterface_DisplayMessageBox( OGE_MESSAGE_ERROR, "Failed to create window!\n" );
+		YnCore_ShellInterface_DisplayMessageBox( APE_MESSAGE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
 	}
 

@@ -5,5 +5,5 @@
 
 #include "common.h"
 
-void cmnPack_RegisterPkgInterface_( void );
-void cmnPack_RegisterVppInterface_( void );
+void cmnRegisterPkgInterface_( void );
+void cmnRegisterVppInterface_( void );

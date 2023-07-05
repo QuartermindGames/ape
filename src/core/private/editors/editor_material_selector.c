@@ -16,7 +16,7 @@ static unsigned int numMaterials, maxMaterials;
 
 static void CacheMaterialPreviewCallback( const char *path, void *user )
 {
-	ApeMaterial *material = apeCacheMaterial( path, YN_CORE_CACHE_GROUP_EDITOR, false, true );
+	ApeMaterial *material = apeCacheMaterial( path, APE_CACHE_EDITOR, false, true );
 	if ( material == NULL )
 		return;
 
