@@ -139,8 +139,8 @@ void apeDrawGUI_( const ApeViewport *viewport )
 	apeDrawEditorGUI_( viewport );
 
 	// todo: this should use GUI
-	PL_GET_CVAR( "debug.overlay", debugOverlay );
-	PL_GET_CVAR( "r.showFPS", showFPS );
+	PL_GET_CVAR( "debug/overlay", debugOverlay );
+	PL_GET_CVAR( "r/showFPS", showFPS );
 	if ( showFPS->b_value && debugOverlay->i_value == 0 )
 	{
 		GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );

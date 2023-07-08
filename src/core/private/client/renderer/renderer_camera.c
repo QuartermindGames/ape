@@ -144,17 +144,17 @@ void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport )
 		}
 	}
 
-	PL_GET_CVAR( "r.fov", fov );
+	PL_GET_CVAR( "r/fov", fov );
 	if ( fov != NULL )
 	{
 		PlgSetCameraFieldOfView( camera->internal, fov->f_value );
 	}
-	PL_GET_CVAR( "r.near", near );
+	PL_GET_CVAR( "r/near", near );
 	if ( near != NULL )
 	{
 		camera->internal->near = near->f_value;
 	}
-	PL_GET_CVAR( "r.far", far );
+	PL_GET_CVAR( "r/far", far );
 	if ( far != NULL )
 	{
 		camera->internal->far = far->f_value;

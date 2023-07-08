@@ -773,7 +773,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 				// textures just need to be set per their respective unit
 				else if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
 				{
-					PL_GET_CVAR( "r.skipDiffuse", skipDiffuse );
+					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
 					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
 					{
 						continue;
@@ -794,12 +794,12 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 					}
 					assert( texture != NULL );
 
-					PL_GET_CVAR( "r.skipNormal", skipNormal );
+					PL_GET_CVAR( "r/skipNormal", skipNormal );
 					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_NORMAL && skipNormal->b_value ) )
 					{
 						texture = normalFallbackTexture;
 					}
-					PL_GET_CVAR( "r.skipSpecular", skipSpecular );
+					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
 					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
 					{
 						texture = specularFallbackTexture;

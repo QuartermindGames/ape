@@ -106,7 +106,7 @@ static void Player_ApplyViewBob( Actor *self )
 
 static void Player_HandleMouseLook( Actor *self )
 {
-	PL_GET_CVAR( "input.mlook", mouseLook );
+	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
 		return;
 

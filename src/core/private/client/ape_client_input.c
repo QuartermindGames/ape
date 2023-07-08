@@ -492,7 +492,7 @@ void apeTickInput_( void )
 
 void apeEndInputFrame_( void )
 {
-	PL_GET_CVAR( "input.mlook", mouseLook );
+	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
 	{
 		return;

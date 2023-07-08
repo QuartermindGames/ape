@@ -94,7 +94,7 @@ static void ToggleConsole( void )
 	consoleIsOpen = !consoleIsOpen;
 
 	// Release the mouse if the console is open
-	PL_GET_CVAR( "input.mlook", mouseLook );
+	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
 		apeShellInterface_GrabMouse( !consoleIsOpen );

@@ -5,8 +5,6 @@
 #include "ape_private.h"
 #include "world.h"
 
-#include "client/renderer/renderer_material.h"
-
 static void SerialiseFace( const ApeWorldFace *face, const ApeWorldMesh *mesh, NdBranch *root, const char *name )
 {
 	NdBranch *node = ndPushBackObject( root, name );

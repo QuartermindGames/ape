@@ -103,7 +103,7 @@ static void ShutdownDemoGame( void )
 
 static void TickDemoGame( void )
 {
-	PL_GET_CVAR( "input.mlook", mouseLook );
+	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
 		int mx, my;

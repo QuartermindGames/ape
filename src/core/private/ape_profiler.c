@@ -83,7 +83,7 @@ void apeUpdateProfilerGraphs( void )
 		timers[ i ].results[ NUM_GRAPH_POINTS - 1 ] = ( float ) apeGetProfilerMeasure( i );
 	}
 
-	PL_GET_CVAR( "debug.profilerFrequency", profilerFrequency );
+	PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
 	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 }
 

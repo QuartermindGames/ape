@@ -249,7 +249,7 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 		}
 
 #if 1
-		PL_GET_CVAR( "r.showActorBounds", showActorBounds );
+		PL_GET_CVAR( "r/showActorBounds", showActorBounds );
 		if ( showActorBounds->b_value )
 		{
 			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );

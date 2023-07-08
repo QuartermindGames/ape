@@ -261,7 +261,7 @@ void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera )
  */
 static void DrawDetailRooms( ApeWorld *world, ApeWorldRoom *room )
 {
-	PL_GET_CVAR( "world.drawDetailRooms", drawDetailRooms );
+	PL_GET_CVAR( "world/drawDetailRooms", drawDetailRooms );
 	if ( drawDetailRooms == NULL || !drawDetailRooms->b_value )
 	{
 		return;
@@ -327,7 +327,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 		return;
 	}
 
-	PL_GET_CVAR( "world.showRoomColours", showRoomColours );
+	PL_GET_CVAR( "world/showRoomColours", showRoomColours );
 	PLColour roomColour;
 	if ( showRoomColours != NULL && showRoomColours->b_value )
 	{
@@ -338,7 +338,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 		roomColour = PlCreateColour4B( 255, 255, 255, 255 );
 	}
 
-	PL_GET_CVAR( "world.showRoomVolumes", showRoomVolumes );
+	PL_GET_CVAR( "world/showRoomVolumes", showRoomVolumes );
 	if ( showRoomVolumes != NULL && showRoomVolumes->b_value )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -483,7 +483,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room )
 
 void apeDrawWorld_( ApeWorld *world )
 {
-	PL_GET_CVAR( "world.draw", drawWorld );
+	PL_GET_CVAR( "world/draw", drawWorld );
 	if ( world == NULL || ( drawWorld != NULL && !drawWorld->b_value ) )
 	{
 		return;
@@ -493,7 +493,7 @@ void apeDrawWorld_( ApeWorld *world )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PL_GET_CVAR( "world.showRoomColours", showRoomColours );
+	PL_GET_CVAR( "world/showRoomColours", showRoomColours );
 	if ( showRoomColours != NULL && showRoomColours->b_value )
 	{
 		srand( PlGetNumVectorArrayElements( world->rooms ) );
@@ -508,7 +508,7 @@ void apeDrawWorld_( ApeWorld *world )
 
 	// TODO: generate a list of visible rooms based on camera position
 
-	PL_GET_CVAR( "world.drawRooms", drawRooms );
+	PL_GET_CVAR( "world/drawRooms", drawRooms );
 	if ( drawRooms != NULL && drawRooms->b_value && world->rooms != NULL )
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )

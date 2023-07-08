@@ -4,7 +4,7 @@
 
 static void HandleMouseLook( GameMovementComponent *movementComponent )
 {
-	PL_GET_CVAR( "input.mlook", mouseLook );
+	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook == NULL || !mouseLook->b_value )
 	{
 		return;

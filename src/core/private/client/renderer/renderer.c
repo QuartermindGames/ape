@@ -273,7 +273,7 @@ void apeShutdownRenderer_( void )
  */
 static void DrawScenePost( const ApeViewport *viewport )
 {
-	PL_GET_CVAR( "r.postProcessing", postProcessingVar );
+	PL_GET_CVAR( "r/postProcessing", postProcessingVar );
 	if ( postProcessingVar == NULL || !postProcessingVar->b_value )
 	{
 		return;
@@ -393,7 +393,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 
 static void DrawDebugOverlay( const ApeViewport *viewport )
 {
-	PL_GET_CVAR( "debug.overlay", debugOverlay );
+	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
 	{
 		return;
@@ -676,7 +676,7 @@ void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	PL_GET_CVAR( "r.wireframe", wireframeMode );
+	PL_GET_CVAR( "r/wireframe", wireframeMode );
 	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
