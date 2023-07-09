@@ -7,12 +7,11 @@
 #include "legacy/actor.h"
 #include "renderer_font.h"
 #include "world/world.h"
-#include "game/game_interface.h"
 #include "renderer.h"
 #include "renderer_particle.h"
 
 #include "client/ape_client_gui.h"
-#include "editors/editors.h"
+#include "editor/editor.h"
 
 #include "post/post.h"
 

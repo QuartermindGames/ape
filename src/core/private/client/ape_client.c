@@ -2,14 +2,12 @@
 
 #include "../ape_private.h"
 
-#include "ape/editor_public.h"
-
 #include "../net/net.h"
 #include "ape_client.h"
 #include "ape_client_input.h"
 #include "game/game_interface.h"
 #include "ape_client_gui.h"
-#include "editors/editors.h"
+#include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
 

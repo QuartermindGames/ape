@@ -6,13 +6,11 @@
 
 PL_EXTERN_C
 
-typedef enum EditorStatus
-{
-	EDITOR_CLOSED,
-	EDITOR_CLOSING,
-	EDITOR_OPEN,
-} EditorStatus;
-EditorStatus apeGetEditorStatus( void );
+typedef enum ApeEditorStatus {
+	APE_EDITOR_STATUS_CLOSED,
+	APE_EDITOR_STATUS_CLOSING,
+	APE_EDITOR_STATUS_OPEN,
+} ApeEditorStatus;
 
 /**
  * Helper function for fetching icons specific to the editor.
@@ -25,6 +23,9 @@ void apeInitializeEditor_( void );
 void apeShutdownEditor_( void );
 void apeTickEditor_( void );
 void apeDrawEditor_( void );
+
+void apeOpenEditor_( void );
+void apeCloseEditor_( void );
 
 void apeDrawEditorGUI_( const ApeViewport *viewport );
 

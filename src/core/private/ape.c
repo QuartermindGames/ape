@@ -1,17 +1,15 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include <plmodel/plm.h>
-
 #include "ape_private.h"
 
-#include <yin/core_game.h>
+#include "yin/core_game.h"
 
 #include "ape_filesystem.h"
 #include "ape_model.h"
 
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
-#include "editors/editors.h"
+#include "editor/editor.h"
 
 #include "server/server.h"
 #include "net/net.h"
@@ -146,6 +144,8 @@ void apeTickFrame( void )
 
 	apeTickTasks();
 
+#if !defined( APE_EDITOR_ENABLED )
+
 	APE_PROFILE_START( PROFILE_TICK_CLIENT );
 	apeTickClient();
 	APE_PROFILE_END( PROFILE_TICK_CLIENT );
@@ -153,6 +153,25 @@ void apeTickFrame( void )
 	APE_PROFILE_START( PROFILE_TICK_SERVER );
 	apeTickServer();
 	APE_PROFILE_END( PROFILE_TICK_SERVER );
+
+#else
+
+	if ( edIsActive() )
+	{
+		edTick();
+	}
+	else
+	{
+		APE_PROFILE_START( PROFILE_TICK_CLIENT );
+		apeTickClient();
+		APE_PROFILE_END( PROFILE_TICK_CLIENT );
+
+		APE_PROFILE_START( PROFILE_TICK_SERVER );
+		apeTickServer();
+		APE_PROFILE_END( PROFILE_TICK_SERVER );
+	}
+
+#endif
 
 	numTicks++;
 

@@ -265,12 +265,18 @@ void apeRegisterEntityPrefab( const char *path )
 	if ( entityTemplate != NULL )
 	{
 		if ( PlInsertHashTableNode( entityPrefabTable, entityTemplate->name, strlen( entityTemplate->name ), entityTemplate ) )
+		{
 			PRINT( "Registered \"%s\" entity (%s)\n", entityTemplate->name, path );
+		}
 		else
+		{
 			PRINT_WARNING( "Failed to register entity template: %s\n", PlGetError() );
+		}
 	}
 	else
+	{
 		PRINT_WARNING( "Failed to register entity template: %s\nSee log for details!\n", path );
+	}
 
 	ndDestroyBranch( root );
 }

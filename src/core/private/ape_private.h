@@ -19,6 +19,13 @@
 #include "common.h"
 
 #include <yin/core.h>
+#include <yin/node.h>
+
+#if ( APE_EDITOR_ENABLED == 1 )
+
+#	include "ape/editor_public.h"
+
+#endif
 
 #define ENGINE_NAME        "APE"
 #define ENGINE_APP_NAME    "ape"

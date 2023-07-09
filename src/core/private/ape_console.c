@@ -2,10 +2,8 @@
 
 #include "ape_private.h"
 
-#include <yin/node.h>
-
 #include "client/ape_client_input.h"
-#include "editors/editors.h"
+#include "ape_filesystem.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -74,9 +72,6 @@ CMD_CALLBACK( Version )
 }
 
 /*------------------------------------------------------------------*/
-
-#include "ape_filesystem.h"
-#include "ape/editor_public.h"
 
 static void SaveUserConfig( void );
 static void LoadUserConfig( void )

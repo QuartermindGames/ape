@@ -3,10 +3,9 @@
 #include "ape_private.h"
 #include "ape_client_gui.h"
 #include "yin/core_interfaces.h"
-#include "editors/editors.h"
+#include "editor/editor.h"
 #include "game/game_interface.h"
 #include "client/renderer/renderer.h"
-#include "legacy/actor.h"
 
 static GuiCanvas *canvas;
 

@@ -42,7 +42,9 @@ set(APE_SOURCE_GUI
         private/client/gui/gui_panel.c)
 
 set(APE_SOURCE_EDITORS
-        private/editors/editors.c)
+        private/editor/editor.c
+        private/editor/editor_material_selector.c
+        private/editor/editor_world.c)
 
 add_library(ApeCore STATIC
         private/ape_console.c
@@ -57,7 +59,6 @@ add_library(ApeCore STATIC
         private/net/net_var.c
 
         private/ape_filesystem.c
-        private/ape_interface_editor.c
         private/ape_interface_game.c
         private/ape_image.c
         private/ape_memory_manager.c
@@ -66,7 +67,7 @@ add_library(ApeCore STATIC
         private/ape_scheduler.c
         private/ape_binary_serializer.c
 
-        private/core.c
+        private/ape.c
 
         private/world/world.c
         private/world/world_deserialiser.c
@@ -121,7 +122,3 @@ target_link_libraries(ApeCore
         ApeNode
         ApeGame
         )
-
-if (APE_COMPILE_EDITOR)
-    target_link_libraries(ApeCore ApeEditor)
-endif ()
