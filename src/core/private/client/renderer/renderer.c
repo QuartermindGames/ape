@@ -353,14 +353,14 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
-	BitmapFont *font = Font_GetDefaultSmall();
-	Font_BeginDraw( font );
+	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
+	apeBeginBitmapFontDraw( font );
 
 	if ( heading != NULL )
 	{
 		size_t len = strlen( heading );
 		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		Font_AddBitmapStringToPass( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
+		apeAddBitmapStringToBatch( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
 	// Calculate the average sum of all the points
@@ -375,9 +375,9 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 
 	// Current and average readings
 	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 
 #if 0
 	snprintf( buf, sizeof( buf ), "y+:%02f", max );
@@ -386,7 +386,7 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 #endif
 
-	Font_Draw( font );
+	apeDrawBitmapFont( font );
 
 	PL_DELETE( points );
 }
@@ -399,14 +399,14 @@ static void DrawDebugOverlay( const ApeViewport *viewport )
 		return;
 	}
 
-	BitmapFont *defaultFont = Font_GetDefaultSmall();
+	ApeBitmapFont *defaultFont = apeGetDefaultSmallBitmapFont();
 	assert( defaultFont != NULL );
 	if ( defaultFont == NULL )
 	{
 		return;
 	}
 
-	Font_BeginDraw( defaultFont );
+	apeBeginBitmapFontDraw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
@@ -425,43 +425,43 @@ static void DrawDebugOverlay( const ApeViewport *viewport )
 		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
 		strcat( buf, vang );
 		strcat( buf, ")" );
-		Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+		apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	}
 
 	// Draw stats
 	char buf[ 64 ];
-	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", YnCore_Viewport_GetAverageFPS( viewport ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", apeGetViewportFramerate( viewport ) );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_RendererPerformance_.numRooms );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_RendererPerformance_.numDetailRooms );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_RendererPerformance_.numVisiblePortals );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_RendererPerformance_.numFacesDrawn );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_RendererPerformance_.numLights );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_RendererPerformance_.numTriangles );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_RendererPerformance_.numBatches );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 
 	unsigned int numTasks = apeGetNumScheduledTasks();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
 		double taskDelay;
 		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
-		Font_AddBitmapStringToPass( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+		apeAddBitmapStringToBatch( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
 	y += defaultFont->ch * 2;
 
@@ -472,7 +472,7 @@ static void DrawDebugOverlay( const ApeViewport *viewport )
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	Font_Draw( defaultFont );
+	apeDrawBitmapFont( defaultFont );
 
 	if ( debugOverlay->i_value > 1 )
 	{

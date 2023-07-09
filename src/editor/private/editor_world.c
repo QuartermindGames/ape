@@ -1,6 +1,8 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 // Purpose: World editor specific functionality.
 
+#if 0 // todo
+
 #include "ape_private.h"
 
 #include "editors.h"
@@ -312,3 +314,5 @@ ApeEditorContext *YnCore_RegisterWorldEditorContext( void )
 
 	return &context;
 }
+
+#endif

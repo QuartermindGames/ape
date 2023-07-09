@@ -141,7 +141,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
 	}
 
-	return YnCore_Viewport_Create( 0, 0, width, height, sdlWindow );
+	return apeCreateViewport( 0, 0, width, height, sdlWindow );
 }
 
 #if 0
@@ -535,7 +535,7 @@ int Launcher_Initialize( int argc, char **argv )
 							//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
 							// originally used the above but it kept returning bogus coords...
 							SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
-							ogeViewport_SetSize( windowViewport, drawW, drawH );
+							apeSetViewportSize( windowViewport, drawW, drawH );
 							break;
 					}
 					break;

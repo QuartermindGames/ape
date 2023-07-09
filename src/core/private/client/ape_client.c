@@ -1,14 +1,14 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "../ape_private.h"
-#include "../net/net.h"
 
+#include "ape/editor_public.h"
+
+#include "../net/net.h"
 #include "ape_client.h"
 #include "ape_client_input.h"
-
 #include "game/game_interface.h"
 #include "ape_client_gui.h"
-
 #include "editors/editors.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
@@ -90,8 +90,11 @@ void apeTickClient( void )
 	apeBeginInputFrame_();
 
 	apeTickInput_();
-	apeTickEditor_();
 	apeTickGUI_();
+
+#if defined( APE_EDITOR_ENABLED )
+	edTick();
+#endif
 
 	apeHandleClientConnectionState_();
 

@@ -20,7 +20,7 @@ static void RegisterFXAAConsoleVariables( void )
 
 static bool SetupFXAAEffect( void )
 {
-	fxaaMaterial = apeCacheMaterial( "materials/post/fxaa.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
+	fxaaMaterial = apeCacheMaterial( "materials/post/fxaa.mat.n", APE_CACHE_WORLD, false, false );
 	if ( fxaaMaterial == NULL )
 		return false;
 

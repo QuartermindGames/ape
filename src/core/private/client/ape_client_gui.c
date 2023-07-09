@@ -33,7 +33,7 @@ void apeInitializeGUI_( void )
 		PRINT_ERROR( "Failed to create default render target for GUI!\n" );
 	}
 
-	baseGuiMat = apeCacheMaterial( "materials/ui/ui_rt_base.mat.n", YN_CORE_CACHE_GROUP_WORLD, false, false );
+	baseGuiMat = apeCacheMaterial( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
 	if ( baseGuiMat == NULL )
 	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
@@ -148,7 +148,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 		if ( font != NULL )
 		{
 			char tmp[ 32 ];
-			snprintf( tmp, sizeof( tmp ), "FPS: %u", YnCore_Viewport_GetAverageFPS( viewport ) );
+			snprintf( tmp, sizeof( tmp ), "FPS: %u", apeGetViewportFramerate( viewport ) );
 			guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
 			guiDisplayFont( font );
 		}

@@ -76,6 +76,7 @@ CMD_CALLBACK( Version )
 /*------------------------------------------------------------------*/
 
 #include "ape_filesystem.h"
+#include "ape/editor_public.h"
 
 static void SaveUserConfig( void );
 static void LoadUserConfig( void )
@@ -174,7 +175,9 @@ void apeRegisterConsoleVariables_( bool isDedicated )
 		apeRegisterClientConsoleVariables_();
 	}
 
-	apeRegisterEditorConsoleVariables_();
+#if defined( APE_EDITOR_ENABLED )
+	edRegisterConsoleVariables();
+#endif
 }
 
 static int logLevels[ APE_LOG_LEVELS ];

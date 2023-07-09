@@ -11,39 +11,6 @@ static ApeEditorContext *currentContext = NULL;
 static EditorStatus editorStatus = EDITOR_CLOSED;
 EditorStatus apeGetEditorStatus( void ) { return editorStatus; }
 
-static bool firstTimeInitialization = true;
-
-void apeRegisterEditorConsoleVariables_( void )
-{
-	ApeEditorContext *YnCore_RegisterWorldEditorContext( void );
-	contexts[ APE_EDITOR_CONTEXT_WORLD ] = YnCore_RegisterWorldEditorContext();
-
-	// setup shared vars per context
-	for ( unsigned int i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
-	{
-		char buf[ 64 ];
-
-		snprintf( buf, sizeof( buf ), "editor.%s.hideGrid", contexts[ i ]->identifier );
-		PlRegisterConsoleVariable( buf,
-		                           "Toggles grid for editor.",
-		                           "false", PL_VAR_BOOL,
-		                           &contexts[ i ]->hideGrid,
-		                           NULL, true );
-		snprintf( buf, sizeof( buf ), "editor.%s.useLineGrid", contexts[ i ]->identifier );
-		PlRegisterConsoleVariable( buf,
-		                           "Toggles between a dotted grid and line grid.",
-		                           "true", PL_VAR_BOOL,
-		                           &contexts[ i ]->useLineGrid,
-		                           NULL, true );
-		snprintf( buf, sizeof( buf ), "editor.%s.gridScale", contexts[ i ]->identifier );
-		PlRegisterConsoleVariable( buf,
-		                           "Sets the scale of the grid.",
-		                           "4", PL_VAR_I32,
-		                           &contexts[ i ]->gridScale,
-		                           NULL, true );
-	}
-}
-
 static void ToggleEditorCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	if ( apeGetCurrentEditorContext() != NULL )
@@ -61,6 +28,7 @@ void apeInitializeEditor_( void )
 {
 	PlRegisterConsoleCommand( "editor", "Enable/disable editor mode.", 0, ToggleEditorCallback );
 
+#if 0
 	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		assert( contexts[ i ]->Initialize != NULL );
@@ -71,10 +39,12 @@ void apeInitializeEditor_( void )
 
 		contexts[ i ]->Initialize();
 	}
+#endif
 }
 
 void apeShutdownEditor_( void )
 {
+#if 0
 	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
 		assert( contexts[ i ]->Shutdown != NULL );
@@ -85,6 +55,7 @@ void apeShutdownEditor_( void )
 
 		contexts[ i ]->Shutdown();
 	}
+#endif
 }
 
 void apeTickEditor_( void )

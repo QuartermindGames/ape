@@ -20,7 +20,7 @@ static bool isInitialized = false;
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
-ApeViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *windowHandle )
+ApeViewport *apeCreateViewport( int x, int y, int width, int height, void *windowHandle )
 {
 	if ( !isInitialized )
 	{
@@ -56,7 +56,7 @@ ApeViewport *YnCore_Viewport_Create( int x, int y, int width, int height, void *
 	return viewports[ i ];
 }
 
-void YnCore_Viewport_Destroy( ApeViewport *viewport )
+void apeDestroyViewport( ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 	{
@@ -71,7 +71,7 @@ void YnCore_Viewport_Destroy( ApeViewport *viewport )
 /**
  * Returns the viewport by the given slot.
  */
-ApeViewport *YnCore_Viewport_GetBySlot( unsigned int slot )
+ApeViewport *apeGetViewportBySlot( unsigned int slot )
 {
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS )
@@ -83,18 +83,18 @@ ApeViewport *YnCore_Viewport_GetBySlot( unsigned int slot )
 	return viewports[ slot ];
 }
 
-void YnCore_Viewport_SetCamera( ApeViewport *viewport, ApeCamera *camera )
+void apeSetViewportCamera( ApeViewport *viewport, ApeCamera *camera )
 {
 	viewport->camera = camera;
 }
 
-void ogeViewport_SetSize( ApeViewport *viewport, int width, int height )
+void apeSetViewportSize( ApeViewport *viewport, int width, int height )
 {
 	viewport->width  = width;
 	viewport->height = height;
 }
 
-void YnCore_Viewport_GetSize( const ApeViewport *viewport, int *width, int *height )
+void apeGetViewportSize( const ApeViewport *viewport, int *width, int *height )
 {
 	*width  = viewport->width;
 	*height = viewport->height;
@@ -103,7 +103,7 @@ void YnCore_Viewport_GetSize( const ApeViewport *viewport, int *width, int *heig
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int YnCore_Viewport_GetAverageFPS( const ApeViewport *viewport )
+unsigned int apeGetViewportFramerate( const ApeViewport *viewport )
 {
 	double t = 0.0;
 	for ( unsigned int i = 0; i < APE_MAX_FPS_READINGS; ++i )

@@ -3,7 +3,7 @@
  * GoldSrc MDL Loader
  * ====================================================================*/
 
-#include "ape_private.h"
+#include "../../editor.h"
 #include "importer_model.h"
 
 #define MDL_NAME                 64
@@ -97,7 +97,7 @@ typedef struct VMDLBoneController
 	int32_t index;
 } VMDLBoneController;
 
-PLMModel *MDL_MDL_LoadFile( const char *path )
+PLMModel *edLoadGoldSrcModel_( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
@@ -108,14 +108,14 @@ PLMModel *MDL_MDL_LoadFile( const char *path )
 	VMDLHeader header;
 	if ( PlReadFile( file, &header, sizeof( VMDLHeader ), 1 ) != 1 )
 	{
-		PRINT_WARNING( "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
+		edPrint_( ED_LOG_WARN, "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* now carry out some basic validation */
 
 	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC )
 	{
-		PRINT_WARNING( "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
+		edPrint_( ED_LOG_WARN, "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
 	}
 
 	return NULL;

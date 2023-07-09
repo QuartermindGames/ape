@@ -42,14 +42,7 @@ set(APE_SOURCE_GUI
         private/client/gui/gui_panel.c)
 
 set(APE_SOURCE_EDITORS
-        private/editors/editor_lightmapper.c
-        private/editors/editor_material_selector.c
-        private/editors/editor_world.c
-        private/editors/editors.c
-        private/editors/importers/models/importer_model.c
-        private/editors/importers/models/importer_model_gsmdl.c
-        private/editors/importers/models/importer_model_ocmsh.c
-        private/editors/importers/models/importer_model_q2md2.c)
+        private/editors/editors.c)
 
 add_library(ApeCore STATIC
         private/ape_console.c
@@ -64,7 +57,8 @@ add_library(ApeCore STATIC
         private/net/net_var.c
 
         private/ape_filesystem.c
-        private/ape_game_interface.c
+        private/ape_interface_editor.c
+        private/ape_interface_game.c
         private/ape_image.c
         private/ape_memory_manager.c
         private/ape_model.c
@@ -127,3 +121,7 @@ target_link_libraries(ApeCore
         ApeNode
         ApeGame
         )
+
+if (APE_COMPILE_EDITOR)
+    target_link_libraries(ApeCore ApeEditor)
+endif ()

@@ -21,7 +21,7 @@ typedef struct ApeWorldObject ApeWorldObject;
 typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeWorld ApeWorld;
 
-#define APE_WORLD_VERSION        2
+#define APE_WORLD_VERSION        3
 #define APE_WORLD_EXTENSION      "wld.n"
 #define APE_WORLD_EXTENSION_MESH "wsm.n"
 

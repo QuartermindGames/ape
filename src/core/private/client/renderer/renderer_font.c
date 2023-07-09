@@ -4,9 +4,9 @@
 #include "renderer_font.h"
 #include "renderer.h"
 
-static BitmapFont *defaultFont, *defaultFontSmall;
+static ApeBitmapFont *defaultFont, *defaultFontSmall;
 
-void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
+void apeAddBitmapCharacterToBatch( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
 {
 	int row = ( character - font->start ) / ( font->w / font->cw );
 	int col = ( character - font->start ) % ( font->w / font->cw );
@@ -29,7 +29,7 @@ void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, fl
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
+void apeAddBitmapStringToBatch( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
 {
 	if ( length == 0 )
 		return;
@@ -51,9 +51,9 @@ void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float
 		}
 
 		if ( shadow )
-			Font_AddBitmapCharacterToPass( font, n_x + 1, n_y + 1, scale, PLColourRGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
+			apeAddBitmapCharacterToBatch( font, n_x + 1, n_y + 1, scale, PLColourRGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
 
-		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
+		apeAddBitmapCharacterToBatch( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 
 		n_x += ( font->cw * scale );
 	}
@@ -62,7 +62,7 @@ void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float
 /**
  * Draw a single bitmap character at the specified coordinates.
  */
-void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, PLColour colour, char character )
+void apeDrawBitmapCharacter( ApeBitmapFont *font, float x, float y, float scale, PLColour colour, char character )
 {
 	if ( scale <= 0 )
 		return;
@@ -77,9 +77,9 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	/* setup our render pass */
 
-	Font_BeginDraw( font );
+	apeBeginBitmapFontDraw( font );
 
-	Font_AddBitmapCharacterToPass( font, x, y, scale, colour, character );
+	apeAddBitmapCharacterToBatch( font, x, y, scale, colour, character );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -91,7 +91,7 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 	PlPopMatrix();
 }
 
-void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
+void apeDrawBitmapString( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
 {
 	if ( scale == 0.0f )
 		return;
@@ -100,22 +100,22 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 	if ( numChars == 0 )
 		return;
 
-	Font_BeginDraw( font );
+	apeBeginBitmapFontDraw( font );
 
 	if ( shadow )
-		Font_AddBitmapStringToPass( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
+		apeAddBitmapStringToBatch( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
 
-	Font_AddBitmapStringToPass( font, x, y, scale, colour, msg, numChars, false );
+	apeAddBitmapStringToBatch( font, x, y, scale, colour, msg, numChars, false );
 
-	Font_Draw( font );
+	apeDrawBitmapFont( font );
 }
 
-void Font_BeginDraw( BitmapFont *font )
+void apeBeginBitmapFontDraw( ApeBitmapFont *font )
 {
 	PlgClearMesh( font->mesh );
 }
 
-void Font_Draw( BitmapFont *font )
+void apeDrawBitmapFont( ApeBitmapFont *font )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -129,8 +129,8 @@ void Font_Draw( BitmapFont *font )
 
 void YR_Font_Initialize( void )
 {
-	defaultFont		 = Font_CacheBitmap( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
-	defaultFontSmall = Font_CacheBitmap( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
+	defaultFont		 = apeCacheBitmapFont( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
+	defaultFontSmall = apeCacheBitmapFont( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
 		PRINT_ERROR( "Failed to load default fonts!\n" );
@@ -138,13 +138,13 @@ void YR_Font_Initialize( void )
 
 void Font_Shutdown( void )
 {
-	Font_ReleaseBitmap( defaultFont );
+	apeReleaseBitmapFont( defaultFont );
 	defaultFont = NULL;
 }
 
 static void Font_CB_DestroyBitmap( void *userData )
 {
-	BitmapFont *font = userData;
+	ApeBitmapFont *font = userData;
 	assert( font != NULL );
 
 	apeReleaseMaterial( font->material );
@@ -154,9 +154,9 @@ static void Font_CB_DestroyBitmap( void *userData )
 	PlFree( font );
 }
 
-BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
+ApeBitmapFont *apeCacheBitmapFont( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	BitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
+	ApeBitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
 	if ( font != NULL )
 	{
 		apeAddReference( &font->mem );
@@ -178,7 +178,7 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 		return NULL;
 	}
 
-	font		   = PlMAlloc( sizeof( BitmapFont ), true );
+	font		   = PlMAlloc( sizeof( ApeBitmapFont ), true );
 	font->material = material;
 	font->mesh	   = mesh;
 	font->w		   = w;
@@ -198,10 +198,10 @@ BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, in
 	return font;
 }
 
-void Font_ReleaseBitmap( BitmapFont *font )
+void apeReleaseBitmapFont( ApeBitmapFont *font )
 {
 	apeReleaseReference( &font->mem );
 }
 
-BitmapFont *Font_GetDefault( void ) { return defaultFont; }
-BitmapFont *Font_GetDefaultSmall( void ) { return defaultFontSmall; }
+ApeBitmapFont *apeGetDefaultBitmapFont( void ) { return defaultFont; }
+ApeBitmapFont *apeGetDefaultSmallBitmapFont( void ) { return defaultFontSmall; }

@@ -249,3 +249,8 @@ void apeInitializeShaders_( void )
 		ape_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
 	}
 }
+
+PLGShaderProgram *apeGetDefaultShaderProgram( ApeDefaultShaderProgram defaultShaderProgram )
+{
+	return ape_defaultShaderPrograms_[ defaultShaderProgram ];
+}

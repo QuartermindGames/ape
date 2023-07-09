@@ -12,7 +12,7 @@
 
 #include "../gui/gui_private.h"
 
-static PLLinkedList *materials[ YN_CORE_MAX_CACHE_GROUPS ];
+static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
 static PLGTexture *specularFallbackTexture;
 static PLGTexture *normalFallbackTexture;
@@ -43,7 +43,7 @@ void apeInitializeMaterialSystem( void )
 {
 	PRINT( "Initializing material system\n" );
 
-	for ( unsigned int i = 0; i < YN_CORE_MAX_CACHE_GROUPS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
@@ -77,7 +77,7 @@ void apeShutdownMaterialSystem( void )
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;
 
-	for ( unsigned int i = 0; i < YN_CORE_MAX_CACHE_GROUPS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		unsigned int cached_materials = PlGetNumLinkedListNodes( materials[ i ] );
 		totalCachedMaterials += cached_materials;
@@ -491,7 +491,7 @@ static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool p
 	return material;
 }
 
-static ApeMaterial *GetMaterial( const char *path, YNCoreCacheGroup group )
+static ApeMaterial *GetMaterial( const char *path, ApeCacheGroup group )
 {
 	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL )
@@ -543,7 +543,7 @@ static void DestroyMaterialCallback( void *userData )
 	DestroyMaterial( ( ApeMaterial * ) userData );
 }
 
-ApeMaterial *apeCacheMaterial( const char *path, YNCoreCacheGroup group, bool useFallback, bool preview )
+ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
 	ApeMaterial *material = GetMaterial( path, group );

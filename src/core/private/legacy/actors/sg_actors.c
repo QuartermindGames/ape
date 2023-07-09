@@ -312,7 +312,7 @@ static void Ship_Spawn( Actor *self )
 	ship->particleEmitter->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->particleEmitter->transform.translation    = Act_GetPosition( self );
 	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->particleEmitter->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false );
+	ship->particleEmitter->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
 	ship->emitLeft                           = PS_SpawnEmitter();
 	ship->emitLeft->emissionRate             = 4;
@@ -327,7 +327,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitLeft->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->emitLeft->transform.translation    = Act_GetPosition( self );
 	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitLeft->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false );
+	ship->emitLeft->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
 	ship->emitRight                           = PS_SpawnEmitter();
 	ship->emitRight->emissionRate             = 4;
@@ -342,7 +342,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->emitRight->transform.translation    = Act_GetPosition( self );
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitRight->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false );
+	ship->emitRight->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
 	ApeCamera *camera      = apeGetActiveCamera();
 	camera->mode        = APE_CAMERA_MODE_TOP;

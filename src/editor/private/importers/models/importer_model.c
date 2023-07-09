@@ -3,9 +3,7 @@
 #include <plcore/pl_timer.h>
 #include <plmodel/plm.h>
 
-#include "ape_private.h"
-
-#include "yin/node.h"
+#include "../../editor.h"
 
 #include "importer_model.h"
 
@@ -162,6 +160,11 @@ static NdBranch *SerializeModel( const PLMModel *model )
 	}
 
 	return root;
+}
+
+void edRegisterImportCommands_( void )
+{
+
 }
 
 #if 0

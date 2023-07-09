@@ -151,7 +151,7 @@ static void ParseStaticGeometryTextures( ApeWorld *world, PLFile *file )
 		PLPath path;
 		PlSetupPath( path, true, "materials/world/%s.mat.n", textureName );
 
-		PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, YN_CORE_CACHE_GROUP_WORLD, true, false ) );
+		PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
 
 		PL_DELETE( textureName );
 	}

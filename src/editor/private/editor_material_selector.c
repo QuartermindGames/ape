@@ -1,11 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ape_private.h"
-#include "editors.h"
-
-#include "client/renderer/renderer.h"
-#include "client/renderer/renderer_material.h"
-#include "client/renderer/renderer_font.h"
+#include "editor.h"
 
 static ApeMaterial **materials;
 static unsigned int numMaterials, maxMaterials;
@@ -35,27 +30,29 @@ static int CompareMaterials( const void *a, const void *b )
 	return strcmp( strA, strB );
 }
 
-void Editor_MaterialSelector_Initialize( void )
+void edInitializeMaterialSelector_( void )
 {
 	numMaterials = 0;
 	maxMaterials = MATERIAL_STORE_INC;
-	materials = PL_NEW_( ApeMaterial *, maxMaterials );
+	materials    = PL_NEW_( ApeMaterial *, maxMaterials );
 
 	// Cache all the materials in a preview state
 	PlScanDirectory( "materials/world/", "n", CacheMaterialPreviewCallback, true, NULL );
-	PRINT( "Found %u world materials\n", numMaterials );
+	edPrint_( ED_LOG_GENERAL, "Found %u world materials\n", numMaterials );
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), CompareMaterials );
 	for ( unsigned int i = 0; i < numMaterials; ++i )
 	{
-		PRINT( "\t%s\n", apeGetMaterialPath( materials[ i ] ) );
+		edPrint_( ED_LOG_GENERAL, "\t%s\n", apeGetMaterialPath( materials[ i ] ) );
 	}
 }
 
-void Editor_MaterialSelector_Shutdown( void )
+void edShutdownMaterialSelector_( void )
 {
 	for ( unsigned int i = 0; i < numMaterials; ++i )
+	{
 		apeReleaseMaterial( materials[ i ] );
+	}
 
 	PL_DELETE( materials );
 }
@@ -76,13 +73,16 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( apeGetDefaultShaderProgram( APE_SHADER_DEFAULT_VERTEX ) );
 
-	PlgDrawRectangle( 0, 0, ( float ) viewport->width, ( float ) viewport->height, PL_COLOUR_DARK_SLATE_GRAY );
+	int vw, vh;
+	apeGetViewportSize( viewport, &vw, &vh );
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+	PlgDrawRectangle( 0, 0, ( float ) vw, ( float ) vh, PL_COLOUR_DARK_SLATE_GRAY );
 
-	BitmapFont *font = Font_GetDefaultSmall();
+	PlgSetShaderProgram( apeGetDefaultShaderProgram( APE_SHADER_DEFAULT ) );
+
+	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
 	for ( unsigned int i = 0; i < numMaterials; ++i )
 	{
 		PLGTexture *texture = apeGetMaterialPreviewTexture( materials[ i ] );
@@ -90,17 +90,17 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 
 		char buf[ 8 ];
 		snprintf( buf, sizeof( buf ), "%ux%u", texture->w, texture->h );
-		Font_DrawBitmapString( font, ( float ) ( x + sp ), ( float ) ( y + sp ), 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
-		Font_DrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, apeGetMaterialPath( materials[ i ] ), true );
+		apeDrawBitmapString( font, ( float ) ( x + sp ), ( float ) ( y + sp ), 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+		apeDrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, apeGetMaterialPath( materials[ i ] ), true );
 
 		x += mw + sp;
-		if ( x + mw >= viewport->width )
+		if ( x + mw >= vw )
 		{
 			x = sp;
 			y += sp + mh;
 		}
 
-		if ( y >= viewport->height )
+		if ( y >= vh )
 		{
 			break;
 		}

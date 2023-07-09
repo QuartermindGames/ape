@@ -10,6 +10,8 @@ project(Ape
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(APE_COMPILE_EDITOR "Enable the editor component." ON)
+
 # Set all of our output directories.
 
 include_directories(src/)
@@ -121,9 +123,14 @@ endif()
 
 add_subdirectory(src/common/)
 
+
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/game/)
+
+if (APE_COMPILE_EDITOR)
+    add_subdirectory(src/editor/)
+endif ()
 
 #add_subdirectory(src/dickens/lib/)
 #add_subdirectory(src/dickens/dcmd/)

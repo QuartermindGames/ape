@@ -103,16 +103,6 @@ typedef struct ApeMaterialPass
 
 #define RS_PROGRAM_NAME_LENGTH 64
 
-typedef enum ApeDefaultShaderProgram
-{
-	APE_SHADER_DEFAULT,
-	APE_SHADER_LIGHTING_PASS,
-	APE_SHADER_DEFAULT_VERTEX,
-	APE_SHADER_DEFAULT_ALPHA,
-	APE_SHADER_DEFAULT_FONT,
-
-	APE_MAX_DEFAULT_SHADERS
-} ApeDefaultShaderProgram;
 extern PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
 typedef struct ApeShaderProgramIndex
@@ -133,8 +123,6 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 
 void apeInitializeMaterialSystem( void );
 void apeShutdownMaterialSystem( void );
-
-PLGTexture *apeGetMaterialPreviewTexture( ApeMaterial *material );
 
 ApeMaterial *apeGetFallbackMaterial( void );
 

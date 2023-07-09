@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ape_private.h"
+#include "../../editor.h"
 #include "importer_model.h"
 
 #define OC_MAGIC PL_MAGIC_TO_NUM( 'q', 'n', '\0', '\0' )
@@ -21,18 +21,18 @@ static void OC_MSH_ParseVertices( PLFile *file, int32_t *verticesNum )
 	int32_t magic = PlReadInt32( file, false, NULL );
 	if ( magic != OC_MAGIC )
 	{
-		PRINT_WARNING( "Unexpected magic: %d vs %d\n", magic, OC_MAGIC );
+		edPrint_( ED_LOG_WARN, "Unexpected magic: %d vs %d\n", magic, OC_MAGIC );
 	}
 
 	if ( !PlFileSeek( file, 24, PL_SEEK_CUR ) )
 	{
-		PRINT_WARNING( "Failed to seek to vertices!\n" );
+		edPrint_( ED_LOG_WARN, "Failed to seek to vertices!\n" );
 	}
 
 	int32_t numVertices = PlReadInt32( file, false, NULL );
 	if ( numVertices <= 0 || numVertices >= MAX_VERTICES )
 	{
-		PRINT_WARNING( "Invalid number of vertices in msh!\n" );
+		edPrint_( ED_LOG_WARN, "Invalid number of vertices in msh!\n" );
 	}
 
 	for ( int32_t i = 0; i < numVertices; ++i )
@@ -62,7 +62,7 @@ static void OC_MSH_ParseFaces( PLFile *file, int32_t *facesNum )
 	int32_t numFaces = PlReadInt32( file, false, NULL );
 	if ( numFaces <= 0 || numFaces >= MAX_FACES )
 	{
-		PRINT_WARNING( "Invalid number of faces in msh!\n" );
+		edPrint_( ED_LOG_WARN, "Invalid number of faces in msh!\n" );
 	}
 
 	for ( int32_t i = 0; i < numFaces; ++i )
@@ -112,7 +112,7 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	PLMModel *model = PlmCreateStaticModel( meshes, 1 );
 	if ( model == NULL )
 	{
-		PRINT_WARNING( "Failed to create model container!\nPL: %s\n", PlGetError() );
+		edPrint_( ED_LOG_WARN, "Failed to create model container!\nPL: %s\n", PlGetError() );
 	}
 
 	meshes[ 0 ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
@@ -146,18 +146,18 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	return model;
 }
 
-PLMModel *OC_MSH_LoadFile( const char *path )
+PLMModel *edLoadOutcastModel_( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		PRINT_WARNING( "Failed to load MSH \"%s\"!\nPL: %s\n", path, PlGetError() );
+		edPrint_( ED_LOG_WARN, "Failed to load MSH \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
 	PLMModel *model = OC_MSH_ParseFile( file );
 	if ( model == NULL )
 	{
-		PRINT_WARNING( "Failed to parse MSH \"%s\"!\n", PlGetError() );
+		edPrint_( ED_LOG_WARN, "Failed to parse MSH \"%s\"!\n", PlGetError() );
 	}
 
 	PlCloseFile( file );
