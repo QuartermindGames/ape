@@ -22,7 +22,7 @@ static ApeMaterial *baseGuiMat;
 
 void apeInitializeGUI_( void )
 {
-	PlRegisterConsoleVariable( "gui/draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
+	PlRegisterConsoleVariable( "gui/draw", "Enable/disable drawing of the GUI.", "1", PL_VAR_BOOL, &drawGUI, NULL, false );
 	PlRegisterConsoleVariable( "gui/width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
 	PlRegisterConsoleVariable( "gui/height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
@@ -123,8 +123,12 @@ void apeDrawGUI_( const ApeViewport *viewport )
 	{
 		// todo: no built-in shaders for GUI yet, just assumes we have one bound... urgh
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+
 		guiSetCanvasSize( canvas, guiWidth, guiHeight );
 		guiDraw( canvas, rootPanel );
+
+		// Need to call this again to reset the viewport
+		apeSet2DViewportSize( viewport->width, viewport->height );
 
 		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
 	}
