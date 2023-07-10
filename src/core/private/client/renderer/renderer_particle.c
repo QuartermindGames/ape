@@ -63,8 +63,8 @@ void PS_CacheEmitterTemplate( const char *path )
 
 	emitter = PlMAlloc( sizeof( PSEmitter ), true );
 
-	SG_DS_Transform( root, "transform", &emitter->transform );
-	SG_DS_Transform( root, "transformVar", &emitter->transformVar );
+	//SG_DS_Transform( root, "transform", &emitter->transform );
+	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
 	emitter->emissionRate = ndGetI32ByName( root, "emissionRate", 2 );
 	emitter->emissionVar = ndGetI32ByName( root, "emissionVar", 2 );

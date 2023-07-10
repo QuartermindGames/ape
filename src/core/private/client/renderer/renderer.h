@@ -11,8 +11,7 @@
 
 #include "renderer_texture.h"
 
-typedef struct ApeRendererStats
-{
+typedef struct ApeRendererStats {
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numTriangles;
@@ -25,15 +24,13 @@ typedef struct ApeRendererStats
 extern ApeRendererStats ape_RendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct ApeSpriteFrame
-{
+typedef struct ApeSpriteFrame {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
 } ApeSpriteFrame;
 
-typedef struct ApeCamera
-{
+typedef struct ApeCamera {
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
@@ -50,8 +47,7 @@ typedef struct ApeCamera
 
 #define APE_MAX_FPS_READINGS 64
 
-typedef struct ApeViewport
-{
+typedef struct ApeViewport {
 	unsigned int index;
 	int x, y;
 	int width, height;
@@ -75,8 +71,7 @@ typedef struct ApeViewport
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum ApeLightType
-{
+typedef enum ApeLightType {
 	OGE_LIGHT_TYPE_OMNI,
 	OGE_LIGHT_TYPE_SPOT,
 	OGE_LIGHT_TYPE_SUN,
@@ -92,8 +87,7 @@ typedef enum ApeLightType
 #define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
 
 #define APE_MAX_LIGHTS_PER_PASS 8
-typedef struct ApeLight
-{
+typedef struct ApeLight {
 	ApeLightType type;
 	PLVector3 position;
 	PLVector3 angles;
@@ -108,8 +102,7 @@ typedef struct ApeLight
 } ApeLight;
 typedef ApeLight OgeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 
-typedef struct ApeRendererPassState
-{
+typedef struct ApeRendererPassState {
 	bool mirror;
 	unsigned int depth;
 } ApeRendererPassState;
@@ -117,7 +110,6 @@ extern ApeRendererPassState rendererState;
 
 #define APE_NUM_SPRITE_ANGLES 8
 
-#include "renderer_scenegraph.h"
 #include "renderer_material.h"
 
 void apeInitializeRenderer_( void );

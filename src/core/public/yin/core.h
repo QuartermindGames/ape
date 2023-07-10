@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core_shell.h"//todo: deprecate this
+#include "core_scene.h"
 #include "core_camera.h"
 #include "core_editor.h"
 

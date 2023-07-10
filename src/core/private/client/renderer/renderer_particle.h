@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "renderer_scenegraph.h"
-
 typedef struct ApeCamera ApeCamera;
 
 typedef enum PSParticleDrawType
@@ -14,7 +12,7 @@ typedef enum PSParticleDrawType
 
 typedef struct PSEmitter
 {
-	SGTransform transform, transformVar;
+	ApeSceneTransform transform, transformVar;
 
 	PLVector3 force, forceVar; /* exterior forces, such as gravity */
 
@@ -46,7 +44,7 @@ typedef struct PSEmitter
 
 typedef struct PSParticle
 {
-	SGTransform transform, oldTransform;
+	ApeSceneTransform transform, oldTransform;
 
 	PLVector3 dir;
 

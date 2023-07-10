@@ -9,8 +9,6 @@
 
 #include "ape_memory_manager.h"
 
-#include "client/renderer/renderer_scenegraph.h"
-
 #include "entity/entity.h"
 
 #define WORLD_PROP_TAG_LENGTH   64
@@ -119,8 +117,6 @@ typedef struct ApeWorldMesh
 typedef struct ApeWorldObject
 {
 	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
-
-	SGTransform transform;
 
 	union
 	{

@@ -18,7 +18,6 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_texture.c
         private/client/renderer/renderer_viewport.c
         private/client/renderer/renderer_world.c
-        private/client/renderer/renderer_scenegraph.c
         private/client/renderer/renderer_shaders.c
         private/client/renderer/renderer_sprite.c)
 
