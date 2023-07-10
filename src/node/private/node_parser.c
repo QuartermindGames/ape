@@ -318,6 +318,18 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 				}
 				return ndPushBackUI32( parent, name, i );
 			}
+			case ND_PROPERTY_I8:
+			{
+				bool status;
+				int8_t i = ( int8_t ) PlParseInteger( buf, &status );
+				if ( !status )
+				{
+					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
+					return NULL;
+				}
+				DEBUG_PARSER( "PushBack I8: %d\n", i );
+				return ndPushBackI8( parent, name, i );
+			}
 			case ND_PROPERTY_I32:
 			{
 				bool status;
@@ -328,7 +340,6 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-
 				return ndPushBackI32( parent, name, i );
 			}
 			case ND_PROPERTY_F32:
