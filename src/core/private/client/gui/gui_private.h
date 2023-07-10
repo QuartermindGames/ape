@@ -117,6 +117,6 @@ bool guiInitializeFonts_( void );
 
 void guiInitializeDraw_( void );
 void guiShutdownDraw_( void );
-PLGMesh *GUI_Draw_GetBatchQueueMesh( PLGTexture *texture );
+PLGMesh *guiGetBatchQueueMesh( PLGTexture *texture );
 void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour );
 void guiDrawQuad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour );

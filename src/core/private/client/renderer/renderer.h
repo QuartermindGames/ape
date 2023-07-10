@@ -162,7 +162,8 @@ PLGTexture            *Renderer_Texture_GetInternal( Texture *texture );
 typedef struct ApeRenderTarget ApeRenderTarget;
 
 ApeRenderTarget *apeGetRenderTargetByKey( const char *key );
-ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags );
+ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter );
 void apeReleaseRenderTarget( ApeRenderTarget *renderTarget );
 void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
 PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget );
+void apeBindRenderTarget( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target );

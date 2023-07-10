@@ -86,8 +86,8 @@ void guiDrawPanel( GuiPanel *self );
 void guiDrawPanelBackground( GuiPanel *self );
 void guiTickPanel( GuiPanel *self );
 
-void GUI_Panel_SetBackgroundColour( GuiPanel *self, const PLColour *colour );
-PLColour GUI_Panel_GetBackgroundColour( GuiPanel *self );
+void guiSetPanelBackgroundColour( GuiPanel *self, const PLColour *colour );
+PLColour guiGetPanelBackgroundColour( GuiPanel *self );
 
 void guiSetPanelBorder( GuiPanel *self, GuiPanelBorder border );
 void guiSetPanelBackground( GuiPanel *self, GuiPanelBackground background );
