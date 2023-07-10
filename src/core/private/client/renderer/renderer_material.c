@@ -805,8 +805,17 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 						texture = specularFallbackTexture;
 					}
 
+					PLGTextureFilter textureFilter = curPass->textureFilter;
+					if ( texture->flags & PLG_TEXTURE_FLAG_NOMIPS ) {
+						if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR ) {
+							textureFilter = PLG_TEXTURE_FILTER_LINEAR;
+						} else {
+							textureFilter = PLG_TEXTURE_FILTER_NEAREST;
+						}
+					}
+
 					PlgSetTexture( texture, curUnit );
-					PlgSetTextureFilter( texture, curPass->textureFilter );
+					PlgSetTextureFilter( texture, textureFilter );
 
 					PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
 					curUnit++;
