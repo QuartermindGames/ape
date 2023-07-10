@@ -5,33 +5,35 @@
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( ApeInputState state, const char *id )
-{
-	if ( state != OGE_INPUT_STATE_DOWN )
-	{
+static void MoveCameraCallback( ApeInputState state, const char *id ) {
+	if ( state != OGE_INPUT_STATE_DOWN ) {
 		return;
 	}
 
 	PLVector3 pos = apeGetCameraPosition( playerCamera );
 	PLVector3 ang = apeGetCameraAngles( playerCamera );
-	if ( strcmp( id, "rotateLeft" ) == 0 )
-	{
+	if ( strcmp( id, "rotateLeft" ) == 0 ) {
 		ang.y += 1.5f;
-	}
-	else if ( strcmp( id, "rotateRight" ) == 0 )
-	{
+	} else if ( strcmp( id, "rotateRight" ) == 0 ) {
 		ang.y -= 1.5f;
 	}
 
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
-	if ( strcmp( id, "moveForward" ) == 0 ) { pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) ); }
-	else if ( strcmp( id, "moveBackward" ) == 0 ) { pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) ); }
-	else if ( strcmp( id, "moveLeft" ) == 0 ) { pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) ); }
-	else if ( strcmp( id, "moveRight" ) == 0 ) { pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) ); }
-	else if ( strcmp( id, "moveUp" ) == 0 ) { pos.y += 0.5f; }
-	else if ( strcmp( id, "moveDown" ) == 0 ) { pos.y -= 0.5f; }
+	if ( strcmp( id, "moveForward" ) == 0 ) {
+		pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+	} else if ( strcmp( id, "moveBackward" ) == 0 ) {
+		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+	} else if ( strcmp( id, "moveLeft" ) == 0 ) {
+		pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) );
+	} else if ( strcmp( id, "moveRight" ) == 0 ) {
+		pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) );
+	} else if ( strcmp( id, "moveUp" ) == 0 ) {
+		pos.y += 0.5f;
+	} else if ( strcmp( id, "moveDown" ) == 0 ) {
+		pos.y -= 0.5f;
+	}
 
 	apeSetCameraPosition( playerCamera, &pos );
 	apeSetCameraAngles( playerCamera, &ang );
@@ -47,21 +49,18 @@ static const char *vppPaths[] = {
         "pc_rf_demo/tables.vpp",
         "pc_rf_demo/ui.vpp",
 
-        "ps2_rf2_demo/L01S2.VPP",
-        "ps2_rf2_demo/L01S3.VPP",
-        "ps2_rf2_demo/L01S4.VPP",
-        "ps2_rf2_demo/L01S5.VPP",
+        //  "ps2_rf2_demo/L01S2.VPP",
+        // "ps2_rf2_demo/L01S3.VPP",
+        //"ps2_rf2_demo/L01S4.VPP",
+        //"ps2_rf2_demo/L01S5.VPP",
 };
 #define NUM_VPP_PACKS PL_ARRAY_ELEMENTS( vppPaths )
 static PLFileSystemMount *vppPackages[ NUM_VPP_PACKS ];
 
-static void InitializeDemoGame( void )
-{
-	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i )
-	{
+static void InitializeDemoGame( void ) {
+	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i ) {
 		vppPackages[ i ] = PlMountLocation( vppPaths[ i ] );
-		if ( vppPackages[ i ] == NULL )
-		{
+		if ( vppPackages[ i ] == NULL ) {
 			Game_Warning( "Failed to open package (%s): %s\n", vppPaths[ i ], PlGetError() );
 		}
 	}
@@ -84,12 +83,9 @@ static void InitializeDemoGame( void )
 	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
 }
 
-static void ShutdownDemoGame( void )
-{
-	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i )
-	{
-		if ( vppPackages[ i ] == NULL )
-		{
+static void ShutdownDemoGame( void ) {
+	for ( unsigned int i = 0; i < NUM_VPP_PACKS; ++i ) {
+		if ( vppPackages[ i ] == NULL ) {
 			continue;
 		}
 
@@ -101,11 +97,9 @@ static void ShutdownDemoGame( void )
 	playerCamera = NULL;
 }
 
-static void TickDemoGame( void )
-{
+static void TickDemoGame( void ) {
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
-	{
+	if ( mouseLook != NULL && mouseLook->b_value ) {
 		int mx, my;
 		apeGetMouseDelta( &mx, &my );
 
@@ -117,21 +111,20 @@ static void TickDemoGame( void )
 	}
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user )
-{
-	switch ( modeRequest )
-	{
-		case GAMEMODE_REQUEST_TICK:
-		{
+static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
+	switch ( modeRequest ) {
+		case GAMEMODE_REQUEST_INITIALIZE: {
+			InitializeDemoGame();
+			return true;
+		}
+		case GAMEMODE_REQUEST_TICK: {
 			TickDemoGame();
 			break;
 		}
-		case GAMEMODE_REQUEST_HANDLEINPUT:
-		{
+		case GAMEMODE_REQUEST_HANDLEINPUT: {
 			break;
 		}
-		case GAMEMODE_REQUEST_SPAWNWORLD:
-		{
+		case GAMEMODE_REQUEST_SPAWNWORLD: {
 			break;
 		}
 		default:
@@ -142,13 +135,12 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 }
 
 const GameModeInterface *gameModeInterface;
-const GameModeInterface *gameGetModeInterface( void )
-{
+const GameModeInterface *gameGetModeInterface( void ) {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 
 	gameMode.Initialize = InitializeDemoGame;
-	gameMode.Shutdown   = ShutdownDemoGame;
+	gameMode.Shutdown = ShutdownDemoGame;
 	//gameMode.NewGame               = FW_Game_NewGame;
 	//gameMode.SaveGame              = FW_Game_SaveGame;
 	//gameMode.RestoreGame           = FW_Game_RestoreGame;
