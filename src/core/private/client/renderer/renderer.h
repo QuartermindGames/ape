@@ -131,7 +131,7 @@ void apeDrawMenu( const ApeViewport *viewport );
 
 struct ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name );
 
-void apeDrawPerspective_( ApeCamera *camera, const ApeViewport *viewport );
+void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport );
 
 void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h );
 void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation );
