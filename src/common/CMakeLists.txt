@@ -1,6 +1,5 @@
 add_library(ApeCommon STATIC
         private/common.c
-        private/pack/pack_packfile.c
         private/pack/pack_pkg.c
         private/pack/pack_vpp.c)
 
