@@ -574,11 +574,11 @@ void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	angles.y = PL_DEG2RAD( rotation.y );
 	angles.z = PL_DEG2RAD( rotation.z );
 
+	PlTranslateMatrix( position );
+
 	PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
 	PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
 	PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
-
-	PlTranslateMatrix( position );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
 	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
