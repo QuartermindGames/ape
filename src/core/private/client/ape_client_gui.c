@@ -39,12 +39,10 @@ void apeInitializeGUI_( void ) {
 		PRINT_ERROR( "Failed to create GUI canvas!\n" );
 	}
 
-	rootPanel = guiCreatePanel( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_SOLID, GUI_PANEL_BORDER_NONE );
+	rootPanel = guiCreatePanel( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 	if ( rootPanel == NULL ) {
 		PRINT_ERROR( "Failed to create base panel!\n" );
 	}
-
-	guiSetPanelBackgroundColour( rootPanel, &PL_COLOURU8( 255, 0, 0, 255 ) );
 
 	cursor = guiCreateCursor( rootPanel, 0, 0 );
 	if ( cursor == NULL ) {
