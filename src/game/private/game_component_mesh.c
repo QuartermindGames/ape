@@ -1,36 +1,37 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include <plmodel/plm.h>
+#include "game_component_mesh.h"
+#include "game_component_transform.h"
 
-#include "game_private.h"
+static void Spawn( ApeEntityComponent *self ) {
+	self->userData = PL_NEW( GameMeshComponent );
 
-typedef struct ECMesh
-{
-	PLMModel *model;
-} ECMesh;
+	GAME_MESH_COMPONENT( self )->transformComponent = apeGetEntityComponentByName( self->entity, "transform" );
 
-static void EntityComponent_Mesh_Spawn( ApeEntityComponent *self )
-{
-	ECMesh *mesh = PlMAllocA( sizeof( ECMesh ) );
-	self->userData = mesh;
+	GAME_MESH_COMPONENT( self )->mesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_STATIC, 0, 6 );
+	GAME_MESH_COMPONENT( self )->material = apeCacheMaterial( "engine/vertex.mat.n", APE_CACHE_WORLD, true, false );
 }
 
-static void EntityComponent_Mesh_Destroy( ApeEntityComponent *self )
-{
-	ECMesh *mesh = self->userData;
+static void Destroy( ApeEntityComponent *self ) {
+	apeReleaseMaterial( GAME_MESH_COMPONENT( self )->material );
 
-	PlmDestroyModel( mesh->model );
-
-	PlFree( mesh );
+	PlgDestroyMesh( GAME_MESH_COMPONENT( self )->mesh );
 }
 
-const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void )
-{
+static void Tick( ApeEntityComponent *self ) {
+	Game_Print( "TICK\n" );
+}
+
+static void Draw( ApeEntityComponent *self ) {
+	apeDrawMesh( GAME_MESH_COMPONENT( self )->material, GAME_MESH_COMPONENT( self )->mesh, NULL, 0 );
+}
+
+const ApeEntityComponentCallbackTable *gameMeshComponentCallbackTable( void ) {
 	static ApeEntityComponentCallbackTable callbackTable;
-	memset( &callbackTable, 0, sizeof( ApeEntityComponentCallbackTable ) );
-
-	callbackTable.spawnFunction = EntityComponent_Mesh_Spawn;
+	PL_ZERO_( callbackTable );
+	callbackTable.spawnFunction = Spawn;
+	callbackTable.destroyFunction = Destroy;
+	callbackTable.drawFunction = Draw;
 
 	return &callbackTable;
 }

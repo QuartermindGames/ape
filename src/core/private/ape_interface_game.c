@@ -64,11 +64,6 @@ void apeInitializeGame( void )
 
 	apeInitializeEntityManager();
 
-	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	apeRegisterEntityComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
-	const ApeEntityComponentCallbackTable *EntityComponent_Mesh_GetCallbackTable( void );
-	apeRegisterEntityComponent( "mesh", EntityComponent_Mesh_GetCallbackTable() );
-
 	game_modeInterface = gameGetModeInterface();
 	if ( game_modeInterface == NULL )
 	{
