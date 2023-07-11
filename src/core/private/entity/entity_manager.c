@@ -326,7 +326,7 @@ bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallb
 	snprintf( base->name, sizeof( base->name ), "%s", name );
 	base->callbackTable = callbackTable;
 	PlInsertHashTableNode( componentSpawnTable, name, strlen( name ), base );
-	PRINT( "Registered \"%s\" component\n", base->name );
+	PRINT( "EM: Registered \"%s\" component\n", base->name );
 
 	return true;
 }
