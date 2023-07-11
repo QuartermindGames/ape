@@ -8,6 +8,7 @@ set(GAME_SHARED_FILES
         private/game_component_input.c
         private/game_component_mesh.c
         private/game_component_movement.c
+        private/game_component_test.c
         private/game_component_transform.c
         private/game_menu.c
         private/game_menu_pie.c
