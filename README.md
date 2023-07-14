@@ -1,15 +1,13 @@
-# APE (Another Portal Engine)
-
 <div align="center">
 
-![Logo](resources/icon.png)
+![Logo](resources/ape_logo_v4_256.png)
 
 </div>
 
 APE is a simplistic 3D game engine, being developed by 
 [Mark "hogsy" Sowden](https://hogsy.me/), 
 for game jams and prototyping.
-APE is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as other engines such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
+APE is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 
 It's available here with absolutely no support whatsoever. Additionally, it is not intended as anything close to a professional grade engine but instead just 
 something that's easy to throw things at and modify. 
