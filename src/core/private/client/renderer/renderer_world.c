@@ -508,6 +508,35 @@ void apeDrawWorld_( ApeWorld *world )
 
 	// TODO: generate a list of visible rooms based on camera position
 
+#if 0// test lights
+
+	{
+		ApeCamera *camera = apeGetActiveCamera();
+		static float tick = 0.0f;
+
+		PLVector3 forward;
+		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
+
+		ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
+		light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 5.0f ) );
+		light->position = PlAddVector3( light->position, ( PLVector3 ){
+		                                                         sinf( tick / 5.0f ) / 10.0f,
+		                                                         cosf( tick / 5.0f ) / 10.0f,
+		                                                         sinf( tick / 5.0f ) / 10.0f } );
+		light->colour.r = 1.0f;
+		light->colour.g = 0.5f;
+		light->colour.b = 0.5f;
+
+		tick += 0.5f;
+	}
+
+	for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k ) {
+		ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
+		apeDrawAxesPivot( light->position, light->angles, 1.0f );
+	}
+
+#endif
+
 	PL_GET_CVAR( "world/drawRooms", drawRooms );
 	if ( drawRooms != NULL && drawRooms->b_value && world->rooms != NULL )
 	{
