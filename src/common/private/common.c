@@ -23,21 +23,17 @@ void cmnInitialize( void )
 	cmnRegisterVppInterface_();
 }
 
-const char *cmnGetDataDirectory( void )
-{
+const char *cmnGetDataDirectory( void ) {
 	// cache it
 	static PLPath dataPath = { '\0' };
-	if ( *dataPath != '\0' )
-	{
+	if ( *dataPath != '\0' ) {
 		return dataPath;
 	}
 
 	PLPath exeDir;
-	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL )
-	{
+	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL ) {
 		PlSetupPath( dataPath, true, "%s/../../runtime", exeDir );
-		if ( PlPathExists( dataPath ) )
-		{
+		if ( PlPathExists( dataPath ) ) {
 			PlSetupPath( dataPath, true, "%s/../..", exeDir );
 			return dataPath;
 		}
@@ -50,12 +46,9 @@ const char *cmnGetDataDirectory( void )
 
 	const char *cwd = PlGetWorkingDirectory();
 	PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
-	if ( PlPathExists( dataPath ) )
-	{
+	if ( PlPathExists( dataPath ) ) {
 		PlSetupPath( dataPath, true, "%s/../..", cwd );
-	}
-	else
-	{
+	} else {
 		PlSetupPath( dataPath, true, "%s", cwd );
 	}
 
