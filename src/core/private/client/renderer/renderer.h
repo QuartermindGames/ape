@@ -86,6 +86,9 @@ typedef enum ApeLightType {
 #define APE_LIGHT_FLAG_ENABLED         0x8U
 #define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
 
+#define APE_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
+#define APE_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
+
 #define APE_MAX_LIGHTS_PER_PASS 8
 typedef struct ApeLight {
 	ApeLightType type;
@@ -100,7 +103,9 @@ typedef struct ApeLight {
 
 	int32_t state;
 } ApeLight;
-typedef ApeLight OgeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
+
+typedef ApeLight ApeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
+typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
 typedef struct ApeRendererPassState {
 	bool mirror;

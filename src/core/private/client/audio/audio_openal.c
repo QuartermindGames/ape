@@ -218,7 +218,7 @@ static void DestroySource( YNCoreAudioSource *source )
 	source->user = NULL;
 }
 
-const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void )
+const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void )
 {
 	static YNCoreAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
@@ -240,6 +240,6 @@ const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void )
 
 #include "audio.h"
 
-const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void ) { return NULL; }
+const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void ) { return NULL; }
 
 #endif

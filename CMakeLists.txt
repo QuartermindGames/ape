@@ -102,10 +102,6 @@ set_target_properties(plmodel PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 
-if(EXISTS "src/3rdparty/ode/")
-    add_subdirectory(src/3rdparty/ode/)
-endif()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 

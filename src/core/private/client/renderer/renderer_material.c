@@ -626,7 +626,6 @@ static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, uns
 			numLights = 8;
 		}
 
-		ape_RendererPerformance_.numLights += numLights;
 		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
 		for ( unsigned int i = 0; i < numLights; ++i ) {
 			/* todo: this would be a lot less fucking disturbing if we were using a proper static layout! */

@@ -157,7 +157,7 @@ static void DrawSectorBody( OgeWorldRoom *sector, OgeWorldMesh *worldMesh, OgeCa
 }
 #endif
 
-static PLVectorArray *lights = NULL;
+static PLVectorArray *visibleLights = NULL;
 
 /**
  * World is drawn using polygons, rather than straight up triangles,
@@ -275,16 +275,14 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 		return;
 	}
 
-	if ( lights == NULL ) {
-		lights = PlCreateVectorArray( 8 );
-	}
-
 	// TODO: gross, we should handle this better rather than just overriding the world ambience
 	if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT ) {
 		world->ambience = PlColourU8ToF32( &room->ambientLight );
 	} else {
 		world->ambience = WORLD_DEFAULT_AMBIENCE;
 	}
+
+	ape_RendererPerformance_.numLights += PlGetNumVectorArrayElements( visibleLights );
 
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i ) {
 		if ( room->batches[ i ].numSubMeshes == 0 ) {
@@ -299,17 +297,22 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 
 		assert( room->batches[ i ].material == material );
 
-		PlClearVectorArray( lights );
-		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k ) {
-			ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
+		unsigned int numLights = 0;
+		ApeLightPointerArray lights;
+		PL_ZERO_( lights );
+
+		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k ) {
+			if ( numLights >= APE_MAX_LIGHTS_PER_PASS ) {
+				break;
+			}
+
+			ApeLight *light = PlGetVectorArrayElementAt( visibleLights, k );
 			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) {
 				continue;
 			}
 
-			PlPushBackVectorArrayElement( lights, light );
-			if ( PlGetNumVectorArrayElements( lights ) >= 8 ) {
-				break;
-			}
+			lights[ numLights ] = light;
+			numLights++;
 		}
 
 		room->mesh->numSubMeshes = room->batches[ i ].numSubMeshes;
@@ -320,13 +323,15 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 			material = apeGetVertexMaterial();
 		}
 
-		apeDrawMesh( material, room->mesh, ( ApeLight ** ) PlGetVectorArrayData( lights ), PlGetNumVectorArrayElements( lights ) );
+		apeDrawMesh( material, room->mesh, lights, numLights );
 	}
 
 	ape_RendererPerformance_.numRooms++;
 }
 
 void apeDrawWorld_( ApeWorld *world ) {
+	ape_RendererPerformance_.numLights = 0;
+
 	ApeCamera *camera = apeGetActiveCamera();
 	if ( camera == NULL ) {
 		return;
@@ -371,6 +376,24 @@ void apeDrawWorld_( ApeWorld *world ) {
 	}
 
 #endif
+
+	if ( visibleLights == NULL ) {
+		visibleLights = PlCreateVectorArray( 0 );
+	}
+
+	// determine what lights are visible -
+	// for now this operates over all the lights in the world, urgh...
+	PlClearVectorArray( visibleLights );
+	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {
+		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+
+		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) ) {
+			continue;
+		}
+
+		PlPushBackVectorArrayElement( visibleLights, light );
+	}
 
 	PL_GET_CVAR( "world/showAllRooms", showAllRooms );
 	if ( camera->room == NULL || ( showAllRooms != NULL && showAllRooms->b_value ) ) {

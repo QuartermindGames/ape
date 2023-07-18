@@ -115,7 +115,7 @@ static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsign
 	return NULL;
 }
 
-void *YnCore_Audio_Wav_Load( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
+void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )

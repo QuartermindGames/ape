@@ -6,13 +6,13 @@
 #define AUDIO_SAMPLE_FREQ 48000
 #define AUDIO_CHANNELS    2
 
-static const YNCoreAudioDriverInterface *audioDriverInterface = NULL;
+static const ApeAudioDriverInterface *audioDriverInterface = NULL;
 #define CallAudioDriverFunction( FUNCTION, ... )                                                                             \
 	{                                                                                                                        \
 		if ( audioDriverInterface != NULL && audioDriverInterface->FUNCTION ) audioDriverInterface->FUNCTION( __VA_ARGS__ ); \
 	}
 
-static YNCoreAudioSample *audioSamples = NULL;
+static ApeAudioSample *audioSamples = NULL;
 static uint32_t     numSamples   = 0;
 static uint32_t     maxSamples   = 4096;
 
@@ -34,7 +34,7 @@ static struct
 
 static void TestAudioCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
-	YNCoreAudioSample *sample = Audio_CacheSample( "sounds/testing/ping.wav" );
+	ApeAudioSample *sample = Audio_CacheSample( "sounds/testing/ping.wav" );
 	if ( sample == NULL )
 	{
 		PRINT_WARNING( "Failed to load test sample!\n" );
@@ -43,7 +43,7 @@ static void TestAudioCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv
 
 	//Audio_EmitSample( sample, 255 );
 
-	YnCore_AudioSample_Release( sample );
+	apeReleaseAudioSample( sample );
 }
 
 static void PlayAudioCommand( unsigned int argc, char **argv )
@@ -68,8 +68,8 @@ void apeInitializeAudio_( void )
 		return;
 	}
 #else
-	const YNCoreAudioDriverInterface *YnCore_Audio_OpenAL_GetDriverInterface( void );
-	audioDriverInterface = YnCore_Audio_OpenAL_GetDriverInterface();
+	const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void );
+	audioDriverInterface = apeGetOpenALAudioDriverInterface();
 	if ( audioDriverInterface == NULL || !audioDriverInterface->Initialize() )
 	{
 		PRINT_WARNING( "Failed to initialize audio driver!\n" );
@@ -78,13 +78,13 @@ void apeInitializeAudio_( void )
 #endif
 
 	/* allocate storage for our samples */
-	audioSamples = PlCAlloc( maxSamples, sizeof( YNCoreAudioSample ), true );
+	audioSamples = PlCAlloc( maxSamples, sizeof( ApeAudioSample ), true );
 
 	PlRegisterConsoleCommand( "audio/test", "Test the audio system.", 0, TestAudioCommand );
 	PlRegisterConsoleCommand( "audio/play", "Play a specific sound.", 1, PlayAudioCommand );
 
 	// reset listener
-	Audio_ClearListener();
+	apeClearAudioListener();
 
 	audioInitialized = true;
 }
@@ -94,7 +94,7 @@ void ogeRegisterAudioConsoleVariables_( void )
 	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
 }
 
-static void Audio_FreeSample( uint32_t s )
+static void FreeSample( uint32_t s )
 {
 	audioSamples[ s ].path[ 0 ] = '\0';
 
@@ -109,7 +109,7 @@ static void Audio_FreeSample( uint32_t s )
 	numSamples--;
 }
 
-void YnCore_AudioSample_Release( YNCoreAudioSample *audioSample )
+void apeReleaseAudioSample( ApeAudioSample *audioSample )
 {
 	audioSample->numReferences--;
 	assert( audioSample->numReferences > 0 );
@@ -123,9 +123,9 @@ void Audio_CleanupSamples( bool force )
      * new sound list to fill with the ones we
      * will retain... */
 	maxSamples = numSamples;
-	YNCoreAudioSample *newAudioSounds;
+	ApeAudioSample *newAudioSounds;
 	if ( !force )
-		newAudioSounds = PlCAllocA( maxSamples, sizeof( YNCoreAudioSample ) );
+		newAudioSounds = PlCAllocA( maxSamples, sizeof( ApeAudioSample ) );
 
 	uint32_t j = 0;
 	for ( uint32_t i = 0; i < numSamples; ++i )
@@ -139,7 +139,7 @@ void Audio_CleanupSamples( bool force )
 		if ( force && audioSamples[ i ].numReferences > 0 )
 			PRINT_WARNING( "Force cleaning dirty slot %d!\n", i );
 
-		Audio_FreeSample( i );
+		FreeSample( i );
 	}
 
 	numSamples = j;
@@ -173,7 +173,7 @@ static int FetchCachedSoundSlotByPath( const char *path )
  * Be sure to release the sound once you're done with
  * it!
  */
-YNCoreAudioSample *Audio_CacheSample( const char *path )
+ApeAudioSample *Audio_CacheSample( const char *path )
 {
 	/* check if it's cached already */
 	int s = FetchCachedSoundSlotByPath( path );
@@ -199,13 +199,13 @@ YNCoreAudioSample *Audio_CacheSample( const char *path )
 		audioSamples = PlReAllocA( audioSamples, maxSamples );
 	}
 
-	YNCoreAudioSample *newSound = &audioSamples[ freeSlot ];
+	ApeAudioSample *newSound = &audioSamples[ freeSlot ];
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
 
 	/* attempt to load in the wav */
 	uint32_t        bufferSize;
 	YNCoreAudioWaveFormat format;
-	uint8_t        *data = YnCore_Audio_Wav_Load( path, &format, &bufferSize );
+	uint8_t        *data = apeLoadWav( path, &format, &bufferSize );
 	if ( data == NULL )
 	{
 		PRINT_WARNING( "Failed to load wav: %s\n", path );
@@ -225,7 +225,7 @@ YNCoreAudioSample *Audio_CacheSample( const char *path )
 	return newSound;
 }
 
-void YnCore_AudioSample_Emit( YNCoreAudioSample *audioSample, int8_t volume )
+void YnCore_AudioSample_Emit( ApeAudioSample *audioSample, int8_t volume )
 {
 #if 0
 	s->channel = Mix_PlayChannel( -1, s->sample, 0 );
@@ -296,7 +296,7 @@ void YnCore_AudioSource_Destroy( YNCoreAudioSource *audioSource )
 	PL_DELETE( audioSource );
 }
 
-void YnCore_AudioSource_Emit( YNCoreAudioSource *audioSource, YNCoreAudioSample *audioSample )
+void YnCore_AudioSource_Emit( YNCoreAudioSource *audioSource, ApeAudioSample *audioSample )
 {
 	assert( audioSource != NULL );
 	if ( audioSource == NULL )
@@ -329,7 +329,7 @@ void Audio_UpdateListener( const PLVector3 *position, const PLVector3 *angles, c
 /**
  * Zeros out the listener position, angles and velocity.
  */
-void Audio_ClearListener( void )
+void apeClearAudioListener( void )
 {
 	PL_ZERO_( audioListener );
 }
@@ -353,14 +353,14 @@ PLVector3 Audio_GetListenerVelocity( void )
  * Music Player
  ****************************************/
 
-static YNCoreAudioSample *music = NULL;
+static ApeAudioSample *music = NULL;
 
 void Audio_DestroyMusic( void )
 {
 	if ( music == NULL )
 		return;
 
-	Audio_FreeSample( FetchCachedSoundSlotByPath( music->path ) );
+	FreeSample( FetchCachedSoundSlotByPath( music->path ) );
 	music = NULL;
 }
 
