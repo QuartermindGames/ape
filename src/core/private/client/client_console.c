@@ -491,5 +491,5 @@ void apeRegisterClientConsoleVariables_( void )
 	R_PP_RegisterConsoleVariables();
 
 	ogeRegisterAudioConsoleVariables_();
-	apeRegisterWorldConsoleVariables_();
+	apeRegisterWorldConsole_();
 }

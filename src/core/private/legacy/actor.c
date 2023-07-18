@@ -15,7 +15,7 @@ static void Act_DrawBasic( Actor *self, void *userData )
 {
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 
-	apeDrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ) );
+	apeDrawAxesPivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ), 1.0f );
 }
 
 void Monster_Collide( struct Actor *self, struct Actor *other, float force )
@@ -281,7 +281,7 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 				{
 					PlgDrawBoundingVolume( &face->bounds, &PL_COLOUR_RED );
 
-					apeDrawAxesPivot( collision.contactPoint, plane.normal );
+					apeDrawAxesPivot( collision.contactPoint, plane.normal, 1.0f );
 
 					PLMatrix4 transform = PlMatrix4Identity();
 					PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );

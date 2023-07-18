@@ -29,10 +29,10 @@ typedef struct ApeMaterial {
 } ApeMaterial;
 
 static ApeMaterial *fallbackMaterial;
+static ApeMaterial *vertexMaterial;
 
-ApeMaterial *apeGetFallbackMaterial( void ) {
-	return fallbackMaterial;
-}
+ApeMaterial *apeGetFallbackMaterial( void ) { return fallbackMaterial; }
+ApeMaterial *apeGetVertexMaterial( void ) { return vertexMaterial; }
 
 void apeInitializeMaterialSystem( void ) {
 	PRINT( "Initializing material system\n" );
@@ -49,18 +49,15 @@ void apeInitializeMaterialSystem( void ) {
 	previewFallbackTexture = apeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	/* go ahead and create the fallback material */
-	fallbackMaterial = PL_NEW( ApeMaterial );
-	/* setup passes */
-	fallbackMaterial->numPasses = 1;
-	fallbackMaterial->preview = previewFallbackTexture;
-	fallbackMaterial->isCached = true;
-	fallbackMaterial->passes[ 0 ].program = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
-	fallbackMaterial->passes[ 0 ].blendMode[ 0 ] = PLG_BLEND_NONE;
-	fallbackMaterial->passes[ 0 ].blendMode[ 1 ] = PLG_BLEND_NONE;
-	/* setup variables */
-	fallbackMaterial->passes[ 0 ].numVariables = 1;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].type = MATERIAL_VAR_TEXTURE;
-	fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
+	fallbackMaterial = apeCacheMaterial( "materials/engine/fallback.mat.n", APE_CACHE_WORLD, false, false );
+	if ( fallbackMaterial == NULL ) {
+		PRINT_ERROR( "Failed to cache fallback material!\n" );
+	}
+
+	vertexMaterial = apeCacheMaterial( "materials/engine/vertex.mat.n", APE_CACHE_WORLD, false, false );
+	if ( vertexMaterial == NULL ) {
+		PRINT_ERROR( "Failed to cache vertex material!\n" );
+	}
 }
 
 void apeShutdownMaterialSystem( void ) {
@@ -133,13 +130,14 @@ static int GetBlendModeByTag( const char *tag ) {
  */
 static ApeMaterialBuiltinVar GetBuiltInByTag( const char *tag ) {
 	static const char *builtInTags[] = {
-	        [MATERIAL_BUILTIN_TIME] = "time",
-	        [MATERIAL_BUILTIN_DEPTH] = "depth",
-	        [MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
+	        [APE_MATERIAL_BUILTIN_TIME] = "time",
+	        [APE_MATERIAL_BUILTIN_DEPTH] = "depth",
+	        [APE_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
+	        [APE_MATERIAL_BUILTIN_FALLBACK] = "proc_fallback",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == MAX_MATERIAL_BUILTINS, "" );
+	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == APE_MAX_MATERIAL_BUILTINS, "" );
 
-	for ( int i = 0; i < MAX_MATERIAL_BUILTINS; ++i ) {
+	for ( int i = 0; i < APE_MAX_MATERIAL_BUILTINS; ++i ) {
 		if ( strcmp( tag, builtInTags[ i ] ) != 0 ) {
 			continue;
 		}
@@ -147,7 +145,7 @@ static ApeMaterialBuiltinVar GetBuiltInByTag( const char *tag ) {
 		return i;
 	}
 
-	return MATERIAL_BUILTIN_INVALID;
+	return APE_MATERIAL_BUILTIN_INVALID;
 }
 
 /**
@@ -247,7 +245,7 @@ static void ParseShaderParameters( ApeMaterialPass *materialPass, NdBranch *root
 				} else {
 					/* lookup what it actually is */
 					ApeMaterialBuiltinVar materialBuiltinVar = GetBuiltInByTag( p );
-					if ( materialBuiltinVar == MATERIAL_BUILTIN_INVALID ) {
+					if ( materialBuiltinVar == APE_MATERIAL_BUILTIN_INVALID ) {
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
 						node = next;
 						continue;
@@ -560,25 +558,32 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	}
 
 	switch ( variable ) {
-		case MATERIAL_BUILTIN_TIME: {
+		case APE_MATERIAL_BUILTIN_TIME: {
 			unsigned int numTicks = apeGetNumTicks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
-		case MATERIAL_BUILTIN_DEPTH: {
-			PLGTexture *depthTexture = apeGetPrimaryDepthAttachment();
-			if ( depthTexture == NULL ) {
+		case APE_MATERIAL_BUILTIN_FALLBACK:
+		case APE_MATERIAL_BUILTIN_DEPTH: {
+			PLGTexture *texture = NULL;
+			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK ) {
+				texture = apeGetFallbackTexture();
+			} else if ( variable == APE_MATERIAL_BUILTIN_DEPTH ) {
+				texture = apeGetPrimaryDepthAttachment();
+			}
+
+			if ( texture == NULL ) {
 				break;
 			}
 
-			PlgSetTexture( depthTexture, *curUnit );
+			PlgSetTexture( texture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
 			break;
 		}
 
-		case MATERIAL_BUILTIN_VIEWPORT_SIZE: {
+		case APE_MATERIAL_BUILTIN_VIEWPORT_SIZE: {
 			int w, h;
 			apeGet2DViewportSize( &w, &h );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );

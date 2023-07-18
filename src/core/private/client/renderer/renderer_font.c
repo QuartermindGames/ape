@@ -102,8 +102,9 @@ void apeDrawBitmapString( ApeBitmapFont *font, float x, float y, float spacing, 
 
 	apeBeginBitmapFontDraw( font );
 
-	if ( shadow )
+	if ( shadow ) {
 		apeAddBitmapStringToBatch( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
+	}
 
 	apeAddBitmapStringToBatch( font, x, y, scale, colour, msg, numChars, false );
 
@@ -117,14 +118,14 @@ void apeBeginBitmapFontDraw( ApeBitmapFont *font )
 
 void apeDrawBitmapFont( ApeBitmapFont *font )
 {
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
+	//PlMatrixMode( PL_MODELVIEW_MATRIX );
+	//PlPushMatrix();
 
-	PlLoadIdentityMatrix();
+	//PlLoadIdentityMatrix();
 
 	apeDrawMesh( font->material, font->mesh, NULL, 0 );
 
-	PlPopMatrix();
+	//PlPopMatrix();
 }
 
 void YR_Font_Initialize( void )

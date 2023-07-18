@@ -560,8 +560,7 @@ void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h )
 	apeDrawMesh( material, mesh, NULL, 0 );
 }
 
-void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
-{
+void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation, float scale ) {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
@@ -581,9 +580,9 @@ void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation )
 	PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
 	PlPopMatrix();

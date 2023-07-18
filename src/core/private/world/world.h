@@ -34,8 +34,7 @@ typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
 typedef struct ApeWorldPortal ApeWorldPortal;
 
-typedef struct ApeWorldVertex
-{
+typedef struct ApeWorldVertex {
 	PLVector3 position;
 	PLVector3 normal;
 	PLVector2 uv;
@@ -43,8 +42,7 @@ typedef struct ApeWorldVertex
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
-typedef struct ApeWorldFaceVertex
-{
+typedef struct ApeWorldFaceVertex {
 	float textureU, textureV;
 	float lightmapU, lightmapV;
 
@@ -62,8 +60,7 @@ typedef struct ApeWorldFaceVertex
 #define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
 #define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
 
-typedef struct ApeWorldFace
-{
+typedef struct ApeWorldFace {
 	PLVector3 normal;
 	PLVector3 origin;
 
@@ -72,6 +69,7 @@ typedef struct ApeWorldFace
 	ApeWorldPortal *portal;
 
 	struct ApeMaterial *material;
+	int materialIndex;// index into world's material list
 	// todo: reduce the below to transform matrix???
 	float materialAngle;
 	PLVector2 materialOffset;
@@ -80,20 +78,12 @@ typedef struct ApeWorldFace
 	PLVectorArray *vertices;// ApeWorldFaceVertex
 	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
 
-	uint8_t flags;          /* portal, mirror, skip etc. */
-
-	ApeWorldMesh *parentMesh;
-	ApeWorldRoom *parentSector;
-
-	// if it's a portal
-	bool isPortalClosed;       // if true, we can't see through the portal
-	ApeWorldRoom *targetSector;// the sector this portal connects to
+	uint8_t flags; /* portal, mirror, skip etc. */
 
 	PLCollisionAABB bounds;
 } ApeWorldFace;
 
-typedef struct ApeWorldMesh
-{
+typedef struct ApeWorldMesh {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
 	struct ApeMaterial **materials;
@@ -114,19 +104,16 @@ typedef struct ApeWorldMesh
 	ApeMemoryReference mem;
 } ApeWorldMesh;
 
-typedef struct ApeWorldObject
-{
+typedef struct ApeWorldObject {
 	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
-	union
-	{
+	union {
 		const ApeWorldMesh *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } ApeWorldObject;
 
-typedef struct ApeWorldPortal
-{
+typedef struct ApeWorldPortal {
 	PLVector3 mins;
 	PLVector3 maxs;
 
@@ -135,14 +122,6 @@ typedef struct ApeWorldPortal
 
 	bool canSeeThrough;
 } ApeWorldPortal;
-
-typedef struct ApeWorldDrawBatch
-{
-	uint32_t *firstSubMeshes;
-	uint32_t *subMeshes;
-	struct ApeMaterial *material;
-	uint32_t numSubMeshes;
-} ApeWorldDrawBatch;
 
 #define APE_WORLD_ROOM_FLAG_COLD     0x2
 #define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
@@ -154,8 +133,14 @@ typedef struct ApeWorldDrawBatch
 #define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
 #define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
-typedef struct ApeWorldRoom
-{
+typedef struct ApeWorldBatch {
+	int *subMeshes;
+	int *firstSubMeshes;
+	unsigned int numSubMeshes, maxSubMeshes;
+	struct ApeMaterial *material;
+} ApeWorldBatch;
+
+typedef struct ApeWorldRoom {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 	int32_t uid;
 
@@ -164,6 +149,7 @@ typedef struct ApeWorldRoom
 
 	uint32_t flags;
 
+	PLColour colour;// an identifying colour
 	PLColour ambientLight;
 
 	float life;
@@ -186,12 +172,10 @@ typedef struct ApeWorldRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	PLGMesh *mesh;             // cached mesh
-	bool isMeshCached;             // if false, mesh cache will be updated
-	uint32_t numBatches;
-
-	ApeWorldObject *staticObjects;
-	unsigned int numStaticObjects;
+	PLGMesh *mesh;// cached mesh
+	ApeWorldBatch *batches;
+	unsigned int numBatches;
+	bool isMeshCached;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
@@ -201,8 +185,7 @@ typedef struct ApeWorldRoom
 
 #define APE_MAX_SKY_LAYERS 4
 
-typedef struct ApeWorld
-{
+typedef struct ApeWorld {
 	char *name;
 	PLPath path;
 
@@ -239,8 +222,7 @@ typedef struct ApeWorld
 	bool isDirty;
 } ApeWorld;
 
-typedef struct ApeWorldEntity
-{
+typedef struct ApeWorldEntity {
 	const ApeEntityPrefab *entityTemplate;
 	NdBranch *properties;
 } ApeWorldEntity;
@@ -261,6 +243,6 @@ void apeSpawnWorldEntities( ApeWorld *world );
 
 unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
 
-void apeRegisterWorldConsoleVariables_( void );
+void apeRegisterWorldConsole_( void );
 
 PL_EXTERN_C_END

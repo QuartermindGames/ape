@@ -62,8 +62,7 @@ static void InitializeDemoGame( void ) {
 
 	Game_RegisterStandardEntityComponents();
 
-	//PlParseConsoleString( "world L01S2.rfl" );
-	PlParseConsoleString( "world train01.rfl" );
+	PlParseConsoleString( "world worlds/test_geo.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );
@@ -120,6 +119,9 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
 			break;
 		}
 		case GAMEMODE_REQUEST_SPAWNWORLD: {
+			for ( unsigned int i = 0; i < 4; ++i ) {
+				apeCreateEntityFromPrefab( "base/test" );
+			}
 			break;
 		}
 		default:
