@@ -622,17 +622,18 @@ static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, uns
 	}
 
 	if ( ( slot = PlgGetShaderUniformSlot( program, "numLights" ) ) >= 0 ) {
-		if ( numLights > 8 ) {
-			numLights = 8;
+		if ( numLights > APE_MAX_LIGHTS_PER_PASS ) {
+			numLights = APE_MAX_LIGHTS_PER_PASS;
 		}
 
 		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
 		for ( unsigned int i = 0; i < numLights; ++i ) {
 			/* todo: this would be a lot less fucking disturbing if we were using a proper static layout! */
-			char buf[ 32 ] = "lights[0].";
-			buf[ 7 ] = '0' + i;
-			char *p = &buf[ 10 ];
+			char buf[ 64 ];
+			PL_ZERO_( buf );
+			sprintf( buf, "lights[%u].", i );
 
+			char *p = &buf[ strlen( buf ) ];
 			strcpy( p, "colour" );
 			PlgSetShaderUniformValue( program, buf, &lights[ i ]->colour, false );
 

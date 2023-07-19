@@ -360,9 +360,9 @@ void apeDrawWorld_( ApeWorld *world ) {
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
 		light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 5.0f ) );
 		light->position = PlAddVector3( light->position, ( PLVector3 ){
-		                                                         sinf( tick / 5.0f ) / 10.0f,
-		                                                         cosf( tick / 5.0f ) / 10.0f,
-		                                                         sinf( tick / 5.0f ) / 10.0f } );
+		                                                         sinf( apeGetNumTicks() / 5.0f ) / 10.0f,
+		                                                         cosf( apeGetNumTicks() / 5.0f ) / 10.0f,
+		                                                         sinf( apeGetNumTicks() / 5.0f ) / 10.0f } );
 		light->colour.r = 1.0f;
 		light->colour.g = 0.5f;
 		light->colour.b = 0.5f;
