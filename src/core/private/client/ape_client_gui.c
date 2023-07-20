@@ -138,6 +138,18 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 		}
 	}
 
+#if 0
+	extern PLVector2 screenPosTest;
+	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
+	assert( font != NULL );
+	if ( font != NULL ) {
+		char tmp[ 32 ];
+		snprintf( tmp, sizeof( tmp ), "coord %s", PlPrintVector2( &screenPosTest, PL_VAR_I32 ) );
+		guiDrawFontString( font, screenPosTest.x, screenPosTest.y, NULL, NULL, 1.0f, &PL_COLOUR_ANTIQUE_WHITE, tmp, strlen( tmp ), false );
+		guiDisplayFont( font );
+	}
+#endif
+
 	// todo: this should use GUI
 	apeDrawConsole_( viewport );
 }

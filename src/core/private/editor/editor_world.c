@@ -161,6 +161,7 @@ static void DrawWorldEditorGUI( void ) {
 		switch ( context.camera->mode ) {
 			default:
 				break;
+#if 0
 			case APE_CAMERA_MODE_TOP:
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
@@ -174,6 +175,7 @@ static void DrawWorldEditorGUI( void ) {
 				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
 				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
 				break;
+#endif
 		}
 
 		// stupid matrix bollocks, blargh

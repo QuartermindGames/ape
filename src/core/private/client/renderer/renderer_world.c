@@ -301,6 +301,8 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 		ApeLightPointerArray lights;
 		PL_ZERO_( lights );
 
+#if 1
+
 		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k ) {
 			if ( numLights >= APE_MAX_LIGHTS_PER_PASS ) {
 				break;
@@ -315,6 +317,44 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 			numLights++;
 		}
 
+#else
+
+		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( visibleLights ); ++j ) {
+			if ( numLights >= APE_MAX_LIGHTS_PER_PASS ) {
+				break;
+			}
+
+			ApeLight *light = PlGetVectorArrayElementAt( visibleLights, j );
+			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) {
+				continue;
+			}
+
+			bool hitFace = false;
+			for ( unsigned int k = 0; k < PlGetNumVectorArrayElements( room->faces ); ++k ) {
+				ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+				if ( face == NULL || face->material != material ) {
+					continue;
+				}
+
+				PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+				if ( !PlIsSphereIntersectingAabb( &sphere, &face->bounds ) ) {
+					continue;
+				}
+
+				hitFace = true;
+				break;
+			}
+
+			if ( !hitFace ) {
+				continue;
+			}
+
+			lights[ numLights ] = light;
+			numLights++;
+		}
+
+#endif
+
 		room->mesh->numSubMeshes = room->batches[ i ].numSubMeshes;
 		room->mesh->firstSubMeshes = room->batches[ i ].firstSubMeshes;
 		room->mesh->subMeshes = room->batches[ i ].subMeshes;
@@ -328,6 +368,8 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals ) {
 
 	ape_RendererPerformance_.numRooms++;
 }
+
+PLVector2 screenPosTest = { 0.0f, 0.0f };
 
 void apeDrawWorld_( ApeWorld *world ) {
 	ape_RendererPerformance_.numLights = 0;
@@ -351,13 +393,24 @@ void apeDrawWorld_( ApeWorld *world ) {
 #if 0// test lights
 
 	{
-		ApeCamera *camera = apeGetActiveCamera();
 		static float tick = 0.0f;
 
 		PLVector3 forward;
 		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
 
+		int w, h;
+		apeGet2DViewportSize( &w, &h );
+
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
+		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+		if ( PlgIsSphereInsideView( camera->internal, &sphere ) ) {
+			PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+			PLVector2 screenPos = PlConvertWorldToScreen( &light->position, &viewProj, w, h, 0, 0 );
+			screenPosTest = screenPos;
+		}
+
+		apeDrawAxesPivot( light->position, light->angles, 1.0f );
+
 		light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 5.0f ) );
 		light->position = PlAddVector3( light->position, ( PLVector3 ){
 		                                                         sinf( apeGetNumTicks() / 5.0f ) / 10.0f,
@@ -370,15 +423,10 @@ void apeDrawWorld_( ApeWorld *world ) {
 		tick += 0.5f;
 	}
 
-	for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( world->lights ); ++k ) {
-		ApeLight *light = PlGetVectorArrayElementAt( world->lights, k );
-		apeDrawAxesPivot( light->position, light->angles, 1.0f );
-	}
-
 #endif
 
 	if ( visibleLights == NULL ) {
-		visibleLights = PlCreateVectorArray( 0 );
+		visibleLights = PlCreateVectorArray( PlGetNumVectorArrayElements( world->lights ) );
 	}
 
 	// determine what lights are visible -
@@ -386,6 +434,11 @@ void apeDrawWorld_( ApeWorld *world ) {
 	PlClearVectorArray( visibleLights );
 	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+
+		float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
+		if ( distance > 64.0f ) {
+			continue;
+		}
 
 		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) ) {
