@@ -11,7 +11,7 @@ typedef struct GameComponentCamera {
 #define GCCAMERA( SELF ) ENTITY_COMPONENT_CAST( ( SELF ), GameComponentCamera )
 
 APE_ENTITY_COMPONENT_BEGIN_PROPERTIES()
-APE_ENTITY_COMPONENT_PROPERTY( GameComponentCamera, isActive, "Indicates if the camera should be active or not.", CMN_DATATYPE_BOOL )
+APE_ENTITY_COMPONENT_PROPERTY( GameComponentCamera, isActive, "Indicates if the camera should be active or not.", COM_DATATYPE_BOOL )
 APE_ENTITY_COMPONENT_END_PROPERTIES()
 
 static void Spawn( ApeEntityComponent *self ) {

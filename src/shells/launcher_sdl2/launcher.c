@@ -342,7 +342,7 @@ static unsigned int OS_TimerCallback( unsigned int interval, void *param )
 
 void apeShellInterface_Shutdown( void )
 {
-	cmnWriteConfig( shellConfig, "shell" );
+	comWriteConfig( shellConfig, "shell" );
 
 	if ( sdlTimer != 0 )
 		SDL_RemoveTimer( sdlTimer );
@@ -456,9 +456,9 @@ int Launcher_Initialize( int argc, char **argv )
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
 	}
 
-	cmnInitialize();
+	comInitialize();
 
-	shellConfig = cmnGetConfig( "shell" );
+	shellConfig = comGetConfig( "shell" );
 
 	if ( !InitializeDisplay() )
 	{
@@ -546,6 +546,16 @@ int Launcher_Initialize( int argc, char **argv )
 		apeRenderFrame( windowViewport );
 
 		SDL_GL_SwapWindow( sdlWindow );
+
+		static unsigned int refreshTime = 0;
+		if ( refreshTime > apeGetNumTicks() ) {
+			continue;
+		}
+
+		comUpdateProfilerSamples();
+
+		PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
+		refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 	}
 
 	SDL_StopTextInput();

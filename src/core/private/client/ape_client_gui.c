@@ -65,6 +65,8 @@ void apeShutdownGUI_( void ) {
 }
 
 void apeDrawGUI_( const ApeViewport *viewport ) {
+	COM_PROFILE_FUNCTION_START();
+
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
 	// Need to call this again to reset the viewport
@@ -105,7 +107,6 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 		PlgSetCullMode( PLG_CULL_POSITIVE );
 	}
 
-	APE_PROFILE_START( PROFILE_DRAW_GUI );
 	if ( drawGUI ) {
 		guiSetCanvasSize( canvas, guiWidth, guiHeight );
 		guiDraw( canvas, rootPanel );
@@ -116,7 +117,6 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 		// draw the output of the canvas
 		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
 	}
-	APE_PROFILE_END( PROFILE_DRAW_GUI );
 
 	if ( game_modeInterface->DrawMenu != NULL ) {
 		game_modeInterface->DrawMenu( viewport );
@@ -152,6 +152,8 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 
 	// todo: this should use GUI
 	apeDrawConsole_( viewport );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void apeTickGUI_( void ) {

@@ -62,7 +62,6 @@ add_library(ApeCore STATIC
         private/ape_image.c
         private/ape_memory_manager.c
         private/ape_model.c
-        private/ape_profiler.c
         private/ape_scheduler.c
         private/ape_binary_serializer.c
 

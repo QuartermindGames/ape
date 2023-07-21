@@ -152,12 +152,20 @@ static void DeserializeEntityCallback( ApeEntityComponent *component, ApeEntityC
 
 void apeTickEntityManager( void )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	IterateEntities( CallEntityTick, NULL );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ogeEntityManager_Draw( ApeCamera *camera, ApeWorldRoom *sector )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	IterateEntities( CallEntityDraw, NULL );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void YnCore_EntityManager_Save( NdBranch *root )

@@ -46,42 +46,7 @@ PL_EXTERN_C
 #	define ENABLE_PROFILER 1
 #endif
 
-typedef enum ApeProfilerGroup
-{
-	PROFILE_SIM_ALL,
-
-	PROFILE_TICK_CLIENT,
-	PROFILE_TICK_SERVER,
-
-	PROFILE_DRAW_ALL,
-	PROFILE_DRAW_WORLD,
-	PROFILE_DRAW_ACTORS,
-	PROFILE_DRAW_UI,
-	PROFILE_DRAW_GUI,
-
-	MAX_PROFILER_GROUPS
-} ApeProfilerGroup;
-extern const char *cpuProfilerDescriptions[ MAX_PROFILER_GROUPS ];
-#if defined( ENABLE_PROFILER )
-void apeInitializeProfiler( void );
-void apeEndProfilerFrame( void );
-void Profiler_StartMeasure( ApeProfilerGroup group );
-void Profiler_EndMeasure( ApeProfilerGroup group );
-double apeGetProfilerMeasure( ApeProfilerGroup group );
-#	define APE_PROFILE_START( GROUP ) Profiler_StartMeasure( GROUP )
-#	define APE_PROFILE_END( GROUP )   Profiler_EndMeasure( GROUP )
-#else
-#	define Profiler_Initialize()
-#	define Profiler_StartMeasure()
-#	define Profiler_EndMeasure()
-#	define Profiler_GetMeasure() 0
-#	define APE_PROFILE_START( GROUP )
-#	define APE_PROFILE_END( GROUP )
-#endif
 void apeUpdateProfilerGraphs( void );
-const double *apeGetProfilerGraph( ApeProfilerGroup group, uint8_t *numPoints );
-double apeGetProfilerGraphValue( ApeProfilerGroup group );
-double apeGetProfilerGraphAverage( ApeProfilerGroup group );
 
 #include "ape_scheduler.h"
 #include "ape_memory_manager.h"

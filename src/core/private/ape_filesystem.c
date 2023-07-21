@@ -83,7 +83,7 @@ static void ParseAliases( NdBranch *root )
 	}
 }
 
-#define USER_CONFIG "user" ND_DEFAULT_EXTENSION
+#define USER_CONFIG "user.cfg" ND_DEFAULT_EXTENSION
 static char configPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
 
 /****************************************
@@ -150,7 +150,7 @@ void apeMountBaseLocations( void )
 	}
 
 	PlMountLocalLocation( exePath );
-	PlMountLocalLocation( cmnGetDataDirectory() );
+	PlMountLocalLocation( comGetDataDirectory() );
 }
 
 void apeMountLocations( void )

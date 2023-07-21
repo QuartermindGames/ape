@@ -30,7 +30,7 @@ int main( int argc, char **argv )
 
 	PlInitialize( argc, argv );
 
-	cmnInitialize();
+	comInitialize();
 
 #define CALL_FUNC_TEST( NAME )                                       \
 	{                                                                \

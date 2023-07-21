@@ -87,7 +87,7 @@ void cmnRegisterPkgInterface_( void )
 /////////////////////////////////////////////////////////////////
 // WRITE
 
-void cmnPkg_WriteHeader( FILE *pack, unsigned int numFiles )
+void comWritePkgHeader( FILE *pack, unsigned int numFiles )
 {
 	fseek( pack, 0, SEEK_SET );
 	fwrite( &( PkgHeader ){ .magic = PKG_MAGIC,
@@ -95,7 +95,7 @@ void cmnPkg_WriteHeader( FILE *pack, unsigned int numFiles )
 	        PKG_HEADER_SIZE, 1, pack );
 }
 
-void cmnPkg_AddData( FILE *pack, const char *path, const void *buf, size_t size )
+void comAddPkgData( FILE *pack, const char *path, const void *buf, size_t size )
 {
 	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, pack );

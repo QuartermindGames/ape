@@ -133,6 +133,8 @@ static void CleanupBatchQueue( void ) {
 }
 
 void guiDraw( GuiCanvas *canvas, GuiPanel *root ) {
+	COM_PROFILE_FUNCTION_START();
+
 	// save old state
 	int ox, oy, ow, oh;
 	PlgGetViewport( &ox, &oy, &ow, &oh );
@@ -189,6 +191,8 @@ void guiDraw( GuiCanvas *canvas, GuiPanel *root ) {
 	PlgSetViewport( ox, oy, ow, oh );
 
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour ) {

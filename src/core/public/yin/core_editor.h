@@ -23,7 +23,7 @@ typedef struct ApeEditorField
 {
 	char name[ 64 ];
 	char description[ 128 ];
-	CmnDataType type;
+	ComDataType type;
 	uintptr_t varOffset;
 } ApeEditorField;
 

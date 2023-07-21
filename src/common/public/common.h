@@ -3,29 +3,24 @@
 
 #pragma once
 
-typedef enum CmnDataType
-{
-	CMN_DATATYPE_BOOL,
+typedef enum ComDataType {
+	COM_DATATYPE_BOOL,
 
-	CMN_DATATYPE_INT8,
-	CMN_DATATYPE_INT16,
-	CMN_DATATYPE_INT32,
+	COM_DATATYPE_INT8,
+	COM_DATATYPE_INT16,
+	COM_DATATYPE_INT32,
 
-	CMN_DATATYPE_UINT8,
-	CMN_DATATYPE_UINT16,
-	CMN_DATATYPE_UINT32,
+	COM_DATATYPE_UINT8,
+	COM_DATATYPE_UINT16,
+	COM_DATATYPE_UINT32,
 
-	CMN_DATATYPE_FLOAT32,
-	CMN_DATATYPE_FLOAT64,
+	COM_DATATYPE_FLOAT32,
+	COM_DATATYPE_FLOAT64,
 
-	CMN_DATATYPE_POINTER,
+	COM_DATATYPE_POINTER,
 
-	CMN_MAX_DATATYPES
-} CmnDataType;
-
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned char uchar;
+	COM_MAX_DATATYPES
+} ComDataType;
 
 #if defined( COMMON_DLL )
 #	include "kernel/plcore/include/plcore/pl_console.h"
@@ -40,13 +35,48 @@ extern int logLevelWarn;
 
 PL_EXTERN_C
 
-void cmnInitialize( void );
-const char *cmnGetDataDirectory( void );
-const char *cmnGetAppDataDirectory( void );
-struct NdBranch *cmnGetConfig( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
-bool cmnWriteConfig( struct NdBranch *root, const char *name );
+void comInitialize( void );
+const char *comGetDataDirectory( void );
+const char *comGetAppDataDirectory( void );
+struct NdBranch *comGetConfig( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
+bool comWriteConfig( struct NdBranch *root, const char *name );
 
-void cmnPkg_WriteHeader( FILE *pack, unsigned int numFiles );
-void cmnPkg_AddData( FILE *pack, const char *path, const void *buf, size_t size );
+void comWritePkgHeader( FILE *pack, unsigned int numFiles );
+void comAddPkgData( FILE *pack, const char *path, const void *buf, size_t size );
+
+/////////////////////////////////////////////////////////////////
+// PROFILER
+
+typedef struct ComProfilingGroup ComProfilingGroup;
+
+ComProfilingGroup *comGetProfilingGroup( const char *key );
+
+void comStartProfiling( const char *key );
+void comEndProfiling( const char *key );
+
+const char *comGetProfilingGroupName( const ComProfilingGroup *group );
+
+ComProfilingGroup *comGetFirstProfilingGroup( void );
+ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group );
+
+double comGetProfilingGroupTimeTaken( const ComProfilingGroup *group );
+double comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group );
+const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, unsigned int *numPoints );
+
+unsigned int comGetNumProfilerGroups( void );
+
+void comUpdateProfilerSamples( void );
+
+#define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
+#define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
+#define COM_PROFILE_FUNCTION_CALL( FUNCTION_NAME, FUNCTION ) \
+	{                                                        \
+		comStartProfiling( FUNCTION_NAME );                  \
+		FUNCTION;                                            \
+		comEndProfiling( FUNCTION_NAME );                    \
+	}
+
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
 
 PL_EXTERN_C_END

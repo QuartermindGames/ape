@@ -10,7 +10,7 @@
 int logLevelPrint;
 int logLevelWarn;
 
-void cmnInitialize( void )
+void comInitialize( void )
 {
 	logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	logLevelWarn  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
@@ -23,7 +23,7 @@ void cmnInitialize( void )
 	cmnRegisterVppInterface_();
 }
 
-const char *cmnGetDataDirectory( void ) {
+const char *comGetDataDirectory( void ) {
 	// cache it
 	static PLPath dataPath = { '\0' };
 	if ( *dataPath != '\0' ) {
@@ -55,7 +55,7 @@ const char *cmnGetDataDirectory( void ) {
 	return dataPath;
 }
 
-const char *cmnGetAppDataDirectory( void )
+const char *comGetAppDataDirectory( void )
 {
 	static PLPath appDataPath = "";
 	if ( *appDataPath != '\0' )
@@ -74,11 +74,11 @@ const char *cmnGetAppDataDirectory( void )
 	return appDataPath;
 }
 
-NdBranch *cmnGetConfig( const char *name )
+NdBranch *comGetConfig( const char *name )
 {
 	// first attempt to load from local dir
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", cmnGetAppDataDirectory(), name );
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
 	NdBranch *root = ndLoadFile( configPath, "config" );
 	if ( root != NULL )
 	{
@@ -99,10 +99,10 @@ NdBranch *cmnGetConfig( const char *name )
 	return root;
 }
 
-bool cmnWriteConfig( struct NdBranch *root, const char *name )
+bool comWriteConfig( struct NdBranch *root, const char *name )
 {
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", cmnGetAppDataDirectory(), name );
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
 	ndWriteFile( configPath, root, ND_FILE_UTF8 );
 	return true;
 }

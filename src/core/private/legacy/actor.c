@@ -229,8 +229,6 @@ bool Act_IsVisible( Actor *self, ApeCamera *camera )
 
 void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 {
-	APE_PROFILE_START( PROFILE_DRAW_ACTORS );
-
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL )
 	{
@@ -300,8 +298,6 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 
 		index = next;
 	}
-
-	APE_PROFILE_END( PROFILE_DRAW_ACTORS );
 }
 
 #define GRAVITY 7.0f

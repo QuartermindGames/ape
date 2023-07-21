@@ -990,7 +990,7 @@ static void WorldSaveCallback( unsigned int argc, char **argv ) {
 		return;
 	}
 
-	const char *dataPath = cmnGetDataDirectory();
+	const char *dataPath = comGetDataDirectory();
 
 	NdBranch *root = ndPushBackObject( NULL, "world" );
 

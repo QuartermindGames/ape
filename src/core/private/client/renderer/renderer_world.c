@@ -384,6 +384,8 @@ void apeDrawWorld_( ApeWorld *world ) {
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
@@ -465,4 +467,6 @@ void apeDrawWorld_( ApeWorld *world ) {
 	}
 
 	PlPopMatrix();
+
+	COM_PROFILE_FUNCTION_END();
 }
