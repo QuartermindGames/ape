@@ -78,11 +78,11 @@ typedef struct ApeAudioSample {
 	void *user;
 } ApeAudioSample;
 
-typedef struct YNCoreAudioSource {
+typedef struct ApeAudioSource {
 	PLVector3 position;
 	PLVector3 velocity;
 	void *user;
-} YNCoreAudioSource;
+} ApeAudioSource;
 
 void apeInitializeAudio_( void );
 void apeShutdownAudio_( void );
@@ -105,9 +105,9 @@ ApeAudioSample *Audio_CacheSample( const char *path );
 void YnCore_AudioSample_Emit( ApeAudioSample *audioSample, int8_t volume );
 void apeReleaseAudioSample( ApeAudioSample *audioSample );
 
-YNCoreAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const PLVector3 *velocity );
-void YnCore_AudioSource_Destroy( YNCoreAudioSource *audioSource );
-void YnCore_AudioSource_Emit( YNCoreAudioSource *audioSource, ApeAudioSample *audioSample );
+ApeAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const PLVector3 *velocity );
+void YnCore_AudioSource_Destroy( ApeAudioSource *audioSource );
+void YnCore_AudioSource_Emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize );
 
@@ -122,8 +122,8 @@ typedef struct ApeAudioDriverInterface {
 	void ( *FreeSample )( ApeAudioSample *audioSample );
 	void ( *EmitSample )( ApeAudioSample *audioSample, int8_t volume );
 
-	bool ( *CreateSource )( YNCoreAudioSource *audioSource );
-	void ( *DestroySource )( YNCoreAudioSource *audioSource );
+	bool ( *CreateSource )( ApeAudioSource *audioSource );
+	void ( *DestroySource )( ApeAudioSource *audioSource );
 } ApeAudioDriverInterface;
 
 PL_EXTERN_C_END

@@ -273,9 +273,9 @@ void Audio_Pause( bool pause )
  * Sources
  ****************************************/
 
-YNCoreAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const PLVector3 *velocity )
+ApeAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const PLVector3 *velocity )
 {
-	YNCoreAudioSource *source = PL_NEW( YNCoreAudioSource );
+	ApeAudioSource *source = PL_NEW( ApeAudioSource );
 	if ( position != NULL )
 		source->position = *position;
 	if ( velocity != NULL )
@@ -286,7 +286,7 @@ YNCoreAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const P
 	return source;
 }
 
-void YnCore_AudioSource_Destroy( YNCoreAudioSource *audioSource )
+void YnCore_AudioSource_Destroy( ApeAudioSource *audioSource )
 {
 	if ( audioSource == NULL )
 		return;
@@ -296,7 +296,7 @@ void YnCore_AudioSource_Destroy( YNCoreAudioSource *audioSource )
 	PL_DELETE( audioSource );
 }
 
-void YnCore_AudioSource_Emit( YNCoreAudioSource *audioSource, ApeAudioSample *audioSample )
+void YnCore_AudioSource_Emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample )
 {
 	assert( audioSource != NULL );
 	if ( audioSource == NULL )

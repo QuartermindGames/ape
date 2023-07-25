@@ -195,7 +195,7 @@ extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 
 #else
 
-extern "C" const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
+extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 {
 	return nullptr;
 }

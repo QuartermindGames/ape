@@ -187,27 +187,27 @@ static void Pause( bool pause )
 {
 }
 
-static bool CacheSample( YNCoreAudioSample *sample )
+static bool CacheSample( ApeAudioSample *sample )
 {
 	return true;
 }
 
-static void FreeSample( YNCoreAudioSample *sample )
+static void FreeSample( ApeAudioSample *sample )
 {
 }
 
-static void EmitSample( YNCoreAudioSample *sample, int8_t volume )
+static void EmitSample( ApeAudioSample *sample, int8_t volume )
 {
 }
 
-static bool CreateSource( YNCoreAudioSource *source )
+static bool CreateSource( ApeAudioSource *source )
 {
 	source->user = PL_NEW( XALAudioSource );
 	XAL_CALL( alGenSources( 1, &( ( XALAudioSource * ) source->user )->id ) );
 	return true;
 }
 
-static void DestroySource( YNCoreAudioSource *source )
+static void DestroySource( ApeAudioSource *source )
 {
 	if ( source->user == NULL )
 		return;
@@ -220,7 +220,7 @@ static void DestroySource( YNCoreAudioSource *source )
 
 const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void )
 {
-	static YNCoreAudioDriverInterface driverInterface;
+	static ApeAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 
 	driverInterface.Initialize = Initialize;
