@@ -14,14 +14,14 @@ typedef struct PSEmitter
 {
 	ApeSceneTransform transform, transformVar;
 
-	PLVector3 force, forceVar; /* exterior forces, such as gravity */
+	PLVector3 force, forceVar;         /* exterior forces, such as gravity */
 
-	int emissionRate, emissionVar; /* how many particles to emit per tick */
+	int emissionRate, emissionVar;     /* how many particles to emit per tick */
 
-	int numTicks, maxTicks; /* number of ticks since last emission and maximum ticks until we emit again */
+	int numTicks, maxTicks;            /* number of ticks since last emission and maximum ticks until we emit again */
 
 	int particleLife, particleLifeVar; /* how long the particles spawned by the emitter will live until they die */
-	int life;						   /* how long this emitter will live until it's removed */
+	int life;                          /* how long this emitter will live until it's removed */
 
 	float speed, speedVar;
 
@@ -35,7 +35,7 @@ typedef struct PSEmitter
 
 	PLCollisionAABB bounds;
 
-	struct PLGMesh  *mesh;
+	struct PLGMesh *mesh;
 	struct ApeMaterial *material;
 	ApeMemoryReference mem;
 
@@ -54,7 +54,7 @@ typedef struct PSParticle
 
 	float scale, oldScale, deltaScale;
 
-	int		   life;
+	int life;
 	PSEmitter *emitter;
 
 	PLCollisionAABB bounds;
@@ -65,9 +65,9 @@ typedef struct PSParticle
 void PS_Initialize( void );
 void PS_Shutdown( void );
 
-void	   PS_CacheEmitterTemplate( const char *path );
+void PS_CacheEmitterTemplate( const char *path );
 PSEmitter *PS_SpawnEmitter( void );
-void	   PS_DestroyEmitter( PSEmitter *emitter );
+void PS_DestroyEmitter( PSEmitter *emitter );
 
 void PS_TickEmitter( PSEmitter *emitter );
 void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera );

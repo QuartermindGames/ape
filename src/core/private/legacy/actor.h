@@ -55,25 +55,25 @@ typedef struct Actor
 	PLVector3 angles, oldAngles;
 	PLVector3 velocity;
 	PLVector3 forward;
-	float     angle;
-	float     viewPitch;
-	float     viewOffset;
+	float angle;
+	float viewPitch;
+	float viewOffset;
 
 	char tagName[ 64 ];
 
 	/* collision/vis */
 	struct ApeWorldRoom *sector;
-	ActorMovementType    movementType;
-	ActorCollisionGroup  collisionGroup;
-	PLCollisionAABB      collisionVolume;
-	PLCollisionAABB      visibilityVolume;
+	ActorMovementType movementType;
+	ActorCollisionGroup collisionGroup;
+	PLCollisionAABB collisionVolume;
+	PLCollisionAABB visibilityVolume;
 	struct PLLinkedList *geoColliders; /* list of faces we're touching to test against */
 
 	/* animation */
 	unsigned int currentFrame;
 	unsigned int frameSwapTime;
 
-	ActorType  type;
+	ActorType type;
 	ActorSetup setup;
 
 	struct SGNode *graphNode;
@@ -85,7 +85,7 @@ typedef struct Actor
 	int16_t score;
 
 	struct PLLinkedListNode *node;
-	void                    *userData;
+	void *userData;
 } Actor;
 
 void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector );
@@ -97,21 +97,21 @@ Actor *Act_DestroyActor( Actor *self );
 
 ActorType Act_GetType( const Actor *self );
 
-void      Act_SetPosition( Actor *self, const PLVector3 *position );
+void Act_SetPosition( Actor *self, const PLVector3 *position );
 PLVector3 Act_GetPosition( const Actor *self );
 
 float Act_GetAngle( const Actor *self );
 
 void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector );
 
-void  Act_SetUserData( Actor *self, void *userData );
+void Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
 
-void  Act_SetViewOffset( Actor *self, float viewOffset );
+void Act_SetViewOffset( Actor *self, float viewOffset );
 float Act_GetViewOffset( Actor *self );
 
-void   Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
-bool   Act_IsColliding( Actor *self, Actor *other );
+void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
+bool Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );

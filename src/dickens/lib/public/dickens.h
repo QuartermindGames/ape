@@ -93,13 +93,13 @@ typedef enum DKTokenType
 	DK_MAX_TOKENTYPES
 } DKTokenType;
 
-typedef struct DKLexer  DKLexer;
+typedef struct DKLexer DKLexer;
 typedef struct DKParser DKParser;
 
 PL_EXTERN_C
 
-PL_EXPORT DKLexer  *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char *file );
+PL_EXPORT DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char *file );
 PL_EXPORT DKParser *DKParser_ParseProgram( DKLexer *lexer );
-PL_EXPORT bool      DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char *outPath );
+PL_EXPORT bool DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char *outPath );
 
 PL_EXTERN_C_END

@@ -64,8 +64,8 @@ static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr )
 		return;
 	}
 
-	meshPtr->numMaterials      = ndGetNumOfChildren( materialsList );
-	meshPtr->materials         = PlCAlloc( meshPtr->numMaterials, sizeof( ApeMaterial         *), true );
+	meshPtr->numMaterials  = ndGetNumOfChildren( materialsList );
+	meshPtr->materials     = PlCAlloc( meshPtr->numMaterials, sizeof( ApeMaterial     *), true );
 	NdBranch *materialNode = ndGetFirstChild( materialsList );
 	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
 	{
@@ -161,7 +161,7 @@ void DestroyWorldMesh( ApeWorldMesh *mesh )
 ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent )
 {
 	ApeWorldMesh *mesh = PL_NEW( ApeWorldMesh );
-	mesh->faces           = PlCreateLinkedList();
+	mesh->faces        = PlCreateLinkedList();
 
 	if ( parent != NULL )
 		PlPushBackVectorArrayElement( parent->meshes, mesh );

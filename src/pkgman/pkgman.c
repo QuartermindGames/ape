@@ -184,8 +184,8 @@ static const char *CMD_AddModel( const char *buf )
 	return buf;
 }
 
-static void        PKG_ParseScript( const char *buffer, size_t length );
-static void        PKG_LoadParseScript( const char *path );
+static void PKG_ParseScript( const char *buffer, size_t length );
+static void PKG_LoadParseScript( const char *path );
 static const char *CMD_Include( const char *buf )
 {
 	PLPath filePath;
@@ -249,7 +249,7 @@ static void PKG_LoadParseScript( const char *path )
 
 	/* now fetch the buffer and length, and throw it to our parser */
 	const char *buffer = ( const char * ) PlGetFileData( filePtr );
-	size_t      length = PlGetFileSize( filePtr );
+	size_t length      = PlGetFileSize( filePtr );
 	PKG_ParseScript( buffer, length );
 
 	PlCloseFile( filePtr );

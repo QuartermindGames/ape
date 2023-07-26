@@ -39,16 +39,16 @@ static void CloseSocket( NetSocketHandle handle )
 
 typedef struct NetSocket
 {
-	NetSocketHandle handle;      /* system socket handle */
-	int             addressType; /* ip4 / ip6 */
+	NetSocketHandle handle; /* system socket handle */
+	int addressType;        /* ip4 / ip6 */
 	union
 	{
-		struct sockaddr_in  ip4;
+		struct sockaddr_in ip4;
 		struct sockaddr_in6 ip6;
 	} local;
 	union
 	{
-		struct sockaddr_in  ip4;
+		struct sockaddr_in ip4;
 		struct sockaddr_in6 ip6;
 	} remote;
 	NetConnectionState connectionState;
@@ -92,12 +92,12 @@ static bool ExecuteTest( void )
 	}
 
 	const char *s = "Hello World!";
-	size_t      sl = strlen( s );
+	size_t sl     = strlen( s );
 	Net_Send( testData.acceptSocket, s, sl );
 
 	PRINT( "Sent \"%s\" to %s\n", s, ip );
 
-	char   d[ 16 ];
+	char d[ 16 ];
 	size_t dl = 0;
 	while ( dl < sl )
 	{
@@ -136,7 +136,7 @@ void apeInitializeNet( void )
 {
 #if defined( _WIN32 )
 	WSADATA data;
-	int     r;
+	int r;
 	if ( ( r = WSAStartup( MAKEWORD( 2, 2 ), &data ) ) != 0 )
 		PRINT_WARNING( "Failed to initialize Winsock: %d\n", r );
 #endif
@@ -158,7 +158,7 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	struct addrinfo hints;
 	PL_ZERO_( hints );
 
-	hints.ai_family = AF_UNSPEC;
+	hints.ai_family   = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* if ip is null, assume we don't care */
@@ -173,14 +173,14 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	snprintf( buf, sizeof( buf ), PL_FMT_uint16, port );
 
 	struct addrinfo *result;
-	int              s = getaddrinfo( ip, buf, &hints, &result );
+	int s = getaddrinfo( ip, buf, &hints, &result );
 	if ( s != 0 )
 	{
 		PRINT_WARNING( "Failed to get address info: %s\n", gai_strerror( s ) );
 		return NULL;
 	}
 
-	NetSocketHandle  handle = -1;
+	NetSocketHandle handle = -1;
 	struct addrinfo *r;
 	for ( r = result; r != NULL; r = r->ai_next )
 	{
@@ -243,10 +243,10 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	}
 
 	/* all done, allocate and return it */
-	NetSocket *netSocket = PlMAllocA( sizeof( NetSocket ) );
+	NetSocket *netSocket       = PlMAllocA( sizeof( NetSocket ) );
 	netSocket->connectionState = NET_CONNECTION_PENDING;
-	netSocket->handle = handle;
-	netSocket->addressType = addressType;
+	netSocket->handle          = handle;
+	netSocket->addressType     = addressType;
 
 	socklen_t addrSize;
 	addrSize = sizeof( netSocket->local );
@@ -294,7 +294,7 @@ ssize_t Net_Receive( NetSocket *netSocket, void *dst, ssize_t length )
 NetSocket *Net_Accept( NetSocket *netSocket )
 {
 	struct sockaddr_storage buf;
-	socklen_t               size = sizeof( buf );
+	socklen_t size = sizeof( buf );
 
 	int handle = accept( netSocket->handle, ( struct sockaddr * ) &buf, &size );
 	if ( handle >= 0 )
@@ -307,7 +307,7 @@ NetSocket *Net_Accept( NetSocket *netSocket )
 #endif
 
 		NetSocket *out = PlMAllocA( sizeof( NetSocket ) );
-		out->handle = handle;
+		out->handle    = handle;
 
 		socklen_t addrSize;
 		addrSize = sizeof( netSocket->local );
@@ -341,7 +341,7 @@ NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket )
 	int s = select( netSocket->handle + 1, NULL, &fdWrite, &fdAccept, &tv );
 	if ( s > 0 )
 	{
-		char      errCode;
+		char errCode;
 		socklen_t errLen = sizeof( errCode );
 		getsockopt( netSocket->handle, SOL_SOCKET, SO_ERROR, &errCode, &errLen );
 		if ( errCode == 0 )

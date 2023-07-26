@@ -15,7 +15,7 @@ static void DeserialiseEntities( ApeWorld *world, NdBranch *root )
 	}
 
 	unsigned int entityNum = 0;
-	NdBranch *child     = ndGetFirstChild( root );
+	NdBranch *child        = ndGetFirstChild( root );
 	while ( child != NULL )
 	{
 		const char *templateName = ndGetStringByName( child, "templateName", NULL );
@@ -24,7 +24,7 @@ static void DeserialiseEntities( ApeWorld *world, NdBranch *root )
 			const ApeEntityPrefab *entityTemplate = YnCore_EntityManager_GetPrefabByName( templateName );
 			if ( entityTemplate != NULL )
 			{
-				ApeWorldEntity *worldEntity    = PL_NEW( ApeWorldEntity );
+				ApeWorldEntity *worldEntity = PL_NEW( ApeWorldEntity );
 				worldEntity->entityTemplate = entityTemplate;
 
 				NdBranch *properties = ndGetChildByName( child, "properties" );
@@ -82,7 +82,7 @@ ApeWorld *apeDeserializeWorld( NdBranch *root, ApeWorld *out )
 	{
 		unsigned int numEntries = ndGetNumOfChildren( meshList );
 		out->meshes             = PlCreateVectorArray( numEntries );
-		NdBranch *c               = ndGetFirstChild( meshList );
+		NdBranch *c             = ndGetFirstChild( meshList );
 		for ( unsigned int i = 0; i < numEntries; ++i )
 		{
 			if ( c == NULL )

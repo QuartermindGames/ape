@@ -110,7 +110,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 		{
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
 			{
-				bool     status;
+				bool status;
 				uint32_t i = PlParseInteger( buf, &status );
 				if ( !status )
 				{
@@ -127,7 +127,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 			DEBUG_PARSER( "Reading I32\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
 			{
-				bool    status;
+				bool status;
 				int32_t i = PlParseInteger( buf, &status );
 				if ( !status )
 				{
@@ -145,7 +145,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 			DEBUG_PARSER( "Reading float\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
 			{
-				bool  status;
+				bool status;
 				float i = PlParseFloat( buf, &status );
 				if ( !status )
 				{
@@ -178,7 +178,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
 			{
 				bool status;
-				int  i = PlParseInteger( buf, &status );
+				int i = PlParseInteger( buf, &status );
 				if ( !status )
 				{
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
@@ -309,7 +309,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 		{
 			case ND_PROPERTY_UI32:
 			{
-				bool     status;
+				bool status;
 				uint32_t i = PlParseInteger( buf, &status );
 				if ( !status )
 				{
@@ -333,7 +333,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 			case ND_PROPERTY_I32:
 			{
 				bool status;
-				int  i = PlParseInteger( buf, &status );
+				int i = PlParseInteger( buf, &status );
 				if ( !status )
 				{
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
@@ -344,7 +344,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 			}
 			case ND_PROPERTY_F32:
 			{
-				bool  status;
+				bool status;
 				float i = PlParseFloat( buf, &status );
 				if ( !status )
 				{

@@ -548,7 +548,8 @@ int Launcher_Initialize( int argc, char **argv )
 		SDL_GL_SwapWindow( sdlWindow );
 
 		static unsigned int refreshTime = 0;
-		if ( refreshTime > apeGetNumTicks() ) {
+		if ( refreshTime > apeGetNumTicks() )
+		{
 			continue;
 		}
 

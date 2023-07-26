@@ -154,11 +154,11 @@ static void Player_Tick( Actor *self, void *userData )
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = apeShellInterface_GetButtonState( INPUT_LEFT_STICK ) || apeShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity                = apeShellInterface_GetButtonState( INPUT_LEFT_STICK ) || apeShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	APLAYER( self )->forwardVelocity = PlClamp( -maxVelocity, APLAYER( self )->forwardVelocity, maxVelocity );
-	APLAYER( self )->strafeVelocity = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
+	APLAYER( self )->strafeVelocity  = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
 
-	APLAYER( self )->viewAngles = self->angles;
+	APLAYER( self )->viewAngles   = self->angles;
 	APLAYER( self )->viewAngles.z = self->viewPitch;
 
 	PLVector3 left;
@@ -197,12 +197,12 @@ static void Player_Collide( Actor *self, Actor *other, void *userData )
 }
 
 const ActorSetup actorPlayerSetup = {
-        .id = "point.player",
-        .Spawn = Player_Spawn,
-        .Tick = Player_Tick,
-        .Draw = Player_Draw,
-        .Collide = Player_Collide,
-        .Destroy = NULL,
-        .Serialize = NULL,
+        .id          = "point.player",
+        .Spawn       = Player_Spawn,
+        .Tick        = Player_Tick,
+        .Draw        = Player_Draw,
+        .Collide     = Player_Collide,
+        .Destroy     = NULL,
+        .Serialize   = NULL,
         .Deserialize = NULL,
 };

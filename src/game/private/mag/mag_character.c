@@ -6,7 +6,6 @@
 
 void magRandomizeCharacterStats( MagCharacter *character )
 {
-
 }
 
 int16_t magNextCharacterLevel( const MagCharacter *character )

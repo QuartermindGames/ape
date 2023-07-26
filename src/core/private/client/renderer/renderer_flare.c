@@ -8,27 +8,27 @@
 /* Prey '98 inspired flares! */
 
 static const char *flarePaths[] = {
-		"materials/effects/Flare1.gif",
-		"materials/effects/Flare2.gif",
-		"materials/effects/Flare3.gif",
-		"materials/effects/Flare4.gif",
-		"materials/effects/Flare5.gif",
-		"materials/effects/Flare6.gif",
+        "materials/effects/Flare1.gif",
+        "materials/effects/Flare2.gif",
+        "materials/effects/Flare3.gif",
+        "materials/effects/Flare4.gif",
+        "materials/effects/Flare5.gif",
+        "materials/effects/Flare6.gif",
 };
 #define MAX_FLARE_TEXTURES PL_ARRAY_ELEMENTS( flarePaths )
 static PLGTexture *flareTextures[ MAX_FLARE_TEXTURES ];
 
 static const char *shinePaths[] = {
-		"materials/effects/Shine0.gif",
-		"materials/effects/Shine1.gif",
-		"materials/effects/Shine2.gif",
-		"materials/effects/Shine3.gif",
-		"materials/effects/Shine4.gif",
-		"materials/effects/Shine5.gif",
-		"materials/effects/Shine6.gif",
-		"materials/effects/Shine7.gif",
-		"materials/effects/Shine8.gif",
-		"materials/effects/Shine9.gif",
+        "materials/effects/Shine0.gif",
+        "materials/effects/Shine1.gif",
+        "materials/effects/Shine2.gif",
+        "materials/effects/Shine3.gif",
+        "materials/effects/Shine4.gif",
+        "materials/effects/Shine5.gif",
+        "materials/effects/Shine6.gif",
+        "materials/effects/Shine7.gif",
+        "materials/effects/Shine8.gif",
+        "materials/effects/Shine9.gif",
 };
 #define MAX_SHINE_TEXTURES PL_ARRAY_ELEMENTS( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];

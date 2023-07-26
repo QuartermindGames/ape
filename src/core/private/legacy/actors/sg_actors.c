@@ -38,7 +38,7 @@ typedef struct ASGActor
 
 typedef struct AsteroidManager
 {
-	ASGActor     base;
+	ASGActor base;
 	unsigned int numAsteroids;
 } AsteroidManager;
 static AsteroidManager *asteroidManager = NULL;
@@ -344,7 +344,7 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitRight->material                 = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
-	ApeCamera *camera      = apeGetActiveCamera();
+	ApeCamera *camera   = apeGetActiveCamera();
 	camera->mode        = APE_CAMERA_MODE_TOP;
 	camera->parentActor = self;
 }

@@ -113,8 +113,8 @@ static void CreateNewPackage( void )
 		gtk_main_iteration_do( false );
 
 		//TODO: bail when this fails...
-		char   *store = PlGetLinkedListNodeUserData( node );
-		PLFile *in = PlOpenLocalFile( store, true );
+		char *store = PlGetLinkedListNodeUserData( node );
+		PLFile *in  = PlOpenLocalFile( store, true );
 		if ( in != NULL )
 		{
 			PLFile *newFile = NodeToBin( in, tmpPath );
@@ -190,7 +190,7 @@ static GtkWidget *CreateTreeView( void )
 
 static GtkWidget *CreateMenus( void )
 {
-	GtkWidget *menuBar = gtk_menu_bar_new();
+	GtkWidget *menuBar  = gtk_menu_bar_new();
 	GtkWidget *fileMenu = gtk_menu_new();
 	{
 		GtkWidget *fileMenuItem = gtk_menu_item_new_with_label( "File" );

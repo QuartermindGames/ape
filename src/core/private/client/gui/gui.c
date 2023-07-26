@@ -137,9 +137,9 @@ bool guiInitialize( void )
 	gui_LogLevels_[ GUI_LOGLEVEL_ERROR ]   = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
 	gui_LogLevels_[ GUI_LOGLEVEL_DEBUG ]   = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
 #ifndef NDEBUG
-	                                                    true
+	                                                      true
 #else
-	                                                    false
+	                                                      false
 #endif
 	);
 

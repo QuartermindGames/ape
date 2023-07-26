@@ -164,7 +164,6 @@ static NdBranch *SerializeModel( const PLMModel *model )
 
 void edRegisterImportCommands_( void )
 {
-
 }
 
 #if 0

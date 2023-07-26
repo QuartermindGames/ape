@@ -7,7 +7,7 @@
 
 typedef struct DKFunctionDeclaration
 {
-	const char  *id;
+	const char *id;
 	unsigned int numArguments;
 	void ( *Callback )();
 } DKFunctionDeclaration;

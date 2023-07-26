@@ -18,7 +18,7 @@ typedef struct PreProcessorMacro
 typedef struct PreProcessorContext
 {
 	PreProcessorMacro macros[ MAX_MACROS ];
-	unsigned int      numMacros;
+	unsigned int numMacros;
 } PreProcessorContext;
 
 static PreProcessorContext ctx;
@@ -47,15 +47,15 @@ static bool IsMacroRegistered( const char *name )
 char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
 {
 	size_t actualLength = 0;
-	size_t maxLength = *length;
-	char  *dstBuffer = PlCAllocA( maxLength, sizeof( char ) );
-	char  *dstPos = dstBuffer;
+	size_t maxLength    = *length;
+	char *dstBuffer     = PlCAllocA( maxLength, sizeof( char ) );
+	char *dstPos        = dstBuffer;
 
 	if ( isHead )
 		PL_ZERO_( ctx );
 
 	const char *srcPos = buf;
-	char       *srcEnd = buf + *length;
+	char *srcEnd       = buf + *length;
 	while ( srcPos < srcEnd && *srcPos != '\0' )
 	{
 		if ( *srcPos == ';' )
@@ -81,7 +81,7 @@ char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
 				{
 					/* allocate a temporary buffer */
 					size_t includeLength = PlGetFileSize( file );
-					char  *includeBody = PlMAlloc( includeLength, true );
+					char *includeBody    = PlMAlloc( includeLength, true );
 					memcpy( includeBody, PlGetFileData( file ), includeLength );
 
 					/* close the current file, to avoid recursively opening files
@@ -162,8 +162,8 @@ char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
 		{
 			++maxLength;
 			char *oldDstBuffer = dstBuffer;
-			dstBuffer = PlReAllocA( dstBuffer, maxLength );
-			dstPos = dstBuffer + ( dstPos - oldDstBuffer );
+			dstBuffer          = PlReAllocA( dstBuffer, maxLength );
+			dstPos             = dstBuffer + ( dstPos - oldDstBuffer );
 		}
 
 		*dstPos++ = *srcPos++;

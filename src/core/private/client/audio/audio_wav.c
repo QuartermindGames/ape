@@ -22,7 +22,7 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 	{
 		uint32_t type = PlReadInt32( file, false, &status );
 		uint32_t size = PlReadInt32( file, false, &status );
-		
+
 		if ( type == CHUNK_RIFF )
 			size = 4;
 		else if ( !PlFileSeek( file, ( long ) size, PL_SEEK_CUR ) )
@@ -32,7 +32,7 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 
 		if ( type == fourCC )
 		{
-			*chunkSize = size;
+			*chunkSize         = size;
 			*chunkDataPosition = offset;
 			return true;
 		}

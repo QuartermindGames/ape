@@ -14,7 +14,7 @@ static NdBranch *fileSystemConfig;
 
 #define MAX_FILESYSTEM_MOUNTS 255
 static PLFileSystemMount *fileSystemMounts[ MAX_FILESYSTEM_MOUNTS ];
-static unsigned int       numMountedLocations = 0;
+static unsigned int numMountedLocations = 0;
 
 static void ParseMountConfig( NdBranch *root )
 {

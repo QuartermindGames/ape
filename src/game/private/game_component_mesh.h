@@ -4,7 +4,8 @@
 
 #include "game_private.h"
 
-typedef struct GameMeshComponent {
+typedef struct GameMeshComponent
+{
 	ApeMaterial *material;
 	PLGMesh *mesh;
 

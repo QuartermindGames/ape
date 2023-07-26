@@ -76,8 +76,8 @@ static void PackImage_WriteBlock( FILE *filePtr, const uint8_t *colour, uint8_t 
 	if ( blockChannelFlags & PGFX_CHANNEL_ALPHA ) { fputc( colour[ 3 ], filePtr ); }
 
 	/* now figure out how many pixels there are that we need in this block */
-	uint16_t  numBlockPixels = 0;
-	uint32_t *pixelOffsets   = malloc( sizeof( uint32_t ) * srcPixelSize );
+	uint16_t numBlockPixels = 0;
+	uint32_t *pixelOffsets  = malloc( sizeof( uint32_t ) * srcPixelSize );
 	for ( uint32_t i = 0; i < srcPixelSize; ++i )
 	{
 		uint8_t srcColour[ 4 ];
@@ -145,10 +145,10 @@ static void PackImage_WriteCluster( FILE *filePtr, const PLImage *image )
 
 	/* figure out how many unique colours there are
 	 * so we know how many blocks there should be */
-	const uint8_t *pixelPos       = image->data[ 0 ];
-	uint8_t *      colourBuffer   = calloc( image->size, sizeof( uint8_t ) );
-	uint16_t       numColours     = 0;
-	uint8_t        outputChannels = 0;
+	const uint8_t *pixelPos = image->data[ 0 ];
+	uint8_t *colourBuffer   = calloc( image->size, sizeof( uint8_t ) );
+	uint16_t numColours     = 0;
+	uint8_t outputChannels  = 0;
 	for ( unsigned int i = 0; i < imagePixelSize; ++i )
 	{
 		/* copy the initial colour to kick us off */
@@ -261,9 +261,9 @@ void PackImage_Write( const char *path, const PLImage *image, uint8_t destFormat
 	else
 	{
 		/* convert our format to the GL equivalent */
-		GLenum        glFormat;
+		GLenum glFormat;
 		PLImageFormat plFormat;
-		GLint         dstRowStride;
+		GLint dstRowStride;
 		switch ( destFormat )
 		{
 			case PGFX_FORMAT_DXT3:
@@ -292,8 +292,8 @@ void PackImage_Write( const char *path, const PLImage *image, uint8_t destFormat
 
 		PackImage_WriteHeader( filePtr, destFormat, 0, image->width, image->height, 0 );
 
-		size_t   dstSize = PlGetImageSize( plFormat, image->width, image->height );
-		uint8_t *dstBuf  = calloc( dstSize, 1 );
+		size_t dstSize  = PlGetImageSize( plFormat, image->width, image->height );
+		uint8_t *dstBuf = calloc( dstSize, 1 );
 
 		//unsigned int srcComps = image->colour_format == PL_COLOURFORMAT_RGB ? 3 : 4;
 		tx_compress_dxtn( 4, image->width, image->height, image->data[ 0 ], glFormat, dstBuf, dstRowStride );

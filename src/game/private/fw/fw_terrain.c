@@ -18,7 +18,7 @@ static unsigned char terrainMinHeight, terrainMaxHeight;
 #endif
 
 static ApeMaterial *terrainMaterial = NULL;
-static PLMModel *terrainModel          = NULL;
+static PLMModel *terrainModel       = NULL;
 
 #define TERRAIN_TILE_SPACING 64
 

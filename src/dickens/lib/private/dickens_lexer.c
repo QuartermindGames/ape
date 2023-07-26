@@ -18,86 +18,86 @@ typedef struct LexerReservedWord
 } LexerReservedWord;
 
 static LexerReservedWord tokenCompareTable[] = {
-        { "float", DK_TOKENTYPE_TYPENAME },
-        { "char", DK_TOKENTYPE_TYPENAME },
-        { "uchar", DK_TOKENTYPE_TYPENAME },
-        { "short", DK_TOKENTYPE_TYPENAME },
-        { "ushort", DK_TOKENTYPE_TYPENAME },
-        { "int", DK_TOKENTYPE_TYPENAME },
-        { "uint", DK_TOKENTYPE_TYPENAME },
-        { "string", DK_TOKENTYPE_TYPENAME },
-        { "void", DK_TOKENTYPE_TYPENAME },
+        {"float",    DK_TOKENTYPE_TYPENAME  },
+        { "char",    DK_TOKENTYPE_TYPENAME  },
+        { "uchar",   DK_TOKENTYPE_TYPENAME  },
+        { "short",   DK_TOKENTYPE_TYPENAME  },
+        { "ushort",  DK_TOKENTYPE_TYPENAME  },
+        { "int",     DK_TOKENTYPE_TYPENAME  },
+        { "uint",    DK_TOKENTYPE_TYPENAME  },
+        { "string",  DK_TOKENTYPE_TYPENAME  },
+        { "void",    DK_TOKENTYPE_TYPENAME  },
 
-        { "if", DK_TOKENTYPE_IF },
-        { "then", DK_TOKENTYPE_THEN },
-        { "else", DK_TOKENTYPE_ELSE },
+        { "if",      DK_TOKENTYPE_IF        },
+        { "then",    DK_TOKENTYPE_THEN      },
+        { "else",    DK_TOKENTYPE_ELSE      },
 
-        { "do", DK_TOKENTYPE_DO },
-        { "end", DK_TOKENTYPE_END },
+        { "do",      DK_TOKENTYPE_DO        },
+        { "end",     DK_TOKENTYPE_END       },
 
-        { "decl", DK_TOKENTYPE_DECLARE },
-        { "struct", DK_TOKENTYPE_STRUCTURE },
-        { "union", DK_TOKENTYPE_UNION },
-        { "label", DK_TOKENTYPE_LABEL },
-        { "const", DK_TOKENTYPE_CONST },
-        { "init", DK_TOKENTYPE_INITIAL },
-        { "typedef", DK_TOKENTYPE_TYPEDEF },
-        { "proc", DK_TOKENTYPE_PROCEDURE },
-        { "extern", DK_TOKENTYPE_EXTERNAL },
-        { "public", DK_TOKENTYPE_PUBLIC },
-        { "native", DK_TOKENTYPE_NATIVE },
-        { "at", DK_TOKENTYPE_AT },
+        { "decl",    DK_TOKENTYPE_DECLARE   },
+        { "struct",  DK_TOKENTYPE_STRUCTURE },
+        { "union",   DK_TOKENTYPE_UNION     },
+        { "label",   DK_TOKENTYPE_LABEL     },
+        { "const",   DK_TOKENTYPE_CONST     },
+        { "init",    DK_TOKENTYPE_INITIAL   },
+        { "typedef", DK_TOKENTYPE_TYPEDEF   },
+        { "proc",    DK_TOKENTYPE_PROCEDURE },
+        { "extern",  DK_TOKENTYPE_EXTERNAL  },
+        { "public",  DK_TOKENTYPE_PUBLIC    },
+        { "native",  DK_TOKENTYPE_NATIVE    },
+        { "at",      DK_TOKENTYPE_AT        },
 
-        { "goto", DK_TOKENTYPE_GOTO },
-        { "by", DK_TOKENTYPE_BY },
-        { "case", DK_TOKENTYPE_CASE },
-        { "while", DK_TOKENTYPE_WHILE },
-        { "leave", DK_TOKENTYPE_LEAVE },
-        { "iterate", DK_TOKENTYPE_ITERATE },
+        { "goto",    DK_TOKENTYPE_GOTO      },
+        { "by",      DK_TOKENTYPE_BY        },
+        { "case",    DK_TOKENTYPE_CASE      },
+        { "while",   DK_TOKENTYPE_WHILE     },
+        { "leave",   DK_TOKENTYPE_LEAVE     },
+        { "iterate", DK_TOKENTYPE_ITERATE   },
 
-        { "call", DK_TOKENTYPE_CALL },
-        { "return", DK_TOKENTYPE_RETURN },
-        { "halt", DK_TOKENTYPE_HALT },
+        { "call",    DK_TOKENTYPE_CALL      },
+        { "return",  DK_TOKENTYPE_RETURN    },
+        { "halt",    DK_TOKENTYPE_HALT      },
 
-        { "or", DK_TOKENTYPE_OR },
-        { "and", DK_TOKENTYPE_AND },
-        { "xor", DK_TOKENTYPE_XOR },
-        { "not", DK_TOKENTYPE_NOT },
+        { "or",      DK_TOKENTYPE_OR        },
+        { "and",     DK_TOKENTYPE_AND       },
+        { "xor",     DK_TOKENTYPE_XOR       },
+        { "not",     DK_TOKENTYPE_NOT       },
 
-        { ":=", DK_TOKENTYPE_ASSIGN },
+        { ":=",      DK_TOKENTYPE_ASSIGN    },
 
-        { "<>", DK_TOKENTYPE_NOTEQ },
-        { "<=", DK_TOKENTYPE_LTEQ },
-        { ">=", DK_TOKENTYPE_GTEQ },
+        { "<>",      DK_TOKENTYPE_NOTEQ     },
+        { "<=",      DK_TOKENTYPE_LTEQ      },
+        { ">=",      DK_TOKENTYPE_GTEQ      },
 
-        { ":", DK_TOKENTYPE_COLON },
+        { ":",       DK_TOKENTYPE_COLON     },
 
-        { "=", DK_TOKENTYPE_EQ },
-        { "%", DK_TOKENTYPE_MOD },
-        { "+", DK_TOKENTYPE_PLUS },
-        { "-", DK_TOKENTYPE_MINUS },
-        { "*", DK_TOKENTYPE_MUL },
+        { "=",       DK_TOKENTYPE_EQ        },
+        { "%",       DK_TOKENTYPE_MOD       },
+        { "+",       DK_TOKENTYPE_PLUS      },
+        { "-",       DK_TOKENTYPE_MINUS     },
+        { "*",       DK_TOKENTYPE_MUL       },
 
-        { "/", DK_TOKENTYPE_SLASH },
+        { "/",       DK_TOKENTYPE_SLASH     },
 
-        { "<", DK_TOKENTYPE_LT },
-        { ">", DK_TOKENTYPE_GT },
+        { "<",       DK_TOKENTYPE_LT        },
+        { ">",       DK_TOKENTYPE_GT        },
 
-        { "@", DK_TOKENTYPE_REFERENCE },
+        { "@",       DK_TOKENTYPE_REFERENCE },
 
-        { ";", DK_TOKENTYPE_SEMICOLON },
-        { ",", DK_TOKENTYPE_COMMA },
-        { "'", DK_TOKENTYPE_QUOTE },
-        { ".", DK_TOKENTYPE_STOP },
-        { "(", DK_TOKENTYPE_LEFTBRACE },
-        { ")", DK_TOKENTYPE_RIGHTBRACE },
+        { ";",       DK_TOKENTYPE_SEMICOLON },
+        { ",",       DK_TOKENTYPE_COMMA     },
+        { "'",       DK_TOKENTYPE_QUOTE     },
+        { ".",       DK_TOKENTYPE_STOP      },
+        { "(",       DK_TOKENTYPE_LEFTBRACE },
+        { ")",       DK_TOKENTYPE_RIGHTBRACE},
 
-        { "|", DK_TOKENTYPE_OR },
-        { "&", DK_TOKENTYPE_AND },
-        { "^", DK_TOKENTYPE_XOR },
-        { "!", DK_TOKENTYPE_NOT },
+        { "|",       DK_TOKENTYPE_OR        },
+        { "&",       DK_TOKENTYPE_AND       },
+        { "^",       DK_TOKENTYPE_XOR       },
+        { "!",       DK_TOKENTYPE_NOT       },
 
-        { "$", DK_TOKENTYPE_DOLLAR },
+        { "$",       DK_TOKENTYPE_DOLLAR    },
 };
 static const unsigned int reservedTableElements = PL_ARRAY_ELEMENTS( tokenCompareTable );
 
@@ -222,7 +222,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 {
 	if ( handle == NULL )
 	{
-		handle = PL_NEW( DKLexer );
+		handle         = PL_NEW( DKLexer );
 		handle->tokens = PlCreateLinkedList();
 		snprintf( handle->originFile, sizeof( handle->originFile ), "%s", file );
 	}
@@ -230,7 +230,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 	double startTime = PlGetCurrentSeconds();
 
 	unsigned int curLineNum = 0;
-	const char  *p = buf;
+	const char *p           = buf;
 	while ( *p != '\0' )
 	{
 		curLineNum++;
@@ -261,7 +261,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 
 		/* tokenise the line */
 		unsigned int bufSize = PlDetermineLineLength( p ) + 1;
-		char        *line = PlMAllocA( bufSize );
+		char *line           = PlMAllocA( bufSize );
 		PlParseLine( &p, line, bufSize );
 
 		DKLexer_ParseLine( line, file, curLineNum, handle->tokens );

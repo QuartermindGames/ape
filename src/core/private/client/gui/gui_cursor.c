@@ -30,9 +30,9 @@ GuiPanel *guiCreateCursor( GuiPanel *parent, int x, int y )
 		return NULL;
 	}
 
-	GuiPanel *panel = guiCreatePanel( parent, x, y, 32, 32, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
+	GuiPanel *panel       = guiCreatePanel( parent, x, y, 32, 32, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
 	panel->DrawBackground = DrawCursorBackground;
-	panel->Tick = TickCursor;
+	panel->Tick           = TickCursor;
 
 	if ( parent != NULL )
 		parent->cursor = panel;

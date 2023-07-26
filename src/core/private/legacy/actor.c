@@ -131,17 +131,17 @@ Actor *Act_DestroyActor( Actor *self )
 
 ActorType Act_GetType( const Actor *self ) { return self->type; }
 
-void      Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
+void Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
 PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
 void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
 
-void  Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
+void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
 
-void  Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
+void Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
 void *Act_GetUserData( Actor *self ) { return self->userData; }
 
 void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
@@ -232,8 +232,8 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL )
 	{
-		PLLinkedListNode *next  = PlGetNextLinkedListNode( index );
-		Actor            *actor = PlGetLinkedListNodeUserData( index );
+		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
+		Actor *actor           = PlGetLinkedListNodeUserData( index );
 		if ( actor == NULL || actor->sector != sector )
 		{
 			index = next;
@@ -273,8 +273,8 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 			{
 				ApeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
-				PLCollisionPlane plane     = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
-				PLCollision      collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );
+				PLCollisionPlane plane = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
+				PLCollision collision  = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );
 				if ( collision.penetration > 0.0f )
 				{
 					PlgDrawBoundingVolume( &face->bounds, &PL_COLOUR_RED );
@@ -306,8 +306,8 @@ void Act_TickActors( void *userData, double delta )
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL )
 	{
-		PLLinkedListNode *next  = PlGetNextLinkedListNode( index );
-		Actor            *actor = PlGetLinkedListNodeUserData( index );
+		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
+		Actor *actor           = PlGetLinkedListNodeUserData( index );
 		if ( actor == NULL )
 		{
 			PlDestroyLinkedListNode( index );

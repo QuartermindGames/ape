@@ -50,19 +50,19 @@ typedef struct DKASTStatement DKASTStatement;
 
 typedef struct DKASTDeclareStatement
 {
-	DKSymbol          symbol;
-	DKSymbolName      type;
-	bool              isConstant;
-	bool              isTypedef;
-	DKASTStatement   *numElements;
-	PLLinkedList     *children;
+	DKSymbol symbol;
+	DKSymbolName type;
+	bool isConstant;
+	bool isTypedef;
+	DKASTStatement *numElements;
+	PLLinkedList *children;
 	PLLinkedListNode *node;
 } DKASTDeclStatement;
 
 typedef struct DKASTProcedureStatement
 {
-	DKSymbol      symbol;
-	DKSymbolName  returnType;
+	DKSymbol symbol;
+	DKSymbolName returnType;
 	PLLinkedList *arguments;
 } DKASTProcedureStatement;
 
@@ -83,10 +83,10 @@ typedef struct DKASTExpression
 
 typedef struct DKASTStatement
 {
-	DKASTOpCode       opCode;
-	PLLinkedList     *statements;
+	DKASTOpCode opCode;
+	PLLinkedList *statements;
 	PLLinkedListNode *node;
-	void             *data;
+	void *data;
 } DKASTStatement;
 
 static DKASTStatement *CreateASTStatement( DKASTOpCode opCode, DKASTStatement *parent )
@@ -125,7 +125,7 @@ static DKASTStatement *CreateASTStatement( DKASTOpCode opCode, DKASTStatement *p
 typedef struct DKParser
 {
 	PLLinkedList *statements;// DKASTStatement
-	DKLexer      *lexer;
+	DKLexer *lexer;
 	DKLexerToken *token;
 	DKLexerToken *peekToken;
 } DKParser;
@@ -167,11 +167,11 @@ static void SubmitParserError( const char *msg, DKParser *parser, bool abortProg
 	                "%2u : %2u > %4s\n";
 
 	char *err = NULL;
-	int   l = snprintf( err, 0, c, msg,
-	                    parser->token->symbol,
-	                    parser->token->lineNum,
-	                    parser->token->linePos,
-	                    parser->token->path );
+	int l     = snprintf( err, 0, c, msg,
+	                      parser->token->symbol,
+	                      parser->token->lineNum,
+	                      parser->token->linePos,
+	                      parser->token->path );
 
 	err = PL_NEW_( char, l + 1 );
 	snprintf( err, l, c, msg,
@@ -230,7 +230,7 @@ static void ParseStruct( DKParser *parser, DKASTStatement *statement ) {
 
 static DKASTStatement *ParseDecl( DKParser *parser, DKASTStatement *parent )
 {
-	DKASTStatement     *statement = CreateASTStatement( DK_AST_OPCODE_DECL, parent );
+	DKASTStatement *statement         = CreateASTStatement( DK_AST_OPCODE_DECL, parent );
 	DKASTDeclStatement *declStatement = statement->data;
 
 	// Fetch and store the identifier, which should immediately follow
@@ -425,7 +425,7 @@ DKParser *DKParser_ParseProgram( DKLexer *lexer )
 	double startTime = PlGetCurrentSeconds();
 
 	DKParser *parser = PL_NEW( DKParser );
-	parser->lexer = lexer;
+	parser->lexer    = lexer;
 
 	// Create the statements list, which is essentially our AST
 	parser->statements = PlCreateLinkedList();

@@ -3,29 +3,29 @@
 
 #if !defined( _WIN32 )
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
+#	include <AL/al.h>
+#	include <AL/alc.h>
+#	include <AL/efx.h>
+#	include <AL/efx-presets.h>
 
-#include "audio.h"
+#	include "audio.h"
 
 /**
  * Cheekily based on the work I'd previously done here...
  * 	https://github.com/TalonBraveInfo/OpenHoW/blob/master/src/engine/audio/AudioManager.cpp
  */
 
-#if !defined( NDEBUG )
-#	define XAL_CALL( X )                     \
-		{                                     \
-			alGetError();                     \
-			X;                                \
-			unsigned int _err = alGetError(); \
-			assert( _err == AL_NO_ERROR );    \
-		}
-#else
-#	define XAL_CALL( X ) X
-#endif
+#	if !defined( NDEBUG )
+#		define XAL_CALL( X )                     \
+			{                                     \
+				alGetError();                     \
+				X;                                \
+				unsigned int _err = alGetError(); \
+				assert( _err == AL_NO_ERROR );    \
+			}
+#	else
+#		define XAL_CALL( X ) X
+#	endif
 
 typedef struct XALAudioSample
 {
@@ -37,7 +37,7 @@ typedef struct XALAudioSource
 	ALuint id;
 } XALAudioSource;
 
-static ALCdevice  *xalDevice = NULL;
+static ALCdevice *xalDevice   = NULL;
 static ALCcontext *xalContext = NULL;
 
 enum
@@ -47,20 +47,20 @@ enum
 
 	XAL_MAX_EXTENSIONS
 };
-static bool   xalExtensions[ XAL_MAX_EXTENSIONS ];
+static bool xalExtensions[ XAL_MAX_EXTENSIONS ];
 static ALuint xalReverbEffectSlot = 0;
-static ALuint xalReverbSoundSlot = 0;
+static ALuint xalReverbSoundSlot  = 0;
 
-static LPALGENEFFECTS    alGenEffects;
+static LPALGENEFFECTS alGenEffects;
 static LPALDELETEEFFECTS alDeleteEffects;
-static LPALISEFFECT      alIsEffect;
-static LPALEFFECTI       alEffecti;
-static LPALEFFECTF       alEffectf;
+static LPALISEFFECT alIsEffect;
+static LPALEFFECTI alEffecti;
+static LPALEFFECTF alEffectf;
 
-static LPALGENAUXILIARYEFFECTSLOTS    alGenAuxiliaryEffectSlots;
+static LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots;
 static LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots;
-static LPALISAUXILIARYEFFECTSLOT      alIsAuxiliaryEffectSlot;
-static LPALAUXILIARYEFFECTSLOTI       alAuxiliaryEffectSloti;
+static LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot;
+static LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti;
 
 static void Audio_OpenAL_Shutdown( void );
 
@@ -223,14 +223,14 @@ const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void )
 	static ApeAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 
-	driverInterface.Initialize = Initialize;
-	driverInterface.Shutdown = Audio_OpenAL_Shutdown;
-	driverInterface.Tick = Audio_OpenAL_Tick;
-	driverInterface.Pause = Pause;
-	driverInterface.CacheSample = CacheSample;
-	driverInterface.FreeSample = FreeSample;
-	driverInterface.EmitSample = EmitSample;
-	driverInterface.CreateSource = CreateSource;
+	driverInterface.Initialize    = Initialize;
+	driverInterface.Shutdown      = Audio_OpenAL_Shutdown;
+	driverInterface.Tick          = Audio_OpenAL_Tick;
+	driverInterface.Pause         = Pause;
+	driverInterface.CacheSample   = CacheSample;
+	driverInterface.FreeSample    = FreeSample;
+	driverInterface.EmitSample    = EmitSample;
+	driverInterface.CreateSource  = CreateSource;
 	driverInterface.DestroySource = DestroySource;
 
 	return &driverInterface;
@@ -238,7 +238,7 @@ const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void )
 
 #else
 
-#include "audio.h"
+#	include "audio.h"
 
 const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void ) { return NULL; }
 

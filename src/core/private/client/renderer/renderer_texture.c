@@ -17,8 +17,8 @@ ApeTexture *YnCore_Texture_Load( const char *path )
 	if ( internal == NULL )
 		return NULL;
 
-	ApeTexture *texture  = PL_NEW( ApeTexture );
-	texture->internal = internal;
+	ApeTexture *texture = PL_NEW( ApeTexture );
+	texture->internal   = internal;
 
 	apeSetupReference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, CleanupTexture, texture );
 
@@ -43,7 +43,7 @@ PLGTexture *apeGetFallbackTexture( void )
 static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
 {
 	PLColourFormat cFormat;
-	PLImageFormat  iFormat;
+	PLImageFormat iFormat;
 
 	switch ( numChannels )
 	{

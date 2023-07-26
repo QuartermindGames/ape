@@ -13,14 +13,14 @@ static const ApeAudioDriverInterface *audioDriverInterface = NULL;
 	}
 
 static ApeAudioSample *audioSamples = NULL;
-static uint32_t     numSamples   = 0;
-static uint32_t     maxSamples   = 4096;
+static uint32_t numSamples          = 0;
+static uint32_t maxSamples          = 4096;
 
 static bool audioInitialized = false;
 static bool audioPaused      = false;
 
 static float audioVolume = 1.0f;
-float        Audio_GetGlobalVolume( void )
+float Audio_GetGlobalVolume( void )
 {
 	return audioVolume;
 }
@@ -48,7 +48,6 @@ static void TestAudioCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv
 
 static void PlayAudioCommand( unsigned int argc, char **argv )
 {
-
 }
 
 void apeInitializeAudio_( void )
@@ -203,9 +202,9 @@ ApeAudioSample *Audio_CacheSample( const char *path )
 	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
 
 	/* attempt to load in the wav */
-	uint32_t        bufferSize;
+	uint32_t bufferSize;
 	YNCoreAudioWaveFormat format;
-	uint8_t        *data = apeLoadWav( path, &format, &bufferSize );
+	uint8_t *data = apeLoadWav( path, &format, &bufferSize );
 	if ( data == NULL )
 	{
 		PRINT_WARNING( "Failed to load wav: %s\n", path );

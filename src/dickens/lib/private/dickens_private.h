@@ -28,7 +28,7 @@ typedef enum DKSymbolVisibility
 
 typedef struct DKSymbol
 {
-	DKSymbolName       name;
+	DKSymbolName name;
 	DKSymbolVisibility visibility;
 } DKSymbol;
 
@@ -47,16 +47,16 @@ typedef enum DKDataType
 
 typedef struct DKLexerToken
 {
-	DKSymbolName      symbol;
-	DKTokenType       type;
-	PLPath            path;
-	unsigned int      lineNum;
-	unsigned int      linePos;
+	DKSymbolName symbol;
+	DKTokenType type;
+	PLPath path;
+	unsigned int lineNum;
+	unsigned int linePos;
 	PLLinkedListNode *node;
 } DKLexerToken;
 
 typedef struct DKLexer
 {
-	PLPath        originFile;
+	PLPath originFile;
 	PLLinkedList *tokens;
 } DKLexer;

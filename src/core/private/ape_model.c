@@ -144,7 +144,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	else
 	{
 		userData.numMaterials = ndGetNumOfChildren( materialArray );
-		NdBranch *n       = ndGetFirstChild( materialArray );
+		NdBranch *n           = ndGetFirstChild( materialArray );
 		for ( unsigned int i = 0; i < userData.numMaterials; ++i )
 		{
 			assert( n != NULL );
@@ -166,7 +166,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 		}
 	}
 
-	PLGMesh **meshes       = PL_NEW_( PLGMesh *, numMeshes );
+	PLGMesh **meshes   = PL_NEW_( PLGMesh *, numMeshes );
 	NdBranch *meshNode = ndGetFirstChild( meshArray );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
@@ -182,7 +182,7 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	if ( ndGetBoolByName( root, "isAnimated", false ) )
 	{
 		NdBranch *bonesList = ndGetChildByName( root, "bones" );
-		uint32_t numBones       = ndGetNumOfChildren( bonesList );
+		uint32_t numBones   = ndGetNumOfChildren( bonesList );
 
 		uint32_t rootBone = ( uint32_t ) ndGetI32ByName( root, "rootBone", 0 );
 		assert( rootBone < numBones );

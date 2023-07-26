@@ -32,8 +32,8 @@ static bool AssembleCallback( const char *parm )
 	snprintf( outPath, sizeof( PLPath ), "%s.obj", PlGetFileName( parm ) );
 
 	const char *fileBuf = ( const char * ) PlGetFileData( file );
-	size_t      fileLength = PlGetFileSize( file );
-	bool        status = DKAssembler_AssembleFromBuffer( fileBuf, fileLength, "out.obj" );
+	size_t fileLength   = PlGetFileSize( file );
+	bool status         = DKAssembler_AssembleFromBuffer( fileBuf, fileLength, "out.obj" );
 
 	PlCloseFile( file );
 
@@ -69,7 +69,7 @@ static void BuildFile( const char *path )
 
 	/* copy it into a null-terminated buffer */
 	size_t fileSize = PlGetFileSize( file );
-	char  *buf = PlMAllocA( fileSize + 1 );
+	char *buf       = PlMAllocA( fileSize + 1 );
 	memcpy( buf, PlGetFileData( file ), fileSize );
 	PlCloseFile( file );
 

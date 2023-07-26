@@ -31,15 +31,15 @@ typedef struct IdBrushFace
 {
 	PLVector3 x, y, z;
 
-	PLVector3    vertices[ MAX_FACE_VERTICES ];
+	PLVector3 vertices[ MAX_FACE_VERTICES ];
 	unsigned int numVertices;
 
-	char      textureName[ 64 ];
+	char textureName[ 64 ];
 	PLVector4 tm[ 2 ];
-	float     rotation;
+	float rotation;
 	PLVector2 scale;
 	PLVector3 normal;
-	float     distance; /* distance from center */
+	float distance; /* distance from center */
 } IdBrushFace;
 
 typedef struct IdBrush
@@ -55,7 +55,7 @@ typedef struct IdProperty
 
 typedef struct IdEntity
 {
-	char          name[ 16 ];
+	char name[ 16 ];
 	PLLinkedList *properties;
 	PLLinkedList *brushes;
 } IdEntity;
@@ -70,9 +70,9 @@ typedef struct IdMap
 
 enum
 {
-	BLOCK_CONTEXT_NONE = 0U,
+	BLOCK_CONTEXT_NONE   = 0U,
 	BLOCK_CONTEXT_ENTITY = 1U,
-	BLOCK_CONTEXT_BRUSH = 2U,
+	BLOCK_CONTEXT_BRUSH  = 2U,
 
 	MAX_BLOCK_LEVELS
 };
@@ -88,7 +88,7 @@ static void CalculateFaceNormal( IdBrushFace *face )
 		PlVectorIndex( z, i ) = PlVectorIndex( face->y, i );
 	}
 
-	face->normal = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
+	face->normal   = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
 	face->distance = PlVector3DotProduct( z, face->normal );
 }
 
@@ -100,7 +100,7 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 		return;
 
 	static IdEntity *currentEntity = NULL;
-	static IdBrush  *currentBrush = NULL;
+	static IdBrush *currentBrush   = NULL;
 
 	if ( *p == '{' )
 	{
@@ -114,8 +114,8 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 			case BLOCK_CONTEXT_ENTITY:
 			{
 				dprint( "entity\n" );
-				IdEntity *entity = calloc( 1, sizeof( IdEntity ) );
-				entity->brushes = PlCreateLinkedList();
+				IdEntity *entity   = calloc( 1, sizeof( IdEntity ) );
+				entity->brushes    = PlCreateLinkedList();
 				entity->properties = PlCreateLinkedList();
 				PlInsertLinkedListNode( map->entities, entity );
 				currentEntity = entity;
@@ -131,7 +131,7 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 				}
 
 				IdBrush *brush = PlCAllocA( 1, sizeof( IdBrush ) );
-				brush->faces = PlCreateLinkedList();
+				brush->faces   = PlCreateLinkedList();
 				PlInsertLinkedListNode( currentEntity->brushes, brush );
 				currentBrush = brush;
 				break;
@@ -157,7 +157,7 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 			case BLOCK_CONTEXT_NONE:
 				/*dprint( "none\n" );*/
 				currentEntity = NULL;
-				currentBrush = NULL;
+				currentBrush  = NULL;
 				break;
 			case BLOCK_CONTEXT_ENTITY:
 				/*dprint( "entity\n" );*/
@@ -204,9 +204,9 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 		case BLOCK_CONTEXT_BRUSH:
 		{
 			/* read in face */
-			bool         status;
+			bool status;
 			IdBrushFace *face = PlCAllocA( 1, sizeof( IdBrushFace ) );
-			face->x = PlParseVector( &p, &status );
+			face->x           = PlParseVector( &p, &status );
 			dprint( "%s ", PlPrintVector3( &face->x, pl_int_var ) );
 			face->y = PlParseVector( &p, &status );
 			dprint( "%s ", PlPrintVector3( &face->y, pl_int_var ) );
@@ -244,7 +244,7 @@ static void ReadMap( IdMap *map, const char *path )
 
 	/* now start reading through every line */
 	static unsigned int lineNum = 0;
-	const char         *p = ( const char         *) PlGetFileData( file );
+	const char *p               = ( const char               *) PlGetFileData( file );
 	while ( *p != '\0' )
 	{
 		lineNum++;
@@ -308,7 +308,7 @@ static bool GetIntersection( const IdBrushFace *faceA, const IdBrushFace *faceB,
 static void WriteBrush( NLNode *root, NLNode *materialsNode, IdBrush *brush )
 {
 	// Move all the faces into an array
-	unsigned int  numFaces;
+	unsigned int numFaces;
 	IdBrushFace **faces = ( IdBrushFace ** ) PlArrayFromLinkedList( brush->faces, &numFaces );
 	// And now, the horrible part
 	for ( unsigned int i = 0; i < numFaces - 3; ++i )
@@ -341,7 +341,7 @@ static void WriteBrush( NLNode *root, NLNode *materialsNode, IdBrush *brush )
 			continue;
 		}
 
-		NLNode *faceNode = NL_PushBackObj( facesNode, "face" );
+		NLNode *faceNode     = NL_PushBackObj( facesNode, "face" );
 		NLNode *verticesNode = NL_PushBackObjArray( faceNode, "vertices" );
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
@@ -391,18 +391,18 @@ static void WriteWorldMesh( NLNode *root, PLLinkedList *brushes )
 	NLNode *worldMeshNode = NL_PushBackObj( root, "worldMesh" );
 
 	NLNode *materials = NL_PushBackStrArray( worldMeshNode, "materials", NULL, 0 );
-	NLNode *vertices = NL_PushBackF32Array( worldMeshNode, "vertices", NULL, 0 );
-	NLNode *faces = NL_PushBackObjArray( worldMeshNode, "faces" );
+	NLNode *vertices  = NL_PushBackF32Array( worldMeshNode, "vertices", NULL, 0 );
+	NLNode *faces     = NL_PushBackObjArray( worldMeshNode, "faces" );
 
 	PLLinkedListNode *brushNode = PlGetFirstNode( brushes );
 	while ( brushNode != NULL )
 	{
-		IdBrush          *brush = PlGetLinkedListNodeUserData( brushNode );
+		IdBrush *brush             = PlGetLinkedListNodeUserData( brushNode );
 		PLLinkedListNode *faceNode = PlGetFirstNode( brush->faces );
 		while ( faceNode != NULL )
 		{
-			IdBrushFace *face = PlGetLinkedListNodeUserData( faceNode );
-			NLNode      *materialNode = NL_GetFirstChild( materials );
+			IdBrushFace *face    = PlGetLinkedListNodeUserData( faceNode );
+			NLNode *materialNode = NL_GetFirstChild( materials );
 			while ( materialNode != NULL )
 			{
 				char materialPath[ 64 ];
@@ -503,7 +503,7 @@ int main( int argc, char **argv )
 	{
 		printf( "No output path specified, using default.\nSpecify using \"-out <path>\" argument.\n" );
 
-		char       *tmpPath = PlMAllocA( strlen( PlGetFileName( inputPath ) ) + strlen( "." WORLD_EXTENSION ) );
+		char *tmpPath = PlMAllocA( strlen( PlGetFileName( inputPath ) ) + strlen( "." WORLD_EXTENSION ) );
 		const char *c = strrchr( inputPath, '.' );
 		strncpy( tmpPath, inputPath, c - inputPath );
 		strcat( tmpPath, "." WORLD_EXTENSION );
@@ -514,7 +514,7 @@ int main( int argc, char **argv )
 	printf( "INPUT:  %s\n", inputPath );
 	printf( "OUTPUT: %s\n", outputPath );
 
-	IdMap *map = PlMAllocA( sizeof( IdMap ) );
+	IdMap *map    = PlMAllocA( sizeof( IdMap ) );
 	map->entities = PlCreateLinkedList();
 	map->textures = PlCreateLinkedList();
 

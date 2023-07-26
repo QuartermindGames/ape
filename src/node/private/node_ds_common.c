@@ -44,9 +44,9 @@ float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements )
 	return out;
 }
 
-PLVector2    *ndDS_DeserializeVector2( NdBranch *in, PLVector2 *out ) { return ( PLVector2    *) ndDS_DeserializeVector( in, ( float * ) out, 2 ); }
-PLVector3    *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out ) { return ( PLVector3    *) ndDS_DeserializeVector( in, ( float * ) out, 3 ); }
-PLVector4    *ndDS_DeserializeVector4( NdBranch *in, PLVector4 *out ) { return ( PLVector4    *) ndDS_DeserializeVector( in, ( float * ) out, 4 ); }
+PLVector2 *ndDS_DeserializeVector2( NdBranch *in, PLVector2 *out ) { return ( PLVector2 * ) ndDS_DeserializeVector( in, ( float * ) out, 2 ); }
+PLVector3 *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out ) { return ( PLVector3 * ) ndDS_DeserializeVector( in, ( float * ) out, 3 ); }
+PLVector4 *ndDS_DeserializeVector4( NdBranch *in, PLVector4 *out ) { return ( PLVector4 * ) ndDS_DeserializeVector( in, ( float * ) out, 4 ); }
 PLQuaternion *ndDS_DeserializeQuaternion( NdBranch *in, PLQuaternion *out ) { return ( PLQuaternion * ) ndDS_DeserializeVector( in, ( float * ) out, 4 ); }
 
 NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour )

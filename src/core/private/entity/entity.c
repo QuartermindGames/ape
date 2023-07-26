@@ -87,7 +87,7 @@ void apeRemoveAllEntityComponents( ApeEntity *self )
 	while ( node != NULL )
 	{
 		ApeEntityComponent *component = PlGetLinkedListNodeUserData( node );
-		node                       = PlGetNextLinkedListNode( node );
+		node                          = PlGetNextLinkedListNode( node );
 		apeRemoveEntityComponent( self, component );
 	}
 }

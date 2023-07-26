@@ -2,7 +2,7 @@
 
 #include "gui_private.h"
 
-typedef void( *GUIButtonCallback )( void *userData );
+typedef void ( *GUIButtonCallback )( void *userData );
 typedef struct GUIButton
 {
 	GUIButtonCallback callback;

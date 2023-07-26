@@ -9,7 +9,7 @@
 
 typedef struct Serializer
 {
-	FILE    *file;
+	FILE *file;
 	uint32_t version;
 } Serializer;
 
@@ -52,8 +52,8 @@ Serializer *Serializer_Create( const char *path, SerializerMode mode )
 	}
 
 	Serializer *serializer = PL_NEW( Serializer );
-	serializer->file = file;
-	serializer->version = version;
+	serializer->file       = file;
+	serializer->version    = version;
 
 	return serializer;
 }

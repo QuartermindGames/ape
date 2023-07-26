@@ -11,7 +11,8 @@
 #include "renderer/renderer.h"
 #include "audio/audio.h"
 
-typedef struct ClientState {
+typedef struct ClientState
+{
 	NetSocket *netSocket;
 	bool isConnected;
 
@@ -21,7 +22,8 @@ typedef struct ClientState {
 } ClientState;
 static ClientState clientState;
 
-void apeInitializeClient_( void ) {
+void apeInitializeClient_( void )
+{
 	CLIENT_PRINT( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
@@ -33,14 +35,16 @@ void apeInitializeClient_( void ) {
 	apeInitializeInput_();
 }
 
-void apeShutdownClient_( void ) {
+void apeShutdownClient_( void )
+{
 	apeShutdownGUI_();
 	apeShutdownEditor_();
 	apeShutdownAudio_();
 	apeShutdownRenderer_();
 }
 
-void apeDrawClient( ApeViewport *viewport ) {
+void apeDrawClient( ApeViewport *viewport )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	apeBeginDraw( viewport );
@@ -54,17 +58,22 @@ void apeDrawClient( ApeViewport *viewport ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-static void apeHandleClientConnectionState_( void ) {
+static void apeHandleClientConnectionState_( void )
+{
 	/* check if the client is connected to anything */
-	if ( !clientState.isConnected ) {
+	if ( !clientState.isConnected )
+	{
 		/* socket hasn't been created, so... */
-		if ( clientState.netSocket == NULL ) {
+		if ( clientState.netSocket == NULL )
+		{
 			return;
 		}
 
 		NetConnectionState state = Net_GetConnectionStatus( clientState.netSocket );
-		if ( state != NET_CONNECTION_CONNECTED ) {
-			if ( state == NET_CONNECTION_FAILED ) {
+		if ( state != NET_CONNECTION_CONNECTED )
+		{
+			if ( state == NET_CONNECTION_FAILED )
+			{
 				apeDisconnectClient_();
 				CLIENT_PRINT_WARNING( "Connection failed!\n" );
 			}
@@ -76,7 +85,8 @@ static void apeHandleClientConnectionState_( void ) {
 	}
 }
 
-void apeTickClient( void ) {
+void apeTickClient( void )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	apeBeginInputFrame_();
@@ -101,9 +111,11 @@ void apeTickClient( void ) {
  * Begin connection process - client will continue connecting per
  * tick until success or failure, and then begin handshake process.
  */
-void apeInitiateClientConnection_( const char *ip, unsigned short port ) {
+void apeInitiateClientConnection_( const char *ip, unsigned short port )
+{
 	clientState.netSocket = Net_OpenSocket( ip, port, false );
-	if ( clientState.netSocket == NULL ) {
+	if ( clientState.netSocket == NULL )
+	{
 		CLIENT_PRINT_WARNING( "Failed to open client socket!\n" );
 		return;
 	}
@@ -111,8 +123,10 @@ void apeInitiateClientConnection_( const char *ip, unsigned short port ) {
 	CLIENT_PRINT( "Initiated connection to %s, pending...\n", ip );
 }
 
-void apeDisconnectClient_( void ) {
-	if ( clientState.netSocket != NULL ) {
+void apeDisconnectClient_( void )
+{
+	if ( clientState.netSocket != NULL )
+	{
 		/* todo: let the server know first? */
 		Net_CloseSocket( clientState.netSocket );
 		clientState.netSocket = NULL;

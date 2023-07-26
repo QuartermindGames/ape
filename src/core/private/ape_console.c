@@ -89,7 +89,7 @@ static void LoadUserConfig( void )
 	while ( child != NULL )
 	{
 		const char *cvarName = ndGetName( child );
-		char        cvarValue[ PL_SYSTEM_MAX_PATH ];
+		char cvarValue[ PL_SYSTEM_MAX_PATH ];
 		if ( ndGetStr( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
 			PlSetConsoleVariableByName( cvarName, cvarValue );
 		else
@@ -110,7 +110,7 @@ static void SaveUserConfig( void )
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
-	size_t              numVars;
+	size_t numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
 	NdBranch *root = ndPushBackObject( NULL, "config" );

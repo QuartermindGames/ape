@@ -102,7 +102,8 @@ void apeDrawBitmapString( ApeBitmapFont *font, float x, float y, float spacing, 
 
 	apeBeginBitmapFontDraw( font );
 
-	if ( shadow ) {
+	if ( shadow )
+	{
 		apeAddBitmapStringToBatch( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
 	}
 
@@ -130,7 +131,7 @@ void apeDrawBitmapFont( ApeBitmapFont *font )
 
 void YR_Font_Initialize( void )
 {
-	defaultFont		 = apeCacheBitmapFont( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
+	defaultFont      = apeCacheBitmapFont( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
 	defaultFontSmall = apeCacheBitmapFont( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
@@ -179,15 +180,15 @@ ApeBitmapFont *apeCacheBitmapFont( const char *materialPath, int w, int h, int c
 		return NULL;
 	}
 
-	font		   = PlMAlloc( sizeof( ApeBitmapFont ), true );
+	font           = PlMAlloc( sizeof( ApeBitmapFont ), true );
 	font->material = material;
-	font->mesh	   = mesh;
-	font->w		   = w;
-	font->h		   = h;
-	font->cw	   = cw;
-	font->ch	   = ch;
-	font->start	   = start;
-	font->end	   = end;
+	font->mesh     = mesh;
+	font->w        = w;
+	font->h        = h;
+	font->cw       = cw;
+	font->ch       = ch;
+	font->start    = start;
+	font->end      = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 

@@ -6,7 +6,7 @@
 
 /* Loader Packed Image Format data */
 
-#define CHANNEL_RED	  ( 1 << 0 )
+#define CHANNEL_RED   ( 1 << 0 )
 #define CHANNEL_GREEN ( 1 << 1 )
 #define CHANNEL_BLUE  ( 1 << 2 )
 #define CHANNEL_ALPHA ( 1 << 3 )
@@ -36,24 +36,24 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 	if ( !( identifier[ 0 ] == 'G' && identifier[ 1 ] == 'F' && identifier[ 2 ] == 'X' && identifier[ 3 ] == '0' ) )
 		PRINT_ERROR( "Invalid identifier for \"%s\", expected GFX0!\n", path );
 
-	bool	 status;
-	uint8_t	 flags	   = PlReadInt8( filePtr, &status );
-	uint16_t width	   = PlReadInt16( filePtr, false, &status );
-	uint16_t height	   = PlReadInt16( filePtr, false, &status );
+	bool status;
+	uint8_t flags      = PlReadInt8( filePtr, &status );
+	uint16_t width     = PlReadInt16( filePtr, false, &status );
+	uint16_t height    = PlReadInt16( filePtr, false, &status );
 	uint16_t numBlocks = PlReadInt16( filePtr, false, &status );
 	if ( !status )
 		PRINT_ERROR( "Failed to read header for \"%s\"!\n", path );
 
-	PLImageFormat  imageFormat;
+	PLImageFormat imageFormat;
 	PLColourFormat colourFormat;
 	if ( flags & CHANNEL_ALPHA )
 	{
-		imageFormat	 = PL_IMAGEFORMAT_RGBA8;
+		imageFormat  = PL_IMAGEFORMAT_RGBA8;
 		colourFormat = PL_COLOURFORMAT_RGBA;
 	}
 	else
 	{
-		imageFormat	 = PL_IMAGEFORMAT_RGB8;
+		imageFormat  = PL_IMAGEFORMAT_RGB8;
 		colourFormat = PL_COLOURFORMAT_RGB;
 	}
 

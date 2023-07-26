@@ -1,11 +1,11 @@
-if(WIN32 AND MSVC)
+if (WIN32 AND MSVC)
     set(APP_ICON_RESOURCE_WINDOWS "launcher.rc")
-endif()
+endif ()
 
 add_executable(ApeSDL2Shell WIN32
-    launcher.c
-    ${APP_ICON_RESOURCE_WINDOWS}
-)
+        launcher.c
+        ${APP_ICON_RESOURCE_WINDOWS}
+        )
 add_dependencies(ApeSDL2Shell
         plcore
         plgraphics
@@ -15,8 +15,8 @@ add_dependencies(ApeSDL2Shell
         )
 
 set_target_properties(ApeSDL2Shell PROPERTIES
-    FOLDER "Shells"
-)
+        FOLDER "Shells"
+        )
 
 # Setup link libraries
 

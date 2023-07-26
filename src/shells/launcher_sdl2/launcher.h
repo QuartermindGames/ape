@@ -13,24 +13,24 @@
 extern int launcherLog;
 
 #define Print( ... ) PlLogMessage( launcherLog, __VA_ARGS__ )
-#define PrintWarn( ... )                                         \
-	{                                                            \
-		PlLogMessage( launcherLog, __VA_ARGS__ );                \
+#define PrintWarn( ... )                                                             \
+	{                                                                                \
+		PlLogMessage( launcherLog, __VA_ARGS__ );                                    \
 		YnCore_ShellInterface_DisplayMessageBox( APE_MESSAGE_WARNING, __VA_ARGS__ ); \
 	}
 
 #ifdef NDEBUG
-#	define PrintError( ... )                                      \
-		{                                                          \
-			PlLogMessage( launcherLog, __VA_ARGS__ );              \
+#	define PrintError( ... )                                                         \
+		{                                                                             \
+			PlLogMessage( launcherLog, __VA_ARGS__ );                                 \
 			YnCore_ShellInterface_DisplayMessageBox( OS_MESSAGE_ERROR, __VA_ARGS__ ); \
-			exit( EXIT_FAILURE );                                  \
+			exit( EXIT_FAILURE );                                                     \
 		}
 #else
-#	define PrintError( ... )                                      \
-		{                                                          \
-			PlLogMessage( launcherLog, __VA_ARGS__ );              \
+#	define PrintError( ... )                                                          \
+		{                                                                              \
+			PlLogMessage( launcherLog, __VA_ARGS__ );                                  \
 			YnCore_ShellInterface_DisplayMessageBox( APE_MESSAGE_ERROR, __VA_ARGS__ ); \
-			abort();                                               \
+			abort();                                                                   \
 		}
 #endif

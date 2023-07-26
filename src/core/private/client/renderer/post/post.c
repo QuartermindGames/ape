@@ -16,10 +16,10 @@ enum
 };
 
 static const PostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
-static bool                     postProcessInit = false;
+static bool postProcessInit = false;
 
 static PLGFrameBuffer *ppBuffer = NULL;
-static PLGTexture     *ppAttachment = NULL;
+static PLGTexture *ppAttachment = NULL;
 
 static void RegisterPostEffects( void )
 {

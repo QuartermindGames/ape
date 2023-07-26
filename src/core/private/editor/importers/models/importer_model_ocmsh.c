@@ -67,9 +67,9 @@ static void OC_MSH_ParseFaces( PLFile *file, int32_t *facesNum )
 
 	for ( int32_t i = 0; i < numFaces; ++i )
 	{
-		ocFaces[ i ].x = PlReadInt16( file, false, NULL );
-		ocFaces[ i ].y = PlReadInt16( file, false, NULL );
-		ocFaces[ i ].z = PlReadInt16( file, false, NULL );
+		ocFaces[ i ].x         = PlReadInt16( file, false, NULL );
+		ocFaces[ i ].y         = PlReadInt16( file, false, NULL );
+		ocFaces[ i ].z         = PlReadInt16( file, false, NULL );
 		ocFaces[ i ].textureId = PlReadInt16( file, false, NULL );
 	}
 
@@ -95,7 +95,7 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 		return NULL;
 	}
 
-	int32_t fileSize = PlReadInt32( file, false, NULL );
+	int32_t fileSize     = PlReadInt32( file, false, NULL );
 	int32_t realFileSize = ( int32_t ) PlGetFileSize( file );
 	if ( fileSize != realFileSize )
 	{
@@ -109,13 +109,13 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	OC_MSH_ParseFaces( file, &numTriangles );
 
 	PLGMesh **meshes = PlCAllocA( 1, sizeof( PLGMesh * ) );
-	PLMModel *model = PlmCreateStaticModel( meshes, 1 );
+	PLMModel *model  = PlmCreateStaticModel( meshes, 1 );
 	if ( model == NULL )
 	{
 		edPrint_( ED_LOG_WARN, "Failed to create model container!\nPL: %s\n", PlGetError() );
 	}
 
-	meshes[ 0 ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
+	meshes[ 0 ]                = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
 	meshes[ 0 ]->materialIndex = 0;
 
 	/* we've swapped the y and z below on purpose to match Yin's awkward coordinates ._. */
@@ -138,7 +138,7 @@ static PLMModel *OC_MSH_ParseFile( PLFile *file )
 	}
 
 	model->numMaterials = 1;
-	model->materials = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
+	model->materials    = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
 	snprintf( model->materials[ 0 ], sizeof( PLPath ), "materials/editor/default.mat.n" );
 
 	PlmGenerateModelNormals( model, true );

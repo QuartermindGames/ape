@@ -7,7 +7,8 @@
 /**
  * Standard transform structure.
  */
-typedef struct ApeSceneTransform {
+typedef struct ApeSceneTransform
+{
 	PLVector3 translation;
 	PLVector3 scale;
 	PLQuaternion rotation;

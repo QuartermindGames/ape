@@ -67,11 +67,11 @@ void PS_CacheEmitterTemplate( const char *path )
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
 	emitter->emissionRate = ndGetI32ByName( root, "emissionRate", 2 );
-	emitter->emissionVar = ndGetI32ByName( root, "emissionVar", 2 );
+	emitter->emissionVar  = ndGetI32ByName( root, "emissionVar", 2 );
 
-	emitter->particleLife = ndGetI32ByName( root, "particleLife", 10 );
+	emitter->particleLife    = ndGetI32ByName( root, "particleLife", 10 );
 	emitter->particleLifeVar = ndGetI32ByName( root, "particleLifeVar", 5 );
-	emitter->maxParticles = ndGetI32ByName( root, "maxParticles", 100 );
+	emitter->maxParticles    = ndGetI32ByName( root, "maxParticles", 100 );
 
 	emitter->life = ndGetI32ByName( root, "life", 0 );
 
@@ -111,7 +111,7 @@ PSEmitter *PS_SpawnEmitter( void )
 		PRINT_ERROR( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 
 	emitter->startScale = 10.0f;
-	emitter->endScale = 0.0f;
+	emitter->endScale   = 0.0f;
 
 	return emitter;
 }
@@ -128,7 +128,7 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 	while ( node != NULL )
 	{
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
+		node                 = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
 
@@ -165,7 +165,7 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 	particle->bounds.origin = particle->transform.translation;
 
 	particle->oldColour = particle->colour;
-	particle->colour = PlAddColourF32( &particle->colour, &particle->deltaColour );
+	particle->colour    = PlAddColourF32( &particle->colour, &particle->deltaColour );
 
 	particle->scale += particle->deltaScale;
 
@@ -186,12 +186,12 @@ void PS_TickEmitter( PSEmitter *emitter )
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
 		PSParticle *particle = PlMAlloc( sizeof( PSParticle ), true );
-		particle->emitter = emitter;
+		particle->emitter    = emitter;
 
 		PLVector3 translationMod;
-		translationMod.x = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
-		translationMod.y = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
-		translationMod.z = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
+		translationMod.x                = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
+		translationMod.y                = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
+		translationMod.z                = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
 		particle->life = emitter->particleLife + ( emitter->particleLifeVar * U_Rand_I32( 100 ) );
@@ -201,19 +201,19 @@ void PS_TickEmitter( PSEmitter *emitter )
 		startColour.g = emitter->startColour.g + ( emitter->startColourVar.g * PlGenerateRandomFloat( 1.0f ) );
 		startColour.b = emitter->startColour.b + ( emitter->startColourVar.b * PlGenerateRandomFloat( 1.0f ) );
 		startColour.a = emitter->startColour.a + ( emitter->startColourVar.a * PlGenerateRandomFloat( 1.0f ) );
-		endColour.r = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
-		endColour.g = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
-		endColour.b = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
-		endColour.a = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
+		endColour.r   = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
+		endColour.g   = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
+		endColour.b   = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
+		endColour.a   = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
 
-		particle->colour = startColour;
+		particle->colour        = startColour;
 		particle->deltaColour.r = ( ( endColour.r - startColour.r ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.g = ( ( endColour.g - startColour.g ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
-		float startScale = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
-		float endScale = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float startScale     = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float endScale       = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
 		particle->bounds.maxs = PLVector3( 2.0f, 2.0f, 2.0f );
@@ -226,7 +226,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 
 	/* simulate all of the existing particles that we've emitted */
-	unsigned int      i = 0;
+	unsigned int i         = 0;
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
@@ -244,7 +244,7 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 
 	emitter->bounds.absOrigin = PLVector3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
-	emitter->bounds.origin = emitter->transform.translation;
+	emitter->bounds.origin    = emitter->transform.translation;
 
 	emitter->numTicks++;
 }

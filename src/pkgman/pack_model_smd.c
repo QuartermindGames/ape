@@ -185,11 +185,11 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		Error( "Failed to create model container!\nPL: %s\n", PlGetError() );
 
 	model->numMaterials = numMeshes;
-	model->materials = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
+	model->materials    = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
 
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
-		meshes[ i ] = smdMeshes[ i ].mesh;
+		meshes[ i ]                = smdMeshes[ i ].mesh;
 		meshes[ i ]->materialIndex = i;
 
 		if ( strstr( smdMeshes[ i ].material, "/" ) != NULL || strstr( smdMeshes[ i ].material, "\\" ) != NULL )
@@ -202,8 +202,8 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		 * extension stripped out, so we can ensure the
 		 * textures are loaded from an appropriate subdir */
 		const char *fileName = PlGetFileName( path );
-		size_t l = strlen( fileName ) - 3;
-		char *buf = calloc( l + 1, sizeof( char ) );
+		size_t l             = strlen( fileName ) - 3;
+		char *buf            = calloc( l + 1, sizeof( char ) );
 		if ( buf != NULL )
 		{
 			snprintf( buf, l, "%s", fileName );

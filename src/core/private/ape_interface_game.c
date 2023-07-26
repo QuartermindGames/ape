@@ -18,16 +18,18 @@
  * PRIVATE
  ****************************************/
 
-typedef enum InputTarget {
+typedef enum InputTarget
+{
 	INPUT_TARGET_MENU, /* menu mode */
 	INPUT_TARGET_GAME, /* game mode */
 } InputTarget;
 static InputTarget inputTarget = INPUT_TARGET_MENU;
-static MenuState menuState = MENU_STATE_START;
+static MenuState menuState     = MENU_STATE_START;
 
 static ApeWorld *currentWorld = NULL;
 
-static void SpawnWorldCommand( unsigned int argc, char **argv ) {
+static void SpawnWorldCommand( unsigned int argc, char **argv )
+{
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
 	apeSpawnWorld( path );
@@ -41,10 +43,11 @@ const GameModeInterface *game_modeInterface;
 
 GameState oge_gameState_;
 
-void apeInitializeGame( void ) {
+void apeInitializeGame( void )
+{
 	PRINT( "Initializing Game...\n" );
 
-	globalGameLog = PlAddLogLevel( "game", PL_COLOUR_WHITE, true );
+	globalGameLog      = PlAddLogLevel( "game", PL_COLOUR_WHITE, true );
 	globalGameDebugLog = PlAddLogLevel( "game/debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )
 	                                    true
@@ -53,7 +56,7 @@ void apeInitializeGame( void ) {
 #endif
 	);
 	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, true );
-	globalGameErrorLog = PlAddLogLevel( "game/error", PL_COLOUR_RED, true );
+	globalGameErrorLog   = PlAddLogLevel( "game/error", PL_COLOUR_RED, true );
 
 	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, SpawnWorldCommand );
 
@@ -62,11 +65,13 @@ void apeInitializeGame( void ) {
 	apeInitializeEntityManager();
 
 	game_modeInterface = gameGetModeInterface();
-	if ( game_modeInterface == NULL ) {
+	if ( game_modeInterface == NULL )
+	{
 		PRINT_ERROR( "Failed to get game interface!\n" );
 	}
 
-	if ( !game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) ) {
+	if ( !game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) )
+	{
 		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
 	}
 
@@ -76,18 +81,21 @@ void apeInitializeGame( void ) {
 	PRINT( "Game initialized!\n" );
 }
 
-void apeShutdownGame( void ) {
+void apeShutdownGame( void )
+{
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 
 	apeShutdownEntityManager();
 }
 
-MenuState gameGetMenuState( void ) {
+MenuState gameGetMenuState( void )
+{
 	return menuState;
 }
 
-void apeTickGame( void ) {
+void apeTickGame( void )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	apeTickEntityManager();
@@ -97,9 +105,12 @@ void apeTickGame( void ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-void apeDisconnectGame( void ) {
-	if ( currentWorld != NULL ) {
-		if ( currentWorld->isDirty ) {
+void apeDisconnectGame( void )
+{
+	if ( currentWorld != NULL )
+	{
+		if ( currentWorld->isDirty )
+		{
 			/* todo: throw a message letting the user know their changes
 			 *  might be lost! */
 		}
@@ -111,17 +122,22 @@ void apeDisconnectGame( void ) {
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void Game_SetupWorldProperties( ApeWorld *world ) {
+void Game_SetupWorldProperties( ApeWorld *world )
+{
 	NdBranch *prop;
-	if ( ( prop = apeGetWorldProperty( world, "music" ) ) != NULL ) {
+	if ( ( prop = apeGetWorldProperty( world, "music" ) ) != NULL )
+	{
 		PLPath musicPath;
-		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS ) {
+		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS )
+		{
 		}
 	}
 }
 
-void apeSpawnWorld( const char *worldPath ) {
-	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 ) {
+void apeSpawnWorld( const char *worldPath )
+{
+	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 )
+	{
 		PRINT_WARNING( "World already loaded!\n" );
 		return;
 	}
@@ -129,7 +145,8 @@ void apeSpawnWorld( const char *worldPath ) {
 	apeDisconnectGame();
 
 	ApeWorld *world = apeLoadWorld( worldPath );
-	if ( world == NULL ) {
+	if ( world == NULL )
+	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
 		return;
 	}
@@ -138,9 +155,12 @@ void apeSpawnWorld( const char *worldPath ) {
 
 	/* HACK, if it's the menu, force menu mode!! */
 	const char *fileName = PlGetFileName( worldPath );
-	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 ) {
+	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 )
+	{
 		menuState = MENU_STATE_START;
-	} else {
+	}
+	else
+	{
 		menuState = MENU_STATE_HUD;
 	}
 
@@ -156,6 +176,7 @@ void apeSpawnWorld( const char *worldPath ) {
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *apeGetCurrentWorld( void ) {
+ApeWorld *apeGetCurrentWorld( void )
+{
 	return currentWorld;
 }

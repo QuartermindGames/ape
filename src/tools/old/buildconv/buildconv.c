@@ -58,10 +58,10 @@ static void DumpART( const char *path, unsigned int *num )
 		return;
 	}
 
-	PlReadInt32( file, false, NULL ); // "Numtiles is not really used anymore.  I wouldn't trust it." ~ Ken
+	PlReadInt32( file, false, NULL );// "Numtiles is not really used anymore.  I wouldn't trust it." ~ Ken
 
 	int32_t tileStart = PlReadInt32( file, false, NULL );
-	int32_t tileEnd = PlReadInt32( file, false, NULL );
+	int32_t tileEnd   = PlReadInt32( file, false, NULL );
 	uint32_t numTiles = tileEnd - tileStart + 1;
 
 	int16_t *tileSizeX = PL_NEW_( int16_t, numTiles );
@@ -83,7 +83,7 @@ static void DumpART( const char *path, unsigned int *num )
 		snprintf( dest, sizeof( dest ), "materials/art/%u.png", *num );
 		if ( PlFileExists( dest ) )
 		{
-			(*num )++;
+			( *num )++;
 			continue;
 		}
 
@@ -93,11 +93,11 @@ static void DumpART( const char *path, unsigned int *num )
 		size_t size = w * h;
 		if ( size == 0 )
 		{
-			(*num)++;
+			( *num )++;
 			continue;
 		}
 
-		PLImage *image = PlCreateImage( NULL, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		PLImage *image  = PlCreateImage( NULL, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		PLColour *pixel = ( PLColour * ) &image->data[ 0 ][ 0 ];
 
 		uint8_t *buffer = PL_NEW_( uint8_t, size );
@@ -107,10 +107,10 @@ static void DumpART( const char *path, unsigned int *num )
 			for ( unsigned int x = 0; x < w; ++x )
 			{
 				uint8_t index = buffer[ y + x * h ];
-				pixel->r = palette[ index ][ 0 ];
-				pixel->g = palette[ index ][ 1 ];
-				pixel->b = palette[ index ][ 2 ];
-				pixel->a = ( index == 255 ) ? 0 : 255;
+				pixel->r      = palette[ index ][ 0 ];
+				pixel->g      = palette[ index ][ 1 ];
+				pixel->b      = palette[ index ][ 2 ];
+				pixel->a      = ( index == 255 ) ? 0 : 255;
 				pixel++;
 			}
 		}
@@ -126,7 +126,7 @@ static void DumpART( const char *path, unsigned int *num )
 		NL_WriteFile( dest, root, NL_FILE_UTF8 );
 		NL_DestroyNode( root );
 
-		(*num)++;
+		( *num )++;
 	}
 
 	PL_DELETE( tileSizeX );
@@ -136,7 +136,7 @@ static void DumpART( const char *path, unsigned int *num )
 	PlCloseFile( file );
 }
 
-#if 0 // argh fuck this...
+#if 0// argh fuck this...
 static int32_t playerStart[ 3 ];
 static int16_t playerAngle;
 static int16_t playerSector;
@@ -270,8 +270,8 @@ static NLNode *MAPtoWorld( const char *worldName, const Sector *sectors, unsigne
 	return root;
 }
 
-#define MAP_MAX_VERSION 6
-#define MAP_MIN_VERSION 5
+#	define MAP_MAX_VERSION 6
+#	define MAP_MIN_VERSION 5
 
 static void ConvertMAP( const char *path, void *user )
 {
@@ -419,7 +419,8 @@ static void ConvertMAP( const char *path, void *user )
 }
 #endif
 
-int main( int argc, char **argv ) {
+int main( int argc, char **argv )
+{
 	PlInitialize( argc, argv );
 
 	Common_Initialize();

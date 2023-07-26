@@ -20,17 +20,17 @@ void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *positi
 
 	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
 
-#if 0
+#	if 0
 	int w = frame->texture->w; //* 1.7;
 	int h = frame->texture->h; //* 1.7;
 	int x = -frame->leftOffset;
 	int y = -frame->topOffset;
-#else /* for the sake of time, let's botch it! */
+#	else /* for the sake of time, let's botch it! */
 	float w = frame->texture->w * 1.7f;
 	float h = frame->texture->h * 1.7f;
 	float x = -( w / 2.0f );
 	float y = -h;
-#endif
+#	endif
 
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, frame->texture );
 #endif

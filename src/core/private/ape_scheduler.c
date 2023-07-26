@@ -10,9 +10,9 @@ static PLLinkedList *scheduleList = NULL;
 
 typedef struct SchTask
 {
-	double            delay;
-	char              desc[ 32 ];
-	void             *userData;
+	double delay;
+	char desc[ 32 ];
+	void *userData;
 	ApeSchedulerCallback callback;
 	PLLinkedListNode *node;
 } SchTask;
@@ -122,10 +122,10 @@ void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void
 {
 	SchTask *task = PlMAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay = delay + apeGetNumTicks();
+	task->delay    = delay + apeGetNumTicks();
 	task->callback = callback;
 	task->userData = userData;
-	task->node = PlInsertLinkedListNode( scheduleList, task );
+	task->node     = PlInsertLinkedListNode( scheduleList, task );
 }
 
 void apeTickTasks( void )
@@ -137,7 +137,7 @@ void apeTickTasks( void )
 	while ( node != NULL )
 	{
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
-		SchTask          *task = PlGetLinkedListNodeUserData( node );
+		SchTask *task              = PlGetLinkedListNodeUserData( node );
 		if ( task->delay < apeGetNumTicks() )
 		{
 			PlDestroyLinkedListNode( node );
@@ -159,7 +159,7 @@ void apeFlushTasks( void )
 
 void apePrintPendingTasks( void )
 {
-	unsigned int      i = 0;
+	unsigned int i         = 0;
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL )
 	{

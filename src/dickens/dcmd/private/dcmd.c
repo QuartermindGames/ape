@@ -21,11 +21,11 @@ int main( int argc, char **argv )
 	{
 		printf( "> " );
 
-		int   i;
+		int i;
 		char *p = cmdLine;
 		while ( ( i = getchar() ) != '\n' )
 		{
-			*p++ = ( char ) i;
+			*p++                  = ( char ) i;
 			unsigned int numChars = p - cmdLine;
 			if ( numChars >= MAX_COMMAND_LENGTH - 1 )
 			{

@@ -23,16 +23,16 @@ typedef enum NetVariableType
 
 typedef struct NetVariable
 {
-	const void     *originPointer;
+	const void *originPointer;
 	NetVariableType type;
 	union
 	{
-		int8_t  varInt8;
+		int8_t varInt8;
 		int16_t varInt16;
 		int32_t varInt32;
 		int64_t varInt64;
 
-		float  varFloat32;
+		float varFloat32;
 		double varFloat64;
 	} baseline;
 } NetVariable;
