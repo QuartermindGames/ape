@@ -1,4 +1,4 @@
-# OGE Coding Standards
+# OSW Coding Standards
 
 This engine and libraries are primarily in C, with some external components in C++. 
 These rules apply to everything except for any third-party libraries, which will of course have their own code style.
@@ -11,9 +11,12 @@ These rules apply to everything except for any third-party libraries, which will
  * though that said, if it just occupies two lines, single-line
  * comments are preferred! */
 
+// Stick to using static for private variables
 static int myVar = 0;
-const char *yetAnotherVar = "Hello world!";
-bool canUseBool = true;
+// if the variable needs to be public, prefix it with '<x>_'
+const char *ape_someGlobalVar = "Hello world!";
+
+static bool canUseBool = true;
 
 // Static private functions can use whatever name you prefer, 
 // just so long as it's consistent
@@ -24,31 +27,31 @@ static void DoThing( void )
 
 // Public functions that are part of the public API should be 
 // prefixed with 'oge'
-void ogeDoPublicThing( void )
+void apeDoPublicThing( void )
 {
     // ...
 }
 
 // Public functions that are intended for private use, 
 // should use an underscore at the end
-void ogeDoPrivatePublicThing_( void )
+void apeDoPrivatePublicThing_( void )
 {
     // ...
 }
 
 // Structs should be prefixed with 'Oge', and 
 // use typedef rather than just struct
-typedef struct OgeMyStruct
+typedef struct ApeMyStruct
 {
     int myVar;
-} OgeMyStruct;
+} ApeMyStruct;
 
-typedef enum OgeMyEnum
+typedef enum ApeMyEnum
 {
-    OGE_MY_ENUM_VAR,
+    APE_MY_ENUM_VAR,
     
-    OGE_MAX_ENUM_VARS
-} OgeMyEnum;
+    APE_MAX_ENUM_VARS
+} ApeMyEnum;
 
 ```
 
@@ -60,8 +63,8 @@ with headers that will provide the public API and a private
 folder with everything that's not intended to be part of
 any public API.
 
-`gui/public/oge/gui.h`
+`gui/public/ape/gui.h`
 
 If you have multiple public headers, do the following.
 
-`gui/public/oge/gui/gui_button.h`
+`gui/public/ape/gui/gui_button.h`
