@@ -61,6 +61,7 @@ typedef struct ApeWorldFaceVertex {
 #define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
 
 typedef struct ApeWorldFace {
+	float offset;
 	PLVector3 normal;
 	PLVector3 origin;
 
@@ -200,7 +201,7 @@ typedef struct ApeWorld {
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *portals;  // ApeWorldPortal
 	PLVectorArray *vertices; // ApeWorldVertex
-	PLVectorArray *faces;    // ApeWorldFace
+	//PLVectorArray *faces;    // ApeWorldFace
 	PLVectorArray *lights;   // ApeLight
 
 	PLColourF32 ambience;
