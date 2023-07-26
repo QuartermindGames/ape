@@ -255,7 +255,11 @@ void apeTickAudio_( void )
 	if ( !audioInitialized )
 		return;
 
+	COM_PROFILE_FUNCTION_START();
+
 	CallAudioDriverFunction( Tick );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void Audio_Pause( bool pause )

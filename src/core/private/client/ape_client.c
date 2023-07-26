@@ -16,7 +16,7 @@ typedef struct ClientState
 	NetSocket *netSocket;
 	bool isConnected;
 
-	bool isEditMode;
+	bool isEditorMode;
 
 	char userName[ 32 ];
 } ClientState;
@@ -27,6 +27,7 @@ void apeInitializeClient_( void )
 	CLIENT_PRINT( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
+	strcpy( clientState.userName, "Anon" );
 
 	apeInitializeRenderer_();
 	apeInitializeAudio_();
@@ -49,7 +50,7 @@ void apeDrawClient( ApeViewport *viewport )
 
 	apeBeginDraw( viewport );
 
-	COM_PROFILE_FUNCTION_CALL( "apeDrawPerspective", apeDrawPerspective_( viewport->camera, viewport ) );
+	apeDrawPerspective_( viewport->camera, viewport );
 
 	apeDrawMenu( viewport );
 

@@ -291,7 +291,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 		world->ambience = WORLD_DEFAULT_AMBIENCE;
 	}
 
-	ape_RendererPerformance_.numLights += PlGetNumVectorArrayElements( visibleLights );
+	//ape_RendererPerformance_.numLights += PlGetNumVectorArrayElements( visibleLights );
 
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{
@@ -315,8 +315,8 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 
 #if 1
 
-		for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
-		{
+		if ( visibleLights != NULL ) {for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
+			{
 			if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
 			{
 				break;
@@ -324,12 +324,13 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 
 			ApeLight *light = PlGetVectorArrayElementAt( visibleLights, k );
 			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
-			{
+				{
 				continue;
 			}
 
-			lights[ numLights ] = light;
-			numLights++;
+				lights[ numLights ] = light;
+				numLights++;
+			}
 		}
 
 #else
@@ -453,31 +454,34 @@ void apeDrawWorld_( ApeWorld *world )
 
 #endif
 
-	if ( visibleLights == NULL )
+	if ( visibleLights == NULL && world->lights != NULL )
 	{
 		visibleLights = PlCreateVectorArray( PlGetNumVectorArrayElements( world->lights ) );
 	}
 
 	// determine what lights are visible -
 	// for now this operates over all the lights in the world, urgh...
-	PlClearVectorArray( visibleLights );
+	if ( visibleLights != NULL ) {PlClearVectorArray( visibleLights );
 	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
-	{
+		{
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
 
-		float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
+			if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) ) {
+				continue;
+			}float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
 		if ( distance > 64.0f )
-		{
+			{
 			continue;
 		}
 
 		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
-		{
+			{
 			continue;
 		}
 
-		PlPushBackVectorArrayElement( visibleLights, light );
+			PlPushBackVectorArrayElement( visibleLights, light );
+		}
 	}
 
 	PL_GET_CVAR( "world/showAllRooms", showAllRooms );

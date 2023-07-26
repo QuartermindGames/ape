@@ -64,6 +64,7 @@ typedef struct ApeWorldFaceVertex
 
 typedef struct ApeWorldFace
 {
+	float offset;
 	PLVector3 normal;
 	PLVector3 origin;
 
@@ -210,7 +211,7 @@ typedef struct ApeWorld
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *portals;  // ApeWorldPortal
 	PLVectorArray *vertices; // ApeWorldVertex
-	PLVectorArray *faces;    // ApeWorldFace
+	//PLVectorArray *faces;    // ApeWorldFace
 	PLVectorArray *lights;   // ApeLight
 
 	PLColourF32 ambience;

@@ -144,6 +144,8 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 		}
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	int ow, oh;
 	PL_GET_CVAR( "r/superSampling", superSampling );
 	if ( superSampling != NULL && superSampling->i_value > 1 )
@@ -237,4 +239,6 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 
 		PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }

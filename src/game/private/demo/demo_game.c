@@ -79,7 +79,7 @@ static void InitializeDemoGame( void )
 		}
 	}
 
-	Game_RegisterStandardEntityComponents();
+	gameRegisterStandardEntityComponents();
 
 	PlParseConsoleString( "world worlds/test_geo.rfl" );
 
