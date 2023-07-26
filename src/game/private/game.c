@@ -16,7 +16,7 @@ void Game_Display( void )
 }
 #endif
 
-void Game_RegisterStandardEntityComponents( void ) {
+void gameRegisterStandardEntityComponents( void ) {
 	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
 	const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
 	const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void );
