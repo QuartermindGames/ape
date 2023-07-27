@@ -315,18 +315,20 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 
 #if 1
 
-		if ( visibleLights != NULL ) {for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
+		if ( visibleLights != NULL )
+		{
+			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
 			{
-			if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
-			{
-				break;
-			}
-
-			ApeLight *light = PlGetVectorArrayElementAt( visibleLights, k );
-			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+				if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
 				{
-				continue;
-			}
+					break;
+				}
+
+				ApeLight *light = PlGetVectorArrayElementAt( visibleLights, k );
+				if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
+				{
+					continue;
+				}
 
 				lights[ numLights ] = light;
 				numLights++;
@@ -461,24 +463,28 @@ void apeDrawWorld_( ApeWorld *world )
 
 	// determine what lights are visible -
 	// for now this operates over all the lights in the world, urgh...
-	if ( visibleLights != NULL ) {PlClearVectorArray( visibleLights );
-	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
+	if ( visibleLights != NULL )
+	{
+		PlClearVectorArray( visibleLights );
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
 		{
-		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
 
-			if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) ) {
+			if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) )
+			{
 				continue;
-			}float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
-		if ( distance > 64.0f )
+			}
+			float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
+			if ( distance > 64.0f )
 			{
-			continue;
-		}
+				continue;
+			}
 
-		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
+			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
 			{
-			continue;
-		}
+				continue;
+			}
 
 			PlPushBackVectorArrayElement( visibleLights, light );
 		}

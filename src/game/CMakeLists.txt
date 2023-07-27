@@ -27,7 +27,7 @@ set(GAME_INCLUDE_DIRS
 #############################################
 # Target Games
 
-set(GAME_USER_TARGET "mag" CACHE STRING "Game to build.")
+set(GAME_USER_TARGET "detox" CACHE STRING "Game to build.")
 
 set(GAME_TARGET_DEMO
         private/demo/demo_game.c)
@@ -46,6 +46,8 @@ set(GAME_TARGET_FERAL
         private/fw/fw_name_generator.c
         private/fw/fw_terrain.c
         private/fw/fw_weapon.c)
+set(GAME_TARGET_DETOX
+        private/detox/detox_game.c)
 
 #todo: need a better way of setting targets...
 if (${GAME_USER_TARGET} STREQUAL "mag")
@@ -54,6 +56,8 @@ elseif (${GAME_USER_TARGET} STREQUAL "demo")
     set(GAME_TARGET ${GAME_TARGET_DEMO})
 elseif (${GAME_USER_TARGET} STREQUAL "feral")
     set(GAME_TARGET ${GAME_TARGET_FERAL})
+elseif (${GAME_USER_TARGET} STREQUAL "detox")
+    set(GAME_TARGET ${GAME_TARGET_DETOX})
 else ()
     message("No valid game target specified!")
 endif ()

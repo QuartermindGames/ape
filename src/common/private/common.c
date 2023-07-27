@@ -20,7 +20,7 @@ void comInitialize( void )
 	ndSetupLogs();
 
 	cmnRegisterPkgInterface_();
-	cmnRegisterVppInterface_();
+	comRegisterVppInterface_();
 }
 
 const char *comGetDataDirectory( void ) {
