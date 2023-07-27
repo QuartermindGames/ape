@@ -301,6 +301,7 @@ static void ParseStaticGeometryDetailRooms( ApeWorld *world, PLFile *file )
 		{
 			room->detailRooms = PlCreateVectorArray( numDetailRooms );
 		}
+
 		for ( uint32_t j = 0; j < numDetailRooms; ++j )
 		{
 			uint32_t detailRoomIndex = PL_READUINT32( file, false, NULL );
@@ -398,13 +399,11 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 		PlReadInt32( file, false, NULL );
 
 		int32_t portalIndex = PlReadInt32( file, false, NULL );
-#if 0// portal index crap is weird...
 		if ( portalIndex >= 0 )
 		{
 			face->portal = PlGetVectorArrayElementAt( world->portals, portalIndex );
 			assert( face->portal != NULL );
 		}
-#endif
 
 		face->flags = PL_READUINT32( file, false, NULL );
 

@@ -117,17 +117,17 @@ void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
 	camera->internal->angles = *angles;
 }
 
-PLVector3 apeGetCameraPosition( ApeCamera *camera )
+PLVector3 apeGetCameraPosition( const ApeCamera *camera )
 {
 	return camera->internal->position;
 }
 
-PLVector3 apeGetCameraAngles( ApeCamera *camera )
+PLVector3 apeGetCameraAngles( const ApeCamera *camera )
 {
 	return camera->internal->angles;
 }
 
-PLVector3 apeGetCameraForward( ApeCamera *camera )
+PLVector3 apeGetCameraForward( const ApeCamera *camera )
 {
 	return camera->forward;
 }

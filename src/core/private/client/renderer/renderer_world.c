@@ -255,6 +255,39 @@ void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera )
 #endif
 }
 
+static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
+static int CompareLights( const void *a, const void *b )
+{
+	ApeLight *lightA = *( ApeLight ** ) a;
+	ApeLight *lightB = *( ApeLight ** ) b;
+
+	float da = PlVector3Length( PlSubtractVector3( lightA->position, viewPos ) );
+	float db = PlVector3Length( PlSubtractVector3( lightB->position, viewPos ) );
+
+	return ( da > db ) ? 1 : -1;
+}
+
+static void SortLights( void )
+{
+	if ( visibleLights == NULL )
+	{
+		return;
+	}
+
+	const ApeCamera *camera = apeGetActiveCamera();
+	if ( camera == NULL )
+	{
+		return;
+	}
+
+	viewPos = apeGetCameraPosition( camera );
+
+	ApeLight **lights      = ( ApeLight      **) PlGetVectorArrayData( visibleLights );
+	unsigned int numLights = PlGetNumVectorArrayElements( visibleLights );
+
+	qsort( lights, numLights, sizeof( ApeLight * ), CompareLights );
+}
+
 static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
@@ -317,6 +350,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 
 		if ( visibleLights != NULL )
 		{
+
 			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
 			{
 				if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
@@ -488,6 +522,8 @@ void apeDrawWorld_( ApeWorld *world )
 
 			PlPushBackVectorArrayElement( visibleLights, light );
 		}
+
+		SortLights();
 	}
 
 	PL_GET_CVAR( "world/showAllRooms", showAllRooms );

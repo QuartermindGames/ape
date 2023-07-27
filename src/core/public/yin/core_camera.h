@@ -34,9 +34,9 @@ void apeDestroyCamera( ApeCamera *camera );
 void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position );
 void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles );
 
-PLVector3 apeGetCameraPosition( ApeCamera *camera );
-PLVector3 apeGetCameraAngles( ApeCamera *camera );
-PLVector3 apeGetCameraForward( ApeCamera *camera );
+PLVector3 apeGetCameraPosition( const ApeCamera *camera );
+PLVector3 apeGetCameraAngles( const ApeCamera *camera );
+PLVector3 apeGetCameraForward( const ApeCamera *camera );
 
 ApeCamera *apeGetActiveCamera( void );
 void apeMakeCameraActive( ApeCamera *camera );
