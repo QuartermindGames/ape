@@ -151,7 +151,7 @@ static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, int8_t volume
 	buffer.Flags      = XAUDIO2_END_OF_STREAM;
 }
 
-static bool Audio_XAudio2_CreateSource( YNCoreAudioSource *source )
+static bool Audio_XAudio2_CreateSource( ApeAudioSource *source )
 {
 	WAVEFORMATEX waveFormat;
 	PL_ZERO_( waveFormat );
@@ -168,7 +168,7 @@ static bool Audio_XAudio2_CreateSource( YNCoreAudioSource *source )
 	return true;
 }
 
-static void Audio_XAudio2_DestroySource( YNCoreAudioSource *source )
+static void Audio_XAudio2_DestroySource( ApeAudioSource *source )
 {
 	IXAudio2SourceVoice *voice = ( IXAudio2SourceVoice * ) source->user;
 	voice->DestroyVoice();
