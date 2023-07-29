@@ -320,8 +320,8 @@ void guiDisplayFont( GuiFont *font )
 	PlgUploadMesh( font->mesh );
 	PlgDrawMesh( font->mesh );
 
-	ape_RendererPerformance_.numTriangles += font->mesh->num_triangles;
-	ape_RendererPerformance_.numBatches++;
+	ape_rendererPerformance_.numTriangles += font->mesh->num_triangles;
+	ape_rendererPerformance_.numBatches++;
 
 	PlPopMatrix();
 

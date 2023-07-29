@@ -231,7 +231,7 @@ ApeWorldMesh *apeLoadWorldMesh( const char *path )
 
 			PL_DELETE( indices );
 
-			ape_RendererPerformance_.numFacesDrawn++;
+			ape_rendererPerformance_.numFacesDrawn++;
 
 			faceNode = PlGetNextLinkedListNode( faceNode );
 		}

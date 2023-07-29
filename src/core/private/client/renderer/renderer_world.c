@@ -269,6 +269,11 @@ static int CompareLights( const void *a, const void *b )
 
 static void SortLights( void )
 {
+	if ( !ape_config_.world.sortLights )
+	{
+		return;
+	}
+
 	if ( visibleLights == NULL )
 	{
 		return;
@@ -326,7 +331,38 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 
 	//ape_RendererPerformance_.numLights += PlGetNumVectorArrayElements( visibleLights );
 
-	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	if ( ape_config_.world.showPortals )
+	{
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( room->faces ); ++i )
+		{
+			ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, i );
+			assert( face != NULL );
+			if ( face == NULL || face->portal == NULL )
+			{
+				continue;
+			}
+
+			ApeWorldPortal *portal = face->portal;
+			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+			PlgDrawBoundingVolume( &PlSetupCollisionAABB( face->origin, portal->mins, portal->maxs ), &PL_COLOURU8( 255, 255, 255, 255 ) );
+
+			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+
+			PLLinkedListNode *node = PlGetFirstNode( face->edgeLoop );
+			while ( node != NULL )
+			{
+				ApeWorldFaceVertex *vertex = ( ApeWorldFaceVertex * ) PlGetLinkedListNodeUserData( node );
+				PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
+				PlgImmColour( 255, 0, 255, 255 );
+
+				node = PlGetNextLinkedListNode( node );
+			}
+
+			apeDrawMesh( apeGetVertexMaterial(), mesh, NULL, 0 );
+		}
+	}
+
+	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{
 		if ( room->batches[ i ].numSubMeshes == 0 )
 		{
@@ -426,14 +462,14 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 		apeDrawMesh( material, room->mesh, lights, numLights );
 	}
 
-	ape_RendererPerformance_.numRooms++;
+	ape_rendererPerformance_.numRooms++;
 }
 
 PLVector2 screenPosTest = { 0.0f, 0.0f };
 
 void apeDrawWorld_( ApeWorld *world )
 {
-	ape_RendererPerformance_.numLights = 0;
+	ape_rendererPerformance_.numLights = 0;
 
 	ApeCamera *camera = apeGetActiveCamera();
 	if ( camera == NULL )

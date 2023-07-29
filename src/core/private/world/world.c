@@ -402,7 +402,7 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 		if ( portalIndex >= 0 )
 		{
 			face->portal = PlGetVectorArrayElementAt( world->portals, portalIndex );
-			assert( face->portal != NULL );
+			//assert( face->portal != NULL );
 		}
 
 		face->flags = PL_READUINT32( file, false, NULL );
@@ -1121,6 +1121,8 @@ void apeRegisterWorldConsole_( void )
 	PlRegisterConsoleVariable( "world/showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "world/showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, NULL, false );
+	PlRegisterConsoleVariable( "world/sortLights", "Sort lights before drawing world.", "true", PL_VAR_BOOL, &ape_config_.world.sortLights, NULL, false );
 	PlRegisterConsoleVariable( "world/forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 
 	PlRegisterConsoleCommand( "world/save", "Save the current world with the specified name.", 1, WorldSaveCallback );

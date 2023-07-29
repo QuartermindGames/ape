@@ -22,7 +22,7 @@ typedef struct ApeRendererStats
 	unsigned int numDetailRooms;
 	unsigned int numLights;
 } ApeRendererStats;
-extern ApeRendererStats ape_RendererPerformance_;
+extern ApeRendererStats ape_rendererPerformance_;
 
 /* todo: introduce container around this */
 typedef struct ApeSpriteFrame
@@ -94,7 +94,7 @@ typedef enum ApeLightType
 #define APE_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
 #define APE_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
 
-#define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
+#define APE_MAX_LIGHTS_PER_PASS 400// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
 {
 	ApeLightType type;

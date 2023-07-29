@@ -15,7 +15,7 @@
 
 #include "post/post.h"
 
-ApeRendererStats ape_RendererPerformance_;
+ApeRendererStats ape_rendererPerformance_;
 ApeRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
@@ -183,7 +183,7 @@ static void WriteScreenshot( void )
 
 void apeEndDraw( ApeViewport *viewport )
 {
-	PL_ZERO_( ape_RendererPerformance_ );
+	PL_ZERO_( ape_rendererPerformance_ );
 
 	viewport->perf.numBatches   = 0;
 	viewport->perf.numTriangles = 0;
@@ -223,13 +223,14 @@ void Renderer_RegisterConsoleVariables( void )
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
 	PlRegisterConsoleVariable( "r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "renderer/useStencilShadowVolumes", "Use stencil shadow volumes.", "1", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -441,19 +442,19 @@ static void DrawDebugOverlay( const ApeViewport *viewport )
 	char buf[ 64 ];
 	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", apeGetViewportFramerate( viewport ) );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_RendererPerformance_.numRooms );
+	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_RendererPerformance_.numDetailRooms );
+	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_RendererPerformance_.numVisiblePortals );
+	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_RendererPerformance_.numFacesDrawn );
+	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_RendererPerformance_.numLights );
+	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_RendererPerformance_.numTriangles );
+	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_RendererPerformance_.numBatches );
+	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
 	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
@@ -535,8 +536,6 @@ void apeDrawMenu( const ApeViewport *viewport )
 
 	apeSet2DViewportSize( viewport->width, viewport->height );
 
-	//PlgSetDepthMask( false );
-
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -559,7 +558,6 @@ void apeDrawMenu( const ApeViewport *viewport )
 
 	PlPopMatrix();
 
-	//PlgSetDepthMask( true );
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 
 	COM_PROFILE_FUNCTION_END();
@@ -612,7 +610,7 @@ void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation, float scale )
 	PlPopMatrix();
 }
 
-static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
+static void RenderScene( ApeCamera *camera, const ApeViewport *viewport, bool depthPass )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -688,11 +686,28 @@ PLGTexture *apeGetPrimaryDepthAttachment( void )
 	return depthTexture;
 }
 
+static void RenderSceneDepth( ApeCamera *camera, const ApeViewport *viewport )
+{
+	RenderScene( camera, viewport, true );
+}
+
+static void RenderSceneStencil( ApeCamera *camera, const ApeViewport *viewport )
+{
+	PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+
+	PlgStencilFunction( PLG_STENCIL_TEST_LEQUAL, 0x0, 0xFF );
+	PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+
+
+	PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+}
+
 void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ape_RendererPerformance_.cameraPos = camera->internal->position;
+	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
 	apeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
@@ -700,15 +715,20 @@ void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	PL_GET_CVAR( "r/wireframe", wireframeMode );
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
-	RenderScene( camera, viewport );
+	if ( ape_config_.renderer.useStencilShadowVolumes && !ape_config_.renderer.wireframe )
+	{
+		RenderSceneDepth( camera, viewport );
+		RenderSceneStencil( camera, viewport );
+	}
 
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	RenderScene( camera, viewport, false );
+
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}

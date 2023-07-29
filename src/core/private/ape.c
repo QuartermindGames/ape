@@ -32,11 +32,15 @@ static bool engineInitialized  = false;
  * PUBLIC
  ****************************************/
 
+ApeConfig ape_config_;
+
 NdBranch *apeGetConfig( void ) { return engineConfig; }
 NdBranch *apeGetUserConfig( void ) { return userConfig; }
 
 bool apeInitialize( const char *config )
 {
+	PL_ZERO_( ape_config_ );
+
 	// Call this first, so we can buffer console output
 	apeInitializeConsole();
 

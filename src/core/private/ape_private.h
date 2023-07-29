@@ -119,4 +119,21 @@ void apeRegisterClientConsoleVariables_( void );
 #	define PRINT_DEBUG( FORMAT, ... )
 #endif
 
+typedef struct ApeConfig
+{
+	struct
+	{
+		bool wireframe;
+		bool useStencilShadowVolumes;
+	} renderer;
+
+	struct
+	{
+		bool showPortals;
+		bool sortLights;
+	} world;
+} ApeConfig;
+
+extern ApeConfig ape_config_;
+
 PL_EXTERN_C_END

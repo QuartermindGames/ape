@@ -887,14 +887,14 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		PlgUploadMesh( mesh );
 		PlgDrawMesh( mesh );
 
-		ape_RendererPerformance_.numBatches++;
+		ape_rendererPerformance_.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
 		{
-			ape_RendererPerformance_.numTriangles += mesh->num_triangles;
+			ape_rendererPerformance_.numTriangles += mesh->num_triangles;
 		}
 		else
 		{
-			ape_RendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
+			ape_rendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
 		}
 	}
 
