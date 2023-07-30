@@ -698,7 +698,7 @@ static void RenderSceneStencil( ApeCamera *camera, const ApeViewport *viewport )
 	PlgStencilFunction( PLG_STENCIL_TEST_LEQUAL, 0x0, 0xFF );
 	PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
-
+	apeDrawWorldStencilShadowPass_();
 
 	PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 }

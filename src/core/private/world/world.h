@@ -141,6 +141,14 @@ typedef struct ApeWorldPortal
 #define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
 #define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
+enum
+{
+	APE_WORLD_ROOM_BATCH_ROOM,
+	APE_WORLD_ROOM_BATCH_DETAIL,
+
+	APE_WORLD_ROOM_NUM_BUILTIN_BATCHES
+};
+
 typedef struct ApeWorldBatch
 {
 	int *subMeshes;
@@ -183,8 +191,10 @@ typedef struct ApeWorldRoom
 	PLVectorArray *faces;      // ApeWorldFace
 
 	PLGMesh *mesh;             // cached mesh
+	PLGMesh *shadowMesh;       // shadow volume mesh
 	ApeWorldBatch *batches;
 	unsigned int numBatches;
+	unsigned int builtInBatches[ APE_WORLD_ROOM_NUM_BUILTIN_BATCHES ];
 	bool isMeshCached;   // if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
@@ -212,7 +222,7 @@ typedef struct ApeWorld
 	PLVectorArray *portals;  // ApeWorldPortal
 	PLVectorArray *vertices; // ApeWorldVertex
 	//PLVectorArray *faces;    // ApeWorldFace
-	PLVectorArray *lights;   // ApeLight
+	PLVectorArray *lights;// ApeLight
 
 	PLColourF32 ambience;
 	PLColourF32 sunColour;
@@ -256,5 +266,18 @@ void apeSpawnWorldEntities( ApeWorld *world );
 unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
 
 void apeRegisterWorldConsole_( void );
+
+void apeTickClientWorld_( void );
+
+/////////////////////////////////////////////////////////////////
+// Visibility API
+
+void apeInitializeWorldVisibilitySystem_( void );
+void apeShutdownWorldVisibilitySystem_( void );
+
+struct ApeLight **apeGetVisibleLights_( unsigned int *num );
+ApeWorldRoom **apeGetVisibleRooms_( void );
+
+void apeBuildWorldVisibiltyLists_( void );
 
 PL_EXTERN_C_END

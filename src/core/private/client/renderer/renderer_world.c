@@ -157,8 +157,6 @@ static void DrawSectorBody( OgeWorldRoom *sector, OgeWorldMesh *worldMesh, OgeCa
 }
 #endif
 
-static PLVectorArray *visibleLights = NULL;
-
 /**
  * World is drawn using polygons, rather than straight up triangles,
  * so to more accuratly display it in wireframe, we'll need to render
@@ -255,56 +253,13 @@ void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera )
 #endif
 }
 
-static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
-static int CompareLights( const void *a, const void *b )
-{
-	ApeLight *lightA = *( ApeLight ** ) a;
-	ApeLight *lightB = *( ApeLight ** ) b;
-
-	float da = PlVector3Length( PlSubtractVector3( lightA->position, viewPos ) );
-	float db = PlVector3Length( PlSubtractVector3( lightB->position, viewPos ) );
-
-	return ( da > db ) ? 1 : -1;
-}
-
-static void SortLights( void )
-{
-	if ( !ape_config_.world.sortLights )
-	{
-		return;
-	}
-
-	if ( visibleLights == NULL )
-	{
-		return;
-	}
-
-	const ApeCamera *camera = apeGetActiveCamera();
-	if ( camera == NULL )
-	{
-		return;
-	}
-
-	viewPos = apeGetCameraPosition( camera );
-
-	ApeLight **lights      = ( ApeLight      **) PlGetVectorArrayData( visibleLights );
-	unsigned int numLights = PlGetNumVectorArrayElements( visibleLights );
-
-	qsort( lights, numLights, sizeof( ApeLight * ), CompareLights );
-}
-
-static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
+static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
-	{
 		return;
-	}
 
-	ApeCamera *camera = apeGetActiveCamera();
-	if ( camera == NULL )
-	{
+	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
 		return;
-	}
 
 	PL_GET_CVAR( "world/showRoomColours", showRoomColours );
 	PL_GET_CVAR( "world/showRoomVolumes", showRoomVolumes );
@@ -312,11 +267,6 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 		PlgDrawBoundingVolume( &room->bounds, &room->colour );
-	}
-
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
-	{
-		return;
 	}
 
 	// TODO: gross, we should handle this better rather than just overriding the world ambience
@@ -362,19 +312,17 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 		}
 	}
 
+#if 1
+
 	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{
 		if ( room->batches[ i ].numSubMeshes == 0 )
-		{
 			continue;
-		}
 
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
 		assert( material != NULL );
 		if ( material == NULL )
-		{
 			continue;
-		}
 
 		assert( room->batches[ i ].material == material );
 
@@ -382,114 +330,107 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, bool skipPortals )
 		ApeLightPointerArray lights;
 		PL_ZERO_( lights );
 
-#if 1
-
-		if ( visibleLights != NULL )
-		{
-
-			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( visibleLights ); ++k )
-			{
-				if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
-				{
-					break;
-				}
-
-				ApeLight *light = PlGetVectorArrayElementAt( visibleLights, k );
-				if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
-				{
-					continue;
-				}
-
-				lights[ numLights ] = light;
-				numLights++;
-			}
-		}
-
-#else
-
-		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( visibleLights ); ++j )
+		unsigned int numVisibleLights;
+		ApeLight **visibleLights = apeGetVisibleLights_( &numVisibleLights );
+		for ( uint32_t j = 0; j < numVisibleLights; ++j )
 		{
 			if ( numLights >= APE_MAX_LIGHTS_PER_PASS )
-			{
 				break;
-			}
 
-			ApeLight *light = PlGetVectorArrayElementAt( visibleLights, j );
+			ApeLight *light = visibleLights[ j ];
 			if ( !PlIsPointIntersectingAabb( &room->bounds, light->position ) )
-			{
 				continue;
-			}
-
-			bool hitFace = false;
-			for ( unsigned int k = 0; k < PlGetNumVectorArrayElements( room->faces ); ++k )
-			{
-				ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
-				if ( face == NULL || face->material != material )
-				{
-					continue;
-				}
-
-				PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-				if ( !PlIsSphereIntersectingAabb( &sphere, &face->bounds ) )
-				{
-					continue;
-				}
-
-				hitFace = true;
-				break;
-			}
-
-			if ( !hitFace )
-			{
-				continue;
-			}
 
 			lights[ numLights ] = light;
 			numLights++;
 		}
-
-#endif
 
 		room->mesh->numSubMeshes   = room->batches[ i ].numSubMeshes;
 		room->mesh->firstSubMeshes = room->batches[ i ].firstSubMeshes;
 		room->mesh->subMeshes      = room->batches[ i ].subMeshes;
 
 		if ( showRoomColours != NULL && showRoomColours->b_value )
-		{
 			material = apeGetVertexMaterial();
-		}
 
 		apeDrawMesh( material, room->mesh, lights, numLights );
 	}
 
+#endif
+
+//	room->mesh->numSubMeshes   = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].numSubMeshes;
+//	room->mesh->firstSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].firstSubMeshes;
+//	room->mesh->subMeshes      = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].subMeshes;
+//	apeDrawMesh( apeGetVertexMaterial(), room->mesh, NULL, 0 );
+
+	room->mesh->numSubMeshes   = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].numSubMeshes;
+	room->mesh->firstSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].firstSubMeshes;
+	room->mesh->subMeshes      = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].subMeshes;
+
+	apeDrawMesh( apeGetShadowMaterial(), room->mesh, NULL, 0 );
+
 	ape_rendererPerformance_.numRooms++;
 }
 
+static void DrawRoomStencilShadowPass( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera )
+{
+
+}
+
 PLVector2 screenPosTest = { 0.0f, 0.0f };
+
+void apeDrawWorldStencilShadowPass_( void )
+{
+	ApeCamera *camera = apeGetActiveCamera();
+	if ( camera == NULL )
+		return;
+
+	ApeWorld *world = apeGetCurrentWorld();
+	if ( world == NULL )
+		return;
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
+
+	PL_GET_CVAR( "world/showAllRooms", showAllRooms );
+	if ( camera->room == NULL || ( showAllRooms != NULL && showAllRooms->b_value ) )
+	{
+		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+		{
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			assert( room != NULL );
+			if ( room == NULL || room->isDetail )
+				continue;
+
+			DrawRoom( world, room, camera, true );
+		}
+	}
+	else
+	{
+		PL_GET_CVAR( "world/skipPortals", skipPortals );
+		DrawRoom( world, camera->room, camera, ( skipPortals != NULL ) ? skipPortals->b_value : false );
+	}
+
+	PlPopMatrix();
+}
 
 void apeDrawWorld_( ApeWorld *world )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeCamera *camera = apeGetActiveCamera();
-	if ( camera == NULL )
-	{
-		return;
-	}
-
 	PL_GET_CVAR( "world/draw", drawWorld );
 	if ( world == NULL || ( drawWorld != NULL && !drawWorld->b_value ) )
-	{
 		return;
-	}
+
+	ApeCamera *camera = apeGetActiveCamera();
+	if ( camera == NULL )
+		return;
 
 	COM_PROFILE_FUNCTION_START();
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
-
-	// TODO: generate a list of visible rooms based on camera position
 
 #if 0// test lights
 
@@ -502,12 +443,13 @@ void apeDrawWorld_( ApeWorld *world )
 		int w, h;
 		apeGet2DViewportSize( &w, &h );
 
-		ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
+		ApeLight *light          = PlGetVectorArrayElementAt( world->lights, 0 );
 		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-		if ( PlgIsSphereInsideView( camera->internal, &sphere ) ) {
-			PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+		if ( PlgIsSphereInsideView( camera->internal, &sphere ) )
+		{
+			PLMatrix4 viewProj  = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 			PLVector2 screenPos = PlConvertWorldToScreen( &light->position, &viewProj, w, h, 0, 0 );
-			screenPosTest = screenPos;
+			screenPosTest       = screenPos;
 		}
 
 		apeDrawAxesPivot( light->position, light->angles, 1.0f );
@@ -526,42 +468,6 @@ void apeDrawWorld_( ApeWorld *world )
 
 #endif
 
-	if ( visibleLights == NULL && world->lights != NULL )
-	{
-		visibleLights = PlCreateVectorArray( PlGetNumVectorArrayElements( world->lights ) );
-	}
-
-	// determine what lights are visible -
-	// for now this operates over all the lights in the world, urgh...
-	if ( visibleLights != NULL )
-	{
-		PlClearVectorArray( visibleLights );
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
-		{
-			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
-
-			if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) )
-			{
-				continue;
-			}
-			float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
-			if ( distance > 64.0f )
-			{
-				continue;
-			}
-
-			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
-			{
-				continue;
-			}
-
-			PlPushBackVectorArrayElement( visibleLights, light );
-		}
-
-		SortLights();
-	}
-
 	PL_GET_CVAR( "world/showAllRooms", showAllRooms );
 	if ( camera->room == NULL || ( showAllRooms != NULL && showAllRooms->b_value ) )
 	{
@@ -570,17 +476,15 @@ void apeDrawWorld_( ApeWorld *world )
 			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail )
-			{
 				continue;
-			}
 
-			DrawRoom( world, room, true );
+			DrawRoom( world, room, camera, true );
 		}
 	}
 	else
 	{
 		PL_GET_CVAR( "world/skipPortals", skipPortals );
-		DrawRoom( world, camera->room, ( skipPortals != NULL ) ? skipPortals->b_value : false );
+		DrawRoom( world, camera->room, camera, ( skipPortals != NULL ) ? skipPortals->b_value : false );
 	}
 
 	PlPopMatrix();

@@ -127,5 +127,6 @@ void apeShutdownMaterialSystem( void );
 
 ApeMaterial *apeGetFallbackMaterial( void );
 ApeMaterial *apeGetVertexMaterial( void );
+ApeMaterial *apeGetShadowMaterial( void );
 
 PL_EXTERN_C_END

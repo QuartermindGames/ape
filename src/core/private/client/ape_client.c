@@ -10,6 +10,7 @@
 #include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
+#include "world/world.h"
 
 typedef struct ClientState
 {
@@ -98,6 +99,8 @@ void apeTickClient( void )
 #if defined( APE_EDITOR_ENABLED )
 	edTick();
 #endif
+
+	apeTickClientWorld_();
 
 	apeHandleClientConnectionState_();
 

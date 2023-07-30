@@ -31,9 +31,11 @@ typedef struct ApeMaterial
 
 static ApeMaterial *fallbackMaterial;
 static ApeMaterial *vertexMaterial;
+static ApeMaterial *shadowMaterial;
 
 ApeMaterial *apeGetFallbackMaterial( void ) { return fallbackMaterial; }
 ApeMaterial *apeGetVertexMaterial( void ) { return vertexMaterial; }
+ApeMaterial *apeGetShadowMaterial( void ) { return shadowMaterial; }
 
 void apeInitializeMaterialSystem( void )
 {
@@ -43,27 +45,23 @@ void apeInitializeMaterialSystem( void )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
-		{
 			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
-		}
 	}
 
 	normalFallbackTexture   = apeLoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
 	specularFallbackTexture = apeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
 	previewFallbackTexture  = apeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
-	/* go ahead and create the fallback material */
+	// cache built-in materials we need
 	fallbackMaterial = apeCacheMaterial( "materials/engine/fallback.mat.n", APE_CACHE_WORLD, false, false );
 	if ( fallbackMaterial == NULL )
-	{
 		PRINT_ERROR( "Failed to cache fallback material!\n" );
-	}
-
 	vertexMaterial = apeCacheMaterial( "materials/engine/vertex.mat.n", APE_CACHE_WORLD, false, false );
 	if ( vertexMaterial == NULL )
-	{
 		PRINT_ERROR( "Failed to cache vertex material!\n" );
-	}
+	shadowMaterial = apeCacheMaterial( "materials/engine/shadow.mat.n", APE_CACHE_WORLD, false, false );
+	if ( shadowMaterial == NULL )
+		PRINT_ERROR( "Failed to cache shadow material!\n" );
 }
 
 void apeShutdownMaterialSystem( void )

@@ -7,7 +7,6 @@
 #include "ape_private.h"
 #include "world.h"
 
-#include <yin/node.h>
 #include <float.h>
 
 #include "client/renderer/renderer.h"
@@ -30,6 +29,8 @@ ApeWorld *apeCreateWorld( void )
 
 	world->meshes   = PlCreateVectorArray( 0 );
 	world->entities = PlCreateLinkedList();
+
+	apeInitializeWorldVisibilitySystem_();
 
 	apeSetupGlobalWorldDefaults( world );
 
@@ -437,6 +438,8 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 				if ( faceVertex->u->position.x < face->bounds.mins.x ) { face->bounds.mins.x = faceVertex->u->position.x; }
 				if ( faceVertex->u->position.y < face->bounds.mins.y ) { face->bounds.mins.y = faceVertex->u->position.y; }
 				if ( faceVertex->u->position.z < face->bounds.mins.z ) { face->bounds.mins.z = faceVertex->u->position.z; }
+
+				face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
 			}
 
 			faceVertex->textureU = PlReadFloat32( file, false, NULL );
@@ -587,16 +590,21 @@ static uint32_t GetTotalFacesForRoom( ApeWorldRoom *room, bool detail )
 static void SetupRoomSubMeshes( const ApeWorld *world, ApeWorldRoom *room )
 {
 	unsigned int numMaterials = PlGetNumVectorArrayElements( world->materials );
-	room->batches             = PL_NEW_( ApeWorldBatch, numMaterials );
+
+	room->numBatches = numMaterials + APE_WORLD_ROOM_NUM_BUILTIN_BATCHES;
+	room->batches    = PL_NEW_( ApeWorldBatch, room->numBatches );
 
 	unsigned int maxFaces = GetTotalFacesForRoom( room, true );
-	for ( unsigned int i = 0; i < numMaterials; ++i )
+	for ( unsigned int i = 0; i < room->numBatches; ++i )
 	{
 		room->batches[ i ].maxSubMeshes   = maxFaces;
 		room->batches[ i ].firstSubMeshes = PL_NEW_( int, room->batches[ i ].maxSubMeshes );
 		room->batches[ i ].subMeshes      = PL_NEW_( int, room->batches[ i ].maxSubMeshes );
 		room->batches[ i ].material       = PlGetVectorArrayElementAt( world->materials, i );
 	}
+
+	room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ]   = numMaterials;
+	room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] = numMaterials + 1;
 }
 
 static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
@@ -647,7 +655,14 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 
 		uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
-		ApeWorldBatch *subMesh = &room->batches[ face->materialIndex ];
+		ApeWorldBatch *subMesh;
+		subMesh = &room->batches[ face->materialIndex ];
+		assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
+		subMesh->subMeshes[ subMesh->numSubMeshes ]      = ( int ) numVertices;
+		subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
+		subMesh->numSubMeshes++;
+
+		subMesh = &room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ];
 		assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
 		subMesh->subMeshes[ subMesh->numSubMeshes ]      = ( int ) numVertices;
 		subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
@@ -656,16 +671,12 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 		total += numVertices;
 	}
 
-#if 1
-
 	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 	{
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
 		if ( detailRoom == NULL )
-		{
 			continue;
-		}
 
 		numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
 		for ( uint32_t k = 0; k < numFaces; ++k )
@@ -673,9 +684,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 			ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 			assert( face != NULL );
 			if ( face == NULL || face->materialIndex < 0 )
-			{
 				continue;
-			}
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
@@ -695,7 +704,14 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 
 			uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
-			ApeWorldBatch *subMesh = &room->batches[ face->materialIndex ];
+			ApeWorldBatch *subMesh;
+			subMesh = &room->batches[ face->materialIndex ];
+			assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
+			subMesh->subMeshes[ subMesh->numSubMeshes ]      = ( int ) numVertices;
+			subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
+			subMesh->numSubMeshes++;
+
+			subMesh = &room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ];
 			assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
 			subMesh->subMeshes[ subMesh->numSubMeshes ]      = ( int ) numVertices;
 			subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
@@ -704,8 +720,6 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 			total += numVertices;
 		}
 	}
-
-#endif
 
 	PlgGenerateMeshNormals( room->mesh, true );
 	PlgGenerateVertexTangentBasis( room->mesh->vertices, room->mesh->num_verts );
@@ -950,6 +964,8 @@ void apeDestroyWorld( ApeWorld *world )
 		return;
 	}
 
+	apeShutdownWorldVisibilitySystem_();
+
 	if ( world->materials != NULL )
 	{
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
@@ -1126,4 +1142,9 @@ void apeRegisterWorldConsole_( void )
 	PlRegisterConsoleVariable( "world/forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 
 	PlRegisterConsoleCommand( "world/save", "Save the current world with the specified name.", 1, WorldSaveCallback );
+}
+
+void apeTickClientWorld_( void )
+{
+	apeBuildWorldVisibiltyLists_();
 }
