@@ -42,7 +42,8 @@ void apeDestroyWorld( ApeWorld *world );
 struct NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world );
-void apeDrawWorldStencilShadowPass_( void );
+void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera );
+void apeDrawWorldDepthPass_( ApeWorld *world, ApeCamera *camera );
 void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
 ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );

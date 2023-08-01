@@ -63,9 +63,12 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera )
 			continue;
 
 		PlPushBackVectorArrayElement( visibleLights, light );
+		break;
 	}
 
 	SortLights( camera );
+
+	ape_rendererPerformance_.numLights = PlGetNumVectorArrayElements( visibleLights );
 }
 
 static void BuildVisibleRoomList( ApeWorld *world, ApeCamera *camera )
@@ -106,6 +109,8 @@ ApeWorldRoom **apeGetVisibleRooms_( void )
 
 void apeBuildWorldVisibiltyLists_( void )
 {
+	ape_rendererPerformance_.numLights = 0;
+
 	PL_GET_CVAR( "world/draw", drawWorld );
 	if ( drawWorld != NULL && !drawWorld->b_value )
 		return;

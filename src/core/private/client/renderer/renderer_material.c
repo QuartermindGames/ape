@@ -29,13 +29,20 @@ typedef struct ApeMaterial
 	ApeMemoryReference mem;
 } ApeMaterial;
 
-static ApeMaterial *fallbackMaterial;
-static ApeMaterial *vertexMaterial;
-static ApeMaterial *shadowMaterial;
+static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
 
-ApeMaterial *apeGetFallbackMaterial( void ) { return fallbackMaterial; }
-ApeMaterial *apeGetVertexMaterial( void ) { return vertexMaterial; }
-ApeMaterial *apeGetShadowMaterial( void ) { return shadowMaterial; }
+ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial )
+{
+	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
+	if ( defaultMaterial == APE_MAX_DEFAULT_MATERIALS )
+		return defaultMaterials[ APE_MATERIAL_BUILTIN_FALLBACK ];
+
+	return defaultMaterials[ defaultMaterial ];
+}
+
+ApeMaterial *apeGetFallbackMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK ); }
+ApeMaterial *apeGetVertexMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_VERTEX ); }
+ApeMaterial *apeGetShadowMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_SHADOW ); }
 
 void apeInitializeMaterialSystem( void )
 {
@@ -52,16 +59,20 @@ void apeInitializeMaterialSystem( void )
 	specularFallbackTexture = apeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
 	previewFallbackTexture  = apeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
-	// cache built-in materials we need
-	fallbackMaterial = apeCacheMaterial( "materials/engine/fallback.mat.n", APE_CACHE_WORLD, false, false );
-	if ( fallbackMaterial == NULL )
-		PRINT_ERROR( "Failed to cache fallback material!\n" );
-	vertexMaterial = apeCacheMaterial( "materials/engine/vertex.mat.n", APE_CACHE_WORLD, false, false );
-	if ( vertexMaterial == NULL )
-		PRINT_ERROR( "Failed to cache vertex material!\n" );
-	shadowMaterial = apeCacheMaterial( "materials/engine/shadow.mat.n", APE_CACHE_WORLD, false, false );
-	if ( shadowMaterial == NULL )
-		PRINT_ERROR( "Failed to cache shadow material!\n" );
+	// cache default materials we need
+	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
+	        {
+	                "materials/engine/fallback.mat.n",
+	                "materials/engine/vertex.mat.n",
+	                "materials/engine/shadow.mat.n",
+	                "materials/engine/depth.mat.n",
+	        };
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	{
+		defaultMaterials[ i ] = apeCacheMaterial( defaultMaterialPaths[ i ], APE_CACHE_WORLD, false, false );
+		if ( defaultMaterials[ i ] == NULL )
+			PRINT_ERROR( "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
+	}
 }
 
 void apeShutdownMaterialSystem( void )
@@ -598,7 +609,7 @@ ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFa
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	ApeMaterial *fallbackPtr = useFallback ? fallbackMaterial : NULL;
+	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : NULL;
 
 	NdBranch *root = ndLoadFile( path, "material" );
 	if ( root == NULL )
@@ -629,11 +640,10 @@ void apeReleaseMaterial( ApeMaterial *material )
 		return;
 	}
 
-	/* Fallback material isn't owned by the memory manager. */
-	if ( material == fallbackMaterial )
-	{
-		return;
-	}
+	// don't flush default materials...
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+		if ( material == defaultMaterials[ i ] )
+			return;
 
 	apeReleaseReference( &material->mem );
 }
@@ -704,38 +714,24 @@ static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, uns
 	if ( world != NULL )
 	{
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->sunColour, false );
-		}
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->sunPosition, false );
-		}
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
-		}
 
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogColour, false );
-		}
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogNear, false );
-		}
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
-		{
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogFar, false );
-		}
 	}
 
 	if ( ( slot = PlgGetShaderUniformSlot( program, "numLights" ) ) >= 0 )
 	{
 		if ( numLights > APE_MAX_LIGHTS_PER_PASS )
-		{
 			numLights = APE_MAX_LIGHTS_PER_PASS;
-		}
 
 		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
 		for ( unsigned int i = 0; i < numLights; ++i )
@@ -765,8 +761,8 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 	assert( material->isCached );
 	if ( !material->isCached )
 	{
-		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = material->preview;
-		material                                                  = fallbackMaterial;
+		defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ]->passes[ 0 ].variables[ 0 ].data.userPtr = material->preview;
+		material                                                                                   = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 	}
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
@@ -776,24 +772,21 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
+		if ( rendererState.cullMode == APE_RENDERER_CULL_FRONT )
+			cullMode = PLG_CULL_POSITIVE;
+		else if ( rendererState.cullMode == APE_RENDERER_CULL_BACK )
+			cullMode = PLG_CULL_NEGATIVE;
+		else if ( rendererState.cullMode == APE_RENDERER_CULL_NONE )
+			cullMode = PLG_CULL_NONE;
+		else
+			cullMode = curPass->cullMode;
+
 		if ( rendererState.mirror && ( rendererState.depth % 2 ) )
 		{
-			if ( curPass->cullMode == PLG_CULL_NEGATIVE )
-			{
+			if ( cullMode == PLG_CULL_NEGATIVE )
 				cullMode = PLG_CULL_POSITIVE;
-			}
-			else if ( curPass->cullMode == PLG_CULL_POSITIVE )
-			{
+			else if ( cullMode == PLG_CULL_POSITIVE )
 				cullMode = PLG_CULL_NEGATIVE;
-			}
-			else
-			{
-				cullMode = curPass->cullMode;
-			}
-		}
-		else
-		{
-			cullMode = curPass->cullMode;
 		}
 
 		PlgSetCullMode( cullMode );
@@ -803,14 +796,18 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		if ( PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME ) )
 		{
 			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 			PlgSetTexture( NULL, 0 );
 		}
 		else
 		{
 			PlgSetShaderProgram( curPass->program );
-			PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
-
 			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+
+			if ( rendererState.overrideBlendMode )
+				PlgSetBlendMode( rendererState.blendModeA, rendererState.blendModeB );
+			else
+				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
 			SetGlobalUniforms( curPass->program, lights, numLights );
 
@@ -827,9 +824,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
 					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
-					{
 						continue;
-					}
 
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
@@ -848,26 +843,18 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 
 					PL_GET_CVAR( "r/skipNormal", skipNormal );
 					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_NORMAL && skipNormal->b_value ) )
-					{
 						texture = normalFallbackTexture;
-					}
 					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
 					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
-					{
 						texture = specularFallbackTexture;
-					}
 
 					PLGTextureFilter textureFilter = curPass->textureFilter;
 					if ( texture->flags & PLG_TEXTURE_FLAG_NOMIPS )
 					{
 						if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR )
-						{
 							textureFilter = PLG_TEXTURE_FILTER_LINEAR;
-						}
 						else
-						{
 							textureFilter = PLG_TEXTURE_FILTER_NEAREST;
-						}
 					}
 
 					PlgSetTexture( texture, curUnit );
@@ -887,19 +874,14 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 
 		ape_rendererPerformance_.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
-		{
 			ape_rendererPerformance_.numTriangles += mesh->num_triangles;
-		}
 		else
-		{
 			ape_rendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
-		}
 	}
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
 	if ( !material->isCached )
-	{
-		fallbackMaterial->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
-	}
+		defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ]->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
 }

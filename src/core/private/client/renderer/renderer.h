@@ -113,8 +113,21 @@ typedef struct ApeLight
 typedef ApeLight ApeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
+typedef enum ApeRendererCullMode
+{
+	APE_RENDERER_CULL_DEFAULT,
+	APE_RENDERER_CULL_FRONT,
+	APE_RENDERER_CULL_BACK,
+	APE_RENDERER_CULL_NONE,
+} ApeRendererCullMode;
+
 typedef struct ApeRendererPassState
 {
+	ApeRendererCullMode cullMode;// override default cull mode
+
+	PLGBlend blendModeA, blendModeB;
+	bool overrideBlendMode;
+
 	bool mirror;
 	unsigned int depth;
 } ApeRendererPassState;
@@ -145,7 +158,7 @@ struct ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name );
 
 void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport );
 
-void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h );
+void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
 void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation, float scale );
 
 void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );

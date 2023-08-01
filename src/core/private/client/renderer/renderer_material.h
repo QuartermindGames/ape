@@ -125,6 +125,19 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 void apeInitializeMaterialSystem( void );
 void apeShutdownMaterialSystem( void );
 
+typedef enum ApeDefaultMaterial
+{
+	APE_MATERIAL_DEFAULT_FALLBACK,
+	APE_MATERIAL_DEFAULT_VERTEX,
+	APE_MATERIAL_DEFAULT_SHADOW,
+	APE_MATERIAL_DEFAULT_DEPTH,
+
+	APE_MAX_DEFAULT_MATERIALS
+} ApeDefaultMaterial;
+
+ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
+
+// !!OBSOLETE!! Use the above instead...
 ApeMaterial *apeGetFallbackMaterial( void );
 ApeMaterial *apeGetVertexMaterial( void );
 ApeMaterial *apeGetShadowMaterial( void );

@@ -37,7 +37,7 @@ static void DrawFXAAEffect( const ApeViewport *viewport )
 	if ( fxaaEnabled )
 		return;
 
-	apeDraw2DQuad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height );
+	apeDraw2DQuad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 }
 
 /****************************************

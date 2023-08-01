@@ -125,7 +125,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 		apeSet2DViewportSize( viewport->width, viewport->height );
 
 		// draw the output of the canvas
-		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height );
+		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
 	if ( game_modeInterface->DrawMenu != NULL )

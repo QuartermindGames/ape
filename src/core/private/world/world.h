@@ -255,6 +255,7 @@ PL_EXTERN_C
 
 ApeWorldRoom *apeCreateWorldRoom( void );
 void apeDestroyWorldRoom( ApeWorldRoom *room );
+ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );
 
 void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
 ApeWorld *apeDeserializeWorld( NdBranch *root, ApeWorld *out );

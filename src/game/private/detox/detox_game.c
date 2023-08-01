@@ -55,11 +55,16 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	apeSetCameraAngles( playerCamera, &ang );
 }
 
+static void SpawnLight( void )
+{
+
+}
+
 static void InitializeGame( void )
 {
 	gameRegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world worlds/train01.rfl" );
+	PlParseConsoleString( "world worlds/train02.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );
@@ -72,6 +77,7 @@ static void InitializeGame( void )
 	apeRegisterInputAction( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
 	apeRegisterInputAction( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
 	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, NULL );
 }
 
 static void ShutdownGame( void )

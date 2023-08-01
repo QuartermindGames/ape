@@ -34,3 +34,9 @@ void apeDestroyWorldRoom( ApeWorldRoom *room )
 
 	PL_DELETE( room );
 }
+
+ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces )
+{
+	*numFaces = PlGetNumVectorArrayElements( room->faces );
+	return ( ApeWorldFace ** ) PlGetVectorArrayData( room->faces );
+}

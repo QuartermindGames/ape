@@ -219,9 +219,7 @@ void apeInitializeShaders_( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
-	{
 		PRINT_ERROR( "Failed to create shader program list: %s\n", PlGetError() );
-	}
 
 	PRINT( "Scanning for shader programs...\n" );
 
@@ -237,14 +235,13 @@ void apeInitializeShaders_( void )
 	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
 	        [APE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
 	        [APE_SHADER_DEFAULT_FONT]   = "font",
+	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
 	};
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
 	{
 		ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
-		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
-		}
 
 		ape_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
 	}
