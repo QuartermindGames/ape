@@ -81,7 +81,7 @@ static void InitializeDemoGame( void )
 
 	gameRegisterStandardEntityComponents();
 
-	PlParseConsoleString( "world worlds/test_geo.rfl" );
+	PlParseConsoleString( "world worlds/train01.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );

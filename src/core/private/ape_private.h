@@ -125,6 +125,7 @@ typedef struct ApeConfig
 	{
 		bool wireframe;
 		bool useStencilShadowVolumes;
+		bool showShadowWireframe;
 	} renderer;
 
 	struct

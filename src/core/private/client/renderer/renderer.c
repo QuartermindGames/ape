@@ -229,7 +229,8 @@ void Renderer_RegisterConsoleVariables( void )
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
-	PlRegisterConsoleVariable( "renderer/useStencilShadowVolumes", "Use stencil shadow volumes.", "1", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
+	PlRegisterConsoleVariable( "renderer/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
+	PlRegisterConsoleVariable( "renderer/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -629,6 +630,8 @@ void apeDebugPlaceLight( PLVector3 position )
 static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ApeWorld *world = apeGetCurrentWorld();
+	if ( world == NULL )
+		return;
 
 #if 1// test lights
 
@@ -650,13 +653,13 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 		//screenPosTest       = screenPos;
 	}
 
-	//light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 5.0f ) );
-	//light->position = PlAddVector3( light->position, ( PLVector3 ){
-	//                                                        sinf( apeGetNumTicks() / 5.0f ) / 10.0f,
-	//                                                        cosf( apeGetNumTicks() / 5.0f ) / 10.0f,
-	//                                                        sinf( apeGetNumTicks() / 5.0f ) / 10.0f } );
-
-	//light->position = PLVector3( -26.0f, -3.5f, 58.0f );
+	light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 5.0f ) );
+	//static PLVector3 position = PLVector3( -26.0f, -3.5f, 58.0f );
+	//light->position           = position;
+	light->position           = PlAddVector3( light->position, ( PLVector3 ){
+                                                             ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 100.0f,
+                                                             ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 50.0f,
+                                                             ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 100.0f } );
 
 	light->colour.r = 1.0f;
 	light->colour.g = 1.0f;
@@ -672,50 +675,59 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 	if ( ape_config_.renderer.wireframe || !ape_config_.renderer.useStencilShadowVolumes )
 	{
 		if ( world != NULL )
-			apeDrawWorld_( world );
+			apeDrawWorld_( world, 0 );
 
 		return;
 	}
 
-	apeDrawWorld_( world );
+	apeDrawWorld_( world, false );
 
 #if 1
 
 	if ( ape_config_.renderer.useStencilShadowVolumes )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+		PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 		PlgColourMask( false, false, false, false );
 		PlgDepthMask( false );
 
-		rendererState.cullMode = APE_RENDERER_CULL_FRONT;
-		PlgStencilFunction( PLG_STENCIL_TEST_ALWAYS, 0x0, 0xFF );
-		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCR, PLG_STENCIL_OP_KEEP );
-
-		apeDrawWorldStencilShadowPass_( world, camera );
-
-		rendererState.cullMode = APE_RENDERER_CULL_BACK;
-		PlgStencilFunction( PLG_STENCIL_TEST_ALWAYS, 0x0, 0xFF );
-		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECR, PLG_STENCIL_OP_KEEP );
-
-		apeDrawWorldStencilShadowPass_( world, camera );
-
 		rendererState.cullMode = APE_RENDERER_CULL_NONE;
+		PlgStencilFunction( PLG_STENCIL_TEST_ALWAYS, 0x0, 0xFF );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+		PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
+		apeDrawWorldStencilShadowPass_( world, camera );
+
+		PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 		PlgColourMask( true, true, true, true );
 		PlgDepthMask( true );
 
 		PlgStencilFunction( PLG_STENCIL_TEST_NOTEQUAL, 0x0, 0xFF );
-		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_REPLACE, PLG_STENCIL_OP_REPLACE, PLG_STENCIL_OP_REPLACE );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
 		PlgDisableGraphicsState( PLG_GFX_STATE_DEPTHTEST );
 
-		apeSet2DViewportSize( viewport->width, viewport->height );
-		apeDraw2DQuad( apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_SHADOW ), 0, 0, viewport->width, viewport->height, &PL_COLOURU8( 0, 0, 0, 255 / 2 ) );
+		//apeSet2DViewportSize( viewport->width, viewport->height );
+		//apeDraw2DQuad( apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_SHADOW ), 0, 0, viewport->width, viewport->height, &PL_COLOURU8( 0, 0, 0, 255 / 2 ) );
+
+		//apeDrawWorldDepthPass_( world, camera );
+		apeDrawWorld_( world, true );
 
 		rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
 
 		PlgEnableGraphicsState( PLG_GFX_STATE_DEPTHTEST );
 		PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+
+		if ( ape_config_.renderer.showShadowWireframe )
+		{
+			rendererState.cullMode = APE_RENDERER_CULL_NONE;
+
+			PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+			apeDrawWorldStencilShadowPass_( world, camera );
+			PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+
+			rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+		}
 	}
 
 #endif

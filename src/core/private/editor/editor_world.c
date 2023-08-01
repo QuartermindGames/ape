@@ -219,7 +219,7 @@ static void DrawWorldEditorGUI( void )
 				break;
 			case APE_CAMERA_DRAW_MODE_SOLID:
 			case APE_CAMERA_DRAW_MODE_TEXTURED:
-				apeDrawWorld_( world );
+				apeDrawWorld_( world, 0 );
 				break;
 			default:
 				break;
