@@ -26,6 +26,8 @@ typedef struct ApeMaterial
 
 	int8_t surfaceType;
 
+	bool skipStencilShadowVolumePass;
+
 	ApeMemoryReference mem;
 } ApeMaterial;
 
@@ -42,7 +44,6 @@ ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial )
 
 ApeMaterial *apeGetFallbackMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK ); }
 ApeMaterial *apeGetVertexMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_VERTEX ); }
-ApeMaterial *apeGetShadowMaterial( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_SHADOW ); }
 
 void apeInitializeMaterialSystem( void )
 {
@@ -516,7 +517,8 @@ static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool p
 		}
 	}
 
-	material->surfaceType = ndGetI8ByName( root, "surfaceType", 0 );
+	material->surfaceType                 = ndGetI8ByName( root, "surfaceType", 0 );
+	material->skipStencilShadowVolumePass = ndGetBoolByName( root, "skipStencilShadowVolumePass", false );
 
 	if ( material->numPasses == 0 )
 	{
@@ -652,6 +654,8 @@ int8_t apeGetMaterialSurfaceType( const ApeMaterial *material )
 {
 	return material->surfaceType;
 }
+
+bool apeMaterialSkipsStencilShadowVolumePass( const ApeMaterial *material ) { return material->skipStencilShadowVolumePass; }
 
 static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
 {

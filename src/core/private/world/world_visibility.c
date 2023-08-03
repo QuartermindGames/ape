@@ -63,7 +63,6 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera )
 			continue;
 
 		PlPushBackVectorArrayElement( visibleLights, light );
-		break;
 	}
 
 	SortLights( camera );

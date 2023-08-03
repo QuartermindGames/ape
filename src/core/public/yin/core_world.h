@@ -10,6 +10,7 @@ PL_EXTERN_C
 /* external elements */
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
+typedef struct ApeLight ApeLight;
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -42,7 +43,7 @@ void apeDestroyWorld( ApeWorld *world );
 struct NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world, bool ambienceOnly );
-void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera );
+void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
 ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );

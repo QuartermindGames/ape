@@ -362,6 +362,23 @@ static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file )
 	}
 }
 
+static void GenerateFaceBounds( ApeWorldFace *face )
+{
+	unsigned int numVertices      = PlGetNumVectorArrayElements( face->vertices );
+	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
+	if ( numVertices == 0 )
+		return;
+
+	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
+	for ( unsigned int i = 0; i < numVertices; ++i )
+		boundVertices[ i ] = vertices[ i ]->u->position;
+
+	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
+	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
+
+	PL_DELETE( boundVertices );
+}
+
 static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t version )
 {
 	uint32_t numFaces = PL_READUINT32( file, false, NULL );
@@ -415,9 +432,6 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
-		face->bounds.mins = ( PLVector3 ){ FLT_MAX, FLT_MAX, FLT_MAX };
-		face->bounds.maxs = ( PLVector3 ){ FLT_MIN, FLT_MIN, FLT_MIN };
-
 		uint32_t numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices           = PlCreateVectorArray( numFaceVertices );
 		for ( uint32_t j = 0; j < numFaceVertices; ++j )
@@ -430,16 +444,6 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 			{
 				faceVertex->u = ( ApeWorldVertex * ) PlGetVectorArrayElementAt( world->vertices, worldVertexIndex );
 				assert( faceVertex->u != NULL );
-
-				if ( faceVertex->u->position.x > face->bounds.maxs.x ) { face->bounds.maxs.x = faceVertex->u->position.x; }
-				if ( faceVertex->u->position.y > face->bounds.maxs.y ) { face->bounds.maxs.y = faceVertex->u->position.y; }
-				if ( faceVertex->u->position.z > face->bounds.maxs.z ) { face->bounds.maxs.z = faceVertex->u->position.z; }
-
-				if ( faceVertex->u->position.x < face->bounds.mins.x ) { face->bounds.mins.x = faceVertex->u->position.x; }
-				if ( faceVertex->u->position.y < face->bounds.mins.y ) { face->bounds.mins.y = faceVertex->u->position.y; }
-				if ( faceVertex->u->position.z < face->bounds.mins.z ) { face->bounds.mins.z = faceVertex->u->position.z; }
-
-				face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
 			}
 
 			faceVertex->textureU = PlReadFloat32( file, false, NULL );
@@ -457,6 +461,8 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 
 			PlPushBackVectorArrayElement( face->vertices, faceVertex );
 		}
+
+		GenerateFaceBounds( face );
 
 		PlPushBackVectorArrayElement( room->faces, face );
 	}

@@ -140,6 +140,7 @@ ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
 // !!OBSOLETE!! Use the above instead...
 ApeMaterial *apeGetFallbackMaterial( void );
 ApeMaterial *apeGetVertexMaterial( void );
-ApeMaterial *apeGetShadowMaterial( void );
+
+bool apeMaterialSkipsStencilShadowVolumePass( const ApeMaterial *material );
 
 PL_EXTERN_C_END

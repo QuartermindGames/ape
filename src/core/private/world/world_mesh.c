@@ -10,16 +10,6 @@
 
 #define WORLD_VERTEX_ELEMENTS 12// pos, norm, uv, colour
 
-bool YnCore_World_IsFaceVisible( ApeWorldFace *face, const ApeCamera *camera )
-{
-	// Check the face is actually visible
-	face->bounds.origin = pl_vecOrigin3;
-	if ( !PlgIsBoxInsideView( camera->internal, &face->bounds ) )
-		return false;
-
-	return true;
-}
-
 unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles )
 {
 #if 0
