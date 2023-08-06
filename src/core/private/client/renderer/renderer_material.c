@@ -769,6 +769,12 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		material                                                                                   = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 	}
 
+	if ( rendererState.overrideBlendMode )
+	{
+		PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
+		PlgSetBlendMode( rendererState.blendModeA, rendererState.blendModeB );
+	}
+
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
 		ApeMaterialPass *curPass = &material->passes[ i ];
@@ -808,9 +814,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 			PlgSetShaderProgram( curPass->program );
 			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
-			if ( rendererState.overrideBlendMode )
-				PlgSetBlendMode( rendererState.blendModeA, rendererState.blendModeB );
-			else
+			if ( !rendererState.overrideBlendMode )
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
 			SetGlobalUniforms( curPass->program, lights, numLights );

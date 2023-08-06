@@ -277,7 +277,7 @@ void apeInitializeWorldVisibilitySystem_( void );
 void apeShutdownWorldVisibilitySystem_( void );
 
 struct ApeLight **apeGetVisibleLights_( unsigned int *num );
-ApeWorldRoom **apeGetVisibleRooms_( void );
+ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
 
 void apeBuildWorldVisibiltyLists_( void );
 

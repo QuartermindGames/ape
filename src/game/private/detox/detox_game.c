@@ -8,56 +8,37 @@ static ApeCamera *playerCamera = NULL;
 static void MoveCameraCallback( ApeInputState state, const char *id )
 {
 	if ( state != OGE_INPUT_STATE_DOWN )
-	{
 		return;
-	}
 
 	PLVector3 pos = apeGetCameraPosition( playerCamera );
 	PLVector3 ang = apeGetCameraAngles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
-	{
 		ang.y += 1.5f;
-	}
 	else if ( strcmp( id, "rotateRight" ) == 0 )
-	{
 		ang.y -= 1.5f;
-	}
 
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
 	if ( strcmp( id, "moveForward" ) == 0 )
-	{
 		pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) );
-	}
 	else if ( strcmp( id, "moveBackward" ) == 0 )
-	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) );
-	}
 	else if ( strcmp( id, "moveLeft" ) == 0 )
-	{
 		pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) );
-	}
 	else if ( strcmp( id, "moveRight" ) == 0 )
-	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) );
-	}
 	else if ( strcmp( id, "moveUp" ) == 0 )
-	{
 		pos.y += 0.5f;
-	}
 	else if ( strcmp( id, "moveDown" ) == 0 )
-	{
 		pos.y -= 0.5f;
-	}
 
 	apeSetCameraPosition( playerCamera, &pos );
 	apeSetCameraAngles( playerCamera, &ang );
 }
 
-static void SpawnLight( void )
+static void SpawnLight( ApeInputState state, const char *id )
 {
-
 }
 
 static void InitializeGame( void )
@@ -77,7 +58,7 @@ static void InitializeGame( void )
 	apeRegisterInputAction( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
 	apeRegisterInputAction( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
 	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, NULL );
+	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, SpawnLight );
 }
 
 static void ShutdownGame( void )

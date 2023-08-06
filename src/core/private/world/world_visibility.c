@@ -54,13 +54,16 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera )
 		if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) )
 			continue;
 
-		float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
-		if ( distance > 64.0f )
-			continue;
+		if ( light->type != APE_LIGHT_TYPE_SUN )
+		{
+			float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
+			if ( distance > ape_config_.renderer.maxLightDistance )
+				continue;
 
-		PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
-			continue;
+			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
+				continue;
+		}
 
 		PlPushBackVectorArrayElement( visibleLights, light );
 	}
@@ -101,8 +104,9 @@ ApeLight **apeGetVisibleLights_( unsigned int *num )
 	return ( ApeLight ** ) PlGetVectorArrayData( visibleLights );
 }
 
-ApeWorldRoom **apeGetVisibleRooms_( void )
+ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num )
 {
+	*num = PlGetNumVectorArrayElements( visibleRooms );
 	return ( ApeWorldRoom ** ) PlGetVectorArrayData( visibleRooms );
 }
 

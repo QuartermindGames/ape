@@ -42,10 +42,6 @@ PL_EXTERN_C
 	PL_TOSTRING( VERSION_MAJOR ) \
 	"." PL_TOSTRING( VERSION_MINOR ) "." PL_TOSTRING( VERSION_PATCH ) " (" VERSION_CODENAME ")"
 
-#if !defined( NDEBUG )
-#	define ENABLE_PROFILER 1
-#endif
-
 void apeUpdateProfilerGraphs( void );
 
 #include "ape_scheduler.h"
@@ -126,6 +122,8 @@ typedef struct ApeConfig
 		bool wireframe;
 		bool useStencilShadowVolumes;
 		bool showShadowWireframe;
+
+		float maxLightDistance;
 	} renderer;
 
 	struct

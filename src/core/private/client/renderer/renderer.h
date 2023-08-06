@@ -77,11 +77,11 @@ typedef struct ApeViewport
 
 typedef enum ApeLightType
 {
-	OGE_LIGHT_TYPE_OMNI,
-	OGE_LIGHT_TYPE_SPOT,
-	OGE_LIGHT_TYPE_SUN,
+	APE_LIGHT_TYPE_OMNI,
+	APE_LIGHT_TYPE_SPOT,
+	APE_LIGHT_TYPE_SUN,
 
-	OGE_MAX_LIGHT_TYPES
+	APE_MAX_LIGHT_TYPES
 } ApeLightType;
 
 // GM flags, do not change!!
@@ -98,6 +98,7 @@ typedef enum ApeLightType
 typedef struct ApeLight
 {
 	ApeLightType type;
+	
 	PLVector3 position;
 	PLVector3 angles;
 	PLColourF32 colour;
@@ -121,9 +122,18 @@ typedef enum ApeRendererCullMode
 	APE_RENDERER_CULL_NONE,
 } ApeRendererCullMode;
 
+typedef enum ApeRendererPassStage
+{
+	APE_RENDERER_PASS_DEFAULT,
+	APE_RENDERER_PASS_DEPTH,
+	APE_RENDERER_PASS_STENCIL,
+	APE_RENDERER_PASS_LIGHTING,
+} ApeRendererPassStage;
+
 typedef struct ApeRendererPassState
 {
 	ApeRendererCullMode cullMode;// override default cull mode
+	ApeRendererPassStage passStage;
 
 	PLGBlend blendModeA, blendModeB;
 	bool overrideBlendMode;
