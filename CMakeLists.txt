@@ -121,10 +121,13 @@ add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/game/)
+
 add_subdirectory(src/shells/launcher_sdl2/)
 
 # tools
 add_subdirectory(src/tools/fonttool)
 add_subdirectory(src/tools/matgen)
+add_subdirectory(src/tools/mated)
+add_subdirectory(src/tools/worlded)
 
 add_subdirectory(src/tests/)
