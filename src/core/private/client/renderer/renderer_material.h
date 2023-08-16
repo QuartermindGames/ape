@@ -141,6 +141,6 @@ ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
 ApeMaterial *apeGetFallbackMaterial( void );
 ApeMaterial *apeGetVertexMaterial( void );
 
-bool apeMaterialSkipsStencilShadowVolumePass( const ApeMaterial *material );
+bool apeMaterialShadowsEnabled( const ApeMaterial *material );
 
 PL_EXTERN_C_END

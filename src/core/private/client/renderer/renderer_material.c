@@ -26,7 +26,7 @@ typedef struct ApeMaterial
 
 	int8_t surfaceType;
 
-	bool skipStencilShadowVolumePass;
+	bool enableShadows;
 
 	ApeMemoryReference mem;
 } ApeMaterial;
@@ -414,9 +414,7 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 			PL_DELETE( blendModesArray[ 1 ] );
 		}
 		else
-		{
 			PRINT_WARNING( "Invalid blend mode array in material!\n" );
-		}
 	}
 
 	materialPass->depthTest = ndGetBoolByName( root, "depthTest", materialPass->depthTest );
@@ -426,34 +424,20 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 	if ( textureFilterPtr != NULL )
 	{
 		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
-		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear_nearest" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR_NEAREST;
-		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest_linear" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST_LINEAR;
-		}
 		else if ( pl_strcasecmp( textureFilterPtr, "nearest" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_NEAREST;
-		}
 		else if ( pl_strcasecmp( textureFilterPtr, "linear" ) == 0 )
-		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_LINEAR;
-		}
 	}
 	else
-	{
 		materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-	}
 
 	/* now handle any specific parameters the material provides */
 	if ( ( subNode = ndGetChildByName( root, "shaderParameters" ) ) != NULL )
@@ -517,8 +501,8 @@ static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool p
 		}
 	}
 
-	material->surfaceType                 = ndGetI8ByName( root, "surfaceType", 0 );
-	material->skipStencilShadowVolumePass = ndGetBoolByName( root, "skipStencilShadowVolumePass", false );
+	material->surfaceType   = ndGetI8ByName( root, "surfaceType", 0 );
+	material->enableShadows = ndGetBoolByName( root, "enableShadows", true );
 
 	if ( material->numPasses == 0 )
 	{
@@ -584,6 +568,87 @@ static void DestroyMaterial( ApeMaterial *material )
 static void DestroyMaterialCallback( void *userData )
 {
 	DestroyMaterial( ( ApeMaterial * ) userData );
+}
+
+static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
+{
+	if ( variable == -1 )
+		return;
+
+	switch ( variable )
+	{
+		case APE_MATERIAL_BUILTIN_TIME:
+		{
+			unsigned int numTicks = apeGetNumTicks();
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
+			break;
+		}
+
+		case APE_MATERIAL_BUILTIN_FALLBACK:
+		case APE_MATERIAL_BUILTIN_DEPTH:
+		{
+			PLGTexture *texture = NULL;
+			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK )
+				texture = apeGetFallbackTexture();
+			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
+				texture = apeGetPrimaryDepthAttachment();
+
+			if ( texture == NULL )
+				break;
+
+			PlgSetTexture( texture, *curUnit );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
+			( *curUnit )++;
+			break;
+		}
+
+		case APE_MATERIAL_BUILTIN_VIEWPORT_SIZE:
+		{
+			int w, h;
+			apeGet2DViewportSize( &w, &h );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
+static void SetGlobalUniforms( PLGShaderProgram *program, const ApeLight *light )
+{
+	//TODO: we should be caching these slots rather than looking them up every time...
+
+	int slot;
+
+	ApeWorld *world = apeGetCurrentWorld();
+	if ( world != NULL )
+	{
+		//TODO: get rid of this, should be treated as a light instead...
+		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->sunColour, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->sunPosition, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
+
+		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->fogColour, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->fogNear, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->fogFar, false );
+	}
+
+	if ( light != NULL )
+	{
+		if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &light->radius, false );
+	}
 }
 
 ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFallback, bool preview )
@@ -655,108 +720,7 @@ int8_t apeGetMaterialSurfaceType( const ApeMaterial *material )
 	return material->surfaceType;
 }
 
-bool apeMaterialSkipsStencilShadowVolumePass( const ApeMaterial *material ) { return material->skipStencilShadowVolumePass; }
-
-static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int variable, unsigned int *curUnit )
-{
-	if ( variable == -1 )
-	{
-		return;
-	}
-
-	switch ( variable )
-	{
-		case APE_MATERIAL_BUILTIN_TIME:
-		{
-			unsigned int numTicks = apeGetNumTicks();
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
-			break;
-		}
-
-		case APE_MATERIAL_BUILTIN_FALLBACK:
-		case APE_MATERIAL_BUILTIN_DEPTH:
-		{
-			PLGTexture *texture = NULL;
-			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK )
-			{
-				texture = apeGetFallbackTexture();
-			}
-			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
-			{
-				texture = apeGetPrimaryDepthAttachment();
-			}
-
-			if ( texture == NULL )
-			{
-				break;
-			}
-
-			PlgSetTexture( texture, *curUnit );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
-			( *curUnit )++;
-			break;
-		}
-
-		case APE_MATERIAL_BUILTIN_VIEWPORT_SIZE:
-		{
-			int w, h;
-			apeGet2DViewportSize( &w, &h );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
-			break;
-		}
-
-		default:
-			break;
-	}
-}
-
-static void SetGlobalUniforms( PLGShaderProgram *program, ApeLight **lights, unsigned int numLights )
-{
-	int slot;
-
-	ApeWorld *world = apeGetCurrentWorld();
-	if ( world != NULL )
-	{
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->sunColour, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->sunPosition, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
-
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->fogColour, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->fogNear, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->fogFar, false );
-	}
-
-	if ( ( slot = PlgGetShaderUniformSlot( program, "numLights" ) ) >= 0 )
-	{
-		if ( numLights > APE_MAX_LIGHTS_PER_PASS )
-			numLights = APE_MAX_LIGHTS_PER_PASS;
-
-		PlgSetShaderUniformValueByIndex( program, slot, &numLights, false );
-		for ( unsigned int i = 0; i < numLights; ++i )
-		{
-			/* todo: this would be a lot less fucking disturbing if we were using a proper static layout! */
-			char buf[ 64 ];
-			PL_ZERO_( buf );
-			sprintf( buf, "lights[%u].", i );
-
-			char *p = &buf[ strlen( buf ) ];
-			strcpy( p, "colour" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ]->colour, false );
-
-			strcpy( p, "position" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ]->position, false );
-
-			strcpy( p, "radius" );
-			PlgSetShaderUniformValue( program, buf, &lights[ i ]->radius, false );
-		}
-	}
-}
+bool apeMaterialShadowsEnabled( const ApeMaterial *material ) { return material->enableShadows; }
 
 void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {
@@ -764,10 +728,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 	// though ideally this shouldn't happen!
 	assert( material->isCached );
 	if ( !material->isCached )
-	{
-		defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ]->passes[ 0 ].variables[ 0 ].data.userPtr = material->preview;
-		material                                                                                   = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
-	}
+		material = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 
 	if ( rendererState.overrideBlendMode )
 	{
@@ -817,7 +778,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 			if ( !rendererState.overrideBlendMode )
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
-			SetGlobalUniforms( curPass->program, lights, numLights );
+			SetGlobalUniforms( curPass->program, lights != NULL ? lights[ 0 ] : NULL );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
@@ -889,7 +850,4 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
-
-	if ( !material->isCached )
-		defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ]->passes[ 0 ].variables[ 0 ].data.userPtr = apeGetFallbackTexture();
 }
