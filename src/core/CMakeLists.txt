@@ -26,9 +26,7 @@ set(APE_SOURCE_AUDIO
         private/client/audio/audio_openal.c
         private/client/audio/audio_wav.c
         private/client/audio/audio_xaudio2.cpp
-        private/client/audio/audio_xwb.c
-        private/client/audio/micromod.c
-        private/client/audio/sdlplayer.c)
+        private/client/audio/audio_xwb.c)
 
 set(APE_SOURCE_GUI
         private/client/gui/gui.c
