@@ -1,0 +1,79 @@
+node.utf8
+object world
+{
+    uint16 version 3
+
+    object geometry
+    {
+        array string materials
+        {
+            "materials/world/example.mat.n"
+        }
+
+        array object rooms
+        {
+            {
+                int32       id          0
+                array float mins        { 0 0 0 }
+                array float maxs        { 0 0 0 }
+                array uint8 ambience    { 255 255 255 255 }
+                bool        isDetail    false
+                uint32      flags       0
+            }
+        }
+
+        array object portals
+        {
+            {
+                uint32      roomA   0
+                uint32      roomB   1
+                array float mins    { 0 0 0 }
+                array float maxs    { 0 0 0 }
+            }
+        }
+
+        array float vertices
+        {
+            0 0 0
+        }
+
+        array object faces
+        {
+            array float normal              { 0 0 0 }
+            float       offset              0
+            uint32      material            0
+            uint32      room                0
+            int32       portal              0
+            uint32      smoothingGroup      0
+            uint32      flags               0
+
+            array object vertices
+            {
+                {
+                    uint32      vertex          0
+                    array float textureCoords   { 0 0 }
+                    array float lightmapCoords  { 0 0 }
+                }
+            }
+        }
+    }
+
+    array object entities
+    {
+        {
+        }
+    }
+
+    array object lights
+    {
+        {
+            int32       id          0
+            string      className   "default"
+            array float position    { 0 0 0 }
+            array float angles      { 0 0 0 }
+            array uint8 colour      { 255 255 255 255 }
+            float       radius      1
+            uint32      flags       0
+        }
+    }
+}
