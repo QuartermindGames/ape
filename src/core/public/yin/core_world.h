@@ -54,7 +54,17 @@ ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
 ApeWorldMesh *apeLoadWorldMesh( const char *path );
 void apeReleaseWorldMesh( ApeWorldMesh *worldMesh );
 
-/* Sector */
+/* Room */
+
+#define APE_WORLD_ROOM_FLAG_COLD     0x2
+#define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
+#define APE_WORLD_ROOM_FLAG_AIRLOCK  0x8
+#define APE_WORLD_ROOM_FLAG_AMBIENT  0x20
+#define APE_WORLD_ROOM_FLAG_ALPHA    0x40
+#define APE_WORLD_ROOM_FLAG_LIFE     0x80
+#define APE_WORLD_ROOM_FLAG_PLANKTON 0x1000
+#define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
+#define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
 struct ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights );
 

@@ -7,6 +7,8 @@
 
 #include <plgraphics/plg_mesh.h>
 
+#include "yin/core_world.h"
+
 #include "ape_memory_manager.h"
 
 #include "entity/entity.h"
@@ -130,16 +132,6 @@ typedef struct ApeWorldPortal
 
 	bool canSeeThrough;
 } ApeWorldPortal;
-
-#define APE_WORLD_ROOM_FLAG_COLD     0x2
-#define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
-#define APE_WORLD_ROOM_FLAG_AIRLOCK  0x8
-#define APE_WORLD_ROOM_FLAG_AMBIENT  0x20
-#define APE_WORLD_ROOM_FLAG_ALPHA    0x40
-#define APE_WORLD_ROOM_FLAG_LIFE     0x80
-#define APE_WORLD_ROOM_FLAG_PLANKTON 0x1000
-#define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
-#define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
 enum
 {
