@@ -640,20 +640,20 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 		PLVector3 forward;
 		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
 
-		for ( unsigned int i = 0; i < 2; ++i )
+		for ( unsigned int i = 0; i < 1; ++i )
 		{
 			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
 			light->flags |= APE_LIGHT_FLAG_RUNTIME_SHADOWS;
 #	if 1
 			if ( i == 0 )
 			{
-				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 2.0f ) );
+				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 8.0f ) );
 				light->position = PlAddVector3( light->position, ( PLVector3 ){
 				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
 				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
 				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f } );
-				light->colour   = PL_COLOURF32( 1.0f, 0, 0.5f, 1.0f );
-				light->radius   = 8.0f;
+				light->colour   = PL_COLOURF32( 1.f, 1.f, 1.f, 1.0f );
+				light->radius   = 16.0f;
 			}
 			else
 			{
@@ -708,34 +708,48 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 
 			if ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS )
 			{
-				rendererState.passStage = APE_RENDERER_PASS_STENCIL;
+				if ( ape_config_.renderer.showShadowWireframe )
+				{
+					rendererState.cullMode  = APE_RENDERER_CULL_NONE;
+					rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
 
-				PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-				PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-				PlgColourMask( false, false, false, false );
-				PlgDepthMask( false );
+					PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+					apeDrawWorldStencilShadowPass_( world, camera, NULL );
+					PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
-				rendererState.cullMode = APE_RENDERER_CULL_NONE;
-				PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
-				PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
-				PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+					rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+				}
+				else
+				{
+					rendererState.passStage = APE_RENDERER_PASS_STENCIL;
 
-				apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+					PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+					PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+					PlgColourMask( false, false, false, false );
+					PlgDepthMask( false );
 
-				PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-				PlgColourMask( true, true, true, true );
+					rendererState.cullMode = APE_RENDERER_CULL_NONE;
+					PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
+					PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+					PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
-				PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+					apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
 
-				PlgStencilBufferFunction( PLG_COMPARE_NOTEQUAL, 0x0, 0xFF );
-				PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+					PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+					PlgColourMask( true, true, true, true );
 
-				apeDrawWorld_( world, camera, NULL, true );
+					PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
 
-				PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-				PlgDepthMask( true );
+					PlgStencilBufferFunction( PLG_COMPARE_NOTEQUAL, 0x0, 0xFF );
+					PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
-				rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+					apeDrawWorld_( world, camera, NULL, true );
+
+					PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+					PlgDepthMask( true );
+
+					rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+				}
 			}
 
 			rendererState.overrideBlendMode = true;
@@ -750,18 +764,6 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport )
 
 			PlgDepthBufferFunction( PLG_COMPARE_LESS );
 			rendererState.overrideBlendMode = false;
-
-			if ( ape_config_.renderer.showShadowWireframe )
-			{
-				rendererState.cullMode  = APE_RENDERER_CULL_NONE;
-				rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
-
-				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				apeDrawWorldStencilShadowPass_( world, camera, NULL );
-				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-
-				rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
-			}
 
 			PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 			ape_rendererPerformance_.numLights++;
