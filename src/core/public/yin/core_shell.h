@@ -39,6 +39,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 bool apeShellInterface_SetWindowSize( int *width, int *height );
 void apeShellInterface_GetWindowSize( int *width, int *height );
 void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, const char *message, ... );
+void apeSetShellIcon( const PLImage *image );
 
 ////////////////////////////////////////////////////////////////////
 // Low Level Input

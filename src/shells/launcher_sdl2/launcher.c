@@ -182,6 +182,28 @@ void apeShellInterface_GetWindowSize( int *width, int *height )
 	SDL_GetWindowSize( sdlWindow, width, height );
 }
 
+void apeSetShellIcon( const PLImage *image )
+{
+	SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
+	        image->data[ 0 ],
+	        ( signed ) image->width,
+	        ( signed ) image->height,
+	        32,
+	        ( signed ) image->width * 4,
+	        0x000000ff,
+	        0x0000ff00,
+	        0x00ff0000,
+	        0xff000000 );
+	if ( surface == NULL )
+	{
+		PrintWarn( "Failed to create requested SDL surface: %s\n", SDL_GetError() );
+		return;
+	}
+
+	SDL_SetWindowIcon( sdlWindow, surface );
+	SDL_FreeSurface( surface );
+}
+
 /****************************************
  * INPUT MANAGEMENT
  ****************************************/
