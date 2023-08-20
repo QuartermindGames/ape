@@ -159,6 +159,8 @@ PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out );
 NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour );
 PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out );
 
+NdBranch *NL_DS_SerializeVertex( NdBranch *parent, const char *name, const struct PLGVertex *vertex );
+
 NdBranch *ndDS_SerializeCollisionAABB( NdBranch *parent, const char *name, const struct PLCollisionAABB *collisionAabb );
 
 PL_EXTERN_C_END

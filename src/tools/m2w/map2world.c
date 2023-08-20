@@ -1,5 +1,4 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl.h>
 #include <plcore/pl_linkedlist.h>
@@ -9,9 +8,8 @@
 
 #include <plgraphics/plg_polygon.h>
 
-#include "engine/public/engine_public_world.h"
-
-#include "node/public/node.h"
+#include "yin/core_world.h"
+#include "yin/node.h"
 
 #define VERSION "0.1"
 #if 0
@@ -213,16 +211,12 @@ static void ParseLine( IdMap *map, const char *buffer, unsigned int lineNum )
 			face->z = PlParseVector( &p, &status );
 			dprint( "%s ", PlPrintVector3( &face->z, pl_int_var ) );
 			if ( !status )
-			{
 				error( "Failed to parse vector on line %d!\n", lineNum );
-			}
 
 			CalculateFaceNormal( face );
 
 			if ( !PlParseToken( &p, face->textureName, sizeof( face->textureName ) ) )
-			{
 				error( "Failed to fetch texture name on line %d!\n", lineNum );
-			}
 
 			dprint( "%s\n", face->textureName );
 
@@ -238,9 +232,7 @@ static void ReadMap( IdMap *map, const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
-	{
 		error( "Failed to open \"%s\"!\nPL: %s\n", path, PlGetError() );
-	}
 
 	/* now start reading through every line */
 	static unsigned int lineNum = 0;
@@ -254,9 +246,7 @@ static void ReadMap( IdMap *map, const char *path )
 		for ( unsigned int i = 0; i < sizeof( lineBuffer ) - 1; ++i )
 		{
 			if ( *p == '\0' || ( *p == '\r' && *( p + 1 ) == '\n' ) || *p == '\n' )
-			{
 				break;
-			}
 
 			lineBuffer[ i ] = *p++;
 		}
@@ -264,13 +254,9 @@ static void ReadMap( IdMap *map, const char *path )
 		ParseLine( map, lineBuffer, lineNum );
 
 		if ( *p == '\r' && *( p + 1 ) == '\n' )
-		{
 			p += 2;
-		}
 		else if ( *p == '\n' )
-		{
 			p++;
-		}
 	}
 
 	PlCloseFile( file );
@@ -278,7 +264,7 @@ static void ReadMap( IdMap *map, const char *path )
 
 /*****************************************************************************************/
 
-static NLNode *globalProperties;
+static NdBranch *globalProperties;
 
 /* Based upon the documentation found here.
  * https://github.com/stefanha/map-files/blob/master/MAPFiles.pdf
@@ -287,9 +273,7 @@ static bool GetIntersection( const IdBrushFace *faceA, const IdBrushFace *faceB,
 {
 	float denom = PlVector3DotProduct( faceA->x, PlVector3CrossProduct( faceA->y, faceA->z ) );
 	if ( denom == 0 )
-	{
 		return false;
-	}
 
 	PLVector3 c1 = PlVector3CrossProduct( faceA->y, faceA->z );
 	PLVector3 c2 = PlVector3CrossProduct( faceA->z, faceA->x );
@@ -305,7 +289,7 @@ static bool GetIntersection( const IdBrushFace *faceA, const IdBrushFace *faceB,
 	return true;
 }
 
-static void WriteBrush( NLNode *root, NLNode *materialsNode, IdBrush *brush )
+static void WriteBrush( NdBranch *root, NdBranch *materialsNode, IdBrush *brush )
 {
 	// Move all the faces into an array
 	unsigned int numFaces;
@@ -322,9 +306,7 @@ static void WriteBrush( NLNode *root, NLNode *materialsNode, IdBrush *brush )
 
 				PLVector3 p;
 				if ( !GetIntersection( faces[ j ], faces[ k ], &p ) )
-				{
 					continue;
-				}
 
 				faces[ i ]->vertices[ faces[ i ]->numVertices++ ] = p;
 				faces[ j ]->vertices[ faces[ j ]->numVertices++ ] = p;
@@ -333,16 +315,14 @@ static void WriteBrush( NLNode *root, NLNode *materialsNode, IdBrush *brush )
 		}
 	}
 
-	NLNode *facesNode = NL_PushBackObjArray( root, "faces" );
+	NdBranch *facesNode = ndPushBackObjectArray( root, "faces" );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( pl_strcasecmp( "skip", faces[ i ]->textureName ) == 0 )
-		{
 			continue;
-		}
 
-		NLNode *faceNode     = NL_PushBackObj( facesNode, "face" );
-		NLNode *verticesNode = NL_PushBackObjArray( faceNode, "vertices" );
+		NdBranch *faceNode     = ndPushBackObject( facesNode, "face" );
+		NdBranch *verticesNode = ndPushBackObjectArray( faceNode, "vertices" );
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
 			PLGVertex vertex;
@@ -383,16 +363,16 @@ static void WriteEntity( IdEntity *entity, FILE *file )
 static void WriteGlobalProperties( void *userData, bool *breakEarly )
 {
 	IdProperty *idProperty = userData;
-	NL_PushBackStr( globalProperties, idProperty->name, idProperty->value );
+	ndPushBackString( globalProperties, idProperty->name, idProperty->value );
 }
 
-static void WriteWorldMesh( NLNode *root, PLLinkedList *brushes )
+static void WriteWorldMesh( NdBranch *root, PLLinkedList *brushes )
 {
-	NLNode *worldMeshNode = NL_PushBackObj( root, "worldMesh" );
+	NdBranch *worldMeshNode = ndPushBackObject( root, "worldMesh" );
 
-	NLNode *materials = NL_PushBackStrArray( worldMeshNode, "materials", NULL, 0 );
-	NLNode *vertices  = NL_PushBackF32Array( worldMeshNode, "vertices", NULL, 0 );
-	NLNode *faces     = NL_PushBackObjArray( worldMeshNode, "faces" );
+	NdBranch *materials = ndPushBackStringArray( worldMeshNode, "materials", NULL, 0 );
+	NdBranch *vertices  = ndPushBackF32Array( worldMeshNode, "vertices", NULL, 0 );
+	NdBranch *faces     = ndPushBackObjectArray( worldMeshNode, "faces" );
 
 	PLLinkedListNode *brushNode = PlGetFirstNode( brushes );
 	while ( brushNode != NULL )
@@ -401,23 +381,23 @@ static void WriteWorldMesh( NLNode *root, PLLinkedList *brushes )
 		PLLinkedListNode *faceNode = PlGetFirstNode( brush->faces );
 		while ( faceNode != NULL )
 		{
-			IdBrushFace *face    = PlGetLinkedListNodeUserData( faceNode );
-			NLNode *materialNode = NL_GetFirstChild( materials );
+			IdBrushFace *face      = PlGetLinkedListNodeUserData( faceNode );
+			NdBranch *materialNode = ndGetFirstChild( materials );
 			while ( materialNode != NULL )
 			{
 				char materialPath[ 64 ];
-				NL_GetStr( materialNode, materialPath, sizeof( materialPath ) );
+				ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
 				if ( strcmp( materialPath, face->textureName ) == 0 )
 				{
 					break;
 				}
 
-				materialNode = NL_GetNextChild( materialNode );
+				materialNode = ndGetNextChild( materialNode );
 			}
 
 			if ( materialNode == NULL )
 			{
-				NL_PushBackStr( materials, NULL, face->textureName );
+				ndPushBackString( materials, NULL, face->textureName );
 			}
 
 			faceNode = PlGetNextLinkedListNode( faceNode );
@@ -427,7 +407,7 @@ static void WriteWorldMesh( NLNode *root, PLLinkedList *brushes )
 	}
 }
 
-static void WriteNodes( NLNode *root, IdMap *map )
+static void WriteNodes( NdBranch *root, IdMap *map )
 {
 	IdEntity *worldSpawn = PlGetLinkedListNodeUserData( PlGetFirstNode( map->entities ) );
 	if ( worldSpawn == NULL )
@@ -436,16 +416,16 @@ static void WriteNodes( NLNode *root, IdMap *map )
 	}
 
 	/* first write out the global properties */
-	globalProperties = NL_PushBackObj( root, "properties" );
+	globalProperties = ndPushBackObject( root, "properties" );
 	PlIterateLinkedList( worldSpawn->properties, WriteGlobalProperties, true );
 
 	char id[ 64 ];
 	PlGenerateUniqueIdentifier( id, sizeof( id ) );
-	NLNode *meshNode = NL_PushBackObj( NL_PushBackObjArray( root, "meshes" ), NULL );
+	NdBranch *meshNode = ndPushBackObject( ndPushBackObjectArray( root, "meshes" ), NULL );
 	{
-		NL_PushBackStr( meshNode, "id", id );
+		ndPushBackString( meshNode, "id", id );
 
-		NLNode *materialsNode = NL_PushBackObjArray( meshNode, "materials" );
+		NdBranch *materialsNode = ndPushBackObjectArray( meshNode, "materials" );
 
 		/* now write out all the brushes */
 		PLLinkedListNode *node = PlGetFirstNode( worldSpawn->brushes );
@@ -469,19 +449,19 @@ static void WriteNodes( NLNode *root, IdMap *map )
 #endif
 
 	/* write out the default room */
-	NLNode *defaultSector = NL_PushBackObj( NL_PushBackObjArray( root, "sectors" ), NULL );
-	NL_PushBackStr( defaultSector, "id", "main.room" );
-	NL_PushBackStr( defaultSector, "meshId", id );
+	NdBranch *defaultSector = ndPushBackObject( ndPushBackObjectArray( root, "sectors" ), NULL );
+	ndPushBackString( defaultSector, "id", "main.room" );
+	ndPushBackString( defaultSector, "meshId", id );
 }
 
 static void WriteWorld( IdMap *map, const char *path )
 {
-	NLNode *root = NL_PushBackObj( NULL, "world" );
-	NL_PushBackI32( root, "version", WORLD_VERSION );
+	NdBranch *root = ndPushBackObject( NULL, "world" );
+	ndPushBackI32( root, "version", APE_WORLD_VERSION );
 
 	WriteNodes( root, map );
 
-	NL_WriteFile( path, root, NL_FILE_BINARY );
+	ndWriteFile( path, root, ND_FILE_BINARY );
 }
 
 int main( int argc, char **argv )
@@ -503,10 +483,10 @@ int main( int argc, char **argv )
 	{
 		printf( "No output path specified, using default.\nSpecify using \"-out <path>\" argument.\n" );
 
-		char *tmpPath = PlMAllocA( strlen( PlGetFileName( inputPath ) ) + strlen( "." WORLD_EXTENSION ) );
+		char *tmpPath = PlMAllocA( strlen( PlGetFileName( inputPath ) ) + strlen( "." APE_WORLD_EXTENSION ) );
 		const char *c = strrchr( inputPath, '.' );
 		strncpy( tmpPath, inputPath, c - inputPath );
-		strcat( tmpPath, "." WORLD_EXTENSION );
+		strcat( tmpPath, "." APE_WORLD_EXTENSION );
 
 		outputPath = tmpPath;
 	}
