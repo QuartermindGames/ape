@@ -13,10 +13,10 @@ object world
         array object rooms
         {
             {
-                int32       id          0
+                int32       tag         0
                 array float mins        { 0 0 0 }
                 array float maxs        { 0 0 0 }
-                array uint8 ambience    { 255 255 255 255 }
+                array float ambience    { 255 255 255 255 }
                 bool        isDetail    false
                 uint32      flags       0
             }
@@ -71,7 +71,7 @@ object world
             string      className   "default"
             array float position    { 0 0 0 }
             array float angles      { 0 0 0 }
-            array uint8 colour      { 255 255 255 255 }
+            array float colour      { 255 255 255 255 }
             float       radius      1
             uint32      flags       0
         }

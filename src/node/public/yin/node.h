@@ -15,8 +15,8 @@ typedef enum NdErrorCode
 {
 	ND_ERROR_SUCCESS,
 
-	ND_ERROR_IO_READ,   /* read failure */
-	ND_ERROR_IO_WRITE,  /* write failure */
+	ND_ERROR_IO_READ,  /* read failure */
+	ND_ERROR_IO_WRITE, /* write failure */
 
 	NL_ERROR_MEM_ALLOC, /* alloc failure */
 
@@ -109,10 +109,24 @@ NdErrorCode ndGetF32Array( NdBranch *parent, float *buf, unsigned int numElement
 
 bool ndGetBoolByName( NdBranch *root, const char *name, bool fallback );
 const char *ndGetStringByName( NdBranch *node, const char *name, const char *fallback );
-int8_t ndGetI8ByName( NdBranch *node, const char *name, int8_t fallback );
-int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback );
+PL_DEPRECATED( int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback ) );
 float ndGetF32ByName( NdBranch *node, const char *name, float fallback );
 double ndGetF64ByName( NdBranch *node, const char *name, double fallback );
+
+intmax_t ndGetInt( NdBranch *root, const char *name, intmax_t fallback );
+uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback );
+
+#define ND_GETINT8( ROOT, NAME, FALLBACK )  ( int8_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GETINT16( ROOT, NAME, FALLBACK ) ( int16_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GETINT32( ROOT, NAME, FALLBACK ) ( int32_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+
+#define ND_GETUINT8( ROOT, NAME, FALLBACK )  ( uint8_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GETUINT16( ROOT, NAME, FALLBACK ) ( uint16_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GETUINT32( ROOT, NAME, FALLBACK ) ( uint32_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+
+PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback );
+PLVector4 ndGetVector4( NdBranch *root, const char *name, const PLVector4 *fallback );
+PLColourF32 ndGetColourF32( NdBranch *root, const char *name, const PLColourF32 *fallback );
 
 NdBranch *ndPushBackBranch( NdBranch *parent, NdBranch *child );
 NdBranch *ndPushBackObject( NdBranch *node, const char *name );
@@ -152,15 +166,8 @@ NdBranch *ndDS_SerializeVector2( NdBranch *parent, const char *name, const PLVec
 PLVector3 *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out );
 NdBranch *ndDS_SerializeVector3( NdBranch *parent, const char *name, const PLVector3 *vector3 );
 
-PLVector4 *ndDS_DeserializeVector4( NdBranch *in, PLVector4 *out );
-PLQuaternion *ndDS_DeserializeQuaternion( NdBranch *in, PLQuaternion *out );
-
 PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out );
 NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour );
 PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out );
-
-NdBranch *NL_DS_SerializeVertex( NdBranch *parent, const char *name, const struct PLGVertex *vertex );
-
-NdBranch *ndDS_SerializeCollisionAABB( NdBranch *parent, const char *name, const struct PLCollisionAABB *collisionAabb );
 
 PL_EXTERN_C_END

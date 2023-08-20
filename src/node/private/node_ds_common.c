@@ -46,8 +46,6 @@ float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements )
 
 PLVector2 *ndDS_DeserializeVector2( NdBranch *in, PLVector2 *out ) { return ( PLVector2 * ) ndDS_DeserializeVector( in, ( float * ) out, 2 ); }
 PLVector3 *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out ) { return ( PLVector3 * ) ndDS_DeserializeVector( in, ( float * ) out, 3 ); }
-PLVector4 *ndDS_DeserializeVector4( NdBranch *in, PLVector4 *out ) { return ( PLVector4 * ) ndDS_DeserializeVector( in, ( float * ) out, 4 ); }
-PLQuaternion *ndDS_DeserializeQuaternion( NdBranch *in, PLQuaternion *out ) { return ( PLQuaternion * ) ndDS_DeserializeVector( in, ( float * ) out, 4 ); }
 
 NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour )
 {
@@ -96,22 +94,6 @@ PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out )
 /****************************************
  ****************************************/
 
-NdBranch *NL_DS_SerializeVertex( NdBranch *parent, const char *name, const PLGVertex *vertex )
-{
-	NdBranch *object = ndPushBackObject( parent, name );
-	ndDS_SerializeVector3( object, "position", &vertex->position );
-	ndDS_SerializeColour( object, "colour", &vertex->colour );
-	if ( !PlCompareVector3( &vertex->normal, &pl_vecOrigin3 ) )
-		ndDS_SerializeVector3( object, "normal", &vertex->normal );
-	if ( !PlCompareVector3( &vertex->tangent, &pl_vecOrigin3 ) )
-		ndDS_SerializeVector3( object, "tangent", &vertex->tangent );
-	if ( !PlCompareVector3( &vertex->bitangent, &pl_vecOrigin3 ) )
-		ndDS_SerializeVector3( object, "bitangent", &vertex->tangent );
-	if ( !PlCompareVector2( &vertex->st[ 0 ], &pl_vecOrigin2 ) )
-		ndDS_SerializeVector2( object, "uv", &vertex->st[ 0 ] );
-	return object;
-}
-
 PLGVertex *NL_DS_DeserializeVertex( NdBranch *in, PLGVertex *out )
 {
 	if ( in == NULL )
@@ -159,15 +141,5 @@ NdBranch *ndDS_SerializeVector3( NdBranch *parent, const char *name, const PLVec
 	ndPushBackF32( object, "x", vector3->x );
 	ndPushBackF32( object, "y", vector3->y );
 	ndPushBackF32( object, "z", vector3->z );
-	return object;
-}
-
-NdBranch *ndDS_SerializeCollisionAABB( NdBranch *parent, const char *name, const struct PLCollisionAABB *collisionAabb )
-{
-	NdBranch *object = ndPushBackObject( parent, name );
-	ndDS_SerializeVector3( object, "mins", &collisionAabb->mins );
-	ndDS_SerializeVector3( object, "maxs", &collisionAabb->maxs );
-	ndDS_SerializeVector3( object, "origin", &collisionAabb->origin );
-	ndDS_SerializeVector3( object, "absOrigin", &collisionAabb->absOrigin );
 	return object;
 }

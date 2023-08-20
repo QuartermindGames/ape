@@ -34,7 +34,7 @@ static NdBranch *Deserialize( ApeEntityComponent *self, NdBranch *root )
 	{
 		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->angles, 3 );
 	}
-	ECTRANSFORM( self )->sectorNum = ndGetI32ByName( root, "sectorNum", -1 );
+	ECTRANSFORM( self )->sectorNum = ndGetInt( root, "sectorNum", -1 );
 	return root;
 }
 

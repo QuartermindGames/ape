@@ -501,7 +501,7 @@ static ApeMaterial *ParseMaterial( ApeMaterial *material, NdBranch *root, bool p
 		}
 	}
 
-	material->surfaceType   = ndGetI8ByName( root, "surfaceType", 0 );
+	material->surfaceType   = ND_GETINT8( root, "surfaceType", 0 );
 	material->enableShadows = ndGetBoolByName( root, "enableShadows", true );
 
 	if ( material->numPasses == 0 )

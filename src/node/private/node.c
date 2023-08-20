@@ -418,16 +418,51 @@ double ndGetF64ByName( NdBranch *node, const char *name, double fallback )
 	return ( var != NULL ) ? strtod( var->buf, NULL ) : fallback;
 }
 
-int8_t ndGetI8ByName( NdBranch *node, const char *name, int8_t fallback )
+intmax_t ndGetInt( NdBranch *root, const char *name, intmax_t fallback )
 {
-	return ( int8_t ) ndGetI32ByName( node, name, fallback );
+	const NdVarString *var = GetValueByName( root, name );
+	return ( var != NULL ) ? strtoll( var->buf, NULL, 10 ) : fallback;
 }
 
-int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback )
+uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback )
 {
-	/* todo: warning on fail */
-	const NdVarString *var = GetValueByName( node, name );
-	return ( var != NULL ) ? strtol( var->buf, NULL, 10 ) : fallback;
+	const NdVarString *var = GetValueByName( root, name );
+	return ( var != NULL ) ? strtoull( var->buf, NULL, 10 ) : fallback;
+}
+
+int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback ) { return ( int32_t ) ndGetInt( node, name, fallback ); }
+// Special types ...
+
+PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback )
+{
+	NdBranch *child = ndGetChildByName( root, name );
+	if ( child == NULL )
+		return *fallback;
+
+	PLVector3 v;
+	if ( ndGetF32Array( child, ( float * ) &v, 3 ) != ND_ERROR_SUCCESS )
+		return *fallback;
+
+	return v;
+}
+
+PLVector4 ndGetVector4( NdBranch *root, const char *name, const PLVector4 *fallback )
+{
+	NdBranch *child = ndGetChildByName( root, name );
+	if ( child == NULL )
+		return *fallback;
+
+	PLVector4 v;
+	if ( ndGetF32Array( child, ( float * ) &v, 4 ) != ND_ERROR_SUCCESS )
+		return *fallback;
+
+	return v;
+}
+
+PLColourF32 ndGetColourF32( NdBranch *root, const char *name, const PLColourF32 *fallback )
+{
+	PLVector4 v = ndGetVector4( root, name, ( PLVector4 * ) fallback );
+	return PlVector4ToColourF32( &v );
 }
 
 /******************************************/
