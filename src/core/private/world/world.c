@@ -174,7 +174,7 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 	{
 		ApeWorldRoom *room = apeCreateWorldRoom();
 
-		room->uid = PlReadInt32( file, false, NULL );
+		room->tag = PlReadInt32( file, false, NULL );
 
 		room->bounds.mins = ParseVector( file );
 		room->bounds.maxs = ParseVector( file );
@@ -206,11 +206,12 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 
 		if ( version >= 234 )
 		{
-			float x = ParseFloat( file );
-			float y = ParseFloat( file );
-			float z = ParseFloat( file );
+			ParseFloat( file );
+			ParseFloat( file );
+			ParseFloat( file );
 
-			room->liquid.colour = ParseColour( file );
+			PLColour colour     = ParseColour( file );
+			room->liquid.colour = PlColourU8ToF32( &colour );
 
 			room->liquid.visibility = ParseFloat( file );
 
@@ -254,7 +255,9 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 			{
 				room->liquid.depth = PlReadFloat32( file, false, NULL );
 				assert( !isnan( room->liquid.depth ) );
-				room->liquid.colour = ParseColour( file );
+
+				PLColour colour     = ParseColour( file );
+				room->liquid.colour = PlColourU8ToF32( &colour );
 
 				uint16_t size;
 				char *liquidTextureName = ParseString( file, &size );
@@ -278,7 +281,8 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 
 			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
 			{
-				room->ambientLight = ParseColour( file );
+				PLColour colour    = ParseColour( file );
+				room->ambientLight = PlColourU8ToF32( &colour );
 			}
 		}
 
@@ -473,32 +477,32 @@ static void ParseStaticGeometryLightmaps( ApeWorld *world, PLFile *file )
 	int32_t numLightmaps = PlReadInt32( file, false, NULL );
 	for ( int32_t i = 0; i < numLightmaps; ++i )
 	{
-		PlReadInt32( file, false, NULL );           // lightmap index
-		PL_READUINT8( file, NULL );                 // x start
-		PL_READUINT8( file, NULL );                 // y start
+		PlReadInt32( file, false, NULL );// lightmap index
+		PL_READUINT8( file, NULL );      // x start
+		PL_READUINT8( file, NULL );      // y start
 
-		uint8_t width = PL_READUINT8( file, NULL ); // width
+		uint8_t width = PL_READUINT8( file, NULL );// width
 		assert( width != 0 );
 		uint8_t height = PL_READUINT8( file, NULL );// height
 		assert( height != 0 );
 
-		float xPerMeter = ParseFloat( file );                // x pixels per meter
-		float yPerMeter = ParseFloat( file );                // y pixels per meter
+		float xPerMeter = ParseFloat( file );// x pixels per meter
+		float yPerMeter = ParseFloat( file );// y pixels per meter
 
-		PLVector3 min = ParseVector( file );                 // min
-		PLVector3 max = ParseVector( file );                 // max
+		PLVector3 min = ParseVector( file );// min
+		PLVector3 max = ParseVector( file );// max
 
-		ParseVector( file );                                 // eq
-		ParseFloat( file );                                  // offset
-		PlReadInt32( file, false, NULL );                    // should smooth
-		PlReadInt32( file, false, NULL );                    // fullbright
-		PlReadInt32( file, false, NULL );                    // dropped coefficient
-		PlReadInt32( file, false, NULL );                    // u coefficient
-		PlReadInt32( file, false, NULL );                    // v coefficient
-		ParseFloat( file );                                  // uv add x
-		ParseFloat( file );                                  // uv add y
-		ParseFloat( file );                                  // uv scale x
-		ParseFloat( file );                                  // uv scale y
+		ParseVector( file );             // eq
+		ParseFloat( file );              // offset
+		PlReadInt32( file, false, NULL );// should smooth
+		PlReadInt32( file, false, NULL );// fullbright
+		PlReadInt32( file, false, NULL );// dropped coefficient
+		PlReadInt32( file, false, NULL );// u coefficient
+		PlReadInt32( file, false, NULL );// v coefficient
+		ParseFloat( file );              // uv add x
+		ParseFloat( file );              // uv add y
+		ParseFloat( file );              // uv scale x
+		ParseFloat( file );              // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
@@ -823,7 +827,7 @@ static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 
 		light->position = ParseVector( file );
 
-		ParseMat3( file );               // rotation
+		ParseMat3( file );// rotation
 
 		tmp = ParseString( file, &size );// script name
 		PL_DELETE( tmp );
@@ -836,17 +840,17 @@ static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version )
 
 		light->radius = ParseFloat( file );// * 2.0f;
 
-		ParseFloat( file );                // fov
-		ParseFloat( file );                // fov dropoff
-		ParseFloat( file );                // intensity at max range
-		PlReadInt32( file, false, NULL );  // dropoff type
-		ParseFloat( file );                // tube light width
-		ParseFloat( file );                // on intensity
-		ParseFloat( file );                // on time
-		ParseFloat( file );                // on time variation
-		ParseFloat( file );                // off intensity
-		ParseFloat( file );                // off time
-		ParseFloat( file );                // off time variation
+		ParseFloat( file );              // fov
+		ParseFloat( file );              // fov dropoff
+		ParseFloat( file );              // intensity at max range
+		PlReadInt32( file, false, NULL );// dropoff type
+		ParseFloat( file );              // tube light width
+		ParseFloat( file );              // on intensity
+		ParseFloat( file );              // on time
+		ParseFloat( file );              // on time variation
+		ParseFloat( file );              // off intensity
+		ParseFloat( file );              // off time
+		ParseFloat( file );              // off time variation
 
 		PlPushBackVectorArrayElement( world->lights, light );
 	}
@@ -931,16 +935,39 @@ static ApeWorld *ParseWorldFile( PLFile *file )
 
 ApeWorld *apeLoadWorld( const char *path )
 {
-	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL )
+	ApeWorld *world = NULL;
+	const char *ext = PlGetFileExtension( path );
+	if ( ext != NULL && pl_strcasecmp( ext, "n" ) )
 	{
-		PRINT_WARNING( "Failed to load world: %s\n", PlGetError() );
-		return NULL;
+		NdBranch *root = ndLoadFile( path, "world" );
+		if ( root == NULL )
+		{
+			PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
+			return NULL;
+		}
+
+		world = PL_NEW( ApeWorld );
+		if ( apeDeserializeWorld( root, world ) == NULL )
+		{
+			apeDestroyWorld( world );
+			world = NULL;
+		}
+
+		ndDestroyBranch( root );
 	}
+	else// todo: old world i/o crud...
+	{
+		PLFile *file = PlOpenFile( path, false );
+		if ( file == NULL )
+		{
+			PRINT_WARNING( "Failed to load world: %s\n", PlGetError() );
+			return NULL;
+		}
 
-	ApeWorld *world = ParseWorldFile( file );
+		world = ParseWorldFile( file );
 
-	PlCloseFile( file );
+		PlCloseFile( file );
+	}
 
 	return world;
 }

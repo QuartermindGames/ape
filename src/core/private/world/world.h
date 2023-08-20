@@ -84,7 +84,7 @@ typedef struct ApeWorldFace
 	PLVectorArray *vertices;// ApeWorldFaceVertex
 	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
 
-	uint8_t flags;          /* portal, mirror, skip etc. */
+	uint8_t flags; /* portal, mirror, skip etc. */
 
 	PLCollisionAABB bounds;
 } ApeWorldFace;
@@ -152,29 +152,29 @@ typedef struct ApeWorldBatch
 typedef struct ApeWorldRoom
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
-	int32_t uid;
+	int tag;
 
 	bool isDetail;
 	bool containsLiquid;
 
-	uint32_t flags;
+	unsigned int flags;
 
-	PLColour colour;// an identifying colour
-	PLColour ambientLight;
+	PLColourF32 colour;// an identifying colour
+	PLColourF32 ambientLight;
 
 	float life;
 
 	struct
 	{
 		float depth;
-		PLColour colour;
+		PLColourF32 colour;
 		float visibility;
-		int32_t type;
-		int32_t alpha;
+		int type;
+		int alpha;
 		bool plankton;
-		int32_t ppmU, ppmV;
+		int ppmU, ppmV;
 		float angle;
-		int32_t waveform;
+		int waveform;
 		float panU, panV;
 	} liquid;
 
@@ -182,12 +182,12 @@ typedef struct ApeWorldRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	PLGMesh *mesh;             // cached mesh
-	PLGMesh *shadowMesh;       // shadow volume mesh
+	PLGMesh *mesh;      // cached mesh
+	PLGMesh *shadowMesh;// shadow volume mesh
 	ApeWorldBatch *batches;
 	unsigned int numBatches;
 	unsigned int builtInBatches[ APE_WORLD_ROOM_NUM_BUILTIN_BATCHES ];
-	bool isMeshCached;   // if false, mesh cache will be updated
+	bool isMeshCached;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector

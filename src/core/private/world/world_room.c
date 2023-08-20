@@ -9,7 +9,11 @@ ApeWorldRoom *apeCreateWorldRoom( void )
 	room->detailRooms  = PlCreateVectorArray( 0 );
 	room->faces        = PlCreateVectorArray( 0 );
 	room->portals      = PlCreateVectorArray( 0 );
-	room->colour       = PlCreateColour4B( rand() % 255, rand() % 255, rand() % 255, 255 );
+
+	// assign the room a random colour so it can be identified per debugging
+	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
+	                                PlUniform0To1Random(),
+	                                PlUniform0To1Random() );
 
 	return room;
 }
