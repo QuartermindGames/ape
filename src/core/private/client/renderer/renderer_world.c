@@ -295,7 +295,7 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bo
 		else
 		{
 			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
-				world->ambience = PlColourU8ToF32( &room->ambientLight );
+				world->ambience = room->ambientLight;
 			else
 				world->ambience = WORLD_DEFAULT_AMBIENCE;
 		}

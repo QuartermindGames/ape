@@ -72,6 +72,7 @@ static void DeserializeMaterials( NdBranch *root, ApeWorld *out )
 			PlPushBackVectorArrayElement( out->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
 		else
 			PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
+
 		child = ndGetNextChild( child );
 	}
 }

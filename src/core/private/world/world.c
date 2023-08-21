@@ -653,11 +653,12 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 			ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			assert( vertex->u != NULL );
 
+			PLColour colour = PlColourF32ToU8( &room->colour );
 			PlgAddMeshVertex( room->mesh,
 			                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
 			                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
 			                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
-			                  &room->colour,
+			                  &colour,
 			                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
@@ -702,11 +703,12 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 				ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 				assert( vertex->u != NULL );
 
+				PLColour colour = PlColourF32ToU8( &room->colour );
 				PlgAddMeshVertex( room->mesh,
 				                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
 				                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
 				                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
-				                  &room->colour,
+				                  &colour,
 				                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
