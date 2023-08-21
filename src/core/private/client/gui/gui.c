@@ -58,8 +58,8 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
-	int version = ndGetI32ByName( root, "version", -1 );
-	if ( version < GUI_STYLESHEET_VERSION )
+	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
+	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
 	{
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
 		return NULL;
@@ -87,8 +87,8 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	c = ndGetChildByName( root, "borders" );
 	if ( c != NULL )
 	{
-		int style = ndGetI32ByName( c, "style", -1 );
-		if ( !( style < 0 || style >= GUI_MAX_BORDER_STYLES ) )
+		unsigned int style = ndGetUInt( c, "style", -1 );
+		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
 		else
 			GUI_WARNING( "No border style specified, using default.\n" );

@@ -418,7 +418,7 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 	}
 
 	materialPass->depthTest = ndGetBoolByName( root, "depthTest", materialPass->depthTest );
-	materialPass->cullMode  = ndGetI32ByName( root, "cullMode", materialPass->cullMode );
+	materialPass->cullMode  = ndGetInt( root, "cullMode", materialPass->cullMode );
 
 	const char *textureFilterPtr = ndGetStringByName( root, "textureFilterMode", NULL );
 	if ( textureFilterPtr != NULL )

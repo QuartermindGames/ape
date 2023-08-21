@@ -27,7 +27,7 @@ static void DestroyModel( void *userData )
 
 static PLGMesh *DeserializeMesh( NdBranch *root )
 {
-	uint32_t numVertices = ( uint32_t ) ndGetI32ByName( root, "numVertices", 0 );
+	uint32_t numVertices = ndGetUInt( root, "numVertices", 0 );
 	if ( numVertices == 0 )
 	{
 		PRINT_WARNING( "Invalid mesh, no vertices!\n" );
@@ -91,7 +91,7 @@ static PLGMesh *DeserializeMesh( NdBranch *root )
 		return NULL;
 	}
 
-	mesh->materialIndex = ndGetI32ByName( root, "materialIndex", 0 );
+	mesh->materialIndex = ndGetUInt( root, "materialIndex", 0 );
 
 	for ( uint32_t i = 0; i < numVertices; ++i )
 	{
@@ -115,8 +115,8 @@ static PLGMesh *DeserializeMesh( NdBranch *root )
 
 static PLMModel *DeserializeModel( NdBranch *root )
 {
-	int version = ndGetI32ByName( root, "version", -1 );
-	if ( version == -1 || version > MDL_VERSION )
+	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
+	if ( version == ( unsigned int ) -1 || version > MDL_VERSION )
 	{
 		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, MDL_VERSION );
 		return NULL;
@@ -181,10 +181,10 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	PLMModel *model;
 	if ( ndGetBoolByName( root, "isAnimated", false ) )
 	{
-		NdBranch *bonesList = ndGetChildByName( root, "bones" );
-		uint32_t numBones   = ndGetNumOfChildren( bonesList );
+		NdBranch *bonesList   = ndGetChildByName( root, "bones" );
+		unsigned int numBones = ndGetNumOfChildren( bonesList );
 
-		uint32_t rootBone = ( uint32_t ) ndGetI32ByName( root, "rootBone", 0 );
+		unsigned int rootBone = ndGetUInt( root, "rootBone", 0 );
 		assert( rootBone < numBones );
 		if ( rootBone >= numBones )
 			PRINT_WARNING( "Invalid root bone (%u), defaulting to 0!\n", rootBone );

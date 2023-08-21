@@ -61,24 +61,24 @@ void PS_CacheEmitterTemplate( const char *path )
 		return;
 	}
 
-	emitter = PlMAlloc( sizeof( PSEmitter ), true );
+	emitter = PL_NEW( PSEmitter );
 
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
-	emitter->emissionRate = ndGetI32ByName( root, "emissionRate", 2 );
-	emitter->emissionVar  = ndGetI32ByName( root, "emissionVar", 2 );
+	emitter->emissionRate = ndGetInt( root, "emissionRate", 2 );
+	emitter->emissionVar  = ndGetInt( root, "emissionVar", 2 );
 
-	emitter->particleLife    = ndGetI32ByName( root, "particleLife", 10 );
-	emitter->particleLifeVar = ndGetI32ByName( root, "particleLifeVar", 5 );
-	emitter->maxParticles    = ndGetI32ByName( root, "maxParticles", 100 );
+	emitter->particleLife    = ndGetInt( root, "particleLife", 10 );
+	emitter->particleLifeVar = ndGetInt( root, "particleLifeVar", 5 );
+	emitter->maxParticles    = ndGetInt( root, "maxParticles", 100 );
 
-	emitter->life = ndGetI32ByName( root, "life", 0 );
+	emitter->life = ndGetInt( root, "life", 0 );
 
-	ndDS_DeserializeColourF32( ndGetChildByName( root, "startColour" ), &emitter->startColour );
-	ndDS_DeserializeColourF32( ndGetChildByName( root, "endColour" ), &emitter->endColour );
-	ndDS_DeserializeColourF32( ndGetChildByName( root, "startColourVar" ), &emitter->startColourVar );
-	ndDS_DeserializeColourF32( ndGetChildByName( root, "endColourVar" ), &emitter->endColourVar );
+	emitter->startColour    = ndGetColourF32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour      = ndGetColourF32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColourVar = ndGetColourF32( root, "startColourVar", &emitter->startColourVar );
+	emitter->endColourVar   = ndGetColourF32( root, "endColourVar", &emitter->endColourVar );
 
 	apeAddToCachePool( path, APE_CACHE_POOL_PARTICLES, emitter );
 

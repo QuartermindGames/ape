@@ -62,10 +62,10 @@ PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out )
 	if ( in == NULL )
 		return NULL;
 
-	out->r = ndGetI32ByName( in, "r", 255 );
-	out->g = ndGetI32ByName( in, "g", 255 );
-	out->b = ndGetI32ByName( in, "b", 255 );
-	out->a = ndGetI32ByName( in, "a", 255 );
+	out->r = ND_GETUINT8( in, "r", 255 );
+	out->g = ND_GETUINT8( in, "g", 255 );
+	out->b = ND_GETUINT8( in, "b", 255 );
+	out->a = ND_GETUINT8( in, "a", 255 );
 	return out;
 }
 

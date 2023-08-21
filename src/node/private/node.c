@@ -430,9 +430,6 @@ uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback )
 	return ( var != NULL ) ? strtoull( var->buf, NULL, 10 ) : fallback;
 }
 
-int32_t ndGetI32ByName( NdBranch *node, const char *name, int32_t fallback ) { return ( int32_t ) ndGetInt( node, name, fallback ); }
-// Special types ...
-
 PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback )
 {
 	NdBranch *child = ndGetChildByName( root, name );
