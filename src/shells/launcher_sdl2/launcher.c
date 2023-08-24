@@ -4,6 +4,8 @@
 
 #ifdef _WIN32
 #	include <crtdbg.h>
+#elif __linux__
+#	include <sys/prctl.h>
 #endif
 
 #include <yin/core.h>
@@ -341,7 +343,6 @@ static int Sys_TranslateSDLKeyInput( int key )
 static SDL_TimerID sdlTimer = 0;
 static unsigned int OS_TimerCallback( unsigned int interval, void *param )
 {
-#if 1
 	SDL_UserEvent userEvent;
 	userEvent.type = SDL_USEREVENT;
 	userEvent.code = 0;
@@ -351,9 +352,6 @@ static unsigned int OS_TimerCallback( unsigned int interval, void *param )
 	event.user = userEvent;
 
 	SDL_PushEvent( &event );
-#else
-	Yin_TickFrame();
-#endif
 
 	return interval;
 }
@@ -445,6 +443,8 @@ int Launcher_Initialize( int argc, char **argv )
 {
 #if defined( _WIN32 ) && !defined( NDEBUG )
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#elif defined( __linux__ )
+	prctl( PR_SET_DUMPABLE, 1 );
 #endif
 
 	/* initialize the platform library */
