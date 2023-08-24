@@ -44,7 +44,7 @@ static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
 	}
 }
 
-static void DeserializeMaterials( NdBranch *root, ApeWorld *out ) {
+static void DeserializeMaterials( ApeWorld *world, NdBranch *root ) {
 	NdBranch *materials = ndGetChildByName( root, "materials" );
 	if ( materials == NULL ) {
 		return;
@@ -60,15 +60,16 @@ static void DeserializeMaterials( NdBranch *root, ApeWorld *out ) {
 		return;
 	}
 
-	out->materials = PlCreateVectorArray( numMaterials );
+	world->materials = PlCreateVectorArray( numMaterials );
 
 	NdBranch *child = ndGetFirstChild( materials );
 	while ( child != NULL ) {
 		PLPath path;
 		if ( ndGetStr( child, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
-			PlPushBackVectorArrayElement( out->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
+			PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
 		} else {
 			PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
+			break;
 		}
 
 		child = ndGetNextChild( child );
@@ -92,7 +93,7 @@ static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
 	return room;
 }
 
-static void DeserializeRooms( NdBranch *root, ApeWorld *out ) {
+static void DeserializeRooms( ApeWorld *world, NdBranch *root ) {
 	NdBranch *rooms = ndGetChildByName( root, "rooms" );
 	if ( rooms == NULL ) {
 		return;
@@ -103,52 +104,52 @@ static void DeserializeRooms( NdBranch *root, ApeWorld *out ) {
 		return;
 	}
 
-	out->rooms = PlCreateVectorArray( numRooms );
+	world->rooms = PlCreateVectorArray( numRooms );
 
 	NdBranch *child = ndGetFirstChild( rooms );
 	while ( child != NULL ) {
-		PlPushBackVectorArrayElement( out->rooms, DeserializeRoom( child ) );
+		PlPushBackVectorArrayElement( world->rooms, DeserializeRoom( child ) );
 		child = ndGetNextChild( child );
 	}
 }
 
-static ApeWorldPortal *DeserializePortal( NdBranch *root, ApeWorld *out ) {
-	unsigned int numRooms = PlGetNumVectorArrayElements( out->rooms );
-
+static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
 	// Fetch the first room index and validate it
-	unsigned int roomA = ndGetUInt( root, "roomA", ( unsigned int ) -1 );
-	assert( roomA < numRooms );
-	if ( roomA >= numRooms ) {
-		PRINT_WARNING( "Invalid portal room A (%u)!\n", roomA );
+	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
+	assert( roomA != NULL );
+	if ( roomA == NULL ) {
+		PRINT_WARNING( "Invalid portal room A!\n" );
 		return NULL;
 	}
 
 	// Fetch the second room index and validate it
-	unsigned int roomB = ndGetUInt( root, "roomB", ( unsigned int ) -1 );
-	assert( roomB < numRooms );
-	if ( roomB >= numRooms ) {
-		PRINT_WARNING( "Invalid portal room B (%u)!\n", roomB );
+	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
+	assert( roomB != NULL );
+	if ( roomB == NULL ) {
+		PRINT_WARNING( "Invalid portal room B!\n" );
 		return NULL;
 	}
 
 	ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
 
-	// Get the two associated rooms for the portal
-	portal->roomA = PlGetVectorArrayElementAt( out->rooms, roomA );
-	PlPushBackVectorArrayElement( portal->roomA->portals, portal );
-	portal->roomB = PlGetVectorArrayElementAt( out->rooms, roomB );
-	PlPushBackVectorArrayElement( portal->roomB->portals, portal );
-
 	portal->mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
 	portal->maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
+
+	// Get the two associated rooms for the portal
+	portal->roomA = roomA;
+	PlPushBackVectorArrayElement( portal->roomA->portals, portal );
+	portal->roomB = roomB;
+	PlPushBackVectorArrayElement( portal->roomB->portals, portal );
+
+	PlPushBackVectorArrayElement( world->portals, portal );
 
 	return portal;
 }
 
-static void DeserializePortals( NdBranch *root, ApeWorld *out ) {
+static void DeserializePortals( ApeWorld *world, NdBranch *root ) {
 	// Check if there are some rooms first, if there aren't any then the
 	// entire portal list is probably bogus
-	unsigned int numRooms = PlGetNumVectorArrayElements( out->rooms );
+	unsigned int numRooms = PlGetNumVectorArrayElements( world->rooms );
 	if ( numRooms == 0 ) {
 		return;
 	}
@@ -163,13 +164,13 @@ static void DeserializePortals( NdBranch *root, ApeWorld *out ) {
 		return;
 	}
 
-	out->portals = PlCreateVectorArray( numPortals );
+	world->portals = PlCreateVectorArray( numPortals );
 
 	NdBranch *child = ndGetFirstChild( portals );
 	while ( child != NULL ) {
-		ApeWorldPortal *portal = DeserializePortal( child, out );
+		ApeWorldPortal *portal = DeserializePortal( world, child );
 		if ( portal != NULL ) {
-			PlPushBackVectorArrayElement( out->portals, portal );
+			PlPushBackVectorArrayElement( world->portals, portal );
 		}
 
 		child = ndGetNextChild( child );
@@ -228,9 +229,9 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 }
 
 static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
-	DeserializeMaterials( root, world );
-	DeserializeRooms( root, world );
-	DeserializePortals( root, world );
+	DeserializeMaterials( world, root );
+	DeserializeRooms( world, root );
+	DeserializePortals( world, root );
 
 	NdBranch *branch;
 
