@@ -1019,14 +1019,11 @@ static void WorldSaveCallback( unsigned int argc, char **argv ) {
 
 void apeRegisterWorldConsole_( void ) {
 	PlRegisterConsoleVariable( "world/draw", "Toggle rendering of world.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world/drawDetailRooms", "Toggle rendering of detail rooms within rooms.", "true", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world/showRoomColours", "Highlights each room in colour.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, NULL, false );
 	PlRegisterConsoleVariable( "world/sortLights", "Sort lights before drawing world.", "true", PL_VAR_BOOL, &ape_config_.world.sortLights, NULL, false );
-	PlRegisterConsoleVariable( "world/forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
 
 	PlRegisterConsoleCommand( "world/save", "Save the current world with the specified name.", 1, WorldSaveCallback );
 }
