@@ -250,6 +250,8 @@ void apeInitializeRenderer_( void )
 	apeInitializeMaterialSystem();
 	YR_Font_Initialize();
 
+	apeInitializeWorldVisibilitySystem_();
+
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
 		PRINT_ERROR( "Failed to create auxiliary camera: %s\n", PlGetError() );
@@ -269,6 +271,7 @@ void apeShutdownRenderer_( void )
 	Font_Shutdown();
 	apeShutdownMaterialSystem();
 	apeShutdownRenderTargets();
+	apeShutdownWorldVisibilitySystem_();
 }
 
 /**

@@ -30,8 +30,6 @@ ApeWorld *apeCreateWorld( void )
 	world->meshes   = PlCreateVectorArray( 0 );
 	world->entities = PlCreateLinkedList();
 
-	apeInitializeWorldVisibilitySystem_();
-
 	apeSetupGlobalWorldDefaults( world );
 
 	return world;
@@ -366,7 +364,7 @@ static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file )
 	}
 }
 
-static void GenerateFaceBounds( ApeWorldFace *face )
+void apeGenerateWorldFaceBounds( ApeWorldFace *face )
 {
 	unsigned int numVertices      = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
@@ -466,7 +464,7 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 			PlPushBackVectorArrayElement( face->vertices, faceVertex );
 		}
 
-		GenerateFaceBounds( face );
+		apeGenerateWorldFaceBounds( face );
 
 		PlPushBackVectorArrayElement( room->faces, face );
 	}
@@ -796,20 +794,6 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	// 		plus we're not doing anything with it right now anyway...
 	//ParseStaticGeometryTextureMovers( world, file );
 
-	// create cached room geometry
-	srand( PlGetNumVectorArrayElements( world->rooms ) );
-	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
-	{
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
-		assert( room != NULL );
-		if ( room == NULL || room->isDetail || room->isMeshCached )
-		{
-			continue;
-		}
-
-		CacheRoomMesh( world, room );
-	}
-
 	return NULL;
 }
 
@@ -948,8 +932,8 @@ ApeWorld *apeLoadWorld( const char *path )
 			return NULL;
 		}
 
-		world = PL_NEW( ApeWorld );
-		if ( apeDeserializeWorld( root, world ) == NULL )
+		world = apeCreateWorld();
+		if ( apeDeserializeWorld( world, root ) == NULL )
 		{
 			apeDestroyWorld( world );
 			world = NULL;
@@ -969,6 +953,17 @@ ApeWorld *apeLoadWorld( const char *path )
 		world = ParseWorldFile( file );
 
 		PlCloseFile( file );
+	}
+
+	// Create cached room geometry
+	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i ) {
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+		assert( room != NULL );
+		if ( room == NULL || room->isDetail || room->isMeshCached ) {
+			continue;
+		}
+
+		CacheRoomMesh( world, room );
 	}
 
 	return world;
@@ -992,22 +987,17 @@ bool apeSaveWorld( ApeWorld *world, const char *path )
 	return true;
 }
 
-void apeDestroyWorld( ApeWorld *world )
-{
-	if ( world == NULL )
-	{
+void apeDestroyWorld( ApeWorld *world ) {
+	if ( world == NULL ) {
 		return;
 	}
 
-	apeShutdownWorldVisibilitySystem_();
+	apeFlushWorldVisibilityLists_();
 
-	if ( world->materials != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
-		{
+	if ( world->materials != NULL ) {
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i ) {
 			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
-			if ( material == NULL )
-			{
+			if ( material == NULL ) {
 				continue;
 			}
 			apeReleaseMaterial( material );
@@ -1017,13 +1007,10 @@ void apeDestroyWorld( ApeWorld *world )
 		world->materials = NULL;
 	}
 
-	if ( world->rooms != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
-		{
+	if ( world->rooms != NULL ) {
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i ) {
 			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
-			if ( room == NULL )
-			{
+			if ( room == NULL ) {
 				continue;
 			}
 			apeDestroyWorldRoom( room );
@@ -1033,13 +1020,10 @@ void apeDestroyWorld( ApeWorld *world )
 		world->rooms = NULL;
 	}
 
-	if ( world->portals != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->portals ); ++i )
-		{
+	if ( world->portals != NULL ) {
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->portals ); ++i ) {
 			ApeWorldPortal *portal = PlGetVectorArrayElementAt( world->portals, i );
-			if ( portal == NULL )
-			{
+			if ( portal == NULL ) {
 				continue;
 			}
 			PL_DELETE( portal );
@@ -1049,13 +1033,10 @@ void apeDestroyWorld( ApeWorld *world )
 		world->portals = NULL;
 	}
 
-	if ( world->vertices != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->vertices ); ++i )
-		{
+	if ( world->vertices != NULL ) {
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->vertices ); ++i ) {
 			ApeWorldVertex *vertex = PlGetVectorArrayElementAt( world->vertices, i );
-			if ( vertex == NULL )
-			{
+			if ( vertex == NULL ) {
 				continue;
 			}
 			PlDestroyVectorArray( vertex->adjacentFaces );
@@ -1066,13 +1047,10 @@ void apeDestroyWorld( ApeWorld *world )
 	}
 
 
-	if ( world->lights != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
-		{
+	if ( world->lights != NULL ) {
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {
 			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
-			if ( light == NULL )
-			{
+			if ( light == NULL ) {
 				continue;
 			}
 
@@ -1112,21 +1090,6 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 /****************************************
  * SECTOR
  ****************************************/
-
-ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights )
-{
-	// TODO: for now we're just going to return this static list...
-	static ApeLight lights[] = {
-	        {
-             .position = { 10.0f, 10.0f, 10.0f },
-             .colour   = { 1.0f, 0.0f, 0.0f, 16.0f },
-             .radius   = 16.0f,
-	         },
-	};
-
-	*numLights = PL_ARRAY_ELEMENTS( lights );
-	return lights;
-}
 
 /**
  * This crudely tries to determine the sector by an origin point.

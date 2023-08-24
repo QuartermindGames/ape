@@ -84,7 +84,7 @@ typedef struct ApeWorldFace
 	PLVectorArray *vertices;// ApeWorldFaceVertex
 	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
 
-	uint8_t flags; /* portal, mirror, skip etc. */
+	unsigned int flags; /* portal, mirror, skip etc. */
 
 	PLCollisionAABB bounds;
 } ApeWorldFace;
@@ -250,7 +250,7 @@ void apeDestroyWorldRoom( ApeWorldRoom *room );
 ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );
 
 void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
-ApeWorld *apeDeserializeWorld( NdBranch *root, ApeWorld *out );
+ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
 
 ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
 
@@ -272,5 +272,6 @@ struct ApeLight **apeGetVisibleLights_( unsigned int *num );
 ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
 
 void apeBuildWorldVisibiltyLists_( void );
+void apeFlushWorldVisibilityLists_( void );
 
 PL_EXTERN_C_END

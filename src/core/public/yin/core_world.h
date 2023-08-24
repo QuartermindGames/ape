@@ -7,6 +7,8 @@
 
 PL_EXTERN_C
 
+typedef struct NdBranch NdBranch;
+
 /* external elements */
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
@@ -22,39 +24,47 @@ typedef struct ApeWorldObject ApeWorldObject;
 typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeWorld ApeWorld;
 
-#define APE_WORLD_VERSION        3
-#define APE_WORLD_EXTENSION      "wld.n"
-#define APE_WORLD_EXTENSION_MESH "wsm.n"
+#define APE_WORLD_VERSION       3
+#define APE_WORLD_EXTENSION     "wld.n"
+#define APE_WORLD_EXTENSION_GEO "wge.n"
+#define APE_WORLD_EXTENSION_ENT "wen.n"
+#define APE_WORLD_EXTENSION_LIT "wli.n"
 
-/* World */
-
+/// Create an entirely new empty world handle.
+/// \return New world instance.
 ApeWorld *apeCreateWorld( void );
+
 ApeWorld *apeLoadWorld( const char *path );
 
+/// Deserialize world from a node tree.
+/// \param world World that deserialized data will be added to.
+/// \param root Handle to the world root.
+/// \return On success, returns the world pointer, otherwise null.
+ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
+
+/// Fetches the currently active world. Only one world can be active at a time.
+/// \return Handle to the currently active world.
 struct ApeWorld *apeGetCurrentWorld( void );
 
-/**
- * Attempts to save the given world to the destination.
- * On success, returns true but false otherwise.
- */
+/// Attempts to save the given world to the destination.
+/// \param world
+/// \param path
+/// \return On success, returns true but false otherwise.
 bool apeSaveWorld( ApeWorld *world, const char *path );
 
 void apeDestroyWorld( ApeWorld *world );
-struct NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
 void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
-ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );
-
 /* Mesh */
 
 ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
-ApeWorldMesh *apeLoadWorldMesh( const char *path );
-void apeReleaseWorldMesh( ApeWorldMesh *worldMesh );
 
-/* Room */
+////////////////////////////////////////////////////////////////////
+// Room
 
 #define APE_WORLD_ROOM_FLAG_COLD     0x2
 #define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
@@ -66,6 +76,11 @@ void apeReleaseWorldMesh( ApeWorldMesh *worldMesh );
 #define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
 #define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
-struct ApeLight *YnCore_WorldSector_GetVisibleLights( ApeWorldRoom *sector, unsigned int *numLights );
+ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );
+
+////////////////////////////////////////////////////////////////////
+// Face
+
+void apeGenerateWorldFaceBounds( ApeWorldFace *face );
 
 PL_EXTERN_C_END

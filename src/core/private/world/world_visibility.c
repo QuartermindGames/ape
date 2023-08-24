@@ -4,6 +4,10 @@
 #include "world.h"
 #include "client/renderer/renderer.h"
 
+/****************************************
+ * PRIVATE
+ ****************************************/
+
 static const unsigned int MAX_VISIBILITY_DEPTH = 256;// we'll go through 256 portals maximum (maybe hook this to a var)
 
 static PLVectorArray *visibleLights = NULL;
@@ -81,7 +85,9 @@ static void BuildVisibleRoomList( ApeWorld *world, ApeCamera *camera )
 		return;
 }
 
-/////////////////////////////////////////////////////////////////
+/****************************************
+ * PUBLIC
+ ****************************************/
 
 void apeInitializeWorldVisibilitySystem_( void )
 {
@@ -128,4 +134,9 @@ void apeBuildWorldVisibiltyLists_( void )
 
 	BuildVisibleLightList( world, camera );
 	BuildVisibleRoomList( world, camera );
+}
+
+void apeFlushWorldVisibilityLists_( void ) {
+	PlClearVectorArray( visibleLights );
+	PlClearVectorArray( visibleRooms );
 }
