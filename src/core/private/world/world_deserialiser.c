@@ -65,10 +65,11 @@ static void DeserializeMaterials( NdBranch *root, ApeWorld *out ) {
 	NdBranch *child = ndGetFirstChild( materials );
 	while ( child != NULL ) {
 		PLPath path;
-		if ( ndGetStr( child, path, sizeof( path ) ) == ND_ERROR_SUCCESS )
+		if ( ndGetStr( child, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
 			PlPushBackVectorArrayElement( out->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
-		else
+		} else {
 			PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
+		}
 
 		child = ndGetNextChild( child );
 	}
@@ -181,7 +182,7 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	face->normal = ndGetVector3( root, "normal", &pl_vecOrigin3 );
 	face->offset = ndGetF32ByName( root, "offset", 0.0f );
 
-	face->flags = ND_GETUINT32( root, "flags", 0 );
+	face->flags = ndGetUInt( root, "flags", 0 );
 
 	face->smoothingGroup = ndGetInt( root, "smoothingGroup", 0 );
 
@@ -288,7 +289,7 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		return NULL;
 	}
 
-	// Get the properties branch from the root
+	// Get the property branch from the root
 	NdBranch *propertyList = ndGetChildByName( root, "properties" );
 	if ( propertyList != NULL ) {
 		// Copy the branch, so we can pass it over to the game logic later
