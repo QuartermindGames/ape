@@ -119,6 +119,7 @@ uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback );
 #define ND_GETUINT16( ROOT, NAME, FALLBACK ) ( uint16_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
 #define ND_GETUINT32( ROOT, NAME, FALLBACK ) ( uint32_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
 
+PLVector2 ndGetVector2( NdBranch *root, const char *name, const PLVector2 *fallback );
 PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback );
 PLVector4 ndGetVector4( NdBranch *root, const char *name, const PLVector4 *fallback );
 PLColourF32 ndGetColourF32( NdBranch *root, const char *name, const PLColourF32 *fallback );

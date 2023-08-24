@@ -379,6 +379,20 @@ uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback ) {
 	return ( var != NULL ) ? strtoull( var->buf, NULL, 10 ) : fallback;
 }
 
+PLVector2 ndGetVector2( NdBranch *root, const char *name, const PLVector2 *fallback ) {
+	NdBranch *child = ndGetChildByName( root, name );
+	if ( child == NULL ) {
+		return *fallback;
+	}
+
+	PLVector2 v;
+	if ( ndGetF32Array( child, ( float * ) &v, 2 ) != ND_ERROR_SUCCESS ) {
+		return *fallback;
+	}
+
+	return v;
+}
+
 PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback ) {
 	NdBranch *child = ndGetChildByName( root, name );
 	if ( child == NULL )

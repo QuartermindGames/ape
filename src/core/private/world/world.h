@@ -45,7 +45,7 @@ typedef struct ApeWorldVertex {
 } ApeWorldVertex;
 
 typedef struct ApeWorldFaceVertex {
-	float textureU, textureV;
+	PLVector2 textureCoords;
 	float lightmapU, lightmapV;
 
 	ApeWorldVertex *u;

@@ -402,10 +402,10 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 				assert( faceVertex->u != NULL );
 			}
 
-			faceVertex->textureU = PlReadFloat32( file, false, NULL );
-			assert( !isnan( faceVertex->textureU ) && ( faceVertex->textureU * faceVertex->textureU >= 0.0f ) );
-			faceVertex->textureV = PlReadFloat32( file, false, NULL );
-			assert( !isnan( faceVertex->textureV ) && ( faceVertex->textureV * faceVertex->textureV >= 0.0f ) );
+			faceVertex->textureCoords.x = PlReadFloat32( file, false, NULL );
+			assert( !isnan( faceVertex->textureCoords.x ) && ( faceVertex->textureCoords.x * faceVertex->textureCoords.x >= 0.0f ) );
+			faceVertex->textureCoords.y = PlReadFloat32( file, false, NULL );
+			assert( !isnan( faceVertex->textureCoords.y ) && ( faceVertex->textureCoords.y * faceVertex->textureCoords.y >= 0.0f ) );
 
 			if ( lightmapIndex >= 0 ) {
 				faceVertex->lightmapU = ParseFloat( file );
@@ -579,11 +579,10 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 
 			PLColour colour = PlColourF32ToU8( &room->colour );
 			PlgAddMeshVertex( room->mesh,
-			                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
-			                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
-			                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
+			                  &vertex->u->position,
+			                  &face->normal,
 			                  &colour,
-			                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
+			                  &vertex->textureCoords );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
@@ -626,11 +625,10 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 
 				PLColour colour = PlColourF32ToU8( &room->colour );
 				PlgAddMeshVertex( room->mesh,
-				                  &( PLVector3 ){ vertex->u->position.x, vertex->u->position.y, vertex->u->position.z },
-				                  // &( PLVector3 ){ vertex->u->normal.x, vertex->u->normal.y, vertex->u->normal.z },
-				                  &( PLVector3 ){ face->normal.x, face->normal.y, face->normal.z },
+				                  &vertex->u->position,
+				                  &face->normal,
 				                  &colour,
-				                  &( PLVector2 ){ vertex->textureU, vertex->textureV } );
+				                  &vertex->textureCoords );
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}

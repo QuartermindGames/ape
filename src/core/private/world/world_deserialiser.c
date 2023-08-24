@@ -214,8 +214,7 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 
 			ApeWorldFaceVertex *vertex = PL_NEW( ApeWorldFaceVertex );
 			vertex->u = worldVertex;
-			vertex->textureU = ndGetF32ByName( branch, "textureU", 0.0f );
-			vertex->textureV = ndGetF32ByName( branch, "textureV", 0.0f );
+			vertex->textureCoords = ndGetVector2( branch, "textureCoords", &pl_vecOrigin2 );
 
 			PlInsertLinkedListNode( face->edgeLoop, vertex );
 			PlPushBackVectorArrayElement( face->vertices, vertex );
