@@ -2,17 +2,15 @@
 
 #include "gui_panel.h"
 
-typedef struct GUIImage
-{
+typedef struct GUIImage {
 	PLGTexture *texture;
 } GUIImage;
 
-GuiPanel *GUI_Image_Create( GuiPanel *parent, int x, int y, int w, int h, PLGTexture *texture )
-{
+GuiPanel *GUI_Image_Create( GuiPanel *parent, int x, int y, int w, int h, PLGTexture *texture ) {
 	GuiPanel *panel = guiCreatePanel( parent, x, y, w, h, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 
-	GUIImage *image     = PL_NEW( GUIImage );
-	image->texture      = texture;
+	GUIImage *image = PL_NEW( GUIImage );
+	image->texture = texture;
 	panel->extendedData = image;
 
 	return panel;

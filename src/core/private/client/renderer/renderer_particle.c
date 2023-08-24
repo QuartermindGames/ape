@@ -8,16 +8,13 @@
 
 #include <yin/node.h>
 
-void PS_Initialize( void )
-{
+void PS_Initialize( void ) {
 }
 
-void PS_Shutdown( void )
-{
+void PS_Shutdown( void ) {
 }
 
-static void PS_CB_DestroyEmitterTemplate( void *userData )
-{
+static void PS_CB_DestroyEmitterTemplate( void *userData ) {
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
@@ -28,11 +25,9 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	PlFree( emitter );
 }
 
-NdBranch *PS_SerializeEmitter( const PSEmitter *emitter )
-{
+NdBranch *PS_SerializeEmitter( const PSEmitter *emitter ) {
 	NdBranch *root = ndPushBackObject( NULL, "particleEmitter" );
-	if ( root != NULL )
-	{
+	if ( root != NULL ) {
 		ndPushBackI32( root, "emissionRate", emitter->emissionRate );
 		ndPushBackI32( root, "emissionVar", emitter->emissionVar );
 
@@ -48,15 +43,13 @@ NdBranch *PS_SerializeEmitter( const PSEmitter *emitter )
 	return root;
 }
 
-void PS_CacheEmitterTemplate( const char *path )
-{
+void PS_CacheEmitterTemplate( const char *path ) {
 	PSEmitter *emitter = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
 	NdBranch *root = ndLoadFile( path, "particleEmitter" );
-	if ( root == NULL )
-	{
+	if ( root == NULL ) {
 		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
 		return;
 	}
@@ -67,18 +60,18 @@ void PS_CacheEmitterTemplate( const char *path )
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
 	emitter->emissionRate = ndGetInt( root, "emissionRate", 2 );
-	emitter->emissionVar  = ndGetInt( root, "emissionVar", 2 );
+	emitter->emissionVar = ndGetInt( root, "emissionVar", 2 );
 
-	emitter->particleLife    = ndGetInt( root, "particleLife", 10 );
+	emitter->particleLife = ndGetInt( root, "particleLife", 10 );
 	emitter->particleLifeVar = ndGetInt( root, "particleLifeVar", 5 );
-	emitter->maxParticles    = ndGetInt( root, "maxParticles", 100 );
+	emitter->maxParticles = ndGetInt( root, "maxParticles", 100 );
 
 	emitter->life = ndGetInt( root, "life", 0 );
 
-	emitter->startColour    = ndGetColourF32( root, "startColour", &PL_COLOURF32_WHITE );
-	emitter->endColour      = ndGetColourF32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColour = ndGetColourF32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour = ndGetColourF32( root, "endColour", &PL_COLOURF32_WHITE );
 	emitter->startColourVar = ndGetColourF32( root, "startColourVar", &emitter->startColourVar );
-	emitter->endColourVar   = ndGetColourF32( root, "endColourVar", &emitter->endColourVar );
+	emitter->endColourVar = ndGetColourF32( root, "endColourVar", &emitter->endColourVar );
 
 	apeAddToCachePool( path, APE_CACHE_POOL_PARTICLES, emitter );
 
@@ -86,11 +79,9 @@ void PS_CacheEmitterTemplate( const char *path )
 	apeAddReference( &emitter->mem );
 }
 
-PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
-{
+PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path ) {
 	PSEmitter *emitterTemplate = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
-	if ( emitterTemplate == NULL )
-	{
+	if ( emitterTemplate == NULL ) {
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
 		return NULL;
 	}
@@ -101,8 +92,7 @@ PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 	return emitter;
 }
 
-PSEmitter *PS_SpawnEmitter( void )
-{
+PSEmitter *PS_SpawnEmitter( void ) {
 	PSEmitter *emitter = PlMAlloc( sizeof( PSEmitter ), true );
 	emitter->particles = PlCreateLinkedList();
 
@@ -111,13 +101,12 @@ PSEmitter *PS_SpawnEmitter( void )
 		PRINT_ERROR( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 
 	emitter->startScale = 10.0f;
-	emitter->endScale   = 0.0f;
+	emitter->endScale = 0.0f;
 
 	return emitter;
 }
 
-void PS_DestroyEmitter( PSEmitter *emitter )
-{
+void PS_DestroyEmitter( PSEmitter *emitter ) {
 	/* todo: 	push it into a queue to be removed once
 	 * 			all the particles are dead */
 	if ( emitter == NULL )
@@ -125,10 +114,9 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 
 	/* free all the particles we've created */
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		node                 = PlGetNextLinkedListNode( node );
+		node = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
 
@@ -139,15 +127,12 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 	PlFree( emitter );
 }
 
-int U_Rand_I32( int max )
-{
+int U_Rand_I32( int max ) {
 	return ( rand() % max );
 }
 
-static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
-{
-	if ( particle->life <= 0 )
-	{
+static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter ) {
+	if ( particle->life <= 0 ) {
 		PlDestroyLinkedListNode( particle->node );
 		PlFree( particle );
 		return;
@@ -165,7 +150,7 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 	particle->bounds.origin = particle->transform.translation;
 
 	particle->oldColour = particle->colour;
-	particle->colour    = PlAddColourF32( &particle->colour, &particle->deltaColour );
+	particle->colour = PlAddColourF32( &particle->colour, &particle->deltaColour );
 
 	particle->scale += particle->deltaScale;
 
@@ -180,18 +165,16 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 	particle->life--;
 }
 
-void PS_TickEmitter( PSEmitter *emitter )
-{
+void PS_TickEmitter( PSEmitter *emitter ) {
 	int numParticles = ( int ) PlGetNumLinkedListNodes( emitter->particles );
-	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
-	{
+	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks ) {
 		PSParticle *particle = PlMAlloc( sizeof( PSParticle ), true );
-		particle->emitter    = emitter;
+		particle->emitter = emitter;
 
 		PLVector3 translationMod;
-		translationMod.x                = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
-		translationMod.y                = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
-		translationMod.z                = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
+		translationMod.x = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
+		translationMod.y = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
+		translationMod.z = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
 		particle->life = emitter->particleLife + ( emitter->particleLifeVar * U_Rand_I32( 100 ) );
@@ -201,19 +184,19 @@ void PS_TickEmitter( PSEmitter *emitter )
 		startColour.g = emitter->startColour.g + ( emitter->startColourVar.g * PlGenerateRandomFloat( 1.0f ) );
 		startColour.b = emitter->startColour.b + ( emitter->startColourVar.b * PlGenerateRandomFloat( 1.0f ) );
 		startColour.a = emitter->startColour.a + ( emitter->startColourVar.a * PlGenerateRandomFloat( 1.0f ) );
-		endColour.r   = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
-		endColour.g   = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
-		endColour.b   = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
-		endColour.a   = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
+		endColour.r = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
+		endColour.g = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
+		endColour.b = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
+		endColour.a = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
 
-		particle->colour        = startColour;
+		particle->colour = startColour;
 		particle->deltaColour.r = ( ( endColour.r - startColour.r ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.g = ( ( endColour.g - startColour.g ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
-		float startScale     = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
-		float endScale       = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float startScale = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float endScale = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
 		particle->bounds.maxs = PLVector3( 2.0f, 2.0f, 2.0f );
@@ -226,13 +209,11 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 
 	/* simulate all of the existing particles that we've emitted */
-	unsigned int i         = 0;
+	unsigned int i = 0;
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		if ( i == 0 )
-		{
+		if ( i == 0 ) {
 			emitter->bounds.maxs = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 			emitter->bounds.mins = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 		}
@@ -244,13 +225,12 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 
 	emitter->bounds.absOrigin = PLVector3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
-	emitter->bounds.origin    = emitter->transform.translation;
+	emitter->bounds.origin = emitter->transform.translation;
 
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera )
-{
+void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera ) {
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -266,8 +246,7 @@ void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera )
 	PlgSetCullMode( PLG_CULL_NONE );
 
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
 
 		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );

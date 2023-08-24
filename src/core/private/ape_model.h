@@ -9,8 +9,7 @@
 
 #define MODEL_MAX_MATERIALS 64
 
-typedef struct MDLUserData
-{
+typedef struct MDLUserData {
 	ApeMaterial *materials[ MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
 	ApeMemoryReference mem;

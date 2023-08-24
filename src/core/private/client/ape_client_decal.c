@@ -4,8 +4,7 @@
 
 #include "ape_client_decal.h"
 
-typedef struct ApeDecal
-{
+typedef struct ApeDecal {
 	PLVector3 position;
 	float width;
 	float height;

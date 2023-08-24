@@ -4,11 +4,9 @@
 #include "mag_game.h"
 #include "mag_character.h"
 
-void magRandomizeCharacterStats( MagCharacter *character )
-{
+void magRandomizeCharacterStats( MagCharacter *character ) {
 }
 
-int16_t magNextCharacterLevel( const MagCharacter *character )
-{
+int16_t magNextCharacterLevel( const MagCharacter *character ) {
 	return ( int16_t ) round( 100 * ( character->stats[ MAG_CHARACTER_STAT_LEVEL ] ^ 3 ) );
 }

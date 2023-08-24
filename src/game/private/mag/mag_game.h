@@ -8,7 +8,6 @@
 #include "mag_character.h"
 #include "mag_world.h"
 
-typedef struct MagGameState
-{
+typedef struct MagGameState {
 	MagWorldState worldState;
 } MagGameState;

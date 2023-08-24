@@ -13,20 +13,16 @@
 GuiState guiState;
 
 static PLLinkedList *cachedTextures;
-typedef struct GuiCachedTexture
-{
+typedef struct GuiCachedTexture {
 	unsigned int hash;
 	PLGTexture *texture;
 } GuiCachedTexture;
-PLGTexture *guiCacheTexture( const char *path )
-{
-	unsigned int hash      = PlGenerateHashSDBM( path );
+PLGTexture *guiCacheTexture( const char *path ) {
+	unsigned int hash = PlGenerateHashSDBM( path );
 	PLLinkedListNode *node = PlGetFirstNode( cachedTextures );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		GuiCachedTexture *cachedTexture = PlGetLinkedListNodeUserData( node );
-		if ( cachedTexture->hash == hash )
-		{
+		if ( cachedTexture->hash == hash ) {
 			return cachedTexture->texture;
 		}
 
@@ -34,41 +30,37 @@ PLGTexture *guiCacheTexture( const char *path )
 	}
 
 	PLGTexture *texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_LINEAR );
-	if ( texture == NULL )
-	{
+	if ( texture == NULL ) {
 		return NULL;
 	}
 
 	GuiCachedTexture *cachedTexture = PL_NEW( GuiCachedTexture );
-	cachedTexture->texture          = texture;
-	cachedTexture->hash             = hash;
+	cachedTexture->texture = texture;
+	cachedTexture->hash = hash;
 	PlInsertLinkedListNode( cachedTextures, cachedTexture );
 	return cachedTexture->texture;
 }
 
 #define MAX_STYLE_SHEETS 16
 GuiStyleSheet styleSheets[ MAX_STYLE_SHEETS ];
-const GuiStyleSheet *activeSheet   = NULL;
+const GuiStyleSheet *activeSheet = NULL;
 static unsigned int numStyleSheets = 0;
 
 #define GUI_STYLESHEET_VERSION 1
 
-static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
-{
+static GuiStyleSheet *ParseStyleSheet( NdBranch *root ) {
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
-	{
+	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION ) {
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
 		return NULL;
 	}
 
 	NdBranch *c;
 	c = ndGetChildByName( root, "colours" );
-	if ( c != NULL )
-	{
+	if ( c != NULL ) {
 		NdBranch *i;
 		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
 			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
@@ -85,8 +77,7 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	}
 
 	c = ndGetChildByName( root, "borders" );
-	if ( c != NULL )
-	{
+	if ( c != NULL ) {
 		unsigned int style = ndGetUInt( c, "style", -1 );
 		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
@@ -101,11 +92,9 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	return guiStyleSheet;
 }
 
-const GuiStyleSheet *guiCacheStyleSheet( const char *path )
-{
+const GuiStyleSheet *guiCacheStyleSheet( const char *path ) {
 	NdBranch *root = ndLoadFile( path, "guiStyle" );
-	if ( root == NULL )
-	{
+	if ( root == NULL ) {
 		GUI_WARNING( "Failed to load node file: %s\n", ndGetErrorMessage() );
 		return NULL;
 	}
@@ -113,13 +102,11 @@ const GuiStyleSheet *guiCacheStyleSheet( const char *path )
 	return ParseStyleSheet( root );
 }
 
-void guiSetStyleSheet( const GuiStyleSheet *styleSheet )
-{
+void guiSetStyleSheet( const GuiStyleSheet *styleSheet ) {
 	activeSheet = styleSheet;
 }
 
-const GuiStyleSheet *guiGetActiveStyleSheet( void )
-{
+const GuiStyleSheet *guiGetActiveStyleSheet( void ) {
 	return activeSheet;
 }
 
@@ -128,14 +115,13 @@ int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 /**
  * Initialize the GUI sub-system.
  */
-bool guiInitialize( void )
-{
+bool guiInitialize( void ) {
 	PL_ZERO_( guiState );
 
 	gui_LogLevels_[ GUI_LOGLEVEL_DEFAULT ] = PlAddLogLevel( "gui", PL_COLOUR_LIGHT_CORAL, true );
 	gui_LogLevels_[ GUI_LOGLEVEL_WARNING ] = PlAddLogLevel( "gui/warning", PL_COLOUR_YELLOW, true );
-	gui_LogLevels_[ GUI_LOGLEVEL_ERROR ]   = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
-	gui_LogLevels_[ GUI_LOGLEVEL_DEBUG ]   = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
+	gui_LogLevels_[ GUI_LOGLEVEL_ERROR ] = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
+	gui_LogLevels_[ GUI_LOGLEVEL_DEBUG ] = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
 #ifndef NDEBUG
 	                                                      true
 #else
@@ -144,8 +130,7 @@ bool guiInitialize( void )
 	);
 
 	guiInitializeDraw_();
-	if ( !guiInitializeFonts_() )
-	{
+	if ( !guiInitializeFonts_() ) {
 		GUI_ERROR( "Font initialization failed!\n" );
 		return false;
 	}
@@ -154,33 +139,28 @@ bool guiInitialize( void )
 	return true;
 }
 
-void guiShutdown( void )
-{
+void guiShutdown( void ) {
 	guiShutdownDraw_();
 
 	for ( unsigned int i = 0; i < GUI_MAX_LOG_LEVELS; ++i )
 		PlRemoveLogLevel( gui_LogLevels_[ i ] );
 }
 
-void guiTick( GuiPanel *root )
-{
+void guiTick( GuiPanel *root ) {
 	guiTickPanel( root );
 }
 
-void guiUpdateMousePosition( int x, int y )
-{
+void guiUpdateMousePosition( int x, int y ) {
 	guiState.mouseOldPos = guiState.mousePos;
-	guiState.mousePos.x  = x;
-	guiState.mousePos.y  = y;
+	guiState.mousePos.x = x;
+	guiState.mousePos.y = y;
 }
 
-void guiUpdateMouseWheel( float x, float y )
-{
+void guiUpdateMouseWheel( float x, float y ) {
 	guiState.mouseOldWheel = guiState.mouseWheel;
-	guiState.mouseWheel.x  = x;
-	guiState.mouseWheel.y  = y;
+	guiState.mouseWheel.x = x;
+	guiState.mouseWheel.y = y;
 }
 
-void guiUpdateMouseButton( GuiMouseButton button, bool isDown )
-{
+void guiUpdateMouseButton( GuiMouseButton button, bool isDown ) {
 }

@@ -4,8 +4,7 @@
 
 #include <yin/core_renderer.h>
 
-typedef struct ApeTexture
-{
+typedef struct ApeTexture {
 	ApeMemoryReference reference;
 	PLGTexture *internal;
 } ApeTexture;

@@ -16,8 +16,7 @@ void Game_Display( void )
 }
 #endif
 
-void gameRegisterStandardEntityComponents( void )
-{
+void gameRegisterStandardEntityComponents( void ) {
 	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
 	const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
 	const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void );
@@ -29,32 +28,27 @@ void gameRegisterStandardEntityComponents( void )
 	apeRegisterEntityComponent( "test", gameTestComponentCallbackTable() );
 }
 
-void gamePlayerConnected( const char *name, unsigned int id )
-{
+void gamePlayerConnected( const char *name, unsigned int id ) {
 	Game_Print( "Player %s (%u) has connected\n", name, id );
 }
 
-void gamePlayerDisconnected( unsigned int id )
-{
+void gamePlayerDisconnected( unsigned int id ) {
 	Game_Print( "Player (%u) has disconnected\n", id );
 }
 
-static GameDifficulty gameDifficulty         = GAME_DIFFICULTY_NORMAL;
+static GameDifficulty gameDifficulty = GAME_DIFFICULTY_NORMAL;
 static GameConnectionType gameConnectionType = GAME_CONNECTION_LOCAL;
 
 void gameSetDifficultyMode( GameDifficulty difficulty ) { gameDifficulty = difficulty; }
 GameDifficulty gameGetDifficultyMode( void ) { return gameDifficulty; }
 
-void Game_SetConnection( const GameConnectionType connectionType )
-{
-	if ( gameConnectionType != GAME_CONNECTION_NONE )
-	{
+void Game_SetConnection( const GameConnectionType connectionType ) {
+	if ( gameConnectionType != GAME_CONNECTION_NONE ) {
 	}
 
 	gameConnectionType = connectionType;
 }
 
-GameConnectionType gameGetConnectionType( void )
-{
+GameConnectionType gameGetConnectionType( void ) {
 	return gameConnectionType;
 }

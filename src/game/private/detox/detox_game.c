@@ -5,8 +5,7 @@
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( ApeInputState state, const char *id )
-{
+static void MoveCameraCallback( ApeInputState state, const char *id ) {
 	if ( state != OGE_INPUT_STATE_DOWN )
 		return;
 
@@ -37,12 +36,10 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	apeSetCameraAngles( playerCamera, &ang );
 }
 
-static void SpawnLight( ApeInputState state, const char *id )
-{
+static void SpawnLight( ApeInputState state, const char *id ) {
 }
 
-static void InitializeGame( void )
-{
+static void InitializeGame( void ) {
 	gameRegisterStandardEntityComponents();
 
 	PlParseConsoleString( "world worlds/train02.rfl" );
@@ -61,17 +58,14 @@ static void InitializeGame( void )
 	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, SpawnLight );
 }
 
-static void ShutdownGame( void )
-{
+static void ShutdownGame( void ) {
 	apeDestroyCamera( playerCamera );
 	playerCamera = NULL;
 }
 
-static void TickGame( void )
-{
+static void TickGame( void ) {
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
-	{
+	if ( mouseLook != NULL && mouseLook->b_value ) {
 		int mx, my;
 		apeGetMouseDelta( &mx, &my );
 
@@ -83,28 +77,21 @@ static void TickGame( void )
 	}
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user )
-{
-	switch ( modeRequest )
-	{
-		case GAMEMODE_REQUEST_INITIALIZE:
-		{
+static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
+	switch ( modeRequest ) {
+		case GAMEMODE_REQUEST_INITIALIZE: {
 			InitializeGame();
 			return true;
 		}
-		case GAMEMODE_REQUEST_TICK:
-		{
+		case GAMEMODE_REQUEST_TICK: {
 			TickGame();
 			break;
 		}
-		case GAMEMODE_REQUEST_HANDLEINPUT:
-		{
+		case GAMEMODE_REQUEST_HANDLEINPUT: {
 			break;
 		}
-		case GAMEMODE_REQUEST_SPAWNWORLD:
-		{
-			for ( unsigned int i = 0; i < 4; ++i )
-			{
+		case GAMEMODE_REQUEST_SPAWNWORLD: {
+			for ( unsigned int i = 0; i < 4; ++i ) {
 				apeCreateEntityFromPrefab( "base/test" );
 			}
 			break;
@@ -116,8 +103,7 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 	return false;
 }
 
-const GameModeInterface *gameGetModeInterface( void )
-{
+const GameModeInterface *gameGetModeInterface( void ) {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 

@@ -10,8 +10,7 @@
  *  Lexer.
  *------------------------------------------------------------------------------------*/
 
-typedef struct LexerReservedWord
-{
+typedef struct LexerReservedWord {
 	const char *string;
 	DKTokenType type;
 	const char *description;
@@ -104,13 +103,11 @@ static const unsigned int reservedTableElements = PL_ARRAY_ELEMENTS( tokenCompar
 /**
  * Determine the type based on the given symbol.
  */
-static DKTokenType GetTokenTypeForSymbol( const char *symbol, unsigned int *length )
-{
+static DKTokenType GetTokenTypeForSymbol( const char *symbol, unsigned int *length ) {
 	if ( *symbol == '\0' )
 		return DK_TOKENTYPE_EOF;
 
-	for ( unsigned int i = 0; i < reservedTableElements; ++i )
-	{
+	for ( unsigned int i = 0; i < reservedTableElements; ++i ) {
 		const char *p = tokenCompareTable[ i ].string;
 		if ( strncmp( p, symbol, strlen( p ) ) != 0 )
 			continue;
@@ -124,11 +121,9 @@ static DKTokenType GetTokenTypeForSymbol( const char *symbol, unsigned int *leng
 	return DK_TOKENTYPE_IDENT;
 }
 
-void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, PLLinkedList *list )
-{
+void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, PLLinkedList *list ) {
 	const char *o = p;
-	while ( true )
-	{
+	while ( true ) {
 		PlSkipWhitespace( &p );
 
 		DKLexerToken *token = PlMAllocA( sizeof( DKLexerToken ) );
@@ -137,30 +132,24 @@ void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, P
 		token->linePos = ( p - o ) + 1;
 		snprintf( token->path, sizeof( token->path ), "%s", file );
 
-		if ( isalpha( *p ) || *p == '_' )
-		{
+		if ( isalpha( *p ) || *p == '_' ) {
 			int i = 0;
-			while ( isalpha( *p ) || *p == '_' )
-			{
+			while ( isalpha( *p ) || *p == '_' ) {
 				if ( i >= YC_MAX_SYMBOL_LENGTH )
 					Error( "Unexpected symbol length!\n" );
 
 				token->symbol[ i++ ] = *p++;
 			}
 			token->type = GetTokenTypeForSymbol( token->symbol, NULL );
-		}
-		else if ( isdigit( *p ) )
-		{
+		} else if ( isdigit( *p ) ) {
 			token->type = DK_TOKENTYPE_INT;
 
 			int i = 0;
-			while ( isdigit( *p ) || *p == '.' )
-			{
+			while ( isdigit( *p ) || *p == '.' ) {
 				if ( i >= YC_MAX_SYMBOL_LENGTH )
 					Error( "Unexpected symbol length!\n" );
 
-				if ( *p == '.' )
-				{
+				if ( *p == '.' ) {
 					if ( token->type == DK_TOKENTYPE_DEC )
 						Error( "Unexpected token in num: %u:%u\n", token->lineNum, token->linePos );
 
@@ -168,9 +157,7 @@ void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, P
 				}
 				token->symbol[ i++ ] = *p++;
 			}
-		}
-		else if ( *p == '\'' )
-		{
+		} else if ( *p == '\'' ) {
 			token->type = DK_TOKENTYPE_STRING;
 			p++;
 			int i = 0;
@@ -183,26 +170,21 @@ void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, P
 			if ( *p != '\'' )
 				Error( "String is not enclosed: %u:%u\n", token->lineNum, token->linePos );
 			p++;
-		}
-		else if ( *p == '\0' )
-		{
+		} else if ( *p == '\0' ) {
 			token->type = DK_TOKENTYPE_EOF;
 			strcpy( token->symbol, "\\0" );
 		}
 
-		if ( token->type == DK_TOKENTYPE_INVALID )
-		{
+		if ( token->type == DK_TOKENTYPE_INVALID ) {
 			unsigned int l;
 			token->type = GetTokenTypeForSymbol( p, &l );
-			if ( token->type != DK_TOKENTYPE_INVALID )
-			{
+			if ( token->type != DK_TOKENTYPE_INVALID ) {
 				strncpy( token->symbol, p, l );
 				p += l;
 			}
 		}
 
-		if ( token->type != DK_TOKENTYPE_INVALID )
-		{
+		if ( token->type != DK_TOKENTYPE_INVALID ) {
 			token->node = PlInsertLinkedListNode( list, token );
 
 			if ( token->type == DK_TOKENTYPE_EOF )
@@ -218,11 +200,9 @@ void DKLexer_ParseLine( const char *p, const char *file, unsigned int lineNum, P
 	}
 }
 
-DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char *file )
-{
-	if ( handle == NULL )
-	{
-		handle         = PL_NEW( DKLexer );
+DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char *file ) {
+	if ( handle == NULL ) {
+		handle = PL_NEW( DKLexer );
 		handle->tokens = PlCreateLinkedList();
 		snprintf( handle->originFile, sizeof( handle->originFile ), "%s", file );
 	}
@@ -230,24 +210,18 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 	double startTime = PlGetCurrentSeconds();
 
 	unsigned int curLineNum = 0;
-	const char *p           = buf;
-	while ( *p != '\0' )
-	{
+	const char *p = buf;
+	while ( *p != '\0' ) {
 		curLineNum++;
 
-		if ( *p == '/' && *( p + 1 ) == '/' )
-		{ /* single-line comment */
+		if ( *p == '/' && *( p + 1 ) == '/' ) { /* single-line comment */
 			PlSkipLine( &p );
 			continue;
-		}
-		else if ( *p == '/' && *( p + 1 ) == '*' )
-		{ /* multi-line comment */
+		} else if ( *p == '/' && *( p + 1 ) == '*' ) { /* multi-line comment */
 			p += 2;
-			while ( *p != '*' && *( p + 1 ) != '/' )
-			{
+			while ( *p != '*' && *( p + 1 ) != '/' ) {
 				int l = PlGetLineEndType( p );
-				if ( l != PL_PARSE_NL_INVALID )
-				{
+				if ( l != PL_PARSE_NL_INVALID ) {
 					p += l;
 					curLineNum++;
 					continue;
@@ -261,7 +235,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 
 		/* tokenise the line */
 		unsigned int bufSize = PlDetermineLineLength( p ) + 1;
-		char *line           = PlMAllocA( bufSize );
+		char *line = PlMAllocA( bufSize );
 		PlParseLine( &p, line, bufSize );
 
 		DKLexer_ParseLine( line, file, curLineNum, handle->tokens );
@@ -273,8 +247,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 #if !defined( NDEBUG )
 	Print( "%5s %20s %10s %10s\n", "TYPE", "SYMBOL", "LINE", "LPOS" );
 	PLLinkedListNode *node = PlGetFirstNode( handle->tokens );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		const DKLexerToken *token = PlGetLinkedListNodeUserData( node );
 		printf( "%5d %20s %10u %10u\n", token->type, token->symbol, token->lineNum, token->linePos );
 		node = PlGetNextLinkedListNode( node );
@@ -288,8 +261,7 @@ DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char
 	return handle;
 }
 
-void Yang_Lexer_Test( void )
-{
+void Yang_Lexer_Test( void ) {
 	static const char *longString =
 	        "// data declares the constant value\n"
 	        "decl someConstant int const( 1 );\n"

@@ -3,8 +3,7 @@
 
 #pragma once
 
-typedef enum ApeCameraMode
-{
+typedef enum ApeCameraMode {
 	APE_CAMERA_MODE_PERSPECTIVE,
 	APE_CAMERA_MODE_TOP,
 	APE_CAMERA_MODE_LEFT,
@@ -13,8 +12,7 @@ typedef enum ApeCameraMode
 	APE_CAMERA_MAX_MODES
 } ApeCameraMode;
 
-typedef enum ApeCameraDrawMode
-{
+typedef enum ApeCameraDrawMode {
 	// "basic" draw modes
 	APE_CAMERA_DRAW_MODE_WIREFRAME,
 	APE_CAMERA_DRAW_MODE_SOLID,

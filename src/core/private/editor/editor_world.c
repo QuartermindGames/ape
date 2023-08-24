@@ -26,24 +26,19 @@ static ApeWorld *world = NULL;
 static int mouseCursorX = 0,
            mouseCursorY = 0;
 
-static void RegisterWorldEditorVariables( void )
-{
+static void RegisterWorldEditorVariables( void ) {
 }
 
-static void CreateWorldCommand( unsigned int argc, char **argv )
-{
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
-	{
+static void CreateWorldCommand( unsigned int argc, char **argv ) {
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
 		return;
 	}
 
 	world = apeCreateWorld();
 }
 
-static void DestroyWorldCommand( unsigned int argc, char **argv )
-{
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
-	{
+static void DestroyWorldCommand( unsigned int argc, char **argv ) {
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
 		return;
 	}
 
@@ -51,23 +46,19 @@ static void DestroyWorldCommand( unsigned int argc, char **argv )
 	world = NULL;
 }
 
-static void CreateMeshCommand( unsigned int argc, char **argv )
-{
+static void CreateMeshCommand( unsigned int argc, char **argv ) {
 	ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
-	if ( editorInstance == NULL )
-	{
+	if ( editorInstance == NULL ) {
 		PRINT_WARNING( "Command failed - no active instance!\n" );
 		return;
 	}
 
-	if ( editorInstance->mode != APE_EDITOR_CONTEXT_WORLD )
-	{
+	if ( editorInstance->mode != APE_EDITOR_CONTEXT_WORLD ) {
 		PRINT_WARNING( "Command failed - invalid active instance mode!\n" );
 		return;
 	}
 
-	if ( world == NULL )
-	{
+	if ( world == NULL ) {
 		return;
 	}
 
@@ -79,70 +70,57 @@ static void CreateMeshCommand( unsigned int argc, char **argv )
 	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
 }
 
-static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
-{
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
-	{
+static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED )
-	{
+	if ( state != OGE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 
 	context.gridScale += 2;
 }
 
-static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id )
-{
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
-	{
+static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED )
-	{
+	if ( state != OGE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 
 	context.gridScale -= 2;
-	if ( context.gridScale <= 0 )
-	{
+	if ( context.gridScale <= 0 ) {
 		context.gridScale = 1;
 	}
 }
 
-static void ToggleView( ApeInputState state, PL_UNUSED const char *id )
-{
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) )
-	{
+static void ToggleView( ApeInputState state, PL_UNUSED const char *id ) {
+	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED )
-	{
+	if ( state != OGE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 
 	context.camera->mode++;
-	if ( context.camera->mode >= APE_CAMERA_MAX_MODES )
-	{
+	if ( context.camera->mode >= APE_CAMERA_MAX_MODES ) {
 		context.camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
 	}
 }
 
-static void InitializeWorldEditor( void )
-{
-	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i )
-	{
+static void InitializeWorldEditor( void ) {
+	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
 		cameras[ i ] = apeCreateCamera( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
-	context.camera           = cameras[ 0 ];
-	context.camera->mode     = APE_CAMERA_MODE_TOP;
+	context.camera = cameras[ 0 ];
+	context.camera->mode = APE_CAMERA_MODE_TOP;
 	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
 
 	apeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
@@ -150,31 +128,27 @@ static void InitializeWorldEditor( void )
 	apeRegisterInputAction( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
-static void ShutdownWorldEditor( void )
-{
+static void ShutdownWorldEditor( void ) {
 }
 
-static void DrawWorldEditor( void )
-{
+static void DrawWorldEditor( void ) {
 }
 
-static void DrawWorldEditorGUI( void )
-{
+static void DrawWorldEditorGUI( void ) {
 	int w, h;
 	PlgGetViewport( NULL, NULL, &w, &h );
 
-	if ( context.camera != NULL && ( context.camera->mode != APE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) )
-	{
+	if ( context.camera != NULL && ( context.camera->mode != APE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) ) {
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
-		float zoom     = roundf( z ) / 2.0f;
+		float zoom = roundf( z ) / 2.0f;
 
 		float x = 500.0f + sinf( zoom * 2.0f ) * 100.0f;
 		float y = 200.0f + cosf( zoom * 2.0f ) * 100.0f;
 
 		PLMatrix4 transform = PlMatrix4Identity();
-		transform           = PlScaleMatrix4( transform, ( PLVector3 ){ zoom, zoom, zoom } );
+		transform = PlScaleMatrix4( transform, ( PLVector3 ){ zoom, zoom, zoom } );
 
 		// stupid matrix bollocks, blargh
 		transform = PlTransposeMatrix4( &transform );
@@ -184,8 +158,7 @@ static void DrawWorldEditorGUI( void )
 		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, context.gridScale / 2, &( PLColour ){ 70, 70, 70, 255 } );
 		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( context.gridScale / 2 ) * 4, &( PLColour ){ 100, 100, 100, 255 } );
 
-		switch ( context.camera->mode )
-		{
+		switch ( context.camera->mode ) {
 			default:
 				break;
 #if 0
@@ -212,8 +185,7 @@ static void DrawWorldEditorGUI( void )
 		ApeCamera tmp;
 		PL_ZERO_( tmp );
 		tmp.internal = apeGetAuxCamera();
-		switch ( context.camera->drawMode )
-		{
+		switch ( context.camera->drawMode ) {
 			case APE_CAMERA_DRAW_MODE_WIREFRAME:
 				apeDrawWorldWireframe_( world, &tmp );
 				break;
@@ -230,18 +202,15 @@ static void DrawWorldEditorGUI( void )
 	}
 
 	ApeBitmapFont *defaultFont = apeGetDefaultBitmapFont();
-	if ( defaultFont == NULL )
-	{
+	if ( defaultFont == NULL ) {
 		return;
 	}
 
 	apeBeginBitmapFontDraw( defaultFont );
 
 	const char *label;
-	if ( context.camera != NULL )
-	{
-		switch ( context.camera->mode )
-		{
+	if ( context.camera != NULL ) {
+		switch ( context.camera->mode ) {
 			default:
 			case APE_CAMERA_MODE_FRONT:
 				label = "Front";
@@ -256,9 +225,7 @@ static void DrawWorldEditorGUI( void )
 				label = "Top";
 				break;
 		}
-	}
-	else
-	{
+	} else {
 		label = "No camera!";
 	}
 
@@ -276,19 +243,16 @@ static void DrawWorldEditorGUI( void )
 	                  PL_COLOUR_RED );
 }
 
-static void TickWorldEditor( void )
-{
+static void TickWorldEditor( void ) {
 	apeGetMousePosition( &mouseCursorX, &mouseCursorY );
 	mouseCursorX = PlRoundUp( mouseCursorX, context.gridScale * 4 );
 	mouseCursorY = PlRoundUp( mouseCursorY, context.gridScale * 4 );
 }
 
-static void OnWorldEditorActive( void )
-{
+static void OnWorldEditorActive( void ) {
 	ApeViewport *viewport = apeGetViewportBySlot( 0 );
 	assert( viewport != NULL );
-	if ( viewport == NULL )
-	{
+	if ( viewport == NULL ) {
 		return;
 	}
 
@@ -297,20 +261,19 @@ static void OnWorldEditorActive( void )
 	world = apeGetCurrentWorld();
 }
 
-ApeEditorContext *YnCore_RegisterWorldEditorContext( void )
-{
+ApeEditorContext *YnCore_RegisterWorldEditorContext( void ) {
 	PL_ZERO_( context );
 
-	context.name       = "World Editor";
+	context.name = "World Editor";
 	context.identifier = WORLD_CONTEXT_IDENTIFIER;
-	context.mode       = APE_EDITOR_CONTEXT_WORLD;
+	context.mode = APE_EDITOR_CONTEXT_WORLD;
 
 	context.RegisterConsoleVariables = RegisterWorldEditorVariables;
-	context.Initialize               = InitializeWorldEditor;
-	context.Shutdown                 = ShutdownWorldEditor;
-	context.Draw                     = DrawWorldEditor;
-	context.DrawGUI                  = DrawWorldEditorGUI;
-	context.Tick                     = TickWorldEditor;
+	context.Initialize = InitializeWorldEditor;
+	context.Shutdown = ShutdownWorldEditor;
+	context.Draw = DrawWorldEditor;
+	context.DrawGUI = DrawWorldEditorGUI;
+	context.Tick = TickWorldEditor;
 
 	context.OnActive = OnWorldEditorActive;
 

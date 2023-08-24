@@ -6,21 +6,17 @@
 
 #include "bsp.h"
 
-static BSPHandle *BSP_ReadFile( PLFile *file )
-{
+static BSPHandle *BSP_ReadFile( PLFile *file ) {
 	BSPHeader header;
-	if ( plReadFile( file, &header, sizeof( BSPHeader ), 1 ) != 1 )
-	{
+	if ( plReadFile( file, &header, sizeof( BSPHeader ), 1 ) != 1 ) {
 		printf( "Failed to read in header!\n" );
 		return NULL;
 	}
 }
 
-BSPHandle *BSP_LoadFile( const char *path )
-{
+BSPHandle *BSP_LoadFile( const char *path ) {
 	PLFile *file = plOpenFile( path, false );
-	if ( file == NULL )
-	{
+	if ( file == NULL ) {
 		printf( "Failed to open BSP file, \"%s\"!\nPL: %s\n", path, plGetError() );
 		return NULL;
 	}

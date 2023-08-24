@@ -36,14 +36,12 @@ extern int nd_LogLevelWarn_;
 #define ND_MAX_BOOL_LENGTH   8 /* 0, 1, true, false */
 #define ND_MAX_TYPE_LENGTH   16
 
-typedef struct NdVarString
-{
+typedef struct NdVarString {
 	char *buf;
 	uint16_t length;
 } NdVarString;
 
-typedef struct NdBranch
-{
+typedef struct NdBranch {
 	NdVarString name;
 	NdPropertyType type;
 	NdPropertyType childType; /* used for array types */

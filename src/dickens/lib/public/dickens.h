@@ -14,8 +14,7 @@
 
 #define DICKENS_LOG_PATH "dickens_output.txt"
 
-typedef enum DKTokenType
-{
+typedef enum DKTokenType {
 	DK_TOKENTYPE_INVALID = 0,
 
 	DK_TOKENTYPE_EOF,

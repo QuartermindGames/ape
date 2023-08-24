@@ -11,8 +11,7 @@ typedef struct NdBranch NdBranch;
 
 #define ND_DEFAULT_EXTENSION ".n"
 
-typedef enum NdErrorCode
-{
+typedef enum NdErrorCode {
 	ND_ERROR_SUCCESS,
 
 	ND_ERROR_IO_READ,  /* read failure */
@@ -25,8 +24,7 @@ typedef enum NdErrorCode
 	ND_ERROR_INVALID_ELEMENTS, /* unexpected number of elements */
 } NdErrorCode;
 
-typedef enum NdFileType
-{
+typedef enum NdFileType {
 	ND_FILE_INVALID = -1,
 	ND_FILE_BINARY,
 	ND_FILE_UTF8,
@@ -34,8 +32,7 @@ typedef enum NdFileType
 	ND_MAX_FILE_TYPES
 } NdFileType;
 
-typedef enum NdPropertyType
-{
+typedef enum NdPropertyType {
 	ND_PROPERTY_INVALID = -1,
 
 	ND_PROPERTY_OBJECT,
@@ -59,8 +56,7 @@ typedef enum NdPropertyType
 	ND_MAX_PROPERTY_TYPES
 } NdPropertyType;
 
-typedef union NdPropertyData
-{
+typedef union NdPropertyData {
 	float f32;
 	double f64;
 	int8_t i8;

@@ -23,14 +23,12 @@ static PLGFrameBuffer *bloomBuffer;
 
 static PLGTexture *bloomTexture;
 
-static void RegisterBloomConsoleVariables( void )
-{
-	bloomEnabled   = PlRegisterConsoleVariable( "r/bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
+static void RegisterBloomConsoleVariables( void ) {
+	bloomEnabled = PlRegisterConsoleVariable( "r/bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
 	bloomIntensity = PlRegisterConsoleVariable( "r/bloomIntensity", "Set the intensity of the bloom effect.", "0.35", PL_VAR_F32, NULL, NULL, true );
 }
 
-static bool SetupBloomEffect( void )
-{
+static bool SetupBloomEffect( void ) {
 	bloomFilterShader = apeGetShaderProgramByName( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
@@ -44,12 +42,10 @@ static bool SetupBloomEffect( void )
 	return true;
 }
 
-static void CleanupBloomEffect( void )
-{
+static void CleanupBloomEffect( void ) {
 }
 
-static void DrawBloomEffect( const ApeViewport *viewport )
-{
+static void DrawBloomEffect( const ApeViewport *viewport ) {
 	if ( !bloomEnabled->b_value )
 		return;
 
@@ -85,15 +81,14 @@ static void DrawBloomEffect( const ApeViewport *viewport )
  * PUBLIC
  ****************************************/
 
-PostProcessEffect *PP_Bloom_GetEffect( void )
-{
+PostProcessEffect *PP_Bloom_GetEffect( void ) {
 	static PostProcessEffect renderBloomPostProcess;
 	PL_ZERO_( renderBloomPostProcess );
 
 	renderBloomPostProcess.RegisterConsoleVariables = RegisterBloomConsoleVariables;
-	renderBloomPostProcess.Setup                    = SetupBloomEffect;
-	renderBloomPostProcess.Cleanup                  = CleanupBloomEffect;
-	renderBloomPostProcess.Draw                     = DrawBloomEffect;
+	renderBloomPostProcess.Setup = SetupBloomEffect;
+	renderBloomPostProcess.Cleanup = CleanupBloomEffect;
+	renderBloomPostProcess.Draw = DrawBloomEffect;
 
 	return &renderBloomPostProcess;
 }

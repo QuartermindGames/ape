@@ -7,8 +7,7 @@
  * PRIVATE
  ****************************************/
 
-enum
-{
+enum {
 	POST_EFFECT_FXAA,
 	POST_EFFECT_BLOOM,
 
@@ -21,8 +20,7 @@ static bool postProcessInit = false;
 static PLGFrameBuffer *ppBuffer = NULL;
 static PLGTexture *ppAttachment = NULL;
 
-static void RegisterPostEffects( void )
-{
+static void RegisterPostEffects( void ) {
 	if ( postProcessInit )
 		return;
 
@@ -41,13 +39,11 @@ static void RegisterPostEffects( void )
  * PUBLIC
  ****************************************/
 
-void R_PP_Cleanup( void )
-{
+void R_PP_Cleanup( void ) {
 	if ( !postProcessInit )
 		return;
 
-	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
-	{
+	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i ) {
 		if ( postProcessEffects[ i ] == NULL )
 			continue;
 
@@ -58,10 +54,8 @@ void R_PP_Cleanup( void )
 	postProcessInit = false;
 }
 
-void R_PP_SetupEffects( void )
-{
-	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
-	{
+void R_PP_SetupEffects( void ) {
+	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i ) {
 		if ( postProcessEffects[ i ] == NULL )
 			continue;
 
@@ -69,15 +63,13 @@ void R_PP_SetupEffects( void )
 	}
 }
 
-void R_PP_RegisterConsoleVariables( void )
-{
+void R_PP_RegisterConsoleVariables( void ) {
 	/* urrrughgdshghfhksd, but yeah... */
 	RegisterPostEffects();
 
 	PlRegisterConsoleVariable( "r/postProcessing", "Toggles post-processing pipeline.", "0", PL_VAR_BOOL, NULL, NULL, true );
 
-	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
-	{
+	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i ) {
 		if ( postProcessEffects[ i ] == NULL )
 			continue;
 
@@ -85,14 +77,11 @@ void R_PP_RegisterConsoleVariables( void )
 	}
 }
 
-void R_PP_Draw( const ApeViewport *viewport )
-{
+void R_PP_Draw( const ApeViewport *viewport ) {
 	apeSetupRenderTarget( &ppBuffer, &ppAttachment, NULL, viewport->width, viewport->height );
 
-	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
-	{
-		if ( postProcessEffects[ i ] == NULL )
-		{
+	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i ) {
+		if ( postProcessEffects[ i ] == NULL ) {
 			continue;
 		}
 

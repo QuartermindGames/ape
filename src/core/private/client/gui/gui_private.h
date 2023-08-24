@@ -10,8 +10,7 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_texture.h>
 
-typedef struct GuiState
-{
+typedef struct GuiState {
 	GUIVector2 mousePos, mouseOldPos;
 	PLVector2 mouseWheel, mouseOldWheel;
 
@@ -24,8 +23,7 @@ extern GuiState guiState;
  * Logging
  ****************************************/
 
-enum
-{
+enum {
 	GUI_LOGLEVEL_DEFAULT,
 	GUI_LOGLEVEL_WARNING,
 	GUI_LOGLEVEL_ERROR,
@@ -44,8 +42,7 @@ extern int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 /****************************************
  ****************************************/
 
-enum
-{
+enum {
 	GUI_MOUSE_CURSOR_DEFAULT,
 	GUI_MOUSE_CURSOR_DENY,
 	GUI_MOUSE_CURSOR_MOVE,
@@ -57,8 +54,7 @@ enum
 
 #define GUI_PANEL_BORDER_SIZE 2 /* pixel size all the way around */
 
-enum
-{
+enum {
 	GUI_FRAME_BACKGROUND,
 	GUI_FRAME_FOREGROUND,
 	GUI_FRAME_TOP,
@@ -69,8 +65,7 @@ enum
 	GUI_MAX_FRAME_ELEMENTS
 };
 
-enum
-{
+enum {
 	GUI_COLOUR_INSET_BACKGROUND,
 	GUI_COLOUR_OUTSET_BACKGROUND,
 	GUI_COLOUR_INSET_BORDER_TOP,
@@ -81,8 +76,7 @@ enum
 	GUI_MAX_DEFAULT_COLOURS
 };
 
-enum
-{
+enum {
 	GUI_BORDER_TOP,
 	GUI_BORDER_BOTTOM,
 	GUI_BORDER_LEFT,
@@ -91,14 +85,12 @@ enum
 	GUI_MAX_BORDER_ELEMENTS
 };
 
-typedef struct GuiStyleElement
-{
+typedef struct GuiStyleElement {
 	int tl, tr;
 	int ll, lr;
 } GuiStyleElement;
 
-typedef struct GuiStyleSheet
-{
+typedef struct GuiStyleSheet {
 	PLGTexture *texture;
 	PLPath path;
 

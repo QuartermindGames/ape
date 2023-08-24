@@ -4,7 +4,6 @@
 
 #include "fw_game.h"
 
-typedef struct FWWeaponComponent
-{
+typedef struct FWWeaponComponent {
 	int blah;
 } FWWeaponComponent;

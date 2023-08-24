@@ -33,27 +33,23 @@ static const char *shinePaths[] = {
 #define MAX_SHINE_TEXTURES PL_ARRAY_ELEMENTS( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
-void Flare_Initialize( void )
-{
+void Flare_Initialize( void ) {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
 		flareTextures[ i ] = apeLoadTexture( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
 		shineTextures[ i ] = apeLoadTexture( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 }
 
-void Flare_Render( PLGTexture *texture, float diameter, float distance )
-{
+void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL )
-	{
+	if ( program == NULL ) {
 		return;
 	}
 
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 }
 
-void Flare_RenderFlares( const ApeCamera *camera )
-{
+void Flare_RenderFlares( const ApeCamera *camera ) {
 	apeGetShaderProgramByName( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );

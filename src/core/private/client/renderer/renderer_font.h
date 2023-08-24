@@ -5,8 +5,7 @@
 
 #include "yin/core_renderer.h"
 
-typedef struct ApeBitmapFont
-{
+typedef struct ApeBitmapFont {
 	struct PLGMesh *mesh; /* for batching */
 	struct ApeMaterial *material;
 	int w, h, cw, ch;

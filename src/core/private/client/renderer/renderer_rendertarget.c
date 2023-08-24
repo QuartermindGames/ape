@@ -5,8 +5,7 @@
 #include "ape_private.h"
 #include "renderer.h"
 
-typedef struct ApeRenderTarget
-{
+typedef struct ApeRenderTarget {
 	char id[ 16 ];// 'rt_menu_0'
 
 	PLGTexture *textureAttachment;
@@ -19,27 +18,22 @@ typedef struct ApeRenderTarget
 
 static PLHashTable *renderTargets;
 
-void apeInitializeRenderTargets( void )
-{
+void apeInitializeRenderTargets( void ) {
 	renderTargets = PlCreateHashTable();
-	if ( renderTargets == NULL )
-	{
+	if ( renderTargets == NULL ) {
 		PRINT_ERROR( "Failed to create render target hash table: %s\n", PlGetError() );
 	}
 }
 
-void apeShutdownRenderTargets( void )
-{
+void apeShutdownRenderTargets( void ) {
 	apeFlushUnreferencedResources();
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( renderTargets );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) PlGetHashTableNodeUserData( node );
 
 		int numReferences = apeGetNumberOfReferences( &renderTarget->reference );
-		if ( numReferences > 0 )
-		{
+		if ( numReferences > 0 ) {
 			PRINT( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
 		}
 
@@ -49,16 +43,13 @@ void apeShutdownRenderTargets( void )
 	PlDestroyHashTable( renderTargets );
 }
 
-ApeRenderTarget *apeGetRenderTargetByKey( const char *key )
-{
+ApeRenderTarget *apeGetRenderTargetByKey( const char *key ) {
 	return ( ApeRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
-static PLGFrameBuffer *CreateFrameBuffer( unsigned int width, unsigned int height, unsigned int flags )
-{
+static PLGFrameBuffer *CreateFrameBuffer( unsigned int width, unsigned int height, unsigned int flags ) {
 	PLGFrameBuffer *frameBuffer = PlgCreateFrameBuffer( width, height, flags );
-	if ( frameBuffer == NULL )
-	{
+	if ( frameBuffer == NULL ) {
 		PRINT_WARNING( "Failed to create specified framebuffer: %s\n", PlGetError() );
 		return NULL;
 	}
@@ -66,31 +57,25 @@ static PLGFrameBuffer *CreateFrameBuffer( unsigned int width, unsigned int heigh
 	return frameBuffer;
 }
 
-static void DestroyRenderTarget( void *user )
-{
+static void DestroyRenderTarget( void *user ) {
 	ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) user;
 	PlgDestroyTexture( renderTarget->textureAttachment );
 }
 
 ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags,
-                                        unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter )
-{
+                                        unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter ) {
 	// Check if it's already been created, and if so, update size to match
 	ApeRenderTarget *renderTarget = apeGetRenderTargetByKey( key );
-	if ( renderTarget != NULL )
-	{
-		if ( flags == 0 )
-		{
+	if ( renderTarget != NULL ) {
+		if ( flags == 0 ) {
 			PRINT_DEBUG( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
 			apeAddReference( &renderTarget->reference );
 			return renderTarget;
 		}
 
-		if ( renderTarget->frameBuffer == NULL )
-		{
+		if ( renderTarget->frameBuffer == NULL ) {
 			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags );
-			if ( renderTarget->frameBuffer == NULL )
-			{
+			if ( renderTarget->frameBuffer == NULL ) {
 				PRINT_WARNING( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
 				return NULL;
 			}
@@ -104,32 +89,27 @@ ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, uns
 
 	PLGFrameBuffer *frameBuffer;
 	PLGTexture *textureAttachment;
-	if ( flags != 0 )
-	{
+	if ( flags != 0 ) {
 		frameBuffer = CreateFrameBuffer( width, height, flags );
-		if ( frameBuffer == NULL )
-		{
+		if ( frameBuffer == NULL ) {
 			PRINT_WARNING( "Failed to create render target, \"%s\"\n", key );
 			return NULL;
 		}
 
 		textureAttachment = PlgGetFrameBufferTextureAttachment( frameBuffer, textureAttachmentComponent, textureAttachmentFilter );
-		if ( textureAttachment == NULL )
-		{
+		if ( textureAttachment == NULL ) {
 			PRINT_WARNING( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
 		}
-	}
-	else
-	{
+	} else {
 		PRINT_DEBUG( "Creating placeholder render target, \"%s\"\n", key );
 		frameBuffer = NULL;
 	}
 
-	renderTarget                             = PL_NEW( ApeRenderTarget );
-	renderTarget->frameBuffer                = frameBuffer;
-	renderTarget->textureAttachment          = textureAttachment;
+	renderTarget = PL_NEW( ApeRenderTarget );
+	renderTarget->frameBuffer = frameBuffer;
+	renderTarget->textureAttachment = textureAttachment;
 	renderTarget->textureAttachmentComponent = textureAttachmentComponent;
-	renderTarget->textureAttachmentFilter    = textureAttachmentFilter;
+	renderTarget->textureAttachmentFilter = textureAttachmentFilter;
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
 	apeSetupReference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, DestroyRenderTarget, renderTarget );
@@ -140,21 +120,17 @@ ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, uns
 	return renderTarget;
 }
 
-void apeReleaseRenderTarget( ApeRenderTarget *renderTarget )
-{
+void apeReleaseRenderTarget( ApeRenderTarget *renderTarget ) {
 	apeReleaseReference( &renderTarget->reference );
 }
 
-void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height )
-{
+void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height ) {
 	PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height );
-	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS )
-	{
+	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS ) {
 		PRINT_WARNING( "Failed to resize framebuffer: %s\n", PlGetError() );
 	}
 
-	if ( renderTarget->textureAttachment != NULL )
-	{
+	if ( renderTarget->textureAttachment != NULL ) {
 		PlgDestroyTexture( renderTarget->textureAttachment );
 	}
 
@@ -164,12 +140,10 @@ void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, 
 	        renderTarget->textureAttachmentFilter );
 }
 
-PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget )
-{
+PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget ) {
 	return renderTarget->textureAttachment;
 }
 
-void apeBindRenderTarget( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target )
-{
+void apeBindRenderTarget( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target ) {
 	PlgBindFrameBuffer( renderTarget->frameBuffer, target );
 }

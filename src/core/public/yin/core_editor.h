@@ -7,8 +7,7 @@
 
 PL_EXTERN_C
 
-typedef enum ApeEditorContextType
-{
+typedef enum ApeEditorContextType {
 	APE_EDITOR_CONTEXT_WORLD,
 	//YN_CORE_EDITOR_CONTEXT_MODEL,
 	//YN_CORE_EDITOR_CONTEXT_MATERIAL,
@@ -19,8 +18,7 @@ typedef enum ApeEditorContextType
 #define APE_EDITOR_MAX_VIEWPORTS      4
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
-typedef struct ApeEditorField
-{
+typedef struct ApeEditorField {
 	char name[ 64 ];
 	char description[ 128 ];
 	ComDataType type;
@@ -34,19 +32,17 @@ typedef struct ApeEditorField
 	static unsigned int x_numEditorVariables = PL_ARRAY_ELEMENTS( x_editorVariables );
 #define APE_ENTITY_COMPONENT_PROPERTY( TYPE, VAR, DESC, VARTYPE ) \
 	{ #VAR, DESC, VARTYPE, PL_OFFSETOF( TYPE, VAR ) },
-#define APE_ENTITY_HOOK_PROPERTIES( CBTABLE )        \
-	( CBTABLE ).editorFields    = x_editorVariables; \
+#define APE_ENTITY_HOOK_PROPERTIES( CBTABLE )     \
+	( CBTABLE ).editorFields = x_editorVariables; \
 	( CBTABLE ).numEditorFields = x_numEditorVariables
 
-typedef struct ApeEditorViewBookmark
-{
+typedef struct ApeEditorViewBookmark {
 	char description[ 32 ];
 	PLVector3 viewPos;
 	PLVector3 viewAngles;
 } ApeEditorViewBookmark;
 
-typedef enum ApeEditorGeometryMode
-{
+typedef enum ApeEditorGeometryMode {
 	EDITOR_GEOMETRYMODE_VERTEX,
 	EDITOR_GEOMETRYMODE_EDGE,
 	EDITOR_GEOMETRYMODE_FACE,
@@ -55,8 +51,7 @@ typedef enum ApeEditorGeometryMode
 	EDITOR_MAX_GEOMETRYMODES
 } ApeEditorGeometryMode;
 
-typedef struct ApeEditorGlobalContext
-{
+typedef struct ApeEditorGlobalContext {
 	ApeWorld *world;
 } ApeEditorGlobalContext;
 ApeEditorGlobalContext *YnCore_GetGlobalEditorContext( void );
@@ -65,8 +60,7 @@ ApeEditorGlobalContext *YnCore_GetGlobalEditorContext( void );
  * of an editing state, which can have it's own world, model
  * or whatever resource open.
  * */
-typedef struct ApeEditorContext
-{
+typedef struct ApeEditorContext {
 	const char *name, *identifier;
 
 	// required

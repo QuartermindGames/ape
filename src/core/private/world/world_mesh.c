@@ -10,8 +10,7 @@
 
 #define WORLD_VERTEX_ELEMENTS 12// pos, norm, uv, colour
 
-unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles )
-{
+unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles ) {
 #if 0
 	if ( face->numVertices < 3 )
 		return NULL;
@@ -35,8 +34,7 @@ unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned
 #endif
 }
 
-static void GenerateFaceNormal( const ApeWorldMesh *mesh, ApeWorldFace *face )
-{
+static void GenerateFaceNormal( const ApeWorldMesh *mesh, ApeWorldFace *face ) {
 #if 0
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 		face->normal = PlAddVector3( face->normal, mesh->vertices[ face->vertices[ i ] ].normal );
@@ -45,22 +43,18 @@ static void GenerateFaceNormal( const ApeWorldMesh *mesh, ApeWorldFace *face )
 #endif
 }
 
-static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr )
-{
+static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr ) {
 	NdBranch *materialsList = ndGetChildByName( meshNode, "materials" );
-	if ( materialsList == NULL )
-	{
+	if ( materialsList == NULL ) {
 		PRINT_WARNING( "No materials for mesh: %s!\n", meshPtr->id );
 		return;
 	}
 
-	meshPtr->numMaterials  = ndGetNumOfChildren( materialsList );
-	meshPtr->materials     = PlCAlloc( meshPtr->numMaterials, sizeof( ApeMaterial     *), true );
+	meshPtr->numMaterials = ndGetNumOfChildren( materialsList );
+	meshPtr->materials = PlCAlloc( meshPtr->numMaterials, sizeof( ApeMaterial * ), true );
 	NdBranch *materialNode = ndGetFirstChild( materialsList );
-	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i )
-	{
-		if ( materialNode == NULL )
-		{
+	for ( unsigned int i = 0; i < meshPtr->numMaterials; ++i ) {
+		if ( materialNode == NULL ) {
 			PRINT_WARNING( "Hit an invalid material index!\n" );
 			meshPtr->numMaterials = i;
 			break;
@@ -69,20 +63,18 @@ static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr )
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
 		ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
 		meshPtr->materials[ i ] = apeCacheMaterial( materialPath, APE_CACHE_WORLD, true, false );
-		materialNode            = ndGetNextChild( materialNode );
+		materialNode = ndGetNextChild( materialNode );
 	}
 }
 
-static ApeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *numVertices )
-{
+static ApeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *numVertices ) {
 	NdBranch *verticesList = ndGetChildByName( meshNode, "vertices" );
 	if ( verticesList == NULL )
 		return NULL;
 
 	unsigned int numChildren = ndGetNumOfChildren( verticesList );
-	float *data              = PL_NEW_( float, numChildren );
-	if ( ndGetF32Array( verticesList, ( float * ) data, numChildren ) != ND_ERROR_SUCCESS )
-	{
+	float *data = PL_NEW_( float, numChildren );
+	if ( ndGetF32Array( verticesList, ( float * ) data, numChildren ) != ND_ERROR_SUCCESS ) {
 		PRINT_WARNING( "Failed to fetch all vertices for mesh!\n" );
 		PL_DELETE( data );
 		return NULL;
@@ -95,25 +87,22 @@ static ApeWorldVertex *DeserializeVertices( NdBranch *meshNode, unsigned int *nu
 /**
  * Deserialise a mesh from the given node.
  */
-ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh )
-{
+ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh ) {
 	DeserializeMaterials( root, worldMesh );
 
 	unsigned int numVertices;
 	ApeWorldVertex *vertices = DeserializeVertices( root, &numVertices );
-	if ( vertices == NULL )
-	{
+	if ( vertices == NULL ) {
 		PRINT_WARNING( "Failed to fetch vertices for mesh: %s\n", worldMesh->id );
 		return NULL;
 	}
 	worldMesh->maxVertices = worldMesh->numVertices = numVertices;
-	worldMesh->vertices                             = vertices;
+	worldMesh->vertices = vertices;
 
 	return worldMesh;
 }
 
-static void GenerateBounds( ApeWorldMesh *mesh )
-{
+static void GenerateBounds( ApeWorldMesh *mesh ) {
 	PLVector3 *coords = PL_NEW_( PLVector3, mesh->numVertices );
 	for ( unsigned int i = 0; i < mesh->numVertices; ++i )
 		coords[ i ] = mesh->vertices[ i ].position;
@@ -143,15 +132,13 @@ static void GenerateBounds( ApeWorldMesh *mesh )
 /**
  * Free the mesh from memory.
  */
-void DestroyWorldMesh( ApeWorldMesh *mesh )
-{
+void DestroyWorldMesh( ApeWorldMesh *mesh ) {
 	PlgDestroyMesh( mesh->drawMesh );
 }
 
-ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent )
-{
+ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent ) {
 	ApeWorldMesh *mesh = PL_NEW( ApeWorldMesh );
-	mesh->faces        = PlCreateLinkedList();
+	mesh->faces = PlCreateLinkedList();
 
 	if ( parent != NULL )
 		PlPushBackVectorArrayElement( parent->meshes, mesh );

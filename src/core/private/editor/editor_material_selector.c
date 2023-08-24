@@ -11,48 +11,41 @@ static unsigned int numMaterials, maxMaterials;
 
 #define MATERIAL_STORE_INC 256
 
-static void CacheMaterialPreviewCallback( const char *path, void *user )
-{
+static void CacheMaterialPreviewCallback( const char *path, void *user ) {
 	ApeMaterial *material = apeCacheMaterial( path, APE_CACHE_EDITOR, false, true );
 	if ( material == NULL )
 		return;
 
 	materials[ numMaterials++ ] = material;
-	if ( numMaterials >= maxMaterials )
-	{
+	if ( numMaterials >= maxMaterials ) {
 		maxMaterials += MATERIAL_STORE_INC;
 		materials = PlReAllocA( materials, sizeof( ApeMaterial * ) * maxMaterials );
 	}
 }
 
-static int CompareMaterials( const void *a, const void *b )
-{
+static int CompareMaterials( const void *a, const void *b ) {
 	const char *strA = apeGetMaterialPath( ( ApeMaterial * ) a );
 	const char *strB = apeGetMaterialPath( ( ApeMaterial * ) b );
 	return strcmp( strA, strB );
 }
 
-void edInitializeMaterialSelector_( void )
-{
+void edInitializeMaterialSelector_( void ) {
 	numMaterials = 0;
 	maxMaterials = MATERIAL_STORE_INC;
-	materials    = PL_NEW_( ApeMaterial *, maxMaterials );
+	materials = PL_NEW_( ApeMaterial *, maxMaterials );
 
 	// Cache all the materials in a preview state
 	PlScanDirectory( "materials/world/", "n", CacheMaterialPreviewCallback, true, NULL );
 	PRINT( "Found %u world materials\n", numMaterials );
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), CompareMaterials );
-	for ( unsigned int i = 0; i < numMaterials; ++i )
-	{
+	for ( unsigned int i = 0; i < numMaterials; ++i ) {
 		PRINT( "\t%s\n", apeGetMaterialPath( materials[ i ] ) );
 	}
 }
 
-void edShutdownMaterialSelector_( void )
-{
-	for ( unsigned int i = 0; i < numMaterials; ++i )
-	{
+void edShutdownMaterialSelector_( void ) {
+	for ( unsigned int i = 0; i < numMaterials; ++i ) {
 		apeReleaseMaterial( materials[ i ] );
 	}
 
@@ -62,8 +55,7 @@ void edShutdownMaterialSelector_( void )
 /**
  * Draw the material selection panel.
  */
-void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
-{
+void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
 	static const unsigned int mw = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int mh = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int sp = MATERIAL_DEFAULT_WIDTH / 8;
@@ -85,8 +77,7 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 	PlgSetShaderProgram( apeGetDefaultShaderProgram( APE_SHADER_DEFAULT ) );
 
 	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
-	for ( unsigned int i = 0; i < numMaterials; ++i )
-	{
+	for ( unsigned int i = 0; i < numMaterials; ++i ) {
 		PLGTexture *texture = apeGetMaterialPreviewTexture( materials[ i ] );
 		PlgDrawTexturedRectangle( ( float ) x, ( float ) y, ( float ) mw, ( float ) mh, texture );
 
@@ -96,14 +87,12 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 		apeDrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, apeGetMaterialPath( materials[ i ] ), true );
 
 		x += mw + sp;
-		if ( x + mw >= vw )
-		{
+		if ( x + mw >= vw ) {
 			x = sp;
 			y += sp + mh;
 		}
 
-		if ( y >= vh )
-		{
+		if ( y >= vh ) {
 			break;
 		}
 	}
@@ -111,6 +100,5 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport )
 	PlPopMatrix();
 }
 
-void Editor_MaterialSelector_Tick( void )
-{
+void Editor_MaterialSelector_Tick( void ) {
 }

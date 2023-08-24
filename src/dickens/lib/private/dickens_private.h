@@ -20,20 +20,17 @@
 #define YC_MAX_SYMBOL_LENGTH 128
 typedef char DKSymbolName[ YC_MAX_SYMBOL_LENGTH ];
 
-typedef enum DKSymbolVisibility
-{
+typedef enum DKSymbolVisibility {
 	DK_SYMBOLVISIBILITY_PRIVATE,
 	DK_SYMBOLVISIBILITY_PUBLIC,
 } DKSymbolVisibility;
 
-typedef struct DKSymbol
-{
+typedef struct DKSymbol {
 	DKSymbolName name;
 	DKSymbolVisibility visibility;
 } DKSymbol;
 
-typedef enum DKDataType
-{
+typedef enum DKDataType {
 	DK_DATATYPE_VOID,
 	DK_DATATYPE_FLOAT,
 	DK_DATATYPE_CHAR,
@@ -45,8 +42,7 @@ typedef enum DKDataType
 	DK_DATATYPE_STRING,
 } DKDataType;
 
-typedef struct DKLexerToken
-{
+typedef struct DKLexerToken {
 	DKSymbolName symbol;
 	DKTokenType type;
 	PLPath path;
@@ -55,8 +51,7 @@ typedef struct DKLexerToken
 	PLLinkedListNode *node;
 } DKLexerToken;
 
-typedef struct DKLexer
-{
+typedef struct DKLexer {
 	PLPath originFile;
 	PLLinkedList *tokens;
 } DKLexer;

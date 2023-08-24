@@ -5,8 +5,7 @@
 
 typedef struct NdBranch NdBranch;// common/node
 
-typedef enum ActorType
-{
+typedef enum ActorType {
 	ACTOR_NONE,
 	ACTOR_PLAYER,
 	ACTOR_LIGHT,
@@ -21,23 +20,20 @@ typedef enum ActorType
 	MAX_ACTOR_TYPES
 } ActorType;
 
-typedef enum ActorMovementType
-{
+typedef enum ActorMovementType {
 	ACTOR_MOVEMENT_PHYSICS,
 
 	MAX_ACTOR_MOVEMENT_TYPES
 } ActorMovementType;
 
-typedef enum ActorCollisionGroup
-{
+typedef enum ActorCollisionGroup {
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_WORLD, 0U ),
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_PLAYER, 1U ),
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_MONSTER, 2U ),
 } ActorCollisionGroup;
 
 typedef struct Actor Actor;
-typedef struct ActorSetup
-{
+typedef struct ActorSetup {
 	const char *id;
 	void ( *Spawn )( Actor *self );
 	void ( *Tick )( Actor *self, void *userData );
@@ -49,8 +45,7 @@ typedef struct ActorSetup
 	void ( *Deserialize )( Actor *self, NdBranch *nodeTree );
 } ActorSetup;
 
-typedef struct Actor
-{
+typedef struct Actor {
 	PLVector3 position, oldPosition;
 	PLVector3 angles, oldAngles;
 	PLVector3 velocity;

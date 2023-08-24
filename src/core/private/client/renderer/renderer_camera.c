@@ -15,34 +15,29 @@ static PLLinkedList *cameras;
 
 static ApeCamera *activeCamera = NULL;
 
-ApeCamera *apeGetActiveCamera( void )
-{
+ApeCamera *apeGetActiveCamera( void ) {
 	return activeCamera;
 }
 
-void apeMakeCameraActive( ApeCamera *camera )
-{
+void apeMakeCameraActive( ApeCamera *camera ) {
 	activeCamera = camera;
 }
 
 /****************************************
  ****************************************/
 
-ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles )
-{
+ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles ) {
 	ApeCamera *camera = PL_NEW( ApeCamera );
 
-	camera->mode     = APE_CAMERA_MODE_PERSPECTIVE;
+	camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
-	if ( camera->internal == NULL )
-	{
+	if ( camera->internal == NULL ) {
 		PRINT_ERROR( "Failed to create camera!\nPL: %s\n", PlGetError() );
 	}
 
-	if ( tag != NULL )
-	{
+	if ( tag != NULL ) {
 		strncpy( camera->tag, tag, sizeof( camera->tag ) - 1 );
 	}
 
@@ -51,11 +46,9 @@ ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PL
 	apeSetCameraPosition( camera, position );
 	apeSetCameraAngles( camera, angles );
 
-	if ( cameras == NULL )
-	{
+	if ( cameras == NULL ) {
 		cameras = PlCreateLinkedList();
-		if ( cameras == NULL )
-		{
+		if ( cameras == NULL ) {
 			PRINT_ERROR( "Failed to create cameras list: %s\n", PlGetError() );
 		}
 	}
@@ -70,10 +63,8 @@ ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PL
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void apeDestroyCamera( ApeCamera *camera )
-{
-	if ( camera == NULL )
-	{
+void apeDestroyCamera( ApeCamera *camera ) {
+	if ( camera == NULL ) {
 		return;
 	}
 
@@ -82,29 +73,24 @@ void apeDestroyCamera( ApeCamera *camera )
 	PlDestroyLinkedListNode( camera->node );
 
 	// be sure the global camera gets unset if we're destroying it
-	if ( camera == activeCamera )
-	{
+	if ( camera == activeCamera ) {
 		activeCamera = NULL;
 	}
 
 	PL_DELETE( camera );
 
-	if ( PlGetNumLinkedListNodes( cameras ) == 0 )
-	{
+	if ( PlGetNumLinkedListNodes( cameras ) == 0 ) {
 		PlDestroyLinkedList( cameras );
 		cameras = NULL;
 	}
 }
 
-void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
-{
+void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position ) {
 	camera->internal->position = *position;
 
-	if ( camera->room == NULL )
-	{
+	if ( camera->room == NULL ) {
 		ApeWorld *world = apeGetCurrentWorld();
-		if ( world == NULL )
-		{
+		if ( world == NULL ) {
 			return;
 		}
 
@@ -112,34 +98,27 @@ void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 	}
 }
 
-void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
-{
+void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles ) {
 	camera->internal->angles = *angles;
 }
 
-PLVector3 apeGetCameraPosition( const ApeCamera *camera )
-{
+PLVector3 apeGetCameraPosition( const ApeCamera *camera ) {
 	return camera->internal->position;
 }
 
-PLVector3 apeGetCameraAngles( const ApeCamera *camera )
-{
+PLVector3 apeGetCameraAngles( const ApeCamera *camera ) {
 	return camera->internal->angles;
 }
 
-PLVector3 apeGetCameraForward( const ApeCamera *camera )
-{
+PLVector3 apeGetCameraForward( const ApeCamera *camera ) {
 	return camera->forward;
 }
 
 void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport );
-void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
-{
-	if ( camera == NULL )
-	{
+void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport ) {
+	if ( camera == NULL ) {
 		camera = apeGetActiveCamera();
-		if ( camera == NULL )
-		{
+		if ( camera == NULL ) {
 			return;
 		}
 	}
@@ -148,8 +127,7 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 
 	int ow, oh;
 	PL_GET_CVAR( "r/superSampling", superSampling );
-	if ( superSampling != NULL && superSampling->i_value > 1 )
-	{
+	if ( superSampling != NULL && superSampling->i_value > 1 ) {
 		ow = viewport->width;
 		viewport->width *= superSampling->i_value;
 		oh = viewport->height;
@@ -159,18 +137,15 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 	}
 
 	PL_GET_CVAR( "r/fov", fov );
-	if ( fov != NULL )
-	{
+	if ( fov != NULL ) {
 		PlgSetCameraFieldOfView( camera->internal, fov->f_value );
 	}
 	PL_GET_CVAR( "r/near", near );
-	if ( near != NULL )
-	{
+	if ( near != NULL ) {
 		camera->internal->near = near->f_value;
 	}
 	PL_GET_CVAR( "r/far", far );
-	if ( far != NULL )
-	{
+	if ( far != NULL ) {
 		camera->internal->far = far->f_value;
 	}
 
@@ -182,40 +157,32 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 
 	/* if we have a parent, follow them */
 	Actor *parent = camera->parentActor;
-	if ( parent != NULL )
-	{
+	if ( parent != NULL ) {
 		angles.x = parent->viewPitch;
 		angles.y = -parent->angles.y + 90.0f;//-Act_GetAngle( camera->parentActor ) + 90.0f;
 		angles.z = 0.0f;
 
-		position   = parent->position;
+		position = parent->position;
 		position.y = Act_GetViewOffset( camera->parentActor );
-	}
-	else
-	{
-		angles   = camera->internal->angles;
+	} else {
+		angles = camera->internal->angles;
 		position = camera->internal->position;
 	}
 
 	float speed;
-	switch ( camera->mode )
-	{
+	switch ( camera->mode ) {
 		default:
 			break;
 		case APE_CAMERA_MODE_PERSPECTIVE:
-			camera->internal->angles   = angles;
+			camera->internal->angles = angles;
 			camera->internal->position = position;
 			break;
-		case APE_CAMERA_MODE_TOP:
-		{
-			if ( camera->parentActor != NULL )
-			{
+		case APE_CAMERA_MODE_TOP: {
+			if ( camera->parentActor != NULL ) {
 				speed = PlVector3Length( camera->parentActor->velocity ) / 16.0f;
 				if ( speed > 1.0f )
 					speed = 1.0f;
-			}
-			else
-			{
+			} else {
 				speed = 0.0f;
 			}
 
@@ -232,9 +199,8 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 	// Draw the scene into a buffer
 	apeDrawScene_( camera, viewport );
 
-	if ( superSampling != NULL && superSampling->i_value > 1 )
-	{
-		viewport->width  = ow;
+	if ( superSampling != NULL && superSampling->i_value > 1 ) {
+		viewport->width = ow;
 		viewport->height = oh;
 
 		PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );

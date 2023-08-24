@@ -55,8 +55,7 @@ void MDL_OutlineVertexDescriptor( NLNode *parent, const PLGMesh *mesh )
 }
 #endif
 
-void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
-{
+void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh ) {
 	NLNode *node = NL_PushBackObj( parent, "mesh" );
 
 	NL_PushBackI32( node, "materialIndex", ( int32_t ) mesh->materialIndex );
@@ -66,8 +65,7 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 #endif
 
 	NLNode *vertexArray = NL_PushBackObjArray( node, "vertices" );
-	for ( uint32_t j = 0; j < mesh->num_verts; ++j )
-	{
+	for ( uint32_t j = 0; j < mesh->num_verts; ++j ) {
 		NLNode *vertex = NL_PushBackObj( vertexArray, "vertex" );
 
 		NLNode *vertexChild;
@@ -82,15 +80,13 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 			NL_PushBackF32( vertexChild, "x", mesh->vertices[ j ].st[ 0 ].x );
 			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].st[ 0 ].y );
 		}
-		if ( !PlCompareVector3( &mesh->vertices[ j ].normal, &pl_vecOrigin3 ) )
-		{
+		if ( !PlCompareVector3( &mesh->vertices[ j ].normal, &pl_vecOrigin3 ) ) {
 			vertexChild = NL_PushBackObj( vertex, "normal" );
 			NL_PushBackF32( vertexChild, "x", mesh->vertices[ j ].normal.x );
 			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].normal.y );
 			NL_PushBackF32( vertexChild, "z", mesh->vertices[ j ].normal.z );
 		}
-		if ( !PlCompareColour( mesh->vertices[ j ].colour, PLColour( 255, 255, 255, 255 ) ) )
-		{
+		if ( !PlCompareColour( mesh->vertices[ j ].colour, PLColour( 255, 255, 255, 255 ) ) ) {
 			vertexChild = NL_PushBackObj( vertex, "colour" );
 			NL_PushBackI8( vertexChild, "r", ( int8_t ) mesh->vertices[ j ].colour.r );
 			NL_PushBackI8( vertexChild, "g", ( int8_t ) mesh->vertices[ j ].colour.g );
@@ -100,15 +96,13 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 	}
 
 	NLNode *triangleArray = NL_PushBackObjArray( node, "faces" );
-	for ( uint32_t j = 0; j < mesh->num_indices; j += 3 )
-	{
+	for ( uint32_t j = 0; j < mesh->num_indices; j += 3 ) {
 		NLNode *face = NL_PushBackObj( triangleArray, "face" );
 		NL_PushBackI32Array( face, "indices", ( int32_t * ) ( mesh->indices + j ), 3 );
 	}
 }
 
-NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model )
-{
+NLNode *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model ) {
 	NLNode *root = NL_PushBackObj( NULL, "model" );
 
 	NL_PushBackI8( root, "version", 1 );

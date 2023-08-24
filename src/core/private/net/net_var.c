@@ -3,8 +3,7 @@
 #include "ape_private.h"
 #include "net.h"
 
-typedef enum NetVariableType
-{
+typedef enum NetVariableType {
 	NET_VARIABLE_TYPE_INT8,
 	NET_VARIABLE_TYPE_INT16,
 	NET_VARIABLE_TYPE_INT32,
@@ -21,12 +20,10 @@ typedef enum NetVariableType
 	NET_MAX_VARIABLE_TYPES
 } NetVariableType;
 
-typedef struct NetVariable
-{
+typedef struct NetVariable {
 	const void *originPointer;
 	NetVariableType type;
-	union
-	{
+	union {
 		int8_t varInt8;
 		int16_t varInt16;
 		int32_t varInt32;
@@ -37,10 +34,8 @@ typedef struct NetVariable
 	} baseline;
 } NetVariable;
 
-bool Net_Variable_IsDirty( const NetVariable *variable )
-{
-	switch ( variable->type )
-	{
+bool Net_Variable_IsDirty( const NetVariable *variable ) {
+	switch ( variable->type ) {
 		default:
 			PRINT_ERROR( "Unhandled networked variable type!\n" );
 		case NET_VARIABLE_TYPE_INT8:

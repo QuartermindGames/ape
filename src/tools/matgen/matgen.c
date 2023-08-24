@@ -10,8 +10,7 @@
 
 static unsigned int numMaterialsGenerated = 0;
 
-typedef struct MatGen
-{
+typedef struct MatGen {
 	const char *dir;
 	const char *shader;
 	bool overwrite;
@@ -21,16 +20,12 @@ typedef struct MatGen
 } MatGen;
 static MatGen matGen;
 
-int8_t GetSurfaceTypeForName( const char *name )
-{
+int8_t GetSurfaceTypeForName( const char *name ) {
 	// good ol' binary search...
-	for ( int8_t i = 0; i < matGen.numSurfaces; ++i )
-	{
+	for ( int8_t i = 0; i < matGen.numSurfaces; ++i ) {
 		GameMaterialSurface *surface = &matGen.surfaceLookup[ i ];
-		for ( unsigned int j = 0; j < surface->numAliases; ++j )
-		{
-			if ( pl_strncasecmp( surface->aliases[ j ], name, strlen( surface->aliases[ j ] ) ) != 0 )
-			{
+		for ( unsigned int j = 0; j < surface->numAliases; ++j ) {
+			if ( pl_strncasecmp( surface->aliases[ j ], name, strlen( surface->aliases[ j ] ) ) != 0 ) {
 				continue;
 			}
 
@@ -41,8 +36,7 @@ int8_t GetSurfaceTypeForName( const char *name )
 	return 0;
 }
 
-static void GenerateMaterial( const char *path, PL_UNUSED void *user )
-{
+static void GenerateMaterial( const char *path, PL_UNUSED void *user ) {
 	printf( "%s - ", path );
 
 	const char *filename = PlGetFileName( path );
@@ -53,8 +47,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 	// search for the extension
 	char *c = strrchr( name, '.' );
 	assert( c != NULL );
-	if ( c == NULL )
-	{
+	if ( c == NULL ) {
 		printf( "Failed to fetch file extension! Skipping...\n" );
 		PL_DELETE( name );
 		return;
@@ -64,8 +57,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 	PLPath writePath;
 	PlSetupPath( writePath, true, "%s/%s.mat.n", matGen.dir, name );
-	if ( matGen.overwrite || ( !matGen.overwrite && !PlFileExists( writePath ) ) )
-	{
+	if ( matGen.overwrite || ( !matGen.overwrite && !PlFileExists( writePath ) ) ) {
 #if 0// old hard-coded method
 
         // this just mimics the RF1 material conventions
@@ -89,8 +81,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 		// now build the node tree for the material
 		NdBranch *root = ndPushBackObject( NULL, "material" );
 		{
-			if ( surfaceType != GAME_MATERIAL_SURFACE_TYPE_NONE )
-			{
+			if ( surfaceType != GAME_MATERIAL_SURFACE_TYPE_NONE ) {
 				ndPushBackI8( root, "surfaceType", surfaceType );
 			}
 
@@ -113,9 +104,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 		numMaterialsGenerated++;
 		printf( "OK [%s]\n", matGen.surfaceLookup[ surfaceType ].description );
-	}
-	else
-	{
+	} else {
 		printf( "Skipped\n" );
 	}
 
@@ -124,30 +113,26 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 static const char *DEFAULT_DIR = "materials/world";
 
-static bool LoadSurfacesConfig( const char *path )
-{
+static bool LoadSurfacesConfig( const char *path ) {
 	NdBranch *root = ndLoadFile( path, "surfaces" );
-	if ( root == NULL )
-	{
+	if ( root == NULL ) {
 		printf( "Failed to load surfaces config file: %s\n", ndGetErrorMessage() );
 		return false;
 	}
 
-	matGen.numSurfaces   = ( int8_t ) ndGetNumOfChildren( root );
+	matGen.numSurfaces = ( int8_t ) ndGetNumOfChildren( root );
 	matGen.surfaceLookup = PL_NEW_( GameMaterialSurface, matGen.numSurfaces );
 
 	GameMaterialSurface *surface = matGen.surfaceLookup;
-	NdBranch *child              = ndGetFirstChild( root );
-	while ( child != NULL )
-	{
+	NdBranch *child = ndGetFirstChild( root );
+	while ( child != NULL ) {
 		snprintf( surface->description, sizeof( surface->description ),
 		          "%s", ndGetStringByName( child, "description", "none" ) );
 
 		NdBranch *aliases = ndGetChildByName( child, "aliases" );
-		if ( aliases != NULL )
-		{
+		if ( aliases != NULL ) {
 			surface->numAliases = ndGetNumOfChildren( aliases );
-			surface->aliases    = PL_NEW_( char *, surface->numAliases );
+			surface->aliases = PL_NEW_( char *, surface->numAliases );
 			ndGetStringArray( aliases, surface->aliases, surface->numAliases );
 			//for ( uint8_t i = 0; i < surface->numAliases; ++i )
 			//{
@@ -164,8 +149,7 @@ static bool LoadSurfacesConfig( const char *path )
 	return true;
 }
 
-int main( int argc, char **argv )
-{
+int main( int argc, char **argv ) {
 	PlInitialize( argc, argv );
 
 	printf( "MATGEN - APE's material generation tool, for the lazy!\n"
@@ -173,32 +157,32 @@ int main( int argc, char **argv )
 
 	PL_ZERO_( matGen );
 
-	if ( !PlPathExists( "materials" ) )
-	{
+	if ( !PlPathExists( "materials" ) ) {
 		printf( "Couldn't find 'materials' sub-folder, please be sure you execute matgen "
 		        "from the root directory of your project!\n" );
 		return EXIT_FAILURE;
 	}
 
-	if ( !LoadSurfacesConfig( "materials/surfaces.cfg.n" ) )
-	{
+	if ( !LoadSurfacesConfig( "materials/surfaces.cfg.n" ) ) {
 		printf( "Failed to load surfaces config!\n" );
 		return EXIT_FAILURE;
 	}
 
 	matGen.dir = PlGetCommandLineArgumentValueByIndex( 1 );
-	if ( matGen.dir == NULL )
-	{
+	if ( matGen.dir == NULL ) {
 		printf( "No directory specified, will use '%s'\n", DEFAULT_DIR );
 		matGen.dir = DEFAULT_DIR;
 	}
 
 	const char *arg;
-	if ( ( arg = PlGetCommandLineArgumentValue( "-s" ) ) != NULL ) { matGen.shader = arg; }
-	else { matGen.shader = "default"; }
+	if ( ( arg = PlGetCommandLineArgumentValue( "-s" ) ) != NULL ) {
+		matGen.shader = arg;
+	} else {
+		matGen.shader = "default";
+	}
 
 	matGen.overwrite = PlHasCommandLineArgument( "-o" );
-	bool recursive   = PlHasCommandLineArgument( "-r" );
+	bool recursive = PlHasCommandLineArgument( "-r" );
 
 	PlScanDirectory( matGen.dir, "png", GenerateMaterial, recursive, NULL );
 	PlScanDirectory( matGen.dir, "tga", GenerateMaterial, recursive, NULL );

@@ -17,8 +17,7 @@ static unsigned int numFiles = 0;
 //static FILE *fileOutPtr = NULL;
 static char outputPath[ 32 ] = { '\0' };
 
-static void PrepareNodeFile( const char *path, PLPath loadPath )
-{
+static void PrepareNodeFile( const char *path, PLPath loadPath ) {
 	Print( "Converting node: %s\n", path );
 
 	/* urgh, let's load the first part of the file to see
@@ -54,8 +53,7 @@ static void PrepareNodeFile( const char *path, PLPath loadPath )
 	NL_DestroyNode( root );
 }
 
-static void PrepareModelFile( const char *path, PLPath loadPath, PLPath packPath )
-{
+static void PrepareModelFile( const char *path, PLPath loadPath, PLPath packPath ) {
 	Print( "Converting model: %s\n", path );
 
 	PLMModel *model = PlmLoadModel( path );
@@ -77,15 +75,13 @@ static void PrepareModelFile( const char *path, PLPath loadPath, PLPath packPath
 	packPath[ strlen( loadPath ) - 2 ] = '\0';
 }
 
-void Pkg_AddFile( FILE *pack, const char *path )
-{
+void Pkg_AddFile( FILE *pack, const char *path ) {
 	PLPath packPath = { '\0' }; /* path we use in the pack */
 	PLPath loadPath = { '\0' }; /* path we use to load the file */
 
 	/* some files are special cases and need to be converted */
 	const char *extension = PlGetFileExtension( path );
-	if ( extension != NULL )
-	{
+	if ( extension != NULL ) {
 		if ( pl_strcasecmp( extension, "node" ) == 0 )
 			PrepareNodeFile( path, loadPath );
 		else if ( pl_strcasecmp( extension, "smd" ) == 0 ||
@@ -115,16 +111,14 @@ static FILE *fileOutPtr = NULL;
 /**
  * Callback used by ScanDirectory function.
  */
-static void Pkg_AddFileCallback( const char *filePath, void *userData )
-{
+static void Pkg_AddFileCallback( const char *filePath, void *userData ) {
 	Pkg_AddFile( ( FILE * ) userData, filePath );
 }
 
 /****************************************
  ****************************************/
 
-static const char *CMD_SetOutputLocation( const char *buf )
-{
+static const char *CMD_SetOutputLocation( const char *buf ) {
 	if ( *outputPath != '\0' )
 		Error( "Output was already specified previously in script!\n" );
 
@@ -145,8 +139,7 @@ static const char *CMD_SetOutputLocation( const char *buf )
 	return buf;
 }
 
-static const char *CMD_AddDirectory( const char *buf )
-{
+static const char *CMD_AddDirectory( const char *buf ) {
 	PLPath directory;
 	buf = P_ReadString( buf, directory, sizeof( directory ) );
 	if ( buf == NULL )
@@ -162,8 +155,7 @@ static const char *CMD_AddDirectory( const char *buf )
 	return buf;
 }
 
-static const char *CMD_AddFile( const char *buf )
-{
+static const char *CMD_AddFile( const char *buf ) {
 	PLPath filePath;
 	buf = P_ReadString( buf, filePath, sizeof( filePath ) );
 	if ( buf == NULL )
@@ -174,8 +166,7 @@ static const char *CMD_AddFile( const char *buf )
 	return buf;
 }
 
-static const char *CMD_AddModel( const char *buf )
-{
+static const char *CMD_AddModel( const char *buf ) {
 	PLPath filePath;
 	buf = P_ReadString( buf, filePath, sizeof( filePath ) );
 	if ( buf == NULL )
@@ -186,8 +177,7 @@ static const char *CMD_AddModel( const char *buf )
 
 static void PKG_ParseScript( const char *buffer, size_t length );
 static void PKG_LoadParseScript( const char *path );
-static const char *CMD_Include( const char *buf )
-{
+static const char *CMD_Include( const char *buf ) {
 	PLPath filePath;
 	buf = P_ReadString( buf, filePath, sizeof( filePath ) );
 	if ( buf == NULL )
@@ -198,10 +188,8 @@ static const char *CMD_Include( const char *buf )
 	return buf;
 }
 
-static void PKG_ParseScript( const char *buffer, size_t length )
-{
-	typedef struct Command
-	{
+static void PKG_ParseScript( const char *buffer, size_t length ) {
+	typedef struct Command {
 		const char *tag;
 		const char *( *Callback )( const char *buf );
 	} Command;
@@ -215,17 +203,14 @@ static void PKG_ParseScript( const char *buffer, size_t length )
     };
 
 	const char *curPos = buffer;
-	while ( curPos != NULL && *curPos != '\0' )
-	{
-		if ( *curPos == ';' )
-		{ /* comment */
+	while ( curPos != NULL && *curPos != '\0' ) {
+		if ( *curPos == ';' ) { /* comment */
 			curPos = P_SkipLine( curPos );
 			continue;
 		}
 
 		uint32_t i;
-		for ( i = 0; i < PL_ARRAY_ELEMENTS( commandList ); ++i )
-		{
+		for ( i = 0; i < PL_ARRAY_ELEMENTS( commandList ); ++i ) {
 			size_t tagLength = strlen( commandList[ i ].tag );
 			if ( strncmp( curPos, commandList[ i ].tag, tagLength ) != 0 )
 				continue;
@@ -241,22 +226,20 @@ static void PKG_ParseScript( const char *buffer, size_t length )
 	}
 }
 
-static void PKG_LoadParseScript( const char *path )
-{
+static void PKG_LoadParseScript( const char *path ) {
 	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL )
 		Error( "Failed to open \"%s\"!\nPL: %s\n", path, PlGetError() );
 
 	/* now fetch the buffer and length, and throw it to our parser */
 	const char *buffer = ( const char * ) PlGetFileData( filePtr );
-	size_t length      = PlGetFileSize( filePtr );
+	size_t length = PlGetFileSize( filePtr );
 	PKG_ParseScript( buffer, length );
 
 	PlCloseFile( filePtr );
 }
 
-int main( int argc, char **argv )
-{
+int main( int argc, char **argv ) {
 #	if defined( _WIN32 )
 	/* stop buffering stdout! */
 	setvbuf( stdout, NULL, _IONBF, 0 );
@@ -271,8 +254,7 @@ int main( int argc, char **argv )
 	PlmRegisterModelLoader( "smd", MDL_SMD_LoadFile );
 
 	Print( "Package Manager\nCopyright (C) 2020-2022 Mark E Sowden <markelswo@gmail.com>\n" );
-	if ( argc < 2 )
-	{
+	if ( argc < 2 ) {
 		Print( "Please provide a package script!\nExample: pkgman myscript.txt\n" );
 		return EXIT_SUCCESS;
 	}

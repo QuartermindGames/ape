@@ -4,7 +4,6 @@
 
 #include "fw_game.h"
 
-typedef struct FWBuildingComponent
-{
+typedef struct FWBuildingComponent {
 	uint16_t power;
 } FWBuildingComponent;

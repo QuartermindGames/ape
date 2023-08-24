@@ -11,8 +11,7 @@
 
 #include "renderer_texture.h"
 
-typedef struct ApeRendererStats
-{
+typedef struct ApeRendererStats {
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numTriangles;
@@ -25,15 +24,13 @@ typedef struct ApeRendererStats
 extern ApeRendererStats ape_rendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct ApeSpriteFrame
-{
+typedef struct ApeSpriteFrame {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
 } ApeSpriteFrame;
 
-typedef struct ApeCamera
-{
+typedef struct ApeCamera {
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
@@ -50,8 +47,7 @@ typedef struct ApeCamera
 
 #define APE_MAX_FPS_READINGS 64
 
-typedef struct ApeViewport
-{
+typedef struct ApeViewport {
 	unsigned int index;
 	int x, y;
 	int width, height;
@@ -75,8 +71,7 @@ typedef struct ApeViewport
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum ApeLightType
-{
+typedef enum ApeLightType {
 	APE_LIGHT_TYPE_OMNI,
 	APE_LIGHT_TYPE_SPOT,
 	APE_LIGHT_TYPE_SUN,
@@ -95,10 +90,9 @@ typedef enum ApeLightType
 #define APE_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
 
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
-typedef struct ApeLight
-{
+typedef struct ApeLight {
 	ApeLightType type;
-	
+
 	PLVector3 position;
 	PLVector3 angles;
 	PLColourF32 colour;
@@ -114,24 +108,21 @@ typedef struct ApeLight
 typedef ApeLight ApeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
-typedef enum ApeRendererCullMode
-{
+typedef enum ApeRendererCullMode {
 	APE_RENDERER_CULL_DEFAULT,
 	APE_RENDERER_CULL_FRONT,
 	APE_RENDERER_CULL_BACK,
 	APE_RENDERER_CULL_NONE,
 } ApeRendererCullMode;
 
-typedef enum ApeRendererPassStage
-{
+typedef enum ApeRendererPassStage {
 	APE_RENDERER_PASS_DEFAULT,
 	APE_RENDERER_PASS_DEPTH,
 	APE_RENDERER_PASS_STENCIL,
 	APE_RENDERER_PASS_LIGHTING,
 } ApeRendererPassStage;
 
-typedef struct ApeRendererPassState
-{
+typedef struct ApeRendererPassState {
 	ApeRendererCullMode cullMode;// override default cull mode
 	ApeRendererPassStage passStage;
 

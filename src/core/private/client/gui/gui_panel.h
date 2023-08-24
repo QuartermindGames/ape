@@ -6,18 +6,15 @@
 #include "gui_private.h"
 
 #define GUI_DEFAULT_INSET_COLOUR \
-	( PLColour )                 \
-	{                            \
+	( PLColour ) {               \
 		122, 122, 122, 255       \
 	}
 #define GUI_DEFAULT_OUTSET_COLOUR \
-	( PLColour )                  \
-	{                             \
+	( PLColour ) {                \
 		192, 192, 192, 255        \
 	}
 
-typedef struct GuiPanel
-{
+typedef struct GuiPanel {
 	int x, y;
 	int w, h;
 	bool isDrawing;// Flag on whether the panel is actually in view

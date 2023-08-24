@@ -19,8 +19,7 @@
 
 typedef struct PLImage PLImage;
 
-typedef enum PKGFileType
-{
+typedef enum PKGFileType {
 	PKG_FILETYPE_GENERIC,
 	PKG_FILETYPE_TEXTURE,
 	PKG_FILETYPE_MODEL,

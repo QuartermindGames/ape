@@ -4,8 +4,7 @@
 
 #include "game_private.h"
 
-typedef struct GameTestComponent
-{
+typedef struct GameTestComponent {
 	ApeEntityComponent *transformComponent;
 	ApeEntityComponent *meshComponent;
 } GameTestComponent;

@@ -3,15 +3,12 @@
 
 #include "mag_game.h"
 
-static bool Initialize( void )
-{
+static bool Initialize( void ) {
 	return true;
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user )
-{
-	switch ( modeRequest )
-	{
+static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
+	switch ( modeRequest ) {
 		default:
 			break;
 		case GAMEMODE_REQUEST_INITIALIZE:
@@ -21,8 +18,7 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 	return false;
 }
 
-const GameModeInterface *gameGetModeInterface( void )
-{
+const GameModeInterface *gameGetModeInterface( void ) {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 	gameMode.RequestCallbackMethod = HandleRequest;

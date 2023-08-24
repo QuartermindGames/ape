@@ -11,21 +11,18 @@
 
 static PLLinkedList *entityList = NULL;
 
-static PLHashTable *entityPrefabTable   = NULL;
+static PLHashTable *entityPrefabTable = NULL;
 static PLHashTable *componentSpawnTable = NULL;
 
 #if !defined( NDEBUG )
-static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
-{
+static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv ) {
 	ApeEntity *entity = apeCreateEntity();
-	if ( entity == NULL )
-	{
+	if ( entity == NULL ) {
 		PRINT_WARNING( "Failed to create entity!\n" );
 		return;
 	}
 
-	if ( apeAttachEntityComponentByName( entity, "transform" ) == NULL )
-	{
+	if ( apeAttachEntityComponentByName( entity, "transform" ) == NULL ) {
 		PRINT_WARNING( "Failed to attach \"transform\" component to entity!\n" );
 	}
 
@@ -33,43 +30,36 @@ static void TestCommand( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 }
 #endif
 
-void apeInitializeEntityManager( void )
-{
+void apeInitializeEntityManager( void ) {
 #if !defined( NDEBUG )
 	PlRegisterConsoleCommand( "entity/test", "Test the entity system.", 0, TestCommand );
 #endif
 
 	entityList = PlCreateLinkedList();
-	if ( entityList == NULL )
-	{
+	if ( entityList == NULL ) {
 		PRINT_ERROR( "Failed to create entity list: %s\n", PlGetError() );
 	}
 
 	entityPrefabTable = PlCreateHashTable();
-	if ( entityPrefabTable == NULL )
-	{
+	if ( entityPrefabTable == NULL ) {
 		PRINT_ERROR( "Failed to create entity prefab list: %s\n", PlGetError() );
 	}
 
 	componentSpawnTable = PlCreateHashTable();
-	if ( componentSpawnTable == NULL )
-	{
+	if ( componentSpawnTable == NULL ) {
 		PRINT_ERROR( "Failed to create entity component list: %s\n", PlGetError() );
 	}
 
 	PRINT( "Entity Manager initialized\n" );
 }
 
-void apeShutdownEntityManager( void )
-{
+void apeShutdownEntityManager( void ) {
 	// Clear up all entities first
-	if ( entityList != NULL )
-	{
+	if ( entityList != NULL ) {
 		PLLinkedListNode *node = PlGetFirstNode( entityList );
-		while ( node != NULL )
-		{
+		while ( node != NULL ) {
 			ApeEntity *entity = PlGetLinkedListNodeUserData( node );
-			node              = PlGetNextLinkedListNode( node );
+			node = PlGetNextLinkedListNode( node );
 			apeDestroyEntity( entity );
 		}
 		PlDestroyLinkedList( entityList );
@@ -79,11 +69,9 @@ void apeShutdownEntityManager( void )
 	PlDestroyHashTable( componentSpawnTable );
 
 	// Clear up entity prefabs
-	if ( entityPrefabTable != NULL )
-	{
+	if ( entityPrefabTable != NULL ) {
 		PLHashTableNode *hashNode = PlGetFirstHashTableNode( entityPrefabTable );
-		while ( hashNode != NULL )
-		{
+		while ( hashNode != NULL ) {
 			ApeEntityPrefab *template = PlGetHashTableNodeUserData( hashNode );
 
 			// Iterate over and clear out all the component references
@@ -98,19 +86,15 @@ void apeShutdownEntityManager( void )
 	}
 }
 
-static void IterateEntities( void ( *callbackHandler )( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user ), void *user )
-{
+static void IterateEntities( void ( *callbackHandler )( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user ), void *user ) {
 	PLHashTableNode *node = PlGetFirstHashTableNode( componentSpawnTable );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		ApeEntityComponentBase *componentTemplate = PlGetHashTableNodeUserData( node );
-		if ( componentTemplate->activeComponents != NULL )
-		{
+		if ( componentTemplate->activeComponents != NULL ) {
 			PLLinkedListNode *subNode = PlGetFirstNode( componentTemplate->activeComponents );
-			while ( subNode != NULL )
-			{
+			while ( subNode != NULL ) {
 				ApeEntityComponent *component = PlGetLinkedListNodeUserData( subNode );
-				subNode                       = PlGetNextLinkedListNode( subNode );
+				subNode = PlGetNextLinkedListNode( subNode );
 				callbackHandler( component, componentTemplate, user );
 			}
 		}
@@ -118,40 +102,35 @@ static void IterateEntities( void ( *callbackHandler )( ApeEntityComponent *comp
 	}
 }
 
-static void CallEntityTick( ApeEntityComponent *component, ApeEntityComponentBase *base, PL_UNUSED void *user )
-{
+static void CallEntityTick( ApeEntityComponent *component, ApeEntityComponentBase *base, PL_UNUSED void *user ) {
 	if ( base->callbackTable->tickFunction == NULL )
 		return;
 
 	base->callbackTable->tickFunction( component );
 }
 
-static void CallEntityDraw( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, PL_UNUSED void *user )
-{
+static void CallEntityDraw( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, PL_UNUSED void *user ) {
 	if ( componentTemplate->callbackTable->drawFunction == NULL )
 		return;
 
 	componentTemplate->callbackTable->drawFunction( component );
 }
 
-static void SerializeEntityCallback( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user )
-{
+static void SerializeEntityCallback( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user ) {
 	if ( componentTemplate->callbackTable->serializeFunction == NULL )
 		return;
 
 	componentTemplate->callbackTable->serializeFunction( component, ( NdBranch * ) user );
 }
 
-static void DeserializeEntityCallback( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user )
-{
+static void DeserializeEntityCallback( ApeEntityComponent *component, ApeEntityComponentBase *componentTemplate, void *user ) {
 	if ( componentTemplate->callbackTable->deserializeFunction == NULL )
 		return;
 
 	componentTemplate->callbackTable->deserializeFunction( component, ( NdBranch * ) user );
 }
 
-void apeTickEntityManager( void )
-{
+void apeTickEntityManager( void ) {
 	COM_PROFILE_FUNCTION_START();
 
 	IterateEntities( CallEntityTick, NULL );
@@ -159,8 +138,7 @@ void apeTickEntityManager( void )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ogeEntityManager_Draw( ApeCamera *camera, ApeWorldRoom *sector )
-{
+void ogeEntityManager_Draw( ApeCamera *camera, ApeWorldRoom *sector ) {
 	COM_PROFILE_FUNCTION_START();
 
 	IterateEntities( CallEntityDraw, NULL );
@@ -168,31 +146,26 @@ void ogeEntityManager_Draw( ApeCamera *camera, ApeWorldRoom *sector )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void YnCore_EntityManager_Save( NdBranch *root )
-{
+void YnCore_EntityManager_Save( NdBranch *root ) {
 	IterateEntities( SerializeEntityCallback, root );
 }
 
-void ogeEntityManager_Restore( NdBranch *root )
-{
+void ogeEntityManager_Restore( NdBranch *root ) {
 	IterateEntities( DeserializeEntityCallback, root );
 }
 
-unsigned int YnCore_EntityManager_GetNumOfEntities( void )
-{
+unsigned int YnCore_EntityManager_GetNumOfEntities( void ) {
 	return PlGetNumLinkedListNodes( entityList );
 }
 
 /////////////////////////////////////////////////////////////////
 // Entity Prefabs
 
-static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
-{
+static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root ) {
 	const char *str;
 	str = ndGetStringByName( root, "name", NULL );
 	assert( str != NULL );
-	if ( str == NULL )
-	{
+	if ( str == NULL ) {
 		PRINT_WARNING( "No valid name provided for entity template, \"%s\"!\n", path );
 		return NULL;
 	}
@@ -200,8 +173,7 @@ static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 	NdBranch *node;
 	node = ndGetChildByName( root, "components" );
 	assert( node != NULL );
-	if ( node == NULL )
-	{
+	if ( node == NULL ) {
 		PRINT_WARNING( "No components for entity template, \"%s\"!\n", path );
 		return NULL;
 	}
@@ -217,31 +189,27 @@ static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 		snprintf( prefab->description, sizeof( prefab->description ), "%s", str );
 
 	prefab->numComponents = ndGetNumOfChildren( node );
-	prefab->components    = PL_NEW_( ApeEntityPrefabComponent, prefab->numComponents );
+	prefab->components = PL_NEW_( ApeEntityPrefabComponent, prefab->numComponents );
 
 	// Get the first child of the components list
 	node = ndGetFirstChild( node );
-	for ( unsigned int i = 0; i < prefab->numComponents; ++i )
-	{
+	for ( unsigned int i = 0; i < prefab->numComponents; ++i ) {
 		assert( node != NULL );
-		if ( node == NULL )
-		{
+		if ( node == NULL ) {
 			PRINT_WARNING( "Encountered an invalid component node, might be a parser error!\n" );
 			break;
 		}
 
 		const char *name = ndGetStringByName( node, "name", NULL );
 		assert( name != NULL );
-		if ( name == NULL )
-		{
+		if ( name == NULL ) {
 			PRINT_WARNING( "Component listed for prefab without a name!\n" );
 			node = ndGetNextChild( node );
 			continue;
 		}
 
 		const ApeEntityComponentBase *base = apeGetEntityComponentBaseByName( name );
-		if ( base == NULL )
-		{
+		if ( base == NULL ) {
 			PRINT_WARNING( "\"%s\" is not a valid entity component!\n", name );
 			node = ndGetNextChild( node );
 			continue;
@@ -260,29 +228,21 @@ static ApeEntityPrefab *ParseEntityPrefab( const char *path, NdBranch *root )
 	return prefab;
 }
 
-void apeRegisterEntityPrefab( const char *path )
-{
+void apeRegisterEntityPrefab( const char *path ) {
 	NdBranch *root = ndLoadFile( path, "entityPrefab" );
-	if ( root == NULL )
-	{
+	if ( root == NULL ) {
 		PRINT_WARNING( "Failed to open entity template, \"%s\": %s\n", path, ndGetErrorMessage() );
 		return;
 	}
 
 	ApeEntityPrefab *entityTemplate = ParseEntityPrefab( path, root );
-	if ( entityTemplate != NULL )
-	{
-		if ( PlInsertHashTableNode( entityPrefabTable, entityTemplate->name, strlen( entityTemplate->name ), entityTemplate ) )
-		{
+	if ( entityTemplate != NULL ) {
+		if ( PlInsertHashTableNode( entityPrefabTable, entityTemplate->name, strlen( entityTemplate->name ), entityTemplate ) ) {
 			PRINT( "Registered \"%s\" entity (%s)\n", entityTemplate->name, path );
-		}
-		else
-		{
+		} else {
 			PRINT_WARNING( "Failed to register entity template: %s\n", PlGetError() );
 		}
-	}
-	else
-	{
+	} else {
 		PRINT_WARNING( "Failed to register entity template: %s\nSee log for details!\n", path );
 	}
 
@@ -292,20 +252,17 @@ void apeRegisterEntityPrefab( const char *path )
 /**
  * Attempts to load the entity template at the specified path and add it to our hash table.
  */
-static void RegisterEntityPrefab( const char *path, PL_UNUSED void *userData )
-{
+static void RegisterEntityPrefab( const char *path, PL_UNUSED void *userData ) {
 	apeRegisterEntityPrefab( path );
 }
 
-void apeRegisterEntityPrefabs( void )
-{
+void apeRegisterEntityPrefabs( void ) {
 	PRINT( "Registering entity prefabs...\n" );
 
 	PlScanDirectory( "entities", "n", RegisterEntityPrefab, true, NULL );
 }
 
-const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name )
-{
+const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name ) {
 	return PlLookupHashTableUserData( entityPrefabTable, name, strlen( name ) );
 }
 
@@ -315,16 +272,13 @@ const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name )
 /**
  * Attempt to find the specified template by name.
  */
-const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name )
-{
+const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name ) {
 	return PlLookupHashTableUserData( componentSpawnTable, name, strlen( name ) );
 }
 
-bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable )
-{
+bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable ) {
 	// check if it's been registered already
-	if ( apeGetEntityComponentBaseByName( name ) != NULL )
-	{
+	if ( apeGetEntityComponentBaseByName( name ) != NULL ) {
 		PRINT_WARNING( "Component \"%s\" was already registered!\n", name );
 		return false;
 	}
@@ -339,19 +293,17 @@ bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallb
 	return true;
 }
 
-ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name )
-{
+ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name ) {
 	const ApeEntityComponentBase *componentTemplate = apeGetEntityComponentBaseByName( name );
-	if ( componentTemplate == NULL )
-	{
+	if ( componentTemplate == NULL ) {
 		PRINT_WARNING( "Attempted to add an invalid component, \"%s\", onto an entity!\n", name );
 		return NULL;
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	component->entity             = entity;
-	component->base               = componentTemplate;
-	component->listNode           = PlInsertLinkedListNode( entity->components, component );
+	component->entity = entity;
+	component->base = componentTemplate;
+	component->listNode = PlInsertLinkedListNode( entity->components, component );
 
 	return component;
 }
@@ -359,13 +311,12 @@ ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char
 /////////////////////////////////////////////////////////////////
 // Entitys
 
-ApeEntity *apeCreateEntity( void )
-{
+ApeEntity *apeCreateEntity( void ) {
 	ApeEntity *entity = PL_NEW( ApeEntity );
 	PlGenerateUniqueIdentifier( entity->name, sizeof( entity->name ) );
 	entity->components = PlCreateLinkedList();
-	entity->id         = PlGetNumLinkedListNodes( entityList );
-	entity->listNode   = PlInsertLinkedListNode( entityList, entity );
+	entity->id = PlGetNumLinkedListNodes( entityList );
+	entity->listNode = PlInsertLinkedListNode( entityList, entity );
 	PRINT_DEBUG( "Created entity (%u %s)\n", entity->id, entity->name );
 	return entity;
 }
@@ -376,30 +327,26 @@ ApeEntity *apeCreateEntity( void )
  * @param name Name of the prefab to lookup.
  * @return NULL on fail, otherwise a pointer to the newly allocated entity.
  */
-ApeEntity *apeCreateEntityFromPrefab( const char *name )
-{
+ApeEntity *apeCreateEntityFromPrefab( const char *name ) {
 	const ApeEntityPrefab *prefab = YnCore_EntityManager_GetPrefabByName( name );
-	if ( prefab == NULL )
-	{
+	if ( prefab == NULL ) {
 		PRINT_WARNING( "Failed to create entity by prefab! (%s == NULL)\n", name );
 		return NULL;
 	}
 
 	ApeEntity *entity = apeCreateEntity();
 
-	for ( unsigned int i = 0; i < prefab->numComponents; ++i )
-	{
+	for ( unsigned int i = 0; i < prefab->numComponents; ++i ) {
 		ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-		component->entity             = entity;
-		component->base               = prefab->components[ i ].base;
-		component->listNode           = PlInsertLinkedListNode( entity->components, component );
+		component->entity = entity;
+		component->base = prefab->components[ i ].base;
+		component->listNode = PlInsertLinkedListNode( entity->components, component );
 	}
 
 	return entity;
 }
 
-void apeDestroyEntity( ApeEntity *entity )
-{
+void apeDestroyEntity( ApeEntity *entity ) {
 	apeRemoveAllEntityComponents( entity );
 	PlDestroyLinkedList( entity->components );
 	PL_DELETE( entity );

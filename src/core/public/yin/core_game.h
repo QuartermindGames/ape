@@ -4,8 +4,7 @@
 
 PL_EXTERN_C
 
-typedef struct GameState
-{
+typedef struct GameState {
 	int mode, oldMode;
 } GameState;
 extern GameState oge_gameState_;

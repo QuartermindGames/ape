@@ -3,8 +3,7 @@
 
 #pragma once
 
-typedef enum MagCharacterStat
-{
+typedef enum MagCharacterStat {
 	MAG_CHARACTER_STAT_STRENGTH,
 	MAG_CHARACTER_STAT_DEXTERITY,
 	MAG_CHARACTER_STAT_INTELLIGENCE,
@@ -25,8 +24,7 @@ typedef enum MagCharacterStat
 
 typedef int16_t MagCharacterStats[ MAG_MAX_CHARACTER_STATS ];
 
-typedef struct MagCharacter
-{
+typedef struct MagCharacter {
 	MagCharacterStats stats;
 } MagCharacter;
 

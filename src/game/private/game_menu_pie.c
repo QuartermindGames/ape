@@ -9,8 +9,7 @@
 #define PIE_MENU_OPTION_WIDTH  128
 #define PIE_MENU_OPTION_HEIGHT 128
 
-typedef struct GamePieMenu
-{
+typedef struct GamePieMenu {
 	PLLinkedList *options;
 	PLLinkedListNode *activeOption;// option we're currently selecting
 	PLLinkedListNode *targetOption;// option we want to be at, for animating
@@ -20,8 +19,7 @@ typedef struct GamePieMenu
 	int w, h;
 } GamePieMenu;
 
-typedef struct GamePieMenuOption
-{
+typedef struct GamePieMenuOption {
 	PLLinkedListNode *node;
 	char label[ 64 ];
 	struct ApeMaterial *icon;
@@ -29,27 +27,23 @@ typedef struct GamePieMenuOption
 	GamePieMenu *parent;
 } GamePieMenuOption;
 
-GamePieMenu *gameCreatePieMenu( void )
-{
+GamePieMenu *gameCreatePieMenu( void ) {
 	// don't need to do much here, just allocate and return
 	GamePieMenu *menu = PL_NEW( GamePieMenu );
-	menu->options     = PlCreateLinkedList();
-	menu->w           = PIE_MENU_WIDTH;
-	menu->h           = PIE_MENU_HEIGHT;
+	menu->options = PlCreateLinkedList();
+	menu->w = PIE_MENU_WIDTH;
+	menu->h = PIE_MENU_HEIGHT;
 	return menu;
 }
 
-void gameDestroyPieMenu( GamePieMenu *menu )
-{
-	if ( menu == NULL )
-	{
+void gameDestroyPieMenu( GamePieMenu *menu ) {
+	if ( menu == NULL ) {
 		return;
 	}
 
 	// destroy all the pie options
 	PLLinkedListNode *node = PlGetFirstNode( menu->options );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PL_DELETE( PlGetLinkedListNodeUserData( node ) );
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -58,35 +52,28 @@ void gameDestroyPieMenu( GamePieMenu *menu )
 	PL_DELETE( menu );
 }
 
-void gameTickPieMenu( GamePieMenu *menu )
-{
+void gameTickPieMenu( GamePieMenu *menu ) {
 	//menu->angle += 0.5f;
 
-	if ( menu->velocity != 0 )
-	{
+	if ( menu->velocity != 0 ) {
 		menu->velocity -= menu->velocity / 8.0f;
 	}
 	menu->angle += menu->velocity;
 
-	if ( menu->scale < 1.0f )
-	{
+	if ( menu->scale < 1.0f ) {
 		menu->scale += 0.05f;
 	}
 }
 
-bool gameHandlePieMenuInput( GamePieMenu *menu )
-{
-	if ( !menu->isActive )
-	{
+bool gameHandlePieMenuInput( GamePieMenu *menu ) {
+	if ( !menu->isActive ) {
 		return false;
 	}
 
 	// if the active option is null, reset it to the first slot
-	if ( menu->activeOption == NULL )
-	{
+	if ( menu->activeOption == NULL ) {
 		menu->activeOption = PlGetFirstNode( menu->options );
-		if ( menu->activeOption == NULL )
-		{// probably no options available, just return...
+		if ( menu->activeOption == NULL ) {// probably no options available, just return...
 			return false;
 		}
 	}
@@ -127,28 +114,21 @@ bool gameHandlePieMenuInput( GamePieMenu *menu )
 #endif
 
 	PLVector2 joyPos = apeGetJoystickStatus( 0, 0 );
-	menu->cursor     = joyPos;
+	menu->cursor = joyPos;
 
-	if ( apeGetButtonStatus( 0, INPUT_A ) == OGE_INPUT_STATE_PRESSED )
-	{
+	if ( apeGetButtonStatus( 0, INPUT_A ) == OGE_INPUT_STATE_PRESSED ) {
 		Game_Debug( "Selected item...\n" );
 
 		GamePieMenuOption *option;
-		if ( menu->targetOption != NULL )
-		{// option we're trying to get to
+		if ( menu->targetOption != NULL ) {// option we're trying to get to
 			option = PlGetLinkedListNodeUserData( menu->targetOption );
-		}
-		else if ( menu->activeOption != NULL )
-		{// option we're currently at
+		} else if ( menu->activeOption != NULL ) {// option we're currently at
 			option = PlGetLinkedListNodeUserData( menu->activeOption );
-		}
-		else
-		{// nothing to select!
+		} else {// nothing to select!
 			return true;
 		}
 
-		if ( option->callback == NULL )
-		{
+		if ( option->callback == NULL ) {
 			return true;
 		}
 
@@ -156,13 +136,10 @@ bool gameHandlePieMenuInput( GamePieMenu *menu )
 		return true;
 	}
 
-	if ( apeGetButtonStatus( 0, INPUT_RB ) != OGE_INPUT_STATE_NONE )
-	{
+	if ( apeGetButtonStatus( 0, INPUT_RB ) != OGE_INPUT_STATE_NONE ) {
 		menu->velocity -= 1.5f;
 		return true;
-	}
-	else if ( apeGetButtonStatus( 0, INPUT_LB ) != OGE_INPUT_STATE_NONE )
-	{
+	} else if ( apeGetButtonStatus( 0, INPUT_LB ) != OGE_INPUT_STATE_NONE ) {
 		menu->velocity += 1.5f;
 		return true;
 	}
@@ -170,8 +147,7 @@ bool gameHandlePieMenuInput( GamePieMenu *menu )
 	return false;
 }
 
-static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isSelected, float scale )
-{
+static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isSelected, float scale ) {
 	float w = PIE_MENU_OPTION_WIDTH * scale;
 	float h = PIE_MENU_OPTION_HEIGHT * scale;
 
@@ -198,8 +174,7 @@ static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isS
 	PlgImmTextureCoord( 1.0f, 1.0f );
 	PlgImmColour( colour.r, colour.g, colour.b, colour.a );
 
-	if ( option->icon == NULL )
-	{
+	if ( option->icon == NULL ) {
 		PlgImmDraw();
 		return;
 	}
@@ -207,8 +182,7 @@ static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isS
 	apeDrawMesh( option->icon, mesh, NULL, 0 );
 }
 
-static GamePieMenuOption *GetSelectedOption( GamePieMenu *menu )
-{
+static GamePieMenuOption *GetSelectedOption( GamePieMenu *menu ) {
 	if ( menu->targetOption != NULL )
 		return PlGetLinkedListNodeUserData( menu->targetOption );
 	if ( menu->activeOption != NULL )
@@ -217,12 +191,10 @@ static GamePieMenuOption *GetSelectedOption( GamePieMenu *menu )
 	return NULL;
 }
 
-static void GetOptionAngle( GamePieMenu *menu, GamePieMenuOption *option )
-{
+static void GetOptionAngle( GamePieMenu *menu, GamePieMenuOption *option ) {
 }
 
-void gameDrawPieMenu( GamePieMenu *menu, float x, float y )
-{
+void gameDrawPieMenu( GamePieMenu *menu, float x, float y ) {
 	if ( !menu->isActive )
 		return;
 
@@ -230,9 +202,8 @@ void gameDrawPieMenu( GamePieMenu *menu, float x, float y )
 	float cursorY = y + ( menu->cursor.y * ( ( float ) menu->h / 2.0f ) );
 
 	unsigned int numElements = PlGetNumLinkedListNodes( menu->options );
-	PLLinkedListNode *node   = PlGetFirstNode( menu->options );
-	for ( unsigned int i = 0, pos = 0; i < 360; i += ( 360 / numElements ) )
-	{
+	PLLinkedListNode *node = PlGetFirstNode( menu->options );
+	for ( unsigned int i = 0, pos = 0; i < 360; i += ( 360 / numElements ) ) {
 		if ( pos >= numElements || node == NULL )
 			break;
 
@@ -248,7 +219,7 @@ void gameDrawPieMenu( GamePieMenu *menu, float x, float y )
 		float dc = menu->scale * ( PlGetVector2Length( &PLVector2( 1.0f, 1.0f ) ) - PlGetVector2Length( &PLVector2( xc, yc ) ) );
 
 		GamePieMenuOption *option = PlGetLinkedListNodeUserData( node );
-		bool isSelected           = ( option == GetSelectedOption( menu ) );
+		bool isSelected = ( option == GetSelectedOption( menu ) );
 		DrawPieOption( option, xo, yo, isSelected, dc );
 		if ( isSelected )
 			PlgDrawSimpleLine( PlMatrix4Identity(), PLVector3( x, y, 0.0f ), PLVector3( xo, yo, 0.0f ), PL_COLOUR_RED );
@@ -259,19 +230,17 @@ void gameDrawPieMenu( GamePieMenu *menu, float x, float y )
 	DrawPieOption( PlGetLinkedListNodeUserData( PlGetFirstNode( menu->options ) ), cursorX, cursorY, false, 1.0f );
 }
 
-void gameSetActivePieMenu( GamePieMenu *menu, bool active )
-{
+void gameSetActivePieMenu( GamePieMenu *menu, bool active ) {
 	menu->isActive = active;
-	menu->scale    = 0.0f;
+	menu->scale = 0.0f;
 }
 
-GamePieMenuOption *gameAddPieMenuOption( GamePieMenu *menu, const char *label, struct ApeMaterial *icon, GamePieMenuOptionCallback callback )
-{
+GamePieMenuOption *gameAddPieMenuOption( GamePieMenu *menu, const char *label, struct ApeMaterial *icon, GamePieMenuOptionCallback callback ) {
 	GamePieMenuOption *option = PL_NEW( GamePieMenuOption );
-	option->node              = PlInsertLinkedListNode( menu->options, option );
-	option->callback          = callback;
-	option->icon              = icon;
-	option->parent            = menu;
+	option->node = PlInsertLinkedListNode( menu->options, option );
+	option->callback = callback;
+	option->icon = icon;
+	option->parent = menu;
 	snprintf( option->label, sizeof( option->label ), "%s", label );
 
 	menu->w += 32;
@@ -284,33 +253,26 @@ GamePieMenuOption *gameAddPieMenuOption( GamePieMenu *menu, const char *label, s
 	return option;
 }
 
-void gameDestroyPieMenuOption( GamePieMenuOption *option )
-{
+void gameDestroyPieMenuOption( GamePieMenuOption *option ) {
 	GamePieMenu *menu = option->parent;
 	assert( menu != NULL );
-	if ( menu != NULL )
-	{
+	if ( menu != NULL ) {
 		// Just reset the target option back to NULL
-		if ( menu->targetOption != NULL )
-		{
+		if ( menu->targetOption != NULL ) {
 			menu->targetOption = NULL;
 		}
 		// And reset the active option to the first node if it's the same as our selection
-		if ( menu->activeOption != NULL && ( ( GamePieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option )
-		{
+		if ( menu->activeOption != NULL && ( ( GamePieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option ) {
 			menu->activeOption = PlGetFirstNode( menu->options );
 		}
 
 		menu->w -= 32;
 		menu->h -= 32;
-	}
-	else
-	{
+	} else {
 		Game_Warning( "Encountered a pie option with no parent!\n" );
 	}
 
-	if ( option->icon != NULL )
-	{
+	if ( option->icon != NULL ) {
 		apeReleaseMaterial( option->icon );
 	}
 

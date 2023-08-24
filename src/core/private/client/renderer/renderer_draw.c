@@ -6,16 +6,14 @@
 /////////////////////////////////////////////////////////////////
 // 2D Primitives
 
-static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty )
-{
+static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty ) {
 	*tw = subRect->w / ( float ) texture->w;
 	*th = subRect->h / ( float ) texture->h;
 	*tx = subRect->x / ( float ) texture->w;
 	*ty = subRect->y / ( float ) texture->h;
 }
 
-void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h )
-{
+void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h ) {
 	float tw, th, tx, ty;
 	GetUVCoordsForSubRect( subRect, texture, &tw, &th, &tx, &ty );
 

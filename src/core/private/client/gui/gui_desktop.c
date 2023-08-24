@@ -8,29 +8,25 @@
 // Overhead menu that provides contextual actions.
 /***********************************************************/
 
-typedef enum GuiMenuItemType
-{
+typedef enum GuiMenuItemType {
 	GUI_MENU_ITEM_ACTION,
 	GUI_MENU_ITEM_SUBMENU,
 
 	GUI_MAX_MENU_ITEM_TYPES
 } GuiMenuItemType;
 
-typedef struct GuiMenuItem
-{
+typedef struct GuiMenuItem {
 	GuiPanel *panel;
 	char *name;
 	GuiMenuItemType type;
 	void *user;
 } GuiMenuItem;
 
-typedef struct GuiMenu
-{
+typedef struct GuiMenu {
 	uint8_t numItems;
 } GuiMenu;
 
-typedef struct GuiDesktop
-{
+typedef struct GuiDesktop {
 	GuiPanel *panel;
 	GuiMenu *menu;
 } GuiDesktop;
@@ -39,20 +35,17 @@ typedef struct GuiDesktop
 // GUI DESKTOP
 /***********************************************************/
 
-GuiDesktop *guiCreateDesktop( GuiPanel *parent )
-{
-	if ( parent == NULL )
-	{
+GuiDesktop *guiCreateDesktop( GuiPanel *parent ) {
+	if ( parent == NULL ) {
 		parent = guiCreatePanel( NULL, 0, 0, 640, 480, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
-		if ( parent == NULL )
-		{
+		if ( parent == NULL ) {
 			GUI_WARNING( "Failed to create root panel for desktop!\n" );
 			return NULL;
 		}
 	}
 
 	GuiDesktop *desktop = PL_NEW( GuiDesktop );
-	desktop->panel      = parent;
+	desktop->panel = parent;
 
 	return desktop;
 }
@@ -61,10 +54,8 @@ GuiDesktop *guiCreateDesktop( GuiPanel *parent )
  * Destroy the given desktop handle and it's
  * children.
  */
-void guiDestroyDesktop( GuiDesktop *desktop )
-{
-	if ( desktop == NULL )
-	{
+void guiDestroyDesktop( GuiDesktop *desktop ) {
+	if ( desktop == NULL ) {
 		return;
 	}
 

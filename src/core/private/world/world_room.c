@@ -3,12 +3,11 @@
 
 #include "world.h"
 
-ApeWorldRoom *apeCreateWorldRoom( void )
-{
+ApeWorldRoom *apeCreateWorldRoom( void ) {
 	ApeWorldRoom *room = PL_NEW( ApeWorldRoom );
-	room->detailRooms  = PlCreateVectorArray( 0 );
-	room->faces        = PlCreateVectorArray( 0 );
-	room->portals      = PlCreateVectorArray( 0 );
+	room->detailRooms = PlCreateVectorArray( 0 );
+	room->faces = PlCreateVectorArray( 0 );
+	room->portals = PlCreateVectorArray( 0 );
 
 	// assign the room a random colour so it can be identified per debugging
 	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
@@ -18,8 +17,7 @@ ApeWorldRoom *apeCreateWorldRoom( void )
 	return room;
 }
 
-void apeDestroyWorldRoom( ApeWorldRoom *room )
-{
+void apeDestroyWorldRoom( ApeWorldRoom *room ) {
 	PlDestroyVectorArray( room->detailRooms );
 	PlDestroyVectorArray( room->faces );
 	PlDestroyVectorArray( room->portals );
@@ -29,8 +27,7 @@ void apeDestroyWorldRoom( ApeWorldRoom *room )
 	PlgDestroyMesh( room->mesh );
 
 	// clean-up batches
-	for ( unsigned int i = 0; i < room->numBatches; ++i )
-	{
+	for ( unsigned int i = 0; i < room->numBatches; ++i ) {
 		PL_DELETE( room->batches[ i ].subMeshes );
 		PL_DELETE( room->batches[ i ].firstSubMeshes );
 	}
@@ -39,8 +36,7 @@ void apeDestroyWorldRoom( ApeWorldRoom *room )
 	PL_DELETE( room );
 }
 
-ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces )
-{
+ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces ) {
 	*numFaces = PlGetNumVectorArrayElements( room->faces );
 	return ( ApeWorldFace ** ) PlGetVectorArrayData( room->faces );
 }

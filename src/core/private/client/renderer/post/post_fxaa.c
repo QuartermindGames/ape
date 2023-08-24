@@ -13,13 +13,11 @@ static ApeMaterial *fxaaMaterial = NULL;
 
 static bool fxaaEnabled = false;
 
-static void RegisterFXAAConsoleVariables( void )
-{
+static void RegisterFXAAConsoleVariables( void ) {
 	PlRegisterConsoleVariable( "r/fxaa", "Enable FXAA anti-aliasing.", "1", PL_VAR_BOOL, &fxaaEnabled, NULL, true );
 }
 
-static bool SetupFXAAEffect( void )
-{
+static bool SetupFXAAEffect( void ) {
 	fxaaMaterial = apeCacheMaterial( "materials/post/fxaa.mat.n", APE_CACHE_WORLD, false, false );
 	if ( fxaaMaterial == NULL )
 		return false;
@@ -27,13 +25,11 @@ static bool SetupFXAAEffect( void )
 	return true;
 }
 
-static void CleanupFXAAEffect( void )
-{
+static void CleanupFXAAEffect( void ) {
 	apeReleaseMaterial( fxaaMaterial );
 }
 
-static void DrawFXAAEffect( const ApeViewport *viewport )
-{
+static void DrawFXAAEffect( const ApeViewport *viewport ) {
 	if ( fxaaEnabled )
 		return;
 
@@ -44,15 +40,14 @@ static void DrawFXAAEffect( const ApeViewport *viewport )
  * PUBLIC
  ****************************************/
 
-const PostProcessEffect *PP_FXAA_GetEffect( void )
-{
+const PostProcessEffect *PP_FXAA_GetEffect( void ) {
 	static PostProcessEffect renderFXAAPostProcess;
 	PL_ZERO_( renderFXAAPostProcess );
 
 	renderFXAAPostProcess.RegisterConsoleVariables = RegisterFXAAConsoleVariables;
-	renderFXAAPostProcess.Setup                    = SetupFXAAEffect;
-	renderFXAAPostProcess.Cleanup                  = CleanupFXAAEffect;
-	renderFXAAPostProcess.Draw                     = DrawFXAAEffect;
+	renderFXAAPostProcess.Setup = SetupFXAAEffect;
+	renderFXAAPostProcess.Cleanup = CleanupFXAAEffect;
+	renderFXAAPostProcess.Draw = DrawFXAAEffect;
 
 	return &renderFXAAPostProcess;
 }

@@ -6,17 +6,14 @@
 
 #include "parser.h"
 
-const char *P_SkipSpaces( const char *buffer )
-{
+const char *P_SkipSpaces( const char *buffer ) {
 	while ( *buffer == ' ' ) buffer++;
 
 	return buffer;
 }
 
-const char *P_SkipLine( const char *buffer )
-{
-	while ( *buffer != '\0' && *buffer != '\n' )
-	{
+const char *P_SkipLine( const char *buffer ) {
+	while ( *buffer != '\0' && *buffer != '\n' ) {
 		buffer++;
 	}
 
@@ -26,27 +23,22 @@ const char *P_SkipLine( const char *buffer )
 /**
  * Returns NULL if string did not fit into destination.
  */
-const char *P_ReadString( const char *buffer, char *destination, size_t length )
-{
+const char *P_ReadString( const char *buffer, char *destination, size_t length ) {
 	bool isContained = false;
-	if ( *buffer == '"' )
-	{
+	if ( *buffer == '"' ) {
 		isContained = true;
 		buffer++;
 	}
 
 	unsigned int destPos = 0;
-	while ( *buffer != '\0' )
-	{
-		if ( ( *buffer == '\r' || *buffer == '\n' ) || ( isContained && *buffer == '"' ) || ( !isContained && *buffer == ' ' ) )
-		{
+	while ( *buffer != '\0' ) {
+		if ( ( *buffer == '\r' || *buffer == '\n' ) || ( isContained && *buffer == '"' ) || ( !isContained && *buffer == ' ' ) ) {
 			buffer++;
 			break;
 		}
 
 		destination[ destPos++ ] = *buffer;
-		if ( destPos >= length )
-		{
+		if ( destPos >= length ) {
 			return NULL;
 		}
 

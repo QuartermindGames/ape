@@ -7,8 +7,7 @@ void gameShutdownMenu( void );
 
 typedef void ( *MenuCallback )( void );
 
-typedef enum MenuOptionType
-{
+typedef enum MenuOptionType {
 	MENU_OPTION_TYPE_LABEL,      //static label, will be skipped during selection
 	MENU_OPTION_TYPE_BUTTON,     //text-based button
 	MENU_OPTION_TYPE_BUTTON_ICON,//button represented by icon
@@ -16,16 +15,14 @@ typedef enum MenuOptionType
 	MENU_OPTION_TYPE_SLIDER,     //and typical slider
 } MenuOptionType;
 
-typedef struct MenuOption
-{
+typedef struct MenuOption {
 	const char *string;
 	struct Menu *nextMenu;
 	MenuCallback callback;
 	MenuOptionType type;
 } MenuOption;
 
-typedef struct Menu
-{
+typedef struct Menu {
 	const char *heading;
 	const MenuOption *options;
 	uint8_t numOptions;

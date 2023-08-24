@@ -9,14 +9,12 @@
 
 #define MAX_TOKEN 64
 
-typedef struct SMDMesh
-{
+typedef struct SMDMesh {
 	char material[ MAX_TOKEN ];
 	PLGMesh *mesh;
 } SMDMesh;
 
-static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
-{
+static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p ) {
 	SMDMesh smdMeshes[ MAX_SMD_MESHES ];
 	unsigned int numMeshes = 0;
 
@@ -24,17 +22,14 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 
 	bool isValidated = false;
 	char token[ MAX_TOKEN ];
-	while ( *p != '\0' )
-	{
+	while ( *p != '\0' ) {
 		PlParseToken( &p, token, sizeof( token ) );
-		if ( *token == '\0' || ( token[ 0 ] == '/' && token[ 1 ] == '/' ) )
-		{
+		if ( *token == '\0' || ( token[ 0 ] == '/' && token[ 1 ] == '/' ) ) {
 			PlSkipLine( &p );
 			continue;
 		}
 
-		if ( !isValidated )
-		{
+		if ( !isValidated ) {
 			if ( strcmp( token, "version" ) != 0 )
 				Error( "Expected \"version\" but found \"%s\"!\n", token );
 
@@ -49,11 +44,9 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		}
 
 		/* skip nodes for now */
-		if ( strcmp( token, "nodes" ) == 0 )
-		{
+		if ( strcmp( token, "nodes" ) == 0 ) {
 			PlSkipLine( &p );
-			while ( *p != '\0' )
-			{
+			while ( *p != '\0' ) {
 				PlParseToken( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
 					break;
@@ -66,11 +59,9 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		}
 
 		/* skip skeleton too... */
-		if ( strcmp( token, "skeleton" ) == 0 )
-		{
+		if ( strcmp( token, "skeleton" ) == 0 ) {
 			PlSkipLine( &p );
-			while ( *p != '\0' )
-			{
+			while ( *p != '\0' ) {
 				PlParseToken( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
 					break;
@@ -82,11 +73,9 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 			continue;
 		}
 
-		if ( strcmp( token, "triangles" ) == 0 )
-		{
+		if ( strcmp( token, "triangles" ) == 0 ) {
 			PlSkipLine( &p );
-			while ( *p != '\0' )
-			{
+			while ( *p != '\0' ) {
 				/* first need to fetch the material name.
 				 * smd spec suggests the extension is ignored, so we'll do the same.
 				 */
@@ -100,10 +89,8 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 
 				PlSkipLine( &p );
 
-				for ( unsigned int i = ( unsigned int ) strlen( material ); i > 0; --i )
-				{
-					if ( material[ i ] != '.' )
-					{
+				for ( unsigned int i = ( unsigned int ) strlen( material ); i > 0; --i ) {
+					if ( material[ i ] != '.' ) {
 						/* convert the string to lowercase as we go
 						 * as we want the lookup to be case-insensitive */
 						material[ i ] = tolower( material[ i ] );
@@ -117,10 +104,8 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 				/* figure out what slot it falls into */
 
 				SMDMesh *smdMesh = NULL;
-				for ( unsigned int i = 0; i < MAX_SMD_MESHES; ++i )
-				{
-					if ( *smdMeshes[ i ].material == '\0' )
-					{
+				for ( unsigned int i = 0; i < MAX_SMD_MESHES; ++i ) {
+					if ( *smdMeshes[ i ].material == '\0' ) {
 						/* setup a new slot */
 						smdMesh = &smdMeshes[ i ];
 						snprintf( smdMesh->material, sizeof( smdMesh->material ), "%s", material );
@@ -143,8 +128,7 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 					Error( "Failed to fetch mesh for material \"%s\"!\n", material );
 
 				unsigned int indices[ 3 ];
-				for ( unsigned int i = 0; i < 3; ++i )
-				{
+				for ( unsigned int i = 0; i < 3; ++i ) {
 					PlParseInteger( &p, NULL ); /* bone index */
 
 					PLVector3 position;
@@ -185,15 +169,13 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		Error( "Failed to create model container!\nPL: %s\n", PlGetError() );
 
 	model->numMaterials = numMeshes;
-	model->materials    = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
+	model->materials = PlMAllocA( sizeof( PLPath ) * model->numMaterials );
 
-	for ( unsigned int i = 0; i < numMeshes; ++i )
-	{
-		meshes[ i ]                = smdMeshes[ i ].mesh;
+	for ( unsigned int i = 0; i < numMeshes; ++i ) {
+		meshes[ i ] = smdMeshes[ i ].mesh;
 		meshes[ i ]->materialIndex = i;
 
-		if ( strstr( smdMeshes[ i ].material, "/" ) != NULL || strstr( smdMeshes[ i ].material, "\\" ) != NULL )
-		{
+		if ( strstr( smdMeshes[ i ].material, "/" ) != NULL || strstr( smdMeshes[ i ].material, "\\" ) != NULL ) {
 			snprintf( model->materials[ i ], sizeof( PLPath ), "%s.mat.n", pl_strtolower( smdMeshes[ i ].material ) );
 			continue;
 		}
@@ -202,10 +184,9 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 		 * extension stripped out, so we can ensure the
 		 * textures are loaded from an appropriate subdir */
 		const char *fileName = PlGetFileName( path );
-		size_t l             = strlen( fileName ) - 3;
-		char *buf            = calloc( l + 1, sizeof( char ) );
-		if ( buf != NULL )
-		{
+		size_t l = strlen( fileName ) - 3;
+		char *buf = calloc( l + 1, sizeof( char ) );
+		if ( buf != NULL ) {
 			snprintf( buf, l, "%s", fileName );
 			snprintf( model->materials[ i ], sizeof( PLPath ), "materials/models/%s/%s.mat.n", buf, smdMeshes[ i ].material );
 			pl_strtolower( model->materials[ i ] );
@@ -220,8 +201,7 @@ static PLMModel *MDL_SMD_ParseFile( const char *path, const char *p )
 	return model;
 }
 
-PLMModel *MDL_SMD_LoadFile( const char *path )
-{
+PLMModel *MDL_SMD_LoadFile( const char *path ) {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
 		Error( "Failed to load SMD \"%s\"!\nPL: %s\n", path, PlGetError() );

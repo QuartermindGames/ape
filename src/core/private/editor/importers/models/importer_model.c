@@ -7,8 +7,7 @@
 
 #include "importer_model.h"
 
-enum
-{
+enum {
 	CHANNEL_POSITION,
 	CHANNEL_UV,
 	CHANNEL_NORMAL,
@@ -16,83 +15,66 @@ enum
 	MAX_CHANNELS
 };
 
-static void SerializeModelMesh( NdBranch *root, const PLGMesh *mesh )
-{
+static void SerializeModelMesh( NdBranch *root, const PLGMesh *mesh ) {
 	ndPushBackI32( root, "materialIndex", ( int32_t ) mesh->materialIndex );
 	ndPushBackI32( root, "numVertices", ( int32_t ) mesh->num_verts );
 
 	bool hasChannel[ MAX_CHANNELS ];
 	PL_ZERO( hasChannel, sizeof( bool ) * MAX_CHANNELS );
-	for ( uint32_t i = 0; i < mesh->num_verts; ++i )
-	{
-		if ( !PlCompareVector3( &mesh->vertices[ i ].position, &pl_vecOrigin3 ) )
-		{
+	for ( uint32_t i = 0; i < mesh->num_verts; ++i ) {
+		if ( !PlCompareVector3( &mesh->vertices[ i ].position, &pl_vecOrigin3 ) ) {
 			hasChannel[ CHANNEL_POSITION ] = true;
 		}
-		if ( !PlCompareVector2( &mesh->vertices[ i ].st[ 0 ], &pl_vecOrigin2 ) )
-		{
+		if ( !PlCompareVector2( &mesh->vertices[ i ].st[ 0 ], &pl_vecOrigin2 ) ) {
 			hasChannel[ CHANNEL_UV ] = true;
 		}
-		if ( !PlCompareVector3( &mesh->vertices[ i ].normal, &pl_vecOrigin3 ) )
-		{
+		if ( !PlCompareVector3( &mesh->vertices[ i ].normal, &pl_vecOrigin3 ) ) {
 			hasChannel[ CHANNEL_NORMAL ] = true;
 		}
-		if ( !PlCompareColour( mesh->vertices[ i ].colour, PL_COLOURU8( 255, 255, 255, 255 ) ) )
-		{
+		if ( !PlCompareColour( mesh->vertices[ i ].colour, PL_COLOURU8( 255, 255, 255, 255 ) ) ) {
 			hasChannel[ CHANNEL_COLOUR ] = true;
 		}
 
 		// if all channels are enabled, just jump out early
 		unsigned int j;
-		for ( j = 0; j < MAX_CHANNELS; ++j )
-		{
-			if ( !hasChannel[ j ] )
-			{
+		for ( j = 0; j < MAX_CHANNELS; ++j ) {
+			if ( !hasChannel[ j ] ) {
 				continue;
 			}
 
 			break;
 		}
-		if ( j >= MAX_CHANNELS )
-		{
+		if ( j >= MAX_CHANNELS ) {
 			break;
 		}
 	}
 
-	if ( hasChannel[ CHANNEL_POSITION ] )
-	{
+	if ( hasChannel[ CHANNEL_POSITION ] ) {
 		NdBranch *positionArray = ndPushBackF32Array( root, "positions", NULL, 0 );
-		for ( uint32_t i = 0; i < mesh->num_verts; ++i )
-		{
+		for ( uint32_t i = 0; i < mesh->num_verts; ++i ) {
 			ndPushBackF32( positionArray, "x", mesh->vertices[ i ].position.x );
 			ndPushBackF32( positionArray, "y", mesh->vertices[ i ].position.y );
 			ndPushBackF32( positionArray, "z", mesh->vertices[ i ].position.z );
 		}
 	}
-	if ( hasChannel[ CHANNEL_UV ] )
-	{
+	if ( hasChannel[ CHANNEL_UV ] ) {
 		NdBranch *uvArray = ndPushBackF32Array( root, "uvs", NULL, 0 );
-		for ( uint32_t i = 0; i < mesh->num_verts; ++i )
-		{
+		for ( uint32_t i = 0; i < mesh->num_verts; ++i ) {
 			ndPushBackF32( uvArray, "x", mesh->vertices[ i ].st[ 0 ].x );
 			ndPushBackF32( uvArray, "y", mesh->vertices[ i ].st[ 0 ].y );
 		}
 	}
-	if ( hasChannel[ CHANNEL_NORMAL ] )
-	{
+	if ( hasChannel[ CHANNEL_NORMAL ] ) {
 		NdBranch *normalsArray = ndPushBackF32Array( root, "normals", NULL, 0 );
-		for ( uint32_t i = 0; i < mesh->num_verts; ++i )
-		{
+		for ( uint32_t i = 0; i < mesh->num_verts; ++i ) {
 			ndPushBackF32( normalsArray, "x", mesh->vertices[ i ].normal.x );
 			ndPushBackF32( normalsArray, "y", mesh->vertices[ i ].normal.y );
 			ndPushBackF32( normalsArray, "z", mesh->vertices[ i ].normal.z );
 		}
 	}
-	if ( hasChannel[ CHANNEL_COLOUR ] )
-	{
+	if ( hasChannel[ CHANNEL_COLOUR ] ) {
 		NdBranch *coloursArray = ndPushBackF32Array( root, "colours", NULL, 0 );
-		for ( uint32_t i = 0; i < mesh->num_verts; ++i )
-		{
+		for ( uint32_t i = 0; i < mesh->num_verts; ++i ) {
 			PLColourF32 colour = PlColourU8ToF32( &mesh->vertices[ i ].colour );
 			ndPushBackF32( coloursArray, "r", colour.r );
 			ndPushBackF32( coloursArray, "g", colour.g );
@@ -104,23 +86,20 @@ static void SerializeModelMesh( NdBranch *root, const PLGMesh *mesh )
 	ndPushBackI32Array( root, "triangles", ( int32_t * ) mesh->indices, mesh->num_indices );
 }
 
-static NdBranch *SerializeModel( const PLMModel *model )
-{
+static NdBranch *SerializeModel( const PLMModel *model ) {
 	NdBranch *root = ndPushBackObject( NULL, "model" );
 	ndPushBackI8( root, "version", 2 );
 
 	printf( "%u materials\n", model->numMaterials );
 	NdBranch *materialList = ndPushBackStringArray( root, "materials", NULL, 0 );
-	for ( uint32_t i = 0; i < model->numMaterials; ++i )
-	{
+	for ( uint32_t i = 0; i < model->numMaterials; ++i ) {
 		printf( " %u : %s\n", i, model->materials[ i ] );
 		ndPushBackString( materialList, NULL, model->materials[ i ] );
 	}
 
 	printf( "%u meshes\n", model->numMeshes );
 	NdBranch *meshesList = ndPushBackObjectArray( root, "meshes" );
-	for ( uint32_t i = 0; i < model->numMeshes; ++i )
-	{
+	for ( uint32_t i = 0; i < model->numMeshes; ++i ) {
 		printf( " %u : %s %u verts, %u tris\n", i,
 		        model->materials[ model->meshes[ i ]->materialIndex ],
 		        model->meshes[ i ]->num_verts,
@@ -128,14 +107,12 @@ static NdBranch *SerializeModel( const PLMModel *model )
 		SerializeModelMesh( ndPushBackObject( meshesList, "mesh" ), model->meshes[ i ] );
 	}
 
-	if ( model->type == PLM_MODELTYPE_SKELETAL )
-	{
+	if ( model->type == PLM_MODELTYPE_SKELETAL ) {
 		ndPushBackBool( root, "isAnimated", true );
 		ndPushBackI32( root, "rootBone", ( int32_t ) model->internal.skeletal_data.rootIndex );
 
 		NdBranch *bonesList = ndPushBackObjectArray( root, "bones" );
-		for ( uint32_t i = 0; i < model->internal.skeletal_data.numBones; ++i )
-		{
+		for ( uint32_t i = 0; i < model->internal.skeletal_data.numBones; ++i ) {
 			NdBranch *bone = ndPushBackObject( bonesList, "bone" );
 			ndPushBackString( bone, "name", model->internal.skeletal_data.bones[ i ].name );
 			ndPushBackI32( bone, "parent", ( int32_t ) model->internal.skeletal_data.bones[ i ].parent );
@@ -153,17 +130,14 @@ static NdBranch *SerializeModel( const PLMModel *model )
 			ndPushBackF32( boneWeight, "factor", model->internal.skeletal_data.weights[ i ].factor );
 		}
 #endif
-	}
-	else
-	{
+	} else {
 		ndPushBackBool( root, "isAnimated", false );
 	}
 
 	return root;
 }
 
-void edRegisterImportCommands_( void )
-{
+void edRegisterImportCommands_( void ) {
 }
 
 #if 0

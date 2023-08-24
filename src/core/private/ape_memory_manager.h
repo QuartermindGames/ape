@@ -10,8 +10,7 @@ void apeShutdownMemoryManager( void );
  * Active Cache
  * ====================================================================*/
 
-typedef enum ApeCachePool
-{
+typedef enum ApeCachePool {
 	APE_CACHE_POOL_FONTS,
 	APE_CACHE_POOL_TEXTURES,
 	APE_CACHE_POOL_MATERIALS,
@@ -27,8 +26,7 @@ typedef enum ApeCachePool
 /**
  * Header for cached data item.
  */
-typedef struct ApeMemoryCacheHeader
-{
+typedef struct ApeMemoryCacheHeader {
 	uint32_t id;                   /* identifier (hashed string) */
 	char description[ 256 ];       //
 	uint8_t pool;                  /* pool we're cached into */
@@ -44,8 +42,7 @@ void *apeGetCachedData( const char *id, ApeCachePool pool );
  * ====================================================================*/
 
 typedef void ( *MMReference_CleanupFunction )( void *userData );
-typedef struct ApeMemoryReference
-{
+typedef struct ApeMemoryReference {
 	bool isInitialized;                         // Indicates whether the handle was set up
 	int numReferences;                          // Number of total references
 	unsigned int timeToLive;                    // Time to live

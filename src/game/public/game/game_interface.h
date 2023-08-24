@@ -8,8 +8,7 @@ extern int globalGameDebugLog;
 extern int globalGameWarningLog;
 extern int globalGameErrorLog;
 
-typedef enum GameModeRequest
-{
+typedef enum GameModeRequest {
 	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation
 	GAMEMODE_REQUEST_SHUTDOWN,  // called when shutting down engine
 
@@ -17,15 +16,14 @@ typedef enum GameModeRequest
 	GAMEMODE_REQUEST_SAVEGAME,
 	GAMEMODE_REQUEST_RESTOREGAME,
 
-	GAMEMODE_REQUEST_TICK,      // called after entity tick
+	GAMEMODE_REQUEST_TICK,// called after entity tick
 	GAMEMODE_REQUEST_HANDLEINPUT,
 	GAMEMODE_REQUEST_SPAWNWORLD,// called before entities are spawned in and
 	                            // before starting and connecting to server
 	GAMEMODE_REQUEST_DISCONNECT,
 } GameModeRequest;
 
-typedef struct GameModeInterface
-{
+typedef struct GameModeInterface {
 	void ( *Initialize )( void );
 	void ( *Shutdown )( void );
 
@@ -43,8 +41,7 @@ typedef struct GameModeInterface
 } GameModeInterface;
 const GameModeInterface *gameGetModeInterface( void );
 
-typedef enum GameDifficulty
-{
+typedef enum GameDifficulty {
 	GAME_DIFFICULTY_NORMAL,
 	GAME_DIFFICULTY_EASY,
 	GAME_DIFFICULTY_HARD,
@@ -54,8 +51,7 @@ typedef enum GameDifficulty
 void gameSetDifficultyMode( GameDifficulty difficulty );
 GameDifficulty gameGetDifficultyMode( void );
 
-typedef enum GameConnectionType
-{
+typedef enum GameConnectionType {
 	GAME_CONNECTION_NONE,  /* not connected */
 	GAME_CONNECTION_LOCAL, /* localhost */
 	GAME_CONNECTION_LAN,
@@ -66,8 +62,7 @@ GameConnectionType gameGetConnectionType( void );
 void gamePlayerConnected( const char *name, unsigned int id );
 void gamePlayerDisconnected( unsigned int id );
 
-typedef enum MenuState
-{
+typedef enum MenuState {
 	MENU_STATE_START, /* draw start screen */
 	MENU_STATE_HUD,   /* hud/overlay mode */
 } MenuState;
@@ -77,8 +72,7 @@ typedef struct Actor Actor;
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum GameMaterialSurfaceType
-{
+typedef enum GameMaterialSurfaceType {
 	GAME_MATERIAL_SURFACE_TYPE_NONE,
 	GAME_MATERIAL_SURFACE_TYPE_ROCK,
 	GAME_MATERIAL_SURFACE_TYPE_METAL,
@@ -93,8 +87,7 @@ typedef enum GameMaterialSurfaceType
 	GAME_MAX_MATERIAL_SURFACE_TYPES
 } GameMaterialSurfaceType;
 
-typedef struct GameMaterialSurface
-{
+typedef struct GameMaterialSurface {
 	char description[ 32 ];
 	char **aliases;
 	uint8_t numAliases;

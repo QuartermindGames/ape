@@ -3,12 +3,10 @@
 
 #include "game_private.h"
 
-typedef struct ECInputComponent
-{
+typedef struct ECInputComponent {
 	unsigned int controllerSlot;
 	ApeInputState inputStates[ APE_MAX_BUTTON_INPUTS ];
 } ECInputComponent;
 
-static void Spawn( ApeEntityComponent *self )
-{
+static void Spawn( ApeEntityComponent *self ) {
 }

@@ -14,8 +14,7 @@ typedef char ApeEntityName[ 64 ];
 typedef struct ApeEntity ApeEntity;
 typedef struct ApeEntityPrefab ApeEntityPrefab;
 typedef struct ApeEntityComponentBase ApeEntityComponentBase;
-typedef struct ApeEntityComponent
-{
+typedef struct ApeEntityComponent {
 	const ApeEntityComponentBase *base;
 	ApeEntity *entity;
 	struct PLLinkedListNode *listNode;
@@ -31,8 +30,7 @@ typedef void ( *ApeECDestroyFunction )( ApeEntityComponent *self );
 typedef NdBranch *( *ApeECSerializeFunction )( ApeEntityComponent *self, NdBranch *root );
 typedef NdBranch *( *ApeECDeserializeFunction )( ApeEntityComponent *self, NdBranch *root );
 
-typedef struct ApeEntityComponentCallbackTable
-{
+typedef struct ApeEntityComponentCallbackTable {
 	ApeECSpawnFunction spawnFunction;
 	ApeECTickFunction tickFunction;
 	ApeECDrawFunction drawFunction;

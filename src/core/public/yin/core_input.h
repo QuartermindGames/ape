@@ -5,8 +5,7 @@
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
-typedef enum ApeInputButton
-{
+typedef enum ApeInputButton {
 	APE_INPUT_INVALID,
 
 	APE_INPUT_UP,
@@ -33,8 +32,7 @@ typedef enum ApeInputButton
 	APE_MAX_BUTTON_INPUTS
 } ApeInputButton;
 
-typedef enum ApeInputMouseButton
-{
+typedef enum ApeInputMouseButton {
 	APE_INPUT_MOUSE_BUTTON_LEFT,
 	APE_INPUT_MOUSE_BUTTON_RIGHT,
 	APE_INPUT_MOUSE_BUTTON_MIDDLE,
@@ -42,13 +40,12 @@ typedef enum ApeInputMouseButton
 	APE_MAX_INPUT_MOUSE_BUTTONS
 } ApeInputMouseButton;
 
-typedef enum ApeInputKey
-{
+typedef enum ApeInputKey {
 	KEY_INVALID = -1,
 
 	KEY_BACKSPACE = 8,
-	KEY_TAB       = 9,
-	KEY_ENTER     = 13,
+	KEY_TAB = 9,
+	KEY_ENTER = 13,
 
 	KEY_CAPSLOCK = 128,
 	KEY_F1,
@@ -89,8 +86,7 @@ typedef enum ApeInputKey
 	APE_MAX_KEY_INPUTS
 } ApeInputKey;
 
-typedef enum ApeInputState
-{
+typedef enum ApeInputState {
 	OGE_INPUT_STATE_NONE,     /* key has no state */
 	OGE_INPUT_STATE_PRESSED,  /* key has been pressed */
 	OGE_INPUT_STATE_DOWN,     /* key is still down */
@@ -99,8 +95,7 @@ typedef enum ApeInputState
 
 PL_EXTERN_C
 
-typedef enum ApeInputDeviceType
-{
+typedef enum ApeInputDeviceType {
 	CLIENT_INPUT_DEVICE_NONE,
 	CLIENT_INPUT_DEVICE_KEYBOARD,
 	CLIENT_INPUT_DEVICE_MOUSE,

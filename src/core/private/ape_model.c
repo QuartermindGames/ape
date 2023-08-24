@@ -10,14 +10,12 @@ static const unsigned int MDL_VERSION = 2;
 /**
  * Callback for garbage day.
  */
-static void DestroyModel( void *userData )
-{
+static void DestroyModel( void *userData ) {
 	PLMModel *model = userData;
 	assert( model != NULL );
 
 	MDLUserData *additionalData = model->userData;
-	if ( additionalData != NULL )
-	{
+	if ( additionalData != NULL ) {
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
 			apeReleaseMaterial( additionalData->materials[ i ] );
 	}
@@ -25,11 +23,9 @@ static void DestroyModel( void *userData )
 	PlmDestroyModel( model );
 }
 
-static PLGMesh *DeserializeMesh( NdBranch *root )
-{
+static PLGMesh *DeserializeMesh( NdBranch *root ) {
 	uint32_t numVertices = ndGetUInt( root, "numVertices", 0 );
-	if ( numVertices == 0 )
-	{
+	if ( numVertices == 0 ) {
 		PRINT_WARNING( "Invalid mesh, no vertices!\n" );
 		return NULL;
 	}
@@ -37,25 +33,21 @@ static PLGMesh *DeserializeMesh( NdBranch *root )
 	NdBranch *child;
 
 	child = ndGetChildByName( root, "triangles" );
-	if ( child == NULL )
-	{
+	if ( child == NULL ) {
 		PRINT_WARNING( "Invalid mesh, no triangles!\n" );
 		return NULL;
 	}
 	uint32_t numIndices = ndGetNumOfChildren( child );
-	uint32_t *indices   = PL_NEW_( uint32_t, numIndices );
+	uint32_t *indices = PL_NEW_( uint32_t, numIndices );
 	ndGetI32Array( child, ( int32_t * ) indices, numIndices );
 	uint32_t numTriangles = numIndices / 3;
 
 	// vertex positions are required
 	PLVector3 *positions;
-	if ( ( child = ndGetChildByName( root, "positions" ) ) != NULL )
-	{
+	if ( ( child = ndGetChildByName( root, "positions" ) ) != NULL ) {
 		positions = PL_NEW_( PLVector3, numVertices );
 		ndGetF32Array( child, ( float * ) positions, numVertices / 3 );
-	}
-	else
-	{
+	} else {
 		PL_DELETE( indices );
 		PRINT_WARNING( "Invalid mesh, no vertex positions!\n" );
 		return NULL;
@@ -64,40 +56,35 @@ static PLGMesh *DeserializeMesh( NdBranch *root )
 	// the rest are optional
 
 	PLVector3 *normals = NULL;
-	if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL )
-	{
+	if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL ) {
 		normals = PL_NEW_( PLVector3, numVertices );
 		ndGetF32Array( child, ( float * ) normals, numVertices / 3 );
 	}
 
 	PLVector2 *uvs = NULL;
-	if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL )
-	{
+	if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL ) {
 		uvs = PL_NEW_( PLVector2, numVertices );
 		ndGetF32Array( child, ( float * ) uvs, numVertices / 2 );
 	}
 
 	PLColourF32 *colours = NULL;
-	if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL )
-	{
+	if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL ) {
 		colours = PL_NEW_( PLColourF32, numVertices );
 		ndGetF32Array( child, ( float * ) colours, numVertices / 4 );
 	}
 
 	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
-	if ( mesh == NULL )
-	{
+	if ( mesh == NULL ) {
 		PRINT_WARNING( "Failed to create mesh: %s\n", PlGetError() );
 		return NULL;
 	}
 
 	mesh->materialIndex = ndGetUInt( root, "materialIndex", 0 );
 
-	for ( uint32_t i = 0; i < numVertices; ++i )
-	{
-		PLColour colour  = ( colours == NULL ) ? ( PLColour ){ 255, 255, 255, 255 } : PlColourF32ToU8( &colours[ i ] );
+	for ( uint32_t i = 0; i < numVertices; ++i ) {
+		PLColour colour = ( colours == NULL ) ? ( PLColour ){ 255, 255, 255, 255 } : PlColourF32ToU8( &colours[ i ] );
 		PLVector3 normal = ( normals == NULL ) ? pl_vecOrigin3 : normals[ i ];
-		PLVector2 uv     = ( uvs == NULL ) ? pl_vecOrigin2 : uvs[ i ];
+		PLVector2 uv = ( uvs == NULL ) ? pl_vecOrigin2 : uvs[ i ];
 		PlgAddMeshVertex( mesh, &positions[ i ], &normal, &colour, &uv );
 	}
 
@@ -113,19 +100,16 @@ static PLGMesh *DeserializeMesh( NdBranch *root )
 	return mesh;
 }
 
-static PLMModel *DeserializeModel( NdBranch *root )
-{
+static PLMModel *DeserializeModel( NdBranch *root ) {
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 || version > MDL_VERSION )
-	{
+	if ( version == ( unsigned int ) -1 || version > MDL_VERSION ) {
 		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, MDL_VERSION );
 		return NULL;
 	}
 
 	unsigned int numMeshes;
 	NdBranch *meshArray = ndGetChildByName( root, "meshes" );
-	if ( meshArray == NULL || ( ( numMeshes = ndGetNumOfChildren( meshArray ) ) == 0 ) )
-	{
+	if ( meshArray == NULL || ( ( numMeshes = ndGetNumOfChildren( meshArray ) ) == 0 ) ) {
 		PRINT_WARNING( "No meshes for model!\n" );
 		return NULL;
 	}
@@ -135,30 +119,22 @@ static PLMModel *DeserializeModel( NdBranch *root )
 
 	// Iterate over all the materials under the root and attempt to load them all in
 	NdBranch *materialArray = ndGetChildByName( root, "materials" );
-	if ( materialArray == NULL )
-	{
+	if ( materialArray == NULL ) {
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
-		userData.numMaterials   = 1;
+		userData.numMaterials = 1;
 		userData.materials[ 0 ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, true, false );
-	}
-	else
-	{
+	} else {
 		userData.numMaterials = ndGetNumOfChildren( materialArray );
-		NdBranch *n           = ndGetFirstChild( materialArray );
-		for ( unsigned int i = 0; i < userData.numMaterials; ++i )
-		{
+		NdBranch *n = ndGetFirstChild( materialArray );
+		for ( unsigned int i = 0; i < userData.numMaterials; ++i ) {
 			assert( n != NULL );
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
-			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
-			{
+			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS ) {
 				userData.materials[ i ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, false, false );
-				if ( userData.materials[ i ] == NULL )
-				{
+				if ( userData.materials[ i ] == NULL ) {
 					PRINT_ERROR( "Failed to cache fallback material for mesh!\n" );
 				}
-			}
-			else
-			{
+			} else {
 				userData.materials[ i ] = apeCacheMaterial( materialPath, 0, true, false );
 			}
 
@@ -166,10 +142,9 @@ static PLMModel *DeserializeModel( NdBranch *root )
 		}
 	}
 
-	PLGMesh **meshes   = PL_NEW_( PLGMesh *, numMeshes );
+	PLGMesh **meshes = PL_NEW_( PLGMesh *, numMeshes );
 	NdBranch *meshNode = ndGetFirstChild( meshArray );
-	for ( unsigned int i = 0; i < numMeshes; ++i )
-	{
+	for ( unsigned int i = 0; i < numMeshes; ++i ) {
 		assert( meshNode != NULL );
 		meshes[ i ] = DeserializeMesh( meshNode );
 		if ( meshes[ i ] == NULL )
@@ -179,9 +154,8 @@ static PLMModel *DeserializeModel( NdBranch *root )
 	}
 
 	PLMModel *model;
-	if ( ndGetBoolByName( root, "isAnimated", false ) )
-	{
-		NdBranch *bonesList   = ndGetChildByName( root, "bones" );
+	if ( ndGetBoolByName( root, "isAnimated", false ) ) {
+		NdBranch *bonesList = ndGetChildByName( root, "bones" );
 		unsigned int numBones = ndGetNumOfChildren( bonesList );
 
 		unsigned int rootBone = ndGetUInt( root, "rootBone", 0 );
@@ -190,24 +164,21 @@ static PLMModel *DeserializeModel( NdBranch *root )
 			PRINT_WARNING( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
 
 		model = PlmCreateSkeletalModel( meshes, numMeshes, NULL, 0, NULL, 0 );
-	}
-	else
+	} else
 		model = PlmCreateStaticModel( meshes, numMeshes );
 
 	if ( model == NULL )
 		PRINT_ERROR( "Failed to create model: %s\n", PlGetError() );
 
-	model->userData                            = PL_NEW( MDLUserData );
+	model->userData = PL_NEW( MDLUserData );
 	*( ( MDLUserData * ) ( model->userData ) ) = userData;
 
 	return model;
 }
 
-PLMModel *apeCacheModel( const char *path )
-{
+PLMModel *apeCacheModel( const char *path ) {
 	NdBranch *root = ndLoadFile( path, "model" );
-	if ( root == NULL )
-	{
+	if ( root == NULL ) {
 		PRINT_WARNING( "Invalid model: %s (%s)\n", ndGetErrorMessage() );
 		return NULL;
 	}
@@ -227,11 +198,9 @@ PLMModel *apeCacheModel( const char *path )
  * manager then it'll be immediately
  * destroyed.
  */
-void apeReleaseModel( PLMModel *model )
-{
+void apeReleaseModel( PLMModel *model ) {
 	MDLUserData *additionalData = model->userData;
-	if ( additionalData == NULL )
-	{
+	if ( additionalData == NULL ) {
 		PRINT_WARNING( "Destroying model not tracked by memory manager!\n" );
 		PlmDestroyModel( model );
 		return;

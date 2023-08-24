@@ -5,24 +5,20 @@
 
 #include <stdint.h>
 
-typedef struct BSPVector3f
-{
+typedef struct BSPVector3f {
 	float x, y, z;
 } BSPVector3f;
 
-typedef struct BSPVector3i
-{
+typedef struct BSPVector3i {
 	int16_t x, y, z;
 } BSPVector3i;
 
-typedef struct BSPLump
-{
+typedef struct BSPLump {
 	uint32_t offset;
 	uint32_t length;
 } BSPLump;
 
-enum BSPLumpType
-{
+enum BSPLumpType {
 	BSP_LUMP_ENTITIES,
 	BSP_LUMP_PLANES,
 	BSP_LUMP_VERTICES,
@@ -46,22 +42,19 @@ enum BSPLumpType
 	BSP_MAX_LUMPS
 };
 
-typedef struct BSPHeader
-{
+typedef struct BSPHeader {
 	char magic[ 4 ];
 	uint32_t version;
 	BSPLump lumps[ BSP_MAX_LUMPS ];
 } BSPHeader;
 
-typedef struct BSPPlane
-{
+typedef struct BSPPlane {
 	BSPVector3f normal;
 	float distance;
 	uint32_t type;
 } BSPPlane;
 
-typedef struct BSPNode
-{
+typedef struct BSPNode {
 	uint32_t plane;
 	int32_t frontChild;
 	int32_t backChild;
@@ -71,8 +64,7 @@ typedef struct BSPNode
 	uint16_t numFaces;
 } BSPNode;
 
-typedef struct BSPTexture
-{
+typedef struct BSPTexture {
 	BSPVector3f uAxis;
 	float uOffset;
 	BSPVector3f vAxis;
@@ -83,8 +75,7 @@ typedef struct BSPTexture
 	uint32_t nextTexture;
 } BSPTexture;
 
-typedef struct BSPFace
-{
+typedef struct BSPFace {
 	uint16_t plane;
 	uint16_t planeSide;
 	uint32_t firstEdge;
@@ -94,8 +85,7 @@ typedef struct BSPFace
 	uint32_t lightmapOffset;
 } BSPFace;
 
-typedef struct BSPLeaf
-{
+typedef struct BSPLeaf {
 	uint32_t brushOr;
 	uint16_t cluster;
 	uint16_t area;
@@ -107,8 +97,7 @@ typedef struct BSPLeaf
 	uint16_t numLeafBrushes;
 } BSPLeaf;
 
-typedef struct BSPHandle
-{
+typedef struct BSPHandle {
 	BSPVector3f *vertices;
 	unsigned int numVertices;
 	BSPFace *faces;

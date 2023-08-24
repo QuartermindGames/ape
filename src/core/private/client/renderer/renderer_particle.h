@@ -4,21 +4,19 @@
 
 typedef struct ApeCamera ApeCamera;
 
-typedef enum PSParticleDrawType
-{
+typedef enum PSParticleDrawType {
 	PS_DRAW_SPRITE,
 	PS_DRAW_MODEL,
 } PSParticleDrawType;
 
-typedef struct PSEmitter
-{
+typedef struct PSEmitter {
 	ApeSceneTransform transform, transformVar;
 
-	PLVector3 force, forceVar;         /* exterior forces, such as gravity */
+	PLVector3 force, forceVar; /* exterior forces, such as gravity */
 
-	int emissionRate, emissionVar;     /* how many particles to emit per tick */
+	int emissionRate, emissionVar; /* how many particles to emit per tick */
 
-	int numTicks, maxTicks;            /* number of ticks since last emission and maximum ticks until we emit again */
+	int numTicks, maxTicks; /* number of ticks since last emission and maximum ticks until we emit again */
 
 	int particleLife, particleLifeVar; /* how long the particles spawned by the emitter will live until they die */
 	int life;                          /* how long this emitter will live until it's removed */
@@ -42,8 +40,7 @@ typedef struct PSEmitter
 	struct PLLinkedList *particles;
 } PSEmitter;
 
-typedef struct PSParticle
-{
+typedef struct PSParticle {
 	ApeSceneTransform transform, oldTransform;
 
 	PLVector3 dir;

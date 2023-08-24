@@ -11,8 +11,7 @@
  * EntityPrefabComponent is a reference to the component the prefab will use with the properties it will set
  */
 
-typedef struct ApeEntity
-{
+typedef struct ApeEntity {
 	unsigned int id;
 	ApeEntityName name;
 	PLLinkedList *components;
@@ -24,8 +23,7 @@ typedef struct ApeEntity
  * it provides all of the callbacks, a list of active instances,
  * the component name and it's id.
  */
-typedef struct ApeEntityComponentBase
-{
+typedef struct ApeEntityComponentBase {
 	ApeEntityName name;
 	const ApeEntityComponentCallbackTable *callbackTable;
 	PLLinkedList *activeComponents;
@@ -36,8 +34,7 @@ typedef struct ApeEntityComponentBase
  * basically provides a pointer to the template and
  * a node list of the properties it'll use.
  */
-typedef struct ApeEntityPrefabComponent
-{
+typedef struct ApeEntityPrefabComponent {
 	const ApeEntityComponentBase *base;
 	NdBranch *properties;
 } ApeEntityPrefabComponent;
@@ -46,8 +43,7 @@ typedef struct ApeEntityPrefabComponent
  * Template/prefab to use for spawning a specific type of entity
  * quickly.
  */
-typedef struct ApeEntityPrefab
-{
+typedef struct ApeEntityPrefab {
 	char name[ 64 ];
 	char description[ 256 ];
 	ApeEntityPrefabComponent *components;

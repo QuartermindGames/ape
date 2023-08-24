@@ -5,8 +5,7 @@
 
 #include "dickens_private.h"
 
-typedef struct YASMOpCodeReference
-{
+typedef struct YASMOpCodeReference {
 	const char *string;
 	VMOpCode opCode;
 } YASMOpCodeReference;
@@ -33,12 +32,9 @@ static YASMOpCodeReference opCodeReference[ VM_MAX_OPCODES ] =
                 { "negf",   VM_OP_NEG_F32},
 };
 
-VMOpCode YASM_GetOpCodeForToken( const char *token )
-{
-	for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( opCodeReference ); ++i )
-	{
-		if ( pl_strcasecmp( token, opCodeReference[ i ].string ) != 0 )
-		{
+VMOpCode YASM_GetOpCodeForToken( const char *token ) {
+	for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( opCodeReference ); ++i ) {
+		if ( pl_strcasecmp( token, opCodeReference[ i ].string ) != 0 ) {
 			continue;
 		}
 
@@ -53,13 +49,10 @@ VMOpCode YASM_GetOpCodeForToken( const char *token )
  * Assembles the given assembly into a binary representation.
  * Length is updated with the returned buffer length.
  */
-bool DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char *outPath )
-{
+bool DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char *outPath ) {
 	const char *p = buf;
-	while ( p != NULL && *p != '\0' && *( p ) <= length )
-	{
-		if ( *p == ';' )
-		{
+	while ( p != NULL && *p != '\0' && *( p ) <= length ) {
+		if ( *p == ';' ) {
 			PlSkipLine( &p );
 			continue;
 		}
@@ -67,8 +60,7 @@ bool DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char 
 		char token[ 64 ];
 		PlParseToken( &p, token, sizeof( token ) );
 		size_t s = strlen( token );
-		if ( token[ s ] == ':' )
-		{
+		if ( token[ s ] == ':' ) {
 			/* todo: handle tag-name */
 			continue;
 		}

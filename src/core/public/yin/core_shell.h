@@ -16,15 +16,13 @@ PL_EXTERN_C
 
 #define APE_TICK_RATE ( 1000 / 60 ) /* ms */
 
-typedef enum ApeMessageBoxType
-{
+typedef enum ApeMessageBoxType {
 	APE_MESSAGE_ERROR,
 	APE_MESSAGE_WARNING,
 	APE_MESSAGE_INFO,
 } ApeMessageBoxType;
 
-enum
-{
+enum {
 	APE_GRAPHICS_SOFTWARE,
 	APE_GRAPHICS_OPENGL,
 	APE_GRAPHICS_VULKAN,

@@ -7,10 +7,8 @@
 
 #include "node_private.h"
 
-PLMatrix4 *NL_DS_DeserializeMatrix4( NdBranch *in, PLMatrix4 *out )
-{
-	if ( in == NULL )
-	{
+PLMatrix4 *NL_DS_DeserializeMatrix4( NdBranch *in, PLMatrix4 *out ) {
+	if ( in == NULL ) {
 		return NULL;
 	}
 
@@ -20,8 +18,7 @@ PLMatrix4 *NL_DS_DeserializeMatrix4( NdBranch *in, PLMatrix4 *out )
 		return NULL;
 
 	NdBranch *c = ndGetFirstChild( in );
-	for ( uint8_t i = 0; i < 16; ++i )
-	{
+	for ( uint8_t i = 0; i < 16; ++i ) {
 		if ( c == NULL || ( ndGetF32( c, &out->m[ i ] ) != ND_ERROR_SUCCESS ) )
 			break;
 
@@ -31,8 +28,7 @@ PLMatrix4 *NL_DS_DeserializeMatrix4( NdBranch *in, PLMatrix4 *out )
 	return out;
 }
 
-float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements )
-{
+float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements ) {
 	if ( in == NULL )
 		return NULL;
 
@@ -47,8 +43,7 @@ float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements )
 PLVector2 *ndDS_DeserializeVector2( NdBranch *in, PLVector2 *out ) { return ( PLVector2 * ) ndDS_DeserializeVector( in, ( float * ) out, 2 ); }
 PLVector3 *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out ) { return ( PLVector3 * ) ndDS_DeserializeVector( in, ( float * ) out, 3 ); }
 
-NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour )
-{
+NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour ) {
 	NdBranch *object = ndPushBackObject( parent, name );
 	ndPushBackI8( object, "r", colour->r );
 	ndPushBackI8( object, "g", colour->g );
@@ -57,8 +52,7 @@ NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColo
 	return object;
 }
 
-PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out )
-{
+PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out ) {
 	if ( in == NULL )
 		return NULL;
 
@@ -69,8 +63,7 @@ PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out )
 	return out;
 }
 
-NdBranch *NL_DS_SerializeColourF32( NdBranch *parent, const char *name, const PLColourF32 *colour )
-{
+NdBranch *NL_DS_SerializeColourF32( NdBranch *parent, const char *name, const PLColourF32 *colour ) {
 	NdBranch *object = ndPushBackObject( parent, name );
 	ndPushBackF32( object, "r", colour->r );
 	ndPushBackF32( object, "g", colour->g );
@@ -79,8 +72,7 @@ NdBranch *NL_DS_SerializeColourF32( NdBranch *parent, const char *name, const PL
 	return object;
 }
 
-PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out )
-{
+PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out ) {
 	if ( in == NULL )
 		return NULL;
 
@@ -94,8 +86,7 @@ PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out )
 /****************************************
  ****************************************/
 
-PLGVertex *NL_DS_DeserializeVertex( NdBranch *in, PLGVertex *out )
-{
+PLGVertex *NL_DS_DeserializeVertex( NdBranch *in, PLGVertex *out ) {
 	if ( in == NULL )
 		return NULL;
 
@@ -111,8 +102,7 @@ PLGVertex *NL_DS_DeserializeVertex( NdBranch *in, PLGVertex *out )
 /****************************************
  ****************************************/
 
-PLCollisionAABB *NL_DS_DeserializeCollisionAABB( NdBranch *in, PLCollisionAABB *out )
-{
+PLCollisionAABB *NL_DS_DeserializeCollisionAABB( NdBranch *in, PLCollisionAABB *out ) {
 	if ( in == NULL )
 		return NULL;
 
@@ -127,16 +117,14 @@ PLCollisionAABB *NL_DS_DeserializeCollisionAABB( NdBranch *in, PLCollisionAABB *
  * SERIALISATION
  ****************************************/
 
-NdBranch *ndDS_SerializeVector2( NdBranch *parent, const char *name, const PLVector2 *vector2 )
-{
+NdBranch *ndDS_SerializeVector2( NdBranch *parent, const char *name, const PLVector2 *vector2 ) {
 	NdBranch *object = ndPushBackObject( parent, name );
 	ndPushBackF32( object, "x", vector2->x );
 	ndPushBackF32( object, "y", vector2->y );
 	return object;
 }
 
-NdBranch *ndDS_SerializeVector3( NdBranch *parent, const char *name, const PLVector3 *vector3 )
-{
+NdBranch *ndDS_SerializeVector3( NdBranch *parent, const char *name, const PLVector3 *vector3 ) {
 	NdBranch *object = ndPushBackObject( parent, name );
 	ndPushBackF32( object, "x", vector3->x );
 	ndPushBackF32( object, "y", vector3->y );

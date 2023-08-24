@@ -7,8 +7,7 @@ PL_EXTERN_C
 
 typedef struct NetSocket NetSocket;
 
-typedef enum NetConnectionState
-{
+typedef enum NetConnectionState {
 	NET_CONNECTION_CONNECTED,
 	NET_CONNECTION_PENDING,
 	NET_CONNECTION_FAILED,

@@ -6,8 +6,7 @@
 
 PL_EXTERN_C
 
-typedef enum ApeEditorStatus
-{
+typedef enum ApeEditorStatus {
 	APE_EDITOR_STATUS_CLOSED,
 	APE_EDITOR_STATUS_CLOSING,
 	APE_EDITOR_STATUS_OPEN,

@@ -5,29 +5,24 @@
 
 uint8_t menuOptionSelection = 0;
 
-void gameInitializeMenu( void )
-{
+void gameInitializeMenu( void ) {
 }
 
-void gameShutdownMenu( void )
-{
+void gameShutdownMenu( void ) {
 }
 
 static Menu *currentMenu = NULL;
 
-void Game_Menu_SetCurrent( Menu *menu )
-{
-	currentMenu         = menu;
+void Game_Menu_SetCurrent( Menu *menu ) {
+	currentMenu = menu;
 	menuOptionSelection = 0;
 }
 
-Menu *Game_Menu_GetCurrent( void )
-{
+Menu *Game_Menu_GetCurrent( void ) {
 	return currentMenu;
 }
 
-typedef enum HUDElement
-{
+typedef enum HUDElement {
 	HUD_ELEMENT_BAR_BG_L,
 	HUD_ELEMENT_BAR_BG_M,
 	HUD_ELEMENT_BAR_BG_R,
@@ -59,12 +54,11 @@ static const PLQuad hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
         [HUD_ELEMENT_BAR_DMG_M] = { 96,  8,  16,  32 },
         [HUD_ELEMENT_BAR_DMG_R] = { 112, 8,  8,   32 },
 
-        [HUD_ELEMENT_ICON_HP]   = { 120, 8,  40,  32 },
+        [HUD_ELEMENT_ICON_HP] = { 120, 8,  40,  32 },
         [HUD_ELEMENT_ICON_CHAR] = { 8,   40, 104, 112},
 };
 
-void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, int w, int h )
-{
+void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, int w, int h ) {
 #if 0
 	if ( w <= 0 )
 		return;
@@ -83,8 +77,7 @@ void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, i
 
 #define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 )
 
-static void Menu_DrawHUD( const ApeViewport *viewport )
-{
+static void Menu_DrawHUD( const ApeViewport *viewport ) {
 #if 0// old crap
 	Menu_DrawElement( NULL, HUD_ELEMENT_ICON_CHAR, BORDER_MARGIN, viewport->h - hudElementLayouts[ HUD_ELEMENT_ICON_CHAR ].h - BORDER_MARGIN, 104, 112 );
 
@@ -124,8 +117,7 @@ static void Menu_DrawHUD( const ApeViewport *viewport )
 #endif
 }
 
-void Menu_Draw( const ApeViewport *viewport )
-{
+void Menu_Draw( const ApeViewport *viewport ) {
 #if 0
 	if ( Game_GetMenuState() == MENU_STATE_HUD )
 	{

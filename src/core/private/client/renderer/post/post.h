@@ -7,8 +7,7 @@
 
 #include "../renderer.h"
 
-typedef struct PostProcessEffect
-{
+typedef struct PostProcessEffect {
 	void ( *RegisterConsoleVariables )( void );
 	bool ( *Setup )( void );
 	void ( *Cleanup )( void );
