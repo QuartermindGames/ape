@@ -44,38 +44,6 @@ static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
 	}
 }
 
-static void DeserializeMaterials( ApeWorld *world, NdBranch *root ) {
-	NdBranch *materials = ndGetChildByName( root, "materials" );
-	if ( materials == NULL ) {
-		return;
-	}
-
-	unsigned int numMaterials = ndGetNumOfChildren( materials );
-	if ( numMaterials == 0 ) {
-		return;
-	}
-
-	if ( ndGetType( materials ) != ND_PROPERTY_STRING ) {
-		PRINT_WARNING( "Unexpected branch type for materials!\n" );
-		return;
-	}
-
-	world->materials = PlCreateVectorArray( numMaterials );
-
-	NdBranch *child = ndGetFirstChild( materials );
-	while ( child != NULL ) {
-		PLPath path;
-		if ( ndGetStr( child, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
-			PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
-		} else {
-			PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
-			break;
-		}
-
-		child = ndGetNextChild( child );
-	}
-}
-
 static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
 	ApeWorldRoom *room = apeCreateWorldRoom();
 
@@ -91,26 +59,6 @@ static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
 	room->flags = ndGetUInt( root, "flags", 0 );
 
 	return room;
-}
-
-static void DeserializeRooms( ApeWorld *world, NdBranch *root ) {
-	NdBranch *rooms = ndGetChildByName( root, "rooms" );
-	if ( rooms == NULL ) {
-		return;
-	}
-
-	unsigned int numRooms = ndGetNumOfChildren( rooms );
-	if ( numRooms == 0 ) {
-		return;
-	}
-
-	world->rooms = PlCreateVectorArray( numRooms );
-
-	NdBranch *child = ndGetFirstChild( rooms );
-	while ( child != NULL ) {
-		PlPushBackVectorArrayElement( world->rooms, DeserializeRoom( child ) );
-		child = ndGetNextChild( child );
-	}
 }
 
 static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
@@ -144,37 +92,6 @@ static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
 	PlPushBackVectorArrayElement( world->portals, portal );
 
 	return portal;
-}
-
-static void DeserializePortals( ApeWorld *world, NdBranch *root ) {
-	// Check if there are some rooms first, if there aren't any then the
-	// entire portal list is probably bogus
-	unsigned int numRooms = PlGetNumVectorArrayElements( world->rooms );
-	if ( numRooms == 0 ) {
-		return;
-	}
-
-	NdBranch *portals = ndGetChildByName( root, "portals" );
-	if ( portals == NULL ) {
-		return;
-	}
-
-	unsigned int numPortals = ndGetNumOfChildren( portals );
-	if ( numPortals == 0 ) {
-		return;
-	}
-
-	world->portals = PlCreateVectorArray( numPortals );
-
-	NdBranch *child = ndGetFirstChild( portals );
-	while ( child != NULL ) {
-		ApeWorldPortal *portal = DeserializePortal( world, child );
-		if ( portal != NULL ) {
-			PlPushBackVectorArrayElement( world->portals, portal );
-		}
-
-		child = ndGetNextChild( child );
-	}
 }
 
 static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
@@ -229,11 +146,74 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 }
 
 static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
-	DeserializeMaterials( world, root );
-	DeserializeRooms( world, root );
-	DeserializePortals( world, root );
-
 	NdBranch *branch;
+
+	if ( ( branch = ndGetChildByName( root, "materials" ) ) != NULL ) {
+		unsigned int numMaterials = ndGetNumOfChildren( branch );
+		if ( numMaterials > 0 ) {
+			if ( ndGetType( branch ) != ND_PROPERTY_STRING ) {
+				PRINT_WARNING( "Unexpected branch type for materials!\n" );
+				return;
+			}
+
+			if ( world->materials == NULL ) {
+				world->materials = PlCreateVectorArray( numMaterials );
+			}
+
+			branch = ndGetFirstChild( branch );
+			while ( branch != NULL ) {
+				PLPath path;
+				if ( ndGetStr( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
+					PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
+				} else {
+					PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
+					break;
+				}
+
+				branch = ndGetNextChild( branch );
+			}
+		} else {
+			PRINT_WARNING( "No materials for geometry!\n" );
+		}
+	}
+
+	if ( ( branch = ndGetChildByName( root, "rooms" ) ) != NULL ) {
+		unsigned int numRooms = ndGetNumOfChildren( branch );
+		if ( numRooms > 0 ) {
+			if ( world->rooms == NULL ) {
+				world->rooms = PlCreateVectorArray( numRooms );
+			}
+
+			branch = ndGetFirstChild( branch );
+			while ( branch != NULL ) {
+				PlPushBackVectorArrayElement( world->rooms, DeserializeRoom( branch ) );
+				branch = ndGetNextChild( branch );
+			}
+		} else {
+			PRINT_WARNING( "No rooms for geometry!\n" );
+		}
+	}
+
+	if ( ( branch = ndGetChildByName( root, "portals" ) ) != NULL ) {
+		unsigned int numPortals = ndGetNumOfChildren( branch );
+		if ( numPortals > 0 ) {
+			if ( world->portals == NULL ) {
+				world->portals = PlCreateVectorArray( numPortals );
+			}
+
+			NdBranch *child = ndGetFirstChild( branch );
+			while ( child != NULL ) {
+				ApeWorldPortal *portal = DeserializePortal( world, child );
+				if ( portal != NULL ) {
+					PlPushBackVectorArrayElement( world->portals, portal );
+				}
+
+				child = ndGetNextChild( child );
+			}
+		} else {
+			PRINT_WARNING( "No portals for geometry!\n" );
+		}
+	}
 
 	// Attempt to fetch the list of vertices - these are just an immediate
 	// list of coordinates
@@ -244,6 +224,10 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
 		if ( numChildren % 3 == 0 ) {
 			unsigned int numVertices = numChildren / 3;
 			if ( numVertices > 0 ) {
+				if ( world->vertices == NULL ) {
+					world->vertices = PlCreateVectorArray( numVertices );
+				}
+
 				float *vertices = PL_NEW_( float, numChildren );
 				ndGetF32Array( branch, vertices, numChildren );
 				for ( unsigned int i = 0, j = 0; i < numVertices; ++i, j += 3 ) {
@@ -269,6 +253,8 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
 				DeserializeFace( world, root );
 				branch = ndGetNextChild( branch );
 			}
+		} else {
+			PRINT_WARNING( "No faces for geometry!\n" );
 		}
 	}
 }
