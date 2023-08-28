@@ -25,11 +25,13 @@ static int CompareLights( const void *a, const void *b ) {
 }
 
 static void SortLights( const ApeCamera *camera ) {
-	if ( !ape_config_.world.sortLights )
+	if ( !ape_config_.world.sortLights ) {
 		return;
+	}
 
-	if ( visibleLights == NULL )
+	if ( visibleLights == NULL ) {
 		return;
+	}
 
 	viewPos = apeGetCameraPosition( camera );
 
@@ -51,17 +53,20 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
 	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
 
-		if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) )
+		if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) ) {
 			continue;
+		}
 
 		if ( light->type != APE_LIGHT_TYPE_SUN ) {
 			float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
-			if ( distance > ape_config_.renderer.maxLightDistance )
+			if ( distance > ape_config_.renderer.maxLightDistance ) {
 				continue;
+			}
 
 			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
-			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
+			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) ) {
 				continue;
+			}
 		}
 
 		PlPushBackVectorArrayElement( visibleLights, light );
@@ -75,8 +80,9 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
 static void BuildVisibleRoomList( ApeWorld *world, ApeCamera *camera ) {
 	PlClearVectorArray( visibleRooms );
 
-	if ( camera->room == NULL )
+	if ( camera->room == NULL ) {
 		return;
+	}
 }
 
 /****************************************
@@ -110,16 +116,19 @@ void apeBuildWorldVisibiltyLists_( void ) {
 	ape_rendererPerformance_.numLights = 0;
 
 	PL_GET_CVAR( "world/draw", drawWorld );
-	if ( drawWorld != NULL && !drawWorld->b_value )
+	if ( drawWorld != NULL && !drawWorld->b_value ) {
 		return;
+	}
 
 	ApeWorld *world = apeGetCurrentWorld();
-	if ( world == NULL )
+	if ( world == NULL ) {
 		return;
+	}
 
 	ApeCamera *camera = apeGetActiveCamera();
-	if ( camera == NULL )
+	if ( camera == NULL ) {
 		return;
+	}
 
 	BuildVisibleLightList( world, camera );
 	BuildVisibleRoomList( world, camera );

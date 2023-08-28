@@ -25,19 +25,14 @@ static ApeLight *DeserializeLight( NdBranch *root ) {
 }
 
 static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
-	NdBranch *lights = ndGetChildByName( root, "lights" );
-	if ( lights == NULL ) {
-		return;
-	}
-
-	unsigned int numLights = ndGetNumOfChildren( lights );
+	unsigned int numLights = ndGetNumOfChildren( root );
 	if ( numLights == 0 ) {
 		return;
 	}
 
 	world->lights = PlCreateVectorArray( numLights );
 
-	NdBranch *child = ndGetFirstChild( lights );
+	NdBranch *child = ndGetFirstChild( root );
 	while ( child != NULL ) {
 		PlPushBackVectorArrayElement( world->lights, DeserializeLight( child ) );
 		child = ndGetNextChild( child );
@@ -276,11 +271,12 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		return NULL;
 	}
 
+	NdBranch *branch;
+
 	// Get the property branch from the root
-	NdBranch *propertyList = ndGetChildByName( root, "properties" );
-	if ( propertyList != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "properties" ) ) != NULL ) {
 		// Copy the branch, so we can pass it over to the game logic later
-		world->globalProperties = ndCopyBranch( propertyList );
+		world->globalProperties = ndCopyBranch( branch );
 
 		// Get the global properties of the world from the branch
 
@@ -295,9 +291,13 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		world->fogNear = ndGetF32ByName( world->globalProperties, "fogNear", 32.0f );
 	}
 
-	// Deserialize the geometry and lights of the world from the root
-	DeserializeGeometry( world, root );
-	DeserializeLights( world, root );
+	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL ) {
+		DeserializeGeometry( world, branch );
+	}
+
+	if ( ( branch = ndGetChildByName( root, "lights" ) ) != NULL ) {
+		DeserializeLights( world, branch );
+	}
 
 	return world;
 }
