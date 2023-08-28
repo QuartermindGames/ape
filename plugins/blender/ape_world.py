@@ -23,7 +23,22 @@ bpy.types.Scene.projectPath = bpy.props.StringProperty(
     description="The path at which your project resides.",
     subtype='DIR_PATH'
 )
-
+bpy.types.Scene.ambience = bpy.props.FloatVectorProperty(
+    name = "Ambience",
+    subtype = "COLOR",
+    size = 4,
+    min = 0.0,
+    max = 1.0,
+    default = (0.5,0.5,0.5,1.0)
+)
+bpy.types.Scene.clearColour = bpy.props.FloatVectorProperty(
+    name = "Clear Colour",
+    subtype = "COLOR",
+    size = 4,
+    min = 0.0,
+    max = 1.0,
+    default = (0.0,0.0,0.0,1.0)
+)
 
 class ExportWorldOperator(bpy.types.Operator, ExportHelper):
     bl_idname = "ape.export_world"
@@ -44,7 +59,7 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
     )
 
     def execute(self, context):
-        objects = context.selected_objects
+        objects = context.scene.objects
         for obj in objects:
             if obj.type != 'MESH':
                 continue
@@ -123,6 +138,9 @@ class PropertyPanel(bpy.types.Panel):
 
         layout.prop(scene, "projectPath")
         layout.operator(SetupProjectOperator.bl_idname)
+        layout.separator()
+        layout.prop(scene, "ambience")
+        layout.prop(scene, "clearColour")
         layout.separator()
         layout.operator(ExportWorldOperator.bl_idname)
 
