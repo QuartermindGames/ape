@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -15,40 +14,39 @@
 
 PL_EXTERN_C
 
-#define YN_CORE_TICK_RATE ( 1000 / 60 ) /* ms */
+#define APE_TICK_RATE ( 1000 / 60 ) /* ms */
 
-typedef enum YNCoreMessageType
-{
-	YN_CORE_MESSAGE_ERROR,
-	YN_CORE_MESSAGE_WARNING,
-	YN_CORE_MESSAGE_INFO,
-} YNCoreMessageType;
+typedef enum ApeMessageBoxType {
+	APE_MESSAGE_ERROR,
+	APE_MESSAGE_WARNING,
+	APE_MESSAGE_INFO,
+} ApeMessageBoxType;
 
-enum
-{
-	YN_CORE_GRAPHICS_SOFTWARE,
-	YN_CORE_GRAPHICS_OPENGL,
-	YN_CORE_GRAPHICS_VULKAN,
-	YN_CORE_GRAPHICS_OTHER,
+enum {
+	APE_GRAPHICS_SOFTWARE,
+	APE_GRAPHICS_OPENGL,
+	APE_GRAPHICS_VULKAN,
+	APE_GRAPHICS_OTHER,
 
-	YN_CORE_MAX_GRAPHICS_MODES
+	APE_MAX_GRAPHICS_MODES
 };
 
 ////////////////////////////////////////////////////////////////////
 // Window Management
-YNCoreViewport *YnCore_ShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode );
-bool YnCore_ShellInterface_SetWindowSize( int *width, int *height );
-void YnCore_ShellInterface_GetWindowSize( int *width, int *height );
-void YnCore_ShellInterface_DisplayMessageBox( YNCoreMessageType messageType, const char *message, ... );
+ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode );
+bool apeShellInterface_SetWindowSize( int *width, int *height );
+void apeShellInterface_GetWindowSize( int *width, int *height );
+void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, const char *message, ... );
+void apeSetShellIcon( const PLImage *image );
 
 ////////////////////////////////////////////////////////////////////
 // Low Level Input
-YNCoreInputState YnCore_ShellInterface_GetButtonState( YNCoreInputButton inputButton );
-YNCoreInputState YnCore_ShellInterface_GetKeyState( int key );
-void YnCore_ShellInterface_GetMousePosition( int *x, int *y );
-void YnCore_ShellInterface_SetMousePosition( int x, int y );
-void YnCore_ShellInterface_GrabMouse( bool grab );
-void YnCore_ShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
-void YnCore_ShellInterface_Shutdown( void );
+ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton );
+ApeInputState apeShellInterface_GetKeyState( int key );
+void apeShellInterface_GetMousePosition( int *x, int *y );
+void apeShellInterface_SetMousePosition( int x, int y );
+void apeShellInterface_GrabMouse( bool grab );
+void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
+void apeShellInterface_Shutdown( void );
 
 PL_EXTERN_C_END

@@ -1,50 +1,28 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "game_private.h"
 #include "game_menu.h"
 
 uint8_t menuOptionSelection = 0;
 
+void gameInitializeMenu( void ) {
+}
+
+void gameShutdownMenu( void ) {
+}
+
 static Menu *currentMenu = NULL;
 
-void Game_Menu_SetCurrent( Menu *menu )
-{
+void Game_Menu_SetCurrent( Menu *menu ) {
 	currentMenu = menu;
 	menuOptionSelection = 0;
 }
 
-Menu *Game_Menu_GetCurrent( void )
-{
+Menu *Game_Menu_GetCurrent( void ) {
 	return currentMenu;
 }
 
-static void Menu_CB_StartGame( void )
-{
-#if 0
-	GameDifficulty difficulty;
-	switch ( currentMenu->curSelection )
-	{
-		default:
-		case 0:
-			difficulty = GAME_DIFFICULTY_EASY;
-			break;
-		case 1:
-			difficulty = GAME_DIFFICULTY_NORMAL;
-			break;
-		case 2:
-			difficulty = GAME_DIFFICULTY_HARD;
-			break;
-	}
-
-	Game_SetDifficultyMode( difficulty );
-#endif
-
-	PlParseConsoleString( "world arena" );
-}
-
-typedef enum HUDElement
-{
+typedef enum HUDElement {
 	HUD_ELEMENT_BAR_BG_L,
 	HUD_ELEMENT_BAR_BG_M,
 	HUD_ELEMENT_BAR_BG_R,
@@ -64,24 +42,23 @@ typedef enum HUDElement
 } HUDElement;
 
 static const PLQuad hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
-        [HUD_ELEMENT_BAR_BG_L] = { 8, 8, 8, 32 },
-        [HUD_ELEMENT_BAR_BG_M] = { 16, 8, 16, 32 },
-        [HUD_ELEMENT_BAR_BG_R] = { 32, 8, 8, 32 },
+        [HUD_ELEMENT_BAR_BG_L] = {8,    8,  8,   32 },
+        [HUD_ELEMENT_BAR_BG_M] = { 16,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_BG_R] = { 32,  8,  8,   32 },
 
-        [HUD_ELEMENT_BAR_HP_L] = { 48, 8, 8, 32 },
-        [HUD_ELEMENT_BAR_HP_M] = { 56, 8, 16, 32 },
-        [HUD_ELEMENT_BAR_HP_R] = { 72, 8, 8, 32 },
+        [HUD_ELEMENT_BAR_HP_L] = { 48,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_HP_M] = { 56,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_HP_R] = { 72,  8,  8,   32 },
 
-        [HUD_ELEMENT_BAR_DMG_L] = { 88, 8, 8, 32 },
-        [HUD_ELEMENT_BAR_DMG_M] = { 96, 8, 16, 32 },
-        [HUD_ELEMENT_BAR_DMG_R] = { 112, 8, 8, 32 },
+        [HUD_ELEMENT_BAR_DMG_L] = { 88,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_DMG_M] = { 96,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_DMG_R] = { 112, 8,  8,   32 },
 
-        [HUD_ELEMENT_ICON_HP] = { 120, 8, 40, 32 },
-        [HUD_ELEMENT_ICON_CHAR] = { 8, 40, 104, 112 },
+        [HUD_ELEMENT_ICON_HP] = { 120, 8,  40,  32 },
+        [HUD_ELEMENT_ICON_CHAR] = { 8,   40, 104, 112},
 };
 
-void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, int w, int h )
-{
+void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, int w, int h ) {
 #if 0
 	if ( w <= 0 )
 		return;
@@ -100,8 +77,7 @@ void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, i
 
 #define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 )
 
-static void Menu_DrawHUD( const YNCoreViewport *viewport )
-{
+static void Menu_DrawHUD( const ApeViewport *viewport ) {
 #if 0// old crap
 	Menu_DrawElement( NULL, HUD_ELEMENT_ICON_CHAR, BORDER_MARGIN, viewport->h - hudElementLayouts[ HUD_ELEMENT_ICON_CHAR ].h - BORDER_MARGIN, 104, 112 );
 
@@ -141,8 +117,7 @@ static void Menu_DrawHUD( const YNCoreViewport *viewport )
 #endif
 }
 
-void Menu_Draw( const YNCoreViewport *viewport )
-{
+void Menu_Draw( const ApeViewport *viewport ) {
 #if 0
 	if ( Game_GetMenuState() == MENU_STATE_HUD )
 	{

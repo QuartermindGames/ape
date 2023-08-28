@@ -1,11 +1,10 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 /* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 
-void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3 *position, float spriteAngle )
-{
+void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle ) {
 #if 0
     PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -20,24 +19,23 @@ void YnCore_Sprite_DrawAnimationFrame( YNCoreSpriteFrame *frame, const PLVector3
 
 	PlgSetShaderProgram( gfxDefaultShaderPrograms[ GFX_SHADER_DEFAULT_LIT ] );
 
-#if 0
+#	if 0
 	int w = frame->texture->w; //* 1.7;
 	int h = frame->texture->h; //* 1.7;
 	int x = -frame->leftOffset;
 	int y = -frame->topOffset;
-#else /* for the sake of time, let's botch it! */
+#	else /* for the sake of time, let's botch it! */
 	float w = frame->texture->w * 1.7f;
 	float h = frame->texture->h * 1.7f;
 	float x = -( w / 2.0f );
 	float y = -h;
-#endif
+#	endif
 
 	plDrawTexturedRectangle( plGetMatrix( PL_MODELVIEW_MATRIX ), x, y, w, h, frame->texture );
 #endif
 }
 
-void YnCore_Sprite_DrawAnimation( YNCoreSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
-{
+void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
 #if 0
     const GfxCamera *camera = Gfx_GetCurrentCamera();
 	if( camera == NULL ) {

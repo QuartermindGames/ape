@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_filesystem.h>
@@ -9,17 +8,14 @@
 #include "buildconv.h"
 
 static uint8_t palette[ 256 ][ 3 ];
-static bool CachePalette( void )
-{
+static bool CachePalette( void ) {
 	PLFile *file = PlOpenFile( "PALETTE.DAT", false );
-	if ( file == NULL )
-	{
+	if ( file == NULL ) {
 		printf( "Failed to load \"PALETTE.DAT\": %s\n", PlGetError() );
 		return false;
 	}
 
-	for ( unsigned int i = 0; i < 256; ++i )
-	{
+	for ( unsigned int i = 0; i < 256; ++i ) {
 		palette[ i ][ 0 ] = ( PlReadInt8( file, NULL ) * 255 ) / 63;
 		palette[ i ][ 1 ] = ( PlReadInt8( file, NULL ) * 255 ) / 63;
 		palette[ i ][ 2 ] = ( PlReadInt8( file, NULL ) * 255 ) / 63;
@@ -32,8 +28,7 @@ static bool CachePalette( void )
 	return true;
 }
 
-static NLNode *GenerateMaterial( const char *texturePath )
-{
+static NLNode *GenerateMaterial( const char *texturePath ) {
 	NLNode *root = NL_PushBackObj( NULL, "material" );
 	NLNode *pass = NL_PushBackObj( NL_PushBackObjArray( root, "passes" ), NULL );
 	NL_PushBackStr( pass, "textureFilterMode", "mipmap_nearest" );
@@ -42,24 +37,21 @@ static NLNode *GenerateMaterial( const char *texturePath )
 	return root;
 }
 
-static void DumpART( const char *path, unsigned int *num )
-{
+static void DumpART( const char *path, unsigned int *num ) {
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL )
-	{
+	if ( file == NULL ) {
 		printf( "Failed to load \"%s\": %s\n", path, PlGetError() );
 		return;
 	}
 
 	// First check and confirm the version
 	int32_t version = PlReadInt32( file, false, NULL );
-	if ( version != 1 )
-	{
+	if ( version != 1 ) {
 		printf( "Encountered unexpected art version (%d != 1)!\n", version );
 		return;
 	}
 
-	PlReadInt32( file, false, NULL ); // "Numtiles is not really used anymore.  I wouldn't trust it." ~ Ken
+	PlReadInt32( file, false, NULL );// "Numtiles is not really used anymore.  I wouldn't trust it." ~ Ken
 
 	int32_t tileStart = PlReadInt32( file, false, NULL );
 	int32_t tileEnd = PlReadInt32( file, false, NULL );
@@ -78,13 +70,11 @@ static void DumpART( const char *path, unsigned int *num )
 		tileAttributes[ i ] = PlReadInt32( file, false, NULL );
 
 	// Right, now for the good stuff!
-	for ( unsigned int i = 0; i < numTiles; ++i )
-	{
+	for ( unsigned int i = 0; i < numTiles; ++i ) {
 		PLPath dest;
 		snprintf( dest, sizeof( dest ), "materials/art/%u.png", *num );
-		if ( PlFileExists( dest ) )
-		{
-			(*num )++;
+		if ( PlFileExists( dest ) ) {
+			( *num )++;
 			continue;
 		}
 
@@ -92,9 +82,8 @@ static void DumpART( const char *path, unsigned int *num )
 		uint32_t h = tileSizeY[ i ];
 
 		size_t size = w * h;
-		if ( size == 0 )
-		{
-			(*num)++;
+		if ( size == 0 ) {
+			( *num )++;
 			continue;
 		}
 
@@ -103,10 +92,8 @@ static void DumpART( const char *path, unsigned int *num )
 
 		uint8_t *buffer = PL_NEW_( uint8_t, size );
 		PlReadFile( file, buffer, sizeof( uint8_t ), size );
-		for ( unsigned int y = 0; y < h; ++y )
-		{
-			for ( unsigned int x = 0; x < w; ++x )
-			{
+		for ( unsigned int y = 0; y < h; ++y ) {
+			for ( unsigned int x = 0; x < w; ++x ) {
 				uint8_t index = buffer[ y + x * h ];
 				pixel->r = palette[ index ][ 0 ];
 				pixel->g = palette[ index ][ 1 ];
@@ -127,7 +114,7 @@ static void DumpART( const char *path, unsigned int *num )
 		NL_WriteFile( dest, root, NL_FILE_UTF8 );
 		NL_DestroyNode( root );
 
-		(*num)++;
+		( *num )++;
 	}
 
 	PL_DELETE( tileSizeX );
@@ -137,7 +124,7 @@ static void DumpART( const char *path, unsigned int *num )
 	PlCloseFile( file );
 }
 
-#if 0 // argh fuck this...
+#if 0// argh fuck this...
 static int32_t playerStart[ 3 ];
 static int16_t playerAngle;
 static int16_t playerSector;
@@ -271,8 +258,8 @@ static NLNode *MAPtoWorld( const char *worldName, const Sector *sectors, unsigne
 	return root;
 }
 
-#define MAP_MAX_VERSION 6
-#define MAP_MIN_VERSION 5
+#	define MAP_MAX_VERSION 6
+#	define MAP_MIN_VERSION 5
 
 static void ConvertMAP( const char *path, void *user )
 {
@@ -437,8 +424,7 @@ int main( int argc, char **argv ) {
 
 	// Convert all ART packages
 	unsigned int num = 0;
-	for ( unsigned int i = 0; i < 999; ++i )
-	{
+	for ( unsigned int i = 0; i < 999; ++i ) {
 		char tmp[ 32 ];
 		snprintf( tmp, sizeof( tmp ), "TILES%.3d.ART", i );
 		if ( !PlFileExists( tmp ) )

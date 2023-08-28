@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
 #include "game_private.h"
 
-typedef struct GameMovementComponent
-{
+typedef struct GameMovementComponent {
 	float forwardVelocity;
 	float strafeVelocity;
 
@@ -14,9 +12,9 @@ typedef struct GameMovementComponent
 
 	float maxRunSpeed, maxWalkSpeed;
 
-	YNCoreEntityComponent *inputComponent;
-	YNCoreEntityComponent *cameraComponent;
+	ApeEntityComponent *inputComponent;
+	ApeEntityComponent *cameraComponent;
 } GameMovementComponent;
 #define GAME_MOVEMENT_COMPONENT( A ) ( ( GameMovementComponent * ) ( A ) )
 
-const YNCoreEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
+const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );

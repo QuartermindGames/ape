@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_parse.h>
@@ -10,22 +9,19 @@
 #define MAX_MACRO_NAME_LENGTH 16
 #define MAX_MACRO_LENGTH      1024
 
-typedef struct PreProcessorMacro
-{
+typedef struct PreProcessorMacro {
 	char name[ MAX_MACRO_NAME_LENGTH ];
 	char body[ MAX_MACRO_LENGTH ];
 } PreProcessorMacro;
 
-typedef struct PreProcessorContext
-{
+typedef struct PreProcessorContext {
 	PreProcessorMacro macros[ MAX_MACROS ];
-	unsigned int      numMacros;
+	unsigned int numMacros;
 } PreProcessorContext;
 
 static PreProcessorContext ctx;
 
-static const PreProcessorMacro *GetPreprocessorMacroByName( const char *name )
-{
+static const PreProcessorMacro *GetPreprocessorMacroByName( const char *name ) {
 	for ( unsigned int i = 0; i < ctx.numMacros; ++i )
 		if ( pl_strcasecmp( ctx.macros[ i ].name, name ) == 0 )
 			return &ctx.macros[ i ];
@@ -37,40 +33,33 @@ static const PreProcessorMacro *GetPreprocessorMacroByName( const char *name )
  * Check if the specified macro exists. Typically going to be
  * used to avoid registering duplicates.
  */
-static bool IsMacroRegistered( const char *name )
-{
+static bool IsMacroRegistered( const char *name ) {
 	if ( GetPreprocessorMacroByName( name ) != NULL )
 		return true;
 
 	return false;
 }
 
-char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
-{
+char *ndPreProcessScript( char *buf, size_t *length, bool isHead ) {
 	size_t actualLength = 0;
 	size_t maxLength = *length;
-	char  *dstBuffer = PlCAllocA( maxLength, sizeof( char ) );
-	char  *dstPos = dstBuffer;
+	char *dstBuffer = PlCAllocA( maxLength, sizeof( char ) );
+	char *dstPos = dstBuffer;
 
 	if ( isHead )
 		PL_ZERO_( ctx );
 
 	const char *srcPos = buf;
-	char       *srcEnd = buf + *length;
-	while ( srcPos < srcEnd && *srcPos != '\0' )
-	{
-		if ( *srcPos == ';' )
-		{
+	char *srcEnd = buf + *length;
+	while ( srcPos < srcEnd && *srcPos != '\0' ) {
+		if ( *srcPos == ';' ) {
 			PlSkipLine( &srcPos );
 			continue;
-		}
-		else if ( *srcPos == '$' )
-		{
+		} else if ( *srcPos == '$' ) {
 			srcPos++;
 			char token[ 32 ];
 			PlParseToken( &srcPos, token, sizeof( token ) );
-			if ( pl_strcasecmp( token, "include" ) == 0 )
-			{
+			if ( pl_strcasecmp( token, "include" ) == 0 ) {
 				PlSkipWhitespace( &srcPos );
 
 				/* pull the path - needs to be enclosed otherwise this'll fail */
@@ -78,11 +67,10 @@ char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
 				PlParseEnclosedString( &srcPos, path, sizeof( path ) );
 
 				PLFile *file = PlOpenFile( path, true );
-				if ( file != NULL )
-				{
+				if ( file != NULL ) {
 					/* allocate a temporary buffer */
 					size_t includeLength = PlGetFileSize( file );
-					char  *includeBody = PlMAlloc( includeLength, true );
+					char *includeBody = PlMAlloc( includeLength, true );
 					memcpy( includeBody, PlGetFileData( file ), includeLength );
 
 					/* close the current file, to avoid recursively opening files
@@ -90,35 +78,29 @@ char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
 					PlCloseFile( file );
 
 					/* now throw it into the pre-processor */
-					includeBody = YnNode_PreProcessScript( includeBody, &includeLength, false );
+					includeBody = ndPreProcessScript( includeBody, &includeLength, false );
 
 					/* and finally, push it into our destination */
 					dstPos = pl_strinsert( includeBody, &dstBuffer, &actualLength, &maxLength );
 					PlFree( includeBody );
-				}
-				else
+				} else
 					Warning( "Failed to load include \"%s\": %s\n", path, PlGetError() );
 
 				PlSkipLine( &srcPos );
 				continue;
-			}
-			else if ( pl_strcasecmp( token, "insert" ) == 0 )
-			{
+			} else if ( pl_strcasecmp( token, "insert" ) == 0 ) {
 				PlSkipWhitespace( &srcPos );
 				PlParseToken( &srcPos, token, sizeof( token ) );
 
 				const PreProcessorMacro *macro = GetPreprocessorMacroByName( token );
-				if ( macro == NULL )
-				{
+				if ( macro == NULL ) {
 					Warning( "Unknown macro \"%s\" was used!\n", token );
 					continue;
 				}
 
 				dstPos = pl_strinsert( macro->body, &dstBuffer, &actualLength, &maxLength );
 				continue;
-			}
-			else if ( pl_strcasecmp( token, "define" ) == 0 )
-			{
+			} else if ( pl_strcasecmp( token, "define" ) == 0 ) {
 				PlSkipWhitespace( &srcPos );
 
 				PreProcessorMacro *macro = &ctx.macros[ ctx.numMacros ];
@@ -128,19 +110,14 @@ char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
 				PlSkipWhitespace( &srcPos );
 
 				/* if it's already registered, skip it */
-				if ( IsMacroRegistered( macro->name ) )
-				{
+				if ( IsMacroRegistered( macro->name ) ) {
 					Warning( "Macro \"%s\" is being redeclared\n", macro->name );
-					if ( *srcPos == '(' )
-					{
+					if ( *srcPos == '(' ) {
 						while ( *srcPos != '\0' && *srcPos != ')' ) srcPos++;
 						if ( *srcPos != '\0' ) srcPos++;
-					}
-					else
+					} else
 						PlSkipLine( &srcPos );
-				}
-				else if ( *srcPos == '(' )
-				{
+				} else if ( *srcPos == '(' ) {
 					srcPos++;
 					/* copy the block into our macro list */
 					char *mbody = macro->body;
@@ -148,19 +125,16 @@ char *YnNode_PreProcessScript( char *buf, size_t *length, bool isHead )
 						*mbody++ = *srcPos++;
 
 					if ( *srcPos != '\0' ) srcPos++;
-				}
-				else
+				} else
 					PlParseToken( &srcPos, macro->body, sizeof( macro->body ) );
 
 				continue;
-			}
-			else
+			} else
 				Warning( "Unknown preprocessor token \"%s\"!\n", token );
 		}
 
 		/* if we exceed the maximum allowed length... */
-		if ( ++actualLength > maxLength )
-		{
+		if ( ++actualLength > maxLength ) {
 			++maxLength;
 			char *oldDstBuffer = dstBuffer;
 			dstBuffer = PlReAllocA( dstBuffer, maxLength );

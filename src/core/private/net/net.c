@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 /* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "net.h"
 
 #if defined( _WIN32 )
@@ -16,8 +16,7 @@
 #	include <fcntl.h>
 #endif
 
-enum
-{
+enum {
 	NET_IP4,
 	NET_IP6,
 };
@@ -28,8 +27,7 @@ typedef SOCKET NetSocketHandle;
 typedef int NetSocketHandle;
 #endif
 
-static void CloseSocket( NetSocketHandle handle )
-{
+static void CloseSocket( NetSocketHandle handle ) {
 #if defined( _MSC_VER )
 	closesocket( handle );
 #else
@@ -37,18 +35,15 @@ static void CloseSocket( NetSocketHandle handle )
 #endif
 }
 
-typedef struct NetSocket
-{
-	NetSocketHandle handle;      /* system socket handle */
-	int             addressType; /* ip4 / ip6 */
-	union
-	{
-		struct sockaddr_in  ip4;
+typedef struct NetSocket {
+	NetSocketHandle handle; /* system socket handle */
+	int addressType;        /* ip4 / ip6 */
+	union {
+		struct sockaddr_in ip4;
 		struct sockaddr_in6 ip6;
 	} local;
-	union
-	{
-		struct sockaddr_in  ip4;
+	union {
+		struct sockaddr_in ip4;
 		struct sockaddr_in6 ip6;
 	} remote;
 	NetConnectionState connectionState;
@@ -64,27 +59,23 @@ static struct
 	        *acceptSocket;
 } testData;
 
-static bool ExecuteTest( void )
-{
+static bool ExecuteTest( void ) {
 	static const char *ip = "localhost";
 
 	testData.hostSocket = Net_OpenSocket( ip, 0, true );
-	if ( testData.hostSocket == NULL )
-	{
+	if ( testData.hostSocket == NULL ) {
 		PRINT_WARNING( "Failed to create host socket!\n" );
 		return false;
 	}
 
 	testData.clientSocket = Net_OpenSocket( ip, Net_GetLocalPort( testData.hostSocket ), false );
-	if ( testData.clientSocket == NULL )
-	{
+	if ( testData.clientSocket == NULL ) {
 		PRINT_WARNING( "Failed to create client socket!\n" );
 		return false;
 	}
 
 	bool accepted = false;
-	while ( !accepted && testData.acceptSocket == NULL )
-	{
+	while ( !accepted && testData.acceptSocket == NULL ) {
 		if ( Net_GetConnectionStatus( testData.clientSocket ) != NET_CONNECTION_PENDING )
 			accepted = true;
 
@@ -92,23 +83,21 @@ static bool ExecuteTest( void )
 	}
 
 	const char *s = "Hello World!";
-	size_t      sl = strlen( s );
+	size_t sl = strlen( s );
 	Net_Send( testData.acceptSocket, s, sl );
 
 	PRINT( "Sent \"%s\" to %s\n", s, ip );
 
-	char   d[ 16 ];
+	char d[ 16 ];
 	size_t dl = 0;
-	while ( dl < sl )
-	{
+	while ( dl < sl ) {
 		if ( Net_Receive( testData.clientSocket, d + dl, sizeof( d ) - dl ) > 0 )
 			break;
 	}
 
 	PRINT( "Received \"%s\" from %s\n", d, ip );
 
-	if ( strncmp( s, d, sl ) != 0 )
-	{
+	if ( strncmp( s, d, sl ) != 0 ) {
 		PRINT_WARNING( "Message did not match expected string!\n" );
 		return false;
 	}
@@ -116,8 +105,7 @@ static bool ExecuteTest( void )
 	return true;
 }
 
-static void TestNetCommand( unsigned int argc, char **argv )
-{
+static void TestNetCommand( unsigned int argc, char **argv ) {
 	PL_ZERO_( testData );
 
 	PRINT( "%s", ExecuteTest() ? "Test passed successfully!\n" : "Test failed!\n" );
@@ -132,11 +120,10 @@ static void TestNetCommand( unsigned int argc, char **argv )
 
 #endif
 
-void YnCore_InitializeNet( void )
-{
+void apeInitializeNet( void ) {
 #if defined( _WIN32 )
 	WSADATA data;
-	int     r;
+	int r;
 	if ( ( r = WSAStartup( MAKEWORD( 2, 2 ), &data ) ) != 0 )
 		PRINT_WARNING( "Failed to initialize Winsock: %d\n", r );
 #endif
@@ -146,15 +133,13 @@ void YnCore_InitializeNet( void )
 #endif
 }
 
-void YnCore_ShutdownNet( void )
-{
+void ogeShutdownNet( void ) {
 #if defined( _WIN32 )
 	WSACleanup();
 #endif
 }
 
-NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
-{
+NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost ) {
 	struct addrinfo hints;
 	PL_ZERO_( hints );
 
@@ -162,8 +147,7 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* if ip is null, assume we don't care */
-	if ( ip == NULL )
-	{
+	if ( ip == NULL ) {
 		hints.ai_flags = AI_PASSIVE;
 	}
 
@@ -173,20 +157,17 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	snprintf( buf, sizeof( buf ), PL_FMT_uint16, port );
 
 	struct addrinfo *result;
-	int              s = getaddrinfo( ip, buf, &hints, &result );
-	if ( s != 0 )
-	{
+	int s = getaddrinfo( ip, buf, &hints, &result );
+	if ( s != 0 ) {
 		PRINT_WARNING( "Failed to get address info: %s\n", gai_strerror( s ) );
 		return NULL;
 	}
 
-	NetSocketHandle  handle = -1;
+	NetSocketHandle handle = -1;
 	struct addrinfo *r;
-	for ( r = result; r != NULL; r = r->ai_next )
-	{
+	for ( r = result; r != NULL; r = r->ai_next ) {
 		handle = socket( r->ai_family, r->ai_socktype, r->ai_protocol );
-		if ( handle == -1 )
-		{
+		if ( handle == -1 ) {
 			continue;
 		}
 
@@ -197,8 +178,7 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 		fcntl( handle, F_SETFL, O_NONBLOCK );
 #endif
 
-		if ( isHost && ( bind( handle, r->ai_addr, r->ai_addrlen ) == 0 ) )
-		{
+		if ( isHost && ( bind( handle, r->ai_addr, r->ai_addrlen ) == 0 ) ) {
 			assert( listen( handle, 8 ) == 0 );
 			break;
 		}
@@ -224,19 +204,16 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	}
 
 	int addressType;
-	if ( r != NULL )
-	{
+	if ( r != NULL ) {
 		addressType = r->ai_family;
-		if ( addressType != AF_INET && addressType != AF_INET6 )
-		{
+		if ( addressType != AF_INET && addressType != AF_INET6 ) {
 			PRINT_WARNING( "Unsupported socket type: %u\n", addressType );
 			CloseSocket( handle );
 			handle = -1;
 		}
 	}
 
-	if ( handle == -1 )
-	{
+	if ( handle == -1 ) {
 		PRINT_WARNING( "Failed to open and connect/bind socket!\n" );
 		freeaddrinfo( result );
 		return NULL;
@@ -259,19 +236,16 @@ NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost )
 	return netSocket;
 }
 
-void Net_CloseSocket( NetSocket *netSocket )
-{
+void Net_CloseSocket( NetSocket *netSocket ) {
 	CloseSocket( netSocket->handle );
 	PlFree( netSocket );
 }
 
-ssize_t Net_Send( NetSocket *netSocket, const void *buf, ssize_t length )
-{
+ssize_t Net_Send( NetSocket *netSocket, const void *buf, ssize_t length ) {
 	return send( netSocket->handle, buf, length, 0 );
 }
 
-ssize_t Net_Receive( NetSocket *netSocket, void *dst, ssize_t length )
-{
+ssize_t Net_Receive( NetSocket *netSocket, void *dst, ssize_t length ) {
 	ssize_t r = recv( netSocket->handle, dst, length, 0 );
 	if ( r == -1 &&
 #if defined( _WIN32 )
@@ -279,26 +253,21 @@ ssize_t Net_Receive( NetSocket *netSocket, void *dst, ssize_t length )
 #else
 	     ( errno == EAGAIN || errno == EWOULDBLOCK )
 #endif
-	)
-	{
+	) {
 		r = 0;
-	}
-	else if ( r == 0 )
-	{
+	} else if ( r == 0 ) {
 		r = -1;
 	}
 
 	return r;
 }
 
-NetSocket *Net_Accept( NetSocket *netSocket )
-{
+NetSocket *Net_Accept( NetSocket *netSocket ) {
 	struct sockaddr_storage buf;
-	socklen_t               size = sizeof( buf );
+	socklen_t size = sizeof( buf );
 
 	int handle = accept( netSocket->handle, ( struct sockaddr * ) &buf, &size );
-	if ( handle >= 0 )
-	{
+	if ( handle >= 0 ) {
 #if defined( _WIN32 )
 		u_long mode = 1;
 		ioctlsocket( handle, FIONBIO, &mode );
@@ -320,10 +289,8 @@ NetSocket *Net_Accept( NetSocket *netSocket )
 	return NULL;
 }
 
-NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket )
-{
-	if ( netSocket->connectionState != NET_CONNECTION_PENDING )
-	{
+NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket ) {
+	if ( netSocket->connectionState != NET_CONNECTION_PENDING ) {
 		return netSocket->connectionState;
 	}
 
@@ -339,13 +306,11 @@ NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket )
 	PL_ZERO_( tv );
 
 	int s = select( netSocket->handle + 1, NULL, &fdWrite, &fdAccept, &tv );
-	if ( s > 0 )
-	{
-		char      errCode;
+	if ( s > 0 ) {
+		char errCode;
 		socklen_t errLen = sizeof( errCode );
 		getsockopt( netSocket->handle, SOL_SOCKET, SO_ERROR, &errCode, &errLen );
-		if ( errCode == 0 )
-		{
+		if ( errCode == 0 ) {
 			return ( netSocket->connectionState = NET_CONNECTION_CONNECTED );
 		}
 
@@ -355,12 +320,10 @@ NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket )
 	return NET_CONNECTION_PENDING;
 }
 
-unsigned short Net_GetLocalPort( NetSocket *netSocket )
-{
+unsigned short Net_GetLocalPort( NetSocket *netSocket ) {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->local.ip4.sin_port : netSocket->local.ip6.sin6_port );
 }
 
-unsigned short Net_GetRemotePort( NetSocket *netSocket )
-{
+unsigned short Net_GetRemotePort( NetSocket *netSocket ) {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->remote.ip4.sin_port : netSocket->remote.ip6.sin6_port );
 }

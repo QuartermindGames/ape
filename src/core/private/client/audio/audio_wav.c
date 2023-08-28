@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "audio.h"
 
@@ -10,8 +9,7 @@
 #define CHUNK_XWMA PL_MAGIC_TO_NUM( 'X', 'W', 'M', 'A' )
 #define CHUNK_DPDS PL_MAGIC_TO_NUM( 'd', 'p', 'd', 's' )
 
-static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint32_t *chunkDataPosition )
-{
+static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint32_t *chunkDataPosition ) {
 	/* throw us back to the start of the file */
 	PlRewindFile( file );
 
@@ -19,11 +17,10 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 
 	/* now iterate through to find the chunk we're after */
 	bool status = true;
-	while ( status )
-	{
+	while ( status ) {
 		uint32_t type = PlReadInt32( file, false, &status );
 		uint32_t size = PlReadInt32( file, false, &status );
-		
+
 		if ( type == CHUNK_RIFF )
 			size = 4;
 		else if ( !PlFileSeek( file, ( long ) size, PL_SEEK_CUR ) )
@@ -31,8 +28,7 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 
 		offset += sizeof( uint32_t ) * 2;
 
-		if ( type == fourCC )
-		{
+		if ( type == fourCC ) {
 			*chunkSize = size;
 			*chunkDataPosition = offset;
 			return true;
@@ -45,16 +41,13 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 	return false;
 }
 
-static bool ReadChunkData( PLFile *file, void *buffer, uint32_t bufferSize, uint32_t bufferOffset )
-{
-	if ( !PlFileSeek( file, ( long ) bufferOffset, PL_SEEK_SET ) )
-	{
+static bool ReadChunkData( PLFile *file, void *buffer, uint32_t bufferSize, uint32_t bufferOffset ) {
+	if ( !PlFileSeek( file, ( long ) bufferOffset, PL_SEEK_SET ) ) {
 		PRINT_WARNING( "Failed to seek to chunk location: %s\n", PlGetError() );
 		return false;
 	}
 
-	if ( PlReadFile( file, buffer, bufferSize, 1 ) != 1 )
-	{
+	if ( PlReadFile( file, buffer, bufferSize, 1 ) != 1 ) {
 		PRINT_WARNING( "Failed to read in chunk data: %s\n", PlGetError() );
 		return false;
 	}
@@ -62,49 +55,39 @@ static bool ReadChunkData( PLFile *file, void *buffer, uint32_t bufferSize, uint
 	return true;
 }
 
-static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
-{
+static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize ) {
 	/* ensure the type is valid */
 	uint32_t chunkSize;
 	uint32_t chunkPosition;
-	if ( FindChunk( file, CHUNK_RIFF, &chunkSize, &chunkPosition ) )
-	{
+	if ( FindChunk( file, CHUNK_RIFF, &chunkSize, &chunkPosition ) ) {
 		uint32_t fileType;
 		if ( !ReadChunkData( file, &fileType, sizeof( uint32_t ), chunkPosition ) )
 			return NULL;
 
-		if ( fileType != CHUNK_WAVE )
-		{
+		if ( fileType != CHUNK_WAVE ) {
 			PRINT_WARNING( "Unexpected file type!\n" );
 			return NULL;
 		}
-	}
-	else
-	{
+	} else {
 		return NULL;
 	}
 
 	/* fetch the format */
-	if ( FindChunk( file, CHUNK_FMT, &chunkSize, &chunkPosition ) )
-	{
-		if ( chunkSize <= sizeof( YNCoreAudioWaveFormat ) )
-		{
+	if ( FindChunk( file, CHUNK_FMT, &chunkSize, &chunkPosition ) ) {
+		if ( chunkSize <= sizeof( YNCoreAudioWaveFormat ) ) {
 			PRINT_WARNING( "Chunk size is too small to hold format data!\n" );
 			return NULL;
 		}
 
 		if ( !ReadChunkData( file, waveFormatEx, sizeof( YNCoreAudioWaveFormat ), chunkPosition ) )
 			return NULL;
-	}
-	else
+	} else
 		return NULL;
 
 	/* and finally the data */
-	if ( FindChunk( file, CHUNK_DATA, &chunkSize, &chunkPosition ) )
-	{
+	if ( FindChunk( file, CHUNK_DATA, &chunkSize, &chunkPosition ) ) {
 		uint8_t *dataBuffer = PlMAllocA( chunkSize );
-		if ( !ReadChunkData( file, dataBuffer, chunkSize, chunkPosition ) )
-		{
+		if ( !ReadChunkData( file, dataBuffer, chunkSize, chunkPosition ) ) {
 			PL_DELETE( dataBuffer );
 			return NULL;
 		}
@@ -116,11 +99,9 @@ static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsign
 	return NULL;
 }
 
-void *YnCore_Audio_Wav_Load( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
-{
+void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize ) {
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL )
-	{
+	if ( file == NULL ) {
 		PRINT_WARNING( "Failed to load wav \"%s\": %s\n", path, PlGetError() );
 		return NULL;
 	}

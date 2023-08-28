@@ -1,28 +1,34 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
 #include "core_shell.h"//todo: deprecate this
+#include "core_scene.h"
 #include "core_camera.h"
 #include "core_editor.h"
 
 PL_EXTERN_C
 
-bool YnCore_Initialize( const char *config );
-void YnCore_Shutdown( void );
+bool apeInitialize( const char *config );
+void apeShutdown( void );
 
-void YnCore_RenderFrame( YNCoreViewport *viewport );
-void YnCore_TickFrame( void );
+void apeRenderFrame( ApeViewport *viewport );
+void apeTickFrame( void );
 
-unsigned int YnCore_GetNumTicks( void );
+struct NdBranch *apeGetConfig( void );
+struct NdBranch *apeGetUserConfig( void );
 
-bool YnCore_IsEngineRunning( void );
+unsigned int apeGetNumTicks( void );
 
-void YnCore_HandleKeyboardEvent( int key, unsigned int keyState );
-void YnCore_HandleTextEvent( const char *key );
-void YnCore_HandleMouseButtonEvent( int button, YNCoreInputState buttonState );
-void YnCore_HandleMouseWheelEvent( float x, float y );
-void YnCore_HandleMouseMotionEvent( int x, int y );
+bool apeIsEngineRunning( void );
+bool apeIsConsoleOpen( void );
+
+void apeHandleKeyboardEvent( int key, unsigned int keyState );
+void apeHandleTextEvent( const char *key );
+void apeHandleMouseButtonEvent( int button, ApeInputState buttonState );
+void apeHandleMouseWheelEvent( float x, float y );
+void apeHandleMouseMotionEvent( int x, int y );
+
+struct GuiPanel *apeGetDefaultRootPanel( void );
 
 PL_EXTERN_C_END

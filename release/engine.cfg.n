@@ -10,29 +10,7 @@ object config
         array string mountLocations
         {
             "projects/base"
-            "scripts"
-        }
-
-        array string aliases
-        {
-            ; <alias>   <target>
-            "tile"      "materials/world/freedoom/tile.n"
-            "wall42_3"  "materials/world/freedoom/wall42_3.n"
-            "rw46_4"    "materials/world/freedoom/rw46_4.n"
-            "aqmetl32"  "materials/world/freedoom/aqmetl32.n"
-            "rw37_2"    "materials/world/freedoom/rw37_2.n"
-            "aqsupp01"  "materials/world/freedoom/aqsupp01.n"
-            "aqpanl04"  "materials/world/freedoom/aqpanl04.n"
-            "aqpanl08"  "materials/world/freedoom/aqpanl08.n"
-            "rw8_4"     "materials/world/freedoom/rw8_4.n"
-            "rrock03"   "materials/world/freedoom/rrock03.n"
-            "aqrust01"  "materials/world/freedoom/aqrust01.n"
-            "mtltrim"   "materials/world/freedoom/mtltrim.n"
-            "floor5_2"  "materials/world/freedoom/floor5_2.n"
-            "wall02_1"  "materials/world/freedoom/wall02_1.n"
-            "aqpipe08"  "materials/world/freedoom/aqpipe08.n"
-            "aqmetl14"  "materials/world/freedoom/aqmetl14.n"
-            "o_lite16"  "materials/world/freedoom/o_lite16.n"
+            "projects/demo"
         }
     }
 }

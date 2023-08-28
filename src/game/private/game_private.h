@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -11,14 +10,13 @@
 #include <yin/core.h>
 #include <yin/core_entity.h>
 #include <yin/core_input.h>
+#include <yin/gui_public.h>
 
-#include "../../gui/public/gui_public.h"
-
-#include "game_interface.h"
+#include "game/game_interface.h"
 
 #define Game_Print( ... )   PlLogMessage( globalGameLog, __VA_ARGS__ )
 #define Game_Warning( ... ) PlLogMessage( globalGameWarningLog, __VA_ARGS__ )
 #define Game_Error( ... )   PlLogMessage( globalGameErrorLog, __VA_ARGS__ )
 #define Game_Debug( ... )   PlLogMessage( globalGameDebugLog, __VA_ARGS__ )
 
-void Game_RegisterStandardEntityComponents( void );
+void gameRegisterStandardEntityComponents( void );

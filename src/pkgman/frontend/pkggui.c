@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 // PKGGUI: GUI interface for pkgman using GTK
 
@@ -9,8 +8,7 @@ static GtkWidget *mainWindow;
 //////////////////////////////////////////////////////////////////////////////////
 // Package Creation
 
-static void CreateNewPackage( void )
-{
+static void CreateNewPackage( void ) {
 	// Pick the source folder
 	char *folder = NULL;
 	{
@@ -48,15 +46,13 @@ static void CreateNewPackage( void )
 		gtk_widget_destroy( dialog );
 	}
 
-	if ( destination == NULL )
-	{
+	if ( destination == NULL ) {
 		g_free( folder );
 		return;
 	}
 
 	FILE *out = fopen( destination, "wb" );
-	if ( out == NULL )
-	{
+	if ( out == NULL ) {
 		ShowMessageBox( "Failed to write to destination!", false );
 		g_free( folder );
 		g_free( destination );
@@ -95,15 +91,13 @@ static void CreateNewPackage( void )
 	gtk_main_iteration_do( false );
 
 	PLPath tmpPath;
-	if ( tmpnam_r( tmpPath ) == NULL )
-	{
+	if ( tmpnam_r( tmpPath ) == NULL ) {
 		Print( "Failed to get temporary location, using './temp' instead...\n" );
 		snprintf( tmpPath, sizeof( tmpPath ), "./temp" );
 	}
 
 	PLLinkedListNode *node = PlGetFirstNode( fileList );
-	for ( unsigned int i = 0;; ++i )
-	{
+	for ( unsigned int i = 0;; ++i ) {
 		if ( node == NULL )
 			break;
 
@@ -114,13 +108,11 @@ static void CreateNewPackage( void )
 		gtk_main_iteration_do( false );
 
 		//TODO: bail when this fails...
-		char   *store = PlGetLinkedListNodeUserData( node );
+		char *store = PlGetLinkedListNodeUserData( node );
 		PLFile *in = PlOpenLocalFile( store, true );
-		if ( in != NULL )
-		{
+		if ( in != NULL ) {
 			PLFile *newFile = NodeToBin( in, tmpPath );
-			if ( newFile != NULL )
-			{
+			if ( newFile != NULL ) {
 				PlCloseFile( in );
 				in = newFile;
 			}
@@ -151,8 +143,7 @@ static void CreateNewPackage( void )
 	gtk_widget_destroy( progressWindow );
 }
 
-static GtkWidget *CreateTreeView( void )
-{
+static GtkWidget *CreateTreeView( void ) {
 	GtkWidget *view = gtk_tree_view_new();
 
 	GtkCellRenderer *renderer;
@@ -189,8 +180,7 @@ static GtkWidget *CreateTreeView( void )
 	return view;
 }
 
-static GtkWidget *CreateMenus( void )
-{
+static GtkWidget *CreateMenus( void ) {
 	GtkWidget *menuBar = gtk_menu_bar_new();
 	GtkWidget *fileMenu = gtk_menu_new();
 	{
@@ -246,8 +236,7 @@ static GtkWidget *CreateMenus( void )
 	return menuBar;
 }
 
-int main( int argc, char **argv )
-{
+int main( int argc, char **argv ) {
 	PlInitialize( argc, argv );
 
 	Common_Initialize();

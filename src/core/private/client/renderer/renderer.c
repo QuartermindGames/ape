@@ -3,38 +3,38 @@
 
 #include <plgraphics/plg_driver_interface.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "legacy/actor.h"
 #include "renderer_font.h"
-#include "world.h"
-#include "game_interface.h"
+#include "world/world.h"
 #include "renderer.h"
 #include "renderer_particle.h"
 
-#include "client/client_gui.h"
+#include "client/ape_client_gui.h"
 #include "editor/editor.h"
 
 #include "post/post.h"
 
-YNCoreRendererStats g_gfxPerfStats;
-YNCoreRendererPassState rendererState;
+ApeRendererStats ape_rendererPerformance_;
+ApeRendererPassState rendererState;
 
 static PLGCamera *auxCamera = NULL;
+PLGCamera *apeGetAuxCamera( void ) { return auxCamera; }
 
 static PLGFrameBuffer *fboBuffer;
 
+static bool isScreenshotPending = false;
+
 /* Post Processing */
 
-void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h )
-{
+void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h ) {
 	unsigned int bw = 0, bh = 0;
 	if ( *buffer != NULL )
 		PlgGetFrameBufferResolution( *buffer, &bw, &bh );
 
 	/* need to rebuild the framebuffer object
 	 * todo: the library should provide us a func to perform a resize? */
-	if ( bw != w || bh != h )
-	{
+	if ( bw != w || bh != h ) {
 		PlgDestroyFrameBuffer( *buffer );
 		*buffer = PlgCreateFrameBuffer( w, h, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 		if ( *buffer == NULL )
@@ -45,8 +45,7 @@ void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment,
 		if ( *attachment == NULL )
 			PRINT_ERROR( "Failed to create texture attachment: %s\n", PlGetError() );
 
-		if ( depthAttachment != NULL )
-		{
+		if ( depthAttachment != NULL ) {
 			PlgDestroyTexture( *depthAttachment );
 			*depthAttachment = PlgGetFrameBufferTextureAttachment( *buffer, PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL, PLG_TEXTURE_FILTER_LINEAR );
 			if ( *depthAttachment == NULL )
@@ -62,8 +61,7 @@ void YnCore_SetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment,
 
 static PLGTexture *numTextureTable[ 10 ];
 
-void R_DrawDigit( float x, float y, int digit )
-{
+void R_DrawDigit( float x, float y, int digit ) {
 	if ( digit < 0 )
 		digit = 0;
 	else if ( digit > 9 )
@@ -72,23 +70,20 @@ void R_DrawDigit( float x, float y, int digit )
 	PlgDrawTexturedRectangle( x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
-void R_DrawNumber( float x, float y, int number )
-{
+void R_DrawNumber( float x, float y, int number ) {
 	/* restrict it for sanity */
 	if ( number < 0 )
 		number = 0;
 	else if ( number > 999 )
 		number = 999;
 
-	if ( number >= 100 )
-	{
+	if ( number >= 100 ) {
 		int digit = number / 100;
 		R_DrawDigit( x, y, digit );
 		x += ( float ) numTextureTable[ digit ]->w + 1;
 	}
 
-	if ( number >= 10 )
-	{
+	if ( number >= 10 ) {
 		int digit = ( number / 10 ) % 10;
 		R_DrawDigit( x, y, digit );
 		x += ( float ) numTextureTable[ digit ]->w + 1;
@@ -97,94 +92,142 @@ void R_DrawNumber( float x, float y, int number )
 	R_DrawDigit( x, y, number % 10 );
 }
 
-void YnCore_SetupDefaultRenderState( const YNCoreViewport *viewport )
-{
+void apeSetupDefaultRenderState( const ApeViewport *viewport ) {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	YNCoreWorld *world = Game_GetCurrentWorld();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE ) )
-	{
+	ApeWorld *world = apeGetCurrentWorld();
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
-	}
 
 	PlgSetClearColour( clearColour );
 
-	PlgEnableGraphicsState( PLG_GFX_STATE_SCISSORTEST );
-
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-	PlgSetDepthMask( true );
+	PlgDepthMask( true );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void YnCore_BeginDraw( YNCoreViewport *viewport )
-{
+void apeBeginDraw( ApeViewport *viewport ) {
+	COM_PROFILE_FUNCTION_START();
+
 	double newTime = PlGetCurrentSeconds();
 
 	viewport->perf.frameReadings[ viewport->perf.frameIndex++ ] = 1.0 / ( newTime - viewport->perf.oldTime );
-	if ( viewport->perf.frameIndex >= YN_CORE_MAX_FPS_READINGS )
-	{
+	if ( viewport->perf.frameIndex >= APE_MAX_FPS_READINGS ) {
 		viewport->perf.frameIndex = 0;
 	}
 	viewport->perf.oldTime = newTime;
 
-	YnCore_SetupDefaultRenderState( viewport );
+	apeSetupDefaultRenderState( viewport );
 
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
-void YnCore_EndDraw( YNCoreViewport *viewport )
-{
-	viewport->perf.numBatches   = 0;
+static void WriteScreenshot( void ) {
+	uint32_t w, h;
+	PlgGetFrameBufferResolution( fboBuffer, &w, &h );
+
+	size_t bufSize = ( ( w * h ) * 4 );
+	uint8_t *buf = PL_NEW_( uint8_t, bufSize );
+	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL ) {
+		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		assert( image != NULL );
+		if ( image != NULL ) {
+			uint16_t num = 0;
+			PLPath path;
+			PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), num );
+			while ( PlFileExists( path ) ) {
+				PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), ++num );
+			}
+
+			PlFlipImageVertical( image );
+
+			PlWriteImage( image, path );
+			PlDestroyImage( image );
+		} else {
+			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
+		}
+	} else {
+		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+	}
+
+	PL_DELETE( buf );
+}
+
+void apeEndDraw( ApeViewport *viewport ) {
+	PL_ZERO_( ape_rendererPerformance_ );
+
+	viewport->perf.numBatches = 0;
 	viewport->perf.numTriangles = 0;
-	viewport->perf.numPolygons  = 0;
-	viewport->perf.numPortals   = 0;
+	viewport->perf.numPolygons = 0;
+	viewport->perf.numPortals = 0;
+
+	if ( isScreenshotPending ) {
+		WriteScreenshot();
+		isScreenshotPending = false;
+	}
 }
 
-static YNCoreMaterial *ppFXAAMaterial = NULL;
-
-void YR_Shader_Initialize( void );  /* renderer/shaders.c */
-void RT_InitializeTextures( void ); /* texture.c */
+void apeInitializeShaders_( void );  /* renderer/shaders.c */
+void apeInitializeTextures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void YnCore_InitializeRenderTargets( void );
-void YnCore_ShutdownRenderTargets( void );
+void apeInitializeRenderTargets( void );
+void apeShutdownRenderTargets( void );
 
-void Renderer_RegisterConsoleVariables( void )
-{
-	PlRegisterConsoleVariable( "r.cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.showFPS", "Toggle FPS counter.", "false", PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r.driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
-
-	// Camera
-	PlRegisterConsoleVariable( "r.fov", "", "75", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r.far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
+static void PrepareScreenshotCapture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv ) {
+	isScreenshotPending = true;
 }
 
-void YnCore_InitializeRenderer( void )
-{
+void Renderer_RegisterConsoleVariables( void ) {
+	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, PrepareScreenshotCapture );
+
+	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/showFPS", "Toggle FPS counter.",
+#if !defined( NDEBUG )
+	                           "true",
+#else
+	                           "false",
+#endif
+	                           PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
+	PlRegisterConsoleVariable( "r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "r/driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
+	PlRegisterConsoleVariable( "r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
+	PlRegisterConsoleVariable( "r/maxLightDistance", "Maximum distance before lights are culled.", "30", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
+
+	// Camera
+	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
+}
+
+void apeInitializeRenderer_( void ) {
 	PRINT( "Initializing renderer\n" );
 
 	PL_ZERO_( rendererState );
 
-	RT_InitializeTextures();
+	apeInitializeTextures_();
 
-	YR_Shader_Initialize();
-	YnCore_InitializeRenderTargets();
-	YnCore_InitializeMaterialSystem();
+	apeInitializeShaders_();
+	apeInitializeRenderTargets();
+	apeInitializeMaterialSystem();
 	YR_Font_Initialize();
+
+	apeInitializeWorldVisibilitySystem_();
 
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
@@ -192,69 +235,79 @@ void YnCore_InitializeRenderer( void )
 
 	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = -10000.0f;
-	auxCamera->far  = 10000.0f;
+	auxCamera->far = 10000.0f;
 
 	//SetupShadowMap();
-	YnCore_SetupDefaultRenderState( NULL );
+	apeSetupDefaultRenderState( NULL );
 
 	R_PP_SetupEffects();
 }
 
-void YnCore_ShutdownRenderer( void )
-{
+void apeShutdownRenderer_( void ) {
 	Font_Shutdown();
-	YnCore_ShutdownMaterialSystem();
-	YnCore_ShutdownRenderTargets();
+	apeShutdownMaterialSystem();
+	apeShutdownRenderTargets();
+	apeShutdownWorldVisibilitySystem_();
 }
 
 /**
  * Where the magic of post processing happens.
  */
-static void DrawScenePost( const YNCoreViewport *viewport )
-{
-	PL_GET_CVAR( "r.postProcessing", postProcessingVar );
-	if ( postProcessingVar == NULL || !postProcessingVar->b_value )
+static void DrawScenePost( const ApeViewport *viewport ) {
+	PL_GET_CVAR( "r/postProcessing", postProcessingVar );
+	if ( postProcessingVar == NULL || !postProcessingVar->b_value ) {
 		return;
+	}
 
 	R_PP_Draw( viewport );
 }
 
-void YR_DrawGraph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
-{
-	if ( numPoints < 2 )
+void YR_DrawGraph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max ) {
+	if ( numPoints < 2 ) {
 		return;
-
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-
-	double oa = min, ob = max;
-	for ( unsigned int i = 0; i < numPoints; ++i )
-	{
-		if ( values[ i ] > max )
-			max = values[ i ];
-		if ( values[ i ] < min )
-			min = values[ i ];
 	}
 
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+
+	double oa = min, ob = max;
+	for ( unsigned int i = 0; i < numPoints; ++i ) {
+		if ( values[ i ] > max ) {
+			max = values[ i ];
+		}
+		if ( values[ i ] < min ) {
+			min = values[ i ];
+		}
+	}
+
+#if 0
 	bool outOfBounds = false;
 	if ( oa != min || max != ob )
+	{
 		outOfBounds = true;
+	}
+#endif
+
+	static PLColour colours[ 3 ] = {
+	        PL_COLOUR_GREEN,
+	        PL_COLOUR_YELLOW,
+	        PL_COLOUR_RED,
+	};
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	PLVector3   *points       = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
+	PLVector3 *points = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
 
 	/* convert the values we've been provided into points in our graph */
-	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
-	{
+	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ ) {
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * ( j - 1 ) );
-		if ( min != max )
+		if ( min != max ) {
 			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
-
+		}
 		++i;
 
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * j );
-		if ( min != max )
+		if ( min != max ) {
 			points[ i ].y = y + h - 1 - ( ( values[ j ] - min ) * ( h / ( max - min ) ) );
-
+		}
 		/* leave z, it'll be initialized as 0 */
 	}
 
@@ -273,164 +326,68 @@ void YR_DrawGraph( const char *heading, float x, float y, float w, float h, cons
 	        { x + w, y + h, 0 },
 	        { x + w, y, 0 },// right
 	};
-	PlgDrawLines( border, PL_ARRAY_ELEMENTS( border ), PL_COLOUR_GOLD );
+	PlgDrawLines( border, PL_ARRAY_ELEMENTS( border ), PL_COLOUR_GOLD, 1.0f );
 #endif
 
-	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE );
+	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
-	BitmapFont *font = Font_GetDefaultSmall();
-	Font_BeginDraw( font );
+	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
+	apeBeginBitmapFontDraw( font );
 
-	if ( heading != NULL )
-	{
-		size_t len  = strlen( heading );
-		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		Font_AddBitmapStringToPass( font, cPos, y + 2.0f, 1.0f, PLColourRGB( 0, 255, 0 ), heading, len, false );
+	if ( heading != NULL ) {
+		size_t len = strlen( heading );
+		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+		apeAddBitmapStringToBatch( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
 	// Calculate the average sum of all the points
 	double avg = 0.0;
-	for ( unsigned int i = 0; i < numPoints; ++i )
+	for ( unsigned int i = 0; i < numPoints; ++i ) {
 		avg += values[ i ];
+	}
 	avg /= numPoints;
 
 	char buf[ 128 ];
 
 	// Current and average readings
 	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 
+#if 0
 	snprintf( buf, sizeof( buf ), "y+:%02f", max );
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "y-:%02f", min );
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
+#endif
 
-	Font_Draw( font );
+	apeDrawBitmapFont( font );
 
-	PlFree( points );
+	PL_DELETE( points );
 }
 
-static void DrawEditorOverlay( const YNCoreViewport *viewport )
-{
-	YNCoreEditorInstance *editorInstance = Editor_GetCurrentInstance();
-	if ( editorInstance == NULL )
+static void DrawDebugOverlay( const ApeViewport *viewport ) {
+	PL_GET_CVAR( "debug/overlay", debugOverlay );
+	if ( debugOverlay->i_value <= 0 ) {
 		return;
-
-	const YNCoreCamera *camera = viewport->camera;
-	if ( camera != NULL && ( camera->mode != YN_CORE_CAMERA_MODE_PERSPECTIVE ) && ( editorInstance->gridScale > 0 ) )
-	{
-		PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
-
-		static float z    = 16.0f;
-		float        zoom = roundf( z ) / 2.0f;
-
-		float x = 500.0f + sinf( zoom * 2.0f ) * 100.0f;
-		float y = 200.0f + cosf( zoom * 2.0f ) * 100.0f;
-
-		PLMatrix4 transform = PlMatrix4Identity();
-		transform           = PlScaleMatrix4( transform, ( PLVector3 ){ zoom, zoom, zoom } );
-
-		// stupid matrix bollocks, blargh
-		transform = PlTransposeMatrix4( &transform );
-		PlgSetViewMatrix( &transform );
-
-		//todo: hook these up with vars...
-		int m = ( viewport->width > viewport->height ) ? viewport->width : viewport->height;
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, editorInstance->gridScale / 2, &( PLColour ){ 70, 70, 70, 255 } );
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( editorInstance->gridScale / 2 ) * 4, &( PLColour ){ 100, 100, 100, 255 } );
-
-		switch ( camera->mode )
-		{
-			default:
-				break;
-			case YN_CORE_CAMERA_MODE_TOP:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
-				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ 0.0f, -y, -x } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
-				break;
-			case YN_CORE_CAMERA_MODE_FRONT:
-				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
-				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
-				break;
-		}
-
-		// stupid matrix bollocks, blargh
-		transform = PlTransposeMatrix4( &transform );
-		PlgSetViewMatrix( &transform );
-
-		YNCoreCamera tmp;
-		PL_ZERO_( tmp );
-		tmp.internal = auxCamera;
-		YnCore_World_DrawWireframe( Game_GetCurrentWorld(), &tmp );
-
-		// reset the view matrix back to it's original state
-		PlgSetViewMatrix( &auxCamera->internal.view );
 	}
 
-	BitmapFont *defaultFont = Font_GetDefault();
-	if ( defaultFont == NULL )
-		return;
-
-	Font_BeginDraw( defaultFont );
-
-	const char *label;
-	if ( camera != NULL )
-	{
-		switch ( camera->mode )
-		{
-			default:
-			case YN_CORE_CAMERA_MODE_FRONT:
-				label = "Front";
-				break;
-			case YN_CORE_CAMERA_MODE_LEFT:
-				label = "Left";
-				break;
-			case YN_CORE_CAMERA_MODE_PERSPECTIVE:
-				label = "Perspective";
-				break;
-			case YN_CORE_CAMERA_MODE_TOP:
-				label = "Top";
-				break;
-		}
-	}
-	else
-		label = "No camera!";
-
-	Font_AddBitmapStringToPass( defaultFont,
-	                            ( float ) ( ( viewport->width - ( defaultFont->cw * 2 ) ) - ( defaultFont->cw * strlen( label ) ) ),
-	                            ( float ) ( viewport->height - ( defaultFont->ch * 2 ) ),
-	                            1.0f, PL_COLOUR_GOLD, label, strlen( label ), true );
-
-	Font_Draw( defaultFont );
-}
-
-static void DrawDebugOverlay( const YNCoreViewport *viewport )
-{
-	PL_GET_CVAR( "debug.overlay", debugOverlay );
-	if ( debugOverlay->i_value <= 0 )
-		return;
-
-	BitmapFont *defaultFont = Font_GetDefaultSmall();
+	ApeBitmapFont *defaultFont = apeGetDefaultSmallBitmapFont();
 	assert( defaultFont != NULL );
-	if ( defaultFont == NULL )
+	if ( defaultFont == NULL ) {
 		return;
+	}
 
-	Font_BeginDraw( defaultFont );
+	apeBeginBitmapFontDraw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
 	static const float tx = 8 + 4;
-	float              y  = sy;
+	float y = sy;
 
-	const YNCoreCamera *camera = viewport->camera;
-	if ( camera != NULL )
-	{
+	const ApeCamera *camera = viewport->camera;
+	if ( camera != NULL ) {
 		// Draw camera position
 		char buf[ 128 ];
 		PL_ZERO( buf, sizeof( buf ) );
@@ -440,103 +397,114 @@ static void DrawDebugOverlay( const YNCoreViewport *viewport )
 		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
 		strcat( buf, vang );
 		strcat( buf, ")" );
-		Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+		apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	}
 
 	// Draw stats
 	char buf[ 64 ];
-	snprintf( buf, sizeof( buf ), "FPS:           " PL_FMT_uint32 "\n", YnCore_Viewport_GetAverageFPS( viewport ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num faces:     " PL_FMT_uint32 "\n", g_gfxPerfStats.numFacesDrawn );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num portals:   " PL_FMT_uint32 "\n", g_gfxPerfStats.numVisiblePortals );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num triangles: " PL_FMT_uint32 "\n", g_gfxPerfStats.numTriangles );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num batches:   " PL_FMT_uint32 "\n", g_gfxPerfStats.numBatches );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Alloc memory:  %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Total memory:  %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", apeGetViewportFramerate( viewport ) );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "---------------------\n" );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 
-	unsigned int numTasks = Sch_GetNumTasks();
+	unsigned int numTasks = apeGetNumScheduledTasks();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
-	Font_AddBitmapStringToPass( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
-	for ( unsigned int i = 0; i < numTasks; ++i )
-	{
-		double      taskDelay;
-		const char *taskDescription = Sch_GetTaskDescription( i, &taskDelay );
+	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	for ( unsigned int i = 0; i < numTasks; ++i ) {
+		double taskDelay;
+		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
-		Font_AddBitmapStringToPass( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+		apeAddBitmapStringToBatch( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
 	y += defaultFont->ch * 2;
 
 	static const float bw = 128;
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	Font_Draw( defaultFont );
+	apeDrawBitmapFont( defaultFont );
 
-	if ( debugOverlay->i_value > 1 )
-	{
+	if ( debugOverlay->i_value > 1 ) {
+		static const float Y_SPACING = 4.0f;
+		static const float X_SPACING = 4.0f;
+		static const float GRAPH_HEIGHT = 32.0f;
+
+		y += Y_SPACING;
+
 		float x = sx;
 
-		static const float graphHeight = 64;
-		for ( unsigned int i = 0; i < MAX_PROFILER_GROUPS; ++i )
-		{
-			if ( y + graphHeight >= ( float ) viewport->height )
-			{
+		ComProfilingGroup *group = comGetFirstProfilingGroup();
+		while ( group != NULL ) {
+			if ( y + GRAPH_HEIGHT >= ( float ) viewport->height ) {
 				y = sy;
-				x += bw;
+				x += ( bw + X_SPACING );
 			}
 
-			uint8_t       numPoints;
-			const double *graph = Profiler_GetGraph( i, &numPoints );
-			YR_DrawGraph( cpuProfilerDescriptions[ i ], x, y, bw, graphHeight, graph, numPoints, .0f, 1.0f );
-			y += graphHeight;
+			unsigned int numPoints;
+			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
+			const char *name = comGetProfilingGroupName( group );
+			YR_DrawGraph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
+			y += GRAPH_HEIGHT + Y_SPACING;
+
+			group = comGetNextProfilingGroup( group );
 		}
 	}
 }
 
-void YnCore_Set2DViewportSize( int w, int h )
-{
+void apeSet2DViewportSize( int w, int h ) {
 	PlgSetViewport( 0, 0, w, h );
 	PlgSetupCamera( auxCamera );
 }
 
-void YnCore_Get2DViewportSize( int *width, int *height )
-{
-	*width  = 640;
-	*height = 480;
+void apeGet2DViewportSize( int *width, int *height ) {
+	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void YnCore_DrawMenu( const YNCoreViewport *viewport )
-{
-	YN_CORE_PROFILE_START( PROFILE_DRAW_UI );
+void apeDrawMenu( const ApeViewport *viewport ) {
+	if ( viewport == NULL ) {
+		return;
+	}
 
-	YnCore_Set2DViewportSize( viewport->width, viewport->height );
+	COM_PROFILE_FUNCTION_START();
 
-	PlgSetDepthMask( false );
+	apeSet2DViewportSize( viewport->width, viewport->height );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	DrawScenePost( NULL );
+	COM_PROFILE_FUNCTION_CALL( "DrawScenePost", DrawScenePost( viewport ) );
 
 	//YRCamera camera;
 	//PL_ZERO_( camera );
 	//camera.internal = auxCamera;
 	//YR_World_DrawWireframe( Game_GetCurrentWorld(), &camera );
 
-	YnCore_DrawGUI( viewport );
-
-	if ( viewport != NULL )
-		DrawEditorOverlay( viewport );
+	apeDrawGUI_( viewport );
+	apeDrawEditorGUI_( viewport );
 
 	DrawDebugOverlay( viewport );
 
@@ -544,81 +512,207 @@ void YnCore_DrawMenu( const YNCoreViewport *viewport )
 
 	PlPopMatrix();
 
-	PlgSetDepthMask( true );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 
-	YN_CORE_PROFILE_END( PROFILE_DRAW_UI );
-
-	PL_ZERO_( g_gfxPerfStats );
+	COM_PROFILE_FUNCTION_END();
 }
 
-void YnCore_Draw2DQuad( YNCoreMaterial *material, int x, int y, int w, int h )
-{
+void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour ) {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
 		mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 2, 4 );
 
 	PlgClearMesh( mesh );
 
-	PlgAddMeshVertex( mesh, &PlVector3( x, y + h, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 0, 0 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x, y, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 0, 1 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 0 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &PlVector2( 1, 1 ) );
+	PlgAddMeshVertex( mesh, &PlVector3( x, y + h, 0 ), &pl_vecOrigin3, colour, &PlVector2( 0, 0 ) );
+	PlgAddMeshVertex( mesh, &PlVector3( x, y, 0 ), &pl_vecOrigin3, colour, &PlVector2( 0, 1 ) );
+	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 0 ) );
+	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 1 ) );
 
-	YnCore_Material_DrawMesh( material, mesh, NULL, 0 );
+	apeDrawMesh( material, mesh, NULL, 0 );
 }
 
-void YnCore_DrawAxesPivot( PLVector3 position, PLVector3 rotation )
-{
+void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation, float scale ) {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	PLVector3 angles;
 	angles.x = PL_DEG2RAD( rotation.x );
 	angles.y = PL_DEG2RAD( rotation.y );
 	angles.z = PL_DEG2RAD( rotation.z );
 
+	PlTranslateMatrix( position );
+
 	PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
 	PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
 	PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
 
-	PlTranslateMatrix( position );
-
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 10, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 10, 0 ), PLColour( 0, 255, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, 10 ), PLColour( 0, 0, 255, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
 	PlPopMatrix();
 }
 
-static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
-{
-	YNCoreWorldSector *currentSector = NULL;
-	YNCoreWorld *world         = Game_GetCurrentWorld();
-	if ( world != NULL )
-		currentSector = YnCore_World_GetSectorByGlobalOrigin( world, &camera->internal->position );
+static PLGTexture *colourTexture;
+PLGTexture *apeGetPrimaryColourAttachment( void ) {
+	return colourTexture;
+}
 
-	/* todo:	
-		this needs to be restructured, as drawing is going to
-		depend on whatever sector is currently being drawn.
-		but for v2, this'll suffice...
-	*/
+static PLGTexture *depthTexture;
+PLGTexture *apeGetPrimaryDepthAttachment( void ) {
+	return depthTexture;
+}
 
-	if ( viewport != NULL )
+void apeDebugPlaceLight( PLVector3 position ) {
+	ApeWorld *world = apeGetCurrentWorld();
+	ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
+	light->position = position;
+}
+
+PLVector2 screenPosTest;
+static void RenderScene( ApeCamera *camera, const ApeViewport *viewport ) {
+	ape_rendererPerformance_.numLights = 0;
+
+	ApeWorld *world = apeGetCurrentWorld();
+	if ( world == NULL )
+		return;
+
+#if 1// test lights
 	{
-		if ( camera->mode == YN_CORE_CAMERA_MODE_PERSPECTIVE )
-		{
-			if ( camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME )
-				YnCore_World_DrawWireframe( world, camera );
-			else
-				YnCore_World_Draw( world, currentSector, camera );
+		PLVector3 forward;
+		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
 
-			YNCoreEditorInstance *editorInstance = Editor_GetCurrentInstance();
+		for ( unsigned int i = 0; i < 1; ++i ) {
+			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+			light->flags |= APE_LIGHT_FLAG_RUNTIME_SHADOWS;
+#	if 1
+			if ( i == 0 ) {
+				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 8.0f ) );
+				light->position = PlAddVector3( light->position, ( PLVector3 ){
+				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
+				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
+				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f } );
+				light->colour = PL_COLOURF32( 1.f, 1.f, 1.f, 1.0f );
+				light->radius = 16.0f;
+			} else {
+				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 2.0f ) );
+				light->position = PlAddVector3( light->position, ( PLVector3 ){
+				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f,
+				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f,
+				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f } );
+				light->colour = PL_COLOURF32( 0.5f, 0, 1.0f, 1.0f );
+				light->radius = 4.0f;
+			}
+#	endif
+			apeDrawAxesPivot( light->position, light->angles, 1.0f );
+		}
+	}
+#endif
+
+	apeDrawWorld_( world, camera, NULL, true );
+
+	unsigned int numLights;
+	ApeLight **lights = apeGetVisibleLights_( &numLights );
+
+	if ( ape_config_.renderer.useStencilShadowVolumes ) {
+		for ( unsigned int i = 0; i < numLights; ++i ) {
+			PLCollisionSphere sphere = PlSetupCollisionSphere( lights[ i ]->position, lights[ i ]->radius );
+			PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+			PLVector2 lightScreenPos = PlConvertWorldToScreen( &lights[ i ]->position, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, false );
+			PLVector3 lightRadi = PlAddVector3F( lights[ i ]->position, lights[ i ]->radius );
+			PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, false );
+
+			static int radius = 256;
+
+			PLRectangleI32 screenRect;
+			screenRect.x = ( int ) lightScreenPos.x - ( radius / 2 );
+			if ( screenRect.x < viewport->x ) screenRect.x = viewport->x;
+			screenRect.y = ( int ) lightScreenPos.y - ( radius / 2 );
+			if ( screenRect.y < viewport->y ) screenRect.y = viewport->y;
+
+			screenRect.w = ( int ) radius;
+			//if ( screenRect.x + screenRect.w > viewport->width ) screenRect.w = ( screenRect.x + screenRect.w ) - viewport->width;
+			screenRect.h = ( int ) radius;
+			//if ( screenRect.y + screenRect.h > viewport->height ) screenRect.h = ( screenRect.y + screenRect.h ) - viewport->height;
+
+			apeDrawAxesPivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+
+			if ( screenRect.w < 0 || screenRect.h < 0 )
+				continue;
+
+			//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
+
+			if ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) {
+				if ( ape_config_.renderer.showShadowWireframe ) {
+					rendererState.cullMode = APE_RENDERER_CULL_NONE;
+					rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
+
+					PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+					apeDrawWorldStencilShadowPass_( world, camera, NULL );
+					PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+
+					rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+				} else {
+					rendererState.passStage = APE_RENDERER_PASS_STENCIL;
+
+					PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+					PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+					PlgColourMask( false, false, false, false );
+					PlgDepthMask( false );
+
+					rendererState.cullMode = APE_RENDERER_CULL_NONE;
+					PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
+					PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+					PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+
+					apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+
+					PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+					PlgColourMask( true, true, true, true );
+
+					PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+
+					PlgStencilBufferFunction( PLG_COMPARE_NOTEQUAL, 0x0, 0xFF );
+					PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+					apeDrawWorld_( world, camera, NULL, true );
+
+					PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+					PlgDepthMask( true );
+
+					rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+				}
+			}
+
+			rendererState.overrideBlendMode = true;
+			rendererState.passStage = APE_RENDERER_PASS_LIGHTING;
+
+			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+
+			rendererState.blendModeA = PLG_BLEND_ONE;
+			rendererState.blendModeB = PLG_BLEND_ONE;
+
+			apeDrawWorld_( world, camera, lights[ i ], false );
+
+			PlgDepthBufferFunction( PLG_COMPARE_LESS );
+			rendererState.overrideBlendMode = false;
+
+			PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
+			ape_rendererPerformance_.numLights++;
+		}
+		rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
+	}
+}
+
+#if 0
+ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
 			{
 				PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -637,55 +731,33 @@ static void YR_RenderScene( YNCoreCamera *camera, const YNCoreViewport *viewport
 
 				static const unsigned int gridW = 256;
 
-				PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+				PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
 
 				PlPopMatrix();
 			}
-		}
-	}
-	else
-		YnCore_World_Draw( world, currentSector, camera );
-
-#if 0
-	static PLVector3 rotation = PLVector3( 0.0f, 0.0f, 0.0f );
-	R_DrawAxesPivot( PLVector3( 16.0f, -0.0f, 0.0f ), rotation );
-	rotation.x += 0.5f;
-	rotation.y += 0.5f;
-	rotation.z += 0.5f;
 #endif
-}
 
-static PLGTexture *colourTexture;
-PLGTexture        *YnCore_GetPrimaryColourAttachment( void )
-{
-	return colourTexture;
-}
+void apeDrawScene_( ApeCamera *camera, const ApeViewport *viewport ) {
+	COM_PROFILE_FUNCTION_START();
 
-static PLGTexture *depthTexture;
-PLGTexture        *YnCore_GetPrimaryDepthAttachment( void )
-{
-	return depthTexture;
-}
-
-void YR_DrawScene( YNCoreCamera *camera, const YNCoreViewport *viewport )
-{
-	g_gfxPerfStats.cameraPos = camera->internal->position;
+	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
-	YnCore_SetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
+	apeSetupRenderTarget( &fboBuffer, &colourTexture, &depthTexture, viewport->width, viewport->height );
 	PlgBindFrameBuffer( fboBuffer, PLG_FRAMEBUFFER_DRAW );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	PL_GET_CVAR( "r.wireframe", wireframeMode );
-	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
-	YR_RenderScene( camera, viewport );
+	RenderScene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == YN_CORE_CAMERA_DRAW_MODE_WIREFRAME ) || wireframeMode->b_value )
+	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
+
+	COM_PROFILE_FUNCTION_END();
 }

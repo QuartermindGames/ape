@@ -1,0 +1,265 @@
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+
+#pragma once
+
+#include <plcore/pl_physics.h>
+#include <plcore/pl_array_vector.h>
+
+#include <plgraphics/plg_mesh.h>
+
+#include "yin/core_world.h"
+
+#include "ape_memory_manager.h"
+
+#include "entity/entity.h"
+
+#define WORLD_PROP_TAG_LENGTH   64
+#define WORLD_PROP_VALUE_LENGTH 256
+
+#if 0 /* original values, used for prototype */
+#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.4f, 0.4f, 0.4f, 1.0f )
+#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
+#	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
+#	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
+#	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.25f )
+#else
+#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.1f, 0.1f, 0.1f, 1.0f )
+#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
+#	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
+#	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
+#	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f )
+#endif
+
+typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
+typedef struct ApeWorldFace ApeWorldFace;
+typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct ApeWorldPortal ApeWorldPortal;
+
+typedef struct ApeWorldVertex {
+	PLVector3 position;
+	PLVector3 normal;
+	PLVector2 uv;
+	PLColourF32 colour;
+	PLVectorArray *adjacentFaces;
+} ApeWorldVertex;
+
+typedef struct ApeWorldFaceVertex {
+	PLVector2 textureCoords;
+	float lightmapU, lightmapV;
+
+	ApeWorldVertex *u;
+} ApeWorldFaceVertex;
+
+#define APE_WORLD_FACE_FLAG_SKY        0x01
+#define APE_WORLD_FACE_FLAG_MIRRORED   0x02
+#define APE_WORLD_FACE_FLAG_LIQUID     0x04
+#define APE_WORLD_FACE_FLAG_DETAIL     0x08
+#define APE_WORLD_FACE_FLAG_SCROLL     0x10
+#define APE_WORLD_FACE_FLAG_FULLBRIGHT 0x20
+#define APE_WORLD_FACE_FLAG_ALPHA      0x40
+#define APE_WORLD_FACE_FLAG_HOLES      0x80
+#define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
+#define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
+
+typedef struct ApeWorldFace {
+	float offset;
+	PLVector3 normal;
+	PLVector3 origin;
+
+	int32_t smoothingGroup;
+
+	ApeWorldPortal *portal;
+
+	struct ApeMaterial *material;
+	int materialIndex;// index into world's material list
+	// todo: reduce the below to transform matrix???
+	float materialAngle;
+	PLVector2 materialOffset;
+	PLVector2 materialScale;
+
+	PLVectorArray *vertices;// ApeWorldFaceVertex
+	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
+
+	unsigned int flags; /* portal, mirror, skip etc. */
+
+	PLCollisionAABB bounds;
+} ApeWorldFace;
+
+typedef struct ApeWorldMesh {
+	char id[ WORLD_PROP_TAG_LENGTH ];
+
+	struct ApeMaterial **materials;
+	unsigned int numMaterials;
+
+	ApeWorldVertex *vertices;
+	unsigned int numVertices;
+	unsigned int maxVertices;
+
+	PLLinkedList *faces;
+
+	PLCollisionAABB bounds;
+
+	struct PLGMesh *drawMesh; /* what actually gets rendered */
+
+	PLLinkedListNode *node;
+
+	ApeMemoryReference mem;
+} ApeWorldMesh;
+
+typedef struct ApeWorldObject {
+	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
+
+	union {
+		const ApeWorldMesh *collisionMesh;
+		const PLCollisionAABB *collisionBounds;
+	} collisionPtr;
+} ApeWorldObject;
+
+typedef struct ApeWorldPortal {
+	PLVector3 mins;
+	PLVector3 maxs;
+
+	ApeWorldRoom *roomA;
+	ApeWorldRoom *roomB;
+
+	bool canSeeThrough;
+} ApeWorldPortal;
+
+enum {
+	APE_WORLD_ROOM_BATCH_ROOM,
+	APE_WORLD_ROOM_BATCH_DETAIL,
+
+	APE_WORLD_ROOM_NUM_BUILTIN_BATCHES
+};
+
+typedef struct ApeWorldBatch {
+	int *subMeshes;
+	int *firstSubMeshes;
+	unsigned int numSubMeshes, maxSubMeshes;
+	struct ApeMaterial *material;
+} ApeWorldBatch;
+
+typedef struct ApeWorldRoom {
+	char id[ WORLD_PROP_TAG_LENGTH ];
+	int tag;
+
+	bool isDetail;
+	bool containsLiquid;
+
+	unsigned int flags;
+
+	PLColourF32 colour;// an identifying colour
+	PLColourF32 ambientLight;
+
+	float life;
+
+	struct
+	{
+		float depth;
+		PLColourF32 colour;
+		float visibility;
+		int type;
+		int alpha;
+		bool plankton;
+		int ppmU, ppmV;
+		float angle;
+		int waveform;
+		float panU, panV;
+	} liquid;
+
+	PLVectorArray *detailRooms;// ApeWorldRoom
+	PLVectorArray *portals;    // ApeWorldPortal
+	PLVectorArray *faces;      // ApeWorldFace
+
+	PLGMesh *mesh;      // cached mesh
+	PLGMesh *shadowMesh;// shadow volume mesh
+	ApeWorldBatch *batches;
+	unsigned int numBatches;
+	unsigned int builtInBatches[ APE_WORLD_ROOM_NUM_BUILTIN_BATCHES ];
+	bool isMeshCached;// if false, mesh cache will be updated
+
+	PLLinkedList *actors;// Actors currently in this sector
+	PLLinkedList *lights;// Lights in this sector
+
+	PLCollisionAABB bounds;
+} ApeWorldRoom;
+
+#define APE_MAX_SKY_LAYERS 4
+
+typedef struct ApeWorld {
+	char *name;
+	PLPath path;
+
+	PLVectorArray *meshes;
+
+	PLLinkedList *entities;
+
+	PLVector3 startPosition;
+	PLMatrix3 startOrientation;
+
+	PLVectorArray *materials;// ApeMaterial
+	PLVectorArray *rooms;    // ApeWorldRoom
+	PLVectorArray *portals;  // ApeWorldPortal
+	PLVectorArray *vertices; // ApeWorldVertex
+	//PLVectorArray *faces;    // ApeWorldFace
+	PLVectorArray *lights;// ApeLight
+
+	PLColourF32 ambience;
+	PLColourF32 sunColour;
+	PLVector3 sunPosition;
+
+	PLColourF32 clearColour;
+
+	PLColourF32 fogColour;
+	float fogNear;
+	float fogFar;
+
+	PLCollisionAABB bounds;
+
+	/* additional generic properties */
+	struct NdBranch *globalProperties;
+
+	uint64_t lastSaveTime;
+	bool isDirty;
+} ApeWorld;
+
+typedef struct ApeWorldEntity {
+	const ApeEntityPrefab *entityTemplate;
+	NdBranch *properties;
+} ApeWorldEntity;
+
+#include <yin/core_world.h>
+
+PL_EXTERN_C
+
+ApeWorldRoom *apeCreateWorldRoom( void );
+void apeDestroyWorldRoom( ApeWorldRoom *room );
+ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );
+
+void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
+ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
+
+ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
+
+void apeSpawnWorldEntities( ApeWorld *world );
+
+unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
+
+void apeRegisterWorldConsole_( void );
+
+void apeTickClientWorld_( void );
+
+/////////////////////////////////////////////////////////////////
+// Visibility API
+
+void apeInitializeWorldVisibilitySystem_( void );
+void apeShutdownWorldVisibilitySystem_( void );
+
+struct ApeLight **apeGetVisibleLights_( unsigned int *num );
+ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
+
+void apeBuildWorldVisibiltyLists_( void );
+void apeFlushWorldVisibilityLists_( void );
+
+PL_EXTERN_C_END

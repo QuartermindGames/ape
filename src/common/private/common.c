@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_filesystem.h>
@@ -6,36 +5,62 @@
 
 #include <yin/node.h>
 
-#include "common.h"
+#include "common_private.h"
 
 int logLevelPrint;
 int logLevelWarn;
 
-void Common_Pkg_RegisterInterface( void );
-
-void Common_Initialize( void )
-{
+void comInitialize( void ) {
 	logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
-	logLevelWarn  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
+	logLevelWarn = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 
 	Message( "Common Library initialized\n" );
 
-	YnNode_SetupLogs();
+	ndSetupLogs();
 
-	Common_Pkg_RegisterInterface();
+	cmnRegisterPkgInterface_();
+	comRegisterVppInterface_();
 }
 
-static PLPath appDataPath = "";
+const char *comGetDataDirectory( void ) {
+	// cache it
+	static PLPath dataPath = { '\0' };
+	if ( *dataPath != '\0' ) {
+		return dataPath;
+	}
 
-const char *Common_GetAppDataDirectory( void )
-{
-	if ( *appDataPath != '\0' )
-	{
+	PLPath exeDir;
+	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL ) {
+		PlSetupPath( dataPath, true, "%s/../../runtime", exeDir );
+		if ( PlPathExists( dataPath ) ) {
+			PlSetupPath( dataPath, true, "%s/../..", exeDir );
+			return dataPath;
+		}
+
+		PlSetupPath( dataPath, true, "%s", exeDir );
+		return dataPath;
+	}
+
+	// oh dear oh dear...
+
+	const char *cwd = PlGetWorkingDirectory();
+	PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
+	if ( PlPathExists( dataPath ) ) {
+		PlSetupPath( dataPath, true, "%s/../..", cwd );
+	} else {
+		PlSetupPath( dataPath, true, "%s", cwd );
+	}
+
+	return dataPath;
+}
+
+const char *comGetAppDataDirectory( void ) {
+	static PLPath appDataPath = "";
+	if ( *appDataPath != '\0' ) {
 		return appDataPath;
 	}
 
-	if ( PlGetApplicationDataDirectory( "yin", appDataPath, sizeof( appDataPath ) ) != NULL )
-	{
+	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL ) {
 		return appDataPath;
 	}
 
@@ -45,35 +70,31 @@ const char *Common_GetAppDataDirectory( void )
 	return appDataPath;
 }
 
-YNNodeBranch *Common_GetConfig( const char *name )
-{
+NdBranch *comGetConfig( const char *name ) {
 	// first attempt to load from local dir
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", Common_GetAppDataDirectory(), name );
-	YNNodeBranch *root = YnNode_LoadFile( configPath, "config" );
-	if ( root != NULL )
-	{
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
+	NdBranch *root = ndLoadFile( configPath, "config" );
+	if ( root != NULL ) {
 		return root;
 	}
 
 	// otherwise attempt to load from app data dir instead
 	snprintf( configPath, sizeof( configPath ), "%s.cfg.n", name );
-	root = YnNode_LoadFile( configPath, "config" );
-	if ( root == NULL )
-	{
+	root = ndLoadFile( configPath, "config" );
+	if ( root == NULL ) {
 		Warning( "Failed to load user config file: %s\n"
 		         "Creating empty config.\n",
-		         YnNode_GetErrorMessage() );
-		root = YnNode_PushBackObject( NULL, "config" );
+		         ndGetErrorMessage() );
+		root = ndPushBackObject( NULL, "config" );
 	}
 
 	return root;
 }
 
-bool Common_WriteConfig( YNNodeBranch *root, const char *name )
-{
+bool comWriteConfig( struct NdBranch *root, const char *name ) {
 	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", Common_GetAppDataDirectory(), name );
-	YnNode_WriteFile( configPath, root, YN_NODE_FILE_UTF8 );
+	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
+	ndWriteFile( configPath, root, ND_FILE_UTF8 );
 	return true;
 }

@@ -1,14 +1,23 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer_font.h"
 #include "renderer.h"
 
-static BitmapFont *defaultFont, *defaultFontSmall;
+static ApeBitmapFont *defaultFont, *defaultFontSmall;
 
-void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
-{
+static void DestroyBitmapFont( void *userData ) {
+	ApeBitmapFont *font = userData;
+	assert( font != NULL );
+
+	apeReleaseMaterial( font->material );
+
+	PlgDestroyMesh( font->mesh );
+
+	PlFree( font );
+}
+
+void apeAddBitmapCharacterToBatch( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character ) {
 	int row = ( character - font->start ) / ( font->w / font->cw );
 	int col = ( character - font->start ) % ( font->w / font->cw );
 
@@ -30,31 +39,26 @@ void Font_AddBitmapCharacterToPass( const BitmapFont *font, float x, float y, fl
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
-{
+void apeAddBitmapStringToBatch( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow ) {
 	if ( length == 0 )
 		return;
 
 	float n_x = x;
 	float n_y = y;
-	for ( size_t i = 0; i < length; ++i )
-	{
-		if ( msg[ i ] == '\n' )
-		{
+	for ( size_t i = 0; i < length; ++i ) {
+		if ( msg[ i ] == '\n' ) {
 			n_y += ( font->ch * scale );
 			n_x = x;
 			continue;
-		}
-		else if ( msg[ i ] == '\t' )
-		{
+		} else if ( msg[ i ] == '\t' ) {
 			n_x += ( font->cw * scale ) * 4.0f;
 			continue;
 		}
 
 		if ( shadow )
-			Font_AddBitmapCharacterToPass( font, n_x + 1, n_y + 1, scale, PLColourRGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
+			apeAddBitmapCharacterToBatch( font, n_x + 1, n_y + 1, scale, PLColourRGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
 
-		Font_AddBitmapCharacterToPass( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
+		apeAddBitmapCharacterToBatch( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 
 		n_x += ( font->cw * scale );
 	}
@@ -63,8 +67,7 @@ void Font_AddBitmapStringToPass( const BitmapFont *font, float x, float y, float
 /**
  * Draw a single bitmap character at the specified coordinates.
  */
-void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, PLColour colour, char character )
-{
+void apeDrawBitmapCharacter( ApeBitmapFont *font, float x, float y, float scale, PLColour colour, char character ) {
 	if ( scale <= 0 )
 		return;
 
@@ -78,22 +81,21 @@ void Font_DrawBitmapCharacter( BitmapFont *font, float x, float y, float scale, 
 
 	/* setup our render pass */
 
-	Font_BeginDraw( font );
+	apeBeginBitmapFontDraw( font );
 
-	Font_AddBitmapCharacterToPass( font, x, y, scale, colour, character );
+	apeAddBitmapCharacterToBatch( font, x, y, scale, colour, character );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
 
-	YnCore_Material_DrawMesh( font->material, font->mesh, NULL, 0 );
+	apeDrawMesh( font->material, font->mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
 
-void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
-{
+void apeDrawBitmapString( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow ) {
 	if ( scale == 0.0f )
 		return;
 
@@ -101,108 +103,88 @@ void Font_DrawBitmapString( BitmapFont *font, float x, float y, float spacing, f
 	if ( numChars == 0 )
 		return;
 
-	Font_BeginDraw( font );
+	apeBeginBitmapFontDraw( font );
 
-	if ( shadow )
-		Font_AddBitmapStringToPass( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
+	if ( shadow ) {
+		apeAddBitmapStringToBatch( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
+	}
 
-	Font_AddBitmapStringToPass( font, x, y, scale, colour, msg, numChars, false );
+	apeAddBitmapStringToBatch( font, x, y, scale, colour, msg, numChars, false );
 
-	Font_Draw( font );
+	apeDrawBitmapFont( font );
 }
 
-void Font_BeginDraw( BitmapFont *font )
-{
+void apeBeginBitmapFontDraw( ApeBitmapFont *font ) {
 	PlgClearMesh( font->mesh );
 }
 
-void Font_Draw( BitmapFont *font )
-{
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
+void apeDrawBitmapFont( ApeBitmapFont *font ) {
+	//PlMatrixMode( PL_MODELVIEW_MATRIX );
+	//PlPushMatrix();
 
-	PlLoadIdentityMatrix();
+	//PlLoadIdentityMatrix();
 
-	YnCore_Material_DrawMesh( font->material, font->mesh, NULL, 0 );
+	apeDrawMesh( font->material, font->mesh, NULL, 0 );
 
-	PlPopMatrix();
+	//PlPopMatrix();
 }
 
-void YR_Font_Initialize( void )
-{
-	defaultFont		 = Font_CacheBitmap( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
-	defaultFontSmall = Font_CacheBitmap( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
+void YR_Font_Initialize( void ) {
+	defaultFont = apeCacheBitmapFont( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
+	defaultFontSmall = apeCacheBitmapFont( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
 		PRINT_ERROR( "Failed to load default fonts!\n" );
 }
 
-void Font_Shutdown( void )
-{
-	Font_ReleaseBitmap( defaultFont );
+void Font_Shutdown( void ) {
+	apeReleaseBitmapFont( defaultFont );
 	defaultFont = NULL;
 }
 
-static void Font_CB_DestroyBitmap( void *userData )
-{
-	BitmapFont *font = userData;
-	assert( font != NULL );
-
-	YnCore_Material_Release( font->material );
-
-	PlgDestroyMesh( font->mesh );
-
-	PlFree( font );
-}
-
-BitmapFont *Font_CacheBitmap( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
-{
-	BitmapFont *font = MM_GetCachedData( materialPath, MEM_CACHE_FONT );
-	if ( font != NULL )
-	{
-		MemoryManager_AddReference( &font->mem );
+ApeBitmapFont *apeCacheBitmapFont( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end ) {
+	ApeBitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
+	if ( font != NULL ) {
+		apeAddReference( &font->mem );
 		return font;
 	}
 
 	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
-	if ( mesh == NULL )
-	{
+	if ( mesh == NULL ) {
 		PRINT_WARNING( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
 		return NULL;
 	}
 
-	YNCoreMaterial *material = YnCore_Material_Cache( materialPath, 0, false, false );
-	if ( material == NULL )
-	{
+	ApeMaterial *material = apeCacheMaterial( materialPath, 0, false, false );
+	if ( material == NULL ) {
 		PlgDestroyMesh( mesh );
 		PRINT_WARNING( "Failed to load font material \"%s\"!\n", materialPath );
 		return NULL;
 	}
 
-	font		   = PlMAlloc( sizeof( BitmapFont ), true );
+	font = PlMAlloc( sizeof( ApeBitmapFont ), true );
 	font->material = material;
-	font->mesh	   = mesh;
-	font->w		   = w;
-	font->h		   = h;
-	font->cw	   = cw;
-	font->ch	   = ch;
-	font->start	   = start;
-	font->end	   = end;
+	font->mesh = mesh;
+	font->w = w;
+	font->h = h;
+	font->cw = cw;
+	font->ch = ch;
+	font->start = start;
+	font->end = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	MM_AddToCache( materialPath, MEM_CACHE_FONT, font );
+	apeAddToCachePool( materialPath, APE_CACHE_POOL_FONTS, font );
 
-	MemoryManager_SetupReference( "bitmapFont", MEM_CACHE_FONT, &font->mem, Font_CB_DestroyBitmap, font );
-	MemoryManager_AddReference( &font->mem );
+	apeSetupReference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
+	apeAddReference( &font->mem );
 
 	return font;
 }
 
-void Font_ReleaseBitmap( BitmapFont *font )
-{
-	MemoryManager_ReleaseReference( &font->mem );
+void apeReleaseBitmapFont( ApeBitmapFont *font ) {
+	apeReleaseReference( &font->mem );
 }
 
-BitmapFont *Font_GetDefault( void ) { return defaultFont; }
-BitmapFont *Font_GetDefaultSmall( void ) { return defaultFontSmall; }
+ApeBitmapFont *apeGetDefaultBitmapFont( void ) { return defaultFont; }
+ApeBitmapFont *apeGetDefaultSmallBitmapFont( void ) { return defaultFontSmall; }

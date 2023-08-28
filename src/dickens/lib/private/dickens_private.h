@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -21,20 +20,17 @@
 #define YC_MAX_SYMBOL_LENGTH 128
 typedef char DKSymbolName[ YC_MAX_SYMBOL_LENGTH ];
 
-typedef enum DKSymbolVisibility
-{
+typedef enum DKSymbolVisibility {
 	DK_SYMBOLVISIBILITY_PRIVATE,
 	DK_SYMBOLVISIBILITY_PUBLIC,
 } DKSymbolVisibility;
 
-typedef struct DKSymbol
-{
-	DKSymbolName       name;
+typedef struct DKSymbol {
+	DKSymbolName name;
 	DKSymbolVisibility visibility;
 } DKSymbol;
 
-typedef enum DKDataType
-{
+typedef enum DKDataType {
 	DK_DATATYPE_VOID,
 	DK_DATATYPE_FLOAT,
 	DK_DATATYPE_CHAR,
@@ -46,18 +42,16 @@ typedef enum DKDataType
 	DK_DATATYPE_STRING,
 } DKDataType;
 
-typedef struct DKLexerToken
-{
-	DKSymbolName      symbol;
-	DKTokenType       type;
-	PLPath            path;
-	unsigned int      lineNum;
-	unsigned int      linePos;
+typedef struct DKLexerToken {
+	DKSymbolName symbol;
+	DKTokenType type;
+	PLPath path;
+	unsigned int lineNum;
+	unsigned int linePos;
 	PLLinkedListNode *node;
 } DKLexerToken;
 
-typedef struct DKLexer
-{
-	PLPath        originFile;
+typedef struct DKLexer {
+	PLPath originFile;
 	PLLinkedList *tokens;
 } DKLexer;

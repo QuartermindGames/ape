@@ -8,15 +8,17 @@ set(GAME_SHARED_FILES
         private/game_component_input.c
         private/game_component_mesh.c
         private/game_component_movement.c
+        private/game_component_test.c
         private/game_component_transform.c
         private/game_menu.c
+        private/game_menu_pie.c
         )
 set(GAME_LINK_LIBS
         plcore
         plgraphics
         plmodel
-        yin-common
-        yin-core
+        ApeCommon
+        ApeCore
         )
 set(GAME_INCLUDE_DIRS
         public/
@@ -25,12 +27,14 @@ set(GAME_INCLUDE_DIRS
 #############################################
 # Target Games
 
-set(GAME_USER_TARGET "feral" CACHE STRING "Game to build.")
+set(GAME_USER_TARGET "detox" CACHE STRING "Game to build.")
 
-set(GAME_TARGET_ONEMANY
-        private/onemany/om_game.c)
-set(GAME_TARGET_SIM
-        private/sim/sim_game.c)
+set(GAME_TARGET_DEMO
+        private/demo/demo_game.c)
+set(GAME_TARGET_MAG
+        private/mag/mag_character.c
+        private/mag/mag_game.c
+        private/mag/mag_world.c)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
         private/fw/menu/fw_menu_pie.c
@@ -42,29 +46,35 @@ set(GAME_TARGET_FERAL
         private/fw/fw_name_generator.c
         private/fw/fw_terrain.c
         private/fw/fw_weapon.c)
+set(GAME_TARGET_DETOX
+        private/detox/detox_game.c)
 
 #todo: need a better way of setting targets...
-if (${GAME_USER_TARGET} STREQUAL "sim")
-    set(GAME_TARGET ${GAME_TARGET_SIM})
+if (${GAME_USER_TARGET} STREQUAL "mag")
+    set(GAME_TARGET ${GAME_TARGET_MAG})
+elseif (${GAME_USER_TARGET} STREQUAL "demo")
+    set(GAME_TARGET ${GAME_TARGET_DEMO})
 elseif (${GAME_USER_TARGET} STREQUAL "feral")
     set(GAME_TARGET ${GAME_TARGET_FERAL})
+elseif (${GAME_USER_TARGET} STREQUAL "detox")
+    set(GAME_TARGET ${GAME_TARGET_DETOX})
 else ()
     message("No valid game target specified!")
 endif ()
 
 #############################################
 
-add_library(yin-game STATIC
+add_library(ApeGame STATIC
         ${GAME_SHARED_FILES}
         ${GAME_TARGET}
         )
 
-set_target_properties(yin-game PROPERTIES PREFIX "")
+set_target_properties(ApeGame PROPERTIES PREFIX "")
 
 # Setup link libraries
 if (NOT UNIX AND NOT MSVC)
-    target_link_libraries(yin-game mingw32)
+    target_link_libraries(ApeGame mingw32)
 endif ()
 
-target_link_libraries(yin-game ${GAME_LINK_LIBS})
-target_include_directories(yin-game PUBLIC public/)
+target_link_libraries(ApeGame ${GAME_LINK_LIBS})
+target_include_directories(ApeGame PUBLIC public/)

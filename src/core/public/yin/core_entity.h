@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -7,84 +6,82 @@
 
 PL_EXTERN_C
 
-typedef struct YNNodeBranch YNNodeBranch;
+typedef struct NdBranch NdBranch;
 
-typedef char YNCoreEntityClassName[ 64 ];
-typedef char YNCoreEntityName[ 64 ];
+typedef char ApeEntityClassName[ 64 ];
+typedef char ApeEntityName[ 64 ];
 
-typedef struct YNCoreEntity YNCoreEntity;
-typedef struct YNCoreEntityPrefab YNCoreEntityPrefab;
-typedef struct YNCoreEntityComponentBase YNCoreEntityComponentBase;
-typedef struct YNCoreEntityComponent
-{
-	const YNCoreEntityComponentBase *base;
-	YNCoreEntity *entity;
+typedef struct ApeEntity ApeEntity;
+typedef struct ApeEntityPrefab ApeEntityPrefab;
+typedef struct ApeEntityComponentBase ApeEntityComponentBase;
+typedef struct ApeEntityComponent {
+	const ApeEntityComponentBase *base;
+	ApeEntity *entity;
 	struct PLLinkedListNode *listNode;
 	void *userData;
-} YNCoreEntityComponent;
+} ApeEntityComponent;
 
 #define ENTITY_COMPONENT_CAST( SELF, TYPE ) ( ( TYPE * ) ( SELF )->userData )
 
-typedef void ( *YNCoreECSpawnFunction )( YNCoreEntityComponent *self );
-typedef void ( *YNCoreECTickFunction )( YNCoreEntityComponent *self );
-typedef void ( *YNCoreECDrawFunction )( YNCoreEntityComponent *self );
-typedef void ( *YNCoreECDestroyFunction )( YNCoreEntityComponent *self );
-typedef YNNodeBranch *( *YNCoreECSerializeFunction )( YNCoreEntityComponent *self, YNNodeBranch *root );
-typedef YNNodeBranch *( *YNCoreECDeserializeFunction )( YNCoreEntityComponent *self, YNNodeBranch *root );
+typedef void ( *ApeECSpawnFunction )( ApeEntityComponent *self );
+typedef void ( *ApeECTickFunction )( ApeEntityComponent *self );
+typedef void ( *ApeECDrawFunction )( ApeEntityComponent *self );
+typedef void ( *ApeECDestroyFunction )( ApeEntityComponent *self );
+typedef NdBranch *( *ApeECSerializeFunction )( ApeEntityComponent *self, NdBranch *root );
+typedef NdBranch *( *ApeECDeserializeFunction )( ApeEntityComponent *self, NdBranch *root );
 
-typedef struct YNCoreEntityComponentCallbackTable
-{
-	YNCoreECSpawnFunction spawnFunction;
-	YNCoreECTickFunction tickFunction;
-	YNCoreECDrawFunction drawFunction;
-	YNCoreECDestroyFunction destroyFunction;
-	YNCoreECSerializeFunction serializeFunction;
-	YNCoreECDeserializeFunction deserializeFunction;
+typedef struct ApeEntityComponentCallbackTable {
+	ApeECSpawnFunction spawnFunction;
+	ApeECTickFunction tickFunction;
+	ApeECDrawFunction drawFunction;
+	ApeECDestroyFunction destroyFunction;
+	ApeECSerializeFunction serializeFunction;
+	ApeECDeserializeFunction deserializeFunction;
 
-	const struct YNCoreEditorField *editorFields;
+	const struct ApeEditorField *editorFields;
 	unsigned int numEditorFields;
-} YNCoreEntityComponentCallbackTable;
+} ApeEntityComponentCallbackTable;
 
-void YnCore_EntityManager_Initialize( void );
-void YnCore_EntityManager_Shutdown( void );
-void YnCore_EntityManager_Tick( void );
-void YnCore_EntityManager_Draw( YNCoreCamera *camera, YNCoreWorldSector *sector );
-void YnCore_EntityManager_Save( YNNodeBranch *root );
-void YnCore_EntityManager_Restore( YNNodeBranch *root );
+void apeInitializeEntityManager( void );
+void apeShutdownEntityManager( void );
+void apeTickEntityManager( void );
+void ogeEntityManager_Draw( struct ApeCamera *camera, struct ApeWorldRoom *sector );
+void YnCore_EntityManager_Save( NdBranch *root );
+void ogeEntityManager_Restore( NdBranch *root );
 
 // Prefabs
-void YnCore_EntityManager_RegisterEntityPrefab( const char *path );
-void YnCore_EntityManager_RegisterEntityPrefabs( void );
-const YNCoreEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
+void apeRegisterEntityPrefab( const char *path );
+void apeRegisterEntityPrefabs( void );
+const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
 
-YNCoreEntity *YnCore_EntityManager_CreateEntity( void );
-YNCoreEntity *YnCore_EntityManager_CreateEntityFromPrefab( const char *name );
-void YnCore_EntityManager_DestroyEntity( YNCoreEntity *entity );
+ApeEntity *apeCreateEntity( void );
+ApeEntity *apeCreateEntityFromPrefab( const char *name );
+void apeDestroyEntity( ApeEntity *entity );
 
 /**
  * Returns the total number of active entities.
  */
 unsigned int YnCore_EntityManager_GetNumOfEntities( void );
 
-bool YnCore_EntityManager_RegisterComponent( const char *name, const YNCoreEntityComponentCallbackTable *callbackTable );
-const YNCoreEntityComponentBase *YnCore_EntityManager_GetComponentBaseByName( const char *name );
-YNCoreEntityComponent *YnCore_EntityManager_AddComponentToEntity( YNCoreEntity *entity, const char *name );
+bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable );
+const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name );
+ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name );
 
 /**
  * Returns a list of properties that can be modified for the component.
  */
-const struct YNCoreEditorField *YnCore_EntityComponent_GetEditableProperties( const YNCoreEntityComponent *entityComponent, unsigned int *num );
+const struct ApeEditorField *apeGetEditableEntityComponentProperties( const ApeEntityComponent *entityComponent, unsigned int *num );
 
 /****************************************
  * ENTITY
  ****************************************/
 
-YNNodeBranch *YnCore_Entity_Serialize( YNCoreEntity *self, YNNodeBranch *root );
-YNCoreEntity *YnCore_Entity_Deserialize( YNNodeBranch *root );
+NdBranch *apeSerializeEntity( ApeEntity *self, NdBranch *root );
+ApeEntity *apeDeserializeEntity( NdBranch *root );
 
-YNCoreEntityComponent *YnCore_Entity_GetComponentByName( YNCoreEntity *self, const char *name );
-YNCoreEntityComponent *YnCore_Entity_AttachComponentByName( YNCoreEntity *self, const char *name );
-void YnCore_Entity_RemoveComponent( YNCoreEntity *self, YNCoreEntityComponent *component );
-void YnCore_Entity_RemoveAllComponents( YNCoreEntity *self );
+ApeEntityComponent *apeGetEntityComponentByName( ApeEntity *self, const char *name );
+ApeEntityComponent *apeAttachEntityComponentByName( ApeEntity *self, const char *name );
+void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component );
+void apeRemoveAllEntityComponents( ApeEntity *self );
 
 PL_EXTERN_C_END

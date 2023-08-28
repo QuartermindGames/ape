@@ -1,13 +1,16 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include "renderer/renderer.h"
-#include "renderer/renderer_font.h"
+#include "gui/gui_private.h"
+#include "client/audio/audio.h"
+#include "world/world.h"
 
 static bool consoleIsOpen = false;
-static bool drawShadow    = false;
+static bool drawShadow = false;
+
+static int consoleAlpha = 200;
 
 /****************************************
  * CONSOLE INPUT BUFFER
@@ -15,12 +18,12 @@ static bool drawShadow    = false;
 
 #define CON_BUFFER_MAX_LENGTH 256
 static char conInputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
-static unsigned int conInputBufferLength                = 0;
+static unsigned int conInputBufferLength = 0;
 
 #define MAX_HISTORY_RESULTS 64
 static char history[ MAX_HISTORY_RESULTS ][ 64 ] = { { '\0' } };
-static unsigned int numHistoryItems              = 0;
-static unsigned int historySelection             = 0;
+static unsigned int numHistoryItems = 0;
+static unsigned int historySelection = 0;
 
 /////////////////////////////////////////////////////////////////
 // AUTOCOMPLETE
@@ -30,11 +33,9 @@ static const char *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ] = { NULL };
 static bool enableAutoCompleteList;
 static unsigned int autoCompleteSelection = 0;
 
-static void UpdateAutoCompleteResult( const char *input )
-{
+static void UpdateAutoCompleteResult( const char *input ) {
 	// just clear it if an empty result is given
-	if ( input == NULL || *input == '\0' )
-	{
+	if ( input == NULL || *input == '\0' ) {
 		PL_ZERO( autoComplete, sizeof( const char * ) * MAX_AUTOCOMPLETE_RESULTS );
 		return;
 	}
@@ -42,14 +43,12 @@ static void UpdateAutoCompleteResult( const char *input )
 	// fetch all matching results
 	unsigned int numOptions;
 	const char **list = PlAutocompleteConsoleString( input, &numOptions );
-	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS )
-	{
+	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS ) {
 		numOptions = MAX_AUTOCOMPLETE_RESULTS - 1;
 	}
 
 	// fill the list, leaving the last item null so we know where it ends
-	for ( unsigned int i = 0; i < numOptions; ++i )
-	{
+	for ( unsigned int i = 0; i < numOptions; ++i ) {
 		autoComplete[ i ] = list[ i ];
 	}
 	autoComplete[ numOptions ] = NULL;
@@ -59,19 +58,20 @@ static void UpdateAutoCompleteResult( const char *input )
 
 /////////////////////////////////////////////////////////////////
 
-bool YnCore_Console_HandleTextEvent( const char *key )
-{
+bool apeHandleConsoleTextEvent_( const char *key ) {
 	// todo y3: allow this key to be customised
-	if ( !consoleIsOpen || *key == '`' || *key == '~' )
+	if ( !consoleIsOpen || *key == '`' || *key == '~' ) {
 		return false;
+	}
 
 	/* check length before appending so we can ensure
      * it's always null terminated */
-	if ( conInputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH )
+	if ( conInputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH ) {
 		return true;
+	}
 
 	conInputBuffer[ conInputBufferLength++ ] = *key;
-	conInputBuffer[ conInputBufferLength ]   = '\0';
+	conInputBuffer[ conInputBufferLength ] = '\0';
 
 	UpdateAutoCompleteResult( conInputBuffer );
 
@@ -82,78 +82,76 @@ bool YnCore_Console_HandleTextEvent( const char *key )
  * GENERAL INPUT
  ****************************************/
 
-static void ToggleConsole( void )
-{
+static void ToggleConsole( void ) {
 	consoleIsOpen = !consoleIsOpen;
 
 	// Release the mouse if the console is open
-	PL_GET_CVAR( "input.mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
-		YnCore_ShellInterface_GrabMouse( !consoleIsOpen );
+	PL_GET_CVAR( "input/mlook", mouseLook );
+	if ( mouseLook != NULL && mouseLook->b_value ) {
+		apeShellInterface_GrabMouse( !consoleIsOpen );
+	}
 }
 
-static void ToggleConsoleCommand( unsigned int argc, char **argv )
-{
+static void ToggleConsoleCommand( unsigned int argc, char **argv ) {
 	( void ) ( argc );
 	( void ) ( argv );
 	ToggleConsole();
 }
 
-static void ScrollForward( ConsoleOutput *output )
-{
+static void ScrollForward( ApeConsoleOutput *output ) {
 	output->scrollPos++;
-	if ( output->scrollPos > output->numLines - 1 )
+	if ( output->scrollPos > output->numLines - 1 ) {
 		output->scrollPos = output->numLines - 1;
+	}
 }
 
-static void ScrollBackward( ConsoleOutput *output )
-{
-	if ( output->scrollPos == 0 )
+static void ScrollBackward( ApeConsoleOutput *output ) {
+	if ( output->scrollPos == 0 ) {
 		return;
+	}
 
 	output->scrollPos--;
 }
 
-bool Client_Console_HandleMouseWheelEvent( float x, float y )
-{
-	if ( !Client_Console_IsOpen() )
+bool Client_Console_HandleMouseWheelEvent( float x, float y ) {
+	if ( !apeIsConsoleOpen() ) {
 		return false;
+	}
 
-	ConsoleOutput *output = Console_GetOutput();
-	if ( y > 0.0f )
+	ApeConsoleOutput *output = apeGetConsoleOutput();
+	if ( y > 0.0f ) {
 		ScrollForward( output );
-	else if ( y < 0.0f )
+	} else if ( y < 0.0f ) {
 		ScrollBackward( output );
+	}
 
 	return true;
 }
 
-static void ClearInputBuffer( void )
-{
+static void ClearInputBuffer( void ) {
 	memset( conInputBuffer, 0, sizeof( conInputBuffer ) );
 	conInputBufferLength = 0;
 
 	UpdateAutoCompleteResult( conInputBuffer );
 }
 
-bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
-{
-	if ( keyState == YN_CORE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
-	{
+bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState ) {
+	if ( keyState == OGE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) ) {
 		ToggleConsole();
 		return true;
 	}
 
 	/* only do anything if the console is open */
-	if ( !consoleIsOpen )
+	if ( !consoleIsOpen ) {
 		return false;
+	}
 	/* but we don't care about these... */
-	if ( keyState != YN_CORE_INPUT_STATE_PRESSED && keyState != YN_CORE_INPUT_STATE_DOWN )
+	if ( keyState != OGE_INPUT_STATE_PRESSED && keyState != OGE_INPUT_STATE_DOWN ) {
 		return true;
+	}
 
-	ConsoleOutput *output = Console_GetOutput();
-	switch ( key )
-	{
+	ApeConsoleOutput *output = apeGetConsoleOutput();
+	switch ( key ) {
 		default:
 			break;
 		case KEY_PAGEUP:
@@ -162,29 +160,24 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 		case KEY_PAGEDOWN:
 			ScrollBackward( output );
 			break;
-		case KEY_END:
-		{
+		case KEY_END: {
 			output->scrollPos = 0;
 			break;
 		}
-		case KEY_HOME:
-		{
+		case KEY_HOME: {
 			output->scrollPos = output->numLines - 1;
 			break;
 		}
 
-		case KEY_UP:
-		{
-			if ( autoComplete[ 0 ] == NULL )
-			{
+		case KEY_UP: {
+			if ( autoComplete[ 0 ] == NULL ) {
 				// in this case, cycle the history
 
 				break;
 			}
 
 			unsigned int nextSlot = autoCompleteSelection + 1;
-			if ( nextSlot >= MAX_AUTOCOMPLETE_RESULTS || autoComplete[ nextSlot ] == NULL )
-			{
+			if ( nextSlot >= MAX_AUTOCOMPLETE_RESULTS || autoComplete[ nextSlot ] == NULL ) {
 				autoCompleteSelection = 0;
 				break;
 			}
@@ -192,13 +185,12 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 			autoCompleteSelection++;
 			break;
 		}
-		case KEY_DOWN:
-		{
-			if ( autoComplete[ 0 ] == NULL )
+		case KEY_DOWN: {
+			if ( autoComplete[ 0 ] == NULL ) {
 				break;
+			}
 
-			if ( autoCompleteSelection == 0 )
-			{
+			if ( autoCompleteSelection == 0 ) {
 				autoCompleteSelection = MAX_AUTOCOMPLETE_RESULTS - 1;
 				while ( autoComplete[ autoCompleteSelection ] == NULL ) { autoCompleteSelection--; }
 				break;
@@ -208,32 +200,27 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
 			break;
 		}
 
-		case KEY_ENTER:
-		{
-			if ( autoComplete[ 0 ] != NULL && autoCompleteSelection > 0 )
-			{
+		case KEY_ENTER: {
+			if ( autoComplete[ 0 ] != NULL && autoCompleteSelection > 0 ) {
 				snprintf( conInputBuffer, sizeof( conInputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
 				conInputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
 				UpdateAutoCompleteResult( conInputBuffer );
 				break;
-			}
-			else if ( conInputBuffer[ 0 ] != '\0' )
-			{
+			} else if ( conInputBuffer[ 0 ] != '\0' ) {
 				PlParseConsoleString( conInputBuffer );
 				ClearInputBuffer();
 			}
 			break;
 		}
-		case KEY_BACKSPACE:
-		{
-			if ( conInputBufferLength > 0 )
+		case KEY_BACKSPACE: {
+			if ( conInputBufferLength > 0 ) {
 				conInputBuffer[ --conInputBufferLength ] = '\0';
+			}
 
 			UpdateAutoCompleteResult( conInputBuffer );
 			break;
 		}
-		case KEY_TAB:
-		{ /* autocompletion */
+		case KEY_TAB: { /* autocompletion */
 			if ( *conInputBuffer == '\0' || autoComplete[ 0 ] == NULL )
 				break;
 
@@ -253,179 +240,167 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState )
  * RENDERING
  ****************************************/
 
-static void Client_Console_DrawInputField( const YNCoreViewport *viewport )
-{
-	BitmapFont *font = Font_GetDefault();
-
-	/* cursor */
-	Font_AddBitmapCharacterToPass( font, 1.0f, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, '>' );
+static void DrawInputField( const ApeViewport *viewport, GuiFont *font ) {
+	const float ch = guiGetFontLineSpacing( font );
+	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
+	guiDrawFontCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < YnCore_GetNumTicks() )
-		v = YnCore_GetNumTicks() + 20;
+	if ( v < apeGetNumTicks() ) {
+		v = apeGetNumTicks() + 20;
+	}
 
-	char c = ( v > YnCore_GetNumTicks() + 10 ) ? '_' : ' ';
-	Font_AddBitmapCharacterToPass( font, ( float ) ( font->cw + SPACER + ( font->cw * conInputBufferLength ) ), ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, c );
+	float bufPixW;
+	guiGetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
 
-	/* input buffer */
+	const float x = ( 1.0f + cw );
 
-	if ( autoComplete[ 0 ] != NULL )
-	{
+	// cursor
+	char c = ( v > apeGetNumTicks() + 10 ) ? '_' : ' ';
+	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
+
+	if ( autoComplete[ 0 ] != NULL ) {
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		float x                   = ( font->cw + SPACER ) + ( font->cw * conInputBufferLength );
-		Font_AddBitmapStringToPass( font, x, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
-
-		if ( enableAutoCompleteList )
-		{
+		guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+		if ( enableAutoCompleteList ) {
 			unsigned int i = 1;
-			while ( autoComplete[ i ] != NULL )
-			{
+			while ( autoComplete[ i ] != NULL ) {
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				Font_AddBitmapStringToPass( font, font->cw + SPACER, ( float ) viewport->height - ( font->ch * ( i + 1 ) ), 1.0f, PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				Font_AddBitmapStringToPass( font, x, ( float ) viewport->height - ( font->ch * ( i + 1 ) ), 1.0f, PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				guiDrawFontString( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+				guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	Font_AddBitmapStringToPass( font, font->cw + SPACER, ( float ) viewport->height - font->ch, 1.0f, PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	guiDrawFontString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
-bool Client_Console_IsOpen( void ) { return consoleIsOpen; }
+bool apeIsConsoleOpen( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
 /**
  * Draw the console panel.
  */
-void Client_Console_Draw( const YNCoreViewport *viewport )
-{
-	if ( !consoleIsOpen )
+void apeDrawConsole_( const ApeViewport *viewport ) {
+	if ( !apeIsConsoleOpen() ) {
 		return;
+	}
 
-	BitmapFont *font = Font_GetDefault();
+	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );
+	assert( font != NULL );
+	if ( font == NULL ) {
+		return;
+	}
 
 	PlgSetTexture( NULL, 0 );
-	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
 #define CON_SIDE_COLOUR      PLColourRGB( 128, 128, 128 )
-#define CON_BACK_COLOUR      PLColour( 0, 0, 0, 128 )
+#define CON_BACK_COLOUR      PLColour( 0, 0, 0, consoleAlpha )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
 
-	float width         = ( float ) viewport->width;
-	float height        = ( float ) viewport->height;
-	float consoleHeight = height - 12.0f;
+	float lineSpacing = guiGetFontLineSpacing( font );
+	float width = ( float ) viewport->width;
+	float height = ( float ) viewport->height;
+	float consoleHeight = height - lineSpacing;
 
-	PlgDrawRectangle( 0.0f, 0.0f, width, height - font->ch, CON_BACK_COLOUR );
-	PlgDrawRectangle( 0.0f, height - ( float ) font->ch, width, ( float ) font->ch, CON_INPUT_COLOUR );
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
+
+	PlgDrawRectangle( 0.0f, 0.0f, width, height - lineSpacing, CON_BACK_COLOUR );
+	PlgDrawRectangle( 0.0f, height - lineSpacing, width, lineSpacing, CON_INPUT_COLOUR );
 	PlgDrawRectangle( 0.0f, 0.0f, consoleScrollBarWidth, consoleHeight, CON_SIDE_COLOUR );
 
-	const ConsoleOutput *output = Console_GetOutput();
-	if ( output->numLines > 0 )
-	{
-		Font_BeginDraw( font );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
+	const ApeConsoleOutput *output = apeGetConsoleOutput();
+	if ( output->numLines > 0 ) {
 		/* draw the indicator at the side of the console */
-		float cH = ( ( font->ch * output->numLines ) / consoleHeight ) + 1.0f;
-		float cY = consoleHeight - ( ( output->numLines / consoleHeight ) + output->scrollPos ) - cH;
+		float cH = ( ( ( lineSpacing * ( float ) output->numLines ) / consoleHeight ) + 1.0f );
+		float cY = consoleHeight - ( ( ( float ) output->numLines / consoleHeight ) + ( float ) output->scrollPos ) - cH;
 		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
 		float y = consoleHeight - 20.0f;
-		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
-		{
+		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i ) {
 			/* draw the line we're currently at */
-			Font_AddBitmapStringToPass( font, 12.0f, y, 1.0f, output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			guiDrawFontString( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
 
-			/* now decrement our y pos for as many new lines there were */
-			if ( i > 0 )
-			{
-				unsigned int nl = pl_strncnt( output->lines[ i - 1 ].buffer, '\n', CONSOLE_BUFFER_MAX_LENGTH );
-				for ( unsigned int j = 0; j < nl; ++j )
-					y -= font->ch;
-			}
-
-			/* and make sure we don't go off screen */
-			if ( y <= -font->ch )
+			y -= lineSpacing;
+			if ( y < 0 ) {
 				break;
+			}
 		}
-
-		Font_Draw( font );
 	}
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetTexture( NULL, 0 );
 
+	guiDisplayFont( font );
+
 	// auto-completion list
-	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
-	{
+	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) ) {
 		float autoCompleteHeight = 0.0f;
-		float autoCompleteWidth  = 0.0f;
+		float autoCompleteWidth = 0.0f;
+
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		// iterate over the options to determine height, width
 		unsigned int i = 1;
-		while ( autoComplete[ i ] != NULL )
-		{
-			float w = ( float ) ( font->cw * ( strlen( autoComplete[ i ] ) + 1 ) );
-			if ( w > autoCompleteWidth ) autoCompleteWidth = w;
-			autoCompleteHeight += font->ch;
-			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) font->ch ) - autoCompleteHeight, w, font->ch, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
+		while ( autoComplete[ i ] != NULL ) {
+			float w, h;
+			guiGetStringPixelSize( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
+			if ( w > autoCompleteWidth ) { autoCompleteWidth = w; }
+			autoCompleteHeight += h;
+			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) h ) - autoCompleteHeight, w, h, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
 			++i;
 		}
 	}
 
-	Font_BeginDraw( font );
-
-	Client_Console_DrawInputField( viewport );
-
-	Font_Draw( font );
+	DrawInputField( viewport, font );
 
 	/* draw version info */
-	{
-		BitmapFont *smallFont = Font_GetDefaultSmall();
+	GuiFont *tinyFont = guiGetDefaultFont( GUI_FONT_DEFAULT_TINY );
+	if ( tinyFont != NULL ) {
+		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
 
-		static char buf[ 64 ]  = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
-		static unsigned int bl = 0;
-		if ( bl == 0 )
-			bl = strlen( buf );
+		float strW, strH;
+		guiGetStringPixelSize( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
 
-		float x = width - ( ( float ) smallFont->cw * ( float ) bl ) - 2.0f;
-		float y = height - ( float ) smallFont->ch - 2.0f;
-		Font_DrawBitmapString( smallFont, x, y, 1.0f, 1.0f, PLColourRGB( 0, 255, 0 ), buf, false );
+		float x = width - strW - 2.0f;
+		float y = height - strH - 2.0f;
+		guiDrawFontString( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+
+		guiDisplayFont( tinyFont );
 	}
 
 	PlPopMatrix();
-
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }
 
 /****************************************
  * CLIENT CONSOLE INIT
  ****************************************/
 
-static void CreateViewportCommand( unsigned int argc, char **argv )
-{
-	int width  = strtol( argv[ 1 ], NULL, 10 );
+static void CreateViewportCommand( unsigned int argc, char **argv ) {
+	int width = strtol( argv[ 1 ], NULL, 10 );
 	int height = strtol( argv[ 2 ], NULL, 10 );
 
-	if ( !YnCore_ShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) )
-	{
+	if ( !apeShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) ) {
 		PRINT_WARNING( "Failed to create viewport!\n" );
 		return;
 	}
 }
 
-void Client_Console_RegisterConsoleCommands( void )
-{
+void apeRegisterClientConsoleCommands_( void ) {
 	PlRegisterConsoleCommand( "Toggle", "Toggle the console.", 0, ToggleConsoleCommand );
-	PlRegisterConsoleCommand( "client.create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
+	PlRegisterConsoleCommand( "client/create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
 
 	//PlRegisterConsoleCommand( "Connect", NULL, "Connect to the specified server." );
 	//PlRegisterConsoleCommand( "Reconnect", NULL, "Reconnect to the current server." );
@@ -434,24 +409,22 @@ void Client_Console_RegisterConsoleCommands( void )
 
 void Renderer_RegisterConsoleVariables( void );
 
-void Client_Console_RegisterConsoleVariables( void )
-{
-	PlRegisterConsoleVariable( "client.name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
+void apeRegisterClientConsoleVariables_( void ) {
+	PlRegisterConsoleVariable( "client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
-	PlRegisterConsoleVariable( "input.mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
 
 	// editor
-	PlRegisterConsoleVariable( "edit.gridSize", "Set the maximum grid size.", "128", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "edit/gridSize", "Set the maximum grid size.", "128", PL_VAR_I32, NULL, NULL, true );
 
-	PlRegisterConsoleVariable( "debug.overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "debug.profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
 
-	PlRegisterConsoleVariable( "console.autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "console.alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "console.drawBackground", "Whether or not to display background.", "true", PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "console.drawShadow", "Shadow for text, which will improve legibility. "
+	PlRegisterConsoleVariable( "console/autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
+	PlRegisterConsoleVariable( "console/alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
+	PlRegisterConsoleVariable( "console/drawShadow", "Shadow for text, which will improve legibility. "
 	                                                 "Disabling might yield a slight performance boost on slower machines.",
-	                           "true", PL_VAR_BOOL, &drawShadow, NULL, true );
+	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
 	Renderer_RegisterConsoleVariables();
 
@@ -459,11 +432,6 @@ void Client_Console_RegisterConsoleVariables( void )
 	void R_PP_RegisterConsoleVariables( void );
 	R_PP_RegisterConsoleVariables();
 
-	void Audio_RegisterConsoleVariables( void );
-	Audio_RegisterConsoleVariables();
-
-	PlRegisterConsoleVariable( "world.drawSectorVolumes", "Toggle rendering of sector volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawSectors", "Toggle rendering of sectors.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.drawSubMeshes", "Toggle rendering of sub-meshes within sectors.", "true", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "world.forceSimple", "Force simple render pass of world.", "false", PL_VAR_BOOL, NULL, NULL, false );
+	ogeRegisterAudioConsoleVariables_();
+	apeRegisterWorldConsole_();
 }

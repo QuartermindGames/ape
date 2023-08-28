@@ -12,9 +12,9 @@
  * PRIVATE
  ****************************************/
 
-static YNCoreShaderProgramIndex *bloomFilterShader;
-static YNCoreShaderProgramIndex *bloomBlurXShader;
-static YNCoreShaderProgramIndex *bloomBlurYShader;
+static ApeShaderProgramIndex *bloomFilterShader;
+static ApeShaderProgramIndex *bloomBlurXShader;
+static ApeShaderProgramIndex *bloomBlurYShader;
 
 static PLConsoleVariable *bloomEnabled;
 static PLConsoleVariable *bloomIntensity;
@@ -23,40 +23,36 @@ static PLGFrameBuffer *bloomBuffer;
 
 static PLGTexture *bloomTexture;
 
-static void RegisterBloomConsoleVariables( void )
-{
-	bloomEnabled   = PlRegisterConsoleVariable( "r.bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
-	bloomIntensity = PlRegisterConsoleVariable( "r.bloomIntensity", "Set the intensity of the bloom effect.", "0.35", PL_VAR_F32, NULL, NULL, true );
+static void RegisterBloomConsoleVariables( void ) {
+	bloomEnabled = PlRegisterConsoleVariable( "r/bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, NULL, NULL, true );
+	bloomIntensity = PlRegisterConsoleVariable( "r/bloomIntensity", "Set the intensity of the bloom effect.", "0.35", PL_VAR_F32, NULL, NULL, true );
 }
 
-static bool SetupBloomEffect( void )
-{
-	bloomFilterShader = YnCore_GetShaderProgramByName( "post_bloom_filter" );
+static bool SetupBloomEffect( void ) {
+	bloomFilterShader = apeGetShaderProgramByName( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = YnCore_GetShaderProgramByName( "post_blur_x" );
+	bloomBlurXShader = apeGetShaderProgramByName( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = YnCore_GetShaderProgramByName( "post_blur_y" );
+	bloomBlurYShader = apeGetShaderProgramByName( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 
 	return true;
 }
 
-static void CleanupBloomEffect( void )
-{
+static void CleanupBloomEffect( void ) {
 }
 
-static void DrawBloomEffect( const YNCoreViewport *viewport )
-{
+static void DrawBloomEffect( const ApeViewport *viewport ) {
 	if ( !bloomEnabled->b_value )
 		return;
 
 	int bw = viewport->width / 2;
 	int bh = viewport->height / 2;
 
-	YnCore_SetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
+	apeSetupRenderTarget( &bloomBuffer, &bloomTexture, NULL, bw, bh );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
@@ -64,7 +60,7 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
 
 	PlgSetShaderProgram( bloomFilterShader->internalPtr );
 	PlgSetShaderUniformValue( bloomFilterShader->internalPtr, "threshold", &bloomIntensity->f_value, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, YnCore_GetPrimaryColourAttachment() );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, apeGetPrimaryColourAttachment() );
 
 	PlgSetShaderProgram( bloomBlurXShader->internalPtr );
 	PlgSetShaderUniformValue( bloomBlurXShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
@@ -76,7 +72,7 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DEFAULT );
 
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomTexture );
 }
@@ -85,15 +81,14 @@ static void DrawBloomEffect( const YNCoreViewport *viewport )
  * PUBLIC
  ****************************************/
 
-PostProcessEffect *PP_Bloom_GetEffect( void )
-{
+PostProcessEffect *PP_Bloom_GetEffect( void ) {
 	static PostProcessEffect renderBloomPostProcess;
 	PL_ZERO_( renderBloomPostProcess );
 
 	renderBloomPostProcess.RegisterConsoleVariables = RegisterBloomConsoleVariables;
-	renderBloomPostProcess.Setup                    = SetupBloomEffect;
-	renderBloomPostProcess.Cleanup                  = CleanupBloomEffect;
-	renderBloomPostProcess.Draw                     = DrawBloomEffect;
+	renderBloomPostProcess.Setup = SetupBloomEffect;
+	renderBloomPostProcess.Cleanup = CleanupBloomEffect;
+	renderBloomPostProcess.Draw = DrawBloomEffect;
 
 	return &renderBloomPostProcess;
 }

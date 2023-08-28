@@ -6,20 +6,32 @@
 
 PL_EXTERN_C
 
-void Editor_Initialize( void );
-void YnCore_ShutdownEditor( void );
-void Editor_Tick( void );
-void Editor_Draw( const YNCoreViewport *viewport );
+typedef enum ApeEditorStatus {
+	APE_EDITOR_STATUS_CLOSED,
+	APE_EDITOR_STATUS_CLOSING,
+	APE_EDITOR_STATUS_OPEN,
+} ApeEditorStatus;
 
-void Editor_Commands_Register( void );
+/**
+ * Helper function for fetching icons specific to the editor.
+ */
+ApeMaterial *apeGetEditorIconMaterial( const char *name );
 
-void Editor_MaterialSelector_Initialize( void );
-void Editor_MaterialSelector_Shutdown( void );
-void Editor_MaterialSelector_Draw( const YNCoreViewport *viewport );
+void apeRegisterEditorConsoleVariables_( void );
 
-YNCoreEditorInstance *Editor_GetCurrentInstance( void );
-void            Editor_SetCurrentInstance( YNCoreEditorInstance *instance );
-YNCoreEditorInstance *Editor_CreateInstance( YNCoreEditorMode mode );
-void            Editor_DestroyInstance( YNCoreEditorInstance *instance );
+void apeInitializeEditor_( void );
+void apeShutdownEditor_( void );
+void apeTickEditor_( void );
+void apeDrawEditor_( void );
+
+void apeOpenEditor_( void );
+void apeCloseEditor_( void );
+
+void apeDrawEditorGUI_( const ApeViewport *viewport );
+
+ApeEditorContext *apeGetCurrentEditorContext( void );
+ApeEditorContext *apeGetEditorContext( const char *identifier );
+ApeEditorContext *apeSetEditorContext( ApeEditorContextType type );
+bool apeIsEditorContextActive( const char *identifier );
 
 PL_EXTERN_C_END

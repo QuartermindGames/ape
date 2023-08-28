@@ -1,22 +1,19 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 
 /////////////////////////////////////////////////////////////////
 // 2D Primitives
 
-static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty )
-{
+static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty ) {
 	*tw = subRect->w / ( float ) texture->w;
 	*th = subRect->h / ( float ) texture->h;
 	*tx = subRect->x / ( float ) texture->w;
 	*ty = subRect->y / ( float ) texture->h;
 }
 
-void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h )
-{
+void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h ) {
 	float tw, th, tx, ty;
 	GetUVCoordsForSubRect( subRect, texture, &tw, &th, &tx, &ty );
 

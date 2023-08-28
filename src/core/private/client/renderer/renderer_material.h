@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -7,23 +6,22 @@
 #define MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-typedef enum MaterialBuiltinVar
-{
-	MATERIAL_BUILTIN_INVALID = -1,
-	MATERIAL_BUILTIN_TIME,
-	MATERIAL_BUILTIN_DEPTH,
-	MATERIAL_BUILTIN_VIEWPORT_SIZE,
+typedef enum ApeMaterialBuiltinVar {
+	APE_MATERIAL_BUILTIN_INVALID = -1,
+	APE_MATERIAL_BUILTIN_TIME,
+	APE_MATERIAL_BUILTIN_DEPTH,
+	APE_MATERIAL_BUILTIN_VIEWPORT_SIZE,
+	APE_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
 
-	MAX_MATERIAL_BUILTINS
-} MaterialBuiltinVar;
+	APE_MAX_MATERIAL_BUILTINS
+} ApeMaterialBuiltinVar;
 
-typedef struct YNCoreMaterial YNCoreMaterial;
+typedef struct ApeMaterial ApeMaterial;
 
 #define MATERIAL_VAR_NAME_LENGTH   64
 #define MATERIAL_VAR_STRING_LENGTH 256
 
-typedef enum MaterialVariableType
-{
+typedef enum ApeMaterialVariableType {
 	MATERIAL_VAR_INVALID,
 
 	MATERIAL_VAR_FLOAT,
@@ -46,27 +44,25 @@ typedef enum MaterialVariableType
 	MATERIAL_VAR_RENDERTARGET,
 
 	MAX_MATERIAL_VAR_TYPES
-} MaterialVariableType;
+} ApeMaterialVariableType;
 
 /**
  * Hints for standard material variables, so
  * that we can toggle their state.
  */
-typedef enum MaterialVariableHint
-{
-	RM_VAR_HINT_DIFFUSE,
-	RM_VAR_HINT_NORMAL,
-	RM_VAR_HINT_SPECULAR,
-} MaterialVariableHint;
+typedef enum ApeMaterialVariableHint {
+	APE_MAT_VAR_HINT_DIFFUSE,
+	APE_MAT_VAR_HINT_NORMAL,
+	APE_MAT_VAR_HINT_SPECULAR,
+} ApeMaterialVariableHint;
 
-typedef union MaterialVariableData
-{
-	float  f32;
+typedef union ApeMaterialVariableData {
+	float f32;
 	double f64;
 
 	bool boolean;
 
-	int32_t  i32;
+	int32_t i32;
 	uint32_t ui32;
 
 	PLVector2 vec2;
@@ -79,59 +75,64 @@ typedef union MaterialVariableData
 	char str[ MATERIAL_VAR_STRING_LENGTH ];
 
 	void *userPtr;
-} MaterialVariableData;
+} ApeMaterialVariableData;
 
-typedef struct MaterialVariable
-{
-	int                  programSlot;
-	char                 name[ MATERIAL_VAR_NAME_LENGTH ];
-	MaterialVariableType type;
-	MaterialVariableData data;
-	MaterialVariableHint hint;
-} MaterialVariable;
+typedef struct ApeMaterialVariable {
+	int programSlot;
+	char name[ MATERIAL_VAR_NAME_LENGTH ];
+	ApeMaterialVariableType type;
+	ApeMaterialVariableData data;
+	ApeMaterialVariableHint hint;
+} ApeMaterialVariable;
 
-typedef struct MaterialPass
-{
+typedef struct ApeMaterialPass {
 	PLGShaderProgram *program;
-	PLGTextureFilter  textureFilter;
-	PLGBlend          blendMode[ 2 ];
-	MaterialVariable  variables[ MAX_MATERIAL_VARIABLES ];
-	unsigned int      numVariables;
+	PLGTextureFilter textureFilter;
+	PLGBlend blendMode[ 2 ];
+	ApeMaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
+	unsigned int numVariables;
 
 	bool depthTest;
-	int  cullMode;
-} YNCoreMaterialPass;
+	int cullMode;
+} ApeMaterialPass;
 
 #define RS_PROGRAM_NAME_LENGTH 64
 
-enum
-{
-	RS_SHADER_DEFAULT,
-	RS_SHADER_LIGHTING_PASS,
-	RS_SHADER_DEFAULT_VERTEX,
-	RS_SHADER_DEFAULT_ALPHA,
+extern PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
-	RS_MAX_DEFAULT_SHADERS
-};
-extern PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
-
-typedef struct YNCoreShaderProgramIndex
-{
+typedef struct ApeShaderProgramIndex {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
 
-	YNCoreMaterialPass defaultPass;
+	ApeMaterialPass defaultPass;
 
-	PLGShaderProgram        *internalPtr;
+	PLGShaderProgram *internalPtr;
 	struct PLLinkedListNode *node;
-} YNCoreShaderProgramIndex;
+} ApeShaderProgramIndex;
 
-void YnCore_Material_ParsePass( struct YNNodeBranch *root, YNCoreMaterialPass *materialPass );
+PL_EXTERN_C
 
-void YnCore_InitializeMaterialSystem( void );
-void YnCore_ShutdownMaterialSystem( void );
+void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass );
 
-PLGTexture *YnCore_Material_GetPreviewTexture( YNCoreMaterial *material );
+void apeInitializeMaterialSystem( void );
+void apeShutdownMaterialSystem( void );
 
-YNCoreMaterial *YnCore_GetFallbackMaterial( void );
+typedef enum ApeDefaultMaterial {
+	APE_MATERIAL_DEFAULT_FALLBACK,
+	APE_MATERIAL_DEFAULT_VERTEX,
+	APE_MATERIAL_DEFAULT_SHADOW,
+	APE_MATERIAL_DEFAULT_DEPTH,
+
+	APE_MAX_DEFAULT_MATERIALS
+} ApeDefaultMaterial;
+
+ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
+
+// !!OBSOLETE!! Use the above instead...
+ApeMaterial *apeGetFallbackMaterial( void );
+ApeMaterial *apeGetVertexMaterial( void );
+
+bool apeMaterialShadowsEnabled( const ApeMaterial *material );
+
+PL_EXTERN_C_END

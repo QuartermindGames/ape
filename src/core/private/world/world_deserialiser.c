@@ -1,0 +1,303 @@
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+
+#include "ape_private.h"
+
+#include "world.h"
+#include "client/renderer/renderer.h"
+
+/****************************************
+ * PRIVATE
+ ****************************************/
+
+static ApeLight *DeserializeLight( NdBranch *root ) {
+	ApeLight *light = PL_NEW( ApeLight );
+
+	light->position = ndGetVector3( root, "position", &pl_vecOrigin3 );
+	light->angles = ndGetVector3( root, "angles", &pl_vecOrigin3 );
+
+	light->colour = ndGetColourF32( root, "colour", &PL_COLOURF32_WHITE );
+	light->radius = ndGetF32ByName( root, "radius", 0.0f );
+
+	light->isHidden = ndGetBoolByName( root, "isHidden", false );
+	light->flags = ndGetUInt( root, "flags", 0 );
+
+	return light;
+}
+
+static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
+	unsigned int numLights = ndGetNumOfChildren( root );
+	if ( numLights == 0 ) {
+		return;
+	}
+
+	world->lights = PlCreateVectorArray( numLights );
+
+	NdBranch *child = ndGetFirstChild( root );
+	while ( child != NULL ) {
+		PlPushBackVectorArrayElement( world->lights, DeserializeLight( child ) );
+		child = ndGetNextChild( child );
+	}
+}
+
+static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
+	ApeWorldRoom *room = apeCreateWorldRoom();
+
+	room->tag = ndGetInt( root, "tag", 0 );
+
+	room->bounds.mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
+	room->bounds.maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
+
+	room->life = ndGetF32ByName( root, "life", 0.0f );
+
+	room->isDetail = ndGetBoolByName( root, "isDetail", false );
+	room->ambientLight = ndGetColourF32( root, "ambience", &PL_COLOURF32_BLACK );
+	room->flags = ndGetUInt( root, "flags", 0 );
+
+	return room;
+}
+
+static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
+	// Fetch the first room index and validate it
+	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
+	assert( roomA != NULL );
+	if ( roomA == NULL ) {
+		PRINT_WARNING( "Invalid portal room A!\n" );
+		return NULL;
+	}
+
+	// Fetch the second room index and validate it
+	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
+	assert( roomB != NULL );
+	if ( roomB == NULL ) {
+		PRINT_WARNING( "Invalid portal room B!\n" );
+		return NULL;
+	}
+
+	ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
+
+	portal->mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
+	portal->maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
+
+	// Get the two associated rooms for the portal
+	portal->roomA = roomA;
+	PlPushBackVectorArrayElement( portal->roomA->portals, portal );
+	portal->roomB = roomB;
+	PlPushBackVectorArrayElement( portal->roomB->portals, portal );
+
+	PlPushBackVectorArrayElement( world->portals, portal );
+
+	return portal;
+}
+
+static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
+	ApeWorldFace *face = PL_NEW( ApeWorldFace );
+
+	face->normal = ndGetVector3( root, "normal", &pl_vecOrigin3 );
+	face->offset = ndGetF32ByName( root, "offset", 0.0f );
+
+	face->flags = ndGetUInt( root, "flags", 0 );
+
+	face->smoothingGroup = ndGetInt( root, "smoothingGroup", 0 );
+
+	// Attempt to fetch the material for the face.
+	// It's inherited from our adventures with RFL, but we'll support cases where a
+	// face doesn't have a material as "valid"...
+	unsigned int materialIndex = ndGetUInt( root, "material", ( unsigned int ) -1 );
+	face->material = PlGetVectorArrayElementAt( world->materials, materialIndex );
+	if ( face->material == NULL ) {
+		face->material = apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK );
+	}
+
+	face->edgeLoop = PlCreateLinkedList();
+	face->vertices = PlCreateVectorArray( 0 );
+
+	// Each face has a collection of vertices, the position of which is stored
+	// per the world vertex list rather than for the face itself, which is
+	// inherited, again, from our adventures with RFL (but not necessarily bad)
+	NdBranch *branch;
+	if ( ( branch = ndGetChildByName( root, "vertices" ) ) != NULL ) {
+		branch = ndGetFirstChild( branch );
+		while ( branch != NULL ) {
+			ApeWorldVertex *worldVertex;
+			unsigned int vertexIndex = ndGetUInt( branch, "vertexIndex", ( unsigned int ) -1 );
+			assert( vertexIndex != ( unsigned int ) -1 );
+			if ( ( worldVertex = PlGetVectorArrayElementAt( world->vertices, vertexIndex ) ) == NULL ) {
+				PRINT_WARNING( "Invalid vertex index for face!\n" );
+				break;
+			}
+
+			ApeWorldFaceVertex *vertex = PL_NEW( ApeWorldFaceVertex );
+			vertex->u = worldVertex;
+			vertex->textureCoords = ndGetVector2( branch, "textureCoords", &pl_vecOrigin2 );
+
+			PlInsertLinkedListNode( face->edgeLoop, vertex );
+			PlPushBackVectorArrayElement( face->vertices, vertex );
+
+			branch = ndGetNextChild( branch );
+		}
+	}
+
+	return face;
+}
+
+static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
+	NdBranch *branch;
+
+	if ( ( branch = ndGetChildByName( root, "materials" ) ) != NULL ) {
+		unsigned int numMaterials = ndGetNumOfChildren( branch );
+		if ( numMaterials > 0 ) {
+			if ( ndGetType( branch ) != ND_PROPERTY_STRING ) {
+				PRINT_WARNING( "Unexpected branch type for materials!\n" );
+				return;
+			}
+
+			if ( world->materials == NULL ) {
+				world->materials = PlCreateVectorArray( numMaterials );
+			}
+
+			branch = ndGetFirstChild( branch );
+			while ( branch != NULL ) {
+				PLPath path;
+				if ( ndGetStr( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
+					PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
+				} else {
+					PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
+					break;
+				}
+
+				branch = ndGetNextChild( branch );
+			}
+		} else {
+			PRINT_WARNING( "No materials for geometry!\n" );
+		}
+	}
+
+	if ( ( branch = ndGetChildByName( root, "rooms" ) ) != NULL ) {
+		unsigned int numRooms = ndGetNumOfChildren( branch );
+		if ( numRooms > 0 ) {
+			if ( world->rooms == NULL ) {
+				world->rooms = PlCreateVectorArray( numRooms );
+			}
+
+			branch = ndGetFirstChild( branch );
+			while ( branch != NULL ) {
+				PlPushBackVectorArrayElement( world->rooms, DeserializeRoom( branch ) );
+				branch = ndGetNextChild( branch );
+			}
+		} else {
+			PRINT_WARNING( "No rooms for geometry!\n" );
+		}
+	}
+
+	if ( ( branch = ndGetChildByName( root, "portals" ) ) != NULL ) {
+		unsigned int numPortals = ndGetNumOfChildren( branch );
+		if ( numPortals > 0 ) {
+			if ( world->portals == NULL ) {
+				world->portals = PlCreateVectorArray( numPortals );
+			}
+
+			NdBranch *child = ndGetFirstChild( branch );
+			while ( child != NULL ) {
+				ApeWorldPortal *portal = DeserializePortal( world, child );
+				if ( portal != NULL ) {
+					PlPushBackVectorArrayElement( world->portals, portal );
+				}
+
+				child = ndGetNextChild( child );
+			}
+		} else {
+			PRINT_WARNING( "No portals for geometry!\n" );
+		}
+	}
+
+	// Attempt to fetch the list of vertices - these are just an immediate
+	// list of coordinates
+	if ( ( branch = ndGetChildByName( root, "vertices" ) ) != NULL ) {
+		// Vertices should be just a big ol' list of floats
+		// representing x y z coordinates
+		unsigned int numChildren = ndGetNumOfChildren( branch );
+		if ( numChildren % 3 == 0 ) {
+			unsigned int numVertices = numChildren / 3;
+			if ( numVertices > 0 ) {
+				if ( world->vertices == NULL ) {
+					world->vertices = PlCreateVectorArray( numVertices );
+				}
+
+				float *vertices = PL_NEW_( float, numChildren );
+				ndGetF32Array( branch, vertices, numChildren );
+				for ( unsigned int i = 0, j = 0; i < numVertices; ++i, j += 3 ) {
+					ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
+					vertex->position.x = vertices[ j ];
+					vertex->position.y = vertices[ j + 1 ];
+					vertex->position.z = vertices[ j + 2 ];
+					PlPushBackVectorArrayElement( world->vertices, vertex );
+				}
+
+				PL_DELETE( vertices );
+			}
+		} else {
+			PRINT_WARNING( "Invalid number of vertices for geometry!\n" );
+		}
+	}
+
+	if ( ( branch = ndGetChildByName( root, "faces" ) ) != NULL ) {
+		unsigned int numFaces = ndGetNumOfChildren( branch );
+		if ( numFaces > 0 ) {
+			branch = ndGetFirstChild( branch );
+			while ( branch != NULL ) {
+				DeserializeFace( world, root );
+				branch = ndGetNextChild( branch );
+			}
+		} else {
+			PRINT_WARNING( "No faces for geometry!\n" );
+		}
+	}
+}
+
+/****************************************
+ * PUBLIC
+ ****************************************/
+
+ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
+	// Get the world version from the branch
+	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
+	if ( version == ( unsigned int ) -1 ) {
+		// Print a warning and return NULL if the version is not found
+		PRINT_WARNING( "Failed to find world version!\n" );
+		return NULL;
+	} else if ( version > APE_WORLD_VERSION ) {
+		// Print a warning and return NULL if the version is not supported
+		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
+		return NULL;
+	}
+
+	NdBranch *branch;
+
+	// Get the property branch from the root
+	if ( ( branch = ndGetChildByName( root, "properties" ) ) != NULL ) {
+		// Copy the branch, so we can pass it over to the game logic later
+		world->globalProperties = ndCopyBranch( branch );
+
+		// Get the global properties of the world from the branch
+
+		world->ambience = ndGetColourF32( world->globalProperties, "ambience", &PL_COLOURF32( 0.5f, 0.5f, 0.5f, 1.0f ) );
+		world->sunColour = ndGetColourF32( world->globalProperties, "sunColour", &PL_COLOURF32_BLACK );
+		world->sunPosition = ndGetVector3( world->globalProperties, "sunPosition", &pl_vecOrigin3 );
+
+		world->clearColour = ndGetColourF32( world->globalProperties, "clearColour", &PL_COLOURF32_BLACK );
+
+		world->fogColour = ndGetColourF32( world->globalProperties, "fogColour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f ) );
+		world->fogFar = ndGetF32ByName( world->globalProperties, "fogFar", 11.0f );
+		world->fogNear = ndGetF32ByName( world->globalProperties, "fogNear", 32.0f );
+	}
+
+	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL ) {
+		DeserializeGeometry( world, branch );
+	}
+
+	if ( ( branch = ndGetChildByName( root, "lights" ) ) != NULL ) {
+		DeserializeLights( world, branch );
+	}
+
+	return world;
+}

@@ -1,21 +1,16 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
-#include "renderer_scenegraph.h"
+typedef struct ApeCamera ApeCamera;
 
-typedef struct YNCoreCamera YNCoreCamera;
-
-typedef enum PSParticleDrawType
-{
+typedef enum PSParticleDrawType {
 	PS_DRAW_SPRITE,
 	PS_DRAW_MODEL,
 } PSParticleDrawType;
 
-typedef struct PSEmitter
-{
-	SGTransform transform, transformVar;
+typedef struct PSEmitter {
+	ApeSceneTransform transform, transformVar;
 
 	PLVector3 force, forceVar; /* exterior forces, such as gravity */
 
@@ -24,7 +19,7 @@ typedef struct PSEmitter
 	int numTicks, maxTicks; /* number of ticks since last emission and maximum ticks until we emit again */
 
 	int particleLife, particleLifeVar; /* how long the particles spawned by the emitter will live until they die */
-	int life;						   /* how long this emitter will live until it's removed */
+	int life;                          /* how long this emitter will live until it's removed */
 
 	float speed, speedVar;
 
@@ -38,16 +33,15 @@ typedef struct PSEmitter
 
 	PLCollisionAABB bounds;
 
-	struct PLGMesh  *mesh;
-	struct YNCoreMaterial *material;
-	YNCoreMemoryReference mem;
+	struct PLGMesh *mesh;
+	struct ApeMaterial *material;
+	ApeMemoryReference mem;
 
 	struct PLLinkedList *particles;
 } PSEmitter;
 
-typedef struct PSParticle
-{
-	SGTransform transform, oldTransform;
+typedef struct PSParticle {
+	ApeSceneTransform transform, oldTransform;
 
 	PLVector3 dir;
 
@@ -57,7 +51,7 @@ typedef struct PSParticle
 
 	float scale, oldScale, deltaScale;
 
-	int		   life;
+	int life;
 	PSEmitter *emitter;
 
 	PLCollisionAABB bounds;
@@ -68,9 +62,9 @@ typedef struct PSParticle
 void PS_Initialize( void );
 void PS_Shutdown( void );
 
-void	   PS_CacheEmitterTemplate( const char *path );
+void PS_CacheEmitterTemplate( const char *path );
 PSEmitter *PS_SpawnEmitter( void );
-void	   PS_DestroyEmitter( PSEmitter *emitter );
+void PS_DestroyEmitter( PSEmitter *emitter );
 
 void PS_TickEmitter( PSEmitter *emitter );
-void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera );
+void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera );

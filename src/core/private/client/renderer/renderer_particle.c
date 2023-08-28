@@ -1,97 +1,87 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_linkedlist.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer_particle.h"
 #include "renderer.h"
 
 #include <yin/node.h>
 
-void PS_Initialize( void )
-{
+void PS_Initialize( void ) {
 }
 
-void PS_Shutdown( void )
-{
+void PS_Shutdown( void ) {
 }
 
-static void PS_CB_DestroyEmitterTemplate( void *userData )
-{
+static void PS_CB_DestroyEmitterTemplate( void *userData ) {
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	YnCore_Material_Release( emitter->material );
+	apeReleaseMaterial( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
 	PlFree( emitter );
 }
 
-YNNodeBranch *PS_SerializeEmitter( const PSEmitter *emitter )
-{
-	YNNodeBranch *root = YnNode_PushBackObject( NULL, "particleEmitter" );
-	if ( root != NULL )
-	{
-		YnNode_PushBackI32( root, "emissionRate", emitter->emissionRate );
-		YnNode_PushBackI32( root, "emissionVar", emitter->emissionVar );
+NdBranch *PS_SerializeEmitter( const PSEmitter *emitter ) {
+	NdBranch *root = ndPushBackObject( NULL, "particleEmitter" );
+	if ( root != NULL ) {
+		ndPushBackI32( root, "emissionRate", emitter->emissionRate );
+		ndPushBackI32( root, "emissionVar", emitter->emissionVar );
 
-		YnNode_PushBackI32( root, "particleLife", emitter->particleLife );
-		YnNode_PushBackI32( root, "particleLifeVar", emitter->particleLifeVar );
+		ndPushBackI32( root, "particleLife", emitter->particleLife );
+		ndPushBackI32( root, "particleLifeVar", emitter->particleLifeVar );
 
-		YnNode_PushBackF32( root, "speed", emitter->speed );
-		YnNode_PushBackF32( root, "speedVar", emitter->speedVar );
+		ndPushBackF32( root, "speed", emitter->speed );
+		ndPushBackF32( root, "speedVar", emitter->speedVar );
 
-		YnNode_PushBackI32( root, "maxParticles", emitter->maxParticles );
+		ndPushBackI32( root, "maxParticles", emitter->maxParticles );
 	}
 
 	return root;
 }
 
-void PS_CacheEmitterTemplate( const char *path )
-{
-	PSEmitter *emitter = MM_GetCachedData( path, MEM_CACHE_PARTICLES );
+void PS_CacheEmitterTemplate( const char *path ) {
+	PSEmitter *emitter = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
-	YNNodeBranch *root = YnNode_LoadFile( path, "particleEmitter" );
-	if ( root == NULL )
-	{
+	NdBranch *root = ndLoadFile( path, "particleEmitter" );
+	if ( root == NULL ) {
 		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
 		return;
 	}
 
-	emitter = PlMAlloc( sizeof( PSEmitter ), true );
+	emitter = PL_NEW( PSEmitter );
 
-	SG_DS_Transform( root, "transform", &emitter->transform );
-	SG_DS_Transform( root, "transformVar", &emitter->transformVar );
+	//SG_DS_Transform( root, "transform", &emitter->transform );
+	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
-	emitter->emissionRate = YnNode_GetI32ByName( root, "emissionRate", 2 );
-	emitter->emissionVar = YnNode_GetI32ByName( root, "emissionVar", 2 );
+	emitter->emissionRate = ndGetInt( root, "emissionRate", 2 );
+	emitter->emissionVar = ndGetInt( root, "emissionVar", 2 );
 
-	emitter->particleLife = YnNode_GetI32ByName( root, "particleLife", 10 );
-	emitter->particleLifeVar = YnNode_GetI32ByName( root, "particleLifeVar", 5 );
-	emitter->maxParticles = YnNode_GetI32ByName( root, "maxParticles", 100 );
+	emitter->particleLife = ndGetInt( root, "particleLife", 10 );
+	emitter->particleLifeVar = ndGetInt( root, "particleLifeVar", 5 );
+	emitter->maxParticles = ndGetInt( root, "maxParticles", 100 );
 
-	emitter->life = YnNode_GetI32ByName( root, "life", 0 );
+	emitter->life = ndGetInt( root, "life", 0 );
 
-	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "startColour" ), &emitter->startColour );
-	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "endColour" ), &emitter->endColour );
-	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "startColourVar" ), &emitter->startColourVar );
-	YnNode_DS_DeserializeColourF32( YnNode_GetChildByName( root, "endColourVar" ), &emitter->endColourVar );
+	emitter->startColour = ndGetColourF32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour = ndGetColourF32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColourVar = ndGetColourF32( root, "startColourVar", &emitter->startColourVar );
+	emitter->endColourVar = ndGetColourF32( root, "endColourVar", &emitter->endColourVar );
 
-	MM_AddToCache( path, MEM_CACHE_PARTICLES, emitter );
+	apeAddToCachePool( path, APE_CACHE_POOL_PARTICLES, emitter );
 
-	MemoryManager_SetupReference( "psemitter", MEM_CACHE_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
-	MemoryManager_AddReference( &emitter->mem );
+	apeSetupReference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	apeAddReference( &emitter->mem );
 }
 
-PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
-{
-	PSEmitter *emitterTemplate = MM_GetCachedData( path, MEM_CACHE_PARTICLES );
-	if ( emitterTemplate == NULL )
-	{
+PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path ) {
+	PSEmitter *emitterTemplate = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
+	if ( emitterTemplate == NULL ) {
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
 		return NULL;
 	}
@@ -102,8 +92,7 @@ PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 	return emitter;
 }
 
-PSEmitter *PS_SpawnEmitter( void )
-{
+PSEmitter *PS_SpawnEmitter( void ) {
 	PSEmitter *emitter = PlMAlloc( sizeof( PSEmitter ), true );
 	emitter->particles = PlCreateLinkedList();
 
@@ -117,8 +106,7 @@ PSEmitter *PS_SpawnEmitter( void )
 	return emitter;
 }
 
-void PS_DestroyEmitter( PSEmitter *emitter )
-{
+void PS_DestroyEmitter( PSEmitter *emitter ) {
 	/* todo: 	push it into a queue to be removed once
 	 * 			all the particles are dead */
 	if ( emitter == NULL )
@@ -126,29 +114,25 @@ void PS_DestroyEmitter( PSEmitter *emitter )
 
 	/* free all the particles we've created */
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
 		node = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
 
 	if ( emitter->material != NULL )
-		YnCore_Material_Release( emitter->material );
+		apeReleaseMaterial( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );
 }
 
-int U_Rand_I32( int max )
-{
+int U_Rand_I32( int max ) {
 	return ( rand() % max );
 }
 
-static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
-{
-	if ( particle->life <= 0 )
-	{
+static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter ) {
+	if ( particle->life <= 0 ) {
 		PlDestroyLinkedListNode( particle->node );
 		PlFree( particle );
 		return;
@@ -181,11 +165,9 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter )
 	particle->life--;
 }
 
-void PS_TickEmitter( PSEmitter *emitter )
-{
+void PS_TickEmitter( PSEmitter *emitter ) {
 	int numParticles = ( int ) PlGetNumLinkedListNodes( emitter->particles );
-	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
-	{
+	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks ) {
 		PSParticle *particle = PlMAlloc( sizeof( PSParticle ), true );
 		particle->emitter = emitter;
 
@@ -227,13 +209,11 @@ void PS_TickEmitter( PSEmitter *emitter )
 	}
 
 	/* simulate all of the existing particles that we've emitted */
-	unsigned int      i = 0;
+	unsigned int i = 0;
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		if ( i == 0 )
-		{
+		if ( i == 0 ) {
 			emitter->bounds.maxs = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 			emitter->bounds.mins = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 		}
@@ -250,9 +230,8 @@ void PS_TickEmitter( PSEmitter *emitter )
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
-{
-	PlgSetShaderProgram( defaultShaderPrograms[ RS_SHADER_DEFAULT_ALPHA ] );
+void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera ) {
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -267,8 +246,7 @@ void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
 	PlgSetCullMode( PLG_CULL_NONE );
 
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PSParticle *particle = PlGetLinkedListNodeUserData( node );
 
 		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
@@ -290,7 +268,7 @@ void PS_Draw( const PSEmitter *emitter, const YNCoreCamera *camera )
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	YnCore_Material_DrawMesh( emitter->material, emitter->mesh, NULL, 0 );
+	apeDrawMesh( emitter->material, emitter->mesh, NULL, 0 );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

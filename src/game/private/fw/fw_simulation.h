@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -11,8 +10,7 @@
 #define FW_SIM_MINUTES_TO_HOUR   60
 #define FW_SIM_HOURS_TO_DAY      24
 
-typedef struct FWSimState
-{
+typedef struct FWSimState {
 	float windPower;
 	PLVector3 windDirection;
 
@@ -21,8 +19,7 @@ typedef struct FWSimState
 	unsigned int seconds;// not *real* seconds!
 } FWSimState;
 
-typedef enum FWSimTimeOfDay
-{
+typedef enum FWSimTimeOfDay {
 	FW_TIMEOFDAY_DAWN,
 	FW_TIMEOFDAY_MORNING,
 	FW_TIMEOFDAY_AFTERNOON,
@@ -37,23 +34,19 @@ static inline unsigned int FW_Sim_GetTotalMinutes( const FWSimState *simState ) 
 static inline unsigned int FW_Sim_GetTotalHours( const FWSimState *simState ) { return FW_Sim_GetTotalMinutes( simState ) / FW_SIM_MINUTES_TO_HOUR; }
 static inline unsigned int FW_Sim_GetTotalDays( const FWSimState *simState ) { return FW_Sim_GetTotalHours( simState ) / FW_SIM_HOURS_TO_DAY; }
 
-static inline unsigned int FW_Sim_GetCurrentSecond( const FWSimState *simState )
-{
+static inline unsigned int FW_Sim_GetCurrentSecond( const FWSimState *simState ) {
 	return ( FW_Sim_GetTotalSeconds( simState ) - ( FW_Sim_GetTotalMinutes( simState ) / FW_SIM_SECONDS_TO_MINUTE ) ) % FW_SIM_SECONDS_TO_MINUTE;
 }
 
-static inline unsigned int FW_Sim_GetCurrentMinute( const FWSimState *simState )
-{
+static inline unsigned int FW_Sim_GetCurrentMinute( const FWSimState *simState ) {
 	return ( FW_Sim_GetTotalMinutes( simState ) - ( FW_Sim_GetTotalHours( simState ) / FW_SIM_MINUTES_TO_HOUR ) ) % FW_SIM_MINUTES_TO_HOUR;
 }
 
-static inline unsigned int FW_Sim_GetCurrentHour( const FWSimState *simState )
-{
+static inline unsigned int FW_Sim_GetCurrentHour( const FWSimState *simState ) {
 	return ( FW_Sim_GetTotalHours( simState ) - ( FW_Sim_GetTotalDays( simState ) / FW_SIM_HOURS_TO_DAY ) ) % FW_SIM_HOURS_TO_DAY;
 }
 
-static inline FWSimTimeOfDay FW_Sim_GetTimeOfDay( const FWSimState *simState )
-{
+static inline FWSimTimeOfDay FW_Sim_GetTimeOfDay( const FWSimState *simState ) {
 	unsigned int hour = FW_Sim_GetCurrentHour( simState );
 	if ( hour > 17 ) return FW_TIMEOFDAY_NIGHT;
 	if ( hour > 15 ) return FW_TIMEOFDAY_EVENING;

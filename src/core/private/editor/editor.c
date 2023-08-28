@@ -1,87 +1,140 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: Primary code for dealing with editor functionality.
 
-#include <plmodel/plm.h>
-
-#include "core_private.h"
+#include "ape_private.h"
 #include "editor.h"
+#include "client/renderer/renderer.h"
 
-static PLVectorArray  *instances;
-static YNCoreEditorInstance *currentInstance = NULL;
+static ApeEditorContext *contexts[ APE_EDITOR_MAX_CONTEXTS ];
+static ApeEditorContext *currentContext = NULL;
 
-void Editor_Initialize( void )
-{
-	instances = PlCreateVectorArray( 4 );
+static ApeEditorStatus editorStatus = APE_EDITOR_STATUS_CLOSED;
 
-	Editor_Commands_Register();
+static void EditorToggleCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **argv ) {
+	if ( editorStatus == APE_EDITOR_STATUS_CLOSING ) {
+		return;
+	} else if ( editorStatus == APE_EDITOR_STATUS_CLOSED ) {
+		apeOpenEditor_();
+		return;
+	}
+
+	apeCloseEditor_();
 }
 
-void YnCore_ShutdownEditor( void )
-{
-	Editor_MaterialSelector_Shutdown();
-}
+void apeInitializeEditor_( void ) {
+	PlRegisterConsoleCommand( "ape/editor/toggle", "Toggle main editor functionality.", 0, EditorToggleCallback );
 
-static void TickEditorInstance( YNCoreEditorInstance *instance )
-{
-	switch ( instance->mode )
+#if 0
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
-		case YN_CORE_EDITOR_MODE_WORLD:
-			break;
-		case YN_CORE_EDITOR_MODE_MODEL:
+		assert( contexts[ i ]->Initialize != NULL );
+		if ( contexts[ i ]->Initialize == NULL )
 		{
-			PLMModel *model = instance->modelMode.model;
-			if ( model == NULL )
-			{
-				break;
-			}
-			break;
+			continue;
 		}
-		case YN_CORE_EDITOR_MODE_MATERIAL:
-			break;
-		default:
-			break;
+
+		contexts[ i ]->Initialize();
 	}
+#endif
 }
 
-void Editor_Tick( void )
-{
-	unsigned int numInstances = PlGetNumVectorArrayElements( instances );
-	for ( unsigned int i = 0; i < numInstances; ++i )
+void apeShutdownEditor_( void ) {
+#if 0
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
 	{
-		TickEditorInstance( PlGetVectorArrayElementAt( instances, i ) );
+		assert( contexts[ i ]->Shutdown != NULL );
+		if ( contexts[ i ]->Shutdown == NULL )
+		{
+			continue;
+		}
+
+		contexts[ i ]->Shutdown();
 	}
+#endif
 }
 
-static void DrawEditorInstance( YNCoreEditorInstance *instance, const YNCoreViewport *viewport )
-{
-}
-
-void Editor_Draw( const YNCoreViewport *viewport )
-{
-	unsigned int numInstances = PlGetNumVectorArrayElements( instances );
-	for ( unsigned int i = 0; i < numInstances; ++i )
-	{
+void apeTickEditor_( void ) {
+	if ( currentContext == NULL ) {
+		return;
 	}
+
+	assert( currentContext->Tick != NULL );
+	if ( currentContext->Tick == NULL ) {
+		return;
+	}
+
+	currentContext->Tick();
 }
 
-YNCoreEditorInstance *Editor_GetCurrentInstance( void )
-{
-	return currentInstance;
+void apeDrawEditor_( void ) {
+	if ( currentContext == NULL ) {
+		return;
+	}
+
+	assert( currentContext->Draw != NULL );
+	if ( currentContext->Draw == NULL ) {
+		return;
+	}
+
+	currentContext->Draw();
 }
 
-void Editor_SetCurrentInstance( YNCoreEditorInstance *instance )
-{
-	currentInstance = instance;
+void apeOpenEditor_( void ) {
+	editorStatus = APE_EDITOR_STATUS_OPEN;
 }
 
-YNCoreEditorInstance *Editor_CreateInstance( YNCoreEditorMode mode )
-{
-	YNCoreEditorInstance *instance = PL_NEW( YNCoreEditorInstance );
-	instance->mode           = mode;
-	instance->gridScale      = 8;
-	PlPushBackVectorArrayElement( instances, instance );
-	return instance;
+void apeCloseEditor_( void ) {
 }
 
-void Editor_DestroyInstance( YNCoreEditorInstance *instance )
-{
+void apeDrawEditorGUI_( const ApeViewport *viewport ) {
+	if ( currentContext == NULL ) {
+		return;
+	}
+
+	assert( currentContext->DrawGUI != NULL );
+	if ( currentContext->DrawGUI == NULL ) {
+		return;
+	}
+
+	currentContext->DrawGUI();
+}
+
+ApeEditorContext *apeGetCurrentEditorContext( void ) {
+	return currentContext;
+}
+
+ApeEditorContext *apeGetEditorContext( const char *identifier ) {
+	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i ) {
+		if ( strcmp( contexts[ i ]->identifier, identifier ) != 0 ) {
+			continue;
+		}
+
+		return contexts[ i ];
+	}
+
+	return NULL;
+}
+
+ApeEditorContext *apeSetEditorContext( ApeEditorContextType type ) {
+	currentContext = contexts[ type ];
+	editorStatus = APE_EDITOR_STATUS_OPEN;
+	if ( currentContext->OnActive != NULL ) {
+		currentContext->OnActive();
+	}
+
+	return currentContext;
+}
+
+bool apeIsEditorContextActive( const char *identifier ) {
+	if ( currentContext == NULL ) {
+		return false;
+	}
+
+	return ( strcmp( currentContext->name, identifier ) == 0 );
+}
+
+ApeMaterial *apeGetEditorIconMaterial( const char *name ) {
+	PLPath path;
+	PlSetupPath( path, true, "editor/icons/%s.mat.n", name );
+	return apeCacheMaterial( path, APE_CACHE_EDITOR, true, false );
 }

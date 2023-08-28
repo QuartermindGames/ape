@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plmodel/plm.h>
@@ -18,26 +17,23 @@ static unsigned char terrainMinHeight, terrainMaxHeight;
 #	define TERRAIN_NUM_CHUNKS  ( TERRAIN_CHUNK_NUM_X * TERRAIN_CHUNK_NUM_Y )
 #endif
 
-static YNCoreMaterial *terrainMaterial = NULL;
-static PLMModel *terrainModel          = NULL;
+static ApeMaterial *terrainMaterial = NULL;
+static PLMModel *terrainModel = NULL;
 
 #define TERRAIN_TILE_SPACING 64
 
-void FW_Terrain_Initialize( void )
-{
+void FW_Terrain_Initialize( void ) {
 	terrainModel = PlmLoadModel( "models/terrain.ply" );
-	if ( terrainModel == NULL )
-	{
+	if ( terrainModel == NULL ) {
 		Game_Error( "Failed to load terrain: %s\n", PlGetError() );
 		return;
 	}
 }
 
-void FW_Terrain_Shutdown( void )
-{
+void FW_Terrain_Shutdown( void ) {
 	PlmDestroyModel( terrainModel );
 
-	YnCore_Material_Release( terrainMaterial );
+	apeReleaseMaterial( terrainMaterial );
 }
 
 /****************************************/
@@ -48,8 +44,7 @@ void FW_Terrain_Shutdown( void )
 static PLGTexture *overview = NULL;
 PLGTexture *FW_Terrain_GetOverview( void ) { return overview; }
 
-static void UpdateOverview( void )
-{
+static void UpdateOverview( void ) {
 }
 
 /****************************************/
@@ -58,21 +53,18 @@ static void UpdateOverview( void )
 /**
  * Loads the terrain into our heightmap buffer.
  */
-static bool ParseTerrainFile( PLFile *file )
-{
+static bool ParseTerrainFile( PLFile *file ) {
 	const char *path = PlGetFilePath( file );
 
 	// validate the file size and ensure it's what we're expecting
 	size_t fileSize = PlGetFileSize( file );
 	assert( TERRAIN_HM_SIZE == fileSize );
-	if ( TERRAIN_HM_SIZE != fileSize )
-	{
+	if ( TERRAIN_HM_SIZE != fileSize ) {
 		Game_Warning( "Invalid terrain size (%d != %d)!\n", TERRAIN_HM_SIZE, fileSize );
 		return false;
 	}
 
-	if ( PlReadFile( file, terrainHeightmap, sizeof( char ), TERRAIN_HM_SIZE ) != TERRAIN_HM_SIZE )
-	{
+	if ( PlReadFile( file, terrainHeightmap, sizeof( char ), TERRAIN_HM_SIZE ) != TERRAIN_HM_SIZE ) {
 		Game_Warning( "Failed to read in terrain: %s\n", PlGetError() );
 		return false;
 	}
@@ -80,12 +72,13 @@ static bool ParseTerrainFile( PLFile *file )
 	// find the heighest and lowest points
 	terrainMinHeight = UINT8_MAX;
 	terrainMaxHeight = 0;
-	for ( unsigned int i = 0; i < TERRAIN_HM_SIZE; ++i )
-	{
-		if ( terrainHeightmap[ i ] > terrainMaxHeight )
+	for ( unsigned int i = 0; i < TERRAIN_HM_SIZE; ++i ) {
+		if ( terrainHeightmap[ i ] > terrainMaxHeight ) {
 			terrainMaxHeight = terrainHeightmap[ i ];
-		if ( terrainHeightmap[ i ] < terrainMinHeight )
+		}
+		if ( terrainHeightmap[ i ] < terrainMinHeight ) {
 			terrainMinHeight = terrainHeightmap[ i ];
+		}
 	}
 
 	UpdateOverview();
@@ -93,35 +86,31 @@ static bool ParseTerrainFile( PLFile *file )
 	return true;
 }
 
-bool FW_Terrain_Load( const char *path )
-{
+bool FW_Terrain_Load( const char *path ) {
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL )
-	{
+	if ( file == NULL ) {
 		Game_Warning( "Failed to load terrain (%s): %s\n", path, PlGetError() );
 		return false;
 	}
 
 	bool status = ParseTerrainFile( file );
-	if ( !status )
+	if ( !status ) {
 		Game_Warning( "Failed to load terrain (%s)!\n", path );
+	}
 
 	PlCloseFile( file );
 
 	return status;
 }
 
-float FW_Terrain_GetHeight( float x, float y )
-{
+float FW_Terrain_GetHeight( float x, float y ) {
 	return 0;
 }
 
-float FW_Terrain_GetMaxHeight( void )
-{
+float FW_Terrain_GetMaxHeight( void ) {
 	return terrainMaxHeight;
 }
 
-float FW_Terrain_GetMinHeight( void )
-{
+float FW_Terrain_GetMinHeight( void ) {
 	return terrainMinHeight;
 }

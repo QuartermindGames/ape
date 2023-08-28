@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_hashtable.h>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
 
 #include <yin/node.h>
@@ -12,13 +11,11 @@
 /** Shaders **/
 
 static PLHashTable *shaderProgramTable;
-PLGShaderProgram *defaultShaderPrograms[ RS_MAX_DEFAULT_SHADERS ];
+PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
-static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
-{
+static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions ) {
 	PLFile *filePtr = PlOpenFile( path, true );
-	if ( filePtr == NULL )
-	{
+	if ( filePtr == NULL ) {
 		PRINT_ERROR( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
@@ -26,7 +23,7 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
 
 	size_t length = PlGetFileSize( filePtr );
-	char *buffer  = PlMAllocA( length + 1 );
+	char *buffer = PlMAllocA( length + 1 );
 	PlReadFile( filePtr, buffer, length, 1 );
 	buffer[ length ] = '\0';
 
@@ -37,14 +34,12 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 	PLPath directory;
 	PlSetupPath( directory, true, "%s", path );
 	char *sep = strrchr( directory, '/' );
-	if ( sep != NULL )
-	{
+	if ( sep != NULL ) {
 		*sep = '\0';
 	}
 
 	PlgCompileShaderStage( stage, buffer, length, directory );
-	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS )
-	{
+	if ( PlGetFunctionResult() != PL_RESULT_SUCCESS ) {
 		PRINT_ERROR( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
@@ -53,40 +48,33 @@ static void RS_RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageTyp
 	PlFree( buffer );
 }
 
-static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
-{
-	YNCoreShaderProgramIndex program;
+static ApeShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
+	ApeShaderProgramIndex program;
 	PL_ZERO_( program );
 
-	const char *internalName = YnNode_GetStringByName( root, "description", NULL );
-	if ( internalName != NULL )
-	{
+	const char *internalName = ndGetStringByName( root, "description", NULL );
+	if ( internalName != NULL ) {
 		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
-	}
-	else
-	{
+	} else {
 		PRINT_WARNING( "Shader program with no internal name provided!\n" );
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-	if ( YnCore_GetShaderProgramByName( internalName ) != NULL )
-	{
+	if ( apeGetShaderProgramByName( internalName ) != NULL ) {
 		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
 		return NULL;
 	}
 
-	const char *vertexPath   = YnNode_GetStringByName( root, "vertexPath", NULL );
-	const char *fragmentPath = YnNode_GetStringByName( root, "fragmentPath", NULL );
+	const char *vertexPath = ndGetStringByName( root, "vertexPath", NULL );
+	const char *fragmentPath = ndGetStringByName( root, "fragmentPath", NULL );
 
-	if ( vertexPath == NULL || fragmentPath == NULL )
-	{
+	if ( vertexPath == NULL || fragmentPath == NULL ) {
 		PRINT_WARNING( "No vertex/fragment stage defined in program!\n" );
 		return NULL;
 	}
 
 	program.internalPtr = PlgCreateShaderProgram();
-	if ( program.internalPtr == NULL )
-	{
+	if ( program.internalPtr == NULL ) {
 		PRINT_WARNING( "Failed to create shader program!\nPL: %s\n", PlGetError() );
 		return NULL;
 	}
@@ -107,57 +95,51 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
 	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
 
-	YNNodeBranch *child = YnNode_GetChildByName( root, "definitions" );
-	if ( child != NULL )
-	{
-		YNNodeBranch *subChild;
-		if ( ( subChild = YnNode_GetChildByName( child, "fragment" ) ) != NULL )
-		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = YnNode_GetNumOfChildren( subChild );
-			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
+	NdBranch *child = ndGetChildByName( root, "definitions" );
+	if ( child != NULL ) {
+		NdBranch *subChild;
+		if ( ( subChild = ndGetChildByName( child, "fragment" ) ) != NULL ) {
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = ndGetNumOfChildren( subChild );
+			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS ) {
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
+			}
 
-			subChild = YnNode_GetFirstChild( subChild );
-			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
-			{
-				if ( subChild == NULL )
-				{
+			subChild = ndGetFirstChild( subChild );
+			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i ) {
+				if ( subChild == NULL ) {
 					PRINT_WARNING( "Hit an invalid child, aborting early!\n" );
 					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
 					break;
 				}
 
-				YnNode_GetStr( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = YnNode_GetNextChild( subChild );
+				ndGetStr( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = ndGetNextChild( subChild );
 			}
 		}
-		if ( ( subChild = YnNode_GetChildByName( child, "vertex" ) ) != NULL )
-		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = YnNode_GetNumOfChildren( subChild );
-			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
+		if ( ( subChild = ndGetChildByName( child, "vertex" ) ) != NULL ) {
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = ndGetNumOfChildren( subChild );
+			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS ) {
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
+			}
 
-			subChild = YnNode_GetFirstChild( subChild );
-			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
-			{
-				if ( subChild == NULL )
-				{
+			subChild = ndGetFirstChild( subChild );
+			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i ) {
+				if ( subChild == NULL ) {
 					PRINT_WARNING( "Hit an invalid child, aborting early!\n" );
 					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
 					break;
 				}
 
-				YnNode_GetStr( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = YnNode_GetNextChild( subChild );
+				ndGetStr( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = ndGetNextChild( subChild );
 			}
 		}
 	}
 
-	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
-	RS_RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
+	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
+	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
 
-	if ( !PlgLinkShaderProgram( program.internalPtr ) )
-	{
+	if ( !PlgLinkShaderProgram( program.internalPtr ) ) {
 		PRINT_WARNING( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
 		PlgDestroyShaderProgram( program.internalPtr, true );
 		return NULL;
@@ -166,38 +148,34 @@ static YNCoreShaderProgramIndex *RS_ParseShaderProgram( YNNodeBranch *root )
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can of course overwrite these. */
-	child = YnNode_GetChildByName( root, "defaultPass" );
-	if ( child != NULL )
-	{
+	child = ndGetChildByName( root, "defaultPass" );
+	if ( child != NULL ) {
 		/* need to assign this for variable validation */
 		program.defaultPass.program = program.internalPtr;
 		/* and now we can fill this out */
-		YnCore_Material_ParsePass( child, &program.defaultPass );
+		apeParseMaterialPass( child, &program.defaultPass );
 	}
 
 	/* allocate and return our program index */
-	YNCoreShaderProgramIndex *out = PlMAlloc( sizeof( YNCoreShaderProgramIndex ), true );
-	*out                          = program;
+	ApeShaderProgramIndex *out = PL_NEW( ApeShaderProgramIndex );
+	*out = program;
 	return out;
 }
 
-static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
-{
+static void LoadShaderProgram( const char *path, PL_UNUSED void *userData ) {
 	PRINT( "Loading program: \"%s\"\n", path );
 
-	YNNodeBranch *root = YnNode_LoadFile( path, "program" );
-	if ( root == NULL )
-	{
+	NdBranch *root = ndLoadFile( path, "program" );
+	if ( root == NULL ) {
 		PRINT_WARNING( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return;
 	}
 
-	YNCoreShaderProgramIndex *program = RS_ParseShaderProgram( root );
+	ApeShaderProgramIndex *program = ParseShaderProgram( root );
 
-	YnNode_DestroyBranch( root );
+	ndDestroyBranch( root );
 
-	if ( program == NULL )
-	{
+	if ( program == NULL ) {
 		PRINT_WARNING( "An error occurred while loading shader program \"%s\"!\n", path );
 		return;
 	}
@@ -207,41 +185,40 @@ static void RS_LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-YNCoreShaderProgramIndex *YnCore_GetShaderProgramByName( const char *name )
-{
-	return ( YNCoreShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name ) {
+	return ( ApeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void YR_Shader_Initialize( void )
-{
+void apeInitializeShaders_( void ) {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
-	{
 		PRINT_ERROR( "Failed to create shader program list: %s\n", PlGetError() );
-	}
 
 	PRINT( "Scanning for shader programs...\n" );
 
-	PlScanDirectory( "materials/shaders", "node", RS_LoadShaderProgram, false, NULL );
-	PlScanDirectory( "materials/shaders", "n", RS_LoadShaderProgram, false, NULL );
+	PlScanDirectory( "materials/shaders", "node", LoadShaderProgram, false, NULL );
+	PlScanDirectory( "materials/shaders", "n", LoadShaderProgram, false, NULL );
 
 	PRINT( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
 	/* now fetch the default programs */
-	static const char *defaultShaderNames[ RS_MAX_DEFAULT_SHADERS ] = {
-	        [RS_SHADER_DEFAULT]        = "default",
-	        [RS_SHADER_LIGHTING_PASS]  = "base_lighting",
-	        [RS_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [RS_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
+	        [APE_SHADER_DEFAULT] = "default",
+	        [APE_SHADER_LIGHTING_PASS] = "base_lighting",
+	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [APE_SHADER_DEFAULT_ALPHA] = "default_alpha",
+	        [APE_SHADER_DEFAULT_FONT] = "font",
+	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
 	};
-	for ( unsigned int i = 0; i < RS_MAX_DEFAULT_SHADERS; ++i )
-	{
-		YNCoreShaderProgramIndex *programIndex = YnCore_GetShaderProgramByName( defaultShaderNames[ i ] );
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i ) {
+		ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
-		{
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
-		}
 
-		defaultShaderPrograms[ i ] = programIndex->internalPtr;
+		ape_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
 	}
+}
+
+PLGShaderProgram *apeGetDefaultShaderProgram( ApeDefaultShaderProgram defaultShaderProgram ) {
+	return ape_defaultShaderPrograms_[ defaultShaderProgram ];
 }

@@ -3,16 +3,15 @@
 
 #pragma once
 
-#include "core_private.h"
+#include "ape_private.h"
 
 #include "../renderer.h"
 
-typedef struct PostProcessEffect
-{
+typedef struct PostProcessEffect {
 	void ( *RegisterConsoleVariables )( void );
 	bool ( *Setup )( void );
 	void ( *Cleanup )( void );
-	void ( *Draw )( const YNCoreViewport *viewport );
+	void ( *Draw )( const ApeViewport *viewport );
 } PostProcessEffect;
 
 void R_PP_Cleanup( void );
@@ -21,4 +20,4 @@ void R_PP_SetupEffects( void );
 void R_PP_RegisterConsoleVariables( void );
 
 void R_PP_PreDraw( void );
-void R_PP_Draw( const YNCoreViewport *viewport );
+void R_PP_Draw( const ApeViewport *viewport );

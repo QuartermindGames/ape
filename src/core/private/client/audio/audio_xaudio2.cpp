@@ -15,32 +15,28 @@
 #		include <x3daudio.h>
 
 static X3DAUDIO_HANDLE audio3DHandle;
-static bool            audio3DSupported = false;
-#    endif
+static bool audio3DSupported = false;
+#	endif
 
-static IXAudio2               *audioEngineInstance = nullptr;
+static IXAudio2 *audioEngineInstance = nullptr;
 static IXAudio2MasteringVoice *audioMasteringVoice = nullptr;
 
-typedef struct VoiceWrapper
-{
+typedef struct VoiceWrapper {
 	IXAudio2SourceVoice *voice;
-	bool                 autoCleanup;
+	bool autoCleanup;
 } VoiceWrapper;
 PLLinkedList *voicesList;
 
-static bool Audio_XAudio2_Initialize()
-{
+static bool Audio_XAudio2_Initialize() {
 	PRINT( "Attempting to initialize XAudio2 driver...\n" );
 
 	HRESULT result = CoInitializeEx( nullptr, COINIT_MULTITHREADED );
-	if ( result != S_OK && result != S_FALSE && result != RPC_E_CHANGED_MODE )
-	{
+	if ( result != S_OK && result != S_FALSE && result != RPC_E_CHANGED_MODE ) {
 		PRINT_WARNING( "COINIT_MULTITHREADED failed (%X)!\n", result );
 		return false;
 	}
 
-	if ( FAILED( XAudio2Create( &audioEngineInstance, 0, XAUDIO2_DEFAULT_PROCESSOR ) ) )
-	{
+	if ( FAILED( XAudio2Create( &audioEngineInstance, 0, XAUDIO2_DEFAULT_PROCESSOR ) ) ) {
 		PRINT_WARNING( "Failed to create XAudio2 instance!\n" );
 		return false;
 	}
@@ -52,8 +48,7 @@ static bool Audio_XAudio2_Initialize()
 	             0,
 	             nullptr,
 	             nullptr,
-	             AudioCategory_GameEffects ) ) )
-	{
+	             AudioCategory_GameEffects ) ) ) {
 		PRINT_WARNING( "Failed to create mastering voice!\n" );
 		return false;
 	}
@@ -73,8 +68,7 @@ static bool Audio_XAudio2_Initialize()
 	PRINT( "Setting up X3DAudio... " );
 	if ( FAILED( X3DAudioInitialize( SPEAKER_STEREO, X3DAUDIO_SPEED_OF_SOUND, audio3DHandle ) ) )
 		PRINT_WARNING( "Failed to initialize 3D audio!\n" );
-	else
-	{
+	else {
 		audio3DSupported = true;
 		PRINT( "Successfully initialized X3DAudio!\n" );
 	}
@@ -85,12 +79,10 @@ static bool Audio_XAudio2_Initialize()
 	return true;
 }
 
-static void Audio_XAudio2_Shutdown()
-{
+static void Audio_XAudio2_Shutdown() {
 	PlDestroyLinkedList( voicesList );
 
-	if ( audioMasteringVoice != nullptr )
-	{
+	if ( audioMasteringVoice != nullptr ) {
 		audioMasteringVoice->DestroyVoice();
 		audioMasteringVoice = nullptr;
 	}
@@ -101,8 +93,7 @@ static void Audio_XAudio2_Shutdown()
 	CoUninitialize();
 }
 
-static void Audio_XAudio2_Tick()
-{
+static void Audio_XAudio2_Tick() {
 #	if defined( ENABLE_3D_AUDIO )
 	X3DAUDIO_LISTENER listener;
 	PL_ZERO_( listener );
@@ -123,10 +114,8 @@ static void Audio_XAudio2_Tick()
 #	endif
 }
 
-static void Audio_XAudio2_Pause( bool pause )
-{
-	if ( pause )
-	{
+static void Audio_XAudio2_Pause( bool pause ) {
+	if ( pause ) {
 		audioEngineInstance->StopEngine();
 		return;
 	}
@@ -134,16 +123,13 @@ static void Audio_XAudio2_Pause( bool pause )
 	audioEngineInstance->StartEngine();
 }
 
-static void Audio_XAudio2_CacheSample( YNCoreAudioSample *audioSample )
-{
+static void Audio_XAudio2_CacheSample( ApeAudioSample *audioSample ) {
 }
 
-static void Audio_XAudio2_FreeSample( YNCoreAudioSample *audioSample )
-{
+static void Audio_XAudio2_FreeSample( ApeAudioSample *audioSample ) {
 }
 
-static void Audio_XAudio2_EmitSample( YNCoreAudioSample *audioSample, int8_t volume )
-{
+static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, int8_t volume ) {
 	XAUDIO2_BUFFER buffer;
 	PL_ZERO_( buffer );
 	buffer.AudioBytes = audioSample->bufferSize;
@@ -151,8 +137,7 @@ static void Audio_XAudio2_EmitSample( YNCoreAudioSample *audioSample, int8_t vol
 	buffer.Flags = XAUDIO2_END_OF_STREAM;
 }
 
-static bool Audio_XAudio2_CreateSource( YNCoreAudioSource *source )
-{
+static bool Audio_XAudio2_CreateSource( ApeAudioSource *source ) {
 	WAVEFORMATEX waveFormat;
 	PL_ZERO_( waveFormat );
 	//waveFormat.
@@ -168,15 +153,13 @@ static bool Audio_XAudio2_CreateSource( YNCoreAudioSource *source )
 	return true;
 }
 
-static void Audio_XAudio2_DestroySource( YNCoreAudioSource *source )
-{
+static void Audio_XAudio2_DestroySource( ApeAudioSource *source ) {
 	IXAudio2SourceVoice *voice = ( IXAudio2SourceVoice * ) source->user;
 	voice->DestroyVoice();
 }
 
-extern "C" const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
-{
-	static YNCoreAudioDriverInterface driverInterface;
+extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface() {
+	static ApeAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 
 	driverInterface.Initialize = Audio_XAudio2_Initialize;
@@ -195,8 +178,7 @@ extern "C" const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 
 #else
 
-extern "C" const YNCoreAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
-{
+extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface() {
 	return nullptr;
 }
 

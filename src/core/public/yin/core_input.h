@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -6,12 +5,11 @@
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
-typedef enum YNCoreInputButton
-{
-	YN_CORE_INPUT_INVALID,
+typedef enum ApeInputButton {
+	APE_INPUT_INVALID,
 
-	YN_CORE_INPUT_UP,
-	YN_CORE_INPUT_DOWN,
+	APE_INPUT_UP,
+	APE_INPUT_DOWN,
 	INPUT_LEFT,
 	INPUT_RIGHT,
 
@@ -31,25 +29,23 @@ typedef enum YNCoreInputButton
 	INPUT_RB,
 	INPUT_RT,
 
-	YN_CORE_MAX_BUTTON_INPUTS
-} YNCoreInputButton;
+	APE_MAX_BUTTON_INPUTS
+} ApeInputButton;
 
-typedef enum YNCoreInputMouseButton
-{
-	CLIENT_INPUT_MOUSE_BUTTON_LEFT,
-	CLIENT_INPUT_MOUSE_BUTTON_RIGHT,
-	CLIENT_INPUT_MOUSE_BUTTON_MIDDLE,
+typedef enum ApeInputMouseButton {
+	APE_INPUT_MOUSE_BUTTON_LEFT,
+	APE_INPUT_MOUSE_BUTTON_RIGHT,
+	APE_INPUT_MOUSE_BUTTON_MIDDLE,
 
-	YN_CORE_MAX_INPUT_MOUSE_BUTTONS
-} YNCoreInputMouseButton;
+	APE_MAX_INPUT_MOUSE_BUTTONS
+} ApeInputMouseButton;
 
-typedef enum YNCoreInputKey
-{
+typedef enum ApeInputKey {
 	KEY_INVALID = -1,
 
 	KEY_BACKSPACE = 8,
-	KEY_TAB       = 9,
-	KEY_ENTER     = 13,
+	KEY_TAB = 9,
+	KEY_ENTER = 13,
 
 	KEY_CAPSLOCK = 128,
 	KEY_F1,
@@ -87,43 +83,55 @@ typedef enum YNCoreInputKey
 	KEY_LEFT_ALT,
 	KEY_RIGHT_ALT,
 
-	YN_CORE_MAX_KEY_INPUTS
-} YNCoreInputKey;
+	APE_MAX_KEY_INPUTS
+} ApeInputKey;
 
-typedef enum YNCoreInputState
-{
-	YN_CORE_INPUT_STATE_NONE,     /* key has no state */
-	YN_CORE_INPUT_STATE_PRESSED,  /* key has been pressed */
-	YN_CORE_INPUT_STATE_DOWN,     /* key is still down */
-	YN_CORE_INPUT_STATE_RELEASED, /* key is up */
-} YNCoreInputState;
+typedef enum ApeInputState {
+	OGE_INPUT_STATE_NONE,     /* key has no state */
+	OGE_INPUT_STATE_PRESSED,  /* key has been pressed */
+	OGE_INPUT_STATE_DOWN,     /* key is still down */
+	OGE_INPUT_STATE_RELEASED, /* key is up */
+} ApeInputState;
 
 PL_EXTERN_C
 
-typedef enum ClientInputDeviceType
-{
+typedef enum ApeInputDeviceType {
 	CLIENT_INPUT_DEVICE_NONE,
 	CLIENT_INPUT_DEVICE_KEYBOARD,
 	CLIENT_INPUT_DEVICE_MOUSE,
 	CLIENT_INPUT_DEVICE_TOUCH,
 	CLIENT_INPUT_DEVICE_CONTROLLER,
-} ClientInputDeviceType;
+} ApeInputDeviceType;
 
 // Controller API
 
 /**
  * Returns the number of available controllers.
  */
-unsigned int YnCore_Input_GetNumControllers( void );
+unsigned int apeGetNumControllers( void );
 
 /**
  * Returns the button state for the given slot.
  */
-YNCoreInputState YnCore_Input_GetButtonStatus( unsigned int slot, YNCoreInputButton button );
+ApeInputState apeGetButtonStatus( unsigned int slot, ApeInputButton button );
 
 /**
  * Returns the analogue stick state for the given slot.
  */
-PLVector2 YnCore_Input_GetStickStatus( unsigned int slot, unsigned int stickNum );
+PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum );
+
+// Mouse
+void apeGetMousePosition( int *x, int *y );
+void apeGetMouseDelta( int *x, int *y );
+
+// Actions
+
+typedef void ( *ApeInputActionCallback )( ApeInputState state, const char *id );
+
+void apeRegisterInputAction( const char *id,
+                             ApeInputButton buttons[], unsigned int numDefaultButtons,
+                             ApeInputKey keys[], unsigned int numDefaultKeys,
+                             ApeInputActionCallback actionCallback );
+ApeInputState apeGetInputActionState( const char *id );
 
 PL_EXTERN_C_END

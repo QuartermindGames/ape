@@ -1,19 +1,20 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
 PL_EXTERN_C
 
-typedef struct GameState
-{
+typedef struct GameState {
 	int mode, oldMode;
 } GameState;
-extern GameState gameState;
+extern GameState oge_gameState_;
 
-void YnCore_InitializeGame( void );
-void YnCore_ShutdownGame( void );
-void Game_Tick( void );
-void Game_Disconnect( void );
+extern const struct GameModeInterface *game_modeInterface;
+
+void apeInitializeGame( void );
+void apeShutdownGame( void );
+void apeTickGame( void );
+void apeDisconnectGame( void );
+void apeSpawnWorld( const char *worldPath );
 
 PL_EXTERN_C_END

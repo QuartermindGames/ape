@@ -1,11 +1,9 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "net.h"
 
-typedef enum NetVariableType
-{
+typedef enum NetVariableType {
 	NET_VARIABLE_TYPE_INT8,
 	NET_VARIABLE_TYPE_INT16,
 	NET_VARIABLE_TYPE_INT32,
@@ -22,26 +20,22 @@ typedef enum NetVariableType
 	NET_MAX_VARIABLE_TYPES
 } NetVariableType;
 
-typedef struct NetVariable
-{
-	const void     *originPointer;
+typedef struct NetVariable {
+	const void *originPointer;
 	NetVariableType type;
-	union
-	{
-		int8_t  varInt8;
+	union {
+		int8_t varInt8;
 		int16_t varInt16;
 		int32_t varInt32;
 		int64_t varInt64;
 
-		float  varFloat32;
+		float varFloat32;
 		double varFloat64;
 	} baseline;
 } NetVariable;
 
-bool Net_Variable_IsDirty( const NetVariable *variable )
-{
-	switch ( variable->type )
-	{
+bool Net_Variable_IsDirty( const NetVariable *variable ) {
+	switch ( variable->type ) {
 		default:
 			PRINT_ERROR( "Unhandled networked variable type!\n" );
 		case NET_VARIABLE_TYPE_INT8:

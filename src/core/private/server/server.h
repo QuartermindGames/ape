@@ -4,19 +4,19 @@
 #pragma once
 
 #include "net/net.h"
-#include "core_protocol.h"
+#include "ape_protocol.h"
 
 PL_EXTERN_C
 
-typedef struct ServerClient ServerClient;
+typedef struct ApeServerClient ApeServerClient;
 
-bool Server_Start( const char *ip, unsigned short port );
+bool apeStartServer( const char *ip, unsigned short port );
 
-void YnCore_InitializeServer( void );
-void YnCore_ShutdownServer( void );
-void Server_DropClient( ServerClient *serverClient );
-void YnCore_TickServer( void );
+void apeInitializeServer( void );
+void apeShutdownServer( void );
+void apeDropServerClient( ApeServerClient *serverClient );
+void apeTickServer( void );
 
-unsigned short Server_GetPort( void );
+unsigned short apeGetServerPort( void );
 
 PL_EXTERN_C_END

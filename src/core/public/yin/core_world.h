@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
@@ -8,68 +7,80 @@
 
 PL_EXTERN_C
 
+typedef struct NdBranch NdBranch;
+
 /* external elements */
-typedef struct YNCoreCamera YNCoreCamera;
-typedef struct YNCoreViewport YNCoreViewport;
+typedef struct ApeCamera ApeCamera;
+typedef struct ApeViewport ApeViewport;
+typedef struct ApeLight ApeLight;
 
 /* ======================================================================
  * WORLD INTERFACE
  * ====================================================================*/
 
-typedef struct YNCoreWorldFace YNCoreWorldFace;
-typedef struct YNCoreWorldMesh YNCoreWorldMesh;
-typedef struct YNCoreWorldObject YNCoreWorldObject;
-typedef struct YNCoreWorldSector YNCoreWorldSector;
-typedef struct YNCoreWorld YNCoreWorld;
+typedef struct ApeWorldFace ApeWorldFace;
+typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct ApeWorldObject ApeWorldObject;
+typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeWorld ApeWorld;
 
-#define YN_CORE_WORLD_VERSION 2
+#define APE_WORLD_VERSION       3
+#define APE_WORLD_EXTENSION     "wld.n"
+#define APE_WORLD_EXTENSION_GEO "wge.n"
+#define APE_WORLD_EXTENSION_ENT "wen.n"
+#define APE_WORLD_EXTENSION_LIT "wli.n"
 
-#define YN_CORE_WORLD_EXTENSION      "wld.n"
-#define YN_CORE_WORLD_EXTENSION_MESH "wsm.n"
+/// Create an entirely new empty world handle.
+/// \return New world instance.
+ApeWorld *apeCreateWorld( void );
 
-/* World */
+ApeWorld *apeLoadWorld( const char *path );
 
-YNCoreWorld *YnCore_World_Create( void );
-YNCoreWorld *YnCore_World_Load( const char *path );
+/// Deserialize world from a node tree.
+/// \param world World that deserialized data will be added to.
+/// \param root Handle to the world root.
+/// \return On success, returns the world pointer, otherwise null.
+ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
 
-/**
- * Attempts to save the given world to the destination.
- * On success, returns true but false otherwise.
- */
-bool YnCore_World_Save( YNCoreWorld *world, const char *path );
+/// Fetches the currently active world. Only one world can be active at a time.
+/// \return Handle to the currently active world.
+struct ApeWorld *apeGetCurrentWorld( void );
 
-void YnCore_World_Destroy( YNCoreWorld *world );
-struct YNNodeBranch *YnCore_World_GetProperty( YNCoreWorld *world, const char *propertyName );
-PLColourF32 YnCore_World_GetAmbience( YNCoreWorld *world );
-PLColourF32 YnCore_World_GetSunColour( YNCoreWorld *world );
-PLVector3 YnCore_World_GetSunPosition( YNCoreWorld *world );
-void YnCore_World_DrawWireframe( YNCoreWorld *world, YNCoreCamera *camera );
-void YnCore_World_Draw( YNCoreWorld *world, YNCoreWorldSector *originSector, YNCoreCamera *camera );
-void YnCore_World_SetupGlobalDefaults( YNCoreWorld *world );
+/// Attempts to save the given world to the destination.
+/// \param world
+/// \param path
+/// \return On success, returns true but false otherwise.
+bool apeSaveWorld( ApeWorld *world, const char *path );
 
-uint64_t YnCore_World_GetLastSaveTime( const YNCoreWorld *world );
-
-YNCoreWorldSector *YnCore_World_GetSectorByGlobalOrigin( YNCoreWorld *world, const PLVector3 *globalOrigin );
-
-const char *YnCore_World_GetPath( const YNCoreWorld *world );
+void apeDestroyWorld( ApeWorld *world );
+NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
+void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
+void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
+void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
 /* Mesh */
 
-YNCoreWorldMesh *YnCore_WorldMesh_Create( YNCoreWorld *parent );
-YNCoreWorldMesh *YnCore_WorldMesh_Load( const char *path );
-void YnCore_WorldMesh_Release( YNCoreWorldMesh *worldMesh );
+ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
 
-/* Face */
+////////////////////////////////////////////////////////////////////
+// Room
 
-PLVector3 YnCore_WorldFace_GetNormal( const YNCoreWorldFace *face );
-PLVector3 YnCore_WorldFace_GetOrigin( const YNCoreWorldFace *face );
-uint8_t YnCore_WorldFace_GetFlags( const YNCoreWorldFace *face );
-const PLCollisionAABB *YnCore_WorldFace_GetBounds( const YNCoreWorldFace *face );
+#define APE_WORLD_ROOM_FLAG_COLD     0x2
+#define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
+#define APE_WORLD_ROOM_FLAG_AIRLOCK  0x8
+#define APE_WORLD_ROOM_FLAG_AMBIENT  0x20
+#define APE_WORLD_ROOM_FLAG_ALPHA    0x40
+#define APE_WORLD_ROOM_FLAG_LIFE     0x80
+#define APE_WORLD_ROOM_FLAG_PLANKTON 0x1000
+#define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
+#define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
-/* Sector */
+ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );
 
-struct YNCoreLight *YnCore_WorldSector_GetVisibleLights( YNCoreWorldSector *sector, unsigned int *numLights );
-YNCoreWorldMesh *YnCore_WorldSector_GetMesh( YNCoreWorldSector *sector );
-YNCoreWorldFace **YnCore_WorldSector_GetMeshFaces( YNCoreWorldSector *sector, uint32_t *numFaces );
+////////////////////////////////////////////////////////////////////
+// Face
+
+void apeGenerateWorldFaceBounds( ApeWorldFace *face );
 
 PL_EXTERN_C_END

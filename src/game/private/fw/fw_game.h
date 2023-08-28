@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -11,15 +10,13 @@
 
 #define FW_MAX_TEAM_NAME 16
 
-typedef struct FWTeam
-{
+typedef struct FWTeam {
 	char name[ FW_MAX_TEAM_NAME ];
 } FWTeam;
 
 #include "fw_simulation.h"
 
-typedef struct FWGameState
-{
+typedef struct FWGameState {
 	FWSimState simState;
 
 	PLLinkedList *buildings;

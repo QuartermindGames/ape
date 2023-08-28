@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_parse.h>
 #include <plcore/pl_linkedlist.h>
@@ -10,8 +9,7 @@
  * PRIVATE
  ****************************************/
 
-typedef enum DKASTOpCode
-{
+typedef enum DKASTOpCode {
 	DK_AST_OPCODE_PROGRAM,
 	DK_AST_OPCODE_MODULE,
 	DK_AST_OPCODE_DECL,
@@ -49,60 +47,51 @@ typedef enum DKASTOpCode
 
 typedef struct DKASTStatement DKASTStatement;
 
-typedef struct DKASTDeclareStatement
-{
-	DKSymbol          symbol;
-	DKSymbolName      type;
-	bool              isConstant;
-	bool              isTypedef;
-	DKASTStatement   *numElements;
-	PLLinkedList     *children;
+typedef struct DKASTDeclareStatement {
+	DKSymbol symbol;
+	DKSymbolName type;
+	bool isConstant;
+	bool isTypedef;
+	DKASTStatement *numElements;
+	PLLinkedList *children;
 	PLLinkedListNode *node;
 } DKASTDeclStatement;
 
-typedef struct DKASTProcedureStatement
-{
-	DKSymbol      symbol;
-	DKSymbolName  returnType;
+typedef struct DKASTProcedureStatement {
+	DKSymbol symbol;
+	DKSymbolName returnType;
 	PLLinkedList *arguments;
 } DKASTProcedureStatement;
 
-typedef struct DKASTModuleStatement
-{
+typedef struct DKASTModuleStatement {
 	DKSymbolName name;
 } DKASTModuleStatement;
 
-typedef struct DKASTEndStatement
-{
+typedef struct DKASTEndStatement {
 	DKSymbolName name;
 } DKASTEndStatement;
 
-typedef struct DKASTExpression
-{
+typedef struct DKASTExpression {
 	DKASTStatement *op1, *op2;
 } DKASTExpression;
 
-typedef struct DKASTStatement
-{
-	DKASTOpCode       opCode;
-	PLLinkedList     *statements;
+typedef struct DKASTStatement {
+	DKASTOpCode opCode;
+	PLLinkedList *statements;
 	PLLinkedListNode *node;
-	void             *data;
+	void *data;
 } DKASTStatement;
 
-static DKASTStatement *CreateASTStatement( DKASTOpCode opCode, DKASTStatement *parent )
-{
+static DKASTStatement *CreateASTStatement( DKASTOpCode opCode, DKASTStatement *parent ) {
 	DKASTStatement *statement = PL_NEW( DKASTStatement );
 
 	statement->statements = PlCreateLinkedList();
-	if ( parent != NULL )
-	{
+	if ( parent != NULL ) {
 		statement->node = PlInsertLinkedListNode( parent->statements, statement );
 	}
 
 	statement->opCode = opCode;
-	switch ( statement->opCode )
-	{
+	switch ( statement->opCode ) {
 		case DK_AST_OPCODE_DECL:
 			statement->data = PL_NEW( DKASTDeclStatement );
 			break;
@@ -123,16 +112,14 @@ static DKASTStatement *CreateASTStatement( DKASTOpCode opCode, DKASTStatement *p
 	return statement;
 }
 
-typedef struct DKParser
-{
+typedef struct DKParser {
 	PLLinkedList *statements;// DKASTStatement
-	DKLexer      *lexer;
+	DKLexer *lexer;
 	DKLexerToken *token;
 	DKLexerToken *peekToken;
 } DKParser;
 
-static void GetNextToken( DKParser *parser )
-{
+static void GetNextToken( DKParser *parser ) {
 	PLLinkedListNode *node = PlGetNextLinkedListNode( parser->token->node );
 	if ( node == NULL )
 		Error( "Unexpected end of token list!\n" );
@@ -144,10 +131,8 @@ static void GetNextToken( DKParser *parser )
 		parser->peekToken = PlGetLinkedListNodeUserData( peekNode );
 }
 
-static bool ExpectPeek( DKParser *parser, DKTokenType tokenType )
-{
-	if ( parser->peekToken->type == tokenType )
-	{
+static bool ExpectPeek( DKParser *parser, DKTokenType tokenType ) {
+	if ( parser->peekToken->type == tokenType ) {
 		GetNextToken( parser );
 		return true;
 	}
@@ -155,24 +140,22 @@ static bool ExpectPeek( DKParser *parser, DKTokenType tokenType )
 	return false;
 }
 
-enum
-{
+enum {
 	PARSER_INFO,
 	PARSER_WARNING,
 	PARSER_ERROR
 };
 
-static void SubmitParserError( const char *msg, DKParser *parser, bool abortProgram )
-{
+static void SubmitParserError( const char *msg, DKParser *parser, bool abortProgram ) {
 	const char *c = "%s\nUnexpected symbol: %s\n"
 	                "%2u : %2u > %4s\n";
 
 	char *err = NULL;
-	int   l = snprintf( err, 0, c, msg,
-	                    parser->token->symbol,
-	                    parser->token->lineNum,
-	                    parser->token->linePos,
-	                    parser->token->path );
+	int l = snprintf( err, 0, c, msg,
+	                  parser->token->symbol,
+	                  parser->token->lineNum,
+	                  parser->token->linePos,
+	                  parser->token->path );
 
 	err = PL_NEW_( char, l + 1 );
 	snprintf( err, l, c, msg,
@@ -194,8 +177,7 @@ static void SubmitParserError( const char *msg, DKParser *parser, bool abortProg
 	PL_DELETE( err );
 }
 
-static void ParseExpression( DKParser *parser, DKASTStatement *statement )
-{
+static void ParseExpression( DKParser *parser, DKASTStatement *statement ) {
 	if ( parser->token->type != DK_TOKENTYPE_INT &&
 	     parser->token->type != DK_TOKENTYPE_DEC &&
 	     parser->token->type != DK_TOKENTYPE_IDENT )
@@ -229,43 +211,36 @@ static void ParseStruct( DKParser *parser, DKASTStatement *statement ) {
 }
 #endif
 
-static DKASTStatement *ParseDecl( DKParser *parser, DKASTStatement *parent )
-{
-	DKASTStatement     *statement = CreateASTStatement( DK_AST_OPCODE_DECL, parent );
+static DKASTStatement *ParseDecl( DKParser *parser, DKASTStatement *parent ) {
+	DKASTStatement *statement = CreateASTStatement( DK_AST_OPCODE_DECL, parent );
 	DKASTDeclStatement *declStatement = statement->data;
 
 	// Fetch and store the identifier, which should immediately follow
 	GetNextToken( parser );
-	if ( parser->token->type != DK_TOKENTYPE_IDENT )
-	{
+	if ( parser->token->type != DK_TOKENTYPE_IDENT ) {
 		SubmitParserError( "Expected an identifier!\n", parser, true );
 	}
 	strcpy( declStatement->symbol.name, parser->token->symbol );
 
 	// Check if it's an array
 	GetNextToken( parser );
-	if ( parser->token->type == DK_TOKENTYPE_LEFTBRACE )
-	{
-		if ( !ExpectPeek( parser, DK_TOKENTYPE_RIGHTBRACE ) )
-		{
+	if ( parser->token->type == DK_TOKENTYPE_LEFTBRACE ) {
+		if ( !ExpectPeek( parser, DK_TOKENTYPE_RIGHTBRACE ) ) {
 			ParseExpression( parser, statement );
 		}
 
-		if ( !ExpectPeek( parser, DK_TOKENTYPE_RIGHTBRACE ) )
-		{
+		if ( !ExpectPeek( parser, DK_TOKENTYPE_RIGHTBRACE ) ) {
 			SubmitParserError( "Expected closing brace!\n", parser, true );
 		}
 
 		GetNextToken( parser );
 	}
 
-	switch ( parser->token->type )
-	{
+	switch ( parser->token->type ) {
 		default:
 			SubmitParserError( "Expected typename or array!\n", parser, true );
 			break;
-		case DK_TOKENTYPE_TYPENAME:
-		{
+		case DK_TOKENTYPE_TYPENAME: {
 			strcpy( declStatement->type, parser->token->symbol );
 			break;
 		}
@@ -278,8 +253,7 @@ static DKASTStatement *ParseDecl( DKParser *parser, DKASTStatement *parent )
 	}
 
 	GetNextToken( parser );
-	if ( parser->token->type == DK_TOKENTYPE_TYPEDEF )
-	{
+	if ( parser->token->type == DK_TOKENTYPE_TYPEDEF ) {
 		declStatement->isTypedef = true;
 		GetNextToken( parser );
 	}
@@ -287,13 +261,11 @@ static DKASTStatement *ParseDecl( DKParser *parser, DKASTStatement *parent )
 	statement->node = PlInsertLinkedListNode( parser->statements, statement );
 
 	// If there's a comma, there's likely another statement
-	if ( parser->token->type == DK_TOKENTYPE_COMMA )
-	{
+	if ( parser->token->type == DK_TOKENTYPE_COMMA ) {
 		return ParseDecl( parser, NULL );
 	}
 	// Otherwise, it's probably the end of the statement
-	else if ( parser->token->type == DK_TOKENTYPE_SEMICOLON )
-	{
+	else if ( parser->token->type == DK_TOKENTYPE_SEMICOLON ) {
 		return statement;
 	}
 
@@ -322,14 +294,12 @@ static bool ParseVariableList( DKParser *parser, DKASTStatement *parent ) {
 
 static DKASTStatement *ParseProgram( DKParser *parser, DKASTStatement *parent );
 
-static DKASTStatement *ParseIdent( DKParser *parser, DKASTStatement *parent )
-{
+static DKASTStatement *ParseIdent( DKParser *parser, DKASTStatement *parent ) {
 	DKSymbolName name;
 	strcpy( name, parser->token->symbol );
 
 	// If followed by colon, likely module name (todo: mod <modulename>; for modules!)
-	if ( ExpectPeek( parser, DK_TOKENTYPE_COLON ) )
-	{
+	if ( ExpectPeek( parser, DK_TOKENTYPE_COLON ) ) {
 		if ( !ExpectPeek( parser, DK_TOKENTYPE_DO ) )
 			SubmitParserError( "Expected do!\n", parser, true );
 		if ( !ExpectPeek( parser, DK_TOKENTYPE_SEMICOLON ) )
@@ -342,25 +312,20 @@ static DKASTStatement *ParseIdent( DKParser *parser, DKASTStatement *parent )
 	}
 
 	// Otherwise, might be a variable
-	if ( !ExpectPeek( parser, DK_TOKENTYPE_STOP ) )
-	{
+	if ( !ExpectPeek( parser, DK_TOKENTYPE_STOP ) ) {
 	}
 }
 
-static DKASTStatement *ParseEnd( DKParser *parser, DKASTStatement *parent )
-{
+static DKASTStatement *ParseEnd( DKParser *parser, DKASTStatement *parent ) {
 	DKASTStatement *endStatement = CreateASTStatement( DK_AST_OPCODE_END, parent );
 
-	if ( ExpectPeek( parser, DK_TOKENTYPE_IDENT ) )
-	{
+	if ( ExpectPeek( parser, DK_TOKENTYPE_IDENT ) ) {
 		strcpy( ( ( DKASTEndStatement * ) endStatement->data )->name, parser->token->symbol );
-		if ( parent != NULL && parent->opCode == DK_AST_OPCODE_MODULE )
-		{
+		if ( parent != NULL && parent->opCode == DK_AST_OPCODE_MODULE ) {
 			if ( strcmp( ( ( DKASTEndStatement * ) endStatement->data )->name,
 			             ( ( DKASTModuleStatement * ) parent->data )->name ) != 0 )
 				SubmitParserError( "Name for end statement did not match module name!\n", parser, false );
-		}
-		else
+		} else
 			SubmitParserError( "End statement with module name, but no module!\n", parser, false );
 	}
 
@@ -370,8 +335,7 @@ static DKASTStatement *ParseEnd( DKParser *parser, DKASTStatement *parent )
 	return endStatement;
 }
 
-static DKASTStatement *ParseProgram( DKParser *parser, DKASTStatement *parent )
-{
+static DKASTStatement *ParseProgram( DKParser *parser, DKASTStatement *parent ) {
 	if ( parser->token->type == DK_TOKENTYPE_DECLARE )
 		return ParseDecl( parser, parent );
 
@@ -421,8 +385,7 @@ static DKASTStatement *ParseProgram( DKParser *parser, DKASTStatement *parent )
  * PUBLIC
  ****************************************/
 
-DKParser *DKParser_ParseProgram( DKLexer *lexer )
-{
+DKParser *DKParser_ParseProgram( DKLexer *lexer ) {
 	double startTime = PlGetCurrentSeconds();
 
 	DKParser *parser = PL_NEW( DKParser );

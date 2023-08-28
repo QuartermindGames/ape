@@ -3,18 +3,16 @@
 
 #pragma once
 
-enum
-{
+enum {
 	ARPG_LANGUAGE_ENGLISH,
 	ARPG_LANGUAGE_GERMAN,
 
 	ARPG_MAX_LANGUAGES
 };
 
-typedef struct ARPGCharacterStats
-{
-	unsigned int lvl;	// Level
-	unsigned int exp;	// Experience
+typedef struct ARPGCharacterStats {
+	unsigned int lvl;   // Level
+	unsigned int exp;   // Experience
 	unsigned int maxExp;// Maximum Experience
 
 	// Stats

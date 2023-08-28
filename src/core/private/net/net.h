@@ -7,8 +7,7 @@ PL_EXTERN_C
 
 typedef struct NetSocket NetSocket;
 
-typedef enum NetConnectionState
-{
+typedef enum NetConnectionState {
 	NET_CONNECTION_CONNECTED,
 	NET_CONNECTION_PENDING,
 	NET_CONNECTION_FAILED,
@@ -19,15 +18,15 @@ typedef enum NetConnectionState
 typedef SSIZE_T ssize_t;
 #endif
 
-void YnCore_InitializeNet( void );
-void YnCore_ShutdownNet( void );
-NetSocket         *Net_OpenSocket( const char *ip, unsigned short port, bool isHost );
-void               Net_CloseSocket( NetSocket *netSocket );
-ssize_t            Net_Send( NetSocket *netSocket, const void *buf, ssize_t length );
-ssize_t            Net_Receive( NetSocket *netSocket, void *dst, ssize_t length );
-NetSocket         *Net_Accept( NetSocket *netSocket );
+void apeInitializeNet( void );
+void ogeShutdownNet( void );
+NetSocket *Net_OpenSocket( const char *ip, unsigned short port, bool isHost );
+void Net_CloseSocket( NetSocket *netSocket );
+ssize_t Net_Send( NetSocket *netSocket, const void *buf, ssize_t length );
+ssize_t Net_Receive( NetSocket *netSocket, void *dst, ssize_t length );
+NetSocket *Net_Accept( NetSocket *netSocket );
 NetConnectionState Net_GetConnectionStatus( NetSocket *netSocket );
-unsigned short     Net_GetLocalPort( NetSocket *netSocket );
-unsigned short     Net_GetRemotePort( NetSocket *netSocket );
+unsigned short Net_GetLocalPort( NetSocket *netSocket );
+unsigned short Net_GetRemotePort( NetSocket *netSocket );
 
 PL_EXTERN_C_END

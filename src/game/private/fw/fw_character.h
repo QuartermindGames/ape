@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
 #include "fw_game.h"
 
-typedef enum FWCharacterDepartment
-{
+typedef enum FWCharacterDepartment {
 	FW_CHARACTERDEPARTMENT_MARINES,
 	FW_CHARACTERDEPARTMENT_INTELLIGENCE,// special ops
 	FW_CHARACTERDEPARTMENT_MEDICAL,     // healing items/abilities
@@ -17,16 +15,14 @@ typedef enum FWCharacterDepartment
 } FWCharacterDepartment;
 
 // certain classes provide buffs
-typedef struct FWCharacterDepartmentStats
-{
+typedef struct FWCharacterDepartmentStats {
 	uint16_t health;
 	uint16_t stamina;
 	uint16_t strength;
 	uint16_t speed;
 } FWCharacterDepartmentStats;
 
-typedef struct FWCharacterStats
-{
+typedef struct FWCharacterStats {
 	uint16_t experience, maxExperience;
 	uint16_t rank;
 
@@ -34,13 +30,11 @@ typedef struct FWCharacterStats
 	uint16_t speed;
 } FWCharacterStats;
 
-typedef struct FWCharacterMovementComponent
-{
+typedef struct FWCharacterMovementComponent {
 	float velocity;
 } FWCharacterMovementComponent;
 
-typedef struct FWCharacterComponent
-{
+typedef struct FWCharacterComponent {
 	FWCharacterDepartment department;
 	FWCharacterStats stats;
 
@@ -49,9 +43,9 @@ typedef struct FWCharacterComponent
 
 	PLLinkedList *buildings;
 
-	YNCoreEntityComponent *transformComponent;
-	YNCoreEntityComponent *meshComponent;
-	YNCoreEntityComponent *movementComponent;
+	ApeEntityComponent *transformComponent;
+	ApeEntityComponent *meshComponent;
+	ApeEntityComponent *movementComponent;
 } FWCharacterComponent;
 
 /**

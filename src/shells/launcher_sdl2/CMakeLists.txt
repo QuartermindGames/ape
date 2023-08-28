@@ -1,35 +1,28 @@
-if(WIN32 AND MSVC)
+if (WIN32 AND MSVC)
     set(APP_ICON_RESOURCE_WINDOWS "launcher.rc")
-endif()
+endif ()
 
-add_executable(yin-shell_sdl2 WIN32
-    launcher.c
-    ${APP_ICON_RESOURCE_WINDOWS}
-)
-add_dependencies(yin-shell_sdl2
+add_executable(ApeSDL2Shell WIN32
+        launcher.c
+        ${APP_ICON_RESOURCE_WINDOWS}
+        )
+add_dependencies(ApeSDL2Shell
         plcore
         plgraphics
         plmodel
-
         pl_gl_driver
-
-        yin-core
+        ApeCore
         )
 
-set_target_properties(yin-shell_sdl2 PROPERTIES
-    FOLDER "Shells"
-)
+set_target_properties(ApeSDL2Shell PROPERTIES
+        FOLDER "Shells"
+        )
 
 # Setup link libraries
 
 if (MINGW)
-    target_link_libraries(yin-shell_sdl2
-            mingw32
-            Imm32)
+    target_link_libraries(ApeSDL2Shell
+            -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive)
 endif ()
 
-target_link_libraries(yin-shell_sdl2
-        SDL2main
-        SDL2
-        yin-core
-        )
+target_link_libraries(ApeSDL2Shell ApeCore)

@@ -1,37 +1,42 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: Camera APIs
 
 #pragma once
 
-typedef enum YNCoreCameraMode
-{
-	YN_CORE_CAMERA_MODE_PERSPECTIVE,
-	YN_CORE_CAMERA_MODE_TOP,
-	YN_CORE_CAMERA_MODE_LEFT,
-	YN_CORE_CAMERA_MODE_FRONT,
+typedef enum ApeCameraMode {
+	APE_CAMERA_MODE_PERSPECTIVE,
+	APE_CAMERA_MODE_TOP,
+	APE_CAMERA_MODE_LEFT,
+	APE_CAMERA_MODE_FRONT,
 
-	YN_CORE_CAMERA_MAX_MODES
-} YNCoreCameraMode;
+	APE_CAMERA_MAX_MODES
+} ApeCameraMode;
 
-typedef enum YNCoreCameraDrawMode
-{
-	YN_CORE_CAMERA_DRAW_MODE_WIREFRAME,
-	YN_CORE_CAMERA_DRAW_MODE_SOLID,
-	YN_CORE_CAMERA_DRAW_MODE_TEXTURED,
+typedef enum ApeCameraDrawMode {
+	// "basic" draw modes
+	APE_CAMERA_DRAW_MODE_WIREFRAME,
+	APE_CAMERA_DRAW_MODE_SOLID,
+	APE_CAMERA_DRAW_MODE_TEXTURED,
+	// and "complete" - uses material system
+	APE_CAMERA_DRAW_MODE_SHADED,
 
-	YN_CORE_CAMERA_MAX_DRAW_MODES
-} YNCoreCameraDrawMode;
+	APE_CAMERA_MAX_DRAW_MODES
+} ApeCameraDrawMode;
 
-typedef struct YNCoreCamera YNCoreCamera;
+typedef struct ApeCamera ApeCamera;
 
 PL_EXTERN_C
 
-YNCoreCamera *YnCore_Camera_Create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
-void YnCore_Camera_Destroy( YNCoreCamera *camera );
-void YnCore_Camera_SetPosition( YNCoreCamera *camera, const PLVector3 *position );
-void YnCore_Camera_SetAngles( YNCoreCamera *camera, const PLVector3 *angles );
+ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+void apeDestroyCamera( ApeCamera *camera );
+void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position );
+void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles );
 
-YNCoreCamera *YnCore_GetActiveCamera( void );
-void YnCore_MakeCameraActive( YNCoreCamera *camera );
+PLVector3 apeGetCameraPosition( const ApeCamera *camera );
+PLVector3 apeGetCameraAngles( const ApeCamera *camera );
+PLVector3 apeGetCameraForward( const ApeCamera *camera );
+
+ApeCamera *apeGetActiveCamera( void );
+void apeMakeCameraActive( ApeCamera *camera );
 
 PL_EXTERN_C_END

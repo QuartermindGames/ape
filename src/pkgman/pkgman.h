@@ -7,7 +7,7 @@
 #include <plcore/pl_filesystem.h>
 #include <plmodel/plm.h>
 
-#include "node/public/node.h"
+#include <yin/node.h>
 
 /* todo: add verbose mode */
 #define Print( ... ) printf( __VA_ARGS__ )
@@ -19,15 +19,14 @@
 
 typedef struct PLImage PLImage;
 
-typedef enum PKGFileType
-{
+typedef enum PKGFileType {
 	PKG_FILETYPE_GENERIC,
 	PKG_FILETYPE_TEXTURE,
 	PKG_FILETYPE_MODEL,
 } PKGFileType;
 
 /* pack_model.c */
-NLNode   *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model );
+NdBranch *MDL_ConvertPlatformModelToNodeModel( const PLMModel *model );
 PLMModel *MDL_SMD_LoadFile( const char *path );
 
 /* pack_image.c */

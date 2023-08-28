@@ -1,34 +1,30 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "core_private.h"
+#include "ape_private.h"
 #include "renderer.h"
-#include "core_image.h"
+#include "ape_image.h"
 
 static PLLinkedList *textures;
 
-static void CleanupTexture( void *user )
-{
-	PlgDestroyTexture( ( ( YNCoreTexture * ) user )->internal );
+static void CleanupTexture( void *user ) {
+	PlgDestroyTexture( ( ( ApeTexture * ) user )->internal );
 }
 
-YNCoreTexture *YnCore_Texture_Load( const char *path )
-{
+ApeTexture *YnCore_Texture_Load( const char *path ) {
 	PLGTexture *internal = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	if ( internal == NULL )
 		return NULL;
 
-	YNCoreTexture *texture  = PL_NEW( YNCoreTexture );
+	ApeTexture *texture = PL_NEW( ApeTexture );
 	texture->internal = internal;
 
-	MemoryManager_SetupReference( "texture", MEM_CACHE_TEXTURES, &texture->reference, CleanupTexture, texture );
+	apeSetupReference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, CleanupTexture, texture );
 
 	return texture;
 }
 
-void YnCore_Texture_Release( YNCoreTexture *texture )
-{
-	MemoryManager_ReleaseReference( &texture->reference );
+void apeReleaseTexture( ApeTexture *texture ) {
+	apeReleaseReference( &texture->reference );
 }
 
 /////////////////////////////////////////////////////////////////
@@ -36,18 +32,15 @@ void YnCore_Texture_Release( YNCoreTexture *texture )
 
 static PLGTexture *fallbackTexture = NULL;
 
-PLGTexture *YnCore_GetFallbackTexture( void )
-{
+PLGTexture *apeGetFallbackTexture( void ) {
 	return fallbackTexture;
 }
 
-static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
-{
+static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap ) {
 	PLColourFormat cFormat;
-	PLImageFormat  iFormat;
+	PLImageFormat iFormat;
 
-	switch ( numChannels )
-	{
+	switch ( numChannels ) {
 		default:
 			PRINT_WARNING( "Invalid number of colour channels specified!\n" );
 			return NULL;
@@ -75,12 +68,10 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	if ( texture == NULL )
 		PRINT_ERROR( "Failed to create texture!\nPL: %s\n", PlGetError() );
 
-	if ( !generateMipMap )
-	{
+	if ( !generateMipMap ) {
 		texture->flags &= PLG_TEXTURE_FLAG_NOMIPS;
 		texture->filter = PLG_TEXTURE_FILTER_NEAREST;
-	}
-	else
+	} else
 		texture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 	if ( !PlgUploadTextureImage( texture, imageData ) )
@@ -91,8 +82,7 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	return texture;
 }
 
-void RT_InitializeTextures( void )
-{
+void apeInitializeTextures_( void ) {
 	textures = PlCreateLinkedList();
 
 	/* generate fallback texture */
@@ -109,11 +99,9 @@ void RT_InitializeTextures( void )
 	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
 }
 
-static PLGTexture *GetTexture( const char *path )
-{
+static PLGTexture *GetTexture( const char *path ) {
 	PLLinkedListNode *node = PlGetFirstNode( textures );
-	while ( node != NULL )
-	{
+	while ( node != NULL ) {
 		PLGTexture *texture = PlGetLinkedListNodeUserData( node );
 		if ( pl_strcasecmp( path, texture->path ) == 0 )
 			return texture;
@@ -124,16 +112,14 @@ static PLGTexture *GetTexture( const char *path )
 	return NULL;
 }
 
-PLGTexture *YnCore_LoadTexture( const char *path, PLGTextureFilter filterMode )
-{
+PLGTexture *apeLoadTexture( const char *path, PLGTextureFilter filterMode ) {
 	/* check if it's already loaded */
 	PLGTexture *texture = GetTexture( path );
 	if ( texture != NULL )
 		return texture;
 
 	texture = PlgLoadTextureFromImage( path, filterMode );
-	if ( texture == NULL )
-	{
+	if ( texture == NULL ) {
 		PRINT_WARNING( "Failed to load texture \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return fallbackTexture;
 	}

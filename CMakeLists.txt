@@ -2,13 +2,13 @@
 
 cmake_minimum_required(VERSION 3.23)
 
-project(Yin
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+project(Ape
         LANGUAGES C CXX
         )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-message("Configuring Yin...")
 
 # Set all of our output directories.
 
@@ -16,34 +16,34 @@ include_directories(src/)
 include_directories(src/libcommon/include/)
 
 include(DetermineTargetArchitecture.cmake)
-determine_target_architecture(YIN_SYSTEM_ARCH)
+determine_target_architecture(APE_SYSTEM_ARCH)
 
 if (UNIX AND NOT APPLE)
-    message("Assuming Unix - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/unix-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Unix - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/unix-${APE_SYSTEM_ARCH}/")
 elseif (WIN32)
-    message("Assuming Win32 - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/win32-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Win32 - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/win32-${APE_SYSTEM_ARCH}/")
 elseif (APPLE)
-    message("Assuming Apple - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/apple-${YIN_SYSTEM_ARCH}/")
+    message("Assuming Apple - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/apple-${APE_SYSTEM_ARCH}/")
 else ()
-    message("Unknown platform - " ${YIN_SYSTEM_ARCH})
-    set(YIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/${YIN_SYSTEM_ARCH}/")
+    message("Unknown platform - " ${APE_SYSTEM_ARCH})
+    set(APE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/release/runtime/${APE_SYSTEM_ARCH}/")
 endif ()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${YIN_OUTPUT_DIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${YIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${APE_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${APE_OUTPUT_DIR}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${YIN_OUTPUT_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
 endforeach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
 
 if (WIN32)
-    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+    if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         if (MINGW)
             link_directories(src/3rdparty/sdl2/lib/x64_mingw/)
         else ()
@@ -102,27 +102,11 @@ set_target_properties(plmodel PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 
-function(build_openal)
-    set(LIBTYPE "STATIC")
-    add_definitions("-DAL_LIBTYPE_STATIC")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/3rdparty/openal-soft/lib/")
-    set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs")
-    set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs")
-    set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs")
-    add_subdirectory(src/3rdparty/openal-soft)
-    set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(common PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(ex-common PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(build_version PROPERTIES FOLDER "3rdParty/OpenAL")
-endfunction()
-
-build_openal()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 
 if(MSVC)
-    if (${YIN_SYSTEM_ARCH} MATCHES x86_64)
+    if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         link_directories(src/3rdparty/sdl2/lib/x64)
     else()
         link_directories(src/3rdparty/sdl2/lib/x86)
@@ -132,22 +116,15 @@ elseif(MINGW)
 endif()
 
 add_subdirectory(src/common/)
-
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/game/)
-add_subdirectory(src/gui/)
-
-add_subdirectory(src/lisp/)
-add_subdirectory(src/dickens/lib/)
-add_subdirectory(src/dickens/dcmd/)
-
-add_subdirectory(src/3rdparty/fox)
 
 add_subdirectory(src/shells/launcher_sdl2/)
-add_subdirectory(src/shells/editor/)
 
 # tools
+add_subdirectory(src/tools/fonttool)
+add_subdirectory(src/tools/matgen)
+add_subdirectory(src/tools/m2w)
+
 add_subdirectory(src/tests/)
-add_subdirectory(src/pkgman/)
-add_subdirectory(src/tools/modelconv/)

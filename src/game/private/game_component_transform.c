@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <yin/node.h>
@@ -6,54 +5,43 @@
 #include "game_private.h"
 #include "game_component_transform.h"
 
-static void Spawn( YNCoreEntityComponent *self )
-{
+static void Spawn( ApeEntityComponent *self ) {
 	self->userData = PL_NEW( ECTransform );
 }
 
-static YNNodeBranch *Serialize( YNCoreEntityComponent *self, YNNodeBranch *root )
-{
-	YnNode_PushBackF32Array( root, "translation", ( float * ) &ECTRANSFORM( self )->translation, 3 );
-	YnNode_PushBackF32Array( root, "scale", ( float * ) &ECTRANSFORM( self )->scale, 3 );
-	YnNode_PushBackF32Array( root, "angles", ( float * ) &ECTRANSFORM( self )->angles, 3 );
-	YnNode_PushBackI32( root, "sectorNum", ECTRANSFORM( self )->sectorNum );
+static NdBranch *Serialize( ApeEntityComponent *self, NdBranch *root ) {
+	ndPushBackF32Array( root, "translation", ( float * ) &ECTRANSFORM( self )->translation, 3 );
+	ndPushBackF32Array( root, "scale", ( float * ) &ECTRANSFORM( self )->scale, 3 );
+	ndPushBackF32Array( root, "angles", ( float * ) &ECTRANSFORM( self )->angles, 3 );
+	ndPushBackI32( root, "sectorNum", ECTRANSFORM( self )->sectorNum );
 	return root;
 }
 
-static YNNodeBranch *Deserialize( YNCoreEntityComponent *self, YNNodeBranch *root )
-{
-	YNNodeBranch *child;
-	if ( ( child = YnNode_GetChildByName( root, "translation" ) ) != NULL )
-	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->translation, 3 );
+static NdBranch *Deserialize( ApeEntityComponent *self, NdBranch *root ) {
+	NdBranch *child;
+	if ( ( child = ndGetChildByName( root, "translation" ) ) != NULL ) {
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->translation, 3 );
 	}
-	if ( ( child = YnNode_GetChildByName( root, "scale" ) ) != NULL )
-	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->scale, 3 );
+	if ( ( child = ndGetChildByName( root, "scale" ) ) != NULL ) {
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->scale, 3 );
 	}
-	if ( ( child = YnNode_GetChildByName( root, "angles" ) ) != NULL )
-	{
-		YnNode_GetF32Array( child, ( float * ) &ECTRANSFORM( self )->angles, 3 );
+	if ( ( child = ndGetChildByName( root, "angles" ) ) != NULL ) {
+		ndGetF32Array( child, ( float * ) &ECTRANSFORM( self )->angles, 3 );
 	}
-	ECTRANSFORM( self )->sectorNum = YnNode_GetI32ByName( root, "sectorNum", -1 );
+	ECTRANSFORM( self )->sectorNum = ndGetInt( root, "sectorNum", -1 );
 	return root;
 }
 
-static void Tick( YNCoreEntityComponent *self )
-{
+static void Tick( ApeEntityComponent *self ) {
 	// if we're in the world, ensure we're attached to a valid sector
-	YNCoreWorld *world = Game_GetCurrentWorld();
-	if ( world != NULL && ECTRANSFORM( self )->sectorNum == -1 )
-	{
+	ApeWorld *world = apeGetCurrentWorld();
+	if ( world != NULL && ECTRANSFORM( self )->sectorNum == -1 ) {
 		Game_Warning( "Entity outside of world, attempting to relocate!\n" );
 
-		YNCoreWorldSector *sector = YnCore_World_GetSectorByGlobalOrigin( world, &ECTRANSFORM( self )->translation );
-		if ( sector != NULL )
-		{
+		ApeWorldRoom *sector = apeGetRoomAtPosition( world, &ECTRANSFORM( self )->translation );
+		if ( sector != NULL ) {
 			//TODO: what fucking index is it!?
-		}
-		else
-		{
+		} else {
 			Game_Warning( "Failed to fetch sector by origin - falling to first sector!\n" );
 			/*sector = World_GetSectorByNum( world, 0 );
 			if ( sector == NULL )
@@ -64,15 +52,14 @@ static void Tick( YNCoreEntityComponent *self )
 	}
 }
 
-const YNCoreEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void )
-{
-	static YNCoreEntityComponentCallbackTable callbackTable;
+const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void ) {
+	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 
-	callbackTable.spawnFunction       = Spawn;
-	callbackTable.serializeFunction   = Serialize;
+	callbackTable.spawnFunction = Spawn;
+	callbackTable.serializeFunction = Serialize;
 	callbackTable.deserializeFunction = Deserialize;
-	callbackTable.tickFunction        = Tick;
+	callbackTable.tickFunction = Tick;
 
 	return &callbackTable;
 }
