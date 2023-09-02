@@ -24,21 +24,31 @@ bpy.types.Scene.projectPath = bpy.props.StringProperty(
     subtype='DIR_PATH'
 )
 bpy.types.Scene.ambience = bpy.props.FloatVectorProperty(
-    name = "Ambience",
-    subtype = "COLOR",
-    size = 4,
-    min = 0.0,
-    max = 1.0,
-    default = (0.5,0.5,0.5,1.0)
+    name="Ambience",
+    subtype="COLOR",
+    size=4,
+    min=0.0,
+    max=1.0,
+    default=(0.5, 0.5, 0.5, 1.0)
 )
 bpy.types.Scene.clearColour = bpy.props.FloatVectorProperty(
-    name = "Clear Colour",
-    subtype = "COLOR",
-    size = 4,
-    min = 0.0,
-    max = 1.0,
-    default = (0.0,0.0,0.0,1.0)
+    name="Clear Colour",
+    subtype="COLOR",
+    size=4,
+    min=0.0,
+    max=1.0,
+    default=(0.0, 0.0, 0.0, 1.0)
 )
+
+
+# https://blender.stackexchange.com/a/255622
+def GetDefault(holder, prop_name):
+    prop = holder.bl_rna.properties[prop_name]
+    if prop.default_array:
+        return [v for v in prop.default_array]
+    else:
+        return prop.default
+
 
 class ExportWorldOperator(bpy.types.Operator, ExportHelper):
     bl_idname = "ape.export_world"
@@ -58,7 +68,55 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
         subtype='DIR_PATH'
     )
 
-    def execute(self, context):
+    def GetMaterialTexturePath(self, context, material):
+        nodeTree = material.node_tree
+        diffuseNode = nodeTree.nodes["Diffuse BSDF"]
+        if not diffuseNode:
+            return material.name
+
+        inputSocket = diffuseNode.inputs[0]
+        if not inputSocket.is_linked:
+            return material.name
+
+        sourceNode = inputSocket.links[0].from_node
+        if sourceNode.type != "TEX_IMAGE":
+            return material.name
+
+        path = sourceNode.image.filepath
+        return path.removeprefix(context.scene.projectPath)
+
+    def WriteGeometry(self, context, fw):
+        object = context.active_object
+        if not object:
+            return
+
+        fw(b"\tobject geometry {\n")
+
+        if object.material_slots:
+            fw(b"\t\tarray string materials {\n")
+            for slot in object.material_slots:
+                fw(b"\t\t\t%s\n" % self.GetMaterialTexturePath(context, slot.material).encode())
+            fw(b"\t\t}\n")
+
+        fw(b"\t}\n")
+        return
+
+    def WriteLights(self, context, fw):
+        lights = [ob for ob in context.scene.objects if ob.type == 'LIGHT']
+        if not lights:
+            return
+
+        fw(b"\tobject array lights {\n")
+
+        for light in lights:
+            fw(b"\t\t{\n")
+            fw(b"\t\t\tarray float position { %f %f %f }\n" % (
+                light.location[0], light.location[1], light.location[2]
+            ))
+            fw(b"\t\t}\n")
+
+        fw(b"\t}\n")
+
         objects = context.scene.objects
         for obj in objects:
             if obj.type != 'MESH':
@@ -66,7 +124,40 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
 
             name = obj.name
 
+        return
 
+    def execute(self, context):
+        filepath = self.filepath
+        print("Exporting world to " + filepath)
+
+        file = open(filepath, "wb")
+
+        fw = file.write
+        fw(b"node.utf8\n"
+           b"object world {\n"
+           b"\tuint version 3\n"
+           b"\tobject properties {\n")
+
+        if context.scene.clearColour != GetDefault(context.scene, "clearColour"):
+            # v = Vector(bpy.context.scene.clearColour)
+            fw(b"\t\tarray float clearColour { %f %f %f %f }\n"
+               % (context.scene.clearColour[0],
+                  context.scene.clearColour[1],
+                  context.scene.clearColour[2],
+                  context.scene.clearColour[3]))
+        if context.scene.ambience != GetDefault(context.scene, "ambience"):
+            fw(b"\t\tarray float ambience { %f %f %f %f }\n"
+               % (context.scene.ambience[0],
+                  context.scene.ambience[1],
+                  context.scene.ambience[2],
+                  context.scene.ambience[3]))
+
+        fw(b"\t}\n")
+
+        self.WriteLights(context, fw)
+        self.WriteGeometry(context, fw)
+
+        fw(b"}")
         return {'FINISHED'}
 
 
@@ -85,20 +176,20 @@ class SetupProjectOperator(bpy.types.Operator):
                 root, ext = os.path.splitext(entry.path)
                 if ext != ".n":
                     continue
-                
+
                 baseTexture = ""
                 file = open(entry.path, "r")
                 for line in file:
                     line = line.strip()
                     if not line:
                         continue
-                    
+
                     tokens = line.split(" ")
                     if tokens[0] not in "string":
                         continue
                     if tokens[1] not in "diffuseMap":
                         continue
-                    
+
                     baseTexture = tokens[2]
                     break
 
@@ -117,7 +208,7 @@ class SetupProjectOperator(bpy.types.Operator):
         modelsPath = context.scene.projectPath + "/models"
         worldsPath = context.scene.projectPath + "/worlds"
 
-        self.FindMaterials(materialsPath)
+        # self.FindMaterials(materialsPath)
         return {'FINISHED'}
 
     @classmethod
@@ -127,7 +218,7 @@ class SetupProjectOperator(bpy.types.Operator):
 
 class PropertyPanel(bpy.types.Panel):
     bl_label = "APE Tech"
-    bl_idname = "APE_Properties"
+    bl_idname = "APE_PT_Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -143,6 +234,19 @@ class PropertyPanel(bpy.types.Panel):
         layout.prop(scene, "clearColour")
         layout.separator()
         layout.operator(ExportWorldOperator.bl_idname)
+
+
+class WORLD_PT_export_world(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "World"
+    bl_parent_id = "FILE_PT_operator"
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "EXPORT_MESH_"
 
 
 def MenuWorldExport(self, context):
