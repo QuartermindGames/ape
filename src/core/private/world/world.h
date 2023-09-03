@@ -7,10 +7,9 @@
 
 #include <plgraphics/plg_mesh.h>
 
-#include "yin/core_world.h"
+#include <yin/core_world.h>
 
 #include "ape_memory_manager.h"
-
 #include "entity/entity.h"
 
 #define WORLD_PROP_TAG_LENGTH   64
@@ -29,6 +28,8 @@
 #	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
 #	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f )
 #endif
+
+typedef struct PLFile PLFile;
 
 typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
@@ -228,8 +229,6 @@ typedef struct ApeWorldEntity {
 	char className[ APE_ENTITY_MAX_NAME ];
 	NdBranch *properties;
 } ApeWorldEntity;
-
-#include <yin/core_world.h>
 
 PL_EXTERN_C
 
