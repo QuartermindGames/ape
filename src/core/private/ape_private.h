@@ -124,6 +124,7 @@ typedef struct ApeConfig {
 
 	struct
 	{
+		bool skipDraw;
 		bool showPortals;
 		bool sortLights;
 	} world;
