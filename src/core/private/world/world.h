@@ -233,6 +233,8 @@ typedef struct ApeWorldEntity {
 
 PL_EXTERN_C
 
+ApeWorld *apeParseRFWorld_( PLFile *file );
+
 ApeWorldRoom *apeCreateWorldRoom( void );
 void apeDestroyWorldRoom( ApeWorldRoom *room );
 ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );

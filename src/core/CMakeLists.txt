@@ -66,6 +66,7 @@ add_library(ApeCore STATIC
 
         private/world/world.c
         private/world/world_deserialiser.c
+        private/world/world_deserialiser_rf.c
         private/world/world_mesh.c
         private/world/world_room.c
         private/world/world_serialiser.c
