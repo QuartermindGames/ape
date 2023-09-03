@@ -1,84 +1,86 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include <plcore/pl_array_vector.h>
-
-#include <yin/node.h>
+#include <plcore/pl_hashtable.h>
 
 #include "ape_private.h"
 #include "entity.h"
 
-#define ENT_INTERNAL_TAG 32 /* maximum length of an internal tag */
+static PLHashTable *entityClassTable = NULL;
 
-static unsigned int numTotalSpawns;
-
-/****************************************
- * ENTITY MANAGER
- ****************************************/
-
-/****************************************
- * ENTITY
- ****************************************/
-
-NdBranch *apeSerializeEntity( ApeEntity *self, NdBranch *root ) {
-	NdBranch *entityNode = ndPushBackObject( root, "entity" );
-	NdBranch *componentsNode = ndPushBackObjectArray( entityNode, "components" );
-
-	PLLinkedListNode *node = PlGetFirstNode( self->components );
-	while ( node != NULL ) {
-		NdBranch *componentNode = ndPushBackObject( componentsNode, NULL );
-
-		ApeEntityComponent *entityComponent = ( ApeEntityComponent * ) PlGetLinkedListNodeUserData( node );
-		ndPushBackString( componentNode, "id", entityComponent->base->name );
-
-		const ApeEntityComponentBase *entityComponentTemplate = entityComponent->base;
-		if ( entityComponentTemplate->callbackTable->serializeFunction != NULL )
-			entityComponentTemplate->callbackTable->serializeFunction( entityComponent, componentNode );
-
-		node = PlGetNextLinkedListNode( node );
+void apeRegisterEntityClass( ApeEntityClassRegisterFunction callback ) {
+	if ( entityClassTable == NULL ) {
+		entityClassTable = PlCreateHashTable();
 	}
 
-	return entityNode;
-}
-
-ApeEntityComponent *apeGetEntityComponentByName( ApeEntity *self, const char *name ) {
-	PLLinkedListNode *node = PlGetFirstNode( self->components );
-	while ( node != NULL ) {
-		ApeEntityComponent *entityComponent = PlGetLinkedListNodeUserData( node );
-		if ( strcmp( entityComponent->base->name, name ) == 0 )
-			return entityComponent;
-
-		node = PlGetNextLinkedListNode( node );
+	const ApeEntityClassTable *classTable = callback();
+	if ( PlLookupHashTableUserData( entityClassTable, classTable->name, strlen( classTable->name ) ) != NULL ) {
+		PRINT_WARNING( "Attempted to register a duplicate entity class (%s)\n", classTable->name );
+		return;
 	}
 
-	return NULL;
+	PlInsertHashTableNode( entityClassTable, classTable->name, strlen( classTable->name ), ( void * ) classTable );
+
+	// call the cache function, so we can load resources into memory
+	if ( classTable->Cache != NULL ) {
+		classTable->Cache();
+	}
 }
 
-ApeEntityComponent *apeAttachEntityComponentByName( ApeEntity *self, const char *name ) {
-	if ( apeGetEntityComponentByName( self, name ) != NULL ) {
-		PRINT_WARNING( "Entity already has a component of type \"%s\"!\n", name );
+const ApeEntityClassTable *apeGetEntityClassTable( const char *className ) {
+	return ( const ApeEntityClassTable * ) PlLookupHashTableUserData( entityClassTable, className, strlen( className ) );
+}
+
+ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
+	const ApeEntityClassTable *classTable = apeGetEntityClassTable( className );
+	if ( className == NULL ) {
+		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
 		return NULL;
 	}
 
-	return apeAddEntityComponentToEntity( self, name );
-}
-
-void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component ) {
-	PlDestroyLinkedListNode( component->listNode );
-
-	const ApeEntityComponentBase *base = component->base;
-	if ( base->callbackTable->destroyFunction != NULL )
-		base->callbackTable->destroyFunction( component );
-
-	PL_DELETE( component );
-
-	PRINT_DEBUG( "Removed component (%s) from entity (%u)\n", base->name, self->id );
-}
-
-void apeRemoveAllEntityComponents( ApeEntity *self ) {
-	PLLinkedListNode *node = PlGetFirstNode( self->components );
-	while ( node != NULL ) {
-		ApeEntityComponent *component = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
-		apeRemoveEntityComponent( self, component );
+	ApeEntity *entity = PL_NEW( ApeEntity );
+	entity->classTable = classTable;
+	entity->componentTable = PlCreateHashTable();
+	if ( classTable->Create != NULL ) {
+		classTable->Create( entity, properties );
 	}
+
+	return entity;
+}
+
+void apeDestroyEntity( ApeEntity *entity ) {
+	PLHashTableNode *node = PlGetFirstHashTableNode( entity->componentTable );
+	while ( node != NULL ) {
+		//TODO: should be calling destructor for component!!!
+		PL_DELETE( PlGetHashTableNodeUserData( node ) );
+		node = PlGetNextHashTableNode( entity->componentTable, node );
+	}
+	PlDestroyHashTable( entity->componentTable );
+
+	PL_DELETE( entity );
+}
+
+void apeTickEntity( ApeEntity *entity ) {
+	assert( entity->classTable != NULL );
+	if ( entity->classTable->Tick == NULL ) {
+		return;
+	}
+
+	entity->classTable->Tick( entity );
+}
+
+void apeDrawEntity( ApeEntity *entity ) {
+	assert( entity->classTable != NULL );
+	if ( entity->classTable->Draw == NULL ) {
+		return;
+	}
+
+	entity->classTable->Draw( entity );
+}
+
+const char *apeGetEntityClassName( ApeEntity *entity ) {
+	return entity->classTable->name;
+}
+
+void *apeGetEntityClassData( ApeEntity *entity ) {
+	return entity->classData;
 }

@@ -1,7 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "game_private.h"
-
 #include "game_component_mesh.h"
 #include "game_component_test.h"
 
@@ -10,22 +9,9 @@ int globalGameDebugLog;
 int globalGameWarningLog;
 int globalGameErrorLog;
 
-#if 0
-void Game_Display( void )
-{
-}
-#endif
-
 void gameRegisterStandardEntityComponents( void ) {
-	const ApeEntityComponentCallbackTable *EntityComponent_Transform_GetCallbackTable( void );
-	const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void );
-	const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void );
-
-	apeRegisterEntityComponent( "transform", EntityComponent_Transform_GetCallbackTable() );
-	apeRegisterEntityComponent( "movement", Game_Component_Movement_GetCallbackTable() );
-	apeRegisterEntityComponent( "camera", Game_Component_Camera_GetCallbackTable() );
-	apeRegisterEntityComponent( "mesh", gameMeshComponentCallbackTable() );
-	apeRegisterEntityComponent( "test", gameTestComponentCallbackTable() );
+	apeRegisterEntityComponent( gameMeshComponentCallbackTable() );
+	apeRegisterEntityComponent( gameTestComponentCallbackTable() );
 }
 
 void gamePlayerConnected( const char *name, unsigned int id ) {
