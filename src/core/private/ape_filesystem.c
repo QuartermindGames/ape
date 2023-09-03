@@ -74,7 +74,7 @@ static void ParseAliases( NdBranch *root ) {
 }
 
 #define USER_CONFIG "user.cfg" ND_DEFAULT_EXTENSION
-static char configPath[ PL_SYSTEM_MAX_PATH ] = { '\0' };
+static PLPath configPath = { '\0' };
 
 /****************************************
  * PUBLIC
@@ -92,10 +92,11 @@ const char *apeGetUserConfigLocation( void ) {
 				PRINT_WARNING( "Failed to create application data directory: %s\n", p );
 
 			p = &p[ strlen( p ) - 1 ];
-			if ( *p == '\\' || *p == '/' )
+			if ( *p == '\\' || *p == '/' ) {
 				strcat( configPath, USER_CONFIG );
-			else
+			} else {
 				strcat( configPath, "/" USER_CONFIG );
+			}
 		}
 
 		PRINT( "Config: %s\n", configPath );
