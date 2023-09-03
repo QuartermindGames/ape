@@ -5,43 +5,42 @@
 #include "ape_private.h"
 #include "entity.h"
 
-static PLHashTable *entityClassTable = NULL;
+static PLHashTable *entityClassDefinitions = NULL;
 
-void apeRegisterEntityClass( ApeEntityClassRegisterFunction callback ) {
-	if ( entityClassTable == NULL ) {
-		entityClassTable = PlCreateHashTable();
+void apeRegisterEntityClass( const ApeEntityClassDefinition *definition ) {
+	if ( entityClassDefinitions == NULL ) {
+		entityClassDefinitions = PlCreateHashTable();
 	}
 
-	const ApeEntityClassTable *classTable = callback();
-	if ( PlLookupHashTableUserData( entityClassTable, classTable->name, strlen( classTable->name ) ) != NULL ) {
-		PRINT_WARNING( "Attempted to register a duplicate entity class (%s)\n", classTable->name );
+	if ( PlLookupHashTableUserData( entityClassDefinitions, definition->name, strlen( definition->name ) ) != NULL ) {
+		PRINT_WARNING( "Attempted to register a duplicate entity class (%s)\n", definition->name );
 		return;
 	}
 
-	PlInsertHashTableNode( entityClassTable, classTable->name, strlen( classTable->name ), ( void * ) classTable );
+	PlInsertHashTableNode( entityClassDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 
 	// call the cache function, so we can load resources into memory
-	if ( classTable->Cache != NULL ) {
-		classTable->Cache();
+	if ( definition->Cache != NULL ) {
+		definition->Cache();
 	}
 }
 
-const ApeEntityClassTable *apeGetEntityClassTable( const char *className ) {
-	return ( const ApeEntityClassTable * ) PlLookupHashTableUserData( entityClassTable, className, strlen( className ) );
+const ApeEntityClassDefinition *apeGetEntityClassTable( const char *className ) {
+	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
 ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
-	const ApeEntityClassTable *classTable = apeGetEntityClassTable( className );
+	const ApeEntityClassDefinition *classDefinition = apeGetEntityClassTable( className );
 	if ( className == NULL ) {
 		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
 		return NULL;
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
-	entity->classTable = classTable;
+	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
-	if ( classTable->Create != NULL ) {
-		classTable->Create( entity, properties );
+	if ( classDefinition->Create != NULL ) {
+		entity->classData = classDefinition->Create( entity, properties );
 	}
 
 	return entity;
@@ -60,27 +59,19 @@ void apeDestroyEntity( ApeEntity *entity ) {
 }
 
 void apeTickEntity( ApeEntity *entity ) {
-	assert( entity->classTable != NULL );
-	if ( entity->classTable->Tick == NULL ) {
+	assert( entity->classDefinition != NULL );
+	if ( entity->classDefinition->Tick == NULL ) {
 		return;
 	}
 
-	entity->classTable->Tick( entity );
+	entity->classDefinition->Tick( entity );
 }
 
 void apeDrawEntity( ApeEntity *entity ) {
-	assert( entity->classTable != NULL );
-	if ( entity->classTable->Draw == NULL ) {
+	assert( entity->classDefinition != NULL );
+	if ( entity->classDefinition->Draw == NULL ) {
 		return;
 	}
 
-	entity->classTable->Draw( entity );
-}
-
-const char *apeGetEntityClassName( ApeEntity *entity ) {
-	return entity->classTable->name;
-}
-
-void *apeGetEntityClassData( ApeEntity *entity ) {
-	return entity->classData;
+	entity->classDefinition->Draw( entity );
 }

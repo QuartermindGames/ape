@@ -549,6 +549,17 @@ NdBranch *ndPushBackF64( NdBranch *parent, const char *name, double var ) {
 	return node;
 }
 
+NdBranch *ndPushBackI16Array( NdBranch *root, const char *name, const int16_t *array, unsigned int numElements ) {
+	NdBranch *node = ndPushBackNewBranch( root, name, ND_PROPERTY_ARRAY );
+	if ( node != NULL ) {
+		node->childType = ND_PROPERTY_I16;
+		for ( unsigned int i = 0; i < numElements; ++i ) {
+			ndPushBackI16( node, NULL, array[ i ] );
+		}
+	}
+	return node;
+}
+
 NdBranch *ndPushBackI32Array( NdBranch *parent, const char *name, const int32_t *array, unsigned int numElements ) {
 	NdBranch *node = ndPushBackNewBranch( parent, name, ND_PROPERTY_ARRAY );
 	if ( node != NULL ) {

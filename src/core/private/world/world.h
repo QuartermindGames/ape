@@ -193,7 +193,7 @@ typedef struct ApeWorld {
 
 	PLVectorArray *meshes;
 
-	PLLinkedList *entities;
+	PLLinkedList *entitySpawns;
 
 	PLVector3 startPosition;
 	PLMatrix3 startOrientation;
@@ -202,8 +202,8 @@ typedef struct ApeWorld {
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *portals;  // ApeWorldPortal
 	PLVectorArray *vertices; // ApeWorldVertex
-	//PLVectorArray *faces;    // ApeWorldFace
-	PLVectorArray *lights;// ApeLight
+	PLVectorArray *lights;   // ApeLight
+	PLVectorArray *entities; // ApeEntity
 
 	PLColourF32 ambience;
 	PLColourF32 sunColour;
@@ -225,7 +225,7 @@ typedef struct ApeWorld {
 } ApeWorld;
 
 typedef struct ApeWorldEntity {
-	const ApeEntityPrefab *entityTemplate;
+	char className[ APE_ENTITY_MAX_NAME ];
 	NdBranch *properties;
 } ApeWorldEntity;
 
@@ -243,6 +243,12 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
 ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
 
 void apeSpawnWorldEntities( ApeWorld *world );
+
+/**
+ * Assigning an entity to the world will give the world instance
+ * ownership of that entity.
+ */
+void apeAssignEntityToWorld( ApeWorld *world, ApeEntity *entity );
 
 unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
 

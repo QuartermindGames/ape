@@ -7,39 +7,38 @@
 #include "ape_private.h"
 #include "entity.h"
 
-static PLHashTable *entityComponentTable = NULL;
+static PLHashTable *entityComponentDefinitions = NULL;
 
-void apeRegisterEntityComponent( ApeEntityComponentRegisterFunction callback ) {
-	if ( entityComponentTable == NULL ) {
-		entityComponentTable = PlCreateHashTable();
+void apeRegisterEntityComponent( const ApeEntityComponentDefinition *definition ) {
+	if ( entityComponentDefinitions == NULL ) {
+		entityComponentDefinitions = PlCreateHashTable();
 	}
 
-	const ApeEntityComponentTable *componentTable = callback();
-	if ( PlLookupHashTableUserData( entityComponentTable, componentTable->name, strlen( componentTable->name ) ) != NULL ) {
-		PRINT_WARNING( "Attempted to register a duplicate entity component (%s)\n", componentTable->name );
+	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL ) {
+		PRINT_WARNING( "Attempted to register a duplicate entity component (%s)\n", definition->name );
 		return;
 	}
 
-	PlInsertHashTableNode( entityComponentTable, componentTable->name, strlen( componentTable->name ), ( void * ) componentTable );
+	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 }
 
 void *apeAddEntityComponent( ApeEntity *entity, const char *name ) {
-	const ApeEntityComponentTable *componentTable = PlLookupHashTableUserData( entityComponentTable, name, strlen( name ) );
-	if ( componentTable == NULL ) {
+	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
+	if ( componentDefinition == NULL ) {
 		PRINT_WARNING( "Failed to find entity component (%s)!\n", name );
 		return NULL;
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	if ( componentTable->Create != NULL ) {
-		component->data = componentTable->Create();
+	if ( componentDefinition->Create != NULL ) {
+		component->data = componentDefinition->Create();
 	}
 
 	if ( !PlInsertHashTableNode( entity->componentTable, name, strlen( name ), component ) ) {
 		PRINT_WARNING( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
-		if ( componentTable->Destroy != NULL ) {
-			componentTable->Destroy( component );
+		if ( componentDefinition->Destroy != NULL ) {
+			componentDefinition->Destroy( component );
 		}
 
 		PL_DELETE( component );

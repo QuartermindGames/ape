@@ -48,8 +48,8 @@ static void Tick( ApeEntityComponent *self ) {
 	}
 }
 
-const ApeEntityClassTable *gameGetCameraClassTable( void ) {
-	static ApeEntityClassTable classTable;
+const ApeEntityClassDefinition *gameGetCameraClassTable( void ) {
+	static ApeEntityClassDefinition classTable;
 	PL_ZERO_( classTable );
 	classTable.Spawn = Spawn;
 	classTable.Destroy = Destroy;

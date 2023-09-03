@@ -6,9 +6,6 @@
 
 #include "ape_private.h"
 #include "world.h"
-
-#include <float.h>
-
 #include "client/renderer/renderer.h"
 
 void apeSetupGlobalWorldDefaults( ApeWorld *world ) {
@@ -19,24 +16,25 @@ void apeSetupGlobalWorldDefaults( ApeWorld *world ) {
 }
 
 ApeWorld *apeCreateWorld( void ) {
-	ApeWorld *world = PlMAllocA( sizeof( ApeWorld ) );
+	ApeWorld *world = PL_NEW( ApeWorld );
 
 	world->globalProperties = ndPushBackObject( NULL, "properties" );
 	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
 	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
 	world->meshes = PlCreateVectorArray( 0 );
-	world->entities = PlCreateLinkedList();
+	world->entities = PlCreateVectorArray( 0 );
+	world->entitySpawns = PlCreateLinkedList();
 
 	apeSetupGlobalWorldDefaults( world );
 
 	return world;
 }
 
-static const uint32_t WORLD_MAGIC = 0xd4bada55;
+static const unsigned int WORLD_MAGIC = 0xd4bada55;
 
-static const int32_t WORLD_VERSION_MIN = 161;
-static const int32_t WORLD_VERSION_MAX = 295;
+static const int WORLD_VERSION_MIN = 161;
+static const int WORLD_VERSION_MAX = 295;
 // version history...
 //	161	Red Faction (PS2 Prototype)
 //	180	Red Faction (PC Demo)
@@ -960,12 +958,23 @@ void apeDestroyWorld( ApeWorld *world ) {
 }
 
 void apeSpawnWorldEntities( ApeWorld *world ) {
-	PLLinkedListNode *node = PlGetFirstNode( world->entities );
+	PLLinkedListNode *node = PlGetFirstNode( world->entitySpawns );
 	while ( node != NULL ) {
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		apeCreateEntityFromPrefab( worldEntity->entityTemplate->name );
+		apeCreateEntity( worldEntity->className, worldEntity->properties );
 		node = PlGetNextLinkedListNode( node );
 	}
+}
+
+void apeAssignEntityToWorld( ApeWorld *world, ApeEntity *entity ) {
+	assert( entity->world == NULL );
+	if ( entity->world != NULL ) {
+		PRINT_WARNING( "Entity is already associated with a world!\n" );
+		return;
+	}
+
+	PlPushBackVectorArrayElement( world->entities, entity );
+	entity->world = world;
 }
 
 /****************************************

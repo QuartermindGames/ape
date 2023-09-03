@@ -2,6 +2,7 @@
 // Purpose: Main file for Detox game project.
 
 #include "detox_game.h"
+#include "detox_character.h"
 
 static ApeCamera *playerCamera = NULL;
 
@@ -41,6 +42,8 @@ static void SpawnLight( ApeInputState state, const char *id ) {
 
 static void InitializeGame( void ) {
 	gameRegisterStandardEntityComponents();
+
+	apeRegisterEntityClass( toxGetCharacterClassTable() );
 
 	PlParseConsoleString( "world worlds/train02.rfl" );
 

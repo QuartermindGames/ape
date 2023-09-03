@@ -4,24 +4,19 @@ set(CMAKE_C_STANDARD 11)
 
 set(GAME_SHARED_FILES
         private/game.c
-        private/game_class_camera.c
-        private/game_component_input.c
-        private/game_component_mesh.c
-        private/game_component_movement.c
-        private/game_component_transform.c
         private/game_menu.c
         private/game_menu_pie.c
-        )
+)
 set(GAME_LINK_LIBS
         plcore
         plgraphics
         plmodel
         ApeCommon
         ApeCore
-        )
+)
 set(GAME_INCLUDE_DIRS
         public/
-        )
+)
 
 #############################################
 # Target Games
@@ -30,10 +25,6 @@ set(GAME_USER_TARGET "detox" CACHE STRING "Game to build.")
 
 set(GAME_TARGET_DEMO
         private/demo/demo_game.c)
-set(GAME_TARGET_MAG
-        private/mag/mag_character.c
-        private/mag/mag_game.c
-        private/mag/mag_world.c)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
         private/fw/menu/fw_menu_pie.c
@@ -46,12 +37,13 @@ set(GAME_TARGET_FERAL
         private/fw/fw_terrain.c
         private/fw/fw_weapon.c)
 set(GAME_TARGET_DETOX
-        private/detox/detox_game.c)
+        private/detox/detox_character.c
+        private/detox/detox_game.c
+        private/detox/detox_world.c
+)
 
 #todo: need a better way of setting targets...
-if (${GAME_USER_TARGET} STREQUAL "mag")
-    set(GAME_TARGET ${GAME_TARGET_MAG})
-elseif (${GAME_USER_TARGET} STREQUAL "demo")
+if (${GAME_USER_TARGET} STREQUAL "demo")
     set(GAME_TARGET ${GAME_TARGET_DEMO})
 elseif (${GAME_USER_TARGET} STREQUAL "feral")
     set(GAME_TARGET ${GAME_TARGET_FERAL})
@@ -66,7 +58,7 @@ endif ()
 add_library(ApeGame STATIC
         ${GAME_SHARED_FILES}
         ${GAME_TARGET}
-        )
+)
 
 set_target_properties(ApeGame PROPERTIES PREFIX "")
 

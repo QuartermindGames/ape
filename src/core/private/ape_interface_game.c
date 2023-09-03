@@ -59,8 +59,6 @@ void apeInitializeGame( void ) {
 
 	PL_ZERO_( oge_gameState_ );
 
-	apeInitializeEntityManager();
-
 	game_modeInterface = gameGetModeInterface();
 	if ( game_modeInterface == NULL ) {
 		PRINT_ERROR( "Failed to get game interface!\n" );
@@ -70,17 +68,12 @@ void apeInitializeGame( void ) {
 		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
 	}
 
-	// has to come last, otherwise we won't find the components!
-	apeRegisterEntityPrefabs();
-
 	PRINT( "Game initialized!\n" );
 }
 
 void apeShutdownGame( void ) {
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
-
-	apeShutdownEntityManager();
 }
 
 MenuState gameGetMenuState( void ) {
@@ -89,8 +82,6 @@ MenuState gameGetMenuState( void ) {
 
 void apeTickGame( void ) {
 	COM_PROFILE_FUNCTION_START();
-
-	apeTickEntityManager();
 
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 

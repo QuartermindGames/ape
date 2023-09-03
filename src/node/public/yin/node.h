@@ -137,6 +137,7 @@ NdBranch *ndPushBackF64( NdBranch *parent, const char *name, double var );
 
 NdBranch *ndPushBackObjectArray( NdBranch *parent, const char *name );
 NdBranch *ndPushBackStringArray( NdBranch *parent, const char *name, const char **array, unsigned int numElements );
+NdBranch *ndPushBackI16Array( NdBranch *root, const char *name, const int16_t *array, unsigned int numElements );
 NdBranch *ndPushBackI32Array( NdBranch *parent, const char *name, const int32_t *array, unsigned int numElements );
 NdBranch *ndPushBackF32Array( NdBranch *parent, const char *name, const float *array, unsigned int numElements );
 

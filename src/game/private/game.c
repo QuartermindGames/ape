@@ -1,8 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "game_private.h"
-#include "game_component_mesh.h"
-#include "game_component_test.h"
 
 int globalGameLog;
 int globalGameDebugLog;
@@ -10,8 +8,6 @@ int globalGameWarningLog;
 int globalGameErrorLog;
 
 void gameRegisterStandardEntityComponents( void ) {
-	apeRegisterEntityComponent( gameMeshComponentCallbackTable() );
-	apeRegisterEntityComponent( gameTestComponentCallbackTable() );
 }
 
 void gamePlayerConnected( const char *name, unsigned int id ) {

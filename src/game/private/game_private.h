@@ -11,6 +11,7 @@
 #include <yin/core_entity.h>
 #include <yin/core_input.h>
 #include <yin/gui_public.h>
+#include <yin/node.h>
 
 #include "game/game_interface.h"
 
