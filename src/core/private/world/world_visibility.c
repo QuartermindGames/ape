@@ -115,8 +115,7 @@ ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num ) {
 void apeBuildWorldVisibiltyLists_( void ) {
 	ape_rendererPerformance_.numLights = 0;
 
-	PL_GET_CVAR( "world/draw", drawWorld );
-	if ( drawWorld != NULL && !drawWorld->b_value ) {
+	if ( ape_config_.world.skipDraw ) {
 		return;
 	}
 
