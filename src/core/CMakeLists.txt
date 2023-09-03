@@ -49,7 +49,6 @@ add_library(ApeCore STATIC
         # Entity System
         private/entity/entity.c
         private/entity/entity_component.c
-        private/entity/entity_manager.c
 
         # Networking
         private/net/net.c

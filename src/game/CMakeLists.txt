@@ -4,11 +4,10 @@ set(CMAKE_C_STANDARD 11)
 
 set(GAME_SHARED_FILES
         private/game.c
-        private/game_component_camera.c
+        private/game_class_camera.c
         private/game_component_input.c
         private/game_component_mesh.c
         private/game_component_movement.c
-        private/game_component_test.c
         private/game_component_transform.c
         private/game_menu.c
         private/game_menu_pie.c

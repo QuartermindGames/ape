@@ -8,80 +8,64 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-typedef char ApeEntityClassName[ 64 ];
-typedef char ApeEntityName[ 64 ];
-
 typedef struct ApeEntity ApeEntity;
-typedef struct ApeEntityPrefab ApeEntityPrefab;
-typedef struct ApeEntityComponentBase ApeEntityComponentBase;
-typedef struct ApeEntityComponent {
-	const ApeEntityComponentBase *base;
-	ApeEntity *entity;
-	struct PLLinkedListNode *listNode;
-	void *userData;
-} ApeEntityComponent;
+typedef struct ApeEntityComponent ApeEntityComponent;
 
-#define ENTITY_COMPONENT_CAST( SELF, TYPE ) ( ( TYPE * ) ( SELF )->userData )
+typedef struct ApeEntityProperty {
+	const char *name;
+	const char *description;
+	void *var;
+	PLVariableType type;
+} ApeEntityProperty;
 
-typedef void ( *ApeECSpawnFunction )( ApeEntityComponent *self );
-typedef void ( *ApeECTickFunction )( ApeEntityComponent *self );
-typedef void ( *ApeECDrawFunction )( ApeEntityComponent *self );
-typedef void ( *ApeECDestroyFunction )( ApeEntityComponent *self );
-typedef NdBranch *( *ApeECSerializeFunction )( ApeEntityComponent *self, NdBranch *root );
-typedef NdBranch *( *ApeECDeserializeFunction )( ApeEntityComponent *self, NdBranch *root );
+typedef struct ApeEntityClassTable {
+	const char *name;
 
-typedef struct ApeEntityComponentCallbackTable {
-	ApeECSpawnFunction spawnFunction;
-	ApeECTickFunction tickFunction;
-	ApeECDrawFunction drawFunction;
-	ApeECDestroyFunction destroyFunction;
-	ApeECSerializeFunction serializeFunction;
-	ApeECDeserializeFunction deserializeFunction;
+	ApeEntityProperty *propertyList;
+	unsigned int numProperties;
 
-	const struct ApeEditorField *editorFields;
-	unsigned int numEditorFields;
-} ApeEntityComponentCallbackTable;
+	void ( *Cache )( void );// called upon registration
+	void ( *Create )( ApeEntity *self, NdBranch *properties );
+	void ( *Destroy )( ApeEntity *self );
+	void ( *Spawn )( ApeEntity *self );
+	void ( *Tick )( ApeEntity *self );
+	void ( *Draw )( ApeEntity *self );
 
-void apeInitializeEntityManager( void );
-void apeShutdownEntityManager( void );
-void apeTickEntityManager( void );
-void ogeEntityManager_Draw( struct ApeCamera *camera, struct ApeWorldRoom *sector );
-void YnCore_EntityManager_Save( NdBranch *root );
-void ogeEntityManager_Restore( NdBranch *root );
+	NdBranch *( *Serialize )( ApeEntity *self );
+	void ( *Deserialize )( ApeEntity *self, NdBranch *root );
+} ApeEntityClassTable;
 
-// Prefabs
-void apeRegisterEntityPrefab( const char *path );
-void apeRegisterEntityPrefabs( void );
-const ApeEntityPrefab *YnCore_EntityManager_GetPrefabByName( const char *name );
+typedef const ApeEntityClassTable *( *ApeEntityClassRegisterFunction )( void );
 
-ApeEntity *apeCreateEntity( void );
-ApeEntity *apeCreateEntityFromPrefab( const char *name );
+void apeRegisterEntityClass( ApeEntityClassRegisterFunction callback );
+const ApeEntityClassTable *apeGetEntityClassTable( const char *className );
+
+ApeEntity *apeCreateEntity( const char *className, NdBranch *properties );
 void apeDestroyEntity( ApeEntity *entity );
 
-/**
- * Returns the total number of active entities.
- */
-unsigned int YnCore_EntityManager_GetNumOfEntities( void );
+void apeTickEntity( ApeEntity *entity );
+void apeDrawEntity( ApeEntity *entity );
 
-bool apeRegisterEntityComponent( const char *name, const ApeEntityComponentCallbackTable *callbackTable );
-const ApeEntityComponentBase *apeGetEntityComponentBaseByName( const char *name );
-ApeEntityComponent *apeAddEntityComponentToEntity( ApeEntity *entity, const char *name );
+const char *apeGetEntityClassName( ApeEntity *entity );
+void *apeGetEntityClassData( ApeEntity *entity );
 
-/**
- * Returns a list of properties that can be modified for the component.
- */
-const struct ApeEditorField *apeGetEditableEntityComponentProperties( const ApeEntityComponent *entityComponent, unsigned int *num );
+////////////////////////////////////////////////////////////////////
+// Components
 
-/****************************************
- * ENTITY
- ****************************************/
+typedef struct ApeEntityComponentTable {
+	const char *name;
 
-NdBranch *apeSerializeEntity( ApeEntity *self, NdBranch *root );
-ApeEntity *apeDeserializeEntity( NdBranch *root );
+	void *( *Create )( void );// required!!
+	void ( *Destroy )( void *data );
 
-ApeEntityComponent *apeGetEntityComponentByName( ApeEntity *self, const char *name );
-ApeEntityComponent *apeAttachEntityComponentByName( ApeEntity *self, const char *name );
-void apeRemoveEntityComponent( ApeEntity *self, ApeEntityComponent *component );
-void apeRemoveAllEntityComponents( ApeEntity *self );
+	NdBranch *( *Serialize )( void );
+	void ( *Deserialize )( NdBranch *root );
+} ApeEntityComponentTable;
+
+typedef const ApeEntityComponentTable *( *ApeEntityComponentRegisterFunction )( void );
+
+void apeRegisterEntityComponent( ApeEntityComponentRegisterFunction callback );
+void *apeAddEntityComponent( ApeEntity *entity, const char *name );
+void *apeGetEntityComponent( ApeEntity *entity, const char *name );
 
 PL_EXTERN_C_END

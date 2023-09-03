@@ -91,9 +91,6 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
 			break;
 		}
 		case GAMEMODE_REQUEST_SPAWNWORLD: {
-			for ( unsigned int i = 0; i < 4; ++i ) {
-				apeCreateEntityFromPrefab( "base/test" );
-			}
 			break;
 		}
 		default:
