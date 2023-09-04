@@ -73,7 +73,7 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 	ApeInputAction *action = ( ApeInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i ) {
 		ApeInputState state = apeShellInterface_GetButtonState( action->buttons[ i ] );
-		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) ) {
+		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
 
@@ -81,7 +81,7 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i ) {
 		ApeInputState state = apeShellInterface_GetKeyState( action->keys[ i ] );
-		if ( ( apeIsConsoleOpen() && state != OGE_INPUT_STATE_RELEASED ) || ( ( state != OGE_INPUT_STATE_DOWN ) && ( state != OGE_INPUT_STATE_PRESSED ) ) ) {
+		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
 
@@ -258,9 +258,9 @@ void Client_Input_HandleKeyboardEvent( int key, ApeInputState keyState ) {
 }
 
 void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState ) {
-	guiUpdateMouseButton( button, ( buttonState == OGE_INPUT_STATE_DOWN ) );
+	guiUpdateMouseButton( button, ( buttonState == APE_INPUT_STATE_DOWN ) );
 
-	if ( buttonState != OGE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == OGE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == OGE_INPUT_STATE_DOWN ) ) {
+	if ( buttonState != APE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == APE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == APE_INPUT_STATE_DOWN ) ) {
 		return;
 	}
 
@@ -393,15 +393,15 @@ void apeTickInput_( void ) {
 		for ( unsigned int j = 0; j < APE_MAX_BUTTON_INPUTS; ++j ) {
 			bool state = GetSDLButtonState( controllers[ i ].sdlGameController, j );
 			if ( !state ) {
-				controllers[ i ].buttons[ j ] = OGE_INPUT_STATE_NONE;
+				controllers[ i ].buttons[ j ] = APE_INPUT_STATE_NONE;
 				continue;
 			}
 
-			if ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_DOWN ) {
+			if ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_DOWN ) {
 				continue;
 			}
 
-			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == OGE_INPUT_STATE_PRESSED ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_PRESSED;
+			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_PRESSED ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_PRESSED;
 		}
 
 		controllers[ i ].stickLOld = controllers[ i ].stickL;
@@ -452,7 +452,7 @@ unsigned int apeGetNumControllers( void ) { return numControllers; }
 ApeInputState apeGetButtonStatus( unsigned int slot, ApeInputButton button ) {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS ) {
-		return OGE_INPUT_STATE_NONE;
+		return APE_INPUT_STATE_NONE;
 	}
 
 	return controllers[ slot ].buttons[ button ];

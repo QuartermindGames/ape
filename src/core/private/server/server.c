@@ -1,5 +1,5 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Purpose: Server implementation.
 
 #include "ape_private.h"
 
@@ -43,9 +43,7 @@ bool apeStartServer( const char *ip, unsigned short port ) {
 		return false;
 	}
 
-	PRINT( "==============================================\n" );
-	PRINT( "YIN %s SERVER ACTIVE, LISTENING FOR CLIENTS\n", ENGINE_VERSION_STR );
-	PRINT( "==============================================\n" );
+	PRINT( "APE %s server active, listening for clients...\n", ENGINE_VERSION_STR );
 
 	return true;
 }

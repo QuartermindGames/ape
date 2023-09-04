@@ -87,10 +87,10 @@ typedef enum ApeInputKey {
 } ApeInputKey;
 
 typedef enum ApeInputState {
-	OGE_INPUT_STATE_NONE,     /* key has no state */
-	OGE_INPUT_STATE_PRESSED,  /* key has been pressed */
-	OGE_INPUT_STATE_DOWN,     /* key is still down */
-	OGE_INPUT_STATE_RELEASED, /* key is up */
+	APE_INPUT_STATE_NONE,     /* key has no state */
+	APE_INPUT_STATE_PRESSED,  /* key has been pressed */
+	APE_INPUT_STATE_DOWN,     /* key is still down */
+	APE_INPUT_STATE_RELEASED, /* key is up */
 } ApeInputState;
 
 PL_EXTERN_C

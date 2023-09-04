@@ -136,7 +136,7 @@ static void ClearInputBuffer( void ) {
 }
 
 bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState ) {
-	if ( keyState == OGE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) ) {
+	if ( keyState == APE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) ) {
 		ToggleConsole();
 		return true;
 	}
@@ -146,7 +146,7 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState ) {
 		return false;
 	}
 	/* but we don't care about these... */
-	if ( keyState != OGE_INPUT_STATE_PRESSED && keyState != OGE_INPUT_STATE_DOWN ) {
+	if ( keyState != APE_INPUT_STATE_PRESSED && keyState != APE_INPUT_STATE_DOWN ) {
 		return true;
 	}
 

@@ -214,7 +214,7 @@ static ApeInputState buttonStates[ APE_MAX_BUTTON_INPUTS ];
 ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton )
 {
 	if ( inputButton >= APE_MAX_BUTTON_INPUTS )
-		return OGE_INPUT_STATE_NONE;
+		return APE_INPUT_STATE_NONE;
 
 	return buttonStates[ inputButton ];
 }
@@ -223,7 +223,7 @@ static ApeInputState keyStates[ APE_MAX_KEY_INPUTS ];
 ApeInputState apeShellInterface_GetKeyState( int key )
 {
 	if ( key >= APE_MAX_KEY_INPUTS )
-		return OGE_INPUT_STATE_NONE;
+		return APE_INPUT_STATE_NONE;
 
 	return keyStates[ key ];
 }
@@ -539,7 +539,7 @@ int Launcher_Initialize( int argc, char **argv )
 						break;
 					}
 
-					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? OGE_INPUT_STATE_DOWN : OGE_INPUT_STATE_NONE;
+					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE;
 
 					apeHandleKeyboardEvent( key, keyStates[ key ] );
 					break;

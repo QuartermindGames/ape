@@ -75,7 +75,7 @@ static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED ) {
+	if ( state != APE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 
@@ -87,7 +87,7 @@ static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED ) {
+	if ( state != APE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 
@@ -102,7 +102,7 @@ static void ToggleView( ApeInputState state, PL_UNUSED const char *id ) {
 		return;
 	}
 
-	if ( state != OGE_INPUT_STATE_PRESSED ) {
+	if ( state != APE_INPUT_STATE_PRESSED ) {
 		return;
 	}
 

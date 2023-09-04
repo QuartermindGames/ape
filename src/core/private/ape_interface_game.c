@@ -102,15 +102,6 @@ void apeDisconnectGame( void ) {
 	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void Game_SetupWorldProperties( ApeWorld *world ) {
-	NdBranch *prop;
-	if ( ( prop = apeGetWorldProperty( world, "music" ) ) != NULL ) {
-		PLPath musicPath;
-		if ( ndGetStr( prop, musicPath, sizeof( PLPath ) ) == ND_ERROR_SUCCESS ) {
-		}
-	}
-}
-
 void apeSpawnWorld( const char *worldPath ) {
 	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 ) {
 		PRINT_WARNING( "World already loaded!\n" );

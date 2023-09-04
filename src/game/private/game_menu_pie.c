@@ -116,7 +116,7 @@ bool gameHandlePieMenuInput( GamePieMenu *menu ) {
 	PLVector2 joyPos = apeGetJoystickStatus( 0, 0 );
 	menu->cursor = joyPos;
 
-	if ( apeGetButtonStatus( 0, INPUT_A ) == OGE_INPUT_STATE_PRESSED ) {
+	if ( apeGetButtonStatus( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED ) {
 		Game_Debug( "Selected item...\n" );
 
 		GamePieMenuOption *option;
@@ -136,10 +136,10 @@ bool gameHandlePieMenuInput( GamePieMenu *menu ) {
 		return true;
 	}
 
-	if ( apeGetButtonStatus( 0, INPUT_RB ) != OGE_INPUT_STATE_NONE ) {
+	if ( apeGetButtonStatus( 0, INPUT_RB ) != APE_INPUT_STATE_NONE ) {
 		menu->velocity -= 1.5f;
 		return true;
-	} else if ( apeGetButtonStatus( 0, INPUT_LB ) != OGE_INPUT_STATE_NONE ) {
+	} else if ( apeGetButtonStatus( 0, INPUT_LB ) != APE_INPUT_STATE_NONE ) {
 		menu->velocity += 1.5f;
 		return true;
 	}

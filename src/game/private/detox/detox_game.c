@@ -7,7 +7,7 @@
 static ApeCamera *playerCamera = NULL;
 
 static void MoveCameraCallback( ApeInputState state, const char *id ) {
-	if ( state != OGE_INPUT_STATE_DOWN )
+	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
 	PLVector3 pos = apeGetCameraPosition( playerCamera );
