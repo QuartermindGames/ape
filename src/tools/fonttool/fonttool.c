@@ -13,20 +13,15 @@ static GtkWidget *fontSelector;
 /**
  * Helper for displaying a simple OK messagebox.
  */
-static void DisplaySimpleMessageBox( const char *message, GtkMessageType messageType ) {
-	GtkWidget *dialog = gtk_message_dialog_new( GTK_WINDOW( mainWindow ),
-	                                            GTK_DIALOG_MODAL,
-	                                            messageType,
-	                                            GTK_BUTTONS_OK,
-	                                            "%s", message );
-	gtk_dialog_run( GTK_DIALOG( dialog ) );
-	gtk_widget_destroy( dialog );
+static void DisplaySimpleMessageBox( const char *message ) {
+	GtkAlertDialog *dialog = gtk_alert_dialog_new( message );
+	gtk_alert_dialog_show( dialog, GTK_WINDOW( mainWindow ) );
 }
 
-void SerializeFont( FILE *file, const OSWFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height ) {
-	uint32_t magic = OSW_FONT_MAGIC;
+void SerializeFont( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height ) {
+	uint32_t magic = COM_FORMAT_FONT_MAGIC;
 	fwrite( &magic, sizeof( uint32_t ), 1, file );
-	uint16_t version = OSW_FONT_VERSION;
+	uint16_t version = COM_FORMAT_FONT_VERSION;
 	fwrite( &version, sizeof( uint16_t ), 1, file );
 
 	fwrite( &numGlyphs, sizeof( uint32_t ), 1, file );
@@ -43,47 +38,20 @@ void SerializeFont( FILE *file, const OSWFontGlyph *glyphs, uint32_t numGlyphs, 
 	fwrite( bitmap, sizeof( uint8_t ), width * height, file );
 }
 
-static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userData ) {
-	const char *fontName = gtk_font_button_get_font_name( GTK_FONT_BUTTON( fontSelector ) );
-	if ( fontName == NULL ) {
-		DisplaySimpleMessageBox( "No font selected!", GTK_MESSAGE_WARNING );
-		return;
-	}
-
-	// ask for the destination we'll save to
-
-	GtkWidget *dialog = gtk_file_chooser_dialog_new( "Specify Destination",
-	                                                 GTK_WINDOW( mainWindow ),
-	                                                 GTK_FILE_CHOOSER_ACTION_SAVE,
-	                                                 "_Cancel",
-	                                                 GTK_RESPONSE_CANCEL,
-	                                                 "_Save",
-	                                                 GTK_RESPONSE_ACCEPT,
-	                                                 NULL );
-	gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), g_get_current_dir() );
-
-	GtkFileFilter *filter = gtk_file_filter_new();
-	gtk_file_filter_set_name( filter, "Font files" );
-	gtk_file_filter_add_pattern( filter, "*.fnt" );
-	gtk_file_chooser_set_filter( GTK_FILE_CHOOSER( dialog ), filter );
-
-	char tmp[ 128 ];
-	snprintf( tmp, sizeof( tmp ), "%s.fnt", fontName );
-	gtk_file_chooser_set_current_name( GTK_FILE_CHOOSER( dialog ), tmp );
-
+static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 	char *destination = NULL;
-	if ( gtk_dialog_run( GTK_DIALOG( dialog ) ) == GTK_RESPONSE_ACCEPT ) {
-		destination = gtk_file_chooser_get_filename( GTK_FILE_CHOOSER( dialog ) );
+	if ( response == GTK_RESPONSE_ACCEPT ) {
+		g_autoptr( GFile ) file = gtk_file_chooser_get_file( GTK_FILE_CHOOSER( dialog ) );
+		destination = g_file_get_path( file );
 	}
 
-	gtk_widget_destroy( dialog );
 	if ( destination == NULL ) {
 		return;
 	}
 
 	// now load everything in and generate our file if we can
 
-	PangoFontDescription *fontDescription = pango_font_description_from_string( fontName );
+	PangoFontDescription *fontDescription = pango_font_description_from_string( ( char * ) user );
 	if ( fontDescription != NULL ) {
 		PangoFontMap *fontMap = pango_cairo_font_map_get_default();
 		PangoContext *context = pango_font_map_create_context( fontMap );
@@ -102,7 +70,7 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 			int32_t x = 0, y = 0;
 			int32_t tallest = 0;
 
-			OSWFontGlyph *glyphs = PL_NEW_( OSWFontGlyph, MAX_ASCII );
+			ComFontGlyph *glyphs = PL_NEW_( ComFontGlyph, MAX_ASCII );
 			uint32_t numChars = 0;
 			for ( uint32_t i = ' '; i < MAX_ASCII; ++i ) {
 				PangoRectangle rect;
@@ -178,14 +146,14 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 				SerializeFont( outFile, glyphs, numChars, cairo_image_surface_get_data( surface ), width, height );
 				fclose( outFile );
 			} else {
-				DisplaySimpleMessageBox( "Failed to write to destination!", GTK_MESSAGE_WARNING );
+				DisplaySimpleMessageBox( "Failed to write to destination!" );
 			}
 
 			g_object_unref( font );
 
 			PL_DELETE( glyphs );
 		} else {
-			DisplaySimpleMessageBox( "Failed to load font!", GTK_MESSAGE_WARNING );
+			DisplaySimpleMessageBox( "Failed to load font!" );
 		}
 
 		// cleanup
@@ -193,40 +161,75 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 		g_object_unref( context );
 		pango_font_description_free( fontDescription );
 	} else {
-		DisplaySimpleMessageBox( "Failed to get font description!", GTK_MESSAGE_WARNING );
+		DisplaySimpleMessageBox( "Failed to get font description!" );
 	}
 
+	gtk_window_destroy( GTK_WINDOW( dialog ) );
+
 	g_free( destination );
+	g_free( user );
+}
+
+static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userData ) {
+	char *fontName = gtk_font_chooser_get_font( GTK_FONT_CHOOSER( fontSelector ) );
+	if ( fontName == NULL ) {
+		DisplaySimpleMessageBox( "No font selected!" );
+		return;
+	}
+
+	// ask for the destination we'll save to
+
+	GtkWidget *dialog = gtk_file_chooser_dialog_new( "Specify Destination",
+	                                                 GTK_WINDOW( mainWindow ),
+	                                                 GTK_FILE_CHOOSER_ACTION_SAVE,
+	                                                 "_Cancel",
+	                                                 GTK_RESPONSE_CANCEL,
+	                                                 "_Save",
+	                                                 GTK_RESPONSE_ACCEPT,
+	                                                 NULL );
+	//gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), g_get_current_dir(), NULL );
+
+	GtkFileFilter *filter = gtk_file_filter_new();
+	gtk_file_filter_set_name( filter, "Font files" );
+	gtk_file_filter_add_pattern( filter, "*.fnt" );
+	gtk_file_chooser_set_filter( GTK_FILE_CHOOSER( dialog ), filter );
+
+	char tmp[ 128 ];
+	snprintf( tmp, sizeof( tmp ), "%s.fnt", fontName );
+	gtk_file_chooser_set_current_name( GTK_FILE_CHOOSER( dialog ), tmp );
+
+	gtk_window_present( GTK_WINDOW( dialog ) );
+
+	g_signal_connect( dialog, "response", G_CALLBACK( OnSaveFont ), fontName );
 }
 
 int main( int argc, char **argv ) {
 	// init and create all widgets
 
-	gtk_init( &argc, &argv );
+	gtk_init();
 
-	mainWindow = gtk_window_new( GTK_WINDOW_TOPLEVEL );
-	gtk_window_set_title( GTK_WINDOW( mainWindow ), "OSW FontTool" );
+	mainWindow = gtk_window_new();
+	gtk_window_set_title( GTK_WINDOW( mainWindow ), "APE FNT Generator" );
 	gtk_window_set_default_size( GTK_WINDOW( mainWindow ), 400, 100 );
-	gtk_window_set_position( GTK_WINDOW( mainWindow ), GTK_WIN_POS_CENTER );
 
-	g_signal_connect( mainWindow, "destroy", G_CALLBACK( gtk_main_quit ), NULL );
-
-	GtkWidget *box = gtk_vbox_new( FALSE, 0 );
-	gtk_container_add( GTK_CONTAINER( mainWindow ), box );
+	GtkWidget *box = gtk_box_new( GTK_ORIENTATION_VERTICAL, 0 );
+	gtk_window_set_child( GTK_WINDOW( mainWindow ), box );
 
 	fontSelector = gtk_font_button_new();
-	gtk_box_pack_start( GTK_BOX( box ), fontSelector, FALSE, FALSE, 0 );
+	gtk_box_append( GTK_BOX( box ), fontSelector );
 
 	GtkWidget *generateFontButton = gtk_button_new_with_label( "Generate" );
 	g_signal_connect( generateFontButton, "clicked", G_CALLBACK( GenerateFont ), NULL );
-	gtk_box_pack_start( GTK_BOX( box ), generateFontButton, FALSE, FALSE, 0 );
+	gtk_box_append( GTK_BOX( box ), generateFontButton );
 
 	gtk_widget_realize( mainWindow );
-	gtk_widget_show_all( mainWindow );
+	gtk_widget_show( mainWindow );
 
 	// now invoke our main loop
 
-	gtk_main();
+	while ( g_list_model_get_n_items( gtk_window_get_toplevels() ) > 0 ) {
+		g_main_context_iteration( NULL, TRUE );
+	}
 
 	return EXIT_SUCCESS;
 }

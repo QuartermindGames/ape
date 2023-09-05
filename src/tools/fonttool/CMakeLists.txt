@@ -1,11 +1,12 @@
-find_package(GTK2 REQUIRED gtk)
-if (GTK2_FOUND)
-    include_directories(${GTK2_INCLUDE_DIRS})
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK4 REQUIRED IMPORTED_TARGET gtk4)
 
-    add_executable(fonttool WIN32
-            fonttool.c)
+add_executable(fonttool WIN32
+        fonttool.c
+)
 
-    target_link_libraries(fonttool ${GTK2_LIBRARIES}
-            plcore
-            ApeCommon)
-endif ()
+target_link_libraries(fonttool
+        PkgConfig::GTK4
+        plcore
+        ApeCommon
+)

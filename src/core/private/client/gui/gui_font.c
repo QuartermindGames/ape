@@ -18,7 +18,7 @@ typedef struct GuiFont {
 	PLGTexture *texture;
 
 	uint32_t numGlyphs;
-	OSWFontGlyph *glyphs;
+	ComFontGlyph *glyphs;
 	PLHashTable *glyphTable;
 
 	float lineSpacing;
@@ -47,15 +47,15 @@ void guiDestroyFont( GuiFont *font ) {
 
 GuiFont *guiDeserializeFont( PLFile *file ) {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
-	assert( magic == OSW_FONT_MAGIC );
-	if ( magic != OSW_FONT_MAGIC ) {
+	assert( magic == COM_FORMAT_FONT_MAGIC );
+	if ( magic != COM_FORMAT_FONT_MAGIC ) {
 		GUI_WARNING( "Invalid font file!\n" );
 		return NULL;
 	}
 
 	uint16_t version = PL_READUINT16( file, false, NULL );
-	assert( version <= OSW_FONT_VERSION );
-	if ( version > OSW_FONT_VERSION ) {
+	assert( version <= COM_FORMAT_FONT_VERSION );
+	if ( version > COM_FORMAT_FONT_VERSION ) {
 		GUI_WARNING( "Unsupported font version (%u)!\n", version );
 		return NULL;
 	}
@@ -69,7 +69,7 @@ GuiFont *guiDeserializeFont( PLFile *file ) {
 
 	GuiFont *font = PL_NEW( GuiFont );
 	font->glyphTable = PlCreateHashTable();
-	font->glyphs = PL_NEW_( OSWFontGlyph, numGlyphs );
+	font->glyphs = PL_NEW_( ComFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i ) {
 		font->glyphs[ i ].codepoint = PL_READUINT32( file, false, NULL );
 		font->glyphs[ i ].x = PL_READUINT16( file, false, NULL );
@@ -137,8 +137,8 @@ bool guiInitializeFonts_( void ) {
 	static const char *fontPaths[ GUI_MAX_FONT_DEFAULTS ] = {
 	        [GUI_FONT_DEFAULT_LARGE] = "guis/fonts/Monospace 12.fnt",
 	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/Monospace 12.fnt",
-	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/Liberation Mono 9.fnt",
-	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/CozetteVector 9.fnt",
+	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/Noto Mono 10.fnt",
+	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/Noto Mono 8.fnt",
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i ) {
 		defaultFonts[ i ] = guiLoadFontFile( fontPaths[ i ] );
@@ -153,7 +153,7 @@ bool guiInitializeFonts_( void ) {
 }
 
 void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh ) {
-	const OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
+	const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	assert( glyph != NULL );
 	if ( glyph == NULL ) {
 		if ( dw != NULL ) { *dw = 0.0f; }
@@ -187,7 +187,7 @@ void guiGetStringPixelSize( const GuiFont *font, float scale, const char *string
 
 		uint32_t c = ( uint32_t ) string[ i ];
 
-		const OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
+		const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
 		if ( glyph == NULL ) {
 			continue;
 		}
@@ -202,7 +202,7 @@ void guiGetStringPixelSize( const GuiFont *font, float scale, const char *string
 	if ( dh != NULL ) *dh = h;
 }
 
-void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const OSWFontGlyph *glyph ) {
+void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph ) {
 	float tw = ( float ) glyph->w / ( float ) font->texture->w;
 	float th = ( float ) glyph->h / ( float ) font->texture->h;
 	float tx = ( float ) glyph->x / ( float ) font->texture->w;
@@ -218,7 +218,7 @@ void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const
 }
 
 void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character ) {
-	OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
+	ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL ) {
 		return;
 	}
@@ -245,7 +245,7 @@ void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float 
 
 		uint32_t c = ( uint32_t ) string[ i ];
 
-		const OSWFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
+		const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
 		if ( glyph == NULL ) {
 			continue;
 		}
