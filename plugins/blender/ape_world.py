@@ -51,22 +51,22 @@ def GetDefault(holder, prop_name):
 
 
 class ExportWorldOperator(bpy.types.Operator, ExportHelper):
-    bl_idname = "ape.export_world"
+    bl_idname = "ape_world.n"
     bl_label = "Export APE World"
     bl_description = "Export the given scene to APE World format."
     filter_glob = bpy.props.StringProperty(
-        default="*.wld.n",
+        default="*.n",
         options={'HIDDEN'},
     )
 
     check_extension = True
-    filename_ext = ".wld.n"
+    filename_ext = ".n"
 
-    filepath: bpy.props.StringProperty(
-        name="File Path",
-        description="The path to save the APE World",
-        subtype='DIR_PATH'
-    )
+    #filepath: bpy.props.StringProperty(
+    #    name="File Path",
+    #    description="The path to save the APE World",
+    #    subtype='DIR_PATH'
+    #)
 
     def GetMaterialTexturePath(self, context, material):
         nodeTree = material.node_tree
