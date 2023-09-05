@@ -218,7 +218,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 ApeWorld *apeLoadWorld( const char *path ) {
 	ApeWorld *world = NULL;
 	const char *ext = PlGetFileExtension( path );
-	if ( ext != NULL && pl_strcasecmp( ext, "n" ) ) {
+	if ( ext != NULL && pl_strcasecmp( ext, "n" ) == 0 ) {
 		NdBranch *root = ndLoadFile( path, "world" );
 		if ( root == NULL ) {
 			PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
@@ -418,7 +418,7 @@ static void WorldSaveCallback( unsigned int argc, char **argv ) {
 }
 
 void apeRegisterWorldConsole_( void ) {
-	PlRegisterConsoleVariable( "world/skipDraw", "Toggle rendering of world.", "true", PL_VAR_BOOL, &ape_config_.world.skipDraw, NULL, false );
+	PlRegisterConsoleVariable( "world/skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.world.skipDraw, NULL, false );
 	PlRegisterConsoleVariable( "world/skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, NULL, NULL, false );
