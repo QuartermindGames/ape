@@ -1,17 +1,11 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "game_private.h"
+#include "game_class_camera.h"
 #include "game_component_transform.h"
 
-typedef struct GameComponentCamera {
-	ApeCamera *camera;
-	bool isActive;
-	ApeEntityComponent *transform;
-} GameComponentCamera;
-#define GCCAMERA( SELF ) ENTITY_COMPONENT_CAST( ( SELF ), GameComponentCamera )
-
 APE_ENTITY_COMPONENT_BEGIN_PROPERTIES()
-APE_ENTITY_COMPONENT_PROPERTY( GameComponentCamera, isActive, "Indicates if the camera should be active or not.", COM_DATATYPE_BOOL )
+APE_ENTITY_COMPONENT_PROPERTY( EntityClassCamera, isActive, "Indicates if the camera should be active or not.", COM_DATATYPE_BOOL )
 APE_ENTITY_COMPONENT_END_PROPERTIES()
 
 static void Spawn( ApeEntityComponent *self ) {
@@ -54,12 +48,12 @@ static void Tick( ApeEntityComponent *self ) {
 	}
 }
 
-const ApeEntityComponentCallbackTable *Game_Component_Camera_GetCallbackTable( void ) {
-	static ApeEntityComponentCallbackTable callbackTable;
-	PL_ZERO_( callbackTable );
-	callbackTable.spawnFunction = Spawn;
-	callbackTable.destroyFunction = Destroy;
-	callbackTable.tickFunction = Tick;
+const ApeEntityClassTable *gameGetCameraClassTable( void ) {
+	static ApeEntityClassTable classTable;
+	PL_ZERO_( classTable );
+	classTable.Spawn = Spawn;
+	classTable.Destroy = Destroy;
+	classTable.Tick = Tick;
 
 	APE_ENTITY_HOOK_PROPERTIES( callbackTable );
 

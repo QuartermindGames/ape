@@ -2,6 +2,8 @@
 
 #pragma once
 
+PL_EXTERN_C
+
 // todo: these shouldn't be in here!!
 extern int globalGameLog;
 extern int globalGameDebugLog;
@@ -92,3 +94,5 @@ typedef struct GameMaterialSurface {
 	char **aliases;
 	uint8_t numAliases;
 } GameMaterialSurface;
+
+PL_EXTERN_C_END

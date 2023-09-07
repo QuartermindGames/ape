@@ -82,7 +82,6 @@ array string example { blah blah blah blah }
 Node files always begin with `node.` followed by the format. The following
 are supported.
 
-- `ascii` (*deprecated*)
 - `utf8`
 - `bin`
 
@@ -144,6 +143,7 @@ The `$` directive denotes a pre-processor command. The following commands are su
 #### Data Types
 
 - `int`; *32-bit integer.*
+- `uint`; *unsigned 32-bit integer.*
 - `float`; *32-bit floating-point.*
 - `string`; *utf-8 char array.*
 - `bool`; *true/false value.*

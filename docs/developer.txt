@@ -46,7 +46,7 @@ values.
 
 Each pass also supports the following.
 
-    integer cullMode        : Specifies culling mode, i.e. front/back/none.
+    int cullMode            : Specifies culling mode, i.e. front/back/none.
     bool depthTest          :
     array string blendMode  :
 
@@ -137,7 +137,7 @@ A complete example of a program can be seen below.
 
         object defaultPass
         {
-            integer cullMode 1
+            int cullMode 1
             object shaderParameters
             {
                 string normalMap materials/shaders/textures/normal.tga
