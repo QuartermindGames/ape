@@ -45,7 +45,7 @@ static void InitializeGame( void ) {
 
 	apeRegisterEntityClass( toxGetCharacterClassTable() );
 
-	PlParseConsoleString( "world worlds/train02.rfl" );
+	//PlParseConsoleString( "world worlds/alive_intro.rfl" );
 
 	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	apeMakeCameraActive( playerCamera );
