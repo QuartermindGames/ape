@@ -24,6 +24,7 @@ ApeWorld *apeCreateWorld( void ) {
 
 	world->meshes = PlCreateVectorArray( 0 );
 	world->entities = PlCreateVectorArray( 0 );
+	world->lights = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
 	apeSetupGlobalWorldDefaults( world );
@@ -31,11 +32,11 @@ ApeWorld *apeCreateWorld( void ) {
 	return world;
 }
 
-static uint32_t GetTotalVertsForRoom( ApeWorldRoom *room, bool detail ) {
+static unsigned int GetTotalVertsForRoom( ApeWorldRoom *room, bool detail ) {
 	// determine the total number of vertices
 
-	uint32_t numVerts = 0;
-	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j ) {
+	unsigned int numVerts = 0;
+	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j ) {
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL ) {
@@ -46,14 +47,14 @@ static uint32_t GetTotalVertsForRoom( ApeWorldRoom *room, bool detail ) {
 	}
 
 	if ( detail ) {
-		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
+		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
 			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL ) {
 				continue;
 			}
 
-			for ( uint32_t k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k ) {
+			for ( unsigned int k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k ) {
 				ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 				assert( face != NULL );
 				if ( face == NULL ) {
@@ -68,11 +69,11 @@ static uint32_t GetTotalVertsForRoom( ApeWorldRoom *room, bool detail ) {
 	return numVerts;
 }
 
-static uint32_t GetTotalFacesForRoom( ApeWorldRoom *room, bool detail ) {
-	uint32_t numFaces = PlGetNumVectorArrayElements( room->faces );
+static unsigned int GetTotalFacesForRoom( ApeWorldRoom *room, bool detail ) {
+	unsigned int numFaces = PlGetNumVectorArrayElements( room->faces );
 
 	if ( detail ) {
-		for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
+		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
 			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL ) {
@@ -118,9 +119,9 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 
 	SetupRoomSubMeshes( world, room );
 
-	uint32_t total = 0;
-	uint32_t numFaces = GetTotalFacesForRoom( room, false );
-	for ( uint32_t j = 0; j < numFaces; ++j ) {
+	unsigned int total = 0;
+	unsigned int numFaces = GetTotalFacesForRoom( room, false );
+	for ( unsigned int j = 0; j < numFaces; ++j ) {
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL || face->materialIndex < 0 ) {
@@ -142,7 +143,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
 
-		uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
+		unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
 		ApeWorldBatch *subMesh;
 		subMesh = &room->batches[ face->materialIndex ];
@@ -160,18 +161,20 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 		total += numVertices;
 	}
 
-	for ( uint32_t j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
+	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j ) {
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
-		if ( detailRoom == NULL )
+		if ( detailRoom == NULL ) {
 			continue;
+		}
 
 		numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
-		for ( uint32_t k = 0; k < numFaces; ++k ) {
+		for ( unsigned int k = 0; k < numFaces; ++k ) {
 			ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 			assert( face != NULL );
-			if ( face == NULL || face->materialIndex < 0 )
+			if ( face == NULL || face->materialIndex < 0 ) {
 				continue;
+			}
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL ) {
@@ -188,7 +191,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}
 
-			uint32_t numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
+			unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 
 			ApeWorldBatch *subMesh;
 			subMesh = &room->batches[ face->materialIndex ];
@@ -207,7 +210,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 		}
 	}
 
-	PlgGenerateMeshNormals( room->mesh, true );
+	//PlgGenerateMeshNormals( room->mesh, true );
 	PlgGenerateVertexTangentBasis( room->mesh->vertices, room->mesh->num_verts );
 
 	PlgUploadMesh( room->mesh );
@@ -333,7 +336,6 @@ void apeDestroyWorld( ApeWorld *world ) {
 		PlDestroyVectorArray( world->vertices );
 		world->vertices = NULL;
 	}
-
 
 	if ( world->lights != NULL ) {
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {

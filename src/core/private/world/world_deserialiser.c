@@ -30,7 +30,7 @@ static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
 		return;
 	}
 
-	world->lights = PlCreateVectorArray( numLights );
+	PlResizeVectorArray( world->lights, numLights );
 
 	NdBranch *child = ndGetFirstChild( root );
 	while ( child != NULL ) {

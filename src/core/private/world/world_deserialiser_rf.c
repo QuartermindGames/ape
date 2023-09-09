@@ -6,42 +6,45 @@
 #include "client/renderer/renderer.h"
 #include "world.h"
 
-static const unsigned int WORLD_MAGIC = 0xd4bada55;
+//#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
 
-static const int WORLD_VERSION_MIN = 161;
-static const int WORLD_VERSION_MAX = 295;
+static const unsigned int RFL_MAGIC = 0xd4bada55;
+
+static const int RFL_VERSION_MIN = 161;
+static const int RFL_VERSION_MAX = 295;
 // version history...
 //	161	Red Faction (PS2 Prototype)
 //	180	Red Faction (PC Demo)
 //	272	Red Faction 2 (PS2 Demo)
 // 	482	The Punisher (PS2)
 
-#define APE_WORLD_CHUNK_GEOMETRY          0x100
-#define APE_WORLD_CHUNK_GEOREGIONS        0x200
-#define APE_WORLD_CHUNK_LIGHTS            0x300
-#define APE_WORLD_CHUNK_CUTSCENECAMERAS   0x400
-#define APE_WORLD_CHUNK_AMBIENTSOUNDS     0x500
-#define APE_WORLD_CHUNK_EVENTS            0x600
-#define APE_WORLD_CHUNK_UNKNOWN0          0x900
-#define APE_WORLD_CHUNK_EMITTERS          0xa00
-#define APE_WORLD_CHUNK_CLIMBREGIONS      0xd00
-#define APE_WORLD_CHUNK_BOLTEMITTERS      0xe00
-#define APE_WORLD_CHUNK_TARGETS           0xf00
-#define APE_WORLD_CHUNK_DECALS            0x1000
-#define APE_WORLD_CHUNK_PUSHREGIONS       0x1100
-#define APE_WORLD_CHUNK_LIGHTMAP          0x1200
-#define APE_WORLD_CHUNK_BRUSH             0x2000
-#define APE_WORLD_CHUNK_MOVINGGROUP       0x3000
-#define APE_WORLD_CHUNK_CUTSCENES         0x4000
-#define APE_WORLD_CHUNK_CUTSCENEPATHNODES 0x5000
-#define APE_WORLD_CHUNK_CUTSCENEPATHS     0x6000
-#define APE_WORLD_CHUNK_WAYPOINTS         0x10000
-#define APE_WORLD_CHUNK_NAVPOINTS         0x20000
-#define APE_WORLD_CHUNK_ENTITIES          0x30000
-#define APE_WORLD_CHUNK_ITEMS             0x40000
-#define APE_WORLD_CHUNK_CLUTTER           0x50000
-#define APE_WORLD_CHUNK_TRIGGERS          0x60000
-#define APE_WORLD_CHUNK_PLAYERSTART       0x70000
+#define RFL_CHUNK_GEOMETRY          0x100
+#define RFL_CHUNK_GEOREGIONS        0x200
+#define RFL_CHUNK_LIGHTS            0x300
+#define RFL_CHUNK_CUTSCENECAMERAS   0x400
+#define RFL_CHUNK_AMBIENTSOUNDS     0x500
+#define RFL_CHUNK_EVENTS            0x600
+#define RFL_CHUNK_LEVELPROPERTIES   0x900
+#define RFL_CHUNK_EMITTERS          0xa00
+#define RFL_CHUNK_CLIMBREGIONS      0xd00
+#define RFL_CHUNK_BOLTEMITTERS      0xe00
+#define RFL_CHUNK_TARGETS           0xf00
+#define RFL_CHUNK_DECALS            0x1000
+#define RFL_CHUNK_PUSHREGIONS       0x1100
+#define RFL_CHUNK_LIGHTMAP          0x1200
+#define RFL_CHUNK_MOVERS            0x2000
+#define RFL_CHUNK_MOVINGGROUP       0x3000
+#define RFL_CHUNK_CUTSCENES         0x4000
+#define RFL_CHUNK_CUTSCENEPATHNODES 0x5000
+#define RFL_CHUNK_CUTSCENEPATHS     0x6000
+#define RFL_CHUNK_EAX               0x8000
+#define RFL_CHUNK_WAYPOINTS         0x10000
+#define RFL_CHUNK_NAVPOINTS         0x20000
+#define RFL_CHUNK_ENTITIES          0x30000
+#define RFL_CHUNK_ITEMS             0x40000
+#define RFL_CHUNK_CLUTTER           0x50000
+#define RFL_CHUNK_TRIGGERS          0x60000
+#define RFL_CHUNK_PLAYERSTART       0x70000
 
 static char *ParseString( PLFile *file, uint16_t *size ) {
 	*size = PL_READUINT16( file, false, NULL );
@@ -55,10 +58,17 @@ static char *ParseString( PLFile *file, uint16_t *size ) {
 }
 
 static PLVector3 ParseVector( PLFile *file ) {
+#if defined( FLIP_WORLD )
+	PLVector3 v = ( PLVector3 ){
+	        -PlReadFloat32( file, false, NULL ),
+	        PlReadFloat32( file, false, NULL ),
+	        PlReadFloat32( file, false, NULL ) };
+#else
 	PLVector3 v = ( PLVector3 ){
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ),
 	        PlReadFloat32( file, false, NULL ) };
+#endif
 	assert( !PlIsVector3NaN( &v ) );
 	return v;
 }
@@ -303,17 +313,30 @@ static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file ) {
 void apeGenerateWorldFaceBounds( ApeWorldFace *face ) {
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
-	if ( numVertices == 0 )
+	if ( numVertices == 0 ) {
 		return;
+	}
 
 	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
-	for ( unsigned int i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i ) {
 		boundVertices[ i ] = vertices[ i ]->u->position;
+	}
 
 	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
 	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
 
 	PL_DELETE( boundVertices );
+}
+
+static void CalculateFaceNormal( ApeWorldFace *face ) {
+	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
+	assert( numVertices > 0 );
+	if ( numVertices == 0 ) {
+		return;
+	}
+
+	//TODO
+	assert( 0 );
 }
 
 static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t version ) {
@@ -373,21 +396,40 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 			if ( worldVertexIndex >= 0 ) {
 				faceVertex->u = ( ApeWorldVertex * ) PlGetVectorArrayElementAt( world->vertices, worldVertexIndex );
 				assert( faceVertex->u != NULL );
+				if ( faceVertex->u == NULL ) {
+					PRINT_ERROR( "Invalid world vertex for face!\n" );
+				}
+
+				if ( faceVertex->u->adjacentFaces == NULL ) {
+					faceVertex->u->adjacentFaces = PlCreateVectorArray( 1 );
+				}
+
+				PlPushBackVectorArrayElement( faceVertex->u->adjacentFaces, face );
 			}
 
-			faceVertex->textureCoords.x = PlReadFloat32( file, false, NULL );
-			assert( !isnan( faceVertex->textureCoords.x ) && ( faceVertex->textureCoords.x * faceVertex->textureCoords.x >= 0.0f ) );
-			faceVertex->textureCoords.y = PlReadFloat32( file, false, NULL );
-			assert( !isnan( faceVertex->textureCoords.y ) && ( faceVertex->textureCoords.y * faceVertex->textureCoords.y >= 0.0f ) );
+			faceVertex->textureCoords.x = ParseFloat( file );
+			assert( faceVertex->textureCoords.x * faceVertex->textureCoords.x >= 0.0f );
+			faceVertex->textureCoords.y = ParseFloat( file );
+			assert( faceVertex->textureCoords.y * faceVertex->textureCoords.y >= 0.0f );
 
 			if ( lightmapIndex >= 0 ) {
 				faceVertex->lightmapU = ParseFloat( file );
 				faceVertex->lightmapV = ParseFloat( file );
 			}
 
+#if defined( FLIP_WORLD )
+			PlInsertFrontLinkedListNode( face->edgeLoop, faceVertex );
+#else
 			PlInsertLinkedListNode( face->edgeLoop, faceVertex );
+#endif
 
 			PlPushBackVectorArrayElement( face->vertices, faceVertex );
+		}
+
+		// Older versions didn't store the face normal / offset,
+		// so we'll need to calculate that here
+		if ( version < 167 ) {
+			CalculateFaceNormal( face );
 		}
 
 		apeGenerateWorldFaceBounds( face );
@@ -504,7 +546,7 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 
 static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version ) {
 	int32_t numLights = PlReadInt32( file, false, NULL );
-	world->lights = PlCreateVectorArray( numLights );
+	PlResizeVectorArray( world->lights, numLights );
 	for ( int32_t i = 0; i < numLights; ++i ) {
 		ApeLight *light = PL_NEW( ApeLight );
 
@@ -550,18 +592,40 @@ static void ParsePlayerStart( ApeWorld *world, PLFile *file, int32_t version ) {
 	world->startOrientation = ParseMat3( file );
 }
 
+static void ParseLevelProperties( ApeWorld *world, PLFile *file, int version ) {
+	uint16_t size;
+	char *texture = ParseString( file, &size );
+	if ( texture != NULL ) {
+		PL_DELETE( texture );
+	}
+
+	int hardness = PlReadInt32( file, false, NULL );
+
+	PLColour ambience = ParseColour( file );
+	world->ambience = PlColourU8ToF32( &ambience );
+	bool directionalAmbience = PL_READUINT8( file, NULL );
+
+	PLColour fogColour = ParseColour( file );
+	world->fogColour = PlColourU8ToF32( &fogColour );
+	world->fogNear = ParseFloat( file );
+	world->fogFar = ParseFloat( file );
+
+	// Ensure clear copies the fog, to ensure some level of consistency
+	world->clearColour = world->fogColour;
+}
+
 ApeWorld *apeParseRFWorld_( PLFile *file ) {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
-	if ( magic != WORLD_MAGIC ) {
-		PRINT_WARNING( "Invalid magic for world: %x != %x\n", magic, WORLD_MAGIC );
+	if ( magic != RFL_MAGIC ) {
+		PRINT_WARNING( "Invalid magic for world: %x != %x\n", magic, RFL_MAGIC );
 		return NULL;
 	}
 
 	int32_t version = PlReadInt32( file, false, NULL );
-	if ( version < WORLD_VERSION_MIN || version > WORLD_VERSION_MAX ) {
+	if ( version < RFL_VERSION_MIN || version > RFL_VERSION_MAX ) {
 		PRINT_WARNING( "Invalid version for world: %d < %d || %d > %d\n",
-		               version, WORLD_VERSION_MIN,
-		               version, WORLD_VERSION_MAX );
+		               version, RFL_VERSION_MIN,
+		               version, RFL_VERSION_MAX );
 		return NULL;
 	}
 
@@ -593,14 +657,17 @@ ApeWorld *apeParseRFWorld_( PLFile *file ) {
 		PLFileOffset nextChunk = offset + chunkSize;
 
 		switch ( chunkId ) {
-			case APE_WORLD_CHUNK_GEOMETRY:
+			case RFL_CHUNK_GEOMETRY:
 				ParseStaticGeometryChunk( world, file, version );
 				break;
-			case APE_WORLD_CHUNK_LIGHTS:
+			case RFL_CHUNK_LIGHTS:
 				ParseLightsChunk( world, file, version );
 				break;
-			case APE_WORLD_CHUNK_PLAYERSTART:
+			case RFL_CHUNK_PLAYERSTART:
 				ParsePlayerStart( world, file, version );
+				break;
+			case RFL_CHUNK_LEVELPROPERTIES:
+				ParseLevelProperties( world, file, version );
 				break;
 			default:
 				PRINT_DEBUG( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );
