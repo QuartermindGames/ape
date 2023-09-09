@@ -47,6 +47,10 @@ static void SortLights( const ApeCamera *camera ) {
  * over every single damn light.
  */
 static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
+	if ( world->lights == NULL ) {
+		return;
+	}
+
 	// determine what lights are visible -
 	// for now this operates over all the lights in the world, urgh...
 	PlClearVectorArray( visibleLights );
