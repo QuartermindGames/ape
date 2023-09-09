@@ -189,7 +189,7 @@ void apeRegisterRendererConsoleVariables_( void ) {
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, PrepareScreenshotCapture );
 
 	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "2", PL_VAR_I32, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r/showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/showFPS", "Toggle FPS counter.",
 #if !defined( NDEBUG )
@@ -206,7 +206,7 @@ void apeRegisterRendererConsoleVariables_( void ) {
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
 	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "30", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
+	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -582,13 +582,18 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport ) {
 	if ( world == NULL )
 		return;
 
-#if 1// test lights
-	{
+#if 0// test lights
+	if ( world->lights != NULL ) {
 		PLVector3 forward;
 		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
 
 		for ( unsigned int i = 0; i < 1; ++i ) {
 			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+			if ( light == NULL ) {
+				// Probably reached the end!
+				break;
+			}
+
 			light->flags |= APE_LIGHT_FLAG_RUNTIME_SHADOWS;
 #	if 1
 			if ( i == 0 ) {
@@ -647,7 +652,7 @@ static void RenderScene( ApeCamera *camera, const ApeViewport *viewport ) {
 
 			//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
 
-			if ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) {
+			if ( ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) || ( lights[ i ]->flags & APE_LIGHT_FLAG_DYNAMIC && lights[ i ]->flags & APE_LIGHT_FLAG_SHADOWS ) ) {
 				if ( ape_config_.renderer.showShadowWireframe ) {
 					rendererState.cullMode = APE_RENDERER_CULL_NONE;
 					rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
