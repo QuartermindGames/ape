@@ -168,13 +168,6 @@ void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames,
 PLGTexture *apeLoadTexture( const char *path, PLGTextureFilter filterMode );
 PLGTexture *apeGetFallbackTexture( void );
 
-#if 0
-typedef struct Texture Texture;
-Texture               *Renderer_Texture_Load( const char *path );
-void                   Renderer_Texture_Release( Texture *texture );
-PLGTexture            *Renderer_Texture_GetInternal( Texture *texture );
-#endif
-
 ////////////////////////////////////////////////////////////////////
 
 typedef struct ApeRenderTarget ApeRenderTarget;

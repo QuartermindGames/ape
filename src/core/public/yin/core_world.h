@@ -59,6 +59,8 @@ void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool am
 void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 void apeSetupGlobalWorldDefaults( ApeWorld *world );
 
+void apeGetPlayerStart( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
+
 /* Mesh */
 
 ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );

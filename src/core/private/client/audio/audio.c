@@ -81,7 +81,7 @@ void apeInitializeAudio_( void ) {
 	audioInitialized = true;
 }
 
-void ogeRegisterAudioConsoleVariables_( void ) {
+void apeRegisterAudioConsoleVariables_( void ) {
 	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
 }
 

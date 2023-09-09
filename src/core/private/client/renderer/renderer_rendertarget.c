@@ -18,14 +18,14 @@ typedef struct ApeRenderTarget {
 
 static PLHashTable *renderTargets;
 
-void apeInitializeRenderTargets( void ) {
+void apeInitializeRenderTargets_( void ) {
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL ) {
 		PRINT_ERROR( "Failed to create render target hash table: %s\n", PlGetError() );
 	}
 }
 
-void apeShutdownRenderTargets( void ) {
+void apeShutdownRenderTargets_( void ) {
 	apeFlushUnreferencedResources();
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( renderTargets );

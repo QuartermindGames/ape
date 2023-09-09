@@ -87,7 +87,7 @@ typedef struct ApeAudioSource {
 void apeInitializeAudio_( void );
 void apeShutdownAudio_( void );
 
-void ogeRegisterAudioConsoleVariables_( void );
+void apeRegisterAudioConsoleVariables_( void );
 
 void apeTickAudio_( void );
 void Audio_Pause( bool pause );

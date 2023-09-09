@@ -74,10 +74,6 @@ typedef struct ApeWorldFace {
 
 	struct ApeMaterial *material;
 	int materialIndex;// index into world's material list
-	// todo: reduce the below to transform matrix???
-	float materialAngle;
-	PLVector2 materialOffset;
-	PLVector2 materialScale;
 
 	PLVectorArray *vertices;// ApeWorldFaceVertex
 	PLLinkedList *edgeLoop; // ApeWorldFaceVertex

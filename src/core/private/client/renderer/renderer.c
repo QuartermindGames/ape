@@ -178,14 +178,14 @@ void apeInitializeShaders_( void );  /* renderer/shaders.c */
 void apeInitializeTextures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void apeInitializeRenderTargets( void );
-void apeShutdownRenderTargets( void );
+void apeInitializeRenderTargets_( void );
+void apeShutdownRenderTargets_( void );
 
 static void PrepareScreenshotCapture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv ) {
 	isScreenshotPending = true;
 }
 
-void Renderer_RegisterConsoleVariables( void ) {
+void apeRegisterRendererConsoleVariables_( void ) {
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, PrepareScreenshotCapture );
 
 	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
@@ -198,16 +198,15 @@ void Renderer_RegisterConsoleVariables( void ) {
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
-	PlRegisterConsoleVariable( "r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "ape/r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
+	PlRegisterConsoleVariable( "ape/r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "ape/r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/driver", "Sets the default graphics driver. Requires restart.", "opengl", PL_VAR_STRING, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
-	PlRegisterConsoleVariable( "r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
-	PlRegisterConsoleVariable( "r/maxLightDistance", "Maximum distance before lights are culled.", "30", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
+	PlRegisterConsoleVariable( "ape/r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
+	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
+	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "30", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -223,21 +222,20 @@ void apeInitializeRenderer_( void ) {
 	apeInitializeTextures_();
 
 	apeInitializeShaders_();
-	apeInitializeRenderTargets();
+	apeInitializeRenderTargets_();
 	apeInitializeMaterialSystem();
 	YR_Font_Initialize();
 
 	apeInitializeWorldVisibilitySystem_();
 
 	auxCamera = PlgCreateCamera();
-	if ( auxCamera == NULL )
+	if ( auxCamera == NULL ) {
 		PRINT_ERROR( "Failed to create auxiliary camera: %s\n", PlGetError() );
-
+	}
 	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	auxCamera->near = -10000.0f;
 	auxCamera->far = 10000.0f;
 
-	//SetupShadowMap();
 	apeSetupDefaultRenderState( NULL );
 
 	R_PP_SetupEffects();
@@ -246,7 +244,7 @@ void apeInitializeRenderer_( void ) {
 void apeShutdownRenderer_( void ) {
 	Font_Shutdown();
 	apeShutdownMaterialSystem();
-	apeShutdownRenderTargets();
+	apeShutdownRenderTargets_();
 	apeShutdownWorldVisibilitySystem_();
 }
 

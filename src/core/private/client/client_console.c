@@ -16,7 +16,6 @@ static int consoleAlpha = 200;
  * CONSOLE INPUT BUFFER
  ****************************************/
 
-#define CON_BUFFER_MAX_LENGTH 256
 static char conInputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
 static unsigned int conInputBufferLength = 0;
 
@@ -388,50 +387,36 @@ void apeDrawConsole_( const ApeViewport *viewport ) {
  * CLIENT CONSOLE INIT
  ****************************************/
 
-static void CreateViewportCommand( unsigned int argc, char **argv ) {
-	int width = strtol( argv[ 1 ], NULL, 10 );
-	int height = strtol( argv[ 2 ], NULL, 10 );
-
-	if ( !apeShellInterface_CreateWindow( "Yin Viewport", width, height, false, 0 ) ) {
-		PRINT_WARNING( "Failed to create viewport!\n" );
-		return;
-	}
-}
-
 void apeRegisterClientConsoleCommands_( void ) {
-	PlRegisterConsoleCommand( "Toggle", "Toggle the console.", 0, ToggleConsoleCommand );
-	PlRegisterConsoleCommand( "client/create_viewport", "Create a new viewport / window", 2, CreateViewportCommand );
+	PlRegisterConsoleCommand( "ape/console/toggle", "Toggle the console.", 0, ToggleConsoleCommand );
 
-	//PlRegisterConsoleCommand( "Connect", NULL, "Connect to the specified server." );
-	//PlRegisterConsoleCommand( "Reconnect", NULL, "Reconnect to the current server." );
-	//PlRegisterConsoleCommand( "Disconnect", NULL, "Disconnect from the current server." );
+	//PlRegisterConsoleCommand( "ape/connect", NULL, "Connect to the specified server." );
+	//PlRegisterConsoleCommand( "ape/reconnect", NULL, "Reconnect to the current server." );
+	//PlRegisterConsoleCommand( "ape/disconnect", NULL, "Disconnect from the current server." );
 }
 
-void Renderer_RegisterConsoleVariables( void );
+void apeRegisterRendererConsoleVariables_( void );
 
 void apeRegisterClientConsoleVariables_( void ) {
-	PlRegisterConsoleVariable( "client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "ape/client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
-
-	// editor
-	PlRegisterConsoleVariable( "edit/gridSize", "Set the maximum grid size.", "128", PL_VAR_I32, NULL, NULL, true );
 
 	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
 
-	PlRegisterConsoleVariable( "console/autocomplete_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "console/alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
-	PlRegisterConsoleVariable( "console/drawShadow", "Shadow for text, which will improve legibility. "
-	                                                 "Disabling might yield a slight performance boost on slower machines.",
+	PlRegisterConsoleVariable( "ape/console/autoList", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
+	PlRegisterConsoleVariable( "ape/console/alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
+	PlRegisterConsoleVariable( "ape/console/drawShadow", "Shadow for text, which will improve legibility. "
+	                                                     "Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
-	Renderer_RegisterConsoleVariables();
+	apeRegisterRendererConsoleVariables_();
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
 	void R_PP_RegisterConsoleVariables( void );
 	R_PP_RegisterConsoleVariables();
 
-	ogeRegisterAudioConsoleVariables_();
+	apeRegisterAudioConsoleVariables_();
 	apeRegisterWorldConsole_();
 }

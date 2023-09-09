@@ -431,3 +431,8 @@ void apeRegisterWorldConsole_( void ) {
 void apeTickClientWorld_( void ) {
 	apeBuildWorldVisibiltyLists_();
 }
+
+void apeGetPlayerStart( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation ) {
+	*position = world->startPosition;
+	*orientation = world->startOrientation;
+}
