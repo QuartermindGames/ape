@@ -18,7 +18,7 @@ void comInitialize( void ) {
 
 	ndSetupLogs();
 
-	cmnRegisterPkgInterface_();
+	comRegisterPkgInterface_();
 	comRegisterVppInterface_();
 }
 

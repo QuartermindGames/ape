@@ -72,7 +72,7 @@ static PLPackage *LoadPkgFile( const char *path ) {
 	return package;
 }
 
-void cmnRegisterPkgInterface_( void ) {
+void comRegisterPkgInterface_( void ) {
 	PlRegisterPackageLoader( "pkg", LoadPkgFile, ParsePkgFile );
 }
 
