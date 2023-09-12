@@ -22,17 +22,6 @@ typedef enum ComDataType {
 	COM_MAX_DATATYPES
 } ComDataType;
 
-#if defined( COMMON_DLL )
-#	include "kernel/plcore/include/plcore/pl_console.h"
-
-#	include <assert.h>
-
-extern int logLevelPrint;
-extern int logLevelWarn;
-#	define Message( FORMAT, ... ) PlLogWFunction( logLevelPrint, FORMAT, ##__VA_ARGS__ )
-#	define Warning( FORMAT, ... ) PlLogWFunction( logLevelWarn, FORMAT, ##__VA_ARGS__ )
-#endif
-
 PL_EXTERN_C
 
 void comInitialize( void );

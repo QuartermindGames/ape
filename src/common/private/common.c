@@ -7,12 +7,13 @@
 
 #include "common_private.h"
 
-int logLevelPrint;
-int logLevelWarn;
+int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
 void comInitialize( void ) {
-	logLevelPrint = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
-	logLevelWarn = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
+	com_logLevels_[ COM_LOG_LEVEL_INFO ] = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
+	com_logLevels_[ COM_LOG_LEVEL_WARN ] = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
+	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
+	com_logLevels_[ COM_LOG_LEVEL_DEBUG ] = PlAddLogLevel( "common/debug", PL_COLOUR_WHITE, true );
 
 	Message( "Common Library initialized\n" );
 
@@ -20,6 +21,10 @@ void comInitialize( void ) {
 
 	comRegisterPkgInterface_();
 	comRegisterVppInterface_();
+
+	// Initialize directory lookups
+	comGetDataDirectory();
+	comGetAppDataDirectory();
 }
 
 const char *comGetDataDirectory( void ) {

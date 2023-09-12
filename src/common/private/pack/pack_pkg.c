@@ -2,7 +2,7 @@
 
 #include <plcore/pl_package.h>
 
-#include "common.h"
+#include "../common_private.h"
 
 #define PKG_MAGIC PL_MAGIC_TO_NUM( 'P', 'K', 'G', '2' )
 
