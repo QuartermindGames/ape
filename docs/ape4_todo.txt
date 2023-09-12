@@ -1,0 +1,7 @@
+APE Tech 4 Wishlist
+------------------------------------------------
+
+- Better namespaces for various exposed APIs
+    (https://www.pvv.ntnu.no/~hakonhal/main.cgi/c/classes/)
+- Support for RFL format used in Red Faction II
+- Move to C23 if available via GCC / Clang
