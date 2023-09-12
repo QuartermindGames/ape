@@ -13,6 +13,7 @@ Any legacy documents might use `node` or `world.n` - these should be updated to 
 | `material`       | `.mat.n`  |
 | `model`          | `.mdl.n`  |
 | `world`          | `.wld.n`  |
+| `lights`         | `.lit.n`  |
 | `worldMesh`      | `.wsm.n`  |
 | `project`        | `.prj.n`  |
 | `program`        | `.sha.n`  |

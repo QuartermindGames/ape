@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "cook.h"
+#include "../cook.h"
 
 #include "plcore/pl_parse.h"
 #include "plgraphics/plg.h"

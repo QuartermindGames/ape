@@ -7,6 +7,7 @@
 #include <plmodel/plm.h>
 
 #include "common.h"
+#include "common_project.h"
 
 #include "yin/node.h"
 
@@ -16,4 +17,12 @@
 		exit( EXIT_FAILURE );  \
 	}
 
+typedef struct CookState
+{
+	const char *projectName;
+} CookState;
+extern CookState cook_state;
+
 PLMModel *Cook_Model_LoadSMD( const char *path );
+
+void Cook_World_Process( const char *worldName );

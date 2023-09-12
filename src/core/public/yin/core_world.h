@@ -26,9 +26,9 @@ typedef struct ApeWorld ApeWorld;
 
 #define APE_WORLD_VERSION       3
 #define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_GEO "wge.n"
-#define APE_WORLD_EXTENSION_ENT "wen.n"
-#define APE_WORLD_EXTENSION_LIT "wli.n"
+#define APE_WORLD_EXTENSION_GEO "geo.n"
+#define APE_WORLD_EXTENSION_ENT "ent.n"
+#define APE_WORLD_EXTENSION_LIT "lit.n"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
