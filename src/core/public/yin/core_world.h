@@ -26,9 +26,10 @@ typedef struct ApeWorld ApeWorld;
 
 #define APE_WORLD_VERSION       3
 #define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_GEO "geo.n"
-#define APE_WORLD_EXTENSION_ENT "ent.n"
-#define APE_WORLD_EXTENSION_LIT "lit.n"
+#define APE_WORLD_EXTENSION_GEO "wgf.n"
+#define APE_WORLD_EXTENSION_ENT "wef.n"
+#define APE_WORLD_EXTENSION_LIT "wlf.n"
+#define APE_WORLD_EXTENSION_CFG "wpf.n"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.

@@ -136,9 +136,9 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 			PLColour colour = PlColourF32ToU8( &room->colour );
 			PlgAddMeshVertex( room->mesh,
 			                  &vertex->u->position,
-			                  &face->normal,
+			                  &vertex->normal,
 			                  &colour,
-			                  &vertex->textureCoords );
+			                  &vertex->uv );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
@@ -184,9 +184,9 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 				PLColour colour = PlColourF32ToU8( &room->colour );
 				PlgAddMeshVertex( room->mesh,
 				                  &vertex->u->position,
-				                  &face->normal,
+				                  &vertex->normal,
 				                  &colour,
-				                  &vertex->textureCoords );
+				                  &vertex->uv );
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}

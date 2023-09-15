@@ -37,16 +37,16 @@ typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
 typedef struct ApeWorldPortal ApeWorldPortal;
 
-typedef struct ApeWorldVertex {
+typedef struct ApeWorldVertex
+{
 	PLVector3 position;
-	PLVector3 normal;
-	PLVector2 uv;
-	PLColourF32 colour;
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
-typedef struct ApeWorldFaceVertex {
-	PLVector2 textureCoords;
+typedef struct ApeWorldFaceVertex
+{
+	PLVector2 uv;
+	PLVector3 normal;
 	float lightmapU, lightmapV;
 
 	ApeWorldVertex *u;
@@ -138,8 +138,8 @@ typedef struct ApeWorldBatch {
 } ApeWorldBatch;
 
 typedef struct ApeWorldRoom {
-	char id[ WORLD_PROP_TAG_LENGTH ];
-	int tag;
+	char tag[ WORLD_PROP_TAG_LENGTH ];
+	int uid;
 
 	bool isDetail;
 	bool containsLiquid;

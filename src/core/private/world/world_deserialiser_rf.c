@@ -141,7 +141,7 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 	for ( uint32_t i = 0; i < numRooms; ++i ) {
 		ApeWorldRoom *room = apeCreateWorldRoom();
 
-		room->tag = PlReadInt32( file, false, NULL );
+		room->uid = PlReadInt32( file, false, NULL );
 
 		room->bounds.mins = ParseVector( file );
 		room->bounds.maxs = ParseVector( file );
@@ -407,10 +407,10 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 				PlPushBackVectorArrayElement( faceVertex->u->adjacentFaces, face );
 			}
 
-			faceVertex->textureCoords.x = ParseFloat( file );
-			assert( faceVertex->textureCoords.x * faceVertex->textureCoords.x >= 0.0f );
-			faceVertex->textureCoords.y = ParseFloat( file );
-			assert( faceVertex->textureCoords.y * faceVertex->textureCoords.y >= 0.0f );
+			faceVertex->uv.x = ParseFloat( file );
+			assert( faceVertex->uv.x * faceVertex->uv.x >= 0.0f );
+			faceVertex->uv.y = ParseFloat( file );
+			assert( faceVertex->uv.y * faceVertex->uv.y >= 0.0f );
 
 			if ( lightmapIndex >= 0 ) {
 				faceVertex->lightmapU = ParseFloat( file );

@@ -42,7 +42,9 @@ static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
 static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
 	ApeWorldRoom *room = apeCreateWorldRoom();
 
-	room->tag = ndGetInt( root, "tag", 0 );
+	room->uid = ndGetInt( root, "uid", 0 );
+
+	snprintf( room->tag, sizeof( room->tag ), "%s", ndGetStringByName( root, "tag", "none" ) );
 
 	room->bounds.mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
 	room->bounds.maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
@@ -99,6 +101,20 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 
 	face->smoothingGroup = ndGetInt( root, "smoothingGroup", 0 );
 
+	unsigned int roomIndex = ndGetUInt( root, "roomIndex", ( unsigned int ) -1 );
+	assert( roomIndex != ( unsigned int ) -1 );
+	if ( roomIndex == ( unsigned int ) -1 )
+		PRINT_WARNING( "No room index for face!\n" );
+	else
+	{
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		assert( room != NULL );
+		if ( room == NULL )
+			PRINT_WARNING( "Invalid room index (%u) for face!\n", roomIndex );
+		else
+			PlPushBackVectorArrayElement( room->faces, face );
+	}
+
 	// Attempt to fetch the material for the face.
 	// It's inherited from our adventures with RFL, but we'll support cases where a
 	// face doesn't have a material as "valid"...
@@ -115,7 +131,7 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	// per the world vertex list rather than for the face itself, which is
 	// inherited, again, from our adventures with RFL (but not necessarily bad)
 	NdBranch *branch;
-	if ( ( branch = ndGetChildByName( root, "vertices" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "edges" ) ) != NULL ) {
 		branch = ndGetFirstChild( branch );
 		while ( branch != NULL ) {
 			ApeWorldVertex *worldVertex;
@@ -128,7 +144,8 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 
 			ApeWorldFaceVertex *vertex = PL_NEW( ApeWorldFaceVertex );
 			vertex->u = worldVertex;
-			vertex->textureCoords = ndGetVector2( branch, "textureCoords", &pl_vecOrigin2 );
+			vertex->uv = ndGetVector2( branch, "uv", &pl_vecOrigin2 );
+			vertex->normal = ndGetVector3( branch, "normal", &pl_vecOrigin3 );
 
 			PlInsertLinkedListNode( face->edgeLoop, vertex );
 			PlPushBackVectorArrayElement( face->vertices, vertex );
@@ -146,11 +163,6 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
 	if ( ( branch = ndGetChildByName( root, "materials" ) ) != NULL ) {
 		unsigned int numMaterials = ndGetNumOfChildren( branch );
 		if ( numMaterials > 0 ) {
-			if ( ndGetType( branch ) != ND_PROPERTY_STRING ) {
-				PRINT_WARNING( "Unexpected branch type for materials!\n" );
-				return;
-			}
-
 			if ( world->materials == NULL ) {
 				world->materials = PlCreateVectorArray( numMaterials );
 			}
@@ -245,7 +257,7 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
 		if ( numFaces > 0 ) {
 			branch = ndGetFirstChild( branch );
 			while ( branch != NULL ) {
-				DeserializeFace( world, root );
+				DeserializeFace( world, branch );
 				branch = ndGetNextChild( branch );
 			}
 		} else {
