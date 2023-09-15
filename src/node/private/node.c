@@ -729,17 +729,19 @@ static NdBranch *DeserializeBinaryNode( PLFile *file, NdBranch *parent ) {
 			node->data.buf = AllocVarString( str, &node->data.length );
 			break;
 		}
+		case ND_PROPERTY_UI32:
 		case ND_PROPERTY_I32: {
 			int32_t v = PlReadInt32( file, false, NULL );
 			char str[ 32 ];
-			snprintf( str, sizeof( str ), PL_FMT_int32, v );
+			snprintf( str, sizeof( str ), node->type == ND_PROPERTY_I32 ? PL_FMT_int32 : PL_FMT_uint32, v );
 			node->data.buf = AllocVarString( str, &node->data.length );
 			break;
 		}
+		case ND_PROPERTY_UI64:
 		case ND_PROPERTY_I64: {
 			int64_t v = PlReadInt64( file, false, NULL );
 			char str[ 32 ];
-			snprintf( str, sizeof( str ), PL_FMT_int64, v );
+			snprintf( str, sizeof( str ), node->type == ND_PROPERTY_I64 ? PL_FMT_int64 : PL_FMT_uint64, v );
 			node->data.buf = AllocVarString( str, &node->data.length );
 			break;
 		}
