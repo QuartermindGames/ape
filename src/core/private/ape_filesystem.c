@@ -139,12 +139,14 @@ void apeMountLocations( void ) {
 
 	PL_ZERO( fileSystemMounts, sizeof( PLFileSystemMount * ) * MAX_FILESYSTEM_MOUNTS );
 
+#if 0 // Handled by common library now
 	/* now attempt to load in the mount config file, and mount */
 	NdBranch *mountRoot = ndGetChildByName( fileSystemConfig, "mountLocations" );
 	if ( mountRoot != NULL ) {
 		ParseMountConfig( mountRoot );
 		ndDestroyBranch( mountRoot );
 	}
+#endif
 
 	/* mount any packages under each of our mounted locations */
 	for ( unsigned int i = 0; i < numMountedLocations; ++i ) {
