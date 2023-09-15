@@ -6,6 +6,72 @@
 
 #include "format_obj.h"
 
+static void ParseMaterialTemplateLibrary( ObjModel *obj, const char *path )
+{
+	PLFile *file = PlOpenFile( path, true );
+	if ( file == NULL )
+		ERROR( "Failed to open OBJ material library: %s\n", PlGetError() );
+
+	// Copy it into a buffer we can parse
+	size_t fileBufSize = PlGetFileSize( file );
+	const char *fileBuf = PlGetFileData( file );
+	char *txtBuf = PL_NEW_( char, fileBufSize + 1 );
+	memcpy( txtBuf, fileBuf, fileBufSize );
+
+	PlCloseFile( file );
+
+	ObjMaterial *material = NULL;
+
+	const char *c = txtBuf;
+	while ( *c != '\0' )
+	{
+		if ( *c == '#' )
+		{
+			PlSkipLine( &c );
+			continue;
+		}
+
+		char token[ 128 ];
+		PlParseToken( &c, token, sizeof( token ) );
+		if ( strcmp( token, "newmtl" ) == 0 )
+		{
+			material = &obj->materials[ obj->numMaterials++ ];
+			PlParseToken( &c, material->name, sizeof( material->name ) );
+		}
+		else if ( strcmp( token, "map_Kd" ) == 0 )
+		{
+			assert( material != NULL );
+			if ( material == NULL ) ERROR( "Invalid MTL file encountered!\n" );
+			PlParseToken( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
+		}
+
+		PlSkipLine( &c );
+	}
+}
+
+static void DetermineSubObjectBounds( ObjModel *obj, ObjSubObject *subObject )
+{
+	unsigned int numFaces;
+	ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
+	for ( unsigned int i = 0; i < numFaces; ++i )
+	{
+		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
+		{
+			PLVector3 *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
+			assert( vertex != NULL );
+			if ( vertex == NULL )
+				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
+
+			if ( vertex->x < subObject->mins.x ) subObject->mins.x = vertex->x;
+			if ( vertex->y < subObject->mins.y ) subObject->mins.y = vertex->y;
+			if ( vertex->z < subObject->mins.z ) subObject->mins.z = vertex->z;
+			if ( vertex->x > subObject->maxs.x ) subObject->maxs.x = vertex->x;
+			if ( vertex->y > subObject->maxs.y ) subObject->maxs.y = vertex->y;
+			if ( vertex->z > subObject->maxs.z ) subObject->maxs.z = vertex->z;
+		}
+	}
+}
+
 ObjModel *ObjModel_LoadFromFile( const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
@@ -22,24 +88,18 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 
 	ObjModel *obj = PL_NEW( ObjModel );
 	ObjSubObject *subObject = NULL;
+	unsigned int materialIndex = 0;
+	unsigned int smoothingIndex = 0;
 
 	const char *c = txtBuf;
 	while ( *c != '\0' )
 	{
-		// Comment
-		if ( *c == '#' )
-		{
-			PlSkipLine( &c );
-			continue;
-		}
 		// Object
-		else if ( *c == 'o' && *( c + 1 ) == ' ' )
+		if ( *c == 'o' && *( c + 1 ) == ' ' )
 		{
 			c += 2;
 			subObject = &obj->subObjects[ obj->numSubObjects++ ];
 			PlParseToken( &c, subObject->name, sizeof( subObject->name ) );
-			PlSkipLine( &c );
-			continue;
 		}
 		// Vertex position
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
@@ -51,11 +111,10 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 			vertex->y = strtof( end, &end );
 			vertex->z = strtof( end, NULL );
 
-			if ( subObject->vertices == NULL )
-				subObject->vertices = PlCreateVectorArray( 1 );
+			if ( obj->vertices == NULL )
+				obj->vertices = PlCreateVectorArray( 1 );
 
-			PlPushBackVectorArrayElement( subObject->vertices, vertex );
-			PlSkipLine( &c );
+			PlPushBackVectorArrayElement( obj->vertices, vertex );
 		}
 		// Vertex normal
 		else if ( *c == 'v' && *( c + 1 ) == 'n' && *( c + 2 ) == ' ' )
@@ -67,11 +126,10 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 			normal->y = strtof( end, &end );
 			normal->z = strtof( end, NULL );
 
-			if ( subObject->normals == NULL )
-				subObject->normals = PlCreateVectorArray( 1 );
+			if ( obj->normals == NULL )
+				obj->normals = PlCreateVectorArray( 1 );
 
-			PlPushBackVectorArrayElement( subObject->normals, normal );
-			PlSkipLine( &c );
+			PlPushBackVectorArrayElement( obj->normals, normal );
 		}
 		// Vertex texture coordinate
 		else if ( *c == 'v' && *( c + 1 ) == 't' && *( c + 2 ) == ' ' )
@@ -82,11 +140,10 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 			uv->x = strtof( c, &end );
 			uv->y = strtof( end, NULL );
 
-			if ( subObject->textureCoords == NULL )
-				subObject->textureCoords = PlCreateVectorArray( 1 );
+			if ( obj->textureCoords == NULL )
+				obj->textureCoords = PlCreateVectorArray( 1 );
 
-			PlPushBackVectorArrayElement( subObject->textureCoords, uv );
-			PlSkipLine( &c );
+			PlPushBackVectorArrayElement( obj->textureCoords, uv );
 		}
 		// Face
 		else if ( *c == 'f' && *( c + 1 ) == ' ' )
@@ -106,56 +163,83 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 					break;
 
 				char *end;
-				face->vertices[ face->numEdges ] = ( strtoul( c, &end, 10 ) - 1 );
+				face->indices[ face->numEdges ][ OBJ_INDEX_VERTEX ] = ( strtoul( c, &end, 10 ) - 1 );
 				end++;
-				face->textureCoords[ face->numEdges ] = ( strtoul( end, &end, 10 ) - 1 );
+				face->indices[ face->numEdges ][ OBJ_INDEX_TEXTURE ] = ( strtoul( end, &end, 10 ) - 1 );
 				end++;
-				face->normals[ face->numEdges ] = ( strtoul( end, &end, 10 ) - 1 );
+				face->indices[ face->numEdges ][ OBJ_INDEX_NORMAL ] = ( strtoul( end, &end, 10 ) - 1 );
 				c = end;
 			}
+
+			// Calculate the normal of the face
+			unsigned int numNormals;
+			const PLVector3 **vn = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->normals, &numNormals );
+			for ( unsigned int i = 0; i < face->numEdges; ++i )
+			{
+				const PLVector3 *n = vn[ face->indices[ i ][ OBJ_INDEX_NORMAL ] ];
+				face->normal = PlAddVector3( face->normal, *n );
+			}
+			face->normal = PlNormalizeVector3( face->normal );
+
+			face->material = materialIndex;
+			face->smoothingGroup = smoothingIndex;
+		}
+		else if ( *c == 's' && *( c + 1 ) == ' ' )
+		{
+			c += 2;
+			smoothingIndex = strtoul( c, NULL, 10 );
 		}
 		// Material library
 		else if ( strncmp( c, "mtllib ", 7 ) == 0 )
 		{
-			PlSkipLine( &c );
+			c += 7;
+
+			char token[ 128 ];
+			PlParseToken( &c, token, sizeof( token ) );
+
+			PLPath libPath;
+			PlSetupPath( libPath, true, "%s", path );
+			char *s = strrchr( libPath, '/' ) + 1;
+			*s = '\0';
+			PlAppendPath( libPath, token, true );
+
+			ParseMaterialTemplateLibrary( obj, libPath );
 		}
-		else
+		else if ( strncmp( c, "usemtl ", 7 ) == 0 )
 		{
-			//printf( "Unhandled OBJ opcode (%c), ignoring!\n", c[ 0 ] );
-			PlSkipLine( &c );
+			c += 7;
+			char token[ 128 ];
+			PlParseToken( &c, token, sizeof( token ) );
+			for ( materialIndex = 0; materialIndex < obj->numMaterials; ++materialIndex )
+			{
+				if ( strcmp( token, obj->materials[ materialIndex ].name ) == 0 )
+					break;
+			}
 		}
+		// Unhandled lines we just skip for now...
+
+		PlSkipLine( &c );
 	}
 
 	PL_DELETE( txtBuf );
+
+	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
+		DetermineSubObjectBounds( obj, &obj->subObjects[ i ] );
 
 	return obj;
 }
 
 void ObjModel_Destroy( ObjModel *obj )
 {
+	if ( obj == NULL )
+		return;
+
+	PlDestroyVectorArrayEx( obj->vertices, PlFree );
+	PlDestroyVectorArrayEx( obj->normals, PlFree );
+	PlDestroyVectorArrayEx( obj->textureCoords, PlFree );
+
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
-	{
-		if ( obj->subObjects[ i ].vertices != NULL )
-		{
-			PlDestroyVectorArrayElements( obj->subObjects[ i ].vertices, PlFree );
-			PlDestroyVectorArray( obj->subObjects[ i ].vertices );
-		}
-		if ( obj->subObjects[ i ].normals != NULL )
-		{
-			PlDestroyVectorArrayElements( obj->subObjects[ i ].normals, PlFree );
-			PlDestroyVectorArray( obj->subObjects[ i ].normals );
-		}
-		if ( obj->subObjects[ i ].textureCoords != NULL )
-		{
-			PlDestroyVectorArrayElements( obj->subObjects[ i ].textureCoords, PlFree );
-			PlDestroyVectorArray( obj->subObjects[ i ].textureCoords );
-		}
-		if ( obj->subObjects[ i ].faces != NULL )
-		{
-			PlDestroyVectorArrayElements( obj->subObjects[ i ].faces, PlFree );
-			PlDestroyVectorArray( obj->subObjects[ i ].faces );
-		}
-	}
+		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, PlFree );
 
 	PL_DELETE( obj );
 }

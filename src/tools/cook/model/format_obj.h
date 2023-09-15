@@ -6,33 +6,56 @@
 
 #define OBJ_MAX_SUB_OBJECTS 32
 #define OBJ_MAX_EDGES       16
+#define OBJ_MAX_MATERIALS   32
 
-typedef struct ObjMaterialLibrary
+typedef struct ObjMaterial
 {
+	char name[ 64 ];
 
-} ObjMaterialLibrary;
+	PLPath diffuseMap;
+	PLPath specularMap;
+	PLPath ambienceMap;
+	PLPath normalMap;
+} ObjMaterial;
+
+typedef enum ObjIndex
+{
+	OBJ_INDEX_VERTEX,
+	OBJ_INDEX_TEXTURE,
+	OBJ_INDEX_NORMAL,
+	OBJ_MAX_INDEXES
+} ObjIndex;
 
 typedef struct ObjFace
 {
 	unsigned int material;
-	unsigned int vertices[ OBJ_MAX_EDGES ];
-	unsigned int normals[ OBJ_MAX_EDGES ];
-	unsigned int textureCoords[ OBJ_MAX_EDGES ];
+	unsigned int smoothingGroup;
+
+	// these are all explicit indices into the vertices, normals etc.
+	unsigned int indices[ OBJ_MAX_EDGES ][ OBJ_MAX_INDEXES ];
+
 	unsigned int numEdges;
+	PLVector3 normal;
 } ObjFace;
 
 typedef struct ObjSubObject
 {
 	char name[ 64 ];
 
-	PLVectorArray *vertices;     // PLVector3
-	PLVectorArray *normals;      // PLVector3
-	PLVectorArray *textureCoords;// PLVector2
-	PLVectorArray *faces;        // ObjFace
+	PLVectorArray *faces;// ObjFace
+
+	PLVector3 mins, maxs;// bounds
 } ObjSubObject;
 
 typedef struct ObjModel
 {
+	PLVectorArray *vertices;     // PLVector3
+	PLVectorArray *normals;      // PLVector3
+	PLVectorArray *textureCoords;// PLVector2
+
+	ObjMaterial materials[ OBJ_MAX_MATERIALS ];
+	unsigned int numMaterials;
+
 	ObjSubObject subObjects[ OBJ_MAX_SUB_OBJECTS ];
 	unsigned int numSubObjects;
 } ObjModel;
