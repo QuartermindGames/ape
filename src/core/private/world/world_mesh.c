@@ -34,15 +34,6 @@ unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned
 #endif
 }
 
-static void GenerateFaceNormal( const ApeWorldMesh *mesh, ApeWorldFace *face ) {
-#if 0
-	for ( unsigned int i = 0; i < face->numVertices; ++i )
-		face->normal = PlAddVector3( face->normal, mesh->vertices[ face->vertices[ i ] ].normal );
-
-	face->normal = PlNormalizeVector3( face->normal );
-#endif
-}
-
 static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr ) {
 	NdBranch *materialsList = ndGetChildByName( meshNode, "materials" );
 	if ( materialsList == NULL ) {

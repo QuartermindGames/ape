@@ -542,36 +542,44 @@ static void SetBuiltInVariable( PLGShaderProgram *program, int uniformSlot, int 
 	}
 }
 
-static void SetGlobalUniforms( PLGShaderProgram *program, const ApeLight *light ) {
+static void SetGlobalUniforms( PLGShaderProgram *program, const ApeLight *light )
+{
 	//TODO: we should be caching these slots rather than looking them up every time...
 
 	int slot;
 
 	ApeWorld *world = apeGetCurrentWorld();
-	if ( world != NULL ) {
-		//TODO: get rid of this, should be treated as a light instead...
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->sunColour, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->sunPosition, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
-
+	if ( world != NULL )
+	{
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogColour, false );
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogNear, false );
 		if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
 			PlgSetShaderUniformValueByIndex( program, slot, &world->fogFar, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
 	}
 
-	if ( light != NULL ) {
-		if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &light->radius, false );
+	if ( light != NULL )
+	{
+		if ( light->type == APE_LIGHT_TYPE_SUN )
+		{
+			//TODO: get rid of this, should be treated as a light instead...
+			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
+			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
+		}
+		else
+		{
+			if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
+			if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
+			if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &light->radius, false );
+		}
 	}
 }
 

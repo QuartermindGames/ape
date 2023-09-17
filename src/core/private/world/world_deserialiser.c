@@ -118,8 +118,9 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	// Attempt to fetch the material for the face.
 	// It's inherited from our adventures with RFL, but we'll support cases where a
 	// face doesn't have a material as "valid"...
-	unsigned int materialIndex = ndGetUInt( root, "material", ( unsigned int ) -1 );
-	face->material = PlGetVectorArrayElementAt( world->materials, materialIndex );
+	face->materialIndex = ndGetUInt( root, "material", ( unsigned int ) -1 );
+	face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
+	assert( face->material != NULL );
 	if ( face->material == NULL ) {
 		face->material = apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK );
 	}
@@ -292,11 +293,11 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 
 		// Get the global properties of the world from the branch
 
-		world->ambience = ndGetColourF32( world->globalProperties, "ambience", &PL_COLOURF32( 0.5f, 0.5f, 0.5f, 1.0f ) );
-		world->sunColour = ndGetColourF32( world->globalProperties, "sunColour", &PL_COLOURF32_BLACK );
-		world->sunPosition = ndGetVector3( world->globalProperties, "sunPosition", &pl_vecOrigin3 );
+		world->ambience = ndGetColourF32( world->globalProperties, "ambience", &WORLD_DEFAULT_AMBIENCE );
+		world->sunColour = ndGetColourF32( world->globalProperties, "sunColour", &WORLD_DEFAULT_SUNCOLOUR );
+		world->sunPosition = ndGetVector3( world->globalProperties, "sunPosition", &WORLD_DEFAULT_SUNPOSITION );
 
-		world->clearColour = ndGetColourF32( world->globalProperties, "clearColour", &PL_COLOURF32_BLACK );
+		world->clearColour = ndGetColourF32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
 		world->fogColour = ndGetColourF32( world->globalProperties, "fogColour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f ) );
 		world->fogFar = ndGetF32ByName( world->globalProperties, "fogFar", 11.0f );

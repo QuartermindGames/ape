@@ -105,7 +105,6 @@ typedef struct ApeLight {
 	int32_t state;
 } ApeLight;
 
-typedef ApeLight ApeLightArray[ APE_MAX_LIGHTS_PER_PASS ];
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
 typedef enum ApeRendererCullMode {
