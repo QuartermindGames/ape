@@ -171,6 +171,8 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 				c = end;
 			}
 
+#if 0// Life wasn't this simple, sadly
+
 			// Calculate the normal of the face
 			unsigned int numNormals;
 			const PLVector3 **vn = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->normals, &numNormals );
@@ -180,6 +182,51 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 				face->normal = PlAddVector3( face->normal, *n );
 			}
 			face->normal = PlNormalizeVector3( face->normal );
+
+#else
+
+			unsigned int numTriangles;
+			if ( face->numEdges < 3 )
+				numTriangles = 0;
+			else
+				numTriangles = face->numEdges - 2;
+			if ( numTriangles > 0 )
+			{
+				unsigned int indices[ OBJ_MAX_EDGES * 3 ];
+				PL_ZERO_( indices );
+				unsigned int *index = indices;
+				for ( unsigned int i = 1; i + 1 < face->numEdges; ++i )
+				{
+					index[ 0 ] = 0;
+					index[ 1 ] = i;
+					index[ 2 ] = i + 1;
+					index += 3;
+				}
+
+				unsigned int numVertices;
+				const PLVector3 **v = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
+
+				PLVector3 normals[ OBJ_MAX_EDGES ];
+				PL_ZERO_( normals );
+				for ( unsigned int i = 0, idx = 0; i < numTriangles; ++i, idx += 3 )
+				{
+					unsigned int x = indices[ idx ];
+					unsigned int y = indices[ idx + 1 ];
+					unsigned int z = indices[ idx + 2 ];
+
+					PLVector3 n = PlgGenerateVertexNormal( *v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ],
+					                                       *v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ],
+					                                       *v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ] );
+
+					normals[ x ] = PlAddVector3( normals[ x ], n );
+					normals[ y ] = PlAddVector3( normals[ y ], n );
+					normals[ z ] = PlAddVector3( normals[ z ], n );
+				}
+
+				face->normal = normals[ 0 ];
+			}
+
+#endif
 
 			face->material = materialIndex;
 			face->smoothingGroup = smoothingIndex;

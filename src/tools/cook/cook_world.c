@@ -63,6 +63,7 @@ static void ProcessGeometry( const char *worldName, NdBranch *root )
 			ndPushBackF32( child, NULL, v->z );
 		}
 
+#if 0
 		child = ndPushBackF32Array( root, "normals", NULL, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->normals ); ++j )
 		{
@@ -87,6 +88,7 @@ static void ProcessGeometry( const char *worldName, NdBranch *root )
 			ndPushBackF32( child, NULL, v->x );
 			ndPushBackF32( child, NULL, v->y );
 		}
+#endif
 
 		child = ndPushBackObjectArray( root, "faces" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
@@ -116,9 +118,9 @@ static void ProcessGeometry( const char *worldName, NdBranch *root )
 					if ( normal != NULL )
 						ndPushBackF32Array( edgeBranch, "normal", ( float * ) normal, 3 );
 
-					PLVector2 *uv = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
+					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
-						ndPushBackF32Array( edgeBranch, "uv", ( float * ) uv, 2 );
+						ndPushBackF32Array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
 				}
 			}
 		}
