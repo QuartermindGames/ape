@@ -27,6 +27,23 @@ ApeWorld *apeCreateWorld( void ) {
 	world->lights = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
+#if 1// ALIVE Hack: add in a light source to act as the sun
+	ApeLight *light = PL_NEW( ApeLight );
+	light->colour = WORLD_DEFAULT_SUNCOLOUR;
+	light->type = APE_LIGHT_TYPE_SUN;
+	light->flags |= APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS;
+	light->position = WORLD_DEFAULT_SUNPOSITION;
+	PlPushBackVectorArrayElement( world->lights, light );
+
+#if 0
+	light = PL_NEW( ApeLight );
+	light->colour = WORLD_DEFAULT_SUNCOLOUR;
+	light->type = APE_LIGHT_TYPE_OMNI;
+	light->flags |= APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS;
+	PlPushBackVectorArrayElement( world->lights, light );
+#endif
+#endif
+
 	apeSetupGlobalWorldDefaults( world );
 
 	return world;
@@ -136,9 +153,9 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 			PLColour colour = PlColourF32ToU8( &room->colour );
 			PlgAddMeshVertex( room->mesh,
 			                  &vertex->u->position,
-			                  &face->normal,
+			                  &vertex->normal,
 			                  &colour,
-			                  &vertex->textureCoords );
+			                  &vertex->uv );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
@@ -184,9 +201,9 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room ) {
 				PLColour colour = PlColourF32ToU8( &room->colour );
 				PlgAddMeshVertex( room->mesh,
 				                  &vertex->u->position,
-				                  &face->normal,
+				                  &vertex->normal,
 				                  &colour,
-				                  &vertex->textureCoords );
+				                  &vertex->uv );
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}
@@ -258,6 +275,11 @@ ApeWorld *apeLoadWorld( const char *path ) {
 
 		CacheRoomMesh( world, room );
 	}
+
+	apeClearSkyLayers_();
+	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
+	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
+	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
 
 	return world;
 }

@@ -26,9 +26,10 @@ typedef struct ApeWorld ApeWorld;
 
 #define APE_WORLD_VERSION       3
 #define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_GEO "geo.n"
-#define APE_WORLD_EXTENSION_ENT "ent.n"
-#define APE_WORLD_EXTENSION_LIT "lit.n"
+#define APE_WORLD_EXTENSION_GEO "wgf.n"
+#define APE_WORLD_EXTENSION_ENT "wef.n"
+#define APE_WORLD_EXTENSION_LIT "wlf.n"
+#define APE_WORLD_EXTENSION_CFG "wpf.n"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
@@ -58,6 +59,10 @@ void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
 void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 void apeSetupGlobalWorldDefaults( ApeWorld *world );
+
+void apeAddSkyLayer_( const char *path );
+void apeClearSkyLayers_( void );
+void apeDrawSky_( ApeCamera *camera );
 
 void apeGetPlayerStart( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
 

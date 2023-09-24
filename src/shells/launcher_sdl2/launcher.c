@@ -13,6 +13,7 @@
 #include <yin/node.h>
 
 #include "common.h"
+#include "common_project.h"
 #include "launcher.h"
 
 static NdBranch *shellConfig;
@@ -481,6 +482,8 @@ int Launcher_Initialize( int argc, char **argv )
 	comInitialize();
 
 	shellConfig = comGetConfig( "shell" );
+
+	comMountProject( "detox" );
 
 	if ( !InitializeDisplay() )
 	{

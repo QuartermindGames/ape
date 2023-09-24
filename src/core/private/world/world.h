@@ -15,12 +15,12 @@
 #define WORLD_PROP_TAG_LENGTH   64
 #define WORLD_PROP_VALUE_LENGTH 256
 
-#if 0 /* original values, used for prototype */
-#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.4f, 0.4f, 0.4f, 1.0f )
-#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
+#if 1 /* original values, used for prototype */
+#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
+#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
 #	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
 #	define WORLD_DEFAULT_SUNPOSITION PLVector3( 0.5f, -1.0f, 0.5f )
-#	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.25f )
+#	define WORLD_DEFAULT_SUNCOLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 0.75f )
 #else
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.1f, 0.1f, 0.1f, 1.0f )
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
@@ -37,16 +37,16 @@ typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
 typedef struct ApeWorldPortal ApeWorldPortal;
 
-typedef struct ApeWorldVertex {
+typedef struct ApeWorldVertex
+{
 	PLVector3 position;
-	PLVector3 normal;
-	PLVector2 uv;
-	PLColourF32 colour;
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
-typedef struct ApeWorldFaceVertex {
-	PLVector2 textureCoords;
+typedef struct ApeWorldFaceVertex
+{
+	PLVector2 uv;
+	PLVector3 normal;
 	float lightmapU, lightmapV;
 
 	ApeWorldVertex *u;
@@ -138,8 +138,8 @@ typedef struct ApeWorldBatch {
 } ApeWorldBatch;
 
 typedef struct ApeWorldRoom {
-	char id[ WORLD_PROP_TAG_LENGTH ];
-	int tag;
+	char tag[ WORLD_PROP_TAG_LENGTH ];
+	int uid;
 
 	bool isDetail;
 	bool containsLiquid;

@@ -324,6 +324,10 @@ static void DrawRoomStencilShadowVolume( const ApeWorldFace *face, const ApeLigh
 	PLGMesh *mesh;
 	PLLinkedListNode *faceVertexNode;
 
+	PLVector3 projDirection;
+	if ( light->type == APE_LIGHT_TYPE_SUN )
+		projDirection = PlNormalizeVector3( ( PLVector3 ) { light->position.x, light->position.y, light->position.z } );
+
 	// end cap
 	mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	faceVertexNode = PlGetLastNode( face->edgeLoop );
@@ -331,10 +335,12 @@ static void DrawRoomStencilShadowVolume( const ApeWorldFace *face, const ApeLigh
 		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
 
-		PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-		PlgImmPushVertex( vertex->u->position.x + lightDir.x * F_INFINITY,
-		                  vertex->u->position.y + lightDir.y * F_INFINITY,
-		                  vertex->u->position.z + lightDir.z * F_INFINITY );
+		if ( light->type != APE_LIGHT_TYPE_SUN )
+			projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
+
+		PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
+		                  vertex->u->position.y + projDirection.y * F_INFINITY,
+		                  vertex->u->position.z + projDirection.z * F_INFINITY );
 		PlgImmColour( 255, 0, 255, colour->a );
 
 		faceVertexNode = PlGetPrevLinkedListNode( faceVertexNode );
@@ -364,10 +370,12 @@ static void DrawRoomStencilShadowVolume( const ApeWorldFace *face, const ApeLigh
 		PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
 		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 
-		PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-		PlgImmPushVertex( vertex->u->position.x + lightDir.x * F_INFINITY,
-		                  vertex->u->position.y + lightDir.y * F_INFINITY,
-		                  vertex->u->position.z + lightDir.z * F_INFINITY );
+		if ( light->type != APE_LIGHT_TYPE_SUN )
+			projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
+
+		PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
+		                  vertex->u->position.y + projDirection.y * F_INFINITY,
+		                  vertex->u->position.z + projDirection.z * F_INFINITY );
 		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 
 		faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
@@ -376,10 +384,13 @@ static void DrawRoomStencilShadowVolume( const ApeWorldFace *face, const ApeLigh
 			vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
 			PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-			lightDir = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-			PlgImmPushVertex( vertex->u->position.x + lightDir.x * F_INFINITY,
-			                  vertex->u->position.y + lightDir.y * F_INFINITY,
-			                  vertex->u->position.z + lightDir.z * F_INFINITY );
+
+			if ( light->type != APE_LIGHT_TYPE_SUN )
+				projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
+
+			PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
+			                  vertex->u->position.y + projDirection.y * F_INFINITY,
+			                  vertex->u->position.z + projDirection.z * F_INFINITY );
 			PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 			break;
 		}
@@ -398,7 +409,7 @@ static void DrawRoomStencilShadowVolumes( ApeWorldRoom *room, const ApeLight *li
 		//	continue;
 
 		PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( faces[ i ]->origin, light->position ) );
-		if ( PlVector3DotProduct( faces[ i ]->normal, lightDir ) < 0 )
+		if ( PlVector3DotProduct( faces[ i ]->normal, lightDir ) >= 0 )
 			continue;
 
 		DrawRoomStencilShadowVolume( faces[ i ], light, &PL_COLOURU8( 255, 255, 255, 255 ) );
