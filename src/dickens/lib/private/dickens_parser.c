@@ -81,7 +81,7 @@ typedef struct DKASTExpression
 	DkAstStatement *op1, *op2;
 } DKASTExpression;
 
-typedef struct DKASTStatement
+typedef struct DkAstStatement
 {
 	DkAstOpCode opCode;
 	PLLinkedList *statements;
@@ -122,15 +122,15 @@ static DkAstStatement *create_ast_statement( DkAstOpCode opCode, DkAstStatement 
 	return statement;
 }
 
-typedef struct DKParser
+typedef struct DkParser
 {
 	PLLinkedList *statements;// DKASTStatement
 	DkLexer *lexer;
 	DkLexerToken *token;
 	DkLexerToken *peekToken;
-} DKParser;
+} DkParser;
 
-static void get_next_token( DKParser *parser )
+static void get_next_token( DkParser *parser )
 {
 	PLLinkedListNode *node = PlGetNextLinkedListNode( parser->token->node );
 	if ( node == NULL )
@@ -143,7 +143,7 @@ static void get_next_token( DKParser *parser )
 		parser->peekToken = PlGetLinkedListNodeUserData( peekNode );
 }
 
-static bool expect_peek( DKParser *parser, DKTokenType tokenType )
+static bool expect_peek( DkParser *parser, DKTokenType tokenType )
 {
 	if ( parser->peekToken->type == tokenType )
 	{
@@ -161,7 +161,7 @@ enum
 	PARSER_ERROR
 };
 
-static void submit_parser_error( const char *msg, DKParser *parser, bool abortProgram )
+static void submit_parser_error( const char *msg, DkParser *parser, bool abortProgram )
 {
 	const char *c = "%s\nUnexpected symbol: %s\n"
 	                "%2u : %2u > %4s\n";
@@ -193,7 +193,7 @@ static void submit_parser_error( const char *msg, DKParser *parser, bool abortPr
 	PL_DELETE( err );
 }
 
-static void parse_expression( DKParser *parser, DkAstStatement *statement )
+static void parse_expression( DkParser *parser, DkAstStatement *statement )
 {
 	if ( parser->token->type != DK_TOKENTYPE_INT &&
 	     parser->token->type != DK_TOKENTYPE_DEC &&
@@ -228,7 +228,7 @@ static void ParseStruct( DKParser *parser, DKASTStatement *statement ) {
 }
 #endif
 
-static DkAstStatement *parse_decl( DKParser *parser, DkAstStatement *parent )
+static DkAstStatement *parse_decl( DkParser *parser, DkAstStatement *parent )
 {
 	DkAstStatement *statement = create_ast_statement( DK_AST_OPCODE_DECL, parent );
 	DKASTDeclStatement *declStatement = statement->data;
@@ -315,9 +315,9 @@ static bool ParseVariableList( DKParser *parser, DKASTStatement *parent ) {
 }
 #endif
 
-static DkAstStatement *parse_program( DKParser *parser, DkAstStatement *parent );
+static DkAstStatement *parse_program( DkParser *parser, DkAstStatement *parent );
 
-static DkAstStatement *parse_ident( DKParser *parser, DkAstStatement *parent )
+static DkAstStatement *parse_ident( DkParser *parser, DkAstStatement *parent )
 {
 	DkSymbolName name;
 	strcpy( name, parser->token->symbol );
@@ -342,7 +342,7 @@ static DkAstStatement *parse_ident( DKParser *parser, DkAstStatement *parent )
 	}
 }
 
-static DkAstStatement *parse_end( DKParser *parser, DkAstStatement *parent )
+static DkAstStatement *parse_end( DkParser *parser, DkAstStatement *parent )
 {
 	DkAstStatement *endStatement = create_ast_statement( DK_AST_OPCODE_END, parent );
 
@@ -365,7 +365,7 @@ static DkAstStatement *parse_end( DKParser *parser, DkAstStatement *parent )
 	return endStatement;
 }
 
-static DkAstStatement *parse_program( DKParser *parser, DkAstStatement *parent )
+static DkAstStatement *parse_program( DkParser *parser, DkAstStatement *parent )
 {
 	if ( parser->token->type == DK_TOKENTYPE_DECLARE )
 		return parse_decl( parser, parent );
@@ -416,11 +416,11 @@ static DkAstStatement *parse_program( DKParser *parser, DkAstStatement *parent )
  * PUBLIC
  ****************************************/
 
-DKParser *dk_parse_program( DkLexer *lexer )
+DkParser *dk_parse_program( DkLexer *lexer )
 {
 	double startTime = PlGetCurrentSeconds();
 
-	DKParser *parser = PL_NEW( DKParser );
+	DkParser *parser = PL_NEW( DkParser );
 	parser->lexer = lexer;
 
 	// Create the statements list, which is essentially our AST

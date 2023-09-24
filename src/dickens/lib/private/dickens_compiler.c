@@ -12,6 +12,7 @@ unsigned int LOG_LEVEL_ERROR;
 
 static PLPath ycOutputPath = "out.yex";
 
+#if 0
 static bool assemble_callback( const char *parm )
 {
 	if ( parm == NULL )
@@ -43,8 +44,9 @@ static bool assemble_callback( const char *parm )
 
 	return true;
 }
+#endif
 
-static void ParseLexerOutput( PLLinkedList *tokenList )
+static void parse_lexer_output( PLLinkedList *tokenList )
 {
 	PLLinkedListNode *node = PlGetFirstNode( tokenList );
 	while ( node != NULL )
@@ -55,7 +57,7 @@ static void ParseLexerOutput( PLLinkedList *tokenList )
 	}
 }
 
-static void BuildFile( const char *path )
+static void build_file( const char *path )
 {
 	Print( "Building \"%s\"\n", path );
 
@@ -77,60 +79,13 @@ static void BuildFile( const char *path )
 	if ( ( lexer = dk_generate_token_list( NULL, buf, path ) ) == NULL )
 		Error( "Lexer failed to generate token table!\nSee logs for more information.\n" );
 
-	ParseLexerOutput( lexer->tokens );
+	parse_lexer_output( lexer->tokens );
 
 	/* generate path for module output */
 	PLPath outPath = "out/";
 	strcat( outPath, PlGetFileName( path ) );
 	PlStripExtension( outPath, sizeof( outPath ), PlGetFileName( path ) );
 	strcat( outPath, ".yb" );
-}
-
-static bool begin_build_project_callback( const char *parm )
-{
-	if ( parm == NULL )
-	{
-		Warning( "No parameter provided!\n" );
-		return false;
-	}
-
-	NLNode *root = NL_LoadFile( parm, "project" );
-	if ( root == NULL )
-	{
-		Warning( "Failed to load specified project: %s\n", NL_GetErrorMessage() );
-		return false;
-	}
-
-	if ( !PlCreateDirectory( "out" ) )
-	{
-		Warning( "Failed to create output directory: %s\n", PlGetError() );
-		return false;
-	}
-
-	const char *outputPath = NL_GetStrByName( root, "output", NULL );
-	if ( outputPath != NULL )
-	{
-		snprintf( ycOutputPath, sizeof( ycOutputPath ), "%s", outputPath );
-	}
-
-	NLNode *fileList = NL_GetChildByName( root, "files" );
-	if ( fileList != NULL )
-	{
-		NLNode *child = NL_GetFirstChild( fileList );
-		while ( child != NULL )
-		{
-			PLPath path;
-			NL_GetStr( child, path, sizeof( path ) );
-
-			BuildFile( path );
-
-			child = NL_GetNextChild( child );
-		}
-	}
-
-	NL_DestroyNode( root );
-
-	return true;
 }
 
 #if 0

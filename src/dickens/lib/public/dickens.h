@@ -6,8 +6,6 @@
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
 
-#include "engine/public/engine_public_vm.h"
-
 #define DICKENS_VERSION_MAJOR 1
 #define DICKENS_VERSION_MINOR 0
 #define DICKENS_VERSION_PATCH 0
@@ -94,12 +92,12 @@ typedef enum DKTokenType
 } DKTokenType;
 
 typedef struct DkLexer DkLexer;
-typedef struct DKParser DKParser;
+typedef struct DkParser DkParser;
 
 PL_EXTERN_C
 
 PL_EXPORT DkLexer *dk_generate_token_list( DkLexer *handle, const char *buf, const char *file );
-PL_EXPORT DKParser *dk_parse_program( DkLexer *lexer );
-PL_EXPORT bool dk_assemble_from_buffer( const char *buf, size_t length, const char *outPath );
+PL_EXPORT DkParser *dk_parse_program( DkLexer *lexer );
+PL_EXPORT bool dk_assemble_from_buffer( const DkParser *parser );
 
 PL_EXTERN_C_END

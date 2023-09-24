@@ -31,15 +31,15 @@ decl bool uchar typedef;
 decl i int, j int, k int;
 
 decl vec2 struct ( x float, y float ) typedef;
-decl vec2Origin vec2 const( 0, 0 );
+decl VEC2_ORIGIN vec2 const( 0, 0 );
 decl vec3 struct ( x float, y float, z float ) typedef;
-decl vec3Origin vec3 const( 0, 0, 0 );
+decl VEC3_ORIGIN vec3 const( 0, 0, 0 );
 decl vec4 struct ( x float, y float, z float, w float ) typedef;
-decl vec4Origin vec4 const( 0, 0, 0, 0 );
+decl VEC4_ORIGIN vec4 const( 0, 0, 0, 0 );
 
 /* 'data' became 'const' which essentially indicates
  * that this variable won't change in its current scope */
-decl true uchar const(1), false uchar const(0);
+decl TRUE uchar const(1), FALSE uchar const(0);
 decl someConstant int const( 1 );
 
 // initial sets the initial value
@@ -94,7 +94,7 @@ decl myBStruct struct
 proc MyFunction() void;
     call println('Hello World');
     myStruct.someValue = 5;
-	myBStruct.childStruct.i = 5;
+    myBStruct.childStruct.i = 5;
 	
     // Example of use, but practically not sure about this right now
     call println('The sum of PI is' + PI);

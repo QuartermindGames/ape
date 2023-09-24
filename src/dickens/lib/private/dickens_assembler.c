@@ -14,23 +14,23 @@ typedef struct YASMOpCodeReference
 /* !!!THIS MUST BE KEPT INLINE WITH VMOpCode LIST!!! */
 static YASMOpCodeReference opCodeReference[ DK_VM_MAX_OPCODES ] =
         {
-                [DK_VM_OP_NOP] = {"nop",     DK_VM_OP_NOP    },
-                [DK_VM_OP_RETURN] = { "return", DK_VM_OP_RETURN },
-                [DK_VM_OP_OR] = { "or",     DK_VM_OP_OR     },
-                [DK_VM_OP_AND] = { "and",    DK_VM_OP_AND    },
-                [DK_VM_OP_CALL] = { "call",   DK_VM_OP_CALL   },
+                {"nop",     DK_VM_OP_NOP      },
+                { "return", DK_VM_OP_RETURN   },
+                { "or",     DK_VM_OP_OR       },
+                { "and",    DK_VM_OP_AND      },
+                { "call",   DK_VM_OP_CALL     },
 
-                { "muli",   DK_VM_OP_MUL_I32},
-                { "inci",   DK_VM_OP_INC_I32},
-                { "addi",   DK_VM_OP_ADD_I32},
-                { "subi",   DK_VM_OP_SUB_I32},
-                { "negi",   DK_VM_OP_NEG_I32},
+                { "mulf",   DK_VM_OP_MUL_FLOAT},
+                { "incf",   DK_VM_OP_INC_FLOAT},
+                { "addf",   DK_VM_OP_ADD_FLOAT},
+                { "subf",   DK_VM_OP_SUB_FLOAT},
+                { "negf",   DK_VM_OP_NEG_FLOAT},
 
-                { "mulf",   DK_VM_OP_MUL_F32},
-                { "incf",   DK_VM_OP_INC_F32},
-                { "addf",   DK_VM_OP_ADD_F32},
-                { "subf",   DK_VM_OP_SUB_F32},
-                { "negf",   DK_VM_OP_NEG_F32},
+                { "muli",   DK_VM_OP_MUL_INT  },
+                { "inci",   DK_VM_OP_INC_INT  },
+                { "addi",   DK_VM_OP_ADD_INT  },
+                { "subi",   DK_VM_OP_SUB_INT  },
+                { "negi",   DK_VM_OP_NEG_INT  },
 };
 
 static DkOpCode get_opcode_for_token( const char *token )
@@ -51,8 +51,9 @@ static DkOpCode get_opcode_for_token( const char *token )
  * Assembles the given assembly into a binary representation.
  * Length is updated with the returned buffer length.
  */
-bool dk_assemble_from_buffer( DkAst )
+bool dk_assemble_from_buffer( const DkParser *parser )
 {
+#if 0
 	const char *p = buf;
 	while ( p != NULL && *p != '\0' && *( p ) <= length )
 	{
@@ -73,6 +74,6 @@ bool dk_assemble_from_buffer( DkAst )
 
 		DkOpCode opCode = get_opcode_for_token( token );
 	}
-
+#endif
 	return true;
 }
