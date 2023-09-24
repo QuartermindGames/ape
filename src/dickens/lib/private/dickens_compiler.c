@@ -4,7 +4,6 @@
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_linkedlist.h>
 
-#include "node/public/node.h"
 #include "dickens_private.h"
 
 unsigned int LOG_LEVEL_DEFAULT;
@@ -13,14 +12,17 @@ unsigned int LOG_LEVEL_ERROR;
 
 static PLPath ycOutputPath = "out.yex";
 
-static bool AssembleCallback( const char *parm ) {
-	if ( parm == NULL ) {
+static bool assemble_callback( const char *parm )
+{
+	if ( parm == NULL )
+	{
 		Warning( "No parameter provided!\n" );
 		return false;
 	}
 
 	PLFile *file = PlOpenFile( parm, true );
-	if ( file == NULL ) {
+	if ( file == NULL )
+	{
 		PlLogMessage( LOG_LEVEL_ERROR, "Failed to open file: %s\n", PlGetError() );
 		return false;
 	}
@@ -30,32 +32,37 @@ static bool AssembleCallback( const char *parm ) {
 
 	const char *fileBuf = ( const char * ) PlGetFileData( file );
 	size_t fileLength = PlGetFileSize( file );
-	bool status = DKAssembler_AssembleFromBuffer( fileBuf, fileLength, "out.obj" );
+	bool status = dk_assemble_from_buffer( fileBuf, fileLength, "out.obj" );
 
 	PlCloseFile( file );
 
-	if ( !status ) {
+	if ( !status )
+	{
 		return false;
 	}
 
 	return true;
 }
 
-static void ParseLexerOutput( PLLinkedList *tokenList ) {
+static void ParseLexerOutput( PLLinkedList *tokenList )
+{
 	PLLinkedListNode *node = PlGetFirstNode( tokenList );
-	while ( node != NULL ) {
-		const DKLexerToken *lexerToken = PlGetLinkedListNodeUserData( node );
+	while ( node != NULL )
+	{
+		const DkLexerToken *lexerToken = PlGetLinkedListNodeUserData( node );
 
 		node = PlGetNextLinkedListNode( node );
 	}
 }
 
-static void BuildFile( const char *path ) {
+static void BuildFile( const char *path )
+{
 	Print( "Building \"%s\"\n", path );
 
 	/* load the file */
 	PLFile *file = PlOpenFile( path, true );
-	if ( file == NULL ) {
+	if ( file == NULL )
+	{
 		Error( "Failed to open \"%s\": %s\n", path, PlGetError() );
 	}
 
@@ -66,8 +73,8 @@ static void BuildFile( const char *path ) {
 	PlCloseFile( file );
 
 	/* create our list and pass it into the lexer */
-	DKLexer *lexer;
-	if ( ( lexer = DKLexer_GenerateTokenList( NULL, buf, path ) ) == NULL )
+	DkLexer *lexer;
+	if ( ( lexer = dk_generate_token_list( NULL, buf, path ) ) == NULL )
 		Error( "Lexer failed to generate token table!\nSee logs for more information.\n" );
 
 	ParseLexerOutput( lexer->tokens );
@@ -79,32 +86,39 @@ static void BuildFile( const char *path ) {
 	strcat( outPath, ".yb" );
 }
 
-static bool BeginBuildProjectCallback( const char *parm ) {
-	if ( parm == NULL ) {
+static bool begin_build_project_callback( const char *parm )
+{
+	if ( parm == NULL )
+	{
 		Warning( "No parameter provided!\n" );
 		return false;
 	}
 
 	NLNode *root = NL_LoadFile( parm, "project" );
-	if ( root == NULL ) {
+	if ( root == NULL )
+	{
 		Warning( "Failed to load specified project: %s\n", NL_GetErrorMessage() );
 		return false;
 	}
 
-	if ( !PlCreateDirectory( "out" ) ) {
+	if ( !PlCreateDirectory( "out" ) )
+	{
 		Warning( "Failed to create output directory: %s\n", PlGetError() );
 		return false;
 	}
 
 	const char *outputPath = NL_GetStrByName( root, "output", NULL );
-	if ( outputPath != NULL ) {
+	if ( outputPath != NULL )
+	{
 		snprintf( ycOutputPath, sizeof( ycOutputPath ), "%s", outputPath );
 	}
 
 	NLNode *fileList = NL_GetChildByName( root, "files" );
-	if ( fileList != NULL ) {
+	if ( fileList != NULL )
+	{
 		NLNode *child = NL_GetFirstChild( fileList );
-		while ( child != NULL ) {
+		while ( child != NULL )
+		{
 			PLPath path;
 			NL_GetStr( child, path, sizeof( path ) );
 

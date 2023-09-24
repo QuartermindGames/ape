@@ -5,8 +5,9 @@
 
 // Built-in functions
 
-typedef struct DKFunctionDeclaration {
+typedef struct DkFunctionDeclaration
+{
 	const char *id;
 	unsigned int numArguments;
 	void ( *Callback )();
-} DKFunctionDeclaration;
+} DkFunctionDeclaration;

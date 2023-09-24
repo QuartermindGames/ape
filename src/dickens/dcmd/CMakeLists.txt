@@ -8,4 +8,4 @@ target_include_directories(dcmd
         PRIVATE private/
         PUBLIC public/
 )
-target_link_libraries(dcmd plcore ape-common ape-node dickens)
+target_link_libraries(dcmd dlib)

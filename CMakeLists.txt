@@ -115,6 +115,8 @@ elseif(MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
 endif()
 
+add_subdirectory(src/dickens)
+
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)

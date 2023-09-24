@@ -17,41 +17,65 @@
 		abort();                         \
 	}
 
-#define YC_MAX_SYMBOL_LENGTH 128
-typedef char DKSymbolName[ YC_MAX_SYMBOL_LENGTH ];
+typedef enum DkOpCode
+{
+	DK_VM_OP_NOP,
+	DK_VM_OP_RETURN,
+	DK_VM_OP_OR,
+	DK_VM_OP_AND,
+	DK_VM_OP_CALL,
 
-typedef enum DKSymbolVisibility {
-	DK_SYMBOLVISIBILITY_PRIVATE,
-	DK_SYMBOLVISIBILITY_PUBLIC,
-} DKSymbolVisibility;
+	DK_VM_OP_MUL,
+	DK_VM_OP_INC,
+	DK_VM_OP_ADD,
+	DK_VM_OP_SUB,
+	DK_VM_OP_NEG,
 
-typedef struct DKSymbol {
-	DKSymbolName name;
-	DKSymbolVisibility visibility;
-} DKSymbol;
+	DK_VM_MAX_OPCODES
+} DkOpCode;
 
-typedef enum DKDataType {
-	DK_DATATYPE_VOID,
-	DK_DATATYPE_FLOAT,
-	DK_DATATYPE_CHAR,
-	DK_DATATYPE_UCHAR,
-	DK_DATATYPE_SHORT,
-	DK_DATATYPE_USHORT,
-	DK_DATATYPE_INT,
-	DK_DATATYPE_UINT,
-	DK_DATATYPE_STRING,
-} DKDataType;
+#define DK_MAX_SYMBOL_LENGTH 128
+typedef char DkSymbolName[ DK_MAX_SYMBOL_LENGTH ];
 
-typedef struct DKLexerToken {
-	DKSymbolName symbol;
+typedef enum DkSymbolVisibility
+{
+	DK_SYMBOL_VISIBILITY_PRIVATE,
+	DK_SYMBOL_VISIBILITY_PUBLIC,
+} DkSymbolVisibility;
+
+typedef struct DkSymbol
+{
+	DkSymbolName name;
+	DkSymbolVisibility visibility;
+} DkSymbol;
+
+typedef enum DkDataType
+{
+	DK_DATA_TYPE_VOID,  //0
+	DK_DATA_TYPE_FLOAT, //4
+	DK_DATA_TYPE_CHAR,  //1
+	DK_DATA_TYPE_UCHAR, //1
+	DK_DATA_TYPE_SHORT, //2
+	DK_DATA_TYPE_USHORT,//2
+	DK_DATA_TYPE_INT,   //4
+	DK_DATA_TYPE_UINT,  //4
+	DK_DATA_TYPE_LONG,  //8
+	DK_DATA_TYPE_ULONG, //8
+	DK_DATA_TYPE_STRING,
+} DkDataType;
+
+typedef struct DkLexerToken
+{
+	DkSymbolName symbol;
 	DKTokenType type;
 	PLPath path;
 	unsigned int lineNum;
 	unsigned int linePos;
 	PLLinkedListNode *node;
-} DKLexerToken;
+} DkLexerToken;
 
-typedef struct DKLexer {
+typedef struct DkLexer
+{
 	PLPath originFile;
 	PLLinkedList *tokens;
-} DKLexer;
+} DkLexer;

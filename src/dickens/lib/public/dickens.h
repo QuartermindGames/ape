@@ -14,7 +14,8 @@
 
 #define DICKENS_LOG_PATH "dickens_output.txt"
 
-typedef enum DKTokenType {
+typedef enum DKTokenType
+{
 	DK_TOKENTYPE_INVALID = 0,
 
 	DK_TOKENTYPE_EOF,
@@ -92,13 +93,13 @@ typedef enum DKTokenType {
 	DK_MAX_TOKENTYPES
 } DKTokenType;
 
-typedef struct DKLexer DKLexer;
+typedef struct DkLexer DkLexer;
 typedef struct DKParser DKParser;
 
 PL_EXTERN_C
 
-PL_EXPORT DKLexer *DKLexer_GenerateTokenList( DKLexer *handle, const char *buf, const char *file );
-PL_EXPORT DKParser *DKParser_ParseProgram( DKLexer *lexer );
-PL_EXPORT bool DKAssembler_AssembleFromBuffer( const char *buf, size_t length, const char *outPath );
+PL_EXPORT DkLexer *dk_generate_token_list( DkLexer *handle, const char *buf, const char *file );
+PL_EXPORT DKParser *dk_parse_program( DkLexer *lexer );
+PL_EXPORT bool dk_assemble_from_buffer( const char *buf, size_t length, const char *outPath );
 
 PL_EXTERN_C_END
