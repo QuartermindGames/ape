@@ -26,7 +26,7 @@ void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *
  * WINDOW MANAGEMENT
  ****************************************/
 
-static SDL_Window *sdlWindow      = NULL;
+static SDL_Window *sdlWindow = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
 static ApeViewport *windowViewport = NULL;
@@ -57,7 +57,7 @@ void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, con
 	va_list args;
 	va_start( args, message );
 
-	int l     = pl_vscprintf( message, args );
+	int l = pl_vscprintf( message, args );
 	char *buf = PlMAllocA( l + 1 );
 
 	vsnprintf( buf, l, message, args );
@@ -162,7 +162,7 @@ bool apeShellInterface_SetWindowSize( int *width, int *height )
 {
 	if ( sdlWindow == NULL )
 	{
-		*width  = 0;
+		*width = 0;
 		*height = 0;
 		return false;
 	}
@@ -175,7 +175,7 @@ bool apeShellInterface_SetWindowSize( int *width, int *height )
 	if ( *width == nW && *height == nH )
 		return true;
 
-	*width  = nW;
+	*width = nW;
 	*height = nH;
 	return false;
 }
@@ -342,7 +342,7 @@ static int Sys_TranslateSDLKeyInput( int key )
  ****************************************/
 
 static SDL_TimerID sdlTimer = 0;
-static unsigned int OS_TimerCallback( unsigned int interval, void *param )
+static unsigned int timer_callback( unsigned int interval, void *param )
 {
 	SDL_UserEvent userEvent;
 	userEvent.type = SDL_USEREVENT;
@@ -373,7 +373,7 @@ void apeShellInterface_Shutdown( void )
 
 int launcherLog;
 
-static bool InitializeDisplay( void )
+static bool initialize_display( void )
 {
 	PlgInitializeGraphics();
 
@@ -381,7 +381,7 @@ static bool InitializeDisplay( void )
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
 	{
-		size_t size      = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
+		size_t size = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
 		char *driverPath = PL_NEW_( char, size );
 		snprintf( driverPath, size, "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
@@ -396,21 +396,13 @@ static bool InitializeDisplay( void )
 	unsigned int driverMode;
 	const char *driverName = ndGetStringByName( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
-	{
 		driverMode = APE_GRAPHICS_OPENGL;
-	}
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
-	{
 		driverMode = APE_GRAPHICS_VULKAN;
-	}
 	else if ( strcmp( driverName, "software" ) == 0 )
-	{
 		driverMode = APE_GRAPHICS_SOFTWARE;
-	}
 	else
-	{
 		driverMode = APE_GRAPHICS_OTHER;
-	}
 
 	if ( ( windowViewport = apeShellInterface_CreateWindow( "APE - Another Portal Engine", 1024, 768, false, driverMode ) ) == NULL )
 	{
@@ -440,7 +432,7 @@ static bool InitializeDisplay( void )
 	return true;
 }
 
-int Launcher_Initialize( int argc, char **argv )
+int launcher_initialize( int argc, char **argv )
 {
 #if defined( _WIN32 ) && !defined( NDEBUG )
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -465,9 +457,8 @@ int Launcher_Initialize( int argc, char **argv )
 	{
 		const char *path = PlGetCommandLineArgumentValue( "-log" );
 		if ( path == NULL )
-		{
 			path = "log.txt";
-		}
+
 		PlSetupLogOutput( path );
 	}
 
@@ -479,24 +470,24 @@ int Launcher_Initialize( int argc, char **argv )
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
 	}
 
-	comInitialize();
+	com_initialize();
 
-	shellConfig = comGetConfig( "shell" );
+	shellConfig = com_get_config( "shell" );
 
-	comMountProject( "detox" );
+	const char *projectName;
+	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
+		projectName = "base";
 
-	if ( !InitializeDisplay() )
-	{
+	com_project_mount( projectName );
+
+	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
-	}
 
 	if ( !apeInitialize( NULL ) )
-	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
-	}
 
 	// setup our timers, in this case we're just setting up our tick
-	sdlTimer = SDL_AddTimer( APE_TICK_RATE, OS_TimerCallback, NULL );
+	sdlTimer = SDL_AddTimer( APE_TICK_RATE, timer_callback, NULL );
 
 	SDL_StartTextInput();
 
@@ -574,11 +565,9 @@ int Launcher_Initialize( int argc, char **argv )
 
 		static unsigned int refreshTime = 0;
 		if ( refreshTime > apeGetNumTicks() )
-		{
 			continue;
-		}
 
-		comUpdateProfilerSamples();
+		com_update_profiler_samples();
 
 		PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
 		refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
@@ -597,14 +586,14 @@ int Launcher_Initialize( int argc, char **argv )
 
 int APIENTRY WinMain( HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow )
 {
-	return Launcher_Initialize( __argc, __argv );
+	return launcher_initialize( __argc, __argv );
 }
 
 #else
 
 int main( int argc, char **argv )
 {
-	return Launcher_Initialize( argc, argv );
+	return launcher_initialize( argc, argv );
 }
 
 #endif

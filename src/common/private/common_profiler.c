@@ -143,7 +143,7 @@ unsigned int comGetNumProfilerGroups( void ) {
 	return PlGetNumHashTableNodes( profilingGroups );
 }
 
-void comUpdateProfilerSamples( void ) {
+void com_update_profiler_samples( void ) {
 	if ( profilingGroups == NULL ) {
 		return;
 	}

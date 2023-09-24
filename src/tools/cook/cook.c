@@ -21,13 +21,13 @@ int main( int argc, char **argv )
 
 	PL_ZERO_( cook_state );
 
-	comInitialize();
+	com_initialize();
 
 	PlMountLocalLocation( comGetAppDataDirectory() );
 	PlMountLocalLocation( comGetDataDirectory() );
 
 	const char *projectName = argv[ 1 ];
-	if ( !comMountProject( projectName ) )
+	if ( !com_project_mount( projectName ) )
 		ERROR( "Failed to mount project (%s)!\n", projectName );
 
 	PLPath configPath;

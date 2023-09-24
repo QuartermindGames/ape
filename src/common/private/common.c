@@ -9,7 +9,7 @@
 
 int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
-void comInitialize( void ) {
+void com_initialize( void ) {
 	com_logLevels_[ COM_LOG_LEVEL_INFO ] = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	com_logLevels_[ COM_LOG_LEVEL_WARN ] = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
@@ -75,7 +75,7 @@ const char *comGetAppDataDirectory( void ) {
 	return appDataPath;
 }
 
-NdBranch *comGetConfig( const char *name ) {
+NdBranch *com_get_config( const char *name ) {
 	// first attempt to load from local dir
 	PLPath configPath;
 	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );

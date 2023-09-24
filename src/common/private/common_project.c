@@ -138,7 +138,7 @@ static void FreeProject( ComProject *out )
  * PUBLIC
  ****************************************/
 
-bool comMountProject( const char *name )
+bool com_project_mount( const char *name )
 {
 	assert( !project.isActive );
 	if ( project.isActive )
@@ -158,21 +158,21 @@ bool comMountProject( const char *name )
 	}
 
 	if ( DeserializeProject( root, name, &project ) == NULL )
-		comUnmountProject();// call unmount to cleanup
+		com_project_unmount();// call unmount to cleanup
 
 	ndDestroyBranch( root );
 
 	return true;
 }
 
-void comUnmountProject( void )
+void com_project_unmount( void )
 {
 	FreeProject( &project );
 
 	PL_ZERO_( project );
 }
 
-const char *comGetProjectLocalPath( void )
+const char *com_project_get_local_path( void )
 {
 	return project.localPath;
 }

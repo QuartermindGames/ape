@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-bool comMountProject( const char *name );
-void comUnmountProject( void );
+bool com_project_mount( const char *name );
+void com_project_unmount( void );
 
-const char *comGetProjectLocalPath( void );
+const char *com_project_get_local_path( void );

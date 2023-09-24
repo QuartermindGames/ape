@@ -138,7 +138,7 @@ void Cook_World_Process( const char *worldName )
 	ProcessGeometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, comGetProjectLocalPath(), worldName, worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName, worldName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
 }

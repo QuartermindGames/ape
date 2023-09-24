@@ -24,10 +24,10 @@ typedef enum ComDataType {
 
 PL_EXTERN_C
 
-void comInitialize( void );
+void com_initialize( void );
 const char *comGetDataDirectory( void );
 const char *comGetAppDataDirectory( void );
-struct NdBranch *comGetConfig( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
+struct NdBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool comWriteConfig( struct NdBranch *root, const char *name );
 
 void comWritePkgHeader( FILE *pack, unsigned int numFiles );
@@ -54,7 +54,7 @@ const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, unsign
 
 unsigned int comGetNumProfilerGroups( void );
 
-void comUpdateProfilerSamples( void );
+void com_update_profiler_samples( void );
 
 #define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
 #define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
