@@ -17,7 +17,7 @@ static void DestroyModel( void *userData ) {
 	MDLUserData *additionalData = model->userData;
 	if ( additionalData != NULL ) {
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
-			apeReleaseMaterial( additionalData->materials[ i ] );
+			ar_material_release( additionalData->materials[ i ] );
 	}
 
 	PlmDestroyModel( model );

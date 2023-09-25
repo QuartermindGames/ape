@@ -11,28 +11,34 @@
 
 static ApeConsoleOutput conOutputBuffer;
 
-ApeConsoleOutput *apeGetConsoleOutput( void ) {
+ApeConsoleOutput *apeGetConsoleOutput( void )
+{
 	return &conOutputBuffer;
 }
 
-static void ClearOutputBuffer( void ) {
+static void ClearOutputBuffer( void )
+{
 	conOutputBuffer.numLines = 0;
 }
 
-static void ClearConsoleCommand( unsigned int argc, char **argv ) {
+static void ClearConsoleCommand( unsigned int argc, char **argv )
+{
 	( void ) ( argc );
 	( void ) ( argv );
 	ClearOutputBuffer();
 }
 
-static void OutputCallback( int level, const char *message, PLColour colour ) {
+static void OutputCallback( int level, const char *message, PLColour colour )
+{
 	size_t l = strlen( message );
-	if ( l >= CONSOLE_BUFFER_MAX_LENGTH ) {
+	if ( l >= CONSOLE_BUFFER_MAX_LENGTH )
+	{
 		PRINT_WARNING( "Attempting to push message to console with an unexpected length!\n" );
 		l = CONSOLE_BUFFER_MAX_LENGTH - 2;
 	}
 
-	if ( conOutputBuffer.numLines >= CONSOLE_BUFFER_MAX_LINES ) {
+	if ( conOutputBuffer.numLines >= CONSOLE_BUFFER_MAX_LINES )
+	{
 #define CON_JUMP 256
 		memmove( conOutputBuffer.lines, &conOutputBuffer.lines[ CON_JUMP ], CONSOLE_BUFFER_MAX_LINES - CON_JUMP );
 		conOutputBuffer.numLines -= CON_JUMP;
@@ -51,13 +57,15 @@ static void OutputCallback( int level, const char *message, PLColour colour ) {
 
 #define CMD_CALLBACK( NAME ) static void Cmd_##NAME( unsigned int argc, char **argv )
 
-CMD_CALLBACK( Quit ) {
+CMD_CALLBACK( Quit )
+{
 	( void ) ( argc );
 	( void ) ( argv );
 	apeShutdown();
 }
 
-CMD_CALLBACK( Version ) {
+CMD_CALLBACK( Version )
+{
 	( void ) ( argc );
 	( void ) ( argv );
 	PRINT( "Version: v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n" );
@@ -65,18 +73,21 @@ CMD_CALLBACK( Version ) {
 
 /*------------------------------------------------------------------*/
 
-static void SaveUserConfig( void );
-static void LoadUserConfig( void ) {
+static void save_user_config( void );
+static void LoadUserConfig( void )
+{
 	NdBranch *root = ndLoadFile( apeGetUserConfigLocation(), "config" );
-	if ( root == NULL ) {
+	if ( root == NULL )
+	{
 		PRINT( "No existing user config, generating default.\n" );
-		SaveUserConfig();
+		save_user_config();
 		return;
 	}
 
 	/* now iterate through the list and update all our children */
 	NdBranch *child = ndGetFirstChild( root );
-	while ( child != NULL ) {
+	while ( child != NULL )
+	{
 		const char *cvarName = ndGetName( child );
 		char cvarValue[ PL_SYSTEM_MAX_PATH ];
 		if ( ndGetStr( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
@@ -92,7 +103,8 @@ static void LoadUserConfig( void ) {
 	PRINT( "User config loaded.\n" );
 }
 
-static void SaveUserConfig( void ) {
+static void save_user_config( void )
+{
 	char path[ PL_SYSTEM_MAX_PATH ];
 	snprintf( path, sizeof( path ), "%s", apeGetUserConfigLocation() );
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
@@ -102,12 +114,17 @@ static void SaveUserConfig( void ) {
 	PlGetConsoleVariables( &cvars, &numVars );
 
 	NdBranch *root = ndPushBackObject( NULL, "config" );
-	for ( unsigned int i = 0; i < numVars; ++i ) {
+	for ( unsigned int i = 0; i < numVars; ++i )
+	{
+		if ( !cvars[ i ]->archive )
+			continue;
+
 		/* don't bother storing it if it matches the default */
 		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 )
 			continue;
 
-		switch ( cvars[ i ]->type ) {
+		switch ( cvars[ i ]->type )
+		{
 			case PL_VAR_F32:
 				ndPushBackF32( root, cvars[ i ]->name, cvars[ i ]->f_value );
 				break;
@@ -131,24 +148,28 @@ static void SaveUserConfig( void ) {
 	PRINT( "User config saved.\n" );
 }
 
-void apeRegisterConsoleCommands_( bool isDedicated ) {
+void apeRegisterConsoleCommands_( bool isDedicated )
+{
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, ClearConsoleCommand );
 
-	if ( !isDedicated ) {
+	if ( !isDedicated )
+	{
 		apeRegisterClientConsoleCommands_();
 	}
 }
 
-void apeRegisterConsoleVariables_( bool isDedicated ) {
+void apeRegisterConsoleVariables_( bool isDedicated )
+{
 	// server
 	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
 	PlRegisterConsoleVariable( "server/password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
 
 	// Client variables
-	if ( !isDedicated ) {
+	if ( !isDedicated )
+	{
 		apeRegisterClientConsoleVariables_();
 	}
 
@@ -159,11 +180,13 @@ void apeRegisterConsoleVariables_( bool isDedicated ) {
 
 static int logLevels[ APE_LOG_LEVELS ];
 
-int Console_GetLogLevel( ApeConsoleLogLevel level ) {
+int Console_GetLogLevel( ApeConsoleLogLevel level )
+{
 	return logLevels[ level ];
 }
 
-void Console_Print( ApeConsoleLogLevel level, const char *message, ... ) {
+void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
+{
 	va_list args;
 	va_start( args, message );
 
@@ -184,7 +207,8 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... ) {
 /**
  * Set the console up.
  */
-void apeInitializeConsole( void ) {
+void apeInitializeConsole( void )
+{
 	PlSetConsoleOutputCallback( OutputCallback );
 
 	logLevels[ APE_LOG_ERROR ] = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
@@ -200,7 +224,8 @@ void apeInitializeConsole( void ) {
 	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 
-void apeShutdownConsole( void ) {
+void apeShutdownConsole( void )
+{
 	ClearOutputBuffer();
-	SaveUserConfig();
+	save_user_config();
 }

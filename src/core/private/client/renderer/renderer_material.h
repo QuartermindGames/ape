@@ -130,9 +130,9 @@ typedef enum ApeDefaultMaterial {
 ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
 
 // !!OBSOLETE!! Use the above instead...
-ApeMaterial *apeGetFallbackMaterial( void );
-ApeMaterial *apeGetVertexMaterial( void );
+ApeMaterial *ar_material_get_fallback( void );
+ApeMaterial *ar_material_get_default_vertex( void );
 
-bool apeMaterialShadowsEnabled( const ApeMaterial *material );
+bool ar_material_shadows_enabled( const ApeMaterial *material );
 
 PL_EXTERN_C_END

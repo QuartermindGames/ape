@@ -172,7 +172,7 @@ void comUnmountProject( void )
 	PL_ZERO_( project );
 }
 
-const char *comGetProjectLocalPath( void )
+const char *com_get_project_local_path( void )
 {
 	return project.localPath;
 }

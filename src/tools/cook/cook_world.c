@@ -4,19 +4,19 @@
 #include "model/format_obj.h"
 #include "yin/core_world.h"
 
-static void ProcessProperties( const char *worldName, NdBranch *root )
+static void process_properties( const char *worldName, NdBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s." APE_WORLD_EXTENSION_CFG, worldName, worldName );
 	NdBranch *properties = ndLoadFile( path, "properties" );
 	if ( properties == NULL )
-		ERROR( "Failed to open world properties file (%s)!\n", path );
+		ERROR( "Failed to open world properties file (%s): %s\n", path, ndGetErrorMessage() );
 
 	ndPushBackBranch( root, properties );
 	ndDestroyBranch( properties );
 }
 
-static void ProcessGeometry( const char *worldName, NdBranch *root )
+static void process_geometry( const char *worldName, NdBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s.obj", worldName, worldName );
@@ -43,6 +43,11 @@ static void ProcessGeometry( const char *worldName, NdBranch *root )
 		child = ndPushBackObjectArray( root, "rooms" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
+			// Ignore sub objects that don't have any faces
+			unsigned int numFaces = PlGetNumVectorArrayElements( model->subObjects[ i ].faces );
+			if ( numFaces == 0 )
+				continue;
+
 			NdBranch *roomBranch = ndPushBackObject( child, NULL );
 			ndPushBackI32( roomBranch, "uid", i );
 			ndPushBackString( roomBranch, "tag", model->subObjects[ i ].name );
@@ -129,16 +134,16 @@ static void ProcessGeometry( const char *worldName, NdBranch *root )
 	ObjModel_Destroy( model );
 }
 
-void Cook_World_Process( const char *worldName )
+void cook_world_process( const char *worldName )
 {
 	NdBranch *root = ndPushBackObject( NULL, "world" );
 	ndPushBackUI32( root, "version", APE_WORLD_VERSION );
 
-	ProcessProperties( worldName, root );
-	ProcessGeometry( worldName, root );
+	process_properties( worldName, root );
+	process_geometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, comGetProjectLocalPath(), worldName, worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_get_project_local_path(), worldName, worldName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
 }

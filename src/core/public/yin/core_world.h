@@ -12,6 +12,7 @@ typedef struct NdBranch NdBranch;
 /* external elements */
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
+
 typedef struct ApeLight ApeLight;
 
 /* ======================================================================
@@ -89,5 +90,30 @@ ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position )
 // Face
 
 void apeGenerateWorldFaceBounds( ApeWorldFace *face );
+
+////////////////////////////////////////////////////////////////////
+// Lighting
+
+typedef enum ApeLightType
+{
+	APE_LIGHT_TYPE_OMNI,
+	APE_LIGHT_TYPE_SPOT,
+	APE_LIGHT_TYPE_SUN,
+
+	APE_MAX_LIGHT_TYPES
+} ApeLightType;
+
+// GM flags, do not change!!
+#define APE_LIGHT_FLAG_DYNAMIC         0x1U
+#define APE_LIGHT_FLAG_FADE            0x2U
+#define APE_LIGHT_FLAG_SHADOWS         0x4U
+#define APE_LIGHT_FLAG_ENABLED         0x8U
+#define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
+
+/// A light can only be spawned in while the world is active.
+/// \param type 	The type of light to be created.
+/// \param position Position of the light.
+/// \return 		A pointer to the instance of the light. This is owned by the world.
+ApeLight *apeSpawnLight( ApeLightType type, PLVector3 *position );
 
 PL_EXTERN_C_END

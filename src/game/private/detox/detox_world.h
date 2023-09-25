@@ -63,3 +63,6 @@ static inline ToxTimeOfDay toxGetWorldTimeOfDay( const ToxWorldState *simState )
 	if ( hour > TOX_WORLD_DAWN_HOUR ) return TOX_ENV_TIMEOFDAY_DAWN;
 	return TOX_ENV_TIMEOFDAY_NIGHT;
 }
+
+void toxWorld_Spawn( void );
+void toxWorld_Tick( void );

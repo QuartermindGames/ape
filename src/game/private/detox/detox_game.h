@@ -9,3 +9,10 @@
 #define DETOX_GAME_VERSION_MAJOR 0
 #define DETOX_GAME_VERSION_MINOR 1
 #define DETOX_GAME_VERSION_PATCH 0
+
+typedef struct ToxGlobalVars
+{
+	float sunPitch;
+	float sunYaw;
+} ToxGlobalVars;
+extern ToxGlobalVars tox_globalVars;

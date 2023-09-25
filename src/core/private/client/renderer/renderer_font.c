@@ -10,7 +10,7 @@ static void DestroyBitmapFont( void *userData ) {
 	ApeBitmapFont *font = userData;
 	assert( font != NULL );
 
-	apeReleaseMaterial( font->material );
+	ar_material_release( font->material );
 
 	PlgDestroyMesh( font->mesh );
 

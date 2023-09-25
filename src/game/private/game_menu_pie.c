@@ -273,7 +273,7 @@ void gameDestroyPieMenuOption( GamePieMenuOption *option ) {
 	}
 
 	if ( option->icon != NULL ) {
-		apeReleaseMaterial( option->icon );
+		ar_material_release( option->icon );
 	}
 
 	PL_DELETE( option );

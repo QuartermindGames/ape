@@ -7,4 +7,4 @@
 bool comMountProject( const char *name );
 void comUnmountProject( void );
 
-const char *comGetProjectLocalPath( void );
+const char *com_get_project_local_path( void );

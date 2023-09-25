@@ -11,7 +11,8 @@
 
 #include "renderer_texture.h"
 
-typedef struct ApeRendererStats {
+typedef struct ApeRendererStats
+{
 	PLVector3 cameraPos;
 	unsigned int numBatches;
 	unsigned int numTriangles;
@@ -24,13 +25,15 @@ typedef struct ApeRendererStats {
 extern ApeRendererStats ape_rendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct ApeSpriteFrame {
+typedef struct ApeSpriteFrame
+{
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
 } ApeSpriteFrame;
 
-typedef struct ApeCamera {
+typedef struct ApeCamera
+{
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
@@ -43,11 +46,14 @@ typedef struct ApeCamera {
 	PLLinkedListNode *node;
 } ApeCamera;
 
+typedef struct ArRenderTarget ArRenderTarget;
+
 ////////////////////////////////////////////////////////////////////
 
 #define APE_MAX_FPS_READINGS 64
 
-typedef struct ApeViewport {
+typedef struct ApeViewport
+{
 	unsigned int index;
 	int x, y;
 	int width, height;
@@ -71,26 +77,12 @@ typedef struct ApeViewport {
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum ApeLightType {
-	APE_LIGHT_TYPE_OMNI,
-	APE_LIGHT_TYPE_SPOT,
-	APE_LIGHT_TYPE_SUN,
-
-	APE_MAX_LIGHT_TYPES
-} ApeLightType;
-
-// GM flags, do not change!!
-#define APE_LIGHT_FLAG_DYNAMIC         0x1U
-#define APE_LIGHT_FLAG_FADE            0x2U
-#define APE_LIGHT_FLAG_SHADOWS         0x4U
-#define APE_LIGHT_FLAG_ENABLED         0x8U
-#define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
-
 #define APE_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
 #define APE_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
 
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
-typedef struct ApeLight {
+typedef struct ApeLight
+{
 	ApeLightType type;
 
 	PLVector3 position;
@@ -107,21 +99,24 @@ typedef struct ApeLight {
 
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
-typedef enum ApeRendererCullMode {
+typedef enum ApeRendererCullMode
+{
 	APE_RENDERER_CULL_DEFAULT,
 	APE_RENDERER_CULL_FRONT,
 	APE_RENDERER_CULL_BACK,
 	APE_RENDERER_CULL_NONE,
 } ApeRendererCullMode;
 
-typedef enum ApeRendererPassStage {
+typedef enum ApeRendererPassStage
+{
 	APE_RENDERER_PASS_DEFAULT,
 	APE_RENDERER_PASS_DEPTH,
 	APE_RENDERER_PASS_STENCIL,
 	APE_RENDERER_PASS_LIGHTING,
 } ApeRendererPassStage;
 
-typedef struct ApeRendererPassState {
+typedef struct ApeRendererPassState
+{
 	ApeRendererCullMode cullMode;// override default cull mode
 	ApeRendererPassStage passStage;
 
@@ -137,29 +132,30 @@ extern ApeRendererPassState rendererState;
 
 #include "renderer_material.h"
 
-void apeInitializeRenderer_( void );
-void apeShutdownRenderer_( void );
+void ar_initialize_( void );
+void ar_shutdown_( void );
 
 PLGCamera *apeGetAuxCamera( void );
 
-void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
-PLGTexture *apeGetPrimaryColourAttachment( void );
-PLGTexture *apeGetPrimaryDepthAttachment( void );
+//void apeSetupRenderTarget( PLGFrameBuffer **buffer, PLGTexture **attachment, PLGTexture **depthAttachment, unsigned int w, unsigned int h );
+//PLGTexture *apeGetPrimaryColourAttachment( void );
+//PLGTexture *apeGetPrimaryDepthAttachment( void );
 
-void apeSetupDefaultRenderState( const ApeViewport *viewport );
-void apeBeginDraw( ApeViewport *viewport );
-void apeEndDraw( ApeViewport *viewport );
+void ar_setup_default_state( const ApeViewport *viewport );
+void ar_draw_begin( ApeViewport *viewport );
+void ar_draw_end( ApeViewport *viewport );
+void ar_draw_menu( const ApeViewport *viewport );
 
 void apeSet2DViewportSize( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );
-void apeDrawMenu( const ApeViewport *viewport );
 
 struct ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name );
 
 void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport );
 
-void apeDraw2DQuad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
-void apeDrawAxesPivot( PLVector3 position, PLVector3 rotation, float scale );
+void ar_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
+void ar_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
+void ar_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 
 void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
 void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
@@ -167,13 +163,6 @@ void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames,
 PLGTexture *apeLoadTexture( const char *path, PLGTextureFilter filterMode );
 PLGTexture *apeGetFallbackTexture( void );
 
+ArRenderTarget *ar_get_default_render_target( void );
+
 ////////////////////////////////////////////////////////////////////
-
-typedef struct ApeRenderTarget ApeRenderTarget;
-
-ApeRenderTarget *apeGetRenderTargetByKey( const char *key );
-ApeRenderTarget *apeCreateRenderTarget( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter );
-void apeReleaseRenderTarget( ApeRenderTarget *renderTarget );
-void apeSetRenderTargetSize( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
-PLGTexture *apeGetRenderTargetTextureAttachment( ApeRenderTarget *renderTarget );
-void apeBindRenderTarget( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target );

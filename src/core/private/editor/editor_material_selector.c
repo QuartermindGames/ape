@@ -24,8 +24,8 @@ static void CacheMaterialPreviewCallback( const char *path, void *user ) {
 }
 
 static int CompareMaterials( const void *a, const void *b ) {
-	const char *strA = apeGetMaterialPath( ( ApeMaterial * ) a );
-	const char *strB = apeGetMaterialPath( ( ApeMaterial * ) b );
+	const char *strA = ar_material_get_path( ( ApeMaterial * ) a );
+	const char *strB = ar_material_get_path( ( ApeMaterial * ) b );
 	return strcmp( strA, strB );
 }
 
@@ -40,13 +40,13 @@ void edInitializeMaterialSelector_( void ) {
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), CompareMaterials );
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		PRINT( "\t%s\n", apeGetMaterialPath( materials[ i ] ) );
+		PRINT( "\t%s\n", ar_material_get_path( materials[ i ] ) );
 	}
 }
 
 void edShutdownMaterialSelector_( void ) {
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		apeReleaseMaterial( materials[ i ] );
+		ar_material_release( materials[ i ] );
 	}
 
 	PL_DELETE( materials );
@@ -78,13 +78,13 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
 
 	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		PLGTexture *texture = apeGetMaterialPreviewTexture( materials[ i ] );
+		PLGTexture *texture = ar_material_get_preview_texture( materials[ i ] );
 		PlgDrawTexturedRectangle( ( float ) x, ( float ) y, ( float ) mw, ( float ) mh, texture );
 
 		char buf[ 8 ];
 		snprintf( buf, sizeof( buf ), "%ux%u", texture->w, texture->h );
 		apeDrawBitmapString( font, ( float ) ( x + sp ), ( float ) ( y + sp ), 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
-		apeDrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, apeGetMaterialPath( materials[ i ] ), true );
+		apeDrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, ar_material_get_path( materials[ i ] ), true );
 
 		x += mw + sp;
 		if ( x + mw >= vw ) {

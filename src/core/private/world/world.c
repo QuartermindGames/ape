@@ -313,7 +313,7 @@ void apeDestroyWorld( ApeWorld *world ) {
 			if ( material == NULL ) {
 				continue;
 			}
-			apeReleaseMaterial( material );
+			ar_material_release( material );
 			material = NULL;
 		}
 		PlDestroyVectorArray( world->materials );
