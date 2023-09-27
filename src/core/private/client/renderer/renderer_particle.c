@@ -18,7 +18,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData ) {
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	apeReleaseMaterial( emitter->material );
+	ar_material_release( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -121,7 +121,7 @@ void PS_DestroyEmitter( PSEmitter *emitter ) {
 	}
 
 	if ( emitter->material != NULL )
-		apeReleaseMaterial( emitter->material );
+		ar_material_release( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );

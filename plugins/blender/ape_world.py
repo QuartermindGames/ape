@@ -62,11 +62,11 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
     check_extension = True
     filename_ext = ".n"
 
-    #filepath: bpy.props.StringProperty(
+    # filepath: bpy.props.StringProperty(
     #    name="File Path",
     #    description="The path to save the APE World",
     #    subtype='DIR_PATH'
-    #)
+    # )
 
     def GetMaterialTexturePath(self, context, material):
         nodeTree = material.node_tree
@@ -90,6 +90,8 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
         if not object:
             return
 
+        mesh = object.data
+
         fw(b"\tobject geometry {\n")
 
         if object.material_slots:
@@ -97,6 +99,26 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
             for slot in object.material_slots:
                 fw(b"\t\t\t%s\n" % self.GetMaterialTexturePath(context, slot.material).encode())
             fw(b"\t\t}\n")
+
+        vdict = [{} for i in range(len(mesh.vertices))]
+        vertices = []
+        vertexCount = 0
+        faces = [[] for f in range(len(mesh.polygons))]
+
+        for i, f in enumerate(mesh.polygons):
+            pf = faces[i]
+            for j, vidx in enumerate(f.vertices):
+                v = mesh.vertices[vidx]
+                normal = v.normal[:]
+
+                vdictLocal = vdict[vidx]
+                vertexIndex = vdictLocal.get(v.location)
+                if vertexIndex is None:
+                    pf_vidx = vdictLocal[key] = vertexCount
+                    vertices.append((vidx, normal))
+                    vertexCount += 1
+
+                pf.append(vertexIndex)
 
         fw(b"\t}\n")
         return
@@ -117,13 +139,6 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
 
         fw(b"\t}\n")
 
-        objects = context.scene.objects
-        for obj in objects:
-            if obj.type != 'MESH':
-                continue
-
-            name = obj.name
-
         return
 
     def execute(self, context):
@@ -139,7 +154,6 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
            b"\tobject properties {\n")
 
         if context.scene.clearColour != GetDefault(context.scene, "clearColour"):
-            # v = Vector(bpy.context.scene.clearColour)
             fw(b"\t\tarray float clearColour { %f %f %f %f }\n"
                % (context.scene.clearColour[0],
                   context.scene.clearColour[1],

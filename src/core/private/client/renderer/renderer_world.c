@@ -402,7 +402,7 @@ static void DrawRoomStencilShadowVolumes( ApeWorldRoom *room, const ApeLight *li
 	unsigned int numFaces;
 	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i ) {
-		if ( faces[ i ]->material == NULL || !apeMaterialShadowsEnabled( faces[ i ]->material ) )
+		if ( faces[ i ]->material == NULL || !ar_material_shadows_enabled( faces[ i ]->material ) )
 			continue;
 
 		//if ( !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )

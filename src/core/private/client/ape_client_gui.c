@@ -6,6 +6,7 @@
 #include "editor/editor.h"
 #include "game/game_interface.h"
 #include "client/renderer/renderer.h"
+#include "client/renderer/ar_render_target.h"
 
 static GuiCanvas *canvas;
 
@@ -20,7 +21,8 @@ static bool drawGUI = false;
 
 static ApeMaterial *baseGuiMat;
 
-void apeInitializeGUI_( void ) {
+void apeInitializeGUI_( void )
+{
 	PlRegisterConsoleVariable( "gui/draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
 	PlRegisterConsoleVariable( "gui/width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
 	PlRegisterConsoleVariable( "gui/height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
@@ -28,43 +30,50 @@ void apeInitializeGUI_( void ) {
 	guiInitialize();
 
 	defaultStyle = guiCacheStyleSheet( "guis/styles/default.n" );
-	if ( defaultStyle == NULL ) {
+	if ( defaultStyle == NULL )
+	{
 		PRINT_ERROR( "Failed to cache base style for GUI!\n" );
 	}
 
 	guiSetStyleSheet( defaultStyle );
 
 	canvas = guiCreateCanvas( guiWidth, guiHeight );
-	if ( canvas == NULL ) {
+	if ( canvas == NULL )
+	{
 		PRINT_ERROR( "Failed to create GUI canvas!\n" );
 	}
 
 	rootPanel = guiCreatePanel( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
-	if ( rootPanel == NULL ) {
+	if ( rootPanel == NULL )
+	{
 		PRINT_ERROR( "Failed to create base panel!\n" );
 	}
 
 	cursor = guiCreateCursor( rootPanel, 0, 0 );
-	if ( cursor == NULL ) {
+	if ( cursor == NULL )
+	{
 		PRINT_ERROR( "Failed to create cursor!\n" );
 	}
 
 	guiSetPanelVisible( rootPanel, true );
 
 	baseGuiMat = apeCacheMaterial( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
-	if ( baseGuiMat == NULL ) {
+	if ( baseGuiMat == NULL )
+	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
 	}
 }
 
-void apeShutdownGUI_( void ) {
+void apeShutdownGUI_( void )
+{
 	guiDestroyPanel( rootPanel );
 	guiShutdown();
 
-	apeReleaseMaterial( baseGuiMat );
+	ar_material_release( baseGuiMat );
 }
 
-void apeDrawGUI_( const ApeViewport *viewport ) {
+void apeDrawGUI_( const ApeViewport *viewport )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
@@ -72,42 +81,48 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 	// Need to call this again to reset the viewport
 	apeSet2DViewportSize( viewport->width, viewport->height );
 
-	PLGTexture *texture;
-	if ( ( texture = apeGetPrimaryColourAttachment() ) != NULL ) {
-		float x = ( float ) viewport->x;
-		float y = ( float ) viewport->y;
-		float w = ( float ) viewport->width;
-		float h = ( float ) viewport->height;
+	ArRenderTarget *renderTarget = ar_get_default_render_target();
+	if ( renderTarget != NULL )
+	{
+		PLGTexture *texture = ar_render_target_get_texture( renderTarget );
+		if ( texture != NULL )
+		{
+			float x = ( float ) viewport->x;
+			float y = ( float ) viewport->y;
+			float w = ( float ) viewport->width;
+			float h = ( float ) viewport->height;
 
-		PlgSetCullMode( PLG_CULL_NEGATIVE );
+			PlgSetCullMode( PLG_CULL_NEGATIVE );
 
-		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
-		PlgSetTexture( texture, 0 );
+			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+			PlgSetTexture( texture, 0 );
 
-		PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+			PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 
-		PlgImmPushVertex( x, y + h, 0.0f );
-		PlgImmColour( 255, 255, 255, 255 );
-		PlgImmTextureCoord( 0.0f, 0.0f );
+			PlgImmPushVertex( x, y + h, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 0.0f, 0.0f );
 
-		PlgImmPushVertex( x, y, 0.0f );
-		PlgImmColour( 255, 255, 255, 255 );
-		PlgImmTextureCoord( 0.0f, 1.0f );
+			PlgImmPushVertex( x, y, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 0.0f, 1.0f );
 
-		PlgImmPushVertex( x + w, y + h, 0.0f );
-		PlgImmColour( 255, 255, 255, 255 );
-		PlgImmTextureCoord( 1.0f, 0.0f );
+			PlgImmPushVertex( x + w, y + h, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 1.0f, 0.0f );
 
-		PlgImmPushVertex( x + w, y, 0.0f );
-		PlgImmColour( 255, 255, 255, 255 );
-		PlgImmTextureCoord( 1.0f, 1.0f );
+			PlgImmPushVertex( x + w, y, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 1.0f, 1.0f );
 
-		PlgImmDraw();
+			PlgImmDraw();
 
-		PlgSetCullMode( PLG_CULL_POSITIVE );
+			PlgSetCullMode( PLG_CULL_POSITIVE );
+		}
 	}
 
-	if ( drawGUI ) {
+	if ( drawGUI )
+	{
 		guiSetCanvasSize( canvas, guiWidth, guiHeight );
 		guiDraw( canvas, rootPanel );
 
@@ -115,10 +130,11 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 		apeSet2DViewportSize( viewport->width, viewport->height );
 
 		// draw the output of the canvas
-		apeDraw2DQuad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+		ar_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
-	if ( game_modeInterface->DrawMenu != NULL ) {
+	if ( game_modeInterface->DrawMenu != NULL )
+	{
 		game_modeInterface->DrawMenu( viewport );
 	}
 
@@ -127,10 +143,12 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 	// todo: this should use GUI
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	PL_GET_CVAR( "r/showFPS", showFPS );
-	if ( showFPS->b_value && debugOverlay->i_value == 0 ) {
+	if ( showFPS->b_value && debugOverlay->i_value == 0 )
+	{
 		GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
 		assert( font != NULL );
-		if ( font != NULL ) {
+		if ( font != NULL )
+		{
 			char tmp[ 32 ];
 			snprintf( tmp, sizeof( tmp ), "FPS: %u", apeGetViewportFramerate( viewport ) );
 			guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
@@ -156,14 +174,17 @@ void apeDrawGUI_( const ApeViewport *viewport ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-void apeTickGUI_( void ) {
+void apeTickGUI_( void )
+{
 	guiTick( rootPanel );
 }
 
-void apeResizeGUI( int w, int h ) {
+void apeResizeGUI( int w, int h )
+{
 	guiSetPanelSize( rootPanel, w, h );
 }
 
-GuiPanel *apeGetDefaultRootPanel( void ) {
+GuiPanel *apeGetDefaultRootPanel( void )
+{
 	return rootPanel;
 }

@@ -69,7 +69,7 @@ PLGShaderProgram *apeGetDefaultShaderProgram( ApeDefaultShaderProgram defaultSha
 /**
  * Returns the original path the material was loaded from.
  */
-const char *apeGetMaterialPath( const ApeMaterial *material );
+const char *ar_material_get_path( const ApeMaterial *material );
 
 /**
  * Cache a new material into memory if not so already, otherwise
@@ -81,12 +81,12 @@ ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFa
 /**
  * Releases a reference to the material, allowing it to clean up.
  */
-void apeReleaseMaterial( ApeMaterial *material );
+void ar_material_release( ApeMaterial *material );
 
 /**
  * Returns the surface type for the material.
  */
-int8_t apeGetMaterialSurfaceType( const ApeMaterial *material );
+int8_t ar_material_get_surface_type( const ApeMaterial *material );
 
 /**
  * Draws the given mesh with the given material. This also updates the peformance tracking,
@@ -99,7 +99,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
  * Can be used to see what a texture looks like without loading the whole
  * thing into memory if material is loaded with 'preview'.
  */
-PLGTexture *apeGetMaterialPreviewTexture( ApeMaterial *material );
+PLGTexture *ar_material_get_preview_texture( ApeMaterial *material );
 
 /**********************************************************/
 // Fonts

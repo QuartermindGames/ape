@@ -116,7 +116,7 @@ static void InitializeWorldEditor( void ) {
 	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = apeCreateCamera( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = ar_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera = cameras[ 0 ];

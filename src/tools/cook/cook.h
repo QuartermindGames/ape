@@ -25,4 +25,4 @@ extern CookState cook_state;
 
 PLMModel *Cook_Model_LoadSMD( const char *path );
 
-void Cook_World_Process( const char *worldName );
+void cook_world_process( const char *worldName );

@@ -6,6 +6,7 @@
 #include "gui_private.h"
 
 #include "client/renderer/renderer.h"
+#include "client/renderer/ar_render_target.h"
 
 /****************************************
  * GUI DRAW API
@@ -22,7 +23,7 @@ typedef struct GUIDrawBatch {
  ****************************************/
 
 typedef struct GuiCanvas {
-	ApeRenderTarget *renderTarget;
+	ArRenderTarget *renderTarget;
 	bool filter;
 	int width;
 	int height;
@@ -32,7 +33,7 @@ GuiCanvas *guiCreateCanvas( int width, int height ) {
 	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width = width;
 	canvas->height = height;
-	canvas->renderTarget = apeCreateRenderTarget( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	canvas->renderTarget = ar_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 	return canvas;
 }
 
@@ -41,7 +42,7 @@ void guiDestroyCanvas( GuiCanvas *canvas ) {
 		return;
 	}
 
-	apeReleaseRenderTarget( canvas->renderTarget );
+	ar_render_target_release( canvas->renderTarget );
 
 	PL_DELETE( canvas );
 }
@@ -51,7 +52,7 @@ void guiSetCanvasSize( GuiCanvas *canvas, int width, int height ) {
 		return;
 	}
 
-	apeSetRenderTargetSize( canvas->renderTarget, width, height );
+	ar_render_target_set_size( canvas->renderTarget, width, height );
 }
 
 void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height ) {
@@ -64,7 +65,7 @@ void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height ) {
 }
 
 PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas ) {
-	return apeGetRenderTargetTextureAttachment( canvas->renderTarget );
+	return ar_render_target_get_texture( canvas->renderTarget );
 }
 
 /****************************************
@@ -144,7 +145,7 @@ void guiDraw( GuiCanvas *canvas, GuiPanel *root ) {
 
 	CleanupBatchQueue();
 
-	apeBindRenderTarget( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
+	ar_render_target_bind( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );

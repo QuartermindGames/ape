@@ -3,10 +3,14 @@
 
 #include "detox_game.h"
 #include "detox_character.h"
+#include "detox_world.h"
+
+ToxGlobalVars tox_globalVars;
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( ApeInputState state, const char *id ) {
+static void MoveCameraCallback( ApeInputState state, const char *id )
+{
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
@@ -37,18 +41,22 @@ static void MoveCameraCallback( ApeInputState state, const char *id ) {
 	apeSetCameraAngles( playerCamera, &ang );
 }
 
-static void SpawnLight( ApeInputState state, const char *id ) {
+static void SpawnLight( ApeInputState state, const char *id )
+{
 }
 
-static void InitializeGame( void ) {
+static void InitializeGame( void )
+{
+	PlRegisterConsoleVariable( "tox/sunYaw", "Set the yaw of the sun.", "0", PL_VAR_F32, &tox_globalVars.sunYaw, NULL, false );
+
 	gameRegisterStandardEntityComponents();
 
 	apeRegisterEntityClass( toxGetCharacterClassTable() );
 
 	PlParseConsoleString( "world ship/worlds/alive_intro.wld.n" );
 
-	playerCamera = apeCreateCamera( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
-	apeMakeCameraActive( playerCamera );
+	playerCamera = ar_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
+	ar_camera_make_active( playerCamera );
 
 	apeRegisterInputAction( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
 	apeRegisterInputAction( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
@@ -61,14 +69,17 @@ static void InitializeGame( void ) {
 	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, SpawnLight );
 }
 
-static void ShutdownGame( void ) {
+static void ShutdownGame( void )
+{
 	apeDestroyCamera( playerCamera );
 	playerCamera = NULL;
 }
 
-static void TickGame( void ) {
+static void TickGame( void )
+{
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value ) {
+	if ( mouseLook != NULL && mouseLook->b_value )
+	{
 		int mx, my;
 		apeGetMouseDelta( &mx, &my );
 
@@ -78,22 +89,31 @@ static void TickGame( void ) {
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 		apeSetCameraAngles( playerCamera, &ang );
 	}
+
+	toxWorld_Tick();
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
-	switch ( modeRequest ) {
-		case GAMEMODE_REQUEST_INITIALIZE: {
+static bool HandleRequest( GameModeRequest modeRequest, void *user )
+{
+	switch ( modeRequest )
+	{
+		case GAMEMODE_REQUEST_INITIALIZE:
+		{
 			InitializeGame();
 			return true;
 		}
-		case GAMEMODE_REQUEST_TICK: {
+		case GAMEMODE_REQUEST_TICK:
+		{
 			TickGame();
 			break;
 		}
-		case GAMEMODE_REQUEST_HANDLEINPUT: {
+		case GAMEMODE_REQUEST_HANDLEINPUT:
+		{
 			break;
 		}
-		case GAMEMODE_REQUEST_SPAWNWORLD: {
+		case GAMEMODE_REQUEST_SPAWNWORLD:
+		{
+			toxWorld_Spawn();
 			break;
 		}
 		default:
@@ -103,11 +123,10 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user ) {
 	return false;
 }
 
-const GameModeInterface *gameGetModeInterface( void ) {
+const GameModeInterface *gameGetModeInterface( void )
+{
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
-
 	gameMode.RequestCallbackMethod = HandleRequest;
-
 	return &gameMode;
 }

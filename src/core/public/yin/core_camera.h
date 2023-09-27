@@ -27,7 +27,7 @@ typedef struct ApeCamera ApeCamera;
 
 PL_EXTERN_C
 
-ApeCamera *apeCreateCamera( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+ApeCamera *ar_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
 void apeDestroyCamera( ApeCamera *camera );
 void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position );
 void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles );
@@ -36,7 +36,7 @@ PLVector3 apeGetCameraPosition( const ApeCamera *camera );
 PLVector3 apeGetCameraAngles( const ApeCamera *camera );
 PLVector3 apeGetCameraForward( const ApeCamera *camera );
 
-ApeCamera *apeGetActiveCamera( void );
-void apeMakeCameraActive( ApeCamera *camera );
+ApeCamera *ar_camera_get_active( void );
+void ar_camera_make_active( ApeCamera *camera );
 
 PL_EXTERN_C_END

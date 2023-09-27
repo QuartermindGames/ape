@@ -361,7 +361,7 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 		// some texture indices are negative, which is valid
 
 		if ( face->material == NULL ) {
-			face->material = apeGetFallbackMaterial();
+			face->material = ar_material_get_fallback();
 		}
 
 		int32_t lightmapIndex = PlReadInt32( file, false, NULL );

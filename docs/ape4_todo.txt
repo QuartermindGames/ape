@@ -1,7 +1,16 @@
 APE Tech 4 Wishlist
 ------------------------------------------------
 
-- Better namespaces for various exposed APIs
-    (https://www.pvv.ntnu.no/~hakonhal/main.cgi/c/classes/)
-- Support for RFL format used in Red Faction II
-- Move to C23 if available via GCC / Clang
+Pending
+    - Better namespaces for various exposed APIs
+        (https://www.pvv.ntnu.no/~hakonhal/main.cgi/c/classes/)
+    - Load entities from RFL
+    - Lightmap loading from RFL
+    - Lightmap generation
+    - Support for RFL format used in Red Faction II
+    - "world" -> "level", to align with Volition's terminology
+    - Rename our world format, in binary form, to ALF (another level format)
+    - Move to C23 if available via GCC / Clang
+    - Allow cook tool to output an RFL, with target version
+
+Done

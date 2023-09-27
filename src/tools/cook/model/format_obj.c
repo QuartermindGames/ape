@@ -100,6 +100,9 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 			c += 2;
 			subObject = &obj->subObjects[ obj->numSubObjects++ ];
 			PlParseToken( &c, subObject->name, sizeof( subObject->name ) );
+
+			if ( subObject->faces == NULL )
+				subObject->faces = PlCreateVectorArray( 1 );
 		}
 		// Vertex position
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
@@ -152,8 +155,7 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 
 			// f <pos>/<uv>/<norm>
 
-			if ( subObject->faces == NULL )
-				subObject->faces = PlCreateVectorArray( 1 );
+			assert( subObject->faces != NULL );
 
 			ObjFace *face = PL_NEW( ObjFace );
 			PlPushBackVectorArrayElement( subObject->faces, face );

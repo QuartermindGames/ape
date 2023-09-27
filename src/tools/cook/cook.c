@@ -73,7 +73,7 @@ int main( int argc, char **argv )
 		{
 			printf( " %s \"%s\" -> ", commands[ i ].command, commands[ i ].argument );
 			if ( pl_strcasecmp( commands[ i ].command, "/world" ) == 0 )
-				Cook_World_Process( commands[ i ].argument );
+				cook_world_process( commands[ i ].argument );
 
 			printf( "OK\n" );
 		}
