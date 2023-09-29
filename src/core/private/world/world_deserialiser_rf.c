@@ -18,6 +18,7 @@ static const int RFL_VERSION_MAX = 295;
 //	272	Red Faction 2 (PS2 Demo)
 // 	482	The Punisher (PS2)
 
+// Below is a list of all the known used chunk types
 #define RFL_CHUNK_GEOMETRY          0x100
 #define RFL_CHUNK_GEOREGIONS        0x200
 #define RFL_CHUNK_LIGHTS            0x300
@@ -44,6 +45,11 @@ static const int RFL_VERSION_MAX = 295;
 #define RFL_CHUNK_UNKNOWN_7003      0x7003
 #define RFL_CHUNK_UNKNOWN_7004      0x7004
 #define RFL_CHUNK_UNKNOWN_7005      0x7005
+#define RFL_CHUNK_UNKNOWN_7678      0x7678
+#define RFL_CHUNK_UNKNOWN_7680      0x7680
+#define RFL_CHUNK_UNKNOWN_7681      0x7681
+#define RFL_CHUNK_UNKNOWN_7900      0x7900
+#define RFL_CHUNK_UNKNOWN_7901      0x7901
 #define RFL_CHUNK_EAX               0x8000
 #define RFL_CHUNK_WAYPOINTS         0x10000
 #define RFL_CHUNK_NAVPOINTS         0x20000
@@ -741,7 +747,7 @@ ApeWorld *apeParseRFWorld_( PLFile *file )
 				parse_level_properties( level, file, version );
 				break;
 			default:
-				PRINT_DEBUG( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );
+				PRINT_WARNING( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );
 				break;
 		}
 
