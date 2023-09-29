@@ -404,7 +404,11 @@ static bool initialize_display( void )
 	else
 		driverMode = APE_GRAPHICS_OTHER;
 
-	if ( ( windowViewport = apeShellInterface_CreateWindow( "APE - Another Portal Engine", 1024, 768, false, driverMode ) ) == NULL )
+	const char *windowTitle = com_project_get_name();
+	if ( windowTitle == NULL )
+		windowTitle = "APE Game Shell";
+
+	if ( ( windowViewport = apeShellInterface_CreateWindow( windowTitle, 1024, 768, false, driverMode ) ) == NULL )
 	{
 		YnCore_ShellInterface_DisplayMessageBox( APE_MESSAGE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;

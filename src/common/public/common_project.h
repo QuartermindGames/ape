@@ -8,3 +8,5 @@ bool com_project_mount( const char *name );
 void com_project_unmount( void );
 
 const char *com_project_get_local_path( void );
+const char *com_project_get_base_name( void );
+const char *com_project_get_name( void );
