@@ -652,6 +652,13 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *ligh
 		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
 			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
 	}
+	else
+	{
+		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
+		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
+	}
 
 	if ( light != NULL )
 	{
@@ -665,6 +672,9 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *ligh
 		}
 		else
 		{
+			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
+				PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f }, false );
+
 			if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
 				PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
 			if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )

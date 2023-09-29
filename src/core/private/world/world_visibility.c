@@ -33,7 +33,7 @@ static void SortLights( const ApeCamera *camera ) {
 		return;
 	}
 
-	viewPos = apeGetCameraPosition( camera );
+	viewPos = arl_camera_get_position( camera );
 
 	ApeLight **lights = ( ApeLight ** ) PlGetVectorArrayData( visibleLights );
 	unsigned int numLights = PlGetNumVectorArrayElements( visibleLights );
@@ -62,7 +62,7 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
 		}
 
 		if ( light->type != APE_LIGHT_TYPE_SUN ) {
-			float distance = PlVector3Length( PlSubtractVector3( light->position, apeGetCameraPosition( camera ) ) );
+			float distance = PlVector3Length( PlSubtractVector3( light->position, arl_camera_get_position( camera ) ) );
 			if ( distance > ape_config_.renderer.maxLightDistance ) {
 				continue;
 			}

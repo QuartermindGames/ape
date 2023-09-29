@@ -27,9 +27,6 @@ typedef enum GameModeRequest
 
 typedef struct GameModeInterface
 {
-	void ( *Initialize )( void );
-	void ( *Shutdown )( void );
-
 	void ( *Draw )( void );
 
 	// This is basically a replacement for the above - just slightly less fussy

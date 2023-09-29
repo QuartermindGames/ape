@@ -7,9 +7,8 @@
 
 #include "yin/node.h"
 
-/****************************************
- * PRIVATE
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
 #define COM_MAX_PROJECT_BASENAME 64
 #define COM_MAX_PROJECT_NAME     64
@@ -27,6 +26,10 @@ typedef struct ComProject
 
 	PLFileSystemMount *mountLocation;// x/projects/blah
 
+#define MAX_FILESYSTEM_MOUNTS 255
+	PLFileSystemMount *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
+	unsigned int numSubMountLocations;
+
 	struct ComProject *parent;
 	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
 	unsigned int numDependencies;
@@ -36,7 +39,37 @@ typedef struct ComProject
 
 static ComProject project;
 
-static ComProject *DeserializeProject( NdBranch *root, const char *name, ComProject *out )
+static void parse_mount_config( NdBranch *root, ComProject *out )
+{
+	unsigned int numChildren = ndGetNumOfChildren( root );
+	if ( numChildren == 0 )
+		/* nothing to mount, okay then */
+		return;
+
+	NdBranch *child = ndGetFirstChild( root );
+	if ( ndGetType( child ) != ND_PROPERTY_STRING )
+	{
+		Warning( "Invalid child type found in config!\n" );
+		return;
+	}
+
+	for ( unsigned int i = 0; i < numChildren; ++i )
+	{
+		PLPath path;
+		ndGetStr( child, path, sizeof( PLPath ) );
+		child = ndGetNextChild( child );
+
+		if ( ( out->subMountLocations[ out->numSubMountLocations ] = PlMountLocation( path ) ) == NULL )
+		{
+			Warning( "Failed to mount \"%s\": %s\n", path, PlGetError() );
+			continue;
+		}
+
+		out->numSubMountLocations++;
+	}
+}
+
+static ComProject *deserialize_project( NdBranch *root, const char *name, ComProject *out )
 {
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s", comGetDataDirectory(), name );
@@ -57,6 +90,8 @@ static ComProject *DeserializeProject( NdBranch *root, const char *name, ComProj
 	NdBranch *child;
 	if ( ( child = ndGetChildByName( root, "version" ) ) != NULL )
 		ndGetI32Array( child, out->version, 3 );
+	if ( ( child = ndGetChildByName( root, "mountLocations" ) ) != NULL )
+		parse_mount_config( child, out );
 	if ( ( child = ndGetChildByName( root, "dependencies" ) ) != NULL )
 	{
 		child = ndGetFirstChild( child );
@@ -95,7 +130,7 @@ static ComProject *DeserializeProject( NdBranch *root, const char *name, ComProj
 			head->dependencies[ index ]->parent = out;
 			head->numDependencies++;
 
-			if ( DeserializeProject( croot, baseName, head->dependencies[ index ] ) == NULL )
+			if ( deserialize_project( croot, baseName, head->dependencies[ index ] ) == NULL )
 			{
 				Warning( "Failed to load dependency (%s)!\n", baseName );
 				return NULL;
@@ -116,7 +151,7 @@ static ComProject *DeserializeProject( NdBranch *root, const char *name, ComProj
 	return out;
 }
 
-static void FreeProject( ComProject *out )
+static void free_project( ComProject *out )
 {
 	if ( out->mountLocation != NULL )
 	{
@@ -124,19 +159,29 @@ static void FreeProject( ComProject *out )
 		out->mountLocation = NULL;
 	}
 
+	for ( unsigned int i = 0; i < out->numSubMountLocations; ++i )
+	{
+		if ( out->subMountLocations[ i ] == NULL )
+			break;
+
+		PlClearMountedLocation( out->subMountLocations[ i ] );
+		out->subMountLocations[ i ] = NULL;
+	}
+	out->numSubMountLocations = 0;
+
 	for ( unsigned int i = 0; i < out->numDependencies; ++i )
 	{
 		if ( out->dependencies[ i ] == NULL )
 			break;
 
-		FreeProject( out->dependencies[ i ] );
+		free_project( out->dependencies[ i ] );
 		PL_DELETE( out->dependencies[ i ] );
+		out->dependencies[ i ] = NULL;
 	}
 }
 
-/****************************************
- * PUBLIC
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 bool com_project_mount( const char *name )
 {
@@ -157,7 +202,7 @@ bool com_project_mount( const char *name )
 		return false;
 	}
 
-	if ( DeserializeProject( root, name, &project ) == NULL )
+	if ( deserialize_project( root, name, &project ) == NULL )
 		com_project_unmount();// call unmount to cleanup
 
 	ndDestroyBranch( root );
@@ -167,7 +212,7 @@ bool com_project_mount( const char *name )
 
 void com_project_unmount( void )
 {
-	FreeProject( &project );
+	free_project( &project );
 
 	PL_ZERO_( project );
 }

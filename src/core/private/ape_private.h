@@ -51,7 +51,8 @@ void apeUpdateProfilerGraphs( void );
  * CONSOLE
  ****************************************/
 
-typedef enum ApeConsoleLogLevel {
+typedef enum ApeConsoleLogLevel
+{
 	APE_LOG_ERROR,
 	APE_LOG_WARNING,
 	APE_LOG_INFORMATION,
@@ -70,12 +71,14 @@ typedef enum ApeConsoleLogLevel {
 #define CONSOLE_BUFFER_MAX_LENGTH 256
 #define CONSOLE_BUFFER_MAX_LINES  2048
 
-typedef struct ApeConsoleLine {
+typedef struct ApeConsoleLine
+{
 	char buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 	PLColour colour;
 } ApeConsoleLine;
 
-typedef struct ApeConsoleOutput {
+typedef struct ApeConsoleOutput
+{
 	ApeConsoleLine lines[ CONSOLE_BUFFER_MAX_LINES ];
 	unsigned int numLines;
 	unsigned int scrollPos;
@@ -112,12 +115,14 @@ void apeRegisterClientConsoleVariables_( void );
 #	define PRINT_DEBUG( FORMAT, ... )
 #endif
 
-typedef struct ApeConfig {
+typedef struct ApeConfig
+{
 	struct
 	{
 		bool wireframe;
 		bool useStencilShadowVolumes;
 		bool showShadowWireframe;
+		bool showFps;
 
 		float maxLightDistance;
 	} renderer;

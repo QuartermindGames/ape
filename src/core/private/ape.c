@@ -57,6 +57,8 @@ bool apeInitialize( const char *config ) {
 	apeRegisterConsoleVariables_( engineTerminalMode );
 	apeRegisterConsoleCommands_( engineTerminalMode );
 
+	PlRegisterStandardPackageLoaders();
+
 	// Need to do this before anything else IO related
 	apeMountBaseLocations();
 
@@ -73,14 +75,13 @@ bool apeInitialize( const char *config ) {
 		return false;
 	}
 
-	userConfig = ndLoadFile( apeGetUserConfigLocation(), "config" );
+	userConfig = ndLoadFile( acl_get_user_config_location(), "config" );
 	if ( userConfig == NULL ) {
 		PRINT( "No existing user config found, will use defaults.\n" );
 		userConfig = ndPushBackObject( NULL, "config" );
 	}
 
-	apeSetupConfig( engineConfig );
-	apeMountLocations();
+	acl_setup_config( engineConfig );
 
 	PRINT( "Initializing core services...\n" );
 
@@ -117,8 +118,6 @@ void apeShutdown( void ) {
 	apeShutdownMemoryManager();
 	apeShutdownScheduler();
 	ogeShutdownNet();
-
-	apeClearMountedLocations();
 
 	apeShellInterface_Shutdown();
 

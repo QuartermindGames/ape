@@ -6,7 +6,7 @@
 #include "client/renderer/renderer.h"
 #include "world.h"
 
-//#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
+#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
 
 static const unsigned int RFL_MAGIC = 0xd4bada55;
 
@@ -22,9 +22,10 @@ static const int RFL_VERSION_MAX = 295;
 #define RFL_CHUNK_GEOREGIONS        0x200
 #define RFL_CHUNK_LIGHTS            0x300
 #define RFL_CHUNK_CUTSCENECAMERAS   0x400
-#define RFL_CHUNK_AMBIENTSOUNDS     0x500
+#define RFL_CHUNK_AMBIENT_SOUNDS    0x500
 #define RFL_CHUNK_EVENTS            0x600
-#define RFL_CHUNK_LEVELPROPERTIES   0x900
+#define RFL_CHUNK_RESPAWN_POINTS    0x700
+#define RFL_CHUNK_LEVEL_PROPERTIES  0x900
 #define RFL_CHUNK_EMITTERS          0xa00
 #define RFL_CHUNK_CLIMBREGIONS      0xd00
 #define RFL_CHUNK_BOLTEMITTERS      0xe00
@@ -37,6 +38,12 @@ static const int RFL_VERSION_MAX = 295;
 #define RFL_CHUNK_CUTSCENES         0x4000
 #define RFL_CHUNK_CUTSCENEPATHNODES 0x5000
 #define RFL_CHUNK_CUTSCENEPATHS     0x6000
+#define RFL_CHUNK_UNKNOWN_7000      0x7000
+#define RFL_CHUNK_UNKNOWN_7001      0x7001
+#define RFL_CHUNK_UNKNOWN_7002      0x7002
+#define RFL_CHUNK_UNKNOWN_7003      0x7003
+#define RFL_CHUNK_UNKNOWN_7004      0x7004
+#define RFL_CHUNK_UNKNOWN_7005      0x7005
 #define RFL_CHUNK_EAX               0x8000
 #define RFL_CHUNK_WAYPOINTS         0x10000
 #define RFL_CHUNK_NAVPOINTS         0x20000
@@ -44,20 +51,21 @@ static const int RFL_VERSION_MAX = 295;
 #define RFL_CHUNK_ITEMS             0x40000
 #define RFL_CHUNK_CLUTTER           0x50000
 #define RFL_CHUNK_TRIGGERS          0x60000
-#define RFL_CHUNK_PLAYERSTART       0x70000
+#define RFL_CHUNK_PLAYER_START      0x70000
 
-static char *ParseString( PLFile *file, uint16_t *size ) {
+static char *parse_string( PLFile *file, uint16_t *size )
+{
 	*size = PL_READUINT16( file, false, NULL );
-	if ( *size == 0 ) {
+	if ( *size == 0 )
 		return NULL;
-	}
 
 	char *buf = PL_NEW_( char, ( *size ) + 1 );
 	PlReadFile( file, buf, sizeof( char ), *size );
 	return buf;
 }
 
-static PLVector3 ParseVector( PLFile *file ) {
+static PLVector3 parse_vector( PLFile *file )
+{
 #if defined( FLIP_WORLD )
 	PLVector3 v = ( PLVector3 ){
 	        -PlReadFloat32( file, false, NULL ),
@@ -73,13 +81,15 @@ static PLVector3 ParseVector( PLFile *file ) {
 	return v;
 }
 
-static float ParseFloat( PLFile *file ) {
+static float parse_float( PLFile *file )
+{
 	float f = PlReadFloat32( file, false, NULL );
 	assert( !isnan( f ) );
 	return f;
 }
 
-static PLMatrix3 ParseMat3( PLFile *file ) {
+static PLMatrix3 parse_mat3( PLFile *file )
+{
 	PLMatrix3 m = ( PLMatrix3 ){
 	        // forward
 	        .m[ 0 ] = PlReadFloat32( file, false, NULL ),
@@ -98,7 +108,8 @@ static PLMatrix3 ParseMat3( PLFile *file ) {
 	return m;
 }
 
-static PLColour ParseColour( PLFile *file ) {
+static PLColour parse_colour( PLFile *file )
+{
 	return ( PLColour ){
 	        PL_READUINT8( file, NULL ),
 	        PL_READUINT8( file, NULL ),
@@ -106,22 +117,26 @@ static PLColour ParseColour( PLFile *file ) {
 	        PL_READUINT8( file, NULL ) };
 }
 
-static void ParseStaticGeometryTextures( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
+{
 	// fetch all the textures we'll be using
 	uint32_t numTextures = PL_READUINT32( file, false, NULL );
 	world->materials = PlCreateVectorArray( numTextures );
-	for ( uint32_t i = 0; i < numTextures; ++i ) {
+	for ( uint32_t i = 0; i < numTextures; ++i )
+	{
 		uint16_t size;
-		char *textureName = ParseString( file, &size );
+		char *textureName = parse_string( file, &size );
 		assert( textureName != NULL );
-		if ( textureName == NULL ) {
+		if ( textureName == NULL )
+		{
 			PRINT_WARNING( "Invalid texture (%u) name!\n", i );
 			continue;
 		}
 		PRINT_DEBUG( "Texture: %s\n", textureName );
 
 		char *c = strrchr( textureName, '.' );
-		if ( c != NULL ) {
+		if ( c != NULL )
+		{
 			*c = '\0';
 		}
 
@@ -134,21 +149,26 @@ static void ParseStaticGeometryTextures( ApeWorld *world, PLFile *file ) {
 	}
 }
 
-static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t version ) {
+static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t version )
+{
 	// fetch and populate the room list
 	uint32_t numRooms = PL_READUINT32( file, false, NULL );
 	world->rooms = PlCreateVectorArray( numRooms );
-	for ( uint32_t i = 0; i < numRooms; ++i ) {
+	for ( uint32_t i = 0; i < numRooms; ++i )
+	{
 		ApeWorldRoom *room = apeCreateWorldRoom();
 
 		room->uid = PlReadInt32( file, false, NULL );
 
-		room->bounds.mins = ParseVector( file );
-		room->bounds.maxs = ParseVector( file );
+		room->bounds.mins = parse_vector( file );
+		room->bounds.maxs = parse_vector( file );
 
-		if ( version >= 234 ) {
+		if ( version >= 234 )
+		{
 			room->flags = PL_READUINT32( file, false, NULL );
-		} else {
+		}
+		else
+		{
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_SKY; }
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_COLD; }
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_OUTSIDE; }
@@ -159,67 +179,76 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_ALPHA; }
 		}
 
-		room->life = ParseFloat( file );
+		room->life = parse_float( file );
 
-		if ( version >= 180 ) {
+		if ( version >= 180 )
+		{
 			uint16_t size;
-			char *eaxEffect = ParseString( file, &size );
+			char *eaxEffect = parse_string( file, &size );
 			PL_DELETE( eaxEffect );
 		}
 
-		if ( version >= 234 ) {
-			ParseFloat( file );
-			ParseFloat( file );
-			ParseFloat( file );
+		if ( version >= 234 )
+		{
+			parse_float( file );
+			parse_float( file );
+			parse_float( file );
 
-			PLColour colour = ParseColour( file );
+			PLColour colour = parse_colour( file );
 			room->liquid.colour = PlColourU8ToF32( &colour );
 
-			room->liquid.visibility = ParseFloat( file );
+			room->liquid.visibility = parse_float( file );
 
 			room->liquid.type = PlReadInt32( file, false, NULL );
 
-			if ( version < 284 ) {
+			if ( version < 284 )
+			{
 				room->liquid.ppmU = PlReadInt32( file, false, NULL );
 				room->liquid.ppmV = PlReadInt32( file, false, NULL );
 
-				room->liquid.angle = ParseFloat( file );
+				room->liquid.angle = parse_float( file );
 
 				room->liquid.waveform = PlReadInt32( file, false, NULL );
 			}
 
-			room->liquid.panU = ParseFloat( file );
-			room->liquid.panV = ParseFloat( file );
+			room->liquid.panU = parse_float( file );
+			room->liquid.panV = parse_float( file );
 
-			if ( version >= 284 ) {
-				ParseFloat( file );
-				ParseFloat( file );
+			if ( version >= 284 )
+			{
+				parse_float( file );
+				parse_float( file );
 			}
 
-			if ( version < 284 ) {
-				ParseColour( file );
+			if ( version < 284 )
+			{
+				parse_colour( file );
 				PlReadInt32( file, false, NULL );
 
-				if ( room->flags & APE_WORLD_ROOM_FLAG_UNKNOWN0 ) {
+				if ( room->flags & APE_WORLD_ROOM_FLAG_UNKNOWN0 )
+				{
 					uint16_t size;
-					char *tmp = ParseString( file, &size );
+					char *tmp = parse_string( file, &size );
 					PL_DELETE( tmp );
 				}
 			}
-		} else {
-			if ( room->containsLiquid ) {
+		}
+		else
+		{
+			if ( room->containsLiquid )
+			{
 				room->liquid.depth = PlReadFloat32( file, false, NULL );
 				assert( !isnan( room->liquid.depth ) );
 
-				PLColour colour = ParseColour( file );
+				PLColour colour = parse_colour( file );
 				room->liquid.colour = PlColourU8ToF32( &colour );
 
 				uint16_t size;
-				char *liquidTextureName = ParseString( file, &size );
+				char *liquidTextureName = parse_string( file, &size );
 				assert( liquidTextureName != NULL && *liquidTextureName != '\0' );
 				PL_DELETE( liquidTextureName );
 
-				room->liquid.visibility = ParseFloat( file );
+				room->liquid.visibility = parse_float( file );
 
 				room->liquid.type = PlReadInt32( file, false, NULL );
 				room->liquid.alpha = PlReadInt32( file, false, NULL );
@@ -227,15 +256,16 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 				room->liquid.ppmU = PlReadInt32( file, false, NULL );
 				room->liquid.ppmV = PlReadInt32( file, false, NULL );
 
-				room->liquid.angle = ParseFloat( file );
+				room->liquid.angle = parse_float( file );
 
 				room->liquid.waveform = PlReadInt32( file, false, NULL );
-				room->liquid.panU = ParseFloat( file );
-				room->liquid.panV = ParseFloat( file );
+				room->liquid.panU = parse_float( file );
+				room->liquid.panV = parse_float( file );
 			}
 
-			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT ) {
-				PLColour colour = ParseColour( file );
+			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
+			{
+				PLColour colour = parse_colour( file );
 				room->ambientLight = PlColourU8ToF32( &colour );
 			}
 		}
@@ -244,25 +274,30 @@ static void ParseStaticGeometryRooms( ApeWorld *world, PLFile *file, int32_t ver
 	}
 }
 
-static void ParseStaticGeometryDetailRooms( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_detail_rooms( ApeWorld *world, PLFile *file )
+{
 	// something about sorting rooms into detail rooms list???
 	uint32_t numRooms = PL_READUINT32( file, false, NULL );
 	assert( numRooms == PlGetNumVectorArrayElements( world->rooms ) );
-	for ( uint32_t i = 0; i < numRooms; ++i ) {
+	for ( uint32_t i = 0; i < numRooms; ++i )
+	{
 		uint32_t roomIndex = PL_READUINT32( file, false, NULL );
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
 		uint32_t numDetailRooms = PL_READUINT32( file, false, NULL );
-		if ( room != NULL && room->detailRooms == NULL ) {
+		if ( room != NULL && room->detailRooms == NULL )
+		{
 			room->detailRooms = PlCreateVectorArray( numDetailRooms );
 		}
 
-		for ( uint32_t j = 0; j < numDetailRooms; ++j ) {
+		for ( uint32_t j = 0; j < numDetailRooms; ++j )
+		{
 			uint32_t detailRoomIndex = PL_READUINT32( file, false, NULL );
 			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( world->rooms, detailRoomIndex );
 			assert( detailRoom != NULL );
-			if ( room != NULL && detailRoom != NULL ) {
+			if ( room != NULL && detailRoom != NULL )
+			{
 				detailRoom->isDetail = true;
 				PlPushBackVectorArrayElement( room->detailRooms, detailRoom );
 			}
@@ -270,20 +305,23 @@ static void ParseStaticGeometryDetailRooms( ApeWorld *world, PLFile *file ) {
 	}
 }
 
-static void ParseStaticGeometryPortals( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
+{
 	uint32_t numPortals = PL_READUINT32( file, false, NULL );
 	world->portals = PlCreateVectorArray( numPortals );
-	for ( uint32_t i = 0; i < numPortals; ++i ) {
+	for ( uint32_t i = 0; i < numPortals; ++i )
+	{
 		uint32_t roomAIndex = PL_READUINT32( file, false, NULL );
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
-		PLVector3 mins = ParseVector( file );
-		PLVector3 maxs = ParseVector( file );
+		PLVector3 mins = parse_vector( file );
+		PLVector3 maxs = parse_vector( file );
 
 		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
 		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
 		assert( roomA != NULL && roomB != NULL );
-		if ( roomA == NULL || roomB == NULL ) {
+		if ( roomA == NULL || roomB == NULL )
+		{
 			PRINT_WARNING( "Invalid rooms for portals!\n" );
 			continue;
 		}
@@ -300,25 +338,30 @@ static void ParseStaticGeometryPortals( ApeWorld *world, PLFile *file ) {
 	}
 }
 
-static void ParseStaticGeometryVertices( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_vertices( ApeWorld *world, PLFile *file )
+{
 	uint32_t numVertices = PL_READUINT32( file, false, NULL );
 	world->vertices = PlCreateVectorArray( numVertices );
-	for ( uint32_t i = 0; i < numVertices; ++i ) {
+	for ( uint32_t i = 0; i < numVertices; ++i )
+	{
 		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
-		vertex->position = ParseVector( file );
+		vertex->position = parse_vector( file );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
 
-void apeGenerateWorldFaceBounds( ApeWorldFace *face ) {
+void apeGenerateWorldFaceBounds( ApeWorldFace *face )
+{
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
-	if ( numVertices == 0 ) {
+	if ( numVertices == 0 )
+	{
 		return;
 	}
 
 	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
-	for ( unsigned int i = 0; i < numVertices; ++i ) {
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
 		boundVertices[ i ] = vertices[ i ]->u->position;
 	}
 
@@ -328,10 +371,12 @@ void apeGenerateWorldFaceBounds( ApeWorldFace *face ) {
 	PL_DELETE( boundVertices );
 }
 
-static void CalculateFaceNormal( ApeWorldFace *face ) {
+static void calculate_face_normal( ApeWorldFace *face )
+{
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	assert( numVertices > 0 );
-	if ( numVertices == 0 ) {
+	if ( numVertices == 0 )
+	{
 		return;
 	}
 
@@ -339,28 +384,33 @@ static void CalculateFaceNormal( ApeWorldFace *face ) {
 	assert( 0 );
 }
 
-static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t version ) {
+static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t version )
+{
 	uint32_t numFaces = PL_READUINT32( file, false, NULL );
 
-	for ( uint32_t i = 0; i < numFaces; ++i ) {
+	for ( uint32_t i = 0; i < numFaces; ++i )
+	{
 		ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 		face->edgeLoop = PlCreateLinkedList();
 
-		if ( version >= 167 ) {
+		if ( version >= 167 )
+		{
 			// plane
-			face->normal = ParseVector( file );// normal
-			face->offset = ParseFloat( file ); // offset
+			face->normal = parse_vector( file );// normal
+			face->offset = parse_float( file ); // offset
 		}
 
 		face->materialIndex = PlReadInt32( file, false, NULL );
-		if ( face->materialIndex >= 0 ) {
+		if ( face->materialIndex >= 0 )
+		{
 			face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 			assert( face->material != NULL );
 		}
 		// some texture indices are negative, which is valid
 
-		if ( face->material == NULL ) {
+		if ( face->material == NULL )
+		{
 			face->material = ar_material_get_fallback();
 		}
 
@@ -372,7 +422,8 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 		PlReadInt32( file, false, NULL );
 
 		int32_t portalIndex = PlReadInt32( file, false, NULL );
-		if ( portalIndex >= 0 ) {
+		if ( portalIndex >= 0 )
+		{
 			face->portal = PlGetVectorArrayElementAt( world->portals, portalIndex );
 			//assert( face->portal != NULL );
 		}
@@ -388,33 +439,38 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 
 		uint32_t numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices = PlCreateVectorArray( numFaceVertices );
-		for ( uint32_t j = 0; j < numFaceVertices; ++j ) {
+		for ( uint32_t j = 0; j < numFaceVertices; ++j )
+		{
 			ApeWorldFaceVertex *faceVertex = PL_NEW( ApeWorldFaceVertex );
 
 			int32_t worldVertexIndex = PlReadInt32( file, false, NULL );
 			assert( worldVertexIndex >= 0 );
-			if ( worldVertexIndex >= 0 ) {
+			if ( worldVertexIndex >= 0 )
+			{
 				faceVertex->u = ( ApeWorldVertex * ) PlGetVectorArrayElementAt( world->vertices, worldVertexIndex );
 				assert( faceVertex->u != NULL );
-				if ( faceVertex->u == NULL ) {
+				if ( faceVertex->u == NULL )
 					PRINT_ERROR( "Invalid world vertex for face!\n" );
-				}
 
-				if ( faceVertex->u->adjacentFaces == NULL ) {
+				if ( faceVertex->u->adjacentFaces == NULL )
 					faceVertex->u->adjacentFaces = PlCreateVectorArray( 1 );
-				}
 
 				PlPushBackVectorArrayElement( faceVertex->u->adjacentFaces, face );
 			}
 
-			faceVertex->uv.x = ParseFloat( file );
+			faceVertex->uv.x = parse_float( file );
 			assert( faceVertex->uv.x * faceVertex->uv.x >= 0.0f );
-			faceVertex->uv.y = ParseFloat( file );
+			faceVertex->uv.y = parse_float( file );
 			assert( faceVertex->uv.y * faceVertex->uv.y >= 0.0f );
 
-			if ( lightmapIndex >= 0 ) {
-				faceVertex->lightmapU = ParseFloat( file );
-				faceVertex->lightmapV = ParseFloat( file );
+			// Initially, we can just derive the face vertex normal from the face normal,
+			// but these will need to be generated based on smoothing groups later
+			faceVertex->normal = PlInverseVector3( face->normal );
+
+			if ( lightmapIndex >= 0 )
+			{
+				faceVertex->lightmapU = parse_float( file );
+				faceVertex->lightmapV = parse_float( file );
 			}
 
 #if defined( FLIP_WORLD )
@@ -428,9 +484,8 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 
 		// Older versions didn't store the face normal / offset,
 		// so we'll need to calculate that here
-		if ( version < 167 ) {
-			CalculateFaceNormal( face );
-		}
+		if ( version < 167 )
+			calculate_face_normal( face );
 
 		apeGenerateWorldFaceBounds( face );
 
@@ -438,9 +493,11 @@ static void ParseStaticGeometryFaces( ApeWorld *world, PLFile *file, int32_t ver
 	}
 }
 
-static void ParseStaticGeometryLightmaps( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file )
+{
 	int32_t numLightmaps = PlReadInt32( file, false, NULL );
-	for ( int32_t i = 0; i < numLightmaps; ++i ) {
+	for ( int32_t i = 0; i < numLightmaps; ++i )
+	{
 		PlReadInt32( file, false, NULL );// lightmap index
 		PL_READUINT8( file, NULL );      // x start
 		PL_READUINT8( file, NULL );      // y start
@@ -450,53 +507,56 @@ static void ParseStaticGeometryLightmaps( ApeWorld *world, PLFile *file ) {
 		uint8_t height = PL_READUINT8( file, NULL );// height
 		assert( height != 0 );
 
-		float xPerMeter = ParseFloat( file );// x pixels per meter
-		float yPerMeter = ParseFloat( file );// y pixels per meter
+		float xPerMeter = parse_float( file );// x pixels per meter
+		float yPerMeter = parse_float( file );// y pixels per meter
 
-		PLVector3 min = ParseVector( file );// min
-		PLVector3 max = ParseVector( file );// max
+		PLVector3 min = parse_vector( file );// min
+		PLVector3 max = parse_vector( file );// max
 
-		ParseVector( file );             // eq
-		ParseFloat( file );              // offset
+		parse_vector( file );            // eq
+		parse_float( file );             // offset
 		PlReadInt32( file, false, NULL );// should smooth
 		PlReadInt32( file, false, NULL );// fullbright
 		PlReadInt32( file, false, NULL );// dropped coefficient
 		PlReadInt32( file, false, NULL );// u coefficient
 		PlReadInt32( file, false, NULL );// v coefficient
-		ParseFloat( file );              // uv add x
-		ParseFloat( file );              // uv add y
-		ParseFloat( file );              // uv scale x
-		ParseFloat( file );              // uv scale y
+		parse_float( file );             // uv add x
+		parse_float( file );             // uv add y
+		parse_float( file );             // uv scale x
+		parse_float( file );             // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
 	}
 }
 
-static void ParseStaticGeometryTextureMovers( ApeWorld *world, PLFile *file ) {
+static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file )
+{
 	// texture movers
 	uint32_t numTextureMovers = PL_READUINT32( file, false, NULL );
-	for ( uint32_t i = 0; i < numTextureMovers; ++i ) {
+	for ( uint32_t i = 0; i < numTextureMovers; ++i )
+	{
 		int32_t faceIndex = PlReadInt32( file, false, NULL );
 		assert( faceIndex >= 0 );
 
 		ApeWorldFace *face;
-		if ( faceIndex >= 0 ) {
+		if ( faceIndex >= 0 )
+		{
 			//face = ( ApeWorldFace * ) PlGetVectorArrayElementAt( world->faces, faceIndex );
 			//assert( face != NULL );
 		}
 
-		float uPanSpeed = ParseFloat( file );
-		float vPanSpeed = ParseFloat( file );
+		float uPanSpeed = parse_float( file );
+		float vPanSpeed = parse_float( file );
 	}
 }
 
 
-static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_t version ) {
-	if ( version >= 200 ) {
+static ApeWorld *parse_static_geometry_chunk( ApeWorld *world, PLFile *file, int32_t version )
+{
+	if ( version >= 200 )
+	{
 		PL_READUINT32( file, false, NULL );// version, unused
-	}
-	if ( version >= 200 ) {
 		PL_READUINT32( file, false, NULL );// "modifiability" - unused
 	}
 
@@ -504,38 +564,39 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	uint16_t size = PL_READUINT16( file, false, NULL );
 	PlFileSeek( file, size, PL_SEEK_CUR );
 
-	if ( version < 200 ) {
+	if ( version < 200 )
 		PL_READUINT32( file, false, NULL );// "modifiability" - unused
-	}
 
-	ParseStaticGeometryTextures( world, file );
+	parse_static_geometry_textures( world, file );
 
-	if ( version >= 180 ) {
+	if ( version >= 180 )
+	{
 		uint32_t numScrollingFaces = PL_READUINT32( file, false, NULL );
-		for ( uint32_t i = 0; i < numScrollingFaces; ++i ) {
+		for ( uint32_t i = 0; i < numScrollingFaces; ++i )
+		{
 			assert( 0 );
 			// todo
 
 			PlReadInt32( file, false, NULL );
 			PlReadInt32( file, false, NULL );
-			ParseFloat( file );//x
-			ParseFloat( file );//y
-			ParseFloat( file );//x
-			ParseFloat( file );//y
-			ParseFloat( file );//x
-			ParseFloat( file );//y
-			ParseFloat( file );//x
-			ParseFloat( file );//y
+			parse_float( file );//x
+			parse_float( file );//y
+			parse_float( file );//x
+			parse_float( file );//y
+			parse_float( file );//x
+			parse_float( file );//y
+			parse_float( file );//x
+			parse_float( file );//y
 			PlReadInt8( file, NULL );
 		}
 	}
 
-	ParseStaticGeometryRooms( world, file, version );
-	ParseStaticGeometryDetailRooms( world, file );
-	ParseStaticGeometryPortals( world, file );
-	ParseStaticGeometryVertices( world, file );
-	ParseStaticGeometryFaces( world, file, version );
-	ParseStaticGeometryLightmaps( world, file );
+	parse_static_geometry_rooms( world, file, version );
+	parse_static_geometry_detail_rooms( world, file );
+	parse_static_geometry_portals( world, file );
+	parse_static_geometry_vertices( world, file );
+	parse_static_geometry_faces( world, file, version );
+	parse_static_geometry_lightmaps( world, file );
 	//TODO: commented out for now, as it's causing issues with newer levels -
 	// 		and I get the impression it was removed but too lazy to check,
 	// 		plus we're not doing anything with it right now anyway...
@@ -544,85 +605,91 @@ static ApeWorld *ParseStaticGeometryChunk( ApeWorld *world, PLFile *file, int32_
 	return NULL;
 }
 
-static void ParseLightsChunk( ApeWorld *world, PLFile *file, int32_t version ) {
+static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
+{
 	int32_t numLights = PlReadInt32( file, false, NULL );
 	PlResizeVectorArray( world->lights, numLights );
-	for ( int32_t i = 0; i < numLights; ++i ) {
+	for ( int32_t i = 0; i < numLights; ++i )
+	{
 		ApeLight *light = PL_NEW( ApeLight );
 
 		PlReadInt32( file, false, NULL );// id
 
 		uint16_t size;
-		char *tmp = ParseString( file, &size );// class name
+		char *tmp = parse_string( file, &size );// class name
 		PL_DELETE( tmp );
 
-		light->position = ParseVector( file );
+		light->position = parse_vector( file );
 
-		ParseMat3( file );// rotation
+		parse_mat3( file );// rotation
 
-		tmp = ParseString( file, &size );// script name
+		tmp = parse_string( file, &size );// script name
 		PL_DELETE( tmp );
 
 		light->isHidden = PL_READUINT8( file, NULL );     // hidden in editor
 		light->flags = PL_READUINT32( file, false, NULL );// flags
 
-		PLColour colour = ParseColour( file );
+		PLColour colour = parse_colour( file );
 		light->colour = PlColourU8ToF32( &colour );
 
-		light->radius = ParseFloat( file );// * 2.0f;
+		light->radius = parse_float( file );// * 2.0f;
 
-		ParseFloat( file );              // fov
-		ParseFloat( file );              // fov dropoff
-		ParseFloat( file );              // intensity at max range
+		parse_float( file );             // fov
+		parse_float( file );             // fov dropoff
+		parse_float( file );             // intensity at max range
 		PlReadInt32( file, false, NULL );// dropoff type
-		ParseFloat( file );              // tube light width
-		ParseFloat( file );              // on intensity
-		ParseFloat( file );              // on time
-		ParseFloat( file );              // on time variation
-		ParseFloat( file );              // off intensity
-		ParseFloat( file );              // off time
-		ParseFloat( file );              // off time variation
+		parse_float( file );             // tube light width
+		parse_float( file );             // on intensity
+		parse_float( file );             // on time
+		parse_float( file );             // on time variation
+		parse_float( file );             // off intensity
+		parse_float( file );             // off time
+		parse_float( file );             // off time variation
 
 		PlPushBackVectorArrayElement( world->lights, light );
 	}
 }
 
-static void ParsePlayerStart( ApeWorld *world, PLFile *file, int32_t version ) {
-	world->startPosition = ParseVector( file );
-	world->startOrientation = ParseMat3( file );
+static void parse_player_start( ApeWorld *world, PLFile *file, int32_t version )
+{
+	world->startPosition = parse_vector( file );
+	world->startOrientation = parse_mat3( file );
 }
 
-static void ParseLevelProperties( ApeWorld *world, PLFile *file, int version ) {
+static void parse_level_properties( ApeWorld *world, PLFile *file, int version )
+{
 	uint16_t size;
-	char *texture = ParseString( file, &size );
-	if ( texture != NULL ) {
+	char *texture = parse_string( file, &size );
+	if ( texture != NULL )
 		PL_DELETE( texture );
-	}
 
 	int hardness = PlReadInt32( file, false, NULL );
 
-	PLColour ambience = ParseColour( file );
+	PLColour ambience = parse_colour( file );
 	world->ambience = PlColourU8ToF32( &ambience );
 	bool directionalAmbience = PL_READUINT8( file, NULL );
 
-	PLColour fogColour = ParseColour( file );
+	PLColour fogColour = parse_colour( file );
 	world->fogColour = PlColourU8ToF32( &fogColour );
-	world->fogNear = ParseFloat( file );
-	world->fogFar = ParseFloat( file );
+	world->fogNear = parse_float( file );
+	world->fogFar = parse_float( file );
 
 	// Ensure clear copies the fog, to ensure some level of consistency
 	world->clearColour = world->fogColour;
 }
 
-ApeWorld *apeParseRFWorld_( PLFile *file ) {
+ApeWorld *apeParseRFWorld_( PLFile *file )
+{
 	uint32_t magic = PL_READUINT32( file, false, NULL );
-	if ( magic != RFL_MAGIC ) {
+	if ( magic != RFL_MAGIC )
+	{
 		PRINT_WARNING( "Invalid magic for world: %x != %x\n", magic, RFL_MAGIC );
 		return NULL;
 	}
 
 	int32_t version = PlReadInt32( file, false, NULL );
-	if ( version < RFL_VERSION_MIN || version > RFL_VERSION_MAX ) {
+	if ( version < RFL_VERSION_MIN || version > RFL_VERSION_MAX )
+	{
 		PRINT_WARNING( "Invalid version for world: %d < %d || %d > %d\n",
 		               version, RFL_VERSION_MIN,
 		               version, RFL_VERSION_MAX );
@@ -634,40 +701,44 @@ ApeWorld *apeParseRFWorld_( PLFile *file ) {
 	uint32_t objectOffset = PL_READUINT32( file, false, NULL );
 	uint32_t editorOffset = PL_READUINT32( file, false, NULL );
 
-	ApeWorld *world = ape_world_create();
+	ApeWorld *level = ape_world_create();
 
 	// read in all the chunks
 	uint32_t numChunks = PL_READUINT32( file, false, NULL );
 	uint32_t totalChunkSize = PL_READUINT32( file, false, NULL );
-	if ( version > 161 ) {
+	if ( version > 161 )
+	{
 		uint16_t size;
-		world->name = ParseString( file, &size );
+		level->name = parse_string( file, &size );
 	}
-	if ( version >= 178 && version < 272 ) {
+	if ( version >= 178 && version < 272 )
+	{
 		uint16_t size;
-		char *modName = ParseString( file, &size );
+		char *modName = parse_string( file, &size );
 		PL_DELETE( modName );
 	}
 
-	for ( uint32_t i = 0; i < numChunks; ++i ) {
+	for ( uint32_t i = 0; i < numChunks; ++i )
+	{
 		uint32_t chunkId = PL_READUINT32( file, false, NULL );
 		uint32_t chunkSize = PL_READUINT32( file, false, NULL );
 
 		PLFileOffset offset = PlGetFileOffset( file );
 		PLFileOffset nextChunk = offset + chunkSize;
 
-		switch ( chunkId ) {
+		switch ( chunkId )
+		{
 			case RFL_CHUNK_GEOMETRY:
-				ParseStaticGeometryChunk( world, file, version );
+				parse_static_geometry_chunk( level, file, version );
 				break;
 			case RFL_CHUNK_LIGHTS:
-				ParseLightsChunk( world, file, version );
+				parse_lights_chunk( level, file, version );
 				break;
-			case RFL_CHUNK_PLAYERSTART:
-				ParsePlayerStart( world, file, version );
+			case RFL_CHUNK_PLAYER_START:
+				parse_player_start( level, file, version );
 				break;
-			case RFL_CHUNK_LEVELPROPERTIES:
-				ParseLevelProperties( world, file, version );
+			case RFL_CHUNK_LEVEL_PROPERTIES:
+				parse_level_properties( level, file, version );
 				break;
 			default:
 				PRINT_DEBUG( "Skipping unknown chunk (%x : %u)\n", chunkId, offset );
@@ -678,5 +749,5 @@ ApeWorld *apeParseRFWorld_( PLFile *file ) {
 		PlFileSeek( file, nextChunk, PL_SEEK_SET );
 	}
 
-	return world;
+	return level;
 }

@@ -13,7 +13,7 @@ static const unsigned int RFC_MAGIC = 0x87128712;
 // so instead we'll do this, so if another version is ever found,
 // it'll get flagged as unsupported instead until we can verify it
 static const unsigned int RFC_SUPPORTED_VERSIONS[] = {
-        0, // Red Faction (?)
+        0, // Red Faction (PS2 Demo)
         1, // Red Faction (PS2)
         10,// Red Faction 2 (PS2 Demo)
 };

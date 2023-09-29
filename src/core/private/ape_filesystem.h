@@ -4,10 +4,8 @@
 
 typedef struct NdBranch NdBranch;
 
-const char *apeGetUserConfigLocation( void );
+const char *acl_get_user_config_location( void );
 
-void apeSetupConfig( NdBranch *root );
+void acl_setup_config( NdBranch *root );
 
 void apeMountBaseLocations( void );
-void apeMountLocations( void );
-void apeClearMountedLocations( void );

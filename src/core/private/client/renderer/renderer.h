@@ -113,8 +113,6 @@ typedef enum ApeRendererPassStage
 {
 	APE_RENDERER_PASS_DEFAULT,
 	APE_RENDERER_PASS_DEPTH,
-	APE_RENDERER_PASS_STENCIL,
-	APE_RENDERER_PASS_LIGHTING,
 } ApeRendererPassStage;
 
 typedef struct ApeRendererPassState

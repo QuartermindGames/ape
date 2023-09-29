@@ -20,7 +20,7 @@ ApeCamera *ar_camera_get_active( void )
 	return activeCamera;
 }
 
-void ar_camera_make_active( ApeCamera *camera )
+void arl_camera_make_active( ApeCamera *camera )
 {
 	activeCamera = camera;
 }
@@ -28,7 +28,7 @@ void ar_camera_make_active( ApeCamera *camera )
 /****************************************
  ****************************************/
 
-ApeCamera *ar_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+ApeCamera *arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
 
@@ -48,8 +48,8 @@ ApeCamera *ar_camera_create( const char *tag, const PLVector3 *position, const P
 
 	camera->internal->fov = 75.0f;
 	camera->internal->far = 1000000.0f;
-	apeSetCameraPosition( camera, position );
-	apeSetCameraAngles( camera, angles );
+	arl_camera_set_position( camera, position );
+	arl_camera_set_angles( camera, angles );
 
 	if ( cameras == NULL )
 	{
@@ -70,7 +70,7 @@ ApeCamera *ar_camera_create( const char *tag, const PLVector3 *position, const P
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void apeDestroyCamera( ApeCamera *camera )
+void arl_camera_destroy( ApeCamera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -96,7 +96,7 @@ void apeDestroyCamera( ApeCamera *camera )
 	}
 }
 
-void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
+void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 
@@ -112,17 +112,17 @@ void apeSetCameraPosition( ApeCamera *camera, const PLVector3 *position )
 	}
 }
 
-void apeSetCameraAngles( ApeCamera *camera, const PLVector3 *angles )
+void arl_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 }
 
-PLVector3 apeGetCameraPosition( const ApeCamera *camera )
+PLVector3 arl_camera_get_position( const ApeCamera *camera )
 {
 	return camera->internal->position;
 }
 
-PLVector3 apeGetCameraAngles( const ApeCamera *camera )
+PLVector3 arl_camera_get_angles( const ApeCamera *camera )
 {
 	return camera->internal->angles;
 }

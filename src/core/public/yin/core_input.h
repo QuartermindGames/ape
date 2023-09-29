@@ -128,9 +128,9 @@ void apeGetMouseDelta( int *x, int *y );
 
 typedef void ( *ApeInputActionCallback )( ApeInputState state, const char *id );
 
-void apeRegisterInputAction( const char *id,
-                             ApeInputButton buttons[], unsigned int numDefaultButtons,
-                             ApeInputKey keys[], unsigned int numDefaultKeys,
+void acl_input_register_action( const char *id,
+                                ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                ApeInputKey keys[], unsigned int numDefaultKeys,
                              ApeInputActionCallback actionCallback );
 ApeInputState apeGetInputActionState( const char *id );
 

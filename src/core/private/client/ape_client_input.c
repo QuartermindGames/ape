@@ -467,9 +467,9 @@ PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum ) {
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
 }
 
-void apeRegisterInputAction( const char *id,
-                             ApeInputButton buttons[], unsigned int numDefaultButtons,
-                             ApeInputKey keys[], unsigned int numDefaultKeys,
+void acl_input_register_action( const char *id,
+                                ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                ApeInputKey keys[], unsigned int numDefaultKeys,
                              ApeInputActionCallback actionCallback ) {
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL ) {

@@ -20,4 +20,4 @@
 #define Game_Error( ... )   PlLogMessage( globalGameErrorLog, __VA_ARGS__ )
 #define Game_Debug( ... )   PlLogMessage( globalGameDebugLog, __VA_ARGS__ )
 
-void gameRegisterStandardEntityComponents( void );
+void game_register_standard_entity_components( void );

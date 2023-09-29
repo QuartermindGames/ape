@@ -16,19 +16,19 @@ ApeConsoleOutput *apeGetConsoleOutput( void )
 	return &conOutputBuffer;
 }
 
-static void ClearOutputBuffer( void )
+static void clear_output_buffer( void )
 {
 	conOutputBuffer.numLines = 0;
 }
 
-static void ClearConsoleCommand( unsigned int argc, char **argv )
+static void clear_console_command( unsigned int argc, char **argv )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	ClearOutputBuffer();
+	clear_output_buffer();
 }
 
-static void OutputCallback( int level, const char *message, PLColour colour )
+static void output_callback( int level, const char *message, PLColour colour )
 {
 	size_t l = strlen( message );
 	if ( l >= CONSOLE_BUFFER_MAX_LENGTH )
@@ -76,7 +76,7 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void LoadUserConfig( void )
 {
-	NdBranch *root = ndLoadFile( apeGetUserConfigLocation(), "config" );
+	NdBranch *root = ndLoadFile( acl_get_user_config_location(), "config" );
 	if ( root == NULL )
 	{
 		PRINT( "No existing user config, generating default.\n" );
@@ -106,7 +106,7 @@ static void LoadUserConfig( void )
 static void save_user_config( void )
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "%s", apeGetUserConfigLocation() );
+	snprintf( path, sizeof( path ), "%s", acl_get_user_config_location() );
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
@@ -118,7 +118,6 @@ static void save_user_config( void )
 	{
 		if ( !cvars[ i ]->archive )
 			continue;
-
 		/* don't bother storing it if it matches the default */
 		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 )
 			continue;
@@ -153,7 +152,7 @@ void apeRegisterConsoleCommands_( bool isDedicated )
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
-	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, ClearConsoleCommand );
+	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
 
 	if ( !isDedicated )
 	{
@@ -209,7 +208,7 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
  */
 void apeInitializeConsole( void )
 {
-	PlSetConsoleOutputCallback( OutputCallback );
+	PlSetConsoleOutputCallback( output_callback );
 
 	logLevels[ APE_LOG_ERROR ] = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_WARNING ] = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
@@ -226,6 +225,6 @@ void apeInitializeConsole( void )
 
 void apeShutdownConsole( void )
 {
-	ClearOutputBuffer();
+	clear_output_buffer();
 	save_user_config();
 }

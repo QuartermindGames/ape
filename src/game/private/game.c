@@ -7,7 +7,7 @@ int globalGameDebugLog;
 int globalGameWarningLog;
 int globalGameErrorLog;
 
-void gameRegisterStandardEntityComponents( void ) {
+void game_register_standard_entity_components( void ) {
 }
 
 void gamePlayerConnected( const char *name, unsigned int id ) {

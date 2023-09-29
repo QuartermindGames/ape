@@ -2,6 +2,7 @@ add_library(ApeCommon STATIC
         private/common.c
         private/common_profiler.c
         private/common_project.c
+        private/formats/tbx.c
         private/pack/pack_pkg.c
         private/pack/pack_vpp.c
 )

@@ -116,16 +116,16 @@ static void InitializeWorldEditor( void ) {
 	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = ar_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = arl_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera = cameras[ 0 ];
 	context.camera->mode = APE_CAMERA_MODE_TOP;
 	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
 
-	apeRegisterInputAction( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	apeRegisterInputAction( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	apeRegisterInputAction( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
+	acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
+	acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
+	acl_input_register_action( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
 static void ShutdownWorldEditor( void ) {
