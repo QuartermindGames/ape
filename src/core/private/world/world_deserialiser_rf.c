@@ -634,7 +634,7 @@ ApeWorld *apeParseRFWorld_( PLFile *file ) {
 	uint32_t objectOffset = PL_READUINT32( file, false, NULL );
 	uint32_t editorOffset = PL_READUINT32( file, false, NULL );
 
-	ApeWorld *world = apeCreateWorld();
+	ApeWorld *world = ape_world_create();
 
 	// read in all the chunks
 	uint32_t numChunks = PL_READUINT32( file, false, NULL );

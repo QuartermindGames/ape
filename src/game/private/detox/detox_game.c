@@ -9,7 +9,7 @@ ToxGlobalVars tox_globalVars;
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( ApeInputState state, const char *id )
+static void move_camera_callback( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
@@ -45,7 +45,7 @@ static void SpawnLight( ApeInputState state, const char *id )
 {
 }
 
-static void InitializeGame( void )
+static void initialize_game( void )
 {
 	PlRegisterConsoleVariable( "tox/sunYaw", "Set the yaw of the sun.", "0", PL_VAR_F32, &tox_globalVars.sunYaw, NULL, false );
 
@@ -58,24 +58,24 @@ static void InitializeGame( void )
 	playerCamera = ar_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	ar_camera_make_active( playerCamera );
 
-	apeRegisterInputAction( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
-	apeRegisterInputAction( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
-	apeRegisterInputAction( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
-	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
+	apeRegisterInputAction( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
+	apeRegisterInputAction( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
+	apeRegisterInputAction( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
+	apeRegisterInputAction( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
+	apeRegisterInputAction( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
+	apeRegisterInputAction( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
+	apeRegisterInputAction( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
+	apeRegisterInputAction( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 	apeRegisterInputAction( "spawnLight", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, SpawnLight );
 }
 
-static void ShutdownGame( void )
+static void shutdown_game( void )
 {
 	apeDestroyCamera( playerCamera );
 	playerCamera = NULL;
 }
 
-static void TickGame( void )
+static void tick_game( void )
 {
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
@@ -90,21 +90,21 @@ static void TickGame( void )
 		apeSetCameraAngles( playerCamera, &ang );
 	}
 
-	toxWorld_Tick();
+	tox_world_tick();
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user )
+static bool handle_request( GameModeRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_INITIALIZE:
 		{
-			InitializeGame();
+			initialize_game();
 			return true;
 		}
 		case GAMEMODE_REQUEST_TICK:
 		{
-			TickGame();
+			tick_game();
 			break;
 		}
 		case GAMEMODE_REQUEST_HANDLEINPUT:
@@ -113,7 +113,7 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 		}
 		case GAMEMODE_REQUEST_SPAWNWORLD:
 		{
-			toxWorld_Spawn();
+			tox_world_spawn( ( ApeWorld * ) user );
 			break;
 		}
 		default:
@@ -127,6 +127,6 @@ const GameModeInterface *gameGetModeInterface( void )
 {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
-	gameMode.RequestCallbackMethod = HandleRequest;
+	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;
 }

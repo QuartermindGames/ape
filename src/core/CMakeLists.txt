@@ -2,6 +2,7 @@ set(YIN_CORE_CLIENT
         private/client/ape_client.c
         private/client/ape_client_decal.c
         private/client/client_console.c
+        private/client/client_light.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
         private/client/renderer/post/post_bloom.c
@@ -63,6 +64,8 @@ add_library(ApeCore STATIC
         private/ape_binary_serializer.c
 
         private/ape.c
+
+        private/model/model_rfc.c
 
         private/world/world.c
         private/world/world_deserialiser.c

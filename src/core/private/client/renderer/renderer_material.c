@@ -417,8 +417,13 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 		else
 			PRINT_WARNING( "Invalid blend mode array in material!\n" );
 	}
+	else
+	{
+		materialPass->blendMode[ 0 ] = PLG_BLEND_NONE;
+		materialPass->blendMode[ 1 ] = PLG_BLEND_NONE;
+	}
 
-	materialPass->depthTest = ndGetBoolByName( root, "depthTest", materialPass->depthTest );
+	materialPass->depthTest = ndGetBoolByName( root, "depthTest", true );
 	materialPass->cullMode = ndGetInt( root, "cullMode", materialPass->cullMode );
 
 	const char *textureFilterPtr = ndGetStringByName( root, "textureFilterMode", NULL );
@@ -780,6 +785,8 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		}
 
 		PlgSetCullMode( cullMode );
+
+		//PlgDepthMask( curPass->depthTest );
 
 		// we have an awkward check for wireframe here because we don't want to just blindly handle it globally,
 		// otherwise UI elements will be wireframe too, so instead we'll just check the plg state flag

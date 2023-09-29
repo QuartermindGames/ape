@@ -64,7 +64,7 @@ void apeInitializeGame( void ) {
 		PRINT_ERROR( "Failed to get game interface!\n" );
 	}
 
-	if ( !game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) ) {
+	if ( !game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) ) {
 		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
 	}
 
@@ -72,7 +72,7 @@ void apeInitializeGame( void ) {
 }
 
 void apeShutdownGame( void ) {
-	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
+	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 }
 
@@ -83,7 +83,7 @@ MenuState gameGetMenuState( void ) {
 void apeTickGame( void ) {
 	COM_PROFILE_FUNCTION_START();
 
-	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
+	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -95,11 +95,11 @@ void apeDisconnectGame( void ) {
 			 *  might be lost! */
 		}
 
-		apeDestroyWorld( currentWorld );
+		ape_world_destroy( currentWorld );
 		currentWorld = NULL;
 	}
 
-	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
+	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
 void apeSpawnWorld( const char *worldPath ) {
@@ -129,7 +129,7 @@ void apeSpawnWorld( const char *worldPath ) {
 	//gameState	= GAME_STATE_ACTIVE;
 	inputTarget = INPUT_TARGET_GAME;
 
-	game_modeInterface->RequestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
+	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
 
 	apeSpawnWorldEntities( world );
 

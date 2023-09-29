@@ -1,5 +1,4 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
-// Purpose: Loader for RFL format.
 
 #include <plcore/pl_filesystem.h>
 #include <plgraphics/plg_mesh.h>
@@ -8,14 +7,12 @@
 #include "world.h"
 #include "client/renderer/renderer.h"
 
-void apeSetupGlobalWorldDefaults( ApeWorld *world ) {
+void ape_world_set_global_defaults( ApeWorld *world ) {
 	world->ambience = WORLD_DEFAULT_AMBIENCE;
-	world->sunColour = WORLD_DEFAULT_SUNCOLOUR;
-	world->sunPosition = WORLD_DEFAULT_SUNPOSITION;
 	world->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-ApeWorld *apeCreateWorld( void ) {
+ApeWorld *ape_world_create( void ) {
 	ApeWorld *world = PL_NEW( ApeWorld );
 
 	world->globalProperties = ndPushBackObject( NULL, "properties" );
@@ -27,24 +24,7 @@ ApeWorld *apeCreateWorld( void ) {
 	world->lights = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
-#if 1// ALIVE Hack: add in a light source to act as the sun
-	ApeLight *light = PL_NEW( ApeLight );
-	light->colour = WORLD_DEFAULT_SUNCOLOUR;
-	light->type = APE_LIGHT_TYPE_SUN;
-	light->flags |= APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS;
-	light->position = WORLD_DEFAULT_SUNPOSITION;
-	PlPushBackVectorArrayElement( world->lights, light );
-
-#if 0
-	light = PL_NEW( ApeLight );
-	light->colour = WORLD_DEFAULT_SUNCOLOUR;
-	light->type = APE_LIGHT_TYPE_OMNI;
-	light->flags |= APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS;
-	PlPushBackVectorArrayElement( world->lights, light );
-#endif
-#endif
-
-	apeSetupGlobalWorldDefaults( world );
+	ape_world_set_global_defaults( world );
 
 	return world;
 }
@@ -245,9 +225,9 @@ ApeWorld *apeLoadWorld( const char *path ) {
 			return NULL;
 		}
 
-		world = apeCreateWorld();
+		world = ape_world_create();
 		if ( apeDeserializeWorld( world, root ) == NULL ) {
-			apeDestroyWorld( world );
+			ape_world_destroy( world );
 			world = NULL;
 		}
 
@@ -300,7 +280,7 @@ bool apeSaveWorld( ApeWorld *world, const char *path ) {
 	return true;
 }
 
-void apeDestroyWorld( ApeWorld *world ) {
+void ape_world_destroy( ApeWorld *world ) {
 	if ( world == NULL ) {
 		return;
 	}
@@ -383,7 +363,8 @@ void apeSpawnWorldEntities( ApeWorld *world ) {
 	}
 }
 
-void apeAssignEntityToWorld( ApeWorld *world, ApeEntity *entity ) {
+void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity )
+{
 	assert( entity->world == NULL );
 	if ( entity->world != NULL ) {
 		PRINT_WARNING( "Entity is already associated with a world!\n" );
@@ -392,6 +373,19 @@ void apeAssignEntityToWorld( ApeWorld *world, ApeEntity *entity ) {
 
 	PlPushBackVectorArrayElement( world->entities, entity );
 	entity->world = world;
+}
+
+void ape_world_attach_light( ApeWorld *world, ApeLight *light )
+{
+	assert( light->world == NULL );
+	if ( light->world != NULL )
+	{
+		PRINT_WARNING( "Light is already associated with a world!\n" );
+		return;
+	}
+
+	PlPushBackVectorArrayElement( world->lights, light );
+	light->world = world;
 }
 
 /****************************************

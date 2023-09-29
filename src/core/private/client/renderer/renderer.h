@@ -95,6 +95,8 @@ typedef struct ApeLight
 	uint32_t flags;
 
 	int32_t state;
+
+	ApeWorld *world;
 } ApeLight;
 
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
