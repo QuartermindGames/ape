@@ -494,53 +494,6 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	if ( world == NULL )
 		return;
 
-#if 1// test lights
-	if ( world->lights != NULL )
-	{
-		PLVector3 forward;
-		PlAnglesAxes( camera->internal->angles, NULL, NULL, &forward );
-
-		ApeLight *light = PlGetVectorArrayElementAt( world->lights, 0 );
-		if ( light != NULL )
-		{
-			light->position.y = ( -1.0f + sinf( ( float ) apeGetNumTicks() / 100.0f ) / 10.0f );
-			//light->position.z -= 0.0005f;
-			//light->colour.a -= 0.0005f;
-		}
-
-#	if 0
-		for ( unsigned int i = 0; i < 2; ++i ) {
-			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
-			if ( light == NULL ) {
-				// Probably reached the end!
-				break;
-			}
-#		if 1
-			if ( i == 0 ) {
-				light->flags |= APE_LIGHT_FLAG_RUNTIME_SHADOWS;
-				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 8.0f ) );
-				light->position = PlAddVector3( light->position, ( PLVector3 ){
-				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
-				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f,
-				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 4.0f } );
-				light->colour = PL_COLOURF32( 1.f, 1.f, 1.f, 1.0f );
-				light->radius = 128.0f;
-			} else {
-				light->position = PlAddVector3( apeGetCameraPosition( camera ), PlScaleVector3F( forward, 2.0f ) );
-				light->position = PlAddVector3( light->position, ( PLVector3 ){
-				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f,
-				                                                         ( sinf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f,
-				                                                         ( cosf( ( float ) apeGetNumTicks() / 100.0f ) / 100.0f ) * 16.0f } );
-				light->colour = PL_COLOURF32( 0.5f, 0, 1.0f, 1.0f );
-				light->radius = 4.0f;
-			}
-#		endif
-			apeDrawAxesPivot( light->position, light->angles, 1.0f );
-		}
-#	endif
-	}
-#endif
-
 	// Ambient pass ...
 
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
@@ -555,6 +508,9 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	{
 		for ( unsigned int i = 0; i < numLights; ++i )
 		{
+			if ( lights[ i ]->colour.a == 0.0f )
+				continue;
+
 #if 0
 
 			PLCollisionSphere sphere = PlSetupCollisionSphere( lights[ i ]->position, lights[ i ]->radius );

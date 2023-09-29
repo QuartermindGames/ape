@@ -12,8 +12,8 @@ typedef struct NdBranch NdBranch;
 /* external elements */
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
-
 typedef struct ApeLight ApeLight;
+typedef struct ApeEntity ApeEntity;// core_entity.h
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -34,7 +34,7 @@ typedef struct ApeWorld ApeWorld;
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
-ApeWorld *apeCreateWorld( void );
+ApeWorld *ape_world_create( void );
 
 ApeWorld *apeLoadWorld( const char *path );
 
@@ -54,16 +54,30 @@ struct ApeWorld *apeGetCurrentWorld( void );
 /// \return On success, returns true but false otherwise.
 bool apeSaveWorld( ApeWorld *world, const char *path );
 
-void apeDestroyWorld( ApeWorld *world );
+void ape_world_destroy( ApeWorld *world );
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
 void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
-void apeSetupGlobalWorldDefaults( ApeWorld *world );
+void ape_world_set_global_defaults( ApeWorld *world );
+
+/**
+ * Assigning an entity to the world will give the world instance
+ * ownership of that entity.
+ */
+void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity );
+
+/**
+ * Assigning a light to the world will give the world instance
+ * ownership of that light.
+ */
+void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
 void apeAddSkyLayer_( const char *path );
 void apeClearSkyLayers_( void );
 void apeDrawSky_( ApeCamera *camera );
+
+void apeSetSunPosition( ApeWorld *world, const PLVector3 *position );
 
 void apeGetPlayerStart( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
 
@@ -114,6 +128,13 @@ typedef enum ApeLightType
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-ApeLight *apeSpawnLight( ApeLightType type, PLVector3 *position );
+ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
+void ape_light_destroy( ApeLight *light );
+
+PLColourF32 ape_light_get_colour( const ApeLight *light );
+void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
+
+PLVector3 ape_light_get_position( const ApeLight *light );
+void ape_light_set_position( ApeLight *light, const PLVector3 *position );
 
 PL_EXTERN_C_END

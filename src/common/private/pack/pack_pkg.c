@@ -15,7 +15,7 @@ static const size_t PKG_HEADER_SIZE = sizeof( PkgHeader );
 /////////////////////////////////////////////////////////////////
 // READ
 
-static PLPackage *ParsePkgFile( PLFile *file ) {
+static PLPackage *parse_pkg_file( PLFile *file ) {
 	PkgHeader header;
 	header.magic = PlReadInt32( file, false, NULL );
 	if ( header.magic != PKG_MAGIC ) {
@@ -60,12 +60,12 @@ static PLPackage *ParsePkgFile( PLFile *file ) {
 	return package;
 }
 
-static PLPackage *LoadPkgFile( const char *path ) {
+static PLPackage *load_pkg_file( const char *path ) {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 		return NULL;
 
-	PLPackage *package = ParsePkgFile( file );
+	PLPackage *package = parse_pkg_file( file );
 
 	PlCloseFile( file );
 
@@ -73,7 +73,7 @@ static PLPackage *LoadPkgFile( const char *path ) {
 }
 
 void comRegisterPkgInterface_( void ) {
-	PlRegisterPackageLoader( "pkg", LoadPkgFile, ParsePkgFile );
+	PlRegisterPackageLoader( "pkg", load_pkg_file, parse_pkg_file );
 }
 
 /////////////////////////////////////////////////////////////////

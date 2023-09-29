@@ -34,7 +34,7 @@ static void CreateWorldCommand( unsigned int argc, char **argv ) {
 		return;
 	}
 
-	world = apeCreateWorld();
+	world = ape_world_create();
 }
 
 static void DestroyWorldCommand( unsigned int argc, char **argv ) {
@@ -42,7 +42,7 @@ static void DestroyWorldCommand( unsigned int argc, char **argv ) {
 		return;
 	}
 
-	apeDestroyWorld( world );
+	ape_world_destroy( world );
 	world = NULL;
 }
 

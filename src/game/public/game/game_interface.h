@@ -10,13 +10,13 @@ extern int globalGameDebugLog;
 extern int globalGameWarningLog;
 extern int globalGameErrorLog;
 
-typedef enum GameModeRequest {
+typedef enum GameModeRequest
+{
 	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation
 	GAMEMODE_REQUEST_SHUTDOWN,  // called when shutting down engine
 
-	GAMEMODE_REQUEST_NEWGAME,
-	GAMEMODE_REQUEST_SAVEGAME,
-	GAMEMODE_REQUEST_RESTOREGAME,
+	GAME_MODE_REQUEST_DRAW,
+	GAME_MODE_REQUEST_DRAW_UI,
 
 	GAMEMODE_REQUEST_TICK,// called after entity tick
 	GAMEMODE_REQUEST_HANDLEINPUT,
@@ -25,25 +25,20 @@ typedef enum GameModeRequest {
 	GAMEMODE_REQUEST_DISCONNECT,
 } GameModeRequest;
 
-typedef struct GameModeInterface {
+typedef struct GameModeInterface
+{
 	void ( *Initialize )( void );
 	void ( *Shutdown )( void );
 
-	void ( *NewGame )( const char *path );
-	void ( *SaveGame )( const char *path );
-	void ( *RestoreGame )( const char *path );
-
-	void ( *Precache )( void );
-
 	void ( *Draw )( void );
-	void ( *DrawMenu )( const struct ApeViewport *viewport );
 
 	// This is basically a replacement for the above - just slightly less fussy
-	bool ( *RequestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
+	bool ( *requestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
 } GameModeInterface;
 const GameModeInterface *gameGetModeInterface( void );
 
-typedef enum GameDifficulty {
+typedef enum GameDifficulty
+{
 	GAME_DIFFICULTY_NORMAL,
 	GAME_DIFFICULTY_EASY,
 	GAME_DIFFICULTY_HARD,
@@ -53,7 +48,8 @@ typedef enum GameDifficulty {
 void gameSetDifficultyMode( GameDifficulty difficulty );
 GameDifficulty gameGetDifficultyMode( void );
 
-typedef enum GameConnectionType {
+typedef enum GameConnectionType
+{
 	GAME_CONNECTION_NONE,  /* not connected */
 	GAME_CONNECTION_LOCAL, /* localhost */
 	GAME_CONNECTION_LAN,
@@ -64,7 +60,8 @@ GameConnectionType gameGetConnectionType( void );
 void gamePlayerConnected( const char *name, unsigned int id );
 void gamePlayerDisconnected( unsigned int id );
 
-typedef enum MenuState {
+typedef enum MenuState
+{
 	MENU_STATE_START, /* draw start screen */
 	MENU_STATE_HUD,   /* hud/overlay mode */
 } MenuState;
@@ -74,7 +71,8 @@ typedef struct Actor Actor;
 
 ////////////////////////////////////////////////////////////////////
 
-typedef enum GameMaterialSurfaceType {
+typedef enum GameMaterialSurfaceType
+{
 	GAME_MATERIAL_SURFACE_TYPE_NONE,
 	GAME_MATERIAL_SURFACE_TYPE_ROCK,
 	GAME_MATERIAL_SURFACE_TYPE_METAL,
@@ -91,7 +89,8 @@ typedef enum GameMaterialSurfaceType {
 	GAME_MAX_MATERIAL_SURFACE_TYPES
 } GameMaterialSurfaceType;
 
-typedef struct GameMaterialSurface {
+typedef struct GameMaterialSurface
+{
 	char description[ 32 ];
 	char **aliases;
 	uint8_t numAliases;

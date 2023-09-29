@@ -133,10 +133,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 		ar_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
-	if ( game_modeInterface->DrawMenu != NULL )
-	{
-		game_modeInterface->DrawMenu( viewport );
-	}
+	game_modeInterface->requestCallbackMethod( GAME_MODE_REQUEST_DRAW_UI, NULL );
 
 	apeDrawEditorGUI_( viewport );
 

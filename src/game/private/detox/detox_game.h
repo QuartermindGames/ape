@@ -5,10 +5,10 @@
 
 #include "../game_private.h"
 
-#define DETOX_GAME_MILESTONE     "alive-preview"
-#define DETOX_GAME_VERSION_MAJOR 0
-#define DETOX_GAME_VERSION_MINOR 1
-#define DETOX_GAME_VERSION_PATCH 0
+#define TOX_GAME_MILESTONE     "alive-preview"
+#define TOX_GAME_VERSION_MAJOR 0
+#define TOX_GAME_VERSION_MINOR 1
+#define TOX_GAME_VERSION_PATCH 0
 
 typedef struct ToxGlobalVars
 {

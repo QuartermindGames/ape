@@ -294,8 +294,6 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		// Get the global properties of the world from the branch
 
 		world->ambience = ndGetColourF32( world->globalProperties, "ambience", &WORLD_DEFAULT_AMBIENCE );
-		world->sunColour = ndGetColourF32( world->globalProperties, "sunColour", &WORLD_DEFAULT_SUNCOLOUR );
-		world->sunPosition = ndGetVector3( world->globalProperties, "sunPosition", &WORLD_DEFAULT_SUNPOSITION );
 
 		world->clearColour = ndGetColourF32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
