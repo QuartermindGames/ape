@@ -92,3 +92,6 @@ const ToxWorldState *tox_world_get_state( void );
 
 void tox_world_spawn( ApeWorld *world );
 void tox_world_tick( void );
+
+float tox_world_get_sun_brightness( void );
+float tox_world_get_moon_brightness( void );

@@ -54,6 +54,7 @@ static void initialize_game( void )
 	apeRegisterEntityClass( toxGetCharacterClassTable() );
 
 	PlParseConsoleString( "world ship/worlds/alive_intro.wld.n" );
+	PlParseConsoleString( "r/fov 45" );
 
 	playerCamera = ar_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	ar_camera_make_active( playerCamera );
