@@ -298,8 +298,8 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		world->clearColour = ndGetColourF32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
 		world->fogColour = ndGetColourF32( world->globalProperties, "fogColour", &WORLD_DEFAULT_CLEARCOLOUR );
-		world->fogFar = ndGetF32ByName( world->globalProperties, "fogFar", 11.0f );
-		world->fogNear = ndGetF32ByName( world->globalProperties, "fogNear", 32.0f );
+		world->fogFar = ndGetF32ByName( world->globalProperties, "fogFar", 5.0f );
+		world->fogNear = ndGetF32ByName( world->globalProperties, "fogNear", 0.01f );
 	}
 
 	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL ) {
