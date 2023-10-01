@@ -539,7 +539,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 #endif
 
-		ar_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+		//arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
 
 		if ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS )
 		{
@@ -597,14 +597,14 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 			apeDrawWorld_( world, camera, lights[ i ], false );
 
-			PlgDepthBufferFunction( PLG_COMPARE_LESS );
-
 			rendererState.overrideBlendMode = false;
 			rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
 		}
 
 		ape_rendererPerformance_.numLights++;
 	}
+
+	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	rendererState.passStage = APE_RENDERER_PASS_DEFAULT;

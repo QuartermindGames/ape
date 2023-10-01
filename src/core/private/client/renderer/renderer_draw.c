@@ -50,7 +50,7 @@ void ar_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLCo
 	apeDrawMesh( material, mesh, NULL, 0 );
 }
 
-void ar_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
+void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

@@ -662,6 +662,10 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *ligh
 
 	if ( light != NULL )
 	{
+		//TODO: another hack, fog shouldn't be included in lighting passes, blergh
+		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
+			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
+
 		if ( light->type == APE_LIGHT_TYPE_SUN )
 		{
 			//TODO: get rid of this, should be treated as a light instead...
@@ -754,7 +758,7 @@ int8_t ar_material_get_surface_type( const ApeMaterial *material )
 	return material->surfaceType;
 }
 
-bool ar_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
+bool arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
 
 void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {

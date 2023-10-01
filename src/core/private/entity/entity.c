@@ -7,7 +7,7 @@
 
 static PLHashTable *entityClassDefinitions = NULL;
 
-void apeRegisterEntityClass( const ApeEntityClassDefinition *definition ) {
+void acl_entity_register_class( const ApeEntityClassDefinition *definition ) {
 	if ( entityClassDefinitions == NULL ) {
 		entityClassDefinitions = PlCreateHashTable();
 	}

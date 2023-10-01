@@ -52,7 +52,7 @@ typedef struct ApeEntityClassDefinition {
 
 typedef const ApeEntityClassDefinition *( *ApeEntityClassRegisterFunction )( void );
 
-void apeRegisterEntityClass( const ApeEntityClassDefinition *definition );
+void acl_entity_register_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition *apeGetEntityClassTable( const char *className );
 
 ApeEntity *apeCreateEntity( const char *className, NdBranch *properties );

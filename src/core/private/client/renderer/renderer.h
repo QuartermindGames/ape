@@ -154,7 +154,7 @@ struct ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name );
 void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport );
 
 void ar_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
-void ar_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
+void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ar_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 
 void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
