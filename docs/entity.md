@@ -31,7 +31,7 @@ You can then register your class by calling `apeRegisterEntityClass` in your gam
 
 ```c
 static void InitializeGame( void ) {
-	gameRegisterStandardEntityComponents();
+	game_register_standard_entity_components();
 	
 	apeRegisterEntityClass( toxGetCharacterClassTable() );
     

@@ -92,8 +92,8 @@ void apeShutdownConsole( void );
 int Console_GetLogLevel( ApeConsoleLogLevel level );
 void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 
-void apeRegisterConsoleCommands_( bool isDedicated );
-void apeRegisterConsoleVariables_( bool isDedicated );
+void acl_console_register_commands_( bool isDedicated );
+void acl_console_register_variables_( bool isDedicated );
 
 void apeDrawConsole_( const ApeViewport *viewport );
 void apeRegisterClientConsoleCommands_( void );

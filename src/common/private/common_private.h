@@ -22,5 +22,5 @@ extern int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 #define Message( FORMAT, ... ) PlLogWFunction( com_logLevels_[ COM_LOG_LEVEL_INFO ], FORMAT, ##__VA_ARGS__ )
 #define Warning( FORMAT, ... ) PlLogWFunction( com_logLevels_[ COM_LOG_LEVEL_WARN ], FORMAT, ##__VA_ARGS__ )
 
-void comRegisterPkgInterface_( void );
-void comRegisterVppInterface_( void );
+void com_pack_pkg_register_( void );
+void com_pack_vpp_register_( void );

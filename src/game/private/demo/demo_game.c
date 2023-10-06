@@ -41,7 +41,7 @@ static void initialize_demo_game( void )
 {
 	game_register_standard_entity_components();
 
-	PlParseConsoleString( "world worlds/train01.rfl" );
+	PlParseConsoleString( "level worlds/train01.rfl" );
 
 	playerCamera = arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	arl_camera_make_active( playerCamera );

@@ -55,7 +55,7 @@ add_library(ApeCore STATIC
         private/net/net.c
         private/net/net_var.c
 
-        private/ape_filesystem.c
+        private/core_fs.c
         private/ape_interface_game.c
         private/ape_image.c
         private/ape_memory_manager.c
@@ -65,7 +65,7 @@ add_library(ApeCore STATIC
 
         private/ape.c
 
-        private/model/model_rfc.c
+        private/model/model_rfm.c
 
         private/world/world.c
         private/world/world_deserialiser.c

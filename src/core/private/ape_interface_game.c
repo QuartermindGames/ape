@@ -27,7 +27,7 @@ static MenuState menuState = MENU_STATE_START;
 
 static ApeWorld *currentWorld = NULL;
 
-static void SpawnWorldCommand( unsigned int argc, char **argv ) {
+static void spawn_level_command( unsigned int argc, char **argv ) {
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
 	apeSpawnWorld( path );
@@ -39,9 +39,9 @@ static void SpawnWorldCommand( unsigned int argc, char **argv ) {
 
 const GameModeInterface *game_modeInterface;
 
-GameState oge_gameState_;
+GameState acl_gameState_;
 
-void apeInitializeGame( void ) {
+void acl_initialize_game_( void ) {
 	PRINT( "Initializing Game...\n" );
 
 	globalGameLog = PlAddLogLevel( "game", PL_COLOUR_WHITE, true );
@@ -55,9 +55,9 @@ void apeInitializeGame( void ) {
 	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, true );
 	globalGameErrorLog = PlAddLogLevel( "game/error", PL_COLOUR_RED, true );
 
-	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, SpawnWorldCommand );
+	PlRegisterConsoleCommand( "level", "Load in and spawn the specified level.", 1, spawn_level_command );
 
-	PL_ZERO_( oge_gameState_ );
+	PL_ZERO_( acl_gameState_ );
 
 	game_modeInterface = gameGetModeInterface();
 	if ( game_modeInterface == NULL ) {
@@ -71,7 +71,7 @@ void apeInitializeGame( void ) {
 	PRINT( "Game initialized!\n" );
 }
 
-void apeShutdownGame( void ) {
+void acl_shutdown_game_( void ) {
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 }

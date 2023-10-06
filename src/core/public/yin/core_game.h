@@ -7,12 +7,12 @@ PL_EXTERN_C
 typedef struct GameState {
 	int mode, oldMode;
 } GameState;
-extern GameState oge_gameState_;
+extern GameState acl_gameState_;
 
 extern const struct GameModeInterface *game_modeInterface;
 
-void apeInitializeGame( void );
-void apeShutdownGame( void );
+void acl_initialize_game_( void );
+void acl_shutdown_game_( void );
 void apeTickGame( void );
 void apeDisconnectGame( void );
 void apeSpawnWorld( const char *worldPath );

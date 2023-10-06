@@ -3,7 +3,7 @@
 #include "ape_private.h"
 
 #include "client/ape_client_input.h"
-#include "ape_filesystem.h"
+#include "yin/core_fs.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -147,12 +147,15 @@ static void save_user_config( void )
 	PRINT( "User config saved.\n" );
 }
 
-void apeRegisterConsoleCommands_( bool isDedicated )
+void acl_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
+
+	void acl_model_rfm_test_command_( unsigned int argc, char **argv );
+	PlRegisterConsoleCommand( "test_model_rfm", "Test the RFM model loader.", 0, acl_model_rfm_test_command_ );
 
 	if ( !isDedicated )
 	{
@@ -160,7 +163,7 @@ void apeRegisterConsoleCommands_( bool isDedicated )
 	}
 }
 
-void apeRegisterConsoleVariables_( bool isDedicated )
+void acl_console_register_variables_( bool isDedicated )
 {
 	// server
 	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );

@@ -3,8 +3,8 @@
 #include "ape_private.h"
 
 #include "yin/core_game.h"
+#include "yin/core_fs.h"
 
-#include "ape_filesystem.h"
 #include "ape_model.h"
 
 #include "client/ape_client.h"
@@ -54,8 +54,8 @@ bool apeInitialize( const char *config ) {
 		PRINT( "Operating in command-line mode!\n" );
 	}
 
-	apeRegisterConsoleVariables_( engineTerminalMode );
-	apeRegisterConsoleCommands_( engineTerminalMode );
+	acl_console_register_variables_( engineTerminalMode );
+	acl_console_register_commands_( engineTerminalMode );
 
 	PlRegisterStandardPackageLoaders();
 
@@ -95,7 +95,7 @@ bool apeInitialize( const char *config ) {
 	apeInitializeServer();
 	apeInitializeClient_();
 
-	apeInitializeGame();
+	acl_initialize_game_();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -109,7 +109,7 @@ void apeShutdown( void ) {
 
 	apeFlushTasks();
 
-	apeShutdownGame();
+	acl_shutdown_game_();
 	apeShutdownEditor_();
 
 	apeShutdownClient_();

@@ -1,8 +1,8 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "ape_private.h"
-#include "ape_filesystem.h"
 
+#include "yin/core_fs.h"
 #include <yin/node.h>
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -107,4 +107,65 @@ void apeMountBaseLocations( void )
 
 	PlMountLocalLocation( exePath );
 	PlMountLocalLocation( comGetDataDirectory() );
+}
+
+char *acl_fs_parse_string( PLFile *file, uint16_t *size )
+{
+	bool status;
+	*size = PL_READUINT16( file, false, &status );
+	assert( status );
+	if ( *size == 0 || !status )
+		return NULL;
+
+	char *buf = PL_NEW_( char, ( *size ) + 1 );
+	size_t rb = PlReadFile( file, buf, sizeof( char ), *size );
+	assert( rb == *size );
+	return buf;
+}
+
+float acl_fs_parse_float( PLFile *file )
+{
+	bool status;
+	float f = PlReadFloat32( file, false, &status );
+	assert( status && !isnan( f ) );
+	return f;
+}
+
+PLVector3 acl_fs_parse_vector( PLFile *file )
+{
+	return ( PLVector3 ){
+	        acl_fs_parse_float( file ),
+	        acl_fs_parse_float( file ),
+	        acl_fs_parse_float( file ),
+	};
+}
+
+PLMatrix3 acl_fs_parse_mat3( PLFile *file )
+{
+	return ( PLMatrix3 ){
+	        // forward
+	        .m[ 0 ] = acl_fs_parse_float( file ),
+	        .m[ 1 ] = acl_fs_parse_float( file ),
+	        .m[ 2 ] = acl_fs_parse_float( file ),
+	        // right
+	        .m[ 3 ] = acl_fs_parse_float( file ),
+	        .m[ 4 ] = acl_fs_parse_float( file ),
+	        .m[ 5 ] = acl_fs_parse_float( file ),
+	        // up
+	        .m[ 6 ] = acl_fs_parse_float( file ),
+	        .m[ 7 ] = acl_fs_parse_float( file ),
+	        .m[ 8 ] = acl_fs_parse_float( file ),
+	};
+}
+
+PLColour acl_fs_parse_colour( PLFile *file )
+{
+	bool status;
+	PLColour c = ( PLColour ){
+	        PL_READUINT8( file, &status ),
+	        PL_READUINT8( file, &status ),
+	        PL_READUINT8( file, &status ),
+	        PL_READUINT8( file, &status ) };
+	assert( status );
+	return c;
 }

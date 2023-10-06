@@ -16,7 +16,8 @@ static const int32_t VPP_MIN_VERSION = 1;
 // 2 - entry structure changed, introduced compression (RF2 PS2)
 // 3 - the same? (Punisher PS2)
 
-typedef struct VppHeader {
+typedef struct VppHeader
+{
 	int32_t magic;
 	int32_t version;
 	int32_t numFiles;
@@ -24,38 +25,46 @@ typedef struct VppHeader {
 } VppHeader;
 PL_STATIC_ASSERT( sizeof( VppHeader ) == 16, "needs to be 16 bytes" );
 
-typedef struct VppEntry {
+typedef struct VppEntry
+{
 	char name[ 60 ];
 	int32_t size;
 } VppEntry;
 PL_STATIC_ASSERT( sizeof( VppEntry ) == 64, "needs to be 64 bytes" );
 
 // this got shrunk down for version 2
-typedef struct Vpp2Entry {
+typedef struct Vpp2Entry
+{
 	char name[ 24 ];
 	int32_t size;
 	int32_t compressedSize;
 } Vpp2Entry;
 PL_STATIC_ASSERT( sizeof( Vpp2Entry ) == 32, "needs to be 32 bytes" );
 
-static uint32_t CalculateStreamLength( uint32_t dataSize ) {
+static uint32_t calculate_stream_length( uint32_t dataSize )
+{
 	return ( uint32_t ) ceil( ( double ) dataSize / BLOCK_SIZE ) * BLOCK_SIZE;
 }
 
-static PLPackage *ParseVPPFile( PLFile *file ) {
+static PLPackage *parse_vpp_file( PLFile *file )
+{
 	// below currently doesn't bother or worry about endianess conversion,
 	// for simplicity’s sake, but probably worth incorporating at some point
 
 	uint8_t buf[ BLOCK_SIZE ];
-	if ( PlReadFile( file, buf, sizeof( uint8_t ), BLOCK_SIZE ) != BLOCK_SIZE ) {
+	if ( PlReadFile( file, buf, sizeof( uint8_t ), BLOCK_SIZE ) != BLOCK_SIZE )
+	{
 		return NULL;
 	}
 
 	VppHeader *header = ( VppHeader * ) &buf;
-	if ( header->magic != VPP_MAGIC ) {
+	if ( header->magic != VPP_MAGIC )
+	{
 		Warning( "Invalid magic for VPP: %d != %d\n", header->magic, VPP_MAGIC );
 		return NULL;
-	} else if ( header->version < VPP_MIN_VERSION || header->version > VPP_MAX_VERSION ) {
+	}
+	else if ( header->version < VPP_MIN_VERSION || header->version > VPP_MAX_VERSION )
+	{
 		Warning( "Unsupported version for VPP: %d %s %d\n", header->version,
 		         ( header->version > VPP_MAX_VERSION ) ? ">" : "<",
 		         ( header->version > VPP_MAX_VERSION ) ? VPP_MAX_VERSION : VPP_MIN_VERSION );
@@ -73,40 +82,50 @@ static PLPackage *ParseVPPFile( PLFile *file ) {
 	}
 #endif
 
-	if ( header->numFiles == 0 ) {
+	if ( header->numFiles == 0 )
+	{
 		Warning( "Empty VPP\n" );
 		return NULL;
-	} else if ( header->fileSize != PlGetFileSize( file ) ) {
+	}
+	else if ( header->fileSize != PlGetFileSize( file ) )
+	{
 		Warning( "Unexpected file size for VPP\n" );
 		return NULL;
 	}
 
 	PLPackage *package = NULL;
 
-	uint32_t streamSize = CalculateStreamLength( ( header->version == 1 ? sizeof( VppEntry ) : sizeof( Vpp2Entry ) ) * header->numFiles );
+	uint32_t streamSize = calculate_stream_length( ( header->version == 1 ? sizeof( VppEntry ) : sizeof( Vpp2Entry ) ) * header->numFiles );
 	uint8_t *stream = PL_NEW_( uint8_t, streamSize );
-	if ( PlReadFile( file, stream, sizeof( uint8_t ), streamSize ) == streamSize ) {
+	if ( PlReadFile( file, stream, sizeof( uint8_t ), streamSize ) == streamSize )
+	{
 		PLFileOffset baseOffset = PlGetFileOffset( file );
 
 		package = PlCreatePackageHandle( PlGetFilePath( file ), header->numFiles, NULL );
-		for ( uint32_t i = 0; i < package->table_size; ++i ) {
-			if ( header->version == 1 ) {
+		for ( uint32_t i = 0; i < package->table_size; ++i )
+		{
+			if ( header->version == 1 )
+			{
 				VppEntry *entry = ( ( VppEntry * ) stream ) + i;
 				strcpy( package->table[ i ].fileName, entry->name );
 				package->table[ i ].fileSize = entry->size;
 				package->table[ i ].offset = baseOffset;
-				baseOffset += CalculateStreamLength( entry->size );
-			} else {
+				baseOffset += calculate_stream_length( entry->size );
+			}
+			else
+			{
 				Vpp2Entry *entry = ( ( Vpp2Entry * ) stream ) + i;
 				strcpy( package->table[ i ].fileName, entry->name );
 				package->table[ i ].fileSize = entry->size;
 				package->table[ i ].compressedSize = entry->compressedSize;
 				package->table[ i ].compressionType = ( package->table[ i ].compressedSize != entry->size ) ? PL_COMPRESSION_DEFLATE : PL_COMPRESSION_NONE;
 				package->table[ i ].offset = baseOffset;
-				baseOffset += CalculateStreamLength( entry->compressedSize );
+				baseOffset += calculate_stream_length( entry->compressedSize );
 			}
 		}
-	} else {
+	}
+	else
+	{
 		Warning( "Failed to read in directory table for VPP\n" );
 	}
 
@@ -115,6 +134,7 @@ static PLPackage *ParseVPPFile( PLFile *file ) {
 	return package;
 }
 
-void comRegisterVppInterface_( void ) {
-	PlRegisterPackageLoader( "vpp", NULL, ParseVPPFile );
+void com_pack_vpp_register_( void )
+{
+	PlRegisterPackageLoader( "vpp", NULL, parse_vpp_file );
 }
