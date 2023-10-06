@@ -35,7 +35,7 @@ static void draw_fxaa_effect( const ApeViewport *viewport )
 	if ( !fxaaEnabled )
 		return;
 
-	ar_draw_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+	arl_draw_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

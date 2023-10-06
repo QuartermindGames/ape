@@ -2,7 +2,7 @@
 Project Yin, Changelog
 =================================================================
 
-v3.0.0/Luna [2022-xx-xx]
+v3.0.0/Luna [2023-xx-xx]
 -----------------------------------------------------------------
     - Project is now licensed under LGPL 3.0
     - Client/server architecture

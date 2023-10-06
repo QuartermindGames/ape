@@ -47,5 +47,7 @@ Pending
         + "choke_count"; "Toggles on/off choke count"
         + "slowmo"; "Make everything in the game slow down"
         + "fps_graph"
+    - Transition to a Source-style material system; less flexible but easier to manage
+        + See ape4_materials.txt
 
 Done

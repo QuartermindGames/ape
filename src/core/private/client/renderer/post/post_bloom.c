@@ -26,13 +26,13 @@ static void register_bloom_console_variables( void )
 
 static bool setup_bloom_effect( void )
 {
-	bloomFilterShader = apeGetShaderProgramByName( "post_bloom_filter" );
+	bloomFilterShader = arl_shader_get_by_name( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = apeGetShaderProgramByName( "post_blur_x" );
+	bloomBlurXShader = arl_shader_get_by_name( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = apeGetShaderProgramByName( "post_blur_y" );
+	bloomBlurYShader = arl_shader_get_by_name( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 

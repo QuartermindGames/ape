@@ -273,32 +273,32 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bo
 	}
 #endif
 
-	if ( rendererState.passStage == APE_RENDERER_PASS_DEPTH )
+	if ( arl_rendererState_.passStage == APE_RENDERER_PASS_DEPTH )
 	{
 		room->mesh->numSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].numSubMeshes;
 		room->mesh->firstSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].firstSubMeshes;
 		room->mesh->subMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ].subMeshes;
-		apeDrawMesh( apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_DEPTH ), room->mesh, NULL, 0 );
+		apeDrawMesh( arl_material_get_default( APE_MATERIAL_DEFAULT_DEPTH ), room->mesh, NULL, 0 );
 
 		room->mesh->numSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].numSubMeshes;
 		room->mesh->firstSubMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].firstSubMeshes;
 		room->mesh->subMeshes = room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ].subMeshes;
-		apeDrawMesh( apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_DEPTH ), room->mesh, NULL, 0 );
+		apeDrawMesh( arl_material_get_default( APE_MATERIAL_DEFAULT_DEPTH ), room->mesh, NULL, 0 );
 	}
 	else
 	{
 		if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
 			return;
 
-		if ( !ambienceOnly )
-			world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
-		else
+		PLColourF32 oldAmbience;
+		if ( light != NULL )
 		{
-			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
-				world->ambience = room->ambientLight;
-			else
-				world->ambience = WORLD_DEFAULT_AMBIENCE;
+			oldAmbience = world->ambience;
+			world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
 		}
+
+		//if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
+		//	world->ambience = room->ambientLight;
 
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 		{
@@ -320,14 +320,20 @@ static void DrawRoom( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bo
 			lights[ 0 ] = light;
 			apeDrawMesh( material, room->mesh, lights, ambienceOnly ? 0 : 1 );
 		}
+
+		if ( light != NULL )
+			world->ambience = oldAmbience;
 	}
 }
 
 static const float F_INFINITY = 100.0f;
 
-static void DrawRoomStencilShadowVolume( const ApeWorldFace *face, const ApeLight *light, const PLColour *colour )
+static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const ApeLight *light, const PLColour *colour )
 {
-	ApeMaterial *shadowMaterial = apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_SHADOW );
+	ApeMaterial *shadowMaterial = arl_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
+	assert( shadowMaterial != NULL );
+	if ( shadowMaterial == NULL )
+		return;
 
 	PLGMesh *mesh;
 	PLLinkedListNode *faceVertexNode;
@@ -426,7 +432,7 @@ static void DrawRoomStencilShadowVolumes( ApeWorldRoom *room, const ApeLight *li
 		if ( PlVector3DotProduct( faces[ i ]->normal, lightDir ) >= 0 )
 			continue;
 
-		DrawRoomStencilShadowVolume( faces[ i ], light, &PL_COLOURU8( 255, 255, 255, 255 ) );
+		draw_room_stencil_shadow_volume( faces[ i ], light, &PL_COLOURU8( 255, 255, 255, 255 ) );
 	}
 }
 

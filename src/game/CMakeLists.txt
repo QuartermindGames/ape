@@ -37,9 +37,12 @@ set(GAME_TARGET_FERAL
         private/fw/fw_terrain.c
         private/fw/fw_weapon.c)
 set(GAME_TARGET_DETOX
-        private/detox/detox_character.c
-        private/detox/detox_game.c
-        private/detox/detox_world.c
+        private/detox/entities/light_night.c
+
+        private/detox/tox_character.c
+        private/detox/tox_game.c
+        private/detox/tox_quest.c
+        private/detox/tox_world.c
 )
 
 #todo: need a better way of setting targets...

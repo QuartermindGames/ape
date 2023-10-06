@@ -8,32 +8,36 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-typedef struct ApeEntityClassDefinition ApeEntityClassDefinition;
+typedef struct AclEntityClassDefinition AclEntityClassDefinition;
 typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
 
 #define APE_ENTITY_MAX_NAME 32
 
-typedef struct ApeEntity {
+typedef struct ApeEntity
+{
 	char name[ APE_ENTITY_MAX_NAME ];               // identifier
-	const ApeEntityClassDefinition *classDefinition;// class that the actor is derived from
+	const AclEntityClassDefinition *classDefinition;// class that the actor is derived from
 	void *classData;                                // pointer to the unique data of the class
 	struct PLHashTable *componentTable;             // list of components
 	struct ApeWorld *world;                         // world the entity is attached to
 } ApeEntity;
 
-typedef struct ApeEntityComponent {
+typedef struct ApeEntityComponent
+{
 	const ApeEntityComponentDefinition *componentDefinition;
 	void *data;
 } ApeEntityComponent;
 
-typedef struct ApeEntityProperty {
+typedef struct ApeEntityProperty
+{
 	const char *name;
 	const char *description;
 	void *var;
 	PLVariableType type;
 } ApeEntityProperty;
 
-typedef struct ApeEntityClassDefinition {
+typedef struct AclEntityClassDefinition
+{
 	const char *name;
 
 	ApeEntityProperty *propertyList;
@@ -48,12 +52,12 @@ typedef struct ApeEntityClassDefinition {
 
 	NdBranch *( *Serialize )( ApeEntity *self );
 	void ( *Deserialize )( ApeEntity *self, NdBranch *root );
-} ApeEntityClassDefinition;
+} AclEntityClassDefinition;
 
-typedef const ApeEntityClassDefinition *( *ApeEntityClassRegisterFunction )( void );
+typedef const AclEntityClassDefinition *( *ApeEntityClassRegisterFunction )( void );
 
-void acl_entity_register_class( const ApeEntityClassDefinition *definition );
-const ApeEntityClassDefinition *apeGetEntityClassTable( const char *className );
+void acl_entity_register_class( const AclEntityClassDefinition *definition );
+const AclEntityClassDefinition *apeGetEntityClassTable( const char *className );
 
 ApeEntity *apeCreateEntity( const char *className, NdBranch *properties );
 void apeDestroyEntity( ApeEntity *entity );
@@ -64,7 +68,8 @@ void apeDrawEntity( ApeEntity *entity );
 ////////////////////////////////////////////////////////////////////
 // Components
 
-typedef struct ApeEntityComponentDefinition {
+typedef struct ApeEntityComponentDefinition
+{
 	const char *name;
 
 	void *( *Create )( void );// required!!

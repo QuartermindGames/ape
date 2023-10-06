@@ -2,31 +2,33 @@
 
 #pragma once
 
-#define MAX_MATERIAL_PASSES    4
-#define MAX_MATERIAL_VARIABLES 64
+#define ARL_MAX_MATERIAL_PASSES    4
+#define ARL_MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-typedef enum ApeMaterialBuiltinVar {
-	APE_MATERIAL_BUILTIN_INVALID = -1,
+typedef enum ApeMaterialBuiltinVar
+{
+	ARL_MATERIAL_BUILTIN_INVALID = -1,
 	APE_MATERIAL_BUILTIN_TIME,
 	APE_MATERIAL_BUILTIN_DEPTH,
 	APE_MATERIAL_BUILTIN_VIEWPORT_SIZE,
 	APE_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
 
-	APE_MAX_MATERIAL_BUILTINS
+	ARL_MAX_MATERIAL_BUILTINS
 } ApeMaterialBuiltinVar;
 
 typedef struct ApeMaterial ApeMaterial;
 
-#define MATERIAL_VAR_NAME_LENGTH   64
-#define MATERIAL_VAR_STRING_LENGTH 256
+#define ARL_MATERIAL_VAR_NAME_LENGTH   64
+#define ARL_MATERIAL_VAR_STRING_LENGTH 256
 
-typedef enum ApeMaterialVariableType {
-	MATERIAL_VAR_INVALID,
+typedef enum ApeMaterialVariableType
+{
+	ARL_MATERIAL_VAR_INVALID,
 
-	MATERIAL_VAR_FLOAT,
-	MATERIAL_VAR_INT,
-	MATERIAL_VAR_UINT,
+	ARL_MATERIAL_VAR_FLOAT,
+	ARL_MATERIAL_VAR_INT,
+	ARL_MATERIAL_VAR_UINT,
 	MATERIAL_VAR_BOOL,
 	MATERIAL_VAR_DOUBLE,
 
@@ -50,13 +52,15 @@ typedef enum ApeMaterialVariableType {
  * Hints for standard material variables, so
  * that we can toggle their state.
  */
-typedef enum ApeMaterialVariableHint {
-	APE_MAT_VAR_HINT_DIFFUSE,
-	APE_MAT_VAR_HINT_NORMAL,
-	APE_MAT_VAR_HINT_SPECULAR,
+typedef enum ApeMaterialVariableHint
+{
+	ARL_MATERIAL_VAR_HINT_DIFFUSE,
+	ARL_MATERIAL_VAR_HINT_NORMAL,
+	ARL_MATERIAL_VAR_HINT_SPECULAR,
 } ApeMaterialVariableHint;
 
-typedef union ApeMaterialVariableData {
+typedef union ApeMaterialVariableData
+{
 	float f32;
 	double f64;
 
@@ -72,24 +76,26 @@ typedef union ApeMaterialVariableData {
 	PLMatrix3 mat3;
 	PLMatrix4 mat4;
 
-	char str[ MATERIAL_VAR_STRING_LENGTH ];
+	char str[ ARL_MATERIAL_VAR_STRING_LENGTH ];
 
 	void *userPtr;
 } ApeMaterialVariableData;
 
-typedef struct ApeMaterialVariable {
+typedef struct ApeMaterialVariable
+{
 	int programSlot;
-	char name[ MATERIAL_VAR_NAME_LENGTH ];
+	char name[ ARL_MATERIAL_VAR_NAME_LENGTH ];
 	ApeMaterialVariableType type;
 	ApeMaterialVariableData data;
 	ApeMaterialVariableHint hint;
 } ApeMaterialVariable;
 
-typedef struct ApeMaterialPass {
+typedef struct ApeMaterialPass
+{
 	PLGShaderProgram *program;
 	PLGTextureFilter textureFilter;
 	PLGBlend blendMode[ 2 ];
-	ApeMaterialVariable variables[ MAX_MATERIAL_VARIABLES ];
+	ApeMaterialVariable variables[ ARL_MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
 
 	bool depthTest;
@@ -100,7 +106,8 @@ typedef struct ApeMaterialPass {
 
 extern PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
 
-typedef struct ApeShaderProgramIndex {
+typedef struct ApeShaderProgramIndex
+{
 	char path[ PL_SYSTEM_MAX_PATH ];
 	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
@@ -115,10 +122,11 @@ PL_EXTERN_C
 
 void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass );
 
-void apeInitializeMaterialSystem( void );
-void apeShutdownMaterialSystem( void );
+void arl_initialize_materials_( void );
+void arl_shutdown_materials_( void );
 
-typedef enum ApeDefaultMaterial {
+typedef enum ApeDefaultMaterial
+{
 	APE_MATERIAL_DEFAULT_FALLBACK,
 	APE_MATERIAL_DEFAULT_VERTEX,
 	APE_MATERIAL_DEFAULT_SHADOW,
@@ -127,7 +135,7 @@ typedef enum ApeDefaultMaterial {
 	APE_MAX_DEFAULT_MATERIALS
 } ApeDefaultMaterial;
 
-ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial );
+ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial );
 
 // !!OBSOLETE!! Use the above instead...
 ApeMaterial *ar_material_get_fallback( void );

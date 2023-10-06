@@ -60,7 +60,7 @@ static ApeShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-	if ( apeGetShaderProgramByName( internalName ) != NULL ) {
+	if ( arl_shader_get_by_name( internalName ) != NULL ) {
 		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
 		return NULL;
 	}
@@ -185,11 +185,11 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData ) {
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-ApeShaderProgramIndex *apeGetShaderProgramByName( const char *name ) {
+ApeShaderProgramIndex *arl_shader_get_by_name( const char *name ) {
 	return ( ApeShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void apeInitializeShaders_( void ) {
+void arl_initialize_shaders_( void ) {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
 		PRINT_ERROR( "Failed to create shader program list: %s\n", PlGetError() );
@@ -204,14 +204,13 @@ void apeInitializeShaders_( void ) {
 	/* now fetch the default programs */
 	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
 	        [APE_SHADER_DEFAULT] = "default",
-	        [APE_SHADER_LIGHTING_PASS] = "base_lighting",
 	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
 	        [APE_SHADER_DEFAULT_ALPHA] = "default_alpha",
 	        [APE_SHADER_DEFAULT_FONT] = "font",
 	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
 	};
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i ) {
-		ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( defaultShaderNames[ i ] );
+		ApeShaderProgramIndex *programIndex = arl_shader_get_by_name( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 
@@ -219,6 +218,6 @@ void apeInitializeShaders_( void ) {
 	}
 }
 
-PLGShaderProgram *apeGetDefaultShaderProgram( ApeDefaultShaderProgram defaultShaderProgram ) {
+PLGShaderProgram *arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram ) {
 	return ape_defaultShaderPrograms_[ defaultShaderProgram ];
 }

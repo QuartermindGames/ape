@@ -19,7 +19,7 @@ static PLGTexture *previewFallbackTexture;
 typedef struct ApeMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	ApeMaterialPass passes[ MAX_MATERIAL_PASSES ];
+	ApeMaterialPass passes[ ARL_MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
@@ -34,7 +34,7 @@ typedef struct ApeMaterial
 
 static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
 
-ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial )
+ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial )
 {
 	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
 	if ( defaultMaterial == APE_MAX_DEFAULT_MATERIALS )
@@ -43,10 +43,10 @@ ApeMaterial *apeGetDefaultMaterial( ApeDefaultMaterial defaultMaterial )
 	return defaultMaterials[ defaultMaterial ];
 }
 
-ApeMaterial *ar_material_get_fallback( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK ); }
-ApeMaterial *ar_material_get_default_vertex( void ) { return apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_VERTEX ); }
+ApeMaterial *ar_material_get_fallback( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK ); }
+ApeMaterial *ar_material_get_default_vertex( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ); }
 
-void apeInitializeMaterialSystem( void )
+void arl_initialize_materials_( void )
 {
 	PRINT( "Initializing material system\n" );
 
@@ -57,9 +57,9 @@ void apeInitializeMaterialSystem( void )
 			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
 	}
 
-	normalFallbackTexture = apeLoadTexture( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
-	specularFallbackTexture = apeLoadTexture( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
-	previewFallbackTexture = apeLoadTexture( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
+	normalFallbackTexture = arl_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
+	specularFallbackTexture = arl_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
+	previewFallbackTexture = arl_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
@@ -77,7 +77,7 @@ void apeInitializeMaterialSystem( void )
 	}
 }
 
-void apeShutdownMaterialSystem( void )
+void arl_shutdown_materials_( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	apeFlushUnreferencedResources();
@@ -163,9 +163,9 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 	        [APE_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
 	        [APE_MATERIAL_BUILTIN_FALLBACK] = "proc_fallback",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == APE_MAX_MATERIAL_BUILTINS, "" );
+	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == ARL_MAX_MATERIAL_BUILTINS, "" );
 
-	for ( int i = 0; i < APE_MAX_MATERIAL_BUILTINS; ++i )
+	for ( int i = 0; i < ARL_MAX_MATERIAL_BUILTINS; ++i )
 	{
 		if ( strcmp( tag, builtInTags[ i ] ) != 0 )
 		{
@@ -175,7 +175,7 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 		return i;
 	}
 
-	return APE_MATERIAL_BUILTIN_INVALID;
+	return ARL_MATERIAL_BUILTIN_INVALID;
 }
 
 /**
@@ -190,14 +190,14 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
 		default:
 			break;
 
-		case MATERIAL_VAR_FLOAT:
+		case ARL_MATERIAL_VAR_FLOAT:
 			return ( uniformType == PLG_UNIFORM_FLOAT );
 		case MATERIAL_VAR_DOUBLE:
 			return ( uniformType == PLG_UNIFORM_DOUBLE );
 
-		case MATERIAL_VAR_INT:
+		case ARL_MATERIAL_VAR_INT:
 			return ( uniformType == PLG_UNIFORM_INT );
-		case MATERIAL_VAR_UINT:
+		case ARL_MATERIAL_VAR_UINT:
 			return ( uniformType == PLG_UNIFORM_UINT );
 
 		case MATERIAL_VAR_BOOL:
@@ -287,7 +287,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					/* lookup what it actually is */
 					ApeMaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
-					if ( materialBuiltinVar == APE_MATERIAL_BUILTIN_INVALID )
+					if ( materialBuiltinVar == ARL_MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
 						node = next;
@@ -302,7 +302,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 		}
 
 		/* otherwise, we need to handle it as a traditional var */
-		if ( materialVariable->type == MATERIAL_VAR_INVALID )
+		if ( materialVariable->type == ARL_MATERIAL_VAR_INVALID )
 		{
 			/* now we need to convert from the node type to our internal
 		 	 * material type, which is gross and sloppy and crap, but oh
@@ -326,7 +326,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					if ( ndGetF32( node, &materialVariable->data.f32 ) != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_FLOAT;
+					materialVariable->type = ARL_MATERIAL_VAR_FLOAT;
 					break;
 				}
 				case PLG_UNIFORM_DOUBLE:
@@ -343,7 +343,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					if ( ndGetUI32( node, &materialVariable->data.ui32 ) != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_UINT;
+					materialVariable->type = ARL_MATERIAL_VAR_UINT;
 					break;
 				}
 				case PLG_UNIFORM_INT:
@@ -351,7 +351,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					if ( ndGetI32( node, &materialVariable->data.i32 ) != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_INT;
+					materialVariable->type = ARL_MATERIAL_VAR_INT;
 					break;
 				}
 
@@ -367,19 +367,19 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 						break;
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
-						materialVariable->hint = APE_MAT_VAR_HINT_DIFFUSE;
+						materialVariable->hint = ARL_MATERIAL_VAR_HINT_DIFFUSE;
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
-						materialVariable->hint = APE_MAT_VAR_HINT_NORMAL;
+						materialVariable->hint = ARL_MATERIAL_VAR_HINT_NORMAL;
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
-						materialVariable->hint = APE_MAT_VAR_HINT_SPECULAR;
+						materialVariable->hint = ARL_MATERIAL_VAR_HINT_SPECULAR;
 
 					materialVariable->type = MATERIAL_VAR_TEXTURE;
-					materialVariable->data.userPtr = apeLoadTexture( texturePath, materialPass->textureFilter );
+					materialVariable->data.userPtr = arl_texture_load_direct_( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
 
-			if ( materialVariable->type == MATERIAL_VAR_INVALID )
+			if ( materialVariable->type == ARL_MATERIAL_VAR_INVALID )
 			{
 				PRINT_WARNING( "Invalid property type for shader variable \"%s\"!\n", propertyName );
 				node = next;
@@ -465,7 +465,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 		const char *previewTexture = ndGetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
 		{
-			material->preview = apeLoadTexture( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+			material->preview = arl_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 		}
 	}
 
@@ -489,7 +489,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName = ndGetStringByName( node, "shaderProgram", "default" );
-			ApeShaderProgramIndex *programIndex = apeGetShaderProgramByName( programName );
+			ApeShaderProgramIndex *programIndex = arl_shader_get_by_name( programName );
 			if ( programIndex == NULL )
 			{
 				currentPass->program = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
@@ -595,7 +595,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		{
 			PLGTexture *texture = NULL;
 			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK )
-				texture = apeGetFallbackTexture();
+				texture = arl_texture_get_fallback();
 #if 0//TODO
 			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
 				texture = apeGetPrimaryDepthAttachment();
@@ -627,65 +627,57 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *ligh
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
+	ApeWorld *world = acl_world_get_current();
+
 	int slot;
-
-	ApeWorld *world = apeGetCurrentWorld();
-	if ( world != NULL )
+	if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
 	{
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->fogColour, false );
-
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
-		{
-			PL_GET_CVAR( "ape/r/fogNear", fogNearVar );
-			float fogNear = ( fogNearVar != NULL && fogNearVar->f_value > -1.f ) ? fogNearVar->f_value : world->fogNear;
-			PlgSetShaderUniformValueByIndex( program, slot, &fogNear, false );
-		}
-
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
-		{
-			PL_GET_CVAR( "ape/r/fogFar", fogFarVar );
-			float fogFar = ( fogFarVar != NULL && fogFarVar->f_value > -1.f ) ? fogFarVar->f_value : world->fogFar;
-			PlgSetShaderUniformValueByIndex( program, slot, &fogFar, false );
-		}
-
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &world->ambience, false );
+		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &fogColour, false );
 	}
-	else
+	if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
 	{
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
-		if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
+		PL_GET_CVAR( "ape/r/fogNear", fogNearVar );
+		float fogNear = ( fogNearVar != NULL && fogNearVar->f_value > -1.f ) ? fogNearVar->f_value : world->fogNear;
+		PlgSetShaderUniformValueByIndex( program, slot, &fogNear, false );
+	}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
+	{
+		PL_GET_CVAR( "ape/r/fogFar", fogFarVar );
+		float fogFar = ( fogFarVar != NULL && fogFarVar->f_value > -1.f ) ? fogFarVar->f_value : world->fogFar;
+		PlgSetShaderUniformValueByIndex( program, slot, &fogFar, false );
 	}
 
-	if ( light != NULL )
+	if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
 	{
-		//TODO: another hack, fog shouldn't be included in lighting passes, blergh
-		if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
-			PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f, 0.f }, false );
+		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &lightColour, false );
+	}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
+	{
+		PLVector3 lightPosition = ( light != NULL ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
+	}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
+	{
+		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
+		PlgSetShaderUniformValueByIndex( program, slot, &lightRadius, false );
+	}
 
-		if ( light->type == APE_LIGHT_TYPE_SUN )
-		{
-			//TODO: get rid of this, should be treated as a light instead...
-			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
-			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
-		}
-		else
-		{
-			if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &( PLColourF32 ){ 0.f, 0.f, 0.f }, false );
-
-			if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &light->colour, false );
-			if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &light->position, false );
-			if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
-				PlgSetShaderUniformValueByIndex( program, slot, &light->radius, false );
-		}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
+	{
+		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &sunColour, false );
+	}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
+	{
+		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
+	}
+	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
+	{
+		PLColourF32 sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PlgSetShaderUniformValueByIndex( program, slot, &sunAmbience, false );
 	}
 }
 
@@ -768,10 +760,10 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 	if ( !material->isCached )
 		material = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 
-	if ( rendererState.overrideBlendMode )
+	if ( arl_rendererState_.overrideBlendMode )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
-		PlgSetBlendMode( rendererState.blendModeA, rendererState.blendModeB );
+		PlgSetBlendMode( arl_rendererState_.blendModeA, arl_rendererState_.blendModeB );
 	}
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
@@ -781,16 +773,16 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
-		if ( rendererState.cullMode == APE_RENDERER_CULL_FRONT )
+		if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_FRONT )
 			cullMode = PLG_CULL_POSITIVE;
-		else if ( rendererState.cullMode == APE_RENDERER_CULL_BACK )
+		else if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_BACK )
 			cullMode = PLG_CULL_NEGATIVE;
-		else if ( rendererState.cullMode == APE_RENDERER_CULL_NONE )
+		else if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_NONE )
 			cullMode = PLG_CULL_NONE;
 		else
 			cullMode = curPass->cullMode;
 
-		if ( rendererState.mirror && ( rendererState.depth % 2 ) )
+		if ( arl_rendererState_.mirror && ( arl_rendererState_.depth % 2 ) )
 		{
 			if ( cullMode == PLG_CULL_NEGATIVE )
 				cullMode = PLG_CULL_POSITIVE;
@@ -815,7 +807,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 			PlgSetShaderProgram( curPass->program );
 			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
-			if ( !rendererState.overrideBlendMode )
+			if ( !arl_rendererState_.overrideBlendMode )
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
 			set_global_uniforms( curPass->program, lights != NULL ? lights[ 0 ] : NULL );
@@ -832,7 +824,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 				else if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
-					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
 						continue;
 
 					PLGTexture *texture;
@@ -841,7 +833,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 						texture = ar_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.userPtr );
 						if ( texture == NULL )
 						{
-							texture = apeGetFallbackTexture();
+							texture = arl_texture_get_fallback();
 						}
 					}
 					else
@@ -851,10 +843,10 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 					assert( texture != NULL );
 
 					PL_GET_CVAR( "r/skipNormal", skipNormal );
-					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_NORMAL && skipNormal->b_value ) )
+					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_NORMAL && skipNormal->b_value ) )
 						texture = normalFallbackTexture;
 					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
-					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == APE_MAT_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
 						texture = specularFallbackTexture;
 
 					PLGTextureFilter textureFilter = curPass->textureFilter;

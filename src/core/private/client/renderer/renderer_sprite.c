@@ -4,7 +4,7 @@
 #include "ape_private.h"
 #include "renderer.h"
 
-void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle ) {
+void arl_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle ) {
 #if 0
     PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -35,7 +35,7 @@ void apeDrawSpriteAnimationFrame( ApeSpriteFrame *frame, const PLVector3 *positi
 #endif
 }
 
-void apeDrawSpriteAnimation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
+void arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle ) {
 #if 0
     const GfxCamera *camera = Gfx_GetCurrentCamera();
 	if( camera == NULL ) {

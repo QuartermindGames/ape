@@ -16,3 +16,5 @@ typedef struct ToxGlobalVars
 	float sunYaw;
 } ToxGlobalVars;
 extern ToxGlobalVars tox_globalVars;
+
+ApeCamera *tox_get_player_camera( void );

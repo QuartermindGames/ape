@@ -7,7 +7,7 @@
 
 static PLHashTable *entityClassDefinitions = NULL;
 
-void acl_entity_register_class( const ApeEntityClassDefinition *definition ) {
+void acl_entity_register_class( const AclEntityClassDefinition *definition ) {
 	if ( entityClassDefinitions == NULL ) {
 		entityClassDefinitions = PlCreateHashTable();
 	}
@@ -25,12 +25,12 @@ void acl_entity_register_class( const ApeEntityClassDefinition *definition ) {
 	}
 }
 
-const ApeEntityClassDefinition *apeGetEntityClassTable( const char *className ) {
-	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
+const AclEntityClassDefinition *apeGetEntityClassTable( const char *className ) {
+	return ( const AclEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
 ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
-	const ApeEntityClassDefinition *classDefinition = apeGetEntityClassTable( className );
+	const AclEntityClassDefinition *classDefinition = apeGetEntityClassTable( className );
 	if ( className == NULL ) {
 		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
 		return NULL;

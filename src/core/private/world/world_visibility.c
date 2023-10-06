@@ -123,7 +123,7 @@ void apeBuildWorldVisibiltyLists_( void ) {
 		return;
 	}
 
-	ApeWorld *world = apeGetCurrentWorld();
+	ApeWorld *world = acl_world_get_current();
 	if ( world == NULL ) {
 		return;
 	}

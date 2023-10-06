@@ -34,7 +34,7 @@ void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGT
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ar_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour )
+void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour )
 {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
@@ -114,7 +114,7 @@ void ar_draw_number( PLGTexture *numTextureTable[], float x, float y, int number
 	ar_draw_digit( numTextureTable, x, y, number % 10 );
 }
 
-void ar_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
+void arl_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
 		return;

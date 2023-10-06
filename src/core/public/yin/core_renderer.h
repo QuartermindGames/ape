@@ -12,7 +12,8 @@ typedef struct ApeTexture ApeTexture;
 typedef struct ApeMaterial ApeMaterial;
 
 // TODO: retire this...
-typedef enum ApeCacheGroup {
+typedef enum ApeCacheGroup
+{
 	APE_CACHE_EDITOR,
 	APE_CACHE_WORLD, /* everything that is cached during level load */
 
@@ -51,9 +52,10 @@ void apeReleaseTexture( ApeTexture *texture );
 
 /** !!!SHADER API - PREFERABLY AVOID!!! *******************/
 
-typedef enum ApeDefaultShaderProgram {
+typedef enum ApeDefaultShaderProgram
+{
 	APE_SHADER_DEFAULT,
-	APE_SHADER_LIGHTING_PASS,
+
 	APE_SHADER_DEFAULT_VERTEX,
 	APE_SHADER_DEFAULT_ALPHA,
 	APE_SHADER_DEFAULT_FONT,
@@ -62,7 +64,7 @@ typedef enum ApeDefaultShaderProgram {
 	APE_MAX_DEFAULT_SHADERS
 } ApeDefaultShaderProgram;
 
-PLGShaderProgram *apeGetDefaultShaderProgram( ApeDefaultShaderProgram defaultShaderProgram );
+PLGShaderProgram *arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram );
 
 /**********************************************************/
 

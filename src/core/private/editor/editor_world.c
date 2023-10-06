@@ -258,7 +258,7 @@ static void OnWorldEditorActive( void ) {
 
 	apeSetViewportCamera( viewport, context.camera );
 
-	world = apeGetCurrentWorld();
+	world = acl_world_get_current();
 }
 
 ApeEditorContext *YnCore_RegisterWorldEditorContext( void ) {

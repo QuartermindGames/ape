@@ -17,7 +17,7 @@
 #include "post/post.h"
 
 ApeRendererStats ape_rendererPerformance_;
-ApeRendererPassState rendererState;
+ArlRendererPassState arl_rendererState_;
 
 static ArRenderTarget *defaultRenderTarget;
 
@@ -28,11 +28,11 @@ static bool isScreenshotPending = false;
 
 /**********************************************************/
 
-void ar_setup_default_state( const ApeViewport *viewport )
+void arl_setup_default_state( const ApeViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	ApeWorld *world = apeGetCurrentWorld();
+	ApeWorld *world = acl_world_get_current();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
 
@@ -59,7 +59,7 @@ void ar_draw_begin( ApeViewport *viewport )
 
 	viewport->perf.oldTime = newTime;
 
-	ar_setup_default_state( viewport );
+	arl_setup_default_state( viewport );
 
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
@@ -121,7 +121,7 @@ void ar_draw_end( ApeViewport *viewport )
 	}
 }
 
-void apeInitializeShaders_( void );  /* renderer/shaders.c */
+void arl_initialize_shaders_( void );  /* renderer/shaders.c */
 void apeInitializeTextures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
@@ -170,13 +170,13 @@ void ar_initialize_( void )
 {
 	PRINT( "Initializing renderer\n" );
 
-	PL_ZERO_( rendererState );
+	PL_ZERO_( arl_rendererState_ );
 
 	apeInitializeTextures_();
 
 	ar_initialize_render_targets();
-	apeInitializeShaders_();
-	apeInitializeMaterialSystem();
+	arl_initialize_shaders_();
+	arl_initialize_materials_();
 	YR_Font_Initialize();
 
 	apeInitializeWorldVisibilitySystem_();
@@ -189,7 +189,7 @@ void ar_initialize_( void )
 	auxCamera->near = -10000.0f;
 	auxCamera->far = 10000.0f;
 
-	ar_setup_default_state( NULL );
+	arl_setup_default_state( NULL );
 
 	defaultRenderTarget = ar_render_target_create( "default",
 	                                               800, 600,
@@ -207,7 +207,7 @@ void ar_shutdown_( void )
 	ar_postfx_cleanup_();
 
 	Font_Shutdown();
-	apeShutdownMaterialSystem();
+	arl_shutdown_materials_();
 	ar_shutdown_render_targets();
 	apeShutdownWorldVisibilitySystem_();
 }
@@ -313,7 +313,7 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 			unsigned int numPoints;
 			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
 			const char *name = comGetProfilingGroupName( group );
-			ar_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
+			arl_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
 			y += GRAPH_HEIGHT + Y_SPACING;
 
 			group = comGetNextProfilingGroup( group );
@@ -490,7 +490,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = apeGetCurrentWorld();
+	ApeWorld *world = acl_world_get_current();
 	if ( world == NULL )
 		return;
 
@@ -545,14 +545,14 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 		{
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
-				rendererState.cullMode = APE_RENDERER_CULL_NONE;
-				rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
+				arl_rendererState_.cullMode = APE_RENDERER_CULL_NONE;
+				arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 				apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
-				rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+				arl_rendererState_.cullMode = APE_RENDERER_CULL_DEFAULT;
 			}
 
 			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
@@ -560,7 +560,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			PlgColourMask( false, false, false, false );
 			PlgDepthMask( false );
 
-			rendererState.cullMode = APE_RENDERER_CULL_NONE;
+			arl_rendererState_.cullMode = APE_RENDERER_CULL_NONE;
 			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
@@ -574,31 +574,31 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
-			rendererState.overrideBlendMode = true;
-			rendererState.blendModeA = PLG_BLEND_ONE;
-			rendererState.blendModeB = PLG_BLEND_ONE;
+			arl_rendererState_.overrideBlendMode = true;
+			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
+			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
 			apeDrawWorld_( world, camera, lights[ i ], false );
 
-			rendererState.overrideBlendMode = false;
+			arl_rendererState_.overrideBlendMode = false;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 			PlgDepthMask( true );
 
-			rendererState.cullMode = APE_RENDERER_CULL_DEFAULT;
+			arl_rendererState_.cullMode = APE_RENDERER_CULL_DEFAULT;
 		}
 		else
 		{
 			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
 
-			rendererState.overrideBlendMode = true;
-			rendererState.blendModeA = PLG_BLEND_ONE;
-			rendererState.blendModeB = PLG_BLEND_ONE;
+			arl_rendererState_.overrideBlendMode = true;
+			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
+			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
 			apeDrawWorld_( world, camera, lights[ i ], false );
 
-			rendererState.overrideBlendMode = false;
-			rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
+			arl_rendererState_.overrideBlendMode = false;
+			arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 		}
 
 		ape_rendererPerformance_.numLights++;
@@ -607,7 +607,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	rendererState.passStage = APE_RENDERER_PASS_DEFAULT;
+	arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 }
 
 #if 0

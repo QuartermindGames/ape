@@ -138,6 +138,6 @@ void apeSpawnWorld( const char *worldPath ) {
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *apeGetCurrentWorld( void ) {
+ApeWorld *acl_world_get_current( void ) {
 	return currentWorld;
 }

@@ -42,11 +42,11 @@ ApeWorld *apeLoadWorld( const char *path );
 /// \param world World that deserialized data will be added to.
 /// \param root Handle to the world root.
 /// \return On success, returns the world pointer, otherwise null.
-ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
+ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root );
 
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.
-struct ApeWorld *apeGetCurrentWorld( void );
+struct ApeWorld *acl_world_get_current( void );
 
 /// Attempts to save the given world to the destination.
 /// \param world
@@ -59,7 +59,10 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
 void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
 void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
-void ape_world_set_global_defaults( ApeWorld *world );
+
+void acl_world_set_global_defaults( ApeWorld *world );
+void acl_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
+void acl_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
 
 /**
  * Assigning an entity to the world will give the world instance

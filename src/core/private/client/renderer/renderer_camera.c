@@ -102,7 +102,7 @@ void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position )
 
 	if ( camera->room == NULL )
 	{
-		ApeWorld *world = apeGetCurrentWorld();
+		ApeWorld *world = acl_world_get_current();
 		if ( world == NULL )
 		{
 			return;

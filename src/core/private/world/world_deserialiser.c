@@ -9,7 +9,8 @@
  * PRIVATE
  ****************************************/
 
-static ApeLight *DeserializeLight( NdBranch *root ) {
+static ApeLight *deserialize_light( NdBranch *root )
+{
 	ApeLight *light = PL_NEW( ApeLight );
 
 	light->position = ndGetVector3( root, "position", &pl_vecOrigin3 );
@@ -24,22 +25,26 @@ static ApeLight *DeserializeLight( NdBranch *root ) {
 	return light;
 }
 
-static void DeserializeLights( ApeWorld *world, NdBranch *root ) {
+static void deserialize_lights( ApeWorld *world, NdBranch *root )
+{
 	unsigned int numLights = ndGetNumOfChildren( root );
-	if ( numLights == 0 ) {
+	if ( numLights == 0 )
+	{
 		return;
 	}
 
 	PlResizeVectorArray( world->lights, numLights );
 
 	NdBranch *child = ndGetFirstChild( root );
-	while ( child != NULL ) {
-		PlPushBackVectorArrayElement( world->lights, DeserializeLight( child ) );
+	while ( child != NULL )
+	{
+		PlPushBackVectorArrayElement( world->lights, deserialize_light( child ) );
 		child = ndGetNextChild( child );
 	}
 }
 
-static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
+static ApeWorldRoom *deserialize_room( NdBranch *root )
+{
 	ApeWorldRoom *room = apeCreateWorldRoom();
 
 	room->uid = ndGetInt( root, "uid", 0 );
@@ -58,11 +63,13 @@ static ApeWorldRoom *DeserializeRoom( NdBranch *root ) {
 	return room;
 }
 
-static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
+static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
+{
 	// Fetch the first room index and validate it
 	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
 	assert( roomA != NULL );
-	if ( roomA == NULL ) {
+	if ( roomA == NULL )
+	{
 		PRINT_WARNING( "Invalid portal room A!\n" );
 		return NULL;
 	}
@@ -70,7 +77,8 @@ static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
 	// Fetch the second room index and validate it
 	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
 	assert( roomB != NULL );
-	if ( roomB == NULL ) {
+	if ( roomB == NULL )
+	{
 		PRINT_WARNING( "Invalid portal room B!\n" );
 		return NULL;
 	}
@@ -91,7 +99,8 @@ static ApeWorldPortal *DeserializePortal( ApeWorld *world, NdBranch *root ) {
 	return portal;
 }
 
-static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
+static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
+{
 	ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 	face->normal = ndGetVector3( root, "normal", &pl_vecOrigin3 );
@@ -121,8 +130,9 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	face->materialIndex = ndGetUInt( root, "material", ( unsigned int ) -1 );
 	face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 	assert( face->material != NULL );
-	if ( face->material == NULL ) {
-		face->material = apeGetDefaultMaterial( APE_MATERIAL_DEFAULT_FALLBACK );
+	if ( face->material == NULL )
+	{
+		face->material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
 	}
 
 	face->edgeLoop = PlCreateLinkedList();
@@ -132,13 +142,16 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	// per the world vertex list rather than for the face itself, which is
 	// inherited, again, from our adventures with RFL (but not necessarily bad)
 	NdBranch *branch;
-	if ( ( branch = ndGetChildByName( root, "edges" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "edges" ) ) != NULL )
+	{
 		branch = ndGetFirstChild( branch );
-		while ( branch != NULL ) {
+		while ( branch != NULL )
+		{
 			ApeWorldVertex *worldVertex;
 			unsigned int vertexIndex = ndGetUInt( branch, "vertexIndex", ( unsigned int ) -1 );
 			assert( vertexIndex != ( unsigned int ) -1 );
-			if ( ( worldVertex = PlGetVectorArrayElementAt( world->vertices, vertexIndex ) ) == NULL ) {
+			if ( ( worldVertex = PlGetVectorArrayElementAt( world->vertices, vertexIndex ) ) == NULL )
+			{
 				PRINT_WARNING( "Invalid vertex index for face!\n" );
 				break;
 			}
@@ -158,87 +171,115 @@ static ApeWorldFace *DeserializeFace( ApeWorld *world, NdBranch *root ) {
 	return face;
 }
 
-static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
+static void deserialize_geometry( ApeWorld *world, NdBranch *root )
+{
 	NdBranch *branch;
 
-	if ( ( branch = ndGetChildByName( root, "materials" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "materials" ) ) != NULL )
+	{
 		unsigned int numMaterials = ndGetNumOfChildren( branch );
-		if ( numMaterials > 0 ) {
-			if ( world->materials == NULL ) {
+		if ( numMaterials > 0 )
+		{
+			if ( world->materials == NULL )
+			{
 				world->materials = PlCreateVectorArray( numMaterials );
 			}
 
 			branch = ndGetFirstChild( branch );
-			while ( branch != NULL ) {
+			while ( branch != NULL )
+			{
 				PLPath path;
-				if ( ndGetStr( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS ) {
+				if ( ndGetStr( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS )
+				{
 					PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
-				} else {
+				}
+				else
+				{
 					PRINT_WARNING( "Failed to fetch string from materials list: %s\n", ndGetErrorMessage() );
 					break;
 				}
 
 				branch = ndGetNextChild( branch );
 			}
-		} else {
+		}
+		else
+		{
 			PRINT_WARNING( "No materials for geometry!\n" );
 		}
 	}
 
-	if ( ( branch = ndGetChildByName( root, "rooms" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "rooms" ) ) != NULL )
+	{
 		unsigned int numRooms = ndGetNumOfChildren( branch );
-		if ( numRooms > 0 ) {
-			if ( world->rooms == NULL ) {
+		if ( numRooms > 0 )
+		{
+			if ( world->rooms == NULL )
+			{
 				world->rooms = PlCreateVectorArray( numRooms );
 			}
 
 			branch = ndGetFirstChild( branch );
-			while ( branch != NULL ) {
-				PlPushBackVectorArrayElement( world->rooms, DeserializeRoom( branch ) );
+			while ( branch != NULL )
+			{
+				PlPushBackVectorArrayElement( world->rooms, deserialize_room( branch ) );
 				branch = ndGetNextChild( branch );
 			}
-		} else {
+		}
+		else
+		{
 			PRINT_WARNING( "No rooms for geometry!\n" );
 		}
 	}
 
-	if ( ( branch = ndGetChildByName( root, "portals" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "portals" ) ) != NULL )
+	{
 		unsigned int numPortals = ndGetNumOfChildren( branch );
-		if ( numPortals > 0 ) {
-			if ( world->portals == NULL ) {
+		if ( numPortals > 0 )
+		{
+			if ( world->portals == NULL )
+			{
 				world->portals = PlCreateVectorArray( numPortals );
 			}
 
 			NdBranch *child = ndGetFirstChild( branch );
-			while ( child != NULL ) {
-				ApeWorldPortal *portal = DeserializePortal( world, child );
-				if ( portal != NULL ) {
+			while ( child != NULL )
+			{
+				ApeWorldPortal *portal = deserialize_portal( world, child );
+				if ( portal != NULL )
+				{
 					PlPushBackVectorArrayElement( world->portals, portal );
 				}
 
 				child = ndGetNextChild( child );
 			}
-		} else {
+		}
+		else
+		{
 			PRINT_WARNING( "No portals for geometry!\n" );
 		}
 	}
 
 	// Attempt to fetch the list of vertices - these are just an immediate
 	// list of coordinates
-	if ( ( branch = ndGetChildByName( root, "vertices" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "vertices" ) ) != NULL )
+	{
 		// Vertices should be just a big ol' list of floats
 		// representing x y z coordinates
 		unsigned int numChildren = ndGetNumOfChildren( branch );
-		if ( numChildren % 3 == 0 ) {
+		if ( numChildren % 3 == 0 )
+		{
 			unsigned int numVertices = numChildren / 3;
-			if ( numVertices > 0 ) {
-				if ( world->vertices == NULL ) {
+			if ( numVertices > 0 )
+			{
+				if ( world->vertices == NULL )
+				{
 					world->vertices = PlCreateVectorArray( numVertices );
 				}
 
 				float *vertices = PL_NEW_( float, numChildren );
 				ndGetF32Array( branch, vertices, numChildren );
-				for ( unsigned int i = 0, j = 0; i < numVertices; ++i, j += 3 ) {
+				for ( unsigned int i = 0, j = 0; i < numVertices; ++i, j += 3 )
+				{
 					ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
 					vertex->position.x = vertices[ j ];
 					vertex->position.y = vertices[ j + 1 ];
@@ -248,20 +289,27 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
 
 				PL_DELETE( vertices );
 			}
-		} else {
+		}
+		else
+		{
 			PRINT_WARNING( "Invalid number of vertices for geometry!\n" );
 		}
 	}
 
-	if ( ( branch = ndGetChildByName( root, "faces" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "faces" ) ) != NULL )
+	{
 		unsigned int numFaces = ndGetNumOfChildren( branch );
-		if ( numFaces > 0 ) {
+		if ( numFaces > 0 )
+		{
 			branch = ndGetFirstChild( branch );
-			while ( branch != NULL ) {
-				DeserializeFace( world, branch );
+			while ( branch != NULL )
+			{
+				deserialize_face( world, branch );
 				branch = ndGetNextChild( branch );
 			}
-		} else {
+		}
+		else
+		{
 			PRINT_WARNING( "No faces for geometry!\n" );
 		}
 	}
@@ -271,14 +319,18 @@ static void DeserializeGeometry( ApeWorld *world, NdBranch *root ) {
  * PUBLIC
  ****************************************/
 
-ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
+ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root )
+{
 	// Get the world version from the branch
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 ) {
+	if ( version == ( unsigned int ) -1 )
+	{
 		// Print a warning and return NULL if the version is not found
 		PRINT_WARNING( "Failed to find world version!\n" );
 		return NULL;
-	} else if ( version > APE_WORLD_VERSION ) {
+	}
+	else if ( version > APE_WORLD_VERSION )
+	{
 		// Print a warning and return NULL if the version is not supported
 		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
 		return NULL;
@@ -287,7 +339,8 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 	NdBranch *branch;
 
 	// Get the property branch from the root
-	if ( ( branch = ndGetChildByName( root, "properties" ) ) != NULL ) {
+	if ( ( branch = ndGetChildByName( root, "properties" ) ) != NULL )
+	{
 		// Copy the branch, so we can pass it over to the game logic later
 		world->globalProperties = ndCopyBranch( branch );
 
@@ -302,12 +355,14 @@ ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root ) {
 		world->fogNear = ndGetF32ByName( world->globalProperties, "fogNear", 0.01f );
 	}
 
-	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL ) {
-		DeserializeGeometry( world, branch );
+	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL )
+	{
+		deserialize_geometry( world, branch );
 	}
 
-	if ( ( branch = ndGetChildByName( root, "lights" ) ) != NULL ) {
-		DeserializeLights( world, branch );
+	if ( ( branch = ndGetChildByName( root, "lights" ) ) != NULL )
+	{
+		deserialize_lights( world, branch );
 	}
 
 	return world;

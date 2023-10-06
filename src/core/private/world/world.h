@@ -59,7 +59,8 @@ typedef struct ApeWorldFaceVertex
 #define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
 #define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
 
-typedef struct ApeWorldFace {
+typedef struct ApeWorldFace
+{
 	float offset;
 	PLVector3 normal;
 	PLVector3 origin;
@@ -79,7 +80,8 @@ typedef struct ApeWorldFace {
 	PLCollisionAABB bounds;
 } ApeWorldFace;
 
-typedef struct ApeWorldMesh {
+typedef struct ApeWorldMesh
+{
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
 	struct ApeMaterial **materials;
@@ -100,16 +102,19 @@ typedef struct ApeWorldMesh {
 	ApeMemoryReference mem;
 } ApeWorldMesh;
 
-typedef struct ApeWorldObject {
+typedef struct ApeWorldObject
+{
 	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
-	union {
+	union
+	{
 		const ApeWorldMesh *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } ApeWorldObject;
 
-typedef struct ApeWorldPortal {
+typedef struct ApeWorldPortal
+{
 	PLVector3 mins;
 	PLVector3 maxs;
 
@@ -119,21 +124,24 @@ typedef struct ApeWorldPortal {
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-enum {
+enum
+{
 	APE_WORLD_ROOM_BATCH_ROOM,
 	APE_WORLD_ROOM_BATCH_DETAIL,
 
 	APE_WORLD_ROOM_NUM_BUILTIN_BATCHES
 };
 
-typedef struct ApeWorldBatch {
+typedef struct ApeWorldBatch
+{
 	int *subMeshes;
 	int *firstSubMeshes;
 	unsigned int numSubMeshes, maxSubMeshes;
 	struct ApeMaterial *material;
 } ApeWorldBatch;
 
-typedef struct ApeWorldRoom {
+typedef struct ApeWorldRoom
+{
 	char tag[ WORLD_PROP_TAG_LENGTH ];
 	int uid;
 
@@ -180,7 +188,8 @@ typedef struct ApeWorldRoom {
 
 #define APE_MAX_SKY_LAYERS 4
 
-typedef struct ApeWorld {
+typedef struct ApeWorld
+{
 	char *name;
 	PLPath path;
 
@@ -215,7 +224,8 @@ typedef struct ApeWorld {
 	bool isDirty;
 } ApeWorld;
 
-typedef struct ApeWorldEntity {
+typedef struct ApeWorldEntity
+{
 	char className[ APE_ENTITY_MAX_NAME ];
 	NdBranch *properties;
 } ApeWorldEntity;
@@ -229,7 +239,7 @@ void apeDestroyWorldRoom( ApeWorldRoom *room );
 ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );
 
 void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
-ApeWorld *apeDeserializeWorld( ApeWorld *world, NdBranch *root );
+ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root );
 
 ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
 

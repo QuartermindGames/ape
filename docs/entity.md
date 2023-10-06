@@ -11,12 +11,12 @@ Unlike a typical ECS, the components in this case are only used to provide addit
 
 When implementing a new entity class, you'll need to first implement a function that provides the entity class table - this is a collection of callbacks and other data the class needs in order to function.
 
-Why a function? This gives us a chance to zero the data which provides a little bit of safety given new callbacks, variables or other changes might be made to the `ApeEntityClassDefinition` type that older code might not have been updated to take advantage of.
+Why a function? This gives us a chance to zero the data which provides a little bit of safety given new callbacks, variables or other changes might be made to the `AclEntityClassDefinition` type that older code might not have been updated to take advantage of.
 
 You can see an example of how to implement the function below.
 ```c
-const ApeEntityClassDefinition *toxGetCharacterClassTable( void ) {
-	static ApeEntityClassDefinition table;
+const AclEntityClassDefinition *tox_character_get_class_table( void ) {
+	static AclEntityClassDefinition table;
 	PL_ZERO_( table );
 	table.name = className;
 	table.Create = CreateCharacterClass;
@@ -27,13 +27,13 @@ const ApeEntityClassDefinition *toxGetCharacterClassTable( void ) {
 }
 ```
 
-You can then register your class by calling `apeRegisterEntityClass` in your game initialisation function, like so.
+You can then register your class by calling `acl_entity_register_class` in your game initialisation function, like so.
 
 ```c
-static void InitializeGame( void ) {
+static void initialize_game( void ) {
 	game_register_standard_entity_components();
 	
-	apeRegisterEntityClass( toxGetCharacterClassTable() );
+	acl_entity_register_class( tox_character_get_class_table() );
     
 	// ...
 }

@@ -67,14 +67,14 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( apeGetDefaultShaderProgram( APE_SHADER_DEFAULT_VERTEX ) );
+	PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 
 	int vw, vh;
 	apeGetViewportSize( viewport, &vw, &vh );
 
 	PlgDrawRectangle( 0, 0, ( float ) vw, ( float ) vh, PL_COLOUR_DARK_SLATE_GRAY );
 
-	PlgSetShaderProgram( apeGetDefaultShaderProgram( APE_SHADER_DEFAULT ) );
+	PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT ) );
 
 	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
