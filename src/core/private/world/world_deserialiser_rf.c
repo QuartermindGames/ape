@@ -385,7 +385,9 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 		// plane
 		face->normal = acl_fs_parse_vector_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, &pl_vecOrigin3 );// normal
 		FLIP_VECTOR( face->normal );
-		face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
+		FLIP_VECTOR( face->normal );
+			face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
+
 
 		face->materialIndex = acl_fs_parse_int( file );
 		if ( face->materialIndex >= 0 )
@@ -632,17 +634,17 @@ static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int vers
 
 		light->radius = acl_fs_parse_float( file );// * 2.0f;
 
-		acl_fs_parse_float( file );// fov
-		acl_fs_parse_float( file );// fov dropoff
-		acl_fs_parse_float( file );// intensity at max range
-		acl_fs_parse_int( file );  // dropoff type
-		acl_fs_parse_float( file );// tube light width
-		acl_fs_parse_float( file );// on intensity
-		acl_fs_parse_float( file );// on time
-		acl_fs_parse_float( file );// on time variation
-		acl_fs_parse_float( file );// off intensity
-		acl_fs_parse_float( file );// off time
-		acl_fs_parse_float( file );// off time variation
+		acl_fs_parse_float( file );      // fov
+		acl_fs_parse_float( file );      // fov dropoff
+		acl_fs_parse_float( file );      // intensity at max range
+		acl_fs_parse_int( file );// dropoff type
+		acl_fs_parse_float( file );      // tube light width
+		acl_fs_parse_float( file );      // on intensity
+		acl_fs_parse_float( file );      // on time
+		acl_fs_parse_float( file );      // on time variation
+		acl_fs_parse_float( file );      // off intensity
+		acl_fs_parse_float( file );      // off time
+		acl_fs_parse_float( file );      // off time variation
 
 		PlPushBackVectorArrayElement( level->lights, light );
 	}
