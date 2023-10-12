@@ -124,22 +124,6 @@ typedef struct ApeWorldPortal
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-enum
-{
-	APE_WORLD_ROOM_BATCH_ROOM,
-	APE_WORLD_ROOM_BATCH_DETAIL,
-
-	APE_WORLD_ROOM_NUM_BUILTIN_BATCHES
-};
-
-typedef struct ApeWorldBatch
-{
-	int *subMeshes;
-	int *firstSubMeshes;
-	unsigned int numSubMeshes, maxSubMeshes;
-	struct ApeMaterial *material;
-} ApeWorldBatch;
-
 typedef struct ApeWorldRoom
 {
 	char tag[ WORLD_PROP_TAG_LENGTH ];
@@ -175,9 +159,6 @@ typedef struct ApeWorldRoom
 
 	PLGMesh *mesh;      // cached mesh
 	PLGMesh *shadowMesh;// shadow volume mesh
-	ApeWorldBatch *batches;
-	unsigned int numBatches;
-	unsigned int builtInBatches[ APE_WORLD_ROOM_NUM_BUILTIN_BATCHES ];
 	bool isMeshCached;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
@@ -226,7 +207,7 @@ typedef struct ApeWorld
 
 typedef struct ApeWorldEntity
 {
-	char className[ APE_ENTITY_MAX_NAME ];
+	char className[ ACL_ENTITY_MAX_NAME ];
 	NdBranch *properties;
 } ApeWorldEntity;
 

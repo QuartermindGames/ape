@@ -104,21 +104,6 @@ static unsigned int GetTotalFacesForRoom( ApeWorldRoom *room, bool detail )
 static void SetupRoomSubMeshes( const ApeWorld *world, ApeWorldRoom *room )
 {
 	unsigned int numMaterials = PlGetNumVectorArrayElements( world->materials );
-
-	room->numBatches = numMaterials + APE_WORLD_ROOM_NUM_BUILTIN_BATCHES;
-	room->batches = PL_NEW_( ApeWorldBatch, room->numBatches );
-
-	unsigned int maxFaces = GetTotalFacesForRoom( room, true );
-	for ( unsigned int i = 0; i < room->numBatches; ++i )
-	{
-		room->batches[ i ].maxSubMeshes = maxFaces;
-		room->batches[ i ].firstSubMeshes = PL_NEW_( int, room->batches[ i ].maxSubMeshes );
-		room->batches[ i ].subMeshes = PL_NEW_( int, room->batches[ i ].maxSubMeshes );
-		room->batches[ i ].material = PlGetVectorArrayElementAt( world->materials, i );
-	}
-
-	room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] = numMaterials;
-	room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] = numMaterials + 1;
 }
 
 static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
@@ -147,9 +132,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL || face->materialIndex < 0 )
-		{
 			continue;
-		}
 
 		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 		while ( faceVertexNode != NULL )
@@ -166,23 +149,6 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 		}
-
-		unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
-
-		ApeWorldBatch *subMesh;
-		subMesh = &room->batches[ face->materialIndex ];
-		assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
-		subMesh->subMeshes[ subMesh->numSubMeshes ] = ( int ) numVertices;
-		subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
-		subMesh->numSubMeshes++;
-
-		subMesh = &room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_ROOM ] ];
-		assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
-		subMesh->subMeshes[ subMesh->numSubMeshes ] = ( int ) numVertices;
-		subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
-		subMesh->numSubMeshes++;
-
-		total += numVertices;
 	}
 
 	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
@@ -190,9 +156,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
 		if ( detailRoom == NULL )
-		{
 			continue;
-		}
 
 		numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
 		for ( unsigned int k = 0; k < numFaces; ++k )
@@ -200,9 +164,7 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 			ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 			assert( face != NULL );
 			if ( face == NULL || face->materialIndex < 0 )
-			{
 				continue;
-			}
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
@@ -219,23 +181,6 @@ static void CacheRoomMesh( const ApeWorld *world, ApeWorldRoom *room )
 
 				faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 			}
-
-			unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
-
-			ApeWorldBatch *subMesh;
-			subMesh = &room->batches[ face->materialIndex ];
-			assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
-			subMesh->subMeshes[ subMesh->numSubMeshes ] = ( int ) numVertices;
-			subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
-			subMesh->numSubMeshes++;
-
-			subMesh = &room->batches[ room->builtInBatches[ APE_WORLD_ROOM_BATCH_DETAIL ] ];
-			assert( subMesh->numSubMeshes != subMesh->maxSubMeshes );
-			subMesh->subMeshes[ subMesh->numSubMeshes ] = ( int ) numVertices;
-			subMesh->firstSubMeshes[ subMesh->numSubMeshes ] = ( int ) total;
-			subMesh->numSubMeshes++;
-
-			total += numVertices;
 		}
 	}
 

@@ -6,7 +6,7 @@
 #include "editor/editor.h"
 #include "game/game_interface.h"
 #include "client/renderer/renderer.h"
-#include "client/renderer/ar_render_target.h"
+#include "client/renderer/renderer_render_target.h"
 
 static GuiCanvas *canvas;
 

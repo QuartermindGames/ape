@@ -5,7 +5,7 @@
 #include <plcore/pl_hashtable.h>
 
 #include "ape_private.h"
-#include "ar_render_target.h"
+#include "renderer_render_target.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

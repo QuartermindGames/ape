@@ -6,7 +6,7 @@
 #include "gui_private.h"
 
 #include "client/renderer/renderer.h"
-#include "client/renderer/ar_render_target.h"
+#include "client/renderer/renderer_render_target.h"
 
 /****************************************
  * GUI DRAW API

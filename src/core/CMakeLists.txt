@@ -15,7 +15,7 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer.c
         private/client/renderer/renderer_draw.c
         private/client/renderer/renderer_material.c
-        private/client/renderer/ar_render_target.c
+        private/client/renderer/renderer_render_target.c
         private/client/renderer/renderer_texture.c
         private/client/renderer/renderer_viewport.c
         private/client/renderer/renderer_world.c

@@ -9,7 +9,7 @@
 #include "world/world.h"
 #include "renderer.h"
 #include "renderer_particle.h"
-#include "ar_render_target.h"
+#include "renderer_render_target.h"
 
 #include "client/ape_client_gui.h"
 #include "editor/editor.h"

@@ -26,13 +26,6 @@ void apeDestroyWorldRoom( ApeWorldRoom *room ) {
 
 	PlgDestroyMesh( room->mesh );
 
-	// clean-up batches
-	for ( unsigned int i = 0; i < room->numBatches; ++i ) {
-		PL_DELETE( room->batches[ i ].subMeshes );
-		PL_DELETE( room->batches[ i ].firstSubMeshes );
-	}
-	PL_DELETE( room->batches );
-
 	PL_DELETE( room );
 }
 

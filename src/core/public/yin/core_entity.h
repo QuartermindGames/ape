@@ -11,11 +11,21 @@ typedef struct NdBranch NdBranch;
 typedef struct AclEntityClassDefinition AclEntityClassDefinition;
 typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
 
-#define APE_ENTITY_MAX_NAME 32
+#define ACL_ENTITY_MAX_NAME 32
+
+#define ACL_ENTITY_CLASS_BASE_MAGIC PL_MAGIC_TO_NUM( 'B', 'A', 'S', 'E' )
+
+/**
+ * Foundation that should be used for all classes.
+ */
+typedef struct AclEntityClassBase
+{
+	unsigned int magic;// 'BASE'
+} AclEntityClassBase;
 
 typedef struct ApeEntity
 {
-	char name[ APE_ENTITY_MAX_NAME ];               // identifier
+	char name[ ACL_ENTITY_MAX_NAME ];               // identifier
 	const AclEntityClassDefinition *classDefinition;// class that the actor is derived from
 	void *classData;                                // pointer to the unique data of the class
 	struct PLHashTable *componentTable;             // list of components
