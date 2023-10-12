@@ -8,7 +8,12 @@
 
 #include "yin/core_fs.h"
 
-#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
+//#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
+#ifdef FLIP_WORLD
+#	define FLIP_VECTOR( X ) ( ( X ).x *= -1 )
+#else
+#	define FLIP_VECTOR( X )
+#endif
 
 static const unsigned int RFL_MAGIC = 0xd4bada55;
 
@@ -105,12 +110,12 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t 
 		room->uid = PlReadInt32( file, false, NULL );
 
 		room->bounds.mins = acl_fs_parse_vector( file );
+		FLIP_VECTOR( room->bounds.mins );
 		room->bounds.maxs = acl_fs_parse_vector( file );
+		FLIP_VECTOR( room->bounds.maxs );
 
 		if ( version >= 234 )
-		{
 			room->flags = PL_READUINT32( file, false, NULL );
-		}
 		else
 		{
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_SKY; }
@@ -259,7 +264,9 @@ static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
 		PLVector3 mins = acl_fs_parse_vector( file );
+		FLIP_VECTOR( mins );
 		PLVector3 maxs = acl_fs_parse_vector( file );
+		FLIP_VECTOR( maxs );
 
 		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
 		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
@@ -290,6 +297,7 @@ static void parse_static_geometry_vertices( ApeWorld *world, PLFile *file )
 	{
 		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
 		vertex->position = acl_fs_parse_vector( file );
+		FLIP_VECTOR( vertex->position );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
@@ -299,15 +307,11 @@ void apeGenerateWorldFaceBounds( ApeWorldFace *face )
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
 	if ( numVertices == 0 )
-	{
 		return;
-	}
 
 	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
 	for ( unsigned int i = 0; i < numVertices; ++i )
-	{
 		boundVertices[ i ] = vertices[ i ]->u->position;
-	}
 
 	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
 	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
@@ -342,7 +346,8 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 		{
 			// plane
 			face->normal = acl_fs_parse_vector( file );// normal
-			face->offset = acl_fs_parse_float( file ); // offset
+			FLIP_VECTOR( face->normal );
+			face->offset = acl_fs_parse_float( file );// offset
 		}
 
 		face->materialIndex = PlReadInt32( file, false, NULL );
@@ -354,9 +359,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 		// some texture indices are negative, which is valid
 
 		if ( face->material == NULL )
-		{
 			face->material = ar_material_get_fallback();
-		}
 
 		int32_t lightmapIndex = PlReadInt32( file, false, NULL );
 
@@ -409,7 +412,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 
 			// Initially, we can just derive the face vertex normal from the face normal,
 			// but these will need to be generated based on smoothing groups later
-			faceVertex->normal = PlInverseVector3( face->normal );
+			faceVertex->normal = face->normal;
 
 			if ( lightmapIndex >= 0 )
 			{
@@ -457,17 +460,17 @@ static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file )
 		PLVector3 min = acl_fs_parse_vector( file );// min
 		PLVector3 max = acl_fs_parse_vector( file );// max
 
-		acl_fs_parse_vector( file );            // eq
-		acl_fs_parse_float( file );             // offset
+		acl_fs_parse_vector( file );     // eq
+		acl_fs_parse_float( file );      // offset
 		PlReadInt32( file, false, NULL );// should smooth
 		PlReadInt32( file, false, NULL );// fullbright
 		PlReadInt32( file, false, NULL );// dropped coefficient
 		PlReadInt32( file, false, NULL );// u coefficient
 		PlReadInt32( file, false, NULL );// v coefficient
-		acl_fs_parse_float( file );             // uv add x
-		acl_fs_parse_float( file );             // uv add y
-		acl_fs_parse_float( file );             // uv scale x
-		acl_fs_parse_float( file );             // uv scale y
+		acl_fs_parse_float( file );      // uv add x
+		acl_fs_parse_float( file );      // uv add y
+		acl_fs_parse_float( file );      // uv scale x
+		acl_fs_parse_float( file );      // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
@@ -564,6 +567,7 @@ static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
 		PL_DELETE( tmp );
 
 		light->position = acl_fs_parse_vector( file );
+		FLIP_VECTOR( light->position );
 
 		acl_fs_parse_mat3( file );// rotation
 
@@ -578,17 +582,17 @@ static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
 
 		light->radius = acl_fs_parse_float( file );// * 2.0f;
 
-		acl_fs_parse_float( file );             // fov
-		acl_fs_parse_float( file );             // fov dropoff
-		acl_fs_parse_float( file );             // intensity at max range
+		acl_fs_parse_float( file );      // fov
+		acl_fs_parse_float( file );      // fov dropoff
+		acl_fs_parse_float( file );      // intensity at max range
 		PlReadInt32( file, false, NULL );// dropoff type
-		acl_fs_parse_float( file );             // tube light width
-		acl_fs_parse_float( file );             // on intensity
-		acl_fs_parse_float( file );             // on time
-		acl_fs_parse_float( file );             // on time variation
-		acl_fs_parse_float( file );             // off intensity
-		acl_fs_parse_float( file );             // off time
-		acl_fs_parse_float( file );             // off time variation
+		acl_fs_parse_float( file );      // tube light width
+		acl_fs_parse_float( file );      // on intensity
+		acl_fs_parse_float( file );      // on time
+		acl_fs_parse_float( file );      // on time variation
+		acl_fs_parse_float( file );      // off intensity
+		acl_fs_parse_float( file );      // off time
+		acl_fs_parse_float( file );      // off time variation
 
 		PlPushBackVectorArrayElement( world->lights, light );
 	}
@@ -597,6 +601,7 @@ static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
 static void parse_player_start( ApeWorld *world, PLFile *file, int32_t version )
 {
 	world->startPosition = acl_fs_parse_vector( file );
+	FLIP_VECTOR( world->startPosition );
 	world->startOrientation = acl_fs_parse_mat3( file );
 }
 
