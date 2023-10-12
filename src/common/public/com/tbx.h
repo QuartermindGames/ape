@@ -1,3 +1,0 @@
-// Copyright © 2022-2023 OldTimes Software, Mark E. Sowden <hogsy@oldtimes-software.com>
-
-#pragma once
