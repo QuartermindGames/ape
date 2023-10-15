@@ -6,6 +6,7 @@
 #include "gui/gui_private.h"
 #include "client/audio/audio.h"
 #include "world/world.h"
+#include "ape_client_input.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow = false;
@@ -387,6 +388,14 @@ void apeDrawConsole_( const ApeViewport *viewport ) {
  * CLIENT CONSOLE INIT
  ****************************************/
 
+static void input_mlook_command( const PLConsoleVariable *consoleVariable )
+{
+	if ( !consoleVariable->b_value )
+		return;
+
+	acl_input_center_mouse();
+}
+
 void apeRegisterClientConsoleCommands_( void ) {
 	PlRegisterConsoleCommand( "ape/console/toggle", "Toggle the console.", 0, ToggleConsoleCommand );
 
@@ -396,11 +405,10 @@ void apeRegisterClientConsoleCommands_( void ) {
 }
 
 void apeRegisterRendererConsoleVariables_( void );
-
 void apeRegisterClientConsoleVariables_( void ) {
 	PlRegisterConsoleVariable( "ape/client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
-	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
 	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );

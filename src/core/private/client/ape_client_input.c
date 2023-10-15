@@ -430,12 +430,8 @@ void apeTickInput_( void ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-void apeEndInputFrame_( void ) {
-	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook == NULL || !mouseLook->b_value ) {
-		return;
-	}
-
+void acl_input_center_mouse( void )
+{
 	int w, h;
 	apeShellInterface_GetWindowSize( &w, &h );
 
@@ -445,6 +441,15 @@ void apeEndInputFrame_( void ) {
 
 	inputMouse.x = ( w / 2 );
 	inputMouse.y = ( h / 2 );
+}
+
+void apeEndInputFrame_( void ) {
+	PL_GET_CVAR( "input/mlook", mouseLook );
+	if ( mouseLook == NULL || !mouseLook->b_value ) {
+		return;
+	}
+
+	acl_input_center_mouse();
 }
 
 unsigned int apeGetNumControllers( void ) { return numControllers; }

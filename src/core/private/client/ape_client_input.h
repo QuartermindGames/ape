@@ -24,5 +24,6 @@ void Client_Input_HandleMouseMotionEvent( int x, int y );
 void apeBeginInputFrame_( void );
 void apeTickInput_( void );
 void apeEndInputFrame_( void );
+void acl_input_center_mouse( void );
 
 PL_EXTERN_C_END
