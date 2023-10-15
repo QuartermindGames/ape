@@ -294,6 +294,7 @@ static void WriteBrush( NdBranch *root, NdBranch *materialsNode, IdBrush *brush 
 			PLGVertex vertex;
 			PL_ZERO_( vertex );
 
+#if 0
 			vertex.position = faces[ i ]->x;
 			NL_DS_SerializeVertex( verticesNode, NULL, &vertex );
 
@@ -302,6 +303,7 @@ static void WriteBrush( NdBranch *root, NdBranch *materialsNode, IdBrush *brush 
 
 			vertex.position = faces[ i ]->z;
 			NL_DS_SerializeVertex( verticesNode, NULL, &vertex );
+#endif
 		}
 	}
 

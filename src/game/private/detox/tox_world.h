@@ -88,7 +88,7 @@ static inline const char *tox_world_get_time_of_day_descriptor( ToxTimeOfDay tim
 	}
 }
 
-const ToxWorldState *tox_world_get_state( void );
+ToxWorldState *tox_world_get_state( void );
 
 void tox_world_spawn( ApeWorld *world );
 void tox_world_tick( void );

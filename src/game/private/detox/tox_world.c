@@ -31,7 +31,7 @@ static float moonBrightness = 0.0f;
 static ApeLight *testLights[ NUM_TEST_NIGHT_LIGHTS ];
 #endif
 
-const ToxWorldState *tox_world_get_state( void ) { return &worldState; }
+ToxWorldState *tox_world_get_state( void ) { return &worldState; }
 
 void tox_world_spawn( ApeWorld *world )
 {
@@ -102,7 +102,7 @@ void tox_world_tick( void )
 	else
 		secondCountdown--;
 #else
-	worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / 200;
+	worldState.seconds++;// += TOX_WORLD_SECONDS_TO_HOUR / 200;
 #endif
 
 	sunYaw = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 360.0f );
@@ -126,9 +126,9 @@ void tox_world_tick( void )
 	                                                DEFAULT_MOON_COLOUR.b,
 	                                                moonBrightness ) );
 
-	acl_world_set_ambience( world, &PL_COLOURF32( PlClamp( 0.15f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
-	                                              PlClamp( 0.15f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
-	                                              PlClamp( 0.15f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
+	acl_world_set_ambience( world, &PL_COLOURF32( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
+	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
+	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              1.0f ) );
 	acl_world_set_clear_colour( world, &PL_COLOURF32( PlClamp( 0.15f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
 	                                                  PlClamp( 0.15f, DEFAULT_CLEAR_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),

@@ -48,11 +48,15 @@ static void move_camera_callback( ApeInputState state, const char *id )
 
 static void spawn_light_action( ApeInputState state, const char *id )
 {
-	if ( state != APE_INPUT_STATE_PRESSED )
+	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
 	ApeWorld *world = acl_world_get_current();
 	if ( world == NULL )
+		return;
+
+	static unsigned int delay = 0;
+	if ( apeGetNumTicks() <= delay )
 		return;
 
 	PLVector3 pos = arl_camera_get_position( playerCamera );
@@ -60,9 +64,11 @@ static void spawn_light_action( ApeInputState state, const char *id )
 	                        ape_light_create(
 	                                &pos,
 	                                &( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f },
-	                                1.5f,
+	                                2.5f,
 	                                APE_LIGHT_TYPE_OMNI,
 	                                APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC ) );
+
+	delay = apeGetNumTicks() + 100;
 }
 
 static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -73,28 +79,36 @@ static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **arg
 	Game_Print( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
 }
 
+static void set_time_command( unsigned int argc, char **argv )
+{
+	ToxWorldState *worldState = tox_world_get_state();
+	worldState->seconds = strtoul( argv[ 1 ], NULL, 10 );
+}
+
 static void initialize_game( void )
 {
 	PlRegisterConsoleVariable( "sun_yaw", "Set the yaw of the sun.", "0", PL_VAR_F32, &tox_globalVars.sunYaw, NULL, false );
+
 	PlRegisterConsoleCommand( "print_pos", "Print the camera position.", 0, print_pos_command );
+	PlRegisterConsoleCommand( "set_time", "Sets the world time.", 1, set_time_command );
 
 	game_register_standard_entity_components();
 
 	acl_entity_register_class( tox_character_get_class_table() );
 
-	playerCamera = arl_camera_create( "test", &PLVector3( -2.45f, 2.0f, 3.33f ), &PLVector3( 0.0f, -158.5f, 0.0f ) );
+	playerCamera = arl_camera_create( "test", &PLVector3( -2.37f, 1.0f, 1.70f ), &PLVector3( 0.0f, -165.0f, 0.0f ) );
 	arl_camera_make_active( playerCamera );
 
 	// hack hack hack hack hack hack
 	PlParseConsoleString( "level ship/worlds/alive_intro.wld.n" );
 	PlParseConsoleString( "r/fov 75" );
 	PlParseConsoleString( "world/showallrooms true" );
-	PlParseConsoleString( "world/sortlights false" );
+	//PlParseConsoleString( "world/sortlights false" );
 
-	acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
-	acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
-	acl_input_register_action( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
-	acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
+	acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
+	acl_input_register_action( "moveBackward", ( ApeInputButton[] ){ APE_INPUT_DOWN }, 1, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
+	acl_input_register_action( "moveLeft", ( ApeInputButton[] ){ INPUT_LEFT }, 1, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
+	acl_input_register_action( "moveRight", ( ApeInputButton[] ){ INPUT_RIGHT }, 1, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
 	acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
 	acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
 	acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
