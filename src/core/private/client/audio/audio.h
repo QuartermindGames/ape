@@ -7,17 +7,19 @@
 PL_EXTERN_C
 
 typedef struct YNCoreAudioXWBRecord YNCoreAudioXWBRecord;
-typedef struct YNCoreAudioXWB YNCoreAudioXWB;
+typedef struct AclAudioXwb AclAudioXwb;
 
-YNCoreAudioXWB *YnCore_Audio_XWB_Load( const char *path );
-void YnCore_Audio_XWB_Destroy( YNCoreAudioXWB *xwb );
+AclAudioXwb *acl_audio_xwb_load_file( const char *path );
+void acl_audio_xwb_destroy( AclAudioXwb *xwb );
 
 /**
  * This list provides a number of
  * somewhat standard presets for
  * reverb.
  */
-typedef enum ApeAudioReverbPreset {
+typedef enum ApeAudioReverbPreset
+{
+	APE_AUDIO_REVERB_PRESET_NONE,
 	APE_AUDIO_REVERB_PRESET_FOREST,
 	APE_AUDIO_REVERB_PRESET_DEFAULT,
 	APE_AUDIO_REVERB_PRESET_GENERIC,
@@ -52,12 +54,21 @@ typedef enum ApeAudioReverbPreset {
 	APE_AUDIO_MAX_REVERB_PRESETS
 } ApeAudioReverbPreset;
 
+typedef struct AclAudioEffectType
+{
+	const char *name;
+	ApeAudioReverbPreset effect;
+} AclAudioEffectType;
+extern const AclAudioEffectType APE_AUDIO_EFFECT_TYPES[];
+extern const unsigned int APE_NUM_AUDIO_EFFECT_TYPES;
+
 /**
  * WARNING: DO NOT CHANGE THIS!!
  * This should match with the 'fmt ' structure
  * within a WAV file.
  */
-typedef struct YNCoreAudioWaveFormat {
+typedef struct YNCoreAudioWaveFormat
+{
 	uint16_t formatTag;
 	uint16_t channels;
 	uint32_t samplesPerSec;
@@ -67,7 +78,8 @@ typedef struct YNCoreAudioWaveFormat {
 	uint16_t size;
 } YNCoreAudioWaveFormat;
 
-typedef struct ApeAudioSample {
+typedef struct ApeAudioSample
+{
 	char path[ PL_SYSTEM_MAX_PATH ];
 	bool reserved;
 	int numReferences;
@@ -78,7 +90,8 @@ typedef struct ApeAudioSample {
 	void *user;
 } ApeAudioSample;
 
-typedef struct ApeAudioSource {
+typedef struct ApeAudioSource
+{
 	PLVector3 position;
 	PLVector3 velocity;
 	void *user;
@@ -111,7 +124,8 @@ void YnCore_AudioSource_Emit( ApeAudioSource *audioSource, ApeAudioSample *audio
 
 void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize );
 
-typedef struct ApeAudioDriverInterface {
+typedef struct ApeAudioDriverInterface
+{
 	bool ( *Initialize )( void );
 	void ( *Shutdown )( void );
 	void ( *Tick )( void );
