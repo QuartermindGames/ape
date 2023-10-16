@@ -16,7 +16,7 @@ typedef struct ApeLight ApeLight;
 typedef struct ApeEntity ApeEntity;// core_entity.h
 
 /* ======================================================================
- * WORLD INTERFACE
+ * LEVEL INTERFACE
  * ====================================================================*/
 
 typedef struct ApeWorldFace ApeWorldFace;
@@ -34,42 +34,44 @@ typedef struct ApeWorld ApeWorld;
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
-ApeWorld *ape_world_create( void );
+ApeWorld *acl_level_create( void );
 
-ApeWorld *apeLoadWorld( const char *path );
+ApeWorld *acl_level_load( const char *path );
 
 /// Deserialize world from a node tree.
 /// \param world World that deserialized data will be added to.
 /// \param root Handle to the world root.
 /// \return On success, returns the world pointer, otherwise null.
-ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root );
+ApeWorld *acl_level_deserialize_( ApeWorld *world, NdBranch *root );
 
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.
-struct ApeWorld *acl_world_get_current( void );
+struct ApeWorld *acl_level_get_current( void );
 
 /// Attempts to save the given world to the destination.
 /// \param world
 /// \param path
 /// \return On success, returns true but false otherwise.
-bool apeSaveWorld( ApeWorld *world, const char *path );
+bool acl_level_save( ApeWorld *world, const char *path );
 
-void ape_world_destroy( ApeWorld *world );
+void acl_level_destroy( ApeWorld *level );
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
-void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera );
-void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
-void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 
-void acl_world_set_global_defaults( ApeWorld *world );
-void acl_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
-void acl_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
+// TODO: move these under the renderer sub-system
+void arl_level_draw_wireframe( ApeWorld *world, ApeCamera *camera );
+void arl_level_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
+void arl_level_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light );
+
+void acl_level_set_global_defaults( ApeWorld *world );
+void acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
+void acl_level_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
 void acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
 
 /**
  * Assigning an entity to the world will give the world instance
  * ownership of that entity.
  */
-void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity );
+void acl_level_attach_entity( ApeWorld *world, ApeEntity *entity );
 
 /**
  * Assigning a light to the world will give the world instance
@@ -82,9 +84,8 @@ void arl_sky_set_layer_alpha( unsigned int slot, float alpha );
 void arl_sky_clear_layers( void );
 void arl_sky_draw( ApeCamera *camera );
 
-void apeSetSunPosition( ApeWorld *world, const PLVector3 *position );
-
-void apeGetPlayerStart( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
+void acl_level_set_sun_position( ApeWorld *world, const PLVector3 *position );
+void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
 
 /* Mesh */
 

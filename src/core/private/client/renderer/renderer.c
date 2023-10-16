@@ -137,7 +137,7 @@ void arl_setup_default_state( const ApeViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	ApeWorld *world = acl_world_get_current();
+	ApeWorld *world = acl_level_get_current();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
 
@@ -282,6 +282,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "skip_ambience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
 	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
@@ -657,7 +658,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = acl_world_get_current();
+	ApeWorld *world = acl_level_get_current();
 	if ( world == NULL )
 		return;
 
@@ -665,8 +666,8 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
-	apeDrawSky_( camera );
-	apeDrawWorld_( world, camera, NULL, true );
+	arl_sky_draw( camera );
+	arl_level_draw( world, camera, NULL, true );
 
 	unsigned int numLights;
 	ApeLight **lights = apeGetVisibleLights_( &numLights );
@@ -716,7 +717,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 				arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+				arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 				arl_rendererState_.cullMode = APE_RENDERER_CULL_DEFAULT;
@@ -732,7 +733,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
-			apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+			arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );
@@ -745,7 +746,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			apeDrawWorld_( world, camera, lights[ i ], false );
+			arl_level_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 
@@ -762,7 +763,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			apeDrawWorld_( world, camera, lights[ i ], false );
+			arl_level_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 			arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;

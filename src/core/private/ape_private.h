@@ -126,6 +126,7 @@ typedef struct ApeConfig
 		bool showFps;
 		bool showFaceBounds;
 		bool skipRoomCull;
+		bool skipAmbience;
 
 		float superSampling;
 		float maxLightDistance;
@@ -136,7 +137,7 @@ typedef struct ApeConfig
 		bool skipDraw;
 		bool showPortals;
 		bool sortLights;
-	} world;
+	} level;
 } ApeConfig;
 
 extern ApeConfig ape_config_;

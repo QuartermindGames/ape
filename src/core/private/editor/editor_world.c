@@ -34,7 +34,7 @@ static void CreateWorldCommand( unsigned int argc, char **argv ) {
 		return;
 	}
 
-	world = ape_world_create();
+	world = acl_level_create();
 }
 
 static void DestroyWorldCommand( unsigned int argc, char **argv ) {
@@ -42,32 +42,8 @@ static void DestroyWorldCommand( unsigned int argc, char **argv ) {
 		return;
 	}
 
-	ape_world_destroy( world );
+	acl_level_destroy( world );
 	world = NULL;
-}
-
-static void CreateMeshCommand( unsigned int argc, char **argv ) {
-	ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
-	if ( editorInstance == NULL ) {
-		PRINT_WARNING( "Command failed - no active instance!\n" );
-		return;
-	}
-
-	if ( editorInstance->mode != APE_EDITOR_CONTEXT_WORLD ) {
-		PRINT_WARNING( "Command failed - invalid active instance mode!\n" );
-		return;
-	}
-
-	if ( world == NULL ) {
-		return;
-	}
-
-	PLVector3 pos = ( PLVector3 ){
-	        strtof( argv[ 1 ], NULL ),
-	        strtof( argv[ 2 ], NULL ),
-	        strtof( argv[ 3 ], NULL ) };
-
-	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
 }
 
 static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
@@ -187,11 +163,11 @@ static void DrawWorldEditorGUI( void ) {
 		tmp.internal = apeGetAuxCamera();
 		switch ( context.camera->drawMode ) {
 			case APE_CAMERA_DRAW_MODE_WIREFRAME:
-				apeDrawWorldWireframe_( world, &tmp );
+				arl_level_draw_wireframe( world, &tmp );
 				break;
 			case APE_CAMERA_DRAW_MODE_SOLID:
 			case APE_CAMERA_DRAW_MODE_TEXTURED:
-				apeDrawWorld_( world, NULL, NULL, 0 );
+				arl_level_draw( world, NULL, NULL, 0 );
 				break;
 			default:
 				break;
@@ -258,7 +234,7 @@ static void OnWorldEditorActive( void ) {
 
 	apeSetViewportCamera( viewport, context.camera );
 
-	world = acl_world_get_current();
+	world = acl_level_get_current();
 }
 
 ApeEditorContext *YnCore_RegisterWorldEditorContext( void ) {

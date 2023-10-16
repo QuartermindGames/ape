@@ -90,7 +90,7 @@ void apeTickClient( void ) {
 	edTick();
 #endif
 
-	apeTickClientWorld_();
+	acl_level_client_tick_();
 
 	apeHandleClientConnectionState_();
 

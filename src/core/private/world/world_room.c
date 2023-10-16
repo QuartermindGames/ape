@@ -3,7 +3,7 @@
 
 #include "world.h"
 
-ApeWorldRoom *apeCreateWorldRoom( void )
+ApeWorldRoom *acl_room_create( void )
 {
 	ApeWorldRoom *room = PL_NEW( ApeWorldRoom );
 	room->detailRooms = PlCreateVectorArray( 0 );
@@ -18,7 +18,7 @@ ApeWorldRoom *apeCreateWorldRoom( void )
 	return room;
 }
 
-void apeDestroyWorldRoom( ApeWorldRoom *room )
+void acl_room_destroy( ApeWorldRoom *room )
 {
 	PlDestroyVectorArray( room->detailRooms );
 	PlDestroyVectorArray( room->faces );
@@ -31,7 +31,14 @@ void apeDestroyWorldRoom( ApeWorldRoom *room )
 	PL_DELETE( room );
 }
 
-ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces )
+ApeWorldFace **acl_room_get_faces( ApeWorldRoom *room, unsigned int *numFaces )
+
 {
 	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( room->faces, numFaces );
+}
+
+ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms )
+{
+	*numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
+	return ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 }

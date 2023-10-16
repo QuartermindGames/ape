@@ -45,7 +45,7 @@ static void deserialize_lights( ApeWorld *world, NdBranch *root )
 
 static ApeWorldRoom *deserialize_room( NdBranch *root )
 {
-	ApeWorldRoom *room = apeCreateWorldRoom();
+	ApeWorldRoom *room = acl_room_create();
 
 	room->uid = ndGetInt( root, "uid", 0 );
 
@@ -320,7 +320,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
  * PUBLIC
  ****************************************/
 
-ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root )
+ApeWorld *acl_level_deserialize_( ApeWorld *world, NdBranch *root )
 {
 	// Get the world version from the branch
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );

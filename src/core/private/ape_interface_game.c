@@ -95,7 +95,7 @@ void apeDisconnectGame( void ) {
 			 *  might be lost! */
 		}
 
-		ape_world_destroy( currentWorld );
+		acl_level_destroy( currentWorld );
 		currentWorld = NULL;
 	}
 
@@ -110,7 +110,7 @@ void apeSpawnWorld( const char *worldPath ) {
 
 	apeDisconnectGame();
 
-	ApeWorld *world = apeLoadWorld( worldPath );
+	ApeWorld *world = acl_level_load( worldPath );
 	if ( world == NULL ) {
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
 		return;
@@ -131,13 +131,13 @@ void apeSpawnWorld( const char *worldPath ) {
 
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
 
-	apeSpawnWorldEntities( world );
+	acl_level_spawn_entities( world );
 
 	apeStartServer( "localhost", 0 );
 
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *acl_world_get_current( void ) {
+ApeWorld *acl_level_get_current( void ) {
 	return currentWorld;
 }
