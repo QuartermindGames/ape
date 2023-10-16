@@ -12,7 +12,7 @@
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_particle.h"
 
-#include "ape_model.h"
+#include "model/model.h"
 
 #define MODEL_SCALE 10.0f
 
