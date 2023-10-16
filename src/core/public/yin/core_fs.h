@@ -31,6 +31,8 @@ char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version
 uint8_t acl_fs_parse_byte( PLFile *file );
 uint8_t acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, uint8_t fallback );
 
+char *acl_fs_parse_string( PLFile *file, uint16_t *size );
+char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion );
 PLColour acl_fs_parse_colour( PLFile *file );
 PLMatrix3 acl_fs_parse_mat3( PLFile *file );
 
