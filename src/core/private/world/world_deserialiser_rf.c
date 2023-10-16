@@ -550,14 +550,14 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 
 static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, unsigned int version )
 {
-	acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_RETAIL_1_2, RFL_VERSION_MAX, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, 200, RFL_VERSION_MAX, 0 );// "modifiability" - unused
 
 	// unused string
 	uint16_t size;
 	char *buf = acl_fs_parse_string( file, &size );
 	PL_DELETE( buf );
 
-	acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 199, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, 0, 199, 0 );// "modifiability" - unused
 
 	parse_static_geometry_textures( level, file );
 
