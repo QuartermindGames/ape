@@ -50,3 +50,25 @@ Below is a list of released games that have used this engine.
 [![Screenshot](resources/preview3_thumb.png)](resources/preview3.png)
 
 </div>
+
+## Roadmap
+
+### Red Faction Support
+One of the extra goals of the engine is support for elements Volition developed for their own in-house engine.
+
+#### Formats
+- VBM (**pending**)
+- VF (**pending**)
+- VFX (**pending**)
+- VPP v1 (**done!**) (The Summoner, Red Faction)
+- VPP v2 (**done!**) (Red Faction II)
+- VPP v2+ (**pending**) (The Summoner 2)
+- VPP v3 (**done!**) (The Punisher)
+- RFA (**pending**)
+- RFMC v1 (**in-progress**) (Red Faction)
+- RFMC v10 (**in-progress**) (Red Faction II)
+- PEG (**pending**) (Red Faction, Red Faction II, The Summoner 2, The Punisher)
+
+#### Features
+- Realtime environmental CSG (**pending**) (Red Faction, Red Faction II)
+- Lightmaps (**pending**) (The Summoner, Red Faction)
