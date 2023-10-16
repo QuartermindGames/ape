@@ -160,10 +160,12 @@ typedef struct ApeWorldRoom
 
 	PLGMesh *mesh;      // cached mesh
 	PLGMesh *shadowMesh;// shadow volume mesh
-	bool isMeshCached;// if false, mesh cache will be updated
+	bool isMeshCached;  // if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
+
+	ApeAudioReverbPreset reverbPreset;
 
 	PLCollisionAABB bounds;
 } ApeWorldRoom;
@@ -214,24 +216,21 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorld *apeParseRFWorld_( PLFile *file );
+ApeWorld *acl_level_load_file( const char *path );
+ApeWorld *acl_level_deserialize_rfl_( PLFile *file );
 
-ApeWorldRoom *apeCreateWorldRoom( void );
-void apeDestroyWorldRoom( ApeWorldRoom *room );
-ApeWorldFace **apeGetWorldRoomFaces( ApeWorldRoom *room, unsigned int *numFaces );
+ApeWorldRoom *acl_room_create( void );
+void acl_room_destroy( ApeWorldRoom *room );
+ApeWorldFace **acl_room_get_faces( ApeWorldRoom *room, unsigned int *numFaces );
+ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms );
 
 void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
-ApeWorld *acl_world_deserialize( ApeWorld *world, NdBranch *root );
 
-ApeWorldMesh *YnCore_WorldDeserialiser_BeginMesh( NdBranch *root, ApeWorldMesh *worldMesh );
-
-void apeSpawnWorldEntities( ApeWorld *world );
-
-unsigned int *apeConvertWorldFaceToTriangles( const ApeWorldFace *face, unsigned int *numTriangles );
+void acl_level_spawn_entities( ApeWorld *world );
 
 void apeRegisterWorldConsole_( void );
 
-void apeTickClientWorld_( void );
+void acl_level_client_tick_( void );
 
 /////////////////////////////////////////////////////////////////
 // Visibility API
@@ -242,7 +241,7 @@ void apeShutdownWorldVisibilitySystem_( void );
 struct ApeLight **apeGetVisibleLights_( unsigned int *num );
 ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
 
-void apeBuildWorldVisibiltyLists_( void );
+void acl_level_build_visibility_lists_( void );
 void apeFlushWorldVisibilityLists_( void );
 
 PL_EXTERN_C_END

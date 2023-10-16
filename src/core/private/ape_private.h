@@ -124,6 +124,7 @@ typedef struct ApeConfig
 		bool useStencilShadowVolumes;
 		bool showShadowWireframe;
 		bool showFps;
+		bool skipAmbience;
 
 		float maxLightDistance;
 	} renderer;
@@ -133,7 +134,7 @@ typedef struct ApeConfig
 		bool skipDraw;
 		bool showPortals;
 		bool sortLights;
-	} world;
+	} level;
 } ApeConfig;
 
 extern ApeConfig ape_config_;
