@@ -14,6 +14,8 @@ Pending
     - Move to C23 if available via GCC / Clang
     - Allow cook tool to output an RFL, with target version
     - Move all libraries under a dedicated 'libraries' folder
+    - Loader for tbl and tbx formats
+    - Loader for RFM format
     - RF/RF2 console commands
         + "show_portals"
         + "debug_portals"
