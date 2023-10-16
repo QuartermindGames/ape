@@ -216,6 +216,13 @@ void apeInitializeConsole( void )
 	logLevels[ APE_LOG_ERROR ] = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_WARNING ] = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
 	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+	logLevels[ ACL_LOG_DEBUG ] = PlAddLogLevel( "yin/debug", PL_COLOUR_ORCHID,
+#if !defined( NDEBUG )
+	                                            true
+#else
+	                                            false
+#endif
+	);
 
 	logLevels[ APE_LOG_CLIENT_ERROR ] = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_CLIENT_WARNING ] = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
