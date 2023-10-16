@@ -130,7 +130,7 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void apeDrawWorldWireframe_( ApeWorld *world, ApeCamera *camera )
+void arl_level_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 {
 #if 0
 	if ( world == NULL )
@@ -229,92 +229,6 @@ static bool face_is_facing_light( const ApeWorldFace *face, const ApeLight *ligh
 	return false;
 }
 
-static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
-{
-	mesh->numSubMeshes = numSubMeshes[ materialIndex ];
-	mesh->firstSubMeshes = firstSubMeshes[ materialIndex ];
-	mesh->subMeshes = subMeshes[ materialIndex ];
-
-	ApeLightPointerArray lights;
-	lights[ 0 ] = light;
-	apeDrawMesh( material, mesh, lights, ( lights[ 0 ] != NULL ) ? 1 : 0 );
-
-	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
-}
-
-static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
-{
-	if ( PlIsVectorArrayEmpty( room->faces ) )
-		return;
-
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
-		return;
-
-	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
-		return;
-
-	PLColourF32 oldAmbience;
-	if ( light != NULL )
-	{
-		oldAmbience = world->ambience;
-		world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
-	}
-
-	unsigned int numFaces;
-	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
-	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
-	{
-		if ( faces[ i ]->materialIndex < 0 )
-			continue;
-
-		unsigned int materialIndex = faces[ i ]->materialIndex;
-		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
-		assert( material != NULL );
-		if ( material == NULL )
-			material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
-
-		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
-		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
-		{
-			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
-			break;
-		}
-
-		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
-
-		//if ( light != NULL && light->type != APE_LIGHT_TYPE_SUN && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )
-		//{
-		//	offset += numVertices;
-		//	continue;
-		//}
-
-		if ( PlgIsBoxInsideView( camera->internal, &faces[ i ]->bounds ) || !( light != NULL && arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) ) )
-		{
-			subMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = numVertices;
-			firstSubMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = offset;
-			numSubMeshes[ materialIndex ]++;
-		}
-
-		offset += numVertices;
-	}
-
-	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
-	{
-		if ( numSubMeshes[ i ] == 0 )
-			continue;
-
-		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
-		assert( material != NULL );
-		if ( material == NULL )
-			continue;
-
-		draw_room_submesh( room->mesh, material, i, ambienceOnly ? NULL : light );
-	}
-
-	if ( light != NULL )
-		world->ambience = oldAmbience;
-}
-
 static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const ApeLight *light, const PLColour *colour )
 {
 	ApeMaterial *shadowMaterial = arl_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
@@ -408,7 +322,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const Ape
 static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight *light )
 {
 	unsigned int numFaces;
-	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
+	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->material == NULL || !arl_material_shadows_enabled( faces[ i ]->material ) )
@@ -446,7 +360,110 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
-void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLight *light )
+
+static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
+{
+	mesh->numSubMeshes = numSubMeshes[ materialIndex ];
+	mesh->firstSubMeshes = firstSubMeshes[ materialIndex ];
+	mesh->subMeshes = subMeshes[ materialIndex ];
+
+	ApeLightPointerArray lights;
+	lights[ 0 ] = light;
+	apeDrawMesh( material, mesh, lights, ( lights[ 0 ] != NULL ) ? 1 : 0 );
+
+	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
+}
+
+static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
+{
+	if ( PlIsVectorArrayEmpty( room->faces ) )
+		return;
+
+	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
+		return;
+
+	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
+		return;
+
+	PLColourF32 oldAmbience;
+	if ( light != NULL )
+	{
+		oldAmbience = world->ambience;
+		world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
+	}
+
+	unsigned int numFaces;
+	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
+	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
+	{
+		if ( faces[ i ]->materialIndex < 0 )
+			continue;
+
+		unsigned int materialIndex = faces[ i ]->materialIndex;
+		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
+		assert( material != NULL );
+		if ( material == NULL )
+			material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
+
+		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
+		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
+		{
+			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+			break;
+		}
+
+		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
+
+		//if ( light != NULL && light->type != APE_LIGHT_TYPE_SUN && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )
+		//{
+		//	offset += numVertices;
+		//	continue;
+		//}
+
+		if ( light != NULL && light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS && arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
+		{
+			offset += numVertices;
+			continue;
+		}
+
+		if ( PlgIsBoxInsideView( camera->internal, &faces[ i ]->bounds ) )
+		{
+			subMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = ( int ) numVertices;
+			firstSubMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = ( int ) offset;
+			numSubMeshes[ materialIndex ]++;
+		}
+
+		offset += numVertices;
+	}
+
+#if 0
+	if ( !room->isDetail )
+	{
+		unsigned int numDetailRooms;
+		ApeWorldRoom **detailRooms = acl_room_get_detail_rooms( room, &numDetailRooms );
+		for ( unsigned int i = 0; i < numDetailRooms; ++i )
+			draw_room( world, detailRooms[ i ], camera, skipPortals, light, ambienceOnly );
+	}
+#endif
+
+	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	{
+		if ( numSubMeshes[ i ] == 0 )
+			continue;
+
+		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
+		assert( material != NULL );
+		if ( material == NULL )
+			continue;
+
+		draw_room_submesh( room->mesh, material, i, ambienceOnly ? NULL : light );
+	}
+
+	if ( light != NULL )
+		world->ambience = oldAmbience;
+}
+
+void arl_level_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -473,8 +490,11 @@ void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLigh
 	PlPopMatrix();
 }
 
-void apeDrawWorld_( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
+void arl_level_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
 {
+	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
+		return;
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();

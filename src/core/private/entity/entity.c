@@ -29,7 +29,7 @@ const AclEntityClassDefinition *apeGetEntityClassTable( const char *className ) 
 	return ( const AclEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
+ApeEntity *acl_entity_create( const char *className, NdBranch *properties ) {
 	const AclEntityClassDefinition *classDefinition = apeGetEntityClassTable( className );
 	if ( className == NULL ) {
 		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
