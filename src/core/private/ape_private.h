@@ -56,6 +56,7 @@ typedef enum ApeConsoleLogLevel
 	APE_LOG_ERROR,
 	APE_LOG_WARNING,
 	APE_LOG_INFORMATION,
+	ACL_LOG_DEBUG,
 
 	APE_LOG_CLIENT_ERROR,
 	APE_LOG_CLIENT_WARNING,
@@ -110,7 +111,7 @@ void apeRegisterClientConsoleVariables_( void );
 	}
 
 #if !defined( NDEBUG )
-#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( APE_LOG_INFORMATION ), FORMAT, ##__VA_ARGS__ )
+#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( ACL_LOG_DEBUG ), FORMAT, ##__VA_ARGS__ )
 #else
 #	define PRINT_DEBUG( FORMAT, ... )
 #endif
