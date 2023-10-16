@@ -1,5 +1,5 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
-// Purpose: Deserialization methods specific to Volition's RF format.
+// Purpose: Deserialization methods specific to Volition's RFL format.
 
 #include "ape_private.h"
 
@@ -134,7 +134,16 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t 
 		{
 			uint16_t size;
 			char *eaxEffect = acl_fs_parse_string( file, &size );
-			PL_DELETE( eaxEffect );
+			if ( eaxEffect != NULL )
+			{
+				assert( isalpha( *eaxEffect ) );
+				if ( isalpha( *eaxEffect ) )
+					room->reverbPreset = get_eax_effect_id( eaxEffect );
+				else
+					PRINT_WARNING( "EAX effect is not a valid string! (%lu)", PlGetFileOffset( file ) );
+
+				PL_DELETE( eaxEffect );
+			}
 		}
 
 		if ( version >= 234 )

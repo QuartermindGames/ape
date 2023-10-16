@@ -6,6 +6,48 @@
 #define AUDIO_SAMPLE_FREQ 48000
 #define AUDIO_CHANNELS    2
 
+// Provided as a list so we can hand this to the tools later...
+// There are some odd ones in here, because the RFII developers
+// seemingly removed EAX effects, only to bring them back and
+// invent their own presets (with mixed-case names)...
+const AclAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
+        {"none",             APE_AUDIO_REVERB_PRESET_NONE           },
+        { "forest",          APE_AUDIO_REVERB_PRESET_FOREST         },
+        { "default",         APE_AUDIO_REVERB_PRESET_DEFAULT        },
+        { "generic",         APE_AUDIO_REVERB_PRESET_GENERIC        },
+        { "paddedcell",      APE_AUDIO_REVERB_PRESET_PADDEDCELL     },
+        { "room",            APE_AUDIO_REVERB_PRESET_ROOM           },
+        { "bathroom",        APE_AUDIO_REVERB_PRESET_BATHROOM       },
+        { "livingroom",      APE_AUDIO_REVERB_PRESET_LIVINGROOM     },
+        { "stoneroom",       APE_AUDIO_REVERB_PRESET_STONEROOM      },
+        { "auditorium",      APE_AUDIO_REVERB_PRESET_AUDITORIUM     },
+        { "concerthall",     APE_AUDIO_REVERB_PRESET_CONCERTHALL    },
+        { "cave",            APE_AUDIO_REVERB_PRESET_CAVE           },
+        { "arena",           APE_AUDIO_REVERB_PRESET_ARENA          },
+        { "hangar",          APE_AUDIO_REVERB_PRESET_HANGAR         },
+        { "carpetedhallway", APE_AUDIO_REVERB_PRESET_CARPETEDHALLWAY},
+        { "hallway",         APE_AUDIO_REVERB_PRESET_HALLWAY        },
+        { "stonecorridor",   APE_AUDIO_REVERB_PRESET_STONECORRIDOR  },
+        { "alley",           APE_AUDIO_REVERB_PRESET_ALLEY          },
+        { "city",            APE_AUDIO_REVERB_PRESET_CITY           },
+        { "mountains",       APE_AUDIO_REVERB_PRESET_MOUNTAINS      },
+        { "quarry",          APE_AUDIO_REVERB_PRESET_QUARRY         },
+        { "plain",           APE_AUDIO_REVERB_PRESET_PLAIN          },
+        { "parkinglot",      APE_AUDIO_REVERB_PRESET_PARKINGLOT     },
+        { "sewerpipe",       APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
+        { "underwater",      APE_AUDIO_REVERB_PRESET_UNDERWATER     },
+        { "smallroom",       APE_AUDIO_REVERB_PRESET_SMALLROOM      },
+        { "mediumroom",      APE_AUDIO_REVERB_PRESET_MEDIUMROOM     },
+        { "largeroom",       APE_AUDIO_REVERB_PRESET_LARGEROOM      },
+        { "mediumhall",      APE_AUDIO_REVERB_PRESET_MEDIUMHALL     },
+        { "largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
+        { "plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
+ // types introduced in RFII
+        { "hall",            APE_AUDIO_REVERB_PRESET_HALLWAY        },
+        { "pipe",            APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
+};
+const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = PL_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
+
 static const ApeAudioDriverInterface *audioDriverInterface = NULL;
 #define CallAudioDriverFunction( FUNCTION, ... )                                                                             \
 	{                                                                                                                        \
