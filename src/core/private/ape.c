@@ -5,8 +5,7 @@
 #include "yin/core_game.h"
 #include "yin/core_fs.h"
 
-#include "ape_model.h"
-
+#include "model/model.h"
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
 #include "editor/editor.h"
