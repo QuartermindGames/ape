@@ -12,12 +12,18 @@ const char *acl_get_user_config_location( void );
 
 void acl_setup_config( NdBranch *root );
 
-void apeMountBaseLocations( void );
+void acl_fs_mount_base_locations( void );
 
+char *acl_fs_parse_string( PLFile *file, uint16_t *size );
+char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion );
 PLColour acl_fs_parse_colour( PLFile *file );
 PLMatrix3 acl_fs_parse_mat3( PLFile *file );
 PLVector3 acl_fs_parse_vector( PLFile *file );
+PLVector4 acl_fs_parse_vector4( PLFile *file );
+PLVector4 acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector4 *fallback );
+int acl_fs_parse_int( PLFile *file );
+int acl_fs_parse_int_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, int fallback );
 float acl_fs_parse_float( PLFile *file );
-char *acl_fs_parse_string( PLFile *file, uint16_t *size );
+float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, float fallback );
 
 PL_EXTERN_C_END

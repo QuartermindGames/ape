@@ -96,7 +96,7 @@ void acl_setup_config( NdBranch *root )
 	// TODO: move this into the project handler
 }
 
-void apeMountBaseLocations( void )
+void acl_fs_mount_base_locations( void )
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
@@ -123,12 +123,44 @@ char *acl_fs_parse_string( PLFile *file, uint16_t *size )
 	return buf;
 }
 
+char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
+{
+	if ( version < minVersion || version > maxVersion )
+		return NULL;
+
+	return acl_fs_parse_string( file, size );
+}
+
+int acl_fs_parse_int( PLFile *file )
+{
+	bool status;
+	int i = PlReadInt32( file, false, &status );
+	assert( status );
+	return i;
+}
+
+int acl_fs_parse_int_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, int fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return acl_fs_parse_int( file );
+}
+
 float acl_fs_parse_float( PLFile *file )
 {
 	bool status;
 	float f = PlReadFloat32( file, false, &status );
 	assert( status && !isnan( f ) );
 	return f;
+}
+
+float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, float fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return acl_fs_parse_float( file );
 }
 
 PLVector3 acl_fs_parse_vector( PLFile *file )
@@ -138,6 +170,24 @@ PLVector3 acl_fs_parse_vector( PLFile *file )
 	        acl_fs_parse_float( file ),
 	        acl_fs_parse_float( file ),
 	};
+}
+
+PLVector4 acl_fs_parse_vector4( PLFile *file )
+{
+	return ( PLVector4 ){
+	        acl_fs_parse_float( file ),
+	        acl_fs_parse_float( file ),
+	        acl_fs_parse_float( file ),
+	        acl_fs_parse_float( file ),
+	};
+}
+
+PLVector4 acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector4 *fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return *fallback;
+
+	return acl_fs_parse_vector4( file );
 }
 
 PLMatrix3 acl_fs_parse_mat3( PLFile *file )

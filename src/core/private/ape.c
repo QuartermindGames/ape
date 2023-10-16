@@ -63,7 +63,7 @@ bool apeInitialize( const char *config )
 	PlRegisterStandardPackageLoaders();
 
 	// Need to do this before anything else IO related
-	apeMountBaseLocations();
+	acl_fs_mount_base_locations();
 
 	// And now we can fetch the engine config that provides mount locations, aliases and more
 	if ( config == NULL )
