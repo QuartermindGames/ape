@@ -223,7 +223,7 @@ int main( int argc, char **argv ) {
 	gtk_box_append( GTK_BOX( box ), generateFontButton );
 
 	gtk_widget_realize( mainWindow );
-	gtk_widget_show( mainWindow );
+	gtk_window_present( GTK_WINDOW( mainWindow ) );
 
 	// now invoke our main loop
 
