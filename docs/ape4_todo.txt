@@ -13,6 +13,7 @@ Pending
     - Rename our world format, in binary form, to ALF (another level format)
     - Move to C23 if available via GCC / Clang
     - Allow cook tool to output an RFL, with target version
+    - Move all libraries under a dedicated 'libraries' folder
     - RF/RF2 console commands
         + "show_portals"
         + "debug_portals"
