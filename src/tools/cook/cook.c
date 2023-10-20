@@ -31,7 +31,7 @@ int main( int argc, char **argv )
 		ERROR( "Failed to mount project (%s)!\n", projectName );
 
 	PLPath configPath;
-	PlSetupPath( configPath, true, "projects/%s/%s.prj.n", argv[ 1 ] );
+	PlSetupPath( configPath, true, "projects/%s/%s.prj.n", projectName, projectName );
 
 	typedef struct LaunchCommand
 	{
