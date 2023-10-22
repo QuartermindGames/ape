@@ -9,18 +9,15 @@
 
 FWGameState fwGameState;
 
-static void FW_Game_Initialize( void ) {
+static bool FW_Game_Initialize( void ) {
 	PL_ZERO_( fwGameState );
 
-	Game_RegisterStandardEntityComponents();
+	game_register_standard_entity_components();
 
-	// Register our FW specific components
-	ogeEntityManager_RegisterComponent( "fw.character", NULL );
-	ogeEntityManager_RegisterComponent( "fw.projectile", NULL );
-	ogeEntityManager_RegisterComponent( "fw.weapon", NULL );
-
-	FW_Menu_Initialize();
+	fw_menu_initialize();
 	FW_Terrain_Initialize();
+
+	return true;
 }
 
 static void FW_Game_Shutdown( void ) {
@@ -34,9 +31,6 @@ static void FW_Game_NewGame( const char *path ) {
 
 static void FW_Game_SaveGame( const char *path ) {
 	NdBranch *root = ndPushBackObject( NULL, "fwGameSave" );
-
-	// Save entity data
-	YnCore_EntityManager_Save( ndPushBackObject( root, "entityData" ) );
 
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) ) {
 		Game_Warning( "Failed to write save (%s): %s\n", path, ndGetErrorMessage() );
@@ -52,32 +46,25 @@ static void FW_Game_RestoreGame( const char *path ) {
 		Game_Warning( "Failed to load game save (%s): %s\n", path, ndGetErrorMessage() );
 		return;
 	}
-
-	NdBranch *entityNode = ndGetChildByName( root, "entityData" );
-	if ( entityNode != NULL ) {
-		ogeEntityManager_Restore( NULL );
-	}
-
-	ndDestroyBranch( entityNode );
 }
 
 static void FW_Game_Precache( void ) {
 }
 
 static void Tick( void ) {
-	FW_Menu_HandleInput();
+	fw_menu_handle_input();
 
-	FW_Menu_Tick();
+	fw_menu_tick();
 }
 
 static void FW_Game_Draw( void ) {
 }
 
 static void FW_Game_DrawMenu( const ApeViewport *viewport ) {
-	FW_Menu_Draw( viewport );
+	fw_menu_draw( viewport );
 }
 
-static void SpawnWorld( ApeWorld *world ) {
+static void spawn_level( ApeWorld *world ) {
 #if 0
 	NdBranch *propertyNode;
 	if ( ( propertyNode = ogeWorld_GetProperty( world, "heightmap" ) ) != NULL )
@@ -104,15 +91,17 @@ static void SpawnWorld( ApeWorld *world ) {
 #endif
 }
 
-static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user ) {
+static bool request_handler( GameModeRequest gameModeRequest, void *user ) {
 	switch ( gameModeRequest ) {
+		case GAMEMODE_REQUEST_INITIALIZE:
+			return FW_Game_Initialize();
 		case GAMEMODE_REQUEST_TICK:
 			Tick();
 			break;
-		case GAMEMODE_REQUEST_HANDLEINPUT:
+		case GAMEMODE_REQUEST_HANDLE_INPUT:
 			break;
-		case GAMEMODE_REQUEST_SPAWNWORLD:
-			SpawnWorld( ( ApeWorld * ) user );
+		case GAMEMODE_REQUEST_SPAWN_LEVEL:
+			spawn_level( ( ApeWorld * ) user );
 			break;
 		default:
 			break;
@@ -122,19 +111,11 @@ static bool FW_Game_RequestHandler( GameModeRequest gameModeRequest, void *user 
 }
 
 const GameModeInterface *gameModeInterface;
-const GameModeInterface *Game_GetModeInterface( void ) {
+const GameModeInterface *gameGetModeInterface( void ) {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 
-	gameMode.Initialize = FW_Game_Initialize;
-	gameMode.Shutdown = FW_Game_Shutdown;
-	gameMode.NewGame = FW_Game_NewGame;
-	gameMode.SaveGame = FW_Game_SaveGame;
-	gameMode.RestoreGame = FW_Game_RestoreGame;
-	gameMode.Precache = FW_Game_Precache;
-	gameMode.Draw = FW_Game_Draw;
-	gameMode.DrawMenu = FW_Game_DrawMenu;
-	gameMode.RequestCallbackMethod = FW_Game_RequestHandler;
+	gameMode.requestCallbackMethod = request_handler;
 
 	return &gameMode;
 }

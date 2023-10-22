@@ -83,7 +83,7 @@ void apeSetViewportSize( ApeViewport *viewport, int width, int height ) {
 	viewport->height = height;
 }
 
-void apeGetViewportSize( const ApeViewport *viewport, int *width, int *height ) {
+void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height ) {
 	*width = viewport->width;
 	*height = viewport->height;
 }

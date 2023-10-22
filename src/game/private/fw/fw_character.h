@@ -4,25 +4,28 @@
 
 #include "fw_game.h"
 
-typedef enum FWCharacterDepartment {
-	FW_CHARACTERDEPARTMENT_MARINES,
-	FW_CHARACTERDEPARTMENT_INTELLIGENCE,// special ops
-	FW_CHARACTERDEPARTMENT_MEDICAL,     // healing items/abilities
-	FW_CHARACTERDEPARTMENT_ENGINEERING, // vehicle/building repair
-	FW_CHARACTERDEPARTMENT_CHEMICALS,   // chemical-based weaponry
+typedef enum FWCharacterDepartment
+{
+	FW_CHARACTER_DEPARTMENT_MARINES,
+	FW_CHARACTER_DEPARTMENT_INTELLIGENCE,// special ops
+	FW_CHARACTER_DEPARTMENT_MEDICAL,     // healing items/abilities
+	FW_CHARACTER_DEPARTMENT_ENGINEERING, // vehicle/building repair
+	FW_CHARACTER_DEPARTMENT_CHEMICALS,   // chemical-based weaponry
 
-	FW_MAX_CHARACTERDEPARTMENT
+	FW_MAX_CHARACTER_DEPARTMENTS
 } FWCharacterDepartment;
 
 // certain classes provide buffs
-typedef struct FWCharacterDepartmentStats {
+typedef struct FWCharacterDepartmentStats
+{
 	uint16_t health;
 	uint16_t stamina;
 	uint16_t strength;
 	uint16_t speed;
 } FWCharacterDepartmentStats;
 
-typedef struct FWCharacterStats {
+typedef struct FWCharacterStats
+{
 	uint16_t experience, maxExperience;
 	uint16_t rank;
 
@@ -30,11 +33,13 @@ typedef struct FWCharacterStats {
 	uint16_t speed;
 } FWCharacterStats;
 
-typedef struct FWCharacterMovementComponent {
+typedef struct FWCharacterMovementComponent
+{
 	float velocity;
 } FWCharacterMovementComponent;
 
-typedef struct FWCharacterComponent {
+typedef struct FWCharacterComponent
+{
 	FWCharacterDepartment department;
 	FWCharacterStats stats;
 
