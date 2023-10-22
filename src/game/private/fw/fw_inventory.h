@@ -6,16 +6,18 @@
 
 #define FW_INVENTORY_MAX_SLOTS 32
 
-typedef struct FWInventoryItem {
+typedef struct FWInventoryItem
+{
 	char *name;// name of the item
 	char *description;
 	char *spawnName;
-	struct OgeMaterial *icon;
+	ApeMaterial *icon;
 	unsigned int quantity;
 	float weight;
 } FWInventoryItem;
 
-typedef struct FWInventory {
+typedef struct FWInventory
+{
 	FWInventoryItem items[ FW_INVENTORY_MAX_SLOTS ];
 	unsigned int numItems;
 } FWInventory;

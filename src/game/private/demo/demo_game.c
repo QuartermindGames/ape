@@ -41,7 +41,7 @@ static void initialize_demo_game( void )
 {
 	game_register_standard_entity_components();
 
-	PlParseConsoleString( "level worlds/train01.rfl" );
+	PlParseConsoleString( "level L01S2.rfl" );
 
 	playerCamera = arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	arl_camera_make_active( playerCamera );
@@ -97,11 +97,11 @@ static bool HandleRequest( GameModeRequest modeRequest, void *user )
 			tick_demo_game();
 			break;
 		}
-		case GAMEMODE_REQUEST_HANDLEINPUT:
+		case GAMEMODE_REQUEST_HANDLE_INPUT:
 		{
 			break;
 		}
-		case GAMEMODE_REQUEST_SPAWNWORLD:
+		case GAMEMODE_REQUEST_SPAWN_LEVEL:
 		{
 			break;
 		}
