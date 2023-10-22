@@ -129,7 +129,7 @@ void apeSpawnWorld( const char *worldPath ) {
 	//gameState	= GAME_STATE_ACTIVE;
 	inputTarget = INPUT_TARGET_GAME;
 
-	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SPAWNWORLD, world );
+	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SPAWN_LEVEL, world );
 
 	acl_level_spawn_entities( world );
 
