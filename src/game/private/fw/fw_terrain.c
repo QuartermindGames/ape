@@ -103,6 +103,7 @@ bool fw_terrain_load( const char *path )
 
 	bool status = parse_terrain_file( file );
 	if ( !status )
+
 		Game_Warning( "Failed to load terrain (%s)!\n", path );
 
 	PlCloseFile( file );
