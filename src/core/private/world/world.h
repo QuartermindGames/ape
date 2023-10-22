@@ -42,6 +42,7 @@ typedef struct ApeWorldFaceVertex
 {
 	PLVector2 uv;
 	PLVector3 normal;
+	PLColour colour;
 	float lightmapU, lightmapV;
 
 	ApeWorldVertex *u;
