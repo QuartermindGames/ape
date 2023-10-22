@@ -131,6 +131,22 @@ char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version
 	return acl_fs_parse_string( file, size );
 }
 
+uint8_t acl_fs_parse_byte( PLFile *file )
+{
+	bool status;
+	uint8_t i = PL_READUINT8( file, &status );
+	assert( status );
+	return i;
+}
+
+uint8_t acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, uint8_t fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return acl_fs_parse_byte( file );
+}
+
 int acl_fs_parse_int( PLFile *file )
 {
 	bool status;
@@ -170,6 +186,14 @@ PLVector3 acl_fs_parse_vector( PLFile *file )
 	        acl_fs_parse_float( file ),
 	        acl_fs_parse_float( file ),
 	};
+}
+
+PLVector3 acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector3 *fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return *fallback;
+
+	return acl_fs_parse_vector( file );
 }
 
 PLVector4 acl_fs_parse_vector4( PLFile *file )
