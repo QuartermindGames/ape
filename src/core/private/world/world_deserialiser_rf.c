@@ -17,46 +17,63 @@
 
 static const unsigned int RFL_MAGIC = 0xd4bada55;
 
+// gross versioning crap... this should probably be simplified
+
+/*
+ * RFL version history...
+ * ------------------------------------
+ * 180 - rf pc public demo
+ * 200 - rf pc retail
+ * 212 - lightmap support removed
+ * 272 - rf2 ps2 public demo
+ * 482 - punisher ps2 retail
+ */
+
 static const unsigned int RFL_VERSION_RF1_PROTO = 161;     // Red Faction (PS2 Prototype)
 static const unsigned int RFL_VERSION_RF1_DEMO = 180;      // Red Faction (PC Demo)
 static const unsigned int RFL_VERSION_RF1_RETAIL_1_2 = 200;// Red Faction (PC v1.2)
 static const unsigned int RFL_VERSION_RF2_DEMO = 272;      // Red Faction 2 (PS2 Demo)
 static const unsigned int RFL_VERSION_RF2_RETAIL = 295;    // Red Faction 2 (PS2)
-static const unsigned int RFL_VERSION_PUN_RETAIL = 482;    // The Punisher (PS2)
 
-static const unsigned int RFL_VERSION_MIN = RFL_VERSION_RF1_PROTO;
-static const unsigned int RFL_VERSION_MAX = RFL_VERSION_PUN_RETAIL;
+static const unsigned int RFL_VERSION_RF1_MAX = RFL_VERSION_RF1_RETAIL_1_2;
+static const unsigned int RFL_VERSION_RF2_MIN = RFL_VERSION_RF2_DEMO;
+
+static const unsigned int RFL_VERSION_MIN = 161;
+static const unsigned int RFL_VERSION_MAX = 272;
 
 // Below is a list of all the known used chunk types
 #define RFL_CHUNK_GEOMETRY          0x100
 #define RFL_CHUNK_GEOREGIONS        0x200
 #define RFL_CHUNK_LIGHTS            0x300
-#define RFL_CHUNK_CUTSCENECAMERAS   0x400
+#define RFL_CHUNK_CUTSCENE_CAMERAS  0x400
 #define RFL_CHUNK_AMBIENT_SOUNDS    0x500
 #define RFL_CHUNK_EVENTS            0x600
 #define RFL_CHUNK_RESPAWN_POINTS    0x700
 #define RFL_CHUNK_LEVEL_PROPERTIES  0x900
 #define RFL_CHUNK_EMITTERS          0xa00
-#define RFL_CHUNK_CLIMBREGIONS      0xd00
+#define RFL_CHUNK_CLIMB_REGIONS     0xd00
 #define RFL_CHUNK_BOLTEMITTERS      0xe00
 #define RFL_CHUNK_TARGETS           0xf00
 #define RFL_CHUNK_DECALS            0x1000
 #define RFL_CHUNK_PUSHREGIONS       0x1100
 #define RFL_CHUNK_LIGHTMAP          0x1200
 #define RFL_CHUNK_MOVERS            0x2000
-#define RFL_CHUNK_MOVINGGROUP       0x3000
+#define RFL_CHUNK_MOVING_GROUP      0x3000
 #define RFL_CHUNK_CUTSCENES         0x4000
 #define RFL_CHUNK_CUTSCENEPATHNODES 0x5000
-#define RFL_CHUNK_CUTSCENEPATHS     0x6000
-#define RFL_CHUNK_UNKNOWN_7000      0x7000
-#define RFL_CHUNK_UNKNOWN_7001      0x7001
-#define RFL_CHUNK_UNKNOWN_7002      0x7002
-#define RFL_CHUNK_UNKNOWN_7003      0x7003
-#define RFL_CHUNK_UNKNOWN_7004      0x7004
-#define RFL_CHUNK_UNKNOWN_7005      0x7005
+#define RFL_CHUNK_CUTSCENE_PATHS    0x6000
+#define RFL_CHUNK_TGA_FILES         0x7000
+#define RFL_CHUNK_RFC_FILES         0x7001
+#define RFL_CHUNK_RFA_FILES         0x7002
+#define RFL_CHUNK_RFM_FILES         0x7003
+#define RFL_CHUNK_RFE_FILES         0x7004
+#define RFL_CHUNK_PEG_FILES         0x7005
+#define RFL_CHUNK_UNKNOWN_7677      0x7677
 #define RFL_CHUNK_UNKNOWN_7678      0x7678
 #define RFL_CHUNK_UNKNOWN_7680      0x7680
 #define RFL_CHUNK_UNKNOWN_7681      0x7681
+#define RFL_CHUNK_UNKNOWN_7777      0x7777
+#define RFL_CHUNK_PATHS             0x7779
 #define RFL_CHUNK_UNKNOWN_7900      0x7900
 #define RFL_CHUNK_UNKNOWN_7901      0x7901
 #define RFL_CHUNK_EAX               0x8000
@@ -67,6 +84,10 @@ static const unsigned int RFL_VERSION_MAX = RFL_VERSION_PUN_RETAIL;
 #define RFL_CHUNK_CLUTTER           0x50000
 #define RFL_CHUNK_TRIGGERS          0x60000
 #define RFL_CHUNK_PLAYER_START      0x70000
+#define RFL_CHUNK_LEVEL_INFO        0x1000000
+#define RFL_CHUNK_BRUSHES           0x2000000
+#define RFL_CHUNK_GROUPS            0x3000000
+#define RFL_CHUNK_EDITOR_LIGHTS     0x4000000
 
 static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 {
@@ -115,9 +136,9 @@ static ApeAudioReverbPreset get_eax_effect_id( const char *effectName )
 static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned int version )
 {
 	// fetch and populate the room list
-	uint32_t numRooms = PL_READUINT32( file, false, NULL );
+	unsigned int numRooms = PL_READUINT32( file, false, NULL );
 	world->rooms = PlCreateVectorArray( numRooms );
-	for ( uint32_t i = 0; i < numRooms; ++i )
+	for ( unsigned int i = 0; i < numRooms; ++i )
 	{
 		ApeWorldRoom *room = acl_room_create();
 
@@ -354,41 +375,43 @@ static void calculate_face_normal( ApeWorldFace *face )
 
 static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned int version )
 {
-	uint32_t numFaces = PL_READUINT32( file, false, NULL );
-
-	for ( uint32_t i = 0; i < numFaces; ++i )
+	unsigned int numFaces = PL_READUINT32( file, false, NULL );
+	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 		face->edgeLoop = PlCreateLinkedList();
 
-		if ( version >= 167 )
-		{
-			// plane
-			face->normal = acl_fs_parse_vector( file );// normal
-			FLIP_VECTOR( face->normal );
-			face->offset = acl_fs_parse_float( file );// offset
-		}
+		// plane
+		face->normal = acl_fs_parse_vector_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, &pl_vecOrigin3 );// normal
+		FLIP_VECTOR( face->normal );
+		face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
 
-		face->materialIndex = PlReadInt32( file, false, NULL );
+		face->materialIndex = acl_fs_parse_int( file );
 		if ( face->materialIndex >= 0 )
 		{
 			face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 			assert( face->material != NULL );
+			if ( face->material == NULL )
+			{
+				PRINT_WARNING( "Invalid material index (%d) (%lu)!\n", face->materialIndex, ( PlGetFileOffset( file ) - 4 ) );
+				face->material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
+			}
 		}
-		// some texture indices are negative, which is valid
-
+		// some texture indices are negative, which is valid...
+		// we just don't handle it yet
 		if ( face->material == NULL )
 			face->material = ar_material_get_fallback();
 
-		int32_t lightmapIndex = PlReadInt32( file, false, NULL );
+		int lightmapIndex = acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 211, -1 );
+		acl_fs_parse_int_ex( file, version, 266, RFL_VERSION_MAX, 0 );// unused?
 
 		// ???
-		PlReadInt32( file, false, NULL );
-		PlReadInt32( file, false, NULL );
-		PlReadInt32( file, false, NULL );
+		acl_fs_parse_int_ex( file, version, 49, RFL_VERSION_MAX, 0 );
+		acl_fs_parse_int_ex( file, version, 66, 211, 0 );
+		acl_fs_parse_int_ex( file, version, 66, 211, 0 );
 
-		int32_t portalIndex = PlReadInt32( file, false, NULL );
+		int32_t portalIndex = acl_fs_parse_int( file );
 		if ( portalIndex >= 0 )
 		{
 			face->portal = PlGetVectorArrayElementAt( world->portals, portalIndex );
@@ -397,16 +420,16 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 
 		face->flags = PL_READUINT32( file, false, NULL );
 
-		face->smoothingGroup = PlReadInt32( file, false, NULL );
+		face->smoothingGroup = acl_fs_parse_int( file );
 
-		int32_t roomIndex = PlReadInt32( file, false, NULL );
+		int32_t roomIndex = acl_fs_parse_int( file );
 		assert( roomIndex >= 0 );
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
-		uint32_t numFaceVertices = PL_READUINT32( file, false, NULL );
+		unsigned int numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices = PlCreateVectorArray( numFaceVertices );
-		for ( uint32_t j = 0; j < numFaceVertices; ++j )
+		for ( unsigned int j = 0; j < numFaceVertices; ++j )
 		{
 			ApeWorldFaceVertex *faceVertex = PL_NEW( ApeWorldFaceVertex );
 
@@ -436,9 +459,14 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 
 			if ( lightmapIndex >= 0 )
 			{
-				faceVertex->lightmapU = acl_fs_parse_float( file );
-				faceVertex->lightmapV = acl_fs_parse_float( file );
+				faceVertex->lightmapU = acl_fs_parse_float_ex( file, version, RFL_VERSION_MIN, 211, 0.0f );
+				faceVertex->lightmapV = acl_fs_parse_float_ex( file, version, RFL_VERSION_MIN, 211, 0.0f );
 			}
+
+			faceVertex->colour.r = acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.g = acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.b = acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.a = acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
 
 #if defined( FLIP_WORLD )
 			PlInsertFrontLinkedListNode( face->edgeLoop, faceVertex );
@@ -460,10 +488,10 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 	}
 }
 
-static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file )
+static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file, unsigned int version )
 {
-	int32_t numLightmaps = PlReadInt32( file, false, NULL );
-	for ( int32_t i = 0; i < numLightmaps; ++i )
+	unsigned int numLightmaps = ( unsigned int ) acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 211, 0 );
+	for ( unsigned int i = 0; i < numLightmaps; ++i )
 	{
 		PlReadInt32( file, false, NULL );// lightmap index
 		PL_READUINT8( file, NULL );      // x start
@@ -520,14 +548,14 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 
 static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, unsigned int version )
 {
-	acl_fs_parse_int_ex( file, version, 200, RFL_VERSION_MAX, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_RETAIL_1_2, RFL_VERSION_MAX, 0 );// "modifiability" - unused
 
 	// unused string
 	uint16_t size;
 	char *buf = acl_fs_parse_string( file, &size );
 	PL_DELETE( buf );
 
-	acl_fs_parse_int_ex( file, version, 0, 199, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 199, 0 );// "modifiability" - unused
 
 	parse_static_geometry_textures( level, file );
 
@@ -552,14 +580,24 @@ static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, uns
 
 	parse_static_geometry_rooms( level, file, version );
 	parse_static_geometry_detail_rooms( level, file );
+
+	// some currently unknown room-related data
+	// (https://github.com/Marisa-Chan/RF2_rfl_rfc/blob/master/rfl_read.py#L264)
+	unsigned int num = acl_fs_parse_int_ex( file, version, 216, RFL_VERSION_MAX, 0 );
+	for ( unsigned int i = 0; i < num; ++i )
+	{
+		acl_fs_parse_int( file );
+		acl_fs_parse_int( file );
+	}
+
 	parse_static_geometry_portals( level, file );
 	parse_static_geometry_vertices( level, file );
 	parse_static_geometry_faces( level, file, version );
-	parse_static_geometry_lightmaps( level, file );
+	parse_static_geometry_lightmaps( level, file, version );
 	//TODO: commented out for now, as it's causing issues with newer levels -
 	// 		and I get the impression it was removed but too lazy to check,
 	// 		plus we're not doing anything with it right now anyway...
-	//ParseStaticGeometryTextureMovers( world, file );
+	//parse_static_geometry_texture_movers( level, file );
 
 	return NULL;
 }
@@ -594,17 +632,17 @@ static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int vers
 
 		light->radius = acl_fs_parse_float( file );// * 2.0f;
 
-		acl_fs_parse_float( file );      // fov
-		acl_fs_parse_float( file );      // fov dropoff
-		acl_fs_parse_float( file );      // intensity at max range
-		PlReadInt32( file, false, NULL );// dropoff type
-		acl_fs_parse_float( file );      // tube light width
-		acl_fs_parse_float( file );      // on intensity
-		acl_fs_parse_float( file );      // on time
-		acl_fs_parse_float( file );      // on time variation
-		acl_fs_parse_float( file );      // off intensity
-		acl_fs_parse_float( file );      // off time
-		acl_fs_parse_float( file );      // off time variation
+		acl_fs_parse_float( file );// fov
+		acl_fs_parse_float( file );// fov dropoff
+		acl_fs_parse_float( file );// intensity at max range
+		acl_fs_parse_int( file );  // dropoff type
+		acl_fs_parse_float( file );// tube light width
+		acl_fs_parse_float( file );// on intensity
+		acl_fs_parse_float( file );// on time
+		acl_fs_parse_float( file );// on time variation
+		acl_fs_parse_float( file );// off intensity
+		acl_fs_parse_float( file );// off time
+		acl_fs_parse_float( file );// off time variation
 
 		PlPushBackVectorArrayElement( level->lights, light );
 	}
