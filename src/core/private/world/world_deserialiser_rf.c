@@ -385,8 +385,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 		// plane
 		face->normal = acl_fs_parse_vector_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, &pl_vecOrigin3 );// normal
 		FLIP_VECTOR( face->normal );
-		FLIP_VECTOR( face->normal );
-			face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
+		face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
 
 
 		face->materialIndex = acl_fs_parse_int( file );
@@ -550,14 +549,14 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 
 static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, unsigned int version )
 {
-	acl_fs_parse_int_ex( file, version, 200, RFL_VERSION_MAX, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_RETAIL_1_2, RFL_VERSION_MAX, 0 );// "modifiability" - unused
 
 	// unused string
 	uint16_t size;
 	char *buf = acl_fs_parse_string( file, &size );
 	PL_DELETE( buf );
 
-	acl_fs_parse_int_ex( file, version, 0, 199, 0 );// "modifiability" - unused
+	acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 199, 0 );// "modifiability" - unused
 
 	parse_static_geometry_textures( level, file );
 
@@ -634,17 +633,17 @@ static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int vers
 
 		light->radius = acl_fs_parse_float( file );// * 2.0f;
 
-		acl_fs_parse_float( file );      // fov
-		acl_fs_parse_float( file );      // fov dropoff
-		acl_fs_parse_float( file );      // intensity at max range
-		acl_fs_parse_int( file );// dropoff type
-		acl_fs_parse_float( file );      // tube light width
-		acl_fs_parse_float( file );      // on intensity
-		acl_fs_parse_float( file );      // on time
-		acl_fs_parse_float( file );      // on time variation
-		acl_fs_parse_float( file );      // off intensity
-		acl_fs_parse_float( file );      // off time
-		acl_fs_parse_float( file );      // off time variation
+		acl_fs_parse_float( file );// fov
+		acl_fs_parse_float( file );// fov dropoff
+		acl_fs_parse_float( file );// intensity at max range
+		acl_fs_parse_int( file );  // dropoff type
+		acl_fs_parse_float( file );// tube light width
+		acl_fs_parse_float( file );// on intensity
+		acl_fs_parse_float( file );// on time
+		acl_fs_parse_float( file );// on time variation
+		acl_fs_parse_float( file );// off intensity
+		acl_fs_parse_float( file );// off time
+		acl_fs_parse_float( file );// off time variation
 
 		PlPushBackVectorArrayElement( level->lights, light );
 	}
