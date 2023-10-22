@@ -22,7 +22,7 @@ static PLMModel *terrainModel = NULL;
 
 #define TERRAIN_TILE_SPACING 64
 
-void FW_Terrain_Initialize( void )
+void fw_terrain_initialize( void )
 {
 	terrainModel = PlmLoadModel( "models/terrain.ply" );
 	if ( terrainModel == NULL )
@@ -32,7 +32,7 @@ void FW_Terrain_Initialize( void )
 	}
 }
 
-void FW_Terrain_Shutdown( void )
+void fw_terrain_shutdown( void )
 {
 	PlmDestroyModel( terrainModel );
 
@@ -45,9 +45,9 @@ void FW_Terrain_Shutdown( void )
  * a minimap... */
 
 static PLGTexture *overview = NULL;
-PLGTexture *FW_Terrain_GetOverview( void ) { return overview; }
+PLGTexture *fw_terrain_get_overview( void ) { return overview; }
 
-static void UpdateOverview( void )
+static void update_overview( void )
 {
 }
 
@@ -57,7 +57,7 @@ static void UpdateOverview( void )
 /**
  * Loads the terrain into our heightmap buffer.
  */
-static bool ParseTerrainFile( PLFile *file )
+static bool parse_terrain_file( PLFile *file )
 {
 	const char *path = PlGetFilePath( file );
 
@@ -87,12 +87,12 @@ static bool ParseTerrainFile( PLFile *file )
 			terrainMinHeight = terrainHeightmap[ i ];
 	}
 
-	UpdateOverview();
+	update_overview();
 
 	return true;
 }
 
-bool FW_Terrain_Load( const char *path )
+bool fw_terrain_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
@@ -101,28 +101,26 @@ bool FW_Terrain_Load( const char *path )
 		return false;
 	}
 
-	bool status = ParseTerrainFile( file );
+	bool status = parse_terrain_file( file );
 	if ( !status )
-	{
 		Game_Warning( "Failed to load terrain (%s)!\n", path );
-	}
 
 	PlCloseFile( file );
 
 	return status;
 }
 
-float FW_Terrain_GetHeight( float x, float y )
+float fw_terrain_get_height( float x, float y )
 {
 	return 0;
 }
 
-float FW_Terrain_GetMaxHeight( void )
+float fw_terrain_get_max_height( void )
 {
 	return terrainMaxHeight;
 }
 
-float FW_Terrain_GetMinHeight( void )
+float fw_terrain_get_min_height( void )
 {
 	return terrainMinHeight;
 }

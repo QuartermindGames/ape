@@ -15,7 +15,7 @@ static bool FW_Game_Initialize( void ) {
 	game_register_standard_entity_components();
 
 	fw_menu_initialize();
-	FW_Terrain_Initialize();
+	fw_terrain_initialize();
 
 	return true;
 }
@@ -23,7 +23,7 @@ static bool FW_Game_Initialize( void ) {
 static void FW_Game_Shutdown( void ) {
 	//TODO: need mechanism for removing components
 
-	FW_Terrain_Shutdown();
+	fw_terrain_shutdown();
 }
 
 static void FW_Game_NewGame( const char *path ) {
