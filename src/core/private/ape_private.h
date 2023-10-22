@@ -21,20 +21,14 @@
 #include <yin/core.h>
 #include <yin/node.h>
 
-#if ( APE_EDITOR_ENABLED == 1 )
-
-#	include "ape/editor_public.h"
-
-#endif
-
 #define ENGINE_NAME        "APE"
 #define ENGINE_APP_NAME    "ape"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
-#define VERSION_MAJOR    3
+#define VERSION_MAJOR    4
 #define VERSION_MINOR    0
 #define VERSION_PATCH    0
-#define VERSION_CODENAME "Amber"
+#define VERSION_CODENAME "Rutilus"
 
 PL_EXTERN_C
 
