@@ -440,6 +440,7 @@ int launcher_initialize( int argc, char **argv )
 {
 #if defined( _WIN32 ) && !defined( NDEBUG )
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+	setvbuf( stdout, NULL, _IONBF, 0 );
 #elif defined( __linux__ )
 	prctl( PR_SET_DUMPABLE, 1 );
 #endif
