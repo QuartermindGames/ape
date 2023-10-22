@@ -27,7 +27,6 @@ set(GAME_TARGET_DEMO
         private/demo/demo_game.c)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
-        private/fw/menu/fw_menu_pie.c
         private/fw/fw_building.c
         private/fw/fw_character.c
         private/fw/fw_component_stats.c

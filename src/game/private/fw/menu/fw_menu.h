@@ -7,7 +7,7 @@
 // base menu impl.
 #include "../../game_menu.h"
 
-void FW_Menu_Initialize( void );
-void FW_Menu_Tick( void );
-void FW_Menu_Draw( const ApeViewport *viewport );
-bool FW_Menu_HandleInput( void );
+void fw_menu_initialize( void );
+void fw_menu_tick( void );
+void fw_menu_draw( const ApeViewport *viewport );
+bool fw_menu_handle_input( void );

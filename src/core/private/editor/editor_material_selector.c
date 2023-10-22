@@ -70,7 +70,7 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
 	PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 
 	int vw, vh;
-	apeGetViewportSize( viewport, &vw, &vh );
+	ape_viewport_get_size( viewport, &vw, &vh );
 
 	PlgDrawRectangle( 0, 0, ( float ) vw, ( float ) vh, PL_COLOUR_DARK_SLATE_GRAY );
 

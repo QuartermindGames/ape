@@ -27,7 +27,7 @@ void apeDestroyViewport( ApeViewport *viewport );
 ApeViewport *apeGetViewportBySlot( unsigned int slot );
 void apeSetViewportCamera( ApeViewport *viewport, ApeCamera *camera );
 void apeSetViewportSize( ApeViewport *viewport, int width, int height );
-void apeGetViewportSize( const ApeViewport *viewport, int *width, int *height );
+void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height );
 unsigned int apeGetViewportFramerate( const ApeViewport *viewport );
 
 /**********************************************************/

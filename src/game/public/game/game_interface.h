@@ -19,9 +19,9 @@ typedef enum GameModeRequest
 	GAME_MODE_REQUEST_DRAW_UI,
 
 	GAMEMODE_REQUEST_TICK,// called after entity tick
-	GAMEMODE_REQUEST_HANDLEINPUT,
-	GAMEMODE_REQUEST_SPAWNWORLD,// called before entities are spawned in and
-	                            // before starting and connecting to server
+	GAMEMODE_REQUEST_HANDLE_INPUT,
+	GAMEMODE_REQUEST_SPAWN_LEVEL,// called before entities are spawned in and
+	                             // before starting and connecting to server
 	GAMEMODE_REQUEST_DISCONNECT,
 } GameModeRequest;
 

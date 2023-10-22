@@ -1,17 +1,18 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "fw_menu.h"
-#include "fw_menu_pie.h"
+#include "../../game_menu_pie.h"
 
 static Menu mainMenu;
 
-static void QuitOption( void ) {
+static void quit_option( void )
+{
 	apeShutdown();
 }
 
 static MenuOption quitMenuOptions[] = {
-        {"Yes", NULL,      QuitOption, MENU_OPTION_TYPE_BUTTON},
-        { "No", &mainMenu, NULL,       MENU_OPTION_TYPE_BUTTON}
+        {"Yes", NULL,      quit_option, MENU_OPTION_TYPE_BUTTON},
+        { "No", &mainMenu, NULL,        MENU_OPTION_TYPE_BUTTON}
 };
 
 static Menu confirmQuitMenu = {
@@ -31,41 +32,41 @@ static Menu mainMenu = {
         PL_ARRAY_ELEMENTS( mainMenuOptions ),
 };
 
-static FWPieMenu *interactPie;
+static GamePieMenu *interactPie;
 
-typedef enum FWPieMenuIcon {
+typedef enum FWPieMenuIcon
+{
 	FW_PIEMENU_ICON_USE,
 
 	FW_MAX_PIEMENU_ICONS
 } FWPieMenuIcon;
 static ApeMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
 
-void FW_Menu_Initialize( void ) {
+void fw_menu_initialize( void )
+{
 	// mmm delicious pie
-	interactPie = FW_Menu_CreatePie();
-	FW_Menu_AddPieOption( interactPie, "testing 1", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 2", apeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
-	FW_Menu_AddPieOption( interactPie, "testing 3", apeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	interactPie = menu_pie_create();
+	menu_pie_add_option( interactPie, "testing 1", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 2", apeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 3", apeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_WORLD, true, false ), NULL );
 	//FW_Menu_SetPieActive( interactPie, true );
 
 	Game_Menu_SetCurrent( &mainMenu );
 }
 
-static void DrawHUD( const ApeViewport *viewport ) {
+static void DrawHUD( const ApeViewport *viewport )
+{
 }
 
-void FW_Menu_Tick( void ) {
-	FW_Menu_TickPie( interactPie );
+void fw_menu_tick( void )
+{
+	menu_pie_tick( interactPie );
 }
 
-void FW_Menu_Draw( const ApeViewport *viewport ) {
-	// get the centre of the screen
-	int w, h;
-	YnCore_Viewport_GetSize( viewport, &w, &h );
-	int cx = w / 2;
-	int cy = h / 2;
-
-	switch ( Game_GetMenuState() ) {
+void fw_menu_draw( const ApeViewport *viewport )
+{
+	switch ( gameGetMenuState() )
+	{
 		default:
 			break;
 		case MENU_STATE_HUD:
@@ -73,23 +74,30 @@ void FW_Menu_Draw( const ApeViewport *viewport ) {
 			break;
 	}
 
+	int w, h;
+	ape_viewport_get_size( viewport, &w, &h );
+
 	// draw our fancy little pie menu for interactions
-	FW_Menu_DrawPie( interactPie, cx, cy );
+	menu_pie_draw( interactPie, ( float ) w / 2, ( float ) h / 2 );
 }
 
-bool FW_Menu_HandleInput( void ) {
+bool fw_menu_handle_input( void )
+{
 	static bool blah = true;
-	if ( apeGetButtonStatus( 0, INPUT_START ) == OGE_INPUT_STATE_PRESSED ) {
+	if ( apeGetButtonStatus( 0, INPUT_START ) == APE_INPUT_STATE_PRESSED )
+	{
 		blah = !blah;
-		FW_Menu_SetPieActive( interactPie, blah );
+		menu_pie_make_active( interactPie, blah );
 		return true;
 	}
-	if ( apeGetButtonStatus( 0, INPUT_X ) == OGE_INPUT_STATE_PRESSED ) {
-		FW_Menu_AddPieOption( interactPie, "testing 4", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", YN_CORE_CACHE_GROUP_WORLD, true, false ), NULL );
+	if ( apeGetButtonStatus( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
+	{
+		menu_pie_add_option( interactPie, "testing 4", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
 		return true;
 	}
 
-	if ( FW_Menu_HandlePieInput( interactPie ) ) {
+	if ( menu_pie_handle_input( interactPie ) )
+	{
 		return true;
 	}
 
