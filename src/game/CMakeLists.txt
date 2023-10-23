@@ -21,10 +21,10 @@ set(GAME_INCLUDE_DIRS
 #############################################
 # Target Games
 
-set(GAME_USER_TARGET "detox" CACHE STRING "Game to build.")
+set(GAME_USER_TARGET "mag" CACHE STRING "Game to build.")
 
-set(GAME_TARGET_DEMO
-        private/demo/demo_game.c)
+set(GAME_TARGET_MAG
+        private/mag/mag_game.c)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
         private/fw/fw_building.c
@@ -45,8 +45,8 @@ set(GAME_TARGET_DETOX
 )
 
 #todo: need a better way of setting targets...
-if (${GAME_USER_TARGET} STREQUAL "demo")
-    set(GAME_TARGET ${GAME_TARGET_DEMO})
+if (${GAME_USER_TARGET} STREQUAL "mag")
+    set(GAME_TARGET ${GAME_TARGET_MAG})
 elseif (${GAME_USER_TARGET} STREQUAL "feral")
     set(GAME_TARGET ${GAME_TARGET_FERAL})
 elseif (${GAME_USER_TARGET} STREQUAL "detox")
