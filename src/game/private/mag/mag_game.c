@@ -1,11 +1,11 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 // Purpose: Main file for demo game project.
 
-#include "demo_game.h"
+#include "mag_game.h"
 
 static ApeCamera *playerCamera = NULL;
 
-static void MoveCameraCallback( ApeInputState state, const char *id )
+static void move_camera_callback( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
@@ -37,7 +37,7 @@ static void MoveCameraCallback( ApeInputState state, const char *id )
 	arl_camera_set_angles( playerCamera, &ang );
 }
 
-static void initialize_demo_game( void )
+static void initialize_game( void )
 {
 	game_register_standard_entity_components();
 
@@ -46,23 +46,23 @@ static void initialize_demo_game( void )
 	playerCamera = arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	arl_camera_make_active( playerCamera );
 
-	acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, MoveCameraCallback );
-	acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, MoveCameraCallback );
-	acl_input_register_action( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, MoveCameraCallback );
-	acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, MoveCameraCallback );
-	acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, MoveCameraCallback );
-	acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, MoveCameraCallback );
-	acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, MoveCameraCallback );
-	acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, MoveCameraCallback );
+	acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
+	acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
+	acl_input_register_action( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
+	acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
+	acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
+	acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
+	acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
+	acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 }
 
-static void shutdown_demo_game( void )
+static void shutdown_game( void )
 {
 	arl_camera_destroy( playerCamera );
 	playerCamera = NULL;
 }
 
-static void tick_demo_game( void )
+static void tick_game( void )
 {
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
@@ -78,23 +78,23 @@ static void tick_demo_game( void )
 	}
 }
 
-static bool HandleRequest( GameModeRequest modeRequest, void *user )
+static bool handle_request( GameModeRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_INITIALIZE:
 		{
-			initialize_demo_game();
+			initialize_game();
 			return true;
 		}
 		case GAMEMODE_REQUEST_SHUTDOWN:
 		{
-			shutdown_demo_game();
+			shutdown_game();
 			return true;
 		}
 		case GAMEMODE_REQUEST_TICK:
 		{
-			tick_demo_game();
+			tick_game();
 			break;
 		}
 		case GAMEMODE_REQUEST_HANDLE_INPUT:
@@ -117,6 +117,6 @@ const GameModeInterface *gameGetModeInterface( void )
 {
 	static GameModeInterface gameMode;
 	PL_ZERO_( gameMode );
-	gameMode.requestCallbackMethod = HandleRequest;
+	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;
 }
