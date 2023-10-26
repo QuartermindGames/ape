@@ -122,12 +122,12 @@ add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/game/)
 
+add_subdirectory(src/forge)
 add_subdirectory(src/shells/launcher_sdl2/)
 
 # tools
 add_subdirectory(src/tools/cook)
 add_subdirectory(src/tools/fonttool)
 add_subdirectory(src/tools/matgen)
-add_subdirectory(src/tools/m2w)
 
 add_subdirectory(src/tests/)
