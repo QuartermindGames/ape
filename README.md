@@ -32,6 +32,8 @@ Some semblance of documentation can be found [here](docs).
 - Memory manager with garbage collection and usage tracking
 - Node format for serialization/deserialization; can be stored as either binary or text
 - Editor frontend using [FOX Toolkit](http://www.fox-toolkit.org/)
+- Compatibility with Red Faction engine
+  - VPP v1, v2 and v3
 
 ## Games
 
@@ -50,6 +52,20 @@ Below is a list of released games that have used this engine.
 [![Screenshot](resources/preview3_thumb.png)](resources/preview3.png)
 
 </div>
+
+## Building
+
+### Windows
+
+APE Tech primarily supports 64-bit Windows 11, and has not been tested against other versions of Windows, so your milage might vary if that's the case.
+
+Compilation of tools requires [MSYS2](https://www.msys2.org/), [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain) and [GTK4](https://packages.msys2.org/package/mingw-w64-x86_64-gtk4?repo=mingw64). All other dependencies are included.
+
+### Linux
+
+APE Tech primarily supports 64-bit Ubuntu 23.04 and has not been tested against other distributions of Linux, but is expected to work just fine.
+
+Compilation of tools requires GTK4.
 
 ## Roadmap
 
