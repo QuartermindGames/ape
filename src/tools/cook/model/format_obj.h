@@ -60,5 +60,5 @@ typedef struct ObjModel
 	unsigned int numSubObjects;
 } ObjModel;
 
-ObjModel *ObjModel_LoadFromFile( const char *path );
-void ObjModel_Destroy( ObjModel *obj );
+ObjModel *model_obj_load( const char *path );
+void model_obj_destroy( ObjModel *obj );

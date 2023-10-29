@@ -27,10 +27,10 @@ typedef struct ApeWorld ApeWorld;
 
 #define APE_WORLD_VERSION       3
 #define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_GEO "wgf.n"
-#define APE_WORLD_EXTENSION_ENT "wef.n"
-#define APE_WORLD_EXTENSION_LIT "wlf.n"
 #define APE_WORLD_EXTENSION_CFG "wpf.n"
+
+#define APE_LEVEL_EXTENSION          ".rfl"
+#define APE_LEVEL_EXTENSION_GEOMETRY ".geo"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
@@ -77,7 +77,7 @@ void acl_level_attach_entity( ApeWorld *world, ApeEntity *entity );
  * Assigning a light to the world will give the world instance
  * ownership of that light.
  */
-void ape_world_attach_light( ApeWorld *world, ApeLight *light );
+void ape_level_attach_light( ApeWorld *world, ApeLight *light );
 
 unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha );
 void arl_sky_set_layer_alpha( unsigned int slot, float alpha );
@@ -86,10 +86,6 @@ void arl_sky_draw( ApeCamera *camera );
 
 void acl_level_set_sun_position( ApeWorld *world, const PLVector3 *position );
 void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
-
-/* Mesh */
-
-ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
 
 ////////////////////////////////////////////////////////////////////
 // Room
@@ -104,12 +100,12 @@ ApeWorldMesh *apeCreateWorldMesh( ApeWorld *parent );
 #define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
 #define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
-ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position );
+ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Face
 
-void apeGenerateWorldFaceBounds( ApeWorldFace *face );
+void ape_level_face_generate_bounds( ApeWorldFace *face );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting

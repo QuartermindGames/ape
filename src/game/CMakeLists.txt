@@ -4,8 +4,11 @@ set(CMAKE_C_STANDARD 11)
 
 set(GAME_SHARED_FILES
         private/game.c
+        private/game_entity_class_base.c
         private/game_menu.c
         private/game_menu_pie.c
+
+        private/ai/ai_brain.c
 )
 set(GAME_LINK_LIBS
         plcore
@@ -24,7 +27,9 @@ set(GAME_INCLUDE_DIRS
 set(GAME_USER_TARGET "mag" CACHE STRING "Game to build.")
 
 set(GAME_TARGET_MAG
-        private/mag/mag_game.c)
+        private/mag/mag_creature.c
+        private/mag/mag_game.c
+)
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c
         private/fw/fw_building.c
@@ -34,7 +39,8 @@ set(GAME_TARGET_FERAL
         private/fw/fw_inventory.c
         private/fw/fw_name_generator.c
         private/fw/fw_terrain.c
-        private/fw/fw_weapon.c)
+        private/fw/fw_weapon.c
+)
 set(GAME_TARGET_DETOX
         private/detox/entities/light_night.c
 

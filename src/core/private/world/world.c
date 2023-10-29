@@ -301,7 +301,7 @@ void acl_level_attach_entity( ApeWorld *world, ApeEntity *entity )
 	entity->world = world;
 }
 
-void ape_world_attach_light( ApeWorld *world, ApeLight *light )
+void ape_level_attach_light( ApeWorld *world, ApeLight *light )
 {
 	assert( light->world == NULL );
 	if ( light->world != NULL )
@@ -336,7 +336,7 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-ApeWorldRoom *apeGetRoomAtPosition( ApeWorld *world, const PLVector3 *position )
+ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
 {
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
