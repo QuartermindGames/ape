@@ -12,6 +12,11 @@ const char *acl_get_user_config_location( void );
 
 void acl_setup_config( NdBranch *root );
 
+/**
+ * Returns contents of file in a null-terminated buffer.
+ */
+void *acl_fs_load_file_buffer( const char *path, size_t *outSize );
+
 void acl_fs_mount_base_locations( void );
 
 char *acl_fs_parse_string( PLFile *file, uint16_t *size );

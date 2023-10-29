@@ -6,7 +6,7 @@
 
 #include "format_obj.h"
 
-static void ParseMaterialTemplateLibrary( ObjModel *obj, const char *path )
+static void parse_material_template_library( ObjModel *obj, const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
@@ -49,7 +49,7 @@ static void ParseMaterialTemplateLibrary( ObjModel *obj, const char *path )
 	}
 }
 
-static void DetermineSubObjectBounds( ObjModel *obj, ObjSubObject *subObject )
+static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject )
 {
 	unsigned int numFaces;
 	ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
@@ -72,7 +72,7 @@ static void DetermineSubObjectBounds( ObjModel *obj, ObjSubObject *subObject )
 	}
 }
 
-ObjModel *ObjModel_LoadFromFile( const char *path )
+ObjModel *model_obj_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
@@ -252,7 +252,7 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 			*s = '\0';
 			PlAppendPath( libPath, token, true );
 
-			ParseMaterialTemplateLibrary( obj, libPath );
+			parse_material_template_library( obj, libPath );
 		}
 		else if ( strncmp( c, "usemtl ", 7 ) == 0 )
 		{
@@ -273,12 +273,12 @@ ObjModel *ObjModel_LoadFromFile( const char *path )
 	PL_DELETE( txtBuf );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
-		DetermineSubObjectBounds( obj, &obj->subObjects[ i ] );
+		determine_sub_object_bounds( obj, &obj->subObjects[ i ] );
 
 	return obj;
 }
 
-void ObjModel_Destroy( ObjModel *obj )
+void model_obj_destroy( ObjModel *obj )
 {
 	if ( obj == NULL )
 		return;

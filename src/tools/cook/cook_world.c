@@ -20,7 +20,7 @@ static void process_geometry( const char *worldName, NdBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s.obj", worldName, worldName );
-	ObjModel *model = ObjModel_LoadFromFile( path );
+	ObjModel *model = model_obj_load( path );
 	if ( model == NULL )
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
 
@@ -131,7 +131,7 @@ static void process_geometry( const char *worldName, NdBranch *root )
 		}
 	}
 
-	ObjModel_Destroy( model );
+	model_obj_destroy( model );
 }
 
 void cook_world_process( const char *worldName )
@@ -143,7 +143,7 @@ void cook_world_process( const char *worldName )
 	process_geometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName, worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
 }

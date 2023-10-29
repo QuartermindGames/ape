@@ -96,6 +96,25 @@ void acl_setup_config( NdBranch *root )
 	// TODO: move this into the project handler
 }
 
+void *acl_fs_load_file_buffer( const char *path, size_t *outSize )
+{
+	PLFile *file = PlOpenFile( path, true );
+	if ( file == NULL )
+	{
+		PRINT_WARNING( "Failed to open file (%s): %s\n", path, PlGetError() );
+		return NULL;
+	}
+
+	size_t fileSize = PlGetFileSize( file );
+	*outSize = fileSize + 1;
+	char *buf = PL_NEW_( char, *outSize );
+	memcpy( buf, PlGetFileData( file ), fileSize );
+
+	PlCloseFile( file );
+
+	return buf;
+}
+
 void acl_fs_mount_base_locations( void )
 {
 	PLPath exePath;
