@@ -9,12 +9,13 @@
 
 static PLHashTable *entityComponentDefinitions = NULL;
 
-void apeRegisterEntityComponent( const ApeEntityComponentDefinition *definition ) {
-	if ( entityComponentDefinitions == NULL ) {
+void ape_entity_component_register( const ApeEntityComponentDefinition *definition )
+{
+	if ( entityComponentDefinitions == NULL )
 		entityComponentDefinitions = PlCreateHashTable();
-	}
 
-	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL ) {
+	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL )
+	{
 		PRINT_WARNING( "Attempted to register a duplicate entity component (%s)\n", definition->name );
 		return;
 	}
@@ -22,24 +23,25 @@ void apeRegisterEntityComponent( const ApeEntityComponentDefinition *definition 
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 }
 
-void *apeAddEntityComponent( ApeEntity *entity, const char *name ) {
+void *ape_entity_add_entity_component( ApeEntity *entity, const char *name )
+{
 	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
-	if ( componentDefinition == NULL ) {
+	if ( componentDefinition == NULL )
+	{
 		PRINT_WARNING( "Failed to find entity component (%s)!\n", name );
 		return NULL;
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	if ( componentDefinition->Create != NULL ) {
+	if ( componentDefinition->Create != NULL )
 		component->data = componentDefinition->Create();
-	}
 
-	if ( !PlInsertHashTableNode( entity->componentTable, name, strlen( name ), component ) ) {
+	if ( !PlInsertHashTableNode( entity->componentTable, name, strlen( name ), component ) )
+	{
 		PRINT_WARNING( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
-		if ( componentDefinition->Destroy != NULL ) {
+		if ( componentDefinition->Destroy != NULL )
 			componentDefinition->Destroy( component );
-		}
 
 		PL_DELETE( component );
 		return NULL;
@@ -48,6 +50,7 @@ void *apeAddEntityComponent( ApeEntity *entity, const char *name ) {
 	return component->data;
 }
 
-void *apeGetEntityComponent( ApeEntity *entity, const char *name ) {
+void *ape_entity_get_entity_component( ApeEntity *entity, const char *name )
+{
 	return PlLookupHashTableUserData( entity->componentTable, name, strlen( name ) );
 }

@@ -108,7 +108,7 @@ void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position )
 			return;
 		}
 
-		camera->room = apeGetRoomAtPosition( world, &camera->internal->position );
+		camera->room = ape_world_get_room_at_position( world, &camera->internal->position );
 	}
 }
 
