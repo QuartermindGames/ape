@@ -41,7 +41,7 @@ static void initialize_game( void )
 {
 	game_register_standard_entity_components();
 
-	PlParseConsoleString( "level L01S2.rfl" );
+	PlParseConsoleString( "level worlds/L1S1.rfl" );
 
 	playerCamera = arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
 	arl_camera_make_active( playerCamera );

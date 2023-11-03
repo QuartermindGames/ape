@@ -1,4 +1,4 @@
-if (WIN32 AND MSVC)
+if (WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "launcher.rc")
 endif ()
 

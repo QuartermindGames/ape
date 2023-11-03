@@ -382,6 +382,13 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, b
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
 		return;
 
+	if ( ape_config_.level.showRoomVolumes )
+	{
+		PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+		PLColour colour = PlColourF32ToU8( &room->colour );
+		PlgDrawBoundingVolume( &room->bounds, &colour );
+	}
+
 	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
 		return;
 
