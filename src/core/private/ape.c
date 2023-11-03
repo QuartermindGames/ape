@@ -204,11 +204,11 @@ void apeHandleKeyboardEvent( int key, unsigned int keyState )
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
-bool apeHandleConsoleTextEvent_( const char *key );
+bool acl_console_handle_text_event_( const char *key );
 
 void apeHandleTextEvent( const char *key )
 {
-	if ( apeHandleConsoleTextEvent_( key ) )
+	if ( acl_console_handle_text_event_( key ) )
 	{
 		return;
 	}

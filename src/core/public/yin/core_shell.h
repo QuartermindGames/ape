@@ -45,7 +45,7 @@ ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton );
 ApeInputState apeShellInterface_GetKeyState( int key );
 void apeShellInterface_GetMousePosition( int *x, int *y );
 void apeShellInterface_SetMousePosition( int x, int y );
-void apeShellInterface_GrabMouse( bool grab );
+void shell_grab_mouse( bool grab );
 void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *colour );
 void apeShellInterface_Shutdown( void );
 

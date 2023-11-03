@@ -241,7 +241,7 @@ void apeShellInterface_SetMousePosition( int x, int y )
 
 static bool grabState = false;
 
-void apeShellInterface_GrabMouse( bool grab )
+void shell_grab_mouse( bool grab )
 {
 	SDL_SetWindowGrab( sdlWindow, grab );
 	SDL_SetRelativeMouseMode( grab );

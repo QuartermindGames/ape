@@ -91,8 +91,8 @@ void acl_console_register_commands_( bool isDedicated );
 void acl_console_register_variables_( bool isDedicated );
 
 void apeDrawConsole_( const ApeViewport *viewport );
-void apeRegisterClientConsoleCommands_( void );
-void apeRegisterClientConsoleVariables_( void );
+void acl_console_register_cl_commands_( void );
+void acl_console_register_cl_variables_( void );
 
 #define PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
