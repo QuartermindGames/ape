@@ -159,7 +159,7 @@ void acl_console_register_commands_( bool isDedicated )
 
 	if ( !isDedicated )
 	{
-		apeRegisterClientConsoleCommands_();
+		acl_console_register_cl_commands_();
 	}
 }
 
@@ -172,7 +172,7 @@ void acl_console_register_variables_( bool isDedicated )
 	// Client variables
 	if ( !isDedicated )
 	{
-		apeRegisterClientConsoleVariables_();
+		acl_console_register_cl_variables_();
 	}
 
 #if defined( APE_EDITOR_ENABLED )

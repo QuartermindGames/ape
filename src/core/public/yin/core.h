@@ -21,7 +21,7 @@ struct NdBranch *apeGetUserConfig( void );
 unsigned int apeGetNumTicks( void );
 
 bool apeIsEngineRunning( void );
-bool apeIsConsoleOpen( void );
+bool acl_console_is_open( void );
 
 void apeHandleKeyboardEvent( int key, unsigned int keyState );
 void apeHandleTextEvent( const char *key );
