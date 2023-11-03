@@ -130,6 +130,7 @@ typedef struct ApeConfig
 	{
 		bool skipDraw;
 		bool showPortals;
+		bool showRoomVolumes;
 		bool sortLights;
 	} level;
 } ApeConfig;
