@@ -31,10 +31,14 @@ static void ParseMaterialTemplateLibrary( ObjModel *obj, const char *path )
 			continue;
 		}
 
-		char token[ 128 ];
+		char token[ 256 ];
 		PlParseToken( &c, token, sizeof( token ) );
 		if ( strcmp( token, "newmtl" ) == 0 )
 		{
+			assert( obj->numMaterials < OBJ_MAX_MATERIALS );
+			if ( obj->numMaterials >= OBJ_MAX_MATERIALS )
+				ERROR( "Unexpected number of materials (%u >= %u)!\n", obj->numMaterials, OBJ_MAX_MATERIALS );
+
 			material = &obj->materials[ obj->numMaterials++ ];
 			PlParseToken( &c, material->name, sizeof( material->name ) );
 		}

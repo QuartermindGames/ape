@@ -6,7 +6,7 @@
 
 #define OBJ_MAX_SUB_OBJECTS 32
 #define OBJ_MAX_EDGES       16
-#define OBJ_MAX_MATERIALS   32
+#define OBJ_MAX_MATERIALS   64
 
 typedef struct ObjMaterial
 {
