@@ -14,7 +14,7 @@
 #include "server/server.h"
 #include "net/net.h"
 
-#include <yin/node.h>
+#include "script_public.h"
 
 /****************************************
  * PRIVATE
@@ -37,7 +37,8 @@ ApeConfig ape_config_;
 NdBranch *apeGetConfig( void ) { return engineConfig; }
 NdBranch *apeGetUserConfig( void ) { return userConfig; }
 
-bool apeInitialize( const char *config ) {
+bool apeInitialize( const char *config )
+{
 	PL_ZERO_( ape_config_ );
 
 	// Call this first, so we can buffer console output
@@ -50,12 +51,15 @@ bool apeInitialize( const char *config ) {
 	PRINT( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );
-	if ( engineTerminalMode ) {
+	if ( engineTerminalMode )
+	{
 		PRINT( "Operating in command-line mode!\n" );
 	}
 
 	acl_console_register_variables_( engineTerminalMode );
 	acl_console_register_commands_( engineTerminalMode );
+
+	ss_script_register_commands();
 
 	PlRegisterStandardPackageLoaders();
 
@@ -63,20 +67,23 @@ bool apeInitialize( const char *config ) {
 	apeMountBaseLocations();
 
 	// And now we can fetch the engine config that provides mount locations, aliases and more
-	if ( config == NULL ) {
+	if ( config == NULL )
+	{
 		PRINT( "Shell didn't provide config - "
 		       "checking for command-line argument, otherwise will use default.\n" );
 		config = ENGINE_BASE_CONFIG;
 	}
 	const char *configPath = PlGetCommandLineArgumentValue( "-config" );
 	engineConfig = ndLoadFile( configPath != NULL ? configPath : config, "config" );
-	if ( engineConfig == NULL ) {
+	if ( engineConfig == NULL )
+	{
 		PRINT_WARNING( "Failed to open engine config: %s\n", ndGetErrorMessage() );
 		return false;
 	}
 
 	userConfig = ndLoadFile( acl_get_user_config_location(), "config" );
-	if ( userConfig == NULL ) {
+	if ( userConfig == NULL )
+	{
 		PRINT( "No existing user config found, will use defaults.\n" );
 		userConfig = ndPushBackObject( NULL, "config" );
 	}
@@ -104,7 +111,8 @@ bool apeInitialize( const char *config ) {
 	return true;
 }
 
-void apeShutdown( void ) {
+void apeShutdown( void )
+{
 	PRINT( "Shutting down...\n" );
 
 	apeFlushTasks();
@@ -124,12 +132,15 @@ void apeShutdown( void ) {
 	engineInitialized = false;
 }
 
-unsigned int apeGetNumTicks( void ) {
+unsigned int apeGetNumTicks( void )
+{
 	return numTicks;
 }
 
-void apeTickFrame( void ) {
-	if ( !engineInitialized ) {
+void apeTickFrame( void )
+{
+	if ( !engineInitialized )
+	{
 		return;
 	}
 
@@ -144,9 +155,12 @@ void apeTickFrame( void ) {
 
 #else
 
-	if ( edIsActive() ) {
+	if ( edIsActive() )
+	{
 		edTick();
-	} else {
+	}
+	else
+	{
 		APE_PROFILE_START( PROFILE_TICK_CLIENT );
 		apeTickClient();
 		APE_PROFILE_END( PROFILE_TICK_CLIENT );
@@ -163,18 +177,22 @@ void apeTickFrame( void ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-bool apeIsEngineRunning( void ) {
+bool apeIsEngineRunning( void )
+{
 	/* always running */
 	return engineInitialized;
 }
 
-void apeRenderFrame( ApeViewport *viewport ) {
-	if ( !engineInitialized ) {
+void apeRenderFrame( ApeViewport *viewport )
+{
+	if ( !engineInitialized )
+	{
 		return;
 	}
 
 	assert( viewport != NULL );
-	if ( viewport == NULL ) {
+	if ( viewport == NULL )
+	{
 		PRINT_WARNING( "Attempted to draw without a valid viewport!\n" );
 		return;
 	}
@@ -182,26 +200,32 @@ void apeRenderFrame( ApeViewport *viewport ) {
 	COM_PROFILE_FUNCTION_CALL( "apeDrawClient", apeDrawClient( viewport ) );
 }
 
-void apeHandleKeyboardEvent( int key, unsigned int keyState ) {
+void apeHandleKeyboardEvent( int key, unsigned int keyState )
+{
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
 bool apeHandleConsoleTextEvent_( const char *key );
 
-void apeHandleTextEvent( const char *key ) {
-	if ( apeHandleConsoleTextEvent_( key ) ) {
+void apeHandleTextEvent( const char *key )
+{
+	if ( apeHandleConsoleTextEvent_( key ) )
+	{
 		return;
 	}
 }
 
-void apeHandleMouseButtonEvent( int button, ApeInputState buttonState ) {
+void apeHandleMouseButtonEvent( int button, ApeInputState buttonState )
+{
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void apeHandleMouseWheelEvent( float x, float y ) {
+void apeHandleMouseWheelEvent( float x, float y )
+{
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void apeHandleMouseMotionEvent( int x, int y ) {
+void apeHandleMouseMotionEvent( int x, int y )
+{
 	Client_Input_HandleMouseMotionEvent( x, y );
 }
