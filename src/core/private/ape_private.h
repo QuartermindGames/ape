@@ -123,6 +123,7 @@ typedef struct ApeConfig
 		bool useStencilShadowVolumes;
 		bool showShadowWireframe;
 		bool showFps;
+		bool showFaceBounds;
 
 		float maxLightDistance;
 	} renderer;

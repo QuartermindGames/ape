@@ -280,19 +280,28 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, b
 			break;
 		}
 
+		if ( ape_config_.renderer.showFaceBounds )
+		{
+			PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
+		}
+
 		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 
-		//if ( light != NULL && light->type != APE_LIGHT_TYPE_SUN && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )
-		//{
-		//	offset += numVertices;
-		//	continue;
-		//}
+		if ( light != NULL && ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) &&
+		     arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
+		{
+			offset += numVertices;
+			continue;
+		}
 
-		if ( PlgIsBoxInsideView( camera->internal, &faces[ i ]->bounds ) || !( light != NULL && arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) ) )
+		if ( PlgIsBoxInsideView( camera->internal, &faces[ i ]->bounds ) )
 		{
 			subMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = numVertices;
 			firstSubMeshes[ materialIndex ][ numSubMeshes[ materialIndex ] ] = offset;
 			numSubMeshes[ materialIndex ]++;
+
+			ape_rendererPerformance_.numFacesDrawn++;
 		}
 
 		offset += numVertices;
