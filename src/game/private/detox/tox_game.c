@@ -46,7 +46,7 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	arl_camera_set_angles( playerCamera, &ang );
 }
 
-static void spawn_light_action( ApeInputState state, const char *id )
+static void spawn_light_action( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
@@ -69,6 +69,21 @@ static void spawn_light_action( ApeInputState state, const char *id )
 	                                APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC ) );
 
 	delay = apeGetNumTicks() + 100;
+}
+
+static void progress_time_action( ApeInputState state, PL_UNUSED const char *id )
+{
+	if ( state != APE_INPUT_STATE_DOWN )
+		return;
+
+	ToxWorldState *worldState = tox_world_get_state();
+	if ( worldState == NULL )
+		return;
+
+	if ( strcmp( id, "time_forward" ) == 0 )
+		worldState->seconds += TOX_WORLD_SECONDS_TO_HOUR / 100;
+	else
+		worldState->seconds -= TOX_WORLD_SECONDS_TO_HOUR / 100;
 }
 
 static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -105,6 +120,7 @@ static void initialize_game( void )
 	PlParseConsoleString( "world/showallrooms true" );
 	//PlParseConsoleString( "world/sortlights false" );
 
+	// movement actions
 	acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
 	acl_input_register_action( "moveBackward", ( ApeInputButton[] ){ APE_INPUT_DOWN }, 1, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
 	acl_input_register_action( "moveLeft", ( ApeInputButton[] ){ INPUT_LEFT }, 1, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
@@ -113,7 +129,11 @@ static void initialize_game( void )
 	acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
 	acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
 	acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
+
+	// this remaining bunch are for debugging purposes...
 	acl_input_register_action( "spawn_light", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, spawn_light_action );
+	acl_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
+	acl_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
 }
 
 static void shutdown_game( void )
