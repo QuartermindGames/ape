@@ -76,9 +76,9 @@ void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity );
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
-void apeAddSkyLayer_( const char *path );
-void apeClearSkyLayers_( void );
-void apeDrawSky_( ApeCamera *camera );
+void arl_sky_add_layer_( const char *path );
+void arl_sky_clear_layers_( void );
+void arl_sky_draw_( ApeCamera *camera );
 
 void apeSetSunPosition( ApeWorld *world, const PLVector3 *position );
 

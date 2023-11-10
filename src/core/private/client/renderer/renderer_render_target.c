@@ -33,14 +33,14 @@ static void destroy_render_target( void *user )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ar_initialize_render_targets( void )
+void arl_initialize_render_targets_( void )
 {
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL )
 		PRINT_ERROR( "Failed to create render target hash table: %s\n", PlGetError() );
 }
 
-void ar_shutdown_render_targets( void )
+void arl_shutdown_render_targets_( void )
 {
 	apeFlushUnreferencedResources();
 
@@ -150,7 +150,7 @@ void arl_render_target_set_size( ArRenderTarget *renderTarget, unsigned int widt
 	        renderTarget->textureAttachmentFilter );
 }
 
-void ar_render_target_get_size( const ArRenderTarget *renderTarget, unsigned int *width, unsigned int *height )
+void arl_render_target_get_size( const ArRenderTarget *renderTarget, unsigned int *width, unsigned int *height )
 {
 	*width = renderTarget->frameBuffer->width;
 	*height = renderTarget->frameBuffer->height;
@@ -166,7 +166,7 @@ void arl_render_target_bind( ArRenderTarget *renderTarget, PLGFrameBufferObjectT
 	PlgBindFrameBuffer( renderTarget->frameBuffer, target );
 }
 
-PLGFrameBuffer *ar_render_target_get_frame_buffer( ArRenderTarget *renderTarget )
+PLGFrameBuffer *arl_render_target_get_frame_buffer( ArRenderTarget *renderTarget )
 {
 	return renderTarget->frameBuffer;
 }

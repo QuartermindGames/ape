@@ -39,7 +39,7 @@ void apeShutdownClient_( void ) {
 	apeShutdownGUI_();
 	apeShutdownEditor_();
 	apeShutdownAudio_();
-	ar_shutdown_();
+	arl_shutdown_();
 }
 
 void apeDrawClient( ApeViewport *viewport ) {
@@ -51,7 +51,7 @@ void apeDrawClient( ApeViewport *viewport ) {
 
 	arl_draw_menu( viewport );
 
-	ar_draw_end( viewport );
+	arl_draw_end_( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }

@@ -139,7 +139,7 @@ extern ArlRendererPassState arl_rendererState_;
 #include "renderer_material.h"
 
 void ar_initialize_( void );
-void ar_shutdown_( void );
+void arl_shutdown_( void );
 
 PLGCamera *apeGetAuxCamera( void );
 
@@ -149,7 +149,7 @@ PLGCamera *apeGetAuxCamera( void );
 
 void arl_setup_default_state( const ApeViewport *viewport );
 void ar_draw_begin( ApeViewport *viewport );
-void ar_draw_end( ApeViewport *viewport );
+void arl_draw_end_( ApeViewport *viewport );
 void arl_draw_menu( const ApeViewport *viewport );
 
 void apeSet2DViewportSize( int w, int h );

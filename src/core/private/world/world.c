@@ -241,10 +241,10 @@ ApeWorld *apeLoadWorld( const char *path )
 		CacheRoomMesh( world, room );
 	}
 
-	apeClearSkyLayers_();
-	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
-	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
-	apeAddSkyLayer_( WORLD_DEFAULT_SKY );
+	arl_sky_clear_layers_();
+	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
+	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
+	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
 
 	return world;
 }

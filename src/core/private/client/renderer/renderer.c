@@ -2,6 +2,7 @@
 /* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
 
 #include <plgraphics/plg_driver_interface.h>
+#include <threads.h>
 
 #include "ape_private.h"
 #include "legacy/actor.h"
@@ -25,6 +26,110 @@ static PLGCamera *auxCamera = NULL;
 PLGCamera *apeGetAuxCamera( void ) { return auxCamera; }
 
 static bool isScreenshotPending = false;
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Frame Capture
+
+typedef struct CaptureFrame
+{
+	unsigned int w;
+	unsigned int h;
+	unsigned char *buf;
+} CaptureFrame;
+
+static volatile bool isCapturing = false;
+static volatile unsigned int numCaptureFrames = 0;
+static unsigned int lastCaptureTick = 0;
+
+static PLLinkedList *captureQueue = NULL;//CaptureFrame
+
+#define MAX_CAPTURE_THREADS 16
+static unsigned int numCaptureThreads = 4;
+static mtx_t captureMutex = {};
+static thrd_t captureThread[ MAX_CAPTURE_THREADS ] = {};
+
+static void destroy_capture_frame( void *ptr )
+{
+	CaptureFrame *frame = ( CaptureFrame * ) ptr;
+	PL_DELETE( frame->buf );
+	PL_DELETE( frame );
+}
+
+static int process_capture_queue( void * )
+{
+	while ( true )
+	{
+		mtx_lock( &captureMutex );
+
+		PLLinkedListNode *node = PlGetFirstNode( captureQueue );
+		if ( node == NULL )
+		{
+			mtx_unlock( &captureMutex );
+			if ( !isCapturing )
+				break;
+
+			usleep( 1000 );
+			continue;
+		}
+
+		CaptureFrame *frame = PlGetLinkedListNodeUserData( node );
+		PlDestroyLinkedListNode( node );
+
+		unsigned int frameNum = numCaptureFrames++;
+
+		mtx_unlock( &captureMutex );
+
+		PLImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		assert( image != NULL );
+		if ( image != NULL )
+		{
+			PlFlipImageVertical( image );
+			PlClearImageAlpha( image );
+
+			PLPath path;
+			PlSetupPath( path, true, "%s/captures/%u.qoi", comGetAppDataDirectory(), frameNum );
+			PlWriteImage( image, path );
+
+			PlDestroyImage( image );
+		}
+
+		destroy_capture_frame( frame );
+	}
+
+	return 0;
+}
+
+static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+{
+	numCaptureFrames = 0;
+	isCapturing = !isCapturing;
+	if ( isCapturing )
+	{
+		// Create a folder to store the captures if one doesn't already exist
+		PLPath captureDirectory;
+		PlSetupPath( captureDirectory, true, "%s/captures/", comGetAppDataDirectory() );
+		PlCreateDirectory( captureDirectory );
+
+		lastCaptureTick = apeGetNumTicks();
+
+		mtx_init( &captureMutex, mtx_plain );
+		captureQueue = PlCreateLinkedList();
+
+		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
+			thrd_create( &captureThread[ i ], process_capture_queue, NULL );
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
+			thrd_join( captureThread[ i ], NULL );
+
+		mtx_destroy( &captureMutex );
+		PlDestroyLinkedListEx( captureQueue, destroy_capture_frame );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 /**********************************************************/
 
@@ -70,9 +175,9 @@ void ar_draw_begin( ApeViewport *viewport )
 static void write_screenshot( void )
 {
 	unsigned int w, h;
-	ar_render_target_get_size( defaultRenderTarget, &w, &h );
+	arl_render_target_get_size( defaultRenderTarget, &w, &h );
 
-	PLGFrameBuffer *fboBuffer = ar_render_target_get_frame_buffer( defaultRenderTarget );
+	PLGFrameBuffer *fboBuffer = arl_render_target_get_frame_buffer( defaultRenderTarget );
 	assert( fboBuffer != NULL );
 	if ( fboBuffer == NULL )
 		return;
@@ -81,17 +186,32 @@ static void write_screenshot( void )
 	unsigned char *buf = PL_NEW_( unsigned char, bufSize );
 	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
+		if ( isCapturing )
+		{
+			mtx_lock( &captureMutex );
+
+			CaptureFrame *frame = PL_NEW( CaptureFrame );
+			PlInsertLinkedListNode( captureQueue, frame );
+			frame->buf = buf;
+			frame->w = w;
+			frame->h = h;
+
+			mtx_unlock( &captureMutex );
+			return;
+		}
+
 		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		assert( image != NULL );
 		if ( image != NULL )
 		{
-			uint16_t num = 0;
+			PlFlipImageVertical( image );
+			PlClearImageAlpha( image );
+
 			PLPath path;
+			unsigned int num = 0;
 			PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), num );
 			while ( PlFileExists( path ) )
 				PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), ++num );
-
-			PlFlipImageVertical( image );
 
 			PlWriteImage( image, path );
 			PlDestroyImage( image );
@@ -101,11 +221,9 @@ static void write_screenshot( void )
 	}
 	else
 		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
-
-	PL_DELETE( buf );
 }
 
-void ar_draw_end( ApeViewport *viewport )
+void arl_draw_end_( ApeViewport *viewport )
 {
 	PL_ZERO_( ape_rendererPerformance_ );
 
@@ -114,28 +232,39 @@ void ar_draw_end( ApeViewport *viewport )
 	viewport->perf.numPolygons = 0;
 	viewport->perf.numPortals = 0;
 
-	if ( isScreenshotPending )
+	if ( isScreenshotPending || isCapturing )
 	{
+		if ( isCapturing && lastCaptureTick >= apeGetNumTicks() )
+			return;
+
 		write_screenshot();
 		isScreenshotPending = false;
+
+		lastCaptureTick = apeGetNumTicks() + 1;
 	}
 }
 
-void arl_initialize_shaders_( void ); /* renderer/shaders.c */
-void apeInitializeTextures_( void );  /* texture.c */
+void arl_initialize_shaders_( void );  /* renderer/shaders.c */
+void arl_initialize_textures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void ar_initialize_render_targets( void );
-void ar_shutdown_render_targets( void );
+void arl_initialize_render_targets_( void );
+void arl_shutdown_render_targets_( void );
 
 static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
+	if ( isCapturing )
+		return;
+
 	isScreenshotPending = true;
 }
 
 void apeRegisterRendererConsoleVariables_( void )
 {
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture );
+
+	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
+	PlRegisterConsoleVariable( "capture_threads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
 
 	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
@@ -173,9 +302,9 @@ void ar_initialize_( void )
 
 	PL_ZERO_( arl_rendererState_ );
 
-	apeInitializeTextures_();
+	arl_initialize_textures_();
 
-	ar_initialize_render_targets();
+	arl_initialize_render_targets_();
 	arl_initialize_shaders_();
 	arl_initialize_materials_();
 	YR_Font_Initialize();
@@ -203,13 +332,15 @@ void ar_initialize_( void )
 	arl_postfx_setup_();
 }
 
-void ar_shutdown_( void )
+void arl_shutdown_( void )
 {
 	arl_postfx_cleanup_();
 
 	Font_Shutdown();
 	arl_shutdown_materials_();
-	ar_shutdown_render_targets();
+	arl_shutdown_render_targets_();
+
+	//TODO: move this out of the renderer...
 	apeShutdownWorldVisibilitySystem_();
 }
 
@@ -391,7 +522,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlPopMatrix();
 }
 
-void apeAddSkyLayer_( const char *path )
+void arl_sky_add_layer_( const char *path )
 {
 	skyMaterials[ numSkyLayers ] = apeCacheMaterial( path, APE_CACHE_WORLD, false, false );
 	if ( skyMaterials[ numSkyLayers ] == NULL )
@@ -400,7 +531,7 @@ void apeAddSkyLayer_( const char *path )
 	numSkyLayers++;
 }
 
-void apeClearSkyLayers_( void )
+void arl_sky_clear_layers_( void )
 {
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
@@ -414,7 +545,7 @@ void apeClearSkyLayers_( void )
 /**
  * Draw scrolling clouds.
  */
-void apeDrawSky_( ApeCamera *camera )
+void arl_sky_draw_( ApeCamera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;

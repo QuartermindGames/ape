@@ -30,8 +30,8 @@ static void register_post_effects( void )
 
 	PL_ZERO( postProcessEffects, sizeof( ArPostProcessEffect * ) * MAX_POST_EFFECTS );
 
-	postProcessEffects[ POST_EFFECT_BLOOM ] = arl_postfx_get_bloom_();
 	postProcessEffects[ POST_EFFECT_FXAA ] = arl_postfx_get_fxaa_();
+	postProcessEffects[ POST_EFFECT_BLOOM ] = arl_postfx_get_bloom_();
 
 	postProcessInit = true;
 }
@@ -99,9 +99,6 @@ void arl_postfx_draw_( const ApeViewport *viewport )
 	arl_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
 	arl_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
-	//PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
-	//PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, arl_render_target_get_texture( arl_get_default_render_target() ) );
-
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
 		if ( postProcessEffects[ i ] == NULL )
@@ -109,9 +106,6 @@ void arl_postfx_draw_( const ApeViewport *viewport )
 
 		postProcessEffects[ i ]->Draw( viewport );
 	}
-
-	//arl_render_target_bind( arl_get_default_render_target(), PLG_FRAMEBUFFER_DEFAULT );
-	//PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, arl_render_target_get_texture( ppRenderTarget ) );
 }
 
 ArRenderTarget *arl_postfx_get_render_target( void )

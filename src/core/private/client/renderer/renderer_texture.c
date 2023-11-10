@@ -82,7 +82,7 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	return texture;
 }
 
-void apeInitializeTextures_( void ) {
+void arl_initialize_textures_( void ) {
 	textures = PlCreateLinkedList();
 
 	/* generate fallback texture */
