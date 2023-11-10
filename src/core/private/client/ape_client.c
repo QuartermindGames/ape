@@ -47,9 +47,9 @@ void apeDrawClient( ApeViewport *viewport ) {
 
 	ar_draw_begin( viewport );
 
-	apeDrawPerspective_( viewport->camera, viewport );
+	arl_camera_draw_perspective_( viewport->camera, viewport );
 
-	ar_draw_menu( viewport );
+	arl_draw_menu( viewport );
 
 	ar_draw_end( viewport );
 

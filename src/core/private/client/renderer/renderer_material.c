@@ -277,7 +277,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					ArRenderTarget *renderTarget = ar_render_target_get_by_key( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = ar_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+						renderTarget = arl_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 					}
 
 					materialVariable->type = MATERIAL_VAR_RENDERTARGET;
@@ -554,7 +554,7 @@ static void destroy_material( ApeMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case MATERIAL_VAR_RENDERTARGET:
-					ar_render_target_release( ( ArRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
+					arl_render_target_release( ( ArRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
 					break;
 				default:
 					break;
@@ -830,7 +830,7 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = ar_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.userPtr );
+						texture = arl_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.userPtr );
 						if ( texture == NULL )
 						{
 							texture = arl_texture_get_fallback();

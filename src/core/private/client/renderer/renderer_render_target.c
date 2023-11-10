@@ -64,7 +64,7 @@ ArRenderTarget *ar_render_target_get_by_key( const char *key )
 	return ( ArRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
-ArRenderTarget *ar_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags,
+ArRenderTarget *arl_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags,
                                          unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter )
 {
 	// Check if it's already been created, and if so, update size to match
@@ -89,7 +89,7 @@ ArRenderTarget *ar_render_target_create( const char *key, unsigned int width, un
 		}
 
 		PRINT_DEBUG( "Render target already exists, updating size\n" );
-		ar_render_target_set_size( renderTarget, width, height );
+		arl_render_target_set_size( renderTarget, width, height );
 		apeAddReference( &renderTarget->reference );
 		return renderTarget;
 	}
@@ -131,12 +131,12 @@ ArRenderTarget *ar_render_target_create( const char *key, unsigned int width, un
 	return renderTarget;
 }
 
-void ar_render_target_release( ArRenderTarget *renderTarget )
+void arl_render_target_release( ArRenderTarget *renderTarget )
 {
 	apeReleaseReference( &renderTarget->reference );
 }
 
-void ar_render_target_set_size( ArRenderTarget *renderTarget, unsigned int width, unsigned int height )
+void arl_render_target_set_size( ArRenderTarget *renderTarget, unsigned int width, unsigned int height )
 {
 	if ( !PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height ) )
 		PRINT_WARNING( "Failed to resize framebuffer: %s\n", PlGetError() );
@@ -156,12 +156,12 @@ void ar_render_target_get_size( const ArRenderTarget *renderTarget, unsigned int
 	*height = renderTarget->frameBuffer->height;
 }
 
-PLGTexture *ar_render_target_get_texture( ArRenderTarget *renderTarget )
+PLGTexture *arl_render_target_get_texture( ArRenderTarget *renderTarget )
 {
 	return renderTarget->textureAttachment;
 }
 
-void ar_render_target_bind( ArRenderTarget *renderTarget, PLGFrameBufferObjectTarget target )
+void arl_render_target_bind( ArRenderTarget *renderTarget, PLGFrameBufferObjectTarget target )
 {
 	PlgBindFrameBuffer( renderTarget->frameBuffer, target );
 }

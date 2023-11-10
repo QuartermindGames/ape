@@ -34,9 +34,9 @@ void arl_camera_set_angles( ApeCamera *camera, const PLVector3 *angles );
 
 PLVector3 arl_camera_get_position( const ApeCamera *camera );
 PLVector3 arl_camera_get_angles( const ApeCamera *camera );
-PLVector3 apeGetCameraForward( const ApeCamera *camera );
+PLVector3 arl_camera_get_forward( const ApeCamera *camera );
 
-ApeCamera *ar_camera_get_active( void );
+ApeCamera *arl_camera_get_active( void );
 void arl_camera_make_active( ApeCamera *camera );
 
 PL_EXTERN_C_END

@@ -41,7 +41,7 @@ static void draw_fxaa_effect( const ApeViewport *viewport )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const ArPostProcessEffect *ar_postfx_get_fxaa_( void )
+const ArPostProcessEffect *arl_postfx_get_fxaa_( void )
 {
 	static ArPostProcessEffect renderFXAAPostProcess;
 	PL_ZERO_( renderFXAAPostProcess );

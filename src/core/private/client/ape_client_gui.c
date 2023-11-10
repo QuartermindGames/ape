@@ -7,6 +7,7 @@
 #include "game/game_interface.h"
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_render_target.h"
+#include "client/renderer/post/post.h"
 
 static GuiCanvas *canvas;
 
@@ -81,10 +82,10 @@ void apeDrawGUI_( const ApeViewport *viewport )
 	// Need to call this again to reset the viewport
 	apeSet2DViewportSize( viewport->width, viewport->height );
 
-	ArRenderTarget *renderTarget = ar_get_default_render_target();
+	ArRenderTarget *renderTarget = arl_postfx_get_render_target();
 	if ( renderTarget != NULL )
 	{
-		PLGTexture *texture = ar_render_target_get_texture( renderTarget );
+		PLGTexture *texture = arl_render_target_get_texture( renderTarget );
 		if ( texture != NULL )
 		{
 			float x = ( float ) viewport->x;

@@ -121,8 +121,8 @@ void ar_draw_end( ApeViewport *viewport )
 	}
 }
 
-void arl_initialize_shaders_( void );  /* renderer/shaders.c */
-void apeInitializeTextures_( void ); /* texture.c */
+void arl_initialize_shaders_( void ); /* renderer/shaders.c */
+void apeInitializeTextures_( void );  /* texture.c */
 
 /* renderer_rendertarget.c */
 void ar_initialize_render_targets( void );
@@ -138,7 +138,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture );
 
 	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1", PL_VAR_I32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
 	PlRegisterConsoleVariable( "r/showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "fps", "Toggle FPS counter.",
 #if !defined( NDEBUG )
@@ -161,7 +161,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
 	PlRegisterConsoleVariable( "r/near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/far", "", "1000.0", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "r/far", "", "50.0", PL_VAR_F32, NULL, NULL, true );
 
 	PlRegisterConsoleVariable( "ape/r/fogNear", "Fog near value.", "-1", PL_VAR_F32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/fogFar", "Fog far value.", "-1", PL_VAR_F32, NULL, NULL, false );
@@ -192,20 +192,20 @@ void ar_initialize_( void )
 
 	arl_setup_default_state( NULL );
 
-	defaultRenderTarget = ar_render_target_create( "default",
-	                                               800, 600,
-	                                               PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                               PLG_BUFFER_COLOUR,
-	                                               PLG_TEXTURE_FILTER_LINEAR );
+	defaultRenderTarget = arl_render_target_create( "default",
+	                                                800, 600,
+	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                PLG_BUFFER_COLOUR,
+	                                                PLG_TEXTURE_FILTER_LINEAR );
 	if ( defaultRenderTarget == NULL )
 		PRINT_ERROR( "Failed to create default render target!\n" );
 
-	ar_postfx_setup_();
+	arl_postfx_setup_();
 }
 
 void ar_shutdown_( void )
 {
-	ar_postfx_cleanup_();
+	arl_postfx_cleanup_();
 
 	Font_Shutdown();
 	arl_shutdown_materials_();
@@ -333,7 +333,7 @@ void apeGet2DViewportSize( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void ar_draw_menu( const ApeViewport *viewport )
+void arl_draw_menu( const ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
@@ -348,7 +348,7 @@ void ar_draw_menu( const ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ar_postfx_draw_( viewport );
+	arl_postfx_draw_( viewport );
 
 	apeDrawGUI_( viewport );
 	apeDrawEditorGUI_( viewport );
@@ -638,15 +638,15 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			}
 #endif
 
-void ar_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
+void arl_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
-	ar_render_target_set_size( defaultRenderTarget, viewport->width, viewport->height );
-	ar_render_target_bind( defaultRenderTarget, PLG_FRAMEBUFFER_DRAW );
+	arl_render_target_set_size( defaultRenderTarget, viewport->width, viewport->height );
+	arl_render_target_bind( defaultRenderTarget, PLG_FRAMEBUFFER_DRAW );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
@@ -663,4 +663,4 @@ void ar_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-ArRenderTarget *ar_get_default_render_target( void ) { return defaultRenderTarget; }
+ArRenderTarget *arl_get_default_render_target( void ) { return defaultRenderTarget; }

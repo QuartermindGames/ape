@@ -111,7 +111,7 @@ static void initialize_game( void )
 
 	acl_entity_register_class( tox_character_get_class_table() );
 
-	playerCamera = arl_camera_create( "test", &PLVector3( -2.37f, 1.0f, 1.70f ), &PLVector3( 0.0f, -165.0f, 0.0f ) );
+	playerCamera = arl_camera_create( "test", &PLVector3( -4.78f, 2.0f, 1.22f ), &PLVector3( 0.0f, -147.0f, 0.0f ) );
 	arl_camera_make_active( playerCamera );
 
 	// hack hack hack hack hack hack

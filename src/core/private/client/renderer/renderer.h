@@ -150,14 +150,14 @@ PLGCamera *apeGetAuxCamera( void );
 void arl_setup_default_state( const ApeViewport *viewport );
 void ar_draw_begin( ApeViewport *viewport );
 void ar_draw_end( ApeViewport *viewport );
-void ar_draw_menu( const ApeViewport *viewport );
+void arl_draw_menu( const ApeViewport *viewport );
 
 void apeSet2DViewportSize( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );
 
 struct ApeShaderProgramIndex *arl_shader_get_by_name( const char *name );
 
-void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport );
+void arl_camera_draw_perspective_( ApeCamera *camera, ApeViewport *viewport );
 
 void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
@@ -169,6 +169,6 @@ void arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFram
 PLGTexture *arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
 PLGTexture *arl_texture_get_fallback( void );
 
-ArRenderTarget *ar_get_default_render_target( void );
+ArRenderTarget *arl_get_default_render_target( void );
 
 ////////////////////////////////////////////////////////////////////

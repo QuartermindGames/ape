@@ -125,6 +125,7 @@ typedef struct ApeConfig
 		bool showFps;
 		bool showFaceBounds;
 
+		float superSampling;
 		float maxLightDistance;
 	} renderer;
 

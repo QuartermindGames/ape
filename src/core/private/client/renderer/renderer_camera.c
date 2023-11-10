@@ -15,7 +15,7 @@ static PLLinkedList *cameras;
 
 static ApeCamera *activeCamera = NULL;
 
-ApeCamera *ar_camera_get_active( void )
+ApeCamera *arl_camera_get_active( void )
 {
 	return activeCamera;
 }
@@ -127,52 +127,40 @@ PLVector3 arl_camera_get_angles( const ApeCamera *camera )
 	return camera->internal->angles;
 }
 
-PLVector3 apeGetCameraForward( const ApeCamera *camera )
+PLVector3 arl_camera_get_forward( const ApeCamera *camera )
 {
 	return camera->forward;
 }
 
-void ar_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
-void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
+void arl_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
+void arl_camera_draw_perspective_( ApeCamera *camera, ApeViewport *viewport )
 {
 	if ( camera == NULL )
 	{
-		camera = ar_camera_get_active();
+		camera = arl_camera_get_active();
 		if ( camera == NULL )
-		{
 			return;
-		}
 	}
 
 	COM_PROFILE_FUNCTION_START();
 
-	int ow, oh;
-	PL_GET_CVAR( "r/superSampling", superSampling );
-	if ( superSampling != NULL && superSampling->i_value > 1 )
-	{
-		ow = viewport->width;
-		viewport->width *= superSampling->i_value;
-		oh = viewport->height;
-		viewport->height *= superSampling->i_value;
-
-		PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	}
+	int ow = viewport->width;
+	viewport->width *= ape_config_.renderer.superSampling;
+	int oh = viewport->height;
+	viewport->height *= ape_config_.renderer.superSampling;
+	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	PL_GET_CVAR( "r/fov", fov );
 	if ( fov != NULL )
-	{
 		PlgSetCameraFieldOfView( camera->internal, fov->f_value );
-	}
+
 	PL_GET_CVAR( "r/near", near );
 	if ( near != NULL )
-	{
 		camera->internal->near = near->f_value;
-	}
+
 	PL_GET_CVAR( "r/far", far );
 	if ( far != NULL )
-	{
 		camera->internal->far = far->f_value;
-	}
 
 	static const float minHeight = 256.0f;
 	static const float maxHeight = 1024.0f;
@@ -230,15 +218,12 @@ void apeDrawPerspective_( ApeCamera *camera, ApeViewport *viewport )
 	PlgSetupCamera( camera->internal );
 
 	// Draw the scene into a buffer
-	ar_draw_scene_( camera, viewport );
+	arl_draw_scene_( camera, viewport );
 
-	if ( superSampling != NULL && superSampling->i_value > 1 )
-	{
-		viewport->width = ow;
-		viewport->height = oh;
-
-		PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	}
+	// Always restore the viewport back
+	viewport->width = ow;
+	viewport->height = oh;
+	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	COM_PROFILE_FUNCTION_END();
 }

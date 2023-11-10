@@ -7,6 +7,7 @@
 #include "client/audio/audio.h"
 #include "world/world.h"
 #include "ape_client_input.h"
+#include "client/renderer/post/post.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow = false;
@@ -422,8 +423,7 @@ void apeRegisterClientConsoleVariables_( void ) {
 	apeRegisterRendererConsoleVariables_();
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
-	void R_PP_RegisterConsoleVariables( void );
-	R_PP_RegisterConsoleVariables();
+	arl_postfx_register_console_variables_();
 
 	apeRegisterAudioConsoleVariables_();
 	apeRegisterWorldConsole_();

@@ -128,7 +128,7 @@ void apeBuildWorldVisibiltyLists_( void ) {
 		return;
 	}
 
-	ApeCamera *camera = ar_camera_get_active();
+	ApeCamera *camera = arl_camera_get_active();
 	if ( camera == NULL ) {
 		return;
 	}

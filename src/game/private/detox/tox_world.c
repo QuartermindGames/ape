@@ -8,8 +8,6 @@ static ToxWorldState worldState;
 static unsigned int secondCountdown = 0;
 static const unsigned int TICKS_UNTIL_SECOND = 30;
 
-static ApeWorld *currentWorld = NULL;
-
 #define DEFAULT_SUN_POSITION PLVector3( -2.0f, -2.0f, 0.0f )
 #define DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
 #define DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
@@ -35,8 +33,6 @@ ToxWorldState *tox_world_get_state( void ) { return &worldState; }
 
 void tox_world_spawn( ApeWorld *world )
 {
-	currentWorld = world;
-
 	PL_ZERO_( worldState );
 
 	acl_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
@@ -57,14 +53,14 @@ void tox_world_spawn( ApeWorld *world )
 	                        ( testLights[ 0 ] = ape_light_create(
 	                                  &( PLVector3 ){ -12.f, 1.5f, -13.2f },
 	                                  &TORCH_COLOUR,
-	                                  1.5f,
+	                                  2.5f,
 	                                  APE_LIGHT_TYPE_OMNI,
 	                                  APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC ) ) );
 	ape_world_attach_light( world,
 	                        ( testLights[ 1 ] = ape_light_create(
 	                                  &( PLVector3 ){ -4.8f, 1.5f, -4.2f },
 	                                  &TORCH_COLOUR,
-	                                  1.5f,
+	                                  2.5f,
 	                                  APE_LIGHT_TYPE_OMNI,
 	                                  APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC ) ) );
 #endif
@@ -102,7 +98,7 @@ void tox_world_tick( void )
 	else
 		secondCountdown--;
 #else
-	worldState.seconds++;// += TOX_WORLD_SECONDS_TO_HOUR / 200;
+//	worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / 200;
 #endif
 
 	sunYaw = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 360.0f );
