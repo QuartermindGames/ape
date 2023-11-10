@@ -1,6 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_parse.h>
+#include <float.h>
 
 #include "../cook.h"
 
@@ -55,6 +56,9 @@ static void ParseMaterialTemplateLibrary( ObjModel *obj, const char *path )
 
 static void DetermineSubObjectBounds( ObjModel *obj, ObjSubObject *subObject )
 {
+	subObject->mins = ( PLVector3 ){ FLT_MAX, FLT_MAX, FLT_MAX };
+	subObject->maxs = ( PLVector3 ){ FLT_MIN, FLT_MIN, FLT_MIN };
+
 	unsigned int numFaces;
 	ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )

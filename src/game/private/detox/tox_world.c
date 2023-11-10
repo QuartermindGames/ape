@@ -35,6 +35,11 @@ void tox_world_spawn( ApeWorld *world )
 {
 	PL_ZERO_( worldState );
 
+	arl_sky_clear_layers();
+	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.85f, 12.0f, 100.0f, 0.5f );
+	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.25f, 14.0f, 120.0f, 0.5f );
+	arl_sky_add_layer( "materials/clouds/cloud_layer_01.mat.n", 0.1f, 16.0f, 400.0f, 1.0f );
+
 	acl_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
 
 	sunLight = ape_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
@@ -126,10 +131,14 @@ void tox_world_tick( void )
 	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              1.0f ) );
-	acl_world_set_clear_colour( world, &PL_COLOURF32( PlClamp( 0.15f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                  PlClamp( 0.15f, DEFAULT_CLEAR_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                  PlClamp( 0.15f, DEFAULT_CLEAR_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                  1.0f ) );
+
+	// Fog and clear should remain the same as each other, for a good little fade-out
+	PLColourF32 fallbackColour = PL_COLOURF32( PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 1.0f ),
+	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.g * ( sunBrightness / 0.5f ), 1.0f ),
+	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.b * ( sunBrightness / 0.5f ), 1.0f ),
+	                                           1.0f );
+	acl_world_set_clear_colour( world, &fallbackColour );
+	acl_level_set_fog_colour( world, &fallbackColour );
 
 #ifdef TEST_NIGHT_LIGHTS
 	for ( unsigned int i = 0; i < NUM_TEST_NIGHT_LIGHTS; ++i )

@@ -45,11 +45,11 @@ void apeShutdownClient_( void ) {
 void apeDrawClient( ApeViewport *viewport ) {
 	COM_PROFILE_FUNCTION_START();
 
-	ar_draw_begin( viewport );
+	arl_draw_begin_( viewport );
 
 	arl_camera_draw_perspective_( viewport->camera, viewport );
 
-	arl_draw_menu( viewport );
+	arl_draw_menu_( viewport );
 
 	arl_draw_end_( viewport );
 

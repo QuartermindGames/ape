@@ -63,6 +63,7 @@ void apeDrawWorldStencilShadowPass_( ApeWorld *world, ApeCamera *camera, ApeLigh
 void acl_world_set_global_defaults( ApeWorld *world );
 void acl_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
 void acl_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
+void acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
 
 /**
  * Assigning an entity to the world will give the world instance
@@ -76,9 +77,10 @@ void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity );
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
-void arl_sky_add_layer_( const char *path );
-void arl_sky_clear_layers_( void );
-void arl_sky_draw_( ApeCamera *camera );
+unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha );
+void arl_sky_set_layer_alpha( unsigned int slot, float alpha );
+void arl_sky_clear_layers( void );
+void arl_sky_draw( ApeCamera *camera );
 
 void apeSetSunPosition( ApeWorld *world, const PLVector3 *position );
 

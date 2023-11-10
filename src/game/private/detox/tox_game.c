@@ -116,9 +116,10 @@ static void initialize_game( void )
 
 	// hack hack hack hack hack hack
 	PlParseConsoleString( "level ship/worlds/alive_intro.wld.n" );
-	PlParseConsoleString( "r/fov 75" );
+	PlParseConsoleString( "r/fov 45" );
 	PlParseConsoleString( "world/showallrooms true" );
-	//PlParseConsoleString( "world/sortlights false" );
+	PlParseConsoleString( "skip_room_cull true" );
+	// hack hack hack hack hack hack
 
 	// movement actions
 	acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );

@@ -148,9 +148,9 @@ PLGCamera *apeGetAuxCamera( void );
 //PLGTexture *apeGetPrimaryDepthAttachment( void );
 
 void arl_setup_default_state( const ApeViewport *viewport );
-void ar_draw_begin( ApeViewport *viewport );
+void arl_draw_begin_( ApeViewport *viewport );
 void arl_draw_end_( ApeViewport *viewport );
-void arl_draw_menu( const ApeViewport *viewport );
+void arl_draw_menu_( const ApeViewport *viewport );
 
 void apeSet2DViewportSize( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );

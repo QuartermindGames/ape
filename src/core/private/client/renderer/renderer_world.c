@@ -247,7 +247,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, b
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
 		return;
 
 	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
@@ -441,7 +441,7 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
 		return;
 
 	if ( !room->isDetail )

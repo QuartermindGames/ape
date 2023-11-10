@@ -15,6 +15,7 @@ void acl_world_set_global_defaults( ApeWorld *world )
 
 void acl_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
 void acl_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
+void acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
 
 ApeWorld *ape_world_create( void )
 {
@@ -241,11 +242,6 @@ ApeWorld *apeLoadWorld( const char *path )
 		CacheRoomMesh( world, room );
 	}
 
-	arl_sky_clear_layers_();
-	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
-	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
-	arl_sky_add_layer_( WORLD_DEFAULT_SKY );
-
 	return world;
 }
 
@@ -282,9 +278,8 @@ void ape_world_destroy( ApeWorld *world )
 		{
 			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
 			if ( material == NULL )
-			{
 				continue;
-			}
+
 			ar_material_release( material );
 			material = NULL;
 		}
@@ -308,21 +303,7 @@ void ape_world_destroy( ApeWorld *world )
 		world->rooms = NULL;
 	}
 
-	if ( world->portals != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->portals ); ++i )
-		{
-			ApeWorldPortal *portal = PlGetVectorArrayElementAt( world->portals, i );
-			if ( portal == NULL )
-			{
-				continue;
-			}
-			PL_DELETE( portal );
-			portal = NULL;
-		}
-		PlDestroyVectorArray( world->portals );
-		world->portals = NULL;
-	}
+	PlDestroyVectorArrayEx( world->portals, PlFree );
 
 	if ( world->vertices != NULL )
 	{
@@ -330,9 +311,8 @@ void ape_world_destroy( ApeWorld *world )
 		{
 			ApeWorldVertex *vertex = PlGetVectorArrayElementAt( world->vertices, i );
 			if ( vertex == NULL )
-			{
 				continue;
-			}
+
 			PlDestroyVectorArray( vertex->adjacentFaces );
 			PL_DELETE( vertex );
 		}
@@ -340,22 +320,7 @@ void ape_world_destroy( ApeWorld *world )
 		world->vertices = NULL;
 	}
 
-	if ( world->lights != NULL )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
-		{
-			ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
-			if ( light == NULL )
-			{
-				continue;
-			}
-
-			PL_DELETE( light );
-		}
-
-		PlDestroyVectorArray( world->lights );
-		world->lights = NULL;
-	}
+	PlDestroyVectorArrayEx( world->lights, PlFree );
 }
 
 void apeSpawnWorldEntities( ApeWorld *world )

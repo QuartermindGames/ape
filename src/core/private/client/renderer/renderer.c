@@ -152,7 +152,7 @@ void arl_setup_default_state( const ApeViewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void ar_draw_begin( ApeViewport *viewport )
+void arl_draw_begin_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -174,10 +174,14 @@ void ar_draw_begin( ApeViewport *viewport )
 
 static void write_screenshot( void )
 {
-	unsigned int w, h;
-	arl_render_target_get_size( defaultRenderTarget, &w, &h );
+	ArRenderTarget *renderTarget = arl_postfx_get_render_target();
+	if ( renderTarget == NULL )
+		return;
 
-	PLGFrameBuffer *fboBuffer = arl_render_target_get_frame_buffer( defaultRenderTarget );
+	unsigned int w, h;
+	arl_render_target_get_size( renderTarget, &w, &h );
+
+	PLGFrameBuffer *fboBuffer = arl_render_target_get_frame_buffer( renderTarget );
 	assert( fboBuffer != NULL );
 	if ( fboBuffer == NULL )
 		return;
@@ -266,9 +270,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
 	PlRegisterConsoleVariable( "capture_threads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
 
-	PlRegisterConsoleVariable( "r/cullMode", "Face culling mode.", "1", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
-	PlRegisterConsoleVariable( "r/showActorBounds", "Toggle actor bounds.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "fps", "Toggle FPS counter.",
 #if !defined( NDEBUG )
 	                           "true",
@@ -276,9 +278,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
-	PlRegisterConsoleVariable( "ape/r/wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/skyHeightOffset", "Height of the sky relative to the camera.", "10", PL_VAR_F32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/skyCull", "Cull backfaces for the sky. Only useful if you set the offset lower than the camera.", "1", PL_VAR_BOOL, NULL, NULL, true );
+	PlRegisterConsoleVariable( "wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
@@ -286,6 +286,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
 	PlRegisterConsoleVariable( "show_face_bounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
+	PlRegisterConsoleVariable( "skip_room_cull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -464,7 +465,7 @@ void apeGet2DViewportSize( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void arl_draw_menu( const ApeViewport *viewport )
+void arl_draw_menu_( const ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
@@ -501,9 +502,18 @@ void arl_draw_menu( const ApeViewport *viewport )
  * ALIVE event... *sigh*
  ****************************************/
 
+typedef struct SkyLayer
+{
+	ApeMaterial *material;
+	float scale;
+	float y;
+	float speed;
+	float alpha;
+} SkyLayer;
+
 #define MAX_SKY_LAYERS 4
 static unsigned int numSkyLayers = 0;
-static ApeMaterial *skyMaterials[ MAX_SKY_LAYERS ];
+static SkyLayer skyLayers[ MAX_SKY_LAYERS ];
 
 static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector3 *location, float x, float y, float scale )
 {
@@ -516,27 +526,53 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 
 	/* todo: do this in shader... */
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
-	mesh->isDirty = true;
+	PlgUploadMesh( mesh );
+
 	apeDrawMesh( material, mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
 
-void arl_sky_add_layer_( const char *path )
+unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha )
 {
-	skyMaterials[ numSkyLayers ] = apeCacheMaterial( path, APE_CACHE_WORLD, false, false );
-	if ( skyMaterials[ numSkyLayers ] == NULL )
-		return;
+	assert( numSkyLayers < MAX_SKY_LAYERS );
+	if ( numSkyLayers >= MAX_SKY_LAYERS )
+		return -1;
+
+	skyLayers[ numSkyLayers ].material = apeCacheMaterial( path, APE_CACHE_WORLD, false, false );
+	if ( skyLayers[ numSkyLayers ].material == NULL )
+		return -1;
+
+	skyLayers[ numSkyLayers ].scale = scale;
+	skyLayers[ numSkyLayers ].y = y;
+	skyLayers[ numSkyLayers ].speed = speed;
+	skyLayers[ numSkyLayers ].alpha = alpha;
 
 	numSkyLayers++;
+	return ( numSkyLayers - 1 );
 }
 
-void arl_sky_clear_layers_( void )
+void arl_sky_set_layer_alpha( unsigned int slot, float alpha )
+{
+	assert( slot < numSkyLayers );
+	if ( slot >= numSkyLayers )
+	{
+		PRINT_WARNING( "Invalid sky layer slot (%u)!\n", slot );
+		return;
+	}
+
+	skyLayers[ slot ].alpha = alpha;
+}
+
+void arl_sky_clear_layers( void )
 {
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		ar_material_release( skyMaterials[ i ] );
-		skyMaterials[ i ] = NULL;
+		if ( skyLayers[ i ].material == NULL )
+			continue;
+
+		ar_material_release( skyLayers[ i ].material );
+		skyLayers[ i ].material = NULL;
 	}
 
 	numSkyLayers = 0;
@@ -545,69 +581,68 @@ void arl_sky_clear_layers_( void )
 /**
  * Draw scrolling clouds.
  */
-void arl_sky_draw_( ApeCamera *camera )
+void arl_sky_draw( ApeCamera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;
 
-	static PLGMesh *skyMesh = NULL;
-	if ( skyMesh == NULL )
-	{
-		static unsigned int indices[][ 3 ] = {
+	static unsigned int indices[][ 3 ] = {
   /* corners */
-		        {2,  1, 0},
-		        { 3, 1, 2},
-		        { 4, 3, 2},
-		        { 5, 3, 4},
-		        { 6, 5, 4},
-		        { 7, 5, 6},
-		        { 0, 7, 6},
-		        { 1, 7, 0},
+	        {2,  1, 0},
+	        { 3, 1, 2},
+	        { 4, 3, 2},
+	        { 5, 3, 4},
+	        { 6, 5, 4},
+	        { 7, 5, 6},
+	        { 0, 7, 6},
+	        { 1, 7, 0},
  /* middle */
-		        { 4, 2, 0},
-		        { 6, 4, 0},
-		};
-		unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
+	        { 4, 2, 0},
+	        { 6, 4, 0},
+	};
+	unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
 
-		skyMesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
-		if ( skyMesh == NULL )
+	static PLGMesh *mesh = NULL;
+	if ( mesh == NULL )
+	{
+		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
+		assert( mesh != NULL );
+		if ( mesh == NULL )
 		{
 			PRINT_WARNING( "Failed to create sky mesh: %s\n", PlGetError() );
 			return;
 		}
-
-		PlgAddMeshVertex( skyMesh, &PLVector3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );   /* top right */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );    /* top right far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );  /* lower right */
-		PlgAddMeshVertex( skyMesh, &PLVector3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );   /* lower right far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 ); /* lower left */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );  /* lower left far */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );  /* top left */
-		PlgAddMeshVertex( skyMesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );   /* top left far */
-
-		for ( unsigned int i = 0; i < numTriangles; ++i )
-			PlgAddMeshTriangle( skyMesh, indices[ i ][ 0 ], indices[ i ][ 1 ], indices[ i ][ 2 ] );
-
-		PlgUploadMesh( skyMesh );
 	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-	PlgDepthMask( false );
 
 	PLVector3 location;
 	location = camera->internal->position;
 	location.y += 10.0f;
 
-	float s = 0.15f;
-	double ticks = apeGetNumTicks();
-	double div = 400;
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+	PlgDepthMask( false );
 
+	//TODO: this is all very slow and very gross, but cobbled together to meet a deadline...
+
+	double ticks = apeGetNumTicks();
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		draw_sky_layer( skyMesh, skyMaterials[ i ], &location, ticks / ( div + 200 ), ticks / div, s );
-		location.y += 2.0f;
-		s += 0.15f;
-		div -= 100;
+		location.y = skyLayers[ i ].y;
+
+		PlgClearMesh( mesh );
+
+		PlgAddMeshVertex( mesh, &PLVector3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );   /* top right */
+		PlgAddMeshVertex( mesh, &PLVector3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                         /* top right far */
+		PlgAddMeshVertex( mesh, &PLVector3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* lower right */
+		PlgAddMeshVertex( mesh, &PLVector3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* lower right far */
+		PlgAddMeshVertex( mesh, &PLVector3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 ); /* lower left */
+		PlgAddMeshVertex( mesh, &PLVector3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                       /* lower left far */
+		PlgAddMeshVertex( mesh, &PLVector3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* top left */
+		PlgAddMeshVertex( mesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* top left far */
+
+		for ( unsigned int j = 0; j < numTriangles; ++j )
+			PlgAddMeshTriangle( mesh, indices[ j ][ 0 ], indices[ j ][ 1 ], indices[ j ][ 2 ] );
+
+		draw_sky_layer( mesh, skyLayers[ i ].material, &location, ticks / ( skyLayers[ i ].speed + 200 ), ticks / skyLayers[ i ].speed, skyLayers[ i ].scale );
 	}
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );

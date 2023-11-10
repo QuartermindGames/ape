@@ -18,11 +18,9 @@
 #if 1 /* original values, used for prototype */
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
-#	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
 #else
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
-#	define WORLD_DEFAULT_SKY         "materials/sky/cloudlayer00.mat.n"
 #endif
 
 typedef struct PLFile PLFile;
@@ -159,7 +157,7 @@ typedef struct ApeWorldRoom
 
 	PLGMesh *mesh;      // cached mesh
 	PLGMesh *shadowMesh;// shadow volume mesh
-	bool isMeshCached;// if false, mesh cache will be updated
+	bool isMeshCached;  // if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
