@@ -168,7 +168,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		}
 	}
 
-	apeGenerateWorldFaceBounds( face );
+	//apeGenerateWorldFaceBounds( face );
 	face->origin = pl_vecOrigin3;//HACK ...
 
 	return face;
