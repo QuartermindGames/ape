@@ -32,16 +32,8 @@ void acl_room_destroy( ApeWorldRoom *room )
 }
 
 ApeWorldFace **acl_room_get_faces( ApeWorldRoom *room, unsigned int *numFaces )
-
-
 {
 	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( room->faces, numFaces );
-}
-
-ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms )
-{
-	*numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-	return ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 }
 
 ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms )
