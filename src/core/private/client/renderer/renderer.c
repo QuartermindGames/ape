@@ -2,7 +2,9 @@
 /* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
 
 #include <plgraphics/plg_driver_interface.h>
-#include <threads.h>
+
+#include <pthread.h>
+#include <unistd.h>
 
 #include "ape_private.h"
 #include "legacy/actor.h"
@@ -45,8 +47,8 @@ static PLLinkedList *captureQueue = NULL;//CaptureFrame
 
 #define MAX_CAPTURE_THREADS 16
 static unsigned int numCaptureThreads = 4;
-static mtx_t captureMutex = {};
-static thrd_t captureThread[ MAX_CAPTURE_THREADS ] = {};
+static pthread_mutex_t captureMutex = {};
+static pthread_t captureThread[ MAX_CAPTURE_THREADS ] = {};
 
 static void destroy_capture_frame( void *ptr )
 {
@@ -55,16 +57,16 @@ static void destroy_capture_frame( void *ptr )
 	PL_DELETE( frame );
 }
 
-static int process_capture_queue( void * )
+static void *process_capture_queue( void * )
 {
 	while ( true )
 	{
-		mtx_lock( &captureMutex );
+		pthread_mutex_lock( &captureMutex );
 
 		PLLinkedListNode *node = PlGetFirstNode( captureQueue );
 		if ( node == NULL )
 		{
-			mtx_unlock( &captureMutex );
+			pthread_mutex_unlock( &captureMutex );
 			if ( !isCapturing )
 				break;
 
@@ -77,7 +79,7 @@ static int process_capture_queue( void * )
 
 		unsigned int frameNum = numCaptureFrames++;
 
-		mtx_unlock( &captureMutex );
+		pthread_mutex_unlock( &captureMutex );
 
 		PLImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		assert( image != NULL );
@@ -96,7 +98,7 @@ static int process_capture_queue( void * )
 		destroy_capture_frame( frame );
 	}
 
-	return 0;
+	return NULL;
 }
 
 static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -112,18 +114,18 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 
 		lastCaptureTick = apeGetNumTicks();
 
-		mtx_init( &captureMutex, mtx_plain );
+		pthread_mutex_init( &captureMutex, NULL );
 		captureQueue = PlCreateLinkedList();
 
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			thrd_create( &captureThread[ i ], process_capture_queue, NULL );
+			pthread_create( &captureThread[ i ], NULL, process_capture_queue, NULL );
 	}
 	else
 	{
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			thrd_join( captureThread[ i ], NULL );
+			pthread_join( captureThread[ i ], NULL );
 
-		mtx_destroy( &captureMutex );
+		pthread_mutex_destroy( &captureMutex );
 		PlDestroyLinkedListEx( captureQueue, destroy_capture_frame );
 	}
 }
@@ -192,7 +194,7 @@ static void write_screenshot( void )
 	{
 		if ( isCapturing )
 		{
-			mtx_lock( &captureMutex );
+			pthread_mutex_lock( &captureMutex );
 
 			CaptureFrame *frame = PL_NEW( CaptureFrame );
 			PlInsertLinkedListNode( captureQueue, frame );
@@ -200,7 +202,7 @@ static void write_screenshot( void )
 			frame->w = w;
 			frame->h = h;
 
-			mtx_unlock( &captureMutex );
+			pthread_mutex_unlock( &captureMutex );
 			return;
 		}
 
