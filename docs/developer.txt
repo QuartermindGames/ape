@@ -132,8 +132,8 @@ A complete example of a program can be seen below.
     object program
     {
         string description toon_shading
-        string vertexPath materials/shaders/gl3/vertex.vert.glsl
-        string fragmentPath materials/shaders/gl3/lit.frag.glsl
+        string vertexPath materials/shaders/glsl/vertex.vert.glsl
+        string fragmentPath materials/shaders/glsl/lit.frag.glsl
 
         object defaultPass
         {

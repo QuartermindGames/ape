@@ -358,20 +358,20 @@ static void Ship_Tick( Actor *self, void *userData ) {
 		return;
 	}
 
-	if ( apeShellInterface_GetKeyState( KEY_LEFT ) ||
-	     apeShellInterface_GetKeyState( 'a' ) )
+	if ( ss_shell_get_key_state( KEY_LEFT ) ||
+	     ss_shell_get_key_state( 'a' ) )
 		self->angles.y += TURN_SPEED;
-	else if ( apeShellInterface_GetKeyState( KEY_RIGHT ) ||
-	          apeShellInterface_GetKeyState( 'd' ) )
+	else if ( ss_shell_get_key_state( KEY_RIGHT ) ||
+	          ss_shell_get_key_state( 'd' ) )
 		self->angles.y -= TURN_SPEED;
 
 	static const float incAmount = 0.0015f;
 
-	if ( apeShellInterface_GetKeyState( KEY_UP ) ||
-	     apeShellInterface_GetKeyState( 'w' ) )
+	if ( ss_shell_get_key_state( KEY_UP ) ||
+	     ss_shell_get_key_state( 'w' ) )
 		sg->forwardVelocity += incAmount;
-	else if ( apeShellInterface_GetKeyState( KEY_DOWN ) ||
-	          apeShellInterface_GetKeyState( 's' ) )
+	else if ( ss_shell_get_key_state( KEY_DOWN ) ||
+	          ss_shell_get_key_state( 's' ) )
 		sg->forwardVelocity -= incAmount;
 	else if ( sg->forwardVelocity != 0.0f ) {
 		sg->forwardVelocity = sg->forwardVelocity > 0 ? sg->forwardVelocity - incAmount : sg->forwardVelocity + incAmount;
@@ -384,7 +384,7 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( apeShellInterface_GetKeyState( KEY_LEFT_CTRL ) && ( sg->fireDelay < apeGetNumTicks() ) ) {
+	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < apeGetNumTicks() ) ) {
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
 

@@ -50,7 +50,7 @@ static void output_callback( int level, const char *message, PLColour colour )
 	conOutputBuffer.lines[ conOutputBuffer.numLines ].colour = colour;
 	conOutputBuffer.numLines++;
 
-	apeShellInterface_PushMessage( level, message, &colour );
+	ss_shell_push_message( level, message, &colour );
 }
 
 /* CONSOLE COMMANDS */

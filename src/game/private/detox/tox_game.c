@@ -100,12 +100,25 @@ static void set_time_command( unsigned int argc, char **argv )
 	worldState->seconds = strtoul( argv[ 1 ], NULL, 10 );
 }
 
+#ifdef TOX_ALIVE_PREVIEW
+
+static void tick_alive_intro( void )
+{
+	// start pos: -1.44 8.0 4.89
+	// start ang: -6.0 1649.00 0.0
+
+	// end pos: -1.44 1.0 4.89
+	// end ang: 12.0 1651.0 0.0
+}
+
+#endif
+
 static void initialize_game( void )
 {
-	PlRegisterConsoleVariable( "sun_yaw", "Set the yaw of the sun.", "0", PL_VAR_F32, &tox_globalVars.sunYaw, NULL, false );
+	PlRegisterConsoleVariable( "tox_time_speed", "Sets the speed of time.", "200", PL_VAR_F32, &tox_globalVars.timeSpeed, NULL, false );
 
-	PlRegisterConsoleCommand( "print_pos", "Print the camera position.", 0, print_pos_command );
-	PlRegisterConsoleCommand( "set_time", "Sets the world time.", 1, set_time_command );
+	PlRegisterConsoleCommand( "tox_print_pos", "Print the camera position and angles.", 0, print_pos_command );
+	PlRegisterConsoleCommand( "tox_set_time", "Sets the world time.", 1, set_time_command );
 
 	game_register_standard_entity_components();
 
@@ -157,6 +170,12 @@ static void tick_game( void )
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 		arl_camera_set_angles( playerCamera, &ang );
 	}
+
+#ifdef TOX_ALIVE_PREVIEW
+
+	tick_alive_intro();
+
+#endif
 
 	tox_world_tick();
 }

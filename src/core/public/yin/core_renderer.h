@@ -31,22 +31,6 @@ void apeGetViewportSize( const ApeViewport *viewport, int *width, int *height );
 unsigned int apeGetViewportFramerate( const ApeViewport *viewport );
 
 /**********************************************************/
-// Textures
-/**********************************************************/
-
-/**
- * Attempts to load the desired texture.
- * If it's already cached, will return the existing instance.
- * Will return NULL on fail.
- */
-ApeTexture *YnCore_Texture_Load( const char *path );
-
-/**
- * Releases the reference for the given texture.
- */
-void apeReleaseTexture( ApeTexture *texture );
-
-/**********************************************************/
 // Materials
 /**********************************************************/
 

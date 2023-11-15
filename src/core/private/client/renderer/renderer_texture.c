@@ -6,41 +6,23 @@
 
 static PLLinkedList *textures;
 
-static void CleanupTexture( void *user ) {
-	PlgDestroyTexture( ( ( ApeTexture * ) user )->internal );
-}
-
-ApeTexture *YnCore_Texture_Load( const char *path ) {
-	PLGTexture *internal = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
-	if ( internal == NULL )
-		return NULL;
-
-	ApeTexture *texture = PL_NEW( ApeTexture );
-	texture->internal = internal;
-
-	apeSetupReference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, CleanupTexture, texture );
-
-	return texture;
-}
-
-void apeReleaseTexture( ApeTexture *texture ) {
-	apeReleaseReference( &texture->reference );
-}
-
 /////////////////////////////////////////////////////////////////
 // Old API crap
 
 static PLGTexture *fallbackTexture = NULL;
 
-PLGTexture *arl_texture_get_fallback( void ) {
+PLGTexture *arl_texture_get_fallback( void )
+{
 	return fallbackTexture;
 }
 
-static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap ) {
+static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
+{
 	PLColourFormat cFormat;
 	PLImageFormat iFormat;
 
-	switch ( numChannels ) {
+	switch ( numChannels )
+	{
 		default:
 			PRINT_WARNING( "Invalid number of colour channels specified!\n" );
 			return NULL;
@@ -68,10 +50,12 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	if ( texture == NULL )
 		PRINT_ERROR( "Failed to create texture!\nPL: %s\n", PlGetError() );
 
-	if ( !generateMipMap ) {
+	if ( !generateMipMap )
+	{
 		texture->flags &= PLG_TEXTURE_FLAG_NOMIPS;
 		texture->filter = PLG_TEXTURE_FILTER_NEAREST;
-	} else
+	}
+	else
 		texture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 	if ( !PlgUploadTextureImage( texture, imageData ) )
@@ -82,7 +66,8 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	return texture;
 }
 
-void arl_initialize_textures_( void ) {
+void arl_initialize_textures_( void )
+{
 	textures = PlCreateLinkedList();
 
 	/* generate fallback texture */
@@ -99,9 +84,11 @@ void arl_initialize_textures_( void ) {
 	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
 }
 
-static PLGTexture *GetTexture( const char *path ) {
+static PLGTexture *GetTexture( const char *path )
+{
 	PLLinkedListNode *node = PlGetFirstNode( textures );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		PLGTexture *texture = PlGetLinkedListNodeUserData( node );
 		if ( pl_strcasecmp( path, texture->path ) == 0 )
 			return texture;
@@ -112,17 +99,23 @@ static PLGTexture *GetTexture( const char *path ) {
 	return NULL;
 }
 
-PLGTexture *arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode ) {
+PLGTexture *arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
+{
 	/* check if it's already loaded */
 	PLGTexture *texture = GetTexture( path );
 	if ( texture != NULL )
 		return texture;
 
 	texture = PlgLoadTextureFromImage( path, filterMode );
-	if ( texture == NULL ) {
+	if ( texture == NULL )
+	{
 		PRINT_WARNING( "Failed to load texture \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return fallbackTexture;
 	}
+
+	//TODO: thrown in for Rayman Alive, but we should probably implement a proper API for this
+	if ( filterMode == PLG_TEXTURE_FILTER_MIPMAP_LINEAR )
+		PlgSetTextureAnisotropy( texture, 16 );
 
 	PlInsertLinkedListNode( textures, texture );
 	return texture;

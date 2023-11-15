@@ -127,7 +127,7 @@ void apeShutdown( void )
 	apeShutdownScheduler();
 	ogeShutdownNet();
 
-	apeShellInterface_Shutdown();
+	ss_shell_shutdown();
 
 	engineInitialized = false;
 }

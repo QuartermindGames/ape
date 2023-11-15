@@ -89,7 +89,7 @@ static void ToggleConsole( void ) {
 	// Release the mouse if the console is open
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value ) {
-		apeShellInterface_GrabMouse( !consoleIsOpen );
+		ss_shell_grab_mouse( !consoleIsOpen );
 	}
 }
 

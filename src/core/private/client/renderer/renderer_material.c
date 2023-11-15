@@ -44,7 +44,6 @@ ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial )
 }
 
 ApeMaterial *ar_material_get_fallback( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK ); }
-ApeMaterial *ar_material_get_default_vertex( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ); }
 
 void arl_initialize_materials_( void )
 {
@@ -352,6 +351,15 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 						break;
 
 					materialVariable->type = ARL_MATERIAL_VAR_INT;
+					break;
+				}
+
+				case PLG_UNIFORM_VEC2:
+				{
+					if ( ndGetF32Array( node, ( float * ) &materialVariable->data.vec2, 2 ) != ND_ERROR_SUCCESS )
+						break;
+
+					materialVariable->type = MATERIAL_VAR_VEC2;
 					break;
 				}
 

@@ -72,7 +72,7 @@ static ApeInputController *GetEmptyController( unsigned int *id ) {
 static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 	ApeInputAction *action = ( ApeInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i ) {
-		ApeInputState state = apeShellInterface_GetButtonState( action->buttons[ i ] );
+		ApeInputState state = ss_shell_get_button_state( action->buttons[ i ] );
 		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
@@ -80,7 +80,7 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 		action->callback( state, action->id );
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i ) {
-		ApeInputState state = apeShellInterface_GetKeyState( action->keys[ i ] );
+		ApeInputState state = ss_shell_get_key_state( action->keys[ i ] );
 		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
@@ -307,7 +307,7 @@ void apeBeginInputFrame_( void ) {
 	// Calculate delta
 	if ( !apeIsConsoleOpen() ) {
 		int w, h;
-		apeShellInterface_GetWindowSize( &w, &h );
+		ss_shell_get_window_size( &w, &h );
 
 		inputMouse.dx = ( ( w / 2 ) - inputMouse.x );
 		inputMouse.dy = ( ( h / 2 ) - inputMouse.y );
@@ -433,10 +433,10 @@ void apeTickInput_( void ) {
 void acl_input_center_mouse( void )
 {
 	int w, h;
-	apeShellInterface_GetWindowSize( &w, &h );
+	ss_shell_get_window_size( &w, &h );
 
 	if ( !apeIsConsoleOpen() ) {
-		apeShellInterface_SetMousePosition( w / 2, h / 2 );
+		ss_shell_set_mouse_position( w / 2, h / 2 );
 	}
 
 	inputMouse.x = ( w / 2 );
