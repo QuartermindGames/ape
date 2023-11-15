@@ -207,6 +207,11 @@ void ss_shell_set_window_icon( const PLImage *image )
 	SDL_FreeSurface( surface );
 }
 
+ApeViewport *ss_shell_viewport_get_active( void )
+{
+	return windowViewport;
+}
+
 /****************************************
  * INPUT MANAGEMENT
  ****************************************/
@@ -505,7 +510,7 @@ int launcher_initialize( int argc, char **argv )
 			switch ( event.type )
 			{
 				case SDL_USEREVENT:
-					apeTickFrame();
+					ss_acl_tick_frame();
 					break;
 
 				case SDL_TEXTINPUT:
@@ -565,7 +570,7 @@ int launcher_initialize( int argc, char **argv )
 			}
 		}
 
-		apeRenderFrame( windowViewport );
+		ss_acl_render_frame( windowViewport );
 
 		SDL_GL_SwapWindow( sdlWindow );
 

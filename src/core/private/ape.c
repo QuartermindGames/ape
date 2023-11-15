@@ -15,6 +15,7 @@
 #include "net/net.h"
 
 #include "script_public.h"
+#include "client/renderer/renderer.h"
 
 /****************************************
  * PRIVATE
@@ -137,40 +138,23 @@ unsigned int apeGetNumTicks( void )
 	return numTicks;
 }
 
-void apeTickFrame( void )
+void ss_acl_tick_frame( void )
 {
 	if ( !engineInitialized )
-	{
 		return;
-	}
 
 	COM_PROFILE_FUNCTION_START();
 
 	apeTickTasks();
-
-#if !defined( APE_EDITOR_ENABLED )
-
 	apeTickClient();
 	apeTickServer();
 
-#else
-
-	if ( edIsActive() )
+	if ( ss_arl_get_capture_state() )
 	{
-		edTick();
+		ApeViewport *viewport = ss_shell_viewport_get_active();
+		if ( viewport != NULL )
+			ss_arl_render_frame( viewport );
 	}
-	else
-	{
-		APE_PROFILE_START( PROFILE_TICK_CLIENT );
-		apeTickClient();
-		APE_PROFILE_END( PROFILE_TICK_CLIENT );
-
-		APE_PROFILE_START( PROFILE_TICK_SERVER );
-		apeTickServer();
-		APE_PROFILE_END( PROFILE_TICK_SERVER );
-	}
-
-#endif
 
 	numTicks++;
 
@@ -183,12 +167,16 @@ bool apeIsEngineRunning( void )
 	return engineInitialized;
 }
 
-void apeRenderFrame( ApeViewport *viewport )
+void ss_acl_render_frame( ApeViewport *viewport )
 {
-	if ( !engineInitialized )
-	{
+	// If we're capturing, ignore the request from the
+	// caller to render the frame because we'll lock it
+	// with the frame tick instead...
+	if ( ss_arl_get_capture_state() )
 		return;
-	}
+
+	if ( !engineInitialized )
+		return;
 
 	assert( viewport != NULL );
 	if ( viewport == NULL )
@@ -197,7 +185,7 @@ void apeRenderFrame( ApeViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "apeDrawClient", apeDrawClient( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame", ss_arl_render_frame( viewport ) );
 }
 
 void apeHandleKeyboardEvent( int key, unsigned int keyState )

@@ -45,7 +45,7 @@ void apeShutdownClient_( void )
 	arl_shutdown_();
 }
 
-void apeDrawClient( ApeViewport *viewport )
+void ss_arl_render_frame( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 

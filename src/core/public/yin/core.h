@@ -12,8 +12,8 @@ PL_EXTERN_C
 bool apeInitialize( const char *config );
 void apeShutdown( void );
 
-void apeRenderFrame( ApeViewport *viewport );
-void apeTickFrame( void );
+void ss_acl_render_frame( ApeViewport *viewport );
+void ss_acl_tick_frame( void );
 
 struct NdBranch *apeGetConfig( void );
 struct NdBranch *apeGetUserConfig( void );

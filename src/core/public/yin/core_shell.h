@@ -39,6 +39,11 @@ void ss_shell_get_window_size( int *width, int *height );
 void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... );
 void ss_shell_set_window_icon( const PLImage *image );
 
+/**
+ * Returns a handle to the currently active viewport.
+ */
+ApeViewport *ss_shell_viewport_get_active( void );
+
 ////////////////////////////////////////////////////////////////////
 // Low Level Input
 ApeInputState ss_shell_get_button_state( ApeInputButton inputButton );

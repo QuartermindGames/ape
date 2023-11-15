@@ -37,9 +37,10 @@ typedef struct CaptureFrame
 	unsigned char *buf;
 } CaptureFrame;
 
+static bool useCaptureToQoi = true;
+static unsigned int captureQuality = 90;
 static volatile bool isCapturing = false;
 static volatile unsigned int numCaptureFrames = 0;
-static unsigned int lastCaptureTick = 0;
 
 static PLLinkedList *captureQueue = NULL;//CaptureFrame
 
@@ -87,8 +88,8 @@ static int process_capture_queue( void * )
 			PlClearImageAlpha( image );
 
 			PLPath path;
-			PlSetupPath( path, true, "%s/captures/%u.qoi", comGetAppDataDirectory(), frameNum );
-			PlWriteImage( image, path );
+			PlSetupPath( path, true, "%s/captures/%u.%s", comGetAppDataDirectory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
+			PlWriteImage( image, path, captureQuality );
 
 			PlDestroyImage( image );
 		}
@@ -110,8 +111,6 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 		PlSetupPath( captureDirectory, true, "%s/captures/", comGetAppDataDirectory() );
 		PlCreateDirectory( captureDirectory );
 
-		lastCaptureTick = apeGetNumTicks();
-
 		mtx_init( &captureMutex, mtx_plain );
 		captureQueue = PlCreateLinkedList();
 
@@ -126,6 +125,11 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 		mtx_destroy( &captureMutex );
 		PlDestroyLinkedListEx( captureQueue, destroy_capture_frame );
 	}
+}
+
+bool ss_arl_get_capture_state( void )
+{
+	return isCapturing;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +221,7 @@ static void write_screenshot( void )
 			while ( PlFileExists( path ) )
 				PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), ++num );
 
-			PlWriteImage( image, path );
+			PlWriteImage( image, path, 90 );
 			PlDestroyImage( image );
 		}
 		else
@@ -238,13 +242,8 @@ void arl_draw_end_( ApeViewport *viewport )
 
 	if ( isScreenshotPending || isCapturing )
 	{
-		if ( isCapturing && lastCaptureTick >= apeGetNumTicks() )
-			return;
-
 		write_screenshot();
 		isScreenshotPending = false;
-
-		lastCaptureTick = apeGetNumTicks() + 1;
 	}
 }
 
@@ -269,6 +268,8 @@ void apeRegisterRendererConsoleVariables_( void )
 
 	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
 	PlRegisterConsoleVariable( "capture_threads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
+	PlRegisterConsoleVariable( "capture_qoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, NULL, true );
+	PlRegisterConsoleVariable( "capture_quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
 
 	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
 	PlRegisterConsoleVariable( "fps", "Toggle FPS counter.",

@@ -6,7 +6,7 @@ PL_EXTERN_C
 
 void apeInitializeClient_( void );
 void apeShutdownClient_( void );
-void apeDrawClient( ApeViewport *viewport );
+void ss_arl_render_frame( ApeViewport *viewport );
 void apeTickClient( void );
 
 void apeInitiateClientConnection_( const char *ip, unsigned short port );

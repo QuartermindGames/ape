@@ -147,6 +147,8 @@ PLGCamera *apeGetAuxCamera( void );
 //PLGTexture *apeGetPrimaryColourAttachment( void );
 //PLGTexture *apeGetPrimaryDepthAttachment( void );
 
+bool ss_arl_get_capture_state( void );
+
 void arl_setup_default_state( const ApeViewport *viewport );
 void arl_draw_begin_( ApeViewport *viewport );
 void arl_draw_end_( ApeViewport *viewport );
