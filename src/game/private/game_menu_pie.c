@@ -179,7 +179,7 @@ static void DrawPieOption( GamePieMenuOption *option, float x, float y, bool isS
 		return;
 	}
 
-	apeDrawMesh( option->icon, mesh, NULL, 0 );
+	ss_arl_material_draw( option->icon, mesh, NULL, 0 );
 }
 
 static GamePieMenuOption *GetSelectedOption( GamePieMenu *menu ) {
@@ -273,7 +273,7 @@ void gameDestroyPieMenuOption( GamePieMenuOption *option ) {
 	}
 
 	if ( option->icon != NULL ) {
-		ar_material_release( option->icon );
+		ss_arl_material_release( option->icon );
 	}
 
 	PL_DELETE( option );

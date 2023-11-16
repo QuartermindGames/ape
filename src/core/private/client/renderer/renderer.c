@@ -18,12 +18,12 @@
 #include "post/post.h"
 
 ApeRendererStats ape_rendererPerformance_;
-ArlRendererPassState arl_rendererState_;
+SS_Arl_RendererPassState arl_rendererState_;
 
 static ArRenderTarget *defaultRenderTarget;
 
 static PLGCamera *auxCamera = NULL;
-PLGCamera *apeGetAuxCamera( void ) { return auxCamera; }
+PLGCamera *ss_arl_get_aux_camera_( void ) { return auxCamera; }
 
 static bool isScreenshotPending = false;
 
@@ -127,7 +127,7 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 	}
 }
 
-bool ss_arl_get_capture_state( void )
+bool ss_arl_get_capture_state_( void )
 {
 	return isCapturing;
 }
@@ -137,7 +137,7 @@ bool ss_arl_get_capture_state( void )
 
 /**********************************************************/
 
-void arl_setup_default_state( const ApeViewport *viewport )
+void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
@@ -156,7 +156,7 @@ void arl_setup_default_state( const ApeViewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void arl_draw_begin_( ApeViewport *viewport )
+void ss_arl_draw_begin_( SS_Arl_Viewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -168,7 +168,7 @@ void arl_draw_begin_( ApeViewport *viewport )
 
 	viewport->perf.oldTime = newTime;
 
-	arl_setup_default_state( viewport );
+	ss_arl_setup_default_state( viewport );
 
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
@@ -231,7 +231,7 @@ static void write_screenshot( void )
 		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 }
 
-void arl_draw_end_( ApeViewport *viewport )
+void ss_arl_draw_end_( SS_Arl_Viewport *viewport )
 {
 	PL_ZERO_( ape_rendererPerformance_ );
 
@@ -298,7 +298,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "ape/r/fogFar", "Fog far value.", "-1", PL_VAR_F32, NULL, NULL, false );
 }
 
-void ar_initialize_( void )
+void ss_arl_initialize_( void )
 {
 	PRINT( "Initializing renderer\n" );
 
@@ -321,7 +321,7 @@ void ar_initialize_( void )
 	auxCamera->near = -10000.0f;
 	auxCamera->far = 10000.0f;
 
-	arl_setup_default_state( NULL );
+	ss_arl_setup_default_state( NULL );
 
 	defaultRenderTarget = arl_render_target_create( "default",
 	                                                800, 600,
@@ -334,7 +334,7 @@ void ar_initialize_( void )
 	arl_postfx_setup_();
 }
 
-void arl_shutdown_( void )
+void ss_arl_shutdown_( void )
 {
 	arl_postfx_cleanup_();
 
@@ -346,25 +346,25 @@ void arl_shutdown_( void )
 	apeShutdownWorldVisibilitySystem_();
 }
 
-static void draw_debug_overlay( const ApeViewport *viewport )
+static void draw_debug_overlay( const SS_Arl_Viewport *viewport )
 {
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
 		return;
 
-	ApeBitmapFont *defaultFont = apeGetDefaultSmallBitmapFont();
+	SS_Arl_BitmapFont *defaultFont = ss_arl_get_default_small_bitmap_font();
 	assert( defaultFont != NULL );
 	if ( defaultFont == NULL )
 		return;
 
-	apeBeginBitmapFontDraw( defaultFont );
+	ss_arl_bitmap_font_begin_draw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
 	static const float tx = 8 + 4;
 	float y = sy;
 
-	const ApeCamera *camera = viewport->camera;
+	const SS_Arl_Camera *camera = viewport->camera;
 	if ( camera != NULL )
 	{
 		// Draw camera position
@@ -376,43 +376,43 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
 		strcat( buf, vang );
 		strcat( buf, ")" );
-		apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+		ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	}
 
 	// Draw stats
 	char buf[ 64 ];
-	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", apeGetViewportFramerate( viewport ) );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ss_arl_viewport_get_framerate( viewport ) );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 
 	unsigned int numTasks = apeGetNumScheduledTasks();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
-	apeAddBitmapStringToBatch( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
 		double taskDelay;
 		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
-		apeAddBitmapStringToBatch( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+		ss_arl_bitmap_font_batch_string( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
 	y += defaultFont->ch * 2;
 
@@ -423,7 +423,7 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	apeDrawBitmapFont( defaultFont );
+	ss_arl_bitmap_font_draw( defaultFont );
 
 	if ( debugOverlay->i_value > 1 )
 	{
@@ -466,7 +466,7 @@ void apeGet2DViewportSize( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void arl_draw_menu_( const ApeViewport *viewport )
+void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
@@ -529,7 +529,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
 	PlgUploadMesh( mesh );
 
-	apeDrawMesh( material, mesh, NULL, 0 );
+	ss_arl_material_draw( material, mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -540,7 +540,7 @@ unsigned int arl_sky_add_layer( const char *path, float scale, float y, float sp
 	if ( numSkyLayers >= MAX_SKY_LAYERS )
 		return -1;
 
-	skyLayers[ numSkyLayers ].material = apeCacheMaterial( path, APE_CACHE_WORLD, false, false );
+	skyLayers[ numSkyLayers ].material = ss_arl_material_cache( path, APE_CACHE_WORLD, false, false );
 	if ( skyLayers[ numSkyLayers ].material == NULL )
 		return -1;
 
@@ -572,7 +572,7 @@ void arl_sky_clear_layers( void )
 		if ( skyLayers[ i ].material == NULL )
 			continue;
 
-		ar_material_release( skyLayers[ i ].material );
+		ss_arl_material_release( skyLayers[ i ].material );
 		skyLayers[ i ].material = NULL;
 	}
 
@@ -582,7 +582,7 @@ void arl_sky_clear_layers( void )
 /**
  * Draw scrolling clouds.
  */
-void arl_sky_draw( ApeCamera *camera )
+void arl_sky_draw( SS_Arl_Camera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;
@@ -624,7 +624,7 @@ void arl_sky_draw( ApeCamera *camera )
 
 	//TODO: this is all very slow and very gross, but cobbled together to meet a deadline...
 
-	double ticks = apeGetNumTicks();
+	double ticks = ss_acl_get_num_ticks();
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
 		location.y = skyLayers[ i ].y;
@@ -654,7 +654,7 @@ void arl_sky_draw( ApeCamera *camera )
  ****************************************/
 
 PLVector2 screenPosTest;
-static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
+static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
@@ -666,11 +666,15 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
-	apeDrawSky_( camera );
+	PlgDepthMask( true );
+
+	arl_sky_draw( camera );
 	apeDrawWorld_( world, camera, NULL, true );
 
+	PlgDepthMask( false );
+
 	unsigned int numLights;
-	ApeLight **lights = apeGetVisibleLights_( &numLights );
+	SS_Arl_Light **lights = apeGetVisibleLights_( &numLights );
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
@@ -713,32 +717,32 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 		{
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
-				arl_rendererState_.cullMode = APE_RENDERER_CULL_NONE;
+				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
 				arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 				apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
-				arl_rendererState_.cullMode = APE_RENDERER_CULL_DEFAULT;
+				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 			}
 
 			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 			PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( false, false, false, false );
-			PlgDepthMask( false );
 
-			arl_rendererState_.cullMode = APE_RENDERER_CULL_NONE;
 			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
+			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
 			apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );
 
-			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+			//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
@@ -751,14 +755,9 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 			arl_rendererState_.overrideBlendMode = false;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-			PlgDepthMask( true );
-
-			arl_rendererState_.cullMode = APE_RENDERER_CULL_DEFAULT;
 		}
 		else
 		{
-			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
-
 			arl_rendererState_.overrideBlendMode = true;
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
@@ -772,6 +771,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 		ape_rendererPerformance_.numLights++;
 	}
 
+	PlgDepthMask( true );
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
@@ -805,7 +805,7 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			}
 #endif
 
-void arl_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
+void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 

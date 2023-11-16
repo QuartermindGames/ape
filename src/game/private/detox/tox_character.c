@@ -11,15 +11,15 @@
 
 static const char *className = "tox/character";
 
-static void *CreateCharacterClass( ApeEntity *self, NdBranch *properties ) {
+static void *CreateCharacterClass( SS_Acl_Entity *self, NdBranch *properties ) {
 	return PL_NEW( ToxCharacter );
 }
 
-static void DestroyCharacterClass( ApeEntity *self ) {
+static void DestroyCharacterClass( SS_Acl_Entity *self ) {
 	PL_DELETEN( self->classData );
 }
 
-static NdBranch *SerializeCharacterClass( ApeEntity *self ) {
+static NdBranch *SerializeCharacterClass( SS_Acl_Entity *self ) {
 	ToxCharacter *character = self->classData;
 
 	NdBranch *root = ndPushBackObject( NULL, className );
@@ -28,7 +28,7 @@ static NdBranch *SerializeCharacterClass( ApeEntity *self ) {
 	return root;
 }
 
-static void DeserializeCharacterClass( ApeEntity *self, NdBranch *root ) {
+static void DeserializeCharacterClass( SS_Acl_Entity *self, NdBranch *root ) {
 }
 
 /****************************************
@@ -42,8 +42,8 @@ int16_t tox_character_xp_to_next( const ToxCharacter *character ) {
 	return ( int16_t ) round( 100 * ( character->stats[ TOX_CHARACTER_STAT_LEVEL ] ^ 3 ) );
 }
 
-const AclEntityClassDefinition *tox_character_get_class_table( void ) {
-	static AclEntityClassDefinition table;
+const SS_Acl_EntityClassDefinition *tox_character_get_class_table( void ) {
+	static SS_Acl_EntityClassDefinition table;
 	PL_ZERO_( table );
 	table.name = className;
 	table.Create = CreateCharacterClass;

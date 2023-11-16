@@ -11,7 +11,7 @@ typedef struct ArPostProcessEffect
 	void ( *RegisterConsoleVariables )( void );
 	bool ( *Setup )( void );
 	void ( *Cleanup )( void );
-	void ( *Draw )( const ApeViewport *viewport );
+	void ( *Draw )( const SS_Arl_Viewport *viewport );
 } ArPostProcessEffect;
 
 void arl_postfx_cleanup_( void );
@@ -19,7 +19,7 @@ void arl_postfx_setup_( void );
 
 void arl_postfx_register_console_variables_( void );
 
-void arl_postfx_draw_( const ApeViewport *viewport );
+void arl_postfx_draw_( const SS_Arl_Viewport *viewport );
 
 const ArPostProcessEffect *arl_postfx_get_bloom_( void );
 const ArPostProcessEffect *arl_postfx_get_fxaa_( void );

@@ -86,16 +86,16 @@ typedef struct ApeConsoleOutput
 
 ApeConsoleOutput *apeGetConsoleOutput( void );
 
-void apeInitializeConsole( void );
-void apeShutdownConsole( void );
+void ss_acl_initialize_console_( void );
+void ss_acl_shutdown_console_( void );
 
 int Console_GetLogLevel( ApeConsoleLogLevel level );
 void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 
-void acl_console_register_commands_( bool isDedicated );
-void acl_console_register_variables_( bool isDedicated );
+void ss_acl_console_register_commands_( bool isDedicated );
+void ss_acl_console_register_variables_( bool isDedicated );
 
-void apeDrawConsole_( const ApeViewport *viewport );
+void ss_acl_console_draw_( const SS_Arl_Viewport *viewport );
 void apeRegisterClientConsoleCommands_( void );
 void apeRegisterClientConsoleVariables_( void );
 
@@ -139,5 +139,12 @@ typedef struct ApeConfig
 } ApeConfig;
 
 extern ApeConfig ape_config_;
+
+void ss_acl_initialize_game_( void );
+void ss_acl_shutdown_game_( void );
+
+void ss_acl_tick_game_( void );
+void ss_acl_disconnect_game_( void );
+void ss_acl_spawn_world_( const char *worldPath );
 
 PL_EXTERN_C_END

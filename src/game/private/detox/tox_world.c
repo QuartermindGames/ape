@@ -12,21 +12,21 @@ static const unsigned int TICKS_UNTIL_SECOND = 30;
 #define DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
 #define DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
 
-static ApeLight *sunLight = NULL;
+static SS_Arl_Light *sunLight = NULL;
 static float sunYaw = 0.0f;
 static float sunPitch = 0.0f;
 static float sunBrightness = 0.0f;
 
 #define DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
 
-static ApeLight *moonLight = NULL;
+static SS_Arl_Light *moonLight = NULL;
 static float moonBrightness = 0.0f;
 
 #define TEST_NIGHT_LIGHTS
 
 #ifdef TEST_NIGHT_LIGHTS
 #	define NUM_TEST_NIGHT_LIGHTS 16
-static ApeLight *testLights[ NUM_TEST_NIGHT_LIGHTS ];
+static SS_Arl_Light *testLights[ NUM_TEST_NIGHT_LIGHTS ];
 #endif
 
 ToxWorldState *tox_world_get_state( void ) { return &worldState; }

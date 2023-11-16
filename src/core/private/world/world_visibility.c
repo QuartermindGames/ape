@@ -15,8 +15,8 @@ static PLVectorArray *visibleRooms = NULL;
 
 static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
 static int CompareLights( const void *a, const void *b ) {
-	ApeLight *lightA = *( ApeLight ** ) a;
-	ApeLight *lightB = *( ApeLight ** ) b;
+	SS_Arl_Light *lightA = *( SS_Arl_Light ** ) a;
+	SS_Arl_Light *lightB = *( SS_Arl_Light ** ) b;
 
 	float da = PlVector3Length( PlSubtractVector3( lightA->position, viewPos ) );
 	float db = PlVector3Length( PlSubtractVector3( lightB->position, viewPos ) );
@@ -24,7 +24,7 @@ static int CompareLights( const void *a, const void *b ) {
 	return ( da > db ) ? 1 : -1;
 }
 
-static void SortLights( const ApeCamera *camera ) {
+static void SortLights( const SS_Arl_Camera *camera ) {
 	if ( !ape_config_.world.sortLights ) {
 		return;
 	}
@@ -33,12 +33,12 @@ static void SortLights( const ApeCamera *camera ) {
 		return;
 	}
 
-	viewPos = arl_camera_get_position( camera );
+	viewPos = ss_arl_camera_get_position( camera );
 
-	ApeLight **lights = ( ApeLight ** ) PlGetVectorArrayData( visibleLights );
+	SS_Arl_Light **lights = ( SS_Arl_Light ** ) PlGetVectorArrayData( visibleLights );
 	unsigned int numLights = PlGetNumVectorArrayElements( visibleLights );
 
-	qsort( lights, numLights, sizeof( ApeLight * ), CompareLights );
+	qsort( lights, numLights, sizeof( SS_Arl_Light * ), CompareLights );
 }
 
 /**
@@ -46,7 +46,7 @@ static void SortLights( const ApeCamera *camera ) {
  * and no association between the worlds and rooms, so we need to iterate
  * over every single damn light.
  */
-static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
+static void BuildVisibleLightList( ApeWorld *world, SS_Arl_Camera *camera ) {
 	if ( world->lights == NULL ) {
 		return;
 	}
@@ -55,14 +55,14 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
 	// for now this operates over all the lights in the world, urgh...
 	PlClearVectorArray( visibleLights );
 	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i ) {
-		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
+		SS_Arl_Light *light = PlGetVectorArrayElementAt( world->lights, i );
 
 		if ( !( light->flags & APE_LIGHT_FLAG_ENABLED ) ) {
 			continue;
 		}
 
 		if ( light->type != APE_LIGHT_TYPE_SUN ) {
-			float distance = PlVector3Length( PlSubtractVector3( light->position, arl_camera_get_position( camera ) ) );
+			float distance = PlVector3Length( PlSubtractVector3( light->position, ss_arl_camera_get_position( camera ) ) );
 			if ( distance > ape_config_.renderer.maxLightDistance ) {
 				continue;
 			}
@@ -81,7 +81,7 @@ static void BuildVisibleLightList( ApeWorld *world, ApeCamera *camera ) {
 	ape_rendererPerformance_.numLights = PlGetNumVectorArrayElements( visibleLights );
 }
 
-static void BuildVisibleRoomList( ApeWorld *world, ApeCamera *camera ) {
+static void BuildVisibleRoomList( ApeWorld *world, SS_Arl_Camera *camera ) {
 	PlClearVectorArray( visibleRooms );
 
 	if ( camera->room == NULL ) {
@@ -106,9 +106,9 @@ void apeShutdownWorldVisibilitySystem_( void ) {
 	visibleRooms = NULL;
 }
 
-ApeLight **apeGetVisibleLights_( unsigned int *num ) {
+SS_Arl_Light **apeGetVisibleLights_( unsigned int *num ) {
 	*num = PlGetNumVectorArrayElements( visibleLights );
-	return ( ApeLight ** ) PlGetVectorArrayData( visibleLights );
+	return ( SS_Arl_Light ** ) PlGetVectorArrayData( visibleLights );
 }
 
 ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num ) {
@@ -128,7 +128,7 @@ void apeBuildWorldVisibiltyLists_( void ) {
 		return;
 	}
 
-	ApeCamera *camera = arl_camera_get_active();
+	SS_Arl_Camera *camera = ss_arl_camera_get_active();
 	if ( camera == NULL ) {
 		return;
 	}

@@ -51,7 +51,7 @@ static void cleanup_bloom_effect( void )
 	arl_render_target_release( bloomRenderTarget );
 }
 
-static void draw_bloom_effect( const ApeViewport *viewport )
+static void draw_bloom_effect( const SS_Arl_Viewport *viewport )
 {
 	if ( !bloomEnabled )
 		return;

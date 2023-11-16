@@ -8,7 +8,7 @@ PL_EXTERN_C
 
 void apeInitializeGUI_( void );
 void apeShutdownGUI_( void );
-void apeDrawGUI_( const ApeViewport *viewport );
+void apeDrawGUI_( const SS_Arl_Viewport *viewport );
 void apeTickGUI_( void );
 void apeResizeGUI( int w, int h );
 

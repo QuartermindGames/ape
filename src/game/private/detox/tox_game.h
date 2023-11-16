@@ -18,4 +18,4 @@ typedef struct ToxGlobalVars
 } ToxGlobalVars;
 extern ToxGlobalVars tox_globalVars;
 
-ApeCamera *tox_get_player_camera( void );
+SS_Arl_Camera *tox_get_player_camera( void );

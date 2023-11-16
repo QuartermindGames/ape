@@ -33,7 +33,7 @@ enum
 
 ////////////////////////////////////////////////////////////////////
 // Window Management
-ApeViewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode );
+SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode );
 bool ss_shell_set_window_size( int *width, int *height );
 void ss_shell_get_window_size( int *width, int *height );
 void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... );
@@ -42,7 +42,7 @@ void ss_shell_set_window_icon( const PLImage *image );
 /**
  * Returns a handle to the currently active viewport.
  */
-ApeViewport *ss_shell_viewport_get_active( void );
+SS_Arl_Viewport *ss_shell_viewport_get_active( void );
 
 ////////////////////////////////////////////////////////////////////
 // Low Level Input

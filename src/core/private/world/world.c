@@ -280,7 +280,7 @@ void ape_world_destroy( ApeWorld *world )
 			if ( material == NULL )
 				continue;
 
-			ar_material_release( material );
+			ss_arl_material_release( material );
 			material = NULL;
 		}
 		PlDestroyVectorArray( world->materials );
@@ -329,12 +329,12 @@ void apeSpawnWorldEntities( ApeWorld *world )
 	while ( node != NULL )
 	{
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		apeCreateEntity( worldEntity->className, worldEntity->properties );
+		ss_acl_entity_create( worldEntity->className, worldEntity->properties );
 		node = PlGetNextLinkedListNode( node );
 	}
 }
 
-void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity )
+void ape_world_attach_entity( ApeWorld *world, SS_Acl_Entity *entity )
 {
 	assert( entity->world == NULL );
 	if ( entity->world != NULL )
@@ -347,7 +347,7 @@ void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity )
 	entity->world = world;
 }
 
-void ape_world_attach_light( ApeWorld *world, ApeLight *light )
+void ape_world_attach_light( ApeWorld *world, SS_Arl_Light *light )
 {
 	assert( light->world == NULL );
 	if ( light->world != NULL )

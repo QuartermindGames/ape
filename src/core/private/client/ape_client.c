@@ -30,7 +30,7 @@ void apeInitializeClient_( void )
 	PL_ZERO_( clientState );
 	strcpy( clientState.userName, "Anon" );
 
-	ar_initialize_();
+	ss_arl_initialize_();
 	apeInitializeAudio_();
 	apeInitializeEditor_();
 	apeInitializeGUI_();
@@ -42,20 +42,20 @@ void apeShutdownClient_( void )
 	apeShutdownGUI_();
 	apeShutdownEditor_();
 	apeShutdownAudio_();
-	arl_shutdown_();
+	ss_arl_shutdown_();
 }
 
-void ss_arl_render_frame( ApeViewport *viewport )
+void ss_arl_render_frame( SS_Arl_Viewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	arl_draw_begin_( viewport );
+	ss_arl_draw_begin_( viewport );
 
 	arl_camera_draw_perspective_( viewport->camera, viewport );
 
-	arl_draw_menu_( viewport );
+	ss_arl_draw_menu_( viewport );
 
-	arl_draw_end_( viewport );
+	ss_arl_draw_end_( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }

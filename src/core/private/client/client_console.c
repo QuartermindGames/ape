@@ -115,7 +115,7 @@ static void ScrollBackward( ApeConsoleOutput *output ) {
 }
 
 bool Client_Console_HandleMouseWheelEvent( float x, float y ) {
-	if ( !apeIsConsoleOpen() ) {
+	if ( !ss_acl_is_console_open() ) {
 		return false;
 	}
 
@@ -241,7 +241,7 @@ bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState ) {
  * RENDERING
  ****************************************/
 
-static void DrawInputField( const ApeViewport *viewport, GuiFont *font ) {
+static void DrawInputField( const SS_Arl_Viewport *viewport, GuiFont *font ) {
 	const float ch = guiGetFontLineSpacing( font );
 	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
 	guiDrawFontCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
@@ -249,8 +249,8 @@ static void DrawInputField( const ApeViewport *viewport, GuiFont *font ) {
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < apeGetNumTicks() ) {
-		v = apeGetNumTicks() + 20;
+	if ( v < ss_acl_get_num_ticks() ) {
+		v = ss_acl_get_num_ticks() + 20;
 	}
 
 	float bufPixW;
@@ -259,7 +259,7 @@ static void DrawInputField( const ApeViewport *viewport, GuiFont *font ) {
 	const float x = ( 1.0f + cw );
 
 	// cursor
-	char c = ( v > apeGetNumTicks() + 10 ) ? '_' : ' ';
+	char c = ( v > ss_acl_get_num_ticks() + 10 ) ? '_' : ' ';
 	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL ) {
@@ -279,15 +279,15 @@ static void DrawInputField( const ApeViewport *viewport, GuiFont *font ) {
 	guiDrawFontString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 }
 
-bool apeIsConsoleOpen( void ) { return consoleIsOpen; }
+bool ss_acl_is_console_open( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
 /**
  * Draw the console panel.
  */
-void apeDrawConsole_( const ApeViewport *viewport ) {
-	if ( !apeIsConsoleOpen() ) {
+void ss_acl_console_draw_( const SS_Arl_Viewport *viewport ) {
+	if ( !ss_acl_is_console_open() ) {
 		return;
 	}
 

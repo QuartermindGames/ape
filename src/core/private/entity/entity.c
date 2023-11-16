@@ -7,7 +7,7 @@
 
 static PLHashTable *entityClassDefinitions = NULL;
 
-void acl_entity_register_class( const AclEntityClassDefinition *definition ) {
+void ss_acl_register_entity_class( const SS_Acl_EntityClassDefinition *definition ) {
 	if ( entityClassDefinitions == NULL ) {
 		entityClassDefinitions = PlCreateHashTable();
 	}
@@ -25,18 +25,18 @@ void acl_entity_register_class( const AclEntityClassDefinition *definition ) {
 	}
 }
 
-const AclEntityClassDefinition *apeGetEntityClassTable( const char *className ) {
-	return ( const AclEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
+const SS_Acl_EntityClassDefinition *ss_acl_get_entity_class_table( const char *className ) {
+	return ( const SS_Acl_EntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
-	const AclEntityClassDefinition *classDefinition = apeGetEntityClassTable( className );
+SS_Acl_Entity *ss_acl_entity_create( const char *className, NdBranch *properties ) {
+	const SS_Acl_EntityClassDefinition *classDefinition = ss_acl_get_entity_class_table( className );
 	if ( className == NULL ) {
 		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
 		return NULL;
 	}
 
-	ApeEntity *entity = PL_NEW( ApeEntity );
+	SS_Acl_Entity *entity = PL_NEW( SS_Acl_Entity );
 	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
 	if ( classDefinition->Create != NULL ) {
@@ -46,7 +46,7 @@ ApeEntity *apeCreateEntity( const char *className, NdBranch *properties ) {
 	return entity;
 }
 
-void apeDestroyEntity( ApeEntity *entity ) {
+void ss_acl_entity_destroy( SS_Acl_Entity *entity ) {
 	PLHashTableNode *node = PlGetFirstHashTableNode( entity->componentTable );
 	while ( node != NULL ) {
 		//TODO: should be calling destructor for component!!!
@@ -58,7 +58,7 @@ void apeDestroyEntity( ApeEntity *entity ) {
 	PL_DELETE( entity );
 }
 
-void apeTickEntity( ApeEntity *entity ) {
+void ss_acl_entity_tick( SS_Acl_Entity *entity ) {
 	assert( entity->classDefinition != NULL );
 	if ( entity->classDefinition->Tick == NULL ) {
 		return;
@@ -67,7 +67,7 @@ void apeTickEntity( ApeEntity *entity ) {
 	entity->classDefinition->Tick( entity );
 }
 
-void apeDrawEntity( ApeEntity *entity ) {
+void ss_acl_entity_draw( SS_Acl_Entity *entity ) {
 	assert( entity->classDefinition != NULL );
 	if ( entity->classDefinition->Draw == NULL ) {
 		return;

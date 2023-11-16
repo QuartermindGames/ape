@@ -73,7 +73,7 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 	ApeInputAction *action = ( ApeInputAction * ) userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i ) {
 		ApeInputState state = ss_shell_get_button_state( action->buttons[ i ] );
-		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
+		if ( ( ss_acl_is_console_open() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
 
@@ -81,7 +81,7 @@ static void IterateAction( void *userData, PL_UNUSED bool *breakEarly ) {
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i ) {
 		ApeInputState state = ss_shell_get_key_state( action->keys[ i ] );
-		if ( ( apeIsConsoleOpen() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
+		if ( ( ss_acl_is_console_open() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) ) {
 			continue;
 		}
 
@@ -233,7 +233,7 @@ void apeClearInputDevices_( void ) {
 	}
 }
 
-unsigned int ogeRegisterInputDevice_( ApeInputDeviceType type ) {
+unsigned int ss_acl_input_register_device( SS_Acl_InputDeviceType type ) {
 	unsigned int id;
 	ApeInputController *device = GetEmptyController( &id );
 	if ( device == NULL ) {
@@ -289,12 +289,12 @@ void Client_Input_HandleMouseMotionEvent( int x, int y ) {
 	guiUpdateMousePosition( inputMouse.x, inputMouse.y );
 }
 
-void apeGetMousePosition( int *x, int *y ) {
+void ss_acl_input_get_mouse_position( int *x, int *y ) {
 	*x = inputMouse.x;
 	*y = inputMouse.y;
 }
 
-void apeGetMouseDelta( int *x, int *y ) {
+void ss_acl_input_get_mouse_delta( int *x, int *y ) {
 	*x = inputMouse.dx;
 	*y = inputMouse.dy;
 }
@@ -305,7 +305,7 @@ void apeBeginInputFrame_( void ) {
 	//int oy = inputMouse.y;
 
 	// Calculate delta
-	if ( !apeIsConsoleOpen() ) {
+	if ( !ss_acl_is_console_open() ) {
 		int w, h;
 		ss_shell_get_window_size( &w, &h );
 
@@ -435,7 +435,7 @@ void acl_input_center_mouse( void )
 	int w, h;
 	ss_shell_get_window_size( &w, &h );
 
-	if ( !apeIsConsoleOpen() ) {
+	if ( !ss_acl_is_console_open() ) {
 		ss_shell_set_mouse_position( w / 2, h / 2 );
 	}
 
@@ -472,9 +472,9 @@ PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum ) {
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
 }
 
-void acl_input_register_action( const char *id,
-                                ApeInputButton buttons[], unsigned int numDefaultButtons,
-                                ApeInputKey keys[], unsigned int numDefaultKeys,
+void ss_acl_input_register_action( const char *id,
+                                   ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                   ApeInputKey keys[], unsigned int numDefaultKeys,
                              ApeInputActionCallback actionCallback ) {
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL ) {

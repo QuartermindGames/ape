@@ -108,7 +108,7 @@ bool apeIsScheduledTaskRunning( const char *desc ) {
 void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay ) {
 	SchTask *task = PlMAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay = delay + apeGetNumTicks();
+	task->delay = delay + ss_acl_get_num_ticks();
 	task->callback = callback;
 	task->userData = userData;
 	task->node = PlInsertLinkedListNode( scheduleList, task );
@@ -122,9 +122,9 @@ void apeTickTasks( void ) {
 	while ( node != NULL ) {
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
 		SchTask *task = PlGetLinkedListNodeUserData( node );
-		if ( task->delay < apeGetNumTicks() ) {
+		if ( task->delay < ss_acl_get_num_ticks() ) {
 			PlDestroyLinkedListNode( node );
-			task->callback( task->userData, ( task->delay - apeGetNumTicks() ) + 1 );
+			task->callback( task->userData, ( task->delay - ss_acl_get_num_ticks() ) + 1 );
 			task->delay = 0.0;
 			PlFree( task );
 		}
@@ -144,7 +144,7 @@ void apePrintPendingTasks( void ) {
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
 	while ( node != NULL ) {
 		SchTask *task = PlGetLinkedListNodeUserData( node );
-		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - apeGetNumTicks() );
+		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - ss_acl_get_num_ticks() );
 		node = PlGetNextLinkedListNode( node );
 	}
 	PRINT( "%d scheduled tasks pending\n", i );
@@ -176,5 +176,5 @@ void apeSetScheduledTaskDelay( const char *desc, double delay ) {
 	if ( task == NULL )
 		return;
 
-	task->delay = delay + apeGetNumTicks();
+	task->delay = delay + ss_acl_get_num_ticks();
 }

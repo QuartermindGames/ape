@@ -52,7 +52,7 @@ static PLPath configPath = { '\0' };
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const char *acl_get_user_config_location( void )
+const char *ss_acl_fs_get_user_config_location( void )
 {
 	if ( *configPath == '\0' )
 	{
@@ -81,7 +81,7 @@ const char *acl_get_user_config_location( void )
 	return configPath;
 }
 
-void acl_setup_config( NdBranch *root )
+void ss_acl_fs_setup_config( NdBranch *root )
 {
 	PlClearFileAliases();
 
@@ -96,7 +96,7 @@ void acl_setup_config( NdBranch *root )
 	// TODO: move this into the project handler
 }
 
-void apeMountBaseLocations( void )
+void ss_acl_fs_mount_base_locations( void )
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
@@ -109,7 +109,7 @@ void apeMountBaseLocations( void )
 	PlMountLocalLocation( comGetDataDirectory() );
 }
 
-char *acl_fs_parse_string( PLFile *file, uint16_t *size )
+char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 {
 	bool status;
 	*size = PL_READUINT16( file, false, &status );
@@ -123,7 +123,7 @@ char *acl_fs_parse_string( PLFile *file, uint16_t *size )
 	return buf;
 }
 
-float acl_fs_parse_float( PLFile *file )
+float ss_acl_fs_parse_float( PLFile *file )
 {
 	bool status;
 	float f = PlReadFloat32( file, false, &status );
@@ -131,34 +131,34 @@ float acl_fs_parse_float( PLFile *file )
 	return f;
 }
 
-PLVector3 acl_fs_parse_vector( PLFile *file )
+PLVector3 ss_acl_fs_parse_vector( PLFile *file )
 {
 	return ( PLVector3 ){
-	        acl_fs_parse_float( file ),
-	        acl_fs_parse_float( file ),
-	        acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
 	};
 }
 
-PLMatrix3 acl_fs_parse_mat3( PLFile *file )
+PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file )
 {
 	return ( PLMatrix3 ){
 	        // forward
-	        .m[ 0 ] = acl_fs_parse_float( file ),
-	        .m[ 1 ] = acl_fs_parse_float( file ),
-	        .m[ 2 ] = acl_fs_parse_float( file ),
+	        .m[ 0 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 1 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 2 ] = ss_acl_fs_parse_float( file ),
 	        // right
-	        .m[ 3 ] = acl_fs_parse_float( file ),
-	        .m[ 4 ] = acl_fs_parse_float( file ),
-	        .m[ 5 ] = acl_fs_parse_float( file ),
+	        .m[ 3 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 4 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 5 ] = ss_acl_fs_parse_float( file ),
 	        // up
-	        .m[ 6 ] = acl_fs_parse_float( file ),
-	        .m[ 7 ] = acl_fs_parse_float( file ),
-	        .m[ 8 ] = acl_fs_parse_float( file ),
+	        .m[ 6 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 7 ] = ss_acl_fs_parse_float( file ),
+	        .m[ 8 ] = ss_acl_fs_parse_float( file ),
 	};
 }
 
-PLColour acl_fs_parse_colour( PLFile *file )
+PLColour ss_acl_fs_parse_colour( PLFile *file )
 {
 	bool status;
 	PLColour c = ( PLColour ){

@@ -53,7 +53,7 @@ static void DeserializeMaterials( NdBranch *meshNode, ApeWorldMesh *meshPtr ) {
 
 		char materialPath[ PL_SYSTEM_MAX_PATH ];
 		ndGetStr( materialNode, materialPath, sizeof( materialPath ) );
-		meshPtr->materials[ i ] = apeCacheMaterial( materialPath, APE_CACHE_WORLD, true, false );
+		meshPtr->materials[ i ] = ss_arl_material_cache( materialPath, APE_CACHE_WORLD, true, false );
 		materialNode = ndGetNextChild( materialNode );
 	}
 }

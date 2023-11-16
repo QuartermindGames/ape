@@ -3,7 +3,8 @@
 
 #pragma once
 
-typedef enum ApeCameraMode {
+typedef enum ApeCameraMode
+{
 	APE_CAMERA_MODE_PERSPECTIVE,
 	APE_CAMERA_MODE_TOP,
 	APE_CAMERA_MODE_LEFT,
@@ -12,7 +13,8 @@ typedef enum ApeCameraMode {
 	APE_CAMERA_MAX_MODES
 } ApeCameraMode;
 
-typedef enum ApeCameraDrawMode {
+typedef enum ApeCameraDrawMode
+{
 	// "basic" draw modes
 	APE_CAMERA_DRAW_MODE_WIREFRAME,
 	APE_CAMERA_DRAW_MODE_SOLID,
@@ -23,20 +25,20 @@ typedef enum ApeCameraDrawMode {
 	APE_CAMERA_MAX_DRAW_MODES
 } ApeCameraDrawMode;
 
-typedef struct ApeCamera ApeCamera;
+typedef struct SS_Arl_Camera SS_Arl_Camera;
 
 PL_EXTERN_C
 
-ApeCamera *arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
-void arl_camera_destroy( ApeCamera *camera );
-void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position );
-void arl_camera_set_angles( ApeCamera *camera, const PLVector3 *angles );
+SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+void ss_arl_camera_destroy( SS_Arl_Camera *camera );
+void ss_arl_camera_set_position( SS_Arl_Camera *camera, const PLVector3 *position );
+void ss_arl_camera_set_angles( SS_Arl_Camera *camera, const PLVector3 *angles );
 
-PLVector3 arl_camera_get_position( const ApeCamera *camera );
-PLVector3 arl_camera_get_angles( const ApeCamera *camera );
-PLVector3 arl_camera_get_forward( const ApeCamera *camera );
+PLVector3 ss_arl_camera_get_position( const SS_Arl_Camera *camera );
+PLVector3 ss_arl_camera_get_angles( const SS_Arl_Camera *camera );
+PLVector3 ss_arl_camera_get_forward( const SS_Arl_Camera *camera );
 
-ApeCamera *arl_camera_get_active( void );
-void arl_camera_make_active( ApeCamera *camera );
+SS_Arl_Camera *ss_arl_camera_get_active( void );
+void ss_arl_camera_make_active( SS_Arl_Camera *camera );
 
 PL_EXTERN_C_END

@@ -61,7 +61,7 @@ CMD_CALLBACK( Quit )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	apeShutdown();
+	ss_acl_shutdown();
 }
 
 CMD_CALLBACK( Version )
@@ -76,7 +76,7 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void LoadUserConfig( void )
 {
-	NdBranch *root = ndLoadFile( acl_get_user_config_location(), "config" );
+	NdBranch *root = ndLoadFile( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
 	{
 		PRINT( "No existing user config, generating default.\n" );
@@ -106,7 +106,7 @@ static void LoadUserConfig( void )
 static void save_user_config( void )
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "%s", acl_get_user_config_location() );
+	snprintf( path, sizeof( path ), "%s", ss_acl_fs_get_user_config_location() );
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
@@ -147,7 +147,7 @@ static void save_user_config( void )
 	PRINT( "User config saved.\n" );
 }
 
-void acl_console_register_commands_( bool isDedicated )
+void ss_acl_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -163,7 +163,7 @@ void acl_console_register_commands_( bool isDedicated )
 	}
 }
 
-void acl_console_register_variables_( bool isDedicated )
+void ss_acl_console_register_variables_( bool isDedicated )
 {
 	// server
 	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
@@ -209,7 +209,7 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
 /**
  * Set the console up.
  */
-void apeInitializeConsole( void )
+void ss_acl_initialize_console_( void )
 {
 	PlSetConsoleOutputCallback( output_callback );
 
@@ -226,7 +226,7 @@ void apeInitializeConsole( void )
 	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 
-void apeShutdownConsole( void )
+void ss_acl_shutdown_console_( void )
 {
 	clear_output_buffer();
 	save_user_config();

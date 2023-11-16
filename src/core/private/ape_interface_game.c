@@ -30,7 +30,7 @@ static ApeWorld *currentWorld = NULL;
 static void spawn_level_command( unsigned int argc, char **argv ) {
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
-	apeSpawnWorld( path );
+	ss_acl_spawn_world_( path );
 }
 
 /****************************************
@@ -41,7 +41,7 @@ const GameModeInterface *game_modeInterface;
 
 GameState acl_gameState_;
 
-void acl_initialize_game_( void ) {
+void ss_acl_initialize_game_( void ) {
 	PRINT( "Initializing Game...\n" );
 
 	globalGameLog = PlAddLogLevel( "game", PL_COLOUR_WHITE, true );
@@ -71,7 +71,7 @@ void acl_initialize_game_( void ) {
 	PRINT( "Game initialized!\n" );
 }
 
-void acl_shutdown_game_( void ) {
+void ss_acl_shutdown_game_( void ) {
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 }
@@ -80,7 +80,7 @@ MenuState gameGetMenuState( void ) {
 	return menuState;
 }
 
-void apeTickGame( void ) {
+void ss_acl_tick_game_( void ) {
 	COM_PROFILE_FUNCTION_START();
 
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
@@ -88,7 +88,7 @@ void apeTickGame( void ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-void apeDisconnectGame( void ) {
+void ss_acl_disconnect_game_( void ) {
 	if ( currentWorld != NULL ) {
 		if ( currentWorld->isDirty ) {
 			/* todo: throw a message letting the user know their changes
@@ -102,13 +102,13 @@ void apeDisconnectGame( void ) {
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void apeSpawnWorld( const char *worldPath ) {
+void ss_acl_spawn_world_( const char *worldPath ) {
 	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 ) {
 		PRINT_WARNING( "World already loaded!\n" );
 		return;
 	}
 
-	apeDisconnectGame();
+	ss_acl_disconnect_game_();
 
 	ApeWorld *world = apeLoadWorld( worldPath );
 	if ( world == NULL ) {

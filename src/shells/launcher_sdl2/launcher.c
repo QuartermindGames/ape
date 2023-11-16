@@ -29,7 +29,7 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 static SDL_Window *sdlWindow = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static ApeViewport *windowViewport = NULL;
+static SS_Arl_Viewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
@@ -78,7 +78,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-ApeViewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 #if !NDEBUG
@@ -144,7 +144,7 @@ ApeViewport *ss_shell_create_window( const char *title, int width, int height, b
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
 	}
 
-	return apeCreateViewport( 0, 0, width, height, sdlWindow );
+	return ss_arl_viewport_create( 0, 0, width, height, sdlWindow );
 }
 
 #if 0
@@ -207,7 +207,7 @@ void ss_shell_set_window_icon( const PLImage *image )
 	SDL_FreeSurface( surface );
 }
 
-ApeViewport *ss_shell_viewport_get_active( void )
+SS_Arl_Viewport *ss_shell_viewport_get_active( void )
 {
 	return windowViewport;
 }
@@ -335,7 +335,7 @@ static int Sys_TranslateSDLKeyInput( int key )
 
 			/* temp temp temp */
 		case SDLK_ESCAPE:
-			apeShutdown();
+			ss_acl_shutdown();
 			break;
 	}
 
@@ -494,7 +494,7 @@ int launcher_initialize( int argc, char **argv )
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 
-	if ( !apeInitialize( NULL ) )
+	if ( !ss_acl_initialize( NULL ) )
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 
 	// setup our timers, in this case we're just setting up our tick
@@ -502,7 +502,7 @@ int launcher_initialize( int argc, char **argv )
 
 	SDL_StartTextInput();
 
-	while ( apeIsEngineRunning() )
+	while ( ss_acl_is_engine_running() )
 	{
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
@@ -514,7 +514,7 @@ int launcher_initialize( int argc, char **argv )
 					break;
 
 				case SDL_TEXTINPUT:
-					apeHandleTextEvent( event.text.text );
+					ss_acl_input_handle_text_event( event.text.text );
 					break;
 
 				case SDL_MOUSEWHEEL:
@@ -546,7 +546,7 @@ int launcher_initialize( int argc, char **argv )
 
 					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE;
 
-					apeHandleKeyboardEvent( key, keyStates[ key ] );
+					ss_acl_input_handle_keyboard_event( key, keyStates[ key ] );
 					break;
 				}
 
@@ -562,7 +562,7 @@ int launcher_initialize( int argc, char **argv )
 							//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
 							// originally used the above but it kept returning bogus coords...
 							SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
-							apeSetViewportSize( windowViewport, drawW, drawH );
+							ss_arl_viewport_set_size( windowViewport, drawW, drawH );
 							break;
 					}
 					break;
@@ -575,7 +575,7 @@ int launcher_initialize( int argc, char **argv )
 		SDL_GL_SwapWindow( sdlWindow );
 
 		static unsigned int refreshTime = 0;
-		if ( refreshTime > apeGetNumTicks() )
+		if ( refreshTime > ss_acl_get_num_ticks() )
 			continue;
 
 		com_update_profiler_samples();
@@ -586,7 +586,7 @@ int launcher_initialize( int argc, char **argv )
 
 	SDL_StopTextInput();
 
-	apeShutdown();
+	ss_acl_shutdown();
 
 	return EXIT_SUCCESS;
 }
