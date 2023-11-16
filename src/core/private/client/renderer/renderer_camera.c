@@ -13,14 +13,14 @@
 
 static PLLinkedList *cameras;
 
-static ApeCamera *activeCamera = NULL;
+static SS_Arl_Camera *activeCamera = NULL;
 
-ApeCamera *arl_camera_get_active( void )
+SS_Arl_Camera *ss_arl_camera_get_active( void )
 {
 	return activeCamera;
 }
 
-void arl_camera_make_active( ApeCamera *camera )
+void ss_arl_camera_make_active( SS_Arl_Camera *camera )
 {
 	activeCamera = camera;
 }
@@ -28,9 +28,9 @@ void arl_camera_make_active( ApeCamera *camera )
 /****************************************
  ****************************************/
 
-ApeCamera *arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
 {
-	ApeCamera *camera = PL_NEW( ApeCamera );
+	SS_Arl_Camera *camera = PL_NEW( SS_Arl_Camera );
 
 	camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
@@ -48,8 +48,8 @@ ApeCamera *arl_camera_create( const char *tag, const PLVector3 *position, const 
 
 	camera->internal->fov = 75.0f;
 	camera->internal->far = 1000000.0f;
-	arl_camera_set_position( camera, position );
-	arl_camera_set_angles( camera, angles );
+	ss_arl_camera_set_position( camera, position );
+	ss_arl_camera_set_angles( camera, angles );
 
 	if ( cameras == NULL )
 	{
@@ -70,7 +70,7 @@ ApeCamera *arl_camera_create( const char *tag, const PLVector3 *position, const 
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void arl_camera_destroy( ApeCamera *camera )
+void ss_arl_camera_destroy( SS_Arl_Camera *camera )
 {
 	if ( camera == NULL )
 	{
@@ -96,7 +96,7 @@ void arl_camera_destroy( ApeCamera *camera )
 	}
 }
 
-void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position )
+void ss_arl_camera_set_position( SS_Arl_Camera *camera, const PLVector3 *position )
 {
 	camera->internal->position = *position;
 
@@ -112,32 +112,32 @@ void arl_camera_set_position( ApeCamera *camera, const PLVector3 *position )
 	}
 }
 
-void arl_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
+void ss_arl_camera_set_angles( SS_Arl_Camera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
 }
 
-PLVector3 arl_camera_get_position( const ApeCamera *camera )
+PLVector3 ss_arl_camera_get_position( const SS_Arl_Camera *camera )
 {
 	return camera->internal->position;
 }
 
-PLVector3 arl_camera_get_angles( const ApeCamera *camera )
+PLVector3 ss_arl_camera_get_angles( const SS_Arl_Camera *camera )
 {
 	return camera->internal->angles;
 }
 
-PLVector3 arl_camera_get_forward( const ApeCamera *camera )
+PLVector3 ss_arl_camera_get_forward( const SS_Arl_Camera *camera )
 {
 	return camera->forward;
 }
 
-void arl_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
-void arl_camera_draw_perspective_( ApeCamera *camera, ApeViewport *viewport )
+void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport );
+void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport )
 {
 	if ( camera == NULL )
 	{
-		camera = arl_camera_get_active();
+		camera = ss_arl_camera_get_active();
 		if ( camera == NULL )
 			return;
 	}

@@ -47,7 +47,7 @@ void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLC
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 0 ) );
 	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 1 ) );
 
-	apeDrawMesh( material, mesh, NULL, 0 );
+	ss_arl_material_draw( material, mesh, NULL, 0 );
 }
 
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
@@ -183,14 +183,14 @@ void arl_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
-	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
-	apeBeginBitmapFontDraw( font );
+	SS_Arl_BitmapFont *font = ss_arl_get_default_small_bitmap_font();
+	ss_arl_bitmap_font_begin_draw( font );
 
 	if ( heading != NULL )
 	{
 		size_t len = strlen( heading );
 		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		apeAddBitmapStringToBatch( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
+		ss_arl_bitmap_font_batch_string( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
 	// Calculate the average sum of all the points
@@ -204,9 +204,9 @@ void arl_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	// Current and average readings
 	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	ss_arl_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	apeAddBitmapStringToBatch( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	ss_arl_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 
 #if 0
 	snprintf( buf, sizeof( buf ), "y+:%02f", max );
@@ -215,7 +215,7 @@ void arl_draw_graph( const char *heading, float x, float y, float w, float h, co
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 #endif
 
-	apeDrawBitmapFont( font );
+	ss_arl_bitmap_font_draw( font );
 
 	PL_DELETE( points );
 }

@@ -17,7 +17,7 @@ static void DestroyModel( void *userData ) {
 	MDLUserData *additionalData = model->userData;
 	if ( additionalData != NULL ) {
 		for ( unsigned int i = 0; i < additionalData->numMaterials; ++i )
-			ar_material_release( additionalData->materials[ i ] );
+			ss_arl_material_release( additionalData->materials[ i ] );
 	}
 
 	PlmDestroyModel( model );
@@ -122,7 +122,7 @@ static PLMModel *DeserializeModel( NdBranch *root ) {
 	if ( materialArray == NULL ) {
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
 		userData.numMaterials = 1;
-		userData.materials[ 0 ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, true, false );
+		userData.materials[ 0 ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 	} else {
 		userData.numMaterials = ndGetNumOfChildren( materialArray );
 		NdBranch *n = ndGetFirstChild( materialArray );
@@ -130,12 +130,12 @@ static PLMModel *DeserializeModel( NdBranch *root ) {
 			assert( n != NULL );
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS ) {
-				userData.materials[ i ] = apeCacheMaterial( "materials/engine/fallback_mesh.mat.n", 0, false, false );
+				userData.materials[ i ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, false, false );
 				if ( userData.materials[ i ] == NULL ) {
 					PRINT_ERROR( "Failed to cache fallback material for mesh!\n" );
 				}
 			} else {
-				userData.materials[ i ] = apeCacheMaterial( materialPath, 0, true, false );
+				userData.materials[ i ] = ss_arl_material_cache( materialPath, 0, true, false );
 			}
 
 			n = ndGetNextChild( n );

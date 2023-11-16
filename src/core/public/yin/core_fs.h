@@ -8,9 +8,9 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-const char *acl_get_user_config_location( void );
+const char *ss_acl_fs_get_user_config_location( void );
 
-void acl_setup_config( NdBranch *root );
+void ss_acl_fs_setup_config( NdBranch *root );
 
 /**
  * Returns contents of file in a null-terminated buffer.
@@ -24,6 +24,7 @@ char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version
 
 uint8_t acl_fs_parse_byte( PLFile *file );
 uint8_t acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, uint8_t fallback );
+void ss_acl_fs_mount_base_locations( void );
 
 PLColour acl_fs_parse_colour( PLFile *file );
 PLMatrix3 acl_fs_parse_mat3( PLFile *file );
@@ -39,5 +40,10 @@ int acl_fs_parse_int_ex( PLFile *file, unsigned int version, unsigned int minVer
 
 float acl_fs_parse_float( PLFile *file );
 float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, float fallback );
+PLColour ss_acl_fs_parse_colour( PLFile *file );
+PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file );
+PLVector3 ss_acl_fs_parse_vector( PLFile *file );
+float ss_acl_fs_parse_float( PLFile *file );
+char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size );
 
 PL_EXTERN_C_END

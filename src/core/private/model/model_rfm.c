@@ -67,13 +67,13 @@ static AclModelRfm *parse_rfm_chunk_material( AclModelRfm *model, PLFile *file, 
 			break;
 
 		PRINT_DEBUG( "diffuse: %s\n", model->materials[ i ].diffuseTexture );
-		model->materials[ i ].illumination = acl_fs_parse_float( file );
+		model->materials[ i ].illumination = ss_acl_fs_parse_float( file );
 		PRINT_DEBUG( "illumination: %f\n", model->materials[ i ].illumination );
-		model->materials[ i ].specular = acl_fs_parse_float( file );
+		model->materials[ i ].specular = ss_acl_fs_parse_float( file );
 		PRINT_DEBUG( "specular: %f\n", model->materials[ i ].specular );
-		model->materials[ i ].gloss = acl_fs_parse_float( file );
+		model->materials[ i ].gloss = ss_acl_fs_parse_float( file );
 		PRINT_DEBUG( "gloss: %f\n", model->materials[ i ].gloss );
-		model->materials[ i ].reflectivity = acl_fs_parse_float( file );
+		model->materials[ i ].reflectivity = ss_acl_fs_parse_float( file );
 		PRINT_DEBUG( "reflectivity: %f\n", model->materials[ i ].reflectivity );
 
 		PlReadFile( file, model->materials[ i ].reflectionTexture, sizeof( char ), 32 );

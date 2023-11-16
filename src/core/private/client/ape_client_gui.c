@@ -58,7 +58,7 @@ void apeInitializeGUI_( void )
 
 	guiSetPanelVisible( rootPanel, true );
 
-	baseGuiMat = apeCacheMaterial( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
+	baseGuiMat = ss_arl_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
 	if ( baseGuiMat == NULL )
 	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
@@ -70,10 +70,10 @@ void apeShutdownGUI_( void )
 	guiDestroyPanel( rootPanel );
 	guiShutdown();
 
-	ar_material_release( baseGuiMat );
+	ss_arl_material_release( baseGuiMat );
 }
 
-void apeDrawGUI_( const ApeViewport *viewport )
+void apeDrawGUI_( const SS_Arl_Viewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -147,7 +147,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 		if ( font != NULL )
 		{
 			char tmp[ 32 ];
-			snprintf( tmp, sizeof( tmp ), "FPS: %u", apeGetViewportFramerate( viewport ) );
+			snprintf( tmp, sizeof( tmp ), "FPS: %u", ss_arl_viewport_get_framerate( viewport ) );
 			guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
 			guiDisplayFont( font );
 		}
@@ -166,7 +166,7 @@ void apeDrawGUI_( const ApeViewport *viewport )
 #endif
 
 	// todo: this should use GUI
-	apeDrawConsole_( viewport );
+	ss_acl_console_draw_( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -181,7 +181,7 @@ void apeResizeGUI( int w, int h )
 	guiSetPanelSize( rootPanel, w, h );
 }
 
-GuiPanel *apeGetDefaultRootPanel( void )
+GuiPanel *ss_gui_get_root_panel( void )
 {
 	return rootPanel;
 }

@@ -237,7 +237,7 @@ void acl_level_client_tick_( void );
 void apeInitializeWorldVisibilitySystem_( void );
 void apeShutdownWorldVisibilitySystem_( void );
 
-struct ApeLight **apeGetVisibleLights_( unsigned int *num );
+struct SS_Arl_Light **apeGetVisibleLights_( unsigned int *num );
 ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
 
 void acl_level_build_visibility_lists_( void );

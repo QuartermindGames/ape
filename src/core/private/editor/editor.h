@@ -27,7 +27,7 @@ void apeDrawEditor_( void );
 void apeOpenEditor_( void );
 void apeCloseEditor_( void );
 
-void apeDrawEditorGUI_( const ApeViewport *viewport );
+void apeDrawEditorGUI_( const SS_Arl_Viewport *viewport );
 
 ApeEditorContext *apeGetCurrentEditorContext( void );
 ApeEditorContext *apeGetEditorContext( const char *identifier );

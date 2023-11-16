@@ -86,7 +86,7 @@ void apeOpenEditor_( void ) {
 void apeCloseEditor_( void ) {
 }
 
-void apeDrawEditorGUI_( const ApeViewport *viewport ) {
+void apeDrawEditorGUI_( const SS_Arl_Viewport *viewport ) {
 	if ( currentContext == NULL ) {
 		return;
 	}
@@ -136,5 +136,5 @@ bool apeIsEditorContextActive( const char *identifier ) {
 ApeMaterial *apeGetEditorIconMaterial( const char *name ) {
 	PLPath path;
 	PlSetupPath( path, true, "editor/icons/%s.mat.n", name );
-	return apeCacheMaterial( path, APE_CACHE_EDITOR, true, false );
+	return ss_arl_material_cache( path, APE_CACHE_EDITOR, true, false );
 }

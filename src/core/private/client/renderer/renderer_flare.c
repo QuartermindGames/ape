@@ -49,7 +49,7 @@ void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 }
 
-void Flare_RenderFlares( const ApeCamera *camera ) {
+void Flare_RenderFlares( const SS_Arl_Camera *camera ) {
 	arl_shader_get_by_name( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );

@@ -18,7 +18,7 @@
 
 static NdBranch *shellConfig;
 
-void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *colour )
+void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 {
 }
 
@@ -29,26 +29,26 @@ void apeShellInterface_PushMessage( int level, const char *msg, const PLColour *
 static SDL_Window *sdlWindow = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static ApeViewport *windowViewport = NULL;
+static SS_Arl_Viewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
-void YnCore_ShellInterface_DisplayMessageBox( ApeMessageBoxType messageType, const char *message, ... )
+void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 {
 	const char *title;
 	SDL_MessageBoxFlags flags;
 	switch ( messageType )
 	{
-		case APE_MESSAGE_ERROR:
+		case SS_SHELL_MESSAGE_BOX_TYPE_ERROR:
 			title = "Error";
 			flags = SDL_MESSAGEBOX_ERROR;
 			break;
-		case APE_MESSAGE_WARNING:
+		case SS_SHELL_MESSAGE_BOX_TYPE_WARNING:
 			title = "Warning";
 			flags = SDL_MESSAGEBOX_WARNING;
 			break;
 		default:
-		case APE_MESSAGE_INFO:
+		case SS_SHELL_MESSAGE_BOX_TYPE_INFO:
 			title = "Info";
 			flags = SDL_MESSAGEBOX_INFORMATION;
 			break;
@@ -78,7 +78,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 #if !NDEBUG
@@ -92,7 +92,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 		default:
 			PrintWarn( "Unknown graphics mode (%d)!\n", mode );
 			break;
-		case APE_GRAPHICS_OPENGL:
+		case SS_SHELL_GRAPHICS_MODE_OPENGL:
 			flags |= SDL_WINDOW_OPENGL;
 			SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
 			SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
@@ -103,7 +103,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
 			SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 			break;
-		case APE_GRAPHICS_VULKAN:
+		case SS_SHELL_GRAPHICS_MODE_VULKAN:
 			flags |= SDL_WINDOW_VULKAN;
 			break;
 	}
@@ -130,7 +130,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 #	endif
 #endif
 
-	if ( mode == APE_GRAPHICS_OPENGL )
+	if ( mode == SS_SHELL_GRAPHICS_MODE_OPENGL )
 	{
 		sdlGLContext = SDL_GL_CreateContext( sdlWindow );
 		if ( sdlGLContext == NULL )
@@ -144,7 +144,7 @@ ApeViewport *apeShellInterface_CreateWindow( const char *title, int width, int h
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
 	}
 
-	return apeCreateViewport( 0, 0, width, height, sdlWindow );
+	return ss_arl_viewport_create( 0, 0, width, height, sdlWindow );
 }
 
 #if 0
@@ -158,7 +158,7 @@ static void DestroyWindow( void )
 }
 #endif
 
-bool apeShellInterface_SetWindowSize( int *width, int *height )
+bool ss_shell_set_window_size( int *width, int *height )
 {
 	if ( sdlWindow == NULL )
 	{
@@ -180,12 +180,12 @@ bool apeShellInterface_SetWindowSize( int *width, int *height )
 	return false;
 }
 
-void apeShellInterface_GetWindowSize( int *width, int *height )
+void ss_shell_get_window_size( int *width, int *height )
 {
 	SDL_GetWindowSize( sdlWindow, width, height );
 }
 
-void apeSetShellIcon( const PLImage *image )
+void ss_shell_set_window_icon( const PLImage *image )
 {
 	SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
 	        image->data[ 0 ],
@@ -207,12 +207,17 @@ void apeSetShellIcon( const PLImage *image )
 	SDL_FreeSurface( surface );
 }
 
+SS_Arl_Viewport *ss_shell_viewport_get_active( void )
+{
+	return windowViewport;
+}
+
 /****************************************
  * INPUT MANAGEMENT
  ****************************************/
 
 static ApeInputState buttonStates[ APE_MAX_BUTTON_INPUTS ];
-ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton )
+ApeInputState ss_shell_get_button_state( ApeInputButton inputButton )
 {
 	if ( inputButton >= APE_MAX_BUTTON_INPUTS )
 		return APE_INPUT_STATE_NONE;
@@ -221,7 +226,7 @@ ApeInputState apeShellInterface_GetButtonState( ApeInputButton inputButton )
 }
 
 static ApeInputState keyStates[ APE_MAX_KEY_INPUTS ];
-ApeInputState apeShellInterface_GetKeyState( int key )
+ApeInputState ss_shell_get_key_state( int key )
 {
 	if ( key >= APE_MAX_KEY_INPUTS )
 		return APE_INPUT_STATE_NONE;
@@ -229,19 +234,19 @@ ApeInputState apeShellInterface_GetKeyState( int key )
 	return keyStates[ key ];
 }
 
-void apeShellInterface_GetMousePosition( int *x, int *y )
+void ss_shell_get_mouse_position( int *x, int *y )
 {
 	SDL_GetMouseState( x, y );
 }
 
-void apeShellInterface_SetMousePosition( int x, int y )
+void ss_shell_set_mouse_position( int x, int y )
 {
 	SDL_WarpMouseInWindow( sdlWindow, x, y );
 }
 
 static bool grabState = false;
 
-void shell_grab_mouse( bool grab )
+void ss_shell_grab_mouse( bool grab )
 {
 	SDL_SetWindowGrab( sdlWindow, grab );
 	SDL_SetRelativeMouseMode( grab );
@@ -330,7 +335,7 @@ static int Sys_TranslateSDLKeyInput( int key )
 
 			/* temp temp temp */
 		case SDLK_ESCAPE:
-			apeShutdown();
+			ss_acl_shutdown();
 			break;
 	}
 
@@ -361,7 +366,7 @@ static unsigned int timer_callback( unsigned int interval, void *param )
  * INITIALIZATION
  ****************************************/
 
-void apeShellInterface_Shutdown( void )
+void ss_shell_shutdown( void )
 {
 	comWriteConfig( shellConfig, "shell" );
 
@@ -396,21 +401,23 @@ static bool initialize_display( void )
 	unsigned int driverMode;
 	const char *driverName = ndGetStringByName( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
-		driverMode = APE_GRAPHICS_OPENGL;
+		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
-		driverMode = APE_GRAPHICS_VULKAN;
+		driverMode = SS_SHELL_GRAPHICS_MODE_VULKAN;
 	else if ( strcmp( driverName, "software" ) == 0 )
-		driverMode = APE_GRAPHICS_SOFTWARE;
+		driverMode = SS_SHELL_GRAPHICS_MODE_SOFTWARE;
 	else
-		driverMode = APE_GRAPHICS_OTHER;
+		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
 
 	const char *windowTitle = com_project_get_name();
 	if ( windowTitle == NULL )
 		windowTitle = "APE Game Shell";
 
-	if ( ( windowViewport = apeShellInterface_CreateWindow( windowTitle, 1024, 768, false, driverMode ) ) == NULL )
+	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
+
+	if ( ( windowViewport = ss_shell_create_window( windowTitle, 1024, 768, true, driverMode ) ) == NULL )
 	{
-		YnCore_ShellInterface_DisplayMessageBox( APE_MESSAGE_ERROR, "Failed to create window!\n" );
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
 	}
 
@@ -488,15 +495,15 @@ int launcher_initialize( int argc, char **argv )
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 
-	if ( !apeInitialize( NULL ) )
+	if ( !ss_acl_initialize( NULL ) )
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 
 	// setup our timers, in this case we're just setting up our tick
-	sdlTimer = SDL_AddTimer( APE_TICK_RATE, timer_callback, NULL );
+	sdlTimer = SDL_AddTimer( SS_SHELL_TICK_RATE, timer_callback, NULL );
 
 	SDL_StartTextInput();
 
-	while ( apeIsEngineRunning() )
+	while ( ss_acl_is_engine_running() )
 	{
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
@@ -504,11 +511,11 @@ int launcher_initialize( int argc, char **argv )
 			switch ( event.type )
 			{
 				case SDL_USEREVENT:
-					apeTickFrame();
+					ss_acl_tick_frame();
 					break;
 
 				case SDL_TEXTINPUT:
-					apeHandleTextEvent( event.text.text );
+					ss_acl_input_handle_text_event( event.text.text );
 					break;
 
 				case SDL_MOUSEWHEEL:
@@ -540,7 +547,7 @@ int launcher_initialize( int argc, char **argv )
 
 					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE;
 
-					apeHandleKeyboardEvent( key, keyStates[ key ] );
+					ss_acl_input_handle_keyboard_event( key, keyStates[ key ] );
 					break;
 				}
 
@@ -556,7 +563,7 @@ int launcher_initialize( int argc, char **argv )
 							//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
 							// originally used the above but it kept returning bogus coords...
 							SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
-							apeSetViewportSize( windowViewport, drawW, drawH );
+							ss_arl_viewport_set_size( windowViewport, drawW, drawH );
 							break;
 					}
 					break;
@@ -564,12 +571,12 @@ int launcher_initialize( int argc, char **argv )
 			}
 		}
 
-		apeRenderFrame( windowViewport );
+		ss_acl_render_frame( windowViewport );
 
 		SDL_GL_SwapWindow( sdlWindow );
 
 		static unsigned int refreshTime = 0;
-		if ( refreshTime > apeGetNumTicks() )
+		if ( refreshTime > ss_acl_get_num_ticks() )
 			continue;
 
 		com_update_profiler_samples();
@@ -580,7 +587,7 @@ int launcher_initialize( int argc, char **argv )
 
 	SDL_StopTextInput();
 
-	apeShutdown();
+	ss_acl_shutdown();
 
 	return EXIT_SUCCESS;
 }

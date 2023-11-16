@@ -69,8 +69,9 @@ static void toggle_console( void )
 
 	// Release the mouse if the console is open
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
-		shell_grab_mouse( !consoleIsOpen );
+	if ( mouseLook != NULL && mouseLook->b_value ) {
+		ss_shell_grab_mouse( !consoleIsOpen );
+	}
 }
 
 static void toggle_console_command( unsigned int argc, char **argv )
@@ -95,9 +96,8 @@ static void scroll_backward( ApeConsoleOutput *output )
 	output->scrollPos--;
 }
 
-bool acl_console_handle_mouse_wheel_event_( float x, float y )
-{
-	if ( !acl_console_is_open() )
+bool acl_console_handle_mouse_wheel_event_( float x, float y ) {
+	if ( !ss_acl_is_console_open() ) {
 		return false;
 
 	ApeConsoleOutput *output = apeGetConsoleOutput();
@@ -257,7 +257,7 @@ bool acl_console_handle_text_event_( const char *key )
  * RENDERING
  ****************************************/
 
-static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
+static void draw_input_field( const SS_Arl_Viewport *viewport, GuiFont *font )
 {
 	const float ch = guiGetFontLineSpacing( font );
 	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
@@ -266,8 +266,8 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < apeGetNumTicks() )
-		v = apeGetNumTicks() + 20;
+	if ( v < ss_acl_get_num_ticks() )
+		v = ss_acl_get_num_ticks() + 20;
 
 	float bufPixW;
 	guiGetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
@@ -275,7 +275,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 	const float x = ( 1.0f + cw );
 
 	// cursor
-	char c = ( v > apeGetNumTicks() + 10 ) ? '_' : ' ';
+	char c = ( v > ss_acl_get_num_ticks() + 10 ) ? '_' : ' ';
 	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )
@@ -300,16 +300,15 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 	guiDisplayFont( font );
 }
 
-bool acl_console_is_open( void ) { return consoleIsOpen; }
+bool ss_acl_is_console_open( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
 /**
  * Draw the console panel.
  */
-void apeDrawConsole_( const ApeViewport *viewport )
-{
-	if ( !acl_console_is_open() )
+void ss_acl_console_draw_( const SS_Arl_Viewport *viewport ) {
+	if ( !ss_acl_is_console_open() ) {
 		return;
 
 	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );

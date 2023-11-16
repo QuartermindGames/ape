@@ -36,7 +36,7 @@ static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 	for ( uint32_t i = 0; i < numTextures; ++i )
 	{
 		uint16_t size;
-		char *textureName = acl_fs_parse_string( file, &size );
+		char *textureName = ss_acl_fs_parse_string( file, &size );
 		assert( textureName != NULL );
 		if ( textureName == NULL )
 		{
@@ -52,7 +52,7 @@ static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 		PLPath path;
 		PlSetupPath( path, true, "materials/world/%s.mat.n", textureName );
 
-		PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
+		PlPushBackVectorArrayElement( world->materials, ss_arl_material_cache( path, APE_CACHE_WORLD, true, false ) );
 
 		PL_DELETE( textureName );
 	}
@@ -83,9 +83,9 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 
 		room->uid = acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_PROTO, RFL_VERSION_MAX, -1 );
 
-		room->bounds.mins = acl_fs_parse_vector( file );
+		room->bounds.mins = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( room->bounds.mins );
-		room->bounds.maxs = acl_fs_parse_vector( file );
+		room->bounds.maxs = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( room->bounds.maxs );
 
 		room->flags = acl_fs_parse_int_ex( file, version, RFL_VERSION_RF2_DEMO, RFL_VERSION_MAX, 0 );
@@ -101,13 +101,13 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_ALPHA; }
 		}
 
-		room->life = acl_fs_parse_float( file );
+		room->life = ss_acl_fs_parse_float( file );
 
 		// Urgh, Volition removed this and then brought it back...
 		if ( ( version >= RFL_VERSION_RF1_DEMO && version < RFL_VERSION_RF2_DEMO ) || version >= RFL_VERSION_RF2_RETAIL )
 		{
 			uint16_t size;
-			char *eaxEffect = acl_fs_parse_string( file, &size );
+			char *eaxEffect = ss_acl_fs_parse_string( file, &size );
 			if ( eaxEffect != NULL )
 			{
 				assert( isalpha( *eaxEffect ) );
@@ -126,10 +126,10 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 
-			PLColour colour = acl_fs_parse_colour( file );
+			PLColour colour = ss_acl_fs_parse_colour( file );
 			room->liquid.colour = PlColourU8ToF32( &colour );
 
-			room->liquid.visibility = acl_fs_parse_float( file );
+			room->liquid.visibility = ss_acl_fs_parse_float( file );
 
 			room->liquid.type = PlReadInt32( file, false, NULL );
 
@@ -138,26 +138,26 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 				room->liquid.ppmU = PlReadInt32( file, false, NULL );
 				room->liquid.ppmV = PlReadInt32( file, false, NULL );
 
-				room->liquid.angle = acl_fs_parse_float( file );
+				room->liquid.angle = ss_acl_fs_parse_float( file );
 
 				room->liquid.waveform = PlReadInt32( file, false, NULL );
 			}
 
-			room->liquid.panU = acl_fs_parse_float( file );
-			room->liquid.panV = acl_fs_parse_float( file );
+			room->liquid.panU = ss_acl_fs_parse_float( file );
+			room->liquid.panV = ss_acl_fs_parse_float( file );
 
 			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 
 			if ( version < RFL_VERSION_RF2_RETAIL )
 			{
-				acl_fs_parse_colour( file );
+				ss_acl_fs_parse_colour( file );
 				PlReadInt32( file, false, NULL );
 
 				if ( room->flags & APE_WORLD_ROOM_FLAG_UNKNOWN0 )
 				{
 					uint16_t size;
-					char *tmp = acl_fs_parse_string( file, &size );
+					char *tmp = ss_acl_fs_parse_string( file, &size );
 					PL_DELETE( tmp );
 				}
 			}
@@ -169,15 +169,15 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 				room->liquid.depth = PlReadFloat32( file, false, NULL );
 				assert( !isnan( room->liquid.depth ) );
 
-				PLColour colour = acl_fs_parse_colour( file );
+				PLColour colour = ss_acl_fs_parse_colour( file );
 				room->liquid.colour = PlColourU8ToF32( &colour );
 
 				uint16_t size;
-				char *liquidTextureName = acl_fs_parse_string( file, &size );
+				char *liquidTextureName = ss_acl_fs_parse_string( file, &size );
 				assert( liquidTextureName != NULL && *liquidTextureName != '\0' );
 				PL_DELETE( liquidTextureName );
 
-				room->liquid.visibility = acl_fs_parse_float( file );
+				room->liquid.visibility = ss_acl_fs_parse_float( file );
 
 				room->liquid.type = PlReadInt32( file, false, NULL );
 				room->liquid.alpha = PlReadInt32( file, false, NULL );
@@ -185,16 +185,16 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 				room->liquid.ppmU = PlReadInt32( file, false, NULL );
 				room->liquid.ppmV = PlReadInt32( file, false, NULL );
 
-				room->liquid.angle = acl_fs_parse_float( file );
+				room->liquid.angle = ss_acl_fs_parse_float( file );
 
 				room->liquid.waveform = PlReadInt32( file, false, NULL );
-				room->liquid.panU = acl_fs_parse_float( file );
-				room->liquid.panV = acl_fs_parse_float( file );
+				room->liquid.panU = ss_acl_fs_parse_float( file );
+				room->liquid.panV = ss_acl_fs_parse_float( file );
 			}
 
 			if ( room->flags & APE_WORLD_ROOM_FLAG_AMBIENT )
 			{
-				PLColour colour = acl_fs_parse_colour( file );
+				PLColour colour = ss_acl_fs_parse_colour( file );
 				room->ambientLight = PlColourU8ToF32( &colour );
 			}
 		}
@@ -243,9 +243,9 @@ static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
 		uint32_t roomAIndex = PL_READUINT32( file, false, NULL );
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
-		PLVector3 mins = acl_fs_parse_vector( file );
+		PLVector3 mins = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( mins );
-		PLVector3 maxs = acl_fs_parse_vector( file );
+		PLVector3 maxs = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( maxs );
 
 		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
@@ -276,7 +276,7 @@ static void parse_static_geometry_vertices( ApeWorld *world, PLFile *file )
 	for ( uint32_t i = 0; i < numVertices; ++i )
 	{
 		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
-		vertex->position = acl_fs_parse_vector( file );
+		vertex->position = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( vertex->position );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
@@ -388,9 +388,9 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 				PlPushBackVectorArrayElement( faceVertex->u->adjacentFaces, face );
 			}
 
-			faceVertex->uv.x = acl_fs_parse_float( file );
+			faceVertex->uv.x = ss_acl_fs_parse_float( file );
 			assert( faceVertex->uv.x * faceVertex->uv.x >= 0.0f );
-			faceVertex->uv.y = acl_fs_parse_float( file );
+			faceVertex->uv.y = ss_acl_fs_parse_float( file );
 			assert( faceVertex->uv.y * faceVertex->uv.y >= 0.0f );
 
 			// Initially, we can just derive the face vertex normal from the face normal,
@@ -442,23 +442,23 @@ static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file, unsi
 		uint8_t height = PL_READUINT8( file, NULL );// height
 		assert( height != 0 );
 
-		float xPerMeter = acl_fs_parse_float( file );// x pixels per meter
-		float yPerMeter = acl_fs_parse_float( file );// y pixels per meter
+		float xPerMeter = ss_acl_fs_parse_float( file );// x pixels per meter
+		float yPerMeter = ss_acl_fs_parse_float( file );// y pixels per meter
 
-		PLVector3 min = acl_fs_parse_vector( file );// min
-		PLVector3 max = acl_fs_parse_vector( file );// max
+		PLVector3 min = ss_acl_fs_parse_vector( file );// min
+		PLVector3 max = ss_acl_fs_parse_vector( file );// max
 
-		acl_fs_parse_vector( file );     // eq
-		acl_fs_parse_float( file );      // offset
+		ss_acl_fs_parse_vector( file );     // eq
+		ss_acl_fs_parse_float( file );      // offset
 		PlReadInt32( file, false, NULL );// should smooth
 		PlReadInt32( file, false, NULL );// fullbright
 		PlReadInt32( file, false, NULL );// dropped coefficient
 		PlReadInt32( file, false, NULL );// u coefficient
 		PlReadInt32( file, false, NULL );// v coefficient
-		acl_fs_parse_float( file );      // uv add x
-		acl_fs_parse_float( file );      // uv add y
-		acl_fs_parse_float( file );      // uv scale x
-		acl_fs_parse_float( file );      // uv scale y
+		ss_acl_fs_parse_float( file );      // uv add x
+		ss_acl_fs_parse_float( file );      // uv add y
+		ss_acl_fs_parse_float( file );      // uv scale x
+		ss_acl_fs_parse_float( file );      // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
@@ -481,8 +481,8 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 			//assert( face != NULL );
 		}
 
-		float uPanSpeed = acl_fs_parse_float( file );
-		float vPanSpeed = acl_fs_parse_float( file );
+		float uPanSpeed = ss_acl_fs_parse_float( file );
+		float vPanSpeed = ss_acl_fs_parse_float( file );
 	}
 }
 
@@ -507,14 +507,14 @@ static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, uns
 
 		PlReadInt32( file, false, NULL );
 		PlReadInt32( file, false, NULL );
-		acl_fs_parse_float( file );//x
-		acl_fs_parse_float( file );//y
-		acl_fs_parse_float( file );//x
-		acl_fs_parse_float( file );//y
-		acl_fs_parse_float( file );//x
-		acl_fs_parse_float( file );//y
-		acl_fs_parse_float( file );//x
-		acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
 		PlReadInt8( file, NULL );
 	}
 
@@ -548,41 +548,41 @@ static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int vers
 	PlResizeVectorArray( level->lights, numLights );
 	for ( int32_t i = 0; i < numLights; ++i )
 	{
-		ApeLight *light = PL_NEW( ApeLight );
+		SS_Arl_Light *light = PL_NEW( SS_Arl_Light );
 
 		PlReadInt32( file, false, NULL );// id
 
 		uint16_t size;
-		char *tmp = acl_fs_parse_string( file, &size );// class name
+		char *tmp = ss_acl_fs_parse_string( file, &size );// class name
 		PL_DELETE( tmp );
 
-		light->position = acl_fs_parse_vector( file );
+		light->position = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( light->position );
 
-		acl_fs_parse_mat3( file );// rotation
+		ss_acl_fs_parse_mat3( file );// rotation
 
-		tmp = acl_fs_parse_string( file, &size );// script name
+		tmp = ss_acl_fs_parse_string( file, &size );// script name
 		PL_DELETE( tmp );
 
 		light->isHidden = PL_READUINT8( file, NULL );     // hidden in editor
 		light->flags = PL_READUINT32( file, false, NULL );// flags
 
-		PLColour colour = acl_fs_parse_colour( file );
+		PLColour colour = ss_acl_fs_parse_colour( file );
 		light->colour = PlColourU8ToF32( &colour );
 
-		light->radius = acl_fs_parse_float( file );// * 2.0f;
+		light->radius = ss_acl_fs_parse_float( file );// * 2.0f;
 
-		acl_fs_parse_float( file );// fov
-		acl_fs_parse_float( file );// fov dropoff
-		acl_fs_parse_float( file );// intensity at max range
+		ss_acl_fs_parse_float( file );// fov
+		ss_acl_fs_parse_float( file );// fov dropoff
+		ss_acl_fs_parse_float( file );// intensity at max range
 		acl_fs_parse_int( file );  // dropoff type
-		acl_fs_parse_float( file );// tube light width
-		acl_fs_parse_float( file );// on intensity
-		acl_fs_parse_float( file );// on time
-		acl_fs_parse_float( file );// on time variation
-		acl_fs_parse_float( file );// off intensity
-		acl_fs_parse_float( file );// off time
-		acl_fs_parse_float( file );// off time variation
+		ss_acl_fs_parse_float( file );// tube light width
+		ss_acl_fs_parse_float( file );// on intensity
+		ss_acl_fs_parse_float( file );// on time
+		ss_acl_fs_parse_float( file );// on time variation
+		ss_acl_fs_parse_float( file );// off intensity
+		ss_acl_fs_parse_float( file );// off time
+		ss_acl_fs_parse_float( file );// off time variation
 
 		PlPushBackVectorArrayElement( level->lights, light );
 	}
@@ -590,28 +590,28 @@ static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int vers
 
 static void parse_player_start( ApeWorld *world, PLFile *file, unsigned int version )
 {
-	world->startPosition = acl_fs_parse_vector( file );
+	world->startPosition = ss_acl_fs_parse_vector( file );
 	FLIP_VECTOR( world->startPosition );
-	world->startOrientation = acl_fs_parse_mat3( file );
+	world->startOrientation = ss_acl_fs_parse_mat3( file );
 }
 
 static void parse_level_properties( ApeWorld *world, PLFile *file, unsigned int version )
 {
 	uint16_t size;
-	char *texture = acl_fs_parse_string( file, &size );
+	char *texture = ss_acl_fs_parse_string( file, &size );
 	if ( texture != NULL )
 		PL_DELETE( texture );
 
 	int hardness = PlReadInt32( file, false, NULL );
 
-	PLColour ambience = acl_fs_parse_colour( file );
+	PLColour ambience = ss_acl_fs_parse_colour( file );
 	world->ambience = PlColourU8ToF32( &ambience );
 	bool directionalAmbience = PL_READUINT8( file, NULL );
 
-	PLColour fogColour = acl_fs_parse_colour( file );
+	PLColour fogColour = ss_acl_fs_parse_colour( file );
 	world->fogColour = PlColourU8ToF32( &fogColour );
-	world->fogNear = acl_fs_parse_float( file );
-	world->fogFar = acl_fs_parse_float( file );
+	world->fogNear = ss_acl_fs_parse_float( file );
+	world->fogFar = ss_acl_fs_parse_float( file );
 
 	// Ensure clear copies the fog, to ensure some level of consistency
 	world->clearColour = world->fogColour;

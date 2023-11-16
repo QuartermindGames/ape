@@ -44,7 +44,6 @@ ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial )
 }
 
 ApeMaterial *ar_material_get_fallback( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK ); }
-ApeMaterial *ar_material_get_default_vertex( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ); }
 
 void arl_initialize_materials_( void )
 {
@@ -71,7 +70,7 @@ void arl_initialize_materials_( void )
 	        };
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
-		defaultMaterials[ i ] = apeCacheMaterial( defaultMaterialPaths[ i ], APE_CACHE_WORLD, false, false );
+		defaultMaterials[ i ] = ss_arl_material_cache( defaultMaterialPaths[ i ], APE_CACHE_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
 			PRINT_ERROR( "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
 	}
@@ -109,12 +108,12 @@ void arl_shutdown_materials_( void )
 	}
 }
 
-const char *ar_material_get_path( const ApeMaterial *material )
+const char *ss_arl_material_get_path( const ApeMaterial *material )
 {
 	return material->path;
 }
 
-PLGTexture *ar_material_get_preview_texture( ApeMaterial *material )
+PLGTexture *ss_arl_material_get_preview_texture( ApeMaterial *material )
 {
 	return material->preview;
 }
@@ -355,6 +354,15 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					break;
 				}
 
+				case PLG_UNIFORM_VEC2:
+				{
+					if ( ndGetF32Array( node, ( float * ) &materialVariable->data.vec2, 2 ) != ND_ERROR_SUCCESS )
+						break;
+
+					materialVariable->type = MATERIAL_VAR_VEC2;
+					break;
+				}
+
 				case PLG_UNIFORM_SAMPLER1D:
 				case PLG_UNIFORM_SAMPLER2D:
 				case PLG_UNIFORM_SAMPLER3D:
@@ -520,7 +528,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 	return material;
 }
 
-static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
+static ApeMaterial *get_material( const char *path, SS_Arl_CacheGroup group )
 {
 	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL )
@@ -585,7 +593,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	{
 		case APE_MATERIAL_BUILTIN_TIME:
 		{
-			unsigned int numTicks = apeGetNumTicks();
+			unsigned int numTicks = ss_acl_get_num_ticks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
@@ -623,7 +631,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	}
 }
 
-static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *light )
+static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Light *light )
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
@@ -681,7 +689,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeLight *ligh
 	}
 }
 
-ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFallback, bool preview )
+ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
 	ApeMaterial *material = get_material( path, group );
@@ -729,7 +737,7 @@ ApeMaterial *apeCacheMaterial( const char *path, ApeCacheGroup group, bool useFa
 	return material;
 }
 
-void ar_material_release( ApeMaterial *material )
+void ss_arl_material_release( ApeMaterial *material )
 {
 	assert( material != NULL );
 	if ( material == NULL )
@@ -745,14 +753,14 @@ void ar_material_release( ApeMaterial *material )
 	apeReleaseReference( &material->mem );
 }
 
-int8_t ar_material_get_surface_type( const ApeMaterial *material )
+int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
 {
 	return material->surfaceType;
 }
 
 bool arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
 
-void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
+void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **lights, unsigned int numLights )
 {
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!
@@ -773,11 +781,11 @@ void apeDrawMesh( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsig
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
-		if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_FRONT )
+		if ( arl_rendererState_.cullMode == SS_ARL_CULL_MODE_FRONT )
 			cullMode = PLG_CULL_POSITIVE;
-		else if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_BACK )
+		else if ( arl_rendererState_.cullMode == SS_ARL_CULL_MODE_BACK )
 			cullMode = PLG_CULL_NEGATIVE;
-		else if ( arl_rendererState_.cullMode == APE_RENDERER_CULL_NONE )
+		else if ( arl_rendererState_.cullMode == SS_ARL_CULL_MODE_NONE )
 			cullMode = PLG_CULL_NONE;
 		else
 			cullMode = curPass->cullMode;

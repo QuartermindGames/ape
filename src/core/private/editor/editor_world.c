@@ -19,7 +19,7 @@ static ApeEditorContext context;
 static ApeEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
 
 #define MAX_CAMERA_SLOTS 16
-static ApeCamera *cameras[ MAX_CAMERA_SLOTS ];
+static SS_Arl_Camera *cameras[ MAX_CAMERA_SLOTS ];
 
 static ApeWorld *world = NULL;
 
@@ -92,16 +92,16 @@ static void InitializeWorldEditor( void ) {
 	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
 		char buf[ 64 ];
 		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = arl_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
+		cameras[ i ] = ss_arl_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
 	}
 
 	context.camera = cameras[ 0 ];
 	context.camera->mode = APE_CAMERA_MODE_TOP;
 	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
 
-	acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	acl_input_register_action( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
+	ss_acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
+	ss_acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
+	ss_acl_input_register_action( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
 }
 
 static void ShutdownWorldEditor( void ) {
@@ -158,9 +158,9 @@ static void DrawWorldEditorGUI( void ) {
 		transform = PlTransposeMatrix4( &transform );
 		PlgSetViewMatrix( &transform );
 
-		ApeCamera tmp;
+		SS_Arl_Camera tmp;
 		PL_ZERO_( tmp );
-		tmp.internal = apeGetAuxCamera();
+		tmp.internal = ss_arl_get_aux_camera_();
 		switch ( context.camera->drawMode ) {
 			case APE_CAMERA_DRAW_MODE_WIREFRAME:
 				arl_level_draw_wireframe( world, &tmp );
@@ -177,12 +177,12 @@ static void DrawWorldEditorGUI( void ) {
 		PlgSetViewMatrix( &tmp.internal->internal.view );
 	}
 
-	ApeBitmapFont *defaultFont = apeGetDefaultBitmapFont();
+	SS_Arl_BitmapFont *defaultFont = ss_arl_get_default_bitmap_font();
 	if ( defaultFont == NULL ) {
 		return;
 	}
 
-	apeBeginBitmapFontDraw( defaultFont );
+	ss_arl_bitmap_font_begin_draw( defaultFont );
 
 	const char *label;
 	if ( context.camera != NULL ) {
@@ -205,12 +205,12 @@ static void DrawWorldEditorGUI( void ) {
 		label = "No camera!";
 	}
 
-	apeAddBitmapStringToBatch( defaultFont,
-	                           ( float ) ( ( w - ( defaultFont->cw * 2 ) ) - ( defaultFont->cw * strlen( label ) ) ),
-	                           ( float ) ( h - ( defaultFont->ch * 2 ) ),
-	                           1.0f, PL_COLOUR_GOLD, label, strlen( label ), true );
+	ss_arl_bitmap_font_batch_string( defaultFont,
+	                                 ( float ) ( ( w - ( defaultFont->cw * 2 ) ) - ( defaultFont->cw * strlen( label ) ) ),
+	                                 ( float ) ( h - ( defaultFont->ch * 2 ) ),
+	                                 1.0f, PL_COLOUR_GOLD, label, strlen( label ), true );
 
-	apeDrawBitmapFont( defaultFont );
+	ss_arl_bitmap_font_draw( defaultFont );
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	static const float CURSOR_SIZE = 8.0f;
@@ -220,19 +220,19 @@ static void DrawWorldEditorGUI( void ) {
 }
 
 static void TickWorldEditor( void ) {
-	apeGetMousePosition( &mouseCursorX, &mouseCursorY );
+	ss_acl_input_get_mouse_position( &mouseCursorX, &mouseCursorY );
 	mouseCursorX = PlRoundUp( mouseCursorX, context.gridScale * 4 );
 	mouseCursorY = PlRoundUp( mouseCursorY, context.gridScale * 4 );
 }
 
 static void OnWorldEditorActive( void ) {
-	ApeViewport *viewport = apeGetViewportBySlot( 0 );
+	SS_Arl_Viewport *viewport = ss_arl_get_viewport_by_slot( 0 );
 	assert( viewport != NULL );
 	if ( viewport == NULL ) {
 		return;
 	}
 
-	apeSetViewportCamera( viewport, context.camera );
+	ss_arl_viewport_set_camera( viewport, context.camera );
 
 	world = acl_level_get_current();
 }

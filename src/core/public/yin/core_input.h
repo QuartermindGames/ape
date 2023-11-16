@@ -5,7 +5,8 @@
 /* map everything out to controller-style input
  * even if the user isn't necessarily using a controller
  */
-typedef enum ApeInputButton {
+typedef enum ApeInputButton
+{
 	APE_INPUT_INVALID,
 
 	APE_INPUT_UP,
@@ -32,7 +33,8 @@ typedef enum ApeInputButton {
 	APE_MAX_BUTTON_INPUTS
 } ApeInputButton;
 
-typedef enum ApeInputMouseButton {
+typedef enum ApeInputMouseButton
+{
 	APE_INPUT_MOUSE_BUTTON_LEFT,
 	APE_INPUT_MOUSE_BUTTON_RIGHT,
 	APE_INPUT_MOUSE_BUTTON_MIDDLE,
@@ -40,7 +42,8 @@ typedef enum ApeInputMouseButton {
 	APE_MAX_INPUT_MOUSE_BUTTONS
 } ApeInputMouseButton;
 
-typedef enum ApeInputKey {
+typedef enum ApeInputKey
+{
 	KEY_INVALID = -1,
 
 	KEY_BACKSPACE = 8,
@@ -86,7 +89,8 @@ typedef enum ApeInputKey {
 	APE_MAX_KEY_INPUTS
 } ApeInputKey;
 
-typedef enum ApeInputState {
+typedef enum ApeInputState
+{
 	APE_INPUT_STATE_NONE,     /* key has no state */
 	APE_INPUT_STATE_PRESSED,  /* key has been pressed */
 	APE_INPUT_STATE_DOWN,     /* key is still down */
@@ -95,13 +99,14 @@ typedef enum ApeInputState {
 
 PL_EXTERN_C
 
-typedef enum ApeInputDeviceType {
+typedef enum SS_Acl_InputDeviceType
+{
 	CLIENT_INPUT_DEVICE_NONE,
 	CLIENT_INPUT_DEVICE_KEYBOARD,
 	CLIENT_INPUT_DEVICE_MOUSE,
 	CLIENT_INPUT_DEVICE_TOUCH,
 	CLIENT_INPUT_DEVICE_CONTROLLER,
-} ApeInputDeviceType;
+} SS_Acl_InputDeviceType;
 
 // Controller API
 
@@ -121,17 +126,18 @@ ApeInputState apeGetButtonStatus( unsigned int slot, ApeInputButton button );
 PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum );
 
 // Mouse
-void apeGetMousePosition( int *x, int *y );
-void apeGetMouseDelta( int *x, int *y );
+void ss_acl_input_get_mouse_position( int *x, int *y );
+void ss_acl_input_get_mouse_delta( int *x, int *y );
 
 // Actions
 
 typedef void ( *ApeInputActionCallback )( ApeInputState state, const char *id );
 
-void acl_input_register_action( const char *id,
-                                ApeInputButton buttons[], unsigned int numDefaultButtons,
-                                ApeInputKey keys[], unsigned int numDefaultKeys,
-                             ApeInputActionCallback actionCallback );
-ApeInputState apeGetInputActionState( const char *id );
+void ss_acl_input_register_action( const char *id,
+                                   ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                   ApeInputKey keys[], unsigned int numDefaultKeys,
+                                   ApeInputActionCallback actionCallback );
+
+unsigned int ss_acl_input_register_device( SS_Acl_InputDeviceType type );
 
 PL_EXTERN_C_END

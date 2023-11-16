@@ -91,7 +91,7 @@ void arl_postfx_register_console_variables_( void )
 	}
 }
 
-void arl_postfx_draw_( const ApeViewport *viewport )
+void arl_postfx_draw_( const SS_Arl_Viewport *viewport )
 {
 	if ( !postProcessEnabled )
 		return;

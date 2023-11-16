@@ -9,9 +9,9 @@
  * PRIVATE
  ****************************************/
 
-static ApeLight *deserialize_light( NdBranch *root )
+static SS_Arl_Light *deserialize_light( NdBranch *root )
 {
-	ApeLight *light = PL_NEW( ApeLight );
+	SS_Arl_Light *light = PL_NEW( SS_Arl_Light );
 
 	light->position = ndGetVector3( root, "position", &pl_vecOrigin3 );
 	light->angles = ndGetVector3( root, "angles", &pl_vecOrigin3 );
@@ -194,7 +194,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 				PLPath path;
 				if ( ndGetStr( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS )
 				{
-					PlPushBackVectorArrayElement( world->materials, apeCacheMaterial( path, APE_CACHE_WORLD, true, false ) );
+					PlPushBackVectorArrayElement( world->materials, ss_arl_material_cache( path, APE_CACHE_WORLD, true, false ) );
 				}
 				else
 				{

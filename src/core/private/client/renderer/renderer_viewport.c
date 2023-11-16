@@ -14,15 +14,15 @@
  */
 
 #define MAX_VIEWPORTS 16
-static ApeViewport *viewports[ MAX_VIEWPORTS ];
+static SS_Arl_Viewport *viewports[ MAX_VIEWPORTS ];
 static bool isInitialized = false;
 
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
-ApeViewport *apeCreateViewport( int x, int y, int width, int height, void *windowHandle ) {
+SS_Arl_Viewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle ) {
 	if ( !isInitialized ) {
-		PL_ZERO( viewports, sizeof( ApeViewport * ) * MAX_VIEWPORTS );
+		PL_ZERO( viewports, sizeof( SS_Arl_Viewport * ) * MAX_VIEWPORTS );
 		isInitialized = true;
 	}
 
@@ -40,7 +40,7 @@ ApeViewport *apeCreateViewport( int x, int y, int width, int height, void *windo
 		return NULL;
 	}
 
-	viewports[ i ] = PL_NEW( ApeViewport );
+	viewports[ i ] = PL_NEW( SS_Arl_Viewport );
 	viewports[ i ]->x = x;
 	viewports[ i ]->y = y;
 	viewports[ i ]->width = width;
@@ -51,7 +51,7 @@ ApeViewport *apeCreateViewport( int x, int y, int width, int height, void *windo
 	return viewports[ i ];
 }
 
-void apeDestroyViewport( ApeViewport *viewport ) {
+void ss_arl_viewport_destroy( SS_Arl_Viewport *viewport ) {
 	if ( viewport == NULL ) {
 		return;
 	}
@@ -64,7 +64,7 @@ void apeDestroyViewport( ApeViewport *viewport ) {
 /**
  * Returns the viewport by the given slot.
  */
-ApeViewport *apeGetViewportBySlot( unsigned int slot ) {
+SS_Arl_Viewport *ss_arl_get_viewport_by_slot( unsigned int slot ) {
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS ) {
 		PRINT_WARNING( "Invalid slot specified!\n" );
@@ -74,16 +74,16 @@ ApeViewport *apeGetViewportBySlot( unsigned int slot ) {
 	return viewports[ slot ];
 }
 
-void apeSetViewportCamera( ApeViewport *viewport, ApeCamera *camera ) {
+void ss_arl_viewport_set_camera( SS_Arl_Viewport *viewport, SS_Arl_Camera *camera ) {
 	viewport->camera = camera;
 }
 
-void apeSetViewportSize( ApeViewport *viewport, int width, int height ) {
+void ss_arl_viewport_set_size( SS_Arl_Viewport *viewport, int width, int height ) {
 	viewport->width = width;
 	viewport->height = height;
 }
 
-void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height ) {
+void ss_arl_viewport_get_size( const SS_Arl_Viewport *viewport, int *width, int *height ) {
 	*width = viewport->width;
 	*height = viewport->height;
 }
@@ -91,7 +91,7 @@ void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int apeGetViewportFramerate( const ApeViewport *viewport ) {
+unsigned int ss_arl_viewport_get_framerate( const SS_Arl_Viewport *viewport ) {
 	double t = 0.0;
 	for ( unsigned int i = 0; i < APE_MAX_FPS_READINGS; ++i ) {
 		t += viewport->perf.frameReadings[ i ];

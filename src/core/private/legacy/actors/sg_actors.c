@@ -182,7 +182,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData ) {
-	ApeCamera *camera = arl_camera_get_active();
+	SS_Arl_Camera *camera = ss_arl_camera_get_active();
 	if ( camera == NULL )
 		return;
 
@@ -213,7 +213,7 @@ static void SGActor_Generic_Draw( Actor *self, void *userData ) {
 
 		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i ) {
 			MDLUserData *modelData = sgActor->model->userData;
-			apeDrawMesh( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
+			ss_arl_material_draw( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
 		}
 
 		PlPopMatrix();
@@ -292,7 +292,7 @@ static void Ship_Spawn( Actor *self ) {
 	ship->particleEmitter->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->particleEmitter->transform.translation = Act_GetPosition( self );
 	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->particleEmitter->material = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
+	ship->particleEmitter->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
 	ship->emitLeft = PS_SpawnEmitter();
 	ship->emitLeft->emissionRate = 4;
@@ -307,7 +307,7 @@ static void Ship_Spawn( Actor *self ) {
 	ship->emitLeft->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->emitLeft->transform.translation = Act_GetPosition( self );
 	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitLeft->material = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
+	ship->emitLeft->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
 	ship->emitRight = PS_SpawnEmitter();
 	ship->emitRight->emissionRate = 4;
@@ -322,9 +322,9 @@ static void Ship_Spawn( Actor *self ) {
 	ship->emitRight->forceVar = PLVector3( 0.0f, 0.05f, 0.0f );
 	ship->emitRight->transform.translation = Act_GetPosition( self );
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
-	ship->emitRight->material = apeCacheMaterial( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
+	ship->emitRight->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
-	ApeCamera *camera = arl_camera_get_active();
+	SS_Arl_Camera *camera = ss_arl_camera_get_active();
 	camera->mode = APE_CAMERA_MODE_TOP;
 	camera->parentActor = self;
 }
@@ -358,20 +358,20 @@ static void Ship_Tick( Actor *self, void *userData ) {
 		return;
 	}
 
-	if ( apeShellInterface_GetKeyState( KEY_LEFT ) ||
-	     apeShellInterface_GetKeyState( 'a' ) )
+	if ( ss_shell_get_key_state( KEY_LEFT ) ||
+	     ss_shell_get_key_state( 'a' ) )
 		self->angles.y += TURN_SPEED;
-	else if ( apeShellInterface_GetKeyState( KEY_RIGHT ) ||
-	          apeShellInterface_GetKeyState( 'd' ) )
+	else if ( ss_shell_get_key_state( KEY_RIGHT ) ||
+	          ss_shell_get_key_state( 'd' ) )
 		self->angles.y -= TURN_SPEED;
 
 	static const float incAmount = 0.0015f;
 
-	if ( apeShellInterface_GetKeyState( KEY_UP ) ||
-	     apeShellInterface_GetKeyState( 'w' ) )
+	if ( ss_shell_get_key_state( KEY_UP ) ||
+	     ss_shell_get_key_state( 'w' ) )
 		sg->forwardVelocity += incAmount;
-	else if ( apeShellInterface_GetKeyState( KEY_DOWN ) ||
-	          apeShellInterface_GetKeyState( 's' ) )
+	else if ( ss_shell_get_key_state( KEY_DOWN ) ||
+	          ss_shell_get_key_state( 's' ) )
 		sg->forwardVelocity -= incAmount;
 	else if ( sg->forwardVelocity != 0.0f ) {
 		sg->forwardVelocity = sg->forwardVelocity > 0 ? sg->forwardVelocity - incAmount : sg->forwardVelocity + incAmount;
@@ -384,7 +384,7 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( apeShellInterface_GetKeyState( KEY_LEFT_CTRL ) && ( sg->fireDelay < apeGetNumTicks() ) ) {
+	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < ss_acl_get_num_ticks() ) ) {
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
 
@@ -394,13 +394,13 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 		projectile->parent = self;
 
-		sg->fireDelay = apeGetNumTicks() + 25;
+		sg->fireDelay = ss_acl_get_num_ticks() + 25;
 	}
 
 	static unsigned int survivalScoreTimer = 0;
-	if ( self->health > 0 && survivalScoreTimer < apeGetNumTicks() ) {
+	if ( self->health > 0 && survivalScoreTimer < ss_acl_get_num_ticks() ) {
 		self->score++;
-		survivalScoreTimer = apeGetNumTicks() + 145;
+		survivalScoreTimer = ss_acl_get_num_ticks() + 145;
 	}
 }
 

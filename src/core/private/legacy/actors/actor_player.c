@@ -34,14 +34,14 @@ typedef struct APlayer {
 
 	PLVector3 viewAngles;
 
-	ApeCamera *eyeCamera;
+	SS_Arl_Camera *eyeCamera;
 
 	PLMModel *model;
 } APlayer;
 
 #define APLAYER( X ) ( ( APlayer * ) ( X )->userData )
 
-ApeCamera *Player_GetCamera( Actor *self ) {
+SS_Arl_Camera *Player_GetCamera( Actor *self ) {
 	APlayer *playerData = Act_GetUserData( self );
 	if ( playerData == NULL )
 		return NULL;
@@ -90,10 +90,10 @@ static void Player_Spawn( Actor *self ) {
 static void Player_ApplyViewBob( Actor *self ) {
 	/* apply view bob */
 	float velocityVector = PlVector3Length( self->velocity );
-	APLAYER( self )->viewBob += ( sinf( apeGetNumTicks() / 5.0f ) / 10.0f ) * velocityVector;
+	APLAYER( self )->viewBob += ( sinf( ss_acl_get_num_ticks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = self->position.y + PLAYER_VIEW_OFFSET;
-	if ( apeShellInterface_GetKeyState( 'c' ) )
+	if ( ss_shell_get_key_state( 'c' ) )
 		viewOffset = self->position.y + PLAYER_CROUCH_OFFSET;
 
 	self->viewOffset = viewOffset + APLAYER( self )->viewBob;
@@ -105,7 +105,7 @@ static void Player_HandleMouseLook( Actor *self ) {
 		return;
 
 	int mx, my;
-	apeGetMouseDelta( &mx, &my );
+	ss_acl_input_get_mouse_delta( &mx, &my );
 
 	self->angles.y += mx;
 
@@ -115,7 +115,7 @@ static void Player_HandleMouseLook( Actor *self ) {
 }
 
 static void Player_Tick( Actor *self, void *userData ) {
-	if ( apeShellInterface_GetButtonState( INPUT_A ) )
+	if ( ss_shell_get_button_state( INPUT_A ) )
 		self->velocity.y += 10.0f;
 
 	Player_HandleMouseLook( self );
@@ -123,9 +123,9 @@ static void Player_Tick( Actor *self, void *userData ) {
 	static const float incAmount = 0.25f;
 
 	// Forward/backward
-	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) )
+	if ( ss_shell_get_button_state( APE_INPUT_UP ) || ss_shell_get_key_state( 'w' ) )
 		APLAYER( self )->forwardVelocity += incAmount;
-	else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) )
+	else if ( ss_shell_get_button_state( APE_INPUT_DOWN ) || ss_shell_get_key_state( 's' ) )
 		APLAYER( self )->forwardVelocity -= incAmount;
 	else if ( APLAYER( self )->forwardVelocity != 0.0f ) {
 		APLAYER( self )->forwardVelocity = APLAYER( self )->forwardVelocity > 0 ? APLAYER( self )->forwardVelocity - incAmount : APLAYER( self )->forwardVelocity + incAmount;
@@ -134,9 +134,9 @@ static void Player_Tick( Actor *self, void *userData ) {
 	}
 
 	// Strafing
-	if ( apeShellInterface_GetKeyState( 'a' ) )
+	if ( ss_shell_get_key_state( 'a' ) )
 		APLAYER( self )->strafeVelocity += incAmount;
-	else if ( apeShellInterface_GetKeyState( 'd' ) )
+	else if ( ss_shell_get_key_state( 'd' ) )
 		APLAYER( self )->strafeVelocity -= incAmount;
 	else if ( APLAYER( self )->strafeVelocity != 0.0f ) {
 		APLAYER( self )->strafeVelocity = APLAYER( self )->strafeVelocity > 0 ? APLAYER( self )->strafeVelocity - incAmount : APLAYER( self )->strafeVelocity + incAmount;
@@ -145,7 +145,7 @@ static void Player_Tick( Actor *self, void *userData ) {
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = apeShellInterface_GetButtonState( INPUT_LEFT_STICK ) || apeShellInterface_GetKeyState( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity = ss_shell_get_button_state( INPUT_LEFT_STICK ) || ss_shell_get_key_state( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	APLAYER( self )->forwardVelocity = PlClamp( -maxVelocity, APLAYER( self )->forwardVelocity, maxVelocity );
 	APLAYER( self )->strafeVelocity = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
 
@@ -174,7 +174,7 @@ static void Player_Draw( Actor *self, void *userData ) {
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
 	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		apeDrawMesh( ar_material_get_fallback(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
+		ss_arl_material_draw( ar_material_get_fallback(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
 
 	PlPopMatrix();
 }

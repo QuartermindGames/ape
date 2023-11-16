@@ -10,11 +10,12 @@
 #define TOX_GAME_VERSION_MINOR 1
 #define TOX_GAME_VERSION_PATCH 0
 
+#define TOX_ALIVE_PREVIEW
+
 typedef struct ToxGlobalVars
 {
-	float sunPitch;
-	float sunYaw;
+	float timeSpeed;
 } ToxGlobalVars;
 extern ToxGlobalVars tox_globalVars;
 
-ApeCamera *tox_get_player_camera( void );
+SS_Arl_Camera *tox_get_player_camera( void );

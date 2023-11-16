@@ -139,7 +139,6 @@ ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial );
 
 // !!OBSOLETE!! Use the above instead...
 ApeMaterial *ar_material_get_fallback( void );
-ApeMaterial *ar_material_get_default_vertex( void );
 
 bool arl_material_shadows_enabled( const ApeMaterial *material );
 

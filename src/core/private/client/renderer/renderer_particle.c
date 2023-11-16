@@ -18,7 +18,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData ) {
 	PSEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	ar_material_release( emitter->material );
+	ss_arl_material_release( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -121,7 +121,7 @@ void PS_DestroyEmitter( PSEmitter *emitter ) {
 	}
 
 	if ( emitter->material != NULL )
-		ar_material_release( emitter->material );
+		ss_arl_material_release( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );
@@ -230,7 +230,7 @@ void PS_TickEmitter( PSEmitter *emitter ) {
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera ) {
+void PS_Draw( const PSEmitter *emitter, const SS_Arl_Camera *camera ) {
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -268,7 +268,7 @@ void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera ) {
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	apeDrawMesh( emitter->material, emitter->mesh, NULL, 0 );
+	ss_arl_material_draw( emitter->material, emitter->mesh, NULL, 0 );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

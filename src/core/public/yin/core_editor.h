@@ -80,8 +80,8 @@ typedef struct ApeEditorContext {
 	PLMatrix4 gridTransform;
 	int32_t gridScale;
 
-	ApeViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
-	ApeCamera *camera;
+	SS_Arl_Viewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
+	SS_Arl_Camera *camera;
 } ApeEditorContext;
 
 PL_EXTERN_C_END

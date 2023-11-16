@@ -14,6 +14,7 @@
 #include "net/net.h"
 
 #include "script_public.h"
+#include "client/renderer/renderer.h"
 
 /****************************************
  * PRIVATE
@@ -36,12 +37,12 @@ ApeConfig ape_config_;
 NdBranch *apeGetConfig( void ) { return engineConfig; }
 NdBranch *apeGetUserConfig( void ) { return userConfig; }
 
-bool apeInitialize( const char *config )
+bool ss_acl_initialize( const char *config )
 {
 	PL_ZERO_( ape_config_ );
 
 	// Call this first, so we can buffer console output
-	apeInitializeConsole();
+	ss_acl_initialize_console_();
 
 	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
 	       VERSION_MAJOR,
@@ -55,15 +56,15 @@ bool apeInitialize( const char *config )
 		PRINT( "Operating in command-line mode!\n" );
 	}
 
-	acl_console_register_variables_( engineTerminalMode );
-	acl_console_register_commands_( engineTerminalMode );
+	ss_acl_console_register_variables_( engineTerminalMode );
+	ss_acl_console_register_commands_( engineTerminalMode );
 
 	ss_script_register_commands();
 
 	PlRegisterStandardPackageLoaders();
 
 	// Need to do this before anything else IO related
-	acl_fs_mount_base_locations();
+	ss_acl_fs_mount_base_locations();
 
 	// And now we can fetch the engine config that provides mount locations, aliases and more
 	if ( config == NULL )
@@ -80,14 +81,14 @@ bool apeInitialize( const char *config )
 		return false;
 	}
 
-	userConfig = ndLoadFile( acl_get_user_config_location(), "config" );
+	userConfig = ndLoadFile( ss_acl_fs_get_user_config_location(), "config" );
 	if ( userConfig == NULL )
 	{
 		PRINT( "No existing user config found, will use defaults.\n" );
 		userConfig = ndPushBackObject( NULL, "config" );
 	}
 
-	acl_setup_config( engineConfig );
+	ss_acl_fs_setup_config( engineConfig );
 
 	PRINT( "Initializing core services...\n" );
 
@@ -101,7 +102,7 @@ bool apeInitialize( const char *config )
 	apeInitializeServer();
 	apeInitializeClient_();
 
-	acl_initialize_game_();
+	ss_acl_initialize_game_();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -110,84 +111,71 @@ bool apeInitialize( const char *config )
 	return true;
 }
 
-void apeShutdown( void )
+void ss_acl_shutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
 	apeFlushTasks();
 
-	acl_shutdown_game_();
+	ss_acl_shutdown_game_();
 	apeShutdownEditor_();
 
 	apeShutdownClient_();
 	apeShutdownServer();
-	apeShutdownConsole();
+	ss_acl_shutdown_console_();
 	apeShutdownMemoryManager();
 	apeShutdownScheduler();
 	ogeShutdownNet();
 
-	apeShellInterface_Shutdown();
+	ss_shell_shutdown();
 
 	engineInitialized = false;
 }
 
-unsigned int apeGetNumTicks( void )
+unsigned int ss_acl_get_num_ticks( void )
 {
 	return numTicks;
 }
 
-void apeTickFrame( void )
+void ss_acl_tick_frame( void )
 {
 	if ( !engineInitialized )
-	{
 		return;
-	}
 
 	COM_PROFILE_FUNCTION_START();
 
 	apeTickTasks();
-
-#if !defined( APE_EDITOR_ENABLED )
-
 	apeTickClient();
 	apeTickServer();
 
-#else
-
-	if ( edIsActive() )
+	if ( ss_arl_get_capture_state_() )
 	{
-		edTick();
+		SS_Arl_Viewport *viewport = ss_shell_viewport_get_active();
+		if ( viewport != NULL )
+			ss_arl_render_frame( viewport );
 	}
-	else
-	{
-		APE_PROFILE_START( PROFILE_TICK_CLIENT );
-		apeTickClient();
-		APE_PROFILE_END( PROFILE_TICK_CLIENT );
-
-		APE_PROFILE_START( PROFILE_TICK_SERVER );
-		apeTickServer();
-		APE_PROFILE_END( PROFILE_TICK_SERVER );
-	}
-
-#endif
 
 	numTicks++;
 
 	COM_PROFILE_FUNCTION_END();
 }
 
-bool apeIsEngineRunning( void )
+bool ss_acl_is_engine_running( void )
 {
 	/* always running */
 	return engineInitialized;
 }
 
-void apeRenderFrame( ApeViewport *viewport )
+void ss_acl_render_frame( SS_Arl_Viewport *viewport )
 {
-	if ( !engineInitialized )
-	{
+	// If we're capturing, ignore the request from the
+	// caller to render the frame because we'll lock it
+	// with the frame tick instead...
+	if ( ss_arl_get_capture_state_() )
 		return;
-	}
+
+	if ( !engineInitialized )
+		return;
 
 	assert( viewport != NULL );
 	if ( viewport == NULL )
@@ -196,17 +184,17 @@ void apeRenderFrame( ApeViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "apeDrawClient", apeDrawClient( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame", ss_arl_render_frame( viewport ) );
 }
 
-void apeHandleKeyboardEvent( int key, unsigned int keyState )
+void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )
 {
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
 bool acl_console_handle_text_event_( const char *key );
 
-void apeHandleTextEvent( const char *key )
+void ss_acl_input_handle_text_event( const char *key )
 {
 	if ( acl_console_handle_text_event_( key ) )
 	{

@@ -10,10 +10,10 @@ PL_EXTERN_C
 typedef struct NdBranch NdBranch;
 
 /* external elements */
-typedef struct ApeCamera ApeCamera;
-typedef struct ApeViewport ApeViewport;
-typedef struct ApeLight ApeLight;
-typedef struct ApeEntity ApeEntity;// core_entity.h
+typedef struct SS_Arl_Camera SS_Arl_Camera;
+typedef struct SS_Arl_Viewport SS_Arl_Viewport;
+typedef struct SS_Arl_Light SS_Arl_Light;
+typedef struct SS_Acl_Entity SS_Acl_Entity;// core_entity.h
 
 /* ======================================================================
  * LEVEL INTERFACE
@@ -71,18 +71,18 @@ void acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
  * Assigning an entity to the world will give the world instance
  * ownership of that entity.
  */
-void acl_level_attach_entity( ApeWorld *world, ApeEntity *entity );
+void acl_level_attach_entity( ApeWorld *world, SS_Acl_Entity *entity );
 
 /**
  * Assigning a light to the world will give the world instance
  * ownership of that light.
  */
-void ape_level_attach_light( ApeWorld *world, ApeLight *light );
+void ape_level_attach_light( ApeWorld *world, SS_Arl_Light *light );
 
 unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha );
 void arl_sky_set_layer_alpha( unsigned int slot, float alpha );
 void arl_sky_clear_layers( void );
-void arl_sky_draw( ApeCamera *camera );
+void arl_sky_draw( SS_Arl_Camera *camera );
 
 void acl_level_set_sun_position( ApeWorld *world, const PLVector3 *position );
 void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
@@ -130,13 +130,13 @@ typedef enum ApeLightType
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
-void ape_light_destroy( ApeLight *light );
+SS_Arl_Light *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
+void ape_light_destroy( SS_Arl_Light *light );
 
-PLColourF32 ape_light_get_colour( const ApeLight *light );
-void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
+PLColourF32 ape_light_get_colour( const SS_Arl_Light *light );
+void ape_light_set_colour( SS_Arl_Light *light, const PLColourF32 *colour );
 
-PLVector3 ape_light_get_position( const ApeLight *light );
-void ape_light_set_position( ApeLight *light, const PLVector3 *position );
+PLVector3 ape_light_get_position( const SS_Arl_Light *light );
+void ape_light_set_position( SS_Arl_Light *light, const PLVector3 *position );
 
 PL_EXTERN_C_END

@@ -2,7 +2,7 @@
 
 #pragma once
 
-typedef struct ApeCamera ApeCamera;
+typedef struct SS_Arl_Camera SS_Arl_Camera;
 
 typedef enum PSParticleDrawType {
 	PS_DRAW_SPRITE,
@@ -67,4 +67,4 @@ PSEmitter *PS_SpawnEmitter( void );
 void PS_DestroyEmitter( PSEmitter *emitter );
 
 void PS_TickEmitter( PSEmitter *emitter );
-void PS_Draw( const PSEmitter *emitter, const ApeCamera *camera );
+void PS_Draw( const PSEmitter *emitter, const SS_Arl_Camera *camera );

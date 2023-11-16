@@ -18,7 +18,7 @@ static void register_fxaa_console_variables( void )
 
 static bool setup_fxaa_effect( void )
 {
-	fxaaMaterial = apeCacheMaterial( "materials/post/fxaa.mat.n", APE_CACHE_WORLD, false, false );
+	fxaaMaterial = ss_arl_material_cache( "materials/post/fxaa.mat.n", APE_CACHE_WORLD, false, false );
 	if ( fxaaMaterial == NULL )
 		return false;
 
@@ -27,10 +27,10 @@ static bool setup_fxaa_effect( void )
 
 static void cleanup_fxaa_effect( void )
 {
-	ar_material_release( fxaaMaterial );
+	ss_arl_material_release( fxaaMaterial );
 }
 
-static void draw_fxaa_effect( const ApeViewport *viewport )
+static void draw_fxaa_effect( const SS_Arl_Viewport *viewport )
 {
 	if ( !fxaaEnabled )
 		return;

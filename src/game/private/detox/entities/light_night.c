@@ -10,15 +10,15 @@
 
 typedef struct ToxLightNight
 {
-	ApeLight *light;
+	SS_Arl_Light *light;
 } ToxLightNight;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const AclEntityClassDefinition *tox_light_night_get_class_table( void )
+const SS_Acl_EntityClassDefinition *tox_light_night_get_class_table( void )
 {
-	static AclEntityClassDefinition table;
+	static SS_Acl_EntityClassDefinition table;
 	PL_ZERO_( table );
 
 	table.name = "tox_light_night";

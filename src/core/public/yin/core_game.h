@@ -11,10 +11,4 @@ extern GameState acl_gameState_;
 
 extern const struct GameModeInterface *game_modeInterface;
 
-void acl_initialize_game_( void );
-void acl_shutdown_game_( void );
-void apeTickGame( void );
-void apeDisconnectGame( void );
-void apeSpawnWorld( const char *worldPath );
-
 PL_EXTERN_C_END

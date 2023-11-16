@@ -12,7 +12,7 @@ static unsigned int numMaterials, maxMaterials;
 #define MATERIAL_STORE_INC 256
 
 static void CacheMaterialPreviewCallback( const char *path, void *user ) {
-	ApeMaterial *material = apeCacheMaterial( path, APE_CACHE_EDITOR, false, true );
+	ApeMaterial *material = ss_arl_material_cache( path, APE_CACHE_EDITOR, false, true );
 	if ( material == NULL )
 		return;
 
@@ -24,8 +24,8 @@ static void CacheMaterialPreviewCallback( const char *path, void *user ) {
 }
 
 static int CompareMaterials( const void *a, const void *b ) {
-	const char *strA = ar_material_get_path( ( ApeMaterial * ) a );
-	const char *strB = ar_material_get_path( ( ApeMaterial * ) b );
+	const char *strA = ss_arl_material_get_path( ( ApeMaterial * ) a );
+	const char *strB = ss_arl_material_get_path( ( ApeMaterial * ) b );
 	return strcmp( strA, strB );
 }
 
@@ -40,13 +40,13 @@ void edInitializeMaterialSelector_( void ) {
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), CompareMaterials );
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		PRINT( "\t%s\n", ar_material_get_path( materials[ i ] ) );
+		PRINT( "\t%s\n", ss_arl_material_get_path( materials[ i ] ) );
 	}
 }
 
 void edShutdownMaterialSelector_( void ) {
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		ar_material_release( materials[ i ] );
+		ss_arl_material_release( materials[ i ] );
 	}
 
 	PL_DELETE( materials );
@@ -55,7 +55,7 @@ void edShutdownMaterialSelector_( void ) {
 /**
  * Draw the material selection panel.
  */
-void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
+void Editor_MaterialSelector_Draw( const SS_Arl_Viewport *viewport ) {
 	static const unsigned int mw = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int mh = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int sp = MATERIAL_DEFAULT_WIDTH / 8;
@@ -67,24 +67,24 @@ void Editor_MaterialSelector_Draw( const ApeViewport *viewport ) {
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+	PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 
 	int vw, vh;
-	ape_viewport_get_size( viewport, &vw, &vh );
+	ss_arl_viewport_get_size( viewport, &vw, &vh );
 
 	PlgDrawRectangle( 0, 0, ( float ) vw, ( float ) vh, PL_COLOUR_DARK_SLATE_GRAY );
 
-	PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT ) );
+	PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT ) );
 
-	ApeBitmapFont *font = apeGetDefaultSmallBitmapFont();
+	SS_Arl_BitmapFont *font = ss_arl_get_default_small_bitmap_font();
 	for ( unsigned int i = 0; i < numMaterials; ++i ) {
-		PLGTexture *texture = ar_material_get_preview_texture( materials[ i ] );
+		PLGTexture *texture = ss_arl_material_get_preview_texture( materials[ i ] );
 		PlgDrawTexturedRectangle( ( float ) x, ( float ) y, ( float ) mw, ( float ) mh, texture );
 
 		char buf[ 8 ];
 		snprintf( buf, sizeof( buf ), "%ux%u", texture->w, texture->h );
-		apeDrawBitmapString( font, ( float ) ( x + sp ), ( float ) ( y + sp ), 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
-		apeDrawBitmapString( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, ar_material_get_path( materials[ i ] ), true );
+		ss_arl_bitmap_font_draw_string( font, ( float ) ( x + sp ), ( float ) ( y + sp ), 1.0f, 1.0f, PL_COLOUR_WHITE, buf, true );
+		ss_arl_bitmap_font_draw_string( font, ( float ) x, ( float ) ( y + mw + 2 ), 1.0f, 1.0f, PL_COLOUR_WHITE, ss_arl_material_get_path( materials[ i ] ), true );
 
 		x += mw + sp;
 		if ( x + mw >= vw ) {

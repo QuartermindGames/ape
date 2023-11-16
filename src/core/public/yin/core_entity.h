@@ -8,67 +8,67 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-typedef struct AclEntityClassDefinition AclEntityClassDefinition;
-typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
+typedef struct SS_Acl_EntityClassDefinition SS_Acl_EntityClassDefinition;
+typedef struct SS_Acl_EntityComponentDefinition SS_Acl_EntityComponentDefinition;
 
 #define ACL_ENTITY_MAX_NAME 32
 
-typedef struct ApeEntity
+typedef struct SS_Acl_Entity
 {
-	char name[ ACL_ENTITY_MAX_NAME ];               // identifier
-	const AclEntityClassDefinition *classDefinition;// class that the actor is derived from
-	void *classData;                                // pointer to the unique data of the class
-	struct PLHashTable *componentTable;             // list of components
-	struct ApeWorld *world;                         // world the entity is attached to
-} ApeEntity;
+	char name[ ACL_ENTITY_MAX_NAME ];                   // identifier
+	const SS_Acl_EntityClassDefinition *classDefinition;// class that the actor is derived from
+	void *classData;                                    // pointer to the unique data of the class
+	struct PLHashTable *componentTable;                 // list of components
+	struct ApeWorld *world;                             // world the entity is attached to
+} SS_Acl_Entity;
 
-typedef struct ApeEntityComponent
+typedef struct SS_Acl_EntityComponent
 {
-	const ApeEntityComponentDefinition *componentDefinition;
+	const SS_Acl_EntityComponentDefinition *componentDefinition;
 	void *data;
-} ApeEntityComponent;
+} SS_Acl_EntityComponent;
 
-typedef struct ApeEntityProperty
+typedef struct SS_Acl_EntityProperty
 {
 	const char *name;
 	const char *description;
 	void *var;
 	PLVariableType type;
-} ApeEntityProperty;
+} SS_Acl_EntityProperty;
 
-typedef struct AclEntityClassDefinition
+typedef struct SS_Acl_EntityClassDefinition
 {
 	const char *name;
 
-	ApeEntityProperty *propertyList;
+	SS_Acl_EntityProperty *propertyList;
 	unsigned int numProperties;
 
 	void ( *Cache )( void );// called upon registration
-	void *( *Create )( ApeEntity *self, NdBranch *properties );
-	void ( *Destroy )( ApeEntity *self );
-	void ( *Spawn )( ApeEntity *self );
-	void ( *Tick )( ApeEntity *self );
-	void ( *Draw )( ApeEntity *self );
+	void *( *Create )( SS_Acl_Entity *self, NdBranch *properties );
+	void ( *Destroy )( SS_Acl_Entity *self );
+	void ( *Spawn )( SS_Acl_Entity *self );
+	void ( *Tick )( SS_Acl_Entity *self );
+	void ( *Draw )( SS_Acl_Entity *self );
 
-	NdBranch *( *Serialize )( ApeEntity *self );
-	void ( *Deserialize )( ApeEntity *self, NdBranch *root );
-} AclEntityClassDefinition;
+	NdBranch *( *Serialize )( SS_Acl_Entity *self );
+	void ( *Deserialize )( SS_Acl_Entity *self, NdBranch *root );
+} SS_Acl_EntityClassDefinition;
 
-typedef const AclEntityClassDefinition *( *ApeEntityClassRegisterFunction )( void );
+typedef const SS_Acl_EntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )( void );
 
-void acl_entity_register_class( const AclEntityClassDefinition *definition );
-const AclEntityClassDefinition *apeGetEntityClassTable( const char *className );
+void ss_acl_register_entity_class( const SS_Acl_EntityClassDefinition *definition );
+const SS_Acl_EntityClassDefinition *ss_acl_get_entity_class_table( const char *className );
 
-ApeEntity *acl_entity_create( const char *className, NdBranch *properties );
-void apeDestroyEntity( ApeEntity *entity );
+SS_Acl_Entity *ss_acl_entity_create( const char *className, NdBranch *properties );
+void ss_acl_entity_destroy( SS_Acl_Entity *entity );
 
-void apeTickEntity( ApeEntity *entity );
-void apeDrawEntity( ApeEntity *entity );
+void ss_acl_entity_tick( SS_Acl_Entity *entity );
+void ss_acl_entity_draw( SS_Acl_Entity *entity );
 
 ////////////////////////////////////////////////////////////////////
 // Components
 
-typedef struct ApeEntityComponentDefinition
+typedef struct SS_Acl_EntityComponentDefinition
 {
 	const char *name;
 
@@ -77,12 +77,12 @@ typedef struct ApeEntityComponentDefinition
 
 	NdBranch *( *Serialize )( void );
 	void ( *Deserialize )( NdBranch *root );
-} ApeEntityComponentDefinition;
+} SS_Acl_EntityComponentDefinition;
 
-typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
+typedef const SS_Acl_EntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
 
-void ape_entity_component_register( const ApeEntityComponentDefinition *definition );
-void *ape_entity_add_entity_component( ApeEntity *entity, const char *name );
-void *ape_entity_get_entity_component( ApeEntity *entity, const char *name );
+void ss_acl_register_entity_component( const SS_Acl_EntityComponentDefinition *definition );
+void *ss_acl_entity_add_component( SS_Acl_Entity *entity, const char *name );
+void *ss_acl_entity_get_component( SS_Acl_Entity *entity, const char *name );
 
 PL_EXTERN_C_END

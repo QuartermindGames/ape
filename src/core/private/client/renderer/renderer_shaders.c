@@ -246,7 +246,7 @@ void arl_initialize_shaders_( void )
 	}
 }
 
-PLGShaderProgram *arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram )
+PLGShaderProgram *ss_arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram )
 {
 	return ape_defaultShaderPrograms_[ defaultShaderProgram ];
 }
