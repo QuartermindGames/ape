@@ -69,7 +69,8 @@ static void toggle_console( void )
 
 	// Release the mouse if the console is open
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value ) {
+	if ( mouseLook != NULL && mouseLook->b_value )
+	{
 		ss_shell_grab_mouse( !consoleIsOpen );
 	}
 }
@@ -96,8 +97,9 @@ static void scroll_backward( ApeConsoleOutput *output )
 	output->scrollPos--;
 }
 
-bool acl_console_handle_mouse_wheel_event_( float x, float y ) {
-	if ( !ss_acl_is_console_open() ) {
+bool acl_console_handle_mouse_wheel_event_( float x, float y )
+{
+	if ( !ss_acl_is_console_open() )
 		return false;
 
 	ApeConsoleOutput *output = apeGetConsoleOutput();
@@ -307,8 +309,9 @@ static const float consoleScrollBarWidth = 8.0f;
 /**
  * Draw the console panel.
  */
-void ss_acl_console_draw_( const SS_Arl_Viewport *viewport ) {
-	if ( !ss_acl_is_console_open() ) {
+void ss_acl_console_draw_( const SS_Arl_Viewport *viewport )
+{
+	if ( !ss_acl_is_console_open() )
 		return;
 
 	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );

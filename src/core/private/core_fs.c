@@ -147,7 +147,7 @@ char *acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version
 	if ( version < minVersion || version > maxVersion )
 		return NULL;
 
-	return acl_fs_parse_string( file, size );
+	return ss_acl_fs_parse_string( file, size );
 }
 
 uint8_t acl_fs_parse_byte( PLFile *file )
@@ -195,7 +195,7 @@ float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int mi
 	if ( version < minVersion || version > maxVersion )
 		return fallback;
 
-	return acl_fs_parse_float( file );
+	return ss_acl_fs_parse_float( file );
 }
 
 PLVector3 ss_acl_fs_parse_vector( PLFile *file )
@@ -212,16 +212,16 @@ PLVector3 acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned i
 	if ( version < minVersion || version > maxVersion )
 		return *fallback;
 
-	return acl_fs_parse_vector( file );
+	return ss_acl_fs_parse_vector( file );
 }
 
 PLVector4 acl_fs_parse_vector4( PLFile *file )
 {
 	return ( PLVector4 ){
-	        acl_fs_parse_float( file ),
-	        acl_fs_parse_float( file ),
-	        acl_fs_parse_float( file ),
-	        acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
 	};
 }
 

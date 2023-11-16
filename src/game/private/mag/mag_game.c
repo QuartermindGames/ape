@@ -3,15 +3,15 @@
 
 #include "mag_game.h"
 
-static ApeCamera *playerCamera = NULL;
+static SS_Arl_Camera *playerCamera = NULL;
 
 static void move_camera_callback( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 pos = arl_camera_get_position( playerCamera );
-	PLVector3 ang = arl_camera_get_angles( playerCamera );
+	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
+	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
 		ang.y += 1.5f;
 	else if ( strcmp( id, "rotateRight" ) == 0 )
@@ -33,8 +33,8 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	else if ( strcmp( id, "moveDown" ) == 0 )
 		pos.y -= 0.5f;
 
-	arl_camera_set_position( playerCamera, &pos );
-	arl_camera_set_angles( playerCamera, &ang );
+	ss_arl_camera_set_position( playerCamera, &pos );
+	ss_arl_camera_set_angles( playerCamera, &ang );
 }
 
 static void initialize_game( void )
@@ -43,22 +43,22 @@ static void initialize_game( void )
 
 	PlParseConsoleString( "level worlds/L1S1.rfl" );
 
-	playerCamera = arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
-	arl_camera_make_active( playerCamera );
+	playerCamera = ss_arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
+	ss_arl_camera_make_active( playerCamera );
 
-	acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
-	acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
-	acl_input_register_action( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
-	acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
-	acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
-	acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
-	acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
-	acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
+	ss_acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
+	ss_acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
+	ss_acl_input_register_action( "moveLeft", NULL, 0, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
+	ss_acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
+	ss_acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
+	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
+	ss_acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
+	ss_acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 }
 
 static void shutdown_game( void )
 {
-	arl_camera_destroy( playerCamera );
+	ss_arl_camera_destroy( playerCamera );
 	playerCamera = NULL;
 }
 
@@ -68,13 +68,13 @@ static void tick_game( void )
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
 		int mx, my;
-		apeGetMouseDelta( &mx, &my );
+		ss_acl_input_get_mouse_delta( &mx, &my );
 
-		PLVector3 ang = arl_camera_get_angles( playerCamera );
+		PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
 		ang.y += mx;
 		ang.x += my;
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
-		arl_camera_set_angles( playerCamera, &ang );
+		ss_arl_camera_set_angles( playerCamera, &ang );
 	}
 }
 

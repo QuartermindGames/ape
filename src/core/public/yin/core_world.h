@@ -58,9 +58,9 @@ void acl_level_destroy( ApeWorld *level );
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
-void arl_level_draw_wireframe( ApeWorld *world, ApeCamera *camera );
-void arl_level_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
-void arl_level_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light );
+void arl_level_draw_wireframe( ApeWorld *world, SS_Arl_Camera *camera );
+void arl_level_draw( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light, bool ambienceOnly );
+void arl_level_draw_stencil_shadows( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light );
 
 void acl_level_set_global_defaults( ApeWorld *world );
 void acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience );

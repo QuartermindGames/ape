@@ -13,12 +13,14 @@
 #include "client/renderer/renderer.h"
 
 #include "server/server.h"
+#include "common/common_tbl.h"
+#include "yin/core_fs.h"
 
-/****************************************
- * PRIVATE
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
-typedef enum InputTarget {
+typedef enum InputTarget
+{
 	INPUT_TARGET_MENU, /* menu mode */
 	INPUT_TARGET_GAME, /* game mode */
 } InputTarget;
@@ -27,21 +29,34 @@ static MenuState menuState = MENU_STATE_START;
 
 static ApeWorld *currentWorld = NULL;
 
-static void spawn_level_command( unsigned int argc, char **argv ) {
+static void spawn_level_command( unsigned int argc, char **argv )
+{
 	PLPath path;
 	snprintf( path, sizeof( path ), "%s", argv[ 1 ] );
 	ss_acl_spawn_world_( path );
 }
 
-/****************************************
- * PUBLIC
- ****************************************/
+static void cache_clutter( void )
+{
+	size_t scriptSize;
+	char *scriptBuf = acl_fs_load_file_buffer( "clutter.tbl", &scriptSize );
+	if ( scriptBuf != NULL )
+	{
+		const char *p = scriptBuf;
+		assert( com_tbl_validate_type( &p, "Clutter" ) );
+		PL_DELETE( scriptBuf );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 const GameModeInterface *game_modeInterface;
 
 GameState acl_gameState_;
 
-void ss_acl_initialize_game_( void ) {
+void ss_acl_initialize_game_( void )
+{
 	PRINT( "Initializing Game...\n" );
 
 	globalGameLog = PlAddLogLevel( "game", PL_COLOUR_WHITE, true );
@@ -59,28 +74,35 @@ void ss_acl_initialize_game_( void ) {
 
 	PL_ZERO_( acl_gameState_ );
 
+	cache_clutter();
+
 	game_modeInterface = gameGetModeInterface();
-	if ( game_modeInterface == NULL ) {
+	if ( game_modeInterface == NULL )
+	{
 		PRINT_ERROR( "Failed to get game interface!\n" );
 	}
 
-	if ( !game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) ) {
+	if ( !game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) )
+	{
 		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
 	}
 
 	PRINT( "Game initialized!\n" );
 }
 
-void ss_acl_shutdown_game_( void ) {
+void ss_acl_shutdown_game_( void )
+{
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
 	game_modeInterface = NULL;
 }
 
-MenuState gameGetMenuState( void ) {
+MenuState gameGetMenuState( void )
+{
 	return menuState;
 }
 
-void ss_acl_tick_game_( void ) {
+void ss_acl_tick_game_( void )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
@@ -88,9 +110,12 @@ void ss_acl_tick_game_( void ) {
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ss_acl_disconnect_game_( void ) {
-	if ( currentWorld != NULL ) {
-		if ( currentWorld->isDirty ) {
+void ss_acl_disconnect_game_( void )
+{
+	if ( currentWorld != NULL )
+	{
+		if ( currentWorld->isDirty )
+		{
 			/* todo: throw a message letting the user know their changes
 			 *  might be lost! */
 		}
@@ -102,8 +127,10 @@ void ss_acl_disconnect_game_( void ) {
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
 }
 
-void ss_acl_spawn_world_( const char *worldPath ) {
-	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 ) {
+void ss_acl_spawn_world_( const char *worldPath )
+{
+	if ( currentWorld != NULL && strcmp( currentWorld->path, worldPath ) == 0 )
+	{
 		PRINT_WARNING( "World already loaded!\n" );
 		return;
 	}
@@ -111,7 +138,8 @@ void ss_acl_spawn_world_( const char *worldPath ) {
 	ss_acl_disconnect_game_();
 
 	ApeWorld *world = acl_level_load( worldPath );
-	if ( world == NULL ) {
+	if ( world == NULL )
+	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
 		return;
 	}
@@ -120,9 +148,12 @@ void ss_acl_spawn_world_( const char *worldPath ) {
 
 	/* HACK, if it's the menu, force menu mode!! */
 	const char *fileName = PlGetFileName( worldPath );
-	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 ) {
+	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 )
+	{
 		menuState = MENU_STATE_START;
-	} else {
+	}
+	else
+	{
 		menuState = MENU_STATE_HUD;
 	}
 
@@ -138,6 +169,7 @@ void ss_acl_spawn_world_( const char *worldPath ) {
 	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
 }
 
-ApeWorld *acl_level_get_current( void ) {
+ApeWorld *acl_level_get_current( void )
+{
 	return currentWorld;
 }

@@ -252,7 +252,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 
 	if ( ape_config_.level.showRoomVolumes )
 	{
-		PlgSetShaderProgram( arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+		PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 		PLColour colour = PlColourF32ToU8( &room->colour );
 		PlgDrawBoundingVolume( &room->bounds, &colour );
 	}

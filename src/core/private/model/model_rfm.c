@@ -43,8 +43,8 @@ static AclModelRfm *parse_rfm_chunk_collision( AclModelRfm *model, PLFile *file,
 
 		PRINT_DEBUG( "sphere name: %s\n", model->collisionSpheres[ i ].name );
 		model->collisionSpheres[ i ].parent = &model->collisionSpheres[ parent ];
-		model->collisionSpheres[ i ].transform = acl_fs_parse_vector( file );
-		model->collisionSpheres[ i ].radius = acl_fs_parse_float( file );
+		model->collisionSpheres[ i ].transform = ss_acl_fs_parse_vector( file );
+		model->collisionSpheres[ i ].radius = ss_acl_fs_parse_float( file );
 	}
 
 	return model;
@@ -103,7 +103,7 @@ static AclModelRfm *parse_rfm_chunk_bone( AclModelRfm *model, PLFile *file, unsi
 
 		model->bones[ i ].rotation = acl_fs_parse_vector4( file );
 		PRINT_DEBUG( "rotation: %s\n", PlPrintQuaternion( &model->bones[ i ].rotation ) );
-		model->bones[ i ].transform = acl_fs_parse_vector( file );
+		model->bones[ i ].transform = ss_acl_fs_parse_vector( file );
 		PRINT_DEBUG( "transform: %s\n", PlPrintVector3( &model->bones[ i ].transform, PL_VAR_F32 ) );
 		unsigned int parent = PL_READUINT32( file, false, NULL );
 		PRINT_DEBUG( "parent: %u\n", parent );
@@ -126,7 +126,7 @@ static AclModelRfm *parse_rfm_chunk_mesh( AclModelRfm *model, PLFile *file, unsi
 {
 	AclModelRfmMesh *mesh = &model->meshes[ model->numMeshes ];
 
-	float lodDistance = acl_fs_parse_float( file );
+	float lodDistance = ss_acl_fs_parse_float( file );
 	PRINT_DEBUG( "lod distance: %f\n", lodDistance );
 
 	// Not 100% sure on this one, yet
@@ -140,10 +140,10 @@ static AclModelRfm *parse_rfm_chunk_mesh( AclModelRfm *model, PLFile *file, unsi
 	unsigned int numOriginalVecs = PL_READUINT32( file, false, NULL );
 	PRINT_DEBUG( "num original vecs: %u\n", numOriginalVecs );
 
-	mesh->boundsMaxs = acl_fs_parse_vector( file );
-	mesh->boundsMins = acl_fs_parse_vector( file );
-	mesh->boundsOrigin = acl_fs_parse_vector( file );
-	mesh->boundsRadius = acl_fs_parse_float( file );
+	mesh->boundsMaxs = ss_acl_fs_parse_vector( file );
+	mesh->boundsMins = ss_acl_fs_parse_vector( file );
+	mesh->boundsOrigin = ss_acl_fs_parse_vector( file );
+	mesh->boundsRadius = ss_acl_fs_parse_float( file );
 
 	unsigned int dataBlockSize = PL_READUINT32( file, false, NULL );
 	PlFileSeek( file, dataBlockSize, PL_SEEK_CUR );

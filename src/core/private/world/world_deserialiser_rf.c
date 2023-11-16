@@ -492,7 +492,7 @@ static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, uns
 
 	// unused string
 	uint16_t size;
-	char *buf = acl_fs_parse_string( file, &size );
+	char *buf = ss_acl_fs_parse_string( file, &size );
 	PL_DELETE( buf );
 
 	acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 199, 0 );// "modifiability" - unused
