@@ -168,12 +168,6 @@ bool ss_acl_is_engine_running( void )
 
 void ss_acl_render_frame( SS_Arl_Viewport *viewport )
 {
-	// If we're capturing, ignore the request from the
-	// caller to render the frame because we'll lock it
-	// with the frame tick instead...
-	if ( ss_arl_get_capture_state_() )
-		return;
-
 	if ( !engineInitialized )
 		return;
 
@@ -202,17 +196,17 @@ void ss_acl_input_handle_text_event( const char *key )
 	}
 }
 
-void apeHandleMouseButtonEvent( int button, ApeInputState buttonState )
+void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void apeHandleMouseWheelEvent( float x, float y )
+void ss_acl_input_handle_mouse_wheel_event( float x, float y )
 {
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void apeHandleMouseMotionEvent( int x, int y )
+void ss_acl_input_handle_mouse_motion_event( int x, int y )
 {
 	Client_Input_HandleMouseMotionEvent( x, y );
 }

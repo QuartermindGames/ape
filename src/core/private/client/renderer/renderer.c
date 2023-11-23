@@ -144,7 +144,7 @@ void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport )
 	PLColour clearColour = { 50, 50, 50, 255 };
 
 	ApeWorld *world = acl_level_get_current();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
 
 	PlgSetClearColour( clearColour );
@@ -820,12 +820,12 @@ void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	render_scene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );

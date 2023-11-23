@@ -159,7 +159,7 @@ void apeGet2DViewportSize( int *width, int *height );
 
 struct ApeShaderProgramIndex *arl_shader_get_by_name( const char *name );
 
-void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport );
+void ss_arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport );
 
 void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );

@@ -84,7 +84,7 @@ static void ToggleView( ApeInputState state, PL_UNUSED const char *id ) {
 
 	context.camera->mode++;
 	if ( context.camera->mode >= APE_CAMERA_MAX_MODES ) {
-		context.camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
+		context.camera->mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
 	}
 }
 
@@ -97,7 +97,7 @@ static void InitializeWorldEditor( void ) {
 
 	context.camera = cameras[ 0 ];
 	context.camera->mode = APE_CAMERA_MODE_TOP;
-	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
+	context.camera->drawMode = SS_ARL_CAMERA_DRAW_MODE_WIREFRAME;
 
 	ss_acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
 	ss_acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
@@ -114,7 +114,7 @@ static void DrawWorldEditorGUI( void ) {
 	int w, h;
 	PlgGetViewport( NULL, NULL, &w, &h );
 
-	if ( context.camera != NULL && ( context.camera->mode != APE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) ) {
+	if ( context.camera != NULL && ( context.camera->mode != SS_ARL_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) ) {
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
@@ -162,11 +162,11 @@ static void DrawWorldEditorGUI( void ) {
 		PL_ZERO_( tmp );
 		tmp.internal = ss_arl_get_aux_camera_();
 		switch ( context.camera->drawMode ) {
-			case APE_CAMERA_DRAW_MODE_WIREFRAME:
+			case SS_ARL_CAMERA_DRAW_MODE_WIREFRAME:
 				arl_level_draw_wireframe( world, &tmp );
 				break;
 			case APE_CAMERA_DRAW_MODE_SOLID:
-			case APE_CAMERA_DRAW_MODE_TEXTURED:
+			case SS_ARL_CAMERA_DRAW_MODE_TEXTURED:
 				arl_level_draw( world, NULL, NULL, 0 );
 				break;
 			default:
@@ -194,7 +194,7 @@ static void DrawWorldEditorGUI( void ) {
 			case APE_CAMERA_MODE_LEFT:
 				label = "Left";
 				break;
-			case APE_CAMERA_MODE_PERSPECTIVE:
+			case SS_ARL_CAMERA_MODE_PERSPECTIVE:
 				label = "Perspective";
 				break;
 			case APE_CAMERA_MODE_TOP:
@@ -235,23 +235,4 @@ static void OnWorldEditorActive( void ) {
 	ss_arl_viewport_set_camera( viewport, context.camera );
 
 	world = acl_level_get_current();
-}
-
-ApeEditorContext *YnCore_RegisterWorldEditorContext( void ) {
-	PL_ZERO_( context );
-
-	context.name = "World Editor";
-	context.identifier = WORLD_CONTEXT_IDENTIFIER;
-	context.mode = APE_EDITOR_CONTEXT_WORLD;
-
-	context.RegisterConsoleVariables = RegisterWorldEditorVariables;
-	context.Initialize = InitializeWorldEditor;
-	context.Shutdown = ShutdownWorldEditor;
-	context.Draw = DrawWorldEditor;
-	context.DrawGUI = DrawWorldEditorGUI;
-	context.Tick = TickWorldEditor;
-
-	context.OnActive = OnWorldEditorActive;
-
-	return &context;
 }

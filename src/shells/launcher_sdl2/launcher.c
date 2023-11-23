@@ -524,15 +524,15 @@ int launcher_initialize( int argc, char **argv )
 					                                                               : 0.0f;
 					float y = ( event.wheel.y > 0 ) ? 1.0f : ( event.wheel.y < 0 ) ? -1.0f
 					                                                               : 0.0f;
-					apeHandleMouseWheelEvent( x, y );
+					ss_acl_input_handle_mouse_wheel_event( x, y );
 					break;
 				}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					apeHandleMouseButtonEvent( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
+					ss_acl_input_handle_mouse_button_event( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
 					break;
 				case SDL_MOUSEMOTION:
-					apeHandleMouseMotionEvent( event.motion.x, event.motion.y );
+					ss_acl_input_handle_mouse_motion_event( event.motion.x, event.motion.y );
 					break;
 
 				case SDL_KEYDOWN:

@@ -25,6 +25,16 @@ void ss_arl_camera_make_active( SS_Arl_Camera *camera )
 	activeCamera = camera;
 }
 
+void ss_arl_camera_set_draw_mode( SS_Arl_Camera *camera, ApeCameraDrawMode drawMode )
+{
+	camera->drawMode = drawMode;
+}
+
+void ss_arl_camera_set_view_mode( SS_Arl_Camera *camera, ApeCameraMode viewMode )
+{
+	camera->mode = viewMode;
+}
+
 /****************************************
  ****************************************/
 
@@ -32,7 +42,7 @@ SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position,
 {
 	SS_Arl_Camera *camera = PL_NEW( SS_Arl_Camera );
 
-	camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
+	camera->mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
@@ -133,7 +143,7 @@ PLVector3 ss_arl_camera_get_forward( const SS_Arl_Camera *camera )
 }
 
 void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport );
-void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport )
+void ss_arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport )
 {
 	if ( camera == NULL )
 	{
@@ -190,7 +200,7 @@ void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewp
 	{
 		default:
 			break;
-		case APE_CAMERA_MODE_PERSPECTIVE:
+		case SS_ARL_CAMERA_MODE_PERSPECTIVE:
 			camera->internal->angles = angles;
 			camera->internal->position = position;
 			break;

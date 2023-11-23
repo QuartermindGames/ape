@@ -11,9 +11,11 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
-using namespace os::editor;
+using namespace ss::forge;
 
 FXGLCanvas *ViewportFrame::displayList_ = nullptr;
+
+unsigned int ViewportFrame::cameraTagNum = 0;
 
 FXDEFMAP( ViewportFrame )
 editorViewportMap[] = {
@@ -27,26 +29,29 @@ ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, ApeCam
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
-	engineViewportHandle = ss_arl_viewport_create( 0, 0, 800, 600, this );
+	std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
+	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3 );
+	ss_arl_camera_set_view_mode( camera, viewMode );
+	ss_arl_camera_set_draw_mode( camera, ( viewMode == SS_ARL_CAMERA_MODE_PERSPECTIVE ) ? SS_ARL_CAMERA_DRAW_MODE_TEXTURED : SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
 
-	//engineViewportHandle.viewMode = viewMode;
-	//engineViewportHandle.drawMode = ( viewMode == YR_CAMERA_MODE_PERSPECTIVE ) ? YR_CAMERA_DRAW_MODE_TEXTURED : YR_CAMERA_DRAW_MODE_WIREFRAME;
+	engineViewport = ss_arl_viewport_create( 0, 0, 800, 600, this );
+	ss_arl_viewport_set_camera( engineViewport, camera );
 
 #if 1
 	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/perspective.gif" ) );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/top.gif" ) );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/left.gif" ) );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/front.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/perspective.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/top.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/left.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/front.gif" ) );
 	new FXVerticalSeparator( toolBar_ );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/wireframe.gif" ) );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/solid.gif" ) );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/textured.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/wireframe.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/solid.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/textured.gif" ) );
 	new FXVerticalSeparator( toolBar_ );
 	new FXTextField( toolBar_, 4, &forwardSpeedTarget_, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 	new FXTextField( toolBar_, 4, &turnSpeedTarget_, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 	new FXVerticalSeparator( toolBar_ );
-	new FXButton( toolBar_, FXString::null, os::editor::LoadFXIcon( getApp(), "resources/popout.gif" ) );
+	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/popout.gif" ) );
 #endif
 
 	visual_ = visual;
@@ -65,7 +70,7 @@ ViewportFrame::~ViewportFrame()
 {
 	getApp()->removeChore( this, ID_CHORE );
 
-	ss_arl_viewport_destroy( engineViewportHandle );
+	ss_arl_viewport_destroy( engineViewport );
 
 	canvas_->makeNonCurrent();
 	delete canvas_;
@@ -95,10 +100,11 @@ void ViewportFrame::Draw()
 
 	PlgSetViewport( 0, 0, w, h );
 
-	if ( ss_acl_is_engine_running() && engineViewportHandle != nullptr )
+	if ( ss_acl_is_engine_running() && engineViewport != nullptr )
 	{
-		ss_arl_viewport_set_size( engineViewportHandle, w, h );
-		ss_acl_render_frame( engineViewportHandle );
+		ss_arl_viewport_set_camera( engineViewport, camera );
+		ss_arl_viewport_set_size( engineViewport, w, h );
+		ss_acl_render_frame( engineViewport );
 	}
 	else
 	{
@@ -124,7 +130,7 @@ long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
 	int const x = event->win_x;
 	int const y = event->win_y;
 
-	apeHandleMouseMotionEvent( x, y );
+	ss_acl_input_handle_mouse_motion_event( x, y );
 
 	return 0;
 }

@@ -2,46 +2,43 @@
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "editor_dialog_project.h"
+#include "common_project.h"
 
 #include "3rdparty/fox/src/icons.h"
 
-std::map< std::string, os::editor::Project * > os::editor::ProjectDialog::projects;
+std::map< std::string, ss::forge::Project * > ss::forge::ProjectDialog::projects;
 
-FXDEFMAP( os::editor::ProjectDialog )
+FXDEFMAP( ss::forge::ProjectDialog )
 projectDialogMap[] = {
-        FXMAPFUNC( SEL_COMMAND, os::editor::ProjectDialog::ID_SELECT_PROJECT, os::editor::ProjectDialog::OnSelectProject ),
-        FXMAPFUNC( SEL_COMMAND, os::editor::ProjectDialog::ID_ACCEPT, os::editor::ProjectDialog::OnAccept ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_SELECT_PROJECT, ss::forge::ProjectDialog::OnSelectProject ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_ACCEPT, ss::forge::ProjectDialog::OnAccept ),
 };
 
-FXIMPLEMENT( os::editor::ProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
+FXIMPLEMENT( ss::forge::ProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
 
-os::editor::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
+ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
     : FXDialogBox( parent, "Project Setup" )
 {
 	setWidth( baseWidth );
 
 	if ( projects.empty() )
-	{
 		// do a quick scan to see what projects are available
-		PlScanDirectory( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], "n", RegisterProjectCallback, false, this );
-	}
+		PlScanDirectory( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], "prj.n", register_project_callback, true, this );
 
 	FXVerticalFrame *vf = new FXVerticalFrame( this, LAYOUT_FILL );
 
+	static FXGIFIcon folderIcon( getApp(), FX::minifolder );
 	listBox = new FXListBox( vf, this, ID_SELECT_PROJECT, FRAME_SUNKEN | FRAME_THICK | LISTBOX_NORMAL | LAYOUT_FILL_X );
-	for ( auto &i : projects )
-	{
-		listBox->appendItem( FXString( i.second->name.c_str() ) + " (" + i.second->rootDir.c_str() + ")", nullptr, ( void * ) &i );
-	}
-	static FXGIFIcon icon( getApp(), FX::foldernew );
-	listBox->appendItem( "Create new project", &icon, nullptr );
+	for ( const auto &i : projects )
+		listBox->appendItem( FXString( i.second->name.c_str() ) + " (" + i.second->internalName.c_str() + ")", i.second->icon, i.second );
+
+	static FXGIFIcon newFolderIcon( getApp(), FX::foldernew );
+	listBox->appendItem( "Create new project", &newFolderIcon, nullptr );
 
 	projectNameField = new FXTextField( vf, 1, nullptr, 0, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
 	projectNameField->setText( defaultName );
 	if ( !projects.empty() )
-	{
 		projectNameField->hide();
-	}
 
 	new FXHorizontalSeparator( vf );
 
@@ -50,44 +47,59 @@ os::editor::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 	new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
 }
 
-void os::editor::ProjectDialog::RegisterProjectCallback( const char *path, void *data )
+void ss::forge::ProjectDialog::register_project_callback( const char *path, void *data )
 {
+	const char *filename = PlGetFileName( path );
+	if ( filename == NULL )
+	{
+		EDITOR_PRINT( "Failed to get filename: %s\n", PlGetError() );
+		return;
+	}
+
+	const char *c = strchr( filename, '.' );
+	if ( c == NULL )
+	{
+		EDITOR_PRINT( "Failed to get filename terminator (%s)!\n", path );
+		return;
+	}
+
 	NdBranch *root = ndLoadFile( path, "project" );
 	if ( root == nullptr )
-	{
 		return;
+
+	if ( ndGetBoolByName( root, "visibleInEditor", true ) )
+	{
+		const char *name = ndGetStringByName( root, "name", nullptr );
+		if ( name == nullptr )
+		{
+			FXMessageBox::warning( FXApp::instance(), 0,
+			                       "Warning",
+			                       "Encountered a project without a name!\n"
+			                       "%s",
+			                       path );
+		}
+		else
+		{
+			Project *project = PL_NEW( Project );
+			project->name = name;
+			project->internalName.assign( filename, c - filename );
+
+			const char *iconPath = ndGetStringByName( root, "iconPath", nullptr );
+			if ( iconPath != nullptr )
+				project->icon = ss::forge::load_fx_icon( FXApp::instance(), iconPath );
+
+			static FXGIFIcon folderIcon( FXApp::instance(), FX::minifolder );
+			if ( project->icon == nullptr )
+				project->icon = &folderIcon;
+
+			projects.emplace( project->internalName, project );
+		}
 	}
 
-	const char *name = ndGetStringByName( root, "name", nullptr );
-	if ( name == nullptr )
-	{
-		FXMessageBox::warning( FXApp::instance(), 0,
-		                       "Warning",
-		                       "Encountered a project without a name!\n"
-		                       "%s",
-		                       path );
-		return;
-	}
-
-	const char *dir = ndGetStringByName( root, "rootDir", nullptr );
-	if ( dir == nullptr )
-	{
-		FXMessageBox::warning( FXApp::instance(), 0,
-		                       "Warning",
-		                       "Encountered a project without a root directory!\n"
-		                       "%s",
-		                       path );
-		return;
-	}
-
-	Project *project = new Project( name );
-	project->config  = root;
-	project->rootDir = dir;
-
-	projects.emplace( name, project );
+	ndDestroyBranch( root );
 }
 
-long os::editor::ProjectDialog::OnSelectProject( FXObject *, FXSelector, void * )
+long ss::forge::ProjectDialog::OnSelectProject( FXObject *, FXSelector, void * )
 {
 	// show or hide the name field, depending on if it's a valid item or not
 	if ( listBox->getItemData( listBox->getCurrentItem() ) == nullptr )
@@ -107,18 +119,20 @@ long os::editor::ProjectDialog::OnSelectProject( FXObject *, FXSelector, void * 
 	return true;
 }
 
-long os::editor::ProjectDialog::OnAccept( FXObject *obj, FXSelector sel, void *ptr )
+long ss::forge::ProjectDialog::OnAccept( FXObject *obj, FXSelector sel, void *ptr )
 {
 	// urgh, check if we have a valid project selected and if not,
 	// that the user has entered *something*
-	editor::editorProject = ( Project * ) listBox->getItemData( listBox->getCurrentItem() );
-	if ( ( editor::editorProject == nullptr ) && ( projectNameField->getText() != defaultName ) )
+	forge::editorProject = ( Project * ) listBox->getItemData( listBox->getCurrentItem() );
+	if ( ( forge::editorProject == nullptr ) && ( projectNameField->getText() != defaultName ) )
 	{
 		PLPath folderName;
-		editor::editorProject = editor::CreateProject(
+		forge::editorProject = forge::create_project(
 		        std::string( projectNameField->getText().text() ),
 		        PlSetupPath( folderName, true, "%s", projectNameField->getText().text() ) );
 	}
+
+	com_project_mount( forge::editorProject->internalName.c_str() );
 
 	return FXDialogBox::onCmdAccept( obj, sel, ptr );
 }

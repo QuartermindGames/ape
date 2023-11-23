@@ -5,13 +5,13 @@
 #include "editor_window_material.h"
 #include "editor_frame_viewport.h"
 
-FXDEFMAP( os::editor::MaterialWindow )
+FXDEFMAP( ss::forge::MaterialWindow )
 materialWindowMap[] = {
         {} };
 
-FXIMPLEMENT( os::editor::MaterialWindow, FXTopWindow, materialWindowMap, ARRAYNUMBER( materialWindowMap ) )
+FXIMPLEMENT( ss::forge::MaterialWindow, FXTopWindow, materialWindowMap, ARRAYNUMBER( materialWindowMap ) )
 
-os::editor::MaterialWindow::MaterialWindow( FXApp *app, ApeMaterial *material )
+ss::forge::MaterialWindow::MaterialWindow( FXApp *app, ApeMaterial *material )
     : FXTopWindow(
               app,
               "Material Editor",
@@ -23,10 +23,10 @@ os::editor::MaterialWindow::MaterialWindow( FXApp *app, ApeMaterial *material )
 {
 	this->material = material;
 
-	viewportFrame = new ViewportFrame( this, nullptr, APE_CAMERA_MODE_PERSPECTIVE );
+	viewportFrame = new ViewportFrame( this, nullptr, SS_ARL_CAMERA_MODE_PERSPECTIVE );
 }
 
-os::editor::MaterialWindow::~MaterialWindow()
+ss::forge::MaterialWindow::~MaterialWindow()
 {
 	if ( material != nullptr )
 		ss_arl_material_release( material );

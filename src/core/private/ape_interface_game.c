@@ -39,7 +39,7 @@ static void spawn_level_command( unsigned int argc, char **argv )
 static void cache_clutter( void )
 {
 	size_t scriptSize;
-	char *scriptBuf = acl_fs_load_file_buffer( "clutter.tbl", &scriptSize );
+	char *scriptBuf = ss_acl_fs_load_file_buffer( "clutter.tbl", &scriptSize );
 	if ( scriptBuf != NULL )
 	{
 		const char *p = scriptBuf;

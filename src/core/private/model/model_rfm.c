@@ -101,7 +101,7 @@ static AclModelRfm *parse_rfm_chunk_bone( AclModelRfm *model, PLFile *file, unsi
 		PlReadFile( file, model->bones[ i ].name, sizeof( char ), 24 );
 		PRINT_DEBUG( "name: %s\n", model->bones[ i ].name );
 
-		model->bones[ i ].rotation = acl_fs_parse_vector4( file );
+		model->bones[ i ].rotation = ss_acl_fs_parse_vector4( file );
 		PRINT_DEBUG( "rotation: %s\n", PlPrintQuaternion( &model->bones[ i ].rotation ) );
 		model->bones[ i ].transform = ss_acl_fs_parse_vector( file );
 		PRINT_DEBUG( "transform: %s\n", PlPrintVector3( &model->bones[ i ].transform, PL_VAR_F32 ) );

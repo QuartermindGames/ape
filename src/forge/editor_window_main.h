@@ -7,7 +7,7 @@
 #include "editor_face_inspector.h"
 #include "editor_frame_console.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class ModelWindow;
 	class MaterialWindow;
@@ -23,17 +23,17 @@ namespace os::editor
 		inline MainWindow() = default;
 
 	public:
-		long OnTick( FXObject *, FXSelector, void * );
-		long OnNew( FXObject *, FXSelector, void * );
-		long OnOpen( FXObject *, FXSelector, void * );
+		long on_tick( FXObject *, FXSelector, void * );
+		long on_new( FXObject *, FXSelector, void * );
+		long on_open( FXObject *, FXSelector, void * );
 
-		long OpenModel( FXObject *, FXSelector, void * );
-		long OpenMaterial( FXObject *, FXSelector, void * );
+		long open_model( FXObject *, FXSelector, void * );
+		long open_material( FXObject *, FXSelector, void * );
 
-		long OnAbout( FXObject *, FXSelector, void * );
-		long OnPackageProject( FXObject *, FXSelector, void * );
+		long on_about( FXObject *, FXSelector, void * );
+		long on_package_project( FXObject *, FXSelector, void * );
 
-		os::editor::Project *GetProject() { return currentProject; }
+		ss::forge::Project *GetProject() { return currentProject; }
 
 		enum
 		{
@@ -62,12 +62,12 @@ namespace os::editor
 			ID_PROJECT_PACKAGE,
 		};
 
-		void PushMessage( int level, const char *msg, const PLColour &colour );
+		void push_message( int level, const char *msg, const PLColour &colour );
 
 	private:
 		void create() override;
 
-		os::editor::Project *currentProject{ nullptr };
+		ss::forge::Project *currentProject{ nullptr };
 
 		FXToolBar *toolBar_{};
 		FXMenuBar *menuBar_{};
@@ -83,7 +83,7 @@ namespace os::editor
 
 		FXGLVisual *glVisual_{};
 
-		os::editor::ConsoleFrame *consoleFrame{};
+		ss::forge::ConsoleFrame *consoleFrame{};
 
 		ViewportFrame *viewportFrame[ 4 ]{};
 

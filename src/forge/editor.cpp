@@ -19,16 +19,16 @@ void operator delete( void *p ) noexcept { PL_DELETE( p ); }
 void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
 #endif
 
-unsigned int editorLogMsgId;
-unsigned int editorLogWarnId;
-unsigned int editorLogErrorId;
+int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
-PLPath os::editor::cachedPaths[ MAX_CACHED_PATHS ];
-NdBranch *os::editor::editorConfig;
+PLPath ss::forge::cachedPaths[ MAX_CACHED_PATHS ];
+NdBranch *ss::forge::editorConfig;
 
-os::editor::Project *os::editor::editorProject = nullptr;
+ss::forge::Project *ss::forge::editorProject = nullptr;
 
-static NdBranch *GenerateProjectConfig( const char *name, const char *path )
+static std::map< std::string, PLImage * > cachedImages;
+
+static NdBranch *generate_project_config( const char *name, const char *path )
 {
 	NdBranch *root = ndPushBackObject( nullptr, "config" );
 	ndPushBackString( root, "title", name );
@@ -41,12 +41,12 @@ static NdBranch *GenerateProjectConfig( const char *name, const char *path )
 /**
  * Creates a new project.
  */
-os::editor::Project *os::editor::CreateProject( const std::string &name, const std::string &folderName )
+ss::forge::Project *ss::forge::create_project( const std::string &name, const std::string &folderName )
 {
 	auto *project = PL_NEW( Project );
 
 	PLPath projectPath;
-	PlSetupPath( projectPath, true, "%s/%s", os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], folderName.c_str() );
+	PlSetupPath( projectPath, true, "%s/%s", ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], folderName.c_str() );
 
 	if ( PlLocalPathExists( projectPath ) )
 	{
@@ -60,21 +60,21 @@ os::editor::Project *os::editor::CreateProject( const std::string &name, const s
 		return nullptr;
 	}
 
-	project->rootDir = folderName;
+	project->internalName = folderName;
 	project->name = name;
 
 	// and now create our placeholder node file
 
 	PLPath nodePath;
-	project->config = GenerateProjectConfig( name.c_str(),
-	                                         PlSetupPath( nodePath, true, "%s/%s.prj.n",
-	                                                      os::editor::cachedPaths[ os::editor::PATH_PROJECTS ],
-	                                                      folderName.c_str() ) );
+	project->config = generate_project_config( name.c_str(),
+	                                           PlSetupPath( nodePath, true, "%s/%s.prj.n",
+	                                                        ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ],
+	                                                        folderName.c_str() ) );
 
 	return project;
 }
 
-os::editor::Project *os::editor::OpenProject( const char *path )
+ss::forge::Project *ss::forge::open_project( const char *path )
 {
 #if 0
 	if ( os::editor::editorProject.config != nullptr )
@@ -118,24 +118,24 @@ os::editor::Project *os::editor::OpenProject( const char *path )
 	return nullptr;
 }
 
-static void SetupPaths( const char *exePath )
+static void setup_paths( const char *exePath )
 {
-	PL_ZERO( os::editor::cachedPaths, sizeof( PLPath ) * os::editor::MAX_CACHED_PATHS );
+	PL_ZERO( ss::forge::cachedPaths, sizeof( PLPath ) * ss::forge::MAX_CACHED_PATHS );
 
 	// copy the exe path and ensure it doesn't end in a slash
-	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_EXE ], true, "%s", exePath );
+	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_EXE ], true, "%s", exePath );
 
 	// resources location - where editor icons are stored
-	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_RESOURCES ], true, "%s/../../resources", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
+	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_RESOURCES ], true, "%s/../../resources", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
 
 	// projects location - where new projects will be created by default
-	PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], true, "%s/../../projects", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
+	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], true, "%s/../../projects", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
 
 	PLPath tmp;
-	if ( PlGetApplicationDataDirectory( "yin", tmp, sizeof( tmp ) ) != nullptr )
+	if ( PlGetApplicationDataDirectory( "ape", tmp, sizeof( tmp ) ) != nullptr )
 	{
 		if ( PlCreateDirectory( tmp ) )
-			PlSetupPath( os::editor::cachedPaths[ os::editor::PATH_CONFIG ], true, "%s", tmp );
+			PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ], true, "%s", tmp );
 		else
 			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
 	}
@@ -143,42 +143,56 @@ static void SetupPaths( const char *exePath )
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
 
 	// fallback to local location if it failed...
-	if ( *os::editor::cachedPaths[ os::editor::PATH_CONFIG ] == '\0' )
-		os::editor::cachedPaths[ os::editor::PATH_CONFIG ][ 0 ] = '.';
+	if ( *ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] == '\0' )
+		ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ][ 0 ] = '.';
 }
 
-static void SetupConfig()
+static void setup_config()
 {
 	// first try and load it locally
 	PLPath path;
-	PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_EXE ] );
-	if ( ( os::editor::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
+	PlSetupPath( path, true, "local://%s/" EDITOR_CONFIG_FILENAME, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
+	if ( ( ss::forge::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
 	{
 		// try again, but from config location
-		PlSetupPath( path, true, "local://%s/editor.cfg.n", os::editor::cachedPaths[ os::editor::PATH_CONFIG ] );
-		if ( ( os::editor::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
+		PlSetupPath( path, true, "local://%s/" EDITOR_CONFIG_FILENAME, ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] );
+		if ( ( ss::forge::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
 		{
 			// uh oh! just append an object and return
-			os::editor::editorConfig = ndPushBackObject( nullptr, "config" );
+			ss::forge::editorConfig = ndPushBackObject( nullptr, "config" );
 			return;
 		}
 	}
 
-	const char *projectPath = ndGetStringByName( os::editor::editorConfig, "projectsPath", "../../projects" );
+	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "../../projects" );
 	if ( projectPath != nullptr )
-		snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
+		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
 	else
 		// no project path provided, just use a fallback
-		snprintf( os::editor::cachedPaths[ os::editor::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
+		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
 }
 
-FXIcon *os::editor::LoadFXIcon( FXApp *app, const char *path )
+FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 {
 	char fullPath[ PL_SYSTEM_MAX_PATH ];
-	snprintf( fullPath, sizeof( fullPath ), "./../../%s", path );
+	snprintf( fullPath, sizeof( fullPath ), "../../%s", path );
 
-	FXIconSource const iconSource( app );
-	return iconSource.loadIconFile( fullPath );
+	PLImage *image;
+	auto i = cachedImages.find( fullPath );
+	if ( i != cachedImages.end() )
+		image = i->second;
+	else
+	{
+		image = PlLoadImage( fullPath );
+		if ( image == nullptr )
+			return nullptr;
+
+		cachedImages.emplace( fullPath, image );
+	}
+
+	FXIcon *icon = new FXIcon( app );
+	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
+	return icon;
 }
 
 int main( int argc, char **argv )
@@ -199,6 +213,8 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
+	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
+
 	// attempt to fetch the driver directly from the executable location if possible
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
@@ -210,9 +226,7 @@ int main( int argc, char **argv )
 		PL_DELETE( driverPath );
 	}
 	else
-	{
 		PlgScanForDrivers( "." );
-	}
 
 	PLPath tmp;
 	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
@@ -224,26 +238,26 @@ int main( int argc, char **argv )
 	// now init common library and fetch the editor config
 	com_initialize();
 
-	SetupPaths( tmp );
-	SetupConfig();
+	setup_paths( tmp );
+	setup_config();
 
-	FXApp app( EDITOR_APP_TITLE, FXString::null );
+	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
 	app.init( argc, argv );
 
-	static constexpr FXColor baseColour = FXRGB( 40, 40, 40 );
-	static constexpr FXColor foreColour = FXRGB( 200, 200, 250 );
-	static constexpr FXColor hiliteColour = FXRGB( 100, 100, 150 );
+	static constexpr FXColor BASE_COLOUR = FXRGB( 40, 40, 40 );
+	static constexpr FXColor FORE_COLOUR = FXRGB( 200, 200, 250 );
+	static constexpr FXColor HILITE_COLOUR = FXRGB( 100, 100, 150 );
 
 	app.setBackColor( FXRGB( 10, 10, 10 ) );
-	app.setBaseColor( baseColour );
-	app.setForeColor( foreColour );
+	app.setBaseColor( BASE_COLOUR );
+	app.setForeColor( FORE_COLOUR );
 
-	app.setBorderColor( baseColour );
-	app.setHiliteColor( hiliteColour );
-	app.setShadowColor( hiliteColour );
+	app.setBorderColor( BASE_COLOUR );
+	app.setHiliteColor( HILITE_COLOUR );
+	app.setShadowColor( HILITE_COLOUR );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
-	os::editor::mainWindow = new os::editor::MainWindow( &app );
+	ss::forge::mainWindow = new ss::forge::MainWindow( &app );
 
 	app.create();
 
@@ -255,17 +269,17 @@ int main( int argc, char **argv )
 
 	// now let us pick a project before we init the engine
 	// (for now, changing project will probably require us to restart)
-	auto *projectDialog = new os::editor::ProjectDialog( os::editor::mainWindow );
+	auto *projectDialog = new ss::forge::ProjectDialog( ss::forge::mainWindow );
 	projectDialog->execute();
 
-	if ( os::editor::editorProject == nullptr )
+	if ( ss::forge::editorProject == nullptr )
 	{
 		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
 	delete projectDialog;
 
-	os::editor::mainWindow->show();
+	ss::forge::mainWindow->show();
 
 	if ( !ss_acl_initialize( "editor.cfg.n" ) )
 	{
@@ -288,9 +302,7 @@ extern "C"
 
 	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
-
-
-		switch( messageType )
+		switch ( messageType )
 		{
 			case SS_SHELL_MESSAGE_BOX_TYPE_ERROR:
 				FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Forge Error", "%s", message );
@@ -321,11 +333,11 @@ extern "C"
 
 	void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 	{
-		os::editor::mainWindow->PushMessage( level, msg, *colour );
+		ss::forge::mainWindow->push_message( level, msg, *colour );
 	}
 
 	void ss_shell_shutdown( void )
 	{
-		os::editor::mainWindow->destroy();
+		ss::forge::mainWindow->destroy();
 	}
 }

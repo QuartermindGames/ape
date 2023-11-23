@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class ModelWindow : public FXWindow
 	{

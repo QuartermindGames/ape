@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class ProjectDialog : public FXDialogBox
 	{
@@ -28,8 +28,8 @@ namespace os::editor
 		static constexpr const char *defaultName = "Enter a project name";
 		static constexpr unsigned int baseWidth  = 256;
 
-		static void RegisterProjectCallback( const char *, void * );
-		static std::map< std::string, editor::Project * > projects;
+		static void register_project_callback( const char *, void * );
+		static std::map< std::string, forge::Project * > projects;
 
 		FXListBox *listBox{};
 		FXTextField *projectNameField{};

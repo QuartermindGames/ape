@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class ViewportFrame : public FXVerticalFrame
 	{
@@ -41,12 +41,14 @@ namespace os::editor
 		FXToggleButton *viewModeButtons_[ APE_CAMERA_MAX_MODES ];
 		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
 
-		ApeCameraDrawMode drawMode_{ APE_CAMERA_DRAW_MODE_WIREFRAME };
+		ApeCameraDrawMode drawMode_{ SS_ARL_CAMERA_DRAW_MODE_WIREFRAME };
 
 		float zoomScale_{ 1.0f };
 
 	public:
-		SS_Arl_Viewport *engineViewportHandle;
+		SS_Arl_Viewport *engineViewport{};
+		SS_Arl_Camera *camera{};
+		static unsigned int cameraTagNum;
 
 	private:
 		FXDataTarget forwardSpeedTarget_;

@@ -3,46 +3,47 @@
 
 #include "editor_frame_console.h"
 
-FXDEFMAP( os::editor::ConsoleFrame )
+FXDEFMAP( ss::forge::ConsoleFrame )
 consoleFrameMap[] = {
-        FXMAPFUNC( SEL_COMMAND, os::editor::ConsoleFrame::ID_SUBMIT, os::editor::ConsoleFrame::SubmitCommand ),
-        FXMAPFUNC( SEL_KEYPRESS, os::editor::ConsoleFrame::ID_SUBMIT_FIELD, os::editor::ConsoleFrame::SubmitKey ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ConsoleFrame::ID_SUBMIT, ss::forge::ConsoleFrame::submit_command ),
+        FXMAPFUNC( SEL_KEYPRESS, ss::forge::ConsoleFrame::ID_SUBMIT_FIELD, ss::forge::ConsoleFrame::submit_key ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ConsoleFrame::ID_CLEAR, ss::forge::ConsoleFrame::clear_command ),
 };
 
-FXIMPLEMENT( os::editor::ConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
+FXIMPLEMENT( ss::forge::ConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
 
-os::editor::ConsoleFrame::ConsoleFrame( FXComposite *composite )
-    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | TEXT_AUTOSCROLL )
+ss::forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
+    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL )
 {
 	setPadBottom( 0 );
 	setPadTop( 0 );
 	setPadLeft( 0 );
 	setPadRight( 0 );
 
-	logField = new FXText( this, nullptr, 0, LAYOUT_FILL );
+	logField = new FXText( this, nullptr, 0, TEXT_READONLY | TEXT_AUTOSCROLL | LAYOUT_FILL );
 	logField->setEditable( false );
-	//logField->setBackColor( FXRGB( 0, 0, 0 ) );
-	//logField->setTextColor( FXRGB( 255, 255, 255 ) );
 
 	auto *submissionFrame = new FXHorizontalFrame( this, FRAME_NORMAL | LAYOUT_FILL_X );
-	submitField           = new FXTextField( submissionFrame, 1, this, ID_SUBMIT_FIELD, FRAME_NORMAL | LAYOUT_FILL_X );
-	submitButton          = new FXButton( submissionFrame, "Submit", nullptr, this, ID_SUBMIT );
+	new FXButton( submissionFrame, "", ss::forge::load_fx_icon( FXApp::instance(), "resources/bin.gif" ), this, ID_CLEAR );
+	submitField = new FXTextField( submissionFrame, 1, this, ID_SUBMIT_FIELD, FRAME_NORMAL | LAYOUT_FILL_X );
+	submitButton = new FXButton( submissionFrame, "Submit", nullptr, this, ID_SUBMIT );
 }
 
-os::editor::ConsoleFrame::~ConsoleFrame() = default;
+ss::forge::ConsoleFrame::~ConsoleFrame() = default;
 
-void os::editor::ConsoleFrame::PushMessage( int, const char *msg, const PLColour & )
+void ss::forge::ConsoleFrame::push_message( int level, const char *msg, const PLColour &colour )
 {
-	logField->appendText( msg );
+	logField->appendText( msg, ( int ) strlen( msg ), true );
+	logField->makePositionVisible( logField->getBottomLine() );// given autoscroll doesn't work...
+	logField->layout();
+	logField->update();
 }
 
-long os::editor::ConsoleFrame::SubmitCommand( FXObject *, FXSelector, void * )
+long ss::forge::ConsoleFrame::submit_command( FXObject *, FXSelector, void * )
 {
 	FXString command = submitField->getText();
 	if ( command.empty() )
-	{
 		return false;
-	}
 
 	PlParseConsoleString( command.text() );
 
@@ -50,13 +51,17 @@ long os::editor::ConsoleFrame::SubmitCommand( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long os::editor::ConsoleFrame::SubmitKey( FXObject *obj, FXSelector sel, void *ptr )
+long ss::forge::ConsoleFrame::submit_key( FXObject *obj, FXSelector sel, void *ptr )
 {
 	const FXEvent *event = ( FXEvent * ) ptr;
 	if ( event->code == FX::KEY_Return )
-	{
-		return SubmitCommand( obj, sel, ptr );
-	}
+		return submit_command( obj, sel, ptr );
 
 	return false;
+}
+
+long ss::forge::ConsoleFrame::clear_command( FXObject *, FXSelector, void * )
+{
+	logField->setText( "" );
+	return 0;
 }

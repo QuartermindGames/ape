@@ -25,9 +25,9 @@ add_dependencies(forge
         plgraphics
         plmodel
         pl_gl_driver
-        
+
         ApeCore
-        
+
         FOX-1.6)
 
 set_target_properties(forge PROPERTIES
@@ -45,5 +45,6 @@ else ()
 endif ()
 
 target_link_libraries(forge
+        ApeCommon
         ApeCore
         FOX-1.6)

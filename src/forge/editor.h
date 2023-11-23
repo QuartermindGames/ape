@@ -24,9 +24,9 @@
 #include <fx.h>
 #include <fxkeys.h>
 
-#define EDITOR_APP_NAME    "yin-editor"
-#define EDITOR_APP_TITLE   "Yin Editor"
-#define EDITOR_APP_VERSION "v0.1.0"
+#define SS_FORGE_APP_NAME    "forge-editor"
+#define SS_FORGE_APP_TITLE   "Forge Editor"
+#define SS_FORGE_APP_VERSION "v0.1.0"
 
 #define EDITOR_CONFIG_FILENAME "editor.cfg.n"
 
@@ -39,18 +39,16 @@ typedef enum EditorLogLevel
 
 	EDITOR_MAX_LOG_LEVELS
 } EditorLogLevel;
-extern int editorLogLevels[];
+extern int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
 #define EDITOR_PRINT( ... ) PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], __VA_ARGS__ )
 #define EDITOR_WARN( ... )  PlLogMessage( editorLogLevels[ EDITOR_LOG_WARNING ], __VA_ARGS__ )
 
-void MainWindow_UpdateStatus( const char *message );
-
-namespace os::editor
+namespace ss::forge
 {
 	extern FXWindow *editorWindow;
 
-	FXIcon *LoadFXIcon( FXApp *app, const char *path );
+	FXIcon *load_fx_icon( FXApp *app, const char *path );
 
 	/////////////////////////////////////////////////////////////////////////
 
@@ -62,14 +60,15 @@ namespace os::editor
 		}
 
 		std::string name;
-		std::string rootDir;
+		std::string internalName;
 		NdBranch *config{ nullptr };
 		PLFileSystemMount *mount{ nullptr };
+		FXIcon *icon;
 	};
 	extern Project *editorProject;
 
-	Project *CreateProject( const std::string &name, const std::string &folderName );
-	Project *OpenProject( const char *path );
+	Project *create_project( const std::string &name, const std::string &folderName );
+	Project *open_project( const char *path );
 
 	/////////////////////////////////////////////////////////////////////////
 
@@ -86,4 +85,4 @@ namespace os::editor
 	extern PLPath cachedPaths[];
 
 	extern NdBranch *editorConfig;
-}// namespace os::editor
+}// namespace ss::forge

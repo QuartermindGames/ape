@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class ConsoleFrame : public FXVerticalFrame
 	{
@@ -18,11 +18,14 @@ namespace os::editor
 		{
 			ID_SUBMIT = FXVerticalFrame::ID_LAST,
 			ID_SUBMIT_FIELD,
+			ID_CLEAR,
 		};
 
-		void PushMessage( int level, const char *msg, const PLColour &colour );
-        long SubmitCommand( FXObject *, FXSelector, void * );
-		long SubmitKey( FXObject *, FXSelector, void * );
+		void push_message( int level, const char *msg, const PLColour &colour );
+		long submit_command( FXObject *, FXSelector, void * );
+		long submit_key( FXObject *obj, FXSelector, void *ptr );
+
+		long clear_command( FXObject *, FXSelector, void * );
 
 	protected:
 	private:
@@ -32,4 +35,4 @@ namespace os::editor
 		FXButton *submitButton{};
 		FXTextField *submitField{};
 	};
-}// namespace os::editor
+}// namespace ss::forge

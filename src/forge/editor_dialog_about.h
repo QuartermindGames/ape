@@ -4,12 +4,16 @@
 
 #include "editor.h"
 
-namespace os::editor
+namespace ss::forge
 {
 	class AboutDialog : public FXDialogBox
 	{
 	public:
 		AboutDialog( FXWindow *parent );
 		~AboutDialog() = default;
+
+	private:
+		static FXIcon *editorIcon;
+		static FXIcon *developerIcon;
 	};
-}
+}// namespace ss::forge
