@@ -57,6 +57,8 @@ void ss_arl_render_frame( SS_Arl_Viewport *viewport )
 
 	ss_arl_draw_end_( viewport );
 
+	ss_shell_swap_window( viewport );
+
 	COM_PROFILE_FUNCTION_END();
 }
 
@@ -96,6 +98,8 @@ void apeTickClient( void )
 	apeTickInput_();
 	apeTickGUI_();
 	apeTickClientWorld_();
+
+	ss_arl_tick_materials_();
 
 	handle_connection_state();
 

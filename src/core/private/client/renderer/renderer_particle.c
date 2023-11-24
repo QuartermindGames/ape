@@ -6,16 +6,9 @@
 #include "renderer_particle.h"
 #include "renderer.h"
 
-#include <yin/node.h>
-
-void PS_Initialize( void ) {
-}
-
-void PS_Shutdown( void ) {
-}
-
-static void PS_CB_DestroyEmitterTemplate( void *userData ) {
-	PSEmitter *emitter = userData;
+static void PS_CB_DestroyEmitterTemplate( void *userData )
+{
+	SS_Arl_ParticleEmitter *emitter = userData;
 	assert( emitter != NULL );
 
 	ss_arl_material_release( emitter->material );
@@ -25,9 +18,11 @@ static void PS_CB_DestroyEmitterTemplate( void *userData ) {
 	PlFree( emitter );
 }
 
-NdBranch *PS_SerializeEmitter( const PSEmitter *emitter ) {
+NdBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
+{
 	NdBranch *root = ndPushBackObject( NULL, "particleEmitter" );
-	if ( root != NULL ) {
+	if ( root != NULL )
+	{
 		ndPushBackI32( root, "emissionRate", emitter->emissionRate );
 		ndPushBackI32( root, "emissionVar", emitter->emissionVar );
 
@@ -43,18 +38,20 @@ NdBranch *PS_SerializeEmitter( const PSEmitter *emitter ) {
 	return root;
 }
 
-void PS_CacheEmitterTemplate( const char *path ) {
-	PSEmitter *emitter = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
+void ss_arl_cache_particle_emitter_template( const char *path )
+{
+	SS_Arl_ParticleEmitter *emitter = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
 	NdBranch *root = ndLoadFile( path, "particleEmitter" );
-	if ( root == NULL ) {
+	if ( root == NULL )
+	{
 		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
 		return;
 	}
 
-	emitter = PL_NEW( PSEmitter );
+	emitter = PL_NEW( SS_Arl_ParticleEmitter );
 
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
@@ -79,21 +76,24 @@ void PS_CacheEmitterTemplate( const char *path ) {
 	apeAddReference( &emitter->mem );
 }
 
-PSEmitter *PS_SpawnEmitterTemplateInstance( const char *path ) {
-	PSEmitter *emitterTemplate = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
-	if ( emitterTemplate == NULL ) {
+SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
+{
+	SS_Arl_ParticleEmitter *emitterTemplate = apeGetCachedData( path, APE_CACHE_POOL_PARTICLES );
+	if ( emitterTemplate == NULL )
+	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
 		return NULL;
 	}
 
-	PSEmitter *emitter = PlMAlloc( sizeof( PSEmitter ), true );
-	memcpy( emitter, emitterTemplate, sizeof( PSEmitter ) );
+	SS_Arl_ParticleEmitter *emitter = PlMAlloc( sizeof( SS_Arl_ParticleEmitter ), true );
+	memcpy( emitter, emitterTemplate, sizeof( SS_Arl_ParticleEmitter ) );
 
 	return emitter;
 }
 
-PSEmitter *PS_SpawnEmitter( void ) {
-	PSEmitter *emitter = PlMAlloc( sizeof( PSEmitter ), true );
+SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void )
+{
+	SS_Arl_ParticleEmitter *emitter = PL_NEW( SS_Arl_ParticleEmitter );
 	emitter->particles = PlCreateLinkedList();
 
 	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
@@ -106,7 +106,8 @@ PSEmitter *PS_SpawnEmitter( void ) {
 	return emitter;
 }
 
-void PS_DestroyEmitter( PSEmitter *emitter ) {
+void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
+{
 	/* todo: 	push it into a queue to be removed once
 	 * 			all the particles are dead */
 	if ( emitter == NULL )
@@ -114,8 +115,9 @@ void PS_DestroyEmitter( PSEmitter *emitter ) {
 
 	/* free all the particles we've created */
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL ) {
-		PSParticle *particle = PlGetLinkedListNodeUserData( node );
+	while ( node != NULL )
+	{
+		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
 		node = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
@@ -127,12 +129,15 @@ void PS_DestroyEmitter( PSEmitter *emitter ) {
 	PlFree( emitter );
 }
 
-int U_Rand_I32( int max ) {
+static int rand_int( int max )
+{
 	return ( rand() % max );
 }
 
-static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter ) {
-	if ( particle->life <= 0 ) {
+static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *emitter )
+{
+	if ( particle->life <= 0 )
+	{
 		PlDestroyLinkedListNode( particle->node );
 		PlFree( particle );
 		return;
@@ -165,10 +170,12 @@ static void PS_TickParticle( PSParticle *particle, PSEmitter *emitter ) {
 	particle->life--;
 }
 
-void PS_TickEmitter( PSEmitter *emitter ) {
+void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
+{
 	int numParticles = ( int ) PlGetNumLinkedListNodes( emitter->particles );
-	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks ) {
-		PSParticle *particle = PlMAlloc( sizeof( PSParticle ), true );
+	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
+	{
+		SS_Arl_Particle *particle = PlMAlloc( sizeof( SS_Arl_Particle ), true );
 		particle->emitter = emitter;
 
 		PLVector3 translationMod;
@@ -177,7 +184,7 @@ void PS_TickEmitter( PSEmitter *emitter ) {
 		translationMod.z = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
-		particle->life = emitter->particleLife + ( emitter->particleLifeVar * U_Rand_I32( 100 ) );
+		particle->life = emitter->particleLife + ( emitter->particleLifeVar * rand_int( 100 ) );
 
 		PLColourF32 startColour, endColour;
 		startColour.r = emitter->startColour.r + ( emitter->startColourVar.r * PlGenerateRandomFloat( 1.0f ) );
@@ -205,21 +212,23 @@ void PS_TickEmitter( PSEmitter *emitter ) {
 		particle->node = PlInsertLinkedListNode( emitter->particles, particle );
 
 		emitter->numTicks = 0;
-		emitter->maxTicks = emitter->emissionRate + ( emitter->emissionVar * U_Rand_I32( 100 ) );
+		emitter->maxTicks = emitter->emissionRate + ( emitter->emissionVar * rand_int( 100 ) );
 	}
 
 	/* simulate all of the existing particles that we've emitted */
 	unsigned int i = 0;
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL ) {
-		PSParticle *particle = PlGetLinkedListNodeUserData( node );
-		if ( i == 0 ) {
+	while ( node != NULL )
+	{
+		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
+		if ( i == 0 )
+		{
 			emitter->bounds.maxs = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 			emitter->bounds.mins = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 		}
 
 		node = PlGetNextLinkedListNode( node );
-		PS_TickParticle( particle, emitter );
+		tick_particle( particle, emitter );
 
 		++i;
 	}
@@ -230,7 +239,8 @@ void PS_TickEmitter( PSEmitter *emitter ) {
 	emitter->numTicks++;
 }
 
-void PS_Draw( const PSEmitter *emitter, const SS_Arl_Camera *camera ) {
+void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SS_Arl_Camera *camera )
+{
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -246,8 +256,9 @@ void PS_Draw( const PSEmitter *emitter, const SS_Arl_Camera *camera ) {
 	PlgSetCullMode( PLG_CULL_NONE );
 
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
-	while ( node != NULL ) {
-		PSParticle *particle = PlGetLinkedListNodeUserData( node );
+	while ( node != NULL )
+	{
+		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
 
 		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
 

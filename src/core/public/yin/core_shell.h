@@ -38,6 +38,7 @@ bool ss_shell_set_window_size( int *width, int *height );
 void ss_shell_get_window_size( int *width, int *height );
 void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... );
 void ss_shell_set_window_icon( const PLImage *image );
+void ss_shell_swap_window( SS_Arl_Viewport *viewport );
 
 /**
  * Returns a handle to the currently active viewport.
@@ -52,6 +53,7 @@ void ss_shell_get_mouse_position( int *x, int *y );
 void ss_shell_set_mouse_position( int x, int y );
 void ss_shell_grab_mouse( bool grab );
 void ss_shell_push_message( int level, const char *msg, const PLColour *colour );
+
 void ss_shell_shutdown( void );
 
 PL_EXTERN_C_END

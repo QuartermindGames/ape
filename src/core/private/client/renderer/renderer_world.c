@@ -271,7 +271,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
 		assert( material != NULL );
 		if ( material == NULL )
-			material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
+			material = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK );
 
 		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
 		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
@@ -289,7 +289,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 
 		if ( light != NULL && ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) &&
-		     arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
+		     ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
 		{
 			offset += numVertices;
 			continue;
@@ -326,7 +326,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 
 static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SS_Arl_Light *light, const PLColour *colour )
 {
-	ApeMaterial *shadowMaterial = arl_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
+	ApeMaterial *shadowMaterial = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 	if ( shadowMaterial == NULL )
 		return;
@@ -420,7 +420,7 @@ static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SS_Arl_L
 	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
-		if ( faces[ i ]->material == NULL || !arl_material_shadows_enabled( faces[ i ]->material ) )
+		if ( faces[ i ]->material == NULL || !ss_arl_material_shadows_enabled( faces[ i ]->material ) )
 			continue;
 
 		//if ( !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )

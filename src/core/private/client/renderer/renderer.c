@@ -308,7 +308,7 @@ void ss_arl_initialize_( void )
 
 	arl_initialize_render_targets_();
 	arl_initialize_shaders_();
-	arl_initialize_materials_();
+	ss_arl_initialize_materials_();
 	YR_Font_Initialize();
 
 	apeInitializeWorldVisibilitySystem_();
@@ -323,11 +323,11 @@ void ss_arl_initialize_( void )
 
 	ss_arl_setup_default_state( NULL );
 
-	defaultRenderTarget = arl_render_target_create( "default",
-	                                                800, 600,
-	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                                PLG_BUFFER_COLOUR,
-	                                                PLG_TEXTURE_FILTER_LINEAR );
+	defaultRenderTarget = ss_arl_render_target_create( "default",
+	                                                   800, 600,
+	                                                   PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                   PLG_BUFFER_COLOUR,
+	                                                   PLG_TEXTURE_FILTER_LINEAR );
 	if ( defaultRenderTarget == NULL )
 		PRINT_ERROR( "Failed to create default render target!\n" );
 
@@ -339,7 +339,7 @@ void ss_arl_shutdown_( void )
 	arl_postfx_cleanup_();
 
 	Font_Shutdown();
-	arl_shutdown_materials_();
+	ss_arl_shutdown_materials_();
 	arl_shutdown_render_targets_();
 
 	//TODO: move this out of the renderer...
@@ -507,9 +507,10 @@ typedef struct SkyLayer
 {
 	ApeMaterial *material;
 	float scale;
-	float y;
-	float speed;
 	float alpha;
+	float y;
+
+	PLVector2 offset;
 } SkyLayer;
 
 #define MAX_SKY_LAYERS 4
@@ -534,7 +535,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlPopMatrix();
 }
 
-unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha )
+unsigned int arl_sky_add_layer( const char *path, float scale, float y, float alpha )
 {
 	assert( numSkyLayers < MAX_SKY_LAYERS );
 	if ( numSkyLayers >= MAX_SKY_LAYERS )
@@ -545,9 +546,8 @@ unsigned int arl_sky_add_layer( const char *path, float scale, float y, float sp
 		return -1;
 
 	skyLayers[ numSkyLayers ].scale = scale;
-	skyLayers[ numSkyLayers ].y = y;
-	skyLayers[ numSkyLayers ].speed = speed;
 	skyLayers[ numSkyLayers ].alpha = alpha;
+	skyLayers[ numSkyLayers ].y = y;
 
 	numSkyLayers++;
 	return ( numSkyLayers - 1 );
@@ -563,6 +563,18 @@ void arl_sky_set_layer_alpha( unsigned int slot, float alpha )
 	}
 
 	skyLayers[ slot ].alpha = alpha;
+}
+
+void ss_arl_sky_set_layer_offset( unsigned int slot, float x, float y )
+{
+	assert( slot < numSkyLayers );
+	if ( slot >= numSkyLayers )
+	{
+		PRINT_WARNING( "Invalid sky layer slot (%u)!\n", slot );
+		return;
+	}
+
+	skyLayers[ slot ].offset = ( PLVector2 ){ x, y };
 }
 
 void arl_sky_clear_layers( void )
@@ -643,7 +655,7 @@ void arl_sky_draw( SS_Arl_Camera *camera )
 		for ( unsigned int j = 0; j < numTriangles; ++j )
 			PlgAddMeshTriangle( mesh, indices[ j ][ 0 ], indices[ j ][ 1 ], indices[ j ][ 2 ] );
 
-		draw_sky_layer( mesh, skyLayers[ i ].material, &location, ticks / ( skyLayers[ i ].speed + 200 ), ticks / skyLayers[ i ].speed, skyLayers[ i ].scale );
+		draw_sky_layer( mesh, skyLayers[ i ].material, &location, skyLayers[ i ].offset.x, skyLayers[ i ].offset.y, skyLayers[ i ].scale );
 	}
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );

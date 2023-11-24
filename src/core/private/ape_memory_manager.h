@@ -55,7 +55,7 @@ typedef struct ApeMemoryReference {
 ApeMemoryReference *apeSetupReference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
 
 void apeAddReference( ApeMemoryReference *m );
-void apeReleaseReference( ApeMemoryReference *m );
+void ss_acl_mm_release( ApeMemoryReference *m );
 int apeGetNumberOfReferences( const ApeMemoryReference *m );
 unsigned int apeFlushUnreferencedResources( void );
 

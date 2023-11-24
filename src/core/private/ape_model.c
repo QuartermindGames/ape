@@ -206,5 +206,5 @@ void apeReleaseModel( PLMModel *model ) {
 		return;
 	}
 
-	apeReleaseReference( &additionalData->mem );
+	ss_acl_mm_release( &additionalData->mem );
 }

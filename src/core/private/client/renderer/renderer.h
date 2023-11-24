@@ -157,7 +157,7 @@ void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport );
 void apeSet2DViewportSize( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );
 
-struct ApeShaderProgramIndex *arl_shader_get_by_name( const char *name );
+struct SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name );
 
 void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport );
 

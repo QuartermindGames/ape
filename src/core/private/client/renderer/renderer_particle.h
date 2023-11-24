@@ -4,12 +4,14 @@
 
 typedef struct SS_Arl_Camera SS_Arl_Camera;
 
-typedef enum PSParticleDrawType {
-	PS_DRAW_SPRITE,
-	PS_DRAW_MODEL,
-} PSParticleDrawType;
+typedef enum SS_Arl_ParticleDrawType
+{
+	SS_ARL_PARTICLE_DRAW_TYPE_SPRITE,
+	SS_ARL_PARTICLE_DRAW_TYPE_MODEL,
+} SS_Arl_ParticleDrawType;
 
-typedef struct PSEmitter {
+typedef struct SS_Arl_ParticleEmitter
+{
 	ApeSceneTransform transform, transformVar;
 
 	PLVector3 force, forceVar; /* exterior forces, such as gravity */
@@ -38,9 +40,10 @@ typedef struct PSEmitter {
 	ApeMemoryReference mem;
 
 	struct PLLinkedList *particles;
-} PSEmitter;
+} SS_Arl_ParticleEmitter;
 
-typedef struct PSParticle {
+typedef struct SS_Arl_Particle
+{
 	ApeSceneTransform transform, oldTransform;
 
 	PLVector3 dir;
@@ -52,19 +55,16 @@ typedef struct PSParticle {
 	float scale, oldScale, deltaScale;
 
 	int life;
-	PSEmitter *emitter;
+	SS_Arl_ParticleEmitter *emitter;
 
 	PLCollisionAABB bounds;
 
 	struct PLLinkedListNode *node;
-} PSParticle;
+} SS_Arl_Particle;
 
-void PS_Initialize( void );
-void PS_Shutdown( void );
+void ss_arl_cache_particle_emitter_template( const char *path );
+SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void );
+void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter );
 
-void PS_CacheEmitterTemplate( const char *path );
-PSEmitter *PS_SpawnEmitter( void );
-void PS_DestroyEmitter( PSEmitter *emitter );
-
-void PS_TickEmitter( PSEmitter *emitter );
-void PS_Draw( const PSEmitter *emitter, const SS_Arl_Camera *camera );
+void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter );
+void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SS_Arl_Camera *camera );

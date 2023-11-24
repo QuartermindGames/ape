@@ -355,7 +355,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 
 		if ( face->material == NULL )
 		{
-			face->material = ar_material_get_fallback();
+			face->material = ss_arl_get_fallback_material();
 		}
 
 		int32_t lightmapIndex = PlReadInt32( file, false, NULL );

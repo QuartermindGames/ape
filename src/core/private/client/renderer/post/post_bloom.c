@@ -9,9 +9,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static ApeShaderProgramIndex *bloomFilterShader;
-static ApeShaderProgramIndex *bloomBlurXShader;
-static ApeShaderProgramIndex *bloomBlurYShader;
+static SS_Arl_ShaderProgramIndex *bloomFilterShader;
+static SS_Arl_ShaderProgramIndex *bloomBlurXShader;
+static SS_Arl_ShaderProgramIndex *bloomBlurYShader;
 
 static ArRenderTarget *bloomRenderTarget;
 
@@ -36,7 +36,7 @@ static bool setup_bloom_effect( void )
 	if ( bloomBlurYShader == NULL )
 		return false;
 
-	bloomRenderTarget = arl_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	bloomRenderTarget = ss_arl_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 	if ( bloomRenderTarget == NULL )
 	{
 		PRINT_WARNING( "Failed to create render target for bloom effect!\n" );
@@ -48,7 +48,7 @@ static bool setup_bloom_effect( void )
 
 static void cleanup_bloom_effect( void )
 {
-	arl_render_target_release( bloomRenderTarget );
+	ss_arl_render_target_release( bloomRenderTarget );
 }
 
 static void draw_bloom_effect( const SS_Arl_Viewport *viewport )

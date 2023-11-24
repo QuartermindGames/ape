@@ -19,7 +19,7 @@ static PLGTexture *previewFallbackTexture;
 typedef struct ApeMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	ApeMaterialPass passes[ ARL_MAX_MATERIAL_PASSES ];
+	SS_Arl_MaterialPass passes[ SS_ARL_MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
@@ -34,18 +34,18 @@ typedef struct ApeMaterial
 
 static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
 
-ApeMaterial *arl_material_get_default( ApeDefaultMaterial defaultMaterial )
+ApeMaterial *ss_arl_get_default_material( SS_Arl_DefaultMaterial defaultMaterial )
 {
 	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
 	if ( defaultMaterial == APE_MAX_DEFAULT_MATERIALS )
-		return defaultMaterials[ APE_MATERIAL_BUILTIN_FALLBACK ];
+		return defaultMaterials[ SS_ARL_MATERIAL_BUILTIN_FALLBACK ];
 
 	return defaultMaterials[ defaultMaterial ];
 }
 
-ApeMaterial *ar_material_get_fallback( void ) { return arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK ); }
+ApeMaterial *ss_arl_get_fallback_material( void ) { return ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK ); }
 
-void arl_initialize_materials_( void )
+void ss_arl_initialize_materials_( void )
 {
 	PRINT( "Initializing material system\n" );
 
@@ -76,7 +76,7 @@ void arl_initialize_materials_( void )
 	}
 }
 
-void arl_shutdown_materials_( void )
+void ss_arl_shutdown_materials_( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	apeFlushUnreferencedResources();
@@ -154,17 +154,17 @@ static int get_blend_mode_by_tag( const char *tag )
 /**
  * Convert the given tag into it's built-in type.
  */
-static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
+static SS_Arl_MaterialBuiltinVar get_built_in_by_tag( const char *tag )
 {
 	static const char *builtInTags[] = {
-	        [APE_MATERIAL_BUILTIN_TIME] = "time",
-	        [APE_MATERIAL_BUILTIN_DEPTH] = "depth",
-	        [APE_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
-	        [APE_MATERIAL_BUILTIN_FALLBACK] = "proc_fallback",
+	        [SS_ARL_MATERIAL_BUILTIN_TIME] = "time",
+	        [SS_ARL_MATERIAL_BUILTIN_DEPTH] = "depth",
+	        [SS_ARL_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
+	        [SS_ARL_MATERIAL_BUILTIN_FALLBACK] = "proc_fallback",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == ARL_MAX_MATERIAL_BUILTINS, "" );
+	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == SS_ARL_MAX_MATERIAL_BUILTINS, "" );
 
-	for ( int i = 0; i < ARL_MAX_MATERIAL_BUILTINS; ++i )
+	for ( int i = 0; i < SS_ARL_MAX_MATERIAL_BUILTINS; ++i )
 	{
 		if ( strcmp( tag, builtInTags[ i ] ) != 0 )
 		{
@@ -174,7 +174,7 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 		return i;
 	}
 
-	return ARL_MATERIAL_BUILTIN_INVALID;
+	return SS_ARL_MATERIAL_BUILTIN_INVALID;
 }
 
 /**
@@ -182,41 +182,41 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool validate_material_variable( ApeMaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool validate_material_variable( SS_Arl_MaterialVariable *variable, PLGShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
 		default:
 			break;
 
-		case ARL_MATERIAL_VAR_FLOAT:
+		case SS_ARL_MATERIAL_VAR_FLOAT:
 			return ( uniformType == PLG_UNIFORM_FLOAT );
-		case MATERIAL_VAR_DOUBLE:
+		case SS_ARL_MATERIAL_VAR_DOUBLE:
 			return ( uniformType == PLG_UNIFORM_DOUBLE );
 
-		case ARL_MATERIAL_VAR_INT:
+		case SS_ARL_MATERIAL_VAR_INT:
 			return ( uniformType == PLG_UNIFORM_INT );
-		case ARL_MATERIAL_VAR_UINT:
+		case SS_ARL_MATERIAL_VAR_UINT:
 			return ( uniformType == PLG_UNIFORM_UINT );
 
-		case MATERIAL_VAR_BOOL:
+		case SS_ARL_MATERIAL_VAR_BOOL:
 			return ( uniformType == PLG_UNIFORM_BOOL );
 
-		case MATERIAL_VAR_VEC2:
+		case SS_ARL_MATERIAL_VAR_VEC2:
 			return ( uniformType == PLG_UNIFORM_VEC2 );
-		case MATERIAL_VAR_VEC3:
+		case SS_ARL_MATERIAL_VAR_VEC3:
 			return ( uniformType == PLG_UNIFORM_VEC3 );
-		case MATERIAL_VAR_VEC4:
+		case SS_ARL_MATERIAL_VAR_VEC4:
 			return ( uniformType == PLG_UNIFORM_VEC4 );
 
-		case MATERIAL_VAR_MAT3:
+		case SS_ARL_MATERIAL_VAR_MAT3:
 			return ( uniformType == PLG_UNIFORM_MAT3 );
-		case MATERIAL_VAR_MAT4:
+		case SS_ARL_MATERIAL_VAR_MAT4:
 			return ( uniformType == PLG_UNIFORM_MAT4 );
 
 			/* special types */
-		case MATERIAL_VAR_RENDERTARGET:
-		case MATERIAL_VAR_TEXTURE:
+		case SS_ARL_MATERIAL_VAR_RENDERTARGET:
+		case SS_ARL_MATERIAL_VAR_TEXTURE:
 		{
 			return ( ( uniformType == PLG_UNIFORM_SAMPLER1D ) ||
 			         ( uniformType == PLG_UNIFORM_SAMPLER1DSHADOW ) ||
@@ -224,7 +224,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
 			         ( uniformType == PLG_UNIFORM_SAMPLER2DSHADOW ) ||
 			         ( uniformType == PLG_UNIFORM_SAMPLERCUBE ) );
 		}
-		case MATERIAL_VAR_BUILTIN:
+		case SS_ARL_MATERIAL_VAR_BUILTIN:
 			return true;
 	}
 
@@ -235,7 +235,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *root )
+static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch *root )
 {
 	NdBranch *node = ndGetFirstChild( root );
 	while ( node != NULL )
@@ -243,7 +243,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 		/* fetch the next node, so we can roll onto the next element early */
 		NdBranch *next = ndGetNextChild( node );
 
-		ApeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
+		SS_Arl_MaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
@@ -253,6 +253,14 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 		if ( materialVariable->programSlot == -1 )
 		{
 			PRINT_WARNING( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
+			node = next;
+			continue;
+		}
+
+		materialVariable->numElements = PlgGetNumShaderUniformElements( materialPass->program, materialVariable->programSlot );
+		if ( materialVariable->numElements == 0 )
+		{
+			PRINT_WARNING( "Failed to fetch number of uniform elements for variable (%s/%u)!\n", propertyName, materialVariable->programSlot );
 			node = next;
 			continue;
 		}
@@ -273,20 +281,20 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					ArRenderTarget *renderTarget = ar_render_target_get_by_key( p );
+					ArRenderTarget *renderTarget = ss_arl_render_target_get_by_key( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = arl_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+						renderTarget = ss_arl_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 					}
 
-					materialVariable->type = MATERIAL_VAR_RENDERTARGET;
-					materialVariable->data.userPtr = renderTarget;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_RENDERTARGET;
+					materialVariable->data.ptr = renderTarget;
 				}
 				else
 				{
 					/* lookup what it actually is */
-					ApeMaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
-					if ( materialBuiltinVar == ARL_MATERIAL_BUILTIN_INVALID )
+					SS_Arl_MaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
+					if ( materialBuiltinVar == SS_ARL_MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
 						node = next;
@@ -294,14 +302,14 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 					}
 
 					/* todo: consider validating the built-in type here, but for now, we won't bother... */
-					materialVariable->type = MATERIAL_VAR_BUILTIN;
-					materialVariable->data.i32 = materialBuiltinVar;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_BUILTIN;
+					materialVariable->data.builtinVar = materialBuiltinVar;
 				}
 			}
 		}
 
 		/* otherwise, we need to handle it as a traditional var */
-		if ( materialVariable->type == ARL_MATERIAL_VAR_INVALID )
+		if ( materialVariable->type == SS_ARL_MATERIAL_VAR_INVALID )
 		{
 			/* now we need to convert from the node type to our internal
 		 	 * material type, which is gross and sloppy and crap, but oh
@@ -313,53 +321,94 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 
 				case PLG_UNIFORM_BOOL:
 				{
-					if ( ndGetBool( node, &materialVariable->data.boolean ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( bool, materialVariable->numElements );
+
+					NdErrorCode status;
+					if ( materialVariable->numElements > 1 )
+						status = ss_nd_branch_get_bool_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					else
+						status = ndGetBool( node, materialVariable->data.ptr );
+
+					if ( status != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_BOOL;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_BOOL;
 					break;
 				}
 
 				case PLG_UNIFORM_FLOAT:
 				{
-					if ( ndGetF32( node, &materialVariable->data.f32 ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( float, materialVariable->numElements );
+
+					NdErrorCode status;
+					if ( materialVariable->numElements > 1 )
+						status = ndGetF32Array( node, materialVariable->data.ptr, materialVariable->numElements );
+					else
+						status = ndGetF32( node, materialVariable->data.ptr );
+
+					if ( status != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = ARL_MATERIAL_VAR_FLOAT;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_FLOAT;
 					break;
 				}
 				case PLG_UNIFORM_DOUBLE:
 				{
-					if ( ndGetF64( node, &materialVariable->data.f64 ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( double, materialVariable->numElements );
+
+					NdErrorCode status;
+					if ( materialVariable->numElements > 1 )
+						status = ss_nd_branch_get_double_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					else
+						status = ndGetF64( node, materialVariable->data.ptr );
+
+					if ( status != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_DOUBLE;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_DOUBLE;
 					break;
 				}
 
 				case PLG_UNIFORM_UINT:
 				{
-					if ( ndGetUI32( node, &materialVariable->data.ui32 ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( uint32_t, materialVariable->numElements );
+
+					NdErrorCode status;
+					if ( materialVariable->numElements > 1 )
+						status = ndGetUI32Array( node, materialVariable->data.ptr, materialVariable->numElements );
+					else
+						status = ndGetUI32( node, materialVariable->data.ptr );
+
+					if ( status != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = ARL_MATERIAL_VAR_UINT;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_UINT;
 					break;
 				}
 				case PLG_UNIFORM_INT:
 				{
-					if ( ndGetI32( node, &materialVariable->data.i32 ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( int32_t, materialVariable->numElements );
+
+					NdErrorCode status;
+					if ( materialVariable->numElements > 1 )
+						status = ndGetI32Array( node, materialVariable->data.ptr, materialVariable->numElements );
+					else
+						status = ndGetI32( node, materialVariable->data.ptr );
+
+					if ( status != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = ARL_MATERIAL_VAR_INT;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_INT;
 					break;
 				}
 
 				case PLG_UNIFORM_VEC2:
 				{
-					if ( ndGetF32Array( node, ( float * ) &materialVariable->data.vec2, 2 ) != ND_ERROR_SUCCESS )
+					materialVariable->data.ptr = PL_NEW_( PLVector2, materialVariable->numElements );
+					if ( ndGetF32Array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
 						break;
 
-					materialVariable->type = MATERIAL_VAR_VEC2;
+					materialVariable->type = SS_ARL_MATERIAL_VAR_VEC2;
 					break;
 				}
 
@@ -375,19 +424,19 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 						break;
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
-						materialVariable->hint = ARL_MATERIAL_VAR_HINT_DIFFUSE;
+						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_DIFFUSE;
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
-						materialVariable->hint = ARL_MATERIAL_VAR_HINT_NORMAL;
+						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_NORMAL;
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
-						materialVariable->hint = ARL_MATERIAL_VAR_HINT_SPECULAR;
+						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
 
-					materialVariable->type = MATERIAL_VAR_TEXTURE;
-					materialVariable->data.userPtr = arl_texture_load_direct_( texturePath, materialPass->textureFilter );
+					materialVariable->type = SS_ARL_MATERIAL_VAR_TEXTURE;
+					materialVariable->data.ptr = arl_texture_load_direct_( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
 
-			if ( materialVariable->type == ARL_MATERIAL_VAR_INVALID )
+			if ( materialVariable->type == SS_ARL_MATERIAL_VAR_INVALID )
 			{
 				PRINT_WARNING( "Invalid property type for shader variable \"%s\"!\n", propertyName );
 				node = next;
@@ -408,7 +457,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 	}
 }
 
-void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass )
+void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	NdBranch *subNode;
@@ -454,12 +503,15 @@ void apeParseMaterialPass( struct NdBranch *root, ApeMaterialPass *materialPass 
 		materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 	/* now handle any specific parameters the material provides */
+	if ( ( subNode = ndGetChildByName( root, "textureScroll" ) ) != NULL )
+		ndGetF32Array( subNode, ( float * ) &materialPass->textureScroll, 2 );
+	if ( ( subNode = ndGetChildByName( root, "textureOffset" ) ) != NULL )
+		ndGetF32Array( subNode, ( float * ) &materialPass->textureOffset, 2 );
 	if ( ( subNode = ndGetChildByName( root, "shaderParameters" ) ) != NULL )
-	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
 		parse_shader_parameters( materialPass, subNode );
-	}
+
 	/* not sure whether the above section should be required yet, there might be
 	 * a case where we only want to use the shader defaults? */
 }
@@ -472,16 +524,12 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 		material->preview = previewFallbackTexture;
 		const char *previewTexture = ndGetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
-		{
 			material->preview = arl_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
-		}
 	}
 
 	// If it's just the preview we want, then stop here
 	if ( preview )
-	{
 		return material;
-	}
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
@@ -491,13 +539,13 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 		node = ndGetFirstChild( node );
 		while ( node != NULL )
 		{
-			ApeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
+			SS_Arl_MaterialPass *currentPass = &material->passes[ material->numPasses++ ];
 			/* current pass should've already been cleared by prior memset,
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName = ndGetStringByName( node, "shaderProgram", "default" );
-			ApeShaderProgramIndex *programIndex = arl_shader_get_by_name( programName );
+			SS_Arl_ShaderProgramIndex *programIndex = arl_shader_get_by_name( programName );
 			if ( programIndex == NULL )
 			{
 				currentPass->program = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
@@ -509,7 +557,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 				currentPass->program = programIndex->internalPtr;
 			}
 
-			apeParseMaterialPass( node, currentPass );
+			ss_arl_material_parse_pass_( node, currentPass );
 
 			node = ndGetNextChild( node );
 		}
@@ -535,9 +583,7 @@ static ApeMaterial *get_material( const char *path, SS_Arl_CacheGroup group )
 	{
 		ApeMaterial *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 )
-		{
 			return material;
-		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -548,9 +594,7 @@ static ApeMaterial *get_material( const char *path, SS_Arl_CacheGroup group )
 static void destroy_material( ApeMaterial *material )
 {
 	if ( material == NULL )
-	{
 		return;
-	}
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
@@ -558,13 +602,15 @@ static void destroy_material( ApeMaterial *material )
 		{
 			switch ( material->passes[ i ].variables[ j ].type )
 			{
-				case MATERIAL_VAR_TEXTURE:
+				case SS_ARL_MATERIAL_VAR_BUILTIN:
+				case SS_ARL_MATERIAL_VAR_TEXTURE:
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
-				case MATERIAL_VAR_RENDERTARGET:
-					arl_render_target_release( ( ArRenderTarget * ) material->passes[ i ].variables[ j ].data.userPtr );
+				case SS_ARL_MATERIAL_VAR_RENDERTARGET:
+					ss_arl_render_target_release( ( ArRenderTarget * ) material->passes[ i ].variables[ j ].data.ptr );
 					break;
 				default:
+					PL_DELETE( material->passes[ i ].variables[ j ].data.ptr );
 					break;
 			}
 		}
@@ -591,18 +637,18 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 
 	switch ( variable )
 	{
-		case APE_MATERIAL_BUILTIN_TIME:
+		case SS_ARL_MATERIAL_BUILTIN_TIME:
 		{
 			unsigned int numTicks = ss_acl_get_num_ticks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
-		case APE_MATERIAL_BUILTIN_FALLBACK:
-		case APE_MATERIAL_BUILTIN_DEPTH:
+		case SS_ARL_MATERIAL_BUILTIN_FALLBACK:
+		case SS_ARL_MATERIAL_BUILTIN_DEPTH:
 		{
 			PLGTexture *texture = NULL;
-			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK )
+			if ( variable == SS_ARL_MATERIAL_BUILTIN_FALLBACK )
 				texture = arl_texture_get_fallback();
 #if 0//TODO
 			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
@@ -618,7 +664,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 			break;
 		}
 
-		case APE_MATERIAL_BUILTIN_VIEWPORT_SIZE:
+		case SS_ARL_MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
 			apeGet2DViewportSize( &w, &h );
@@ -631,7 +677,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	}
 }
 
-static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Light *light )
+static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_MaterialPass *pass, const SS_Arl_Light *light )
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
@@ -687,6 +733,9 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Light *
 		PLColourF32 sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program, slot, &sunAmbience, false );
 	}
+
+	if ( ( slot = PlgGetShaderUniformSlot( program, "textureOffset" ) ) >= 0 )
+		PlgSetShaderUniformValueByIndex( program, slot, &pass->textureOffset, false );
 }
 
 ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, bool useFallback, bool preview )
@@ -741,16 +790,18 @@ void ss_arl_material_release( ApeMaterial *material )
 {
 	assert( material != NULL );
 	if ( material == NULL )
-	{
 		return;
-	}
 
 	// don't flush default materials...
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
-		if ( material == defaultMaterials[ i ] )
-			return;
+	{
+		if ( material != defaultMaterials[ i ] )
+			continue;
 
-	apeReleaseReference( &material->mem );
+		return;
+	}
+
+	ss_acl_mm_release( &material->mem );
 }
 
 int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
@@ -758,7 +809,7 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
 	return material->surfaceType;
 }
 
-bool arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
+bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
 
 void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **lights, unsigned int numLights )
 {
@@ -776,7 +827,7 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		ApeMaterialPass *curPass = &material->passes[ i ];
+		SS_Arl_MaterialPass *curPass = &material->passes[ i ];
 
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
@@ -818,43 +869,40 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **
 			if ( !arl_rendererState_.overrideBlendMode )
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 
-			set_global_uniforms( curPass->program, lights != NULL ? lights[ 0 ] : NULL );
+			set_global_uniforms( curPass->program, curPass, lights != NULL ? lights[ 0 ] : NULL );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
 			{
-				if ( curPass->variables[ j ].type == MATERIAL_VAR_BUILTIN )
+				if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_BUILTIN )
 				{
-					set_built_in_variable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.i32, &curUnit );
+					set_built_in_variable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
 					continue;
 				}
 				// textures just need to be set per their respective unit
-				else if ( curPass->variables[ j ].type == MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
+				else if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_RENDERTARGET )
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
-					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
 						continue;
 
 					PLGTexture *texture;
-					if ( curPass->variables[ j ].type == MATERIAL_VAR_RENDERTARGET )
+					if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = arl_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.userPtr );
+						texture = arl_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
-						{
 							texture = arl_texture_get_fallback();
-						}
 					}
 					else
-					{
-						texture = ( PLGTexture * ) curPass->variables[ j ].data.userPtr;
-					}
+						texture = ( PLGTexture * ) curPass->variables[ j ].data.ptr;
+
 					assert( texture != NULL );
 
 					PL_GET_CVAR( "r/skipNormal", skipNormal );
-					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_NORMAL && skipNormal->b_value ) )
+					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && skipNormal->b_value ) )
 						texture = normalFallbackTexture;
 					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
-					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == ARL_MATERIAL_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
 						texture = specularFallbackTexture;
 
 					PLGTextureFilter textureFilter = curPass->textureFilter;
@@ -874,7 +922,7 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **
 					continue;
 				}
 
-				PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curPass->variables[ j ].data, false );
+				PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, ( intmax_t * ) curPass->variables[ j ].data.ptr, false );
 			}
 		}
 
@@ -890,4 +938,20 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
+}
+
+void ss_arl_tick_materials_( void )
+{
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	{
+		PLLinkedListNode *node = PlGetFirstNode( materials[ i ] );
+		while ( node != NULL )
+		{
+			ApeMaterial *material = PlGetLinkedListNodeUserData( node );
+			for ( unsigned int j = 0; j < material->numPasses; ++j )
+				material->passes[ j ].textureOffset = PlAddVector2( material->passes[ j ].textureOffset, material->passes[ j ].textureScroll );
+
+			node = PlGetNextLinkedListNode( node );
+		}
+	}
 }

@@ -22,8 +22,8 @@ typedef struct ASGActor {
 	float forwardVelocity;
 	float scale;
 
-	PSEmitter *particleEmitter;
-	PSEmitter *emitLeft, *emitRight;
+	SS_Arl_ParticleEmitter *particleEmitter;
+	SS_Arl_ParticleEmitter *emitLeft, *emitRight;
 
 	PLVector3 spawnPosition;
 	PLVector3 spawnAngles;
@@ -81,19 +81,19 @@ static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf
 	if ( sgSelf->particleEmitter != NULL ) {
 		PLVector3 cpos = PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) );
 		sgSelf->particleEmitter->transform.translation = cpos;
-		PS_TickEmitter( sgSelf->particleEmitter );
+		ss_arl_particle_emitter_tick( sgSelf->particleEmitter );
 	}
 
 	if ( sgSelf->emitLeft != NULL ) {
 		PLVector3 lpos = PlAddVector3( PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) ), PlScaleVector3F( left, 32.0f ) );
 		sgSelf->emitLeft->transform.translation = lpos;
-		PS_TickEmitter( sgSelf->emitLeft );
+		ss_arl_particle_emitter_tick( sgSelf->emitLeft );
 	}
 
 	if ( sgSelf->emitRight != NULL ) {
 		PLVector3 rpos = PlSubtractVector3( PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) ), PlScaleVector3F( left, 32.0f ) );
 		sgSelf->emitRight->transform.translation = rpos;
-		PS_TickEmitter( sgSelf->emitRight );
+		ss_arl_particle_emitter_tick( sgSelf->emitRight );
 	}
 }
 
@@ -220,22 +220,22 @@ static void SGActor_Generic_Draw( Actor *self, void *userData ) {
 	}
 
 	if ( sgActor->particleEmitter != NULL ) {
-		PS_Draw( sgActor->particleEmitter, camera );
+		ss_arl_particle_emitter_draw( sgActor->particleEmitter, camera );
 	}
 	if ( sgActor->emitRight != NULL ) {
-		PS_Draw( sgActor->emitRight, camera );
+		ss_arl_particle_emitter_draw( sgActor->emitRight, camera );
 	}
 	if ( sgActor->emitLeft != NULL ) {
-		PS_Draw( sgActor->emitLeft, camera );
+		ss_arl_particle_emitter_draw( sgActor->emitLeft, camera );
 	}
 }
 
 static void SGActor_Generic_Destroy( Actor *self, void *userData ) {
 	ASGActor *sgActor = userData;
 
-	PS_DestroyEmitter( sgActor->particleEmitter );
-	PS_DestroyEmitter( sgActor->emitLeft );
-	PS_DestroyEmitter( sgActor->emitRight );
+	ss_arl_particle_emitter_destroy( sgActor->particleEmitter );
+	ss_arl_particle_emitter_destroy( sgActor->emitLeft );
+	ss_arl_particle_emitter_destroy( sgActor->emitRight );
 
 	if ( asteroidManager != NULL && self->type == ACTOR_SG_ASTEROID )
 		asteroidManager->numAsteroids--;
@@ -278,7 +278,7 @@ static void Ship_Spawn( Actor *self ) {
 	self->health = 100;
 	self->movementType = ACTOR_MOVEMENT_PHYSICS;
 
-	ship->particleEmitter = PS_SpawnEmitter();
+	ship->particleEmitter = ss_arl_particle_emitter_create();
 	ship->particleEmitter->emissionRate = 0;
 	ship->particleEmitter->emissionVar = 0;
 	ship->particleEmitter->speed = 2;
@@ -294,7 +294,7 @@ static void Ship_Spawn( Actor *self ) {
 	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->particleEmitter->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
-	ship->emitLeft = PS_SpawnEmitter();
+	ship->emitLeft = ss_arl_particle_emitter_create();
 	ship->emitLeft->emissionRate = 4;
 	ship->emitLeft->emissionVar = 0;
 	ship->emitLeft->speed = 2;
@@ -309,7 +309,7 @@ static void Ship_Spawn( Actor *self ) {
 	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitLeft->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
-	ship->emitRight = PS_SpawnEmitter();
+	ship->emitRight = ss_arl_particle_emitter_create();
 	ship->emitRight->emissionRate = 4;
 	ship->emitRight->emissionVar = 0;
 	ship->emitRight->speed = 2;
