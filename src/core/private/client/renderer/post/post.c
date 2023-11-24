@@ -55,16 +55,16 @@ void arl_postfx_cleanup_( void )
 
 	postProcessInit = false;
 
-	arl_render_target_release( ppRenderTarget );
+	ss_arl_render_target_release( ppRenderTarget );
 }
 
 void arl_postfx_setup_( void )
 {
-	ppRenderTarget = arl_render_target_create( "postfx",
-	                                           800, 600,
-	                                           PLG_BUFFER_COLOUR,
-	                                           PLG_BUFFER_COLOUR,
-	                                           PLG_TEXTURE_FILTER_LINEAR );
+	ppRenderTarget = ss_arl_render_target_create( "postfx",
+	                                              800, 600,
+	                                              PLG_BUFFER_COLOUR,
+	                                              PLG_BUFFER_COLOUR,
+	                                              PLG_TEXTURE_FILTER_LINEAR );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{

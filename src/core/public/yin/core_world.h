@@ -79,8 +79,9 @@ void acl_level_attach_entity( ApeWorld *world, SS_Acl_Entity *entity );
  */
 void ape_level_attach_light( ApeWorld *world, SS_Arl_Light *light );
 
-unsigned int arl_sky_add_layer( const char *path, float scale, float y, float speed, float alpha );
+unsigned int arl_sky_add_layer( const char *path, float scale, float y, float alpha );
 void arl_sky_set_layer_alpha( unsigned int slot, float alpha );
+void ss_arl_sky_set_layer_offset( unsigned int slot, float x, float y );
 void arl_sky_clear_layers( void );
 void arl_sky_draw( SS_Arl_Camera *camera );
 

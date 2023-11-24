@@ -102,13 +102,28 @@ static void set_time_command( unsigned int argc, char **argv )
 
 #ifdef TOX_ALIVE_PREVIEW
 
+static const PLVector3 introStartPos = ( PLVector3 ){ -2.55f, 20.0f, 2.17f };
+static const PLVector3 introStartAng = ( PLVector3 ){ 0.0f, -147.0f, 0.0f };
+static const PLVector3 introEndPos = ( PLVector3 ){ -2.55f, 2.0f, 2.17f };
+static const PLVector3 introEndAng = ( PLVector3 ){ 12.0f, 1651.0f, 0.0f };
+
 static void tick_alive_intro( void )
 {
-	// start pos: -1.44 8.0 4.89
-	// start ang: -6.0 1649.00 0.0
+	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
+	pos = PlLinearInterpolateV3f( pos, introEndPos,
+	                              PlVector3Length(
+	                                      PlSubtractVector3( introStartPos, introEndPos ) ) /
+	                                      10000.0f );
+	ss_arl_camera_set_position( playerCamera, &pos );
 
-	// end pos: -1.44 1.0 4.89
-	// end ang: 12.0 1651.0 0.0
+#	if 0
+	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+	ang = PlLinearInterpolateV3f( ang, introEndAng,
+	                              PlVector3Length(
+	                                      PlSubtractVector3( introStartAng, introEndAng ) ) /
+	                                      1000.0f );
+	ss_arl_camera_set_angles( playerCamera, &ang );
+#	endif
 }
 
 #endif
@@ -124,15 +139,19 @@ static void initialize_game( void )
 
 	ss_acl_register_entity_class( tox_character_get_class_table() );
 
-	playerCamera = ss_arl_camera_create( "test", &PLVector3( -4.78f, 2.0f, 1.22f ), &PLVector3( 0.0f, -147.0f, 0.0f ) );
+	playerCamera = ss_arl_camera_create( "test", &introStartPos, &introStartAng );
 	ss_arl_camera_make_active( playerCamera );
 
+#ifdef TOX_ALIVE_PREVIEW
 	// hack hack hack hack hack hack
 	PlParseConsoleString( "level ship/worlds/alive_intro.wld.n" );
 	PlParseConsoleString( "r/fov 45" );
 	PlParseConsoleString( "world/showallrooms true" );
 	PlParseConsoleString( "skip_room_cull true" );
+	PlParseConsoleString( "r/supersampling 2" );
+	PlParseConsoleString( "capture" );
 	// hack hack hack hack hack hack
+#endif
 
 	// movement actions
 	ss_acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );

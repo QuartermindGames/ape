@@ -174,7 +174,7 @@ static void Player_Draw( Actor *self, void *userData ) {
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
 	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		ss_arl_material_draw( ar_material_get_fallback(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
+		ss_arl_material_draw( ss_arl_get_fallback_material(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
 
 	PlPopMatrix();
 }

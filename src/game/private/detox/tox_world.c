@@ -31,14 +31,16 @@ static SS_Arl_Light *testLights[ NUM_TEST_NIGHT_LIGHTS ];
 
 ToxWorldState *tox_world_get_state( void ) { return &worldState; }
 
+static unsigned int skyLayerStars = 0;
+
 void tox_world_spawn( ApeWorld *world )
 {
 	PL_ZERO_( worldState );
 
 	arl_sky_clear_layers();
-	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.85f, 12.0f, 100.0f, 0.5f );
-	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.25f, 14.0f, 120.0f, 0.5f );
-	arl_sky_add_layer( "materials/clouds/cloud_layer_01.mat.n", 0.1f, 16.0f, 400.0f, 1.0f );
+	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.85f, 12.0f, 0.5f );
+	arl_sky_add_layer( "materials/sky/cloudlayer00.mat.n", 0.25f, 14.0f, 0.5f );
+	skyLayerStars = arl_sky_add_layer( "materials/clouds/cloud_layer_01.mat.n", 0.1f, 16.0f, 1.0f );
 
 	acl_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
 
@@ -103,7 +105,8 @@ void tox_world_tick( void )
 	else
 		secondCountdown--;
 #else
-//	worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / 200;
+	//worldState.seconds = 40000;
+	worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / tox_globalVars.timeSpeed;
 #endif
 
 	sunYaw = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 360.0f );
@@ -151,6 +154,16 @@ void tox_world_tick( void )
 		ape_light_set_colour( testLights[ i ], &colour );
 	}
 #endif
+
+	ss_arl_sky_set_layer_offset( 0,
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 100.0f ),
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 100.0f ) );
+	ss_arl_sky_set_layer_offset( 1,
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 500.0f ),
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 500.0f ) );
+	ss_arl_sky_set_layer_offset( 2,
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 700.0f ),
+	                             tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 700.0f ) );
 
 #if 0
 	printf( "p%f y%f b%f d%d h%d m%d s%d\n", sunPitch, sunYaw, sunBrightness,

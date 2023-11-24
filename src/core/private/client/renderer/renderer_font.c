@@ -200,7 +200,7 @@ SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, in
 
 void ss_arl_bitmap_font_release( SS_Arl_BitmapFont *font )
 {
-	apeReleaseReference( &font->mem );
+	ss_acl_mm_release( &font->mem );
 }
 
 SS_Arl_BitmapFont *ss_arl_get_default_bitmap_font( void ) { return defaultFont; }

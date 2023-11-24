@@ -212,6 +212,12 @@ SS_Arl_Viewport *ss_shell_viewport_get_active( void )
 	return windowViewport;
 }
 
+void ss_shell_swap_window( SS_Arl_Viewport * )
+{
+	// Just ignore the viewport for now...
+	SDL_GL_SwapWindow( sdlWindow );
+}
+
 /****************************************
  * INPUT MANAGEMENT
  ****************************************/
@@ -572,8 +578,6 @@ int launcher_initialize( int argc, char **argv )
 		}
 
 		ss_acl_render_frame( windowViewport );
-
-		SDL_GL_SwapWindow( sdlWindow );
 
 		static unsigned int refreshTime = 0;
 		if ( refreshTime > ss_acl_get_num_ticks() )

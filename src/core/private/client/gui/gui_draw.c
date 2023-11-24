@@ -33,7 +33,7 @@ GuiCanvas *guiCreateCanvas( int width, int height ) {
 	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width = width;
 	canvas->height = height;
-	canvas->renderTarget = arl_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	canvas->renderTarget = ss_arl_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 	return canvas;
 }
 
@@ -42,7 +42,7 @@ void guiDestroyCanvas( GuiCanvas *canvas ) {
 		return;
 	}
 
-	arl_render_target_release( canvas->renderTarget );
+	ss_arl_render_target_release( canvas->renderTarget );
 
 	PL_DELETE( canvas );
 }

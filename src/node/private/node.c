@@ -243,6 +243,27 @@ NdErrorCode ndGetStringArray( NdBranch *parent, char **buf, unsigned int numElem
 	return ND_ERROR_SUCCESS;
 }
 
+NdErrorCode ss_nd_branch_get_bool_array( NdBranch *root, bool *buf, unsigned int numElements )
+{
+	if ( root->type != ND_PROPERTY_ARRAY || root->childType != ND_PROPERTY_F64 )
+		return ND_ERROR_INVALID_TYPE;
+
+	NdBranch *child = ndGetFirstChild( root );
+	for ( unsigned int i = 0; i < numElements; ++i )
+	{
+		if ( child == NULL )
+			return ND_ERROR_INVALID_ELEMENTS;
+
+		NdErrorCode errorCode = ndGetBool( child, &buf[ i ] );
+		if ( errorCode != ND_ERROR_SUCCESS )
+			return errorCode;
+
+		child = ndGetNextChild( child );
+	}
+
+	return ND_ERROR_SUCCESS;
+}
+
 NdErrorCode ndGetI8Array( NdBranch *parent, int8_t *buf, unsigned int numElements ) {
 	if ( parent->type != ND_PROPERTY_ARRAY || parent->childType != ND_PROPERTY_I8 )
 		return ND_ERROR_INVALID_TYPE;
@@ -329,6 +350,27 @@ NdErrorCode ndGetF32Array( NdBranch *parent, float *buf, unsigned int numElement
 			return ND_ERROR_INVALID_ELEMENTS;
 
 		NdErrorCode errorCode = ndGetF32( child, &buf[ i ] );
+		if ( errorCode != ND_ERROR_SUCCESS )
+			return errorCode;
+
+		child = ndGetNextChild( child );
+	}
+
+	return ND_ERROR_SUCCESS;
+}
+
+NdErrorCode ss_nd_branch_get_double_array( NdBranch *root, double *buf, unsigned int numElements )
+{
+	if ( root->type != ND_PROPERTY_ARRAY || root->childType != ND_PROPERTY_F64 )
+		return ND_ERROR_INVALID_TYPE;
+
+	NdBranch *child = ndGetFirstChild( root );
+	for ( unsigned int i = 0; i < numElements; ++i )
+	{
+		if ( child == NULL )
+			return ND_ERROR_INVALID_ELEMENTS;
+
+		NdErrorCode errorCode = ndGetF64( child, &buf[ i ] );
 		if ( errorCode != ND_ERROR_SUCCESS )
 			return errorCode;
 

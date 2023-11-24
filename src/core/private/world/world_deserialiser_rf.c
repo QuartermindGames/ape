@@ -341,7 +341,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 		// some texture indices are negative, which is valid...
 		// we just don't handle it yet
 		if ( face->material == NULL )
-			face->material = ar_material_get_fallback();
+			face->material = ss_arl_get_fallback_material();
 
 		int lightmapIndex = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 211, -1 );
 		ss_acl_fs_parse_int_ex( file, version, 266, RFL_VERSION_MAX, 0 );// unused?

@@ -211,7 +211,7 @@ void apeAddReference( ApeMemoryReference *m ) {
 #endif
 }
 
-void apeReleaseReference( ApeMemoryReference *m ) {
+void ss_acl_mm_release( ApeMemoryReference *m ) {
 	assert( m->numReferences > 0 );
 
 #if defined( DEBUG_MEMORY )

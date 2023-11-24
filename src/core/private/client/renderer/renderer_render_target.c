@@ -59,16 +59,16 @@ void arl_shutdown_render_targets_( void )
 	PlDestroyHashTable( renderTargets );
 }
 
-ArRenderTarget *ar_render_target_get_by_key( const char *key )
+ArRenderTarget *ss_arl_render_target_get_by_key( const char *key )
 {
 	return ( ArRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
-ArRenderTarget *arl_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags,
+ArRenderTarget *ss_arl_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags,
                                          unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter )
 {
 	// Check if it's already been created, and if so, update size to match
-	ArRenderTarget *renderTarget = ar_render_target_get_by_key( key );
+	ArRenderTarget *renderTarget = ss_arl_render_target_get_by_key( key );
 	if ( renderTarget != NULL )
 	{
 		if ( flags == 0 )
@@ -131,9 +131,9 @@ ArRenderTarget *arl_render_target_create( const char *key, unsigned int width, u
 	return renderTarget;
 }
 
-void arl_render_target_release( ArRenderTarget *renderTarget )
+void ss_arl_render_target_release( ArRenderTarget *renderTarget )
 {
-	apeReleaseReference( &renderTarget->reference );
+	ss_acl_mm_release( &renderTarget->reference );
 }
 
 void arl_render_target_set_size( ArRenderTarget *renderTarget, unsigned int width, unsigned int height )
