@@ -335,7 +335,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 			if ( face->material == NULL )
 			{
 				PRINT_WARNING( "Invalid material index (%d) (%lu)!\n", face->materialIndex, ( PlGetFileOffset( file ) - 4 ) );
-				face->material = arl_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
+				face->material = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK );
 			}
 		}
 		// some texture indices are negative, which is valid...

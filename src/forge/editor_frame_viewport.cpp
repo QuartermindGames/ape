@@ -104,6 +104,9 @@ void ViewportFrame::Draw()
 	{
 		ss_arl_viewport_set_camera( engineViewport, camera );
 		ss_arl_viewport_set_size( engineViewport, w, h );
+
+		ss_arl_camera_make_active( camera );
+
 		ss_acl_render_frame( engineViewport );
 	}
 	else

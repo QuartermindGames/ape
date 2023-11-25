@@ -87,11 +87,11 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 
 	auto *vs = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
 
+	unsigned int mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
 	auto *hs = new FX4Splitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 	for ( auto &i : viewportFrame )
-	{
-		i = new ViewportFrame( hs, glVisual_, ( ApeCameraMode ) SS_ARL_CAMERA_MODE_PERSPECTIVE );
-	}
+		i = new ViewportFrame( hs, glVisual_, ( ApeCameraMode ) mode++ );
+
 	hs->setHeight( 720 );
 
 	// Add the console at the bottom

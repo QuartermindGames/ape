@@ -93,7 +93,7 @@ static void build_visible_room_list( ApeWorld *world, SS_Arl_Camera *camera ) {
  * PUBLIC
  ****************************************/
 
-void apeInitializeWorldVisibilitySystem_( void ) {
+void ss_arl_initialize_visibility_system_( void ) {
 	assert( visibleLights == NULL && visibleRooms == NULL );
 	visibleLights = PlCreateVectorArray( APE_MAX_LIGHTS_PER_PASS );
 	visibleRooms = PlCreateVectorArray( MAX_VISIBILITY_DEPTH );

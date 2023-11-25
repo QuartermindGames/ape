@@ -227,14 +227,14 @@ void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
 
 void acl_level_spawn_entities( ApeWorld *world );
 
-void apeRegisterWorldConsole_( void );
+void ss_acl_register_level_console_variables_( void );
 
-void acl_level_client_tick_( void );
+void ss_acl_level_client_tick_( void );
 
 /////////////////////////////////////////////////////////////////
 // Visibility API
 
-void apeInitializeWorldVisibilitySystem_( void );
+void ss_arl_initialize_visibility_system_( void );
 void apeShutdownWorldVisibilitySystem_( void );
 
 struct SS_Arl_Light **apeGetVisibleLights_( unsigned int *num );

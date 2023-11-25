@@ -10,8 +10,8 @@ std::map< std::string, ss::forge::Project * > ss::forge::ProjectDialog::projects
 
 FXDEFMAP( ss::forge::ProjectDialog )
 projectDialogMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_SELECT_PROJECT, ss::forge::ProjectDialog::OnSelectProject ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_ACCEPT, ss::forge::ProjectDialog::OnAccept ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_SELECT_PROJECT, ss::forge::ProjectDialog::on_select_project ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_ACCEPT, ss::forge::ProjectDialog::on_accept ),
 };
 
 FXIMPLEMENT( ss::forge::ProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
@@ -99,7 +99,7 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 	ndDestroyBranch( root );
 }
 
-long ss::forge::ProjectDialog::OnSelectProject( FXObject *, FXSelector, void * )
+long ss::forge::ProjectDialog::on_select_project( FXObject *, FXSelector, void * )
 {
 	// show or hide the name field, depending on if it's a valid item or not
 	if ( listBox->getItemData( listBox->getCurrentItem() ) == nullptr )
@@ -119,7 +119,7 @@ long ss::forge::ProjectDialog::OnSelectProject( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::ProjectDialog::OnAccept( FXObject *obj, FXSelector sel, void *ptr )
+long ss::forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
 {
 	// urgh, check if we have a valid project selected and if not,
 	// that the user has entered *something*

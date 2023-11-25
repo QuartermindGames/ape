@@ -123,7 +123,7 @@ void apeInitializeAudio_( void ) {
 	audioInitialized = true;
 }
 
-void apeRegisterAudioConsoleVariables_( void ) {
+void ss_acl_audio_register_console_variables_( void ) {
 	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, NULL, true );
 }
 

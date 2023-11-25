@@ -300,6 +300,8 @@ extern "C"
 	bool ss_shell_set_window_size( int *width, int *height ) { return false; }
 	void ss_shell_get_window_size( int *width, int *height ) {}
 
+	void ss_shell_swap_window( SS_Arl_Viewport * ) {}
+
 	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
 		switch ( messageType )

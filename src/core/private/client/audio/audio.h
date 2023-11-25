@@ -100,7 +100,7 @@ typedef struct ApeAudioSource
 void apeInitializeAudio_( void );
 void apeShutdownAudio_( void );
 
-void apeRegisterAudioConsoleVariables_( void );
+void ss_acl_audio_register_console_variables_( void );
 
 void apeTickAudio_( void );
 void Audio_Pause( bool pause );

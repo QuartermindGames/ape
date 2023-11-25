@@ -336,7 +336,7 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
+ApeWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector3 *position )
 {
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
@@ -368,7 +368,7 @@ static void level_save_command( unsigned int argc, char **argv )
 	apeSerializeWorld( world, root );
 }
 
-void apeRegisterWorldConsole_( void )
+void ss_acl_register_level_console_variables_( void )
 {
 	PlRegisterConsoleVariable( "world/skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.level.skipDraw, NULL, false );
 	PlRegisterConsoleVariable( "world/skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, NULL, NULL, false );
@@ -380,12 +380,12 @@ void apeRegisterWorldConsole_( void )
 	PlRegisterConsoleCommand( "level_save", "Save the current level with the specified name.", 1, level_save_command );
 }
 
-void acl_level_client_tick_( void )
+void ss_acl_level_client_tick_( void )
 {
 	acl_level_build_visibility_lists_();
 }
 
-void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation )
+void ss_acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation )
 {
 	*position = world->startPosition;
 	*orientation = world->startOrientation;

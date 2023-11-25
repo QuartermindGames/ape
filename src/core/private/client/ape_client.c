@@ -33,7 +33,6 @@ void apeInitializeClient_( void )
 	ss_arl_initialize_();
 
 	apeInitializeAudio_();
-	apeInitializeEditor_();
 	apeInitializeGUI_();
 	apeInitializeInput_();
 }
@@ -41,7 +40,6 @@ void apeInitializeClient_( void )
 void apeShutdownClient_( void )
 {
 	apeShutdownGUI_();
-	apeShutdownEditor_();
 	apeShutdownAudio_();
 	ss_arl_shutdown_();
 }
@@ -102,7 +100,7 @@ void apeTickClient( void )
 	apeTickInput_();
 	apeTickGUI_();
 
-	acl_level_client_tick_();
+	ss_acl_level_client_tick_();
 
 	ss_arl_tick_materials_();
 

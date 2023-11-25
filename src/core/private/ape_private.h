@@ -25,8 +25,8 @@
 #define ENGINE_APP_NAME    "ape"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
-#define VERSION_MAJOR    4
-#define VERSION_MINOR    0
+#define VERSION_MAJOR    0
+#define VERSION_MINOR    4
 #define VERSION_PATCH    0
 #define VERSION_CODENAME "Rutilus"
 
@@ -91,8 +91,8 @@ void ss_acl_console_register_commands_( bool isDedicated );
 void ss_acl_console_register_variables_( bool isDedicated );
 
 void ss_acl_console_draw_( const SS_Arl_Viewport *viewport );
-void acl_console_register_cl_commands_( void );
-void acl_console_register_cl_variables_( void );
+void ss_acl_console_register_cl_commands_( void );
+void ss_acl_console_register_cl_variables_( void );
 
 #define PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
@@ -119,6 +119,7 @@ typedef struct ApeConfig
 		bool showShadowWireframe;
 		bool showFps;
 		bool showFaceBounds;
+		bool showLights;
 		bool skipRoomCull;
 		bool skipAmbience;
 
@@ -133,6 +134,8 @@ typedef struct ApeConfig
 		bool showRoomVolumes;
 		bool sortLights;
 	} level;
+
+	bool editor;
 } ApeConfig;
 
 extern ApeConfig ape_config_;

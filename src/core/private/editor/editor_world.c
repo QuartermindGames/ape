@@ -15,95 +15,13 @@
 
 #define WORLD_CONTEXT_IDENTIFIER "world"
 
-static ApeEditorContext context;
-static ApeEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
-
-#define MAX_CAMERA_SLOTS 16
-static SS_Arl_Camera *cameras[ MAX_CAMERA_SLOTS ];
+static SSAclEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
 
 static ApeWorld *world = NULL;
 
 static int mouseCursorX = 0,
            mouseCursorY = 0;
-
-static void RegisterWorldEditorVariables( void ) {
-}
-
-static void CreateWorldCommand( unsigned int argc, char **argv ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	world = acl_level_create();
-}
-
-static void DestroyWorldCommand( unsigned int argc, char **argv ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	acl_level_destroy( world );
-	world = NULL;
-}
-
-static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.gridScale += 2;
-}
-
-static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.gridScale -= 2;
-	if ( context.gridScale <= 0 ) {
-		context.gridScale = 1;
-	}
-}
-
-static void ToggleView( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.camera->mode++;
-	if ( context.camera->mode >= APE_CAMERA_MAX_MODES ) {
-		context.camera->mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
-	}
-}
-
-static void InitializeWorldEditor( void ) {
-	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
-		char buf[ 64 ];
-		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = ss_arl_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
-	}
-
-	context.camera = cameras[ 0 ];
-	context.camera->mode = APE_CAMERA_MODE_TOP;
-	context.camera->drawMode = SS_ARL_CAMERA_DRAW_MODE_WIREFRAME;
-
-	ss_acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	ss_acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	ss_acl_input_register_action( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
-}
-
+#if 0
 static void ShutdownWorldEditor( void ) {
 }
 
@@ -236,3 +154,4 @@ static void OnWorldEditorActive( void ) {
 
 	world = acl_level_get_current();
 }
+#endif

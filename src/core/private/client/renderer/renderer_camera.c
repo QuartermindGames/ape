@@ -83,9 +83,7 @@ SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position,
 void ss_arl_camera_destroy( SS_Arl_Camera *camera )
 {
 	if ( camera == NULL )
-	{
 		return;
-	}
 
 	PlgDestroyCamera( camera->internal );
 
@@ -93,9 +91,7 @@ void ss_arl_camera_destroy( SS_Arl_Camera *camera )
 
 	// be sure the global camera gets unset if we're destroying it
 	if ( camera == activeCamera )
-	{
 		activeCamera = NULL;
-	}
 
 	PL_DELETE( camera );
 
@@ -114,11 +110,9 @@ void ss_arl_camera_set_position( SS_Arl_Camera *camera, const PLVector3 *positio
 	{
 		ApeWorld *world = acl_level_get_current();
 		if ( world == NULL )
-		{
 			return;
-		}
 
-		camera->room = ape_world_get_room_at_position( world, &camera->internal->position );
+		camera->room = ss_acl_level_get_room_at_position( world, &camera->internal->position );
 	}
 }
 
@@ -213,9 +207,7 @@ void ss_arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *vi
 					speed = 1.0f;
 			}
 			else
-			{
 				speed = 0.0f;
-			}
 
 			camera->internal->angles.x = -75.0f;
 			camera->internal->position = position;

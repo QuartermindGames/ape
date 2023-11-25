@@ -86,7 +86,7 @@ void arl_sky_clear_layers( void );
 void arl_sky_draw( SS_Arl_Camera *camera );
 
 void acl_level_set_sun_position( ApeWorld *world, const PLVector3 *position );
-void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
+void ss_acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation );
 
 ////////////////////////////////////////////////////////////////////
 // Room
@@ -101,7 +101,7 @@ void acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLM
 #define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
 #define APE_WORLD_ROOM_FLAG_SKY      0x40000000
 
-ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+ApeWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Face

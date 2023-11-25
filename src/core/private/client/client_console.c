@@ -8,6 +8,7 @@
 #include "world/world.h"
 #include "ape_client_input.h"
 #include "client/renderer/post/post.h"
+#include "editor/editor.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow = false;
@@ -423,36 +424,30 @@ static void input_mlook_command( const PLConsoleVariable *consoleVariable )
 	acl_input_center_mouse();
 }
 
-void acl_console_register_cl_commands_( void )
+void ss_acl_console_register_cl_commands_( void )
 {
-	PlRegisterConsoleCommand( "ape/console/toggle", "Toggle the console.", 0, toggle_console_command );
-
-	//PlRegisterConsoleCommand( "ape/connect", NULL, "Connect to the specified server." );
-	//PlRegisterConsoleCommand( "ape/reconnect", NULL, "Reconnect to the current server." );
-	//PlRegisterConsoleCommand( "ape/disconnect", NULL, "Disconnect from the current server." );
+	PlRegisterConsoleCommand( "toggle_console", "Toggle the console.", 0, toggle_console_command );
 }
 
 void apeRegisterRendererConsoleVariables_( void );
-void acl_console_register_cl_variables_( void )
+void ss_acl_console_register_cl_variables_( void )
 {
-	PlRegisterConsoleVariable( "ape/client/name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
 	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
 
-	PlRegisterConsoleVariable( "ape/console/autoList", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "ape/console/alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
-	PlRegisterConsoleVariable( "ape/console/drawShadow", "Shadow for text, which will improve legibility. "
-	                                                     "Disabling might yield a slight performance boost on slower machines.",
+	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
+	PlRegisterConsoleVariable( "console_alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
+	PlRegisterConsoleVariable( "console_text_shadow", "Shadow for text, which will improve legibility. "
+	                                                  "Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
 	apeRegisterRendererConsoleVariables_();
 
-	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
-	arl_postfx_register_console_variables_();
-
-	apeRegisterAudioConsoleVariables_();
-	apeRegisterWorldConsole_();
+	ss_acl_audio_register_console_variables_();
+	ss_acl_register_level_console_variables_();
+	ss_acl_register_editor_console_variables_();
 }

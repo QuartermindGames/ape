@@ -28,6 +28,36 @@ static NdBranch *userConfig;
 static bool engineTerminalMode = false;
 static bool engineInitialized = false;
 
+static void execute_launch_commands( void )
+{
+	if ( engineConfig == NULL )
+		return;
+
+	NdBranch *branch = ndGetChildByName( engineConfig, "launchCommands" );
+	if ( branch == NULL )
+		return;
+
+	static const unsigned int MAX_COMMANDS = 256;
+	unsigned int numCommands = ndGetNumOfChildren( branch );
+	if ( numCommands == 0 )
+		return;
+	else if ( numCommands >= MAX_COMMANDS )
+	{
+		PRINT_WARNING( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
+		numCommands = ( MAX_COMMANDS - 1 );
+	}
+
+	char *commands[ MAX_COMMANDS ];
+	if ( ndGetStringArray( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+		return;
+
+	for ( unsigned int i = 0; i < numCommands; ++i )
+	{
+		PlParseConsoleString( commands[ i ] );
+		PL_DELETE( commands[ i ] );
+	}
+}
+
 /****************************************
  * PUBLIC
  ****************************************/
@@ -108,6 +138,8 @@ bool ss_acl_initialize( const char *config )
 
 	engineInitialized = true;
 
+	execute_launch_commands();
+
 	return true;
 }
 
@@ -118,7 +150,6 @@ void ss_acl_shutdown( void )
 	apeFlushTasks();
 
 	ss_acl_shutdown_game_();
-	apeShutdownEditor_();
 
 	apeShutdownClient_();
 	apeShutdownServer();

@@ -66,7 +66,7 @@ static PLGTexture *GenerateTextureFromData( uint8_t *data, unsigned int w, unsig
 	return texture;
 }
 
-void arl_initialize_textures_( void )
+void ss_arl_initialize_textures_( void )
 {
 	textures = PlCreateLinkedList();
 

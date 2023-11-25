@@ -249,11 +249,11 @@ void ss_arl_draw_end_( SS_Arl_Viewport *viewport )
 	}
 }
 
-void arl_initialize_shaders_( void );  /* renderer/shaders.c */
-void arl_initialize_textures_( void ); /* texture.c */
+void ss_arl_initialize_shaders_( void );  /* renderer/shaders.c */
+void ss_arl_initialize_textures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void arl_initialize_render_targets_( void );
+void ss_arl_initialize_render_targets_( void );
 void arl_shutdown_render_targets_( void );
 
 static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -291,6 +291,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
 	PlRegisterConsoleVariable( "show_face_bounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
 	PlRegisterConsoleVariable( "skip_room_cull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
+	PlRegisterConsoleVariable( "show_lights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, NULL, false );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -299,6 +300,9 @@ void apeRegisterRendererConsoleVariables_( void )
 
 	PlRegisterConsoleVariable( "ape/r/fogNear", "Fog near value.", "-1", PL_VAR_F32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/fogFar", "Fog far value.", "-1", PL_VAR_F32, NULL, NULL, false );
+
+	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
+	ss_arl_postfx_register_console_variables_();
 }
 
 void ss_arl_initialize_( void )
@@ -307,14 +311,14 @@ void ss_arl_initialize_( void )
 
 	PL_ZERO_( arl_rendererState_ );
 
-	arl_initialize_textures_();
+	ss_arl_initialize_textures_();
 
-	arl_initialize_render_targets_();
-	arl_initialize_shaders_();
+	ss_arl_initialize_render_targets_();
+	ss_arl_initialize_shaders_();
 	ss_arl_initialize_materials_();
 	YR_Font_Initialize();
 
-	apeInitializeWorldVisibilitySystem_();
+	ss_arl_initialize_visibility_system_();
 
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
@@ -487,7 +491,7 @@ void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport )
 	arl_postfx_draw_( viewport );
 
 	apeDrawGUI_( viewport );
-	apeDrawEditorGUI_( viewport );
+	ss_acl_draw_editor_gui_( viewport );
 
 	draw_debug_overlay( viewport );
 

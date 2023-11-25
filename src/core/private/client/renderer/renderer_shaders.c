@@ -214,7 +214,7 @@ SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name )
 	return ( SS_Arl_ShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void arl_initialize_shaders_( void )
+void ss_arl_initialize_shaders_( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )

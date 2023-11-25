@@ -33,7 +33,7 @@ static void destroy_render_target( void *user )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void arl_initialize_render_targets_( void )
+void ss_arl_initialize_render_targets_( void )
 {
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL )

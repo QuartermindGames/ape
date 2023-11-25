@@ -18,8 +18,8 @@ namespace ss::forge
 		{
 			ID_SELECT_PROJECT = FXDialogBox::ID_LAST,
 		};
-		long OnSelectProject( FXObject *, FXSelector, void * );
-		long OnAccept( FXObject *, FXSelector, void * );
+		long on_select_project( FXObject *, FXSelector, void * );
+		long on_accept( FXObject *obj, FXSelector, void *ptr );
 
 	protected:
 		inline ProjectDialog() = default;

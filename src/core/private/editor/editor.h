@@ -6,32 +6,9 @@
 
 PL_EXTERN_C
 
-typedef enum ApeEditorStatus {
-	APE_EDITOR_STATUS_CLOSED,
-	APE_EDITOR_STATUS_CLOSING,
-	APE_EDITOR_STATUS_OPEN,
-} ApeEditorStatus;
+void ss_acl_register_editor_console_variables_( void );
+void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport );
 
-/**
- * Helper function for fetching icons specific to the editor.
- */
-ApeMaterial *apeGetEditorIconMaterial( const char *name );
-
-void apeRegisterEditorConsoleVariables_( void );
-
-void apeInitializeEditor_( void );
-void apeShutdownEditor_( void );
-void apeTickEditor_( void );
-void apeDrawEditor_( void );
-
-void apeOpenEditor_( void );
-void apeCloseEditor_( void );
-
-void apeDrawEditorGUI_( const SS_Arl_Viewport *viewport );
-
-ApeEditorContext *apeGetCurrentEditorContext( void );
-ApeEditorContext *apeGetEditorContext( const char *identifier );
-ApeEditorContext *apeSetEditorContext( ApeEditorContextType type );
 bool apeIsEditorContextActive( const char *identifier );
 
 PL_EXTERN_C_END
