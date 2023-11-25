@@ -15,6 +15,24 @@ static const unsigned int KEG_VERSION_RF2 = 6;
 static const unsigned int KEG_VERSION_PUN = 7;
 // The Punisher on PC is 1, for whatever reason...
 
+static const unsigned int KEG_VERSION_MIN = KEG_VERSION_RF2;
+static const unsigned int KEG_VERSION_MAX = KEG_VERSION_PUN;
+
+typedef struct KegVbmHeader
+{
+	uint16_t width;
+	uint16_t height;
+	uint8_t bitmapType;
+	uint8_t paletteType;
+	uint8_t flags;
+	uint8_t numFrames;
+	uint8_t framerate;
+	uint8_t numMips;
+	int16_t filterValue;
+	char filename[ 48 ];
+	uint32_t dataOffset;
+} KegVbmHeader;
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -28,7 +46,17 @@ PLPackage *com_pack_keg_parse_file_( PLFile *file )
 	}
 
 	unsigned int version = PL_READUINT32( file, false, NULL );
-	
+	if ( version < KEG_VERSION_MIN || version > KEG_VERSION_MAX )
+	{
+		Warning( "Invalid version for KEG (%u)!\n", version );
+		return NULL;
+	}
 
-	return NULL;
+	unsigned int headerSize = PL_READUINT32( file, false, NULL );
+	unsigned int dataSize = PL_READUINT32( file, false, NULL );
+	unsigned int numBitmaps = PL_READUINT32( file, false, NULL );
+	unsigned int numFlags = PL_READUINT32( file, false, NULL );
+	unsigned int frameCount = PL_READUINT32( file, false, NULL );
+	unsigned int totalEntries = PL_READUINT32( file, false, NULL );
+	unsigned int alignValue = PL_READUINT32( file, false, NULL );
 }
