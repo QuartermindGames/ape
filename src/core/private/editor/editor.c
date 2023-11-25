@@ -63,6 +63,9 @@ void ss_acl_register_editor_console_variables_( void )
 
 void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
 {
+	if ( !ss_acl_is_editor_active() )
+		return;
+
 	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
 	if ( font == NULL )
 		return;
@@ -167,6 +170,11 @@ void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
 			PlgSetViewMatrix( &tmp.internal->internal.view );
 		}
 	}
+}
+
+bool ss_acl_is_editor_active( void )
+{
+	return ape_config_.editor;
 }
 
 bool apeIsEditorContextActive( const char *identifier )
