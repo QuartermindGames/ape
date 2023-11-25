@@ -14,4 +14,10 @@ object config
             "projects/base"
         }
     }
+
+    ; A collection of commands to automatically execute
+    array string launchCommands
+    {
+        "editor" ; This kicks the engine into editor mode
+    }
 }
