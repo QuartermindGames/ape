@@ -116,7 +116,6 @@ elseif(MINGW)
 endif()
 
 add_subdirectory(src/dickens)
-add_subdirectory(src/script)
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)

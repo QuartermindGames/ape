@@ -13,7 +13,6 @@
 #include "server/server.h"
 #include "net/net.h"
 
-#include "script_public.h"
 #include "client/renderer/renderer.h"
 
 /****************************************
@@ -88,8 +87,6 @@ bool ss_acl_initialize( const char *config )
 
 	ss_acl_console_register_variables_( engineTerminalMode );
 	ss_acl_console_register_commands_( engineTerminalMode );
-
-	ss_script_register_commands();
 
 	PlRegisterStandardPackageLoaders();
 
