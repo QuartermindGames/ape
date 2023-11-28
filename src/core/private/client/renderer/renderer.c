@@ -2,7 +2,9 @@
 /* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
 
 #include <plgraphics/plg_driver_interface.h>
-#include <threads.h>
+
+#include <pthread.h>
+#include <unistd.h>
 
 #include "ape_private.h"
 #include "legacy/actor.h"
@@ -46,8 +48,8 @@ static PLLinkedList *captureQueue = NULL;//CaptureFrame
 
 #define MAX_CAPTURE_THREADS 16
 static unsigned int numCaptureThreads = 4;
-static mtx_t captureMutex = {};
-static thrd_t captureThread[ MAX_CAPTURE_THREADS ] = {};
+static pthread_mutex_t captureMutex = {};
+static pthread_t captureThread[ MAX_CAPTURE_THREADS ] = {};
 
 static void destroy_capture_frame( void *ptr )
 {
@@ -56,16 +58,16 @@ static void destroy_capture_frame( void *ptr )
 	PL_DELETE( frame );
 }
 
-static int process_capture_queue( void * )
+static void *process_capture_queue( void * )
 {
 	while ( true )
 	{
-		mtx_lock( &captureMutex );
+		pthread_mutex_lock( &captureMutex );
 
 		PLLinkedListNode *node = PlGetFirstNode( captureQueue );
 		if ( node == NULL )
 		{
-			mtx_unlock( &captureMutex );
+			pthread_mutex_unlock( &captureMutex );
 			if ( !isCapturing )
 				break;
 
@@ -78,7 +80,7 @@ static int process_capture_queue( void * )
 
 		unsigned int frameNum = numCaptureFrames++;
 
-		mtx_unlock( &captureMutex );
+		pthread_mutex_unlock( &captureMutex );
 
 		PLImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		assert( image != NULL );
@@ -97,7 +99,7 @@ static int process_capture_queue( void * )
 		destroy_capture_frame( frame );
 	}
 
-	return 0;
+	return NULL;
 }
 
 static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -111,18 +113,18 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 		PlSetupPath( captureDirectory, true, "%s/captures/", comGetAppDataDirectory() );
 		PlCreateDirectory( captureDirectory );
 
-		mtx_init( &captureMutex, mtx_plain );
+		pthread_mutex_init( &captureMutex, NULL );
 		captureQueue = PlCreateLinkedList();
 
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			thrd_create( &captureThread[ i ], process_capture_queue, NULL );
+			pthread_create( &captureThread[ i ], NULL, process_capture_queue, NULL );
 	}
 	else
 	{
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			thrd_join( captureThread[ i ], NULL );
+			pthread_join( captureThread[ i ], NULL );
 
-		mtx_destroy( &captureMutex );
+		pthread_mutex_destroy( &captureMutex );
 		PlDestroyLinkedListEx( captureQueue, destroy_capture_frame );
 	}
 }
@@ -141,8 +143,8 @@ void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	ApeWorld *world = acl_world_get_current();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
+	ApeWorld *world = acl_level_get_current();
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
 
 	PlgSetClearColour( clearColour );
@@ -196,7 +198,7 @@ static void write_screenshot( void )
 	{
 		if ( isCapturing )
 		{
-			mtx_lock( &captureMutex );
+			pthread_mutex_lock( &captureMutex );
 
 			CaptureFrame *frame = PL_NEW( CaptureFrame );
 			PlInsertLinkedListNode( captureQueue, frame );
@@ -204,7 +206,7 @@ static void write_screenshot( void )
 			frame->w = w;
 			frame->h = h;
 
-			mtx_unlock( &captureMutex );
+			pthread_mutex_unlock( &captureMutex );
 			return;
 		}
 
@@ -247,11 +249,11 @@ void ss_arl_draw_end_( SS_Arl_Viewport *viewport )
 	}
 }
 
-void arl_initialize_shaders_( void );  /* renderer/shaders.c */
-void arl_initialize_textures_( void ); /* texture.c */
+void ss_arl_initialize_shaders_( void );  /* renderer/shaders.c */
+void ss_arl_initialize_textures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void arl_initialize_render_targets_( void );
+void ss_arl_initialize_render_targets_( void );
 void arl_shutdown_render_targets_( void );
 
 static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -283,11 +285,13 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
+	PlRegisterConsoleVariable( "skip_ambience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
 	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
 	PlRegisterConsoleVariable( "show_face_bounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
 	PlRegisterConsoleVariable( "skip_room_cull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
+	PlRegisterConsoleVariable( "show_lights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, NULL, false );
 
 	// Camera
 	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
@@ -296,6 +300,9 @@ void apeRegisterRendererConsoleVariables_( void )
 
 	PlRegisterConsoleVariable( "ape/r/fogNear", "Fog near value.", "-1", PL_VAR_F32, NULL, NULL, false );
 	PlRegisterConsoleVariable( "ape/r/fogFar", "Fog far value.", "-1", PL_VAR_F32, NULL, NULL, false );
+
+	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
+	ss_arl_postfx_register_console_variables_();
 }
 
 void ss_arl_initialize_( void )
@@ -304,14 +311,14 @@ void ss_arl_initialize_( void )
 
 	PL_ZERO_( arl_rendererState_ );
 
-	arl_initialize_textures_();
+	ss_arl_initialize_textures_();
 
-	arl_initialize_render_targets_();
-	arl_initialize_shaders_();
+	ss_arl_initialize_render_targets_();
+	ss_arl_initialize_shaders_();
 	ss_arl_initialize_materials_();
 	YR_Font_Initialize();
 
-	apeInitializeWorldVisibilitySystem_();
+	ss_arl_initialize_visibility_system_();
 
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
@@ -484,7 +491,7 @@ void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport )
 	arl_postfx_draw_( viewport );
 
 	apeDrawGUI_( viewport );
-	apeDrawEditorGUI_( viewport );
+	ss_acl_draw_editor_gui_( viewport );
 
 	draw_debug_overlay( viewport );
 
@@ -670,7 +677,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = acl_world_get_current();
+	ApeWorld *world = acl_level_get_current();
 	if ( world == NULL )
 		return;
 
@@ -681,7 +688,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 	PlgDepthMask( true );
 
 	arl_sky_draw( camera );
-	apeDrawWorld_( world, camera, NULL, true );
+	arl_level_draw( world, camera, NULL, true );
 
 	PlgDepthMask( false );
 
@@ -733,7 +740,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 				arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+				arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
@@ -748,7 +755,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
 			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-			apeDrawWorldStencilShadowPass_( world, camera, lights[ i ] );
+			arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
 			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
@@ -762,7 +769,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			apeDrawWorld_( world, camera, lights[ i ], false );
+			arl_level_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 
@@ -774,7 +781,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			apeDrawWorld_( world, camera, lights[ i ], false );
+			arl_level_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 			arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
@@ -829,12 +836,12 @@ void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	render_scene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );

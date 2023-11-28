@@ -59,18 +59,17 @@ add_library(ApeCore STATIC
         private/ape_interface_game.c
         private/ape_image.c
         private/ape_memory_manager.c
-        private/ape_model.c
         private/ape_scheduler.c
         private/ape_binary_serializer.c
 
         private/ape.c
 
+        private/model/model.c
         private/model/model_rfm.c
 
         private/world/world.c
         private/world/world_deserialiser.c
         private/world/world_deserialiser_rf.c
-        private/world/world_mesh.c
         private/world/world_room.c
         private/world/world_serialiser.c
         private/world/world_visibility.c

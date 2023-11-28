@@ -136,7 +136,7 @@ void apeDrawGUI_( const SS_Arl_Viewport *viewport )
 
 	game_modeInterface->requestCallbackMethod( GAME_MODE_REQUEST_DRAW_UI, NULL );
 
-	apeDrawEditorGUI_( viewport );
+	ss_acl_draw_editor_gui_( viewport );
 
 	// todo: this should use GUI
 	PL_GET_CVAR( "debug/overlay", debugOverlay );

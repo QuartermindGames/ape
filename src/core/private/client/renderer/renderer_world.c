@@ -130,7 +130,7 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void apeDrawWorldWireframe_( ApeWorld *world, SS_Arl_Camera *camera )
+void arl_level_draw_wireframe( ApeWorld *world, SS_Arl_Camera *camera )
 {
 #if 0
 	if ( world == NULL )
@@ -250,6 +250,13 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
 		return;
 
+	if ( ape_config_.level.showRoomVolumes )
+	{
+		PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+		PLColour colour = PlColourF32ToU8( &room->colour );
+		PlgDrawBoundingVolume( &room->bounds, &colour );
+	}
+
 	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
 		return;
 
@@ -261,7 +268,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 	}
 
 	unsigned int numFaces;
-	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
+	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
 	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->materialIndex < 0 )
@@ -417,7 +424,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SS_
 static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SS_Arl_Light *light )
 {
 	unsigned int numFaces;
-	ApeWorldFace **faces = apeGetWorldRoomFaces( room, &numFaces );
+	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->material == NULL || !ss_arl_material_shadows_enabled( faces[ i ]->material ) )
@@ -455,7 +462,7 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SS_Arl_Camera *ca
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
-void apeDrawWorldStencilShadowPass_( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light )
+void arl_level_draw_stencil_shadows( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -482,8 +489,11 @@ void apeDrawWorldStencilShadowPass_( ApeWorld *world, SS_Arl_Camera *camera, SS_
 	PlPopMatrix();
 }
 
-void apeDrawWorld_( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light, bool ambienceOnly )
+void arl_level_draw( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light, bool ambienceOnly )
 {
+	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
+		return;
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();

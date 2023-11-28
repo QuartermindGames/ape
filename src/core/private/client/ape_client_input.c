@@ -250,9 +250,9 @@ unsigned int ss_acl_input_register_device( SS_Acl_InputDeviceType type ) {
 	return id;
 }
 
-bool Client_Console_HandleKeyboardEvent( int key, unsigned int keyState );
+bool acl_console_handle_key_event_( int key, unsigned int keyState );
 void Client_Input_HandleKeyboardEvent( int key, ApeInputState keyState ) {
-	if ( Client_Console_HandleKeyboardEvent( key, keyState ) ) {
+	if ( acl_console_handle_key_event_( key, keyState ) ) {
 		return;
 	}
 }
@@ -267,13 +267,13 @@ void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState 
 	inputMouse.buttons[ button ] = buttonState;
 }
 
-bool Client_Console_HandleMouseWheelEvent( float x, float y );
+bool acl_console_handle_mouse_wheel_event_( float x, float y );
 void Client_Input_HandleMouseWheelEvent( float x, float y ) {
 	inputMouse.oldWheel = inputMouse.wheel;
 	inputMouse.wheel.x = x;
 	inputMouse.wheel.y = y;
 
-	if ( Client_Console_HandleMouseWheelEvent( x, y ) ) {
+	if ( acl_console_handle_mouse_wheel_event_( x, y ) ) {
 		return;
 	}
 

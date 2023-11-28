@@ -158,9 +158,7 @@ void ss_acl_console_register_commands_( bool isDedicated )
 	PlRegisterConsoleCommand( "test_model_rfm", "Test the RFM model loader.", 0, acl_model_rfm_test_command_ );
 
 	if ( !isDedicated )
-	{
-		apeRegisterClientConsoleCommands_();
-	}
+		ss_acl_console_register_cl_commands_();
 }
 
 void ss_acl_console_register_variables_( bool isDedicated )
@@ -171,13 +169,7 @@ void ss_acl_console_register_variables_( bool isDedicated )
 
 	// Client variables
 	if ( !isDedicated )
-	{
-		apeRegisterClientConsoleVariables_();
-	}
-
-#if defined( APE_EDITOR_ENABLED )
-	edRegisterConsoleVariables();
-#endif
+		ss_acl_console_register_cl_variables_();
 }
 
 static int logLevels[ APE_LOG_LEVELS ];
@@ -216,6 +208,13 @@ void ss_acl_initialize_console_( void )
 	logLevels[ APE_LOG_ERROR ] = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_WARNING ] = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
 	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
+	logLevels[ ACL_LOG_DEBUG ] = PlAddLogLevel( "yin/debug", PL_COLOUR_ORCHID,
+#if !defined( NDEBUG )
+	                                            true
+#else
+	                                            false
+#endif
+	);
 
 	logLevels[ APE_LOG_CLIENT_ERROR ] = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_CLIENT_WARNING ] = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );

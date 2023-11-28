@@ -96,6 +96,25 @@ void ss_acl_fs_setup_config( NdBranch *root )
 	// TODO: move this into the project handler
 }
 
+void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
+{
+	PLFile *file = PlOpenFile( path, true );
+	if ( file == NULL )
+	{
+		PRINT_WARNING( "Failed to open file (%s): %s\n", path, PlGetError() );
+		return NULL;
+	}
+
+	size_t fileSize = PlGetFileSize( file );
+	*outSize = fileSize + 1;
+	char *buf = PL_NEW_( char, *outSize );
+	memcpy( buf, PlGetFileData( file ), fileSize );
+
+	PlCloseFile( file );
+
+	return buf;
+}
+
 void ss_acl_fs_mount_base_locations( void )
 {
 	PLPath exePath;
@@ -123,12 +142,60 @@ char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 	return buf;
 }
 
+char *ss_acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
+{
+	if ( version < minVersion || version > maxVersion )
+		return NULL;
+
+	return ss_acl_fs_parse_string( file, size );
+}
+
+uint8_t ss_acl_fs_parse_byte( PLFile *file )
+{
+	bool status;
+	uint8_t i = PL_READUINT8( file, &status );
+	assert( status );
+	return i;
+}
+
+uint8_t ss_acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, uint8_t fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return ss_acl_fs_parse_byte( file );
+}
+
+int ss_acl_fs_parse_int( PLFile *file )
+{
+	bool status;
+	int i = PlReadInt32( file, false, &status );
+	assert( status );
+	return i;
+}
+
+int ss_acl_fs_parse_int_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, int fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return ss_acl_fs_parse_int( file );
+}
+
 float ss_acl_fs_parse_float( PLFile *file )
 {
 	bool status;
 	float f = PlReadFloat32( file, false, &status );
 	assert( status && !isnan( f ) );
 	return f;
+}
+
+float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, float fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return fallback;
+
+	return ss_acl_fs_parse_float( file );
 }
 
 PLVector3 ss_acl_fs_parse_vector( PLFile *file )
@@ -138,6 +205,32 @@ PLVector3 ss_acl_fs_parse_vector( PLFile *file )
 	        ss_acl_fs_parse_float( file ),
 	        ss_acl_fs_parse_float( file ),
 	};
+}
+
+PLVector3 acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector3 *fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return *fallback;
+
+	return ss_acl_fs_parse_vector( file );
+}
+
+PLVector4 ss_acl_fs_parse_vector4( PLFile *file )
+{
+	return ( PLVector4 ){
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	        ss_acl_fs_parse_float( file ),
+	};
+}
+
+PLVector4 ss_acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector4 *fallback )
+{
+	if ( version < minVersion || version > maxVersion )
+		return *fallback;
+
+	return ss_acl_fs_parse_vector4( file );
 }
 
 PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file )

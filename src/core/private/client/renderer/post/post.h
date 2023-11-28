@@ -17,7 +17,7 @@ typedef struct ArPostProcessEffect
 void arl_postfx_cleanup_( void );
 void arl_postfx_setup_( void );
 
-void arl_postfx_register_console_variables_( void );
+void ss_arl_postfx_register_console_variables_( void );
 
 void arl_postfx_draw_( const SS_Arl_Viewport *viewport );
 

@@ -21,20 +21,14 @@
 #include <yin/core.h>
 #include <yin/node.h>
 
-#if ( APE_EDITOR_ENABLED == 1 )
-
-#	include "ape/editor_public.h"
-
-#endif
-
 #define ENGINE_NAME        "APE"
 #define ENGINE_APP_NAME    "ape"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
-#define VERSION_MAJOR    3
-#define VERSION_MINOR    0
+#define VERSION_MAJOR    0
+#define VERSION_MINOR    4
 #define VERSION_PATCH    0
-#define VERSION_CODENAME "Amber"
+#define VERSION_CODENAME "Rutilus"
 
 PL_EXTERN_C
 
@@ -56,6 +50,7 @@ typedef enum ApeConsoleLogLevel
 	APE_LOG_ERROR,
 	APE_LOG_WARNING,
 	APE_LOG_INFORMATION,
+	ACL_LOG_DEBUG,
 
 	APE_LOG_CLIENT_ERROR,
 	APE_LOG_CLIENT_WARNING,
@@ -96,8 +91,8 @@ void ss_acl_console_register_commands_( bool isDedicated );
 void ss_acl_console_register_variables_( bool isDedicated );
 
 void ss_acl_console_draw_( const SS_Arl_Viewport *viewport );
-void apeRegisterClientConsoleCommands_( void );
-void apeRegisterClientConsoleVariables_( void );
+void ss_acl_console_register_cl_commands_( void );
+void ss_acl_console_register_cl_variables_( void );
 
 #define PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
@@ -110,7 +105,7 @@ void apeRegisterClientConsoleVariables_( void );
 	}
 
 #if !defined( NDEBUG )
-#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( APE_LOG_INFORMATION ), FORMAT, ##__VA_ARGS__ )
+#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( ACL_LOG_DEBUG ), FORMAT, ##__VA_ARGS__ )
 #else
 #	define PRINT_DEBUG( FORMAT, ... )
 #endif
@@ -124,7 +119,9 @@ typedef struct ApeConfig
 		bool showShadowWireframe;
 		bool showFps;
 		bool showFaceBounds;
+		bool showLights;
 		bool skipRoomCull;
+		bool skipAmbience;
 
 		float superSampling;
 		float maxLightDistance;
@@ -134,8 +131,11 @@ typedef struct ApeConfig
 	{
 		bool skipDraw;
 		bool showPortals;
+		bool showRoomVolumes;
 		bool sortLights;
-	} world;
+	} level;
+
+	bool editor;
 } ApeConfig;
 
 extern ApeConfig ape_config_;

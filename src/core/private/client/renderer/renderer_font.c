@@ -103,7 +103,7 @@ void ss_arl_bitmap_font_draw_character( SS_Arl_BitmapFont *font, float x, float 
 	PlPopMatrix();
 }
 
-void apeDrawBitmapString( SS_Arl_BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
+void ss_arl_bitmap_font_draw_string( SS_Arl_BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
 {
 	if ( scale == 0.0f )
 		return;
@@ -118,7 +118,6 @@ void apeDrawBitmapString( SS_Arl_BitmapFont *font, float x, float y, float spaci
 		ss_arl_bitmap_font_batch_string( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
 
 	ss_arl_bitmap_font_batch_string( font, x, y, scale, colour, msg, numChars, false );
-
 	ss_arl_bitmap_font_draw( font );
 }
 

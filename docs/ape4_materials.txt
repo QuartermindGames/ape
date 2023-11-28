@@ -1,8 +1,0 @@
-APE Tech 4 Material System
-------------------------------------------------
-
-Our prior system was incredibly powerful and flexible, but
-introduced problems when we started to depend on more
-specialised functionality per our renderer.
-
-

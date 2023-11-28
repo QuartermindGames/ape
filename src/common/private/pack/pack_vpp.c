@@ -5,6 +5,9 @@
 
 #include "../common_private.h"
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
+
 // format is optimized for DVD streaming,
 // so we'll need to respect that
 #define BLOCK_SIZE 2048
@@ -133,6 +136,9 @@ static PLPackage *parse_vpp_file( PLFile *file )
 
 	return package;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 void com_pack_vpp_register_( void )
 {

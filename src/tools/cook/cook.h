@@ -23,6 +23,6 @@ typedef struct CookState
 } CookState;
 extern CookState cook_state;
 
-PLMModel *Cook_Model_LoadSMD( const char *path );
+PLMModel *model_smd_load( const char *path );
 
 void cook_world_process( const char *worldName );

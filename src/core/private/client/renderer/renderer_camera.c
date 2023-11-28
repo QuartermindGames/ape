@@ -25,6 +25,16 @@ void ss_arl_camera_make_active( SS_Arl_Camera *camera )
 	activeCamera = camera;
 }
 
+void ss_arl_camera_set_draw_mode( SS_Arl_Camera *camera, ApeCameraDrawMode drawMode )
+{
+	camera->drawMode = drawMode;
+}
+
+void ss_arl_camera_set_view_mode( SS_Arl_Camera *camera, ApeCameraMode viewMode )
+{
+	camera->mode = viewMode;
+}
+
 /****************************************
  ****************************************/
 
@@ -32,7 +42,7 @@ SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position,
 {
 	SS_Arl_Camera *camera = PL_NEW( SS_Arl_Camera );
 
-	camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
+	camera->mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
@@ -73,9 +83,7 @@ SS_Arl_Camera *ss_arl_camera_create( const char *tag, const PLVector3 *position,
 void ss_arl_camera_destroy( SS_Arl_Camera *camera )
 {
 	if ( camera == NULL )
-	{
 		return;
-	}
 
 	PlgDestroyCamera( camera->internal );
 
@@ -83,9 +91,7 @@ void ss_arl_camera_destroy( SS_Arl_Camera *camera )
 
 	// be sure the global camera gets unset if we're destroying it
 	if ( camera == activeCamera )
-	{
 		activeCamera = NULL;
-	}
 
 	PL_DELETE( camera );
 
@@ -102,13 +108,11 @@ void ss_arl_camera_set_position( SS_Arl_Camera *camera, const PLVector3 *positio
 
 	if ( camera->room == NULL )
 	{
-		ApeWorld *world = acl_world_get_current();
+		ApeWorld *world = acl_level_get_current();
 		if ( world == NULL )
-		{
 			return;
-		}
 
-		camera->room = apeGetRoomAtPosition( world, &camera->internal->position );
+		camera->room = ss_acl_level_get_room_at_position( world, &camera->internal->position );
 	}
 }
 
@@ -133,7 +137,7 @@ PLVector3 ss_arl_camera_get_forward( const SS_Arl_Camera *camera )
 }
 
 void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport );
-void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport )
+void ss_arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport )
 {
 	if ( camera == NULL )
 	{
@@ -190,7 +194,7 @@ void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewp
 	{
 		default:
 			break;
-		case APE_CAMERA_MODE_PERSPECTIVE:
+		case SS_ARL_CAMERA_MODE_PERSPECTIVE:
 			camera->internal->angles = angles;
 			camera->internal->position = position;
 			break;
@@ -203,9 +207,7 @@ void arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewp
 					speed = 1.0f;
 			}
 			else
-			{
 				speed = 0.0f;
-			}
 
 			camera->internal->angles.x = -75.0f;
 			camera->internal->position = position;

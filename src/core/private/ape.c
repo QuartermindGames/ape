@@ -5,8 +5,7 @@
 #include "yin/core_game.h"
 #include "yin/core_fs.h"
 
-#include "ape_model.h"
-
+#include "model/model.h"
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
 #include "editor/editor.h"
@@ -28,6 +27,36 @@ static NdBranch *userConfig;
 
 static bool engineTerminalMode = false;
 static bool engineInitialized = false;
+
+static void execute_launch_commands( void )
+{
+	if ( engineConfig == NULL )
+		return;
+
+	NdBranch *branch = ndGetChildByName( engineConfig, "launchCommands" );
+	if ( branch == NULL )
+		return;
+
+	static const unsigned int MAX_COMMANDS = 256;
+	unsigned int numCommands = ndGetNumOfChildren( branch );
+	if ( numCommands == 0 )
+		return;
+	else if ( numCommands >= MAX_COMMANDS )
+	{
+		PRINT_WARNING( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
+		numCommands = ( MAX_COMMANDS - 1 );
+	}
+
+	char *commands[ MAX_COMMANDS ];
+	if ( ndGetStringArray( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+		return;
+
+	for ( unsigned int i = 0; i < numCommands; ++i )
+	{
+		PlParseConsoleString( commands[ i ] );
+		PL_DELETE( commands[ i ] );
+	}
+}
 
 /****************************************
  * PUBLIC
@@ -109,6 +138,8 @@ bool ss_acl_initialize( const char *config )
 
 	engineInitialized = true;
 
+	execute_launch_commands();
+
 	return true;
 }
 
@@ -119,7 +150,6 @@ void ss_acl_shutdown( void )
 	apeFlushTasks();
 
 	ss_acl_shutdown_game_();
-	apeShutdownEditor_();
 
 	apeShutdownClient_();
 	apeShutdownServer();
@@ -169,12 +199,6 @@ bool ss_acl_is_engine_running( void )
 
 void ss_acl_render_frame( SS_Arl_Viewport *viewport )
 {
-	// If we're capturing, ignore the request from the
-	// caller to render the frame because we'll lock it
-	// with the frame tick instead...
-	if ( ss_arl_get_capture_state_() )
-		return;
-
 	if ( !engineInitialized )
 		return;
 
@@ -193,27 +217,27 @@ void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )
 	Client_Input_HandleKeyboardEvent( key, keyState );
 }
 
-bool apeHandleConsoleTextEvent_( const char *key );
+bool acl_console_handle_text_event_( const char *key );
 
 void ss_acl_input_handle_text_event( const char *key )
 {
-	if ( apeHandleConsoleTextEvent_( key ) )
+	if ( acl_console_handle_text_event_( key ) )
 	{
 		return;
 	}
 }
 
-void apeHandleMouseButtonEvent( int button, ApeInputState buttonState )
+void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonState )
 {
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void apeHandleMouseWheelEvent( float x, float y )
+void ss_acl_input_handle_mouse_wheel_event( float x, float y )
 {
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void apeHandleMouseMotionEvent( int x, int y )
+void ss_acl_input_handle_mouse_motion_event( int x, int y )
 {
 	Client_Input_HandleMouseMotionEvent( x, y );
 }

@@ -15,7 +15,7 @@ typedef struct SMDMesh
 	PLGMesh *mesh;
 } SMDMesh;
 
-static PLMModel *ParseSMD( const char *path, const char *p )
+static PLMModel *parse_smd( const char *path, const char *p )
 {
 	unsigned int numMeshes = 0;
 	SMDMesh smdMeshes[ MAX_SMD_MESHES ];
@@ -219,7 +219,7 @@ static PLMModel *ParseSMD( const char *path, const char *p )
 	return model;
 }
 
-PLMModel *Cook_Model_LoadSMD( const char *path )
+PLMModel *model_smd_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
@@ -229,7 +229,7 @@ PLMModel *Cook_Model_LoadSMD( const char *path )
 	if ( *p == '\0' )
 		ERROR( "SMD \"%s\" is empty!\n", path );
 
-	PLMModel *model = ParseSMD( path, p );
+	PLMModel *model = parse_smd( path, p );
 
 	PlCloseFile( file );
 

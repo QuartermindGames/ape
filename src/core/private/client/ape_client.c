@@ -31,8 +31,8 @@ void apeInitializeClient_( void )
 	strcpy( clientState.userName, "Anon" );
 
 	ss_arl_initialize_();
+
 	apeInitializeAudio_();
-	apeInitializeEditor_();
 	apeInitializeGUI_();
 	apeInitializeInput_();
 }
@@ -40,19 +40,23 @@ void apeInitializeClient_( void )
 void apeShutdownClient_( void )
 {
 	apeShutdownGUI_();
-	apeShutdownEditor_();
 	apeShutdownAudio_();
 	ss_arl_shutdown_();
 }
 
 void ss_arl_render_frame( SS_Arl_Viewport *viewport )
 {
+	// If we're capturing, ignore the request from the
+	// caller to render the frame because we'll lock it
+	// with the frame tick instead...
+	if ( ss_arl_get_capture_state_() )
+		return;
+
 	COM_PROFILE_FUNCTION_START();
 
 	ss_arl_draw_begin_( viewport );
 
-	arl_camera_draw_perspective_( viewport->camera, viewport );
-
+	ss_arl_camera_draw_perspective_( viewport->camera, viewport );
 	ss_arl_draw_menu_( viewport );
 
 	ss_arl_draw_end_( viewport );
@@ -69,9 +73,7 @@ static void handle_connection_state( void )
 	{
 		/* socket hasn't been created, so... */
 		if ( clientState.netSocket == NULL )
-		{
 			return;
-		}
 
 		NetConnectionState state = Net_GetConnectionStatus( clientState.netSocket );
 		if ( state != NET_CONNECTION_CONNECTED )
@@ -97,7 +99,8 @@ void apeTickClient( void )
 
 	apeTickInput_();
 	apeTickGUI_();
-	apeTickClientWorld_();
+
+	ss_acl_level_client_tick_();
 
 	ss_arl_tick_materials_();
 

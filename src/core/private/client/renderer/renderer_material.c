@@ -681,7 +681,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
-	ApeWorld *world = acl_world_get_current();
+	ApeWorld *world = acl_level_get_current();
 
 	int slot;
 	if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )

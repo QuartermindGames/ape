@@ -25,9 +25,9 @@ bool ss_acl_is_console_open( void );
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState );
 void ss_acl_input_handle_text_event( const char *key );
-void apeHandleMouseButtonEvent( int button, ApeInputState buttonState );
-void apeHandleMouseWheelEvent( float x, float y );
-void apeHandleMouseMotionEvent( int x, int y );
+void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonState );
+void ss_acl_input_handle_mouse_wheel_event( float x, float y );
+void ss_acl_input_handle_mouse_motion_event( int x, int y );
 
 struct GuiPanel *ss_gui_get_root_panel( void );
 

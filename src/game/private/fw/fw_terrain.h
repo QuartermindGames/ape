@@ -6,15 +6,15 @@
 
 PL_EXTERN_C
 
-void FW_Terrain_Initialize( void );
-void FW_Terrain_Shutdown( void );
+void fw_terrain_initialize( void );
+void fw_terrain_shutdown( void );
 
-PLGTexture *FW_Terrain_GetOverview( void );
-bool FW_Terrain_Load( const char *path );
+PLGTexture *fw_terrain_get_overview( void );
+bool fw_terrain_load( const char *path );
 
-float FW_Terrain_GetHeight( float x, float y );
-float FW_Terrain_GetMaxHeight( void );
-float FW_Terrain_GetMinHeight( void );
+float fw_terrain_get_height( float x, float y );
+float fw_terrain_get_max_height( void );
+float fw_terrain_get_min_height( void );
 
 void FW_Terrain_Draw( void );
 

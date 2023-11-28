@@ -75,7 +75,7 @@ void arl_postfx_setup_( void )
 	}
 }
 
-void arl_postfx_register_console_variables_( void )
+void ss_arl_postfx_register_console_variables_( void )
 {
 	/* urrrughgdshghfhksd, but yeah... */
 	register_post_effects();

@@ -1,5 +1,5 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
-// Purpose: Deserialization methods specific to Volition's RF format.
+// Purpose: Deserialization methods specific to Volition's RFL format.
 
 #include "ape_private.h"
 
@@ -7,59 +7,26 @@
 #include "world.h"
 
 #include "yin/core_fs.h"
+#include "ape/ape_format_rfl.h"
 
-#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
+//#define FLIP_WORLD// X coord needs to be flipped to match APE Tech coordinates...
+#ifdef FLIP_WORLD
+#	define FLIP_VECTOR( X ) ( ( X ).x *= -1 )
+#else
+#	define FLIP_VECTOR( X )
+#endif
 
-static const unsigned int RFL_MAGIC = 0xd4bada55;
+// gross versioning crap... this should probably be simplified
 
-static const int RFL_VERSION_MIN = 161;
-static const int RFL_VERSION_MAX = 295;
-// version history...
-//	161	Red Faction (PS2 Prototype)
-//	180	Red Faction (PC Demo)
-//	272	Red Faction 2 (PS2 Demo)
-// 	482	The Punisher (PS2)
-
-// Below is a list of all the known used chunk types
-#define RFL_CHUNK_GEOMETRY          0x100
-#define RFL_CHUNK_GEOREGIONS        0x200
-#define RFL_CHUNK_LIGHTS            0x300
-#define RFL_CHUNK_CUTSCENECAMERAS   0x400
-#define RFL_CHUNK_AMBIENT_SOUNDS    0x500
-#define RFL_CHUNK_EVENTS            0x600
-#define RFL_CHUNK_RESPAWN_POINTS    0x700
-#define RFL_CHUNK_LEVEL_PROPERTIES  0x900
-#define RFL_CHUNK_EMITTERS          0xa00
-#define RFL_CHUNK_CLIMBREGIONS      0xd00
-#define RFL_CHUNK_BOLTEMITTERS      0xe00
-#define RFL_CHUNK_TARGETS           0xf00
-#define RFL_CHUNK_DECALS            0x1000
-#define RFL_CHUNK_PUSHREGIONS       0x1100
-#define RFL_CHUNK_LIGHTMAP          0x1200
-#define RFL_CHUNK_MOVERS            0x2000
-#define RFL_CHUNK_MOVINGGROUP       0x3000
-#define RFL_CHUNK_CUTSCENES         0x4000
-#define RFL_CHUNK_CUTSCENEPATHNODES 0x5000
-#define RFL_CHUNK_CUTSCENEPATHS     0x6000
-#define RFL_CHUNK_UNKNOWN_7000      0x7000
-#define RFL_CHUNK_UNKNOWN_7001      0x7001
-#define RFL_CHUNK_UNKNOWN_7002      0x7002
-#define RFL_CHUNK_UNKNOWN_7003      0x7003
-#define RFL_CHUNK_UNKNOWN_7004      0x7004
-#define RFL_CHUNK_UNKNOWN_7005      0x7005
-#define RFL_CHUNK_UNKNOWN_7678      0x7678
-#define RFL_CHUNK_UNKNOWN_7680      0x7680
-#define RFL_CHUNK_UNKNOWN_7681      0x7681
-#define RFL_CHUNK_UNKNOWN_7900      0x7900
-#define RFL_CHUNK_UNKNOWN_7901      0x7901
-#define RFL_CHUNK_EAX               0x8000
-#define RFL_CHUNK_WAYPOINTS         0x10000
-#define RFL_CHUNK_NAVPOINTS         0x20000
-#define RFL_CHUNK_ENTITIES          0x30000
-#define RFL_CHUNK_ITEMS             0x40000
-#define RFL_CHUNK_CLUTTER           0x50000
-#define RFL_CHUNK_TRIGGERS          0x60000
-#define RFL_CHUNK_PLAYER_START      0x70000
+/*
+ * RFL version history...
+ * ------------------------------------
+ * 180 - rf pc public demo
+ * 200 - rf pc retail
+ * 212 - lightmap support removed
+ * 272 - rf2 ps2 public demo
+ * 482 - punisher ps2 retail
+ */
 
 static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 {
@@ -73,16 +40,14 @@ static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 		assert( textureName != NULL );
 		if ( textureName == NULL )
 		{
-			PRINT_WARNING( "Invalid texture (%u) name!\n", i );
+			PRINT_WARNING( "Invalid texture (%u) name! (%lu)\n", i, PlGetFileOffset( file ) );
 			continue;
 		}
 		PRINT_DEBUG( "Texture: %s\n", textureName );
 
 		char *c = strrchr( textureName, '.' );
 		if ( c != NULL )
-		{
 			*c = '\0';
-		}
 
 		PLPath path;
 		PlSetupPath( path, true, "materials/world/%s.mat.n", textureName );
@@ -93,25 +58,38 @@ static void parse_static_geometry_textures( ApeWorld *world, PLFile *file )
 	}
 }
 
-static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t version )
+static ApeAudioReverbPreset get_eax_effect_id( const char *effectName )
+{
+	for ( unsigned int i = 0; i < APE_NUM_AUDIO_EFFECT_TYPES; ++i )
+	{
+		if ( pl_strcasecmp( effectName, APE_AUDIO_EFFECT_TYPES[ i ].name ) != 0 )
+			continue;
+
+		return APE_AUDIO_EFFECT_TYPES[ i ].effect;
+	}
+
+	PRINT_WARNING( "Unknown EAX effect name (%s)!\n", effectName );
+	return APE_AUDIO_REVERB_PRESET_NONE;
+}
+
+static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned int version )
 {
 	// fetch and populate the room list
-	uint32_t numRooms = PL_READUINT32( file, false, NULL );
+	unsigned int numRooms = PL_READUINT32( file, false, NULL );
 	world->rooms = PlCreateVectorArray( numRooms );
-	for ( uint32_t i = 0; i < numRooms; ++i )
+	for ( unsigned int i = 0; i < numRooms; ++i )
 	{
-		ApeWorldRoom *room = apeCreateWorldRoom();
+		ApeWorldRoom *room = acl_room_create();
 
-		room->uid = PlReadInt32( file, false, NULL );
+		room->uid = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_PROTO, RFL_VERSION_MAX, -1 );
 
 		room->bounds.mins = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( room->bounds.mins );
 		room->bounds.maxs = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( room->bounds.maxs );
 
-		if ( version >= 234 )
-		{
-			room->flags = PL_READUINT32( file, false, NULL );
-		}
-		else
+		room->flags = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_RF2_DEMO, RFL_VERSION_MAX, 0 );
+		if ( version < RFL_VERSION_RF2_DEMO )
 		{
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_SKY; }
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_COLD; }
@@ -125,18 +103,28 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t 
 
 		room->life = ss_acl_fs_parse_float( file );
 
-		if ( version >= 180 )
+		// Urgh, Volition removed this and then brought it back...
+		if ( ( version >= RFL_VERSION_RF1_DEMO && version < RFL_VERSION_RF2_DEMO ) || version >= RFL_VERSION_RF2_RETAIL )
 		{
 			uint16_t size;
 			char *eaxEffect = ss_acl_fs_parse_string( file, &size );
-			PL_DELETE( eaxEffect );
+			if ( eaxEffect != NULL )
+			{
+				assert( isalpha( *eaxEffect ) );
+				if ( isalpha( *eaxEffect ) )
+					room->reverbPreset = get_eax_effect_id( eaxEffect );
+				else
+					PRINT_WARNING( "EAX effect is not a valid string! (%lu)", PlGetFileOffset( file ) );
+
+				PL_DELETE( eaxEffect );
+			}
 		}
 
-		if ( version >= 234 )
+		if ( version >= RFL_VERSION_RF2_DEMO )
 		{
-			ss_acl_fs_parse_float( file );
-			ss_acl_fs_parse_float( file );
-			ss_acl_fs_parse_float( file );
+			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
+			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
+			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 
 			PLColour colour = ss_acl_fs_parse_colour( file );
 			room->liquid.colour = PlColourU8ToF32( &colour );
@@ -145,7 +133,7 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t 
 
 			room->liquid.type = PlReadInt32( file, false, NULL );
 
-			if ( version < 284 )
+			if ( version < RFL_VERSION_RF2_RETAIL )
 			{
 				room->liquid.ppmU = PlReadInt32( file, false, NULL );
 				room->liquid.ppmV = PlReadInt32( file, false, NULL );
@@ -158,13 +146,10 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, int32_t 
 			room->liquid.panU = ss_acl_fs_parse_float( file );
 			room->liquid.panV = ss_acl_fs_parse_float( file );
 
-			if ( version >= 284 )
-			{
-				ss_acl_fs_parse_float( file );
-				ss_acl_fs_parse_float( file );
-			}
+			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
+			acl_fs_parse_float_ex( file, version, RFL_VERSION_RF2_RETAIL, RFL_VERSION_MAX, 0.0f );
 
-			if ( version < 284 )
+			if ( version < RFL_VERSION_RF2_RETAIL )
 			{
 				ss_acl_fs_parse_colour( file );
 				PlReadInt32( file, false, NULL );
@@ -259,7 +244,9 @@ static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
 		uint32_t roomBIndex = PL_READUINT32( file, false, NULL );
 
 		PLVector3 mins = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( mins );
 		PLVector3 maxs = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( maxs );
 
 		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
 		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
@@ -290,24 +277,21 @@ static void parse_static_geometry_vertices( ApeWorld *world, PLFile *file )
 	{
 		ApeWorldVertex *vertex = PL_NEW( ApeWorldVertex );
 		vertex->position = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( vertex->position );
 		PlPushBackVectorArrayElement( world->vertices, vertex );
 	}
 }
 
-void apeGenerateWorldFaceBounds( ApeWorldFace *face )
+void ape_level_face_generate_bounds( ApeWorldFace *face )
 {
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
 	if ( numVertices == 0 )
-	{
 		return;
-	}
 
 	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
 	for ( unsigned int i = 0; i < numVertices; ++i )
-	{
 		boundVertices[ i ] = vertices[ i ]->u->position;
-	}
 
 	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
 	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
@@ -328,44 +312,46 @@ static void calculate_face_normal( ApeWorldFace *face )
 	assert( 0 );
 }
 
-static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t version )
+static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned int version )
 {
-	uint32_t numFaces = PL_READUINT32( file, false, NULL );
-
-	for ( uint32_t i = 0; i < numFaces; ++i )
+	unsigned int numFaces = PL_READUINT32( file, false, NULL );
+	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 		face->edgeLoop = PlCreateLinkedList();
 
-		if ( version >= 167 )
-		{
-			// plane
-			face->normal = ss_acl_fs_parse_vector( file );// normal
-			face->offset = ss_acl_fs_parse_float( file ); // offset
-		}
+		// plane
+		face->normal = acl_fs_parse_vector_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, &pl_vecOrigin3 );// normal
+		FLIP_VECTOR( face->normal );
+		face->offset = acl_fs_parse_float_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX, 0.0f );// offset
 
-		face->materialIndex = PlReadInt32( file, false, NULL );
+
+		face->materialIndex = ss_acl_fs_parse_int( file );
 		if ( face->materialIndex >= 0 )
 		{
 			face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 			assert( face->material != NULL );
+			if ( face->material == NULL )
+			{
+				PRINT_WARNING( "Invalid material index (%d) (%lu)!\n", face->materialIndex, ( PlGetFileOffset( file ) - 4 ) );
+				face->material = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK );
+			}
 		}
-		// some texture indices are negative, which is valid
-
+		// some texture indices are negative, which is valid...
+		// we just don't handle it yet
 		if ( face->material == NULL )
-		{
 			face->material = ss_arl_get_fallback_material();
-		}
 
-		int32_t lightmapIndex = PlReadInt32( file, false, NULL );
+		int lightmapIndex = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 211, -1 );
+		ss_acl_fs_parse_int_ex( file, version, 266, RFL_VERSION_MAX, 0 );// unused?
 
 		// ???
-		PlReadInt32( file, false, NULL );
-		PlReadInt32( file, false, NULL );
-		PlReadInt32( file, false, NULL );
+		ss_acl_fs_parse_int_ex( file, version, 49, RFL_VERSION_MAX, 0 );
+		ss_acl_fs_parse_int_ex( file, version, 66, 211, 0 );
+		ss_acl_fs_parse_int_ex( file, version, 66, 211, 0 );
 
-		int32_t portalIndex = PlReadInt32( file, false, NULL );
+		int32_t portalIndex = ss_acl_fs_parse_int( file );
 		if ( portalIndex >= 0 )
 		{
 			face->portal = PlGetVectorArrayElementAt( world->portals, portalIndex );
@@ -374,16 +360,16 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 
 		face->flags = PL_READUINT32( file, false, NULL );
 
-		face->smoothingGroup = PlReadInt32( file, false, NULL );
+		face->smoothingGroup = ss_acl_fs_parse_int( file );
 
-		int32_t roomIndex = PlReadInt32( file, false, NULL );
+		int32_t roomIndex = ss_acl_fs_parse_int( file );
 		assert( roomIndex >= 0 );
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
-		uint32_t numFaceVertices = PL_READUINT32( file, false, NULL );
+		unsigned int numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices = PlCreateVectorArray( numFaceVertices );
-		for ( uint32_t j = 0; j < numFaceVertices; ++j )
+		for ( unsigned int j = 0; j < numFaceVertices; ++j )
 		{
 			ApeWorldFaceVertex *faceVertex = PL_NEW( ApeWorldFaceVertex );
 
@@ -409,13 +395,18 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 
 			// Initially, we can just derive the face vertex normal from the face normal,
 			// but these will need to be generated based on smoothing groups later
-			faceVertex->normal = PlInverseVector3( face->normal );
+			faceVertex->normal = face->normal;
 
 			if ( lightmapIndex >= 0 )
 			{
-				faceVertex->lightmapU = ss_acl_fs_parse_float( file );
-				faceVertex->lightmapV = ss_acl_fs_parse_float( file );
+				faceVertex->lightmapU = acl_fs_parse_float_ex( file, version, RFL_VERSION_MIN, 211, 0.0f );
+				faceVertex->lightmapV = acl_fs_parse_float_ex( file, version, RFL_VERSION_MIN, 211, 0.0f );
 			}
+
+			faceVertex->colour.r = ss_acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.g = ss_acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.b = ss_acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
+			faceVertex->colour.a = ss_acl_fs_parse_byte_ex( file, version, 212, RFL_VERSION_MAX, 0 );
 
 #if defined( FLIP_WORLD )
 			PlInsertFrontLinkedListNode( face->edgeLoop, faceVertex );
@@ -431,16 +422,16 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, int32_t 
 		if ( version < 167 )
 			calculate_face_normal( face );
 
-		apeGenerateWorldFaceBounds( face );
+		ape_level_face_generate_bounds( face );
 
 		PlPushBackVectorArrayElement( room->faces, face );
 	}
 }
 
-static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file )
+static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file, unsigned int version )
 {
-	int32_t numLightmaps = PlReadInt32( file, false, NULL );
-	for ( int32_t i = 0; i < numLightmaps; ++i )
+	unsigned int numLightmaps = ( unsigned int ) ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 211, 0 );
+	for ( unsigned int i = 0; i < numLightmaps; ++i )
 	{
 		PlReadInt32( file, false, NULL );// lightmap index
 		PL_READUINT8( file, NULL );      // x start
@@ -457,17 +448,17 @@ static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file )
 		PLVector3 min = ss_acl_fs_parse_vector( file );// min
 		PLVector3 max = ss_acl_fs_parse_vector( file );// max
 
-		ss_acl_fs_parse_vector( file );            // eq
-		ss_acl_fs_parse_float( file );             // offset
+		ss_acl_fs_parse_vector( file );     // eq
+		ss_acl_fs_parse_float( file );      // offset
 		PlReadInt32( file, false, NULL );// should smooth
 		PlReadInt32( file, false, NULL );// fullbright
 		PlReadInt32( file, false, NULL );// dropped coefficient
 		PlReadInt32( file, false, NULL );// u coefficient
 		PlReadInt32( file, false, NULL );// v coefficient
-		ss_acl_fs_parse_float( file );             // uv add x
-		ss_acl_fs_parse_float( file );             // uv add y
-		ss_acl_fs_parse_float( file );             // uv scale x
-		ss_acl_fs_parse_float( file );             // uv scale y
+		ss_acl_fs_parse_float( file );      // uv add x
+		ss_acl_fs_parse_float( file );      // uv add y
+		ss_acl_fs_parse_float( file );      // uv scale x
+		ss_acl_fs_parse_float( file );      // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
@@ -495,64 +486,66 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 	}
 }
 
-
-static ApeWorld *parse_static_geometry_chunk( ApeWorld *world, PLFile *file, int32_t version )
+static ApeWorld *parse_static_geometry_chunk( ApeWorld *level, PLFile *file, unsigned int version )
 {
-	if ( version >= 200 )
-	{
-		PL_READUINT32( file, false, NULL );// version, unused
-		PL_READUINT32( file, false, NULL );// "modifiability" - unused
-	}
+	ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_RETAIL_1_2, RFL_VERSION_MAX, 0 );// "modifiability" - unused
 
 	// unused string
-	uint16_t size = PL_READUINT16( file, false, NULL );
-	PlFileSeek( file, size, PL_SEEK_CUR );
+	uint16_t size;
+	char *buf = ss_acl_fs_parse_string( file, &size );
+	PL_DELETE( buf );
 
-	if ( version < 200 )
-		PL_READUINT32( file, false, NULL );// "modifiability" - unused
+	ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_MIN, 199, 0 );// "modifiability" - unused
 
-	parse_static_geometry_textures( world, file );
+	parse_static_geometry_textures( level, file );
 
-	if ( version >= 180 )
+	unsigned int numScrollingFaces = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_RF1_RETAIL_1_2, 0 );
+	for ( unsigned int i = 0; i < numScrollingFaces; ++i )
 	{
-		uint32_t numScrollingFaces = PL_READUINT32( file, false, NULL );
-		for ( uint32_t i = 0; i < numScrollingFaces; ++i )
-		{
-			assert( 0 );
-			// todo
+		assert( 0 );
+		// todo
 
-			PlReadInt32( file, false, NULL );
-			PlReadInt32( file, false, NULL );
-			ss_acl_fs_parse_float( file );//x
-			ss_acl_fs_parse_float( file );//y
-			ss_acl_fs_parse_float( file );//x
-			ss_acl_fs_parse_float( file );//y
-			ss_acl_fs_parse_float( file );//x
-			ss_acl_fs_parse_float( file );//y
-			ss_acl_fs_parse_float( file );//x
-			ss_acl_fs_parse_float( file );//y
-			PlReadInt8( file, NULL );
-		}
+		PlReadInt32( file, false, NULL );
+		PlReadInt32( file, false, NULL );
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		ss_acl_fs_parse_float( file );//x
+		ss_acl_fs_parse_float( file );//y
+		PlReadInt8( file, NULL );
 	}
 
-	parse_static_geometry_rooms( world, file, version );
-	parse_static_geometry_detail_rooms( world, file );
-	parse_static_geometry_portals( world, file );
-	parse_static_geometry_vertices( world, file );
-	parse_static_geometry_faces( world, file, version );
-	parse_static_geometry_lightmaps( world, file );
+	parse_static_geometry_rooms( level, file, version );
+	parse_static_geometry_detail_rooms( level, file );
+
+	// some currently unknown room-related data
+	// (https://github.com/Marisa-Chan/RF2_rfl_rfc/blob/master/rfl_read.py#L264)
+	unsigned int num = ss_acl_fs_parse_int_ex( file, version, 216, RFL_VERSION_MAX, 0 );
+	for ( unsigned int i = 0; i < num; ++i )
+	{
+		ss_acl_fs_parse_int( file );
+		ss_acl_fs_parse_int( file );
+	}
+
+	parse_static_geometry_portals( level, file );
+	parse_static_geometry_vertices( level, file );
+	parse_static_geometry_faces( level, file, version );
+	parse_static_geometry_lightmaps( level, file, version );
 	//TODO: commented out for now, as it's causing issues with newer levels -
 	// 		and I get the impression it was removed but too lazy to check,
 	// 		plus we're not doing anything with it right now anyway...
-	//ParseStaticGeometryTextureMovers( world, file );
+	//parse_static_geometry_texture_movers( level, file );
 
 	return NULL;
 }
 
-static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
+static void parse_lights_chunk( ApeWorld *level, PLFile *file, unsigned int version )
 {
 	int32_t numLights = PlReadInt32( file, false, NULL );
-	PlResizeVectorArray( world->lights, numLights );
+	PlResizeVectorArray( level->lights, numLights );
 	for ( int32_t i = 0; i < numLights; ++i )
 	{
 		SS_Arl_Light *light = PL_NEW( SS_Arl_Light );
@@ -564,6 +557,7 @@ static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
 		PL_DELETE( tmp );
 
 		light->position = ss_acl_fs_parse_vector( file );
+		FLIP_VECTOR( light->position );
 
 		ss_acl_fs_parse_mat3( file );// rotation
 
@@ -578,29 +572,30 @@ static void parse_lights_chunk( ApeWorld *world, PLFile *file, int32_t version )
 
 		light->radius = ss_acl_fs_parse_float( file );// * 2.0f;
 
-		ss_acl_fs_parse_float( file );             // fov
-		ss_acl_fs_parse_float( file );             // fov dropoff
-		ss_acl_fs_parse_float( file );             // intensity at max range
-		PlReadInt32( file, false, NULL );// dropoff type
-		ss_acl_fs_parse_float( file );             // tube light width
-		ss_acl_fs_parse_float( file );             // on intensity
-		ss_acl_fs_parse_float( file );             // on time
-		ss_acl_fs_parse_float( file );             // on time variation
-		ss_acl_fs_parse_float( file );             // off intensity
-		ss_acl_fs_parse_float( file );             // off time
-		ss_acl_fs_parse_float( file );             // off time variation
+		ss_acl_fs_parse_float( file );// fov
+		ss_acl_fs_parse_float( file );// fov dropoff
+		ss_acl_fs_parse_float( file );// intensity at max range
+		ss_acl_fs_parse_int( file );  // dropoff type
+		ss_acl_fs_parse_float( file );// tube light width
+		ss_acl_fs_parse_float( file );// on intensity
+		ss_acl_fs_parse_float( file );// on time
+		ss_acl_fs_parse_float( file );// on time variation
+		ss_acl_fs_parse_float( file );// off intensity
+		ss_acl_fs_parse_float( file );// off time
+		ss_acl_fs_parse_float( file );// off time variation
 
-		PlPushBackVectorArrayElement( world->lights, light );
+		PlPushBackVectorArrayElement( level->lights, light );
 	}
 }
 
-static void parse_player_start( ApeWorld *world, PLFile *file, int32_t version )
+static void parse_player_start( ApeWorld *world, PLFile *file, unsigned int version )
 {
 	world->startPosition = ss_acl_fs_parse_vector( file );
+	FLIP_VECTOR( world->startPosition );
 	world->startOrientation = ss_acl_fs_parse_mat3( file );
 }
 
-static void parse_level_properties( ApeWorld *world, PLFile *file, int version )
+static void parse_level_properties( ApeWorld *world, PLFile *file, unsigned int version )
 {
 	uint16_t size;
 	char *texture = ss_acl_fs_parse_string( file, &size );
@@ -622,19 +617,38 @@ static void parse_level_properties( ApeWorld *world, PLFile *file, int version )
 	world->clearColour = world->fogColour;
 }
 
-ApeWorld *apeParseRFWorld_( PLFile *file )
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+ApeWorld *acl_level_load_file( const char *path )
+{
+	PLFile *file = PlOpenFile( path, false );
+	if ( file == NULL )
+	{
+		PRINT_WARNING( "Failed to load world: %s\n", PlGetError() );
+		return NULL;
+	}
+
+	ApeWorld *level = acl_level_deserialize_rfl_( file );
+
+	PlCloseFile( file );
+
+	return level;
+}
+
+ApeWorld *acl_level_deserialize_rfl_( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != RFL_MAGIC )
 	{
-		PRINT_WARNING( "Invalid magic for world: %x != %x\n", magic, RFL_MAGIC );
+		PRINT_WARNING( "Invalid magic for world! (%x != %x)\n", magic, RFL_MAGIC );
 		return NULL;
 	}
 
-	int32_t version = PlReadInt32( file, false, NULL );
+	unsigned int version = PL_READUINT32( file, false, NULL );
 	if ( version < RFL_VERSION_MIN || version > RFL_VERSION_MAX )
 	{
-		PRINT_WARNING( "Invalid version for world: %d < %d || %d > %d\n",
+		PRINT_WARNING( "Invalid version for world! (%d < %d || %d > %d)\n",
 		               version, RFL_VERSION_MIN,
 		               version, RFL_VERSION_MAX );
 		return NULL;
@@ -645,20 +659,21 @@ ApeWorld *apeParseRFWorld_( PLFile *file )
 	uint32_t objectOffset = PL_READUINT32( file, false, NULL );
 	uint32_t editorOffset = PL_READUINT32( file, false, NULL );
 
-	ApeWorld *level = ape_world_create();
+	ApeWorld *level = acl_level_create();
 
 	// read in all the chunks
 	uint32_t numChunks = PL_READUINT32( file, false, NULL );
 	uint32_t totalChunkSize = PL_READUINT32( file, false, NULL );
-	if ( version > 161 )
+
+	uint16_t size;
+	level->name = ss_acl_fs_parse_string_ex( file, &size, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_MAX );
+	if ( level->name != NULL )
+		PRINT( "RFL level name: %s\n", level->name );
+
+	char *modName = ss_acl_fs_parse_string_ex( file, &size, version, RFL_VERSION_RF1_DEMO, RFL_VERSION_RF1_RETAIL_1_2 );
+	if ( modName != NULL )
 	{
-		uint16_t size;
-		level->name = ss_acl_fs_parse_string( file, &size );
-	}
-	if ( version >= 178 && version < 272 )
-	{
-		uint16_t size;
-		char *modName = ss_acl_fs_parse_string( file, &size );
+		PRINT( "RFL mod name: %s\n", modName );
 		PL_DELETE( modName );
 	}
 

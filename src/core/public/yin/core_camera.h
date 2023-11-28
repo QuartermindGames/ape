@@ -5,7 +5,8 @@
 
 typedef enum ApeCameraMode
 {
-	APE_CAMERA_MODE_PERSPECTIVE,
+	SS_ARL_CAMERA_MODE_INVALID = -1,
+	SS_ARL_CAMERA_MODE_PERSPECTIVE,
 	APE_CAMERA_MODE_TOP,
 	APE_CAMERA_MODE_LEFT,
 	APE_CAMERA_MODE_FRONT,
@@ -16,9 +17,9 @@ typedef enum ApeCameraMode
 typedef enum ApeCameraDrawMode
 {
 	// "basic" draw modes
-	APE_CAMERA_DRAW_MODE_WIREFRAME,
+	SS_ARL_CAMERA_DRAW_MODE_WIREFRAME,
 	APE_CAMERA_DRAW_MODE_SOLID,
-	APE_CAMERA_DRAW_MODE_TEXTURED,
+	SS_ARL_CAMERA_DRAW_MODE_TEXTURED,
 	// and "complete" - uses material system
 	APE_CAMERA_DRAW_MODE_SHADED,
 
@@ -40,5 +41,8 @@ PLVector3 ss_arl_camera_get_forward( const SS_Arl_Camera *camera );
 
 SS_Arl_Camera *ss_arl_camera_get_active( void );
 void ss_arl_camera_make_active( SS_Arl_Camera *camera );
+
+void ss_arl_camera_set_draw_mode( SS_Arl_Camera *camera, ApeCameraDrawMode drawMode );
+void ss_arl_camera_set_view_mode( SS_Arl_Camera *camera, ApeCameraMode viewMode );
 
 PL_EXTERN_C_END

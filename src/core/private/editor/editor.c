@@ -2,139 +2,174 @@
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "ape_private.h"
+
 #include "editor.h"
+
 #include "client/renderer/renderer.h"
+#include "client/renderer/renderer_font.h"
 
-static ApeEditorContext *contexts[ APE_EDITOR_MAX_CONTEXTS ];
-static ApeEditorContext *currentContext = NULL;
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
-static ApeEditorStatus editorStatus = APE_EDITOR_STATUS_CLOSED;
+static SSAclEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_BRUSH;
 
-static void EditorToggleCallback( PL_UNUSED unsigned int argc, PL_UNUSED char **argv ) {
-	if ( editorStatus == APE_EDITOR_STATUS_CLOSING ) {
-		return;
-	} else if ( editorStatus == APE_EDITOR_STATUS_CLOSED ) {
-		apeOpenEditor_();
-		return;
-	}
+static bool gridVisible = false;
+static unsigned int gridScale = 1;
 
-	apeCloseEditor_();
-}
+static void toggle_editor_command( unsigned int, char ** )
+{
+	ape_config_.editor = !ape_config_.editor;
 
-void apeInitializeEditor_( void ) {
-	PlRegisterConsoleCommand( "ape/editor/toggle", "Toggle main editor functionality.", 0, EditorToggleCallback );
-
-#if 0
-	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
+	if ( ape_config_.editor )
 	{
-		assert( contexts[ i ]->Initialize != NULL );
-		if ( contexts[ i ]->Initialize == NULL )
-		{
-			continue;
-		}
-
-		contexts[ i ]->Initialize();
+		gridVisible = true;
+		gridScale = 1;
 	}
-#endif
-}
-
-void apeShutdownEditor_( void ) {
-#if 0
-	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i )
+	else
 	{
-		assert( contexts[ i ]->Shutdown != NULL );
-		if ( contexts[ i ]->Shutdown == NULL )
+		gridVisible = false;
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+void ss_acl_increase_grid_size( void )
+{
+	gridScale += 2;
+}
+
+void ss_acl_decrease_grid_size( void )
+{
+	gridScale -= 2;
+
+	if ( gridScale == 0 )
+		gridScale = 1;
+}
+
+unsigned int ss_acl_get_grid_size( void )
+{
+	return gridScale;
+}
+
+void ss_acl_grid_set_visibility( bool visible )
+{
+}
+
+void ss_acl_register_editor_console_variables_( void )
+{
+	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
+}
+
+void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
+{
+	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
+	if ( font == NULL )
+		return;
+
+	SS_Arl_Camera *camera = ss_arl_camera_get_active();
+	if ( camera == NULL )
+		return;
+
+	const char *label;
+	ApeCameraMode cameraMode = ( camera != NULL ) ? camera->mode : SS_ARL_CAMERA_MODE_INVALID;
+	switch ( cameraMode )
+	{
+		default:
+		case SS_ARL_CAMERA_MODE_INVALID:
+			label = "No camera!";
+			break;
+		case SS_ARL_CAMERA_MODE_PERSPECTIVE:
+			label = "Perspective";
+			break;
+		case APE_CAMERA_MODE_FRONT:
+			label = "Front";
+			break;
+		case APE_CAMERA_MODE_LEFT:
+			label = "Left";
+			break;
+		case APE_CAMERA_MODE_TOP:
+			label = "Top";
+			break;
+	}
+
+	ss_arl_bitmap_font_draw_string( font,
+	                                ( float ) ( ( viewport->width - ( font->cw * 2 ) ) - ( font->cw * strlen( label ) ) ),
+	                                ( float ) ( viewport->height - ( font->ch * 2 ) ),
+	                                1.0f, 1.0f, PL_COLOUR_GOLD, label, true );
+
+	if ( cameraMode != SS_ARL_CAMERA_MODE_INVALID && cameraMode != SS_ARL_CAMERA_MODE_PERSPECTIVE )
+	{
+		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+
+		static float z = 16.0f;
+		float zoom = roundf( z ) / 2.0f;
+
+		float x = 500.0f + sinf( zoom * 2.0f ) * 100.0f;
+		float y = 200.0f + cosf( zoom * 2.0f ) * 100.0f;
+
+		PLMatrix4 transform = PlMatrix4Identity();
+		transform = PlScaleMatrix4( transform, ( PLVector3 ){ zoom, zoom, zoom } );
+
+		// stupid matrix bollocks, blargh
+		transform = PlTransposeMatrix4( &transform );
+		PlgSetViewMatrix( &transform );
+
+		int m = ( viewport->width > viewport->height ) ? viewport->width : viewport->height;
+		//PlgDrawDottedGrid( -m / 2, -m / 2, m, m, gridScale / 2, &( PLColour ){ 70, 70, 70, 255 } );
+		//PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( gridScale / 2 ) * 4, &( PLColour ){ 100, 100, 100, 255 } );
+
+		switch ( cameraMode )
 		{
-			continue;
-		}
-
-		contexts[ i ]->Shutdown();
-	}
+			default:
+				break;
+#if 0
+			case APE_CAMERA_MODE_TOP:
+				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ x, -0.0f, -y } ) );
+				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ) );
+				break;
+			case APE_CAMERA_MODE_LEFT:
+				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ 0.0f, -y, -x } ) );
+				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ) );
+				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
+				break;
+			case APE_CAMERA_MODE_FRONT:
+				transform = PlMultiplyMatrix4( transform, PlTranslateMatrix4( ( PLVector3 ){ -x, -y, 0.0f } ) );
+				transform = PlMultiplyMatrix4( transform, PlRotateMatrix4( PL_DEG2RAD( 180.0f ), &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ) );
+				break;
 #endif
-}
-
-void apeTickEditor_( void ) {
-	if ( currentContext == NULL ) {
-		return;
-	}
-
-	assert( currentContext->Tick != NULL );
-	if ( currentContext->Tick == NULL ) {
-		return;
-	}
-
-	currentContext->Tick();
-}
-
-void apeDrawEditor_( void ) {
-	if ( currentContext == NULL ) {
-		return;
-	}
-
-	assert( currentContext->Draw != NULL );
-	if ( currentContext->Draw == NULL ) {
-		return;
-	}
-
-	currentContext->Draw();
-}
-
-void apeOpenEditor_( void ) {
-	editorStatus = APE_EDITOR_STATUS_OPEN;
-}
-
-void apeCloseEditor_( void ) {
-}
-
-void apeDrawEditorGUI_( const SS_Arl_Viewport *viewport ) {
-	if ( currentContext == NULL ) {
-		return;
-	}
-
-	assert( currentContext->DrawGUI != NULL );
-	if ( currentContext->DrawGUI == NULL ) {
-		return;
-	}
-
-	currentContext->DrawGUI();
-}
-
-ApeEditorContext *apeGetCurrentEditorContext( void ) {
-	return currentContext;
-}
-
-ApeEditorContext *apeGetEditorContext( const char *identifier ) {
-	for ( uint32_t i = 0; i < APE_EDITOR_MAX_CONTEXTS; ++i ) {
-		if ( strcmp( contexts[ i ]->identifier, identifier ) != 0 ) {
-			continue;
 		}
 
-		return contexts[ i ];
-	}
+		ApeWorld *level = acl_level_get_current();
+		if ( camera != NULL && level != NULL )
+		{
+			// stupid matrix bollocks, blargh
+			transform = PlTransposeMatrix4( &transform );
+			PlgSetViewMatrix( &transform );
 
-	return NULL;
+			SS_Arl_Camera tmp;
+			PL_ZERO_( tmp );
+			tmp.internal = ss_arl_get_aux_camera_();
+			switch ( camera->drawMode )
+			{
+				case SS_ARL_CAMERA_DRAW_MODE_WIREFRAME:
+					arl_level_draw_wireframe( level, &tmp );
+					break;
+				case APE_CAMERA_DRAW_MODE_SOLID:
+				case SS_ARL_CAMERA_DRAW_MODE_TEXTURED:
+					arl_level_draw( level, camera, NULL, 0 );
+					break;
+				default:
+					break;
+			}
+
+			// reset the view matrix back to it's original state
+			PlgSetViewMatrix( &tmp.internal->internal.view );
+		}
+	}
 }
 
-ApeEditorContext *apeSetEditorContext( ApeEditorContextType type ) {
-	currentContext = contexts[ type ];
-	editorStatus = APE_EDITOR_STATUS_OPEN;
-	if ( currentContext->OnActive != NULL ) {
-		currentContext->OnActive();
-	}
-
-	return currentContext;
-}
-
-bool apeIsEditorContextActive( const char *identifier ) {
-	if ( currentContext == NULL ) {
-		return false;
-	}
-
-	return ( strcmp( currentContext->name, identifier ) == 0 );
-}
-
-ApeMaterial *apeGetEditorIconMaterial( const char *name ) {
-	PLPath path;
-	PlSetupPath( path, true, "editor/icons/%s.mat.n", name );
-	return ss_arl_material_cache( path, APE_CACHE_EDITOR, true, false );
+bool apeIsEditorContextActive( const char *identifier )
+{
+	return false;
 }

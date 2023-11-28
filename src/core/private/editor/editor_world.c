@@ -15,119 +15,13 @@
 
 #define WORLD_CONTEXT_IDENTIFIER "world"
 
-static ApeEditorContext context;
-static ApeEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
-
-#define MAX_CAMERA_SLOTS 16
-static SS_Arl_Camera *cameras[ MAX_CAMERA_SLOTS ];
+static SSAclEditorGeometryMode geometryMode = EDITOR_GEOMETRYMODE_VERTEX;
 
 static ApeWorld *world = NULL;
 
 static int mouseCursorX = 0,
            mouseCursorY = 0;
-
-static void RegisterWorldEditorVariables( void ) {
-}
-
-static void CreateWorldCommand( unsigned int argc, char **argv ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	world = ape_world_create();
-}
-
-static void DestroyWorldCommand( unsigned int argc, char **argv ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	ape_world_destroy( world );
-	world = NULL;
-}
-
-static void CreateMeshCommand( unsigned int argc, char **argv ) {
-	ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
-	if ( editorInstance == NULL ) {
-		PRINT_WARNING( "Command failed - no active instance!\n" );
-		return;
-	}
-
-	if ( editorInstance->mode != APE_EDITOR_CONTEXT_WORLD ) {
-		PRINT_WARNING( "Command failed - invalid active instance mode!\n" );
-		return;
-	}
-
-	if ( world == NULL ) {
-		return;
-	}
-
-	PLVector3 pos = ( PLVector3 ){
-	        strtof( argv[ 1 ], NULL ),
-	        strtof( argv[ 2 ], NULL ),
-	        strtof( argv[ 3 ], NULL ) };
-
-	ApeWorldMesh *mesh = apeCreateWorldMesh( world );
-}
-
-static void IncreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.gridScale += 2;
-}
-
-static void DecreaseGridSize( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.gridScale -= 2;
-	if ( context.gridScale <= 0 ) {
-		context.gridScale = 1;
-	}
-}
-
-static void ToggleView( ApeInputState state, PL_UNUSED const char *id ) {
-	if ( !apeIsEditorContextActive( WORLD_CONTEXT_IDENTIFIER ) ) {
-		return;
-	}
-
-	if ( state != APE_INPUT_STATE_PRESSED ) {
-		return;
-	}
-
-	context.camera->mode++;
-	if ( context.camera->mode >= APE_CAMERA_MAX_MODES ) {
-		context.camera->mode = APE_CAMERA_MODE_PERSPECTIVE;
-	}
-}
-
-static void InitializeWorldEditor( void ) {
-	for ( uint32_t i = 0; i < MAX_CAMERA_SLOTS; ++i ) {
-		char buf[ 64 ];
-		snprintf( buf, sizeof( buf ), "worldCamera%u", i );
-		cameras[ i ] = ss_arl_camera_create( buf, &pl_vecOrigin3, &pl_vecOrigin3 );
-	}
-
-	context.camera = cameras[ 0 ];
-	context.camera->mode = APE_CAMERA_MODE_TOP;
-	context.camera->drawMode = APE_CAMERA_DRAW_MODE_WIREFRAME;
-
-	ss_acl_input_register_action( "editor.world.gridUp", NULL, 0, ( ApeInputKey[] ){ '[' }, 1, IncreaseGridSize );
-	ss_acl_input_register_action( "editor.world.gridDown", NULL, 0, ( ApeInputKey[] ){ ']' }, 1, DecreaseGridSize );
-	ss_acl_input_register_action( "editor.world.toggleView", NULL, 0, ( ApeInputKey[] ){ KEY_TAB }, 1, ToggleView );
-}
-
+#if 0
 static void ShutdownWorldEditor( void ) {
 }
 
@@ -138,7 +32,7 @@ static void DrawWorldEditorGUI( void ) {
 	int w, h;
 	PlgGetViewport( NULL, NULL, &w, &h );
 
-	if ( context.camera != NULL && ( context.camera->mode != APE_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) ) {
+	if ( context.camera != NULL && ( context.camera->mode != SS_ARL_CAMERA_MODE_PERSPECTIVE ) && ( context.gridScale > 0 ) ) {
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		static float z = 16.0f;
@@ -186,12 +80,12 @@ static void DrawWorldEditorGUI( void ) {
 		PL_ZERO_( tmp );
 		tmp.internal = ss_arl_get_aux_camera_();
 		switch ( context.camera->drawMode ) {
-			case APE_CAMERA_DRAW_MODE_WIREFRAME:
-				apeDrawWorldWireframe_( world, &tmp );
+			case SS_ARL_CAMERA_DRAW_MODE_WIREFRAME:
+				arl_level_draw_wireframe( world, &tmp );
 				break;
 			case APE_CAMERA_DRAW_MODE_SOLID:
-			case APE_CAMERA_DRAW_MODE_TEXTURED:
-				apeDrawWorld_( world, NULL, NULL, 0 );
+			case SS_ARL_CAMERA_DRAW_MODE_TEXTURED:
+				arl_level_draw( world, NULL, NULL, 0 );
 				break;
 			default:
 				break;
@@ -218,7 +112,7 @@ static void DrawWorldEditorGUI( void ) {
 			case APE_CAMERA_MODE_LEFT:
 				label = "Left";
 				break;
-			case APE_CAMERA_MODE_PERSPECTIVE:
+			case SS_ARL_CAMERA_MODE_PERSPECTIVE:
 				label = "Perspective";
 				break;
 			case APE_CAMERA_MODE_TOP:
@@ -258,24 +152,6 @@ static void OnWorldEditorActive( void ) {
 
 	ss_arl_viewport_set_camera( viewport, context.camera );
 
-	world = acl_world_get_current();
+	world = acl_level_get_current();
 }
-
-ApeEditorContext *YnCore_RegisterWorldEditorContext( void ) {
-	PL_ZERO_( context );
-
-	context.name = "World Editor";
-	context.identifier = WORLD_CONTEXT_IDENTIFIER;
-	context.mode = APE_EDITOR_CONTEXT_WORLD;
-
-	context.RegisterConsoleVariables = RegisterWorldEditorVariables;
-	context.Initialize = InitializeWorldEditor;
-	context.Shutdown = ShutdownWorldEditor;
-	context.Draw = DrawWorldEditor;
-	context.DrawGUI = DrawWorldEditorGUI;
-	context.Tick = TickWorldEditor;
-
-	context.OnActive = OnWorldEditorActive;
-
-	return &context;
-}
+#endif
