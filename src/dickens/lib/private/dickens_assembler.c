@@ -4,6 +4,7 @@
 #include <plcore/pl_parse.h>
 
 #include "dickens_private.h"
+#include "dickens_bin.h"
 
 typedef struct YASMOpCodeReference
 {

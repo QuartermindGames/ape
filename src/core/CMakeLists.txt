@@ -119,6 +119,4 @@ target_link_libraries(ApeCore
         ApeCommon
         ApeNode
         ApeGame
-
-        sscript
         )

@@ -2,10 +2,8 @@
 
 #pragma once
 
-#include "script.h"
-
 /*****************************************************
- * SBF Format Specification (Script Binary Format)
+ * DK Bin Format Specification
  * This is heavily based upon the COB format used in
  * Creatures - originally the plan was to make it
  * exactly the same so it would be compatible (imagine
@@ -13,13 +11,13 @@
  * world!) but alas...
  *****************************************************/
 
-#define SS_SCRIPT_SBF_MAGIC PL_MAGIC_TO_NUM( 'S', 'B', 'F', ' ' )
+#define DK_BIN_MAGIC PL_MAGIC_TO_NUM( 'D', 'B', 'I', 'N' )
 
-typedef struct SS_ScriptSbfHeader
+typedef struct DkBinHeader
 {
 	uint32_t magic;
 	uint16_t version;
-} SS_ScriptSbfHeader;
+} DkBinHeader;
 
 /**
  * Files can be embedded alongside the
@@ -27,22 +25,22 @@ typedef struct SS_ScriptSbfHeader
  * a little easier.
  * Deflate compression is used.
  */
-typedef struct SS_ScriptSbfFileChunk
+typedef struct DkBinFileChunk
 {
 	char filename[ 256 ];
 	uint32_t compressedSize;
 	uint32_t size;
-} SS_ScriptSbfFileChunk;
+} DkBinFileChunk;
 
-typedef struct SS_ScriptSbfObjectChunk
+typedef struct DkBinObjectChunk
 {
 
-} SS_ScriptSbfObjectChunk;
+} DkBinObjectChunk;
 
 /**
  * Details about the author of the SBF.
  */
-typedef struct SS_ScriptSbfAuthorChunk
+typedef struct DkBinAuthorChunk
 {
 	uint64_t timestamp;
 	uint16_t version;
@@ -51,4 +49,4 @@ typedef struct SS_ScriptSbfAuthorChunk
 	char *authorEmail;
 	char *authorUrl;
 	char *authorComments;
-} SS_ScriptSbfAuthorChunk;
+} DkBinAuthorChunk;
