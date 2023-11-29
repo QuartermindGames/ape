@@ -29,6 +29,8 @@ set(GAME_USER_TARGET "mag" CACHE STRING "Game to build.")
 set(GAME_TARGET_MAG
         private/mag/mag_creature.c
         private/mag/mag_game.c
+        private/mag/mag_tile_editor.c
+        private/mag/mag_world.c
 )
 set(GAME_TARGET_FERAL
         private/fw/menu/fw_menu.c

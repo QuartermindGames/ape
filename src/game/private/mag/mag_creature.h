@@ -4,7 +4,6 @@
 
 #include "../ai/ai_brain.h"
 
-
 /**
  * These relationships are mostly for the AI,
  * allowing us to determine what characters can
@@ -27,7 +26,10 @@ typedef enum MagCreatureRelationshipGroup
 
 typedef enum MagCreatureEmotion
 {
-	MAG_CREATURE_EMOTION_ANGER,
+	MAG_CREATURE_EMOTION_RELAXED,
+	MAG_CREATURE_EMOTION_ANGRY,
+	MAG_CREATURE_EMOTION_EXCITED,
+	MAG_CREATURE_EMOTION_DEPRESSED,
 } MagCreatureEmotion;
 
 typedef enum MagCreatureSex
@@ -49,6 +51,13 @@ typedef enum MagCreatureLifePhase
 
 	MAG_CREATURE_MAX_LIFE_PHASES
 } MagCreatureLifePhase;
+
+typedef enum MagCreatureIntelligence
+{
+	MAG_CREATURE_INTELLIGENCE_LOW,     // like a dog/cat
+	MAG_CREATURE_INTELLIGENCE_MEDIUM,  // primitive human or ape
+	MAG_CREATURE_INTELLIGENCE_ADVANCED,// human being
+} MagCreatureIntelligence;
 
 #define MAG_CREATURE_MAGIC PL_MAGIC_TO_NUM( 'M', 'C', 'R', 'T' )
 

@@ -13,23 +13,37 @@
 #define MAG_WORLD_SECONDS_TO_HOUR ( MAG_WORLD_SECONDS_TO_MINUTE * MAG_WORLD_MINUTES_TO_HOUR )
 #define MAG_WORLD_SECONDS_TO_DAY  ( MAG_WORLD_SECONDS_TO_HOUR * MAG_WORLD_HOURS_TO_DAY )
 
+typedef enum MagWorldLayer
+{
+	MAG_WORLD_LAYER_BACKGROUND,
+	MAG_WORLD_LAYER_SPRITES,
+	MAG_WORLD_LAYER_FOREGROUND,
+
+	MAG_WORLD_MAX_LAYERS
+} MagWorldLayer;
+
 typedef struct MagWorldState
 {
 	float windPower;
 	PLVector3 windDirection;
 
 	unsigned int seconds;// not *real* seconds!
+
+	struct
+	{
+
+	} layers[ MAG_WORLD_MAX_LAYERS ];
 } MagWorldState;
 
 typedef enum ToxTimeOfDay
 {
-	TOX_ENV_TIMEOFDAY_DAWN,
-	TOX_ENV_TIMEOFDAY_MORNING,
-	TOX_ENV_TIMEOFDAY_AFTERNOON,
-	TOX_ENV_TIMEOFDAY_EVENING,
-	TOX_ENV_TIMEOFDAY_NIGHT,
+	MAG_ENV_TIMEOFDAY_DAWN,
+	MAG_ENV_TIMEOFDAY_MORNING,
+	MAG_ENV_TIMEOFDAY_AFTERNOON,
+	MAG_ENV_TIMEOFDAY_EVENING,
+	MAG_ENV_TIMEOFDAY_NIGHT,
 
-	TOX_ENV_MAX_TIMEOFDAY
+	MAG_ENV_MAX_TIMEOFDAY
 } ToxTimeOfDay;
 
 #define MAG_WORLD_NIGHT_HOUR     17
@@ -67,23 +81,23 @@ static inline unsigned int mag_world_get_seconds_in_day( const MagWorldState *wo
 static inline ToxTimeOfDay mag_world_get_time_of_day( const MagWorldState *worldState )
 {
 	unsigned int hour = mag_world_get_current_hour( worldState );
-	if ( hour > MAG_WORLD_NIGHT_HOUR ) return TOX_ENV_TIMEOFDAY_NIGHT;
-	if ( hour > MAG_WORLD_EVENING_HOUR ) return TOX_ENV_TIMEOFDAY_EVENING;
-	if ( hour > MAG_WORLD_AFTERNOON_HOUR ) return TOX_ENV_TIMEOFDAY_AFTERNOON;
-	if ( hour > MAG_WORLD_MORNING_HOUR ) return TOX_ENV_TIMEOFDAY_MORNING;
-	if ( hour > MAG_WORLD_DAWN_HOUR ) return TOX_ENV_TIMEOFDAY_DAWN;
-	return TOX_ENV_TIMEOFDAY_NIGHT;
+	if ( hour > MAG_WORLD_NIGHT_HOUR ) return MAG_ENV_TIMEOFDAY_NIGHT;
+	if ( hour > MAG_WORLD_EVENING_HOUR ) return MAG_ENV_TIMEOFDAY_EVENING;
+	if ( hour > MAG_WORLD_AFTERNOON_HOUR ) return MAG_ENV_TIMEOFDAY_AFTERNOON;
+	if ( hour > MAG_WORLD_MORNING_HOUR ) return MAG_ENV_TIMEOFDAY_MORNING;
+	if ( hour > MAG_WORLD_DAWN_HOUR ) return MAG_ENV_TIMEOFDAY_DAWN;
+	return MAG_ENV_TIMEOFDAY_NIGHT;
 }
 
 static inline const char *mag_world_get_time_of_day_descriptor( ToxTimeOfDay timeOfDay )
 {
 	switch ( timeOfDay )
 	{
-		case TOX_ENV_TIMEOFDAY_DAWN: return "dawn";
-		case TOX_ENV_TIMEOFDAY_MORNING: return "morning";
-		case TOX_ENV_TIMEOFDAY_AFTERNOON: return "afternoon";
-		case TOX_ENV_TIMEOFDAY_EVENING: return "evening";
-		case TOX_ENV_TIMEOFDAY_NIGHT:
+		case MAG_ENV_TIMEOFDAY_DAWN: return "dawn";
+		case MAG_ENV_TIMEOFDAY_MORNING: return "morning";
+		case MAG_ENV_TIMEOFDAY_AFTERNOON: return "afternoon";
+		case MAG_ENV_TIMEOFDAY_EVENING: return "evening";
+		case MAG_ENV_TIMEOFDAY_NIGHT:
 		default: return "night";
 	}
 }

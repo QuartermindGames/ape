@@ -3,7 +3,9 @@
 
 #include "mag_game.h"
 
-static SS_Arl_Camera *playerCamera = NULL;
+static SSArlCamera *playerCamera = NULL;
+
+static ApeMaterial *testMaterial;
 
 static void move_camera_callback( ApeInputState state, const char *id )
 {
@@ -41,9 +43,7 @@ static void initialize_game( void )
 {
 	game_register_standard_entity_components();
 
-	PlParseConsoleString( "level worlds/L1S1.rfl" );
-
-	playerCamera = ss_arl_camera_create( "test", &PLVector3( 0.0f, 0.0f, 0.0f ), &pl_vecOrigin3 );
+	playerCamera = ss_arl_camera_create( "mag_camera", &pl_vecOrigin3, &pl_vecOrigin3 );
 	ss_arl_camera_make_active( playerCamera );
 
 	ss_acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
@@ -54,6 +54,10 @@ static void initialize_game( void )
 	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
 	ss_acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
 	ss_acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
+
+	testMaterial = ss_arl_material_cache( "materials/debug/debug_sprite.mat.n", APE_CACHE_EDITOR, true, false );
+
+	mag_tile_editor_initialize();
 }
 
 static void shutdown_game( void )
@@ -78,33 +82,54 @@ static void tick_game( void )
 	}
 }
 
+static void draw_game( SSArlViewport *viewport )
+{
+	static float rotate = 0.0f;
+	ss_arl_draw_sprite( testMaterial,
+	                    &( PLQuad ){ 0.0f, 0.0f, 128.0f, 128.0f },
+	                    &( PLVector3 ){ 250.f, 250.f, 0.f },
+	                    &( PLVector3 ){ -( 128.0f / 2.0f ), -( 128.0f / 2.0f ), 0.0f },
+	                    &( PLVector3 ){ 0.0f, 0.0f, rotate }, 1.0f );
+	rotate += 0.0005f;
+}
+
+static void draw_game_ui( SSArlViewport *viewport )
+{
+	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
+	ss_arl_bitmap_font_draw_string( font, 200.0f, 200.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, "HELLO WORLD", true );
+
+#if 0
+	static float rotate = 0.0f;
+	ss_arl_draw_sprite( testMaterial,
+	                    &( PLQuad ){ 0.0f, 0.0f, 128.0f, 128.0f },
+	                    &( PLVector3 ){ 250.f, 250.f, 0.f },
+	                    &( PLVector3 ){ -( 128.0f / 2.0f ), -( 128.0f / 2.0f ), 0.0f },
+	                    &( PLVector3 ){ 0.0f, 0.0f, rotate }, 1.0f );
+	rotate += 0.0005f;
+#endif
+
+	mag_tile_editor_draw( viewport );
+}
+
 static bool handle_request( GameModeRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_INITIALIZE:
-		{
 			initialize_game();
 			return true;
-		}
 		case GAMEMODE_REQUEST_SHUTDOWN:
-		{
 			shutdown_game();
 			return true;
-		}
 		case GAMEMODE_REQUEST_TICK:
-		{
 			tick_game();
-			break;
-		}
-		case GAMEMODE_REQUEST_HANDLE_INPUT:
-		{
-			break;
-		}
-		case GAMEMODE_REQUEST_SPAWN_LEVEL:
-		{
-			break;
-		}
+			return true;
+		case GAME_MODE_REQUEST_DRAW:
+			draw_game( ( SSArlViewport * ) user );
+			return true;
+		case GAME_MODE_REQUEST_DRAW_UI:
+			draw_game_ui( ( SSArlViewport * ) user );
+			return true;
 		default:
 			break;
 	}
