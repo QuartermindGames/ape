@@ -30,20 +30,20 @@ static void cleanup_fxaa_effect( void )
 	ss_arl_material_release( fxaaMaterial );
 }
 
-static void draw_fxaa_effect( const SS_Arl_Viewport *viewport )
+static void draw_fxaa_effect( const SSArlViewport *viewport )
 {
 	if ( !fxaaEnabled )
 		return;
 
-	arl_draw_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+	ss_arl_draw_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const ArPostProcessEffect *arl_postfx_get_fxaa_( void )
+const SSArlPostProcessEffect *ss_arl_postfx_get_fxaa_( void )
 {
-	static ArPostProcessEffect renderFXAAPostProcess;
+	static SSArlPostProcessEffect renderFXAAPostProcess;
 	PL_ZERO_( renderFXAAPostProcess );
 	renderFXAAPostProcess.RegisterConsoleVariables = register_fxaa_console_variables;
 	renderFXAAPostProcess.Setup = setup_fxaa_effect;

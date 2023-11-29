@@ -37,7 +37,7 @@ typedef struct GuiDesktop {
 
 GuiDesktop *guiCreateDesktop( GuiPanel *parent ) {
 	if ( parent == NULL ) {
-		parent = guiCreatePanel( NULL, 0, 0, 640, 480, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
+		parent = ss_gui_panel_create( NULL, 0, 0, 640, 480, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
 		if ( parent == NULL ) {
 			GUI_WARNING( "Failed to create root panel for desktop!\n" );
 			return NULL;
@@ -59,7 +59,7 @@ void guiDestroyDesktop( GuiDesktop *desktop ) {
 		return;
 	}
 
-	guiDestroyPanel( desktop->panel );
+	ss_gui_panel_destroy( desktop->panel );
 
 	PL_DELETE( desktop );
 }

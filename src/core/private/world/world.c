@@ -7,32 +7,32 @@
 #include "world.h"
 #include "client/renderer/renderer.h"
 
-void acl_level_set_global_defaults( ApeWorld *world )
+void ss_acl_level_set_global_defaults( ApeWorld *level )
 {
-	world->ambience = WORLD_DEFAULT_AMBIENCE;
-	world->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
+	level->ambience = WORLD_DEFAULT_AMBIENCE;
+	level->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-void acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
-void acl_level_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
-void acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
+void ss_acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
+void ss_acl_level_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
+void ss_acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
 
-ApeWorld *acl_level_create( void )
+ApeWorld *ss_acl_level_create( void )
 {
-	ApeWorld *world = PL_NEW( ApeWorld );
+	ApeWorld *level = PL_NEW( ApeWorld );
 
-	world->globalProperties = ndPushBackObject( NULL, "properties" );
-	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	level->globalProperties = ndPushBackObject( NULL, "properties" );
+	ndPushBackF32Array( level->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	ndPushBackF32Array( level->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
-	world->meshes = PlCreateVectorArray( 0 );
-	world->entities = PlCreateVectorArray( 0 );
-	world->lights = PlCreateVectorArray( 0 );
-	world->entitySpawns = PlCreateLinkedList();
+	level->meshes = PlCreateVectorArray( 0 );
+	level->entities = PlCreateVectorArray( 0 );
+	level->lights = PlCreateVectorArray( 0 );
+	level->entitySpawns = PlCreateLinkedList();
 
-	acl_level_set_global_defaults( world );
+	ss_acl_level_set_global_defaults( level );
 
-	return world;
+	return level;
 }
 
 static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
@@ -45,9 +45,7 @@ static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL )
-		{
 			continue;
-		}
 
 		numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
 	}
@@ -277,7 +275,7 @@ void acl_level_destroy( ApeWorld *level )
 	PlDestroyVectorArrayEx( level->lights, PlFree );
 }
 
-void acl_level_spawn_entities( ApeWorld *world )
+void acl_level_spawn_entities_( ApeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entitySpawns );
 	while ( node != NULL )
@@ -301,7 +299,7 @@ void acl_level_attach_entity( ApeWorld *world, SS_Acl_Entity *entity )
 	entity->world = world;
 }
 
-void ape_level_attach_light( ApeWorld *world, SS_Arl_Light *light )
+void ape_level_attach_light( ApeWorld *world, SSArlLight *light )
 {
 	assert( light->world == NULL );
 	if ( light->world != NULL )
@@ -321,9 +319,7 @@ void ape_level_attach_light( ApeWorld *world, SS_Arl_Light *light )
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
-	{
 		return NULL;
-	}
 
 	return ndGetChildByName( world->globalProperties, propertyName );
 }
@@ -342,9 +338,7 @@ ApeWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector
 	{
 		ApeWorldRoom *room = ( ApeWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
 		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
-		{
 			continue;
-		}
 
 		return room;
 	}
@@ -370,12 +364,12 @@ static void level_save_command( unsigned int argc, char **argv )
 
 void ss_acl_register_level_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "world/skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.level.skipDraw, NULL, false );
+	PlRegisterConsoleVariable( "skip_level_draw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.level.skipDraw, NULL, false );
 	PlRegisterConsoleVariable( "world/skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "world/showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "show_room_volumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, &ape_config_.level.showRoomVolumes, NULL, false );
-	PlRegisterConsoleVariable( "world/showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.level.showPortals, NULL, false );
-	PlRegisterConsoleVariable( "world/sortLights", "Sort lights before drawing world.", "true", PL_VAR_BOOL, &ape_config_.level.sortLights, NULL, false );
+	PlRegisterConsoleVariable( "show_portals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.level.showPortals, NULL, false );
+	PlRegisterConsoleVariable( "sort_lights", "Sort lights before drawing world.", "true", PL_VAR_BOOL, &ape_config_.level.sortLights, NULL, false );
 
 	PlRegisterConsoleCommand( "level_save", "Save the current level with the specified name.", 1, level_save_command );
 }
@@ -385,8 +379,8 @@ void ss_acl_level_client_tick_( void )
 	acl_level_build_visibility_lists_();
 }
 
-void ss_acl_level_get_player_start( const ApeWorld *world, PLVector3 *position, PLMatrix3 *orientation )
+void ss_acl_level_get_player_start( const ApeWorld *level, PLVector3 *position, PLMatrix3 *orientation )
 {
-	*position = world->startPosition;
-	*orientation = world->startOrientation;
+	*position = level->startPosition;
+	*orientation = level->startOrientation;
 }

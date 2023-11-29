@@ -20,13 +20,13 @@ static void TickCursor( GuiPanel *self, bool *override ) {
  * PUBLIC
  ****************************************/
 
-GuiPanel *guiCreateCursor( GuiPanel *parent, int x, int y ) {
+GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y ) {
 	if ( parent != NULL && parent->cursor != NULL ) {
 		GUI_WARNING( "Only one cursor allowed per panel!\n" );
 		return NULL;
 	}
 
-	GuiPanel *panel = guiCreatePanel( parent, x, y, 32, 32, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
+	GuiPanel *panel = ss_gui_panel_create( parent, x, y, 32, 32, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
 	panel->DrawBackground = DrawCursorBackground;
 	panel->Tick = TickCursor;
 
@@ -40,5 +40,5 @@ void guiDestroyCursor( GuiPanel *self ) {
 	if ( self->parent != NULL )
 		self->parent->cursor = NULL;
 
-	guiDestroyPanel( self );
+	ss_gui_panel_destroy( self );
 }

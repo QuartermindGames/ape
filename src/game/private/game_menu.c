@@ -77,7 +77,7 @@ void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, i
 
 #define STR_CENTER( FONT, STRLEN ) ( viewport->w / 2 ) - ( ( menuFont->cw * ( STRLEN ) ) / 2 )
 
-static void Menu_DrawHUD( const SS_Arl_Viewport *viewport ) {
+static void Menu_DrawHUD( const SSArlViewport *viewport ) {
 #if 0// old crap
 	Menu_DrawElement( NULL, HUD_ELEMENT_ICON_CHAR, BORDER_MARGIN, viewport->h - hudElementLayouts[ HUD_ELEMENT_ICON_CHAR ].h - BORDER_MARGIN, 104, 112 );
 
@@ -117,7 +117,7 @@ static void Menu_DrawHUD( const SS_Arl_Viewport *viewport ) {
 #endif
 }
 
-void Menu_Draw( const SS_Arl_Viewport *viewport ) {
+void Menu_Draw( const SSArlViewport *viewport ) {
 #if 0
 	if ( Game_GetMenuState() == MENU_STATE_HUD )
 	{

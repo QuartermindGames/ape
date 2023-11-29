@@ -3,7 +3,7 @@
 
 #pragma once
 
-void apeInitializeMemoryManager( void );
+void ss_acl_initialize_memory_manager_( void );
 void apeShutdownMemoryManager( void );
 
 /* ======================================================================
@@ -52,9 +52,9 @@ typedef struct ApeMemoryReference {
 	struct PLLinkedListNode *node;              // Index into the memory reference list
 } ApeMemoryReference;
 
-ApeMemoryReference *apeSetupReference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
+ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
 
-void apeAddReference( ApeMemoryReference *m );
+void ss_acl_mm_add_reference( ApeMemoryReference *m );
 void ss_acl_mm_release( ApeMemoryReference *m );
 int apeGetNumberOfReferences( const ApeMemoryReference *m );
 unsigned int apeFlushUnreferencedResources( void );

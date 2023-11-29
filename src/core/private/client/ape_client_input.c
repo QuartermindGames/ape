@@ -371,7 +371,7 @@ static bool GetSDLButtonState( SDL_GameController *gameController, ApeInputButto
 	return SDL_GameControllerGetButton( gameController, sdlButton );
 }
 
-void apeTickInput_( void ) {
+void ss_acl_tick_input_( void ) {
 	if ( !sdlInputInitialized ) {
 		return;
 	}

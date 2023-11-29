@@ -61,7 +61,7 @@ void ss_acl_register_editor_console_variables_( void )
 	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
 }
 
-void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
+void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 {
 	if ( !ss_acl_is_editor_active() )
 		return;
@@ -70,7 +70,7 @@ void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
 	if ( font == NULL )
 		return;
 
-	SS_Arl_Camera *camera = ss_arl_camera_get_active();
+	SSArlCamera *camera = ss_arl_camera_get_active();
 	if ( camera == NULL )
 		return;
 
@@ -150,7 +150,7 @@ void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport )
 			transform = PlTransposeMatrix4( &transform );
 			PlgSetViewMatrix( &transform );
 
-			SS_Arl_Camera tmp;
+			SSArlCamera tmp;
 			PL_ZERO_( tmp );
 			tmp.internal = ss_arl_get_aux_camera_();
 			switch ( camera->drawMode )

@@ -23,13 +23,13 @@ typedef struct GUIDrawBatch {
  ****************************************/
 
 typedef struct GuiCanvas {
-	ArRenderTarget *renderTarget;
+	SSArlRenderTarget *renderTarget;
 	bool filter;
 	int width;
 	int height;
 } GuiCanvas;
 
-GuiCanvas *guiCreateCanvas( int width, int height ) {
+GuiCanvas *ss_gui_canvas_create( int width, int height ) {
 	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width = width;
 	canvas->height = height;
@@ -47,12 +47,12 @@ void guiDestroyCanvas( GuiCanvas *canvas ) {
 	PL_DELETE( canvas );
 }
 
-void guiSetCanvasSize( GuiCanvas *canvas, int width, int height ) {
+void gui_canvas_set_size( GuiCanvas *canvas, int width, int height ) {
 	if ( canvas->width == width && canvas->height == height ) {
 		return;
 	}
 
-	arl_render_target_set_size( canvas->renderTarget, width, height );
+	ss_arl_render_target_set_size( canvas->renderTarget, width, height );
 }
 
 void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height ) {
@@ -65,7 +65,7 @@ void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height ) {
 }
 
 PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas ) {
-	return arl_render_target_get_texture( canvas->renderTarget );
+	return ss_arl_render_target_get_texture( canvas->renderTarget );
 }
 
 /****************************************
@@ -133,7 +133,7 @@ static void CleanupBatchQueue( void ) {
 	guiState.numBatches = 0;
 }
 
-void guiDraw( GuiCanvas *canvas, GuiPanel *root ) {
+void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root ) {
 	COM_PROFILE_FUNCTION_START();
 
 	// save old state
@@ -145,7 +145,7 @@ void guiDraw( GuiCanvas *canvas, GuiPanel *root ) {
 
 	CleanupBatchQueue();
 
-	arl_render_target_bind( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
+	ss_arl_render_target_bind( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );

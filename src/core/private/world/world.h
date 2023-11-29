@@ -225,7 +225,7 @@ ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numD
 
 void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
 
-void acl_level_spawn_entities( ApeWorld *world );
+void acl_level_spawn_entities_( ApeWorld *world );
 
 void ss_acl_register_level_console_variables_( void );
 
@@ -237,7 +237,7 @@ void ss_acl_level_client_tick_( void );
 void ss_arl_initialize_visibility_system_( void );
 void apeShutdownWorldVisibilitySystem_( void );
 
-struct SS_Arl_Light **apeGetVisibleLights_( unsigned int *num );
+struct SSArlLight **apeGetVisibleLights_( unsigned int *num );
 ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
 
 void acl_level_build_visibility_lists_( void );

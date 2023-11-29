@@ -75,7 +75,7 @@ static void DrawBorder( GuiPanel *self ) {
  * @param border
  * @return
  */
-GuiPanel *guiCreatePanel( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border ) {
+GuiPanel *ss_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border ) {
 	GuiPanel *self = PlMAllocA( sizeof( GuiPanel ) );
 	self->x = x;
 	self->y = y;
@@ -105,7 +105,7 @@ GuiPanel *guiCreatePanel( GuiPanel *parent, int x, int y, int w, int h, GuiPanel
  * Destroy the given panel. Automatically culls all
  * children of the given panel too.
  */
-void guiDestroyPanel( GuiPanel *self ) {
+void ss_gui_panel_destroy( GuiPanel *self ) {
 	if ( self == NULL ) {
 		return;
 	}
@@ -120,7 +120,7 @@ void guiDestroyPanel( GuiPanel *self ) {
 	while ( childNode != NULL ) {
 		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
 		childNode = PlGetNextLinkedListNode( childNode );
-		guiDestroyPanel( childPanel );
+		ss_gui_panel_destroy( childPanel );
 	}
 	PlDestroyLinkedList( self->children );
 
@@ -327,7 +327,7 @@ void guiGetPanelContentSize( GuiPanel *self, int *w, int *h ) {
 	if ( h != NULL ) *h = self->h - GUI_PANEL_BORDER_SIZE;
 }
 
-void guiSetPanelSize( GuiPanel *self, int w, int h ) {
+void gui_panel_set_size( GuiPanel *self, int w, int h ) {
 	self->w = w;
 	self->h = h;
 	// todo: recurse over children?
@@ -379,6 +379,6 @@ bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp ) {
 	return false;
 }
 
-void guiSetPanelVisible( GuiPanel *self, bool flag ) {
+void ss_gui_panel_set_visible( GuiPanel *self, bool flag ) {
 	self->isVisible = flag;
 }

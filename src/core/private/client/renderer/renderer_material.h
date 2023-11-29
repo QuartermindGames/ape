@@ -128,8 +128,7 @@ typedef enum SS_Arl_DefaultMaterial
 
 ApeMaterial *ss_arl_get_default_material( SS_Arl_DefaultMaterial defaultMaterial );
 
-// !!OBSOLETE!! Use the above instead...
-ApeMaterial *ss_arl_get_fallback_material( void );
+PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material );
 

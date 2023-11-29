@@ -22,7 +22,7 @@ void Client_Input_HandleMouseWheelEvent( float x, float y );
 void Client_Input_HandleMouseMotionEvent( int x, int y );
 
 void apeBeginInputFrame_( void );
-void apeTickInput_( void );
+void ss_acl_tick_input_( void );
 void apeEndInputFrame_( void );
 void acl_input_center_mouse( void );
 

@@ -11,7 +11,7 @@ static PLLinkedList *textures;
 
 static PLGTexture *fallbackTexture = NULL;
 
-PLGTexture *arl_texture_get_fallback( void )
+PLGTexture *ss_arl_texture_get_fallback( void )
 {
 	return fallbackTexture;
 }
@@ -99,7 +99,7 @@ static PLGTexture *GetTexture( const char *path )
 	return NULL;
 }
 
-PLGTexture *arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
+PLGTexture *ss_arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
 {
 	/* check if it's already loaded */
 	PLGTexture *texture = GetTexture( path );

@@ -24,68 +24,58 @@ static ApeMaterial *baseGuiMat;
 
 void apeInitializeGUI_( void )
 {
-	PlRegisterConsoleVariable( "gui/draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
-	PlRegisterConsoleVariable( "gui/width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
-	PlRegisterConsoleVariable( "gui/height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
+	PlRegisterConsoleVariable( "gui_draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
+	PlRegisterConsoleVariable( "gui_width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
+	PlRegisterConsoleVariable( "gui_height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
-	guiInitialize();
+	ss_gui_initialize();
 
-	defaultStyle = guiCacheStyleSheet( "guis/styles/default.n" );
+	defaultStyle = ss_gui_cache_style_sheet( "guis/styles/default.n" );
 	if ( defaultStyle == NULL )
-	{
 		PRINT_ERROR( "Failed to cache base style for GUI!\n" );
-	}
 
-	guiSetStyleSheet( defaultStyle );
+	ss_gui_set_style_sheet( defaultStyle );
 
-	canvas = guiCreateCanvas( guiWidth, guiHeight );
+	canvas = ss_gui_canvas_create( guiWidth, guiHeight );
 	if ( canvas == NULL )
-	{
 		PRINT_ERROR( "Failed to create GUI canvas!\n" );
-	}
 
-	rootPanel = guiCreatePanel( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
+	rootPanel = ss_gui_panel_create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 	if ( rootPanel == NULL )
-	{
 		PRINT_ERROR( "Failed to create base panel!\n" );
-	}
 
-	cursor = guiCreateCursor( rootPanel, 0, 0 );
+	cursor = ss_gui_cursor_create( rootPanel, 0, 0 );
 	if ( cursor == NULL )
-	{
 		PRINT_ERROR( "Failed to create cursor!\n" );
-	}
 
-	guiSetPanelVisible( rootPanel, true );
+	ss_gui_panel_set_visible( rootPanel, true );
 
 	baseGuiMat = ss_arl_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
 	if ( baseGuiMat == NULL )
-	{
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
-	}
 }
 
 void apeShutdownGUI_( void )
 {
-	guiDestroyPanel( rootPanel );
-	guiShutdown();
+	ss_gui_panel_destroy( rootPanel );
+	ss_gui_shutdown();
 
 	ss_arl_material_release( baseGuiMat );
 }
 
-void apeDrawGUI_( const SS_Arl_Viewport *viewport )
+void apeDrawGUI_( SSArlViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
 	// Need to call this again to reset the viewport
-	apeSet2DViewportSize( viewport->width, viewport->height );
+	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
-	ArRenderTarget *renderTarget = arl_postfx_get_render_target();
+	SSArlRenderTarget *renderTarget = ss_arl_postfx_get_render_target();
 	if ( renderTarget != NULL )
 	{
-		PLGTexture *texture = arl_render_target_get_texture( renderTarget );
+		PLGTexture *texture = ss_arl_render_target_get_texture( renderTarget );
 		if ( texture != NULL )
 		{
 			float x = ( float ) viewport->x;
@@ -124,17 +114,17 @@ void apeDrawGUI_( const SS_Arl_Viewport *viewport )
 
 	if ( drawGUI )
 	{
-		guiSetCanvasSize( canvas, guiWidth, guiHeight );
-		guiDraw( canvas, rootPanel );
+		gui_canvas_set_size( canvas, guiWidth, guiHeight );
+		gui_canvas_draw( canvas, rootPanel );
 
 		// Need to call this again to reset the viewport
-		apeSet2DViewportSize( viewport->width, viewport->height );
+		ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
 		// draw the output of the canvas
-		arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+		ss_arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
-	game_modeInterface->requestCallbackMethod( GAME_MODE_REQUEST_DRAW_UI, NULL );
+	game_modeInterface->requestCallbackMethod( GAME_MODE_REQUEST_DRAW_UI, viewport );
 
 	ss_acl_draw_editor_gui_( viewport );
 
@@ -171,14 +161,14 @@ void apeDrawGUI_( const SS_Arl_Viewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void apeTickGUI_( void )
+void ss_acl_tick_gui_( void )
 {
-	guiTick( rootPanel );
+	gui_panel_tick( rootPanel );
 }
 
 void apeResizeGUI( int w, int h )
 {
-	guiSetPanelSize( rootPanel, w, h );
+	gui_panel_set_size( rootPanel, w, h );
 }
 
 GuiPanel *ss_gui_get_root_panel( void )

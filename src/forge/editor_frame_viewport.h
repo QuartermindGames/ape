@@ -46,8 +46,8 @@ namespace ss::forge
 		float zoomScale_{ 1.0f };
 
 	public:
-		SS_Arl_Viewport *engineViewport{};
-		SS_Arl_Camera *camera{};
+		SSArlViewport *engineViewport{};
+		SSArlCamera *camera{};
 		static unsigned int cameraTagNum;
 
 	private:

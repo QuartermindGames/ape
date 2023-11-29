@@ -9,14 +9,14 @@
 
 typedef void ( *ApeSchedulerCallback )( void *userData, double delta );
 
-void apeInitializeScheduler( void );
+void ss_acl_initialize_scheduler_( void );
 void apeShutdownScheduler( void );
 unsigned int apeGetNumScheduledTasks( void );
 const char *apeGetScheduledTaskDescription( unsigned int index, double *delay );
 bool apeIsScheduledTaskRunning( const char *desc );
 void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay );
-void apeTickTasks( void );
-void apeFlushTasks( void );
+void ss_acl_tick_tasks_( void );
+void ss_acl_flush_tasks_( void );
 void apePrintPendingTasks( void );
 void apeKillScheduledTask( const char *desc );
 void apeSetScheduledTaskDelay( const char *desc, double delay );

@@ -83,7 +83,7 @@ typedef struct Actor {
 	void *userData;
 } Actor;
 
-void Act_DrawActors( SS_Arl_Camera *camera, ApeWorldRoom *sector );
+void Act_DrawActors( SSArlCamera *camera, ApeWorldRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree );
@@ -110,7 +110,7 @@ bool Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-bool Act_IsVisible( Actor *self, SS_Arl_Camera *camera );
+bool Act_IsVisible( Actor *self, SSArlCamera *camera );
 
 PLVector3 Act_GetForward( const Actor *self );
 

@@ -17,21 +17,21 @@ enum
 	MAX_POST_EFFECTS
 };
 
-static const ArPostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
+static const SSArlPostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool postProcessInit = false;
 static bool postProcessEnabled = true;
 
-static ArRenderTarget *ppRenderTarget = NULL;
+static SSArlRenderTarget *ppRenderTarget = NULL;
 
 static void register_post_effects( void )
 {
 	if ( postProcessInit )
 		return;
 
-	PL_ZERO( postProcessEffects, sizeof( ArPostProcessEffect * ) * MAX_POST_EFFECTS );
+	PL_ZERO( postProcessEffects, sizeof( SSArlPostProcessEffect * ) * MAX_POST_EFFECTS );
 
-	postProcessEffects[ POST_EFFECT_FXAA ] = arl_postfx_get_fxaa_();
-	postProcessEffects[ POST_EFFECT_BLOOM ] = arl_postfx_get_bloom_();
+	postProcessEffects[ POST_EFFECT_FXAA ] = ss_arl_postfx_get_fxaa_();
+	postProcessEffects[ POST_EFFECT_BLOOM ] = ss_arl_postfx_get_bloom_();
 
 	postProcessInit = true;
 }
@@ -39,7 +39,12 @@ static void register_post_effects( void )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void arl_postfx_cleanup_( void )
+bool ss_arl_postfx_is_enabled( void )
+{
+	return postProcessEnabled;
+}
+
+void ss_arl_postfx_cleanup_( void )
 {
 	if ( !postProcessInit )
 		return;
@@ -58,7 +63,7 @@ void arl_postfx_cleanup_( void )
 	ss_arl_render_target_release( ppRenderTarget );
 }
 
-void arl_postfx_setup_( void )
+void ss_arl_postfx_setup_( void )
 {
 	ppRenderTarget = ss_arl_render_target_create( "postfx",
 	                                              800, 600,
@@ -91,13 +96,13 @@ void ss_arl_postfx_register_console_variables_( void )
 	}
 }
 
-void arl_postfx_draw_( const SS_Arl_Viewport *viewport )
+void ss_arl_postfx_draw_( const SSArlViewport *viewport )
 {
 	if ( !postProcessEnabled )
 		return;
 
-	arl_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-	arl_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ss_arl_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
+	ss_arl_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -108,7 +113,10 @@ void arl_postfx_draw_( const SS_Arl_Viewport *viewport )
 	}
 }
 
-ArRenderTarget *arl_postfx_get_render_target( void )
+SSArlRenderTarget *ss_arl_postfx_get_render_target( void )
 {
+	if ( !postProcessEnabled )
+		return ss_arl_get_default_render_target();
+
 	return ppRenderTarget;
 }

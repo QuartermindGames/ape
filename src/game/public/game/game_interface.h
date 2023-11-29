@@ -27,8 +27,6 @@ typedef enum GameModeRequest
 
 typedef struct GameModeInterface
 {
-	void ( *Draw )( void );
-
 	// This is basically a replacement for the above - just slightly less fussy
 	bool ( *requestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
 } GameModeInterface;
@@ -56,13 +54,6 @@ GameConnectionType gameGetConnectionType( void );
 
 void gamePlayerConnected( const char *name, unsigned int id );
 void gamePlayerDisconnected( unsigned int id );
-
-typedef enum MenuState
-{
-	MENU_STATE_START, /* draw start screen */
-	MENU_STATE_HUD,   /* hud/overlay mode */
-} MenuState;
-MenuState gameGetMenuState( void );
 
 typedef struct Actor Actor;
 

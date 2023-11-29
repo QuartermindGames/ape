@@ -29,7 +29,7 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 static SDL_Window *sdlWindow = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static SS_Arl_Viewport *windowViewport = NULL;
+static SSArlViewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
@@ -78,7 +78,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 #if !NDEBUG
@@ -116,7 +116,7 @@ SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int heigh
 	        flags );
 	if ( sdlWindow == NULL )
 	{
-		PrintWarn( "Failed to create window!\nSDL: %s\n", SDL_GetError() );
+		PrintWarn( "Failed to create SDL window: %s\n", SDL_GetError() );
 		return false;
 	}
 
@@ -136,7 +136,7 @@ SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int heigh
 		if ( sdlGLContext == NULL )
 		{
 			SDL_DestroyWindow( sdlWindow );
-			PrintWarn( "Failed to create OpenGL context!\nSDL: %s\n", SDL_GetError() );
+			PrintWarn( "Failed to create OpenGL context: %s\n", SDL_GetError() );
 			return false;
 		}
 
@@ -144,7 +144,7 @@ SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int heigh
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
 	}
 
-	return ss_arl_viewport_create( 0, 0, width, height, sdlWindow );
+	return sdlWindow;
 }
 
 #if 0
@@ -207,12 +207,12 @@ void ss_shell_set_window_icon( const PLImage *image )
 	SDL_FreeSurface( surface );
 }
 
-SS_Arl_Viewport *ss_shell_viewport_get_active( void )
+SSArlViewport *ss_shell_viewport_get_active( void )
 {
 	return windowViewport;
 }
 
-void ss_shell_swap_window( SS_Arl_Viewport * )
+void ss_shell_swap_window( SSArlViewport * )
 {
 	// Just ignore the viewport for now...
 	SDL_GL_SwapWindow( sdlWindow );
@@ -421,7 +421,7 @@ static bool initialize_display( void )
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
-	if ( ( windowViewport = ss_shell_create_window( windowTitle, 1024, 768, true, driverMode ) ) == NULL )
+	if ( ( sdlWindow = create_window( windowTitle, 1024, 768, true, driverMode ) ) == NULL )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
@@ -484,9 +484,7 @@ int launcher_initialize( int argc, char **argv )
 	Print( "Log output initialized!\n" );
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
-	{
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
-	}
 
 	com_initialize();
 
@@ -501,8 +499,14 @@ int launcher_initialize( int argc, char **argv )
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 
-	if ( !ss_acl_initialize( NULL ) )
+	if ( !ss_acl_initialize( argc, argv, NULL ) )
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
+
+	int w, h;
+	ss_shell_get_window_size( &w, &h );
+	windowViewport = ss_arl_viewport_create( 0, 0, w, h, sdlWindow );
+	if ( windowViewport == NULL )
+		PrintError( "Failed to create virtual window viewport!\n" );
 
 	// setup our timers, in this case we're just setting up our tick
 	sdlTimer = SDL_AddTimer( SS_SHELL_TICK_RATE, timer_callback, NULL );

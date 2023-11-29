@@ -2,7 +2,7 @@
 
 #pragma once
 
-typedef struct SS_Arl_Camera SS_Arl_Camera;
+typedef struct SSArlCamera SSArlCamera;
 
 typedef enum SS_Arl_ParticleDrawType
 {
@@ -67,4 +67,4 @@ SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void );
 void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter );
 
 void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter );
-void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SS_Arl_Camera *camera );
+void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SSArlCamera *camera );

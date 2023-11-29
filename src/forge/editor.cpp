@@ -281,7 +281,7 @@ int main( int argc, char **argv )
 
 	ss::forge::mainWindow->show();
 
-	if ( !ss_acl_initialize( "editor.cfg.n" ) )
+	if ( !ss_acl_initialize( argc, argv, "editor.cfg.n" ) )
 	{
 		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Yin!" );
 		return EXIT_FAILURE;
@@ -292,15 +292,10 @@ int main( int argc, char **argv )
 
 extern "C"
 {
-	SS_Arl_Viewport *ss_shell_create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
-	{
-		return NULL;
-	}
-
 	bool ss_shell_set_window_size( int *width, int *height ) { return false; }
 	void ss_shell_get_window_size( int *width, int *height ) {}
 
-	void ss_shell_swap_window( SS_Arl_Viewport * ) {}
+	void ss_shell_swap_window( SSArlViewport * ) {}
 
 	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
@@ -322,7 +317,7 @@ extern "C"
 
 	void ss_shell_set_window_icon( const PLImage *image ) {}
 
-	SS_Arl_Viewport *ss_shell_viewport_get_active( void )
+	SSArlViewport *ss_shell_viewport_get_active( void )
 	{
 		return NULL;
 	}

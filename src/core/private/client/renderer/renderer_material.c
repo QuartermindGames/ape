@@ -43,7 +43,29 @@ ApeMaterial *ss_arl_get_default_material( SS_Arl_DefaultMaterial defaultMaterial
 	return defaultMaterials[ defaultMaterial ];
 }
 
-ApeMaterial *ss_arl_get_fallback_material( void ) { return ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK ); }
+PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint )
+{
+	assert( pass < material->numPasses );
+	if ( pass >= material->numPasses )
+	{
+		PRINT_WARNING( "Invalid material pass (%u >= %u)!\n", pass, material->numPasses );
+		return NULL;
+	}
+
+	SS_Arl_MaterialPass *materialPass = &material->passes[ pass ];
+	for ( unsigned int i = 0; i < materialPass->numVariables; ++i )
+	{
+		if ( materialPass->variables[ i ].type != SS_ARL_MATERIAL_VAR_TEXTURE )
+			continue;
+
+		if ( strcmp( materialPass->variables[ i ].name, hint ) != 0 )
+			continue;
+
+		return ( PLGTexture * ) materialPass->variables[ i ].data.ptr;
+	}
+
+	return NULL;
+}
 
 void ss_arl_initialize_materials_( void )
 {
@@ -56,9 +78,9 @@ void ss_arl_initialize_materials_( void )
 			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
 	}
 
-	normalFallbackTexture = arl_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
-	specularFallbackTexture = arl_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
-	previewFallbackTexture = arl_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
+	normalFallbackTexture = ss_arl_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
+	specularFallbackTexture = ss_arl_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
+	previewFallbackTexture = ss_arl_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
@@ -281,7 +303,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					ArRenderTarget *renderTarget = ss_arl_render_target_get_by_key( p );
+					SSArlRenderTarget *renderTarget = ss_arl_render_target_get_by_key( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
 						renderTarget = ss_arl_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
@@ -431,7 +453,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_TEXTURE;
-					materialVariable->data.ptr = arl_texture_load_direct_( texturePath, materialPass->textureFilter );
+					materialVariable->data.ptr = ss_arl_texture_load_direct_( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
@@ -524,7 +546,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 		material->preview = previewFallbackTexture;
 		const char *previewTexture = ndGetStringByName( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
-			material->preview = arl_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+			material->preview = ss_arl_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	}
 
 	// If it's just the preview we want, then stop here
@@ -607,7 +629,7 @@ static void destroy_material( ApeMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case SS_ARL_MATERIAL_VAR_RENDERTARGET:
-					ss_arl_render_target_release( ( ArRenderTarget * ) material->passes[ i ].variables[ j ].data.ptr );
+					ss_arl_render_target_release( ( SSArlRenderTarget * ) material->passes[ i ].variables[ j ].data.ptr );
 					break;
 				default:
 					PL_DELETE( material->passes[ i ].variables[ j ].data.ptr );
@@ -649,7 +671,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		{
 			PLGTexture *texture = NULL;
 			if ( variable == SS_ARL_MATERIAL_BUILTIN_FALLBACK )
-				texture = arl_texture_get_fallback();
+				texture = ss_arl_texture_get_fallback();
 #if 0//TODO
 			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
 				texture = apeGetPrimaryDepthAttachment();
@@ -677,7 +699,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	}
 }
 
-static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_MaterialPass *pass, const SS_Arl_Light *light )
+static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_MaterialPass *pass, const SSArlLight *light )
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
@@ -758,7 +780,7 @@ ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, b
 				PRINT_WARNING( "Failed to cache material, \"%s\" (%s)!\n", path, ndGetErrorMessage() );
 			}
 		}
-		apeAddReference( &material->mem );
+		ss_acl_mm_add_reference( &material->mem );
 		return material;
 	}
 
@@ -780,8 +802,8 @@ ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, b
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
-	apeSetupReference( "material", APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
-	apeAddReference( &material->mem );
+	ss_acl_mm_setup_reference( "material", APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
+	ss_acl_mm_add_reference( &material->mem );
 
 	return material;
 }
@@ -811,7 +833,7 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
 
-void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **lights, unsigned int numLights )
+void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SSArlLight **lights, unsigned int numLights )
 {
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!
@@ -889,9 +911,9 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = arl_render_target_get_texture( ( ArRenderTarget * ) curPass->variables[ j ].data.ptr );
+						texture = ss_arl_render_target_get_texture( ( SSArlRenderTarget * ) curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
-							texture = arl_texture_get_fallback();
+							texture = ss_arl_texture_get_fallback();
 					}
 					else
 						texture = ( PLGTexture * ) curPass->variables[ j ].data.ptr;

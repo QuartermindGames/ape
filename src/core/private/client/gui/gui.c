@@ -92,7 +92,7 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root ) {
 	return guiStyleSheet;
 }
 
-const GuiStyleSheet *guiCacheStyleSheet( const char *path ) {
+const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path ) {
 	NdBranch *root = ndLoadFile( path, "guiStyle" );
 	if ( root == NULL ) {
 		GUI_WARNING( "Failed to load node file: %s\n", ndGetErrorMessage() );
@@ -102,7 +102,7 @@ const GuiStyleSheet *guiCacheStyleSheet( const char *path ) {
 	return ParseStyleSheet( root );
 }
 
-void guiSetStyleSheet( const GuiStyleSheet *styleSheet ) {
+void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet ) {
 	activeSheet = styleSheet;
 }
 
@@ -115,7 +115,7 @@ int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 /**
  * Initialize the GUI sub-system.
  */
-bool guiInitialize( void ) {
+bool ss_gui_initialize( void ) {
 	PL_ZERO_( guiState );
 
 	gui_LogLevels_[ GUI_LOGLEVEL_DEFAULT ] = PlAddLogLevel( "gui", PL_COLOUR_LIGHT_CORAL, true );
@@ -139,14 +139,14 @@ bool guiInitialize( void ) {
 	return true;
 }
 
-void guiShutdown( void ) {
+void ss_gui_shutdown( void ) {
 	guiShutdownDraw_();
 
 	for ( unsigned int i = 0; i < GUI_MAX_LOG_LEVELS; ++i )
 		PlRemoveLogLevel( gui_LogLevels_[ i ] );
 }
 
-void guiTick( GuiPanel *root ) {
+void gui_panel_tick( GuiPanel *root ) {
 	guiTickPanel( root );
 }
 

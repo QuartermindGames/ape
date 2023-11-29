@@ -7,7 +7,7 @@
 PL_EXTERN_C
 
 void ss_acl_register_editor_console_variables_( void );
-void ss_acl_draw_editor_gui_( const SS_Arl_Viewport *viewport );
+void ss_acl_draw_editor_gui_( const SSArlViewport *viewport );
 
 bool ss_acl_is_editor_active( void );
 

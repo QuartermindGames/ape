@@ -20,9 +20,9 @@ typedef struct GUIVector2 {
 
 typedef struct GuiCanvas GuiCanvas;// represents what the GUI draws to
 
-GuiCanvas *guiCreateCanvas( int width, int height );
+GuiCanvas *ss_gui_canvas_create( int width, int height );
 void guiDestroyCanvas( GuiCanvas *canvas );
-void guiSetCanvasSize( GuiCanvas *canvas, int width, int height );
+void gui_canvas_set_size( GuiCanvas *canvas, int width, int height );
 void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height );
 PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas );
 
@@ -34,15 +34,15 @@ typedef struct GuiStyleSheet GuiStyleSheet;
 
 typedef struct GuiPanel GuiPanel;
 
-bool guiInitialize( void );
-void guiShutdown( void );
+bool ss_gui_initialize( void );
+void ss_gui_shutdown( void );
 
-const GuiStyleSheet *guiCacheStyleSheet( const char *path );
-void guiSetStyleSheet( const GuiStyleSheet *styleSheet );
+const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path );
+void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet );
 const GuiStyleSheet *guiGetActiveStyleSheet( void );
 
-void guiTick( GuiPanel *root );
-void guiDraw( GuiCanvas *canvas, GuiPanel *root );
+void gui_panel_tick( GuiPanel *root );
+void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root );
 
 typedef enum GuiMouseButton {
 	GUI_MOUSE_BUTTON_LEFT,
@@ -73,8 +73,8 @@ typedef enum GuiPanelBorder {
 	GUI_MAX_BORDER_STYLES
 } GuiPanelBorder;
 
-GuiPanel *guiCreatePanel( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
-void guiDestroyPanel( GuiPanel *self );
+GuiPanel *ss_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
+void ss_gui_panel_destroy( GuiPanel *self );
 
 void guiSetPanelStyleSheet( GuiPanel *self, const GuiStyleSheet *styleSheet );
 
@@ -99,20 +99,20 @@ void guiSetPanelPosition( GuiPanel *self, int x, int y );
 void guiGetPanelSize( GuiPanel *self, int *w, int *h );
 void guiGetPanelContentSize( GuiPanel *self, int *w, int *h );
 
-void guiSetPanelSize( GuiPanel *self, int w, int h );
+void gui_panel_set_size( GuiPanel *self, int w, int h );
 
 bool guiIsMouseOverPanel( GuiPanel *self, int mx, int my );
 
 bool guiHandleMousePanelEvent( GuiPanel *self, int mx, int my, int wheel, int button, bool buttonUp );
 bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp );
 
-void guiSetPanelVisible( GuiPanel *self, bool flag );
+void ss_gui_panel_set_visible( GuiPanel *self, bool flag );
 
 /****************************************
  * Cursor
  ****************************************/
 
-GuiPanel *guiCreateCursor( GuiPanel *parent, int x, int y );
+GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y );
 void guiDestroyCursor( GuiPanel *self );
 
 /****************************************

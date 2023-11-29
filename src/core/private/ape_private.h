@@ -90,7 +90,7 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 void ss_acl_console_register_commands_( bool isDedicated );
 void ss_acl_console_register_variables_( bool isDedicated );
 
-void ss_acl_console_draw_( const SS_Arl_Viewport *viewport );
+void ss_acl_console_draw_( const SSArlViewport *viewport );
 void ss_acl_console_register_cl_commands_( void );
 void ss_acl_console_register_cl_variables_( void );
 

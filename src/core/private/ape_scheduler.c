@@ -17,7 +17,7 @@ typedef struct SchTask {
 } SchTask;
 
 static void Cmd_FlushTasks( unsigned int argc, char **argv ) {
-	apeFlushTasks();
+	ss_acl_flush_tasks_();
 }
 
 static void Cmd_IsTaskRunning( unsigned int argc, char **argv ) {
@@ -42,7 +42,7 @@ static void Cmd_SetTaskDelay( unsigned int argc, char **argv ) {
 	apeSetScheduledTaskDelay( argv[ 1 ], delay );
 }
 
-void apeInitializeScheduler( void ) {
+void ss_acl_initialize_scheduler_( void ) {
 	PRINT( "Initializing scheduler\n" );
 
 	PlRegisterConsoleCommand( "sch/flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
@@ -114,7 +114,7 @@ void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void
 	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
-void apeTickTasks( void ) {
+void ss_acl_tick_tasks_( void ) {
 	if ( scheduleList == NULL )
 		return;
 
@@ -133,7 +133,7 @@ void apeTickTasks( void ) {
 	}
 }
 
-void apeFlushTasks( void ) {
+void ss_acl_flush_tasks_( void ) {
 	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
 	PlDestroyLinkedListNodes( scheduleList );
 	PRINT( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );

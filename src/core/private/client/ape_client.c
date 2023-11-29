@@ -14,7 +14,7 @@
 
 typedef struct ClientState
 {
-	NetSocket *netSocket;
+	SSAclNetSocket *netSocket;
 	bool isConnected;
 
 	bool isEditorMode;
@@ -23,7 +23,7 @@ typedef struct ClientState
 } ClientState;
 static ClientState clientState;
 
-void apeInitializeClient_( void )
+void ss_acl_initialize_client_( void )
 {
 	CLIENT_PRINT( "Initializing client\n" );
 
@@ -37,26 +37,22 @@ void apeInitializeClient_( void )
 	apeInitializeInput_();
 }
 
-void apeShutdownClient_( void )
+void ss_acl_shutdown_client_( void )
 {
 	apeShutdownGUI_();
 	apeShutdownAudio_();
 	ss_arl_shutdown_();
 }
 
-void ss_arl_render_frame( SS_Arl_Viewport *viewport )
+void ss_arl_render_frame_( SSArlViewport *viewport )
 {
-	// If we're capturing, ignore the request from the
-	// caller to render the frame because we'll lock it
-	// with the frame tick instead...
-	if ( ss_arl_get_capture_state_() )
-		return;
-
 	COM_PROFILE_FUNCTION_START();
 
 	ss_arl_draw_begin_( viewport );
 
-	ss_arl_camera_draw_perspective_( viewport->camera, viewport );
+	if ( !gameGetModeInterface()->requestCallbackMethod( GAME_MODE_REQUEST_DRAW, viewport ) )
+		ss_arl_camera_draw_perspective_( viewport->camera, viewport );
+
 	ss_arl_draw_menu_( viewport );
 
 	ss_arl_draw_end_( viewport );
@@ -75,12 +71,12 @@ static void handle_connection_state( void )
 		if ( clientState.netSocket == NULL )
 			return;
 
-		NetConnectionState state = Net_GetConnectionStatus( clientState.netSocket );
+		SSAclNetConnectionState state = ss_acl_net_get_connection_status_( clientState.netSocket );
 		if ( state != NET_CONNECTION_CONNECTED )
 		{
 			if ( state == NET_CONNECTION_FAILED )
 			{
-				apeDisconnectClient_();
+				ss_acl_client_disconnect_();
 				CLIENT_PRINT_WARNING( "Connection failed!\n" );
 			}
 			return;
@@ -91,14 +87,14 @@ static void handle_connection_state( void )
 	}
 }
 
-void apeTickClient( void )
+void ss_acl_tick_client_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	apeBeginInputFrame_();
 
-	apeTickInput_();
-	apeTickGUI_();
+	ss_acl_tick_input_();
+	ss_acl_tick_gui_();
 
 	ss_acl_level_client_tick_();
 
@@ -108,7 +104,7 @@ void apeTickClient( void )
 
 	apeEndInputFrame_();
 
-	apeTickAudio_();
+	ss_acl_audio_tick_();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -117,9 +113,9 @@ void apeTickClient( void )
  * Begin connection process - client will continue connecting per
  * tick until success or failure, and then begin handshake process.
  */
-void apeInitiateClientConnection_( const char *ip, unsigned short port )
+void ss_acl_initiate_client_connection_( const char *ip, unsigned short port )
 {
-	clientState.netSocket = Net_OpenSocket( ip, port, false );
+	clientState.netSocket = ss_acl_net_open_socket_( ip, port, false );
 	if ( clientState.netSocket == NULL )
 	{
 		CLIENT_PRINT_WARNING( "Failed to open client socket!\n" );
@@ -129,12 +125,12 @@ void apeInitiateClientConnection_( const char *ip, unsigned short port )
 	CLIENT_PRINT( "Initiated connection to %s, pending...\n", ip );
 }
 
-void apeDisconnectClient_( void )
+void ss_acl_client_disconnect_( void )
 {
 	if ( clientState.netSocket != NULL )
 	{
 		/* todo: let the server know first? */
-		Net_CloseSocket( clientState.netSocket );
+		ss_acl_net_close_socket_( clientState.netSocket );
 		clientState.netSocket = NULL;
 	}
 }

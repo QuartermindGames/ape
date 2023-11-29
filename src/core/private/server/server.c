@@ -9,7 +9,7 @@
 
 #define SERVER_CLIENT_TIMEOUT 1024
 
-static NetSocket *hostSocket = NULL;
+static SSAclNetSocket *hostSocket = NULL;
 
 typedef enum ServerClientState {
 	SERVER_CLIENT_STATE_ACCEPTED,   /* connection has been established */
@@ -18,7 +18,7 @@ typedef enum ServerClientState {
 } ServerClientState;
 
 typedef struct ApeServerClient {
-	NetSocket *netSocket;
+	SSAclNetSocket *netSocket;
 	PLLinkedListNode *node;
 
 	ServerClientState state;
@@ -34,10 +34,10 @@ static void DropClientCallback( void *userData, bool *breakEarly ) {
 	apeDropServerClient( ( ApeServerClient * ) userData );
 }
 
-bool apeStartServer( const char *ip, unsigned short port ) {
+bool ss_acl_start_server_( const char *ip, unsigned short port ) {
 	PRINT( "Opening socket: %s:" PL_FMT_uint16 "\n", ip, port );
 
-	hostSocket = Net_OpenSocket( ip, port, true );
+	hostSocket = ss_acl_net_open_socket_( ip, port, true );
 	if ( hostSocket == NULL ) {
 		PRINT_WARNING( "Failed to open server socket!\n" );
 		return false;
@@ -48,14 +48,14 @@ bool apeStartServer( const char *ip, unsigned short port ) {
 	return true;
 }
 
-void apeInitializeServer( void ) {
+void ss_acl_initialize_server_( void ) {
 	connectedClients = PlCreateLinkedList();
 	if ( connectedClients == NULL ) {
 		PRINT_ERROR( "Failed to create connected clients list: %s\n", PlGetError() );
 	}
 }
 
-void apeShutdownServer( void ) {
+void ss_acl_shutdown_server_( void ) {
 	/* drop all connected clients */
 	PlIterateLinkedList( connectedClients, DropClientCallback, true );
 }
@@ -63,7 +63,7 @@ void apeShutdownServer( void ) {
 void apeDropServerClient( ApeServerClient *serverClient ) {
 	PRINT( "Dropping client...\n" );
 
-	Net_CloseSocket( serverClient->netSocket );
+	ss_acl_net_close_socket_( serverClient->netSocket );
 	PlDestroyLinkedListNode( serverClient->node );
 	PlFree( serverClient );
 }
@@ -74,9 +74,9 @@ static void ProcessClientMessage( ApeServerClient *client, const void *buf ) {
 static void TickServerClient( void *userData, bool *breakEarly ) {
 	ApeServerClient *serverClient = ( ApeServerClient * ) userData;
 
-	ssize_t r = Net_Receive( serverClient->netSocket,
-	                         serverClient->receiveBuffer + serverClient->receivedBytes,
-	                         sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
+	ssize_t r = ss_acl_net_receive_( serverClient->netSocket,
+	                                 serverClient->receiveBuffer + serverClient->receivedBytes,
+	                                 sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
 	if ( r == -1 ) {
 		apeDropServerClient( serverClient );
 		return;
@@ -104,11 +104,11 @@ static void TickServerClient( void *userData, bool *breakEarly ) {
 	}
 }
 
-void apeTickServer( void ) {
+void ss_acl_tick_server_( void ) {
 	COM_PROFILE_FUNCTION_START();
 
 	if ( hostSocket != NULL ) { /* check if a new connection is being established */
-		NetSocket *connectedSocket = Net_Accept( hostSocket );
+		SSAclNetSocket *connectedSocket = ss_acl_net_accept_( hostSocket );
 		if ( connectedSocket != NULL ) {
 			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
 			serverClient->netSocket = connectedSocket;
@@ -128,11 +128,11 @@ void apeTickServer( void ) {
 /**
  * Return port of local server instance.
  */
-unsigned short apeGetServerPort( void ) {
+unsigned short ss_acl_server_get_port_( void ) {
 	assert( hostSocket != NULL );
 	if ( hostSocket == NULL ) {
 		return 0;
 	}
 
-	return Net_GetLocalPort( hostSocket );
+	return ss_acl_net_get_local_port_( hostSocket );
 }

@@ -55,7 +55,7 @@ void edShutdownMaterialSelector_( void ) {
 /**
  * Draw the material selection panel.
  */
-void Editor_MaterialSelector_Draw( const SS_Arl_Viewport *viewport ) {
+void Editor_MaterialSelector_Draw( const SSArlViewport *viewport ) {
 	static const unsigned int mw = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int mh = MATERIAL_DEFAULT_WIDTH;
 	static const unsigned int sp = MATERIAL_DEFAULT_WIDTH / 8;

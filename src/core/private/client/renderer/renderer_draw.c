@@ -34,7 +34,51 @@ void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGT
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour )
+void ss_arl_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
+{
+	PLGTexture *texture = ss_arl_material_get_texture_( material, 0, "diffuseMap" );
+	if ( texture == NULL )
+		return;
+
+	static PLGMesh *mesh = NULL;
+	if ( mesh == NULL )
+		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 2, 4 );
+
+	assert( mesh != NULL );
+	if ( mesh == NULL )
+	{
+		PRINT_WARNING( "Attempted to draw sprite with an invalid mesh: %s\n", PlGetError() );
+		return;
+	}
+
+	float tw, th, tx, ty;
+	GetUVCoordsForSubRect( subRect, texture, &tw, &th, &tx, &ty );
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlTranslateMatrix( *position );
+
+	PlRotateMatrix( angles->x, 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( angles->y, 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix( angles->z, 0.0f, 0.0f, 1.0f );
+
+	PlgClearMesh( mesh );
+
+	unsigned int x = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y, origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty ) );
+	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty + th ) );
+	unsigned int z = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y, origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty ) );
+	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty + th ) );
+
+	PlgAddMeshTriangle( mesh, x, y, z );
+	PlgAddMeshTriangle( mesh, z, y, w );
+
+	ss_arl_material_draw( material, mesh, NULL, 0 );
+
+	PlPopMatrix();
+}
+
+void ss_arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour )
 {
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )

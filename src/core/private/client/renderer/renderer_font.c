@@ -158,7 +158,7 @@ SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, in
 	SS_Arl_BitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
 	if ( font != NULL )
 	{
-		apeAddReference( &font->mem );
+		ss_acl_mm_add_reference( &font->mem );
 		return font;
 	}
 
@@ -191,8 +191,8 @@ SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, in
 
 	apeAddToCachePool( materialPath, APE_CACHE_POOL_FONTS, font );
 
-	apeSetupReference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
-	apeAddReference( &font->mem );
+	ss_acl_mm_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
+	ss_acl_mm_add_reference( &font->mem );
 
 	return font;
 }

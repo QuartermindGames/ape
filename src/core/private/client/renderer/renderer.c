@@ -20,9 +20,9 @@
 #include "post/post.h"
 
 ApeRendererStats ape_rendererPerformance_;
-SS_Arl_RendererPassState arl_rendererState_;
+SSArlRendererPassState arl_rendererState_;
 
-static ArRenderTarget *defaultRenderTarget;
+static SSArlRenderTarget *defaultRenderTarget;
 
 static PLGCamera *auxCamera = NULL;
 PLGCamera *ss_arl_get_aux_camera_( void ) { return auxCamera; }
@@ -139,7 +139,7 @@ bool ss_arl_get_capture_state_( void )
 
 /**********************************************************/
 
-void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport )
+void ss_arl_setup_default_state( const SSArlViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
@@ -158,7 +158,7 @@ void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void ss_arl_draw_begin_( SS_Arl_Viewport *viewport )
+void ss_arl_draw_begin_( SSArlViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -180,14 +180,14 @@ void ss_arl_draw_begin_( SS_Arl_Viewport *viewport )
 
 static void write_screenshot( void )
 {
-	ArRenderTarget *renderTarget = arl_postfx_get_render_target();
+	SSArlRenderTarget *renderTarget = ss_arl_postfx_get_render_target();
 	if ( renderTarget == NULL )
 		return;
 
 	unsigned int w, h;
-	arl_render_target_get_size( renderTarget, &w, &h );
+	ss_arl_render_target_get_size( renderTarget, &w, &h );
 
-	PLGFrameBuffer *fboBuffer = arl_render_target_get_frame_buffer( renderTarget );
+	PLGFrameBuffer *fboBuffer = ss_arl_render_target_get_frame_buffer( renderTarget );
 	assert( fboBuffer != NULL );
 	if ( fboBuffer == NULL )
 		return;
@@ -233,7 +233,7 @@ static void write_screenshot( void )
 		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 }
 
-void ss_arl_draw_end_( SS_Arl_Viewport *viewport )
+void ss_arl_draw_end_( SSArlViewport *viewport )
 {
 	PL_ZERO_( ape_rendererPerformance_ );
 
@@ -254,7 +254,7 @@ void ss_arl_initialize_textures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
 void ss_arl_initialize_render_targets_( void );
-void arl_shutdown_render_targets_( void );
+void ss_arl_shutdown_render_targets_( void );
 
 static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
@@ -338,22 +338,22 @@ void ss_arl_initialize_( void )
 	if ( defaultRenderTarget == NULL )
 		PRINT_ERROR( "Failed to create default render target!\n" );
 
-	arl_postfx_setup_();
+	ss_arl_postfx_setup_();
 }
 
 void ss_arl_shutdown_( void )
 {
-	arl_postfx_cleanup_();
+	ss_arl_postfx_cleanup_();
 
 	Font_Shutdown();
 	ss_arl_shutdown_materials_();
-	arl_shutdown_render_targets_();
+	ss_arl_shutdown_render_targets_();
 
 	//TODO: move this out of the renderer...
 	apeShutdownWorldVisibilitySystem_();
 }
 
-static void draw_debug_overlay( const SS_Arl_Viewport *viewport )
+static void draw_debug_overlay( const SSArlViewport *viewport )
 {
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
@@ -371,7 +371,7 @@ static void draw_debug_overlay( const SS_Arl_Viewport *viewport )
 	static const float tx = 8 + 4;
 	float y = sy;
 
-	const SS_Arl_Camera *camera = viewport->camera;
+	const SSArlCamera *camera = viewport->camera;
 	if ( camera != NULL )
 	{
 		// Draw camera position
@@ -462,7 +462,7 @@ static void draw_debug_overlay( const SS_Arl_Viewport *viewport )
 	}
 }
 
-void apeSet2DViewportSize( int w, int h )
+void ss_arl_set_2d_viewport_size_( int w, int h )
 {
 	PlgSetViewport( 0, 0, w, h );
 	PlgSetupCamera( auxCamera );
@@ -473,14 +473,14 @@ void apeGet2DViewportSize( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport )
+void ss_arl_draw_menu_( const SSArlViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
 
 	COM_PROFILE_FUNCTION_START();
 
-	apeSet2DViewportSize( viewport->width, viewport->height );
+	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
@@ -488,7 +488,7 @@ void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	arl_postfx_draw_( viewport );
+	ss_arl_postfx_draw_( viewport );
 
 	apeDrawGUI_( viewport );
 	ss_acl_draw_editor_gui_( viewport );
@@ -542,7 +542,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlPopMatrix();
 }
 
-unsigned int arl_sky_add_layer( const char *path, float scale, float y, float alpha )
+unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float alpha )
 {
 	assert( numSkyLayers < MAX_SKY_LAYERS );
 	if ( numSkyLayers >= MAX_SKY_LAYERS )
@@ -560,7 +560,7 @@ unsigned int arl_sky_add_layer( const char *path, float scale, float y, float al
 	return ( numSkyLayers - 1 );
 }
 
-void arl_sky_set_layer_alpha( unsigned int slot, float alpha )
+void ss_arl_sky_set_layer_alpha( unsigned int slot, float alpha )
 {
 	assert( slot < numSkyLayers );
 	if ( slot >= numSkyLayers )
@@ -601,7 +601,7 @@ void arl_sky_clear_layers( void )
 /**
  * Draw scrolling clouds.
  */
-void arl_sky_draw( SS_Arl_Camera *camera )
+void arl_sky_draw( SSArlCamera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;
@@ -673,7 +673,7 @@ void arl_sky_draw( SS_Arl_Camera *camera )
  ****************************************/
 
 PLVector2 screenPosTest;
-static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
+static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
@@ -693,7 +693,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 	PlgDepthMask( false );
 
 	unsigned int numLights;
-	SS_Arl_Light **lights = apeGetVisibleLights_( &numLights );
+	SSArlLight **lights = apeGetVisibleLights_( &numLights );
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
@@ -737,7 +737,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
 				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-				arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
+				arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 				arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
@@ -784,7 +784,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 			arl_level_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
-			arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
+			arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 		}
 
 		ape_rendererPerformance_.numLights++;
@@ -794,7 +794,7 @@ static void render_scene( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	arl_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
+	arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }
 
 #if 0
@@ -824,15 +824,15 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			}
 #endif
 
-void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
+void arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	// We're going to draw into a texture, so set that up first
-	arl_render_target_set_size( defaultRenderTarget, viewport->width, viewport->height );
-	arl_render_target_bind( defaultRenderTarget, PLG_FRAMEBUFFER_DRAW );
+	ss_arl_render_target_set_size( defaultRenderTarget, viewport->width, viewport->height );
+	ss_arl_render_target_bind( defaultRenderTarget, PLG_FRAMEBUFFER_DRAW );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
@@ -849,4 +849,4 @@ void arl_draw_scene_( SS_Arl_Camera *camera, const SS_Arl_Viewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-ArRenderTarget *arl_get_default_render_target( void ) { return defaultRenderTarget; }
+SSArlRenderTarget *ss_arl_get_default_render_target( void ) { return defaultRenderTarget; }

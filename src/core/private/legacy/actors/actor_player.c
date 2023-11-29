@@ -34,14 +34,14 @@ typedef struct APlayer {
 
 	PLVector3 viewAngles;
 
-	SS_Arl_Camera *eyeCamera;
+	SSArlCamera *eyeCamera;
 
 	PLMModel *model;
 } APlayer;
 
 #define APLAYER( X ) ( ( APlayer * ) ( X )->userData )
 
-SS_Arl_Camera *Player_GetCamera( Actor *self ) {
+SSArlCamera *Player_GetCamera( Actor *self ) {
 	APlayer *playerData = Act_GetUserData( self );
 	if ( playerData == NULL )
 		return NULL;
@@ -174,7 +174,7 @@ static void Player_Draw( Actor *self, void *userData ) {
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
 	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		ss_arl_material_draw( ss_arl_get_fallback_material(), APLAYER( self )->model->meshes[ i ], NULL, 0 );
+		ss_arl_material_draw( ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK ), APLAYER( self )->model->meshes[ i ], NULL, 0 );
 
 	PlPopMatrix();
 }

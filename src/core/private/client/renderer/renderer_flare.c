@@ -35,9 +35,9 @@ static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
 void Flare_Initialize( void ) {
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
-		flareTextures[ i ] = arl_texture_load_direct_( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		flareTextures[ i ] = ss_arl_texture_load_direct_( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
-		shineTextures[ i ] = arl_texture_load_direct_( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		shineTextures[ i ] = ss_arl_texture_load_direct_( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 }
 
 void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
@@ -49,7 +49,7 @@ void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 }
 
-void Flare_RenderFlares( const SS_Arl_Camera *camera ) {
+void Flare_RenderFlares( const SSArlCamera *camera ) {
 	arl_shader_get_by_name( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );

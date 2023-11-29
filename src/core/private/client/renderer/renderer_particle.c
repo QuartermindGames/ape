@@ -72,8 +72,8 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 
 	apeAddToCachePool( path, APE_CACHE_POOL_PARTICLES, emitter );
 
-	apeSetupReference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
-	apeAddReference( &emitter->mem );
+	ss_acl_mm_setup_reference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	ss_acl_mm_add_reference( &emitter->mem );
 }
 
 SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
@@ -239,7 +239,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	emitter->numTicks++;
 }
 
-void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SS_Arl_Camera *camera )
+void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const SSArlCamera *camera )
 {
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
 

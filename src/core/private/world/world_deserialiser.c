@@ -9,9 +9,9 @@
  * PRIVATE
  ****************************************/
 
-static SS_Arl_Light *deserialize_light( NdBranch *root )
+static SSArlLight *deserialize_light( NdBranch *root )
 {
-	SS_Arl_Light *light = PL_NEW( SS_Arl_Light );
+	SSArlLight *light = PL_NEW( SSArlLight );
 
 	light->position = ndGetVector3( root, "position", &pl_vecOrigin3 );
 	light->angles = ndGetVector3( root, "angles", &pl_vecOrigin3 );

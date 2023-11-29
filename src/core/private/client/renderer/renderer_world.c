@@ -130,7 +130,7 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void arl_level_draw_wireframe( ApeWorld *world, SS_Arl_Camera *camera )
+void arl_level_draw_wireframe( ApeWorld *world, SSArlCamera *camera )
 {
 #if 0
 	if ( world == NULL )
@@ -220,7 +220,7 @@ void arl_level_draw_wireframe( ApeWorld *world, SS_Arl_Camera *camera )
 #endif
 }
 
-static bool face_is_facing_light( const ApeWorldFace *face, const SS_Arl_Light *light )
+static bool face_is_facing_light( const ApeWorldFace *face, const SSArlLight *light )
 {
 	PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( face->origin, light->position ) );
 	if ( PlVector3DotProduct( face->normal, lightDir ) >= 0 )
@@ -229,20 +229,20 @@ static bool face_is_facing_light( const ApeWorldFace *face, const SS_Arl_Light *
 	return false;
 }
 
-static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, SS_Arl_Light *light )
+static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, SSArlLight *light )
 {
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ];
 	mesh->firstSubMeshes = firstSubMeshes[ materialIndex ];
 	mesh->subMeshes = subMeshes[ materialIndex ];
 
-	SS_Arl_LightPointerArray lights;
+	SSArlLightPointerArray lights;
 	lights[ 0 ] = light;
 	ss_arl_material_draw( material, mesh, lights, ( lights[ 0 ] != NULL ) ? 1 : 0 );
 
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camera, bool skipPortals, SS_Arl_Light *light, bool ambienceOnly )
+static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera, bool skipPortals, SSArlLight *light, bool ambienceOnly )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
@@ -331,7 +331,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SS_Arl_Camera *camer
 		world->ambience = oldAmbience;
 }
 
-static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SS_Arl_Light *light, const PLColour *colour )
+static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSArlLight *light, const PLColour *colour )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
@@ -421,7 +421,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SS_
 	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
-static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SS_Arl_Light *light )
+static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SSArlLight *light )
 {
 	unsigned int numFaces;
 	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
@@ -440,7 +440,7 @@ static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SS_Arl_L
 	}
 }
 
-static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SS_Arl_Camera *camera, SS_Arl_Light *light )
+static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SSArlCamera *camera, SSArlLight *light )
 {
 	if ( light == NULL )
 		return;
@@ -462,7 +462,7 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SS_Arl_Camera *ca
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
-void arl_level_draw_stencil_shadows( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light )
+void arl_level_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -489,7 +489,7 @@ void arl_level_draw_stencil_shadows( ApeWorld *world, SS_Arl_Camera *camera, SS_
 	PlPopMatrix();
 }
 
-void arl_level_draw( ApeWorld *world, SS_Arl_Camera *camera, SS_Arl_Light *light, bool ambienceOnly )
+void arl_level_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly )
 {
 	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
 		return;

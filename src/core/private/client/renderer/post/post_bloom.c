@@ -13,7 +13,7 @@ static SS_Arl_ShaderProgramIndex *bloomFilterShader;
 static SS_Arl_ShaderProgramIndex *bloomBlurXShader;
 static SS_Arl_ShaderProgramIndex *bloomBlurYShader;
 
-static ArRenderTarget *bloomRenderTarget;
+static SSArlRenderTarget *bloomRenderTarget;
 
 static bool bloomEnabled;
 static float bloomIntensity;
@@ -51,7 +51,7 @@ static void cleanup_bloom_effect( void )
 	ss_arl_render_target_release( bloomRenderTarget );
 }
 
-static void draw_bloom_effect( const SS_Arl_Viewport *viewport )
+static void draw_bloom_effect( const SSArlViewport *viewport )
 {
 	if ( !bloomEnabled )
 		return;
@@ -59,19 +59,19 @@ static void draw_bloom_effect( const SS_Arl_Viewport *viewport )
 	int bw = viewport->width / 2;
 	int bh = viewport->height / 2;
 
-	arl_render_target_set_size( bloomRenderTarget, bw, bh );
-	PLGTexture *bloomRenderTargetTexture = arl_render_target_get_texture( bloomRenderTarget );
+	ss_arl_render_target_set_size( bloomRenderTarget, bw, bh );
+	PLGTexture *bloomRenderTargetTexture = ss_arl_render_target_get_texture( bloomRenderTarget );
 	assert( bloomRenderTargetTexture != NULL );
 	if ( bloomRenderTargetTexture == NULL )
 		return;
 
-	arl_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ss_arl_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
 	PlgSetShaderProgram( bloomFilterShader->internalPtr );
 	PlgSetShaderUniformValue( bloomFilterShader->internalPtr, "threshold", &bloomIntensity, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, arl_render_target_get_texture( arl_get_default_render_target() ) );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, ss_arl_render_target_get_texture( ss_arl_get_default_render_target() ) );
 
 	PlgSetShaderProgram( bloomBlurXShader->internalPtr );
 	PlgSetShaderUniformValue( bloomBlurXShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
@@ -85,8 +85,8 @@ static void draw_bloom_effect( const SS_Arl_Viewport *viewport )
 
 	//TODO: this last step is botched, urgh...
 
-	arl_render_target_bind( arl_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, arl_render_target_get_texture( arl_get_default_render_target() ) );
+	ss_arl_render_target_bind( ss_arl_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, ss_arl_render_target_get_texture( ss_arl_get_default_render_target() ) );
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomRenderTargetTexture );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
@@ -95,9 +95,9 @@ static void draw_bloom_effect( const SS_Arl_Viewport *viewport )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const ArPostProcessEffect *arl_postfx_get_bloom_( void )
+const SSArlPostProcessEffect *ss_arl_postfx_get_bloom_( void )
 {
-	static ArPostProcessEffect renderBloomPostProcess;
+	static SSArlPostProcessEffect renderBloomPostProcess;
 	PL_ZERO_( renderBloomPostProcess );
 	renderBloomPostProcess.RegisterConsoleVariables = register_bloom_console_variables;
 	renderBloomPostProcess.Setup = setup_bloom_effect;

@@ -182,7 +182,7 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 }
 
 static void SGActor_Generic_Draw( Actor *self, void *userData ) {
-	SS_Arl_Camera *camera = ss_arl_camera_get_active();
+	SSArlCamera *camera = ss_arl_camera_get_active();
 	if ( camera == NULL )
 		return;
 
@@ -324,7 +324,7 @@ static void Ship_Spawn( Actor *self ) {
 	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
 	ship->emitRight->material = ss_arl_material_cache( "materials/effects/particle.mat.n", APE_CACHE_WORLD, true, false );
 
-	SS_Arl_Camera *camera = ss_arl_camera_get_active();
+	SSArlCamera *camera = ss_arl_camera_get_active();
 	camera->mode = APE_CAMERA_MODE_TOP;
 	camera->parentActor = self;
 }

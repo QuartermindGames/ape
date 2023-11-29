@@ -25,7 +25,6 @@ typedef enum InputTarget
 	INPUT_TARGET_GAME, /* game mode */
 } InputTarget;
 static InputTarget inputTarget = INPUT_TARGET_MENU;
-static MenuState menuState = MENU_STATE_START;
 
 static ApeWorld *currentWorld = NULL;
 
@@ -96,11 +95,6 @@ void ss_acl_shutdown_game_( void )
 	game_modeInterface = NULL;
 }
 
-MenuState gameGetMenuState( void )
-{
-	return menuState;
-}
-
 void ss_acl_tick_game_( void )
 {
 	COM_PROFILE_FUNCTION_START();
@@ -146,27 +140,12 @@ void ss_acl_spawn_world_( const char *worldPath )
 
 	currentWorld = world;
 
-	/* HACK, if it's the menu, force menu mode!! */
-	const char *fileName = PlGetFileName( worldPath );
-	if ( strncmp( "menu", fileName, strlen( fileName ) - 5 ) == 0 )
-	{
-		menuState = MENU_STATE_START;
-	}
-	else
-	{
-		menuState = MENU_STATE_HUD;
-	}
-
-	//gameState	= GAME_STATE_ACTIVE;
-	inputTarget = INPUT_TARGET_GAME;
-
 	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_SPAWN_LEVEL, world );
 
-	acl_level_spawn_entities( world );
+	acl_level_spawn_entities_( world );
 
-	apeStartServer( "localhost", 0 );
-
-	apeInitiateClientConnection_( "localhost", apeGetServerPort() );
+	ss_acl_start_server_( "localhost", 0 );
+	ss_acl_initiate_client_connection_( "localhost", ss_acl_server_get_port_() );
 }
 
 ApeWorld *acl_level_get_current( void )

@@ -27,8 +27,26 @@ static NdBranch *userConfig;
 static bool engineTerminalMode = false;
 static bool engineInitialized = false;
 
-static void execute_launch_commands( void )
+static void execute_launch_commands( unsigned int argc, char **argv )
 {
+	// First go over any command-line arguments here...
+	for ( unsigned int i = 0; i < argc; ++i )
+	{
+		if ( *argv[ i ] != '+' )
+			continue;
+
+		const char *command = argv[ i + 1 ];
+		const char *argument = NULL;
+
+		char commandBuf[ 1024 ];
+		if ( argument == NULL )
+			snprintf( commandBuf, sizeof( commandBuf ), "%s", command );
+		else
+			snprintf( commandBuf, sizeof( commandBuf ), "%s %s", command, argument );
+
+		PlParseConsoleString( commandBuf );
+	}
+
 	if ( engineConfig == NULL )
 		return;
 
@@ -63,17 +81,19 @@ static void execute_launch_commands( void )
 
 ApeConfig ape_config_;
 
-NdBranch *apeGetConfig( void ) { return engineConfig; }
-NdBranch *apeGetUserConfig( void ) { return userConfig; }
+NdBranch *ss_acl_get_config( void ) { return engineConfig; }
+NdBranch *ss_acl_get_user_config( void ) { return userConfig; }
 
-bool ss_acl_initialize( const char *config )
+bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
+
+	PlRegisterStandardPackageLoaders();
 
 	// Call this first, so we can buffer console output
 	ss_acl_initialize_console_();
 
-	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 Mark E Sowden\n",
+	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 SnortySoft, Mark E Sowden\n",
 	       VERSION_MAJOR,
 	       ENGINE_VERSION_STR,
 	       GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
@@ -81,14 +101,10 @@ bool ss_acl_initialize( const char *config )
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );
 	if ( engineTerminalMode )
-	{
 		PRINT( "Operating in command-line mode!\n" );
-	}
 
 	ss_acl_console_register_variables_( engineTerminalMode );
 	ss_acl_console_register_commands_( engineTerminalMode );
-
-	PlRegisterStandardPackageLoaders();
 
 	// Need to do this before anything else IO related
 	ss_acl_fs_mount_base_locations();
@@ -122,12 +138,12 @@ bool ss_acl_initialize( const char *config )
 	// TODO: move these somewhere more appropriate??
 	PlmRegisterModelLoader( "mdl.n", apeCacheModel, NULL );
 
-	apeInitializeScheduler();
-	apeInitializeMemoryManager();
-	apeInitializeNet();
+	ss_acl_initialize_scheduler_();
+	ss_acl_initialize_memory_manager_();
+	ss_acl_initialize_net_();
 
-	apeInitializeServer();
-	apeInitializeClient_();
+	ss_acl_initialize_server_();
+	ss_acl_initialize_client_();
 
 	ss_acl_initialize_game_();
 
@@ -135,7 +151,7 @@ bool ss_acl_initialize( const char *config )
 
 	engineInitialized = true;
 
-	execute_launch_commands();
+	execute_launch_commands( argc, argv );
 
 	return true;
 }
@@ -144,16 +160,16 @@ void ss_acl_shutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
-	apeFlushTasks();
+	ss_acl_flush_tasks_();
 
 	ss_acl_shutdown_game_();
 
-	apeShutdownClient_();
-	apeShutdownServer();
+	ss_acl_shutdown_client_();
+	ss_acl_shutdown_server_();
 	ss_acl_shutdown_console_();
 	apeShutdownMemoryManager();
 	apeShutdownScheduler();
-	ogeShutdownNet();
+	ss_acl_shutdown_net_();
 
 	ss_shell_shutdown();
 
@@ -172,15 +188,15 @@ void ss_acl_tick_frame( void )
 
 	COM_PROFILE_FUNCTION_START();
 
-	apeTickTasks();
-	apeTickClient();
-	apeTickServer();
+	ss_acl_tick_tasks_();
+	ss_acl_tick_client_();
+	ss_acl_tick_server_();
 
 	if ( ss_arl_get_capture_state_() )
 	{
-		SS_Arl_Viewport *viewport = ss_shell_viewport_get_active();
+		SSArlViewport *viewport = ss_shell_viewport_get_active();
 		if ( viewport != NULL )
-			ss_arl_render_frame( viewport );
+			ss_arl_render_frame_( viewport );
 	}
 
 	numTicks++;
@@ -194,9 +210,15 @@ bool ss_acl_is_engine_running( void )
 	return engineInitialized;
 }
 
-void ss_acl_render_frame( SS_Arl_Viewport *viewport )
+void ss_acl_render_frame( SSArlViewport *viewport )
 {
 	if ( !engineInitialized )
+		return;
+
+	// If we're capturing, ignore the request from the
+	// caller to render the frame because we'll lock it
+	// with the frame tick instead...
+	if ( ss_arl_get_capture_state_() )
 		return;
 
 	assert( viewport != NULL );
@@ -206,7 +228,7 @@ void ss_acl_render_frame( SS_Arl_Viewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame", ss_arl_render_frame( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame_", ss_arl_render_frame_( viewport ) );
 }
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )

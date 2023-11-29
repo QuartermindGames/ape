@@ -269,7 +269,7 @@ void apeShutdownAudio_( void ) {
 	audioInitialized = false;
 }
 
-void apeTickAudio_( void ) {
+void ss_acl_audio_tick_( void ) {
 	if ( !audioInitialized )
 		return;
 

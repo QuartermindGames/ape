@@ -25,14 +25,14 @@ typedef struct ApeRendererStats
 extern ApeRendererStats ape_rendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct SS_Arl_SpriteFrame
+typedef struct SSArlSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
-} SS_Arl_SpriteFrame;
+} SSArlSpriteFrame;
 
-typedef struct SS_Arl_Camera
+typedef struct SSArlCamera
 {
 	char tag[ 32 ];
 	bool active;
@@ -44,21 +44,22 @@ typedef struct SS_Arl_Camera
 	bool enablePostProcessing;
 	PLVector3 forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
-} SS_Arl_Camera;
+} SSArlCamera;
 
-typedef struct ArRenderTarget ArRenderTarget;
+typedef struct SSArlRenderTarget SSArlRenderTarget;
 
 ////////////////////////////////////////////////////////////////////
 
 #define APE_MAX_FPS_READINGS 64
 
-typedef struct SS_Arl_Viewport
+typedef struct SSArlViewport
 {
 	unsigned int index;
 	int x, y;
 	int width, height;
 
-	SS_Arl_Camera *camera;
+	SSArlCamera *camera;
+	SSArlRenderTarget *renderTarget;
 
 	struct
 	{
@@ -73,12 +74,12 @@ typedef struct SS_Arl_Viewport
 	} perf;
 
 	void *windowHandle;
-} SS_Arl_Viewport;
+} SSArlViewport;
 
 ////////////////////////////////////////////////////////////////////
 
-#define APE_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
-#define APE_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
+#define SS_ARL_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
+#define SS_ARL_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
 
 typedef struct ArlLightCachedStencilVolume
 {
@@ -86,7 +87,7 @@ typedef struct ArlLightCachedStencilVolume
 } ArlLightCachedStencilVolume;
 
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
-typedef struct SS_Arl_Light
+typedef struct SSArlLight
 {
 	ApeLightType type;
 
@@ -103,38 +104,36 @@ typedef struct SS_Arl_Light
 	bool isCacheDirty;
 
 	ApeWorld *world;
-} SS_Arl_Light;
+} SSArlLight;
 
-typedef SS_Arl_Light *SS_Arl_LightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
+typedef SSArlLight *SSArlLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
-typedef enum SS_Arl_CullMode
+typedef enum SSArlCullMode
 {
 	SS_ARL_CULL_MODE_DEFAULT,
 	SS_ARL_CULL_MODE_FRONT,
 	SS_ARL_CULL_MODE_BACK,
 	SS_ARL_CULL_MODE_NONE,
-} SS_Arl_CullMode;
+} SSArlCullMode;
 
-typedef enum ApeRendererPassStage
+typedef enum SSArlRendererPassStage
 {
-	APE_RENDERER_PASS_DEFAULT,
-	APE_RENDERER_PASS_DEPTH,
-} ApeRendererPassStage;
+	SS_ARL_RENDERER_PASS_DEFAULT,
+	SS_ARL_RENDERER_PASS_DEPTH,
+} SSArlRendererPassStage;
 
-typedef struct SS_Arl_RendererPassState
+typedef struct SSArlRendererPassState
 {
-	SS_Arl_CullMode cullMode;// override default cull mode
-	ApeRendererPassStage passStage;
+	SSArlCullMode cullMode;// override default cull mode
+	SSArlRendererPassStage passStage;
 
 	PLGBlend blendModeA, blendModeB;
 	bool overrideBlendMode;
 
 	bool mirror;
 	unsigned int depth;
-} SS_Arl_RendererPassState;
-extern SS_Arl_RendererPassState arl_rendererState_;
-
-#define APE_NUM_SPRITE_ANGLES 8
+} SSArlRendererPassState;
+extern SSArlRendererPassState arl_rendererState_;
 
 #include "renderer_material.h"
 
@@ -149,28 +148,24 @@ PLGCamera *ss_arl_get_aux_camera_( void );
 
 bool ss_arl_get_capture_state_( void );
 
-void ss_arl_setup_default_state( const SS_Arl_Viewport *viewport );
-void ss_arl_draw_begin_( SS_Arl_Viewport *viewport );
-void ss_arl_draw_end_( SS_Arl_Viewport *viewport );
-void ss_arl_draw_menu_( const SS_Arl_Viewport *viewport );
+void ss_arl_setup_default_state( const SSArlViewport *viewport );
+void ss_arl_draw_begin_( SSArlViewport *viewport );
+void ss_arl_draw_end_( SSArlViewport *viewport );
+void ss_arl_draw_menu_( const SSArlViewport *viewport );
 
-void apeSet2DViewportSize( int w, int h );
+void ss_arl_set_2d_viewport_size_( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );
 
 struct SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name );
 
-void ss_arl_camera_draw_perspective_( SS_Arl_Camera *camera, SS_Arl_Viewport *viewport );
+void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewport );
 
-void arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
-void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
-void arl_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
+void arl_draw_sprite_animation_frame( SSArlSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
+void arl_draw_sprite_animation( SSArlSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-void arl_draw_sprite_animation_frame( SS_Arl_SpriteFrame *frame, const PLVector3 *position, float spriteAngle );
-void arl_draw_sprite_animation( SS_Arl_SpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+PLGTexture *ss_arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
+PLGTexture *ss_arl_texture_get_fallback( void );
 
-PLGTexture *arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
-PLGTexture *arl_texture_get_fallback( void );
-
-ArRenderTarget *arl_get_default_render_target( void );
+SSArlRenderTarget *ss_arl_get_default_render_target( void );
 
 ////////////////////////////////////////////////////////////////////

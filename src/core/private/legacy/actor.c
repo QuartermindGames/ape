@@ -191,7 +191,7 @@ Actor *Act_CheckCollisions( Actor *self ) {
  * RENDERING
  ****************************************/
 
-bool Act_IsVisible( Actor *self, SS_Arl_Camera *camera ) {
+bool Act_IsVisible( Actor *self, SSArlCamera *camera ) {
 	if ( camera == NULL )
 		return false;
 
@@ -205,7 +205,7 @@ bool Act_IsVisible( Actor *self, SS_Arl_Camera *camera ) {
 #endif
 }
 
-void Act_DrawActors( SS_Arl_Camera *camera, ApeWorldRoom *sector ) {
+void Act_DrawActors( SSArlCamera *camera, ApeWorldRoom *sector ) {
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL ) {
 		PLLinkedListNode *next = PlGetNextLinkedListNode( index );

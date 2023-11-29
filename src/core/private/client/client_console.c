@@ -260,7 +260,7 @@ bool acl_console_handle_text_event_( const char *key )
  * RENDERING
  ****************************************/
 
-static void draw_input_field( const SS_Arl_Viewport *viewport, GuiFont *font )
+static void draw_input_field( const SSArlViewport *viewport, GuiFont *font )
 {
 	const float ch = guiGetFontLineSpacing( font );
 	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
@@ -310,7 +310,7 @@ static const float consoleScrollBarWidth = 8.0f;
 /**
  * Draw the console panel.
  */
-void ss_acl_console_draw_( const SS_Arl_Viewport *viewport )
+void ss_acl_console_draw_( const SSArlViewport *viewport )
 {
 	if ( !ss_acl_is_console_open() )
 		return;

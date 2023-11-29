@@ -9,14 +9,14 @@
 
 PL_EXTERN_C
 
-bool ss_acl_initialize( const char *config );
+bool ss_acl_initialize( unsigned int argc, char **argv, const char *config );
 void ss_acl_shutdown( void );
 
-void ss_acl_render_frame( SS_Arl_Viewport *viewport );
+void ss_acl_render_frame( SSArlViewport *viewport );
 void ss_acl_tick_frame( void );
 
-struct NdBranch *apeGetConfig( void );
-struct NdBranch *apeGetUserConfig( void );
+struct NdBranch *ss_acl_get_config( void );
+struct NdBranch *ss_acl_get_user_config( void );
 
 unsigned int ss_acl_get_num_ticks( void );
 

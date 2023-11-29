@@ -5,9 +5,10 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_mesh.h>
 
-typedef struct SS_Arl_Camera SS_Arl_Camera;
-typedef struct SS_Arl_Viewport SS_Arl_Viewport;
-typedef struct SS_Arl_Light SS_Arl_Light;
+typedef struct SSArlCamera SSArlCamera;
+typedef struct SSArlViewport SSArlViewport;
+typedef struct SSArlLight SSArlLight;
+typedef struct SSArlRenderTarget SSArlRenderTarget;
 typedef struct ApeTexture ApeTexture;
 typedef struct ApeMaterial ApeMaterial;
 
@@ -22,14 +23,15 @@ typedef enum SS_Arl_CacheGroup
 
 PL_EXTERN_C
 
-SS_Arl_Viewport *ss_arl_get_viewport_by_slot( unsigned int slot );
+SSArlViewport *ss_arl_get_viewport_by_slot( unsigned int slot );
 
-SS_Arl_Viewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle );
-void ss_arl_viewport_destroy( SS_Arl_Viewport *viewport );
-void ss_arl_viewport_set_camera( SS_Arl_Viewport *viewport, SS_Arl_Camera *camera );
-void ss_arl_viewport_set_size( SS_Arl_Viewport *viewport, int width, int height );
-void ss_arl_viewport_get_size( const SS_Arl_Viewport *viewport, int *width, int *height );
-unsigned int ss_arl_viewport_get_framerate( const SS_Arl_Viewport *viewport );
+SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle );
+void ss_arl_viewport_destroy( SSArlViewport *viewport );
+void ss_arl_viewport_set_camera( SSArlViewport *viewport, SSArlCamera *camera );
+void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height );
+void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *height );
+unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport );
+SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport );
 
 /**********************************************************/
 // Materials
@@ -79,7 +81,7 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SS_Arl_Light **lights, unsigned int numLights );
+void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SSArlLight **lights, unsigned int numLights );
 
 /**
  * Returns the texture representing a material.
@@ -112,5 +114,16 @@ void ss_arl_bitmap_font_begin_draw( SS_Arl_BitmapFont *font );
 void ss_arl_bitmap_font_draw( SS_Arl_BitmapFont *font );
 
 /**********************************************************/
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Draw API
+
+void ss_arl_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
+void ss_arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
+void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
+void arl_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 PL_EXTERN_C_END
