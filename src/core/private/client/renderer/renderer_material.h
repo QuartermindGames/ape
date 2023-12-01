@@ -105,7 +105,7 @@ typedef struct SS_Arl_ShaderProgramIndex
 
 	SS_Arl_MaterialPass defaultPass;
 
-	PLGShaderProgram *internalPtr;
+	PLGShaderProgram *internal;
 	struct PLLinkedListNode *node;
 } SS_Arl_ShaderProgramIndex;
 

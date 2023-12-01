@@ -576,7 +576,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 			else
 			{
 				*currentPass = programIndex->defaultPass;
-				currentPass->program = programIndex->internalPtr;
+				currentPass->program = programIndex->internal;
 			}
 
 			ss_arl_material_parse_pass_( node, currentPass );
@@ -714,13 +714,13 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
 	{
 		PL_GET_CVAR( "ape/r/fogNear", fogNearVar );
-		float fogNear = ( fogNearVar != NULL && fogNearVar->f_value > -1.f ) ? fogNearVar->f_value : world->fogNear;
+		float fogNear = ( ( fogNearVar != NULL && fogNearVar->f_value > -1.f ) || world == NULL ) ? fogNearVar->f_value : world->fogNear;
 		PlgSetShaderUniformValueByIndex( program, slot, &fogNear, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
 	{
 		PL_GET_CVAR( "ape/r/fogFar", fogFarVar );
-		float fogFar = ( fogFarVar != NULL && fogFarVar->f_value > -1.f ) ? fogFarVar->f_value : world->fogFar;
+		float fogFar = ( ( fogFarVar != NULL && fogFarVar->f_value > -1.f ) || world == NULL ) ? fogFarVar->f_value : world->fogFar;
 		PlgSetShaderUniformValueByIndex( program, slot, &fogFar, false );
 	}
 

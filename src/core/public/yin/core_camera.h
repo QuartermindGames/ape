@@ -3,16 +3,16 @@
 
 #pragma once
 
-typedef enum ApeCameraMode
+typedef enum SSArlCameraMode
 {
 	SS_ARL_CAMERA_MODE_INVALID = -1,
 	SS_ARL_CAMERA_MODE_PERSPECTIVE,
 	APE_CAMERA_MODE_TOP,
 	APE_CAMERA_MODE_LEFT,
-	APE_CAMERA_MODE_FRONT,
+	SS_ARL_CAMERA_MODE_FRONT,
 
 	APE_CAMERA_MAX_MODES
-} ApeCameraMode;
+} SSArlCameraMode;
 
 typedef enum ApeCameraDrawMode
 {
@@ -30,7 +30,7 @@ typedef struct SSArlCamera SSArlCamera;
 
 PL_EXTERN_C
 
-SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles );
+SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, SSArlCameraMode cameraMode );
 void ss_arl_camera_destroy( SSArlCamera *camera );
 void ss_arl_camera_set_position( SSArlCamera *camera, const PLVector3 *position );
 void ss_arl_camera_set_angles( SSArlCamera *camera, const PLVector3 *angles );
@@ -43,6 +43,6 @@ SSArlCamera *ss_arl_camera_get_active( void );
 void ss_arl_camera_make_active( SSArlCamera *camera );
 
 void ss_arl_camera_set_draw_mode( SSArlCamera *camera, ApeCameraDrawMode drawMode );
-void ss_arl_camera_set_view_mode( SSArlCamera *camera, ApeCameraMode viewMode );
+void ss_arl_camera_set_view_mode( SSArlCamera *camera, SSArlCameraMode viewMode );
 
 PL_EXTERN_C_END

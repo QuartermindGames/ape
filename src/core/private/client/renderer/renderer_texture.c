@@ -113,6 +113,9 @@ static void fetch_texture_config( SSArlTexture *texture )
 	*c = '\0';
 	strcat( configPath, ".tex.n" );
 
+	if ( !PlFileExists( configPath ) )
+		return;
+
 	NdBranch *root = ndLoadFile( configPath, "texture" );
 	if ( root == NULL )
 		return;

@@ -177,12 +177,20 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 	room->isMeshCached = true;
 }
 
-ApeWorld *acl_level_load( const char *path )
+ApeWorld *ss_acl_level_load( const char *path )
 {
-	ApeWorld *level = acl_level_load_file( path );
+	NdBranch *root = ndLoadFile( path, "world" );
+	if ( root == NULL )
+	{
+		PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
+		return NULL;
+	}
+
+	ApeWorld *level = ss_acl_world_deserialize_( NULL );
 	if ( level == NULL )
 	{
 		PRINT_WARNING( "Failed to load level (%s)!\n", path );
+		ndDestroyBranch( root );
 		return NULL;
 	}
 

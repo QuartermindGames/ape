@@ -11,7 +11,7 @@ namespace ss::forge
 		FXDECLARE( ViewportFrame )
 
 	public:
-		ViewportFrame( FXComposite *composite, FXGLVisual *visual, ApeCameraMode viewMode );
+		ViewportFrame( FXComposite *composite, FXGLVisual *visual, SSArlCameraMode viewMode );
 		virtual ~ViewportFrame();
 
 		void create() override;
@@ -44,7 +44,7 @@ namespace ss::forge
 		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
 
 		ApeCameraDrawMode drawMode_{ SS_ARL_CAMERA_DRAW_MODE_WIREFRAME };
-		ApeCameraMode viewMode_{ SS_ARL_CAMERA_MODE_INVALID };
+		SSArlCameraMode viewMode_{ SS_ARL_CAMERA_MODE_INVALID };
 
 		float zoomScale_{ 1.0f };
 

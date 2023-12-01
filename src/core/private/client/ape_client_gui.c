@@ -63,7 +63,7 @@ void apeShutdownGUI_( void )
 	ss_arl_material_release( baseGuiMat );
 }
 
-void apeDrawGUI_( SSArlViewport *viewport )
+void ss_arl_draw_gui_( SSArlViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 

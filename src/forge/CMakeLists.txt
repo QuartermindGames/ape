@@ -41,7 +41,7 @@ if (NOT UNIX)
         target_compile_options(forge PRIVATE -static -static-libstdc++ -static-libgcc)
     endif ()
 else ()
-    target_link_libraries(forge GLEW GL GLU)
+    #target_link_libraries(forge GLEW GL GLU)
 endif ()
 
 target_link_libraries(forge

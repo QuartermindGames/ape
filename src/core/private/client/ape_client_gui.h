@@ -8,7 +8,7 @@ PL_EXTERN_C
 
 void apeInitializeGUI_( void );
 void apeShutdownGUI_( void );
-void apeDrawGUI_( SSArlViewport *viewport );
+void ss_arl_draw_gui_( SSArlViewport *viewport );
 void ss_acl_tick_gui_( void );
 void apeResizeGUI( int w, int h );
 

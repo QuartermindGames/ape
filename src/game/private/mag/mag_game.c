@@ -39,12 +39,16 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	ss_arl_camera_set_angles( playerCamera, &ang );
 }
 
-static void initialize_game( void )
+static bool initialize_game( void )
 {
 	game_register_standard_entity_components();
 
-	playerCamera = ss_arl_camera_create( "mag_camera", &pl_vecOrigin3, &pl_vecOrigin3 );
-	ss_arl_camera_make_active( playerCamera );
+	playerCamera = ss_arl_camera_create( "mag_camera", &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	if ( playerCamera == NULL )
+	{
+		Game_Error( "Failed to create game camera!\n" );
+		return false;
+	}
 
 	ss_acl_input_register_action( "moveForward", NULL, 0, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
 	ss_acl_input_register_action( "moveBackward", NULL, 0, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
@@ -52,12 +56,12 @@ static void initialize_game( void )
 	ss_acl_input_register_action( "moveRight", NULL, 0, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
 	ss_acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
 	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
-	ss_acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
-	ss_acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 
 	testMaterial = ss_arl_material_cache( "materials/debug/debug_sprite.mat.n", APE_CACHE_EDITOR, true, false );
 
 	mag_tile_editor_initialize();
+
+	return true;
 }
 
 static void shutdown_game( void )
@@ -82,23 +86,62 @@ static void tick_game( void )
 	}
 }
 
-static void draw_game( SSArlViewport *viewport )
-{
-	static float rotate = 0.0f;
-	ss_arl_draw_sprite( testMaterial,
-	                    &( PLQuad ){ 0.0f, 0.0f, 128.0f, 128.0f },
-	                    &( PLVector3 ){ 250.f, 250.f, 0.f },
-	                    &( PLVector3 ){ -( 128.0f / 2.0f ), -( 128.0f / 2.0f ), 0.0f },
-	                    &( PLVector3 ){ 0.0f, 0.0f, rotate }, 1.0f );
-	rotate += 0.0005f;
-}
-
 static void draw_game_ui( SSArlViewport *viewport )
 {
-	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
-	ss_arl_bitmap_font_draw_string( font, 200.0f, 200.0f, 1.0f, 1.0f, PL_COLOUR_WHITE, "HELLO WORLD", true );
-
 #if 0
+	SSArlRenderTarget *renderTarget = ss_arl_viewport_get_render_target( gameViewport );
+	if ( renderTarget != NULL )
+	{
+		PLGTexture *texture = ss_arl_render_target_get_texture( renderTarget );
+		if ( texture != NULL )
+		{
+			float x = ( float ) viewport->x;
+			float y = ( float ) viewport->y;
+			float w = ( float ) viewport->width;
+			float h = ( float ) viewport->height;
+
+			PlgSetCullMode( PLG_CULL_NEGATIVE );
+
+			PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT ) );
+			PlgSetTexture( texture, 0 );
+
+			PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+
+			PlgImmPushVertex( x, y + h, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 0.0f, 0.0f );
+
+			PlgImmPushVertex( x, y, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 0.0f, 1.0f );
+
+			PlgImmPushVertex( x + w, y + h, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 1.0f, 0.0f );
+
+			PlgImmPushVertex( x + w, y, 0.0f );
+			PlgImmColour( 255, 255, 255, 255 );
+			PlgImmTextureCoord( 1.0f, 1.0f );
+
+			PlgImmDraw();
+
+			PlgSetCullMode( PLG_CULL_POSITIVE );
+		}
+	}
+#endif
+
+	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
+	const char *mode;
+	if ( mag_tile_editor_get_status() == MAG_TILE_EDITOR_STATUS_OPEN )
+		mode = "Tile Editor";
+	else
+		mode = "Game";
+
+	char buf[ 64 ];
+	snprintf( buf, sizeof( buf ), "MODE = %s", mode );
+	ss_arl_bitmap_font_draw_string( font, 10.0f, 50.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf, false );
+
+#if 1
 	static float rotate = 0.0f;
 	ss_arl_draw_sprite( testMaterial,
 	                    &( PLQuad ){ 0.0f, 0.0f, 128.0f, 128.0f },
@@ -116,16 +159,12 @@ static bool handle_request( GameModeRequest modeRequest, void *user )
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_INITIALIZE:
-			initialize_game();
-			return true;
+			return initialize_game();
 		case GAMEMODE_REQUEST_SHUTDOWN:
 			shutdown_game();
 			return true;
 		case GAMEMODE_REQUEST_TICK:
 			tick_game();
-			return true;
-		case GAME_MODE_REQUEST_DRAW:
-			draw_game( ( SSArlViewport * ) user );
 			return true;
 		case GAME_MODE_REQUEST_DRAW_UI:
 			draw_game_ui( ( SSArlViewport * ) user );

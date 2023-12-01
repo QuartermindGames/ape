@@ -171,8 +171,8 @@ void ss_arl_draw_begin_( SSArlViewport *viewport )
 	viewport->perf.oldTime = newTime;
 
 	ss_arl_setup_default_state( viewport );
+	ss_arl_viewport_make_active( viewport );
 
-	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 
 	COM_PROFILE_FUNCTION_END();
@@ -473,13 +473,14 @@ void apeGet2DViewportSize( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void ss_arl_draw_menu_( const SSArlViewport *viewport )
+void ss_arl_draw_menu_( SSArlViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
 
 	COM_PROFILE_FUNCTION_START();
 
+	ss_arl_viewport_make_active( viewport );
 	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
@@ -490,7 +491,7 @@ void ss_arl_draw_menu_( const SSArlViewport *viewport )
 
 	ss_arl_postfx_draw_( viewport );
 
-	apeDrawGUI_( viewport );
+	ss_arl_draw_gui_( viewport );
 	ss_acl_draw_editor_gui_( viewport );
 
 	draw_debug_overlay( viewport );
@@ -830,10 +831,6 @@ void arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 
 	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
-	// We're going to draw into a texture, so set that up first
-	ss_arl_render_target_set_size( defaultRenderTarget, viewport->width, viewport->height );
-	ss_arl_render_target_bind( defaultRenderTarget, PLG_FRAMEBUFFER_DRAW );
-
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
@@ -849,4 +846,7 @@ void arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-SSArlRenderTarget *ss_arl_get_default_render_target( void ) { return defaultRenderTarget; }
+SSArlRenderTarget *ss_arl_get_default_render_target( void )
+{
+	return defaultRenderTarget;
+}

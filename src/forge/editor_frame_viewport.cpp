@@ -25,7 +25,7 @@ editorViewportMap[] = {
 
 FXIMPLEMENT( ViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, ApeCameraMode viewMode )
+ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, SSArlCameraMode viewMode )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
@@ -95,7 +95,7 @@ void ViewportFrame::create()
 void ViewportFrame::setup_engine_viewport()
 {
 	std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
-	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3 );
+	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
 	ss_arl_camera_set_view_mode( camera, viewMode_ );
 	ss_arl_camera_set_draw_mode( camera, ( viewMode_ == SS_ARL_CAMERA_MODE_PERSPECTIVE ) ? SS_ARL_CAMERA_DRAW_MODE_TEXTURED : SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
 

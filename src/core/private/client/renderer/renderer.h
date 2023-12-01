@@ -37,7 +37,7 @@ typedef struct SSArlCamera
 	char tag[ 32 ];
 	bool active;
 	PLGCamera *internal; /* the camera used for this viewport */
-	ApeCameraMode mode;
+	SSArlCameraMode mode;
 	ApeCameraDrawMode drawMode;
 	ApeWorldRoom *room;
 	struct Actor *parentActor;
@@ -151,7 +151,7 @@ bool ss_arl_get_capture_state_( void );
 void ss_arl_setup_default_state( const SSArlViewport *viewport );
 void ss_arl_draw_begin_( SSArlViewport *viewport );
 void ss_arl_draw_end_( SSArlViewport *viewport );
-void ss_arl_draw_menu_( const SSArlViewport *viewport );
+void ss_arl_draw_menu_( SSArlViewport *viewport );
 
 void ss_arl_set_2d_viewport_size_( int w, int h );
 void apeGet2DViewportSize( int *width, int *height );

@@ -320,8 +320,15 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
  * PUBLIC
  ****************************************/
 
-ApeWorld *acl_level_deserialize_( ApeWorld *world, NdBranch *root )
+ApeWorld *ss_acl_world_deserialize_( NdBranch *root )
 {
+	ApeWorld *world = ss_acl_level_create();
+	if ( world == NULL )
+	{
+		PRINT_WARNING( "Failed to create world!\n" );
+		return NULL;
+	}
+
 	// Get the world version from the branch
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 )
@@ -357,14 +364,10 @@ ApeWorld *acl_level_deserialize_( ApeWorld *world, NdBranch *root )
 	}
 
 	if ( ( branch = ndGetChildByName( root, "geometry" ) ) != NULL )
-	{
 		deserialize_geometry( world, branch );
-	}
 
 	if ( ( branch = ndGetChildByName( root, "lights" ) ) != NULL )
-	{
 		deserialize_lights( world, branch );
-	}
 
 	return world;
 }

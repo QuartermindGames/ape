@@ -82,8 +82,8 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
 		return NULL;
 	}
 
-	program.internalPtr = PlgCreateShaderProgram();
-	if ( program.internalPtr == NULL )
+	program.internal = PlgCreateShaderProgram();
+	if ( program.internal == NULL )
 	{
 		PRINT_WARNING( "Failed to create shader program!\nPL: %s\n", PlGetError() );
 		return NULL;
@@ -155,13 +155,13 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
 		}
 	}
 
-	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
-	RegisterShaderStage( program.internalPtr, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
+	RegisterShaderStage( program.internal, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
+	RegisterShaderStage( program.internal, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
 
-	if ( !PlgLinkShaderProgram( program.internalPtr ) )
+	if ( !PlgLinkShaderProgram( program.internal ) )
 	{
 		PRINT_WARNING( "Failed to link shader stages!\nPL: %s\n", PlGetError() );
-		PlgDestroyShaderProgram( program.internalPtr, true );
+		PlgDestroyShaderProgram( program.internal, true );
 		return NULL;
 	}
 
@@ -172,7 +172,7 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
 	if ( child != NULL )
 	{
 		/* need to assign this for variable validation */
-		program.defaultPass.program = program.internalPtr;
+		program.defaultPass.program = program.internal;
 		/* and now we can fill this out */
 		ss_arl_material_parse_pass_( child, &program.defaultPass );
 	}
@@ -240,7 +240,7 @@ void ss_arl_initialize_shaders_( void )
 		if ( programIndex == NULL )
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 
-		ape_defaultShaderPrograms_[ i ] = programIndex->internalPtr;
+		ape_defaultShaderPrograms_[ i ] = programIndex->internal;
 	}
 }
 

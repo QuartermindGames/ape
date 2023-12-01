@@ -125,3 +125,19 @@ SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport )
 {
 	return viewport->renderTarget;
 }
+
+void ss_arl_viewport_make_active( SSArlViewport *viewport )
+{
+	SSArlRenderTarget *target = ss_arl_viewport_get_render_target( viewport );
+	assert( target != NULL );
+	if ( target == NULL )
+		return;
+
+	ss_arl_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+
+	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
+	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
+
+	if ( viewport->camera != NULL )
+		ss_arl_camera_make_active( viewport->camera );
+}

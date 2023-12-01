@@ -75,7 +75,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 		return;
 
 	const char *label;
-	ApeCameraMode cameraMode = ( camera != NULL ) ? camera->mode : SS_ARL_CAMERA_MODE_INVALID;
+	SSArlCameraMode cameraMode = ( camera != NULL ) ? camera->mode : SS_ARL_CAMERA_MODE_INVALID;
 	switch ( cameraMode )
 	{
 		default:
@@ -85,7 +85,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 		case SS_ARL_CAMERA_MODE_PERSPECTIVE:
 			label = "Perspective";
 			break;
-		case APE_CAMERA_MODE_FRONT:
+		case SS_ARL_CAMERA_MODE_FRONT:
 			label = "Front";
 			break;
 		case APE_CAMERA_MODE_LEFT:

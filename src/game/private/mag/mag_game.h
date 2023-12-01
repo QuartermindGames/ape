@@ -5,6 +5,9 @@
 
 #include "../game_private.h"
 
+#define MAG_VIEWPORT_WIDTH  320
+#define MAG_VIEWPORT_HEIGHT 200
+
 /////////////////////////////////////////////////////////////////////////////////////
 // MAG Tile Editor
 

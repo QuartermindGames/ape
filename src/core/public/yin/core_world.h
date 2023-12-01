@@ -36,13 +36,13 @@ typedef struct ApeWorld ApeWorld;
 /// \return New world instance.
 ApeWorld *ss_acl_level_create( void );
 
-ApeWorld *acl_level_load( const char *path );
+ApeWorld *ss_acl_level_load( const char *path );
 
 /// Deserialize world from a node tree.
 /// \param world World that deserialized data will be added to.
 /// \param root Handle to the world root.
 /// \return On success, returns the world pointer, otherwise null.
-ApeWorld *acl_level_deserialize_( ApeWorld *world, NdBranch *root );
+ApeWorld *ss_acl_world_deserialize_( NdBranch *root );
 
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.

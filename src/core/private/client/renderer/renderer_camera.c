@@ -23,6 +23,7 @@ SSArlCamera *ss_arl_camera_get_active( void )
 void ss_arl_camera_make_active( SSArlCamera *camera )
 {
 	activeCamera = camera;
+	PlgSetupCamera( camera->internal );
 }
 
 void ss_arl_camera_set_draw_mode( SSArlCamera *camera, ApeCameraDrawMode drawMode )
@@ -30,7 +31,7 @@ void ss_arl_camera_set_draw_mode( SSArlCamera *camera, ApeCameraDrawMode drawMod
 	camera->drawMode = drawMode;
 }
 
-void ss_arl_camera_set_view_mode( SSArlCamera *camera, ApeCameraMode viewMode )
+void ss_arl_camera_set_view_mode( SSArlCamera *camera, SSArlCameraMode viewMode )
 {
 	camera->mode = viewMode;
 }
@@ -38,26 +39,32 @@ void ss_arl_camera_set_view_mode( SSArlCamera *camera, ApeCameraMode viewMode )
 /****************************************
  ****************************************/
 
-SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles )
+SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, SSArlCameraMode cameraMode )
 {
 	SSArlCamera *camera = PL_NEW( SSArlCamera );
 
-	camera->mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
+	camera->mode = cameraMode;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == NULL )
-	{
 		PRINT_ERROR( "Failed to create camera!\nPL: %s\n", PlGetError() );
-	}
 
 	if ( tag != NULL )
-	{
 		strncpy( camera->tag, tag, sizeof( camera->tag ) - 1 );
+
+	if ( camera->mode != SS_ARL_CAMERA_MODE_PERSPECTIVE )
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
+		camera->internal->near = -10000.0f;
+		camera->internal->far = 10000.0f;
+	}
+	else
+	{
+		camera->internal->fov = 75.0f;
+		camera->internal->far = 1000000.0f;
 	}
 
-	camera->internal->fov = 75.0f;
-	camera->internal->far = 1000000.0f;
 	ss_arl_camera_set_position( camera, position );
 	ss_arl_camera_set_angles( camera, angles );
 
@@ -65,9 +72,7 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 	{
 		cameras = PlCreateLinkedList();
 		if ( cameras == NULL )
-		{
 			PRINT_ERROR( "Failed to create cameras list: %s\n", PlGetError() );
-		}
 	}
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
@@ -217,7 +222,7 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 		}
 	}
 
-	PlgSetupCamera( camera->internal );
+	ss_arl_camera_make_active( camera );
 
 	// Draw the scene into a buffer
 	arl_draw_scene_( camera, viewport );

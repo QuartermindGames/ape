@@ -69,16 +69,16 @@ static void draw_bloom_effect( const SSArlViewport *viewport )
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
-	PlgSetShaderProgram( bloomFilterShader->internalPtr );
-	PlgSetShaderUniformValue( bloomFilterShader->internalPtr, "threshold", &bloomIntensity, false );
+	PlgSetShaderProgram( bloomFilterShader->internal );
+	PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomIntensity, false );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, ss_arl_render_target_get_texture( ss_arl_get_default_render_target() ) );
 
-	PlgSetShaderProgram( bloomBlurXShader->internalPtr );
-	PlgSetShaderUniformValue( bloomBlurXShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
+	PlgSetShaderProgram( bloomBlurXShader->internal );
+	PlgSetShaderUniformValue( bloomBlurXShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, bloomRenderTargetTexture );
 
-	PlgSetShaderProgram( bloomBlurYShader->internalPtr );
-	PlgSetShaderUniformValue( bloomBlurYShader->internalPtr, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
+	PlgSetShaderProgram( bloomBlurYShader->internal );
+	PlgSetShaderUniformValue( bloomBlurYShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, bloomRenderTargetTexture );
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
