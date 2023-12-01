@@ -116,6 +116,30 @@ static void fetch_texture_config( SSArlTexture *texture )
 	NdBranch *root = ndLoadFile( configPath, "texture" );
 	if ( root == NULL )
 		return;
+
+	const char *wrapMode = ndGetStringByName( root, "wrapMode", "repeat" );
+	if ( strcmp( wrapMode, "repeat" ) == 0 )
+		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
+	else if ( strcmp( wrapMode, "mirrored_repeat" ) == 0 )
+		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_MIRRORED_REPEAT;
+	else if ( strcmp( wrapMode, "clamp" ) == 0 )
+		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
+	else if ( strcmp( wrapMode, "clamp_border" ) == 0 )
+		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
+	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
+
+	const char *filterMode = ndGetStringByName( root, "filterMode", "linear" );
+	if ( strcmp( filterMode, "mipmap_linear" ) == 0 )
+		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+	else if ( strcmp( filterMode, "linear" ) == 0 )
+		texture->filterMode = PLG_TEXTURE_FILTER_LINEAR;
+	else if ( strcmp( filterMode, "mipmap_nearest" ) == 0 )
+		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
+	else if ( strcmp( filterMode, "nearest" ) == 0 )
+		texture->filterMode = PLG_TEXTURE_FILTER_NEAREST;
+	PlgSetTextureFilter( texture->internal, texture->filterMode );
+
+	ndDestroyBranch( root );
 }
 
 /////////////////////////////////////////////////////////////////
