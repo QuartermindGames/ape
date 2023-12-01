@@ -287,12 +287,13 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
+	ss::forge::mainWindow->setup_engine_viewports();
+
 	return app.run();
 }
 
 extern "C"
 {
-	bool ss_shell_set_window_size( int *width, int *height ) { return false; }
 	void ss_shell_get_window_size( int *width, int *height ) {}
 
 	void ss_shell_swap_window( SSArlViewport * ) {}
@@ -315,11 +316,9 @@ extern "C"
 		}
 	}
 
-	void ss_shell_set_window_icon( const PLImage *image ) {}
-
 	SSArlViewport *ss_shell_viewport_get_active( void )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	ApeInputState ss_shell_get_button_state( ApeInputButton inputButton ) { return APE_INPUT_STATE_NONE; }

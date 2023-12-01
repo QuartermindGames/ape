@@ -28,10 +28,13 @@ namespace ss::forge
 		long on_open( FXObject *, FXSelector, void * );
 
 		long open_model( FXObject *, FXSelector, void * );
+		long open_texture( FXObject *, FXSelector, void * );
 		long open_material( FXObject *, FXSelector, void * );
 
 		long on_about( FXObject *, FXSelector, void * );
 		long on_package_project( FXObject *, FXSelector, void * );
+
+		void setup_engine_viewports();
 
 		ss::forge::Project *GetProject() { return currentProject; }
 
@@ -50,6 +53,7 @@ namespace ss::forge
 
 			ID_MODEL_OPEN,
 			ID_MATERIAL_OPEN,
+			ID_TEXTURE_OPEN,
 
 			ID_COPY,
 			ID_PASTE,
@@ -93,4 +97,4 @@ namespace ss::forge
 	};
 
 	extern MainWindow *mainWindow;
-}// namespace os::editor
+}// namespace ss::forge

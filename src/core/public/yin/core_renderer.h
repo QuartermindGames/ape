@@ -9,7 +9,7 @@ typedef struct SSArlCamera SSArlCamera;
 typedef struct SSArlViewport SSArlViewport;
 typedef struct SSArlLight SSArlLight;
 typedef struct SSArlRenderTarget SSArlRenderTarget;
-typedef struct ApeTexture ApeTexture;
+typedef struct SSArlTexture SSArlTexture;
 typedef struct ApeMaterial ApeMaterial;
 
 // TODO: retire this...
@@ -32,6 +32,20 @@ void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height );
 void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *height );
 unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport );
 SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Render Target API
+
+SSArlRenderTarget *ss_arl_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter );
+void ss_arl_render_target_release( SSArlRenderTarget *renderTarget );
+void ss_arl_render_target_set_size( SSArlRenderTarget *renderTarget, unsigned int width, unsigned int height );
+void ss_arl_render_target_get_size( const SSArlRenderTarget *renderTarget, unsigned int *width, unsigned int *height );
+PLGTexture *ss_arl_render_target_get_texture( SSArlRenderTarget *renderTarget );
+void ss_arl_render_target_bind( SSArlRenderTarget *renderTarget, PLGFrameBufferObjectTarget target );
+PLGFrameBuffer *ss_arl_render_target_get_frame_buffer( SSArlRenderTarget *renderTarget );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 /**********************************************************/
 // Materials

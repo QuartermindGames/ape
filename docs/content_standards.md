@@ -1,4 +1,4 @@
-# Yin Content Standards
+# APE Tech Content Standards
 
 ## Naming
 
@@ -17,13 +17,14 @@ Any legacy documents might use `node` or `world.n` - these should be updated to 
 | `worldMesh`      | `.wsm.n`  |
 | `project`        | `.prj.n`  |
 | `program`        | `.sha.n`  |
+| `texture`        | `.tex.n`  |
 
 Any binary forms should use the same convention going forward.
 To avoid any conflicts, these should ideally be generated into an alternate root location.
 
 ## Textures
 
-Yin has support for a large range of different formats, that said we would recommend using industry standard formats
+APE Tech has support for a large range of different formats, that said we would recommend using industry standard formats
 such as the following.
 
 - PNG

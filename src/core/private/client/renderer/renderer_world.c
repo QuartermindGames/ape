@@ -278,7 +278,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera,
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
 		assert( material != NULL );
 		if ( material == NULL )
-			material = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK );
+			material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
 
 		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
 		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
@@ -333,7 +333,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera,
 
 static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSArlLight *light, const PLColour *colour )
 {
-	ApeMaterial *shadowMaterial = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_SHADOW );
+	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 	if ( shadowMaterial == NULL )
 		return;

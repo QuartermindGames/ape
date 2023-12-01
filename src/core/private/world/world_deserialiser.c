@@ -132,7 +132,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	assert( face->material != NULL );
 	if ( face->material == NULL )
 	{
-		face->material = ss_arl_get_default_material( APE_MATERIAL_DEFAULT_FALLBACK );
+		face->material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
 	}
 
 	face->edgeLoop = PlCreateLinkedList();

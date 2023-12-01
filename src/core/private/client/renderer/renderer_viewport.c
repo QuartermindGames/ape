@@ -120,3 +120,8 @@ unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport )
 
 	return ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
 }
+
+SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport )
+{
+	return viewport->renderTarget;
+}

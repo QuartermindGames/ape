@@ -43,6 +43,7 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCommand( menuPane, "Close Level\t\tClose the current level.", nullptr, this, ID_WORLD_CLOSE );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Open Model\t\tOpen an existing model.", nullptr, this, ID_MODEL_OPEN );
+	new FXMenuCommand( menuPane, "Open Texture\t\tOpen an existing texture.", nullptr, this, ID_TEXTURE_OPEN );
 	new FXMenuCommand( menuPane, "Open Material\t\tOpen an existing material.", nullptr, this, ID_MATERIAL_OPEN );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Package Project\t\tPackage the current project.", nullptr, this, ID_PROJECT_PACKAGE );
@@ -142,6 +143,15 @@ long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 	return true;
 }
 
+long ss::forge::MainWindow::open_texture( FXObject *, FXSelector, void * )
+{
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing texture", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.png" );
+	if ( filename.empty() )
+		return false;
+
+	return 0;
+}
+
 long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 {
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.mat.n" );
@@ -181,6 +191,12 @@ long ss::forge::MainWindow::on_package_project( FXObject *, FXSelector, void * )
 		return false;
 
 	return true;
+}
+
+void ss::forge::MainWindow::setup_engine_viewports()
+{
+	for ( auto i : viewportFrame )
+		i->setup_engine_viewport();
 }
 
 /**

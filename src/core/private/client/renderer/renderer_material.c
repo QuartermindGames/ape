@@ -32,12 +32,12 @@ typedef struct ApeMaterial
 	ApeMemoryReference mem;
 } ApeMaterial;
 
-static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
+static ApeMaterial *defaultMaterials[ SS_ARL_MAX_DEFAULT_MATERIALS ];
 
-ApeMaterial *ss_arl_get_default_material( SS_Arl_DefaultMaterial defaultMaterial )
+ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
 {
-	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
-	if ( defaultMaterial == APE_MAX_DEFAULT_MATERIALS )
+	assert( defaultMaterial != SS_ARL_MAX_DEFAULT_MATERIALS );
+	if ( defaultMaterial == SS_ARL_MAX_DEFAULT_MATERIALS )
 		return defaultMaterials[ SS_ARL_MATERIAL_BUILTIN_FALLBACK ];
 
 	return defaultMaterials[ defaultMaterial ];
@@ -83,14 +83,14 @@ void ss_arl_initialize_materials_( void )
 	previewFallbackTexture = ss_arl_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	// cache default materials we need
-	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
+	static const char *defaultMaterialPaths[ SS_ARL_MAX_DEFAULT_MATERIALS ] =
 	        {
 	                "materials/engine/fallback.mat.n",
 	                "materials/engine/vertex.mat.n",
 	                "materials/engine/shadow.mat.n",
 	                "materials/engine/depth.mat.n",
 	        };
-	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		defaultMaterials[ i ] = ss_arl_material_cache( defaultMaterialPaths[ i ], APE_CACHE_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
@@ -785,7 +785,7 @@ ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, b
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : NULL;
+	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ] : NULL;
 
 	NdBranch *root = ndLoadFile( path, "material" );
 	if ( root == NULL )
@@ -815,7 +815,7 @@ void ss_arl_material_release( ApeMaterial *material )
 		return;
 
 	// don't flush default materials...
-	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		if ( material != defaultMaterials[ i ] )
 			continue;
@@ -839,7 +839,7 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, SSArlLight **li
 	// though ideally this shouldn't happen!
 	assert( material->isCached );
 	if ( !material->isCached )
-		material = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
+		material = defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ];
 
 	if ( arl_rendererState_.overrideBlendMode )
 	{

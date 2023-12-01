@@ -29,6 +29,9 @@ ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, ApeCam
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
+
+	// Originally created engine camera and view here, but we'll have to defer that...
+#if 0
 	std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
 	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3 );
 	ss_arl_camera_set_view_mode( camera, viewMode );
@@ -36,6 +39,9 @@ ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, ApeCam
 
 	engineViewport = ss_arl_viewport_create( 0, 0, 800, 600, this );
 	ss_arl_viewport_set_camera( engineViewport, camera );
+#endif
+
+	viewMode_ = viewMode;
 
 #if 1
 	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
@@ -84,6 +90,17 @@ void ViewportFrame::create()
 	enable();
 
 	canvas_->makeCurrent();
+}
+
+void ViewportFrame::setup_engine_viewport()
+{
+	std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
+	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3 );
+	ss_arl_camera_set_view_mode( camera, viewMode_ );
+	ss_arl_camera_set_draw_mode( camera, ( viewMode_ == SS_ARL_CAMERA_MODE_PERSPECTIVE ) ? SS_ARL_CAMERA_DRAW_MODE_TEXTURED : SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
+
+	engineViewport = ss_arl_viewport_create( 0, 0, 800, 600, this );
+	ss_arl_viewport_set_camera( engineViewport, camera );
 }
 
 void ViewportFrame::Draw()

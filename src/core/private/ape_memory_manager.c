@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+/* Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com> */
 
 #include <plcore/pl_linkedlist.h>
 
@@ -13,19 +13,24 @@ static PLMemoryGroup *memoryGroups[ APE_MAX_CACHE_POOLS ];
 
 static PLLinkedList *memCachePools[ APE_MAX_CACHE_POOLS ];
 
-static void InitializeCachePools( void ) {
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i ) {
+static void InitializeCachePools( void )
+{
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
+	{
 		memCachePools[ i ] = PlCreateLinkedList();
-		if ( memCachePools[ i ] == NULL ) {
+		if ( memCachePools[ i ] == NULL )
+		{
 			PRINT_ERROR( "Failed to create cache pool: " PL_FMT_int32 "\nPL: %s\n", i, PlGetError() );
 		}
 	}
 }
 
-void apeAddToCachePool( const char *id, ApeCachePool pool, void *data ) {
+void apeAddToCachePool( const char *id, ApeCachePool pool, void *data )
+{
 	/* ensure the data hasn't been cached already */
 	void *cachedData = apeGetCachedData( id, pool );
-	if ( cachedData != NULL ) {
+	if ( cachedData != NULL )
+	{
 		PRINT_ERROR( "Attempted to cache duplicate data: %s\n", id );
 	}
 
@@ -36,20 +41,22 @@ void apeAddToCachePool( const char *id, ApeCachePool pool, void *data ) {
 	snprintf( header->description, sizeof( header->description ), "%s", id );
 
 	PLLinkedListNode *node = PlInsertLinkedListNode( memCachePools[ pool ], header );
-	if ( node == NULL ) {
+	if ( node == NULL )
+	{
 		PRINT_ERROR( "Failed to insert node for cache pool!\n" );
 	}
 
 	PRINT( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
 }
 
-static ApeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool ) {
+static ApeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool )
+{
 	PLLinkedListNode *node = PlGetFirstNode( memCachePools[ pool ] );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		ApeMemoryCacheHeader *header = PlGetLinkedListNodeUserData( node );
-		if ( header->id == id ) {
+		if ( header->id == id )
 			return header;
-		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
@@ -57,19 +64,21 @@ static ApeMemoryCacheHeader *GetCache( uint32_t id, uint8_t pool ) {
 	return NULL;
 }
 
-void *apeGetCachedData( const char *id, ApeCachePool pool ) {
+void *apeGetCachedData( const char *id, ApeCachePool pool )
+{
 	uint32_t hashedName = PlGenerateHashSDBM( id );
 	ApeMemoryCacheHeader *header = GetCache( hashedName, pool );
-	if ( header != NULL ) {
+	if ( header != NULL )
 		return header->userData;
-	}
 
 	return NULL;
 }
 
-static void RemoveFromCache( uint32_t id, uint8_t pool ) {
+static void RemoveFromCache( uint32_t id, uint8_t pool )
+{
 	ApeMemoryCacheHeader *header = GetCache( id, pool );
-	if ( header == NULL ) {
+	if ( header == NULL )
+	{
 		PRINT_WARNING( "Attempted to remove node from cache pool, but failed: %s\n", id );
 		return;
 	}
@@ -89,19 +98,22 @@ static PLLinkedList *mmReferenceList;
 
 #define MEM_CLEANUP_DELAY 200.0
 
-//#define DEBUG_MEMORY
+//#	define DEBUG_MEMORY
 
-static bool FreeReference( ApeMemoryReference *m, bool force ) {
+static bool FreeReference( ApeMemoryReference *m, bool force )
+{
 #if defined( DEBUG_MEMORY )
-	DebugMsg( "%s, numRefs = %d, ttl = %u\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+	PRINT_DEBUG( "%s, numRefs = %d, ttl = %u\n",
+	             m->cache == NULL ? "unknown" : m->cache->description,
+	             m->numReferences,
+	             m->timeToLive );
 #endif
 
-	if ( m->numReferences <= 0 && ( force || m->timeToLive < ss_acl_get_num_ticks() ) ) {
+	if ( m->numReferences <= 0 && ( force || m->timeToLive < ss_acl_get_num_ticks() ) )
+	{
 		/* remove it from whatever cached list it exists in */
-		if ( m->cache != NULL ) {
+		if ( m->cache != NULL )
+		{
 			RemoveFromCache( m->cache->id, m->cache->pool );
 			m->cache = NULL;
 		}
@@ -116,14 +128,18 @@ static bool FreeReference( ApeMemoryReference *m, bool force ) {
 	return false;
 }
 
-static void CleanupUnreferencedResources( bool force ) {
+static void CleanupUnreferencedResources( bool force )
+{
 	PLLinkedListNode *child = PlGetFirstNode( mmReferenceList );
-	while ( child != NULL ) {
+	while ( child != NULL )
+	{
 		PLLinkedListNode *nextChild = PlGetNextLinkedListNode( child );
 		ApeMemoryReference *m = PlGetLinkedListNodeUserData( child );
 
 #if defined( DEBUG_MEMORY )
-		DebugMsg( " %s (" COM_FMT_int32 ")\n", m->description, m->numRefs );
+		PRINT_DEBUG( " %s (" PL_FMT_int32 ")\n",
+		             m->cache == NULL ? "unknown" : m->cache->description,
+		             m->numReferences );
 #endif
 
 		FreeReference( m, force );
@@ -134,13 +150,15 @@ static void CleanupUnreferencedResources( bool force ) {
 
 #define MEM_CLEANUP_TASK_NAME "mem_cleanup"
 
-static void CleanupCallback( PL_UNUSED void *unused0, PL_UNUSED double unused1 ) {
+static void CleanupCallback( PL_UNUSED void *unused0, PL_UNUSED double unused1 )
+{
 	CleanupUnreferencedResources( false );
 
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void ss_acl_initialize_memory_manager_( void ) {
+void ss_acl_initialize_memory_manager_( void )
+{
 	PRINT( "Initializing memory manager\n" );
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
@@ -149,39 +167,44 @@ void ss_acl_initialize_memory_manager_( void ) {
 	InitializeCachePools();
 
 	mmReferenceList = PlCreateLinkedList();
-	if ( mmReferenceList == NULL ) {
+	if ( mmReferenceList == NULL )
+	{
 		PRINT_ERROR( "Failed to create memory manager linked list!\n" );
 	}
 
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void apeShutdownMemoryManager( void ) {
+void apeShutdownMemoryManager( void )
+{
 	apeFlushUnreferencedResources();
 
 	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
-	if ( danglingReferences > 0 ) {
+	if ( danglingReferences > 0 )
+	{
 		PRINT_WARNING( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
 	}
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i ) {
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
+	{
 		PlDestroyMemoryGroup( memoryGroups[ i ] );
 	}
 }
 
-unsigned int apeFlushUnreferencedResources( void ) {
+unsigned int apeFlushUnreferencedResources( void )
+{
 	unsigned int references = PlGetNumLinkedListNodes( mmReferenceList );
-	while ( references > 0 ) {
+	while ( references > 0 )
+	{
 #if defined( DEBUG_MEMORY )
-		DebugMsg( " dangling references: " COM_FMT_uint32 "\n", danglingReferences );
+		PRINT_DEBUG( " dangling references: " PL_FMT_uint32 "\n", references );
 #endif
 
 		CleanupUnreferencedResources( true );
 
 		unsigned int n = PlGetNumLinkedListNodes( mmReferenceList );
-		if ( n == references ) {
+		if ( n == references )
 			break;
-		}
 
 		references = n;
 	}
@@ -189,10 +212,9 @@ unsigned int apeFlushUnreferencedResources( void ) {
 	return references;
 }
 
-ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData ) {
-	if ( id != NULL )
-		m->cache = apeGetCachedData( id, pool );
-
+ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
+{
+	m->cache = apeGetCachedData( id, pool );
 	m->userData = userData;
 	m->cleanupFunction = cleanupFunction;
 	m->isInitialized = true;
@@ -200,34 +222,38 @@ ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, Ape
 	return m;
 }
 
-void ss_acl_mm_add_reference( ApeMemoryReference *m ) {
+void ss_acl_mm_add_reference( ApeMemoryReference *m )
+{
 	m->numReferences++;
 	m->timeToLive = ( ss_acl_get_num_ticks() + 1024 );
 #if defined( DEBUG_MEMORY )
-	DebugMsg( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+	PRINT_DEBUG( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
+	             m->cache == NULL ? "unknown" : m->cache->description,
+	             m->numReferences,
+	             m->timeToLive );
 #endif
 }
 
-void ss_acl_mm_release( ApeMemoryReference *m ) {
+void ss_acl_mm_release( ApeMemoryReference *m )
+{
 	assert( m->numReferences > 0 );
 
 #if defined( DEBUG_MEMORY )
-	DebugMsg( "Releasing reference: description(%s) numRefs(%d) ttl(%u)\n",
-	          m->description[ 0 ] == '\0' ? "unknown" : m->description,
-	          m->numRefs,
-	          m->ttl );
+	PRINT_DEBUG( "Releasing reference: description(%s) numRefs(%d) ttl(%u)\n",
+	             m->cache == NULL ? "unknown" : m->cache->description,
+	             m->numReferences,
+	             m->timeToLive );
 #endif
 
 	m->numReferences--;
-	if ( m->numReferences <= 0 ) {
+	if ( m->numReferences <= 0 )
+	{
 		m->timeToLive = ( ss_acl_get_num_ticks() + 1024 );
 	}
 }
 
-int apeGetNumberOfReferences( const ApeMemoryReference *m ) {
+int apeGetNumberOfReferences( const ApeMemoryReference *m )
+{
 	return m->numReferences;
 }
 
@@ -235,7 +261,8 @@ int apeGetNumberOfReferences( const ApeMemoryReference *m ) {
  * Temporary Buffer Allocation
  * ====================================================================*/
 
-static void CleanupTempAllocCallback( void *userData ) {
+static void CleanupTempAllocCallback( void *userData )
+{
 	PL_DELETE( userData );
 }
 
@@ -243,7 +270,8 @@ static void CleanupTempAllocCallback( void *userData ) {
  * Allocates a pool of memory that will be automatically
  * cleaned up.
  */
-void *apeTempAlloc( ApeMemoryReference *m, size_t size ) {
+void *apeTempAlloc( ApeMemoryReference *m, size_t size )
+{
 	void *buf = PlMAllocA( size );
 	ss_acl_mm_setup_reference( "temp", 0, m, CleanupTempAllocCallback, buf );
 	return buf;
@@ -254,8 +282,10 @@ void *apeTempAlloc( ApeMemoryReference *m, size_t size ) {
  * If this isn't called, resource will be cleaned
  * up automatically later.
  */
-void apeTempFree( ApeMemoryReference *m ) {
-	if ( !FreeReference( m, false ) ) {
+void apeTempFree( ApeMemoryReference *m )
+{
+	if ( !FreeReference( m, false ) )
+	{
 		PRINT_WARNING( "Failed to cleanup temporary pool!\n" );
 	}
 }

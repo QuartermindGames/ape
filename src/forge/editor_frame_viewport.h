@@ -16,6 +16,8 @@ namespace ss::forge
 
 		void create() override;
 
+		void setup_engine_viewport();
+
 		enum
 		{
 			ID_CHORE = FXVerticalFrame::ID_LAST,
@@ -42,6 +44,7 @@ namespace ss::forge
 		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
 
 		ApeCameraDrawMode drawMode_{ SS_ARL_CAMERA_DRAW_MODE_WIREFRAME };
+		ApeCameraMode viewMode_{ SS_ARL_CAMERA_MODE_INVALID };
 
 		float zoomScale_{ 1.0f };
 
@@ -56,4 +59,4 @@ namespace ss::forge
 
 		static FXGLCanvas *displayList_;
 	};
-}// namespace os::editor
+}// namespace ss::forge
