@@ -179,33 +179,47 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 
 ApeWorld *ss_acl_level_load( const char *path )
 {
-	NdBranch *root = ndLoadFile( path, "world" );
-	if ( root == NULL )
+	const char *extension = PlGetFileExtension( path );
+	if ( extension == NULL )
 	{
-		PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
+		PRINT_WARNING( "Invalid world name (%s)!\n", path );
 		return NULL;
 	}
 
-	ApeWorld *level = ss_acl_world_deserialize_( NULL );
-	if ( level == NULL )
+	ApeWorld *world;
+	if ( pl_strcasecmp( extension, ".rfl" ) == 0 )
+		world = acl_level_load_rfl_file_( path );
+	else
 	{
-		PRINT_WARNING( "Failed to load level (%s)!\n", path );
+		NdBranch *root = ndLoadFile( path, "world" );
+		if ( root == NULL )
+		{
+			PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
+			return NULL;
+		}
+
+		world = ss_acl_world_deserialize_( root );
+		if ( world == NULL )
+			PRINT_WARNING( "Failed to load level (%s)!\n", path );
+
 		ndDestroyBranch( root );
-		return NULL;
 	}
 
-	// Create cached room geometry
-	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( level->rooms ); ++i )
+	if ( world != NULL )
 	{
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
-		assert( room != NULL );
-		if ( room == NULL || room->isDetail || room->isMeshCached )
-			continue;
+		// Create cached room geometry
+		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+		{
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			assert( room != NULL );
+			if ( room == NULL || room->isDetail || room->isMeshCached )
+				continue;
 
-		cache_room_mesh( level, room );
+			cache_room_mesh( world, room );
+		}
 	}
 
-	return level;
+	return world;
 }
 
 bool acl_level_save( ApeWorld *world, const char *path )

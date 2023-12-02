@@ -215,7 +215,7 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorld *acl_level_load_file( const char *path );
+ApeWorld *acl_level_load_rfl_file_( const char *path );
 ApeWorld *acl_level_deserialize_rfl_( PLFile *file );
 
 ApeWorldRoom *acl_room_create( void );

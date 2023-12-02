@@ -620,7 +620,7 @@ static void parse_level_properties( ApeWorld *world, PLFile *file, unsigned int 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-ApeWorld *acl_level_load_file( const char *path )
+ApeWorld *acl_level_load_rfl_file_( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
