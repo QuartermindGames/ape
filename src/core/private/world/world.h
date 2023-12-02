@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -26,11 +26,11 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeWorldRoom ApeWorldRoom;
-typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
-typedef struct ApeWorldFace ApeWorldFace;
-typedef struct ApeWorldMesh ApeWorldMesh;
-typedef struct ApeWorldPortal ApeWorldPortal;
+typedef struct SSAclWorldRoom SSAclWorldRoom;
+typedef struct SSAclWorldFaceVertex SSAclWorldFaceVertex;
+typedef struct SSAclWorldFace SSAclWorldFace;
+typedef struct SSAclWorldMesh SSAclWorldMesh;
+typedef struct SSAclWorldPortal SSAclWorldPortal;
 
 typedef struct ApeWorldVertex
 {
@@ -38,7 +38,7 @@ typedef struct ApeWorldVertex
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
-typedef struct ApeWorldFaceVertex
+typedef struct SSAclWorldFaceVertex
 {
 	PLVector2 uv;
 	PLVector3 normal;
@@ -46,7 +46,7 @@ typedef struct ApeWorldFaceVertex
 	float lightmapU, lightmapV;
 
 	ApeWorldVertex *u;
-} ApeWorldFaceVertex;
+} SSAclWorldFaceVertex;
 
 #define APE_WORLD_FACE_FLAG_SKY        0x01
 #define APE_WORLD_FACE_FLAG_MIRRORED   0x02
@@ -59,7 +59,7 @@ typedef struct ApeWorldFaceVertex
 #define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
 #define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
 
-typedef struct ApeWorldFace
+typedef struct SSAclWorldFace
 {
 	float offset;
 	PLVector3 normal;
@@ -67,7 +67,7 @@ typedef struct ApeWorldFace
 
 	int32_t smoothingGroup;
 
-	ApeWorldPortal *portal;
+	SSAclWorldPortal *portal;
 
 	struct ApeMaterial *material;
 	int materialIndex;// index into world's material list
@@ -78,9 +78,9 @@ typedef struct ApeWorldFace
 	unsigned int flags; /* portal, mirror, skip etc. */
 
 	PLCollisionAABB bounds;
-} ApeWorldFace;
+} SSAclWorldFace;
 
-typedef struct ApeWorldMesh
+typedef struct SSAclWorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
@@ -100,31 +100,31 @@ typedef struct ApeWorldMesh
 	PLLinkedListNode *node;
 
 	ApeMemoryReference mem;
-} ApeWorldMesh;
+} SSAclWorldMesh;
 
 typedef struct ApeWorldObject
 {
-	ApeWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
+	SSAclWorldMesh *mesh; /* pointer to mesh in worldMeshes list */
 
 	union
 	{
-		const ApeWorldMesh *collisionMesh;
+		const SSAclWorldMesh *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } ApeWorldObject;
 
-typedef struct ApeWorldPortal
+typedef struct SSAclWorldPortal
 {
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	ApeWorldRoom *roomA;
-	ApeWorldRoom *roomB;
+	SSAclWorldRoom *roomA;
+	SSAclWorldRoom *roomB;
 
 	bool canSeeThrough;
-} ApeWorldPortal;
+} SSAclWorldPortal;
 
-typedef struct ApeWorldRoom
+typedef struct SSAclWorldRoom
 {
 	char tag[ WORLD_PROP_TAG_LENGTH ];
 	int uid;
@@ -157,9 +157,8 @@ typedef struct ApeWorldRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	PLGMesh *mesh;      // cached mesh
-	PLGMesh *shadowMesh;// shadow volume mesh
-	bool isMeshCached;  // if false, mesh cache will be updated
+	PLGMesh *mesh;    // cached mesh
+	bool isMeshCached;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
@@ -167,9 +166,7 @@ typedef struct ApeWorldRoom
 	ApeAudioReverbPreset reverbPreset;
 
 	PLCollisionAABB bounds;
-} ApeWorldRoom;
-
-#define APE_MAX_SKY_LAYERS 4
+} SSAclWorldRoom;
 
 typedef struct ApeWorld
 {
@@ -215,32 +212,25 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorld *acl_level_load_rfl_file_( const char *path );
-ApeWorld *acl_level_deserialize_rfl_( PLFile *file );
+ApeWorld *ss_acl_world_load_rfl_file_( const char *path );
 
-ApeWorldRoom *acl_room_create( void );
-void acl_room_destroy( ApeWorldRoom *room );
-ApeWorldFace **acl_room_get_faces( ApeWorldRoom *room, unsigned int *numFaces );
-ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms );
+SSAclWorldRoom *ss_acl_room_create( void );
+void ss_acl_room_destroy( SSAclWorldRoom *room );
+SSAclWorldFace **ss_acl_room_get_faces( SSAclWorldRoom *room, unsigned int *numFaces );
+SSAclWorldRoom **ss_acl_room_get_detail_rooms( SSAclWorldRoom *room, unsigned int *numDetailRooms );
 
-void apeSerializeWorld( const ApeWorld *world, NdBranch *root );
+void ss_acl_world_serialize_( const ApeWorld *world, NdBranch *root );
 
-void acl_level_spawn_entities_( ApeWorld *world );
+/// Deserialize world from a node tree.
+/// \param world World that deserialized data will be added to.
+/// \param root Handle to the world root.
+/// \return On success, returns the world pointer, otherwise null.
+ApeWorld *ss_acl_world_deserialize_( NdBranch *root );
+
+void ss_acl_world_spawn_entities_( ApeWorld *world );
 
 void ss_acl_register_level_console_variables_( void );
 
 void ss_acl_level_client_tick_( void );
-
-/////////////////////////////////////////////////////////////////
-// Visibility API
-
-void ss_arl_initialize_visibility_system_( void );
-void apeShutdownWorldVisibilitySystem_( void );
-
-struct SSArlLight **apeGetVisibleLights_( unsigned int *num );
-ApeWorldRoom **apeGetVisibleRooms_( unsigned int *num );
-
-void acl_level_build_visibility_lists_( void );
-void apeFlushWorldVisibilityLists_( void );
 
 PL_EXTERN_C_END

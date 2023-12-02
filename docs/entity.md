@@ -31,7 +31,7 @@ You can then register your class by calling `ss_acl_register_entity_class` in yo
 
 ```c
 static void initialize_game( void ) {
-	game_register_standard_entity_components();
+	ss_game_register_standard_entity_components_();
 	
 	ss_acl_register_entity_class( tox_character_get_class_table() );
     

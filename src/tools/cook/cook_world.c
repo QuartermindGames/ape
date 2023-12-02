@@ -7,7 +7,7 @@
 static void process_properties( const char *worldName, NdBranch *root )
 {
 	PLPath path;
-	PlSetupPath( path, true, "worlds/%s/%s." APE_WORLD_EXTENSION_CFG, worldName, worldName );
+	PlSetupPath( path, true, "worlds/%s/%s." SS_ACL_WORLD_EXTENSION_CFG, worldName, worldName );
 	NdBranch *properties = ndLoadFile( path, "properties" );
 	if ( properties == NULL )
 		ERROR( "Failed to open world properties file (%s): %s\n", path, ndGetErrorMessage() );
@@ -137,13 +137,13 @@ static void process_geometry( const char *worldName, NdBranch *root )
 void cook_world_process( const char *worldName )
 {
 	NdBranch *root = ndPushBackObject( NULL, "world" );
-	ndPushBackUI32( root, "version", APE_WORLD_VERSION );
+	ndPushBackUI32( root, "version", SS_ACL_WORLD_VERSION );
 
 	process_properties( worldName, root );
 	process_geometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s." SS_ACL_WORLD_EXTENSION, com_project_get_local_path(), worldName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
 }

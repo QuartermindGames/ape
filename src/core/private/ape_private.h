@@ -144,7 +144,6 @@ void ss_acl_initialize_game_( void );
 void ss_acl_shutdown_game_( void );
 
 void ss_acl_tick_game_( void );
-void ss_acl_disconnect_game_( void );
 void ss_acl_spawn_world_( const char *worldPath );
 
 PL_EXTERN_C_END

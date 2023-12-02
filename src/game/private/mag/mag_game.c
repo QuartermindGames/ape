@@ -41,7 +41,7 @@ static void move_camera_callback( ApeInputState state, const char *id )
 
 static bool initialize_game( void )
 {
-	game_register_standard_entity_components();
+	ss_game_register_standard_entity_components_();
 
 	playerCamera = ss_arl_camera_create( "mag_camera", &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
 	if ( playerCamera == NULL )
@@ -58,6 +58,8 @@ static bool initialize_game( void )
 	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
 
 	testMaterial = ss_arl_material_cache( "materials/debug/debug_sprite.mat.n", APE_CACHE_EDITOR, true, false );
+
+	ss_acl_level_create();
 
 	mag_tile_editor_initialize();
 
@@ -154,7 +156,7 @@ static void draw_game_ui( SSArlViewport *viewport )
 	mag_tile_editor_draw( viewport );
 }
 
-static bool handle_request( GameModeRequest modeRequest, void *user )
+static bool handle_request( SSGameModeRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
@@ -176,10 +178,10 @@ static bool handle_request( GameModeRequest modeRequest, void *user )
 	return false;
 }
 
-const GameModeInterface *gameModeInterface;
-const GameModeInterface *gameGetModeInterface( void )
+const SSGameModeInterface *gameModeInterface;
+const SSGameModeInterface *ss_game_mode_get_interface( void )
 {
-	static GameModeInterface gameMode;
+	static SSGameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;

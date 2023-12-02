@@ -123,7 +123,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct SSAclWorldRoom *sector ) { self->sector = sector; }
 
 void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -205,7 +205,7 @@ bool Act_IsVisible( Actor *self, SSArlCamera *camera ) {
 #endif
 }
 
-void Act_DrawActors( SSArlCamera *camera, ApeWorldRoom *sector ) {
+void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector ) {
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
 	while ( index != NULL ) {
 		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
@@ -240,7 +240,7 @@ void Act_DrawActors( SSArlCamera *camera, ApeWorldRoom *sector ) {
 #	if 1
 			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
 			while ( colliderNode != NULL ) {
-				ApeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
+				SSAclWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
 				PLCollisionPlane plane = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
 				PLCollision collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );

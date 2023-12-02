@@ -26,6 +26,6 @@ typedef struct GameEntityClassBase
 
 	int life;
 	int armor;
-	GameEntityFlag flags;
-	GameAIFlag aiFlags;
+	SSGameEntityFlag flags;
+	SSGameAIFlag aiFlags;
 } GameEntityClassBase;

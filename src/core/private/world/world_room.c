@@ -3,9 +3,9 @@
 
 #include "world.h"
 
-ApeWorldRoom *acl_room_create( void )
+SSAclWorldRoom *ss_acl_room_create( void )
 {
-	ApeWorldRoom *room = PL_NEW( ApeWorldRoom );
+	SSAclWorldRoom *room = PL_NEW( SSAclWorldRoom );
 	room->detailRooms = PlCreateVectorArray( 0 );
 	room->faces = PlCreateVectorArray( 0 );
 	room->portals = PlCreateVectorArray( 0 );
@@ -18,7 +18,7 @@ ApeWorldRoom *acl_room_create( void )
 	return room;
 }
 
-void acl_room_destroy( ApeWorldRoom *room )
+void ss_acl_room_destroy( SSAclWorldRoom *room )
 {
 	PlDestroyVectorArray( room->detailRooms );
 	PlDestroyVectorArray( room->faces );
@@ -31,13 +31,13 @@ void acl_room_destroy( ApeWorldRoom *room )
 	PL_DELETE( room );
 }
 
-ApeWorldFace **acl_room_get_faces( ApeWorldRoom *room, unsigned int *numFaces )
+SSAclWorldFace **ss_acl_room_get_faces( SSAclWorldRoom *room, unsigned int *numFaces )
 {
-	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( room->faces, numFaces );
+	return ( SSAclWorldFace ** ) PlGetVectorArrayDataEx( room->faces, numFaces );
 }
 
-ApeWorldRoom **acl_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms )
+SSAclWorldRoom **ss_acl_room_get_detail_rooms( SSAclWorldRoom *room, unsigned int *numDetailRooms )
 {
 	*numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-	return ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
+	return ( SSAclWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 }

@@ -5,8 +5,8 @@
 #include "ape_private.h"
 #include "world.h"
 
-void apeSerializeWorld( const ApeWorld *world, NdBranch *root ) {
-	ndPushBackUI32( root, "version", APE_WORLD_VERSION );
+void ss_acl_world_serialize_( const ApeWorld *world, NdBranch *root ) {
+	ndPushBackUI32( root, "version", SS_ACL_WORLD_VERSION );
 
 	if ( world->globalProperties != NULL ) {
 		ndPushBackBranch( root, world->globalProperties );

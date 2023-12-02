@@ -16,21 +16,18 @@ typedef struct SSArlLight SSArlLight;
 typedef struct SS_Acl_Entity SS_Acl_Entity;// core_entity.h
 
 /* ======================================================================
- * LEVEL INTERFACE
+ * WORLD INTERFACE
  * ====================================================================*/
 
-typedef struct ApeWorldFace ApeWorldFace;
-typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct SSAclWorldFace SSAclWorldFace;
+typedef struct SSAclWorldMesh SSAclWorldMesh;
 typedef struct ApeWorldObject ApeWorldObject;
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct SSAclWorldRoom SSAclWorldRoom;
 typedef struct ApeWorld ApeWorld;
 
-#define APE_WORLD_VERSION       3
-#define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_CFG "wpf.n"
-
-#define APE_LEVEL_EXTENSION          ".rfl"
-#define APE_LEVEL_EXTENSION_GEOMETRY ".geo"
+#define SS_ACL_WORLD_VERSION       3
+#define SS_ACL_WORLD_EXTENSION     "wld.n"
+#define SS_ACL_WORLD_EXTENSION_CFG "wpf.n"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
@@ -38,21 +35,11 @@ ApeWorld *ss_acl_level_create( void );
 
 ApeWorld *ss_acl_level_load( const char *path );
 
-/// Deserialize world from a node tree.
-/// \param world World that deserialized data will be added to.
-/// \param root Handle to the world root.
-/// \return On success, returns the world pointer, otherwise null.
-ApeWorld *ss_acl_world_deserialize_( NdBranch *root );
-
-/// Fetches the currently active world. Only one world can be active at a time.
-/// \return Handle to the currently active world.
-struct ApeWorld *acl_level_get_current( void );
-
 /// Attempts to save the given world to the destination.
 /// \param world
 /// \param path
 /// \return On success, returns true but false otherwise.
-bool acl_level_save( ApeWorld *world, const char *path );
+bool ss_acl_world_save( ApeWorld *world, const char *path );
 
 void acl_level_destroy( ApeWorld *level );
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
@@ -91,53 +78,53 @@ void ss_acl_level_get_player_start( const ApeWorld *level, PLVector3 *position, 
 ////////////////////////////////////////////////////////////////////
 // Room
 
-#define APE_WORLD_ROOM_FLAG_COLD     0x2
-#define APE_WORLD_ROOM_FLAG_OUTSIDE  0x4
-#define APE_WORLD_ROOM_FLAG_AIRLOCK  0x8
-#define APE_WORLD_ROOM_FLAG_AMBIENT  0x20
-#define APE_WORLD_ROOM_FLAG_ALPHA    0x40
-#define APE_WORLD_ROOM_FLAG_LIFE     0x80
-#define APE_WORLD_ROOM_FLAG_PLANKTON 0x1000
-#define APE_WORLD_ROOM_FLAG_UNKNOWN0 0x2000
-#define APE_WORLD_ROOM_FLAG_SKY      0x40000000
+#define SS_ACL_WORLD_ROOM_FLAG_COLD    0x2
+#define SS_ACL_WORLD_ROOM_FLAG_OUTSIDE 0x4
+#define APE_WORLD_ROOM_FLAG_AIRLOCK    0x8
+#define APE_WORLD_ROOM_FLAG_AMBIENT    0x20
+#define APE_WORLD_ROOM_FLAG_ALPHA      0x40
+#define APE_WORLD_ROOM_FLAG_LIFE       0x80
+#define APE_WORLD_ROOM_FLAG_PLANKTON   0x1000
+#define APE_WORLD_ROOM_FLAG_UNKNOWN0   0x2000
+#define APE_WORLD_ROOM_FLAG_SKY        0x40000000
 
-ApeWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+SSAclWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Face
 
-void ape_level_face_generate_bounds( ApeWorldFace *face );
+void ss_acl_world_face_generate_bounds( SSAclWorldFace *face );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting
 
-typedef enum ApeLightType
+typedef enum SSArlLightType
 {
 	APE_LIGHT_TYPE_OMNI,
 	APE_LIGHT_TYPE_SPOT,
 	APE_LIGHT_TYPE_SUN,
 
 	APE_MAX_LIGHT_TYPES
-} ApeLightType;
+} SSArlLightType;
 
 // GM flags, do not change!!
-#define APE_LIGHT_FLAG_DYNAMIC         0x1U
-#define APE_LIGHT_FLAG_FADE            0x2U
-#define APE_LIGHT_FLAG_SHADOWS         0x4U
-#define APE_LIGHT_FLAG_ENABLED         0x8U
-#define APE_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U
+#define SS_ARL_LIGHT_FLAG_DYNAMIC         0x1U   // means the light is not baked, and can be moved at runtime
+#define SS_ARL_LIGHT_FLAG_FADE            0x2U   // ...
+#define SS_ARL_LIGHT_FLAG_SHADOWS         0x4U   // if enabled without runtime shadows flag, will cast lightmap shadows
+#define SS_ARL_LIGHT_FLAG_ENABLED         0x8U   // if flag is not present, light is not active
+#define SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U// treated as stencil shadow volumes
 
 /// A light can only be spawned in while the world is active.
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-SSArlLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
-void ape_light_destroy( SSArlLight *light );
+SSArlLight *ss_arl_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, SSArlLightType type, unsigned int flags );
+void ss_arl_light_destroy( SSArlLight *light );
 
-PLColourF32 ape_light_get_colour( const SSArlLight *light );
-void ape_light_set_colour( SSArlLight *light, const PLColourF32 *colour );
+PLColourF32 ss_arl_light_get_colour( const SSArlLight *light );
+void ss_arl_light_set_colour( SSArlLight *light, const PLColourF32 *colour );
 
-PLVector3 ape_light_get_position( const SSArlLight *light );
-void ape_light_set_position( SSArlLight *light, const PLVector3 *position );
+PLVector3 ss_arl_light_get_position( const SSArlLight *light );
+void ss_arl_light_set_position( SSArlLight *light, const PLVector3 *position );
 
 PL_EXTERN_C_END

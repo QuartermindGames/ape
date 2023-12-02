@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -7,20 +7,26 @@
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_hashtable.h>
 
-#include <yin/core.h>
-#include <yin/core_entity.h>
-#include <yin/core_input.h>
-#include <yin/gui_public.h>
-#include <yin/node.h>
+#include "yin/core.h"
+#include "yin/core_entity.h"
+#include "yin/core_input.h"
+#include "yin/core_game.h"
+#include "yin/gui_public.h"
+#include "yin/node.h"
 
 #include "game/game_interface.h"
+
+extern int globalGameLog;
+extern int globalGameDebugLog;
+extern int globalGameWarningLog;
+extern int globalGameErrorLog;
 
 #define Game_Print( ... )   PlLogMessage( globalGameLog, __VA_ARGS__ )
 #define Game_Warning( ... ) PlLogMessage( globalGameWarningLog, __VA_ARGS__ )
 #define Game_Error( ... )   PlLogMessage( globalGameErrorLog, __VA_ARGS__ )
 #define Game_Debug( ... )   PlLogMessage( globalGameDebugLog, __VA_ARGS__ )
 
-typedef enum GameEntityFlag
+typedef enum SSGameEntityFlag
 {
 	PL_BITFLAG( GAME_ENTITY_FLAG_HAS_ALPHA, 0U ),
 	PL_BITFLAG( GAME_ENTITY_FLAG_WALK, 1U ),
@@ -53,9 +59,9 @@ typedef enum GameEntityFlag
 	PL_BITFLAG( GAME_ENTITY_FLAG_CUSTOM_CORPSE, 28U ),
 	PL_BITFLAG( GAME_ENTITY_FLAG_COLLIDE_ENTITY, 29U ),
 	PL_BITFLAG( GAME_ENTITY_FLAG_STRINGER_TARGET, 30U ),
-} GameEntityFlag;
+} SSGameEntityFlag;
 
-typedef enum GameAIFlag
+typedef enum SSGameAIFlag
 {
 	PL_BITFLAG( GAME_AI_FLAG_CAUTIOUS, 0U ),
 	PL_BITFLAG( GAME_AI_FLAG_AGGRESSIVE, 1U ),
@@ -80,6 +86,6 @@ typedef enum GameAIFlag
 	PL_BITFLAG( GAME_AI_FLAG_RUSSIAN, 20U ),
 	PL_BITFLAG( GAME_AI_FLAG_YAKUZA, 21U ),
 	PL_BITFLAG( GAME_AI_FLAG_NO_GIB, 22U ),
-} GameAIFlag;
+} SSGameAIFlag;
 
-void game_register_standard_entity_components( void );
+void ss_game_register_standard_entity_components_( void );

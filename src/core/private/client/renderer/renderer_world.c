@@ -220,7 +220,7 @@ void arl_level_draw_wireframe( ApeWorld *world, SSArlCamera *camera )
 #endif
 }
 
-static bool face_is_facing_light( const ApeWorldFace *face, const SSArlLight *light )
+static bool face_is_facing_light( const SSAclWorldFace *face, const SSArlLight *light )
 {
 	PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( face->origin, light->position ) );
 	if ( PlVector3DotProduct( face->normal, lightDir ) >= 0 )
@@ -242,7 +242,7 @@ static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned in
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera, bool skipPortals, SSArlLight *light, bool ambienceOnly )
+static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camera, bool skipPortals, SSArlLight *light, bool ambienceOnly )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
@@ -268,7 +268,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera,
 	}
 
 	unsigned int numFaces;
-	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
+	SSAclWorldFace **faces = ss_acl_room_get_faces( room, &numFaces );
 	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->materialIndex < 0 )
@@ -295,7 +295,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera,
 
 		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 
-		if ( light != NULL && ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS ) &&
+		if ( light != NULL && ( light->flags & SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS ) &&
 		     ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
 		{
 			offset += numVertices;
@@ -331,7 +331,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, SSArlCamera *camera,
 		world->ambience = oldAmbience;
 }
 
-static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSArlLight *light, const PLColour *colour )
+static void draw_room_stencil_shadow_volume( const SSAclWorldFace *face, const SSArlLight *light, const PLColour *colour )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
@@ -352,7 +352,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSA
 	faceVertexNode = PlGetLastNode( face->edgeLoop );
 	while ( faceVertexNode != NULL )
 	{
-		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
 
 		if ( light->type != APE_LIGHT_TYPE_SUN )
@@ -372,7 +372,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSA
 	faceVertexNode = PlGetFirstNode( face->edgeLoop );
 	while ( faceVertexNode != NULL )
 	{
-		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
 
 		PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
@@ -386,7 +386,7 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSA
 	faceVertexNode = PlGetFirstNode( face->edgeLoop );
 	while ( faceVertexNode != NULL )
 	{
-		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
 
 		PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
@@ -421,10 +421,10 @@ static void draw_room_stencil_shadow_volume( const ApeWorldFace *face, const SSA
 	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
-static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SSArlLight *light )
+static void draw_room_stencil_shadow_volumes( SSAclWorldRoom *room, const SSArlLight *light )
 {
 	unsigned int numFaces;
-	ApeWorldFace **faces = acl_room_get_faces( room, &numFaces );
+	SSAclWorldFace **faces = ss_acl_room_get_faces( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->material == NULL || !ss_arl_material_shadows_enabled( faces[ i ]->material ) )
@@ -440,7 +440,7 @@ static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const SSArlLig
 	}
 }
 
-static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SSArlCamera *camera, SSArlLight *light )
+static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *camera, SSArlLight *light )
 {
 	if ( light == NULL )
 		return;
@@ -454,7 +454,7 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, SSArlCamera *came
 	if ( !room->isDetail )
 	{
 		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		ApeWorldRoom **detailRooms = ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
+		SSAclWorldRoom **detailRooms = ( SSAclWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 		for ( unsigned int j = 0; j < numDetailRooms; ++j )
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 	}
@@ -475,7 +475,7 @@ void arl_level_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArl
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail )
 				continue;
@@ -503,7 +503,7 @@ void arl_level_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bo
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail )
 				continue;

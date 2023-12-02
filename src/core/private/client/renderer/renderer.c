@@ -8,9 +8,10 @@
 
 #include "ape_private.h"
 #include "legacy/actor.h"
-#include "renderer_font.h"
 #include "world/world.h"
+
 #include "renderer.h"
+#include "renderer_font.h"
 #include "renderer_particle.h"
 #include "renderer_render_target.h"
 
@@ -18,6 +19,8 @@
 #include "editor/editor.h"
 
 #include "post/post.h"
+
+#include "game/game_interface.h"
 
 ApeRendererStats ape_rendererPerformance_;
 SSArlRendererPassState arl_rendererState_;
@@ -143,7 +146,7 @@ void ss_arl_setup_default_state( const SSArlViewport *viewport )
 {
 	PLColour clearColour = { 50, 50, 50, 255 };
 
-	ApeWorld *world = acl_level_get_current();
+	ApeWorld *world = ss_game_get_current_world();
 	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE ) )
 		clearColour = PlColourF32ToU8( &world->clearColour );
 
@@ -318,8 +321,6 @@ void ss_arl_initialize_( void )
 	ss_arl_initialize_materials_();
 	YR_Font_Initialize();
 
-	ss_arl_initialize_visibility_system_();
-
 	auxCamera = PlgCreateCamera();
 	if ( auxCamera == NULL )
 		PRINT_ERROR( "Failed to create auxiliary camera: %s\n", PlGetError() );
@@ -348,9 +349,6 @@ void ss_arl_shutdown_( void )
 	Font_Shutdown();
 	ss_arl_shutdown_materials_();
 	ss_arl_shutdown_render_targets_();
-
-	//TODO: move this out of the renderer...
-	apeShutdownWorldVisibilitySystem_();
 }
 
 static void draw_debug_overlay( const SSArlViewport *viewport )
@@ -468,7 +466,7 @@ void ss_arl_set_2d_viewport_size_( int w, int h )
 	PlgSetupCamera( auxCamera );
 }
 
-void apeGet2DViewportSize( int *width, int *height )
+void ss_arl_get_2d_viewport_size_( int *width, int *height )
 {
 	PlgGetViewport( NULL, NULL, width, height );
 }
@@ -678,7 +676,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = acl_level_get_current();
+	ApeWorld *world = ss_game_get_current_world();
 	if ( world == NULL )
 		return;
 
@@ -694,7 +692,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 	PlgDepthMask( false );
 
 	unsigned int numLights;
-	SSArlLight **lights = apeGetVisibleLights_( &numLights );
+	SSArlLight **lights = ss_acl_camera_get_visible_lights_( NULL, &numLights );
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
@@ -733,7 +731,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 
 		//arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
 
-		if ( lights[ i ]->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS )
+		if ( lights[ i ]->flags & SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS )
 		{
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
@@ -825,7 +823,7 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			}
 #endif
 
-void arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
+void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 

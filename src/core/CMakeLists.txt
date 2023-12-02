@@ -72,7 +72,6 @@ add_library(ApeCore STATIC
         private/world/world_deserialiser_rf.c
         private/world/world_room.c
         private/world/world_serialiser.c
-        private/world/world_visibility.c
 
         ${YIN_CORE_CLIENT}
         ${APE_SOURCE_AUDIO}

@@ -4,11 +4,6 @@
 
 PL_EXTERN_C
 
-typedef struct GameState {
-	int mode, oldMode;
-} GameState;
-extern GameState acl_gameState_;
-
-extern const struct GameModeInterface *game_modeInterface;
+extern const struct SSGameModeInterface *game_modeInterface;
 
 PL_EXTERN_C_END

@@ -1,29 +1,110 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Core camera implementation.
 
 #include <plcore/pl_linkedlist.h>
 
 #include "ape_private.h"
 #include "renderer.h"
-#include "post/post.h"
-#include "legacy/actor.h"
+
+#include "world/world.h"
+
 #include "game/game_interface.h"
 
-/* Camera management fun! */
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
+
+static const unsigned int MAX_VISIBILITY_DEPTH = 256;// we'll go through 256 portals maximum (maybe hook this to a var)
 
 static PLLinkedList *cameras;
 
-static SSArlCamera *activeCamera = NULL;
-
-SSArlCamera *ss_arl_camera_get_active( void )
+static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
+static int compare_lights( const void *a, const void *b )
 {
-	return activeCamera;
+	SSArlLight *lightA = *( SSArlLight ** ) a;
+	SSArlLight *lightB = *( SSArlLight ** ) b;
+
+	float da = PlVector3Length( PlSubtractVector3( lightA->position, viewPos ) );
+	float db = PlVector3Length( PlSubtractVector3( lightB->position, viewPos ) );
+
+	return ( da > db ) ? 1 : -1;
 }
+
+static void sort_lights( const SSArlCamera *camera )
+{
+	if ( !ape_config_.level.sortLights )
+		return;
+
+	viewPos = camera->internal->position;
+
+	SSArlLight **lights = ( SSArlLight ** ) PlGetVectorArrayData( camera->visibleLights );
+	unsigned int numLights = PlGetNumVectorArrayElements( camera->visibleLights );
+	qsort( lights, numLights, sizeof( SSArlLight * ), compare_lights );
+}
+
+/**
+ * Right now, there's a giant fuck-off list of lights the world provides
+ * and no association between the worlds and rooms, so we need to iterate
+ * over every single damn light.
+ */
+static void build_visible_light_list( SSArlCamera *camera, ApeWorld *world )
+{
+	if ( world->lights == NULL )
+		return;
+
+	// determine what lights are visible -
+	// for now this operates over all the lights in the world, urgh...
+	PlClearVectorArray( camera->visibleLights );
+	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->lights ); ++i )
+	{
+		SSArlLight *light = PlGetVectorArrayElementAt( world->lights, i );
+
+		if ( !( light->flags & SS_ARL_LIGHT_FLAG_ENABLED ) )
+			continue;
+
+		if ( light->type != APE_LIGHT_TYPE_SUN )
+		{
+			//TODO: let us configure draw distance per light
+			float distance = PlVector3Length( PlSubtractVector3( light->position, ss_arl_camera_get_position( camera ) ) );
+			if ( distance > ape_config_.renderer.maxLightDistance )
+				continue;
+
+			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
+			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
+				continue;
+		}
+
+		PlPushBackVectorArrayElement( camera->visibleLights, light );
+	}
+
+	sort_lights( camera );
+
+	ape_rendererPerformance_.numLights = PlGetNumVectorArrayElements( camera->visibleLights );
+}
+
+static void build_visible_room_list( SSArlCamera *camera, ApeWorld *world )
+{
+	PlClearVectorArray( camera->visibleRooms );
+
+	if ( camera->room == NULL )
+		return;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 void ss_arl_camera_make_active( SSArlCamera *camera )
 {
-	activeCamera = camera;
 	PlgSetupCamera( camera->internal );
+}
+
+void ss_arl_camera_assign_world( SSArlCamera *camera, ApeWorld *world )
+{
+	camera->world = world;
+}
+
+ApeWorld *ss_arl_camera_get_world( SSArlCamera *camera )
+{
+	return camera->world;
 }
 
 void ss_arl_camera_set_draw_mode( SSArlCamera *camera, ApeCameraDrawMode drawMode )
@@ -44,7 +125,7 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 	SSArlCamera *camera = PL_NEW( SSArlCamera );
 
 	camera->mode = cameraMode;
-	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
+	camera->drawMode = SS_ARL_CAMERA_DRAW_MODE_SHADED;
 
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == NULL )
@@ -61,6 +142,7 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 	}
 	else
 	{
+		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
 		camera->internal->fov = 75.0f;
 		camera->internal->far = 1000000.0f;
 	}
@@ -74,6 +156,9 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 		if ( cameras == NULL )
 			PRINT_ERROR( "Failed to create cameras list: %s\n", PlGetError() );
 	}
+
+	camera->visibleLights = PlCreateVectorArray( SS_ARL_MAX_LIGHTS_PER_PASS );
+	camera->visibleRooms = PlCreateVectorArray( MAX_VISIBILITY_DEPTH );
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
 
@@ -94,9 +179,8 @@ void ss_arl_camera_destroy( SSArlCamera *camera )
 
 	PlDestroyLinkedListNode( camera->node );
 
-	// be sure the global camera gets unset if we're destroying it
-	if ( camera == activeCamera )
-		activeCamera = NULL;
+	PlDestroyVectorArray( camera->visibleLights );
+	PlDestroyVectorArray( camera->visibleRooms );
 
 	PL_DELETE( camera );
 
@@ -113,7 +197,7 @@ void ss_arl_camera_set_position( SSArlCamera *camera, const PLVector3 *position 
 
 	if ( camera->room == NULL )
 	{
-		ApeWorld *world = acl_level_get_current();
+		ApeWorld *world = ss_game_get_current_world();
 		if ( world == NULL )
 			return;
 
@@ -141,15 +225,13 @@ PLVector3 ss_arl_camera_get_forward( const SSArlCamera *camera )
 	return camera->forward;
 }
 
-void arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport );
+void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport );
 void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewport )
 {
 	if ( camera == NULL )
-	{
-		camera = ss_arl_camera_get_active();
-		if ( camera == NULL )
-			return;
-	}
+		camera = viewport->camera;
+	if ( camera == NULL )
+		return;
 
 	COM_PROFILE_FUNCTION_START();
 
@@ -174,9 +256,10 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 	static const float minHeight = 256.0f;
 	static const float maxHeight = 1024.0f;
 
-	PLVector3 angles;
-	PLVector3 position;
+	PLVector3 angles = camera->internal->angles;
+	PLVector3 position = camera->internal->position;
 
+#if 0
 	/* if we have a parent, follow them */
 	Actor *parent = camera->parentActor;
 	if ( parent != NULL )
@@ -193,6 +276,7 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 		angles = camera->internal->angles;
 		position = camera->internal->position;
 	}
+#endif
 
 	float speed;
 	switch ( camera->mode )
@@ -203,8 +287,9 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 			camera->internal->angles = angles;
 			camera->internal->position = position;
 			break;
-		case APE_CAMERA_MODE_TOP:
+		case SS_ARL_CAMERA_MODE_TOP:
 		{
+#if 0
 			if ( camera->parentActor != NULL )
 			{
 				speed = PlVector3Length( camera->parentActor->velocity ) / 16.0f;
@@ -212,7 +297,8 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 					speed = 1.0f;
 			}
 			else
-				speed = 0.0f;
+#endif
+			speed = 0.0f;
 
 			camera->internal->angles.x = -75.0f;
 			camera->internal->position = position;
@@ -222,10 +308,8 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 		}
 	}
 
-	ss_arl_camera_make_active( camera );
-
 	// Draw the scene into a buffer
-	arl_draw_scene_( camera, viewport );
+	ss_arl_draw_scene_( camera, viewport );
 
 	// Always restore the viewport back
 	viewport->width = ow;
@@ -233,4 +317,48 @@ void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewpo
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	COM_PROFILE_FUNCTION_END();
+}
+
+PLGCamera *ss_arl_camera_get_internal( SSArlCamera *camera )
+{
+	return camera->internal;
+}
+
+SSArlLight **ss_acl_camera_get_visible_lights_( SSArlCamera *camera, unsigned int *num )
+{
+	return ( SSArlLight ** ) PlGetVectorArrayDataEx( camera->visibleLights, num );
+}
+
+SSAclWorldRoom **ss_acl_camera_get_visible_rooms_( SSArlCamera *camera, unsigned int *num )
+{
+	return ( SSAclWorldRoom ** ) PlGetVectorArrayDataEx( camera->visibleRooms, num );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ss_arl_build_camera_visibility_lists_( void )
+{
+	PLLinkedListNode *node = PlGetFirstNode( cameras );
+	while ( node != NULL )
+	{
+		SSArlCamera *camera = PlGetLinkedListNodeUserData( node );
+		if ( camera->world != NULL )
+		{
+			build_visible_light_list( camera, camera->world );
+			build_visible_room_list( camera, camera->world );
+		}
+		node = PlGetNextLinkedListNode( node );
+	}
+}
+
+void ss_arl_clear_camera_visibility_lists_( void )
+{
+	PLLinkedListNode *node = PlGetFirstNode( cameras );
+	while ( node != NULL )
+	{
+		SSArlCamera *camera = PlGetLinkedListNodeUserData( node );
+		PlClearVectorArray( camera->visibleLights );
+		PlClearVectorArray( camera->visibleRooms );
+		node = PlGetNextLinkedListNode( node );
+	}
 }

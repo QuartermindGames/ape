@@ -8,6 +8,8 @@
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_font.h"
 
+#include "game/game_interface.h"
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -70,7 +72,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 	if ( font == NULL )
 		return;
 
-	SSArlCamera *camera = ss_arl_camera_get_active();
+	SSArlCamera *camera = viewport->camera;
 	if ( camera == NULL )
 		return;
 
@@ -88,10 +90,10 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 		case SS_ARL_CAMERA_MODE_FRONT:
 			label = "Front";
 			break;
-		case APE_CAMERA_MODE_LEFT:
+		case SS_ARL_CAMERA_MODE_LEFT:
 			label = "Left";
 			break;
-		case APE_CAMERA_MODE_TOP:
+		case SS_ARL_CAMERA_MODE_TOP:
 			label = "Top";
 			break;
 	}
@@ -143,7 +145,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 #endif
 		}
 
-		ApeWorld *level = acl_level_get_current();
+		ApeWorld *level = ss_game_get_current_world();
 		if ( camera != NULL && level != NULL )
 		{
 			// stupid matrix bollocks, blargh
@@ -158,7 +160,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 				case SS_ARL_CAMERA_DRAW_MODE_WIREFRAME:
 					arl_level_draw_wireframe( level, &tmp );
 					break;
-				case APE_CAMERA_DRAW_MODE_SOLID:
+				case SS_ARL_CAMERA_DRAW_MODE_SOLID:
 				case SS_ARL_CAMERA_DRAW_MODE_TEXTURED:
 					arl_level_draw( level, camera, NULL, 0 );
 					break;

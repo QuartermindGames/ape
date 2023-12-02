@@ -79,7 +79,7 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 	world->rooms = PlCreateVectorArray( numRooms );
 	for ( unsigned int i = 0; i < numRooms; ++i )
 	{
-		ApeWorldRoom *room = acl_room_create();
+		SSAclWorldRoom *room = ss_acl_room_create();
 
 		room->uid = ss_acl_fs_parse_int_ex( file, version, RFL_VERSION_RF1_PROTO, RFL_VERSION_MAX, -1 );
 
@@ -92,8 +92,8 @@ static void parse_static_geometry_rooms( ApeWorld *world, PLFile *file, unsigned
 		if ( version < RFL_VERSION_RF2_DEMO )
 		{
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_SKY; }
-			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_COLD; }
-			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_OUTSIDE; }
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= SS_ACL_WORLD_ROOM_FLAG_COLD; }
+			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= SS_ACL_WORLD_ROOM_FLAG_OUTSIDE; }
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_AIRLOCK; }
 			room->containsLiquid = ( bool ) PL_READUINT8( file, NULL );
 			if ( ( bool ) PL_READUINT8( file, NULL ) ) { room->flags |= APE_WORLD_ROOM_FLAG_AMBIENT; }
@@ -211,7 +211,7 @@ static void parse_static_geometry_detail_rooms( ApeWorld *world, PLFile *file )
 	for ( uint32_t i = 0; i < numRooms; ++i )
 	{
 		uint32_t roomIndex = PL_READUINT32( file, false, NULL );
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
 		uint32_t numDetailRooms = PL_READUINT32( file, false, NULL );
@@ -223,7 +223,7 @@ static void parse_static_geometry_detail_rooms( ApeWorld *world, PLFile *file )
 		for ( uint32_t j = 0; j < numDetailRooms; ++j )
 		{
 			uint32_t detailRoomIndex = PL_READUINT32( file, false, NULL );
-			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( world->rooms, detailRoomIndex );
+			SSAclWorldRoom *detailRoom = PlGetVectorArrayElementAt( world->rooms, detailRoomIndex );
 			assert( detailRoom != NULL );
 			if ( room != NULL && detailRoom != NULL )
 			{
@@ -248,8 +248,8 @@ static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
 		PLVector3 maxs = ss_acl_fs_parse_vector( file );
 		FLIP_VECTOR( maxs );
 
-		ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
-		ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
+		SSAclWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, roomAIndex );
+		SSAclWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, roomBIndex );
 		assert( roomA != NULL && roomB != NULL );
 		if ( roomA == NULL || roomB == NULL )
 		{
@@ -257,7 +257,7 @@ static void parse_static_geometry_portals( ApeWorld *world, PLFile *file )
 			continue;
 		}
 
-		ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
+		SSAclWorldPortal *portal = PL_NEW( SSAclWorldPortal );
 		portal->roomA = roomA;
 		portal->roomB = roomB;
 		portal->mins = mins;
@@ -282,10 +282,10 @@ static void parse_static_geometry_vertices( ApeWorld *world, PLFile *file )
 	}
 }
 
-void ape_level_face_generate_bounds( ApeWorldFace *face )
+void ss_acl_world_face_generate_bounds( SSAclWorldFace *face )
 {
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
-	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
+	SSAclWorldFaceVertex **vertices = ( SSAclWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
 	if ( numVertices == 0 )
 		return;
 
@@ -299,7 +299,7 @@ void ape_level_face_generate_bounds( ApeWorldFace *face )
 	PL_DELETE( boundVertices );
 }
 
-static void calculate_face_normal( ApeWorldFace *face )
+static void calculate_face_normal( SSAclWorldFace *face )
 {
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	assert( numVertices > 0 );
@@ -317,7 +317,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 	unsigned int numFaces = PL_READUINT32( file, false, NULL );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
-		ApeWorldFace *face = PL_NEW( ApeWorldFace );
+		SSAclWorldFace *face = PL_NEW( SSAclWorldFace );
 
 		face->edgeLoop = PlCreateLinkedList();
 
@@ -364,14 +364,14 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 
 		int32_t roomIndex = ss_acl_fs_parse_int( file );
 		assert( roomIndex >= 0 );
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 
 		unsigned int numFaceVertices = PL_READUINT32( file, false, NULL );
 		face->vertices = PlCreateVectorArray( numFaceVertices );
 		for ( unsigned int j = 0; j < numFaceVertices; ++j )
 		{
-			ApeWorldFaceVertex *faceVertex = PL_NEW( ApeWorldFaceVertex );
+			SSAclWorldFaceVertex *faceVertex = PL_NEW( SSAclWorldFaceVertex );
 
 			int32_t worldVertexIndex = PlReadInt32( file, false, NULL );
 			assert( worldVertexIndex >= 0 );
@@ -422,7 +422,7 @@ static void parse_static_geometry_faces( ApeWorld *world, PLFile *file, unsigned
 		if ( version < 167 )
 			calculate_face_normal( face );
 
-		ape_level_face_generate_bounds( face );
+		ss_acl_world_face_generate_bounds( face );
 
 		PlPushBackVectorArrayElement( room->faces, face );
 	}
@@ -448,17 +448,17 @@ static void parse_static_geometry_lightmaps( ApeWorld *world, PLFile *file, unsi
 		PLVector3 min = ss_acl_fs_parse_vector( file );// min
 		PLVector3 max = ss_acl_fs_parse_vector( file );// max
 
-		ss_acl_fs_parse_vector( file );     // eq
-		ss_acl_fs_parse_float( file );      // offset
+		ss_acl_fs_parse_vector( file );  // eq
+		ss_acl_fs_parse_float( file );   // offset
 		PlReadInt32( file, false, NULL );// should smooth
 		PlReadInt32( file, false, NULL );// fullbright
 		PlReadInt32( file, false, NULL );// dropped coefficient
 		PlReadInt32( file, false, NULL );// u coefficient
 		PlReadInt32( file, false, NULL );// v coefficient
-		ss_acl_fs_parse_float( file );      // uv add x
-		ss_acl_fs_parse_float( file );      // uv add y
-		ss_acl_fs_parse_float( file );      // uv scale x
-		ss_acl_fs_parse_float( file );      // uv scale y
+		ss_acl_fs_parse_float( file );   // uv add x
+		ss_acl_fs_parse_float( file );   // uv add y
+		ss_acl_fs_parse_float( file );   // uv scale x
+		ss_acl_fs_parse_float( file );   // uv scale y
 
 		int32_t roomIndex = PlReadInt32( file, false, NULL );// room index
 		assert( PlGetVectorArrayElementAt( world->rooms, roomIndex ) != NULL );
@@ -474,7 +474,7 @@ static void parse_static_geometry_texture_movers( ApeWorld *world, PLFile *file 
 		int32_t faceIndex = PlReadInt32( file, false, NULL );
 		assert( faceIndex >= 0 );
 
-		ApeWorldFace *face;
+		SSAclWorldFace *face;
 		if ( faceIndex >= 0 )
 		{
 			//face = ( ApeWorldFace * ) PlGetVectorArrayElementAt( world->faces, faceIndex );
@@ -617,26 +617,7 @@ static void parse_level_properties( ApeWorld *world, PLFile *file, unsigned int 
 	world->clearColour = world->fogColour;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
-ApeWorld *acl_level_load_rfl_file_( const char *path )
-{
-	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL )
-	{
-		PRINT_WARNING( "Failed to load world: %s\n", PlGetError() );
-		return NULL;
-	}
-
-	ApeWorld *level = acl_level_deserialize_rfl_( file );
-
-	PlCloseFile( file );
-
-	return level;
-}
-
-ApeWorld *acl_level_deserialize_rfl_( PLFile *file )
+static ApeWorld *deserialize_rfl( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != RFL_MAGIC )
@@ -707,6 +688,25 @@ ApeWorld *acl_level_deserialize_rfl_( PLFile *file )
 		// always do this afterwards, just on the off-chance the chunk failed to read
 		PlFileSeek( file, nextChunk, PL_SEEK_SET );
 	}
+
+	return level;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+ApeWorld *ss_acl_world_load_rfl_file_( const char *path )
+{
+	PLFile *file = PlOpenFile( path, false );
+	if ( file == NULL )
+	{
+		PRINT_WARNING( "Failed to load world: %s\n", PlGetError() );
+		return NULL;
+	}
+
+	ApeWorld *level = deserialize_rfl( file );
+
+	PlCloseFile( file );
 
 	return level;
 }

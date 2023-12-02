@@ -4,13 +4,7 @@
 
 PL_EXTERN_C
 
-// todo: these shouldn't be in here!!
-extern int globalGameLog;
-extern int globalGameDebugLog;
-extern int globalGameWarningLog;
-extern int globalGameErrorLog;
-
-typedef enum GameModeRequest
+typedef enum SSGameModeRequest
 {
 	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation
 	GAMEMODE_REQUEST_SHUTDOWN,  // called when shutting down engine
@@ -20,28 +14,28 @@ typedef enum GameModeRequest
 
 	GAMEMODE_REQUEST_TICK,// called after entity tick
 	GAMEMODE_REQUEST_HANDLE_INPUT,
-	GAMEMODE_REQUEST_SPAWN_LEVEL,// called before entities are spawned in and
-	                             // before starting and connecting to server
+	SS_GAME_MODE_REQUEST_SPAWN_WORLD,// called before entities are spawned in and
+	                                 // before starting and connecting to server
 	GAMEMODE_REQUEST_DISCONNECT,
-} GameModeRequest;
+} SSGameModeRequest;
 
-typedef struct GameModeInterface
+typedef struct SSGameModeInterface
 {
 	// This is basically a replacement for the above - just slightly less fussy
-	bool ( *requestCallbackMethod )( GameModeRequest gameModeRequest, void *user );
-} GameModeInterface;
-const GameModeInterface *gameGetModeInterface( void );
+	bool ( *requestCallbackMethod )( SSGameModeRequest gameModeRequest, void *user );
+} SSGameModeInterface;
+const SSGameModeInterface *ss_game_mode_get_interface( void );
 
-typedef enum GameDifficulty
-{
-	GAME_DIFFICULTY_NORMAL,
-	GAME_DIFFICULTY_EASY,
-	GAME_DIFFICULTY_HARD,
+void ss_game_initialize( void );
 
-	GAME_MAX_DIFFICULTY_MODES
-} GameDifficulty;
-void gameSetDifficultyMode( GameDifficulty difficulty );
-GameDifficulty gameGetDifficultyMode( void );
+/// Fetches the currently active world. Only one world can be active at a time.
+/// \return Handle to the currently active world.
+struct ApeWorld *ss_game_get_current_world( void );
+
+void ss_game_spawn_world( ApeWorld *world );
+
+void ss_game_tick( void );
+void ss_game_disconnect( void );
 
 typedef enum GameConnectionType
 {
@@ -51,9 +45,6 @@ typedef enum GameConnectionType
 	GAME_CONNECTION_NET,
 } GameConnectionType;
 GameConnectionType gameGetConnectionType( void );
-
-void gamePlayerConnected( const char *name, unsigned int id );
-void gamePlayerDisconnected( unsigned int id );
 
 typedef struct Actor Actor;
 

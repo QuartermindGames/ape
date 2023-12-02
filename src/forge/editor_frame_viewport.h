@@ -40,8 +40,8 @@ namespace ss::forge
 		FXGLVisual *visual_;
 		FXGLContext *context_;
 
-		FXToggleButton *viewModeButtons_[ APE_CAMERA_MAX_MODES ];
-		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
+		FXToggleButton *viewModeButtons_[ SS_ARL_CAMERA_MAX_MODES ];
+		FXToggleButton *drawModeButtons_[ SS_ARL_CAMERA_MAX_DRAW_MODES ];
 
 		ApeCameraDrawMode drawMode_{ SS_ARL_CAMERA_DRAW_MODE_WIREFRAME };
 		SSArlCameraMode viewMode_{ SS_ARL_CAMERA_MODE_INVALID };
