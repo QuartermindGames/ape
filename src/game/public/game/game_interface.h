@@ -4,6 +4,8 @@
 
 PL_EXTERN_C
 
+typedef struct ApeWorld ApeWorld;
+
 typedef enum SSGameModeRequest
 {
 	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation

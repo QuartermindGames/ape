@@ -6,10 +6,10 @@
 
 PL_EXTERN_C
 
-void apeInitializeGUI_( void );
-void apeShutdownGUI_( void );
+void ss_acl_initialize_gui_( void );
+void ss_acl_shutdown_gui_( void );
 void ss_arl_draw_gui_( SSArlViewport *viewport );
 void ss_acl_tick_gui_( void );
-void apeResizeGUI( int w, int h );
+void ss_acl_resize_gui_( int w, int h );
 
 PL_EXTERN_C_END

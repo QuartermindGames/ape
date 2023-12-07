@@ -106,6 +106,7 @@ const MagWorldState *mag_world_get_state( void );
 
 void mag_world_spawn( ApeWorld *world );
 void mag_world_tick( void );
+void mag_world_draw( SSArlViewport *viewport );
 
 float mag_world_get_sun_brightness( void );
 float mag_world_get_moon_brightness( void );

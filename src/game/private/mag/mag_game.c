@@ -2,10 +2,11 @@
 // Purpose: Main file for demo game project.
 
 #include "mag_game.h"
+#include "mag_world.h"
 
 static SSArlCamera *playerCamera = NULL;
 
-static ApeMaterial *testMaterial;
+static ApeWorld *world;
 
 static void move_camera_callback( ApeInputState state, const char *id )
 {
@@ -57,9 +58,10 @@ static bool initialize_game( void )
 	ss_acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
 	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
 
-	testMaterial = ss_arl_material_cache( "materials/debug/debug_sprite.mat.n", APE_CACHE_EDITOR, true, false );
+	world = ss_acl_level_create();
+	//ss_game_spawn_world( world );
 
-	ss_acl_level_create();
+	ss_arl_camera_assign_world( playerCamera, world );
 
 	mag_tile_editor_initialize();
 
@@ -88,49 +90,24 @@ static void tick_game( void )
 	}
 }
 
+static void draw_game( SSArlViewport * )
+{
+}
+
 static void draw_game_ui( SSArlViewport *viewport )
 {
-#if 0
-	SSArlRenderTarget *renderTarget = ss_arl_viewport_get_render_target( gameViewport );
-	if ( renderTarget != NULL )
-	{
-		PLGTexture *texture = ss_arl_render_target_get_texture( renderTarget );
-		if ( texture != NULL )
-		{
-			float x = ( float ) viewport->x;
-			float y = ( float ) viewport->y;
-			float w = ( float ) viewport->width;
-			float h = ( float ) viewport->height;
+	SSArlCamera *oldCamera = ss_arl_viewport_get_camera( viewport );
+	//ss_arl_camera_make_active( playerCamera );
 
-			PlgSetCullMode( PLG_CULL_NEGATIVE );
+	PLGCamera *internalCamera = ss_arl_camera_get_internal( playerCamera );
+	assert( internalCamera != NULL );
+	if ( internalCamera == NULL )
+		return;
 
-			PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT ) );
-			PlgSetTexture( texture, 0 );
+	mag_world_draw( viewport );
 
-			PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
-
-			PlgImmPushVertex( x, y + h, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 0.0f, 0.0f );
-
-			PlgImmPushVertex( x, y, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 0.0f, 1.0f );
-
-			PlgImmPushVertex( x + w, y + h, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 1.0f, 0.0f );
-
-			PlgImmPushVertex( x + w, y, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 1.0f, 1.0f );
-
-			PlgImmDraw();
-
-			PlgSetCullMode( PLG_CULL_POSITIVE );
-		}
-	}
-#endif
+	if ( oldCamera != NULL )
+		ss_arl_camera_make_active( oldCamera );
 
 	SS_Arl_BitmapFont *font = ss_arl_get_default_bitmap_font();
 	const char *mode;
@@ -142,16 +119,6 @@ static void draw_game_ui( SSArlViewport *viewport )
 	char buf[ 64 ];
 	snprintf( buf, sizeof( buf ), "MODE = %s", mode );
 	ss_arl_bitmap_font_draw_string( font, 10.0f, 50.0f, 1.0f, 1.0f, PL_COLOUR_GREEN, buf, false );
-
-#if 1
-	static float rotate = 0.0f;
-	ss_arl_draw_sprite( testMaterial,
-	                    &( PLQuad ){ 0.0f, 0.0f, 128.0f, 128.0f },
-	                    &( PLVector3 ){ 250.f, 250.f, 0.f },
-	                    &( PLVector3 ){ -( 128.0f / 2.0f ), -( 128.0f / 2.0f ), 0.0f },
-	                    &( PLVector3 ){ 0.0f, 0.0f, rotate }, 1.0f );
-	rotate += 0.0005f;
-#endif
 
 	mag_tile_editor_draw( viewport );
 }
@@ -167,6 +134,9 @@ static bool handle_request( SSGameModeRequest modeRequest, void *user )
 			return true;
 		case GAMEMODE_REQUEST_TICK:
 			tick_game();
+			return true;
+		case GAME_MODE_REQUEST_DRAW:
+			draw_game( ( SSArlViewport * ) user );
 			return true;
 		case GAME_MODE_REQUEST_DRAW_UI:
 			draw_game_ui( ( SSArlViewport * ) user );

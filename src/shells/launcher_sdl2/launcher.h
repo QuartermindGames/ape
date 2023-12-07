@@ -13,9 +13,9 @@
 extern int launcherLog;
 
 #define Print( ... ) PlLogMessage( launcherLog, __VA_ARGS__ )
-#define PrintWarn( ... )                                                             \
-	{                                                                                \
-		PlLogMessage( launcherLog, __VA_ARGS__ );                                    \
+#define PrintWarn( ... )                                                            \
+	{                                                                               \
+		PlLogMessage( launcherLog, __VA_ARGS__ );                                   \
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, __VA_ARGS__ ); \
 	}
 
@@ -23,14 +23,14 @@ extern int launcherLog;
 #	define PrintError( ... )                                                         \
 		{                                                                             \
 			PlLogMessage( launcherLog, __VA_ARGS__ );                                 \
-			ss_shell_display_message( OS_MESSAGE_ERROR, __VA_ARGS__ ); \
+			ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, __VA_ARGS__ ); \
 			exit( EXIT_FAILURE );                                                     \
 		}
 #else
-#	define PrintError( ... )                                                          \
-		{                                                                              \
-			PlLogMessage( launcherLog, __VA_ARGS__ );                                  \
+#	define PrintError( ... )                                                         \
+		{                                                                             \
+			PlLogMessage( launcherLog, __VA_ARGS__ );                                 \
 			ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, __VA_ARGS__ ); \
-			abort();                                                                   \
+			abort();                                                                  \
 		}
 #endif

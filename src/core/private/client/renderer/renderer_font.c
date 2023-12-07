@@ -138,7 +138,7 @@ void ss_arl_bitmap_font_draw( SS_Arl_BitmapFont *font )
 	//PlPopMatrix();
 }
 
-void YR_Font_Initialize( void )
+void ss_arl_initialize_bitmap_fonts_( void )
 {
 	defaultFont = ss_arl_bitmap_font_cache( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
 	defaultFontSmall = ss_arl_bitmap_font_cache( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
@@ -147,7 +147,7 @@ void YR_Font_Initialize( void )
 		PRINT_ERROR( "Failed to load default fonts!\n" );
 }
 
-void Font_Shutdown( void )
+void ss_arl_shutdown_bitmap_fonts_( void )
 {
 	ss_arl_bitmap_font_release( defaultFont );
 	defaultFont = NULL;

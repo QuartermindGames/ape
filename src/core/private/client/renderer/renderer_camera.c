@@ -195,14 +195,11 @@ void ss_arl_camera_set_position( SSArlCamera *camera, const PLVector3 *position 
 {
 	camera->internal->position = *position;
 
-	if ( camera->room == NULL )
-	{
-		ApeWorld *world = ss_game_get_current_world();
-		if ( world == NULL )
-			return;
+	if ( camera->world == NULL )
+		return;
 
-		camera->room = ss_acl_level_get_room_at_position( world, &camera->internal->position );
-	}
+	if ( camera->room == NULL )
+		camera->room = ss_acl_level_get_room_at_position( camera->world, &camera->internal->position );
 }
 
 void ss_arl_camera_set_angles( SSArlCamera *camera, const PLVector3 *angles )

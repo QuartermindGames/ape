@@ -33,13 +33,13 @@ void ss_acl_initialize_client_( void )
 	ss_arl_initialize_();
 
 	apeInitializeAudio_();
-	apeInitializeGUI_();
+	ss_acl_initialize_gui_();
 	apeInitializeInput_();
 }
 
 void ss_acl_shutdown_client_( void )
 {
-	apeShutdownGUI_();
+	ss_acl_shutdown_gui_();
 	apeShutdownAudio_();
 	ss_arl_shutdown_();
 }

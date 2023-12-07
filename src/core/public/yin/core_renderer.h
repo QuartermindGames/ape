@@ -5,13 +5,6 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_mesh.h>
 
-typedef struct SSArlCamera SSArlCamera;
-typedef struct SSArlViewport SSArlViewport;
-typedef struct SSArlLight SSArlLight;
-typedef struct SSArlRenderTarget SSArlRenderTarget;
-typedef struct SSArlTexture SSArlTexture;
-typedef struct ApeMaterial ApeMaterial;
-
 // TODO: retire this...
 typedef enum SS_Arl_CacheGroup
 {
@@ -23,11 +16,19 @@ typedef enum SS_Arl_CacheGroup
 
 PL_EXTERN_C
 
+typedef struct SSArlCamera SSArlCamera;
+typedef struct SSArlViewport SSArlViewport;
+typedef struct SSArlLight SSArlLight;
+typedef struct SSArlRenderTarget SSArlRenderTarget;
+typedef struct SSArlTexture SSArlTexture;
+typedef struct ApeMaterial ApeMaterial;
+
 SSArlViewport *ss_arl_get_viewport_by_slot( unsigned int slot );
 
 SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle );
 void ss_arl_viewport_destroy( SSArlViewport *viewport );
 void ss_arl_viewport_set_camera( SSArlViewport *viewport, SSArlCamera *camera );
+SSArlCamera *ss_arl_viewport_get_camera( SSArlViewport *viewport );
 void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height );
 void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *height );
 unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport );

@@ -95,6 +95,8 @@ void ss_arl_viewport_set_camera( SSArlViewport *viewport, SSArlCamera *camera )
 	viewport->camera = camera;
 }
 
+SSArlCamera *ss_arl_viewport_get_camera( SSArlViewport *viewport ) { return viewport->camera; }
+
 void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height )
 {
 	viewport->width = width;

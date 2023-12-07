@@ -16,5 +16,5 @@ typedef struct SS_Arl_BitmapFont
 	ApeMemoryReference mem;
 } SS_Arl_BitmapFont;
 
-void YR_Font_Initialize( void );
-void Font_Shutdown( void );
+void ss_arl_initialize_bitmap_fonts_( void );
+void ss_arl_shutdown_bitmap_fonts_( void );

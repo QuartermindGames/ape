@@ -27,9 +27,6 @@ SSArlRendererPassState arl_rendererState_;
 
 static SSArlRenderTarget *defaultRenderTarget;
 
-static PLGCamera *auxCamera = NULL;
-PLGCamera *ss_arl_get_aux_camera_( void ) { return auxCamera; }
-
 static bool isScreenshotPending = false;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -315,19 +312,10 @@ void ss_arl_initialize_( void )
 	PL_ZERO_( arl_rendererState_ );
 
 	ss_arl_initialize_textures_();
-
 	ss_arl_initialize_render_targets_();
 	ss_arl_initialize_shaders_();
 	ss_arl_initialize_materials_();
-	YR_Font_Initialize();
-
-	auxCamera = PlgCreateCamera();
-	if ( auxCamera == NULL )
-		PRINT_ERROR( "Failed to create auxiliary camera: %s\n", PlGetError() );
-
-	auxCamera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
-	auxCamera->near = -10000.0f;
-	auxCamera->far = 10000.0f;
+	ss_arl_initialize_bitmap_fonts_();
 
 	ss_arl_setup_default_state( NULL );
 
@@ -346,161 +334,9 @@ void ss_arl_shutdown_( void )
 {
 	ss_arl_postfx_cleanup_();
 
-	Font_Shutdown();
+	ss_arl_shutdown_bitmap_fonts_();
 	ss_arl_shutdown_materials_();
 	ss_arl_shutdown_render_targets_();
-}
-
-static void draw_debug_overlay( const SSArlViewport *viewport )
-{
-	PL_GET_CVAR( "debug/overlay", debugOverlay );
-	if ( debugOverlay->i_value <= 0 )
-		return;
-
-	SS_Arl_BitmapFont *defaultFont = ss_arl_get_default_small_bitmap_font();
-	assert( defaultFont != NULL );
-	if ( defaultFont == NULL )
-		return;
-
-	ss_arl_bitmap_font_begin_draw( defaultFont );
-
-	static const float sy = 8;
-	static const float sx = 8;
-	static const float tx = 8 + 4;
-	float y = sy;
-
-	const SSArlCamera *camera = viewport->camera;
-	if ( camera != NULL )
-	{
-		// Draw camera position
-		char buf[ 128 ];
-		PL_ZERO( buf, sizeof( buf ) );
-		const char *vpos = PlPrintVector3( &camera->internal->position, PL_VAR_I32 );
-		strcat( buf, vpos );
-		strcat( buf, " (" );
-		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
-		strcat( buf, vang );
-		strcat( buf, ")" );
-		ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
-	}
-
-	// Draw stats
-	char buf[ 64 ];
-	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ss_arl_viewport_get_framerate( viewport ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "---------------------\n" );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
-
-	unsigned int numTasks = apeGetNumScheduledTasks();
-	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
-	for ( unsigned int i = 0; i < numTasks; ++i )
-	{
-		double taskDelay;
-		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
-		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
-		ss_arl_bitmap_font_batch_string( defaultFont, tx + 8, y += defaultFont->ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
-	}
-	y += defaultFont->ch * 2;
-
-	static const float bw = 128;
-
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
-
-	ss_arl_bitmap_font_draw( defaultFont );
-
-	if ( debugOverlay->i_value > 1 )
-	{
-		static const float Y_SPACING = 4.0f;
-		static const float X_SPACING = 4.0f;
-		static const float GRAPH_HEIGHT = 32.0f;
-
-		y += Y_SPACING;
-
-		float x = sx;
-
-		ComProfilingGroup *group = comGetFirstProfilingGroup();
-		while ( group != NULL )
-		{
-			if ( y + GRAPH_HEIGHT >= ( float ) viewport->height )
-			{
-				y = sy;
-				x += ( bw + X_SPACING );
-			}
-
-			unsigned int numPoints;
-			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
-			const char *name = comGetProfilingGroupName( group );
-			arl_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
-			y += GRAPH_HEIGHT + Y_SPACING;
-
-			group = comGetNextProfilingGroup( group );
-		}
-	}
-}
-
-void ss_arl_set_2d_viewport_size_( int w, int h )
-{
-	PlgSetViewport( 0, 0, w, h );
-	PlgSetupCamera( auxCamera );
-}
-
-void ss_arl_get_2d_viewport_size_( int *width, int *height )
-{
-	PlgGetViewport( NULL, NULL, width, height );
-}
-
-void ss_arl_draw_menu_( SSArlViewport *viewport )
-{
-	if ( viewport == NULL )
-		return;
-
-	COM_PROFILE_FUNCTION_START();
-
-	ss_arl_viewport_make_active( viewport );
-	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadIdentityMatrix();
-
-	ss_arl_postfx_draw_( viewport );
-
-	ss_arl_draw_gui_( viewport );
-	ss_acl_draw_editor_gui_( viewport );
-
-	draw_debug_overlay( viewport );
-
-	PlgSetTexture( NULL, 0 );
-
-	PlPopMatrix();
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-
-	COM_PROFILE_FUNCTION_END();
 }
 
 /****************************************

@@ -80,16 +80,6 @@ void ss_game_register_standard_entity_components_( void )
 {
 }
 
-void gamePlayerConnected( const char *name, unsigned int id )
-{
-	Game_Print( "Player %s (%u) has connected\n", name, id );
-}
-
-void gamePlayerDisconnected( unsigned int id )
-{
-	Game_Print( "Player (%u) has disconnected\n", id );
-}
-
 static GameConnectionType gameConnectionType = GAME_CONNECTION_LOCAL;
 
 void Game_SetConnection( const GameConnectionType connectionType )
