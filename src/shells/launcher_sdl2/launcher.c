@@ -81,11 +81,15 @@ static bool IsWindowActive( void )
 SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
-#if !NDEBUG
-	flags |= SDL_WINDOW_RESIZABLE;
-#endif
 	if ( fullscreen )
-		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	{
+		flags |= SDL_WINDOW_BORDERLESS;
+
+		SDL_Rect rect;
+		SDL_GetDisplayBounds( 0, &rect );
+		width = rect.w;
+		height = rect.h;
+	}
 
 	switch ( mode )
 	{
@@ -143,6 +147,20 @@ SDL_Window *create_window( const char *title, int width, int height, bool fullsc
 		SDL_GL_MakeCurrent( sdlWindow, sdlGLContext );
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
 	}
+
+	// Okay, so apparently setting borderless fullscreen under Windows is messing around with the display...
+	// Let's try this instead *after* the window is created
+#if 0// NOPE, does the same damn thing...
+	if ( fullscreen )
+	{
+		SDL_SetWindowBordered( sdlWindow, SDL_FALSE );
+
+		SDL_Rect rect;
+		SDL_GetDisplayBounds( 0, &rect );
+		SDL_SetWindowSize( sdlWindow, rect.w, rect.h );
+		SDL_SetWindowPosition( sdlWindow, 0, 0 );
+	}
+#endif
 
 	return sdlWindow;
 }
@@ -374,7 +392,7 @@ static unsigned int timer_callback( unsigned int interval, void *param )
 
 void ss_shell_shutdown( void )
 {
-	comWriteConfig( shellConfig, "shell" );
+	ss_com_write_config( shellConfig, "shell" );
 
 	if ( sdlTimer != 0 )
 		SDL_RemoveTimer( sdlTimer );
@@ -421,7 +439,21 @@ static bool initialize_display( void )
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
-	if ( ( sdlWindow = create_window( windowTitle, 1024, 768, true, driverMode ) ) == NULL )
+#if !NDEBUG
+	bool fullscreen = false;
+#else
+	bool fullscreen = true;
+#endif
+	int width = 1280;
+	int height = 720;
+	if ( shellConfig != NULL )
+	{
+		fullscreen = ndGetBoolByName( shellConfig, "fullscreen", fullscreen );
+		width = ( int ) ndGetInt( shellConfig, "width", width );
+		height = ( int ) ndGetInt( shellConfig, "height", height );
+	}
+
+	if ( ( sdlWindow = create_window( windowTitle, width, height, fullscreen, driverMode ) ) == NULL )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
