@@ -188,7 +188,7 @@ ApeWorld *ss_acl_level_load( const char *path )
 	}
 
 	ApeWorld *world;
-	if ( pl_strcasecmp( extension, ".rfl" ) == 0 )
+	if ( pl_strcasecmp( extension, "rfl" ) == 0 )
 		world = ss_acl_world_load_rfl_file_( path );
 	else
 	{

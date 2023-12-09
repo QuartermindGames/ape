@@ -28,7 +28,7 @@ void com_initialize( void );
 const char *comGetDataDirectory( void );
 const char *comGetAppDataDirectory( void );
 struct NdBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
-bool comWriteConfig( struct NdBranch *root, const char *name );
+bool ss_com_write_config( struct NdBranch *root, const char *name );
 
 void comWritePkgHeader( FILE *pack, unsigned int numFiles );
 void comAddPkgData( FILE *pack, const char *path, const void *buf, size_t size );

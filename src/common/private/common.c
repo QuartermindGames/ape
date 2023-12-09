@@ -97,9 +97,8 @@ NdBranch *com_get_config( const char *name ) {
 	return root;
 }
 
-bool comWriteConfig( struct NdBranch *root, const char *name ) {
+bool ss_com_write_config( struct NdBranch *root, const char *name ) {
 	PLPath configPath;
 	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
-	ndWriteFile( configPath, root, ND_FILE_UTF8 );
-	return true;
+	return ndWriteFile( configPath, root, ND_FILE_UTF8 );
 }
