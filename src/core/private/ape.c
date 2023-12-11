@@ -70,6 +70,9 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 
 	for ( unsigned int i = 0; i < numCommands; ++i )
 	{
+		if ( commands[ i ] == NULL )
+			continue;
+
 		PlParseConsoleString( commands[ i ] );
 		PL_DELETE( commands[ i ] );
 	}

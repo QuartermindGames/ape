@@ -115,6 +115,7 @@ elseif(MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
 endif()
 
+# 3rd party libraries
 add_subdirectory(src/3rdparty/fox)
 
 add_subdirectory(src/dickens)

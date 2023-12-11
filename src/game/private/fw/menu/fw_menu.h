@@ -9,5 +9,5 @@
 
 void fw_menu_initialize( void );
 void fw_menu_tick( void );
-void fw_menu_draw( const ApeViewport *viewport );
+void fw_menu_draw( const SSArlViewport *viewport );
 bool fw_menu_handle_input( void );

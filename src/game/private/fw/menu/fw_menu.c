@@ -7,7 +7,6 @@ static Menu mainMenu;
 
 static void quit_option( void )
 {
-	apeShutdown();
 }
 
 static MenuOption quitMenuOptions[] = {
@@ -46,15 +45,15 @@ void fw_menu_initialize( void )
 {
 	// mmm delicious pie
 	interactPie = menu_pie_create();
-	menu_pie_add_option( interactPie, "testing 1", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
-	menu_pie_add_option( interactPie, "testing 2", apeCacheMaterial( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_WORLD, true, false ), NULL );
-	menu_pie_add_option( interactPie, "testing 3", apeCacheMaterial( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 1", ss_arl_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 2", ss_arl_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 3", ss_arl_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_WORLD, true, false ), NULL );
 	//FW_Menu_SetPieActive( interactPie, true );
 
 	Game_Menu_SetCurrent( &mainMenu );
 }
 
-static void DrawHUD( const ApeViewport *viewport )
+static void DrawHUD( const SSArlViewport *viewport )
 {
 }
 
@@ -63,19 +62,12 @@ void fw_menu_tick( void )
 	menu_pie_tick( interactPie );
 }
 
-void fw_menu_draw( const ApeViewport *viewport )
+void fw_menu_draw( const SSArlViewport *viewport )
 {
-	switch ( gameGetMenuState() )
-	{
-		default:
-			break;
-		case MENU_STATE_HUD:
-			DrawHUD( viewport );
-			break;
-	}
+	DrawHUD( viewport );
 
 	int w, h;
-	ape_viewport_get_size( viewport, &w, &h );
+	ss_arl_viewport_get_size( viewport, &w, &h );
 
 	// draw our fancy little pie menu for interactions
 	menu_pie_draw( interactPie, ( float ) w / 2, ( float ) h / 2 );
@@ -92,7 +84,7 @@ bool fw_menu_handle_input( void )
 	}
 	if ( apeGetButtonStatus( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
 	{
-		menu_pie_add_option( interactPie, "testing 4", apeCacheMaterial( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+		menu_pie_add_option( interactPie, "testing 4", ss_arl_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
 		return true;
 	}
 
