@@ -12,7 +12,7 @@ FWGameState fwGameState;
 static bool FW_Game_Initialize( void ) {
 	PL_ZERO_( fwGameState );
 
-	game_register_standard_entity_components();
+	ss_game_register_standard_entity_components_();
 
 	fw_menu_initialize();
 	fw_terrain_initialize();
@@ -60,7 +60,7 @@ static void Tick( void ) {
 static void FW_Game_Draw( void ) {
 }
 
-static void FW_Game_DrawMenu( const ApeViewport *viewport ) {
+static void FW_Game_DrawMenu( const SSArlViewport *viewport ) {
 	fw_menu_draw( viewport );
 }
 
@@ -91,7 +91,7 @@ static void spawn_level( ApeWorld *world ) {
 #endif
 }
 
-static bool request_handler( GameModeRequest gameModeRequest, void *user ) {
+static bool request_handler( SSGameModeRequest gameModeRequest, void *user ) {
 	switch ( gameModeRequest ) {
 		case GAMEMODE_REQUEST_INITIALIZE:
 			return FW_Game_Initialize();
@@ -100,7 +100,7 @@ static bool request_handler( GameModeRequest gameModeRequest, void *user ) {
 			break;
 		case GAMEMODE_REQUEST_HANDLE_INPUT:
 			break;
-		case GAMEMODE_REQUEST_SPAWN_LEVEL:
+		case SS_GAME_MODE_REQUEST_SPAWN_WORLD:
 			spawn_level( ( ApeWorld * ) user );
 			break;
 		default:
@@ -110,9 +110,8 @@ static bool request_handler( GameModeRequest gameModeRequest, void *user ) {
 	return false;
 }
 
-const GameModeInterface *gameModeInterface;
-const GameModeInterface *gameGetModeInterface( void ) {
-	static GameModeInterface gameMode;
+const SSGameModeInterface *ss_game_mode_get_interface( void ) {
+	static SSGameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 
 	gameMode.requestCallbackMethod = request_handler;
