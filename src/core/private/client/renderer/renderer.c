@@ -381,7 +381,10 @@ unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float
 {
 	assert( numSkyLayers < MAX_SKY_LAYERS );
 	if ( numSkyLayers >= MAX_SKY_LAYERS )
-		return -1;
+	{
+		PRINT_WARNING( "Hit sky layer limit (%u >= %u)!\n", numSkyLayers, MAX_SKY_LAYERS );
+		return ( unsigned int ) -1;
+	}
 
 	skyLayers[ numSkyLayers ].material = ss_arl_material_cache( path, APE_CACHE_WORLD, false, false );
 	if ( skyLayers[ numSkyLayers ].material == NULL )
@@ -528,7 +531,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 	PlgDepthMask( false );
 
 	unsigned int numLights;
-	SSArlLight **lights = ss_acl_camera_get_visible_lights_( NULL, &numLights );
+	SSArlLight **lights = ss_acl_camera_get_visible_lights_( camera, &numLights );
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
