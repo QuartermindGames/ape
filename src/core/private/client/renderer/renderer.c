@@ -386,10 +386,7 @@ unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float
 		return ( unsigned int ) -1;
 	}
 
-	skyLayers[ numSkyLayers ].material = ss_arl_material_cache( path, APE_CACHE_WORLD, false, false );
-	if ( skyLayers[ numSkyLayers ].material == NULL )
-		return -1;
-
+	skyLayers[ numSkyLayers ].material = ss_arl_material_cache( path, APE_CACHE_WORLD, true, false );
 	skyLayers[ numSkyLayers ].scale = scale;
 	skyLayers[ numSkyLayers ].alpha = alpha;
 	skyLayers[ numSkyLayers ].y = y;
