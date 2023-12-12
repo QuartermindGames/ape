@@ -9,7 +9,8 @@
 
 int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
-void com_initialize( void ) {
+void com_initialize( void )
+{
 	com_logLevels_[ COM_LOG_LEVEL_INFO ] = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	com_logLevels_[ COM_LOG_LEVEL_WARN ] = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
@@ -23,21 +24,23 @@ void com_initialize( void ) {
 	com_pack_vpp_register_();
 
 	// Initialize directory lookups
-	comGetDataDirectory();
-	comGetAppDataDirectory();
+	ss_com_get_local_data_directory();
+	ss_com_get_app_data_directory();
 }
 
-const char *comGetDataDirectory( void ) {
+const char *ss_com_get_local_data_directory( void )
+{
 	// cache it
 	static PLPath dataPath = { '\0' };
-	if ( *dataPath != '\0' ) {
+	if ( *dataPath != '\0' )
 		return dataPath;
-	}
 
 	PLPath exeDir;
-	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL ) {
+	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL )
+	{
 		PlSetupPath( dataPath, true, "%s/../../runtime", exeDir );
-		if ( PlPathExists( dataPath ) ) {
+		if ( PlPathExists( dataPath ) )
+		{
 			PlSetupPath( dataPath, true, "%s/../..", exeDir );
 			return dataPath;
 		}
@@ -50,55 +53,53 @@ const char *comGetDataDirectory( void ) {
 
 	const char *cwd = PlGetWorkingDirectory();
 	PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
-	if ( PlPathExists( dataPath ) ) {
+	if ( PlPathExists( dataPath ) )
 		PlSetupPath( dataPath, true, "%s/../..", cwd );
-	} else {
+	else
 		PlSetupPath( dataPath, true, "%s", cwd );
-	}
 
 	return dataPath;
 }
 
-const char *comGetAppDataDirectory( void ) {
+const char *ss_com_get_app_data_directory( void )
+{
 	static PLPath appDataPath = "";
-	if ( *appDataPath != '\0' ) {
+	if ( *appDataPath != '\0' )
 		return appDataPath;
-	}
 
-	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL ) {
+	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL )
 		return appDataPath;
-	}
 
 	Warning( "Failed to fetch application data directory: %s\n", PlGetError() );
 
-	snprintf( appDataPath, sizeof( appDataPath ), "." );
+	PlSetupPath( appDataPath, true, "." );
 	return appDataPath;
 }
 
-NdBranch *com_get_config( const char *name ) {
-	// first attempt to load from local dir
-	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
-	NdBranch *root = ndLoadFile( configPath, "config" );
-	if ( root != NULL ) {
-		return root;
-	}
-
-	// otherwise attempt to load from app data dir instead
-	snprintf( configPath, sizeof( configPath ), "%s.cfg.n", name );
-	root = ndLoadFile( configPath, "config" );
-	if ( root == NULL ) {
-		Warning( "Failed to load user config file: %s\n"
-		         "Creating empty config.\n",
-		         ndGetErrorMessage() );
+NdBranch *ss_com_get_config( const char *name )
+{
+	PLPath path;
+	PlSetupPath( path, true, "configs/%s.cfg.n", name );
+	NdBranch *root = ndLoadFile( path, "config" );
+	if ( root == NULL )
+	{
+		Warning( "Failed to load user config file (%s)! Creating empty config.\n", ndGetErrorMessage() );
 		root = ndPushBackObject( NULL, "config" );
 	}
 
 	return root;
 }
 
-bool ss_com_write_config( struct NdBranch *root, const char *name ) {
-	PLPath configPath;
-	snprintf( configPath, sizeof( configPath ), "%s/%s.cfg.n", comGetAppDataDirectory(), name );
-	return ndWriteFile( configPath, root, ND_FILE_UTF8 );
+bool ss_com_write_config( struct NdBranch *root, const char *name )
+{
+	PLPath path;
+	PlSetupPath( path, true, "%s/configs/", ss_com_get_app_data_directory() );
+	if ( !PlCreatePath( path ) )
+	{
+		Warning( "Failed to create configs path (%s): %s\n", path, PlGetError() );
+		return false;
+	}
+
+	PlSetupPath( path, true, "%s/configs/%s.cfg.n", ss_com_get_app_data_directory(), name );
+	return ndWriteFile( path, root, ND_FILE_UTF8 );
 }

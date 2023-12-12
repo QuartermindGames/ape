@@ -72,7 +72,7 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 static ComProject *deserialize_project( NdBranch *root, const char *name, ComProject *out )
 {
 	PLPath path;
-	PlSetupPath( path, true, "%s/projects/%s", comGetDataDirectory(), name );
+	PlSetupPath( path, true, "%s/projects/%s", ss_com_get_local_data_directory(), name );
 	out->mountLocation = PlMountLocalLocation( path );
 	if ( out->mountLocation == NULL )
 	{
@@ -104,7 +104,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 				return NULL;
 			}
 
-			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", comGetDataDirectory(), baseName, baseName );
+			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", ss_com_get_local_data_directory(), baseName, baseName );
 
 			NdBranch *croot = ndLoadFile( path, "project" );
 			if ( croot == NULL )
@@ -193,7 +193,7 @@ bool com_project_mount( const char *name )
 	}
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", comGetDataDirectory(), name, name );
+	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", ss_com_get_local_data_directory(), name, name );
 
 	NdBranch *root = ndLoadFile( path, "project" );
 	if ( root == NULL )

@@ -281,7 +281,7 @@ int main( int argc, char **argv )
 
 	ss::forge::mainWindow->show();
 
-	if ( !ss_acl_initialize( argc, argv, "editor.cfg.n" ) )
+	if ( !ss_acl_initialize( argc, argv, EDITOR_CONFIG_FILENAME ) )
 	{
 		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Yin!" );
 		return EXIT_FAILURE;

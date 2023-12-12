@@ -378,7 +378,7 @@ static void level_save_command( unsigned int argc, char **argv )
 		return;
 	}
 
-	const char *dataPath = comGetDataDirectory();
+	const char *dataPath = ss_com_get_local_data_directory();
 
 	NdBranch *root = ndPushBackObject( NULL, "world" );
 

@@ -520,11 +520,19 @@ int launcher_initialize( int argc, char **argv )
 
 	com_initialize();
 
-	shellConfig = com_get_config( "shell" );
+	PlMountLocalLocation( ss_com_get_app_data_directory() );
+	PlMountLocalLocation( ss_com_get_local_data_directory() );
 
-	const char *projectName;
+	shellConfig = ss_com_get_config( "shell" );
+
+	const char *projectName = NULL;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
 		projectName = "base";
+	else if ( shellConfig != NULL )
+		projectName = ndGetStringByName( shellConfig, "defaultProject", projectName );
+
+	if ( projectName == NULL )
+		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 
 	com_project_mount( projectName );
 

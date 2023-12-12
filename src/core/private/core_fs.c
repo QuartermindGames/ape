@@ -125,7 +125,6 @@ void ss_acl_fs_mount_base_locations( void )
 	}
 
 	PlMountLocalLocation( exePath );
-	PlMountLocalLocation( comGetDataDirectory() );
 }
 
 char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )

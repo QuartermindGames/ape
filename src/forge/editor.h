@@ -28,7 +28,7 @@
 #define SS_FORGE_APP_TITLE   "Forge Editor"
 #define SS_FORGE_APP_VERSION "v0.1.0"
 
-#define EDITOR_CONFIG_FILENAME "editor.cfg.n"
+#define EDITOR_CONFIG_FILENAME "editor"
 
 typedef enum EditorLogLevel
 {

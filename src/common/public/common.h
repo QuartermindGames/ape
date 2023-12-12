@@ -25,9 +25,9 @@ typedef enum ComDataType {
 PL_EXTERN_C
 
 void com_initialize( void );
-const char *comGetDataDirectory( void );
-const char *comGetAppDataDirectory( void );
-struct NdBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
+const char *ss_com_get_local_data_directory( void );
+const char *ss_com_get_app_data_directory( void );
+struct NdBranch *ss_com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool ss_com_write_config( struct NdBranch *root, const char *name );
 
 void comWritePkgHeader( FILE *pack, unsigned int numFiles );

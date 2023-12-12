@@ -90,7 +90,7 @@ static void *process_capture_queue( void * )
 			PlClearImageAlpha( image );
 
 			PLPath path;
-			PlSetupPath( path, true, "%s/captures/%u.%s", comGetAppDataDirectory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
+			PlSetupPath( path, true, "%s/captures/%u.%s", ss_com_get_app_data_directory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
 			PlWriteImage( image, path, captureQuality );
 
 			PlDestroyImage( image );
@@ -110,7 +110,7 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 	{
 		// Create a folder to store the captures if one doesn't already exist
 		PLPath captureDirectory;
-		PlSetupPath( captureDirectory, true, "%s/captures/", comGetAppDataDirectory() );
+		PlSetupPath( captureDirectory, true, "%s/captures/", ss_com_get_app_data_directory() );
 		PlCreateDirectory( captureDirectory );
 
 		pthread_mutex_init( &captureMutex, NULL );
@@ -219,9 +219,9 @@ static void write_screenshot( void )
 
 			PLPath path;
 			unsigned int num = 0;
-			PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), num );
+			PlSetupPath( path, true, "%s/screen%u.png", ss_com_get_app_data_directory(), num );
 			while ( PlFileExists( path ) )
-				PlSetupPath( path, true, "%s/screen%u.png", comGetAppDataDirectory(), ++num );
+				PlSetupPath( path, true, "%s/screen%u.png", ss_com_get_app_data_directory(), ++num );
 
 			PlWriteImage( image, path, 90 );
 			PlDestroyImage( image );

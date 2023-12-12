@@ -112,27 +112,9 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 	// Need to do this before anything else IO related
 	ss_acl_fs_mount_base_locations();
 
-	// And now we can fetch the engine config that provides mount locations, aliases and more
-	if ( config == NULL )
-	{
-		PRINT( "Shell didn't provide config - "
-		       "checking for command-line argument, otherwise will use default.\n" );
-		config = ENGINE_BASE_CONFIG;
-	}
-	const char *configPath = PlGetCommandLineArgumentValue( "-config" );
-	engineConfig = ndLoadFile( configPath != NULL ? configPath : config, "config" );
-	if ( engineConfig == NULL )
-	{
-		PRINT_WARNING( "Failed to open engine config: %s\n", ndGetErrorMessage() );
-		return false;
-	}
-
-	userConfig = ndLoadFile( ss_acl_fs_get_user_config_location(), "config" );
-	if ( userConfig == NULL )
-	{
-		PRINT( "No existing user config found, will use defaults.\n" );
-		userConfig = ndPushBackObject( NULL, "config" );
-	}
+	// And now we can fetch the configs that provides mount locations, aliases and more
+	engineConfig = ss_com_get_config( config != NULL ? config : "engine" );
+	userConfig = ss_com_get_config( "user" );
 
 	ss_acl_fs_setup_config( engineConfig );
 
