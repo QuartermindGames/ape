@@ -183,7 +183,7 @@ static void free_project( ComProject *out )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-bool com_project_mount( const char *name )
+bool ss_com_project_mount( const char *name )
 {
 	assert( !project.isActive );
 	if ( project.isActive )
@@ -203,20 +203,20 @@ bool com_project_mount( const char *name )
 	}
 
 	if ( deserialize_project( root, name, &project ) == NULL )
-		com_project_unmount();// call unmount to cleanup
+		ss_com_project_unmount();// call unmount to cleanup
 
 	ndDestroyBranch( root );
 
 	return true;
 }
 
-void com_project_unmount( void )
+void ss_com_project_unmount( void )
 {
 	free_project( &project );
 
 	PL_ZERO_( project );
 }
 
-const char *com_project_get_local_path( void ) { return project.localPath; }
-const char *com_project_get_base_name( void ) { return project.baseName; }
-const char *com_project_get_name( void ) { return project.name; }
+const char *ss_com_project_get_local_path( void ) { return project.localPath; }
+const char *ss_com_project_get_base_name( void ) { return project.baseName; }
+const char *ss_com_project_get_name( void ) { return project.name; }

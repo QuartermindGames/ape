@@ -27,7 +27,7 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( ss_com_get_local_data_directory() );
 
 	const char *projectName = argv[ 1 ];
-	if ( !com_project_mount( projectName ) )
+	if ( !ss_com_project_mount( projectName ) )
 		ERROR( "Failed to mount project (%s)!\n", projectName );
 
 	PLPath configPath;

@@ -143,7 +143,7 @@ void cook_world_process( const char *worldName )
 	process_geometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s." SS_ACL_WORLD_EXTENSION, com_project_get_local_path(), worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s." SS_ACL_WORLD_EXTENSION, ss_com_project_get_local_path(), worldName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
 }

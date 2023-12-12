@@ -433,7 +433,7 @@ static bool initialize_display( void )
 	else
 		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
 
-	const char *windowTitle = com_project_get_name();
+	const char *windowTitle = ss_com_project_get_name();
 	if ( windowTitle == NULL )
 		windowTitle = "APE Game Shell";
 
@@ -534,7 +534,7 @@ int launcher_initialize( int argc, char **argv )
 	if ( projectName == NULL )
 		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 
-	com_project_mount( projectName );
+	ss_com_project_mount( projectName );
 
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );

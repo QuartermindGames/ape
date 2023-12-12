@@ -132,7 +132,7 @@ long ss::forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *p
 		        PlSetupPath( folderName, true, "%s", projectNameField->getText().text() ) );
 	}
 
-	com_project_mount( forge::editorProject->internalName.c_str() );
+	ss_com_project_mount( forge::editorProject->internalName.c_str() );
 
 	return FXDialogBox::onCmdAccept( obj, sel, ptr );
 }
