@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -23,6 +23,9 @@ typedef struct SSArlRenderTarget SSArlRenderTarget;
 typedef struct SSArlTexture SSArlTexture;
 typedef struct ApeMaterial ApeMaterial;
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Viewport API
+
 SSArlViewport *ss_arl_get_viewport_by_slot( unsigned int slot );
 
 SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle );
@@ -34,6 +37,11 @@ void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *h
 unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport );
 SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport );
 void ss_arl_viewport_make_active( SSArlViewport *viewport );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Camera API
+
+void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewport );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Render Target API

@@ -5,11 +5,13 @@
 #include "tox_character.h"
 #include "tox_world.h"
 
+#include "ui/tox_ui.h"
+
 ToxGlobalVars tox_globalVars;
 
-static SS_Arl_Camera *playerCamera = NULL;
+static SSArlCamera *playerCamera = NULL;
 
-SS_Arl_Camera *tox_get_player_camera( void )
+SSArlCamera *tox_get_player_camera( void )
 {
 	return playerCamera;
 }
@@ -46,31 +48,6 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	ss_arl_camera_set_angles( playerCamera, &ang );
 }
 
-static void spawn_light_action( ApeInputState state, PL_UNUSED const char *id )
-{
-	if ( state != APE_INPUT_STATE_DOWN )
-		return;
-
-	ApeWorld *world = acl_world_get_current();
-	if ( world == NULL )
-		return;
-
-	static unsigned int delay = 0;
-	if ( ss_acl_get_num_ticks() <= delay )
-		return;
-
-	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
-	ape_world_attach_light( world,
-	                        ape_light_create(
-	                                &pos,
-	                                &( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f },
-	                                2.5f,
-	                                APE_LIGHT_TYPE_OMNI,
-	                                APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC ) );
-
-	delay = ss_acl_get_num_ticks() + 100;
-}
-
 static void progress_time_action( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
@@ -100,58 +77,12 @@ static void set_time_command( unsigned int argc, char **argv )
 	worldState->seconds = strtoul( argv[ 1 ], NULL, 10 );
 }
 
-#ifdef TOX_ALIVE_PREVIEW
-
-static const PLVector3 introStartPos = ( PLVector3 ){ -2.55f, 20.0f, 2.17f };
-static const PLVector3 introStartAng = ( PLVector3 ){ 0.0f, -147.0f, 0.0f };
-static const PLVector3 introEndPos = ( PLVector3 ){ -2.55f, 2.0f, 2.17f };
-static const PLVector3 introEndAng = ( PLVector3 ){ 12.0f, 1651.0f, 0.0f };
-
-static void tick_alive_intro( void )
-{
-	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
-	pos = PlLinearInterpolateV3f( pos, introEndPos,
-	                              PlVector3Length(
-	                                      PlSubtractVector3( introStartPos, introEndPos ) ) /
-	                                      10000.0f );
-	ss_arl_camera_set_position( playerCamera, &pos );
-
-#	if 0
-	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
-	ang = PlLinearInterpolateV3f( ang, introEndAng,
-	                              PlVector3Length(
-	                                      PlSubtractVector3( introStartAng, introEndAng ) ) /
-	                                      1000.0f );
-	ss_arl_camera_set_angles( playerCamera, &ang );
-#	endif
-}
-
-#endif
-
-static void initialize_game( void )
+static bool initialize_game( void )
 {
 	PlRegisterConsoleVariable( "tox_time_speed", "Sets the speed of time.", "200", PL_VAR_F32, &tox_globalVars.timeSpeed, NULL, false );
 
 	PlRegisterConsoleCommand( "tox_print_pos", "Print the camera position and angles.", 0, print_pos_command );
 	PlRegisterConsoleCommand( "tox_set_time", "Sets the world time.", 1, set_time_command );
-
-	game_register_standard_entity_components();
-
-	ss_acl_register_entity_class( tox_character_get_class_table() );
-
-	playerCamera = ss_arl_camera_create( "test", &introStartPos, &introStartAng );
-	ss_arl_camera_make_active( playerCamera );
-
-#ifdef TOX_ALIVE_PREVIEW
-	// hack hack hack hack hack hack
-	PlParseConsoleString( "level ship/worlds/alive_intro.wld.n" );
-	PlParseConsoleString( "r/fov 45" );
-	PlParseConsoleString( "world/showallrooms true" );
-	PlParseConsoleString( "skip_room_cull true" );
-	PlParseConsoleString( "r/supersampling 2" );
-	PlParseConsoleString( "capture" );
-	// hack hack hack hack hack hack
-#endif
 
 	// movement actions
 	ss_acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
@@ -164,9 +95,21 @@ static void initialize_game( void )
 	ss_acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 
 	// this remaining bunch are for debugging purposes...
-	ss_acl_input_register_action( "spawn_light", NULL, 0, ( ApeInputKey[] ){ KEY_ENTER }, 1, spawn_light_action );
 	ss_acl_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
 	ss_acl_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
+
+	ss_game_register_standard_entity_components_();
+
+	ss_acl_register_entity_class( tox_character_get_class_table() );
+
+	playerCamera = ss_arl_camera_create( "tox_camera_player", &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	if ( playerCamera == NULL )
+	{
+		Game_Error( "Failed to create player camera!\n" );
+		return false;
+	}
+
+	return true;
 }
 
 static void shutdown_game( void )
@@ -175,7 +118,7 @@ static void shutdown_game( void )
 	playerCamera = NULL;
 }
 
-static void tick_game( void )
+static bool tick_game( void )
 {
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
@@ -190,38 +133,36 @@ static void tick_game( void )
 		ss_arl_camera_set_angles( playerCamera, &ang );
 	}
 
-#ifdef TOX_ALIVE_PREVIEW
-
-	tick_alive_intro();
-
-#endif
-
 	tox_world_tick();
+	tox_ui_tick();
+
+	return true;
 }
 
-static bool handle_request( GameModeRequest modeRequest, void *user )
+static bool draw_game( SSArlViewport *viewport )
+{
+	ss_arl_camera_make_active( playerCamera );
+	ss_arl_camera_draw_perspective( playerCamera, viewport );
+	return true;
+}
+
+static bool handle_request( SSGameModeRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
 		case GAMEMODE_REQUEST_INITIALIZE:
-		{
-			initialize_game();
-			return true;
-		}
+			return initialize_game();
 		case GAMEMODE_REQUEST_TICK:
-		{
-			tick_game();
+			return tick_game();
+		case GAME_MODE_REQUEST_DRAW:
+			return draw_game( ( SSArlViewport * ) user );
+		case GAME_MODE_REQUEST_DRAW_UI:
+			return tox_ui_draw( ( SSArlViewport * ) user );
+		case GAMEMODE_REQUEST_HANDLE_INPUT:
 			break;
-		}
-		case GAMEMODE_REQUEST_HANDLEINPUT:
-		{
-			break;
-		}
-		case GAMEMODE_REQUEST_SPAWNWORLD:
-		{
+		case SS_GAME_MODE_REQUEST_SPAWN_WORLD:
 			tox_world_spawn( ( ApeWorld * ) user );
-			break;
-		}
+			return true;
 		default:
 			break;
 	}
@@ -229,9 +170,9 @@ static bool handle_request( GameModeRequest modeRequest, void *user )
 	return false;
 }
 
-const GameModeInterface *gameGetModeInterface( void )
+const SSGameModeInterface *ss_game_mode_get_interface( void )
 {
-	static GameModeInterface gameMode;
+	static SSGameModeInterface gameMode;
 	PL_ZERO_( gameMode );
 	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;

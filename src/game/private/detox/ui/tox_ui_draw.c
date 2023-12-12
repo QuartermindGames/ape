@@ -1,0 +1,16 @@
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: For handling UI drawing routines.
+// Author:  Mark E. Sowden
+
+#include "tox_ui.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+bool tox_ui_draw( SSArlViewport *viewport )
+{
+	return false;
+}

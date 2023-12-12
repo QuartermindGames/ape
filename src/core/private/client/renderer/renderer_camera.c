@@ -223,7 +223,7 @@ PLVector3 ss_arl_camera_get_forward( const SSArlCamera *camera )
 }
 
 void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport );
-void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewport )
+void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewport )
 {
 	if ( camera == NULL )
 		camera = viewport->camera;

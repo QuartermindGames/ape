@@ -9,17 +9,20 @@
  * PRIVATE
  ****************************************/
 
-static const char *className = "tox/character";
+static const char *className = "tox_character";
 
-static void *CreateCharacterClass( SS_Acl_Entity *self, NdBranch *properties ) {
+static void *CreateCharacterClass( SS_Acl_Entity *self, NdBranch *properties )
+{
 	return PL_NEW( ToxCharacter );
 }
 
-static void DestroyCharacterClass( SS_Acl_Entity *self ) {
+static void DestroyCharacterClass( SS_Acl_Entity *self )
+{
 	PL_DELETEN( self->classData );
 }
 
-static NdBranch *SerializeCharacterClass( SS_Acl_Entity *self ) {
+static NdBranch *SerializeCharacterClass( SS_Acl_Entity *self )
+{
 	ToxCharacter *character = self->classData;
 
 	NdBranch *root = ndPushBackObject( NULL, className );
@@ -28,21 +31,25 @@ static NdBranch *SerializeCharacterClass( SS_Acl_Entity *self ) {
 	return root;
 }
 
-static void DeserializeCharacterClass( SS_Acl_Entity *self, NdBranch *root ) {
+static void DeserializeCharacterClass( SS_Acl_Entity *self, NdBranch *root )
+{
 }
 
 /****************************************
  * PUBLIC
  ****************************************/
 
-void tox_character_randomize_stats( ToxCharacter *character ) {
+void tox_character_randomize_stats( ToxCharacter *character )
+{
 }
 
-int16_t tox_character_xp_to_next( const ToxCharacter *character ) {
+int16_t tox_character_xp_to_next( const ToxCharacter *character )
+{
 	return ( int16_t ) round( 100 * ( character->stats[ TOX_CHARACTER_STAT_LEVEL ] ^ 3 ) );
 }
 
-const SS_Acl_EntityClassDefinition *tox_character_get_class_table( void ) {
+const SS_Acl_EntityClassDefinition *tox_character_get_class_table( void )
+{
 	static SS_Acl_EntityClassDefinition table;
 	PL_ZERO_( table );
 	table.name = className;

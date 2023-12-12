@@ -163,8 +163,6 @@ void ss_arl_get_2d_viewport_size_( int *width, int *height );
 
 struct SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name );
 
-void ss_arl_camera_draw_perspective_( SSArlCamera *camera, SSArlViewport *viewport );
-
 void ss_arl_draw_sprite_animation_frame( SSArlSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
 void ss_arl_draw_sprite_animation( SSArlSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 

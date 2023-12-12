@@ -46,6 +46,9 @@ set(GAME_TARGET_FERAL
 set(GAME_TARGET_DETOX
         private/detox/entities/light_night.c
 
+        private/detox/ui/tox_ui.c
+        private/detox/ui/tox_ui_draw.c
+
         private/detox/tox_character.c
         private/detox/tox_game.c
         private/detox/tox_quest.c
