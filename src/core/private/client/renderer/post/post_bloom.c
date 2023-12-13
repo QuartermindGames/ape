@@ -53,7 +53,11 @@ static void cleanup_bloom_effect( void )
 
 static void draw_bloom_effect( const SSArlViewport *viewport )
 {
-	if ( !bloomEnabled )
+	if ( !bloomEnabled || viewport->renderTarget == NULL )
+		return;
+
+	PLGTexture *baseTexture = ss_arl_render_target_get_texture( viewport->renderTarget );
+	if ( baseTexture == NULL )
 		return;
 
 	int bw = viewport->width / 2;
@@ -61,7 +65,6 @@ static void draw_bloom_effect( const SSArlViewport *viewport )
 
 	ss_arl_render_target_set_size( bloomRenderTarget, bw, bh );
 	PLGTexture *bloomRenderTargetTexture = ss_arl_render_target_get_texture( bloomRenderTarget );
-	assert( bloomRenderTargetTexture != NULL );
 	if ( bloomRenderTargetTexture == NULL )
 		return;
 
@@ -71,7 +74,7 @@ static void draw_bloom_effect( const SSArlViewport *viewport )
 
 	PlgSetShaderProgram( bloomFilterShader->internal );
 	PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomIntensity, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, ss_arl_render_target_get_texture( ss_arl_get_default_render_target() ) );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, baseTexture );
 
 	PlgSetShaderProgram( bloomBlurXShader->internal );
 	PlgSetShaderUniformValue( bloomBlurXShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
@@ -86,7 +89,7 @@ static void draw_bloom_effect( const SSArlViewport *viewport )
 	//TODO: this last step is botched, urgh...
 
 	ss_arl_render_target_bind( ss_arl_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, ss_arl_render_target_get_texture( ss_arl_get_default_render_target() ) );
+	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomRenderTargetTexture );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );

@@ -98,11 +98,19 @@ void ss_arl_postfx_register_console_variables_( void )
 
 void ss_arl_postfx_draw_( const SSArlViewport *viewport )
 {
-	if ( !postProcessEnabled )
+	assert( viewport->renderTarget != NULL );
+	PLGTexture *baseTexture = ss_arl_render_target_get_texture( viewport->renderTarget );
+	if ( baseTexture == NULL )
 		return;
 
 	ss_arl_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
 	ss_arl_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+
+	if ( !postProcessEnabled )
+	{
+		PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
+		return;
+	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -115,8 +123,5 @@ void ss_arl_postfx_draw_( const SSArlViewport *viewport )
 
 SSArlRenderTarget *ss_arl_postfx_get_render_target( void )
 {
-	if ( !postProcessEnabled )
-		return ss_arl_get_default_render_target();
-
 	return ppRenderTarget;
 }
