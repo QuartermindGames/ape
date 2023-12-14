@@ -21,7 +21,7 @@
 #include <yin/core.h>
 #include <yin/node.h>
 
-#define ENGINE_NAME        "APE"
+#define ENGINE_NAME        "APE Tech"
 #define ENGINE_APP_NAME    "ape"
 #define ENGINE_BASE_CONFIG "engine.cfg.n"
 
