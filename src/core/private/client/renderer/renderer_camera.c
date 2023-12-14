@@ -134,17 +134,26 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 	if ( tag != NULL )
 		strncpy( camera->tag, tag, sizeof( camera->tag ) - 1 );
 
-	if ( camera->mode != SS_ARL_CAMERA_MODE_PERSPECTIVE )
+	static const float DEFAULT_FAR = 1000000.0f;
+	static const float DEFAULT_FOV = 75.0f;
+
+	if ( camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE )
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
+		camera->internal->fov = DEFAULT_FOV;
+		camera->internal->far = DEFAULT_FAR;
+	}
+	else if ( camera->mode == SS_ARL_CAMERA_MODE_ISOMETRIC )
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
+		camera->internal->fov = DEFAULT_FOV;
+		camera->internal->far = DEFAULT_FAR;
+	}
+	else
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 		camera->internal->near = -10000.0f;
 		camera->internal->far = 10000.0f;
-	}
-	else
-	{
-		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
-		camera->internal->fov = 75.0f;
-		camera->internal->far = 1000000.0f;
 	}
 
 	ss_arl_camera_set_position( camera, position );
@@ -253,9 +262,6 @@ void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewpor
 	static const float minHeight = 256.0f;
 	static const float maxHeight = 1024.0f;
 
-	PLVector3 angles = camera->internal->angles;
-	PLVector3 position = camera->internal->position;
-
 #if 0
 	/* if we have a parent, follow them */
 	Actor *parent = camera->parentActor;
@@ -280,13 +286,17 @@ void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewpor
 	{
 		default:
 			break;
-		case SS_ARL_CAMERA_MODE_PERSPECTIVE:
-			camera->internal->angles = angles;
-			camera->internal->position = position;
+		case SS_ARL_CAMERA_MODE_ISOMETRIC:
+		{
+			// Uh, let's hardcode it for this as I can't think why you would want anything else -
+			// this is what the other modes are there for!
+			camera->internal->angles.x = -35.264f;
 			break;
+		}
+#if 0//TODO: old game-specific behaviours, we don't want these anymore!
 		case SS_ARL_CAMERA_MODE_TOP:
 		{
-#if 0
+#	if 0
 			if ( camera->parentActor != NULL )
 			{
 				speed = PlVector3Length( camera->parentActor->velocity ) / 16.0f;
@@ -294,16 +304,18 @@ void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewpor
 					speed = 1.0f;
 			}
 			else
-#endif
+#	endif
 			speed = 0.0f;
 
 			camera->internal->angles.x = -75.0f;
-			camera->internal->position = position;
 			camera->internal->position.x -= 150.0f;
 			camera->internal->position.y += minHeight + PlCosineInterpolate( minHeight, maxHeight, speed );
 			break;
 		}
+#endif
 	}
+
+	PlgSetupCamera( camera->internal );
 
 	// Draw the scene into a buffer
 	ss_arl_draw_scene_( camera, viewport );

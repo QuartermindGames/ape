@@ -55,7 +55,7 @@ void ss_acl_initialize_scheduler_( void ) {
 		PRINT_ERROR( "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
 }
 
-void apeShutdownScheduler( void ) {
+void ss_ape_shutdown_scheduler_( void ) {
 	PRINT( "Shutting down scheduler\n" );
 
 	PlDestroyLinkedList( scheduleList );

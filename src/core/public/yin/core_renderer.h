@@ -22,6 +22,7 @@ typedef struct SSArlLight SSArlLight;
 typedef struct SSArlRenderTarget SSArlRenderTarget;
 typedef struct SSArlTexture SSArlTexture;
 typedef struct ApeMaterial ApeMaterial;
+typedef struct ApeWorld ApeWorld;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Viewport API

@@ -16,6 +16,42 @@ SSArlCamera *tox_get_player_camera( void )
 	return playerCamera;
 }
 
+static void move_camera_iso_callback( ApeInputState state, const char *id )
+{
+	if ( state != APE_INPUT_STATE_DOWN )
+		return;
+
+	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+
+	ang.x = 0.0f;
+	if ( strcmp( id, "rotateLeft" ) == 0 )
+		ang.y += 1.5f;
+	else if ( strcmp( id, "rotateRight" ) == 0 )
+		ang.y -= 1.5f;
+
+	PLVector3 forward, left;
+	PlAnglesAxes( ang, &left, NULL, &forward );
+
+	static const float SPEED = 0.5f;
+
+	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
+	if ( strcmp( id, "moveForward" ) == 0 )
+		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	else if ( strcmp( id, "moveBackward" ) == 0 )
+		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	else if ( strcmp( id, "moveLeft" ) == 0 )
+		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+	else if ( strcmp( id, "moveRight" ) == 0 )
+		pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+	else if ( strcmp( id, "moveUp" ) == 0 )
+		pos.y += 0.5f;
+	else if ( strcmp( id, "moveDown" ) == 0 )
+		pos.y -= 0.5f;
+
+	ss_arl_camera_set_position( playerCamera, &pos );
+	ss_arl_camera_set_angles( playerCamera, &ang );
+}
+
 static void move_camera_callback( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
@@ -31,20 +67,38 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
+	static const float SPEED = 0.5f;
+
 	if ( strcmp( id, "moveForward" ) == 0 )
-		pos = PlAddVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
 	else if ( strcmp( id, "moveBackward" ) == 0 )
-		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, 0.5f ) );
+		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
 	else if ( strcmp( id, "moveLeft" ) == 0 )
-		pos = PlAddVector3( pos, PlScaleVector3F( left, 0.5f ) );
+		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
 	else if ( strcmp( id, "moveRight" ) == 0 )
-		pos = PlSubtractVector3( pos, PlScaleVector3F( left, 0.5f ) );
+		pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
 	else if ( strcmp( id, "moveUp" ) == 0 )
 		pos.y += 0.5f;
 	else if ( strcmp( id, "moveDown" ) == 0 )
 		pos.y -= 0.5f;
 
 	ss_arl_camera_set_position( playerCamera, &pos );
+	ss_arl_camera_set_angles( playerCamera, &ang );
+}
+
+static void rotate_camera_action( ApeInputState state, const char *id )
+{
+	if ( state != APE_INPUT_STATE_DOWN )
+		return;
+
+	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+	if ( strcmp( id, "rotateUp" ) == 0 )
+		ang.x += 1.5f;
+	else if ( strcmp( id, "rotateDown" ) == 0 )
+		ang.x -= 1.5f;
+
+	ang.x = PlClamp( -90.0f, ang.x, 90.0f );
+
 	ss_arl_camera_set_angles( playerCamera, &ang );
 }
 
@@ -97,6 +151,9 @@ static bool initialize_game( void )
 	// this remaining bunch are for debugging purposes...
 	ss_acl_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
 	ss_acl_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
+
+	ss_acl_input_register_action( "rotateUp", NULL, 0, ( ApeInputKey[] ){ 'r' }, 1, rotate_camera_action );
+	ss_acl_input_register_action( "rotateDown", NULL, 0, ( ApeInputKey[] ){ 'f' }, 1, rotate_camera_action );
 
 	ss_game_register_standard_entity_components_();
 

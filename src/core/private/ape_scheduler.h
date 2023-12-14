@@ -10,7 +10,7 @@
 typedef void ( *ApeSchedulerCallback )( void *userData, double delta );
 
 void ss_acl_initialize_scheduler_( void );
-void apeShutdownScheduler( void );
+void ss_ape_shutdown_scheduler_( void );
 unsigned int apeGetNumScheduledTasks( void );
 const char *apeGetScheduledTaskDescription( unsigned int index, double *delay );
 bool apeIsScheduledTaskRunning( const char *desc );

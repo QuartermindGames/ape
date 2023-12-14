@@ -78,11 +78,7 @@ static void LoadUserConfig( void )
 {
 	NdBranch *root = ndLoadFile( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
-	{
-		PRINT( "No existing user config, generating default.\n" );
-		save_user_config();
 		return;
-	}
 
 	/* now iterate through the list and update all our children */
 	NdBranch *child = ndGetFirstChild( root );
@@ -228,5 +224,4 @@ void ss_acl_initialize_console_( void )
 void ss_acl_shutdown_console_( void )
 {
 	clear_output_buffer();
-	save_user_config();
 }

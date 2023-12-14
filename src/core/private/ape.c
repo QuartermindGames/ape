@@ -152,9 +152,15 @@ void ss_acl_shutdown( void )
 	ss_acl_shutdown_client_();
 	ss_acl_shutdown_server_();
 	ss_acl_shutdown_console_();
-	apeShutdownMemoryManager();
-	apeShutdownScheduler();
+	ss_ape_shutdown_memory_manager_();
+	ss_ape_shutdown_scheduler_();
 	ss_acl_shutdown_net_();
+
+	ss_com_write_config( engineConfig, "engine" );
+	ndDestroyBranch( engineConfig );
+
+	ss_com_write_config( userConfig, "user" );
+	ndDestroyBranch( userConfig );
 
 	ss_shell_shutdown();
 

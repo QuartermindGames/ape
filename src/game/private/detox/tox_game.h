@@ -5,12 +5,12 @@
 
 #include "../game_private.h"
 
-#define TOX_GAME_MILESTONE     "alive-preview"
+#define TOX_GAME_MILESTONE     "proto_a"
 #define TOX_GAME_VERSION_MAJOR 0
-#define TOX_GAME_VERSION_MINOR 1
+#define TOX_GAME_VERSION_MINOR 2
 #define TOX_GAME_VERSION_PATCH 0
 
-#define TOX_ALIVE_PREVIEW
+//#define TOX_ALIVE_PREVIEW
 
 typedef struct ToxGlobalVars
 {

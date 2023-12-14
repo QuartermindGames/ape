@@ -72,6 +72,10 @@ void tox_world_spawn( ApeWorld *world )
 	                                 APE_LIGHT_TYPE_SUN,
 	                                 SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
 	ape_level_attach_light( world, moonLight );
+
+	//TODO: scrap this - let's just pass the world into the draw call... it's safer
+	SSArlCamera *camera = tox_get_player_camera();
+	ss_arl_camera_assign_world( camera, world );
 }
 
 /**

@@ -4,7 +4,7 @@
 #pragma once
 
 void ss_acl_initialize_memory_manager_( void );
-void apeShutdownMemoryManager( void );
+void ss_ape_shutdown_memory_manager_( void );
 
 /* ======================================================================
  * Active Cache

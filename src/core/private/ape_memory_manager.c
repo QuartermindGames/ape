@@ -175,7 +175,7 @@ void ss_acl_initialize_memory_manager_( void )
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void apeShutdownMemoryManager( void )
+void ss_ape_shutdown_memory_manager_( void )
 {
 	apeFlushUnreferencedResources();
 
