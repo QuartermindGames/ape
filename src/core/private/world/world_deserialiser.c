@@ -168,7 +168,7 @@ static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		}
 	}
 
-	//apeGenerateWorldFaceBounds( face );
+	ss_acl_world_face_generate_bounds( face );
 	face->origin = pl_vecOrigin3;//HACK ...
 
 	return face;
