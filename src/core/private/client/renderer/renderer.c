@@ -436,7 +436,7 @@ void arl_sky_clear_layers( void )
 /**
  * Draw scrolling clouds.
  */
-void arl_sky_draw( SSArlCamera *camera )
+void ss_ape_sky_draw( SSArlCamera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;
@@ -522,8 +522,8 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 
 	PlgDepthMask( true );
 
-	arl_sky_draw( camera );
-	arl_level_draw( world, camera, NULL, true );
+	ss_ape_sky_draw( camera );
+	ss_ape_world_draw( world, camera, NULL, true );
 
 	PlgDepthMask( false );
 
@@ -575,7 +575,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 				arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
+				ss_ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
@@ -590,7 +590,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
 			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-			arl_level_draw_stencil_shadows( world, camera, lights[ i ] );
+			ss_ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
 			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
@@ -604,7 +604,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			arl_level_draw( world, camera, lights[ i ], false );
+			ss_ape_world_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 
@@ -616,7 +616,7 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
 			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
 
-			arl_level_draw( world, camera, lights[ i ], false );
+			ss_ape_world_draw( world, camera, lights[ i ], false );
 
 			arl_rendererState_.overrideBlendMode = false;
 			arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
@@ -661,18 +661,21 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 
 void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 {
+	assert( camera != NULL );
+	assert( viewport != NULL );
+
 	COM_PROFILE_FUNCTION_START();
 
 	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	render_scene( camera, viewport );
 
-	if ( ( camera != NULL && camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME ) || ape_config_.renderer.wireframe )
+	if ( camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );

@@ -131,9 +131,7 @@ static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 	assert( face->material != NULL );
 	if ( face->material == NULL )
-	{
 		face->material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
-	}
 
 	face->edgeLoop = PlCreateLinkedList();
 	face->vertices = PlCreateVectorArray( 0 );

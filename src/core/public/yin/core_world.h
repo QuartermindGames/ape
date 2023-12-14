@@ -46,8 +46,8 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
 void arl_level_draw_wireframe( ApeWorld *world, SSArlCamera *camera );
-void arl_level_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly );
-void arl_level_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light );
+void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly );
+void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light );
 
 void ss_acl_level_set_global_defaults( ApeWorld *level );
 void ss_acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
@@ -70,7 +70,7 @@ unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float
 void ss_arl_sky_set_layer_alpha( unsigned int slot, float alpha );
 void ss_arl_sky_set_layer_offset( unsigned int slot, float x, float y );
 void arl_sky_clear_layers( void );
-void arl_sky_draw( SSArlCamera *camera );
+void ss_ape_sky_draw( SSArlCamera *camera );
 
 void acl_level_set_sun_position( ApeWorld *world, const PLVector3 *position );
 void ss_acl_level_get_player_start( const ApeWorld *level, PLVector3 *position, PLMatrix3 *orientation );

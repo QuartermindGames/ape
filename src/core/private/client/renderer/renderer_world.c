@@ -462,7 +462,7 @@ static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *ca
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
-void arl_level_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light )
+void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -489,7 +489,7 @@ void arl_level_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArl
 	PlPopMatrix();
 }
 
-void arl_level_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly )
+void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly )
 {
 	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
 		return;

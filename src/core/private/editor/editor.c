@@ -162,7 +162,7 @@ void ss_acl_draw_editor_gui_( const SSArlViewport *viewport )
 					break;
 				case SS_ARL_CAMERA_DRAW_MODE_SOLID:
 				case SS_ARL_CAMERA_DRAW_MODE_TEXTURED:
-					arl_level_draw( level, camera, NULL, 0 );
+					ss_ape_world_draw( level, camera, NULL, 0 );
 					break;
 				default:
 					break;

@@ -2,7 +2,6 @@
 
 #include "ape_private.h"
 
-#include "yin/core_game.h"
 #include "yin/core_fs.h"
 
 #include "model/model.h"

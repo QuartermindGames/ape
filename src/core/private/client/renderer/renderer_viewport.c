@@ -54,7 +54,16 @@ SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void
 
 	char viewportTag[ 64 ];
 	snprintf( viewportTag, sizeof( viewportTag ), "viewport_%u", i );
-	viewports[ i ]->renderTarget = ss_arl_render_target_create( viewportTag, width, height, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	viewports[ i ]->renderTarget = ss_arl_render_target_create( viewportTag,
+	                                                            width, height,
+	                                                            PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                            PLG_BUFFER_COLOUR,
+	                                                            PLG_TEXTURE_FILTER_LINEAR );
+	if ( viewports[ i ]->renderTarget == NULL )
+	{
+		PRINT_WARNING( "Failed to create render target for viewport!\n" );
+		PL_DELETEN( viewports[ i ] );
+	}
 
 	return viewports[ i ];
 }
