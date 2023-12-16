@@ -133,7 +133,7 @@ static void set_time_command( unsigned int argc, char **argv )
 
 static bool initialize_game( void )
 {
-	PlRegisterConsoleVariable( "tox_time_speed", "Sets the speed of time.", "200", PL_VAR_F32, &tox_globalVars.timeSpeed, NULL, false );
+	PlRegisterConsoleVariable( "tox_time_speed", "Sets the speed of time.", "2000", PL_VAR_F32, &tox_globalVars.timeSpeed, NULL, false );
 
 	PlRegisterConsoleCommand( "tox_print_pos", "Print the camera position and angles.", 0, print_pos_command );
 	PlRegisterConsoleCommand( "tox_set_time", "Sets the world time.", 1, set_time_command );
