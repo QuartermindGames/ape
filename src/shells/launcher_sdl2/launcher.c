@@ -527,10 +527,7 @@ int launcher_initialize( int argc, char **argv )
 
 	const char *projectName = NULL;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
-		projectName = "base";
-	else if ( shellConfig != NULL )
-		projectName = ndGetStringByName( shellConfig, "defaultProject", projectName );
-
+		projectName = ndGetStringByName( shellConfig, "defaultProject", "base" );
 	if ( projectName == NULL )
 		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 
