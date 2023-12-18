@@ -11,6 +11,10 @@
 
 #include "yin/node.h"
 
+#define WARN( ... )                        \
+	{                                      \
+		printf( "WARNING: " __VA_ARGS__ ); \
+	}
 #define ERROR( ... )           \
 	{                          \
 		printf( __VA_ARGS__ ); \
@@ -26,3 +30,4 @@ extern CookState cook_state;
 PLMModel *model_smd_load( const char *path );
 
 void cook_world_process( const char *worldName );
+void cook_model_process( const char *modelName, const char *sourcePath );

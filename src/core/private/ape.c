@@ -119,9 +119,6 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 
 	PRINT( "Initializing core services...\n" );
 
-	// TODO: move these somewhere more appropriate??
-	PlmRegisterModelLoader( "mdl.n", apeCacheModel, NULL );
-
 	ss_acl_initialize_scheduler_();
 	ss_acl_initialize_memory_manager_();
 	ss_acl_initialize_net_();

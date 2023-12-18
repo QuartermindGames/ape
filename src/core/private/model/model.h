@@ -1,19 +1,42 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
-#include <plmodel/plm.h>
+PL_EXTERN_C
 
-#include "client/renderer/renderer_material.h"
+#define SS_APE_MODEL_MAX_MATERIALS 32
+#define SS_APE_MODEL_MAX_BONES     256
 
-#define MODEL_MAX_MATERIALS 64
+typedef struct PLHashTableNode PLHashTableNode;
 
-typedef struct MDLUserData {
-	ApeMaterial *materials[ MODEL_MAX_MATERIALS ];
+typedef struct SSApeModelBone
+{
+	char name[ 64 ];
+	unsigned int parent;
+	PLVector3 position;
+	PLQuaternion orientation;
+} SSApeModelBone;
+
+typedef struct SSApeModel
+{
+	ApeMaterial *materials[ SS_APE_MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
-	ApeMemoryReference mem;
-} MDLUserData;
 
-PLMModel *apeCacheModel( const char *path );
-void apeReleaseModel( PLMModel *model );
+	PLGMesh *meshes[ SS_APE_MODEL_MAX_MATERIALS ];
+	unsigned int numMeshes;
+
+	SSApeModelBone bones[ SS_APE_MODEL_MAX_BONES ];
+	SSApeModelBone *rootBone;
+	unsigned int numBones;
+
+	PLCollisionSphere visSphere;
+
+	PLHashTableNode *node;
+
+	ApeMemoryReference mem;
+} SSApeModel;
+
+SSApeModel *ss_ape_model_load( const char *path );
+void ss_ape_model_release( SSApeModel *model );
+
+PL_EXTERN_C_END

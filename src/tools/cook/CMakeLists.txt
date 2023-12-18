@@ -1,5 +1,6 @@
 add_executable(cook
         cook.c
+        cook_model.c
         cook_world.c
 
         model/format_obj.c
