@@ -4,6 +4,8 @@
 
 #include <plcore/pl_array_vector.h>
 
+PL_EXTERN_C
+
 #define OBJ_MAX_SUB_OBJECTS 32
 #define OBJ_MAX_EDGES       16
 #define OBJ_MAX_MATERIALS   64
@@ -62,3 +64,5 @@ typedef struct ObjModel
 
 ObjModel *model_obj_load( const char *path );
 void model_obj_destroy( ObjModel *obj );
+
+PL_EXTERN_C_END

@@ -51,6 +51,8 @@ static bool serialize_obj( NdBranch *root, const char *sourcePath )
 		{
 			NdBranch *meshBranch = ndPushBackObject( meshArray, NULL );
 			ndPushBackUI32( meshBranch, "numFaces", PlGetNumVectorArrayElements( model->subObjects[ i ].faces ) );
+
+			ndPushBackUI32( meshBranch, "materialIndex", i );
 		}
 	}
 
@@ -73,9 +75,12 @@ void cook_model_process( const char *modelName, const char *sourcePath )
 
 	if ( pl_strcasecmp( extension, "smd" ) == 0 )
 	{
+		ERROR( "Failed to serialize smd model (%s)!\n", sourcePath );
 	}
 	else if ( pl_strcasecmp( extension, "obj" ) == 0 && !serialize_obj( root, sourcePath ) )
+	{
 		ERROR( "Failed to serialize obj model (%s)!\n", sourcePath );
+	}
 
 	PLPath path;
 	PlSetupPath( path, true, "%s/ship/models/%s." SS_APE_FORMAT_MODEL_EXTENSION, ss_com_project_get_local_path(), modelName );

@@ -32,107 +32,135 @@ static void destroy_model( void *userData )
 	PL_DELETE( model );
 }
 
-static PLGMesh *deserialize_mesh( NdBranch *root )
+static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 {
 	NdBranch *child;
 
-	// vertex positions are required
-	PLVector3 *positions;
+	PLVector3 *positions = NULL;
 	unsigned int numVertices = 0;
 	if ( ( child = ndGetChildByName( root, "positions" ) ) != NULL )
 	{
 		numVertices = ndGetNumOfChildren( child );
-		positions = PL_NEW_( PLVector3, numVertices );
-		ndGetF32Array( child, ( float * ) positions, numVertices / 3 );
+		if ( numVertices >= 3 )
+		{
+			positions = PL_NEW_( PLVector3, numVertices );
+			numVertices = numVertices / 3;
+			ndGetF32Array( child, ( float * ) positions, numVertices );
+		}
+		else
+		{
+			PRINT_WARNING( "Invalid number (%u) of positions in model!\n", numVertices );
+			numVertices = 0;
+		}
+	}
+	else
+		PRINT_WARNING( "Mesh has no vertices!\n" );
+
+	PLVector3 *normals = NULL;
+	unsigned int numNormals = 0;
+	if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL )
+	{
+		numNormals = ndGetNumOfChildren( child );
+		if ( numNormals >= 3 )
+		{
+			normals = PL_NEW_( PLVector3, numNormals );
+			numNormals = numNormals / 3;
+			ndGetF32Array( child, ( float * ) normals, numNormals );
+		}
+		else
+		{
+			PRINT_WARNING( "Invalid number (%u) of normals in model!\n", numNormals );
+			numNormals = 0;
+		}
 	}
 
-
-
-
-
-	PL_DELETE( positions );
-
-	////////////////////////////////
-
-	unsigned int numFaces = ndGetUInt( root, "numFaces", 0 );
-	if ( numFaces > 0 )
+	PLVector2 *uvs = NULL;
+	unsigned int numUVs = 0;
+	if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL )
 	{
+		numUVs = ndGetNumOfChildren( child );
+		if ( numUVs >= 2 )
+		{
+			uvs = PL_NEW_( PLVector2, numUVs );
+			numUVs = numUVs / 2;
+			ndGetF32Array( child, ( float * ) uvs, numUVs );
+		}
+		else
+		{
+			PRINT_WARNING( "Invalid number (%u) of UVs in model!\n", numUVs );
+			numUVs = 0;
+		}
 	}
-	else// mesh is composed of explicit triangles
+
+	PLColourF32 *colours = NULL;
+	unsigned int numColours = 0;
+	if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL )
 	{
-
-
-		child = ndGetChildByName( root, "triangles" );
-		if ( child == NULL )
-		{
-			PRINT_WARNING( "Invalid mesh, no triangles!\n" );
-			return NULL;
-		}
-
-
-
-		if ( numVertices == 0 )
-		{
-			PRINT_WARNING( "Invalid mesh, no vertex positions!\n" );
-			return NULL;
-		}
-
-		uint32_t numIndices = ndGetNumOfChildren( child );
-		uint32_t *indices = PL_NEW_( uint32_t, numIndices );
-		ndGetI32Array( child, ( int32_t * ) indices, numIndices );
-		uint32_t numTriangles = numIndices / 3;
-
-		// the rest are optional
-
-		PLVector3 *normals = NULL;
-		if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL )
-		{
-			normals = PL_NEW_( PLVector3, numVertices );
-			ndGetF32Array( child, ( float * ) normals, numVertices / 3 );
-		}
-
-		PLVector2 *uvs = NULL;
-		if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL )
-		{
-			uvs = PL_NEW_( PLVector2, numVertices );
-			ndGetF32Array( child, ( float * ) uvs, numVertices / 2 );
-		}
-
-		PLColourF32 *colours = NULL;
-		if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL )
+		numColours = ndGetNumOfChildren( child );
+		if ( numColours >= 4 )
 		{
 			colours = PL_NEW_( PLColourF32, numVertices );
-			ndGetF32Array( child, ( float * ) colours, numVertices / 4 );
+			numColours = numColours / 4;
+			ndGetF32Array( child, ( float * ) colours, numColours );
 		}
-
-		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
-		if ( mesh == NULL )
+		else
 		{
-			PRINT_WARNING( "Failed to create mesh: %s\n", PlGetError() );
-			return NULL;
+			PRINT_WARNING( "Invalid number (%u) of colours in model!\n", numColours );
+			numColours = 0;
 		}
+	}
 
-		mesh->materialIndex = ndGetUInt( root, "materialIndex", 0 );
+	unsigned int *indices = NULL;
+	unsigned int numIndices = 0;
+	unsigned int numTriangles = 0;
+	if ( ( child = ndGetChildByName( root, "triangles" ) ) != NULL )
+	{
+		numIndices = ndGetNumOfChildren( child );
+		indices = PL_NEW_( unsigned int, numIndices );
+		ndGetUI32Array( child, indices, numIndices );
+		numTriangles = numIndices / 3;
+	}
+	else
+		PRINT_WARNING( "Mesh has no indices!\n" );
 
-		for ( uint32_t i = 0; i < numVertices; ++i )
+	unsigned int materialIndex = ndGetUInt( root, "materialIndex", 0 );
+	if ( materialIndex >= SS_APE_MODEL_MAX_MATERIALS )
+	{
+		PRINT_WARNING( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, SS_APE_MODEL_MAX_MATERIALS );
+		materialIndex = 0;
+	}
+
+	if ( model->meshes[ materialIndex ] == NULL )
+		model->meshes[ materialIndex ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
+	if ( model->meshes[ materialIndex ] != NULL )
+	{
+		for ( unsigned int i = 0; i < numVertices; ++i )
 		{
 			PLColour colour = ( colours == NULL ) ? ( PLColour ){ 255, 255, 255, 255 } : PlColourF32ToU8( &colours[ i ] );
 			PLVector3 normal = ( normals == NULL ) ? pl_vecOrigin3 : normals[ i ];
 			PLVector2 uv = ( uvs == NULL ) ? pl_vecOrigin2 : uvs[ i ];
-			PlgAddMeshVertex( mesh, &positions[ i ], &normal, &colour, &uv );
+			PlgAddMeshVertex( model->meshes[ materialIndex ], &positions[ i ], &normal, &colour, &uv );
 		}
 
-		for ( uint32_t i = 0; i < numIndices; i += 3 )
-			PlgAddMeshTriangle( mesh, indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
+		for ( unsigned int i = 0; i < numIndices; i += 3 )
+			PlgAddMeshTriangle( model->meshes[ materialIndex ], indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
 
 		if ( normals == NULL )
-			PlgGenerateMeshNormals( mesh, false );
+			PlgGenerateMeshNormals( model->meshes[ materialIndex ], false );
+
+		PlgGenerateMeshTangentBasis( model->meshes[ materialIndex ] );
+		PlgUploadMesh( model->meshes[ materialIndex ] );
 	}
+	else
+		PRINT_WARNING( "Failed to create mesh: %s\n", PlGetError() );
 
-	PlgGenerateMeshTangentBasis( mesh );
-	PlgUploadMesh( mesh );
+	PL_DELETE( positions );
+	PL_DELETE( normals );
+	PL_DELETE( uvs );
+	PL_DELETE( colours );
+	PL_DELETE( indices );
 
-	return mesh;
+	return model->meshes[ materialIndex ];
 }
 
 static SSApeModel *deserialize_model( NdBranch *root )
@@ -177,9 +205,8 @@ static SSApeModel *deserialize_model( NdBranch *root )
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
-				model->materials[ i ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, false, false );
-				if ( model->materials[ i ] == NULL )
-					PRINT_ERROR( "Failed to cache fallback material for mesh!\n" );
+				PRINT_WARNING( "Failed to get material string for model: %s\n", ndGetErrorMessage() );
+				model->materials[ i ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 			}
 			else
 				model->materials[ i ] = ss_arl_material_cache( materialPath, 0, true, false );
@@ -192,10 +219,7 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
 		assert( meshNode != NULL );
-		model->meshes[ i ] = deserialize_mesh( meshNode );
-		if ( model->meshes[ i ] == NULL )
-			PRINT_ERROR( "Failed to load mesh %u from model!\n" );
-
+		deserialize_mesh( model, meshNode );
 		meshNode = ndGetNextChild( meshNode );
 	}
 
@@ -254,7 +278,7 @@ SSApeModel *ss_ape_model_load( const char *path )
 
 	ndDestroyBranch( root );
 
-	PlInsertHashTableNode( modelsTable, path, strlen( path ) );
+	//PlInsertHashTableNode( modelsTable, path, strlen( path ), model );
 
 	return model;
 }
@@ -271,4 +295,8 @@ void ss_ape_model_release( SSApeModel *model )
 	assert( 0 );
 
 	ss_acl_mm_release( &model->mem );
+}
+
+void ss_ape_model_draw( SSApeModel *model )
+{
 }

@@ -9,6 +9,29 @@ PL_EXTERN_C
 
 typedef struct PLHashTableNode PLHashTableNode;
 
+typedef enum SSApeModelAnimationFlag
+{
+	PL_BITFLAG( SS_APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
+} SSApeModelAnimationFlag;
+
+typedef struct SSApeModelAnimationFrame
+{
+	PLVector3 mins;
+	PLVector3 maxs;
+} SSApeModelAnimationFrame;
+
+typedef struct SSApeModelAnimation
+{
+	char name[ 64 ];
+	SSApeModelAnimationFlag flags;
+
+	unsigned int numFrames;
+
+	float speed;
+
+	unsigned int numBones;
+} SSApeModelAnimation;
+
 typedef struct SSApeModelBone
 {
 	char name[ 64 ];
@@ -38,5 +61,7 @@ typedef struct SSApeModel
 
 SSApeModel *ss_ape_model_load( const char *path );
 void ss_ape_model_release( SSApeModel *model );
+
+void ss_ape_model_draw( SSApeModel *model );
 
 PL_EXTERN_C_END

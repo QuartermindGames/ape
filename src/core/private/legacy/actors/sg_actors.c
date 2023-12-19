@@ -212,8 +212,8 @@ static void SGActor_Generic_Draw( Actor *self, void *userData ) {
 #endif
 
 		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i ) {
-			MDLUserData *modelData = sgActor->model->userData;
-			ss_arl_material_draw( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
+			//MDLUserData *modelData = sgActor->model->userData;
+			//ss_arl_material_draw( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
 		}
 
 		PlPopMatrix();

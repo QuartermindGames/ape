@@ -11,10 +11,8 @@
 
 #include "yin/node.h"
 
-#define WARN( ... )                        \
-	{                                      \
-		printf( "WARNING: " __VA_ARGS__ ); \
-	}
+#define WARN( ... ) \
+	printf( "WARNING: " __VA_ARGS__ );
 #define ERROR( ... )           \
 	{                          \
 		printf( __VA_ARGS__ ); \
