@@ -50,7 +50,7 @@ void ss_arl_render_frame_( SSArlViewport *viewport )
 
 	ss_arl_draw_begin_( viewport );
 
-	if ( !ss_game_mode_get_interface()->requestCallbackMethod( GAME_MODE_REQUEST_DRAW, viewport ) )
+	if ( ss_acl_is_editor_active() || !ss_game_mode_get_interface()->requestCallbackMethod( GAME_MODE_REQUEST_DRAW, viewport ) )
 		ss_arl_camera_draw_perspective( viewport->camera, viewport );
 
 	ss_arl_draw_menu_( viewport );
