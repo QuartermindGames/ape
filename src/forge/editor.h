@@ -68,7 +68,7 @@ namespace ss::forge
 	extern Project *editorProject;
 
 	Project *create_project( const std::string &name, const std::string &folderName );
-	Project *open_project( const char *path );
+	bool open_project( const char *path );
 
 	/////////////////////////////////////////////////////////////////////////
 

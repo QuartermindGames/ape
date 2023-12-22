@@ -11,6 +11,8 @@
 #include "editor_window_main.h"
 #include "editor_dialog_project.h"
 
+#include "common_project.h"
+
 // Override C++ new/delete operators, so we can track memory usage
 #if 0//TODO: causing pain on win32 target, let's not bother for now
 void *operator new( size_t size ) { return PL_NEW_( char, size ); }
@@ -30,10 +32,20 @@ static std::map< std::string, PLImage * > cachedImages;
 
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
-	NdBranch *root = ndPushBackObject( nullptr, "config" );
+	NdBranch *root = ndPushBackObject( nullptr, "project" );
 	ndPushBackString( root, "title", name );
+
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
 	ndPushBackI32Array( root, "version", version, 3 );
+
+	NdBranch *child;
+	child = ndPushBackStringArray( root, "mountLocations", nullptr, 0 );
+	ndPushBackString( child, nullptr, "ship" );
+	ndPushBackString( child, nullptr, "dev" );
+
+	child = ndPushBackStringArray( root, "dependencies", nullptr, 0 );
+	ndPushBackString( child, nullptr, "base" );
+
 	ndWriteFile( path, root, ND_FILE_UTF8 );
 	return root;
 }
@@ -67,55 +79,17 @@ ss::forge::Project *ss::forge::create_project( const std::string &name, const st
 
 	PLPath nodePath;
 	project->config = generate_project_config( name.c_str(),
-	                                           PlSetupPath( nodePath, true, "%s/%s.prj.n",
+	                                           PlSetupPath( nodePath, true, "%s/%s/%s.prj.n",
 	                                                        ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ],
+	                                                        folderName.c_str(),
 	                                                        folderName.c_str() ) );
 
 	return project;
 }
 
-ss::forge::Project *ss::forge::open_project( const char *path )
+bool ss::forge::open_project( const char *path )
 {
-#if 0
-	if ( os::editor::editorProject.config != nullptr )
-	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Project already open, please close it first before opening another!" );
-		return false;
-	}
-
-	PLPath configPath;
-	PlSetPath( configPath, path, true );
-	PlAppendPath( configPath, "/project.cfg.n", true );
-
-	if ( ( os::editor::editorProject.config = NL_LoadFile( configPath, "config" ) ) == nullptr )
-	{
-		GenerateProjectConfig( "Unnamed Project", path );
-		if ( ( os::editor::editorProject.config = NL_LoadFile( configPath, "config" ) ) == nullptr )
-		{
-			FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to generate project configuration!\nNL: %s", NL_GetErrorMessage() );
-			return false;
-		}
-	}
-
-	os::editor::editorProject.name = NL_GetStrByName( os::editor::editorProject.config, "title", nullptr );
-	if ( os::editor::editorProject.name == nullptr )
-	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "No project title found in project configuration!" );
-		return false;
-	}
-
-	if ( git_repository_open( &repository, path ) == 0 )
-		usingVersionControl = true;
-	else
-	{
-		const git_error *err = git_error_last();
-		if ( err != nullptr )
-			FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to open git repository for project (%s)!", err->message );
-	}
-
-	return true;
-#endif
-	return nullptr;
+	return ss_com_project_mount( path );
 }
 
 static void setup_paths( const char *exePath )

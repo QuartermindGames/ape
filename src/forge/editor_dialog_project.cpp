@@ -25,7 +25,7 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 		// do a quick scan to see what projects are available
 		PlScanDirectory( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], "prj.n", register_project_callback, true, this );
 
-	FXVerticalFrame *vf = new FXVerticalFrame( this, LAYOUT_FILL );
+	auto *vf = new FXVerticalFrame( this, LAYOUT_FILL );
 
 	static FXGIFIcon folderIcon( getApp(), FX::minifolder );
 	listBox = new FXListBox( vf, this, ID_SELECT_PROJECT, FRAME_SUNKEN | FRAME_THICK | LISTBOX_NORMAL | LAYOUT_FILL_X );
@@ -42,7 +42,7 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 
 	new FXHorizontalSeparator( vf );
 
-	FXHorizontalFrame *hf = new FXHorizontalFrame( vf, LAYOUT_FILL | LAYOUT_RIGHT );
+	auto *hf = new FXHorizontalFrame( vf, LAYOUT_FILL | LAYOUT_RIGHT );
 	new FXButton( hf, "Accept", nullptr, this, ID_ACCEPT, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
 	new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
 }
@@ -50,14 +50,14 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 void ss::forge::ProjectDialog::register_project_callback( const char *path, void *data )
 {
 	const char *filename = PlGetFileName( path );
-	if ( filename == NULL )
+	if ( filename == nullptr )
 	{
 		EDITOR_PRINT( "Failed to get filename: %s\n", PlGetError() );
 		return;
 	}
 
 	const char *c = strchr( filename, '.' );
-	if ( c == NULL )
+	if ( c == nullptr )
 	{
 		EDITOR_PRINT( "Failed to get filename terminator (%s)!\n", path );
 		return;
@@ -80,7 +80,7 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 		}
 		else
 		{
-			Project *project = PL_NEW( Project );
+			auto *project = PL_NEW( Project );
 			project->name = name;
 			project->internalName.assign( filename, c - filename );
 
@@ -132,7 +132,7 @@ long ss::forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *p
 		        PlSetupPath( folderName, true, "%s", projectNameField->getText().text() ) );
 	}
 
-	ss_com_project_mount( forge::editorProject->internalName.c_str() );
+	forge::open_project( forge::editorProject->internalName.c_str() );
 
 	return FXDialogBox::onCmdAccept( obj, sel, ptr );
 }
