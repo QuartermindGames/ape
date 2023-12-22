@@ -64,5 +64,6 @@ typedef struct ObjModel
 
 ObjModel *model_obj_load( const char *path );
 void model_obj_destroy( ObjModel *obj );
+bool model_obj_serialize( NdBranch *root, const char *sourcePath );
 
 PL_EXTERN_C_END

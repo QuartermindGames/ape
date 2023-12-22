@@ -1,7 +1,7 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "cook.h"
-#include "model/format_obj.h"
+#include "model/model_obj.h"
 #include "yin/core_world.h"
 
 static void process_properties( const char *worldName, NdBranch *root )

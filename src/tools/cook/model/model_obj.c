@@ -5,7 +5,7 @@
 
 #include "../cook.h"
 
-#include "format_obj.h"
+#include "model_obj.h"
 
 static void parse_material_template_library( ObjModel *obj, const char *path )
 {
@@ -299,4 +299,73 @@ void model_obj_destroy( ObjModel *obj )
 		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, PlFree );
 
 	PL_DELETE( obj );
+}
+
+bool model_obj_serialize( NdBranch *root, const char *sourcePath )
+{
+	ObjModel *model = model_obj_load( sourcePath );
+	if ( model == NULL )
+	{
+		WARN( "Failed to open obj model (%s)!\n", sourcePath );
+		return false;
+	}
+
+	unsigned int numVertices;
+	PLVector3 **vertices = ( PLVector3 ** ) PlGetVectorArrayDataEx( model->vertices, &numVertices );
+	if ( numVertices == 0 )
+	{
+		WARN( "Model has no vertices (%s)!\n", sourcePath );
+		return false;
+	}
+
+	unsigned int numNormals;
+	PLVector3 **normals = ( PLVector3 ** ) PlGetVectorArrayDataEx( model->normals, &numNormals );
+	unsigned int numUVs;
+	PLVector2 **uvs = ( PLVector2 ** ) PlGetVectorArrayDataEx( model->vertices, &numUVs );
+
+	if ( model->numMaterials > 0 )
+	{
+		NdBranch *materialBranch = ndPushBackStringArray( root, "materials", NULL, 0 );
+		for ( unsigned int i = 0; i < model->numMaterials; ++i )
+		{
+			char tmp[ 128 ];
+			snprintf( tmp, sizeof( tmp ), "materials/%s.mat.n", model->materials[ i ].name );
+			ndPushBackString( materialBranch, NULL, tmp );
+		}
+	}
+
+	if ( model->numSubObjects > 0 )
+	{
+		NdBranch *meshArray = ndPushBackObjectArray( root, "meshes" );
+		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
+		{
+			NdBranch *mb = ndPushBackObject( meshArray, NULL );
+
+			ndPushBackUI32( mb, "materialIndex", i );
+
+			// description of vertex data, given it's a blob of floats
+			ndPushBackBool( mb, "hasPositions", true );
+			ndPushBackBool( mb, "hasNormals", ( numNormals > 0 ) );
+			ndPushBackBool( mb, "hasUVs", ( numUVs > 0 ) );
+
+			NdBranch *vb = ndPushBackF32Array( mb, "vertices", NULL, 0 );
+
+			unsigned int numFaces;
+			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+			for ( unsigned int j = 0; j < numFaces; ++j )
+			{
+				unsigned int numTriangles = faces[ j ]->numEdges < 3 ? 0 : ( faces[ j ]->numEdges - 3 );
+				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
+				{
+
+				}
+
+				//faces[ j ]->indices[]
+			}
+		}
+	}
+
+	model_obj_destroy( model );
+
+	return true;
 }

@@ -1,5 +1,5 @@
 // Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
-// Purpose: Model deserialisation and caching.
+// Purpose: Model deserialization and caching.
 // Author:  Mark E. Sowden
 
 #include "ape_private.h"

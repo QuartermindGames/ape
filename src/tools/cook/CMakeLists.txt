@@ -3,9 +3,9 @@ add_executable(cook
         cook_model.c
         cook_world.c
 
-        model/format_obj.c
-        model/format_qc.c
-        model/format_smd.c
+        model/model_obj.c
+        model/model_qc.c
+        model/model_smd.c
 )
 
 target_link_libraries(cook
