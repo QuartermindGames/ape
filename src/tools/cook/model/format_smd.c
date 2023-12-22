@@ -235,3 +235,24 @@ PLMModel *model_smd_load( const char *path )
 
 	return model;
 }
+
+bool model_smd_serialize( NdBranch *root, const char *sourcePath )
+{
+	PLMModel *model = model_smd_load( sourcePath );
+	if ( model == NULL )
+	{
+		WARN( "Failed to open smd model (%s)\n", sourcePath );
+		return false;
+	}
+
+	NdBranch *materialsBranch = ndPushBackStringArray( root, "materials", NULL, 0 );
+	for ( unsigned int i = 0; i < model->numMaterials; ++i )
+		ndPushBackString( materialsBranch, NULL, model->materials[ i ] );
+
+	NdBranch *meshesBranch = ndPushBackObjectArray( root, "meshes" );
+	for ( unsigned int i = 0; i < model->numMeshes; ++i )
+	{
+	}
+
+	return true;
+}

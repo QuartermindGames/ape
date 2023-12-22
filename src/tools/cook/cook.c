@@ -55,7 +55,7 @@ int main( int argc, char **argv )
 			break;
 		}
 
-		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 )
+		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 || pl_strcasecmp( argv[ i ], "/model" ) == 0 )
 		{
 			commands[ numCommands ].command = argv[ i ];
 			commands[ numCommands ].argument = argv[ ++i ];
@@ -74,6 +74,8 @@ int main( int argc, char **argv )
 			printf( " %s \"%s\" -> ", commands[ i ].command, commands[ i ].argument );
 			if ( pl_strcasecmp( commands[ i ].command, "/world" ) == 0 )
 				cook_world_process( commands[ i ].argument );
+			else if ( pl_strcasecmp( commands[ i ].command, "/model" ) == 0 )
+				cook_model_process( commands[ i ].argument );
 
 			printf( "OK\n" );
 		}
