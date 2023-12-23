@@ -72,7 +72,7 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 		const char *name = ndGetStringByName( root, "name", nullptr );
 		if ( name == nullptr )
 		{
-			FXMessageBox::warning( FXApp::instance(), 0,
+			FXMessageBox::warning( FXApp::instance(), MBOX_OK,
 			                       "Warning",
 			                       "Encountered a project without a name!\n"
 			                       "%s",

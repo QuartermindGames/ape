@@ -33,7 +33,7 @@ static std::map< std::string, PLImage * > cachedImages;
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
 	NdBranch *root = ndPushBackObject( nullptr, "project" );
-	ndPushBackString( root, "title", name );
+	ndPushBackString( root, "name", name );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
 	ndPushBackI32Array( root, "version", version, 3 );
