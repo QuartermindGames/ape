@@ -4,16 +4,19 @@
 
 #include "model_obj.h"
 
+#include "ape/ape_formats.h"
+
 PL_EXTERN_C
 
-#define SMD_MAX_MESHES    64
-#define SMD_MAX_TRIANGLES 4096
+#define SMD_MAX_MESHES    SS_APE_FORMAT_MODEL_MAX_MATERIALS
+#define SMD_MAX_TRIANGLES SS_APE_FORMAT_MODEL_MAX_TRIANGLES
 #define SMD_MAX_WEIGHTS   4
+#define SMD_MAX_BONES     SS_APE_FORMAT_MODEL_MAX_BONES
 
 typedef struct SmdBone
 {
 	int id;
-	char name[ 64 ];
+	char name[ SS_APE_FORMAT_MODEL_MAX_BONE_NAME ];
 	struct SmdBone *parent;
 } SmdBone;
 
@@ -23,7 +26,7 @@ typedef struct SmdWeight
 	float value;
 } SmdWeight;
 
-typedef struct SmdTriangle
+typedef struct SmdVertex
 {
 	SmdBone *defaultBone;
 
@@ -33,6 +36,11 @@ typedef struct SmdTriangle
 
 	unsigned int numWeights;
 	SmdWeight weights[ SMD_MAX_WEIGHTS ];
+} SmdVertex;
+
+typedef struct SmdTriangle
+{
+	SmdVertex vertices[ 3 ];
 } SmdTriangle;
 
 typedef struct SmdMesh
@@ -47,10 +55,14 @@ typedef struct SmdModel
 {
 	SmdMesh meshes[ SMD_MAX_MESHES ];
 	unsigned int numMeshes;
+
+	SmdBone bones[ SMD_MAX_BONES ];
+	unsigned int numBones;
 } SmdModel;
 
 SmdModel *model_smd_load( const char *path );
 void model_smd_destroy( SmdModel *model );
-bool model_smd_serialize( NdBranch *root, const char *sourcePath );
+
+SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out );
 
 PL_EXTERN_C_END

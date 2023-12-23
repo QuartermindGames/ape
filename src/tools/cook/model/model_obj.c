@@ -301,71 +301,31 @@ void model_obj_destroy( ObjModel *obj )
 	PL_DELETE( obj );
 }
 
-bool model_obj_serialize( NdBranch *root, const char *sourcePath )
+SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out )
 {
-	ObjModel *model = model_obj_load( sourcePath );
-	if ( model == NULL )
+	out->numMeshes = obj->numSubObjects;
+	if ( out->numMeshes >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Failed to open obj model (%s)!\n", sourcePath );
-		return false;
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
+		out->numMeshes = ( SS_APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
-	unsigned int numVertices;
-	PLVector3 **vertices = ( PLVector3 ** ) PlGetVectorArrayDataEx( model->vertices, &numVertices );
-	if ( numVertices == 0 )
+	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
-		WARN( "Model has no vertices (%s)!\n", sourcePath );
-		return false;
-	}
+		SSApeFormatMesh *mesh = &out->meshes[ i ];
 
-	unsigned int numNormals;
-	PLVector3 **normals = ( PLVector3 ** ) PlGetVectorArrayDataEx( model->normals, &numNormals );
-	unsigned int numUVs;
-	PLVector2 **uvs = ( PLVector2 ** ) PlGetVectorArrayDataEx( model->vertices, &numUVs );
-
-	if ( model->numMaterials > 0 )
-	{
-		NdBranch *materialBranch = ndPushBackStringArray( root, "materials", NULL, 0 );
-		for ( unsigned int i = 0; i < model->numMaterials; ++i )
+		unsigned int numFaces;
+		ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
+		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
-			char tmp[ 128 ];
-			snprintf( tmp, sizeof( tmp ), "materials/%s.mat.n", model->materials[ i ].name );
-			ndPushBackString( materialBranch, NULL, tmp );
+			// We'll need to convert it into triangles here...
+			unsigned int numTriangles = faces[ j ]->numEdges < 3 ? 0 : ( faces[ j ]->numEdges - 3 );
 		}
 	}
-
-	if ( model->numSubObjects > 0 )
-	{
-		NdBranch *meshArray = ndPushBackObjectArray( root, "meshes" );
-		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
-		{
-			NdBranch *mb = ndPushBackObject( meshArray, NULL );
-
-			ndPushBackUI32( mb, "materialIndex", i );
-
-			// description of vertex data, given it's a blob of floats
-			ndPushBackBool( mb, "hasPositions", true );
-			ndPushBackBool( mb, "hasNormals", ( numNormals > 0 ) );
-			ndPushBackBool( mb, "hasUVs", ( numUVs > 0 ) );
-
-			NdBranch *vb = ndPushBackF32Array( mb, "vertices", NULL, 0 );
-
-			unsigned int numFaces;
-			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
-			for ( unsigned int j = 0; j < numFaces; ++j )
-			{
-				unsigned int numTriangles = faces[ j ]->numEdges < 3 ? 0 : ( faces[ j ]->numEdges - 3 );
-				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
-				{
-
-				}
-
-				//faces[ j ]->indices[]
-			}
-		}
-	}
-
-	model_obj_destroy( model );
-
-	return true;
 }
+
+static void *load_obj( const char *path ) { return model_obj_load( path ); }
+static SSApeFormatModel *conv_obj( const void *model, SSApeFormatModel *out ) { return model_obj_to_ape( model, out ); }
+static void destroy_obj( void *model ) { model_obj_destroy( model ); }
+
+CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

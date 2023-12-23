@@ -3,6 +3,7 @@
 #pragma once
 
 #include <plcore/pl_array_vector.h>
+#include "ape/ape_formats.h"
 
 PL_EXTERN_C
 
@@ -64,6 +65,7 @@ typedef struct ObjModel
 
 ObjModel *model_obj_load( const char *path );
 void model_obj_destroy( ObjModel *obj );
-bool model_obj_serialize( NdBranch *root, const char *sourcePath );
+
+SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out );
 
 PL_EXTERN_C_END

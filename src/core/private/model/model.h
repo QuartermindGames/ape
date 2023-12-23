@@ -4,8 +4,7 @@
 
 PL_EXTERN_C
 
-#define SS_APE_MODEL_MAX_MATERIALS 32
-#define SS_APE_MODEL_MAX_BONES     256
+#include "ape/ape_formats.h"
 
 typedef struct PLHashTableNode PLHashTableNode;
 
@@ -42,13 +41,13 @@ typedef struct SSApeModelBone
 
 typedef struct SSApeModel
 {
-	ApeMaterial *materials[ SS_APE_MODEL_MAX_MATERIALS ];
+	ApeMaterial *materials[ SS_APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
 
-	PLGMesh *meshes[ SS_APE_MODEL_MAX_MATERIALS ];
+	PLGMesh *meshes[ SS_APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMeshes;
 
-	SSApeModelBone bones[ SS_APE_MODEL_MAX_BONES ];
+	SSApeModelBone bones[ SS_APE_FORMAT_MODEL_MAX_BONES ];
 	SSApeModelBone *rootBone;
 	unsigned int numBones;
 

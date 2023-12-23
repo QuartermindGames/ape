@@ -5,6 +5,7 @@
 #include "model.h"
 
 #include "plcore/pl_parse.h"
+#include "ape/ape_formats.h"
 
 #define MAX_TOKEN 64
 
@@ -131,7 +132,6 @@ static SmdModel *parse_smd( const char *path, const char *p )
 				if ( smdMesh == NULL )
 					ERROR( "Failed to fetch mesh for material \"%s\"!\n", material );
 
-				unsigned int indices[ 3 ];
 				for ( unsigned int i = 0; i < 3; ++i )
 				{
 					PlParseInteger( &p, NULL );// bone index
@@ -140,23 +140,23 @@ static SmdModel *parse_smd( const char *path, const char *p )
 					position.x = PlParseFloat( &p, NULL );
 					position.y = PlParseFloat( &p, NULL );
 					position.z = PlParseFloat( &p, NULL );
-					smdMesh->triangles[ smdMesh->numTriangles ].position = position;
+					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
 					PLVector3 normal;
 					normal.x = PlParseFloat( &p, NULL );
 					normal.y = PlParseFloat( &p, NULL );
 					normal.z = PlParseFloat( &p, NULL );
-					smdMesh->triangles[ smdMesh->numTriangles ].normal = normal;
+					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
 					PLVector2 uv;
 					uv.x = PlParseFloat( &p, NULL );
 					uv.y = PlParseFloat( &p, NULL ) * -1;// inverse, because aaargh
-					smdMesh->triangles[ smdMesh->numTriangles ].uv = uv;
-
-					smdMesh->numTriangles++;
+					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].uv = uv;
 
 					PlSkipLine( &p );
 				}
+
+				smdMesh->numTriangles++;
 			}
 
 			continue;
@@ -191,28 +191,51 @@ void model_smd_destroy( SmdModel *model )
 	PL_DELETE( model );
 }
 
-bool model_smd_serialize( NdBranch *root, const char *sourcePath )
+SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out )
 {
-	PLMModel *model = model_smd_load( sourcePath );
-	if ( model == NULL )
+	out->numMeshes = smd->numMeshes;
+	if ( out->numMeshes >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Failed to open smd model (%s)\n", sourcePath );
-		return false;
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
+		out->numMeshes = ( SS_APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
-	NdBranch *materialsBranch = ndPushBackStringArray( root, "materials", NULL, 0 );
-	for ( unsigned int i = 0; i < model->numMaterials; ++i )
+	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
+		SSApeFormatMesh *mesh = &out->meshes[ i ];
+
 		PLPath tmp;
-		PlSetupPath( tmp, true, "materials/models/%s", model->materials[ i ] );
+		strcpy( tmp, smd->meshes[ i ].material );
+		pl_strntolower( tmp, sizeof( tmp ) );
+		char *c = strrchr( tmp, '.' );
+		if ( c != NULL )
+			*c = '\0';
 
-		ndPushBackString( materialsBranch, NULL, model->materials[ i ] );
+		PlSetupPath( mesh->material, true, "materials/%s.mat.n", tmp );
+
+		mesh->numTriangles = smd->meshes[ i ].numTriangles;
+		if ( mesh->numTriangles >= SS_APE_FORMAT_MODEL_MAX_TRIANGLES )
+		{
+			WARN( "Hit maximum triangle limit (%u >= %u)!\n", mesh->numTriangles, SS_APE_FORMAT_MODEL_MAX_TRIANGLES );
+			mesh->numTriangles = ( SS_APE_FORMAT_MODEL_MAX_TRIANGLES - 1 );
+		}
+
+		for ( unsigned int tri = 0; tri < mesh->numTriangles; ++tri )
+		{
+			for ( unsigned int vtx = 0; vtx < 3; ++vtx )
+			{
+				mesh->triangles[ tri ].vertices[ vtx ].position = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].position;
+				mesh->triangles[ tri ].vertices[ vtx ].normal = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].normal;
+				mesh->triangles[ tri ].vertices[ vtx ].uv = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].uv;
+			}
+		}
 	}
 
-	NdBranch *meshesBranch = ndPushBackObjectArray( root, "meshes" );
-	for ( unsigned int i = 0; i < model->numMeshes; ++i )
-	{
-	}
-
-	return true;
+	return out;
 }
+
+static void *load_smd( const char *path ) { return model_smd_load( path ); }
+static SSApeFormatModel *conv_smd( const void *model, SSApeFormatModel *out ) { return model_obj_to_ape( model, out ); }
+static void destroy_smd( void *model ) { model_smd_destroy( model ); }
+
+CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };
