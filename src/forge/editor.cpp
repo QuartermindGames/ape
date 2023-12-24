@@ -105,6 +105,11 @@ static void setup_paths( const char *exePath )
 	// projects location - where new projects will be created by default
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], true, "%s/../../projects", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
 
+	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
+	if ( !PlFileExists( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] ) )
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
+		                       ss::forge::cachedPaths[ ss::forge::PATH_COOK ] );
+
 	PLPath tmp;
 	if ( PlGetApplicationDataDirectory( "ape", tmp, sizeof( tmp ) ) != nullptr )
 	{
@@ -119,31 +124,6 @@ static void setup_paths( const char *exePath )
 	// fallback to local location if it failed...
 	if ( *ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] == '\0' )
 		ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ][ 0 ] = '.';
-}
-
-static void setup_config()
-{
-	// first try and load it locally
-	PLPath path;
-	PlSetupPath( path, true, "local://%s/" EDITOR_CONFIG_FILENAME, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
-	if ( ( ss::forge::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
-	{
-		// try again, but from config location
-		PlSetupPath( path, true, "local://%s/" EDITOR_CONFIG_FILENAME, ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] );
-		if ( ( ss::forge::editorConfig = ndLoadFile( path, "config" ) ) == nullptr )
-		{
-			// uh oh! just append an object and return
-			ss::forge::editorConfig = ndPushBackObject( nullptr, "config" );
-			return;
-		}
-	}
-
-	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "../../projects" );
-	if ( projectPath != nullptr )
-		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
-	else
-		// no project path provided, just use a fallback
-		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "projects" );
 }
 
 FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
@@ -212,17 +192,24 @@ int main( int argc, char **argv )
 	// now init common library and fetch the editor config
 	com_initialize();
 
-	setup_paths( tmp );
-	setup_config();
+	PlMountLocalLocation( ss_com_get_app_data_directory() );
+	PlMountLocalLocation( ss_com_get_local_data_directory() );
+
+	ss::forge::editorConfig = ss_com_get_config( "editor" );
+
+	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "projects" );
+	if ( projectPath != nullptr )
+		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
 
 	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
 	app.init( argc, argv );
 
-	static constexpr FXColor BASE_COLOUR = FXRGB( 40, 40, 40 );
-	static constexpr FXColor FORE_COLOUR = FXRGB( 200, 200, 250 );
-	static constexpr FXColor HILITE_COLOUR = FXRGB( 100, 100, 150 );
+	const auto BASE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	const auto FORE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	const auto HILITE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	const auto BACK_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
-	app.setBackColor( FXRGB( 10, 10, 10 ) );
+	app.setBackColor( BACK_COLOUR );
 	app.setBaseColor( BASE_COLOUR );
 	app.setForeColor( FORE_COLOUR );
 
@@ -234,6 +221,8 @@ int main( int argc, char **argv )
 	ss::forge::mainWindow = new ss::forge::MainWindow( &app );
 
 	app.create();
+
+	setup_paths( tmp );
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{

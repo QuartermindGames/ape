@@ -21,6 +21,7 @@ FXDEFMAP( ViewportFrame )
 editorViewportMap[] = {
         FXMAPFUNC( SEL_CHORE, ViewportFrame::ID_CHORE, ViewportFrame::OnChore ),
         FXMAPFUNC( SEL_MOTION, ViewportFrame::ID_CANVAS, ViewportFrame::OnMotion ),
+        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, ViewportFrame::ID_CANVAS, ViewportFrame::OnRightClick ),
 };
 
 FXIMPLEMENT( ViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
@@ -141,4 +142,28 @@ long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
 	ss_acl_input_handle_mouse_motion_event( x, y );
 
 	return 0;
+}
+
+long ViewportFrame::OnRightClick( FXObject *, FXSelector, void *ptr )
+{
+	auto event = ( FXEvent * ) ptr;
+	if ( event->moved )
+		return TRUE;
+
+	// Create a pop up menu
+	auto popup = new FXMenuPane( this );
+
+	// Add items to the menu
+	new FXMenuCommand( popup, "Wireframe", nullptr, this, 0 );
+	new FXMenuCommand( popup, "Textured", nullptr, this, 0 );
+	new FXMenuCommand( popup, "Lit", nullptr, this, 0 );
+
+	// Show the menu
+	popup->create();
+	popup->popup( nullptr, event->root_x, event->root_y );
+	getApp()->runModalWhileShown( popup );
+
+	delete popup;
+
+	return TRUE;
 }

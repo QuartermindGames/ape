@@ -31,6 +31,7 @@ namespace ss::forge
 
 		long OnChore( FXObject *, FXSelector, void * );
 		long OnMotion( FXObject *, FXSelector, void * );
+		long OnRightClick( FXObject *, FXSelector, void * );
 
 	private:
 		inline ViewportFrame() = default;

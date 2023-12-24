@@ -79,6 +79,7 @@ namespace ss::forge
 		PATH_CONFIG,   // location of our config
 		PATH_PROJECTS, // location where *all* projects are stored
 		PATH_PROJECT,  // current project
+		PATH_COOK,     // cooking tool
 
 		MAX_CACHED_PATHS
 	};

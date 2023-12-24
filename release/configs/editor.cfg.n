@@ -1,7 +1,7 @@
 node.utf8
 object config
 {
-    string projectsPath "/home/hogsy/Projects"
+    ;string projectsPath "../../projects"
 
     string title "Yin Game Engine"
 

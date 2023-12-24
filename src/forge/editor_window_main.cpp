@@ -36,11 +36,11 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 	menuBar_ = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
 	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
-	new FXMenuCommand( menuPane, "New Level\t\tCreate a new level.", nullptr, this, ID_WORLD_NEW );
-	new FXMenuCommand( menuPane, "Open Level\t\tOpen an existing level.", nullptr, this, ID_WORLD_OPEN );
-	new FXMenuCommand( menuPane, "Save Level\t\tSave the level.", nullptr, this, ID_WORLD_SAVE );
-	new FXMenuCommand( menuPane, "Save Level As...\t\tSave the level to the specified destination.", nullptr, this, ID_WORLD_SAVEAS );
-	new FXMenuCommand( menuPane, "Close Level\t\tClose the current level.", nullptr, this, ID_WORLD_CLOSE );
+	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", nullptr, this, ID_WORLD_NEW );
+	new FXMenuCommand( menuPane, "Open World\t\tOpen an existing world.", nullptr, this, ID_WORLD_OPEN );
+	new FXMenuCommand( menuPane, "Save World\t\tSave the world.", nullptr, this, ID_WORLD_SAVE );
+	new FXMenuCommand( menuPane, "Save World As...\t\tSave the world to the specified destination.", nullptr, this, ID_WORLD_SAVEAS );
+	new FXMenuCommand( menuPane, "Close World\t\tClose the current world.", nullptr, this, ID_WORLD_CLOSE );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Open Model\t\tOpen an existing model.", nullptr, this, ID_MODEL_OPEN );
 	new FXMenuCommand( menuPane, "Open Texture\t\tOpen an existing texture.", nullptr, this, ID_TEXTURE_OPEN );
@@ -125,7 +125,7 @@ long ss::forge::MainWindow::on_new( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::on_open( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select a level", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.rfl" );
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.wld.n" );
 	if ( filename.empty() )
 		return false;
 
@@ -136,7 +136,7 @@ long ss::forge::MainWindow::on_open( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.model.n" );
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.mdl.n" );
 	if ( filename.empty() )
 		return false;
 
@@ -161,7 +161,7 @@ long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 	ApeMaterial *material = ss_arl_material_cache( filename.text(), APE_CACHE_EDITOR, false, false );
 	if ( material == nullptr )
 	{
-		FXMessageBox::warning( FXApp::instance(), 0, "Warning", "Failed to load material (%s)!", filename.text() );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to load material (%s)!", filename.text() );
 		return false;
 	}
 
