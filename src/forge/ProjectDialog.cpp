@@ -88,10 +88,6 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 			project->name = name;
 			project->internalName.assign( filename, c - filename );
 
-			const char *iconPath = ndGetStringByName( root, "iconPath", nullptr );
-			if ( iconPath != nullptr )
-				project->icon = ss::forge::load_fx_icon( FXApp::instance(), iconPath );
-
 			static FXGIFIcon folderIcon( FXApp::instance(), FX::minifolder );
 			if ( project->icon == nullptr )
 				project->icon = &folderIcon;
