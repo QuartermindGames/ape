@@ -324,8 +324,8 @@ SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out )
 	}
 }
 
-static void *load_obj( const char *path ) { return model_obj_load( path ); }
-static SSApeFormatModel *conv_obj( const void *model, SSApeFormatModel *out ) { return model_obj_to_ape( model, out ); }
-static void destroy_obj( void *model ) { model_obj_destroy( model ); }
+static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
+static SSApeFormatModel *conv_obj( const CookModel *model, SSApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
+static void destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
 
 CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

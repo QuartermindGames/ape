@@ -25,9 +25,12 @@ typedef struct CookState
 } CookState;
 extern CookState cook_state;
 
-typedef void *( *CookModelLoadFunction )( const char *path );
-typedef SSApeFormatModel *( *CookModelConvertFunction )( const void *model, SSApeFormatModel *out );
-typedef void ( *CookModelDeleteFunction )( void *model );
+struct CookModel;
+typedef struct CookModel CookModel;
+
+typedef CookModel *( *CookModelLoadFunction )( const char *path );
+typedef SSApeFormatModel *( *CookModelConvertFunction )( const CookModel *model, SSApeFormatModel *out );
+typedef void ( *CookModelDeleteFunction )( CookModel *model );
 
 typedef struct CookModelFormatInterface
 {

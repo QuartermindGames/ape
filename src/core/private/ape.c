@@ -90,7 +90,7 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
 
-	PlRegisterStandardPackageLoaders();
+	PlRegisterStandardPackageLoaders( PL_PACKAGE_LOAD_FORMAT_ALL );
 
 	// Call this first, so we can buffer console output
 	ss_acl_initialize_console_();
