@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_dialog_project.h"
+#include "ProjectDialog.h"
 #include "common_project.h"
 
 #include "3rdparty/fox/src/icons.h"
@@ -22,8 +22,11 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 	setWidth( baseWidth );
 
 	if ( projects.empty() )
+	{
 		// do a quick scan to see what projects are available
-		PlScanDirectory( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], "prj.n", register_project_callback, true, this );
+		std::string localPath = "local://" + std::string( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] );
+		PlScanDirectory( localPath.c_str(), "prj.n", register_project_callback, true, this );
+	}
 
 	auto *vf = new FXVerticalFrame( this, LAYOUT_FILL );
 
@@ -34,6 +37,7 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 
 	static FXGIFIcon newFolderIcon( getApp(), FX::foldernew );
 	listBox->appendItem( "Create new project", &newFolderIcon, nullptr );
+	listBox->setNumVisible( PlClamp( 4, listBox->getNumItems(), 8 ) );
 
 	projectNameField = new FXTextField( vf, 1, nullptr, 0, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
 	projectNameField->setText( defaultName );

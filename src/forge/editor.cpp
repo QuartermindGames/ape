@@ -9,7 +9,7 @@
 
 #include "editor.h"
 #include "editor_window_main.h"
-#include "editor_dialog_project.h"
+#include "ProjectDialog.h"
 
 #include "common_project.h"
 

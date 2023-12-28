@@ -13,7 +13,7 @@ endif ()
 add_executable(forge WIN32
         editor.cpp
         editor_dialog_about.cpp
-        editor_dialog_project.cpp
+        ProjectDialog.cpp
         editor_frame_console.cpp
         editor_frame_viewport.cpp
         editor_window_main.cpp
