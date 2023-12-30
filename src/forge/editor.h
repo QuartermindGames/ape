@@ -48,7 +48,20 @@ namespace ss::forge
 {
 	extern FXWindow *editorWindow;
 
+	FXGLVisual *get_shared_gl_visual();
+
 	FXIcon *load_fx_icon( FXApp *app, const char *path );
+
+	enum ThemeColour : uint8_t
+	{
+		THEME_COLOUR_BASE,
+		THEME_COLOUR_FORE,
+		THEME_COLOUR_HILITE,
+		THEME_COLOUR_BACK,
+
+		MAX_THEME_COLOURS
+	};
+	extern FXColor themeColours[ ThemeColour::MAX_THEME_COLOURS ];
 
 	/////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +97,8 @@ namespace ss::forge
 		MAX_CACHED_PATHS
 	};
 	extern PLPath cachedPaths[];
+
+	extern bool isCookAvailable;
 
 	extern NdBranch *editorConfig;
 }// namespace ss::forge

@@ -2,7 +2,7 @@
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "editor_face_inspector.h"
-#include "editor_window_main.h"
+#include "MainWindow.h"
 
 FXIMPLEMENT( EditorFaceInspector, FXDialogBox, NULL, 0 )
 

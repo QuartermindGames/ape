@@ -12,13 +12,16 @@ endif ()
 
 add_executable(forge WIN32
         editor.cpp
-        editor_dialog_about.cpp
+        AboutDialog.cpp
         ProjectDialog.cpp
-        editor_frame_console.cpp
-        editor_frame_viewport.cpp
-        editor_window_main.cpp
+        ConsoleFrame.cpp
+        ViewportFrame.cpp
+        MainWindow.cpp
         editor_window_material.cpp
-        editor_window_model.cpp)
+        editor_window_model.cpp
+
+        WorldEditor.cpp WorldEditor.h
+)
 
 add_dependencies(forge
         plcore

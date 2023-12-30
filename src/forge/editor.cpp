@@ -8,10 +8,12 @@
 #include <plgraphics/plg_driver_interface.h>
 
 #include "editor.h"
-#include "editor_window_main.h"
+#include "MainWindow.h"
 #include "ProjectDialog.h"
 
 #include "common_project.h"
+
+#include <FXGLVisual.h>
 
 // Override C++ new/delete operators, so we can track memory usage
 #if 0//TODO: causing pain on win32 target, let's not bother for now
@@ -26,9 +28,16 @@ int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 PLPath ss::forge::cachedPaths[ MAX_CACHED_PATHS ];
 NdBranch *ss::forge::editorConfig;
 
+static FXGLVisual *glVisual = nullptr;
+FXGLVisual *ss::forge::get_shared_gl_visual() { return glVisual; }
+
+bool ss::forge::isCookAvailable = true;
+
 ss::forge::Project *ss::forge::editorProject = nullptr;
 
 static std::map< std::string, PLImage * > cachedImages;
+
+FXColor ss::forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
@@ -107,8 +116,11 @@ static void setup_paths( const char *exePath )
 
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
 	if ( !PlFileExists( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] ) )
+	{
+		ss::forge::isCookAvailable = false;
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
 		                       ss::forge::cachedPaths[ ss::forge::PATH_COOK ] );
+	}
 
 	PLPath tmp;
 	if ( PlGetApplicationDataDirectory( "ape", tmp, sizeof( tmp ) ) != nullptr )
@@ -139,12 +151,15 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 	{
 		image = PlLoadImage( fullPath );
 		if ( image == nullptr )
+		{
+			EDITOR_PRINT( "Failed to load icon (%s): %s\n", fullPath, PlGetError() );
 			return nullptr;
+		}
 
 		cachedImages.emplace( fullPath, image );
 	}
 
-	FXIcon *icon = new FXIcon( app );
+	auto *icon = new FXIcon( app );
 	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
 	return icon;
 }
@@ -204,29 +219,34 @@ int main( int argc, char **argv )
 	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
 	app.init( argc, argv );
 
-	const auto BASE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	const auto FORE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	const auto HILITE_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	const auto BACK_COLOUR = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
-	app.setBackColor( BACK_COLOUR );
-	app.setBaseColor( BASE_COLOUR );
-	app.setForeColor( FORE_COLOUR );
+	app.setBackColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] );
+	app.setBaseColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
+	app.setForeColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] );
 
-	app.setBorderColor( BASE_COLOUR );
-	app.setHiliteColor( HILITE_COLOUR );
-	app.setShadowColor( HILITE_COLOUR );
+	app.setBorderColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
+	app.setHiliteColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	app.setShadowColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+
+	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
 	ss::forge::mainWindow = new ss::forge::MainWindow( &app );
 
 	app.create();
 
+	ss::forge::mainWindow->show();
+	ss::forge::mainWindow->maximize();
+
 	setup_paths( tmp );
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to set OpenGL driver (%s)!", PlGetError() );
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to set OpenGL driver: %s\n", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -237,20 +257,16 @@ int main( int argc, char **argv )
 
 	if ( ss::forge::editorProject == nullptr )
 	{
-		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "No project selected, aborting!" );
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
 	delete projectDialog;
 
-	ss::forge::mainWindow->show();
-
 	if ( !ss_acl_initialize( argc, argv, EDITOR_CONFIG_FILENAME ) )
 	{
-		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Yin!" );
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;
 	}
-
-	ss::forge::mainWindow->setup_engine_viewports();
 
 	return app.run();
 }
@@ -287,7 +303,10 @@ extern "C"
 	ApeInputState ss_shell_get_button_state( ApeInputButton inputButton ) { return APE_INPUT_STATE_NONE; }
 	ApeInputState ss_shell_get_key_state( int key ) { return APE_INPUT_STATE_NONE; }
 	void ss_shell_get_mouse_position( int *x, int *y ) {}
-	void ss_shell_set_mouse_position( int x, int y ) {}
+	void ss_shell_set_mouse_position( int x, int y )
+	{
+	}
+
 	void ss_shell_grab_mouse( bool grab ) {}
 
 	void ss_shell_push_message( int level, const char *msg, const PLColour *colour )

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_frame_console.h"
+#include "ConsoleFrame.h"
 
 FXDEFMAP( ss::forge::ConsoleFrame )
 consoleFrameMap[] = {
@@ -24,7 +24,7 @@ ss::forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
 	logField->setEditable( false );
 
 	auto *submissionFrame = new FXHorizontalFrame( this, FRAME_NORMAL | LAYOUT_FILL_X );
-	new FXButton( submissionFrame, "", ss::forge::load_fx_icon( FXApp::instance(), "resources/bin.gif" ), this, ID_CLEAR );
+	new FXButton( submissionFrame, "", ss::forge::load_fx_icon( FXApp::instance(), "resources/trash.gif" ), this, ID_CLEAR );
 	submitField = new FXTextField( submissionFrame, 1, this, ID_SUBMIT_FIELD, FRAME_NORMAL | LAYOUT_FILL_X );
 	submitButton = new FXButton( submissionFrame, "Submit", nullptr, this, ID_SUBMIT );
 }

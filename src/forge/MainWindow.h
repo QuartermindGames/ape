@@ -3,9 +3,9 @@
 #pragma once
 
 #include "editor.h"
-#include "editor_frame_viewport.h"
+#include "ViewportFrame.h"
 #include "editor_face_inspector.h"
-#include "editor_frame_console.h"
+#include "ConsoleFrame.h"
 
 namespace ss::forge
 {
@@ -24,8 +24,8 @@ namespace ss::forge
 
 	public:
 		long on_tick( FXObject *, FXSelector, void * );
-		long on_new( FXObject *, FXSelector, void * );
-		long on_open( FXObject *, FXSelector, void * );
+		long on_new_world( FXObject *, FXSelector, void * );
+		long on_open_world( FXObject *, FXSelector, void * );
 
 		long open_model( FXObject *, FXSelector, void * );
 		long open_texture( FXObject *, FXSelector, void * );
@@ -52,6 +52,7 @@ namespace ss::forge
 			ID_WORLD_CLOSE,
 
 			ID_MODEL_OPEN,
+			ID_MATERIAL_NEW,
 			ID_MATERIAL_OPEN,
 			ID_TEXTURE_OPEN,
 
@@ -73,27 +74,23 @@ namespace ss::forge
 
 		ss::forge::Project *currentProject{ nullptr };
 
-		FXToolBar *toolBar_{};
 		FXMenuBar *menuBar_{};
-
-		FXDataTarget gridHideTarget;
-		FXDataTarget gridSizeTarget;
 
 		FXVerticalFrame *mainFrame{};
 
-		FXToggleButton *editModeButtons[ EDITOR_MAX_GEOMETRYMODES ]{};
-
 		FXStatusBar *statusBars_[ 3 ]{};
 
-		FXGLVisual *glVisual_{};
+	public:
+		static FXGLVisual *glVisual_;
 
+	private:
 		ss::forge::ConsoleFrame *consoleFrame{};
 
-		ViewportFrame *viewportFrame[ 4 ]{};
-
-		EditorFaceInspector *faceInspectorWindow{};
-		ModelWindow *modelWindow{};
 		MaterialWindow *materialWindow{ nullptr };
+
+	private:
+		FXTabBook *_tabBook;
+		std::vector< FXTabItem * > _tabs;
 	};
 
 	extern MainWindow *mainWindow;

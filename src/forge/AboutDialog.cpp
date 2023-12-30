@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_dialog_about.h"
+#include "AboutDialog.h"
 
 FXIcon *ss::forge::AboutDialog::editorIcon = nullptr;
 FXIcon *ss::forge::AboutDialog::developerIcon = nullptr;
@@ -9,10 +9,9 @@ FXIcon *ss::forge::AboutDialog::developerIcon = nullptr;
 ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
     : FXDialogBox( parent, "About " SS_FORGE_APP_TITLE )
 {
-	FXVerticalFrame *infoFrame = new FXVerticalFrame( this );
+	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
 
-	new FXLabel( infoFrame, SS_FORGE_APP_TITLE " (" SS_FORGE_APP_VERSION ")\n"
-	                                           "Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>\n"
+	new FXLabel( infoFrame, SS_FORGE_APP_TITLE " (" SS_FORGE_APP_VERSION ")\n" SS_COM_COPYRIGHT "\n"
 	                                           "Editor environment for use with APE Tech.",
 	             nullptr,
 	             LAYOUT_LEFT | LAYOUT_SIDE_LEFT | JUSTIFY_LEFT );
@@ -29,4 +28,6 @@ ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
 	new FXHorizontalSeparator( infoFrame );
 
 	new FXButton( infoFrame, "Close", nullptr, this, ID_ACCEPT, BUTTON_NORMAL | LAYOUT_RIGHT );
+
+	setWidth( 400 );
 }

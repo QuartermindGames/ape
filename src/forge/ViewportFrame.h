@@ -16,11 +16,9 @@ namespace ss::forge
 
 		void create() override;
 
-		void setup_engine_viewport();
-
 		enum
 		{
-			ID_CHORE = FXVerticalFrame::ID_LAST,
+			ID_DRAW = FXVerticalFrame::ID_LAST,
 			ID_CANVAS,
 			ID_TOGGLE_VIEW,
 			ID_TOGGLE_DRAW,
@@ -29,9 +27,18 @@ namespace ss::forge
 
 		virtual void Draw();
 
-		long OnChore( FXObject *, FXSelector, void * );
-		long OnMotion( FXObject *, FXSelector, void * );
-		long OnRightClick( FXObject *, FXSelector, void * );
+		inline void set_active( bool state )
+		{
+			_isActive = state;
+		}
+
+	private:
+		bool _isActive{ true };
+
+	public:
+		long on_chore( FXObject *, FXSelector, void * );
+		long on_motion( FXObject *, FXSelector, void *ptr );
+		long on_right_click( FXObject *, FXSelector, void *ptr );
 
 	private:
 		inline ViewportFrame() = default;

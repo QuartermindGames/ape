@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_frame_viewport.h"
+#include "ViewportFrame.h"
 
 #include <yin/core_renderer.h>
 
@@ -14,14 +14,13 @@
 using namespace ss::forge;
 
 FXGLCanvas *ViewportFrame::displayList_ = nullptr;
-
 unsigned int ViewportFrame::cameraTagNum = 0;
 
 FXDEFMAP( ViewportFrame )
 editorViewportMap[] = {
-        FXMAPFUNC( SEL_CHORE, ViewportFrame::ID_CHORE, ViewportFrame::OnChore ),
-        FXMAPFUNC( SEL_MOTION, ViewportFrame::ID_CANVAS, ViewportFrame::OnMotion ),
-        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, ViewportFrame::ID_CANVAS, ViewportFrame::OnRightClick ),
+        FXMAPFUNC( SEL_CHORE, ViewportFrame::ID_DRAW, ViewportFrame::on_chore ),
+        FXMAPFUNC( SEL_MOTION, ViewportFrame::ID_CANVAS, ViewportFrame::on_motion ),
+        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, ViewportFrame::ID_CANVAS, ViewportFrame::on_right_click ),
 };
 
 FXIMPLEMENT( ViewportFrame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
@@ -56,15 +55,15 @@ ViewportFrame::ViewportFrame( FXComposite *composite, FXGLVisual *visual, SSArlC
 		displayList_ = canvas_;
 	}
 	else
+	{
 		canvas_ = new FXGLCanvas( this, visual_, displayList_, this, ID_CANVAS, LAYOUT_FILL );
+	}
 
-	getApp()->addChore( this, ID_CHORE );
+	getApp()->addChore( this, ID_DRAW );
 }
 
 ViewportFrame::~ViewportFrame()
 {
-	getApp()->removeChore( this, ID_CHORE );
-
 	ss_arl_viewport_destroy( engineViewport );
 
 	canvas_->makeNonCurrent();
@@ -81,19 +80,11 @@ void ViewportFrame::create()
 	canvas_->makeCurrent();
 }
 
-void ViewportFrame::setup_engine_viewport()
-{
-	std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
-	camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
-	ss_arl_camera_set_view_mode( camera, viewMode_ );
-	ss_arl_camera_set_draw_mode( camera, ( viewMode_ == SS_ARL_CAMERA_MODE_PERSPECTIVE ) ? SS_ARL_CAMERA_DRAW_MODE_TEXTURED : SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
-
-	engineViewport = ss_arl_viewport_create( 0, 0, 800, 600, this );
-	ss_arl_viewport_set_camera( engineViewport, camera );
-}
-
 void ViewportFrame::Draw()
 {
+	if ( !_isActive )
+		return;
+
 	canvas_->makeCurrent();
 
 	int w = canvas_->getWidth();
@@ -106,8 +97,27 @@ void ViewportFrame::Draw()
 
 	PlgSetViewport( 0, 0, w, h );
 
-	if ( ss_acl_is_engine_running() && engineViewport != nullptr )
+	// A lot of this is currently terrible,
+	// simply because the renderer gets it's init
+	// at the same time as the rest of the engine...
+	// which happens AFTER the window is created (urgh)
+
+	if ( ss_acl_is_engine_running() )
 	{
+		if ( engineViewport == nullptr )
+		{
+			engineViewport = ss_arl_viewport_create( 0, 0, w, h, this );
+			ss_arl_viewport_set_camera( engineViewport, camera );
+		}
+
+		if ( camera == nullptr )
+		{
+			std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
+			camera = ss_arl_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
+			ss_arl_camera_set_view_mode( camera, viewMode_ );
+			ss_arl_camera_set_draw_mode( camera, ( viewMode_ == SS_ARL_CAMERA_MODE_PERSPECTIVE ) ? SS_ARL_CAMERA_DRAW_MODE_TEXTURED : SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
+		}
+
 		ss_arl_viewport_set_camera( engineViewport, camera );
 		ss_arl_viewport_set_size( engineViewport, w, h );
 
@@ -125,15 +135,15 @@ void ViewportFrame::Draw()
 		canvas_->swapBuffers();
 }
 
-long ViewportFrame::OnChore( FXObject *, FXSelector, void * )
+long ViewportFrame::on_chore( FXObject *, FXSelector, void * )
 {
 	Draw();
 
-	getApp()->addChore( this, ID_CHORE );
+	getApp()->addChore( this, ID_DRAW );
 	return 1;
 }
 
-long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
+long ViewportFrame::on_motion( FXObject *, FXSelector, void *ptr )
 {
 	auto *event = ( FXEvent * ) ptr;
 	int const x = event->win_x;
@@ -144,19 +154,25 @@ long ViewportFrame::OnMotion( FXObject *, FXSelector, void *ptr )
 	return 0;
 }
 
-long ViewportFrame::OnRightClick( FXObject *, FXSelector, void *ptr )
+long ViewportFrame::on_right_click( FXObject *, FXSelector, void *ptr )
 {
 	auto event = ( FXEvent * ) ptr;
 	if ( event->moved )
 		return TRUE;
 
-	// Create a pop up menu
+	// Create a pop-up menu
 	auto popup = new FXMenuPane( this );
 
 	// Add items to the menu
-	new FXMenuCommand( popup, "Wireframe", nullptr, this, 0 );
-	new FXMenuCommand( popup, "Textured", nullptr, this, 0 );
-	new FXMenuCommand( popup, "Lit", nullptr, this, 0 );
+	( new FXMenuRadio( popup, "Perspective" ) )->setCheck( viewMode_ == SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	( new FXMenuRadio( popup, "Top" ) )->setCheck( viewMode_ == SS_ARL_CAMERA_MODE_TOP );
+	( new FXMenuRadio( popup, "Left" ) )->setCheck( viewMode_ == SS_ARL_CAMERA_MODE_LEFT );
+	( new FXMenuRadio( popup, "Front" ) )->setCheck( viewMode_ == SS_ARL_CAMERA_MODE_FRONT );
+	new FXMenuSeparator( popup );
+	( new FXMenuRadio( popup, "Wireframe" ) )->setCheck( drawMode_ == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME );
+	( new FXMenuRadio( popup, "Solid" ) )->setCheck( drawMode_ == SS_ARL_CAMERA_DRAW_MODE_SOLID );
+	( new FXMenuRadio( popup, "Textured" ) )->setCheck( drawMode_ == SS_ARL_CAMERA_DRAW_MODE_TEXTURED );
+	( new FXMenuRadio( popup, "Lit" ) )->setCheck( drawMode_ == SS_ARL_CAMERA_DRAW_MODE_SHADED );
 
 	// Show the menu
 	popup->create();

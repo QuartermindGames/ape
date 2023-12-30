@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "editor_window_main.h"
+#include "MainWindow.h"
 #include "editor_window_material.h"
 #include "editor_window_model.h"
-#include "editor_dialog_about.h"
+#include "AboutDialog.h"
+#include "WorldEditor.h"
 
+#include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
 ss::forge::MainWindow *ss::forge::mainWindow = nullptr;
@@ -15,8 +17,8 @@ MainWindowMap[] = {
         //FXMAPFUNC( SEL_CONFIGURE, MainWindow::ID_CANVAS, mao::MainWindow::OnConfigure ),
         //FXMAPFUNC( SEL_PAINT, MainWindow::ID_CANVAS, mao::MainWindow::OnExpose ),
         //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_NEW, ss::forge::MainWindow::on_new ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_OPEN, ss::forge::MainWindow::on_open ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_NEW, ss::forge::MainWindow::on_new_world ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_OPEN, ss::forge::MainWindow::on_open_world ),
 
         FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_MODEL_OPEN, ss::forge::MainWindow::open_model ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_MATERIAL_OPEN, ss::forge::MainWindow::open_material ),
@@ -36,19 +38,26 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 	menuBar_ = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
 	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
-	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", nullptr, this, ID_WORLD_NEW );
-	new FXMenuCommand( menuPane, "Open World\t\tOpen an existing world.", nullptr, this, ID_WORLD_OPEN );
-	new FXMenuCommand( menuPane, "Save World\t\tSave the world.", nullptr, this, ID_WORLD_SAVE );
-	new FXMenuCommand( menuPane, "Save World As...\t\tSave the world to the specified destination.", nullptr, this, ID_WORLD_SAVEAS );
-	new FXMenuCommand( menuPane, "Close World\t\tClose the current world.", nullptr, this, ID_WORLD_CLOSE );
-	new FXMenuSeparator( menuPane );
-	new FXMenuCommand( menuPane, "Open Model\t\tOpen an existing model.", nullptr, this, ID_MODEL_OPEN );
-	new FXMenuCommand( menuPane, "Open Texture\t\tOpen an existing texture.", nullptr, this, ID_TEXTURE_OPEN );
-	new FXMenuCommand( menuPane, "Open Material\t\tOpen an existing material.", nullptr, this, ID_MATERIAL_OPEN );
+
+	FXMenuCaption *caption;
+	caption = new FXMenuCaption( menuPane, "World Editor", ss::forge::load_fx_icon( getApp(), "resources/world_editor.gif" ) );
+	caption->setBackColor( themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", ss::forge::load_fx_icon( getApp(), "resources/new_world.gif" ), this, ID_WORLD_NEW );
+	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", ss::forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
+
+	caption = new FXMenuCaption( menuPane, "Model Editor", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ) );
+	caption->setBackColor( themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	new FXMenuCommand( menuPane, "Open Model...\t\tOpen an existing model.", ss::forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, ID_MODEL_OPEN );
+
+	caption = new FXMenuCaption( menuPane, "Material Editor", ss::forge::load_fx_icon( getApp(), "resources/material_editor.gif" ) );
+	caption->setBackColor( themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	new FXMenuCommand( menuPane, "New Material\t\tOpen an existing material.", ss::forge::load_fx_icon( getApp(), "resources/new_material.gif" ), this, ID_MATERIAL_NEW );
+	new FXMenuCommand( menuPane, "Open Material...\t\tOpen an existing material.", ss::forge::load_fx_icon( getApp(), "resources/open_material.gif" ), this, ID_MATERIAL_OPEN );
+
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Package Project\t\tPackage the current project.", nullptr, this, ID_PROJECT_PACKAGE );
 	new FXMenuSeparator( menuPane );
-	new FXMenuCommand( menuPane, "Settings\t\tConfigure editor settings and more.", nullptr, this );
+	new FXMenuCommand( menuPane, "Settings...\t\tConfigure editor settings and more.", nullptr, this );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "&Quit\t\tQuit the application.", nullptr, this, ID_CLOSE );
 	new FXMenuTitle( menuBar_, "&File", nullptr, menuPane );
@@ -61,42 +70,35 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuTitle( menuBar_, "&Tools", nullptr, menuPane );
+	auto *subMenu = new FXMenuCascade( menuPane, "Cook" );
+	auto *subMenuPane = new FXMenuPane( this );
+	new FXMenuCommand( subMenuPane, "Convert Model...\t\tConvert a model from another format.", nullptr, this, 0 );
+	new FXMenuCommand( subMenuPane, "Import Texture...\t\tImport an existing texture.", nullptr, this, 0 );
+	subMenu->setMenu( subMenuPane );
+	if ( !isCookAvailable )
+		subMenu->disable();
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "&About\t\tOpen about dialog.", nullptr, this, ID_ABOUT );
 	new FXMenuTitle( menuBar_, "&Help", nullptr, menuPane );
 
-#if 1
-	toolBar_ = new FXToolBar( this, FRAME_RAISED | FRAME_THICK | LAYOUT_FILL_X );
-	editModeButtons[ EDITOR_GEOMETRYMODE_BRUSH ] = new FXToggleButton( toolBar_, "", "", ss::forge::load_fx_icon( getApp(), "resources/brush_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	editModeButtons[ EDITOR_GEOMETRYMODE_VERTEX ] = new FXToggleButton( toolBar_, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	editModeButtons[ EDITOR_GEOMETRYMODE_EDGE ] = new FXToggleButton( toolBar_, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	editModeButtons[ EDITOR_GEOMETRYMODE_FACE ] = new FXToggleButton( toolBar_, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), 0, this, MainWindow::ID_TOGGLE_EDIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	//editModeButtons[ currentEditMode ]->setState( true );
-	new FXVerticalSeparator( toolBar_ );
-	new FXToggleButton( toolBar_, "", "", ss::forge::load_fx_icon( getApp(), "resources/grid.gif" ), 0, &gridSizeTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	new FXTextField( toolBar_, 4, &gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
-	new FXVerticalSeparator( toolBar_ );
-	new FXButton( toolBar_, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
-#endif
-
 	new FXStatusBar( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
 
-	glVisual_ = new FXGLVisual( getApp(), VISUAL_DOUBLEBUFFER );
-
 	mainFrame = new FXVerticalFrame( this, LAYOUT_FILL );
+	auto *verticalSplitter = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
 
-	auto *vs = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
-
-	unsigned int mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
-	auto *hs = new FX4Splitter( vs, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	for ( auto &i : viewportFrame )
-		i = new ViewportFrame( hs, glVisual_, ( SSArlCameraMode ) mode++ );
-
-	hs->setHeight( 720 );
+	_tabBook = new FXTabBook( verticalSplitter, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_RIGHT );
+	_tabBook->setHeight( getHeight() - 128 );
+	auto tab = new WorldEditor( _tabBook, "test", nullptr );
+	_tabs.push_back( tab );
 
 	// Add the console at the bottom
-	consoleFrame = new ss::forge::ConsoleFrame( vs );
+	consoleFrame = new ss::forge::ConsoleFrame( verticalSplitter );
+
+	//HACK: make the engine initialisation happy...
+	auto *dummy = new ViewportFrame( this, get_shared_gl_visual(), SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	dummy->set_active( false );
+	dummy->hide();
 
 	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
 }
@@ -117,21 +119,33 @@ long ss::forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 	return 0;
 }
 
-long ss::forge::MainWindow::on_new( FXObject *, FXSelector, void * )
+long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 {
 	PlParseConsoleString( "editor.create_world" );
 	return 0;
 }
 
-long ss::forge::MainWindow::on_open( FXObject *, FXSelector, void * )
+long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 {
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.wld.n" );
 	if ( filename.empty() )
-		return false;
+		return FALSE;
 
-	ss_acl_level_load( filename.text() );
+	ApeWorld *world = ss_acl_level_load( filename.text() );
+	if ( world == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK,
+		                       "Warning",
+		                       "Failed to open world (%s)!\n"
+		                       "See logs for details.",
+		                       filename.text() );
+		return FALSE;
+	}
 
-	return 0;
+	auto tab = new WorldEditor( _tabBook, "test", world );
+	_tabs.push_back( tab );
+
+	return TRUE;
 }
 
 long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
@@ -179,7 +193,7 @@ long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::on_about( FXObject *, FXSelector, void * )
 {
-	forge::AboutDialog *aboutDialog = new forge::AboutDialog( this );
+	auto *aboutDialog = new forge::AboutDialog( this );
 	aboutDialog->execute();
 	return true;
 }
@@ -195,8 +209,6 @@ long ss::forge::MainWindow::on_package_project( FXObject *, FXSelector, void * )
 
 void ss::forge::MainWindow::setup_engine_viewports()
 {
-	for ( auto i : viewportFrame )
-		i->setup_engine_viewport();
 }
 
 /**

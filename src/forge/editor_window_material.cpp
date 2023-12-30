@@ -3,7 +3,7 @@
 
 #include "editor.h"
 #include "editor_window_material.h"
-#include "editor_frame_viewport.h"
+#include "ViewportFrame.h"
 
 FXDEFMAP( ss::forge::MaterialWindow )
 materialWindowMap[] = {

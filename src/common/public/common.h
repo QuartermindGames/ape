@@ -1,9 +1,11 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
-// Purpose: Public header for common library
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
-typedef enum ComDataType {
+#define SS_COM_COPYRIGHT "Copyright © 2020-2024 SnortySoft, Mark E Sowden"
+
+typedef enum ComDataType
+{
 	COM_DATATYPE_BOOL,
 
 	COM_DATATYPE_INT8,
