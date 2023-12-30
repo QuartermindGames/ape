@@ -9,8 +9,8 @@ namespace ss::forge
 	class AboutDialog : public FXDialogBox
 	{
 	public:
-		AboutDialog( FXWindow *parent );
-		~AboutDialog() = default;
+		explicit AboutDialog( FXWindow *parent );
+		~AboutDialog() override = default;
 
 	private:
 		static FXIcon *editorIcon;

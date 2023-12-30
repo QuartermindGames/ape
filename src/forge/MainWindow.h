@@ -28,7 +28,6 @@ namespace ss::forge
 		long on_open_world( FXObject *, FXSelector, void * );
 
 		long open_model( FXObject *, FXSelector, void * );
-		long open_texture( FXObject *, FXSelector, void * );
 		long open_material( FXObject *, FXSelector, void * );
 
 		long on_about( FXObject *, FXSelector, void * );

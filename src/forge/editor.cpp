@@ -164,6 +164,22 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 	return icon;
 }
 
+static void setup_app_colours( FXApp &app )
+{
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+
+	app.setBackColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] );
+	app.setBaseColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
+	app.setForeColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] );
+
+	app.setBorderColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
+	app.setHiliteColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	app.setShadowColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+}
+
 int main( int argc, char **argv )
 {
 #if !defined( NDEBUG ) && defined( WIN32 )
@@ -219,18 +235,7 @@ int main( int argc, char **argv )
 	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
 	app.init( argc, argv );
 
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
-
-	app.setBackColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] );
-	app.setBaseColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
-	app.setForeColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] );
-
-	app.setBorderColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
-	app.setHiliteColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
-	app.setShadowColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	setup_app_colours( app );
 
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 

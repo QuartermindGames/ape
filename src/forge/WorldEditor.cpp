@@ -38,12 +38,12 @@ ss::forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName
 		i = new ViewportFrame( hs, get_shared_gl_visual(), ( SSArlCameraMode ) mode++ );
 	}
 
+	frame->create();
+
 	if ( !worldName.empty() )
 	{
 		setText( "World Editor (" + worldName + ")" );
 	}
-
-	owner->recalc();
 }
 
 ss::forge::WorldEditor::~WorldEditor() = default;

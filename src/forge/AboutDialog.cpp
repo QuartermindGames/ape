@@ -25,9 +25,11 @@ ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
 	new FXLabel( hframe, FXString::null, editorIcon, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | JUSTIFY_CENTER_Y | LAYOUT_CENTER_Y );
 	new FXLabel( hframe, FXString::null, developerIcon, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | JUSTIFY_CENTER_Y | LAYOUT_CENTER_Y );
 
+	new FXLabel( infoFrame, "This software uses the FOX Toolkit (http://www.fox-toolkit.org)." );
+
 	new FXHorizontalSeparator( infoFrame );
 
 	new FXButton( infoFrame, "Close", nullptr, this, ID_ACCEPT, BUTTON_NORMAL | LAYOUT_RIGHT );
 
-	setWidth( 400 );
+	setWidth( 450 );
 }

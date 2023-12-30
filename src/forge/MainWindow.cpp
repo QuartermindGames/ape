@@ -3,9 +3,10 @@
 
 #include "MainWindow.h"
 #include "editor_window_material.h"
-#include "editor_window_model.h"
 #include "AboutDialog.h"
 #include "WorldEditor.h"
+
+#include "common_project.h"
 
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
@@ -89,8 +90,6 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 
 	_tabBook = new FXTabBook( verticalSplitter, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_RIGHT );
 	_tabBook->setHeight( getHeight() - 128 );
-	auto tab = new WorldEditor( _tabBook, "test", nullptr );
-	_tabs.push_back( tab );
 
 	// Add the console at the bottom
 	consoleFrame = new ss::forge::ConsoleFrame( verticalSplitter );
@@ -127,7 +126,8 @@ long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.wld.n" );
+	const char *path = ss_com_project_get_local_path();
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
 	if ( filename.empty() )
 		return FALSE;
 
@@ -142,33 +142,28 @@ long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	auto tab = new WorldEditor( _tabBook, "test", world );
-	_tabs.push_back( tab );
+	auto tab = _tabs.emplace_back( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
+	tab->create();
+
+	_tabBook->layout();
 
 	return TRUE;
 }
 
 long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.mdl.n" );
+	const char *path = ss_com_project_get_local_path();
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
 	if ( filename.empty() )
 		return false;
 
 	return true;
 }
 
-long ss::forge::MainWindow::open_texture( FXObject *, FXSelector, void * )
-{
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing texture", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.png" );
-	if ( filename.empty() )
-		return false;
-
-	return 0;
-}
-
 long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.mat.n" );
+	const char *path = ss_com_project_get_local_path();
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
 	if ( filename.empty() )
 		return false;
 
