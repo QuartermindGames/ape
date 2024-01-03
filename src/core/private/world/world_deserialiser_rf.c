@@ -640,7 +640,7 @@ static ApeWorld *deserialize_rfl( PLFile *file )
 	uint32_t objectOffset = PL_READUINT32( file, false, NULL );
 	uint32_t editorOffset = PL_READUINT32( file, false, NULL );
 
-	ApeWorld *level = ss_acl_level_create();
+	ApeWorld *level = ss_ape_world_create();
 
 	// read in all the chunks
 	uint32_t numChunks = PL_READUINT32( file, false, NULL );

@@ -3,7 +3,8 @@
 // Author:  Mark E. Sowden
 
 #include "WorldEditor.h"
-#include "ViewportFrame.h"
+
+#include "../ViewportFrame.h"
 
 FXDEFMAP( ss::forge::WorldEditor )
 worldEditorMap[] = {
@@ -18,6 +19,8 @@ ss::forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName
 	auto *frame = new FXVerticalFrame( owner, LAYOUT_FILL );
 
 	auto *toolbar = new FXToolBar( frame, FRAME_RAISED | FRAME_THICK );
+	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
+	new FXVerticalSeparator( toolbar );
 	_editModeButtons[ EDITOR_GEOMETRYMODE_BRUSH ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/brush_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	_editModeButtons[ EDITOR_GEOMETRYMODE_VERTEX ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	_editModeButtons[ EDITOR_GEOMETRYMODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );

@@ -59,7 +59,7 @@ void ss_acl_tick_game_( void )
 
 void ss_acl_spawn_world_( const char *worldPath )
 {
-	ApeWorld *world = ss_acl_level_load( worldPath );
+	ApeWorld *world = ss_ape_world_load( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );

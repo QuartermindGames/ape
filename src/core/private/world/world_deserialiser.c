@@ -320,7 +320,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 
 ApeWorld *ss_acl_world_deserialize_( NdBranch *root )
 {
-	ApeWorld *world = ss_acl_level_create();
+	ApeWorld *world = ss_ape_world_create();
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to create world!\n" );

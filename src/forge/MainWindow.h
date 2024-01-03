@@ -4,14 +4,10 @@
 
 #include "editor.h"
 #include "ViewportFrame.h"
-#include "editor_face_inspector.h"
 #include "ConsoleFrame.h"
 
 namespace ss::forge
 {
-	class ModelWindow;
-	class MaterialWindow;
-
 	class MainWindow : public FXMainWindow
 	{
 		FXDECLARE( MainWindow )
@@ -35,7 +31,7 @@ namespace ss::forge
 
 		void setup_engine_viewports();
 
-		ss::forge::Project *GetProject() { return currentProject; }
+		Project *GetProject() { return currentProject; }
 
 		enum
 		{
@@ -55,6 +51,8 @@ namespace ss::forge
 			ID_MATERIAL_OPEN,
 			ID_TEXTURE_OPEN,
 
+			ID_SETTINGS,
+
 			ID_COPY,
 			ID_PASTE,
 			ID_GRID_TOGGLE,
@@ -71,7 +69,7 @@ namespace ss::forge
 	private:
 		void create() override;
 
-		ss::forge::Project *currentProject{ nullptr };
+		Project *currentProject{ nullptr };
 
 		FXMenuBar *menuBar_{};
 
@@ -83,12 +81,10 @@ namespace ss::forge
 		static FXGLVisual *glVisual_;
 
 	private:
-		ss::forge::ConsoleFrame *consoleFrame{};
-
-		MaterialWindow *materialWindow{ nullptr };
+		ConsoleFrame *consoleFrame{};
 
 	private:
-		FXTabBook *_tabBook;
+		FXTabBook *_tabBook{};
 		std::vector< FXTabItem * > _tabs;
 	};
 

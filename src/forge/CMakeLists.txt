@@ -17,10 +17,11 @@ add_executable(forge WIN32
         ConsoleFrame.cpp
         ViewportFrame.cpp
         MainWindow.cpp
-        editor_window_material.cpp
-        editor_window_model.cpp
 
-        WorldEditor.cpp WorldEditor.h
+        editors/EditorTab.cpp editors/EditorTab.h
+        editors/MaterialEditor.cpp editors/MaterialEditor.h
+        editors/ModelEditor.cpp editors/ModelEditor.h
+        editors/WorldEditor.cpp editors/WorldEditor.h
 )
 
 add_dependencies(forge

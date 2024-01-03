@@ -18,7 +18,7 @@ void ss_acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) {
 void ss_acl_level_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
 void ss_acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
 
-ApeWorld *ss_acl_level_create( void )
+ApeWorld *ss_ape_world_create( void )
 {
 	ApeWorld *level = PL_NEW( ApeWorld );
 
@@ -178,7 +178,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 	room->isMeshCached = true;
 }
 
-ApeWorld *ss_acl_level_load( const char *path )
+ApeWorld *ss_ape_world_load( const char *path )
 {
 	const char *extension = PlGetFileExtension( path );
 	if ( extension == NULL )

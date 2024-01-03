@@ -31,9 +31,9 @@ typedef struct ApeWorld ApeWorld;
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
-ApeWorld *ss_acl_level_create( void );
+ApeWorld *ss_ape_world_create( void );
 
-ApeWorld *ss_acl_level_load( const char *path );
+ApeWorld *ss_ape_world_load( const char *path );
 
 /// Attempts to save the given world to the destination.
 /// \param world
