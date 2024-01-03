@@ -31,8 +31,10 @@ namespace ss::forge
 	private:
 		inline ConsoleFrame() = default;
 
+		std::vector< std::string > _previousCommands;
+
 		FXText *logField{};
 		FXButton *submitButton{};
-		FXTextField *submitField{};
+		FXComboBox *submitField{};
 	};
 }// namespace ss::forge

@@ -25,7 +25,7 @@ ss::forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
 
 	auto *submissionFrame = new FXHorizontalFrame( this, FRAME_NORMAL | LAYOUT_FILL_X );
 	new FXButton( submissionFrame, "", ss::forge::load_fx_icon( FXApp::instance(), "resources/trash.gif" ), this, ID_CLEAR );
-	submitField = new FXTextField( submissionFrame, 1, this, ID_SUBMIT_FIELD, FRAME_NORMAL | LAYOUT_FILL_X );
+	submitField = new FXComboBox( submissionFrame, 1, this, ID_SUBMIT_FIELD, FRAME_NORMAL | LAYOUT_FILL_X | COMBOBOX_INSERT_BEFORE );
 	submitButton = new FXButton( submissionFrame, "Submit", nullptr, this, ID_SUBMIT );
 }
 
@@ -47,6 +47,7 @@ long ss::forge::ConsoleFrame::submit_command( FXObject *, FXSelector, void * )
 
 	PlParseConsoleString( command.text() );
 
+	submitField->appendItem( command );
 	submitField->setText( "" );
 	return true;
 }
