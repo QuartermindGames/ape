@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <plcore/pl_package.h>
 
@@ -6,7 +6,8 @@
 
 #define PKG_MAGIC PL_MAGIC_TO_NUM( 'P', 'K', 'G', '2' )
 
-typedef struct PkgHeader {
+typedef struct PkgHeader
+{
 	uint32_t magic;
 	uint32_t numFiles;
 } PkgHeader;
@@ -15,34 +16,38 @@ static const size_t PKG_HEADER_SIZE = sizeof( PkgHeader );
 /////////////////////////////////////////////////////////////////
 // READ
 
-static PLPackage *parse_pkg_file( PLFile *file ) {
+static PLPackage *parse_pkg_file( PLFile *file )
+{
 	PkgHeader header;
 	header.magic = PlReadInt32( file, false, NULL );
-	if ( header.magic != PKG_MAGIC ) {
+	if ( header.magic != PKG_MAGIC )
+	{
 		Warning( "Unexpected magic for pkg: %d\n", header.magic );
 		return NULL;
 	}
 
-	header.numFiles = PlReadInt32( file, false, NULL );
-	if ( header.numFiles == 0 ) {
+	header.numFiles = PL_READUINT32( file, false, NULL );
+	if ( header.numFiles == 0 )
+	{
 		Warning( "Empty package!\n" );
 		return NULL;
 	}
 
 	const char *path = PlGetFilePath( file );
 	PLPackage *package = PlCreatePackageHandle( path, header.numFiles, NULL );
-	for ( unsigned int i = 0; i < header.numFiles; ++i ) {
+	for ( unsigned int i = 0; i < header.numFiles; ++i )
+	{
 		PLPackageIndex *index = &package->table[ i ];
 
 		// read in the filename, it's a sized string...
-		uint8_t nameLength = PlReadInt8( file, NULL );
+		uint8_t nameLength = PL_READUINT8( file, NULL );
 		PlReadFile( file, index->fileName, sizeof( char ), nameLength );
 
 		index->fileName[ nameLength + 1 ] = '\0';
 
 		// file length/size
-		index->fileSize = PlReadInt32( file, false, NULL );
-		index->compressedSize = PlReadInt32( file, false, NULL );
+		index->fileSize = PL_READUINT32( file, false, NULL );
+		index->compressedSize = PL_READUINT32( file, false, NULL );
 
 		if ( index->fileSize != index->compressedSize )
 			index->compressionType = PL_COMPRESSION_DEFLATE;
@@ -50,7 +55,8 @@ static PLPackage *parse_pkg_file( PLFile *file ) {
 		index->offset = PlGetFileOffset( file );
 
 		// now seek to the next file
-		if ( !PlFileSeek( file, ( PLFileOffset ) index->compressedSize, PL_SEEK_CUR ) ) {
+		if ( !PlFileSeek( file, ( PLFileOffset ) index->compressedSize, PL_SEEK_CUR ) )
+		{
 			Warning( "Failed to seek to the next file within package: %s\n", PlGetError() );
 			package->table_size = ( i + 1 );
 			break;
@@ -60,7 +66,8 @@ static PLPackage *parse_pkg_file( PLFile *file ) {
 	return package;
 }
 
-static PLPackage *load_pkg_file( const char *path ) {
+static PLPackage *load_pkg_file( const char *path )
+{
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 		return NULL;
@@ -72,21 +79,24 @@ static PLPackage *load_pkg_file( const char *path ) {
 	return package;
 }
 
-void com_pack_pkg_register_( void ) {
+void ss_com_pack_pkg_register_( void )
+{
 	PlRegisterPackageLoader( "pkg", load_pkg_file, parse_pkg_file );
 }
 
 /////////////////////////////////////////////////////////////////
 // WRITE
 
-void comWritePkgHeader( FILE *pack, unsigned int numFiles ) {
+void ss_com_pkg_write_header( FILE *pack, unsigned int numFiles )
+{
 	fseek( pack, 0, SEEK_SET );
 	fwrite( &( PkgHeader ){ .magic = PKG_MAGIC,
 	                        .numFiles = numFiles },
 	        PKG_HEADER_SIZE, 1, pack );
 }
 
-void comAddPkgData( FILE *pack, const char *path, const void *buf, size_t size ) {
+void ss_com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size )
+{
 	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, pack );
 	fwrite( path, sizeof( char ), nameLength, pack );
@@ -94,14 +104,19 @@ void comAddPkgData( FILE *pack, const char *path, const void *buf, size_t size )
 
 	size_t compressedSize;
 	void *compressedData = PlCompress_Deflate( buf, size, &compressedSize );
-	if ( compressedData == NULL ) {
+	if ( compressedData == NULL )
+	{
 		compressedSize = size;
 		Warning( "Failed to compress data: %s\n", PlGetError() );
-	} else if ( compressedSize >= size ) {
+	}
+	else if ( compressedSize >= size )
+	{
 		PL_DELETE( compressedData );
 		compressedData = NULL;
 		compressedSize = size;
-	} else {
+	}
+	else
+	{
 		size = compressedSize;
 		buf = compressedData;
 	}

@@ -20,7 +20,7 @@ void com_initialize( void )
 
 	ndSetupLogs();
 
-	com_pack_pkg_register_();
+	ss_com_pack_pkg_register_();
 	com_pack_vpp_register_();
 
 	// Initialize directory lookups
