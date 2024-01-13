@@ -1,123 +1,11 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "ape_private.h"
 #include "renderer.h"
 #include "world/world.h"
 #include "legacy/actor.h"
 
-#if 0
-	PLLinkedListNode *faceNode = PlGetFirstNode( visiblePortals );
-	while ( faceNode != NULL )
-	{
-		OgeWorldFace *face = PlGetLinkedListNodeUserData( faceNode );
-		if ( face->isPortalClosed )
-		{
-			faceNode = PlGetNextLinkedListNode( faceNode );
-			continue;
-		}
-
-		face->flags |= WORLD_FACE_FLAG_SKIP;
-		if ( face->flags & WORLD_FACE_FLAG_MIRROR )
-		{
-			/* in the case of a mirror, both the target and target face
-			 * are assumed to be the same as the mirror, so that keeps
-			 * things pretty simple! */
-
-			rendererState.depth++;
-			rendererState.mirror = true;
-
-#	if 0
-			//PlMatrixMode( PL_MODELVIEW_MATRIX );
-
-			//PLMatrix4 om = camera->internal->internal.proj;
-			//PlMatrixMode( PL_PROJECTION_MATRIX );
-			//PlPushMatrix();
-			//PlLoadMatrix( &om );
-
-			//PlInverseMatrix();
-
-			// Inverse it
-			//PlScaleMatrix( PlVector3( 1.0f, 1.0f, -1.0f ) );
-
-			//PLMatrix4 im = PlInverseMatrix4( om );
-			//PlMultiMatrix( &im );
-
-			//PLVector3 in = PlInverseVector3( PlVector3( PL_RAD2DEG( face->normal.x ),
-			//                                            PL_RAD2DEG( face->normal.y ),
-			 //                                           PL_RAD2DEG( face->normal.z ) ) );
-			//camera->internal->angles = PlAddVector3( camera->internal->angles, in );
-
-			PLVector3 angles = pl_vecOrigin3;
-			angles = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 1.0f, 0.0f, 0.0f, face->normal.x ) ) );
-			angles = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 0.0f, 1.0f, 0.0f, face->normal.y ) ) );
-			angles = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 0.0f, 0.0f, 1.0f, face->normal.z ) ) );
-
-			camera->internal->position = PlAddVector3( camera->internal->position, face->origin );
-			camera->internal->angles.x += ( angles.x );
-			camera->internal->angles.y += ( angles.y );
-			camera->internal->angles.z += ( angles.z );
-
-			PlgSetupCamera( camera->internal );
-
-			// Override the matrix the above set for us
-			//PlgSetProjectionMatrix( PlGetMatrix( PL_PROJECTION_MATRIX ) );
-
-			DrawSector( NULL, sector, camera );
-
-			PlPopMatrix();
-
-			// Restore it
-			PlgSetupCamera( camera->internal );
-#	else
-			PlMatrixMode( PL_MODELVIEW_MATRIX );
-
-			int x, y;
-			if ( ( fabsf( face->normal.x ) > fabsf( face->normal.y ) ) && ( fabsf( face->normal.x ) > fabsf( face->normal.z ) ) )
-			{
-				x = ( face->normal.x > 0.0 ) ? 1 : 2;
-				y = ( face->normal.x > 0.0 ) ? 2 : 1;
-			}
-			else if ( ( fabsf( face->normal.z ) > fabsf( face->normal.x ) ) && ( fabsf( face->normal.z ) > fabsf( face->normal.y ) ) )
-			{
-				x = ( face->normal.z > 0.0 ) ? 0 : 1;
-				y = ( face->normal.z > 0.0 ) ? 1 : 0;
-			}
-			else
-			{
-				x = ( face->normal.y > 0.0 ) ? 2 : 0;
-				y = ( face->normal.y > 0.0 ) ? 0 : 2;
-			}
-
-			PlScaleMatrix( PlVector3( x == 0 ? -1.0f : 1.0f,
-			                          y == 0 ? -1.0f : 1.0f,
-			                          x == 0 && y == 0 ? -1.0f : 1.0f ) );
-
-			PLVector3 normal = PlInverseVector3( face->normal );
-			PLVector3 angles = pl_vecOrigin3;
-			angles           = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 1.0f, 0.0f, 0.0f, normal.x ) ) );
-			angles           = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 0.0f, 1.0f, 0.0f, normal.y ) ) );
-			angles           = PlAddVector3( angles, PlQuaternionToEuler( &PlQuaternion( 0.0f, 0.0f, 1.0f, normal.z ) ) );
-			//PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
-			//PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
-			//PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
-
-			DrawSector( NULL, sector, camera );
-
-			PlPopMatrix();
-#	endif
-
-			rendererState.depth--;
-			rendererState.mirror = false;
-		}
-		else
-		{
-			/* otherwise, in the case of an actual portal, we'll need
-			 * to fetch the target sector and the target face...
-			 * if these aren't set appropriately, then, well... */
-		}
-		face->flags &= ~WORLD_FACE_FLAG_SKIP;
-#endif
-
+//TODO: eventually we should do away with this
 #define MAX_MATERIALS_PER_PASS 256
 #define MAX_SUB_MESHES         8192
 static int subMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
@@ -224,9 +112,21 @@ static bool face_is_facing_light( const SSAclWorldFace *face, const SSArlLight *
 {
 	PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( face->origin, light->position ) );
 	if ( PlVector3DotProduct( face->normal, lightDir ) >= 0 )
+	{
 		return true;
+	}
 
 	return false;
+}
+
+static bool is_light_not_shadowing_face( const ApeMaterial *material, const SSAclWorldFace *face, SSArlLight *light )
+{
+	if ( light == NULL || ( ss_ape_light_get_shadow_type( light ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC ) )
+	{
+		return false;
+	}
+
+	return ( ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( face, light ) );
 }
 
 static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, SSArlLight *light )
@@ -250,7 +150,7 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
 		return;
 
-	if ( ape_config_.level.showRoomVolumes )
+	if ( ape_config_.world.showRoomVolumes )
 	{
 		PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 		PLColour colour = PlColourF32ToU8( &room->colour );
@@ -277,8 +177,6 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 		unsigned int materialIndex = faces[ i ]->materialIndex;
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
 		assert( material != NULL );
-		if ( material == NULL )
-			material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
 
 		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
 		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
@@ -295,8 +193,7 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 
 		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 
-		if ( light != NULL && ( light->flags & SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS ) &&
-		     ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( faces[ i ], light ) )
+		if ( is_light_not_shadowing_face( material, faces[ i ], light ) )
 		{
 			offset += numVertices;
 			continue;
@@ -321,8 +218,6 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
 		assert( material != NULL );
-		if ( material == NULL )
-			continue;
 
 		draw_room_submesh( room->mesh, material, i, ambienceOnly ? NULL : light );
 	}
@@ -331,113 +226,92 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 		world->ambience = oldAmbience;
 }
 
-static void draw_room_stencil_shadow_volume( const SSAclWorldFace *face, const SSArlLight *light, const PLColour *colour )
+static const float F_INFINITY = 100.0f;
+
+static PLVector3 get_projection( const SSArlLight *light, const PLVector3 *origin )
 {
-	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
-	assert( shadowMaterial != NULL );
-	if ( shadowMaterial == NULL )
-		return;
-
-	PLGMesh *mesh;
-	PLLinkedListNode *faceVertexNode;
-
-	PLVector3 projDirection;
-	if ( light->type == APE_LIGHT_TYPE_SUN )
-		projDirection = PlNormalizeVector3( ( PLVector3 ){ light->position.x, light->position.y, light->position.z } );
-
-	static const float F_INFINITY = 100.0f;
-
-	// end cap
-	mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-	faceVertexNode = PlGetLastNode( face->edgeLoop );
-	while ( faceVertexNode != NULL )
+	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-		assert( vertex->u != NULL );
-
-		if ( light->type != APE_LIGHT_TYPE_SUN )
-			projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-
-		PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
-		                  vertex->u->position.y + projDirection.y * F_INFINITY,
-		                  vertex->u->position.z + projDirection.z * F_INFINITY );
-		PlgImmColour( 255, 0, 255, colour->a );
-
-		faceVertexNode = PlGetPrevLinkedListNode( faceVertexNode );
+		return PlNormalizeVector3( PlSubtractVector3( *origin, light->position ) );
 	}
-	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 
-	// start cap
-	mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-	faceVertexNode = PlGetFirstNode( face->edgeLoop );
-	while ( faceVertexNode != NULL )
+	return PlNormalizeVector3( ( PLVector3 ){ light->position.x, light->position.y, light->position.z } );
+}
+
+static void draw_stencil_shadow_cap( const SSAclWorldFace *face, const SSArlLight *light, bool start, unsigned int *indices )
+{
+	unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
+	PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
-
-		PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
-		PlgImmColour( 255, 0, 0, colour->a );
-
+		//TODO: yes yes, all this bollocks should be in a vertex shader...
+		PLVector3 projDirection = start ? pl_vecOrigin3 : get_projection( light, &vertex->u->position );
+		indices[ i ] = PlgImmPushVertex( vertex->u->position.x + ( projDirection.x * F_INFINITY ),
+		                                 vertex->u->position.y + ( projDirection.y * F_INFINITY ),
+		                                 vertex->u->position.z + ( projDirection.z * F_INFINITY ) );
+#if 1// for debugging
+		PlgImmColour( start ? 255 : 0, start ? 0 : 255, 255, 255 );
+#endif
 		faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 	}
-	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 
-	mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
-	faceVertexNode = PlGetFirstNode( face->edgeLoop );
-	while ( faceVertexNode != NULL )
+	for ( unsigned int i = 1; i + 1 < numVertices; ++i )
 	{
-		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-		assert( vertex->u != NULL );
-
-		PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
-		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-
-		if ( light->type != APE_LIGHT_TYPE_SUN )
-			projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-
-		PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
-		                  vertex->u->position.y + projDirection.y * F_INFINITY,
-		                  vertex->u->position.z + projDirection.z * F_INFINITY );
-		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-
-		faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
-		if ( faceVertexNode == NULL )
-		{
-			faceVertexNode = PlGetFirstNode( face->edgeLoop );
-			vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-			PlgImmPushVertex( vertex->u->position.x, vertex->u->position.y, vertex->u->position.z );
-			PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-
-			if ( light->type != APE_LIGHT_TYPE_SUN )
-				projDirection = PlNormalizeVector3( PlSubtractVector3( vertex->u->position, light->position ) );
-
-			PlgImmPushVertex( vertex->u->position.x + projDirection.x * F_INFINITY,
-			                  vertex->u->position.y + projDirection.y * F_INFINITY,
-			                  vertex->u->position.z + projDirection.z * F_INFINITY );
-			PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-			break;
-		}
+		PlgImmPushTriangle( indices[ 0 ], indices[ start ? i : ( i + 1 ) ], indices[ start ? ( i + 1 ) : i ] );
 	}
-	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
 static void draw_room_stencil_shadow_volumes( SSAclWorldRoom *room, const SSArlLight *light )
 {
+	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
+	assert( shadowMaterial != NULL );
+
 	unsigned int numFaces;
 	SSAclWorldFace **faces = ss_acl_room_get_faces( room, &numFaces );
+
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
+	unsigned int numIndices = 0;
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->material == NULL || !ss_arl_material_shadows_enabled( faces[ i ]->material ) )
 			continue;
 
-		//if ( !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->position, light->radius ), &faces[ i ]->bounds ) )
-		//	continue;
-
 		if ( face_is_facing_light( faces[ i ], light ) )
 			continue;
 
-		draw_room_stencil_shadow_volume( faces[ i ], light, &PL_COLOURU8( 255, 255, 255, 255 ) );
+		// There's probably a more efficient way of doing this,
+		// but let's go ahead and store all the indices into a dynamic array
+		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
+		numIndices += ( numVertices * 2 );// * 2 for edges
+		static unsigned int *indices = NULL;
+		static unsigned int maxIndices = 0;
+		if ( indices == NULL )
+		{
+			maxIndices = ( numIndices * numFaces );
+			indices = PL_NEW_( unsigned int, maxIndices );
+		}
+		else if ( numIndices > maxIndices )
+		{
+			maxIndices = numIndices + 16;
+			indices = PL_REALLOCA( indices, sizeof( unsigned int ) * maxIndices );
+		}
+
+		unsigned int *fl = &indices[ numIndices - ( numVertices * 2 ) ];
+		draw_stencil_shadow_cap( faces[ i ], light, false, fl );
+		unsigned int *sl = &indices[ numIndices - numVertices ];
+		draw_stencil_shadow_cap( faces[ i ], light, true, sl );
+
+		// Now produce the edges
+		for ( int j = 0; j < numVertices; j++ )
+		{
+			PlgImmPushTriangle( fl[ j ], fl[ ( j + 1 ) % numVertices ], sl[ j ] );
+			PlgImmPushTriangle( sl[ j ], fl[ ( j + 1 ) % numVertices ], sl[ ( j + 1 ) % numVertices ] );
+		}
 	}
+
+	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
 static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *camera, SSArlLight *light )
@@ -470,8 +344,7 @@ void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SS
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
-	PL_GET_CVAR( "world/showAllRooms", showAllRooms );
-	if ( camera->room == NULL || ( showAllRooms != NULL && showAllRooms->b_value ) )
+	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
@@ -498,14 +371,13 @@ void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light,
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PL_GET_CVAR( "world/showAllRooms", showAllRooms );
-	if ( camera->room == NULL || ( showAllRooms != NULL && showAllRooms->b_value ) )
+	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
 			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
-			if ( room == NULL || room->isDetail )
+			if ( room->isDetail )
 				continue;
 
 			draw_room( world, room, camera, true, light, ambienceOnly );
@@ -513,8 +385,7 @@ void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light,
 	}
 	else
 	{
-		PL_GET_CVAR( "world/skipPortals", skipPortals );
-		draw_room( world, camera->room, camera, ( skipPortals != NULL ) ? skipPortals->b_value : false, light, ambienceOnly );
+		draw_room( world, camera->room, camera, ape_config_.world.skipPortals, light, ambienceOnly );
 	}
 
 	PlPopMatrix();

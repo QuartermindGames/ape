@@ -120,8 +120,12 @@ typedef struct ApeConfig
 		bool showFps;
 		bool showFaceBounds;
 		bool showLights;
+		bool forceShadows;
 		bool skipRoomCull;
 		bool skipAmbience;
+
+		float fogNearOverride;
+		float fogFarOverride;
 
 		float superSampling;
 		float maxLightDistance;
@@ -130,10 +134,14 @@ typedef struct ApeConfig
 	struct
 	{
 		bool skipDraw;
+		bool skipPortals;
+
 		bool showPortals;
+		bool showAllRooms;
 		bool showRoomVolumes;
+
 		bool sortLights;
-	} level;
+	} world;
 
 	bool editor;
 } ApeConfig;

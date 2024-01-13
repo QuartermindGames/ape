@@ -33,3 +33,17 @@ void ss_arl_light_set_colour( SSArlLight *light, const PLColourF32 *colour ) { l
 
 PLVector3 ss_arl_light_get_position( const SSArlLight *light ) { return light->position; }
 void ss_arl_light_set_position( SSArlLight *light, const PLVector3 *position ) { light->position = *position; }
+
+SSApeLightShadowType ss_ape_light_get_shadow_type( const SSArlLight *light )
+{
+	if ( ape_config_.renderer.forceShadows || ( light->flags & SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS || ( light->flags & SS_ARL_LIGHT_FLAG_DYNAMIC && light->flags & SS_ARL_LIGHT_FLAG_SHADOWS ) ) )
+	{
+		return SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC;
+	}
+	else if ( light->flags & SS_ARL_LIGHT_FLAG_SHADOWS )
+	{
+		return SS_APE_LIGHT_SHADOW_TYPE_STATIC;
+	}
+
+	return SS_APE_LIGHT_SHADOW_TYPE_NONE;
+}

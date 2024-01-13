@@ -98,6 +98,15 @@ void ss_acl_world_face_generate_bounds( SSAclWorldFace *face );
 ////////////////////////////////////////////////////////////////////
 // Lighting
 
+typedef enum SSApeLightShadowType
+{
+	SS_APE_LIGHT_SHADOW_TYPE_NONE,
+	SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC,
+	SS_APE_LIGHT_SHADOW_TYPE_STATIC,
+
+	SS_APE_MAX_LIGHT_SHADOW_TYPES
+} SSApeLightShadowType;
+
 typedef enum SSArlLightType
 {
 	APE_LIGHT_TYPE_OMNI,
@@ -126,5 +135,7 @@ void ss_arl_light_set_colour( SSArlLight *light, const PLColourF32 *colour );
 
 PLVector3 ss_arl_light_get_position( const SSArlLight *light );
 void ss_arl_light_set_position( SSArlLight *light, const PLVector3 *position );
+
+SSApeLightShadowType ss_ape_light_get_shadow_type( const SSArlLight *light );
 
 PL_EXTERN_C_END

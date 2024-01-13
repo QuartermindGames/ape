@@ -717,14 +717,12 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
 	{
-		PL_GET_CVAR( "ape/r/fogNear", fogNearVar );
-		float fogNear = ( ( fogNearVar != NULL && fogNearVar->f_value > -1.f ) || world == NULL ) ? fogNearVar->f_value : world->fogNear;
+		float fogNear = ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear;
 		PlgSetShaderUniformValueByIndex( program, slot, &fogNear, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
 	{
-		PL_GET_CVAR( "ape/r/fogFar", fogFarVar );
-		float fogFar = ( ( fogFarVar != NULL && fogFarVar->f_value > -1.f ) || world == NULL ) ? fogFarVar->f_value : world->fogFar;
+		float fogFar = ( ( ape_config_.renderer.fogFarOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogFarOverride : world->fogFar;
 		PlgSetShaderUniformValueByIndex( program, slot, &fogFar, false );
 	}
 

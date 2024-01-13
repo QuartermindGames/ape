@@ -269,37 +269,36 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture );
 
 	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
-	PlRegisterConsoleVariable( "capture_threads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
-	PlRegisterConsoleVariable( "capture_qoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, NULL, true );
-	PlRegisterConsoleVariable( "capture_quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
+	PlRegisterConsoleVariable( "capture.numThreads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
+	PlRegisterConsoleVariable( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, NULL, true );
+	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
 
-	PlRegisterConsoleVariable( "r/superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
-	PlRegisterConsoleVariable( "fps", "Toggle FPS counter.",
+	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
+	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.",
 #if !defined( NDEBUG )
 	                           "true",
 #else
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
-	PlRegisterConsoleVariable( "wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
+	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "skip_ambience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
-	PlRegisterConsoleVariable( "ape/r/showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
-	PlRegisterConsoleVariable( "show_face_bounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
-	PlRegisterConsoleVariable( "skip_room_cull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
-	PlRegisterConsoleVariable( "show_lights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, NULL, false );
+	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, NULL, false );
 
-	// Camera
-	PlRegisterConsoleVariable( "r/fov", "", "75", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/near", "", "0.1", PL_VAR_F32, NULL, NULL, true );
-	PlRegisterConsoleVariable( "r/far", "", "50.0", PL_VAR_F32, NULL, NULL, true );
+	PlRegisterConsoleVariable( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
+	PlRegisterConsoleVariable( "renderer.skipRoomCull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
 
-	PlRegisterConsoleVariable( "ape/r/fogNear", "Fog near value.", "-1", PL_VAR_F32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "ape/r/fogFar", "Fog far value.", "-1", PL_VAR_F32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "renderer.maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
+	PlRegisterConsoleVariable( "renderer.showLights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, NULL, false );
+
+	PlRegisterConsoleVariable( "renderer.useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
+	PlRegisterConsoleVariable( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
+	PlRegisterConsoleVariable( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, NULL, false );
+
+	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, NULL, false );
+	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
 	ss_arl_postfx_register_console_variables_();
@@ -532,6 +531,8 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
+		PlgClearBuffers( PLG_BUFFER_STENCIL );
+
 		if ( lights[ i ]->colour.a == 0.0f )
 			continue;
 
@@ -565,9 +566,13 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 
 #endif
 
-		//arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+		if ( ape_config_.renderer.showLights )
+		{
+			arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+		}
 
-		if ( lights[ i ]->flags & SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS )
+		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ss_ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+		if ( drawShadows )
 		{
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
@@ -596,30 +601,23 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );
 
-			//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
-
-			arl_rendererState_.overrideBlendMode = true;
-			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
-			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
-
-			ss_ape_world_draw( world, camera, lights[ i ], false );
-
-			arl_rendererState_.overrideBlendMode = false;
-
-			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 		}
-		else
+
+		arl_rendererState_.overrideBlendMode = true;
+		arl_rendererState_.blendModeA = PLG_BLEND_ONE;
+		arl_rendererState_.blendModeB = PLG_BLEND_ONE;
+
+		ss_ape_world_draw( world, camera, lights[ i ], false );
+
+		arl_rendererState_.overrideBlendMode = false;
+		arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+
+		if ( drawShadows )
 		{
-			arl_rendererState_.overrideBlendMode = true;
-			arl_rendererState_.blendModeA = PLG_BLEND_ONE;
-			arl_rendererState_.blendModeB = PLG_BLEND_ONE;
-
-			ss_ape_world_draw( world, camera, lights[ i ], false );
-
-			arl_rendererState_.overrideBlendMode = false;
-			arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 		}
 
 		ape_rendererPerformance_.numLights++;

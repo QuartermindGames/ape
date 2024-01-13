@@ -31,7 +31,7 @@ static int compare_lights( const void *a, const void *b )
 
 static void sort_lights( const SSArlCamera *camera )
 {
-	if ( !ape_config_.level.sortLights )
+	if ( !ape_config_.world.sortLights )
 		return;
 
 	viewPos = camera->internal->position;
@@ -136,18 +136,21 @@ SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, c
 
 	static const float DEFAULT_FAR = 1000000.0f;
 	static const float DEFAULT_FOV = 75.0f;
+	static const float DEFAULT_NEAR = 0.1f;
 
 	if ( camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE )
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
 		camera->internal->fov = DEFAULT_FOV;
 		camera->internal->far = DEFAULT_FAR;
+		camera->internal->near = DEFAULT_NEAR;
 	}
 	else if ( camera->mode == SS_ARL_CAMERA_MODE_ISOMETRIC )
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
 		camera->internal->fov = DEFAULT_FOV;
 		camera->internal->far = DEFAULT_FAR;
+		camera->internal->near = DEFAULT_NEAR;
 	}
 	else
 	{
@@ -247,18 +250,6 @@ void ss_arl_camera_draw_perspective( SSArlCamera *camera, SSArlViewport *viewpor
 	viewport->height *= ape_config_.renderer.superSampling;
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
-	PL_GET_CVAR( "r/fov", fov );
-	if ( fov != NULL )
-		PlgSetCameraFieldOfView( camera->internal, fov->f_value );
-
-	PL_GET_CVAR( "r/near", near );
-	if ( near != NULL )
-		camera->internal->near = near->f_value;
-
-	PL_GET_CVAR( "r/far", far );
-	if ( far != NULL )
-		camera->internal->far = far->f_value;
-
 	static const float minHeight = 256.0f;
 	static const float maxHeight = 1024.0f;
 
@@ -353,8 +344,8 @@ void ss_arl_build_camera_visibility_lists_( void )
 		SSArlCamera *camera = PlGetLinkedListNodeUserData( node );
 		if ( camera->world != NULL )
 		{
-			build_visible_light_list( camera, camera->world );
 			build_visible_room_list( camera, camera->world );
+			build_visible_light_list( camera, camera->world );
 		}
 		node = PlGetNextLinkedListNode( node );
 	}
