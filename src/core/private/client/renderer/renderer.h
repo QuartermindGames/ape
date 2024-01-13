@@ -59,7 +59,7 @@ typedef struct SSArlRenderTarget SSArlRenderTarget;
 
 ////////////////////////////////////////////////////////////////////
 
-#define APE_MAX_FPS_READINGS 64
+#define APE_MAX_FPS_READINGS 128
 
 typedef struct SSArlViewport
 {
@@ -73,8 +73,11 @@ typedef struct SSArlViewport
 	struct
 	{
 		double frameTime, oldTime;
-		double frameReadings[ APE_MAX_FPS_READINGS ];
 		unsigned int frameIndex;
+
+		unsigned int lastFramerate;
+		unsigned int lastFramerateUpdate;
+		double frameReadings[ APE_MAX_FPS_READINGS ];
 
 		unsigned int numBatches;
 		unsigned int numTriangles;

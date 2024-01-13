@@ -437,7 +437,7 @@ void ss_acl_console_register_cl_variables_( void )
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
 	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "16", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, NULL, false );
 
 	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
 	PlRegisterConsoleVariable( "console_alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );

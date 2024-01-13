@@ -121,15 +121,21 @@ void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *h
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport )
+unsigned int ss_arl_viewport_get_framerate( SSArlViewport *viewport )
 {
-	double t = 0.0;
-	for ( unsigned int i = 0; i < APE_MAX_FPS_READINGS; ++i )
+	if ( viewport->perf.frameIndex == 0 )
 	{
-		t += viewport->perf.frameReadings[ i ];
+		double t = 0.0;
+		for ( unsigned int i = 0; i < APE_MAX_FPS_READINGS; ++i )
+		{
+			t += viewport->perf.frameReadings[ i ];
+		}
+
+		viewport->perf.lastFramerateUpdate = APE_MAX_FPS_READINGS;
+		viewport->perf.lastFramerate = ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
 	}
 
-	return ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
+	return viewport->perf.lastFramerate;
 }
 
 SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport )

@@ -35,7 +35,7 @@ void ss_arl_viewport_set_camera( SSArlViewport *viewport, SSArlCamera *camera );
 SSArlCamera *ss_arl_viewport_get_camera( SSArlViewport *viewport );
 void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height );
 void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *height );
-unsigned int ss_arl_viewport_get_framerate( const SSArlViewport *viewport );
+unsigned int ss_arl_viewport_get_framerate( SSArlViewport *viewport );
 SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport );
 void ss_arl_viewport_make_active( SSArlViewport *viewport );
 
