@@ -81,7 +81,7 @@ static void TickServerClient( void *userData, bool *breakEarly ) {
 		apeDropServerClient( serverClient );
 		return;
 	} else if ( r > 0 ) {
-		serverClient->lastMessageTick = ss_acl_get_num_ticks();
+		serverClient->lastMessageTick = ape_get_num_ticks();
 	}
 
 	serverClient->receivedBytes += r;

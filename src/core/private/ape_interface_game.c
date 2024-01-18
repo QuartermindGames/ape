@@ -22,7 +22,7 @@ static void world_command( unsigned int argc, char **argv )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const SSGameModeInterface *game_modeInterface;
+const ApeGameInterfaceImport *game_modeInterface;
 
 void ss_acl_initialize_game_( void )
 {
@@ -32,11 +32,11 @@ void ss_acl_initialize_game_( void )
 
 	ss_game_initialize();
 
-	game_modeInterface = ss_game_mode_get_interface();
+	game_modeInterface = ape_game_get_interface();
 	if ( game_modeInterface == NULL )
 		PRINT_ERROR( "Failed to get game interface!\n" );
 
-	if ( !game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_INITIALIZE, NULL ) )
+	if ( !game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, NULL ) )
 		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
 
 	PRINT( "Game initialized!\n" );
@@ -44,12 +44,12 @@ void ss_acl_initialize_game_( void )
 
 void ss_acl_shutdown_game_( void )
 {
-	const SSGameModeInterface *interface = ss_game_mode_get_interface();
+	const ApeGameInterfaceImport *interface = ape_game_get_interface();
 	assert( interface != NULL );
 	if ( interface == NULL )
 		return;
 
-	interface->requestCallbackMethod( GAMEMODE_REQUEST_SHUTDOWN, NULL );
+	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, NULL );
 }
 
 void ss_acl_tick_game_( void )

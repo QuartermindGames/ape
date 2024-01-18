@@ -109,7 +109,7 @@ void ss::forge::MainWindow::create()
 
 long ss::forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 {
-	ss_acl_tick_frame();
+	ape_tick_frame();
 
 	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
 	return 0;

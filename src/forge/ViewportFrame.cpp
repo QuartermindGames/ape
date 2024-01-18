@@ -102,7 +102,7 @@ void ViewportFrame::Draw()
 	// at the same time as the rest of the engine...
 	// which happens AFTER the window is created (urgh)
 
-	if ( ss_acl_is_engine_running() )
+	if ( ape_is_running() )
 	{
 		if ( engineViewport == nullptr )
 		{
@@ -123,7 +123,7 @@ void ViewportFrame::Draw()
 
 		ss_arl_camera_make_active( camera );
 
-		ss_acl_render_frame( engineViewport );
+		ape_render_frame( engineViewport );
 	}
 	else
 	{

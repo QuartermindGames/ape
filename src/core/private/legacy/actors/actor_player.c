@@ -90,7 +90,7 @@ static void Player_Spawn( Actor *self ) {
 static void Player_ApplyViewBob( Actor *self ) {
 	/* apply view bob */
 	float velocityVector = PlVector3Length( self->velocity );
-	APLAYER( self )->viewBob += ( sinf( ss_acl_get_num_ticks() / 5.0f ) / 10.0f ) * velocityVector;
+	APLAYER( self )->viewBob += ( sinf( ape_get_num_ticks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = self->position.y + PLAYER_VIEW_OFFSET;
 	if ( ss_shell_get_key_state( 'c' ) )

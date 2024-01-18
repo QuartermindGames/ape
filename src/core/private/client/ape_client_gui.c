@@ -268,7 +268,7 @@ void ss_arl_draw_gui_( SSArlViewport *viewport )
 		ss_arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
-	game_modeInterface->requestCallbackMethod( GAME_MODE_REQUEST_DRAW_UI, viewport );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
 
 	ss_acl_draw_editor_gui_( viewport );
 

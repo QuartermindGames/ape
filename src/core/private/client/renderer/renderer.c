@@ -477,7 +477,7 @@ void ss_ape_sky_draw( SSArlCamera *camera )
 
 	//TODO: this is all very slow and very gross, but cobbled together to meet a deadline...
 
-	double ticks = ss_acl_get_num_ticks();
+	double ticks = ape_get_num_ticks();
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
 		location.y = skyLayers[ i ].y;

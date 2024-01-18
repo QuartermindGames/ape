@@ -665,7 +665,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	{
 		case SS_ARL_MATERIAL_BUILTIN_TIME:
 		{
-			unsigned int numTicks = ss_acl_get_num_ticks();
+			unsigned int numTicks = ape_get_num_ticks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}

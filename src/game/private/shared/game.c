@@ -59,21 +59,21 @@ void ss_game_spawn_world( ApeWorld *world )
 	}
 
 	currentWorld = world;
-	game_modeInterface->requestCallbackMethod( SS_GAME_MODE_REQUEST_SPAWN_WORLD, world );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD, world );
 }
 
 void ss_game_tick( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_TICK, NULL );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK, NULL );
 
 	COM_PROFILE_FUNCTION_END();
 }
 
 void ss_game_disconnect( void )
 {
-	game_modeInterface->requestCallbackMethod( GAMEMODE_REQUEST_DISCONNECT, NULL );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DISCONNECT, NULL );
 }
 
 void ss_game_register_standard_entity_components_( void )

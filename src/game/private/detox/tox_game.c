@@ -203,21 +203,21 @@ static bool draw_game( SSArlViewport *viewport )
 	return true;
 }
 
-static bool handle_request( SSGameModeRequest modeRequest, void *user )
+static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 {
 	switch ( modeRequest )
 	{
-		case GAMEMODE_REQUEST_INITIALIZE:
+		case APE_GAME_INTERFACE_REQUEST_INITIALIZE:
 			return initialize_game();
-		case GAMEMODE_REQUEST_TICK:
+		case APE_GAME_INTERFACE_REQUEST_TICK:
 			return tick_game();
-		case GAME_MODE_REQUEST_DRAW:
+		case APE_GAME_INTERFACE_REQUEST_DRAW:
 			return draw_game( ( SSArlViewport * ) user );
-		case GAME_MODE_REQUEST_DRAW_UI:
+		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
 			return tox_ui_draw( ( SSArlViewport * ) user );
-		case GAMEMODE_REQUEST_HANDLE_INPUT:
+		case APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT:
 			break;
-		case SS_GAME_MODE_REQUEST_SPAWN_WORLD:
+		case APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD:
 			tox_world_spawn( ( ApeWorld * ) user );
 			return true;
 		default:
@@ -227,9 +227,9 @@ static bool handle_request( SSGameModeRequest modeRequest, void *user )
 	return false;
 }
 
-const SSGameModeInterface *ss_game_mode_get_interface( void )
+const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
-	static SSGameModeInterface gameMode;
+	static ApeGameInterfaceImport gameMode;
 	PL_ZERO_( gameMode );
 	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;

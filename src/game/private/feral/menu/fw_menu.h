@@ -5,7 +5,7 @@
 #include "../fw_game.h"
 
 // base menu impl.
-#include "../../game_menu.h"
+#include "../../shared/game_menu.h"
 
 void fw_menu_initialize( void );
 void fw_menu_tick( void );

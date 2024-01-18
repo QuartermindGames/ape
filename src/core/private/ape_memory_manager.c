@@ -109,7 +109,7 @@ static bool FreeReference( ApeMemoryReference *m, bool force )
 	             m->timeToLive );
 #endif
 
-	if ( m->numReferences <= 0 && ( force || m->timeToLive < ss_acl_get_num_ticks() ) )
+	if ( m->numReferences <= 0 && ( force || m->timeToLive < ape_get_num_ticks() ) )
 	{
 		/* remove it from whatever cached list it exists in */
 		if ( m->cache != NULL )
@@ -225,7 +225,7 @@ ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, Ape
 void ss_acl_mm_add_reference( ApeMemoryReference *m )
 {
 	m->numReferences++;
-	m->timeToLive = ( ss_acl_get_num_ticks() + 1024 );
+	m->timeToLive = ( ape_get_num_ticks() + 1024 );
 #if defined( DEBUG_MEMORY )
 	PRINT_DEBUG( "Adding reference: description(%s) numRefs(%d) ttl(%u)\n",
 	             m->cache == NULL ? "unknown" : m->cache->description,
@@ -248,7 +248,7 @@ void ss_acl_mm_release( ApeMemoryReference *m )
 	m->numReferences--;
 	if ( m->numReferences <= 0 )
 	{
-		m->timeToLive = ( ss_acl_get_num_ticks() + 1024 );
+		m->timeToLive = ( ape_get_num_ticks() + 1024 );
 	}
 }
 

@@ -91,6 +91,7 @@ add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
 add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
+####################################################################
 # main projects
 
 add_subdirectory(src/kernel/plcore/)
@@ -101,6 +102,7 @@ add_subdirectory(src/kernel/plmodel/)
 set_target_properties(plmodel PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
+set(HEI_LIBRARIES plcore plgraphics plmodel)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
@@ -122,10 +124,8 @@ add_subdirectory(src/dickens)
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
-add_subdirectory(src/game/)
-
 add_subdirectory(src/forge)
-add_subdirectory(src/shells/launcher_sdl2/)
+add_subdirectory(src/game/) # includes shells
 
 # tools
 add_subdirectory(src/tools/cook)

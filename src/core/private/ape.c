@@ -112,8 +112,8 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 	ss_acl_fs_mount_base_locations();
 
 	// And now we can fetch the configs that provides mount locations, aliases and more
-	engineConfig = ss_com_get_config( config != NULL ? config : "engine" );
-	userConfig = ss_com_get_config( "user" );
+	engineConfig = com_get_config( config != NULL ? config : "engine" );
+	userConfig = com_get_config( "user" );
 
 	ss_acl_fs_setup_config( engineConfig );
 
@@ -137,7 +137,7 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 	return true;
 }
 
-void ss_acl_shutdown( void )
+void ape_shutdown( void )
 {
 	PRINT( "Shutting down...\n" );
 
@@ -163,12 +163,12 @@ void ss_acl_shutdown( void )
 	engineInitialized = false;
 }
 
-unsigned int ss_acl_get_num_ticks( void )
+unsigned int ape_get_num_ticks( void )
 {
 	return numTicks;
 }
 
-void ss_acl_tick_frame( void )
+void ape_tick_frame( void )
 {
 	if ( !engineInitialized )
 		return;
@@ -191,13 +191,13 @@ void ss_acl_tick_frame( void )
 	COM_PROFILE_FUNCTION_END();
 }
 
-bool ss_acl_is_engine_running( void )
+bool ape_is_running( void )
 {
 	/* always running */
 	return engineInitialized;
 }
 
-void ss_acl_render_frame( SSArlViewport *viewport )
+void ape_render_frame( SSArlViewport *viewport )
 {
 	if ( !engineInitialized )
 		return;

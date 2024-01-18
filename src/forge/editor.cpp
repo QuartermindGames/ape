@@ -98,7 +98,7 @@ ss::forge::Project *ss::forge::create_project( const std::string &name, const st
 
 bool ss::forge::open_project( const char *path )
 {
-	return ss_com_project_mount( path );
+	return com_project_mount( path );
 }
 
 static void setup_paths( const char *exePath )
@@ -226,7 +226,7 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( ss_com_get_app_data_directory() );
 	PlMountLocalLocation( ss_com_get_local_data_directory() );
 
-	ss::forge::editorConfig = ss_com_get_config( "editor" );
+	ss::forge::editorConfig = com_get_config( "editor" );
 
 	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )

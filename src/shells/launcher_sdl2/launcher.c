@@ -359,7 +359,7 @@ static int Sys_TranslateSDLKeyInput( int key )
 
 			/* temp temp temp */
 		case SDLK_ESCAPE:
-			ss_acl_shutdown();
+			ape_shutdown();
 			break;
 	}
 
@@ -433,7 +433,7 @@ static bool initialize_display( void )
 	else
 		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
 
-	const char *windowTitle = ss_com_project_get_name();
+	const char *windowTitle = com_project_get_name();
 	if ( windowTitle == NULL )
 		windowTitle = "APE Game Shell";
 
@@ -523,7 +523,7 @@ int launcher_initialize( int argc, char **argv )
 	PlMountLocalLocation( ss_com_get_app_data_directory() );
 	PlMountLocalLocation( ss_com_get_local_data_directory() );
 
-	shellConfig = ss_com_get_config( "shell" );
+	shellConfig = com_get_config( "shell" );
 
 	const char *projectName = NULL;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
@@ -531,7 +531,7 @@ int launcher_initialize( int argc, char **argv )
 	if ( projectName == NULL )
 		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 
-	ss_com_project_mount( projectName );
+	com_project_mount( projectName );
 
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
@@ -550,7 +550,7 @@ int launcher_initialize( int argc, char **argv )
 
 	SDL_StartTextInput();
 
-	while ( ss_acl_is_engine_running() )
+	while ( ape_is_running() )
 	{
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
@@ -558,7 +558,7 @@ int launcher_initialize( int argc, char **argv )
 			switch ( event.type )
 			{
 				case SDL_USEREVENT:
-					ss_acl_tick_frame();
+					ape_tick_frame();
 					break;
 
 				case SDL_TEXTINPUT:
@@ -618,10 +618,10 @@ int launcher_initialize( int argc, char **argv )
 			}
 		}
 
-		ss_acl_render_frame( windowViewport );
+		ape_render_frame( windowViewport );
 
 		static unsigned int refreshTime = 0;
-		if ( refreshTime > ss_acl_get_num_ticks() )
+		if ( refreshTime > ape_get_num_ticks() )
 			continue;
 
 		com_update_profiler_samples();
@@ -632,7 +632,7 @@ int launcher_initialize( int argc, char **argv )
 
 	SDL_StopTextInput();
 
-	ss_acl_shutdown();
+	ape_shutdown();
 
 	return EXIT_SUCCESS;
 }

@@ -337,7 +337,7 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < ss_acl_get_num_ticks() ) ) {
+	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < ape_get_num_ticks() ) ) {
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
 
@@ -347,13 +347,13 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 		projectile->parent = self;
 
-		sg->fireDelay = ss_acl_get_num_ticks() + 25;
+		sg->fireDelay = ape_get_num_ticks() + 25;
 	}
 
 	static unsigned int survivalScoreTimer = 0;
-	if ( self->health > 0 && survivalScoreTimer < ss_acl_get_num_ticks() ) {
+	if ( self->health > 0 && survivalScoreTimer < ape_get_num_ticks() ) {
 		self->score++;
-		survivalScoreTimer = ss_acl_get_num_ticks() + 145;
+		survivalScoreTimer = ape_get_num_ticks() + 145;
 	}
 }
 

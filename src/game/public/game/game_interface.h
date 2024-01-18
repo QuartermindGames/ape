@@ -2,31 +2,11 @@
 
 #pragma once
 
+#include "ape/ape_public_game.h"
+
 PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
-
-typedef enum SSGameModeRequest
-{
-	GAMEMODE_REQUEST_INITIALIZE,// called on engine initialisation
-	GAMEMODE_REQUEST_SHUTDOWN,  // called when shutting down engine
-
-	GAME_MODE_REQUEST_DRAW,
-	GAME_MODE_REQUEST_DRAW_UI,
-
-	GAMEMODE_REQUEST_TICK,// called after entity tick
-	GAMEMODE_REQUEST_HANDLE_INPUT,
-	SS_GAME_MODE_REQUEST_SPAWN_WORLD,// called before entities are spawned in and
-	                                 // before starting and connecting to server
-	GAMEMODE_REQUEST_DISCONNECT,
-} SSGameModeRequest;
-
-typedef struct SSGameModeInterface
-{
-	// This is basically a replacement for the above - just slightly less fussy
-	bool ( *requestCallbackMethod )( SSGameModeRequest gameModeRequest, void *user );
-} SSGameModeInterface;
-const SSGameModeInterface *ss_game_mode_get_interface( void );
 
 void ss_game_initialize( void );
 
@@ -47,8 +27,6 @@ typedef enum GameConnectionType
 	GAME_CONNECTION_NET,
 } GameConnectionType;
 GameConnectionType gameGetConnectionType( void );
-
-typedef struct Actor Actor;
 
 ////////////////////////////////////////////////////////////////////
 

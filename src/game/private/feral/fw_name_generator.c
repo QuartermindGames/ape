@@ -1,6 +1,6 @@
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "game/private/game_private.h"
+#include "fw_game.h"
 
 const char *fw_name_generator_generate( char *buffer, size_t size )
 {

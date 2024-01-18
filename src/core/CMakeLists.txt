@@ -87,19 +87,20 @@ add_dependencies(ApeCore
         plgraphics
         plmodel
         pl_gl_driver
-        )
+)
 
 target_include_directories(ApeCore PRIVATE
         private/
-        )
+        ../game/public/
+)
 target_include_directories(ApeCore PUBLIC
         public/
-        )
+)
 
 set_target_properties(ApeCore PROPERTIES
         FOLDER "Engine"
         PREFIX ""
-        )
+)
 
 if (WIN32)
     target_link_libraries(ApeCore
@@ -116,5 +117,4 @@ target_link_libraries(ApeCore
         plmodel
         ApeCommon
         ApeNode
-        ApeGame
-        )
+)

@@ -76,7 +76,7 @@ const char *ss_com_get_app_data_directory( void )
 	return appDataPath;
 }
 
-NdBranch *ss_com_get_config( const char *name )
+NdBranch *com_get_config( const char *name )
 {
 	PLPath path;
 	PlSetupPath( path, true, "configs/%s.cfg.n", name );

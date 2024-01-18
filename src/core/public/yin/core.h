@@ -10,17 +10,17 @@
 PL_EXTERN_C
 
 bool ss_acl_initialize( unsigned int argc, char **argv, const char *config );
-void ss_acl_shutdown( void );
+void ape_shutdown( void );
 
-void ss_acl_render_frame( SSArlViewport *viewport );
-void ss_acl_tick_frame( void );
+void ape_render_frame( SSArlViewport *viewport );
+void ape_tick_frame( void );
 
 struct NdBranch *ss_acl_get_config( void );
 struct NdBranch *ss_acl_get_user_config( void );
 
-unsigned int ss_acl_get_num_ticks( void );
+unsigned int ape_get_num_ticks( void );
 
-bool ss_acl_is_engine_running( void );
+bool ape_is_running( void );
 bool ss_acl_is_console_open( void );
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState );

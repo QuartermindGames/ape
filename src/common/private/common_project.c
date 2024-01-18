@@ -183,7 +183,7 @@ static void free_project( ComProject *out )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-bool ss_com_project_mount( const char *name )
+bool com_project_mount( const char *name )
 {
 	assert( !project.isActive );
 	if ( project.isActive )
@@ -219,4 +219,4 @@ void ss_com_project_unmount( void )
 
 const char *ss_com_project_get_local_path( void ) { return project.localPath; }
 const char *ss_com_project_get_base_name( void ) { return project.baseName; }
-const char *ss_com_project_get_name( void ) { return project.name; }
+const char *com_project_get_name( void ) { return project.name; }

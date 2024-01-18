@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../game_private.h"
+#include "../shared/game_private.h"
 
 #define FW_MAX_TEAMS        4
 #define FW_MAX_TEAM_MEMBERS 64

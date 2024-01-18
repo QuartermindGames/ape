@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../game_private.h"
+#include "../shared/game_private.h"
 
 #define TOX_GAME_MILESTONE     "proto_a"
 #define TOX_GAME_VERSION_MAJOR 0

@@ -269,8 +269,8 @@ static void draw_input_field( const SSArlViewport *viewport, GuiFont *font )
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
-	if ( v < ss_acl_get_num_ticks() )
-		v = ss_acl_get_num_ticks() + 20;
+	if ( v < ape_get_num_ticks() )
+		v = ape_get_num_ticks() + 20;
 
 	float bufPixW;
 	guiGetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
@@ -278,7 +278,7 @@ static void draw_input_field( const SSArlViewport *viewport, GuiFont *font )
 	const float x = ( 1.0f + cw );
 
 	// cursor
-	char c = ( v > ss_acl_get_num_ticks() + 10 ) ? '_' : ' ';
+	char c = ( v > ape_get_num_ticks() + 10 ) ? '_' : ' ';
 	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )

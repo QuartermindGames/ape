@@ -61,7 +61,7 @@ CMD_CALLBACK( Quit )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	ss_acl_shutdown();
+	ape_shutdown();
 }
 
 CMD_CALLBACK( Version )
