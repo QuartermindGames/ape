@@ -150,9 +150,6 @@ void ss_acl_console_register_commands_( bool isDedicated )
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
 
-	void acl_model_rfm_test_command_( unsigned int argc, char **argv );
-	PlRegisterConsoleCommand( "test_model_rfm", "Test the RFM model loader.", 0, acl_model_rfm_test_command_ );
-
 	if ( !isDedicated )
 		ss_acl_console_register_cl_commands_();
 }

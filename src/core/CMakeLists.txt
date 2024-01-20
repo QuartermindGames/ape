@@ -64,7 +64,6 @@ add_library(ApeCore STATIC
         private/ape.c
 
         private/model/model.c
-        private/model/model_rfm.c
 
         private/world/world.c
         private/world/world_deserialiser.c

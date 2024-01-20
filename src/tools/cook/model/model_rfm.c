@@ -1,13 +1,82 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E. Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: RFM loader
+//			Status - unfinished
 // Author:  Mark E. Sowden
 
-#include "model_rfm.h"
+#include "../cook.h"
 
-#include "yin/core_fs.h"
+#include "model.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
+
+#define RFM_MAX_MESHES            64
+#define RFM_MAX_MATERIALS         32
+#define RFM_MAX_BONES             64// hard limit of 49 in RF
+#define RFM_MAX_COLLISION_SPHERES 64
+
+#define RFX_FLAG_TRANSPARENT 8
+
+typedef struct RfcMaterial
+{
+	char diffuseTexture[ 32 ];
+	char reflectionTexture[ 32 ];
+
+	float specular;
+	float gloss;
+	float reflectivity;
+	float illumination;
+
+	unsigned int flags;
+} RfcMaterial;
+
+typedef struct RfmMesh
+{
+	PLVector3 boundsMins;
+	PLVector3 boundsMaxs;
+	PLVector3 boundsOrigin;
+	float boundsRadius;
+
+	unsigned int flags;
+
+	unsigned int numChunks;
+} RfmMesh;
+
+typedef struct AclModelRfcBone
+{
+	char name[ 24 ];
+	PLQuaternion rotation;
+	PLVector3 transform;
+	struct AclModelRfcBone *parent;
+} AclModelRfcBone;
+
+typedef struct AclModelRfmCollisionSphere
+{
+	char name[ 24 ];
+	float radius;
+	PLVector3 transform;
+	struct AclModelRfmCollisionSphere *parent;
+} AclModelRfmCollisionSphere;
+
+typedef struct RfmModel
+{
+	unsigned int numLods;
+
+	unsigned int numMeshes;
+	RfmMesh meshes[ RFM_MAX_MESHES ];
+
+	unsigned int numCollisionSpheres;
+	AclModelRfmCollisionSphere collisionSpheres[ RFM_MAX_COLLISION_SPHERES ];
+
+	unsigned int numAttachments;
+
+	unsigned int numMaterials;
+	RfcMaterial materials[ RFM_MAX_MATERIALS ];
+
+	unsigned int numBones;
+	AclModelRfcBone bones[ RFM_MAX_BONES ];
+	AclModelRfcBone *rootBone;
+} RfmModel;
 
 static const unsigned int RFM_MAGIC = 0x87128712;
 static const unsigned int RFM_MAGIC_PUN = 0x87128713;
@@ -23,13 +92,17 @@ static const unsigned int RFM_VERSION_PUN = 21;// first magic byte is changed to
 #define RFM_CHUNK_MATERIAL   PL_MAGIC_TO_NUM( 'D', '3', 0x13, 0x11 )
 #define RFM_CHUNK_MESH       PL_MAGIC_TO_NUM( 0x10, 0x11, 0x25, 0x87 )
 
-static AclModelRfm *parse_rfm_chunk_collision( AclModelRfm *model, PLFile *file, unsigned int version )
+void acl_model_rfm_destroy_( RfmModel *model );
+
+#if 0 // return to this later...
+
+static RfmModel *parse_rfm_chunk_collision( RfmModel *model, PLFile *file, unsigned int version )
 {
 	for ( unsigned int i = 0; i < model->numCollisionSpheres; ++i )
 	{
 		if ( PlReadFile( file, model->collisionSpheres[ i ].name, sizeof( char ), 24 ) != 24 )
 		{
-			PRINT_WARNING( "Failed to read collision sphere name (%s)!\n", PlGetError() );
+			WARN( "Failed to read collision sphere name (%s)!\n", PlGetError() );
 			return NULL;
 		}
 
@@ -37,11 +110,11 @@ static AclModelRfm *parse_rfm_chunk_collision( AclModelRfm *model, PLFile *file,
 		//assert( parent < model->numCollisionSpheres );
 		if ( parent >= model->numCollisionSpheres )
 		{
-			PRINT_WARNING( "Invalid parent index for collision sphere (%u >= %u)!\n", parent, model->numCollisionSpheres );
+			WARN( "Invalid parent index for collision sphere (%u >= %u)!\n", parent, model->numCollisionSpheres );
 			parent = 0;
 		}
 
-		PRINT_DEBUG( "sphere name: %s\n", model->collisionSpheres[ i ].name );
+		printf( "sphere name: %s\n", model->collisionSpheres[ i ].name );
 		model->collisionSpheres[ i ].parent = &model->collisionSpheres[ parent ];
 		model->collisionSpheres[ i ].transform = ss_acl_fs_parse_vector( file );
 		model->collisionSpheres[ i ].radius = ss_acl_fs_parse_float( file );
@@ -50,13 +123,13 @@ static AclModelRfm *parse_rfm_chunk_collision( AclModelRfm *model, PLFile *file,
 	return model;
 }
 
-static AclModelRfm *parse_rfm_chunk_material( AclModelRfm *model, PLFile *file, unsigned int version )
+static RfmModel *parse_rfm_chunk_material( RfmModel *model, PLFile *file, unsigned int version )
 {
 	unsigned int numMaterials = PL_READUINT32( file, false, NULL );
 	assert( numMaterials == model->numMaterials );
 	if ( numMaterials != model->numMaterials )
 	{
-		PRINT_WARNING( "Unexpected number of materials in material chunk (%u != %u)!\n", numMaterials, model->numMaterials );
+		WARN( "Unexpected number of materials in material chunk (%u != %u)!\n", numMaterials, model->numMaterials );
 		return NULL;
 	}
 
@@ -66,18 +139,18 @@ static AclModelRfm *parse_rfm_chunk_material( AclModelRfm *model, PLFile *file, 
 		if ( strlen( model->materials[ i ].diffuseTexture ) == 0 )
 			break;
 
-		PRINT_DEBUG( "diffuse: %s\n", model->materials[ i ].diffuseTexture );
+		printf( "diffuse: %s\n", model->materials[ i ].diffuseTexture );
 		model->materials[ i ].illumination = ss_acl_fs_parse_float( file );
-		PRINT_DEBUG( "illumination: %f\n", model->materials[ i ].illumination );
+		printf( "illumination: %f\n", model->materials[ i ].illumination );
 		model->materials[ i ].specular = ss_acl_fs_parse_float( file );
-		PRINT_DEBUG( "specular: %f\n", model->materials[ i ].specular );
+		printf( "specular: %f\n", model->materials[ i ].specular );
 		model->materials[ i ].gloss = ss_acl_fs_parse_float( file );
-		PRINT_DEBUG( "gloss: %f\n", model->materials[ i ].gloss );
+		printf( "gloss: %f\n", model->materials[ i ].gloss );
 		model->materials[ i ].reflectivity = ss_acl_fs_parse_float( file );
-		PRINT_DEBUG( "reflectivity: %f\n", model->materials[ i ].reflectivity );
+		printf( "reflectivity: %f\n", model->materials[ i ].reflectivity );
 
 		PlReadFile( file, model->materials[ i ].reflectionTexture, sizeof( char ), 32 );
-		PRINT_DEBUG( "reflection: %s\n", *model->materials[ i ].reflectionTexture != '\0' ? model->materials[ i ].reflectionTexture : "none" );
+		printf( "reflection: %s\n", *model->materials[ i ].reflectionTexture != '\0' ? model->materials[ i ].reflectionTexture : "none" );
 
 		model->materials[ i ].flags = PL_READUINT32( file, false, NULL );
 	}
@@ -85,33 +158,33 @@ static AclModelRfm *parse_rfm_chunk_material( AclModelRfm *model, PLFile *file, 
 	return model;
 }
 
-static AclModelRfm *parse_rfm_chunk_bone( AclModelRfm *model, PLFile *file, unsigned int version )
+static RfmModel *parse_rfm_chunk_bone( RfmModel *model, PLFile *file, unsigned int version )
 {
 	model->numBones = PL_READUINT32( file, false, NULL );
-	assert( model->numBones < ACL_MODEL_RFM_MAX_BONES );
-	if ( model->numBones >= ACL_MODEL_RFM_MAX_BONES )
+	assert( model->numBones < RFM_MAX_BONES );
+	if ( model->numBones >= RFM_MAX_BONES )
 	{
-		PRINT_WARNING( "Reached internal bone limit: %u >= %u\n", model->numBones, ACL_MODEL_RFM_MAX_BONES );
-		model->numBones = ACL_MODEL_RFM_MAX_BONES - 1;
+		WARN( "Reached internal bone limit: %u >= %u\n", model->numBones, RFM_MAX_BONES );
+		model->numBones = RFM_MAX_BONES - 1;
 	}
 
-	PRINT_DEBUG( "num bones: %u\n", model->numBones );
+	printf( "num bones: %u\n", model->numBones );
 	for ( unsigned int i = 0; i < model->numBones; ++i )
 	{
 		PlReadFile( file, model->bones[ i ].name, sizeof( char ), 24 );
-		PRINT_DEBUG( "name: %s\n", model->bones[ i ].name );
+		printf( "name: %s\n", model->bones[ i ].name );
 
 		model->bones[ i ].rotation = ss_acl_fs_parse_vector4( file );
-		PRINT_DEBUG( "rotation: %s\n", PlPrintQuaternion( &model->bones[ i ].rotation ) );
+		printf( "rotation: %s\n", PlPrintQuaternion( &model->bones[ i ].rotation ) );
 		model->bones[ i ].transform = ss_acl_fs_parse_vector( file );
-		PRINT_DEBUG( "transform: %s\n", PlPrintVector3( &model->bones[ i ].transform, PL_VAR_F32 ) );
+		printf( "transform: %s\n", PlPrintVector3( &model->bones[ i ].transform, PL_VAR_F32 ) );
 		unsigned int parent = PL_READUINT32( file, false, NULL );
-		PRINT_DEBUG( "parent: %u\n", parent );
-		if ( parent >= ACL_MODEL_RFM_MAX_BONES )
+		printf( "parent: %u\n", parent );
+		if ( parent >= RFM_MAX_BONES )
 		{
 			assert( model->rootBone == NULL );
 			if ( model->rootBone != NULL )
-				PRINT_WARNING( "Encountered second bone with invalid parent! Root may be incorrect.\n" );
+				WARN( "Encountered second bone with invalid parent! Root may be incorrect.\n" );
 
 			model->rootBone = &model->bones[ i ];
 		}
@@ -122,23 +195,23 @@ static AclModelRfm *parse_rfm_chunk_bone( AclModelRfm *model, PLFile *file, unsi
 	return model;
 }
 
-static AclModelRfm *parse_rfm_chunk_mesh( AclModelRfm *model, PLFile *file, unsigned int version )
+static RfmModel *parse_rfm_chunk_mesh( RfmModel *model, PLFile *file, unsigned int version )
 {
-	AclModelRfmMesh *mesh = &model->meshes[ model->numMeshes ];
+	RfmMesh *mesh = &model->meshes[ model->numMeshes ];
 
 	float lodDistance = ss_acl_fs_parse_float( file );
-	PRINT_DEBUG( "lod distance: %f\n", lodDistance );
+	printf( "lod distance: %f\n", lodDistance );
 
 	// Not 100% sure on this one, yet
 	unsigned int numMaterials = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num materials: %u\n", numMaterials );
+	printf( "num materials: %u\n", numMaterials );
 	if ( numMaterials < 3 )
 		return model;
 
 	mesh->flags = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "flags: %u\n", model->meshes[ model->numMeshes ].flags );
+	printf( "flags: %u\n", model->meshes[ model->numMeshes ].flags );
 	unsigned int numOriginalVecs = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num original vecs: %u\n", numOriginalVecs );
+	printf( "num original vecs: %u\n", numOriginalVecs );
 
 	mesh->boundsMaxs = ss_acl_fs_parse_vector( file );
 	mesh->boundsMins = ss_acl_fs_parse_vector( file );
@@ -149,32 +222,32 @@ static AclModelRfm *parse_rfm_chunk_mesh( AclModelRfm *model, PLFile *file, unsi
 	PlFileSeek( file, dataBlockSize, PL_SEEK_CUR );
 
 	mesh->numChunks = PL_READUINT16( file, false, NULL );
-	PRINT_DEBUG( "num chunks: %u\n", mesh->numChunks );
+	printf( "num chunks: %u\n", mesh->numChunks );
 
 	model->numMeshes++;
 	return model;
 }
 
-static AclModelRfm *deserialize_rfm_v1( PLFile *file, unsigned int version )
+static RfmModel *deserialize_rfm_v1( PLFile *file, unsigned int version )
 {
 	// This always appears to be equal to 1 :shrug:
 	if ( PL_READUINT32( file, false, NULL ) != 1 )
 	{
-		PRINT_WARNING( "Not a valid RFC file!\n" );
+		WARN( "Not a valid RFC file!\n" );
 		return NULL;
 	}
 
-	AclModelRfm *model = PL_NEW( AclModelRfm );
+	RfmModel *model = PL_NEW( RfmModel );
 	unsigned int numLodMeshes = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num lod meshes: %u\n", numLodMeshes );
+	printf( "num lod meshes: %u\n", numLodMeshes );
 	model->numLods = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num lods: %u\n", model->numLods );
+	printf( "num lods: %u\n", model->numLods );
 	model->numCollisionSpheres = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num spheres: %u\n", model->numCollisionSpheres );
+	printf( "num spheres: %u\n", model->numCollisionSpheres );
 	model->numAttachments = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num attachments: %u\n", model->numAttachments );
+	printf( "num attachments: %u\n", model->numAttachments );
 	model->numMaterials = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num materials: %u\n", model->numMaterials );
+	printf( "num materials: %u\n", model->numMaterials );
 
 	// Yet another chunk-based format, wheee...
 	for ( ;; )
@@ -209,7 +282,7 @@ static AclModelRfm *deserialize_rfm_v1( PLFile *file, unsigned int version )
 				else
 					strncpy( tagName, "none", 4 );
 
-				PRINT_WARNING( "Skipping unknown chunk (%x/%s : %u)\n", chunkTag, tagName, offset );
+				WARN( "Skipping unknown chunk (%x/%s : %u)\n", chunkTag, tagName, offset );
 				break;
 			}
 		}
@@ -225,38 +298,38 @@ static unsigned int seek_next( PLFile *file )
 {
 	static const unsigned int BLOCK_SIZE = 64;
 	PlFileSeek( file, ( PLFileOffset ) ceil( ( double ) PlGetFileOffset( file ) / BLOCK_SIZE ) * BLOCK_SIZE, PL_SEEK_SET );
-	PRINT_DEBUG( "Seeked to offset %lu\n", PlGetFileOffset( file ) );
+	printf( "Seeked to offset %lu\n", PlGetFileOffset( file ) );
 	return PlGetFileOffset( file );
 }
 
-static AclModelRfm *deserialize_rfm_v10( PLFile *file )
+static RfmModel *deserialize_rfm_v10( PLFile *file )
 {
 	// "We have a perfectly good format, but how can we make it better?"
 	// "I know, let's just make the same format, but different."
 	// - Volition developer, ca. 2002/2003
 
 	bool hasBones = ( bool ) PL_READUINT32( file, false, NULL );// could actually be a flag...
-	PRINT_DEBUG( "has bones: %s\n", hasBones ? "true" : "false" );
+	printf( "has bones: %s\n", hasBones ? "true" : "false" );
 	// if true, usually an RFC, otherwise a RFM
 
-	AclModelRfm *model = PL_NEW( AclModelRfm );
-	PRINT_DEBUG( "a: %u\n", PL_READUINT32( file, false, NULL ) );// always 16??
+	RfmModel *model = PL_NEW( RfmModel );
+	printf( "a: %u\n", PL_READUINT32( file, false, NULL ) );// always 16??
 
 	model->numCollisionSpheres = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num spheres: %u\n", model->numCollisionSpheres );
+	printf( "num spheres: %u\n", model->numCollisionSpheres );
 	model->numAttachments = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num attachments: %u\n", model->numAttachments );
+	printf( "num attachments: %u\n", model->numAttachments );
 	model->numBones = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num bones: %u\n", model->numBones );
+	printf( "num bones: %u\n", model->numBones );
 	model->numMaterials = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "num materials: %u\n", model->numMaterials );
-	PRINT_DEBUG( "e: %u\n", PL_READUINT32( file, false, NULL ) );// always 1??
-	PRINT_DEBUG( "f: %u\n", PL_READUINT32( file, false, NULL ) );// always 1??
+	printf( "num materials: %u\n", model->numMaterials );
+	printf( "e: %u\n", PL_READUINT32( file, false, NULL ) );// always 1??
+	printf( "f: %u\n", PL_READUINT32( file, false, NULL ) );// always 1??
 
 	seek_next( file );
 	if ( parse_rfm_chunk_collision( model, file, 10 ) == NULL )
 	{
-		PRINT_WARNING( "Failed to read in collision spheres!\n" );
+		WARN( "Failed to read in collision spheres!\n" );
 		acl_model_rfm_destroy_( model );
 		return NULL;
 	}
@@ -266,45 +339,42 @@ static AclModelRfm *deserialize_rfm_v10( PLFile *file )
 	return model;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
-AclModelRfm *acl_model_rfm_parse_file_( PLFile *file )
+RfmModel *acl_model_rfm_parse_file_( PLFile *file )
 {
 	unsigned int magic = PL_READUINT32( file, false, NULL );
 	if ( magic != RFM_MAGIC )
 	{
-		PRINT_WARNING( "Not an RFM file!\n" );
+		WARN( "Not an RFM file!\n" );
 		return NULL;
 	}
 
 	unsigned int version = PL_READUINT32( file, false, NULL );
-	PRINT_DEBUG( "RFM version %u\n", version );
+	printf( "RFM version %u\n", version );
 	if ( version == RFM_VERSION_RF1 )
 		return deserialize_rfm_v1( file, version );
 	else if ( version == RFM_VERSION_RF2 )
 		return deserialize_rfm_v10( file );
 
-	PRINT_WARNING( "Unsupported RFM version (%u)!\n", version );
+	WARN( "Unsupported RFM version (%u)!\n", version );
 	return NULL;
 }
 
-AclModelRfm *acl_model_rfm_load_file_( const char *filename )
+RfmModel *acl_model_rfm_load_file_( const char *filename )
 {
 	PLFile *file = PlOpenFile( filename, false );
 	if ( file == NULL )
 	{
-		PRINT_WARNING( "Failed to load RFM model (%s): %s\n", filename, PlGetError() );
+		WARN( "Failed to load RFM model (%s): %s\n", filename, PlGetError() );
 		return NULL;
 	}
 
-	AclModelRfm *model = acl_model_rfm_parse_file_( file );
+	RfmModel *model = acl_model_rfm_parse_file_( file );
 
 	PlCloseFile( file );
 	return model;
 }
 
-void acl_model_rfm_destroy_( AclModelRfm *model )
+void acl_model_rfm_destroy_( RfmModel *model )
 {
 	if ( model == NULL )
 		return;
@@ -312,6 +382,7 @@ void acl_model_rfm_destroy_( AclModelRfm *model )
 	PL_DELETE( model );
 }
 
+#if 0
 void acl_model_rfm_test_command_( unsigned int argc, char **argv )
 {
 	static const char *MODELS[] =
@@ -329,11 +400,17 @@ void acl_model_rfm_test_command_( unsigned int argc, char **argv )
 
 	for ( unsigned int i = 0; i < NUM_MODELS; ++i )
 	{
-		PRINT_DEBUG( "model: %s\n", MODELS[ i ] );
-		AclModelRfm *model = acl_model_rfm_load_file_( MODELS[ i ] );
+		printf( "model: %s\n", MODELS[ i ] );
+		RfmModel *model = acl_model_rfm_load_file_( MODELS[ i ] );
 		if ( model == NULL )
 			continue;
 
 		acl_model_rfm_destroy_( model );
 	}
 }
+#endif
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public

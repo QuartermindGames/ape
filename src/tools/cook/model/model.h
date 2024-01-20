@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "model_obj.h"
-
 #include "ape/ape_formats.h"
+
+#include "model_obj.h"
 
 PL_EXTERN_C
 
@@ -62,7 +62,5 @@ typedef struct SmdModel
 
 SmdModel *model_smd_load( const char *path );
 void model_smd_destroy( SmdModel *model );
-
-SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out );
 
 PL_EXTERN_C_END

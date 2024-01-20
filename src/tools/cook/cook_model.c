@@ -38,10 +38,11 @@ static bool serialize_ape_model( NdBranch *root, const SSApeFormatModel *model )
 
 extern CookModelFormatInterface modelSmdInterface;
 extern CookModelFormatInterface modelObjInterface;
-
+extern CookModelFormatInterface modelHowPCInterface;
 static const CookModelFormatInterface *modelCookFormats[] = {
         &modelObjInterface,
         &modelSmdInterface,
+        &modelHowPCInterface,
         NULL,
 };
 
