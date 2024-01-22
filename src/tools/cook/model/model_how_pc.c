@@ -324,7 +324,7 @@ static CookModel *load_fac( const char *path )
 {
 }
 
-static SSApeFormatModel *conv_fac( const CookModel *model, SSApeFormatModel *out )
+static ApeFormatModel *conv_fac( const CookModel *model, ApeFormatModel *out )
 {
 }
 

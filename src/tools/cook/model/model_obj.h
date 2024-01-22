@@ -66,6 +66,6 @@ typedef struct ObjModel
 ObjModel *model_obj_load( const char *path );
 void model_obj_destroy( ObjModel *obj );
 
-SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out );
+ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out );
 
 PL_EXTERN_C_END

@@ -14,9 +14,8 @@
 
 #include "client/renderer/renderer.h"
 
-/****************************************
- * PRIVATE
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
 static unsigned int numTicks = 0;
 
@@ -77,9 +76,8 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 }
 
-/****************************************
- * PUBLIC
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 ApeConfig ape_config_;
 
@@ -177,7 +175,7 @@ void ape_tick_frame( void )
 
 	ss_acl_tick_tasks_();
 	ss_acl_tick_client_();
-	ss_acl_tick_server_();
+	ape_server_tick_();
 
 	if ( ss_arl_get_capture_state_() )
 	{
@@ -215,7 +213,7 @@ void ape_render_frame( SSArlViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame_", ss_arl_render_frame_( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( ss_arl_render_frame_( viewport ) );
 }
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )

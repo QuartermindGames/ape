@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Cooking methods specific to models.
 // Author:  Mark E. Sowden
 
@@ -14,23 +14,37 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static bool serialize_ape_model( NdBranch *root, const SSApeFormatModel *model )
+ND_DECLARE_STRUCT( ApeFormatBone, 2,
+                   ND_DECLARE_STRUCT_ITEM( ApeFormatBone, name, ND_PROPERTY_STRING ),
+                   ND_DECLARE_STRUCT_ITEM( ApeFormatBone, parent, ND_PROPERTY_UI32 ) )
+
+ND_DECLARE_STRUCT( ApeFormatVertex, 3,
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, position, ND_PROPERTY_F32, 3 ),
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, normal, ND_PROPERTY_F32, 3 ),
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, uv, ND_PROPERTY_F32, 2 ) )
+
+ND_DECLARE_STRUCT( ApeFormatTriangle, 1,
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatTriangle, indices, ND_PROPERTY_UI32, 3 ) )
+
+ND_DECLARE_STRUCT( ApeFormatMesh, 2,
+                   ND_DECLARE_STRUCT_ITEM( ApeFormatMesh, material, ND_PROPERTY_STRING ) )
+
+ND_DECLARE_STRUCT( ApeFormatModel, 2,
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatModel, bones, ND_PROPERTY_OBJECT, APE_FORMAT_MODEL_MAX_BONES ),
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatModel, meshes, ND_PROPERTY_OBJECT, APE_FORMAT_MODEL_MAX_MATERIALS ) )
+
+static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 {
-	if ( model->numMeshes == 0 )
+	NdErrorCode errorCode;
+	NdBranch *root = nd_serialize_struct( &ApeFormatModel_descriptor, model, &errorCode );
+	if ( errorCode != ND_ERROR_SUCCESS )
 	{
-		WARN( "Attempted to serialize an empty model!\n" );
-		return false;
+		ndDestroyBranch( root );
+		root = NULL;
 	}
 
-	NdBranch *materialsBranch = ndPushBackStringArray( root, "materials", NULL, 0 );
-	for ( unsigned int i = 0; i < model->numMeshes; ++i )
-		ndPushBackString( materialsBranch, NULL, model->meshes[ i ].material );
-
-	PLHashTable *uniqueVertices = PlCreateHashTable();
-
-	PlDestroyHashTable( uniqueVertices );
-
-	return true;
+	ndPushBackUI32( root, "version", APE_FORMAT_MODEL_VERSION );
+	return root;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +69,7 @@ void cook_model_process( const char *modelName )
 	if ( extension == NULL )
 		ERROR( "Failed to get extension for model (%s): %s\n", modelName, PlGetError() );
 
-	NdBranch *root = ndPushBackObject( NULL, "model" );
-	ndPushBackUI32( root, "version", SS_APE_FORMAT_MODEL_VERSION );
-
-	SSApeFormatModel model = {};
+	ApeFormatModel model = {};
 
 	for ( unsigned int i = 0;; ++i )
 	{
@@ -79,10 +90,15 @@ void cook_model_process( const char *modelName )
 		break;
 	}
 
-	if ( !serialize_ape_model( root, &model ) )
+	NdBranch *root = serialize_ape_model( &model );
+	if ( root == NULL )
+	{
 		ERROR( "Failed to serialize model!\n" );
+	}
 
-	PlSetupPath( path, true, "%s/ship/models/%s." SS_APE_FORMAT_MODEL_EXTENSION, ss_com_project_get_local_path(), modelName );
+	PlSetupPath( path, true, "%s/ship/models/%s." APE_FORMAT_MODEL_EXTENSION, ss_com_project_get_local_path(), modelName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
+	{
 		ERROR( "Failed to write model: %s\n", ndGetErrorMessage() );
+	}
 }

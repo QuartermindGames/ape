@@ -41,13 +41,13 @@ typedef struct SSApeModelBone
 
 typedef struct SSApeModel
 {
-	ApeMaterial *materials[ SS_APE_FORMAT_MODEL_MAX_MATERIALS ];
+	ApeMaterial *materials[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
 
-	PLGMesh *meshes[ SS_APE_FORMAT_MODEL_MAX_MATERIALS ];
+	PLGMesh *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMeshes;
 
-	SSApeModelBone bones[ SS_APE_FORMAT_MODEL_MAX_BONES ];
+	SSApeModelBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	SSApeModelBone *rootBone;
 	unsigned int numBones;
 

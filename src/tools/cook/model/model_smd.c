@@ -191,18 +191,18 @@ void model_smd_destroy( SmdModel *model )
 	PL_DELETE( model );
 }
 
-SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out )
+ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 {
 	out->numMeshes = smd->numMeshes;
-	if ( out->numMeshes >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
-		out->numMeshes = ( SS_APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
+		out->numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
-		SSApeFormatMesh *mesh = &out->meshes[ i ];
+		ApeFormatMesh *mesh = &out->meshes[ i ];
 
 		PLPath tmp;
 		strcpy( tmp, smd->meshes[ i ].material );
@@ -214,10 +214,10 @@ SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out )
 		PlSetupPath( mesh->material, true, "materials/%s.mat.n", tmp );
 
 		mesh->numTriangles = smd->meshes[ i ].numTriangles;
-		if ( mesh->numTriangles >= SS_APE_FORMAT_MODEL_MAX_TRIANGLES )
+		if ( mesh->numTriangles >= APE_FORMAT_MODEL_MAX_TRIANGLES )
 		{
-			WARN( "Hit maximum triangle limit (%u >= %u)!\n", mesh->numTriangles, SS_APE_FORMAT_MODEL_MAX_TRIANGLES );
-			mesh->numTriangles = ( SS_APE_FORMAT_MODEL_MAX_TRIANGLES - 1 );
+			WARN( "Hit maximum triangle limit (%u >= %u)!\n", mesh->numTriangles, APE_FORMAT_MODEL_MAX_TRIANGLES );
+			mesh->numTriangles = ( APE_FORMAT_MODEL_MAX_TRIANGLES - 1 );
 		}
 
 		for ( unsigned int tri = 0; tri < mesh->numTriangles; ++tri )
@@ -235,7 +235,7 @@ SSApeFormatModel *model_smd_to_ape( const SmdModel *smd, SSApeFormatModel *out )
 }
 
 static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
-static SSApeFormatModel *conv_smd( const CookModel *model, SSApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
+static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return model_smd_to_ape( ( const SmdModel * ) model, out ); }
 static void destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
 
 CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };
