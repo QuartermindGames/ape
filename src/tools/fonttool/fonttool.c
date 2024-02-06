@@ -13,19 +13,22 @@ static GtkWidget *fontSelector;
 /**
  * Helper for displaying a simple OK messagebox.
  */
-static void DisplaySimpleMessageBox( const char *message ) {
+static void DisplaySimpleMessageBox( const char *message )
+{
 	GtkAlertDialog *dialog = gtk_alert_dialog_new( message );
 	gtk_alert_dialog_show( dialog, GTK_WINDOW( mainWindow ) );
 }
 
-void SerializeFont( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height ) {
+void SerializeFont( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height )
+{
 	uint32_t magic = COM_FORMAT_FONT_MAGIC;
 	fwrite( &magic, sizeof( uint32_t ), 1, file );
 	uint16_t version = COM_FORMAT_FONT_VERSION;
 	fwrite( &version, sizeof( uint16_t ), 1, file );
 
 	fwrite( &numGlyphs, sizeof( uint32_t ), 1, file );
-	for ( uint32_t i = 0; i < numGlyphs; ++i ) {
+	for ( uint32_t i = 0; i < numGlyphs; ++i )
+	{
 		fwrite( &glyphs[ i ].codepoint, sizeof( uint32_t ), 1, file );
 		fwrite( &glyphs[ i ].x, sizeof( uint16_t ), 1, file );
 		fwrite( &glyphs[ i ].y, sizeof( uint16_t ), 1, file );
@@ -38,25 +41,32 @@ void SerializeFont( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, 
 	fwrite( bitmap, sizeof( uint8_t ), width * height, file );
 }
 
-static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
+static void OnSaveFont( GtkDialog *dialog, int response, void *user )
+{
 	char *destination = NULL;
-	if ( response == GTK_RESPONSE_ACCEPT ) {
+	if ( response == GTK_RESPONSE_ACCEPT )
+	{
 		g_autoptr( GFile ) file = gtk_file_chooser_get_file( GTK_FILE_CHOOSER( dialog ) );
 		destination = g_file_get_path( file );
 	}
 
-	if ( destination == NULL ) {
+	if ( destination == NULL )
+	{
+		gtk_window_destroy( GTK_WINDOW( dialog ) );
+		g_free( user );
 		return;
 	}
 
 	// now load everything in and generate our file if we can
 
 	PangoFontDescription *fontDescription = pango_font_description_from_string( ( char * ) user );
-	if ( fontDescription != NULL ) {
+	if ( fontDescription != NULL )
+	{
 		PangoFontMap *fontMap = pango_cairo_font_map_get_default();
 		PangoContext *context = pango_font_map_create_context( fontMap );
 		PangoFont *font = pango_context_load_font( context, fontDescription );
-		if ( font != NULL ) {
+		if ( font != NULL )
+		{
 			PangoLayout *layout = pango_layout_new( context );
 			pango_layout_set_font_description( layout, fontDescription );
 
@@ -72,7 +82,8 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 
 			ComFontGlyph *glyphs = PL_NEW_( ComFontGlyph, MAX_ASCII );
 			uint32_t numChars = 0;
-			for ( uint32_t i = ' '; i < MAX_ASCII; ++i ) {
+			for ( uint32_t i = ' '; i < MAX_ASCII; ++i )
+			{
 				PangoRectangle rect;
 				pango_layout_set_text( layout, ( char * ) &i, 1 );
 				pango_layout_get_extents( layout, NULL, &rect );
@@ -85,8 +96,10 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 
 				glyphs[ numChars ].w = ( rect.width );
 				x += ( glyphs[ numChars ].w + PADDING );
-				if ( x > width ) {
-					if ( width > MAX_WIDTH ) {
+				if ( x > width )
+				{
+					if ( width > MAX_WIDTH )
+					{
 						y += ( tallest + PADDING );
 						x = tallest = 0;
 					}
@@ -95,10 +108,12 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 				}
 
 				glyphs[ numChars ].h = ( rect.height );
-				if ( glyphs[ numChars ].h > tallest ) {
+				if ( glyphs[ numChars ].h > tallest )
+				{
 					tallest = ( rect.height );
 				}
-				if ( ( y + glyphs[ numChars ].h ) > height ) {
+				if ( ( y + glyphs[ numChars ].h ) > height )
+				{
 					height += tallest;
 				}
 
@@ -122,7 +137,8 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 			pango_font_description_free( fontDescription );
 			fontDescription = NULL;
 
-			for ( uint32_t i = 0; i < numChars; ++i ) {
+			for ( uint32_t i = 0; i < numChars; ++i )
+			{
 #if 0// draws an outline around each character, showing the boundary
 				cairo_set_source_rgb( cairo, 1.0, 0.0, 1.0 );
 				cairo_rectangle( cairo, glyphs[ i ].x, glyphs[ i ].y, glyphs[ i ].w, glyphs[ i ].h );
@@ -142,17 +158,22 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 			PlSetupPath( outPath, true, ( PlGetFileExtension( destination ) == NULL ) ? "%s.fnt" : "%s", destination );
 
 			FILE *outFile = fopen( outPath, "wb" );
-			if ( outFile != NULL ) {
+			if ( outFile != NULL )
+			{
 				SerializeFont( outFile, glyphs, numChars, cairo_image_surface_get_data( surface ), width, height );
 				fclose( outFile );
-			} else {
+			}
+			else
+			{
 				DisplaySimpleMessageBox( "Failed to write to destination!" );
 			}
 
 			g_object_unref( font );
 
 			PL_DELETE( glyphs );
-		} else {
+		}
+		else
+		{
 			DisplaySimpleMessageBox( "Failed to load font!" );
 		}
 
@@ -160,7 +181,9 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 
 		g_object_unref( context );
 		pango_font_description_free( fontDescription );
-	} else {
+	}
+	else
+	{
 		DisplaySimpleMessageBox( "Failed to get font description!" );
 	}
 
@@ -170,9 +193,11 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user ) {
 	g_free( user );
 }
 
-static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userData ) {
+static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userData )
+{
 	char *fontName = gtk_font_chooser_get_font( GTK_FONT_CHOOSER( fontSelector ) );
-	if ( fontName == NULL ) {
+	if ( fontName == NULL )
+	{
 		DisplaySimpleMessageBox( "No font selected!" );
 		return;
 	}
@@ -196,6 +221,21 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 
 	char tmp[ 128 ];
 	snprintf( tmp, sizeof( tmp ), "%s.fnt", fontName );
+	for ( unsigned int i = 0; i < sizeof( tmp ); ++i )
+	{
+		if ( tmp[ i ] == '\0' )
+		{
+			break;
+		}
+		else if ( tmp[ i ] == ' ' )
+		{
+			tmp[ i ] = '_';
+			continue;
+		}
+
+		tmp[ i ] = tolower( tmp[ i ] );
+	}
+
 	gtk_file_chooser_set_current_name( GTK_FILE_CHOOSER( dialog ), tmp );
 
 	gtk_window_present( GTK_WINDOW( dialog ) );
@@ -203,7 +243,8 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 	g_signal_connect( dialog, "response", G_CALLBACK( OnSaveFont ), fontName );
 }
 
-int main( int argc, char **argv ) {
+int main( int argc, char **argv )
+{
 	// init and create all widgets
 
 	gtk_init();
@@ -227,7 +268,8 @@ int main( int argc, char **argv ) {
 
 	// now invoke our main loop
 
-	while ( g_list_model_get_n_items( gtk_window_get_toplevels() ) > 0 ) {
+	while ( g_list_model_get_n_items( gtk_window_get_toplevels() ) > 0 )
+	{
 		g_main_context_iteration( NULL, TRUE );
 	}
 
