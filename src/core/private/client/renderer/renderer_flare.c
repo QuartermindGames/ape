@@ -33,24 +33,28 @@ static const char *shinePaths[] = {
 #define MAX_SHINE_TEXTURES PL_ARRAY_ELEMENTS( shinePaths )
 static PLGTexture *shineTextures[ MAX_SHINE_TEXTURES ];
 
-void Flare_Initialize( void ) {
+void ape_flare_initialize_( void )
+{
 	for ( unsigned int i = 0; i < MAX_FLARE_TEXTURES; ++i )
-		flareTextures[ i ] = ss_arl_texture_load_direct_( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		flareTextures[ i ] = ape_texture_load_direct_( flarePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 	for ( unsigned int i = 0; i < MAX_SHINE_TEXTURES; ++i )
-		shineTextures[ i ] = ss_arl_texture_load_direct_( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
+		shineTextures[ i ] = ape_texture_load_direct_( shinePaths[ i ], PLG_TEXTURE_FILTER_LINEAR );
 }
 
-void Flare_Render( PLGTexture *texture, float diameter, float distance ) {
+void Flare_Render( PLGTexture *texture, float diameter, float distance )
+{
 	PLGShaderProgram *program = PlgGetCurrentShaderProgram();
-	if ( program == NULL ) {
+	if ( program == NULL )
+	{
 		return;
 	}
 
 	PlgSetShaderUniformValue( program, "scale", &diameter, false );
 }
 
-void Flare_RenderFlares( const SSArlCamera *camera ) {
-	arl_shader_get_by_name( "flare" );
+void ape_flare_draw_( const ApeCamera *camera )
+{
+	ape_shader_get_by_name( "flare" );
 
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 

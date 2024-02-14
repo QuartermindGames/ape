@@ -7,7 +7,17 @@
 
 #include "common_private.h"
 
-int com_logLevels_[ COM_MAX_LOG_LEVELS ];
+enum ComLogLevel
+{
+	COM_LOG_LEVEL_INFO,
+	COM_LOG_LEVEL_DEBUG,
+	COM_LOG_LEVEL_WARN,
+	COM_LOG_LEVEL_ERROR,
+
+	COM_MAX_LOG_LEVELS
+};
+
+static int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
 void com_initialize( void )
 {
@@ -16,19 +26,18 @@ void com_initialize( void )
 	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
 	com_logLevels_[ COM_LOG_LEVEL_DEBUG ] = PlAddLogLevel( "common/debug", PL_COLOUR_WHITE, true );
 
-	Message( "Common Library initialized\n" );
+	com_print_( "Common Library initialized\n" );
 
 	ndSetupLogs();
 
-	ss_com_pack_pkg_register_();
-	com_pack_vpp_register_();
+	com_pack_pkg_register_();
 
 	// Initialize directory lookups
-	ss_com_get_local_data_directory();
-	ss_com_get_app_data_directory();
+	com_get_local_data_directory();
+	com_get_app_data_directory();
 }
 
-const char *ss_com_get_local_data_directory( void )
+const char *com_get_local_data_directory( void )
 {
 	// cache it
 	static PLPath dataPath = { '\0' };
@@ -61,7 +70,7 @@ const char *ss_com_get_local_data_directory( void )
 	return dataPath;
 }
 
-const char *ss_com_get_app_data_directory( void )
+const char *com_get_app_data_directory( void )
 {
 	static PLPath appDataPath = "";
 	if ( *appDataPath != '\0' )
@@ -70,7 +79,7 @@ const char *ss_com_get_app_data_directory( void )
 	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL )
 		return appDataPath;
 
-	Warning( "Failed to fetch application data directory: %s\n", PlGetError() );
+	com_warning_( "Failed to fetch application data directory: %s\n", PlGetError() );
 
 	PlSetupPath( appDataPath, true, "." );
 	return appDataPath;
@@ -83,23 +92,66 @@ NdBranch *com_get_config( const char *name )
 	NdBranch *root = ndLoadFile( path, "config" );
 	if ( root == NULL )
 	{
-		Warning( "Failed to load user config file (%s)! Creating empty config.\n", ndGetErrorMessage() );
+		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", ndGetErrorMessage() );
 		root = ndPushBackObject( NULL, "config" );
 	}
 
 	return root;
 }
 
-bool ss_com_write_config( struct NdBranch *root, const char *name )
+bool com_write_config( struct NdBranch *root, const char *name )
 {
 	PLPath path;
-	PlSetupPath( path, true, "%s/configs/", ss_com_get_app_data_directory() );
+	PlSetupPath( path, true, "%s/configs/", com_get_app_data_directory() );
 	if ( !PlCreatePath( path ) )
 	{
-		Warning( "Failed to create configs path (%s): %s\n", path, PlGetError() );
+		com_warning_( "Failed to create configs path (%s): %s\n", path, PlGetError() );
 		return false;
 	}
 
-	PlSetupPath( path, true, "%s/configs/%s.cfg.n", ss_com_get_app_data_directory(), name );
+	PlSetupPath( path, true, "%s/configs/%s.cfg.n", com_get_app_data_directory(), name );
 	return ndWriteFile( path, root, ND_FILE_UTF8 );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+void com_print_( const char *m, ... )
+{
+	va_list args;
+	va_start( args, m );
+
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), m, args );
+
+	va_end( args );
+
+	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_INFO ], "%s", buf );
+}
+
+void com_warning_( const char *m, ... )
+{
+	va_list args;
+	va_start( args, m );
+
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), m, args );
+
+	va_end( args );
+
+	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_WARN ], "%s", buf );
+}
+
+void com_error_( const char *m, ... )
+{
+	va_list args;
+	va_start( args, m );
+
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), m, args );
+
+	va_end( args );
+
+	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_ERROR ], "%s", buf );
+
+	abort();
 }

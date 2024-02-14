@@ -260,7 +260,7 @@ bool acl_console_handle_text_event_( const char *key )
  * RENDERING
  ****************************************/
 
-static void draw_input_field( const SSArlViewport *viewport, GuiFont *font )
+static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 {
 	const float ch = guiGetFontLineSpacing( font );
 	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
@@ -310,7 +310,7 @@ static const float consoleScrollBarWidth = 8.0f;
 /**
  * Draw the console panel.
  */
-void ss_acl_console_draw_( const SSArlViewport *viewport )
+void ape_console_draw_( const ApeViewport *viewport )
 {
 	if ( !ss_acl_is_console_open() )
 		return;
@@ -424,13 +424,13 @@ static void input_mlook_command( const PLConsoleVariable *consoleVariable )
 	acl_input_center_mouse();
 }
 
-void ss_acl_console_register_cl_commands_( void )
+void ape_console_register_cl_commands_( void )
 {
 	PlRegisterConsoleCommand( "toggle_console", "Toggle the console.", 0, toggle_console_command );
 }
 
 void apeRegisterRendererConsoleVariables_( void );
-void ss_acl_console_register_cl_variables_( void )
+void ape_console_register_cl_variables_( void )
 {
 	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
 
@@ -448,6 +448,6 @@ void ss_acl_console_register_cl_variables_( void )
 	apeRegisterRendererConsoleVariables_();
 
 	ss_acl_audio_register_console_variables_();
-	ss_acl_register_level_console_variables_();
-	ss_acl_register_editor_console_variables_();
+	ape_register_world_console_variables_();
+	ape_register_editor_console_variables_();
 }

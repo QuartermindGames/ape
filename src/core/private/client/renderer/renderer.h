@@ -26,14 +26,14 @@ typedef struct ApeRendererStats
 extern ApeRendererStats ape_rendererPerformance_;
 
 /* todo: introduce container around this */
-typedef struct SSArlSpriteFrame
+typedef struct ApeSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
 	PLGTexture *texture;
-} SSArlSpriteFrame;
+} ApeSpriteFrame;
 
-typedef struct SSArlCamera
+typedef struct ApeCamera
 {
 	char tag[ 32 ];
 
@@ -41,11 +41,11 @@ typedef struct SSArlCamera
 
 	PLGCamera *internal; /* the camera used for this viewport */
 
-	SSArlCameraMode mode;
+	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;
 
 	ApeWorld *world;
-	SSAclWorldRoom *room;
+	ApeWorldRoom *room;
 
 	// For visibility
 	PLVectorArray *visibleLights;
@@ -53,41 +53,11 @@ typedef struct SSArlCamera
 
 	PLVector3 forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
-} SSArlCamera;
+} ApeCamera;
 
-typedef struct SSArlRenderTarget SSArlRenderTarget;
+typedef struct ApeRenderTarget ApeRenderTarget;
 
 ////////////////////////////////////////////////////////////////////
-
-#define APE_MAX_FPS_READINGS 128
-
-typedef struct SSArlViewport
-{
-	unsigned int index;
-	int x, y;
-	int width, height;
-
-	SSArlCamera *camera;
-	SSArlRenderTarget *renderTarget;
-
-	struct
-	{
-		double frameTime, oldTime;
-		unsigned int frameIndex;
-
-		unsigned int lastFramerate;
-		unsigned int lastFramerateUpdate;
-		double frameReadings[ APE_MAX_FPS_READINGS ];
-
-		unsigned int numBatches;
-		unsigned int numTriangles;
-		unsigned int numPolygons;
-		unsigned int numPortals;
-	} perf;
-
-	void *windowHandle;
-} SSArlViewport;
-
 ////////////////////////////////////////////////////////////////////
 
 #define SS_ARL_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
@@ -99,9 +69,9 @@ typedef struct ArlLightCachedStencilVolume
 } ArlLightCachedStencilVolume;
 
 #define SS_ARL_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
-typedef struct SSArlLight
+typedef struct ApeLight
 {
-	SSArlLightType type;
+	ApeLightType type;
 
 	PLVector3 position;
 	PLVector3 angles;
@@ -116,28 +86,28 @@ typedef struct SSArlLight
 	bool isCacheDirty;
 
 	ApeWorld *world;
-} SSArlLight;
+} ApeLight;
 
-typedef SSArlLight *SSArlLightPointerArray[ SS_ARL_MAX_LIGHTS_PER_PASS ];
+typedef ApeLight *ApeLightPointerArray[ SS_ARL_MAX_LIGHTS_PER_PASS ];
 
-typedef enum SSArlCullMode
+typedef enum ApeCullMode
 {
 	SS_ARL_CULL_MODE_DEFAULT,
 	SS_ARL_CULL_MODE_FRONT,
 	SS_ARL_CULL_MODE_BACK,
 	SS_ARL_CULL_MODE_NONE,
-} SSArlCullMode;
+} ApeCullMode;
 
-typedef enum SSArlRendererPassStage
+typedef enum ApeRendererPassStage
 {
 	SS_ARL_RENDERER_PASS_DEFAULT,
 	SS_ARL_RENDERER_PASS_DEPTH,
-} SSArlRendererPassStage;
+} ApeRendererPassStage;
 
 typedef struct SSArlRendererPassState
 {
-	SSArlCullMode cullMode;// override default cull mode
-	SSArlRendererPassStage passStage;
+	ApeCullMode cullMode;// override default cull mode
+	ApeRendererPassStage passStage;
 
 	PLGBlend blendModeA, blendModeB;
 	bool overrideBlendMode;
@@ -145,33 +115,33 @@ typedef struct SSArlRendererPassState
 	bool mirror;
 	unsigned int depth;
 } SSArlRendererPassState;
-extern SSArlRendererPassState arl_rendererState_;
+extern SSArlRendererPassState ape_rendererState_;
 
 #include "renderer_material.h"
 
-void ss_arl_initialize_( void );
-void ss_arl_shutdown_( void );
+void ape_initialize_renderer_( void );
+void ape_shutdown_renderer_( void );
 
-PLGCamera *ss_arl_get_aux_camera_( void );
+PLGCamera *ape_get_aux_camera_( void );
 
-bool ss_arl_get_capture_state_( void );
+bool ape_get_capture_state_( void );
 
-void ss_arl_setup_default_state( const SSArlViewport *viewport );
-void ss_arl_draw_begin_( SSArlViewport *viewport );
-void ss_arl_draw_end_( SSArlViewport *viewport );
-void ss_arl_draw_menu_( SSArlViewport *viewport );
+void ape_setup_default_draw_state_( const ApeViewport *viewport );
+void ape_draw_begin_( ApeViewport *viewport );
+void ape_draw_end_( ApeViewport *viewport );
+void ape_draw_menu_( ApeViewport *viewport );
 
 void ss_arl_set_2d_viewport_size_( int w, int h );
 void ss_arl_get_2d_viewport_size_( int *width, int *height );
 
-struct SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name );
+struct SS_Arl_ShaderProgramIndex *ape_shader_get_by_name( const char *name );
 
-void ss_arl_draw_sprite_animation_frame( SSArlSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
-void ss_arl_draw_sprite_animation( SSArlSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+void ss_arl_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
+void ss_arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
-PLGTexture *ss_arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
+PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
 PLGTexture *ss_arl_texture_get_fallback( void );
 
-SSArlRenderTarget *ss_arl_get_default_render_target( void );
+ApeRenderTarget *ss_arl_get_default_render_target( void );
 
 ////////////////////////////////////////////////////////////////////

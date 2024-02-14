@@ -21,7 +21,7 @@ static const SSArlPostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool postProcessInit = false;
 static bool postProcessEnabled = true;
 
-static SSArlRenderTarget *ppRenderTarget = NULL;
+static ApeRenderTarget *ppRenderTarget = NULL;
 
 static void register_post_effects( void )
 {
@@ -60,16 +60,16 @@ void ss_arl_postfx_cleanup_( void )
 
 	postProcessInit = false;
 
-	ss_arl_render_target_release( ppRenderTarget );
+	ape_render_target_release( ppRenderTarget );
 }
 
 void ss_arl_postfx_setup_( void )
 {
-	ppRenderTarget = ss_arl_render_target_create( "postfx",
-	                                              800, 600,
-	                                              PLG_BUFFER_COLOUR,
-	                                              PLG_BUFFER_COLOUR,
-	                                              PLG_TEXTURE_FILTER_LINEAR );
+	ppRenderTarget = ape_render_target_create( "postfx",
+	                                           800, 600,
+	                                           PLG_BUFFER_COLOUR,
+	                                           PLG_BUFFER_COLOUR,
+	                                           PLG_TEXTURE_FILTER_LINEAR );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -96,15 +96,15 @@ void ss_arl_postfx_register_console_variables_( void )
 	}
 }
 
-void ss_arl_postfx_draw_( const SSArlViewport *viewport )
+void ss_arl_postfx_draw_( const ApeViewport *viewport )
 {
 	assert( viewport->renderTarget != NULL );
-	PLGTexture *baseTexture = ss_arl_render_target_get_texture( viewport->renderTarget );
+	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )
 		return;
 
-	ss_arl_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-	ss_arl_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
+	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	if ( !postProcessEnabled )
 	{
@@ -121,7 +121,7 @@ void ss_arl_postfx_draw_( const SSArlViewport *viewport )
 	}
 }
 
-SSArlRenderTarget *ss_arl_postfx_get_render_target( void )
+ApeRenderTarget *ape_postfx_get_render_target( void )
 {
 	return ppRenderTarget;
 }

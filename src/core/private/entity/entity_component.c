@@ -9,7 +9,7 @@
 
 static PLHashTable *entityComponentDefinitions = NULL;
 
-void ss_acl_register_entity_component( const SS_Acl_EntityComponentDefinition *definition )
+void ape_register_entity_component( const ApeEntityComponentDefinition *definition )
 {
 	if ( entityComponentDefinitions == NULL )
 		entityComponentDefinitions = PlCreateHashTable();
@@ -23,16 +23,16 @@ void ss_acl_register_entity_component( const SS_Acl_EntityComponentDefinition *d
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 }
 
-void *ss_acl_entity_add_component( SS_Acl_Entity *entity, const char *name )
+void *ss_acl_entity_add_component( ApeEntity *entity, const char *name )
 {
-	const SS_Acl_EntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
+	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
 	if ( componentDefinition == NULL )
 	{
 		PRINT_WARNING( "Failed to find entity component (%s)!\n", name );
 		return NULL;
 	}
 
-	SS_Acl_EntityComponent *component = PL_NEW( SS_Acl_EntityComponent );
+	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
 	if ( componentDefinition->Create != NULL )
 		component->data = componentDefinition->Create();
 
@@ -50,7 +50,7 @@ void *ss_acl_entity_add_component( SS_Acl_Entity *entity, const char *name )
 	return component->data;
 }
 
-void *ss_acl_entity_get_component( SS_Acl_Entity *entity, const char *name )
+void *ss_acl_entity_get_component( ApeEntity *entity, const char *name )
 {
 	return PlLookupHashTableUserData( entity->componentTable, name, strlen( name ) );
 }

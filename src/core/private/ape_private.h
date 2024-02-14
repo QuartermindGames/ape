@@ -17,13 +17,13 @@
 #include <assert.h>
 
 #include "common.h"
+#include "common/common_math.h"
 
 #include <yin/core.h>
 #include <yin/node.h>
 
-#define ENGINE_NAME        "APE Tech"
-#define ENGINE_APP_NAME    "ape"
-#define ENGINE_BASE_CONFIG "engine.cfg.n"
+#define ENGINE_NAME     "APE Tech"
+#define ENGINE_APP_NAME "ape"
 
 #define VERSION_MAJOR    0
 #define VERSION_MINOR    4
@@ -81,18 +81,18 @@ typedef struct ApeConsoleOutput
 
 ApeConsoleOutput *apeGetConsoleOutput( void );
 
-void ss_acl_initialize_console_( void );
-void ss_acl_shutdown_console_( void );
+void ape_initialize_console_( void );
+void ape_shutdown_console_( void );
 
 int Console_GetLogLevel( ApeConsoleLogLevel level );
 void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 
-void ss_acl_console_register_commands_( bool isDedicated );
-void ss_acl_console_register_variables_( bool isDedicated );
+void ape_console_register_commands_( bool isDedicated );
+void ape_console_register_variables_( bool isDedicated );
 
-void ss_acl_console_draw_( const SSArlViewport *viewport );
-void ss_acl_console_register_cl_commands_( void );
-void ss_acl_console_register_cl_variables_( void );
+void ape_console_draw_( const ApeViewport *viewport );
+void ape_console_register_cl_commands_( void );
+void ape_console_register_cl_variables_( void );
 
 #define PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
@@ -148,10 +148,10 @@ typedef struct ApeConfig
 
 extern ApeConfig ape_config_;
 
-void ss_acl_initialize_game_( void );
-void ss_acl_shutdown_game_( void );
+void ape_initialize_game_( void );
+void ape_shutdown_game_( void );
 
-void ss_acl_tick_game_( void );
-void ss_acl_spawn_world_( const char *worldPath );
+void ape_tick_game_( void );
+void ape_spawn_world_( const char *worldPath );
 
 PL_EXTERN_C_END

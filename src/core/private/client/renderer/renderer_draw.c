@@ -158,7 +158,7 @@ void ar_draw_number( PLGTexture *numTextureTable[], float x, float y, int number
 	ar_draw_digit( numTextureTable, x, y, number % 10 );
 }
 
-void arl_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
+void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
 		return;
@@ -227,14 +227,14 @@ void arl_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
-	SS_Arl_BitmapFont *font = ss_arl_get_default_small_bitmap_font();
-	ss_arl_bitmap_font_begin_draw( font );
+	ApeBitmapFont *font = ape_get_default_small_bitmap_font();
+	ape_bitmap_font_begin_draw( font );
 
 	if ( heading != NULL )
 	{
 		size_t len = strlen( heading );
 		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		ss_arl_bitmap_font_batch_string( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
+		ape_bitmap_font_batch_string( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
 	// Calculate the average sum of all the points
@@ -248,9 +248,9 @@ void arl_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	// Current and average readings
 	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	ss_arl_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	ss_arl_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
 
 #if 0
 	snprintf( buf, sizeof( buf ), "y+:%02f", max );

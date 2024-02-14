@@ -30,20 +30,20 @@ static bool drawGUI = false;
 
 static ApeMaterial *baseGuiMat;
 
-static SSArlCamera *auxCamera;
+static ApeCamera *auxCamera;
 
-static void draw_debug_overlay( const SSArlViewport *viewport )
+static void draw_debug_overlay( const ApeViewport *viewport )
 {
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
 		return;
 
-	SS_Arl_BitmapFont *defaultFont = ss_arl_get_default_small_bitmap_font();
+	ApeBitmapFont *defaultFont = ape_get_default_small_bitmap_font();
 	assert( defaultFont != NULL );
 	if ( defaultFont == NULL )
 		return;
 
-	ss_arl_bitmap_font_begin_draw( defaultFont );
+	ape_bitmap_font_begin_draw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
@@ -52,7 +52,7 @@ static void draw_debug_overlay( const SSArlViewport *viewport )
 
 	float ch = ( float ) defaultFont->ch;
 
-	const SSArlCamera *camera = viewport->camera;
+	const ApeCamera *camera = viewport->camera;
 	if ( camera != NULL )
 	{
 		// Draw camera position
@@ -64,43 +64,43 @@ static void draw_debug_overlay( const SSArlViewport *viewport )
 		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
 		strcat( buf, vang );
 		strcat( buf, ")" );
-		ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+		ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	}
 
 	// Draw stats
 	char buf[ 64 ];
-	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ss_arl_viewport_get_framerate( viewport ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ape_viewport_get_framerate( viewport ) );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_GOLD, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_ORCHID, buf, strlen( buf ), false );
 
 	unsigned int numTasks = apeGetNumScheduledTasks();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
-	ss_arl_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
 		double taskDelay;
 		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
-		ss_arl_bitmap_font_batch_string( defaultFont, tx + 8, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+		ape_bitmap_font_batch_string( defaultFont, tx + 8, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
 	y += ch * 2;
 
@@ -135,7 +135,7 @@ static void draw_debug_overlay( const SSArlViewport *viewport )
 			unsigned int numPoints;
 			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
 			const char *name = comGetProfilingGroupName( group );
-			arl_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
+			ape_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
 			y += GRAPH_HEIGHT + Y_SPACING;
 
 			group = comGetNextProfilingGroup( group );
@@ -146,18 +146,18 @@ static void draw_debug_overlay( const SSArlViewport *viewport )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-PLGCamera *ss_arl_get_aux_camera_( void )
+PLGCamera *ape_get_aux_camera_( void )
 {
-	return ss_arl_camera_get_internal( auxCamera );
+	return ape_camera_get_internal( auxCamera );
 }
 
-void ss_acl_initialize_gui_( void )
+void ape_initialize_gui_( void )
 {
 	PlRegisterConsoleVariable( "gui_draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
 	PlRegisterConsoleVariable( "gui_width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
 	PlRegisterConsoleVariable( "gui_height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
-	auxCamera = ss_arl_camera_create( "aux", &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_FRONT );
+	auxCamera = ape_camera_create( "aux", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT );
 	if ( auxCamera == NULL )
 		PRINT_ERROR( "Failed to create auxiliary camera!\n" );
 
@@ -188,7 +188,7 @@ void ss_acl_initialize_gui_( void )
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
 }
 
-void ss_acl_shutdown_gui_( void )
+void ape_shutdown_gui_( void )
 {
 	ss_gui_panel_destroy( rootPanel );
 	ss_gui_shutdown();
@@ -199,7 +199,7 @@ void ss_acl_shutdown_gui_( void )
 void ss_arl_set_2d_viewport_size_( int w, int h )
 {
 	PlgSetViewport( 0, 0, w, h );
-	PlgSetupCamera( ss_arl_camera_get_internal( auxCamera ) );
+	PlgSetupCamera( ape_camera_get_internal( auxCamera ) );
 }
 
 void ss_arl_get_2d_viewport_size_( int *width, int *height )
@@ -207,7 +207,7 @@ void ss_arl_get_2d_viewport_size_( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void ss_arl_draw_gui_( SSArlViewport *viewport )
+void ss_arl_draw_gui_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -216,10 +216,10 @@ void ss_arl_draw_gui_( SSArlViewport *viewport )
 	// Need to call this again to reset the viewport
 	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
-	SSArlRenderTarget *renderTarget = ss_arl_postfx_get_render_target();
+	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
 	if ( renderTarget != NULL )
 	{
-		PLGTexture *texture = ss_arl_render_target_get_texture( renderTarget );
+		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
 		if ( texture != NULL )
 		{
 			float x = ( float ) viewport->x;
@@ -270,21 +270,17 @@ void ss_arl_draw_gui_( SSArlViewport *viewport )
 
 	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
 
-	ss_acl_draw_editor_gui_( viewport );
+	ape_editor_draw_gui_( viewport );
 
 	// todo: this should use GUI
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( ape_config_.renderer.showFps && debugOverlay->i_value == 0 )
 	{
 		GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
-		assert( font != NULL );
-		if ( font != NULL )
-		{
-			char tmp[ 32 ];
-			snprintf( tmp, sizeof( tmp ), "FPS: %u", ss_arl_viewport_get_framerate( viewport ) );
-			guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
-			guiDisplayFont( font );
-		}
+		char tmp[ 32 ];
+		snprintf( tmp, sizeof( tmp ), "FPS: %u", ape_viewport_get_framerate( viewport ) );
+		guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
+		guiDisplayFont( font );
 	}
 
 #if 0
@@ -300,19 +296,19 @@ void ss_arl_draw_gui_( SSArlViewport *viewport )
 #endif
 
 	// todo: this should use GUI
-	ss_acl_console_draw_( viewport );
+	ape_console_draw_( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ss_arl_draw_menu_( SSArlViewport *viewport )
+void ape_draw_menu_( ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
 
 	COM_PROFILE_FUNCTION_START();
 
-	ss_arl_viewport_make_active( viewport );
+	ape_viewport_make_active( viewport );
 	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
@@ -324,7 +320,7 @@ void ss_arl_draw_menu_( SSArlViewport *viewport )
 	ss_arl_postfx_draw_( viewport );
 
 	ss_arl_draw_gui_( viewport );
-	ss_acl_draw_editor_gui_( viewport );
+	ape_editor_draw_gui_( viewport );
 
 	draw_debug_overlay( viewport );
 
@@ -337,7 +333,7 @@ void ss_arl_draw_menu_( SSArlViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ss_acl_tick_gui_( void )
+void ape_tick_gui_( void )
 {
 	gui_panel_tick( rootPanel );
 }

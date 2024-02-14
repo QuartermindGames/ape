@@ -11,8 +11,8 @@ typedef struct ApeServerClient ApeServerClient;
 
 bool ss_acl_start_server_( const char *ip, unsigned short port );
 
-void ss_acl_initialize_server_( void );
-void ss_acl_shutdown_server_( void );
+void ape_initialize_server_( void );
+void ape_shutdown_server_( void );
 void apeDropServerClient( ApeServerClient *serverClient );
 void ss_acl_tick_server_( void );
 

@@ -80,7 +80,7 @@ const char *ss_acl_fs_get_user_config_location( void )
 	return configPath;
 }
 
-void ss_acl_fs_setup_config( NdBranch *root )
+void ape_fs_setup_config( NdBranch *root )
 {
 	PlClearFileAliases();
 
@@ -114,7 +114,7 @@ void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
 	return buf;
 }
 
-void ss_acl_fs_mount_base_locations( void )
+void ape_fs_mount_base_locations( void )
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )

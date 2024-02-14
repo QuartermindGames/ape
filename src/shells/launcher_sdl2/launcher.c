@@ -29,7 +29,7 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 static SDL_Window *sdlWindow = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
-static SSArlViewport *windowViewport = NULL;
+static ApeViewport *windowViewport = NULL;
 
 static int drawW, drawH;
 
@@ -198,7 +198,7 @@ bool ss_shell_set_window_size( int *width, int *height )
 	return false;
 }
 
-void ss_shell_get_window_size( int *width, int *height )
+void shell_get_window_size( int *width, int *height )
 {
 	SDL_GetWindowSize( sdlWindow, width, height );
 }
@@ -225,12 +225,12 @@ void ss_shell_set_window_icon( const PLImage *image )
 	SDL_FreeSurface( surface );
 }
 
-SSArlViewport *ss_shell_viewport_get_active( void )
+ApeViewport *ss_shell_viewport_get_active( void )
 {
 	return windowViewport;
 }
 
-void ss_shell_swap_window( SSArlViewport * )
+void shell_swap_window( ApeViewport *viewport )
 {
 	// Just ignore the viewport for now...
 	SDL_GL_SwapWindow( sdlWindow );
@@ -392,7 +392,7 @@ static unsigned int timer_callback( unsigned int interval, void *param )
 
 void ss_shell_shutdown( void )
 {
-	ss_com_write_config( shellConfig, "shell" );
+	com_write_config( shellConfig, "shell" );
 
 	if ( sdlTimer != 0 )
 		SDL_RemoveTimer( sdlTimer );
@@ -520,8 +520,8 @@ int launcher_initialize( int argc, char **argv )
 
 	com_initialize();
 
-	PlMountLocalLocation( ss_com_get_app_data_directory() );
-	PlMountLocalLocation( ss_com_get_local_data_directory() );
+	PlMountLocalLocation( com_get_app_data_directory() );
+	PlMountLocalLocation( com_get_local_data_directory() );
 
 	shellConfig = com_get_config( "shell" );
 
@@ -536,12 +536,12 @@ int launcher_initialize( int argc, char **argv )
 	if ( !initialize_display() )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 
-	if ( !ss_acl_initialize( argc, argv, NULL ) )
+	if ( !ape_initialize( argc, argv, NULL ) )
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 
 	int w, h;
-	ss_shell_get_window_size( &w, &h );
-	windowViewport = ss_arl_viewport_create( 0, 0, w, h, sdlWindow );
+	shell_get_window_size( &w, &h );
+	windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow );
 	if ( windowViewport == NULL )
 		PrintError( "Failed to create virtual window viewport!\n" );
 
@@ -571,7 +571,7 @@ int launcher_initialize( int argc, char **argv )
 					                                                               : 0.0f;
 					float y = ( event.wheel.y > 0 ) ? 1.0f : ( event.wheel.y < 0 ) ? -1.0f
 					                                                               : 0.0f;
-					ss_acl_input_handle_mouse_wheel_event( x, y );
+					ape_input_handle_mouse_wheel_event( x, y );
 					break;
 				}
 				case SDL_MOUSEBUTTONDOWN:
@@ -579,7 +579,7 @@ int launcher_initialize( int argc, char **argv )
 					ss_acl_input_handle_mouse_button_event( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
 					break;
 				case SDL_MOUSEMOTION:
-					ss_acl_input_handle_mouse_motion_event( event.motion.x, event.motion.y );
+					ape_input_handle_mouse_motion_event( event.motion.x, event.motion.y );
 					break;
 
 				case SDL_KEYDOWN:
@@ -610,7 +610,7 @@ int launcher_initialize( int argc, char **argv )
 							//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
 							// originally used the above but it kept returning bogus coords...
 							SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
-							ss_arl_viewport_set_size( windowViewport, drawW, drawH );
+							ape_viewport_set_size( windowViewport, drawW, drawH );
 							break;
 					}
 					break;

@@ -4,7 +4,8 @@
 
 #include "game_private.h"
 
-typedef struct GameMovementComponent {
+typedef struct GameMovementComponent
+{
 	float forwardVelocity;
 	float strafeVelocity;
 

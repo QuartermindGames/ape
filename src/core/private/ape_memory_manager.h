@@ -3,14 +3,15 @@
 
 #pragma once
 
-void ss_acl_initialize_memory_manager_( void );
-void ss_ape_shutdown_memory_manager_( void );
+void ape_initialize_memory_manager_( void );
+void ape_shutdown_memory_manager_( void );
 
 /* ======================================================================
  * Active Cache
  * ====================================================================*/
 
-typedef enum ApeCachePool {
+typedef enum ApeCachePool
+{
 	APE_CACHE_POOL_FONTS,
 	APE_CACHE_POOL_TEXTURES,
 	APE_CACHE_POOL_MATERIALS,
@@ -26,7 +27,8 @@ typedef enum ApeCachePool {
 /**
  * Header for cached data item.
  */
-typedef struct ApeMemoryCacheHeader {
+typedef struct ApeMemoryCacheHeader
+{
 	uint32_t id;                   /* identifier (hashed string) */
 	char description[ 256 ];       //
 	uint8_t pool;                  /* pool we're cached into */
@@ -42,7 +44,8 @@ void *apeGetCachedData( const char *id, ApeCachePool pool );
  * ====================================================================*/
 
 typedef void ( *MMReference_CleanupFunction )( void *userData );
-typedef struct ApeMemoryReference {
+typedef struct ApeMemoryReference
+{
 	bool isInitialized;                         // Indicates whether the handle was set up
 	int numReferences;                          // Number of total references
 	unsigned int timeToLive;                    // Time to live
@@ -52,9 +55,9 @@ typedef struct ApeMemoryReference {
 	struct PLLinkedListNode *node;              // Index into the memory reference list
 } ApeMemoryReference;
 
-ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
+ApeMemoryReference *ape_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
 
-void ss_acl_mm_add_reference( ApeMemoryReference *m );
+void ape_mm_add_reference( ApeMemoryReference *m );
 void ss_acl_mm_release( ApeMemoryReference *m );
 int apeGetNumberOfReferences( const ApeMemoryReference *m );
 unsigned int apeFlushUnreferencedResources( void );

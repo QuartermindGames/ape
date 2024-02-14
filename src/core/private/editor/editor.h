@@ -6,11 +6,11 @@
 
 PL_EXTERN_C
 
-void ss_acl_register_editor_console_variables_( void );
-void ss_acl_draw_editor_gui_( const SSArlViewport *viewport );
+void ape_register_editor_console_variables_( void );
 
-bool ss_acl_is_editor_active( void );
+void ape_editor_draw_gui_( const ApeViewport *viewport );
+void ape_editor_draw_grid_( void );
 
-bool apeIsEditorContextActive( const char *identifier );
+bool ape_is_editor_active( void );
 
 PL_EXTERN_C_END

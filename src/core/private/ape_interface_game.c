@@ -16,7 +16,7 @@
 
 static void world_command( unsigned int argc, char **argv )
 {
-	ss_acl_spawn_world_( argv[ 1 ] );
+	ape_spawn_world_( argv[ 1 ] );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ static void world_command( unsigned int argc, char **argv )
 
 const ApeGameInterfaceImport *game_modeInterface;
 
-void ss_acl_initialize_game_( void )
+void ape_initialize_game_( void )
 {
 	PRINT( "Initializing Game...\n" );
 
@@ -42,7 +42,7 @@ void ss_acl_initialize_game_( void )
 	PRINT( "Game initialized!\n" );
 }
 
-void ss_acl_shutdown_game_( void )
+void ape_shutdown_game_( void )
 {
 	const ApeGameInterfaceImport *interface = ape_game_get_interface();
 	assert( interface != NULL );
@@ -52,14 +52,14 @@ void ss_acl_shutdown_game_( void )
 	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, NULL );
 }
 
-void ss_acl_tick_game_( void )
+void ape_tick_game_( void )
 {
 	ss_game_tick();
 }
 
-void ss_acl_spawn_world_( const char *worldPath )
+void ape_spawn_world_( const char *worldPath )
 {
-	ApeWorld *world = ss_ape_world_load( worldPath );
+	ApeWorld *world = ape_world_load( worldPath );
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
@@ -68,8 +68,8 @@ void ss_acl_spawn_world_( const char *worldPath )
 
 	ss_game_spawn_world( world );
 
-	ss_acl_world_spawn_entities_( world );
+	ape_world_spawn_entities_( world );
 
 	ss_acl_start_server_( "localhost", 0 );
-	ss_acl_initiate_client_connection_( "localhost", ss_acl_server_get_port_() );
+	ape_initiate_client_connection_( "localhost", ss_acl_server_get_port_() );
 }

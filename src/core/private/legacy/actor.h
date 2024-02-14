@@ -5,7 +5,8 @@
 
 typedef struct NdBranch NdBranch;// common/node
 
-typedef enum ActorType {
+typedef enum ActorType
+{
 	ACTOR_NONE,
 	ACTOR_PLAYER,
 	ACTOR_LIGHT,
@@ -20,20 +21,23 @@ typedef enum ActorType {
 	MAX_ACTOR_TYPES
 } ActorType;
 
-typedef enum ActorMovementType {
+typedef enum ActorMovementType
+{
 	ACTOR_MOVEMENT_PHYSICS,
 
 	MAX_ACTOR_MOVEMENT_TYPES
 } ActorMovementType;
 
-typedef enum ActorCollisionGroup {
+typedef enum ActorCollisionGroup
+{
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_WORLD, 0U ),
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_PLAYER, 1U ),
 	PL_BITFLAG( ACTOR_COLLISION_GROUP_MONSTER, 2U ),
 } ActorCollisionGroup;
 
 typedef struct Actor Actor;
-typedef struct ActorSetup {
+typedef struct ActorSetup
+{
 	const char *id;
 	void ( *Spawn )( Actor *self );
 	void ( *Tick )( Actor *self, void *userData );
@@ -45,7 +49,8 @@ typedef struct ActorSetup {
 	void ( *Deserialize )( Actor *self, NdBranch *nodeTree );
 } ActorSetup;
 
-typedef struct Actor {
+typedef struct Actor
+{
 	PLVector3 position, oldPosition;
 	PLVector3 angles, oldAngles;
 	PLVector3 velocity;
@@ -57,7 +62,7 @@ typedef struct Actor {
 	char tagName[ 64 ];
 
 	/* collision/vis */
-	struct SSAclWorldRoom *sector;
+	struct ApeWorldRoom *sector;
 	ActorMovementType movementType;
 	ActorCollisionGroup collisionGroup;
 	PLCollisionAABB collisionVolume;
@@ -83,7 +88,7 @@ typedef struct Actor {
 	void *userData;
 } Actor;
 
-void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector );
+void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree );
@@ -97,7 +102,7 @@ PLVector3 Act_GetPosition( const Actor *self );
 
 float Act_GetAngle( const Actor *self );
 
-void Act_SetWorldSector( Actor *self, struct SSAclWorldRoom *sector );
+void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector );
 
 void Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
@@ -110,7 +115,7 @@ bool Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-bool Act_IsVisible( Actor *self, SSArlCamera *camera );
+bool Act_IsVisible( Actor *self, ApeCamera *camera );
 
 PLVector3 Act_GetForward( const Actor *self );
 

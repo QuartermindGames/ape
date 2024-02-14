@@ -23,8 +23,8 @@ int main( int argc, char **argv )
 
 	com_initialize();
 
-	PlMountLocalLocation( ss_com_get_app_data_directory() );
-	PlMountLocalLocation( ss_com_get_local_data_directory() );
+	PlMountLocalLocation( com_get_app_data_directory() );
+	PlMountLocalLocation( com_get_local_data_directory() );
 
 	const char *projectName = argv[ 1 ];
 	if ( !com_project_mount( projectName ) )

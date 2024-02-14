@@ -49,7 +49,7 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 	NdBranch *child = ndGetFirstChild( root );
 	if ( ndGetType( child ) != ND_PROPERTY_STRING )
 	{
-		Warning( "Invalid child type found in config!\n" );
+		com_warning_( "Invalid child type found in config!\n" );
 		return;
 	}
 
@@ -61,7 +61,7 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 
 		if ( ( out->subMountLocations[ out->numSubMountLocations ] = PlMountLocation( path ) ) == NULL )
 		{
-			Warning( "Failed to mount \"%s\": %s\n", path, PlGetError() );
+			com_warning_( "Failed to mount \"%s\": %s\n", path, PlGetError() );
 			continue;
 		}
 
@@ -72,11 +72,11 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 static ComProject *deserialize_project( NdBranch *root, const char *name, ComProject *out )
 {
 	PLPath path;
-	PlSetupPath( path, true, "%s/projects/%s", ss_com_get_local_data_directory(), name );
+	PlSetupPath( path, true, "%s/projects/%s", com_get_local_data_directory(), name );
 	out->mountLocation = PlMountLocalLocation( path );
 	if ( out->mountLocation == NULL )
 	{
-		Warning( "Failed to mount project location: %s\n", PlGetError() );
+		com_warning_( "Failed to mount project location: %s\n", PlGetError() );
 		return NULL;
 	}
 
@@ -100,16 +100,16 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 			char baseName[ COM_MAX_PROJECT_BASENAME ];
 			if ( ndGetStr( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
 			{
-				Warning( "Failed to load dependency due to invalid dependency listing!\n" );
+				com_warning_( "Failed to load dependency due to invalid dependency listing!\n" );
 				return NULL;
 			}
 
-			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", ss_com_get_local_data_directory(), baseName, baseName );
+			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), baseName, baseName );
 
 			NdBranch *croot = ndLoadFile( path, "project" );
 			if ( croot == NULL )
 			{
-				Warning( "Failed to load depedency (%s) project file: %s\n", baseName, ndGetErrorMessage() );
+				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, ndGetErrorMessage() );
 				return NULL;
 			}
 
@@ -121,7 +121,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 			ComProject *head = ( out->parent == NULL ) ? out : out->parent;
 			if ( strcmp( head->baseName, baseName ) == 0 )
 			{
-				Warning( "Project is including self as dependency, bailing!\n" );
+				com_warning_( "Project is including self as dependency, bailing!\n" );
 				return NULL;
 			}
 
@@ -132,7 +132,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 			if ( deserialize_project( croot, baseName, head->dependencies[ index ] ) == NULL )
 			{
-				Warning( "Failed to load dependency (%s)!\n", baseName );
+				com_warning_( "Failed to load dependency (%s)!\n", baseName );
 				return NULL;
 			}
 
@@ -140,7 +140,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 			if ( head->numDependencies >= COM_MAX_DEPENDENCIES )
 			{
-				Warning( "Hit dependency limit (%u), bailing on others (this might mean content will be missing!)\n", COM_MAX_DEPENDENCIES );
+				com_warning_( "Hit dependency limit (%u), bailing on others (this might mean content will be missing!)\n", COM_MAX_DEPENDENCIES );
 				break;
 			}
 
@@ -188,35 +188,35 @@ bool com_project_mount( const char *name )
 	assert( !project.isActive );
 	if ( project.isActive )
 	{
-		Warning( "A project is already active! Unmount current project first.\n" );
+		com_warning_( "A project is already active! Unmount current project first.\n" );
 		return false;
 	}
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", ss_com_get_local_data_directory(), name, name );
+	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), name, name );
 
 	NdBranch *root = ndLoadFile( path, "project" );
 	if ( root == NULL )
 	{
-		Warning( "Failed to load project file: %s\n", ndGetErrorMessage() );
+		com_warning_( "Failed to load project file: %s\n", ndGetErrorMessage() );
 		return false;
 	}
 
 	if ( deserialize_project( root, name, &project ) == NULL )
-		ss_com_project_unmount();// call unmount to cleanup
+		com_project_unmount();// call unmount to cleanup
 
 	ndDestroyBranch( root );
 
 	return true;
 }
 
-void ss_com_project_unmount( void )
+void com_project_unmount( void )
 {
 	free_project( &project );
 
 	PL_ZERO_( project );
 }
 
-const char *ss_com_project_get_local_path( void ) { return project.localPath; }
-const char *ss_com_project_get_base_name( void ) { return project.baseName; }
+const char *com_project_get_local_path( void ) { return project.localPath; }
+const char *com_project_get_base_name( void ) { return project.baseName; }
 const char *com_project_get_name( void ) { return project.name; }

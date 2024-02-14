@@ -54,7 +54,7 @@ void ss_game_spawn_world( ApeWorld *world )
 {
 	if ( currentWorld != NULL )
 	{
-		acl_level_destroy( currentWorld );
+		ape_world_destroy( currentWorld );
 		currentWorld = NULL;
 	}
 

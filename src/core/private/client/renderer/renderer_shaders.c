@@ -52,7 +52,8 @@ static void RegisterShaderStage( PLGShaderProgram *program, PLGShaderStageType t
 	PlFree( buffer );
 }
 
-static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
+static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
+{
 	SS_Arl_ShaderProgramIndex program;
 	PL_ZERO_( program );
 
@@ -67,7 +68,7 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root ) {
 		snprintf( program.internalName, sizeof( program.internalName ), "unnamed" );
 	}
 
-	if ( arl_shader_get_by_name( internalName ) != NULL )
+	if ( ape_shader_get_by_name( internalName ) != NULL )
 	{
 		PRINT_WARNING( "Shader program (%s) already registered!\n", internalName );
 		return NULL;
@@ -209,12 +210,12 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
 }
 
-SS_Arl_ShaderProgramIndex *arl_shader_get_by_name( const char *name )
+SS_Arl_ShaderProgramIndex *ape_shader_get_by_name( const char *name )
 {
 	return ( SS_Arl_ShaderProgramIndex * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 }
 
-void ss_arl_initialize_shaders_( void )
+void ape_initialize_shaders_( void )
 {
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
@@ -235,8 +236,9 @@ void ss_arl_initialize_shaders_( void )
 	        [APE_SHADER_DEFAULT_FONT] = "font",
 	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
 	};
-	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i ) {
-		SS_Arl_ShaderProgramIndex *programIndex = arl_shader_get_by_name( defaultShaderNames[ i ] );
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
+	{
+		SS_Arl_ShaderProgramIndex *programIndex = ape_shader_get_by_name( defaultShaderNames[ i ] );
 		if ( programIndex == NULL )
 			PRINT_ERROR( "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 

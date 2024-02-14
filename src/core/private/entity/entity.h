@@ -3,3 +3,5 @@
 #pragma once
 
 #include <yin/core_entity.h>
+
+void ape_register_entity_commands_( void );

@@ -22,14 +22,14 @@ static PLPackage *parse_pkg_file( PLFile *file )
 	header.magic = PlReadInt32( file, false, NULL );
 	if ( header.magic != PKG_MAGIC )
 	{
-		Warning( "Unexpected magic for pkg: %d\n", header.magic );
+		com_warning_( "Unexpected magic for pkg: %d\n", header.magic );
 		return NULL;
 	}
 
 	header.numFiles = PL_READUINT32( file, false, NULL );
 	if ( header.numFiles == 0 )
 	{
-		Warning( "Empty package!\n" );
+		com_warning_( "Empty package!\n" );
 		return NULL;
 	}
 
@@ -57,7 +57,7 @@ static PLPackage *parse_pkg_file( PLFile *file )
 		// now seek to the next file
 		if ( !PlFileSeek( file, ( PLFileOffset ) index->compressedSize, PL_SEEK_CUR ) )
 		{
-			Warning( "Failed to seek to the next file within package: %s\n", PlGetError() );
+			com_warning_( "Failed to seek to the next file within package: %s\n", PlGetError() );
 			package->table_size = ( i + 1 );
 			break;
 		}
@@ -79,7 +79,7 @@ static PLPackage *load_pkg_file( const char *path )
 	return package;
 }
 
-void ss_com_pack_pkg_register_( void )
+void com_pack_pkg_register_( void )
 {
 	PlRegisterPackageLoader( "pkg", load_pkg_file, parse_pkg_file );
 }
@@ -87,7 +87,7 @@ void ss_com_pack_pkg_register_( void )
 /////////////////////////////////////////////////////////////////
 // WRITE
 
-void ss_com_pkg_write_header( FILE *pack, unsigned int numFiles )
+void com_pkg_write_header( FILE *pack, unsigned int numFiles )
 {
 	fseek( pack, 0, SEEK_SET );
 	fwrite( &( PkgHeader ){ .magic = PKG_MAGIC,
@@ -95,7 +95,7 @@ void ss_com_pkg_write_header( FILE *pack, unsigned int numFiles )
 	        PKG_HEADER_SIZE, 1, pack );
 }
 
-void ss_com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size )
+void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size )
 {
 	uint8_t nameLength = ( uint8_t ) strlen( path );
 	fwrite( &nameLength, sizeof( uint8_t ), 1, pack );
@@ -107,7 +107,7 @@ void ss_com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t 
 	if ( compressedData == NULL )
 	{
 		compressedSize = size;
-		Warning( "Failed to compress data: %s\n", PlGetError() );
+		com_warning_( "Failed to compress data: %s\n", PlGetError() );
 	}
 	else if ( compressedSize >= size )
 	{

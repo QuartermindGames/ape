@@ -157,7 +157,7 @@ static void CleanupCallback( PL_UNUSED void *unused0, PL_UNUSED double unused1 )
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void ss_acl_initialize_memory_manager_( void )
+void ape_initialize_memory_manager_( void )
 {
 	PRINT( "Initializing memory manager\n" );
 
@@ -175,7 +175,7 @@ void ss_acl_initialize_memory_manager_( void )
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, CleanupCallback, NULL, MEM_CLEANUP_DELAY );
 }
 
-void ss_ape_shutdown_memory_manager_( void )
+void ape_shutdown_memory_manager_( void )
 {
 	apeFlushUnreferencedResources();
 
@@ -212,7 +212,7 @@ unsigned int apeFlushUnreferencedResources( void )
 	return references;
 }
 
-ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
+ApeMemoryReference *ape_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData )
 {
 	m->cache = apeGetCachedData( id, pool );
 	m->userData = userData;
@@ -222,7 +222,7 @@ ApeMemoryReference *ss_acl_mm_setup_reference( const char *id, uint8_t pool, Ape
 	return m;
 }
 
-void ss_acl_mm_add_reference( ApeMemoryReference *m )
+void ape_mm_add_reference( ApeMemoryReference *m )
 {
 	m->numReferences++;
 	m->timeToLive = ( ape_get_num_ticks() + 1024 );
@@ -273,7 +273,7 @@ static void CleanupTempAllocCallback( void *userData )
 void *apeTempAlloc( ApeMemoryReference *m, size_t size )
 {
 	void *buf = PlMAllocA( size );
-	ss_acl_mm_setup_reference( "temp", 0, m, CleanupTempAllocCallback, buf );
+	ape_mm_setup_reference( "temp", 0, m, CleanupTempAllocCallback, buf );
 	return buf;
 }
 

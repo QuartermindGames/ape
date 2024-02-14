@@ -6,13 +6,13 @@
 
 namespace ss::forge
 {
-	class ViewportFrame : public FXVerticalFrame
+	class viewport_frame : public FXVerticalFrame
 	{
-		FXDECLARE( ViewportFrame )
+		FXDECLARE( viewport_frame )
 
 	public:
-		ViewportFrame( FXComposite *composite, FXGLVisual *visual, SSArlCameraMode viewMode );
-		virtual ~ViewportFrame();
+		viewport_frame( FXComposite *composite, FXGLVisual *visual, ApeCameraViewMode viewMode );
+		virtual ~viewport_frame();
 
 		void create() override;
 
@@ -22,6 +22,17 @@ namespace ss::forge
 			ID_CANVAS,
 			ID_TOGGLE_VIEW,
 			ID_TOGGLE_DRAW,
+
+			ID_PERSPECTIVE,
+			ID_TOP,
+			ID_LEFT,
+			ID_FRONT,
+
+			ID_WIREFRAME,
+			ID_SOLID,
+			ID_TEXTURED,
+			ID_LIT,
+
 			ID_LAST
 		};
 
@@ -36,29 +47,32 @@ namespace ss::forge
 		bool _isActive{ true };
 
 	public:
+		long on_change_camera_modes( FXObject *object, FXSelector, void * );
+
 		long on_chore( FXObject *, FXSelector, void * );
+		long on_zoom( FXObject *, FXSelector, void * );
 		long on_motion( FXObject *, FXSelector, void *ptr );
 		long on_right_click( FXObject *, FXSelector, void *ptr );
 
 	private:
-		inline ViewportFrame() = default;
+		inline viewport_frame() = default;
 
 		FXToolBar *toolBar_;
 		FXGLCanvas *canvas_;
 		FXGLVisual *visual_;
 		FXGLContext *context_;
 
-		FXToggleButton *viewModeButtons_[ SS_ARL_CAMERA_MAX_MODES ];
-		FXToggleButton *drawModeButtons_[ SS_ARL_CAMERA_MAX_DRAW_MODES ];
+		FXToggleButton *viewModeButtons_[ APE_CAMERA_MAX_MODES ];
+		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
 
-		ApeCameraDrawMode drawMode_{ SS_ARL_CAMERA_DRAW_MODE_WIREFRAME };
-		SSArlCameraMode viewMode_{ SS_ARL_CAMERA_MODE_INVALID };
+		ApeCameraDrawMode drawMode_{ APE_CAMERA_DRAW_MODE_WIREFRAME };
+		ApeCameraViewMode viewMode_{ APE_CAMERA_MODE_INVALID };
 
 		float zoomScale_{ 1.0f };
 
 	public:
-		SSArlViewport *engineViewport{};
-		SSArlCamera *camera{};
+		ApeViewport *internalViewport_{};
+		ApeCamera *camera{};
 		static unsigned int cameraTagNum;
 
 	private:

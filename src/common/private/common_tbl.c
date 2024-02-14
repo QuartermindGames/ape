@@ -14,7 +14,6 @@
 
 const char *com_tbl_get_token( const char **p, char *buf, size_t size )
 {
-
 }
 
 bool com_tbl_validate_type( const char **p, const char *type )

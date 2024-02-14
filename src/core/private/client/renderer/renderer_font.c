@@ -4,11 +4,11 @@
 #include "renderer_font.h"
 #include "renderer.h"
 
-static SS_Arl_BitmapFont *defaultFont, *defaultFontSmall;
+static ApeBitmapFont *defaultFont, *defaultFontSmall;
 
 static void DestroyBitmapFont( void *userData )
 {
-	SS_Arl_BitmapFont *font = userData;
+	ApeBitmapFont *font = userData;
 	assert( font != NULL );
 
 	ss_arl_material_release( font->material );
@@ -18,7 +18,7 @@ static void DestroyBitmapFont( void *userData )
 	PlFree( font );
 }
 
-void ss_arl_bitmap_font_batch_character( const SS_Arl_BitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
+void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
 {
 	int row = ( character - font->start ) / ( font->w / font->cw );
 	int col = ( character - font->start ) % ( font->w / font->cw );
@@ -41,7 +41,7 @@ void ss_arl_bitmap_font_batch_character( const SS_Arl_BitmapFont *font, float x,
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void ss_arl_bitmap_font_batch_string( const SS_Arl_BitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
+void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
 {
 	if ( length == 0 )
 		return;
@@ -74,7 +74,7 @@ void ss_arl_bitmap_font_batch_string( const SS_Arl_BitmapFont *font, float x, fl
 /**
  * Draw a single bitmap character at the specified coordinates.
  */
-void ss_arl_bitmap_font_draw_character( SS_Arl_BitmapFont *font, float x, float y, float scale, PLColour colour, char character )
+void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, float scale, PLColour colour, char character )
 {
 	if ( scale <= 0 )
 		return;
@@ -89,7 +89,7 @@ void ss_arl_bitmap_font_draw_character( SS_Arl_BitmapFont *font, float x, float 
 
 	/* setup our render pass */
 
-	ss_arl_bitmap_font_begin_draw( font );
+	ape_bitmap_font_begin_draw( font );
 
 	ss_arl_bitmap_font_batch_character( font, x, y, scale, colour, character );
 
@@ -103,7 +103,7 @@ void ss_arl_bitmap_font_draw_character( SS_Arl_BitmapFont *font, float x, float 
 	PlPopMatrix();
 }
 
-void ss_arl_bitmap_font_draw_string( SS_Arl_BitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
+void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
 {
 	if ( scale == 0.0f )
 		return;
@@ -112,21 +112,21 @@ void ss_arl_bitmap_font_draw_string( SS_Arl_BitmapFont *font, float x, float y, 
 	if ( numChars == 0 )
 		return;
 
-	ss_arl_bitmap_font_begin_draw( font );
+	ape_bitmap_font_begin_draw( font );
 
 	if ( shadow )
-		ss_arl_bitmap_font_batch_string( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
+		ape_bitmap_font_batch_string( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
 
-	ss_arl_bitmap_font_batch_string( font, x, y, scale, colour, msg, numChars, false );
+	ape_bitmap_font_batch_string( font, x, y, scale, colour, msg, numChars, false );
 	ss_arl_bitmap_font_draw( font );
 }
 
-void ss_arl_bitmap_font_begin_draw( SS_Arl_BitmapFont *font )
+void ape_bitmap_font_begin_draw( ApeBitmapFont *font )
 {
 	PlgClearMesh( font->mesh );
 }
 
-void ss_arl_bitmap_font_draw( SS_Arl_BitmapFont *font )
+void ss_arl_bitmap_font_draw( ApeBitmapFont *font )
 {
 	//PlMatrixMode( PL_MODELVIEW_MATRIX );
 	//PlPushMatrix();
@@ -138,7 +138,7 @@ void ss_arl_bitmap_font_draw( SS_Arl_BitmapFont *font )
 	//PlPopMatrix();
 }
 
-void ss_arl_initialize_bitmap_fonts_( void )
+void ape_initialize_bitmap_fonts_( void )
 {
 	defaultFont = ss_arl_bitmap_font_cache( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
 	defaultFontSmall = ss_arl_bitmap_font_cache( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
@@ -147,18 +147,18 @@ void ss_arl_initialize_bitmap_fonts_( void )
 		PRINT_ERROR( "Failed to load default fonts!\n" );
 }
 
-void ss_arl_shutdown_bitmap_fonts_( void )
+void ape_shutdown_bitmap_fonts_( void )
 {
 	ss_arl_bitmap_font_release( defaultFont );
 	defaultFont = NULL;
 }
 
-SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
+ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	SS_Arl_BitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
+	ApeBitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
 	if ( font != NULL )
 	{
-		ss_acl_mm_add_reference( &font->mem );
+		ape_mm_add_reference( &font->mem );
 		return font;
 	}
 
@@ -177,7 +177,7 @@ SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, in
 		return NULL;
 	}
 
-	font = PlMAlloc( sizeof( SS_Arl_BitmapFont ), true );
+	font = PlMAlloc( sizeof( ApeBitmapFont ), true );
 	font->material = material;
 	font->mesh = mesh;
 	font->w = w;
@@ -191,16 +191,16 @@ SS_Arl_BitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, in
 
 	apeAddToCachePool( materialPath, APE_CACHE_POOL_FONTS, font );
 
-	ss_acl_mm_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
-	ss_acl_mm_add_reference( &font->mem );
+	ape_mm_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
+	ape_mm_add_reference( &font->mem );
 
 	return font;
 }
 
-void ss_arl_bitmap_font_release( SS_Arl_BitmapFont *font )
+void ss_arl_bitmap_font_release( ApeBitmapFont *font )
 {
 	ss_acl_mm_release( &font->mem );
 }
 
-SS_Arl_BitmapFont *ss_arl_get_default_bitmap_font( void ) { return defaultFont; }
-SS_Arl_BitmapFont *ss_arl_get_default_small_bitmap_font( void ) { return defaultFontSmall; }
+ApeBitmapFont *ss_arl_get_default_bitmap_font( void ) { return defaultFont; }
+ApeBitmapFont *ape_get_default_small_bitmap_font( void ) { return defaultFontSmall; }

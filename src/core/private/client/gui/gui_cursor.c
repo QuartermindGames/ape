@@ -7,11 +7,13 @@
  * PRIVATE
  ****************************************/
 
-static void DrawCursorBackground( GuiPanel *self, bool *override ) {
+static void DrawCursorBackground( GuiPanel *self, bool *override )
+{
 	*override = false;
 }
 
-static void TickCursor( GuiPanel *self, bool *override ) {
+static void TickCursor( GuiPanel *self, bool *override )
+{
 	*override = false;
 	guiSetPanelPosition( self, guiState.mousePos.x, guiState.mousePos.y );
 }
@@ -20,8 +22,10 @@ static void TickCursor( GuiPanel *self, bool *override ) {
  * PUBLIC
  ****************************************/
 
-GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y ) {
-	if ( parent != NULL && parent->cursor != NULL ) {
+GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y )
+{
+	if ( parent != NULL && parent->cursor != NULL )
+	{
 		GUI_WARNING( "Only one cursor allowed per panel!\n" );
 		return NULL;
 	}
@@ -36,7 +40,8 @@ GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y ) {
 	return panel;
 }
 
-void guiDestroyCursor( GuiPanel *self ) {
+void guiDestroyCursor( GuiPanel *self )
+{
 	if ( self->parent != NULL )
 		self->parent->cursor = NULL;
 

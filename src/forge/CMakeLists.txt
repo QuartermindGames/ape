@@ -10,13 +10,13 @@ add_library(Forge STATIC
         AboutDialog.cpp
         ProjectDialog.cpp
         ConsoleFrame.cpp
-        ViewportFrame.cpp
+        forge_viewport_frame.cpp
         MainWindow.cpp
 
         editors/EditorTab.cpp editors/EditorTab.h
-        editors/MaterialEditor.cpp editors/MaterialEditor.h
+        editors/editor_material.cpp editors/editor_material.h
         editors/ModelEditor.cpp editors/ModelEditor.h
-        editors/WorldEditor.cpp editors/WorldEditor.h
+        editors/editor_world.cpp editors/editor_world.h
 )
 
 add_dependencies(Forge

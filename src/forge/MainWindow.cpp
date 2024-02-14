@@ -4,9 +4,9 @@
 #include "MainWindow.h"
 #include "AboutDialog.h"
 
-#include "editors/WorldEditor.h"
+#include "editors/editor_world.h"
 #include "editors/ModelEditor.h"
-#include "editors/MaterialEditor.h"
+#include "editors/editor_material.h"
 
 #include "common_project.h"
 
@@ -74,7 +74,9 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCommand( subMenuPane, "Import Texture...\t\tImport an existing texture.", nullptr, this, 0 );
 	subMenu->setMenu( subMenuPane );
 	if ( !isCookAvailable )
+	{
 		subMenu->disable();
+	}
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "&About\t\tOpen about dialog.", nullptr, this, ID_ABOUT );
@@ -92,7 +94,7 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 	consoleFrame = new ss::forge::ConsoleFrame( verticalSplitter );
 
 	//HACK: make the engine initialisation happy...
-	auto *dummy = new ViewportFrame( this, get_shared_gl_visual(), SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
 	dummy->set_active( false );
 	dummy->hide();
 
@@ -117,14 +119,14 @@ long ss::forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 {
-	ApeWorld *world = ss_ape_world_create();
+	ApeWorld *world = ape_world_create();
 	if ( world == NULL )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world!\nSee logs for details." );
 		return FALSE;
 	}
 
-	auto tab = _tabs.emplace_back( new WorldEditor( _tabBook, "", world ) );
+	auto tab = _tabs.emplace_back( new editor_world( _tabBook, "", world ) );
 	tab->create();
 
 	_tabBook->layout();
@@ -134,12 +136,12 @@ long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 {
-	const char *path = ss_com_project_get_local_path();
+	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
 	if ( filename.empty() )
 		return FALSE;
 
-	ApeWorld *world = ss_ape_world_load( filename.text() );
+	ApeWorld *world = ape_world_load( filename.text() );
 	if ( world == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK,
@@ -150,7 +152,7 @@ long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	auto tab = _tabs.emplace_back( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
+	auto tab = _tabs.emplace_back( new editor_world( _tabBook, PlGetFileName( filename.text() ), world ) );
 	tab->create();
 
 	_tabBook->layout();
@@ -160,7 +162,7 @@ long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	const char *path = ss_com_project_get_local_path();
+	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
 	if ( filename.empty() )
 		return false;
@@ -175,7 +177,7 @@ long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 
 long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 {
-	const char *path = ss_com_project_get_local_path();
+	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
 	if ( filename.empty() )
 		return false;
@@ -187,7 +189,7 @@ long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	auto tab = _tabs.emplace_back( new MaterialEditor( _tabBook, PlGetFileName( filename.text() ), material ) );
+	auto tab = _tabs.emplace_back( new editor_material( _tabBook, PlGetFileName( filename.text() ), material ) );
 	tab->create();
 
 	_tabBook->layout();

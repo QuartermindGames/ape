@@ -4,13 +4,13 @@
 
 #include "ModelEditor.h"
 
-#include "../ViewportFrame.h"
+#include "../forge_viewport_frame.h"
 
 FXDEFMAP( ss::forge::ModelEditor )
-modelEditorMap[]={
+modelEditorMap[] = {
 
 };
-FXIMPLEMENT(ss::forge::ModelEditor, FXTabItem, modelEditorMap, ARRAYNUMBER( modelEditorMap ) )
+FXIMPLEMENT( ss::forge::ModelEditor, FXTabItem, modelEditorMap, ARRAYNUMBER( modelEditorMap ) )
 
 ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName, SSApeModel *model ) : FXTabItem( owner, "Model Editor" )
 {
@@ -21,10 +21,9 @@ ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName
 	auto *toolbar = new FXToolBar( frame, FRAME_RAISED | FRAME_THICK );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
-	_editModeButtons[ EDITOR_GEOMETRYMODE_BRUSH ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/brush_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	_editModeButtons[ EDITOR_GEOMETRYMODE_VERTEX ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	_editModeButtons[ EDITOR_GEOMETRYMODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	_editModeButtons[ EDITOR_GEOMETRYMODE_FACE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	//editModeButtons[ currentEditMode ]->setState( true );
 
 	new FXVerticalSeparator( toolbar );
@@ -34,9 +33,9 @@ ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
-	unsigned int mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
+	unsigned int mode = APE_CAMERA_MODE_PERSPECTIVE;
 	auto *hs = new FX4Splitter( frame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewport = new ViewportFrame( hs, get_shared_gl_visual(), ( SSArlCameraMode ) mode++ );
+	_viewport = new viewport_frame( hs, get_shared_gl_visual(), ( ApeCameraViewMode ) mode++ );
 
 	frame->create();
 

@@ -7,12 +7,14 @@
 
 typedef struct Serializer Serializer;
 
-typedef enum SerializerMode {
+typedef enum SerializerMode
+{
 	SERIALIZER_MODE_READ,
 	SERIALIZER_MODE_WRITE,
 } SerializerMode;
 
-typedef enum SerializerDataFormat {
+typedef enum SerializerDataFormat
+{
 	SERIALIZER_DATA_FORMAT_I32,
 	SERIALIZER_DATA_FORMAT_F32,
 	SERIALIZER_DATA_FORMAT_STRING,

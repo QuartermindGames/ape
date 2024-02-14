@@ -11,13 +11,15 @@
 
 #include "client/renderer/renderer.h"
 
-static void Act_DrawBasic( Actor *self, void *userData ) {
+static void Act_DrawBasic( Actor *self, void *userData )
+{
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 
 	arl_draw_axis_pivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ), 1.0f );
 }
 
-void Monster_Collide( struct Actor *self, struct Actor *other, float force ) {
+void Monster_Collide( struct Actor *self, struct Actor *other, float force )
+{
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
@@ -52,14 +54,16 @@ const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 
 static PLLinkedList *actorList;
 
-Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree ) {
+Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
+{
 	Actor *actor = PL_NEW( Actor );
 	actor->node = PlInsertLinkedListNode( actorList, actor );
 	actor->setup = *actorSpawnSetup[ type ];
 	actor->type = type;
 
 	actor->geoColliders = PlCreateLinkedList();
-	if ( actor->geoColliders == NULL ) {
+	if ( actor->geoColliders == NULL )
+	{
 		PRINT_ERROR( "Failed to create colliders list!\nPL: %s\n", PlGetError() );
 	}
 
@@ -71,15 +75,19 @@ Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree ) {
 	if ( actor->setup.Spawn != NULL )
 		actor->setup.Spawn( actor );
 
-	if ( nodeTree != NULL ) {
+	if ( nodeTree != NULL )
+	{
 		NdBranch *node;
-		if ( ( node = ndGetChildByName( nodeTree, "tagName" ) ) != NULL ) {
+		if ( ( node = ndGetChildByName( nodeTree, "tagName" ) ) != NULL )
+		{
 			ndGetStr( node, actor->tagName, sizeof( actor->tagName ) );
 		}
-		if ( ( node = ndGetChildByName( nodeTree, "position" ) ) != NULL ) {
+		if ( ( node = ndGetChildByName( nodeTree, "position" ) ) != NULL )
+		{
 			ndDS_DeserializeVector3( node, &actor->position );
 		}
-		if ( ( node = ndGetChildByName( nodeTree, "angles" ) ) != NULL ) {
+		if ( ( node = ndGetChildByName( nodeTree, "angles" ) ) != NULL )
+		{
 			ndDS_DeserializeVector3( node, &actor->angles );
 		}
 
@@ -90,9 +98,12 @@ Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree ) {
 	return actor;
 }
 
-Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree ) {
-	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i ) {
-		if ( actorSpawnSetup[ i ] == NULL || strcmp( actorSpawnSetup[ i ]->id, id ) != 0 ) {
+Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree )
+{
+	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
+	{
+		if ( actorSpawnSetup[ i ] == NULL || strcmp( actorSpawnSetup[ i ]->id, id ) != 0 )
+		{
 			continue;
 		}
 
@@ -103,8 +114,10 @@ Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree ) {
 	return NULL;
 }
 
-Actor *Act_DestroyActor( Actor *self ) {
-	if ( self->setup.Destroy != NULL ) {
+Actor *Act_DestroyActor( Actor *self )
+{
+	if ( self->setup.Destroy != NULL )
+	{
 		self->setup.Destroy( self, self->userData );
 	}
 
@@ -123,7 +136,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct SSAclWorldRoom *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
 
 void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -131,7 +144,8 @@ float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
 void Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
 void *Act_GetUserData( Actor *self ) { return self->userData; }
 
-void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs ) {
+void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
+{
 	if ( mins.x > maxs.x || mins.y > maxs.y || mins.z > maxs.z )
 		PRINT_ERROR( "Invalid bounds for actor (mins %s, maxs %s)!\n", PlPrintVector3( &mins, PL_VAR_I32 ), PlPrintVector3( &maxs, PL_VAR_I32 ) );
 
@@ -139,7 +153,8 @@ void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs ) {
 	self->collisionVolume.mins = mins;
 }
 
-void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs ) {
+void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs )
+{
 	if ( mins->x > maxs->x || mins->y > maxs->y || mins->z > maxs->z )
 		PRINT_ERROR( "Invalid visibility volume for actor (mins %s, maxs %s)!\n", PlPrintVector3( mins, PL_VAR_I32 ), PlPrintVector3( maxs, PL_VAR_I32 ) );
 
@@ -147,7 +162,8 @@ void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector
 	self->visibilityVolume.mins = *mins;
 }
 
-PLVector3 Act_GetForward( const Actor *self ) {
+PLVector3 Act_GetForward( const Actor *self )
+{
 	return self->forward;
 }
 
@@ -155,25 +171,30 @@ PLVector3 Act_GetForward( const Actor *self ) {
  * COLLISION
  ****************************************/
 
-bool Act_IsColliding( Actor *self, Actor *other ) {
+bool Act_IsColliding( Actor *self, Actor *other )
+{
 	// todo: we need to be smarter, what about cases where an actor is crossing
 	//  the boundary?
 	return PlIsAabbIntersecting( &self->collisionVolume, &other->collisionVolume );
 }
 
-Actor *Act_CheckCollisions( Actor *self ) {
+Actor *Act_CheckCollisions( Actor *self )
+{
 	/* in the future, perhaps it's worth tracking multiple lists per sector? */
 	PLLinkedListNode *curNode = PlGetFirstNode( actorList );
-	while ( curNode != NULL ) {
+	while ( curNode != NULL )
+	{
 		Actor *actor = PlGetLinkedListNodeUserData( curNode );
-		if ( actor == NULL ) {
+		if ( actor == NULL )
+		{
 			/* Destroyed actor */
 			curNode = PlGetNextLinkedListNode( curNode );
 			continue;
 		}
 
 		/* "don't have time to play with myself" */
-		if ( actor == self ) {
+		if ( actor == self )
+		{
 			curNode = PlGetNextLinkedListNode( curNode );
 			continue;
 		}
@@ -191,7 +212,8 @@ Actor *Act_CheckCollisions( Actor *self ) {
  * RENDERING
  ****************************************/
 
-bool Act_IsVisible( Actor *self, SSArlCamera *camera ) {
+bool Act_IsVisible( Actor *self, ApeCamera *camera )
+{
 	if ( camera == NULL )
 		return false;
 
@@ -205,30 +227,38 @@ bool Act_IsVisible( Actor *self, SSArlCamera *camera ) {
 #endif
 }
 
-void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector ) {
+void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
+{
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
-	while ( index != NULL ) {
+	while ( index != NULL )
+	{
 		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
 		Actor *actor = PlGetLinkedListNodeUserData( index );
-		if ( actor == NULL || actor->sector != sector ) {
+		if ( actor == NULL || actor->sector != sector )
+		{
 			index = next;
 			continue;
 		}
 
-		if ( Act_IsVisible( actor, camera ) ) {
+		if ( Act_IsVisible( actor, camera ) )
+		{
 			if ( actor->setup.Draw )
 				actor->setup.Draw( actor, actor->userData );
 		}
 
 #if 1
 		PL_GET_CVAR( "r/showActorBounds", showActorBounds );
-		if ( showActorBounds->b_value ) {
+		if ( showActorBounds->b_value )
+		{
 			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 			PLColour boxColour;
-			if ( Act_IsVisible( actor, camera ) ) {
+			if ( Act_IsVisible( actor, camera ) )
+			{
 				boxColour = PL_COLOUR_GREEN;
-			} else {
+			}
+			else
+			{
 				boxColour = PL_COLOUR_RED;
 			}
 
@@ -239,12 +269,14 @@ void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector ) {
 
 #	if 1
 			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );
-			while ( colliderNode != NULL ) {
-				SSAclWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
+			while ( colliderNode != NULL )
+			{
+				ApeWorldFace *face = PlGetLinkedListNodeUserData( colliderNode );
 
 				PLCollisionPlane plane = PlSetupCollisionPlane( face->bounds.absOrigin, face->normal );
 				PLCollision collision = PlIsSphereIntersectingPlane( &PlSetupCollisionSphere( actor->position, 16.0f ), &plane );
-				if ( collision.penetration > 0.0f ) {
+				if ( collision.penetration > 0.0f )
+				{
 					PlgDrawBoundingVolume( &face->bounds, &PL_COLOUR_RED );
 
 					arl_draw_axis_pivot( collision.contactPoint, plane.normal, 1.0f );
@@ -252,7 +284,9 @@ void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector ) {
 					PLMatrix4 transform = PlMatrix4Identity();
 					PlgDrawSimpleLine( transform, face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( plane.normal, 64.0f ) ), PLColour( 255, 255, 0, 255 ) );
 					PlgDrawSimpleLine( transform, actor->collisionVolume.origin, collision.contactPoint, PLColour( 0, 255, 0, 255 ) );
-				} else {
+				}
+				else
+				{
 					PlgDrawBoundingVolume( &face->bounds, &PL_COLOUR_GREEN );
 				}
 
@@ -267,27 +301,34 @@ void Act_DrawActors( SSArlCamera *camera, SSAclWorldRoom *sector ) {
 }
 
 #define GRAVITY 7.0f
-void Act_TickActors( void *userData, double delta ) {
+void Act_TickActors( void *userData, double delta )
+{
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
-	while ( index != NULL ) {
+	while ( index != NULL )
+	{
 		PLLinkedListNode *next = PlGetNextLinkedListNode( index );
 		Actor *actor = PlGetLinkedListNodeUserData( index );
-		if ( actor == NULL ) {
+		if ( actor == NULL )
+		{
 			PlDestroyLinkedListNode( index );
 			index = next;
 
 			continue;
 		}
 
-		if ( actor->movementType == ACTOR_MOVEMENT_PHYSICS ) {
+		if ( actor->movementType == ACTOR_MOVEMENT_PHYSICS )
+		{
 			static const float friction = 4.0f;
-			if ( actor->velocity.x != 0 ) {
+			if ( actor->velocity.x != 0 )
+			{
 				actor->velocity.x -= ( actor->velocity.x / ( friction - ( float ) delta ) );
 			}
-			if ( actor->velocity.y != 0 ) {
+			if ( actor->velocity.y != 0 )
+			{
 				actor->velocity.y -= ( actor->velocity.y / ( friction - ( float ) delta ) );
 			}
-			if ( actor->velocity.z != 0 ) {
+			if ( actor->velocity.z != 0 )
+			{
 				actor->velocity.z -= ( actor->velocity.z / ( friction - ( float ) delta ) );
 			}
 
@@ -306,12 +347,15 @@ void Act_TickActors( void *userData, double delta ) {
 		actor->collisionVolume.origin = nPos;
 
 		/* check actor vs actor collision */
-		if ( actor->setup.Collide != NULL ) {
+		if ( actor->setup.Collide != NULL )
+		{
 			Actor *collider = Act_CheckCollisions( actor );
-			if ( collider != NULL && collider->setup.Collide != NULL ) {
+			if ( collider != NULL && collider->setup.Collide != NULL )
+			{
 				actor->setup.Collide( actor, collider, actor->userData );
 
-				if ( PlGetLinkedListNodeUserData( index ) == NULL ) {
+				if ( PlGetLinkedListNodeUserData( index ) == NULL )
+				{
 					/* Actor was destroyed by collision. */
 					continue;
 				}
@@ -360,7 +404,8 @@ void Act_TickActors( void *userData, double delta ) {
 		}
 #endif
 
-		if ( actor->setup.Tick != NULL ) {
+		if ( actor->setup.Tick != NULL )
+		{
 			actor->setup.Tick( actor, actor->userData );
 		}
 
@@ -370,9 +415,11 @@ void Act_TickActors( void *userData, double delta ) {
 	apePushScheduledTask( "actor_tick", Act_TickActors, NULL, delta );
 }
 
-Actor *Act_GetByTag( const char *tag, Actor *start ) {
+Actor *Act_GetByTag( const char *tag, Actor *start )
+{
 	PLLinkedListNode *node = ( start == NULL ) ? PlGetFirstNode( actorList ) : PlGetNextLinkedListNode( start->node );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		Actor *actor = PlGetLinkedListNodeUserData( node );
 		if ( actor != NULL && strncmp( tag, actor->tagName, sizeof( actor->tagName ) ) == 0 )
 			return actor;

@@ -15,17 +15,17 @@
  */
 
 #define MAX_VIEWPORTS 16
-static SSArlViewport *viewports[ MAX_VIEWPORTS ];
+static ApeViewport *viewports[ MAX_VIEWPORTS ];
 static bool isInitialized = false;
 
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
-SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void *windowHandle )
+ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle )
 {
 	if ( !isInitialized )
 	{
-		PL_ZERO( viewports, sizeof( SSArlViewport * ) * MAX_VIEWPORTS );
+		PL_ZERO( viewports, sizeof( ApeViewport * ) * MAX_VIEWPORTS );
 		isInitialized = true;
 	}
 
@@ -44,21 +44,22 @@ SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void
 		return NULL;
 	}
 
-	viewports[ i ] = PL_NEW( SSArlViewport );
+	viewports[ i ] = PL_NEW( ApeViewport );
 	viewports[ i ]->x = x;
 	viewports[ i ]->y = y;
 	viewports[ i ]->width = width;
 	viewports[ i ]->height = height;
 	viewports[ i ]->index = i;
 	viewports[ i ]->windowHandle = windowHandle;
+	viewports[ i ]->zoom = 1.0f;
 
 	char viewportTag[ 64 ];
 	snprintf( viewportTag, sizeof( viewportTag ), "viewport_%u", i );
-	viewports[ i ]->renderTarget = ss_arl_render_target_create( viewportTag,
-	                                                            width, height,
-	                                                            PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                                            PLG_BUFFER_COLOUR,
-	                                                            PLG_TEXTURE_FILTER_LINEAR );
+	viewports[ i ]->renderTarget = ape_render_target_create( viewportTag,
+	                                                         width, height,
+	                                                         PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                         PLG_BUFFER_COLOUR,
+	                                                         PLG_TEXTURE_FILTER_LINEAR );
 	if ( viewports[ i ]->renderTarget == NULL )
 	{
 		PRINT_WARNING( "Failed to create render target for viewport!\n" );
@@ -68,14 +69,14 @@ SSArlViewport *ss_arl_viewport_create( int x, int y, int width, int height, void
 	return viewports[ i ];
 }
 
-void ss_arl_viewport_destroy( SSArlViewport *viewport )
+void ape_viewport_destroy( ApeViewport *viewport )
 {
 	if ( viewport == NULL )
 		return;
 
 	if ( viewport->renderTarget != NULL )
 	{
-		ss_arl_render_target_release( viewport->renderTarget );
+		ape_render_target_release( viewport->renderTarget );
 		viewport->renderTarget = NULL;
 	}
 
@@ -87,7 +88,7 @@ void ss_arl_viewport_destroy( SSArlViewport *viewport )
 /**
  * Returns the viewport by the given slot.
  */
-SSArlViewport *ss_arl_get_viewport_by_slot( unsigned int slot )
+ApeViewport *ape_get_viewport_by_slot( unsigned int slot )
 {
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS )
@@ -99,20 +100,20 @@ SSArlViewport *ss_arl_get_viewport_by_slot( unsigned int slot )
 	return viewports[ slot ];
 }
 
-void ss_arl_viewport_set_camera( SSArlViewport *viewport, SSArlCamera *camera )
+void ape_viewport_set_camera( ApeViewport *viewport, ApeCamera *camera )
 {
 	viewport->camera = camera;
 }
 
-SSArlCamera *ss_arl_viewport_get_camera( SSArlViewport *viewport ) { return viewport->camera; }
+ApeCamera *ape_viewport_get_camera( ApeViewport *viewport ) { return viewport->camera; }
 
-void ss_arl_viewport_set_size( SSArlViewport *viewport, int width, int height )
+void ape_viewport_set_size( ApeViewport *viewport, int width, int height )
 {
 	viewport->width = width;
 	viewport->height = height;
 }
 
-void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *height )
+void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height )
 {
 	*width = viewport->width;
 	*height = viewport->height;
@@ -121,7 +122,7 @@ void ss_arl_viewport_get_size( const SSArlViewport *viewport, int *width, int *h
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int ss_arl_viewport_get_framerate( SSArlViewport *viewport )
+unsigned int ape_viewport_get_framerate( ApeViewport *viewport )
 {
 	if ( viewport->perf.frameIndex == 0 )
 	{
@@ -138,23 +139,23 @@ unsigned int ss_arl_viewport_get_framerate( SSArlViewport *viewport )
 	return viewport->perf.lastFramerate;
 }
 
-SSArlRenderTarget *ss_arl_viewport_get_render_target( SSArlViewport *viewport )
+ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *viewport )
 {
 	return viewport->renderTarget;
 }
 
-void ss_arl_viewport_make_active( SSArlViewport *viewport )
+void ape_viewport_make_active( ApeViewport *viewport )
 {
-	SSArlRenderTarget *target = ss_arl_viewport_get_render_target( viewport );
+	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
 	assert( target != NULL );
 	if ( target == NULL )
 		return;
 
-	ss_arl_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	if ( viewport->camera != NULL )
-		ss_arl_camera_make_active( viewport->camera );
+		ape_camera_make_active( viewport->camera );
 }

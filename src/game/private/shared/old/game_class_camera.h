@@ -2,7 +2,8 @@
 
 #pragma once
 
-typedef struct GameCameraEntityClass {
+typedef struct GameCameraEntityClass
+{
 	ApeCamera *camera;
 	bool isActive;
 	ApeEntityComponent *transform;

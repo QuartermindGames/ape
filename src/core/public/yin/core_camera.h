@@ -3,66 +3,71 @@
 
 #pragma once
 
-typedef enum SSArlCameraMode
+typedef enum ApeCameraViewMode
 {
-	SS_ARL_CAMERA_MODE_INVALID = -1,
+	APE_CAMERA_MODE_INVALID = -1,
 
 	// basic view modes
-	SS_ARL_CAMERA_MODE_PERSPECTIVE,
-	SS_ARL_CAMERA_MODE_ISOMETRIC,
+	APE_CAMERA_MODE_PERSPECTIVE,
+	APE_CAMERA_MODE_ISOMETRIC,
 
 	// editor modes
-	SS_ARL_CAMERA_MODE_TOP,
-	SS_ARL_CAMERA_MODE_LEFT,
-	SS_ARL_CAMERA_MODE_FRONT,
+	APE_CAMERA_MODE_TOP,
+	APE_CAMERA_MODE_LEFT,
+	APE_CAMERA_MODE_FRONT,
 
-	SS_ARL_CAMERA_MAX_MODES
-} SSArlCameraMode;
+	APE_CAMERA_MAX_MODES
+} ApeCameraViewMode;
 
 typedef enum ApeCameraDrawMode
 {
-	// "basic" draw modes
-	SS_ARL_CAMERA_DRAW_MODE_WIREFRAME,
-	SS_ARL_CAMERA_DRAW_MODE_SOLID,
-	SS_ARL_CAMERA_DRAW_MODE_TEXTURED,
-	// and "complete" - uses material system
-	SS_ARL_CAMERA_DRAW_MODE_SHADED,
+	APE_CAMERA_DRAW_MODE_INVALID = -1,
 
-	SS_ARL_CAMERA_MAX_DRAW_MODES
+	// "basic" draw modes
+	APE_CAMERA_DRAW_MODE_WIREFRAME,
+	APE_CAMERA_DRAW_MODE_SOLID,
+	APE_CAMERA_DRAW_MODE_TEXTURED,
+	// and "complete" - uses material system
+	APE_CAMERA_DRAW_MODE_SHADED,
+
+	APE_CAMERA_MAX_DRAW_MODES
 } ApeCameraDrawMode;
 
 
 PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
-typedef struct SSAclWorldRoom SSAclWorldRoom;
-typedef struct SSArlCamera SSArlCamera;
+typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeCamera ApeCamera;
 
-SSArlCamera *ss_arl_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, SSArlCameraMode cameraMode );
-void ss_arl_camera_destroy( SSArlCamera *camera );
-void ss_arl_camera_set_position( SSArlCamera *camera, const PLVector3 *position );
-void ss_arl_camera_set_angles( SSArlCamera *camera, const PLVector3 *angles );
+ApeCamera *ape_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode );
+void ape_camera_destroy( ApeCamera *camera );
+void ape_camera_set_position( ApeCamera *camera, const PLVector3 *position );
+void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles );
 
-PLVector3 ss_arl_camera_get_position( const SSArlCamera *camera );
-PLVector3 ss_arl_camera_get_angles( const SSArlCamera *camera );
-PLVector3 ss_arl_camera_get_forward( const SSArlCamera *camera );
+PLVector3 ape_camera_get_position( const ApeCamera *camera );
+PLVector3 ape_camera_get_angles( const ApeCamera *camera );
+PLVector3 ape_camera_get_forward( const ApeCamera *camera );
 
-void ss_arl_camera_make_active( SSArlCamera *camera );
+void ape_camera_make_active( ApeCamera *camera );
 
-void ss_arl_camera_assign_world( SSArlCamera *camera, ApeWorld *world );
-ApeWorld *ss_arl_camera_get_world( SSArlCamera *camera );
+void ape_camera_assign_world( ApeCamera *camera, ApeWorld *world );
+ApeWorld *ape_camera_get_world( ApeCamera *camera );
 
-void ss_arl_camera_set_draw_mode( SSArlCamera *camera, ApeCameraDrawMode drawMode );
-void ss_arl_camera_set_view_mode( SSArlCamera *camera, SSArlCameraMode viewMode );
+void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode );
+void ape_camera_set_view_mode( ApeCamera *camera, ApeCameraViewMode viewMode );
 
-PLGCamera *ss_arl_camera_get_internal( SSArlCamera *camera );
+const char *ape_get_camera_draw_mode_label( ApeCameraDrawMode drawMode );
+const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 
-SSArlLight **ss_acl_camera_get_visible_lights_( SSArlCamera *camera, unsigned int *num );
-SSAclWorldRoom **ss_acl_camera_get_visible_rooms_( SSArlCamera *camera, unsigned int *num );
+PLGCamera *ape_camera_get_internal( ApeCamera *camera );
+
+ApeLight **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num );
+ApeWorldRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ss_arl_build_camera_visibility_lists_( void );
-void ss_arl_clear_camera_visibility_lists_( void );
+void ape_build_camera_visibility_lists_( void );
+void ape_clear_camera_visibility_lists_( void );
 
 PL_EXTERN_C_END

@@ -13,7 +13,7 @@ static SS_Arl_ShaderProgramIndex *bloomFilterShader;
 static SS_Arl_ShaderProgramIndex *bloomBlurXShader;
 static SS_Arl_ShaderProgramIndex *bloomBlurYShader;
 
-static SSArlRenderTarget *bloomRenderTarget;
+static ApeRenderTarget *bloomRenderTarget;
 
 static bool bloomEnabled;
 static float bloomIntensity;
@@ -26,17 +26,17 @@ static void register_bloom_console_variables( void )
 
 static bool setup_bloom_effect( void )
 {
-	bloomFilterShader = arl_shader_get_by_name( "post_bloom_filter" );
+	bloomFilterShader = ape_shader_get_by_name( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = arl_shader_get_by_name( "post_blur_x" );
+	bloomBlurXShader = ape_shader_get_by_name( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = arl_shader_get_by_name( "post_blur_y" );
+	bloomBlurYShader = ape_shader_get_by_name( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 
-	bloomRenderTarget = ss_arl_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	bloomRenderTarget = ape_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
 	if ( bloomRenderTarget == NULL )
 	{
 		PRINT_WARNING( "Failed to create render target for bloom effect!\n" );
@@ -48,27 +48,27 @@ static bool setup_bloom_effect( void )
 
 static void cleanup_bloom_effect( void )
 {
-	ss_arl_render_target_release( bloomRenderTarget );
+	ape_render_target_release( bloomRenderTarget );
 }
 
-static void draw_bloom_effect( const SSArlViewport *viewport )
+static void draw_bloom_effect( const ApeViewport *viewport )
 {
 	if ( !bloomEnabled || viewport->renderTarget == NULL )
 		return;
 
-	PLGTexture *baseTexture = ss_arl_render_target_get_texture( viewport->renderTarget );
+	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )
 		return;
 
 	int bw = viewport->width / 2;
 	int bh = viewport->height / 2;
 
-	ss_arl_render_target_set_size( bloomRenderTarget, bw, bh );
-	PLGTexture *bloomRenderTargetTexture = ss_arl_render_target_get_texture( bloomRenderTarget );
+	ape_render_target_set_size( bloomRenderTarget, bw, bh );
+	PLGTexture *bloomRenderTargetTexture = ape_render_target_get_texture( bloomRenderTarget );
 	if ( bloomRenderTargetTexture == NULL )
 		return;
 
-	ss_arl_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
@@ -88,7 +88,7 @@ static void draw_bloom_effect( const SSArlViewport *viewport )
 
 	//TODO: this last step is botched, urgh...
 
-	ss_arl_render_target_bind( ss_arl_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomRenderTargetTexture );

@@ -2,17 +2,17 @@
 // Purpose: Material editor tab
 // Author:  Mark E. Sowden
 
-#include "MaterialEditor.h"
+#include "editor_material.h"
 
-#include "../ViewportFrame.h"
+#include "../forge_viewport_frame.h"
 
-FXDEFMAP( ss::forge::MaterialEditor )
+FXDEFMAP( ss::forge::editor_material )
 materialEditorMap[] = {
 
 };
-FXIMPLEMENT( ss::forge::MaterialEditor, FXTabItem, materialEditorMap, ARRAYNUMBER( materialEditorMap ) )
+FXIMPLEMENT( ss::forge::editor_material, FXTabItem, materialEditorMap, ARRAYNUMBER( materialEditorMap ) )
 
-ss::forge::MaterialEditor::MaterialEditor( FXTabBook *owner, const FXString &worldName, ApeMaterial *material ) : FXTabItem( owner, "Material Editor" )
+ss::forge::editor_material::editor_material( FXTabBook *owner, const FXString &worldName, ApeMaterial *material ) : FXTabItem( owner, "Material Editor" )
 {
 	setIcon( ss::forge::load_fx_icon( getApp(), "resources/material_editor.gif" ) );
 
@@ -28,9 +28,9 @@ ss::forge::MaterialEditor::MaterialEditor( FXTabBook *owner, const FXString &wor
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
-	unsigned int mode = SS_ARL_CAMERA_MODE_PERSPECTIVE;
+	unsigned int mode = APE_CAMERA_MODE_PERSPECTIVE;
 	auto *hs = new FX4Splitter( frame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewport = new ViewportFrame( hs, get_shared_gl_visual(), ( SSArlCameraMode ) mode++ );
+	_viewport = new viewport_frame( hs, get_shared_gl_visual(), ( ApeCameraViewMode ) mode++ );
 
 	frame->create();
 
@@ -40,4 +40,4 @@ ss::forge::MaterialEditor::MaterialEditor( FXTabBook *owner, const FXString &wor
 	}
 }
 
-ss::forge::MaterialEditor::~MaterialEditor() = default;
+ss::forge::editor_material::~editor_material() = default;

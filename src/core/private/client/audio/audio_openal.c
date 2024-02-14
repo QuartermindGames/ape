@@ -27,18 +27,21 @@
 #		define XAL_CALL( X ) X
 #	endif
 
-typedef struct XALAudioSample {
+typedef struct XALAudioSample
+{
 	ALuint id;
 } XALAudioSample;
 
-typedef struct XALAudioSource {
+typedef struct XALAudioSource
+{
 	ALuint id;
 } XALAudioSource;
 
 static ALCdevice *xalDevice = NULL;
 static ALCcontext *xalContext = NULL;
 
-enum {
+enum
+{
 	XAL_EXTENSION_EFX,
 	XAL_EXTENSION_SOFT_BUFFER_SAMPLES,
 
@@ -61,15 +64,18 @@ static LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti;
 
 static void Audio_OpenAL_Shutdown( void );
 
-static bool Initialize( void ) {
+static bool Initialize( void )
+{
 	xalDevice = alcOpenDevice( NULL );
-	if ( xalDevice == NULL ) {
+	if ( xalDevice == NULL )
+	{
 		PRINT_WARNING( "Failed to open default OpenAL device!\n" );
 		return false;
 	}
 
 	xalContext = alcCreateContext( xalDevice, NULL );
-	if ( xalContext == NULL ) {
+	if ( xalContext == NULL )
+	{
 		PRINT_WARNING( "Failed to create OpenAL context!\n" );
 		Audio_OpenAL_Shutdown();
 		return false;
@@ -77,7 +83,8 @@ static bool Initialize( void ) {
 
 	bool status;
 	status = alcMakeContextCurrent( xalContext );
-	if ( !status ) {
+	if ( !status )
+	{
 		PRINT_WARNING( "Failed to make OpenAL context current!\n" );
 		Audio_OpenAL_Shutdown();
 		return false;
@@ -85,7 +92,8 @@ static bool Initialize( void ) {
 
 	PL_ZERO( xalExtensions, sizeof( bool ) * XAL_MAX_EXTENSIONS );
 	XAL_CALL( status = alcIsExtensionPresent( xalDevice, "ALC_EXT_EFX" ) );
-	if ( status ) {
+	if ( status )
+	{
 		PRINT( "ALC_EXT_EFX detected\n" );
 
 		XAL_CALL( alGenEffects = alGetProcAddress( "alGenEffects" ) );
@@ -103,7 +111,8 @@ static bool Initialize( void ) {
 	}
 
 	XAL_CALL( status = alIsExtensionPresent( "AL_SOFT_buffer_samples" ) );
-	if ( status ) {
+	if ( status )
+	{
 		PRINT( "AL_SOFT_buffer_samples detected\n" );
 		xalExtensions[ XAL_EXTENSION_SOFT_BUFFER_SAMPLES ] = true;
 	}
@@ -111,7 +120,8 @@ static bool Initialize( void ) {
 	XAL_CALL( alDopplerFactor( 4.0f ) );
 	XAL_CALL( alDopplerVelocity( 350.0f ) );
 
-	if ( xalExtensions[ XAL_EXTENSION_EFX ] ) {
+	if ( xalExtensions[ XAL_EXTENSION_EFX ] )
+	{
 		XAL_CALL( alGenEffects( 1, &xalReverbEffectSlot ) );
 		XAL_CALL( alEffecti( xalReverbEffectSlot, AL_EFFECT_TYPE, AL_EFFECT_REVERB ) );
 		const EFXEAXREVERBPROPERTIES reverb = EFX_REVERB_PRESET_OUTDOORS_DEEPCANYON;
@@ -138,7 +148,8 @@ static bool Initialize( void ) {
 	return true;
 }
 
-static void Audio_OpenAL_Shutdown( void ) {
+static void Audio_OpenAL_Shutdown( void )
+{
 	PRINT( "Shutting down OpenAL interface\n" );
 
 	alcDestroyContext( xalContext );
@@ -148,7 +159,8 @@ static void Audio_OpenAL_Shutdown( void ) {
 	xalDevice = NULL;
 }
 
-static void Audio_OpenAL_Tick( void ) {
+static void Audio_OpenAL_Tick( void )
+{
 	PLVector3 position = Audio_GetListenerPosition();
 	XAL_CALL( alListenerfv( AL_POSITION, ( ALfloat * ) &position ) );
 
@@ -171,26 +183,32 @@ static void Audio_OpenAL_Tick( void ) {
 	XAL_CALL( alListenerf( AL_GAIN, Audio_GetGlobalVolume() ) );
 }
 
-static void Pause( bool pause ) {
+static void Pause( bool pause )
+{
 }
 
-static bool CacheSample( ApeAudioSample *sample ) {
+static bool CacheSample( ApeAudioSample *sample )
+{
 	return true;
 }
 
-static void FreeSample( ApeAudioSample *sample ) {
+static void FreeSample( ApeAudioSample *sample )
+{
 }
 
-static void EmitSample( ApeAudioSample *sample, int8_t volume ) {
+static void EmitSample( ApeAudioSample *sample, int8_t volume )
+{
 }
 
-static bool CreateSource( ApeAudioSource *source ) {
+static bool CreateSource( ApeAudioSource *source )
+{
 	source->user = PL_NEW( XALAudioSource );
 	XAL_CALL( alGenSources( 1, &( ( XALAudioSource * ) source->user )->id ) );
 	return true;
 }
 
-static void DestroySource( ApeAudioSource *source ) {
+static void DestroySource( ApeAudioSource *source )
+{
 	if ( source->user == NULL )
 		return;
 
@@ -200,7 +218,8 @@ static void DestroySource( ApeAudioSource *source ) {
 	source->user = NULL;
 }
 
-const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void ) {
+const ApeAudioDriverInterface *apeGetOpenALAudioDriverInterface( void )
+{
 	static ApeAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 

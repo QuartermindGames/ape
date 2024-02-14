@@ -12,14 +12,14 @@ static const unsigned int TICKS_UNTIL_SECOND = 30;
 #define DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
 #define DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
 
-static SSArlLight *sunLight = NULL;
+static ApeLight *sunLight = NULL;
 static float sunYaw = 0.0f;
 static float sunPitch = 0.0f;
 static float sunBrightness = 0.0f;
 
 #define DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
 
-static SSArlLight *moonLight = NULL;
+static ApeLight *moonLight = NULL;
 static float moonBrightness = 0.0f;
 
 ToxWorldState *tox_world_get_state( void ) { return &worldState; }
@@ -54,28 +54,28 @@ void tox_world_spawn( ApeWorld *world )
 {
 	PL_ZERO_( worldState );
 
-	arl_sky_clear_layers();
+	ape_sky_clear_layers();
 	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
-		skyLayers[ i ].id = ss_arl_sky_add_layer( skyLayers[ i ].material,
-		                                          skyLayers[ i ].baseScale,
-		                                          skyLayers[ i ].baseY,
-		                                          skyLayers[ i ].baseAlpha );
+		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,
+		                                       skyLayers[ i ].baseScale,
+		                                       skyLayers[ i ].baseY,
+		                                       skyLayers[ i ].baseAlpha );
 
-	ss_acl_level_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
+	ape_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
 
-	sunLight = ss_arl_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
-	                                APE_LIGHT_TYPE_SUN,
-	                                SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ape_level_attach_light( world, sunLight );
+	sunLight = ape_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
+	                             APE_LIGHT_TYPE_SUN,
+	                             SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+	ape_world_attach_light( world, sunLight );
 
-	moonLight = ss_arl_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
-	                                 APE_LIGHT_TYPE_SUN,
-	                                 SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ape_level_attach_light( world, moonLight );
+	moonLight = ape_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
+	                              APE_LIGHT_TYPE_SUN,
+	                              SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+	ape_world_attach_light( world, moonLight );
 
 	//TODO: scrap this - let's just pass the world into the draw call... it's safer
-	SSArlCamera *camera = tox_get_player_camera();
-	ss_arl_camera_assign_world( camera, world );
+	ApeCamera *camera = tox_get_player_camera();
+	ape_camera_assign_world( camera, world );
 }
 
 /**
@@ -134,24 +134,24 @@ void tox_world_tick( void )
 	                                                   DEFAULT_MOON_COLOUR.b,
 	                                                   moonBrightness ) );
 
-	ss_acl_level_set_ambience( world, &PL_COLOURF32( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                 PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                 PlClamp( 0.05f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
-	                                                 1.0f ) );
+	ape_world_set_ambience( world, &PL_COLOURF32( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
+	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
+	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
+	                                              1.0f ) );
 
 	// Fog and clear should remain the same as each other, for a good little fade-out
 	PLColourF32 fallbackColour = PL_COLOURF32( PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.g * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.b * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           1.0f );
-	ss_acl_level_set_clear_colour( world, &fallbackColour );
-	ss_acl_level_set_fog_colour( world, &fallbackColour );
+	ape_world_set_clear_colour( world, &fallbackColour );
+	ape_world_set_fog_colour( world, &fallbackColour );
 
 	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
 	{
 		//TODO: in the future, this should probably be based on wind dir or something...
 		float parallax = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / skyLayers[ i ].parallaxDiff );
-		ss_arl_sky_set_layer_offset( skyLayers[ i ].id, parallax, parallax );
+		ape_sky_set_layer_offset( skyLayers[ i ].id, parallax, parallax );
 	}
 
 #if 0

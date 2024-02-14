@@ -10,14 +10,14 @@ typedef struct NdBranch NdBranch;
 
 const char *ss_acl_fs_get_user_config_location( void );
 
-void ss_acl_fs_setup_config( NdBranch *root );
+void ape_fs_setup_config( NdBranch *root );
 
 /**
  * Returns contents of file in a null-terminated buffer.
  */
 void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize );
 
-void ss_acl_fs_mount_base_locations( void );
+void ape_fs_mount_base_locations( void );
 
 char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size );
 char *ss_acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion );

@@ -16,7 +16,8 @@
 
 #define MODEL_SCALE 10.0f
 
-typedef struct ASGActor {
+typedef struct ASGActor
+{
 	PLMModel *model;
 
 	float forwardVelocity;
@@ -35,7 +36,8 @@ typedef struct ASGActor {
 	bool isSolid;
 } ASGActor;
 
-typedef struct AsteroidManager {
+typedef struct AsteroidManager
+{
 	ASGActor base;
 	unsigned int numAsteroids;
 } AsteroidManager;
@@ -44,12 +46,14 @@ static AsteroidManager *asteroidManager = NULL;
 #define MAX_ASTEROIDS 200
 
 #define SG_BOUNDS 2048 /* bounds before an object is removed */
-static bool SGActor_Generic_InsideBounds( Actor *self ) {
+static bool SGActor_Generic_InsideBounds( Actor *self )
+{
 	const PLVector3 pos = Act_GetPosition( self );
 	return !( pos.x > SG_BOUNDS || pos.x < -SG_BOUNDS || pos.z > SG_BOUNDS || pos.z < -SG_BOUNDS );
 }
 
-static void SGActor_Generic_Wrap( Actor *self ) {
+static void SGActor_Generic_Wrap( Actor *self )
+{
 	PLVector3 pos = Act_GetPosition( self );
 
 	if ( pos.x > SG_BOUNDS ) pos.x = -SG_BOUNDS;
@@ -67,37 +71,43 @@ static void SGActor_Generic_Wrap( Actor *self ) {
 	Act_SetPosition( self, &pos );
 }
 
-static ASGActor *SGActor_Generic_Spawn( Actor *self ) {
+static ASGActor *SGActor_Generic_Spawn( Actor *self )
+{
 	ASGActor *sgActor = PlMAlloc( sizeof( ASGActor ), true );
 	Act_SetUserData( self, sgActor );
 
 	return sgActor;
 }
 
-static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf ) {
+static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf )
+{
 	PLVector3 forward, left;
 	PlAnglesAxes( PLVector3( 0, self->angles.y, 0 ), &left, NULL, &forward );
 
-	if ( sgSelf->particleEmitter != NULL ) {
+	if ( sgSelf->particleEmitter != NULL )
+	{
 		PLVector3 cpos = PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) );
 		sgSelf->particleEmitter->transform.translation = cpos;
 		ss_arl_particle_emitter_tick( sgSelf->particleEmitter );
 	}
 
-	if ( sgSelf->emitLeft != NULL ) {
+	if ( sgSelf->emitLeft != NULL )
+	{
 		PLVector3 lpos = PlAddVector3( PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) ), PlScaleVector3F( left, 32.0f ) );
 		sgSelf->emitLeft->transform.translation = lpos;
 		ss_arl_particle_emitter_tick( sgSelf->emitLeft );
 	}
 
-	if ( sgSelf->emitRight != NULL ) {
+	if ( sgSelf->emitRight != NULL )
+	{
 		PLVector3 rpos = PlSubtractVector3( PlSubtractVector3( self->position, PlScaleVector3F( forward, 20.0f ) ), PlScaleVector3F( left, 32.0f ) );
 		sgSelf->emitRight->transform.translation = rpos;
 		ss_arl_particle_emitter_tick( sgSelf->emitRight );
 	}
 }
 
-static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData ) {
+static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
+{
 #if 0
 	ASGActor *sg = self->userData;
 	if ( sg == NULL )
@@ -181,13 +191,15 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 #endif
 }
 
-static void SGActor_Generic_Draw( Actor *self, void *userData ) {
+static void SGActor_Generic_Draw( Actor *self, void *userData )
+{
 	//SSArlCamera *camera = ss_arl_camera_get_active();
 	//if ( camera == NULL )
 	//	return;
 
 	ASGActor *sgActor = userData;
-	if ( sgActor->model != NULL ) {
+	if ( sgActor->model != NULL )
+	{
 		PlMatrixMode( PL_MODELVIEW_MATRIX );
 		PlPushMatrix();
 
@@ -211,7 +223,8 @@ static void SGActor_Generic_Draw( Actor *self, void *userData ) {
 		printf( "%s\n", PlPrintVector2( &sv, pl_float_var ) );
 #endif
 
-		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i ) {
+		for ( unsigned int i = 0; i < sgActor->model->numMeshes; ++i )
+		{
 			//MDLUserData *modelData = sgActor->model->userData;
 			//ss_arl_material_draw( modelData->materials[ i ], sgActor->model->meshes[ i ], NULL, 0 );
 		}
@@ -229,7 +242,8 @@ static void SGActor_Generic_Draw( Actor *self, void *userData ) {
 
 #define SHIP_MAX_PARTICLES 100
 
-static void Ship_Spawn( Actor *self ) {
+static void Ship_Spawn( Actor *self )
+{
 	ASGActor *ship = SGActor_Generic_Spawn( self );
 	ship->isSolid = true;
 
@@ -292,22 +306,27 @@ static void Ship_Spawn( Actor *self ) {
 #define TURN_SPEED 5.0f
 #define MAX_SPEED  4.0f
 
-static void Ship_Tick( Actor *self, void *userData ) {
+static void Ship_Tick( Actor *self, void *userData )
+{
 	SGActor_Generic_Wrap( self );
 	SGActor_Generic_UpdateParticleEmitter( self, userData );
 
 	ASGActor *sg = userData;
-	if ( PlVector3Length( self->velocity ) <= 1.0f ) {
+	if ( PlVector3Length( self->velocity ) <= 1.0f )
+	{
 		sg->emitLeft->maxParticles = 0;
 		sg->emitRight->maxParticles = 0;
 		sg->particleEmitter->maxParticles = 0;
-	} else {
+	}
+	else
+	{
 		sg->emitLeft->maxParticles = SHIP_MAX_PARTICLES;
 		sg->emitRight->maxParticles = SHIP_MAX_PARTICLES;
 		sg->particleEmitter->maxParticles = SHIP_MAX_PARTICLES;
 	}
 
-	if ( self->health <= 0 ) {
+	if ( self->health <= 0 )
+	{
 		return;
 	}
 
@@ -326,7 +345,8 @@ static void Ship_Tick( Actor *self, void *userData ) {
 	else if ( ss_shell_get_key_state( KEY_DOWN ) ||
 	          ss_shell_get_key_state( 's' ) )
 		sg->forwardVelocity -= incAmount;
-	else if ( sg->forwardVelocity != 0.0f ) {
+	else if ( sg->forwardVelocity != 0.0f )
+	{
 		sg->forwardVelocity = sg->forwardVelocity > 0 ? sg->forwardVelocity - incAmount : sg->forwardVelocity + incAmount;
 		if ( sg->forwardVelocity < 0.1f && sg->forwardVelocity > -0.1f )
 			sg->forwardVelocity = 0.0f;
@@ -337,7 +357,8 @@ static void Ship_Tick( Actor *self, void *userData ) {
 
 	self->velocity = PlAddVector3( self->velocity, PlScaleVector3F( Act_GetForward( self ), sg->forwardVelocity ) );
 
-	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < ape_get_num_ticks() ) ) {
+	if ( ss_shell_get_key_state( KEY_LEFT_CTRL ) && ( sg->fireDelay < ape_get_num_ticks() ) )
+	{
 		Actor *projectile = Act_SpawnActorById( "point.sg.projectile", NULL );
 		projectile->position = self->position;
 
@@ -351,23 +372,28 @@ static void Ship_Tick( Actor *self, void *userData ) {
 	}
 
 	static unsigned int survivalScoreTimer = 0;
-	if ( self->health > 0 && survivalScoreTimer < ape_get_num_ticks() ) {
+	if ( self->health > 0 && survivalScoreTimer < ape_get_num_ticks() )
+	{
 		self->score++;
 		survivalScoreTimer = ape_get_num_ticks() + 145;
 	}
 }
 
-static void Ship_Collide( Actor *self, Actor *other, void *userData ) {
-	if ( self->health <= 0 ) {
+static void Ship_Collide( Actor *self, Actor *other, void *userData )
+{
+	if ( self->health <= 0 )
+	{
 		return;
 	}
 
 	ASGActor *sg = self->userData;
-	if ( other->type == ACTOR_SG_PROJECTILE || !sg->isSolid ) {
+	if ( other->type == ACTOR_SG_PROJECTILE || !sg->isSolid )
+	{
 		return;
 	}
 
-	if ( sg->forwardVelocity > 0.0f ) {
+	if ( sg->forwardVelocity > 0.0f )
+	{
 		sg->forwardVelocity /= 2.0f;
 	}
 

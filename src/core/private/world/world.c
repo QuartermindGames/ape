@@ -7,43 +7,46 @@
 #include "world.h"
 #include "client/renderer/renderer.h"
 #include "game/game_interface.h"
+#include "editor/editor.h"
 
-void ss_acl_level_set_global_defaults( ApeWorld *level )
+void ape_world_set_global_defaults( ApeWorld *level )
 {
 	level->ambience = WORLD_DEFAULT_AMBIENCE;
 	level->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-void ss_acl_level_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
-void ss_acl_level_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
-void ss_acl_level_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
+void ape_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
+void ape_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
+void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
 
-ApeWorld *ss_ape_world_create( void )
+ApeWorld *ape_world_create( void )
 {
-	ApeWorld *level = PL_NEW( ApeWorld );
+	ApeWorld *world = PL_NEW( ApeWorld );
 
-	level->globalProperties = ndPushBackObject( NULL, "properties" );
-	ndPushBackF32Array( level->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	ndPushBackF32Array( level->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	world->globalProperties = ndPushBackObject( NULL, "properties" );
+	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
-	level->meshes = PlCreateVectorArray( 0 );
-	level->entities = PlCreateVectorArray( 0 );
-	level->lights = PlCreateVectorArray( 0 );
-	level->entitySpawns = PlCreateLinkedList();
+	world->meshes = PlCreateVectorArray( 0 );
+	world->entities = PlCreateVectorArray( 0 );
+	world->lights = PlCreateVectorArray( 0 );
+	world->entitySpawns = PlCreateLinkedList();
 
-	ss_acl_level_set_global_defaults( level );
+	world->nodes = PlCreateLinkedList();
 
-	return level;
+	ape_world_set_global_defaults( world );
+
+	return world;
 }
 
-static unsigned int get_total_verts_for_room( SSAclWorldRoom *room, bool detail )
+static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
 {
 	// determine the total number of vertices
 
 	unsigned int numVerts = 0;
 	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->faces ); ++j )
 	{
-		SSAclWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL )
 			continue;
@@ -55,14 +58,14 @@ static unsigned int get_total_verts_for_room( SSAclWorldRoom *room, bool detail 
 	{
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 		{
-			SSAclWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL )
 				continue;
 
 			for ( unsigned int k = 0; k < PlGetNumVectorArrayElements( detailRoom->faces ); ++k )
 			{
-				SSAclWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
+				ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 				assert( face != NULL );
 				if ( face == NULL )
 					continue;
@@ -75,7 +78,7 @@ static unsigned int get_total_verts_for_room( SSAclWorldRoom *room, bool detail 
 	return numVerts;
 }
 
-static unsigned int get_total_faces_for_room( SSAclWorldRoom *room, bool detail )
+static unsigned int get_total_faces_for_room( ApeWorldRoom *room, bool detail )
 {
 	unsigned int numFaces = PlGetNumVectorArrayElements( room->faces );
 
@@ -83,7 +86,7 @@ static unsigned int get_total_faces_for_room( SSAclWorldRoom *room, bool detail 
 	{
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 		{
-			SSAclWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL )
 			{
@@ -97,7 +100,7 @@ static unsigned int get_total_faces_for_room( SSAclWorldRoom *room, bool detail 
 	return numFaces;
 }
 
-static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
+static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 {
 	if ( room->mesh == NULL )
 	{
@@ -115,7 +118,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 	unsigned int numFaces = get_total_faces_for_room( room, false );
 	for ( unsigned int j = 0; j < numFaces; ++j )
 	{
-		SSAclWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
+		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
 		if ( face == NULL || face->materialIndex < 0 )
 			continue;
@@ -123,7 +126,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 		while ( faceVertexNode != NULL )
 		{
-			SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+			ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			assert( vertex->u != NULL );
 
 			PLColour colour = PlColourF32ToU8( &room->colour );
@@ -139,7 +142,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 
 	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 	{
-		SSAclWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
 		if ( detailRoom == NULL )
 			continue;
@@ -147,7 +150,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 		numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
 		for ( unsigned int k = 0; k < numFaces; ++k )
 		{
-			SSAclWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
+			ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 			assert( face != NULL );
 			if ( face == NULL || face->materialIndex < 0 )
 				continue;
@@ -155,7 +158,7 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
 			{
-				SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+				ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 				assert( vertex->u != NULL );
 
 				PLColour colour = PlColourF32ToU8( &room->colour );
@@ -178,40 +181,29 @@ static void cache_room_mesh( const ApeWorld *world, SSAclWorldRoom *room )
 	room->isMeshCached = true;
 }
 
-ApeWorld *ss_ape_world_load( const char *path )
+ApeWorld *ape_world_load( const char *path )
 {
-	const char *extension = PlGetFileExtension( path );
-	if ( extension == NULL )
+	NdBranch *root = ndLoadFile( path, "world" );
+	if ( root == NULL )
 	{
-		PRINT_WARNING( "Invalid world name (%s)!\n", path );
+		PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
 		return NULL;
 	}
 
-	ApeWorld *world;
-	if ( pl_strcasecmp( extension, "rfl" ) == 0 )
-		world = ss_acl_world_load_rfl_file_( path );
-	else
+	ApeWorld *world = ape_world_deserialize_( root );
+	if ( world == NULL )
 	{
-		NdBranch *root = ndLoadFile( path, "world" );
-		if ( root == NULL )
-		{
-			PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
-			return NULL;
-		}
-
-		world = ss_acl_world_deserialize_( root );
-		if ( world == NULL )
-			PRINT_WARNING( "Failed to load level (%s)!\n", path );
-
-		ndDestroyBranch( root );
+		PRINT_WARNING( "Failed to load level (%s)!\n", path );
 	}
+
+	ndDestroyBranch( root );
 
 	if ( world != NULL )
 	{
 		// Create cached room geometry
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail || room->isMeshCached )
 				continue;
@@ -223,13 +215,13 @@ ApeWorld *ss_ape_world_load( const char *path )
 	return world;
 }
 
-bool ss_acl_world_save( ApeWorld *world, const char *path )
+bool ape_world_save( ApeWorld *world, const char *path )
 {
 	world->lastSaveTime = time( NULL );
 
 	NdBranch *root = ndPushBackObject( NULL, "world" );
 
-	ss_acl_world_serialize_( world, root );
+	ape_world_serialize_( world, root );
 	snprintf( world->path, sizeof( world->path ), "%s", path );
 
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
@@ -241,12 +233,12 @@ bool ss_acl_world_save( ApeWorld *world, const char *path )
 	return true;
 }
 
-void acl_level_destroy( ApeWorld *level )
+void ape_world_destroy( ApeWorld *level )
 {
 	if ( level == NULL )
 		return;
 
-	ss_arl_clear_camera_visibility_lists_();
+	ape_clear_camera_visibility_lists_();
 
 	if ( level->materials != NULL )
 	{
@@ -267,11 +259,11 @@ void acl_level_destroy( ApeWorld *level )
 	{
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( level->rooms ); ++i )
 		{
-			SSAclWorldRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
 			if ( room == NULL )
 				continue;
 
-			ss_acl_room_destroy( room );
+			ape_world_room_destroy( room );
 			room = NULL;
 		}
 		PlDestroyVectorArray( level->rooms );
@@ -298,18 +290,18 @@ void acl_level_destroy( ApeWorld *level )
 	PlDestroyVectorArrayEx( level->lights, PlFree );
 }
 
-void ss_acl_world_spawn_entities_( ApeWorld *world )
+void ape_world_spawn_entities_( ApeWorld *world )
 {
 	PLLinkedListNode *node = PlGetFirstNode( world->entitySpawns );
 	while ( node != NULL )
 	{
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		ss_acl_entity_create( worldEntity->className, worldEntity->properties );
+		ape_entity_create( worldEntity->className, worldEntity->properties );
 		node = PlGetNextLinkedListNode( node );
 	}
 }
 
-void acl_level_attach_entity( ApeWorld *world, SS_Acl_Entity *entity )
+void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity )
 {
 	assert( entity->world == NULL );
 	if ( entity->world != NULL )
@@ -322,7 +314,7 @@ void acl_level_attach_entity( ApeWorld *world, SS_Acl_Entity *entity )
 	entity->world = world;
 }
 
-void ape_level_attach_light( ApeWorld *world, SSArlLight *light )
+void ape_world_attach_light( ApeWorld *world, ApeLight *light )
 {
 	assert( light->world == NULL );
 	if ( light->world != NULL )
@@ -355,11 +347,11 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-SSAclWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVector3 *position )
+ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
 {
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
-		SSAclWorldRoom *room = ( SSAclWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
+		ApeWorldRoom *room = ( ApeWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
 		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
 			continue;
 
@@ -369,23 +361,7 @@ SSAclWorldRoom *ss_acl_level_get_room_at_position( ApeWorld *world, const PLVect
 	return NULL;
 }
 
-static void level_save_command( unsigned int argc, char **argv )
-{
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world == NULL )
-	{
-		PRINT_WARNING( "No active world, can't save!\n" );
-		return;
-	}
-
-	const char *dataPath = ss_com_get_local_data_directory();
-
-	NdBranch *root = ndPushBackObject( NULL, "world" );
-
-	ss_acl_world_serialize_( world, root );
-}
-
-void ss_acl_register_level_console_variables_( void )
+void ape_register_world_console_variables_( void )
 {
 	PlRegisterConsoleVariable( "world.skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.world.skipDraw, NULL, false );
 	PlRegisterConsoleVariable( "world.skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, &ape_config_.world.skipPortals, NULL, false );
@@ -393,17 +369,9 @@ void ss_acl_register_level_console_variables_( void )
 	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, &ape_config_.world.showRoomVolumes, NULL, false );
 	PlRegisterConsoleVariable( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, NULL, false );
 	PlRegisterConsoleVariable( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, NULL, false );
-
-	PlRegisterConsoleCommand( "level_save", "Save the current level with the specified name.", 1, level_save_command );
 }
 
-void ss_acl_level_client_tick_( void )
+void ape_tick_client_world_( void )
 {
-	ss_arl_build_camera_visibility_lists_();
-}
-
-void ss_acl_level_get_player_start( const ApeWorld *level, PLVector3 *position, PLMatrix3 *orientation )
-{
-	*position = level->startPosition;
-	*orientation = level->startOrientation;
+	ape_build_camera_visibility_lists_();
 }

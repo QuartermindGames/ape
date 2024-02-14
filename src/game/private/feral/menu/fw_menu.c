@@ -53,7 +53,7 @@ void fw_menu_initialize( void )
 	Game_Menu_SetCurrent( &mainMenu );
 }
 
-static void DrawHUD( const SSArlViewport *viewport )
+static void DrawHUD( const ApeViewport *viewport )
 {
 }
 
@@ -62,12 +62,12 @@ void fw_menu_tick( void )
 	menu_pie_tick( interactPie );
 }
 
-void fw_menu_draw( const SSArlViewport *viewport )
+void fw_menu_draw( const ApeViewport *viewport )
 {
 	DrawHUD( viewport );
 
 	int w, h;
-	ss_arl_viewport_get_size( viewport, &w, &h );
+	ape_viewport_get_size( viewport, &w, &h );
 
 	// draw our fancy little pie menu for interactions
 	menu_pie_draw( interactPie, ( float ) w / 2, ( float ) h / 2 );

@@ -9,9 +9,9 @@
 
 ToxGlobalVars tox_globalVars;
 
-static SSArlCamera *playerCamera = NULL;
+static ApeCamera *playerCamera = NULL;
 
-SSArlCamera *tox_get_player_camera( void )
+ApeCamera *tox_get_player_camera( void )
 {
 	return playerCamera;
 }
@@ -21,7 +21,7 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+	PLVector3 ang = ape_camera_get_angles( playerCamera );
 
 	ang.x = 0.0f;
 	if ( strcmp( id, "rotateLeft" ) == 0 )
@@ -34,7 +34,7 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 
 	static const float SPEED = 0.5f;
 
-	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
+	PLVector3 pos = ape_camera_get_position( playerCamera );
 	if ( strcmp( id, "moveForward" ) == 0 )
 		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
 	else if ( strcmp( id, "moveBackward" ) == 0 )
@@ -48,8 +48,8 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 	else if ( strcmp( id, "moveDown" ) == 0 )
 		pos.y -= 0.5f;
 
-	ss_arl_camera_set_position( playerCamera, &pos );
-	ss_arl_camera_set_angles( playerCamera, &ang );
+	ape_camera_set_position( playerCamera, &pos );
+	ape_camera_set_angles( playerCamera, &ang );
 }
 
 static void move_camera_callback( ApeInputState state, const char *id )
@@ -57,8 +57,8 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 pos = ss_arl_camera_get_position( playerCamera );
-	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+	PLVector3 pos = ape_camera_get_position( playerCamera );
+	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
 		ang.y += 1.5f;
 	else if ( strcmp( id, "rotateRight" ) == 0 )
@@ -82,8 +82,8 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	else if ( strcmp( id, "moveDown" ) == 0 )
 		pos.y -= 0.5f;
 
-	ss_arl_camera_set_position( playerCamera, &pos );
-	ss_arl_camera_set_angles( playerCamera, &ang );
+	ape_camera_set_position( playerCamera, &pos );
+	ape_camera_set_angles( playerCamera, &ang );
 }
 
 static void rotate_camera_action( ApeInputState state, const char *id )
@@ -91,7 +91,7 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateUp" ) == 0 )
 		ang.x += 1.5f;
 	else if ( strcmp( id, "rotateDown" ) == 0 )
@@ -99,7 +99,7 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 
 	ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 
-	ss_arl_camera_set_angles( playerCamera, &ang );
+	ape_camera_set_angles( playerCamera, &ang );
 }
 
 static void progress_time_action( ApeInputState state, PL_UNUSED const char *id )
@@ -119,9 +119,9 @@ static void progress_time_action( ApeInputState state, PL_UNUSED const char *id 
 
 static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
-	PLVector3 cameraPos = ss_arl_camera_get_position( playerCamera );
+	PLVector3 cameraPos = ape_camera_get_position( playerCamera );
 	Game_Print( "Camera Pos: %s\n", PlPrintVector3( &cameraPos, PL_VAR_F32 ) );
-	PLVector3 cameraAngles = ss_arl_camera_get_angles( playerCamera );
+	PLVector3 cameraAngles = ape_camera_get_angles( playerCamera );
 	Game_Print( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
 }
 
@@ -157,9 +157,9 @@ static bool initialize_game( void )
 
 	ss_game_register_standard_entity_components_();
 
-	ss_acl_register_entity_class( tox_character_get_class_table() );
+	ape_register_entity_class( tox_character_get_class_table() );
 
-	playerCamera = ss_arl_camera_create( "tox_camera_player", &pl_vecOrigin3, &pl_vecOrigin3, SS_ARL_CAMERA_MODE_PERSPECTIVE );
+	playerCamera = ape_camera_create( "tox_camera_player", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE );
 	if ( playerCamera == NULL )
 	{
 		Game_Error( "Failed to create player camera!\n" );
@@ -171,7 +171,7 @@ static bool initialize_game( void )
 
 static void shutdown_game( void )
 {
-	ss_arl_camera_destroy( playerCamera );
+	ape_camera_destroy( playerCamera );
 	playerCamera = NULL;
 }
 
@@ -183,11 +183,11 @@ static bool tick_game( void )
 		int mx, my;
 		ss_acl_input_get_mouse_delta( &mx, &my );
 
-		PLVector3 ang = ss_arl_camera_get_angles( playerCamera );
+		PLVector3 ang = ape_camera_get_angles( playerCamera );
 		ang.y += ( float ) mx;
 		ang.x += ( float ) my;
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
-		ss_arl_camera_set_angles( playerCamera, &ang );
+		ape_camera_set_angles( playerCamera, &ang );
 	}
 
 	tox_world_tick();
@@ -196,10 +196,10 @@ static bool tick_game( void )
 	return true;
 }
 
-static bool draw_game( SSArlViewport *viewport )
+static bool draw_game( ApeViewport *viewport )
 {
-	ss_arl_camera_make_active( playerCamera );
-	ss_arl_camera_draw_perspective( playerCamera, viewport );
+	ape_camera_make_active( playerCamera );
+	ape_camera_draw_perspective( playerCamera, viewport );
 	return true;
 }
 
@@ -212,9 +212,9 @@ static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 		case APE_GAME_INTERFACE_REQUEST_TICK:
 			return tick_game();
 		case APE_GAME_INTERFACE_REQUEST_DRAW:
-			return draw_game( ( SSArlViewport * ) user );
+			return draw_game( ( ApeViewport * ) user );
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
-			return tox_ui_draw( ( SSArlViewport * ) user );
+			return tox_ui_draw( ( ApeViewport * ) user );
 		case APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT:
 			break;
 		case APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD:

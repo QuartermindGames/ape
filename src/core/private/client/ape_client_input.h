@@ -8,7 +8,7 @@ PL_EXTERN_C
 
 typedef struct NdBranch NdBranch;
 
-void apeInitializeInput_( void );
+void ape_initialize_input_( void );
 void apeShutdownInput_( void );
 
 void apeSerializeInputConfig_( NdBranch *root );
@@ -21,9 +21,9 @@ void Client_Input_HandleMouseButtonEvent( int button, ApeInputState buttonState 
 void Client_Input_HandleMouseWheelEvent( float x, float y );
 void Client_Input_HandleMouseMotionEvent( int x, int y );
 
-void apeBeginInputFrame_( void );
-void ss_acl_tick_input_( void );
-void apeEndInputFrame_( void );
+void ape_begin_input_frame_( void );
+void ape_tick_input_( void );
+void ape_end_input_frame_( void );
 void acl_input_center_mouse( void );
 
 PL_EXTERN_C_END

@@ -7,7 +7,7 @@
 namespace ss::forge
 {
 	struct SSApeModel;
-	class ViewportFrame;
+	class viewport_frame;
 
 	class ModelEditor : public FXTabItem
 	{
@@ -26,8 +26,8 @@ namespace ss::forge
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;
 
-		FXToggleButton *_editModeButtons[ EDITOR_MAX_GEOMETRYMODES ]{};
+		FXToggleButton *_editModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
-		ViewportFrame *_viewport{};
+		viewport_frame *_viewport{};
 	};
 }// namespace ss::forge

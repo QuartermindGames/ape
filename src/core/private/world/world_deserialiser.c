@@ -9,9 +9,9 @@
  * PRIVATE
  ****************************************/
 
-static SSArlLight *deserialize_light( NdBranch *root )
+static ApeLight *deserialize_light( NdBranch *root )
 {
-	SSArlLight *light = PL_NEW( SSArlLight );
+	ApeLight *light = PL_NEW( ApeLight );
 
 	light->position = ndGetVector3( root, "position", &pl_vecOrigin3 );
 	light->angles = ndGetVector3( root, "angles", &pl_vecOrigin3 );
@@ -43,9 +43,9 @@ static void deserialize_lights( ApeWorld *world, NdBranch *root )
 	}
 }
 
-static SSAclWorldRoom *deserialize_room( NdBranch *root )
+static ApeWorldRoom *deserialize_room( NdBranch *root )
 {
-	SSAclWorldRoom *room = ss_acl_room_create();
+	ApeWorldRoom *room = ape_world_room_create();
 
 	room->uid = ndGetInt( root, "uid", 0 );
 
@@ -63,10 +63,10 @@ static SSAclWorldRoom *deserialize_room( NdBranch *root )
 	return room;
 }
 
-static SSAclWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
+static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 {
 	// Fetch the first room index and validate it
-	SSAclWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
+	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
 	assert( roomA != NULL );
 	if ( roomA == NULL )
 	{
@@ -75,7 +75,7 @@ static SSAclWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	}
 
 	// Fetch the second room index and validate it
-	SSAclWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
+	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
 	assert( roomB != NULL );
 	if ( roomB == NULL )
 	{
@@ -83,7 +83,7 @@ static SSAclWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 		return NULL;
 	}
 
-	SSAclWorldPortal *portal = PL_NEW( SSAclWorldPortal );
+	ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
 
 	portal->mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
 	portal->maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
@@ -99,9 +99,9 @@ static SSAclWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	return portal;
 }
 
-static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
+static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 {
-	SSAclWorldFace *face = PL_NEW( SSAclWorldFace );
+	ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 	face->normal = ndGetVector3( root, "normal", &pl_vecOrigin3 );
 	face->offset = ndGetF32ByName( root, "offset", 0.0f );
@@ -116,7 +116,7 @@ static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		PRINT_WARNING( "No room index for face!\n" );
 	else
 	{
-		SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 		if ( room == NULL )
 			PRINT_WARNING( "Invalid room index (%u) for face!\n", roomIndex );
@@ -154,7 +154,7 @@ static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 				break;
 			}
 
-			SSAclWorldFaceVertex *vertex = PL_NEW( SSAclWorldFaceVertex );
+			ApeWorldFaceVertex *vertex = PL_NEW( ApeWorldFaceVertex );
 			vertex->u = worldVertex;
 			vertex->uv = ndGetVector2( branch, "uv", &pl_vecOrigin2 );
 			vertex->normal = ndGetVector3( branch, "normal", &pl_vecOrigin3 );
@@ -166,7 +166,7 @@ static SSAclWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		}
 	}
 
-	ss_acl_world_face_generate_bounds( face );
+	ape_world_face_generate_bounds( face );
 	face->origin = pl_vecOrigin3;//HACK ...
 
 	return face;
@@ -245,7 +245,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 			NdBranch *child = ndGetFirstChild( branch );
 			while ( child != NULL )
 			{
-				SSAclWorldPortal *portal = deserialize_portal( world, child );
+				ApeWorldPortal *portal = deserialize_portal( world, child );
 				if ( portal != NULL )
 				{
 					PlPushBackVectorArrayElement( world->portals, portal );
@@ -318,9 +318,26 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
  * PUBLIC
  ****************************************/
 
-ApeWorld *ss_acl_world_deserialize_( NdBranch *root )
+void ape_world_face_generate_bounds( ApeWorldFace *face )
 {
-	ApeWorld *world = ss_ape_world_create();
+	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
+	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
+	if ( numVertices == 0 )
+		return;
+
+	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
+	for ( unsigned int i = 0; i < numVertices; ++i )
+		boundVertices[ i ] = vertices[ i ]->u->position;
+
+	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
+	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );
+
+	PL_DELETE( boundVertices );
+}
+
+ApeWorld *ape_world_deserialize_( NdBranch *root )
+{
+	ApeWorld *world = ape_world_create();
 	if ( world == NULL )
 	{
 		PRINT_WARNING( "Failed to create world!\n" );
@@ -335,10 +352,10 @@ ApeWorld *ss_acl_world_deserialize_( NdBranch *root )
 		PRINT_WARNING( "Failed to find world version!\n" );
 		return NULL;
 	}
-	else if ( version > SS_ACL_WORLD_VERSION )
+	else if ( version > APE_WORLD_VERSION )
 	{
 		// Print a warning and return NULL if the version is not supported
-		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, SS_ACL_WORLD_VERSION );
+		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
 		return NULL;
 	}
 

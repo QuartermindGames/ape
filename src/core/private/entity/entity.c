@@ -1,18 +1,61 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <plcore/pl_hashtable.h>
 
 #include "ape_private.h"
 #include "entity.h"
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
+
 static PLHashTable *entityClassDefinitions = NULL;
 
-void ss_acl_register_entity_class( const SS_Acl_EntityClassDefinition *definition ) {
-	if ( entityClassDefinitions == NULL ) {
+static void list_entity_classes_command( unsigned int, char ** )
+{
+	if ( entityClassDefinitions == NULL )
+	{
+		return;
+	}
+
+	PRINT( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassDefinitions ) );
+
+	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassDefinitions );
+	while ( node != NULL )
+	{
+		ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
+		PRINT( "-------------------------------------------------\n" );
+		PRINT( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
+		PRINT( " num properties       = %u\n", classDefinition->numProperties );
+		PRINT( " cache callback       = %p\n", classDefinition->cacheFunction );
+		PRINT( " create callback      = %p\n", classDefinition->createFunction );
+		PRINT( " destroy callback     = %p\n", classDefinition->destroyFunction );
+		PRINT( " spawn callback       = %p\n", classDefinition->spawnFunction );
+		PRINT( " tick callback        = %p\n", classDefinition->tickFunction );
+		PRINT( " draw callback        = %p\n", classDefinition->drawFunction );
+		PRINT( " serialize callback   = %p\n", classDefinition->serializeFunction );
+		PRINT( " deserialize callback = %p\n", classDefinition->deserializeFunction );
+
+		node = PlGetNextHashTableNode( entityClassDefinitions, node );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+void ape_register_entity_commands_( void )
+{
+	PlRegisterConsoleCommand( "list_entity_classes", "List all of the registered entity classes.", 0, list_entity_classes_command );
+}
+
+void ape_register_entity_class( const ApeEntityClassDefinition *definition )
+{
+	if ( entityClassDefinitions == NULL )
+	{
 		entityClassDefinitions = PlCreateHashTable();
 	}
 
-	if ( PlLookupHashTableUserData( entityClassDefinitions, definition->name, strlen( definition->name ) ) != NULL ) {
+	if ( PlLookupHashTableUserData( entityClassDefinitions, definition->name, strlen( definition->name ) ) != NULL )
+	{
 		PRINT_WARNING( "Attempted to register a duplicate entity class (%s)\n", definition->name );
 		return;
 	}
@@ -20,35 +63,42 @@ void ss_acl_register_entity_class( const SS_Acl_EntityClassDefinition *definitio
 	PlInsertHashTableNode( entityClassDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 
 	// call the cache function, so we can load resources into memory
-	if ( definition->Cache != NULL ) {
-		definition->Cache();
+	if ( definition->cacheFunction != NULL )
+	{
+		definition->cacheFunction();
 	}
 }
 
-const SS_Acl_EntityClassDefinition *ss_acl_get_entity_class_table( const char *className ) {
-	return ( const SS_Acl_EntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
+const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className )
+{
+	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-SS_Acl_Entity *ss_acl_entity_create( const char *className, NdBranch *properties ) {
-	const SS_Acl_EntityClassDefinition *classDefinition = ss_acl_get_entity_class_table( className );
-	if ( className == NULL ) {
+ApeEntity *ape_entity_create( const char *className, NdBranch *properties )
+{
+	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
+	if ( className == NULL )
+	{
 		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
 		return NULL;
 	}
 
-	SS_Acl_Entity *entity = PL_NEW( SS_Acl_Entity );
+	ApeEntity *entity = PL_NEW( ApeEntity );
 	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
-	if ( classDefinition->Create != NULL ) {
-		entity->classData = classDefinition->Create( entity, properties );
+	if ( classDefinition->createFunction != NULL )
+	{
+		entity->classData = classDefinition->createFunction( entity, properties );
 	}
 
 	return entity;
 }
 
-void ss_acl_entity_destroy( SS_Acl_Entity *entity ) {
+void ape_entity_destroy( ApeEntity *entity )
+{
 	PLHashTableNode *node = PlGetFirstHashTableNode( entity->componentTable );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		//TODO: should be calling destructor for component!!!
 		PL_DELETE( PlGetHashTableNodeUserData( node ) );
 		node = PlGetNextHashTableNode( entity->componentTable, node );
@@ -58,20 +108,24 @@ void ss_acl_entity_destroy( SS_Acl_Entity *entity ) {
 	PL_DELETE( entity );
 }
 
-void ss_acl_entity_tick( SS_Acl_Entity *entity ) {
+void ape_entity_tick( ApeEntity *entity )
+{
 	assert( entity->classDefinition != NULL );
-	if ( entity->classDefinition->Tick == NULL ) {
+	if ( entity->classDefinition->tickFunction == NULL )
+	{
 		return;
 	}
 
-	entity->classDefinition->Tick( entity );
+	entity->classDefinition->tickFunction( entity );
 }
 
-void ss_acl_entity_draw( SS_Acl_Entity *entity ) {
+void ape_entity_draw( ApeEntity *entity )
+{
 	assert( entity->classDefinition != NULL );
-	if ( entity->classDefinition->Draw == NULL ) {
+	if ( entity->classDefinition->drawFunction == NULL )
+	{
 		return;
 	}
 
-	entity->classDefinition->Draw( entity );
+	entity->classDefinition->drawFunction( entity );
 }

@@ -97,12 +97,12 @@ typedef struct ApeAudioSource
 	void *user;
 } ApeAudioSource;
 
-void apeInitializeAudio_( void );
-void apeShutdownAudio_( void );
+void ape_initialize_audio_( void );
+void ape_shutdown_audio_( void );
 
 void ss_acl_audio_register_console_variables_( void );
 
-void ss_acl_audio_tick_( void );
+void ape_tick_audio_( void );
 void Audio_Pause( bool pause );
 
 void Audio_UpdateListener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity );

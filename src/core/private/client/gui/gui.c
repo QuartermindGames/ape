@@ -13,16 +13,20 @@
 GuiState guiState;
 
 static PLLinkedList *cachedTextures;
-typedef struct GuiCachedTexture {
+typedef struct GuiCachedTexture
+{
 	unsigned int hash;
 	PLGTexture *texture;
 } GuiCachedTexture;
-PLGTexture *guiCacheTexture( const char *path ) {
+PLGTexture *guiCacheTexture( const char *path )
+{
 	unsigned int hash = PlGenerateHashSDBM( path );
 	PLLinkedListNode *node = PlGetFirstNode( cachedTextures );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		GuiCachedTexture *cachedTexture = PlGetLinkedListNodeUserData( node );
-		if ( cachedTexture->hash == hash ) {
+		if ( cachedTexture->hash == hash )
+		{
 			return cachedTexture->texture;
 		}
 
@@ -30,7 +34,8 @@ PLGTexture *guiCacheTexture( const char *path ) {
 	}
 
 	PLGTexture *texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_LINEAR );
-	if ( texture == NULL ) {
+	if ( texture == NULL )
+	{
 		return NULL;
 	}
 
@@ -48,19 +53,22 @@ static unsigned int numStyleSheets = 0;
 
 #define GUI_STYLESHEET_VERSION 1
 
-static GuiStyleSheet *ParseStyleSheet( NdBranch *root ) {
+static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
+{
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION ) {
+	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
+	{
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
 		return NULL;
 	}
 
 	NdBranch *c;
 	c = ndGetChildByName( root, "colours" );
-	if ( c != NULL ) {
+	if ( c != NULL )
+	{
 		NdBranch *i;
 		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
 			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
@@ -77,7 +85,8 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root ) {
 	}
 
 	c = ndGetChildByName( root, "borders" );
-	if ( c != NULL ) {
+	if ( c != NULL )
+	{
 		unsigned int style = ndGetUInt( c, "style", -1 );
 		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
@@ -92,9 +101,11 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root ) {
 	return guiStyleSheet;
 }
 
-const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path ) {
+const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path )
+{
 	NdBranch *root = ndLoadFile( path, "guiStyle" );
-	if ( root == NULL ) {
+	if ( root == NULL )
+	{
 		GUI_WARNING( "Failed to load node file: %s\n", ndGetErrorMessage() );
 		return NULL;
 	}
@@ -102,11 +113,13 @@ const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path ) {
 	return ParseStyleSheet( root );
 }
 
-void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet ) {
+void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet )
+{
 	activeSheet = styleSheet;
 }
 
-const GuiStyleSheet *guiGetActiveStyleSheet( void ) {
+const GuiStyleSheet *guiGetActiveStyleSheet( void )
+{
 	return activeSheet;
 }
 
@@ -115,7 +128,8 @@ int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 /**
  * Initialize the GUI sub-system.
  */
-bool ss_gui_initialize( void ) {
+bool ss_gui_initialize( void )
+{
 	PL_ZERO_( guiState );
 
 	gui_LogLevels_[ GUI_LOGLEVEL_DEFAULT ] = PlAddLogLevel( "gui", PL_COLOUR_LIGHT_CORAL, true );
@@ -130,7 +144,8 @@ bool ss_gui_initialize( void ) {
 	);
 
 	guiInitializeDraw_();
-	if ( !guiInitializeFonts_() ) {
+	if ( !guiInitializeFonts_() )
+	{
 		GUI_ERROR( "Font initialization failed!\n" );
 		return false;
 	}
@@ -139,28 +154,33 @@ bool ss_gui_initialize( void ) {
 	return true;
 }
 
-void ss_gui_shutdown( void ) {
+void ss_gui_shutdown( void )
+{
 	guiShutdownDraw_();
 
 	for ( unsigned int i = 0; i < GUI_MAX_LOG_LEVELS; ++i )
 		PlRemoveLogLevel( gui_LogLevels_[ i ] );
 }
 
-void gui_panel_tick( GuiPanel *root ) {
+void gui_panel_tick( GuiPanel *root )
+{
 	guiTickPanel( root );
 }
 
-void guiUpdateMousePosition( int x, int y ) {
+void guiUpdateMousePosition( int x, int y )
+{
 	guiState.mouseOldPos = guiState.mousePos;
 	guiState.mousePos.x = x;
 	guiState.mousePos.y = y;
 }
 
-void guiUpdateMouseWheel( float x, float y ) {
+void guiUpdateMouseWheel( float x, float y )
+{
 	guiState.mouseOldWheel = guiState.mouseWheel;
 	guiState.mouseWheel.x = x;
 	guiState.mouseWheel.y = y;
 }
 
-void guiUpdateMouseButton( GuiMouseButton button, bool isDown ) {
+void guiUpdateMouseButton( GuiMouseButton button, bool isDown )
+{
 }

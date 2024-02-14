@@ -18,7 +18,7 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void arl_level_draw_wireframe( ApeWorld *world, SSArlCamera *camera )
+void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 {
 #if 0
 	if ( world == NULL )
@@ -108,7 +108,7 @@ void arl_level_draw_wireframe( ApeWorld *world, SSArlCamera *camera )
 #endif
 }
 
-static bool face_is_facing_light( const SSAclWorldFace *face, const SSArlLight *light )
+static bool face_is_facing_light( const ApeWorldFace *face, const ApeLight *light )
 {
 	PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( face->origin, light->position ) );
 	if ( PlVector3DotProduct( face->normal, lightDir ) >= 0 )
@@ -119,9 +119,9 @@ static bool face_is_facing_light( const SSAclWorldFace *face, const SSArlLight *
 	return false;
 }
 
-static bool is_light_not_shadowing_face( const ApeMaterial *material, const SSAclWorldFace *face, SSArlLight *light )
+static bool is_light_not_shadowing_face( const ApeMaterial *material, const ApeWorldFace *face, ApeLight *light )
 {
-	if ( light == NULL || ( ss_ape_light_get_shadow_type( light ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC ) )
+	if ( light == NULL || ( ape_light_get_shadow_type( light ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC ) )
 	{
 		return false;
 	}
@@ -129,20 +129,20 @@ static bool is_light_not_shadowing_face( const ApeMaterial *material, const SSAc
 	return ( ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( face, light ) );
 }
 
-static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, SSArlLight *light )
+static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
 {
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ];
 	mesh->firstSubMeshes = firstSubMeshes[ materialIndex ];
 	mesh->subMeshes = subMeshes[ materialIndex ];
 
-	SSArlLightPointerArray lights;
+	ApeLightPointerArray lights;
 	lights[ 0 ] = light;
 	ss_arl_material_draw( material, mesh, lights, ( lights[ 0 ] != NULL ) ? 1 : 0 );
 
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camera, bool skipPortals, SSArlLight *light, bool ambienceOnly )
+static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
@@ -168,7 +168,7 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 	}
 
 	unsigned int numFaces;
-	SSAclWorldFace **faces = ss_acl_room_get_faces( room, &numFaces );
+	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->materialIndex < 0 )
@@ -228,7 +228,7 @@ static void draw_room( ApeWorld *world, SSAclWorldRoom *room, SSArlCamera *camer
 
 static const float F_INFINITY = 100.0f;
 
-static PLVector3 get_projection( const SSArlLight *light, const PLVector3 *origin )
+static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin )
 {
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
@@ -238,13 +238,13 @@ static PLVector3 get_projection( const SSArlLight *light, const PLVector3 *origi
 	return PlNormalizeVector3( ( PLVector3 ){ light->position.x, light->position.y, light->position.z } );
 }
 
-static void draw_stencil_shadow_cap( const SSAclWorldFace *face, const SSArlLight *light, bool start, unsigned int *indices )
+static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, unsigned int *indices )
 {
 	unsigned int numVertices = PlGetNumLinkedListNodes( face->edgeLoop );
 	PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
-		SSAclWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
 		//TODO: yes yes, all this bollocks should be in a vertex shader...
 		PLVector3 projDirection = start ? pl_vecOrigin3 : get_projection( light, &vertex->u->position );
@@ -263,13 +263,13 @@ static void draw_stencil_shadow_cap( const SSAclWorldFace *face, const SSArlLigh
 	}
 }
 
-static void draw_room_stencil_shadow_volumes( SSAclWorldRoom *room, const SSArlLight *light )
+static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight *light )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 
 	unsigned int numFaces;
-	SSAclWorldFace **faces = ss_acl_room_get_faces( room, &numFaces );
+	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
 	unsigned int numIndices = 0;
@@ -314,7 +314,7 @@ static void draw_room_stencil_shadow_volumes( SSAclWorldRoom *room, const SSArlL
 	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
-static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *camera, SSArlLight *light )
+static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera, ApeLight *light )
 {
 	if ( light == NULL )
 		return;
@@ -328,7 +328,7 @@ static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *ca
 	if ( !room->isDetail )
 	{
 		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		SSAclWorldRoom **detailRooms = ( SSAclWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
+		ApeWorldRoom **detailRooms = ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 		for ( unsigned int j = 0; j < numDetailRooms; ++j )
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 	}
@@ -336,7 +336,7 @@ static void draw_room_stencil_shadow_pass( SSAclWorldRoom *room, SSArlCamera *ca
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
-void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SSArlLight *light )
+void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -348,7 +348,7 @@ void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SS
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail )
 				continue;
@@ -362,7 +362,7 @@ void ss_ape_world_draw_stencil_shadows( ApeWorld *world, SSArlCamera *camera, SS
 	PlPopMatrix();
 }
 
-void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light, bool ambienceOnly )
+void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
 {
 	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
 		return;
@@ -375,7 +375,7 @@ void ss_ape_world_draw( ApeWorld *world, SSArlCamera *camera, SSArlLight *light,
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			SSAclWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room->isDetail )
 				continue;

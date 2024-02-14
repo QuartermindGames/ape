@@ -19,17 +19,17 @@ typedef enum SSAclNetConnectionState
 typedef SSIZE_T ssize_t;
 #endif
 
-void ss_acl_initialize_net_( void );
-void ss_acl_shutdown_net_( void );
+void ape_initialize_net_( void );
+void ape_shutdown_net_( void );
 
-SSAclNetSocket *ss_acl_net_open_socket_( const char *ip, unsigned short port, bool isHost );
-void ss_acl_net_close_socket_( SSAclNetSocket *netSocket );
+SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost );
+void ape_net_close_socket_( SSAclNetSocket *netSocket );
 
 ssize_t ss_acl_net_send_( SSAclNetSocket *netSocket, const void *buf, ssize_t length );
 ssize_t ss_acl_net_receive_( SSAclNetSocket *netSocket, void *dst, ssize_t length );
 SSAclNetSocket *ss_acl_net_accept_( SSAclNetSocket *netSocket );
 
-SSAclNetConnectionState ss_acl_net_get_connection_status_( SSAclNetSocket *netSocket );
+SSAclNetConnectionState ape_net_get_connection_status_( SSAclNetSocket *netSocket );
 
 unsigned short ss_acl_net_get_local_port_( SSAclNetSocket *netSocket );
 unsigned short ss_acl_net_get_remote_port_( SSAclNetSocket *netSocket );

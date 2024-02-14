@@ -6,7 +6,7 @@
 
 PL_EXTERN_C
 
-bool tox_ui_draw( SSArlViewport *viewport );
+bool tox_ui_draw( ApeViewport *viewport );
 void tox_ui_tick( void );
 
 PL_EXTERN_C_END

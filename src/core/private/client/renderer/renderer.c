@@ -23,9 +23,9 @@
 #include "game/game_interface.h"
 
 ApeRendererStats ape_rendererPerformance_;
-SSArlRendererPassState arl_rendererState_;
+SSArlRendererPassState ape_rendererState_;
 
-static SSArlRenderTarget *defaultRenderTarget;
+static ApeRenderTarget *defaultRenderTarget;
 
 static bool isScreenshotPending = false;
 
@@ -90,7 +90,7 @@ static void *process_capture_queue( void * )
 			PlClearImageAlpha( image );
 
 			PLPath path;
-			PlSetupPath( path, true, "%s/captures/%u.%s", ss_com_get_app_data_directory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
+			PlSetupPath( path, true, "%s/captures/%u.%s", com_get_app_data_directory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
 			PlWriteImage( image, path, captureQuality );
 
 			PlDestroyImage( image );
@@ -110,7 +110,7 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 	{
 		// Create a folder to store the captures if one doesn't already exist
 		PLPath captureDirectory;
-		PlSetupPath( captureDirectory, true, "%s/captures/", ss_com_get_app_data_directory() );
+		PlSetupPath( captureDirectory, true, "%s/captures/", com_get_app_data_directory() );
 		PlCreateDirectory( captureDirectory );
 
 		pthread_mutex_init( &captureMutex, NULL );
@@ -129,7 +129,7 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 	}
 }
 
-bool ss_arl_get_capture_state_( void )
+bool ape_get_capture_state_( void )
 {
 	return isCapturing;
 }
@@ -139,13 +139,15 @@ bool ss_arl_get_capture_state_( void )
 
 /**********************************************************/
 
-void ss_arl_setup_default_state( const SSArlViewport *viewport )
+void ape_setup_default_draw_state_( const ApeViewport *viewport )
 {
-	PLColour clearColour = { 50, 50, 50, 255 };
+	PLColour clearColour = { 0, 0, 0, 255 };
 
 	ApeWorld *world = ss_game_get_current_world();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == SS_ARL_CAMERA_MODE_PERSPECTIVE ) )
+	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
+	{
 		clearColour = PlColourF32ToU8( &world->clearColour );
+	}
 
 	PlgSetClearColour( clearColour );
 
@@ -158,7 +160,7 @@ void ss_arl_setup_default_state( const SSArlViewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 }
 
-void ss_arl_draw_begin_( SSArlViewport *viewport )
+void ape_draw_begin_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -166,12 +168,14 @@ void ss_arl_draw_begin_( SSArlViewport *viewport )
 
 	viewport->perf.frameReadings[ viewport->perf.frameIndex++ ] = 1.0 / ( newTime - viewport->perf.oldTime );
 	if ( viewport->perf.frameIndex >= APE_MAX_FPS_READINGS )
+	{
 		viewport->perf.frameIndex = 0;
+	}
 
 	viewport->perf.oldTime = newTime;
 
-	ss_arl_setup_default_state( viewport );
-	ss_arl_viewport_make_active( viewport );
+	ape_setup_default_draw_state_( viewport );
+	ape_viewport_make_active( viewport );
 
 	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
 
@@ -180,14 +184,14 @@ void ss_arl_draw_begin_( SSArlViewport *viewport )
 
 static void write_screenshot( void )
 {
-	SSArlRenderTarget *renderTarget = ss_arl_postfx_get_render_target();
+	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
 	if ( renderTarget == NULL )
 		return;
 
 	unsigned int w, h;
-	ss_arl_render_target_get_size( renderTarget, &w, &h );
+	ape_render_target_get_size( renderTarget, &w, &h );
 
-	PLGFrameBuffer *fboBuffer = ss_arl_render_target_get_frame_buffer( renderTarget );
+	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer( renderTarget );
 	assert( fboBuffer != NULL );
 	if ( fboBuffer == NULL )
 		return;
@@ -219,9 +223,9 @@ static void write_screenshot( void )
 
 			PLPath path;
 			unsigned int num = 0;
-			PlSetupPath( path, true, "%s/screen%u.png", ss_com_get_app_data_directory(), num );
+			PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), num );
 			while ( PlFileExists( path ) )
-				PlSetupPath( path, true, "%s/screen%u.png", ss_com_get_app_data_directory(), ++num );
+				PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), ++num );
 
 			PlWriteImage( image, path, 90 );
 			PlDestroyImage( image );
@@ -233,7 +237,7 @@ static void write_screenshot( void )
 		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 }
 
-void ss_arl_draw_end_( SSArlViewport *viewport )
+void ape_draw_end_( ApeViewport *viewport )
 {
 	PL_ZERO_( ape_rendererPerformance_ );
 
@@ -249,12 +253,12 @@ void ss_arl_draw_end_( SSArlViewport *viewport )
 	}
 }
 
-void ss_arl_initialize_shaders_( void );  /* renderer/shaders.c */
-void ss_arl_initialize_textures_( void ); /* texture.c */
+void ape_initialize_shaders_( void );  /* renderer/shaders.c */
+void ape_initialize_textures_( void ); /* texture.c */
 
 /* renderer_rendertarget.c */
-void ss_arl_initialize_render_targets_( void );
-void ss_arl_shutdown_render_targets_( void );
+void ape_initialize_render_targets_( void );
+void ape_shutdown_render_targets_( void );
 
 static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
@@ -304,38 +308,38 @@ void apeRegisterRendererConsoleVariables_( void )
 	ss_arl_postfx_register_console_variables_();
 }
 
-void ss_arl_initialize_( void )
+void ape_initialize_renderer_( void )
 {
 	PRINT( "Initializing renderer\n" );
 
-	PL_ZERO_( arl_rendererState_ );
+	PL_ZERO_( ape_rendererState_ );
 
-	ss_arl_initialize_textures_();
-	ss_arl_initialize_render_targets_();
-	ss_arl_initialize_shaders_();
-	ss_arl_initialize_materials_();
-	ss_arl_initialize_bitmap_fonts_();
+	ape_initialize_textures_();
+	ape_initialize_render_targets_();
+	ape_initialize_shaders_();
+	ape_initialize_materials_();
+	ape_initialize_bitmap_fonts_();
 
-	ss_arl_setup_default_state( NULL );
+	ape_setup_default_draw_state_( NULL );
 
-	defaultRenderTarget = ss_arl_render_target_create( "default",
-	                                                   800, 600,
-	                                                   PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                                   PLG_BUFFER_COLOUR,
-	                                                   PLG_TEXTURE_FILTER_LINEAR );
+	defaultRenderTarget = ape_render_target_create( "default",
+	                                                800, 600,
+	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                PLG_BUFFER_COLOUR,
+	                                                PLG_TEXTURE_FILTER_LINEAR );
 	if ( defaultRenderTarget == NULL )
 		PRINT_ERROR( "Failed to create default render target!\n" );
 
 	ss_arl_postfx_setup_();
 }
 
-void ss_arl_shutdown_( void )
+void ape_shutdown_renderer_( void )
 {
 	ss_arl_postfx_cleanup_();
 
-	ss_arl_shutdown_bitmap_fonts_();
-	ss_arl_shutdown_materials_();
-	ss_arl_shutdown_render_targets_();
+	ape_shutdown_bitmap_fonts_();
+	ape_shutdown_materials_();
+	ape_shutdown_render_targets_();
 }
 
 /****************************************
@@ -376,7 +380,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlPopMatrix();
 }
 
-unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float alpha )
+unsigned int ape_sky_add_layer( const char *path, float scale, float y, float alpha )
 {
 	assert( numSkyLayers < MAX_SKY_LAYERS );
 	if ( numSkyLayers >= MAX_SKY_LAYERS )
@@ -394,7 +398,7 @@ unsigned int ss_arl_sky_add_layer( const char *path, float scale, float y, float
 	return ( numSkyLayers - 1 );
 }
 
-void ss_arl_sky_set_layer_alpha( unsigned int slot, float alpha )
+void ape_sky_set_layer_alpha( unsigned int slot, float alpha )
 {
 	assert( slot < numSkyLayers );
 	if ( slot >= numSkyLayers )
@@ -406,7 +410,7 @@ void ss_arl_sky_set_layer_alpha( unsigned int slot, float alpha )
 	skyLayers[ slot ].alpha = alpha;
 }
 
-void ss_arl_sky_set_layer_offset( unsigned int slot, float x, float y )
+void ape_sky_set_layer_offset( unsigned int slot, float x, float y )
 {
 	assert( slot < numSkyLayers );
 	if ( slot >= numSkyLayers )
@@ -418,7 +422,7 @@ void ss_arl_sky_set_layer_offset( unsigned int slot, float x, float y )
 	skyLayers[ slot ].offset = ( PLVector2 ){ x, y };
 }
 
-void arl_sky_clear_layers( void )
+void ape_sky_clear_layers( void )
 {
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
@@ -435,7 +439,7 @@ void arl_sky_clear_layers( void )
 /**
  * Draw scrolling clouds.
  */
-void ss_ape_sky_draw( SSArlCamera *camera )
+void ape_sky_draw_( ApeCamera *camera )
 {
 	if ( numSkyLayers == 0 )
 		return;
@@ -507,34 +511,35 @@ void ss_ape_sky_draw( SSArlCamera *camera )
  ****************************************/
 
 PLVector2 screenPosTest;
-static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
+static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world == NULL )
-		return;
-
-	// Ambient pass ...
-
-	//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
-
 	PlgDepthMask( true );
 
-	ss_ape_sky_draw( camera );
-	ss_ape_world_draw( world, camera, NULL, true );
+	ape_editor_draw_grid_();
+	ape_sky_draw_( camera );
 
-	PlgDepthMask( false );
-
-	unsigned int numLights;
-	SSArlLight **lights = ss_acl_camera_get_visible_lights_( camera, &numLights );
-
-	for ( unsigned int i = 0; i < numLights; ++i )
+	ApeWorld *world = ss_game_get_current_world();
+	if ( world != NULL )
 	{
-		PlgClearBuffers( PLG_BUFFER_STENCIL );
+		// Ambient pass ...
 
-		if ( lights[ i ]->colour.a == 0.0f )
-			continue;
+		//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+
+		ape_world_draw( world, camera, NULL, true );
+
+		PlgDepthMask( false );
+
+		unsigned int numLights;
+		ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
+
+		for ( unsigned int i = 0; i < numLights; ++i )
+		{
+			PlgClearBuffers( PLG_BUFFER_STENCIL );
+
+			if ( lights[ i ]->colour.a == 0.0f )
+				continue;
 
 #if 0
 
@@ -566,68 +571,70 @@ static void render_scene( SSArlCamera *camera, const SSArlViewport *viewport )
 
 #endif
 
-		if ( ape_config_.renderer.showLights )
-		{
-			arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
-		}
-
-		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ss_ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
-		if ( drawShadows )
-		{
-			if ( ape_config_.renderer.showShadowWireframe )
+			if ( ape_config_.renderer.showLights )
 			{
-				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-				arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
-
-				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				ss_ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
-				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-
-				arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
+				arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
 			}
 
-			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-			PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-			PlgColourMask( false, false, false, false );
+			bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+			if ( drawShadows )
+			{
+				if ( ape_config_.renderer.showShadowWireframe )
+				{
+					ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
+					ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 
-			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
-			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+					PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+					ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
+					PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
-			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-			ss_ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
-			arl_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
+					ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
+				}
 
-			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-			PlgColourMask( true, true, true, true );
+				PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+				PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+				PlgColourMask( false, false, false, false );
 
-			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
-			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+				PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
+				PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+				PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+
+				ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
+				ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
+				ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
+
+				PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+				PlgColourMask( true, true, true, true );
+
+				PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+				PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
+				PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+			}
+
+			ape_rendererState_.overrideBlendMode = true;
+			ape_rendererState_.blendModeA = PLG_BLEND_ONE;
+			ape_rendererState_.blendModeB = PLG_BLEND_ONE;
+
+			ape_world_draw( world, camera, lights[ i ], false );
+
+			ape_rendererState_.overrideBlendMode = false;
+			ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+
+			if ( drawShadows )
+			{
+				PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+			}
+
+			ape_rendererPerformance_.numLights++;
 		}
 
-		arl_rendererState_.overrideBlendMode = true;
-		arl_rendererState_.blendModeA = PLG_BLEND_ONE;
-		arl_rendererState_.blendModeB = PLG_BLEND_ONE;
-
-		ss_ape_world_draw( world, camera, lights[ i ], false );
-
-		arl_rendererState_.overrideBlendMode = false;
-		arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
-
-		if ( drawShadows )
-		{
-			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-		}
-
-		ape_rendererPerformance_.numLights++;
+		PlgDepthMask( true );
 	}
 
-	PlgDepthMask( true );
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	arl_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }
 
 #if 0
@@ -657,7 +664,7 @@ ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
 			}
 #endif
 
-void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
+void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	assert( camera != NULL );
 	assert( viewport != NULL );
@@ -668,12 +675,12 @@ void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	if ( camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	render_scene( camera, viewport );
 
-	if ( camera->drawMode == SS_ARL_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
@@ -681,7 +688,7 @@ void ss_arl_draw_scene_( SSArlCamera *camera, const SSArlViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-SSArlRenderTarget *ss_arl_get_default_render_target( void )
+ApeRenderTarget *ss_arl_get_default_render_target( void )
 {
 	return defaultRenderTarget;
 }

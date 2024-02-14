@@ -10,13 +10,15 @@
 
 #define FW_MAX_TEAM_NAME 16
 
-typedef struct FWTeam {
+typedef struct FWTeam
+{
 	char name[ FW_MAX_TEAM_NAME ];
 } FWTeam;
 
 #include "fw_simulation.h"
 
-typedef struct FWGameState {
+typedef struct FWGameState
+{
 	FWSimState simState;
 
 	PLLinkedList *buildings;

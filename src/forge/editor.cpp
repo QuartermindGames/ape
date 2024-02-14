@@ -223,8 +223,8 @@ int main( int argc, char **argv )
 	// now init common library and fetch the editor config
 	com_initialize();
 
-	PlMountLocalLocation( ss_com_get_app_data_directory() );
-	PlMountLocalLocation( ss_com_get_local_data_directory() );
+	PlMountLocalLocation( com_get_app_data_directory() );
+	PlMountLocalLocation( com_get_local_data_directory() );
 
 	ss::forge::editorConfig = com_get_config( "editor" );
 
@@ -267,7 +267,7 @@ int main( int argc, char **argv )
 	}
 	delete projectDialog;
 
-	if ( !ss_acl_initialize( argc, argv, EDITOR_CONFIG_FILENAME ) )
+	if ( !ape_initialize( argc, argv, EDITOR_CONFIG_FILENAME ) )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;
@@ -278,9 +278,9 @@ int main( int argc, char **argv )
 
 extern "C"
 {
-	void ss_shell_get_window_size( int *width, int *height ) {}
+	void shell_get_window_size( int *width, int *height ) {}
 
-	void ss_shell_swap_window( SSArlViewport * ) {}
+	void shell_swap_window( ApeViewport *viewport ) {}
 
 	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
@@ -300,7 +300,7 @@ extern "C"
 		}
 	}
 
-	SSArlViewport *ss_shell_viewport_get_active( void )
+	ApeViewport *ss_shell_viewport_get_active( void )
 	{
 		return nullptr;
 	}

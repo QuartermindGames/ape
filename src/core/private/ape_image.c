@@ -13,7 +13,8 @@
 
 #define GFX_IDENTIFIER "GFX0"
 
-static uint8_t GetNumChannels( uint8_t channelFlags ) {
+static uint8_t GetNumChannels( uint8_t channelFlags )
+{
 	uint8_t numChannels = 0;
 	if ( channelFlags & CHANNEL_RED ) numChannels++;
 	if ( channelFlags & CHANNEL_GREEN ) numChannels++;
@@ -22,7 +23,8 @@ static uint8_t GetNumChannels( uint8_t channelFlags ) {
 	return numChannels;
 }
 
-PLImage *Image_LoadPackedImage( PLFile *filePtr ) {
+PLImage *Image_LoadPackedImage( PLFile *filePtr )
+{
 	const char *path = PlGetFilePath( filePtr );
 
 	/* read in the header */
@@ -44,10 +46,13 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr ) {
 
 	PLImageFormat imageFormat;
 	PLColourFormat colourFormat;
-	if ( flags & CHANNEL_ALPHA ) {
+	if ( flags & CHANNEL_ALPHA )
+	{
 		imageFormat = PL_IMAGEFORMAT_RGBA8;
 		colourFormat = PL_COLOURFORMAT_RGBA;
-	} else {
+	}
+	else
+	{
 		imageFormat = PL_IMAGEFORMAT_RGB8;
 		colourFormat = PL_COLOURFORMAT_RGB;
 	}
@@ -57,17 +62,22 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr ) {
 		PRINT_ERROR( "Failed to create image handle!\nPL: %s\n", PlGetError() );
 
 	uint32_t pixelSize = width * height;
-	if ( numBlocks == 0 ) {
+	if ( numBlocks == 0 )
+	{
 		uint8_t *pixelPos = image->data[ 0 ];
-		for ( unsigned int i = 0; i < pixelSize; ++i ) {
+		for ( unsigned int i = 0; i < pixelSize; ++i )
+		{
 			if ( flags & CHANNEL_RED ) { pixelPos[ 0 ] = PlReadInt8( filePtr, &status ); }
 			if ( flags & CHANNEL_GREEN ) { pixelPos[ 1 ] = PlReadInt8( filePtr, &status ); }
 			if ( flags & CHANNEL_BLUE ) { pixelPos[ 2 ] = PlReadInt8( filePtr, &status ); }
 			if ( flags & CHANNEL_ALPHA ) { pixelPos[ 3 ] = PlReadInt8( filePtr, &status ); }
 			pixelPos += ( imageFormat == PL_IMAGEFORMAT_RGBA8 ) ? 4 : 3;
 		}
-	} else {
-		for ( unsigned int i = 0; i < numBlocks; ++i ) {
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < numBlocks; ++i )
+		{
 			uint8_t blockFlags = PlReadInt8( filePtr, &status );
 			if ( !status )
 				PRINT_ERROR( "Failed to read in block %d header in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
@@ -95,9 +105,11 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr ) {
 			if ( PlReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels )
 				PRINT_ERROR( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
 
-			for ( unsigned int j = 0; j < numBlockPixels; ++j ) {
+			for ( unsigned int j = 0; j < numBlockPixels; ++j )
+			{
 				size_t po;
-				switch ( offsetSize ) {
+				switch ( offsetSize )
+				{
 					case sizeof( uint8_t ):
 						po = ( ( uint8_t * ) ( pixelOffsets ) )[ j ];
 						break;

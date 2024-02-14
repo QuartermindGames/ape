@@ -113,8 +113,8 @@ PL_EXTERN_C
 
 void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *materialPass );
 
-void ss_arl_initialize_materials_( void );
-void ss_arl_shutdown_materials_( void );
+void ape_initialize_materials_( void );
+void ape_shutdown_materials_( void );
 
 typedef enum SSArlDefaultMaterial
 {
@@ -132,6 +132,6 @@ PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pa
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material );
 
-void ss_arl_tick_materials_( void );
+void ape_tick_materials_( void );
 
 PL_EXTERN_C_END

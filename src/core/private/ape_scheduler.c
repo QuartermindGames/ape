@@ -8,7 +8,8 @@
 
 static PLLinkedList *scheduleList = NULL;
 
-typedef struct SchTask {
+typedef struct SchTask
+{
 	double delay;
 	char desc[ 32 ];
 	void *userData;
@@ -16,25 +17,29 @@ typedef struct SchTask {
 	PLLinkedListNode *node;
 } SchTask;
 
-static void Cmd_FlushTasks( unsigned int argc, char **argv ) {
+static void Cmd_FlushTasks( unsigned int argc, char **argv )
+{
 	ss_acl_flush_tasks_();
 }
 
-static void Cmd_IsTaskRunning( unsigned int argc, char **argv ) {
+static void Cmd_IsTaskRunning( unsigned int argc, char **argv )
+{
 	if ( argc <= 1 )
 		return;
 
 	PRINT( "%s\n", apeIsScheduledTaskRunning( argv[ 1 ] ) ? "true" : "false" );
 }
 
-static void Cmd_KillTask( unsigned int argc, char **argv ) {
+static void Cmd_KillTask( unsigned int argc, char **argv )
+{
 	if ( argc <= 1 )
 		return;
 
 	apeKillScheduledTask( argv[ 1 ] );
 }
 
-static void Cmd_SetTaskDelay( unsigned int argc, char **argv ) {
+static void Cmd_SetTaskDelay( unsigned int argc, char **argv )
+{
 	if ( argc <= 2 )
 		return;
 
@@ -42,7 +47,8 @@ static void Cmd_SetTaskDelay( unsigned int argc, char **argv ) {
 	apeSetScheduledTaskDelay( argv[ 1 ], delay );
 }
 
-void ss_acl_initialize_scheduler_( void ) {
+void ape_initialize_scheduler_( void )
+{
 	PRINT( "Initializing scheduler\n" );
 
 	PlRegisterConsoleCommand( "sch/flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
@@ -55,23 +61,28 @@ void ss_acl_initialize_scheduler_( void ) {
 		PRINT_ERROR( "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
 }
 
-void ss_ape_shutdown_scheduler_( void ) {
+void ape_shutdown_scheduler_( void )
+{
 	PRINT( "Shutting down scheduler\n" );
 
 	PlDestroyLinkedList( scheduleList );
 }
 
-unsigned int apeGetNumScheduledTasks( void ) {
+unsigned int apeGetNumScheduledTasks( void )
+{
 	return PlGetNumLinkedListNodes( scheduleList );
 }
 
-const char *apeGetScheduledTaskDescription( unsigned int index, double *delay ) {
+const char *apeGetScheduledTaskDescription( unsigned int index, double *delay )
+{
 	if ( scheduleList == NULL )
 		return NULL;
 
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	if ( node != NULL ) {
-		for ( unsigned int i = 0; i < index; ++i ) {
+	if ( node != NULL )
+	{
+		for ( unsigned int i = 0; i < index; ++i )
+		{
 			node = PlGetNextLinkedListNode( node );
 			if ( node == NULL )
 				break;
@@ -89,12 +100,14 @@ const char *apeGetScheduledTaskDescription( unsigned int index, double *delay ) 
 	return task->desc;
 }
 
-bool apeIsScheduledTaskRunning( const char *desc ) {
+bool apeIsScheduledTaskRunning( const char *desc )
+{
 	if ( scheduleList == NULL )
 		return false;
 
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( task->desc, desc ) == 0 )
 			return true;
@@ -105,7 +118,8 @@ bool apeIsScheduledTaskRunning( const char *desc ) {
 	return false;
 }
 
-void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay ) {
+void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay )
+{
 	SchTask *task = PlMAlloc( sizeof( SchTask ), true );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
 	task->delay = delay + ape_get_num_ticks();
@@ -114,15 +128,18 @@ void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void
 	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
-void ss_acl_tick_tasks_( void ) {
+void ss_acl_tick_tasks_( void )
+{
 	if ( scheduleList == NULL )
 		return;
 
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
 		SchTask *task = PlGetLinkedListNodeUserData( node );
-		if ( task->delay < ape_get_num_ticks() ) {
+		if ( task->delay < ape_get_num_ticks() )
+		{
 			PlDestroyLinkedListNode( node );
 			task->callback( task->userData, ( task->delay - ape_get_num_ticks() ) + 1 );
 			task->delay = 0.0;
@@ -133,16 +150,19 @@ void ss_acl_tick_tasks_( void ) {
 	}
 }
 
-void ss_acl_flush_tasks_( void ) {
+void ss_acl_flush_tasks_( void )
+{
 	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
 	PlDestroyLinkedListNodes( scheduleList );
 	PRINT( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );
 }
 
-void apePrintPendingTasks( void ) {
+void apePrintPendingTasks( void )
+{
 	unsigned int i = 0;
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		SchTask *task = PlGetLinkedListNodeUserData( node );
 		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - ape_get_num_ticks() );
 		node = PlGetNextLinkedListNode( node );
@@ -150,9 +170,11 @@ void apePrintPendingTasks( void ) {
 	PRINT( "%d scheduled tasks pending\n", i );
 }
 
-static SchTask *GetTaskByDescription( const char *desc ) {
+static SchTask *GetTaskByDescription( const char *desc )
+{
 	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL ) {
+	while ( node != NULL )
+	{
 		SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( task->desc, desc ) == 0 )
 			return task;
@@ -162,7 +184,8 @@ static SchTask *GetTaskByDescription( const char *desc ) {
 	return NULL;
 }
 
-void apeKillScheduledTask( const char *desc ) {
+void apeKillScheduledTask( const char *desc )
+{
 	SchTask *task = GetTaskByDescription( desc );
 	if ( task == NULL )
 		return;
@@ -171,7 +194,8 @@ void apeKillScheduledTask( const char *desc ) {
 	PlFree( task );
 }
 
-void apeSetScheduledTaskDelay( const char *desc, double delay ) {
+void apeSetScheduledTaskDelay( const char *desc, double delay )
+{
 	SchTask *task = GetTaskByDescription( desc );
 	if ( task == NULL )
 		return;

@@ -65,6 +65,6 @@ void tox_character_randomize_stats( ToxCharacter *character );
 int16_t tox_character_xp_to_next( const ToxCharacter *character );
 
 /// Register the character entity class.
-const SS_Acl_EntityClassDefinition *tox_character_get_class_table( void );
+const ApeEntityClassDefinition *tox_character_get_class_table( void );
 
 PL_EXTERN_C_END

@@ -105,7 +105,7 @@ set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 set(HEI_LIBRARIES plcore plgraphics plmodel)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 23)
 
 if(MSVC)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)

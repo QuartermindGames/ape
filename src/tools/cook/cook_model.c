@@ -82,7 +82,7 @@ void cook_model_process( const char *modelName )
 	if ( !serialize_ape_model( root, &model ) )
 		ERROR( "Failed to serialize model!\n" );
 
-	PlSetupPath( path, true, "%s/ship/models/%s." SS_APE_FORMAT_MODEL_EXTENSION, ss_com_project_get_local_path(), modelName );
+	PlSetupPath( path, true, "%s/ship/models/%s." SS_APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), modelName );
 	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
 		ERROR( "Failed to write model: %s\n", ndGetErrorMessage() );
 }

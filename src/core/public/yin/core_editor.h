@@ -29,17 +29,26 @@ typedef struct SSAclEditorField
 	( CBTABLE ).editorFields = x_editorVariables; \
 	( CBTABLE ).numEditorFields = x_numEditorVariables
 
-typedef enum SSAclEditorGeometryMode
+typedef enum ApeEditorGeometryMode
 {
-	EDITOR_GEOMETRYMODE_VERTEX,
-	EDITOR_GEOMETRYMODE_EDGE,
-	EDITOR_GEOMETRYMODE_FACE,
-	EDITOR_GEOMETRYMODE_BRUSH,
+	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,
+	APE_EDITOR_GEOMETRY_MODE_FACE,
+	APE_EDITOR_GEOMETRY_MODE_EDGE,
+	APE_EDITOR_GEOMETRY_MODE_VERTEX,
 
-	EDITOR_MAX_GEOMETRYMODES
-} SSAclEditorGeometryMode;
+	APE_EDITOR_MAX_GEOMETRY_MODES
+} ApeEditorGeometryMode;
 
-void ss_acl_increase_grid_size( void );
-void ss_acl_decrease_grid_size( void );
+typedef struct ApeEditorState
+{
+	ApeEditorGeometryMode geometryMode;
+} ApeEditorState;
+
+ApeEditorState *ape_editor_get_state( void );
+
+void ape_increase_grid_size( void );
+void ape_decrease_grid_size( void );
+unsigned int ape_get_grid_size( void );
+void ape_grid_set_visibility( bool visible );
 
 PL_EXTERN_C_END

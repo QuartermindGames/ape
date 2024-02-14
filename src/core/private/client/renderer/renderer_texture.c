@@ -11,24 +11,24 @@
 
 PLGTexture *ss_arl_texture_get_fallback( void )
 {
-	return ss_arl_get_default_texture_( SS_ARL_TEXTURE_FALLBACK )->internal;
+	return ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
 }
 
-PLGTexture *ss_arl_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
+PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
 {
-	return ss_arl_texture_cache_( path, true )->internal;
+	return ape_texture_cache_( path, true )->internal;
 }
 
 /////////////////////////////////////////////////////////////////
 // Private
 
 static PLHashTable *textureTable;
-static SSArlTexture *defaultTextures[ SS_ARL_MAX_DEFAULT_TEXTURES ];
+static ApeTexture *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
 
 static void destroy_texture( void *userData )
 {
-	SSArlTexture *texture = ( SSArlTexture * ) userData;
-	if ( texture == NULL || texture->flags & SS_ARL_TEXTURE_FLAG_PRESERVE )
+	ApeTexture *texture = ( ApeTexture * ) userData;
+	if ( texture == NULL || texture->flags & APE_TEXTURE_FLAG_PRESERVE )
 		return;
 
 	//TODO: set hashtable lookup index to null...
@@ -37,7 +37,7 @@ static void destroy_texture( void *userData )
 	PL_DELETE( texture );
 }
 
-static SSArlTexture *generate_texture( const char *id, uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
+static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
 {
 	PLColourFormat cFormat;
 	PLImageFormat iFormat;
@@ -84,15 +84,15 @@ static SSArlTexture *generate_texture( const char *id, uint8_t *data, unsigned i
 
 	PlDestroyImage( imageData );
 
-	SSArlTexture *texture = PL_NEW( SSArlTexture );
+	ApeTexture *texture = PL_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
 
-	ss_acl_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
 	return texture;
 }
 
-static void fetch_texture_config( SSArlTexture *texture )
+static void fetch_texture_config( ApeTexture *texture )
 {
 	PLPath configPath;
 	PlSetupPath( configPath, "%s", texture->path );
@@ -148,7 +148,7 @@ static void fetch_texture_config( SSArlTexture *texture )
 /////////////////////////////////////////////////////////////////
 // Public
 
-void ss_arl_initialize_textures_( void )
+void ape_initialize_textures_( void )
 {
 	// register the standard image loaders, and our package image loader
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
@@ -165,16 +165,16 @@ void ss_arl_initialize_textures_( void )
 	        { 0,   128, 128, 255},
 	        { 128, 0,   128, 255},
 	};
-	defaultTextures[ SS_ARL_TEXTURE_FALLBACK ] = generate_texture( NULL, ( uint8_t * ) fallbackData, 2, 2, 4, false );
-	defaultTextures[ SS_ARL_TEXTURE_FALLBACK ]->flags |= SS_ARL_TEXTURE_FLAG_PRESERVE;
+	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( NULL, ( uint8_t * ) fallbackData, 2, 2, 4, false );
+	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
-SSArlTexture *ss_arl_texture_cache_( const char *path, bool useFallback )
+ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
 {
-	SSArlTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
+	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
 	if ( texture != NULL )
 	{
-		ss_acl_mm_add_reference( &texture->reference );
+		ape_mm_add_reference( &texture->reference );
 		return texture;
 	}
 
@@ -182,10 +182,10 @@ SSArlTexture *ss_arl_texture_cache_( const char *path, bool useFallback )
 	if ( internalTexture == NULL )
 	{
 		PRINT_WARNING( "Failed to load texture (%s): %s\n", path, PlGetError() );
-		return ( useFallback ) ? defaultTextures[ SS_ARL_TEXTURE_FALLBACK ] : NULL;
+		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : NULL;
 	}
 
-	texture = PL_NEW( SSArlTexture );
+	texture = PL_NEW( ApeTexture );
 	texture->internal = internalTexture;
 	texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 	texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
@@ -193,8 +193,8 @@ SSArlTexture *ss_arl_texture_cache_( const char *path, bool useFallback )
 
 	fetch_texture_config( texture );
 
-	ss_acl_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
-	ss_acl_mm_add_reference( &texture->reference );
+	ape_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_mm_add_reference( &texture->reference );
 
 	//TODO: thrown in for Rayman Alive, but we should probably implement a proper API for this
 	PlgSetTextureAnisotropy( texture->internal, 16 );
@@ -202,7 +202,7 @@ SSArlTexture *ss_arl_texture_cache_( const char *path, bool useFallback )
 	return texture;
 }
 
-SSArlTexture *ss_arl_get_default_texture_( SSArlDefaultTexture defaultTexture )
+ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture )
 {
 	return defaultTextures[ defaultTexture ];
 }

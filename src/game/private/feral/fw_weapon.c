@@ -4,25 +4,30 @@
 
 #include "fw_weapon.h"
 
-typedef enum FWWeaponType {
+typedef enum FWWeaponType
+{
 	FW_WEAPON_TYPE_PROJECTILE,
 	FW_WEAPON_TYPE_TRACE,
 } FWWeaponType;
 
-typedef struct FWWeapon {
+typedef struct FWWeapon
+{
 	char *name;
 	char *projectileName;
 } FWWeapon;
 
-void FW_Weapon_LoadTypes( void ) {
+void FW_Weapon_LoadTypes( void )
+{
 	NdBranch *node = ndLoadFile( "config/weapons.cfg.n", "weapons" );
-	if ( node == NULL ) {
+	if ( node == NULL )
+	{
 		Game_Warning( "Failed to open weapons config: %s\n", ndGetErrorMessage() );
 		return;
 	}
 
 	NdBranch *weaponObject = ndGetFirstChild( node );
-	while ( weaponObject != NULL ) {
+	while ( weaponObject != NULL )
+	{
 		const char *c = ndGetStringByName( weaponObject, "name", NULL );
 
 		weaponObject = ndGetNextChild( weaponObject );

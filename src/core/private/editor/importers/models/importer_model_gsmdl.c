@@ -15,7 +15,8 @@
 
 #define MDL_VERSION 10
 
-typedef struct VMDLHeader {
+typedef struct VMDLHeader
+{
 	int32_t magic; /* IDST / IDSQ */
 	int32_t version;
 	char name[ MDL_NAME ];
@@ -54,27 +55,31 @@ typedef struct VMDLHeader {
 	int32_t transitionIndex;
 } VMDLHeader;
 
-typedef struct VMDLBoundingBox {
+typedef struct VMDLBoundingBox
+{
 	int32_t bone;
 	int32_t group;
 	PLVector3 bbMin;
 	PLVector3 bbMax;
 } VMDLBoundingBox;
 
-typedef struct VMDLAnimationHeader {
+typedef struct VMDLAnimationHeader
+{
 	int32_t id;
 	int32_t version;
 	char name[ MDL_NAME ];
 	int32_t length;
 } VMDLAnimationHeader;
 
-typedef struct VMDLAnimationGroup {
+typedef struct VMDLAnimationGroup
+{
 	char label[ MDL_LABEL ];
 	char name[ MDL_NAME ];
 	int32_t unused[ 2 ];
 } VMDLAnimationGroup;
 
-typedef struct VMDLBone {
+typedef struct VMDLBone
+{
 	char label[ MDL_LABEL ];
 	int32_t parent;
 	int32_t flags;
@@ -83,7 +88,8 @@ typedef struct VMDLBone {
 	float scale[ MDL_MAX_BONE_CONTROLLERS ];
 } VMDLBone;
 
-typedef struct VMDLBoneController {
+typedef struct VMDLBoneController
+{
 	int32_t bone;
 	int32_t type;
 	float range[ 2 ];
@@ -91,20 +97,24 @@ typedef struct VMDLBoneController {
 	int32_t index;
 } VMDLBoneController;
 
-PLMModel *edLoadGoldSrcModel_( const char *path ) {
+PLMModel *edLoadGoldSrcModel_( const char *path )
+{
 	PLFile *file = PlOpenFile( path, false );
-	if ( file == NULL ) {
+	if ( file == NULL )
+	{
 		return NULL;
 	}
 
 	VMDLHeader header;
-	if ( PlReadFile( file, &header, sizeof( VMDLHeader ), 1 ) != 1 ) {
+	if ( PlReadFile( file, &header, sizeof( VMDLHeader ), 1 ) != 1 )
+	{
 		edPrint_( ED_LOG_WARN, "Failed to read in header: %s\nPL: %s\n", path, PlGetError() );
 	}
 
 	/* now carry out some basic validation */
 
-	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC ) {
+	if ( header.magic != MDL_MAGIC && header.magic != MDL_SEQ_MAGIC )
+	{
 		edPrint_( ED_LOG_WARN, "Invalid identifier for MDL: %d vs %d!\n", header.magic, MDL_MAGIC );
 	}
 

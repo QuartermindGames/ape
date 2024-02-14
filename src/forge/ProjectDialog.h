@@ -26,7 +26,7 @@ namespace ss::forge
 
 	private:
 		static constexpr const char *defaultName = "Enter a project name";
-		static constexpr unsigned int baseWidth  = 256;
+		static constexpr unsigned int baseWidth = 256;
 
 		static void register_project_callback( const char *, void * );
 		static std::map< std::string, forge::Project * > projects;
@@ -34,4 +34,4 @@ namespace ss::forge
 		FXListBox *listBox{};
 		FXTextField *projectNameField{};
 	};
-}// namespace os::editor
+}// namespace ss::forge

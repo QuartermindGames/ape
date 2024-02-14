@@ -40,8 +40,7 @@ set(APE_SOURCE_GUI
 
 set(APE_SOURCE_EDITORS
         private/editor/editor.c
-        private/editor/editor_material_selector.c
-        private/editor/editor_world.c)
+        private/editor/editor_material_selector.c)
 
 add_library(ApeCore STATIC
         private/ape_console.c
@@ -66,8 +65,9 @@ add_library(ApeCore STATIC
         private/model/model.c
 
         private/world/world.c
+        private/world/world_brush.c
         private/world/world_deserialiser.c
-        private/world/world_deserialiser_rf.c
+        private/world/world_node.c
         private/world/world_room.c
         private/world/world_serialiser.c
 

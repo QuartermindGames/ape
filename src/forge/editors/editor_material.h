@@ -6,18 +6,18 @@
 
 namespace ss::forge
 {
-	class ViewportFrame;
+	class viewport_frame;
 
-	class MaterialEditor : public FXTabItem
+	class editor_material : public FXTabItem
 	{
-		FXDECLARE( MaterialEditor )
+		FXDECLARE( editor_material )
 
 	protected:
-		inline MaterialEditor() = default;
+		inline editor_material() = default;
 
 	public:
-		MaterialEditor( FXTabBook *owner, const FXString &worldName, ApeMaterial *material );
-		~MaterialEditor() override;
+		editor_material( FXTabBook *owner, const FXString &worldName, ApeMaterial *material );
+		~editor_material() override;
 
 	private:
 		ApeWorld *_material{ nullptr };
@@ -25,6 +25,6 @@ namespace ss::forge
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;
 
-		ViewportFrame *_viewport;
+		viewport_frame *_viewport;
 	};
 }// namespace ss::forge

@@ -10,7 +10,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-bool tox_ui_draw( SSArlViewport *viewport )
+bool tox_ui_draw( ApeViewport *viewport )
 {
 	return false;
 }

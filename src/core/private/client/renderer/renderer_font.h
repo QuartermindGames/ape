@@ -1,11 +1,10 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
 #include "yin/core_renderer.h"
 
-typedef struct SS_Arl_BitmapFont
+typedef struct ApeBitmapFont
 {
 	struct PLGMesh *mesh; /* for batching */
 	struct ApeMaterial *material;
@@ -14,7 +13,7 @@ typedef struct SS_Arl_BitmapFont
 	unsigned int start, end;
 
 	ApeMemoryReference mem;
-} SS_Arl_BitmapFont;
+} ApeBitmapFont;
 
-void ss_arl_initialize_bitmap_fonts_( void );
-void ss_arl_shutdown_bitmap_fonts_( void );
+void ape_initialize_bitmap_fonts_( void );
+void ape_shutdown_bitmap_fonts_( void );

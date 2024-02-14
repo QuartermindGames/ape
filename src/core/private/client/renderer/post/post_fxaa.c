@@ -30,7 +30,7 @@ static void cleanup_fxaa_effect( void )
 	ss_arl_material_release( fxaaMaterial );
 }
 
-static void draw_fxaa_effect( const SSArlViewport *viewport )
+static void draw_fxaa_effect( const ApeViewport *viewport )
 {
 	if ( !fxaaEnabled )
 		return;

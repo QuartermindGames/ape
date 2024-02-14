@@ -68,14 +68,14 @@ static bool execute_test( void )
 {
 	static const char *ip = "localhost";
 
-	testData.hostSocket = ss_acl_net_open_socket_( ip, 0, true );
+	testData.hostSocket = ape_net_open_socket_( ip, 0, true );
 	if ( testData.hostSocket == NULL )
 	{
 		PRINT_WARNING( "Failed to create host socket!\n" );
 		return false;
 	}
 
-	testData.clientSocket = ss_acl_net_open_socket_( ip, ss_acl_net_get_local_port_( testData.hostSocket ), false );
+	testData.clientSocket = ape_net_open_socket_( ip, ss_acl_net_get_local_port_( testData.hostSocket ), false );
 	if ( testData.clientSocket == NULL )
 	{
 		PRINT_WARNING( "Failed to create client socket!\n" );
@@ -85,7 +85,7 @@ static bool execute_test( void )
 	bool accepted = false;
 	while ( !accepted && testData.acceptSocket == NULL )
 	{
-		if ( ss_acl_net_get_connection_status_( testData.clientSocket ) != NET_CONNECTION_PENDING )
+		if ( ape_net_get_connection_status_( testData.clientSocket ) != NET_CONNECTION_PENDING )
 			accepted = true;
 
 		testData.acceptSocket = ss_acl_net_accept_( testData.hostSocket );
@@ -123,16 +123,16 @@ static void test_net_command( unsigned int argc, char **argv )
 	PRINT( "%s", execute_test() ? "Test passed successfully!\n" : "Test failed!\n" );
 
 	if ( testData.hostSocket != NULL )
-		ss_acl_net_close_socket_( testData.hostSocket );
+		ape_net_close_socket_( testData.hostSocket );
 	if ( testData.clientSocket != NULL )
-		ss_acl_net_close_socket_( testData.clientSocket );
+		ape_net_close_socket_( testData.clientSocket );
 	if ( testData.acceptSocket != NULL )
-		ss_acl_net_close_socket_( testData.acceptSocket );
+		ape_net_close_socket_( testData.acceptSocket );
 }
 
 #endif
 
-void ss_acl_initialize_net_( void )
+void ape_initialize_net_( void )
 {
 #if defined( _WIN32 )
 	WSADATA data;
@@ -146,14 +146,14 @@ void ss_acl_initialize_net_( void )
 #endif
 }
 
-void ss_acl_shutdown_net_( void )
+void ape_shutdown_net_( void )
 {
 #if defined( _WIN32 )
 	WSACleanup();
 #endif
 }
 
-SSAclNetSocket *ss_acl_net_open_socket_( const char *ip, unsigned short port, bool isHost )
+SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost )
 {
 	struct addrinfo hints;
 	PL_ZERO_( hints );
@@ -259,7 +259,7 @@ SSAclNetSocket *ss_acl_net_open_socket_( const char *ip, unsigned short port, bo
 	return netSocket;
 }
 
-void ss_acl_net_close_socket_( SSAclNetSocket *netSocket )
+void ape_net_close_socket_( SSAclNetSocket *netSocket )
 {
 	close_socket( netSocket->handle );
 	PlFree( netSocket );
@@ -320,7 +320,7 @@ SSAclNetSocket *ss_acl_net_accept_( SSAclNetSocket *netSocket )
 	return NULL;
 }
 
-SSAclNetConnectionState ss_acl_net_get_connection_status_( SSAclNetSocket *netSocket )
+SSAclNetConnectionState ape_net_get_connection_status_( SSAclNetSocket *netSocket )
 {
 	if ( netSocket->connectionState != NET_CONNECTION_PENDING )
 		return netSocket->connectionState;

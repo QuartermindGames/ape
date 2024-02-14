@@ -10,7 +10,8 @@
 
 PL_EXTERN_C
 
-typedef struct GUIVector2 {
+typedef struct GUIVector2
+{
 	int x, y;
 } GUIVector2;
 
@@ -44,7 +45,8 @@ const GuiStyleSheet *guiGetActiveStyleSheet( void );
 void gui_panel_tick( GuiPanel *root );
 void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root );
 
-typedef enum GuiMouseButton {
+typedef enum GuiMouseButton
+{
 	GUI_MOUSE_BUTTON_LEFT,
 	GUI_MOUSE_BUTTON_RIGHT,
 	GUI_MOUSE_BUTTON_MIDDLE,
@@ -59,13 +61,15 @@ void guiUpdateMouseButton( GuiMouseButton button, bool isDown );
  * Panel
  ****************************************/
 
-typedef enum GuiPanelBackground {
+typedef enum GuiPanelBackground
+{
 	GUI_PANEL_BACKGROUND_NONE,
 	GUI_PANEL_BACKGROUND_DEFAULT,
 	GUI_PANEL_BACKGROUND_SOLID,
 } GuiPanelBackground;
 
-typedef enum GuiPanelBorder {
+typedef enum GuiPanelBorder
+{
 	GUI_PANEL_BORDER_NONE,
 	GUI_PANEL_BORDER_INSET,
 	GUI_PANEL_BORDER_OUTSET,
@@ -122,7 +126,8 @@ void guiDestroyCursor( GuiPanel *self );
  * Font
  ****************************************/
 
-typedef enum GuiFontDefaultType {
+typedef enum GuiFontDefaultType
+{
 	GUI_FONT_DEFAULT_LARGE,
 	GUI_FONT_DEFAULT_MEDIUM,
 	GUI_FONT_DEFAULT_SMALL,
@@ -133,6 +138,9 @@ typedef enum GuiFontDefaultType {
 
 float guiGetFontLineSpacing( const GuiFont *font );
 
+/**
+ * Returns the specified default font.
+ */
 GuiFont *guiGetDefaultFont( GuiFontDefaultType defaultType );
 
 void guiDestroyFont( GuiFont *font );

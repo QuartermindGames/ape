@@ -1,18 +1,15 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
 
 #include "yin/core_fs.h"
 
-#include "model/model.h"
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
-#include "editor/editor.h"
+#include "client/renderer/renderer.h"
 
 #include "server/server.h"
 #include "net/net.h"
-
-#include "client/renderer/renderer.h"
 
 /****************************************
  * PRIVATE
@@ -86,14 +83,14 @@ ApeConfig ape_config_;
 NdBranch *ss_acl_get_config( void ) { return engineConfig; }
 NdBranch *ss_acl_get_user_config( void ) { return userConfig; }
 
-bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
+bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
 
 	PlRegisterStandardPackageLoaders( PL_PACKAGE_LOAD_FORMAT_ALL );
 
 	// Call this first, so we can buffer console output
-	ss_acl_initialize_console_();
+	ape_initialize_console_();
 
 	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 SnortySoft, Mark E Sowden\n",
 	       VERSION_MAJOR,
@@ -105,28 +102,28 @@ bool ss_acl_initialize( unsigned int argc, char **argv, const char *config )
 	if ( engineTerminalMode )
 		PRINT( "Operating in command-line mode!\n" );
 
-	ss_acl_console_register_variables_( engineTerminalMode );
-	ss_acl_console_register_commands_( engineTerminalMode );
+	ape_console_register_variables_( engineTerminalMode );
+	ape_console_register_commands_( engineTerminalMode );
 
 	// Need to do this before anything else IO related
-	ss_acl_fs_mount_base_locations();
+	ape_fs_mount_base_locations();
 
 	// And now we can fetch the configs that provides mount locations, aliases and more
 	engineConfig = com_get_config( config != NULL ? config : "engine" );
 	userConfig = com_get_config( "user" );
 
-	ss_acl_fs_setup_config( engineConfig );
+	ape_fs_setup_config( engineConfig );
 
 	PRINT( "Initializing core services...\n" );
 
-	ss_acl_initialize_scheduler_();
-	ss_acl_initialize_memory_manager_();
-	ss_acl_initialize_net_();
+	ape_initialize_scheduler_();
+	ape_initialize_memory_manager_();
+	ape_initialize_net_();
 
-	ss_acl_initialize_server_();
-	ss_acl_initialize_client_();
+	ape_initialize_server_();
+	ape_initialize_client_();
 
-	ss_acl_initialize_game_();
+	ape_initialize_game_();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -143,19 +140,19 @@ void ape_shutdown( void )
 
 	ss_acl_flush_tasks_();
 
-	ss_acl_shutdown_game_();
+	ape_shutdown_game_();
 
-	ss_acl_shutdown_client_();
-	ss_acl_shutdown_server_();
-	ss_acl_shutdown_console_();
-	ss_ape_shutdown_memory_manager_();
-	ss_ape_shutdown_scheduler_();
-	ss_acl_shutdown_net_();
+	ape_shutdown_client_();
+	ape_shutdown_server_();
+	ape_shutdown_console_();
+	ape_shutdown_memory_manager_();
+	ape_shutdown_scheduler_();
+	ape_shutdown_net_();
 
-	ss_com_write_config( engineConfig, "engine" );
+	com_write_config( engineConfig, "engine" );
 	ndDestroyBranch( engineConfig );
 
-	ss_com_write_config( userConfig, "user" );
+	com_write_config( userConfig, "user" );
 	ndDestroyBranch( userConfig );
 
 	ss_shell_shutdown();
@@ -176,14 +173,14 @@ void ape_tick_frame( void )
 	COM_PROFILE_FUNCTION_START();
 
 	ss_acl_tick_tasks_();
-	ss_acl_tick_client_();
+	ape_tick_client_();
 	ss_acl_tick_server_();
 
-	if ( ss_arl_get_capture_state_() )
+	if ( ape_get_capture_state_() )
 	{
-		SSArlViewport *viewport = ss_shell_viewport_get_active();
+		ApeViewport *viewport = ss_shell_viewport_get_active();
 		if ( viewport != NULL )
-			ss_arl_render_frame_( viewport );
+			ape_render_frame_( viewport );
 	}
 
 	numTicks++;
@@ -197,7 +194,7 @@ bool ape_is_running( void )
 	return engineInitialized;
 }
 
-void ape_render_frame( SSArlViewport *viewport )
+void ape_render_frame( ApeViewport *viewport )
 {
 	if ( !engineInitialized )
 		return;
@@ -205,7 +202,7 @@ void ape_render_frame( SSArlViewport *viewport )
 	// If we're capturing, ignore the request from the
 	// caller to render the frame because we'll lock it
 	// with the frame tick instead...
-	if ( ss_arl_get_capture_state_() )
+	if ( ape_get_capture_state_() )
 		return;
 
 	assert( viewport != NULL );
@@ -215,7 +212,7 @@ void ape_render_frame( SSArlViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "ss_arl_render_frame_", ss_arl_render_frame_( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( "ape_render_frame_", ape_render_frame_( viewport ) );
 }
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )
@@ -238,12 +235,13 @@ void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonSta
 	Client_Input_HandleMouseButtonEvent( button, buttonState );
 }
 
-void ss_acl_input_handle_mouse_wheel_event( float x, float y )
+void ape_input_handle_mouse_wheel_event( float x, float y )
 {
+	printf( "%f\n", y );
 	Client_Input_HandleMouseWheelEvent( x, y );
 }
 
-void ss_acl_input_handle_mouse_motion_event( int x, int y )
+void ape_input_handle_mouse_motion_event( int x, int y )
 {
 	Client_Input_HandleMouseMotionEvent( x, y );
 }

@@ -2,9 +2,11 @@
 
 #include "game_component_movement.h"
 
-static void HandleMouseLook( GameMovementComponent *movementComponent ) {
+static void HandleMouseLook( GameMovementComponent *movementComponent )
+{
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook == NULL || !mouseLook->b_value ) {
+	if ( mouseLook == NULL || !mouseLook->b_value )
+	{
 		return;
 	}
 
@@ -14,8 +16,10 @@ static void HandleMouseLook( GameMovementComponent *movementComponent ) {
 	//TODO
 }
 
-static void Tick( ApeEntityComponent *self ) {
-	if ( apeShellInterface_GetButtonState( INPUT_A ) ) {
+static void Tick( ApeEntityComponent *self )
+{
+	if ( apeShellInterface_GetButtonState( INPUT_A ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->velocity.y += 10.0f;
 	}
 
@@ -23,25 +27,37 @@ static void Tick( ApeEntityComponent *self ) {
 
 	static const float gain = 0.25f;
 
-	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) ) {
+	if ( apeShellInterface_GetButtonState( APE_INPUT_UP ) || apeShellInterface_GetKeyState( 'w' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity += gain;
-	} else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) ) {
+	}
+	else if ( apeShellInterface_GetButtonState( APE_INPUT_DOWN ) || apeShellInterface_GetKeyState( 's' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity -= gain;
-	} else if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity != 0.0f ) {
+	}
+	else if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity != 0.0f )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->forwardVelocity = GAME_MOVEMENT_COMPONENT( self )->forwardVelocity > 0 ? GAME_MOVEMENT_COMPONENT( self )->forwardVelocity - gain : GAME_MOVEMENT_COMPONENT( self )->forwardVelocity + gain;
-		if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->forwardVelocity > -0.1f ) {
+		if ( GAME_MOVEMENT_COMPONENT( self )->forwardVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->forwardVelocity > -0.1f )
+		{
 			GAME_MOVEMENT_COMPONENT( self )->forwardVelocity = 0.0f;
 		}
 	}
 
 	// strafing
-	if ( apeShellInterface_GetKeyState( 'a' ) ) {
+	if ( apeShellInterface_GetKeyState( 'a' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity += gain;
-	} else if ( apeShellInterface_GetKeyState( 'd' ) ) {
+	}
+	else if ( apeShellInterface_GetKeyState( 'd' ) )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity -= gain;
-	} else if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity != 0.0f ) {
+	}
+	else if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity != 0.0f )
+	{
 		GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = GAME_MOVEMENT_COMPONENT( self )->strafeVelocity > 0 ? GAME_MOVEMENT_COMPONENT( self )->strafeVelocity - gain : GAME_MOVEMENT_COMPONENT( self )->strafeVelocity + gain;
-		if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->strafeVelocity > -0.1f ) {
+		if ( GAME_MOVEMENT_COMPONENT( self )->strafeVelocity < 0.1f && GAME_MOVEMENT_COMPONENT( self )->strafeVelocity > -0.1f )
+		{
 			GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = 0.0f;
 		}
 	}
@@ -61,7 +77,8 @@ static void Tick( ApeEntityComponent *self ) {
 #endif
 }
 
-const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void ) {
+const ApeEntityComponentCallbackTable *Game_Component_Movement_GetCallbackTable( void )
+{
 	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 

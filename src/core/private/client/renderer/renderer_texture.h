@@ -6,16 +6,16 @@
 
 PL_EXTERN_C
 
-typedef enum SSArlDefaultTexture
+typedef enum ApeDefaultTexture
 {
-	SS_ARL_TEXTURE_FALLBACK,
+	APE_TEXTURE_FALLBACK,
 
-	SS_ARL_MAX_DEFAULT_TEXTURES
-} SSArlDefaultTexture;
+	APE_MAX_DEFAULT_TEXTURES
+} ApeDefaultTexture;
 
-#define SS_ARL_TEXTURE_FLAG_PRESERVE ( 1 << 0 )
+#define APE_TEXTURE_FLAG_PRESERVE ( 1 << 0 )
 
-typedef struct SSArlTexture
+typedef struct ApeTexture
 {
 	ApeMemoryReference reference;
 	PLGTexture *internal;
@@ -25,10 +25,10 @@ typedef struct SSArlTexture
 	unsigned int flags;
 
 	PLPath path;// for reloading
-} SSArlTexture;
+} ApeTexture;
 
-SSArlTexture *ss_arl_texture_cache_( const char *path, bool useFallback );
+ApeTexture *ape_texture_cache_( const char *path, bool useFallback );
 
-SSArlTexture *ss_arl_get_default_texture_( SSArlDefaultTexture defaultTexture );
+ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture );
 
 PL_EXTERN_C_END

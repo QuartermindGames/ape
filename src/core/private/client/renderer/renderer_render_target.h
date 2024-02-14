@@ -4,6 +4,6 @@
 
 #include "renderer.h"
 
-typedef struct SSArlRenderTarget SSArlRenderTarget;
+typedef struct ApeRenderTarget ApeRenderTarget;
 
-SSArlRenderTarget *ss_arl_render_target_get_by_key( const char *key );
+ApeRenderTarget *ape_render_target_get_by_key( const char *key );

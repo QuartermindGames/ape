@@ -4,6 +4,7 @@
 
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
+#include "entity/entity.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -143,18 +144,20 @@ static void save_user_config( void )
 	PRINT( "User config saved.\n" );
 }
 
-void ss_acl_console_register_commands_( bool isDedicated )
+void ape_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
 
+	ape_register_entity_commands_();
+
 	if ( !isDedicated )
-		ss_acl_console_register_cl_commands_();
+		ape_console_register_cl_commands_();
 }
 
-void ss_acl_console_register_variables_( bool isDedicated )
+void ape_console_register_variables_( bool isDedicated )
 {
 	// server
 	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
@@ -162,7 +165,7 @@ void ss_acl_console_register_variables_( bool isDedicated )
 
 	// Client variables
 	if ( !isDedicated )
-		ss_acl_console_register_cl_variables_();
+		ape_console_register_cl_variables_();
 }
 
 static int logLevels[ APE_LOG_LEVELS ];
@@ -194,7 +197,7 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
 /**
  * Set the console up.
  */
-void ss_acl_initialize_console_( void )
+void ape_initialize_console_( void )
 {
 	PlSetConsoleOutputCallback( output_callback );
 
@@ -218,7 +221,7 @@ void ss_acl_initialize_console_( void )
 	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 
-void ss_acl_shutdown_console_( void )
+void ape_shutdown_console_( void )
 {
 	clear_output_buffer();
 }

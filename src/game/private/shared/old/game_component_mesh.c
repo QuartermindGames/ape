@@ -3,7 +3,8 @@
 #include "game_component_mesh.h"
 #include "game_component_transform.h"
 
-static void Spawn( ApeEntityComponent *self ) {
+static void Spawn( ApeEntityComponent *self )
+{
 	self->userData = PL_NEW( GameMeshComponent );
 
 	GAME_MESH_COMPONENT( self )->transformComponent = apeGetEntityComponentByName( self->entity, "transform" );
@@ -12,21 +13,25 @@ static void Spawn( ApeEntityComponent *self ) {
 	GAME_MESH_COMPONENT( self )->material = apeCacheMaterial( "engine/vertex.mat.n", APE_CACHE_WORLD, true, false );
 }
 
-static void Destroy( ApeEntityComponent *self ) {
+static void Destroy( ApeEntityComponent *self )
+{
 	apeReleaseMaterial( GAME_MESH_COMPONENT( self )->material );
 
 	PlgDestroyMesh( GAME_MESH_COMPONENT( self )->mesh );
 }
 
-static void Tick( ApeEntityComponent *self ) {
+static void Tick( ApeEntityComponent *self )
+{
 	Game_Print( "TICK\n" );
 }
 
-static void Draw( ApeEntityComponent *self ) {
+static void Draw( ApeEntityComponent *self )
+{
 	apeDrawMesh( GAME_MESH_COMPONENT( self )->material, GAME_MESH_COMPONENT( self )->mesh, NULL, 0 );
 }
 
-const ApeEntityComponentCallbackTable *gameMeshComponentCallbackTable( void ) {
+const ApeEntityComponentCallbackTable *gameMeshComponentCallbackTable( void )
+{
 	static ApeEntityComponentCallbackTable callbackTable;
 	PL_ZERO_( callbackTable );
 	callbackTable.spawnFunction = Spawn;

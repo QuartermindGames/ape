@@ -48,9 +48,9 @@ typedef struct FWCharacterComponent
 
 	PLLinkedList *buildings;
 
-	SS_Acl_EntityComponent *transformComponent;
-	SS_Acl_EntityComponent *meshComponent;
-	SS_Acl_EntityComponent *movementComponent;
+	ApeEntityComponent *transformComponent;
+	ApeEntityComponent *meshComponent;
+	ApeEntityComponent *movementComponent;
 } FWCharacterComponent;
 
 /**
