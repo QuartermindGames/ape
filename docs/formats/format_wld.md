@@ -1,5 +1,32 @@
 # WLD v3 Format Specification
 
+```
+object world
+{
+    array object sectors
+    {
+        {
+            {
+                array object nodes
+                {
+                    {
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+## Node
+
+```c
+{
+    string id "example"
+    string className ""
+}
+```
+
 ## Light
 
 ```

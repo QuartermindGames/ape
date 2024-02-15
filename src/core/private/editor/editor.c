@@ -158,6 +158,8 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	char label[ 64 ] = {};
 	strcat( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
 	strcat( label, " / " );
@@ -232,6 +234,8 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		// Restore the view matrix back
 		PlgSetViewMatrix( &viewport->camera->internal->internal.view );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 bool ape_is_editor_active( void )

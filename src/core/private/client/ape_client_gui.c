@@ -303,9 +303,6 @@ void ss_arl_draw_gui_( ApeViewport *viewport )
 
 void ape_draw_menu_( ApeViewport *viewport )
 {
-	if ( viewport == NULL )
-		return;
-
 	COM_PROFILE_FUNCTION_START();
 
 	ape_viewport_make_active( viewport );
@@ -317,7 +314,7 @@ void ape_draw_menu_( ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ss_arl_postfx_draw_( viewport );
+	COM_PROFILE_FUNCTION_CALL( ss_arl_postfx_draw_( viewport ) );
 
 	ss_arl_draw_gui_( viewport );
 	ape_editor_draw_gui_( viewport );

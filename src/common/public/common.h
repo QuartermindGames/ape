@@ -38,6 +38,10 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 /////////////////////////////////////////////////////////////////
 // PROFILER
 
+#ifndef NDEBUG
+#	define COM_ENABLE_PROFILER 1
+#endif
+
 typedef struct ComProfilingGroup ComProfilingGroup;
 
 ComProfilingGroup *comGetProfilingGroup( const char *key );
@@ -58,14 +62,20 @@ unsigned int comGetNumProfilerGroups( void );
 
 void com_update_profiler_samples( void );
 
-#define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
-#define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
-#define COM_PROFILE_FUNCTION_CALL( FUNCTION ) \
-	{                                         \
-		comStartProfiling( #FUNCTION );       \
-		FUNCTION;                             \
-		comEndProfiling( #FUNCTION );         \
-	}
+#if ( COM_ENABLE_PROFILER == 1 )
+#	define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_CALL( FUNCTION ) \
+		{                                         \
+			comStartProfiling( #FUNCTION );       \
+			FUNCTION;                             \
+			comEndProfiling( #FUNCTION );         \
+		}
+#else
+#	define COM_PROFILE_FUNCTION_START()
+#	define COM_PROFILE_FUNCTION_END()
+#	define COM_PROFILE_FUNCTION_CALL( FUNCTION ) FUNCTION;
+#endif
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////

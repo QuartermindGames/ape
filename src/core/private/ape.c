@@ -210,7 +210,7 @@ void ape_render_frame( ApeViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( "ape_render_frame_", ape_render_frame_( viewport ) );
+	ape_render_frame_( viewport );
 }
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )

@@ -317,8 +317,8 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );
 	assert( font != NULL );
-	if ( font == NULL )
-		return;
+
+	COM_PROFILE_FUNCTION_START();
 
 	PlgSetTexture( NULL, 0 );
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -410,6 +410,8 @@ void ape_console_draw_( const ApeViewport *viewport )
 	}
 
 	PlPopMatrix();
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 /****************************************
