@@ -11,9 +11,8 @@
 #include "server/server.h"
 #include "net/net.h"
 
-/****************************************
- * PRIVATE
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
 static unsigned int numTicks = 0;
 
@@ -74,9 +73,8 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 }
 
-/****************************************
- * PUBLIC
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
 ApeConfig ape_config_;
 
@@ -174,7 +172,7 @@ void ape_tick_frame( void )
 
 	ss_acl_tick_tasks_();
 	ape_tick_client_();
-	ss_acl_tick_server_();
+	ape_server_tick_();
 
 	if ( ape_get_capture_state_() )
 	{

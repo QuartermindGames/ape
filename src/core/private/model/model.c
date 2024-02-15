@@ -124,9 +124,9 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 		PRINT_WARNING( "Mesh has no indices!\n" );
 
 	unsigned int materialIndex = ndGetUInt( root, "materialIndex", 0 );
-	if ( materialIndex >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( materialIndex >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		PRINT_WARNING( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
+		PRINT_WARNING( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, APE_FORMAT_MODEL_MAX_MATERIALS );
 		materialIndex = 0;
 	}
 
@@ -166,9 +166,9 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 static SSApeModel *deserialize_model( NdBranch *root )
 {
 	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 || version > SS_APE_FORMAT_MODEL_VERSION )
+	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
-		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, SS_APE_FORMAT_MODEL_VERSION );
+		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
 		return NULL;
 	}
 
@@ -179,10 +179,10 @@ static SSApeModel *deserialize_model( NdBranch *root )
 		PRINT_WARNING( "No meshes for model!\n" );
 		return NULL;
 	}
-	else if ( numMeshes >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
+	else if ( numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		PRINT_WARNING( "Unexpected number of meshes (%u >= %u)!\n", numMeshes, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
-		numMeshes = ( SS_APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		PRINT_WARNING( "Unexpected number of meshes (%u >= %u)!\n", numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
+		numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
 	SSApeModel *model = PL_NEW( SSApeModel );
@@ -227,10 +227,10 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	if ( bonesList != NULL )
 	{
 		model->numBones = ndGetNumOfChildren( bonesList );
-		if ( model->numBones >= SS_APE_FORMAT_MODEL_MAX_BONES )
+		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
 		{
-			PRINT_WARNING( "Unexpected number of bones (%u >= %u)!", model->numBones, SS_APE_FORMAT_MODEL_MAX_BONES );
-			model->numBones = ( SS_APE_FORMAT_MODEL_MAX_BONES - 1 );
+			PRINT_WARNING( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
+			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
 		NdBranch *child = ndGetFirstChild( bonesList );
 		for ( unsigned int i = 0; i < model->numBones; ++i )

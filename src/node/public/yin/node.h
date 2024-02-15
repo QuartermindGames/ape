@@ -73,6 +73,55 @@ typedef union NdPropertyData
 	uint64_t ui64;
 } NdPropertyData;
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Struct Serialization
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct NdStructDescriptor NdStructDescriptor;
+
+typedef struct NdStructItemDescriptor
+{
+	const char *name;
+	NdPropertyType type;
+	NdPropertyType subType;              // if it's an array
+	unsigned int numElements;            // if it's an array
+	NdStructDescriptor *structDescriptor;// if it's an object
+	size_t offset;                       // offset into the struct
+} NdStructItemDescriptor;
+
+typedef struct NdStructDescriptor
+{
+	const char *name;
+	NdStructItemDescriptor items[ 64 ];
+	unsigned int numItems;
+} NdStructDescriptor;
+
+#define ND_DECLARE_STRUCT( NAME, NUM, ... )         \
+	static NdStructDescriptor NAME##_descriptor = { \
+	        .name = #NAME,                          \
+	        .numItems = ( NUM ),                    \
+	        .items = { __VA_ARGS__ } };
+#define ND_DECLARE_STRUCT_ITEM( TYPE, VAR, DATATYPE ) \
+	{                                                 \
+		.name = #VAR,                                 \
+		.type = ( DATATYPE ),                         \
+		.offset = PL_OFFSETOF( TYPE, VAR ),           \
+	}
+#define ND_DECLARE_STRUCT_ITEM_ARRAY( TYPE, VAR, SUBTYPE, SIZE ) \
+	{                                                            \
+		.name = #VAR,                                            \
+		.type = ND_PROPERTY_ARRAY,                               \
+		.subType = ( SUBTYPE ),                                  \
+		.numElements = ( SIZE ),                                 \
+		.offset = PL_OFFSETOF( TYPE, VAR ),                      \
+	}
+#define ND_DECLARE_STRUCT_ITEM_OBJECT( NAME, STRUCT )
+
+NdBranch *nd_serialize_struct( const NdStructDescriptor *descriptor, const void *ptr, NdErrorCode *errorCode );
+NdBranch *nd_deserialize_struct( const NdStructDescriptor *descriptor, void *ptr, NdErrorCode *errorCode );
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 void ndSetupLogs( void );
 
 const char *ndGetErrorMessage( void );

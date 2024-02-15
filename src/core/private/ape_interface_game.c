@@ -71,5 +71,5 @@ void ape_spawn_world_( const char *worldPath )
 	ape_world_spawn_entities_( world );
 
 	ss_acl_start_server_( "localhost", 0 );
-	ape_initiate_client_connection_( "localhost", ss_acl_server_get_port_() );
+	ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
 }

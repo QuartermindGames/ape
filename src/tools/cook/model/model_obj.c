@@ -301,18 +301,18 @@ void model_obj_destroy( ObjModel *obj )
 	PL_DELETE( obj );
 }
 
-SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out )
+ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
 {
 	out->numMeshes = obj->numSubObjects;
-	if ( out->numMeshes >= SS_APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, SS_APE_FORMAT_MODEL_MAX_MATERIALS );
-		out->numMeshes = ( SS_APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
+		out->numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
-		SSApeFormatMesh *mesh = &out->meshes[ i ];
+		ApeFormatMesh *mesh = &out->meshes[ i ];
 
 		unsigned int numFaces;
 		ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
@@ -325,7 +325,7 @@ SSApeFormatModel *model_obj_to_ape( const ObjModel *obj, SSApeFormatModel *out )
 }
 
 static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
-static SSApeFormatModel *conv_obj( const CookModel *model, SSApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
+static ApeFormatModel *conv_obj( const CookModel *model, ApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
 static void destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
 
 CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

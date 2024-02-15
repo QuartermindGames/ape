@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -8,74 +8,74 @@ PL_EXTERN_C
 // Config Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define SS_APE_FORMAT_CONFIG_EXTENSION "cfg.n"
+#define APE_FORMAT_CONFIG_EXTENSION "cfg.n"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Effect Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define SS_APE_FORMAT_EFFECT_EXTENSION "eff.n"
+#define APE_FORMAT_EFFECT_EXTENSION "eff.n"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Model Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define SS_APE_FORMAT_MODEL_EXTENSION "mdl.n"
-#define SS_APE_FORMAT_MODEL_VERSION   2
+#define APE_FORMAT_MODEL_EXTENSION "mdl.n"
+#define APE_FORMAT_MODEL_VERSION   2
 
-#define SS_APE_FORMAT_MODEL_MAX_MATERIALS 64
-#define SS_APE_FORMAT_MODEL_MAX_BONES     256
-#define SS_APE_FORMAT_MODEL_MAX_TRIANGLES 16384
-#define SS_APE_FORMAT_MODEL_MAX_BONE_NAME 64
+#define APE_FORMAT_MODEL_MAX_MATERIALS 64
+#define APE_FORMAT_MODEL_MAX_BONES     256
+#define APE_FORMAT_MODEL_MAX_TRIANGLES 16384
+#define APE_FORMAT_MODEL_MAX_BONE_NAME 64
 
-typedef struct SSApeFormatBone
+typedef struct ApeFormatBone
 {
-	char name[ SS_APE_FORMAT_MODEL_MAX_BONE_NAME ];
-	struct SSApeFormatBone *parent;
-} SSApeFormatBone;
+	char name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
+	unsigned int parent;
+} ApeFormatBone;
 
-typedef struct SSApeFormatVertex
+typedef struct ApeFormatVertex
 {
 	PLVector3 position;
 	PLVector3 normal;
 	PLVector2 uv;
 
 	unsigned int numWeights;
-} SSApeFormatVertex;
+} ApeFormatVertex;
 
-typedef struct SSApeFormatTriangle
+typedef struct ApeFormatTriangle
 {
-	SSApeFormatVertex vertices[ 3 ];
-} SSApeFormatTriangle;
+	unsigned int indices[ 3 ];
+} ApeFormatTriangle;
 
-typedef struct SSApeFormatMesh
+typedef struct ApeFormatMesh
 {
 	PLPath material;
 
-	SSApeFormatTriangle triangles[ SS_APE_FORMAT_MODEL_MAX_TRIANGLES ];
+	ApeFormatTriangle triangles[ APE_FORMAT_MODEL_MAX_TRIANGLES ];
 	unsigned int numTriangles;
-} SSApeFormatMesh;
+} ApeFormatMesh;
 
-typedef struct SSApeFormatModel
+typedef struct ApeFormatModel
 {
-	SSApeFormatBone bones[ SS_APE_FORMAT_MODEL_MAX_BONES ];
+	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	unsigned int numBones;
 
-	SSApeFormatMesh meshes[ SS_APE_FORMAT_MODEL_MAX_MATERIALS ];
+	ApeFormatMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMeshes;
-} SSApeFormatModel;
+} ApeFormatModel;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Material Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define SS_APE_FORMAT_MATERIAL_EXTENSION "mat.n"
+#define APE_FORMAT_MATERIAL_EXTENSION "mat.n"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Texture Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define SS_APE_FORMAT_TEXTURE_EXTENSION "tex.n"
+#define APE_FORMAT_TEXTURE_EXTENSION "tex.n"
 
 /////////////////////////////////////////////////////////////////////////////////////
 

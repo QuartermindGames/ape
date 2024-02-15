@@ -1215,6 +1215,50 @@ bool ndWriteFile( const char *path, NdBranch *root, NdFileType fileType )
 	return true;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Struct Serialization
+/////////////////////////////////////////////////////////////////////////////////////
+
+NdBranch *nd_serialize_struct( const NdStructDescriptor *descriptor, const void *ptr, NdErrorCode *errorCode )
+{
+	NdBranch *branch = ndPushBackNewBranch( NULL, descriptor->name, ND_PROPERTY_OBJECT );
+	if ( branch == NULL )
+	{
+		return NULL;
+	}
+
+	for ( unsigned int i = 0; i < descriptor->numItems; ++i )
+	{
+		NdPropertyData *data = ( ( void * ) ptr + descriptor->items[ i ].offset );
+
+		switch ( descriptor->items[ i ].type )
+		{
+			default:
+				*errorCode = ND_ERROR_INVALID_TYPE;
+				return branch;
+			case ND_PROPERTY_OBJECT: break;
+			case ND_PROPERTY_LINK: break;
+			case ND_PROPERTY_ARRAY: break;
+			case ND_PROPERTY_STRING: break;
+			case ND_PROPERTY_BOOL: break;
+			case ND_PROPERTY_F32: break;
+			case ND_PROPERTY_F64: break;
+			case ND_PROPERTY_I8: break;
+			case ND_PROPERTY_I16: break;
+			case ND_PROPERTY_I32: break;
+			case ND_PROPERTY_I64: break;
+			case ND_PROPERTY_UI8: break;
+			case ND_PROPERTY_UI16: break;
+			case ND_PROPERTY_UI32: break;
+			case ND_PROPERTY_UI64: break;
+		}
+	}
+
+	return branch;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 /******************************************/
 /** API Testing **/
 

@@ -32,9 +32,9 @@ typedef struct ApeServerClient
 } ApeServerClient;
 static PLLinkedList *connectedClients = NULL;
 
-static void DropClientCallback( void *userData, bool *breakEarly )
+static void drop_client_callback( void *userData, bool *breakEarly )
 {
-	apeDropServerClient( ( ApeServerClient * ) userData );
+	ape_server_drop_client_( ( ApeServerClient * ) userData );
 }
 
 bool ss_acl_start_server_( const char *ip, unsigned short port )
@@ -65,10 +65,10 @@ void ape_initialize_server_( void )
 void ape_shutdown_server_( void )
 {
 	/* drop all connected clients */
-	PlIterateLinkedList( connectedClients, DropClientCallback, true );
+	PlIterateLinkedList( connectedClients, drop_client_callback, true );
 }
 
-void apeDropServerClient( ApeServerClient *serverClient )
+void ape_server_drop_client_( ApeServerClient *serverClient )
 {
 	PRINT( "Dropping client...\n" );
 
@@ -77,11 +77,11 @@ void apeDropServerClient( ApeServerClient *serverClient )
 	PlFree( serverClient );
 }
 
-static void ProcessClientMessage( ApeServerClient *client, const void *buf )
+static void process_client_message( ApeServerClient *client, const void *buf )
 {
 }
 
-static void TickServerClient( void *userData, bool *breakEarly )
+static void tick_server_client( void *userData, bool *breakEarly )
 {
 	ApeServerClient *serverClient = ( ApeServerClient * ) userData;
 
@@ -90,7 +90,7 @@ static void TickServerClient( void *userData, bool *breakEarly )
 	                                 sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
 	if ( r == -1 )
 	{
-		apeDropServerClient( serverClient );
+		ape_server_drop_client_( serverClient );
 		return;
 	}
 	else if ( r > 0 )
@@ -108,7 +108,7 @@ static void TickServerClient( void *userData, bool *breakEarly )
 		if ( serverClient->receivedBytes >= l )
 		{
 			/* process message */
-			ProcessClientMessage( serverClient, serverClient->receiveBuffer );
+			process_client_message( serverClient, serverClient->receiveBuffer );
 
 			memmove( serverClient->receiveBuffer, serverClient->receiveBuffer + l, serverClient->receivedBytes - l );
 			serverClient->receivedBytes -= l;
@@ -117,12 +117,12 @@ static void TickServerClient( void *userData, bool *breakEarly )
 		{
 			/* boom */
 			PRINT_WARNING( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, PROTOCOL_MESSAGESIZE );
-			apeDropServerClient( serverClient );
+			ape_server_drop_client_( serverClient );
 		}
 	}
 }
 
-void ss_acl_tick_server_( void )
+void ape_server_tick_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -138,7 +138,7 @@ void ss_acl_tick_server_( void )
 			PRINT( "Client connected, awaiting validation...\n" );
 		}
 
-		PlIterateLinkedList( connectedClients, TickServerClient, true );
+		PlIterateLinkedList( connectedClients, tick_server_client, true );
 	}
 
 	ape_tick_game_();
@@ -149,7 +149,7 @@ void ss_acl_tick_server_( void )
 /**
  * Return port of local server instance.
  */
-unsigned short ss_acl_server_get_port_( void )
+unsigned short ape_server_get_port_( void )
 {
 	assert( hostSocket != NULL );
 	if ( hostSocket == NULL )

@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -29,7 +29,7 @@ struct CookModel;
 typedef struct CookModel CookModel;
 
 typedef CookModel *( *CookModelLoadFunction )( const char *path );
-typedef SSApeFormatModel *( *CookModelConvertFunction )( const CookModel *model, SSApeFormatModel *out );
+typedef ApeFormatModel *( *CookModelConvertFunction )( const CookModel *model, ApeFormatModel *out );
 typedef void ( *CookModelDeleteFunction )( CookModel *model );
 
 typedef struct CookModelFormatInterface
