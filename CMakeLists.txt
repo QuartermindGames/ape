@@ -6,7 +6,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project(Ape
         LANGUAGES C CXX
-        )
+)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -91,8 +91,9 @@ add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
 add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
-####################################################################
-# main projects
+#####################################################################
+# Hei libraries
+#####################################################################
 
 add_subdirectory(src/kernel/plcore/)
 set_target_properties(plcore PROPERTIES FOLDER "Kernel")
@@ -104,26 +105,51 @@ add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 set(HEI_LIBRARIES plcore plgraphics plmodel)
 
+#####################################################################
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 23)
 
-if(MSVC)
+if (MSVC)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         link_directories(src/3rdparty/sdl2/lib/x64)
-    else()
+    else ()
         link_directories(src/3rdparty/sdl2/lib/x86)
-    endif()
-elseif(MINGW)
+    endif ()
+elseif (MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
-endif()
+endif ()
 
 # 3rd party libraries
 add_subdirectory(src/3rdparty/fox)
+
+#####################################################################
+
+set(APE_CORE_LIBRARIES
+        plcore
+        plgraphics
+        plmodel
+        ApeCommon
+        ApeCore
+)
+if (MINGW)
+    set(APE_SHELL_LIBRARIES
+            -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
+            ApeCore
+    )
+else ()
+    set(APE_SHELL_LIBRARIES
+            ApeCore
+    )
+endif ()
+
+#####################################################################
 
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
 add_subdirectory(src/forge)
+
 add_subdirectory(src/game/) # includes shells
 
 # tools

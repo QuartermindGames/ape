@@ -10,30 +10,12 @@ set(GAME_SHARED_FILES
         #############################################
         private/shared/ai/ai_brain.c
 )
-set(GAME_LINK_LIBS
-        plcore
-        plgraphics
-        plmodel
-        ApeCommon
-        ApeCore
-)
 
 include_directories(public/)
 
-if (MINGW)
-    set(SHELL_LINK_LIBS
-            -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
-            ApeCore
-    )
-else ()
-    set(SHELL_LINK_LIBS
-            ApeCore
-    )
-endif ()
-
-#############################################
+#####################################################################
 # FERAL / SS1
-#############################################
+#####################################################################
 
 set(FERAL_SOURCES
         ${GAME_SHARED_FILES}
@@ -52,16 +34,16 @@ add_executable(FeralShell WIN32
         ${FERAL_SOURCES}
         ../shells/launcher_sdl2/launcher.c
 )
-target_link_libraries(FeralShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+target_link_libraries(FeralShell ${APE_SHELL_LIBRARIES} ${APE_CORE_LIBRARIES})
 set_target_properties(FeralShell PROPERTIES FOLDER "Shells")
 
 add_executable(FeralForgeShell WIN32 ${FERAL_SOURCES})
-target_link_libraries(FeralForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+target_link_libraries(FeralForgeShell ${APE_SHELL_LIBRARIES} ${APE_CORE_LIBRARIES} Forge)
 set_target_properties(FeralForgeShell PROPERTIES FOLDER "Shells")
 
-#############################################
+#####################################################################
 # DETOX / SS2
-#############################################
+#####################################################################
 
 set(DETOX_SOURCES
         ${GAME_SHARED_FILES}
@@ -78,11 +60,11 @@ add_executable(DetoxShell WIN32
         ${DETOX_SOURCES}
         ../shells/launcher_sdl2/launcher.c
 )
-target_link_libraries(DetoxShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+target_link_libraries(DetoxShell ${APE_SHELL_LIBRARIES} ${APE_CORE_LIBRARIES})
 set_target_properties(DetoxShell PROPERTIES FOLDER "Shells")
 
 add_executable(DetoxForgeShell WIN32 ${DETOX_SOURCES})
-target_link_libraries(DetoxForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+target_link_libraries(DetoxForgeShell ${APE_SHELL_LIBRARIES} ${APE_CORE_LIBRARIES} Forge)
 set_target_properties(DetoxForgeShell PROPERTIES FOLDER "Shells")
 
-#############################################
+#####################################################################
