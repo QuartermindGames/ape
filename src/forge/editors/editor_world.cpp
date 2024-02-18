@@ -57,8 +57,8 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	_viewportFrames[ 2 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_LEFT );
 	_viewportFrames[ 3 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_FRONT );
 #else
-	auto *hs = new FXSplitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewportFrames[ 0 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
+	auto *hs = new FXVerticalFrame( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+	viewportFrame = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
 #endif
 
 	auto rightSidebar = new FXVerticalSeparator( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH, 0, 0, 200 );
@@ -75,7 +75,7 @@ ss::forge::editor_world::~editor_world() = default;
 
 void ss::forge::editor_world::create_new_entity( ApeWorldNode *parent )
 {
-	ape_entity_create( "test", NULL );
+	ape_entity_create( "test", nullptr );
 
 	update_tree();
 }

@@ -11,7 +11,7 @@ add_library(Forge STATIC
         ProjectDialog.cpp
         ConsoleFrame.cpp
         forge_viewport_frame.cpp
-        MainWindow.cpp
+        main_window.cpp
 
         editors/EditorTab.cpp editors/EditorTab.h
         editors/editor_material.cpp editors/editor_material.h

@@ -8,7 +8,7 @@
 #include <plgraphics/plg_driver_interface.h>
 
 #include "editor.h"
-#include "MainWindow.h"
+#include "main_window.h"
 #include "ProjectDialog.h"
 
 #include "common_project.h"
@@ -240,7 +240,7 @@ int main( int argc, char **argv )
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
-	ss::forge::mainWindow = new ss::forge::MainWindow( &app );
+	ss::forge::mainWindow = new ss::forge::main_window( &app );
 
 	app.create();
 

@@ -31,7 +31,11 @@ namespace ss::forge
 
 		FXToggleButton *_editModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
+#if 0
 		viewport_frame *_viewportFrames[ 4 ]{};
+#else
+		viewport_frame *viewportFrame{};
+#endif
 
 		FXTreeList *nodeTree{};
 

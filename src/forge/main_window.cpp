@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "MainWindow.h"
+#include "main_window.h"
 #include "AboutDialog.h"
 
 #include "editors/editor_world.h"
@@ -13,29 +13,29 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
-ss::forge::MainWindow *ss::forge::mainWindow = nullptr;
+ss::forge::main_window *ss::forge::mainWindow = nullptr;
 
-FXDEFMAP( ss::forge::MainWindow )
+FXDEFMAP( ss::forge::main_window )
 MainWindowMap[] = {
         //FXMAPFUNC( SEL_CONFIGURE, MainWindow::ID_CANVAS, mao::MainWindow::OnConfigure ),
         //FXMAPFUNC( SEL_PAINT, MainWindow::ID_CANVAS, mao::MainWindow::OnExpose ),
         //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_NEW, ss::forge::MainWindow::on_new_world ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_WORLD_OPEN, ss::forge::MainWindow::on_open_world ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_WORLD_NEW, ss::forge::main_window::on_new_world ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_WORLD_OPEN, ss::forge::main_window::on_open_world ),
 
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_MODEL_OPEN, ss::forge::MainWindow::open_model ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_MATERIAL_OPEN, ss::forge::MainWindow::open_material ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_MODEL_OPEN, ss::forge::main_window::open_model ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_MATERIAL_OPEN, ss::forge::main_window::open_material ),
 
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_ABOUT, ss::forge::MainWindow::on_about ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::MainWindow::ID_PROJECT_PACKAGE, ss::forge::MainWindow::on_package_project ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_ABOUT, ss::forge::main_window::on_about ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_PROJECT_PACKAGE, ss::forge::main_window::on_package_project ),
         //FXMAPFUNC( SEL_COMMAND, MainWindow::ID_TOGGLE_EDIT, mao::MainWindow::OnToggleEdit ),
         //FXMAPFUNC( SEL_KEYRELEASE, MainWindow::ID_CANVAS, mao::MainWindow::OnInput ),
-        FXMAPFUNC( SEL_TIMEOUT, ss::forge::MainWindow::ID_TICK, ss::forge::MainWindow::on_tick ),
+        FXMAPFUNC( SEL_TIMEOUT, ss::forge::main_window::ID_TICK, ss::forge::main_window::on_tick ),
 };
 
-FXIMPLEMENT( ss::forge::MainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
+FXIMPLEMENT( ss::forge::main_window, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
 
-ss::forge::MainWindow::MainWindow( FXApp *app )
+ss::forge::main_window::main_window( FXApp *app )
     : FXMainWindow( app, SS_FORGE_APP_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 )
 {
 	menuBar_ = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
@@ -95,13 +95,13 @@ ss::forge::MainWindow::MainWindow( FXApp *app )
 
 	//HACK: make the engine initialisation happy...
 	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
-	dummy->set_active( false );
-	dummy->hide();
+	//dummy->set_active( false );
+	//dummy->hide();
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, main_window::ID_TICK, SS_SHELL_TICK_RATE );
 }
 
-void ss::forge::MainWindow::create()
+void ss::forge::main_window::create()
 {
 	FXMainWindow::create();
 
@@ -109,18 +109,18 @@ void ss::forge::MainWindow::create()
 	maximize();
 }
 
-long ss::forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
+long ss::forge::main_window::on_tick( FXObject *, FXSelector, void * )
 {
 	ape_tick_frame();
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, main_window::ID_TICK, SS_SHELL_TICK_RATE );
 	return 0;
 }
 
-long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
+long ss::forge::main_window::on_new_world( FXObject *, FXSelector, void * )
 {
 	ApeWorld *world = ape_world_create();
-	if ( world == NULL )
+	if ( world == nullptr )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world!\nSee logs for details." );
 		return FALSE;
@@ -134,7 +134,7 @@ long ss::forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
+long ss::forge::main_window::on_open_world( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
@@ -160,7 +160,7 @@ long ss::forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
+long ss::forge::main_window::open_model( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
@@ -175,7 +175,7 @@ long ss::forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
+long ss::forge::main_window::open_material( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
@@ -197,14 +197,14 @@ long ss::forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::MainWindow::on_about( FXObject *, FXSelector, void * )
+long ss::forge::main_window::on_about( FXObject *, FXSelector, void * )
 {
 	auto *aboutDialog = new forge::AboutDialog( this );
 	aboutDialog->execute();
 	return true;
 }
 
-long ss::forge::MainWindow::on_package_project( FXObject *, FXSelector, void * )
+long ss::forge::main_window::on_package_project( FXObject *, FXSelector, void * )
 {
 	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.pkg" );
 	if ( filename.empty() )
@@ -213,14 +213,14 @@ long ss::forge::MainWindow::on_package_project( FXObject *, FXSelector, void * )
 	return true;
 }
 
-void ss::forge::MainWindow::setup_engine_viewports()
+void ss::forge::main_window::setup_engine_viewports()
 {
 }
 
 /**
  * Push a message to the console.
  */
-void ss::forge::MainWindow::push_message( int level, const char *msg, const PLColour &colour )
+void ss::forge::main_window::push_message( int level, const char *msg, const PLColour &colour )
 {
 	consoleFrame->push_message( level, msg, colour );
 }

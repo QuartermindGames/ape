@@ -8,15 +8,15 @@
 
 namespace ss::forge
 {
-	class MainWindow : public FXMainWindow
+	class main_window : public FXMainWindow
 	{
-		FXDECLARE( MainWindow )
+		FXDECLARE( main_window )
 
 	public:
-		explicit MainWindow( FXApp *app );
+		explicit main_window( FXApp *app );
 
 	protected:
-		inline MainWindow() = default;
+		inline main_window() = default;
 
 	public:
 		long on_tick( FXObject *, FXSelector, void * );
@@ -88,5 +88,5 @@ namespace ss::forge
 		std::vector< FXTabItem * > _tabs;
 	};
 
-	extern MainWindow *mainWindow;
+	extern main_window *mainWindow;
 }// namespace ss::forge

@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "ape_private.h"
@@ -16,7 +16,7 @@
 
 static ApeEditorState editorState = {};
 
-static const unsigned int DEFAULT_GRID_SCALE = 4;
+static const unsigned int DEFAULT_GRID_SCALE = 2;
 
 static bool gridVisible;
 static unsigned int gridScale = DEFAULT_GRID_SCALE;
@@ -126,11 +126,13 @@ void ape_editor_draw_grid_( void )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
+	PlRotateMatrix( PL_DEG2RAD( 90.0f ), 1.0f, 0.0f, 0.0f );
+
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
-	int m = 2048;
-	PlgDrawDottedGrid( -m / 2, -m / 2, m, m, gridScale / 2, &( PLColour ){ 0, 0, 255, 255 } );
-	PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( gridScale / 2 ) * 4, &( PLColour ){ 0, 0, 100, 255 } );
+	int m = 128;
+	PlgDrawGrid( -m / 2, -m / 2, m, m, gridScale / 2, &( PLColour ){ 0, 0, 100, 255 } );
+	PlgDrawGrid( -m / 2, -m / 2, m, m, gridScale, &( PLColour ){ 0, 0, 255, 255 } );
 
 	PlPopMatrix();
 }
@@ -174,20 +176,21 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		float z = viewport->zoom;
-		float zoom = roundf( z ) / 2.0f;
+		int zoom = roundl( z ) / 2;
+		if ( zoom <= 0 )
+		{
+			zoom = 1;
+		}
 
-		float x = 500.0f + sinf( zoom * 2.0f ) * 100.0f;
-		float y = 200.0f + cosf( zoom * 2.0f ) * 100.0f;
+		int x = 500 + sinl( zoom * 2 ) * 100.0f;
+		int y = 200 + cosl( zoom * 2 ) * 100.0f;
 
 		PlMatrixMode( PL_MODELVIEW_MATRIX );//TODO: should probably be view matrix...
 		PlPushMatrix();
 		PlLoadIdentityMatrix();
 
-		PlScaleMatrix( ( PLVector3 ){ zoom, zoom, zoom } );
-
-		int m = ( viewport->width > viewport->height ) ? viewport->width : viewport->height;
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, gridScale / 2, &( PLColour ){ 70, 70, 70, 255 } );
-		PlgDrawDottedGrid( -m / 2, -m / 2, m, m, ( gridScale / 2 ) * 4, &( PLColour ){ 100, 100, 100, 255 } );
+		PlgDrawGrid( 0, 0, viewport->width, viewport->height, ( gridScale / 2 ) * zoom, &( PLColour ){ 0, 0, 100, 255 } );
+		PlgDrawGrid( 0, 0, viewport->width, viewport->height, gridScale * zoom, &( PLColour ){ 0, 0, 255, 255 } );
 
 		switch ( camera->mode )
 		{
