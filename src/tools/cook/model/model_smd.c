@@ -224,9 +224,11 @@ ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 		{
 			for ( unsigned int vtx = 0; vtx < 3; ++vtx )
 			{
+#if 0//todo
 				mesh->triangles[ tri ].vertices[ vtx ].position = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].position;
 				mesh->triangles[ tri ].vertices[ vtx ].normal = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].normal;
 				mesh->triangles[ tri ].vertices[ vtx ].uv = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].uv;
+#endif
 			}
 		}
 	}

@@ -95,7 +95,7 @@ static void LoadUserConfig( void )
 		child = ndGetNextChild( child );
 	}
 
-	apeDeserializeInputConfig_( root );
+	ss_ape_deserialize_input_config_( root );
 
 	PRINT( "User config loaded.\n" );
 }
@@ -136,7 +136,7 @@ static void save_user_config( void )
 		}
 	}
 
-	apeSerializeInputConfig_( root );
+	ss_ape_serialize_input_config_( root );
 
 	ndWriteFile( path, root, ND_FILE_UTF8 );
 	ndDestroyBranch( root );

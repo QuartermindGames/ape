@@ -194,6 +194,8 @@ bool ape_is_running( void )
 
 void ape_render_frame( ApeViewport *viewport )
 {
+	assert( viewport != NULL );
+
 	if ( !engineInitialized )
 		return;
 
@@ -203,14 +205,7 @@ void ape_render_frame( ApeViewport *viewport )
 	if ( ape_get_capture_state_() )
 		return;
 
-	assert( viewport != NULL );
-	if ( viewport == NULL )
-	{
-		PRINT_WARNING( "Attempted to draw without a valid viewport!\n" );
-		return;
-	}
-
-	COM_PROFILE_FUNCTION_CALL( "ape_render_frame_", ape_render_frame_( viewport ) );
+	COM_PROFILE_FUNCTION_CALL( ape_render_frame_( viewport ) );
 }
 
 void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )

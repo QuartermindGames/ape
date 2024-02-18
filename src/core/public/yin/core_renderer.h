@@ -83,7 +83,12 @@ void ape_render_target_release( ApeRenderTarget *renderTarget );
 void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
 void ape_render_target_get_size( const ApeRenderTarget *renderTarget, unsigned int *width, unsigned int *height );
 PLGTexture *ape_render_target_get_texture( ApeRenderTarget *renderTarget );
+
+/**
+ * If the provided render target is null, this will clear whatever is currently set back to the default.
+ */
 void ape_render_target_bind( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target );
+
 PLGFrameBuffer *ape_render_target_get_frame_buffer( ApeRenderTarget *renderTarget );
 
 /////////////////////////////////////////////////////////////////////////////////////

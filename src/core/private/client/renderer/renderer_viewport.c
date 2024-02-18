@@ -53,6 +53,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	viewports[ i ]->windowHandle = windowHandle;
 	viewports[ i ]->zoom = 1.0f;
 
+#if 1
 	char viewportTag[ 64 ];
 	snprintf( viewportTag, sizeof( viewportTag ), "viewport_%u", i );
 	viewports[ i ]->renderTarget = ape_render_target_create( viewportTag,
@@ -65,6 +66,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 		PRINT_WARNING( "Failed to create render target for viewport!\n" );
 		PL_DELETEN( viewports[ i ] );
 	}
+#endif
 
 	return viewports[ i ];
 }
@@ -147,11 +149,8 @@ ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *viewport )
 void ape_viewport_make_active( ApeViewport *viewport )
 {
 	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
-	assert( target != NULL );
-	if ( target == NULL )
-		return;
-
-	ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+	if ( target != NULL )
+		ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );

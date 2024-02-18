@@ -421,7 +421,7 @@ static void input_mlook_command( const PLConsoleVariable *consoleVariable )
 	if ( !consoleVariable->b_value )
 		return;
 
-	acl_input_center_mouse();
+	ape_input_center_mouse();
 }
 
 void ape_console_register_cl_commands_( void )

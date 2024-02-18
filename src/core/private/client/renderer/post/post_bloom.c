@@ -68,13 +68,16 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	if ( bloomRenderTargetTexture == NULL )
 		return;
 
-	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DRAW );
+	PlgClearBuffers( PLG_BUFFER_COLOUR );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
 	PlgSetShaderProgram( bloomFilterShader->internal );
 	PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomIntensity, false );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, baseTexture );
+
+	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	PlgSetShaderProgram( bloomBlurXShader->internal );
 	PlgSetShaderUniformValue( bloomBlurXShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
@@ -88,7 +91,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 	//TODO: this last step is botched, urgh...
 
-	ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DRAW );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
 	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomRenderTargetTexture );

@@ -53,9 +53,9 @@ const ApeEntityClassDefinition *tox_character_get_class_table( void )
 	static ApeEntityClassDefinition table;
 	PL_ZERO_( table );
 	table.name = className;
-	table.Create = CreateCharacterClass;
-	table.Destroy = DestroyCharacterClass;
-	table.Serialize = SerializeCharacterClass;
-	table.Deserialize = DeserializeCharacterClass;
+	table.createFunction = CreateCharacterClass;
+	table.destroyFunction = DestroyCharacterClass;
+	table.serializeFunction = SerializeCharacterClass;
+	table.deserializeFunction = DeserializeCharacterClass;
 	return &table;
 }

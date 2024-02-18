@@ -188,7 +188,7 @@ static void CheckForControllers( void )
 void ape_initialize_input_( void )
 {
 	// initialize the controller structure
-	apeClearInputDevices_();
+	ss_ape_clear_input_devices_();
 
 	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
 	{
@@ -224,10 +224,10 @@ void ape_initialize_input_( void )
 
 void apeShutdownInput_( void )
 {
-	apeClearInputDevices_();
+	ss_ape_clear_input_devices_();
 }
 
-void apeSerializeInputConfig_( NdBranch *root )
+void ss_ape_serialize_input_config_( NdBranch *root )
 {
 	/* nothing to serialise */
 	if ( actionableList == NULL )
@@ -245,7 +245,7 @@ void apeSerializeInputConfig_( NdBranch *root )
 	//PlIterateLinkedList( actionableList, NULL, NULL );
 }
 
-void apeDeserializeInputConfig_( NdBranch *root )
+void ss_ape_deserialize_input_config_( NdBranch *root )
 {
 	NdBranch *inputNode = ndGetChildByName( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
@@ -254,9 +254,9 @@ void apeDeserializeInputConfig_( NdBranch *root )
 	}
 }
 
-static void UnregisterController( unsigned int id )
-{
-	if ( controllers[ id ].sdlGameController != NULL )
+static void unregister_controller( unsigned int id )
+
+{	if ( controllers[ id ].sdlGameController != NULL )
 	{
 		SDL_GameControllerClose( controllers[ id ].sdlGameController );
 		controllers[ id ].sdlGameController = NULL;
@@ -265,15 +265,15 @@ static void UnregisterController( unsigned int id )
 	numControllers--;
 }
 
-void apeClearInputDevices_( void )
-{
-	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
+void ss_ape_clear_input_devices_( void )
+
+{	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
-		UnregisterController( i );
+		unregister_controller( i );
 	}
 }
 
-unsigned int ss_acl_input_register_device( SS_Acl_InputDeviceType type )
+unsigned int ss_ape_input_register_device( SS_Acl_InputDeviceType type )
 {
 	unsigned int id;
 	ApeInputController *device = GetEmptyController( &id );
@@ -367,7 +367,7 @@ void ape_begin_input_frame_( void )
 	}
 }
 
-static bool GetSDLButtonState( SDL_GameController *gameController, ApeInputButton button )
+static bool get_sdl_button_state( SDL_GameController *gameController, ApeInputButton button )
 {
 	SDL_GameControllerButton sdlButton;
 	switch ( button )
@@ -446,13 +446,13 @@ void ape_tick_input_( void )
 		if ( !SDL_GameControllerGetAttached( controllers[ i ].sdlGameController ) )
 		{
 			PRINT( "Controller disconnected from slot %u.\n", i );
-			UnregisterController( i );
+			unregister_controller( i );
 			continue;
 		}
 
 		for ( unsigned int j = 0; j < APE_MAX_BUTTON_INPUTS; ++j )
 		{
-			bool state = GetSDLButtonState( controllers[ i ].sdlGameController, j );
+			bool state = get_sdl_button_state( controllers[ i ].sdlGameController, j );
 			if ( !state )
 			{
 				controllers[ i ].buttons[ j ] = APE_INPUT_STATE_NONE;
@@ -494,7 +494,7 @@ void ape_tick_input_( void )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void acl_input_center_mouse( void )
+void ape_input_center_mouse( void )
 {
 	int w, h;
 	shell_get_window_size( &w, &h );
@@ -516,7 +516,7 @@ void ape_end_input_frame_( void )
 		return;
 	}
 
-	acl_input_center_mouse();
+	ape_input_center_mouse();
 }
 
 unsigned int apeGetNumControllers( void ) { return numControllers; }

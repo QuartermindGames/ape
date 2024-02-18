@@ -163,7 +163,7 @@ PLGTexture *ape_render_target_get_texture( ApeRenderTarget *renderTarget )
 
 void ape_render_target_bind( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target )
 {
-	PlgBindFrameBuffer( renderTarget->frameBuffer, target );
+	PlgBindFrameBuffer( ( renderTarget == NULL ) ? NULL : renderTarget->frameBuffer, target );
 }
 
 PLGFrameBuffer *ape_render_target_get_frame_buffer( ApeRenderTarget *renderTarget )

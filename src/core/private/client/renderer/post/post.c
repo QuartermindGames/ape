@@ -9,13 +9,13 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-enum
+typedef enum PostEffect
 {
 	POST_EFFECT_FXAA,
 	POST_EFFECT_BLOOM,
 
 	MAX_POST_EFFECTS
-};
+} PostEffect;
 
 static const SSArlPostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool postProcessInit = false;
@@ -70,6 +70,8 @@ void ss_arl_postfx_setup_( void )
 	                                           PLG_BUFFER_COLOUR,
 	                                           PLG_BUFFER_COLOUR,
 	                                           PLG_TEXTURE_FILTER_LINEAR );
+	if ( ppRenderTarget == NULL )
+		PRINT_ERROR( "Failed to create postfx render target: %s\n", PlGetError() );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -98,13 +100,14 @@ void ss_arl_postfx_register_console_variables_( void )
 
 void ss_arl_postfx_draw_( const ApeViewport *viewport )
 {
-	assert( viewport->renderTarget != NULL );
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )
 		return;
 
 	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DRAW );
+
+	PlgClearBuffers( PLG_BUFFER_COLOUR );
 
 	if ( !postProcessEnabled )
 	{
