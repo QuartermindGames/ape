@@ -76,13 +76,13 @@ void fw_menu_draw( const ApeViewport *viewport )
 bool fw_menu_handle_input( void )
 {
 	static bool blah = true;
-	if ( apeGetButtonStatus( 0, INPUT_START ) == APE_INPUT_STATE_PRESSED )
+	if ( ape_client_input_get_button_state( 0, INPUT_START ) == APE_INPUT_STATE_PRESSED )
 	{
 		blah = !blah;
 		menu_pie_make_active( interactPie, blah );
 		return true;
 	}
-	if ( apeGetButtonStatus( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
+	if ( ape_client_input_get_button_state( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
 	{
 		menu_pie_add_option( interactPie, "testing 4", ss_arl_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
 		return true;

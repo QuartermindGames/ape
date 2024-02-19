@@ -34,7 +34,7 @@ static GuiFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 float guiGetFontLineSpacing( const GuiFont *font ) { return font->lineSpacing; }
 
-GuiFont *guiGetDefaultFont( GuiFontDefaultType defaultType )
+GuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 {
 	return defaultFonts[ defaultType ];
 }
@@ -258,7 +258,7 @@ void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, c
 	guiDrawFontGlyph( font, x, y, scale, colour, glyph );
 }
 
-void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
+void gui_font_draw_string( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
@@ -303,7 +303,7 @@ void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float 
 	if ( oy != NULL ) *oy = ny;
 }
 
-void guiDisplayFont( GuiFont *font )
+void gui_font_display( GuiFont *font )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

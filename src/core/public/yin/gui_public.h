@@ -54,7 +54,7 @@ typedef enum GuiMouseButton
 } GuiMouseButton;
 
 void guiUpdateMousePosition( int x, int y );
-void guiUpdateMouseWheel( float x, float y );
+void gui_update_mouse_wheel( float x, float y );
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown );
 
 /****************************************
@@ -141,7 +141,7 @@ float guiGetFontLineSpacing( const GuiFont *font );
 /**
  * Returns the specified default font.
  */
-GuiFont *guiGetDefaultFont( GuiFontDefaultType defaultType );
+GuiFont *gui_get_default_font( GuiFontDefaultType defaultType );
 
 void guiDestroyFont( GuiFont *font );
 
@@ -153,8 +153,8 @@ float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t char
 
 void guiGetStringPixelSize( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh );
 void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
-void guiDrawFontString( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
-void guiDisplayFont( GuiFont *font );
+void gui_font_draw_string( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
+void gui_font_display( GuiFont *font );
 
 /****************************************
  * Desktop

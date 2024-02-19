@@ -29,6 +29,9 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_SOLID, viewport_frame::on_change_camera_modes ),
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_TEXTURED, viewport_frame::on_change_camera_modes ),
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_LIT, viewport_frame::on_change_camera_modes ),
+
+        FXMAPFUNC( SEL_KEYPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
+        FXMAPFUNC( SEL_KEYRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
 };
 
 FXIMPLEMENT( viewport_frame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
@@ -39,7 +42,7 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, ApeC
 {
 	viewMode_ = viewMode;
 
-#if 0
+#if 1
 	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/perspective.gif" ) );
 	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/top.gif" ) );
@@ -272,6 +275,19 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	getApp()->runModalWhileShown( popup );
 
 	delete popup;
+
+	return TRUE;
+}
+
+long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
+{
+	if ( !hasFocus() )
+	{
+		return FALSE;
+	}
+
+	auto *event = ( FXEvent * ) ptr;
+	ape_input_handle_keyboard_event( event->code, ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
 
 	return TRUE;
 }

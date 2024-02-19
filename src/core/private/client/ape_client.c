@@ -36,6 +36,7 @@ void ape_initialize_client_( void )
 
 void ape_shutdown_client_( void )
 {
+	ape_shutdown_input_();
 	ape_shutdown_gui_();
 	ape_shutdown_audio_();
 	ape_shutdown_renderer_();

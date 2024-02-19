@@ -53,6 +53,7 @@ namespace ss::forge
 		long on_zoom( FXObject *, FXSelector, void * );
 		long on_motion( FXObject *, FXSelector, void *ptr );
 		long on_right_click( FXObject *, FXSelector, void *ptr );
+		long on_key( FXObject *, FXSelector, void * );
 
 	private:
 		inline viewport_frame() = default;

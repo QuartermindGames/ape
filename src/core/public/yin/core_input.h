@@ -91,10 +91,11 @@ typedef enum ApeInputKey
 
 typedef enum ApeInputState
 {
-	APE_INPUT_STATE_NONE,     /* key has no state */
-	APE_INPUT_STATE_PRESSED,  /* key has been pressed */
-	APE_INPUT_STATE_DOWN,     /* key is still down */
-	APE_INPUT_STATE_RELEASED, /* key is up */
+	APE_INPUT_STATE_NONE = 0, /* key has no state */
+
+	PL_BITFLAG( APE_INPUT_STATE_DOWN, 1 ),     /* key is still down */
+	PL_BITFLAG( APE_INPUT_STATE_PRESSED, 2 ),  /* key has been pressed */
+	PL_BITFLAG( APE_INPUT_STATE_RELEASED, 3 ), /* key is up */
 } ApeInputState;
 
 PL_EXTERN_C
@@ -118,24 +119,24 @@ unsigned int apeGetNumControllers( void );
 /**
  * Returns the button state for the given slot.
  */
-ApeInputState apeGetButtonStatus( unsigned int slot, ApeInputButton button );
+ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButton button );
 
 /**
  * Returns the analogue stick state for the given slot.
  */
-PLVector2 apeGetJoystickStatus( unsigned int slot, unsigned int stickNum );
+PLVector2 ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum );
 
 // Mouse
-void ss_acl_input_get_mouse_position( int *x, int *y );
-void ss_acl_input_get_mouse_delta( int *x, int *y );
+void ape_client_input_get_mouse_position( int *x, int *y );
+void ape_client_input_get_mouse_delta( int *x, int *y );
 
 // Actions
 
 typedef void ( *ApeInputActionCallback )( ApeInputState state, const char *id );
 
-void ss_acl_input_register_action( const char *id,
-                                   ApeInputButton buttons[], unsigned int numDefaultButtons,
-                                   ApeInputKey keys[], unsigned int numDefaultKeys,
+void ape_client_input_register_action( const char *id,
+                                       ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                       ApeInputKey keys[], unsigned int numDefaultKeys,
                                    ApeInputActionCallback actionCallback );
 
 unsigned int ss_ape_input_register_device( SS_Acl_InputDeviceType type );

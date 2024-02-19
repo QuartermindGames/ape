@@ -21,11 +21,11 @@ struct NdBranch *ss_acl_get_user_config( void );
 unsigned int ape_get_num_ticks( void );
 
 bool ape_is_running( void );
-bool ss_acl_is_console_open( void );
+bool ape_is_console_open( void );
 
-void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState );
-void ss_acl_input_handle_text_event( const char *key );
-void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonState );
+void ape_input_handle_keyboard_event( int key, bool isPressed );
+void ape_input_handle_text_event( const char *key );
+void ape_input_handle_mouse_button_event( int button, ApeInputState buttonState );
 void ape_input_handle_mouse_wheel_event( float x, float y );
 void ape_input_handle_mouse_motion_event( int x, int y );
 

@@ -1,5 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include <stdbool.h>
 #include "ape_private.h"
 
 #include "yin/core_fs.h"
@@ -208,30 +209,29 @@ void ape_render_frame( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_CALL( ape_render_frame_( viewport ) );
 }
 
-void ss_acl_input_handle_keyboard_event( int key, unsigned int keyState )
+void ape_input_handle_keyboard_event( int key, bool isPressed )
 {
-	Client_Input_HandleKeyboardEvent( key, keyState );
+	ape_client_input_handle_key_event_( key, isPressed );
 }
 
-bool acl_console_handle_text_event_( const char *key );
-
-void ss_acl_input_handle_text_event( const char *key )
+bool ape_console_handle_text_event_( const char *key );
+void ape_input_handle_text_event( const char *key )
 {
-	if ( acl_console_handle_text_event_( key ) )
+	if ( ape_console_handle_text_event_( key ) )
 	{
 		return;
 	}
 }
 
-void ss_acl_input_handle_mouse_button_event( int button, ApeInputState buttonState )
+void ape_input_handle_mouse_button_event( int button, ApeInputState buttonState )
 {
-	Client_Input_HandleMouseButtonEvent( button, buttonState );
+	ape_client_input_handle_mouse_button_event_( button, buttonState );
 }
 
 void ape_input_handle_mouse_wheel_event( float x, float y )
 {
 	printf( "%f\n", y );
-	Client_Input_HandleMouseWheelEvent( x, y );
+	ape_client_input_handle_mouse_wheel_event( x, y );
 }
 
 void ape_input_handle_mouse_motion_event( int x, int y )

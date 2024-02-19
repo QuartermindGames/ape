@@ -131,7 +131,7 @@ void ape_draw_begin_( ApeViewport *viewport );
 void ape_draw_end_( ApeViewport *viewport );
 void ape_draw_menu_( ApeViewport *viewport );
 
-void ss_arl_set_2d_viewport_size_( int w, int h );
+void ape_set_2d_viewport_size_( int w, int h );
 void ss_arl_get_2d_viewport_size_( int *width, int *height );
 
 struct SS_Arl_ShaderProgramIndex *ape_shader_get_by_name( const char *name );

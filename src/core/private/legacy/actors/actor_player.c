@@ -111,7 +111,7 @@ static void Player_HandleMouseLook( Actor *self )
 		return;
 
 	int mx, my;
-	ss_acl_input_get_mouse_delta( &mx, &my );
+	ape_client_input_get_mouse_delta( &mx, &my );
 
 	self->angles.y += mx;
 

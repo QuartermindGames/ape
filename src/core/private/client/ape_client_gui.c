@@ -39,10 +39,6 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 		return;
 
 	ApeBitmapFont *defaultFont = ape_get_default_small_bitmap_font();
-	assert( defaultFont != NULL );
-	if ( defaultFont == NULL )
-		return;
-
 	ape_bitmap_font_begin_draw( defaultFont );
 
 	static const float sy = 8;
@@ -196,7 +192,7 @@ void ape_shutdown_gui_( void )
 	ss_arl_material_release( baseGuiMat );
 }
 
-void ss_arl_set_2d_viewport_size_( int w, int h )
+void ape_set_2d_viewport_size_( int w, int h )
 {
 	PlgSetViewport( 0, 0, w, h );
 	PlgSetupCamera( ape_camera_get_internal( auxCamera ) );
@@ -207,14 +203,14 @@ void ss_arl_get_2d_viewport_size_( int *width, int *height )
 	PlgGetViewport( NULL, NULL, width, height );
 }
 
-void ss_arl_draw_gui_( ApeViewport *viewport )
+void ape_draw_gui_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
 	// Need to call this again to reset the viewport
-	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
+	ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
 	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
 	if ( renderTarget != NULL )
@@ -262,7 +258,7 @@ void ss_arl_draw_gui_( ApeViewport *viewport )
 		gui_canvas_draw( canvas, rootPanel );
 
 		// Need to call this again to reset the viewport
-		ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
+		ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
 		// draw the output of the canvas
 		ss_arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
@@ -276,11 +272,12 @@ void ss_arl_draw_gui_( ApeViewport *viewport )
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( ape_config_.renderer.showFps && debugOverlay->i_value == 0 )
 	{
-		GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
 		char tmp[ 32 ];
 		snprintf( tmp, sizeof( tmp ), "FPS: %u", ape_viewport_get_framerate( viewport ) );
-		guiDrawFontString( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
-		guiDisplayFont( font );
+
+		GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+		gui_font_draw_string( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
+		gui_font_display( font );
 	}
 
 #if 0
@@ -309,7 +306,7 @@ void ape_draw_menu_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	ape_viewport_make_active( viewport );
-	ss_arl_set_2d_viewport_size_( viewport->width, viewport->height );
+	ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
@@ -317,10 +314,9 @@ void ape_draw_menu_( ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ss_arl_postfx_draw_( viewport );
+	ape_postfx_draw_( viewport );
 
-	ss_arl_draw_gui_( viewport );
-	ape_editor_draw_gui_( viewport );
+	ape_draw_gui_( viewport );
 
 	draw_debug_overlay( viewport );
 

@@ -562,7 +562,7 @@ int launcher_initialize( int argc, char **argv )
 					break;
 
 				case SDL_TEXTINPUT:
-					ss_acl_input_handle_text_event( event.text.text );
+					ape_input_handle_text_event( event.text.text );
 					break;
 
 				case SDL_MOUSEWHEEL:
@@ -576,7 +576,7 @@ int launcher_initialize( int argc, char **argv )
 				}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					ss_acl_input_handle_mouse_button_event( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
+					ape_input_handle_mouse_button_event( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
 					break;
 				case SDL_MOUSEMOTION:
 					ape_input_handle_mouse_motion_event( event.motion.x, event.motion.y );
@@ -592,9 +592,7 @@ int launcher_initialize( int argc, char **argv )
 						break;
 					}
 
-					keyStates[ key ] = ( event.type == SDL_KEYDOWN ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE;
-
-					ss_acl_input_handle_keyboard_event( key, keyStates[ key ] );
+					ape_input_handle_keyboard_event( key, ( event.type == SDL_KEYDOWN ) );
 					break;
 				}
 

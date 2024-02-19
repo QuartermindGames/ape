@@ -54,15 +54,21 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 
 static void move_camera_callback( ApeInputState state, const char *id )
 {
-	if ( state != APE_INPUT_STATE_DOWN )
+	if ( !( state & APE_INPUT_STATE_DOWN ) )
+	{
 		return;
+	}
 
 	PLVector3 pos = ape_camera_get_position( playerCamera );
 	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
+	{
 		ang.y += 1.5f;
+	}
 	else if ( strcmp( id, "rotateRight" ) == 0 )
+	{
 		ang.y -= 1.5f;
+	}
 
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
@@ -70,17 +76,29 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	static const float SPEED = 0.5f;
 
 	if ( strcmp( id, "moveForward" ) == 0 )
+	{
 		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	}
 	else if ( strcmp( id, "moveBackward" ) == 0 )
+	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	}
 	else if ( strcmp( id, "moveLeft" ) == 0 )
+	{
 		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+	}
 	else if ( strcmp( id, "moveRight" ) == 0 )
+	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+	}
 	else if ( strcmp( id, "moveUp" ) == 0 )
+	{
 		pos.y += 0.5f;
+	}
 	else if ( strcmp( id, "moveDown" ) == 0 )
+	{
 		pos.y -= 0.5f;
+	}
 
 	ape_camera_set_position( playerCamera, &pos );
 	ape_camera_set_angles( playerCamera, &ang );
@@ -93,9 +111,13 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 
 	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateUp" ) == 0 )
+	{
 		ang.x += 1.5f;
+	}
 	else if ( strcmp( id, "rotateDown" ) == 0 )
+	{
 		ang.x -= 1.5f;
+	}
 
 	ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 
@@ -105,16 +127,24 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 static void progress_time_action( ApeInputState state, PL_UNUSED const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
+	{
 		return;
+	}
 
 	ToxWorldState *worldState = tox_world_get_state();
 	if ( worldState == NULL )
+	{
 		return;
+	}
 
 	if ( strcmp( id, "time_forward" ) == 0 )
+	{
 		worldState->seconds += TOX_WORLD_SECONDS_TO_HOUR / 100;
+	}
 	else
+	{
 		worldState->seconds -= TOX_WORLD_SECONDS_TO_HOUR / 100;
+	}
 }
 
 static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
@@ -139,21 +169,21 @@ static bool initialize_game( void )
 	PlRegisterConsoleCommand( "tox_set_time", "Sets the world time.", 1, set_time_command );
 
 	// movement actions
-	ss_acl_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
-	ss_acl_input_register_action( "moveBackward", ( ApeInputButton[] ){ APE_INPUT_DOWN }, 1, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
-	ss_acl_input_register_action( "moveLeft", ( ApeInputButton[] ){ INPUT_LEFT }, 1, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
-	ss_acl_input_register_action( "moveRight", ( ApeInputButton[] ){ INPUT_RIGHT }, 1, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
-	ss_acl_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
-	ss_acl_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
-	ss_acl_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
-	ss_acl_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
+	ape_client_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ KEY_UP, 'w' }, 2, move_camera_callback );
+	ape_client_input_register_action( "moveBackward", ( ApeInputButton[] ){ APE_INPUT_DOWN }, 1, ( ApeInputKey[] ){ KEY_DOWN, 's' }, 2, move_camera_callback );
+	ape_client_input_register_action( "moveLeft", ( ApeInputButton[] ){ INPUT_LEFT }, 1, ( ApeInputKey[] ){ 'a' }, 1, move_camera_callback );
+	ape_client_input_register_action( "moveRight", ( ApeInputButton[] ){ INPUT_RIGHT }, 1, ( ApeInputKey[] ){ 'd' }, 1, move_camera_callback );
+	ape_client_input_register_action( "moveDown", NULL, 0, ( ApeInputKey[] ){ 'q' }, 1, move_camera_callback );
+	ape_client_input_register_action( "moveUp", NULL, 0, ( ApeInputKey[] ){ 'e' }, 1, move_camera_callback );
+	ape_client_input_register_action( "rotateLeft", NULL, 0, ( ApeInputKey[] ){ KEY_LEFT }, 1, move_camera_callback );
+	ape_client_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ KEY_RIGHT }, 1, move_camera_callback );
 
 	// this remaining bunch are for debugging purposes...
-	ss_acl_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
-	ss_acl_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
+	ape_client_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
+	ape_client_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
 
-	ss_acl_input_register_action( "rotateUp", NULL, 0, ( ApeInputKey[] ){ 'r' }, 1, rotate_camera_action );
-	ss_acl_input_register_action( "rotateDown", NULL, 0, ( ApeInputKey[] ){ 'f' }, 1, rotate_camera_action );
+	ape_client_input_register_action( "rotateUp", NULL, 0, ( ApeInputKey[] ){ 'r' }, 1, rotate_camera_action );
+	ape_client_input_register_action( "rotateDown", NULL, 0, ( ApeInputKey[] ){ 'f' }, 1, rotate_camera_action );
 
 	ss_game_register_standard_entity_components_();
 
@@ -181,7 +211,7 @@ static bool tick_game( void )
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
 		int mx, my;
-		ss_acl_input_get_mouse_delta( &mx, &my );
+		ape_client_input_get_mouse_delta( &mx, &my );
 
 		PLVector3 ang = ape_camera_get_angles( playerCamera );
 		ang.y += ( float ) mx;

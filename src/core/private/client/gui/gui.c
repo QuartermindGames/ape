@@ -174,7 +174,7 @@ void guiUpdateMousePosition( int x, int y )
 	guiState.mousePos.y = y;
 }
 
-void guiUpdateMouseWheel( float x, float y )
+void gui_update_mouse_wheel( float x, float y )
 {
 	guiState.mouseOldWheel = guiState.mouseWheel;
 	guiState.mouseWheel.x = x;

@@ -98,7 +98,7 @@ void ss_arl_postfx_register_console_variables_( void )
 	}
 }
 
-void ss_arl_postfx_draw_( const ApeViewport *viewport )
+void ape_postfx_draw_( const ApeViewport *viewport )
 {
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )

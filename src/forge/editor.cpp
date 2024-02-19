@@ -105,16 +105,11 @@ static void setup_paths( const char *exePath )
 {
 	PL_ZERO( ss::forge::cachedPaths, sizeof( PLPath ) * ss::forge::MAX_CACHED_PATHS );
 
-	// copy the exe path and ensure it doesn't end in a slash
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_EXE ], true, "%s", exePath );
-
-	// resources location - where editor icons are stored
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_RESOURCES ], true, "%s/../../resources", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
-
-	// projects location - where new projects will be created by default
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], true, "%s/../../projects", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
-
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
+
 	if ( !PlFileExists( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] ) )
 	{
 		ss::forge::isCookAvailable = false;
@@ -128,14 +123,20 @@ static void setup_paths( const char *exePath )
 		if ( PlCreateDirectory( tmp ) )
 			PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ], true, "%s", tmp );
 		else
+		{
 			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
+		}
 	}
 	else
+	{
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
+	}
 
 	// fallback to local location if it failed...
 	if ( *ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] == '\0' )
+	{
 		ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ][ 0 ] = '.';
+	}
 }
 
 FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
@@ -146,7 +147,9 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 	PLImage *image;
 	auto i = cachedImages.find( fullPath );
 	if ( i != cachedImages.end() )
+	{
 		image = i->second;
+	}
 	else
 	{
 		image = PlLoadImage( fullPath );
@@ -211,7 +214,9 @@ int main( int argc, char **argv )
 		PL_DELETE( driverPath );
 	}
 	else
+	{
 		PlgScanForDrivers( "." );
+	}
 
 	PLPath tmp;
 	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
@@ -230,7 +235,9 @@ int main( int argc, char **argv )
 
 	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
+	{
 		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
+	}
 
 	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
 	app.init( argc, argv );

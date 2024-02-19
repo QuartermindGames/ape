@@ -98,9 +98,9 @@ static void scroll_backward( ApeConsoleOutput *output )
 	output->scrollPos--;
 }
 
-bool acl_console_handle_mouse_wheel_event_( float x, float y )
+bool ape_console_handle_mouse_wheel_event_( float x, float y )
 {
-	if ( !ss_acl_is_console_open() )
+	if ( !ape_is_console_open() )
 		return false;
 
 	ApeConsoleOutput *output = apeGetConsoleOutput();
@@ -120,7 +120,7 @@ static void clear_input_buffer( void )
 	update_auto_complete_result( conInputBuffer );
 }
 
-bool acl_console_handle_key_event_( int key, unsigned int keyState )
+bool ape_console_handle_key_event_( int key, unsigned int keyState )
 {
 	if ( keyState == APE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
 	{
@@ -237,7 +237,7 @@ bool acl_console_handle_key_event_( int key, unsigned int keyState )
 	return consoleIsOpen;
 }
 
-bool acl_console_handle_text_event_( const char *key )
+bool ape_console_handle_text_event_( const char *key )
 {
 	// todo y3: allow this key to be customised
 	if ( !consoleIsOpen || *key == '`' || *key == '~' )
@@ -284,26 +284,26 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
 			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				guiDrawFontString( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				guiDrawFontString( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				gui_font_draw_string( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+				gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	guiDrawFontString( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	gui_font_draw_string( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
 
-	guiDisplayFont( font );
+	gui_font_display( font );
 }
 
-bool ss_acl_is_console_open( void ) { return consoleIsOpen; }
+bool ape_is_console_open( void ) { return consoleIsOpen; }
 
 static const float consoleScrollBarWidth = 8.0f;
 
@@ -312,10 +312,10 @@ static const float consoleScrollBarWidth = 8.0f;
  */
 void ape_console_draw_( const ApeViewport *viewport )
 {
-	if ( !ss_acl_is_console_open() )
+	if ( !ape_is_console_open() )
 		return;
 
-	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_SMALL );
+	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 	assert( font != NULL );
 	if ( font == NULL )
 		return;
@@ -357,7 +357,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			guiDrawFontString( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			gui_font_draw_string( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
 
 			y -= lineSpacing;
 			if ( y < 0 )
@@ -368,7 +368,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 	PlgSetTexture( NULL, 0 );
 
-	guiDisplayFont( font );
+	gui_font_display( font );
 
 	// auto-completion list
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
@@ -394,7 +394,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 	draw_input_field( viewport, font );
 
 	/* draw version info */
-	GuiFont *tinyFont = guiGetDefaultFont( GUI_FONT_DEFAULT_TINY );
+	GuiFont *tinyFont = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 	if ( tinyFont != NULL )
 	{
 		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
@@ -404,9 +404,9 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 		float x = width - strW - 2.0f;
 		float y = height - strH - 2.0f;
-		guiDrawFontString( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+		gui_font_draw_string( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
 
-		guiDisplayFont( tinyFont );
+		gui_font_display( tinyFont );
 	}
 
 	PlPopMatrix();
