@@ -27,7 +27,8 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
-#if 0
+#if 1
+	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/new_room.gif" ) );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/new_brush.gif" ) );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/new_light.gif" ) );
@@ -50,16 +51,13 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
-#if 0
-	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewportFrames[ 0 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
-	_viewportFrames[ 1 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_TOP );
-	_viewportFrames[ 2 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_LEFT );
-	_viewportFrames[ 3 ] = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_FRONT );
-#else
 	auto *hs = new FXVerticalFrame( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+	hs->setPadBottom( 0 );
+	hs->setPadLeft( 0 );
+	hs->setPadRight( 0 );
+	hs->setPadTop( 0 );
+
 	viewportFrame = new viewport_frame( hs, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
-#endif
 
 	auto rightSidebar = new FXVerticalSeparator( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH, 0, 0, 200 );
 
@@ -84,7 +82,7 @@ void ss::forge::editor_world::update_tree()
 {
 	nodeTree->clearItems();
 
-	PLLinkedListNode *node = PlGetFirstNode( _world->nodes );
+	PLLinkedListNode *node = PlGetFirstNode( _world->root->children );
 	while ( node != nullptr )
 	{
 		auto *worldNode = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( node );

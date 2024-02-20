@@ -142,7 +142,7 @@ static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned in
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
+static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 		return;
@@ -263,7 +263,7 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 	}
 }
 
-static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight *light )
+static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *light )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
@@ -314,7 +314,7 @@ static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight
 	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
-static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera, ApeLight *light )
+static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, ApeLight *light )
 {
 	if ( light == NULL )
 		return;
@@ -328,7 +328,7 @@ static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera
 	if ( !room->isDetail )
 	{
 		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		ApeWorldRoom **detailRooms = ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
+		ApeRoom **detailRooms = ( ApeRoom ** ) PlGetVectorArrayData( room->detailRooms );
 		for ( unsigned int j = 0; j < numDetailRooms; ++j )
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 	}
@@ -348,7 +348,7 @@ void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLigh
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail )
 				continue;
@@ -375,7 +375,7 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room->isDetail )
 				continue;

@@ -45,7 +45,7 @@ typedef struct ApeCamera
 	ApeCameraDrawMode drawMode;
 
 	ApeWorld *world;
-	ApeWorldRoom *room;
+	ApeRoom *room;
 
 	// For visibility
 	PLVectorArray *visibleLights;

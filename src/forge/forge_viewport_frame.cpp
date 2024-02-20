@@ -42,7 +42,7 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, ApeC
 {
 	viewMode_ = viewMode;
 
-#if 1
+#if 0
 	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/perspective.gif" ) );
 	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/top.gif" ) );
@@ -201,9 +201,6 @@ long viewport_frame::on_change_camera_modes( FXObject *object, FX::FXSelector se
 long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 {
 	Draw();
-
-	// shoved here to fix fps hitting 0 and ui becoming unresponsive, maybe?
-	update();
 
 	getApp()->addChore( this, ID_DRAW );
 	return 1;

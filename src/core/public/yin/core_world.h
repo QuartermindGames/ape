@@ -14,6 +14,7 @@ typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
 typedef struct ApeLight ApeLight;
 typedef struct ApeEntity ApeEntity;// core_entity.h
+typedef struct ApeRoom ApeRoom;    // world.h
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -28,7 +29,7 @@ typedef struct ApeWorldBrush ApeWorldBrush;
 
 typedef enum ApeWorldNodeType
 {
-	APE_WORLD_NODE_TYPE_EMPTY,
+	APE_WORLD_NODE_TYPE_EMPTY = 0,
 	APE_WORLD_NODE_TYPE_ROOM,// and then brushes, lights, cameras and entities should be attached to this
 	APE_WORLD_NODE_TYPE_BRUSH,
 	APE_WORLD_NODE_TYPE_LIGHT,
@@ -43,21 +44,36 @@ typedef struct ApeWorldNode
 	char name[ 64 ];
 	ApeWorldNodeType type;
 
-	union
-	{
-		ApeCamera *camera;
-		ApeLight *light;
-		ApeEntity *entity;
-	} data;
+	void *data;
 
 	PLMatrix4 transform;
 	PLCollisionAABB bounds;
 
 	ApeWorldNode *parent;
+	struct PLLinkedListNode *parentListNode;
+
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
-ApeWorldNode *ape_world_node_create( const char *id );
+ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, const char *name, ApeWorldNodeType type, void *data );
+void ape_world_node_destroy( ApeWorldNode *self );
+void ape_world_node_attach_data( ApeWorldNode *self, ApeWorldNodeType type, void *data );
+
+/// Performs some basic validation on the node type before passing back the data.
+static inline void *ape_world_node_get_data( ApeWorldNode *self, ApeWorldNodeType expectedType )
+{
+	if ( self->type != expectedType )
+	{
+		return NULL;
+	}
+
+	return self->data;
+}
+
+static inline ApeRoom *ape_world_node_get_room_data( ApeWorldNode *self ) { return ( ApeRoom * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_ROOM ); }
+static inline ApeLight *ape_world_node_get_light_data( ApeWorldNode *self ) { return ( ApeLight * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_LIGHT ); }
+static inline ApeCamera *ape_world_node_get_camera_data( ApeWorldNode *self ) { return ( ApeCamera * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_CAMERA ); }
+static inline ApeEntity *ape_world_node_get_entity_data( ApeWorldNode *self ) { return ( ApeEntity * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_ENTITY ); }
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ape World Brush - the building blocks of the world.
@@ -102,7 +118,7 @@ typedef struct ApeWorldBrush
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
 typedef struct ApeWorldObject ApeWorldObject;
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeRoom ApeRoom;
 
 typedef struct PLVectorArray PLVectorArray;
 typedef struct PLLinkedList PLLinkedList;
@@ -119,7 +135,7 @@ typedef struct ApeWorld
 	PLVector3 startPosition;
 	PLMatrix3 startOrientation;
 
-	PLLinkedList *nodes;// ApeWorldNode
+	ApeWorldNode *root;
 
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
@@ -175,16 +191,13 @@ void ape_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
 void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
 
 /**
- * Assigning an entity to the world will give the world instance
- * ownership of that entity.
- */
-void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity );
-
-/**
  * Assigning a light to the world will give the world instance
  * ownership of that light.
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
+
+/// Attach a node to the world's root node.
+void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node );
 
 unsigned int ape_sky_add_layer( const char *path, float scale, float y, float alpha );
 void ape_sky_set_layer_alpha( unsigned int slot, float alpha );
@@ -195,7 +208,7 @@ void ape_sky_draw_( ApeCamera *camera );
 ////////////////////////////////////////////////////////////////////
 // Room
 
-ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Face

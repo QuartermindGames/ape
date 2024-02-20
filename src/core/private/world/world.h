@@ -26,7 +26,7 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeRoom ApeRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
@@ -118,40 +118,20 @@ typedef struct ApeWorldPortal
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	ApeWorldRoom *roomA;
-	ApeWorldRoom *roomB;
+	ApeRoom *roomA;
+	ApeRoom *roomB;
 
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-typedef struct ApeWorldRoom
+typedef struct ApeRoom
 {
-	char tag[ WORLD_PROP_TAG_LENGTH ];
-	int uid;
-
 	bool isDetail;
-	bool containsLiquid;
 
 	unsigned int flags;
 
 	PLColourF32 colour;// an identifying colour
 	PLColourF32 ambientLight;
-
-	float life;
-
-	struct
-	{
-		float depth;
-		PLColourF32 colour;
-		float visibility;
-		int type;
-		int alpha;
-		bool plankton;
-		int ppmU, ppmV;
-		float angle;
-		int waveform;
-		float panU, panV;
-	} liquid;
 
 	PLVectorArray *detailRooms;// ApeWorldRoom
 	PLVectorArray *portals;    // ApeWorldPortal
@@ -166,7 +146,7 @@ typedef struct ApeWorldRoom
 	ApeAudioReverbPreset reverbPreset;
 
 	PLCollisionAABB bounds;
-} ApeWorldRoom;
+} ApeRoom;
 
 typedef struct ApeWorldEntity
 {
@@ -176,10 +156,10 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorldRoom *ape_world_room_create( void );
-void ape_world_room_destroy( ApeWorldRoom *room );
-ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *room, unsigned int *numFaces );
-ApeWorldRoom **ape_world_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms );
+ApeRoom *ape_world_room_create( void );
+void ape_world_room_destroy( ApeRoom *room );
+ApeWorldFace **ape_world_room_get_faces_( ApeRoom *room, unsigned int *numFaces );
+ApeRoom **ape_world_room_get_detail_rooms( ApeRoom *room, unsigned int *numDetailRooms );
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
 

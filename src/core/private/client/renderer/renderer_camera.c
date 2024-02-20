@@ -344,9 +344,9 @@ ApeLight **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num 
 	return ( ApeLight ** ) PlGetVectorArrayDataEx( camera->visibleLights, num );
 }
 
-ApeWorldRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num )
+ApeRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num )
 {
-	return ( ApeWorldRoom ** ) PlGetVectorArrayDataEx( camera->visibleRooms, num );
+	return ( ApeRoom ** ) PlGetVectorArrayDataEx( camera->visibleRooms, num );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

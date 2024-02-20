@@ -43,22 +43,18 @@ static void deserialize_lights( ApeWorld *world, NdBranch *root )
 	}
 }
 
-static ApeWorldRoom *deserialize_room( NdBranch *root )
+static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 {
-	ApeWorldRoom *room = ape_world_room_create();
-
-	room->uid = ndGetInt( root, "uid", 0 );
-
-	snprintf( room->tag, sizeof( room->tag ), "%s", ndGetStringByName( root, "tag", "none" ) );
+	ApeRoom *room = ape_world_room_create();
 
 	room->bounds.mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
 	room->bounds.maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
 
-	room->life = ndGetF32ByName( root, "life", 0.0f );
-
 	room->isDetail = ndGetBoolByName( root, "isDetail", false );
 	room->ambientLight = ndGetColourF32( root, "ambience", &PL_COLOURF32_BLACK );
 	room->flags = ndGetUInt( root, "flags", 0 );
+
+	ape_world_node_create( world->root, "dummy", APE_WORLD_NODE_TYPE_ROOM, room );
 
 	return room;
 }
@@ -66,7 +62,7 @@ static ApeWorldRoom *deserialize_room( NdBranch *root )
 static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 {
 	// Fetch the first room index and validate it
-	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
+	ApeRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
 	assert( roomA != NULL );
 	if ( roomA == NULL )
 	{
@@ -75,7 +71,7 @@ static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	}
 
 	// Fetch the second room index and validate it
-	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
+	ApeRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
 	assert( roomB != NULL );
 	if ( roomB == NULL )
 	{
@@ -116,7 +112,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		PRINT_WARNING( "No room index for face!\n" );
 	else
 	{
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 		if ( room == NULL )
 			PRINT_WARNING( "Invalid room index (%u) for face!\n", roomIndex );
@@ -222,7 +218,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 			branch = ndGetFirstChild( branch );
 			while ( branch != NULL )
 			{
-				PlPushBackVectorArrayElement( world->rooms, deserialize_room( branch ) );
+				PlPushBackVectorArrayElement( world->rooms, deserialize_room( world, branch ) );
 				branch = ndGetNextChild( branch );
 			}
 		}

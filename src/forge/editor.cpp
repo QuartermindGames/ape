@@ -185,10 +185,6 @@ static void setup_app_colours( FXApp &app )
 
 int main( int argc, char **argv )
 {
-#if !defined( NDEBUG ) && defined( WIN32 )
-	setvbuf( stdout, nullptr, _IONBF, 0 );
-#endif
-
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
 	{
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
@@ -239,10 +235,10 @@ int main( int argc, char **argv )
 		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
 	}
 
-	FXApp app( SS_FORGE_APP_TITLE, FXString::null );
+	FXApp app( SS_FORGE_APP_NAME, FXString::null );
 	app.init( argc, argv );
 
-	setup_app_colours( app );
+	//setup_app_colours( app );
 
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 

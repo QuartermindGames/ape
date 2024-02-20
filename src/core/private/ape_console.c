@@ -1,4 +1,6 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: Bulk of implementation.
+// Author:  Mark E. Sowden
 
 #include "ape_private.h"
 
@@ -144,6 +146,8 @@ static void save_user_config( void )
 	PRINT( "User config saved.\n" );
 }
 
+void ape_world_node_test_command_( unsigned int, char ** );
+
 void ape_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -151,21 +155,27 @@ void ape_console_register_commands_( bool isDedicated )
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
 
+	PlRegisterConsoleCommand( "test_world_node", "Test the world node API.", 0, ape_world_node_test_command_ );
+
 	ape_register_entity_commands_();
 
 	if ( !isDedicated )
+	{
 		ape_console_register_cl_commands_();
+	}
 }
 
 void ape_console_register_variables_( bool isDedicated )
 {
 	// server
-	PlRegisterConsoleVariable( "server/name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
-	PlRegisterConsoleVariable( "server/password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
+	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
+	PlRegisterConsoleVariable( "server.password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
 
 	// Client variables
 	if ( !isDedicated )
+	{
 		ape_console_register_cl_variables_();
+	}
 }
 
 static int logLevels[ APE_LOG_LEVELS ];

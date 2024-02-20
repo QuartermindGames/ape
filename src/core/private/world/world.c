@@ -32,14 +32,14 @@ ApeWorld *ape_world_create( void )
 	world->lights = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
-	world->nodes = PlCreateLinkedList();
+	world->root = ape_world_node_create( NULL, "root", APE_WORLD_NODE_TYPE_EMPTY, NULL );
 
 	ape_world_set_global_defaults( world );
 
 	return world;
 }
 
-static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
+static unsigned int get_total_verts_for_room( ApeRoom *room, bool detail )
 {
 	// determine the total number of vertices
 
@@ -58,7 +58,7 @@ static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
 	{
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 		{
-			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			ApeRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL )
 				continue;
@@ -78,7 +78,7 @@ static unsigned int get_total_verts_for_room( ApeWorldRoom *room, bool detail )
 	return numVerts;
 }
 
-static unsigned int get_total_faces_for_room( ApeWorldRoom *room, bool detail )
+static unsigned int get_total_faces_for_room( ApeRoom *room, bool detail )
 {
 	unsigned int numFaces = PlGetNumVectorArrayElements( room->faces );
 
@@ -86,7 +86,7 @@ static unsigned int get_total_faces_for_room( ApeWorldRoom *room, bool detail )
 	{
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 		{
-			ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+			ApeRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 			assert( detailRoom != NULL );
 			if ( detailRoom == NULL )
 			{
@@ -100,7 +100,7 @@ static unsigned int get_total_faces_for_room( ApeWorldRoom *room, bool detail )
 	return numFaces;
 }
 
-static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
+static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 {
 	if ( room->mesh == NULL )
 	{
@@ -142,7 +142,7 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 
 	for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
 	{
-		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
+		ApeRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
 		if ( detailRoom == NULL )
 			continue;
@@ -203,7 +203,7 @@ ApeWorld *ape_world_load( const char *path )
 		// Create cached room geometry
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
 			if ( room == NULL || room->isDetail || room->isMeshCached )
 				continue;
@@ -259,7 +259,7 @@ void ape_world_destroy( ApeWorld *level )
 	{
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( level->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
+			ApeRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
 			if ( room == NULL )
 				continue;
 
@@ -301,19 +301,6 @@ void ape_world_spawn_entities_( ApeWorld *world )
 	}
 }
 
-void ape_world_attach_entity( ApeWorld *world, ApeEntity *entity )
-{
-	assert( entity->world == NULL );
-	if ( entity->world != NULL )
-	{
-		PRINT_WARNING( "Entity is already associated with a world!\n" );
-		return;
-	}
-
-	PlPushBackVectorArrayElement( world->entities, entity );
-	entity->world = world;
-}
-
 void ape_world_attach_light( ApeWorld *world, ApeLight *light )
 {
 	assert( light->world == NULL );
@@ -325,6 +312,17 @@ void ape_world_attach_light( ApeWorld *world, ApeLight *light )
 
 	PlPushBackVectorArrayElement( world->lights, light );
 	light->world = world;
+}
+
+void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node )
+{
+	if ( node->parent != NULL )
+	{
+		PlDestroyLinkedListNode( node->parentListNode );
+	}
+
+	node->parent = self->root;
+	node->parentListNode = PlInsertLinkedListNode( self->root->children, node );
 }
 
 /****************************************
@@ -347,11 +345,11 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
  * This crudely tries to determine the sector by an origin point.
  * Should only be used for vague lookup.
  */
-ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
+ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
 {
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
-		ApeWorldRoom *room = ( ApeWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
+		ApeRoom *room = ( ApeRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
 		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
 			continue;
 
