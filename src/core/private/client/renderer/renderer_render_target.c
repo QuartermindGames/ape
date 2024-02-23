@@ -139,10 +139,14 @@ void ape_render_target_release( ApeRenderTarget *renderTarget )
 void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height )
 {
 	if ( !PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height ) )
+	{
 		PRINT_WARNING( "Failed to resize framebuffer: %s\n", PlGetError() );
+	}
 
 	if ( renderTarget->textureAttachment != NULL )
+	{
 		PlgDestroyTexture( renderTarget->textureAttachment );
+	}
 
 	renderTarget->textureAttachment = PlgGetFrameBufferTextureAttachment(
 	        renderTarget->frameBuffer,

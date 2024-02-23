@@ -111,8 +111,18 @@ ApeCamera *ape_viewport_get_camera( ApeViewport *viewport ) { return viewport->c
 
 void ape_viewport_set_size( ApeViewport *viewport, int width, int height )
 {
+	if ( width == viewport->width && height == viewport->height )
+	{
+		return;
+	}
+
 	viewport->width = width;
 	viewport->height = height;
+
+	if ( viewport->renderTarget != NULL )
+	{
+		ape_render_target_set_size( viewport->renderTarget, viewport->width, viewport->height );
+	}
 }
 
 void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height )
@@ -150,11 +160,15 @@ void ape_viewport_make_active( ApeViewport *viewport )
 {
 	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
 	if ( target != NULL )
+	{
 		ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+	}
 
 	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	if ( viewport->camera != NULL )
+	{
 		ape_camera_make_active( viewport->camera );
+	}
 }

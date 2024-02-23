@@ -49,13 +49,16 @@ void ape_render_frame_( ApeViewport *viewport )
 	ape_draw_begin_( viewport );
 
 	// Let the game draw from its own camera
-	if ( !ape_game_get_interface()->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW, viewport ) )
+	if ( !ape_is_editor_active() )
+	{
+		ape_game_get_interface()->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW, viewport );
+	}
+	else
 	{
 		ape_camera_draw_perspective( viewport->camera, viewport );
 	}
 
 	ape_draw_menu_( viewport );
-
 	ape_draw_end_( viewport );
 
 	shell_swap_window( viewport );

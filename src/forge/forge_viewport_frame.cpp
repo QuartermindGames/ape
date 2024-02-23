@@ -2,6 +2,7 @@
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "forge_viewport_frame.h"
+#include "forge/editors/editor_world.h"
 
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_camera.h>
@@ -30,17 +31,26 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_TEXTURED, viewport_frame::on_change_camera_modes ),
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_LIT, viewport_frame::on_change_camera_modes ),
 
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_ROOM, viewport_frame::on_create ),
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_BRUSH, viewport_frame::on_create ),
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_LIGHT, viewport_frame::on_create ),
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_CAMERA, viewport_frame::on_create ),
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_ENTITY, viewport_frame::on_create ),
+
         FXMAPFUNC( SEL_KEYPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
         FXMAPFUNC( SEL_KEYRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
+
+        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_RESET_CAMERA, viewport_frame::on_reset_camera ),
 };
 
 FXIMPLEMENT( viewport_frame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, ApeCameraViewMode viewMode )
-    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
+viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTabItem *editor, ApeCameraViewMode viewMode )
+    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
 	viewMode_ = viewMode;
+
+	this->editor = editor;
 
 #if 0
 	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
@@ -94,17 +104,23 @@ void viewport_frame::create()
 void viewport_frame::Draw()
 {
 	if ( !_isActive )
+	{
 		return;
+	}
 
 	canvas_->makeCurrent();
 
 	int w = canvas_->getWidth();
 	if ( w < 2 )
+	{
 		w = 2;
+	}
 
 	int h = canvas_->getHeight();
 	if ( h < 2 )
+	{
 		h = 2;
+	}
 
 	PlgSetViewport( 0, 0, w, h );
 
@@ -125,13 +141,24 @@ void viewport_frame::Draw()
 		{
 			std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
 			camera = ape_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, viewMode_ );
-			ape_camera_set_draw_mode( camera, ( viewMode_ == APE_CAMERA_MODE_PERSPECTIVE ) ? APE_CAMERA_DRAW_MODE_TEXTURED : APE_CAMERA_DRAW_MODE_WIREFRAME );
+			drawMode_ = ( viewMode_ == APE_CAMERA_MODE_PERSPECTIVE ) ? APE_CAMERA_DRAW_MODE_TEXTURED : APE_CAMERA_DRAW_MODE_WIREFRAME;
+			ape_camera_set_draw_mode( camera, drawMode_ );
 		}
 
 		ape_viewport_set_camera( internalViewport_, camera );
 		ape_viewport_set_size( internalViewport_, w, h );
 
 		ape_camera_make_active( camera );
+
+		auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
+		if ( worldEditor != nullptr )
+		{
+			ApeWorld *world = worldEditor->get_world();
+			if ( world != nullptr )
+			{
+				ape_camera_assign_world( camera, world );
+			}
+		}
 
 		ape_render_frame( internalViewport_ );
 	}
@@ -248,11 +275,11 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	// Create a pop-up menu
 	auto popup = new FXMenuPane( this );
 
-	new FXMenuCommand( popup, "Create Room...", forge::load_fx_icon( getApp(), "resources/new_room.gif" ) );
-	new FXMenuCommand( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ) );
-	new FXMenuCommand( popup, "Create Light...", forge::load_fx_icon( getApp(), "resources/new_light.gif" ) );
-	new FXMenuCommand( popup, "Create Camera...", forge::load_fx_icon( getApp(), "resources/new_camera.gif" ) );
-	new FXMenuCommand( popup, "Create Entity...", forge::load_fx_icon( getApp(), "resources/new_entity.gif" ) );
+	new FXMenuCommand( popup, "Create Room...", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_BUTTON_CREATE_ROOM );
+	new FXMenuCommand( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ), this, ID_BUTTON_CREATE_BRUSH );
+	new FXMenuCommand( popup, "Create Light...", forge::load_fx_icon( getApp(), "resources/new_light.gif" ), this, ID_BUTTON_CREATE_LIGHT );
+	new FXMenuCommand( popup, "Create Camera...", forge::load_fx_icon( getApp(), "resources/new_camera.gif" ), this, ID_BUTTON_CREATE_CAMERA );
+	new FXMenuCommand( popup, "Create Entity...", forge::load_fx_icon( getApp(), "resources/new_entity.gif" ), this, ID_BUTTON_CREATE_ENTITY );
 	new FXMenuSeparator( popup );
 
 	// Add items to the menu
@@ -265,6 +292,8 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	( new FXMenuRadio( popup, "Solid", this, ID_SOLID ) )->setCheck( drawMode_ == APE_CAMERA_DRAW_MODE_SOLID );
 	( new FXMenuRadio( popup, "Textured", this, ID_TEXTURED ) )->setCheck( drawMode_ == APE_CAMERA_DRAW_MODE_TEXTURED );
 	( new FXMenuRadio( popup, "Lit", this, ID_LIT ) )->setCheck( drawMode_ == APE_CAMERA_DRAW_MODE_SHADED );
+	new FXMenuSeparator( popup );
+	new FXMenuCommand( popup, "Reset Camera", nullptr, this, ID_BUTTON_RESET_CAMERA );
 
 	// Show the menu
 	popup->create();
@@ -284,7 +313,140 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 	}
 
 	auto *event = ( FXEvent * ) ptr;
-	ape_input_handle_keyboard_event( event->code, ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+	ape_input_handle_keyboard_event( translate_key( event->code ), ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+
+	if ( FXSELTYPE( selector ) != SEL_KEYPRESS )
+	{
+		return FALSE;
+	}
+
+	static const float SPEED = 0.5f;
+	PLVector3 pos = ape_camera_get_position( camera );
+	PLVector3 ang = ape_camera_get_angles( camera );
+
+	PLVector3 forward, left;
+	PlAnglesAxes( ang, &left, nullptr, &forward );
+
+	switch ( event->code )
+	{
+		default:
+			break;
+		case KEY_Up:
+		case 'w':
+		{
+			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			break;
+		}
+		case KEY_Down:
+		case 's':
+		{
+			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			break;
+		}
+		case KEY_Left:
+		{
+			ang.y += 1.5f;
+			break;
+		}
+		case KEY_Right:
+		{
+			ang.y -= 1.5f;
+			break;
+		}
+		case 'a':
+		{
+			pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+			break;
+		}
+		case 'd':
+		{
+			pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+			break;
+		}
+		case 'q':
+		{
+			pos.y += 0.5f;
+			break;
+		}
+		case 'e':
+		{
+			pos.y -= 0.5f;
+			break;
+		}
+	}
+
+	ape_camera_set_position( camera, &pos );
+	ape_camera_set_angles( camera, &ang );
 
 	return TRUE;
+}
+
+long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
+{
+	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
+	if ( worldEditor == nullptr )
+	{
+		return FALSE;
+	}
+
+	ApeWorld *world = worldEditor->get_world();
+	if ( world == nullptr )
+	{
+		return FALSE;
+	}
+
+	void *data;
+	ApeWorldNodeType type;
+	switch ( FXSELTYPE( selector ) )
+	{
+		default:
+			data = nullptr;
+			type = APE_WORLD_NODE_TYPE_EMPTY;
+			break;
+		case ID_BUTTON_CREATE_ROOM:
+			type = APE_WORLD_NODE_TYPE_ROOM;
+			break;
+		case ID_BUTTON_CREATE_BRUSH:
+			type = APE_WORLD_NODE_TYPE_BRUSH;
+			break;
+		case ID_BUTTON_CREATE_LIGHT:
+			type = APE_WORLD_NODE_TYPE_LIGHT;
+			break;
+		case ID_BUTTON_CREATE_CAMERA:
+			type = APE_WORLD_NODE_TYPE_CAMERA;
+			break;
+		case ID_BUTTON_CREATE_ENTITY:
+			type = APE_WORLD_NODE_TYPE_ENTITY;
+			break;
+	}
+
+	ApeWorldNode *node = ape_world_node_create( world->root, "test", type, nullptr );
+
+	worldEditor->update_tree();
+
+	return TRUE;
+}
+
+long viewport_frame::on_reset_camera( FXObject *, FXSelector, void * )
+{
+	ape_camera_set_angles( camera, &pl_vecOrigin3 );
+	ape_camera_set_position( camera, &pl_vecOrigin3 );
+	return TRUE;
+}
+
+int viewport_frame::translate_key( int code )
+{
+	switch ( code )
+	{
+		default:
+			return code;
+		case KEY_Up:
+			return APE_INPUT_KEY_UP;
+		case KEY_Down:
+			return APE_INPUT_KEY_DOWN;
+		case KEY_Left:
+			return APE_INPUT_KEY_LEFT;
+		case KEY_Right:
+			return APE_INPUT_KEY_RIGHT;
+	}
 }

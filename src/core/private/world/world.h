@@ -26,7 +26,7 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
@@ -118,14 +118,17 @@ typedef struct ApeWorldPortal
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	ApeRoom *roomA;
-	ApeRoom *roomB;
+	ApeWorldRoom *roomA;
+	ApeWorldRoom *roomB;
 
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-typedef struct ApeRoom
+typedef struct ApeWorldRoom
 {
+	// This should always come first!
+	ApeWorldNodeHeader header;
+
 	bool isDetail;
 
 	unsigned int flags;
@@ -146,7 +149,9 @@ typedef struct ApeRoom
 	ApeAudioReverbPreset reverbPreset;
 
 	PLCollisionAABB bounds;
-} ApeRoom;
+
+	ApeWorldNode *worldNode;
+} ApeWorldRoom;
 
 typedef struct ApeWorldEntity
 {
@@ -156,10 +161,10 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeRoom *ape_world_room_create( void );
-void ape_world_room_destroy( ApeRoom *room );
-ApeWorldFace **ape_world_room_get_faces_( ApeRoom *room, unsigned int *numFaces );
-ApeRoom **ape_world_room_get_detail_rooms( ApeRoom *room, unsigned int *numDetailRooms );
+ApeWorldRoom *ape_world_room_create( void );
+void ape_world_room_destroy( ApeWorldRoom *room );
+ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *room, unsigned int *numFaces );
+ApeWorldRoom **ape_world_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms );
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
 

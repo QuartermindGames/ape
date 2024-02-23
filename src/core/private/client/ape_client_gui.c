@@ -264,7 +264,10 @@ void ape_draw_gui_( ApeViewport *viewport )
 		ss_arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
+	if ( !ape_is_editor_active() )
+	{
+		game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
+	}
 
 	ape_editor_draw_gui_( viewport );
 

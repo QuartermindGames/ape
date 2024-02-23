@@ -121,7 +121,9 @@ static void setup_paths( const char *exePath )
 	if ( PlGetApplicationDataDirectory( "ape", tmp, sizeof( tmp ) ) != nullptr )
 	{
 		if ( PlCreateDirectory( tmp ) )
+		{
 			PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ], true, "%s", tmp );
+		}
 		else
 		{
 			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
@@ -144,6 +146,8 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 	char fullPath[ PL_SYSTEM_MAX_PATH ];
 	snprintf( fullPath, sizeof( fullPath ), "../../%s", path );
 
+#if 1
+
 	PLImage *image;
 	auto i = cachedImages.find( fullPath );
 	if ( i != cachedImages.end() )
@@ -165,6 +169,13 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 	auto *icon = new FXIcon( app );
 	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
 	return icon;
+
+#else
+
+	FXIconSource const iconSource( app );
+	return iconSource.loadIconFile( fullPath );
+
+#endif
 }
 
 static void setup_app_colours( FXApp &app )
@@ -238,7 +249,7 @@ int main( int argc, char **argv )
 	FXApp app( SS_FORGE_APP_NAME, FXString::null );
 	app.init( argc, argv );
 
-	//setup_app_colours( app );
+	setup_app_colours( app );
 
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 

@@ -43,9 +43,9 @@ static void deserialize_lights( ApeWorld *world, NdBranch *root )
 	}
 }
 
-static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
+static ApeWorldRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 {
-	ApeRoom *room = ape_world_room_create();
+	ApeWorldRoom *room = ape_world_room_create();
 
 	room->bounds.mins = ndGetVector3( root, "mins", &pl_vecOrigin3 );
 	room->bounds.maxs = ndGetVector3( root, "maxs", &pl_vecOrigin3 );
@@ -54,7 +54,10 @@ static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 	room->ambientLight = ndGetColourF32( root, "ambience", &PL_COLOURF32_BLACK );
 	room->flags = ndGetUInt( root, "flags", 0 );
 
-	ape_world_node_create( world->root, "dummy", APE_WORLD_NODE_TYPE_ROOM, room );
+	char tmp[ 64 ];
+	snprintf( tmp, sizeof( tmp ), "room_%u", PlGetNumVectorArrayElements( world->rooms ) );
+
+	room->worldNode = ape_world_node_create( world->root, tmp, APE_WORLD_NODE_TYPE_ROOM, room );
 
 	return room;
 }
@@ -62,7 +65,7 @@ static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 {
 	// Fetch the first room index and validate it
-	ApeRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
+	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomB", ( unsigned int ) -1 ) );
 	assert( roomA != NULL );
 	if ( roomA == NULL )
 	{
@@ -71,7 +74,7 @@ static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	}
 
 	// Fetch the second room index and validate it
-	ApeRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
+	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, ndGetUInt( root, "roomA", ( unsigned int ) -1 ) );
 	assert( roomB != NULL );
 	if ( roomB == NULL )
 	{
@@ -112,7 +115,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 		PRINT_WARNING( "No room index for face!\n" );
 	else
 	{
-		ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 		if ( room == NULL )
 			PRINT_WARNING( "Invalid room index (%u) for face!\n", roomIndex );

@@ -7,32 +7,99 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+#define APE_WORLD_NODE_ROOT_MAGIC   PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' )
+#define APE_WORLD_NODE_ROOM_MAGIC   PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' )
+#define APE_WORLD_NODE_BRUSH_MAGIC  PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' )
+#define APE_WORLD_NODE_LIGHT_MAGIC  PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' )
+#define APE_WORLD_NODE_CAMERA_MAGIC PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' )
+#define APE_WORLD_NODE_ENTITY_MAGIC PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' )
+
+static const ApeWorldNodeMagic typeMagic[ APE_WORLD_MAX_NODE_TYPES ] = {
+        [APE_WORLD_NODE_TYPE_ROOT] = APE_WORLD_NODE_ROOT_MAGIC,
+        [APE_WORLD_NODE_TYPE_ROOM] = APE_WORLD_NODE_ROOM_MAGIC,
+        [APE_WORLD_NODE_TYPE_BRUSH] = APE_WORLD_NODE_BRUSH_MAGIC,
+        [APE_WORLD_NODE_TYPE_LIGHT] = APE_WORLD_NODE_LIGHT_MAGIC,
+        [APE_WORLD_NODE_TYPE_CAMERA] = APE_WORLD_NODE_CAMERA_MAGIC,
+        [APE_WORLD_NODE_TYPE_ENTITY] = APE_WORLD_NODE_ENTITY_MAGIC,
+};
+
+/// Excludes validation.
+static void attach_data( ApeWorldNode *self, void *data, ApeWorldNodeType type )
+{
+	self->type = type;
+	self->data = data;
+	if ( self->data != NULL )
+	{
+		( ( ApeWorldNodeHeader * ) data )->node = self;
+	}
+}
+
+static bool validate_data( void *data, ApeWorldNodeType type )
+{
+	if ( data == NULL && type != APE_WORLD_NODE_TYPE_EMPTY )
+	{
+		PRINT_WARNING( "Attempted to attach a null pointer on a non empty node!\n" );
+		return false;
+	}
+	else if ( data != NULL && type == APE_WORLD_NODE_TYPE_EMPTY )
+	{
+		PRINT_WARNING( "Passing data to an empty node type!\n" );
+		return false;
+	}
+
+	if ( type == APE_WORLD_NODE_TYPE_EMPTY )
+	{
+		return true;
+	}
+
+	ApeWorldNodeHeader *header = ( ApeWorldNodeHeader * ) data;
+	if ( header->magic != typeMagic[ type ] )
+	{
+		PRINT_WARNING( "Invalid data for node type!\n" );
+		return false;
+	}
+
+	return true;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
+void ape_world_node_setup_header( ApeWorldNodeHeader *header, ApeWorldNodeType type )
+{
+	header->magic = typeMagic[ type ];
+}
+
 ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, const char *name, ApeWorldNodeType type, void *data )
 {
-	ApeWorldNode *node = PL_NEW( ApeWorldNode );
-	snprintf( node->name, sizeof( node->name ), "%s", name );
-
-	node->children = PlCreateLinkedList();
-	node->transform = PlMatrix4Identity();
-
-	node->parent = parent;
-	if ( node->parent != NULL )
+	if ( !validate_data( data, type ) )
 	{
-		node->parentListNode = PlInsertLinkedListNode( node->parent->children, node );
+		PRINT_WARNING( "Invalid data for node type!\n" );
+		return NULL;
 	}
 
-	ape_world_node_attach_data( node, type, data );
+	ApeWorldNode *self = PL_NEW( ApeWorldNode );
+	snprintf( self->name, sizeof( self->name ), "%s", name );
 
-	return node;
+	self->children = PlCreateLinkedList();
+	self->transform = PlMatrix4Identity();
+
+	self->parent = parent;
+	if ( self->parent != NULL )
+	{
+		self->parentListNode = PlInsertLinkedListNode( self->parent->children, self );
+	}
+
+	attach_data( self, data, type );
+
+	return self;
 }
 
 void ape_world_node_destroy( ApeWorldNode *self )
 {
 	if ( self->data != NULL )
 	{
+		assert( self->type != APE_WORLD_NODE_TYPE_EMPTY );
 		switch ( self->type )
 		{
 			default:
@@ -54,21 +121,36 @@ void ape_world_node_destroy( ApeWorldNode *self )
 				ape_entity_destroy( self->data );
 				break;
 		}
-
-		self->data = NULL;
 	}
+
+	PLLinkedListNode *node = PlGetFirstNode( self->children );
+	while ( node != NULL )
+	{
+		ApeWorldNode *child = PlGetLinkedListNodeUserData( node );
+		ape_world_node_destroy( child );
+		node = PlGetNextLinkedListNode( node );
+	}
+
+	PlDestroyLinkedList( self->children );
+
+	PL_DELETE( self );
 }
 
-void ape_world_node_attach_data( ApeWorldNode *self, ApeWorldNodeType type, void *data )
+void *ape_world_node_attach_data( ApeWorldNode *self, ApeWorldNodeType type, void *data )
 {
-	self->type = type;
-	if ( self->type != APE_WORLD_NODE_TYPE_EMPTY && data == NULL )
+	if ( self->data != NULL )
 	{
-		PRINT_WARNING( "Created a node of a specific type without any data!\n" );
-		return;
+		PRINT_WARNING( "Data already attached to node!\n" );
+		return NULL;
 	}
 
-	self->data = data;
+	if ( !validate_data( data, type ) )
+	{
+		return NULL;
+	}
+
+	attach_data( self, data, type );
+	return self->data;
 }
 
 /// Function dedicated for testing node API.

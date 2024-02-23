@@ -330,19 +330,19 @@ static void Ship_Tick( Actor *self, void *userData )
 		return;
 	}
 
-	if ( ss_shell_get_key_state( KEY_LEFT ) ||
+	if ( ss_shell_get_key_state( APE_INPUT_KEY_LEFT ) ||
 	     ss_shell_get_key_state( 'a' ) )
 		self->angles.y += TURN_SPEED;
-	else if ( ss_shell_get_key_state( KEY_RIGHT ) ||
+	else if ( ss_shell_get_key_state( APE_INPUT_KEY_RIGHT ) ||
 	          ss_shell_get_key_state( 'd' ) )
 		self->angles.y -= TURN_SPEED;
 
 	static const float incAmount = 0.0015f;
 
-	if ( ss_shell_get_key_state( KEY_UP ) ||
+	if ( ss_shell_get_key_state( APE_INPUT_KEY_UP ) ||
 	     ss_shell_get_key_state( 'w' ) )
 		sg->forwardVelocity += incAmount;
-	else if ( ss_shell_get_key_state( KEY_DOWN ) ||
+	else if ( ss_shell_get_key_state( APE_INPUT_KEY_DOWN ) ||
 	          ss_shell_get_key_state( 's' ) )
 		sg->forwardVelocity -= incAmount;
 	else if ( sg->forwardVelocity != 0.0f )

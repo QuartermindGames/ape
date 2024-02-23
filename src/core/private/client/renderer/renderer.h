@@ -35,6 +35,9 @@ typedef struct ApeSpriteFrame
 
 typedef struct ApeCamera
 {
+	// This should always come first!
+	ApeWorldNodeHeader header;
+
 	char tag[ 32 ];
 
 	bool active;
@@ -44,10 +47,13 @@ typedef struct ApeCamera
 	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;
 
+	ApeWorldNode *worldNode;
 	ApeWorld *world;
-	ApeRoom *room;
+	ApeWorldRoom *room;
 
 	// For visibility
+	bool dirty;
+	PLVector3 oldPosition, oldAngles;
 	PLVectorArray *visibleLights;
 	PLVectorArray *visibleRooms;
 
@@ -71,6 +77,9 @@ typedef struct ArlLightCachedStencilVolume
 #define SS_ARL_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
 {
+	// This should always come first!
+	ApeWorldNodeHeader header;
+
 	ApeLightType type;
 
 	PLVector3 position;

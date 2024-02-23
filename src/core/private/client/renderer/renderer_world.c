@@ -3,7 +3,6 @@
 #include "ape_private.h"
 #include "renderer.h"
 #include "world/world.h"
-#include "legacy/actor.h"
 
 //TODO: eventually we should do away with this
 #define MAX_MATERIALS_PER_PASS 256
@@ -12,100 +11,92 @@ static int subMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
 static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
 static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
 
+static void draw_face_wireframe( ApeWorld *world, ApeWorldFace *face )
+{
+	PlgImmSetPrimitiveScale( 2.0f );
+
+	unsigned int numVertices;
+	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayDataEx( face->vertices, &numVertices );
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		ApeWorldVertex *a = vertices[ i ]->u;
+		PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
+		if ( face->portal != NULL )
+		{
+			PlgImmColour( 255, 0, 255, 255 );
+		}
+		else
+		{
+			PlgImmColour( 255, 255, 255, 255 );
+		}
+
+		ApeWorldVertex *b = ( ( i + 1 ) < numVertices ) ? vertices[ i + 1 ]->u : vertices[ 0 ]->u;
+		PlgImmPushVertex( b->position.x, b->position.y, b->position.z );
+		if ( face->portal != NULL )
+		{
+			PlgImmColour( 255, 0, 255, 255 );
+		}
+		else
+		{
+			PlgImmColour( 255, 255, 255, 255 );
+		}
+	}
+}
+
+static void draw_room_wireframe( ApeWorld *world, ApeWorldRoom *room )
+{
+	unsigned int numFaces;
+	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
+	for ( unsigned int j = 0; j < numFaces; ++j )
+	{
+		draw_face_wireframe( world, faces[ j ] );
+	}
+}
+
 /**
  * World is drawn using polygons, rather than straight up triangles,
- * so to more accuratly display it in wireframe, we'll need to render
+ * so to more accurately display it in wireframe, we'll need to render
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 {
-#if 0
-	if ( world == NULL )
+	assert( ( camera != NULL ) && ( world != NULL ) );
+	if ( camera == NULL || world == NULL )
 	{
 		return;
 	}
 
-	PlgSetShaderProgram( oge_defaultShaderPrograms_[ OGE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	PlgSetTexture( NULL, 0 );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-	PlLoadIdentityMatrix();
-
-	PlgSetTexture( NULL, 0 );
+	PlLoadMatrix( &world->root->transform );
 
 	PlgImmBegin( PLG_MESH_LINES );
-	for ( unsigned int i = 0; i < world->numRooms; ++i )
+	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
-		if ( world->rooms[ i ].mesh == NULL )
-		{
-			continue;
-		}
-
-		OgeWorldMesh *mesh     = world->rooms[ i ].mesh;
-		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
+		// Just go over the initial children to determine if they're rooms
+		PLLinkedListNode *node = PlGetFirstNode( world->root->children );
 		while ( node != NULL )
 		{
-			OgeWorldFace *face = PlGetLinkedListNodeUserData( node );
-			for ( unsigned int j = 0; j < face->numVertices; ++j )
+			ApeWorldNode *worldNode = PlGetLinkedListNodeUserData( node );
+			if ( worldNode->type == APE_WORLD_NODE_TYPE_ROOM )
 			{
-				OgeWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
-				OgeWorldVertex *b = ( ( j + 1 ) < face->numVertices ) ? &mesh->vertices[ face->vertices[ j + 1 ] ] : &mesh->vertices[ face->vertices[ 0 ] ];
-
-				PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
-				if ( face->targetSector != NULL )
-				{
-					PlgImmColour( 255, 0, 255, 255 );
-				}
-				else
-				{
-					PlgImmColour( 255, 255, 255, 255 );
-				}
-
-				PlgImmPushVertex( b->position.x, b->position.y, b->position.z );
-				if ( face->targetSector != NULL )
-				{
-					PlgImmColour( 255, 0, 255, 255 );
-				}
-				else
-				{
-					PlgImmColour( 255, 255, 255, 255 );
-				}
+				draw_room_wireframe( world, worldNode->data );
 			}
 
 			node = PlGetNextLinkedListNode( node );
 		}
 	}
-	PlgImmDraw();
-
-	PlgImmBegin( PLG_MESH_POINTS );
-	PlgImmSetPrimitiveScale( 4.0f );
-	for ( unsigned int i = 0; i < world->numRooms; ++i )
+	else
 	{
-		if ( world->rooms[ i ].mesh == NULL )
-		{
-			continue;
-		}
-
-		OgeWorldMesh *mesh     = world->rooms[ i ].mesh;
-		PLLinkedListNode *node = PlGetFirstNode( mesh->faces );
-		while ( node != NULL )
-		{
-			OgeWorldFace *face = PlGetLinkedListNodeUserData( node );
-			for ( unsigned int j = 0; j < face->numVertices; ++j )
-			{
-				OgeWorldVertex *a = &mesh->vertices[ face->vertices[ j ] ];
-				PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
-				PlgImmColour( 0, 255, 0, 255 );
-			}
-
-			node = PlGetNextLinkedListNode( node );
-		}
+		draw_room_wireframe( world, camera->room );
 	}
 	PlgImmDraw();
 
 	PlPopMatrix();
-#endif
 }
 
 static bool face_is_facing_light( const ApeWorldFace *face, const ApeLight *light )
@@ -142,13 +133,17 @@ static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned in
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
+static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, bool skipPortals, ApeLight *light, bool ambienceOnly )
 {
 	if ( PlIsVectorArrayEmpty( room->faces ) )
+	{
 		return;
+	}
 
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
+	{
 		return;
+	}
 
 	if ( ape_config_.world.showRoomVolumes )
 	{
@@ -158,7 +153,9 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, bool s
 	}
 
 	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
+	{
 		return;
+	}
 
 	PLColourF32 oldAmbience;
 	if ( light != NULL )
@@ -172,7 +169,9 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, bool s
 	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->materialIndex < 0 )
+		{
 			continue;
+		}
 
 		unsigned int materialIndex = faces[ i ]->materialIndex;
 		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, materialIndex );
@@ -263,7 +262,7 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 	}
 }
 
-static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *light )
+static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight *light )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
@@ -314,21 +313,25 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *lig
 	ss_arl_material_draw( shadowMaterial, mesh, NULL, 0 );
 }
 
-static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, ApeLight *light )
+static void draw_room_stencil_shadow_pass( ApeWorldRoom *room, ApeCamera *camera, ApeLight *light )
 {
 	if ( light == NULL )
 		return;
 
 	if ( PlIsVectorArrayEmpty( room->faces ) )
+	{
 		return;
+	}
 
 	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
+	{
 		return;
+	}
 
 	if ( !room->isDetail )
 	{
 		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		ApeRoom **detailRooms = ( ApeRoom ** ) PlGetVectorArrayData( room->detailRooms );
+		ApeWorldRoom **detailRooms = ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
 		for ( unsigned int j = 0; j < numDetailRooms; ++j )
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 	}
@@ -348,39 +351,56 @@ void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLigh
 	{
 		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 		{
-			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
-			if ( room == NULL || room->isDetail )
+			if ( room->isDetail )
+			{
 				continue;
+			}
 
 			draw_room_stencil_shadow_pass( room, camera, light );
 		}
 	}
 	else
+	{
 		draw_room_stencil_shadow_pass( camera->room, camera, light );
+	}
 
 	PlPopMatrix();
 }
 
 void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
 {
-	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
+	assert( ( camera != NULL ) && ( world != NULL ) );
+	if ( camera == NULL || world == NULL )
+	{
 		return;
+	}
+
+	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
+	{
+		return;
+	}
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-	PlLoadIdentityMatrix();
+	PlLoadMatrix( &world->root->transform );
 
 	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
-		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+		if ( world->rooms != NULL )
 		{
-			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
-			assert( room != NULL );
-			if ( room->isDetail )
-				continue;
+			for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
+			{
+				ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
+				assert( room != NULL );
+				if ( room->isDetail )
+				{
+					continue;
+				}
 
-			draw_room( world, room, camera, true, light, ambienceOnly );
+				draw_room( world, room, camera, true, light, ambienceOnly );
+			}
 		}
 	}
 	else

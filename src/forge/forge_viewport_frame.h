@@ -11,7 +11,7 @@ namespace ss::forge
 		FXDECLARE( viewport_frame )
 
 	public:
-		viewport_frame( FXComposite *composite, FXGLVisual *visual, ApeCameraViewMode viewMode );
+		viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTabItem *editor, ApeCameraViewMode viewMode );
 		virtual ~viewport_frame();
 
 		void create() override;
@@ -32,6 +32,14 @@ namespace ss::forge
 			ID_SOLID,
 			ID_TEXTURED,
 			ID_LIT,
+
+			ID_BUTTON_CREATE_ROOM,
+			ID_BUTTON_CREATE_BRUSH,
+			ID_BUTTON_CREATE_LIGHT,
+			ID_BUTTON_CREATE_CAMERA,
+			ID_BUTTON_CREATE_ENTITY,
+
+			ID_BUTTON_RESET_CAMERA,
 
 			ID_LAST
 		};
@@ -54,6 +62,8 @@ namespace ss::forge
 		long on_motion( FXObject *, FXSelector, void *ptr );
 		long on_right_click( FXObject *, FXSelector, void *ptr );
 		long on_key( FXObject *, FXSelector, void * );
+		long on_create( FXObject *, FXSelector, void * );
+		long on_reset_camera( FXObject *, FXSelector, void * );
 
 	private:
 		inline viewport_frame() = default;
@@ -69,6 +79,8 @@ namespace ss::forge
 		ApeCameraDrawMode drawMode_{ APE_CAMERA_DRAW_MODE_WIREFRAME };
 		ApeCameraViewMode viewMode_{ APE_CAMERA_MODE_INVALID };
 
+		static int translate_key( int code );
+
 		float zoomScale_{ 1.0f };
 
 	public:
@@ -81,5 +93,7 @@ namespace ss::forge
 		FXDataTarget turnSpeedTarget_;
 
 		static FXGLCanvas *displayList_;
+
+		FXTabItem *editor{};
 	};
 }// namespace ss::forge

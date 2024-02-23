@@ -157,7 +157,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 			break;
 		}
 
-		case KEY_UP:
+		case APE_INPUT_KEY_UP:
 		{
 			if ( autoComplete[ 0 ] == NULL )
 			{
@@ -176,7 +176,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 			autoCompleteSelection++;
 			break;
 		}
-		case KEY_DOWN:
+		case APE_INPUT_KEY_DOWN:
 		{
 			if ( autoComplete[ 0 ] == NULL )
 			{

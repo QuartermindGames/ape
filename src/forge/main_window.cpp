@@ -94,7 +94,7 @@ ss::forge::main_window::main_window( FXApp *app )
 	consoleFrame = new ss::forge::ConsoleFrame( verticalSplitter );
 
 	//HACK: make the engine initialisation happy...
-	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), APE_CAMERA_MODE_PERSPECTIVE );
+	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
 	//dummy->set_active( false );
 	//dummy->hide();
 
@@ -126,7 +126,10 @@ long ss::forge::main_window::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	auto tab = _tabs.emplace_back( new editor_world( _tabBook, "", world ) );
+	auto *editor = new editor_world( _tabBook, "", world );
+	editor->update_tree();
+
+	auto tab = _tabs.emplace_back( editor );
 	tab->create();
 
 	_tabBook->layout();
@@ -152,7 +155,10 @@ long ss::forge::main_window::on_open_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	auto tab = _tabs.emplace_back( new editor_world( _tabBook, PlGetFileName( filename.text() ), world ) );
+	auto *editor = new editor_world( _tabBook, PlGetFileName( filename.text() ), world );
+	editor->update_tree();
+
+	auto tab = _tabs.emplace_back( editor );
 	tab->create();
 
 	_tabBook->layout();

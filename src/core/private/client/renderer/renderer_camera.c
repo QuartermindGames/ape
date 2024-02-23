@@ -83,10 +83,6 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorld *world )
 
 static void build_visible_room_list( ApeCamera *camera, ApeWorld *world )
 {
-	PlClearVectorArray( camera->visibleRooms );
-
-	if ( camera->room == NULL )
-		return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +153,8 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 ApeCamera *ape_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
+
+	ape_world_node_setup_header( &camera->header, APE_WORLD_NODE_TYPE_CAMERA );
 
 	camera->mode = cameraMode;
 	camera->drawMode = APE_CAMERA_DRAW_MODE_SHADED;
@@ -242,10 +240,14 @@ void ape_camera_set_position( ApeCamera *camera, const PLVector3 *position )
 	camera->internal->position = *position;
 
 	if ( camera->world == NULL )
+	{
 		return;
+	}
 
-	if ( camera->room == NULL )
-		camera->room = ape_world_get_room_at_position( camera->world, &camera->internal->position );
+	//if ( camera->room == NULL )
+	//{
+	//	camera->room = ape_world_get_room_at_position( camera->world, &camera->internal->position );
+	//}
 }
 
 void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
@@ -344,15 +346,17 @@ ApeLight **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num 
 	return ( ApeLight ** ) PlGetVectorArrayDataEx( camera->visibleLights, num );
 }
 
-ApeRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num )
+ApeWorldRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num )
 {
-	return ( ApeRoom ** ) PlGetVectorArrayDataEx( camera->visibleRooms, num );
+	return ( ApeWorldRoom ** ) PlGetVectorArrayDataEx( camera->visibleRooms, num );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_build_camera_visibility_lists_( void )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	PLLinkedListNode *node = PlGetFirstNode( cameras );
 	while ( node != NULL )
 	{
@@ -364,10 +368,14 @@ void ape_build_camera_visibility_lists_( void )
 		}
 		node = PlGetNextLinkedListNode( node );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_clear_camera_visibility_lists_( void )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	PLLinkedListNode *node = PlGetFirstNode( cameras );
 	while ( node != NULL )
 	{
@@ -376,4 +384,6 @@ void ape_clear_camera_visibility_lists_( void )
 		PlClearVectorArray( camera->visibleRooms );
 		node = PlGetNextLinkedListNode( node );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }

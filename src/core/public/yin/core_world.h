@@ -13,31 +13,46 @@ typedef struct NdBranch NdBranch;
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
 typedef struct ApeLight ApeLight;
-typedef struct ApeEntity ApeEntity;// core_entity.h
-typedef struct ApeRoom ApeRoom;    // world.h
+typedef struct ApeEntity ApeEntity;      // core_entity.h
+typedef struct ApeWorldRoom ApeWorldRoom;// world.h
+typedef struct ApeBrush ApeBrush;
 
 /* ======================================================================
  * WORLD INTERFACE
  * ====================================================================*/
 
 typedef struct ApeWorldNode ApeWorldNode;
-typedef struct ApeWorldBrush ApeWorldBrush;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ape World Node - foundation of all objects associated with the world.
+// In hindsight, this should have been a header for objects that can be used by the
+// node tree, but alas, I only thought about that after the fact. Maybe in the future
+// I'll look into it again.
 /////////////////////////////////////////////////////////////////////////////////////
+
+// These will need to go under their respective objects
+typedef uint32_t ApeWorldNodeMagic;
 
 typedef enum ApeWorldNodeType
 {
 	APE_WORLD_NODE_TYPE_EMPTY = 0,
-	APE_WORLD_NODE_TYPE_ROOM,// and then brushes, lights, cameras and entities should be attached to this
-	APE_WORLD_NODE_TYPE_BRUSH,
+	APE_WORLD_NODE_TYPE_ROOT, // the world itself
+	APE_WORLD_NODE_TYPE_ROOM, // and then brushes, lights, cameras and entities should be attached to this
+	APE_WORLD_NODE_TYPE_BRUSH,// geometry that makes up the room
 	APE_WORLD_NODE_TYPE_LIGHT,
 	APE_WORLD_NODE_TYPE_CAMERA,
-	APE_WORLD_NODE_TYPE_ENTITY,
+	APE_WORLD_NODE_TYPE_ENTITY,// can add dynamic behaviours to any children
 
 	APE_WORLD_MAX_NODE_TYPES
 } ApeWorldNodeType;
+
+/// This should be the first thing under any data considered a node type.
+/// This is so that validation can be done, and one can easily fetch the associated node.
+typedef struct ApeWorldNodeHeader
+{
+	ApeWorldNodeMagic magic;
+	ApeWorldNode *node;
+} ApeWorldNodeHeader;
 
 typedef struct ApeWorldNode
 {
@@ -50,14 +65,16 @@ typedef struct ApeWorldNode
 	PLCollisionAABB bounds;
 
 	ApeWorldNode *parent;
-	struct PLLinkedListNode *parentListNode;
+	struct PLLinkedListNode *parentListNode;// our slot under the parent
 
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
+void ape_world_node_setup_header( ApeWorldNodeHeader *header, ApeWorldNodeType type );
+
 ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, const char *name, ApeWorldNodeType type, void *data );
 void ape_world_node_destroy( ApeWorldNode *self );
-void ape_world_node_attach_data( ApeWorldNode *self, ApeWorldNodeType type, void *data );
+void *ape_world_node_attach_data( ApeWorldNode *self, ApeWorldNodeType type, void *data );
 
 /// Performs some basic validation on the node type before passing back the data.
 static inline void *ape_world_node_get_data( ApeWorldNode *self, ApeWorldNodeType expectedType )
@@ -70,7 +87,7 @@ static inline void *ape_world_node_get_data( ApeWorldNode *self, ApeWorldNodeTyp
 	return self->data;
 }
 
-static inline ApeRoom *ape_world_node_get_room_data( ApeWorldNode *self ) { return ( ApeRoom * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_ROOM ); }
+static inline ApeWorldRoom *ape_world_node_get_room_data( ApeWorldNode *self ) { return ( ApeWorldRoom * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_ROOM ); }
 static inline ApeLight *ape_world_node_get_light_data( ApeWorldNode *self ) { return ( ApeLight * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_LIGHT ); }
 static inline ApeCamera *ape_world_node_get_camera_data( ApeWorldNode *self ) { return ( ApeCamera * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_CAMERA ); }
 static inline ApeEntity *ape_world_node_get_entity_data( ApeWorldNode *self ) { return ( ApeEntity * ) ape_world_node_get_data( self, APE_WORLD_NODE_TYPE_ENTITY ); }
@@ -79,38 +96,36 @@ static inline ApeEntity *ape_world_node_get_entity_data( ApeWorldNode *self ) { 
 // Ape World Brush - the building blocks of the world.
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef enum ApeWorldBrushGeometryType
+typedef enum ApeBrushGeometryType
 {
 	APE_WORLD_BRUSH_GEOMETRY_TYPE_PRIMITIVE,// class quake-style
 	APE_WORLD_BRUSH_GEOMETRY_TYPE_MESH,     // let's you use an explicit mesh instead
 
 	APE_MAX_WORLD_BRUSH_GEOMETRY_TYPES
-} ApeWorldBrushGeometryType;
+} ApeBrushGeometryType;
 
-typedef enum ApeWorldBrushType
+typedef enum ApeBrushType
 {
 	APE_WORLD_BRUSH_TYPE_SOLID,
 	APE_WORLD_BRUSH_TYPE_AIR,
 
 	APE_MAX_WORLD_BRUSH_TYPES
-} ApeWorldBrushType;
+} ApeBrushType;
 
-typedef struct ApeWorldBrushFace
+typedef struct ApeBrushFace
 {
 
-} ApeWorldBrushFace;
+} ApeBrushFace;
 
 #define APE_WORLD_BRUSH_MAX_FACES 32
 
-typedef struct ApeWorldBrush
+typedef struct ApeBrush
 {
-	ApeWorldNode node;
-
-	ApeWorldBrushType type;
-	ApeWorldBrushGeometryType geometryType;
+	ApeBrushType type;
+	ApeBrushGeometryType geometryType;
 
 	struct PLLinkedList *faces;
-} ApeWorldBrush;
+} ApeBrush;
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -118,13 +133,16 @@ typedef struct ApeWorldBrush
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
 typedef struct ApeWorldObject ApeWorldObject;
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeWorldRoom ApeWorldRoom;
 
 typedef struct PLVectorArray PLVectorArray;
 typedef struct PLLinkedList PLLinkedList;
 
 typedef struct ApeWorld
 {
+	// This should always come first!
+	ApeWorldNodeHeader header;
+
 	char *name;
 	PLPath path;
 
@@ -208,7 +226,7 @@ void ape_sky_draw_( ApeCamera *camera );
 ////////////////////////////////////////////////////////////////////
 // Room
 
-ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Face

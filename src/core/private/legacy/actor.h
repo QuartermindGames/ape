@@ -62,7 +62,7 @@ typedef struct Actor
 	char tagName[ 64 ];
 
 	/* collision/vis */
-	struct ApeRoom *sector;
+	struct ApeWorldRoom *sector;
 	ActorMovementType movementType;
 	ActorCollisionGroup collisionGroup;
 	PLCollisionAABB collisionVolume;
@@ -88,7 +88,7 @@ typedef struct Actor
 	void *userData;
 } Actor;
 
-void Act_DrawActors( ApeCamera *camera, ApeRoom *sector );
+void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree );
@@ -102,7 +102,7 @@ PLVector3 Act_GetPosition( const Actor *self );
 
 float Act_GetAngle( const Actor *self );
 
-void Act_SetWorldSector( Actor *self, struct ApeRoom *sector );
+void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector );
 
 void Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );

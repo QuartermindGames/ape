@@ -37,7 +37,7 @@ typedef enum ApeCameraDrawMode
 PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeWorldRoom ApeWorldRoom;
 typedef struct ApeCamera ApeCamera;
 
 ApeCamera *ape_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode );
@@ -63,7 +63,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 PLGCamera *ape_camera_get_internal( ApeCamera *camera );
 
 ApeLight **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num );
-ApeRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
+ApeWorldRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
 
 /////////////////////////////////////////////////////////////////////////////////////
 

@@ -40,6 +40,15 @@ namespace ss::forge
 		FXTreeList *nodeTree{};
 
 	private:
+		class room_creation_dialog : FXDialogBox
+		{
+			FXDECLARE( room_creation_dialog )
+
+		public:
+		protected:
+		private:
+		};
+
 		class entity_creation_dialog : FXDialogBox
 		{
 			FXDECLARE( entity_creation_dialog )
@@ -54,5 +63,8 @@ namespace ss::forge
 		private:
 			FXListBox *classSelection{};
 		};
+
+	public:
+		inline ApeWorld *get_world() { return _world; }
 	};
 }// namespace ss::forge

@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E. Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Lights
 // Author:  Mark E. Sowden
 
@@ -15,6 +15,9 @@
 ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
 {
 	ApeLight *light = PL_NEW( ApeLight );
+
+	ape_world_node_setup_header( &light->header, APE_WORLD_NODE_TYPE_LIGHT );
+
 	light->position = *position;
 	light->colour = *colour;
 	light->type = type;
@@ -26,6 +29,12 @@ ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour
 
 void ape_light_destroy( ApeLight *light )
 {
+	if ( light == NULL )
+	{
+		return;
+	}
+
+	PL_DELETE( light );
 }
 
 PLColourF32 ss_arl_light_get_colour( const ApeLight *light ) { return light->colour; }

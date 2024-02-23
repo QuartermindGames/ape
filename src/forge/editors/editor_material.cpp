@@ -30,7 +30,7 @@ ss::forge::editor_material::editor_material( FXTabBook *owner, const FXString &w
 
 	unsigned int mode = APE_CAMERA_MODE_PERSPECTIVE;
 	auto *hs = new FX4Splitter( frame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewport = new viewport_frame( hs, get_shared_gl_visual(), ( ApeCameraViewMode ) mode++ );
+	_viewport = new viewport_frame( hs, get_shared_gl_visual(), nullptr, ( ApeCameraViewMode ) mode++ );
 
 	frame->create();
 

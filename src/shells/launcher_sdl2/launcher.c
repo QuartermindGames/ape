@@ -337,13 +337,13 @@ static int Sys_TranslateSDLKeyInput( int key )
 		case SDLK_KP_ENTER:
 			return KEY_ENTER;
 		case SDLK_UP:
-			return KEY_UP;
+			return APE_INPUT_KEY_UP;
 		case SDLK_DOWN:
-			return KEY_DOWN;
+			return APE_INPUT_KEY_DOWN;
 		case SDLK_LEFT:
-			return KEY_LEFT;
+			return APE_INPUT_KEY_LEFT;
 		case SDLK_RIGHT:
-			return KEY_RIGHT;
+			return APE_INPUT_KEY_RIGHT;
 		case SDLK_LCTRL:
 			return KEY_LEFT_CTRL;
 		case SDLK_RCTRL:
