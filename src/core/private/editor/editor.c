@@ -18,24 +18,20 @@ static ApeEditorState editorState = {};
 
 static const unsigned int DEFAULT_GRID_SCALE = 2;
 
-static bool gridVisible;
+static bool gridVisible = true;
 static unsigned int gridScale = DEFAULT_GRID_SCALE;
 static PLMatrix4 gridTransform;
+
+static ApeRenderTarget *selectionRenderTarget;
+
+static void toggle_grid_command( unsigned int, char ** )
+{
+	gridVisible = !gridVisible;
+}
 
 static void toggle_editor_command( unsigned int, char ** )
 {
 	ape_config_.editor = !ape_config_.editor;
-
-	if ( ape_config_.editor )
-	{
-		gridVisible = true;
-		gridScale = DEFAULT_GRID_SCALE;
-		gridTransform = PlMatrix4Identity();
-	}
-	else
-	{
-		gridVisible = false;
-	}
 }
 
 static void save_world_command( unsigned int argc, char **argv )
@@ -81,6 +77,18 @@ static void create_world_command( unsigned int, char ** )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
+void ape_initialize_editor_( void )
+{
+}
+
+void ape_shutdown_editor_( void )
+{
+	if ( selectionRenderTarget != NULL )
+	{
+		ape_render_target_release( selectionRenderTarget );
+	}
+}
+
 ApeEditorState *ape_editor_get_state( void )
 {
 	return &editorState;
@@ -117,7 +125,7 @@ void ape_grid_set_visibility( bool visible )
 
 void ape_editor_draw_grid_( void )
 {
-	if ( !ape_config_.editor )
+	if ( !ape_config_.editor || !gridVisible )
 	{
 		return;
 	}
@@ -141,7 +149,10 @@ void ape_editor_draw_grid_( void )
 
 void ape_register_editor_console_variables_( void )
 {
+	PlRegisterConsoleVariable( "grid_scale", "Scale of the editing grid.", "2", PL_VAR_I32, &gridScale, NULL, true );
+
 	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
+	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, toggle_grid_command );
 
 	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );

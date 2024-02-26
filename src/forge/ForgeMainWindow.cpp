@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "main_window.h"
+#include "ForgeMainWindow.h"
 #include "AboutDialog.h"
 
 #include "editors/editor_world.h"
@@ -13,30 +13,30 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
-ss::forge::main_window *ss::forge::mainWindow = nullptr;
+ss::forge::ForgeMainWindow *ss::forge::mainWindow = nullptr;
 
-FXDEFMAP( ss::forge::main_window )
+FXDEFMAP( ss::forge::ForgeMainWindow )
 MainWindowMap[] = {
         //FXMAPFUNC( SEL_CONFIGURE, MainWindow::ID_CANVAS, mao::MainWindow::OnConfigure ),
         //FXMAPFUNC( SEL_PAINT, MainWindow::ID_CANVAS, mao::MainWindow::OnExpose ),
         //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_WORLD_NEW, ss::forge::main_window::on_new_world ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_WORLD_OPEN, ss::forge::main_window::on_open_world ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_WORLD_NEW, ss::forge::ForgeMainWindow::on_new_world ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_WORLD_OPEN, ss::forge::ForgeMainWindow::on_open_world ),
 
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_MODEL_OPEN, ss::forge::main_window::open_model ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_MATERIAL_OPEN, ss::forge::main_window::open_material ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_MODEL_OPEN, ss::forge::ForgeMainWindow::open_model ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_MATERIAL_OPEN, ss::forge::ForgeMainWindow::open_material ),
 
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_ABOUT, ss::forge::main_window::on_about ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::main_window::ID_PROJECT_PACKAGE, ss::forge::main_window::on_package_project ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_ABOUT, ss::forge::ForgeMainWindow::on_about ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_PROJECT_PACKAGE, ss::forge::ForgeMainWindow::on_package_project ),
         //FXMAPFUNC( SEL_COMMAND, MainWindow::ID_TOGGLE_EDIT, mao::MainWindow::OnToggleEdit ),
         //FXMAPFUNC( SEL_KEYRELEASE, MainWindow::ID_CANVAS, mao::MainWindow::OnInput ),
-        FXMAPFUNC( SEL_TIMEOUT, ss::forge::main_window::ID_TICK, ss::forge::main_window::on_tick ),
+        FXMAPFUNC( SEL_TIMEOUT, ss::forge::ForgeMainWindow::ID_TICK, ss::forge::ForgeMainWindow::on_tick ),
 };
 
-FXIMPLEMENT( ss::forge::main_window, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
+FXIMPLEMENT( ss::forge::ForgeMainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
 
-ss::forge::main_window::main_window( FXApp *app )
-    : FXMainWindow( app, SS_FORGE_APP_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 )
+ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
+    : FXMainWindow( app, FORGE_APP_TITLE, nullptr, nullptr, DECOR_ALL, 0, 0, 1024, 768, 0, 0 )
 {
 	menuBar_ = new FXMenuBar( this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
@@ -46,6 +46,7 @@ ss::forge::main_window::main_window( FXApp *app )
 	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", ss::forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
 	new FXMenuSeparator( menuPane );
 
+#if 0
 	new FXMenuCommand( menuPane, "Open Model...\t\tOpen an existing model.", ss::forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, ID_MODEL_OPEN );
 	new FXMenuSeparator( menuPane );
 
@@ -57,9 +58,12 @@ ss::forge::main_window::main_window( FXApp *app )
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Settings...\t\tConfigure editor settings and more.", ss::forge::load_fx_icon( getApp(), "resources/wrench.gif" ), this, ID_SETTINGS );
 	new FXMenuSeparator( menuPane );
+#endif
+
 	new FXMenuCommand( menuPane, "&Quit\t\tQuit the application.", nullptr, this, ID_CLOSE );
 	new FXMenuTitle( menuBar_, "&File", nullptr, menuPane );
 
+#if 0
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuTitle( menuBar_, "&Edit", nullptr, menuPane );
 
@@ -77,6 +81,7 @@ ss::forge::main_window::main_window( FXApp *app )
 	{
 		subMenu->disable();
 	}
+#endif
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "&About\t\tOpen about dialog.", nullptr, this, ID_ABOUT );
@@ -91,17 +96,17 @@ ss::forge::main_window::main_window( FXApp *app )
 	_tabBook->setHeight( getHeight() - 128 );
 
 	// Add the console at the bottom
-	consoleFrame = new ss::forge::ConsoleFrame( verticalSplitter );
+	consoleFrame = new ss::forge::ForgeConsoleFrame( verticalSplitter );
 
 	//HACK: make the engine initialisation happy...
 	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
 	//dummy->set_active( false );
 	//dummy->hide();
 
-	getApp()->addTimeout( this, main_window::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, ForgeMainWindow::ID_TICK, SS_SHELL_TICK_RATE );
 }
 
-void ss::forge::main_window::create()
+void ss::forge::ForgeMainWindow::create()
 {
 	FXMainWindow::create();
 
@@ -109,15 +114,15 @@ void ss::forge::main_window::create()
 	maximize();
 }
 
-long ss::forge::main_window::on_tick( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::on_tick( FXObject *, FXSelector, void * )
 {
 	ape_tick_frame();
 
-	getApp()->addTimeout( this, main_window::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, ForgeMainWindow::ID_TICK, SS_SHELL_TICK_RATE );
 	return 0;
 }
 
-long ss::forge::main_window::on_new_world( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::on_new_world( FXObject *, FXSelector, void * )
 {
 	ApeWorld *world = ape_world_create();
 	if ( world == nullptr )
@@ -137,7 +142,7 @@ long ss::forge::main_window::on_new_world( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long ss::forge::main_window::on_open_world( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::on_open_world( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
@@ -166,7 +171,7 @@ long ss::forge::main_window::on_open_world( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long ss::forge::main_window::open_model( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::open_model( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
@@ -181,7 +186,7 @@ long ss::forge::main_window::open_model( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::main_window::open_material( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::open_material( FXObject *, FXSelector, void * )
 {
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
@@ -203,14 +208,14 @@ long ss::forge::main_window::open_material( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::main_window::on_about( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::on_about( FXObject *, FXSelector, void * )
 {
 	auto *aboutDialog = new forge::AboutDialog( this );
 	aboutDialog->execute();
 	return true;
 }
 
-long ss::forge::main_window::on_package_project( FXObject *, FXSelector, void * )
+long ss::forge::ForgeMainWindow::on_package_project( FXObject *, FXSelector, void * )
 {
 	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.pkg" );
 	if ( filename.empty() )
@@ -219,14 +224,14 @@ long ss::forge::main_window::on_package_project( FXObject *, FXSelector, void * 
 	return true;
 }
 
-void ss::forge::main_window::setup_engine_viewports()
+void ss::forge::ForgeMainWindow::setup_engine_viewports()
 {
 }
 
 /**
  * Push a message to the console.
  */
-void ss::forge::main_window::push_message( int level, const char *msg, const PLColour &colour )
+void ss::forge::ForgeMainWindow::push_message( int level, const char *msg, const PLColour &colour )
 {
 	consoleFrame->push_message( level, msg, colour );
 }

@@ -4,7 +4,7 @@
 
 #include "editor_material.h"
 
-#include "../forge_viewport_frame.h"
+#include "../ForgeViewportFrame.h"
 
 FXDEFMAP( ss::forge::editor_material )
 materialEditorMap[] = {

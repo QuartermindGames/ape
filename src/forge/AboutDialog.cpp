@@ -7,12 +7,12 @@ FXIcon *ss::forge::AboutDialog::editorIcon = nullptr;
 FXIcon *ss::forge::AboutDialog::developerIcon = nullptr;
 
 ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
-    : FXDialogBox( parent, "About " SS_FORGE_APP_TITLE )
+    : FXDialogBox( parent, FXString( "About " ) + FORGE_APP_TITLE )
 {
 	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
 
-	new FXLabel( infoFrame, SS_FORGE_APP_TITLE " (" SS_FORGE_APP_VERSION ")\n" SS_COM_COPYRIGHT "\n"
-	                                           "Editor environment for use with APE Tech.",
+	new FXLabel( infoFrame, FXString( FORGE_APP_TITLE ) + " (" SS_FORGE_APP_VERSION ")\n" SS_COM_COPYRIGHT "\n"
+	                                                      "Editor environment for use with APE Tech.",
 	             nullptr,
 	             LAYOUT_LEFT | LAYOUT_SIDE_LEFT | JUSTIFY_LEFT );
 

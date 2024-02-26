@@ -6,13 +6,13 @@
 
 namespace ss::forge
 {
-	class ConsoleFrame : public FXVerticalFrame
+	class ForgeConsoleFrame : public FXVerticalFrame
 	{
-		FXDECLARE( ConsoleFrame )
+		FXDECLARE( ForgeConsoleFrame )
 
 	public:
-		explicit ConsoleFrame( FXComposite *composite );
-		~ConsoleFrame() override;
+		explicit ForgeConsoleFrame( FXComposite *composite );
+		~ForgeConsoleFrame() override;
 
 		enum
 		{
@@ -29,7 +29,7 @@ namespace ss::forge
 
 	protected:
 	private:
-		inline ConsoleFrame() = default;
+		inline ForgeConsoleFrame() = default;
 
 		std::vector< std::string > _previousCommands;
 

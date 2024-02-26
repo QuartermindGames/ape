@@ -4,7 +4,7 @@
 
 #include "ModelEditor.h"
 
-#include "../forge_viewport_frame.h"
+#include "../ForgeViewportFrame.h"
 
 FXDEFMAP( ss::forge::ModelEditor )
 modelEditorMap[] = {

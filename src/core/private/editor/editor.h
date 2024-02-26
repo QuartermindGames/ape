@@ -6,6 +6,9 @@
 
 PL_EXTERN_C
 
+void ape_initialize_editor_( void );
+void ape_shutdown_editor_( void );
+
 void ape_register_editor_console_variables_( void );
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );

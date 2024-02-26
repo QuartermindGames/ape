@@ -247,7 +247,7 @@ void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void guiDrawFontCharacter( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
+void gui_font_draw_character( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
 {
 	ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )

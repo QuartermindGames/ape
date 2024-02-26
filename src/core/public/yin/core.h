@@ -15,8 +15,8 @@ void ape_shutdown( void );
 void ape_render_frame( ApeViewport *viewport );
 void ape_tick_frame( void );
 
-struct NdBranch *ss_acl_get_config( void );
-struct NdBranch *ss_acl_get_user_config( void );
+struct NdBranch *ape_get_config( void );
+struct NdBranch *ape_get_user_config( void );
 
 unsigned int ape_get_num_ticks( void );
 

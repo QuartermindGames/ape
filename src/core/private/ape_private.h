@@ -94,6 +94,10 @@ void ape_console_draw_( const ApeViewport *viewport );
 void ape_console_register_cl_commands_( void );
 void ape_console_register_cl_variables_( void );
 
+void ape_print_( const char *message, ... );
+void ape_warning_( const char *message, ... );
+void ape_error_( bool die, const char *message, ... );
+
 #define PRINT( FORMAT, ... ) \
 	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
 #define PRINT_WARNING( FORMAT, ... ) \

@@ -6,13 +6,13 @@
 
 namespace ss::forge
 {
-	class ProjectDialog : public FXDialogBox
+	class ForgeProjectDialog : public FXDialogBox
 	{
-		FXDECLARE( ProjectDialog )
+		FXDECLARE( ForgeProjectDialog )
 
 	public:
-		explicit ProjectDialog( FXWindow *parent );
-		~ProjectDialog() = default;
+		explicit ForgeProjectDialog( FXWindow *parent );
+		~ForgeProjectDialog() = default;
 
 		enum
 		{
@@ -22,7 +22,7 @@ namespace ss::forge
 		long on_accept( FXObject *obj, FXSelector, void *ptr );
 
 	protected:
-		inline ProjectDialog() = default;
+		inline ForgeProjectDialog() = default;
 
 	private:
 		static constexpr const char *defaultName = "Enter a project name";

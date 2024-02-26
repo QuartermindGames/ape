@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
 
@@ -19,8 +19,8 @@ static int consoleAlpha = 200;
  * CONSOLE INPUT BUFFER
  ****************************************/
 
-static char conInputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
-static unsigned int conInputBufferLength = 0;
+static char inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
+static unsigned int inputBufferLength = 0;
 
 #define MAX_HISTORY_RESULTS 64
 static char history[ MAX_HISTORY_RESULTS ][ 64 ] = { { '\0' } };
@@ -48,11 +48,15 @@ static void update_auto_complete_result( const char *input )
 	unsigned int numOptions;
 	const char **list = PlAutocompleteConsoleString( input, &numOptions );
 	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS )
+	{
 		numOptions = MAX_AUTOCOMPLETE_RESULTS - 1;
+	}
 
 	// fill the list, leaving the last item null so we know where it ends
 	for ( unsigned int i = 0; i < numOptions; ++i )
+	{
 		autoComplete[ i ] = list[ i ];
+	}
 	autoComplete[ numOptions ] = NULL;
 
 	autoCompleteSelection = 0;
@@ -87,13 +91,17 @@ static void scroll_forward( ApeConsoleOutput *output )
 {
 	output->scrollPos++;
 	if ( output->scrollPos > output->numLines - 1 )
+	{
 		output->scrollPos = output->numLines - 1;
+	}
 }
 
 static void scroll_backward( ApeConsoleOutput *output )
 {
 	if ( output->scrollPos == 0 )
+	{
 		return;
+	}
 
 	output->scrollPos--;
 }
@@ -101,23 +109,29 @@ static void scroll_backward( ApeConsoleOutput *output )
 bool ape_console_handle_mouse_wheel_event_( float x, float y )
 {
 	if ( !ape_is_console_open() )
+	{
 		return false;
+	}
 
 	ApeConsoleOutput *output = apeGetConsoleOutput();
 	if ( y > 0.0f )
+	{
 		scroll_forward( output );
+	}
 	else if ( y < 0.0f )
+	{
 		scroll_backward( output );
+	}
 
 	return true;
 }
 
 static void clear_input_buffer( void )
 {
-	memset( conInputBuffer, 0, sizeof( conInputBuffer ) );
-	conInputBufferLength = 0;
+	memset( inputBuffer, 0, sizeof( inputBuffer ) );
+	inputBufferLength = 0;
 
-	update_auto_complete_result( conInputBuffer );
+	update_auto_complete_result( inputBuffer );
 }
 
 bool ape_console_handle_key_event_( int key, unsigned int keyState )
@@ -198,38 +212,38 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 		{
 			if ( autoComplete[ 0 ] != NULL && autoCompleteSelection > 0 )
 			{
-				snprintf( conInputBuffer, sizeof( conInputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
-				conInputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
-				update_auto_complete_result( conInputBuffer );
+				snprintf( inputBuffer, sizeof( inputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
+				inputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
+				update_auto_complete_result( inputBuffer );
 				break;
 			}
-			else if ( conInputBuffer[ 0 ] != '\0' )
+			else if ( inputBuffer[ 0 ] != '\0' )
 			{
-				PlParseConsoleString( conInputBuffer );
+				PlParseConsoleString( inputBuffer );
 				clear_input_buffer();
 			}
 			break;
 		}
 		case KEY_BACKSPACE:
 		{
-			if ( conInputBufferLength > 0 )
+			if ( inputBufferLength > 0 )
 			{
-				conInputBuffer[ --conInputBufferLength ] = '\0';
+				inputBuffer[ --inputBufferLength ] = '\0';
 			}
 
-			update_auto_complete_result( conInputBuffer );
+			update_auto_complete_result( inputBuffer );
 			break;
 		}
 		case KEY_TAB:
 		{ /* autocompletion */
-			if ( *conInputBuffer == '\0' || autoComplete[ 0 ] == NULL )
+			if ( *inputBuffer == '\0' || autoComplete[ 0 ] == NULL )
 				break;
 
 			/* update to match the first result */
-			snprintf( conInputBuffer, sizeof( conInputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
-			conInputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
+			snprintf( inputBuffer, sizeof( inputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
+			inputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
 
-			update_auto_complete_result( conInputBuffer );
+			update_auto_complete_result( inputBuffer );
 			break;
 		}
 	}
@@ -245,13 +259,13 @@ bool ape_console_handle_text_event_( const char *key )
 
 	/* check length before appending so we can ensure
      * it's always null terminated */
-	if ( conInputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH )
+	if ( inputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH )
 		return true;
 
-	conInputBuffer[ conInputBufferLength++ ] = *key;
-	conInputBuffer[ conInputBufferLength ] = '\0';
+	inputBuffer[ inputBufferLength++ ] = *key;
+	inputBuffer[ inputBufferLength ] = '\0';
 
-	update_auto_complete_result( conInputBuffer );
+	update_auto_complete_result( inputBuffer );
 
 	return true;
 }
@@ -264,41 +278,43 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 {
 	const float ch = guiGetFontLineSpacing( font );
 	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
-	guiDrawFontCharacter( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
+	gui_font_draw_character( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 #define SPACER 4.0f
 	static unsigned int v = 0;
 	if ( v < ape_get_num_ticks() )
+	{
 		v = ape_get_num_ticks() + 20;
+	}
 
 	float bufPixW;
-	guiGetStringPixelSize( font, 1.0f, conInputBuffer, conInputBufferLength, &bufPixW, NULL );
+	guiGetStringPixelSize( font, 1.0f, inputBuffer, inputBufferLength, &bufPixW, NULL );
 
 	const float x = ( 1.0f + cw );
 
 	// cursor
 	char c = ( v > ape_get_num_ticks() + 10 ) ? '_' : ' ';
-	guiDrawFontCharacter( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
+	gui_font_draw_character( font, x + bufPixW, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
 			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				gui_font_draw_string( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
-				gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + conInputBufferLength, autoCompleteLength - conInputBufferLength, false );
+				gui_font_draw_string( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
+				gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ i ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	gui_font_draw_string( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, conInputBuffer, conInputBufferLength, false );
+	gui_font_draw_string( font, 1.0f + cw, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
 
 	gui_font_display( font );
 }
@@ -313,12 +329,16 @@ static const float consoleScrollBarWidth = 8.0f;
 void ape_console_draw_( const ApeViewport *viewport )
 {
 	if ( !ape_is_console_open() )
+	{
 		return;
+	}
 
 	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 	assert( font != NULL );
 	if ( font == NULL )
+	{
 		return;
+	}
 
 	PlgSetTexture( NULL, 0 );
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -361,7 +381,9 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 			y -= lineSpacing;
 			if ( y < 0 )
+			{
 				break;
+			}
 		}
 	}
 
@@ -419,7 +441,9 @@ void ape_console_draw_( const ApeViewport *viewport )
 static void input_mlook_command( const PLConsoleVariable *consoleVariable )
 {
 	if ( !consoleVariable->b_value )
+	{
 		return;
+	}
 
 	ape_input_center_mouse();
 }

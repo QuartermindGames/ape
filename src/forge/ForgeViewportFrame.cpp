@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "forge_viewport_frame.h"
+#include "ForgeViewportFrame.h"
 #include "forge/editors/editor_world.h"
+#include "ForgeMainWindow.h"
 
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_camera.h>
 
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
+
+#include <X11/Xlib.h>
 
 using namespace ss::forge;
 
@@ -21,6 +24,8 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_MOTION, viewport_frame::ID_CANVAS, viewport_frame::on_motion ),
         FXMAPFUNC( SEL_MOUSEWHEEL, viewport_frame::ID_CANVAS, viewport_frame::on_zoom ),
         FXMAPFUNC( SEL_RIGHTBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_right_click ),
+        FXMAPFUNC( SEL_MIDDLEBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
+        FXMAPFUNC( SEL_MIDDLEBUTTONRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
 
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_PERSPECTIVE, viewport_frame::on_change_camera_modes ),
         FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_TOP, viewport_frame::on_change_camera_modes ),
@@ -49,25 +54,9 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTa
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
 	viewMode_ = viewMode;
+	drawMode_ = ( viewMode_ == APE_CAMERA_MODE_PERSPECTIVE ) ? APE_CAMERA_DRAW_MODE_TEXTURED : APE_CAMERA_DRAW_MODE_WIREFRAME;
 
 	this->editor = editor;
-
-#if 0
-	toolBar_ = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/perspective.gif" ) );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/top.gif" ) );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/left.gif" ) );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/front.gif" ) );
-	new FXVerticalSeparator( toolBar_ );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/wireframe.gif" ) );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/solid.gif" ) );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/textured.gif" ) );
-	new FXVerticalSeparator( toolBar_ );
-	new FXTextField( toolBar_, 4, &forwardSpeedTarget_, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
-	new FXTextField( toolBar_, 4, &turnSpeedTarget_, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
-	new FXVerticalSeparator( toolBar_ );
-	new FXButton( toolBar_, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/popout.gif" ) );
-#endif
 
 	visual_ = visual;
 	if ( displayList_ == nullptr )
@@ -141,7 +130,6 @@ void viewport_frame::Draw()
 		{
 			std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
 			camera = ape_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, viewMode_ );
-			drawMode_ = ( viewMode_ == APE_CAMERA_MODE_PERSPECTIVE ) ? APE_CAMERA_DRAW_MODE_TEXTURED : APE_CAMERA_DRAW_MODE_WIREFRAME;
 			ape_camera_set_draw_mode( camera, drawMode_ );
 		}
 
@@ -227,6 +215,23 @@ long viewport_frame::on_change_camera_modes( FXObject *object, FX::FXSelector se
 
 long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 {
+	if ( useMouseLook )
+	{
+		int mx, my;
+		unsigned int tmp;
+		getCursorPosition( mx, my, tmp );
+		setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
+
+		int dx = originCursorPos[ 0 ] - mx;
+		int dy = originCursorPos[ 1 ] - my;
+
+		PLVector3 angles = ape_camera_get_angles( camera );
+		angles.y += (( float ) dx) / 8.0f;
+		angles.x += (( float ) dy) / 8.0f;
+
+		ape_camera_set_angles( camera, &angles );
+	}
+
 	Draw();
 
 	getApp()->addChore( this, ID_DRAW );
@@ -305,6 +310,11 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
+long viewport_frame::on_middle_click( FXObject *, FXSelector, void * )
+{
+	return 0;
+}
+
 long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 {
 	if ( !hasFocus() )
@@ -313,11 +323,26 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 	}
 
 	auto *event = ( FXEvent * ) ptr;
-	ape_input_handle_keyboard_event( translate_key( event->code ), ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+	if ( mainWindow->is_game_running() )
+	{
+		ape_input_handle_keyboard_event( translate_key( event->code ), ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+		return TRUE;
+	}
 
 	if ( FXSELTYPE( selector ) != SEL_KEYPRESS )
 	{
 		return FALSE;
+	}
+
+	if ( event->code == 'f' )
+	{
+		useMouseLook = !useMouseLook;
+		if ( useMouseLook )
+		{
+			FXuint tmp;
+			getCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ], tmp );
+		}
+		return TRUE;
 	}
 
 	static const float SPEED = 0.5f;

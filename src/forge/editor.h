@@ -24,9 +24,14 @@
 #include <fx.h>
 #include <fxkeys.h>
 
-#define SS_FORGE_APP_NAME    "forge-editor"
-#define SS_FORGE_APP_TITLE   "Forge Editor"
 #define SS_FORGE_APP_VERSION "v0.1.0"
+
+static inline constexpr const char *FORGE_APP_NAME = "forge";
+static inline constexpr const char *FORGE_APP_TITLE = "Forge";
+
+static inline constexpr uint8_t FORGE_VERSION_MAJOR = 0;
+static inline constexpr uint8_t FORGE_VERSION_MINOR = 0;
+static inline constexpr uint8_t FORGE_VERSION_PATCH = 0;
 
 #define EDITOR_CONFIG_FILENAME "editor"
 
@@ -42,12 +47,9 @@ typedef enum EditorLogLevel
 extern int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
 #define EDITOR_PRINT( ... ) PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], __VA_ARGS__ )
-#define EDITOR_WARN( ... )  PlLogMessage( editorLogLevels[ EDITOR_LOG_WARNING ], __VA_ARGS__ )
 
 namespace ss::forge
 {
-	extern FXWindow *editorWindow;
-
 	FXGLVisual *get_shared_gl_visual();
 
 	FXIcon *load_fx_icon( FXApp *app, const char *path );
@@ -74,9 +76,9 @@ namespace ss::forge
 
 		std::string name;
 		std::string internalName;
-		NdBranch *config{ nullptr };
-		PLFileSystemMount *mount{ nullptr };
-		FXIcon *icon;
+		NdBranch *config{};
+		PLFileSystemMount *mount{};
+		FXIcon *icon{};
 	};
 	extern Project *editorProject;
 
@@ -91,7 +93,6 @@ namespace ss::forge
 		PATH_RESOURCES,// general resources
 		PATH_CONFIG,   // location of our config
 		PATH_PROJECTS, // location where *all* projects are stored
-		PATH_PROJECT,  // current project
 		PATH_COOK,     // cooking tool
 
 		MAX_CACHED_PATHS

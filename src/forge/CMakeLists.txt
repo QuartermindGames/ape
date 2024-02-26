@@ -8,10 +8,10 @@ endif ()
 add_library(Forge STATIC
         editor.cpp
         AboutDialog.cpp
-        ProjectDialog.cpp
-        ConsoleFrame.cpp
-        forge_viewport_frame.cpp
-        main_window.cpp
+        ForgeProjectDialog.cpp
+        ForgeConsoleFrame.cpp
+        ForgeViewportFrame.cpp
+        ForgeMainWindow.cpp
 
         editors/EditorTab.cpp editors/EditorTab.h
         editors/editor_material.cpp editors/editor_material.h

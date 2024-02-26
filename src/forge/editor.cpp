@@ -8,8 +8,8 @@
 #include <plgraphics/plg_driver_interface.h>
 
 #include "editor.h"
-#include "main_window.h"
-#include "ProjectDialog.h"
+#include "ForgeMainWindow.h"
+#include "ForgeProjectDialog.h"
 
 #include "common_project.h"
 
@@ -246,7 +246,7 @@ int main( int argc, char **argv )
 		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
 	}
 
-	FXApp app( SS_FORGE_APP_NAME, FXString::null );
+	FXApp app( FORGE_APP_NAME, FXString::null );
 	app.init( argc, argv );
 
 	setup_app_colours( app );
@@ -254,7 +254,7 @@ int main( int argc, char **argv )
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
-	ss::forge::mainWindow = new ss::forge::main_window( &app );
+	ss::forge::mainWindow = new ss::forge::ForgeMainWindow( &app );
 
 	app.create();
 
@@ -271,7 +271,7 @@ int main( int argc, char **argv )
 
 	// now let us pick a project before we init the engine
 	// (for now, changing project will probably require us to restart)
-	auto *projectDialog = new ss::forge::ProjectDialog( ss::forge::mainWindow );
+	auto *projectDialog = new ss::forge::ForgeProjectDialog( ss::forge::mainWindow );
 	projectDialog->execute();
 
 	if ( ss::forge::editorProject == nullptr )

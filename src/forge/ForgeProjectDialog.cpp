@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ProjectDialog.h"
+#include "ForgeProjectDialog.h"
 #include "common_project.h"
 
 #include "3rdparty/fox/src/icons.h"
 
-std::map< std::string, ss::forge::Project * > ss::forge::ProjectDialog::projects;
+std::map< std::string, ss::forge::Project * > ss::forge::ForgeProjectDialog::projects;
 
-FXDEFMAP( ss::forge::ProjectDialog )
+FXDEFMAP( ss::forge::ForgeProjectDialog )
 projectDialogMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_SELECT_PROJECT, ss::forge::ProjectDialog::on_select_project ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ProjectDialog::ID_ACCEPT, ss::forge::ProjectDialog::on_accept ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeProjectDialog::ID_SELECT_PROJECT, ss::forge::ForgeProjectDialog::on_select_project ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeProjectDialog::ID_ACCEPT, ss::forge::ForgeProjectDialog::on_accept ),
 };
 
-FXIMPLEMENT( ss::forge::ProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
+FXIMPLEMENT( ss::forge::ForgeProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
 
-ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
+ss::forge::ForgeProjectDialog::ForgeProjectDialog( FX::FXWindow *parent )
     : FXDialogBox( parent, "Project Setup" )
 {
 	setWidth( baseWidth );
@@ -33,7 +33,9 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 	static FXGIFIcon folderIcon( getApp(), FX::minifolder );
 	listBox = new FXListBox( vf, this, ID_SELECT_PROJECT, FRAME_SUNKEN | FRAME_THICK | LISTBOX_NORMAL | LAYOUT_FILL_X );
 	for ( const auto &i : projects )
+	{
 		listBox->appendItem( FXString( i.second->name.c_str() ) + " (" + i.second->internalName.c_str() + ")", i.second->icon, i.second );
+	}
 
 	static FXGIFIcon newFolderIcon( getApp(), FX::foldernew );
 	listBox->appendItem( "Create new project", &newFolderIcon, nullptr );
@@ -42,7 +44,9 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 	projectNameField = new FXTextField( vf, 1, nullptr, 0, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
 	projectNameField->setText( defaultName );
 	if ( !projects.empty() )
+	{
 		projectNameField->hide();
+	}
 
 	new FXHorizontalSeparator( vf );
 
@@ -51,7 +55,7 @@ ss::forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 	new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
 }
 
-void ss::forge::ProjectDialog::register_project_callback( const char *path, void *data )
+void ss::forge::ForgeProjectDialog::register_project_callback( const char *path, void *data )
 {
 	const char *filename = PlGetFileName( path );
 	if ( filename == nullptr )
@@ -69,7 +73,9 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 
 	NdBranch *root = ndLoadFile( path, "project" );
 	if ( root == nullptr )
+	{
 		return;
+	}
 
 	if ( ndGetBoolByName( root, "visibleInEditor", true ) )
 	{
@@ -90,7 +96,9 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 
 			static FXGIFIcon folderIcon( FXApp::instance(), FX::minifolder );
 			if ( project->icon == nullptr )
+			{
 				project->icon = &folderIcon;
+			}
 
 			projects.emplace( project->internalName, project );
 		}
@@ -99,7 +107,7 @@ void ss::forge::ProjectDialog::register_project_callback( const char *path, void
 	ndDestroyBranch( root );
 }
 
-long ss::forge::ProjectDialog::on_select_project( FXObject *, FXSelector, void * )
+long ss::forge::ForgeProjectDialog::on_select_project( FXObject *, FXSelector, void * )
 {
 	// show or hide the name field, depending on if it's a valid item or not
 	if ( listBox->getItemData( listBox->getCurrentItem() ) == nullptr )
@@ -119,7 +127,7 @@ long ss::forge::ProjectDialog::on_select_project( FXObject *, FXSelector, void *
 	return true;
 }
 
-long ss::forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
+long ss::forge::ForgeProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
 {
 	// urgh, check if we have a valid project selected and if not,
 	// that the user has entered *something*

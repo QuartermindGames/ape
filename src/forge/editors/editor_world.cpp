@@ -4,7 +4,7 @@
 
 #include "editor_world.h"
 
-#include "../forge_viewport_frame.h"
+#include "../ForgeViewportFrame.h"
 
 #include "yin/core_entity.h"
 

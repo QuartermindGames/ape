@@ -59,8 +59,9 @@ namespace ss::forge
 
 		long on_chore( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
-		long on_motion( FXObject *, FXSelector, void *ptr );
-		long on_right_click( FXObject *, FXSelector, void *ptr );
+		long on_motion( FXObject *, FXSelector, void * );
+		long on_right_click( FXObject *, FXSelector, void * );
+		long on_middle_click( FXObject *, FXSelector, void * );
 		long on_key( FXObject *, FXSelector, void * );
 		long on_create( FXObject *, FXSelector, void * );
 		long on_reset_camera( FXObject *, FXSelector, void * );
@@ -95,5 +96,8 @@ namespace ss::forge
 		static FXGLCanvas *displayList_;
 
 		FXTabItem *editor{};
+
+		bool useMouseLook{};
+		FXint originCursorPos[ 2 ];
 	};
 }// namespace ss::forge

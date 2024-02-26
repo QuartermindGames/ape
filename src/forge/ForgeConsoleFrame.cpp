@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ConsoleFrame.h"
+#include "ForgeConsoleFrame.h"
 
-FXDEFMAP( ss::forge::ConsoleFrame )
+FXDEFMAP( ss::forge::ForgeConsoleFrame )
 consoleFrameMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ConsoleFrame::ID_SUBMIT, ss::forge::ConsoleFrame::submit_command ),
-        FXMAPFUNC( SEL_KEYPRESS, ss::forge::ConsoleFrame::ID_SUBMIT_FIELD, ss::forge::ConsoleFrame::submit_key ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ConsoleFrame::ID_CLEAR, ss::forge::ConsoleFrame::clear_command ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeConsoleFrame::ID_SUBMIT, ss::forge::ForgeConsoleFrame::submit_command ),
+        FXMAPFUNC( SEL_KEYPRESS, ss::forge::ForgeConsoleFrame::ID_SUBMIT_FIELD, ss::forge::ForgeConsoleFrame::submit_key ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeConsoleFrame::ID_CLEAR, ss::forge::ForgeConsoleFrame::clear_command ),
 };
 
-FXIMPLEMENT( ss::forge::ConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
+FXIMPLEMENT( ss::forge::ForgeConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
 
-ss::forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
+ss::forge::ForgeConsoleFrame::ForgeConsoleFrame( FXComposite *composite )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL )
 {
 	setPadBottom( 0 );
@@ -29,9 +29,9 @@ ss::forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
 	submitButton = new FXButton( submissionFrame, "Submit", nullptr, this, ID_SUBMIT );
 }
 
-ss::forge::ConsoleFrame::~ConsoleFrame() = default;
+ss::forge::ForgeConsoleFrame::~ForgeConsoleFrame() = default;
 
-void ss::forge::ConsoleFrame::push_message( int level, const char *msg, const PLColour &colour )
+void ss::forge::ForgeConsoleFrame::push_message( int level, const char *msg, const PLColour &colour )
 {
 	logField->appendText( msg, ( int ) strlen( msg ), true );
 	logField->makePositionVisible( logField->getBottomLine() );// given autoscroll doesn't work...
@@ -39,7 +39,7 @@ void ss::forge::ConsoleFrame::push_message( int level, const char *msg, const PL
 	logField->update();
 }
 
-long ss::forge::ConsoleFrame::submit_command( FXObject *, FXSelector, void * )
+long ss::forge::ForgeConsoleFrame::submit_command( FXObject *, FXSelector, void * )
 {
 	FXString command = submitField->getText();
 	if ( command.empty() )
@@ -52,7 +52,7 @@ long ss::forge::ConsoleFrame::submit_command( FXObject *, FXSelector, void * )
 	return true;
 }
 
-long ss::forge::ConsoleFrame::submit_key( FXObject *obj, FXSelector sel, void *ptr )
+long ss::forge::ForgeConsoleFrame::submit_key( FXObject *obj, FXSelector sel, void *ptr )
 {
 	const FXEvent *event = ( FXEvent * ) ptr;
 	if ( event->code == FX::KEY_Return )
@@ -61,7 +61,7 @@ long ss::forge::ConsoleFrame::submit_key( FXObject *obj, FXSelector sel, void *p
 	return false;
 }
 
-long ss::forge::ConsoleFrame::clear_command( FXObject *, FXSelector, void * )
+long ss::forge::ForgeConsoleFrame::clear_command( FXObject *, FXSelector, void * )
 {
 	logField->setText( "" );
 	return 0;

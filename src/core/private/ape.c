@@ -11,6 +11,7 @@
 
 #include "server/server.h"
 #include "net/net.h"
+#include "editor/editor.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -79,8 +80,46 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 
 ApeConfig ape_config_;
 
-NdBranch *ss_acl_get_config( void ) { return engineConfig; }
-NdBranch *ss_acl_get_user_config( void ) { return userConfig; }
+NdBranch *ape_get_config( void ) { return engineConfig; }
+NdBranch *ape_get_user_config( void ) { return userConfig; }
+
+void ape_print_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, msg );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( Console_GetLogLevel( APE_LOG_INFORMATION ), buf );
+}
+
+void ape_warning_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, msg );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( Console_GetLogLevel( APE_LOG_WARNING ), buf );
+}
+
+void ape_error_( bool die, const char *message, ... )
+{
+	va_list args;
+	va_start( args, msg );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), buf );
+
+	if ( die )
+	{
+		abort();
+	}
+}
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
@@ -91,7 +130,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	// Call this first, so we can buffer console output
 	ape_initialize_console_();
 
-	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2023 SnortySoft, Mark E Sowden\n",
+	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2024 SnortySoft, Mark E. Sowden\n",
 	       VERSION_MAJOR,
 	       ENGINE_VERSION_STR,
 	       GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
@@ -123,6 +162,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_initialize_client_();
 
 	ape_initialize_game_();
+	ape_initialize_editor_();
 
 	PRINT( "Initialization complete!\n" );
 
@@ -139,6 +179,7 @@ void ape_shutdown( void )
 
 	ss_acl_flush_tasks_();
 
+	ape_shutdown_editor_();
 	ape_shutdown_game_();
 
 	ape_shutdown_client_();
