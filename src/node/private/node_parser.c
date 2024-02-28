@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "kernel/plcore/include/plcore/pl_linkedlist.h"
 #include "kernel/plcore/include/plcore/pl_parse.h"

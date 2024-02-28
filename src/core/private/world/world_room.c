@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Specific logic for managing rooms, otherwise known as "sectors", within a world
 
 #include "world.h"

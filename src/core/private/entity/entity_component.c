@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 /* This essentially consolidates the entity component system into one file, whereas
  * before it was all spread through entity.c, which made it really confusing... */
 

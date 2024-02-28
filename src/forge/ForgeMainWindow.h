@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -29,6 +29,8 @@ namespace ss::forge
 		long on_about( FXObject *, FXSelector, void * );
 		long on_package_project( FXObject *, FXSelector, void * );
 
+		long on_close_editor( FXObject *, FXSelector, void * );
+
 		void setup_engine_viewports();
 
 		Project *GetProject() { return currentProject; }
@@ -37,31 +39,21 @@ namespace ss::forge
 		{
 			ID_CANVAS = FXMainWindow::ID_LAST,
 
-			ID_PROJECT_NEW,
-			ID_PROJECT_OPEN,
-
 			ID_WORLD_NEW,
 			ID_WORLD_OPEN,
-			ID_WORLD_SAVE,
-			ID_WORLD_SAVEAS,
-			ID_WORLD_CLOSE,
 
 			ID_MODEL_OPEN,
 			ID_MATERIAL_NEW,
 			ID_MATERIAL_OPEN,
-			ID_TEXTURE_OPEN,
 
 			ID_SETTINGS,
 
-			ID_COPY,
-			ID_PASTE,
-			ID_GRID_TOGGLE,
-			ID_TOGGLE_EDIT,
-			ID_TIMEOUT,
 			ID_TICK,
 			ID_ABOUT,
 
 			ID_PROJECT_PACKAGE,
+
+			ID_CLOSE_EDITOR,
 		};
 
 		void push_message( int level, const char *msg, const PLColour &colour );
@@ -89,6 +81,9 @@ namespace ss::forge
 
 	public:
 		[[nodiscard]] bool is_game_running() const { return isGameRunning; }
+
+	private:
+		FXMenuCommand *closeEditorCommand;
 	};
 
 	extern ForgeMainWindow *mainWindow;

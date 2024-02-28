@@ -226,8 +226,8 @@ long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 		int dy = originCursorPos[ 1 ] - my;
 
 		PLVector3 angles = ape_camera_get_angles( camera );
-		angles.y += (( float ) dx) / 8.0f;
-		angles.x += (( float ) dy) / 8.0f;
+		angles.y += ( ( float ) dx ) / 8.0f;
+		angles.x += ( ( float ) dy ) / 8.0f;
 
 		ape_camera_set_angles( camera, &angles );
 	}
@@ -271,6 +271,12 @@ long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
 
 long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 {
+	// Can't interact if mouse look is active!
+	if ( useMouseLook )
+	{
+		return FALSE;
+	}
+
 	auto event = ( FXEvent * ) ptr;
 	if ( event->moved )
 	{

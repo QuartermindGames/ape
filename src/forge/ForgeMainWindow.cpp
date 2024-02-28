@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2023 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ForgeMainWindow.h"
 #include "AboutDialog.h"
@@ -12,6 +12,7 @@
 
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
+#include <algorithm>
 
 ss::forge::ForgeMainWindow *ss::forge::mainWindow = nullptr;
 
@@ -31,6 +32,7 @@ MainWindowMap[] = {
         //FXMAPFUNC( SEL_COMMAND, MainWindow::ID_TOGGLE_EDIT, mao::MainWindow::OnToggleEdit ),
         //FXMAPFUNC( SEL_KEYRELEASE, MainWindow::ID_CANVAS, mao::MainWindow::OnInput ),
         FXMAPFUNC( SEL_TIMEOUT, ss::forge::ForgeMainWindow::ID_TICK, ss::forge::ForgeMainWindow::on_tick ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_CLOSE_EDITOR, ss::forge::ForgeMainWindow::on_close_editor ),
 };
 
 FXIMPLEMENT( ss::forge::ForgeMainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
@@ -44,6 +46,9 @@ ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
 
 	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", ss::forge::load_fx_icon( getApp(), "resources/new_world.gif" ), this, ID_WORLD_NEW );
 	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", ss::forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
+	new FXMenuSeparator( menuPane );
+	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", ss::forge::load_fx_icon( getApp(), "resources/close.gif" ), this, ID_CLOSE_EDITOR );
+	closeEditorCommand->disable();
 	new FXMenuSeparator( menuPane );
 
 #if 0
@@ -147,7 +152,9 @@ long ss::forge::ForgeMainWindow::on_open_world( FXObject *, FXSelector, void * )
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
 	if ( filename.empty() )
+	{
 		return FALSE;
+	}
 
 	ApeWorld *world = ape_world_load( filename.text() );
 	if ( world == nullptr )
@@ -176,7 +183,9 @@ long ss::forge::ForgeMainWindow::open_model( FXObject *, FXSelector, void * )
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
 	if ( filename.empty() )
+	{
 		return false;
+	}
 
 	//	auto tab = _tabs.emplace_back( new ModelEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
 	//	tab->create();
@@ -191,7 +200,9 @@ long ss::forge::ForgeMainWindow::open_material( FXObject *, FXSelector, void * )
 	const char *path = com_project_get_local_path();
 	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
 	if ( filename.empty() )
+	{
 		return false;
+	}
 
 	ApeMaterial *material = ss_arl_material_cache( filename.text(), APE_CACHE_EDITOR, false, false );
 	if ( material == nullptr )
@@ -219,9 +230,39 @@ long ss::forge::ForgeMainWindow::on_package_project( FXObject *, FXSelector, voi
 {
 	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] ) + "/", "*.pkg" );
 	if ( filename.empty() )
+	{
 		return false;
+	}
 
 	return true;
+}
+
+long ss::forge::ForgeMainWindow::on_close_editor( FXObject *, FXSelector, void * )
+{
+	try
+	{
+		int index = _tabBook->getCurrent();
+		if ( index < 0 || index >= _tabs.size() )
+		{
+			throw;
+		}
+
+		auto it = _tabs.begin() + index;
+		auto item = *it;
+		item->destroy();
+
+		_tabBook->recalc();
+
+		_tabs.erase( it );
+		delete item;
+
+		return true;
+	}
+	catch ( ... )
+	{
+	}
+
+	return false;
 }
 
 void ss::forge::ForgeMainWindow::setup_engine_viewports()
