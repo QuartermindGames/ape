@@ -27,21 +27,21 @@
 
 /* todo: remove the dependence on gl.h */
 #if defined( _MSC_VER )
-#include <Windows.h>
+#	include <Windows.h>
 #endif
 #include <GL/gl.h>
 /* define some GL macros we need if they're not available */
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
-#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
+#	define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
 #endif
 #ifndef GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
+#	define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
 #endif
 #ifndef GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
+#	define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
 #endif
 #ifndef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+#	define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
 #endif
 
 typedef GLubyte GLchan;

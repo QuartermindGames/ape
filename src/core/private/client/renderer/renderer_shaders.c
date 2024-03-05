@@ -57,7 +57,7 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 	SS_Arl_ShaderProgramIndex program;
 	PL_ZERO_( program );
 
-	const char *internalName = ndGetStringByName( root, "description", NULL );
+	const char *internalName = nd_branch_get_child_string( root, "description", NULL );
 	if ( internalName != NULL )
 	{
 		snprintf( program.internalName, sizeof( program.internalName ), "%s", internalName );
@@ -74,8 +74,8 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 		return NULL;
 	}
 
-	const char *vertexPath = ndGetStringByName( root, "vertexPath", NULL );
-	const char *fragmentPath = ndGetStringByName( root, "fragmentPath", NULL );
+	const char *vertexPath = nd_branch_get_child_string( root, "vertexPath", NULL );
+	const char *fragmentPath = nd_branch_get_child_string( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
@@ -106,19 +106,19 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
 	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
 
-	NdBranch *child = ndGetChildByName( root, "definitions" );
+	NdBranch *child = nd_branch_get_child_by_name( root, "definitions" );
 	if ( child != NULL )
 	{
 		NdBranch *subChild;
-		if ( ( subChild = ndGetChildByName( child, "fragment" ) ) != NULL )
+		if ( ( subChild = nd_branch_get_child_by_name( child, "fragment" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = ndGetNumOfChildren( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = nd_branch_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = ndGetFirstChild( subChild );
+			subChild = nd_branch_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -128,19 +128,19 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 					break;
 				}
 
-				ndGetStr( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = ndGetNextChild( subChild );
+				nd_branch_get_string( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = nd_get_next_child( subChild );
 			}
 		}
-		if ( ( subChild = ndGetChildByName( child, "vertex" ) ) != NULL )
+		if ( ( subChild = nd_branch_get_child_by_name( child, "vertex" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = ndGetNumOfChildren( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = nd_branch_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = ndGetFirstChild( subChild );
+			subChild = nd_branch_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -150,8 +150,8 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 					break;
 				}
 
-				ndGetStr( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = ndGetNextChild( subChild );
+				nd_branch_get_string( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = nd_get_next_child( subChild );
 			}
 		}
 	}
@@ -169,7 +169,7 @@ static SS_Arl_ShaderProgramIndex *ParseShaderProgram( NdBranch *root )
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can of course overwrite these. */
-	child = ndGetChildByName( root, "defaultPass" );
+	child = nd_branch_get_child_by_name( root, "defaultPass" );
 	if ( child != NULL )
 	{
 		/* need to assign this for variable validation */
@@ -188,7 +188,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 {
 	PRINT( "Loading program: \"%s\"\n", path );
 
-	NdBranch *root = ndLoadFile( path, "program" );
+	NdBranch *root = nd_load_file( path, "program" );
 	if ( root == NULL )
 	{
 		PRINT_WARNING( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -197,7 +197,7 @@ static void LoadShaderProgram( const char *path, PL_UNUSED void *userData )
 
 	SS_Arl_ShaderProgramIndex *program = ParseShaderProgram( root );
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 
 	if ( program == NULL )
 	{

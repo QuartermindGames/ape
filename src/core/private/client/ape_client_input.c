@@ -11,6 +11,10 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+static NdBranch *inputConfig;
+
+static const float DEFAULT_DEADZONE = 0.2f;
+
 #define SERIALISATION_NODE_NAME "input"
 
 typedef struct ApeInputAction
@@ -54,11 +58,18 @@ static struct
 typedef struct ApeInputController
 {
 	bool isActive;
+
 	ApeInputState buttons[ APE_MAX_BUTTON_INPUTS ];
+
 	PLVector2 stickL, stickLOld, stickLDelta;
 	PLVector2 stickR, stickROld, stickRDelta;
+	float deadzones[ 2 ];
+
 	SDL_GameController *sdlGameController;
 } ApeInputController;
+
+ND_DECLARE_STRUCT( ApeInputController, 2,
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ND_PROPERTY_FLOAT32, 2 ) )
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
 static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
@@ -179,6 +190,8 @@ static void check_for_controllers( void )
 			serial = "Unknown";
 		}
 
+		controller->deadzones[ 0 ] = controller->deadzones[ 1 ] = DEFAULT_DEADZONE;
+
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
 		PRINT( "%s", tmp );
@@ -195,7 +208,11 @@ static void unregister_controller( unsigned int id )
 		controllers[ id ].sdlGameController = NULL;
 	}
 	PL_ZERO_( controllers[ id ] );
-	numControllers--;
+
+	if ( numControllers > 0 )
+	{
+		numControllers--;
+	}
 }
 
 static bool get_sdl_button_state( SDL_GameController *gameController, ApeInputButton button )
@@ -269,7 +286,7 @@ void ape_initialize_input_( void )
 	}
 
 	// initialize the controller structure
-	ss_ape_clear_input_devices_();
+	ape_clear_input_devices();
 
 	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
 	{
@@ -298,14 +315,24 @@ void ape_initialize_input_( void )
 		PRINT_WARNING( "Failed to load game controller mappings: %s\n", PlGetError() );
 	}
 
+	// attempt to fetch and then init config
+	NdBranch *userConfig = ape_get_user_config();
+	inputConfig = nd_branch_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
+	if ( inputConfig == NULL )
+	{
+		inputConfig = nd_branch_push_back_object( userConfig, SERIALISATION_NODE_NAME );
+	}
+
 	check_for_controllers();
 
 	sdlInputInitialized = true;
+
+	ape_serialize_input_config_( NULL );
 }
 
 void ape_shutdown_input_( void )
 {
-	ss_ape_clear_input_devices_();
+	ape_clear_input_devices();
 
 	PlDestroyLinkedList( inputKeyboard.activeKeyList );
 	inputKeyboard.activeKeyList = NULL;
@@ -313,45 +340,47 @@ void ape_shutdown_input_( void )
 
 void ape_serialize_input_config_( NdBranch *root )
 {
-	/* nothing to serialise */
-	if ( actionableList == NULL )
+	NdBranch *controllersBranch = nd_branch_push_back_object_array( root, "controllers" );
+	for ( unsigned int i = 0; i < numControllers; ++i )
 	{
-		return;
+		NdErrorCode errorCode;
+		NdBranch *controllerBranch = nd_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
+		if ( errorCode != ND_ERROR_SUCCESS )
+		{
+			ape_warning_( "Failed to serialize controller: %s\n", nd_get_error_message() );
+			break;
+		}
+
+		nd_branch_push_back_branch( controllersBranch, controllerBranch );
 	}
 
-	NdBranch *inputNode = ndPushBackObjectArray( root, SERIALISATION_NODE_NAME );
-	if ( inputNode == NULL )
-	{
-		PRINT_WARNING( "Failed to attach \"" SERIALISATION_NODE_NAME "\" for config!\n" );
-		return;
-	}
-
-	//PlIterateLinkedList( actionableList, NULL, NULL );
+	nd_write_file( "test.cfg.n", controllersBranch, ND_FILE_UTF8 );
 }
 
 void ape_deserialize_input_config_( NdBranch *root )
 {
-	NdBranch *inputNode = ndGetChildByName( root, SERIALISATION_NODE_NAME );
+	NdBranch *inputNode = nd_branch_get_child_by_name( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 	{
 		return;
 	}
 }
 
-void ss_ape_clear_input_devices_( void )
+void ape_clear_input_devices( void )
 
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
 		unregister_controller( i );
 	}
+	numControllers = 0;
 
 	// Zero out and clear the active keys
 	memset( inputKeyboard.keys, 0, sizeof( Key ) );
 	PlDestroyLinkedListNodes( inputKeyboard.activeKeyList );
 }
 
-unsigned int ss_ape_input_register_device( SS_Acl_InputDeviceType type )
+unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 {
 	unsigned int id;
 	ApeInputController *device = get_empty_controller( &id );
@@ -553,7 +582,7 @@ void ape_input_center_mouse( void )
 
 	if ( !ape_is_console_open() )
 	{
-		ss_shell_set_mouse_position( w / 2, h / 2 );
+		shell_set_mouse_position( w / 2, h / 2 );
 	}
 
 	inputMouse.x = ( w / 2 );

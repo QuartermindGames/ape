@@ -7,10 +7,10 @@
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root )
 {
-	ndPushBackUI32( root, "version", APE_WORLD_VERSION );
+	nd_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
 
 	if ( world->globalProperties != NULL )
 	{
-		ndPushBackBranch( root, world->globalProperties );
+		nd_branch_push_back_branch( root, world->globalProperties );
 	}
 }

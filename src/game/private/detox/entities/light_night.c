@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 OldTimes Software, Mark E. Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: A light manager that makes the light turn on at night.
 // Author:  Mark E. Sowden
 

@@ -205,20 +205,41 @@ static void shutdown_game( void )
 	playerCamera = NULL;
 }
 
-static bool tick_game( void )
+static void handle_input( void )
 {
+	PLVector3 ang = ape_camera_get_angles( playerCamera );
+	PLVector3 pos = ape_camera_get_position( playerCamera );
+
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
 	{
 		int mx, my;
 		ape_client_input_get_mouse_delta( &mx, &my );
 
-		PLVector3 ang = ape_camera_get_angles( playerCamera );
+
 		ang.y += ( float ) mx;
 		ang.x += ( float ) my;
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
-		ape_camera_set_angles( playerCamera, &ang );
 	}
+
+	PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+	ang.x -= rightStick.y * 2.0f;
+	ang.y -= rightStick.x * 2.0f;
+
+	PLVector3 forward, left;
+	PlAnglesAxes( ang, &left, NULL, &forward );
+
+	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
+	pos = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
+	pos = PlSubtractVector3( pos, PlScaleVector3F( left, leftStick.x ) );
+
+	ape_camera_set_position( playerCamera, &pos );
+	ape_camera_set_angles( playerCamera, &ang );
+}
+
+static bool tick_game( void )
+{
+	handle_input();
 
 	tox_world_tick();
 	tox_ui_tick();

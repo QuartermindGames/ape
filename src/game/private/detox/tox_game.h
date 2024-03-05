@@ -12,8 +12,16 @@
 
 //#define TOX_ALIVE_PREVIEW
 
+typedef enum ToxCameraState
+{
+	TOX_CAMERA_FLY,
+	TOX_CAMERA_ORBIT,
+} ToxCameraState;
+
 typedef struct ToxGlobalVars
 {
+	ToxCameraState cameraState;
+
 	float timeSpeed;
 } ToxGlobalVars;
 extern ToxGlobalVars tox_globalVars;

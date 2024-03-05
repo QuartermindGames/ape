@@ -71,15 +71,15 @@ void ss::forge::ForgeProjectDialog::register_project_callback( const char *path,
 		return;
 	}
 
-	NdBranch *root = ndLoadFile( path, "project" );
+	NdBranch *root = nd_load_file( path, "project" );
 	if ( root == nullptr )
 	{
 		return;
 	}
 
-	if ( ndGetBoolByName( root, "visibleInEditor", true ) )
+	if ( nd_branch_get_child_bool( root, "visibleInEditor", true ) )
 	{
-		const char *name = ndGetStringByName( root, "name", nullptr );
+		const char *name = nd_branch_get_child_string( root, "name", nullptr );
 		if ( name == nullptr )
 		{
 			FXMessageBox::warning( FXApp::instance(), MBOX_OK,
@@ -104,7 +104,7 @@ void ss::forge::ForgeProjectDialog::register_project_callback( const char *path,
 		}
 	}
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 }
 
 long ss::forge::ForgeProjectDialog::on_select_project( FXObject *, FXSelector, void * )

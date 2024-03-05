@@ -11,14 +11,14 @@ static NdBranch *fileSystemConfig;
 
 static void parse_aliases( NdBranch *root )
 {
-	unsigned int numAliases = ndGetNumOfChildren( root ) / 2;
+	unsigned int numAliases = nd_branch_get_num_of_children( root ) / 2;
 	if ( numAliases == 0 )
 	{
 		return;
 	}
 
-	NdBranch *child = ndGetFirstChild( root );
-	if ( ndGetType( child ) != ND_PROPERTY_STRING )
+	NdBranch *child = nd_branch_get_first_child( root );
+	if ( nd_branch_get_type( child ) != ND_PROPERTY_STRING )
 	{
 		PRINT_WARNING( "Invalid child type found in config!\n" );
 		return;
@@ -27,8 +27,8 @@ static void parse_aliases( NdBranch *root )
 	for ( unsigned int i = 0; i < numAliases; i++ )
 	{
 		PLPath aliasPath;
-		ndGetStr( child, aliasPath, sizeof( PLPath ) );
-		child = ndGetNextChild( child );
+		nd_branch_get_string( child, aliasPath, sizeof( PLPath ) );
+		child = nd_get_next_child( child );
 		if ( child == NULL )
 		{
 			PRINT_WARNING( "Encountered alias with no path: %u\n", i );
@@ -36,12 +36,12 @@ static void parse_aliases( NdBranch *root )
 		}
 
 		PLPath targetPath;
-		ndGetStr( child, targetPath, sizeof( PLPath ) );
+		nd_branch_get_string( child, targetPath, sizeof( PLPath ) );
 
 		PlAddFileAlias( aliasPath, targetPath );
 		PRINT( "Registered alias: \"%s\" > \"%s\"\n", aliasPath, targetPath );
 
-		child = ndGetNextChild( child );
+		child = nd_get_next_child( child );
 	}
 }
 
@@ -84,11 +84,11 @@ void ape_fs_setup_config( NdBranch *root )
 {
 	PlClearFileAliases();
 
-	fileSystemConfig = ndGetChildByName( root, "fileSystem" );
+	fileSystemConfig = nd_branch_get_child_by_name( root, "fileSystem" );
 	if ( fileSystemConfig != NULL )
 	{
 		NdBranch *child;
-		if ( ( child = ndGetChildByName( fileSystemConfig, "aliases" ) ) != NULL )
+		if ( ( child = nd_branch_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
 			parse_aliases( child );
 	}
 

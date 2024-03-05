@@ -1,5 +1,4 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -19,7 +18,8 @@
 
 typedef struct PLImage PLImage;
 
-typedef enum PKGFileType {
+typedef enum PKGFileType
+{
 	PKG_FILETYPE_GENERIC,
 	PKG_FILETYPE_TEXTURE,
 	PKG_FILETYPE_MODEL,

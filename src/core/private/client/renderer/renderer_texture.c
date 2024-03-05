@@ -116,11 +116,11 @@ static void fetch_texture_config( ApeTexture *texture )
 	if ( !PlFileExists( configPath ) )
 		return;
 
-	NdBranch *root = ndLoadFile( configPath, "texture" );
+	NdBranch *root = nd_load_file( configPath, "texture" );
 	if ( root == NULL )
 		return;
 
-	const char *wrapMode = ndGetStringByName( root, "wrapMode", "repeat" );
+	const char *wrapMode = nd_branch_get_child_string( root, "wrapMode", "repeat" );
 	if ( strcmp( wrapMode, "repeat" ) == 0 )
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
 	else if ( strcmp( wrapMode, "mirrored_repeat" ) == 0 )
@@ -131,7 +131,7 @@ static void fetch_texture_config( ApeTexture *texture )
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
 	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
 
-	const char *filterMode = ndGetStringByName( root, "filterMode", "linear" );
+	const char *filterMode = nd_branch_get_child_string( root, "filterMode", "linear" );
 	if ( strcmp( filterMode, "mipmap_linear" ) == 0 )
 		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 	else if ( strcmp( filterMode, "linear" ) == 0 )
@@ -142,7 +142,7 @@ static void fetch_texture_config( ApeTexture *texture )
 		texture->filterMode = PLG_TEXTURE_FILTER_NEAREST;
 	PlgSetTextureFilter( texture->internal, texture->filterMode );
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 }
 
 /////////////////////////////////////////////////////////////////

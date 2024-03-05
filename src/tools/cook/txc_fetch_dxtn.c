@@ -42,14 +42,14 @@
 static void dxt135_decode_imageblock( const GLubyte *img_block_src,
                                       GLint i, GLint j, GLuint dxt_type, GLvoid *texel )
 {
-	GLchan *       rgba   = ( GLchan * ) texel;
+	GLchan *rgba = ( GLchan * ) texel;
 	const GLushort color0 = img_block_src[ 0 ] | ( img_block_src[ 1 ] << 8 );
 	const GLushort color1 = img_block_src[ 2 ] | ( img_block_src[ 3 ] << 8 );
-	const GLuint   bits   = img_block_src[ 4 ] | ( img_block_src[ 5 ] << 8 ) |
+	const GLuint bits = img_block_src[ 4 ] | ( img_block_src[ 5 ] << 8 ) |
 	                    ( img_block_src[ 6 ] << 16 ) | ( img_block_src[ 7 ] << 24 );
 	/* What about big/little endian? */
 	GLubyte bit_pos = 2 * ( j * 4 + i );
-	GLubyte code    = ( GLubyte ) ( ( bits >> bit_pos ) & 3 );
+	GLubyte code = ( GLubyte ) ( ( bits >> bit_pos ) & 3 );
 
 	rgba[ ACOMP ] = CHAN_MAX;
 	switch ( code )
@@ -131,7 +131,7 @@ void fetch_2d_texel_rgba_dxt3( GLint srcRowStride, const GLubyte *pixdata,
     * in texel[RCOMP], texel[GCOMP], texel[BCOMP], texel[ACOMP].
     */
 
-	GLchan *       rgba   = ( GLchan * ) texel;
+	GLchan *rgba = ( GLchan * ) texel;
 	const GLubyte *blksrc = ( pixdata + ( ( srcRowStride + 3 ) / 4 * ( j / 4 ) + ( i / 4 ) ) * 16 );
 #if 0
    /* Simple 32bit version. */
@@ -162,10 +162,10 @@ void fetch_2d_texel_rgba_dxt5( GLint srcRowStride, const GLubyte *pixdata,
     * in texel[RCOMP], texel[GCOMP], texel[BCOMP], texel[ACOMP].
     */
 
-	GLchan *       rgba   = ( GLchan * ) texel;
+	GLchan *rgba = ( GLchan * ) texel;
 	const GLubyte *blksrc = ( pixdata + ( ( srcRowStride + 3 ) / 4 * ( j / 4 ) + ( i / 4 ) ) * 16 );
-	const GLubyte  alpha0 = blksrc[ 0 ];
-	const GLubyte  alpha1 = blksrc[ 1 ];
+	const GLubyte alpha0 = blksrc[ 0 ];
+	const GLubyte alpha1 = blksrc[ 1 ];
 #if 0
    const GLubyte bit_pos = 3 * ((j&3) * 4 + (i&3));
    /* simple 32bit version */
@@ -182,11 +182,11 @@ void fetch_2d_texel_rgba_dxt5( GLint srcRowStride, const GLubyte *pixdata,
 #endif
 #if 1
 	/* TODO test this! */
-	const GLubyte bit_pos   = ( ( j & 3 ) * 4 + ( i & 3 ) ) * 3;
-	const GLubyte acodelow  = blksrc[ 2 + bit_pos / 8 ];
+	const GLubyte bit_pos = ( ( j & 3 ) * 4 + ( i & 3 ) ) * 3;
+	const GLubyte acodelow = blksrc[ 2 + bit_pos / 8 ];
 	const GLubyte acodehigh = blksrc[ 3 + bit_pos / 8 ];
-	const GLubyte code      = ( acodelow >> ( bit_pos & 0x7 ) |
-                           ( acodehigh << ( 8 - ( bit_pos & 0x7 ) ) ) ) &
+	const GLubyte code = ( acodelow >> ( bit_pos & 0x7 ) |
+	                       ( acodehigh << ( 8 - ( bit_pos & 0x7 ) ) ) ) &
 	                     0x7;
 #endif
 	dxt135_decode_imageblock( blksrc + 8, ( i & 3 ), ( j & 3 ), 2, texel );

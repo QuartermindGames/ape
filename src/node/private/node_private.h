@@ -55,4 +55,4 @@ typedef struct NdBranch
 } NdBranch;
 
 char *ndPreProcessScript( char *buf, size_t *length, bool isHead );
-NdBranch *ndPushBackNewBranch( NdBranch *parent, const char *name, NdPropertyType propertyType );
+NdBranch *nd_push_back_new_branch( NdBranch *parent, const char *name, NdPropertyType propertyType );

@@ -8,12 +8,12 @@ static void process_properties( const char *worldName, NdBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s." APE_WORLD_EXTENSION_CFG, worldName, worldName );
-	NdBranch *properties = ndLoadFile( path, "properties" );
+	NdBranch *properties = nd_load_file( path, "properties" );
 	if ( properties == NULL )
-		ERROR( "Failed to open world properties file (%s): %s\n", path, ndGetErrorMessage() );
+		ERROR( "Failed to open world properties file (%s): %s\n", path, nd_get_error_message() );
 
-	ndPushBackBranch( root, properties );
-	ndDestroyBranch( properties );
+	nd_branch_push_back_branch( root, properties );
+	nd_branch_destroy( properties );
 }
 
 static void process_geometry( const char *worldName, NdBranch *root )
@@ -24,23 +24,23 @@ static void process_geometry( const char *worldName, NdBranch *root )
 	if ( model == NULL )
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
 
-	root = ndPushBackObject( root, "geometry" );
+	root = nd_branch_push_back_object( root, "geometry" );
 
 	NdBranch *child;
 	if ( model->numMaterials > 0 )
 	{
-		child = ndPushBackStringArray( root, "materials", NULL, 0 );
+		child = nd_branch_push_back_string_array( root, "materials", NULL, 0 );
 		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			char tmp[ 128 ];
 			snprintf( tmp, sizeof( tmp ), "materials/world/%s.mat.n", model->materials[ i ].name );
-			ndPushBackString( child, NULL, tmp );
+			nd_branch_push_back_string( child, NULL, tmp );
 		}
 	}
 
 	if ( model->numSubObjects > 0 )
 	{
-		child = ndPushBackObjectArray( root, "rooms" );
+		child = nd_branch_push_back_object_array( root, "rooms" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
 			// Ignore sub objects that don't have any faces
@@ -48,14 +48,14 @@ static void process_geometry( const char *worldName, NdBranch *root )
 			if ( numFaces == 0 )
 				continue;
 
-			NdBranch *roomBranch = ndPushBackObject( child, NULL );
-			ndPushBackI32( roomBranch, "uid", i );
-			ndPushBackString( roomBranch, "tag", model->subObjects[ i ].name );
-			ndPushBackF32Array( roomBranch, "mins", ( float * ) &model->subObjects[ i ].mins, 3 );
-			ndPushBackF32Array( roomBranch, "maxs", ( float * ) &model->subObjects[ i ].maxs, 3 );
+			NdBranch *roomBranch = nd_branch_push_back_object( child, NULL );
+			nd_branch_push_back_int32( roomBranch, "uid", i );
+			nd_branch_push_back_string( roomBranch, "tag", model->subObjects[ i ].name );
+			nd_branch_push_back_float32_array( roomBranch, "mins", ( float * ) &model->subObjects[ i ].mins, 3 );
+			nd_branch_push_back_float32_array( roomBranch, "maxs", ( float * ) &model->subObjects[ i ].maxs, 3 );
 		}
 
-		child = ndPushBackF32Array( root, "vertices", NULL, 0 );
+		child = nd_branch_push_back_float32_array( root, "vertices", NULL, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			PLVector3 *v = PlGetVectorArrayElementAt( model->vertices, j );
@@ -63,9 +63,9 @@ static void process_geometry( const char *worldName, NdBranch *root )
 			if ( v == NULL )
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
 
-			ndPushBackF32( child, NULL, v->x );
-			ndPushBackF32( child, NULL, v->y );
-			ndPushBackF32( child, NULL, v->z );
+			nd_branch_push_back_float32( child, NULL, v->x );
+			nd_branch_push_back_float32( child, NULL, v->y );
+			nd_branch_push_back_float32( child, NULL, v->z );
 		}
 
 #if 0
@@ -95,24 +95,24 @@ static void process_geometry( const char *worldName, NdBranch *root )
 		}
 #endif
 
-		child = ndPushBackObjectArray( root, "faces" );
+		child = nd_branch_push_back_object_array( root, "faces" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
 			unsigned int numFaces;
 			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
 			for ( unsigned int j = 0; j < numFaces; ++j )
 			{
-				NdBranch *faceBranch = ndPushBackObject( child, NULL );
-				ndPushBackF32Array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
-				ndPushBackUI32( faceBranch, "material", faces[ j ]->material );
-				ndPushBackI32( faceBranch, "smoothingGroup", faces[ j ]->smoothingGroup );
-				ndPushBackUI32( faceBranch, "roomIndex", i );
+				NdBranch *faceBranch = nd_branch_push_back_object( child, NULL );
+				nd_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
+				nd_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
+				nd_branch_push_back_int32( faceBranch, "smoothingGroup", faces[ j ]->smoothingGroup );
+				nd_branch_push_back_uint32( faceBranch, "roomIndex", i );
 
-				NdBranch *verticesBranch = ndPushBackObjectArray( faceBranch, "edges" );
+				NdBranch *verticesBranch = nd_branch_push_back_object_array( faceBranch, "edges" );
 				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 				{
-					NdBranch *edgeBranch = ndPushBackObject( verticesBranch, NULL );
-					ndPushBackUI32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+					NdBranch *edgeBranch = nd_branch_push_back_object( verticesBranch, NULL );
+					nd_branch_push_back_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
 					//ndPushBackUI32( edgeBranch, "normalIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					//ndPushBackUI32( edgeBranch, "uvIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 
@@ -121,11 +121,11 @@ static void process_geometry( const char *worldName, NdBranch *root )
 
 					PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
-						ndPushBackF32Array( edgeBranch, "normal", ( float * ) normal, 3 );
+						nd_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
 
 					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
-						ndPushBackF32Array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+						nd_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
 				}
 			}
 		}
@@ -136,14 +136,14 @@ static void process_geometry( const char *worldName, NdBranch *root )
 
 void cook_world_process( const char *worldName )
 {
-	NdBranch *root = ndPushBackObject( NULL, "world" );
-	ndPushBackUI32( root, "version", APE_WORLD_VERSION );
+	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
+	nd_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
 
 	process_properties( worldName, root );
 	process_geometry( worldName, root );
 
 	PLPath path;
 	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName );
-	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
-		ERROR( "Failed to write world: %s\n", ndGetErrorMessage() );
+	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+		ERROR( "Failed to write world: %s\n", nd_get_error_message() );
 }

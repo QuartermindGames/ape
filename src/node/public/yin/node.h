@@ -38,23 +38,24 @@ typedef enum NdPropertyType
 {
 	ND_PROPERTY_INVALID = -1,
 
+	// special types
 	ND_PROPERTY_OBJECT,
 	ND_PROPERTY_LINK, /* todo */
 	ND_PROPERTY_ARRAY,
-
 	ND_PROPERTY_STRING,
-	ND_PROPERTY_BOOL,
 
-	ND_PROPERTY_F32, // float
-	ND_PROPERTY_F64, // double
-	ND_PROPERTY_I8,  // int8
-	ND_PROPERTY_I16, // int16
-	ND_PROPERTY_I32, // int32
-	ND_PROPERTY_I64, // int64
-	ND_PROPERTY_UI8, // uint8
-	ND_PROPERTY_UI16,// uint16
-	ND_PROPERTY_UI32,// uint32
-	ND_PROPERTY_UI64,// uint64
+	// standard types
+	ND_PROPERTY_BOOL,
+	ND_PROPERTY_FLOAT32,// float
+	ND_PROPERTY_FLOAT64,// double
+	ND_PROPERTY_INT8,   // int8
+	ND_PROPERTY_INT16,  // int16
+	ND_PROPERTY_INT32,  // int32
+	ND_PROPERTY_INT64,  // int64
+	ND_PROPERTY_UI8,    // uint8
+	ND_PROPERTY_UI16,   // uint16
+	ND_PROPERTY_UI32,   // uint32
+	ND_PROPERTY_UI64,   // uint64
 
 	ND_MAX_PROPERTY_TYPES
 } NdPropertyType;
@@ -122,105 +123,91 @@ NdBranch *nd_deserialize_struct( const NdStructDescriptor *descriptor, void *ptr
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ndSetupLogs( void );
+void nd_setup_logs( void );
 
-const char *ndGetErrorMessage( void );
-NdErrorCode ndGetError( void );
+const char *nd_get_error_message( void );
+NdErrorCode nd_get_error( void );
 
-unsigned int ndGetNumOfChildren( const NdBranch *parent ); /* only valid for object/array */
-NdBranch *ndGetFirstChild( NdBranch *parent );
-NdBranch *ndGetNextChild( NdBranch *node );
-NdBranch *ndGetChildByName( NdBranch *parent, const char *name ); /* only valid for object */
-NdBranch *ndGetParent( NdBranch *node );
+unsigned int nd_branch_get_num_of_children( const NdBranch *self ); /* only valid for object/array */
+NdBranch *nd_branch_get_first_child( NdBranch *self );
+NdBranch *nd_branch_get_child_by_name( NdBranch *self, const char *name ); /* only valid for object */
+NdBranch *nd_branch_get_parent( NdBranch *self );
 
-const char *ndGetName( const NdBranch *node );
-NdPropertyType ndGetType( const NdBranch *node );
+NdBranch *nd_get_next_child( NdBranch *node );
 
-NdErrorCode ndGetBool( const NdBranch *node, bool *dest );
-NdErrorCode ndGetStr( const NdBranch *node, char *dest, size_t length );
-NdErrorCode ndGetF32( const NdBranch *node, float *dest );
-NdErrorCode ndGetF64( const NdBranch *node, double *dest );
-NdErrorCode ndGetI8( const NdBranch *node, int8_t *dest );
-NdErrorCode ndGetI16( const NdBranch *node, int16_t *dest );
-NdErrorCode ndGetI32( const NdBranch *node, int32_t *dest );
-NdErrorCode ndGetI64( const NdBranch *node, int64_t *dest );
-NdErrorCode ndGetUI8( const NdBranch *node, uint8_t *dest );
-NdErrorCode ndGetUI16( const NdBranch *node, uint16_t *dest );
-NdErrorCode ndGetUI32( const NdBranch *node, uint32_t *dest );
-NdErrorCode ndGetUI64( const NdBranch *node, uint64_t *dest );
+const char *nd_branch_get_name( const NdBranch *self );
+NdPropertyType nd_branch_get_type( const NdBranch *self );
 
-NdErrorCode ndGetStringArray( NdBranch *parent, char **buf, unsigned int numElements );
-NdErrorCode ndGetI8Array( NdBranch *parent, int8_t *buf, unsigned int numElements );
-NdErrorCode ndGetI16Array( NdBranch *parent, int16_t *buf, unsigned int numElements );
-NdErrorCode ndGetI32Array( NdBranch *parent, int32_t *buf, unsigned int numElements );
-NdErrorCode ndGetUI32Array( NdBranch *parent, uint32_t *buf, unsigned int numElements );
-NdErrorCode ndGetF32Array( NdBranch *parent, float *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_bool( const NdBranch *self, bool *dest );
+NdErrorCode nd_branch_get_string( const NdBranch *self, char *dest, size_t length );
+NdErrorCode nd_branch_get_float32( const NdBranch *self, float *dest );
+NdErrorCode nd_branch_get_float64( const NdBranch *self, double *dest );
+NdErrorCode nd_branch_get_int8( const NdBranch *self, int8_t *dest );
+NdErrorCode nd_branch_get_int16( const NdBranch *self, int16_t *dest );
+NdErrorCode nd_branch_get_int32( const NdBranch *self, int32_t *dest );
+NdErrorCode nd_branch_get_int64( const NdBranch *self, int64_t *dest );
+NdErrorCode nd_branch_get_uint8( const NdBranch *self, uint8_t *dest );
+NdErrorCode nd_branch_get_uint16( const NdBranch *self, uint16_t *dest );
+NdErrorCode nd_branch_get_uint32( const NdBranch *self, uint32_t *dest );
+NdErrorCode nd_branch_get_uint64( const NdBranch *self, uint64_t *dest );
 
-NdErrorCode ss_nd_branch_get_bool_array( NdBranch *root, bool *buf, unsigned int numElements );
-NdErrorCode ss_nd_branch_get_double_array( NdBranch *root, double *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_bool_array( NdBranch *self, bool *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_string_array( NdBranch *self, char **buf, unsigned int numElements );
+NdErrorCode nd_branch_get_int8_array( NdBranch *self, int8_t *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_int16_array( NdBranch *self, int16_t *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_int32_array( NdBranch *self, int32_t *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_uint32_array( NdBranch *self, uint32_t *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_float32_array( NdBranch *self, float *buf, unsigned int numElements );
+NdErrorCode nd_branch_get_float64_array( NdBranch *self, double *buf, unsigned int numElements );
 
-bool ndGetBoolByName( NdBranch *root, const char *name, bool fallback );
-const char *ndGetStringByName( NdBranch *node, const char *name, const char *fallback );
-float ndGetF32ByName( NdBranch *node, const char *name, float fallback );
-double ndGetF64ByName( NdBranch *node, const char *name, double fallback );
+bool nd_branch_get_child_bool( NdBranch *root, const char *name, bool fallback );
+const char *nd_branch_get_child_string( NdBranch *node, const char *name, const char *fallback );
+float nd_branch_get_child_float32( NdBranch *node, const char *name, float fallback );
+double nd_branch_get_child_float64( NdBranch *node, const char *name, double fallback );
 
-intmax_t ndGetInt( NdBranch *root, const char *name, intmax_t fallback );
-uintmax_t ndGetUInt( NdBranch *root, const char *name, uintmax_t fallback );
+intmax_t nd_branch_get_child_int( NdBranch *root, const char *name, intmax_t fallback );
+uintmax_t nd_branch_get_child_uint( NdBranch *root, const char *name, uintmax_t fallback );
 
-#define ND_GETINT8( ROOT, NAME, FALLBACK )  ( int8_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
-#define ND_GETINT16( ROOT, NAME, FALLBACK ) ( int16_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
-#define ND_GETINT32( ROOT, NAME, FALLBACK ) ( int32_t ) ndGetInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_INT8( ROOT, NAME, FALLBACK )  ( int8_t ) nd_branch_get_child_int( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_INT16( ROOT, NAME, FALLBACK ) ( int16_t ) nd_branch_get_child_int( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_INT32( ROOT, NAME, FALLBACK ) ( int32_t ) nd_branch_get_child_int( ( ROOT ), ( NAME ), ( FALLBACK ) )
 
-#define ND_GETUINT8( ROOT, NAME, FALLBACK )  ( uint8_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
-#define ND_GETUINT16( ROOT, NAME, FALLBACK ) ( uint16_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
-#define ND_GETUINT32( ROOT, NAME, FALLBACK ) ( uint32_t ) ndGetUInt( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_UINT8( ROOT, NAME, FALLBACK )  ( uint8_t ) nd_branch_get_child_uint( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_UINT16( ROOT, NAME, FALLBACK ) ( uint16_t ) nd_branch_get_child_uint( ( ROOT ), ( NAME ), ( FALLBACK ) )
+#define ND_GET_UINT32( ROOT, NAME, FALLBACK ) ( uint32_t ) nd_branch_get_child_uint( ( ROOT ), ( NAME ), ( FALLBACK ) )
 
-PLVector2 ndGetVector2( NdBranch *root, const char *name, const PLVector2 *fallback );
-PLVector3 ndGetVector3( NdBranch *root, const char *name, const PLVector3 *fallback );
-PLVector4 ndGetVector4( NdBranch *root, const char *name, const PLVector4 *fallback );
-PLColourF32 ndGetColourF32( NdBranch *root, const char *name, const PLColourF32 *fallback );
+PLVector2 nd_get_vector2( NdBranch *root, const char *name, const PLVector2 *fallback );
+PLVector3 nd_get_vector3( NdBranch *root, const char *name, const PLVector3 *fallback );
+PLVector4 nd_get_vector4( NdBranch *root, const char *name, const PLVector4 *fallback );
+PLColourF32 nd_get_colour_f32( NdBranch *root, const char *name, const PLColourF32 *fallback );
 
-NdBranch *ndPushBackBranch( NdBranch *parent, NdBranch *child );
-NdBranch *ndPushBackObject( NdBranch *node, const char *name );
-NdBranch *ndPushBackString( NdBranch *parent, const char *name, const char *var );
-NdBranch *ndPushBackBool( NdBranch *parent, const char *name, bool var );
-NdBranch *ndPushBackI8( NdBranch *parent, const char *name, int8_t var );
-NdBranch *ndPushBackI16( NdBranch *parent, const char *name, int16_t var );
-NdBranch *ndPushBackI32( NdBranch *parent, const char *name, int32_t var );
-NdBranch *ndPushBackUI32( NdBranch *parent, const char *name, uint32_t var );
-NdBranch *ndPushBackF32( NdBranch *parent, const char *name, float var );
-NdBranch *ndPushBackF64( NdBranch *parent, const char *name, double var );
+NdBranch *nd_branch_push_back_branch( NdBranch *parent, NdBranch *child );
+NdBranch *nd_branch_push_back_object( NdBranch *node, const char *name );
+NdBranch *nd_branch_push_back_string( NdBranch *parent, const char *name, const char *var );
+NdBranch *nd_branch_push_back_bool( NdBranch *parent, const char *name, bool var );
+NdBranch *nd_branch_push_back_int8( NdBranch *parent, const char *name, int8_t var );
+NdBranch *nd_branch_push_back_int16( NdBranch *parent, const char *name, int16_t var );
+NdBranch *nd_branch_push_back_int32( NdBranch *parent, const char *name, int32_t var );
+NdBranch *nd_branch_push_back_uint32( NdBranch *parent, const char *name, uint32_t var );
+NdBranch *nd_branch_push_back_float32( NdBranch *parent, const char *name, float var );
+NdBranch *nd_branch_push_back_float64( NdBranch *parent, const char *name, double var );
 
-NdBranch *ndPushBackObjectArray( NdBranch *parent, const char *name );
-NdBranch *ndPushBackStringArray( NdBranch *parent, const char *name, const char **array, unsigned int numElements );
-NdBranch *ndPushBackI16Array( NdBranch *root, const char *name, const int16_t *array, unsigned int numElements );
-NdBranch *ndPushBackI32Array( NdBranch *parent, const char *name, const int32_t *array, unsigned int numElements );
-NdBranch *ndPushBackF32Array( NdBranch *parent, const char *name, const float *array, unsigned int numElements );
+NdBranch *nd_branch_push_back_object_array( NdBranch *parent, const char *name );
+NdBranch *nd_branch_push_back_string_array( NdBranch *parent, const char *name, const char **array, unsigned int numElements );
+NdBranch *nd_branch_push_back_int16_array( NdBranch *root, const char *name, const int16_t *array, unsigned int numElements );
+NdBranch *nd_branch_push_back_int32_array( NdBranch *parent, const char *name, const int32_t *array, unsigned int numElements );
+NdBranch *nd_branch_push_back_float32_array( NdBranch *parent, const char *name, const float *array, unsigned int numElements );
 
-NdBranch *ndCopyBranch( NdBranch *node );
-void ndDestroyBranch( NdBranch *node );
+NdBranch *nd_copy_branch( NdBranch *node );
+void nd_branch_destroy( NdBranch *node );
 
-NdBranch *ndParseFile( PLFile *file, const char *objectType );
-NdBranch *ndLoadFile( const char *path, const char *objectType );
-bool ndWriteFile( const char *path, NdBranch *root, NdFileType fileType );
+NdBranch *nd_parse_file( PLFile *file, const char *objectType );
+NdBranch *nd_load_file( const char *path, const char *objectType );
+bool nd_write_file( const char *path, NdBranch *root, NdFileType fileType );
 
-NdBranch *ndParseBuffer( const char *buf, size_t length );
+NdBranch *nd_parse_buffer( const char *buf, size_t length );
 
 /* debugging */
-void ndPrintTree( NdBranch *node, int index );
-
-/* deserialisation/serialisation */
-
-float *ndDS_DeserializeVector( NdBranch *in, float *out, uint8_t numElements );
-
-PLVector2 *ndDS_DeserializeVector2( NdBranch *in, PLVector2 *out );
-NdBranch *ndDS_SerializeVector2( NdBranch *parent, const char *name, const PLVector2 *vector2 );
-
-PLVector3 *ndDS_DeserializeVector3( NdBranch *in, PLVector3 *out );
-NdBranch *ndDS_SerializeVector3( NdBranch *parent, const char *name, const PLVector3 *vector3 );
-
-PLColour *ndDS_DeserializeColour( NdBranch *in, PLColour *out );
-NdBranch *ndDS_SerializeColour( NdBranch *parent, const char *name, const PLColour *colour );
-PLColourF32 *ndDS_DeserializeColourF32( NdBranch *in, PLColourF32 *out );
+void nd_branch_print_tree( NdBranch *self, int index );
 
 PL_EXTERN_C_END

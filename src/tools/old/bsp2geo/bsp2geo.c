@@ -1,21 +1,23 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "bsp2geo.h"
 
-int main( int argc, char **argv ) {
+int main( int argc, char **argv )
+{
 	plInitialize( argc, argv );
 
 	printf( "bsp2geo\nCopyright (C) 2020 Mark E Sowden <hogsy@oldtimes-software.com>\n" );
 
 	const char *inputPath = plGetCommandLineArgumentValue( "-bsp" );
-	if ( inputPath == NULL ) {
+	if ( inputPath == NULL )
+	{
 		printf( "No input path specified, using \"default.bsp\".\nSpecify using \"-bsp <path>\" argument.\n" );
 		inputPath = "default.bsp";
 	}
 
 	const char *outputPath = plGetCommandLineArgumentValue( "-out" );
-	if ( outputPath == NULL ) {
+	if ( outputPath == NULL )
+	{
 		printf( "No output path specified, using \"default.geo\".\nSpecify using \"-out <path>\" argument.\n" );
 		outputPath = "default.geo";
 	}

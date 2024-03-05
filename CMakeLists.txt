@@ -131,5 +131,3 @@ add_subdirectory(src/game/) # includes shells
 add_subdirectory(src/tools/cook)
 add_subdirectory(src/tools/fonttool)
 add_subdirectory(src/tools/matgen)
-
-add_subdirectory(src/tests/)

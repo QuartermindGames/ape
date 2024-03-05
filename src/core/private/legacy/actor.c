@@ -1,5 +1,4 @@
-/* SPDX-License-Identifier: LGPL-3.0-or-later */
-/* Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com> */
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <plcore/pl_linkedlist.h>
 
@@ -78,17 +77,17 @@ Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
 	if ( nodeTree != NULL )
 	{
 		NdBranch *node;
-		if ( ( node = ndGetChildByName( nodeTree, "tagName" ) ) != NULL )
+		if ( ( node = nd_branch_get_child_by_name( nodeTree, "tagName" ) ) != NULL )
 		{
-			ndGetStr( node, actor->tagName, sizeof( actor->tagName ) );
+			nd_branch_get_string( node, actor->tagName, sizeof( actor->tagName ) );
 		}
-		if ( ( node = ndGetChildByName( nodeTree, "position" ) ) != NULL )
+		if ( ( node = nd_branch_get_child_by_name( nodeTree, "position" ) ) != NULL )
 		{
-			ndDS_DeserializeVector3( node, &actor->position );
+			//nd_ds_deserialize_vector3( node, &actor->position );
 		}
-		if ( ( node = ndGetChildByName( nodeTree, "angles" ) ) != NULL )
+		if ( ( node = nd_branch_get_child_by_name( nodeTree, "angles" ) ) != NULL )
 		{
-			ndDS_DeserializeVector3( node, &actor->angles );
+			//nd_ds_deserialize_vector3( node, &actor->angles );
 		}
 
 		if ( actor->setup.Deserialize != NULL )

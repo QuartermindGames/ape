@@ -50,7 +50,7 @@ static void save_world_command( unsigned int argc, char **argv )
 
 	const char *dataPath = com_get_local_data_directory();
 
-	NdBranch *root = ndPushBackObject( NULL, "world" );
+	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
 
 	ape_world_serialize_( world, root );
 }

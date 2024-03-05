@@ -47,12 +47,12 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	if ( engineConfig == NULL )
 		return;
 
-	NdBranch *branch = ndGetChildByName( engineConfig, "launchCommands" );
+	NdBranch *branch = nd_branch_get_child_by_name( engineConfig, "launchCommands" );
 	if ( branch == NULL )
 		return;
 
 	static const unsigned int MAX_COMMANDS = 256;
-	unsigned int numCommands = ndGetNumOfChildren( branch );
+	unsigned int numCommands = nd_branch_get_num_of_children( branch );
 	if ( numCommands == 0 )
 		return;
 	else if ( numCommands >= MAX_COMMANDS )
@@ -62,7 +62,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 
 	char *commands[ MAX_COMMANDS ];
-	if ( ndGetStringArray( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+	if ( nd_branch_get_string_array( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
 		return;
 
 	for ( unsigned int i = 0; i < numCommands; ++i )
@@ -190,10 +190,10 @@ void ape_shutdown( void )
 	ape_shutdown_net_();
 
 	com_write_config( engineConfig, "engine" );
-	ndDestroyBranch( engineConfig );
+	nd_branch_destroy( engineConfig );
 
 	com_write_config( userConfig, "user" );
-	ndDestroyBranch( userConfig );
+	nd_branch_destroy( userConfig );
 
 	ss_shell_shutdown();
 

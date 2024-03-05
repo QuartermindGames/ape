@@ -25,8 +25,8 @@ static NdBranch *SerializeCharacterClass( ApeEntity *self )
 {
 	ToxCharacter *character = self->classData;
 
-	NdBranch *root = ndPushBackObject( NULL, className );
-	ndPushBackI16Array( root, "stats", character->stats, TOX_MAX_CHARACTER_STATS );
+	NdBranch *root = nd_branch_push_back_object( NULL, className );
+	nd_branch_push_back_int16_array( root, "stats", character->stats, TOX_MAX_CHARACTER_STATS );
 
 	return root;
 }

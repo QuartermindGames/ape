@@ -25,9 +25,9 @@ ApeWorld *ape_world_create( void )
 
 	ape_world_node_setup_header( &world->header, APE_WORLD_NODE_TYPE_ROOT );
 
-	world->globalProperties = ndPushBackObject( NULL, "properties" );
-	ndPushBackF32Array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	ndPushBackF32Array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	world->globalProperties = nd_branch_push_back_object( NULL, "properties" );
+	nd_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	nd_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
 	world->meshes = PlCreateVectorArray( 0 );
 	world->entities = PlCreateVectorArray( 0 );
@@ -187,10 +187,10 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 
 ApeWorld *ape_world_load( const char *path )
 {
-	NdBranch *root = ndLoadFile( path, "world" );
+	NdBranch *root = nd_load_file( path, "world" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Failed to load world: %s\n", ndGetErrorMessage() );
+		PRINT_WARNING( "Failed to load world: %s\n", nd_get_error_message() );
 		return NULL;
 	}
 
@@ -200,7 +200,7 @@ ApeWorld *ape_world_load( const char *path )
 		PRINT_WARNING( "Failed to load level (%s)!\n", path );
 	}
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 
 	if ( world != NULL )
 	{
@@ -223,14 +223,14 @@ bool ape_world_save( ApeWorld *world, const char *path )
 {
 	world->lastSaveTime = time( NULL );
 
-	NdBranch *root = ndPushBackObject( NULL, "world" );
+	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
 
 	ape_world_serialize_( world, root );
 	snprintf( world->path, sizeof( world->path ), "%s", path );
 
-	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
+	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		PRINT_WARNING( "Failed to save world (%s): %s\n", path, ndGetErrorMessage() );
+		PRINT_WARNING( "Failed to save world (%s): %s\n", path, nd_get_error_message() );
 		return false;
 	}
 
@@ -338,7 +338,7 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 	if ( world->globalProperties == NULL )
 		return NULL;
 
-	return ndGetChildByName( world->globalProperties, propertyName );
+	return nd_branch_get_child_by_name( world->globalProperties, propertyName );
 }
 
 /****************************************

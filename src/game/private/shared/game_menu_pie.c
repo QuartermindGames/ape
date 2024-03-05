@@ -210,9 +210,13 @@ static void draw_pie_option( GamePieMenuOption *option, float x, float y, bool i
 static GamePieMenuOption *get_selected_option( GamePieMenu *menu )
 {
 	if ( menu->targetOption != NULL )
+	{
 		return PlGetLinkedListNodeUserData( menu->targetOption );
+	}
 	if ( menu->activeOption != NULL )
+	{
 		return PlGetLinkedListNodeUserData( menu->activeOption );
+	}
 
 	return NULL;
 }

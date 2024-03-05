@@ -42,11 +42,11 @@ static void fancybasecolorsearch( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 	/* TODO could also try to find a better encoding for the 3-color-encoding type, this really should be done
       if it's rgba_dxt1 and we have alpha in the block, currently even values which will be mapped to black
       due to their alpha value will influence the result */
-	GLint   i, j, colors, z;
-	GLuint  pixerror, pixerrorred, pixerrorgreen, pixerrorblue, pixerrorbest;
-	GLint   colordist, blockerrlin[ 2 ][ 3 ];
+	GLint i, j, colors, z;
+	GLuint pixerror, pixerrorred, pixerrorgreen, pixerrorblue, pixerrorbest;
+	GLint colordist, blockerrlin[ 2 ][ 3 ];
 	GLubyte nrcolor[ 2 ];
-	GLint   pixerrorcolorbest[ 3 ];
+	GLint pixerrorcolorbest[ 3 ];
 	GLubyte enc = 0;
 	GLubyte cv[ 4 ][ 4 ];
 	GLubyte testcolor[ 2 ][ 3 ];
@@ -98,19 +98,19 @@ static void fancybasecolorsearch( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 			pixerrorbest = 0xffffffff;
 			for ( colors = 0; colors < 4; colors++ )
 			{
-				colordist   = srccolors[ j ][ i ][ 0 ] - ( cv[ colors ][ 0 ] );
-				pixerror    = colordist * colordist * REDWEIGHT;
+				colordist = srccolors[ j ][ i ][ 0 ] - ( cv[ colors ][ 0 ] );
+				pixerror = colordist * colordist * REDWEIGHT;
 				pixerrorred = colordist;
-				colordist   = srccolors[ j ][ i ][ 1 ] - ( cv[ colors ][ 1 ] );
+				colordist = srccolors[ j ][ i ][ 1 ] - ( cv[ colors ][ 1 ] );
 				pixerror += colordist * colordist * GREENWEIGHT;
 				pixerrorgreen = colordist;
-				colordist     = srccolors[ j ][ i ][ 2 ] - ( cv[ colors ][ 2 ] );
+				colordist = srccolors[ j ][ i ][ 2 ] - ( cv[ colors ][ 2 ] );
 				pixerror += colordist * colordist * BLUEWEIGHT;
 				pixerrorblue = colordist;
 				if ( pixerror < pixerrorbest )
 				{
-					enc                    = colors;
-					pixerrorbest           = pixerror;
+					enc = colors;
+					pixerrorbest = pixerror;
 					pixerrorcolorbest[ 0 ] = pixerrorred;
 					pixerrorcolorbest[ 1 ] = pixerrorgreen;
 					pixerrorcolorbest[ 2 ] = pixerrorblue;
@@ -183,10 +183,10 @@ static void fancybasecolorsearch( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 		/* both colors are so close they might get encoded as the same 16bit values */
 		GLubyte coldiffred, coldiffgreen, coldiffblue, coldiffmax, factor, ind0, ind1;
 
-		coldiffred   = abs( testcolor[ 0 ][ 0 ] - testcolor[ 1 ][ 0 ] );
+		coldiffred = abs( testcolor[ 0 ][ 0 ] - testcolor[ 1 ][ 0 ] );
 		coldiffgreen = 2 * abs( testcolor[ 0 ][ 1 ] - testcolor[ 1 ][ 1 ] );
-		coldiffblue  = abs( testcolor[ 0 ][ 2 ] - testcolor[ 1 ][ 2 ] );
-		coldiffmax   = coldiffred;
+		coldiffblue = abs( testcolor[ 0 ][ 2 ] - testcolor[ 1 ][ 2 ] );
+		coldiffmax = coldiffred;
 		if ( coldiffmax < coldiffgreen ) coldiffmax = coldiffgreen;
 		if ( coldiffmax < coldiffblue ) coldiffmax = coldiffblue;
 		if ( coldiffmax > 0 )
@@ -271,14 +271,14 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 {
 	/* use same luminance-weighted distance metric to determine encoding as for finding the base colors */
 
-	GLint    i, j, colors;
-	GLuint   testerror, testerror2, pixerror, pixerrorbest;
-	GLint    colordist;
+	GLint i, j, colors;
+	GLuint testerror, testerror2, pixerror, pixerrorbest;
+	GLint colordist;
 	GLushort color0, color1, tempcolor;
-	GLuint   bits = 0, bits2 = 0;
+	GLuint bits = 0, bits2 = 0;
 	GLubyte *colorptr;
-	GLubyte  enc = 0;
-	GLubyte  cv[ 4 ][ 4 ];
+	GLubyte enc = 0;
+	GLubyte cv[ 4 ][ 4 ];
 
 	bestcolor[ 0 ][ 0 ] = bestcolor[ 0 ][ 0 ] & 0xf8;
 	bestcolor[ 0 ][ 1 ] = bestcolor[ 0 ][ 1 ] & 0xfc;
@@ -291,10 +291,10 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 	color1 = bestcolor[ 1 ][ 0 ] << 8 | bestcolor[ 1 ][ 1 ] << 3 | bestcolor[ 1 ][ 2 ] >> 3;
 	if ( color0 < color1 )
 	{
-		tempcolor      = color0;
-		color0         = color1;
-		color1         = tempcolor;
-		colorptr       = bestcolor[ 0 ];
+		tempcolor = color0;
+		color0 = color1;
+		color1 = tempcolor;
+		colorptr = bestcolor[ 0 ];
 		bestcolor[ 0 ] = bestcolor[ 1 ];
 		bestcolor[ 1 ] = colorptr;
 	}
@@ -317,7 +317,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 			for ( colors = 0; colors < 4; colors++ )
 			{
 				colordist = srccolors[ j ][ i ][ 0 ] - cv[ colors ][ 0 ];
-				pixerror  = colordist * colordist * REDWEIGHT;
+				pixerror = colordist * colordist * REDWEIGHT;
 				colordist = srccolors[ j ][ i ][ 1 ] - cv[ colors ][ 1 ];
 				pixerror += colordist * colordist * GREENWEIGHT;
 				colordist = srccolors[ j ][ i ][ 2 ] - cv[ colors ][ 2 ];
@@ -325,7 +325,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 				if ( pixerror < pixerrorbest )
 				{
 					pixerrorbest = pixerror;
-					enc          = colors;
+					enc = colors;
 				}
 			}
 			testerror += pixerrorbest;
@@ -353,7 +353,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 				pixerrorbest = 0xffffffff;
 				if ( ( type == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ) && ( srccolors[ j ][ i ][ 3 ] <= ALPHACUT ) )
 				{
-					enc          = 3;
+					enc = 3;
 					pixerrorbest = 0; /* don't calculate error */
 				}
 				else
@@ -362,7 +362,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 					for ( colors = 0; colors < 3; colors++ )
 					{
 						colordist = srccolors[ j ][ i ][ 0 ] - cv[ colors ][ 0 ];
-						pixerror  = colordist * colordist * REDWEIGHT;
+						pixerror = colordist * colordist * REDWEIGHT;
 						colordist = srccolors[ j ][ i ][ 1 ] - cv[ colors ][ 1 ];
 						pixerror += colordist * colordist * GREENWEIGHT;
 						colordist = srccolors[ j ][ i ][ 2 ] - cv[ colors ][ 2 ];
@@ -397,7 +397,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 		*blkaddr++ = bits2 & 0xff;
 		*blkaddr++ = ( bits2 >> 8 ) & 0xff;
 		*blkaddr++ = ( bits2 >> 16 ) & 0xff;
-		*blkaddr   = bits2 >> 24;
+		*blkaddr = bits2 >> 24;
 	}
 	else
 	{
@@ -408,7 +408,7 @@ static void storedxtencodedblock( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][
 		*blkaddr++ = bits & 0xff;
 		*blkaddr++ = ( bits >> 8 ) & 0xff;
 		*blkaddr++ = ( bits >> 16 ) & 0xff;
-		*blkaddr   = bits >> 24;
+		*blkaddr = bits >> 24;
 	}
 }
 
@@ -423,10 +423,10 @@ static void encodedxtcolorblockfaster( GLubyte *blkaddr, GLubyte srccolors[ 4 ][
       doesn't work too well though...
       This seems to be a rather difficult problem */
 
-	GLubyte * bestcolor[ 2 ];
-	GLubyte   basecolors[ 2 ][ 3 ];
-	GLubyte   i, j;
-	GLuint    lowcv, highcv, testcv;
+	GLubyte *bestcolor[ 2 ];
+	GLubyte basecolors[ 2 ][ 3 ];
+	GLubyte i, j;
+	GLuint lowcv, highcv, testcv;
 	GLboolean haveAlpha = GL_FALSE;
 
 	lowcv = highcv = srccolors[ 0 ][ 0 ][ 0 ] * srccolors[ 0 ][ 0 ][ 0 ] * REDWEIGHT +
@@ -445,12 +445,12 @@ static void encodedxtcolorblockfaster( GLubyte *blkaddr, GLubyte srccolors[ 4 ][
 				         srccolors[ j ][ i ][ 2 ] * srccolors[ j ][ i ][ 2 ] * BLUEWEIGHT;
 				if ( testcv > highcv )
 				{
-					highcv         = testcv;
+					highcv = testcv;
 					bestcolor[ 1 ] = srccolors[ j ][ i ];
 				}
 				else if ( testcv < lowcv )
 				{
-					lowcv          = testcv;
+					lowcv = testcv;
 					bestcolor[ 0 ] = srccolors[ j ][ i ];
 				}
 			}
@@ -491,14 +491,14 @@ static void writedxt5encodedalphablock( GLubyte *blkaddr, GLubyte alphabase1, GL
 static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
                              GLint numxpixels, GLint numypixels )
 {
-	GLubyte   alphabase[ 2 ], alphause[ 2 ];
-	GLshort   alphatest[ 2 ];
-	GLuint    alphablockerror1, alphablockerror2, alphablockerror3;
-	GLubyte   i, j, aindex, acutValues[ 7 ];
-	GLubyte   alphaenc1[ 16 ], alphaenc2[ 16 ], alphaenc3[ 16 ];
+	GLubyte alphabase[ 2 ], alphause[ 2 ];
+	GLshort alphatest[ 2 ];
+	GLuint alphablockerror1, alphablockerror2, alphablockerror3;
+	GLubyte i, j, aindex, acutValues[ 7 ];
+	GLubyte alphaenc1[ 16 ], alphaenc2[ 16 ], alphaenc3[ 16 ];
 	GLboolean alphaabsmin = GL_FALSE;
 	GLboolean alphaabsmax = GL_FALSE;
-	GLshort   alphadist;
+	GLshort alphadist;
 
 	/* find lowest and highest alpha value in block, alphabase[0] lowest, alphabase[1] highest */
 	alphabase[ 0 ] = 0xff;
@@ -567,42 +567,42 @@ static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
 			if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 0 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 0;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - alphause[ 1 ];
+				alphadist = srccolors[ j ][ i ][ 3 ] - alphause[ 1 ];
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 1 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 2;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 6 + alphause[ 0 ] * 1 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 6 + alphause[ 0 ] * 1 ) / 7;
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 2 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 3;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 5 + alphause[ 0 ] * 2 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 5 + alphause[ 0 ] * 2 ) / 7;
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 3 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 4;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 4 + alphause[ 0 ] * 3 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 4 + alphause[ 0 ] * 3 ) / 7;
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 4 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 5;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 3 + alphause[ 0 ] * 4 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 3 + alphause[ 0 ] * 4 ) / 7;
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 5 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 6;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 2 + alphause[ 0 ] * 5 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 2 + alphause[ 0 ] * 5 ) / 7;
 			}
 			else if ( srccolors[ j ][ i ][ 3 ] > acutValues[ 6 ] )
 			{
 				alphaenc1[ 4 * j + i ] = 7;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 1 + alphause[ 0 ] * 6 ) / 7;
+				alphadist = srccolors[ j ][ i ][ 3 ] - ( alphause[ 1 ] * 1 + alphause[ 0 ] * 6 ) / 7;
 			}
 			else
 			{
 				alphaenc1[ 4 * j + i ] = 1;
-				alphadist              = srccolors[ j ][ i ][ 3 ] - alphause[ 0 ];
+				alphadist = srccolors[ j ][ i ][ 3 ] - alphause[ 0 ];
 			}
 			alphablockerror1 += alphadist * alphadist;
 		}
@@ -644,42 +644,42 @@ static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
 				if ( srccolors[ j ][ i ][ 3 ] == 0 )
 				{
 					alphaenc2[ 4 * j + i ] = 6;
-					alphadist              = 0;
+					alphadist = 0;
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] == 255 )
 				{
 					alphaenc2[ 4 * j + i ] = 7;
-					alphadist              = 0;
+					alphadist = 0;
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 0 ] )
 				{
 					alphaenc2[ 4 * j + i ] = 0;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - alphabase[ 0 ];
+					alphadist = srccolors[ j ][ i ][ 3 ] - alphabase[ 0 ];
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 1 ] )
 				{
 					alphaenc2[ 4 * j + i ] = 2;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 4 + alphabase[ 1 ] * 1 ) / 5;
+					alphadist = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 4 + alphabase[ 1 ] * 1 ) / 5;
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 2 ] )
 				{
 					alphaenc2[ 4 * j + i ] = 3;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 3 + alphabase[ 1 ] * 2 ) / 5;
+					alphadist = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 3 + alphabase[ 1 ] * 2 ) / 5;
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 3 ] )
 				{
 					alphaenc2[ 4 * j + i ] = 4;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 2 + alphabase[ 1 ] * 3 ) / 5;
+					alphadist = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 2 + alphabase[ 1 ] * 3 ) / 5;
 				}
 				else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 4 ] )
 				{
 					alphaenc2[ 4 * j + i ] = 5;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 1 + alphabase[ 1 ] * 4 ) / 5;
+					alphadist = srccolors[ j ][ i ][ 3 ] - ( alphabase[ 0 ] * 1 + alphabase[ 1 ] * 4 ) / 5;
 				}
 				else
 				{
 					alphaenc2[ 4 * j + i ] = 1;
-					alphadist              = srccolors[ j ][ i ][ 3 ] - alphabase[ 1 ];
+					alphadist = srccolors[ j ][ i ][ 3 ] - alphabase[ 1 ];
 				}
 				alphablockerror2 += alphadist * alphadist;
 			}
@@ -690,12 +690,12 @@ static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
          this encoding is MUCH better on average than #2 though, but expensive! */
 		if ( ( alphablockerror2 > 96 ) && ( alphablockerror1 > 96 ) )
 		{
-			GLshort blockerrlin1       = 0;
-			GLshort blockerrlin2       = 0;
-			GLubyte nralphainrangelow  = 0;
+			GLshort blockerrlin1 = 0;
+			GLshort blockerrlin2 = 0;
+			GLubyte nralphainrangelow = 0;
 			GLubyte nralphainrangehigh = 0;
-			alphatest[ 0 ]             = 0xff;
-			alphatest[ 1 ]             = 0x0;
+			alphatest[ 0 ] = 0xff;
+			alphatest[ 1 ] = 0x0;
 			/* if we have large range it's likely there are values close to 0/255, try to map them to 0/255 */
 			for ( j = 0; j < numypixels; j++ )
 			{
@@ -811,42 +811,42 @@ static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
 					if ( srccolors[ j ][ i ][ 3 ] <= alphatest[ 0 ] / 2 )
 					{
 						alphaenc3[ 4 * j + i ] = 6;
-						alphadist              = srccolors[ j ][ i ][ 3 ];
+						alphadist = srccolors[ j ][ i ][ 3 ];
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] > ( ( 255 + alphatest[ 1 ] ) / 2 ) )
 					{
 						alphaenc3[ 4 * j + i ] = 7;
-						alphadist              = 255 - srccolors[ j ][ i ][ 3 ];
+						alphadist = 255 - srccolors[ j ][ i ][ 3 ];
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 0 ] )
 					{
 						alphaenc3[ 4 * j + i ] = 0;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - alphatest[ 0 ];
+						alphadist = srccolors[ j ][ i ][ 3 ] - alphatest[ 0 ];
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 1 ] )
 					{
 						alphaenc3[ 4 * j + i ] = 2;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 4 + alphatest[ 1 ] * 1 ) / 5;
+						alphadist = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 4 + alphatest[ 1 ] * 1 ) / 5;
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 2 ] )
 					{
 						alphaenc3[ 4 * j + i ] = 3;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 3 + alphatest[ 1 ] * 2 ) / 5;
+						alphadist = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 3 + alphatest[ 1 ] * 2 ) / 5;
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 3 ] )
 					{
 						alphaenc3[ 4 * j + i ] = 4;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 2 + alphatest[ 1 ] * 3 ) / 5;
+						alphadist = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 2 + alphatest[ 1 ] * 3 ) / 5;
 					}
 					else if ( srccolors[ j ][ i ][ 3 ] <= acutValues[ 4 ] )
 					{
 						alphaenc3[ 4 * j + i ] = 5;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 1 + alphatest[ 1 ] * 4 ) / 5;
+						alphadist = srccolors[ j ][ i ][ 3 ] - ( alphatest[ 0 ] * 1 + alphatest[ 1 ] * 4 ) / 5;
 					}
 					else
 					{
 						alphaenc3[ 4 * j + i ] = 1;
-						alphadist              = srccolors[ j ][ i ][ 3 ] - alphatest[ 1 ];
+						alphadist = srccolors[ j ][ i ][ 3 ] - alphatest[ 1 ];
 					}
 					alphablockerror3 += alphadist * alphadist;
 				}
@@ -874,7 +874,7 @@ static void encodedxt5alpha( GLubyte *blkaddr, GLubyte srccolors[ 4 ][ 4 ][ 4 ],
 static void extractsrccolors( GLubyte srcpixels[ 4 ][ 4 ][ 4 ], const GLchan *srcaddr,
                               GLint srcRowStride, GLint numxpixels, GLint numypixels, GLint comps )
 {
-	GLubyte       i, j, c;
+	GLubyte i, j, c;
 	const GLchan *curaddr;
 	for ( j = 0; j < numypixels; j++ )
 	{
@@ -893,12 +893,12 @@ static void extractsrccolors( GLubyte srcpixels[ 4 ][ 4 ][ 4 ], const GLchan *sr
 void tx_compress_dxtn( GLint srccomps, GLint width, GLint height, const GLubyte *srcPixData,
                        GLenum destFormat, GLubyte *dest, GLint dstRowStride )
 {
-	GLubyte *     blkaddr = dest;
-	GLubyte       srcpixels[ 4 ][ 4 ][ 4 ];
+	GLubyte *blkaddr = dest;
+	GLubyte srcpixels[ 4 ][ 4 ][ 4 ];
 	const GLchan *srcaddr = srcPixData;
-	GLint         numxpixels, numypixels;
-	GLint         i, j;
-	GLint         dstRowDiff;
+	GLint numxpixels, numypixels;
+	GLint i, j;
+	GLint dstRowDiff;
 
 	switch ( destFormat )
 	{

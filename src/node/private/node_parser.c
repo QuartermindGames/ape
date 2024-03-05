@@ -50,15 +50,15 @@ static NdPropertyType PropertyTypeForString( const char *type )
 	if ( pl_strcasecmp( type, "uint64" ) == 0 )
 		return ND_PROPERTY_UI64;
 	if ( pl_strcasecmp( type, "int8" ) == 0 )
-		return ND_PROPERTY_I8;
+		return ND_PROPERTY_INT8;
 	if ( pl_strcasecmp( type, "int" ) == 0 || pl_strcasecmp( type, "int32" ) == 0 )
-		return ND_PROPERTY_I32;
+		return ND_PROPERTY_INT32;
 	if ( pl_strcasecmp( type, "int64" ) == 0 )
-		return ND_PROPERTY_I64;
+		return ND_PROPERTY_INT64;
 	if ( pl_strcasecmp( type, "float" ) == 0 )
-		return ND_PROPERTY_F32;
+		return ND_PROPERTY_FLOAT32;
 	if ( pl_strcasecmp( type, "float64" ) == 0 )
-		return ND_PROPERTY_F64;
+		return ND_PROPERTY_FLOAT64;
 
 	return ND_PROPERTY_INVALID;
 }
@@ -92,7 +92,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 	}
 	( *buf )++;
 
-	NdBranch *arrayNode = ndPushBackNewBranch( parent, name, ND_PROPERTY_ARRAY );
+	NdBranch *arrayNode = nd_push_back_new_branch( parent, name, ND_PROPERTY_ARRAY );
 	if ( arrayNode == NULL )
 		return NULL;
 
@@ -117,12 +117,12 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
-				ndPushBackUI32( arrayNode, NULL, i );
+				nd_branch_push_back_uint32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case ND_PROPERTY_I32:
+		case ND_PROPERTY_INT32:
 		{
 			DEBUG_PARSER( "Reading I32\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -135,12 +135,12 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 					break;
 				}
 				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-				ndPushBackI32( arrayNode, NULL, i );
+				nd_branch_push_back_int32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
 		}
-		case ND_PROPERTY_F32:
+		case ND_PROPERTY_FLOAT32:
 		{
 			DEBUG_PARSER( "Reading float\n" );
 			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
@@ -153,7 +153,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 					break;
 				}
 				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				ndPushBackF32( arrayNode, NULL, i );
+				nd_branch_push_back_float32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
@@ -185,7 +185,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 					break;
 				}
 				DEBUG_PARSER( "PushBack Boolean: %d\n", i );
-				ndPushBackI32( arrayNode, NULL, i );
+				nd_branch_push_back_int32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
@@ -201,7 +201,7 @@ static NdBranch *ParseArrayNode( NdBranch *parent, const char **buf, size_t leng
 					break;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				ndPushBackString( arrayNode, NULL, i );
+				nd_branch_push_back_string( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
 			break;
@@ -250,7 +250,7 @@ static NdBranch *ParseObjectNode( NdBranch *parent, const char **buf, size_t len
 	}
 	( *buf )++;
 
-	NdBranch *objectNode = ndPushBackObject( parent, name );
+	NdBranch *objectNode = nd_branch_push_back_object( parent, name );
 	if ( objectNode == NULL )
 		return NULL;
 
@@ -316,9 +316,9 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
-				return ndPushBackUI32( parent, name, i );
+				return nd_branch_push_back_uint32( parent, name, i );
 			}
-			case ND_PROPERTY_I8:
+			case ND_PROPERTY_INT8:
 			{
 				bool status;
 				int8_t i = ( int8_t ) PlParseInteger( buf, &status );
@@ -328,9 +328,9 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack I8: %d\n", i );
-				return ndPushBackI8( parent, name, i );
+				return nd_branch_push_back_int8( parent, name, i );
 			}
-			case ND_PROPERTY_I32:
+			case ND_PROPERTY_INT32:
 			{
 				bool status;
 				int i = PlParseInteger( buf, &status );
@@ -340,9 +340,9 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-				return ndPushBackI32( parent, name, i );
+				return nd_branch_push_back_int32( parent, name, i );
 			}
-			case ND_PROPERTY_F32:
+			case ND_PROPERTY_FLOAT32:
 			{
 				bool status;
 				float i = PlParseFloat( buf, &status );
@@ -352,7 +352,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				return ndPushBackF32( parent, name, i );
+				return nd_branch_push_back_float32( parent, name, i );
 			}
 			case ND_PROPERTY_STRING:
 			{
@@ -363,7 +363,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				return ndPushBackString( parent, name, i );
+				return nd_branch_push_back_string( parent, name, i );
 			}
 			case ND_PROPERTY_BOOL:
 			{
@@ -374,7 +374,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack Boolean: %s\n", i );
-				return ndPushBackBool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
+				return nd_branch_push_back_bool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
 			}
 			default:
 				Warning( "Unknown property type, \"%s\" [%d]!\n", type, currentLine );
@@ -385,7 +385,7 @@ static NdBranch *ParseNode( NdBranch *parent, const char **buf, size_t length, u
 	return NULL;
 }
 
-NdBranch *ndParseBuffer( const char *buf, size_t length )
+NdBranch *nd_parse_buffer( const char *buf, size_t length )
 {
 	return ParseNode( NULL, &buf, length, 1 );
 }

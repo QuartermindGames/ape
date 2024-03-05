@@ -41,21 +41,21 @@ FXColor ss::forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
-	NdBranch *root = ndPushBackObject( nullptr, "project" );
-	ndPushBackString( root, "name", name );
+	NdBranch *root = nd_branch_push_back_object( nullptr, "project" );
+	nd_branch_push_back_string( root, "name", name );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
-	ndPushBackI32Array( root, "version", version, 3 );
+	nd_branch_push_back_int32_array( root, "version", version, 3 );
 
 	NdBranch *child;
-	child = ndPushBackStringArray( root, "mountLocations", nullptr, 0 );
-	ndPushBackString( child, nullptr, "ship" );
-	ndPushBackString( child, nullptr, "dev" );
+	child = nd_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
+	nd_branch_push_back_string( child, nullptr, "ship" );
+	nd_branch_push_back_string( child, nullptr, "dev" );
 
-	child = ndPushBackStringArray( root, "dependencies", nullptr, 0 );
-	ndPushBackString( child, nullptr, "base" );
+	child = nd_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
+	nd_branch_push_back_string( child, nullptr, "base" );
 
-	ndWriteFile( path, root, ND_FILE_UTF8 );
+	nd_write_file( path, root, ND_FILE_UTF8 );
 	return root;
 }
 
@@ -180,10 +180,10 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 
 static void setup_app_colours( FXApp &app )
 {
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) ndGetUInt( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
 	app.setBackColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] );
 	app.setBaseColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
@@ -240,7 +240,7 @@ int main( int argc, char **argv )
 
 	ss::forge::editorConfig = com_get_config( "editor" );
 
-	const char *projectPath = ndGetStringByName( ss::forge::editorConfig, "projectsPath", "projects" );
+	const char *projectPath = nd_branch_get_child_string( ss::forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
 	{
 		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
@@ -322,7 +322,7 @@ extern "C"
 	ApeInputState ss_shell_get_button_state( ApeInputButton inputButton ) { return APE_INPUT_STATE_NONE; }
 	ApeInputState ss_shell_get_key_state( int key ) { return APE_INPUT_STATE_NONE; }
 	void ss_shell_get_mouse_position( int *x, int *y ) {}
-	void ss_shell_set_mouse_position( int x, int y )
+	void shell_set_mouse_position( int x, int y )
 	{
 	}
 

@@ -139,6 +139,6 @@ void ape_client_input_register_action( const char *id,
                                        ApeInputKey keys[], unsigned int numDefaultKeys,
                                    ApeInputActionCallback actionCallback );
 
-unsigned int ss_ape_input_register_device( SS_Acl_InputDeviceType type );
+unsigned int ape_input_register_device( SS_Acl_InputDeviceType type );
 
 PL_EXTERN_C_END

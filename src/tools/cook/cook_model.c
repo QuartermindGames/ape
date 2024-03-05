@@ -19,9 +19,9 @@ ND_DECLARE_STRUCT( ApeFormatBone, 2,
                    ND_DECLARE_STRUCT_ITEM( ApeFormatBone, parent, ND_PROPERTY_UI32 ) )
 
 ND_DECLARE_STRUCT( ApeFormatVertex, 3,
-                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, position, ND_PROPERTY_F32, 3 ),
-                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, normal, ND_PROPERTY_F32, 3 ),
-                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, uv, ND_PROPERTY_F32, 2 ) )
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, position, ND_PROPERTY_FLOAT32, 3 ),
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, normal, ND_PROPERTY_FLOAT32, 3 ),
+                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatVertex, uv, ND_PROPERTY_FLOAT32, 2 ) )
 
 ND_DECLARE_STRUCT( ApeFormatTriangle, 1,
                    ND_DECLARE_STRUCT_ITEM_ARRAY( ApeFormatTriangle, indices, ND_PROPERTY_UI32, 3 ) )
@@ -39,11 +39,11 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 	NdBranch *root = nd_serialize_struct( &ApeFormatModel_descriptor, model, &errorCode );
 	if ( errorCode != ND_ERROR_SUCCESS )
 	{
-		ndDestroyBranch( root );
+		nd_branch_destroy( root );
 		root = NULL;
 	}
 
-	ndPushBackUI32( root, "version", APE_FORMAT_MODEL_VERSION );
+	nd_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
 	return root;
 }
 
@@ -97,8 +97,8 @@ void cook_model_process( const char *modelName )
 	}
 
 	PlSetupPath( path, true, "%s/ship/models/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), modelName );
-	if ( !ndWriteFile( path, root, ND_FILE_BINARY ) )
+	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		ERROR( "Failed to write model: %s\n", ndGetErrorMessage() );
+		ERROR( "Failed to write model: %s\n", nd_get_error_message() );
 	}
 }

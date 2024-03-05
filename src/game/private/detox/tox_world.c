@@ -54,6 +54,10 @@ void tox_world_spawn( ApeWorld *world )
 {
 	PL_ZERO_( worldState );
 
+	// kick off during daylight hours
+	//TODO: make this configurable via editor?
+	worldState.seconds = 40000;
+
 	ape_sky_clear_layers();
 	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
 		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,

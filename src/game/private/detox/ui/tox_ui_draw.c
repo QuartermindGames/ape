@@ -1,6 +1,8 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: For handling UI drawing routines.
 // Author:  Mark E. Sowden
+
+#include "yin/core_renderer.h"
 
 #include "tox_ui.h"
 
@@ -9,8 +11,3 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
-
-bool tox_ui_draw( ApeViewport *viewport )
-{
-	return false;
-}

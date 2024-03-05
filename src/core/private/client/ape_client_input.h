@@ -15,7 +15,7 @@ void ape_shutdown_input_( void );
 void ape_serialize_input_config_( NdBranch *root );
 void ape_deserialize_input_config_( NdBranch *root );
 
-void ss_ape_clear_input_devices_( void );
+void ape_clear_input_devices( void );
 
 void ape_client_input_handle_key_event_( int keyIndex, bool isPressed );
 void ape_client_input_handle_mouse_button_event_( int button, ApeInputState buttonState );

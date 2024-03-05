@@ -58,7 +58,7 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
-	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
+	unsigned int version = nd_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
 	{
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
@@ -66,36 +66,36 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	}
 
 	NdBranch *c;
-	c = ndGetChildByName( root, "colours" );
+	c = nd_branch_get_child_by_name( root, "colours" );
 	if ( c != NULL )
 	{
 		NdBranch *i;
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
-		if ( ( i = ndGetChildByName( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
-			ndGetF32Array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
+		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
+			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
 	}
 
-	c = ndGetChildByName( root, "borders" );
+	c = nd_branch_get_child_by_name( root, "borders" );
 	if ( c != NULL )
 	{
-		unsigned int style = ndGetUInt( c, "style", -1 );
+		unsigned int style = nd_branch_get_child_uint( c, "style", -1 );
 		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
 		else
 			GUI_WARNING( "No border style specified, using default.\n" );
 
 		NdBranch *i;
-		if ( ( i = ndGetChildByName( c, "padding" ) ) != NULL )
-			ndGetI32Array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
+		if ( ( i = nd_branch_get_child_by_name( c, "padding" ) ) != NULL )
+			nd_branch_get_int32_array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
 	}
 
 	return guiStyleSheet;
@@ -103,10 +103,10 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 
 const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path )
 {
-	NdBranch *root = ndLoadFile( path, "guiStyle" );
+	NdBranch *root = nd_load_file( path, "guiStyle" );
 	if ( root == NULL )
 	{
-		GUI_WARNING( "Failed to load node file: %s\n", ndGetErrorMessage() );
+		GUI_WARNING( "Failed to load node file: %s\n", nd_get_error_message() );
 		return NULL;
 	}
 

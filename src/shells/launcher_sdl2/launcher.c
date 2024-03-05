@@ -263,7 +263,7 @@ void ss_shell_get_mouse_position( int *x, int *y )
 	SDL_GetMouseState( x, y );
 }
 
-void ss_shell_set_mouse_position( int x, int y )
+void shell_set_mouse_position( int x, int y )
 {
 	SDL_WarpMouseInWindow( sdlWindow, x, y );
 }
@@ -423,7 +423,7 @@ static bool initialize_display( void )
 	}
 
 	unsigned int driverMode;
-	const char *driverName = ndGetStringByName( shellConfig, "shell.driver", "opengl" );
+	const char *driverName = nd_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
 		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
@@ -448,9 +448,9 @@ static bool initialize_display( void )
 	int height = 720;
 	if ( shellConfig != NULL )
 	{
-		fullscreen = ndGetBoolByName( shellConfig, "fullscreen", fullscreen );
-		width = ( int ) ndGetInt( shellConfig, "width", width );
-		height = ( int ) ndGetInt( shellConfig, "height", height );
+		fullscreen = nd_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
+		width = ( int ) nd_branch_get_child_int( shellConfig, "width", width );
+		height = ( int ) nd_branch_get_child_int( shellConfig, "height", height );
 	}
 
 	if ( ( sdlWindow = create_window( windowTitle, width, height, fullscreen, driverMode ) ) == NULL )
@@ -527,7 +527,7 @@ int launcher_initialize( int argc, char **argv )
 
 	const char *projectName = NULL;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
-		projectName = ndGetStringByName( shellConfig, "defaultProject", "base" );
+		projectName = nd_branch_get_child_string( shellConfig, "defaultProject", "base" );
 	if ( projectName == NULL )
 		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 

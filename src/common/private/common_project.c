@@ -41,13 +41,13 @@ static ComProject project;
 
 static void parse_mount_config( NdBranch *root, ComProject *out )
 {
-	unsigned int numChildren = ndGetNumOfChildren( root );
+	unsigned int numChildren = nd_branch_get_num_of_children( root );
 	if ( numChildren == 0 )
 		/* nothing to mount, okay then */
 		return;
 
-	NdBranch *child = ndGetFirstChild( root );
-	if ( ndGetType( child ) != ND_PROPERTY_STRING )
+	NdBranch *child = nd_branch_get_first_child( root );
+	if ( nd_branch_get_type( child ) != ND_PROPERTY_STRING )
 	{
 		com_warning_( "Invalid child type found in config!\n" );
 		return;
@@ -56,8 +56,8 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 	for ( unsigned int i = 0; i < numChildren; ++i )
 	{
 		PLPath path;
-		ndGetStr( child, path, sizeof( PLPath ) );
-		child = ndGetNextChild( child );
+		nd_branch_get_string( child, path, sizeof( PLPath ) );
+		child = nd_get_next_child( child );
 
 		if ( ( out->subMountLocations[ out->numSubMountLocations ] = PlMountLocation( path ) ) == NULL )
 		{
@@ -83,22 +83,22 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 	PlSetupPath( out->localPath, true, "%s", path );
 
 	snprintf( out->baseName, sizeof( out->baseName ), "%s", name );
-	snprintf( out->name, sizeof( out->name ), "%s", ndGetStringByName( root, "name", "none" ) );
-	snprintf( out->developer, sizeof( out->developer ), "%s", ndGetStringByName( root, "developer", "none" ) );
-	snprintf( out->website, sizeof( out->website ), "%s", ndGetStringByName( root, "website", "none" ) );
+	snprintf( out->name, sizeof( out->name ), "%s", nd_branch_get_child_string( root, "name", "none" ) );
+	snprintf( out->developer, sizeof( out->developer ), "%s", nd_branch_get_child_string( root, "developer", "none" ) );
+	snprintf( out->website, sizeof( out->website ), "%s", nd_branch_get_child_string( root, "website", "none" ) );
 
 	NdBranch *child;
-	if ( ( child = ndGetChildByName( root, "version" ) ) != NULL )
-		ndGetI32Array( child, out->version, 3 );
-	if ( ( child = ndGetChildByName( root, "mountLocations" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "version" ) ) != NULL )
+		nd_branch_get_int32_array( child, out->version, 3 );
+	if ( ( child = nd_branch_get_child_by_name( root, "mountLocations" ) ) != NULL )
 		parse_mount_config( child, out );
-	if ( ( child = ndGetChildByName( root, "dependencies" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "dependencies" ) ) != NULL )
 	{
-		child = ndGetFirstChild( child );
+		child = nd_branch_get_first_child( child );
 		while ( child != NULL )
 		{
 			char baseName[ COM_MAX_PROJECT_BASENAME ];
-			if ( ndGetStr( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
+			if ( nd_branch_get_string( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
 			{
 				com_warning_( "Failed to load dependency due to invalid dependency listing!\n" );
 				return NULL;
@@ -106,10 +106,10 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), baseName, baseName );
 
-			NdBranch *croot = ndLoadFile( path, "project" );
+			NdBranch *croot = nd_load_file( path, "project" );
 			if ( croot == NULL )
 			{
-				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, ndGetErrorMessage() );
+				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, nd_get_error_message() );
 				return NULL;
 			}
 
@@ -136,7 +136,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 				return NULL;
 			}
 
-			ndDestroyBranch( croot );
+			nd_branch_destroy( croot );
 
 			if ( head->numDependencies >= COM_MAX_DEPENDENCIES )
 			{
@@ -144,7 +144,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 				break;
 			}
 
-			child = ndGetNextChild( child );
+			child = nd_get_next_child( child );
 		}
 	}
 
@@ -195,17 +195,17 @@ bool com_project_mount( const char *name )
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), name, name );
 
-	NdBranch *root = ndLoadFile( path, "project" );
+	NdBranch *root = nd_load_file( path, "project" );
 	if ( root == NULL )
 	{
-		com_warning_( "Failed to load project file: %s\n", ndGetErrorMessage() );
+		com_warning_( "Failed to load project file: %s\n", nd_get_error_message() );
 		return false;
 	}
 
 	if ( deserialize_project( root, name, &project ) == NULL )
 		com_project_unmount();// call unmount to cleanup
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 
 	return true;
 }

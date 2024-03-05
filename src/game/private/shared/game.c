@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "game_private.h"
 #include "yin/core_fs.h"

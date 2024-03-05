@@ -94,7 +94,7 @@ static const unsigned int RFM_VERSION_PUN = 21;// first magic byte is changed to
 
 void acl_model_rfm_destroy_( RfmModel *model );
 
-#if 0 // return to this later...
+#if 0// return to this later...
 
 static RfmModel *parse_rfm_chunk_collision( RfmModel *model, PLFile *file, unsigned int version )
 {
@@ -382,7 +382,7 @@ void acl_model_rfm_destroy_( RfmModel *model )
 	PL_DELETE( model );
 }
 
-#if 0
+#	if 0
 void acl_model_rfm_test_command_( unsigned int argc, char **argv )
 {
 	static const char *MODELS[] =
@@ -408,7 +408,7 @@ void acl_model_rfm_test_command_( unsigned int argc, char **argv )
 		acl_model_rfm_destroy_( model );
 	}
 }
-#endif
+#	endif
 
 #endif
 

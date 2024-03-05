@@ -79,22 +79,22 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void LoadUserConfig( void )
 {
-	NdBranch *root = ndLoadFile( ss_acl_fs_get_user_config_location(), "config" );
+	NdBranch *root = nd_load_file( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
 		return;
 
 	/* now iterate through the list and update all our children */
-	NdBranch *child = ndGetFirstChild( root );
+	NdBranch *child = nd_branch_get_first_child( root );
 	while ( child != NULL )
 	{
-		const char *cvarName = ndGetName( child );
+		const char *cvarName = nd_branch_get_name( child );
 		char cvarValue[ PL_SYSTEM_MAX_PATH ];
-		if ( ndGetStr( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
+		if ( nd_branch_get_string( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
 			PlSetConsoleVariableByName( cvarName, cvarValue );
 		else
 			PRINT_WARNING( "Failed to fetch value: %s\n", cvarName );
 
-		child = ndGetNextChild( child );
+		child = nd_get_next_child( child );
 	}
 
 	ape_deserialize_input_config_( root );
@@ -112,7 +112,7 @@ static void save_user_config( void )
 	size_t numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
-	NdBranch *root = ndPushBackObject( NULL, "config" );
+	NdBranch *root = nd_branch_push_back_object( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i )
 	{
 		if ( !cvars[ i ]->archive )
@@ -124,24 +124,24 @@ static void save_user_config( void )
 		switch ( cvars[ i ]->type )
 		{
 			case PL_VAR_F32:
-				ndPushBackF32( root, cvars[ i ]->name, cvars[ i ]->f_value );
+				nd_branch_push_back_float32( root, cvars[ i ]->name, cvars[ i ]->f_value );
 				break;
 			case PL_VAR_I32:
-				ndPushBackI32( root, cvars[ i ]->name, cvars[ i ]->i_value );
+				nd_branch_push_back_int32( root, cvars[ i ]->name, cvars[ i ]->i_value );
 				break;
 			case PL_VAR_BOOL:
-				ndPushBackBool( root, cvars[ i ]->name, cvars[ i ]->b_value );
+				nd_branch_push_back_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
 				break;
 			default:
-				ndPushBackString( root, cvars[ i ]->name, cvars[ i ]->s_value );
+				nd_branch_push_back_string( root, cvars[ i ]->name, cvars[ i ]->s_value );
 				break;
 		}
 	}
 
 	ape_serialize_input_config_( root );
 
-	ndWriteFile( path, root, ND_FILE_UTF8 );
-	ndDestroyBranch( root );
+	nd_write_file( path, root, ND_FILE_UTF8 );
+	nd_branch_destroy( root );
 
 	PRINT( "User config saved.\n" );
 }

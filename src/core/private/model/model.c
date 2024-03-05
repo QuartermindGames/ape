@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Model deserialization and caching.
 // Author:  Mark E. Sowden
 
@@ -38,14 +38,14 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 
 	PLVector3 *positions = NULL;
 	unsigned int numVertices = 0;
-	if ( ( child = ndGetChildByName( root, "positions" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "positions" ) ) != NULL )
 	{
-		numVertices = ndGetNumOfChildren( child );
+		numVertices = nd_branch_get_num_of_children( child );
 		if ( numVertices >= 3 )
 		{
 			positions = PL_NEW_( PLVector3, numVertices );
 			numVertices = numVertices / 3;
-			ndGetF32Array( child, ( float * ) positions, numVertices );
+			nd_branch_get_float32_array( child, ( float * ) positions, numVertices );
 		}
 		else
 		{
@@ -58,14 +58,14 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 
 	PLVector3 *normals = NULL;
 	unsigned int numNormals = 0;
-	if ( ( child = ndGetChildByName( root, "normals" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "normals" ) ) != NULL )
 	{
-		numNormals = ndGetNumOfChildren( child );
+		numNormals = nd_branch_get_num_of_children( child );
 		if ( numNormals >= 3 )
 		{
 			normals = PL_NEW_( PLVector3, numNormals );
 			numNormals = numNormals / 3;
-			ndGetF32Array( child, ( float * ) normals, numNormals );
+			nd_branch_get_float32_array( child, ( float * ) normals, numNormals );
 		}
 		else
 		{
@@ -76,14 +76,14 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 
 	PLVector2 *uvs = NULL;
 	unsigned int numUVs = 0;
-	if ( ( child = ndGetChildByName( root, "uvs" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "uvs" ) ) != NULL )
 	{
-		numUVs = ndGetNumOfChildren( child );
+		numUVs = nd_branch_get_num_of_children( child );
 		if ( numUVs >= 2 )
 		{
 			uvs = PL_NEW_( PLVector2, numUVs );
 			numUVs = numUVs / 2;
-			ndGetF32Array( child, ( float * ) uvs, numUVs );
+			nd_branch_get_float32_array( child, ( float * ) uvs, numUVs );
 		}
 		else
 		{
@@ -94,14 +94,14 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 
 	PLColourF32 *colours = NULL;
 	unsigned int numColours = 0;
-	if ( ( child = ndGetChildByName( root, "colours" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "colours" ) ) != NULL )
 	{
-		numColours = ndGetNumOfChildren( child );
+		numColours = nd_branch_get_num_of_children( child );
 		if ( numColours >= 4 )
 		{
 			colours = PL_NEW_( PLColourF32, numVertices );
 			numColours = numColours / 4;
-			ndGetF32Array( child, ( float * ) colours, numColours );
+			nd_branch_get_float32_array( child, ( float * ) colours, numColours );
 		}
 		else
 		{
@@ -113,17 +113,17 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 	unsigned int *indices = NULL;
 	unsigned int numIndices = 0;
 	unsigned int numTriangles = 0;
-	if ( ( child = ndGetChildByName( root, "triangles" ) ) != NULL )
+	if ( ( child = nd_branch_get_child_by_name( root, "triangles" ) ) != NULL )
 	{
-		numIndices = ndGetNumOfChildren( child );
+		numIndices = nd_branch_get_num_of_children( child );
 		indices = PL_NEW_( unsigned int, numIndices );
-		ndGetUI32Array( child, indices, numIndices );
+		nd_branch_get_uint32_array( child, indices, numIndices );
 		numTriangles = numIndices / 3;
 	}
 	else
 		PRINT_WARNING( "Mesh has no indices!\n" );
 
-	unsigned int materialIndex = ndGetUInt( root, "materialIndex", 0 );
+	unsigned int materialIndex = nd_branch_get_child_uint( root, "materialIndex", 0 );
 	if ( materialIndex >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
 		PRINT_WARNING( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, APE_FORMAT_MODEL_MAX_MATERIALS );
@@ -165,7 +165,7 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 
 static SSApeModel *deserialize_model( NdBranch *root )
 {
-	unsigned int version = ndGetUInt( root, "version", ( unsigned int ) -1 );
+	unsigned int version = nd_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
 		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
@@ -173,8 +173,8 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	}
 
 	unsigned int numMeshes;
-	NdBranch *meshArray = ndGetChildByName( root, "meshes" );
-	if ( meshArray == NULL || ( ( numMeshes = ndGetNumOfChildren( meshArray ) ) == 0 ) )
+	NdBranch *meshArray = nd_branch_get_child_by_name( root, "meshes" );
+	if ( meshArray == NULL || ( ( numMeshes = nd_branch_get_num_of_children( meshArray ) ) == 0 ) )
 	{
 		PRINT_WARNING( "No meshes for model!\n" );
 		return NULL;
@@ -188,7 +188,7 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	SSApeModel *model = PL_NEW( SSApeModel );
 
 	// Iterate over all the materials under the root and attempt to load them all in
-	NdBranch *materialArray = ndGetChildByName( root, "materials" );
+	NdBranch *materialArray = nd_branch_get_child_by_name( root, "materials" );
 	if ( materialArray == NULL )
 	{
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
@@ -197,51 +197,51 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	}
 	else
 	{
-		model->numMaterials = ndGetNumOfChildren( materialArray );
-		NdBranch *n = ndGetFirstChild( materialArray );
+		model->numMaterials = nd_branch_get_num_of_children( materialArray );
+		NdBranch *n = nd_branch_get_first_child( materialArray );
 		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			assert( n != NULL );
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
-			if ( ndGetStr( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
+			if ( nd_branch_get_string( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
-				PRINT_WARNING( "Failed to get material string for model: %s\n", ndGetErrorMessage() );
+				PRINT_WARNING( "Failed to get material string for model: %s\n", nd_get_error_message() );
 				model->materials[ i ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 			}
 			else
 				model->materials[ i ] = ss_arl_material_cache( materialPath, 0, true, false );
 
-			n = ndGetNextChild( n );
+			n = nd_get_next_child( n );
 		}
 	}
 
-	NdBranch *meshNode = ndGetFirstChild( meshArray );
+	NdBranch *meshNode = nd_branch_get_first_child( meshArray );
 	for ( unsigned int i = 0; i < numMeshes; ++i )
 	{
 		assert( meshNode != NULL );
 		deserialize_mesh( model, meshNode );
-		meshNode = ndGetNextChild( meshNode );
+		meshNode = nd_get_next_child( meshNode );
 	}
 
-	NdBranch *bonesList = ndGetChildByName( root, "bones" );
+	NdBranch *bonesList = nd_branch_get_child_by_name( root, "bones" );
 	if ( bonesList != NULL )
 	{
-		model->numBones = ndGetNumOfChildren( bonesList );
+		model->numBones = nd_branch_get_num_of_children( bonesList );
 		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
 		{
 			PRINT_WARNING( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
 			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
-		NdBranch *child = ndGetFirstChild( bonesList );
+		NdBranch *child = nd_branch_get_first_child( bonesList );
 		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
 			if ( child == NULL )
 				break;
 
-			child = ndGetNextChild( child );
+			child = nd_get_next_child( child );
 		}
 
-		unsigned int rootBone = ndGetUInt( root, "rootBone", 0 );
+		unsigned int rootBone = nd_branch_get_child_uint( root, "rootBone", 0 );
 		if ( rootBone >= model->numBones )
 		{
 			PRINT_WARNING( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
@@ -265,10 +265,10 @@ SSApeModel *ss_ape_model_load( const char *path )
 	if ( model != NULL )
 		return model;
 
-	NdBranch *root = ndLoadFile( path, "model" );
+	NdBranch *root = nd_load_file( path, "model" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Invalid model: %s (%s)\n", ndGetErrorMessage() );
+		PRINT_WARNING( "Invalid model: %s (%s)\n", nd_get_error_message() );
 		return NULL;
 	}
 
@@ -276,7 +276,7 @@ SSApeModel *ss_ape_model_load( const char *path )
 	if ( model == NULL )
 		PRINT_WARNING( "Failed to load model, \"%s\"!\n", path );
 
-	ndDestroyBranch( root );
+	nd_branch_destroy( root );
 
 	//PlInsertHashTableNode( modelsTable, path, strlen( path ), model );
 
