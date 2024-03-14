@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <yin/core_editor.h>
+#include "ape/ape_public_editor.h"
 
 PL_EXTERN_C
 
@@ -12,7 +12,7 @@ void ape_shutdown_editor_( void );
 void ape_register_editor_console_variables_( void );
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );
-void ape_editor_draw_grid_( void );
+void ape_grid_draw_( ApeCamera *camera );
 
 bool ape_is_editor_active( void );
 

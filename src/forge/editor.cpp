@@ -39,6 +39,8 @@ static std::map< std::string, PLImage * > cachedImages;
 
 FXColor ss::forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
+ApeEditorState *ss::forge::engineEditorState = {};
+
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
 	NdBranch *root = nd_branch_push_back_object( nullptr, "project" );
@@ -168,6 +170,7 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 
 	auto *icon = new FXIcon( app );
 	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
+	icon->create();
 	return icon;
 
 #else
@@ -261,6 +264,10 @@ int main( int argc, char **argv )
 	ss::forge::mainWindow->show();
 	ss::forge::mainWindow->maximize();
 
+	//HACK: make the engine initialisation happy...
+	auto *dummy = new ss::forge::viewport_frame( ss::forge::mainWindow, ss::forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
+	dummy->create();
+
 	setup_paths( tmp );
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
@@ -286,6 +293,10 @@ int main( int argc, char **argv )
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;
 	}
+
+	ss::forge::engineEditorState = ape_editor_get_state();
+
+	dummy->hide();
 
 	return app.run();
 }

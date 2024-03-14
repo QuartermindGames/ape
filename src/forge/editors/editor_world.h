@@ -16,12 +16,23 @@ namespace ss::forge
 		inline editor_world() = default;
 
 	public:
+		enum
+		{
+			ID_BRUSH_MODE = FXTabItem::ID_LAST,
+			ID_FACE_MODE,
+			ID_EDGE_MODE,
+			ID_VERTEX_MODE,
+			ID_TRANSFORM_MODE,
+		};
+
 		editor_world( FXTabBook *owner, const FXString &worldName, ApeWorld *world );
 		~editor_world() override;
 
 		void create_new_entity( ApeWorldNode *parent = nullptr );
 
 		void update_tree();
+
+		long on_change_geometry_mode( FXObject *, FXSelector, void * );
 
 	private:
 		ApeWorld *_world{};
@@ -30,12 +41,6 @@ namespace ss::forge
 		FXDataTarget _gridSizeTarget;
 
 		FXToggleButton *_editModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
-
-#if 0
-		viewport_frame *_viewportFrames[ 4 ]{};
-#else
-		viewport_frame *viewportFrame{};
-#endif
 
 		FXTreeList *nodeTree{};
 

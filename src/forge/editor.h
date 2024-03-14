@@ -102,4 +102,6 @@ namespace ss::forge
 	extern bool isCookAvailable;
 
 	extern NdBranch *editorConfig;
+
+	extern ApeEditorState *engineEditorState;
 }// namespace ss::forge

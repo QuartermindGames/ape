@@ -113,7 +113,7 @@ typedef enum ApeRendererPassStage
 	SS_ARL_RENDERER_PASS_DEPTH,
 } ApeRendererPassStage;
 
-typedef struct SSArlRendererPassState
+typedef struct ApeRendererPassState
 {
 	ApeCullMode cullMode;// override default cull mode
 	ApeRendererPassStage passStage;
@@ -123,8 +123,10 @@ typedef struct SSArlRendererPassState
 
 	bool mirror;
 	unsigned int depth;
-} SSArlRendererPassState;
-extern SSArlRendererPassState ape_rendererState_;
+
+	ApeCamera *camera;
+} ApeRendererPassState;
+extern ApeRendererPassState ape_rendererState_;
 
 #include "renderer_material.h"
 

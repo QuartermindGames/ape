@@ -9,7 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty )
+static void get_uv_coords_for_sub_rect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty )
 {
 	*tw = subRect->w / ( float ) texture->w;
 	*th = subRect->h / ( float ) texture->h;
@@ -17,10 +17,10 @@ static void GetUVCoordsForSubRect( const PLQuad *subRect, PLGTexture *texture, f
 	*ty = subRect->y / ( float ) texture->h;
 }
 
-void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h )
+void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h )
 {
 	float tw, th, tx, ty;
-	GetUVCoordsForSubRect( subRect, texture, &tw, &th, &tx, &ty );
+	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
 	unsigned int vX = PlgAddMeshVertex( mesh, &PLVector3( x, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty ) );
 	unsigned int vY = PlgAddMeshVertex( mesh, &PLVector3( x, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty + th ) );
@@ -34,7 +34,7 @@ void Renderer_Draw_TexturedSubRect2D( PLGMesh *mesh, const PLQuad *subRect, PLGT
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ss_arl_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
+void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
 {
 	PLGTexture *texture = ss_arl_material_get_texture_( material, 0, "diffuseMap" );
 	if ( texture == NULL )
@@ -52,7 +52,7 @@ void ss_arl_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLV
 	}
 
 	float tw, th, tx, ty;
-	GetUVCoordsForSubRect( subRect, texture, &tw, &th, &tx, &ty );
+	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

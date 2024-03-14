@@ -264,7 +264,7 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 			PlgDrawBoundingVolume( &actor->visibilityVolume, &boxColour );
 			PlgDrawBoundingVolume( &actor->collisionVolume, &PL_COLOUR_WHITE );
 
-			PlgDrawBoundingVolume( &PlSetupCollisionAABB( actor->position, PLVector3( -8.0f, -8.0f, -8.0f ), PLVector3( 8.0f, 8.0f, 8.0f ) ), &PL_COLOUR_BLUE );
+			PlgDrawBoundingVolume( &PL_COLLISION_AABB( actor->position, PLVector3( -8.0f, -8.0f, -8.0f ), PLVector3( 8.0f, 8.0f, 8.0f ) ), &PL_COLOUR_BLUE );
 
 #	if 1
 			PLLinkedListNode *colliderNode = PlGetFirstNode( actor->geoColliders );

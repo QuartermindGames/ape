@@ -61,8 +61,6 @@ void ape_render_frame_( ApeViewport *viewport )
 	ape_draw_menu_( viewport );
 	ape_draw_end_( viewport );
 
-	shell_swap_window( viewport );
-
 	COM_PROFILE_FUNCTION_END();
 }
 

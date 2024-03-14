@@ -304,7 +304,9 @@ void ape_draw_gui_( ApeViewport *viewport )
 void ape_draw_menu_( ApeViewport *viewport )
 {
 	if ( viewport == NULL )
+	{
 		return;
+	}
 
 	COM_PROFILE_FUNCTION_START();
 

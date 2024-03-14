@@ -220,7 +220,9 @@ void ape_tick_frame( void )
 	{
 		ApeViewport *viewport = ss_shell_viewport_get_active();
 		if ( viewport != NULL )
+		{
 			ape_render_frame_( viewport );
+		}
 	}
 
 	numTicks++;
@@ -239,13 +241,17 @@ void ape_render_frame( ApeViewport *viewport )
 	assert( viewport != NULL );
 
 	if ( !engineInitialized )
+	{
 		return;
+	}
 
 	// If we're capturing, ignore the request from the
 	// caller to render the frame because we'll lock it
 	// with the frame tick instead...
 	if ( ape_get_capture_state_() )
+	{
 		return;
+	}
 
 	COM_PROFILE_FUNCTION_CALL( ape_render_frame_( viewport ) );
 }

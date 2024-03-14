@@ -13,7 +13,7 @@ consoleFrameMap[] = {
 FXIMPLEMENT( ss::forge::ForgeConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
 
 ss::forge::ForgeConsoleFrame::ForgeConsoleFrame( FXComposite *composite )
-    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL )
+    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_FIX_Y )
 {
 	setPadBottom( 0 );
 	setPadTop( 0 );

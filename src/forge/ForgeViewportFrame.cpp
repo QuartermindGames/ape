@@ -58,18 +58,15 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTa
 
 	this->editor = editor;
 
-	visual_ = visual;
 	if ( displayList_ == nullptr )
 	{
-		canvas_ = new FXGLCanvas( this, visual_, this, ID_CANVAS, LAYOUT_FILL );
+		canvas_ = new FXGLCanvas( this, visual, this, ID_CANVAS, LAYOUT_FILL );
 		displayList_ = canvas_;
 	}
 	else
 	{
-		canvas_ = new FXGLCanvas( this, visual_, displayList_, this, ID_CANVAS, LAYOUT_FILL );
+		canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	}
-
-	getApp()->addChore( this, ID_DRAW );
 }
 
 viewport_frame::~viewport_frame()
@@ -87,17 +84,20 @@ void viewport_frame::create()
 	show();
 	enable();
 
-	canvas_->makeCurrent();
+	if ( displayList_->getCurrentContext() == nullptr )
+	{
+		displayList_->makeCurrent();
+	}
+
+	getApp()->addChore( this, ID_DRAW );
 }
 
 void viewport_frame::Draw()
 {
-	if ( !_isActive )
+	if ( !is_editor_active() )
 	{
 		return;
 	}
-
-	canvas_->makeCurrent();
 
 	int w = canvas_->getWidth();
 	if ( w < 2 )
@@ -113,58 +113,50 @@ void viewport_frame::Draw()
 
 	PlgSetViewport( 0, 0, w, h );
 
+	if ( !ape_is_running() )
+	{
+		PlgSetClearColour( PLColourRGB( 255, 0, 0 ) );
+		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
+		return;
+	}
+
 	// A lot of this is currently terrible,
 	// simply because the renderer gets it's init
 	// at the same time as the rest of the engine...
 	// which happens AFTER the window is created (urgh)
 
-	if ( ape_is_running() )
+	if ( internalViewport_ == nullptr )
 	{
-		if ( internalViewport_ == nullptr )
-		{
-			internalViewport_ = ape_viewport_create( 0, 0, w, h, this );
-			ape_viewport_set_camera( internalViewport_, camera );
-		}
-
-		if ( camera == nullptr )
-		{
-			std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
-			camera = ape_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, viewMode_ );
-			ape_camera_set_draw_mode( camera, drawMode_ );
-		}
-
+		internalViewport_ = ape_viewport_create( 0, 0, w, h, this );
 		ape_viewport_set_camera( internalViewport_, camera );
-		ape_viewport_set_size( internalViewport_, w, h );
+	}
 
-		ape_camera_make_active( camera );
+	if ( camera == nullptr )
+	{
+		std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
+		camera = ape_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, viewMode_ );
+		ape_camera_set_draw_mode( camera, drawMode_ );
+	}
 
-		auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
-		if ( worldEditor != nullptr )
+	ape_viewport_set_camera( internalViewport_, camera );
+	ape_viewport_set_size( internalViewport_, w, h );
+
+	ape_camera_make_active( camera );
+
+	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
+	if ( worldEditor != nullptr )
+	{
+		ApeWorld *world = worldEditor->get_world();
+		if ( world != nullptr )
 		{
-			ApeWorld *world = worldEditor->get_world();
-			if ( world != nullptr )
-			{
-				ape_camera_assign_world( camera, world );
-			}
+			ape_camera_assign_world( camera, world );
 		}
-
-		ape_render_frame( internalViewport_ );
-	}
-	else
-	{
-		PlgSetClearColour( PLColourRGB( 255, 0, 0 ) );
-		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	}
 
-#if 0
-	if ( visual_ != nullptr && visual_->isDoubleBuffer() )
-	{
-		canvas_->swapBuffers();
-	}
-#endif
+	ape_render_frame( internalViewport_ );
 }
 
-long viewport_frame::on_change_camera_modes( FXObject *object, FX::FXSelector selector, void * )
+long viewport_frame::on_change_camera_modes( FXObject *, FX::FXSelector selector, void * )
 {
 	ApeCameraViewMode viewMode = APE_CAMERA_MODE_INVALID;
 	ApeCameraDrawMode drawMode = APE_CAMERA_DRAW_MODE_INVALID;
@@ -232,7 +224,11 @@ long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 		ape_camera_set_angles( camera, &angles );
 	}
 
+	canvas_->makeCurrent();
+
 	Draw();
+
+	canvas_->swapBuffers();
 
 	getApp()->addChore( this, ID_DRAW );
 	return 1;
@@ -259,6 +255,11 @@ long viewport_frame::on_zoom( FXObject *, FXSelector, void *ptr )
 
 long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
 {
+	if ( !hasFocus() )
+	{
+		//	return FALSE;
+	}
+
 	auto *event = ( FXEvent * ) ptr;
 	int const x = event->win_x;
 	int const y = event->win_y;
@@ -271,6 +272,11 @@ long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
 
 long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 {
+	if ( !hasFocus() )
+	{
+		return FALSE;
+	}
+
 	// Can't interact if mouse look is active!
 	if ( useMouseLook )
 	{
@@ -318,6 +324,11 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 
 long viewport_frame::on_middle_click( FXObject *, FXSelector, void * )
 {
+	if ( !hasFocus() )
+	{
+		return FALSE;
+	}
+
 	return 0;
 }
 
@@ -404,6 +415,18 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 			pos.y -= 0.5f;
 			break;
 		}
+
+		// grid controls
+		case KEY_KP_Subtract:
+		{
+			ape_grid_decrease_size();
+			break;
+		}
+		case KEY_KP_Add:
+		{
+			ape_grid_increase_size();
+			break;
+		}
 	}
 
 	ape_camera_set_position( camera, &pos );
@@ -427,31 +450,53 @@ long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
 	}
 
 	void *data;
+	const char *name;
 	ApeWorldNodeType type;
-	switch ( FXSELTYPE( selector ) )
+	switch ( FXSELID( selector ) )
 	{
 		default:
+		{
 			data = nullptr;
+			name = "empty";
 			type = APE_WORLD_NODE_TYPE_EMPTY;
 			break;
+		}
 		case ID_BUTTON_CREATE_ROOM:
+		{
+			name = "room";
 			type = APE_WORLD_NODE_TYPE_ROOM;
 			break;
+		}
 		case ID_BUTTON_CREATE_BRUSH:
+		{
+			name = "brush";
 			type = APE_WORLD_NODE_TYPE_BRUSH;
 			break;
+		}
 		case ID_BUTTON_CREATE_LIGHT:
+		{
+			PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+			data = ape_light_create( &pl_vecOrigin3, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );
+			name = "light";
 			type = APE_WORLD_NODE_TYPE_LIGHT;
 			break;
+		}
 		case ID_BUTTON_CREATE_CAMERA:
+		{
+			data = ape_camera_create( "camera", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE );
+			name = "camera";
 			type = APE_WORLD_NODE_TYPE_CAMERA;
 			break;
+		}
 		case ID_BUTTON_CREATE_ENTITY:
+		{
+			name = "entity";
 			type = APE_WORLD_NODE_TYPE_ENTITY;
 			break;
+		}
 	}
 
-	ApeWorldNode *node = ape_world_node_create( world->root, "test", type, nullptr );
+	ape_world_node_create( world->root, name, type, data );
 
 	worldEditor->update_tree();
 
@@ -480,4 +525,15 @@ int viewport_frame::translate_key( int code )
 		case KEY_Right:
 			return APE_INPUT_KEY_RIGHT;
 	}
+}
+
+bool viewport_frame::is_editor_active() const
+{
+	if ( this->editor == nullptr )
+	{
+		return false;
+	}
+
+	FXTabItem *activeTab = mainWindow->get_active_tab();
+	return ( activeTab == this->editor );
 }

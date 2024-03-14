@@ -18,6 +18,8 @@
 static ApeViewport *viewports[ MAX_VIEWPORTS ];
 static bool isInitialized = false;
 
+static ApeViewport *activeViewport;
+
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
@@ -33,7 +35,9 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	for ( ; i < MAX_VIEWPORTS; ++i )
 	{
 		if ( viewports[ i ] != NULL )
+		{
 			continue;
+		}
 
 		break;
 	}
@@ -71,18 +75,20 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	return viewports[ i ];
 }
 
-void ape_viewport_destroy( ApeViewport *viewport )
+void ape_viewport_destroy( ApeViewport *self )
 {
-	if ( viewport == NULL )
-		return;
-
-	if ( viewport->renderTarget != NULL )
+	if ( self == NULL )
 	{
-		ape_render_target_release( viewport->renderTarget );
-		viewport->renderTarget = NULL;
+		return;
 	}
 
-	unsigned int index = viewport->index;
+	if ( self->renderTarget != NULL )
+	{
+		ape_render_target_release( self->renderTarget );
+		self->renderTarget = NULL;
+	}
+
+	unsigned int index = self->index;
 	PL_DELETE( viewports[ index ] );
 	viewports[ index ] = NULL;
 }
@@ -102,73 +108,79 @@ ApeViewport *ape_get_viewport_by_slot( unsigned int slot )
 	return viewports[ slot ];
 }
 
-void ape_viewport_set_camera( ApeViewport *viewport, ApeCamera *camera )
+void ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera )
 {
-	viewport->camera = camera;
+	self->camera = camera;
 }
 
 ApeCamera *ape_viewport_get_camera( ApeViewport *viewport ) { return viewport->camera; }
 
-void ape_viewport_set_size( ApeViewport *viewport, int width, int height )
+void ape_viewport_set_size( ApeViewport *self, int width, int height )
 {
-	if ( width == viewport->width && height == viewport->height )
+	if ( width == self->width && height == self->height )
 	{
 		return;
 	}
 
-	viewport->width = width;
-	viewport->height = height;
+	self->width = width;
+	self->height = height;
 
-	if ( viewport->renderTarget != NULL )
+	if ( self->renderTarget != NULL )
 	{
-		ape_render_target_set_size( viewport->renderTarget, viewport->width, viewport->height );
+		ape_render_target_set_size( self->renderTarget, self->width, self->height );
 	}
 }
 
-void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height )
+void ape_viewport_get_size( const ApeViewport *self, int *width, int *height )
 {
-	*width = viewport->width;
-	*height = viewport->height;
+	*width = self->width;
+	*height = self->height;
 }
 
 /**
  * Weird one, I know, but frametime is tied in with each viewport...
  */
-unsigned int ape_viewport_get_framerate( ApeViewport *viewport )
+unsigned int ape_viewport_get_framerate( ApeViewport *self )
 {
-	if ( viewport->perf.frameIndex == 0 )
+	if ( self->perf.frameIndex == 0 )
 	{
 		double t = 0.0;
 		for ( unsigned int i = 0; i < APE_MAX_FPS_READINGS; ++i )
 		{
-			t += viewport->perf.frameReadings[ i ];
+			t += self->perf.frameReadings[ i ];
 		}
 
-		viewport->perf.lastFramerateUpdate = APE_MAX_FPS_READINGS;
-		viewport->perf.lastFramerate = ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
+		self->perf.lastFramerateUpdate = APE_MAX_FPS_READINGS;
+		self->perf.lastFramerate = ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
 	}
 
-	return viewport->perf.lastFramerate;
+	return self->perf.lastFramerate;
 }
 
-ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *viewport )
+ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self )
 {
-	return viewport->renderTarget;
+	return self->renderTarget;
 }
 
-void ape_viewport_make_active( ApeViewport *viewport )
+void ape_viewport_make_active( ApeViewport *self )
 {
-	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
-	if ( target != NULL )
+	if ( activeViewport == self )
 	{
-		ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+		return;
 	}
 
-	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
+	PlgClipViewport( self->x, self->y, self->width, self->height );
+	PlgSetViewport( self->x, self->y, self->width, self->height );
 
-	if ( viewport->camera != NULL )
+	if ( self->camera != NULL )
 	{
-		ape_camera_make_active( viewport->camera );
+		ape_camera_make_active( self->camera );
 	}
+
+	activeViewport = self;
+}
+
+ApeViewport *ape_viewport_get_active( void )
+{
+	return activeViewport;
 }

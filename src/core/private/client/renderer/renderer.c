@@ -21,7 +21,7 @@
 #include "game/game_interface.h"
 
 ApeRendererStats ape_rendererPerformance_;
-SSArlRendererPassState ape_rendererState_;
+ApeRendererPassState ape_rendererState_;
 
 static ApeRenderTarget *defaultRenderTarget;
 
@@ -172,10 +172,12 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 	viewport->perf.oldTime = newTime;
 
-	ape_setup_default_draw_state_( viewport );
 	ape_viewport_make_active( viewport );
 
-	PlgClearBuffers( PLG_BUFFER_DEPTH | PLG_BUFFER_COLOUR );
+	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
+	ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
+
+	ape_setup_default_draw_state_( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -192,7 +194,9 @@ static void write_screenshot( void )
 	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer( renderTarget );
 	assert( fboBuffer != NULL );
 	if ( fboBuffer == NULL )
+	{
 		return;
+	}
 
 	size_t bufSize = ( ( w * h ) * 4 );
 	unsigned char *buf = PL_NEW_( unsigned char, bufSize );
@@ -223,16 +227,24 @@ static void write_screenshot( void )
 			unsigned int num = 0;
 			PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), num );
 			while ( PlFileExists( path ) )
+			{
 				PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), ++num );
+			}
 
 			PlWriteImage( image, path, 90 );
 			PlDestroyImage( image );
 		}
 		else
+		{
 			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
+		}
 	}
 	else
+	{
 		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+	}
+
+	PL_DELETE( buf );
 }
 
 void ape_draw_end_( ApeViewport *viewport )
@@ -526,7 +538,9 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 		PlgClearBuffers( PLG_BUFFER_STENCIL );
 
 		if ( lights[ i ]->colour.a == 0.0f )
+		{
 			continue;
+		}
 
 #if 0
 
@@ -625,7 +639,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	PlgDepthMask( true );
 
-	ape_editor_draw_grid_();
+	ape_grid_draw_( camera );
 	ape_sky_draw_( camera );
 
 	ApeWorld *world = camera->world;

@@ -754,12 +754,23 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
 	{
-		PLColourF32 sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PLColourF32 sunAmbience;
+		if ( ape_rendererState_.camera != NULL && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
+		{
+			sunAmbience = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+		}
+		else
+		{
+			sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		}
+
 		PlgSetShaderUniformValueByIndex( program, slot, &sunAmbience, false );
 	}
 
 	if ( ( slot = PlgGetShaderUniformSlot( program, "textureOffset" ) ) >= 0 )
+	{
 		PlgSetShaderUniformValueByIndex( program, slot, &pass->textureOffset, false );
+	}
 }
 
 ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, bool useFallback, bool preview )
@@ -812,15 +823,18 @@ ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, b
 
 void ss_arl_material_release( ApeMaterial *material )
 {
-	assert( material != NULL );
 	if ( material == NULL )
+	{
 		return;
+	}
 
 	// don't flush default materials...
 	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		if ( material != defaultMaterials[ i ] )
+		{
 			continue;
+		}
 
 		return;
 	}
@@ -837,11 +851,25 @@ bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return mat
 
 void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {
+	if ( ape_rendererState_.camera != NULL )
+	{
+		if ( ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) || ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID ) )
+		{
+			lights = NULL;
+		}
+		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
+		{
+			material = defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_VERTEX ];
+		}
+	}
+
 	// If it's not had a full cache, use the fallback,
 	// though ideally this shouldn't happen!
 	assert( material->isCached );
 	if ( !material->isCached )
+	{
 		material = defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ];
+	}
 
 	if ( ape_rendererState_.overrideBlendMode )
 	{
@@ -857,20 +885,32 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **ligh
 		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
 		if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_FRONT )
+		{
 			cullMode = PLG_CULL_POSITIVE;
+		}
 		else if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_BACK )
+		{
 			cullMode = PLG_CULL_NEGATIVE;
+		}
 		else if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_NONE )
+		{
 			cullMode = PLG_CULL_NONE;
+		}
 		else
+		{
 			cullMode = curPass->cullMode;
+		}
 
 		if ( ape_rendererState_.mirror && ( ape_rendererState_.depth % 2 ) )
 		{
 			if ( cullMode == PLG_CULL_NEGATIVE )
+			{
 				cullMode = PLG_CULL_POSITIVE;
+			}
 			else if ( cullMode == PLG_CULL_POSITIVE )
+			{
 				cullMode = PLG_CULL_NEGATIVE;
+			}
 		}
 
 		PlgSetCullMode( cullMode );
@@ -891,7 +931,9 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **ligh
 			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 			if ( !ape_rendererState_.overrideBlendMode )
+			{
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
+			}
 
 			set_global_uniforms( curPass->program, curPass, lights != NULL ? lights[ 0 ] : NULL );
 
@@ -908,34 +950,48 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **ligh
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
 					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+					{
 						continue;
+					}
 
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_RENDERTARGET )
 					{
 						texture = ape_render_target_get_texture( ( ApeRenderTarget * ) curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
+						{
 							texture = ss_arl_texture_get_fallback();
+						}
 					}
 					else
+					{
 						texture = ( PLGTexture * ) curPass->variables[ j ].data.ptr;
+					}
 
 					assert( texture != NULL );
 
 					PL_GET_CVAR( "r/skipNormal", skipNormal );
 					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && skipNormal->b_value ) )
+					{
 						texture = normalFallbackTexture;
+					}
 					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
 					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+					{
 						texture = specularFallbackTexture;
+					}
 
 					PLGTextureFilter textureFilter = curPass->textureFilter;
 					if ( texture->flags & PLG_TEXTURE_FLAG_NOMIPS )
 					{
 						if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR )
+						{
 							textureFilter = PLG_TEXTURE_FILTER_LINEAR;
+						}
 						else
+						{
 							textureFilter = PLG_TEXTURE_FILTER_NEAREST;
+						}
 					}
 
 					PlgSetTexture( texture, curUnit );
@@ -955,9 +1011,13 @@ void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **ligh
 
 		ape_rendererPerformance_.numBatches++;
 		if ( mesh->primitive == PLG_MESH_TRIANGLES )
+		{
 			ape_rendererPerformance_.numTriangles += mesh->num_triangles;
+		}
 		else
+		{
 			ape_rendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
+		}
 	}
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );

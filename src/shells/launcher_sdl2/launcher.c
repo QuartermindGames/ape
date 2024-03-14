@@ -230,12 +230,6 @@ ApeViewport *ss_shell_viewport_get_active( void )
 	return windowViewport;
 }
 
-void shell_swap_window( ApeViewport *viewport )
-{
-	// Just ignore the viewport for now...
-	SDL_GL_SwapWindow( sdlWindow );
-}
-
 /****************************************
  * INPUT MANAGEMENT
  ****************************************/
@@ -534,16 +528,22 @@ int launcher_initialize( int argc, char **argv )
 	com_project_mount( projectName );
 
 	if ( !initialize_display() )
+	{
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
+	}
 
 	if ( !ape_initialize( argc, argv, NULL ) )
+	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
+	}
 
 	int w, h;
 	shell_get_window_size( &w, &h );
 	windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow );
 	if ( windowViewport == NULL )
+	{
 		PrintError( "Failed to create virtual window viewport!\n" );
+	}
 
 	// setup our timers, in this case we're just setting up our tick
 	sdlTimer = SDL_AddTimer( SS_SHELL_TICK_RATE, timer_callback, NULL );
@@ -618,9 +618,13 @@ int launcher_initialize( int argc, char **argv )
 
 		ape_render_frame( windowViewport );
 
+		SDL_GL_SwapWindow( sdlWindow );
+
 		static unsigned int refreshTime = 0;
 		if ( refreshTime > ape_get_num_ticks() )
+		{
 			continue;
+		}
 
 		com_update_profiler_samples();
 

@@ -18,9 +18,6 @@ ss::forge::ForgeMainWindow *ss::forge::mainWindow = nullptr;
 
 FXDEFMAP( ss::forge::ForgeMainWindow )
 MainWindowMap[] = {
-        //FXMAPFUNC( SEL_CONFIGURE, MainWindow::ID_CANVAS, mao::MainWindow::OnConfigure ),
-        //FXMAPFUNC( SEL_PAINT, MainWindow::ID_CANVAS, mao::MainWindow::OnExpose ),
-        //FXMAPFUNC( SEL_CHORE, MainWindow::ID_TIMEOUT, mao::MainWindow::OnTimeout ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_WORLD_NEW, ss::forge::ForgeMainWindow::on_new_world ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_WORLD_OPEN, ss::forge::ForgeMainWindow::on_open_world ),
 
@@ -28,13 +25,13 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_MATERIAL_OPEN, ss::forge::ForgeMainWindow::open_material ),
 
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_ABOUT, ss::forge::ForgeMainWindow::on_about ),
+
+        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_TOGGLE_CONSOLE, ss::forge::ForgeMainWindow::on_toggle_console ),
+
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_PROJECT_PACKAGE, ss::forge::ForgeMainWindow::on_package_project ),
-        //FXMAPFUNC( SEL_COMMAND, MainWindow::ID_TOGGLE_EDIT, mao::MainWindow::OnToggleEdit ),
-        //FXMAPFUNC( SEL_KEYRELEASE, MainWindow::ID_CANVAS, mao::MainWindow::OnInput ),
         FXMAPFUNC( SEL_TIMEOUT, ss::forge::ForgeMainWindow::ID_TICK, ss::forge::ForgeMainWindow::on_tick ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeMainWindow::ID_CLOSE_EDITOR, ss::forge::ForgeMainWindow::on_close_editor ),
 };
-
 FXIMPLEMENT( ss::forge::ForgeMainWindow, FXMainWindow, MainWindowMap, ARRAYNUMBER( MainWindowMap ) )
 
 ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
@@ -47,8 +44,10 @@ ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
 	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", ss::forge::load_fx_icon( getApp(), "resources/new_world.gif" ), this, ID_WORLD_NEW );
 	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", ss::forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
 	new FXMenuSeparator( menuPane );
+
 	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", ss::forge::load_fx_icon( getApp(), "resources/close.gif" ), this, ID_CLOSE_EDITOR );
 	closeEditorCommand->disable();
+
 	new FXMenuSeparator( menuPane );
 
 #if 0
@@ -88,6 +87,11 @@ ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
 	}
 #endif
 
+	// view
+	menuPane = new FXMenuPane( menuBar_->getParent() );
+	new FXMenuCheck( menuPane, "&Console\t\tShow/hide the console.", this, ID_TOGGLE_CONSOLE );
+	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
+
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "&About\t\tOpen about dialog.", nullptr, this, ID_ABOUT );
 	new FXMenuTitle( menuBar_, "&Help", nullptr, menuPane );
@@ -97,16 +101,11 @@ ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
 	mainFrame = new FXVerticalFrame( this, LAYOUT_FILL );
 	auto *verticalSplitter = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
 
-	_tabBook = new FXTabBook( verticalSplitter, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_RIGHT );
+	_tabBook = new FXTabBook( verticalSplitter, nullptr, 0, LAYOUT_FILL | LAYOUT_RIGHT );
 	_tabBook->setHeight( getHeight() - 128 );
 
 	// Add the console at the bottom
-	consoleFrame = new ss::forge::ForgeConsoleFrame( verticalSplitter );
-
-	//HACK: make the engine initialisation happy...
-	auto *dummy = new viewport_frame( this, get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
-	//dummy->set_active( false );
-	//dummy->hide();
+	console = new ss::forge::ForgeConsoleFrame( verticalSplitter );
 
 	getApp()->addTimeout( this, ForgeMainWindow::ID_TICK, SS_SHELL_TICK_RATE );
 }
@@ -142,7 +141,10 @@ long ss::forge::ForgeMainWindow::on_new_world( FXObject *, FXSelector, void * )
 	auto tab = _tabs.emplace_back( editor );
 	tab->create();
 
+	_tabBook->setCurrent( _tabBook->numChildren() - 1 );
 	_tabBook->layout();
+
+	closeEditorCommand->enable();
 
 	return TRUE;
 }
@@ -173,25 +175,16 @@ long ss::forge::ForgeMainWindow::on_open_world( FXObject *, FXSelector, void * )
 	auto tab = _tabs.emplace_back( editor );
 	tab->create();
 
+	_tabBook->setCurrent( _tabBook->numChildren() - 1 );
 	_tabBook->layout();
+
+	closeEditorCommand->enable();
 
 	return TRUE;
 }
 
 long ss::forge::ForgeMainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	const char *path = com_project_get_local_path();
-	FXString filename = FXFileDialog::getOpenFilename( this, "Select an existing model", FXString( path ) + "/", "*.mdl.n" );
-	if ( filename.empty() )
-	{
-		return false;
-	}
-
-	//	auto tab = _tabs.emplace_back( new ModelEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
-	//	tab->create();
-
-	_tabBook->layout();
-
 	return true;
 }
 
@@ -262,11 +255,33 @@ long ss::forge::ForgeMainWindow::on_close_editor( FXObject *, FXSelector, void *
 	{
 	}
 
+	if ( _tabs.empty() )
+	{
+		closeEditorCommand->disable();
+	}
+
 	return false;
 }
 
-void ss::forge::ForgeMainWindow::setup_engine_viewports()
+long ss::forge::ForgeMainWindow::on_toggle_console( FXObject *object, FXSelector, void * )
 {
+	assert( console != nullptr );
+
+	auto checkBox = dynamic_cast< FXMenuCheck * >( object );
+	if ( checkBox != nullptr && checkBox->getCheck() )
+	{
+		console->show();
+	}
+	else
+	{
+		console->hide();
+	}
+
+	console->getParent()->recalc();
+	update();
+	getApp()->refresh();
+
+	return TRUE;
 }
 
 /**
@@ -274,5 +289,23 @@ void ss::forge::ForgeMainWindow::setup_engine_viewports()
  */
 void ss::forge::ForgeMainWindow::push_message( int level, const char *msg, const PLColour &colour )
 {
-	consoleFrame->push_message( level, msg, colour );
+	console->push_message( level, msg, colour );
+}
+
+FXTabItem *ss::forge::ForgeMainWindow::get_active_tab()
+{
+	try
+	{
+		int index = _tabBook->getCurrent();
+		if ( index < 0 || index >= _tabs.size() )
+		{
+			throw;
+		}
+
+		return *( _tabs.begin() + index );
+	}
+	catch ( ... )
+	{
+		return nullptr;
+	}
 }

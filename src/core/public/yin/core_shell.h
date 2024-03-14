@@ -35,7 +35,6 @@ enum
 // Window Management
 void shell_get_window_size( int *width, int *height );
 void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... );
-void shell_swap_window( ApeViewport *viewport );
 
 /**
  * Returns a handle to the currently active viewport.

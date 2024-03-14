@@ -51,11 +51,13 @@ namespace ss::forge
 			_isActive = state;
 		}
 
+		[[nodiscard]] bool is_editor_active() const;
+
 	private:
 		bool _isActive{ true };
 
 	public:
-		long on_change_camera_modes( FXObject *object, FXSelector, void * );
+		long on_change_camera_modes( FXObject *, FXSelector, void * );
 
 		long on_chore( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
@@ -69,20 +71,12 @@ namespace ss::forge
 	private:
 		inline viewport_frame() = default;
 
-		FXToolBar *toolBar_;
 		FXGLCanvas *canvas_;
-		FXGLVisual *visual_;
-		FXGLContext *context_;
-
-		FXToggleButton *viewModeButtons_[ APE_CAMERA_MAX_MODES ];
-		FXToggleButton *drawModeButtons_[ APE_CAMERA_MAX_DRAW_MODES ];
 
 		ApeCameraDrawMode drawMode_{ APE_CAMERA_DRAW_MODE_WIREFRAME };
 		ApeCameraViewMode viewMode_{ APE_CAMERA_MODE_INVALID };
 
 		static int translate_key( int code );
-
-		float zoomScale_{ 1.0f };
 
 	public:
 		ApeViewport *internalViewport_{};

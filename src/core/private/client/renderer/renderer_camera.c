@@ -90,7 +90,12 @@ static void build_visible_room_list( ApeCamera *camera, ApeWorld *world )
 
 void ape_camera_make_active( ApeCamera *camera )
 {
-	PlgSetupCamera( camera->internal );
+	if ( camera != NULL )
+	{
+		PlgSetupCamera( camera->internal );
+	}
+
+	ape_rendererState_.camera = camera;
 }
 
 void ape_camera_assign_world( ApeCamera *camera, ApeWorld *world )

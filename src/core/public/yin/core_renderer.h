@@ -61,14 +61,19 @@ typedef struct ApeViewport
 ApeViewport *ape_get_viewport_by_slot( unsigned int slot );
 
 ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle );
-void ape_viewport_destroy( ApeViewport *viewport );
-void ape_viewport_set_camera( ApeViewport *viewport, ApeCamera *camera );
+void ape_viewport_destroy( ApeViewport *self );
+
+void ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera );
 ApeCamera *ape_viewport_get_camera( ApeViewport *viewport );
-void ape_viewport_set_size( ApeViewport *viewport, int width, int height );
-void ape_viewport_get_size( const ApeViewport *viewport, int *width, int *height );
-unsigned int ape_viewport_get_framerate( ApeViewport *viewport );
-ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *viewport );
-void ape_viewport_make_active( ApeViewport *viewport );
+
+void ape_viewport_set_size( ApeViewport *self, int width, int height );
+void ape_viewport_get_size( const ApeViewport *self, int *width, int *height );
+
+unsigned int ape_viewport_get_framerate( ApeViewport *self );
+ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self );
+
+void ape_viewport_make_active( ApeViewport *self );
+ApeViewport *ape_viewport_get_active( void );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Camera API
@@ -179,7 +184,7 @@ void ss_arl_bitmap_font_draw( ApeBitmapFont *font );
 /////////////////////////////////////////////////////////////////////////////////////
 // Draw API
 
-void ss_arl_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
+void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
 void ss_arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );

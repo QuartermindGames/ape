@@ -66,10 +66,11 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	ape_render_target_set_size( bloomRenderTarget, bw, bh );
 	PLGTexture *bloomRenderTargetTexture = ape_render_target_get_texture( bloomRenderTarget );
 	if ( bloomRenderTargetTexture == NULL )
+	{
 		return;
+	}
 
 	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DRAW );
-	PlgClearBuffers( PLG_BUFFER_COLOUR );
 
 	PlgSetCullMode( PLG_CULL_NONE );
 

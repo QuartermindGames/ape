@@ -31,7 +31,7 @@ namespace ss::forge
 
 		long on_close_editor( FXObject *, FXSelector, void * );
 
-		void setup_engine_viewports();
+		long on_toggle_console( FXObject *, FXSelector, void * );
 
 		Project *GetProject() { return currentProject; }
 
@@ -50,6 +50,8 @@ namespace ss::forge
 
 			ID_TICK,
 			ID_ABOUT,
+
+			ID_TOGGLE_CONSOLE,
 
 			ID_PROJECT_PACKAGE,
 
@@ -71,7 +73,7 @@ namespace ss::forge
 		static FXGLVisual *glVisual_;
 
 	private:
-		ForgeConsoleFrame *consoleFrame{};
+		ForgeConsoleFrame *console{};
 
 	private:
 		FXTabBook *_tabBook{};
@@ -84,6 +86,9 @@ namespace ss::forge
 
 	private:
 		FXMenuCommand *closeEditorCommand;
+
+	public:
+		FXTabItem *get_active_tab();
 	};
 
 	extern ForgeMainWindow *mainWindow;

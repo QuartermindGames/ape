@@ -3,7 +3,8 @@
 #pragma once
 
 #include "common.h"
-#include "core_world.h"
+
+#include "yin/core_world.h"
 
 PL_EXTERN_C
 
@@ -31,10 +32,11 @@ typedef struct SSAclEditorField
 
 typedef enum ApeEditorGeometryMode
 {
-	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,
+	APE_EDITOR_GEOMETRY_MODE_BRUSH,
 	APE_EDITOR_GEOMETRY_MODE_FACE,
 	APE_EDITOR_GEOMETRY_MODE_EDGE,
 	APE_EDITOR_GEOMETRY_MODE_VERTEX,
+	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,
 
 	APE_EDITOR_MAX_GEOMETRY_MODES
 } ApeEditorGeometryMode;
@@ -42,13 +44,18 @@ typedef enum ApeEditorGeometryMode
 typedef struct ApeEditorState
 {
 	ApeEditorGeometryMode geometryMode;
+
+	unsigned char gridVisible;// unsigned char, because otherwise can't hook it with frontend :(
+	unsigned int gridScale;
 } ApeEditorState;
 
 ApeEditorState *ape_editor_get_state( void );
 
-void ape_increase_grid_size( void );
-void ape_decrease_grid_size( void );
-unsigned int ape_get_grid_size( void );
+PLVector3 ape_grid_get_cursor_position( void );
+
+void ape_grid_increase_size( void );
+void ape_grid_decrease_size( void );
+unsigned int ape_grid_get_size( void );
 void ape_grid_set_visibility( bool visible );
 
 PL_EXTERN_C_END

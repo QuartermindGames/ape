@@ -92,7 +92,9 @@ void ss_arl_postfx_register_console_variables_( void )
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
 		if ( postProcessEffects[ i ] == NULL )
+		{
 			continue;
+		}
 
 		postProcessEffects[ i ]->RegisterConsoleVariables();
 	}
@@ -102,23 +104,27 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 {
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )
+	{
 		return;
+	}
 
 	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
 	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DRAW );
 
-	PlgClearBuffers( PLG_BUFFER_COLOUR );
-
 	if ( !postProcessEnabled )
 	{
-		PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
+		PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
+		PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
+		PlgBlitFrameBuffers( src, viewport->width, viewport->height, dst, viewport->width, viewport->height, true );
 		return;
 	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
 		if ( postProcessEffects[ i ] == NULL )
+		{
 			continue;
+		}
 
 		postProcessEffects[ i ]->Draw( viewport );
 	}

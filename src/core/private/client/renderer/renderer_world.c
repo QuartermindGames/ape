@@ -13,8 +13,6 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
 
 static void draw_face_wireframe( ApeWorld *world, ApeWorldFace *face )
 {
-	PlgImmSetPrimitiveScale( 2.0f );
-
 	unsigned int numVertices;
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayDataEx( face->vertices, &numVertices );
 	for ( unsigned int i = 0; i < numVertices; ++i )
