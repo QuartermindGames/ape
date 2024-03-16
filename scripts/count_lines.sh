@@ -1,1 +1,2 @@
+#!/bin/sh
 cloc --include-lang="C,C++,C/C++ Header" src/common src/core src/forge src/game src/node src/shells
