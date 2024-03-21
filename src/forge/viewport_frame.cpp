@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ForgeViewportFrame.h"
+#include "viewport_frame.h"
 #include "forge/editors/editor_world.h"
 #include "ForgeMainWindow.h"
 
@@ -23,6 +23,7 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_CHORE, viewport_frame::ID_DRAW, viewport_frame::on_chore ),
         FXMAPFUNC( SEL_MOTION, viewport_frame::ID_CANVAS, viewport_frame::on_motion ),
         FXMAPFUNC( SEL_MOUSEWHEEL, viewport_frame::ID_CANVAS, viewport_frame::on_zoom ),
+        FXMAPFUNC( SEL_LEFTBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_left_click ),
         FXMAPFUNC( SEL_RIGHTBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_right_click ),
         FXMAPFUNC( SEL_MIDDLEBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
         FXMAPFUNC( SEL_MIDDLEBUTTONRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
@@ -50,7 +51,7 @@ editorViewportMap[] = {
 
 FXIMPLEMENT( viewport_frame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTabItem *editor, ApeCameraViewMode viewMode )
+viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
 	viewMode_ = viewMode;
@@ -111,10 +112,9 @@ void viewport_frame::Draw()
 		h = 2;
 	}
 
-	PlgSetViewport( 0, 0, w, h );
-
 	if ( !ape_is_running() )
 	{
+		PlgSetViewport( 0, 0, w, h );
 		PlgSetClearColour( PLColourRGB( 255, 0, 0 ) );
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		return;
@@ -207,31 +207,34 @@ long viewport_frame::on_change_camera_modes( FXObject *, FX::FXSelector selector
 
 long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 {
-	if ( useMouseLook )
+	//if ( is_editor_active() )
 	{
-		int mx, my;
-		unsigned int tmp;
-		getCursorPosition( mx, my, tmp );
-		setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
+		if ( useMouseLook )
+		{
+			int mx, my;
+			unsigned int tmp;
+			getCursorPosition( mx, my, tmp );
+			setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
 
-		int dx = originCursorPos[ 0 ] - mx;
-		int dy = originCursorPos[ 1 ] - my;
+			int dx = originCursorPos[ 0 ] - mx;
+			int dy = originCursorPos[ 1 ] - my;
 
-		PLVector3 angles = ape_camera_get_angles( camera );
-		angles.y += ( ( float ) dx ) / 8.0f;
-		angles.x += ( ( float ) dy ) / 8.0f;
+			PLVector3 angles = ape_camera_get_angles( camera );
+			angles.y += ( ( float ) dx ) / 8.0f;
+			angles.x += ( ( float ) dy ) / 8.0f;
 
-		ape_camera_set_angles( camera, &angles );
+			ape_camera_set_angles( camera, &angles );
+		}
+
+		canvas_->makeCurrent();
+
+		Draw();
+
+		canvas_->swapBuffers();
 	}
 
-	canvas_->makeCurrent();
-
-	Draw();
-
-	canvas_->swapBuffers();
-
 	getApp()->addChore( this, ID_DRAW );
-	return 1;
+	return TRUE;
 }
 
 long viewport_frame::on_zoom( FXObject *, FXSelector, void *ptr )
@@ -268,6 +271,18 @@ long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
 	ape_input_handle_mouse_motion_event( x, y );
 
 	return TRUE;
+}
+
+long viewport_frame::on_left_click( FX::FXObject *, FX::FXSelector, void * )
+{
+	if ( !hasFocus() || editor == nullptr )
+	{
+		return FALSE;
+	}
+
+	ape_editor_plot_point( editor->get_internal() );
+
+	return FALSE;
 }
 
 long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
@@ -362,6 +377,12 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 		return TRUE;
 	}
 
+	ApeEditorState *instance = editor->get_internal();
+	if ( instance == nullptr )
+	{
+		return FALSE;
+	}
+
 	static const float SPEED = 0.5f;
 	PLVector3 pos = ape_camera_get_position( camera );
 	PLVector3 ang = ape_camera_get_angles( camera );
@@ -413,6 +434,15 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 		case 'e':
 		{
 			pos.y -= 0.5f;
+			break;
+		}
+
+		case KEY_Escape:
+		{
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH )
+			{
+				ape_editor_clear_plot_points( instance );
+			}
 			break;
 		}
 

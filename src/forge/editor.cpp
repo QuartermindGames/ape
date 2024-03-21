@@ -25,7 +25,7 @@ void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
 
 int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
-PLPath ss::forge::cachedPaths[ MAX_CACHED_PATHS ];
+PLPath ss::forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
 NdBranch *ss::forge::editorConfig;
 
 static FXGLVisual *glVisual = nullptr;
@@ -38,8 +38,6 @@ ss::forge::Project *ss::forge::editorProject = nullptr;
 static std::map< std::string, PLImage * > cachedImages;
 
 FXColor ss::forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
-
-ApeEditorState *ss::forge::engineEditorState = {};
 
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
@@ -105,8 +103,6 @@ bool ss::forge::open_project( const char *path )
 
 static void setup_paths( const char *exePath )
 {
-	PL_ZERO( ss::forge::cachedPaths, sizeof( PLPath ) * ss::forge::MAX_CACHED_PATHS );
-
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_EXE ], true, "%s", exePath );
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_RESOURCES ], true, "%s/../../resources", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
 	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], true, "%s/../../projects", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
@@ -145,8 +141,8 @@ static void setup_paths( const char *exePath )
 
 FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 {
-	char fullPath[ PL_SYSTEM_MAX_PATH ];
-	snprintf( fullPath, sizeof( fullPath ), "../../%s", path );
+	PLPath fullPath;
+	PlSetupPath( fullPath, true, "../../%s", path );
 
 #if 1
 
@@ -181,7 +177,7 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 #endif
 }
 
-static void setup_app_colours( FXApp &app )
+static void setup_colours( FXApp &app )
 {
 	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
 	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
@@ -195,6 +191,20 @@ static void setup_app_colours( FXApp &app )
 	app.setBorderColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
 	app.setHiliteColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
 	app.setShadowColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+}
+
+FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
+void setup_icons( FXApp &app )
+{
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = ss::forge::load_fx_icon( &app, "resources/brush_mode.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_EDGE ] = ss::forge::load_fx_icon( &app, "resources/edge_mode.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ] = ss::forge::load_fx_icon( &app, "resources/face_mode.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ] = ss::forge::load_fx_icon( &app, "resources/node.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] = ss::forge::load_fx_icon( &app, "resources/world_editor.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ] = ss::forge::load_fx_icon( &app, "resources/room.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_ENTITY ] = ss::forge::load_fx_icon( &app, "resources/entity.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_TEXTURE ] = ss::forge::load_fx_icon( &app, "resources/texture.gif" );
 }
 
 int main( int argc, char **argv )
@@ -252,7 +262,8 @@ int main( int argc, char **argv )
 	FXApp app( FORGE_APP_NAME, FXString::null );
 	app.init( argc, argv );
 
-	setup_app_colours( app );
+	setup_colours( app );
+	setup_icons( app );
 
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
@@ -288,13 +299,11 @@ int main( int argc, char **argv )
 	}
 	delete projectDialog;
 
-	if ( !ape_initialize( argc, argv, EDITOR_CONFIG_FILENAME ) )
+	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME ) )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;
 	}
-
-	ss::forge::engineEditorState = ape_editor_get_state();
 
 	dummy->hide();
 

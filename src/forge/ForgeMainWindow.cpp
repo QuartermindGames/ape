@@ -135,6 +135,8 @@ long ss::forge::ForgeMainWindow::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
+	ape_world_node_create( world->root, "room0", APE_WORLD_NODE_TYPE_ROOM, ape_world_room_create() );
+
 	auto *editor = new editor_world( _tabBook, "", world );
 	editor->update_tree();
 

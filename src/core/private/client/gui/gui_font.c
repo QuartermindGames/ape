@@ -150,8 +150,8 @@ bool guiInitializeFonts_( void )
 	cachedFontsTable = PlCreateHashTable();
 
 	static const char *fontPaths[ GUI_MAX_FONT_DEFAULTS ] = {
-	        [GUI_FONT_DEFAULT_LARGE] = "guis/fonts/Monospace 12.fnt",
-	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/Monospace 12.fnt",
+	        [GUI_FONT_DEFAULT_LARGE] = "guis/fonts/noto_mono_24.fnt",
+	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/noto_mono_12.fnt",
 	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/Noto Mono 10.fnt",
 	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/Noto Mono 8.fnt",
 	};
@@ -191,7 +191,7 @@ float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t char
 	return w;
 }
 
-void guiGetStringPixelSize( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
+void gui_font_get_string_pixel_size( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
 	float h = 0;
@@ -258,7 +258,7 @@ void gui_font_draw_character( const GuiFont *font, float x, float y, float scale
 	guiDrawFontGlyph( font, x, y, scale, colour, glyph );
 }
 
-void gui_font_draw_string( const GuiFont *font, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
+void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
@@ -271,19 +271,19 @@ void gui_font_draw_string( const GuiFont *font, float x, float y, float *ox, flo
 
 		if ( string[ i ] == '\n' )
 		{
-			ny += ( font->lineSpacing * scale );
+			ny += ( self->lineSpacing * scale );
 			nx = x;
 			continue;
 		}
 		else if ( string[ i ] == '\t' )
 		{
-			nx += ( font->lineSpacing * scale ) * 4.0f;
+			nx += ( self->lineSpacing * scale ) * 4.0f;
 			continue;
 		}
 
 		uint32_t c = ( uint32_t ) string[ i ];
 
-		const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
+		const ComFontGlyph *glyph = PlLookupHashTableUserData( self->glyphTable, &c, sizeof( uint32_t ) );
 		if ( glyph == NULL )
 		{
 			continue;
@@ -291,10 +291,10 @@ void gui_font_draw_string( const GuiFont *font, float x, float y, float *ox, flo
 
 		if ( shadow )
 		{
-			guiDrawFontGlyph( font, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
+			guiDrawFontGlyph( self, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
 		}
 
-		guiDrawFontGlyph( font, nx, ny, scale, colour, glyph );
+		guiDrawFontGlyph( self, nx, ny, scale, colour, glyph );
 
 		nx += ( ( float ) glyph->w ) * scale;
 	}

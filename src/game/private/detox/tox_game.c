@@ -124,7 +124,7 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 	ape_camera_set_angles( playerCamera, &ang );
 }
 
-static void progress_time_action( ApeInputState state, PL_UNUSED const char *id )
+static void progress_time_action( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
 	{
@@ -137,17 +137,17 @@ static void progress_time_action( ApeInputState state, PL_UNUSED const char *id 
 		return;
 	}
 
-	if ( strcmp( id, "time_forward" ) == 0 )
+	if ( strcmp( id, "tox_time_forward" ) == 0 )
 	{
-		worldState->seconds += TOX_WORLD_SECONDS_TO_HOUR / 100;
+		worldState->seconds += TOX_WORLD_SECONDS_TO_HOUR / 10;
 	}
 	else
 	{
-		worldState->seconds -= TOX_WORLD_SECONDS_TO_HOUR / 100;
+		worldState->seconds -= TOX_WORLD_SECONDS_TO_HOUR / 10;
 	}
 }
 
-static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void print_pos_command( unsigned int, char ** )
 {
 	PLVector3 cameraPos = ape_camera_get_position( playerCamera );
 	Game_Print( "Camera Pos: %s\n", PlPrintVector3( &cameraPos, PL_VAR_F32 ) );
@@ -155,11 +155,38 @@ static void print_pos_command( PL_UNUSED unsigned int argc, PL_UNUSED char **arg
 	Game_Print( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
 }
 
-static void set_time_command( unsigned int argc, char **argv )
+static void set_time_command( unsigned int, char **argv )
 {
 	ToxWorldState *worldState = tox_world_get_state();
 	worldState->seconds = strtoul( argv[ 1 ], NULL, 10 );
 }
+
+static void damage_player_command( unsigned int argc, char **argv )
+{
+	int16_t value;
+	if ( argc > 1 )
+	{
+		value = ( int16_t ) atoi( argv[ 1 ] );
+	}
+	else
+	{
+		value = 10;
+	}
+
+	tox_ui_handle_damage_event( value );
+}
+
+static void damage_player_action( ApeInputState state, const char *id )
+{
+	if ( state != APE_INPUT_STATE_DOWN )
+	{
+		return;
+	}
+
+	tox_ui_handle_damage_event( 10 );
+}
+
+extern const ApeEntityClassDefinition *tox_characterClass;
 
 static bool initialize_game( void )
 {
@@ -167,6 +194,7 @@ static bool initialize_game( void )
 
 	PlRegisterConsoleCommand( "tox_print_pos", "Print the camera position and angles.", 0, print_pos_command );
 	PlRegisterConsoleCommand( "tox_set_time", "Sets the world time.", 1, set_time_command );
+	PlRegisterConsoleCommand( "tox_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
 
 	// movement actions
 	ape_client_input_register_action( "moveForward", ( ApeInputButton[] ){ APE_INPUT_UP }, 1, ( ApeInputKey[] ){ APE_INPUT_KEY_UP, 'w' }, 2, move_camera_callback );
@@ -179,15 +207,18 @@ static bool initialize_game( void )
 	ape_client_input_register_action( "rotateRight", NULL, 0, ( ApeInputKey[] ){ APE_INPUT_KEY_RIGHT }, 1, move_camera_callback );
 
 	// this remaining bunch are for debugging purposes...
-	ape_client_input_register_action( "time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
-	ape_client_input_register_action( "time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
+	ape_client_input_register_action( "tox_time_forward", NULL, 0, ( ApeInputKey[] ){ 'z' }, 1, progress_time_action );
+	ape_client_input_register_action( "tox_time_backward", NULL, 0, ( ApeInputKey[] ){ 'x' }, 1, progress_time_action );
+	ape_client_input_register_action( "tox_damage_player", NULL, 0, ( ApeInputKey[] ){ 'c' }, 1, damage_player_action );
 
 	ape_client_input_register_action( "rotateUp", NULL, 0, ( ApeInputKey[] ){ 'r' }, 1, rotate_camera_action );
 	ape_client_input_register_action( "rotateDown", NULL, 0, ( ApeInputKey[] ){ 'f' }, 1, rotate_camera_action );
 
+	tox_ui_initialize();
+
 	ss_game_register_standard_entity_components_();
 
-	ape_register_entity_class( tox_character_get_class_table() );
+	ape_register_entity_class( tox_characterClass );
 
 	playerCamera = ape_camera_create( "tox_camera_player", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE );
 	if ( playerCamera == NULL )
@@ -199,10 +230,14 @@ static bool initialize_game( void )
 	return true;
 }
 
-static void shutdown_game( void )
+static bool shutdown_game( void )
 {
+	tox_ui_shutdown();
+
 	ape_camera_destroy( playerCamera );
 	playerCamera = NULL;
+
+	return true;
 }
 
 static void handle_input( void )
@@ -259,18 +294,34 @@ static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 	switch ( modeRequest )
 	{
 		case APE_GAME_INTERFACE_REQUEST_INITIALIZE:
+		{
 			return initialize_game();
+		}
+		case APE_GAME_INTERFACE_REQUEST_SHUTDOWN:
+		{
+			return shutdown_game();
+		}
 		case APE_GAME_INTERFACE_REQUEST_TICK:
+		{
 			return tick_game();
+		}
 		case APE_GAME_INTERFACE_REQUEST_DRAW:
+		{
 			return draw_game( ( ApeViewport * ) user );
+		}
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
+		{
 			return tox_ui_draw( ( ApeViewport * ) user );
+		}
 		case APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT:
+		{
 			break;
+		}
 		case APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD:
+		{
 			tox_world_spawn( ( ApeWorld * ) user );
 			return true;
+		}
 		default:
 			break;
 	}

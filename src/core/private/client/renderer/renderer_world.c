@@ -60,10 +60,6 @@ static void draw_room_wireframe( ApeWorld *world, ApeWorldRoom *room )
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 {
 	assert( ( camera != NULL ) && ( world != NULL ) );
-	if ( camera == NULL || world == NULL )
-	{
-		return;
-	}
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	PlgSetTexture( NULL, 0 );
@@ -150,7 +146,7 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, b
 		PlgDrawBoundingVolume( &room->bounds, &colour );
 	}
 
-	if ( ( !ambienceOnly && light == NULL ) || ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) ) )
+	if ( ( !ambienceOnly && light == NULL ) /*|| ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) )*/ )
 	{
 		return;
 	}

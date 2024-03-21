@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 #include <map>
 #include <string>
@@ -24,16 +25,16 @@
 #include <fx.h>
 #include <fxkeys.h>
 
-#define SS_FORGE_APP_VERSION "v0.1.0"
+#define FORGE_APP_VERSION "v0.1.0"
 
 static inline constexpr const char *FORGE_APP_NAME = "forge";
 static inline constexpr const char *FORGE_APP_TITLE = "Forge";
 
 static inline constexpr uint8_t FORGE_VERSION_MAJOR = 0;
-static inline constexpr uint8_t FORGE_VERSION_MINOR = 0;
+static inline constexpr uint8_t FORGE_VERSION_MINOR = 1;
 static inline constexpr uint8_t FORGE_VERSION_PATCH = 0;
 
-#define EDITOR_CONFIG_FILENAME "editor"
+#define FORGE_CONFIG_FILENAME "editor"
 
 typedef enum EditorLogLevel
 {
@@ -47,6 +48,43 @@ typedef enum EditorLogLevel
 extern int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
 #define EDITOR_PRINT( ... ) PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], __VA_ARGS__ )
+
+enum ForgeIconType
+{
+	FORGE_ICON_TYPE_MODE_BRUSH,
+	FORGE_ICON_TYPE_MODE_EDGE,
+	FORGE_ICON_TYPE_MODE_FACE,
+
+	FORGE_ICON_TYPE_NODE,
+	FORGE_ICON_TYPE_WORLD,
+	FORGE_ICON_TYPE_ROOM,
+	FORGE_ICON_TYPE_BRUSH,
+	FORGE_ICON_TYPE_CAMERA,
+	FORGE_ICON_TYPE_ENTITY,
+	FORGE_ICON_TYPE_LIGHT,
+
+	FORGE_ICON_TYPE_TEXTURE,
+
+	FORGE_ICON_TYPE_NEW,
+	FORGE_ICON_TYPE_NEW_BRUSH,
+	FORGE_ICON_TYPE_NEW_CAMERA,
+	FORGE_ICON_TYPE_NEW_LIGHT,
+	FORGE_ICON_TYPE_NEW_MATERIAL,
+	FORGE_ICON_TYPE_NEW_ROOM,
+	FORGE_ICON_TYPE_NEW_WORLD,
+
+	FORGE_ICON_TYPE_OPEN,
+	FORGE_ICON_TYPE_OPEN_MATERIAL,
+	FORGE_ICON_TYPE_OPEN_MODEL,
+	FORGE_ICON_TYPE_OPEN_WORLD,
+
+	FORGE_ICON_TYPE_CLOSE,
+
+	FORGE_ICON_TYPE_CAMERA_FORWARD,
+
+	MAX_FORGE_ICONS
+};
+extern FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
 
 namespace ss::forge
 {
@@ -102,6 +140,4 @@ namespace ss::forge
 	extern bool isCookAvailable;
 
 	extern NdBranch *editorConfig;
-
-	extern ApeEditorState *engineEditorState;
 }// namespace ss::forge

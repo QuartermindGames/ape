@@ -4,11 +4,13 @@
 
 #include "../editor.h"
 
+#include "EditorTab.h"
+
 namespace ss::forge
 {
 	class viewport_frame;
 
-	class editor_world : public FXTabItem
+	class editor_world : public EditorTab
 	{
 		FXDECLARE( editor_world )
 
@@ -40,7 +42,7 @@ namespace ss::forge
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;
 
-		FXToggleButton *_editModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
+		FXToggleButton *geometryModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
 		FXTreeList *nodeTree{};
 

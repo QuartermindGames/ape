@@ -3,7 +3,7 @@
 #pragma once
 
 #include "editor.h"
-#include "ForgeViewportFrame.h"
+#include "viewport_frame.h"
 #include "ForgeConsoleFrame.h"
 
 namespace ss::forge

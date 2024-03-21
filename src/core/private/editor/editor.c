@@ -1,33 +1,85 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Primary code for dealing with editor functionality.
 
-#include "ape_private.h"
-
 #include "plcore/pl_hashtable.h"
+
+#include "ape_private.h"
 
 #include "editor.h"
 
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_font.h"
+#include "client/renderer/renderer_material.h"
 
 #include "game/game_interface.h"
+
 #include "world/world.h"
+#include "yin/gui_public.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static ApeEditorState editorState = {};
+static ApeMaterial *planeMaterial;
 
-//static bool gridVisible = true;
-//static unsigned int gridScale = DEFAULT_GRID_SCALE;
+/////////////////////////////////////////////////////////////////////////////////////
+// Editor Instance Management
+/////////////////////////////////////////////////////////////////////////////////////
+
+void grid_initialize_( ApeEditorState *instance );
+void grid_shutdown_( void );
+
+static ApeEditorState *editorInstance = NULL;
+
+ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
+{
+	PL_ZERO( self, sizeof( ApeEditorState ) );
+
+	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_BRUSH;
+
+	self->brushPlotPoints = PlCreateLinkedList();
+	if ( self->brushPlotPoints == NULL )
+	{
+		ape_warning_( "Failed to create brush plot points list: %s\n", PlGetError() );
+		return NULL;
+	}
+
+	grid_initialize_( self );
+
+	return self;
+}
+
+void ape_editor_instance_shutdown( ApeEditorState *self )
+{
+	if ( self->brushPlotPoints != NULL )
+	{
+		PlDestroyLinkedList( self->brushPlotPoints );
+		self->brushPlotPoints = NULL;
+	}
+}
+
+void ape_editor_set_active_instance( ApeEditorState *instance )
+{
+	editorInstance = instance;
+}
+
+ApeEditorState *ape_editor_get_active_instance( void )
+{
+	return editorInstance;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Selection Buffer
+/////////////////////////////////////////////////////////////////////////////////////
 
 static ApeViewport *selectionViewport;
 static PLHashTable *selectionObjectTable;
 
-static void toggle_grid_command( unsigned int, char ** )
+ApeViewport *get_selection_viewport_( void )
 {
-	editorState.gridVisible = !editorState.gridVisible;
+	return selectionViewport;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void toggle_editor_command( unsigned int, char ** )
 {
@@ -77,14 +129,13 @@ static void create_world_command( unsigned int, char ** )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-static void grid_initialize( void );
-static void grid_shutdown( void );
-
 void ape_initialize_editor_( void )
 {
-	editorState.geometryMode = APE_EDITOR_GEOMETRY_MODE_BRUSH;
-
 	selectionObjectTable = PlCreateHashTable();
+	if ( selectionObjectTable == NULL )
+	{
+		ape_error_( true, "Failed to create selection object hash table: %s\n", PlGetError() );
+	}
 
 	selectionViewport = ape_viewport_create( 0, 0, 640, 480, NULL );
 	if ( selectionViewport == NULL )
@@ -92,7 +143,7 @@ void ape_initialize_editor_( void )
 		ape_error_( true, "Failed to create selection viewport!\n" );
 	}
 
-	grid_initialize();
+	planeMaterial = ss_arl_material_cache( "materials/editor/plane.mat.n", APE_CACHE_EDITOR, true, false );
 }
 
 void ape_shutdown_editor_( void )
@@ -101,313 +152,74 @@ void ape_shutdown_editor_( void )
 
 	ape_viewport_destroy( selectionViewport );
 
-	grid_shutdown();
-}
-
-ApeEditorState *ape_editor_get_state( void )
-{
-	return &editorState;
+	grid_shutdown_();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Grid
-/////////////////////////////////////////////////////////////////////////////////////
 
-static const unsigned int DEFAULT_GRID_SCALE = 2;
-static const unsigned int MAX_GRID_SCALE = 16;
-#define GRID_SIZE     64
-#define GRID_ELEMENTS ( GRID_SIZE * GRID_SIZE )
-
-static PLMatrix4 gridTransform;
-
-typedef struct GridSelectable
-{
-	PLColour colour;
-	PLVector3 position;
-} GridSelectable;
-static GridSelectable gridSelectables[ GRID_ELEMENTS ];
-static GridSelectable *activeGridSelectable;
-static PLHashTable *gridSelectablesTable;
-
-static unsigned int gridOldScale = DEFAULT_GRID_SCALE;
-
-static const float GRID_SELECTABLE_SCALE = 0.5f;
-
-static void grid_update_selection_points( void );
-
-static void grid_initialize( void )
-{
-	editorState.gridVisible = true;
-	editorState.gridScale = DEFAULT_GRID_SCALE;
-
-	gridTransform = PlMatrix4Identity();
-	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
-	gridTransform = PlMultiplyMatrix4( gridTransform, &gridRotation );
-
-	gridSelectablesTable = PlCreateHashTable();
-
-	// assign colours to each of the selection cubes
-	unsigned int aaa = 1;
-	for ( unsigned int i = 0; i < GRID_ELEMENTS; ++i )
-	{
-		gridSelectables[ i ].colour.r = aaa & 0xFF;
-		gridSelectables[ i ].colour.g = ( aaa & 0xFF00 ) >> 8;
-		gridSelectables[ i ].colour.b = ( aaa & 0xFF0000 ) >> 16;
-		gridSelectables[ i ].colour.a = 255;
-		aaa += 16;
-
-		PlInsertHashTableNode( gridSelectablesTable, &gridSelectables[ i ].colour, sizeof( PLColour ), &gridSelectables[ i ] );
-	}
-
-	grid_update_selection_points();
-}
-
-static void grid_shutdown( void )
-{
-	PlDestroyHashTable( gridSelectablesTable );
-	gridSelectablesTable = NULL;
-}
-
-static void grid_update_selection_points( void )
-{
-	for ( unsigned int r = 0; r < GRID_SIZE; ++r )
-	{
-		for ( unsigned int c = 0; c < GRID_SIZE; ++c )
-		{
-			GridSelectable *selectable = &gridSelectables[ r * GRID_SIZE + c ];
-			selectable->position.x = ( float ) r - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
-			selectable->position.y = ( float ) c - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
-		}
-	}
-
-	//todo: mesh should also be regenerated here
-}
-
-static void grid_batch_selection_point( const ApeCamera *camera, const GridSelectable *selectable )
-{
-	PLCollisionAABB bounds = ( PLCollisionAABB ){
-	        .origin = PlTransformVector3( &selectable->position, &gridTransform ),
-	        .maxs = ( PLVector3 ){GRID_SELECTABLE_SCALE,   GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE },
-	        .mins = ( PLVector3 ){ -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE}
-    };
-	if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
-	{
-		return;
-	}
-
-	float scale = GRID_SELECTABLE_SCALE / 2.0f;
-
-	unsigned int x, y, z, w;
-	x = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y + scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y - scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y + scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y - scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
-
-	x = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
-
-	x = PlgImmPushVertex( selectable->position.x, selectable->position.y + scale, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x, selectable->position.y - scale, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x, selectable->position.y + scale, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x, selectable->position.y - scale, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
-}
-
-static void update_active_grid_selection( void )
-{
-	PLGFrameBuffer *frameBuffer = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
-	if ( frameBuffer == NULL )
-	{
-		return;
-	}
-
-	size_t size = frameBuffer->width * frameBuffer->height * 4;
-	PLColour *buf = PL_NEW_( PLColour, size );
-	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != NULL )
-	{
-		int x, y;
-		ape_client_input_get_mouse_position( &x, &y );
-
-		// selection buffer is half of the source
-		x /= 2;
-		y /= 2;
-
-		if ( x < frameBuffer->width && y < frameBuffer->height )
-		{
-			const PLColour *pixel = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
-			GridSelectable *selectable = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
-			if ( selectable != NULL )
-			{
-				activeGridSelectable = selectable;
-			}
-		}
-	}
-	else
-	{
-		ape_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
-	}
-
-	PL_DELETE( buf );
-}
-
-/**
- * this draws what should be selectable to the selection buffer.
- */
-static void draw_selection_grid( ApeCamera *camera )
-{
-	if ( gridOldScale != editorState.gridScale )
-	{
-		grid_update_selection_points();
-		gridOldScale = editorState.gridScale;
-	}
-
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadMatrix( &gridTransform );
-
-	PlgImmBegin( PLG_MESH_TRIANGLES );
-	for ( unsigned int i = 0; i < GRID_ELEMENTS; i++ )
-	{
-		grid_batch_selection_point( camera, &gridSelectables[ i ] );
-	}
-
-	PlgSetCullMode( PLG_CULL_NONE );
-
-	PlgImmDraw();
-
-	PlgSetCullMode( PLG_CULL_POSITIVE );
-
-	PlPopMatrix();
-}
-
-PLVector3 ape_grid_get_cursor_position( void )
-{
-	if ( activeGridSelectable == NULL )
-	{
-		return pl_vecOrigin3;
-	}
-
-	return PlTransformVector3( &activeGridSelectable->position, &gridTransform );
-}
-
-void ape_grid_increase_size( void )
-{
-	editorState.gridScale = PlClamp( DEFAULT_GRID_SCALE, ( editorState.gridScale * 2 ), MAX_GRID_SCALE );
-	activeGridSelectable = NULL;
-}
-
-void ape_grid_decrease_size( void )
-{
-	editorState.gridScale = PlClamp( DEFAULT_GRID_SCALE, ( editorState.gridScale / 2 ), MAX_GRID_SCALE );
-	activeGridSelectable = NULL;
-}
-
-unsigned int ape_grid_get_size( void )
-{
-	return editorState.gridScale;
-}
-
-void ape_grid_set_visibility( bool visible )
-{
-	editorState.gridVisible = visible;
-	activeGridSelectable = NULL;
-}
-
-void ape_grid_draw_( ApeCamera *camera )
-{
-	ApeViewport *viewport = ape_viewport_get_active();
-	if ( viewport == NULL )
-	{
-		return;
-	}
-
-	if ( !ape_config_.editor || !editorState.gridVisible || editorState.gridScale <= 1 )
-	{
-		return;
-	}
-
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-
-	if ( editorState.geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH )
-	{
-		unsigned int sw = viewport->width / 2;
-		unsigned int sh = viewport->height / 2;
-		ape_viewport_set_size( selectionViewport, sw, sh );
-		ape_viewport_make_active( selectionViewport );
-		ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
-
-		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
-
-		//todo: just shove this here for now for testing...
-		draw_selection_grid( camera );
-
-		update_active_grid_selection();
-
-		ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
-		ape_viewport_make_active( viewport );
-	}
-
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadMatrix( &gridTransform );
-
-	PlgDrawGrid( -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE, editorState.gridScale / 2, &( PLColour ){ 0, 0, 255, 255 } );
-
-	if ( ( editorState.geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH ) && activeGridSelectable != NULL )
-	{
-		static const float GRID_HIGHLIGHT_SCALE = GRID_SELECTABLE_SCALE / 8.0f;
-
-		PLCollisionAABB bounds = {
-		        .origin = activeGridSelectable->position,
-		        .mins = {-GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE},
-		        .maxs = { GRID_HIGHLIGHT_SCALE, GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE },
-		};
-		PlgDrawBoundingVolume( &bounds, &( PLColour ){ 255, 255, 255, 255 } );
-	}
-
-	PlPopMatrix();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
+void ape_toggle_grid_command_( unsigned int, char ** );
 
 void ape_register_editor_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "grid_scale", "Scale of the editing grid.", "2", PL_VAR_I32, &editorState.gridScale, NULL, true );
-
 	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
-	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, toggle_grid_command );
+	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, ape_toggle_grid_command_ );
 
 	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
 }
 
-void ape_editor_draw_gui_( const ApeViewport *viewport )
+void ape_editor_pre_render_scene_( const ApeCamera *camera )
 {
 	if ( !ape_is_editor_active() )
+	{
+		return;
+	}
+
+	ApeEditorState *instance = ape_editor_get_active_instance();
+	if ( instance == NULL )
+	{
+		return;
+	}
+
+
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
+	while ( node != NULL )
+	{
+		const PLVector3 *p = PlGetLinkedListNodeUserData( node );
+		assert( p != NULL );
+
+		PlgImmPushVertex( p->x, p->y, p->z );
+		PlgImmColour( 255, 255, 0, 255 );
+
+		node = PlGetNextLinkedListNode( node );
+	}
+
+	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
+
+	ss_arl_material_draw( planeMaterial, mesh, NULL, 0 );
+
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	node = PlGetFirstNode( instance->brushPlotPoints );
+	while ( node != NULL )
+	{
+		const PLVector3 *p = PlGetLinkedListNodeUserData( node );
+		assert( p != NULL );
+
+		PLCollisionAABB bounds = {
+		        .origin = *p,
+		        .mins = {-0.1f, -0.1f, -0.1f},
+		        .maxs = { 0.1f, 0.1f,  0.1f },
+		};
+		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
+
+		node = PlGetNextLinkedListNode( node );
+	}
+}
+
+void ape_editor_draw_gui_( const ApeViewport *viewport )
+{
+	if ( !ape_is_editor_active() || editorInstance == NULL )
 	{
 		return;
 	}
@@ -423,32 +235,51 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	strcat( label, " / " );
 	strcat( label, ape_get_camera_view_mode_label( camera->mode ) );
 
-	ApeBitmapFont *font = ape_get_default_small_bitmap_font();
-	ape_bitmap_font_draw_string( font,
-	                             ( float ) ( ( viewport->width - ( font->cw * 2 ) ) - ( font->cw * strlen( label ) ) ),
-	                             ( float ) ( viewport->height - ( font->ch * 2 ) ),
-	                             1.0f, 1.0f, PL_COLOUR_GOLD, label, true );
+	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
+
+	float dw, dh;
+	gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
+	gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), NULL, NULL, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+
+	unsigned int num = 1;
+	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
+	while ( node != NULL )
+	{
+		PLVector3 *p = PlGetLinkedListNodeUserData( node );
+		assert( p != NULL );
+
+		PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+		PLVector2 screenPos = PlConvertWorldToScreen( p, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+
+		char msg[ 8 ];
+		snprintf( msg, sizeof( msg ), "%u", num++ );
+		gui_font_draw_string( font, screenPos.x, screenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
+
+		node = PlGetNextLinkedListNode( node );
+	}
+
+	gui_font_display( font );
 
 	if ( camera->mode != APE_CAMERA_MODE_INVALID && camera->mode != APE_CAMERA_MODE_PERSPECTIVE )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		float z = viewport->zoom;
-		int zoom = roundl( z ) / 2;
+		int zoom = round( z ) / 2;
 		if ( zoom <= 0 )
 		{
 			zoom = 1;
 		}
 
-		int x = 500 + sinl( zoom * 2 ) * 100.0f;
-		int y = 200 + cosl( zoom * 2 ) * 100.0f;
+		int x = 500 + sin( zoom * 2 ) * 100;
+		int y = 200 + cos( zoom * 2 ) * 100;
 
 		PlMatrixMode( PL_MODELVIEW_MATRIX );//TODO: should probably be view matrix...
 		PlPushMatrix();
 		PlLoadIdentityMatrix();
 
-		PlgDrawGrid( 0, 0, viewport->width, viewport->height, ( editorState.gridScale / 2 ) * zoom, &( PLColour ){ 0, 0, 100, 255 } );
-		PlgDrawGrid( 0, 0, viewport->width, viewport->height, editorState.gridScale * zoom, &( PLColour ){ 0, 0, 255, 255 } );
+		PlgDrawGrid( 0, 0, viewport->width, viewport->height, ( editorInstance->gridScale / 2 ) * zoom, &( PLColour ){ 0, 0, 100, 255 } );
+		PlgDrawGrid( 0, 0, viewport->width, viewport->height, editorInstance->gridScale * zoom, &( PLColour ){ 0, 0, 255, 255 } );
 
 		switch ( camera->mode )
 		{
@@ -498,4 +329,79 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 bool ape_is_editor_active( void )
 {
 	return ape_config_.editor;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Brush Plotting
+/////////////////////////////////////////////////////////////////////////////////////
+
+static bool validate_plotted_plane( ApeEditorState *state )
+{
+	// this determines that the plane is convex, hopefully
+
+	unsigned int numVertices;
+	PLVector3 **vertices = ( PLVector3 ** ) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
+	if ( numVertices < 4 )
+	{
+		return true;
+	}
+
+	bool sign = false;
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		PLVector2 a;
+		a.x = vertices[ ( i + 2 ) % numVertices ]->x - vertices[ ( i + 1 ) % numVertices ]->x;
+		a.y = vertices[ ( i + 2 ) % numVertices ]->y - vertices[ ( i + 1 ) % numVertices ]->y;
+
+		PLVector2 b;
+		b.x = vertices[ i ]->x - vertices[ ( i + 1 ) % numVertices ]->x;
+		b.y = vertices[ i ]->y - vertices[ ( i + 1 ) % numVertices ]->y;
+
+		float cp = a.x * b.y - a.y * b.x;
+		if ( i == 0 )
+		{
+			sign = cp > 0.0f;
+		}
+		else if ( sign != ( cp > 0 ) )
+		{
+			return false;
+		}
+	}
+
+	PL_DELETE( vertices );
+
+	return true;
+}
+
+bool ape_editor_plot_point( ApeEditorState *state )
+{
+	PLVector3 cursor;
+	if ( ape_grid_get_cursor_position( &cursor ) == NULL )
+	{
+		return false;
+	}
+
+	PLVector3 *p = PL_NEW( PLVector3 );
+	PLLinkedListNode *node = PlInsertLinkedListNode( state->brushPlotPoints, p );
+	*p = cursor;
+
+	// validate and then if this fails, remove the last element
+	if ( !validate_plotted_plane( state ) )
+	{
+		PlDestroyLinkedListNode( node );
+		PL_DELETE( p );
+		return false;
+	}
+
+	return true;
+}
+
+static void destroy_plot_point( void *user )
+{
+	PL_DELETE( ( PLVector3 * ) user );
+}
+
+void ape_editor_clear_plot_points( ApeEditorState *state )
+{
+	PlDestroyLinkedListNodesEx( state->brushPlotPoints, destroy_plot_point );
 }

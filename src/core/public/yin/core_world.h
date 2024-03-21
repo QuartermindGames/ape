@@ -190,12 +190,12 @@ ApeWorld *ape_world_create( void );
 ApeWorld *ape_world_load( const char *path );
 
 /// Attempts to save the given world to the destination.
-/// \param world
+/// \param self
 /// \param path
 /// \return On success, returns true but false otherwise.
-bool ape_world_save( ApeWorld *world, const char *path );
+bool ape_world_save( ApeWorld *self, const char *path );
 
-void ape_world_destroy( ApeWorld *level );
+void ape_world_destroy( ApeWorld *self );
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
@@ -214,6 +214,8 @@ void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
+ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+
 /// Attach a node to the world's root node.
 void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node );
 
@@ -226,7 +228,8 @@ void ape_sky_draw_( ApeCamera *camera );
 ////////////////////////////////////////////////////////////////////
 // Room
 
-ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
+ApeWorldRoom *ape_world_room_create( void );
+void ape_world_room_destroy( ApeWorldRoom *self );
 
 ////////////////////////////////////////////////////////////////////
 // Face

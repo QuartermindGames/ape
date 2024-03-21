@@ -124,8 +124,10 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 	{
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
 		assert( face != NULL );
-		if ( face == NULL || face->materialIndex < 0 )
+		if ( face->materialIndex < 0 )
+		{
 			continue;
+		}
 
 		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 		while ( faceVertexNode != NULL )
@@ -148,16 +150,16 @@ static void cache_room_mesh( const ApeWorld *world, ApeWorldRoom *room )
 	{
 		ApeWorldRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
 		assert( detailRoom != NULL );
-		if ( detailRoom == NULL )
-			continue;
 
 		numFaces = PlGetNumVectorArrayElements( detailRoom->faces );
 		for ( unsigned int k = 0; k < numFaces; ++k )
 		{
 			ApeWorldFace *face = PlGetVectorArrayElementAt( detailRoom->faces, k );
 			assert( face != NULL );
-			if ( face == NULL || face->materialIndex < 0 )
+			if ( face->materialIndex < 0 )
+			{
 				continue;
+			}
 
 			PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 			while ( faceVertexNode != NULL )
@@ -209,8 +211,10 @@ ApeWorld *ape_world_load( const char *path )
 		{
 			ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != NULL );
-			if ( room == NULL || room->isDetail || room->isMeshCached )
+			if ( room->isDetail || room->isMeshCached )
+			{
 				continue;
+			}
 
 			cache_room_mesh( world, room );
 		}
@@ -219,14 +223,14 @@ ApeWorld *ape_world_load( const char *path )
 	return world;
 }
 
-bool ape_world_save( ApeWorld *world, const char *path )
+bool ape_world_save( ApeWorld *self, const char *path )
 {
-	world->lastSaveTime = time( NULL );
+	self->lastSaveTime = time( NULL );
 
 	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
 
-	ape_world_serialize_( world, root );
-	snprintf( world->path, sizeof( world->path ), "%s", path );
+	ape_world_serialize_( self, root );
+	snprintf( self->path, sizeof( self->path ), "%s", path );
 
 	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
 	{
@@ -237,61 +241,65 @@ bool ape_world_save( ApeWorld *world, const char *path )
 	return true;
 }
 
-void ape_world_destroy( ApeWorld *level )
+void ape_world_destroy( ApeWorld *self )
 {
-	if ( level == NULL )
+	if ( self == NULL )
+	{
 		return;
+	}
 
 	ape_clear_camera_visibility_lists_();
 
-	if ( level->materials != NULL )
+	if ( self->materials != NULL )
 	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( level->materials ); ++i )
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( self->materials ); ++i )
 		{
-			ApeMaterial *material = PlGetVectorArrayElementAt( level->materials, i );
+			ApeMaterial *material = PlGetVectorArrayElementAt( self->materials, i );
 			if ( material == NULL )
+			{
 				continue;
+			}
 
 			ss_arl_material_release( material );
 			material = NULL;
 		}
-		PlDestroyVectorArray( level->materials );
-		level->materials = NULL;
+		PlDestroyVectorArray( self->materials );
+		self->materials = NULL;
 	}
 
-	if ( level->rooms != NULL )
+	if ( self->rooms != NULL )
 	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( level->rooms ); ++i )
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( self->rooms ); ++i )
 		{
-			ApeWorldRoom *room = PlGetVectorArrayElementAt( level->rooms, i );
+			ApeWorldRoom *room = PlGetVectorArrayElementAt( self->rooms, i );
 			if ( room == NULL )
 				continue;
 
 			ape_world_room_destroy( room );
 			room = NULL;
 		}
-		PlDestroyVectorArray( level->rooms );
-		level->rooms = NULL;
+		PlDestroyVectorArray( self->rooms );
+		self->rooms = NULL;
 	}
 
-	PlDestroyVectorArrayEx( level->portals, PlFree );
+	PlDestroyVectorArrayEx( self->portals, PlFree );
 
-	if ( level->vertices != NULL )
+	if ( self->vertices != NULL )
 	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( level->vertices ); ++i )
+		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( self->vertices ); ++i )
 		{
-			ApeWorldVertex *vertex = PlGetVectorArrayElementAt( level->vertices, i );
+			ApeWorldVertex *vertex = PlGetVectorArrayElementAt( self->vertices, i );
 			if ( vertex == NULL )
 				continue;
 
 			PlDestroyVectorArray( vertex->adjacentFaces );
 			PL_DELETE( vertex );
 		}
-		PlDestroyVectorArray( level->vertices );
-		level->vertices = NULL;
+		PlDestroyVectorArray( self->vertices );
+		self->vertices = NULL;
 	}
 
-	PlDestroyVectorArrayEx( level->lights, PlFree );
+	PlDestroyVectorArrayEx( self->lights, PlFree );
 }
 
 void ape_world_spawn_entities_( ApeWorld *world )
@@ -336,7 +344,9 @@ void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node )
 NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == NULL )
+	{
 		return NULL;
+	}
 
 	return nd_branch_get_child_by_name( world->globalProperties, propertyName );
 }
@@ -355,7 +365,9 @@ ApeWorldRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *
 	{
 		ApeWorldRoom *room = ( ApeWorldRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
 		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
+		{
 			continue;
+		}
 
 		return room;
 	}

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "editor.h"
+#include "forge/editors/EditorTab.h"
 
 namespace ss::forge
 {
@@ -11,8 +12,8 @@ namespace ss::forge
 		FXDECLARE( viewport_frame )
 
 	public:
-		viewport_frame( FXComposite *composite, FXGLVisual *visual, FXTabItem *editor, ApeCameraViewMode viewMode );
-		virtual ~viewport_frame();
+		viewport_frame( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode );
+		~viewport_frame() override;
 
 		void create() override;
 
@@ -62,6 +63,7 @@ namespace ss::forge
 		long on_chore( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
 		long on_motion( FXObject *, FXSelector, void * );
+		long on_left_click( FXObject *, FXSelector, void * );
 		long on_right_click( FXObject *, FXSelector, void * );
 		long on_middle_click( FXObject *, FXSelector, void * );
 		long on_key( FXObject *, FXSelector, void * );
@@ -89,7 +91,7 @@ namespace ss::forge
 
 		static FXGLCanvas *displayList_;
 
-		FXTabItem *editor{};
+		EditorTab *editor{};
 
 		bool useMouseLook{};
 		FXint originCursorPos[ 2 ];

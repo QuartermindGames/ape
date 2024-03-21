@@ -58,10 +58,12 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == NULL )
+	{
 		return;
+	}
 
-	int bw = viewport->width / 2;
-	int bh = viewport->height / 2;
+	int bw = ( int ) baseTexture->w / 2;
+	int bh = ( int ) baseTexture->h / 2;
 
 	ape_render_target_set_size( bloomRenderTarget, bw, bh );
 	PLGTexture *bloomRenderTargetTexture = ape_render_target_get_texture( bloomRenderTarget );
@@ -102,13 +104,13 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const SSArlPostProcessEffect *ss_arl_postfx_get_bloom_( void )
+const ApePostProcessEffect *ape_postfx_get_bloom_( void )
 {
-	static SSArlPostProcessEffect renderBloomPostProcess;
+	static ApePostProcessEffect renderBloomPostProcess;
 	PL_ZERO_( renderBloomPostProcess );
-	renderBloomPostProcess.RegisterConsoleVariables = register_bloom_console_variables;
-	renderBloomPostProcess.Setup = setup_bloom_effect;
-	renderBloomPostProcess.Cleanup = cleanup_bloom_effect;
-	renderBloomPostProcess.Draw = draw_bloom_effect;
+	renderBloomPostProcess.registerConsoleVariables = register_bloom_console_variables;
+	renderBloomPostProcess.setup = setup_bloom_effect;
+	renderBloomPostProcess.cleanup = cleanup_bloom_effect;
+	renderBloomPostProcess.draw = draw_bloom_effect;
 	return &renderBloomPostProcess;
 }

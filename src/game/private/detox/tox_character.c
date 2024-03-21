@@ -5,57 +5,70 @@
 #include "tox_game.h"
 #include "tox_character.h"
 
-/****************************************
- * PRIVATE
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
-static const char *className = "tox_character";
+static void *create_character_class( ApeEntity *self, NdBranch *properties );
+static void destroy_character_class( ApeEntity *self );
+static void spawn_character_class( ApeEntity *self );
+static NdBranch *serialize_character_class( ApeEntity *self );
+static void deserialize_character_class( ApeEntity *self, NdBranch *root );
 
-static void *CreateCharacterClass( ApeEntity *self, NdBranch *properties )
+static const ApeEntityClassDefinition characterClass = {
+        .name = "tox_character",
+        .createFunction = create_character_class,
+        .destroyFunction = destroy_character_class,
+        .spawnFunction = spawn_character_class,
+        .serializeFunction = serialize_character_class,
+        .deserializeFunction = deserialize_character_class,
+};
+
+static void *create_character_class( ApeEntity *self, NdBranch *properties )
 {
 	return PL_NEW( ToxCharacter );
 }
 
-static void DestroyCharacterClass( ApeEntity *self )
+static void destroy_character_class( ApeEntity *self )
 {
 	PL_DELETEN( self->classData );
 }
 
-static NdBranch *SerializeCharacterClass( ApeEntity *self )
+static void spawn_character_class( ApeEntity *self )
+{
+}
+
+static void tick_character_class( ApeEntity *self )
+{
+}
+
+static void draw_character_class( ApeEntity *self )
+{
+}
+
+static NdBranch *serialize_character_class( ApeEntity *self )
 {
 	ToxCharacter *character = self->classData;
 
-	NdBranch *root = nd_branch_push_back_object( NULL, className );
+	NdBranch *root = nd_branch_push_back_object( NULL, characterClass.name );
 	nd_branch_push_back_int16_array( root, "stats", character->stats, TOX_MAX_CHARACTER_STATS );
 
 	return root;
 }
 
-static void DeserializeCharacterClass( ApeEntity *self, NdBranch *root )
+static void deserialize_character_class( ApeEntity *self, NdBranch *root )
 {
 }
 
-/****************************************
- * PUBLIC
- ****************************************/
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
 
-void tox_character_randomize_stats( ToxCharacter *character )
+void tox_character_randomize_stats( ToxCharacter *self )
 {
 }
 
-int16_t tox_character_xp_to_next( const ToxCharacter *character )
+int16_t tox_character_xp_to_next( const ToxCharacter *self )
 {
-	return ( int16_t ) round( 100 * ( character->stats[ TOX_CHARACTER_STAT_LEVEL ] ^ 3 ) );
+	return ( int16_t ) round( 100 * ( self->stats[ TOX_CHARACTER_STAT_LEVEL ] ^ 3 ) );
 }
 
-const ApeEntityClassDefinition *tox_character_get_class_table( void )
-{
-	static ApeEntityClassDefinition table;
-	PL_ZERO_( table );
-	table.name = className;
-	table.createFunction = CreateCharacterClass;
-	table.destroyFunction = DestroyCharacterClass;
-	table.serializeFunction = SerializeCharacterClass;
-	table.deserializeFunction = DeserializeCharacterClass;
-	return &table;
-}
+const ApeEntityClassDefinition *tox_characterClass = &characterClass;

@@ -17,7 +17,7 @@ typedef enum PostEffect
 	MAX_POST_EFFECTS
 } PostEffect;
 
-static const SSArlPostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
+static const ApePostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool postProcessInit = false;
 static bool postProcessEnabled = true;
 
@@ -26,12 +26,14 @@ static ApeRenderTarget *ppRenderTarget = NULL;
 static void register_post_effects( void )
 {
 	if ( postProcessInit )
+	{
 		return;
+	}
 
-	PL_ZERO( postProcessEffects, sizeof( SSArlPostProcessEffect * ) * MAX_POST_EFFECTS );
+	PL_ZERO( postProcessEffects, sizeof( ApePostProcessEffect * ) * MAX_POST_EFFECTS );
 
-	postProcessEffects[ POST_EFFECT_FXAA ] = ss_arl_postfx_get_fxaa_();
-	postProcessEffects[ POST_EFFECT_BLOOM ] = ss_arl_postfx_get_bloom_();
+	postProcessEffects[ POST_EFFECT_FXAA ] = ape_postfx_get_fxaa_();
+	postProcessEffects[ POST_EFFECT_BLOOM ] = ape_postfx_get_bloom_();
 
 	postProcessInit = true;
 }
@@ -39,22 +41,26 @@ static void register_post_effects( void )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-bool ss_arl_postfx_is_enabled( void )
+bool ape_postfx_is_enabled( void )
 {
 	return postProcessEnabled;
 }
 
-void ss_arl_postfx_cleanup_( void )
+void ape_postfx_cleanup_( void )
 {
 	if ( !postProcessInit )
+	{
 		return;
+	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
 		if ( postProcessEffects[ i ] == NULL )
+		{
 			continue;
+		}
 
-		postProcessEffects[ i ]->Cleanup();
+		postProcessEffects[ i ]->cleanup();
 		postProcessEffects[ i ] = NULL;
 	}
 
@@ -63,7 +69,7 @@ void ss_arl_postfx_cleanup_( void )
 	ape_render_target_release( ppRenderTarget );
 }
 
-void ss_arl_postfx_setup_( void )
+void ape_postfx_setup_( void )
 {
 	ppRenderTarget = ape_render_target_create( "postfx",
 	                                           800, 600,
@@ -71,18 +77,22 @@ void ss_arl_postfx_setup_( void )
 	                                           PLG_BUFFER_COLOUR,
 	                                           PLG_TEXTURE_FILTER_LINEAR );
 	if ( ppRenderTarget == NULL )
-		PRINT_ERROR( "Failed to create postfx render target: %s\n", PlGetError() );
+	{
+		ape_error_( true, "Failed to create postfx render target: %s\n", PlGetError() );
+	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
 		if ( postProcessEffects[ i ] == NULL )
+		{
 			continue;
+		}
 
-		postProcessEffects[ i ]->Setup();
+		postProcessEffects[ i ]->setup();
 	}
 }
 
-void ss_arl_postfx_register_console_variables_( void )
+void ape_postfx_register_console_variables_( void )
 {
 	/* urrrughgdshghfhksd, but yeah... */
 	register_post_effects();
@@ -96,7 +106,7 @@ void ss_arl_postfx_register_console_variables_( void )
 			continue;
 		}
 
-		postProcessEffects[ i ]->RegisterConsoleVariables();
+		postProcessEffects[ i ]->registerConsoleVariables();
 	}
 }
 
@@ -126,7 +136,7 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 			continue;
 		}
 
-		postProcessEffects[ i ]->Draw( viewport );
+		postProcessEffects[ i ]->draw( viewport );
 	}
 }
 

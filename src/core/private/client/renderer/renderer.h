@@ -153,6 +153,4 @@ void ss_arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numF
 PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
 PLGTexture *ss_arl_texture_get_fallback( void );
 
-ApeRenderTarget *ss_arl_get_default_render_target( void );
-
 ////////////////////////////////////////////////////////////////////

@@ -10,7 +10,7 @@ add_library(Forge STATIC
         AboutDialog.cpp
         ForgeProjectDialog.cpp
         ForgeConsoleFrame.cpp
-        ForgeViewportFrame.cpp
+        viewport_frame.cpp
         ForgeMainWindow.cpp
 
         editors/EditorTab.cpp editors/EditorTab.h

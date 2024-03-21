@@ -30,31 +30,33 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	for ( unsigned int i = 0; i < argc; ++i )
 	{
 		if ( *argv[ i ] != '+' )
+		{
 			continue;
-
-		const char *command = argv[ i + 1 ];
-		const char *argument = NULL;
+		}
 
 		char commandBuf[ 1024 ];
-		if ( argument == NULL )
-			snprintf( commandBuf, sizeof( commandBuf ), "%s", command );
-		else
-			snprintf( commandBuf, sizeof( commandBuf ), "%s %s", command, argument );
+		snprintf( commandBuf, sizeof( commandBuf ), "%s", argv[ i ] + 1 );
 
 		PlParseConsoleString( commandBuf );
 	}
 
 	if ( engineConfig == NULL )
+	{
 		return;
+	}
 
 	NdBranch *branch = nd_branch_get_child_by_name( engineConfig, "launchCommands" );
 	if ( branch == NULL )
+	{
 		return;
+	}
 
 	static const unsigned int MAX_COMMANDS = 256;
 	unsigned int numCommands = nd_branch_get_num_of_children( branch );
 	if ( numCommands == 0 )
+	{
 		return;
+	}
 	else if ( numCommands >= MAX_COMMANDS )
 	{
 		PRINT_WARNING( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );

@@ -289,7 +289,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 	}
 
 	float bufPixW;
-	guiGetStringPixelSize( font, 1.0f, inputBuffer, inputBufferLength, &bufPixW, NULL );
+	gui_font_get_string_pixel_size( font, 1.0f, inputBuffer, inputBufferLength, &bufPixW, NULL );
 
 	const float x = ( 1.0f + cw );
 
@@ -405,7 +405,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		while ( autoComplete[ i ] != NULL )
 		{
 			float w, h;
-			guiGetStringPixelSize( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
+			gui_font_get_string_pixel_size( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
 			if ( w > autoCompleteWidth ) { autoCompleteWidth = w; }
 			autoCompleteHeight += h;
 			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) h ) - autoCompleteHeight, ( w + 8.0f ), h, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
@@ -422,7 +422,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
 
 		float strW, strH;
-		guiGetStringPixelSize( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
+		gui_font_get_string_pixel_size( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
 
 		float x = width - strW - 2.0f;
 		float y = height - strH - 2.0f;

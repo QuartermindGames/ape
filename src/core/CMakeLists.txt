@@ -40,6 +40,7 @@ set(APE_SOURCE_GUI
 
 set(APE_SOURCE_EDITORS
         private/editor/editor.c
+        private/editor/editor_grid.c
         private/editor/editor_material_selector.c)
 
 add_library(ApeCore STATIC

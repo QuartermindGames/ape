@@ -62,9 +62,6 @@ void tox_character_randomize_stats( ToxCharacter *character );
  * Returns the amount of XP required to make
  * it to the next level.
  */
-int16_t tox_character_xp_to_next( const ToxCharacter *character );
-
-/// Register the character entity class.
-const ApeEntityClassDefinition *tox_character_get_class_table( void );
+int16_t tox_character_xp_to_next( const ToxCharacter *self );
 
 PL_EXTERN_C_END

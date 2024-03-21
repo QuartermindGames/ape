@@ -32,6 +32,7 @@ typedef struct ApeWorld ApeWorld;
 typedef struct ApeViewport
 {
 	unsigned int index;
+
 	int x, y;
 	int width, height;
 
@@ -120,6 +121,18 @@ typedef enum ApeDefaultShaderProgram
 PLGShaderProgram *ss_arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram );
 
 /**********************************************************/
+
+typedef enum SSArlDefaultMaterial
+{
+	SS_ARL_MATERIAL_DEFAULT_FALLBACK,
+	SS_ARL_MATERIAL_DEFAULT_VERTEX,
+	SS_ARL_MATERIAL_DEFAULT_SHADOW,
+	SS_ARL_MATERIAL_DEFAULT_DEPTH,
+
+	SS_ARL_MAX_DEFAULT_MATERIALS
+} SSArlDefaultMaterial;
+
+ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial );
 
 /**
  * Returns the original path the material was loaded from.

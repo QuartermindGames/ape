@@ -45,17 +45,37 @@ typedef struct ApeEditorState
 {
 	ApeEditorGeometryMode geometryMode;
 
-	unsigned char gridVisible;// unsigned char, because otherwise can't hook it with frontend :(
+	unsigned char gridVisible;// unsigned char, because otherwise
+	                          // can't hook it with frontend :(
 	unsigned int gridScale;
+
+	PLLinkedList *brushPlotPoints;
 } ApeEditorState;
 
-ApeEditorState *ape_editor_get_state( void );
+ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self );
+void ape_editor_instance_shutdown( ApeEditorState *self );
+void ape_editor_set_active_instance( ApeEditorState *self );
+ApeEditorState *ape_editor_get_active_instance( void );
 
-PLVector3 ape_grid_get_cursor_position( void );
+PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst );
 
 void ape_grid_increase_size( void );
 void ape_grid_decrease_size( void );
 unsigned int ape_grid_get_size( void );
 void ape_grid_set_visibility( bool visible );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Brush Plotting
+/////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Plots a new point for a brush. Keep in mind this is merely triggering it to occur,
+ * and it will operate off whatever is the current grid point.
+ * @param state The editor state that the action is being performed within.
+ * @return True if the point is at the same location as the origin.
+ */
+bool ape_editor_plot_point( ApeEditorState *state );
+
+void ape_editor_clear_plot_points( ApeEditorState *state );
 
 PL_EXTERN_C_END

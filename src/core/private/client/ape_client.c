@@ -21,6 +21,17 @@ typedef struct ClientState
 } ClientState;
 static ClientState clientState;
 
+void ape_prepare_screenshot_capture_( void );
+static void capture_screenshot_action( ApeInputState state, const char * )
+{
+	if ( state != APE_INPUT_STATE_DOWN )
+	{
+		return;
+	}
+
+	ape_prepare_screenshot_capture_();
+}
+
 void ape_initialize_client_( void )
 {
 	CLIENT_PRINT( "Initializing client\n" );
@@ -32,6 +43,8 @@ void ape_initialize_client_( void )
 	ape_initialize_audio_();
 	ape_initialize_gui_();
 	ape_initialize_input_();
+
+	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ){ KEY_F12 }, 1, capture_screenshot_action );
 }
 
 void ape_shutdown_client_( void )

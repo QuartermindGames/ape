@@ -63,7 +63,7 @@ typedef struct ApeInputController
 
 	PLVector2 stickL, stickLOld, stickLDelta;
 	PLVector2 stickR, stickROld, stickRDelta;
-	float deadzones[ 2 ];
+	PLVector2 deadzones;
 
 	SDL_GameController *sdlGameController;
 } ApeInputController;
@@ -190,7 +190,7 @@ static void check_for_controllers( void )
 			serial = "Unknown";
 		}
 
-		controller->deadzones[ 0 ] = controller->deadzones[ 1 ] = DEFAULT_DEADZONE;
+		controller->deadzones = PL_VECTOR2( DEFAULT_DEADZONE, DEFAULT_DEADZONE );
 
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
@@ -272,6 +272,12 @@ static bool get_sdl_button_state( SDL_GameController *gameController, ApeInputBu
 	}
 
 	return SDL_GameControllerGetButton( gameController, sdlButton );
+}
+
+static float clamp_axis_input( float value, float deadzone )
+{
+	float t = fabsf( value ) - deadzone;
+	return copysignf( ( float ) ( t > 0.0f ), value ) * fminf( t / ( 1.0f - deadzone ), 1.0f ) * ( float ) ( t > 0.0f );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -367,7 +373,6 @@ void ape_deserialize_input_config_( NdBranch *root )
 }
 
 void ape_clear_input_devices( void )
-
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
@@ -546,10 +551,11 @@ void ape_tick_input_( void )
 		controllers[ i ].stickLOld = controllers[ i ].stickL;
 		controllers[ i ].stickROld = controllers[ i ].stickR;
 
-		controllers[ i ].stickL.x = ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTX ) ) / ( float ) INT16_MAX;
-		controllers[ i ].stickL.y = ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTY ) ) / ( float ) INT16_MAX;
-		controllers[ i ].stickR.x = ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTX ) ) / ( float ) INT16_MAX;
-		controllers[ i ].stickR.y = ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTY ) ) / ( float ) INT16_MAX;
+		controllers[ i ].stickL.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTX ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.x );
+		controllers[ i ].stickL.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTY ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.x );
+
+		controllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.y );
+		controllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.y );
 
 		controllers[ i ].stickLDelta = PlSubtractVector2( &controllers[ i ].stickLOld, &controllers[ i ].stickL );
 		controllers[ i ].stickRDelta = PlSubtractVector2( &controllers[ i ].stickROld, &controllers[ i ].stickR );

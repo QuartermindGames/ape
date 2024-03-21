@@ -21,26 +21,20 @@ ApeWorldRoom *ape_world_room_create( void )
 	return room;
 }
 
-void ape_world_room_destroy( ApeWorldRoom *room )
+void ape_world_room_destroy( ApeWorldRoom *self )
 {
-	PlDestroyVectorArray( room->detailRooms );
-	PlDestroyVectorArray( room->faces );
-	PlDestroyVectorArray( room->portals );
+	PlDestroyVectorArray( self->detailRooms );
+	PlDestroyVectorArray( self->faces );
+	PlDestroyVectorArray( self->portals );
 
-	PlDestroyLinkedList( room->lights );
+	PlDestroyLinkedList( self->lights );
 
-	PlgDestroyMesh( room->mesh );
+	PlgDestroyMesh( self->mesh );
 
-	PL_DELETE( room );
+	PL_DELETE( self );
 }
 
-ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *room, unsigned int *numFaces )
+ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *self, unsigned int *numFaces )
 {
-	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( room->faces, numFaces );
-}
-
-ApeWorldRoom **ape_world_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms )
-{
-	*numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-	return ( ApeWorldRoom ** ) PlGetVectorArrayData( room->detailRooms );
+	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( self->faces, numFaces );
 }

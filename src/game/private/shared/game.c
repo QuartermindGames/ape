@@ -9,18 +9,6 @@
 
 static ApeWorld *currentWorld = NULL;
 
-static void cache_clutter( void )
-{
-	size_t scriptSize;
-	char *scriptBuf = ss_acl_fs_load_file_buffer( "clutter.tbl", &scriptSize );
-	if ( scriptBuf != NULL )
-	{
-		const char *p = scriptBuf;
-		assert( com_tbl_validate_type( &p, "Clutter" ) );
-		PL_DELETE( scriptBuf );
-	}
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -41,8 +29,6 @@ void ss_game_initialize( void )
 	);
 	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, true );
 	globalGameErrorLog = PlAddLogLevel( "game/error", PL_COLOUR_RED, true );
-
-	cache_clutter();
 }
 
 ApeWorld *ss_game_get_current_world( void )

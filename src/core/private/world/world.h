@@ -161,10 +161,7 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorldRoom *ape_world_room_create( void );
-void ape_world_room_destroy( ApeWorldRoom *room );
-ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *room, unsigned int *numFaces );
-ApeWorldRoom **ape_world_room_get_detail_rooms( ApeWorldRoom *room, unsigned int *numDetailRooms );
+ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *self, unsigned int *numFaces );
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
 

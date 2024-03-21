@@ -9,7 +9,7 @@ PL_EXTERN_C
 
 typedef struct ApeServerClient ApeServerClient;
 
-bool ss_acl_start_server_( const char *ip, unsigned short port );
+bool ape_server_start( const char *ip, unsigned short port );
 
 void ape_initialize_server_( void );
 void ape_shutdown_server_( void );

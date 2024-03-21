@@ -200,7 +200,7 @@ static void write_screenshot( void )
 
 	size_t bufSize = ( ( w * h ) * 4 );
 	unsigned char *buf = PL_NEW_( unsigned char, bufSize );
-	if ( PlgReadFrameBufferRegion( fboBuffer, 0, 0, w, h, bufSize, buf ) != NULL )
+	if ( PlgReadFrameBufferRegion( NULL, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
 		if ( isCapturing )
 		{
@@ -270,17 +270,24 @@ void ape_initialize_textures_( void ); /* texture.c */
 void ape_initialize_render_targets_( void );
 void ape_shutdown_render_targets_( void );
 
-static void prepare_screenshot_capture( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+void ape_prepare_screenshot_capture_( void )
 {
 	if ( isCapturing )
+	{
 		return;
+	}
 
 	isScreenshotPending = true;
 }
 
+static void prepare_screenshot_capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+{
+	ape_prepare_screenshot_capture_();
+}
+
 void apeRegisterRendererConsoleVariables_( void )
 {
-	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture );
+	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture_command );
 
 	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
 	PlRegisterConsoleVariable( "capture.numThreads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
@@ -315,7 +322,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
-	ss_arl_postfx_register_console_variables_();
+	ape_postfx_register_console_variables_();
 }
 
 void ape_initialize_renderer_( void )
@@ -340,12 +347,12 @@ void ape_initialize_renderer_( void )
 	if ( defaultRenderTarget == NULL )
 		PRINT_ERROR( "Failed to create default render target!\n" );
 
-	ss_arl_postfx_setup_();
+	ape_postfx_setup_();
 }
 
 void ape_shutdown_renderer_( void )
 {
-	ss_arl_postfx_cleanup_();
+	ape_postfx_cleanup_();
 
 	ape_shutdown_bitmap_fonts_();
 	ape_shutdown_materials_();
@@ -382,7 +389,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlTranslateMatrix( *location );
 
 	/* todo: do this in shader... */
-	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale, scale ) );
+	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
 	PlgUploadMesh( mesh );
 
 	ss_arl_material_draw( material, mesh, NULL, 0 );
@@ -637,9 +644,8 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	PlgDepthMask( true );
+	ape_editor_pre_render_scene_( camera );
 
-	ape_grid_draw_( camera );
 	ape_sky_draw_( camera );
 
 	ApeWorld *world = camera->world;
@@ -664,7 +670,6 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
-	PlgClipViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }
 
@@ -704,7 +709,10 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
+	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
+
+	ape_grid_draw_( camera );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 	{
@@ -721,9 +729,4 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
 	COM_PROFILE_FUNCTION_END();
-}
-
-ApeRenderTarget *ss_arl_get_default_render_target( void )
-{
-	return defaultRenderTarget;
 }

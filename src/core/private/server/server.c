@@ -37,7 +37,7 @@ static void drop_client_callback( void *userData, bool *breakEarly )
 	ape_server_drop_client_( ( ApeServerClient * ) userData );
 }
 
-bool ss_acl_start_server_( const char *ip, unsigned short port )
+bool ape_server_start( const char *ip, unsigned short port )
 {
 	PRINT( "Opening socket: %s:" PL_FMT_uint16 "\n", ip, port );
 

@@ -116,18 +116,6 @@ void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *ma
 void ape_initialize_materials_( void );
 void ape_shutdown_materials_( void );
 
-typedef enum SSArlDefaultMaterial
-{
-	SS_ARL_MATERIAL_DEFAULT_FALLBACK,
-	SS_ARL_MATERIAL_DEFAULT_VERTEX,
-	SS_ARL_MATERIAL_DEFAULT_SHADOW,
-	SS_ARL_MATERIAL_DEFAULT_DEPTH,
-
-	SS_ARL_MAX_DEFAULT_MATERIALS
-} SSArlDefaultMaterial;
-
-ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial );
-
 PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material );

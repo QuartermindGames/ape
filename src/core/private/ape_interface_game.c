@@ -16,7 +16,10 @@
 
 static void world_command( unsigned int argc, char **argv )
 {
-	ape_spawn_world_( argv[ 1 ] );
+	PLPath path;
+	PlSetupPath( path, true, "worlds/%s.wld.n", argv[ 1 ] );
+
+	ape_spawn_world_( path );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +73,6 @@ void ape_spawn_world_( const char *worldPath )
 
 	ape_world_spawn_entities_( world );
 
-	ss_acl_start_server_( "localhost", 0 );
+	ape_server_start( "localhost", 0 );
 	ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
 }
