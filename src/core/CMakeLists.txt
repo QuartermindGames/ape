@@ -21,13 +21,6 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_shaders.c
         private/client/renderer/renderer_sprite.c)
 
-set(APE_SOURCE_AUDIO
-        private/client/audio/audio.c
-        private/client/audio/audio_openal.c
-        private/client/audio/audio_wav.c
-        private/client/audio/audio_xaudio2.cpp
-        private/client/audio/audio_xwb.c)
-
 set(APE_SOURCE_GUI
         private/client/gui/gui.c
         private/client/gui/gui_button.c
@@ -73,7 +66,11 @@ add_library(ApeCore STATIC
         private/world/world_serialiser.c
 
         ${YIN_CORE_CLIENT}
-        ${APE_SOURCE_AUDIO}
+        private/audio/audio.c
+        private/audio/audio_openal.c
+        private/audio/audio_wav.c
+        private/audio/audio_xaudio2.cpp
+        private/audio/audio_xwb.c
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}
 

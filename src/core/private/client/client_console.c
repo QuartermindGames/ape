@@ -4,10 +4,9 @@
 
 #include "renderer/renderer.h"
 #include "gui/gui_private.h"
-#include "client/audio/audio.h"
+#include "audio/audio.h"
 #include "world/world.h"
 #include "ape_client_input.h"
-#include "client/renderer/post/post.h"
 #include "editor/editor.h"
 
 static bool consoleIsOpen = false;

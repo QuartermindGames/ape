@@ -1,5 +1,10 @@
 # Todo
 
+## Future
+- Restrict vertices for stencil shadows based on point of intersection
+  - If point doesn't cross/intersect, we should have a reasonable limit
+
+## Current
 - Different viewport implementations, as some logic for viewport isn't necessary for others
 - Draw bounding volumes for rooms
 - Add texture selection frame
@@ -9,11 +14,12 @@
 - Make the console correctly hide/show, and resize with a window
 
 ## In-Progress
+- Fix supersampling
 - Icons for nodes within viewport
   - ~~Get icons commissioned~~
-- Implement plotting for brushes
 
 ## Done
+- ~~Implement plotting for brushes~~
 - ~~Colour selection buffer implemented in editor.c, use it to determine grid segment~~
   - ~~Draw large rectangles around grid intersections~~
 - ~~Add a close option to 'File' menu which should just close the currently open editor~~

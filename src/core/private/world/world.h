@@ -11,7 +11,7 @@
 
 #include "ape_memory_manager.h"
 #include "entity/entity.h"
-#include "client/audio/audio.h"
+#include "audio/audio.h"
 
 #define WORLD_PROP_TAG_LENGTH   64
 #define WORLD_PROP_VALUE_LENGTH 256
