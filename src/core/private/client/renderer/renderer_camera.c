@@ -285,12 +285,6 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport )
 
 	COM_PROFILE_FUNCTION_START();
 
-	int ow = viewport->width;
-	viewport->width *= ape_config_.renderer.superSampling;
-	int oh = viewport->height;
-	viewport->height *= ape_config_.renderer.superSampling;
-	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
-
 	float speed;
 	switch ( camera->mode )
 	{
@@ -332,11 +326,6 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport )
 
 	// Draw the scene into a buffer
 	ape_draw_scene_( camera, viewport );
-
-	// Always restore the viewport back
-	viewport->width = ow;
-	viewport->height = oh;
-	PlgSetViewport( viewport->x, viewport->y, viewport->width, viewport->height );
 
 	COM_PROFILE_FUNCTION_END();
 }

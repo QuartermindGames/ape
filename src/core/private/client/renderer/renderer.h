@@ -133,8 +133,6 @@ extern ApeRendererPassState ape_rendererState_;
 void ape_initialize_renderer_( void );
 void ape_shutdown_renderer_( void );
 
-PLGCamera *ape_get_aux_camera_( void );
-
 bool ape_get_capture_state_( void );
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport );

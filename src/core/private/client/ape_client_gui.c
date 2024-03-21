@@ -142,11 +142,6 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-PLGCamera *ape_get_aux_camera_( void )
-{
-	return ape_camera_get_internal( auxCamera );
-}
-
 void ape_initialize_gui_( void )
 {
 	PlRegisterConsoleVariable( "gui_draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );

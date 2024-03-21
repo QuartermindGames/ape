@@ -14,7 +14,6 @@
 #include "audio/audio.h"
 
 #define WORLD_PROP_TAG_LENGTH   64
-#define WORLD_PROP_VALUE_LENGTH 256
 
 #if 1 /* original values, used for prototype */
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )

@@ -115,26 +115,44 @@ void ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera )
 
 ApeCamera *ape_viewport_get_camera( ApeViewport *viewport ) { return viewport->camera; }
 
-void ape_viewport_set_size( ApeViewport *self, int width, int height )
+static void update_render_target_size( ApeViewport *self )
 {
-	if ( width == self->width && height == self->height )
+	if ( self->renderTarget == NULL )
 	{
 		return;
 	}
 
+	unsigned int rw, rh;
+	ape_render_target_get_size( self->renderTarget, &rw, &rh );
+
+	unsigned int nw = self->width * ( int ) ape_config_.renderer.superSampling;
+	unsigned int nh = self->height * ( int ) ape_config_.renderer.superSampling;
+	if ( nw == rw && nh == rh )
+	{
+		return;
+	}
+
+	ape_render_target_set_size( self->renderTarget, nw, nh );
+}
+
+void ape_viewport_set_size( ApeViewport *self, int width, int height )
+{
 	self->width = width;
 	self->height = height;
 
-	if ( self->renderTarget != NULL )
-	{
-		ape_render_target_set_size( self->renderTarget, self->width, self->height );
-	}
+	update_render_target_size( self );
 }
 
 void ape_viewport_get_size( const ApeViewport *self, int *width, int *height )
 {
-	*width = self->width;
-	*height = self->height;
+	if ( width != NULL )
+	{
+		*width = self->width;
+	}
+	if ( height != NULL )
+	{
+		*height = self->height;
+	}
 }
 
 /**
@@ -164,13 +182,15 @@ ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self )
 
 void ape_viewport_make_active( ApeViewport *self )
 {
-	if ( activeViewport == self )
-	{
-		return;
-	}
+	// we've got to do this here again, because set_viewport_size isn't called quite so often via the regular launcher,
+	// though to be honest, it probably shouldn't be called as often from the editor either...
+	update_render_target_size( self );
 
-	PlgClipViewport( self->x, self->y, self->width, self->height );
-	PlgSetViewport( self->x, self->y, self->width, self->height );
+	int rw = self->width * ( int ) ape_config_.renderer.superSampling;
+	int rh = self->height * ( int ) ape_config_.renderer.superSampling;
+
+	PlgClipViewport( self->x, self->y, rw, rh );
+	PlgSetViewport( self->x, self->y, rw, rh );
 
 	if ( self->camera != NULL )
 	{

@@ -186,7 +186,9 @@ static void write_screenshot( void )
 {
 	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
 	if ( renderTarget == NULL )
+	{
 		return;
+	}
 
 	unsigned int w, h;
 	ape_render_target_get_size( renderTarget, &w, &h );
@@ -295,13 +297,7 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
 
 	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
-	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.",
-#if !defined( NDEBUG )
-	                           "true",
-#else
-	                           "false",
-#endif
-	                           PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
+	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
 	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );

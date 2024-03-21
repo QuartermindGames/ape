@@ -125,7 +125,7 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 	{
 		PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
 		PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
-		PlgBlitFrameBuffers( src, viewport->width, viewport->height, dst, viewport->width, viewport->height, true );
+		PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
 		return;
 	}
 
