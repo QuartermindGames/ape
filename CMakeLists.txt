@@ -120,7 +120,6 @@ endif()
 # 3rd party libraries
 add_subdirectory(src/3rdparty/fox)
 
-add_subdirectory(src/dickens)
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/node/)
