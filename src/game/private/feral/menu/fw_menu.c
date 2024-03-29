@@ -45,9 +45,9 @@ void fw_menu_initialize( void )
 {
 	// mmm delicious pie
 	interactPie = menu_pie_create();
-	menu_pie_add_option( interactPie, "testing 1", ss_arl_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
-	menu_pie_add_option( interactPie, "testing 2", ss_arl_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_WORLD, true, false ), NULL );
-	menu_pie_add_option( interactPie, "testing 3", ss_arl_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 1", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 2", ape_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
+	menu_pie_add_option( interactPie, "testing 3", ape_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
 	//FW_Menu_SetPieActive( interactPie, true );
 
 	Game_Menu_SetCurrent( &mainMenu );
@@ -84,7 +84,7 @@ bool fw_menu_handle_input( void )
 	}
 	if ( ape_client_input_get_button_state( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
 	{
-		menu_pie_add_option( interactPie, "testing 4", ss_arl_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_WORLD, true, false ), NULL );
+		menu_pie_add_option( interactPie, "testing 4", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
 		return true;
 	}
 

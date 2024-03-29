@@ -18,7 +18,7 @@ static void register_fxaa_console_variables( void )
 
 static bool setup_fxaa_effect( void )
 {
-	fxaaMaterial = ss_arl_material_cache( "materials/post/fxaa.mat.n", APE_CACHE_WORLD, false, false );
+	fxaaMaterial = ape_material_cache( "materials/post/fxaa.mat.n", APE_CACHE_GROUP_WORLD, false, false );
 	if ( fxaaMaterial == NULL )
 	{
 		return false;
@@ -29,7 +29,7 @@ static bool setup_fxaa_effect( void )
 
 static void cleanup_fxaa_effect( void )
 {
-	ss_arl_material_release( fxaaMaterial );
+	ape_material_release( fxaaMaterial );
 }
 
 static void draw_fxaa_effect( const ApeViewport *viewport )
@@ -39,7 +39,7 @@ static void draw_fxaa_effect( const ApeViewport *viewport )
 		return;
 	}
 
-	ss_arl_draw_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+	ape_draw_textured_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

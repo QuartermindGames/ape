@@ -204,7 +204,7 @@ static void draw_pie_option( GamePieMenuOption *option, float x, float y, bool i
 		return;
 	}
 
-	ss_arl_material_draw( option->icon, mesh, NULL, 0 );
+	ape_material_draw( option->icon, mesh, NULL, 0 );
 }
 
 static GamePieMenuOption *get_selected_option( GamePieMenu *menu )
@@ -308,7 +308,7 @@ void menu_pie_destroy_option( GamePieMenuOption *option )
 		Game_Warning( "Encountered a pie option with no parent!\n" );
 
 	if ( option->icon != NULL )
-		ss_arl_material_release( option->icon );
+		ape_material_release( option->icon );
 
 	PL_DELETE( option );
 }

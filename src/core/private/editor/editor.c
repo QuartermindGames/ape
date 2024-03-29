@@ -19,7 +19,90 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
+
+static void cache_node_icons( void )
+{
+	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ] = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ] = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ] = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ] = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+
+	// root is weird; as in theory, you shouldn't see it...
+	nodeIcons[ APE_WORLD_NODE_TYPE_ROOT ] = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
+}
+
+static void release_node_icons( void )
+{
+	for ( unsigned int i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
+	{
+		if ( nodeIcons[ i ] == NULL )
+		{
+			continue;
+		}
+
+		ape_material_release( nodeIcons[ i ] );
+		nodeIcons[ i ] = NULL;
+	}
+}
+
 static ApeMaterial *planeMaterial;
+
+static PLVectorArray *materialsArray;// ApeMaterial
+
+static void cache_material_preview_callback( const char *path, void *user )
+{
+	ApeMaterial *material = ape_material_cache( path, APE_CACHE_GROUP_EDITOR, false, true );
+	if ( material == NULL )
+	{
+		return;
+	}
+
+	PlPushBackVectorArrayElement( materialsArray, material );
+}
+
+static int compare_materials( const void *a, const void *b )
+{
+	const char *strA = ape_material_get_path( ( ApeMaterial * ) a );
+	const char *strB = ape_material_get_path( ( ApeMaterial * ) b );
+	return strcmp( strA, strB );
+}
+
+static void cache_preview_materials( void )
+{
+	materialsArray = PlCreateVectorArray( 256 );
+	if ( materialsArray == NULL )
+	{
+		ape_error_( true, "Failed to create material array for editor: %s\n", PlGetError() );
+	}
+
+	// Cache all the materials in a preview state
+	PlScanDirectory( "materials/world/", "n", cache_material_preview_callback, true, NULL );
+
+	unsigned int numMaterials;
+	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
+	PRINT( "Found %u world materials\n", numMaterials );
+
+	qsort( materials, numMaterials, sizeof( ApeMaterial * ), compare_materials );
+	for ( unsigned int i = 0; i < numMaterials; ++i )
+	{
+		PRINT( "\t%s\n", ape_material_get_path( materials[ i ] ) );
+	}
+}
+
+static void release_preview_materials( void )
+{
+	unsigned int numMaterials;
+	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
+	for ( unsigned int i = 0; i < numMaterials; ++i )
+	{
+		ape_material_release( materials[ i ] );
+	}
+
+	PlDestroyVectorArray( materialsArray );
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Editor Instance Management
@@ -84,6 +167,17 @@ ApeViewport *get_selection_viewport_( void )
 static void toggle_editor_command( unsigned int, char ** )
 {
 	ape_config_.editor = !ape_config_.editor;
+
+	if ( ape_config_.editor )
+	{
+		cache_preview_materials();
+		cache_node_icons();
+	}
+	else
+	{
+		release_preview_materials();
+		release_node_icons();
+	}
 }
 
 static void save_world_command( unsigned int argc, char **argv )
@@ -143,7 +237,7 @@ void ape_initialize_editor_( void )
 		ape_error_( true, "Failed to create selection viewport!\n" );
 	}
 
-	planeMaterial = ss_arl_material_cache( "materials/editor/plane.mat.n", APE_CACHE_EDITOR, true, false );
+	planeMaterial = ape_material_cache( "materials/editor/plane.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
 }
 
 void ape_shutdown_editor_( void )
@@ -168,6 +262,28 @@ void ape_register_editor_console_variables_( void )
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
 }
 
+static void pre_render_world_node( const ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
+{
+	assert( world != NULL && worldNode != NULL );
+
+	const PLVector3 position = PlGetMatrix4Translation( &worldNode->transform );
+	if ( nodeIcons[ worldNode->type ] != NULL )
+	{
+		ape_draw_sprite( nodeIcons[ worldNode->type ], &PL_QUAD( 0.0f, 0.0f, 64.0f, 64.0f ), &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ), &position, &pl_vecOrigin3, &pl_vecOrigin3, 1.0f );
+	}
+
+	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
+
+	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
+	while ( node != NULL )
+	{
+		ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( node );
+		pre_render_world_node( camera, world, childWorldNode );
+		node = PlGetLinkedListNodeUserData( node );
+	}
+}
+
 void ape_editor_pre_render_scene_( const ApeCamera *camera )
 {
 	if ( !ape_is_editor_active() )
@@ -180,7 +296,6 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 	{
 		return;
 	}
-
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
@@ -197,7 +312,7 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
 
-	ss_arl_material_draw( planeMaterial, mesh, NULL, 0 );
+	ape_material_draw( planeMaterial, mesh, NULL, 0 );
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	node = PlGetFirstNode( instance->brushPlotPoints );
@@ -250,6 +365,10 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 		PLVector2 screenPos = PlConvertWorldToScreen( p, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
+		{
+			return;
+		}
 
 		char msg[ 8 ];
 		snprintf( msg, sizeof( msg ), "%u", num++ );
@@ -265,14 +384,14 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 		float z = viewport->zoom;
-		int zoom = round( z ) / 2;
+		float zoom = roundf( z ) / 2;
 		if ( zoom <= 0 )
 		{
 			zoom = 1;
 		}
 
-		int x = 500 + sin( zoom * 2 ) * 100;
-		int y = 200 + cos( zoom * 2 ) * 100;
+		float x = 500.0f + sinf( zoom * 2 ) * 100.0f;
+		float y = 200.0f + cosf( zoom * 2 ) * 100.0f;
 
 		PlMatrixMode( PL_MODELVIEW_MATRIX );//TODO: should probably be view matrix...
 		PlPushMatrix();
@@ -329,6 +448,16 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 bool ape_is_editor_active( void )
 {
 	return ape_config_.editor;
+}
+
+ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials )
+{
+	if ( materialsArray == NULL )
+	{
+		return NULL;
+	}
+
+	return ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, numMaterials );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

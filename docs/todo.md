@@ -14,11 +14,12 @@
 - Make the console correctly hide/show, and resize with a window
 
 ## In-Progress
-- Fix supersampling
+- Lensflare effect
 - Icons for nodes within viewport
   - ~~Get icons commissioned~~
 
 ## Done
+- ~~Fix supersampling~~
 - ~~Implement plotting for brushes~~
 - ~~Colour selection buffer implemented in editor.c, use it to determine grid segment~~
   - ~~Draw large rectangles around grid intersections~~

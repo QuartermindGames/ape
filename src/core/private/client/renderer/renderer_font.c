@@ -11,7 +11,7 @@ static void DestroyBitmapFont( void *userData )
 	ApeBitmapFont *font = userData;
 	assert( font != NULL );
 
-	ss_arl_material_release( font->material );
+	ape_material_release( font->material );
 
 	PlgDestroyMesh( font->mesh );
 
@@ -98,7 +98,7 @@ void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, f
 
 	PlLoadIdentityMatrix();
 
-	ss_arl_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -118,7 +118,7 @@ void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float s
 		ape_bitmap_font_batch_string( font, x + 1, y + 1, scale, PL_COLOUR_BLACK, msg, numChars, false );
 
 	ape_bitmap_font_batch_string( font, x, y, scale, colour, msg, numChars, false );
-	ss_arl_bitmap_font_draw( font );
+	ape_bitmap_font_draw( font );
 }
 
 void ape_bitmap_font_begin_draw( ApeBitmapFont *font )
@@ -126,14 +126,14 @@ void ape_bitmap_font_begin_draw( ApeBitmapFont *font )
 	PlgClearMesh( font->mesh );
 }
 
-void ss_arl_bitmap_font_draw( ApeBitmapFont *font )
+void ape_bitmap_font_draw( ApeBitmapFont *font )
 {
 	//PlMatrixMode( PL_MODELVIEW_MATRIX );
 	//PlPushMatrix();
 
 	//PlLoadIdentityMatrix();
 
-	ss_arl_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL, 0 );
 
 	//PlPopMatrix();
 }
@@ -169,7 +169,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 		return NULL;
 	}
 
-	ApeMaterial *material = ss_arl_material_cache( materialPath, 0, false, false );
+	ApeMaterial *material = ape_material_cache( materialPath, 0, false, false );
 	if ( material == NULL )
 	{
 		PlgDestroyMesh( mesh );

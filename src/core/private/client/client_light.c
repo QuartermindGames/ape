@@ -56,3 +56,18 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 
 	return SS_APE_LIGHT_SHADOW_TYPE_NONE;
 }
+
+bool ape_light_is_active( const ApeLight *light )
+{
+	if ( !( light->flags & SS_ARL_LIGHT_FLAG_ENABLED ) || light->colour.a <= 0.0f )
+	{
+		return false;
+	}
+
+	if ( light->type != APE_LIGHT_TYPE_SUN && light->radius <= 0.0f )
+	{
+		return false;
+	}
+
+	return true;
+}

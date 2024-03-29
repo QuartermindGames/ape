@@ -51,7 +51,7 @@ static void draw_dial( int16_t value, float radius, float thickness, float cente
 		PlgImmColour( colour->r / 2, colour->g / 2, colour->b / 2, colour->a );
 	}
 
-	ss_arl_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), mesh, NULL, 0 );
+	ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), mesh, NULL, 0 );
 }
 
 static void draw_debug_overlay( void )
@@ -87,12 +87,12 @@ static void draw_debug_overlay( void )
 
 void tox_ui_initialize( void )
 {
-	edHealthIcon = ss_arl_material_cache( "materials/hud/hud_ed_head.mat.n", APE_CACHE_WORLD, true, false );
+	edHealthIcon = ape_material_cache( "materials/hud/hud_ed_head.mat.n", APE_CACHE_GROUP_WORLD, true, false );
 }
 
 void tox_ui_shutdown( void )
 {
-	ss_arl_material_release( edHealthIcon );
+	ape_material_release( edHealthIcon );
 	edHealthIcon = NULL;
 }
 

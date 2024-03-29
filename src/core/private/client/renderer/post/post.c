@@ -92,7 +92,7 @@ void ape_postfx_setup_( void )
 	}
 }
 
-void ape_postfx_register_console_variables_( void )
+void ape_register_postfx_console_variables_( void )
 {
 	/* urrrughgdshghfhksd, but yeah... */
 	register_post_effects();

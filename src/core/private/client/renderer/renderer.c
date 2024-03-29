@@ -1,9 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <plgraphics/plg_driver_interface.h>
-
 #include <pthread.h>
-#include <unistd.h>
 
 #include "ape_private.h"
 #include "world/world.h"
@@ -268,7 +265,12 @@ void ape_draw_end_( ApeViewport *viewport )
 void ape_initialize_shaders_( void );  /* renderer/shaders.c */
 void ape_initialize_textures_( void ); /* texture.c */
 
-/* renderer_rendertarget.c */
+// renderer_flare.c
+void ape_initialize_flares_( void );
+void ape_shutdown_flares_( void );
+void ape_register_flare_console_variables_( void );
+
+// renderer_rendertarget.c
 void ape_initialize_render_targets_( void );
 void ape_shutdown_render_targets_( void );
 
@@ -317,8 +319,10 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, NULL, false );
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
 
+	ape_register_flare_console_variables_();
+
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
-	ape_postfx_register_console_variables_();
+	ape_register_postfx_console_variables_();
 }
 
 void ape_initialize_renderer_( void )
@@ -332,6 +336,7 @@ void ape_initialize_renderer_( void )
 	ape_initialize_shaders_();
 	ape_initialize_materials_();
 	ape_initialize_bitmap_fonts_();
+	ape_initialize_flares_();
 
 	ape_setup_default_draw_state_( NULL );
 
@@ -350,6 +355,7 @@ void ape_shutdown_renderer_( void )
 {
 	ape_postfx_cleanup_();
 
+	ape_shutdown_flares_();
 	ape_shutdown_bitmap_fonts_();
 	ape_shutdown_materials_();
 	ape_shutdown_render_targets_();
@@ -388,7 +394,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
 	PlgUploadMesh( mesh );
 
-	ss_arl_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
@@ -402,7 +408,7 @@ unsigned int ape_sky_add_layer( const char *path, float scale, float y, float al
 		return ( unsigned int ) -1;
 	}
 
-	skyLayers[ numSkyLayers ].material = ss_arl_material_cache( path, APE_CACHE_WORLD, true, false );
+	skyLayers[ numSkyLayers ].material = ape_material_cache( path, APE_CACHE_GROUP_WORLD, true, false );
 	skyLayers[ numSkyLayers ].scale = scale;
 	skyLayers[ numSkyLayers ].alpha = alpha;
 	skyLayers[ numSkyLayers ].y = y;
@@ -442,7 +448,7 @@ void ape_sky_clear_layers( void )
 		if ( skyLayers[ i ].material == NULL )
 			continue;
 
-		ss_arl_material_release( skyLayers[ i ].material );
+		ape_material_release( skyLayers[ i ].material );
 		skyLayers[ i ].material = NULL;
 	}
 
@@ -455,7 +461,9 @@ void ape_sky_clear_layers( void )
 void ape_sky_draw_( ApeCamera *camera )
 {
 	if ( numSkyLayers == 0 )
+	{
 		return;
+	}
 
 	static unsigned int indices[][ 3 ] = {
   /* corners */
@@ -549,9 +557,9 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 
 			PLCollisionSphere sphere = PlSetupCollisionSphere( lights[ i ]->position, lights[ i ]->radius );
 			PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-			PLVector2 lightScreenPos = PlConvertWorldToScreen( &lights[ i ]->position, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, false );
+			PLVector2 lightScreenPos = PlConvertWorldToScreen( &lights[ i ]->position, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, true );
 			PLVector3 lightRadi = PlAddVector3F( lights[ i ]->position, lights[ i ]->radius );
-			PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, false );
+			PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, true );
 
 			static int radius = 256;
 
@@ -640,27 +648,29 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
+	ApeWorld *world = camera->world;
 	ape_editor_pre_render_scene_( camera );
 
-	ape_sky_draw_( camera );
-
-	ApeWorld *world = camera->world;
-	if ( world != NULL )
+	if ( !ape_config_.world.skipDraw )
 	{
-		switch ( camera->drawMode )
+		ape_sky_draw_( camera );
+		if ( world != NULL )
 		{
-			default:
-				break;
-			case APE_CAMERA_DRAW_MODE_WIREFRAME:
-				ape_world_draw_wireframe( world, camera );
-				break;
-			case APE_CAMERA_DRAW_MODE_SOLID:
-			case APE_CAMERA_DRAW_MODE_TEXTURED:
-				ape_world_draw( world, camera, NULL, true );
-				break;
-			case APE_CAMERA_DRAW_MODE_SHADED:
-				render_shaded_world( world, camera );
-				break;
+			switch ( camera->drawMode )
+			{
+				default:
+					break;
+				case APE_CAMERA_DRAW_MODE_WIREFRAME:
+					ape_world_draw_wireframe( world, camera );
+					break;
+				case APE_CAMERA_DRAW_MODE_SOLID:
+				case APE_CAMERA_DRAW_MODE_TEXTURED:
+					ape_world_draw( world, camera, NULL, true );
+					break;
+				case APE_CAMERA_DRAW_MODE_SHADED:
+					render_shaded_world( world, camera );
+					break;
+			}
 		}
 	}
 

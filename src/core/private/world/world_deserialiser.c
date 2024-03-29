@@ -191,7 +191,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 				PLPath path;
 				if ( nd_branch_get_string( branch, path, sizeof( path ) ) == ND_ERROR_SUCCESS )
 				{
-					PlPushBackVectorArrayElement( world->materials, ss_arl_material_cache( path, APE_CACHE_WORLD, true, false ) );
+					PlPushBackVectorArrayElement( world->materials, ape_material_cache( path, APE_CACHE_GROUP_WORLD, true, false ) );
 				}
 				else
 				{

@@ -11,7 +11,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	SS_Arl_ParticleEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	ss_arl_material_release( emitter->material );
+	ape_material_release( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -123,7 +123,7 @@ void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
 	}
 
 	if ( emitter->material != NULL )
-		ss_arl_material_release( emitter->material );
+		ape_material_release( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	PlFree( emitter );
@@ -279,7 +279,7 @@ void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const 
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	ss_arl_material_draw( emitter->material, emitter->mesh, NULL, 0 );
+	ape_material_draw( emitter->material, emitter->mesh, NULL, 0 );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

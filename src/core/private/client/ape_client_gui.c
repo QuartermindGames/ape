@@ -107,7 +107,7 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	ss_arl_bitmap_font_draw( defaultFont );
+	ape_bitmap_font_draw( defaultFont );
 
 	if ( debugOverlay->i_value > 1 )
 	{
@@ -174,7 +174,7 @@ void ape_initialize_gui_( void )
 
 	ss_gui_panel_set_visible( rootPanel, true );
 
-	baseGuiMat = ss_arl_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_WORLD, false, false );
+	baseGuiMat = ape_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_GROUP_WORLD, false, false );
 	if ( baseGuiMat == NULL )
 		PRINT_ERROR( "Failed to cache base material for ui!\n" );
 }
@@ -184,7 +184,7 @@ void ape_shutdown_gui_( void )
 	ss_gui_panel_destroy( rootPanel );
 	ss_gui_shutdown();
 
-	ss_arl_material_release( baseGuiMat );
+	ape_material_release( baseGuiMat );
 }
 
 void ape_set_2d_viewport_size_( int w, int h )
@@ -197,6 +197,8 @@ void ss_arl_get_2d_viewport_size_( int *width, int *height )
 {
 	PlgGetViewport( NULL, NULL, width, height );
 }
+
+void ape_flare_draw_( const ApeViewport *viewport );
 
 void ape_draw_gui_( ApeViewport *viewport )
 {
@@ -247,6 +249,8 @@ void ape_draw_gui_( ApeViewport *viewport )
 		}
 	}
 
+	ape_flare_draw_( viewport );
+
 	if ( drawGUI )
 	{
 		gui_canvas_set_size( canvas, guiWidth, guiHeight );
@@ -256,7 +260,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 		ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
 		// draw the output of the canvas
-		ss_arl_draw_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+		ape_draw_textured_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 	}
 
 	if ( !ape_is_editor_active() )

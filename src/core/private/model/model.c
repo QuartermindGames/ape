@@ -25,7 +25,7 @@ static void destroy_model( void *userData )
 	assert( model != NULL );
 
 	for ( unsigned int i = 0; i < model->numMaterials; ++i )
-		ss_arl_material_release( model->materials[ i ] );
+		ape_material_release( model->materials[ i ] );
 
 	PlSetHashTableNodeUserData( model->node, NULL );
 
@@ -193,7 +193,7 @@ static SSApeModel *deserialize_model( NdBranch *root )
 	{
 		PRINT_WARNING( "No materials for model, using fallback!\n" );
 		model->numMaterials = 1;
-		model->materials[ 0 ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
+		model->materials[ 0 ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 	}
 	else
 	{
@@ -206,10 +206,10 @@ static SSApeModel *deserialize_model( NdBranch *root )
 			if ( nd_branch_get_string( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
 				PRINT_WARNING( "Failed to get material string for model: %s\n", nd_get_error_message() );
-				model->materials[ i ] = ss_arl_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
+				model->materials[ i ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 			}
 			else
-				model->materials[ i ] = ss_arl_material_cache( materialPath, 0, true, false );
+				model->materials[ i ] = ape_material_cache( materialPath, 0, true, false );
 
 			n = nd_get_next_child( n );
 		}
