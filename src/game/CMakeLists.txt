@@ -34,7 +34,7 @@ endif ()
 #############################################
 # FERAL / SS1
 #############################################
-
+#[[
 set(FERAL_SOURCES
         ${GAME_SHARED_FILES}
         private/feral/menu/fw_menu.c
@@ -58,7 +58,7 @@ set_target_properties(FeralShell PROPERTIES FOLDER "Shells")
 add_executable(FeralForgeShell WIN32 ${FERAL_SOURCES})
 target_link_libraries(FeralForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
 set_target_properties(FeralForgeShell PROPERTIES FOLDER "Shells")
-
+]]
 #############################################
 # DETOX / SS2
 #############################################
@@ -84,5 +84,22 @@ set_target_properties(DetoxShell PROPERTIES FOLDER "Shells")
 add_executable(DetoxForgeShell WIN32 ${DETOX_SOURCES})
 target_link_libraries(DetoxForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
 set_target_properties(DetoxForgeShell PROPERTIES FOLDER "Shells")
+
+#############################################
+# SS3
+#############################################
+
+set(SS3_SOURCES
+        ${GAME_SHARED_FILES}
+        private/ss3/ss3_game.c
+)
+
+add_executable(SS3 WIN32 ${SS3_SOURCES} ../shells/launcher_sdl2/launcher.c)
+target_link_libraries(SS3 ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+set_target_properties(SS3 PROPERTIES FOLDER "Shells")
+
+add_executable(SS3Forge WIN32 ${SS3_SOURCES})
+target_link_libraries(SS3Forge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+set_target_properties(SS3Forge PROPERTIES FOLDER "Shells")
 
 #############################################

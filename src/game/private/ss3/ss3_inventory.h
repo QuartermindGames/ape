@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "fw_game.h"
+#include "ss3_game.h"
 
-#define FW_INVENTORY_MAX_SLOTS 32
+#define SS3_INVENTORY_MAX_SLOTS 32
 
-typedef struct FWInventoryItem
+typedef struct SS3InventoryItem
 {
 	char *name;// name of the item
 	char *description;
@@ -14,10 +14,10 @@ typedef struct FWInventoryItem
 	ApeMaterial *icon;
 	unsigned int quantity;
 	float weight;
-} FWInventoryItem;
+} SS3InventoryItem;
 
-typedef struct FWInventory
+typedef struct SS3Inventory
 {
-	FWInventoryItem items[ FW_INVENTORY_MAX_SLOTS ];
+	SS3InventoryItem items[ SS3_INVENTORY_MAX_SLOTS ];
 	unsigned int numItems;
-} FWInventory;
+} SS3Inventory;
