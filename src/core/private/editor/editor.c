@@ -330,6 +330,10 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 
 		node = PlGetNextLinkedListNode( node );
 	}
+
+	const ApeWorld *world = camera->world;
+	assert( world != NULL );
+	pre_render_world_node( camera, world, world->root );
 }
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )
