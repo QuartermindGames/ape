@@ -36,7 +36,7 @@ void fw_terrain_shutdown( void )
 {
 	PlmDestroyModel( terrainModel );
 
-	ss_arl_material_release( terrainMaterial );
+	ape_material_release( terrainMaterial );
 }
 
 /****************************************/

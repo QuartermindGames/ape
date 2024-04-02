@@ -151,4 +151,7 @@ void ss_arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numF
 PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
 PLGTexture *ss_arl_texture_get_fallback( void );
 
+void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity );
+void ape_clear_flare_queue_( void );
+
 ////////////////////////////////////////////////////////////////////

@@ -260,7 +260,7 @@ void ape_world_destroy( ApeWorld *self )
 				continue;
 			}
 
-			ss_arl_material_release( material );
+			ape_material_release( material );
 			material = NULL;
 		}
 		PlDestroyVectorArray( self->materials );

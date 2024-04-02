@@ -970,11 +970,16 @@ NdBranch *nd_parse_file( PLFile *file, const char *objectType )
 		}
 		else
 		{
-			const char *data = ( const char * ) ( ( uint8_t * ) PlGetFileData( file ) + strlen( ND_FORMAT_UTF8_HEADER ) );
+			size_t headerSize = strlen( ND_FORMAT_UTF8_HEADER );
+			const char *data = ( const char * ) ( ( uint8_t * ) PlGetFileData( file ) + headerSize );
+
+			length -= headerSize;
 			char *buf = PL_NEW_( char, length + 1 );
 			memcpy( buf, data, length );
+
 			buf = ndPreProcessScript( buf, &length, true );
 			root = nd_parse_buffer( buf, length );
+
 			PL_DELETE( buf );
 		}
 	}

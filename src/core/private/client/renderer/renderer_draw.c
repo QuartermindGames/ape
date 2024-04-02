@@ -34,20 +34,24 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
+void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColourF32 *colour, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
 {
-	PLGTexture *texture = ss_arl_material_get_texture_( material, 0, "diffuseMap" );
+	PLGTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
 	if ( texture == NULL )
+	{
 		return;
+	}
 
 	static PLGMesh *mesh = NULL;
 	if ( mesh == NULL )
+	{
 		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 2, 4 );
+	}
 
 	assert( mesh != NULL );
 	if ( mesh == NULL )
 	{
-		PRINT_WARNING( "Attempted to draw sprite with an invalid mesh: %s\n", PlGetError() );
+		ape_warning_( "Attempted to draw sprite with an invalid mesh: %s\n", PlGetError() );
 		return;
 	}
 
@@ -65,33 +69,39 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVect
 
 	PlgClearMesh( mesh );
 
-	unsigned int x = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y, origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty ) );
-	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty + th ) );
-	unsigned int z = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y, origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty ) );
-	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty + th ) );
+	PLColour c = PlColourF32ToU8( colour );
+	unsigned int x = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty ) );
+	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty + th ) );
+	unsigned int z = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty ) );
+	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( mesh, x, y, z );
 	PlgAddMeshTriangle( mesh, z, y, w );
 
-	ss_arl_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL, 0 );
 
 	PlPopMatrix();
 }
 
-void ss_arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour )
+void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour )
 {
-	static PLGMesh *mesh = NULL;
-	if ( mesh == NULL )
-		mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 2, 4 );
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	assert( mesh != NULL );
 
-	PlgClearMesh( mesh );
+	PlgImmPushVertex( x, y + h, 0 );
+	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
+	PlgImmTextureCoord( 0.0f, 0.0f );
+	PlgImmPushVertex( x, y, 0 );
+	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
+	PlgImmTextureCoord( 0.0f, 1.0f );
+	PlgImmPushVertex( x + w, y + h, 0 );
+	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
+	PlgImmTextureCoord( 1.0f, 0.0f );
+	PlgImmPushVertex( x + w, y, 0 );
+	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
+	PlgImmTextureCoord( 1.0f, 1.0f );
 
-	PlgAddMeshVertex( mesh, &PlVector3( x, y + h, 0 ), &pl_vecOrigin3, colour, &PlVector2( 0, 0 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x, y, 0 ), &pl_vecOrigin3, colour, &PlVector2( 0, 1 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x + w, y + h, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 0 ) );
-	PlgAddMeshVertex( mesh, &PlVector3( x + w, y, 0 ), &pl_vecOrigin3, colour, &PlVector2( 1, 1 ) );
-
-	ss_arl_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL, 0 );
 }
 
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
@@ -123,45 +133,55 @@ void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 	PlPopMatrix();
 }
 
-void ar_draw_digit( PLGTexture *numTextureTable[], float x, float y, int digit )
+void ape_draw_digit( PLGTexture *numTextureTable[], float x, float y, int digit )
 {
 	if ( digit < 0 )
+	{
 		digit = 0;
+	}
 	else if ( digit > 9 )
+	{
 		digit = 9;
+	}
 
 	PlgDrawTexturedRectangle( x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
-void ar_draw_number( PLGTexture *numTextureTable[], float x, float y, int number )
+void ape_draw_number( PLGTexture *numTextureTable[], float x, float y, int number )
 {
 	/* restrict it for sanity */
 	if ( number < 0 )
+	{
 		number = 0;
+	}
 	else if ( number > 999 )
+	{
 		number = 999;
+	}
 
 	if ( number >= 100 )
 	{
 		int digit = number / 100;
-		ar_draw_digit( numTextureTable, x, y, digit );
+		ape_draw_digit( numTextureTable, x, y, digit );
 		x += ( float ) numTextureTable[ digit ]->w + 1;
 	}
 
 	if ( number >= 10 )
 	{
 		int digit = ( number / 10 ) % 10;
-		ar_draw_digit( numTextureTable, x, y, digit );
+		ape_draw_digit( numTextureTable, x, y, digit );
 		x += ( float ) numTextureTable[ digit ]->w + 1;
 	}
 
-	ar_draw_digit( numTextureTable, x, y, number % 10 );
+	ape_draw_digit( numTextureTable, x, y, number % 10 );
 }
 
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
 {
 	if ( numPoints < 2 )
+	{
 		return;
+	}
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
@@ -169,9 +189,13 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	for ( unsigned int i = 0; i < numPoints; ++i )
 	{
 		if ( values[ i ] > max )
+		{
 			max = values[ i ];
+		}
 		if ( values[ i ] < min )
+		{
 			min = values[ i ];
+		}
 	}
 
 #if 0
@@ -182,7 +206,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	}
 #endif
 
-	static PLColour colours[ 3 ] = {
+	static const PLColour colours[ 3 ] = {
 	        PL_COLOUR_GREEN,
 	        PL_COLOUR_YELLOW,
 	        PL_COLOUR_RED,
@@ -196,13 +220,17 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	{
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * ( j - 1 ) );
 		if ( min != max )
+		{
 			points[ i ].y = y + h - 1 - ( ( values[ j - 1 ] - min ) * ( h / ( max - min ) ) );
+		}
 
 		++i;
 
 		points[ i ].x = x + ( ( w / ( numPoints - 1 ) ) * j );
 		if ( min != max )
+		{
 			points[ i ].y = y + h - 1 - ( ( values[ j ] - min ) * ( h / ( max - min ) ) );
+		}
 
 		/* leave z, it'll be initialized as 0 */
 	}
@@ -240,7 +268,9 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	// Calculate the average sum of all the points
 	double avg = 0.0;
 	for ( unsigned int i = 0; i < numPoints; ++i )
+	{
 		avg += values[ i ];
+	}
 
 	avg /= numPoints;
 
@@ -259,7 +289,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 #endif
 
-	ss_arl_bitmap_font_draw( font );
+	ape_bitmap_font_draw( font );
 
 	PL_DELETE( points );
 }

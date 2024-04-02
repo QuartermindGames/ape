@@ -25,9 +25,13 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 
 	ang.x = 0.0f;
 	if ( strcmp( id, "rotateLeft" ) == 0 )
+	{
 		ang.y += 1.5f;
+	}
 	else if ( strcmp( id, "rotateRight" ) == 0 )
+	{
 		ang.y -= 1.5f;
+	}
 
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
@@ -36,17 +40,29 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 
 	PLVector3 pos = ape_camera_get_position( playerCamera );
 	if ( strcmp( id, "moveForward" ) == 0 )
+	{
 		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	}
 	else if ( strcmp( id, "moveBackward" ) == 0 )
+	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+	}
 	else if ( strcmp( id, "moveLeft" ) == 0 )
+	{
 		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+	}
 	else if ( strcmp( id, "moveRight" ) == 0 )
+	{
 		pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+	}
 	else if ( strcmp( id, "moveUp" ) == 0 )
+	{
 		pos.y += 0.5f;
+	}
 	else if ( strcmp( id, "moveDown" ) == 0 )
+	{
 		pos.y -= 0.5f;
+	}
 
 	ape_camera_set_position( playerCamera, &pos );
 	ape_camera_set_angles( playerCamera, &ang );

@@ -47,7 +47,7 @@ ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
 	return defaultMaterials[ defaultMaterial ];
 }
 
-PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint )
+PLGTexture *ape_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint )
 {
 	assert( pass < material->numPasses );
 	if ( pass >= material->numPasses )
@@ -96,7 +96,7 @@ void ape_initialize_materials_( void )
 	        };
 	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
-		defaultMaterials[ i ] = ss_arl_material_cache( defaultMaterialPaths[ i ], APE_CACHE_WORLD, false, false );
+		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
 			PRINT_ERROR( "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
 	}
@@ -134,7 +134,7 @@ void ape_shutdown_materials_( void )
 	}
 }
 
-const char *ss_arl_material_get_path( const ApeMaterial *material )
+const char *ape_material_get_path( const ApeMaterial *material )
 {
 	return material->path;
 }
@@ -602,7 +602,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 	return material;
 }
 
-static ApeMaterial *get_material( const char *path, SS_Arl_CacheGroup group )
+static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
 {
 	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
 	while ( node != NULL )
@@ -773,7 +773,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	}
 }
 
-ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, bool useFallback, bool preview )
+ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback, bool preview )
 {
 	/* check if it's already cached */
 	ApeMaterial *material = get_material( path, group );
@@ -821,7 +821,7 @@ ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, b
 	return material;
 }
 
-void ss_arl_material_release( ApeMaterial *material )
+void ape_material_release( ApeMaterial *material )
 {
 	if ( material == NULL )
 	{
@@ -849,7 +849,7 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
 
-void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {
 	if ( ape_rendererState_.camera != NULL )
 	{

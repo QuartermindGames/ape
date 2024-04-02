@@ -49,7 +49,9 @@ static void sort_lights( const ApeCamera *camera )
 static void build_visible_light_list( ApeCamera *camera, ApeWorld *world )
 {
 	if ( world->lights == NULL )
+	{
 		return;
+	}
 
 	// determine what lights are visible -
 	// for now this operates over all the lights in the world, urgh...
@@ -58,20 +60,41 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorld *world )
 	{
 		ApeLight *light = PlGetVectorArrayElementAt( world->lights, i );
 
-		if ( !( light->flags & SS_ARL_LIGHT_FLAG_ENABLED ) )
+		if ( !ape_light_is_active( light ) )
+		{
 			continue;
+		}
 
 		if ( light->type != APE_LIGHT_TYPE_SUN )
 		{
 			//TODO: let us configure draw distance per light
 			float distance = PlVector3Length( PlSubtractVector3( light->position, ape_camera_get_position( camera ) ) );
 			if ( distance > ape_config_.renderer.maxLightDistance )
+			{
 				continue;
+			}
 
 			PLCollisionSphere sphere = PlSetupCollisionSphere( light->position, light->radius );
 			if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
+			{
 				continue;
+			}
 		}
+
+#if 0// test flares
+		PLVector3 pos = light->position;
+		pos.z += 16.0f;
+		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, light->colour.a );
+		pos.z += 16.0f;
+		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, 1.0f );
+		pos.z += 16.0f;
+		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, 1.0f );
+#else
+		if ( light->flags & APE_LIGHT_FLAG_FLARE )
+		{
+			ape_add_flare_to_queue( camera, &light->position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		}
+#endif
 
 		PlPushBackVectorArrayElement( camera->visibleLights, light );
 	}

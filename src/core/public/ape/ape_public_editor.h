@@ -57,6 +57,8 @@ void ape_editor_instance_shutdown( ApeEditorState *self );
 void ape_editor_set_active_instance( ApeEditorState *self );
 ApeEditorState *ape_editor_get_active_instance( void );
 
+ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
+
 PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst );
 
 void ape_grid_increase_size( void );

@@ -257,12 +257,14 @@ typedef enum ApeLightType
 	APE_MAX_LIGHT_TYPES
 } ApeLightType;
 
-// GM flags, do not change!!
-#define SS_ARL_LIGHT_FLAG_DYNAMIC         0x1U   // means the light is not baked, and can be moved at runtime
-#define SS_ARL_LIGHT_FLAG_FADE            0x2U   // ...
-#define SS_ARL_LIGHT_FLAG_SHADOWS         0x4U   // if enabled without runtime shadows flag, will cast lightmap shadows
-#define SS_ARL_LIGHT_FLAG_ENABLED         0x8U   // if flag is not present, light is not active
-#define SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS 0x2000U// treated as stencil shadow volumes
+typedef enum ApeLightFlag
+{
+	PL_BITFLAG( SS_ARL_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
+	PL_BITFLAG( SS_ARL_LIGHT_FLAG_SHADOWS, 1U ),        // if enabled without runtime shadows flag, will cast lightmap shadows
+	PL_BITFLAG( SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
+	PL_BITFLAG( SS_ARL_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
+	PL_BITFLAG( APE_LIGHT_FLAG_FLARE, 4U ),             // light will produce a lensflare effect when visible
+} ApeLightFlag;
 
 /// A light can only be spawned in while the world is active.
 /// \param type 	The type of light to be created.
@@ -278,5 +280,7 @@ PLVector3 ss_arl_light_get_position( const ApeLight *light );
 void ss_arl_light_set_position( ApeLight *light, const PLVector3 *position );
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
+
+bool ape_light_is_active( const ApeLight *light );
 
 PL_EXTERN_C_END

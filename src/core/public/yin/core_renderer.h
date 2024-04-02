@@ -6,13 +6,14 @@
 #include <plgraphics/plg_mesh.h>
 
 // TODO: retire this...
-typedef enum SS_Arl_CacheGroup
+typedef enum ApeCacheGroup
 {
-	APE_CACHE_EDITOR,
-	APE_CACHE_WORLD, /* everything that is cached during level load */
+	APE_CACHE_GROUP_GLOBAL,// everything here is retained globally, and won't be unloaded
+	APE_CACHE_GROUP_EDITOR,// these are cached when the editor is enabled, and free'd up when it's disabled
+	APE_CACHE_GROUP_WORLD, // will be cached on world load and free'd up when world is unloaded
 
 	APE_MAX_CACHE_GROUPS
-} SS_Arl_CacheGroup;
+} ApeCacheGroup;
 
 PL_EXTERN_C
 
@@ -137,19 +138,19 @@ ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
 /**
  * Returns the original path the material was loaded from.
  */
-const char *ss_arl_material_get_path( const ApeMaterial *material );
+const char *ape_material_get_path( const ApeMaterial *material );
 
 /**
  * Cache a new material into memory if not so already, otherwise
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
  */
-ApeMaterial *ss_arl_material_cache( const char *path, SS_Arl_CacheGroup group, bool useFallback, bool preview );
+ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback, bool preview );
 
 /**
  * Releases a reference to the material, allowing it to clean up.
  */
-void ss_arl_material_release( ApeMaterial *material );
+void ape_material_release( ApeMaterial *material );
 
 /**
  * Returns the surface type for the material.
@@ -160,7 +161,7 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ss_arl_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights );
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights );
 
 /**
  * Returns the texture representing a material.
@@ -190,15 +191,15 @@ void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, f
 void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow );
 
 void ape_bitmap_font_begin_draw( ApeBitmapFont *font );
-void ss_arl_bitmap_font_draw( ApeBitmapFont *font );
+void ape_bitmap_font_draw( ApeBitmapFont *font );
 
 /**********************************************************/
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Draw API
 
-void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
-void ss_arl_draw_quad( ApeMaterial *material, int x, int y, int w, int h, const PLColour *colour );
+void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColourF32 *colour, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
+void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour );
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 

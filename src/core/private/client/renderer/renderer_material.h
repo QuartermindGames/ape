@@ -116,7 +116,7 @@ void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *ma
 void ape_initialize_materials_( void );
 void ape_shutdown_materials_( void );
 
-PLGTexture *ss_arl_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
+PLGTexture *ape_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material );
 
