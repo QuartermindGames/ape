@@ -6,7 +6,6 @@ add_executable(cook
         model/model_how_pc.c
         model/model_obj.c
         model/model_qc.c
-        model/model_rfm.c
         model/model_smd.c
 )
 

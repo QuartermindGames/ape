@@ -6,7 +6,7 @@
 
 PL_EXTERN_C
 
-bool com_project_mount( const char *name );
+struct NdBranch *com_project_mount( const char *name );
 void com_project_unmount( void );
 
 const char *com_project_get_local_path( void );

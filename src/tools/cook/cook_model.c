@@ -47,6 +47,10 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 	return root;
 }
 
+static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst )
+{
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -65,26 +69,47 @@ void cook_model_process( const char *modelName )
 	PLPath path;
 	PlSetupPath( path, true, "models/%s", modelName );
 
+#if 1
+
+	ApeFormatModel model = {};
+	NdBranch *root = nd_load_file( path, "modelConvert" );
+	if ( root == NULL )
+	{
+
+	}
+
+#else // old
+
 	const char *extension = PlGetFileExtension( modelName );
 	if ( extension == NULL )
+	{
 		ERROR( "Failed to get extension for model (%s): %s\n", modelName, PlGetError() );
+	}
 
 	ApeFormatModel model = {};
 
 	for ( unsigned int i = 0;; ++i )
 	{
 		if ( modelCookFormats[ i ] == NULL )
+		{
 			ERROR( "Unsupported model format (%s)!\n", path );
+		}
 
 		if ( pl_strcasecmp( extension, modelCookFormats[ i ]->extension ) != 0 )
+		{
 			continue;
+		}
 
 		void *pm = modelCookFormats[ i ]->loadFunction( path );
 		if ( pm == NULL )
+		{
 			ERROR( "Failed to load model (%s)!\n", path );
+		}
 
 		if ( modelCookFormats[ i ]->convertFunction( pm, &model ) == NULL )
+		{
 			ERROR( "Failed to convert model (%s)!\n", path );
+		}
 
 		modelCookFormats[ i ]->deleteFunction( pm );
 		break;
@@ -101,4 +126,6 @@ void cook_model_process( const char *modelName )
 	{
 		ERROR( "Failed to write model: %s\n", nd_get_error_message() );
 	}
+
+#endif
 }

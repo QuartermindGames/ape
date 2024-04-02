@@ -11,7 +11,9 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
+	{
 		ERROR( "Failed to open OBJ material library: %s\n", PlGetError() );
+	}
 
 	// Copy it into a buffer we can parse
 	size_t fileBufSize = PlGetFileSize( file );
@@ -38,7 +40,9 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		{
 			assert( obj->numMaterials < OBJ_MAX_MATERIALS );
 			if ( obj->numMaterials >= OBJ_MAX_MATERIALS )
+			{
 				ERROR( "Unexpected number of materials (%u >= %u)!\n", obj->numMaterials, OBJ_MAX_MATERIALS );
+			}
 
 			material = &obj->materials[ obj->numMaterials++ ];
 			PlParseToken( &c, material->name, sizeof( material->name ) );
@@ -46,7 +50,10 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		else if ( strcmp( token, "map_Kd" ) == 0 )
 		{
 			assert( material != NULL );
-			if ( material == NULL ) ERROR( "Invalid MTL file encountered!\n" );
+			if ( material == NULL )
+			{
+				ERROR( "Invalid MTL file encountered!\n" );
+			}
 			PlParseToken( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
 		}
 
@@ -68,7 +75,9 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 			PLVector3 *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
 			assert( vertex != NULL );
 			if ( vertex == NULL )
+			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
+			}
 
 			if ( vertex->x < subObject->mins.x ) subObject->mins.x = vertex->x;
 			if ( vertex->y < subObject->mins.y ) subObject->mins.y = vertex->y;
@@ -138,7 +147,9 @@ ObjModel *model_obj_load( const char *path )
 			normal->z = strtof( end, NULL );
 
 			if ( obj->normals == NULL )
+			{
 				obj->normals = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->normals, normal );
 		}
@@ -197,9 +208,13 @@ ObjModel *model_obj_load( const char *path )
 
 			unsigned int numTriangles;
 			if ( face->numEdges < 3 )
+			{
 				numTriangles = 0;
+			}
 			else
+			{
 				numTriangles = face->numEdges - 2;
+			}
 			if ( numTriangles > 0 )
 			{
 				unsigned int indices[ OBJ_MAX_EDGES * 3 ];
@@ -270,7 +285,9 @@ ObjModel *model_obj_load( const char *path )
 			for ( materialIndex = 0; materialIndex < obj->numMaterials; ++materialIndex )
 			{
 				if ( strcmp( token, obj->materials[ materialIndex ].name ) == 0 )
+				{
 					break;
+				}
 			}
 		}
 		// Unhandled lines we just skip for now...
@@ -281,7 +298,9 @@ ObjModel *model_obj_load( const char *path )
 	PL_DELETE( txtBuf );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
+	{
 		determine_sub_object_bounds( obj, &obj->subObjects[ i ] );
+	}
 
 	return obj;
 }
@@ -289,14 +308,18 @@ ObjModel *model_obj_load( const char *path )
 void model_obj_destroy( ObjModel *obj )
 {
 	if ( obj == NULL )
+	{
 		return;
+	}
 
 	PlDestroyVectorArrayEx( obj->vertices, PlFree );
 	PlDestroyVectorArrayEx( obj->normals, PlFree );
 	PlDestroyVectorArrayEx( obj->textureCoords, PlFree );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
+	{
 		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, PlFree );
+	}
 
 	PL_DELETE( obj );
 }

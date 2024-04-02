@@ -34,6 +34,8 @@ typedef struct ComProject
 	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
 	unsigned int numDependencies;
 
+	NdBranch *config;
+
 	PLPath localPath;
 } ComProject;
 
@@ -43,8 +45,10 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 {
 	unsigned int numChildren = nd_branch_get_num_of_children( root );
 	if ( numChildren == 0 )
-		/* nothing to mount, okay then */
+	{
+		// nothing to mount, okay then
 		return;
+	}
 
 	NdBranch *child = nd_branch_get_first_child( root );
 	if ( nd_branch_get_type( child ) != ND_PROPERTY_STRING )
@@ -89,9 +93,13 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 	NdBranch *child;
 	if ( ( child = nd_branch_get_child_by_name( root, "version" ) ) != NULL )
+	{
 		nd_branch_get_int32_array( child, out->version, 3 );
+	}
 	if ( ( child = nd_branch_get_child_by_name( root, "mountLocations" ) ) != NULL )
+	{
 		parse_mount_config( child, out );
+	}
 	if ( ( child = nd_branch_get_child_by_name( root, "dependencies" ) ) != NULL )
 	{
 		child = nd_branch_get_first_child( child );
@@ -153,6 +161,12 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 static void free_project( ComProject *out )
 {
+	if ( out->config != NULL )
+	{
+		nd_branch_destroy( out->config );
+		out->config = NULL;
+	}
+
 	if ( out->mountLocation != NULL )
 	{
 		PlClearMountedLocation( out->mountLocation );
@@ -162,7 +176,9 @@ static void free_project( ComProject *out )
 	for ( unsigned int i = 0; i < out->numSubMountLocations; ++i )
 	{
 		if ( out->subMountLocations[ i ] == NULL )
+		{
 			break;
+		}
 
 		PlClearMountedLocation( out->subMountLocations[ i ] );
 		out->subMountLocations[ i ] = NULL;
@@ -183,13 +199,13 @@ static void free_project( ComProject *out )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-bool com_project_mount( const char *name )
+NdBranch *com_project_mount( const char *name )
 {
 	assert( !project.isActive );
 	if ( project.isActive )
 	{
 		com_warning_( "A project is already active! Unmount current project first.\n" );
-		return false;
+		return NULL;
 	}
 
 	PLPath path;
@@ -199,15 +215,16 @@ bool com_project_mount( const char *name )
 	if ( root == NULL )
 	{
 		com_warning_( "Failed to load project file: %s\n", nd_get_error_message() );
-		return false;
+		return NULL;
 	}
 
 	if ( deserialize_project( root, name, &project ) == NULL )
+	{
 		com_project_unmount();// call unmount to cleanup
+	}
 
-	nd_branch_destroy( root );
-
-	return true;
+	project.config = root;
+	return project.config;
 }
 
 void com_project_unmount( void )

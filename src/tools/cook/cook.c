@@ -5,6 +5,55 @@
 
 CookState cook_state;
 
+static void cook_project( NdBranch *root )
+{
+	const char *projectName = com_project_get_name();
+	printf( "------------------------------------------------------\n"
+	        "Cooking \"%s\" project...\n", projectName );
+
+	NdBranch *cookBranch = nd_branch_get_child_by_name( root, "cook" );
+	if ( cookBranch == NULL )
+	{
+		ERROR( "No cook configuration specified for project, aborting!\n" );
+	}
+
+	NdBranch *childBranch;
+
+	childBranch = nd_branch_get_child_by_name( cookBranch, "worlds" );
+	if ( childBranch != NULL )
+	{
+		printf( "Processing %u worlds...\n", nd_branch_get_num_of_children( childBranch ) );
+
+		childBranch = nd_branch_get_first_child( childBranch );
+		while( childBranch != NULL )
+		{
+			char worldName[ 64 ];
+			nd_branch_get_string( childBranch, worldName, sizeof( worldName ) );
+
+			cook_world_process( worldName );
+
+			childBranch = nd_get_next_child( childBranch );
+		}
+	}
+
+	childBranch = nd_branch_get_child_by_name( cookBranch, "models" );
+	if ( childBranch != NULL )
+	{
+		printf( "Processing %u models...\n", nd_branch_get_num_of_children( childBranch ) );
+
+		childBranch = nd_branch_get_first_child( childBranch );
+		while ( childBranch != NULL )
+		{
+			char modelName[ 64 ];
+			nd_branch_get_string( childBranch, modelName, sizeof( modelName ) );
+
+			cook_model_process( modelName );
+
+			childBranch = nd_get_next_child( childBranch );
+		}
+	}
+}
+
 int main( int argc, char **argv )
 {
 	printf( "COOK - APE's project cooking utility!\n"
@@ -17,7 +66,9 @@ int main( int argc, char **argv )
 	}
 
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
+	{
 		ERROR( "Failed to initialize plcore: %s\n", PlGetError() );
+	}
 
 	PL_ZERO_( cook_state );
 
@@ -26,12 +77,12 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
 
+	NdBranch *config;
 	const char *projectName = argv[ 1 ];
-	if ( !com_project_mount( projectName ) )
+	if ( ( config = com_project_mount( projectName ) ) == NULL )
+	{
 		ERROR( "Failed to mount project (%s)!\n", projectName );
-
-	PLPath configPath;
-	PlSetupPath( configPath, true, "projects/%s/%s.prj.n", projectName, projectName );
+	}
 
 	typedef struct LaunchCommand
 	{
@@ -47,7 +98,9 @@ int main( int argc, char **argv )
 	for ( unsigned int i = 2; i < argc; ++i )
 	{
 		if ( argv[ i ] == NULL )
+		{
 			break;
+		}
 
 		if ( numCommands >= MAX_COMMANDS )
 		{
@@ -62,7 +115,9 @@ int main( int argc, char **argv )
 			numCommands++;
 		}
 		else
+		{
 			printf( "Unknown command \"%s\", ignoring...\n", argv[ i ] );
+		}
 	}
 
 	// Let's go ahead and operate on them now
@@ -73,9 +128,13 @@ int main( int argc, char **argv )
 		{
 			printf( " %s \"%s\" -> ", commands[ i ].command, commands[ i ].argument );
 			if ( pl_strcasecmp( commands[ i ].command, "/world" ) == 0 )
+			{
 				cook_world_process( commands[ i ].argument );
+			}
 			else if ( pl_strcasecmp( commands[ i ].command, "/model" ) == 0 )
+			{
 				cook_model_process( commands[ i ].argument );
+			}
 
 			printf( "OK\n" );
 		}
@@ -83,8 +142,9 @@ int main( int argc, char **argv )
 	}
 
 	// Otherwise we'll just carry on as normal
-	printf( "Processing \"%s\" project...\n", argv[ 1 ] );
-	//TODO: operate on entire project
+	cook_project( config );
+
+	printf( "OK\n" );
 
 	return EXIT_SUCCESS;
 }

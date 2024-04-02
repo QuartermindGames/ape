@@ -10,8 +10,9 @@ static void process_properties( const char *worldName, NdBranch *root )
 	PlSetupPath( path, true, "worlds/%s/%s." APE_WORLD_EXTENSION_CFG, worldName, worldName );
 	NdBranch *properties = nd_load_file( path, "properties" );
 	if ( properties == NULL )
+	{
 		ERROR( "Failed to open world properties file (%s): %s\n", path, nd_get_error_message() );
-
+	}
 	nd_branch_push_back_branch( root, properties );
 	nd_branch_destroy( properties );
 }
@@ -22,7 +23,9 @@ static void process_geometry( const char *worldName, NdBranch *root )
 	PlSetupPath( path, true, "worlds/%s/%s.obj", worldName, worldName );
 	ObjModel *model = model_obj_load( path );
 	if ( model == NULL )
+	{
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
+	}
 
 	root = nd_branch_push_back_object( root, "geometry" );
 
@@ -37,6 +40,7 @@ static void process_geometry( const char *worldName, NdBranch *root )
 			nd_branch_push_back_string( child, NULL, tmp );
 		}
 	}
+	printf( "%u materials\n", model->numMaterials );
 
 	if ( model->numSubObjects > 0 )
 	{
@@ -59,9 +63,10 @@ static void process_geometry( const char *worldName, NdBranch *root )
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			PLVector3 *v = PlGetVectorArrayElementAt( model->vertices, j );
-			assert( v != NULL );
 			if ( v == NULL )
+			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
+			}
 
 			nd_branch_push_back_float32( child, NULL, v->x );
 			nd_branch_push_back_float32( child, NULL, v->y );
@@ -121,21 +126,27 @@ static void process_geometry( const char *worldName, NdBranch *root )
 
 					PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
+					{
 						nd_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
-
+					}
 					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
+					{
 						nd_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+					}
 				}
 			}
 		}
 	}
+	printf( "%u sub objects\n", model->numSubObjects );
 
 	model_obj_destroy( model );
 }
 
 void cook_world_process( const char *worldName )
 {
+	printf( "Processing world: %s\n", worldName );
+
 	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
 	nd_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
 
@@ -145,5 +156,7 @@ void cook_world_process( const char *worldName )
 	PLPath path;
 	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName );
 	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	{
 		ERROR( "Failed to write world: %s\n", nd_get_error_message() );
+	}
 }
