@@ -89,7 +89,7 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
-	static const float SPEED = 0.5f;
+	static const float SPEED = 2.0f;
 
 	if ( strcmp( id, "moveForward" ) == 0 )
 	{

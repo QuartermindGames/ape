@@ -32,58 +32,29 @@ else ()
 endif ()
 
 #############################################
-# FERAL / SS1
-#############################################
-#[[
-set(FERAL_SOURCES
-        ${GAME_SHARED_FILES}
-        private/feral/menu/fw_menu.c
-        private/feral/fw_building.c
-        private/feral/fw_character.c
-        private/feral/fw_component_stats.c
-        private/feral/fw_game.c
-        private/feral/fw_inventory.c
-        private/feral/fw_name_generator.c
-        private/feral/fw_terrain.c
-        private/feral/fw_weapon.c
-)
-
-add_executable(FeralShell WIN32
-        ${FERAL_SOURCES}
-        ../shells/launcher_sdl2/launcher.c
-)
-target_link_libraries(FeralShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
-set_target_properties(FeralShell PROPERTIES FOLDER "Shells")
-
-add_executable(FeralForgeShell WIN32 ${FERAL_SOURCES})
-target_link_libraries(FeralForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
-set_target_properties(FeralForgeShell PROPERTIES FOLDER "Shells")
-]]
-#############################################
 # DETOX / SS2
 #############################################
 
-set(DETOX_SOURCES
+set(TOX_SOURCES
         ${GAME_SHARED_FILES}
         private/detox/entities/light_night.c
         private/detox/ui/tox_ui.c
-        private/detox/ui/tox_ui_draw.c
         private/detox/tox_character.c
         private/detox/tox_game.c
         private/detox/tox_quest.c
         private/detox/tox_world.c
 )
 
-add_executable(DetoxShell WIN32
-        ${DETOX_SOURCES}
+add_executable(Tox WIN32
+        ${TOX_SOURCES}
         ../shells/launcher_sdl2/launcher.c
 )
-target_link_libraries(DetoxShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
-set_target_properties(DetoxShell PROPERTIES FOLDER "Shells")
+target_link_libraries(Tox ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+set_target_properties(Tox PROPERTIES FOLDER "Shells")
 
-add_executable(DetoxForgeShell WIN32 ${DETOX_SOURCES})
-target_link_libraries(DetoxForgeShell ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
-set_target_properties(DetoxForgeShell PROPERTIES FOLDER "Shells")
+add_executable(ToxForge WIN32 ${TOX_SOURCES})
+target_link_libraries(ToxForge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+set_target_properties(ToxForge PROPERTIES FOLDER "Shells")
 
 #############################################
 # SS3
@@ -92,6 +63,8 @@ set_target_properties(DetoxForgeShell PROPERTIES FOLDER "Shells")
 set(SS3_SOURCES
         ${GAME_SHARED_FILES}
         private/ss3/ss3_game.c
+        private/ss3/ss3_name_generator.c
+        private/ss3/ss3_ui.c
 )
 
 add_executable(SS3 WIN32 ${SS3_SOURCES} ../shells/launcher_sdl2/launcher.c)
