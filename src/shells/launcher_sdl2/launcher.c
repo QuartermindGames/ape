@@ -83,7 +83,7 @@ SDL_Window *create_window( const char *title, int width, int height, bool fullsc
 	int flags = 0;
 	if ( fullscreen )
 	{
-		flags |= SDL_WINDOW_BORDERLESS;
+		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
 		SDL_Rect rect;
 		SDL_GetDisplayBounds( 0, &rect );
@@ -434,12 +434,12 @@ static bool initialize_display( void )
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
 #if !NDEBUG
-	bool fullscreen = false;
+	bool fullscreen = true;
 #else
 	bool fullscreen = true;
 #endif
-	int width = 1280;
-	int height = 720;
+	int width = 1920;
+	int height = 1080;
 	if ( shellConfig != NULL )
 	{
 		fullscreen = nd_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
