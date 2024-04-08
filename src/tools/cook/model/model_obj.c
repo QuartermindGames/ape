@@ -45,7 +45,7 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 			}
 
 			material = &obj->materials[ obj->numMaterials++ ];
-			PlParseToken( &c, material->name, sizeof( material->name ) );
+			PlParseEnclosedString( &c, material->name, sizeof( material->name ) );
 		}
 		else if ( strcmp( token, "map_Kd" ) == 0 )
 		{
@@ -54,7 +54,7 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 			{
 				ERROR( "Invalid MTL file encountered!\n" );
 			}
-			PlParseToken( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
+			PlParseEnclosedString( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
 		}
 
 		PlSkipLine( &c );
@@ -119,7 +119,9 @@ ObjModel *model_obj_load( const char *path )
 			PlParseToken( &c, subObject->name, sizeof( subObject->name ) );
 
 			if ( subObject->faces == NULL )
+			{
 				subObject->faces = PlCreateVectorArray( 1 );
+			}
 		}
 		// Vertex position
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
@@ -132,7 +134,9 @@ ObjModel *model_obj_load( const char *path )
 			vertex->z = strtof( end, NULL );
 
 			if ( obj->vertices == NULL )
+			{
 				obj->vertices = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->vertices, vertex );
 		}
@@ -163,7 +167,9 @@ ObjModel *model_obj_load( const char *path )
 			uv->y = strtof( end, NULL );
 
 			if ( obj->textureCoords == NULL )
+			{
 				obj->textureCoords = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->textureCoords, uv );
 		}
@@ -181,7 +187,9 @@ ObjModel *model_obj_load( const char *path )
 			for ( ; face->numEdges < OBJ_MAX_EDGES; face->numEdges++ )
 			{
 				if ( PlIsEndOfLine( c ) )
+				{
 					break;
+				}
 
 				char *end;
 				face->indices[ face->numEdges ][ OBJ_INDEX_VERTEX ] = ( strtoul( c, &end, 10 ) - 1 );
@@ -267,7 +275,7 @@ ObjModel *model_obj_load( const char *path )
 			c += 7;
 
 			char token[ 128 ];
-			PlParseToken( &c, token, sizeof( token ) );
+			PlParseEnclosedString( &c, token, sizeof( token ) );
 
 			PLPath libPath;
 			PlSetupPath( libPath, true, "%s", path );
@@ -281,7 +289,13 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 7;
 			char token[ 128 ];
-			PlParseToken( &c, token, sizeof( token ) );
+#if 1
+			PlParseEnclosedString( &c, token, sizeof( token ) );
+#else
+			// well, the above would've been nice, but I hit a case where it's not enclosed despite having spaces...
+			// maybe reading the whole line will be okay????
+			PlParseLine( &c, token, sizeof( token ) );
+#endif
 			for ( materialIndex = 0; materialIndex < obj->numMaterials; ++materialIndex )
 			{
 				if ( strcmp( token, obj->materials[ materialIndex ].name ) == 0 )
@@ -289,6 +303,8 @@ ObjModel *model_obj_load( const char *path )
 					break;
 				}
 			}
+
+			assert( materialIndex < obj->numMaterials );
 		}
 		// Unhandled lines we just skip for now...
 

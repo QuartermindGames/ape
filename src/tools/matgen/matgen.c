@@ -173,9 +173,9 @@ int main( int argc, char **argv )
 
 	PL_ZERO_( matGen );
 
-	if ( !PlPathExists( "materials" ) )
+	if ( !PlPathExists( "materials" ) && !PlPathExists( "textures" ) )
 	{
-		printf( "Couldn't find 'materials' sub-folder, please be sure you execute matgen "
+		printf( "Couldn't find 'materials'/'textures' sub-folder, please be sure you execute matgen "
 		        "from the root directory of your project!\n" );
 		return EXIT_FAILURE;
 	}

@@ -32,15 +32,26 @@ static void process_geometry( const char *worldName, NdBranch *root )
 	NdBranch *child;
 	if ( model->numMaterials > 0 )
 	{
+		printf( "Building material table (%u)...\n", model->numMaterials );
 		child = nd_branch_push_back_string_array( root, "materials", NULL, 0 );
 		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			char tmp[ 128 ];
-			snprintf( tmp, sizeof( tmp ), "materials/world/%s.mat.n", model->materials[ i ].name );
+			snprintf( tmp, sizeof( tmp ), "materials/%s.mat.n", model->materials[ i ].name );
+			if ( !PlFileExists( tmp ) )
+			{
+				snprintf( tmp, sizeof( tmp ), "textures/%s.mat.n", model->materials[ i ].name );
+				if ( !PlFileExists( tmp ) )
+				{
+					WARN( "Failed to find material (%s)!\n", tmp );
+				}
+			}
+
+			printf( " %u \"%s\"\n", nd_branch_get_num_of_children( child ), tmp );
 			nd_branch_push_back_string( child, NULL, tmp );
 		}
 	}
-	printf( "%u materials\n", model->numMaterials );
+	printf( "%u materials\n", nd_branch_get_num_of_children( child ) );
 
 	if ( model->numSubObjects > 0 )
 	{
@@ -50,7 +61,9 @@ static void process_geometry( const char *worldName, NdBranch *root )
 			// Ignore sub objects that don't have any faces
 			unsigned int numFaces = PlGetNumVectorArrayElements( model->subObjects[ i ].faces );
 			if ( numFaces == 0 )
+			{
 				continue;
+			}
 
 			NdBranch *roomBranch = nd_branch_push_back_object( child, NULL );
 			nd_branch_push_back_int32( roomBranch, "uid", i );
@@ -107,6 +120,11 @@ static void process_geometry( const char *worldName, NdBranch *root )
 			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
 			for ( unsigned int j = 0; j < numFaces; ++j )
 			{
+				if ( strncmp( model->materials[ faces[ j ]->material ].name, "tools/skip", 10 ) == 0 )
+				{
+					continue;
+				}
+
 				NdBranch *faceBranch = nd_branch_push_back_object( child, NULL );
 				nd_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
 				nd_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
