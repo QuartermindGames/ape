@@ -237,3 +237,8 @@ void com_project_unmount( void )
 const char *com_project_get_local_path( void ) { return project.localPath; }
 const char *com_project_get_base_name( void ) { return project.baseName; }
 const char *com_project_get_name( void ) { return project.name; }
+
+NdBranch *com_project_get_config()
+{
+	return project.config;
+}
