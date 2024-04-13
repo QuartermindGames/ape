@@ -13,7 +13,7 @@
 
 static const unsigned int DEFAULT_GRID_SCALE = 2;
 static const unsigned int MAX_GRID_SCALE = 16;
-#define GRID_SIZE     64
+#define GRID_SIZE     256
 #define GRID_ELEMENTS ( GRID_SIZE * GRID_SIZE )
 
 static PLMatrix4 gridTransform;

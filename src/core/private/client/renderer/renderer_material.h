@@ -17,6 +17,13 @@ typedef enum SS_Arl_MaterialBuiltinVar
 	SS_ARL_MAX_MATERIAL_BUILTINS
 } SS_Arl_MaterialBuiltinVar;
 
+typedef enum ApeMaterialFlag
+{
+	PL_BITFLAG( APE_MATERIAL_FLAG_MIRROR, 0U ),
+	PL_BITFLAG( APE_MATERIAL_FLAG_SHADOWS, 1U ),
+	PL_BITFLAG( APE_MATERIAL_FLAG_BLENDED, 2U ),
+} ApeMaterialFlag;
+
 typedef struct ApeMaterial ApeMaterial;
 
 #define SS_ARL_MATERIAL_VAR_NAME_LENGTH   64
@@ -119,6 +126,7 @@ void ape_shutdown_materials_( void );
 PLGTexture *ape_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
 
 bool ss_arl_material_shadows_enabled( const ApeMaterial *material );
+bool ape_material_is_blended( const ApeMaterial *self );
 
 void ape_tick_materials_( void );
 

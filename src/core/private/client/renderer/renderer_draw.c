@@ -63,17 +63,17 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColo
 
 	PlTranslateMatrix( *position );
 
-	PlRotateMatrix( angles->x, 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( angles->y, 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix( angles->z, 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix( PL_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( PL_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
 
 	PlgClearMesh( mesh );
 
 	PLColour c = PlColourF32ToU8( colour );
 	unsigned int x = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty ) );
-	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty + th ) );
+	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y - ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty + th ) );
 	unsigned int z = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty ) );
-	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y + ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty + th ) );
+	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y - ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( mesh, x, y, z );
 	PlgAddMeshTriangle( mesh, z, y, w );

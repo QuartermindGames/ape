@@ -170,6 +170,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
  */
 PLGTexture *ss_arl_material_get_preview_texture( ApeMaterial *material );
 
+unsigned int ape_material_get_flags( const ApeMaterial *self );
+
 /**********************************************************/
 // Fonts
 /**********************************************************/
@@ -181,14 +183,10 @@ typedef struct ApeBitmapFont ApeBitmapFont;
 ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end );
 void ss_arl_bitmap_font_release( ApeBitmapFont *font );
 
-ApeBitmapFont *ss_arl_get_default_bitmap_font( void );
 ApeBitmapFont *ape_get_default_small_bitmap_font( void );
 
 void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character );
 void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow );
-
-void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, float scale, PLColour colour, char character );
-void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow );
 
 void ape_bitmap_font_begin_draw( ApeBitmapFont *font );
 void ape_bitmap_font_draw( ApeBitmapFont *font );

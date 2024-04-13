@@ -387,12 +387,10 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlPushMatrix();
 
 	PlLoadIdentityMatrix();
-
 	PlTranslateMatrix( *location );
 
 	/* todo: do this in shader... */
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
-	PlgUploadMesh( mesh );
 
 	ape_material_draw( material, mesh, NULL, 0 );
 
@@ -493,19 +491,15 @@ void ape_sky_draw_( ApeCamera *camera )
 		}
 	}
 
-	PLVector3 location;
-	location = camera->internal->position;
-	location.y += 10.0f;
-
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 	PlgDepthMask( false );
 
 	//TODO: this is all very slow and very gross, but cobbled together to meet a deadline...
 
-	double ticks = ape_get_num_ticks();
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		location.y = skyLayers[ i ].y;
+		PLVector3 location = camera->internal->position;
+		location.y += ( skyLayers[ i ].y + 10.0f );
 
 		PlgClearMesh( mesh );
 
@@ -519,7 +513,9 @@ void ape_sky_draw_( ApeCamera *camera )
 		PlgAddMeshVertex( mesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* top left far */
 
 		for ( unsigned int j = 0; j < numTriangles; ++j )
+		{
 			PlgAddMeshTriangle( mesh, indices[ j ][ 0 ], indices[ j ][ 1 ], indices[ j ][ 2 ] );
+		}
 
 		draw_sky_layer( mesh, skyLayers[ i ].material, &location, skyLayers[ i ].offset.x, skyLayers[ i ].offset.y, skyLayers[ i ].scale );
 	}

@@ -152,8 +152,8 @@ bool guiInitializeFonts_( void )
 	static const char *fontPaths[ GUI_MAX_FONT_DEFAULTS ] = {
 	        [GUI_FONT_DEFAULT_LARGE] = "guis/fonts/noto_mono_24.fnt",
 	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/noto_mono_12.fnt",
-	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/Noto Mono 10.fnt",
-	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/Noto Mono 8.fnt",
+	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/proggysmalltt_12.fnt",
+	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/proggytinytt_12.fnt",
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{

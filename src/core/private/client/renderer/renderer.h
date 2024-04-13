@@ -11,6 +11,8 @@
 
 #include "renderer_texture.h"
 
+typedef struct PLHashTable PLHashTable;
+
 typedef struct ApeRendererStats
 {
 	PLVector3 cameraPos;
@@ -33,6 +35,10 @@ typedef struct ApeSpriteFrame
 	PLGTexture *texture;
 } ApeSpriteFrame;
 
+#define APE_CAMERA_MAX_ROOM_VISITS    4  // Maximum number of times we can visit the same room. TODO: hook up to var
+#define APE_CAMERA_MAX_VISIBLE_ROOMS  256// we'll go through 256 portals maximum (maybe hook this to a var)
+#define APE_CAMERA_MAX_VISIBLE_LIGHTS 512//TODO: hook up to var
+
 typedef struct ApeCamera
 {
 	// This should always come first!
@@ -52,10 +58,25 @@ typedef struct ApeCamera
 	ApeWorldRoom *room;
 
 	// For visibility
-	bool dirty;
-	PLVector3 oldPosition, oldAngles;
-	PLVectorArray *visibleLights;
-	PLVectorArray *visibleRooms;
+	struct
+	{
+		bool dirty;
+		PLVector3 oldPosition, oldAngles;
+
+		ApeLight *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
+		unsigned int numLights;
+
+		struct
+		{
+			PLMatrix4 transform;
+			unsigned int numVisits;
+			ApeWorldRoom *room;
+		} rooms[ APE_CAMERA_MAX_VISIBLE_ROOMS ];
+		unsigned int numRooms;
+		PLHashTable *visitedRooms;
+	} visibility;
+
+	/////////////////////////////////////////////////////////////////////////////////////
 
 	PLVector3 forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;

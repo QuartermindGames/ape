@@ -236,6 +236,9 @@ void ape_world_room_destroy( ApeWorldRoom *self );
 
 void ape_world_face_generate_bounds( ApeWorldFace *face );
 
+bool ape_world_face_is_mirror( const ApeWorldFace *self );
+bool ape_world_face_is_portal( const ApeWorldFace *self );
+
 ////////////////////////////////////////////////////////////////////
 // Lighting
 

@@ -4,6 +4,8 @@
 
 #include "world.h"
 
+#include "client/renderer/renderer_material.h"
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -37,4 +39,22 @@ void ape_brush_destroy( ApeBrush *brush )
 
 void ape_world_brush_draw_( const ApeBrush *brush )
 {
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool ape_world_face_is_mirror( const ApeWorldFace *self )
+{
+	unsigned int flags = ape_material_get_flags( self->material );
+	if ( flags & APE_MATERIAL_FLAG_MIRROR )
+	{
+		return true;
+	}
+
+	return ( self->flags & APE_WORLD_FACE_FLAG_MIRRORED );
+}
+
+bool ape_world_face_is_portal( const ApeWorldFace *self )
+{
+	return ( ape_world_face_is_mirror( self ) || ( self->portal != NULL ) );
 }

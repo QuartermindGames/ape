@@ -5,10 +5,11 @@
 
 #include "ape_private.h"
 
+#include "common_project.h"
+
 #include "editor.h"
 
 #include "client/renderer/renderer.h"
-#include "client/renderer/renderer_font.h"
 #include "client/renderer/renderer_material.h"
 
 #include "game/game_interface.h"
@@ -18,6 +19,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
+
+static NdBranch *editorConfigRoot;
 
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
@@ -72,6 +75,8 @@ static int compare_materials( const void *a, const void *b )
 
 static void cache_preview_materials( void )
 {
+	ape_print_( "Attempting to cache preview materials...\n" );
+
 	materialsArray = PlCreateVectorArray( 256 );
 	if ( materialsArray == NULL )
 	{
@@ -79,17 +84,27 @@ static void cache_preview_materials( void )
 	}
 
 	// Cache all the materials in a preview state
-	PlScanDirectory( "materials/world/", "n", cache_material_preview_callback, true, NULL );
+	NdBranch *child = nd_branch_get_child_by_name( editorConfigRoot, "materialPaths" );
+	if ( child == nullptr )
+	{
+		ape_warning_( "No material paths specified for editor!\n" );
+		return;
+	}
+
+	child = nd_branch_get_first_child( child );
+	while ( child != nullptr )
+	{
+		PLPath buf;
+		nd_branch_get_string( child, buf, sizeof( buf ) );
+		PlScanDirectory( buf, "n", cache_material_preview_callback, true, NULL );
+		child = nd_get_next_child( child );
+	}
 
 	unsigned int numMaterials;
 	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
-	PRINT( "Found %u world materials\n", numMaterials );
+	PRINT( "Found %u materials\n", numMaterials );
 
 	qsort( materials, numMaterials, sizeof( ApeMaterial * ), compare_materials );
-	for ( unsigned int i = 0; i < numMaterials; ++i )
-	{
-		PRINT( "\t%s\n", ape_material_get_path( materials[ i ] ) );
-	}
 }
 
 static void release_preview_materials( void )
@@ -225,6 +240,14 @@ static void create_world_command( unsigned int, char ** )
 
 void ape_initialize_editor_( void )
 {
+	NdBranch *root = com_project_get_config();
+	assert( root != NULL );
+	editorConfigRoot = nd_branch_get_child_by_name( root, "editor" );
+	if ( editorConfigRoot == nullptr )
+	{
+		editorConfigRoot = nd_branch_push_back_object( root, "editor" );
+	}
+
 	selectionObjectTable = PlCreateHashTable();
 	if ( selectionObjectTable == NULL )
 	{
@@ -262,14 +285,24 @@ void ape_register_editor_console_variables_( void )
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
 }
 
-static void pre_render_world_node( const ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
+static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
 {
 	assert( world != NULL && worldNode != NULL );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
 	const PLVector3 position = PlGetMatrix4Translation( &worldNode->transform );
 	if ( nodeIcons[ worldNode->type ] != NULL )
 	{
-		ape_draw_sprite( nodeIcons[ worldNode->type ], &PL_QUAD( 0.0f, 0.0f, 64.0f, 64.0f ), &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ), &position, &pl_vecOrigin3, &pl_vecOrigin3, 1.0f );
+		static const float size = 64.0f;
+		static const float scale = 0.5f;
+		ape_draw_sprite( nodeIcons[ worldNode->type ],
+		                 &PL_QUAD( 0.0f, 0.0f, size, size ),
+		                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),
+		                 &PL_VECTOR3( position.x, position.y, position.z ),
+		                 &PL_VECTOR3( -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ) ),
+		                 &PL_VECTOR3( 0.0f, camera->internal->angles.y, 0.0f ),
+		                 scale );
 	}
 
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -279,24 +312,64 @@ static void pre_render_world_node( const ApeCamera *camera, const ApeWorld *worl
 	while ( node != NULL )
 	{
 		ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( node );
-		pre_render_world_node( camera, world, childWorldNode );
-		node = PlGetLinkedListNodeUserData( node );
+		pre_render_nodes( camera, world, childWorldNode );
+		node = PlGetNextLinkedListNode( node );
+	}
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+}
+
+static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
+{
+	ApeCamera *camera = viewport->camera;
+	assert( camera != NULL );
+
+	unsigned int num = 1;
+	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
+	while ( node != NULL )
+	{
+		PLVector3 *p = PlGetLinkedListNodeUserData( node );
+		assert( p != NULL );
+
+		PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+		PLVector2 screenPos = PlConvertWorldToScreen( p, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
+		{
+			return;
+		}
+
+		char msg[ 16 ];
+		snprintf( msg, sizeof( msg ), "%u", num++ );
+		gui_font_draw_string( font, screenPos.x, screenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
+
+		node = PlGetNextLinkedListNode( node );
+
+		PLVector3 *e;
+		if ( node == NULL )
+		{
+			e = PlGetLinkedListNodeUserData( PlGetFirstNode( editorInstance->brushPlotPoints ) );
+		}
+		else
+		{
+			e = PlGetLinkedListNodeUserData( node );
+		}
+		assert( e != NULL );
+
+		PLVector2 otherScreenPos = PlConvertWorldToScreen( e, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		if ( otherScreenPos.x == 0.0f && otherScreenPos.y == 0.0f )
+		{
+			return;
+		}
+
+		// determine the point between the two on the screen
+		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
+		snprintf( msg, sizeof( msg ), "%f", PlVector3Length( PlSubtractVector3( *e, *p ) ) );
+		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 }
 
-void ape_editor_pre_render_scene_( const ApeCamera *camera )
+static void pre_render_brush( ApeEditorState *instance )
 {
-	if ( !ape_is_editor_active() )
-	{
-		return;
-	}
-
-	ApeEditorState *instance = ape_editor_get_active_instance();
-	if ( instance == NULL )
-	{
-		return;
-	}
-
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
 	while ( node != NULL )
@@ -314,45 +387,100 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 
 	ape_material_draw( planeMaterial, mesh, NULL, 0 );
 
+	// draw boundary
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 	node = PlGetFirstNode( instance->brushPlotPoints );
-	while ( node != NULL )
+	while ( true )
 	{
+		if ( node == NULL )
+		{
+			break;
+		}
+
 		const PLVector3 *p = PlGetLinkedListNodeUserData( node );
 		assert( p != NULL );
 
 		PLCollisionAABB bounds = {
 		        .origin = *p,
 		        .mins = {-0.1f, -0.1f, -0.1f},
-		        .maxs = { 0.1f, 0.1f,  0.1f },
+		        .maxs = {0.1f,  0.1f,  0.1f },
 		};
 		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
 
+		const PLVector3 *e;
 		node = PlGetNextLinkedListNode( node );
+		if ( node != NULL )
+		{
+			e = PlGetLinkedListNodeUserData( node );
+		}
+		else
+		{
+			e = PlGetLinkedListNodeUserData( PlGetFirstNode( instance->brushPlotPoints ) );
+		}
+		assert( e != NULL );
+		PlgDrawSimpleLine( PlMatrix4Identity(), *p, *e, PL_COLOUR_PURPLE );
+	}
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+}
+
+static void pre_render_vertex( ApeEditorState *instance, const ApeCamera *camera )
+{
+	const ApeWorld *world = camera->world;
+	assert( world != NULL );
+}
+
+void ape_editor_pre_render_scene_( const ApeCamera *camera )
+{
+	if ( !ape_is_editor_active() )
+	{
+		return;
+	}
+
+	ApeEditorState *instance = ape_editor_get_active_instance();
+	if ( instance == NULL )
+	{
+		return;
+	}
+
+	// slow, unoptimised, jelly
+
+	switch ( instance->geometryMode )
+	{
+		case APE_EDITOR_GEOMETRY_MODE_BRUSH:
+			pre_render_brush( instance );
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
+		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
+			pre_render_vertex( instance, camera );
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
+		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
 	const ApeWorld *world = camera->world;
 	assert( world != NULL );
-	pre_render_world_node( camera, world, world->root );
+	pre_render_nodes( camera, world, world->root );
 }
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )
 {
-	if ( !ape_is_editor_active() || editorInstance == NULL )
+	if ( !ape_is_editor_active() || editorInstance == nullptr )
 	{
 		return;
 	}
 
 	ApeCamera *camera = viewport->camera;
-	if ( camera == NULL )
+	if ( camera == nullptr )
 	{
 		return;
 	}
 
 	char label[ 64 ] = {};
-	strcat( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
-	strcat( label, " / " );
-	strcat( label, ape_get_camera_view_mode_label( camera->mode ) );
+	S_STRCAT( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
+	S_STRCAT( label, " / " );
+	S_STRCAT( label, ape_get_camera_view_mode_label( camera->mode ) );
 
 	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 
@@ -360,29 +488,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
 	gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), NULL, NULL, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
 
-	unsigned int num = 1;
-	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
-	while ( node != NULL )
-	{
-		PLVector3 *p = PlGetLinkedListNodeUserData( node );
-		assert( p != NULL );
-
-		PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-		PLVector2 screenPos = PlConvertWorldToScreen( p, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
-		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
-		{
-			return;
-		}
-
-		char msg[ 8 ];
-		snprintf( msg, sizeof( msg ), "%u", num++ );
-		gui_font_draw_string( font, screenPos.x, screenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
-
-		node = PlGetNextLinkedListNode( node );
-	}
+	draw_brush_gui( viewport, font );
 
 	gui_font_display( font );
 
+#if 0
 	if ( camera->mode != APE_CAMERA_MODE_INVALID && camera->mode != APE_CAMERA_MODE_PERSPECTIVE )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -447,6 +557,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		// Restore the view matrix back
 		PlgSetViewMatrix( &viewport->camera->internal->internal.view );
 	}
+#endif
 }
 
 bool ape_is_editor_active( void )
