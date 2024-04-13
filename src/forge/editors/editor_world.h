@@ -25,6 +25,10 @@ namespace ss::forge
 			ID_EDGE_MODE,
 			ID_VERTEX_MODE,
 			ID_TRANSFORM_MODE,
+
+			ID_GRID_UP,
+			ID_GRID_DOWN,
+			ID_GRID_ROTATE,
 		};
 
 		editor_world( FXTabBook *owner, const FXString &worldName, ApeWorld *world );
@@ -35,6 +39,7 @@ namespace ss::forge
 		void update_tree();
 
 		long on_change_geometry_mode( FXObject *, FXSelector, void * );
+		long on_shift_grid( FXObject *, FXSelector, void * );
 
 	private:
 		ApeWorld *_world{};
