@@ -55,11 +55,11 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 		char buf[ 128 ];
 		PL_ZERO( buf, sizeof( buf ) );
 		const char *vpos = PlPrintVector3( &camera->internal->position, PL_VAR_I32 );
-		strcat( buf, vpos );
-		strcat( buf, " (" );
+		S_STRCAT( buf, vpos );
+		S_STRCAT( buf, " (" );
 		const char *vang = PlPrintVector3( &camera->internal->angles, PL_VAR_I32 );
-		strcat( buf, vang );
-		strcat( buf, ")" );
+		S_STRCAT( buf, vang );
+		S_STRCAT( buf, ")" );
 		ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_WHITE, buf, strlen( buf ), false );
 	}
 

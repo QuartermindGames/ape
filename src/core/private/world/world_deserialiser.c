@@ -112,15 +112,21 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	unsigned int roomIndex = nd_branch_get_child_uint( root, "roomIndex", ( unsigned int ) -1 );
 	assert( roomIndex != ( unsigned int ) -1 );
 	if ( roomIndex == ( unsigned int ) -1 )
-		PRINT_WARNING( "No room index for face!\n" );
+	{
+		ape_warning_( "No room index for face!\n" );
+	}
 	else
 	{
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		assert( room != NULL );
 		if ( room == NULL )
-			PRINT_WARNING( "Invalid room index (%u) for face!\n", roomIndex );
+		{
+			ape_warning_( "Invalid room index (%u) for face!\n", roomIndex );
+		}
 		else
+		{
 			PlPushBackVectorArrayElement( room->faces, face );
+		}
 	}
 
 	// Attempt to fetch the material for the face.
@@ -128,9 +134,11 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	// face doesn't have a material as "valid"...
 	face->materialIndex = nd_branch_get_child_uint( root, "material", ( unsigned int ) -1 );
 	face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
-	assert( face->material != NULL );
 	if ( face->material == NULL )
+	{
+		ape_warning_( "Encountered an invalid material index (%u) for world!\n", face->materialIndex );
 		face->material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
+	}
 
 	face->edgeLoop = PlCreateLinkedList();
 	face->vertices = PlCreateVectorArray( 0 );
@@ -373,7 +381,7 @@ ApeWorld *ape_world_deserialize_( NdBranch *root )
 		world->clearColour = nd_get_colour_f32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
 		world->fogColour = nd_get_colour_f32( world->globalProperties, "fogColour", &WORLD_DEFAULT_CLEARCOLOUR );
-		world->fogFar = nd_branch_get_child_float32( world->globalProperties, "fogFar", 4.0f );
+		world->fogFar = nd_branch_get_child_float32( world->globalProperties, "fogFar", 32.0f );
 		world->fogNear = nd_branch_get_child_float32( world->globalProperties, "fogNear", 0.01f );
 	}
 

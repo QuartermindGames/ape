@@ -49,6 +49,9 @@ typedef struct ApeEditorState
 	                          // can't hook it with frontend :(
 	unsigned int gridScale;
 
+	float forwardSpeed;
+	float turnSpeed;
+
 	PLLinkedList *brushPlotPoints;
 } ApeEditorState;
 

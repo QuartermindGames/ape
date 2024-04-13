@@ -46,7 +46,7 @@ static void parse_aliases( NdBranch *root )
 }
 
 #define USER_CONFIG "user.cfg" ND_DEFAULT_EXTENSION
-static PLPath configPath = { '\0' };
+static PLPath configPath;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
@@ -65,13 +65,19 @@ const char *ss_acl_fs_get_user_config_location( void )
 		else
 		{
 			if ( !PlCreateDirectory( p ) )
+			{
 				PRINT_WARNING( "Failed to create application data directory: %s\n", p );
+			}
 
 			p = &p[ strlen( p ) - 1 ];
 			if ( *p == '\\' || *p == '/' )
-				strcat( configPath, USER_CONFIG );
+			{
+				S_STRCAT( configPath, USER_CONFIG );
+			}
 			else
-				strcat( configPath, "/" USER_CONFIG );
+			{
+				S_STRCAT( configPath, "/" USER_CONFIG );
+			}
 		}
 
 		PRINT( "Config: %s\n", configPath );

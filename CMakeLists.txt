@@ -1,12 +1,12 @@
-# Copyright (C) 2020 Mark Sowden <markelswo@gmail.com>
-
 cmake_minimum_required(VERSION 3.23)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project(Ape
+        HOMEPAGE_URL "https://snortysoft.net/"
+        DESCRIPTION "3D game engine written in C."
         LANGUAGES C CXX
-        )
+)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -107,18 +107,19 @@ set(HEI_LIBRARIES plcore plgraphics plmodel)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 23)
 
-if(MSVC)
+if (MSVC)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         link_directories(src/3rdparty/sdl2/lib/x64)
-    else()
+    else ()
         link_directories(src/3rdparty/sdl2/lib/x86)
-    endif()
-elseif(MINGW)
+    endif ()
+elseif (MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
-endif()
+endif ()
 
 # 3rd party libraries
 add_subdirectory(src/3rdparty/fox)
+add_subdirectory(src/3rdparty/lua)
 
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)

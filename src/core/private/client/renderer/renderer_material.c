@@ -31,7 +31,7 @@ typedef struct ApeMaterial
 
 	int8_t surfaceType;
 
-	bool enableShadows;
+	unsigned int flags;
 
 	ApeMemoryReference mem;
 } ApeMaterial;
@@ -142,6 +142,11 @@ const char *ape_material_get_path( const ApeMaterial *material )
 PLGTexture *ss_arl_material_get_preview_texture( ApeMaterial *material )
 {
 	return material->preview;
+}
+
+unsigned int ape_material_get_flags( const ApeMaterial *self )
+{
+	return self->flags;
 }
 
 /**
@@ -498,7 +503,9 @@ void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *ma
 			PL_DELETE( blendModesArray[ 1 ] );
 		}
 		else
-			PRINT_WARNING( "Invalid blend mode array in material!\n" );
+		{
+			ape_warning_( "Invalid blend mode array in material!\n" );
+		}
 	}
 	else
 	{
@@ -584,13 +591,24 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 			}
 
 			ss_arl_material_parse_pass_( node, currentPass );
+			if ( currentPass->blendMode[ 0 ] != PLG_BLEND_NONE || currentPass->blendMode[ 1 ] != PLG_BLEND_NONE )
+			{
+				material->flags |= APE_MATERIAL_FLAG_BLENDED;
+			}
 
 			node = nd_get_next_child( node );
 		}
 	}
 
 	material->surfaceType = ND_GET_INT8( root, "surfaceType", 0 );
-	material->enableShadows = nd_branch_get_child_bool( root, "enableShadows", true );
+	if ( nd_branch_get_child_bool( root, "enableShadows", true ) )
+	{
+		material->flags |= APE_MATERIAL_FLAG_SHADOWS;
+	}
+	if ( nd_branch_get_child_bool( root, "mirror", false ) )
+	{
+		material->flags |= APE_MATERIAL_FLAG_MIRROR;
+	}
 
 	if ( material->numPasses == 0 )
 	{
@@ -847,7 +865,12 @@ int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
 	return material->surfaceType;
 }
 
-bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return material->enableShadows; }
+bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return ( material->flags & APE_MATERIAL_FLAG_SHADOWS ); }
+
+bool ape_material_is_blended( const ApeMaterial *self )
+{
+	return ( self->flags & APE_MATERIAL_FLAG_BLENDED );
+}
 
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
 {
@@ -915,6 +938,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 
 		PlgSetCullMode( cullMode );
 
+		//TODO: breaks crap if called... :(
 		//PlgDepthMask( curPass->depthTest );
 
 		// we have an awkward check for wireframe here because we don't want to just blindly handle it globally,

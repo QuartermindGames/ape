@@ -103,11 +103,16 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 		float x = flare->screenPos.x - ( deltaX * ( float ) i );
 		float y = flare->screenPos.y - ( deltaY * ( float ) i );
 
+		// TODO: these are flipped relative to screen-space, urgh...
+#if 0
+		ape_draw_textured_quad( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), x - FLARE_ELEMENT_WIDTH / 2.0f, y - FLARE_ELEMENT_HEIGHT / 2.0f, FLARE_ELEMENT_WIDTH, FLARE_ELEMENT_HEIGHT, &PL_COLOURU8( 255, 255, 255, 255 ) );
+#else
 		ape_draw_sprite( flareMaterial, &flareElements[ i ],
 		                 &PL_COLOURF32( 1.0f, 1.0f, 1.0f, intensity ),
 		                 &PL_VECTOR3( x - FLARE_ELEMENT_WIDTH / 2.0f, y - FLARE_ELEMENT_HEIGHT / 2.0f, 0.0f ),
 		                 &pl_vecOrigin3,
-		                 &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), /*1.0f - ( intensity / ( ( i + 1 ) * 100.0f ) ) / 1.0f*/ 1.0f );
+		                 &pl_vecOrigin3, /*1.0f - ( intensity / ( ( i + 1 ) * 100.0f ) ) / 1.0f*/ 1.0f );
+#endif
 	}
 }
 

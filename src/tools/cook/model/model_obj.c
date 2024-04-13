@@ -11,7 +11,9 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
+	{
 		ERROR( "Failed to open OBJ material library: %s\n", PlGetError() );
+	}
 
 	// Copy it into a buffer we can parse
 	size_t fileBufSize = PlGetFileSize( file );
@@ -38,16 +40,21 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		{
 			assert( obj->numMaterials < OBJ_MAX_MATERIALS );
 			if ( obj->numMaterials >= OBJ_MAX_MATERIALS )
+			{
 				ERROR( "Unexpected number of materials (%u >= %u)!\n", obj->numMaterials, OBJ_MAX_MATERIALS );
+			}
 
 			material = &obj->materials[ obj->numMaterials++ ];
-			PlParseToken( &c, material->name, sizeof( material->name ) );
+			PlParseEnclosedString( &c, material->name, sizeof( material->name ) );
 		}
 		else if ( strcmp( token, "map_Kd" ) == 0 )
 		{
 			assert( material != NULL );
-			if ( material == NULL ) ERROR( "Invalid MTL file encountered!\n" );
-			PlParseToken( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
+			if ( material == NULL )
+			{
+				ERROR( "Invalid MTL file encountered!\n" );
+			}
+			PlParseEnclosedString( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
 		}
 
 		PlSkipLine( &c );
@@ -68,7 +75,9 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 			PLVector3 *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
 			assert( vertex != NULL );
 			if ( vertex == NULL )
+			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
+			}
 
 			if ( vertex->x < subObject->mins.x ) subObject->mins.x = vertex->x;
 			if ( vertex->y < subObject->mins.y ) subObject->mins.y = vertex->y;
@@ -110,7 +119,9 @@ ObjModel *model_obj_load( const char *path )
 			PlParseToken( &c, subObject->name, sizeof( subObject->name ) );
 
 			if ( subObject->faces == NULL )
+			{
 				subObject->faces = PlCreateVectorArray( 1 );
+			}
 		}
 		// Vertex position
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
@@ -123,7 +134,9 @@ ObjModel *model_obj_load( const char *path )
 			vertex->z = strtof( end, NULL );
 
 			if ( obj->vertices == NULL )
+			{
 				obj->vertices = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->vertices, vertex );
 		}
@@ -138,7 +151,9 @@ ObjModel *model_obj_load( const char *path )
 			normal->z = strtof( end, NULL );
 
 			if ( obj->normals == NULL )
+			{
 				obj->normals = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->normals, normal );
 		}
@@ -152,7 +167,9 @@ ObjModel *model_obj_load( const char *path )
 			uv->y = strtof( end, NULL );
 
 			if ( obj->textureCoords == NULL )
+			{
 				obj->textureCoords = PlCreateVectorArray( 1 );
+			}
 
 			PlPushBackVectorArrayElement( obj->textureCoords, uv );
 		}
@@ -170,7 +187,9 @@ ObjModel *model_obj_load( const char *path )
 			for ( ; face->numEdges < OBJ_MAX_EDGES; face->numEdges++ )
 			{
 				if ( PlIsEndOfLine( c ) )
+				{
 					break;
+				}
 
 				char *end;
 				face->indices[ face->numEdges ][ OBJ_INDEX_VERTEX ] = ( strtoul( c, &end, 10 ) - 1 );
@@ -197,9 +216,13 @@ ObjModel *model_obj_load( const char *path )
 
 			unsigned int numTriangles;
 			if ( face->numEdges < 3 )
+			{
 				numTriangles = 0;
+			}
 			else
+			{
 				numTriangles = face->numEdges - 2;
+			}
 			if ( numTriangles > 0 )
 			{
 				unsigned int indices[ OBJ_MAX_EDGES * 3 ];
@@ -252,7 +275,7 @@ ObjModel *model_obj_load( const char *path )
 			c += 7;
 
 			char token[ 128 ];
-			PlParseToken( &c, token, sizeof( token ) );
+			PlParseEnclosedString( &c, token, sizeof( token ) );
 
 			PLPath libPath;
 			PlSetupPath( libPath, true, "%s", path );
@@ -266,12 +289,22 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 7;
 			char token[ 128 ];
-			PlParseToken( &c, token, sizeof( token ) );
+#if 1
+			PlParseEnclosedString( &c, token, sizeof( token ) );
+#else
+			// well, the above would've been nice, but I hit a case where it's not enclosed despite having spaces...
+			// maybe reading the whole line will be okay????
+			PlParseLine( &c, token, sizeof( token ) );
+#endif
 			for ( materialIndex = 0; materialIndex < obj->numMaterials; ++materialIndex )
 			{
 				if ( strcmp( token, obj->materials[ materialIndex ].name ) == 0 )
+				{
 					break;
+				}
 			}
+
+			assert( materialIndex < obj->numMaterials );
 		}
 		// Unhandled lines we just skip for now...
 
@@ -281,7 +314,9 @@ ObjModel *model_obj_load( const char *path )
 	PL_DELETE( txtBuf );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
+	{
 		determine_sub_object_bounds( obj, &obj->subObjects[ i ] );
+	}
 
 	return obj;
 }
@@ -289,14 +324,18 @@ ObjModel *model_obj_load( const char *path )
 void model_obj_destroy( ObjModel *obj )
 {
 	if ( obj == NULL )
+	{
 		return;
+	}
 
 	PlDestroyVectorArrayEx( obj->vertices, PlFree );
 	PlDestroyVectorArrayEx( obj->normals, PlFree );
 	PlDestroyVectorArrayEx( obj->textureCoords, PlFree );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
+	{
 		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, PlFree );
+	}
 
 	PL_DELETE( obj );
 }

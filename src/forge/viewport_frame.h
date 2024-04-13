@@ -74,6 +74,10 @@ namespace ss::forge
 		inline viewport_frame() = default;
 
 		FXGLCanvas *canvas_;
+		FXToolBar *toolBar;
+
+		FXToggleButton *viewModeButtons[ APE_CAMERA_MAX_MODES ];
+		FXToggleButton *drawModeButtons[ APE_CAMERA_MAX_DRAW_MODES ];
 
 		ApeCameraDrawMode drawMode_{ APE_CAMERA_DRAW_MODE_WIREFRAME };
 		ApeCameraViewMode viewMode_{ APE_CAMERA_MODE_INVALID };
@@ -86,8 +90,8 @@ namespace ss::forge
 		static unsigned int cameraTagNum;
 
 	private:
-		FXDataTarget forwardSpeedTarget_;
-		FXDataTarget turnSpeedTarget_;
+		FXDataTarget forwardSpeedTarget;
+		FXDataTarget turnSpeedTarget;
 
 		static FXGLCanvas *displayList_;
 

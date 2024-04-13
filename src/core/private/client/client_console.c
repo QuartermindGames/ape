@@ -218,6 +218,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 			}
 			else if ( inputBuffer[ 0 ] != '\0' )
 			{
+				ape_print_( inputBuffer );
 				PlParseConsoleString( inputBuffer );
 				clear_input_buffer();
 			}
@@ -332,7 +333,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		return;
 	}
 
-	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
+	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 	assert( font != NULL );
 	if ( font == NULL )
 	{

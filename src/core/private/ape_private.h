@@ -30,6 +30,8 @@
 #define VERSION_PATCH    0
 #define VERSION_CODENAME "Rutilus"
 
+#define S_STRCAT( DST, SOURCE ) strncat( ( DST ), ( SOURCE ), sizeof( ( DST ) ) - strlen( ( DST ) ) - 1 )
+
 PL_EXTERN_C
 
 #define ENGINE_VERSION_STR       \

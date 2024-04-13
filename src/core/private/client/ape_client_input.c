@@ -333,7 +333,7 @@ void ape_initialize_input_( void )
 
 	sdlInputInitialized = true;
 
-	ape_serialize_input_config_( NULL );
+	ape_serialize_input_config_( inputConfig );
 }
 
 void ape_shutdown_input_( void )
@@ -359,8 +359,6 @@ void ape_serialize_input_config_( NdBranch *root )
 
 		nd_branch_push_back_branch( controllersBranch, controllerBranch );
 	}
-
-	nd_write_file( "test.cfg.n", controllersBranch, ND_FILE_UTF8 );
 }
 
 void ape_deserialize_input_config_( NdBranch *root )

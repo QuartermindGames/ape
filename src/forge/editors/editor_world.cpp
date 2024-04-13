@@ -50,13 +50,25 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	//new FXVerticalSeparator( toolbar );
 	//new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
-	auto *hs = new FXVerticalFrame( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+#if 0
+
+    auto *hs = new FXVerticalFrame( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 	hs->setPadBottom( 0 );
 	hs->setPadLeft( 0 );
 	hs->setPadRight( 0 );
 	hs->setPadTop( 0 );
+	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
+
+#else
+
+	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
+	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_TOP );
+	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_LEFT );
+	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_FRONT );
+
+#endif
 
 	//auto rightSidebar = new FXVerticalSeparator( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH, 0, 0, 200 );
 
@@ -89,6 +101,7 @@ void ss::forge::editor_world::update_tree()
 		parentItem = nodeTree->appendItem( nullptr, _world->root->name );
 		parentItem->setClosedIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
 		parentItem->setOpenIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
+		parentItem->setExpanded( true );
 	}
 
 	PLLinkedListNode *node = PlGetFirstNode( _world->root->children );
@@ -126,6 +139,7 @@ void ss::forge::editor_world::update_tree()
 
 			item->setClosedIcon( forge_cachedIcons[ iconType ] );
 			item->setOpenIcon( forge_cachedIcons[ iconType ] );
+			item->setExpanded( true );
 		}
 
 		node = PlGetNextLinkedListNode( node );
@@ -158,6 +172,23 @@ long ss::forge::editor_world::on_change_geometry_mode( FXObject *, FXSelector se
 	for ( unsigned int i = 0; i < APE_EDITOR_MAX_GEOMETRY_MODES; ++i )
 	{
 		geometryModeButtons[ i ]->setState( this->instance.geometryMode == i );
+	}
+
+	return TRUE;
+}
+
+long ss::forge::editor_world::on_shift_grid( FXObject *, FXSelector selector, void * )
+{
+	switch ( FXSELID( selector ) )
+	{
+		default:
+			break;
+		case ID_GRID_UP:
+			break;
+		case ID_GRID_DOWN:
+			break;
+		case ID_GRID_ROTATE:
+			break;
 	}
 
 	return TRUE;
