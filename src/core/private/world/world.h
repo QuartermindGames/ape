@@ -64,8 +64,6 @@ typedef struct ApeWorldFace
 	PLVector3 normal;
 	PLVector3 origin;
 
-	int32_t smoothingGroup;
-
 	ApeWorldPortal *portal;
 
 	struct ApeMaterial *material;
