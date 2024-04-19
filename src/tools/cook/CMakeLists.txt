@@ -2,6 +2,7 @@ add_executable(cook
         cook.c
         cook_model.c
         cook_world.c
+        cook_world_qmap.c
 
         model/model_how_pc.c
         model/model_obj.c
