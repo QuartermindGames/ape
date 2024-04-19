@@ -28,6 +28,9 @@ typedef struct ApeEntityComponent
 	void *data;
 } ApeEntityComponent;
 
+#define APE_ENT_CLASS( SELF, TYPE )     ( ( TYPE * ) ( ( SELF )->classData ) )
+#define APE_ENT_COMPONENT( SELF, TYPE ) ( ( TYPE * ) ( ( SELF )->data ) )
+
 typedef struct ApeEntityProperty
 {
 	const char *name;
@@ -46,11 +49,11 @@ typedef struct ApeEntityClassDefinition
 	ApeEntityProperty *propertyList;
 	unsigned int numProperties;
 
-	void ( *cacheFunction )( void );// called upon registration
-	void *( *createFunction )( ApeEntity *self, NdBranch *properties );
-	void ( *destroyFunction )( ApeEntity *self );
-	void ( *spawnFunction )( ApeEntity *self );
-	void ( *tickFunction )( ApeEntity *self );
+	void ( *cacheFunction )( void );                                   // called upon registration
+	void *( *createFunction )( ApeEntity *self, NdBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
+	void ( *destroyFunction )( ApeEntity *self );                      // called when the entity is free'd, which should be done for the class too
+	void ( *spawnFunction )( ApeEntity *self );                        // this gets called when the entity is actually spawned into the world, at which point the class state can be reset
+	void ( *tickFunction )( ApeEntity *self );                         // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self );
 
 	NdBranch *( *serializeFunction )( ApeEntity *self );
