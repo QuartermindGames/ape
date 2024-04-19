@@ -58,6 +58,9 @@ unsigned int comGetNumProfilerGroups( void );
 
 void com_update_profiler_samples( void );
 
+#define COM_PROFILE_START( NAME ) comStartProfiling( ( NAME ) )
+#define COM_PROFILE_END( NAME )   comEndProfiling( ( NAME ) )
+
 #define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
 #define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
 #define COM_PROFILE_FUNCTION_CALL( FUNCTION ) \

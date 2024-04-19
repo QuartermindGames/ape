@@ -22,12 +22,14 @@ Any legacy documents might use `node` or `world.n` - these should be updated to 
 Any binary forms should use the same convention going forward.
 To avoid any conflicts, these should ideally be generated into an alternate root location.
 
-## Textures
+## Materials/Textures
 
-APE Tech has support for a large range of different formats, that said we would recommend using industry standard formats
-such as the following.
+Ideally these should go under your `<project>/materials/` directory. In some circumstances you might find them under `<project>/textures/` instead, which is unfortunately due to a tooling limitation. That said, whenever possible, the former is preferable.
+
+APE Tech has support for a large range of different formats, that said we would recommend using industry standard formats such as the following.
 
 - PNG
 - TGA
 - DDS
-- GFX
+
+In future, per the cooking process, these will be converted into a .tex format.
