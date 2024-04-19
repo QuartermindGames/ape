@@ -150,39 +150,51 @@ void ape_initialize_gui_( void )
 
 	auxCamera = ape_camera_create( "aux", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT );
 	if ( auxCamera == NULL )
-		PRINT_ERROR( "Failed to create auxiliary camera!\n" );
+	{
+		ape_error_( true, "Failed to create auxiliary camera!\n" );
+	}
 
-	ss_gui_initialize();
+	ape_gui_initialize_();
 
-	defaultStyle = ss_gui_cache_style_sheet( "guis/styles/default.n" );
+	defaultStyle = ape_gui_cache_style_sheet( "guis/styles/default.n" );
 	if ( defaultStyle == NULL )
-		PRINT_ERROR( "Failed to cache base style for GUI!\n" );
+	{
+		ape_error_( true, "Failed to cache base style for GUI!\n" );
+	}
 
-	ss_gui_set_style_sheet( defaultStyle );
+	ape_gui_set_style_sheet( defaultStyle );
 
-	canvas = ss_gui_canvas_create( guiWidth, guiHeight );
+	canvas = ape_gui_canvas_create( guiWidth, guiHeight );
 	if ( canvas == NULL )
-		PRINT_ERROR( "Failed to create GUI canvas!\n" );
+	{
+		ape_error_( true, "Failed to create GUI canvas!\n" );
+	}
 
-	rootPanel = ss_gui_panel_create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
+	rootPanel = ape_gui_panel_create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 	if ( rootPanel == NULL )
-		PRINT_ERROR( "Failed to create base panel!\n" );
+	{
+		ape_error_( true, "Failed to create base panel!\n" );
+	}
 
-	cursor = ss_gui_cursor_create( rootPanel, 0, 0 );
+	cursor = ape_gui_cursor_create( rootPanel, 0, 0 );
 	if ( cursor == NULL )
-		PRINT_ERROR( "Failed to create cursor!\n" );
+	{
+		ape_error_( true, "Failed to create cursor!\n" );
+	}
 
-	ss_gui_panel_set_visible( rootPanel, true );
+	ape_gui_panel_set_visible( rootPanel, true );
 
 	baseGuiMat = ape_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_GROUP_WORLD, false, false );
 	if ( baseGuiMat == NULL )
-		PRINT_ERROR( "Failed to cache base material for ui!\n" );
+	{
+		ape_error_( true, "Failed to cache base material for ui!\n" );
+	}
 }
 
 void ape_shutdown_gui_( void )
 {
-	ss_gui_panel_destroy( rootPanel );
-	ss_gui_shutdown();
+	ape_gui_panel_destroy( rootPanel );
+	ape_gui_shutdown_();
 
 	ape_material_release( baseGuiMat );
 }
@@ -209,43 +221,21 @@ void ape_draw_gui_( ApeViewport *viewport )
 	// Need to call this again to reset the viewport
 	ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
+	float x = ( float ) viewport->x;
+	float y = ( float ) viewport->y;
+	float w = ( float ) viewport->width;
+	float h = ( float ) viewport->height;
+
 	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
 	if ( renderTarget != NULL )
 	{
 		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
 		if ( texture != NULL )
 		{
-			float x = ( float ) viewport->x;
-			float y = ( float ) viewport->y;
-			float w = ( float ) viewport->width;
-			float h = ( float ) viewport->height;
-
-			PlgSetCullMode( PLG_CULL_NEGATIVE );
-
 			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
 			PlgSetTexture( texture, 0 );
 
-			PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
-
-			PlgImmPushVertex( x, y + h, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 0.0f, 0.0f );
-
-			PlgImmPushVertex( x, y, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 0.0f, 1.0f );
-
-			PlgImmPushVertex( x + w, y + h, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 1.0f, 0.0f );
-
-			PlgImmPushVertex( x + w, y, 0.0f );
-			PlgImmColour( 255, 255, 255, 255 );
-			PlgImmTextureCoord( 1.0f, 1.0f );
-
-			PlgImmDraw();
-
-			PlgSetCullMode( PLG_CULL_POSITIVE );
+			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE );
 		}
 	}
 
@@ -260,7 +250,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 		ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
 		// draw the output of the canvas
-		ape_draw_textured_quad( baseGuiMat, 0, 0, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+		ape_draw_textured_quad( baseGuiMat, 0, 0, w, h, &PL_COLOUR_WHITE );
 	}
 
 	if ( !ape_is_editor_active() )
@@ -281,18 +271,6 @@ void ape_draw_gui_( ApeViewport *viewport )
 		gui_font_draw_string( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
 		gui_font_display( font );
 	}
-
-#if 0
-	extern PLVector2 screenPosTest;
-	GuiFont *font = guiGetDefaultFont( GUI_FONT_DEFAULT_MEDIUM );
-	assert( font != NULL );
-	if ( font != NULL ) {
-		char tmp[ 32 ];
-		snprintf( tmp, sizeof( tmp ), "coord %s", PlPrintVector2( &screenPosTest, PL_VAR_I32 ) );
-		guiDrawFontString( font, screenPosTest.x, screenPosTest.y, NULL, NULL, 1.0f, &PL_COLOUR_ANTIQUE_WHITE, tmp, strlen( tmp ), false );
-		guiDisplayFont( font );
-	}
-#endif
 
 	// todo: this should use GUI
 	ape_console_draw_( viewport );

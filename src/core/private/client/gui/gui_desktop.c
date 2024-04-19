@@ -43,7 +43,7 @@ GuiDesktop *guiCreateDesktop( GuiPanel *parent )
 {
 	if ( parent == NULL )
 	{
-		parent = ss_gui_panel_create( NULL, 0, 0, 640, 480, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
+		parent = ape_gui_panel_create( NULL, 0, 0, 640, 480, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_NONE );
 		if ( parent == NULL )
 		{
 			GUI_WARNING( "Failed to create root panel for desktop!\n" );
@@ -68,7 +68,7 @@ void guiDestroyDesktop( GuiDesktop *desktop )
 		return;
 	}
 
-	ss_gui_panel_destroy( desktop->panel );
+	ape_gui_panel_destroy( desktop->panel );
 
 	PL_DELETE( desktop );
 }

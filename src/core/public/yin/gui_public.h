@@ -21,7 +21,7 @@ typedef struct GUIVector2
 
 typedef struct GuiCanvas GuiCanvas;// represents what the GUI draws to
 
-GuiCanvas *ss_gui_canvas_create( int width, int height );
+GuiCanvas *ape_gui_canvas_create( int width, int height );
 void guiDestroyCanvas( GuiCanvas *canvas );
 void gui_canvas_set_size( GuiCanvas *canvas, int width, int height );
 void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height );
@@ -35,11 +35,11 @@ typedef struct GuiStyleSheet GuiStyleSheet;
 
 typedef struct GuiPanel GuiPanel;
 
-bool ss_gui_initialize( void );
-void ss_gui_shutdown( void );
+bool ape_gui_initialize_( void );
+void ape_gui_shutdown_( void );
 
-const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path );
-void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet );
+const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path );
+void ape_gui_set_style_sheet( const GuiStyleSheet *styleSheet );
 const GuiStyleSheet *guiGetActiveStyleSheet( void );
 
 void gui_panel_tick( GuiPanel *root );
@@ -77,8 +77,8 @@ typedef enum GuiPanelBorder
 	GUI_MAX_BORDER_STYLES
 } GuiPanelBorder;
 
-GuiPanel *ss_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
-void ss_gui_panel_destroy( GuiPanel *self );
+GuiPanel *ape_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
+void ape_gui_panel_destroy( GuiPanel *self );
 
 void guiSetPanelStyleSheet( GuiPanel *self, const GuiStyleSheet *styleSheet );
 
@@ -110,13 +110,13 @@ bool guiIsMouseOverPanel( GuiPanel *self, int mx, int my );
 bool guiHandleMousePanelEvent( GuiPanel *self, int mx, int my, int wheel, int button, bool buttonUp );
 bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp );
 
-void ss_gui_panel_set_visible( GuiPanel *self, bool flag );
+void ape_gui_panel_set_visible( GuiPanel *self, bool flag );
 
 /****************************************
  * Cursor
  ****************************************/
 
-GuiPanel *ss_gui_cursor_create( GuiPanel *parent, int x, int y );
+GuiPanel *ape_gui_cursor_create( GuiPanel *parent, int x, int y );
 void guiDestroyCursor( GuiPanel *self );
 
 /****************************************

@@ -9,7 +9,7 @@ typedef struct GUIImage
 
 GuiPanel *GUI_Image_Create( GuiPanel *parent, int x, int y, int w, int h, PLGTexture *texture )
 {
-	GuiPanel *panel = ss_gui_panel_create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
+	GuiPanel *panel = ape_gui_panel_create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
 
 	GUIImage *image = PL_NEW( GUIImage );
 	image->texture = texture;
