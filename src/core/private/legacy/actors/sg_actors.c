@@ -377,24 +377,3 @@ static void Ship_Tick( Actor *self, void *userData )
 		survivalScoreTimer = ape_get_num_ticks() + 145;
 	}
 }
-
-static void Ship_Collide( Actor *self, Actor *other, void *userData )
-{
-	if ( self->health <= 0 )
-	{
-		return;
-	}
-
-	ASGActor *sg = self->userData;
-	if ( other->type == ACTOR_SG_PROJECTILE || !sg->isSolid )
-	{
-		return;
-	}
-
-	if ( sg->forwardVelocity > 0.0f )
-	{
-		sg->forwardVelocity /= 2.0f;
-	}
-
-	Monster_Collide( self, other, 20.0f );
-}
