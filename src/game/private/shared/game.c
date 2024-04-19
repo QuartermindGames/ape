@@ -57,13 +57,11 @@ void ss_game_tick( void )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ss_game_disconnect( void )
-{
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DISCONNECT, NULL );
-}
+extern ApeEntityClassDefinition game_entityLightClass;
 
 void ss_game_register_standard_entity_components_( void )
 {
+	ape_register_entity_class( &game_entityLightClass );
 }
 
 static GameConnectionType gameConnectionType = GAME_CONNECTION_LOCAL;

@@ -2,11 +2,16 @@
 // Purpose: <purpose>
 // Author:  <name>
 
-#include "game_private.h"
-#include "game_entity_class_base.h"
+#include "../game_private.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
+
+typedef struct CameraEntity
+{
+	ApeCamera *camera;
+} CameraEntity;
+#define CAMERA( SELF ) APE_ENT_CLASS( SELF, CameraEntity )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public

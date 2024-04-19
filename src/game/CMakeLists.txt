@@ -4,11 +4,12 @@ set(CMAKE_C_STANDARD 11)
 
 set(GAME_SHARED_FILES
         private/shared/game.c
-        private/shared/game_entity_class_base.c
         private/shared/game_menu.c
         private/shared/game_menu_pie.c
         #############################################
         private/shared/ai/ai_brain.c
+
+        private/shared/entities/entity_light.c
 )
 set(GAME_LINK_LIBS
         plcore
