@@ -4,6 +4,8 @@
 #include "renderer.h"
 
 // Prey '98 inspired flares!
+//TODO: maybe this would be better placed under the game code?
+// 		some projects might not want flares the way we do them...
 
 typedef struct Flare
 {
@@ -14,7 +16,7 @@ typedef struct Flare
 	float distance;
 } Flare;
 
-#define MAX_FLARES 64
+static constexpr unsigned int MAX_FLARES = 64;
 static unsigned int numFlares;
 static Flare flares[ MAX_FLARES ];
 
@@ -23,16 +25,26 @@ static ApeMaterial *flareMaterial;
 
 static bool flareEnabled = true;
 
-static const float MAX_FLARE_DISTANCE = 256.0f;
+static constexpr float MAX_FLARE_DISTANCE = 256.0f;
 
-static const float FLARE_ELEMENT_WIDTH = 128.0f;
-static const float FLARE_ELEMENT_HEIGHT = 128.0f;
-#define NUM_FLARE_ELEMENTS 4
-static const PLQuad flareElements[ NUM_FLARE_ELEMENTS ] = {
-        {.w = FLARE_ELEMENT_WIDTH,  .h = FLARE_ELEMENT_HEIGHT, .x = 0.0f,                    .y = 0.0f},
-        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH,     .y = 0.0f},
-        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH * 2, .y = 0.0f},
-        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH * 3, .y = 0.0f},
+static constexpr float FLARE_ELEMENT_WIDTH = 128.0f;
+static constexpr float FLARE_ELEMENT_HEIGHT = 128.0f;
+
+typedef struct FlareElement
+{
+	float w;
+	float h;
+	float x;
+	float y;
+	bool rotate;
+} FlareElement;
+
+static constexpr unsigned int NUM_FLARE_ELEMENTS = 4;
+static const FlareElement flareElements[ NUM_FLARE_ELEMENTS ] = {
+        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = 0.0f, .y = 0.0f, .rotate = true },
+        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH, .y = 0.0f },
+        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH * 2, .y = 0.0f },
+        { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH * 3, .y = 0.0f },
 };
 
 void ape_initialize_flares_( void )
@@ -67,7 +79,7 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos,
 		return;
 	}
 
-	float distance = PlVector3Length( PlSubtractVector3( *worldPos, camera->internal->position ) );
+	float distance = PlVector3Length( PlSubtractVector3( *worldPos, ape_camera_get_position( camera ) ) );
 	if ( distance >= MAX_FLARE_DISTANCE )
 	{
 		return;
@@ -102,17 +114,19 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 	{
 		float x = flare->screenPos.x - ( deltaX * ( float ) i );
 		float y = flare->screenPos.y - ( deltaY * ( float ) i );
+		float s = 2.0f;
 
-		// TODO: these are flipped relative to screen-space, urgh...
-#if 0
-		ape_draw_textured_quad( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), x - FLARE_ELEMENT_WIDTH / 2.0f, y - FLARE_ELEMENT_HEIGHT / 2.0f, FLARE_ELEMENT_WIDTH, FLARE_ELEMENT_HEIGHT, &PL_COLOURU8( 255, 255, 255, 255 ) );
-#else
-		ape_draw_sprite( flareMaterial, &flareElements[ i ],
-		                 &PL_COLOURF32( 1.0f, 1.0f, 1.0f, intensity ),
-		                 &PL_VECTOR3( x - FLARE_ELEMENT_WIDTH / 2.0f, y - FLARE_ELEMENT_HEIGHT / 2.0f, 0.0f ),
-		                 &pl_vecOrigin3,
-		                 &pl_vecOrigin3, /*1.0f - ( intensity / ( ( i + 1 ) * 100.0f ) ) / 1.0f*/ 1.0f );
-#endif
+		// sprite properties
+		const FlareElement *element = &flareElements[ i ];
+		PLColourF32 colour = { 1.0f, 1.0f, 1.0f, intensity };
+		PLVector3 position = { x, y, 0.0f };
+		PLVector3 origin = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
+		PLVector3 angles = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
+
+		// area of the texture we want to use
+		PLQuad quad = { element->x, element->y, element->w, element->h };
+
+		ape_draw_sprite( flareMaterial, &quad, &colour, &position, &origin, &angles, /*1.0f - ( intensity / ( ( i + 1 ) * 100.0f ) ) / 1.0f*/ s );
 	}
 }
 
@@ -122,6 +136,8 @@ void ape_flare_draw_( const ApeViewport *viewport )
 	{
 		return;
 	}
+
+	COM_PROFILE_FUNCTION_START();
 
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
@@ -141,18 +157,18 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float dx = flare->screenPos.x - cx;
 		float dy = flare->screenPos.y - cy;
 
-		float deltaX = dx / ( float ) NUM_FLARE_ELEMENTS;
-		float deltaY = dy / ( float ) NUM_FLARE_ELEMENTS;
+		float deltaX = ( dx / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
+		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 
 		float maxDistance = PlGetVector2Length( &PL_VECTOR2( w, h ) ) / 4.0f;
-		float intensity = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &PL_VECTOR2( dx, dy ) ) / maxDistance ) ), 1.0f );
-		sumFlareIntensity += intensity * ( 1.0f - ( flare->distance / ( MAX_FLARE_DISTANCE / 10.0f ) ) );
+		float intensity = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &PL_VECTOR2( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
+		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );
 	}
 
-#if 0// hogsy: todo!
-	ape_print_( "sum flare = %f\n", sumFlareIntensity );
+#if 1// hogsy: todo!
+	sumFlareIntensity = PlClamp( 0.0f, sumFlareIntensity, 1.0f );
 	if ( sumFlareIntensity > 0.0f )
 	{
 		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
@@ -163,4 +179,6 @@ void ape_flare_draw_( const ApeViewport *viewport )
 #endif
 
 	PlPopMatrix();
+
+	COM_PROFILE_FUNCTION_END();
 }

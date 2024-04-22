@@ -4,10 +4,12 @@
 
 </div>
 
-APE is a simplistic 3D game engine, being developed by 
-[Mark "hogsy" Sowden](https://hogsy.me/), 
-for game jams and prototyping.
+APE is a 3D game engine written in C23, being developed by 
+[Mark "hogsy" Sowden](https://hogsy.me/), for game jams and prototyping.
+
 APE is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
+
+What makes APE a little different in this regard is that it's attempting to go a step further with this, aiming to replicate something similar to what 3D Realms' Prey from 1998 was attempting to do; joining rooms don't necessarily have to be connected physically but can be travelled between via portals that can be added dynamically.
 
 It's available here with absolutely no support whatsoever. Additionally, it is not intended as anything close to a professional grade engine but instead just 
 something that's easy to throw things at and modify. 
@@ -30,10 +32,8 @@ Some semblance of documentation can be found [here](docs).
 - Simple post-processing pipeline with support for FXAA and bloom
 - Super-sampling up to 2x display resolution
 - Memory manager with garbage collection and usage tracking
-- Node format for serialization/deserialization; can be stored as either binary or text
+- Node format for serialisation/deserialisation; can be stored as either binary or text
 - Editor frontend using [FOX Toolkit](http://www.fox-toolkit.org/)
-- Compatibility with Red Faction engine
-  - VPP v1, v2 and v3
 
 ## Games
 
@@ -55,18 +55,28 @@ Below is a list of released games that have used this engine.
 
 ## Building
 
+I've been primarily using GCC as a compiler and have taken advantage of a few extensions available there that might not be available elsewhere. Clang should be alright. MSVC might have issues.
+
+The project uses CMake, so ideally it should be as simple as this...
+```
+mkdir build
+cd build
+cmake ../
+```
+
 ### Windows
 
 APE Tech primarily supports 64-bit Windows 11; it has not been tested against other versions of Windows, so your milage might vary if that's the case.
 
-Compilation requires [MSYS2](https://www.msys2.org/) and [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain). 
-I'd recommend against trying to use MSVC to compile the project 
-(if you really don't want to use GCC, consider Clang instead).
-All other dependencies are included.
+Compilation requires [MSYS2](https://www.msys2.org/) and [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain). As mentioned, Clang should also work, but I've not tried compiling it with Clang myself.
 
 ### Linux
 
-APE Tech primarily supports 64-bit Ubuntu 23.10 and has not been tested against other distributions of Linux, but is expected to work just fine.
+The engine primarily supports 64-bit Ubuntu 23.10 and has not been tested against other distributions of Linux, but is expected to work just fine.
+
+### macOS
+
+Historically, the engine had been successfully built and run on macOS—but that was quite a few years ago. Given Apple's recent actions and lack of support for open standards, such as Vulkan/OpenGL, I've felt less inclined to support it as a target.
 
 ## Roadmap
 

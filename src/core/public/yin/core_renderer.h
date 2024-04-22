@@ -197,7 +197,13 @@ void ape_bitmap_font_draw( ApeBitmapFont *font );
 // Draw API
 
 void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColourF32 *colour, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
+
+/**
+ * Draws a textured quad. *SLOW* so use sparingly.
+ * If material is null, this will draw without passing through the material API.
+ */
 void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour );
+
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 

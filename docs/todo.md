@@ -5,6 +5,13 @@
   - If point doesn't cross/intersect, we should have a reasonable limit
 
 ## Current
+- Allow for reloading shaders on command (hot-reload feature?)
+- Allow for reloading materials on command
+- Process a level directly from a .map rather than from an .obj, and process the entities
+  - Process entities from a .map
+- Initial Lua mock-up
+- World deserialiser should perform deserialisation on context of node tree, rather than explicitly by type
+- 'current' world selection in editor
 - Different viewport implementations, as some logic for viewport isn't necessary for others
 - Draw bounding volumes for rooms
 - Add texture selection frame
@@ -14,11 +21,11 @@
 - Make the console correctly hide/show, and resize with a window
 
 ## In-Progress
-- Lensflare effect
 - Icons for nodes within viewport
   - ~~Get icons commissioned~~
 
 ## Done
+- ~~Lensflare effect~~
 - ~~Fix supersampling~~
 - ~~Implement plotting for brushes~~
 - ~~Colour selection buffer implemented in editor.c, use it to determine grid segment~~

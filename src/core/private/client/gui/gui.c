@@ -101,7 +101,7 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 	return guiStyleSheet;
 }
 
-const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path )
+const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path )
 {
 	NdBranch *root = nd_load_file( path, "guiStyle" );
 	if ( root == NULL )
@@ -113,7 +113,7 @@ const GuiStyleSheet *ss_gui_cache_style_sheet( const char *path )
 	return ParseStyleSheet( root );
 }
 
-void ss_gui_set_style_sheet( const GuiStyleSheet *styleSheet )
+void ape_gui_set_style_sheet( const GuiStyleSheet *styleSheet )
 {
 	activeSheet = styleSheet;
 }
@@ -128,7 +128,7 @@ int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
 /**
  * Initialize the GUI sub-system.
  */
-bool ss_gui_initialize( void )
+bool ape_gui_initialize_( void )
 {
 	PL_ZERO_( guiState );
 
@@ -154,7 +154,7 @@ bool ss_gui_initialize( void )
 	return true;
 }
 
-void ss_gui_shutdown( void )
+void ape_gui_shutdown_( void )
 {
 	guiShutdownDraw_();
 

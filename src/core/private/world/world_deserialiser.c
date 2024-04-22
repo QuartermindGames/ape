@@ -69,7 +69,7 @@ static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	assert( roomA != NULL );
 	if ( roomA == NULL )
 	{
-		PRINT_WARNING( "Invalid portal room A!\n" );
+		ape_warning_( "Invalid portal room A!\n" );
 		return NULL;
 	}
 
@@ -78,7 +78,7 @@ static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
 	assert( roomB != NULL );
 	if ( roomB == NULL )
 	{
-		PRINT_WARNING( "Invalid portal room B!\n" );
+		ape_warning_( "Invalid portal room B!\n" );
 		return NULL;
 	}
 
@@ -107,10 +107,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 
 	face->flags = nd_branch_get_child_uint( root, "flags", 0 );
 
-	face->smoothingGroup = nd_branch_get_child_int( root, "smoothingGroup", 0 );
-
 	unsigned int roomIndex = nd_branch_get_child_uint( root, "roomIndex", ( unsigned int ) -1 );
-	assert( roomIndex != ( unsigned int ) -1 );
 	if ( roomIndex == ( unsigned int ) -1 )
 	{
 		ape_warning_( "No room index for face!\n" );
@@ -118,8 +115,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	else
 	{
 		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
-		assert( room != NULL );
-		if ( room == NULL )
+		if ( room == nullptr )
 		{
 			ape_warning_( "Invalid room index (%u) for face!\n", roomIndex );
 		}
@@ -132,7 +128,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	// Attempt to fetch the material for the face.
 	// It's inherited from our adventures with RFL, but we'll support cases where a
 	// face doesn't have a material as "valid"...
-	face->materialIndex = nd_branch_get_child_uint( root, "material", ( unsigned int ) -1 );
+	face->materialIndex = ( int32_t ) nd_branch_get_child_int( root, "material", -1 );
 	face->material = PlGetVectorArrayElementAt( world->materials, face->materialIndex );
 	if ( face->material == NULL )
 	{
@@ -157,7 +153,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 			assert( vertexIndex != ( unsigned int ) -1 );
 			if ( ( worldVertex = PlGetVectorArrayElementAt( world->vertices, vertexIndex ) ) == NULL )
 			{
-				PRINT_WARNING( "Invalid vertex index for face!\n" );
+				ape_warning_( "Invalid vertex index for face!\n" );
 				break;
 			}
 
@@ -203,7 +199,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 				}
 				else
 				{
-					PRINT_WARNING( "Failed to fetch string from materials list: %s\n", nd_get_error_message() );
+					ape_warning_( "Failed to fetch string from materials list: %s\n", nd_get_error_message() );
 					break;
 				}
 
@@ -212,7 +208,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "No materials for geometry!\n" );
+			ape_warning_( "No materials for geometry!\n" );
 		}
 	}
 
@@ -235,7 +231,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "No rooms for geometry!\n" );
+			ape_warning_( "No rooms for geometry!\n" );
 		}
 	}
 
@@ -263,7 +259,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "No portals for geometry!\n" );
+			ape_warning_( "No portals for geometry!\n" );
 		}
 	}
 
@@ -298,7 +294,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "Invalid number of vertices for geometry!\n" );
+			ape_warning_( "Invalid number of vertices for geometry!\n" );
 		}
 	}
 
@@ -316,7 +312,7 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "No faces for geometry!\n" );
+			ape_warning_( "No faces for geometry!\n" );
 		}
 	}
 }
@@ -347,7 +343,7 @@ ApeWorld *ape_world_deserialize_( NdBranch *root )
 	ApeWorld *world = ape_world_create();
 	if ( world == NULL )
 	{
-		PRINT_WARNING( "Failed to create world!\n" );
+		ape_warning_( "Failed to create world!\n" );
 		return NULL;
 	}
 
@@ -356,13 +352,13 @@ ApeWorld *ape_world_deserialize_( NdBranch *root )
 	if ( version == ( unsigned int ) -1 )
 	{
 		// Print a warning and return NULL if the version is not found
-		PRINT_WARNING( "Failed to find world version!\n" );
+		ape_warning_( "Failed to find world version!\n" );
 		return NULL;
 	}
 	else if ( version > APE_WORLD_VERSION )
 	{
 		// Print a warning and return NULL if the version is not supported
-		PRINT_WARNING( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
+		ape_warning_( "Unsupported world version! (%d > %d)\n", version, APE_WORLD_VERSION );
 		return NULL;
 	}
 
@@ -386,10 +382,14 @@ ApeWorld *ape_world_deserialize_( NdBranch *root )
 	}
 
 	if ( ( branch = nd_branch_get_child_by_name( root, "geometry" ) ) != NULL )
+	{
 		deserialize_geometry( world, branch );
+	}
 
 	if ( ( branch = nd_branch_get_child_by_name( root, "lights" ) ) != NULL )
+	{
 		deserialize_lights( world, branch );
+	}
 
 	return world;
 }

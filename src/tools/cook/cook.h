@@ -19,6 +19,12 @@
 		exit( EXIT_FAILURE );  \
 	}
 
+#if !defined( NDEBUG )
+#	define DPRINT( ... ) printf( __VA_ARGS__ )
+#else
+#	define DPRINT( ... )
+#endif
+
 typedef struct CookState
 {
 	const char *projectName;

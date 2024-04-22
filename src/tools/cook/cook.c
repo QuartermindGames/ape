@@ -5,11 +5,43 @@
 
 CookState cook_state;
 
+static void process_collection( NdBranch *root, const char *tag, void ( *callback )( const char * ) )
+{
+	assert( root != NULL );
+	assert( tag != NULL );
+	assert( callback != NULL );
+
+	NdBranch *child = nd_branch_get_child_by_name( root, tag );
+	if ( child == nullptr )
+	{
+		printf( "No \"%s\" collection, skipping\n", tag );
+		return;
+	}
+
+	unsigned int numTotal = nd_branch_get_num_of_children( child );
+	printf( "Processing %u %s...\n", numTotal, tag );
+
+	unsigned int num = 1;
+	child = nd_branch_get_first_child( child );
+	while ( child != nullptr )
+	{
+		char name[ 64 ];
+		nd_branch_get_string( child, name, sizeof( name ) );
+
+		printf( "(%u/%u) %s\n", num, numTotal, name );
+		callback( name );
+
+		child = nd_get_next_child( child );
+		num++;
+	}
+}
+
 static void cook_project( NdBranch *root )
 {
 	const char *projectName = com_project_get_name();
 	printf( "------------------------------------------------------\n"
-	        "Cooking \"%s\" project...\n", projectName );
+	        "Cooking \"%s\" project...\n",
+	        projectName );
 
 	NdBranch *cookBranch = nd_branch_get_child_by_name( root, "cook" );
 	if ( cookBranch == NULL )
@@ -17,41 +49,8 @@ static void cook_project( NdBranch *root )
 		ERROR( "No cook configuration specified for project, aborting!\n" );
 	}
 
-	NdBranch *childBranch;
-
-	childBranch = nd_branch_get_child_by_name( cookBranch, "worlds" );
-	if ( childBranch != NULL )
-	{
-		printf( "Processing %u worlds...\n", nd_branch_get_num_of_children( childBranch ) );
-
-		childBranch = nd_branch_get_first_child( childBranch );
-		while( childBranch != NULL )
-		{
-			char worldName[ 64 ];
-			nd_branch_get_string( childBranch, worldName, sizeof( worldName ) );
-
-			cook_world_process( worldName );
-
-			childBranch = nd_get_next_child( childBranch );
-		}
-	}
-
-	childBranch = nd_branch_get_child_by_name( cookBranch, "models" );
-	if ( childBranch != NULL )
-	{
-		printf( "Processing %u models...\n", nd_branch_get_num_of_children( childBranch ) );
-
-		childBranch = nd_branch_get_first_child( childBranch );
-		while ( childBranch != NULL )
-		{
-			char modelName[ 64 ];
-			nd_branch_get_string( childBranch, modelName, sizeof( modelName ) );
-
-			cook_model_process( modelName );
-
-			childBranch = nd_get_next_child( childBranch );
-		}
-	}
+	process_collection( cookBranch, "worlds", cook_world_process );
+	process_collection( cookBranch, "models", cook_model_process );
 }
 
 int main( int argc, char **argv )

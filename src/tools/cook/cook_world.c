@@ -11,7 +11,8 @@ static void process_properties( const char *worldName, NdBranch *root )
 	NdBranch *properties = nd_load_file( path, "properties" );
 	if ( properties == NULL )
 	{
-		ERROR( "Failed to open world properties file (%s): %s\n", path, nd_get_error_message() );
+		WARN( "Failed to open world properties file (%s): %s\n", path, nd_get_error_message() );
+		return;
 	}
 	nd_branch_push_back_branch( root, properties );
 	nd_branch_destroy( properties );
@@ -128,7 +129,6 @@ static void process_geometry( const char *worldName, NdBranch *root )
 				NdBranch *faceBranch = nd_branch_push_back_object( child, NULL );
 				nd_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
 				nd_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
-				nd_branch_push_back_int32( faceBranch, "smoothingGroup", faces[ j ]->smoothingGroup );
 				nd_branch_push_back_uint32( faceBranch, "roomIndex", i );
 
 				NdBranch *verticesBranch = nd_branch_push_back_object_array( faceBranch, "edges" );

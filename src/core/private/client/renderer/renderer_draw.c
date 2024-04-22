@@ -37,46 +37,46 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColourF32 *colour, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale )
 {
 	PLGTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
-	if ( texture == NULL )
-	{
-		return;
-	}
+	assert( texture != nullptr );
 
-	static PLGMesh *mesh = NULL;
-	if ( mesh == NULL )
-	{
-		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 2, 4 );
-	}
-
-	assert( mesh != NULL );
-	if ( mesh == NULL )
-	{
-		ape_warning_( "Attempted to draw sprite with an invalid mesh: %s\n", PlGetError() );
-		return;
-	}
-
-	float tw, th, tx, ty;
-	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	assert( mesh != nullptr );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	PlTranslateMatrix( *position );
-
 	PlRotateMatrix( PL_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
 	PlRotateMatrix( PL_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
 	PlRotateMatrix( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
 
-	PlgClearMesh( mesh );
+	float tw, th, tx, ty;
+	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
+	float w = subRect->w * scale;
+	float h = subRect->h * scale;
+
+	float x = origin->x * scale;
+	float y = origin->y * scale;
+
+	//FIXME: plgraphics should support using floats for colours damn it!!!!
 	PLColour c = PlColourF32ToU8( colour );
-	unsigned int x = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty ) );
-	unsigned int y = PlgAddMeshVertex( mesh, &PLVector3( origin->x, origin->y - ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx, ty + th ) );
-	unsigned int z = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y, origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty ) );
-	unsigned int w = PlgAddMeshVertex( mesh, &PLVector3( origin->x + ( subRect->w * scale ), origin->y - ( subRect->h * scale ), origin->z ), &pl_vecOrigin3, &c, &PLVector2( tx + tw, ty + th ) );
 
-	PlgAddMeshTriangle( mesh, x, y, z );
-	PlgAddMeshTriangle( mesh, z, y, w );
+	PlgImmPushVertex( x, y, 0.0f );
+	PlgImmColour( c.r, c.g, c.b, c.a );
+	PlgImmTextureCoord( tx, ty + th );
+
+	PlgImmPushVertex( x, y + h, 0.0f );
+	PlgImmColour( c.r, c.g, c.b, c.a );
+	PlgImmTextureCoord( tx, ty );
+
+	PlgImmPushVertex( x + w, y, 0.0f );
+	PlgImmColour( c.r, c.g, c.b, c.a );
+	PlgImmTextureCoord( tx + tw, ty + th );
+
+	PlgImmPushVertex( x + w, y + h, 0.0f );
+	PlgImmColour( c.r, c.g, c.b, c.a );
+	PlgImmTextureCoord( tx + tw, ty );
 
 	ape_material_draw( material, mesh, NULL, 0 );
 
@@ -88,20 +88,30 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 	assert( mesh != NULL );
 
-	PlgImmPushVertex( x, y + h, 0 );
-	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 0.0f, 0.0f );
-	PlgImmPushVertex( x, y, 0 );
+	PlgImmPushVertex( x, y, 0.0f );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 0.0f, 1.0f );
-	PlgImmPushVertex( x + w, y + h, 0 );
+
+	PlgImmPushVertex( x, y + h, 0.0f );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 1.0f, 0.0f );
-	PlgImmPushVertex( x + w, y, 0 );
+	PlgImmTextureCoord( 0.0f, 0.0f );
+
+	PlgImmPushVertex( x + w, y, 0.0f );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 1.0f, 1.0f );
 
-	ape_material_draw( material, mesh, NULL, 0 );
+	PlgImmPushVertex( x + w, y + h, 0.0f );
+	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
+	PlgImmTextureCoord( 1.0f, 0.0f );
+
+	if ( material != nullptr )
+	{
+		ape_material_draw( material, mesh, NULL, 0 );
+	}
+	else
+	{
+		PlgImmDraw();
+	}
 }
 
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )

@@ -10,7 +10,7 @@ typedef struct GUIButton
 
 GuiPanel *GUI_Button_Create( GuiPanel *parent, const char *label, int x, int y, int w, int h )
 {
-	GuiPanel *panel = ss_gui_panel_create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_OUTSET );
+	GuiPanel *panel = ape_gui_panel_create( parent, x, y, w, h, GUI_PANEL_BACKGROUND_DEFAULT, GUI_PANEL_BORDER_OUTSET );
 
 	return panel;
 }

@@ -78,7 +78,7 @@ static void DrawBorder( GuiPanel *self )
  * @param border
  * @return
  */
-GuiPanel *ss_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border )
+GuiPanel *ape_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border )
 {
 	GuiPanel *self = PlMAllocA( sizeof( GuiPanel ) );
 	self->x = x;
@@ -110,7 +110,7 @@ GuiPanel *ss_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, Gui
  * Destroy the given panel. Automatically culls all
  * children of the given panel too.
  */
-void ss_gui_panel_destroy( GuiPanel *self )
+void ape_gui_panel_destroy( GuiPanel *self )
 {
 	if ( self == NULL )
 	{
@@ -129,7 +129,7 @@ void ss_gui_panel_destroy( GuiPanel *self )
 	{
 		GuiPanel *childPanel = PlGetLinkedListNodeUserData( childNode );
 		childNode = PlGetNextLinkedListNode( childNode );
-		ss_gui_panel_destroy( childPanel );
+		ape_gui_panel_destroy( childPanel );
 	}
 	PlDestroyLinkedList( self->children );
 
@@ -433,7 +433,7 @@ bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp )
 	return false;
 }
 
-void ss_gui_panel_set_visible( GuiPanel *self, bool flag )
+void ape_gui_panel_set_visible( GuiPanel *self, bool flag )
 {
 	self->isVisible = flag;
 }

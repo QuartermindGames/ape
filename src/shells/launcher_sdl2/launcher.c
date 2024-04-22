@@ -552,6 +552,8 @@ int launcher_initialize( int argc, char **argv )
 
 	while ( ape_is_running() )
 	{
+		COM_PROFILE_START( "frametime" );
+
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
 		{
@@ -619,6 +621,8 @@ int launcher_initialize( int argc, char **argv )
 		ape_render_frame( windowViewport );
 
 		SDL_GL_SwapWindow( sdlWindow );
+
+		COM_PROFILE_END( "frametime" );
 
 		static unsigned int refreshTime = 0;
 		if ( refreshTime > ape_get_num_ticks() )

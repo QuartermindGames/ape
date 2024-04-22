@@ -184,7 +184,6 @@ void com_update_profiler_samples( void )
 		}
 
 		group->results[ NUM_SAMPLES - 1 ] = comGetProfilingGroupTimeTaken( group );
-
 		group = comGetNextProfilingGroup( group );
 	}
 }

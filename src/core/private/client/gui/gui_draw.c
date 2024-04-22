@@ -31,7 +31,7 @@ typedef struct GuiCanvas
 	int height;
 } GuiCanvas;
 
-GuiCanvas *ss_gui_canvas_create( int width, int height )
+GuiCanvas *ape_gui_canvas_create( int width, int height )
 {
 	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width = width;

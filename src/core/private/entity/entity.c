@@ -56,7 +56,13 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 
 	if ( PlLookupHashTableUserData( entityClassDefinitions, definition->name, strlen( definition->name ) ) != NULL )
 	{
-		PRINT_WARNING( "Attempted to register a duplicate entity class (%s)\n", definition->name );
+		ape_warning_( "Attempted to register a duplicate entity class (%s)\n", definition->name );
+		return;
+	}
+
+	if ( definition->createFunction == nullptr )
+	{
+		ape_warning_( "Encountered a class (%s) with no create callback!\n", definition->name );
 		return;
 	}
 
@@ -79,16 +85,20 @@ ApeEntity *ape_entity_create( const char *className, NdBranch *properties )
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( className == NULL )
 	{
-		PRINT_WARNING( "Failed to find entity class (%s)!\n", className );
+		ape_warning_( "Failed to find entity class (%s)!\n", className );
 		return NULL;
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
 	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
-	if ( classDefinition->createFunction != NULL )
+
+	entity->classData = classDefinition->createFunction( entity, properties );
+	if ( entity->classData == nullptr )
 	{
-		entity->classData = classDefinition->createFunction( entity, properties );
+		ape_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
+		ape_entity_destroy( entity );
+		return nullptr;
 	}
 
 	return entity;
