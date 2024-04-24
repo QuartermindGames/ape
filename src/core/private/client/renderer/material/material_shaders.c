@@ -1,0 +1,441 @@
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: Shader management system
+// Author:  Mark E. Sowden
+
+#include <plcore/pl_hashtable.h>
+
+#include "ape_private.h"
+
+#include "../renderer.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
+
+static PLHashTable *shaderProgramTable;
+static ApeShaderProgram *defaultShaders[ APE_MAX_DEFAULT_SHADERS ];
+
+#define HOT_RELOAD_TICKS_DEFAULT 60
+static bool hotReload = false;
+static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
+static unsigned int hotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
+
+static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
+{
+	PLFile *filePtr = PlOpenFile( path, true );
+	if ( filePtr == NULL )
+	{
+		ape_warning_( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
+		return nullptr;
+	}
+
+	PLGShaderStage *stage = PlgCreateShaderStage( type );
+	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
+
+	size_t length = PlGetFileSize( filePtr );
+	char *buffer = PL_NEW_( char, length + 1 );
+	PlReadFile( filePtr, buffer, length, 1 );
+
+	PlCloseFile( filePtr );
+
+	// get the directory we're loading the file from,
+	// so we can use include relative to the original file
+	PLPath directory;
+	PlSetupPath( directory, true, "%s", path );
+	char *sep = strrchr( directory, '/' );
+	if ( sep != NULL )
+	{
+		*sep = '\0';
+	}
+
+	PlgCompileShaderStage( stage, buffer, length, directory );
+	if ( PlGetFunctionResult() == PL_RESULT_SUCCESS )
+	{
+		PlgAttachShaderStage( program, stage );
+	}
+	else
+	{
+		ape_warning_( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
+		PlgDestroyShaderStage( stage );
+		stage = nullptr;
+	}
+
+	PL_DELETE( buffer );
+
+	return stage;
+}
+
+static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBranch *root )
+{
+	const char *internalName = nd_branch_get_child_string( root, "description", nullptr );
+	if ( internalName == nullptr )
+	{
+		ape_warning_( "Shader program not assigned a valid 'description'!\n" );
+		return nullptr;
+	}
+
+	if ( *program->internalName == '\0' )
+	{
+		snprintf( program->internalName, sizeof( program->internalName ), "%s", internalName );
+		if ( ape_get_shader_by_name( program->internalName ) != NULL )
+		{
+			ape_warning_( "Shader program (%s) already registered!\n", program->internalName );
+			return nullptr;
+		}
+	}
+	else if ( strcmp( internalName, program->internalName ) != 0 )
+	{
+		ape_warning_( "Changing the internal name of an already loaded shader isn't allowed!\n" );
+		return nullptr;
+	}
+
+	const char *vertexPath = nd_branch_get_child_string( root, "vertexPath", NULL );
+	const char *fragmentPath = nd_branch_get_child_string( root, "fragmentPath", NULL );
+
+	if ( vertexPath == NULL || fragmentPath == NULL )
+	{
+		ape_warning_( "No vertex/fragment stage defined in program!\n" );
+		return NULL;
+	}
+
+	PLGShaderProgram *internal = PlgCreateShaderProgram();
+	if ( internal == NULL )
+	{
+		ape_warning_( "Failed to create shader program!\nPL: %s\n", PlGetError() );
+		return NULL;
+	}
+
+	if ( PlResolveVirtualPath( vertexPath, program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ], sizeof( program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ] ) ) != nullptr )
+	{
+		program->sourceTimestamps[ PLG_SHADER_TYPE_VERTEX ] = PlGetLocalFileTimeStamp( program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ] );
+	}
+	if ( PlResolveVirtualPath( fragmentPath, program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ], sizeof( program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ] ) ) != nullptr )
+	{
+		program->sourceTimestamps[ PLG_SHADER_TYPE_FRAGMENT ] = PlGetLocalFileTimeStamp( program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ] );
+	}
+
+	/* these allow for the program to specify what
+	 * definitions should be set prior to compiling
+	 * the given shader. */
+
+	char fragmentDefinitions[ PLG_MAX_DEFINITIONS ][ PLG_MAX_DEFINITION_LENGTH ];
+	PL_ZERO( fragmentDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
+
+	char vertexDefinitions[ PLG_MAX_DEFINITIONS ][ PLG_MAX_DEFINITION_LENGTH ];
+	PL_ZERO( vertexDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
+
+	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
+	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
+
+	NdBranch *child = nd_branch_get_child_by_name( root, "definitions" );
+	if ( child != NULL )
+	{
+		NdBranch *subChild;
+		if ( ( subChild = nd_branch_get_child_by_name( child, "fragment" ) ) != NULL )
+		{
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = nd_branch_get_num_of_children( subChild );
+			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
+			{
+				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
+			}
+
+			subChild = nd_branch_get_first_child( subChild );
+			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
+			{
+				if ( subChild == NULL )
+				{
+					ape_warning_( "Hit an invalid child, aborting early!\n" );
+					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
+					break;
+				}
+
+				nd_branch_get_string( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = nd_get_next_child( subChild );
+			}
+		}
+		if ( ( subChild = nd_branch_get_child_by_name( child, "vertex" ) ) != NULL )
+		{
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = nd_branch_get_num_of_children( subChild );
+			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
+			{
+				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
+			}
+
+			subChild = nd_branch_get_first_child( subChild );
+			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
+			{
+				if ( subChild == NULL )
+				{
+					ape_warning_( "Hit an invalid child, aborting early!\n" );
+					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
+					break;
+				}
+
+				nd_branch_get_string( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = nd_get_next_child( subChild );
+			}
+		}
+	}
+
+	register_shader_stage( internal, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
+	register_shader_stage( internal, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
+
+	if ( !PlgLinkShaderProgram( internal ) )
+	{
+		ape_warning_( "Failed to link shader stages (%s): %s\n", program->internalName, PlGetError() );
+		PlgDestroyShaderProgram( internal, true );
+		return nullptr;
+	}
+
+	if ( program->internal != nullptr )
+	{
+		PlgDestroyShaderProgram( program->internal, true );
+	}
+
+	program->internal = internal;
+
+	/* the default pass is an optional field that can outline
+	 * the initial properties that should be used during a draw.
+	 * a material can of course overwrite these. */
+	child = nd_branch_get_child_by_name( root, "defaultPass" );
+	if ( child != NULL )
+	{
+		// zero in-case we're reloading...
+		PL_ZERO_( program->defaultPass );
+		/* need to assign this for variable validation */
+		program->defaultPass.program = program;
+
+		ape_parse_material_pass_( child, &program->defaultPass );
+
+#pragma message "TODO: materials won't automatically inherit these default changes yet..."
+	}
+
+	return program;
+}
+
+static void destroy_shader( void *user )
+{
+	ApeShaderProgram *programIndex = ( ApeShaderProgram * ) user;
+	assert( programIndex != nullptr );
+	PlgDestroyShaderProgram( programIndex->internal, true );
+	PL_DELETE( programIndex );
+}
+
+static void load_shader_program_callback( const char *path, PL_UNUSED void *userData )
+{
+	ape_print_( "Loading program: \"%s\"\n", path );
+
+	NdBranch *root = nd_load_file( path, "program" );
+	if ( root == NULL )
+	{
+		ape_warning_( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
+		return;
+	}
+
+	ApeShaderProgram *program = PL_NEW( ApeShaderProgram );
+	if ( parse_shader_program( program, root ) == nullptr )
+	{
+		ape_warning_( "Failed to parse shader program (%s)!\n", path );
+		destroy_shader( program );
+		program = nullptr;
+	}
+
+	nd_branch_destroy( root );
+
+	if ( program == NULL )
+	{
+		return;
+	}
+
+	if ( PlResolveVirtualPath( path, program->path, sizeof( program->path ) ) != nullptr )
+	{
+		program->timestamp = PlGetLocalFileTimeStamp( program->path );
+	}
+	else
+	{
+		// the only negative outcome from this is that hot-reloading won't work, so just warn...
+		ape_warning_( "Failed to resolve virtual path for shader program (%s): %s\n", program->internalName, PlGetError() );
+	}
+
+	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
+}
+
+static void reload_shader_program( ApeShaderProgram *program )
+{
+	NdBranch *root = nd_load_file( program->path, "program" );
+	if ( root == nullptr )
+	{
+		ape_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, nd_get_error_message() );
+		return;
+	}
+
+	if ( parse_shader_program( program, root ) == nullptr )
+	{
+		ape_warning_( "Failed to parse shader program (%s) for reload!\n", program->path );
+	}
+
+	nd_branch_destroy( root );
+
+	program->timestamp = PlGetLocalFileTimeStamp( program->path );
+}
+
+static void reload_shader_program_command( unsigned int argc, char **argv )
+{
+	if ( argc > 1 )
+	{
+		ApeShaderProgram *program = ape_get_shader_by_name( argv[ 1 ] );
+		if ( program == nullptr )
+		{
+			ape_warning_( "Failed to find existing shader (%s)!\n", argv[ 1 ] );
+			return;
+		}
+
+		reload_shader_program( program );
+		return;
+	}
+
+	PLHashTableNode *node = PlGetFirstHashTableNode( shaderProgramTable );
+	while ( node != nullptr )
+	{
+		ApeShaderProgram *program = PlGetHashTableNodeUserData( node );
+		assert( program != nullptr );
+
+		reload_shader_program( program );
+
+		node = PlGetNextHashTableNode( shaderProgramTable, node );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+ApeShaderProgram *ape_get_shader_by_name( const char *name )
+{
+	return ( ApeShaderProgram * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+}
+
+ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderProgram )
+{
+	return defaultShaders[ defaultShaderProgram ];
+}
+
+void ape_register_shader_console_variables_()
+{
+	PlRegisterConsoleVariable( "shaders.autoHotReload", "Enable automatic reload of shaders.",
+#if !defined( NDEBUG )
+	                           "true",
+#else
+	                           "false",
+#endif
+	                           PL_VAR_BOOL, &hotReload, nullptr, true );
+	PlRegisterConsoleVariable( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", PL_TOSTRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, true );
+
+	PlRegisterConsoleCommand( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
+}
+
+void ape_hot_reload_shaders_()
+{
+	if ( !hotReload || hotReloadTicks > ape_get_num_ticks() )
+	{
+		return;
+	}
+
+	PLHashTableNode *node = PlGetFirstHashTableNode( shaderProgramTable );
+	while ( node != nullptr )
+	{
+		ApeShaderProgram *program = PlGetHashTableNodeUserData( node );
+		assert( program != nullptr );
+
+		bool reload = false;
+
+		// first attempt to check the original program file to see if anything changed...
+		time_t timestamp = PlGetLocalFileTimeStamp( program->path );
+		if ( timestamp != 0 && timestamp != program->timestamp )
+		{
+			reload = true;
+		}
+
+		// now check the other files
+		if ( !reload )
+		{
+			for ( unsigned int i = 0; i < PLG_MAX_SHADER_TYPES; ++i )
+			{
+				const char *path = program->sourcePaths[ i ];
+				if ( *path == '\0' )
+				{
+					continue;
+				}
+
+				timestamp = PlGetLocalFileTimeStamp( path );
+				if ( timestamp == 0 || timestamp == program->sourceTimestamps[ i ] )
+				{
+					continue;
+				}
+
+				reload = true;
+			}
+		}
+
+		if ( reload )
+		{
+			ape_print_( "Reloading shader program (%s)\n", program->internalName );
+			reload_shader_program( program );
+		}
+
+		node = PlGetNextHashTableNode( shaderProgramTable, node );
+	}
+
+	hotReloadTicks = ape_get_num_ticks() + incHotReloadTicks;
+}
+
+void ape_initialize_shaders_( void )
+{
+	shaderProgramTable = PlCreateHashTable();
+	if ( shaderProgramTable == NULL )
+	{
+		ape_error_( true, "Failed to create shader program list: %s\n", PlGetError() );
+	}
+
+	ape_print_( "Scanning for shader programs...\n" );
+
+#pragma message "TODO: deprecate 'node' lookup!"
+	PlScanDirectory( "materials/shaders", "node", load_shader_program_callback, false, NULL );
+	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, false, NULL );
+
+	ape_print_( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
+
+	/* now fetch the default programs */
+	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
+	        [APE_SHADER_DEFAULT] = "default",
+	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
+	        [APE_SHADER_DEFAULT_ALPHA] = "default_alpha",
+	        [APE_SHADER_DEFAULT_FONT] = "font",
+	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
+	};
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
+	{
+		ApeShaderProgram *program = ape_get_shader_by_name( defaultShaderNames[ i ] );
+		if ( program == nullptr )
+		{
+			ape_error_( true, "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
+		}
+
+		defaultShaders[ i ] = program;
+	}
+}
+
+void ape_shutdown_shaders_()
+{
+	PlDestroyHashTableEx( shaderProgramTable, destroy_shader );
+}
+
+void ape_set_active_shader_by_default_( ApeDefaultShaderProgram defaultShaderProgram )
+{
+	PlgSetShaderProgram( defaultShaders[ defaultShaderProgram ]->internal );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_shader_set_active_( ApeShaderProgram *self )
+{
+	PlgSetShaderProgram( self->internal );
+}

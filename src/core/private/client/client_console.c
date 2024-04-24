@@ -334,14 +334,14 @@ void ape_console_draw_( const ApeViewport *viewport )
 	}
 
 	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
-	assert( font != NULL );
 	if ( font == NULL )
 	{
 		return;
 	}
 
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 	PlgSetTexture( NULL, 0 );
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -387,7 +387,8 @@ void ape_console_draw_( const ApeViewport *viewport )
 		}
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
+
 	PlgSetTexture( NULL, 0 );
 
 	gui_font_display( font );
@@ -398,7 +399,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		float autoCompleteHeight = 0.0f;
 		float autoCompleteWidth = 0.0f;
 
-		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 		// iterate over the options to determine height, width
 		unsigned int i = 1;
@@ -453,7 +454,7 @@ void ape_console_register_cl_commands_( void )
 	PlRegisterConsoleCommand( "toggle_console", "Toggle the console.", 0, toggle_console_command );
 }
 
-void apeRegisterRendererConsoleVariables_( void );
+void ape_register_renderer_console_variables_( void );
 void ape_console_register_cl_variables_( void )
 {
 	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
@@ -469,8 +470,7 @@ void ape_console_register_cl_variables_( void )
 	                                                  "Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
-	apeRegisterRendererConsoleVariables_();
-
+	ape_register_renderer_console_variables_();
 	ss_acl_audio_register_console_variables_();
 	ape_register_world_console_variables_();
 	ape_register_editor_console_variables_();

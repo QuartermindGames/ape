@@ -10,7 +10,6 @@
 #include "editor.h"
 
 #include "client/renderer/renderer.h"
-#include "client/renderer/renderer_material.h"
 
 #include "game/game_interface.h"
 
@@ -305,7 +304,8 @@ static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, co
 		                 scale );
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
 
 	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
@@ -389,7 +389,7 @@ static void pre_render_brush( ApeEditorState *instance )
 
 	// draw boundary
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 	node = PlGetFirstNode( instance->brushPlotPoints );
 	while ( true )
 	{

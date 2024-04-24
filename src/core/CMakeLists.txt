@@ -4,6 +4,8 @@ set(YIN_CORE_CLIENT
         private/client/client_light.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
+        private/client/renderer/material/material.c
+        private/client/renderer/material/material_shaders.c
         private/client/renderer/post/post_bloom.c
         private/client/renderer/post/post_fxaa.c
         private/client/renderer/post/post.c
@@ -13,12 +15,10 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_particle.c
         private/client/renderer/renderer.c
         private/client/renderer/renderer_draw.c
-        private/client/renderer/renderer_material.c
         private/client/renderer/renderer_render_target.c
         private/client/renderer/renderer_texture.c
         private/client/renderer/renderer_viewport.c
         private/client/renderer/renderer_world.c
-        private/client/renderer/renderer_shaders.c
         private/client/renderer/renderer_sprite.c)
 
 set(APE_SOURCE_GUI

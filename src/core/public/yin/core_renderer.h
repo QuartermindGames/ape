@@ -107,6 +107,8 @@ PLGFrameBuffer *ape_render_target_get_frame_buffer( ApeRenderTarget *renderTarge
 
 /** !!!SHADER API - PREFERABLY AVOID!!! *******************/
 
+typedef struct ApeShaderProgram ApeShaderProgram;
+
 typedef enum ApeDefaultShaderProgram
 {
 	APE_SHADER_DEFAULT,
@@ -119,7 +121,7 @@ typedef enum ApeDefaultShaderProgram
 	APE_MAX_DEFAULT_SHADERS
 } ApeDefaultShaderProgram;
 
-PLGShaderProgram *ss_arl_shader_get_default( ApeDefaultShaderProgram defaultShaderProgram );
+ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderProgram );
 
 /**********************************************************/
 
@@ -155,7 +157,7 @@ void ape_material_release( ApeMaterial *material );
 /**
  * Returns the surface type for the material.
  */
-int8_t ss_arl_material_get_surface_type( const ApeMaterial *material );
+int8_t ape_material_get_surface_type( const ApeMaterial *material );
 
 /**
  * Draws the given mesh with the given material. This also updates the peformance tracking,
@@ -168,7 +170,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
  * Can be used to see what a texture looks like without loading the whole
  * thing into memory if material is loaded with 'preview'.
  */
-PLGTexture *ss_arl_material_get_preview_texture( ApeMaterial *material );
+PLGTexture *ape_material_get_preview_texture( ApeMaterial *material );
 
 unsigned int ape_material_get_flags( const ApeMaterial *self );
 

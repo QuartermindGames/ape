@@ -4,7 +4,7 @@
 
 #include "world.h"
 
-#include "client/renderer/renderer_material.h"
+#include "client/renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

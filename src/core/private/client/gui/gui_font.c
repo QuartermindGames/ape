@@ -7,7 +7,6 @@
 
 #include "gui_private.h"
 #include "common_format_fnt.h"
-#include "client/renderer/renderer_material.h"
 #include "client/renderer/renderer.h"
 
 /****************************************
@@ -51,7 +50,6 @@ void guiDestroyFont( GuiFont *font )
 GuiFont *guiDeserializeFont( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
-	assert( magic == COM_FORMAT_FONT_MAGIC );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
 	{
 		GUI_WARNING( "Invalid font file!\n" );
@@ -67,7 +65,6 @@ GuiFont *guiDeserializeFont( PLFile *file )
 	}
 
 	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
-	assert( numGlyphs != 0 );
 	if ( numGlyphs == 0 )
 	{
 		GUI_WARNING( "Empty font file!\n" );
@@ -172,7 +169,6 @@ bool guiInitializeFonts_( void )
 void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh )
 {
 	const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
-	assert( glyph != NULL );
 	if ( glyph == NULL )
 	{
 		if ( dw != NULL ) { *dw = 0.0f; }
@@ -310,8 +306,9 @@ void gui_font_display( GuiFont *font )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ] );
-	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_FONT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_FONT );
+	PlgSetShaderProgram( program->internal );
+	PlgSetShaderUniformValue( program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 

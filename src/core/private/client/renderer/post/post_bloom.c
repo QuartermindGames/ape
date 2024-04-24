@@ -9,9 +9,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static SS_Arl_ShaderProgramIndex *bloomFilterShader;
-static SS_Arl_ShaderProgramIndex *bloomBlurXShader;
-static SS_Arl_ShaderProgramIndex *bloomBlurYShader;
+static ApeShaderProgram *bloomFilterShader;
+static ApeShaderProgram *bloomBlurXShader;
+static ApeShaderProgram *bloomBlurYShader;
 
 static ApeRenderTarget *bloomRenderTarget;
 
@@ -26,13 +26,13 @@ static void register_bloom_console_variables( void )
 
 static bool setup_bloom_effect( void )
 {
-	bloomFilterShader = ape_shader_get_by_name( "post_bloom_filter" );
+	bloomFilterShader = ape_get_shader_by_name( "post_bloom_filter" );
 	if ( bloomFilterShader == NULL )
 		return false;
-	bloomBlurXShader = ape_shader_get_by_name( "post_blur_x" );
+	bloomBlurXShader = ape_get_shader_by_name( "post_blur_x" );
 	if ( bloomBlurXShader == NULL )
 		return false;
-	bloomBlurYShader = ape_shader_get_by_name( "post_blur_y" );
+	bloomBlurYShader = ape_get_shader_by_name( "post_blur_y" );
 	if ( bloomBlurYShader == NULL )
 		return false;
 
@@ -90,7 +90,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	PlgSetShaderUniformValue( bloomBlurYShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
 	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, bloomRenderTargetTexture );
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 
 	//TODO: this last step is botched, urgh...
 

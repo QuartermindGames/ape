@@ -91,8 +91,8 @@ static void grid_batch_selection_point( const ApeCamera *camera, const GridSelec
 {
 	PLCollisionAABB bounds = ( PLCollisionAABB ){
 	        .origin = PlTransformVector3( &selectable->position, &gridTransform ),
-	        .maxs = ( PLVector3 ){GRID_SELECTABLE_SCALE,   GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE },
-	        .mins = ( PLVector3 ){ -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE}
+	        .maxs = ( PLVector3 ){GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE },
+	        .mins = ( PLVector3 ){-GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE}
     };
 	if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
 	{
@@ -187,7 +187,7 @@ static void draw_selection_grid( ApeCamera *camera )
 		gridOldScale = state->gridScale;
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -280,7 +280,7 @@ void ape_grid_draw_( ApeCamera *camera )
 		return;
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	ApeViewport *selectionViewport = get_selection_viewport_();
 	if ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH )
@@ -315,7 +315,7 @@ void ape_grid_draw_( ApeCamera *camera )
 		PLCollisionAABB bounds = {
 		        .origin = activeGridSelectable->position,
 		        .mins = {-GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE},
-		        .maxs = { GRID_HIGHLIGHT_SCALE, GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE },
+		        .maxs = {GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE },
 		};
 		PlgDrawBoundingVolume( &bounds, &( PLColour ){ 255, 255, 255, 255 } );
 	}

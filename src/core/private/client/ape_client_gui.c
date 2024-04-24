@@ -102,7 +102,8 @@ static void draw_debug_overlay( const ApeViewport *viewport )
 
 	static const float bw = 128;
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 	PlgDrawRectangle( sx, sy, bw, y - sy, PLColour( 0, 0, 0, 200 ) );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
@@ -232,7 +233,8 @@ void ape_draw_gui_( ApeViewport *viewport )
 		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
 		if ( texture != NULL )
 		{
-			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
+			PlgSetShaderProgram( program->internal );
 			PlgSetTexture( texture, 0 );
 
 			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE );

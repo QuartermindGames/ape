@@ -1,30 +1,34 @@
 # Todo
 
 ## Future
+- Initial Lua mock-up
+- Stencil shadow volumes only need to extend within the sphere/radius of a local light source
 - Restrict vertices for stencil shadows based on point of intersection
   - If point doesn't cross/intersect, we should have a reasonable limit
 
 ## Current
-- Allow for reloading shaders on command (hot-reload feature?)
+- Implement DetachShaderStage in graphics driver
 - Allow for reloading materials on command
 - Process a level directly from a .map rather than from an .obj, and process the entities
   - Process entities from a .map
-- Initial Lua mock-up
 - World deserialiser should perform deserialisation on context of node tree, rather than explicitly by type
 - 'current' world selection in editor
 - Different viewport implementations, as some logic for viewport isn't necessary for others
 - Draw bounding volumes for rooms
-- Add texture selection frame
+- **(Editor)** Add texture selection frame
 - Implement a new tab type with close button, so we can easily close editors
-- Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
-- Look into the concept of supporting multiple grids
-- Make the console correctly hide/show, and resize with a window
+- **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
+- **(Editor)** Look into the concept of supporting multiple grids
+- **(Editor)** Make the console correctly hide/show, and resize with a window
+- Terrain brush type using heightmap with variable height specific textures
 
 ## In-Progress
-- Icons for nodes within viewport
-  - ~~Get icons commissioned~~
+- Mirrors - correctly traverse from room to build visible list of rooms w/ transforms
 
 ## Done
+- ~~Allow for reloading shaders on command (hot-reload feature?)~~
+- ~~Icons for nodes within viewport~~
+  - ~~Get icons commissioned~~
 - ~~Lensflare effect~~
 - ~~Fix supersampling~~
 - ~~Implement plotting for brushes~~

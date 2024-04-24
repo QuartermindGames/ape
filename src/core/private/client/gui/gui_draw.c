@@ -179,8 +179,10 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 
 	guiDrawPanel( root );
 
-	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-	PlgSetShaderUniformValue( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ], "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	ApeShaderProgram *defaultProgram = ape_get_default_shader( APE_SHADER_DEFAULT );
+	PlgSetShaderUniformValue( defaultProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	ApeShaderProgram *vertexProgram = ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX );
+	PlgSetShaderUniformValue( vertexProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )
@@ -189,11 +191,11 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 		PlgSetTexture( drawBatch->texture, 0 );
 		if ( drawBatch->texture == NULL )
 		{
-			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+			PlgSetShaderProgram( vertexProgram->internal );
 		}
 		else
 		{
-			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+			PlgSetShaderProgram( defaultProgram->internal );
 		}
 
 		PlgUploadMesh( drawBatch->mesh );

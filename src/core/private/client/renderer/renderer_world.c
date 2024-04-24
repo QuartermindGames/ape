@@ -61,7 +61,8 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 {
 	assert( ( camera != NULL ) && ( world != NULL ) );
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 	PlgSetTexture( NULL, 0 );
 
 	//PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -111,7 +112,7 @@ static bool is_light_not_shadowing_face( const ApeMaterial *material, const ApeW
 		return false;
 	}
 
-	return ( ss_arl_material_shadows_enabled( material ) && !face_is_facing_light( face, light ) );
+	return ( ape_material_shadows_enabled( material ) && !face_is_facing_light( face, light ) );
 }
 
 static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
@@ -162,7 +163,8 @@ static void draw_room_faces( ApeWorld *world, ApeWorldRoom *room, ApeCamera *cam
 
 		if ( ape_config_.renderer.showFaceBounds )
 		{
-			PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+#pragma message "TODO: update this to use material system!!!"
+			PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
 			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
 		}
 
@@ -196,7 +198,8 @@ static void draw_room( ApeWorld *world, ApeWorldRoom *room, ApeCamera *camera, A
 
 	if ( ape_config_.world.showRoomVolumes )
 	{
-		PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
+#pragma message "TODO: update this to use material system!!!"
+		PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
 		PLColour colour = PlColourF32ToU8( &room->colour );
 		PlgDrawBoundingVolume( &room->bounds, &colour );
 	}
@@ -298,7 +301,7 @@ static void draw_room_stencil_shadow_volumes( ApeWorldRoom *room, const ApeLight
 	unsigned int numIndices = 0;
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
-		if ( faces[ i ]->material == NULL || !ss_arl_material_shadows_enabled( faces[ i ]->material ) )
+		if ( faces[ i ]->material == NULL || !ape_material_shadows_enabled( faces[ i ]->material ) )
 			continue;
 
 		if ( face_is_facing_light( faces[ i ], light ) )
@@ -369,7 +372,7 @@ void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLigh
 	//PlPushMatrix();
 	//PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
@@ -395,7 +398,6 @@ void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLigh
 
 void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
 {
-	assert( ( camera != NULL ) && ( world != NULL ) );
 	if ( camera == NULL || world == NULL )
 	{
 		return;

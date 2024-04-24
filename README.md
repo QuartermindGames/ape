@@ -55,9 +55,12 @@ Below is a list of released games that have used this engine.
 
 ## Building
 
-I've been primarily using GCC as a compiler and have taken advantage of a few extensions available there that might not be available elsewhere. Clang should be alright. MSVC might have issues.
+Keep in mind that the code is taking advantage of C23 additions. To my knowledge, this currently, unfortunately, means you're going to be limited to GCC 13, at least as of April 2024. You might have some success with Clang. MSVC is completely out of the picture.
+
+I've essentially done this because I'd estimate by the time this code is actually useful to anyone, if ever, C23 support should hopefully be reasonably widespread. If you've received this before that time, apologies!
 
 The project uses CMake, so ideally it should be as simple as this...
+
 ```
 mkdir build
 cd build
@@ -80,3 +83,4 @@ Historically, the engine had been successfully built and run on macOS—but that
 
 ## Roadmap
 
+- [ ] WebGPU backend for rendering (see [here]())
