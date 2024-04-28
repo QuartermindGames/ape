@@ -1,12 +1,12 @@
 [submodule "src/3rdparty/platform"]
 	path = src/kernel
-	url = ../hei.git
+	url = ../../OldTimes-Software/hei.git
 [submodule "src/3rdparty/openal-soft"]
 	path = src/3rdparty/openal-soft
 	url = ../../kcat/openal-soft.git
 [submodule "release/projects/base"]
 	path = release/projects/base
-	url = ../yin-base.git
+	url = ../../OldTimes-Software/ape-base.git
 [submodule "src/3rdparty/fox"]
 	path = src/3rdparty/fox
-	url = ../fox-1.6.57_cmake.git
+	url = ../../OldTimes-Software/fox-1.6.57_cmake.git
