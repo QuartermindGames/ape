@@ -14,6 +14,20 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+extern CookModelFormatInterface modelSmdInterface;
+extern CookModelFormatInterface modelObjInterface;
+extern CookModelFormatInterface modelHowPCInterface;
+extern CookModelFormatInterface modelPsiInterface;
+static const CookModelFormatInterface *modelCookFormats[] = {
+        &modelObjInterface,
+        &modelSmdInterface,
+        &modelHowPCInterface,
+        &modelPsiInterface,
+        nullptr,
+};
+
+#if 0
+
 ND_DECLARE_STRUCT( ApeFormatBone, 2,
                    ND_DECLARE_STRUCT_ITEM( ApeFormatBone, name, ND_PROPERTY_STRING ),
                    ND_DECLARE_STRUCT_ITEM( ApeFormatBone, parent, ND_PROPERTY_UI32 ) )
@@ -47,85 +61,61 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 	return root;
 }
 
+#endif
+
 static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst )
 {
+	const char *bodyName = nd_branch_get_child_string( root, "body", nullptr );
+	if ( bodyName != nullptr )
+	{
+		const char *ext = PlGetFileExtension( bodyName );
+		if ( ext == nullptr )
+		{
+			return;
+		}
+
+		const CookModelFormatInterface *interface = ( const CookModelFormatInterface * ) &modelCookFormats[ 0 ];
+		while ( interface != nullptr )
+		{
+			if ( pl_strcasecmp( interface->extension, ext ) != 0 )
+			{
+				interface++;
+				continue;
+			}
+
+			if ( interface->loadFunction != nullptr && interface->loadFunction( bodyName ) != nullptr )
+			{
+				break;
+			}
+
+			interface++;
+		}
+
+		if ( interface == nullptr )
+		{
+			WARN( "Failed to find appropriate interface for format (%s)!\n", ext );
+			return;
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-extern CookModelFormatInterface modelSmdInterface;
-extern CookModelFormatInterface modelObjInterface;
-extern CookModelFormatInterface modelHowPCInterface;
-static const CookModelFormatInterface *modelCookFormats[] = {
-        &modelObjInterface,
-        &modelSmdInterface,
-        &modelHowPCInterface,
-        NULL,
-};
-
 void cook_model_process( const char *modelName )
 {
 	PLPath path;
-	PlSetupPath( path, true, "models/%s", modelName );
-
-#if 1
+	PlSetupPath( path, true, "models/%s.%s", modelName, COOK_MODEL_EXTENSION );
 
 	ApeFormatModel model = {};
-	NdBranch *root = nd_load_file( path, "modelConvert" );
-	if ( root == NULL )
+	NdBranch *root = nd_load_file( path, "cookModel" );
+	if ( root == nullptr )
 	{
-
+		WARN( "Failed to open model cook file (%s): %s\n", path, nd_get_error_message() );
+		return;
 	}
 
-#else // old
+	deserialize_model_config( root, &model );
 
-	const char *extension = PlGetFileExtension( modelName );
-	if ( extension == NULL )
-	{
-		ERROR( "Failed to get extension for model (%s): %s\n", modelName, PlGetError() );
-	}
-
-	ApeFormatModel model = {};
-
-	for ( unsigned int i = 0;; ++i )
-	{
-		if ( modelCookFormats[ i ] == NULL )
-		{
-			ERROR( "Unsupported model format (%s)!\n", path );
-		}
-
-		if ( pl_strcasecmp( extension, modelCookFormats[ i ]->extension ) != 0 )
-		{
-			continue;
-		}
-
-		void *pm = modelCookFormats[ i ]->loadFunction( path );
-		if ( pm == NULL )
-		{
-			ERROR( "Failed to load model (%s)!\n", path );
-		}
-
-		if ( modelCookFormats[ i ]->convertFunction( pm, &model ) == NULL )
-		{
-			ERROR( "Failed to convert model (%s)!\n", path );
-		}
-
-		modelCookFormats[ i ]->deleteFunction( pm );
-		break;
-	}
-
-	NdBranch *root = serialize_ape_model( &model );
-	if ( root == NULL )
-	{
-		ERROR( "Failed to serialize model!\n" );
-	}
-
-	PlSetupPath( path, true, "%s/ship/models/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), modelName );
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
-	{
-		ERROR( "Failed to write model: %s\n", nd_get_error_message() );
-	}
-
-#endif
+	nd_branch_destroy( root );
 }
