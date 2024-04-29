@@ -88,7 +88,7 @@ NdBranch *ape_get_user_config( void ) { return userConfig; }
 void ape_print_( const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
@@ -99,7 +99,7 @@ void ape_print_( const char *message, ... )
 void ape_warning_( const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
@@ -110,7 +110,7 @@ void ape_warning_( const char *message, ... )
 void ape_error_( bool die, const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
