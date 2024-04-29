@@ -37,7 +37,9 @@ void ape_initialize_render_targets_( void )
 {
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL )
-		PRINT_ERROR( "Failed to create render target hash table: %s\n", PlGetError() );
+	{
+		ape_error_( true, "Failed to create render target hash table: %s\n", PlGetError() );
+	}
 }
 
 void ape_shutdown_render_targets_( void )
@@ -51,7 +53,7 @@ void ape_shutdown_render_targets_( void )
 
 		int numReferences = apeGetNumberOfReferences( &renderTarget->reference );
 		if ( numReferences > 0 )
-			PRINT( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
+			ape_print_( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
 
 		node = PlGetNextHashTableNode( renderTargets, node );
 	}
@@ -83,7 +85,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags );
 			if ( renderTarget->frameBuffer == NULL )
 			{
-				PRINT_WARNING( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
+				ape_warning_( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
 				return NULL;
 			}
 		}
@@ -101,13 +103,15 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 		frameBuffer = PlgCreateFrameBuffer( width, height, flags );
 		if ( frameBuffer == NULL )
 		{
-			PRINT_WARNING( "Failed to create specified framebuffer: %s\n", PlGetError() );
+			ape_warning_( "Failed to create specified framebuffer: %s\n", PlGetError() );
 			return NULL;
 		}
 
 		textureAttachment = PlgGetFrameBufferTextureAttachment( frameBuffer, textureAttachmentComponent, textureAttachmentFilter );
 		if ( textureAttachment == NULL )
-			PRINT_WARNING( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
+		{
+			ape_warning_( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
+		}
 	}
 	else
 	{
@@ -140,7 +144,7 @@ void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int wid
 {
 	if ( !PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height ) )
 	{
-		PRINT_WARNING( "Failed to resize framebuffer: %s\n", PlGetError() );
+		ape_warning_( "Failed to resize framebuffer: %s\n", PlGetError() );
 	}
 
 	if ( renderTarget->textureAttachment != NULL )
