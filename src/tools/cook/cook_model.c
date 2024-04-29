@@ -107,7 +107,8 @@ void cook_model_process( const char *modelName )
 	PLPath path;
 	PlSetupPath( path, true, "models/%s.%s", modelName, COOK_MODEL_EXTENSION );
 
-	ApeFormatModel model = {};
+	ApeFormatModel *model = PL_NEW( ApeFormatModel );
+
 	NdBranch *root = nd_load_file( path, "cookModel" );
 	if ( root == nullptr )
 	{
@@ -115,7 +116,9 @@ void cook_model_process( const char *modelName )
 		return;
 	}
 
-	deserialize_model_config( root, &model );
+	deserialize_model_config( root, model );
 
 	nd_branch_destroy( root );
+
+	PL_DELETE( model );
 }

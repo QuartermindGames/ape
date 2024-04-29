@@ -7,6 +7,9 @@
   - If point doesn't cross/intersect, we should have a reasonable limit
 
 ## Current
+- Prototype 'eyes' for SS2
+  - Plane with two layers, second layer representing pupil will take offset for eye movement. Maybe first layer acts as mask?
+  - Add some logic for swapping out first texture, so we can convey different expressions
 - Implement DetachShaderStage in graphics driver
 - Allow for reloading materials on command
 - Process a level directly from a .map rather than from an .obj, and process the entities
