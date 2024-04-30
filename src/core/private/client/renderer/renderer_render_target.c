@@ -137,7 +137,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 
 void ape_render_target_release( ApeRenderTarget *renderTarget )
 {
-	ss_acl_mm_release( &renderTarget->reference );
+	ape_mm_release( &renderTarget->reference );
 }
 
 void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height )

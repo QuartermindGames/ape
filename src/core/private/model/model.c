@@ -294,7 +294,7 @@ void ss_ape_model_release( SSApeModel *model )
 	//TODO!!!
 	assert( 0 );
 
-	ss_acl_mm_release( &model->mem );
+	ape_mm_release( &model->mem );
 }
 
 void ss_ape_model_draw( SSApeModel *model )

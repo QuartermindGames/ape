@@ -854,7 +854,7 @@ void ape_material_release( ApeMaterial *material )
 		return;
 	}
 
-	ss_acl_mm_release( &material->mem );
+	ape_mm_release( &material->mem );
 }
 
 int8_t ape_material_get_surface_type( const ApeMaterial *material )
