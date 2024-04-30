@@ -7,6 +7,10 @@
 
 #include "common_format_fnt.h"
 
+// gtk is deprecating pretty useful shit now, annoyingly...
+// need to move away from GTK or reimplement (for now, plug our ears)
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 static GtkWidget *mainWindow;
 static GtkWidget *fontSelector;
 
@@ -15,7 +19,7 @@ static GtkWidget *fontSelector;
  */
 static void DisplaySimpleMessageBox( const char *message )
 {
-	GtkAlertDialog *dialog = gtk_alert_dialog_new( message );
+	GtkAlertDialog *dialog = gtk_alert_dialog_new( "%s", message );
 	gtk_alert_dialog_show( dialog, GTK_WINDOW( mainWindow ) );
 }
 
