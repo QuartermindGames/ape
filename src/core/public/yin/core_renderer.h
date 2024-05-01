@@ -118,7 +118,8 @@ typedef enum ApeDefaultShaderProgram
 	APE_SHADER_DEFAULT_FONT,
 	APE_SHADER_DEFAULT_SHADOW,
 
-	APE_MAX_DEFAULT_SHADERS
+	APE_MAX_DEFAULT_SHADERS,
+	APE_SHADER_DEFAULT_NULL = APE_MAX_DEFAULT_SHADERS,
 } ApeDefaultShaderProgram;
 
 ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderProgram );

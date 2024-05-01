@@ -575,17 +575,9 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName = nd_branch_get_child_string( node, "shaderProgram", "default" );
-			ApeShaderProgram *programIndex = ape_get_shader_by_name( programName );
-			if ( programIndex == NULL )
-			{
-				currentPass->program = ape_get_default_shader( APE_SHADER_DEFAULT );
-				PRINT_WARNING( "Failed to find program \"%s\", using fallback!\n", programName );
-			}
-			else
-			{
-				*currentPass = programIndex->defaultPass;
-				currentPass->program = programIndex;
-			}
+			ApeShaderProgram *programIndex = ape_get_shader_by_name( programName, APE_SHADER_DEFAULT );
+			*currentPass = programIndex->defaultPass;
+			currentPass->program = programIndex;
 
 			ape_parse_material_pass_( node, currentPass );
 			if ( currentPass->blendMode[ 0 ] != PLG_BLEND_NONE || currentPass->blendMode[ 1 ] != PLG_BLEND_NONE )

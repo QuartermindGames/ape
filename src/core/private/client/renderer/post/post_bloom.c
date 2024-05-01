@@ -10,36 +10,41 @@
 // Private
 
 static ApeShaderProgram *bloomFilterShader;
-static ApeShaderProgram *bloomBlurXShader;
-static ApeShaderProgram *bloomBlurYShader;
+static ApeShaderProgram *bloomBlurShader;
 
-static ApeRenderTarget *bloomRenderTarget;
+static ApeRenderTarget *bloomFilterTarget;
+static ApeRenderTarget *bloomBlurTarget;
 
 static bool bloomEnabled;
 static float bloomIntensity;
+static float bloomThreshold;
 
 static void register_bloom_console_variables( void )
 {
-	PlRegisterConsoleVariable( "postfx_bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, &bloomEnabled, NULL, true );
-	PlRegisterConsoleVariable( "postfx_bloom_intensity", "Set the intensity of the bloom effect.", "0.75", PL_VAR_F32, &bloomIntensity, NULL, true );
+	PlRegisterConsoleVariable( "post_bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, &bloomEnabled, nullptr, true );
+	PlRegisterConsoleVariable( "post_bloom.intensity", "Set the intensity of the bloom effect.", "1.0", PL_VAR_F32, &bloomIntensity, nullptr, true );
+	PlRegisterConsoleVariable( "post_bloom.threshold", "Sets the threshold of the bloom effect.", "0.5", PL_VAR_F32, &bloomThreshold, nullptr, true );
 }
 
 static bool setup_bloom_effect( void )
 {
-	bloomFilterShader = ape_get_shader_by_name( "post_bloom_filter" );
-	if ( bloomFilterShader == NULL )
-		return false;
-	bloomBlurXShader = ape_get_shader_by_name( "post_blur_x" );
-	if ( bloomBlurXShader == NULL )
-		return false;
-	bloomBlurYShader = ape_get_shader_by_name( "post_blur_y" );
-	if ( bloomBlurYShader == NULL )
-		return false;
-
-	bloomRenderTarget = ape_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
-	if ( bloomRenderTarget == NULL )
+	if ( ( bloomFilterShader = ape_get_shader_by_name( "post_bloom_filter", APE_SHADER_DEFAULT_NULL ) ) == nullptr )
 	{
-		PRINT_WARNING( "Failed to create render target for bloom effect!\n" );
+		return false;
+	}
+	if ( ( bloomBlurShader = ape_get_shader_by_name( "post_bloom_blur", APE_SHADER_DEFAULT_NULL ) ) == nullptr )
+	{
+		return false;
+	}
+
+	if ( ( bloomFilterTarget = ape_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR ) ) == nullptr )
+	{
+		PRINT_WARNING( "Failed to create render target for bloom filter effect!\n" );
+		return false;
+	}
+	if ( ( bloomBlurTarget = ape_render_target_create( "post_bloom_blur", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR ) ) == nullptr )
+	{
+		PRINT_WARNING( "Failed to create render target for bloom blur effect!\n" );
 		return false;
 	}
 
@@ -48,57 +53,75 @@ static bool setup_bloom_effect( void )
 
 static void cleanup_bloom_effect( void )
 {
-	ape_render_target_release( bloomRenderTarget );
+	ape_render_target_release( bloomFilterTarget );
+	ape_render_target_release( bloomBlurTarget );
 }
 
 static void draw_bloom_effect( const ApeViewport *viewport )
 {
 	if ( !bloomEnabled || viewport->renderTarget == NULL )
-		return;
-
-	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
-	if ( baseTexture == NULL )
 	{
 		return;
 	}
 
-	int bw = ( int ) baseTexture->w / 2;
-	int bh = ( int ) baseTexture->h / 2;
+	// this is currently pretty shit due to limitations in the plgraphics implementation,
+	// so we have to do it in more passes than we should
 
-	ape_render_target_set_size( bloomRenderTarget, bw, bh );
-	PLGTexture *bloomRenderTargetTexture = ape_render_target_get_texture( bloomRenderTarget );
-	if ( bloomRenderTargetTexture == NULL )
+	PLGTexture *viewportTexture = ape_render_target_get_texture( viewport->renderTarget );
+	assert( viewportTexture != nullptr );
+
+	// we use the texture here because supersampling madness...
+	int bw = ( int ) viewportTexture->w / 2;
+	int bh = ( int ) viewportTexture->h / 2;
+	ape_set_2d_viewport_size_( bw, bh );
+
+	// draw with filter into bloom render target
 	{
-		return;
+		ape_render_target_bind( bloomFilterTarget, PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_set_size( bloomFilterTarget, bw, bh );
+
+		ape_shader_set_active_( bloomFilterShader );
+
+		PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomThreshold, false );
+		PlgSetShaderUniformValue( bloomFilterShader->internal, "intensity", &bloomIntensity, false );
+		PlgSetTexture( viewportTexture, 0 );
+
+		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE );
 	}
 
-	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DRAW );
+	// blur
+	{
+		PLGTexture *bloomFilterTexture = ape_render_target_get_texture( bloomFilterTarget );
+		assert( bloomFilterTexture != nullptr );
 
-	PlgSetCullMode( PLG_CULL_NONE );
+		ape_render_target_bind( bloomBlurTarget, PLG_FRAMEBUFFER_DRAW );
+		ape_render_target_set_size( bloomBlurTarget, bw, bh );
 
-	PlgSetShaderProgram( bloomFilterShader->internal );
-	PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomIntensity, false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, baseTexture );
+		ape_shader_set_active_( bloomBlurShader );
 
-	ape_render_target_bind( bloomRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
+		PlgSetTexture( bloomFilterTexture, 0 );
 
-	PlgSetShaderProgram( bloomBlurXShader->internal );
-	PlgSetShaderUniformValue( bloomBlurXShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, bloomRenderTargetTexture );
+		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE );
+	}
 
-	PlgSetShaderProgram( bloomBlurYShader->internal );
-	PlgSetShaderUniformValue( bloomBlurYShader->internal, "viewportSize", &PLVector2( ( float ) bw, ( float ) bh ), false );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, bw, -bh, bloomRenderTargetTexture );
+	// final blend
+	{
+		PLGTexture *bloomBlurTexture = ape_render_target_get_texture( bloomBlurTarget );
+		assert( bloomBlurTexture != nullptr );
 
-	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
+		ape_set_2d_viewport_size_( viewport->width, viewport->height );
 
-	//TODO: this last step is botched, urgh...
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
+		ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
 
-	ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DRAW );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, baseTexture );
-	PlgSetBlendMode( PLG_BLEND_ADDITIVE );
-	PlgDrawTexturedRectangle( viewport->x, viewport->height, viewport->width, -viewport->height, bloomRenderTargetTexture );
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
+		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
+
+		PlgSetTexture( bloomBlurTexture, 0 );
+		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+
+		PlgSetBlendMode( PLG_BLEND_DISABLE );
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

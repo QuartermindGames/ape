@@ -76,7 +76,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 	if ( *program->internalName == '\0' )
 	{
 		snprintf( program->internalName, sizeof( program->internalName ), "%s", internalName );
-		if ( ape_get_shader_by_name( program->internalName ) != NULL )
+		if ( ape_get_shader_by_name( program->internalName, APE_SHADER_DEFAULT_NULL ) != nullptr )
 		{
 			ape_warning_( "Shader program (%s) already registered!\n", program->internalName );
 			return nullptr;
@@ -205,7 +205,6 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 		program->defaultPass.program = program;
 
 		ape_parse_material_pass_( child, &program->defaultPass );
-
 #pragma message "TODO: materials won't automatically inherit these default changes yet..."
 	}
 
@@ -282,7 +281,7 @@ static void reload_shader_program_command( unsigned int argc, char **argv )
 {
 	if ( argc > 1 )
 	{
-		ApeShaderProgram *program = ape_get_shader_by_name( argv[ 1 ] );
+		ApeShaderProgram *program = ape_get_shader_by_name( argv[ 1 ], APE_SHADER_DEFAULT_NULL );
 		if ( program == nullptr )
 		{
 			ape_warning_( "Failed to find existing shader (%s)!\n", argv[ 1 ] );
@@ -308,9 +307,26 @@ static void reload_shader_program_command( unsigned int argc, char **argv )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-ApeShaderProgram *ape_get_shader_by_name( const char *name )
+ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProgram fallback )
 {
-	return ( ApeShaderProgram * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	ApeShaderProgram *program = ( ApeShaderProgram * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	if ( program != nullptr )
+	{
+		return program;
+	}
+
+	if ( fallback == APE_SHADER_DEFAULT_NULL )
+	{
+		ape_warning_( "Failed to fetch shader (%s) by name!\n", name );
+		return nullptr;
+	}
+
+	program = defaultShaders[ fallback ];
+	assert( program != nullptr );
+
+	ape_warning_( "Failed to fetch shader (%s) by name! Using fallback (%s)\n", program->internalName );
+
+	return program;
 }
 
 ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderProgram )
@@ -396,14 +412,11 @@ void ape_initialize_shaders_( void )
 	}
 
 	ape_print_( "Scanning for shader programs...\n" );
-
-#pragma message "TODO: deprecate 'node' lookup!"
-	PlScanDirectory( "materials/shaders", "node", load_shader_program_callback, false, NULL );
 	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, false, NULL );
 
 	ape_print_( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
-	/* now fetch the default programs */
+	// now fetch the default programs
 	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
 	        [APE_SHADER_DEFAULT] = "default",
 	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
@@ -413,7 +426,7 @@ void ape_initialize_shaders_( void )
 	};
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
 	{
-		ApeShaderProgram *program = ape_get_shader_by_name( defaultShaderNames[ i ] );
+		ApeShaderProgram *program = ape_get_shader_by_name( defaultShaderNames[ i ], APE_SHADER_DEFAULT_NULL );
 		if ( program == nullptr )
 		{
 			ape_error_( true, "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );

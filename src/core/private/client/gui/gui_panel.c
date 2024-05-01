@@ -17,18 +17,18 @@ static void DrawBorder( GuiPanel *self )
 	PLGMesh *mesh = guiGetBatchQueueMesh( NULL );
 
 	PLColourF32 topColour;
-	PLColourF32 bottomColour;
+	//PLColourF32 bottomColour;
 
 	switch ( self->border )
 	{
 		default:
 		case GUI_PANEL_BORDER_INSET:
 			topColour = self->styleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ];
-			bottomColour = self->styleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ];
+			//bottomColour = self->styleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ];
 			break;
 		case GUI_PANEL_BORDER_OUTSET:
 			topColour = self->styleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ];
-			bottomColour = self->styleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ];
+			//bottomColour = self->styleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ];
 			break;
 	}
 

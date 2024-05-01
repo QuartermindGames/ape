@@ -124,7 +124,7 @@ typedef struct ApeShaderProgram
 
 void ape_hot_reload_shaders_();
 
-ApeShaderProgram *ape_get_shader_by_name( const char *name );
+ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProgram fallback );
 
 void ape_set_active_shader_by_default_( ApeDefaultShaderProgram defaultShaderProgram );
 
