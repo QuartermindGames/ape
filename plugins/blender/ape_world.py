@@ -128,7 +128,7 @@ class ExportWorldOperator(bpy.types.Operator, ExportHelper):
         if not lights:
             return
 
-        fw(b"\tobject array lights {\n")
+        fw(b"\tarray object lights {\n")
 
         for light in lights:
             fw(b"\t\t{\n")

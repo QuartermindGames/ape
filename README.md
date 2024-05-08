@@ -75,7 +75,7 @@ Compilation requires [MSYS2](https://www.msys2.org/) and [MinGW64](https://packa
 
 ### Linux
 
-The engine primarily supports 64-bit Ubuntu 23.10 and has not been tested against other distributions of Linux, but is expected to work just fine.
+The engine primarily supports 64-bit [Ubuntu 24.04 LTS](https://ubuntu.com/download/desktop) and has not been tested against other distributions of Linux, but is expected to work just fine.
 
 ### macOS
 

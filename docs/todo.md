@@ -10,6 +10,7 @@
   - If point doesn't cross/intersect, we should have a reasonable limit
 
 ## Current
+- Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
 - Shadows from multiple sources don't work!
 - We don't have spotlights...
 - Prototype 'eyes' for SS2
@@ -22,17 +23,17 @@
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
 - 'current' world selection in editor
 - Different viewport implementations, as some logic for viewport isn't necessary for others
-- Draw bounding volumes for rooms
+- **(Editor)** Draw bounding volumes for rooms
 - **(Editor)** Add texture selection frame
 - Implement a new tab type with close button, so we can easily close editors
 - **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
 - **(Editor)** Look into the concept of supporting multiple grids
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Terrain brush type using heightmap with variable height specific textures
-- Sky plane should always show above the camera
+- Sky plane should display irrelevent of camera position
 
 ## In-Progress
-- Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
+- Model import from SMD/QC etc.
 
 ## Done
 - ~~Fix post-processing, again~~
