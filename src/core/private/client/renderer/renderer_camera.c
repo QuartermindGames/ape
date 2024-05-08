@@ -93,6 +93,7 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorld *world )
 #else
 		if ( light->flags & APE_LIGHT_FLAG_FLARE )
 		{
+#	pragma message "TODO: if it's the sun, the position needs to be projected out to where it *would* be - there should be no distance check either..."
 			ape_add_flare_to_queue( camera, &light->position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 		}
 #endif

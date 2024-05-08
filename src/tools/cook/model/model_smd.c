@@ -6,6 +6,7 @@
 
 #include "plcore/pl_parse.h"
 #include "ape/ape_formats.h"
+#include "plcore/pl_hashtable.h"
 
 #define MAX_TOKEN 64
 
@@ -29,11 +30,15 @@ static SmdModel *parse_smd( const char *path, const char *p )
 		if ( !isValidated )
 		{
 			if ( strcmp( token, "version" ) != 0 )
+			{
 				ERROR( "Expected \"version\" but found \"%s\"!\n", token );
+			}
 
-			int version = PlParseInteger( &p, NULL );
+			int version = PlParseInteger( &p, nullptr );
 			if ( version != SMD_VERSION )
+			{
 				ERROR( "Expected version %d, but found \"%d\"!\n", version, SMD_VERSION );
+			}
 
 			PlSkipLine( &p );
 
@@ -49,7 +54,9 @@ static SmdModel *parse_smd( const char *path, const char *p )
 			{
 				PlParseToken( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
+				{
 					break;
+				}
 
 				PlSkipLine( &p );
 			}
@@ -66,7 +73,9 @@ static SmdModel *parse_smd( const char *path, const char *p )
 			{
 				PlParseToken( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
+				{
 					break;
+				}
 
 				PlSkipLine( &p );
 			}
@@ -86,26 +95,14 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				PlParseToken( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
+				{
 					break;
+				}
 
 				char material[ MAX_TOKEN ];
 				snprintf( material, sizeof( material ), "%s", token );
 
 				PlSkipLine( &p );
-
-				for ( unsigned int i = ( unsigned int ) strlen( material ); i > 0; --i )
-				{
-					if ( material[ i ] != '.' )
-					{
-						/* convert the string to lowercase as we go
-						 * as we want the lookup to be case-insensitive */
-						material[ i ] = ( char ) tolower( material[ i ] );
-						continue;
-					}
-
-					material[ i ] = '\0';
-					break;
-				}
 
 				// figure out what slot it falls into
 
@@ -122,35 +119,39 @@ static SmdModel *parse_smd( const char *path, const char *p )
 						break;
 					}
 
-					if ( strcmp( model->meshes[ i ].material, material ) != 0 )
+					if ( pl_strcasecmp( model->meshes[ i ].material, material ) != 0 )
+					{
 						continue;
+					}
 
 					smdMesh = &model->meshes[ i ];
 					break;
 				}
 
-				if ( smdMesh == NULL )
+				if ( smdMesh == nullptr )
+				{
 					ERROR( "Failed to fetch mesh for material \"%s\"!\n", material );
+				}
 
 				for ( unsigned int i = 0; i < 3; ++i )
 				{
-					PlParseInteger( &p, NULL );// bone index
+					PlParseInteger( &p, nullptr );// bone index
 
 					PLVector3 position;
-					position.x = PlParseFloat( &p, NULL );
-					position.y = PlParseFloat( &p, NULL );
-					position.z = PlParseFloat( &p, NULL );
+					position.x = PlParseFloat( &p, nullptr );
+					position.y = PlParseFloat( &p, nullptr );
+					position.z = PlParseFloat( &p, nullptr );
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
 					PLVector3 normal;
-					normal.x = PlParseFloat( &p, NULL );
-					normal.y = PlParseFloat( &p, NULL );
-					normal.z = PlParseFloat( &p, NULL );
+					normal.x = PlParseFloat( &p, nullptr );
+					normal.y = PlParseFloat( &p, nullptr );
+					normal.z = PlParseFloat( &p, nullptr );
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
 					PLVector2 uv;
-					uv.x = PlParseFloat( &p, NULL );
-					uv.y = PlParseFloat( &p, NULL ) * -1;// inverse, because aaargh
+					uv.x = PlParseFloat( &p, nullptr );
+					uv.y = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].uv = uv;
 
 					PlSkipLine( &p );
@@ -172,12 +173,16 @@ static SmdModel *parse_smd( const char *path, const char *p )
 SmdModel *model_smd_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, true );
-	if ( file == NULL )
+	if ( file == nullptr )
+	{
 		ERROR( "Failed to load SMD \"%s\"!\nPL: %s\n", path, PlGetError() );
+	}
 
 	const char *p = ( char * ) PlGetFileData( file );
 	if ( *p == '\0' )
+	{
 		ERROR( "SMD \"%s\" is empty!\n", path );
+	}
 
 	SmdModel *model = parse_smd( path, p );
 
@@ -191,7 +196,7 @@ void model_smd_destroy( SmdModel *model )
 	PL_DELETE( model );
 }
 
-ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
+static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 {
 	out->numMeshes = smd->numMeshes;
 	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
@@ -208,10 +213,19 @@ ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 		strcpy( tmp, smd->meshes[ i ].material );
 		pl_strntolower( tmp, sizeof( tmp ) );
 		char *c = strrchr( tmp, '.' );
-		if ( c != NULL )
+		if ( c != nullptr )
+		{
 			*c = '\0';
+		}
 
-		PlSetupPath( mesh->material, true, "materials/%s.mat.n", tmp );
+		if ( *out->materialPath != '\0' )
+		{
+			PlSetupPath( mesh->material, true, "materials/%s/%s.mat.n", out->materialPath, tmp );
+		}
+		else
+		{
+			PlSetupPath( mesh->material, true, "materials/%s.mat.n", tmp );
+		}
 
 		mesh->numTriangles = smd->meshes[ i ].numTriangles;
 		if ( mesh->numTriangles >= APE_FORMAT_MODEL_MAX_TRIANGLES )
@@ -224,11 +238,9 @@ ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 		{
 			for ( unsigned int vtx = 0; vtx < 3; ++vtx )
 			{
-#if 0//todo
 				mesh->triangles[ tri ].vertices[ vtx ].position = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].position;
 				mesh->triangles[ tri ].vertices[ vtx ].normal = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].normal;
 				mesh->triangles[ tri ].vertices[ vtx ].uv = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].uv;
-#endif
 			}
 		}
 	}
@@ -237,7 +249,7 @@ ApeFormatModel *model_smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 }
 
 static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
-static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return model_smd_to_ape( ( const SmdModel * ) model, out ); }
+static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
 static void destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
 
 CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };

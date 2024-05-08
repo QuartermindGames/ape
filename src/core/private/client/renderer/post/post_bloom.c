@@ -36,18 +36,14 @@ static bool setup_bloom_effect( void )
 	{
 		return false;
 	}
-
 	if ( ( bloomFilterTarget = ape_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR ) ) == nullptr )
 	{
-		PRINT_WARNING( "Failed to create render target for bloom filter effect!\n" );
 		return false;
 	}
 	if ( ( bloomBlurTarget = ape_render_target_create( "post_bloom_blur", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR ) ) == nullptr )
 	{
-		PRINT_WARNING( "Failed to create render target for bloom blur effect!\n" );
 		return false;
 	}
-
 	return true;
 }
 
@@ -116,8 +112,8 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
 
 		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
-
 		PlgSetTexture( bloomBlurTexture, 0 );
+
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
 
 		PlgSetBlendMode( PLG_BLEND_DISABLE );

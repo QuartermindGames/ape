@@ -63,39 +63,182 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 
 #endif
 
-static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst )
+static void deserialize_model_animations( NdBranch *root, ApeFormatModel *dst, const char *folder )
 {
-	const char *bodyName = nd_branch_get_child_string( root, "body", nullptr );
-	if ( bodyName != nullptr )
+}
+
+static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const char *folder )
+{
+	const char *name = nd_branch_get_child_string( root, "name", nullptr );
+	if ( name == nullptr )
 	{
-		const char *ext = PlGetFileExtension( bodyName );
+		WARN( "No name specified for model!\n" );
+		return;
+	}
+
+	const char *materialPath = nd_branch_get_child_string( root, "materialPath", folder );
+	PlSetupPath( dst->materialPath, true, "%s", materialPath );
+
+	const char *body = nd_branch_get_child_string( root, "body", nullptr );
+	if ( body != nullptr )
+	{
+		const char *ext = PlGetFileExtension( body );
 		if ( ext == nullptr )
 		{
+			WARN( "Failed to get extension for body (%s)!\n", body );
 			return;
 		}
 
-		const CookModelFormatInterface *interface = ( const CookModelFormatInterface * ) &modelCookFormats[ 0 ];
+		PLPath bodyPath;
+		PlSetupPath( bodyPath, true, "%s/%s", folder, body );
+
+		const CookModelFormatInterface *interface = ( const CookModelFormatInterface * ) modelCookFormats;
 		while ( interface != nullptr )
 		{
-			if ( pl_strcasecmp( interface->extension, ext ) != 0 )
+			if ( interface->extension != nullptr && ( pl_strcasecmp( interface->extension, ext ) == 0 ) )
 			{
-				interface++;
-				continue;
-			}
+				assert( interface->loadFunction );
+				assert( interface->convertFunction );
+				assert( interface->deleteFunction );
 
-			if ( interface->loadFunction != nullptr && interface->loadFunction( bodyName ) != nullptr )
-			{
+				CookModel *model = interface->loadFunction( bodyPath );
+				if ( model == nullptr )
+				{
+					interface++;
+					continue;
+				}
+
+				interface->convertFunction( model, dst );
+				interface->deleteFunction( model );
 				break;
 			}
-
 			interface++;
 		}
 
 		if ( interface == nullptr )
 		{
-			WARN( "Failed to find appropriate interface for format (%s)!\n", ext );
+			WARN( "Failed to load body (%s)!\n", bodyPath );
 			return;
 		}
+	}
+	else
+	{
+		WARN( "No body specified for model!\n" );
+		return;
+	}
+
+	NdBranch *child;
+	if ( dst->numBones > 0 )
+	{
+		if ( ( child = nd_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+		{
+			deserialize_model_animations( child, dst, folder );
+		}
+		else
+		{
+			WARN( "Skeletal model, but no animations specified!\n" );
+		}
+	}
+
+	if ( ( child = nd_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
+	{
+	}
+
+	snprintf( dst->name, sizeof( dst->name ), "%s", name );
+}
+
+static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
+{
+	NdBranch *root = nd_branch_push_back_object( nullptr, "model" );
+
+	// build up lists of unique vertex data sets...
+	PLHashTable *vertexTable = PlCreateHashTable();
+	for ( unsigned int i = 0; i < model->numVertices; ++i )
+	{
+		PlInsertHashTableNode( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ), ( void * ) &model->vertices[ i ].position );
+	}
+	PLHashTable *normalsTable = PlCreateHashTable();
+	for ( unsigned int i = 0; i < model->numVertices; ++i )
+	{
+		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), ( void * ) &model->vertices[ i ].normal );
+	}
+
+	NdBranch *child;
+	PLHashTableNode *childHashNode;
+
+	child = nd_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	childHashNode = PlGetFirstHashTableNode( vertexTable );
+	while ( childHashNode != nullptr )
+	{
+		const PLVector3 *v = PlGetHashTableNodeUserData( childHashNode );
+		nd_branch_push_back_float32( child, nullptr, v->x );
+		nd_branch_push_back_float32( child, nullptr, v->y );
+		nd_branch_push_back_float32( child, nullptr, v->z );
+		childHashNode = PlGetNextHashTableNode( vertexTable, childHashNode );
+	}
+
+	child = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
+	childHashNode = PlGetFirstHashTableNode( normalsTable );
+	while ( childHashNode != nullptr )
+	{
+		const PLVector3 *v = PlGetHashTableNodeUserData( childHashNode );
+		nd_branch_push_back_float32( child, nullptr, v->x );
+		nd_branch_push_back_float32( child, nullptr, v->y );
+		nd_branch_push_back_float32( child, nullptr, v->z );
+		childHashNode = PlGetNextHashTableNode( normalsTable, childHashNode );
+	}
+
+	PlDestroyHashTable( normalsTable );
+	PlDestroyHashTable( vertexTable );
+
+	return root;
+}
+
+/**
+ * This basically works under the assumption that
+ * the given path includes the name of a file at
+ * the end.
+ */
+static bool create_file_path( const char *path )
+{
+	PLPath makePath;
+	PlSetupPath( makePath, true, "%s", path );
+	char *c = strrchr( makePath, '/' );
+	if ( c == nullptr || *( c + 1 ) == '\0' )
+	{
+		// no path, so return
+		return true;
+	}
+
+	*c = '\0';
+	if ( !PlCreatePath( makePath ) )
+	{
+		WARN( "Failed to create destination path (%s): %s\n", makePath, PlGetError() );
+		return false;
+	}
+
+	return true;
+}
+
+static void write_ape_format_model( const ApeFormatModel *model, const char *folder )
+{
+	NdBranch *root = serialize_ape_format_model( model );
+	if ( root == nullptr )
+	{
+		WARN( "Failed to serialize model!\n" );
+		return;
+	}
+
+	PLPath path = {};
+	PlSetupPath( path, true, "%s/ship/models/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), model->name );
+	if ( !create_file_path( path ) )
+	{
+		return;
+	}
+
+	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	{
+		WARN( "Failed to write model file: %s\n", nd_get_error_message() );
 	}
 }
 
@@ -104,21 +247,31 @@ static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst )
 
 void cook_model_process( const char *modelName )
 {
-	PLPath path;
+	PLPath path = {};
 	PlSetupPath( path, true, "models/%s.%s", modelName, COOK_MODEL_EXTENSION );
+
+	PLPath folder = {};
+	if ( PlGetFolderForPath( folder, path ) == nullptr )
+	{
+		WARN( "Failed to get folder from path (%s)!\n", path );
+		return;
+	}
 
 	ApeFormatModel *model = PL_NEW( ApeFormatModel );
 
 	NdBranch *root = nd_load_file( path, "cookModel" );
-	if ( root == nullptr )
+	if ( root != nullptr )
+	{
+		deserialize_model_config( root, model, folder );
+
+		nd_branch_destroy( root );
+
+		write_ape_format_model( model, folder );
+	}
+	else
 	{
 		WARN( "Failed to open model cook file (%s): %s\n", path, nd_get_error_message() );
-		return;
 	}
-
-	deserialize_model_config( root, model );
-
-	nd_branch_destroy( root );
 
 	PL_DELETE( model );
 }
