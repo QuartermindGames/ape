@@ -1,7 +1,7 @@
 # Entity API
 
 The entity system introduced in APE is made up of entity classes and entity components.
-Unlike a typical ECS, the components in this case are only used to provide additional blocks of data an entity can utilise, whereas the "class" is what actually implements the specific behaviours for the given entity.
+Unlike a typical ECS, the components in this case are only used to provide additional blocks of data an entity can use, whereas the "class" is what actually implements the specific behaviours for the given entity.
 
 ## General
 
@@ -9,7 +9,7 @@ Unlike a typical ECS, the components in this case are only used to provide addit
 
 ### Classes
 
-When implementing a new entity class, you'll need to first implement a function that provides the entity class table - this is a collection of callbacks and other data the class needs in order to function.
+When implementing a new entity class, you'll need to first implement a function that provides the entity class table—this is a collection of callbacks and other data the class needs to function.
 
 Why a function? This gives us a chance to zero the data which provides a little bit of safety given new callbacks, variables or other changes might be made to the `ApeEntityClassDefinition` type that older code might not have been updated to take advantage of.
 

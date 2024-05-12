@@ -1,6 +1,6 @@
 # APE Tech Coding Standards
 
-This engine and it's libraries are primarily written in C, with some external components in C++. 
+This engine and its libraries are primarily written in C, with some external components in C++. 
 These rules apply to everything except for any third-party libraries, and the [kernel](../src/kernel), which each will have their own code style.
 
 Fundamentally, the style to be followed is the same as GTK, which can be found [here](https://developer.gnome.org/documentation/guidelines/programming/coding-style.html).
@@ -15,4 +15,4 @@ Below are various points in addition.
 - If it's something that could be used everywhere, and isn't specific to the needs of the engine, consider putting it in 'kernel' instead
 - Forge is a little different given it's written in C++ - my suggestion there is to just go with what you see...
 
-Some functions are also prefixed with `ss_`; this is a short-hand for SnortySoft
+Some functions are also prefixed with `ss_`; this is a shorthand for SnortySoft, but it's an old convention.

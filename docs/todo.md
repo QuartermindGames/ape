@@ -6,6 +6,7 @@
   - One I've seen is to essentially draw the result of the stencil shadow volumes to another buffer, blur it and then apply it to the scene; if we include depth information with this, we could use it for controlling the samples per depth (kind of like a DOF effect)
 - Look into adding support for DOF
 - Stencil shadow volumes only need to extend within the sphere/radius of a local light source
+- Look into light-bleeding issue...
 - Restrict vertices for stencil shadows based on point of intersection
   - If point doesn't cross/intersect, we should have a reasonable limit
 
@@ -22,7 +23,7 @@
   - Process entities from a .map
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
 - 'current' world selection in editor
-- Different viewport implementations, as some logic for viewport isn't necessary for others
+- **(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others
 - **(Editor)** Draw bounding volumes for rooms
 - **(Editor)** Add texture selection frame
 - Implement a new tab type with close button, so we can easily close editors
