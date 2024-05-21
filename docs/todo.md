@@ -1,9 +1,11 @@
 # Todo
 
 ## Future
+- Look into PSK/PSA formats for cook tool
 - Initial Lua mock-up
 - Investigate a solution for giving stencil shadows a softer appearance
   - One I've seen is to essentially draw the result of the stencil shadow volumes to another buffer, blur it and then apply it to the scene; if we include depth information with this, we could use it for controlling the samples per depth (kind of like a DOF effect)
+  - Another is to use a selection of wedges that are shaped based on the penumbra...
 - Look into adding support for DOF
 - Stencil shadow volumes only need to extend within the sphere/radius of a local light source
 - Look into light-bleeding issue...
@@ -22,6 +24,8 @@
 - Process a level directly from a .map rather than from an .obj, and process the entities
   - Process entities from a .map
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
+- **(Editor)** Expose API for adding new brush types
+- **(Editor)** Allow for picking the type of brush we're placing
 - 'current' world selection in editor
 - **(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others
 - **(Editor)** Draw bounding volumes for rooms
@@ -30,11 +34,12 @@
 - **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
 - **(Editor)** Look into the concept of supporting multiple grids
 - **(Editor)** Make the console correctly hide/show, and resize with a window
-- Terrain brush type using heightmap with variable height specific textures
 - Sky plane should display irrelevent of camera position
+- Migrate Detox to use new shared world 'simulation' code
 
 ## In-Progress
 - Model import from SMD/QC etc.
+- Terrain brush type using heightmap with variable height specific textures
 
 ## Done
 - ~~Fix post-processing, again~~
