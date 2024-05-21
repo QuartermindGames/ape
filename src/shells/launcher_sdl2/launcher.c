@@ -121,7 +121,7 @@ SDL_Window *create_window( const char *title, int width, int height, bool fullsc
 	if ( sdlWindow == NULL )
 	{
 		PrintWarn( "Failed to create SDL window: %s\n", SDL_GetError() );
-		return false;
+		return nullptr;
 	}
 
 #if 0
@@ -141,7 +141,7 @@ SDL_Window *create_window( const char *title, int width, int height, bool fullsc
 		{
 			SDL_DestroyWindow( sdlWindow );
 			PrintWarn( "Failed to create OpenGL context: %s\n", SDL_GetError() );
-			return false;
+			return nullptr;
 		}
 
 		SDL_GL_MakeCurrent( sdlWindow, sdlGLContext );
