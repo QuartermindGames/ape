@@ -196,6 +196,7 @@ NdBranch *nd_branch_push_back_object_array( NdBranch *parent, const char *name )
 NdBranch *nd_branch_push_back_string_array( NdBranch *parent, const char *name, const char **array, unsigned int numElements );
 NdBranch *nd_branch_push_back_int16_array( NdBranch *root, const char *name, const int16_t *array, unsigned int numElements );
 NdBranch *nd_branch_push_back_int32_array( NdBranch *parent, const char *name, const int32_t *array, unsigned int numElements );
+NdBranch *nd_branch_push_back_uint32_array( NdBranch *parent, const char *name, const uint32_t *array, unsigned int numElements );
 NdBranch *nd_branch_push_back_float32_array( NdBranch *parent, const char *name, const float *array, unsigned int numElements );
 
 NdBranch *nd_copy_branch( NdBranch *node );
