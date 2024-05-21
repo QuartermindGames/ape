@@ -46,7 +46,7 @@ static SmdModel *parse_smd( const char *path, const char *p )
 			continue;
 		}
 
-		/* skip nodes for now */
+		// skip nodes for now
 		if ( strcmp( token, "nodes" ) == 0 )
 		{
 			PlSkipLine( &p );
@@ -205,6 +205,19 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 		out->numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
+	out->numBones = smd->numBones;
+	if ( out->numBones >= APE_FORMAT_MODEL_MAX_BONES )
+	{
+		WARN( "Hit maximum bone limit (%u >= %u)!\n", out->numBones, APE_FORMAT_MODEL_MAX_BONES );
+		out->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
+	}
+
+	for ( unsigned int i = 0; i < out->numBones; ++i )
+	{
+		out->bones[ i ].parent = ( smd->bones[ i ].parent - &smd->bones[ i ] );
+		snprintf( out->bones[ i ].name, sizeof( out->bones[ i ].name ), "%s", smd->bones[ i ].name );
+	}
+
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
 		ApeFormatMesh *mesh = &out->meshes[ i ];
@@ -236,11 +249,22 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 
 		for ( unsigned int tri = 0; tri < mesh->numTriangles; ++tri )
 		{
+			const SmdTriangle *smdTriangle = &smd->meshes[ i ].triangles[ tri ];
 			for ( unsigned int vtx = 0; vtx < 3; ++vtx )
 			{
-				mesh->triangles[ tri ].vertices[ vtx ].position = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].position;
-				mesh->triangles[ tri ].vertices[ vtx ].normal = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].normal;
-				mesh->triangles[ tri ].vertices[ vtx ].uv = smd->meshes[ i ].triangles[ tri ].vertices[ vtx ].uv;
+				ApeFormatVertex *vertex = &out->vertices[ tri + vtx ];
+				vertex->position = smdTriangle->vertices[ vtx ].position;
+				vertex->normal = smdTriangle->vertices[ vtx ].normal;
+				vertex->uv = smdTriangle->vertices[ vtx ].uv;
+
+				vertex->numWeights = smdTriangle->vertices[ vtx ].numWeights;
+				for ( unsigned int wei = 0; wei < smdTriangle->vertices[ vtx ].numWeights; ++wei )
+				{
+					vertex->weights[ wei ].bone = ( smdTriangle->vertices[ vtx ].weights[ wei ].node - smd->bones );
+					vertex->weights[ wei ].weight = smdTriangle->vertices[ vtx ].weights[ wei ].value;
+				}
+
+				mesh->triangles[ tri ].indices[ vtx ] = ( tri + vtx );
 			}
 		}
 	}

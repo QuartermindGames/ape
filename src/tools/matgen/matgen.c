@@ -3,7 +3,8 @@
 
 #include <plcore/pl.h>
 
-#include <yin/node.h>
+#include "yin/node.h"
+#include "ape/ape_formats.h"
 
 // uurrgghh...
 #include "../../game/public/game/game_interface.h"
@@ -180,7 +181,7 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	if ( !LoadSurfacesConfig( "materials/surfaces.cfg.n" ) )
+	if ( !LoadSurfacesConfig( "materials/surfaces." APE_FORMAT_CONFIG_EXTENSION ) )
 	{
 		printf( "Failed to load surfaces config!\n" );
 		return EXIT_FAILURE;
