@@ -1,6 +1,5 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <c++/14/bits/align.h>
 #include "yin/node.h"
 
 #include "pm_game.h"
