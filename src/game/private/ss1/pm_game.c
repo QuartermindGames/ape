@@ -85,11 +85,17 @@ static bool pm_shutdown( void )
 
 	com_write_config( pm_gameState.config, PM_CONFIG );
 
-	ape_camera_destroy( pm_gameState.camera );
-	pm_gameState.camera = nullptr;
+	if ( pm_gameState.camera != nullptr )
+	{
+		ape_world_node_destroy( ape_camera_get_world_node( pm_gameState.camera ) );
+		pm_gameState.camera = nullptr;
+	}
 
-	ape_world_destroy( pm_gameState.world );
-	pm_gameState.world = nullptr;
+	if ( pm_gameState.world != nullptr )
+	{
+		ape_world_node_destroy( ape_world_get_world_node( pm_gameState.world ) );
+		pm_gameState.world = nullptr;
+	}
 
 	return true;
 }
@@ -169,8 +175,7 @@ static bool pm_spawn_world( ApeWorld *world )
 	}
 
 	//HACK: this should be created in the level instead!!
-	sun = ape_create_light( nullptr, &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ape_world_attach_light( world, sun );
+	sun = ape_create_light( worldNode, &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
 
 	return true;
 }
