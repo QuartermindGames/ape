@@ -682,7 +682,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		{
 			PLGTexture *texture = NULL;
 			if ( variable == SS_ARL_MATERIAL_BUILTIN_FALLBACK )
-				texture = ss_arl_texture_get_fallback();
+				texture = ape_texture_get_fallback();
 #if 0//TODO
 			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
 				texture = apeGetPrimaryDepthAttachment();
@@ -700,7 +700,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		case SS_ARL_MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
-			ss_arl_get_2d_viewport_size_( &w, &h );
+			ape_get_2d_viewport_size_( &w, &h );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
 			break;
 		}
@@ -974,7 +974,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 						texture = ape_render_target_get_texture( ( ApeRenderTarget * ) curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
 						{
-							texture = ss_arl_texture_get_fallback();
+							texture = ape_texture_get_fallback();
 						}
 					}
 					else

@@ -45,9 +45,9 @@ typedef struct ToxSkyLayer
 	float parallaxDiff;
 } ToxSkyLayer;
 static ToxSkyLayer skyLayers[ TOX_MAX_SKY_LAYER_TYPES ] = {
-        {0,  "materials/sky/cloudlayer00.mat.n",      0.85f, 12.0f, 0.5f, 100.0f},
-        { 0, "materials/sky/cloudlayer00.mat.n",      0.25f, 14.0f, 0.5f, 500.0f},
-        { 0, "materials/clouds/cloud_layer_01.mat.n", 0.1f,  16.0f, 1.0f, 700.0f},
+        {0, "materials/sky/cloudlayer00.mat.n",      0.85f, 12.0f, 0.5f, 100.0f},
+        {0, "materials/sky/cloudlayer00.mat.n",      0.25f, 14.0f, 0.5f, 500.0f},
+        {0, "materials/clouds/cloud_layer_01.mat.n", 0.1f,  16.0f, 1.0f, 700.0f},
 };
 
 void tox_world_spawn( ApeWorld *world )
@@ -60,26 +60,31 @@ void tox_world_spawn( ApeWorld *world )
 
 	ape_sky_clear_layers();
 	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
+	{
 		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,
 		                                       skyLayers[ i ].baseScale,
 		                                       skyLayers[ i ].baseY,
 		                                       skyLayers[ i ].baseAlpha );
+	}
 
 	ape_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
 
-	sunLight = ape_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
+	ApeWorldNode *worldNode = ape_world_get_world_node( world );
+	sunLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
 	                             APE_LIGHT_TYPE_SUN,
 	                             SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ape_world_attach_light( world, sunLight );
-
-	moonLight = ape_light_create( &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
+	moonLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
 	                              SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ape_world_attach_light( world, moonLight );
 
 	//TODO: scrap this - let's just pass the world into the draw call... it's safer
 	ApeCamera *camera = tox_get_player_camera();
-	ape_camera_assign_world( camera, world );
+	assert( camera != nullptr );
+
+	ape_world_node_attach( ape_camera_get_world_node( camera ), worldNode );
+
+	// do one tick, just to let things settle...
+	tox_world_tick( world );
 }
 
 /**
@@ -97,11 +102,12 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 	return position;
 }
 
-void tox_world_tick( void )
+void tox_world_tick( ApeWorld *world )
 {
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world == NULL )
+	if ( world == nullptr )
+	{
 		return;
+	}
 
 #if 0
 	// Don't increment a second for every tick,
@@ -119,24 +125,37 @@ void tox_world_tick( void )
 
 	sunYaw = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 360.0f );
 	sunPitch = sinf( PL_DEG2RAD( sunYaw + 90.0f ) ) * 2.0f;
-
-	PLVector3 sunPosition = pitch_yaw_to_position( sunPitch, sunYaw );
-	ss_arl_light_set_position( sunLight, &sunPosition );
-
 	sunBrightness = PlClamp( 0.0f, ( -sunPitch ) / 1.0f, 1.25f );
-	ss_arl_light_set_colour( sunLight, &PL_COLOURF32( DEFAULT_SUN_COLOUR.r,
-	                                                  DEFAULT_SUN_COLOUR.g,
-	                                                  DEFAULT_SUN_COLOUR.b,
-	                                                  sunBrightness ) );
+
+	if ( sunLight != nullptr )
+	{
+		PLVector3 sunPosition = pitch_yaw_to_position( sunPitch, sunYaw );
+		ape_light_set_position( sunLight, &sunPosition );
+		ape_light_set_colour( sunLight, &PL_COLOURF32( DEFAULT_SUN_COLOUR.r,
+		                                               DEFAULT_SUN_COLOUR.g,
+		                                               DEFAULT_SUN_COLOUR.b,
+		                                               sunBrightness ) );
+	}
+
 
 	PLVector3 moonPosition = pitch_yaw_to_position( -sunPitch, -sunYaw );
-	ss_arl_light_set_position( moonLight, &moonPosition );
-
 	moonBrightness = PlClamp( 0.0f, ( sunPitch ) / 1.0f, 0.25f );
-	ss_arl_light_set_colour( moonLight, &PL_COLOURF32( DEFAULT_MOON_COLOUR.r,
-	                                                   DEFAULT_MOON_COLOUR.g,
-	                                                   DEFAULT_MOON_COLOUR.b,
-	                                                   moonBrightness ) );
+
+	if ( moonLight != nullptr )
+	{
+		ape_light_set_position( moonLight, &moonPosition );
+		ape_light_set_colour( moonLight, &PL_COLOURF32( DEFAULT_MOON_COLOUR.r,
+		                                                DEFAULT_MOON_COLOUR.g,
+		                                                DEFAULT_MOON_COLOUR.b,
+		                                                moonBrightness ) );
+	}
+
+	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
+	{
+		//TODO: in the future, this should probably be based on wind dir or something...
+		float parallax = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / skyLayers[ i ].parallaxDiff );
+		ape_sky_set_layer_offset( skyLayers[ i ].id, parallax, parallax );
+	}
 
 	ape_world_set_ambience( world, &PL_COLOURF32( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
@@ -150,22 +169,6 @@ void tox_world_tick( void )
 	                                           1.0f );
 	ape_world_set_clear_colour( world, &fallbackColour );
 	ape_world_set_fog_colour( world, &fallbackColour );
-
-	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
-	{
-		//TODO: in the future, this should probably be based on wind dir or something...
-		float parallax = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / skyLayers[ i ].parallaxDiff );
-		ape_sky_set_layer_offset( skyLayers[ i ].id, parallax, parallax );
-	}
-
-#if 0
-	printf( "p%f y%f b%f d%d h%d m%d s%d\n", sunPitch, sunYaw, sunBrightness,
-	        tox_world_get_total_days( &worldState ),
-	        tox_world_get_current_hour( &worldState ),
-	        tox_world_get_current_minute( &worldState ),
-	        tox_world_get_seconds_in_day( &worldState ) );
-	printf( "%s\n", tox_world_get_time_of_day_descriptor( tox_world_get_time_of_day( &worldState ) ) );
-#endif
 }
 
 float tox_world_get_sun_brightness( void ) { return sunBrightness; }

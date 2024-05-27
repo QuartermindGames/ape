@@ -236,7 +236,7 @@ static bool initialize_game( void )
 
 	ape_register_entity_class( tox_characterClass );
 
-	playerCamera = ape_camera_create( "tox_camera_player", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE );
+	playerCamera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( playerCamera == NULL )
 	{
 		Game_Error( "Failed to create player camera!\n" );
@@ -250,8 +250,8 @@ static bool shutdown_game( void )
 {
 	tox_ui_shutdown();
 
-	ape_camera_destroy( playerCamera );
-	playerCamera = NULL;
+	ape_world_node_destroy( ape_camera_get_world_node( playerCamera ) );
+	playerCamera = nullptr;
 
 	return true;
 }
@@ -292,7 +292,7 @@ static bool tick_game( void )
 {
 	handle_input();
 
-	tox_world_tick();
+	tox_world_tick( ss_game_get_current_world() );
 	tox_ui_tick();
 
 	return true;
@@ -349,6 +349,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode;
 	PL_ZERO_( gameMode );
+	gameMode.version = APE_GAME_INTERFACE_VERSION;
 	gameMode.requestCallbackMethod = handle_request;
 	return &gameMode;
 }

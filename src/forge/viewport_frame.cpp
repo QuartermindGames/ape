@@ -137,7 +137,7 @@ void viewport_frame::Draw()
 	}
 
 	// A lot of this is currently terrible,
-	// simply because the renderer gets it's init
+	// simply because the renderer gets its init
 	// at the same time as the rest of the engine...
 	// which happens AFTER the window is created (urgh)
 
@@ -149,8 +149,7 @@ void viewport_frame::Draw()
 
 	if ( camera == nullptr )
 	{
-		std::string cameraTag = "editor_camera_" + std::to_string( cameraTagNum );
-		camera = ape_camera_create( cameraTag.c_str(), &pl_vecOrigin3, &pl_vecOrigin3, viewMode_ );
+		camera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 		ape_camera_set_draw_mode( camera, drawMode_ );
 	}
 
@@ -165,7 +164,8 @@ void viewport_frame::Draw()
 		ApeWorld *world = worldEditor->get_world();
 		if ( world != nullptr )
 		{
-			ape_camera_assign_world( camera, world );
+			ape_world_node_attach( ape_camera_get_world_node( camera ),
+			                       ape_world_get_world_node( world ) );
 		}
 	}
 
@@ -488,14 +488,15 @@ long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
 		return FALSE;
 	}
 
-	void *data;
+	ApeEditorState *instance = worldEditor->get_internal();
+	assert( instance != nullptr );
+
 	const char *name;
 	ApeWorldNodeType type;
 	switch ( FXSELID( selector ) )
 	{
 		default:
 		{
-			data = nullptr;
 			name = "empty";
 			type = APE_WORLD_NODE_TYPE_EMPTY;
 			break;
@@ -514,15 +515,12 @@ long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
 		}
 		case ID_BUTTON_CREATE_LIGHT:
 		{
-			PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
-			data = ape_light_create( &pl_vecOrigin3, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );
 			name = "light";
 			type = APE_WORLD_NODE_TYPE_LIGHT;
 			break;
 		}
 		case ID_BUTTON_CREATE_CAMERA:
 		{
-			data = ape_camera_create( "camera", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE );
 			name = "camera";
 			type = APE_WORLD_NODE_TYPE_CAMERA;
 			break;
@@ -535,9 +533,7 @@ long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
 		}
 	}
 
-	ape_world_node_create( world->root, name, type, data );
-
-	worldEditor->update_tree();
+	worldEditor->create_new_object( name, type );
 
 	return TRUE;
 }

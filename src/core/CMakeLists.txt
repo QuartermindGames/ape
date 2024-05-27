@@ -59,6 +59,7 @@ add_library(ApeCore STATIC
 
         private/world/world.c
         private/world/world_brush.c
+        private/world/world_brush_poly.c
         private/world/world_deserialiser.c
         private/world/world_node.c
         private/world/world_room.c

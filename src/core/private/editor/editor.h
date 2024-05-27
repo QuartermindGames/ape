@@ -11,7 +11,7 @@ void ape_shutdown_editor_( void );
 
 void ape_register_editor_console_variables_( void );
 
-void ape_editor_pre_render_scene_( const ApeCamera *camera );
+void ape_editor_pre_render_scene_( ApeCamera *camera );
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );
 void ape_grid_draw_( ApeCamera *camera );

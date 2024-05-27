@@ -1,7 +1,3 @@
-cmake_minimum_required(VERSION 3.5.1)
-
-set(CMAKE_C_STANDARD 11)
-
 set(GAME_SHARED_FILES
         private/shared/game.c
         private/shared/game_menu.c
@@ -33,9 +29,28 @@ else ()
 endif ()
 
 #############################################
+# SS1
+#############################################
+set(SS1_SOURCES
+        ${GAME_SHARED_FILES}
+        private/ss1/menu/fw_menu.c
+
+        private/ss1/pm_brush_terrain.c
+        private/ss1/pm_game.c
+        private/ss1/pm_pawn.c
+)
+
+add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)
+target_link_libraries(SS1 ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+set_target_properties(SS1 PROPERTIES FOLDER "Shells")
+
+add_executable(SS1Forge WIN32 ${SS1_SOURCES})
+target_link_libraries(SS1Forge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")
+
+#############################################
 # DETOX / SS2
 #############################################
-
 set(TOX_SOURCES
         ${GAME_SHARED_FILES}
         private/detox/entities/light_night.c
@@ -46,34 +61,10 @@ set(TOX_SOURCES
         private/detox/tox_world.c
 )
 
-add_executable(Tox WIN32
-        ${TOX_SOURCES}
-        ../shells/launcher_sdl2/launcher.c
-)
+add_executable(Tox WIN32 ${TOX_SOURCES} ../shells/launcher_sdl2/launcher.c)
 target_link_libraries(Tox ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
 set_target_properties(Tox PROPERTIES FOLDER "Shells")
 
 add_executable(ToxForge WIN32 ${TOX_SOURCES})
 target_link_libraries(ToxForge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
 set_target_properties(ToxForge PROPERTIES FOLDER "Shells")
-
-#############################################
-# SS3
-#############################################
-
-set(SS3_SOURCES
-        ${GAME_SHARED_FILES}
-        private/ss3/ss3_game.c
-        private/ss3/ss3_name_generator.c
-        private/ss3/ss3_ui.c
-)
-
-add_executable(SS3 WIN32 ${SS3_SOURCES} ../shells/launcher_sdl2/launcher.c)
-target_link_libraries(SS3 ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
-set_target_properties(SS3 PROPERTIES FOLDER "Shells")
-
-add_executable(SS3Forge WIN32 ${SS3_SOURCES})
-target_link_libraries(SS3Forge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
-set_target_properties(SS3Forge PROPERTIES FOLDER "Shells")
-
-#############################################

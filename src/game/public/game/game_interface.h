@@ -14,7 +14,7 @@ void ss_game_initialize( void );
 /// \return Handle to the currently active world.
 struct ApeWorld *ss_game_get_current_world( void );
 
-void ss_game_spawn_world( ApeWorld *world );
+void game_spawn_world( ApeWorld *world );
 
 void ss_game_tick( void );
 

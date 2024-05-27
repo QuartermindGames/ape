@@ -41,7 +41,7 @@ typedef enum FWPieMenuIcon
 } FWPieMenuIcon;
 static ApeMaterial *pieIcons[ FW_MAX_PIEMENU_ICONS ];
 
-void fw_menu_initialize( void )
+void pm_menu_initialize( void )
 {
 	// mmm delicious pie
 	interactPie = menu_pie_create();
@@ -57,12 +57,12 @@ static void DrawHUD( const ApeViewport *viewport )
 {
 }
 
-void fw_menu_tick( void )
+void pm_menu_tick( void )
 {
 	menu_pie_tick( interactPie );
 }
 
-void fw_menu_draw( const ApeViewport *viewport )
+void pm_menu_draw( const ApeViewport *viewport )
 {
 	DrawHUD( viewport );
 
@@ -73,7 +73,7 @@ void fw_menu_draw( const ApeViewport *viewport )
 	menu_pie_draw( interactPie, ( float ) w / 2, ( float ) h / 2 );
 }
 
-bool fw_menu_handle_input( void )
+bool pm_menu_handle_input( void )
 {
 	static bool blah = true;
 	if ( ape_client_input_get_button_state( 0, INPUT_START ) == APE_INPUT_STATE_PRESSED )

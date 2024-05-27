@@ -14,7 +14,7 @@
 
 typedef struct ClientState
 {
-	SSAclNetSocket *netSocket;
+	ApeNetSocket *netSocket;
 	bool isConnected;
 
 	char userName[ 32 ];
@@ -86,7 +86,7 @@ static void handle_connection_state( void )
 		if ( clientState.netSocket == NULL )
 			return;
 
-		SSAclNetConnectionState state = ape_net_get_connection_status_( clientState.netSocket );
+		ApeNetConnectionState state = ape_net_get_connection_status_( clientState.netSocket );
 		if ( state != NET_CONNECTION_CONNECTED )
 		{
 			if ( state == NET_CONNECTION_FAILED )

@@ -63,7 +63,7 @@ void grid_initialize_( ApeEditorState *instance )
 void grid_shutdown_( void )
 {
 	PlDestroyHashTable( gridSelectablesTable );
-	gridSelectablesTable = NULL;
+	gridSelectablesTable = nullptr;
 }
 
 void ape_toggle_grid_command_( unsigned int, char ** )
@@ -143,14 +143,14 @@ static void update_active_grid_selection( void )
 {
 	ApeViewport *selectionViewport = get_selection_viewport_();
 	PLGFrameBuffer *frameBuffer = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
-	if ( frameBuffer == NULL )
+	if ( frameBuffer == nullptr )
 	{
 		return;
 	}
 
 	size_t size = frameBuffer->width * frameBuffer->height * 4;
 	PLColour *buf = PL_NEW_( PLColour, size );
-	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != NULL )
+	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
 		int x, y;
 		ape_client_input_get_mouse_position( &x, &y );
@@ -210,9 +210,9 @@ static void draw_selection_grid( ApeCamera *camera )
 
 PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst )
 {
-	if ( activeGridSelectable == NULL )
+	if ( activeGridSelectable == nullptr )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	*dst = PlTransformVector3( &activeGridSelectable->position, &gridTransform );
@@ -222,31 +222,31 @@ PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst )
 void ape_grid_increase_size( void )
 {
 	ApeEditorState *instance = ape_editor_get_active_instance();
-	if ( instance == NULL )
+	if ( instance == nullptr )
 	{
 		return;
 	}
 
 	instance->gridScale = PlClamp( DEFAULT_GRID_SCALE, ( instance->gridScale * 2 ), MAX_GRID_SCALE );
-	activeGridSelectable = NULL;
+	activeGridSelectable = nullptr;
 }
 
 void ape_grid_decrease_size( void )
 {
 	ApeEditorState *instance = ape_editor_get_active_instance();
-	if ( instance == NULL )
+	if ( instance == nullptr )
 	{
 		return;
 	}
 
 	instance->gridScale = PlClamp( DEFAULT_GRID_SCALE, ( instance->gridScale / 2 ), MAX_GRID_SCALE );
-	activeGridSelectable = NULL;
+	activeGridSelectable = nullptr;
 }
 
 unsigned int ape_grid_get_size( void )
 {
 	ApeEditorState *instance = ape_editor_get_active_instance();
-	if ( instance == NULL )
+	if ( instance == nullptr )
 	{
 		return 0;
 	}
@@ -257,19 +257,19 @@ unsigned int ape_grid_get_size( void )
 void ape_grid_set_visibility( bool visible )
 {
 	ApeEditorState *instance = ape_editor_get_active_instance();
-	if ( instance == NULL )
+	if ( instance == nullptr )
 	{
 		return;
 	}
 
 	instance->gridVisible = visible;
-	activeGridSelectable = NULL;
+	activeGridSelectable = nullptr;
 }
 
 void ape_grid_draw_( ApeCamera *camera )
 {
 	ApeViewport *viewport = ape_viewport_get_active();
-	if ( viewport == NULL )
+	if ( viewport == nullptr )
 	{
 		return;
 	}
@@ -308,7 +308,7 @@ void ape_grid_draw_( ApeCamera *camera )
 
 	PlgDrawGrid( -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE, state->gridScale / 2, &( PLColour ){ 0, 0, 255, 255 } );
 
-	if ( ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH ) && activeGridSelectable != NULL )
+	if ( ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH ) && activeGridSelectable != nullptr )
 	{
 		static const float GRID_HIGHLIGHT_SCALE = GRID_SELECTABLE_SCALE / 8.0f;
 

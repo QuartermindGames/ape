@@ -9,7 +9,7 @@
 
 #define SERVER_CLIENT_TIMEOUT 1024
 
-static SSAclNetSocket *hostSocket = NULL;
+static ApeNetSocket *hostSocket = NULL;
 
 typedef enum ServerClientState
 {
@@ -20,7 +20,7 @@ typedef enum ServerClientState
 
 typedef struct ApeServerClient
 {
-	SSAclNetSocket *netSocket;
+	ApeNetSocket *netSocket;
 	PLLinkedListNode *node;
 
 	ServerClientState state;
@@ -85,9 +85,9 @@ static void tick_server_client( void *userData, bool *breakEarly )
 {
 	ApeServerClient *serverClient = ( ApeServerClient * ) userData;
 
-	ssize_t r = ss_acl_net_receive_( serverClient->netSocket,
-	                                 serverClient->receiveBuffer + serverClient->receivedBytes,
-	                                 sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
+	ssize_t r = ape_net_receive_( serverClient->netSocket,
+	                              serverClient->receiveBuffer + serverClient->receivedBytes,
+	                              sizeof( serverClient->receiveBuffer ) - serverClient->receivedBytes );
 	if ( r == -1 )
 	{
 		ape_server_drop_client_( serverClient );
@@ -128,7 +128,7 @@ void ape_server_tick_( void )
 
 	if ( hostSocket != NULL )
 	{ /* check if a new connection is being established */
-		SSAclNetSocket *connectedSocket = ss_acl_net_accept_( hostSocket );
+		ApeNetSocket *connectedSocket = ape_net_accept_( hostSocket );
 		if ( connectedSocket != NULL )
 		{
 			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
@@ -157,5 +157,5 @@ unsigned short ape_server_get_port_( void )
 		return 0;
 	}
 
-	return ss_acl_net_get_local_port_( hostSocket );
+	return ape_net_get_local_port_( hostSocket );
 }

@@ -127,7 +127,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct ApeRoom *sector ) { self->sector = sector; }
 
 void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }

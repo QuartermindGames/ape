@@ -36,11 +36,20 @@ void ape_initialize_game_( void )
 	ss_game_initialize();
 
 	game_modeInterface = ape_game_get_interface();
-	if ( game_modeInterface == NULL )
-		PRINT_ERROR( "Failed to get game interface!\n" );
+	if ( game_modeInterface == nullptr )
+	{
+		ape_error_( true, "Failed to get game interface!\n" );
+	}
 
-	if ( !game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, NULL ) )
-		PRINT_ERROR( "Failed to initialize game sub-system!\n" );
+	if ( game_modeInterface->version != APE_GAME_INTERFACE_VERSION )
+	{
+		ape_error_( true, "Unsupported game interface version!\n" );
+	}
+
+	if ( !game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, nullptr ) )
+	{
+		ape_error_( true, "Failed to initialize game sub-system!\n" );
+	}
 
 	PRINT( "Game initialized!\n" );
 }
@@ -48,11 +57,12 @@ void ape_initialize_game_( void )
 void ape_shutdown_game_( void )
 {
 	const ApeGameInterfaceImport *interface = ape_game_get_interface();
-	assert( interface != NULL );
-	if ( interface == NULL )
+	if ( interface == nullptr )
+	{
 		return;
+	}
 
-	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, NULL );
+	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, nullptr );
 }
 
 void ape_tick_game_( void )
@@ -63,13 +73,13 @@ void ape_tick_game_( void )
 void ape_spawn_world_( const char *worldPath )
 {
 	ApeWorld *world = ape_world_load( worldPath );
-	if ( world == NULL )
+	if ( world == nullptr )
 	{
-		PRINT_WARNING( "Failed to load world, aborting game spawn!\n" );
+		ape_warning_( "Failed to load world, aborting game spawn!\n" );
 		return;
 	}
 
-	ss_game_spawn_world( world );
+	game_spawn_world( world );
 
 	ape_world_spawn_entities_( world );
 

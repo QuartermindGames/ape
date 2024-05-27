@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "core_world.h"
 typedef enum ApeCameraViewMode
 {
 	APE_CAMERA_MODE_INVALID = -1,
@@ -37,12 +38,12 @@ typedef enum ApeCameraDrawMode
 PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeRoom ApeRoom;
 typedef struct ApeCamera ApeCamera;
 
-ApeCamera *ape_camera_create( const char *tag, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode );
+ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode );
 void ape_camera_destroy( ApeCamera *camera );
-void ape_camera_set_position( ApeCamera *camera, const PLVector3 *position );
+void ape_camera_set_position( ApeCamera *self, const PLVector3 *position );
 void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles );
 
 PLVector3 ape_camera_get_position( const ApeCamera *camera );
@@ -51,8 +52,7 @@ PLVector3 ape_camera_get_forward( const ApeCamera *camera );
 
 void ape_camera_make_active( ApeCamera *camera );
 
-void ape_camera_assign_world( ApeCamera *camera, ApeWorld *world );
-ApeWorld *ape_camera_get_world( ApeCamera *camera );
+ApeWorld *ape_camera_get_world( ApeCamera *self );
 
 void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode );
 void ape_camera_set_view_mode( ApeCamera *camera, ApeCameraViewMode viewMode );
@@ -63,7 +63,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 PLGCamera *ape_camera_get_internal( ApeCamera *camera );
 
 ApeLight **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num );
-ApeWorldRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
+ApeRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
 
 /////////////////////////////////////////////////////////////////////////////////////
 

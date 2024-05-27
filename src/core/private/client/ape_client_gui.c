@@ -32,7 +32,7 @@ static ApeMaterial *baseGuiMat;
 
 static ApeCamera *auxCamera;
 
-static void draw_debug_overlay( const ApeViewport *viewport )
+static void draw_debug_overlay( ApeViewport *viewport )
 {
 	PL_GET_CVAR( "debug/overlay", debugOverlay );
 	if ( debugOverlay->i_value <= 0 )
@@ -149,7 +149,7 @@ void ape_initialize_gui_( void )
 	PlRegisterConsoleVariable( "gui_width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
 	PlRegisterConsoleVariable( "gui_height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
 
-	auxCamera = ape_camera_create( "aux", &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT );
+	auxCamera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( auxCamera == NULL )
 	{
 		ape_error_( true, "Failed to create auxiliary camera!\n" );
@@ -206,7 +206,7 @@ void ape_set_2d_viewport_size_( int w, int h )
 	PlgSetupCamera( ape_camera_get_internal( auxCamera ) );
 }
 
-void ss_arl_get_2d_viewport_size_( int *width, int *height )
+void ape_get_2d_viewport_size_( int *width, int *height )
 {
 	PlgGetViewport( NULL, NULL, width, height );
 }
@@ -273,6 +273,18 @@ void ape_draw_gui_( ApeViewport *viewport )
 		gui_font_draw_string( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
 		gui_font_display( font );
 	}
+
+#if !defined( NDEBUG )
+	if ( !ape_is_editor_active() )
+	{
+		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]";
+		float sw, sh;
+		GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
+		gui_font_get_string_pixel_size( font, 1.0f, buildIdentifier, strlen( buildIdentifier ), &sw, &sh );
+		gui_font_draw_string( font, w / 2 - ( sw / 2 ), h - sh, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, buildIdentifier, strlen( buildIdentifier ), false );
+		gui_font_display( font );
+	}
+#endif
 
 	// todo: this should use GUI
 	ape_console_draw_( viewport );

@@ -13,7 +13,7 @@
 #include "entity/entity.h"
 #include "audio/audio.h"
 
-#define WORLD_PROP_TAG_LENGTH   64
+#define WORLD_PROP_TAG_LENGTH 64
 
 #if 1 /* original values, used for prototype */
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
@@ -25,7 +25,7 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeRoom ApeRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
@@ -115,13 +115,13 @@ typedef struct ApeWorldPortal
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	ApeWorldRoom *roomA;
-	ApeWorldRoom *roomB;
+	ApeRoom *roomA;
+	ApeRoom *roomB;
 
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-typedef struct ApeWorldRoom
+typedef struct ApeRoom
 {
 	// This should always come first!
 	ApeWorldNodeHeader header;
@@ -148,7 +148,7 @@ typedef struct ApeWorldRoom
 	PLCollisionAABB bounds;
 
 	ApeWorldNode *worldNode;
-} ApeWorldRoom;
+} ApeRoom;
 
 typedef struct ApeWorldEntity
 {
@@ -158,7 +158,7 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *self, unsigned int *numFaces );
+ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces );
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
 

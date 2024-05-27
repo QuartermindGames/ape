@@ -12,11 +12,10 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
+ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
 {
 	ApeLight *light = PL_NEW( ApeLight );
-
-	ape_world_node_setup_header( &light->header, APE_WORLD_NODE_TYPE_LIGHT );
+	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_LIGHT, position, &pl_vecOrigin3, light );
 
 	light->position = *position;
 	light->colour = *colour;
@@ -27,21 +26,22 @@ ApeLight *ape_light_create( const PLVector3 *position, const PLColourF32 *colour
 	return light;
 }
 
-void ape_light_destroy( ApeLight *light )
+void ape_light_destroy_( void *data )
 {
-	if ( light == NULL )
+	ApeLight *self = ( ApeLight * ) data;
+	if ( self == NULL )
 	{
 		return;
 	}
 
-	PL_DELETE( light );
+	PL_DELETE( self );
 }
 
 PLColourF32 ss_arl_light_get_colour( const ApeLight *light ) { return light->colour; }
-void ss_arl_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
+void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
 
 PLVector3 ss_arl_light_get_position( const ApeLight *light ) { return light->position; }
-void ss_arl_light_set_position( ApeLight *light, const PLVector3 *position ) { light->position = *position; }
+void ape_light_set_position( ApeLight *light, const PLVector3 *position ) { light->position = *position; }
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 {

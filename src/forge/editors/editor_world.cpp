@@ -2,6 +2,7 @@
 // Purpose: World editor tab
 // Author:  Mark E. Sowden
 
+#include <memory>
 #include "editor_world.h"
 
 #include "../viewport_frame.h"
@@ -33,6 +34,18 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
+
+	// brush class selection drop-down
+	brushClassBox = new FXComboBox( toolbar, 1, this, 0, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN );
+	unsigned int numBrushClasses;
+	const ApeBrushClass **brushClasses = ape_get_available_brush_classes( &numBrushClasses );
+	for ( unsigned int i = 0; i < numBrushClasses; ++i )
+	{
+		brushClassBox->appendItem( brushClasses[ i ]->editorName );
+	}
+	brushClassBox->setNumVisible( 4 );
+	this->instance.brushClass = brushClasses[ brushClassBox->getCurrentItem() ];
+
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_BRUSH ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/brush_mode.gif" ), nullptr, this, ID_BRUSH_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
@@ -50,25 +63,12 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	//new FXVerticalSeparator( toolbar );
 	//new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
-#if 0
-
-    auto *hs = new FXVerticalFrame( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	hs->setPadBottom( 0 );
-	hs->setPadLeft( 0 );
-	hs->setPadRight( 0 );
-	hs->setPadTop( 0 );
-	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
-
-#else
-
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_TOP );
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_LEFT );
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_FRONT );
-
-#endif
 
 	//auto rightSidebar = new FXVerticalSeparator( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH, 0, 0, 200 );
 
@@ -86,9 +86,48 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 
 ss::forge::editor_world::~editor_world() = default;
 
-void ss::forge::editor_world::create_new_entity( ApeWorldNode *parent )
+void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeType type )
 {
-	ape_entity_create( "test", nullptr );
+	FXTreeItem *selectedItem = nodeTree->getCurrentItem();
+	if ( selectedItem == nullptr )
+	{
+		return;
+	}
+
+	auto *parentNode = ( ApeWorldNode * ) nodeTree->getCurrentItem()->getData();
+	if ( parentNode == nullptr )
+	{
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create object, no valid node selected!" );
+		return;
+	}
+
+	PLVector3 pos;
+	ape_grid_get_cursor_position( &pos );
+
+	static const PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	void *data = nullptr;
+	switch ( type )
+	{
+		default:
+			break;
+		case APE_WORLD_NODE_TYPE_EMPTY: break;
+		case APE_WORLD_NODE_TYPE_ROOT: break;
+		case APE_WORLD_NODE_TYPE_ROOM:
+			data = ape_create_room( parentNode );
+			break;
+		case APE_WORLD_NODE_TYPE_BRUSH:
+			data = ape_create_brush( parentNode, instance.brushClass->name, &pos, &pl_vecOrigin3 );
+			break;
+		case APE_WORLD_NODE_TYPE_LIGHT:
+			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );
+			break;
+		case APE_WORLD_NODE_TYPE_CAMERA:
+			data = ape_create_camera( parentNode, &pos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
+			break;
+		case APE_WORLD_NODE_TYPE_ENTITY: break;
+	}
+	assert( data != nullptr );
 
 	update_tree();
 }

@@ -13,6 +13,7 @@
 
 static PLHashTable *shaderProgramTable;
 static ApeShaderProgram *defaultShaders[ APE_MAX_DEFAULT_SHADERS ];
+static bool isEnumeratingShaders;
 
 #define HOT_RELOAD_TICKS_DEFAULT 60
 static bool hotReload = false;
@@ -317,7 +318,11 @@ ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProg
 
 	if ( fallback == APE_SHADER_DEFAULT_NULL )
 	{
-		ape_warning_( "Failed to fetch shader (%s) by name!\n", name );
+		//HACK: silence this if we're setting things up...
+		if ( !isEnumeratingShaders )
+		{
+			ape_warning_( "Failed to fetch shader (%s) by name!\n", name );
+		}
 		return nullptr;
 	}
 
@@ -354,6 +359,8 @@ void ape_hot_reload_shaders_()
 	{
 		return;
 	}
+
+	isEnumeratingShaders = true;
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( shaderProgramTable );
 	while ( node != nullptr )
@@ -401,6 +408,8 @@ void ape_hot_reload_shaders_()
 	}
 
 	hotReloadTicks = ape_get_num_ticks() + incHotReloadTicks;
+
+	isEnumeratingShaders = false;
 }
 
 void ape_initialize_shaders_( void )
@@ -411,8 +420,12 @@ void ape_initialize_shaders_( void )
 		ape_error_( true, "Failed to create shader program list: %s\n", PlGetError() );
 	}
 
+	isEnumeratingShaders = true;
+
 	ape_print_( "Scanning for shader programs...\n" );
 	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, false, NULL );
+
+	isEnumeratingShaders = false;
 
 	ape_print_( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 

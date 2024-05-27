@@ -13,6 +13,7 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 #include <algorithm>
+#include <memory>
 
 ss::forge::ForgeMainWindow *ss::forge::mainWindow = nullptr;
 
@@ -128,14 +129,14 @@ long ss::forge::ForgeMainWindow::on_tick( FXObject *, FXSelector, void * )
 
 long ss::forge::ForgeMainWindow::on_new_world( FXObject *, FXSelector, void * )
 {
-	ApeWorld *world = ape_world_create();
+	ApeWorld *world = ape_create_world();
 	if ( world == nullptr )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world!\nSee logs for details." );
 		return FALSE;
 	}
 
-	ape_world_node_create( world->root, "room0", APE_WORLD_NODE_TYPE_ROOM, ape_world_room_create() );
+	ape_create_room( world->root );
 
 	auto *editor = new editor_world( _tabBook, "", world );
 	editor->update_tree();

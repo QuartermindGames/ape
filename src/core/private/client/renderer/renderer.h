@@ -15,8 +15,6 @@ typedef struct PLHashTable PLHashTable;
 
 typedef struct ApeRendererStats
 {
-	PLVector3 cameraPos;
-
 	unsigned int numBatches;
 	unsigned int numTriangles;
 	unsigned int numFacesDrawn;
@@ -53,9 +51,7 @@ typedef struct ApeCamera
 	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;
 
-	ApeWorldNode *worldNode;
-	ApeWorld *world;
-	ApeWorldRoom *room;
+	ApeRoom *room;
 
 	// For visibility
 	struct
@@ -70,7 +66,7 @@ typedef struct ApeCamera
 		{
 			PLMatrix4 transform;
 			unsigned int numVisits;
-			ApeWorldRoom *room;
+			ApeRoom *room;
 		} rooms[ APE_CAMERA_MAX_VISIBLE_ROOMS ];
 		unsigned int numRooms;
 		PLHashTable *visitedRooms;
@@ -87,15 +83,7 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
-#define SS_ARL_LIGHT_GETTYPE( FLAG ) 	( ( FLAG ) & 0x30U ) >> 4 )
-#define SS_ARL_LIGHT_GETSTATE( FLAG )	( ( FLAG ) & 0xF00U ) >> 8 )
-
-typedef struct ArlLightCachedStencilVolume
-{
-
-} ArlLightCachedStencilVolume;
-
-#define SS_ARL_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
+#define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
 {
 	// This should always come first!
@@ -118,7 +106,7 @@ typedef struct ApeLight
 	ApeWorld *world;
 } ApeLight;
 
-typedef ApeLight *ApeLightPointerArray[ SS_ARL_MAX_LIGHTS_PER_PASS ];
+typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
 typedef enum ApeCullMode
 {
@@ -162,13 +150,13 @@ void ape_draw_end_( ApeViewport *viewport );
 void ape_draw_menu_( ApeViewport *viewport );
 
 void ape_set_2d_viewport_size_( int w, int h );
-void ss_arl_get_2d_viewport_size_( int *width, int *height );
+void ape_get_2d_viewport_size_( int *width, int *height );
 
-void ss_arl_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
-void ss_arl_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
+void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle );
+void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle );
 
 PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
-PLGTexture *ss_arl_texture_get_fallback( void );
+PLGTexture *ape_texture_get_fallback( void );
 
 void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity );
 void ape_clear_flare_queue_( void );

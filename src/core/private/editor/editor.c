@@ -229,9 +229,9 @@ static void create_world_command( unsigned int, char ** )
 		return;
 	}
 
-	world = ape_world_create();
+	world = ape_create_world();
 
-	ss_game_spawn_world( world );
+	game_spawn_world( world );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -424,13 +424,13 @@ static void pre_render_brush( ApeEditorState *instance )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-static void pre_render_vertex( ApeEditorState *instance, const ApeCamera *camera )
+static void pre_render_vertex( ApeEditorState *instance, ApeCamera *camera )
 {
-	const ApeWorld *world = camera->world;
+	const ApeWorld *world = ape_camera_get_world( camera );
 	assert( world != NULL );
 }
 
-void ape_editor_pre_render_scene_( const ApeCamera *camera )
+void ape_editor_pre_render_scene_( ApeCamera *camera )
 {
 	if ( !ape_is_editor_active() )
 	{
@@ -459,8 +459,8 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
-	const ApeWorld *world = camera->world;
-	assert( world != NULL );
+	const ApeWorld *world = ape_camera_get_world( camera );
+	assert( world != nullptr );
 	pre_render_nodes( camera, world, world->root );
 }
 
@@ -495,7 +495,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 #if 0
 	if ( camera->mode != APE_CAMERA_MODE_INVALID && camera->mode != APE_CAMERA_MODE_PERSPECTIVE )
 	{
-		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 		float z = viewport->zoom;
 		float zoom = roundf( z ) / 2;

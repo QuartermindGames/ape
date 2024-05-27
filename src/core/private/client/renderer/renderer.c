@@ -325,6 +325,8 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, NULL, false );
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
 
+	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
+
 	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();
 
@@ -654,7 +656,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = camera->world;
+	ApeWorld *world = ape_camera_get_world( camera );
 	ape_editor_pre_render_scene_( camera );
 
 	if ( !ape_config_.world.skipDraw )
@@ -718,8 +720,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	assert( viewport != NULL );
 
 	COM_PROFILE_FUNCTION_START();
-
-	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
