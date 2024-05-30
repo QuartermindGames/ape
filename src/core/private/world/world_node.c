@@ -236,7 +236,6 @@ void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
 
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 {
-	ApeWorldNode *root = self;
 	ApeWorldNode *next = self->parent;
 	while ( next != nullptr )
 	{
@@ -245,11 +244,10 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 			break;
 		}
 
-		root = next;
 		next = next->parent;
 	}
 
-	return ape_world_node_get_room_data( next );
+	return ( next != nullptr ) ? ape_world_node_get_room_data( next ) : nullptr;
 }
 
 ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )

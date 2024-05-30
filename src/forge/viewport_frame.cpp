@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2022 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: Forge viewport implementation.
+// Author:  Mark E. Sowden
 
 #include "viewport_frame.h"
 #include "forge/editors/editor_world.h"
@@ -327,8 +328,19 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	// Create a pop-up menu
 	auto popup = new FXMenuPane( this );
 
+	auto brushMenu = new FXMenuPane( popup );
+	new FXMenuCascade( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ), brushMenu );
+
+	unsigned int numBrushClasses;
+	const ApeBrushClass **brushClasses = ape_get_available_brush_classes( &numBrushClasses );
+	for ( unsigned int i = 0; i < numBrushClasses; ++i )
+	{
+		auto brushClass = brushClasses[ i ];
+		new FXMenuCommand( brushMenu, brushClass->editorName, nullptr, this, ID_BUTTON_CREATE_BRUSH );
+	}
+
+	new FXMenuSeparator( popup );
 	new FXMenuCommand( popup, "Create Room...", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_BUTTON_CREATE_ROOM );
-	new FXMenuCommand( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ), this, ID_BUTTON_CREATE_BRUSH );
 	new FXMenuCommand( popup, "Create Light...", forge::load_fx_icon( getApp(), "resources/new_light.gif" ), this, ID_BUTTON_CREATE_LIGHT );
 	new FXMenuCommand( popup, "Create Camera...", forge::load_fx_icon( getApp(), "resources/new_camera.gif" ), this, ID_BUTTON_CREATE_CAMERA );
 	new FXMenuCommand( popup, "Create Entity...", forge::load_fx_icon( getApp(), "resources/new_entity.gif" ), this, ID_BUTTON_CREATE_ENTITY );
@@ -448,7 +460,7 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case KEY_Escape:
 		{
-			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH )
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT )
 			{
 				ape_editor_clear_plot_points( instance );
 			}

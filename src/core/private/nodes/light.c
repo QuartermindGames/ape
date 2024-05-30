@@ -4,7 +4,7 @@
 
 #include "ape_private.h"
 
-#include "renderer/renderer.h"
+#include "../client/renderer/renderer.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -37,10 +37,10 @@ void ape_light_destroy_( void *data )
 	PL_DELETE( self );
 }
 
-PLColourF32 ss_arl_light_get_colour( const ApeLight *light ) { return light->colour; }
+PLColourF32 ape_light_get_colour( const ApeLight *light ) { return light->colour; }
 void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
 
-PLVector3 ss_arl_light_get_position( const ApeLight *light ) { return light->position; }
+PLVector3 ape_light_get_position( const ApeLight *light ) { return light->position; }
 void ape_light_set_position( ApeLight *light, const PLVector3 *position ) { light->position = *position; }
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
@@ -70,4 +70,32 @@ bool ape_light_is_active( const ApeLight *light )
 	}
 
 	return true;
+}
+
+/**
+ * Test if the plane will be hit by the light.
+ */
+bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
+{
+	PLVector3 pos = ape_light_get_position( self );
+	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( plane->origin, pos ) );
+	if ( PlVector3DotProduct( plane->normal, dir ) >= 0 )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Test if the plane will be shadowed by the light.
+ */
+bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane )
+{
+	if ( ape_light_get_shadow_type( self ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC )
+	{
+		return false;
+	}
+
+	return ( ape_material_shadows_enabled( material ) && !ape_light_test_plane( self, plane ) );
 }

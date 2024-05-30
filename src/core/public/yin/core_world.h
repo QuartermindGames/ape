@@ -268,6 +268,8 @@ bool ape_world_face_is_portal( const ApeWorldFace *self );
 ////////////////////////////////////////////////////////////////////
 // Lighting
 
+typedef struct ApeMaterial ApeMaterial;
+
 typedef enum ApeLightShadowType
 {
 	SS_APE_LIGHT_SHADOW_TYPE_NONE,
@@ -302,14 +304,17 @@ typedef enum ApeLightFlag
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
 void ape_light_destroy( ApeLight *light );
 
-PLColourF32 ss_arl_light_get_colour( const ApeLight *light );
+PLColourF32 ape_light_get_colour( const ApeLight *light );
 void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
 
-PLVector3 ss_arl_light_get_position( const ApeLight *light );
+PLVector3 ape_light_get_position( const ApeLight *light );
 void ape_light_set_position( ApeLight *light, const PLVector3 *position );
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 
 bool ape_light_is_active( const ApeLight *light );
+
+bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
+bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
 
 PL_EXTERN_C_END

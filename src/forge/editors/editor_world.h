@@ -20,7 +20,7 @@ namespace ss::forge
 	public:
 		enum
 		{
-			ID_BRUSH_MODE = FXTabItem::ID_LAST,
+			ID_SELECT_MODE = FXTabItem::ID_LAST,
 			ID_FACE_MODE,
 			ID_EDGE_MODE,
 			ID_VERTEX_MODE,

@@ -94,27 +94,6 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 	//PlPopMatrix();
 }
 
-static bool face_is_facing_light( const ApeWorldFace *face, const ApeLight *light )
-{
-	PLVector3 lightDir = PlNormalizeVector3( PlSubtractVector3( face->origin, light->position ) );
-	if ( PlVector3DotProduct( face->normal, lightDir ) >= 0 )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-static bool is_light_not_shadowing_face( const ApeMaterial *material, const ApeWorldFace *face, ApeLight *light )
-{
-	if ( light == NULL || ( ape_light_get_shadow_type( light ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC ) )
-	{
-		return false;
-	}
-
-	return ( ape_material_shadows_enabled( material ) && !face_is_facing_light( face, light ) );
-}
-
 static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
 {
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ];
@@ -168,7 +147,8 @@ static void draw_room_faces( ApeWorld *world, ApeRoom *room, ApeCamera *camera, 
 			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
 		}
 
-		if ( is_light_not_shadowing_face( material, faces[ i ], light ) )
+		PLCollisionPlane plane = { .normal = faces[ i ]->normal, .origin = faces[ i ]->origin };
+		if ( light != nullptr && ape_light_test_plane_shadow( light, material, &plane ) )
 		{
 			continue;
 		}
@@ -304,8 +284,10 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *lig
 		if ( faces[ i ]->material == NULL || !ape_material_shadows_enabled( faces[ i ]->material ) )
 			continue;
 
-		if ( face_is_facing_light( faces[ i ], light ) )
+		if ( ape_light_test_plane( light, &( PLCollisionPlane ){ .normal = faces[ i ]->normal, .origin = faces[ i ]->origin } ) )
+		{
 			continue;
+		}
 
 		// There's probably a more efficient way of doing this,
 		// but let's go ahead and store all the indices into a dynamic array

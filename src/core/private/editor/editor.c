@@ -131,7 +131,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 {
 	PL_ZERO( self, sizeof( ApeEditorState ) );
 
-	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_BRUSH;
+	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
 
 	self->brushPlotPoints = PlCreateLinkedList();
 	if ( self->brushPlotPoints == NULL )
@@ -284,11 +284,16 @@ void ape_register_editor_console_variables_( void )
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
 }
 
-static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
+static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
 {
 	assert( world != NULL && worldNode != NULL );
 
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+	// don't draw the sprite for the camera...
+	ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
+	if ( worldNode == cameraNode )
+	{
+		return;
+	}
 
 	const PLVector3 position = PlGetMatrix4Translation( &worldNode->transform );
 	if ( nodeIcons[ worldNode->type ] != NULL )
@@ -315,8 +320,6 @@ static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, co
 		pre_render_nodes( camera, world, childWorldNode );
 		node = PlGetNextLinkedListNode( node );
 	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
 static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
@@ -447,21 +450,29 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 	switch ( instance->geometryMode )
 	{
-		case APE_EDITOR_GEOMETRY_MODE_BRUSH:
-			pre_render_brush( instance );
-			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
 		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
-			pre_render_vertex( instance, camera );
+			pre_render_brush( instance );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
+	bool isWireframe = PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME );
+	if ( isWireframe )
+	{
+		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
+
 	const ApeWorld *world = ape_camera_get_world( camera );
 	assert( world != nullptr );
 	pre_render_nodes( camera, world, world->root );
+
+	if ( isWireframe )
+	{
+		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 }
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )

@@ -11,8 +11,9 @@
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////
 
-static const unsigned int DEFAULT_GRID_SCALE = 2;
-static const unsigned int MAX_GRID_SCALE = 16;
+static constexpr unsigned int DEFAULT_GRID_SCALE = 16;
+static constexpr unsigned int MAX_GRID_SCALE = 256;
+static constexpr unsigned int MIN_GRID_SCALE = 2;
 #define GRID_SIZE     256
 #define GRID_ELEMENTS ( GRID_SIZE * GRID_SIZE )
 
@@ -227,7 +228,7 @@ void ape_grid_increase_size( void )
 		return;
 	}
 
-	instance->gridScale = PlClamp( DEFAULT_GRID_SCALE, ( instance->gridScale * 2 ), MAX_GRID_SCALE );
+	instance->gridScale = PlClamp( MIN_GRID_SCALE, ( instance->gridScale * 2 ), MAX_GRID_SCALE );
 	activeGridSelectable = nullptr;
 }
 
@@ -239,7 +240,7 @@ void ape_grid_decrease_size( void )
 		return;
 	}
 
-	instance->gridScale = PlClamp( DEFAULT_GRID_SCALE, ( instance->gridScale / 2 ), MAX_GRID_SCALE );
+	instance->gridScale = PlClamp( MIN_GRID_SCALE, ( instance->gridScale / 2 ), MAX_GRID_SCALE );
 	activeGridSelectable = nullptr;
 }
 
@@ -283,7 +284,7 @@ void ape_grid_draw_( ApeCamera *camera )
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	ApeViewport *selectionViewport = get_selection_viewport_();
-	if ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH )
+	if ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT )
 	{
 		unsigned int sw = viewport->width / 2;
 		unsigned int sh = viewport->height / 2;
@@ -308,7 +309,7 @@ void ape_grid_draw_( ApeCamera *camera )
 
 	PlgDrawGrid( -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE, state->gridScale / 2, &( PLColour ){ 0, 0, 255, 255 } );
 
-	if ( ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_BRUSH ) && activeGridSelectable != nullptr )
+	if ( ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT ) && activeGridSelectable != nullptr )
 	{
 		static const float GRID_HIGHLIGHT_SCALE = GRID_SELECTABLE_SCALE / 8.0f;
 

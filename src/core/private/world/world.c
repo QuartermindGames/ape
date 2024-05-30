@@ -125,17 +125,23 @@ static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 			continue;
 		}
 
+		PLColour faceColour = {
+		        .r = ( rand() % 200 ) + 55,
+		        .g = ( rand() % 200 ) + 55,
+		        .b = ( rand() % 200 ) + 55,
+		        .a = 255,
+		};
+
 		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 		while ( faceVertexNode != nullptr )
 		{
 			ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			assert( vertex->u != nullptr );
 
-			PLColour colour = PlColourF32ToU8( &room->colour );
 			PlgAddMeshVertex( room->mesh,
 			                  &vertex->u->position,
 			                  &vertex->normal,
-			                  &colour,
+			                  &faceColour,
 			                  &vertex->uv );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );

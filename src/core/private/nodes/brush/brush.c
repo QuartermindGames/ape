@@ -4,8 +4,7 @@
 
 #include "plcore/pl_hashtable.h"
 
-#include "world.h"
-
+#include "world/world.h"
 #include "client/renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////

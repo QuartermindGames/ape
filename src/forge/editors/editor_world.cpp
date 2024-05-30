@@ -11,7 +11,7 @@
 
 FXDEFMAP( ss::forge::editor_world )
 worldEditorMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_BRUSH_MODE, ss::forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_SELECT_MODE, ss::forge::editor_world::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_FACE_MODE, ss::forge::editor_world::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_EDGE_MODE, ss::forge::editor_world::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_VERTEX_MODE, ss::forge::editor_world::on_change_geometry_mode ),
@@ -25,8 +25,8 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
       _gridHideTarget( this->instance.gridVisible )
 {
 	auto frame = new FXHorizontalFrame( owner, LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_SIDE_TOP | FRAME_RAISED );
-	auto leftSidebar = new FXVerticalFrame( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH | FRAME_RAISED, 0, 0, 200 );
 
+	auto leftSidebar = new FXVerticalFrame( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH | FRAME_RAISED, 0, 0, 200 );
 	nodeTree = new FXTreeList( leftSidebar, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | TREELIST_ROOT_BOXES | TREELIST_SHOWS_LINES | TREELIST_SHOWS_BOXES );
 
 	auto *middleFrame = new FXVerticalFrame( frame, FRAME_RAISED | LAYOUT_FILL );
@@ -35,6 +35,7 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
 
+#if 0
 	// brush class selection drop-down
 	brushClassBox = new FXComboBox( toolbar, 1, this, 0, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN );
 	unsigned int numBrushClasses;
@@ -45,8 +46,9 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	}
 	brushClassBox->setNumVisible( 4 );
 	this->instance.brushClass = brushClasses[ brushClassBox->getCurrentItem() ];
+#endif
 
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_BRUSH ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/brush_mode.gif" ), nullptr, this, ID_BRUSH_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_SELECT ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/select.gif" ), nullptr, this, ID_SELECT_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
@@ -69,8 +71,6 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_TOP );
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_LEFT );
 	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_FRONT );
-
-	//auto rightSidebar = new FXVerticalSeparator( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH, 0, 0, 200 );
 
 	frame->create();
 
@@ -191,8 +191,8 @@ long ss::forge::editor_world::on_change_geometry_mode( FXObject *, FXSelector se
 	{
 		default:
 			break;
-		case ID_BRUSH_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_BRUSH;
+		case ID_SELECT_MODE:
+			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_SELECT;
 			break;
 		case ID_FACE_MODE:
 			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_FACE;

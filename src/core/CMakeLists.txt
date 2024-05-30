@@ -1,7 +1,6 @@
 set(YIN_CORE_CLIENT
         private/client/ape_client.c
         private/client/client_console.c
-        private/client/client_light.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
         private/client/renderer/material/material.c
@@ -38,9 +37,12 @@ set(APE_SOURCE_EDITORS
 add_library(ApeCore STATIC
         private/ape_console.c
 
-        # Entity System
-        private/entity/entity.c
-        private/entity/entity_component.c
+        # Scene Node System
+        private/nodes/brush/brush.c
+        private/nodes/brush/brush_poly.c
+        private/nodes/entity/entity.c
+        private/nodes/entity/entity_component.c
+        private/nodes/light.c
 
         # Networking
         private/net/net.c
@@ -58,8 +60,6 @@ add_library(ApeCore STATIC
         private/model/model.c
 
         private/world/world.c
-        private/world/world_brush.c
-        private/world/world_brush_poly.c
         private/world/world_deserialiser.c
         private/world/world_node.c
         private/world/world_room.c
