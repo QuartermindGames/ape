@@ -62,6 +62,8 @@ typedef struct ApeCamera
 		ApeLight *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
 		unsigned int numLights;
 
+		PLVectorArray *nodes;//ApeWorldNode
+
 		struct
 		{
 			PLMatrix4 transform;

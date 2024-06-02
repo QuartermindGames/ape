@@ -181,7 +181,6 @@ ApeViewport *get_selection_viewport_( void )
 static void toggle_editor_command( unsigned int, char ** )
 {
 	ape_config_.editor = !ape_config_.editor;
-
 	if ( ape_config_.editor )
 	{
 		cache_preview_materials();
@@ -289,7 +288,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 	assert( world != NULL && worldNode != NULL );
 
 	// don't draw the sprite for the camera...
-	ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
+	const ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
 	if ( worldNode == cameraNode )
 	{
 		return;
@@ -299,7 +298,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 	if ( nodeIcons[ worldNode->type ] != NULL )
 	{
 		static const float size = 64.0f;
-		static const float scale = 0.5f;
+		static const float scale = 0.1f;
 		ape_draw_sprite( nodeIcons[ worldNode->type ],
 		                 &PL_QUAD( 0.0f, 0.0f, size, size ),
 		                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),

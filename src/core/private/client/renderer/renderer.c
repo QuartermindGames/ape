@@ -687,33 +687,6 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }
 
-#if 0
-ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
-			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
-			{
-				PlMatrixMode( PL_MODELVIEW_MATRIX );
-				PlPushMatrix();
-
-				PLVector3 angles;
-				angles.x = PL_DEG2RAD( 90.0f );
-				angles.y = PL_DEG2RAD( 0.0f );
-				angles.z = PL_DEG2RAD( 0.0f );
-
-				PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
-				PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
-				PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
-
-				PlTranslateMatrix( PLVector3( 0, -5, 0 ) );
-
-				static const unsigned int gridW = 256;
-
-				PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
-
-				PlPopMatrix();
-			}
-#endif
-
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	assert( camera != NULL );

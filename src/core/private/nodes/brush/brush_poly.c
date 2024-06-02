@@ -176,8 +176,9 @@ static void poly_brush_draw( ApeBrush *self )
 
 ApeBrushClass ape_polyBrushClass = {
         .name = "polyBrushClass",
-        .editorName = "Poly Brush",
+        .editorName = "Poly",
         .editorDescription = "Basic brush used for building polygonal geometry.",
+        .iconSmall = "resources/poly.gif",
 
         .drawFunction = poly_brush_draw,
 };

@@ -122,6 +122,17 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorldNode *root )
 
 static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 {
+	if ( self->visibility.numRooms >= APE_CAMERA_MAX_VISIBLE_ROOMS )
+	{
+		return;
+	}
+
+	//TODO: get rid of this and use the node boundary instead per the caller!
+	if ( !PlgIsBoxInsideView( self->internal, &room->bounds ) )
+	{
+		return;
+	}
+
 	PlPushMatrix();
 
 	unsigned int numFaces;
@@ -159,47 +170,41 @@ static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 	PlPopMatrix();
 }
 
-static void build_visible_room_list( ApeCamera *self, ApeWorld *world )
+static void camera_build_visibility_lists( ApeCamera *self )
 {
-	// right, this is where the horrible madness of portal rendering begins...
-	//	1. Iterate over all surfaces for the current room, if it's a portal, move to that room and continue step one
-	//	2. If final room, add it to the start of the list, then wind backwards to the previous room (and next portal etc.)
-
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ApeWorldNode *worldNode = ( self->room != nullptr ) ? self->room->worldNode : world->root;
-	if ( worldNode->type != APE_WORLD_NODE_TYPE_ROOM )
+	ApeRoom *originRoom = ape_world_node_get_room( self->header.node );
+	ApeWorldNode *startWorldNode = originRoom != nullptr ? originRoom->header.node : ape_world_node_get_root( self->header.node );
+	if ( startWorldNode == nullptr )
 	{
-		// we're probably not associated with a room, so we need to go over them all
-		// this method actually sucks, but hey, get a room...
-
-		PLLinkedListNode *childNode = PlGetFirstNode( worldNode->children );
-		while ( childNode != nullptr )
-		{
-			if ( self->visibility.numRooms >= APE_CAMERA_MAX_VISIBLE_ROOMS )
-			{
-				break;
-			}
-
-			ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( childNode );
-			assert( childWorldNode != nullptr );
-			childNode = PlGetNextLinkedListNode( childNode );
-
-			ApeRoom *room = ape_world_node_get_room_data( childWorldNode );
-			if ( room == nullptr )
-			{
-				continue;
-			}
-
-			test_room_visibility( self, room );
-		}
-
 		return;
 	}
 
-	test_room_visibility( self, ape_world_node_get_room_data( worldNode ) );
+	build_visible_light_list( self, startWorldNode );
+
+	PLLinkedListNode *childNode = PlGetFirstNode( startWorldNode->children );
+	while ( childNode != nullptr )
+	{
+		ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( childNode );
+		assert( childWorldNode != nullptr );
+		childNode = PlGetNextLinkedListNode( childNode );
+
+		ApeRoom *room = ape_world_node_get_room_data( childWorldNode );
+		if ( room != nullptr )
+		{
+			test_room_visibility( self, room );
+		}
+	}
+
+	// if the start node was a room, make sure we check that
+	ApeRoom *room = ape_world_node_get_room_data( startWorldNode );
+	if ( room != nullptr )
+	{
+		test_room_visibility( self, room );
+	}
 
 	PlPopMatrix();
 }
@@ -219,14 +224,18 @@ void ape_camera_make_active( ApeCamera *camera )
 
 ApeWorld *ape_camera_get_world( ApeCamera *self )
 {
-	ApeWorldNode *cameraNode = ape_camera_get_world_node( self );
-	ApeWorldNode *worldNode = ape_world_node_get_root( cameraNode );
+	ApeWorldNode *worldNode = ape_world_node_get_root( self->header.node );
 	if ( worldNode == nullptr )
 	{
 		return nullptr;
 	}
 
 	return ape_world_node_get_root_data( worldNode );
+}
+
+ApeRoom *ape_camera_get_room( ApeCamera *self )
+{
+	return ape_world_node_get_room( self->header.node );
 }
 
 void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode )
@@ -328,6 +337,7 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, c
 	}
 
 	camera->visibility.visitedRooms = PlCreateHashTable();
+	camera->visibility.nodes = PlCreateVectorArray( 0 );
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
 
@@ -350,7 +360,10 @@ void ape_camera_destroy_( void *data )
 	PlgDestroyCamera( self->internal );
 
 	PlDestroyLinkedListNode( self->node );
+
+	// clean up visibility data
 	PlDestroyHashTable( self->visibility.visitedRooms );
+	PlDestroyVectorArray( self->visibility.nodes );
 
 	PL_DELETE( self );
 
@@ -470,6 +483,11 @@ ApeRoom **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num )
 	return ( ApeRoom ** ) camera->visibility.rooms;
 }
 
+ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num )
+{
+	return ( ApeWorldNode ** ) PlGetVectorArrayDataEx( self->visibility.nodes, num );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_build_camera_visibility_lists_( void )
@@ -485,14 +503,7 @@ void ape_build_camera_visibility_lists_( void )
 		camera->visibility.numLights = 0;
 		camera->visibility.numRooms = 0;
 
-		ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
-		ApeWorldNode *worldNode = ape_world_node_get_root( cameraNode );
-		if ( worldNode != nullptr )
-		{
-			ApeWorld *world = ape_world_node_get_root_data( worldNode );
-			build_visible_room_list( camera, world );
-			build_visible_light_list( camera, worldNode );
-		}
+		camera_build_visibility_lists( camera );
 
 		ape_rendererPerformance_.numRooms += camera->visibility.numRooms;
 		ape_rendererPerformance_.numLights += camera->visibility.numLights;

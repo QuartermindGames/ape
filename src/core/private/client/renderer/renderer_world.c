@@ -342,7 +342,9 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
 		ApeRoom **detailRooms = ( ApeRoom ** ) PlGetVectorArrayData( room->detailRooms );
 		for ( unsigned int j = 0; j < numDetailRooms; ++j )
+		{
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
+		}
 	}
 
 	draw_room_stencil_shadow_volumes( room, light );
@@ -350,32 +352,19 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 
 void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light )
 {
-	//PlMatrixMode( PL_MODELVIEW_MATRIX );
-	//PlPushMatrix();
-	//PlLoadIdentityMatrix();
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	if ( camera->room == NULL || ape_config_.world.showAllRooms )
+	for ( unsigned int i = 0; i < camera->visibility.numRooms; ++i )
 	{
-		for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
-		{
-			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
-			assert( room != NULL );
-			if ( room->isDetail )
-			{
-				continue;
-			}
+		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
 
-			draw_room_stencil_shadow_pass( room, camera, light );
-		}
-	}
-	else
-	{
-		draw_room_stencil_shadow_pass( camera->room, camera, light );
+		draw_room_stencil_shadow_pass( camera->visibility.rooms[ i ].room, camera, light );
 	}
 
-	//PlPopMatrix();
+	PlPopMatrix();
 }
 
 void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly )
@@ -390,32 +379,6 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 		return;
 	}
 
-#if 0
-
-	if ( camera->room == NULL || ape_config_.world.showAllRooms )
-	{
-		if ( world->rooms != NULL )
-		{
-			for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
-			{
-				ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
-				assert( room != NULL );
-				if ( room->isDetail )
-				{
-					continue;
-				}
-
-				draw_room( world, room, camera, true, light, ambienceOnly );
-			}
-		}
-	}
-	else
-	{
-		draw_room( world, camera->room, camera, ape_config_.world.skipPortals, light, ambienceOnly );
-	}
-
-#else// new code using new vis
-
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
@@ -427,7 +390,20 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 		draw_room( world, room, camera, light, ambienceOnly );
 	}
 
-	PlPopMatrix();
+#pragma message "Decide how we're going to do this..."
+#if 0
+	unsigned int numWorldNodes;
+	ApeWorldNode **worldNodes = ape_camera_get_visible_nodes_( camera, &numWorldNodes );
+	for ( unsigned int i = 0; i < numWorldNodes; ++i )
+	{
+		if ( !worldNodes[ i ]->classType->drawFunction )
+		{
+			continue;
+		}
 
+		worldNodes[ i ]->classType->drawFunction();
+	}
 #endif
+
+	PlPopMatrix();
 }

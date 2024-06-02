@@ -42,6 +42,20 @@ static void sun_colour_command( unsigned int argc, char **argv )
 	ape_light_set_colour( sun, &PL_COLOURF32( x, y, z, w ) );
 }
 
+static void generate_world_command( unsigned int argc, char **argv )
+{
+	if ( pm_gameState.world != nullptr )
+	{
+		ape_world_node_destroy( ape_world_get_world_node( pm_gameState.world ) );
+	}
+
+	pm_gameState.world = ape_create_world();
+	pm_gameState.terrain = ape_create_brush( pm_gameState.world->root, "pm_terrainBrushClass", &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	//HACK: this should be created in the level instead!!
+	sun = ape_create_light( pm_gameState.world->root, &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+}
+
 extern ApeBrushClass pm_terrainBrushClass;
 static bool pm_initialize( void )
 {
@@ -51,8 +65,9 @@ static bool pm_initialize( void )
 
 	ape_register_brush_class( &pm_terrainBrushClass );
 
-	PlRegisterConsoleCommand( "ss3_sun", "Set the global sun position.", 3, sun_command );
-	PlRegisterConsoleCommand( "ss3_sun_colour", "Sets the global sun colour.", 4, sun_colour_command );
+	PlRegisterConsoleCommand( "sun", "Set the global sun position.", 3, sun_command );
+	PlRegisterConsoleCommand( "sun_colour", "Sets the global sun colour.", 4, sun_colour_command );
+	PlRegisterConsoleCommand( "generate_world", "Generate a new world.", 0, generate_world_command );
 
 	pm_menu_initialize();
 
@@ -159,23 +174,26 @@ static bool pm_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &pm_gameState.simulation );
 
+	ape_world_node_attach( ape_camera_get_world_node( pm_gameState.camera ), world->root );
+
+	ApeWorldNode *worldNode;
 	// attempt to fetch the terrain
-	ApeWorldNode *worldNode = ape_world_node_get_child_by_name( world->root, "terrain" );
-	if ( worldNode == nullptr )
+	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "terrain" ) ) != nullptr )
 	{
-		Game_Print( "No terrain node in world, not a playable level\n" );
-		return true;
+		pm_gameState.terrain = ape_world_node_get_brush_data( worldNode );
+		if ( pm_gameState.terrain == nullptr )
+		{
+			Game_Warning( "Terrain node is not a valid brush!\n" );
+		}
 	}
-
-	pm_gameState.terrain = ape_world_node_get_brush_data( worldNode );
-	if ( pm_gameState.terrain == nullptr )
+	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "sun" ) ) != nullptr )
 	{
-		Game_Warning( "Terrain node is not a valid brush!\n" );
-		return false;
+		sun = ape_world_node_get_light_data( worldNode );
+		if ( sun == nullptr )
+		{
+			Game_Warning( "Sun node is not a valid light!\n" );
+		}
 	}
-
-	//HACK: this should be created in the level instead!!
-	sun = ape_create_light( worldNode, &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
 
 	return true;
 }

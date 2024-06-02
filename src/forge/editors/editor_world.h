@@ -52,6 +52,8 @@ namespace ss::forge
 		FXTreeList *nodeTree{};
 		FXComboBox *brushClassBox{};
 
+		viewport_frame *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
+
 	private:
 		class room_creation_dialog : FXDialogBox
 		{

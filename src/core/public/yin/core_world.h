@@ -125,6 +125,7 @@ typedef struct ApeBrushClass
 	const char *name;
 	const char *editorName;       // displayed in the editor
 	const char *editorDescription;// displayed in the editor
+	const char *iconSmall;        // small icon to display in menu
 
 	void ( *registerFunction )();// called after registration
 	void *( *createFunction )();

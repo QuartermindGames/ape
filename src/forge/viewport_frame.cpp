@@ -330,16 +330,15 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 
 	auto brushMenu = new FXMenuPane( popup );
 	new FXMenuCascade( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ), brushMenu );
-
 	unsigned int numBrushClasses;
 	const ApeBrushClass **brushClasses = ape_get_available_brush_classes( &numBrushClasses );
 	for ( unsigned int i = 0; i < numBrushClasses; ++i )
 	{
 		auto brushClass = brushClasses[ i ];
-		new FXMenuCommand( brushMenu, brushClass->editorName, nullptr, this, ID_BUTTON_CREATE_BRUSH );
+		auto brushCommand = new FXMenuCommand( brushMenu, brushClass->editorName, brushClass->iconSmall != nullptr ? forge::load_fx_icon( getApp(), brushClass->iconSmall ) : nullptr, this, ID_BUTTON_CREATE_BRUSH );
+		brushCommand->setUserData( ( void * ) brushClass );
 	}
 
-	new FXMenuSeparator( popup );
 	new FXMenuCommand( popup, "Create Room...", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_BUTTON_CREATE_ROOM );
 	new FXMenuCommand( popup, "Create Light...", forge::load_fx_icon( getApp(), "resources/new_light.gif" ), this, ID_BUTTON_CREATE_LIGHT );
 	new FXMenuCommand( popup, "Create Camera...", forge::load_fx_icon( getApp(), "resources/new_camera.gif" ), this, ID_BUTTON_CREATE_CAMERA );
@@ -486,7 +485,7 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 	return TRUE;
 }
 
-long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
+long viewport_frame::on_create( FXObject *object, FXSelector selector, void * )
 {
 	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
 	if ( worldEditor == nullptr )
@@ -523,6 +522,12 @@ long viewport_frame::on_create( FXObject *, FXSelector selector, void * )
 		{
 			name = "brush";
 			type = APE_WORLD_NODE_TYPE_BRUSH;
+
+			// determine which brush class we're after...
+			auto command = dynamic_cast< FXMenuCommand * >( object );
+			assert( command != nullptr );
+			auto brushClass = ( ApeBrushClass * ) command->getUserData();
+			instance->brushClass = brushClass;
 			break;
 		}
 		case ID_BUTTON_CREATE_LIGHT:

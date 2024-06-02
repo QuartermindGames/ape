@@ -67,10 +67,11 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
-	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
-	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_TOP );
-	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_LEFT );
-	new viewport_frame( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_FRONT );
+	ApeCameraViewMode viewModes[ APE_EDITOR_MAX_VIEWPORTS ] = { APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_MODE_TOP, APE_CAMERA_MODE_LEFT, APE_CAMERA_MODE_FRONT };
+	for ( unsigned int i = 0; i < APE_EDITOR_MAX_VIEWPORTS; ++i )
+	{
+		viewports[ i ] = new viewport_frame( hs, get_shared_gl_visual(), this, viewModes[ i ] );
+	}
 
 	frame->create();
 
@@ -91,6 +92,12 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 	FXTreeItem *selectedItem = nodeTree->getCurrentItem();
 	if ( selectedItem == nullptr )
 	{
+		return;
+	}
+
+	if ( instance.brushClass == nullptr )
+	{
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Invalid brush class!" );
 		return;
 	}
 
@@ -147,38 +154,61 @@ void ss::forge::editor_world::update_tree()
 	while ( node != nullptr )
 	{
 		auto *worldNode = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( node );
-		FXTreeItem *item = nodeTree->findItemByData( worldNode );
-		if ( item == nullptr )
+
+		// don't include the editor cameras in the tree
+		for ( auto &viewport : viewports )
 		{
-			ForgeIconType iconType;
-			switch ( worldNode->type )
+			if ( viewport->camera == nullptr )
 			{
-				default:
-					iconType = FORGE_ICON_TYPE_NODE;
-					break;
-				case APE_WORLD_NODE_TYPE_ROOM:
-					iconType = FORGE_ICON_TYPE_ROOM;
-					break;
-				case APE_WORLD_NODE_TYPE_BRUSH:
-					iconType = FORGE_ICON_TYPE_BRUSH;
-					break;
-				case APE_WORLD_NODE_TYPE_LIGHT:
-					iconType = FORGE_ICON_TYPE_LIGHT;
-					break;
-				case APE_WORLD_NODE_TYPE_CAMERA:
-					iconType = FORGE_ICON_TYPE_CAMERA;
-					break;
-				case APE_WORLD_NODE_TYPE_ENTITY:
-					iconType = FORGE_ICON_TYPE_ENTITY;
-					break;
+				// probably not initialised yet
+				continue;
 			}
 
-			item = nodeTree->appendItem( parentItem, worldNode->name );
-			nodeTree->setItemData( item, worldNode );
+			auto cameraWorldNode = ape_camera_get_world_node( viewport->camera );
+			if ( cameraWorldNode != worldNode )
+			{
+				continue;
+			}
 
-			item->setClosedIcon( forge_cachedIcons[ iconType ] );
-			item->setOpenIcon( forge_cachedIcons[ iconType ] );
-			item->setExpanded( true );
+			worldNode = nullptr;
+			break;
+		}
+
+		if ( worldNode != nullptr )
+		{
+			FXTreeItem *item = nodeTree->findItemByData( worldNode );
+			if ( item == nullptr )
+			{
+				ForgeIconType iconType;
+				switch ( worldNode->type )
+				{
+					default:
+						iconType = FORGE_ICON_TYPE_NODE;
+						break;
+					case APE_WORLD_NODE_TYPE_ROOM:
+						iconType = FORGE_ICON_TYPE_ROOM;
+						break;
+					case APE_WORLD_NODE_TYPE_BRUSH:
+						iconType = FORGE_ICON_TYPE_BRUSH;
+						break;
+					case APE_WORLD_NODE_TYPE_LIGHT:
+						iconType = FORGE_ICON_TYPE_LIGHT;
+						break;
+					case APE_WORLD_NODE_TYPE_CAMERA:
+						iconType = FORGE_ICON_TYPE_CAMERA;
+						break;
+					case APE_WORLD_NODE_TYPE_ENTITY:
+						iconType = FORGE_ICON_TYPE_ENTITY;
+						break;
+				}
+
+				item = nodeTree->appendItem( parentItem, worldNode->name );
+				nodeTree->setItemData( item, worldNode );
+
+				item->setClosedIcon( forge_cachedIcons[ iconType ] );
+				item->setOpenIcon( forge_cachedIcons[ iconType ] );
+				item->setExpanded( true );
+			}
 		}
 
 		node = PlGetNextLinkedListNode( node );

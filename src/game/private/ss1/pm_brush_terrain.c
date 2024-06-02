@@ -77,16 +77,24 @@ static void destroy_terrain( void *self )
 	PL_DELETE( self );
 }
 
+static void draw_terrain( ApeBrush *self )
+{
+	printf( "farts\n" );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
 ApeBrushClass pm_terrainBrushClass = {
         .name = "pm_terrainBrushClass",
-        .editorName = "PM Terrain",
+        .editorName = "Terrain",
         .editorDescription = "A flat-shaded primitive terrain system for PM.",
+
+        .iconSmall = "resources/terrain.gif",
 
         .createFunction = create_terrain,
         .destroyFunction = destroy_terrain,
+        .drawFunction = draw_terrain,
 };
 
 float pm_brush_terrain_get_max_height( const PMTerrainBrush *self )
