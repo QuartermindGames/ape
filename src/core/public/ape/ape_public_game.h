@@ -14,7 +14,7 @@ typedef enum ApeGameInterfaceRequest
 	APE_GAME_INTERFACE_REQUEST_DRAW,
 	APE_GAME_INTERFACE_REQUEST_DRAW_UI,
 
-	APE_GAME_INTERFACE_REQUEST_TICK,// called after entity tick
+	APE_GAME_INTERFACE_REQUEST_TICK_SERVER,// called after entity tick
 	APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT,
 
 	APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD,// called before entities are spawned in and

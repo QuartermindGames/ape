@@ -294,7 +294,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 		return;
 	}
 
-	const PLVector3 position = PlGetMatrix4Translation( &worldNode->transform );
+	const PLVector3 position = worldNode->position;
 	if ( nodeIcons[ worldNode->type ] != NULL )
 	{
 		static const float size = 64.0f;

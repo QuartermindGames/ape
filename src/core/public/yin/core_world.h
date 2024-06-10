@@ -71,8 +71,13 @@ typedef struct ApeWorldNode
 
 	void *data;
 
-	PLMatrix4 transform;
-	PLCollisionAABB bounds;
+	// Originally used a transform matrix here, but for simplicity...
+	PLVector3 position;
+	PLVector3 angles;
+	PLVector3 scale;
+
+	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
+	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
 
 	ApeWorldNode *parent;
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
@@ -88,6 +93,8 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
 
 void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position );
 void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles );
+
+void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs );
 
 /**
  * Travels up the tree until it encounters a room.
@@ -310,6 +317,9 @@ void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
 
 PLVector3 ape_light_get_position( const ApeLight *light );
 void ape_light_set_position( ApeLight *light, const PLVector3 *position );
+
+PLVector3 ape_light_get_angles( const ApeLight *self );
+void ape_light_set_angles( ApeLight *self, const PLVector3 *angles );
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 

@@ -93,8 +93,6 @@ typedef struct ApeLight
 
 	ApeLightType type;
 
-	PLVector3 position;
-	PLVector3 angles;
 	PLColourF32 colour;
 	float radius;
 

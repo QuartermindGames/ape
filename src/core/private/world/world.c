@@ -329,14 +329,14 @@ NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 
 /**
  * This crudely tries to determine the sector by an origin point.
- * Should only be used for vague lookup.
+ * Should only be used for vague, but fast, lookup.
  */
 ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position )
 {
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
 		ApeRoom *room = ( ApeRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
-		if ( !PlIsPointIntersectingAabb( &room->bounds, *position ) )
+		if ( !PlIsPointIntersectingAabb( &room->header.node->bounds, *position ) )
 		{
 			continue;
 		}
@@ -355,11 +355,6 @@ void ape_register_world_console_variables_( void )
 	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, &ape_config_.world.showRoomVolumes, nullptr, false );
 	PlRegisterConsoleVariable( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, nullptr, false );
 	PlRegisterConsoleVariable( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, nullptr, false );
-}
-
-void ape_tick_client_world_( void )
-{
-	ape_build_camera_visibility_lists_();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

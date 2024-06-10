@@ -47,11 +47,11 @@ void game_spawn_world( ApeWorld *world )
 	currentWorld = world;
 }
 
-void ss_game_tick( void )
+void game_tick_server( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK, NULL );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
 
 	COM_PROFILE_FUNCTION_END();
 }

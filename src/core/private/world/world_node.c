@@ -141,6 +141,12 @@ static void *get_world_node_data( ApeWorldNode *self, ApeWorldNodeType expectedT
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
+void ape_calc_world_node_bounds( ApeWorldNode *root )
+{
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, ApeWorldNodeType type, const PLVector3 *position, const PLVector3 *angles, void *data )
 {
 	setup_data_header( ( ApeWorldNodeHeader * ) data, type );
@@ -156,11 +162,8 @@ ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, ApeWorldNodeType type
 
 	self->children = PlCreateLinkedList();
 
-	self->transform = PlMatrix4Identity();
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->x, &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ), &self->transform );
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->y, &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ), &self->transform );
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->z, &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ), &self->transform );
-	self->transform = PlMultiplyMatrix4( PlTranslateMatrix4( *position ), &self->transform );
+	self->position = *position;
+	self->angles = *angles;
 
 	self->classType = &nodeClasses[ type ];
 
@@ -224,14 +227,38 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 
 void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position )
 {
-	self->transform = PlMultiplyMatrix4( PlTranslateMatrix4( *position ), &self->transform );
+	self->position = *position;
 }
 
 void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
 {
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->x, &( PLVector3 ){ 1.0f, 0.0f, 0.0f } ), &self->transform );
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->y, &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ), &self->transform );
-	self->transform = PlMultiplyMatrix4( PlRotateMatrix4( angles->z, &( PLVector3 ){ 0.0f, 0.0f, 1.0f } ), &self->transform );
+	self->angles = *angles;
+}
+
+void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs )
+{
+	self->localBounds.mins = *mins;
+	self->localBounds.maxs = *maxs;
+
+	// need to go ahead and recalc bounds
+
+	self->bounds = self->localBounds;
+
+	PLLinkedListNode *child = PlGetFirstNode( self->children );
+	while ( child != nullptr )
+	{
+		ApeWorldNode *childNode = PlGetLinkedListNodeUserData( child );
+#pragma message "THIS SHOULD BE ACCOUNTING FOR TRANSFORMS YOU DUMB BASTARD"
+		if ( childNode->bounds.mins.x < self->bounds.mins.x ) { self->bounds.mins.x = childNode->bounds.mins.x; }
+		if ( childNode->bounds.mins.y < self->bounds.mins.y ) { self->bounds.mins.y = childNode->bounds.mins.y; }
+		if ( childNode->bounds.mins.z < self->bounds.mins.z ) { self->bounds.mins.z = childNode->bounds.mins.z; }
+		if ( childNode->bounds.maxs.x > self->bounds.maxs.x ) { self->bounds.maxs.x = childNode->bounds.maxs.x; }
+		if ( childNode->bounds.maxs.y > self->bounds.maxs.y ) { self->bounds.maxs.y = childNode->bounds.maxs.y; }
+		if ( childNode->bounds.maxs.z > self->bounds.maxs.z ) { self->bounds.maxs.z = childNode->bounds.maxs.z; }
+		child = PlGetNextLinkedListNode( child );
+	}
+
+	// and now wake our parents up...
 }
 
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )

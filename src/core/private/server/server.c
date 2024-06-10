@@ -122,7 +122,7 @@ static void tick_server_client( void *userData, bool *breakEarly )
 	}
 }
 
-void ape_server_tick_( void )
+void ape_tick_server_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -141,7 +141,7 @@ void ape_server_tick_( void )
 		PlIterateLinkedList( connectedClients, tick_server_client, true );
 	}
 
-	ape_tick_game_();
+	ape_tick_game_server_();
 
 	COM_PROFILE_FUNCTION_END();
 }

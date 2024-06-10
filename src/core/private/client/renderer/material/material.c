@@ -740,7 +740,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeMaterialPas
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL ) ? light->header.node->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
@@ -756,7 +756,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeMaterialPas
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->header.node->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )

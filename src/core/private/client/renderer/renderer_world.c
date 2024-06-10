@@ -171,17 +171,9 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 		return;
 	}
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->header.node->bounds ) && !ape_config_.renderer.skipRoomCull )
 	{
 		return;
-	}
-
-	if ( ape_config_.world.showRoomVolumes )
-	{
-#pragma message "TODO: update this to use material system!!!"
-		PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
-		PLColour colour = PlColourF32ToU8( &room->colour );
-		PlgDrawBoundingVolume( &room->bounds, &colour );
 	}
 
 	if ( ( !ambienceOnly && light == NULL ) /*|| ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) )*/ )
@@ -238,10 +230,10 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 {
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		return PlNormalizeVector3( PlSubtractVector3( *origin, light->position ) );
+		return PlNormalizeVector3( PlSubtractVector3( *origin, light->header.node->position ) );
 	}
 
-	return PlNormalizeVector3( ( PLVector3 ){ light->position.x, light->position.y, light->position.z } );
+	return PlNormalizeVector3( light->header.node->position );
 }
 
 static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, unsigned int *indices )
@@ -332,7 +324,7 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 		return;
 	}
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->bounds ) && !ape_config_.renderer.skipRoomCull )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->header.node->bounds ) && !ape_config_.renderer.skipRoomCull )
 	{
 		return;
 	}

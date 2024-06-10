@@ -50,10 +50,12 @@ static void generate_world_command( unsigned int argc, char **argv )
 	}
 
 	pm_gameState.world = ape_create_world();
-	pm_gameState.terrain = ape_create_brush( pm_gameState.world->root, "pm_terrainBrushClass", &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	ApeRoom *room = ape_create_room( pm_gameState.world->header.node );
+	pm_gameState.terrain = ape_create_brush( ape_room_get_world_node( room ), "pm_terrainBrushClass", &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	//HACK: this should be created in the level instead!!
-	sun = ape_create_light( pm_gameState.world->root, &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+	sun = ape_create_light( ape_room_get_world_node( room ), &PLVector3( -2.0f, -2.0f, 1.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f ), 0.0f, APE_LIGHT_TYPE_SUN, SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
 }
 
 extern ApeBrushClass pm_terrainBrushClass;
@@ -174,7 +176,8 @@ static bool pm_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &pm_gameState.simulation );
 
-	ape_world_node_attach( ape_camera_get_world_node( pm_gameState.camera ), world->root );
+	ape_world_node_attach( ape_camera_get_world_node( pm_gameState.camera ),
+	                       world->header.node );
 
 	ApeWorldNode *worldNode;
 	// attempt to fetch the terrain
@@ -210,7 +213,7 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 			return pm_draw( ( ApeViewport * ) user );
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
 			return pm_draw_menu( user );
-		case APE_GAME_INTERFACE_REQUEST_TICK:
+		case APE_GAME_INTERFACE_REQUEST_TICK_SERVER:
 			return pm_tick();
 		case APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT:
 			break;

@@ -89,11 +89,6 @@ typedef struct ApeWorldMesh
 	unsigned int maxVertices;
 
 	PLLinkedList *faces;
-
-	PLCollisionAABB bounds;
-
-	struct PLGMesh *drawMesh; /* what actually gets rendered */
-
 	PLLinkedListNode *node;
 
 	ApeMemoryReference mem;
@@ -145,9 +140,7 @@ typedef struct ApeRoom
 
 	ApeAudioReverbPreset reverbPreset;
 
-	PLCollisionAABB bounds;
-
-	ApeWorldNode *worldNode;
+	unsigned int numVisits;
 } ApeRoom;
 
 typedef struct ApeWorldEntity
@@ -172,6 +165,6 @@ void ape_world_spawn_entities_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
-void ape_tick_client_world_( void );
+void ape_calc_world_node_bounds( ApeWorldNode *root );
 
 PL_EXTERN_C_END

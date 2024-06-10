@@ -20,7 +20,9 @@ static void deserialize_light( ApeWorld *world, NdBranch *root )
 	                                    nd_branch_get_child_uint( root, "type", APE_LIGHT_TYPE_OMNI ),
 	                                    nd_branch_get_child_uint( root, "flags", 0 ) );
 
-	light->angles = nd_get_vector3( root, "angles", &pl_vecOrigin3 );
+	PLVector3 angles = nd_get_vector3( root, "angles", &pl_vecOrigin3 );
+	ape_light_set_angles( light, &angles );
+
 	light->isHidden = nd_branch_get_child_bool( root, "isHidden", false );
 }
 
@@ -38,8 +40,9 @@ static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 {
 	ApeRoom *room = ape_create_room( world->root );
 
-	room->bounds.mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
-	room->bounds.maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
+	PLVector3 mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
+	PLVector3 maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
+	ape_world_node_set_local_bounds( room->header.node, &mins, &maxs );
 
 	room->isDetail = nd_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = nd_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );
@@ -49,40 +52,6 @@ static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 	snprintf( tmp, sizeof( tmp ), "room_%u", PlGetNumVectorArrayElements( world->rooms ) );
 
 	return room;
-}
-
-static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
-{
-	// Fetch the first room index and validate it
-	ApeRoom *roomA = PlGetVectorArrayElementAt( world->rooms, nd_branch_get_child_uint( root, "roomB", ( unsigned int ) -1 ) );
-	assert( roomA != NULL );
-	if ( roomA == NULL )
-	{
-		ape_warning_( "Invalid portal room A!\n" );
-		return NULL;
-	}
-
-	// Fetch the second room index and validate it
-	ApeRoom *roomB = PlGetVectorArrayElementAt( world->rooms, nd_branch_get_child_uint( root, "roomA", ( unsigned int ) -1 ) );
-	assert( roomB != NULL );
-	if ( roomB == NULL )
-	{
-		ape_warning_( "Invalid portal room B!\n" );
-		return NULL;
-	}
-
-	ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
-
-	portal->mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
-	portal->maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
-
-	// Get the two associated rooms for the portal
-	portal->roomA = roomA;
-	PlPushBackVectorArrayElement( portal->roomA->portals, portal );
-	portal->roomB = roomB;
-	PlPushBackVectorArrayElement( portal->roomB->portals, portal );
-
-	return portal;
 }
 
 static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )

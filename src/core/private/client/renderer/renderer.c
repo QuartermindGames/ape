@@ -17,7 +17,7 @@
 
 #include "game/game_interface.h"
 
-ApeRendererStats ape_rendererPerformance_;
+ApeRendererStats ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;
 
 static ApeRenderTarget *defaultRenderTarget;
@@ -249,7 +249,9 @@ static void write_screenshot( void )
 
 void ape_draw_end_( ApeViewport *viewport )
 {
-	PL_ZERO_( ape_rendererPerformance_ );
+	ape_rendererPerformance_.numBatches = 0;
+	ape_rendererPerformance_.numTriangles = 0;
+	ape_rendererPerformance_.numFacesDrawn = 0;
 
 	viewport->perf.numBatches = 0;
 	viewport->perf.numTriangles = 0;
@@ -593,7 +595,7 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 
 		if ( ape_config_.renderer.showLights )
 		{
-			arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+			arl_draw_axis_pivot( lights[ i ]->header.node->position, lights[ i ]->header.node->angles, 1.0f );
 		}
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );

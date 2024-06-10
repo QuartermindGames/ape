@@ -317,7 +317,7 @@ static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 		{
 			return shutdown_game();
 		}
-		case APE_GAME_INTERFACE_REQUEST_TICK:
+		case APE_GAME_INTERFACE_REQUEST_TICK_SERVER:
 		{
 			return tick_game();
 		}

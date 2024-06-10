@@ -38,9 +38,10 @@ typedef struct PMGameState
 	PMTeam teams[ PM_MAX_TEAMS ];
 	PMPlayer players[ PM_MAX_PLAYERS ];
 
-	ApeCamera *camera;
-	ApeWorld *world;
-	ApeBrush *terrain;
+	ApeCamera *camera;// our eyes
+	ApeWorld *world;  // world container
+	ApeRoom *room;    // everything in the scene should be tied to this!
+	ApeBrush *terrain;// proc terrain brush
 
 	bool isFirstLaunch;
 	NdBranch *config;

@@ -17,7 +17,6 @@ ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, con
 	ApeLight *light = PL_NEW( ApeLight );
 	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_LIGHT, position, &pl_vecOrigin3, light );
 
-	light->position = *position;
 	light->colour = *colour;
 	light->type = type;
 	light->flags = flags;
@@ -40,8 +39,11 @@ void ape_light_destroy_( void *data )
 PLColourF32 ape_light_get_colour( const ApeLight *light ) { return light->colour; }
 void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
 
-PLVector3 ape_light_get_position( const ApeLight *light ) { return light->position; }
-void ape_light_set_position( ApeLight *light, const PLVector3 *position ) { light->position = *position; }
+PLVector3 ape_light_get_position( const ApeLight *self ) { return self->header.node->position; }
+void ape_light_set_position( ApeLight *self, const PLVector3 *position ) { ape_world_node_set_position( self->header.node, position ); }
+
+PLVector3 ape_light_get_angles( const ApeLight *self ) { return self->header.node->angles; }
+void ape_light_set_angles( ApeLight *self, const PLVector3 *angles ) { ape_world_node_set_angles( self->header.node, angles ); }
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 {

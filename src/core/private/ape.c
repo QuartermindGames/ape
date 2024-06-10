@@ -223,9 +223,10 @@ void ape_tick_frame( void )
 
 	COM_PROFILE_FUNCTION_START();
 
-	ss_acl_tick_tasks_();
+	ape_tick_tasks_();
+	//TODO: what order should these be?
+	ape_tick_server_();
 	ape_tick_client_();
-	ape_server_tick_();
 
 	if ( ape_get_capture_state_() )
 	{

@@ -65,9 +65,17 @@ void ape_shutdown_game_( void )
 	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, nullptr );
 }
 
-void ape_tick_game_( void )
+void ape_tick_game_server_( void )
 {
-	ss_game_tick();
+	ApeWorld *world = ss_game_get_current_world();
+	if ( world != nullptr )
+	{
+		ape_calc_world_node_bounds( world->root );
+	}
+
+	ape_build_camera_visibility_lists_();
+
+	game_tick_server();
 }
 
 void ape_spawn_world_( const char *worldPath )
