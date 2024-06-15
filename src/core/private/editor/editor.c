@@ -10,7 +10,6 @@
 #include "editor.h"
 
 #include "client/renderer/renderer.h"
-#include "client/renderer/renderer_material.h"
 
 #include "game/game_interface.h"
 
@@ -132,7 +131,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 {
 	PL_ZERO( self, sizeof( ApeEditorState ) );
 
-	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_BRUSH;
+	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
 
 	self->brushPlotPoints = PlCreateLinkedList();
 	if ( self->brushPlotPoints == NULL )
@@ -182,7 +181,6 @@ ApeViewport *get_selection_viewport_( void )
 static void toggle_editor_command( unsigned int, char ** )
 {
 	ape_config_.editor = !ape_config_.editor;
-
 	if ( ape_config_.editor )
 	{
 		cache_preview_materials();
@@ -230,9 +228,9 @@ static void create_world_command( unsigned int, char ** )
 		return;
 	}
 
-	world = ape_world_create();
+	world = ape_create_world();
 
-	ss_game_spawn_world( world );
+	game_spawn_world( world );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -285,17 +283,22 @@ void ape_register_editor_console_variables_( void )
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
 }
 
-static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
+static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
 {
 	assert( world != NULL && worldNode != NULL );
 
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+	// don't draw the sprite for the camera...
+	const ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
+	if ( worldNode == cameraNode )
+	{
+		return;
+	}
 
-	const PLVector3 position = PlGetMatrix4Translation( &worldNode->transform );
+	const PLVector3 position = worldNode->position;
 	if ( nodeIcons[ worldNode->type ] != NULL )
 	{
 		static const float size = 64.0f;
-		static const float scale = 0.5f;
+		static const float scale = 0.1f;
 		ape_draw_sprite( nodeIcons[ worldNode->type ],
 		                 &PL_QUAD( 0.0f, 0.0f, size, size ),
 		                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),
@@ -305,7 +308,8 @@ static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, co
 		                 scale );
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
 
 	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
@@ -315,8 +319,6 @@ static void pre_render_nodes( const ApeCamera *camera, const ApeWorld *world, co
 		pre_render_nodes( camera, world, childWorldNode );
 		node = PlGetNextLinkedListNode( node );
 	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
 static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
@@ -389,7 +391,7 @@ static void pre_render_brush( ApeEditorState *instance )
 
 	// draw boundary
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 	node = PlGetFirstNode( instance->brushPlotPoints );
 	while ( true )
 	{
@@ -424,13 +426,13 @@ static void pre_render_brush( ApeEditorState *instance )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-static void pre_render_vertex( ApeEditorState *instance, const ApeCamera *camera )
+static void pre_render_vertex( ApeEditorState *instance, ApeCamera *camera )
 {
-	const ApeWorld *world = camera->world;
+	const ApeWorld *world = ape_camera_get_world( camera );
 	assert( world != NULL );
 }
 
-void ape_editor_pre_render_scene_( const ApeCamera *camera )
+void ape_editor_pre_render_scene_( ApeCamera *camera )
 {
 	if ( !ape_is_editor_active() )
 	{
@@ -447,21 +449,29 @@ void ape_editor_pre_render_scene_( const ApeCamera *camera )
 
 	switch ( instance->geometryMode )
 	{
-		case APE_EDITOR_GEOMETRY_MODE_BRUSH:
-			pre_render_brush( instance );
-			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
 		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
-			pre_render_vertex( instance, camera );
+			pre_render_brush( instance );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
-	const ApeWorld *world = camera->world;
-	assert( world != NULL );
+	bool isWireframe = PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME );
+	if ( isWireframe )
+	{
+		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
+
+	const ApeWorld *world = ape_camera_get_world( camera );
+	assert( world != nullptr );
 	pre_render_nodes( camera, world, world->root );
+
+	if ( isWireframe )
+	{
+		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
 }
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )
@@ -495,7 +505,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 #if 0
 	if ( camera->mode != APE_CAMERA_MODE_INVALID && camera->mode != APE_CAMERA_MODE_PERSPECTIVE )
 	{
-		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 		float z = viewport->zoom;
 		float zoom = roundf( z ) / 2;

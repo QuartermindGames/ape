@@ -2,11 +2,16 @@
 
 #pragma once
 
+PL_EXTERN_C
+
+typedef struct ApeShaderProgram ApeShaderProgram;
+typedef struct ApeMaterial ApeMaterial;
+
 #define SS_ARL_MAX_MATERIAL_PASSES    4
 #define SS_ARL_MAX_MATERIAL_VARIABLES 64
 
 /* built-in variable types */
-typedef enum SS_Arl_MaterialBuiltinVar
+typedef enum ApeMaterialBuiltinVar
 {
 	SS_ARL_MATERIAL_BUILTIN_INVALID = -1,
 	SS_ARL_MATERIAL_BUILTIN_TIME,
@@ -15,7 +20,7 @@ typedef enum SS_Arl_MaterialBuiltinVar
 	SS_ARL_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
 
 	SS_ARL_MAX_MATERIAL_BUILTINS
-} SS_Arl_MaterialBuiltinVar;
+} ApeMaterialBuiltinVar;
 
 typedef enum ApeMaterialFlag
 {
@@ -24,12 +29,9 @@ typedef enum ApeMaterialFlag
 	PL_BITFLAG( APE_MATERIAL_FLAG_BLENDED, 2U ),
 } ApeMaterialFlag;
 
-typedef struct ApeMaterial ApeMaterial;
+#define APE_MATERIAL_VAR_NAME_LENGTH 64
 
-#define SS_ARL_MATERIAL_VAR_NAME_LENGTH   64
-#define SS_ARL_MATERIAL_VAR_STRING_LENGTH 256
-
-typedef enum SS_Arl_MaterialVariableType
+typedef enum ApeMaterialVariableType
 {
 	SS_ARL_MATERIAL_VAR_INVALID,
 
@@ -53,79 +55,91 @@ typedef enum SS_Arl_MaterialVariableType
 	SS_ARL_MATERIAL_VAR_RENDERTARGET,
 
 	SS_ARL_MAX_MATERIAL_VAR_TYPES
-} SS_Arl_MaterialVariableType;
+} ApeMaterialVariableType;
 
 /**
  * Hints for standard material variables, so
  * that we can toggle their state.
  */
-typedef enum SS_Arl_MaterialVariableHint
+typedef enum ApeMaterialVariableHint
 {
 	SS_ARL_MATERIAL_VAR_HINT_DIFFUSE,
 	SS_ARL_MATERIAL_VAR_HINT_NORMAL,
 	SS_ARL_MATERIAL_VAR_HINT_SPECULAR,
-} SS_Arl_MaterialVariableHint;
+} ApeMaterialVariableHint;
 
-typedef union SS_Arl_MaterialVariableData
+typedef union ApeMaterialVariableData
 {
-	SS_Arl_MaterialBuiltinVar builtinVar;
+	ApeMaterialBuiltinVar builtinVar;
 	void *ptr;
-} SS_Arl_MaterialVariableData;
+} ApeMaterialVariableData;
 
-typedef struct SS_Arl_MaterialVariable
+typedef struct ApeMaterialVariable
 {
 	int programSlot;
-	char name[ SS_ARL_MATERIAL_VAR_NAME_LENGTH ];
+	char name[ APE_MATERIAL_VAR_NAME_LENGTH ];
 
-	SS_Arl_MaterialVariableType type;// type of data
-	SS_Arl_MaterialVariableData data;// data store
-	unsigned int numElements;        // number of elements (i.e., is it an array?)
+	ApeMaterialVariableType type;// type of data
+	ApeMaterialVariableData data;// data store
+	unsigned int numElements;    // number of elements (i.e., is it an array?)
 
-	SS_Arl_MaterialVariableHint hint;
-} SS_Arl_MaterialVariable;
+	ApeMaterialVariableHint hint;
+} ApeMaterialVariable;
 
-typedef struct SS_Arl_MaterialPass
+typedef struct ApeMaterialPass
 {
-	PLGShaderProgram *program;
+	ApeShaderProgram *program;
 
 	PLGTextureFilter textureFilter;
 	PLVector2 textureScroll;
 	PLVector2 textureOffset;
 
 	PLGBlend blendMode[ 2 ];
-	SS_Arl_MaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];
+	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];
 	unsigned int numVariables;
 
 	bool depthTest;
 	int cullMode;
-} SS_Arl_MaterialPass;
+} ApeMaterialPass;
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Shaders
 
 #define RS_PROGRAM_NAME_LENGTH 64
 
-extern PLGShaderProgram *ape_defaultShaderPrograms_[ APE_MAX_DEFAULT_SHADERS ];
-
-typedef struct SS_Arl_ShaderProgramIndex
+typedef struct ApeShaderProgram
 {
-	char path[ PL_SYSTEM_MAX_PATH ];
-	char shaderPaths[ PLG_MAX_SHADER_TYPES ][ PL_SYSTEM_MAX_PATH ];
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
 
-	SS_Arl_MaterialPass defaultPass;
+	PLPath path;
+	time_t timestamp;
+
+	PLPath sourcePaths[ PLG_MAX_SHADER_TYPES ];
+	time_t sourceTimestamps[ PLG_MAX_SHADER_TYPES ];
+
+	ApeMaterialPass defaultPass;
 
 	PLGShaderProgram *internal;
-	struct PLLinkedListNode *node;
-} SS_Arl_ShaderProgramIndex;
+} ApeShaderProgram;
 
-PL_EXTERN_C
+void ape_hot_reload_shaders_();
 
-void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *materialPass );
+ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProgram fallback );
+
+void ape_set_active_shader_by_default_( ApeDefaultShaderProgram defaultShaderProgram );
+
+void ape_shader_set_active_( ApeShaderProgram *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialPass );
 
 void ape_initialize_materials_( void );
 void ape_shutdown_materials_( void );
 
-PLGTexture *ape_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint );
+PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint );
 
-bool ss_arl_material_shadows_enabled( const ApeMaterial *material );
+bool ape_material_shadows_enabled( const ApeMaterial *self );
 bool ape_material_is_blended( const ApeMaterial *self );
 
 void ape_tick_materials_( void );

@@ -233,7 +233,7 @@ void ape_mm_add_reference( ApeMemoryReference *m )
 #endif
 }
 
-void ss_acl_mm_release( ApeMemoryReference *m )
+void ape_mm_release( ApeMemoryReference *m )
 {
 	assert( m->numReferences > 0 );
 

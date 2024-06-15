@@ -31,6 +31,9 @@ typedef struct CookState
 } CookState;
 extern CookState cook_state;
 
+#define COOK_WORLD_EXTENSION "cwf.n"
+#define COOK_MODEL_EXTENSION "cmf.n"
+
 struct CookModel;
 typedef struct CookModel CookModel;
 

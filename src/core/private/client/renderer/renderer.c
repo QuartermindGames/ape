@@ -17,7 +17,7 @@
 
 #include "game/game_interface.h"
 
-ApeRendererStats ape_rendererPerformance_;
+ApeRendererStats ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;
 
 static ApeRenderTarget *defaultRenderTarget;
@@ -152,7 +152,8 @@ void ape_setup_default_draw_state_( const ApeViewport *viewport )
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
+	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
+	PlgSetShaderProgram( program->internal );
 }
 
 void ape_draw_begin_( ApeViewport *viewport )
@@ -248,7 +249,9 @@ static void write_screenshot( void )
 
 void ape_draw_end_( ApeViewport *viewport )
 {
-	PL_ZERO_( ape_rendererPerformance_ );
+	ape_rendererPerformance_.numBatches = 0;
+	ape_rendererPerformance_.numTriangles = 0;
+	ape_rendererPerformance_.numFacesDrawn = 0;
 
 	viewport->perf.numBatches = 0;
 	viewport->perf.numTriangles = 0;
@@ -262,7 +265,7 @@ void ape_draw_end_( ApeViewport *viewport )
 	}
 }
 
-void ape_initialize_shaders_( void );  /* renderer/shaders.c */
+
 void ape_initialize_textures_( void ); /* texture.c */
 
 // renderer_flare.c
@@ -273,6 +276,11 @@ void ape_register_flare_console_variables_( void );
 // renderer_rendertarget.c
 void ape_initialize_render_targets_( void );
 void ape_shutdown_render_targets_( void );
+
+// renderer_shader.c
+void ape_initialize_shaders_( void );
+void ape_shutdown_shaders_();
+void ape_register_shader_console_variables_();
 
 void ape_prepare_screenshot_capture_( void )
 {
@@ -289,7 +297,7 @@ static void prepare_screenshot_capture_command( PL_UNUSED unsigned int argc, PL_
 	ape_prepare_screenshot_capture_();
 }
 
-void apeRegisterRendererConsoleVariables_( void )
+void ape_register_renderer_console_variables_( void )
 {
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture_command );
 
@@ -319,6 +327,9 @@ void apeRegisterRendererConsoleVariables_( void )
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, NULL, false );
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
 
+	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
+
+	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
@@ -346,7 +357,9 @@ void ape_initialize_renderer_( void )
 	                                                PLG_BUFFER_COLOUR,
 	                                                PLG_TEXTURE_FILTER_LINEAR );
 	if ( defaultRenderTarget == NULL )
-		PRINT_ERROR( "Failed to create default render target!\n" );
+	{
+		ape_error_( true, "Failed to create default render target!\n" );
+	}
 
 	ape_postfx_setup_();
 }
@@ -358,6 +371,7 @@ void ape_shutdown_renderer_( void )
 	ape_shutdown_flares_();
 	ape_shutdown_bitmap_fonts_();
 	ape_shutdown_materials_();
+	ape_shutdown_shaders_();
 	ape_shutdown_render_targets_();
 }
 
@@ -464,18 +478,18 @@ void ape_sky_draw_( ApeCamera *camera )
 	}
 
 	static unsigned int indices[][ 3 ] = {
-  /* corners */
-	        {2,  1, 0},
-	        { 3, 1, 2},
-	        { 4, 3, 2},
-	        { 5, 3, 4},
-	        { 6, 5, 4},
-	        { 7, 5, 6},
-	        { 0, 7, 6},
-	        { 1, 7, 0},
- /* middle */
-	        { 4, 2, 0},
-	        { 6, 4, 0},
+	        /* corners */
+	        {2, 1, 0},
+	        {3, 1, 2},
+	        {4, 3, 2},
+	        {5, 3, 4},
+	        {6, 5, 4},
+	        {7, 5, 6},
+	        {0, 7, 6},
+	        {1, 7, 0},
+	        /* middle */
+	        {4, 2, 0},
+	        {6, 4, 0},
 	};
 	unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
 
@@ -581,7 +595,7 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 
 		if ( ape_config_.renderer.showLights )
 		{
-			arl_draw_axis_pivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+			arl_draw_axis_pivot( lights[ i ]->header.node->position, lights[ i ]->header.node->angles, 1.0f );
 		}
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
@@ -644,7 +658,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = camera->world;
+	ApeWorld *world = ape_camera_get_world( camera );
 	ape_editor_pre_render_scene_( camera );
 
 	if ( !ape_config_.world.skipDraw )
@@ -675,41 +689,12 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }
 
-#if 0
-ApeEditorContext *editorInstance = apeGetCurrentEditorContext();
-			if ( editorInstance != NULL && editorInstance->gridScale > 0 )
-			{
-				PlMatrixMode( PL_MODELVIEW_MATRIX );
-				PlPushMatrix();
-
-				PLVector3 angles;
-				angles.x = PL_DEG2RAD( 90.0f );
-				angles.y = PL_DEG2RAD( 0.0f );
-				angles.z = PL_DEG2RAD( 0.0f );
-
-				PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
-				PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
-				PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
-
-				PlTranslateMatrix( PLVector3( 0, -5, 0 ) );
-
-				static const unsigned int gridW = 256;
-
-				PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-				PlgDrawDottedGrid( -( gridW / 2 ), -( gridW / 2 ), gridW, gridW, editorInstance->gridScale, &PL_COLOUR_BLUE );
-
-				PlPopMatrix();
-			}
-#endif
-
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	assert( camera != NULL );
 	assert( viewport != NULL );
 
 	COM_PROFILE_FUNCTION_START();
-
-	ape_rendererPerformance_.cameraPos = camera->internal->position;
 
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );

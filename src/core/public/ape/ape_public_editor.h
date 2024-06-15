@@ -11,15 +11,15 @@ PL_EXTERN_C
 #define APE_EDITOR_MAX_VIEWPORTS      4
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
-typedef struct SSAclEditorField
+typedef struct ApeEditorField
 {
 	char name[ 64 ];
 	char description[ 128 ];
 	ComDataType type;
 	uintptr_t varOffset;
-} SSAclEditorField;
+} ApeEditorField;
 
-#define APE_ENTITY_COMPONENT_BEGIN_PROPERTIES() static SSAclEditorField x_editorVariables[] = {
+#define APE_ENTITY_COMPONENT_BEGIN_PROPERTIES() static ApeEditorField x_editorVariables[] = {
 #define APE_ENTITY_COMPONENT_END_PROPERTIES() \
 	}                                         \
 	;                                         \
@@ -32,17 +32,18 @@ typedef struct SSAclEditorField
 
 typedef enum ApeEditorGeometryMode
 {
-	APE_EDITOR_GEOMETRY_MODE_BRUSH,
-	APE_EDITOR_GEOMETRY_MODE_FACE,
-	APE_EDITOR_GEOMETRY_MODE_EDGE,
-	APE_EDITOR_GEOMETRY_MODE_VERTEX,
-	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,
+	APE_EDITOR_GEOMETRY_MODE_SELECT,    // brush creation mode
+	APE_EDITOR_GEOMETRY_MODE_FACE,     // face selection mode
+	APE_EDITOR_GEOMETRY_MODE_EDGE,     // edge selection mode
+	APE_EDITOR_GEOMETRY_MODE_VERTEX,   // vertex selection mode
+	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,// object transform mode
 
 	APE_EDITOR_MAX_GEOMETRY_MODES
 } ApeEditorGeometryMode;
 
 typedef struct ApeEditorState
 {
+	const ApeBrushClass *brushClass;
 	ApeEditorGeometryMode geometryMode;
 
 	unsigned char gridVisible;// unsigned char, because otherwise

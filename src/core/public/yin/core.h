@@ -10,6 +10,8 @@
 
 PL_EXTERN_C
 
+#define APE_SELF_CAST( X, Y ) ( ( X * ) ( Y ) )
+
 bool ape_initialize( unsigned int argc, char **argv, const char *config );
 void ape_shutdown( void );
 

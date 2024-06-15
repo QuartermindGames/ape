@@ -1,6 +1,5 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <stdbool.h>
 #include "ape_private.h"
 
 #include "yin/core_fs.h"
@@ -26,7 +25,7 @@ static bool engineInitialized = false;
 
 static void execute_launch_commands( unsigned int argc, char **argv )
 {
-	// First go over any command-line arguments here...
+	// First, go over any command-line arguments here...
 	for ( unsigned int i = 0; i < argc; ++i )
 	{
 		if ( *argv[ i ] != '+' )
@@ -59,18 +58,22 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 	else if ( numCommands >= MAX_COMMANDS )
 	{
-		PRINT_WARNING( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
+		ape_warning_( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
 		numCommands = ( MAX_COMMANDS - 1 );
 	}
 
 	char *commands[ MAX_COMMANDS ];
 	if ( nd_branch_get_string_array( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+	{
 		return;
+	}
 
 	for ( unsigned int i = 0; i < numCommands; ++i )
 	{
 		if ( commands[ i ] == NULL )
+		{
 			continue;
+		}
 
 		PlParseConsoleString( commands[ i ] );
 		PL_DELETE( commands[ i ] );
@@ -88,7 +91,7 @@ NdBranch *ape_get_user_config( void ) { return userConfig; }
 void ape_print_( const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
@@ -99,7 +102,7 @@ void ape_print_( const char *message, ... )
 void ape_warning_( const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
@@ -110,7 +113,7 @@ void ape_warning_( const char *message, ... )
 void ape_error_( bool die, const char *message, ... )
 {
 	va_list args;
-	va_start( args, msg );
+	va_start( args, message );
 	char buf[ 2048 ];
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
@@ -123,6 +126,9 @@ void ape_error_( bool die, const char *message, ... )
 	}
 }
 
+void ape_initialize_world_();
+void ape_shutdown_world_();
+
 bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
@@ -132,15 +138,17 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	// Call this first, so we can buffer console output
 	ape_initialize_console_();
 
-	PRINT( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2024 SnortySoft, Mark E. Sowden\n",
-	       VERSION_MAJOR,
-	       ENGINE_VERSION_STR,
-	       GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
-	PRINT( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
+	ape_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2024 SnortySoft, Mark E. Sowden\n",
+	            VERSION_MAJOR,
+	            ENGINE_VERSION_STR,
+	            GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
+	ape_print_( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );
 	if ( engineTerminalMode )
-		PRINT( "Operating in command-line mode!\n" );
+	{
+		ape_print_( "Operating in command-line mode!\n" );
+	}
 
 	ape_console_register_variables_( engineTerminalMode );
 	ape_console_register_commands_( engineTerminalMode );
@@ -148,25 +156,24 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	// Need to do this before anything else IO related
 	ape_fs_mount_base_locations();
 
-	// And now we can fetch the configs that provides mount locations, aliases and more
-	engineConfig = com_get_config( config != NULL ? config : "engine" );
+	// And now we can fetch the configs that provide mount locations, aliases, and more
+	engineConfig = com_get_config( config != nullptr ? config : "engine" );
 	userConfig = com_get_config( "user" );
 
 	ape_fs_setup_config( engineConfig );
 
-	PRINT( "Initializing core services...\n" );
+	ape_print_( "Initializing core services...\n" );
 
 	ape_initialize_scheduler_();
 	ape_initialize_memory_manager_();
 	ape_initialize_net_();
-
 	ape_initialize_server_();
 	ape_initialize_client_();
-
+	ape_initialize_world_();
 	ape_initialize_game_();
 	ape_initialize_editor_();
 
-	PRINT( "Initialization complete!\n" );
+	ape_print_( "Initialization complete!\n" );
 
 	engineInitialized = true;
 
@@ -177,13 +184,13 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 void ape_shutdown( void )
 {
-	PRINT( "Shutting down...\n" );
+	ape_print_( "Shutting down...\n" );
 
 	ss_acl_flush_tasks_();
 
 	ape_shutdown_editor_();
 	ape_shutdown_game_();
-
+	ape_shutdown_world_();
 	ape_shutdown_client_();
 	ape_shutdown_server_();
 	ape_shutdown_console_();
@@ -210,18 +217,21 @@ unsigned int ape_get_num_ticks( void )
 void ape_tick_frame( void )
 {
 	if ( !engineInitialized )
+	{
 		return;
+	}
 
 	COM_PROFILE_FUNCTION_START();
 
-	ss_acl_tick_tasks_();
+	ape_tick_tasks_();
+	//TODO: what order should these be?
+	ape_tick_server_();
 	ape_tick_client_();
-	ape_server_tick_();
 
 	if ( ape_get_capture_state_() )
 	{
 		ApeViewport *viewport = ss_shell_viewport_get_active();
-		if ( viewport != NULL )
+		if ( viewport != nullptr )
 		{
 			ape_render_frame_( viewport );
 		}
@@ -240,7 +250,7 @@ bool ape_is_running( void )
 
 void ape_render_frame( ApeViewport *viewport )
 {
-	assert( viewport != NULL );
+	assert( viewport != nullptr );
 
 	if ( !engineInitialized )
 	{
@@ -279,7 +289,6 @@ void ape_input_handle_mouse_button_event( int button, ApeInputState buttonState 
 
 void ape_input_handle_mouse_wheel_event( float x, float y )
 {
-	printf( "%f\n", y );
 	ape_client_input_handle_mouse_wheel_event( x, y );
 }
 

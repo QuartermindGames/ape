@@ -241,7 +241,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 
 void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const ApeCamera *camera )
 {
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_ALPHA ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_ALPHA );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

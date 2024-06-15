@@ -9,46 +9,40 @@
  * PRIVATE
  ****************************************/
 
-static ApeLight *deserialize_light( NdBranch *root )
+static void deserialize_light( ApeWorld *world, NdBranch *root )
 {
-	ApeLight *light = PL_NEW( ApeLight );
+	ApeWorldNode *worldNode = ape_world_get_world_node( world );
 
-	light->position = nd_get_vector3( root, "position", &pl_vecOrigin3 );
-	light->angles = nd_get_vector3( root, "angles", &pl_vecOrigin3 );
+	PLVector3 position = nd_get_vector3( root, "position", &pl_vecOrigin3 );
+	PLColourF32 colour = nd_get_colour_f32( root, "colour", &PL_COLOURF32_WHITE );
+	ApeLight *light = ape_create_light( worldNode, &position, &colour,
+	                                    nd_branch_get_child_float32( root, "radius", 0.0f ),
+	                                    nd_branch_get_child_uint( root, "type", APE_LIGHT_TYPE_OMNI ),
+	                                    nd_branch_get_child_uint( root, "flags", 0 ) );
 
-	light->colour = nd_get_colour_f32( root, "colour", &PL_COLOURF32_WHITE );
-	light->radius = nd_branch_get_child_float32( root, "radius", 0.0f );
+	PLVector3 angles = nd_get_vector3( root, "angles", &pl_vecOrigin3 );
+	ape_light_set_angles( light, &angles );
 
 	light->isHidden = nd_branch_get_child_bool( root, "isHidden", false );
-	light->flags = nd_branch_get_child_uint( root, "flags", 0 );
-
-	return light;
 }
 
 static void deserialize_lights( ApeWorld *world, NdBranch *root )
 {
-	unsigned int numLights = nd_branch_get_num_of_children( root );
-	if ( numLights == 0 )
-	{
-		return;
-	}
-
-	PlResizeVectorArray( world->lights, numLights );
-
 	NdBranch *child = nd_branch_get_first_child( root );
-	while ( child != NULL )
+	while ( child != nullptr )
 	{
-		PlPushBackVectorArrayElement( world->lights, deserialize_light( child ) );
+		deserialize_light( world, child );
 		child = nd_get_next_child( child );
 	}
 }
 
-static ApeWorldRoom *deserialize_room( ApeWorld *world, NdBranch *root )
+static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 {
-	ApeWorldRoom *room = ape_world_room_create();
+	ApeRoom *room = ape_create_room( world->root );
 
-	room->bounds.mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
-	room->bounds.maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
+	PLVector3 mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
+	PLVector3 maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
+	ape_world_node_set_local_bounds( room->header.node, &mins, &maxs );
 
 	room->isDetail = nd_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = nd_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );
@@ -57,45 +51,7 @@ static ApeWorldRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 	char tmp[ 64 ];
 	snprintf( tmp, sizeof( tmp ), "room_%u", PlGetNumVectorArrayElements( world->rooms ) );
 
-	room->worldNode = ape_world_node_create( world->root, tmp, APE_WORLD_NODE_TYPE_ROOM, room );
-
 	return room;
-}
-
-static ApeWorldPortal *deserialize_portal( ApeWorld *world, NdBranch *root )
-{
-	// Fetch the first room index and validate it
-	ApeWorldRoom *roomA = PlGetVectorArrayElementAt( world->rooms, nd_branch_get_child_uint( root, "roomB", ( unsigned int ) -1 ) );
-	assert( roomA != NULL );
-	if ( roomA == NULL )
-	{
-		ape_warning_( "Invalid portal room A!\n" );
-		return NULL;
-	}
-
-	// Fetch the second room index and validate it
-	ApeWorldRoom *roomB = PlGetVectorArrayElementAt( world->rooms, nd_branch_get_child_uint( root, "roomA", ( unsigned int ) -1 ) );
-	assert( roomB != NULL );
-	if ( roomB == NULL )
-	{
-		ape_warning_( "Invalid portal room B!\n" );
-		return NULL;
-	}
-
-	ApeWorldPortal *portal = PL_NEW( ApeWorldPortal );
-
-	portal->mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
-	portal->maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
-
-	// Get the two associated rooms for the portal
-	portal->roomA = roomA;
-	PlPushBackVectorArrayElement( portal->roomA->portals, portal );
-	portal->roomB = roomB;
-	PlPushBackVectorArrayElement( portal->roomB->portals, portal );
-
-	PlPushBackVectorArrayElement( world->portals, portal );
-
-	return portal;
 }
 
 static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
@@ -114,7 +70,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, NdBranch *root )
 	}
 	else
 	{
-		ApeWorldRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
+		ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, roomIndex );
 		if ( room == nullptr )
 		{
 			ape_warning_( "Invalid room index (%u) for face!\n", roomIndex );
@@ -235,34 +191,6 @@ static void deserialize_geometry( ApeWorld *world, NdBranch *root )
 		}
 	}
 
-	if ( ( branch = nd_branch_get_child_by_name( root, "portals" ) ) != NULL )
-	{
-		unsigned int numPortals = nd_branch_get_num_of_children( branch );
-		if ( numPortals > 0 )
-		{
-			if ( world->portals == NULL )
-			{
-				world->portals = PlCreateVectorArray( numPortals );
-			}
-
-			NdBranch *child = nd_branch_get_first_child( branch );
-			while ( child != NULL )
-			{
-				ApeWorldPortal *portal = deserialize_portal( world, child );
-				if ( portal != NULL )
-				{
-					PlPushBackVectorArrayElement( world->portals, portal );
-				}
-
-				child = nd_get_next_child( child );
-			}
-		}
-		else
-		{
-			ape_warning_( "No portals for geometry!\n" );
-		}
-	}
-
 	// Attempt to fetch the list of vertices - these are just an immediate
 	// list of coordinates
 	if ( ( branch = nd_branch_get_child_by_name( root, "vertices" ) ) != NULL )
@@ -340,7 +268,7 @@ void ape_world_face_generate_bounds( ApeWorldFace *face )
 
 ApeWorld *ape_world_deserialize_( NdBranch *root )
 {
-	ApeWorld *world = ape_world_create();
+	ApeWorld *world = ape_create_world();
 	if ( world == NULL )
 	{
 		ape_warning_( "Failed to create world!\n" );

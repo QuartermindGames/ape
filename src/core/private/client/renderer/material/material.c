@@ -4,15 +4,16 @@
 
 #include "ape_private.h"
 
-#include "renderer.h"
-#include "renderer_material.h"
-#include "renderer_render_target.h"
+#include "../renderer.h"
+#include "../renderer_render_target.h"
+
+#include "material.h"
 
 #include "world/world.h"
 
 #include "game/game_interface.h"
 
-#include "../gui/gui_private.h"
+#include "client/gui/gui_private.h"
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
@@ -23,7 +24,7 @@ static PLGTexture *previewFallbackTexture;
 typedef struct ApeMaterial
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	SS_Arl_MaterialPass passes[ SS_ARL_MAX_MATERIAL_PASSES ];
+	ApeMaterialPass passes[ SS_ARL_MAX_MATERIAL_PASSES ];
 	unsigned int numPasses;
 	bool isCached;      // if false, it's just the preview
 	PLGTexture *preview;// preview utilised for editor
@@ -41,22 +42,18 @@ static ApeMaterial *defaultMaterials[ SS_ARL_MAX_DEFAULT_MATERIALS ];
 ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
 {
 	assert( defaultMaterial != SS_ARL_MAX_DEFAULT_MATERIALS );
-	if ( defaultMaterial == SS_ARL_MAX_DEFAULT_MATERIALS )
-		return defaultMaterials[ SS_ARL_MATERIAL_BUILTIN_FALLBACK ];
-
 	return defaultMaterials[ defaultMaterial ];
 }
 
-PLGTexture *ape_material_get_texture_( ApeMaterial *material, unsigned int pass, const char *hint )
+PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint )
 {
-	assert( pass < material->numPasses );
-	if ( pass >= material->numPasses )
+	if ( pass >= self->numPasses )
 	{
-		PRINT_WARNING( "Invalid material pass (%u >= %u)!\n", pass, material->numPasses );
+		PRINT_WARNING( "Invalid material pass (%u >= %u)!\n", pass, self->numPasses );
 		return NULL;
 	}
 
-	SS_Arl_MaterialPass *materialPass = &material->passes[ pass ];
+	ApeMaterialPass *materialPass = &self->passes[ pass ];
 	for ( unsigned int i = 0; i < materialPass->numVariables; ++i )
 	{
 		if ( materialPass->variables[ i ].type != SS_ARL_MATERIAL_VAR_TEXTURE )
@@ -139,7 +136,7 @@ const char *ape_material_get_path( const ApeMaterial *material )
 	return material->path;
 }
 
-PLGTexture *ss_arl_material_get_preview_texture( ApeMaterial *material )
+PLGTexture *ape_material_get_preview_texture( ApeMaterial *material )
 {
 	return material->preview;
 }
@@ -185,7 +182,7 @@ static int get_blend_mode_by_tag( const char *tag )
 /**
  * Convert the given tag into it's built-in type.
  */
-static SS_Arl_MaterialBuiltinVar get_built_in_by_tag( const char *tag )
+static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 {
 	static const char *builtInTags[] = {
 	        [SS_ARL_MATERIAL_BUILTIN_TIME] = "time",
@@ -213,7 +210,7 @@ static SS_Arl_MaterialBuiltinVar get_built_in_by_tag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool validate_material_variable( SS_Arl_MaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool validate_material_variable( ApeMaterialVariable *variable, PLGShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
@@ -266,7 +263,7 @@ static bool validate_material_variable( SS_Arl_MaterialVariable *variable, PLGSh
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch *root )
+static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *root )
 {
 	NdBranch *node = nd_branch_get_first_child( root );
 	while ( node != NULL )
@@ -274,13 +271,13 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 		/* fetch the next node, so we can roll onto the next element early */
 		NdBranch *next = nd_get_next_child( node );
 
-		SS_Arl_MaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
+		ApeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
 		 * for now, just do it directly against the shader itself */
 		const char *propertyName = nd_branch_get_name( node );
-		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program, propertyName );
+		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program->internal, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
 			PRINT_WARNING( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
@@ -288,7 +285,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 			continue;
 		}
 
-		materialVariable->numElements = PlgGetNumShaderUniformElements( materialPass->program, materialVariable->programSlot );
+		materialVariable->numElements = PlgGetNumShaderUniformElements( materialPass->program->internal, materialVariable->programSlot );
 		if ( materialVariable->numElements == 0 )
 		{
 			PRINT_WARNING( "Failed to fetch number of uniform elements for variable (%s/%u)!\n", propertyName, materialVariable->programSlot );
@@ -298,7 +295,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 
 		snprintf( materialVariable->name, sizeof( materialVariable->name ), "%s", propertyName );
 
-		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program, materialVariable->programSlot );
+		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program->internal, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
 		if ( nd_branch_get_type( node ) == ND_PROPERTY_STRING )
@@ -324,7 +321,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 				else
 				{
 					/* lookup what it actually is */
-					SS_Arl_MaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
+					ApeMaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
 					if ( materialBuiltinVar == SS_ARL_MATERIAL_BUILTIN_INVALID )
 					{
 						PRINT_WARNING( "Invalid built-in variable, \"%s\", specified!\n", value );
@@ -488,7 +485,7 @@ static void parse_shader_parameters( SS_Arl_MaterialPass *materialPass, NdBranch
 	}
 }
 
-void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *materialPass )
+void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	NdBranch *subNode;
@@ -514,7 +511,7 @@ void ss_arl_material_parse_pass_( struct NdBranch *root, SS_Arl_MaterialPass *ma
 	}
 
 	materialPass->depthTest = nd_branch_get_child_bool( root, "depthTest", true );
-	materialPass->cullMode = nd_branch_get_child_int( root, "cullMode", materialPass->cullMode );
+	materialPass->cullMode = ND_GET_INT32( root, "cullMode", materialPass->cullMode );
 
 	const char *textureFilterPtr = nd_branch_get_child_string( root, "textureFilterMode", NULL );
 	if ( textureFilterPtr != NULL )
@@ -572,25 +569,17 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 		node = nd_branch_get_first_child( node );
 		while ( node != NULL )
 		{
-			SS_Arl_MaterialPass *currentPass = &material->passes[ material->numPasses++ ];
+			ApeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
 			/* current pass should've already been cleared by prior memset,
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
 			const char *programName = nd_branch_get_child_string( node, "shaderProgram", "default" );
-			SS_Arl_ShaderProgramIndex *programIndex = ape_shader_get_by_name( programName );
-			if ( programIndex == NULL )
-			{
-				currentPass->program = ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ];
-				PRINT_WARNING( "Failed to find program \"%s\", using fallback!\n", programName );
-			}
-			else
-			{
-				*currentPass = programIndex->defaultPass;
-				currentPass->program = programIndex->internal;
-			}
+			ApeShaderProgram *programIndex = ape_get_shader_by_name( programName, APE_SHADER_DEFAULT );
+			*currentPass = programIndex->defaultPass;
+			currentPass->program = programIndex;
 
-			ss_arl_material_parse_pass_( node, currentPass );
+			ape_parse_material_pass_( node, currentPass );
 			if ( currentPass->blendMode[ 0 ] != PLG_BLEND_NONE || currentPass->blendMode[ 1 ] != PLG_BLEND_NONE )
 			{
 				material->flags |= APE_MATERIAL_FLAG_BLENDED;
@@ -693,7 +682,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		{
 			PLGTexture *texture = NULL;
 			if ( variable == SS_ARL_MATERIAL_BUILTIN_FALLBACK )
-				texture = ss_arl_texture_get_fallback();
+				texture = ape_texture_get_fallback();
 #if 0//TODO
 			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
 				texture = apeGetPrimaryDepthAttachment();
@@ -711,7 +700,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 		case SS_ARL_MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
-			ss_arl_get_2d_viewport_size_( &w, &h );
+			ape_get_2d_viewport_size_( &w, &h );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
 			break;
 		}
@@ -721,7 +710,7 @@ static void set_built_in_variable( PLGShaderProgram *program, int uniformSlot, i
 	}
 }
 
-static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_MaterialPass *pass, const ApeLight *light )
+static void set_global_uniforms( PLGShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
@@ -751,7 +740,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL ) ? light->header.node->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
@@ -767,7 +756,7 @@ static void set_global_uniforms( PLGShaderProgram *program, const SS_Arl_Materia
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->header.node->position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
 	}
 	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
@@ -857,22 +846,22 @@ void ape_material_release( ApeMaterial *material )
 		return;
 	}
 
-	ss_acl_mm_release( &material->mem );
+	ape_mm_release( &material->mem );
 }
 
-int8_t ss_arl_material_get_surface_type( const ApeMaterial *material )
+int8_t ape_material_get_surface_type( const ApeMaterial *material )
 {
 	return material->surfaceType;
 }
 
-bool ss_arl_material_shadows_enabled( const ApeMaterial *material ) { return ( material->flags & APE_MATERIAL_FLAG_SHADOWS ); }
+bool ape_material_shadows_enabled( const ApeMaterial *self ) { return ( self->flags & APE_MATERIAL_FLAG_SHADOWS ); }
 
 bool ape_material_is_blended( const ApeMaterial *self )
 {
 	return ( self->flags & APE_MATERIAL_FLAG_BLENDED );
 }
 
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights )
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, PL_UNUSED unsigned int numLights )
 {
 	if ( ape_rendererState_.camera != NULL )
 	{
@@ -902,7 +891,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		SS_Arl_MaterialPass *curPass = &material->passes[ i ];
+		ApeMaterialPass *curPass = &material->passes[ i ];
 
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
@@ -945,28 +934,29 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 		// otherwise UI elements will be wireframe too, so instead we'll just check the plg state flag
 		if ( PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME ) )
 		{
-			PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
-			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX );
+			ape_shader_set_active_( program );
+			PlgSetShaderUniformValue( program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 			PlgSetTexture( NULL, 0 );
 		}
 		else
 		{
-			PlgSetShaderProgram( curPass->program );
-			PlgSetShaderUniformValue( curPass->program, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+			PlgSetShaderProgram( curPass->program->internal );
+			PlgSetShaderUniformValue( curPass->program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 			if ( !ape_rendererState_.overrideBlendMode )
 			{
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 			}
 
-			set_global_uniforms( curPass->program, curPass, lights != NULL ? lights[ 0 ] : NULL );
+			set_global_uniforms( curPass->program->internal, curPass, lights != NULL ? lights[ 0 ] : NULL );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
 			{
 				if ( curPass->variables[ j ].type == SS_ARL_MATERIAL_VAR_BUILTIN )
 				{
-					set_built_in_variable( curPass->program, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
+					set_built_in_variable( curPass->program->internal, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
 					continue;
 				}
 				// textures just need to be set per their respective unit
@@ -984,7 +974,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 						texture = ape_render_target_get_texture( ( ApeRenderTarget * ) curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
 						{
-							texture = ss_arl_texture_get_fallback();
+							texture = ape_texture_get_fallback();
 						}
 					}
 					else
@@ -1021,12 +1011,12 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 					PlgSetTexture( texture, curUnit );
 					PlgSetTextureFilter( texture, textureFilter );
 
-					PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, &curUnit, false );
+					PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, &curUnit, false );
 					curUnit++;
 					continue;
 				}
 
-				PlgSetShaderUniformValueByIndex( curPass->program, curPass->variables[ j ].programSlot, ( intmax_t * ) curPass->variables[ j ].data.ptr, false );
+				PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, ( intmax_t * ) curPass->variables[ j ].data.ptr, false );
 			}
 		}
 
@@ -1050,6 +1040,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 
 void ape_tick_materials_( void )
 {
+	ape_hot_reload_shaders_();
+
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		PLLinkedListNode *node = PlGetFirstNode( materials[ i ] );

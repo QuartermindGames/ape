@@ -7,9 +7,9 @@ CookState cook_state;
 
 static void process_collection( NdBranch *root, const char *tag, void ( *callback )( const char * ) )
 {
-	assert( root != NULL );
-	assert( tag != NULL );
-	assert( callback != NULL );
+	assert( root != nullptr );
+	assert( tag != nullptr );
+	assert( callback != nullptr );
 
 	NdBranch *child = nd_branch_get_child_by_name( root, tag );
 	if ( child == nullptr )

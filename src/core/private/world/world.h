@@ -10,10 +10,10 @@
 #include <yin/core_world.h>
 
 #include "ape_memory_manager.h"
-#include "entity/entity.h"
+#include "nodes/entity/entity.h"
 #include "audio/audio.h"
 
-#define WORLD_PROP_TAG_LENGTH   64
+#define WORLD_PROP_TAG_LENGTH 64
 
 #if 1 /* original values, used for prototype */
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
@@ -25,7 +25,7 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeWorldRoom ApeWorldRoom;
+typedef struct ApeRoom ApeRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
 typedef struct ApeWorldFace ApeWorldFace;
 typedef struct ApeWorldMesh ApeWorldMesh;
@@ -89,11 +89,6 @@ typedef struct ApeWorldMesh
 	unsigned int maxVertices;
 
 	PLLinkedList *faces;
-
-	PLCollisionAABB bounds;
-
-	struct PLGMesh *drawMesh; /* what actually gets rendered */
-
 	PLLinkedListNode *node;
 
 	ApeMemoryReference mem;
@@ -115,13 +110,13 @@ typedef struct ApeWorldPortal
 	PLVector3 mins;
 	PLVector3 maxs;
 
-	ApeWorldRoom *roomA;
-	ApeWorldRoom *roomB;
+	ApeRoom *roomA;
+	ApeRoom *roomB;
 
 	bool canSeeThrough;
 } ApeWorldPortal;
 
-typedef struct ApeWorldRoom
+typedef struct ApeRoom
 {
 	// This should always come first!
 	ApeWorldNodeHeader header;
@@ -145,10 +140,8 @@ typedef struct ApeWorldRoom
 
 	ApeAudioReverbPreset reverbPreset;
 
-	PLCollisionAABB bounds;
-
-	ApeWorldNode *worldNode;
-} ApeWorldRoom;
+	unsigned int numVisits;
+} ApeRoom;
 
 typedef struct ApeWorldEntity
 {
@@ -158,7 +151,7 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorldFace **ape_world_room_get_faces_( ApeWorldRoom *self, unsigned int *numFaces );
+ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces );
 
 void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
 
@@ -172,6 +165,6 @@ void ape_world_spawn_entities_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
-void ape_tick_client_world_( void );
+void ape_calc_world_node_bounds( ApeWorldNode *root );
 
 PL_EXTERN_C_END

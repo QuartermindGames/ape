@@ -20,7 +20,7 @@ namespace ss::forge
 	public:
 		enum
 		{
-			ID_BRUSH_MODE = FXTabItem::ID_LAST,
+			ID_SELECT_MODE = FXTabItem::ID_LAST,
 			ID_FACE_MODE,
 			ID_EDGE_MODE,
 			ID_VERTEX_MODE,
@@ -34,7 +34,7 @@ namespace ss::forge
 		editor_world( FXTabBook *owner, const FXString &worldName, ApeWorld *world );
 		~editor_world() override;
 
-		void create_new_entity( ApeWorldNode *parent = nullptr );
+		void create_new_object( const char *name, ApeWorldNodeType type );
 
 		void update_tree();
 
@@ -50,6 +50,9 @@ namespace ss::forge
 		FXToggleButton *geometryModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
 		FXTreeList *nodeTree{};
+		FXComboBox *brushClassBox{};
+
+		viewport_frame *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 	private:
 		class room_creation_dialog : FXDialogBox

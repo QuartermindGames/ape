@@ -36,23 +36,22 @@ ApeWorld *ss_game_get_current_world( void )
 	return currentWorld;
 }
 
-void ss_game_spawn_world( ApeWorld *world )
+void game_spawn_world( ApeWorld *world )
 {
 	if ( currentWorld != NULL )
 	{
-		ape_world_destroy( currentWorld );
+		ape_world_node_destroy( ape_world_get_world_node( currentWorld ) );
 		currentWorld = NULL;
 	}
 
 	currentWorld = world;
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD, world );
 }
 
-void ss_game_tick( void )
+void game_tick_server( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK, NULL );
+	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
 
 	COM_PROFILE_FUNCTION_END();
 }

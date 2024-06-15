@@ -80,7 +80,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-ApeEntity *ape_entity_create( const char *className, NdBranch *properties )
+ApeEntity *ape_create_entity( const char *className, NdBranch *properties )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( className == NULL )
@@ -90,6 +90,7 @@ ApeEntity *ape_entity_create( const char *className, NdBranch *properties )
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
+	ape_world_node_create( nullptr, APE_WORLD_NODE_TYPE_ENTITY, &pl_vecOrigin3, &pl_vecOrigin3, entity );
 	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
 
@@ -97,25 +98,31 @@ ApeEntity *ape_entity_create( const char *className, NdBranch *properties )
 	if ( entity->classData == nullptr )
 	{
 		ape_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
-		ape_entity_destroy( entity );
+		ape_world_node_destroy( ape_entity_get_world_node( entity ) );
 		return nullptr;
 	}
 
 	return entity;
 }
 
-void ape_entity_destroy( ApeEntity *entity )
+void ape_entity_destroy_( void *data )
 {
-	PLHashTableNode *node = PlGetFirstHashTableNode( entity->componentTable );
+	ApeEntity *self = ( ApeEntity * ) data;
+	if ( self == nullptr )
+	{
+		return;
+	}
+
+	PLHashTableNode *node = PlGetFirstHashTableNode( self->componentTable );
 	while ( node != NULL )
 	{
 		//TODO: should be calling destructor for component!!!
 		PL_DELETE( PlGetHashTableNodeUserData( node ) );
-		node = PlGetNextHashTableNode( entity->componentTable, node );
+		node = PlGetNextHashTableNode( self->componentTable, node );
 	}
-	PlDestroyHashTable( entity->componentTable );
+	PlDestroyHashTable( self->componentTable );
 
-	PL_DELETE( entity );
+	PL_DELETE( self );
 }
 
 void ape_entity_tick( ApeEntity *entity )

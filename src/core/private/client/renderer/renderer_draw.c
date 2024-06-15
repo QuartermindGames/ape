@@ -121,7 +121,7 @@ void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PLVector3 angles;
 	angles.x = PL_DEG2RAD( rotation.x );
@@ -193,7 +193,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 		return;
 	}
 
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )

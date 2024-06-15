@@ -199,7 +199,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 
 void ss_arl_bitmap_font_release( ApeBitmapFont *font )
 {
-	ss_acl_mm_release( &font->mem );
+	ape_mm_release( &font->mem );
 }
 
 ApeBitmapFont *ss_arl_get_default_bitmap_font( void ) { return defaultFont; }

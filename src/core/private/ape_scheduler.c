@@ -127,7 +127,7 @@ void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void
 	task->node = PlInsertLinkedListNode( scheduleList, task );
 }
 
-void ss_acl_tick_tasks_( void )
+void ape_tick_tasks_( void )
 {
 	if ( scheduleList == NULL )
 		return;

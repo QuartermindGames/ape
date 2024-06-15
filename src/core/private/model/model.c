@@ -21,7 +21,7 @@ static PLHashTable *modelsTable;
  */
 static void destroy_model( void *userData )
 {
-	SSApeModel *model = ( SSApeModel * ) userData;
+	ApeModel *model = ( ApeModel * ) userData;
 	assert( model != NULL );
 
 	for ( unsigned int i = 0; i < model->numMaterials; ++i )
@@ -32,7 +32,7 @@ static void destroy_model( void *userData )
 	PL_DELETE( model );
 }
 
-static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
+static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 {
 	NdBranch *child;
 
@@ -54,7 +54,9 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 		}
 	}
 	else
+	{
 		PRINT_WARNING( "Mesh has no vertices!\n" );
+	}
 
 	PLVector3 *normals = NULL;
 	unsigned int numNormals = 0;
@@ -163,7 +165,7 @@ static PLGMesh *deserialize_mesh( SSApeModel *model, NdBranch *root )
 	return model->meshes[ materialIndex ];
 }
 
-static SSApeModel *deserialize_model( NdBranch *root )
+static ApeModel *deserialize_model( NdBranch *root )
 {
 	unsigned int version = nd_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
@@ -185,7 +187,7 @@ static SSApeModel *deserialize_model( NdBranch *root )
 		numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
-	SSApeModel *model = PL_NEW( SSApeModel );
+	ApeModel *model = PL_NEW( ApeModel );
 
 	// Iterate over all the materials under the root and attempt to load them all in
 	NdBranch *materialArray = nd_branch_get_child_by_name( root, "materials" );
@@ -256,12 +258,12 @@ static SSApeModel *deserialize_model( NdBranch *root )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-SSApeModel *ss_ape_model_load( const char *path )
+ApeModel *ape_load_model( const char *path )
 {
 	if ( modelsTable == NULL )
 		modelsTable = PlCreateHashTable();
 
-	SSApeModel *model = PlLookupHashTableUserData( modelsTable, path, strlen( path ) );
+	ApeModel *model = PlLookupHashTableUserData( modelsTable, path, strlen( path ) );
 	if ( model != NULL )
 		return model;
 
@@ -289,14 +291,14 @@ SSApeModel *ss_ape_model_load( const char *path )
  * manager then it'll be immediately
  * destroyed.
  */
-void ss_ape_model_release( SSApeModel *model )
+void ape_model_release( ApeModel *model )
 {
 	//TODO!!!
 	assert( 0 );
 
-	ss_acl_mm_release( &model->mem );
+	ape_mm_release( &model->mem );
 }
 
-void ss_ape_model_draw( SSApeModel *model )
+void ape_model_draw( ApeModel *model )
 {
 }

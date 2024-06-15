@@ -14,7 +14,7 @@ unsigned int apeGetNumScheduledTasks( void );
 const char *apeGetScheduledTaskDescription( unsigned int index, double *delay );
 bool apeIsScheduledTaskRunning( const char *desc );
 void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay );
-void ss_acl_tick_tasks_( void );
+void ape_tick_tasks_( void );
 void ss_acl_flush_tasks_( void );
 void apePrintPendingTasks( void );
 void apeKillScheduledTask( const char *desc );

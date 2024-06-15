@@ -65,7 +65,7 @@ typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )(
 void ape_register_entity_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className );
 
-ApeEntity *ape_entity_create( const char *className, NdBranch *properties );
+ApeEntity *ape_create_entity( const char *className, NdBranch *properties );
 void ape_entity_destroy( ApeEntity *entity );
 
 void ape_entity_tick( ApeEntity *entity );

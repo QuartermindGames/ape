@@ -12,6 +12,7 @@
 typedef enum PostEffect
 {
 	POST_EFFECT_FXAA,
+	POST_EFFECT_DOF,
 	POST_EFFECT_BLOOM,
 
 	MAX_POST_EFFECTS
@@ -112,26 +113,29 @@ void ape_register_postfx_console_variables_( void )
 
 void ape_postfx_draw_( const ApeViewport *viewport )
 {
+	assert( viewport->renderTarget != nullptr );
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
-	if ( baseTexture == NULL )
+	if ( baseTexture == nullptr )
 	{
 		return;
 	}
 
 	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DRAW );
+
+	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
+	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
+	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
 
 	if ( !postProcessEnabled )
 	{
-		PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
-		PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
-		PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
 		return;
 	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
-		if ( postProcessEffects[ i ] == NULL )
+		ape_render_target_bind( nullptr, PLG_FRAMEBUFFER_DEFAULT );
+
+		if ( postProcessEffects[ i ] == nullptr )
 		{
 			continue;
 		}

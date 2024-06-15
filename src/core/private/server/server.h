@@ -15,7 +15,7 @@ void ape_initialize_server_( void );
 void ape_shutdown_server_( void );
 
 void ape_server_drop_client_( ApeServerClient *serverClient );
-void ape_server_tick_( void );
+void ape_tick_server_( void );
 
 unsigned short ape_server_get_port_( void );
 

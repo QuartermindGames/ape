@@ -10,13 +10,6 @@
 
 #include "client/renderer/renderer.h"
 
-static void Act_DrawBasic( Actor *self, void *userData )
-{
-	PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT ] );
-
-	arl_draw_axis_pivot( Act_GetPosition( self ), PLVector3( 0, 0, 0 ), 1.0f );
-}
-
 void Monster_Collide( struct Actor *self, struct Actor *other, float force )
 {
 	/* decide what direction to push out from */
@@ -32,7 +25,6 @@ static ActorSetup actorDefault = {
         .id = "point.null",
         .Spawn = NULL,
         .Tick = NULL,
-        .Draw = Act_DrawBasic,
         .Collide = NULL,
         .Destroy = NULL,
         .Serialize = NULL,
@@ -135,7 +127,7 @@ PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
 
-void Act_SetWorldSector( Actor *self, struct ApeWorldRoom *sector ) { self->sector = sector; }
+void Act_SetWorldSector( Actor *self, struct ApeRoom *sector ) { self->sector = sector; }
 
 void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -226,6 +218,7 @@ bool Act_IsVisible( Actor *self, ApeCamera *camera )
 #endif
 }
 
+#if 0
 void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 {
 	PLLinkedListNode *index = PlGetFirstNode( actorList );
@@ -245,7 +238,6 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 				actor->setup.Draw( actor, actor->userData );
 		}
 
-#if 1
 		PL_GET_CVAR( "r/showActorBounds", showActorBounds );
 		if ( showActorBounds->b_value )
 		{
@@ -292,12 +284,12 @@ void Act_DrawActors( ApeCamera *camera, ApeWorldRoom *sector )
 				colliderNode = PlGetNextLinkedListNode( colliderNode );
 			}
 #	endif
-#endif
 		}
 
 		index = next;
 	}
 }
+#endif
 
 #define GRAVITY 7.0f
 void Act_TickActors( void *userData, double delta )

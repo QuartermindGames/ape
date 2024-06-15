@@ -26,7 +26,6 @@ typedef enum ToxUIElementType
 
 static void draw_dial( int16_t value, float radius, float thickness, float centerX, float centerY, float precision, const PLColour *colour )
 {
-	PlgSetShaderProgram( ss_arl_shader_get_default( APE_SHADER_DEFAULT_VERTEX ) );
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 
 	static const float RANDOM_VARIATION = 10.0f;

@@ -157,7 +157,7 @@ extern ApeConfig ape_config_;
 void ape_initialize_game_( void );
 void ape_shutdown_game_( void );
 
-void ape_tick_game_( void );
+void ape_tick_game_server_( void );
 void ape_spawn_world_( const char *worldPath );
 
 PL_EXTERN_C_END

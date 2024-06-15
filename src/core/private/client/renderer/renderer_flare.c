@@ -171,7 +171,8 @@ void ape_flare_draw_( const ApeViewport *viewport )
 	sumFlareIntensity = PlClamp( 0.0f, sumFlareIntensity, 1.0f );
 	if ( sumFlareIntensity > 0.0f )
 	{
-		PlgSetShaderProgram( ape_defaultShaderPrograms_[ APE_SHADER_DEFAULT_VERTEX ] );
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
 		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
 		PlgDrawRectangle( 0.0f, 0.0f, w, h, PLColour( 255, 255, 255, PlFloatToByte( sumFlareIntensity ) ) );
 		PlgSetBlendMode( PLG_BLEND_DISABLE );

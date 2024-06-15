@@ -22,12 +22,12 @@ enum
 };
 
 #if defined( _MSC_VER )
-typedef SOCKET NetSocketHandle;
+typedef SOCKET ApeNetSocketHandle;
 #else
-typedef int SSAclNetSocketHandle;
+typedef int ApeNetSocketHandle;
 #endif
 
-static void close_socket( SSAclNetSocketHandle handle )
+static void close_socket( ApeNetSocketHandle handle )
 {
 #if defined( _MSC_VER )
 	closesocket( handle );
@@ -36,10 +36,10 @@ static void close_socket( SSAclNetSocketHandle handle )
 #endif
 }
 
-typedef struct SSAclNetSocket
+typedef struct ApeNetSocket
 {
-	SSAclNetSocketHandle handle; /* system socket handle */
-	int addressType;             /* ip4 / ip6 */
+	ApeNetSocketHandle handle; /* system socket handle */
+	int addressType;           /* ip4 / ip6 */
 	union
 	{
 		struct sockaddr_in ip4;
@@ -50,14 +50,14 @@ typedef struct SSAclNetSocket
 		struct sockaddr_in ip4;
 		struct sockaddr_in6 ip6;
 	} remote;
-	SSAclNetConnectionState connectionState;
-} SSAclNetSocket;
+	ApeNetConnectionState connectionState;
+} ApeNetSocket;
 
 #if !defined( NDEBUG )
 
 static struct
 {
-	SSAclNetSocket
+	ApeNetSocket
 	        *hostSocket,
 	        *clientSocket,
 	        *acceptSocket;
@@ -74,7 +74,7 @@ static bool execute_test( void )
 		return false;
 	}
 
-	testData.clientSocket = ape_net_open_socket_( ip, ss_acl_net_get_local_port_( testData.hostSocket ), false );
+	testData.clientSocket = ape_net_open_socket_( ip, ape_net_get_local_port_( testData.hostSocket ), false );
 	if ( testData.clientSocket == NULL )
 	{
 		PRINT_WARNING( "Failed to create client socket!\n" );
@@ -87,12 +87,12 @@ static bool execute_test( void )
 		if ( ape_net_get_connection_status_( testData.clientSocket ) != NET_CONNECTION_PENDING )
 			accepted = true;
 
-		testData.acceptSocket = ss_acl_net_accept_( testData.hostSocket );
+		testData.acceptSocket = ape_net_accept_( testData.hostSocket );
 	}
 
 	const char *s = "Hello World!";
 	size_t sl = strlen( s );
-	ss_acl_net_send_( testData.acceptSocket, s, sl );
+	ape_net_send_( testData.acceptSocket, s, sl );
 
 	PRINT( "Sent \"%s\" to %s\n", s, ip );
 
@@ -100,7 +100,7 @@ static bool execute_test( void )
 	size_t dl = 0;
 	while ( dl < sl )
 	{
-		if ( ss_acl_net_receive_( testData.clientSocket, d + dl, sizeof( d ) - dl ) > 0 )
+		if ( ape_net_receive_( testData.clientSocket, d + dl, sizeof( d ) - dl ) > 0 )
 			break;
 	}
 
@@ -137,7 +137,9 @@ void ape_initialize_net_( void )
 	WSADATA data;
 	int r;
 	if ( ( r = WSAStartup( MAKEWORD( 2, 2 ), &data ) ) != 0 )
+	{
 		PRINT_WARNING( "Failed to initialize Winsock: %d\n", r );
+	}
 #endif
 
 #if !defined( NDEBUG )
@@ -152,7 +154,7 @@ void ape_shutdown_net_( void )
 #endif
 }
 
-SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost )
+ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost )
 {
 	struct addrinfo hints;
 	PL_ZERO_( hints );
@@ -179,7 +181,7 @@ SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool 
 		return NULL;
 	}
 
-	SSAclNetSocketHandle handle = -1;
+	ApeNetSocketHandle handle = -1;
 	struct addrinfo *r;
 	for ( r = result; r != NULL; r = r->ai_next )
 	{
@@ -242,7 +244,7 @@ SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool 
 	}
 
 	/* all done, allocate and return it */
-	SSAclNetSocket *netSocket = PlMAllocA( sizeof( SSAclNetSocket ) );
+	ApeNetSocket *netSocket = PlMAllocA( sizeof( ApeNetSocket ) );
 	netSocket->connectionState = NET_CONNECTION_PENDING;
 	netSocket->handle = handle;
 	netSocket->addressType = addressType;
@@ -258,18 +260,18 @@ SSAclNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool 
 	return netSocket;
 }
 
-void ape_net_close_socket_( SSAclNetSocket *netSocket )
+void ape_net_close_socket_( ApeNetSocket *netSocket )
 {
 	close_socket( netSocket->handle );
 	PlFree( netSocket );
 }
 
-ssize_t ss_acl_net_send_( SSAclNetSocket *netSocket, const void *buf, ssize_t length )
+ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, ssize_t length )
 {
 	return send( netSocket->handle, buf, length, 0 );
 }
 
-ssize_t ss_acl_net_receive_( SSAclNetSocket *netSocket, void *dst, ssize_t length )
+ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, ssize_t length )
 {
 	ssize_t r = recv( netSocket->handle, dst, length, 0 );
 	if ( r == -1 &&
@@ -290,7 +292,7 @@ ssize_t ss_acl_net_receive_( SSAclNetSocket *netSocket, void *dst, ssize_t lengt
 	return r;
 }
 
-SSAclNetSocket *ss_acl_net_accept_( SSAclNetSocket *netSocket )
+ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 {
 	struct sockaddr_storage buf;
 	socklen_t size = sizeof( buf );
@@ -305,7 +307,7 @@ SSAclNetSocket *ss_acl_net_accept_( SSAclNetSocket *netSocket )
 		fcntl( handle, F_SETFL, O_NONBLOCK );
 #endif
 
-		SSAclNetSocket *out = PlMAllocA( sizeof( SSAclNetSocket ) );
+		ApeNetSocket *out = PlMAllocA( sizeof( ApeNetSocket ) );
 		out->handle = handle;
 
 		socklen_t addrSize;
@@ -319,10 +321,12 @@ SSAclNetSocket *ss_acl_net_accept_( SSAclNetSocket *netSocket )
 	return NULL;
 }
 
-SSAclNetConnectionState ape_net_get_connection_status_( SSAclNetSocket *netSocket )
+ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 {
 	if ( netSocket->connectionState != NET_CONNECTION_PENDING )
+	{
 		return netSocket->connectionState;
+	}
 
 	fd_set fdWrite;
 	FD_ZERO( &fdWrite );
@@ -342,7 +346,9 @@ SSAclNetConnectionState ape_net_get_connection_status_( SSAclNetSocket *netSocke
 		socklen_t errLen = sizeof( errCode );
 		getsockopt( netSocket->handle, SOL_SOCKET, SO_ERROR, &errCode, &errLen );
 		if ( errCode == 0 )
+		{
 			return ( netSocket->connectionState = NET_CONNECTION_CONNECTED );
+		}
 
 		return ( netSocket->connectionState = NET_CONNECTION_FAILED );
 	}
@@ -350,12 +356,12 @@ SSAclNetConnectionState ape_net_get_connection_status_( SSAclNetSocket *netSocke
 	return NET_CONNECTION_PENDING;
 }
 
-unsigned short ss_acl_net_get_local_port_( SSAclNetSocket *netSocket )
+unsigned short ape_net_get_local_port_( ApeNetSocket *netSocket )
 {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->local.ip4.sin_port : netSocket->local.ip6.sin6_port );
 }
 
-unsigned short ss_acl_net_get_remote_port_( SSAclNetSocket *netSocket )
+unsigned short ape_net_get_remote_port_( ApeNetSocket *netSocket )
 {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->remote.ip4.sin_port : netSocket->remote.ip6.sin6_port );
 }

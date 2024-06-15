@@ -2,44 +2,31 @@
 
 #pragma once
 
-PL_EXTERN_C
-
 #include "ape/ape_formats.h"
+
+PL_EXTERN_C
 
 typedef struct PLHashTableNode PLHashTableNode;
 
-typedef enum SSApeModelAnimationFlag
-{
-	PL_BITFLAG( SS_APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
-} SSApeModelAnimationFlag;
-
-typedef struct SSApeModelAnimationFrame
+typedef struct ApeModelAnimationFrame
 {
 	PLVector3 mins;
 	PLVector3 maxs;
-} SSApeModelAnimationFrame;
+} ApeModelAnimationFrame;
 
-typedef struct SSApeModelAnimation
+typedef struct ApeModelAnimation
 {
 	char name[ 64 ];
-	SSApeModelAnimationFlag flags;
+	ApeModelAnimationFlag flags;
 
 	unsigned int numFrames;
 
 	float speed;
 
 	unsigned int numBones;
-} SSApeModelAnimation;
+} ApeModelAnimation;
 
-typedef struct SSApeModelBone
-{
-	char name[ 64 ];
-	unsigned int parent;
-	PLVector3 position;
-	PLQuaternion orientation;
-} SSApeModelBone;
-
-typedef struct SSApeModel
+typedef struct ApeModel
 {
 	ApeMaterial *materials[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;
@@ -47,20 +34,22 @@ typedef struct SSApeModel
 	PLGMesh *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int numMeshes;
 
-	SSApeModelBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
-	SSApeModelBone *rootBone;
+	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
+	ApeFormatBone *rootBone;
 	unsigned int numBones;
 
 	PLCollisionSphere visSphere;
 
 	PLHashTableNode *node;
 
+	ApeFormatModel disk;
+
 	ApeMemoryReference mem;
-} SSApeModel;
+} ApeModel;
 
-SSApeModel *ss_ape_model_load( const char *path );
-void ss_ape_model_release( SSApeModel *model );
+ApeModel *ape_load_model( const char *path );
 
-void ss_ape_model_draw( SSApeModel *model );
+void ape_model_release( ApeModel *model );
+void ape_model_draw( ApeModel *model );
 
 PL_EXTERN_C_END

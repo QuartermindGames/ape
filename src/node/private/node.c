@@ -716,7 +716,23 @@ NdBranch *nd_branch_push_back_int32_array( NdBranch *parent, const char *name, c
 	{
 		node->childType = ND_PROPERTY_INT32;
 		for ( unsigned int i = 0; i < numElements; ++i )
+		{
 			nd_branch_push_back_int32( node, NULL, array[ i ] );
+		}
+	}
+	return node;
+}
+
+NdBranch *nd_branch_push_back_uint32_array( NdBranch *parent, const char *name, const uint32_t *array, unsigned int numElements )
+{
+	NdBranch *node = nd_push_back_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	if ( node != NULL )
+	{
+		node->childType = ND_PROPERTY_UI32;
+		for ( unsigned int i = 0; i < numElements; ++i )
+		{
+			nd_branch_push_back_uint32( node, NULL, array[ i ] );
+		}
 	}
 	return node;
 }

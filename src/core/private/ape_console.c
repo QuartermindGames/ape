@@ -6,7 +6,7 @@
 
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
-#include "entity/entity.h"
+#include "nodes/entity/entity.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -154,8 +154,6 @@ void ape_console_register_commands_( bool isDedicated )
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
-
-	PlRegisterConsoleCommand( "test_world_node", "Test the world node API.", 0, ape_world_node_test_command_ );
 
 	ape_register_entity_commands_();
 

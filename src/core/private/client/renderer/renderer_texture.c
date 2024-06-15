@@ -9,7 +9,7 @@
 /////////////////////////////////////////////////////////////////
 // Old API crap
 
-PLGTexture *ss_arl_texture_get_fallback( void )
+PLGTexture *ape_texture_get_fallback( void )
 {
 	return ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
 }
