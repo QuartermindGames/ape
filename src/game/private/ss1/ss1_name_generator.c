@@ -1,6 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include "pm_game.h"
+#include "ss1_game.h"
 
 const char *pm_name_generator_generate( char *buffer, size_t size )
 {

@@ -2,8 +2,8 @@
 // Purpose: Pawns represent anything *living* in the world.
 // Author:  Mark E. Sowden
 
-#include "pm_game.h"
-#include "pm_pawn.h"
+#include "ss1_game.h"
+#include "ss1_character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

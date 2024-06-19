@@ -256,7 +256,7 @@ static bool shutdown_game( void )
 	return true;
 }
 
-static void handle_input( void )
+static void ss1_handle_input( void )
 {
 	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	PLVector3 pos = ape_camera_get_position( playerCamera );
@@ -290,7 +290,7 @@ static void handle_input( void )
 
 static bool tick_game( void )
 {
-	handle_input();
+	ss1_handle_input();
 
 	tox_world_tick( ss_game_get_current_world() );
 	tox_ui_tick();

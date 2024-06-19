@@ -11,3 +11,9 @@ WIND PARTICLE SYSTEM
     Each particle can have a given radius, anything caught
     in that radius will have the properties of that particle
     applied to it.
+
+DEFORMATION
+    Trace a ray from a projectile - determine surface properties.
+    If it's marked deformable (i.e., metal), then it will bend away from the direction of the projectile.
+    Probably flex the part depending on the amount of surface area at that point -
+    so shooting the top or bottom will flex more than shooting the middle.
