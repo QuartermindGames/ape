@@ -10,6 +10,10 @@
 
 PL_EXTERN_C
 
+typedef unsigned long int ulong;
+typedef unsigned short int ushort;
+typedef unsigned int uint;
+
 #define APE_SELF_CAST( X, Y ) ( ( X * ) ( Y ) )
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config );

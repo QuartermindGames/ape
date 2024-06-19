@@ -29,6 +29,14 @@ typedef struct ApeGameInterfaceImport
 {
 	unsigned int version;
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
+
+	// client
+	void ( *clientConnect )();
+	void ( *clientDisconnect )();
+
+	// server
+	void ( *serverClientConnected )();
+	void ( *serverClientDisconnected )();
 } ApeGameInterfaceImport;
 const ApeGameInterfaceImport *ape_game_get_interface( void );
 
