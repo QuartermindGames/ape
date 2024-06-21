@@ -5,13 +5,16 @@
 #include "../net/net.h"
 #include "ape_client.h"
 #include "ape_client_input.h"
-#include "game/game_interface.h"
+#include "game/game_public.h"
 #include "ape_client_gui.h"
 #include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
 #include "world/world.h"
 #include "ape_protocol.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Private
 
 typedef enum ClientServerState
 {
@@ -46,56 +49,11 @@ static void capture_screenshot_action( ApeInputState state, const char * )
 	ape_prepare_screenshot_capture_();
 }
 
-void ape_initialize_client_( void )
-{
-	CLIENT_PRINT( "Initializing client\n" );
-
-	PL_ZERO_( clientState );
-	strcpy( clientState.userName, "Anon" );
-
-	ape_initialize_renderer_();
-	ape_initialize_audio_();
-	ape_initialize_gui_();
-	ape_initialize_input_();
-
-	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ){ KEY_F12 }, 1, capture_screenshot_action );
-}
-
-void ape_shutdown_client_( void )
-{
-	ape_shutdown_input_();
-	ape_shutdown_gui_();
-	ape_shutdown_audio_();
-	ape_shutdown_renderer_();
-}
-
-void ape_render_frame_( ApeViewport *viewport )
-{
-	COM_PROFILE_FUNCTION_START();
-
-	ape_draw_begin_( viewport );
-
-	// Let the game draw from its own camera
-	if ( !ape_is_editor_active() )
-	{
-		ape_game_get_interface()->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW, viewport );
-	}
-	else
-	{
-		ape_camera_draw_perspective( viewport->camera, viewport );
-	}
-
-	ape_draw_menu_( viewport );
-	ape_draw_end_( viewport );
-
-	COM_PROFILE_FUNCTION_END();
-}
-
 static void process_server_message()
 {
+	const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) clientState.message.receiveBuffer;
 	if ( clientState.state == CLIENT_SERVER_STATE_VALIDATING )
 	{
-		const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) clientState.message.receiveBuffer;
 		if ( messageHeader->type != APE_PROTOCOL_MESSAGE_TYPE_VALIDATED )
 		{
 			ape_warning_( "Invalid message type received: %u\n", messageHeader->type );
@@ -105,6 +63,21 @@ static void process_server_message()
 
 		clientState.state = CLIENT_SERVER_STATE_ACCEPTED;
 		return;
+	}
+
+	if ( clientState.state != CLIENT_SERVER_STATE_ACCEPTED )
+	{
+		return;
+	}
+
+	switch ( messageHeader->type )
+	{
+		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
+		{
+			const ApeGameInterfaceImport *game = ape_game_get_interface();
+			assert( game->clientProcessMessage );
+			game->clientProcessMessage( messageHeader + 1, messageHeader->length - sizeof( ApeProtocolMessageHeader ) );
+		}
 	}
 }
 
@@ -130,11 +103,16 @@ static void handle_connection_state( void )
 			return;
 		}
 
+		const ApeGameInterfaceImport *game = ape_game_get_interface();
 		ApeProtocolValidationMessage validationMessage = {
 		        .header = { .length = sizeof( ApeProtocolValidationMessage ), .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATION },
 		        .magic = APE_PROTOCOL_MAGIC,
-		        .version = APE_PROTOCOL_VERSION,
+		        .version = APE_PROTOCOL_VERSION + game->protocolVersion,
 		};
+
+		const char *id = game_get_identifier();
+		strncpy( validationMessage.identifier, id, sizeof( validationMessage.identifier ) );
+
 		ape_net_send_( clientState.netSocket, &validationMessage, sizeof( ApeProtocolValidationMessage ) );
 
 		clientState.isConnected = true;
@@ -182,20 +160,64 @@ static void handle_connection_state( void )
 			ape_client_disconnect_();
 		}
 	}
+}
 
-	switch ( clientState.state )
+static void connect_command( unsigned int argc, char **argv )
+{
+	uint16_t port = strtoul( argv[ 1 ], nullptr, 10 );
+	ape_initiate_client_connection_( "localhost", port );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Public
+
+void ape_initialize_client_( void )
+{
+	CLIENT_PRINT( "Initializing client\n" );
+
+	PL_ZERO_( clientState );
+	strcpy( clientState.userName, "Anon" );
+
+	ape_initialize_renderer_();
+	ape_initialize_audio_();
+	ape_initialize_gui_();
+	ape_initialize_input_();
+
+	PlRegisterConsoleCommand( "connect",
+	                          "Attempt to connect to the specified server.",
+	                          1, connect_command );
+
+	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ){ KEY_F12 }, 1, capture_screenshot_action );
+}
+
+void ape_shutdown_client_( void )
+{
+	ape_shutdown_input_();
+	ape_shutdown_gui_();
+	ape_shutdown_audio_();
+	ape_shutdown_renderer_();
+}
+
+void ape_render_frame_( ApeViewport *viewport )
+{
+	COM_PROFILE_FUNCTION_START();
+
+	ape_draw_begin_( viewport );
+
+	// Let the game draw from its own camera
+	if ( !ape_is_editor_active() )
 	{
-		case CLIENT_SERVER_STATE_DISCONNECTED:
-			break;
-		case CLIENT_SERVER_STATE_VALIDATING:
-		{
-			break;
-		}
-		case CLIENT_SERVER_STATE_REJECTED:
-			break;
-		case CLIENT_SERVER_STATE_ACCEPTED:
-			break;
+		ape_game_get_interface()->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW, viewport );
 	}
+	else
+	{
+		ape_camera_draw_perspective( viewport->camera, viewport );
+	}
+
+	ape_draw_menu_( viewport );
+	ape_draw_end_( viewport );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_tick_client_( void )
@@ -243,4 +265,49 @@ void ape_client_disconnect_( void )
 		ape_net_close_socket_( clientState.netSocket );
 		clientState.netSocket = NULL;
 	}
+
+	clientState.state = CLIENT_SERVER_STATE_DISCONNECTED;
+}
+
+/**
+ * Returns true if the current client is connected and validated.
+ */
+bool ape_is_client_connected( void )
+{
+	return ( clientState.state == CLIENT_SERVER_STATE_ACCEPTED );
+}
+
+bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffers )
+{
+	if ( !ape_is_client_connected() )
+	{
+		ape_warning_( "Attempted to send message while disconnected!\n" );
+		return false;
+	}
+
+	size_t totalSize = 0;
+	for ( uint i = 0; i < numBuffers; ++i )
+	{
+		totalSize += bufSizes[ i ];
+	}
+
+	ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ) + totalSize, .type = APE_PROTOCOL_MESSAGE_TYPE_GAME };
+	if ( ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) != sizeof( ApeProtocolMessageHeader ) )
+	{
+		ape_warning_( "Failed to send message header!\n" );
+		return false;
+	}
+
+	for ( uint i = 0; i < numBuffers; ++i )
+	{
+		if ( ape_net_send_( clientState.netSocket, buf[ i ], bufSizes[ i ] ) == bufSizes[ i ] )
+		{
+			continue;
+		}
+
+		ape_warning_( "Failed to send message buffer (%u)!\n", i );
+		break;
+	}
+
+	return true;
 }

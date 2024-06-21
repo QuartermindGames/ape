@@ -39,8 +39,6 @@ static void drop_client_callback( void *userData, bool *breakEarly )
 
 bool ape_server_start( const char *ip, unsigned short port )
 {
-	ape_print_( "Opening socket: %s:" PL_FMT_uint16 "\n", ip, port );
-
 	hostSocket = ape_net_open_socket_( ip, port, true );
 	if ( hostSocket == NULL )
 	{
@@ -48,7 +46,7 @@ bool ape_server_start( const char *ip, unsigned short port )
 		return false;
 	}
 
-	ape_print_( "APE %s server active, listening for clients...\n", ENGINE_VERSION_STR );
+	ape_print_( "APE server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
 
 	return true;
 }
@@ -75,11 +73,8 @@ void ape_server_drop_client_( ApeServerClient *serverClient )
 	ape_net_close_socket_( serverClient->netSocket );
 
 	const ApeGameInterfaceImport *game = ape_game_get_interface();
-	if ( game != nullptr && game->serverClientDisconnected != nullptr )
-	{
-		//TODO: pass in the server client details
-		game->serverClientDisconnected();
-	}
+	assert( game->serverClientDisconnected != nullptr );
+	game->serverClientDisconnected( serverClient );
 
 	PlDestroyLinkedListNode( serverClient->node );
 	PL_DELETE( serverClient );
@@ -87,9 +82,9 @@ void ape_server_drop_client_( ApeServerClient *serverClient )
 
 static void process_client_message( ApeServerClient *client, const void *buf )
 {
+	const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) buf;
 	if ( client->state == SERVER_CLIENT_STATE_VALIDATING )
 	{
-		const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) buf;
 		if ( messageHeader->type != APE_PROTOCOL_MESSAGE_TYPE_VALIDATION )
 		{
 			ape_warning_( "Client answered without validation message, rejecting!\n" );
@@ -111,9 +106,19 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 			return;
 		}
 
-		if ( message->version != APE_PROTOCOL_VERSION )
+		const ApeGameInterfaceImport *game = ape_game_get_interface();
+
+		unsigned int protocolVersion = APE_PROTOCOL_VERSION + game->protocolVersion;
+		if ( message->version != protocolVersion )
 		{
-			ape_warning_( "Invalid version received from client (%u != %u)!\n", message->version, APE_PROTOCOL_VERSION );
+			ape_warning_( "Invalid version received from client (%u != %u)!\n", message->version, protocolVersion );
+			client->state = SERVER_CLIENT_STATE_REJECTED;
+			return;
+		}
+
+		if ( strncmp( message->identifier, game->identifier, sizeof( message->identifier ) ) != 0 )
+		{
+			ape_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
 			client->state = SERVER_CLIENT_STATE_REJECTED;
 			return;
 		}
@@ -121,12 +126,30 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 		ape_print_( "Client validated successfully\n" );
 		client->state = SERVER_CLIENT_STATE_ACCEPTED;
 
+		assert( game->serverClientConnected != nullptr );
+		game->serverClientConnected( client );
+
 		ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ){
 		                                          .length = sizeof( ApeProtocolMessageHeader ),
 		                                          .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
 		                                  },
 		               sizeof( ApeProtocolMessageHeader ) );
 		return;
+	}
+
+	if ( client->state != SERVER_CLIENT_STATE_ACCEPTED )
+	{
+		return;
+	}
+
+	switch ( messageHeader->type )
+	{
+		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
+		{
+			const ApeGameInterfaceImport *game = ape_game_get_interface();
+			assert( game->serverProcessMessage );
+			game->serverProcessMessage( client, messageHeader + 1, messageHeader->length - sizeof( ApeProtocolMessageHeader ) );
+		}
 	}
 }
 
@@ -205,11 +228,39 @@ void ape_tick_server_( void )
  */
 unsigned short ape_server_get_port_( void )
 {
-	assert( hostSocket != NULL );
 	if ( hostSocket == NULL )
 	{
 		return 0;
 	}
 
 	return ape_net_get_local_port_( hostSocket );
+}
+
+bool ape_server_send( ApeServerClientHandle *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers )
+{
+	size_t totalSize = 0;
+	for ( uint i = 0; i < numBuffers; ++i )
+	{
+		totalSize += bufSizes[ i ];
+	}
+
+	ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ) + totalSize, .type = APE_PROTOCOL_MESSAGE_TYPE_GAME };
+	if ( ape_net_send_( clientHandle->netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) != sizeof( ApeProtocolMessageHeader ) )
+	{
+		ape_warning_( "Failed to send message header!\n" );
+		return false;
+	}
+
+	for ( uint i = 0; i < numBuffers; ++i )
+	{
+		if ( ape_net_send_( clientHandle->netSocket, buf[ i ], bufSizes[ i ] ) == bufSizes[ i ] )
+		{
+			continue;
+		}
+
+		ape_warning_( "Failed to send message buffer (%u)!\n", i );
+		break;
+	}
+
+	return true;
 }

@@ -7,7 +7,7 @@
 
 #include "editor/editor.h"
 
-#include "game/game_interface.h"
+#include "game/game_public.h"
 
 #include "renderer/renderer.h"
 #include "renderer/renderer_render_target.h"
@@ -257,7 +257,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 
 	if ( !ape_is_editor_active() )
 	{
-		game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
+		ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
 	}
 
 	ape_editor_draw_gui_( viewport );

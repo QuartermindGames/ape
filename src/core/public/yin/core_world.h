@@ -7,9 +7,13 @@
 
 PL_EXTERN_C
 
+typedef struct PLVectorArray PLVectorArray;
+typedef struct PLLinkedList PLLinkedList;
+
 typedef struct NdBranch NdBranch;
 
 /* external elements */
+typedef struct ApeMaterial ApeMaterial;
 typedef struct ApeCamera ApeCamera;
 typedef struct ApeViewport ApeViewport;
 typedef struct ApeLight ApeLight;
@@ -127,21 +131,6 @@ ApeWorldNode *ape_brush_get_world_node( ApeBrush *self );
 
 typedef struct ApeBrush ApeBrush;
 
-typedef struct ApeBrushClass
-{
-	const char *name;
-	const char *editorName;       // displayed in the editor
-	const char *editorDescription;// displayed in the editor
-	const char *iconSmall;        // small icon to display in menu
-
-	void ( *registerFunction )();// called after registration
-	void *( *createFunction )();
-	void ( *destroyFunction )( void *self );
-	void ( *drawFunction )( ApeBrush *self );
-	void ( *tickFunction )( ApeBrush *self );
-	void ( *collideFunction )( ApeBrush *self );
-} ApeBrushClass;
-
 typedef enum ApeBrushType
 {
 	APE_WORLD_BRUSH_TYPE_SOLID,
@@ -150,25 +139,45 @@ typedef enum ApeBrushType
 	APE_MAX_WORLD_BRUSH_TYPES
 } ApeBrushType;
 
+#define APE_BRUSH_MAX_SUB_MESHES 8192
+
+typedef struct ApeBrushFaceVertex
+{
+	PLVector2 textureCoords;
+	PLVector2 lightmapCoords;
+	PLVector3 position;
+	PLVector3 normal;
+	PLColourF32 colour;
+} ApeBrushFaceVertex;
+
+typedef struct ApeBrushFace
+{
+	int materialIndex;
+
+	PLVectorArray *vertices;//ApeBrushFaceVertex
+	PLLinkedList *edgeLoop; //ApeBrushFaceVertex
+
+	unsigned int flags;
+
+	struct ApeBrushFace *connectedPortalFace;
+} ApeBrushFace;
+
 typedef struct ApeBrush
 {
 	// This should always come first!
 	ApeWorldNodeHeader header;
 
-	const ApeBrushClass *classPtr;
-
 	ApeBrushType type;
 
-	void *user;
+	ApeMaterial *materials[ APE_BRUSH_MAX_SUB_MESHES ];
+
+	PLVectorArray *faces;//ApeBrushFace
+
+	PLGMesh *mesh;    // cached mesh
+	bool isMeshCached;// if false, mesh cache will be updated
 } ApeBrush;
 
-/**
- * Returns a list of all the available brushes.
- */
-const ApeBrushClass **ape_get_available_brush_classes( unsigned int *numClasses );
-void ape_register_brush_class( const ApeBrushClass *classPtr );
-
-ApeBrush *ape_create_brush( ApeWorldNode *parent, const char *className, const PLVector3 *position, const PLVector3 *angles );
+ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles );
 
 void ape_brush_destroy( ApeBrush *self );
 void ape_brush_draw( ApeBrush *self );

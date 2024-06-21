@@ -11,7 +11,7 @@
 
 #include "client/renderer/renderer.h"
 
-#include "game/game_interface.h"
+#include "game/game_public.h"
 
 #include "world/world.h"
 #include "yin/gui_public.h"

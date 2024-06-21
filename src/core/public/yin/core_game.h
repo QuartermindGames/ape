@@ -4,6 +4,6 @@
 
 PL_EXTERN_C
 
-extern const struct ApeGameInterfaceImport *game_modeInterface;
+extern const struct ApeGameInterfaceImport *ape_gameInterface;
 
 PL_EXTERN_C_END

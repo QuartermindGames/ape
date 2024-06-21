@@ -6,7 +6,7 @@
 
 #include "ape_private.h"
 #include "../actor.h"
-#include "game/game_interface.h"
+#include "game/game_public.h"
 
 #include "client/renderer/renderer.h"
 #include "client/renderer/renderer_particle.h"

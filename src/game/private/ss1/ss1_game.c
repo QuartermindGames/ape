@@ -96,7 +96,7 @@ static bool ss1_initialize( void )
 	ss1_gameState.camera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( ss1_gameState.camera == nullptr )
 	{
-		Game_Error( "Failed to create player camera!\n" );
+		game_error_( "Failed to create player camera!\n" );
 		return false;
 	}
 
@@ -193,7 +193,7 @@ static bool ss1_spawn_world( ApeWorld *world )
 		ss1_gameState.terrain = ape_world_node_get_brush_data( worldNode );
 		if ( ss1_gameState.terrain == nullptr )
 		{
-			Game_Warning( "Terrain node is not a valid brush!\n" );
+			game_warning_( "Terrain node is not a valid brush!\n" );
 		}
 	}
 	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "sun" ) ) != nullptr )
@@ -201,7 +201,7 @@ static bool ss1_spawn_world( ApeWorld *world )
 		sun = ape_world_node_get_light_data( worldNode );
 		if ( sun == nullptr )
 		{
-			Game_Warning( "Sun node is not a valid light!\n" );
+			game_warning_( "Sun node is not a valid light!\n" );
 		}
 	}
 
@@ -237,6 +237,8 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
 	        .version = APE_GAME_INTERFACE_VERSION,
+	        .protocolVersion = SS1_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
+	        .identifier = "ss1",
 	        .requestCallbackMethod = request_handler,
 	};
 	return &gameMode;

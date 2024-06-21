@@ -8,7 +8,7 @@ PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
 
-void ss_game_initialize( void );
+bool game_initialize( void );
 
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.
@@ -16,7 +16,9 @@ struct ApeWorld *ss_game_get_current_world( void );
 
 void game_spawn_world( ApeWorld *world );
 
-void game_tick_server( void );
+const char *game_get_identifier();
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum GameConnectionType
 {

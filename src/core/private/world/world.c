@@ -6,7 +6,7 @@
 #include "ape_private.h"
 #include "world.h"
 #include "client/renderer/renderer.h"
-#include "game/game_interface.h"
+#include "game/game_public.h"
 #include "yin/core_game.h"
 
 void ape_world_set_global_defaults( ApeWorld *level )
@@ -33,7 +33,7 @@ ApeWorld *ape_create_world( void )
 
 	ape_world_set_global_defaults( world );
 
-	game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD, world );
+	ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD, world );
 
 	return world;
 }
@@ -359,15 +359,10 @@ void ape_register_world_console_variables_( void )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_initialize_brushes_();
-void ape_shutdown_brushes_();
-
 void ape_initialize_world_()
 {
-	ape_initialize_brushes_();
 }
 
 void ape_shutdown_world_()
 {
-	ape_shutdown_brushes_();
 }

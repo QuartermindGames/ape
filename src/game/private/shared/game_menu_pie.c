@@ -131,7 +131,7 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 
 	if ( ape_client_input_get_button_state( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED )
 	{
-		Game_Debug( "Selected item...\n" );
+		game_debug_( "Selected item...\n" );
 
 		GamePieMenuOption *option;
 		if ( menu->targetOption != NULL )
@@ -305,7 +305,9 @@ void menu_pie_destroy_option( GamePieMenuOption *option )
 		menu->h -= 32;
 	}
 	else
-		Game_Warning( "Encountered a pie option with no parent!\n" );
+	{
+		game_warning_( "Encountered a pie option with no parent!\n" );
+	}
 
 	if ( option->icon != NULL )
 		ape_material_release( option->icon );

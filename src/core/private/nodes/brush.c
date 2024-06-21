@@ -1,53 +1,24 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
-// Purpose: Default poly brush class.
+// Purpose: Implementation of the world building blocks - brushes.
 // Author:  Mark E. Sowden
 
+#include "plcore/pl_hashtable.h"
+
 #include "world/world.h"
+#include "client/renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
 //TODO: eventually we should do away with this
 #define MAX_MATERIALS_PER_PASS 256
-#define MAX_SUB_MESHES         8192
-static int subMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
-static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
+static int subMeshes[ MAX_MATERIALS_PER_PASS ][ APE_BRUSH_MAX_SUB_MESHES ];
+static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ APE_BRUSH_MAX_SUB_MESHES ];
 static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
-
-typedef struct ApePolyBrushFaceVertex
-{
-	PLVector2 textureCoords;
-	PLVector2 lightmapCoords;
-	PLVector3 position;
-	PLVector3 normal;
-	PLColourF32 colour;
-} ApePolyBrushFaceVertex;
-
-typedef struct ApePolyBrushFace
-{
-	int materialIndex;
-
-	PLVectorArray *vertices;//ApePolyBrushFaceVertex
-	PLLinkedList *edgeLoop; //ApePolyBrushFaceVertex
-
-	unsigned int flags;
-
-	struct ApePolyBrushFace *connectedPortalFace;
-} ApePolyBrushFace;
-
-typedef struct ApePolyBrush
-{
-	ApeMaterial *materials[ MAX_SUB_MESHES ];
-
-	PLVectorArray *faces;//ApePolyBrushFace
-
-	PLGMesh *mesh;    // cached mesh
-	bool isMeshCached;// if false, mesh cache will be updated
-} ApePolyBrush;
 
 #define SELF( X ) APE_SELF_CAST( ApePolyBrush, X )
 
-static unsigned int get_total_verts( const ApePolyBrush *self )
+static unsigned int get_total_verts( const ApeBrush *self )
 {
 	// determine the total number of vertices
 
@@ -67,19 +38,19 @@ static unsigned int get_total_verts( const ApePolyBrush *self )
 	return numVerts;
 }
 
-static unsigned int get_total_faces( ApePolyBrush *self )
+static unsigned int get_total_faces( ApeBrush *self )
 {
 	return PlGetNumVectorArrayElements( self->faces );
 }
 
-static ApePolyBrushFace **get_faces( ApePolyBrush *self, unsigned int *num )
+static ApeBrushFace **get_faces( ApeBrush *self, unsigned int *num )
 {
-	return ( ApePolyBrushFace ** ) PlGetVectorArrayDataEx( self->faces, num );
+	return ( ApeBrushFace ** ) PlGetVectorArrayDataEx( self->faces, num );
 }
 
-static void upload_mesh( ApePolyBrush *self )
+static void upload_mesh( ApeBrush *self )
 {
-	if ( SELF( self )->isMeshCached )
+	if ( self->isMeshCached )
 	{
 		return;
 	}
@@ -116,7 +87,7 @@ static void upload_mesh( ApePolyBrush *self )
 		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
 		while ( faceVertexNode != nullptr )
 		{
-			ApePolyBrushFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
+			ApeBrushFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 			unsigned int v = PlgAddMeshVertex( self->mesh,
 			                                   &vertex->position,
 			                                   &vertex->normal,
@@ -134,10 +105,10 @@ static void upload_mesh( ApePolyBrush *self )
 	self->isMeshCached = true;
 }
 
-static void draw_faces( ApePolyBrush *self )
+static void draw_faces( ApeBrush *self )
 {
 	unsigned int numFaces;
-	ApePolyBrushFace **faces = get_faces( self, &numFaces );
+	ApeBrushFace **faces = get_faces( self, &numFaces );
 	if ( numFaces == 0 )
 	{
 		return;
@@ -153,8 +124,8 @@ static void draw_faces( ApePolyBrush *self )
 			continue;
 		}
 
-		assert( numSubMeshes[ faces[ i ]->materialIndex ] < MAX_SUB_MESHES );
-		if ( numSubMeshes[ faces[ i ]->materialIndex ] >= MAX_SUB_MESHES )
+		assert( numSubMeshes[ faces[ i ]->materialIndex ] < APE_BRUSH_MAX_SUB_MESHES );
+		if ( numSubMeshes[ faces[ i ]->materialIndex ] >= APE_BRUSH_MAX_SUB_MESHES )
 		{
 			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
 			break;
@@ -162,23 +133,67 @@ static void draw_faces( ApePolyBrush *self )
 	}
 }
 
-static void poly_brush_draw( ApeBrush *self )
-{
-	// It's assumed all vis checks were done beforehand...
-
-	upload_mesh( SELF( self ) );
-
-	draw_faces( SELF( self ) );
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-ApeBrushClass ape_polyBrushClass = {
-        .name = "polyBrushClass",
-        .editorName = "Poly",
-        .editorDescription = "Basic brush used for building polygonal geometry.",
-        .iconSmall = "resources/poly.gif",
+ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles )
+{
+	ApeBrush *brush = PL_NEW( ApeBrush );
+	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_BRUSH, position, angles, brush );
+	return brush;
+}
 
-        .drawFunction = poly_brush_draw,
-};
+void ape_brush_destroy_( void *data )
+{
+	ApeBrush *self = ( ApeBrush * ) data;
+	if ( self == nullptr )
+	{
+		return;
+	}
+
+	PlgDestroyMesh( self->mesh );
+
+	PL_DELETE( self );
+}
+
+void ape_brush_draw( ApeBrush *self )
+{
+	// It's assumed all vis checks were done beforehand...
+
+	upload_mesh( self );
+
+	draw_faces( self );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool ape_world_face_is_backface( const ApeWorldFace *self, const ApeCamera *camera )
+{
+	PLVector3 angles = ape_camera_get_angles( camera );
+	PLVector3 forward;
+	PlAnglesAxes( angles, nullptr, nullptr, &forward );
+
+	PLVector3 cameraPos = ape_camera_get_position( camera );
+	if ( PlVector3DotProduct( self->normal, forward ) >= 0 )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool ape_world_face_is_mirror( const ApeWorldFace *self )
+{
+	unsigned int flags = ape_material_get_flags( self->material );
+	if ( flags & APE_MATERIAL_FLAG_MIRROR )
+	{
+		return true;
+	}
+
+	return ( self->flags & APE_WORLD_FACE_FLAG_MIRRORED );
+}
+
+bool ape_world_face_is_portal( const ApeWorldFace *self )
+{
+	return ( ape_world_face_is_mirror( self ) || ( self->portal != NULL ) );
+}

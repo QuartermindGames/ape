@@ -16,7 +16,7 @@
 - Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
 - Shadows from multiple sources don't work!
 - We don't have spotlights...
-- Prototype 'eyes' for SS2
+- Prototype 'eyes' for SS2 & SS1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
   - Add some logic for swapping out first texture, so we can convey different expressions
 - Implement DetachShaderStage in graphics driver
@@ -38,10 +38,14 @@
 - Migrate Detox to use new shared world 'simulation' code
 
 ## In-Progress
+- Remove class API per brushes; we'll have just poly-brushes now
 - Model import from SMD/QC etc.
-- Terrain brush type using heightmap with variable height specific textures
+- Networking
+  - Bitshift protocol version
+  - Disconnect currently just crashes
 
 ## Done
+- ~~Terrain brush type using heightmap with variable height specific textures~~ (ditched)
 - ~~Fix post-processing, again~~
 - ~~Allow for reloading shaders on command (hot-reload feature?)~~
 - ~~Icons for nodes within viewport~~
