@@ -78,7 +78,7 @@ static bool IsWindowActive( void )
 	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
-SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
+static SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
 	int flags = 0;
 	if ( fullscreen )
@@ -429,7 +429,9 @@ static bool initialize_display( void )
 
 	const char *windowTitle = com_project_get_name();
 	if ( windowTitle == NULL )
+	{
 		windowTitle = "APE Game Shell";
+	}
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
@@ -445,6 +447,25 @@ static bool initialize_display( void )
 		fullscreen = nd_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
 		width = ( int ) nd_branch_get_child_int( shellConfig, "width", width );
 		height = ( int ) nd_branch_get_child_int( shellConfig, "height", height );
+	}
+
+	if ( PlHasCommandLineArgument( "/window" ) )
+	{
+		fullscreen = false;
+	}
+	else if ( PlHasCommandLineArgument( "/fullscreen" ) )
+	{
+		fullscreen = true;
+	}
+
+	const char *arg;
+	if ( ( arg = PlGetCommandLineArgumentValue( "/width" ) ) != nullptr )
+	{
+		width = ( int ) strtol( arg, nullptr, 10 );
+	}
+	if ( ( arg = PlGetCommandLineArgumentValue( "/height" ) ) != nullptr )
+	{
+		height = ( int ) strtol( arg, nullptr, 10 );
 	}
 
 	if ( ( sdlWindow = create_window( windowTitle, width, height, fullscreen, driverMode ) ) == NULL )
