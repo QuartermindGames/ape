@@ -7,6 +7,7 @@
 typedef struct GameServerClient
 {
 	ApeServerClientHandle *internalHandle;
+	PLHashTableNode *hashTableNode;
 } GameServerClient;
 
 void game_server_client_connected_( ApeServerClientHandle *clientHandle );

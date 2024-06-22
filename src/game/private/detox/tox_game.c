@@ -2,7 +2,6 @@
 // Purpose: Main file for Detox game project.
 
 #include "tox_game.h"
-#include "tox_character.h"
 #include "tox_world.h"
 
 #include "ui/tox_ui.h"

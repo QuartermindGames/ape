@@ -225,7 +225,7 @@ void acl_audio_xwb_destroy( AclAudioXwb *xwb )
 	{
 		YNCoreAudioXWBRecord *record = PlGetHashTableNodeUserData( node );
 
-		node = PlGetNextHashTableNode( xwb->recordTable, node );
+		node = PlGetNextHashTableNode( node );
 
 		if ( record != NULL )
 		{

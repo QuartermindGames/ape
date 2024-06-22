@@ -301,7 +301,7 @@ static void reload_shader_program_command( unsigned int argc, char **argv )
 
 		reload_shader_program( program );
 
-		node = PlGetNextHashTableNode( shaderProgramTable, node );
+		node = PlGetNextHashTableNode( node );
 	}
 }
 
@@ -404,7 +404,7 @@ void ape_hot_reload_shaders_()
 			reload_shader_program( program );
 		}
 
-		node = PlGetNextHashTableNode( shaderProgramTable, node );
+		node = PlGetNextHashTableNode( node );
 	}
 
 	hotReloadTicks = ape_get_num_ticks() + incHotReloadTicks;

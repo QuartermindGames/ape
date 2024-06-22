@@ -124,7 +124,7 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 			data = ape_create_room( parentNode );
 			break;
 		case APE_WORLD_NODE_TYPE_BRUSH:
-			data = ape_create_brush( parentNode, instance.brushClass->name, &pos, &pl_vecOrigin3 );
+			data = ape_create_brush( parentNode, &pos, &pl_vecOrigin3 );
 			break;
 		case APE_WORLD_NODE_TYPE_LIGHT:
 			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );

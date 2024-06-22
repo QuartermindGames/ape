@@ -27,8 +27,8 @@ void game_server_client_disconnected_( ApeServerClientHandle *clientHandle )
 {
 	GameServerClient *serverClient = PlLookupHashTableUserData( serverClients, clientHandle, sizeof( ApeServerClientHandle * ) );
 	assert( serverClient != nullptr );
-
-	abort();//todo: implement hash table node deletion
+	PlDestroyHashTableNode( serverClient->hashTableNode );
+	PL_DELETE( serverClient );
 }
 
 void game_server_process_message_( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
@@ -42,7 +42,7 @@ void game_server_process_message_( ApeServerClientHandle *clientHandle, const vo
 			while ( hashNode != nullptr )
 			{
 				GameServerClient *otherClient = PlGetHashTableNodeUserData( hashNode );
-				hashNode = PlGetNextHashTableNode( serverClients, hashNode );
+				hashNode = PlGetNextHashTableNode( hashNode );
 				if ( otherClient->internalHandle == clientHandle )
 				{
 					continue;
