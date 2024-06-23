@@ -40,11 +40,11 @@
 ## In-Progress
 - Remove class API per brushes; we'll have just poly-brushes now
 - Model import from SMD/QC etc.
-- Networking
-  - Bitshift protocol version
-  - Disconnect currently just crashes
 
 ## Done
+- ~~Networking~~
+  - ~~Bitshift protocol version~~
+  - ~~Disconnect currently just crashes~~
 - ~~Terrain brush type using heightmap with variable height specific textures~~ (ditched)
 - ~~Fix post-processing, again~~
 - ~~Allow for reloading shaders on command (hot-reload feature?)~~

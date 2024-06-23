@@ -108,10 +108,18 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 
 		const ApeGameInterfaceImport *game = ape_game_get_interface();
 
-		unsigned int protocolVersion = APE_PROTOCOL_VERSION + game->protocolVersion;
-		if ( message->version != protocolVersion )
+		uint16_t baseProtocolVersion = message->version >> 8;
+		if ( baseProtocolVersion != APE_PROTOCOL_VERSION )
 		{
-			ape_warning_( "Invalid version received from client (%u != %u)!\n", message->version, protocolVersion );
+			ape_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
+			client->state = SERVER_CLIENT_STATE_REJECTED;
+			return;
+		}
+
+		uint16_t gameProtocolVersion = ( message->version & 0xFF );
+		if ( gameProtocolVersion != game->protocolVersion )
+		{
+			ape_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
 			client->state = SERVER_CLIENT_STATE_REJECTED;
 			return;
 		}

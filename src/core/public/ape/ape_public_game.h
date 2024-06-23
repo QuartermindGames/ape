@@ -29,9 +29,9 @@ typedef enum ApeGameInterfaceRequest
 // Interface imported from game
 typedef struct ApeGameInterfaceImport
 {
-	unsigned int version;        // interface version
-	unsigned int protocolVersion;// protocol version specific to the game itself
-	char identifier[ 8 ];        // identifier for the game (clients will only be able to connect if this matches)
+	unsigned int version;   // interface version
+	uint8_t protocolVersion;// protocol version specific to the game itself
+	char identifier[ 8 ];   // identifier for the game (clients will only be able to connect if this matches)
 
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
 

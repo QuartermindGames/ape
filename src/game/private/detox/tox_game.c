@@ -368,7 +368,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
 	        .version = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion = TOX_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
+	        .protocolVersion = TOX_GAME_PROTOCOL_VERSION,
 	        .identifier = "ss2",
 
 	        .requestCallbackMethod = handle_request,

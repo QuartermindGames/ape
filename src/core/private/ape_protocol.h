@@ -50,15 +50,6 @@ typedef struct __attribute__( ( packed ) ) ApeProtocolValidationMessage
 	char identifier[ 8 ];
 } ApeProtocolValidationMessage;
 
-#define APE_PROTOCOL_IMPLEMENT_WRITE_FUNCTION( NAME, TYPE )          \
-	static inline TYPE NAME( const void **buf )                      \
-	{                                                                \
-		TYPE value;                                                  \
-		memcpy( &value, *buf, sizeof( typeof( value ) ) );           \
-		*buf = ( void * ) ( ( char * ) ( *buf ) + sizeof( value ) ); \
-		return value;                                                \
-	}
-
 #define APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( NAME, TYPE )          \
 	static inline TYPE NAME( const void **buf )                      \
 	{                                                                \

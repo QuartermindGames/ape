@@ -107,7 +107,7 @@ static void handle_connection_state( void )
 		ApeProtocolValidationMessage validationMessage = {
 		        .header = { .length = sizeof( ApeProtocolValidationMessage ), .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATION },
 		        .magic = APE_PROTOCOL_MAGIC,
-		        .version = APE_PROTOCOL_VERSION + game->protocolVersion,
+		        .version = ( ( uint16_t ) APE_PROTOCOL_VERSION << 8 ) | game->protocolVersion,
 		};
 
 		const char *id = game_get_identifier();
