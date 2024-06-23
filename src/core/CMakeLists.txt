@@ -38,8 +38,7 @@ add_library(ApeCore STATIC
         private/ape_console.c
 
         # Scene Node System
-        private/nodes/brush/brush.c
-        private/nodes/brush/brush_poly.c
+        private/nodes/brush.c
         private/nodes/entity/entity.c
         private/nodes/entity/entity_component.c
         private/nodes/light.c

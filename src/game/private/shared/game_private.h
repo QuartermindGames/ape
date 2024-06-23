@@ -14,78 +14,42 @@
 #include "yin/gui_public.h"
 #include "yin/node.h"
 
-#include "game/game_interface.h"
+#include "ape/ape_public_client.h"
 
-extern int globalGameLog;
-extern int globalGameDebugLog;
-extern int globalGameWarningLog;
-extern int globalGameErrorLog;
+#include "game/game_public.h"
 
-#define Game_Print( ... )   PlLogMessage( globalGameLog, __VA_ARGS__ )
-#define Game_Warning( ... ) PlLogMessage( globalGameWarningLog, __VA_ARGS__ )
-#define Game_Error( ... )   PlLogMessage( globalGameErrorLog, __VA_ARGS__ )
-#define Game_Debug( ... )   PlLogMessage( globalGameDebugLog, __VA_ARGS__ )
-
-typedef enum SSGameEntityFlag
-{
-	PL_BITFLAG( GAME_ENTITY_FLAG_HAS_ALPHA, 0U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_WALK, 1U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_FLY, 2U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_CLIMB, 3U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_CROUCH, 4U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_SWIM, 5U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_SENTIENT, 6U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_HUMANOID, 7U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_BOSS, 8U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_MOUSE_LOOK, 9U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_FIRE_OUTSIDE_RANGE, 10U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_COLLIDE_PLAYER, 11U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_NO_WORLD_COLLIDE, 12U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_NO_CATCH_FIRE, 13U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_NO_BERSERK, 14U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_NO_CHROME, 15U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_SLIPPERY, 16U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_RIGGABLE, 17U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_ANIMATED_MESH, 18U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_SKIP_RENDER_GUNS, 19U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_SKIP_RELOAD, 20U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_IGNORE_FLASHBANG, 21U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_USE_PLAYER_IK, 22U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_HOLDS_WEAPONS, 23U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_ALT_FIRE, 24U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_WATER_ONLY, 25U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_LINKED_PRIMARIES, 26U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_CRUSHER, 27U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_CUSTOM_CORPSE, 28U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_COLLIDE_ENTITY, 29U ),
-	PL_BITFLAG( GAME_ENTITY_FLAG_STRINGER_TARGET, 30U ),
-} SSGameEntityFlag;
-
-typedef enum SSGameAIFlag
-{
-	PL_BITFLAG( GAME_AI_FLAG_CAUTIOUS, 0U ),
-	PL_BITFLAG( GAME_AI_FLAG_AGGRESSIVE, 1U ),
-	PL_BITFLAG( GAME_AI_FLAG_ELITE, 2U ),
-	PL_BITFLAG( GAME_AI_FLAG_EVASIVE, 3U ),
-	PL_BITFLAG( GAME_AI_FLAG_ALWAYS_COWER, 4U ),
-	PL_BITFLAG( GAME_AI_FLAG_NEVER_COWER_SURRENDER, 5U ),
-	PL_BITFLAG( GAME_AI_FLAG_ALWAYS_SURPRISED, 6U ),
-	PL_BITFLAG( GAME_AI_FLAG_NEVER_SURPRISED, 7U ),
-	PL_BITFLAG( GAME_AI_FLAG_MELEE_WEAPONS, 8U ),
-	PL_BITFLAG( GAME_AI_FLAG_DONT_SHOOT_FRIENDS, 9U ),
-	PL_BITFLAG( GAME_AI_FLAG_STANDS_UP_FAST, 10U ),
-	PL_BITFLAG( GAME_AI_FLAG_NEVER_ADVANCE, 11U ),
-	PL_BITFLAG( GAME_AI_FLAG_NEVER_RETREAT, 12U ),
-	PL_BITFLAG( GAME_AI_FLAG_ALWAYS_SURRENDER, 13U ),
-	PL_BITFLAG( GAME_AI_FLAG_FRIENDLY_FIRE, 14U ),
-	PL_BITFLAG( GAME_AI_FLAG_CERAMIC_ARMOR, 15U ),
-	PL_BITFLAG( GAME_AI_FLAG_KEVLAR_ARMOR, 16U ),
-	PL_BITFLAG( GAME_AI_FLAG_REGULAR_DODGES, 17U ),
-	PL_BITFLAG( GAME_AI_FLAG_ROLLING_DODGES, 18U ),
-	PL_BITFLAG( GAME_AI_FLAG_GNUCCI, 19U ),
-	PL_BITFLAG( GAME_AI_FLAG_RUSSIAN, 20U ),
-	PL_BITFLAG( GAME_AI_FLAG_YAKUZA, 21U ),
-	PL_BITFLAG( GAME_AI_FLAG_NO_GIB, 22U ),
-} SSGameAIFlag;
+PL_EXTERN_C
 
 void ss_game_register_standard_entity_components_( void );
+
+void game_interface_import_setup_( ApeGameInterfaceImport *import, unsigned int version, unsigned int protocolVersion, const char *id );
+
+void game_print_( const char *message, ... );
+void game_warning_( const char *message, ... );
+void game_error_( const char *message, ... );
+
+#if !defined( NDEBUG )
+void game_debug_( const char *message, ... );
+#else
+#	define game_debug_( ... )
+#endif
+
+/////////////////////////////////////////////////////////////////
+
+#define GAME_NET_PROTOCOL_VERSION 1
+
+typedef enum GameNetMessageType : uint16_t
+{
+	GAME_NET_MESSAGE_SAY,
+} GameNetMessageType;
+
+#define GAME_NET_MAX_SAY_MESSAGE UINT8_MAX
+
+typedef struct __attribute( ( packed ) ) GameNetMessageHeader
+{
+	GameNetMessageType type;
+} GameNetMessageHeader;
+
+/////////////////////////////////////////////////////////////////
+
+PL_EXTERN_C_END

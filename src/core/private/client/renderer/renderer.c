@@ -15,7 +15,7 @@
 
 #include "post/post.h"
 
-#include "game/game_interface.h"
+#include "game/game_public.h"
 
 ApeRendererStats ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;

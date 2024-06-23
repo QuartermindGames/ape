@@ -126,7 +126,7 @@ ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group )
 		return NULL;
 	}
 
-	PLHashTableNode *node = PlGetNextHashTableNode( profilingGroups, group->node );
+	PLHashTableNode *node = PlGetNextHashTableNode( group->node );
 	if ( node != NULL )
 	{
 		return ( ComProfilingGroup * ) PlGetHashTableNodeUserData( node );

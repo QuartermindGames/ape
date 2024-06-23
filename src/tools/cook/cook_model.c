@@ -245,7 +245,7 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		nd_branch_push_back_float32( child, nullptr, v->x );
 		nd_branch_push_back_float32( child, nullptr, v->y );
 		nd_branch_push_back_float32( child, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( vertexTable, childHashNode );
+		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
 	child = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
@@ -256,7 +256,7 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		nd_branch_push_back_float32( child, nullptr, v->x );
 		nd_branch_push_back_float32( child, nullptr, v->y );
 		nd_branch_push_back_float32( child, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( normalsTable, childHashNode );
+		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
 	child = nd_branch_push_back_object_array( root, "bones" );

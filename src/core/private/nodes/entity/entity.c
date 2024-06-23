@@ -35,7 +35,7 @@ static void list_entity_classes_command( unsigned int, char ** )
 		PRINT( " serialize callback   = %p\n", classDefinition->serializeFunction );
 		PRINT( " deserialize callback = %p\n", classDefinition->deserializeFunction );
 
-		node = PlGetNextHashTableNode( entityClassDefinitions, node );
+		node = PlGetNextHashTableNode( node );
 	}
 }
 
@@ -118,7 +118,7 @@ void ape_entity_destroy_( void *data )
 	{
 		//TODO: should be calling destructor for component!!!
 		PL_DELETE( PlGetHashTableNodeUserData( node ) );
-		node = PlGetNextHashTableNode( self->componentTable, node );
+		node = PlGetNextHashTableNode( node );
 	}
 	PlDestroyHashTable( self->componentTable );
 

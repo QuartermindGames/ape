@@ -1,7 +1,7 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
-#include "game/game_interface.h"
+#include "game/game_public.h"
 #include "world/world.h"
 
 #include "client/ape_client.h"
@@ -25,33 +25,35 @@ static void world_command( unsigned int argc, char **argv )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const ApeGameInterfaceImport *game_modeInterface;
+//todo: remove this, use 'ape_game_get_interface' instead!
+const ApeGameInterfaceImport *ape_gameInterface;
 
 void ape_initialize_game_( void )
 {
-	PRINT( "Initializing Game...\n" );
+	ape_print_( "Initializing game...\n" );
 
 	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, world_command );
 
-	ss_game_initialize();
-
-	game_modeInterface = ape_game_get_interface();
-	if ( game_modeInterface == nullptr )
+	ape_gameInterface = ape_game_get_interface();
+	if ( ape_gameInterface == nullptr )
 	{
 		ape_error_( true, "Failed to get game interface!\n" );
 	}
-
-	if ( game_modeInterface->version != APE_GAME_INTERFACE_VERSION )
+	else if ( ape_gameInterface->version != APE_GAME_INTERFACE_VERSION )
 	{
-		ape_error_( true, "Unsupported game interface version!\n" );
+		ape_error_( true, "Unsupported game interface version (%u != %u)!\n", ape_gameInterface->version, APE_GAME_INTERFACE_VERSION );
+	}
+	else if ( *ape_gameInterface->identifier == '\0' )
+	{
+		ape_error_( true, "No identifier provided for game interface!\n" );
 	}
 
-	if ( !game_modeInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, nullptr ) )
+	if ( !game_initialize() )
 	{
-		ape_error_( true, "Failed to initialize game sub-system!\n" );
+		ape_error_( true, "Failed to initialize game!\n" );
 	}
 
-	PRINT( "Game initialized!\n" );
+	ape_print_( "Game initialized!\n" );
 }
 
 void ape_shutdown_game_( void )
@@ -75,7 +77,8 @@ void ape_tick_game_server_( void )
 
 	ape_build_camera_visibility_lists_();
 
-	game_tick_server();
+	const ApeGameInterfaceImport *game = ape_game_get_interface();
+	game->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
 }
 
 void ape_spawn_world_( const char *worldPath )

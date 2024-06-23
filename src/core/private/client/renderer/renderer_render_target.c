@@ -55,7 +55,7 @@ void ape_shutdown_render_targets_( void )
 		if ( numReferences > 0 )
 			ape_print_( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
 
-		node = PlGetNextHashTableNode( renderTargets, node );
+		node = PlGetNextHashTableNode( node );
 	}
 
 	PlDestroyHashTable( renderTargets );

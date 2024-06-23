@@ -4,11 +4,15 @@
 #pragma once
 
 #include "../shared/game_private.h"
+#include "../shared/game_server.h"
+#include "../shared/game_client.h"
 
 #define TOX_GAME_MILESTONE     "proto_a"
 #define TOX_GAME_VERSION_MAJOR 0
 #define TOX_GAME_VERSION_MINOR 2
 #define TOX_GAME_VERSION_PATCH 0
+
+#define TOX_GAME_PROTOCOL_VERSION ( GAME_NET_PROTOCOL_VERSION + 1 )
 
 //#define TOX_ALIVE_PREVIEW
 

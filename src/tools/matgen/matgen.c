@@ -7,7 +7,7 @@
 #include "ape/ape_formats.h"
 
 // uurrgghh...
-#include "../../game/public/game/game_interface.h"
+#include "game/public/game/game_public.h"
 
 static unsigned int numMaterialsGenerated = 0;
 

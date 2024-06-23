@@ -266,12 +266,12 @@ void ape_net_close_socket_( ApeNetSocket *netSocket )
 	PlFree( netSocket );
 }
 
-ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, ssize_t length )
+ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, size_t length )
 {
 	return send( netSocket->handle, buf, length, 0 );
 }
 
-ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, ssize_t length )
+ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, size_t length )
 {
 	ssize_t r = recv( netSocket->handle, dst, length, 0 );
 	if ( r == -1 &&
@@ -350,6 +350,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 			return ( netSocket->connectionState = NET_CONNECTION_CONNECTED );
 		}
 
+		ape_warning_( "Connection failed with error code %u!\n", errCode );
 		return ( netSocket->connectionState = NET_CONNECTION_FAILED );
 	}
 

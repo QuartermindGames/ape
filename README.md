@@ -55,9 +55,13 @@ Below is a list of released games that have used this engine.
 
 ## Building
 
-Keep in mind that the code is taking advantage of C23 additions. To my knowledge, this currently, unfortunately, means you're going to be limited to GCC 13, at least as of April 2024. You might have some success with Clang. MSVC is completely out of the picture.
+Keep in mind that the code is taking advantage of C23 additions. 
+To my knowledge, this currently means you're going to be limited to GCC 13 minimum, at least as of April 2024. 
+You might have some success with Clang. 
+MSVC is completely out of the picture.
 
-I've essentially done this because I'd estimate by the time this code is actually useful to anyone, if ever, C23 support should hopefully be reasonably widespread. If you've received this before that time, apologies!
+I've done this because I'd estimate by the time this code is actually useful to anyone, if ever, C23 support should hopefully be reasonably widespread. 
+If you've received this before that time, apologies!
 
 The project uses CMake, so ideally it should be as simple as this...
 
@@ -80,7 +84,3 @@ The engine primarily supports 64-bit [Ubuntu 24.04 LTS](https://ubuntu.com/downl
 ### macOS
 
 Historically, the engine had been successfully built and run on macOS—but that was quite a few years ago. Given Apple's recent actions and lack of support for open standards, such as Vulkan/OpenGL, I've felt less inclined to support it as a target.
-
-## Roadmap
-
-- [ ] WebGPU backend for rendering (see [here]())

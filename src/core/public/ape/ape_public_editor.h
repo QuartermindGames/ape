@@ -43,7 +43,6 @@ typedef enum ApeEditorGeometryMode
 
 typedef struct ApeEditorState
 {
-	const ApeBrushClass *brushClass;
 	ApeEditorGeometryMode geometryMode;
 
 	unsigned char gridVisible;// unsigned char, because otherwise

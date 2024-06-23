@@ -2,7 +2,6 @@
 // Purpose: Main file for Detox game project.
 
 #include "tox_game.h"
-#include "tox_character.h"
 #include "tox_world.h"
 
 #include "ui/tox_ui.h"
@@ -166,9 +165,9 @@ static void progress_time_action( ApeInputState state, const char *id )
 static void print_pos_command( unsigned int, char ** )
 {
 	PLVector3 cameraPos = ape_camera_get_position( playerCamera );
-	Game_Print( "Camera Pos: %s\n", PlPrintVector3( &cameraPos, PL_VAR_F32 ) );
+	game_print_( "Camera Pos: %s\n", PlPrintVector3( &cameraPos, PL_VAR_F32 ) );
 	PLVector3 cameraAngles = ape_camera_get_angles( playerCamera );
-	Game_Print( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
+	game_print_( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
 }
 
 static void set_time_command( unsigned int, char **argv )
@@ -239,7 +238,7 @@ static bool initialize_game( void )
 	playerCamera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( playerCamera == NULL )
 	{
-		Game_Error( "Failed to create player camera!\n" );
+		game_error_( "Failed to create player camera!\n" );
 		return false;
 	}
 
@@ -256,7 +255,7 @@ static bool shutdown_game( void )
 	return true;
 }
 
-static void handle_input( void )
+static void ss1_handle_input( void )
 {
 	PLVector3 ang = ape_camera_get_angles( playerCamera );
 	PLVector3 pos = ape_camera_get_position( playerCamera );
@@ -290,7 +289,7 @@ static void handle_input( void )
 
 static bool tick_game( void )
 {
-	handle_input();
+	ss1_handle_input();
 
 	tox_world_tick( ss_game_get_current_world() );
 	tox_ui_tick();
@@ -345,11 +344,40 @@ static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 	return false;
 }
 
+static void server_client_connected( ApeServerClientHandle *clientHandle )
+{
+	game_server_client_connected_( clientHandle );
+}
+
+static void server_client_disconnected( ApeServerClientHandle *clientHandle )
+{
+	game_server_client_disconnected_( clientHandle );
+}
+
+static void server_process_message( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
+{
+	game_server_process_message_( clientHandle, buf, bufSize );
+}
+
+static void client_process_message( const void *buf, size_t bufSize )
+{
+	game_client_process_message_( buf, bufSize );
+}
+
 const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
-	static ApeGameInterfaceImport gameMode;
-	PL_ZERO_( gameMode );
-	gameMode.version = APE_GAME_INTERFACE_VERSION;
-	gameMode.requestCallbackMethod = handle_request;
+	static ApeGameInterfaceImport gameMode = {
+	        .version = APE_GAME_INTERFACE_VERSION,
+	        .protocolVersion = TOX_GAME_PROTOCOL_VERSION,
+	        .identifier = "ss2",
+
+	        .requestCallbackMethod = handle_request,
+
+	        .serverClientConnected = server_client_connected,
+	        .serverClientDisconnected = server_client_disconnected,
+	        .serverProcessMessage = server_process_message,
+
+	        .clientProcessMessage = client_process_message,
+	};
 	return &gameMode;
 }

@@ -11,7 +11,7 @@
 
 #include "world/world.h"
 
-#include "game/game_interface.h"
+#include "game/game_public.h"
 
 #include "client/gui/gui_private.h"
 

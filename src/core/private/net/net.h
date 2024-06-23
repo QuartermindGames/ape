@@ -25,8 +25,8 @@ void ape_shutdown_net_( void );
 ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost );
 void ape_net_close_socket_( ApeNetSocket *netSocket );
 
-ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, ssize_t length );
-ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, ssize_t length );
+ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, size_t length );
+ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, size_t length );
 ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket );
 
 ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket );
