@@ -3,6 +3,8 @@
 #include "ape_private.h"
 #include "net.h"
 
+#include <limits.h>
+
 #if defined( _WIN32 )
 #	include <WinSock2.h>
 #	include <WS2tcpip.h>
@@ -51,7 +53,16 @@ typedef struct ApeNetSocket
 		struct sockaddr_in6 ip6;
 	} remote;
 	ApeNetConnectionState connectionState;
+	
+	unsigned char *sendBuffer;  /**< Buffer for data waiting to be sent. */
+	size_t sendBufferSize;      /**< Size of sendBuffer. */
+	size_t sendBufferUsed;      /**< Number of bytes currently in sendBuffer. */
+	
+	size_t osSendBufferSize;    /**< Size of OS socket send buffer (i.e. SO_SNDBUF). */
 } ApeNetSocket;
+
+#define APE_DEFAULT_SOCKET_SEND_BUFFER_SIZE  65536 /* 64kiB */
+#define APE_DEFAULT_SOCKET_MAX_SEND_SIZE     4096  /* 4kiB */
 
 #if !defined( NDEBUG )
 
@@ -256,6 +267,9 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	getpeername( handle, ( struct sockaddr * ) &netSocket->remote.ip6, &addrSize );
 
 	freeaddrinfo( result );
+	
+	ape_net_set_max_send_size_(netSocket, APE_DEFAULT_SOCKET_MAX_SEND_SIZE);
+	ape_net_set_send_buffer_size_(netSocket, APE_DEFAULT_SOCKET_SEND_BUFFER_SIZE);
 
 	return netSocket;
 }
@@ -263,16 +277,68 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 void ape_net_close_socket_( ApeNetSocket *netSocket )
 {
 	close_socket( netSocket->handle );
+	PlFree( netSocket->sendBuffer );
 	PlFree( netSocket );
 }
 
-ssize_t ape_net_send_( ApeNetSocket *netSocket, const void *buf, size_t length )
+static bool flush_send_buffer( ApeNetSocket *netSocket )
 {
-	return send( netSocket->handle, buf, length, 0 );
+	while(netSocket->sendBufferUsed > 0)
+	{
+		ssize_t sent_bytes = send(netSocket->handle, netSocket->sendBuffer, netSocket->sendBufferUsed, 0);
+		if(sent_bytes < 0)
+		{
+#if defined( _WIN32 )
+			DWORD error = WSAGetLastError();
+			if(error != WSAEWOULDBLOCK)
+			{
+				PRINT_WARNING( "Send error on socket (error code %u)\n", (unsigned)(error) );
+				return false;
+			}
+#else
+			if(errno != EAGAIN && errno != EWOULDBLOCK)
+			{
+				PRINT_WARNING( "Send error on socket (%s)\n", strerror(errno) );
+				return false;
+			}
+#endif
+			
+			break;
+		}
+		
+		memmove(netSocket->sendBuffer, (netSocket->sendBuffer + netSocket->sendBufferUsed), (netSocket->sendBufferUsed - sent_bytes));
+		netSocket->sendBufferUsed -= sent_bytes;
+	}
+	
+	return true;
+}
+
+bool ape_net_send_( ApeNetSocket *netSocket, const void *buf, size_t length )
+{
+	if(!flush_send_buffer(netSocket))
+	{
+		return false;
+	}
+	
+	if((netSocket->sendBufferUsed + length) > netSocket->sendBufferSize)
+	{
+		PRINT_WARNING( "Attempted to send %zu bytes on socket, but send buffer has insufficient space\n", length );
+		return false;
+	}
+	
+	memcpy((netSocket->sendBuffer + netSocket->sendBufferUsed), buf, length);
+	netSocket->sendBufferUsed += length;
+	
+	return flush_send_buffer(netSocket);
 }
 
 ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, size_t length )
 {
+	/* We get called periodically, so use this point to flush any pending
+	 * data from our send buffer.
+	*/
+	flush_send_buffer(netSocket);
+	
 	ssize_t r = recv( netSocket->handle, dst, length, 0 );
 	if ( r == -1 &&
 #if defined( _WIN32 )
@@ -315,6 +381,9 @@ ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 		getsockname( out->handle, ( struct sockaddr * ) &netSocket->local.ip6, &addrSize );
 		addrSize = sizeof( netSocket->remote );
 		getpeername( out->handle, ( struct sockaddr * ) &netSocket->remote.ip6, &addrSize );
+		
+		ape_net_set_max_send_size_(out, APE_DEFAULT_SOCKET_MAX_SEND_SIZE);
+		ape_net_set_send_buffer_size_(out, APE_DEFAULT_SOCKET_SEND_BUFFER_SIZE);
 
 		return out;
 	}
@@ -365,4 +434,51 @@ unsigned short ape_net_get_local_port_( ApeNetSocket *netSocket )
 unsigned short ape_net_get_remote_port_( ApeNetSocket *netSocket )
 {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->remote.ip4.sin_port : netSocket->remote.ip6.sin6_port );
+}
+
+bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize )
+{
+	if(maxSendSize < netSocket->sendBufferUsed)
+	{
+		return false;
+	}
+	
+	void *newSendBuffer = PlReAlloc( netSocket->sendBuffer, maxSendSize, false );
+	if(newSendBuffer == NULL)
+	{
+		return false;
+	}
+	
+	netSocket->sendBuffer = newSendBuffer;
+	netSocket->sendBufferSize = maxSendSize;
+}
+
+size_t ape_net_get_max_send_size_( ApeNetSocket *netSocket )
+{
+	return netSocket->sendBufferSize;
+}
+
+bool ape_net_set_send_buffer_size_( ApeNetSocket *netSocket, size_t sendBufferSize )
+{
+	assert(sendBufferSize < INT_MAX);
+	
+	int sndbuf = sendBufferSize;
+	int res = setsockopt(netSocket->handle, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf));
+	if(res != 0)
+	{
+#ifdef _WIN32
+		PRINT_WARNING( "Error setting SO_SNDBUF socket option (error code %u)\n", (unsigned)(WSAGetLastError()) );
+#else
+		PRINT_WARNING( "Error setting SO_SNDBUF socket option (%s)\n", strlen(errno) );
+#endif
+		return false;
+	}
+	
+	netSocket->osSendBufferSize = sendBufferSize;
+	return true;
+}
+
+size_t ape_net_get_send_buffer_size_( ApeNetSocket *netSocket )
+{
+	return netSocket->osSendBufferSize;
 }

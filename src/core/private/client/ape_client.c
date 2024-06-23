@@ -292,7 +292,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 	}
 
 	ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ) + totalSize, .type = APE_PROTOCOL_MESSAGE_TYPE_GAME };
-	if ( ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) != sizeof( ApeProtocolMessageHeader ) )
+	if ( !ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
 	{
 		ape_warning_( "Failed to send message header!\n" );
 		return false;
@@ -300,13 +300,13 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 
 	for ( uint i = 0; i < numBuffers; ++i )
 	{
-		if ( ape_net_send_( clientState.netSocket, buf[ i ], bufSizes[ i ] ) == bufSizes[ i ] )
+		if ( ape_net_send_( clientState.netSocket, buf[ i ], bufSizes[ i ] ) )
 		{
 			continue;
 		}
 
 		ape_warning_( "Failed to send message buffer (%u)!\n", i );
-		break;
+		return false;
 	}
 
 	return true;
