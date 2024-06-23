@@ -95,12 +95,6 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 		return;
 	}
 
-	if ( instance.brushClass == nullptr )
-	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Invalid brush class!" );
-		return;
-	}
-
 	auto *parentNode = ( ApeWorldNode * ) nodeTree->getCurrentItem()->getData();
 	if ( parentNode == nullptr )
 	{
