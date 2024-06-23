@@ -14,15 +14,11 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-extern CookModelFormatInterface modelSmdInterface;
-extern CookModelFormatInterface modelObjInterface;
-extern CookModelFormatInterface modelHowPCInterface;
-extern CookModelFormatInterface modelPsiInterface;
+extern const CookModelFormatInterface modelSmdInterface;
+extern const CookModelFormatInterface modelObjInterface;
 static const CookModelFormatInterface *modelCookFormats[] = {
         &modelObjInterface,
         &modelSmdInterface,
-        &modelHowPCInterface,
-        &modelPsiInterface,
         nullptr,
 };
 
@@ -67,7 +63,7 @@ static void deserialize_model_animations( NdBranch *root, ApeFormatModel *dst, c
 {
 }
 
-static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const char *folder )
+static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char *folder )
 {
 	const char *name = nd_branch_get_child_string( root, "name", nullptr );
 	if ( name == nullptr )
@@ -92,24 +88,24 @@ static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const
 		PLPath bodyPath;
 		PlSetupPath( bodyPath, true, "%s/%s", folder, body );
 
-		const CookModelFormatInterface *interface = ( const CookModelFormatInterface * ) modelCookFormats;
-		while ( interface != nullptr )
+		const CookModelFormatInterface **interface = modelCookFormats;
+		while ( ( *interface ) != nullptr )
 		{
-			if ( interface->extension != nullptr && ( pl_strcasecmp( interface->extension, ext ) == 0 ) )
+			if ( ( *interface )->extension != nullptr && ( pl_strcasecmp( ( *interface )->extension, ext ) == 0 ) )
 			{
-				assert( interface->loadFunction );
-				assert( interface->convertFunction );
-				assert( interface->deleteFunction );
+				assert( ( *interface )->loadFunction );
+				assert( ( *interface )->convertFunction );
+				assert( ( *interface )->deleteFunction );
 
-				CookModel *model = interface->loadFunction( bodyPath );
+				CookModel *model = ( *interface )->loadFunction( bodyPath );
 				if ( model == nullptr )
 				{
 					interface++;
 					continue;
 				}
 
-				interface->convertFunction( model, dst );
-				interface->deleteFunction( model );
+				( *interface )->convertFunction( model, dst );
+				( *interface )->deleteFunction( model );
 				break;
 			}
 			interface++;
@@ -345,7 +341,7 @@ void cook_model_process( const char *modelName )
 	NdBranch *root = nd_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
-		deserialize_model_config( root, model, folder );
+		parse_model_config( root, model, folder );
 
 		nd_branch_destroy( root );
 

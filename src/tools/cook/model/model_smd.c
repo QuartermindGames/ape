@@ -276,4 +276,4 @@ static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_sm
 static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
 static void destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
 
-CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };
+const CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };

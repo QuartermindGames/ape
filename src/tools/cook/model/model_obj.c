@@ -367,4 +367,4 @@ static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_ob
 static ApeFormatModel *conv_obj( const CookModel *model, ApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
 static void destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
 
-CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };
+const CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };
