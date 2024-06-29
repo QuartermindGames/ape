@@ -13,8 +13,11 @@ void nd_setup_logs( void )
 	Message( "Logs are now active for NODE library\n" );
 }
 
-#define ND_FORMAT_BINARY_HEADER "node.bin"
-#define ND_FORMAT_UTF8_HEADER   "node.utf8"
+#define ND_FORMAT_UTF8_HEADER "node.utf8"
+
+#define ND_FORMAT_BINARY_HEADER   "node.bin" // original format w/ no versioning support (defaults to 1)
+#define ND_FORMAT_BINARY_HEADER_2 "node.binx"// new format w/ versioning support
+#define ND_FORMAT_BINARY_VERSION  1
 
 static const char *string_for_property_type( NdPropertyType propertyType )
 {
@@ -943,7 +946,7 @@ static NdBranch *deserialize_binary_node( PLFile *file, NdBranch *parent )
 	return node;
 }
 
-static NdFileType parse_node_file_type( PLFile *file )
+static NdFileType parse_node_file_type( PLFile *file, uint32_t *dstVersion )
 {
 	char token[ 32 ];
 	if ( PlReadString( file, token, sizeof( token ) ) == NULL )
@@ -952,14 +955,28 @@ static NdFileType parse_node_file_type( PLFile *file )
 		return ND_FILE_INVALID;
 	}
 
-	if ( strncmp( token, ND_FORMAT_BINARY_HEADER, strlen( ND_FORMAT_BINARY_HEADER ) ) == 0 )
+	if ( strncmp( token, ND_FORMAT_BINARY_HEADER_2, strlen( ND_FORMAT_BINARY_HEADER_2 ) ) == 0 )
 	{
+		uint32_t version = PL_READUINT32( file, false, NULL );
+		if ( version == 0 || version > ND_FORMAT_BINARY_VERSION )
+		{
+			set_error_message( ND_ERROR_IO_READ, "invalid binary node format (%u == 0 || %u > %u)", version, version, ND_FORMAT_BINARY_VERSION );
+			return ND_FILE_INVALID;
+		}
+
+		*dstVersion = version;
+		return ND_FILE_BINARY;
+	}
+	else if ( strncmp( token, ND_FORMAT_BINARY_HEADER, strlen( ND_FORMAT_BINARY_HEADER ) ) == 0 )
+	{
+		*dstVersion = 1;
 		return ND_FILE_BINARY;
 	}
 	/* we still check for 'ascii' here, just for backwards compat, but they're handled the
 	 * same either way */
 	else if ( strncmp( token, ND_FORMAT_UTF8_HEADER, strlen( ND_FORMAT_UTF8_HEADER ) ) == 0 )
 	{
+		*dstVersion = 1;
 		return ND_FILE_UTF8;
 	}
 
@@ -971,7 +988,8 @@ NdBranch *nd_parse_file( PLFile *file, const char *objectType )
 {
 	NdBranch *root = NULL;
 
-	NdFileType fileType = parse_node_file_type( file );
+	uint32_t version;
+	NdFileType fileType = parse_node_file_type( file, &version );
 	if ( fileType == ND_FILE_BINARY )
 	{
 		root = deserialize_binary_node( file, NULL );
@@ -1279,7 +1297,11 @@ bool nd_write_file( const char *path, NdBranch *root, NdFileType fileType )
 	}
 
 	if ( fileType == ND_FILE_BINARY )
-		fprintf( file, ND_FORMAT_BINARY_HEADER "\n" );
+	{
+		fprintf( file, ND_FORMAT_BINARY_HEADER_2 "\n" );
+		static const unsigned int version = ND_FORMAT_BINARY_VERSION;
+		fwrite( &version, sizeof( uint32_t ), 1, file );
+	}
 	else
 	{
 		sDepth = 0;
