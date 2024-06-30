@@ -6,7 +6,7 @@
 
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
-#include "nodes/entity/entity.h"
+#include "nodes/node_entity.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER

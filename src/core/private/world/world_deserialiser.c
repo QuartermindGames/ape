@@ -11,11 +11,9 @@
 
 static void deserialize_light( ApeWorld *world, NdBranch *root )
 {
-	ApeWorldNode *worldNode = ape_world_get_world_node( world );
-
 	PLVector3 position = nd_get_vector3( root, "position", &pl_vecOrigin3 );
 	PLColourF32 colour = nd_get_colour_f32( root, "colour", &PL_COLOURF32_WHITE );
-	ApeLight *light = ape_create_light( worldNode, &position, &colour,
+	ApeLight *light = ape_create_light( ( ApeWorldNode * ) world, &position, &colour,
 	                                    nd_branch_get_child_float32( root, "radius", 0.0f ),
 	                                    nd_branch_get_child_uint( root, "type", APE_LIGHT_TYPE_OMNI ),
 	                                    nd_branch_get_child_uint( root, "flags", 0 ) );
@@ -38,11 +36,11 @@ static void deserialize_lights( ApeWorld *world, NdBranch *root )
 
 static ApeRoom *deserialize_room( ApeWorld *world, NdBranch *root )
 {
-	ApeRoom *room = ape_create_room( world->root );
+	ApeRoom *room = ape_room_create( &world->base );
 
 	PLVector3 mins = nd_get_vector3( root, "mins", &pl_vecOrigin3 );
 	PLVector3 maxs = nd_get_vector3( root, "maxs", &pl_vecOrigin3 );
-	ape_world_node_set_local_bounds( room->header.node, &mins, &maxs );
+	ape_world_node_set_local_bounds( &room->base, &mins, &maxs );
 
 	room->isDetail = nd_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = nd_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );

@@ -3,11 +3,13 @@
 #include <plcore/pl_hashtable.h>
 
 #include "ape_private.h"
-#include "entity.h"
+#include "node_entity.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+
+static PLHashTable *entityComponentDefinitions = NULL;
 static PLHashTable *entityClassDefinitions = NULL;
 
 static void list_entity_classes_command( unsigned int, char ** )
@@ -80,7 +82,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-ApeEntity *ape_create_entity( const char *className, NdBranch *properties )
+ApeEntity *ape_create_entity( const char *className, NdBranch *properties, ApeWorldNode *parent )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( className == NULL )
@@ -90,7 +92,7 @@ ApeEntity *ape_create_entity( const char *className, NdBranch *properties )
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
-	ape_world_node_create( nullptr, APE_WORLD_NODE_TYPE_ENTITY, &pl_vecOrigin3, &pl_vecOrigin3, entity );
+	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, &pl_vecOrigin3, &pl_vecOrigin3 );
 	entity->classDefinition = classDefinition;
 	entity->componentTable = PlCreateHashTable();
 
@@ -98,7 +100,7 @@ ApeEntity *ape_create_entity( const char *className, NdBranch *properties )
 	if ( entity->classData == nullptr )
 	{
 		ape_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
-		ape_world_node_destroy( ape_entity_get_world_node( entity ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) entity );
 		return nullptr;
 	}
 
@@ -145,4 +147,50 @@ void ape_entity_draw( ApeEntity *entity )
 	}
 
 	entity->classDefinition->drawFunction( entity );
+}
+
+void ape_register_entity_component( const ApeEntityComponentDefinition *definition )
+{
+	if ( entityComponentDefinitions == NULL )
+		entityComponentDefinitions = PlCreateHashTable();
+
+	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL )
+	{
+		PRINT_WARNING( "Attempted to register a duplicate entity component (%s)\n", definition->name );
+		return;
+	}
+
+	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
+}
+
+void *ss_acl_entity_add_component( ApeEntity *entity, const char *name )
+{
+	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
+	if ( componentDefinition == NULL )
+	{
+		PRINT_WARNING( "Failed to find entity component (%s)!\n", name );
+		return NULL;
+	}
+
+	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
+	if ( componentDefinition->Create != NULL )
+		component->data = componentDefinition->Create();
+
+	if ( !PlInsertHashTableNode( entity->componentTable, name, strlen( name ), component ) )
+	{
+		PRINT_WARNING( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
+
+		if ( componentDefinition->Destroy != NULL )
+			componentDefinition->Destroy( component );
+
+		PL_DELETE( component );
+		return NULL;
+	}
+
+	return component->data;
+}
+
+void *ss_acl_entity_get_component( ApeEntity *entity, const char *name )
+{
+	return PlLookupHashTableUserData( entity->componentTable, name, strlen( name ) );
 }

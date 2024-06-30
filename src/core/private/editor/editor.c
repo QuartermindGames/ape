@@ -288,7 +288,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 	assert( world != NULL && worldNode != NULL );
 
 	// don't draw the sprite for the camera...
-	const ApeWorldNode *cameraNode = ape_camera_get_world_node( camera );
+	const ApeWorldNode *cameraNode = ( ApeWorldNode * ) camera;
 	if ( worldNode == cameraNode )
 	{
 		return;
@@ -466,7 +466,7 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 	const ApeWorld *world = ape_camera_get_world( camera );
 	assert( world != nullptr );
-	pre_render_nodes( camera, world, world->root );
+	pre_render_nodes( camera, world, &world->base );
 
 	if ( isWireframe )
 	{

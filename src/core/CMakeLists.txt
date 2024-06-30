@@ -38,10 +38,10 @@ add_library(ApeCore STATIC
         private/ape_console.c
 
         # Scene Node System
-        private/nodes/brush.c
-        private/nodes/entity/entity.c
-        private/nodes/entity/entity_component.c
-        private/nodes/light.c
+        private/nodes/node_brush.c
+        private/nodes/node_entity.c
+        private/nodes/node_light.c
+        private/nodes/node_room.c
 
         # Networking
         private/net/net.c
@@ -61,7 +61,6 @@ add_library(ApeCore STATIC
         private/world/world.c
         private/world/world_deserialiser.c
         private/world/world_node.c
-        private/world/world_room.c
         private/world/world_serialiser.c
 
         ${YIN_CORE_CLIENT}

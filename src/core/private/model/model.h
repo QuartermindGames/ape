@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ape/ape_formats.h"
+#include "ape/ape_public_model.h"
 
 PL_EXTERN_C
 
@@ -46,10 +47,5 @@ typedef struct ApeModel
 
 	ApeMemoryReference mem;
 } ApeModel;
-
-ApeModel *ape_load_model( const char *path );
-
-void ape_model_release( ApeModel *model );
-void ape_model_draw( ApeModel *model );
 
 PL_EXTERN_C_END

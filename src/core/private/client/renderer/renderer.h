@@ -40,7 +40,7 @@ typedef struct ApeSpriteFrame
 typedef struct ApeCamera
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	char tag[ 32 ];
 
@@ -89,7 +89,7 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 typedef struct ApeLight
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	ApeLightType type;
 

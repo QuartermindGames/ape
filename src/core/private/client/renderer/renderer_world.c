@@ -73,7 +73,7 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 	if ( camera->room == NULL || ape_config_.world.showAllRooms )
 	{
 		// Just go over the initial children to determine if they're rooms
-		PLLinkedListNode *node = PlGetFirstNode( world->root->children );
+		PLLinkedListNode *node = PlGetFirstNode( world->base.children );
 		while ( node != NULL )
 		{
 			ApeWorldNode *worldNode = PlGetLinkedListNodeUserData( node );
@@ -171,7 +171,7 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 		return;
 	}
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->header.node->bounds ) && !ape_config_.renderer.skipRoomCull )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->base.bounds ) && !ape_config_.renderer.skipRoomCull )
 	{
 		return;
 	}
@@ -230,10 +230,10 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 {
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		return PlNormalizeVector3( PlSubtractVector3( *origin, light->header.node->position ) );
+		return PlNormalizeVector3( PlSubtractVector3( *origin, light->base.position ) );
 	}
 
-	return PlNormalizeVector3( light->header.node->position );
+	return PlNormalizeVector3( light->base.position );
 }
 
 static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, unsigned int *indices )
@@ -324,7 +324,7 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 		return;
 	}
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->header.node->bounds ) && !ape_config_.renderer.skipRoomCull )
+	if ( !PlgIsBoxInsideView( camera->internal, &room->base.bounds ) && !ape_config_.renderer.skipRoomCull )
 	{
 		return;
 	}

@@ -15,6 +15,9 @@ typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
 
 typedef struct ApeEntity
 {
+	// This should always come first!
+	ApeWorldNode base;
+
 	char name[ APE_ENTITY_MAX_NAME ];               // identifier
 	const ApeEntityClassDefinition *classDefinition;// class that the actor is derived from
 	void *classData;                                // pointer to the unique data of the class
@@ -65,7 +68,7 @@ typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )(
 void ape_register_entity_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className );
 
-ApeEntity *ape_create_entity( const char *className, NdBranch *properties );
+ApeEntity *ape_create_entity( const char *className, NdBranch *properties, ApeWorldNode *parent );
 void ape_entity_destroy( ApeEntity *entity );
 
 void ape_entity_tick( ApeEntity *entity );

@@ -4,9 +4,10 @@
 
 #include "../editor.h"
 
+struct ApeModel;
+
 namespace ss::forge
 {
-	struct SSApeModel;
 	class viewport_frame;
 
 	class ModelEditor : public FXTabItem
@@ -17,11 +18,14 @@ namespace ss::forge
 		inline ModelEditor() = default;
 
 	public:
-		ModelEditor( FXTabBook *owner, const FXString &modelName, SSApeModel *model );
+		ModelEditor( FXTabBook *owner, const FXString &modelName, ApeModel *model );
 		~ModelEditor() override;
 
 	private:
-		SSApeModel *_model{ nullptr };
+		ApeModel *model{ nullptr };
+
+		ApeWorld *world{ nullptr };
+		ApeEntity *modelEntity{ nullptr };
 
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;

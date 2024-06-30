@@ -1,4 +1,5 @@
 set(GAME_SHARED_FILES
+        private/shared/physics/physics_rope.c
         private/shared/game.c
         private/shared/game_client.c
         private/shared/game_menu.c

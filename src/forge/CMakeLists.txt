@@ -15,7 +15,7 @@ add_library(Forge STATIC
 
         editors/EditorTab.cpp editors/EditorTab.h
         editors/editor_material.cpp editors/editor_material.h
-        editors/ModelEditor.cpp editors/ModelEditor.h
+        editors/editor_model.cpp editors/editor_model.h
         editors/editor_world.cpp editors/editor_world.h
 )
 

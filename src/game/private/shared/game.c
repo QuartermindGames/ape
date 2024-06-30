@@ -97,7 +97,7 @@ void game_spawn_world( ApeWorld *world )
 {
 	if ( currentWorld != NULL )
 	{
-		ape_world_node_destroy( ape_world_get_world_node( currentWorld ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) currentWorld );
 		currentWorld = NULL;
 	}
 

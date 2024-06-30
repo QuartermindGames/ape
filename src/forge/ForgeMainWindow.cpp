@@ -1,11 +1,10 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ForgeMainWindow.h"
 #include "AboutDialog.h"
 
 #include "editors/editor_world.h"
-#include "editors/ModelEditor.h"
+#include "forge/editors/editor_model.h"
 #include "editors/editor_material.h"
 
 #include "common_project.h"
@@ -44,6 +43,8 @@ ss::forge::ForgeMainWindow::ForgeMainWindow( FXApp *app )
 
 	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", ss::forge::load_fx_icon( getApp(), "resources/new_world.gif" ), this, ID_WORLD_NEW );
 	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", ss::forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
+	new FXMenuSeparator( menuPane );
+	new FXMenuCommand( menuPane, "Open Model...\t\tOpen an existing model.", ss::forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, ID_MODEL_OPEN );
 	new FXMenuSeparator( menuPane );
 
 	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", ss::forge::load_fx_icon( getApp(), "resources/close.gif" ), this, ID_CLOSE_EDITOR );
@@ -136,7 +137,7 @@ long ss::forge::ForgeMainWindow::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	ape_create_room( world->root );
+	ape_room_create( &world->base );
 
 	auto *editor = new editor_world( _tabBook, "", world );
 	editor->update_tree();
@@ -188,7 +189,38 @@ long ss::forge::ForgeMainWindow::on_open_world( FXObject *, FXSelector, void * )
 
 long ss::forge::ForgeMainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	return true;
+	const char *path = com_project_get_local_path();
+	FXString filename = FXFileDialog::getOpenFilename( this, "Select a model", FXString( path ) + "/", "*.mdl.n" );
+	if ( filename.empty() )
+	{
+		return FALSE;
+	}
+
+#if 0
+	ApeWorld *world = ape_world_load( filename.text() );
+	if ( world == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK,
+		                       "Warning",
+		                       "Failed to open world (%s)!\n"
+		                       "See logs for details.",
+		                       filename.text() );
+		return FALSE;
+	}
+
+	auto *editor = new editor_world( _tabBook, PlGetFileName( filename.text() ), world );
+	editor->update_tree();
+
+	auto tab = _tabs.emplace_back( editor );
+	tab->create();
+
+	_tabBook->setCurrent( _tabBook->numChildren() - 1 );
+	_tabBook->layout();
+
+	closeEditorCommand->enable();
+#endif
+
+	return TRUE;
 }
 
 long ss::forge::ForgeMainWindow::open_material( FXObject *, FXSelector, void * )

@@ -165,8 +165,7 @@ void viewport_frame::Draw()
 		ApeWorld *world = worldEditor->get_world();
 		if ( world != nullptr )
 		{
-			ape_world_node_attach( ape_camera_get_world_node( camera ),
-			                       ape_world_get_world_node( world ) );
+			ape_world_node_attach( ( ApeWorldNode * ) camera, ( ApeWorldNode * ) world );
 		}
 	}
 

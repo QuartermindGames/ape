@@ -139,7 +139,7 @@ static void draw_faces( ApeBrush *self )
 ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeBrush *brush = PL_NEW( ApeBrush );
-	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_BRUSH, position, angles, brush );
+	ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, position, angles );
 	return brush;
 }
 

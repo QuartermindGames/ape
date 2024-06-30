@@ -2,9 +2,11 @@
 // Purpose: Model editor tab
 // Author:  Mark E. Sowden
 
-#include "ModelEditor.h"
+#include "editor_model.h"
 
 #include "../viewport_frame.h"
+#include "ape/ape_public_model.h"
+#include "yin/core_entity.h"
 
 FXDEFMAP( ss::forge::ModelEditor )
 modelEditorMap[] = {
@@ -12,7 +14,7 @@ modelEditorMap[] = {
 };
 FXIMPLEMENT( ss::forge::ModelEditor, FXTabItem, modelEditorMap, ARRAYNUMBER( modelEditorMap ) )
 
-ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName, SSApeModel *model ) : FXTabItem( owner, "Model Editor" )
+ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName, ApeModel *model ) : FXTabItem( owner, "Model Editor" )
 {
 	setIcon( ss::forge::load_fx_icon( getApp(), "resources/model_editor.gif" ) );
 
@@ -43,6 +45,20 @@ ss::forge::ModelEditor::ModelEditor( FXTabBook *owner, const FXString &worldName
 	{
 		setText( "Material Editor (" + worldName + ")" );
 	}
+
+	this->model = model;
+
+	world = ape_create_world();
+
+	ApeRoom *room = ape_room_create( &world->base );
+
+	modelEntity = ape_create_entity( "modelDummy", nullptr, nullptr );
+	ape_world_node_attach( ( ApeWorldNode * ) room, &modelEntity->base );
 }
 
-ss::forge::ModelEditor::~ModelEditor() = default;
+ss::forge::ModelEditor::~ModelEditor()
+{
+	ape_model_release( model );
+
+	ape_world_node_destroy( &world->base );
+}

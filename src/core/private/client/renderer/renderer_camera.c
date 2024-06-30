@@ -19,8 +19,8 @@ static PLLinkedList *cameras;
 static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
 static int compare_lights( const void *a, const void *b )
 {
-	float da = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) a )->header.node->position, viewPos ) );
-	float db = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) b )->header.node->position, viewPos ) );
+	float da = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) a )->base.position, viewPos ) );
+	float db = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) b )->base.position, viewPos ) );
 	return ( da > db ) ? 1 : -1;
 }
 
@@ -47,13 +47,13 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
 		//TODO: let us configure draw distance per light
-		float distance = PlVector3Length( PlSubtractVector3( light->header.node->position, ape_camera_get_position( camera ) ) );
+		float distance = PlVector3Length( PlSubtractVector3( light->base.position, ape_camera_get_position( camera ) ) );
 		if ( distance > ape_config_.renderer.maxLightDistance )
 		{
 			return;
 		}
 
-		PLCollisionSphere sphere = PlSetupCollisionSphere( light->header.node->position, light->radius );
+		PLCollisionSphere sphere = PlSetupCollisionSphere( light->base.position, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
 		{
 			return;
@@ -63,7 +63,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 	PL_GET_CVAR( "renderer.testFlares", testFlares );
 	if ( testFlares != nullptr && testFlares->b_value )
 	{
-		PLVector3 pos = light->header.node->position;
+		PLVector3 pos = light->base.position;
 		pos.z += 16.0f;
 		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, light->colour.a );
 		pos.z += 16.0f;
@@ -74,7 +74,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 
 	if ( light->flags & APE_LIGHT_FLAG_FLARE )
 	{
-		ape_add_flare_to_queue( camera, &light->header.node->position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		ape_add_flare_to_queue( camera, &light->base.position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 	}
 
 	camera->visibility.lights[ camera->visibility.numLights ] = light;
@@ -89,10 +89,13 @@ static void light_vis_navigate_tree( ApeCamera *camera, ApeWorldNode *node )
 		return;
 	}
 
-	ApeLight *light = ape_world_node_get_light_data( node );
-	if ( light != nullptr )
+	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
-		queue_light( camera, light );
+		ApeLight *light = ( ApeLight * ) node;
+		if ( light != nullptr )
+		{
+			queue_light( camera, light );
+		}
 	}
 
 	PLLinkedListNode *i = PlGetFirstNode( node->children );
@@ -129,7 +132,7 @@ static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 	}
 
 	//TODO: get rid of this and use the node boundary instead per the caller!
-	if ( !PlgIsBoxInsideView( self->internal, &room->header.node->bounds ) )
+	if ( !PlgIsBoxInsideView( self->internal, &room->base.bounds ) )
 	{
 		return;
 	}
@@ -195,13 +198,13 @@ static void camera_build_visibility_lists( ApeCamera *self )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ApeWorldNode *rootNode = ape_world_node_get_root( self->header.node );
+	ApeWorldNode *rootNode = ape_world_node_get_root( &self->base );
 	if ( rootNode == nullptr )
 	{
 		return;
 	}
 
-	ApeRoom *room = ape_world_node_get_room( self->header.node );
+	ApeRoom *room = ape_world_node_get_room( &self->base );
 	if ( room == nullptr )
 	{
 		PLLinkedListNode *childNode = PlGetFirstNode( rootNode->children );
@@ -211,7 +214,12 @@ static void camera_build_visibility_lists( ApeCamera *self )
 			assert( childWorldNode != nullptr );
 			childNode = PlGetNextLinkedListNode( childNode );
 
-			room = ape_world_node_get_room_data( childWorldNode );
+			if ( childWorldNode->type != APE_WORLD_NODE_TYPE_ROOM )
+			{
+				continue;
+			}
+
+			room = ( ApeRoom * ) childWorldNode;
 			if ( room != nullptr )
 			{
 				// this just draws every room we can see from the
@@ -246,18 +254,19 @@ void ape_camera_make_active( ApeCamera *camera )
 
 ApeWorld *ape_camera_get_world( ApeCamera *self )
 {
-	ApeWorldNode *worldNode = ape_world_node_get_root( self->header.node );
+	ApeWorldNode *worldNode = ape_world_node_get_root( &self->base );
 	if ( worldNode == nullptr )
 	{
 		return nullptr;
 	}
 
-	return ape_world_node_get_root_data( worldNode );
+	assert( ape_world_node_is_valid_( worldNode, APE_WORLD_NODE_TYPE_ROOT ) );
+	return ( ApeWorld * ) worldNode;
 }
 
 ApeRoom *ape_camera_get_room( ApeCamera *self )
 {
-	return ape_world_node_get_room( self->header.node );
+	return ape_world_node_get_room( &self->base );
 }
 
 void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode )
@@ -310,7 +319,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
-	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_CAMERA, position, angles, camera );
+	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, position, angles );
 
 	camera->mode = cameraMode;
 	camera->drawMode = drawMode;

@@ -22,7 +22,7 @@ void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { wo
 ApeWorld *ape_create_world( void )
 {
 	ApeWorld *world = PL_NEW( ApeWorld );
-	world->root = ape_world_node_create( nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3, world );
+	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	world->globalProperties = nd_branch_push_back_object( nullptr, "properties" );
 	nd_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
@@ -293,20 +293,9 @@ void ape_world_spawn_entities_( ApeWorld *world )
 	while ( node != nullptr )
 	{
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		ape_create_entity( worldEntity->className, worldEntity->properties );
+		ape_create_entity( worldEntity->className, worldEntity->properties, nullptr );
 		node = PlGetNextLinkedListNode( node );
 	}
-}
-
-void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node )
-{
-	if ( node->parent != nullptr )
-	{
-		PlDestroyLinkedListNode( node->parentListNode );
-	}
-
-	node->parent = self->root;
-	node->parentListNode = PlInsertLinkedListNode( self->root->children, node );
 }
 
 /****************************************
@@ -336,7 +325,7 @@ ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *posit
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
 		ApeRoom *room = ( ApeRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
-		if ( !PlIsPointIntersectingAabb( &room->header.node->bounds, *position ) )
+		if ( !PlIsPointIntersectingAabb( &room->base.bounds, *position ) )
 		{
 			continue;
 		}

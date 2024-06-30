@@ -69,19 +69,18 @@ void tox_world_spawn( ApeWorld *world )
 
 	ape_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
 
-	ApeWorldNode *worldNode = ape_world_get_world_node( world );
+	ApeWorldNode *worldNode = &world->base;
 	sunLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
 	                             APE_LIGHT_TYPE_SUN,
-	                             SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+	                             APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 	moonLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
-	                              SS_ARL_LIGHT_FLAG_ENABLED | SS_ARL_LIGHT_FLAG_DYNAMIC | SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS );
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 
 	//TODO: scrap this - let's just pass the world into the draw call... it's safer
 	ApeCamera *camera = tox_get_player_camera();
 	assert( camera != nullptr );
-
-	ape_world_node_attach( ape_camera_get_world_node( camera ), worldNode );
+	ape_world_node_attach( ( ApeWorldNode * ) camera, worldNode );
 
 	// do one tick, just to let things settle...
 	tox_world_tick( world );
@@ -136,7 +135,6 @@ void tox_world_tick( ApeWorld *world )
 		                                               DEFAULT_SUN_COLOUR.b,
 		                                               sunBrightness ) );
 	}
-
 
 	PLVector3 moonPosition = pitch_yaw_to_position( -sunPitch, -sunYaw );
 	moonBrightness = PlClamp( 0.0f, ( sunPitch ) / 1.0f, 0.25f );

@@ -111,13 +111,13 @@ static bool ss1_shutdown( void )
 
 	if ( ss1_gameState.camera != nullptr )
 	{
-		ape_world_node_destroy( ape_camera_get_world_node( ss1_gameState.camera ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) ss1_gameState.camera );
 		ss1_gameState.camera = nullptr;
 	}
 
 	if ( ss1_gameState.world != nullptr )
 	{
-		ape_world_node_destroy( ape_world_get_world_node( ss1_gameState.world ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) ss1_gameState.world );
 		ss1_gameState.world = nullptr;
 	}
 
@@ -183,27 +183,7 @@ static bool ss1_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &ss1_gameState.simulation );
 
-	ape_world_node_attach( ape_camera_get_world_node( ss1_gameState.camera ),
-	                       world->header.node );
-
-	ApeWorldNode *worldNode;
-	// attempt to fetch the terrain
-	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "terrain" ) ) != nullptr )
-	{
-		ss1_gameState.terrain = ape_world_node_get_brush_data( worldNode );
-		if ( ss1_gameState.terrain == nullptr )
-		{
-			game_warning_( "Terrain node is not a valid brush!\n" );
-		}
-	}
-	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "sun" ) ) != nullptr )
-	{
-		sun = ape_world_node_get_light_data( worldNode );
-		if ( sun == nullptr )
-		{
-			game_warning_( "Sun node is not a valid light!\n" );
-		}
-	}
+	ape_world_node_attach( ( ApeWorldNode * ) ( ss1_gameState.camera ), &world->base );
 
 	return true;
 }

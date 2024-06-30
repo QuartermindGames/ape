@@ -5,11 +5,7 @@
 #include "ape_private.h"
 #include "model.h"
 
-#include "ape/ape_formats.h"
-
 #include "plcore/pl_hashtable.h"
-
-#include <yin/node.h>
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -19,7 +15,7 @@ static PLHashTable *modelsTable;
 /**
  * Callback for garbage day.
  */
-static void destroy_model( void *userData )
+void ape_model_destroy_( void *userData )
 {
 	ApeModel *model = ( ApeModel * ) userData;
 	assert( model != NULL );
@@ -49,13 +45,13 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "Invalid number (%u) of positions in model!\n", numVertices );
+			ape_warning_( "Invalid number (%u) of positions in model!\n", numVertices );
 			numVertices = 0;
 		}
 	}
 	else
 	{
-		PRINT_WARNING( "Mesh has no vertices!\n" );
+		ape_warning_( "Mesh has no vertices!\n" );
 	}
 
 	PLVector3 *normals = NULL;
@@ -71,7 +67,7 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "Invalid number (%u) of normals in model!\n", numNormals );
+			ape_warning_( "Invalid number (%u) of normals in model!\n", numNormals );
 			numNormals = 0;
 		}
 	}
@@ -89,7 +85,7 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "Invalid number (%u) of UVs in model!\n", numUVs );
+			ape_warning_( "Invalid number (%u) of UVs in model!\n", numUVs );
 			numUVs = 0;
 		}
 	}
@@ -107,7 +103,7 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		}
 		else
 		{
-			PRINT_WARNING( "Invalid number (%u) of colours in model!\n", numColours );
+			ape_warning_( "Invalid number (%u) of colours in model!\n", numColours );
 			numColours = 0;
 		}
 	}
@@ -123,17 +119,19 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		numTriangles = numIndices / 3;
 	}
 	else
-		PRINT_WARNING( "Mesh has no indices!\n" );
+		ape_warning_( "Mesh has no indices!\n" );
 
 	unsigned int materialIndex = nd_branch_get_child_uint( root, "materialIndex", 0 );
 	if ( materialIndex >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		PRINT_WARNING( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, APE_FORMAT_MODEL_MAX_MATERIALS );
+		ape_warning_( "Material index (%u) exceeds material limit (%u)!\n", materialIndex, APE_FORMAT_MODEL_MAX_MATERIALS );
 		materialIndex = 0;
 	}
 
 	if ( model->meshes[ materialIndex ] == NULL )
+	{
 		model->meshes[ materialIndex ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
+	}
 	if ( model->meshes[ materialIndex ] != NULL )
 	{
 		for ( unsigned int i = 0; i < numVertices; ++i )
@@ -154,7 +152,9 @@ static PLGMesh *deserialize_mesh( ApeModel *model, NdBranch *root )
 		PlgUploadMesh( model->meshes[ materialIndex ] );
 	}
 	else
-		PRINT_WARNING( "Failed to create mesh: %s\n", PlGetError() );
+	{
+		ape_warning_( "Failed to create mesh: %s\n", PlGetError() );
+	}
 
 	PL_DELETE( positions );
 	PL_DELETE( normals );
@@ -170,7 +170,7 @@ static ApeModel *deserialize_model( NdBranch *root )
 	unsigned int version = nd_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
-		PRINT_WARNING( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
+		ape_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
 		return NULL;
 	}
 
@@ -178,12 +178,12 @@ static ApeModel *deserialize_model( NdBranch *root )
 	NdBranch *meshArray = nd_branch_get_child_by_name( root, "meshes" );
 	if ( meshArray == NULL || ( ( numMeshes = nd_branch_get_num_of_children( meshArray ) ) == 0 ) )
 	{
-		PRINT_WARNING( "No meshes for model!\n" );
+		ape_warning_( "No meshes for model!\n" );
 		return NULL;
 	}
 	else if ( numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		PRINT_WARNING( "Unexpected number of meshes (%u >= %u)!\n", numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
+		ape_warning_( "Unexpected number of meshes (%u >= %u)!\n", numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
 		numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
@@ -193,7 +193,7 @@ static ApeModel *deserialize_model( NdBranch *root )
 	NdBranch *materialArray = nd_branch_get_child_by_name( root, "materials" );
 	if ( materialArray == NULL )
 	{
-		PRINT_WARNING( "No materials for model, using fallback!\n" );
+		ape_warning_( "No materials for model, using fallback!\n" );
 		model->numMaterials = 1;
 		model->materials[ 0 ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 	}
@@ -207,11 +207,13 @@ static ApeModel *deserialize_model( NdBranch *root )
 			char materialPath[ PL_SYSTEM_MAX_PATH ];
 			if ( nd_branch_get_string( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
 			{
-				PRINT_WARNING( "Failed to get material string for model: %s\n", nd_get_error_message() );
+				ape_warning_( "Failed to get material string for model: %s\n", nd_get_error_message() );
 				model->materials[ i ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
 			}
 			else
+			{
 				model->materials[ i ] = ape_material_cache( materialPath, 0, true, false );
+			}
 
 			n = nd_get_next_child( n );
 		}
@@ -231,7 +233,7 @@ static ApeModel *deserialize_model( NdBranch *root )
 		model->numBones = nd_branch_get_num_of_children( bonesList );
 		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
 		{
-			PRINT_WARNING( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
+			ape_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
 			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
 		NdBranch *child = nd_branch_get_first_child( bonesList );
@@ -246,7 +248,7 @@ static ApeModel *deserialize_model( NdBranch *root )
 		unsigned int rootBone = nd_branch_get_child_uint( root, "rootBone", 0 );
 		if ( rootBone >= model->numBones )
 		{
-			PRINT_WARNING( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
+			ape_warning_( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
 			rootBone = 0;
 		}
 		model->rootBone = &model->bones[ rootBone ];
@@ -261,22 +263,28 @@ static ApeModel *deserialize_model( NdBranch *root )
 ApeModel *ape_load_model( const char *path )
 {
 	if ( modelsTable == NULL )
+	{
 		modelsTable = PlCreateHashTable();
+	}
 
 	ApeModel *model = PlLookupHashTableUserData( modelsTable, path, strlen( path ) );
 	if ( model != NULL )
+	{
 		return model;
+	}
 
 	NdBranch *root = nd_load_file( path, "model" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Invalid model: %s (%s)\n", nd_get_error_message() );
+		ape_warning_( "Invalid model: %s (%s)\n", nd_get_error_message() );
 		return NULL;
 	}
 
 	model = deserialize_model( root );
 	if ( model == NULL )
-		PRINT_WARNING( "Failed to load model, \"%s\"!\n", path );
+	{
+		ape_warning_( "Failed to load model, \"%s\"!\n", path );
+	}
 
 	nd_branch_destroy( root );
 

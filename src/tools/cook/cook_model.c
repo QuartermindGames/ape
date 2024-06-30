@@ -10,6 +10,7 @@
 #include "ape/ape_formats.h"
 
 #include "plcore/pl_hashtable.h"
+#include "plcore/pl_timer.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -123,19 +124,24 @@ static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char 
 		return;
 	}
 
-	NdBranch *child;
-	if ( dst->numBones > 0 )
+	dst->isStatic = nd_branch_get_child_bool( root, "isStatic", false );
+	if ( !dst->isStatic )
 	{
-		if ( ( child = nd_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+		if ( dst->numBones > 0 )
 		{
-			deserialize_model_animations( child, dst, folder );
-		}
-		else
-		{
-			WARN( "Skeletal model, but no animations specified!\n" );
+			NdBranch *child;
+			if ( ( child = nd_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+			{
+				deserialize_model_animations( child, dst, folder );
+			}
+			else
+			{
+				WARN( "Skeletal model, but no animations specified!\n" );
+			}
 		}
 	}
 
+	NdBranch *child;
 	if ( ( child = nd_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
 	{
 	}
@@ -214,6 +220,8 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 
 	// build up lists of unique vertex data sets...
 	PLHashTable *vertexTable = PlCreateHashTable();
+	assert( model->numVertices > 0 );
+	printf( "%u vertices\n", model->numVertices );
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
 		VectorIndex *index = PL_NEW( VectorIndex );
@@ -221,6 +229,7 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		index->vec = &model->vertices[ i ].position;
 		PlInsertHashTableNode( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ), index );
 	}
+	//todo: we might as well encode the normals into the same table... can't remember why we didn't!
 	PLHashTable *normalsTable = PlCreateHashTable();
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
@@ -255,10 +264,14 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
-	child = nd_branch_push_back_object_array( root, "bones" );
-	for ( unsigned int i = 0; i < model->numBones; ++i )
+	nd_branch_push_back_bool( root, "isStatic", model->isStatic );
+	if ( model->numBones > 0 )
 	{
-		serialize_bone( child, &model->bones[ i ] );
+		child = nd_branch_push_back_object_array( root, "bones" );
+		for ( unsigned int i = 0; i < model->numBones; ++i )
+		{
+			serialize_bone( child, &model->bones[ i ] );
+		}
 	}
 
 	child = nd_branch_push_back_object_array( root, "meshes" );
@@ -341,11 +354,17 @@ void cook_model_process( const char *modelName )
 	NdBranch *root = nd_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
+		double startTime = PlGetCurrentSeconds();
+
 		parse_model_config( root, model, folder );
 
 		nd_branch_destroy( root );
 
 		write_ape_format_model( model, folder );
+
+		double endTime = PlGetCurrentSeconds();
+
+		printf( "Processed model in %.2lfs\n", endTime - startTime );
 	}
 	else
 	{

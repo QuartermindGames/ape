@@ -451,6 +451,8 @@ bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize )
 
 	netSocket->sendBuffer = newSendBuffer;
 	netSocket->sendBufferSize = maxSendSize;
+
+	return true;
 }
 
 size_t ape_net_get_max_send_size_( ApeNetSocket *netSocket )

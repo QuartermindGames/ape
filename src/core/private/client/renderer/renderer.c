@@ -595,7 +595,7 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 
 		if ( ape_config_.renderer.showLights )
 		{
-			arl_draw_axis_pivot( lights[ i ]->header.node->position, lights[ i ]->header.node->angles, 1.0f );
+			arl_draw_axis_pivot( lights[ i ]->base.position, lights[ i ]->base.angles, 1.0f );
 		}
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );

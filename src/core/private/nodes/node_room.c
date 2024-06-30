@@ -1,12 +1,12 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Specific logic for managing rooms, otherwise known as "sectors", within a world
 
-#include "world.h"
+#include "../world/world.h"
 
-ApeRoom *ape_create_room( ApeWorldNode *parent )
+ApeRoom *ape_room_create( ApeWorldNode *parent )
 {
 	ApeRoom *room = PL_NEW( ApeRoom );
-	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_ROOM, &pl_vecOrigin3, &pl_vecOrigin3, room );
+	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	room->detailRooms = PlCreateVectorArray( 0 );
 	room->faces = PlCreateVectorArray( 0 );

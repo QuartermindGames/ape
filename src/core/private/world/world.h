@@ -10,7 +10,7 @@
 #include <yin/core_world.h>
 
 #include "ape_memory_manager.h"
-#include "nodes/entity/entity.h"
+#include "nodes/node_entity.h"
 #include "audio/audio.h"
 
 #define WORLD_PROP_TAG_LENGTH 64
@@ -119,7 +119,7 @@ typedef struct ApeWorldPortal
 typedef struct ApeRoom
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	bool isDetail;
 

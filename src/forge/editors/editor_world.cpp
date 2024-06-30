@@ -115,13 +115,13 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 		case APE_WORLD_NODE_TYPE_EMPTY: break;
 		case APE_WORLD_NODE_TYPE_ROOT: break;
 		case APE_WORLD_NODE_TYPE_ROOM:
-			data = ape_create_room( parentNode );
+			data = ape_room_create( parentNode );
 			break;
 		case APE_WORLD_NODE_TYPE_BRUSH:
 			data = ape_create_brush( parentNode, &pos, &pl_vecOrigin3 );
 			break;
 		case APE_WORLD_NODE_TYPE_LIGHT:
-			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );
+			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED );
 			break;
 		case APE_WORLD_NODE_TYPE_CAMERA:
 			data = ape_create_camera( parentNode, &pos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
@@ -135,16 +135,16 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 
 void ss::forge::editor_world::update_tree()
 {
-	FXTreeItem *parentItem = nodeTree->findItem( _world->root->name );
+	FXTreeItem *parentItem = nodeTree->findItem( _world->base.name );
 	if ( parentItem == nullptr )
 	{
-		parentItem = nodeTree->appendItem( nullptr, _world->root->name );
+		parentItem = nodeTree->appendItem( nullptr, _world->base.name );
 		parentItem->setClosedIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
 		parentItem->setOpenIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
 		parentItem->setExpanded( true );
 	}
 
-	PLLinkedListNode *node = PlGetFirstNode( _world->root->children );
+	PLLinkedListNode *node = PlGetFirstNode( _world->base.children );
 	while ( node != nullptr )
 	{
 		auto *worldNode = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( node );
@@ -158,7 +158,7 @@ void ss::forge::editor_world::update_tree()
 				continue;
 			}
 
-			auto cameraWorldNode = ape_camera_get_world_node( viewport->camera );
+			auto cameraWorldNode = ( ApeWorldNode * ) viewport->camera;
 			if ( cameraWorldNode != worldNode )
 			{
 				continue;
