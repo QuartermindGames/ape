@@ -8,7 +8,7 @@
   - Another is to use a selection of wedges that are shaped based on the penumbra...
 - Look into adding support for DOF
 - Stencil shadow volumes only need to extend within the sphere/radius of a local light source
-- Look into light-bleeding issue...
+- Look into the light-bleeding issue...
 - Restrict vertices for stencil shadows based on point of intersection
   - If point doesn't cross/intersect, we should have a reasonable limit
 
@@ -35,18 +35,18 @@
 - **(Editor)** Look into the concept of supporting multiple grids
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Sky plane should display irrelevent of camera position
-- Migrate Detox to use new shared world 'simulation' code
+- String table for binary-based node format
 - Test the rope physics and confirm they're working
 - Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives
 - Per-vertex lighting shader
 
 ## In-Progress
 - Model import from SMD/QC etc.
-- String table for binary-based node format
 
 ## Done
 
 ### 2024-07
+- Add 'list_worlds' command
 
 ### 2024-06
 - Migrate rope physics from Doom 3

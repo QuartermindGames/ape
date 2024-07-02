@@ -3,13 +3,11 @@
 Hi there, thanks for your interest in APE Tech! These documents will hopefully give you some guidance on how you can use the engine.
 
 - [Forge Documentation](forge/forge.md)
+- [Changelog](changelog.md)
 
 # Getting Started
 
 ## Creating a new project
-
-!!! warning 
-This is no longer recommended.
 
 Projects can be found or added under the `release/projects/` directory.
 
