@@ -1,0 +1,8 @@
+site_name: APE Tech Documentation
+nav:
+ - Home 🏠: index.md
+ - Other 🏠:
+     Todo: todo.md
+theme: 
+ name: readthedocs
+ color_mode: dark

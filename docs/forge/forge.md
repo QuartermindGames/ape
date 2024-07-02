@@ -26,7 +26,7 @@ From here you can now go into *File* in the top menu, and either choose to creat
 
 - [World Editor](forge_world_editor.md)
 - [Material Editor]()
-- [Model Editor]()
+- [Model Editor](forge_model_editor.md)
 
 ## Troubleshooting
 

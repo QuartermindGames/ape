@@ -36,16 +36,27 @@
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Sky plane should display irrelevent of camera position
 - Migrate Detox to use new shared world 'simulation' code
+- Test the rope physics and confirm they're working
+- Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives
+- Per-vertex lighting shader
 
 ## In-Progress
-- Remove class API per brushes; we'll have just poly-brushes now
 - Model import from SMD/QC etc.
+- String table for binary-based node format
 
 ## Done
-- ~~Networking~~
-  - ~~Bitshift protocol version~~
-  - ~~Disconnect currently just crashes~~
-- ~~Terrain brush type using heightmap with variable height specific textures~~ (ditched)
+
+### 2024-07
+
+### 2024-06
+- Migrate rope physics from Doom 3
+- Versioning for binary node format
+- Remove class API per brushes; we'll have just poly-brushes now
+- Bitshift protocol version
+- Disconnect currently just crashes
+- ~~Terrain brush type using heightmap with variable height specific textures~~
+
+### Older...
 - ~~Fix post-processing, again~~
 - ~~Allow for reloading shaders on command (hot-reload feature?)~~
 - ~~Icons for nodes within viewport~~
