@@ -22,6 +22,17 @@ static void world_command( unsigned int argc, char **argv )
 	ape_spawn_world_( path );
 }
 
+static void print_world_name( const char *path, void * )
+{
+	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
+	ape_print_( "%s\n", name );
+}
+
+static void list_worlds_command( uint, char ** )
+{
+	PlScanDirectory( "worlds", "n", print_world_name, false, nullptr );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -33,6 +44,7 @@ void ape_initialize_game_( void )
 	ape_print_( "Initializing game...\n" );
 
 	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, world_command );
+	PlRegisterConsoleCommand( "list_worlds", "List all of the available worlds.", 0, list_worlds_command );
 
 	ape_gameInterface = ape_game_get_interface();
 	if ( ape_gameInterface == nullptr )
