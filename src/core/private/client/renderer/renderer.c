@@ -352,6 +352,8 @@ void ape_initialize_renderer_( void )
 	ape_initialize_bitmap_fonts_();
 	ape_initialize_flares_();
 
+	ape_draw_initialize_debug_mesh_();
+
 	ape_setup_default_draw_state_( NULL );
 
 	defaultRenderTarget = ape_render_target_create( "default",
@@ -370,6 +372,8 @@ void ape_initialize_renderer_( void )
 void ape_shutdown_renderer_( void )
 {
 	ape_postfx_cleanup_();
+
+	ape_draw_destroy_debug_mesh_();
 
 	ape_shutdown_flares_();
 	ape_shutdown_bitmap_fonts_();
@@ -686,6 +690,9 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	}
 
 	PlgDepthBufferFunction( PLG_COMPARE_LESS );
+
+	// for now, shove this here, but really it should be accounting for the room transform... :(
+	ape_draw_debug_mesh_display_();
 
 	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
 }

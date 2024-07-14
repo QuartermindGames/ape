@@ -169,4 +169,13 @@ PLGTexture *ape_texture_get_fallback( void );
 void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity );
 void ape_clear_flare_queue_( void );
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Debug Draw
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_draw_initialize_debug_mesh_();
+void ape_draw_destroy_debug_mesh_();
+void ape_draw_debug_begin_tick_();
+void ape_draw_debug_mesh_display_();
+
 ////////////////////////////////////////////////////////////////////

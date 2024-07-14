@@ -223,7 +223,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	};
 
 	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	PLVector3 *points = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
+	PLVector3   *points       = PlCAllocA( numOutPoints, sizeof( PLVector3 ) );
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
@@ -270,8 +270,8 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	if ( heading != NULL )
 	{
-		size_t len = strlen( heading );
-		float cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
+		size_t len  = strlen( heading );
+		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
 		ape_bitmap_font_batch_string( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
 	}
 
@@ -302,4 +302,124 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	ape_bitmap_font_draw( font );
 
 	PL_DELETE( points );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Debug Draw
+/////////////////////////////////////////////////////////////////////////////////////
+
+static PLGMesh     *debugDrawMesh;
+static ApeMaterial *debugDrawMaterial;
+
+void ape_draw_initialize_debug_mesh_()
+{
+	assert( debugDrawMesh == nullptr );
+	assert( debugDrawMaterial == nullptr );
+
+	debugDrawMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_DYNAMIC, 0, 2048 );
+	if ( debugDrawMesh == nullptr )
+	{
+		ape_error_( true, "Failed to create debug draw mesh: %s\n", PlGetError() );
+	}
+
+	debugDrawMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_GLOBAL, false, false );
+	if ( debugDrawMaterial == nullptr )
+	{
+		ape_error_( true, "Failed to cache debug draw material!\n" );
+	}
+}
+
+void ape_draw_destroy_debug_mesh_()
+{
+	assert( debugDrawMesh != nullptr );
+	assert( debugDrawMaterial != nullptr );
+
+	PlgDestroyMesh( debugDrawMesh );
+	debugDrawMesh = nullptr;
+
+	ape_material_release( debugDrawMaterial );
+	debugDrawMaterial = nullptr;
+}
+
+void ape_draw_debug_begin_tick_()
+{
+	PlgClearMesh( debugDrawMesh );
+}
+
+void ape_draw_debug_mesh_display_()
+{
+	ape_material_draw( debugDrawMaterial, debugDrawMesh, nullptr, 0 );
+}
+
+void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour )
+{
+	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+}
+
+void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
+{
+	PLVector3 direction = PlSubtractVector3( end, start );
+	float     length    = PlVector3Length( direction );
+	direction           = PlNormalizeVector3( direction );
+
+	PLVector3 arrowHead  = PlNormalizeVector3( PlAddVector3( start, PlScaleVector3F( direction, length * .5f ) ) );
+	PLVector3 arrowLeft  = PlSubtractVector3( PlAddVector3( end, PlScaleVector3F( PlVector3CrossProduct( direction, PLVector3( 0.0f, 0.0f, 1.0f ) ), 0.5f ) ), arrowHead );
+	PLVector3 arrowRight = PlSubtractVector3( PlAddVector3( end, PlScaleVector3F( PlVector3CrossProduct( PLVector3( 0.0f, 0.0f, 1.0f ), direction ), 0.5f ) ), arrowHead );
+
+	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+
+	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &arrowLeft, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+
+	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &arrowRight, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+}
+
+void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale )
+{
+	static constexpr uint  NUM_SEGMENTS = 16;
+	static constexpr float DELTA        = 2.0f * PL_PI / NUM_SEGMENTS;
+
+	// array to store the vertices
+	PLVector3 vertices[ NUM_SEGMENTS + 1 ][ NUM_SEGMENTS + 1 ];
+
+	// Generate the vertices
+	for ( int i = 0; i <= NUM_SEGMENTS; ++i )
+	{
+		for ( int j = 0; j <= NUM_SEGMENTS; ++j )
+		{
+			float angle1 = ( float ) i * DELTA;// azimuth
+			float angle2 = ( float ) j * DELTA;// elevation
+
+			PLVector3 pos = {
+			        .x = origin.x + scale * sinf( angle2 ) * cosf( angle1 ),
+			        .y = origin.y + scale * sinf( angle2 ) * sinf( angle1 ),
+			        .z = origin.z + scale * cosf( angle2 ),
+			};
+
+			vertices[ i ][ j ] = pos;
+		}
+	}
+
+	// Create lines along latitudes (across)
+	for ( int i = 0; i <= NUM_SEGMENTS; ++i )
+	{
+		for ( int j = 0; j < NUM_SEGMENTS; ++j )
+		{
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j + 1 ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+		}
+	}
+
+	// Create lines along longitudes (up-down)
+	for ( int i = 0; i < NUM_SEGMENTS; ++i )
+	{
+		for ( int j = 0; j <= NUM_SEGMENTS; ++j )
+		{
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i + 1 ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+		}
+	}
 }

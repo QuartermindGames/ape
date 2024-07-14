@@ -210,6 +210,35 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 
+// The following are safe to be called during tick, the above are *not*!
+
+/**
+ * Draws a basic wireframe line from start to end.
+ *
+ * @param start 	Point the line starts.
+ * @param end 		Point the line ends.
+ * @param colour 	Colour of the line.
+ */
+void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour );
+
+/**
+ * Draw a wireframe arrow from start to end.
+ *
+ * @param start		Point the line starts.
+ * @param end 		Point the line ends. Arrow will point in this direction.
+ * @param colour	Colour of the line.
+ */
+void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour );
+
+/**
+ * Draw a wireframe sphere at the given location.
+ *
+ * @param origin 	Position of the sphere.
+ * @param colour 	Colour of the sphere.
+ * @param scale 	Scale of the sphere.
+ */
+void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 

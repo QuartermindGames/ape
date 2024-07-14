@@ -160,6 +160,12 @@ static bool ss1_tick( void )
 
 			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
 			ape_light_set_position( suns[ 1 ], &sunPosition );
+
+			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 0.0f, 8.0f, 0.0f ), PL_COLOUR_ORANGE_RED );
+			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 8.0f, 0.0f, 0.0f ), PL_COLOUR_PURPLE );
+			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 0.0f, 0.0f, 8.0f ), PL_COLOUR_PURPLE );
+
+			ape_draw_debug_sphere( PL_VECTOR3( 0.0f, 16.0f, 0.0f ), PL_COLOUR_WHITE, 1.0f );
 		}
 
 		ape_world_set_ambience( world, &( PLColourF32 ){ 0.25f, 0.25f, 0.25f, 1.f } );
