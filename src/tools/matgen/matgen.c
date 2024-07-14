@@ -15,10 +15,10 @@ typedef struct MatGen
 {
 	const char *dir;
 	const char *shader;
-	bool overwrite;
+	bool        overwrite;
 
 	GameMaterialSurface *surfaceLookup;
-	int8_t numSurfaces;
+	int8_t               numSurfaces;
 } MatGen;
 static MatGen matGen;
 
@@ -64,7 +64,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 	*c = '\0';
 
 	PLPath writePath;
-	PlSetupPath( writePath, true, "%s/%s.mat.n", matGen.dir, name );
+	PlSetupPath( writePath, true, "%s/%s." APE_FORMAT_MATERIAL_EXTENSION, matGen.dir, name );
 	if ( matGen.overwrite || ( !matGen.overwrite && !PlFileExists( writePath ) ) )
 	{
 #if 0// old hard-coded method
@@ -134,11 +134,11 @@ static bool LoadSurfacesConfig( const char *path )
 		return false;
 	}
 
-	matGen.numSurfaces = ( int8_t ) nd_branch_get_num_of_children( root );
+	matGen.numSurfaces   = ( int8_t ) nd_branch_get_num_of_children( root );
 	matGen.surfaceLookup = PL_NEW_( GameMaterialSurface, matGen.numSurfaces );
 
 	GameMaterialSurface *surface = matGen.surfaceLookup;
-	NdBranch *child = nd_branch_get_first_child( root );
+	NdBranch            *child   = nd_branch_get_first_child( root );
 	while ( child != NULL )
 	{
 		snprintf( surface->description, sizeof( surface->description ),
@@ -148,7 +148,7 @@ static bool LoadSurfacesConfig( const char *path )
 		if ( aliases != NULL )
 		{
 			surface->numAliases = nd_branch_get_num_of_children( aliases );
-			surface->aliases = PL_NEW_( char *, surface->numAliases );
+			surface->aliases    = PL_NEW_( char *, surface->numAliases );
 			nd_branch_get_string_array( aliases, surface->aliases, surface->numAliases );
 			//for ( uint8_t i = 0; i < surface->numAliases; ++i )
 			//{
@@ -205,7 +205,7 @@ int main( int argc, char **argv )
 	}
 
 	matGen.overwrite = PlHasCommandLineArgument( "-o" );
-	bool recursive = PlHasCommandLineArgument( "-r" );
+	bool recursive   = PlHasCommandLineArgument( "-r" );
 
 	PlScanDirectory( matGen.dir, "png", GenerateMaterial, recursive, NULL );
 	PlScanDirectory( matGen.dir, "tga", GenerateMaterial, recursive, NULL );

@@ -2,21 +2,21 @@
 
 #pragma once
 
-#include "editor.h"
-#include "viewport_frame.h"
-#include "ForgeConsoleFrame.h"
+#include "forge.h"
+#include "forge_viewport.h"
+#include "forge_console_frame.h"
 
-namespace ss::forge
+namespace forge
 {
-	class ForgeMainWindow : public FXMainWindow
+	class MainWindow : public FXMainWindow
 	{
-		FXDECLARE( ForgeMainWindow )
+		FXDECLARE( MainWindow )
 
 	public:
-		explicit ForgeMainWindow( FXApp *app );
+		explicit MainWindow( FXApp *app );
 
 	protected:
-		inline ForgeMainWindow() = default;
+		inline MainWindow() = default;
 
 	public:
 		long on_tick( FXObject *, FXSelector, void * );
@@ -65,18 +65,18 @@ namespace ss::forge
 
 		Project *currentProject{ nullptr };
 
-		FXMenuBar *menuBar_{};
+		FXMenuBar       *menuBar_{};
 		FXVerticalFrame *mainFrame{};
-		FXStatusBar *statusBars_[ 3 ]{};
+		FXStatusBar     *statusBars_[ 3 ]{};
 
 	public:
 		static FXGLVisual *glVisual_;
 
 	private:
-		ForgeConsoleFrame *console{};
+		ConsoleFrame *console{};
 
 	private:
-		FXTabBook *_tabBook{};
+		FXTabBook                 *_tabBook{};
 		std::vector< FXTabItem * > _tabs;
 
 		bool isGameRunning{};
@@ -89,7 +89,8 @@ namespace ss::forge
 
 	public:
 		FXTabItem *get_active_tab();
+		FXTabItem *add_tab( FXTabItem *item );
 	};
 
-	extern ForgeMainWindow *mainWindow;
-}// namespace ss::forge
+	extern MainWindow *mainWindow;
+}// namespace forge

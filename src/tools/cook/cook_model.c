@@ -2,21 +2,16 @@
 // Purpose: Cooking methods specific to models.
 // Author:  Mark E. Sowden
 
-#include "cook.h"
-
-#include "model/model.h"
-#include "model/model_obj.h"
-
-#include "ape/ape_formats.h"
-
 #include "plcore/pl_hashtable.h"
 #include "plcore/pl_timer.h"
+
+#include "cook.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-extern const CookModelFormatInterface modelSmdInterface;
-extern const CookModelFormatInterface modelObjInterface;
+extern const CookModelFormatInterface  modelSmdInterface;
+extern const CookModelFormatInterface  modelObjInterface;
 static const CookModelFormatInterface *modelCookFormats[] = {
         &modelObjInterface,
         &modelSmdInterface,
@@ -152,7 +147,7 @@ static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char 
 typedef struct VectorIndex
 {
 	const PLVector3 *vec;
-	unsigned int pos;
+	unsigned int     pos;
 } VectorIndex;
 
 static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
@@ -225,8 +220,8 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
 		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos = i;
-		index->vec = &model->vertices[ i ].position;
+		index->pos         = i;
+		index->vec         = &model->vertices[ i ].position;
 		PlInsertHashTableNode( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ), index );
 	}
 	//todo: we might as well encode the normals into the same table... can't remember why we didn't!
@@ -234,15 +229,15 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
 		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos = i;
-		index->vec = &model->vertices[ i ].normal;
+		index->pos         = i;
+		index->vec         = &model->vertices[ i ].normal;
 		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), index );
 	}
 
-	NdBranch *child;
+	NdBranch        *child;
 	PLHashTableNode *childHashNode;
 
-	child = nd_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	child         = nd_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( vertexTable );
 	while ( childHashNode != nullptr )
 	{
@@ -253,7 +248,7 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
-	child = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
+	child         = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( normalsTable );
 	while ( childHashNode != nullptr )
 	{

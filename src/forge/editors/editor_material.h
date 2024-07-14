@@ -2,22 +2,22 @@
 
 #pragma once
 
-#include "../editor.h"
+#include "forge/forge.h"
 
-namespace ss::forge
+namespace forge
 {
-	class viewport_frame;
+	class Viewport;
 
-	class editor_material : public FXTabItem
+	class MaterialEditor : public FXTabItem
 	{
-		FXDECLARE( editor_material )
+		FXDECLARE( MaterialEditor )
 
 	protected:
-		inline editor_material() = default;
+		inline MaterialEditor() = default;
 
 	public:
-		editor_material( FXTabBook *owner, const FXString &worldName, ApeMaterial *material );
-		~editor_material() override;
+		MaterialEditor( FXTabBook *owner, const FXString &worldName, ApeMaterial *material );
+		~MaterialEditor() override;
 
 	private:
 		ApeWorld *_material{ nullptr };
@@ -25,6 +25,6 @@ namespace ss::forge
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;
 
-		viewport_frame *_viewport;
+		Viewport *_viewport;
 	};
-}// namespace ss::forge
+}// namespace forge

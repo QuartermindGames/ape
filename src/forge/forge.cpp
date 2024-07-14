@@ -7,9 +7,9 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_driver_interface.h>
 
-#include "editor.h"
-#include "ForgeMainWindow.h"
-#include "ForgeProjectDialog.h"
+#include "forge.h"
+#include "forge_window_main.h"
+#include "forge_project_dialog.h"
 
 #include "common_project.h"
 
@@ -25,19 +25,19 @@ void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
 
 int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
-PLPath ss::forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
-NdBranch *ss::forge::editorConfig;
+PLPath    forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
+NdBranch *forge::editorConfig;
 
 static FXGLVisual *glVisual = nullptr;
-FXGLVisual *ss::forge::get_shared_gl_visual() { return glVisual; }
+FXGLVisual        *forge::get_shared_gl_visual() { return glVisual; }
 
-bool ss::forge::isCookAvailable = true;
+bool forge::isCookAvailable = true;
 
-ss::forge::Project *ss::forge::editorProject = nullptr;
+forge::Project *forge::editorProject = nullptr;
 
 static std::map< std::string, PLImage * > cachedImages;
 
-FXColor ss::forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
+FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
 static NdBranch *generate_project_config( const char *name, const char *path )
 {
@@ -62,12 +62,12 @@ static NdBranch *generate_project_config( const char *name, const char *path )
 /**
  * Creates a new project.
  */
-ss::forge::Project *ss::forge::create_project( const std::string &name, const std::string &folderName )
+forge::Project *forge::create_project( const std::string &name, const std::string &folderName )
 {
 	auto *project = PL_NEW( Project );
 
 	PLPath projectPath;
-	PlSetupPath( projectPath, true, "%s/%s", ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], folderName.c_str() );
+	PlSetupPath( projectPath, true, "%s/%s", forge::cachedPaths[ forge::PATH_PROJECTS ], folderName.c_str() );
 
 	if ( PlLocalPathExists( projectPath ) )
 	{
@@ -82,37 +82,37 @@ ss::forge::Project *ss::forge::create_project( const std::string &name, const st
 	}
 
 	project->internalName = folderName;
-	project->name = name;
+	project->name         = name;
 
 	// and now create our placeholder node file
 
 	PLPath nodePath;
 	project->config = generate_project_config( name.c_str(),
 	                                           PlSetupPath( nodePath, true, "%s/%s/%s.prj.n",
-	                                                        ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ],
+	                                                        forge::cachedPaths[ forge::PATH_PROJECTS ],
 	                                                        folderName.c_str(),
 	                                                        folderName.c_str() ) );
 
 	return project;
 }
 
-bool ss::forge::open_project( const char *path )
+bool forge::open_project( const char *path )
 {
 	return com_project_mount( path );
 }
 
 static void setup_paths( const char *exePath )
 {
-	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_EXE ], true, "%s", exePath );
-	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_RESOURCES ], true, "%s/../../resources", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
-	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], true, "%s/../../projects", ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
-	PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, ss::forge::cachedPaths[ ss::forge::PATH_EXE ] );
+	PlSetupPath( forge::cachedPaths[ forge::PATH_EXE ], true, "%s", exePath );
+	PlSetupPath( forge::cachedPaths[ forge::PATH_RESOURCES ], true, "%s/../../resources", forge::cachedPaths[ forge::PATH_EXE ] );
+	PlSetupPath( forge::cachedPaths[ forge::PATH_PROJECTS ], true, "%s/../../projects", forge::cachedPaths[ forge::PATH_EXE ] );
+	PlSetupPath( forge::cachedPaths[ forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, forge::cachedPaths[ forge::PATH_EXE ] );
 
-	if ( !PlFileExists( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] ) )
+	if ( !PlFileExists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
 	{
-		ss::forge::isCookAvailable = false;
+		forge::isCookAvailable = false;
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
-		                       ss::forge::cachedPaths[ ss::forge::PATH_COOK ] );
+		                       forge::cachedPaths[ forge::PATH_COOK ] );
 	}
 
 	PLPath tmp;
@@ -120,7 +120,7 @@ static void setup_paths( const char *exePath )
 	{
 		if ( PlCreateDirectory( tmp ) )
 		{
-			PlSetupPath( ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ], true, "%s", tmp );
+			PlSetupPath( forge::cachedPaths[ forge::PATH_CONFIG ], true, "%s", tmp );
 		}
 		else
 		{
@@ -133,13 +133,13 @@ static void setup_paths( const char *exePath )
 	}
 
 	// fallback to local location if it failed...
-	if ( *ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ] == '\0' )
+	if ( *forge::cachedPaths[ forge::PATH_CONFIG ] == '\0' )
 	{
-		ss::forge::cachedPaths[ ss::forge::PATH_CONFIG ][ 0 ] = '.';
+		forge::cachedPaths[ forge::PATH_CONFIG ][ 0 ] = '.';
 	}
 }
 
-FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
+FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 {
 	PLPath fullPath;
 	PlSetupPath( fullPath, true, "../../%s", path );
@@ -147,7 +147,7 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 #if 1
 
 	PLImage *image;
-	auto i = cachedImages.find( fullPath );
+	auto     i = cachedImages.find( fullPath );
 	if ( i != cachedImages.end() )
 	{
 		image = i->second;
@@ -179,32 +179,32 @@ FXIcon *ss::forge::load_fx_icon( FXApp *app, const char *path )
 
 static void setup_colours( FXApp &app )
 {
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] = ( FXColor ) nd_branch_get_child_uint( ss::forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BASE ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	forge::themeColours[ forge::THEME_COLOUR_FORE ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	forge::themeColours[ forge::THEME_COLOUR_HILITE ] = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BACK ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
-	app.setBackColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BACK ] );
-	app.setBaseColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
-	app.setForeColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_FORE ] );
+	app.setBackColor( forge::themeColours[ forge::THEME_COLOUR_BACK ] );
+	app.setBaseColor( forge::themeColours[ forge::THEME_COLOUR_BASE ] );
+	app.setForeColor( forge::themeColours[ forge::THEME_COLOUR_FORE ] );
 
-	app.setBorderColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_BASE ] );
-	app.setHiliteColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
-	app.setShadowColor( ss::forge::themeColours[ ss::forge::THEME_COLOUR_HILITE ] );
+	app.setBorderColor( forge::themeColours[ forge::THEME_COLOUR_BASE ] );
+	app.setHiliteColor( forge::themeColours[ forge::THEME_COLOUR_HILITE ] );
+	app.setShadowColor( forge::themeColours[ forge::THEME_COLOUR_HILITE ] );
 }
 
 FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
-void setup_icons( FXApp &app )
+void    setup_icons( FXApp &app )
 {
-	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = ss::forge::load_fx_icon( &app, "resources/brush_mode.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_EDGE ] = ss::forge::load_fx_icon( &app, "resources/edge_mode.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ] = ss::forge::load_fx_icon( &app, "resources/face_mode.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = forge::load_fx_icon( &app, "resources/brush_mode.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_EDGE ]  = forge::load_fx_icon( &app, "resources/edge_mode.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ]  = forge::load_fx_icon( &app, "resources/face_mode.gif" );
 
-	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ] = ss::forge::load_fx_icon( &app, "resources/node.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] = ss::forge::load_fx_icon( &app, "resources/world_editor.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ] = ss::forge::load_fx_icon( &app, "resources/room.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_ENTITY ] = ss::forge::load_fx_icon( &app, "resources/entity.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_TEXTURE ] = ss::forge::load_fx_icon( &app, "resources/texture.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ]    = forge::load_fx_icon( &app, "resources/node.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ]   = forge::load_fx_icon( &app, "resources/world_editor.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ]    = forge::load_fx_icon( &app, "resources/room.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_ENTITY ]  = forge::load_fx_icon( &app, "resources/entity.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_TEXTURE ] = forge::load_fx_icon( &app, "resources/texture.gif" );
 }
 
 int main( int argc, char **argv )
@@ -227,8 +227,8 @@ int main( int argc, char **argv )
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
 	{
-		size_t const size = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char *driverPath = PL_NEW_( char, size );
+		size_t const size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
+		char        *driverPath = PL_NEW_( char, size );
 		snprintf( driverPath, size, "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
 		PL_DELETE( driverPath );
@@ -251,12 +251,12 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
 
-	ss::forge::editorConfig = com_get_config( "editor" );
+	forge::editorConfig = com_get_config( "editor" );
 
-	const char *projectPath = nd_branch_get_child_string( ss::forge::editorConfig, "projectsPath", "projects" );
+	const char *projectPath = nd_branch_get_child_string( forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
 	{
-		snprintf( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
+		snprintf( forge::cachedPaths[ forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
 	}
 
 	FXApp app( FORGE_APP_NAME, FXString::null );
@@ -268,15 +268,15 @@ int main( int argc, char **argv )
 	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
-	ss::forge::mainWindow = new ss::forge::ForgeMainWindow( &app );
+	forge::mainWindow = new forge::MainWindow( &app );
 
 	app.create();
 
-	ss::forge::mainWindow->show();
-	ss::forge::mainWindow->maximize();
+	forge::mainWindow->show();
+	forge::mainWindow->maximize();
 
 	//HACK: make the engine initialisation happy...
-	auto *dummy = new ss::forge::viewport_frame( ss::forge::mainWindow, ss::forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
+	auto *dummy = new forge::Viewport( forge::mainWindow, forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
 	dummy->create();
 
 	setup_paths( tmp );
@@ -287,17 +287,37 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
+	// allow us to override the project if desired
+	const char *projectName = PlGetCommandLineArgumentValue( "/project" );
+	if ( projectName != nullptr )
+	{
+		NdBranch *branch;
+		if ( ( branch = com_project_mount( projectName ) ) == nullptr )
+		{
+			ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Invalid project specified (%s), aborting!", projectName );
+			return EXIT_FAILURE;
+		}
+
+		forge::editorProject               = new forge::Project( projectName );
+		forge::editorProject->name         = nd_branch_get_child_string( branch, "name", "none" );
+		forge::editorProject->internalName = projectName;
+		forge::editorProject->config       = branch;
+	}
+
 	// now let us pick a project before we init the engine
 	// (for now, changing project will probably require us to restart)
-	auto *projectDialog = new ss::forge::ForgeProjectDialog( ss::forge::mainWindow );
-	projectDialog->execute();
+	if ( forge::editorProject == nullptr )
+	{
+		auto *projectDialog = new forge::ProjectDialog( forge::mainWindow );
+		projectDialog->execute();
+		delete projectDialog;
+	}
 
-	if ( ss::forge::editorProject == nullptr )
+	if ( forge::editorProject == nullptr )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
-	delete projectDialog;
 
 	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME ) )
 	{
@@ -341,8 +361,8 @@ extern "C"
 
 	ApeInputState ss_shell_get_button_state( ApeInputButton inputButton ) { return APE_INPUT_STATE_NONE; }
 	ApeInputState ss_shell_get_key_state( int key ) { return APE_INPUT_STATE_NONE; }
-	void ss_shell_get_mouse_position( int *x, int *y ) {}
-	void shell_set_mouse_position( int x, int y )
+	void          ss_shell_get_mouse_position( int *x, int *y ) {}
+	void          shell_set_mouse_position( int x, int y )
 	{
 	}
 
@@ -350,11 +370,11 @@ extern "C"
 
 	void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 	{
-		ss::forge::mainWindow->push_message( level, msg, *colour );
+		forge::mainWindow->push_message( level, msg, *colour );
 	}
 
 	void ss_shell_shutdown( void )
 	{
-		ss::forge::mainWindow->destroy();
+		forge::mainWindow->destroy();
 	}
 }

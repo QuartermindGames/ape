@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "editor.h"
+#include "forge.h"
 
-namespace ss::forge
+namespace forge
 {
 	class AboutDialog : public FXDialogBox
 	{
@@ -16,4 +16,4 @@ namespace ss::forge
 		static FXIcon *editorIcon;
 		static FXIcon *developerIcon;
 	};
-}// namespace ss::forge
+}// namespace forge

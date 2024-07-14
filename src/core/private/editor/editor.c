@@ -25,10 +25,10 @@ static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
 static void cache_node_icons( void )
 {
-	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ] = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ] = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ] = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ] = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ]   = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ]  = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ]  = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
 	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
 	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
 
@@ -99,7 +99,7 @@ static void cache_preview_materials( void )
 		child = nd_get_next_child( child );
 	}
 
-	unsigned int numMaterials;
+	unsigned int  numMaterials;
 	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
 	PRINT( "Found %u materials\n", numMaterials );
 
@@ -108,7 +108,7 @@ static void cache_preview_materials( void )
 
 static void release_preview_materials( void )
 {
-	unsigned int numMaterials;
+	unsigned int  numMaterials;
 	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
 	for ( unsigned int i = 0; i < numMaterials; ++i )
 	{
@@ -122,8 +122,8 @@ static void release_preview_materials( void )
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
-void grid_initialize_( ApeEditorState *instance );
-void grid_shutdown_( void );
+void ape_grid_initialize_( ApeEditorState *instance );
+void ape_grid_shutdown_( void );
 
 static ApeEditorState *editorInstance = NULL;
 
@@ -131,7 +131,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 {
 	PL_ZERO( self, sizeof( ApeEditorState ) );
 
-	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
+	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_SELECT;
 
 	self->brushPlotPoints = PlCreateLinkedList();
 	if ( self->brushPlotPoints == NULL )
@@ -140,7 +140,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 		return NULL;
 	}
 
-	grid_initialize_( self );
+	ape_grid_initialize_( self );
 
 	return self;
 }
@@ -267,17 +267,17 @@ void ape_shutdown_editor_( void )
 
 	ape_viewport_destroy( selectionViewport );
 
-	grid_shutdown_();
+	ape_grid_shutdown_();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_toggle_grid_command_( unsigned int, char ** );
+void ape_grid_toggle_command_( unsigned int, char ** );
 
 void ape_register_editor_console_variables_( void )
 {
 	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
-	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, ape_toggle_grid_command_ );
+	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 
 	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
@@ -297,7 +297,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 	const PLVector3 position = worldNode->position;
 	if ( nodeIcons[ worldNode->type ] != NULL )
 	{
-		static const float size = 64.0f;
+		static const float size  = 64.0f;
 		static const float scale = 0.1f;
 		ape_draw_sprite( nodeIcons[ worldNode->type ],
 		                 &PL_QUAD( 0.0f, 0.0f, size, size ),
@@ -326,15 +326,16 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 	ApeCamera *camera = viewport->camera;
 	assert( camera != NULL );
 
-	unsigned int num = 1;
+	unsigned int      num  = 1;
 	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
 	while ( node != NULL )
 	{
 		PLVector3 *p = PlGetLinkedListNodeUserData( node );
 		assert( p != NULL );
 
-		PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-		PLVector2 screenPos = PlConvertWorldToScreen( p, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+		int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
+		PLVector2 screenPos      = PlConvertWorldToScreen( p, &m, viewportSize, true );
 		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
 		{
 			return;
@@ -357,7 +358,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 		}
 		assert( e != NULL );
 
-		PLVector2 otherScreenPos = PlConvertWorldToScreen( e, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		PLVector2 otherScreenPos = PlConvertWorldToScreen( e, &m, viewportSize, true );
 		if ( otherScreenPos.x == 0.0f && otherScreenPos.y == 0.0f )
 		{
 			return;
@@ -372,7 +373,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 
 static void pre_render_brush( ApeEditorState *instance )
 {
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+	PLGMesh          *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
 	while ( node != NULL )
 	{
@@ -405,8 +406,8 @@ static void pre_render_brush( ApeEditorState *instance )
 
 		PLCollisionAABB bounds = {
 		        .origin = *p,
-		        .mins = {-0.1f, -0.1f, -0.1f},
-		        .maxs = {0.1f,  0.1f,  0.1f },
+		        .mins   = { -0.1f, -0.1f, -0.1f },
+		        .maxs   = { 0.1f, 0.1f, 0.1f },
 		};
 		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
 
@@ -594,7 +595,7 @@ static bool validate_plotted_plane( ApeEditorState *state )
 	// this determines that the plane is convex, hopefully
 
 	unsigned int numVertices;
-	PLVector3 **vertices = ( PLVector3 ** ) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
+	PLVector3  **vertices = ( PLVector3  **) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
 	if ( numVertices < 4 )
 	{
 		return true;
@@ -635,9 +636,9 @@ bool ape_editor_plot_point( ApeEditorState *state )
 		return false;
 	}
 
-	PLVector3 *p = PL_NEW( PLVector3 );
+	PLVector3        *p    = PL_NEW( PLVector3 );
 	PLLinkedListNode *node = PlInsertLinkedListNode( state->brushPlotPoints, p );
-	*p = cursor;
+	*p                     = cursor;
 
 	// validate and then if this fails, remove the last element
 	if ( !validate_plotted_plane( state ) )

@@ -11,7 +11,7 @@
 
 void ape_world_set_global_defaults( ApeWorld *level )
 {
-	level->ambience = WORLD_DEFAULT_AMBIENCE;
+	level->ambience    = WORLD_DEFAULT_AMBIENCE;
 	level->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
@@ -28,7 +28,7 @@ ApeWorld *ape_create_world( void )
 	nd_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
 	nd_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
-	world->meshes = PlCreateVectorArray( 0 );
+	world->meshes       = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
 	ape_world_set_global_defaults( world );
@@ -354,4 +354,22 @@ void ape_initialize_world_()
 
 void ape_shutdown_world_()
 {
+}
+
+ApeRoom *ape_world_get_first_room_( ApeWorld *self )
+{
+	PLLinkedListNode *childNode = PlGetFirstNode( self->base.children );
+	while ( childNode != nullptr )
+	{
+		ApeWorldNode *worldNode = PlGetLinkedListNodeUserData( childNode );
+		if ( worldNode->type != APE_WORLD_NODE_TYPE_ROOM )
+		{
+			childNode = PlGetNextLinkedListNode( childNode );
+			continue;
+		}
+
+		return ( ApeRoom * ) worldNode;
+	}
+
+	return nullptr;
 }

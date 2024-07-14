@@ -25,35 +25,35 @@ void ape_entity_destroy_( void *data );
 
 static const ApeWorldNodeClass nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_ROOT] = {
-                                      .identifier = "root",
-                                      .magic = APE_WORLD_NODE_ROOT_MAGIC,
-                                      .destroyFunction = ape_world_destroy_,
-                                      },
+                .identifier      = "root",
+                .magic           = APE_WORLD_NODE_ROOT_MAGIC,
+                .destroyFunction = ape_world_destroy_,
+        },
         [APE_WORLD_NODE_TYPE_ROOM] = {
-                                      .identifier = "room",
-                                      .magic = APE_WORLD_NODE_ROOM_MAGIC,
-                                      .destroyFunction = ape_room_destroy_,
-                                      },
+                .identifier      = "room",
+                .magic           = APE_WORLD_NODE_ROOM_MAGIC,
+                .destroyFunction = ape_room_destroy_,
+        },
         [APE_WORLD_NODE_TYPE_BRUSH] = {
-                                      .identifier = "brush",
-                                      .magic = APE_WORLD_NODE_BRUSH_MAGIC,
-                                      .destroyFunction = ape_brush_destroy_,
-                                      },
+                .identifier      = "brush",
+                .magic           = APE_WORLD_NODE_BRUSH_MAGIC,
+                .destroyFunction = ape_brush_destroy_,
+        },
         [APE_WORLD_NODE_TYPE_LIGHT] = {
-                                      .identifier = "light",
-                                      .magic = APE_WORLD_NODE_LIGHT_MAGIC,
-                                      .destroyFunction = ape_light_destroy_,
-                                      },
+                .identifier      = "light",
+                .magic           = APE_WORLD_NODE_LIGHT_MAGIC,
+                .destroyFunction = ape_light_destroy_,
+        },
         [APE_WORLD_NODE_TYPE_CAMERA] = {
-                                      .identifier = "camera",
-                                      .magic = APE_WORLD_NODE_CAMERA_MAGIC,
-                                      .destroyFunction = ape_camera_destroy_,
-                                      },
+                .identifier      = "camera",
+                .magic           = APE_WORLD_NODE_CAMERA_MAGIC,
+                .destroyFunction = ape_camera_destroy_,
+        },
         [APE_WORLD_NODE_TYPE_ENTITY] = {
-                                      .identifier = "entity",
-                                      .magic = APE_WORLD_NODE_ENTITY_MAGIC,
-                                      .destroyFunction = ape_entity_destroy_,
-                                      },
+                .identifier      = "entity",
+                .magic           = APE_WORLD_NODE_ENTITY_MAGIC,
+                .destroyFunction = ape_entity_destroy_,
+        },
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +95,9 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 	self->children = PlCreateLinkedList();
 
 	self->position = *position;
-	self->angles = *angles;
+	self->angles   = *angles;
 
-	self->type = type;
+	self->type      = type;
 	self->classType = &nodeClasses[ self->type ];
 
 	if ( parent != nullptr )
@@ -112,12 +112,6 @@ void ape_world_node_destroy( ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid_( self, self->type ) );
 
-	if ( self->data != nullptr )
-	{
-		self->classType->destroyFunction( self->data );
-		self->data = nullptr;
-	}
-
 	PLLinkedListNode *node = PlGetFirstNode( self->children );
 	while ( node != NULL )
 	{
@@ -128,7 +122,8 @@ void ape_world_node_destroy( ApeWorldNode *self )
 
 	PlDestroyLinkedList( self->children );
 
-	PL_DELETE( self );
+	assert( self->classType->destroyFunction );
+	self->classType->destroyFunction( self );
 }
 
 void ape_world_node_dettach( ApeWorldNode *self )
@@ -143,7 +138,7 @@ void ape_world_node_dettach( ApeWorldNode *self )
 	assert( self->parentListNode != nullptr );
 	PlDestroyLinkedListNode( self->parentListNode );
 
-	self->parent = nullptr;
+	self->parent         = nullptr;
 	self->parentListNode = nullptr;
 }
 
@@ -158,7 +153,7 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 
 	ape_world_node_dettach( self );
 
-	self->parent = parent;
+	self->parent         = parent;
 	self->parentListNode = PlInsertLinkedListNode( self->parent->children, self );
 }
 
@@ -252,8 +247,8 @@ ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *
 {
 	assert( ape_world_node_is_valid_( self, self->type ) );
 
-	ApeWorldNode *child = nullptr;
-	PLLinkedListNode *node = PlGetFirstNode( self->children );
+	ApeWorldNode     *child = nullptr;
+	PLLinkedListNode *node  = PlGetFirstNode( self->children );
 	while ( node != nullptr )
 	{
 		ApeWorldNode *current = PlGetLinkedListNodeUserData( node );

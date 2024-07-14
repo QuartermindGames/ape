@@ -17,9 +17,9 @@ typedef struct GuiFont
 {
 	PLGTexture *texture;
 
-	uint32_t numGlyphs;
+	uint32_t      numGlyphs;
 	ComFontGlyph *glyphs;
-	PLHashTable *glyphTable;
+	PLHashTable  *glyphTable;
 
 	float lineSpacing;
 	float tabWidth;
@@ -28,8 +28,8 @@ typedef struct GuiFont
 } GuiFont;
 
 static PLVectorArray *cachedFonts;
-static PLHashTable *cachedFontsTable;
-static GuiFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
+static PLHashTable   *cachedFontsTable;
+static GuiFont       *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 float guiGetFontLineSpacing( const GuiFont *font ) { return font->lineSpacing; }
 
@@ -71,23 +71,23 @@ GuiFont *guiDeserializeFont( PLFile *file )
 		return NULL;
 	}
 
-	GuiFont *font = PL_NEW( GuiFont );
+	GuiFont *font    = PL_NEW( GuiFont );
 	font->glyphTable = PlCreateHashTable();
-	font->glyphs = PL_NEW_( ComFontGlyph, numGlyphs );
+	font->glyphs     = PL_NEW_( ComFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i )
 	{
 		font->glyphs[ i ].codepoint = PL_READUINT32( file, false, NULL );
-		font->glyphs[ i ].x = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].y = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].w = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].h = PL_READUINT16( file, false, NULL );
+		font->glyphs[ i ].x         = PL_READUINT16( file, false, NULL );
+		font->glyphs[ i ].y         = PL_READUINT16( file, false, NULL );
+		font->glyphs[ i ].w         = PL_READUINT16( file, false, NULL );
+		font->glyphs[ i ].h         = PL_READUINT16( file, false, NULL );
 		PlInsertHashTableNode( font->glyphTable, &font->glyphs[ i ].codepoint, sizeof( uint32_t ), &font->glyphs[ i ] );
 
 		// for now, just determine line spacing and tab width based on the w/h of a space...
 		if ( font->glyphs[ i ].codepoint == ' ' )
 		{
 			font->lineSpacing = font->glyphs[ i ].h;
-			font->tabWidth = font->glyphs[ i ].w;
+			font->tabWidth    = font->glyphs[ i ].w;
 		}
 	}
 
@@ -101,7 +101,7 @@ GuiFont *guiDeserializeFont( PLFile *file )
 		return NULL;
 	}
 
-	size_t bitmapSize = bitmapW * bitmapH;
+	size_t   bitmapSize  = bitmapW * bitmapH;
 	PLImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
 	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
@@ -110,7 +110,8 @@ GuiFont *guiDeserializeFont( PLFile *file )
 		return NULL;
 	}
 
-	font->texture = PlgCreateTexture();
+	font->texture         = PlgCreateTexture();
+	font->texture->filter = PLG_TEXTURE_FILTER_LINEAR;
 	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
 	{
 		guiDestroyFont( font );
@@ -143,14 +144,14 @@ GuiFont *guiLoadFontFile( const char *path )
 
 bool guiInitializeFonts_( void )
 {
-	cachedFonts = PlCreateVectorArray( GUI_MAX_FONT_DEFAULTS );
+	cachedFonts      = PlCreateVectorArray( GUI_MAX_FONT_DEFAULTS );
 	cachedFontsTable = PlCreateHashTable();
 
 	static const char *fontPaths[ GUI_MAX_FONT_DEFAULTS ] = {
-	        [GUI_FONT_DEFAULT_LARGE] = "guis/fonts/noto_mono_24.fnt",
+	        [GUI_FONT_DEFAULT_LARGE]  = "guis/fonts/noto_mono_24.fnt",
 	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/noto_mono_12.fnt",
-	        [GUI_FONT_DEFAULT_SMALL] = "guis/fonts/proggysmalltt_12.fnt",
-	        [GUI_FONT_DEFAULT_TINY] = "guis/fonts/proggytinytt_12.fnt",
+	        [GUI_FONT_DEFAULT_SMALL]  = "guis/fonts/proggysmalltt_12.fnt",
+	        [GUI_FONT_DEFAULT_TINY]   = "guis/fonts/proggytinytt_12.fnt",
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{

@@ -17,35 +17,31 @@ typedef struct ApeModelAnimationFrame
 
 typedef struct ApeModelAnimation
 {
-	char name[ 64 ];
+	char                  name[ 64 ];
 	ApeModelAnimationFlag flags;
 
-	unsigned int numFrames;
+	uint numFrames;
 
 	float speed;
 
-	unsigned int numBones;
+	uint numBones;
 } ApeModelAnimation;
 
 typedef struct ApeModel
 {
+	PLGMesh     *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	ApeMaterial *materials[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	unsigned int numMaterials;
+	uint         numMaterials;
 
-	PLGMesh *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	unsigned int numMeshes;
-
-	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
+	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
-	unsigned int numBones;
+	uint           numBones;
 
 	PLCollisionSphere visSphere;
 
-	PLHashTableNode *node;
-
 	ApeFormatModel disk;
 
-	ApeMemoryReference mem;
+	ApeMemoryReference reference;
 } ApeModel;
 
 PL_EXTERN_C_END

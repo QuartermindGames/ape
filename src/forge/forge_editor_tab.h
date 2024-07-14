@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "../editor.h"
+#include "forge/forge.h"
 
-namespace ss::forge
+namespace forge
 {
 	class EditorTab : public FXTabItem
 	{
@@ -26,4 +26,4 @@ namespace ss::forge
 			return &instance;
 		}
 	};
-}// namespace ss::forge
+}// namespace forge

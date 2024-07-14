@@ -2,9 +2,9 @@
 // Purpose: Forge viewport implementation.
 // Author:  Mark E. Sowden
 
-#include "viewport_frame.h"
+#include "forge_viewport.h"
 #include "forge/editors/editor_world.h"
-#include "ForgeMainWindow.h"
+#include "forge_window_main.h"
 
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_camera.h>
@@ -14,46 +14,46 @@
 
 #include <X11/Xlib.h>
 
-using namespace ss::forge;
+using namespace forge;
 
-FXGLCanvas *viewport_frame::displayList_ = nullptr;
-unsigned int viewport_frame::cameraTagNum = 0;
+FXGLCanvas  *Viewport::displayList_ = nullptr;
+unsigned int Viewport::cameraTagNum = 0;
 
-FXDEFMAP( viewport_frame )
+FXDEFMAP( Viewport )
 editorViewportMap[] = {
-        FXMAPFUNC( SEL_CHORE, viewport_frame::ID_DRAW, viewport_frame::on_chore ),
-        FXMAPFUNC( SEL_MOTION, viewport_frame::ID_CANVAS, viewport_frame::on_motion ),
-        FXMAPFUNC( SEL_MOUSEWHEEL, viewport_frame::ID_CANVAS, viewport_frame::on_zoom ),
-        FXMAPFUNC( SEL_LEFTBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_left_click ),
-        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_right_click ),
-        FXMAPFUNC( SEL_MIDDLEBUTTONPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
-        FXMAPFUNC( SEL_MIDDLEBUTTONRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_middle_click ),
+        FXMAPFUNC( SEL_CHORE, Viewport::ID_DRAW, Viewport::on_chore ),
+        FXMAPFUNC( SEL_MOTION, Viewport::ID_CANVAS, Viewport::on_motion ),
+        FXMAPFUNC( SEL_MOUSEWHEEL, Viewport::ID_CANVAS, Viewport::on_zoom ),
+        FXMAPFUNC( SEL_LEFTBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_left_click ),
+        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_right_click ),
+        FXMAPFUNC( SEL_MIDDLEBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_middle_click ),
+        FXMAPFUNC( SEL_MIDDLEBUTTONRELEASE, Viewport::ID_CANVAS, Viewport::on_middle_click ),
 
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_PERSPECTIVE, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_TOP, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_LEFT, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_FRONT, viewport_frame::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_PERSPECTIVE, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_TOP, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_LEFT, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_FRONT, Viewport::on_change_camera_modes ),
 
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_WIREFRAME, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_SOLID, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_TEXTURED, viewport_frame::on_change_camera_modes ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_LIT, viewport_frame::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_WIREFRAME, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_SOLID, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_TEXTURED, Viewport::on_change_camera_modes ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_LIT, Viewport::on_change_camera_modes ),
 
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_ROOM, viewport_frame::on_create ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_BRUSH, viewport_frame::on_create ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_LIGHT, viewport_frame::on_create ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_CAMERA, viewport_frame::on_create ),
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_CREATE_ENTITY, viewport_frame::on_create ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_CREATE_ROOM, Viewport::on_create ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_CREATE_BRUSH, Viewport::on_create ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_CREATE_LIGHT, Viewport::on_create ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_CREATE_CAMERA, Viewport::on_create ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_CREATE_ENTITY, Viewport::on_create ),
 
-        FXMAPFUNC( SEL_KEYPRESS, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
-        FXMAPFUNC( SEL_KEYRELEASE, viewport_frame::ID_CANVAS, viewport_frame::on_key ),
+        FXMAPFUNC( SEL_KEYPRESS, Viewport::ID_CANVAS, Viewport::on_key ),
+        FXMAPFUNC( SEL_KEYRELEASE, Viewport::ID_CANVAS, Viewport::on_key ),
 
-        FXMAPFUNC( SEL_COMMAND, viewport_frame::ID_BUTTON_RESET_CAMERA, viewport_frame::on_reset_camera ),
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_RESET_CAMERA, Viewport::on_reset_camera ),
 };
 
-FXIMPLEMENT( viewport_frame, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
+FXIMPLEMENT( Viewport, FXVerticalFrame, editorViewportMap, ARRAYNUMBER( editorViewportMap ) )
 
-viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode )
+Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode )
     : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_TOP | LAYOUT_LEFT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
 {
 	viewMode_ = viewMode;
@@ -63,22 +63,22 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, Edit
 
 	this->toolBar = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
-	viewModeButtons[ APE_CAMERA_MODE_PERSPECTIVE ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/perspective.gif" ), nullptr, this, ID_PERSPECTIVE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_TOP ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/top.gif" ), nullptr, this, ID_TOP, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_LEFT ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/left.gif" ), nullptr, this, ID_LEFT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_FRONT ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/front.gif" ), nullptr, this, ID_FRONT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_PERSPECTIVE ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/perspective.gif" ), nullptr, this, ID_PERSPECTIVE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_TOP ]         = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/top.gif" ), nullptr, this, ID_TOP, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_LEFT ]        = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/left.gif" ), nullptr, this, ID_LEFT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_FRONT ]       = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/front.gif" ), nullptr, this, ID_FRONT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	viewModeButtons[ viewMode_ ]->setState( true );
 
 	new FXVerticalSeparator( this->toolBar );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_WIREFRAME ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/wireframe.gif" ), nullptr, this, ID_WIREFRAME, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_SOLID ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/solid.gif" ), nullptr, this, ID_SOLID, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_TEXTURED ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/textured.gif" ), nullptr, this, ID_TEXTURED, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, ss::forge::load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_WIREFRAME ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/wireframe.gif" ), nullptr, this, ID_WIREFRAME, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_SOLID ]     = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/solid.gif" ), nullptr, this, ID_SOLID, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_TEXTURED ]  = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/textured.gif" ), nullptr, this, ID_TEXTURED, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ]    = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	drawModeButtons[ drawMode_ ]->setState( true );
 
 	if ( displayList_ == nullptr )
 	{
-		canvas_ = new FXGLCanvas( this, visual, this, ID_CANVAS, LAYOUT_FILL );
+		canvas_      = new FXGLCanvas( this, visual, this, ID_CANVAS, LAYOUT_FILL );
 		displayList_ = canvas_;
 	}
 	else
@@ -87,7 +87,7 @@ viewport_frame::viewport_frame( FXComposite *composite, FXGLVisual *visual, Edit
 	}
 }
 
-viewport_frame::~viewport_frame()
+Viewport::~Viewport()
 {
 	ape_viewport_destroy( internalViewport_ );
 
@@ -95,7 +95,7 @@ viewport_frame::~viewport_frame()
 	delete canvas_;
 }
 
-void viewport_frame::create()
+void Viewport::create()
 {
 	FXVerticalFrame::create();
 
@@ -110,7 +110,7 @@ void viewport_frame::create()
 	getApp()->addChore( this, ID_DRAW );
 }
 
-void viewport_frame::Draw()
+void Viewport::draw()
 {
 	if ( !is_editor_active() )
 	{
@@ -172,7 +172,7 @@ void viewport_frame::Draw()
 	ape_render_frame( internalViewport_ );
 }
 
-long viewport_frame::on_change_camera_modes( FXObject *, FX::FXSelector selector, void * )
+long Viewport::on_change_camera_modes( FXObject *, FX::FXSelector selector, void * )
 {
 	ApeCameraViewMode viewMode = APE_CAMERA_MODE_INVALID;
 	ApeCameraDrawMode drawMode = APE_CAMERA_DRAW_MODE_INVALID;
@@ -225,13 +225,13 @@ long viewport_frame::on_change_camera_modes( FXObject *, FX::FXSelector selector
 	return TRUE;
 }
 
-long viewport_frame::on_chore( FXObject *, FXSelector, void * )
+long Viewport::on_chore( FXObject *, FXSelector, void * )
 {
 	//if ( is_editor_active() )
 	{
 		if ( useMouseLook )
 		{
-			int mx, my;
+			int          mx, my;
 			unsigned int tmp;
 			getCursorPosition( mx, my, tmp );
 			setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
@@ -248,7 +248,7 @@ long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 
 		canvas_->makeCurrent();
 
-		Draw();
+		draw();
 
 		canvas_->swapBuffers();
 	}
@@ -257,10 +257,10 @@ long viewport_frame::on_chore( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long viewport_frame::on_zoom( FXObject *, FXSelector, void *ptr )
+long Viewport::on_zoom( FXObject *, FXSelector, void *ptr )
 {
 	auto *event = ( FXEvent * ) ptr;
-	float dir = ( float ) event->code / 120;
+	float dir   = ( float ) event->code / 120;
 
 	if ( viewMode_ != APE_CAMERA_MODE_PERSPECTIVE && viewMode_ != APE_CAMERA_MODE_ISOMETRIC )
 	{
@@ -276,16 +276,16 @@ long viewport_frame::on_zoom( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
-long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
+long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 {
 	if ( !hasFocus() )
 	{
 		//	return FALSE;
 	}
 
-	auto *event = ( FXEvent * ) ptr;
-	int const x = event->win_x;
-	int const y = event->win_y;
+	auto     *event = ( FXEvent     *) ptr;
+	int const x     = event->win_x;
+	int const y     = event->win_y;
 
 	//TODO: check if the game is currently active
 	ape_input_handle_mouse_motion_event( x, y );
@@ -293,7 +293,7 @@ long viewport_frame::on_motion( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
-long viewport_frame::on_left_click( FX::FXObject *, FX::FXSelector, void * )
+long Viewport::on_left_click( FX::FXObject *, FX::FXSelector, void * )
 {
 	if ( !hasFocus() || editor == nullptr )
 	{
@@ -305,7 +305,7 @@ long viewport_frame::on_left_click( FX::FXObject *, FX::FXSelector, void * )
 	return FALSE;
 }
 
-long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
+long Viewport::on_right_click( FXObject *, FXSelector, void *ptr )
 {
 	if ( !hasFocus() )
 	{
@@ -345,7 +345,7 @@ long viewport_frame::on_right_click( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
-long viewport_frame::on_middle_click( FXObject *, FXSelector, void * )
+long Viewport::on_middle_click( FXObject *, FXSelector, void * )
 {
 	if ( !hasFocus() )
 	{
@@ -355,7 +355,7 @@ long viewport_frame::on_middle_click( FXObject *, FXSelector, void * )
 	return 0;
 }
 
-long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
+long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 {
 	if ( !hasFocus() )
 	{
@@ -392,8 +392,8 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 	}
 
 	static const float SPEED = 2.0f;
-	PLVector3 pos = ape_camera_get_position( camera );
-	PLVector3 ang = ape_camera_get_angles( camera );
+	PLVector3          pos   = ape_camera_get_position( camera );
+	PLVector3          ang   = ape_camera_get_angles( camera );
 
 	PLVector3 forward, left;
 	PlAnglesAxes( ang, &left, nullptr, &forward );
@@ -473,7 +473,7 @@ long viewport_frame::on_key( FXObject *, FXSelector selector, void *ptr )
 	return TRUE;
 }
 
-long viewport_frame::on_create( FXObject *object, FXSelector selector, void * )
+long Viewport::on_create( FXObject *object, FXSelector selector, void * )
 {
 	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
 	if ( worldEditor == nullptr )
@@ -490,7 +490,7 @@ long viewport_frame::on_create( FXObject *object, FXSelector selector, void * )
 	ApeEditorState *instance = worldEditor->get_internal();
 	assert( instance != nullptr );
 
-	const char *name;
+	const char      *name;
 	ApeWorldNodeType type;
 	switch ( FXSELID( selector ) )
 	{
@@ -537,14 +537,14 @@ long viewport_frame::on_create( FXObject *object, FXSelector selector, void * )
 	return TRUE;
 }
 
-long viewport_frame::on_reset_camera( FXObject *, FXSelector, void * )
+long Viewport::on_reset_camera( FXObject *, FXSelector, void * )
 {
 	ape_camera_set_angles( camera, &pl_vecOrigin3 );
 	ape_camera_set_position( camera, &pl_vecOrigin3 );
 	return TRUE;
 }
 
-int viewport_frame::translate_key( int code )
+int Viewport::translate_key( int code )
 {
 	switch ( code )
 	{
@@ -561,7 +561,7 @@ int viewport_frame::translate_key( int code )
 	}
 }
 
-bool viewport_frame::is_editor_active() const
+bool Viewport::is_editor_active() const
 {
 	if ( this->editor == nullptr )
 	{

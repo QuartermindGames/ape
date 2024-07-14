@@ -36,7 +36,6 @@ static void list_worlds_command( uint, char ** )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-//todo: remove this, use 'ape_game_get_interface' instead!
 const ApeGameInterfaceImport *ape_gameInterface;
 
 void ape_initialize_game_( void )

@@ -14,7 +14,6 @@
 
 ## Current
 - Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
-- Shadows from multiple sources don't work!
 - We don't have spotlights...
 - Prototype 'eyes' for SS2 & SS1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
@@ -36,24 +35,28 @@
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Sky plane should display irrelevent of camera position
 - String table for binary-based node format
+- Update cook tool to convert obj geom to brush rather than room geo
+- Finish implementing support for receive/cast shadow flags (might need self-shadow too)
 - Test the rope physics and confirm they're working
-- Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives
-- Per-vertex lighting shader
 
 ## In-Progress
+- Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives
 - Model import from SMD/QC etc.
 
 ## Done
 
 ### 2024-07
-- Add 'list_worlds' command
+- ~~Per-vertex lighting shader~~
+- ~~Shadows from multiple sources don't work!~~
+- ~~Add 'list_worlds' command~~
+- ~~Add basic menu~~
 
 ### 2024-06
-- Migrate rope physics from Doom 3
-- Versioning for binary node format
-- Remove class API per brushes; we'll have just poly-brushes now
-- Bitshift protocol version
-- Disconnect currently just crashes
+- ~~Migrate rope physics from Doom 3~~
+- ~~Versioning for binary node format~~
+- ~~Remove class API per brushes; we'll have just poly-brushes now~~
+- ~~Bitshift protocol version~~
+- ~~Disconnect currently just crashes~~
 - ~~Terrain brush type using heightmap with variable height specific textures~~
 
 ### Older...

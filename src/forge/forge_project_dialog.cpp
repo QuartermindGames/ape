@@ -1,21 +1,21 @@
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "ForgeProjectDialog.h"
+#include "forge_project_dialog.h"
 #include "common_project.h"
 
 #include "3rdparty/fox/src/icons.h"
 
-std::map< std::string, ss::forge::Project * > ss::forge::ForgeProjectDialog::projects;
+std::map< std::string, forge::Project * > forge::ProjectDialog::projects;
 
-FXDEFMAP( ss::forge::ForgeProjectDialog )
+FXDEFMAP( forge::ProjectDialog )
 projectDialogMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeProjectDialog::ID_SELECT_PROJECT, ss::forge::ForgeProjectDialog::on_select_project ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::ForgeProjectDialog::ID_ACCEPT, ss::forge::ForgeProjectDialog::on_accept ),
+        FXMAPFUNC( SEL_COMMAND, forge::ProjectDialog::ID_SELECT_PROJECT, forge::ProjectDialog::on_select_project ),
+        FXMAPFUNC( SEL_COMMAND, forge::ProjectDialog::ID_ACCEPT, forge::ProjectDialog::on_accept ),
 };
 
-FXIMPLEMENT( ss::forge::ForgeProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
+FXIMPLEMENT( forge::ProjectDialog, FXDialogBox, projectDialogMap, ARRAYNUMBER( projectDialogMap ) )
 
-ss::forge::ForgeProjectDialog::ForgeProjectDialog( FX::FXWindow *parent )
+forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
     : FXDialogBox( parent, "Project Setup" )
 {
 	setWidth( baseWidth );
@@ -23,7 +23,7 @@ ss::forge::ForgeProjectDialog::ForgeProjectDialog( FX::FXWindow *parent )
 	if ( projects.empty() )
 	{
 		// do a quick scan to see what projects are available
-		std::string localPath = "local://" + std::string( ss::forge::cachedPaths[ ss::forge::PATH_PROJECTS ] );
+		std::string localPath = "local://" + std::string( forge::cachedPaths[ forge::PATH_PROJECTS ] );
 		PlScanDirectory( localPath.c_str(), "prj.n", register_project_callback, true, this );
 	}
 
@@ -54,7 +54,7 @@ ss::forge::ForgeProjectDialog::ForgeProjectDialog( FX::FXWindow *parent )
 	new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
 }
 
-void ss::forge::ForgeProjectDialog::register_project_callback( const char *path, void *data )
+void forge::ProjectDialog::register_project_callback( const char *path, void *data )
 {
 	const char *filename = PlGetFileName( path );
 	if ( filename == nullptr )
@@ -106,7 +106,7 @@ void ss::forge::ForgeProjectDialog::register_project_callback( const char *path,
 	nd_branch_destroy( root );
 }
 
-long ss::forge::ForgeProjectDialog::on_select_project( FXObject *, FXSelector, void * )
+long forge::ProjectDialog::on_select_project( FXObject *, FXSelector, void * )
 {
 	// show or hide the name field, depending on if it's a valid item or not
 	if ( listBox->getItemData( listBox->getCurrentItem() ) == nullptr )
@@ -126,7 +126,7 @@ long ss::forge::ForgeProjectDialog::on_select_project( FXObject *, FXSelector, v
 	return true;
 }
 
-long ss::forge::ForgeProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
+long forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
 {
 	// urgh, check if we have a valid project selected and if not,
 	// that the user has entered *something*

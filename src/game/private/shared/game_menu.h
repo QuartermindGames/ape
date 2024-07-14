@@ -2,14 +2,12 @@
 
 #pragma once
 
-void gameInitializeMenu( void );
-void gameShutdownMenu( void );
+typedef struct MenuOption MenuOption;
 
-typedef void ( *MenuCallback )( void );
+typedef void ( *MenuCallback )( const MenuOption *option );
 
 typedef enum MenuOptionType
 {
-	MENU_OPTION_TYPE_LABEL,      //static label, will be skipped during selection
 	MENU_OPTION_TYPE_BUTTON,     //text-based button
 	MENU_OPTION_TYPE_BUTTON_ICON,//button represented by icon
 	MENU_OPTION_TYPE_CHECKBOX,   //typical checkbox
@@ -18,20 +16,26 @@ typedef enum MenuOptionType
 
 typedef struct MenuOption
 {
-	const char *string;
-	struct Menu *nextMenu;
-	MenuCallback callback;
+	const char    *string;
+	struct Menu   *nextMenu;
+	MenuCallback   callback;
 	MenuOptionType type;
+	const char    *command;
+	union
+	{
+		bool    checkbox;
+		uint8_t slider;
+	};
 } MenuOption;
 
 typedef struct Menu
 {
-	const char *heading;
+	const char       *heading;
 	const MenuOption *options;
-	uint8_t numOptions;
+	uint8_t           numOptions;
+	struct Menu      *parent;
+	uint8_t           lastOption;
 } Menu;
 
-extern uint8_t menuOptionSelection;
-
-void Game_Menu_SetCurrent( Menu *menu );
+void  Game_Menu_SetCurrent( Menu *menu );
 Menu *Game_Menu_GetCurrent( void );

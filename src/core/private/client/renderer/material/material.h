@@ -5,7 +5,7 @@
 PL_EXTERN_C
 
 typedef struct ApeShaderProgram ApeShaderProgram;
-typedef struct ApeMaterial ApeMaterial;
+typedef struct ApeMaterial      ApeMaterial;
 
 #define SS_ARL_MAX_MATERIAL_PASSES    4
 #define SS_ARL_MAX_MATERIAL_VARIABLES 64
@@ -13,11 +13,13 @@ typedef struct ApeMaterial ApeMaterial;
 /* built-in variable types */
 typedef enum ApeMaterialBuiltinVar
 {
-	SS_ARL_MATERIAL_BUILTIN_INVALID = -1,
-	SS_ARL_MATERIAL_BUILTIN_TIME,
-	SS_ARL_MATERIAL_BUILTIN_DEPTH,
-	SS_ARL_MATERIAL_BUILTIN_VIEWPORT_SIZE,
-	SS_ARL_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
+	APE_MATERIAL_BUILTIN_INVALID = -1,
+	APE_MATERIAL_BUILTIN_TIME,
+	APE_MATERIAL_BUILTIN_DEPTH,
+	APE_MATERIAL_BUILTIN_VIEWPORT_SIZE,
+	APE_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
+
+	APE_MATERIAL_BUILTIN_RT_SPHERE,// realtime spheremap reflections
 
 	SS_ARL_MAX_MATERIAL_BUILTINS
 } ApeMaterialBuiltinVar;
@@ -25,8 +27,9 @@ typedef enum ApeMaterialBuiltinVar
 typedef enum ApeMaterialFlag
 {
 	PL_BITFLAG( APE_MATERIAL_FLAG_MIRROR, 0U ),
-	PL_BITFLAG( APE_MATERIAL_FLAG_SHADOWS, 1U ),
-	PL_BITFLAG( APE_MATERIAL_FLAG_BLENDED, 2U ),
+	PL_BITFLAG( APE_MATERIAL_FLAG_CAST_SHADOWS, 1U ),
+	PL_BITFLAG( APE_MATERIAL_FLAG_RECEIVE_SHADOWS, 2U ),
+	PL_BITFLAG( APE_MATERIAL_FLAG_BLENDED, 3U ),
 } ApeMaterialFlag;
 
 #define APE_MATERIAL_VAR_NAME_LENGTH 64
@@ -50,9 +53,9 @@ typedef enum ApeMaterialVariableType
 
 	/* special types */
 	SS_ARL_MATERIAL_VAR_STRING,
-	SS_ARL_MATERIAL_VAR_TEXTURE,
-	SS_ARL_MATERIAL_VAR_BUILTIN,
-	SS_ARL_MATERIAL_VAR_RENDERTARGET,
+	APE_MATERIAL_VAR_TEXTURE,
+	APE_MATERIAL_VAR_BUILTIN,
+	APE_MATERIAL_VAR_RENDERTARGET,
 
 	SS_ARL_MAX_MATERIAL_VAR_TYPES
 } ApeMaterialVariableType;
@@ -71,17 +74,17 @@ typedef enum ApeMaterialVariableHint
 typedef union ApeMaterialVariableData
 {
 	ApeMaterialBuiltinVar builtinVar;
-	void *ptr;
+	void                 *ptr;
 } ApeMaterialVariableData;
 
 typedef struct ApeMaterialVariable
 {
-	int programSlot;
+	int  programSlot;
 	char name[ APE_MATERIAL_VAR_NAME_LENGTH ];
 
-	ApeMaterialVariableType type;// type of data
-	ApeMaterialVariableData data;// data store
-	unsigned int numElements;    // number of elements (i.e., is it an array?)
+	ApeMaterialVariableType type;       // type of data
+	ApeMaterialVariableData data;       // data store
+	unsigned int            numElements;// number of elements (i.e., is it an array?)
 
 	ApeMaterialVariableHint hint;
 } ApeMaterialVariable;
@@ -91,15 +94,15 @@ typedef struct ApeMaterialPass
 	ApeShaderProgram *program;
 
 	PLGTextureFilter textureFilter;
-	PLVector2 textureScroll;
-	PLVector2 textureOffset;
+	PLVector2        textureScroll;
+	PLVector2        textureOffset;
 
-	PLGBlend blendMode[ 2 ];
+	PLGBlend            blendMode[ 2 ];
 	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];
-	unsigned int numVariables;
+	unsigned int        numVariables;
 
 	bool depthTest;
-	int cullMode;
+	int  cullMode;
 } ApeMaterialPass;
 
 /////////////////////////////////////////////////////////////////////////////////////

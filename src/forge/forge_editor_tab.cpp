@@ -2,15 +2,15 @@
 // Purpose: Base tab implementation for editors.
 // Author:  Mark E. Sowden
 
-#include "../editor.h"
+#include "forge/forge.h"
 
-#include "EditorTab.h"
+#include "forge_editor_tab.h"
 
-FXDEFMAP( ss::forge::EditorTab )
+FXDEFMAP( forge::EditorTab )
 editorTabMap[] = {};
-FXIMPLEMENT( ss::forge::EditorTab, FXTabItem, editorTabMap, ARRAYNUMBER( editorTabMap ) )
+FXIMPLEMENT( forge::EditorTab, FXTabItem, editorTabMap, ARRAYNUMBER( editorTabMap ) )
 
-ss::forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon )
+forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon )
     : FXTabItem( owner, heading )
 {
 	if ( icon != nullptr )
@@ -24,7 +24,7 @@ ss::forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIc
 	}
 }
 
-ss::forge::EditorTab::~EditorTab()
+forge::EditorTab::~EditorTab()
 {
 	ape_editor_instance_shutdown( &instance );
 }

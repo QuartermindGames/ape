@@ -18,8 +18,8 @@ ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, con
 	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, position, &pl_vecOrigin3 );
 
 	light->colour = *colour;
-	light->type = type;
-	light->flags = flags;
+	light->type   = type;
+	light->flags  = flags;
 	light->radius = radius;
 
 	return light;
@@ -37,7 +37,7 @@ void ape_light_destroy_( void *data )
 }
 
 PLColourF32 ape_light_get_colour( const ApeLight *light ) { return light->colour; }
-void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
+void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
 
 PLVector3 ape_light_get_position( const ApeLight *self )
 {
@@ -57,6 +57,11 @@ PLVector3 ape_light_get_angles( const ApeLight *self )
 void ape_light_set_angles( ApeLight *self, const PLVector3 *angles )
 {
 	ape_world_node_set_angles( ( ApeWorldNode * ) self, angles );
+}
+
+void ape_light_set_radius( ApeLight *self, float radius )
+{
+	self->radius = radius;
 }
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
@@ -108,10 +113,14 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
  */
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane )
 {
+	return false;
+
 	if ( ape_light_get_shadow_type( self ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC )
 	{
 		return false;
 	}
 
-	return ( ape_material_shadows_enabled( material ) && !ape_light_test_plane( self, plane ) );
+	uint flags = ape_material_get_flags( material );
+
+	return ( ( flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) && !ape_light_test_plane( self, plane ) );
 }

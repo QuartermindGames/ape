@@ -167,4 +167,12 @@ void ape_register_world_console_variables_( void );
 
 void ape_calc_world_node_bounds( ApeWorldNode *root );
 
+/**
+ * Iterates over the children of the world and returns the first room.
+ *
+ * @param self	Pointer to instance of world.
+ * @return 		Pointer to instance of room. Null on fail.
+ */
+ApeRoom *ape_world_get_first_room_( ApeWorld *self );
+
 PL_EXTERN_C_END

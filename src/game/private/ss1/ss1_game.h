@@ -3,6 +3,8 @@
 #pragma once
 
 #include "../shared/game_private.h"
+#include "../shared/game_server.h"
+#include "../shared/game_client.h"
 #include "../shared/game_world_simulation.h"
 
 #define SS1_GAME_MILESTONE     "ss1_proto_1"
@@ -54,15 +56,15 @@ typedef struct SS1GameState
 {
 	WorldSimulation simulation;
 
-	SS1Team teams[ SS1_MAX_TEAMS ];
+	SS1Team   teams[ SS1_MAX_TEAMS ];
 	SS1Player players[ SS1_MAX_PLAYERS ];
 
-	ApeCamera *camera;// our eyes
-	ApeWorld *world;  // world container
-	ApeRoom *room;    // everything in the scene should be tied to this!
-	ApeBrush *terrain;// proc terrain brush
+	ApeCamera *camera; // our eyes
+	ApeWorld  *world;  // world container
+	ApeRoom   *room;   // everything in the scene should be tied to this!
+	ApeBrush  *terrain;// proc terrain brush
 
-	bool isFirstLaunch;
+	bool      isFirstLaunch;
 	NdBranch *config;
 } SS1GameState;
 extern SS1GameState ss1_gameState;

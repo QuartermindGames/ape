@@ -35,8 +35,8 @@ typedef struct ApeMemoryCacheHeader
 	struct PLLinkedListNode *node; /* index in pool */
 } ApeMemoryCacheHeader;
 
-void apeAddToCachePool( const char *id, ApeCachePool pool, void *data );
-void *apeGetCachedData( const char *id, ApeCachePool pool );
+void  ape_cache_add_to_pool_( const char *id, ApeCachePool pool, void *data );
+void *ape_cache_get_data_( const char *id, ApeCachePool pool );
 
 /* ======================================================================
  * Reference Counting and Garbage Collection

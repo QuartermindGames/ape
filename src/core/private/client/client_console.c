@@ -10,7 +10,7 @@
 #include "editor/editor.h"
 
 static bool consoleIsOpen = false;
-static bool drawShadow = false;
+static bool drawShadow    = false;
 
 static int consoleAlpha = 200;
 
@@ -18,20 +18,20 @@ static int consoleAlpha = 200;
  * CONSOLE INPUT BUFFER
  ****************************************/
 
-static char inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
-static unsigned int inputBufferLength = 0;
+static char         inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
+static unsigned int inputBufferLength                        = 0;
 
 #define MAX_HISTORY_RESULTS 64
-static char history[ MAX_HISTORY_RESULTS ][ 64 ] = { { '\0' } };
-static unsigned int numHistoryItems = 0;
-static unsigned int historySelection = 0;
+static char         history[ MAX_HISTORY_RESULTS ][ 64 ] = { { '\0' } };
+static unsigned int numHistoryItems                      = 0;
+static unsigned int historySelection                     = 0;
 
 /////////////////////////////////////////////////////////////////
 // AUTOCOMPLETE
 
 #define MAX_AUTOCOMPLETE_RESULTS 8
-static const char *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ] = { NULL };
-static bool enableAutoCompleteList;
+static const char  *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ] = { NULL };
+static bool         enableAutoCompleteList;
 static unsigned int autoCompleteSelection = 0;
 
 static void update_auto_complete_result( const char *input )
@@ -263,7 +263,7 @@ bool ape_console_handle_text_event_( const char *key )
 		return true;
 
 	inputBuffer[ inputBufferLength++ ] = *key;
-	inputBuffer[ inputBufferLength ] = '\0';
+	inputBuffer[ inputBufferLength ]   = '\0';
 
 	update_auto_complete_result( inputBuffer );
 
@@ -277,7 +277,7 @@ bool ape_console_handle_text_event_( const char *key )
 static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 {
 	const float ch = guiGetFontLineSpacing( font );
-	float cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
+	float       cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
 	gui_font_draw_character( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
@@ -352,9 +352,9 @@ void ape_console_draw_( const ApeViewport *viewport )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
 
-	float lineSpacing = guiGetFontLineSpacing( font );
-	float width = ( float ) viewport->width;
-	float height = ( float ) viewport->height;
+	float lineSpacing   = guiGetFontLineSpacing( font );
+	float width         = ( float ) viewport->width;
+	float height        = ( float ) viewport->height;
 	float consoleHeight = height - lineSpacing;
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
@@ -397,7 +397,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 	if ( enableAutoCompleteList && ( autoComplete[ 0 ] != NULL ) )
 	{
 		float autoCompleteHeight = 0.0f;
-		float autoCompleteWidth = 0.0f;
+		float autoCompleteWidth  = 0.0f;
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 

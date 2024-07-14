@@ -11,14 +11,14 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static PLHashTable *shaderProgramTable;
+static PLHashTable      *shaderProgramTable;
 static ApeShaderProgram *defaultShaders[ APE_MAX_DEFAULT_SHADERS ];
-static bool isEnumeratingShaders;
+static bool              isEnumeratingShaders;
 
 #define HOT_RELOAD_TICKS_DEFAULT 60
-static bool hotReload = false;
+static bool         hotReload         = false;
 static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
-static unsigned int hotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
+static unsigned int hotReloadTicks    = HOT_RELOAD_TICKS_DEFAULT;
 
 static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
@@ -33,7 +33,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
 
 	size_t length = PlGetFileSize( filePtr );
-	char *buffer = PL_NEW_( char, length + 1 );
+	char  *buffer = PL_NEW_( char, length + 1 );
 	PlReadFile( filePtr, buffer, length, 1 );
 
 	PlCloseFile( filePtr );
@@ -89,7 +89,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 		return nullptr;
 	}
 
-	const char *vertexPath = nd_branch_get_child_string( root, "vertexPath", NULL );
+	const char *vertexPath   = nd_branch_get_child_string( root, "vertexPath", NULL );
 	const char *fragmentPath = nd_branch_get_child_string( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
@@ -204,6 +204,10 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 		PL_ZERO_( program->defaultPass );
 		/* need to assign this for variable validation */
 		program->defaultPass.program = program;
+
+		// some sensible defaults...
+		program->defaultPass.depthTest     = true;
+		program->defaultPass.textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 		ape_parse_material_pass_( child, &program->defaultPass );
 #pragma message "TODO: materials won't automatically inherit these default changes yet..."
@@ -431,10 +435,10 @@ void ape_initialize_shaders_( void )
 
 	// now fetch the default programs
 	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
-	        [APE_SHADER_DEFAULT] = "default",
+	        [APE_SHADER_DEFAULT]        = "default",
 	        [APE_SHADER_DEFAULT_VERTEX] = "default_vertex",
-	        [APE_SHADER_DEFAULT_ALPHA] = "default_alpha",
-	        [APE_SHADER_DEFAULT_FONT] = "font",
+	        [APE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
+	        [APE_SHADER_DEFAULT_FONT]   = "font",
 	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
 	};
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )

@@ -8,9 +8,8 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-
 static PLHashTable *entityComponentDefinitions = NULL;
-static PLHashTable *entityClassDefinitions = NULL;
+static PLHashTable *entityClassDefinitions     = NULL;
 
 static void list_entity_classes_command( unsigned int, char ** )
 {
@@ -19,23 +18,23 @@ static void list_entity_classes_command( unsigned int, char ** )
 		return;
 	}
 
-	PRINT( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassDefinitions ) );
+	ape_print_( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassDefinitions ) );
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassDefinitions );
 	while ( node != NULL )
 	{
 		ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
-		PRINT( "-------------------------------------------------\n" );
-		PRINT( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
-		PRINT( " num properties       = %u\n", classDefinition->numProperties );
-		PRINT( " cache callback       = %p\n", classDefinition->cacheFunction );
-		PRINT( " create callback      = %p\n", classDefinition->createFunction );
-		PRINT( " destroy callback     = %p\n", classDefinition->destroyFunction );
-		PRINT( " spawn callback       = %p\n", classDefinition->spawnFunction );
-		PRINT( " tick callback        = %p\n", classDefinition->tickFunction );
-		PRINT( " draw callback        = %p\n", classDefinition->drawFunction );
-		PRINT( " serialize callback   = %p\n", classDefinition->serializeFunction );
-		PRINT( " deserialize callback = %p\n", classDefinition->deserializeFunction );
+		ape_print_( "-------------------------------------------------\n" );
+		ape_print_( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
+		ape_print_( " num properties       = %u\n", classDefinition->numProperties );
+		ape_print_( " cache callback       = %p\n", classDefinition->cacheFunction );
+		ape_print_( " create callback      = %p\n", classDefinition->createFunction );
+		ape_print_( " destroy callback     = %p\n", classDefinition->destroyFunction );
+		ape_print_( " spawn callback       = %p\n", classDefinition->spawnFunction );
+		ape_print_( " tick callback        = %p\n", classDefinition->tickFunction );
+		ape_print_( " draw callback        = %p\n", classDefinition->drawFunction );
+		ape_print_( " serialize callback   = %p\n", classDefinition->serializeFunction );
+		ape_print_( " deserialize callback = %p\n", classDefinition->deserializeFunction );
 
 		node = PlGetNextHashTableNode( node );
 	}
@@ -94,7 +93,7 @@ ApeEntity *ape_create_entity( const char *className, NdBranch *properties, ApeWo
 	ApeEntity *entity = PL_NEW( ApeEntity );
 	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, &pl_vecOrigin3, &pl_vecOrigin3 );
 	entity->classDefinition = classDefinition;
-	entity->componentTable = PlCreateHashTable();
+	entity->componentTable  = PlCreateHashTable();
 
 	entity->classData = classDefinition->createFunction( entity, properties );
 	if ( entity->classData == nullptr )
@@ -127,61 +126,67 @@ void ape_entity_destroy_( void *data )
 	PL_DELETE( self );
 }
 
-void ape_entity_tick( ApeEntity *entity )
+void ape_entity_tick( ApeEntity *self )
 {
-	assert( entity->classDefinition != NULL );
-	if ( entity->classDefinition->tickFunction == NULL )
+	assert( self->classDefinition != NULL );
+	if ( self->classDefinition->tickFunction == NULL )
 	{
 		return;
 	}
 
-	entity->classDefinition->tickFunction( entity );
+	self->classDefinition->tickFunction( self );
 }
 
-void ape_entity_draw( ApeEntity *entity )
+void ape_entity_draw( ApeEntity *self )
 {
-	assert( entity->classDefinition != NULL );
-	if ( entity->classDefinition->drawFunction == NULL )
+	assert( self->classDefinition != NULL );
+	if ( self->classDefinition->drawFunction == NULL )
 	{
 		return;
 	}
 
-	entity->classDefinition->drawFunction( entity );
+	self->classDefinition->drawFunction( self );
 }
 
 void ape_register_entity_component( const ApeEntityComponentDefinition *definition )
 {
 	if ( entityComponentDefinitions == NULL )
+	{
 		entityComponentDefinitions = PlCreateHashTable();
+	}
 
 	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL )
 	{
-		PRINT_WARNING( "Attempted to register a duplicate entity component (%s)\n", definition->name );
+		ape_warning_( "Attempted to register a duplicate entity component (%s)\n", definition->name );
 		return;
 	}
 
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 }
 
-void *ss_acl_entity_add_component( ApeEntity *entity, const char *name )
+void *ape_entity_add_component( ApeEntity *self, const char *name )
 {
 	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
 	if ( componentDefinition == NULL )
 	{
-		PRINT_WARNING( "Failed to find entity component (%s)!\n", name );
+		ape_warning_( "Failed to find entity component (%s)!\n", name );
 		return NULL;
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
 	if ( componentDefinition->Create != NULL )
-		component->data = componentDefinition->Create();
-
-	if ( !PlInsertHashTableNode( entity->componentTable, name, strlen( name ), component ) )
 	{
-		PRINT_WARNING( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
+		component->data = componentDefinition->Create();
+	}
+
+	if ( !PlInsertHashTableNode( self->componentTable, name, strlen( name ), component ) )
+	{
+		ape_warning_( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
 		if ( componentDefinition->Destroy != NULL )
+		{
 			componentDefinition->Destroy( component );
+		}
 
 		PL_DELETE( component );
 		return NULL;
@@ -190,7 +195,7 @@ void *ss_acl_entity_add_component( ApeEntity *entity, const char *name )
 	return component->data;
 }
 
-void *ss_acl_entity_get_component( ApeEntity *entity, const char *name )
+void *ape_entity_get_component( ApeEntity *self, const char *name )
 {
-	return PlLookupHashTableUserData( entity->componentTable, name, strlen( name ) );
+	return PlLookupHashTableUserData( self->componentTable, name, strlen( name ) );
 }

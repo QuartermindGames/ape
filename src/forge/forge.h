@@ -27,7 +27,7 @@
 
 #define FORGE_APP_VERSION "v0.1.0"
 
-static inline constexpr const char *FORGE_APP_NAME = "forge";
+static inline constexpr const char *FORGE_APP_NAME  = "forge";
 static inline constexpr const char *FORGE_APP_TITLE = "Forge";
 
 static inline constexpr uint8_t FORGE_VERSION_MAJOR = 0;
@@ -86,7 +86,7 @@ enum ForgeIconType
 };
 extern FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
 
-namespace ss::forge
+namespace forge
 {
 	FXGLVisual *get_shared_gl_visual();
 
@@ -114,14 +114,13 @@ namespace ss::forge
 
 		std::string name;
 		std::string internalName;
-		NdBranch *config{};
-		PLFileSystemMount *mount{};
-		FXIcon *icon{};
+		NdBranch   *config{};
+		FXIcon     *icon{};
 	};
 	extern Project *editorProject;
 
 	Project *create_project( const std::string &name, const std::string &folderName );
-	bool open_project( const char *path );
+	bool     open_project( const char *path );
 
 	/////////////////////////////////////////////////////////////////////////
 
@@ -140,4 +139,4 @@ namespace ss::forge
 	extern bool isCookAvailable;
 
 	extern NdBranch *editorConfig;
-}// namespace ss::forge
+}// namespace forge

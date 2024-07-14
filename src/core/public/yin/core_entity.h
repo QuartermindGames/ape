@@ -69,10 +69,9 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className );
 
 ApeEntity *ape_create_entity( const char *className, NdBranch *properties, ApeWorldNode *parent );
-void ape_entity_destroy( ApeEntity *entity );
 
-void ape_entity_tick( ApeEntity *entity );
-void ape_entity_draw( ApeEntity *entity );
+void ape_entity_tick( ApeEntity *self );
+void ape_entity_draw( ApeEntity *self );
 
 ////////////////////////////////////////////////////////////////////
 // Components
@@ -91,7 +90,7 @@ typedef struct ApeEntityComponentDefinition
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
 
 void ape_register_entity_component( const ApeEntityComponentDefinition *definition );
-void *ss_acl_entity_add_component( ApeEntity *entity, const char *name );
-void *ss_acl_entity_get_component( ApeEntity *entity, const char *name );
+void *ape_entity_add_component( ApeEntity *self, const char *name );
+void *ape_entity_get_component( ApeEntity *self, const char *name );
 
 PL_EXTERN_C_END

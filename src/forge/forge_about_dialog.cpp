@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "AboutDialog.h"
+#include "forge_about_dialog.h"
 
-FXIcon *ss::forge::AboutDialog::editorIcon = nullptr;
-FXIcon *ss::forge::AboutDialog::developerIcon = nullptr;
+FXIcon *forge::AboutDialog::editorIcon    = nullptr;
+FXIcon *forge::AboutDialog::developerIcon = nullptr;
 
-ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
+forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
     : FXDialogBox( parent, FXString( "About " ) + FORGE_APP_TITLE )
 {
 	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
@@ -17,9 +17,9 @@ ss::forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
 	             LAYOUT_LEFT | LAYOUT_SIDE_LEFT | JUSTIFY_LEFT );
 
 	if ( editorIcon == nullptr )
-		editorIcon = ss::forge::load_fx_icon( FXApp::instance(), "resources/logo_editor.gif" );
+		editorIcon = forge::load_fx_icon( FXApp::instance(), "resources/logo_editor.gif" );
 	if ( developerIcon == nullptr )
-		developerIcon = ss::forge::load_fx_icon( FXApp::instance(), "resources/logo_developer.gif" );
+		developerIcon = forge::load_fx_icon( FXApp::instance(), "resources/logo_developer.gif" );
 
 	auto hframe = new FXHorizontalFrame( infoFrame, LAYOUT_FILL_X );
 	new FXLabel( hframe, FXString::null, editorIcon, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | JUSTIFY_CENTER_Y | LAYOUT_CENTER_Y );

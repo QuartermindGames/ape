@@ -2,17 +2,17 @@
 
 #pragma once
 
-#include "editor.h"
+#include "forge.h"
 
-namespace ss::forge
+namespace forge
 {
-	class ForgeConsoleFrame : public FXVerticalFrame
+	class ConsoleFrame : public FXVerticalFrame
 	{
-		FXDECLARE( ForgeConsoleFrame )
+		FXDECLARE( ConsoleFrame )
 
 	public:
-		explicit ForgeConsoleFrame( FXComposite *composite );
-		~ForgeConsoleFrame() override;
+		explicit ConsoleFrame( FXComposite *composite );
+		~ConsoleFrame() override;
 
 		enum
 		{
@@ -29,12 +29,12 @@ namespace ss::forge
 
 	protected:
 	private:
-		inline ForgeConsoleFrame() = default;
+		inline ConsoleFrame() = default;
 
 		std::vector< std::string > _previousCommands;
 
-		FXText *logField{};
-		FXButton *submitButton{};
+		FXText     *logField{};
+		FXButton   *submitButton{};
 		FXComboBox *submitField{};
 	};
-}// namespace ss::forge
+}// namespace forge

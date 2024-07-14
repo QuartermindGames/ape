@@ -2,18 +2,18 @@
 
 #pragma once
 
-#include "editor.h"
-#include "forge/editors/EditorTab.h"
+#include "forge.h"
+#include "forge_editor_tab.h"
 
-namespace ss::forge
+namespace forge
 {
-	class viewport_frame : public FXVerticalFrame
+	class Viewport : public FXVerticalFrame
 	{
-		FXDECLARE( viewport_frame )
+		FXDECLARE( Viewport )
 
 	public:
-		viewport_frame( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode );
-		~viewport_frame() override;
+		Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *editor, ApeCameraViewMode viewMode );
+		~Viewport() override;
 
 		void create() override;
 
@@ -45,7 +45,7 @@ namespace ss::forge
 			ID_LAST
 		};
 
-		virtual void Draw();
+		virtual void draw();
 
 		inline void set_active( bool state )
 		{
@@ -71,10 +71,8 @@ namespace ss::forge
 		long on_reset_camera( FXObject *, FXSelector, void * );
 
 	private:
-		inline viewport_frame() = default;
-
 		FXGLCanvas *canvas_;
-		FXToolBar *toolBar;
+		FXToolBar  *toolBar;
 
 		FXToggleButton *viewModeButtons[ APE_CAMERA_MAX_MODES ];
 		FXToggleButton *drawModeButtons[ APE_CAMERA_MAX_DRAW_MODES ];
@@ -84,9 +82,12 @@ namespace ss::forge
 
 		static int translate_key( int code );
 
+	protected:
+		inline Viewport() = default;
+
 	public:
-		ApeViewport *internalViewport_{};
-		ApeCamera *camera{};
+		ApeViewport        *internalViewport_{};
+		ApeCamera          *camera{};
 		static unsigned int cameraTagNum;
 
 	private:
@@ -97,7 +98,7 @@ namespace ss::forge
 
 		EditorTab *editor{};
 
-		bool useMouseLook{};
+		bool  useMouseLook{};
 		FXint originCursorPos[ 2 ];
 	};
-}// namespace ss::forge
+}// namespace forge
