@@ -65,9 +65,9 @@ set(TOX_SOURCES
 )
 
 add_executable(Tox WIN32 ${TOX_SOURCES} ../shells/launcher_sdl2/launcher.c)
-target_link_libraries(Tox ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS})
+target_link_libraries(Tox ${GAME_LINK_LIBS})
 set_target_properties(Tox PROPERTIES FOLDER "Shells")
 
 add_executable(ToxForge WIN32 ${TOX_SOURCES})
-target_link_libraries(ToxForge ${SHELL_LINK_LIBS} ${GAME_LINK_LIBS} Forge)
+target_link_libraries(ToxForge Forge ${GAME_LINK_LIBS})
 set_target_properties(ToxForge PROPERTIES FOLDER "Shells")
