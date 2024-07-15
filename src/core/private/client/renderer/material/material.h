@@ -135,7 +135,7 @@ void ape_shader_set_active_( ApeShaderProgram *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialPass );
+void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *materialPass );
 
 void ape_initialize_materials_( void );
 void ape_shutdown_materials_( void );

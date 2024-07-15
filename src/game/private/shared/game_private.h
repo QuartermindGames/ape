@@ -12,7 +12,7 @@
 #include "yin/core_input.h"
 #include "yin/core_game.h"
 #include "yin/gui_public.h"
-#include "yin/node.h"
+#include "acm/public/acm/acm.h"
 
 #include "ape/ape_public_client.h"
 

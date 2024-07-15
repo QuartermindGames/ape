@@ -146,20 +146,20 @@ typedef struct ApeRoom
 typedef struct ApeWorldEntity
 {
 	char className[ APE_ENTITY_MAX_NAME ];
-	NdBranch *properties;
+	AcmBranch *properties;
 } ApeWorldEntity;
 
 PL_EXTERN_C
 
 ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces );
 
-void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
+void ape_world_serialize_( const ApeWorld *world, AcmBranch *root );
 
 /// Deserialize world from a node tree.
 /// \param world World that deserialized data will be added to.
 /// \param root Handle to the world root.
 /// \return On success, returns the world pointer, otherwise null.
-ApeWorld *ape_world_deserialize_( NdBranch *root );
+ApeWorld *ape_world_deserialize_( AcmBranch *root );
 
 void ape_world_spawn_entities_( ApeWorld *world );
 

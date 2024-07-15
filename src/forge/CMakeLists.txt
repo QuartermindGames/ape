@@ -49,6 +49,6 @@ target_include_directories(Forge
         PRIVATE ../kernel/plcore/include
         PRIVATE ../kernel/plgraphics/include
         PRIVATE ../common/public
-        PRIVATE ../node/public
+        PRIVATE ../acm/public
         PRIVATE ../core/public
 )

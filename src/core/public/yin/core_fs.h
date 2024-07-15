@@ -6,11 +6,11 @@
 
 PL_EXTERN_C
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
 const char *ss_acl_fs_get_user_config_location( void );
 
-void ape_fs_setup_config( NdBranch *root );
+void ape_fs_setup_config( AcmBranch *root );
 
 /**
  * Returns contents of file in a null-terminated buffer.

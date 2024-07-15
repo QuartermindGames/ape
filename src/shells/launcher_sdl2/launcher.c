@@ -10,13 +10,13 @@
 
 #include <yin/core.h>
 #include <yin/core_renderer.h>
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #include "common.h"
 #include "common_project.h"
 #include "launcher.h"
 
-static NdBranch *shellConfig;
+static AcmBranch *shellConfig;
 
 void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 {
@@ -417,7 +417,7 @@ static bool initialize_display( void )
 	}
 
 	unsigned int driverMode;
-	const char *driverName = nd_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
+	const char *driverName = acm_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
 		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
@@ -444,9 +444,9 @@ static bool initialize_display( void )
 	int height = 1080;
 	if ( shellConfig != NULL )
 	{
-		fullscreen = nd_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
-		width = ( int ) nd_branch_get_child_int( shellConfig, "width", width );
-		height = ( int ) nd_branch_get_child_int( shellConfig, "height", height );
+		fullscreen = acm_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
+		width = ( int ) acm_branch_get_child_int( shellConfig, "width", width );
+		height = ( int ) acm_branch_get_child_int( shellConfig, "height", height );
 	}
 
 	if ( PlHasCommandLineArgument( "/window" ) )
@@ -542,7 +542,7 @@ int launcher_initialize( int argc, char **argv )
 
 	const char *projectName = NULL;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
-		projectName = nd_branch_get_child_string( shellConfig, "defaultProject", "base" );
+		projectName = acm_branch_get_child_string( shellConfig, "defaultProject", "base" );
 	if ( projectName == NULL )
 		PrintError( "No valid project specified!\nCheck debug logs.\n" );
 

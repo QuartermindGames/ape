@@ -10,7 +10,7 @@ PL_EXTERN_C
 typedef struct PLVectorArray PLVectorArray;
 typedef struct PLLinkedList  PLLinkedList;
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
 /* external elements */
 typedef struct ApeMaterial ApeMaterial;
@@ -204,7 +204,7 @@ typedef struct ApeWorld
 	float       fogFar;
 
 	/* additional generic properties */
-	struct NdBranch *globalProperties;
+	struct AcmBranch *globalProperties;
 } ApeWorld;
 
 #define APE_WORLD_VERSION       3
@@ -223,7 +223,7 @@ ApeWorld *ape_world_load( const char *path );
 /// \return On success, returns true but false otherwise.
 bool ape_world_save( ApeWorld *self, const char *path );
 
-NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera );

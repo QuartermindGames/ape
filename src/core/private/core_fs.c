@@ -7,18 +7,18 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static NdBranch *fileSystemConfig;
+static AcmBranch *fileSystemConfig;
 
-static void parse_aliases( NdBranch *root )
+static void parse_aliases( AcmBranch *root )
 {
-	unsigned int numAliases = nd_branch_get_num_of_children( root ) / 2;
+	unsigned int numAliases = acm_branch_get_num_of_children( root ) / 2;
 	if ( numAliases == 0 )
 	{
 		return;
 	}
 
-	NdBranch *child = nd_branch_get_first_child( root );
-	if ( nd_branch_get_type( child ) != ND_PROPERTY_STRING )
+	AcmBranch *child = acm_branch_get_first_child( root );
+	if ( acm_branch_get_type( child ) != ND_PROPERTY_STRING )
 	{
 		PRINT_WARNING( "Invalid child type found in config!\n" );
 		return;
@@ -27,8 +27,8 @@ static void parse_aliases( NdBranch *root )
 	for ( unsigned int i = 0; i < numAliases; i++ )
 	{
 		PLPath aliasPath;
-		nd_branch_get_string( child, aliasPath, sizeof( PLPath ) );
-		child = nd_get_next_child( child );
+		acm_branch_get_string( child, aliasPath, sizeof( PLPath ) );
+		child = acm_get_next_child( child );
 		if ( child == NULL )
 		{
 			PRINT_WARNING( "Encountered alias with no path: %u\n", i );
@@ -36,16 +36,16 @@ static void parse_aliases( NdBranch *root )
 		}
 
 		PLPath targetPath;
-		nd_branch_get_string( child, targetPath, sizeof( PLPath ) );
+		acm_branch_get_string( child, targetPath, sizeof( PLPath ) );
 
 		PlAddFileAlias( aliasPath, targetPath );
 		PRINT( "Registered alias: \"%s\" > \"%s\"\n", aliasPath, targetPath );
 
-		child = nd_get_next_child( child );
+		child = acm_get_next_child( child );
 	}
 }
 
-#define USER_CONFIG "user.cfg" ND_DEFAULT_EXTENSION
+#define USER_CONFIG "user.cfg" ACM_DEFAULT_EXTENSION
 static PLPath configPath;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -86,15 +86,15 @@ const char *ss_acl_fs_get_user_config_location( void )
 	return configPath;
 }
 
-void ape_fs_setup_config( NdBranch *root )
+void ape_fs_setup_config( AcmBranch *root )
 {
 	PlClearFileAliases();
 
-	fileSystemConfig = nd_branch_get_child_by_name( root, "fileSystem" );
+	fileSystemConfig = acm_branch_get_child_by_name( root, "fileSystem" );
 	if ( fileSystemConfig != NULL )
 	{
-		NdBranch *child;
-		if ( ( child = nd_branch_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
+		AcmBranch *child;
+		if ( ( child = acm_branch_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
 			parse_aliases( child );
 	}
 

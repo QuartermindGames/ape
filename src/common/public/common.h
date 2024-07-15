@@ -37,8 +37,8 @@ PL_EXTERN_C
 void             com_initialize( void );
 const char      *com_get_local_data_directory( void );
 const char      *com_get_app_data_directory( void );
-struct NdBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
-bool             com_write_config( struct NdBranch *root, const char *name );
+struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
+bool             com_write_config( struct AcmBranch *root, const char *name );
 
 void com_pkg_write_header( FILE *pack, uint numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );

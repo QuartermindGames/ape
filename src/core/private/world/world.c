@@ -24,9 +24,9 @@ ApeWorld *ape_create_world( void )
 	ApeWorld *world = PL_NEW( ApeWorld );
 	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	world->globalProperties = nd_branch_push_back_object( nullptr, "properties" );
-	nd_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	nd_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	world->globalProperties = acm_branch_push_back_object( nullptr, "properties" );
+	acm_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	acm_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
 	world->meshes       = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
@@ -191,10 +191,10 @@ static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 
 ApeWorld *ape_world_load( const char *path )
 {
-	NdBranch *root = nd_load_file( path, "world" );
+	AcmBranch *root = acm_load_file( path, "world" );
 	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to load world: %s\n", nd_get_error_message() );
+		ape_warning_( "Failed to load world: %s\n", acm_get_error_message() );
 		return nullptr;
 	}
 
@@ -204,7 +204,7 @@ ApeWorld *ape_world_load( const char *path )
 		ape_warning_( "Failed to load level (%s)!\n", path );
 	}
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	if ( world != nullptr )
 	{
@@ -227,14 +227,14 @@ ApeWorld *ape_world_load( const char *path )
 
 bool ape_world_save( ApeWorld *self, const char *path )
 {
-	NdBranch *root = nd_branch_push_back_object( nullptr, "world" );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
 
 	ape_world_serialize_( self, root );
 	snprintf( self->path, sizeof( self->path ), "%s", path );
 
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		ape_warning_( "Failed to save world (%s): %s\n", path, nd_get_error_message() );
+		ape_warning_( "Failed to save world (%s): %s\n", path, acm_get_error_message() );
 		return false;
 	}
 
@@ -302,14 +302,14 @@ void ape_world_spawn_entities_( ApeWorld *world )
  * Global World Properties
  ****************************************/
 
-NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
+AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == nullptr )
 	{
 		return nullptr;
 	}
 
-	return nd_branch_get_child_by_name( world->globalProperties, propertyName );
+	return acm_branch_get_child_by_name( world->globalProperties, propertyName );
 }
 
 /****************************************

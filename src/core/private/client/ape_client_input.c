@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static NdBranch *inputConfig;
+static AcmBranch *inputConfig;
 
 static const float DEFAULT_DEADZONE = 0.2f;
 
@@ -68,8 +68,8 @@ typedef struct ApeInputController
 	SDL_GameController *sdlGameController;
 } ApeInputController;
 
-ND_DECLARE_STRUCT( ApeInputController, 2,
-                   ND_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ND_PROPERTY_FLOAT32, 2 ) )
+ACM_DECLARE_STRUCT( ApeInputController, 2,
+                    ACM_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ND_PROPERTY_FLOAT32, 2 ) )
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
 static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
@@ -322,11 +322,11 @@ void ape_initialize_input_( void )
 	}
 
 	// attempt to fetch and then init config
-	NdBranch *userConfig = ape_get_user_config();
-	inputConfig = nd_branch_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
+	AcmBranch *userConfig = ape_get_user_config();
+	inputConfig = acm_branch_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
 	if ( inputConfig == NULL )
 	{
-		inputConfig = nd_branch_push_back_object( userConfig, SERIALISATION_NODE_NAME );
+		inputConfig = acm_branch_push_back_object( userConfig, SERIALISATION_NODE_NAME );
 	}
 
 	check_for_controllers();
@@ -344,26 +344,26 @@ void ape_shutdown_input_( void )
 	inputKeyboard.activeKeyList = NULL;
 }
 
-void ape_serialize_input_config_( NdBranch *root )
+void ape_serialize_input_config_( AcmBranch *root )
 {
-	NdBranch *controllersBranch = nd_branch_push_back_object_array( root, "controllers" );
+	AcmBranch *controllersBranch = acm_branch_push_back_object_array( root, "controllers" );
 	for ( unsigned int i = 0; i < numControllers; ++i )
 	{
-		NdErrorCode errorCode;
-		NdBranch *controllerBranch = nd_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
+		AcmErrorCode errorCode;
+		AcmBranch  *controllerBranch = acm_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
 		if ( errorCode != ND_ERROR_SUCCESS )
 		{
-			ape_warning_( "Failed to serialize controller: %s\n", nd_get_error_message() );
+			ape_warning_( "Failed to serialize controller: %s\n", acm_get_error_message() );
 			break;
 		}
 
-		nd_branch_push_back_branch( controllersBranch, controllerBranch );
+		acm_branch_push_back_branch( controllersBranch, controllerBranch );
 	}
 }
 
-void ape_deserialize_input_config_( NdBranch *root )
+void ape_deserialize_input_config_( AcmBranch *root )
 {
-	NdBranch *inputNode = nd_branch_get_child_by_name( root, SERIALISATION_NODE_NAME );
+	AcmBranch *inputNode = acm_branch_get_child_by_name( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 	{
 		return;

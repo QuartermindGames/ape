@@ -20,7 +20,7 @@
 #include "common/common_math.h"
 
 #include <yin/core.h>
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #define ENGINE_NAME     "APE Tech"
 #define ENGINE_APP_NAME "ape"

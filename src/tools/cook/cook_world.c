@@ -4,21 +4,21 @@
 #include "model/model_obj.h"
 #include "yin/core_world.h"
 
-static void process_properties( const char *worldName, NdBranch *root )
+static void process_properties( const char *worldName, AcmBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s." APE_WORLD_EXTENSION_CFG, worldName, worldName );
-	NdBranch *properties = nd_load_file( path, "properties" );
+	AcmBranch *properties = acm_load_file( path, "properties" );
 	if ( properties == NULL )
 	{
-		WARN( "Failed to open world properties file (%s): %s\n", path, nd_get_error_message() );
+		WARN( "Failed to open world properties file (%s): %s\n", path, acm_get_error_message() );
 		return;
 	}
-	nd_branch_push_back_branch( root, properties );
-	nd_branch_destroy( properties );
+	acm_branch_push_back_branch( root, properties );
+	acm_branch_destroy( properties );
 }
 
-static void process_geometry( const char *worldName, NdBranch *root )
+static void process_geometry( const char *worldName, AcmBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s.obj", worldName, worldName );
@@ -28,13 +28,13 @@ static void process_geometry( const char *worldName, NdBranch *root )
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
 	}
 
-	root = nd_branch_push_back_object( root, "geometry" );
+	root = acm_branch_push_back_object( root, "geometry" );
 
-	NdBranch *child;
+	AcmBranch *child;
 	if ( model->numMaterials > 0 )
 	{
 		printf( "Building material table (%u)...\n", model->numMaterials );
-		child = nd_branch_push_back_string_array( root, "materials", NULL, 0 );
+		child = acm_branch_push_back_string_array( root, "materials", NULL, 0 );
 		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			char tmp[ 128 ];
@@ -48,15 +48,15 @@ static void process_geometry( const char *worldName, NdBranch *root )
 				}
 			}
 
-			printf( " %u \"%s\"\n", nd_branch_get_num_of_children( child ), tmp );
-			nd_branch_push_back_string( child, NULL, tmp );
+			printf( " %u \"%s\"\n", acm_branch_get_num_of_children( child ), tmp );
+			acm_branch_push_back_string( child, NULL, tmp );
 		}
 	}
-	printf( "%u materials\n", nd_branch_get_num_of_children( child ) );
+	printf( "%u materials\n", acm_branch_get_num_of_children( child ) );
 
 	if ( model->numSubObjects > 0 )
 	{
-		child = nd_branch_push_back_object_array( root, "rooms" );
+		child = acm_branch_push_back_object_array( root, "rooms" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
 			// Ignore sub objects that don't have any faces
@@ -66,14 +66,14 @@ static void process_geometry( const char *worldName, NdBranch *root )
 				continue;
 			}
 
-			NdBranch *roomBranch = nd_branch_push_back_object( child, NULL );
-			nd_branch_push_back_int32( roomBranch, "uid", i );
-			nd_branch_push_back_string( roomBranch, "tag", model->subObjects[ i ].name );
-			nd_branch_push_back_float32_array( roomBranch, "mins", ( float * ) &model->subObjects[ i ].mins, 3 );
-			nd_branch_push_back_float32_array( roomBranch, "maxs", ( float * ) &model->subObjects[ i ].maxs, 3 );
+			AcmBranch *roomBranch = acm_branch_push_back_object( child, NULL );
+			acm_branch_push_back_int32( roomBranch, "uid", i );
+			acm_branch_push_back_string( roomBranch, "tag", model->subObjects[ i ].name );
+			acm_branch_push_back_float32_array( roomBranch, "mins", ( float * ) &model->subObjects[ i ].mins, 3 );
+			acm_branch_push_back_float32_array( roomBranch, "maxs", ( float * ) &model->subObjects[ i ].maxs, 3 );
 		}
 
-		child = nd_branch_push_back_float32_array( root, "vertices", NULL, 0 );
+		child = acm_branch_push_back_float32_array( root, "vertices", NULL, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			PLVector3 *v = PlGetVectorArrayElementAt( model->vertices, j );
@@ -82,9 +82,9 @@ static void process_geometry( const char *worldName, NdBranch *root )
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
 			}
 
-			nd_branch_push_back_float32( child, NULL, v->x );
-			nd_branch_push_back_float32( child, NULL, v->y );
-			nd_branch_push_back_float32( child, NULL, v->z );
+			acm_branch_push_back_float32( child, NULL, v->x );
+			acm_branch_push_back_float32( child, NULL, v->y );
+			acm_branch_push_back_float32( child, NULL, v->z );
 		}
 
 #if 0
@@ -114,11 +114,11 @@ static void process_geometry( const char *worldName, NdBranch *root )
 		}
 #endif
 
-		child = nd_branch_push_back_object_array( root, "faces" );
+		child = acm_branch_push_back_object_array( root, "faces" );
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
 			unsigned int numFaces;
-			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+			ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
 			for ( unsigned int j = 0; j < numFaces; ++j )
 			{
 				if ( strncmp( model->materials[ faces[ j ]->material ].name, "tools/skip", 10 ) == 0 )
@@ -126,16 +126,16 @@ static void process_geometry( const char *worldName, NdBranch *root )
 					continue;
 				}
 
-				NdBranch *faceBranch = nd_branch_push_back_object( child, NULL );
-				nd_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
-				nd_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
-				nd_branch_push_back_uint32( faceBranch, "roomIndex", i );
+				AcmBranch *faceBranch = acm_branch_push_back_object( child, NULL );
+				acm_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
+				acm_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
+				acm_branch_push_back_uint32( faceBranch, "roomIndex", i );
 
-				NdBranch *verticesBranch = nd_branch_push_back_object_array( faceBranch, "edges" );
+				AcmBranch *verticesBranch = acm_branch_push_back_object_array( faceBranch, "edges" );
 				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 				{
-					NdBranch *edgeBranch = nd_branch_push_back_object( verticesBranch, NULL );
-					nd_branch_push_back_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+					AcmBranch *edgeBranch = acm_branch_push_back_object( verticesBranch, NULL );
+					acm_branch_push_back_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
 					//ndPushBackUI32( edgeBranch, "normalIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					//ndPushBackUI32( edgeBranch, "uvIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 
@@ -145,12 +145,12 @@ static void process_geometry( const char *worldName, NdBranch *root )
 					PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
 					{
-						nd_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
+						acm_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
 					}
 					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
 					{
-						nd_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+						acm_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
 					}
 				}
 			}
@@ -165,16 +165,16 @@ void cook_world_process( const char *worldName )
 {
 	printf( "Processing world: %s\n", worldName );
 
-	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
-	nd_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
+	AcmBranch *root = acm_branch_push_back_object( NULL, "world" );
+	acm_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
 
 	process_properties( worldName, root );
 	process_geometry( worldName, root );
 
 	PLPath path;
 	PlSetupPath( path, true, "%s/ship/worlds/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName );
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		ERROR( "Failed to write world: %s\n", nd_get_error_message() );
+		ERROR( "Failed to write world: %s\n", acm_get_error_message() );
 	}
 }

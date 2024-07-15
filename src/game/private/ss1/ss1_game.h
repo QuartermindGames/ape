@@ -65,6 +65,6 @@ typedef struct SS1GameState
 	ApeBrush  *terrain;// proc terrain brush
 
 	bool      isFirstLaunch;
-	NdBranch *config;
+	AcmBranch *config;
 } SS1GameState;
 extern SS1GameState ss1_gameState;

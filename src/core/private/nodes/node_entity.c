@@ -81,7 +81,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
 }
 
-ApeEntity *ape_create_entity( const char *className, NdBranch *properties, ApeWorldNode *parent )
+ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( className == NULL )

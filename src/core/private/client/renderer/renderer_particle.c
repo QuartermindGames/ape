@@ -18,21 +18,21 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	PlFree( emitter );
 }
 
-NdBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
+AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
 {
-	NdBranch *root = nd_branch_push_back_object( NULL, "particleEmitter" );
+	AcmBranch *root = acm_branch_push_back_object( NULL, "particleEmitter" );
 	if ( root != NULL )
 	{
-		nd_branch_push_back_int32( root, "emissionRate", emitter->emissionRate );
-		nd_branch_push_back_int32( root, "emissionVar", emitter->emissionVar );
+		acm_branch_push_back_int32( root, "emissionRate", emitter->emissionRate );
+		acm_branch_push_back_int32( root, "emissionVar", emitter->emissionVar );
 
-		nd_branch_push_back_int32( root, "particleLife", emitter->particleLife );
-		nd_branch_push_back_int32( root, "particleLifeVar", emitter->particleLifeVar );
+		acm_branch_push_back_int32( root, "particleLife", emitter->particleLife );
+		acm_branch_push_back_int32( root, "particleLifeVar", emitter->particleLifeVar );
 
-		nd_branch_push_back_float32( root, "speed", emitter->speed );
-		nd_branch_push_back_float32( root, "speedVar", emitter->speedVar );
+		acm_branch_push_back_float32( root, "speed", emitter->speed );
+		acm_branch_push_back_float32( root, "speedVar", emitter->speedVar );
 
-		nd_branch_push_back_int32( root, "maxParticles", emitter->maxParticles );
+		acm_branch_push_back_int32( root, "maxParticles", emitter->maxParticles );
 	}
 
 	return root;
@@ -44,7 +44,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	if ( emitter != NULL )
 		return;
 
-	NdBranch *root = nd_load_file( path, "particleEmitter" );
+	AcmBranch *root = acm_load_file( path, "particleEmitter" );
 	if ( root == NULL )
 	{
 		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
@@ -56,19 +56,19 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
-	emitter->emissionRate = nd_branch_get_child_int( root, "emissionRate", 2 );
-	emitter->emissionVar = nd_branch_get_child_int( root, "emissionVar", 2 );
+	emitter->emissionRate = acm_branch_get_child_int( root, "emissionRate", 2 );
+	emitter->emissionVar = acm_branch_get_child_int( root, "emissionVar", 2 );
 
-	emitter->particleLife = nd_branch_get_child_int( root, "particleLife", 10 );
-	emitter->particleLifeVar = nd_branch_get_child_int( root, "particleLifeVar", 5 );
-	emitter->maxParticles = nd_branch_get_child_int( root, "maxParticles", 100 );
+	emitter->particleLife = acm_branch_get_child_int( root, "particleLife", 10 );
+	emitter->particleLifeVar = acm_branch_get_child_int( root, "particleLifeVar", 5 );
+	emitter->maxParticles = acm_branch_get_child_int( root, "maxParticles", 100 );
 
-	emitter->life = nd_branch_get_child_int( root, "life", 0 );
+	emitter->life = acm_branch_get_child_int( root, "life", 0 );
 
-	emitter->startColour = nd_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
-	emitter->endColour = nd_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
-	emitter->startColourVar = nd_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
-	emitter->endColourVar = nd_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
+	emitter->startColour = acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour = acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColourVar = acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
+	emitter->endColourVar = acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
 	ape_cache_add_to_pool_( path, APE_CACHE_POOL_PARTICLES, emitter );
 

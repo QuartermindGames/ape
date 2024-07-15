@@ -5,7 +5,7 @@
 #include "common_private.h"
 #include "common_project.h"
 
-#include "yin/node.h"
+#include "acm/public/acm/acm.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -34,24 +34,24 @@ typedef struct ComProject
 	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
 	unsigned int numDependencies;
 
-	NdBranch *config;
+	AcmBranch *config;
 
 	PLPath localPath;
 } ComProject;
 
 static ComProject project;
 
-static void parse_mount_config( NdBranch *root, ComProject *out )
+static void parse_mount_config( AcmBranch *root, ComProject *out )
 {
-	unsigned int numChildren = nd_branch_get_num_of_children( root );
+	unsigned int numChildren = acm_branch_get_num_of_children( root );
 	if ( numChildren == 0 )
 	{
 		// nothing to mount, okay then
 		return;
 	}
 
-	NdBranch *child = nd_branch_get_first_child( root );
-	if ( nd_branch_get_type( child ) != ND_PROPERTY_STRING )
+	AcmBranch *child = acm_branch_get_first_child( root );
+	if ( acm_branch_get_type( child ) != ND_PROPERTY_STRING )
 	{
 		com_warning_( "Invalid child type found in config!\n" );
 		return;
@@ -60,8 +60,8 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 	for ( unsigned int i = 0; i < numChildren; ++i )
 	{
 		PLPath path;
-		nd_branch_get_string( child, path, sizeof( PLPath ) );
-		child = nd_get_next_child( child );
+		acm_branch_get_string( child, path, sizeof( PLPath ) );
+		child = acm_get_next_child( child );
 
 		if ( ( out->subMountLocations[ out->numSubMountLocations ] = PlMountLocation( path ) ) == NULL )
 		{
@@ -73,7 +73,7 @@ static void parse_mount_config( NdBranch *root, ComProject *out )
 	}
 }
 
-static ComProject *deserialize_project( NdBranch *root, const char *name, ComProject *out )
+static ComProject *deserialize_project( AcmBranch *root, const char *name, ComProject *out )
 {
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s", com_get_local_data_directory(), name );
@@ -87,26 +87,26 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 	PlSetupPath( out->localPath, true, "%s", path );
 
 	snprintf( out->baseName, sizeof( out->baseName ), "%s", name );
-	snprintf( out->name, sizeof( out->name ), "%s", nd_branch_get_child_string( root, "name", "none" ) );
-	snprintf( out->developer, sizeof( out->developer ), "%s", nd_branch_get_child_string( root, "developer", "none" ) );
-	snprintf( out->website, sizeof( out->website ), "%s", nd_branch_get_child_string( root, "website", "none" ) );
+	snprintf( out->name, sizeof( out->name ), "%s", acm_branch_get_child_string( root, "name", "none" ) );
+	snprintf( out->developer, sizeof( out->developer ), "%s", acm_branch_get_child_string( root, "developer", "none" ) );
+	snprintf( out->website, sizeof( out->website ), "%s", acm_branch_get_child_string( root, "website", "none" ) );
 
-	NdBranch *child;
-	if ( ( child = nd_branch_get_child_by_name( root, "version" ) ) != NULL )
+	AcmBranch *child;
+	if ( ( child = acm_branch_get_child_by_name( root, "version" ) ) != NULL )
 	{
-		nd_branch_get_int32_array( child, out->version, 3 );
+		acm_branch_get_int32_array( child, out->version, 3 );
 	}
-	if ( ( child = nd_branch_get_child_by_name( root, "mountLocations" ) ) != NULL )
+	if ( ( child = acm_branch_get_child_by_name( root, "mountLocations" ) ) != NULL )
 	{
 		parse_mount_config( child, out );
 	}
-	if ( ( child = nd_branch_get_child_by_name( root, "dependencies" ) ) != NULL )
+	if ( ( child = acm_branch_get_child_by_name( root, "dependencies" ) ) != NULL )
 	{
-		child = nd_branch_get_first_child( child );
+		child = acm_branch_get_first_child( child );
 		while ( child != NULL )
 		{
 			char baseName[ COM_MAX_PROJECT_BASENAME ];
-			if ( nd_branch_get_string( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
+			if ( acm_branch_get_string( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
 			{
 				com_warning_( "Failed to load dependency due to invalid dependency listing!\n" );
 				return NULL;
@@ -114,10 +114,10 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 
 			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), baseName, baseName );
 
-			NdBranch *croot = nd_load_file( path, "project" );
+			AcmBranch *croot = acm_load_file( path, "project" );
 			if ( croot == NULL )
 			{
-				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, nd_get_error_message() );
+				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, acm_get_error_message() );
 				return NULL;
 			}
 
@@ -144,7 +144,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 				return NULL;
 			}
 
-			nd_branch_destroy( croot );
+			acm_branch_destroy( croot );
 
 			if ( head->numDependencies >= COM_MAX_DEPENDENCIES )
 			{
@@ -152,7 +152,7 @@ static ComProject *deserialize_project( NdBranch *root, const char *name, ComPro
 				break;
 			}
 
-			child = nd_get_next_child( child );
+			child = acm_get_next_child( child );
 		}
 	}
 
@@ -163,7 +163,7 @@ static void free_project( ComProject *out )
 {
 	if ( out->config != NULL )
 	{
-		nd_branch_destroy( out->config );
+		acm_branch_destroy( out->config );
 		out->config = NULL;
 	}
 
@@ -199,7 +199,7 @@ static void free_project( ComProject *out )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-NdBranch *com_project_mount( const char *name )
+AcmBranch *com_project_mount( const char *name )
 {
 	assert( !project.isActive );
 	if ( project.isActive )
@@ -211,10 +211,10 @@ NdBranch *com_project_mount( const char *name )
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), name, name );
 
-	NdBranch *root = nd_load_file( path, "project" );
+	AcmBranch *root = acm_load_file( path, "project" );
 	if ( root == NULL )
 	{
-		com_warning_( "Failed to load project file: %s\n", nd_get_error_message() );
+		com_warning_( "Failed to load project file: %s\n", acm_get_error_message() );
 		return NULL;
 	}
 
@@ -238,7 +238,7 @@ const char *com_project_get_local_path( void ) { return project.localPath; }
 const char *com_project_get_base_name( void ) { return project.baseName; }
 const char *com_project_get_name( void ) { return project.name; }
 
-NdBranch *com_project_get_config()
+AcmBranch *com_project_get_config()
 {
 	return project.config;
 }

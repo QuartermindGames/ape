@@ -3,7 +3,7 @@
 
 #include <plcore/pl.h>
 
-#include "yin/node.h"
+#include "acm/acm.h"
 #include "ape/ape_formats.h"
 
 // uurrgghh...
@@ -88,29 +88,29 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 #endif
 
 		// now build the node tree for the material
-		NdBranch *root = nd_branch_push_back_object( NULL, "material" );
+		AcmBranch *root = acm_branch_push_back_object( NULL, "material" );
 		{
 			if ( surfaceType != GAME_MATERIAL_SURFACE_TYPE_NONE )
 			{
-				nd_branch_push_back_int8( root, "surfaceType", surfaceType );
+				acm_branch_push_back_int8( root, "surfaceType", surfaceType );
 			}
 
-			NdBranch *passesArray = nd_branch_push_back_object_array( root, "passes" );
+			AcmBranch *passesArray = acm_branch_push_back_object_array( root, "passes" );
 			{
-				NdBranch *pass = nd_branch_push_back_object( passesArray, NULL );
+				AcmBranch *pass = acm_branch_push_back_object( passesArray, NULL );
 				{
-					nd_branch_push_back_string( pass, "shaderProgram", matGen.shader );
-					NdBranch *parameters = nd_branch_push_back_object( pass, "shaderParameters" );
+					acm_branch_push_back_string( pass, "shaderProgram", matGen.shader );
+					AcmBranch *parameters = acm_branch_push_back_object( pass, "shaderParameters" );
 					{
-						nd_branch_push_back_string( parameters, "diffuseMap", path );
+						acm_branch_push_back_string( parameters, "diffuseMap", path );
 					}
 				}
 			}
 		}
 
 		// write it out and destroy it
-		nd_write_file( writePath, root, ND_FILE_UTF8 );
-		nd_branch_destroy( root );
+		acm_write_file( writePath, root, ND_FILE_UTF8 );
+		acm_branch_destroy( root );
 
 		numMaterialsGenerated++;
 		printf( "OK [%s]\n", matGen.surfaceLookup[ surfaceType ].description );
@@ -127,40 +127,40 @@ static const char *DEFAULT_DIR = "materials/world";
 
 static bool LoadSurfacesConfig( const char *path )
 {
-	NdBranch *root = nd_load_file( path, "surfaces" );
+	AcmBranch *root = acm_load_file( path, "surfaces" );
 	if ( root == NULL )
 	{
-		printf( "Failed to load surfaces config file: %s\n", nd_get_error_message() );
+		printf( "Failed to load surfaces config file: %s\n", acm_get_error_message() );
 		return false;
 	}
 
-	matGen.numSurfaces   = ( int8_t ) nd_branch_get_num_of_children( root );
+	matGen.numSurfaces   = ( int8_t ) acm_branch_get_num_of_children( root );
 	matGen.surfaceLookup = PL_NEW_( GameMaterialSurface, matGen.numSurfaces );
 
 	GameMaterialSurface *surface = matGen.surfaceLookup;
-	NdBranch            *child   = nd_branch_get_first_child( root );
+	AcmBranch           *child   = acm_branch_get_first_child( root );
 	while ( child != NULL )
 	{
 		snprintf( surface->description, sizeof( surface->description ),
-		          "%s", nd_branch_get_child_string( child, "description", "none" ) );
+		          "%s", acm_branch_get_child_string( child, "description", "none" ) );
 
-		NdBranch *aliases = nd_branch_get_child_by_name( child, "aliases" );
+		AcmBranch *aliases = acm_branch_get_child_by_name( child, "aliases" );
 		if ( aliases != NULL )
 		{
-			surface->numAliases = nd_branch_get_num_of_children( aliases );
+			surface->numAliases = acm_branch_get_num_of_children( aliases );
 			surface->aliases    = PL_NEW_( char *, surface->numAliases );
-			nd_branch_get_string_array( aliases, surface->aliases, surface->numAliases );
+			acm_branch_get_string_array( aliases, surface->aliases, surface->numAliases );
 			//for ( uint8_t i = 0; i < surface->numAliases; ++i )
 			//{
 			//	printf( "alias %u: %s\n", i, surface->aliases[ i ] );
 			//}
 		}
 
-		child = nd_get_next_child( child );
+		child = acm_get_next_child( child );
 		surface++;
 	}
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	return true;
 }

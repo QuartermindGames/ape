@@ -111,5 +111,5 @@ target_link_libraries(ApeCore
         plgraphics
         plmodel
         ApeCommon
-        ApeNode
+        acm
 )

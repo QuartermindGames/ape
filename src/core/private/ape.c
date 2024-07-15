@@ -17,8 +17,8 @@
 
 static unsigned int numTicks = 0;
 
-static NdBranch *engineConfig;
-static NdBranch *userConfig;
+static AcmBranch *engineConfig;
+static AcmBranch *userConfig;
 
 static bool engineTerminalMode = false;
 static bool engineInitialized = false;
@@ -44,14 +44,14 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		return;
 	}
 
-	NdBranch *branch = nd_branch_get_child_by_name( engineConfig, "launchCommands" );
+	AcmBranch *branch = acm_branch_get_child_by_name( engineConfig, "launchCommands" );
 	if ( branch == NULL )
 	{
 		return;
 	}
 
 	static const unsigned int MAX_COMMANDS = 256;
-	unsigned int numCommands = nd_branch_get_num_of_children( branch );
+	unsigned int numCommands = acm_branch_get_num_of_children( branch );
 	if ( numCommands == 0 )
 	{
 		return;
@@ -63,7 +63,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 
 	char *commands[ MAX_COMMANDS ];
-	if ( nd_branch_get_string_array( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+	if ( acm_branch_get_string_array( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
 	{
 		return;
 	}
@@ -85,8 +85,8 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 
 ApeConfig ape_config_;
 
-NdBranch *ape_get_config( void ) { return engineConfig; }
-NdBranch *ape_get_user_config( void ) { return userConfig; }
+AcmBranch *ape_get_config( void ) { return engineConfig; }
+AcmBranch *ape_get_user_config( void ) { return userConfig; }
 
 void ape_print_( const char *message, ... )
 {
@@ -199,10 +199,10 @@ void ape_shutdown( void )
 	ape_shutdown_net_();
 
 	com_write_config( engineConfig, "engine" );
-	nd_branch_destroy( engineConfig );
+	acm_branch_destroy( engineConfig );
 
 	com_write_config( userConfig, "user" );
-	nd_branch_destroy( userConfig );
+	acm_branch_destroy( userConfig );
 
 	ss_shell_shutdown();
 

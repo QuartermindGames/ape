@@ -19,7 +19,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static NdBranch *editorConfigRoot;
+static AcmBranch *editorConfigRoot;
 
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
@@ -83,20 +83,20 @@ static void cache_preview_materials( void )
 	}
 
 	// Cache all the materials in a preview state
-	NdBranch *child = nd_branch_get_child_by_name( editorConfigRoot, "materialPaths" );
+	AcmBranch *child = acm_branch_get_child_by_name( editorConfigRoot, "materialPaths" );
 	if ( child == nullptr )
 	{
 		ape_warning_( "No material paths specified for editor!\n" );
 		return;
 	}
 
-	child = nd_branch_get_first_child( child );
+	child = acm_branch_get_first_child( child );
 	while ( child != nullptr )
 	{
 		PLPath buf;
-		nd_branch_get_string( child, buf, sizeof( buf ) );
+		acm_branch_get_string( child, buf, sizeof( buf ) );
 		PlScanDirectory( buf, "n", cache_material_preview_callback, true, NULL );
-		child = nd_get_next_child( child );
+		child = acm_get_next_child( child );
 	}
 
 	unsigned int  numMaterials;
@@ -209,7 +209,7 @@ static void save_world_command( unsigned int argc, char **argv )
 
 	const char *dataPath = com_get_local_data_directory();
 
-	NdBranch *root = nd_branch_push_back_object( NULL, "world" );
+	AcmBranch *root = acm_branch_push_back_object( NULL, "world" );
 
 	ape_world_serialize_( world, root );
 }
@@ -238,12 +238,12 @@ static void create_world_command( unsigned int, char ** )
 
 void ape_initialize_editor_( void )
 {
-	NdBranch *root = com_project_get_config();
+	AcmBranch *root = com_project_get_config();
 	assert( root != NULL );
-	editorConfigRoot = nd_branch_get_child_by_name( root, "editor" );
+	editorConfigRoot = acm_branch_get_child_by_name( root, "editor" );
 	if ( editorConfigRoot == nullptr )
 	{
-		editorConfigRoot = nd_branch_push_back_object( root, "editor" );
+		editorConfigRoot = acm_branch_push_back_object( root, "editor" );
 	}
 
 	selectionObjectTable = PlCreateHashTable();

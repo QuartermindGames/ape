@@ -55,23 +55,23 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 
 #endif
 
-static void deserialize_model_animations( NdBranch *root, ApeFormatModel *dst, const char *folder )
+static void deserialize_model_animations( AcmBranch *root, ApeFormatModel *dst, const char *folder )
 {
 }
 
-static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char *folder )
+static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char *folder )
 {
-	const char *name = nd_branch_get_child_string( root, "name", nullptr );
+	const char *name = acm_branch_get_child_string( root, "name", nullptr );
 	if ( name == nullptr )
 	{
 		WARN( "No name specified for model!\n" );
 		return;
 	}
 
-	const char *materialPath = nd_branch_get_child_string( root, "materialPath", folder );
+	const char *materialPath = acm_branch_get_child_string( root, "materialPath", folder );
 	PlSetupPath( dst->materialPath, true, "%s", materialPath );
 
-	const char *body = nd_branch_get_child_string( root, "body", nullptr );
+	const char *body = acm_branch_get_child_string( root, "body", nullptr );
 	if ( body != nullptr )
 	{
 		const char *ext = PlGetFileExtension( body );
@@ -119,13 +119,13 @@ static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char 
 		return;
 	}
 
-	dst->isStatic = nd_branch_get_child_bool( root, "isStatic", false );
+	dst->isStatic = acm_branch_get_child_bool( root, "isStatic", false );
 	if ( !dst->isStatic )
 	{
 		if ( dst->numBones > 0 )
 		{
-			NdBranch *child;
-			if ( ( child = nd_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+			AcmBranch *child;
+			if ( ( child = acm_branch_get_child_by_name( root, "animations" ) ) != nullptr )
 			{
 				deserialize_model_animations( child, dst, folder );
 			}
@@ -136,8 +136,8 @@ static void parse_model_config( NdBranch *root, ApeFormatModel *dst, const char 
 		}
 	}
 
-	NdBranch *child;
-	if ( ( child = nd_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
+	AcmBranch *child;
+	if ( ( child = acm_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
 	{
 	}
 
@@ -161,9 +161,9 @@ static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTab
 	return index->pos;
 }
 
-static void serialize_triangle( NdBranch *root, const ApeFormatTriangle *triangle, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
+static void serialize_triangle( AcmBranch *root, const ApeFormatTriangle *triangle, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
 {
-	NdBranch *triangleBranch = nd_branch_push_back_object( root, nullptr );
+	AcmBranch *triangleBranch = acm_branch_push_back_object( root, nullptr );
 
 	const ApeFormatVertex *a = &vertices[ triangle->indices[ 0 ] ];
 	const ApeFormatVertex *b = &vertices[ triangle->indices[ 1 ] ];
@@ -174,44 +174,44 @@ static void serialize_triangle( NdBranch *root, const ApeFormatTriangle *triangl
 	        get_vector_index( &b->position, vertexTable ),
 	        get_vector_index( &c->position, vertexTable ),
 	};
-	nd_branch_push_back_uint32_array( triangleBranch, "vertex", vertexIndices, 3 );
+	acm_branch_push_back_uint32_array( triangleBranch, "vertex", vertexIndices, 3 );
 
 	unsigned int normalIndices[ 3 ] = {
 	        get_vector_index( &a->normal, normalsTable ),
 	        get_vector_index( &b->normal, normalsTable ),
 	        get_vector_index( &c->normal, normalsTable ),
 	};
-	nd_branch_push_back_uint32_array( triangleBranch, "normal", normalIndices, 3 );
+	acm_branch_push_back_uint32_array( triangleBranch, "normal", normalIndices, 3 );
 }
 
-static void serialize_mesh( NdBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
+static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
 {
-	NdBranch *meshBranch = nd_branch_push_back_object( root, nullptr );
+	AcmBranch *meshBranch = acm_branch_push_back_object( root, nullptr );
 
 	//TODO: should go ahead and ensure material exists, and associated texture for material is cooked, etc.
-	nd_branch_push_back_string( meshBranch, "material", mesh->material );
+	acm_branch_push_back_string( meshBranch, "material", mesh->material );
 
-	NdBranch *trianglesBranch = nd_branch_push_back_object_array( meshBranch, "triangles" );
+	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
 	for ( unsigned int i = 0; i < mesh->numTriangles; ++i )
 	{
 		serialize_triangle( trianglesBranch, &mesh->triangles[ i ], vertices, vertexTable, normalsTable );
 	}
 }
 
-static void serialize_bone( NdBranch *root, const ApeFormatBone *bone )
+static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 {
-	NdBranch *boneBranch = nd_branch_push_back_object( root, nullptr );
-	nd_branch_push_back_string( boneBranch, "name", bone->name );
-	nd_branch_push_back_uint32( boneBranch, "parent", bone->parent );
-	nd_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
-	nd_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
+	AcmBranch *boneBranch = acm_branch_push_back_object( root, nullptr );
+	acm_branch_push_back_string( boneBranch, "name", bone->name );
+	acm_branch_push_back_uint32( boneBranch, "parent", bone->parent );
+	acm_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
+	acm_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
 
-static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
+static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 {
-	NdBranch *root = nd_branch_push_back_object( nullptr, "model" );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "model" );
 
-	nd_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
+	acm_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
 
 	// build up lists of unique vertex data sets...
 	PLHashTable *vertexTable = PlCreateHashTable();
@@ -234,42 +234,42 @@ static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
 		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), index );
 	}
 
-	NdBranch        *child;
+	AcmBranch       *child;
 	PLHashTableNode *childHashNode;
 
-	child         = nd_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	child         = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( vertexTable );
 	while ( childHashNode != nullptr )
 	{
 		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		nd_branch_push_back_float32( child, nullptr, v->x );
-		nd_branch_push_back_float32( child, nullptr, v->y );
-		nd_branch_push_back_float32( child, nullptr, v->z );
+		acm_branch_push_back_float32( child, nullptr, v->x );
+		acm_branch_push_back_float32( child, nullptr, v->y );
+		acm_branch_push_back_float32( child, nullptr, v->z );
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
-	child         = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
+	child         = acm_branch_push_back_float32_array( root, "normals", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( normalsTable );
 	while ( childHashNode != nullptr )
 	{
 		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		nd_branch_push_back_float32( child, nullptr, v->x );
-		nd_branch_push_back_float32( child, nullptr, v->y );
-		nd_branch_push_back_float32( child, nullptr, v->z );
+		acm_branch_push_back_float32( child, nullptr, v->x );
+		acm_branch_push_back_float32( child, nullptr, v->y );
+		acm_branch_push_back_float32( child, nullptr, v->z );
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
-	nd_branch_push_back_bool( root, "isStatic", model->isStatic );
+	acm_branch_push_back_bool( root, "isStatic", model->isStatic );
 	if ( model->numBones > 0 )
 	{
-		child = nd_branch_push_back_object_array( root, "bones" );
+		child = acm_branch_push_back_object_array( root, "bones" );
 		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
 			serialize_bone( child, &model->bones[ i ] );
 		}
 	}
 
-	child = nd_branch_push_back_object_array( root, "meshes" );
+	child = acm_branch_push_back_object_array( root, "meshes" );
 	for ( unsigned int i = 0; i < model->numMeshes; ++i )
 	{
 		serialize_mesh( child, &model->meshes[ i ], model->vertices, vertexTable, normalsTable );
@@ -309,7 +309,7 @@ static bool create_file_path( const char *path )
 
 static void write_ape_format_model( const ApeFormatModel *model, const char *folder )
 {
-	NdBranch *root = serialize_ape_format_model( model );
+	AcmBranch *root = serialize_ape_format_model( model );
 	if ( root == nullptr )
 	{
 		WARN( "Failed to serialize model!\n" );
@@ -323,9 +323,9 @@ static void write_ape_format_model( const ApeFormatModel *model, const char *fol
 		return;
 	}
 
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		WARN( "Failed to write model file: %s\n", nd_get_error_message() );
+		WARN( "Failed to write model file: %s\n", acm_get_error_message() );
 	}
 }
 
@@ -346,14 +346,14 @@ void cook_model_process( const char *modelName )
 
 	ApeFormatModel *model = PL_NEW( ApeFormatModel );
 
-	NdBranch *root = nd_load_file( path, "cookModel" );
+	AcmBranch *root = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
 		double startTime = PlGetCurrentSeconds();
 
 		parse_model_config( root, model, folder );
 
-		nd_branch_destroy( root );
+		acm_branch_destroy( root );
 
 		write_ape_format_model( model, folder );
 
@@ -363,7 +363,7 @@ void cook_model_process( const char *modelName )
 	}
 	else
 	{
-		WARN( "Failed to open model cook file (%s): %s\n", path, nd_get_error_message() );
+		WARN( "Failed to open model cook file (%s): %s\n", path, acm_get_error_message() );
 	}
 
 	PL_DELETE( model );

@@ -1,6 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include "yin/node.h"
+#include "acm/public/acm/acm.h"
 #include "ss1_game.h"
 #include "game/private/ss1/menu/ss1_menu.h"
 
@@ -52,7 +52,7 @@ static bool ss1_initialize( void )
 	ss1_gameState.config = com_get_config( SS1_CONFIG );
 
 	// determine if it's the first time we've launched
-	const char *name = nd_branch_get_child_string( ss1_gameState.config, "name", nullptr );
+	const char *name = acm_branch_get_child_string( ss1_gameState.config, "name", nullptr );
 	if ( name != nullptr )
 	{
 		snprintf( ss1_gameState.players[ 0 ].name, sizeof( ss1_gameState.players[ 0 ].name ), "%s", name );

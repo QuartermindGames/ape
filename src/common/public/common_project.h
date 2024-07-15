@@ -6,15 +6,15 @@
 
 PL_EXTERN_C
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
-NdBranch *com_project_mount( const char *name );
+AcmBranch *com_project_mount( const char *name );
 void com_project_unmount( void );
 
 const char *com_project_get_local_path( void );
 const char *com_project_get_base_name( void );
 const char *com_project_get_name( void );
 
-NdBranch *com_project_get_config();
+AcmBranch *com_project_get_config();
 
 PL_EXTERN_C_END

@@ -65,9 +65,9 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	return stage;
 }
 
-static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBranch *root )
+static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBranch *root )
 {
-	const char *internalName = nd_branch_get_child_string( root, "description", nullptr );
+	const char *internalName = acm_branch_get_child_string( root, "description", nullptr );
 	if ( internalName == nullptr )
 	{
 		ape_warning_( "Shader program not assigned a valid 'description'!\n" );
@@ -89,8 +89,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 		return nullptr;
 	}
 
-	const char *vertexPath   = nd_branch_get_child_string( root, "vertexPath", NULL );
-	const char *fragmentPath = nd_branch_get_child_string( root, "fragmentPath", NULL );
+	const char *vertexPath   = acm_branch_get_child_string( root, "vertexPath", NULL );
+	const char *fragmentPath = acm_branch_get_child_string( root, "fragmentPath", NULL );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
@@ -127,19 +127,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
 	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
 
-	NdBranch *child = nd_branch_get_child_by_name( root, "definitions" );
+	AcmBranch *child = acm_branch_get_child_by_name( root, "definitions" );
 	if ( child != NULL )
 	{
-		NdBranch *subChild;
-		if ( ( subChild = nd_branch_get_child_by_name( child, "fragment" ) ) != NULL )
+		AcmBranch *subChild;
+		if ( ( subChild = acm_branch_get_child_by_name( child, "fragment" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = nd_branch_get_num_of_children( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = acm_branch_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = nd_branch_get_first_child( subChild );
+			subChild = acm_branch_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -149,19 +149,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 					break;
 				}
 
-				nd_branch_get_string( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = nd_get_next_child( subChild );
+				acm_branch_get_string( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = acm_get_next_child( subChild );
 			}
 		}
-		if ( ( subChild = nd_branch_get_child_by_name( child, "vertex" ) ) != NULL )
+		if ( ( subChild = acm_branch_get_child_by_name( child, "vertex" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = nd_branch_get_num_of_children( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = acm_branch_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = nd_branch_get_first_child( subChild );
+			subChild = acm_branch_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -171,8 +171,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 					break;
 				}
 
-				nd_branch_get_string( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
-				subChild = nd_get_next_child( subChild );
+				acm_branch_get_string( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				subChild = acm_get_next_child( subChild );
 			}
 		}
 	}
@@ -197,7 +197,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, NdBran
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can of course overwrite these. */
-	child = nd_branch_get_child_by_name( root, "defaultPass" );
+	child = acm_branch_get_child_by_name( root, "defaultPass" );
 	if ( child != NULL )
 	{
 		// zero in-case we're reloading...
@@ -228,7 +228,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 {
 	ape_print_( "Loading program: \"%s\"\n", path );
 
-	NdBranch *root = nd_load_file( path, "program" );
+	AcmBranch *root = acm_load_file( path, "program" );
 	if ( root == NULL )
 	{
 		ape_warning_( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -243,7 +243,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 		program = nullptr;
 	}
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	if ( program == NULL )
 	{
@@ -265,10 +265,10 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 
 static void reload_shader_program( ApeShaderProgram *program )
 {
-	NdBranch *root = nd_load_file( program->path, "program" );
+	AcmBranch *root = acm_load_file( program->path, "program" );
 	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, nd_get_error_message() );
+		ape_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, acm_get_error_message() );
 		return;
 	}
 
@@ -277,7 +277,7 @@ static void reload_shader_program( ApeShaderProgram *program )
 		ape_warning_( "Failed to parse shader program (%s) for reload!\n", program->path );
 	}
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	program->timestamp = PlGetLocalFileTimeStamp( program->path );
 }

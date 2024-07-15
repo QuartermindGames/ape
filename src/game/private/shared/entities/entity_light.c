@@ -13,7 +13,7 @@ typedef struct LightEntity
 } LightEntity;
 #define LIGHT( SELF ) APE_ENT_CLASS( ( SELF ), LightEntity )
 
-static void *create_light( PL_UNUSED ApeEntity *self, PL_UNUSED NdBranch *properties )
+static void *create_light( PL_UNUSED ApeEntity *self, PL_UNUSED AcmBranch *properties )
 {
 	return PL_NEW( LightEntity );
 }

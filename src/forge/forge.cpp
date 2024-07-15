@@ -26,7 +26,7 @@ void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
 int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
 PLPath    forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
-NdBranch *forge::editorConfig;
+AcmBranch *forge::editorConfig;
 
 static FXGLVisual *glVisual = nullptr;
 FXGLVisual        *forge::get_shared_gl_visual() { return glVisual; }
@@ -39,23 +39,23 @@ static std::map< std::string, PLImage * > cachedImages;
 
 FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
-static NdBranch *generate_project_config( const char *name, const char *path )
+static AcmBranch *generate_project_config( const char *name, const char *path )
 {
-	NdBranch *root = nd_branch_push_back_object( nullptr, "project" );
-	nd_branch_push_back_string( root, "name", name );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "project" );
+	acm_branch_push_back_string( root, "name", name );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
-	nd_branch_push_back_int32_array( root, "version", version, 3 );
+	acm_branch_push_back_int32_array( root, "version", version, 3 );
 
-	NdBranch *child;
-	child = nd_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
-	nd_branch_push_back_string( child, nullptr, "ship" );
-	nd_branch_push_back_string( child, nullptr, "dev" );
+	AcmBranch *child;
+	child = acm_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
+	acm_branch_push_back_string( child, nullptr, "ship" );
+	acm_branch_push_back_string( child, nullptr, "dev" );
 
-	child = nd_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
-	nd_branch_push_back_string( child, nullptr, "base" );
+	child = acm_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
+	acm_branch_push_back_string( child, nullptr, "base" );
 
-	nd_write_file( path, root, ND_FILE_UTF8 );
+	acm_write_file( path, root, ND_FILE_UTF8 );
 	return root;
 }
 
@@ -179,10 +179,10 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 
 static void setup_colours( FXApp &app )
 {
-	forge::themeColours[ forge::THEME_COLOUR_BASE ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	forge::themeColours[ forge::THEME_COLOUR_FORE ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	forge::themeColours[ forge::THEME_COLOUR_HILITE ] = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	forge::themeColours[ forge::THEME_COLOUR_BACK ]   = ( FXColor ) nd_branch_get_child_uint( forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BASE ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	forge::themeColours[ forge::THEME_COLOUR_FORE ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	forge::themeColours[ forge::THEME_COLOUR_HILITE ] = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BACK ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
 	app.setBackColor( forge::themeColours[ forge::THEME_COLOUR_BACK ] );
 	app.setBaseColor( forge::themeColours[ forge::THEME_COLOUR_BASE ] );
@@ -253,7 +253,7 @@ int main( int argc, char **argv )
 
 	forge::editorConfig = com_get_config( "editor" );
 
-	const char *projectPath = nd_branch_get_child_string( forge::editorConfig, "projectsPath", "projects" );
+	const char *projectPath = acm_branch_get_child_string( forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
 	{
 		snprintf( forge::cachedPaths[ forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
@@ -291,7 +291,7 @@ int main( int argc, char **argv )
 	const char *projectName = PlGetCommandLineArgumentValue( "/project" );
 	if ( projectName != nullptr )
 	{
-		NdBranch *branch;
+		AcmBranch *branch;
 		if ( ( branch = com_project_mount( projectName ) ) == nullptr )
 		{
 			ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Invalid project specified (%s), aborting!", projectName );
@@ -299,7 +299,7 @@ int main( int argc, char **argv )
 		}
 
 		forge::editorProject               = new forge::Project( projectName );
-		forge::editorProject->name         = nd_branch_get_child_string( branch, "name", "none" );
+		forge::editorProject->name         = acm_branch_get_child_string( branch, "name", "none" );
 		forge::editorProject->internalName = projectName;
 		forge::editorProject->config       = branch;
 	}

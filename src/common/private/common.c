@@ -3,7 +3,7 @@
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_console.h>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #include "common_private.h"
 
@@ -28,7 +28,7 @@ void com_initialize( void )
 
 	com_print_( "Common Library initialized\n" );
 
-	nd_setup_logs();
+	acm_setup_logs();
 
 	com_pack_pkg_register_();
 
@@ -85,21 +85,21 @@ const char *com_get_app_data_directory( void )
 	return appDataPath;
 }
 
-NdBranch *com_get_config( const char *name )
+AcmBranch *com_get_config( const char *name )
 {
 	PLPath path;
 	PlSetupPath( path, true, "configs/%s.cfg.n", name );
-	NdBranch *root = nd_load_file( path, "config" );
+	AcmBranch *root = acm_load_file( path, "config" );
 	if ( root == NULL )
 	{
-		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", nd_get_error_message() );
-		root = nd_branch_push_back_object( NULL, "config" );
+		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", acm_get_error_message() );
+		root = acm_branch_push_back_object( NULL, "config" );
 	}
 
 	return root;
 }
 
-bool com_write_config( struct NdBranch *root, const char *name )
+bool com_write_config( struct AcmBranch *root, const char *name )
 {
 	PLPath path;
 	PlSetupPath( path, true, "%s/configs/", com_get_app_data_directory() );
@@ -110,7 +110,7 @@ bool com_write_config( struct NdBranch *root, const char *name )
 	}
 
 	PlSetupPath( path, true, "%s/configs/%s.cfg.n", com_get_app_data_directory(), name );
-	return nd_write_file( path, root, ND_FILE_UTF8 );
+	return acm_write_file( path, root, ND_FILE_UTF8 );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

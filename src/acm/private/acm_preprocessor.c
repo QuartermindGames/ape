@@ -3,7 +3,7 @@
 #include <plcore/pl_parse.h>
 #include <plcore/pl_filesystem.h>
 
-#include "node_private.h"
+#include "acm_private.h"
 
 #define MAX_MACROS            512
 #define MAX_MACRO_NAME_LENGTH 16
@@ -44,7 +44,7 @@ static bool IsMacroRegistered( const char *name )
 	return false;
 }
 
-char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
+char *acm_preprocess_script_( char *buf, size_t *length, bool isHead )
 {
 	size_t actualLength = 0;
 	size_t maxLength = *length;
@@ -89,7 +89,7 @@ char *ndPreProcessScript( char *buf, size_t *length, bool isHead )
 					PlCloseFile( file );
 
 					/* now throw it into the pre-processor */
-					includeBody = ndPreProcessScript( includeBody, &includeLength, false );
+					includeBody = acm_preprocess_script_( includeBody, &includeLength, false );
 
 					/* and finally, push it into our destination */
 					dstPos = pl_strinsert( includeBody, &dstBuffer, &actualLength, &maxLength );

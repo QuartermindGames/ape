@@ -19,7 +19,7 @@
 
 // Yin
 #include <yin/core.h>
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 // FOX Toolkit
 #include <fx.h>
@@ -114,7 +114,7 @@ namespace forge
 
 		std::string name;
 		std::string internalName;
-		NdBranch   *config{};
+		AcmBranch  *config{};
 		FXIcon     *icon{};
 	};
 	extern Project *editorProject;
@@ -138,5 +138,5 @@ namespace forge
 
 	extern bool isCookAvailable;
 
-	extern NdBranch *editorConfig;
+	extern AcmBranch *editorConfig;
 }// namespace forge

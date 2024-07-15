@@ -260,20 +260,20 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *root )
+static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *root )
 {
-	NdBranch *node = nd_branch_get_first_child( root );
+	AcmBranch *node = acm_branch_get_first_child( root );
 	while ( node != NULL )
 	{
 		/* fetch the next node, so we can roll onto the next element early */
-		NdBranch *next = nd_get_next_child( node );
+		AcmBranch *next = acm_get_next_child( node );
 
 		ApeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
 		 * for now, just do it directly against the shader itself */
-		const char *propertyName      = nd_branch_get_name( node );
+		const char *propertyName      = acm_branch_get_name( node );
 		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program->internal, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
@@ -295,10 +295,10 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program->internal, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
-		if ( nd_branch_get_type( node ) == ND_PROPERTY_STRING )
+		if ( acm_branch_get_type( node ) == ND_PROPERTY_STRING )
 		{
 			PLPath value;
-			nd_branch_get_string( node, value, sizeof( value ) );
+			acm_branch_get_string( node, value, sizeof( value ) );
 			if ( *value == '_' )
 			{
 				const char *p = ( value + 1 );
@@ -348,11 +348,11 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					materialVariable->data.ptr = PL_NEW_( bool, materialVariable->numElements );
 
-					NdErrorCode status;
+					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
-						status = nd_branch_get_bool_array( node, materialVariable->data.ptr, materialVariable->numElements );
+						status = acm_branch_get_bool_array( node, materialVariable->data.ptr, materialVariable->numElements );
 					else
-						status = nd_branch_get_bool( node, materialVariable->data.ptr );
+						status = acm_branch_get_bool( node, materialVariable->data.ptr );
 
 					if ( status != ND_ERROR_SUCCESS )
 						break;
@@ -365,11 +365,11 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					materialVariable->data.ptr = PL_NEW_( float, materialVariable->numElements );
 
-					NdErrorCode status;
+					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
-						status = nd_branch_get_float32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+						status = acm_branch_get_float32_array( node, materialVariable->data.ptr, materialVariable->numElements );
 					else
-						status = nd_branch_get_float32( node, materialVariable->data.ptr );
+						status = acm_branch_get_float32( node, materialVariable->data.ptr );
 
 					if ( status != ND_ERROR_SUCCESS )
 						break;
@@ -381,11 +381,11 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					materialVariable->data.ptr = PL_NEW_( double, materialVariable->numElements );
 
-					NdErrorCode status;
+					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
-						status = nd_branch_get_float64_array( node, materialVariable->data.ptr, materialVariable->numElements );
+						status = acm_branch_get_float64_array( node, materialVariable->data.ptr, materialVariable->numElements );
 					else
-						status = nd_branch_get_float64( node, materialVariable->data.ptr );
+						status = acm_branch_get_float64( node, materialVariable->data.ptr );
 
 					if ( status != ND_ERROR_SUCCESS )
 						break;
@@ -398,11 +398,11 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					materialVariable->data.ptr = PL_NEW_( uint32_t, materialVariable->numElements );
 
-					NdErrorCode status;
+					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
-						status = nd_branch_get_uint32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+						status = acm_branch_get_uint32_array( node, materialVariable->data.ptr, materialVariable->numElements );
 					else
-						status = nd_branch_get_uint32( node, materialVariable->data.ptr );
+						status = acm_branch_get_uint32( node, materialVariable->data.ptr );
 
 					if ( status != ND_ERROR_SUCCESS )
 						break;
@@ -414,11 +414,11 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				{
 					materialVariable->data.ptr = PL_NEW_( int32_t, materialVariable->numElements );
 
-					NdErrorCode status;
+					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
-						status = nd_branch_get_int32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+						status = acm_branch_get_int32_array( node, materialVariable->data.ptr, materialVariable->numElements );
 					else
-						status = nd_branch_get_int32( node, materialVariable->data.ptr );
+						status = acm_branch_get_int32( node, materialVariable->data.ptr );
 
 					if ( status != ND_ERROR_SUCCESS )
 						break;
@@ -430,7 +430,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				case PLG_UNIFORM_VEC2:
 				{
 					materialVariable->data.ptr = PL_NEW_( PLVector2, materialVariable->numElements );
-					if ( nd_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
+					if ( acm_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
 						break;
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_VEC2;
@@ -445,7 +445,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 				case PLG_UNIFORM_SAMPLER2DSHADOW:
 				{
 					PLPath texturePath;
-					if ( nd_branch_get_string( node, texturePath, sizeof( PLPath ) ) != ND_ERROR_SUCCESS )
+					if ( acm_branch_get_string( node, texturePath, sizeof( PLPath ) ) != ND_ERROR_SUCCESS )
 						break;
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
@@ -482,14 +482,14 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, NdBranch *ro
 	}
 }
 
-void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialPass )
+void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
-	NdBranch *subNode;
-	if ( ( subNode = nd_branch_get_child_by_name( root, "blendMode" ) ) != NULL )
+	AcmBranch *subNode;
+	if ( ( subNode = acm_branch_get_child_by_name( root, "blendMode" ) ) != NULL )
 	{
 		char *blendModesArray[ 2 ];
-		if ( nd_branch_get_string_array( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
+		if ( acm_branch_get_string_array( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
 		{
 			materialPass->blendMode[ 0 ] = get_blend_mode_by_tag( blendModesArray[ 0 ] );
 			PL_DELETE( blendModesArray[ 0 ] );
@@ -507,10 +507,10 @@ void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialP
 		materialPass->blendMode[ 1 ] = PLG_BLEND_NONE;
 	}
 
-	materialPass->depthTest = nd_branch_get_child_bool( root, "depthTest", materialPass->depthTest );
-	materialPass->cullMode  = ND_GET_INT32( root, "cullMode", materialPass->cullMode );
+	materialPass->depthTest = acm_branch_get_child_bool( root, "depthTest", materialPass->depthTest );
+	materialPass->cullMode  = ACM_GET_INT32( root, "cullMode", materialPass->cullMode );
 
-	const char *textureFilterPtr = nd_branch_get_child_string( root, "textureFilterMode", NULL );
+	const char *textureFilterPtr = acm_branch_get_child_string( root, "textureFilterMode", NULL );
 	if ( textureFilterPtr != NULL )
 	{
 		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
@@ -528,11 +528,11 @@ void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialP
 	}
 
 	/* now handle any specific parameters the material provides */
-	if ( ( subNode = nd_branch_get_child_by_name( root, "textureScroll" ) ) != NULL )
-		nd_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScroll, 2 );
-	if ( ( subNode = nd_branch_get_child_by_name( root, "textureOffset" ) ) != NULL )
-		nd_branch_get_float32_array( subNode, ( float * ) &materialPass->textureOffset, 2 );
-	if ( ( subNode = nd_branch_get_child_by_name( root, "shaderParameters" ) ) != NULL )
+	if ( ( subNode = acm_branch_get_child_by_name( root, "textureScroll" ) ) != NULL )
+		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScroll, 2 );
+	if ( ( subNode = acm_branch_get_child_by_name( root, "textureOffset" ) ) != NULL )
+		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureOffset, 2 );
+	if ( ( subNode = acm_branch_get_child_by_name( root, "shaderParameters" ) ) != NULL )
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
 		parse_shader_parameters( materialPass, subNode );
@@ -541,13 +541,13 @@ void ape_parse_material_pass_( struct NdBranch *root, ApeMaterialPass *materialP
 	 * a case where we only want to use the shader defaults? */
 }
 
-static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool preview )
+static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool preview )
 {
 	// see if the preview texture is specified
 	if ( material->preview == NULL )
 	{
 		material->preview          = previewFallbackTexture;
-		const char *previewTexture = nd_branch_get_child_string( root, "previewTexture", NULL );
+		const char *previewTexture = acm_branch_get_child_string( root, "previewTexture", NULL );
 		if ( previewTexture != NULL )
 			material->preview = ape_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 	}
@@ -558,10 +558,10 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
-	NdBranch *node;
-	if ( ( node = nd_branch_get_child_by_name( root, "passes" ) ) != NULL )
+	AcmBranch *node;
+	if ( ( node = acm_branch_get_child_by_name( root, "passes" ) ) != NULL )
 	{
-		node = nd_branch_get_first_child( node );
+		node = acm_branch_get_first_child( node );
 		while ( node != NULL )
 		{
 			ApeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
@@ -569,7 +569,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
-			const char       *programName  = nd_branch_get_child_string( node, "shaderProgram", "default" );
+			const char       *programName  = acm_branch_get_child_string( node, "shaderProgram", "default" );
 			ApeShaderProgram *programIndex = ape_get_shader_by_name( programName, APE_SHADER_DEFAULT );
 			*currentPass                   = programIndex->defaultPass;
 			currentPass->program           = programIndex;
@@ -580,24 +580,24 @@ static ApeMaterial *parse_material( ApeMaterial *material, NdBranch *root, bool 
 				material->flags |= APE_MATERIAL_FLAG_BLENDED;
 			}
 
-			node = nd_get_next_child( node );
+			node = acm_get_next_child( node );
 		}
 	}
 
-	material->surfaceType = ND_GET_INT8( root, "surfaceType", 0 );
-	if ( nd_branch_get_child_bool( root, "enableShadows", true ) )
+	material->surfaceType = ACM_GET_INT8( root, "surfaceType", 0 );
+	if ( acm_branch_get_child_bool( root, "enableShadows", true ) )
 	{
 		material->flags |= APE_MATERIAL_FLAG_CAST_SHADOWS | APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !nd_branch_get_child_bool( root, "receiveShadows", ( material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) ) )
+	if ( !acm_branch_get_child_bool( root, "receiveShadows", ( material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !nd_branch_get_child_bool( root, "castShadows", ( material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) ) )
+	if ( !acm_branch_get_child_bool( root, "castShadows", ( material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_CAST_SHADOWS;
 	}
-	if ( nd_branch_get_child_bool( root, "mirror", false ) )
+	if ( acm_branch_get_child_bool( root, "mirror", false ) )
 	{
 		material->flags |= APE_MATERIAL_FLAG_MIRROR;
 	}
@@ -843,15 +843,15 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 		// If it's not cached, and we're not asking for the preview, load the full thing
 		if ( !material->isCached && !preview )
 		{
-			NdBranch *root = nd_load_file( path, "material" );
+			AcmBranch *root = acm_load_file( path, "material" );
 			if ( root != NULL )
 			{
 				parse_material( material, root, false );
-				nd_branch_destroy( root );
+				acm_branch_destroy( root );
 			}
 			else
 			{
-				ape_warning_( "Failed to cache material, \"%s\" (%s)!\n", path, nd_get_error_message() );
+				ape_warning_( "Failed to cache material, \"%s\" (%s)!\n", path, acm_get_error_message() );
 			}
 		}
 		ape_mm_add_reference( &material->mem );
@@ -861,17 +861,17 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	/* fallback should be optional, as in some cases we might actually care */
 	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ] : NULL;
 
-	NdBranch *root = nd_load_file( path, "material" );
+	AcmBranch *root = acm_load_file( path, "material" );
 	if ( root == NULL )
 	{
-		ape_warning_( "Failed to load material, \"%s\" (%s)!\n", path, nd_get_error_message() );
+		ape_warning_( "Failed to load material, \"%s\" (%s)!\n", path, acm_get_error_message() );
 		return fallbackPtr;
 	}
 
 	material = PL_NEW( ApeMaterial );
 	parse_material( material, root, preview );
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );

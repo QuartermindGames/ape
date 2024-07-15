@@ -8,11 +8,11 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static void *create_character_class( ApeEntity *self, NdBranch *properties );
+static void *create_character_class( ApeEntity *self, AcmBranch *properties );
 static void destroy_character_class( ApeEntity *self );
 static void spawn_character_class( ApeEntity *self );
-static NdBranch *serialize_character_class( ApeEntity *self );
-static void deserialize_character_class( ApeEntity *self, NdBranch *root );
+static AcmBranch *serialize_character_class( ApeEntity *self );
+static void deserialize_character_class( ApeEntity *self, AcmBranch *root );
 
 static const ApeEntityClassDefinition characterClass = {
         .name = "tox_character",
@@ -23,7 +23,7 @@ static const ApeEntityClassDefinition characterClass = {
         .deserializeFunction = deserialize_character_class,
 };
 
-static void *create_character_class( ApeEntity *self, NdBranch *properties )
+static void *create_character_class( ApeEntity *self, AcmBranch *properties )
 {
 	return PL_NEW( ToxCharacter );
 }
@@ -45,17 +45,17 @@ static void draw_character_class( ApeEntity *self )
 {
 }
 
-static NdBranch *serialize_character_class( ApeEntity *self )
+static AcmBranch *serialize_character_class( ApeEntity *self )
 {
 	ToxCharacter *character = self->classData;
 
-	NdBranch *root = nd_branch_push_back_object( NULL, characterClass.name );
-	nd_branch_push_back_int16_array( root, "stats", character->stats, TOX_MAX_CHARACTER_STATS );
+	AcmBranch *root = acm_branch_push_back_object( NULL, characterClass.name );
+	acm_branch_push_back_int16_array( root, "stats", character->stats, TOX_MAX_CHARACTER_STATS );
 
 	return root;
 }
 
-static void deserialize_character_class( ApeEntity *self, NdBranch *root )
+static void deserialize_character_class( ApeEntity *self, AcmBranch *root )
 {
 }
 

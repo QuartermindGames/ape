@@ -5,7 +5,7 @@
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_console.h>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 /* node structure
  *  string
@@ -42,17 +42,17 @@ typedef struct NdVarString
 	uint16_t length;
 } NdVarString;
 
-typedef struct NdBranch
+typedef struct AcmBranch
 {
 	NdVarString name;
-	NdPropertyType type;
-	NdPropertyType childType; /* used for array types */
+	AcmPropertyType type;
+	AcmPropertyType childType; /* used for array types */
 	NdVarString data;
-	NdBranch *parent;
+	AcmBranch     *parent;
 
 	PLLinkedListNode *linkedListNode;
 	PLLinkedList *linkedList;
-} NdBranch;
+} AcmBranch;
 
-char *ndPreProcessScript( char *buf, size_t *length, bool isHead );
-NdBranch *nd_push_back_new_branch( NdBranch *parent, const char *name, NdPropertyType propertyType );
+char *acm_preprocess_script_( char *buf, size_t *length, bool isHead );
+AcmBranch *acm_push_back_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType );
