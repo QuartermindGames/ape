@@ -50,7 +50,12 @@ void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num )
 	else if ( num < 2 )
 	{
 		game_warning_( "Invalid number of segments for rope (%u); must be greater than 2!\n", num );
-		return;
+		num = 2;
+	}
+	else if ( num >= GAME_PHYSICS_ROPE_MAX_PARTICLES )
+	{
+		game_warning_( "Invalid number of segments for rope (%u); must be less than %u!\n", num, GAME_PHYSICS_ROPE_MAX_PARTICLES );
+		num = ( GAME_PHYSICS_ROPE_MAX_PARTICLES - 1 );
 	}
 
 	if ( self->numParticles > 0 )
