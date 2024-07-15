@@ -175,7 +175,7 @@ void ape_clear_flare_queue_( void );
 
 void ape_draw_initialize_debug_mesh_();
 void ape_draw_destroy_debug_mesh_();
-void ape_draw_debug_begin_tick_();
+void ape_draw_debug_clear_();
 void ape_draw_debug_mesh_display_();
 
 ////////////////////////////////////////////////////////////////////

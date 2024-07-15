@@ -157,14 +157,13 @@ static bool ss1_tick( void )
 
 			sunPosition = pitch_yaw_to_position( p, y );
 			ape_light_set_position( suns[ 0 ], &( PLVector3 ){ sunPosition.x, sunPosition.y + 16.0f + sinf( y / 50.0f ) * 10.0f, sunPosition.z - 8.0f } );
+			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), sunPosition, PL_COLOUR_ORANGE_RED );
 
 			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
 			ape_light_set_position( suns[ 1 ], &sunPosition );
+			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), sunPosition, PL_COLOUR_PURPLE );
 
-			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 0.0f, 8.0f, 0.0f ), PL_COLOUR_ORANGE_RED );
-			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 8.0f, 0.0f, 0.0f ), PL_COLOUR_PURPLE );
 			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 0.0f, 0.0f, 8.0f ), PL_COLOUR_PURPLE );
-
 			ape_draw_debug_sphere( PL_VECTOR3( 0.0f, 16.0f, 0.0f ), PL_COLOUR_WHITE, 1.0f );
 		}
 

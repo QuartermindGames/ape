@@ -341,7 +341,7 @@ void ape_draw_destroy_debug_mesh_()
 	debugDrawMaterial = nullptr;
 }
 
-void ape_draw_debug_begin_tick_()
+void ape_draw_debug_clear_()
 {
 	PlgClearMesh( debugDrawMesh );
 }
@@ -363,9 +363,9 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
 	float     length    = PlVector3Length( direction );
 	direction           = PlNormalizeVector3( direction );
 
-	PLVector3 arrowHead  = PlNormalizeVector3( PlAddVector3( start, PlScaleVector3F( direction, length * .5f ) ) );
-	PLVector3 arrowLeft  = PlSubtractVector3( PlAddVector3( end, PlScaleVector3F( PlVector3CrossProduct( direction, PLVector3( 0.0f, 0.0f, 1.0f ) ), 0.5f ) ), arrowHead );
-	PLVector3 arrowRight = PlSubtractVector3( PlAddVector3( end, PlScaleVector3F( PlVector3CrossProduct( PLVector3( 0.0f, 0.0f, 1.0f ), direction ), 0.5f ) ), arrowHead );
+	PLVector3 arrowHead  = PlAddVector3( start, PlScaleVector3F( direction, length * 0.9f ) );
+	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PLVector3( 0.0f, 0.0f, 1.0f ) ) ), 0.5f ) );
+	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PLVector3( 0.0f, 0.0f, 1.0f ), direction ) ), 0.5f ) );
 
 	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
 	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );

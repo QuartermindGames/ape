@@ -80,7 +80,7 @@ void ape_shutdown_game_( void )
 
 void ape_tick_game_server_( void )
 {
-	ape_draw_debug_begin_tick_();
+	ape_draw_debug_clear_();
 
 	ApeWorld *world = ss_game_get_current_world();
 	if ( world != nullptr )
