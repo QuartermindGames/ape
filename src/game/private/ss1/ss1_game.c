@@ -1,10 +1,12 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "yin/node.h"
-
 #include "ss1_game.h"
-
 #include "game/private/ss1/menu/ss1_menu.h"
+
+#include "../shared/physics/physics.h"
+
+static GamePhysicsRope debugRope;
 
 SS1GameState ss1_gameState;
 
@@ -66,6 +68,8 @@ static bool ss1_initialize( void )
 		game_error_( "Failed to create player camera!\n" );
 		return false;
 	}
+
+	game_physics_rope_setup( &debugRope, 16, 1.0f );
 
 	return true;
 }
@@ -157,19 +161,20 @@ static bool ss1_tick( void )
 
 			sunPosition = pitch_yaw_to_position( p, y );
 			ape_light_set_position( suns[ 0 ], &( PLVector3 ){ sunPosition.x, sunPosition.y + 16.0f + sinf( y / 50.0f ) * 10.0f, sunPosition.z - 8.0f } );
-			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), sunPosition, PL_COLOUR_ORANGE_RED );
 
 			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
 			ape_light_set_position( suns[ 1 ], &sunPosition );
-			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), sunPosition, PL_COLOUR_PURPLE );
 
-			ape_draw_debug_arrow( PL_VECTOR3( 0.0f, 2.0f, 0.0f ), PL_VECTOR3( 0.0f, 0.0f, 8.0f ), PL_COLOUR_PURPLE );
-			ape_draw_debug_sphere( PL_VECTOR3( 0.0f, 16.0f, 0.0f ), PL_COLOUR_WHITE, 1.0f );
+			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 16.0f + cosf( y / 50.0f ) * 10.0f, 16.0f + sinf( y / 30.0f ) * 10.0f, 16.0f + cosf( y / 50.0f ) * 10.0f ), true );
+			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 8.0f + sinf( y / 50.0f ) * 10.0f, 8.0f + cosf( y / 30.0f ) * 10.0f, 8.0f + sinf( y / 50.0f ) * 10.0f ), false );
 		}
 
 		ape_world_set_ambience( world, &( PLColourF32 ){ 0.25f, 0.25f, 0.25f, 1.f } );
 
 		world_simulation_tick( &ss1_gameState.simulation );
+
+		game_physics_rope_tick( &debugRope, 1.0f );
+		game_physics_rope_debug_draw( &debugRope );
 	}
 
 	return true;

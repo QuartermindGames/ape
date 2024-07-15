@@ -36,16 +36,16 @@
 - Sky plane should display irrelevent of camera position
 - String table for binary-based node format
 - Update cook tool to convert obj geom to brush rather than room geo
-- Finish implementing support for receive/cast shadow flags (might need self-shadow too)
-- Test the rope physics and confirm they're working
+- Finish implementing support for the receive shadow flag (might need self-shadow too)
 
 ## In-Progress
-- Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives
 - Model import from SMD/QC etc.
 
 ## Done
 
 ### 2024-07
+- ~~Test the rope physics and confirm they're working~~
+- ~~Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives~~
 - ~~Per-vertex lighting shader~~
 - ~~Shadows from multiple sources don't work!~~
 - ~~Add 'list_worlds' command~~

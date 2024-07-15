@@ -53,14 +53,21 @@ void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num )
 		return;
 	}
 
-	// store and dettach the current end, given we'll have a new end
-	GamePhysicsRopeParticle end = self->particles[ self->numParticles - 1 ];
-	game_physics_rope_dettach( self, false );
+	if ( self->numParticles > 0 )
+	{
+		// store and dettach the current end, given we'll have a new end
+		GamePhysicsRopeParticle end = self->particles[ self->numParticles - 1 ];
+		game_physics_rope_dettach( self, false );
 
-	self->numParticles = num;
+		self->numParticles = num;
 
-	// and restore it
-	self->particles[ self->numParticles - 1 ] = end;
+		// and restore it
+		self->particles[ self->numParticles - 1 ] = end;
+	}
+	else
+	{
+		self->numParticles = num;
+	}
 }
 
 void game_physics_rope_tick( GamePhysicsRope *self, float delta )
@@ -72,6 +79,8 @@ void game_physics_rope_tick( GamePhysicsRope *self, float delta )
 		{
 			continue;
 		}
+
+		self->particles[ i ].velocity = PL_VECTOR3( 0.0f, -0.005f, 0.0f );
 
 		PLVector3 temp                   = self->particles[ i ].position;
 		self->particles[ i ].position    = PlAddVector3( self->particles[ i ].position,
@@ -112,4 +121,20 @@ void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float le
 	game_physics_rope_set_num_segments( self, numParticles );
 
 	self->length = length;
+}
+
+void game_physics_rope_debug_draw( GamePhysicsRope *self )
+{
+	for ( uint i = 0; i < self->numParticles; ++i )
+	{
+		const PLColour colour = ( self->particles[ i ].fixed ) ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
+		ape_draw_debug_sphere( self->particles[ i ].position, colour, 0.1f );
+
+		if ( i == 0 )
+		{
+			continue;
+		}
+
+		ape_draw_debug_arrow( self->particles[ i - 1 ].position, self->particles[ i ].position, PL_COLOUR_MAGENTA );
+	}
 }

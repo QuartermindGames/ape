@@ -83,4 +83,20 @@ void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num );
  */
 void game_physics_rope_tick( GamePhysicsRope *self, float delta );
 
+/**
+ * Sets up the initial rope state. Should be called before simulation.
+ *
+ * @param self 			Pointer to instance.
+ * @param numParticles 	Number of particles for the rope.
+ * @param length 		Length of the rope / slack.
+ */
+void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length );
+
+/**
+ * Provides a visual of the rope using the debug drawing API.
+ *
+ * @param self	Pointer to instance.
+ */
+void game_physics_rope_debug_draw( GamePhysicsRope *self );
+
 /////////////////////////////////////////////////////////////////////////////////////
