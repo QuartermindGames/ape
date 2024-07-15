@@ -363,7 +363,7 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
 	float     length    = PlVector3Length( direction );
 	direction           = PlNormalizeVector3( direction );
 
-	PLVector3 arrowHead  = PlAddVector3( start, PlScaleVector3F( direction, length * 0.9f ) );
+	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, 0.5f ) );
 	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PLVector3( 0.0f, 0.0f, 1.0f ) ) ), 0.5f ) );
 	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PLVector3( 0.0f, 0.0f, 1.0f ), direction ) ), 0.5f ) );
 

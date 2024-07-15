@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Physics Rope
 
-#define GAME_PHYSICS_ROPE_MAX_PARTICLES 32
+#define GAME_PHYSICS_ROPE_MAX_PARTICLES 256
 
 /**
  * Particles represent the individual
