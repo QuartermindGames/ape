@@ -148,12 +148,30 @@ static void save_user_config( void )
 
 void ape_world_node_test_command_( unsigned int, char ** );
 
+static void toggle_command( unsigned int, char **argv )
+{
+	PLConsoleVariable *variable = PlGetConsoleVariable( argv[ 1 ] );
+	if ( variable == nullptr )
+	{
+		ape_warning_( "Failed to find the specified variable (%s)!\n" );
+		return;
+	}
+	else if ( variable->type != PL_VAR_BOOL )
+	{
+		ape_warning_( "Console variable is not a boolean type!\n" );
+		return;
+	}
+
+	PlSetConsoleVariable( variable, variable->b_value ? "false" : "true" );
+}
+
 void ape_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
+	PlRegisterConsoleCommand( "toggle", "Toggle a specific variable.", 1, toggle_command );
 
 	ape_register_entity_commands_();
 

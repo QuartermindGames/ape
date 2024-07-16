@@ -12,6 +12,7 @@ typedef enum MenuOptionType
 	MENU_OPTION_TYPE_BUTTON_ICON,//button represented by icon
 	MENU_OPTION_TYPE_CHECKBOX,   //typical checkbox
 	MENU_OPTION_TYPE_SLIDER,     //and typical slider
+	MENU_OPTION_TYPE_SEPERATOR,
 } MenuOptionType;
 
 typedef struct MenuOption
@@ -20,21 +21,27 @@ typedef struct MenuOption
 	struct Menu   *nextMenu;
 	MenuCallback   callback;
 	MenuOptionType type;
-	const char    *command;
 	union
 	{
-		bool    checkbox;
-		uint8_t slider;
+		struct
+		{
+			const char        *varName;
+			PLConsoleVariable *var;
+		} checkbox;
+		struct
+		{
+			const char *command;
+		} button;
 	};
 } MenuOption;
 
 typedef struct Menu
 {
-	const char       *heading;
-	const MenuOption *options;
-	uint8_t           numOptions;
-	struct Menu      *parent;
-	uint8_t           lastOption;
+	const char  *heading;
+	MenuOption  *options;
+	uint8_t      numOptions;
+	struct Menu *parent;
+	uint8_t      lastOption;
 } Menu;
 
 void  Game_Menu_SetCurrent( Menu *menu );

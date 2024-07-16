@@ -13,8 +13,14 @@ static Menu *currentMenu       = &mainMenu;
 static uint  currentMenuOption = 0;
 
 static MenuOption debugMenuOptions[] = {
-        { "Enable postfx\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, "postfx 1" },
-        { "Disable postfx\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, "postfx 0" },
+        { "FPS Counter\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
+        { "Show Lights\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
+        { "Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
+        { "Shadow Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
+        { "Post-Processing\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
+        { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
+        { "Capture\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
+        { "Screenshot\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
 };
 static Menu debugMenu = {
         "Debug Menu\n",
@@ -24,7 +30,7 @@ static Menu debugMenu = {
 };
 
 static MenuOption quitMenuOptions[] = {
-        { "Yes\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, "quit" },
+        { "Yes\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "quit" } },
         { "No\n", &mainMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
 };
 static Menu confirmQuitMenu = {
@@ -35,8 +41,8 @@ static Menu confirmQuitMenu = {
 };
 
 static MenuOption startMenuOptions[] = {
-        { "test_room\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, "world test_room" },
-        { "zoo_shaders\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, "world zoo_shaders" },
+        { "test_room\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world test_room" } },
+        { "zoo_shaders\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world zoo_shaders" } },
 };
 static Menu startMenu = {
         "Start Server\n",
@@ -50,8 +56,6 @@ static MenuOption mainMenuOptions[] = {
         { "Debug\n", &debugMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
 #endif
         { "Start Server\n", &startMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
-        { "Join Server\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON },
-        { "Settings\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON },
         { "Quit\n", &confirmQuitMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
 };
 static Menu mainMenu = {
@@ -61,6 +65,23 @@ static Menu mainMenu = {
 };
 
 static GamePieMenu *interactPie;
+
+static void initialize_menu( Menu *menu )
+{
+	for ( uint i = 0; i < menu->numOptions; ++i )
+	{
+		if ( menu->options[ i ].nextMenu != nullptr )
+		{
+			//initialize_menu( menu->options[ i ].nextMenu );
+		}
+
+		if ( menu->options[ i ].type == MENU_OPTION_TYPE_CHECKBOX )
+		{
+			menu->options[ i ].checkbox.var = PlGetConsoleVariable( menu->options[ i ].checkbox.varName );
+			assert( menu->options[ i ].checkbox.var != nullptr );
+		}
+	}
+}
 
 void ss1_menu_initialize( void )
 {
@@ -76,6 +97,10 @@ void ss1_menu_initialize( void )
 	menu_pie_add_option( interactPie, "testing 2", ape_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
 	menu_pie_add_option( interactPie, "testing 3", ape_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
 	menu_pie_make_active( interactPie, true );
+
+	// iterate over and init the menus
+	initialize_menu( &mainMenu );
+	initialize_menu( &debugMenu );
 
 	Game_Menu_SetCurrent( &mainMenu );
 }
@@ -102,14 +127,32 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		x += 30.0f;
 		for ( uint i = 0; i < currentMenu->numOptions; ++i )
 		{
+			if ( currentMenu->options[ i ].type == MENU_OPTION_TYPE_SEPERATOR )
+			{
+				y += guiGetFontLineSpacing( menuFont ) / 2.0f;
+				continue;
+			}
+
+			char tmp[ 128 ];
+			if ( currentMenu->options[ i ].type == MENU_OPTION_TYPE_CHECKBOX )
+			{
+				snprintf( tmp, sizeof( tmp ), "[%s] %s", currentMenu->options[ i ].checkbox.var->b_value ? "X" : " ", currentMenu->options[ i ].string );
+			}
+			else
+			{
+				snprintf( tmp, sizeof( tmp ), "%s", currentMenu->options[ i ].string );
+			}
+
+			size_t len = strlen( tmp );
+
 			static constexpr float SCALE = 0.7f;
 			if ( currentMenuOption == i )
 			{
 				float w;
-				gui_font_get_string_pixel_size( menuFont, SCALE, currentMenu->options[ i ].string, strlen( currentMenu->options[ i ].string ), &w, nullptr );
+				gui_font_get_string_pixel_size( menuFont, SCALE, tmp, len, &w, nullptr );
 				gui_font_draw_string( menuFont, x + w, y, nullptr, nullptr, SCALE, &PL_COLOUR_GOLD, "<", strlen( "<" ), true );
 			}
-			gui_font_draw_string( menuFont, x, y, nullptr, &y, SCALE, &PL_COLOUR_WHITE, currentMenu->options[ i ].string, strlen( currentMenu->options[ i ].string ), true );
+			gui_font_draw_string( menuFont, x, y, nullptr, &y, SCALE, &PL_COLOUR_WHITE, tmp, len, true );
 		}
 
 		gui_font_display( menuFont );
@@ -120,31 +163,45 @@ void ss1_menu_draw( const ApeViewport *viewport )
 	//menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
 }
 
+static void next_menu_option()
+{
+	currentMenuOption++;
+	if ( currentMenuOption >= currentMenu->numOptions )
+	{
+		currentMenuOption = 0;
+	}
+}
+
+static void prev_menu_option()
+{
+	if ( currentMenuOption == 0 )
+	{
+		currentMenuOption = currentMenu->numOptions - 1;
+	}
+	else
+	{
+		currentMenuOption--;
+	}
+}
+
 bool ss1_menu_handle_input( void )
 {
 	if ( isMainMenuOpen )
 	{
 		if ( ape_client_input_get_button_state( 0, APE_INPUT_DOWN ) == APE_INPUT_STATE_PRESSED )
 		{
-			currentMenuOption++;
-			if ( currentMenuOption >= currentMenu->numOptions )
+			do
 			{
-				currentMenuOption = 0;
-			}
-
+				next_menu_option();
+			} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
 			return true;
 		}
 		else if ( ape_client_input_get_button_state( 0, APE_INPUT_UP ) == APE_INPUT_STATE_PRESSED )
 		{
-			if ( currentMenuOption == 0 )
+			do
 			{
-				currentMenuOption = currentMenu->numOptions - 1;
-			}
-			else
-			{
-				currentMenuOption--;
-			}
-
+				prev_menu_option();
+			} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
 			return true;
 		}
 		else if ( ape_client_input_get_button_state( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED )
@@ -154,10 +211,29 @@ bool ss1_menu_handle_input( void )
 			{
 				option->callback( option );
 			}
-			if ( option->command != nullptr )
+
+			switch ( option->type )
 			{
-				PlParseConsoleString( option->command );
+				default:
+					break;
+				case MENU_OPTION_TYPE_BUTTON:
+				{
+					if ( option->button.command != nullptr )
+					{
+						PlParseConsoleString( option->button.command );
+					}
+					break;
+				}
+				case MENU_OPTION_TYPE_CHECKBOX:
+				{
+					if ( option->checkbox.var != nullptr )
+					{
+						PlSetConsoleVariable( option->checkbox.var, option->checkbox.var->b_value ? "0" : "1" );
+					}
+					break;
+				}
 			}
+
 			if ( option->nextMenu != nullptr )
 			{
 				currentMenu->lastOption = currentMenuOption;
