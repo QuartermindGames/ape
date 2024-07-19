@@ -124,7 +124,6 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, AcmBranch *root )
 	}
 
 	ape_world_face_generate_bounds( face );
-	face->origin = pl_vecOrigin3;//HACK ...
 
 	return face;
 }
@@ -252,11 +251,15 @@ void ape_world_face_generate_bounds( ApeWorldFace *face )
 	unsigned int numVertices = PlGetNumVectorArrayElements( face->vertices );
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayData( face->vertices );
 	if ( numVertices == 0 )
+	{
 		return;
+	}
 
 	PLVector3 *boundVertices = PL_NEW_( PLVector3, numVertices );
 	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
 		boundVertices[ i ] = vertices[ i ]->u->position;
+	}
 
 	face->bounds = PlGenerateAabbFromCoords( boundVertices, numVertices, true );
 	face->origin = PlGetAabbAbsOrigin( &face->bounds, pl_vecOrigin3 );

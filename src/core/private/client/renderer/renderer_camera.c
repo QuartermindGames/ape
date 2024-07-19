@@ -157,6 +157,11 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 			continue;
 		}
 
+#if 0
+		PLVector3 endPos = PlAddVector3( face->origin, PlScaleVector3F( face->normal, 0.5f ) );
+		ape_draw_debug_arrow( face->origin, endPos, PL_COLOUR_RED );
+#endif
+
 		PLVector3 forward;
 		PlAnglesAxes( camera->angles, nullptr, nullptr, &forward );
 		if ( !PlgIsBoxInsideView( camera, &face->bounds ) || PlVector3DotProduct( forward, face->normal ) > 0.f )

@@ -98,14 +98,13 @@ bool ape_light_is_active( const ApeLight *light )
  */
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 {
-	PLVector3 pos = ape_light_get_position( self );
-	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( plane->origin, pos ) );
-	if ( PlVector3DotProduct( plane->normal, dir ) >= 0 )
-	{
-		return true;
-	}
+	//HACK: the sun is an awkward case...
+	PLVector3 origin = ( self->type == APE_LIGHT_TYPE_SUN ) ? pl_vecOrigin3 : plane->origin;
 
-	return false;
+	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( origin, ape_light_get_position( self ) ) );
+	float     dot = PlVector3DotProduct( plane->normal, dir );
+
+	return ( self->type == APE_LIGHT_TYPE_OMNI && dot < 0 ) || ( self->type == APE_LIGHT_TYPE_SUN && dot >= 0 );
 }
 
 /**
@@ -113,8 +112,6 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
  */
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane )
 {
-	return false;
-
 	if ( ape_light_get_shadow_type( self ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC )
 	{
 		return false;

@@ -145,13 +145,16 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 #pragma message "TODO: update this to use material system!!!"
 			PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
 			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
+			PlgDrawBoundingVolume( &( PLCollisionAABB ){ .origin = faces[ i ]->origin, .mins = { -0.1f, -0.1f, -0.1f }, .maxs = { 0.1f, 0.1f, 0.1f } }, &PL_COLOUR_BLUE );
 		}
 
+#if 0// ditched for speed...
 		PLCollisionPlane plane = { .normal = faces[ i ]->normal, .origin = faces[ i ]->origin };
 		if ( light != nullptr && ape_light_test_plane_shadow( light, material, &plane ) )
 		{
 			continue;
 		}
+#endif
 
 		if ( PlgIsBoxInsideView( camera->internal, &faces[ i ]->bounds ) )
 		{
@@ -262,7 +265,8 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *lig
 			continue;
 		}
 
-		if ( ape_light_test_plane( light, &( PLCollisionPlane ){ .normal = faces[ i ]->normal, .origin = faces[ i ]->origin } ) )
+		PLCollisionPlane plane = ( PLCollisionPlane ){ .normal = faces[ i ]->normal, .origin = faces[ i ]->origin };
+		if ( ape_light_test_plane( light, &plane ) )
 		{
 			continue;
 		}
