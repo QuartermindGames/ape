@@ -31,6 +31,7 @@ v0.4.0/Artemis [xxxx-xx-xx]
 - Video capture now uses pthreads instead of C11 mtx due to limited support
 - 'mirror' parameter can now be provided for materials
 - Stencil shadow volumes are now batched per light (no caching yet)
+- Multiple shadow sources now work as expected
 - New node-graph system for world structure
   - World geometry is now represented as a 'brush' type
 - Simplified entity implementation 
@@ -47,7 +48,7 @@ v0.4.0/Artemis [xxxx-xx-xx]
   - Selection buffer
   - Brush plotting
 
-v3.0.0/Luna [2023-11-24]
+v0.3.0/Luna [2023-11-24]
 -----------------------------------------------------------------
 - Project is now licensed under LGPL 3.0
 - Client/server architecture
@@ -77,7 +78,7 @@ v3.0.0/Luna [2023-11-24]
 - New audio API with abstraction layer
 - Improvements to profiler
 
-v2.0.0 [2021-09-13] (aka, Space Ranger: Asteroid Attack)
+v0.2.0 [2021-09-13] (aka, Space Ranger: Asteroid Attack)
 -----------------------------------------------------------------
 - 'platform' has been split up into 'plcore', 'plgraphics' and 'plmodel'
 - 'yin' has been split up into 'common', 'launcher_sdl2', 'game' and 'engine'
@@ -116,6 +117,6 @@ v2.0.0 [2021-09-13] (aka, Space Ranger: Asteroid Attack)
 - Actors are now spawned by an id string, rather than by index
 - Simple particle system
 
-v1.0.0 [2020-04-15] (aka, Buddy's Adventure)
+v0.1.0 [2020-04-15] (aka, Buddy's Adventure)
 -----------------------------------------------------------------
 - Initial release

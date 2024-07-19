@@ -33,10 +33,14 @@
 - **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
 - **(Editor)** Look into the concept of supporting multiple grids
 - **(Editor)** Make the console correctly hide/show, and resize with a window
+- Recycle the parser from Dickens for ACM
 - Sky plane should display irrelevent of camera position
 - String table for binary-based node format
 - Update cook tool to convert obj geom to brush rather than room geo
 - Finish implementing support for the receive shadow flag (might need self-shadow too)
+- Handler for team colours via shader; some sort of mask
+- Pass vertex weights as attributes for vertex shader
+- Make attributes automatically derive from shader; open up API for specifying additional attributes (see vertex-desc branch per Hei)
 
 ## In-Progress
 - Model import from SMD/QC etc.
