@@ -104,7 +104,12 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( origin, ape_light_get_position( self ) ) );
 	float     dot = PlVector3DotProduct( plane->normal, dir );
 
-	return ( self->type == APE_LIGHT_TYPE_OMNI && dot < 0 ) || ( self->type == APE_LIGHT_TYPE_SUN && dot >= 0 );
+	if ( self->type == APE_LIGHT_TYPE_SUN )
+	{
+		return ( dot >= 0 );
+	}
+
+	return ( dot < 0 );
 }
 
 /**
@@ -120,4 +125,16 @@ bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *mater
 	uint flags = ape_material_get_flags( material );
 
 	return ( ( flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) && !ape_light_test_plane( self, plane ) );
+}
+
+bool ape_light_is_visible( const ApeLight *self, const ApeCamera *camera )
+{
+	if ( self->type == APE_LIGHT_TYPE_SUN )
+	{
+		return true;
+	}
+
+	PLVector3         lightPosition = ape_light_get_position( self );
+	PLCollisionSphere sphere        = PlSetupCollisionSphere( lightPosition, self->radius );
+	return PlgIsSphereInsideView( camera->internal, &sphere );
 }

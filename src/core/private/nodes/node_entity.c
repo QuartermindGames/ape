@@ -43,7 +43,7 @@ static void list_entity_classes_command( unsigned int, char ** )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ape_register_entity_commands_( void )
+void ape_entity_register_commands_( void )
 {
 	PlRegisterConsoleCommand( "list_entity_classes", "List all of the registered entity classes.", 0, list_entity_classes_command );
 }
@@ -84,7 +84,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
-	if ( className == NULL )
+	if ( classDefinition == NULL )
 	{
 		ape_warning_( "Failed to find entity class (%s)!\n", className );
 		return NULL;

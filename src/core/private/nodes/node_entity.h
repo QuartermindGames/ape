@@ -6,6 +6,6 @@
 
 PL_EXTERN_C
 
-void ape_register_entity_commands_( void );
+void ape_entity_register_commands_( void );
 
 PL_EXTERN_C_END

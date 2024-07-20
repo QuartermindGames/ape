@@ -18,27 +18,35 @@ static void model_cleanup_callback_( void *userData )
 
 	for ( uint i = 0; i < model->numMaterials; ++i )
 	{
-		ape_material_release( model->materials[ i ] );
-		PlgDestroyMesh( model->meshes[ i ] );
+		ape_material_release( model->meshes[ i ].material );
+		PlgDestroyMesh( model->meshes[ i ].cache );
 	}
 
 	PL_DELETE( model );
 }
 
-static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
+static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmBranch *root )
 {
-	AcmBranch *child;
+	const char *materialPath = acm_branch_get_child_string( root, "material", nullptr );
+	if ( materialPath == nullptr )
+	{
+		materialPath = "materials/engine/fallback.mat.n";
+	}
+
+	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true, false );
+
+	AcmBranch *branch;
 
 	PLVector3 *positions   = NULL;
 	uint       numVertices = 0;
-	if ( ( child = acm_branch_get_child_by_name( root, "positions" ) ) != NULL )
+	if ( ( branch = acm_branch_get_child_by_name( root, "positions" ) ) != NULL )
 	{
-		numVertices = acm_branch_get_num_of_children( child );
+		numVertices = acm_branch_get_num_of_children( branch );
 		if ( numVertices >= 3 )
 		{
 			positions   = PL_NEW_( PLVector3, numVertices );
 			numVertices = numVertices / 3;
-			acm_branch_get_float32_array( child, ( float * ) positions, numVertices );
+			acm_branch_get_float32_array( branch, ( float * ) positions, numVertices );
 		}
 		else
 		{
@@ -55,14 +63,14 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 
 	PLVector3 *normals    = NULL;
 	uint       numNormals = 0;
-	if ( ( child = acm_branch_get_child_by_name( root, "normals" ) ) != NULL )
+	if ( ( branch = acm_branch_get_child_by_name( root, "normals" ) ) != NULL )
 	{
-		numNormals = acm_branch_get_num_of_children( child );
+		numNormals = acm_branch_get_num_of_children( branch );
 		if ( numNormals >= 3 )
 		{
 			normals    = PL_NEW_( PLVector3, numNormals );
 			numNormals = numNormals / 3;
-			acm_branch_get_float32_array( child, ( float * ) normals, numNormals );
+			acm_branch_get_float32_array( branch, ( float * ) normals, numNormals );
 		}
 		else
 		{
@@ -73,14 +81,14 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 
 	PLVector2 *uvs    = NULL;
 	uint       numUVs = 0;
-	if ( ( child = acm_branch_get_child_by_name( root, "uvs" ) ) != NULL )
+	if ( ( branch = acm_branch_get_child_by_name( root, "uvs" ) ) != NULL )
 	{
-		numUVs = acm_branch_get_num_of_children( child );
+		numUVs = acm_branch_get_num_of_children( branch );
 		if ( numUVs >= 2 )
 		{
 			uvs    = PL_NEW_( PLVector2, numUVs );
 			numUVs = numUVs / 2;
-			acm_branch_get_float32_array( child, ( float * ) uvs, numUVs );
+			acm_branch_get_float32_array( branch, ( float * ) uvs, numUVs );
 		}
 		else
 		{
@@ -91,14 +99,14 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 
 	PLColourF32 *colours    = NULL;
 	uint         numColours = 0;
-	if ( ( child = acm_branch_get_child_by_name( root, "colours" ) ) != NULL )
+	if ( ( branch = acm_branch_get_child_by_name( root, "colours" ) ) != NULL )
 	{
-		numColours = acm_branch_get_num_of_children( child );
+		numColours = acm_branch_get_num_of_children( branch );
 		if ( numColours >= 4 )
 		{
 			colours    = PL_NEW_( PLColourF32, numVertices );
 			numColours = numColours / 4;
-			acm_branch_get_float32_array( child, ( float * ) colours, numColours );
+			acm_branch_get_float32_array( branch, ( float * ) colours, numColours );
 		}
 		else
 		{
@@ -110,11 +118,11 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 	uint *indices      = NULL;
 	uint  numIndices   = 0;
 	uint  numTriangles = 0;
-	if ( ( child = acm_branch_get_child_by_name( root, "triangles" ) ) != NULL )
+	if ( ( branch = acm_branch_get_child_by_name( root, "triangles" ) ) != NULL )
 	{
-		numIndices = acm_branch_get_num_of_children( child );
+		numIndices = acm_branch_get_num_of_children( branch );
 		indices    = PL_NEW_( uint, numIndices );
-		acm_branch_get_uint32_array( child, indices, numIndices );
+		acm_branch_get_uint32_array( branch, indices, numIndices );
 		numTriangles = numIndices / 3;
 	}
 	else
@@ -129,32 +137,32 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 		materialIndex = 0;
 	}
 
-	if ( model->meshes[ materialIndex ] == NULL )
+	if ( model->meshes[ materialIndex ].cache == NULL )
 	{
-		model->meshes[ materialIndex ] = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
+		model->meshes[ materialIndex ].cache = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, numVertices );
 	}
-	if ( model->meshes[ materialIndex ] != NULL )
+	if ( model->meshes[ materialIndex ].cache != NULL )
 	{
 		for ( uint i = 0; i < numVertices; ++i )
 		{
 			PLColour  colour = ( colours == NULL ) ? ( PLColour ){ 255, 255, 255, 255 } : PlColourF32ToU8( &colours[ i ] );
 			PLVector3 normal = ( normals == NULL ) ? pl_vecOrigin3 : normals[ i ];
 			PLVector2 uv     = ( uvs == NULL ) ? pl_vecOrigin2 : uvs[ i ];
-			PlgAddMeshVertex( model->meshes[ materialIndex ], &positions[ i ], &normal, &colour, &uv );
+			PlgAddMeshVertex( model->meshes[ materialIndex ].cache, &positions[ i ], &normal, &colour, &uv );
 		}
 
 		for ( uint i = 0; i < numIndices; i += 3 )
 		{
-			PlgAddMeshTriangle( model->meshes[ materialIndex ], indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
+			PlgAddMeshTriangle( model->meshes[ materialIndex ].cache, indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
 		}
 
 		if ( normals == NULL )
 		{
-			PlgGenerateMeshNormals( model->meshes[ materialIndex ], false );
+			PlgGenerateMeshNormals( model->meshes[ materialIndex ].cache, false );
 		}
 
-		PlgGenerateMeshTangentBasis( model->meshes[ materialIndex ] );
-		PlgUploadMesh( model->meshes[ materialIndex ] );
+		PlgGenerateMeshTangentBasis( model->meshes[ materialIndex ].cache );
+		PlgUploadMesh( model->meshes[ materialIndex ].cache );
 	}
 	else
 	{
@@ -167,10 +175,10 @@ static PLGMesh *deserialize_mesh( ApeModel *model, AcmBranch *root )
 	PL_DELETE( colours );
 	PL_DELETE( indices );
 
-	return model->meshes[ materialIndex ];
+	return mesh;
 }
 
-static ApeModel *deserialize_model( AcmBranch *root )
+static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 {
 	uint version = acm_branch_get_child_uint( root, "version", ( uint ) -1 );
 	if ( version == ( uint ) -1 || version > APE_FORMAT_MODEL_VERSION )
@@ -179,7 +187,7 @@ static ApeModel *deserialize_model( AcmBranch *root )
 		return NULL;
 	}
 
-	uint      numMeshes;
+	uint       numMeshes;
 	AcmBranch *meshArray = acm_branch_get_child_by_name( root, "meshes" );
 	if ( meshArray == NULL || ( ( numMeshes = acm_branch_get_num_of_children( meshArray ) ) == 0 ) )
 	{
@@ -192,47 +200,16 @@ static ApeModel *deserialize_model( AcmBranch *root )
 		numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
-	ApeModel *model = PL_NEW( ApeModel );
-
-	// Iterate over all the materials under the root and attempt to load them all in
-	AcmBranch *materialArray = acm_branch_get_child_by_name( root, "materials" );
-	if ( materialArray == NULL )
-	{
-		ape_warning_( "No materials for model, using fallback!\n" );
-		model->numMaterials   = 1;
-		model->materials[ 0 ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
-	}
-	else
-	{
-		model->numMaterials = acm_branch_get_num_of_children( materialArray );
-		AcmBranch *n         = acm_branch_get_first_child( materialArray );
-		for ( uint i = 0; i < model->numMaterials; ++i )
-		{
-			assert( n != NULL );
-			char materialPath[ PL_SYSTEM_MAX_PATH ];
-			if ( acm_branch_get_string( n, materialPath, sizeof( materialPath ) ) != ND_ERROR_SUCCESS )
-			{
-				ape_warning_( "Failed to get material string for model: %s\n", acm_get_error_message() );
-				model->materials[ i ] = ape_material_cache( "materials/engine/fallback_mesh.mat.n", 0, true, false );
-			}
-			else
-			{
-				model->materials[ i ] = ape_material_cache( materialPath, 0, true, false );
-			}
-
-			n = acm_get_next_child( n );
-		}
-	}
-
 	AcmBranch *meshNode = acm_branch_get_first_child( meshArray );
 	for ( uint i = 0; i < numMeshes; ++i )
 	{
 		assert( meshNode != NULL );
-		if ( deserialize_mesh( model, meshNode ) == nullptr )
+		if ( deserialize_mesh( model, &model->meshes[ i ], meshNode ) == nullptr )
 		{
 			ape_warning_( "Failed to deserialize mesh %u!\n", i );
 			break;
 		}
+
 		meshNode = acm_get_next_child( meshNode );
 	}
 
@@ -287,8 +264,8 @@ ApeModel *ape_model_load( const char *path )
 		return NULL;
 	}
 
-	model = deserialize_model( root );
-	if ( model != nullptr )
+	model = PL_NEW( ApeModel );
+	if ( deserialize_model( model, root ) != nullptr )
 	{
 		ape_cache_add_to_pool_( path, APE_CACHE_POOL_MODELS, model );
 
@@ -297,6 +274,7 @@ ApeModel *ape_model_load( const char *path )
 	}
 	else
 	{
+		PL_DELETEN( model );
 		ape_warning_( "Failed to load model, \"%s\"!\n", path );
 	}
 
@@ -314,6 +292,11 @@ void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const
 {
 	for ( uint i = 0; model->numMaterials; ++i )
 	{
-		ape_material_draw( model->materials[ i ], model->meshes[ i ], nullptr, 0 );
+		ape_material_draw( model->meshes[ i ].material, model->meshes[ i ].cache, nullptr, 0 );
 	}
+}
+
+void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms )
+{
+	//TODO: only will work with static models for now...
 }

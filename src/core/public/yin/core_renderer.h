@@ -239,6 +239,15 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour );
  */
 void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
 
+/**
+ * Draw an axis at the given position using Euler angles.
+ *
+ * @param origin 	Position of the axis.
+ * @param angles 	Angles of the axis.
+ * @param scale		Scale of the axis.
+ */
+void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 

@@ -60,6 +60,17 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 		}
 	}
 
+	if ( ape_config_.renderer.showLights )
+	{
+		PLVector3 pos = ape_light_get_position( light );
+		ape_draw_debug_sphere( pos, PlColourF32ToU8( &light->colour ), light->radius );
+		if ( light->type != APE_LIGHT_TYPE_OMNI )
+		{
+			PLVector3 end = PlAddVector3( pos, PlScaleVector3F( light->base.angles, 2.0f ) );
+			ape_draw_debug_arrow( pos, end, PlColourF32ToU8( &light->colour ) );
+		}
+	}
+
 	PL_GET_CVAR( "renderer.testFlares", testFlares );
 	if ( testFlares != nullptr && testFlares->b_value )
 	{

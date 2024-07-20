@@ -1,12 +1,10 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "plcore/pl_parse.h"
+
 #include "../cook.h"
 
 #include "model.h"
-
-#include "plcore/pl_parse.h"
-#include "ape/ape_formats.h"
-#include "plcore/pl_hashtable.h"
 
 #define MAX_TOKEN 64
 
@@ -138,20 +136,20 @@ static SmdModel *parse_smd( const char *path, const char *p )
 					PlParseInteger( &p, nullptr );// bone index
 
 					PLVector3 position;
-					position.x = PlParseFloat( &p, nullptr );
-					position.y = PlParseFloat( &p, nullptr );
-					position.z = PlParseFloat( &p, nullptr );
+					position.x                                                         = PlParseFloat( &p, nullptr );
+					position.y                                                         = PlParseFloat( &p, nullptr );
+					position.z                                                         = PlParseFloat( &p, nullptr );
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
 					PLVector3 normal;
-					normal.x = PlParseFloat( &p, nullptr );
-					normal.y = PlParseFloat( &p, nullptr );
-					normal.z = PlParseFloat( &p, nullptr );
+					normal.x                                                         = PlParseFloat( &p, nullptr );
+					normal.y                                                         = PlParseFloat( &p, nullptr );
+					normal.z                                                         = PlParseFloat( &p, nullptr );
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
 					PLVector2 uv;
-					uv.x = PlParseFloat( &p, nullptr );
-					uv.y = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
+					uv.x                                                         = PlParseFloat( &p, nullptr );
+					uv.y                                                         = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].uv = uv;
 
 					PlSkipLine( &p );
@@ -250,21 +248,21 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 		for ( unsigned int tri = 0; tri < mesh->numTriangles; ++tri )
 		{
 			const SmdTriangle *smdTriangle = &smd->meshes[ i ].triangles[ tri ];
-			for ( unsigned int vtx = 0; vtx < 3; ++vtx )
+			for ( unsigned int vtx = 0; vtx < 3; ++vtx, ++out->numVertices )
 			{
-				ApeFormatVertex *vertex = &out->vertices[ tri + vtx ];
-				vertex->position = smdTriangle->vertices[ vtx ].position;
-				vertex->normal = smdTriangle->vertices[ vtx ].normal;
-				vertex->uv = smdTriangle->vertices[ vtx ].uv;
+				ApeFormatVertex *vertex = &out->vertices[ out->numVertices ];
+				vertex->position        = smdTriangle->vertices[ vtx ].position;
+				vertex->normal          = smdTriangle->vertices[ vtx ].normal;
+				vertex->uv              = smdTriangle->vertices[ vtx ].uv;
 
 				vertex->numWeights = smdTriangle->vertices[ vtx ].numWeights;
 				for ( unsigned int wei = 0; wei < smdTriangle->vertices[ vtx ].numWeights; ++wei )
 				{
-					vertex->weights[ wei ].bone = ( smdTriangle->vertices[ vtx ].weights[ wei ].node - smd->bones );
+					vertex->weights[ wei ].bone   = ( smdTriangle->vertices[ vtx ].weights[ wei ].node - smd->bones );
 					vertex->weights[ wei ].weight = smdTriangle->vertices[ vtx ].weights[ wei ].value;
 				}
 
-				mesh->triangles[ tri ].indices[ vtx ] = ( tri + vtx );
+				mesh->triangles[ tri ].indices[ vtx ] = out->numVertices;
 			}
 		}
 	}
@@ -272,8 +270,8 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 	return out;
 }
 
-static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
+static CookModel      *load_smd( const char *path ) { return ( CookModel      *) model_smd_load( path ); }
 static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
-static void destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
+static void            destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel            *) model ); }
 
 const CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };

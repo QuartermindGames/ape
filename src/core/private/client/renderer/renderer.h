@@ -119,7 +119,7 @@ typedef enum ApeCullMode
 
 typedef enum ApeRendererPassStage
 {
-	SS_ARL_RENDERER_PASS_DEFAULT,
+	APE_RENDERER_PASS_DEFAULT,
 	SS_ARL_RENDERER_PASS_DEPTH,
 } ApeRendererPassStage;
 

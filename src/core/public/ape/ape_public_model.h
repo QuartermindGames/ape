@@ -41,4 +41,13 @@ void ape_model_release( ApeModel *model );
  */
 void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform );
 
+/**
+ * Draw an instanced version of the model.
+ *
+ * @param model 		Pointer to instance of model.
+ * @param transforms 	List of transforms to use.
+ * @param numTransforms Number of transforms in the list.
+ */
+void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms );
+
 PL_EXTERN_C_END

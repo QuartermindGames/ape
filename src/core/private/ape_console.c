@@ -165,6 +165,7 @@ static void toggle_command( unsigned int, char **argv )
 	PlSetConsoleVariable( variable, variable->b_value ? "false" : "true" );
 }
 
+void ape_test_register_commands_();
 void ape_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
@@ -173,7 +174,8 @@ void ape_console_register_commands_( bool isDedicated )
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
 	PlRegisterConsoleCommand( "toggle", "Toggle a specific variable.", 1, toggle_command );
 
-	ape_register_entity_commands_();
+	ape_entity_register_commands_();
+	ape_test_register_commands_();
 
 	if ( !isDedicated )
 	{

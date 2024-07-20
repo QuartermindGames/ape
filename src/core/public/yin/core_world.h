@@ -324,4 +324,13 @@ bool ape_light_is_active( const ApeLight *light );
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
 
+/**
+ * Test whether or not the light is visible to the given camera.
+ *
+ * @param self 		Instance of light.
+ * @param camera 	Instance of camera.
+ * @return 			True on visible, false otherwise.
+ */
+bool ape_light_is_visible( const ApeLight *self, const ApeCamera *camera );
+
 PL_EXTERN_C_END

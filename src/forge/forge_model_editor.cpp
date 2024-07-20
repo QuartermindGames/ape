@@ -47,13 +47,6 @@ forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, 
 	}
 
 	this->model = model;
-
-	world = ape_create_world();
-
-	ApeRoom *room = ape_room_create( &world->base );
-
-	modelEntity = ape_create_entity( "modelDummy", nullptr, nullptr );
-	ape_world_node_attach( ( ApeWorldNode * ) room, &modelEntity->base );
 }
 
 forge::editor_model::~editor_model()

@@ -76,7 +76,10 @@ add_library(ApeCore STATIC
         private/legacy/actors/actor_player.c
         private/legacy/actors/sg_actors.c
 
-        private/server/server.c)
+        private/server/server.c
+
+        private/ape_test.c
+)
 add_dependencies(ApeCore
         plcore
         plgraphics

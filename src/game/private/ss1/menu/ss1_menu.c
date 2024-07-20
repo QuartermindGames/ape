@@ -12,6 +12,11 @@ static Menu  mainMenu;
 static Menu *currentMenu       = &mainMenu;
 static uint  currentMenuOption = 0;
 
+static void capture_screenshot_callback( const MenuOption * )
+{
+	isMainMenuOpen = false;
+}
+
 static MenuOption debugMenuOptions[] = {
         { "FPS Counter\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
         { "Show Lights\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
@@ -19,8 +24,8 @@ static MenuOption debugMenuOptions[] = {
         { "Shadow Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
         { "Post-Processing\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
         { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
-        { "Capture\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
-        { "Screenshot\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
+        { "Capture\n", nullptr, capture_screenshot_callback, MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
+        { "Screenshot\n", nullptr, capture_screenshot_callback, MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
 };
 static Menu debugMenu = {
         "Debug Menu\n",

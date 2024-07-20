@@ -27,19 +27,27 @@ typedef struct ApeModelAnimation
 	uint numBones;
 } ApeModelAnimation;
 
+typedef struct ApeModelVertexWeight
+{
+	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
+	unsigned int    numWeights;
+} ApeModelVertexWeight;
+
+typedef struct ApeModelMesh
+{
+	PLGMesh             *cache;
+	ApeMaterial         *material;
+	ApeModelVertexWeight weights[ APE_FORMAT_MODEL_MAX_VERTICES ];
+} ApeModelMesh;
+
 typedef struct ApeModel
 {
-	PLGMesh     *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	ApeMaterial *materials[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	uint         numMaterials;
+	ApeModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
+	uint         numMaterials;// also corrisponds to number of meshes...
 
 	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
 	uint           numBones;
-
-	PLCollisionSphere visSphere;
-
-	ApeFormatModel disk;
 
 	ApeMemoryReference reference;
 } ApeModel;

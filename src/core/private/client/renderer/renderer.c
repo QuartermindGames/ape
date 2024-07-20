@@ -568,14 +568,13 @@ static void render_transparent_world( ApeWorld *world, ApeCamera *camera )
 		ape_world_draw( world, camera, lights[ i ], false, true );
 
 		ape_rendererState_.overrideBlendMode = false;
-		ape_rendererState_.passStage         = SS_ARL_RENDERER_PASS_DEFAULT;
+		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 	}
 }
 
-static void render_solid_world( ApeWorld *world, ApeCamera *camera )
+static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeViewport *viewport )
 {
-	// Ambient pass ...
-
+	// Ambient pass
 	ape_world_draw( world, camera, NULL, true, false );
 
 	PlgDepthMask( false );
@@ -593,11 +592,40 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera )
 		}
 
 		//TODO: viewport clipping per light volume
+#if 0
 
-		if ( ape_config_.renderer.showLights )
+		PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+
+		int       viewportSize[] = { viewport->width, viewport->height, viewport->x, viewport->y };
+		PLVector2 lightScreenPos = PlConvertWorldToScreen( &lightPosition, &viewProj, viewportSize, true );
+		PLVector3 lightRadi      = PlAddVector3F( lightPosition, lights[ i ]->radius );
+		PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewportSize, true );
+
+		static int radius = 256;
+
+		PLRectangleI32 screenRect;
+		screenRect.x = ( int ) lightScreenPos.x - ( radius / 2 );
+		if ( screenRect.x < viewport->x ) screenRect.x = viewport->x;
+		screenRect.y = ( int ) lightScreenPos.y - ( radius / 2 );
+		if ( screenRect.y < viewport->y ) screenRect.y = viewport->y;
+
+		screenRect.w = ( int ) radius;
+		if ( screenRect.x + screenRect.w > viewport->width ) screenRect.w = ( screenRect.x + screenRect.w ) - viewport->width;
+		screenRect.h = ( int ) radius;
+		if ( screenRect.y + screenRect.h > viewport->height ) screenRect.h = ( screenRect.y + screenRect.h ) - viewport->height;
+
+		if ( screenRect.w < 0 || screenRect.h < 0 )
 		{
-			arl_draw_axis_pivot( lights[ i ]->base.position, lights[ i ]->base.angles, 1.0f );
+			continue;
 		}
+
+		ape_print_( "light pos 		%s\n", PlPrintVector3( &lightPosition, PL_VAR_F32 ) );
+		ape_print_( "screen pos		%s\n", PlPrintVector2( &lightScreenPos, PL_VAR_F32 ) );
+		ape_print_( "screen bounds	%u %u %u %u\n", screenRect.x, screenRect.y, screenRect.w, screenRect.h );
+
+		//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
+
+#endif
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )
@@ -605,7 +633,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera )
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
 				ape_rendererState_.cullMode  = SS_ARL_CULL_MODE_NONE;
-				ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+				ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 
@@ -643,7 +671,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera )
 		ape_world_draw( world, camera, lights[ i ], false, false );
 
 		ape_rendererState_.overrideBlendMode = false;
-		ape_rendererState_.passStage         = SS_ARL_RENDERER_PASS_DEFAULT;
+		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 
 		if ( drawShadows )
 		{
@@ -656,17 +684,20 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera )
 	PlgDepthMask( true );
 }
 
+void ape_test_draw_model_();
+
 PLVector2   screenPosTest;
 static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = ape_camera_get_world( camera );
 	ape_editor_pre_render_scene_( camera );
 
 	if ( !ape_config_.world.skipDraw )
 	{
 		ape_sky_draw_( camera );
+
+		ApeWorld *world = ape_camera_get_world( camera );
 		if ( world != NULL )
 		{
 			switch ( camera->drawMode )
@@ -682,19 +713,21 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 					ape_world_draw( world, camera, NULL, true, true );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
-					render_solid_world( world, camera );
+					render_solid_world( world, camera, viewport );
 					render_transparent_world( world, camera );
 					break;
 			}
 		}
+
+		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
 
-	PlgDepthBufferFunction( PLG_COMPARE_LESS );
-
-	// for now, shove this here, but really it should be accounting for the room transform... :(
+#if !defined( NDEBUG )
 	ape_draw_debug_mesh_display_();
+	ape_test_draw_model_();
+#endif
 
-	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )

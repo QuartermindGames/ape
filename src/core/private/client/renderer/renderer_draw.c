@@ -423,3 +423,11 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale )
 		}
 	}
 }
+
+void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale )
+{
+	//TODO: represent angles...
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ scale, 0.0f, 0.0f } ), PL_COLOUR_RED );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE );
+}

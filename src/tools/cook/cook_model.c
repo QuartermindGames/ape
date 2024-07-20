@@ -186,12 +186,16 @@ static void serialize_triangle( AcmBranch *root, const ApeFormatTriangle *triang
 
 static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
 {
+	char *c = strrchr( mesh->material, '/' );
+	printf( "\tSerialising mesh (%s)\n", c != nullptr ? ( c + 1 ) : mesh->material );
+
 	AcmBranch *meshBranch = acm_branch_push_back_object( root, nullptr );
 
 	//TODO: should go ahead and ensure material exists, and associated texture for material is cooked, etc.
 	acm_branch_push_back_string( meshBranch, "material", mesh->material );
 
 	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
+	printf( "\t\t%u triangles\n", mesh->numTriangles );
 	for ( unsigned int i = 0; i < mesh->numTriangles; ++i )
 	{
 		serialize_triangle( trianglesBranch, &mesh->triangles[ i ], vertices, vertexTable, normalsTable );
@@ -200,6 +204,8 @@ static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const Ap
 
 static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 {
+	printf( "\tSerialising bone (%s)\n", bone->name );
+
 	AcmBranch *boneBranch = acm_branch_push_back_object( root, nullptr );
 	acm_branch_push_back_string( boneBranch, "name", bone->name );
 	acm_branch_push_back_uint32( boneBranch, "parent", bone->parent );
@@ -219,6 +225,11 @@ static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 	printf( "%u vertices\n", model->numVertices );
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
+		if ( PlLookupHashTableUserData( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ) ) != nullptr )
+		{
+			continue;
+		}
+
 		VectorIndex *index = PL_NEW( VectorIndex );
 		index->pos         = i;
 		index->vec         = &model->vertices[ i ].position;
@@ -228,55 +239,61 @@ static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 	PLHashTable *normalsTable = PlCreateHashTable();
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
+		if ( PlLookupHashTableUserData( vertexTable, &model->vertices[ i ].normal, sizeof( PLVector3 ) ) != nullptr )
+		{
+			continue;
+		}
+
 		VectorIndex *index = PL_NEW( VectorIndex );
 		index->pos         = i;
 		index->vec         = &model->vertices[ i ].normal;
 		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), index );
 	}
 
-	AcmBranch       *child;
+	AcmBranch       *branch;
 	PLHashTableNode *childHashNode;
 
-	child         = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	branch        = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( vertexTable );
 	while ( childHashNode != nullptr )
 	{
 		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		acm_branch_push_back_float32( child, nullptr, v->x );
-		acm_branch_push_back_float32( child, nullptr, v->y );
-		acm_branch_push_back_float32( child, nullptr, v->z );
+		acm_branch_push_back_float32( branch, nullptr, v->x );
+		acm_branch_push_back_float32( branch, nullptr, v->y );
+		acm_branch_push_back_float32( branch, nullptr, v->z );
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
-	child         = acm_branch_push_back_float32_array( root, "normals", nullptr, 0 );
+	branch        = acm_branch_push_back_float32_array( root, "normals", nullptr, 0 );
 	childHashNode = PlGetFirstHashTableNode( normalsTable );
 	while ( childHashNode != nullptr )
 	{
 		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		acm_branch_push_back_float32( child, nullptr, v->x );
-		acm_branch_push_back_float32( child, nullptr, v->y );
-		acm_branch_push_back_float32( child, nullptr, v->z );
+		acm_branch_push_back_float32( branch, nullptr, v->x );
+		acm_branch_push_back_float32( branch, nullptr, v->y );
+		acm_branch_push_back_float32( branch, nullptr, v->z );
 		childHashNode = PlGetNextHashTableNode( childHashNode );
 	}
 
 	acm_branch_push_back_bool( root, "isStatic", model->isStatic );
 	if ( model->numBones > 0 )
 	{
-		child = acm_branch_push_back_object_array( root, "bones" );
+		branch = acm_branch_push_back_object_array( root, "bones" );
 		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
-			serialize_bone( child, &model->bones[ i ] );
+			serialize_bone( branch, &model->bones[ i ] );
 		}
 	}
 
-	child = acm_branch_push_back_object_array( root, "meshes" );
+	printf( "%u meshes\n", model->numMeshes );
+	branch = acm_branch_push_back_object_array( root, "meshes" );
 	for ( unsigned int i = 0; i < model->numMeshes; ++i )
 	{
-		serialize_mesh( child, &model->meshes[ i ], model->vertices, vertexTable, normalsTable );
+		serialize_mesh( branch, &model->meshes[ i ], model->vertices, vertexTable, normalsTable );
 	}
 
-	PlDestroyHashTableEx( normalsTable, pl_free );
-	PlDestroyHashTableEx( vertexTable, pl_free );
+	PlDestroyHashTableEx( normalsTable, PlFree );
+	PlDestroyHashTableEx( vertexTable, PlFree );
 
 	return root;
 }
