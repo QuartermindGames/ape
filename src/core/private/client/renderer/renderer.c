@@ -630,18 +630,15 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )
 		{
+			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
+
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
-				ape_rendererState_.cullMode  = SS_ARL_CULL_MODE_NONE;
 				ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-
 				ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
-
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-
-				ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 			}
 
 			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
@@ -652,9 +649,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
 			ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );
@@ -662,6 +657,8 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 			PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 		}
 
 		ape_rendererState_.overrideBlendMode = true;

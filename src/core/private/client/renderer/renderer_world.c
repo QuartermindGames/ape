@@ -13,9 +13,9 @@ static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
 
 static void draw_face_wireframe( ApeWorldFace *face )
 {
-	unsigned int         numVertices;
+	uint                 numVertices;
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayDataEx( face->vertices, &numVertices );
-	for ( unsigned int i = 0; i < numVertices; ++i )
+	for ( uint i = 0; i < numVertices; ++i )
 	{
 		ApeWorldVertex *a = vertices[ i ]->u;
 		PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
@@ -43,9 +43,9 @@ static void draw_face_wireframe( ApeWorldFace *face )
 
 static void draw_room_wireframe( ApeWorld *world, ApeRoom *room )
 {
-	unsigned int   numFaces;
+	uint           numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
-	for ( unsigned int j = 0; j < numFaces; ++j )
+	for ( uint j = 0; j < numFaces; ++j )
 	{
 		draw_face_wireframe( faces[ j ] );
 	}
@@ -94,7 +94,7 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 	//PlPopMatrix();
 }
 
-static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned int materialIndex, ApeLight *light )
+static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, uint materialIndex, ApeLight *light )
 {
 	mesh->numSubMeshes   = numSubMeshes[ materialIndex ];
 	mesh->firstSubMeshes = firstSubMeshes[ materialIndex ];
@@ -107,13 +107,14 @@ static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, unsigned in
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
 
-static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool drawAlpha )
+#if 0
+static bool build_shadow_display_list( ApeRoom *room, const ApeLight *light )
 {
-	unsigned int   numFaces;
+	uint           numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 
-	unsigned int numVertices;
-	for ( unsigned int i = 0, offset = 0; i < numFaces; ++i, offset += numVertices )
+	bool shadowTest = false;
+	for ( uint i = 0, offset = 0, numVertices; i < numFaces; ++i, offset += numVertices )
 	{
 		numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 		if ( faces[ i ]->materialIndex < 0 )
@@ -121,7 +122,44 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 			continue;
 		}
 
-		unsigned int materialIndex = faces[ i ]->materialIndex;
+		assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
+		if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
+		{
+			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+			break;
+		}
+
+		if ( !shadowTest && ape_light_test_plane( light, &( PLCollisionPlane ){ .origin = faces[ i ]->origin, .normal = faces[ i ]->normal } ) )
+		{
+			shadowTest = true;
+		}
+
+		subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = numVertices;
+		firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = offset;
+		numSubMeshes[ 0 ]++;
+
+		ape_rendererPerformance_.numFacesDrawn++;
+	}
+
+	return shadowTest;
+}
+#endif
+
+static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool drawAlpha )
+{
+	uint           numFaces;
+	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
+
+	uint numVertices;
+	for ( uint i = 0, offset = 0; i < numFaces; ++i, offset += numVertices )
+	{
+		numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
+		if ( faces[ i ]->materialIndex < 0 )
+		{
+			continue;
+		}
+
+		uint         materialIndex = faces[ i ]->materialIndex;
 		ApeMaterial *material      = PlGetVectorArrayElementAt( world->materials, materialIndex );
 		if ( material == NULL )
 		{
@@ -192,7 +230,7 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 	}
 
 	build_display_lists( world, room, camera, light, alpha );
-	for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	for ( uint i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{
 		if ( numSubMeshes[ i ] == 0 )
 		{
@@ -223,11 +261,11 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 	return PlNormalizeVector3( light->base.position );
 }
 
-static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, unsigned int *indices )
+static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, uint *indices )
 {
-	unsigned int      numVertices    = PlGetNumLinkedListNodes( face->edgeLoop );
+	uint              numVertices    = PlGetNumLinkedListNodes( face->edgeLoop );
 	PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
-	for ( unsigned int i = 0; i < numVertices; ++i )
+	for ( uint i = 0; i < numVertices; ++i )
 	{
 		ApeWorldFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
 		assert( vertex->u != NULL );
@@ -242,23 +280,34 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 		faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
 	}
 
-	for ( unsigned int i = 1; i + 1 < numVertices; ++i )
+	for ( uint i = 1; i + 1 < numVertices; ++i )
 	{
 		PlgImmPushTriangle( indices[ 0 ], indices[ start ? i : ( i + 1 ) ], indices[ start ? ( i + 1 ) : i ] );
 	}
 }
 
-static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *light )
+static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 {
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 
-	unsigned int   numFaces;
+#if 0 // entirely done with vertex shader...
+
+	if ( !build_shadow_display_list( room, light ) )
+	{
+		return;
+	}
+
+	draw_room_submesh( room->mesh, shadowMaterial, 0, light );
+
+#else // slower CPU route...
+
+	uint           numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 
-	PLGMesh     *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
-	unsigned int numIndices = 0;
-	for ( unsigned int i = 0; i < numFaces; ++i )
+	PLGMesh *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
+	uint     numIndices = 0;
+	for ( uint i = 0; i < numFaces; ++i )
 	{
 		if ( faces[ i ]->material == NULL || !ape_material_shadows_enabled( faces[ i ]->material ) )
 		{
@@ -273,24 +322,24 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *lig
 
 		// There's probably a more efficient way of doing this,
 		// but let's go ahead and store all the indices into a dynamic array
-		unsigned int numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
+		uint numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 		numIndices += ( numVertices * 2 );// * 2 for edges
-		static unsigned int *indices    = NULL;
-		static unsigned int  maxIndices = 0;
+		static uint *indices    = NULL;
+		static uint  maxIndices = 0;
 		if ( indices == NULL )
 		{
 			maxIndices = ( numIndices * numFaces );
-			indices    = PL_NEW_( unsigned int, maxIndices );
+			indices    = PL_NEW_( uint, maxIndices );
 		}
 		else if ( numIndices > maxIndices )
 		{
 			maxIndices = numIndices + 16;
-			indices    = PL_REALLOCA( indices, sizeof( unsigned int ) * maxIndices );
+			indices    = PL_REALLOCA( indices, sizeof( uint ) * maxIndices );
 		}
 
-		unsigned int *fl = &indices[ numIndices - ( numVertices * 2 ) ];
+		uint *fl = &indices[ numIndices - ( numVertices * 2 ) ];
 		draw_stencil_shadow_cap( faces[ i ], light, false, fl );
-		unsigned int *sl = &indices[ numIndices - numVertices ];
+		uint *sl = &indices[ numIndices - numVertices ];
 		draw_stencil_shadow_cap( faces[ i ], light, true, sl );
 
 		// Now produce the edges
@@ -308,6 +357,8 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, const ApeLight *lig
 	}
 
 	ape_material_draw( shadowMaterial, mesh, NULL, 0 );
+
+#endif
 }
 
 static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, ApeLight *light )
@@ -327,9 +378,9 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 
 	if ( !room->isDetail )
 	{
-		unsigned int numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		ApeRoom    **detailRooms    = ( ApeRoom       **) PlGetVectorArrayData( room->detailRooms );
-		for ( unsigned int j = 0; j < numDetailRooms; ++j )
+		uint      numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
+		ApeRoom **detailRooms    = ( ApeRoom    **) PlGetVectorArrayData( room->detailRooms );
+		for ( uint j = 0; j < numDetailRooms; ++j )
 		{
 			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 		}
@@ -345,7 +396,7 @@ void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLigh
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	for ( unsigned int i = 0; i < camera->visibility.numRooms; ++i )
+	for ( uint i = 0; i < camera->visibility.numRooms; ++i )
 	{
 		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
 
@@ -370,7 +421,7 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
-	for ( unsigned int i = 0; i < camera->visibility.numRooms; ++i )
+	for ( uint i = 0; i < camera->visibility.numRooms; ++i )
 	{
 		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
 		draw_room( world, camera->visibility.rooms[ i ].room, camera, light, ambienceOnly, alpha );
@@ -378,9 +429,9 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 
 #pragma message "Decide how we're going to do this..."
 #if 0
-	unsigned int numWorldNodes;
+	uint numWorldNodes;
 	ApeWorldNode **worldNodes = ape_camera_get_visible_nodes_( camera, &numWorldNodes );
-	for ( unsigned int i = 0; i < numWorldNodes; ++i )
+	for ( uint i = 0; i < numWorldNodes; ++i )
 	{
 		if ( !worldNodes[ i ]->classType->drawFunction )
 		{
