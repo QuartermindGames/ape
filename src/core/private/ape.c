@@ -21,7 +21,7 @@ static AcmBranch *engineConfig;
 static AcmBranch *userConfig;
 
 static bool engineTerminalMode = false;
-static bool engineInitialized = false;
+static bool engineInitialized  = false;
 
 static void execute_launch_commands( unsigned int argc, char **argv )
 {
@@ -51,7 +51,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 
 	static const unsigned int MAX_COMMANDS = 256;
-	unsigned int numCommands = acm_branch_get_num_of_children( branch );
+	unsigned int              numCommands  = acm_branch_get_num_of_children( branch );
 	if ( numCommands == 0 )
 	{
 		return;
@@ -158,7 +158,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	// And now we can fetch the configs that provide mount locations, aliases, and more
 	engineConfig = com_get_config( config != nullptr ? config : "engine" );
-	userConfig = com_get_config( "user" );
+	userConfig   = com_get_config( "user" );
 
 	ape_fs_setup_config( engineConfig );
 

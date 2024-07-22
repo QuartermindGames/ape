@@ -8,6 +8,8 @@ set(GAME_SHARED_FILES
         #############################################
         private/shared/ai/ai_brain.c
 
+        private/shared/integrations/discord/discord.c
+
         private/shared/entities/entity_light.c
 )
 

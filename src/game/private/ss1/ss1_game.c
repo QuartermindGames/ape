@@ -4,9 +4,12 @@
 #include "ss1_game.h"
 #include "game/private/ss1/menu/ss1_menu.h"
 
+#include "../shared/integrations/integrations.h"
 #include "../shared/physics/physics.h"
 
 static GamePhysicsRope debugRope;
+
+static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 
 SS1GameState ss1_gameState;
 
@@ -33,9 +36,12 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
 
 static ApeLight *suns[ 2 ];
 
-static bool ss1_initialize( void )
+static bool ss1_initialize()
 {
 	PL_ZERO_( ss1_gameState );
+
+	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
+	game_integrations_discord_update_activity_( "Testing 123", "Hello World!", "ape_logo", "Blah!" );
 
 	ss_game_register_standard_entity_components_();
 
@@ -91,6 +97,8 @@ static bool ss1_shutdown( void )
 		ape_world_node_destroy( ( ApeWorldNode * ) ss1_gameState.world );
 		ss1_gameState.world = nullptr;
 	}
+
+	game_integrations_discord_shutdown_();
 
 	return true;
 }
@@ -176,6 +184,8 @@ static bool ss1_tick( void )
 		game_physics_rope_tick( &debugRope, 1.0f );
 		game_physics_rope_debug_draw( &debugRope );
 	}
+
+	game_integrations_discord_tick_();
 
 	return true;
 }
