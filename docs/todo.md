@@ -41,6 +41,7 @@
 - Handler for team colours via shader; some sort of mask
 - Pass vertex weights as attributes for vertex shader
 - Make attributes automatically derive from shader; open up API for specifying additional attributes (see vertex-desc branch per Hei)
+- When an item is removed from memory, it's not being correctly removed from the cache
 
 ## In-Progress
 - Model import from SMD/QC etc.

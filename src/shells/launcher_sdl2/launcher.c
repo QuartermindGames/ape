@@ -3,13 +3,13 @@
 #include <SDL2/SDL.h>
 
 #ifdef _WIN32
-#	include <crtdbg.h>
+#include <crtdbg.h>
 #elif __linux__
-#	include <sys/prctl.h>
+#include <sys/prctl.h>
+#include <signal.h>
 #endif
 
 #include <yin/core.h>
-#include <yin/core_renderer.h>
 #include "acm/public/acm/acm.h"
 
 #include "common.h"
@@ -26,7 +26,7 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
  * WINDOW MANAGEMENT
  ****************************************/
 
-static SDL_Window *sdlWindow = NULL;
+static SDL_Window   *sdlWindow    = NULL;
 static SDL_GLContext sdlGLContext = NULL;
 
 static ApeViewport *windowViewport = NULL;
@@ -35,7 +35,7 @@ static int drawW, drawH;
 
 void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 {
-	const char *title;
+	const char         *title;
 	SDL_MessageBoxFlags flags;
 	switch ( messageType )
 	{
@@ -57,7 +57,7 @@ void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *
 	va_list args;
 	va_start( args, message );
 
-	int l = pl_vscprintf( message, args );
+	int   l   = pl_vscprintf( message, args );
 	char *buf = PlMAllocA( l + 1 );
 
 	vsnprintf( buf, l, message, args );
@@ -87,7 +87,7 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 
 		SDL_Rect rect;
 		SDL_GetDisplayBounds( 0, &rect );
-		width = rect.w;
+		width  = rect.w;
 		height = rect.h;
 	}
 
@@ -125,13 +125,13 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 	}
 
 #if 0
-#	if !NDEBUG// for debug builds, throw it onto a second display if available
+#if !NDEBUG// for debug builds, throw it onto a second display if available
 	if ( SDL_GetNumVideoDisplays() > 1 )
 	{
 		SDL_SetWindowPosition( sdlWindow, SDL_WINDOWPOS_CENTERED_DISPLAY( 1 ), SDL_WINDOWPOS_CENTERED_DISPLAY( 1 ) );
 		SDL_MaximizeWindow( sdlWindow );
 	}
-#	endif
+#endif
 #endif
 
 	if ( mode == SS_SHELL_GRAPHICS_MODE_OPENGL )
@@ -180,7 +180,7 @@ bool ss_shell_set_window_size( int *width, int *height )
 {
 	if ( sdlWindow == NULL )
 	{
-		*width = 0;
+		*width  = 0;
 		*height = 0;
 		return false;
 	}
@@ -193,7 +193,7 @@ bool ss_shell_set_window_size( int *width, int *height )
 	if ( *width == nW && *height == nH )
 		return true;
 
-	*width = nW;
+	*width  = nW;
 	*height = nH;
 	return false;
 }
@@ -235,7 +235,7 @@ ApeViewport *ss_shell_viewport_get_active( void )
  ****************************************/
 
 static ApeInputState buttonStates[ APE_MAX_BUTTON_INPUTS ];
-ApeInputState ss_shell_get_button_state( ApeInputButton inputButton )
+ApeInputState        ss_shell_get_button_state( ApeInputButton inputButton )
 {
 	if ( inputButton >= APE_MAX_BUTTON_INPUTS )
 		return APE_INPUT_STATE_NONE;
@@ -244,7 +244,7 @@ ApeInputState ss_shell_get_button_state( ApeInputButton inputButton )
 }
 
 static ApeInputState keyStates[ APE_MAX_KEY_INPUTS ];
-ApeInputState ss_shell_get_key_state( int key )
+ApeInputState        ss_shell_get_key_state( int key )
 {
 	if ( key >= APE_MAX_KEY_INPUTS )
 		return APE_INPUT_STATE_NONE;
@@ -364,7 +364,7 @@ static int Sys_TranslateSDLKeyInput( int key )
  * TIMER MANAGEMENT
  ****************************************/
 
-static SDL_TimerID sdlTimer = 0;
+static SDL_TimerID  sdlTimer = 0;
 static unsigned int timer_callback( unsigned int interval, void *param )
 {
 	SDL_UserEvent userEvent;
@@ -404,8 +404,8 @@ static bool initialize_display( void )
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
 	{
-		size_t size = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char *driverPath = PL_NEW_( char, size );
+		size_t size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
+		char  *driverPath = PL_NEW_( char, size );
 		snprintf( driverPath, size, "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
 		PL_DELETE( driverPath );
@@ -417,7 +417,7 @@ static bool initialize_display( void )
 	}
 
 	unsigned int driverMode;
-	const char *driverName = acm_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
+	const char  *driverName = acm_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
 		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
@@ -440,13 +440,13 @@ static bool initialize_display( void )
 #else
 	bool fullscreen = true;
 #endif
-	int width = 1920;
+	int width  = 1920;
 	int height = 1080;
 	if ( shellConfig != NULL )
 	{
 		fullscreen = acm_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
-		width = ( int ) acm_branch_get_child_int( shellConfig, "width", width );
-		height = ( int ) acm_branch_get_child_int( shellConfig, "height", height );
+		width      = ( int ) acm_branch_get_child_int( shellConfig, "width", width );
+		height     = ( int ) acm_branch_get_child_int( shellConfig, "height", height );
 	}
 
 	if ( PlHasCommandLineArgument( "/window" ) )
@@ -518,9 +518,9 @@ int launcher_initialize( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	if ( PlHasCommandLineArgument( "-log" ) )
+	if ( PlHasCommandLineArgument( "/log" ) )
 	{
-		const char *path = PlGetCommandLineArgumentValue( "-log" );
+		const char *path = PlGetCommandLineArgumentValue( "/log" );
 		if ( path == NULL )
 			path = "log.txt";
 
@@ -540,13 +540,32 @@ int launcher_initialize( int argc, char **argv )
 
 	shellConfig = com_get_config( "shell" );
 
-	const char *projectName = NULL;
+	const char *projectName;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
+	{
 		projectName = acm_branch_get_child_string( shellConfig, "defaultProject", "base" );
-	if ( projectName == NULL )
-		PrintError( "No valid project specified!\nCheck debug logs.\n" );
+	}
 
-	com_project_mount( projectName );
+	if ( com_project_mount( projectName ) == nullptr )
+	{
+		PrintError( "Failed to mount project (%s)!\n", projectName );
+	}
+
+#if !defined( _WIN32 )
+	// allow us to cook everything before launching, if desired
+	if ( PlHasCommandLineArgument( "/cook" ) )
+	{
+		PLPath exePath;
+		PlGetExecutableDirectory( exePath, sizeof( exePath ) );
+
+		char tmp[ sizeof( exePath ) + 64 ];
+		snprintf( tmp, sizeof( tmp ), "%s/cook %s", exePath, projectName );
+		if ( system( tmp ) == -1 )
+		{
+			PrintWarn( "Failed to execute cook command!\n" );
+		}
+	}
+#endif
 
 	if ( !initialize_display() )
 	{
@@ -666,7 +685,7 @@ int launcher_initialize( int argc, char **argv )
 
 #if defined( _WIN32 )
 
-#	include <windows.h>
+#include <windows.h>
 
 int APIENTRY WinMain( HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow )
 {

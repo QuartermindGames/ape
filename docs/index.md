@@ -51,3 +51,12 @@ object project
     }
 }
 ```
+
+----
+
+# Launch Arguments
+
+By default, the executable supports the following commands.
+
+- **/cook** - automatically attempts to run the cook utility before launching the engine.
+- **/project [projectName]** - mounts the given project.
