@@ -53,9 +53,9 @@ typedef struct Md2Vertex
 
 typedef struct Md2Frame
 {
-	PLVector3 scale;
-	PLVector3 translate;
-	char name[ 16 ];
+	PLVector3  scale;
+	PLVector3  translate;
+	char       name[ 16 ];
 	Md2Vertex *vertices;
 } Md2Frame;
 
@@ -69,7 +69,7 @@ typedef struct Md2Model
 	Md2Triangle *triangles;
 	unsigned int numTriangles;
 
-	Md2Frame *frames;
+	Md2Frame    *frames;
 	unsigned int numFrames;
 } Md2Model;
 
@@ -130,13 +130,13 @@ static Md2Model *parse_md2( PLFile *file )
 	Md2Model *model = PL_NEW( Md2Model );
 
 	model->numFrames = header.numFrames;
-	model->frames = frames;
+	model->frames    = frames;
 
 	model->numTriangles = header.numTriangles;
-	model->triangles = triangles;
+	model->triangles    = triangles;
 
 	model->numTexCoords = header.numST;
-	model->texCoords = texCoords;
+	model->texCoords    = texCoords;
 
 	return model;
 }

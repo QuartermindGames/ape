@@ -22,7 +22,7 @@ static void process_collection( AcmBranch *root, const char *tag, void ( *callba
 	printf( "Processing %u %s...\n", numTotal, tag );
 
 	unsigned int num = 1;
-	child = acm_branch_get_first_child( child );
+	child            = acm_branch_get_first_child( child );
 	while ( child != nullptr )
 	{
 		char name[ 64 ];
@@ -92,8 +92,8 @@ int main( int argc, char **argv )
 	// Collect up all commands we've been issued, if any,
 	// as we might not want to operate on the entire project
 	static const unsigned int MAX_COMMANDS = 16;
-	unsigned int numCommands = 0;
-	LaunchCommand commands[ MAX_COMMANDS ];
+	unsigned int              numCommands  = 0;
+	LaunchCommand             commands[ MAX_COMMANDS ];
 	for ( unsigned int i = 2; i < argc; ++i )
 	{
 		if ( argv[ i ] == NULL )
@@ -109,7 +109,7 @@ int main( int argc, char **argv )
 
 		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 || pl_strcasecmp( argv[ i ], "/model" ) == 0 )
 		{
-			commands[ numCommands ].command = argv[ i ];
+			commands[ numCommands ].command  = argv[ i ];
 			commands[ numCommands ].argument = argv[ ++i ];
 			numCommands++;
 		}

@@ -38,7 +38,7 @@ typedef struct ObjFace
 	unsigned int indices[ OBJ_MAX_EDGES ][ OBJ_MAX_INDEXES ];
 
 	unsigned int numEdges;
-	PLVector3 normal;
+	PLVector3    normal;
 } ObjFace;
 
 typedef struct ObjSubObject
@@ -56,7 +56,7 @@ typedef struct ObjModel
 	PLVectorArray *normals;      // PLVector3
 	PLVectorArray *textureCoords;// PLVector2
 
-	ObjMaterial materials[ OBJ_MAX_MATERIALS ];
+	ObjMaterial  materials[ OBJ_MAX_MATERIALS ];
 	unsigned int numMaterials;
 
 	ObjSubObject subObjects[ OBJ_MAX_SUB_OBJECTS ];
@@ -64,7 +64,7 @@ typedef struct ObjModel
 } ObjModel;
 
 ObjModel *model_obj_load( const char *path );
-void model_obj_destroy( ObjModel *obj );
+void      model_obj_destroy( ObjModel *obj );
 
 ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out );
 

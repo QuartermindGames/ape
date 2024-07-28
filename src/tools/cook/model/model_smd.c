@@ -136,20 +136,23 @@ static SmdModel *parse_smd( const char *path, const char *p )
 					PlParseInteger( &p, nullptr );// bone index
 
 					PLVector3 position;
-					position.x                                                         = PlParseFloat( &p, nullptr );
-					position.y                                                         = PlParseFloat( &p, nullptr );
-					position.z                                                         = PlParseFloat( &p, nullptr );
+					position.x = PlParseFloat( &p, nullptr );
+					position.y = PlParseFloat( &p, nullptr );
+					position.z = PlParseFloat( &p, nullptr );
+
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
 					PLVector3 normal;
-					normal.x                                                         = PlParseFloat( &p, nullptr );
-					normal.y                                                         = PlParseFloat( &p, nullptr );
-					normal.z                                                         = PlParseFloat( &p, nullptr );
+					normal.x = PlParseFloat( &p, nullptr );
+					normal.y = PlParseFloat( &p, nullptr );
+					normal.z = PlParseFloat( &p, nullptr );
+
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
 					PLVector2 uv;
-					uv.x                                                         = PlParseFloat( &p, nullptr );
-					uv.y                                                         = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
+					uv.x = PlParseFloat( &p, nullptr );
+					uv.y = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
+
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].uv = uv;
 
 					PlSkipLine( &p );

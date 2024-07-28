@@ -71,6 +71,8 @@ static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char
 	const char *materialPath = acm_branch_get_child_string( root, "materialPath", folder );
 	PlSetupPath( dst->materialPath, true, "%s", materialPath );
 
+	dst->scale = acm_branch_get_child_float32( root, "scale", 1.0f );
+
 	const char *body = acm_branch_get_child_string( root, "body", nullptr );
 	if ( body != nullptr )
 	{
@@ -105,6 +107,12 @@ static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char
 				break;
 			}
 			interface++;
+		}
+
+		// apply the scale here...
+		for ( uint i = 0; i < dst->numVertices; ++i )
+		{
+			dst->vertices[ i ].position = PlScaleVector3F( dst->vertices[ i ].position, dst->scale );
 		}
 
 		if ( interface == nullptr )
@@ -144,47 +152,26 @@ static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char
 	snprintf( dst->name, sizeof( dst->name ), "%s", name );
 }
 
+#if 0// originally had a bunch of fancy crap for only storing unique vertices, but the complexity doesn't seem worth it
 typedef struct VectorIndex
 {
 	const PLVector3 *vec;
-	unsigned int     pos;
+	uint             pos;
 } VectorIndex;
 
-static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
+static uint get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
 {
 	const VectorIndex *index = PlLookupHashTableUserData( vectorTable, v, sizeof( PLVector3 ) );
 	if ( index == nullptr )
 	{
-		return ( unsigned int ) -1;
+		return ( uint ) -1;
 	}
 
 	return index->pos;
 }
+#endif
 
-static void serialize_triangle( AcmBranch *root, const ApeFormatTriangle *triangle, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
-{
-	AcmBranch *triangleBranch = acm_branch_push_back_object( root, nullptr );
-
-	const ApeFormatVertex *a = &vertices[ triangle->indices[ 0 ] ];
-	const ApeFormatVertex *b = &vertices[ triangle->indices[ 1 ] ];
-	const ApeFormatVertex *c = &vertices[ triangle->indices[ 2 ] ];
-
-	unsigned int vertexIndices[ 3 ] = {
-	        get_vector_index( &a->position, vertexTable ),
-	        get_vector_index( &b->position, vertexTable ),
-	        get_vector_index( &c->position, vertexTable ),
-	};
-	acm_branch_push_back_uint32_array( triangleBranch, "vertex", vertexIndices, 3 );
-
-	unsigned int normalIndices[ 3 ] = {
-	        get_vector_index( &a->normal, normalsTable ),
-	        get_vector_index( &b->normal, normalsTable ),
-	        get_vector_index( &c->normal, normalsTable ),
-	};
-	acm_branch_push_back_uint32_array( triangleBranch, "normal", normalIndices, 3 );
-}
-
-static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
+static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices )
 {
 	char *c = strrchr( mesh->material, '/' );
 	printf( "\tSerialising mesh (%s)\n", c != nullptr ? ( c + 1 ) : mesh->material );
@@ -196,9 +183,10 @@ static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const Ap
 
 	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
 	printf( "\t\t%u triangles\n", mesh->numTriangles );
-	for ( unsigned int i = 0; i < mesh->numTriangles; ++i )
+	for ( uint i = 0; i < mesh->numTriangles; ++i )
 	{
-		serialize_triangle( trianglesBranch, &mesh->triangles[ i ], vertices, vertexTable, normalsTable );
+		AcmBranch *triangleBranch = acm_branch_push_back_object( trianglesBranch, nullptr );
+		acm_branch_push_back_uint32_array( triangleBranch, "vertex", mesh->triangles[ i ].indices, 3 );
 	}
 }
 
@@ -219,67 +207,35 @@ static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 
 	acm_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
 
-	// build up lists of unique vertex data sets...
-	PLHashTable *vertexTable = PlCreateHashTable();
-	assert( model->numVertices > 0 );
-	printf( "%u vertices\n", model->numVertices );
-	for ( unsigned int i = 0; i < model->numVertices; ++i )
+	AcmBranch *branch;
+
+	//TODO: this is pretty basic and hard-coded for now... meh...
+	//TODO: allow us to store vertex data as other data types besides floats...
+	branch = acm_branch_push_back_object( root, "vertexFormatDescriptor" );
+	acm_branch_push_back_uint32( branch, "numFloatElements", 8 );
+	acm_branch_push_back_bool( branch, "hasPosition", true );
+	acm_branch_push_back_bool( branch, "hasNormal", true );
+	acm_branch_push_back_bool( branch, "hasUV", true );
+
+	branch = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	for ( uint i = 0; i < model->numVertices; ++i )
 	{
-		if ( PlLookupHashTableUserData( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ) ) != nullptr )
-		{
-			continue;
-		}
-
-		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos         = i;
-		index->vec         = &model->vertices[ i ].position;
-		PlInsertHashTableNode( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ), index );
-	}
-	//todo: we might as well encode the normals into the same table... can't remember why we didn't!
-	PLHashTable *normalsTable = PlCreateHashTable();
-	for ( unsigned int i = 0; i < model->numVertices; ++i )
-	{
-		if ( PlLookupHashTableUserData( vertexTable, &model->vertices[ i ].normal, sizeof( PLVector3 ) ) != nullptr )
-		{
-			continue;
-		}
-
-		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos         = i;
-		index->vec         = &model->vertices[ i ].normal;
-		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), index );
-	}
-
-	AcmBranch       *branch;
-	PLHashTableNode *childHashNode;
-
-	branch        = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
-	childHashNode = PlGetFirstHashTableNode( vertexTable );
-	while ( childHashNode != nullptr )
-	{
-		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		acm_branch_push_back_float32( branch, nullptr, v->x );
-		acm_branch_push_back_float32( branch, nullptr, v->y );
-		acm_branch_push_back_float32( branch, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( childHashNode );
-	}
-
-	branch        = acm_branch_push_back_float32_array( root, "normals", nullptr, 0 );
-	childHashNode = PlGetFirstHashTableNode( normalsTable );
-	while ( childHashNode != nullptr )
-	{
-		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		acm_branch_push_back_float32( branch, nullptr, v->x );
-		acm_branch_push_back_float32( branch, nullptr, v->y );
-		acm_branch_push_back_float32( branch, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( childHashNode );
+		const ApeFormatVertex *vertexIndex = &model->vertices[ i ];
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.y );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.z );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.y );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.z );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->uv.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->uv.y );
 	}
 
 	acm_branch_push_back_bool( root, "isStatic", model->isStatic );
 	if ( model->numBones > 0 )
 	{
 		branch = acm_branch_push_back_object_array( root, "bones" );
-		for ( unsigned int i = 0; i < model->numBones; ++i )
+		for ( uint i = 0; i < model->numBones; ++i )
 		{
 			serialize_bone( branch, &model->bones[ i ] );
 		}
@@ -287,13 +243,10 @@ static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 
 	printf( "%u meshes\n", model->numMeshes );
 	branch = acm_branch_push_back_object_array( root, "meshes" );
-	for ( unsigned int i = 0; i < model->numMeshes; ++i )
+	for ( uint i = 0; i < model->numMeshes; ++i )
 	{
-		serialize_mesh( branch, &model->meshes[ i ], model->vertices, vertexTable, normalsTable );
+		serialize_mesh( branch, &model->meshes[ i ], model->vertices );
 	}
-
-	PlDestroyHashTableEx( normalsTable, PlFree );
-	PlDestroyHashTableEx( vertexTable, PlFree );
 
 	return root;
 }

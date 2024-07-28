@@ -15,15 +15,15 @@ PL_EXTERN_C
 
 typedef struct SmdBone
 {
-	int id;
-	char name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
+	int             id;
+	char            name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
 	struct SmdBone *parent;
 } SmdBone;
 
 typedef struct SmdWeight
 {
 	SmdBone *node;
-	float value;
+	float    value;
 } SmdWeight;
 
 typedef struct SmdVertex
@@ -35,7 +35,7 @@ typedef struct SmdVertex
 	PLVector2 uv;
 
 	unsigned int numWeights;
-	SmdWeight weights[ SMD_MAX_WEIGHTS ];
+	SmdWeight    weights[ SMD_MAX_WEIGHTS ];
 } SmdVertex;
 
 typedef struct SmdTriangle
@@ -47,20 +47,20 @@ typedef struct SmdMesh
 {
 	PLPath material;
 
-	SmdTriangle triangles[ SMD_MAX_TRIANGLES ];
+	SmdTriangle  triangles[ SMD_MAX_TRIANGLES ];
 	unsigned int numTriangles;
 } SmdMesh;
 
 typedef struct SmdModel
 {
-	SmdMesh meshes[ SMD_MAX_MESHES ];
+	SmdMesh      meshes[ SMD_MAX_MESHES ];
 	unsigned int numMeshes;
 
-	SmdBone bones[ SMD_MAX_BONES ];
+	SmdBone      bones[ SMD_MAX_BONES ];
 	unsigned int numBones;
 } SmdModel;
 
 SmdModel *model_smd_load( const char *path );
-void model_smd_destroy( SmdModel *model );
+void      model_smd_destroy( SmdModel *model );
 
 PL_EXTERN_C_END
