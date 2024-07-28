@@ -97,7 +97,7 @@ void ape_initialize_materials_( void )
 void ape_shutdown_materials_( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
-	apeFlushUnreferencedResources();
+	ape_memory_manager_flush_unreferenced_resources();
 
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;

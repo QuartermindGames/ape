@@ -431,3 +431,36 @@ void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale )
 	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN );
 	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE );
 }
+
+void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )
+{
+	PLVector3 corners[ 8 ];
+
+	// bottom
+	corners[ 0 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
+	corners[ 1 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 2 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
+	corners[ 3 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
+
+	// top
+	corners[ 4 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
+	corners[ 5 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 6 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
+	corners[ 7 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
+
+	ape_draw_debug_line( corners[ 0 ], corners[ 1 ], colour );
+	ape_draw_debug_line( corners[ 0 ], corners[ 2 ], colour );
+	ape_draw_debug_line( corners[ 3 ], corners[ 1 ], colour );
+	ape_draw_debug_line( corners[ 3 ], corners[ 2 ], colour );
+
+	ape_draw_debug_line( corners[ 4 ], corners[ 5 ], colour );
+	ape_draw_debug_line( corners[ 4 ], corners[ 6 ], colour );
+	ape_draw_debug_line( corners[ 7 ], corners[ 5 ], colour );
+	ape_draw_debug_line( corners[ 7 ], corners[ 6 ], colour );
+
+	// corners
+	ape_draw_debug_line( corners[ 0 ], corners[ 4 ], colour );
+	ape_draw_debug_line( corners[ 1 ], corners[ 5 ], colour );
+	ape_draw_debug_line( corners[ 2 ], corners[ 6 ], colour );
+	ape_draw_debug_line( corners[ 3 ], corners[ 7 ], colour );
+}

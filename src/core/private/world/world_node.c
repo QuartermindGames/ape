@@ -263,3 +263,8 @@ ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *
 
 	return child;
 }
+
+void ape_world_node_draw_bounding_volume_( ApeWorldNode *self )
+{
+
+}

@@ -518,6 +518,11 @@ void ape_camera_build_visibility_lists_( ApeCamera *self )
 			assert( childWorldNode != nullptr );
 			childNode = PlGetNextLinkedListNode( childNode );
 
+			if ( ape_config_.world.showNodeVolumes )
+			{
+				ape_draw_debug_aabb( &childWorldNode->bounds, PL_COLOUR_RED );
+			}
+
 			if ( childWorldNode->type != APE_WORLD_NODE_TYPE_ROOM )
 			{
 				continue;

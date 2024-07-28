@@ -33,11 +33,15 @@ typedef struct ApeModelVertexWeight
 	unsigned int    numWeights;
 } ApeModelVertexWeight;
 
+#define APE_MODEL_MAX_SUBMESHES ( APE_FORMAT_MODEL_MAX_TRIANGLES / 2 )
+
 typedef struct ApeModelMesh
 {
-	PLGMesh             *cache;
 	ApeMaterial         *material;
 	ApeModelVertexWeight weights[ APE_FORMAT_MODEL_MAX_VERTICES ];
+
+	uint startIndex;
+	uint endIndex;
 } ApeModelMesh;
 
 typedef struct ApeModel
@@ -48,6 +52,8 @@ typedef struct ApeModel
 	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
 	uint           numBones;
+
+	PLGMesh *cache;
 
 	ApeMemoryReference reference;
 } ApeModel;

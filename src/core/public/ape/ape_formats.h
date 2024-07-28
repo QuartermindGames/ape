@@ -26,7 +26,7 @@ PL_EXTERN_C
 // much of this is just here for sanity checking -
 // in the long-term, we should really look at making
 // these dynamically allocated instead...
-#define APE_FORMAT_MODEL_MAX_MATERIALS 64
+#define APE_FORMAT_MODEL_MAX_MATERIALS 16
 #define APE_FORMAT_MODEL_MAX_BONES     256
 #define APE_FORMAT_MODEL_MAX_TRIANGLES 8192
 #define APE_FORMAT_MODEL_MAX_VERTICES  ( APE_FORMAT_MODEL_MAX_TRIANGLES * 3 )
@@ -89,6 +89,8 @@ typedef struct ApeFormatModel
 
 	ApeFormatMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
 	unsigned int  numMeshes;
+
+	float scale;
 
 	bool isStatic;
 } ApeFormatModel;

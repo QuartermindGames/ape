@@ -5,6 +5,7 @@
 #include "ape_private.h"
 
 #include "model/model.h"
+#include "client/renderer/renderer.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Models
@@ -34,28 +35,46 @@ static void test_model_command( unsigned int argc, char **argv )
 
 #endif
 
-void ape_test_draw_model_()
+static void draw_model_( ApeCamera *camera )
 {
 #if !defined( NDEBUG )
+
 	if ( testModel == nullptr )
 	{
 		return;
 	}
 
-	PLMatrix4              transform      = PlMatrix4Identity();
+	uint       numLights;
+	ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
+
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
+
+	PlTranslateMatrix( PL_VECTOR3( 15.0f, 0.0f, 5.0f ) );
+
 	ApeModelAnimationState animationState = {};
-	ape_model_draw( testModel, &animationState, &transform );
+	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), ( numLights > 0 ) ? lights[ 0 ] : nullptr );
+
+	PlPopMatrix();
+
 #endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_test_draw_( ApeCamera *camera )
+{
+	draw_model_( camera );
 }
 
 void ape_test_register_commands_()
 {
 #if !defined( NDEBUG )
+
 	PlRegisterConsoleCommand( "test_model",
 	                          "Test a specific model. The given test model will be drawn into the world.",
 	                          -1, test_model_command );
+
 #endif
 }
-
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////

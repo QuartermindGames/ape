@@ -248,6 +248,14 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
  */
 void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
 
+/**
+ * Draw the specified AABB volume at the specified location.
+ *
+ * @param aabb		Pointer to the AABB to draw.
+ * @param colour 	Colour of the volume.
+ */
+void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 

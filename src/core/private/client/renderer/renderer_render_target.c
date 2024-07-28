@@ -44,7 +44,7 @@ void ape_initialize_render_targets_( void )
 
 void ape_shutdown_render_targets_( void )
 {
-	apeFlushUnreferencedResources();
+	ape_memory_manager_flush_unreferenced_resources();
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( renderTargets );
 	while ( node != NULL )
