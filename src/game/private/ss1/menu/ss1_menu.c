@@ -18,6 +18,9 @@ static void capture_screenshot_callback( const MenuOption * )
 }
 
 static MenuOption debugMenuOptions[] = {
+        { "Test Model\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "test_model" } },
+        { "Test Net\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "test_net" } },
+        { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
         { "FPS Counter\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
         { "Show Lights\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
         { "Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
@@ -127,7 +130,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		assert( currentMenu != nullptr );
 
 		float x = 50.0f;
-		float y = ( float ) viewport->height / 2.0f;
+		float y = 64.0f;
 		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, currentMenu->heading, strlen( currentMenu->heading ), true );
 		x += 30.0f;
 		for ( uint i = 0; i < currentMenu->numOptions; ++i )
