@@ -113,6 +113,7 @@ static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char
 		for ( uint i = 0; i < dst->numVertices; ++i )
 		{
 			dst->vertices[ i ].position = PlScaleVector3F( dst->vertices[ i ].position, dst->scale );
+			dst->vertices[ i ].normal   = PlScaleVector3F( dst->vertices[ i ].normal, dst->scale );
 		}
 
 		if ( interface == nullptr )
