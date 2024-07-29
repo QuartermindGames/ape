@@ -388,7 +388,7 @@ static void pre_render_brush( ApeEditorState *instance )
 
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
 
-	ape_material_draw( planeMaterial, mesh, NULL, 0 );
+	ape_material_draw( planeMaterial, mesh, NULL );
 
 	// draw boundary
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );

@@ -98,7 +98,7 @@ void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, f
 
 	PlLoadIdentityMatrix();
 
-	ape_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL );
 
 	PlPopMatrix();
 }
@@ -133,7 +133,7 @@ void ape_bitmap_font_draw( ApeBitmapFont *font )
 
 	//PlLoadIdentityMatrix();
 
-	ape_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL );
 
 	//PlPopMatrix();
 }

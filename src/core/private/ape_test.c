@@ -35,7 +35,7 @@ static void test_model_command( unsigned int argc, char **argv )
 
 #endif
 
-static void draw_model_( ApeCamera *camera )
+static void draw_model_( ApeCamera *camera, ApeLight *light )
 {
 #if !defined( NDEBUG )
 
@@ -44,16 +44,15 @@ static void draw_model_( ApeCamera *camera )
 		return;
 	}
 
-	uint       numLights;
-	ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
-
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
 	PlTranslateMatrix( PL_VECTOR3( 15.0f, 0.0f, 5.0f ) );
+	PlRotateMatrix( PL_DEG2RAD( -90.0f ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( PL_DEG2RAD( -90.0f ), 0.0f, 0.0f, 1.0f );
 
 	ApeModelAnimationState animationState = {};
-	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), ( numLights > 0 ) ? lights[ 0 ] : nullptr );
+	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
 
 	PlPopMatrix();
 
@@ -65,7 +64,25 @@ static void draw_model_( ApeCamera *camera )
 
 void ape_test_draw_( ApeCamera *camera )
 {
-	draw_model_( camera );
+	draw_model_( camera, nullptr );
+
+	PlgDepthMask( false );
+
+	ape_rendererState_.overrideBlendMode = true;
+	ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+	ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
+
+	uint       numLights;
+	ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
+	for ( uint i = 0; i < numLights; ++i )
+	{
+		draw_model_( camera, lights[ i ] );
+	}
+
+	ape_rendererState_.overrideBlendMode = false;
+	ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
+
+	PlgDepthMask( true );
 }
 
 void ape_test_register_commands_()

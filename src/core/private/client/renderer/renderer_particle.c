@@ -279,7 +279,7 @@ void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const 
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	ape_material_draw( emitter->material, emitter->mesh, NULL, 0 );
+	ape_material_draw( emitter->material, emitter->mesh, NULL );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 

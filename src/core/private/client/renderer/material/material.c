@@ -764,56 +764,56 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 	}
 }
 
-static void set_global_uniforms( PLGShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
+static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
 	//TODO: we should be caching these slots rather than looking them up every time...
 
 	ApeWorld *world = ss_game_get_current_world();
 
-	int slot;
-	if ( ( slot = PlgGetShaderUniformSlot( program, "fogColour" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
 		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program, slot, &fogColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR ], &fogColour, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "fogNear" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR ] >= 0 )
 	{
 		float fogNear = ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear;
-		PlgSetShaderUniformValueByIndex( program, slot, &fogNear, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR ], &fogNear, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "fogFar" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR ] >= 0 )
 	{
 		float fogFar = ( ( ape_config_.renderer.fogFarOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogFarOverride : world->fogFar;
-		PlgSetShaderUniformValueByIndex( program, slot, &fogFar, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR ], &fogFar, false );
 	}
 
-	if ( ( slot = PlgGetShaderUniformSlot( program, "light.colour" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
 		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program, slot, &lightColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "light.position" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
 		PLVector3 lightPosition = ( light != NULL ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "light.radius" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS ] >= 0 )
 	{
 		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
-		PlgSetShaderUniformValueByIndex( program, slot, &lightRadius, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
 	}
 
-	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.colour" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
 		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program, slot, &sunColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.position" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION ] >= 0 )
 	{
 		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program, slot, &lightPosition, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
-	if ( ( slot = PlgGetShaderUniformSlot( program, "sun.ambience" ) ) >= 0 )
+
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE ] >= 0 )
 	{
 		PLColourF32 sunAmbience;
 		if ( ape_rendererState_.camera != NULL && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
@@ -825,12 +825,12 @@ static void set_global_uniforms( PLGShaderProgram *program, const ApeMaterialPas
 			sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
 		}
 
-		PlgSetShaderUniformValueByIndex( program, slot, &sunAmbience, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE ], &sunAmbience, false );
 	}
 
-	if ( ( slot = PlgGetShaderUniformSlot( program, "textureOffset" ) ) >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program, slot, &pass->textureOffset, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET ], &pass->textureOffset, false );
 	}
 }
 
@@ -918,7 +918,7 @@ bool ape_material_is_blended( const ApeMaterial *self )
 	return ( self->flags & APE_MATERIAL_FLAG_BLENDED );
 }
 
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, PL_UNUSED unsigned int numLights )
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights )
 {
 	if ( ape_rendererState_.camera != NULL )
 	{
@@ -1006,7 +1006,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights,
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 			}
 
-			set_global_uniforms( curPass->program->internal, curPass, lights != NULL ? lights[ 0 ] : NULL );
+			set_global_uniforms( curPass->program, curPass, lights != NULL ? lights[ 0 ] : NULL );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )

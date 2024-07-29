@@ -20,6 +20,23 @@ static bool         hotReload         = false;
 static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
 static unsigned int hotReloadTicks    = HOT_RELOAD_TICKS_DEFAULT;
 
+static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_PROGRAM_MAX_GLOBAL_UNIFORMS ] = {
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR] = "fogColour",
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR]   = "fogNear",
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR]    = "fogFar",
+
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR]   = "light.colour",
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION] = "light.position",
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS]   = "light.radius",
+
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR]   = "sun.colour",
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION] = "sun.position",
+
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE] = "sun.ambience",
+
+        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET] = "textureOffset",
+};
+
 static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
 	PLFile *filePtr = PlOpenFile( path, true );
@@ -211,6 +228,16 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 		ape_parse_material_pass_( child, &program->defaultPass );
 #pragma message "TODO: materials won't automatically inherit these default changes yet..."
+	}
+
+	// now lookup all the default uniforms
+	for ( uint i = 0; i < APE_SHADER_PROGRAM_MAX_GLOBAL_UNIFORMS; ++i )
+	{
+		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
+		if ( program->globalUniforms[ i ] < 0 )
+		{
+			PRINT_DEBUG( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
+		}
 	}
 
 	return program;

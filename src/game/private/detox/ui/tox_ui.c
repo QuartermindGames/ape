@@ -50,7 +50,7 @@ static void draw_dial( int16_t value, float radius, float thickness, float cente
 		PlgImmColour( colour->r / 2, colour->g / 2, colour->b / 2, colour->a );
 	}
 
-	ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), mesh, NULL, 0 );
+	ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX ), mesh, NULL );
 }
 
 static void draw_debug_overlay( void )

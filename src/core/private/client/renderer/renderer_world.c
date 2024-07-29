@@ -102,7 +102,7 @@ static void draw_room_submesh( PLGMesh *mesh, ApeMaterial *material, uint materi
 
 	ApeLightPointerArray lights;
 	lights[ 0 ] = light;
-	ape_material_draw( material, mesh, lights, ( lights[ 0 ] != NULL ) ? 1 : 0 );
+	ape_material_draw( material, mesh, lights );
 
 	mesh->numSubMeshes = numSubMeshes[ materialIndex ] = 0;
 }
@@ -356,7 +356,7 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 		return;
 	}
 
-	ape_material_draw( shadowMaterial, mesh, NULL, 0 );
+	ape_material_draw( shadowMaterial, mesh, NULL );
 
 #endif
 }

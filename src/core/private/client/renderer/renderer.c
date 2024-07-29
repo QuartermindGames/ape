@@ -412,7 +412,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	/* todo: do this in shader... */
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
 
-	ape_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL );
 
 	PlPopMatrix();
 }

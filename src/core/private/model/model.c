@@ -258,7 +258,7 @@ void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const
 		ApeLightPointerArray lights;
 		lights[ 0 ] = light;
 
-		ape_material_draw( model->meshes[ i ].material, model->cache, lights, ( light != nullptr ) );
+		ape_material_draw( model->meshes[ i ].material, model->cache, lights );
 	}
 
 #else

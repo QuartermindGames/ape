@@ -183,7 +183,7 @@ static void Player_Draw( Actor *self, void *userData )
 	PlTranslateMatrix( Act_GetPosition( self ) );
 
 	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK ), APLAYER( self )->model->meshes[ i ], NULL, 0 );
+		ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK ), APLAYER( self )->model->meshes[ i ], NULL );
 
 	PlPopMatrix();
 }

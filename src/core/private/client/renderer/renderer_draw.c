@@ -78,7 +78,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColo
 	PlgImmColour( c.r, c.g, c.b, c.a );
 	PlgImmTextureCoord( tx + tw, ty );
 
-	ape_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL );
 
 	PlPopMatrix();
 }
@@ -106,7 +106,7 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 
 	if ( material != nullptr )
 	{
-		ape_material_draw( material, mesh, NULL, 0 );
+		ape_material_draw( material, mesh, NULL );
 	}
 	else
 	{
@@ -348,7 +348,7 @@ void ape_draw_debug_clear_()
 
 void ape_draw_debug_mesh_display_()
 {
-	ape_material_draw( debugDrawMaterial, debugDrawMesh, nullptr, 0 );
+	ape_material_draw( debugDrawMaterial, debugDrawMesh, nullptr );
 }
 
 void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour )
