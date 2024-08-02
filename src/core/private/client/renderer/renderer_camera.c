@@ -129,6 +129,8 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorldNode *root )
 	// for now this operates over all the lights in the world, urgh...
 	camera->visibility.numLights = 0;
 
+	ape_clear_flare_queue_();
+
 	light_vis_navigate_tree( camera, root );
 
 	sort_lights( camera );
@@ -441,7 +443,7 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport )
 			static const float minHeight = 256.0f;
 			static const float maxHeight = 1024.0f;
 
-#if 0
+#	if 0
 			if ( camera->parentActor != nullptr )
 			{
 				speed = PlVector3Length( camera->parentActor->velocity ) / 16.0f;
@@ -449,7 +451,7 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport )
 					speed = 1.0f;
 			}
 			else
-#endif
+#	endif
 			speed = 0.0f;
 
 			camera->internal->angles.x = -75.0f;

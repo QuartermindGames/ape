@@ -518,7 +518,7 @@ void ape_sky_draw_( ApeCamera *camera )
 
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		PLVector3 location = camera->internal->position;
+		PLVector3 location = camera->base.position;
 		location.y += ( skyLayers[ i ].y + 10.0f );
 
 		PlgClearMesh( mesh );
@@ -583,12 +583,9 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
-		PlgClearBuffers( PLG_BUFFER_STENCIL );
+		assert( lights[ i ]->colour.a > 0.0f );
 
-		if ( lights[ i ]->colour.a == 0.0f )
-		{
-			continue;
-		}
+		PlgClearBuffers( PLG_BUFFER_STENCIL );
 
 		//TODO: viewport clipping per light volume
 #if 0
