@@ -21,18 +21,17 @@ typedef struct ComProject
 	char baseName[ COM_MAX_PROJECT_BASENAME ];
 	char name[ COM_MAX_PROJECT_NAME ];
 	char developer[ 64 ];
-	char website[ 256 ];
-	int version[ 3 ];
+	int  version[ 3 ];
 
 	PLFileSystemMount *mountLocation;// x/projects/blah
 
 #define MAX_FILESYSTEM_MOUNTS 255
 	PLFileSystemMount *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
-	unsigned int numSubMountLocations;
+	unsigned int       numSubMountLocations;
 
 	struct ComProject *parent;
 	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
-	unsigned int numDependencies;
+	unsigned int       numDependencies;
 
 	AcmBranch *config;
 
@@ -89,7 +88,6 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 	snprintf( out->baseName, sizeof( out->baseName ), "%s", name );
 	snprintf( out->name, sizeof( out->name ), "%s", acm_branch_get_child_string( root, "name", "none" ) );
 	snprintf( out->developer, sizeof( out->developer ), "%s", acm_branch_get_child_string( root, "developer", "none" ) );
-	snprintf( out->website, sizeof( out->website ), "%s", acm_branch_get_child_string( root, "website", "none" ) );
 
 	AcmBranch *child;
 	if ( ( child = acm_branch_get_child_by_name( root, "version" ) ) != NULL )
@@ -133,8 +131,8 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 				return NULL;
 			}
 
-			unsigned int index = head->numDependencies;
-			head->dependencies[ index ] = PL_NEW( ComProject );
+			unsigned int index                  = head->numDependencies;
+			head->dependencies[ index ]         = PL_NEW( ComProject );
 			head->dependencies[ index ]->parent = out;
 			head->numDependencies++;
 
