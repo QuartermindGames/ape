@@ -171,11 +171,12 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 			continue;
 		}
 
-		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
-		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
+		if ( light != nullptr )
 		{
-			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
-			break;
+			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->base.position, light->radius ), &faces[ i ]->bounds ) )
+			{
+				continue;
+			}
 		}
 
 		if ( ape_config_.renderer.showFaceBounds )
@@ -184,6 +185,13 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 			PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
 			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
 			PlgDrawBoundingVolume( &( PLCollisionAABB ){ .origin = faces[ i ]->origin, .mins = { -0.1f, -0.1f, -0.1f }, .maxs = { 0.1f, 0.1f, 0.1f } }, &PL_COLOUR_BLUE );
+		}
+
+		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
+		if ( numSubMeshes[ materialIndex ] >= MAX_SUB_MESHES )
+		{
+			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+			break;
 		}
 
 #if 0// ditched for speed...
@@ -291,7 +299,7 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 
-#if 0 // entirely done with vertex shader...
+#if 0// entirely done with vertex shader...
 
 	if ( !build_shadow_display_list( room, light ) )
 	{
@@ -300,7 +308,7 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 
 	draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 
-#else // slower CPU route...
+#else// slower CPU route...
 
 	uint           numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
