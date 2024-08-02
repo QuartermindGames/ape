@@ -2,6 +2,8 @@
 
 #pragma once
 
+PL_EXTERN_C
+
 typedef struct MenuOption MenuOption;
 
 typedef void ( *MenuCallback )( const MenuOption *option );
@@ -46,3 +48,5 @@ typedef struct Menu
 
 void  Game_Menu_SetCurrent( Menu *menu );
 Menu *Game_Menu_GetCurrent( void );
+
+PL_EXTERN_C_END

@@ -2,6 +2,7 @@ set(GAME_SHARED_FILES
         private/shared/physics/physics_rope.c
         private/shared/game.c
         private/shared/game_client.c
+        private/shared/game_language.c
         private/shared/game_menu.c
         private/shared/game_menu_pie.c
         private/shared/game_server.c

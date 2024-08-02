@@ -231,7 +231,7 @@ static bool initialize_game( void )
 
 	tox_ui_initialize();
 
-	ss_game_register_standard_entity_components_();
+	game_register_standard_entity_components_();
 
 	ape_register_entity_class( tox_characterClass );
 

@@ -13,7 +13,7 @@ static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 
 SS1GameState ss1_gameState;
 
-#define SS1_CONFIG "pm_user"
+#define SS1_CONFIG "game_ss1"
 
 const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
         [SS1_PROFESSION_SHAMAN] = {
@@ -36,20 +36,33 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
 
 static ApeLight *suns[ 2 ];
 
+#if !defined( NDEBUG )
+static void run_tests()
+{
+	game_language_set_current( "ger" );
+	game_print_( "%s", G_STR( "test_message", "Test failed!" ) );
+	game_language_set_current( nullptr );
+}
+#endif
+
 static bool ss1_initialize()
 {
 	PL_ZERO_( ss1_gameState );
 
-	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
-	game_integrations_discord_update_activity_( "Testing 123", "Hello World!", "ape_logo", "Blah!" );
+#if !defined( NDEBUG )
+	run_tests();
+#endif
 
-	ss_game_register_standard_entity_components_();
+	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
+	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
+
+	game_register_standard_entity_components_();
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
 	for ( uint i = 0; i < SS1_MAX_PROFESSIONS; ++i )
 	{
-		assert( ss1_professions[ i ].name != nullptr );
+		assert( ss1_professions[ i ].name != nullptr && ss1_professions[ i ].description != nullptr );
 	}
 #endif
 
@@ -166,15 +179,13 @@ static bool ss1_tick( void )
 			y += 0.5f;
 
 			PLVector3 sunPosition;
-
-			sunPosition = pitch_yaw_to_position( p, y );
-			ape_light_set_position( suns[ 0 ], &( PLVector3 ){ sunPosition.x, sunPosition.y + 16.0f + sinf( y / 50.0f ) * 10.0f, sunPosition.z - 8.0f } );
-
 			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
 			ape_light_set_position( suns[ 1 ], &sunPosition );
 
-			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 16.0f + cosf( y / 50.0f ) * 10.0f, 16.0f + sinf( y / 30.0f ) * 10.0f, 16.0f + cosf( y / 50.0f ) * 10.0f ), true );
-			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 8.0f + sinf( y / 50.0f ) * 10.0f, 8.0f + cosf( y / 30.0f ) * 10.0f, 8.0f + sinf( y / 50.0f ) * 10.0f ), false );
+			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 0.0f + cosf( y / 20.0f ) * 10.0f, 24.0f + sinf( y / 50.0f ) * 10.0f, -20.0f ), true );
+
+			sunPosition = game_physics_rope_get_end_position( &debugRope );
+			ape_light_set_position( suns[ 0 ], &sunPosition );
 		}
 
 		ape_world_set_ambience( world, &( PLColourF32 ){ 0.25f, 0.25f, 0.25f, 1.f } );
@@ -211,7 +222,7 @@ static bool ss1_spawn_world( ApeWorld *world )
 
 	suns[ 0 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
 	                              APE_LIGHT_TYPE_OMNI,
-	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_FLARE | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 	suns[ 1 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );

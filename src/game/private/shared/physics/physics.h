@@ -67,13 +67,13 @@ void game_physics_rope_attach( GamePhysicsRope *self, const PLVector3 *position,
 void game_physics_rope_dettach( GamePhysicsRope *self, bool start );
 
 /**
- * Set the number of segments the rope will have.
+ * Set the number of particles the rope will have.
  * If either end is attached, this will be retained with the new start or end.
  *
  * @param self 	Pointer to instance.
- * @param num 	Number of segments.
+ * @param num 	Number of particles.
  */
-void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num );
+void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num );
 
 /**
  * Simulate the rope. Should be called once per tick.
@@ -98,5 +98,30 @@ void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float le
  * @param self	Pointer to instance.
  */
 void game_physics_rope_debug_draw( GamePhysicsRope *self );
+
+/**
+ * Get the position of one of the specific particle of the rope.
+ *
+ * @param self 		Pointer to instance.
+ * @param particle 	Index of the particle.
+ * @return 			Position of the specified segment, or NaN on error.
+ */
+PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, uint particle );
+
+/**
+ * Return the start position of the rope.
+ *
+ * @param self 	Pointer to instance.
+ * @return 		Position.
+ */
+PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self );
+
+/**
+ * Return the end position of the rope.
+ *
+ * @param self 	Pointer to instance.
+ * @return 		Position.
+ */
+PLVector3 game_physics_rope_get_end_position( const GamePhysicsRope *self );
 
 /////////////////////////////////////////////////////////////////////////////////////

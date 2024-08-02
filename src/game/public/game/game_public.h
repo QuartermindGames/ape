@@ -9,6 +9,7 @@ PL_EXTERN_C
 typedef struct ApeWorld ApeWorld;
 
 bool game_initialize( void );
+void game_shutdown();
 
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.
@@ -51,8 +52,8 @@ typedef enum GameMaterialSurfaceType
 
 typedef struct GameMaterialSurface
 {
-	char description[ 32 ];
-	char **aliases;
+	char    description[ 32 ];
+	char  **aliases;
 	uint8_t numAliases;
 } GameMaterialSurface;
 

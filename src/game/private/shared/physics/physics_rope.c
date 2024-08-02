@@ -41,7 +41,7 @@ void game_physics_rope_dettach( GamePhysicsRope *self, bool start )
 	self->particles[ slot ].fixed = false;
 }
 
-void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num )
+void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num )
 {
 	if ( num == self->numParticles )
 	{
@@ -49,12 +49,12 @@ void game_physics_rope_set_num_segments( GamePhysicsRope *self, uint num )
 	}
 	else if ( num < 2 )
 	{
-		game_warning_( "Invalid number of segments for rope (%u); must be greater than 2!\n", num );
+		game_warning_( "Invalid number of particles for rope (%u); must be greater than 2!\n", num );
 		num = 2;
 	}
 	else if ( num >= GAME_PHYSICS_ROPE_MAX_PARTICLES )
 	{
-		game_warning_( "Invalid number of segments for rope (%u); must be less than %u!\n", num, GAME_PHYSICS_ROPE_MAX_PARTICLES );
+		game_warning_( "Invalid number of particles for rope (%u); must be less than %u!\n", num, GAME_PHYSICS_ROPE_MAX_PARTICLES );
 		num = ( GAME_PHYSICS_ROPE_MAX_PARTICLES - 1 );
 	}
 
@@ -123,7 +123,7 @@ void game_physics_rope_tick( GamePhysicsRope *self, float delta )
 
 void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length )
 {
-	game_physics_rope_set_num_segments( self, numParticles );
+	game_physics_rope_set_num_particles( self, numParticles );
 
 	self->length = length;
 }
@@ -142,4 +142,25 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self )
 
 		ape_draw_debug_arrow( self->particles[ i - 1 ].position, self->particles[ i ].position, PL_COLOUR_MAGENTA );
 	}
+}
+
+PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, uint particle )
+{
+	if ( particle >= self->numParticles )
+	{
+		game_warning_( "Invalid particle segment specified for rope (%u >= %u)!\n", particle, self->numParticles );
+		return PL_VECTOR3( NAN, NAN, NAN );
+	}
+
+	return self->particles[ particle ].position;
+}
+
+PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self )
+{
+	return game_physics_rope_get_particle_position( self, 0 );
+}
+
+PLVector3 game_physics_rope_get_end_position( const GamePhysicsRope *self )
+{
+	return game_physics_rope_get_particle_position( self, self->numParticles - 1 );
 }
