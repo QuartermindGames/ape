@@ -31,6 +31,53 @@ static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
 static GuiFont       *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
+static uint32_t decode_utf8_char( const char **string )
+{
+	uint32_t c = 0;
+	if ( ( **string & 0x80 ) == 0 )
+	{
+		c = ( uint32_t ) * ( *string )++;
+	}
+	else if ( ( **string & 0xE0 ) == 0xC0 )
+	{
+		c = ( *( *string )++ & 0x1F ) << 6;
+		if ( ( **string & 0xC0 ) == 0x80 )
+		{
+			c |= *( *string )++ & 0x3F;
+		}
+	}
+	else if ( ( **string & 0xF0 ) == 0xE0 )
+	{
+		c = ( *( *string )++ & 0x0F ) << 12;
+		if ( ( **string & 0xC0 ) == 0x80 )
+		{
+			c |= ( *( *string )++ & 0x3F ) << 6;
+			if ( ( **string & 0xC0 ) == 0x80 )
+			{
+				c |= *( *string )++ & 0x3F;
+			}
+		}
+	}
+	else if ( ( **string & 0xF8 ) == 0xF0 )
+	{
+		c = ( *( *string )++ & 0x07 ) << 18;
+		if ( ( **string & 0xC0 ) == 0x80 )
+		{
+			c |= ( *( *string )++ & 0x3F ) << 12;
+			if ( ( **string & 0xC0 ) == 0x80 )
+			{
+				c |= ( *( *string )++ & 0x3F ) << 6;
+				if ( ( **string & 0xC0 ) == 0x80 )
+				{
+					c |= *( *string )++ & 0x3F;
+				}
+			}
+		}
+	}
+
+	return c;
+}
+
 float guiGetFontLineSpacing( const GuiFont *font ) { return font->lineSpacing; }
 
 GuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
@@ -259,29 +306,29 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 {
 	float nx = x;
 	float ny = y;
-	for ( size_t i = 0; i < length; ++i )
+
+	const char *end = string + length;
+	while ( string < end )
 	{
-		if ( string[ i ] == '\0' )
+		uint32_t c = decode_utf8_char( &string );
+		if ( c == '\0' )
 		{
 			break;
 		}
-
-		if ( string[ i ] == '\n' )
+		else if ( c == '\n' )
 		{
 			ny += ( self->lineSpacing * scale );
 			nx = x;
 			continue;
 		}
-		else if ( string[ i ] == '\t' )
+		else if ( c == '\t' )
 		{
 			nx += ( self->lineSpacing * scale ) * 4.0f;
 			continue;
 		}
 
-		uint32_t c = ( uint32_t ) string[ i ];
-
 		const ComFontGlyph *glyph = PlLookupHashTableUserData( self->glyphTable, &c, sizeof( uint32_t ) );
-		if ( glyph == NULL )
+		if ( glyph == nullptr )
 		{
 			continue;
 		}
@@ -292,7 +339,6 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 		}
 
 		guiDrawFontGlyph( self, nx, ny, scale, colour, glyph );
-
 		nx += ( ( float ) glyph->w ) * scale;
 	}
 

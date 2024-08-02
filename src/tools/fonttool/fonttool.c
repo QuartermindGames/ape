@@ -51,7 +51,7 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 	if ( response == GTK_RESPONSE_ACCEPT )
 	{
 		g_autoptr( GFile ) file = gtk_file_chooser_get_file( GTK_FILE_CHOOSER( dialog ) );
-		destination = g_file_get_path( file );
+		destination             = g_file_get_path( file );
 	}
 
 	if ( destination == NULL )
@@ -68,7 +68,7 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 	{
 		PangoFontMap *fontMap = pango_cairo_font_map_get_default();
 		PangoContext *context = pango_font_map_create_context( fontMap );
-		PangoFont *font = pango_context_load_font( context, fontDescription );
+		PangoFont    *font    = pango_context_load_font( context, fontDescription );
 		if ( font != NULL )
 		{
 			PangoLayout *layout = pango_layout_new( context );
@@ -76,20 +76,23 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 
 			// first determine the size we need for the surface
 
-			static const int32_t MAX_WIDTH = 512;
-			static const uint32_t MAX_ASCII = 127;
-			static const int32_t PADDING = 4;
+			static const int32_t  MAX_WIDTH = 512;
+			static const uint32_t MAX_ASCII = 512;
+			static const int32_t  PADDING   = 4;
 
 			int32_t width = 8, height = 8;
 			int32_t x = 0, y = 0;
 			int32_t tallest = 0;
 
-			ComFontGlyph *glyphs = PL_NEW_( ComFontGlyph, MAX_ASCII );
-			uint32_t numChars = 0;
+			ComFontGlyph *glyphs   = PL_NEW_( ComFontGlyph, MAX_ASCII );
+			uint32_t      numChars = 0;
 			for ( uint32_t i = ' '; i < MAX_ASCII; ++i )
 			{
+				char buf[ 7 ];
+				int  len = g_unichar_to_utf8( i, buf );
+
 				PangoRectangle rect;
-				pango_layout_set_text( layout, ( char * ) &i, 1 );
+				pango_layout_set_text( layout, buf, len );
 				pango_layout_get_extents( layout, NULL, &rect );
 				pango_extents_to_pixels( &rect, NULL );
 
@@ -121,7 +124,8 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 					height += tallest;
 				}
 
-				printf( "%c : %d %d (%d %d)\n", ( char ) i,
+				printf( "%s %u : %d %d (%d %d)\n", buf,
+				        glyphs[ numChars ].codepoint,
 				        glyphs[ numChars ].x, glyphs[ numChars ].y,
 				        glyphs[ numChars ].w, glyphs[ numChars ].h );
 
@@ -131,7 +135,7 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 			printf( "%u chars have been indexed, proceeding to draw to %dx%d surface\n", numChars, width, height );
 
 			cairo_surface_t *surface = cairo_image_surface_create( CAIRO_FORMAT_A8, width, height );
-			cairo_t *cairo = cairo_create( surface );
+			cairo_t         *cairo   = cairo_create( surface );
 			cairo_set_source_rgb( cairo, 1.0, 1.0, 1.0 );
 
 			g_free( layout );
@@ -150,9 +154,12 @@ static void OnSaveFont( GtkDialog *dialog, int response, void *user )
 
 				cairo_set_source_rgb( cairo, 1.0, 1.0, 1.0 );
 #endif
-				char c = ( char ) ( ' ' + i );
 				cairo_move_to( cairo, glyphs[ i ].x, glyphs[ i ].y );
-				pango_layout_set_text( layout, &c, 1 );
+
+				char buf[ 7 ];
+				int  len = g_unichar_to_utf8( glyphs[ i ].codepoint, buf );
+				pango_layout_set_text( layout, buf, len );
+
 				pango_cairo_show_layout( cairo, layout );
 			}
 
@@ -208,6 +215,13 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 
 	// ask for the destination we'll save to
 
+	PLPath appPath;
+	PlGetExecutableDirectory( appPath, sizeof( appPath ) );
+
+	PLPath defaultPath;
+	PlSetupPath( defaultPath, true, "%s/../../projects/", appPath );
+
+	GFile     *file   = g_file_new_for_path( defaultPath );
 	GtkWidget *dialog = gtk_file_chooser_dialog_new( "Specify Destination",
 	                                                 GTK_WINDOW( mainWindow ),
 	                                                 GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -216,7 +230,7 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 	                                                 "_Save",
 	                                                 GTK_RESPONSE_ACCEPT,
 	                                                 NULL );
-	//gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), g_get_current_dir(), NULL );
+	gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), file, NULL );
 
 	GtkFileFilter *filter = gtk_file_filter_new();
 	gtk_file_filter_set_name( filter, "Font files" );
@@ -245,6 +259,8 @@ static void GenerateFont( PL_UNUSED GtkButton *widget, PL_UNUSED gpointer userDa
 	gtk_window_present( GTK_WINDOW( dialog ) );
 
 	g_signal_connect( dialog, "response", G_CALLBACK( OnSaveFont ), fontName );
+
+	g_object_unref( file );
 }
 
 int main( int argc, char **argv )
@@ -276,6 +292,8 @@ int main( int argc, char **argv )
 	{
 		g_main_context_iteration( NULL, TRUE );
 	}
+
+	gtk_window_destroy( GTK_WINDOW( mainWindow ) );
 
 	return EXIT_SUCCESS;
 }
