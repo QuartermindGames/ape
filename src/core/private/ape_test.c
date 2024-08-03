@@ -64,7 +64,7 @@ static void draw_model_( ApeCamera *camera, ApeLight *light )
 
 void ape_test_draw_( ApeCamera *camera )
 {
-	draw_model_( camera, nullptr );
+	//draw_model_( camera, nullptr );
 
 	PlgDepthMask( false );
 

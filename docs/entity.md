@@ -31,7 +31,7 @@ You can then register your class by calling `ape_register_entity_class` in your 
 
 ```c
 static void initialize_game( void ) {
-	ss_game_register_standard_entity_components_();
+	game_register_standard_entity_components_();
 	
 	ape_register_entity_class( tox_character_get_class_table() );
     
