@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "../editor.h"
+#include "forge/forge.h"
+#include "forge/forge_editor_tab.h"
 
-#include "EditorTab.h"
-
-namespace ss::forge
+namespace forge
 {
-	class viewport_frame;
+	class Viewport;
 
 	class editor_world : public EditorTab
 	{
@@ -50,9 +49,9 @@ namespace ss::forge
 		FXToggleButton *geometryModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
 		FXTreeList *nodeTree{};
-		FXComboBox *brushClassBox{};
+		FXComboBox *roomSelectBox{};
 
-		viewport_frame *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
+		Viewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 	private:
 		class room_creation_dialog : FXDialogBox
@@ -82,4 +81,4 @@ namespace ss::forge
 	public:
 		inline ApeWorld *get_world() { return _world; }
 	};
-}// namespace ss::forge
+}// namespace forge

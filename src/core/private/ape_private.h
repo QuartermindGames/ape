@@ -20,7 +20,7 @@
 #include "common/common_math.h"
 
 #include <yin/core.h>
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #define ENGINE_NAME     "APE Tech"
 #define ENGINE_APP_NAME "ape"
@@ -28,7 +28,7 @@
 #define VERSION_MAJOR    0
 #define VERSION_MINOR    4
 #define VERSION_PATCH    0
-#define VERSION_CODENAME "Rutilus"
+#define VERSION_CODENAME "Artemis"
 
 #define S_STRCAT( DST, SOURCE ) strncat( ( DST ), ( SOURCE ), sizeof( ( DST ) ) - strlen( ( DST ) ) - 1 )
 
@@ -70,15 +70,15 @@ typedef enum ApeConsoleLogLevel
 
 typedef struct ApeConsoleLine
 {
-	char buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 	PLColour colour;
 } ApeConsoleLine;
 
 typedef struct ApeConsoleOutput
 {
 	ApeConsoleLine lines[ CONSOLE_BUFFER_MAX_LINES ];
-	unsigned int numLines;
-	unsigned int scrollPos;
+	unsigned int   numLines;
+	unsigned int   scrollPos;
 } ApeConsoleOutput;
 
 ApeConsoleOutput *apeGetConsoleOutput( void );
@@ -86,7 +86,7 @@ ApeConsoleOutput *apeGetConsoleOutput( void );
 void ape_initialize_console_( void );
 void ape_shutdown_console_( void );
 
-int Console_GetLogLevel( ApeConsoleLogLevel level );
+int  Console_GetLogLevel( ApeConsoleLogLevel level );
 void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
 
 void ape_console_register_commands_( bool isDedicated );
@@ -145,6 +145,7 @@ typedef struct ApeConfig
 		bool showPortals;
 		bool showAllRooms;
 		bool showRoomVolumes;
+		bool showNodeVolumes;
 
 		bool sortLights;
 	} world;

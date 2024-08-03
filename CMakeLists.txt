@@ -123,7 +123,7 @@ add_subdirectory(src/3rdparty/lua)
 
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
-add_subdirectory(src/node/)
+add_subdirectory(src/acm/)
 add_subdirectory(src/forge)
 add_subdirectory(src/game/) # includes shells
 

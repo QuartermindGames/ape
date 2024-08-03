@@ -11,7 +11,7 @@
 
 void ape_world_set_global_defaults( ApeWorld *level )
 {
-	level->ambience = WORLD_DEFAULT_AMBIENCE;
+	level->ambience    = WORLD_DEFAULT_AMBIENCE;
 	level->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
@@ -22,13 +22,13 @@ void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { wo
 ApeWorld *ape_create_world( void )
 {
 	ApeWorld *world = PL_NEW( ApeWorld );
-	world->root = ape_world_node_create( nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3, world );
+	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	world->globalProperties = nd_branch_push_back_object( nullptr, "properties" );
-	nd_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
-	nd_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
+	world->globalProperties = acm_branch_push_back_object( nullptr, "properties" );
+	acm_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
+	acm_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
-	world->meshes = PlCreateVectorArray( 0 );
+	world->meshes       = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
 	ape_world_set_global_defaults( world );
@@ -191,10 +191,10 @@ static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 
 ApeWorld *ape_world_load( const char *path )
 {
-	NdBranch *root = nd_load_file( path, "world" );
+	AcmBranch *root = acm_load_file( path, "world" );
 	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to load world: %s\n", nd_get_error_message() );
+		ape_warning_( "Failed to load world: %s\n", acm_get_error_message() );
 		return nullptr;
 	}
 
@@ -204,7 +204,7 @@ ApeWorld *ape_world_load( const char *path )
 		ape_warning_( "Failed to load level (%s)!\n", path );
 	}
 
-	nd_branch_destroy( root );
+	acm_branch_destroy( root );
 
 	if ( world != nullptr )
 	{
@@ -227,14 +227,14 @@ ApeWorld *ape_world_load( const char *path )
 
 bool ape_world_save( ApeWorld *self, const char *path )
 {
-	NdBranch *root = nd_branch_push_back_object( nullptr, "world" );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
 
 	ape_world_serialize_( self, root );
 	snprintf( self->path, sizeof( self->path ), "%s", path );
 
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		ape_warning_( "Failed to save world (%s): %s\n", path, nd_get_error_message() );
+		ape_warning_( "Failed to save world (%s): %s\n", path, acm_get_error_message() );
 		return false;
 	}
 
@@ -293,34 +293,23 @@ void ape_world_spawn_entities_( ApeWorld *world )
 	while ( node != nullptr )
 	{
 		ApeWorldEntity *worldEntity = ( ApeWorldEntity * ) PlGetLinkedListNodeUserData( node );
-		ape_create_entity( worldEntity->className, worldEntity->properties );
+		ape_create_entity( worldEntity->className, worldEntity->properties, nullptr );
 		node = PlGetNextLinkedListNode( node );
 	}
-}
-
-void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node )
-{
-	if ( node->parent != nullptr )
-	{
-		PlDestroyLinkedListNode( node->parentListNode );
-	}
-
-	node->parent = self->root;
-	node->parentListNode = PlInsertLinkedListNode( self->root->children, node );
 }
 
 /****************************************
  * Global World Properties
  ****************************************/
 
-NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
+AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 {
 	if ( world->globalProperties == nullptr )
 	{
 		return nullptr;
 	}
 
-	return nd_branch_get_child_by_name( world->globalProperties, propertyName );
+	return acm_branch_get_child_by_name( world->globalProperties, propertyName );
 }
 
 /****************************************
@@ -336,7 +325,7 @@ ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *posit
 	for ( uint32_t i = 0; i < PlGetNumVectorArrayElements( world->rooms ); ++i )
 	{
 		ApeRoom *room = ( ApeRoom * ) PlGetVectorArrayElementAt( world->rooms, i );
-		if ( !PlIsPointIntersectingAabb( &room->header.node->bounds, *position ) )
+		if ( !PlIsPointIntersectingAabb( &room->base.bounds, *position ) )
 		{
 			continue;
 		}
@@ -355,6 +344,7 @@ void ape_register_world_console_variables_( void )
 	PlRegisterConsoleVariable( "world.showRoomVolumes", "Toggle rendering of room volumes.", "false", PL_VAR_BOOL, &ape_config_.world.showRoomVolumes, nullptr, false );
 	PlRegisterConsoleVariable( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, nullptr, false );
 	PlRegisterConsoleVariable( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, nullptr, false );
+	PlRegisterConsoleVariable( "world.showNodeVolumes", "Shows bounding volumes of all nodes currently in the scene.", "false", PL_VAR_BOOL, &ape_config_.world.showNodeVolumes, nullptr, false );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -365,4 +355,22 @@ void ape_initialize_world_()
 
 void ape_shutdown_world_()
 {
+}
+
+ApeRoom *ape_world_get_first_room_( ApeWorld *self )
+{
+	PLLinkedListNode *childNode = PlGetFirstNode( self->base.children );
+	while ( childNode != nullptr )
+	{
+		ApeWorldNode *worldNode = PlGetLinkedListNodeUserData( childNode );
+		if ( worldNode->type != APE_WORLD_NODE_TYPE_ROOM )
+		{
+			childNode = PlGetNextLinkedListNode( childNode );
+			continue;
+		}
+
+		return ( ApeRoom * ) worldNode;
+	}
+
+	return nullptr;
 }

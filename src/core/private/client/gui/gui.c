@@ -2,7 +2,7 @@
 
 #include <plcore/pl_console.h>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #include "gui_private.h"
 
@@ -53,49 +53,49 @@ static unsigned int numStyleSheets = 0;
 
 #define GUI_STYLESHEET_VERSION 1
 
-static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
+static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 {
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
-	unsigned int version = nd_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
+	unsigned int version = acm_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
 	{
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
 		return NULL;
 	}
 
-	NdBranch *c;
-	c = nd_branch_get_child_by_name( root, "colours" );
+	AcmBranch *c;
+	c = acm_branch_get_child_by_name( root, "colours" );
 	if ( c != NULL )
 	{
-		NdBranch *i;
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
-		if ( ( i = nd_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
-			nd_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
+		AcmBranch *i;
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
+		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
+			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
 	}
 
-	c = nd_branch_get_child_by_name( root, "borders" );
+	c = acm_branch_get_child_by_name( root, "borders" );
 	if ( c != NULL )
 	{
-		unsigned int style = nd_branch_get_child_uint( c, "style", -1 );
+		unsigned int style = acm_branch_get_child_uint( c, "style", -1 );
 		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
 		else
 			GUI_WARNING( "No border style specified, using default.\n" );
 
-		NdBranch *i;
-		if ( ( i = nd_branch_get_child_by_name( c, "padding" ) ) != NULL )
-			nd_branch_get_int32_array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
+		AcmBranch *i;
+		if ( ( i = acm_branch_get_child_by_name( c, "padding" ) ) != NULL )
+			acm_branch_get_int32_array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
 	}
 
 	return guiStyleSheet;
@@ -103,10 +103,10 @@ static GuiStyleSheet *ParseStyleSheet( NdBranch *root )
 
 const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path )
 {
-	NdBranch *root = nd_load_file( path, "guiStyle" );
+	AcmBranch *root = acm_load_file( path, "guiStyle" );
 	if ( root == NULL )
 	{
-		GUI_WARNING( "Failed to load node file: %s\n", nd_get_error_message() );
+		GUI_WARNING( "Failed to load node file: %s\n", acm_get_error_message() );
 		return NULL;
 	}
 

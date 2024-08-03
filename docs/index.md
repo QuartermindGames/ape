@@ -2,6 +2,9 @@
 
 Hi there, thanks for your interest in APE Tech! These documents will hopefully give you some guidance on how you can use the engine.
 
+- [Forge Documentation](forge/forge.md)
+- [Changelog](changelog.md)
+
 # Getting Started
 
 ## Creating a new project
@@ -48,3 +51,12 @@ object project
     }
 }
 ```
+
+----
+
+# Launch Arguments
+
+By default, the executable supports the following commands.
+
+- **/cook** - automatically attempts to run the cook utility before launching the engine.
+- **/project [projectName]** - mounts the given project.

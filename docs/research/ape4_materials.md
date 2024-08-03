@@ -6,7 +6,7 @@
 - Introduce a way for the game to fetch / modify variables that are set for a particular material (Source Engine has a similar feature, need to see how that's done); this will be handy for TOD behaviour in SS1 and SS2
 - Experiment with ways we can make the shaders/materials more efficient (see [LOD section](#lod-management))
 - Materials need to be simplified; need a proxy for variables that can be specified within the shader that materials can utilise instead, which would greatly simplify their design
-- Try to avoid breaking com
+- Try to avoid breaking compatility with existing materials
 
 ## Shaders
 
@@ -14,8 +14,7 @@
 
 `defaultPass` should be followed up with multiple other types of passes, depending on what the engine needs.
 
-For instance, we should introduce a new `stencilShadowPass` which is used when rendering a surface as per the stencil
-shadow volumes.
+For instance, we should introduce a new `stencilShadowPass` which is used when rendering a surface as per the stencil shadow volumes.
 
 ### Passes / Techniques
 

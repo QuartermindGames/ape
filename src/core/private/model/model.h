@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ape/ape_formats.h"
+#include "ape/ape_public_model.h"
 
 PL_EXTERN_C
 
@@ -16,40 +17,45 @@ typedef struct ApeModelAnimationFrame
 
 typedef struct ApeModelAnimation
 {
-	char name[ 64 ];
+	char                  name[ 64 ];
 	ApeModelAnimationFlag flags;
 
-	unsigned int numFrames;
+	uint numFrames;
 
 	float speed;
 
-	unsigned int numBones;
+	uint numBones;
 } ApeModelAnimation;
+
+typedef struct ApeModelVertexWeight
+{
+	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
+	unsigned int    numWeights;
+} ApeModelVertexWeight;
+
+#define APE_MODEL_MAX_SUBMESHES ( APE_FORMAT_MODEL_MAX_TRIANGLES / 2 )
+
+typedef struct ApeModelMesh
+{
+	ApeMaterial         *material;
+	ApeModelVertexWeight weights[ APE_FORMAT_MODEL_MAX_VERTICES ];
+
+	uint startIndex;
+	uint endIndex;
+} ApeModelMesh;
 
 typedef struct ApeModel
 {
-	ApeMaterial *materials[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	unsigned int numMaterials;
+	ApeModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
+	uint         numMaterials;// also corrisponds to number of meshes...
 
-	PLGMesh *meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	unsigned int numMeshes;
-
-	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
+	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
-	unsigned int numBones;
+	uint           numBones;
 
-	PLCollisionSphere visSphere;
+	PLGMesh *cache;
 
-	PLHashTableNode *node;
-
-	ApeFormatModel disk;
-
-	ApeMemoryReference mem;
+	ApeMemoryReference reference;
 } ApeModel;
-
-ApeModel *ape_load_model( const char *path );
-
-void ape_model_release( ApeModel *model );
-void ape_model_draw( ApeModel *model );
 
 PL_EXTERN_C_END

@@ -6,7 +6,7 @@
 #include <plcore/pl_filesystem.h>
 #include <plmodel/plm.h>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 /* todo: add verbose mode */
 #define Print( ... ) printf( __VA_ARGS__ )

@@ -5,21 +5,21 @@
 #include <memory>
 #include "editor_world.h"
 
-#include "../viewport_frame.h"
+#include "forge/forge_viewport.h"
 
 #include "yin/core_entity.h"
 
-FXDEFMAP( ss::forge::editor_world )
+FXDEFMAP( forge::editor_world )
 worldEditorMap[] = {
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_SELECT_MODE, ss::forge::editor_world::on_change_geometry_mode ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_FACE_MODE, ss::forge::editor_world::on_change_geometry_mode ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_EDGE_MODE, ss::forge::editor_world::on_change_geometry_mode ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_VERTEX_MODE, ss::forge::editor_world::on_change_geometry_mode ),
-        FXMAPFUNC( SEL_COMMAND, ss::forge::editor_world::ID_TRANSFORM_MODE, ss::forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::editor_world::ID_SELECT_MODE, forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::editor_world::ID_FACE_MODE, forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::editor_world::ID_EDGE_MODE, forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::editor_world::ID_VERTEX_MODE, forge::editor_world::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::editor_world::ID_TRANSFORM_MODE, forge::editor_world::on_change_geometry_mode ),
 };
-FXIMPLEMENT( ss::forge::editor_world, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
+FXIMPLEMENT( forge::editor_world, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
-ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
+forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
     : EditorTab( owner, "World Editor", forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] ),
       _gridSizeTarget( this->instance.gridScale ),
       _gridHideTarget( this->instance.gridVisible )
@@ -27,17 +27,17 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	auto frame = new FXHorizontalFrame( owner, LAYOUT_FILL_X | LAYOUT_FILL_Y | LAYOUT_SIDE_TOP | FRAME_RAISED );
 
 	auto leftSidebar = new FXVerticalFrame( frame, LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH | FRAME_RAISED, 0, 0, 200 );
-	nodeTree = new FXTreeList( leftSidebar, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | TREELIST_ROOT_BOXES | TREELIST_SHOWS_LINES | TREELIST_SHOWS_BOXES );
+	nodeTree         = new FXTreeList( leftSidebar, nullptr, 0, LAYOUT_FILL_X | LAYOUT_FILL_Y | TREELIST_ROOT_BOXES | TREELIST_SHOWS_LINES | TREELIST_SHOWS_BOXES );
 
 	auto *middleFrame = new FXVerticalFrame( frame, FRAME_RAISED | LAYOUT_FILL );
 
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
 
+	// room selection box
 #if 0
-	// brush class selection drop-down
-	brushClassBox = new FXComboBox( toolbar, 1, this, 0, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN );
+	roomSelectBox = new FXComboBox( toolbar, 1, this, 0, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN );
 	unsigned int numBrushClasses;
 	const ApeBrushClass **brushClasses = ape_get_available_brush_classes( &numBrushClasses );
 	for ( unsigned int i = 0; i < numBrushClasses; ++i )
@@ -48,29 +48,29 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	this->instance.brushClass = brushClasses[ brushClassBox->getCurrentItem() ];
 #endif
 
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_SELECT ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/select.gif" ), nullptr, this, ID_SELECT_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_SELECT ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/select.gif" ), nullptr, this, ID_SELECT_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ this->instance.geometryMode ]->setState( true );
 
 	new FXVerticalSeparator( toolbar );
-	new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/grid.gif" ), 0, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/grid_up.gif" ) );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/grid_down.gif" ) );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/grid_orient.gif" ) );
+	new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/grid.gif" ), 0, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_up.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_down.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_orient.gif" ) );
 	new FXTextField( toolbar, 4, &_gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_READONLY | TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	//new FXVerticalSeparator( toolbar );
-	//new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
+	//new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
 	ApeCameraViewMode viewModes[ APE_EDITOR_MAX_VIEWPORTS ] = { APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_MODE_TOP, APE_CAMERA_MODE_LEFT, APE_CAMERA_MODE_FRONT };
 	for ( unsigned int i = 0; i < APE_EDITOR_MAX_VIEWPORTS; ++i )
 	{
-		viewports[ i ] = new viewport_frame( hs, get_shared_gl_visual(), this, viewModes[ i ] );
+		viewports[ i ] = new Viewport( hs, get_shared_gl_visual(), this, viewModes[ i ] );
 	}
 
 	frame->create();
@@ -85,19 +85,13 @@ ss::forge::editor_world::editor_world( FXTabBook *owner, const FXString &worldNa
 	ape_editor_set_active_instance( &this->instance );
 }
 
-ss::forge::editor_world::~editor_world() = default;
+forge::editor_world::~editor_world() = default;
 
-void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeType type )
+void forge::editor_world::create_new_object( const char *name, ApeWorldNodeType type )
 {
 	FXTreeItem *selectedItem = nodeTree->getCurrentItem();
 	if ( selectedItem == nullptr )
 	{
-		return;
-	}
-
-	if ( instance.brushClass == nullptr )
-	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Invalid brush class!" );
 		return;
 	}
 
@@ -121,13 +115,13 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 		case APE_WORLD_NODE_TYPE_EMPTY: break;
 		case APE_WORLD_NODE_TYPE_ROOT: break;
 		case APE_WORLD_NODE_TYPE_ROOM:
-			data = ape_create_room( parentNode );
+			data = ape_room_create( parentNode );
 			break;
 		case APE_WORLD_NODE_TYPE_BRUSH:
 			data = ape_create_brush( parentNode, &pos, &pl_vecOrigin3 );
 			break;
 		case APE_WORLD_NODE_TYPE_LIGHT:
-			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, SS_ARL_LIGHT_FLAG_ENABLED );
+			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED );
 			break;
 		case APE_WORLD_NODE_TYPE_CAMERA:
 			data = ape_create_camera( parentNode, &pos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
@@ -139,18 +133,18 @@ void ss::forge::editor_world::create_new_object( const char *name, ApeWorldNodeT
 	update_tree();
 }
 
-void ss::forge::editor_world::update_tree()
+void forge::editor_world::update_tree()
 {
-	FXTreeItem *parentItem = nodeTree->findItem( _world->root->name );
+	FXTreeItem *parentItem = nodeTree->findItem( _world->base.name );
 	if ( parentItem == nullptr )
 	{
-		parentItem = nodeTree->appendItem( nullptr, _world->root->name );
+		parentItem = nodeTree->appendItem( nullptr, _world->base.name );
 		parentItem->setClosedIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
 		parentItem->setOpenIcon( forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ] );
 		parentItem->setExpanded( true );
 	}
 
-	PLLinkedListNode *node = PlGetFirstNode( _world->root->children );
+	PLLinkedListNode *node = PlGetFirstNode( _world->base.children );
 	while ( node != nullptr )
 	{
 		auto *worldNode = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( node );
@@ -164,7 +158,7 @@ void ss::forge::editor_world::update_tree()
 				continue;
 			}
 
-			auto cameraWorldNode = ape_camera_get_world_node( viewport->camera );
+			auto cameraWorldNode = ( ApeWorldNode * ) viewport->camera;
 			if ( cameraWorldNode != worldNode )
 			{
 				continue;
@@ -215,7 +209,7 @@ void ss::forge::editor_world::update_tree()
 	}
 }
 
-long ss::forge::editor_world::on_change_geometry_mode( FXObject *, FXSelector selector, void * )
+long forge::editor_world::on_change_geometry_mode( FXObject *, FXSelector selector, void * )
 {
 	switch ( FXSELID( selector ) )
 	{
@@ -246,7 +240,7 @@ long ss::forge::editor_world::on_change_geometry_mode( FXObject *, FXSelector se
 	return TRUE;
 }
 
-long ss::forge::editor_world::on_shift_grid( FXObject *, FXSelector selector, void * )
+long forge::editor_world::on_shift_grid( FXObject *, FXSelector selector, void * )
 {
 	switch ( FXSELID( selector ) )
 	{

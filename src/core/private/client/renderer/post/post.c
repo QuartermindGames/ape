@@ -4,7 +4,8 @@
 
 #include "post.h"
 
-#include "../renderer_render_target.h"
+#include "client/renderer/renderer_render_target.h"
+#include "editor/editor.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -19,8 +20,8 @@ typedef enum PostEffect
 } PostEffect;
 
 static const ApePostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
-static bool postProcessInit = false;
-static bool postProcessEnabled = true;
+static bool                        postProcessInit    = false;
+static bool                        postProcessEnabled = true;
 
 static ApeRenderTarget *ppRenderTarget = NULL;
 
@@ -33,7 +34,7 @@ static void register_post_effects( void )
 
 	PL_ZERO( postProcessEffects, sizeof( ApePostProcessEffect * ) * MAX_POST_EFFECTS );
 
-	postProcessEffects[ POST_EFFECT_FXAA ] = ape_postfx_get_fxaa_();
+	postProcessEffects[ POST_EFFECT_FXAA ]  = ape_postfx_get_fxaa_();
 	postProcessEffects[ POST_EFFECT_BLOOM ] = ape_postfx_get_bloom_();
 
 	postProcessInit = true;
@@ -41,11 +42,6 @@ static void register_post_effects( void )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
-
-bool ape_postfx_is_enabled( void )
-{
-	return postProcessEnabled;
-}
 
 void ape_postfx_cleanup_( void )
 {
@@ -126,7 +122,7 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
 	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
 
-	if ( !postProcessEnabled )
+	if ( ape_is_editor_active() || !postProcessEnabled )
 	{
 		return;
 	}

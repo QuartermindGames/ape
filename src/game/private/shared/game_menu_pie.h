@@ -1,6 +1,10 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Delicious pie menu!
 
+#pragma once
+
+PL_EXTERN_C
+
 typedef struct GamePieMenu GamePieMenu;
 typedef struct GamePieMenuOption GamePieMenuOption;
 
@@ -47,3 +51,5 @@ GamePieMenuOption *menu_pie_add_option( GamePieMenu *menu, const char *label, st
  * Destroys the specific pie menu option.
  */
 void menu_pie_destroy_option( GamePieMenuOption *option );
+
+PL_EXTERN_C_END

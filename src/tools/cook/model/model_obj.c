@@ -16,9 +16,9 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 	}
 
 	// Copy it into a buffer we can parse
-	size_t fileBufSize = PlGetFileSize( file );
-	const char *fileBuf = PlGetFileData( file );
-	char *txtBuf = PL_NEW_( char, fileBufSize + 1 );
+	size_t      fileBufSize = PlGetFileSize( file );
+	const char *fileBuf     = PlGetFileData( file );
+	char       *txtBuf      = PL_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
@@ -67,7 +67,7 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 	subObject->maxs = ( PLVector3 ){ FLT_MIN, FLT_MIN, FLT_MIN };
 
 	unsigned int numFaces;
-	ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
+	ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
@@ -96,17 +96,17 @@ ObjModel *model_obj_load( const char *path )
 		ERROR( "Failed to open OBJ: %s\n", PlGetError() );
 
 	// Copy it into a buffer we can parse
-	size_t fileBufSize = PlGetFileSize( file );
-	const char *fileBuf = PlGetFileData( file );
-	char *txtBuf = PL_NEW_( char, fileBufSize + 1 );
+	size_t      fileBufSize = PlGetFileSize( file );
+	const char *fileBuf     = PlGetFileData( file );
+	char       *txtBuf      = PL_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
 
-	ObjModel *obj = PL_NEW( ObjModel );
-	ObjSubObject *subObject = NULL;
-	unsigned int materialIndex = 0;
-	unsigned int smoothingIndex = 0;
+	ObjModel     *obj            = PL_NEW( ObjModel );
+	ObjSubObject *subObject      = NULL;
+	unsigned int  materialIndex  = 0;
+	unsigned int  smoothingIndex = 0;
 
 	const char *c = txtBuf;
 	while ( *c != '\0' )
@@ -127,11 +127,11 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
 		{
 			c += 2;
-			char *end;
+			char      *end;
 			PLVector3 *vertex = PL_NEW( PLVector3 );
-			vertex->x = strtof( c, &end );
-			vertex->y = strtof( end, &end );
-			vertex->z = strtof( end, NULL );
+			vertex->x         = strtof( c, &end );
+			vertex->y         = strtof( end, &end );
+			vertex->z         = strtof( end, NULL );
 
 			if ( obj->vertices == NULL )
 			{
@@ -144,11 +144,11 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == 'n' && *( c + 2 ) == ' ' )
 		{
 			c += 3;
-			char *end;
+			char      *end;
 			PLVector3 *normal = PL_NEW( PLVector3 );
-			normal->x = strtof( c, &end );
-			normal->y = strtof( end, &end );
-			normal->z = strtof( end, NULL );
+			normal->x         = strtof( c, &end );
+			normal->y         = strtof( end, &end );
+			normal->z         = strtof( end, NULL );
 
 			if ( obj->normals == NULL )
 			{
@@ -161,10 +161,10 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == 't' && *( c + 2 ) == ' ' )
 		{
 			c += 3;
-			char *end;
+			char      *end;
 			PLVector2 *uv = PL_NEW( PLVector2 );
-			uv->x = strtof( c, &end );
-			uv->y = strtof( end, NULL );
+			uv->x         = strtof( c, &end );
+			uv->y         = strtof( end, NULL );
 
 			if ( obj->textureCoords == NULL )
 			{
@@ -197,7 +197,7 @@ ObjModel *model_obj_load( const char *path )
 				face->indices[ face->numEdges ][ OBJ_INDEX_TEXTURE ] = ( strtoul( end, &end, 10 ) - 1 );
 				end++;
 				face->indices[ face->numEdges ][ OBJ_INDEX_NORMAL ] = ( strtoul( end, &end, 10 ) - 1 );
-				c = end;
+				c                                                   = end;
 			}
 
 #if 0// Life wasn't this simple, sadly
@@ -236,7 +236,7 @@ ObjModel *model_obj_load( const char *path )
 					index += 3;
 				}
 
-				unsigned int numVertices;
+				unsigned int      numVertices;
 				const PLVector3 **v = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
 
 				PLVector3 normals[ OBJ_MAX_EDGES ];
@@ -261,7 +261,7 @@ ObjModel *model_obj_load( const char *path )
 
 #endif
 
-			face->material = materialIndex;
+			face->material       = materialIndex;
 			face->smoothingGroup = smoothingIndex;
 		}
 		else if ( *c == 's' && *( c + 1 ) == ' ' )
@@ -280,7 +280,7 @@ ObjModel *model_obj_load( const char *path )
 			PLPath libPath;
 			PlSetupPath( libPath, true, "%s", path );
 			char *s = strrchr( libPath, '/' ) + 1;
-			*s = '\0';
+			*s      = '\0';
 			PlAppendPath( libPath, token, true );
 
 			parse_material_template_library( obj, libPath );
@@ -354,7 +354,7 @@ ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
 		ApeFormatMesh *mesh = &out->meshes[ i ];
 
 		unsigned int numFaces;
-		ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
+		ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
 		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
 			// We'll need to convert it into triangles here...
@@ -363,8 +363,8 @@ ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
 	}
 }
 
-static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
+static CookModel      *load_obj( const char *path ) { return ( CookModel      *) model_obj_load( path ); }
 static ApeFormatModel *conv_obj( const CookModel *model, ApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
-static void destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
+static void            destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel            *) model ); }
 
-CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };
+const CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

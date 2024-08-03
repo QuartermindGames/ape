@@ -14,8 +14,6 @@ typedef struct ApePostProcessEffect
 	void ( *draw )( const ApeViewport *viewport );
 } ApePostProcessEffect;
 
-bool ape_postfx_is_enabled( void );
-
 void ape_postfx_cleanup_( void );
 void ape_postfx_setup_( void );
 

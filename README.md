@@ -32,7 +32,7 @@ Some semblance of documentation can be found [here](docs).
 - Simple post-processing pipeline with support for FXAA and bloom
 - Super-sampling up to 2x display resolution
 - Memory manager with garbage collection and usage tracking
-- Node format for serialisation/deserialisation; can be stored as either binary or text
+- Ape Config Markup (ACM) for serialisation/deserialisation; can be stored as either binary or text
 - Editor frontend using [FOX Toolkit](http://www.fox-toolkit.org/)
 
 ## Games

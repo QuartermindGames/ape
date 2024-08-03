@@ -6,16 +6,19 @@ if (WIN32)
 endif ()
 
 add_library(Forge STATIC
-        editor.cpp
-        AboutDialog.cpp
-        ForgeProjectDialog.cpp
-        ForgeConsoleFrame.cpp
-        viewport_frame.cpp
-        ForgeMainWindow.cpp
+        forge.cpp
+        forge_about_dialog.cpp
+        forge_project_dialog.cpp
+        forge_console_frame.cpp
+        forge_viewport.cpp
+        forge_window_main.cpp
 
-        editors/EditorTab.cpp editors/EditorTab.h
+        forge_editor_tab.cpp forge_editor_tab.h
         editors/editor_material.cpp editors/editor_material.h
-        editors/ModelEditor.cpp editors/ModelEditor.h
+
+        forge_model_editor.cpp forge_model_editor.h
+        forge_model_viewport.cpp forge_model_viewport.h
+
         editors/editor_world.cpp editors/editor_world.h
 )
 
@@ -46,6 +49,6 @@ target_include_directories(Forge
         PRIVATE ../kernel/plcore/include
         PRIVATE ../kernel/plgraphics/include
         PRIVATE ../common/public
-        PRIVATE ../node/public
+        PRIVATE ../acm/public
         PRIVATE ../core/public
 )

@@ -4,6 +4,14 @@
 
 #define SS_COM_COPYRIGHT "Copyright © 2020-2024 SnortySoft, Mark E Sowden"
 
+// These are non-standard, so declare them here
+#if !defined( _POSIX_SOURCE )
+#define _POSIX_SOURCE 1
+#endif
+typedef unsigned char  uchar;
+typedef unsigned short ushort;
+typedef unsigned int   uint;
+
 typedef enum ComDataType
 {
 	COM_DATATYPE_BOOL,
@@ -26,13 +34,13 @@ typedef enum ComDataType
 
 PL_EXTERN_C
 
-void com_initialize( void );
-const char *com_get_local_data_directory( void );
-const char *com_get_app_data_directory( void );
-struct NdBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
-bool com_write_config( struct NdBranch *root, const char *name );
+void             com_initialize( void );
+const char      *com_get_local_data_directory( void );
+const char      *com_get_app_data_directory( void );
+struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
+bool             com_write_config( struct AcmBranch *root, const char *name );
 
-void com_pkg_write_header( FILE *pack, unsigned int numFiles );
+void com_pkg_write_header( FILE *pack, uint numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
 
 /////////////////////////////////////////////////////////////////
@@ -50,11 +58,11 @@ const char *comGetProfilingGroupName( const ComProfilingGroup *group );
 ComProfilingGroup *comGetFirstProfilingGroup( void );
 ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group );
 
-double comGetProfilingGroupTimeTaken( const ComProfilingGroup *group );
-double comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group );
-const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, unsigned int *numPoints );
+double        comGetProfilingGroupTimeTaken( const ComProfilingGroup *group );
+double        comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group );
+const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, uint *numPoints );
 
-unsigned int comGetNumProfilerGroups( void );
+uint comGetNumProfilerGroups( void );
 
 void com_update_profiler_samples( void );
 

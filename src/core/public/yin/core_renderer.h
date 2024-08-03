@@ -164,7 +164,7 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights, unsigned int numLights );
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights );
 
 /**
  * Returns the texture representing a material.
@@ -209,6 +209,52 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 
 void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
+
+// The following are safe to be called during tick, the above are *not*!
+
+/**
+ * Draws a basic wireframe line from start to end.
+ *
+ * @param start 	Point the line starts.
+ * @param end 		Point the line ends.
+ * @param colour 	Colour of the line.
+ */
+void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour );
+
+/**
+ * Draw a wireframe arrow from start to end.
+ *
+ * @param start		Point the line starts.
+ * @param end 		Point the line ends. Arrow will point in this direction.
+ * @param colour	Colour of the line.
+ */
+void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour );
+
+/**
+ * Draw a wireframe sphere at the given location.
+ *
+ * @param origin 	Position of the sphere.
+ * @param colour 	Colour of the sphere.
+ * @param scale 	Scale of the sphere.
+ */
+void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
+
+/**
+ * Draw an axis at the given position using Euler angles.
+ *
+ * @param origin 	Position of the axis.
+ * @param angles 	Angles of the axis.
+ * @param scale		Scale of the axis.
+ */
+void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
+
+/**
+ * Draw the specified AABB volume at the specified location.
+ *
+ * @param aabb		Pointer to the AABB to draw.
+ * @param colour 	Colour of the volume.
+ */
+void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

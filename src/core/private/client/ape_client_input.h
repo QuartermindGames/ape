@@ -7,13 +7,13 @@ PL_EXTERN_C
 #include <yin/core_input.h>
 #include <stdbool.h>
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
 void ape_initialize_input_( void );
 void ape_shutdown_input_( void );
 
-void ape_serialize_input_config_( NdBranch *root );
-void ape_deserialize_input_config_( NdBranch *root );
+void ape_serialize_input_config_( AcmBranch *root );
+void ape_deserialize_input_config_( AcmBranch *root );
 
 void ape_clear_input_devices( void );
 

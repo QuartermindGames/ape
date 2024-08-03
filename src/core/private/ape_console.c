@@ -6,7 +6,7 @@
 
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
-#include "nodes/entity/entity.h"
+#include "nodes/node_entity.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -79,22 +79,22 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void LoadUserConfig( void )
 {
-	NdBranch *root = nd_load_file( ss_acl_fs_get_user_config_location(), "config" );
+	AcmBranch *root = acm_load_file( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
 		return;
 
 	/* now iterate through the list and update all our children */
-	NdBranch *child = nd_branch_get_first_child( root );
+	AcmBranch *child = acm_branch_get_first_child( root );
 	while ( child != NULL )
 	{
-		const char *cvarName = nd_branch_get_name( child );
-		char cvarValue[ PL_SYSTEM_MAX_PATH ];
-		if ( nd_branch_get_string( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
+		const char *cvarName = acm_branch_get_name( child );
+		char        cvarValue[ PL_SYSTEM_MAX_PATH ];
+		if ( acm_branch_get_string( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
 			PlSetConsoleVariableByName( cvarName, cvarValue );
 		else
 			PRINT_WARNING( "Failed to fetch value: %s\n", cvarName );
 
-		child = nd_get_next_child( child );
+		child = acm_get_next_child( child );
 	}
 
 	ape_deserialize_input_config_( root );
@@ -109,10 +109,10 @@ static void save_user_config( void )
 	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
-	size_t numVars;
+	size_t              numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
-	NdBranch *root = nd_branch_push_back_object( NULL, "config" );
+	AcmBranch *root = acm_branch_push_back_object( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i )
 	{
 		if ( !cvars[ i ]->archive )
@@ -124,38 +124,58 @@ static void save_user_config( void )
 		switch ( cvars[ i ]->type )
 		{
 			case PL_VAR_F32:
-				nd_branch_push_back_float32( root, cvars[ i ]->name, cvars[ i ]->f_value );
+				acm_branch_push_back_float32( root, cvars[ i ]->name, cvars[ i ]->f_value );
 				break;
 			case PL_VAR_I32:
-				nd_branch_push_back_int32( root, cvars[ i ]->name, cvars[ i ]->i_value );
+				acm_branch_push_back_int32( root, cvars[ i ]->name, cvars[ i ]->i_value );
 				break;
 			case PL_VAR_BOOL:
-				nd_branch_push_back_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
+				acm_branch_push_back_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
 				break;
 			default:
-				nd_branch_push_back_string( root, cvars[ i ]->name, cvars[ i ]->s_value );
+				acm_branch_push_back_string( root, cvars[ i ]->name, cvars[ i ]->s_value );
 				break;
 		}
 	}
 
 	ape_serialize_input_config_( root );
 
-	nd_write_file( path, root, ND_FILE_UTF8 );
-	nd_branch_destroy( root );
+	acm_write_file( path, root, ND_FILE_UTF8 );
+	acm_branch_destroy( root );
 
 	PRINT( "User config saved.\n" );
 }
 
 void ape_world_node_test_command_( unsigned int, char ** );
 
+static void toggle_command( unsigned int, char **argv )
+{
+	PLConsoleVariable *variable = PlGetConsoleVariable( argv[ 1 ] );
+	if ( variable == nullptr )
+	{
+		ape_warning_( "Failed to find the specified variable (%s)!\n" );
+		return;
+	}
+	else if ( variable->type != PL_VAR_BOOL )
+	{
+		ape_warning_( "Console variable is not a boolean type!\n" );
+		return;
+	}
+
+	PlSetConsoleVariable( variable, variable->b_value ? "false" : "true" );
+}
+
+void ape_test_register_commands_();
 void ape_console_register_commands_( bool isDedicated )
 {
 	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
 	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
 	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
+	PlRegisterConsoleCommand( "toggle", "Toggle a specific variable.", 1, toggle_command );
 
-	ape_register_entity_commands_();
+	ape_entity_register_commands_();
+	ape_test_register_commands_();
 
 	if ( !isDedicated )
 	{
@@ -209,10 +229,10 @@ void ape_initialize_console_( void )
 {
 	PlSetConsoleOutputCallback( output_callback );
 
-	logLevels[ APE_LOG_ERROR ] = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_WARNING ] = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_ERROR ]       = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_WARNING ]     = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
 	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
-	logLevels[ ACL_LOG_DEBUG ] = PlAddLogLevel( "yin/debug", PL_COLOUR_ORCHID,
+	logLevels[ ACL_LOG_DEBUG ]       = PlAddLogLevel( "yin/debug", PL_COLOUR_ORCHID,
 #if !defined( NDEBUG )
 	                                            true
 #else
@@ -220,12 +240,12 @@ void ape_initialize_console_( void )
 #endif
 	);
 
-	logLevels[ APE_LOG_CLIENT_ERROR ] = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_CLIENT_WARNING ] = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
 	logLevels[ APE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "yin/client", PL_COLOUR_WHITE, true );
 
-	logLevels[ APE_LOG_SERVER_ERROR ] = PlAddLogLevel( "yin/server/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_SERVER_WARNING ] = PlAddLogLevel( "yin/server/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "yin/server/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "yin/server/warning", PL_COLOUR_YELLOW, true );
 	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
 }
 

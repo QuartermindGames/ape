@@ -8,7 +8,7 @@
 #include "common.h"
 #include "common_project.h"
 
-#include "yin/node.h"
+#include "acm/public/acm/acm.h"
 #include "ape/ape_formats.h"
 
 #define WARN( ... ) \

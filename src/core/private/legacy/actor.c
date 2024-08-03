@@ -2,7 +2,7 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #include "ape_private.h"
 #include "actor.h"
@@ -45,7 +45,7 @@ const ActorSetup *actorSpawnSetup[ MAX_ACTOR_TYPES ] = {
 
 static PLLinkedList *actorList;
 
-Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
+Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree )
 {
 	Actor *actor = PL_NEW( Actor );
 	actor->node = PlInsertLinkedListNode( actorList, actor );
@@ -68,16 +68,16 @@ Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
 
 	if ( nodeTree != NULL )
 	{
-		NdBranch *node;
-		if ( ( node = nd_branch_get_child_by_name( nodeTree, "tagName" ) ) != NULL )
+		AcmBranch *node;
+		if ( ( node = acm_branch_get_child_by_name( nodeTree, "tagName" ) ) != NULL )
 		{
-			nd_branch_get_string( node, actor->tagName, sizeof( actor->tagName ) );
+			acm_branch_get_string( node, actor->tagName, sizeof( actor->tagName ) );
 		}
-		if ( ( node = nd_branch_get_child_by_name( nodeTree, "position" ) ) != NULL )
+		if ( ( node = acm_branch_get_child_by_name( nodeTree, "position" ) ) != NULL )
 		{
 			//nd_ds_deserialize_vector3( node, &actor->position );
 		}
-		if ( ( node = nd_branch_get_child_by_name( nodeTree, "angles" ) ) != NULL )
+		if ( ( node = acm_branch_get_child_by_name( nodeTree, "angles" ) ) != NULL )
 		{
 			//nd_ds_deserialize_vector3( node, &actor->angles );
 		}
@@ -89,7 +89,7 @@ Actor *Act_SpawnActor( ActorType type, NdBranch *nodeTree )
 	return actor;
 }
 
-Actor *Act_SpawnActorById( const char *id, NdBranch *nodeTree )
+Actor *Act_SpawnActorById( const char *id, AcmBranch *nodeTree )
 {
 	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
 	{

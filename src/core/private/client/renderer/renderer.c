@@ -17,8 +17,10 @@
 
 #include "game/game_public.h"
 
-ApeRendererStats ape_rendererPerformance_ = {};
+ApeRendererStats     ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;
+
+static ApeCamera *currentCamera;
 
 static ApeRenderTarget *defaultRenderTarget;
 
@@ -29,22 +31,22 @@ static bool isScreenshotPending = false;
 
 typedef struct CaptureFrame
 {
-	unsigned int w;
-	unsigned int h;
+	unsigned int   w;
+	unsigned int   h;
 	unsigned char *buf;
 } CaptureFrame;
 
-static bool useCaptureToQoi = true;
-static unsigned int captureQuality = 90;
-static volatile bool isCapturing = false;
+static bool                  useCaptureToQoi  = true;
+static unsigned int          captureQuality   = 90;
+static volatile bool         isCapturing      = false;
 static volatile unsigned int numCaptureFrames = 0;
 
 static PLLinkedList *captureQueue = NULL;//CaptureFrame
 
 #define MAX_CAPTURE_THREADS 16
-static unsigned int numCaptureThreads = 4;
-static pthread_mutex_t captureMutex = {};
-static pthread_t captureThread[ MAX_CAPTURE_THREADS ] = {};
+static unsigned int    numCaptureThreads                    = 4;
+static pthread_mutex_t captureMutex                         = {};
+static pthread_t       captureThread[ MAX_CAPTURE_THREADS ] = {};
 
 static void destroy_capture_frame( void *ptr )
 {
@@ -100,7 +102,7 @@ static void *process_capture_queue( void * )
 static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	numCaptureFrames = 0;
-	isCapturing = !isCapturing;
+	isCapturing      = !isCapturing;
 	if ( isCapturing )
 	{
 		// Create a folder to store the captures if one doesn't already exist
@@ -198,8 +200,8 @@ static void write_screenshot( void )
 		return;
 	}
 
-	size_t bufSize = ( ( w * h ) * 4 );
-	unsigned char *buf = PL_NEW_( unsigned char, bufSize );
+	size_t         bufSize = ( ( w * h ) * 4 );
+	unsigned char *buf     = PL_NEW_( unsigned char, bufSize );
 	if ( PlgReadFrameBufferRegion( NULL, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
 		if ( isCapturing )
@@ -209,8 +211,8 @@ static void write_screenshot( void )
 			CaptureFrame *frame = PL_NEW( CaptureFrame );
 			PlInsertLinkedListNode( captureQueue, frame );
 			frame->buf = buf;
-			frame->w = w;
-			frame->h = h;
+			frame->w   = w;
+			frame->h   = h;
 
 			pthread_mutex_unlock( &captureMutex );
 			return;
@@ -223,7 +225,7 @@ static void write_screenshot( void )
 			PlFlipImageVertical( image );
 			PlClearImageAlpha( image );
 
-			PLPath path;
+			PLPath       path;
 			unsigned int num = 0;
 			PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), num );
 			while ( PlFileExists( path ) )
@@ -249,14 +251,14 @@ static void write_screenshot( void )
 
 void ape_draw_end_( ApeViewport *viewport )
 {
-	ape_rendererPerformance_.numBatches = 0;
-	ape_rendererPerformance_.numTriangles = 0;
+	ape_rendererPerformance_.numBatches    = 0;
+	ape_rendererPerformance_.numTriangles  = 0;
 	ape_rendererPerformance_.numFacesDrawn = 0;
 
-	viewport->perf.numBatches = 0;
+	viewport->perf.numBatches   = 0;
 	viewport->perf.numTriangles = 0;
-	viewport->perf.numPolygons = 0;
-	viewport->perf.numPortals = 0;
+	viewport->perf.numPolygons  = 0;
+	viewport->perf.numPortals   = 0;
 
 	if ( isScreenshotPending || isCapturing )
 	{
@@ -306,7 +308,7 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, NULL, true );
 	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
 
-	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
+	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "2.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
 	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
 	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
@@ -349,6 +351,8 @@ void ape_initialize_renderer_( void )
 	ape_initialize_bitmap_fonts_();
 	ape_initialize_flares_();
 
+	ape_draw_initialize_debug_mesh_();
+
 	ape_setup_default_draw_state_( NULL );
 
 	defaultRenderTarget = ape_render_target_create( "default",
@@ -368,6 +372,8 @@ void ape_shutdown_renderer_( void )
 {
 	ape_postfx_cleanup_();
 
+	ape_draw_destroy_debug_mesh_();
+
 	ape_shutdown_flares_();
 	ape_shutdown_bitmap_fonts_();
 	ape_shutdown_materials_();
@@ -384,16 +390,16 @@ void ape_shutdown_renderer_( void )
 typedef struct SkyLayer
 {
 	ApeMaterial *material;
-	float scale;
-	float alpha;
-	float y;
+	float        scale;
+	float        alpha;
+	float        y;
 
 	PLVector2 offset;
 } SkyLayer;
 
 #define MAX_SKY_LAYERS 4
 static unsigned int numSkyLayers = 0;
-static SkyLayer skyLayers[ MAX_SKY_LAYERS ];
+static SkyLayer     skyLayers[ MAX_SKY_LAYERS ];
 
 static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector3 *location, float x, float y, float scale )
 {
@@ -406,7 +412,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	/* todo: do this in shader... */
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
 
-	ape_material_draw( material, mesh, NULL, 0 );
+	ape_material_draw( material, mesh, NULL );
 
 	PlPopMatrix();
 }
@@ -421,9 +427,9 @@ unsigned int ape_sky_add_layer( const char *path, float scale, float y, float al
 	}
 
 	skyLayers[ numSkyLayers ].material = ape_material_cache( path, APE_CACHE_GROUP_WORLD, true, false );
-	skyLayers[ numSkyLayers ].scale = scale;
-	skyLayers[ numSkyLayers ].alpha = alpha;
-	skyLayers[ numSkyLayers ].y = y;
+	skyLayers[ numSkyLayers ].scale    = scale;
+	skyLayers[ numSkyLayers ].alpha    = alpha;
+	skyLayers[ numSkyLayers ].y        = y;
 
 	numSkyLayers++;
 	return ( numSkyLayers - 1 );
@@ -479,17 +485,17 @@ void ape_sky_draw_( ApeCamera *camera )
 
 	static unsigned int indices[][ 3 ] = {
 	        /* corners */
-	        {2, 1, 0},
-	        {3, 1, 2},
-	        {4, 3, 2},
-	        {5, 3, 4},
-	        {6, 5, 4},
-	        {7, 5, 6},
-	        {0, 7, 6},
-	        {1, 7, 0},
+	        { 2, 1, 0 },
+	        { 3, 1, 2 },
+	        { 4, 3, 2 },
+	        { 5, 3, 4 },
+	        { 6, 5, 4 },
+	        { 7, 5, 6 },
+	        { 0, 7, 6 },
+	        { 1, 7, 0 },
 	        /* middle */
-	        {4, 2, 0},
-	        {6, 4, 0},
+	        { 4, 2, 0 },
+	        { 6, 4, 0 },
 	};
 	unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
 
@@ -512,7 +518,7 @@ void ape_sky_draw_( ApeCamera *camera )
 
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		PLVector3 location = camera->internal->position;
+		PLVector3 location = camera->base.position;
 		location.y += ( skyLayers[ i ].y + 10.0f );
 
 		PlgClearMesh( mesh );
@@ -541,76 +547,94 @@ void ape_sky_draw_( ApeCamera *camera )
 /****************************************
  ****************************************/
 
-static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
+static void render_transparent_world( ApeWorld *world, ApeCamera *camera )
 {
-	// Ambient pass ...
-
-	//PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
-
-	ape_world_draw( world, camera, NULL, true );
-
-	PlgDepthMask( false );
-
 	unsigned int numLights;
-	ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
-
+	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
-		PlgClearBuffers( PLG_BUFFER_STENCIL );
-
 		if ( lights[ i ]->colour.a == 0.0f )
 		{
 			continue;
 		}
 
+		//TODO: viewport clipping per light volume
+
+		ape_rendererState_.overrideBlendMode = true;
+		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
+
+		ape_world_draw( world, camera, lights[ i ], false, true );
+
+		ape_rendererState_.overrideBlendMode = false;
+		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
+	}
+}
+
+static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeViewport *viewport )
+{
+	// Ambient pass
+	ape_world_draw( world, camera, NULL, true, false );
+
+	PlgDepthMask( false );
+
+	unsigned int numLights;
+	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
+
+	for ( unsigned int i = 0; i < numLights; ++i )
+	{
+		assert( lights[ i ]->colour.a > 0.0f );
+
+		PlgClearBuffers( PLG_BUFFER_STENCIL );
+
+		//TODO: viewport clipping per light volume
 #if 0
 
-			PLCollisionSphere sphere = PlSetupCollisionSphere( lights[ i ]->position, lights[ i ]->radius );
-			PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-			PLVector2 lightScreenPos = PlConvertWorldToScreen( &lights[ i ]->position, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, true );
-			PLVector3 lightRadi = PlAddVector3F( lights[ i ]->position, lights[ i ]->radius );
-			PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewport->width, viewport->height, viewport->x, viewport->y, true );
+		PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 
-			static int radius = 256;
+		int       viewportSize[] = { viewport->width, viewport->height, viewport->x, viewport->y };
+		PLVector2 lightScreenPos = PlConvertWorldToScreen( &lightPosition, &viewProj, viewportSize, true );
+		PLVector3 lightRadi      = PlAddVector3F( lightPosition, lights[ i ]->radius );
+		PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewportSize, true );
 
-			PLRectangleI32 screenRect;
-			screenRect.x = ( int ) lightScreenPos.x - ( radius / 2 );
-			if ( screenRect.x < viewport->x ) screenRect.x = viewport->x;
-			screenRect.y = ( int ) lightScreenPos.y - ( radius / 2 );
-			if ( screenRect.y < viewport->y ) screenRect.y = viewport->y;
+		static int radius = 256;
 
-			screenRect.w = ( int ) radius;
-			//if ( screenRect.x + screenRect.w > viewport->width ) screenRect.w = ( screenRect.x + screenRect.w ) - viewport->width;
-			screenRect.h = ( int ) radius;
-			//if ( screenRect.y + screenRect.h > viewport->height ) screenRect.h = ( screenRect.y + screenRect.h ) - viewport->height;
+		PLRectangleI32 screenRect;
+		screenRect.x = ( int ) lightScreenPos.x - ( radius / 2 );
+		if ( screenRect.x < viewport->x ) screenRect.x = viewport->x;
+		screenRect.y = ( int ) lightScreenPos.y - ( radius / 2 );
+		if ( screenRect.y < viewport->y ) screenRect.y = viewport->y;
 
-			//apeDrawAxesPivot( lights[ i ]->position, lights[ i ]->angles, 1.0f );
+		screenRect.w = ( int ) radius;
+		if ( screenRect.x + screenRect.w > viewport->width ) screenRect.w = ( screenRect.x + screenRect.w ) - viewport->width;
+		screenRect.h = ( int ) radius;
+		if ( screenRect.y + screenRect.h > viewport->height ) screenRect.h = ( screenRect.y + screenRect.h ) - viewport->height;
 
-			if ( screenRect.w < 0 || screenRect.h < 0 )
-				continue;
+		if ( screenRect.w < 0 || screenRect.h < 0 )
+		{
+			continue;
+		}
 
-			//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
+		ape_print_( "light pos 		%s\n", PlPrintVector3( &lightPosition, PL_VAR_F32 ) );
+		ape_print_( "screen pos		%s\n", PlPrintVector2( &lightScreenPos, PL_VAR_F32 ) );
+		ape_print_( "screen bounds	%u %u %u %u\n", screenRect.x, screenRect.y, screenRect.w, screenRect.h );
+
+		//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
 
 #endif
-
-		if ( ape_config_.renderer.showLights )
-		{
-			arl_draw_axis_pivot( lights[ i ]->header.node->position, lights[ i ]->header.node->angles, 1.0f );
-		}
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )
 		{
+			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
+
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
-				ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
-				ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+				ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 				ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-
-				ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 			}
 
 			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
@@ -621,26 +645,26 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
 			ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );
 
-			PlgDepthBufferFunction( PLG_COMPARE_EQUAL );
+			PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
 		}
 
 		ape_rendererState_.overrideBlendMode = true;
-		ape_rendererState_.blendModeA = PLG_BLEND_ONE;
-		ape_rendererState_.blendModeB = PLG_BLEND_ONE;
+		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw( world, camera, lights[ i ], false );
+		ape_world_draw( world, camera, lights[ i ], false, false );
 
 		ape_rendererState_.overrideBlendMode = false;
-		ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 
 		if ( drawShadows )
 		{
@@ -653,17 +677,20 @@ static void render_shaded_world( ApeWorld *world, ApeCamera *camera )
 	PlgDepthMask( true );
 }
 
-PLVector2 screenPosTest;
+void ape_test_draw_( ApeCamera *camera );
+
+PLVector2   screenPosTest;
 static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
 	ape_rendererPerformance_.numLights = 0;
 
-	ApeWorld *world = ape_camera_get_world( camera );
 	ape_editor_pre_render_scene_( camera );
 
 	if ( !ape_config_.world.skipDraw )
 	{
 		ape_sky_draw_( camera );
+
+		ApeWorld *world = ape_camera_get_world( camera );
 		if ( world != NULL )
 		{
 			switch ( camera->drawMode )
@@ -675,18 +702,25 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 					break;
 				case APE_CAMERA_DRAW_MODE_SOLID:
 				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw( world, camera, NULL, true );
+					ape_world_draw( world, camera, NULL, true, false );
+					ape_world_draw( world, camera, NULL, true, true );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
-					render_shaded_world( world, camera );
+					render_solid_world( world, camera, viewport );
+					render_transparent_world( world, camera );
 					break;
 			}
 		}
+
+		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
 
-	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+#if !defined( NDEBUG )
+	ape_draw_debug_mesh_display_();
+	ape_test_draw_( camera );
+#endif
 
-	ape_rendererState_.passStage = SS_ARL_RENDERER_PASS_DEFAULT;
+	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
@@ -695,6 +729,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	assert( viewport != NULL );
 
 	COM_PROFILE_FUNCTION_START();
+
+	currentCamera = camera;
 
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
@@ -715,5 +751,12 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
 
+	currentCamera = nullptr;
+
 	COM_PROFILE_FUNCTION_END();
+}
+
+ApeCamera *ape_renderer_get_current_camera_()
+{
+	return currentCamera;
 }

@@ -1,80 +1,68 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include "yin/node.h"
-
+#include "acm/public/acm/acm.h"
 #include "ss1_game.h"
-
 #include "game/private/ss1/menu/ss1_menu.h"
+
+#include "../shared/integrations/integrations.h"
+#include "../shared/physics/physics.h"
+
+static GamePhysicsRope debugRope;
+
+static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 
 SS1GameState ss1_gameState;
 
-#define SS1_CONFIG "pm_user"
+#define SS1_CONFIG "game_ss1"
 
 const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
         [SS1_PROFESSION_SHAMAN] = {
-                                   .name = "Shaman",
-                                   .description = "Temp",
-                                   },
+                .name        = "Shaman",
+                .description = "Temp",
+        },
         [SS1_PROFESSION_MACHINIST] = {
-                                   .name = "Machinist",
-                                   .description = "Temp",
-                                   },
+                .name        = "Machinist",
+                .description = "Temp",
+        },
         [SS1_PROFESSION_TRICKSTER] = {
-                                   .name = "Trickster",
-                                   .description = "Temp",
-                                   },
+                .name        = "Trickster",
+                .description = "Temp",
+        },
         [SS1_PROFESSION_POUNDER] = {
-                                   .name = "Pounder",
-                                   .description = "Temp",
-                                   },
+                .name        = "Pounder",
+                .description = "Temp",
+        },
 };
 
-static ApeLight *sun;
+static ApeLight *suns[ 2 ];
 
-static void sun_command( unsigned int argc, char **argv )
+#if !defined( NDEBUG )
+static void run_tests()
 {
-	if ( sun == nullptr )
-	{
-		return;
-	}
-
-	float x = ( float ) atof( argv[ 1 ] );
-	float y = ( float ) atof( argv[ 2 ] );
-	float z = ( float ) atof( argv[ 3 ] );
-
-	PLVector3 sunPos = { x, y, z };
-	ape_light_set_position( sun, &sunPos );
+	game_language_set_current( "ger" );
+	game_print_( "%s", G_STR( "test_message", "Test failed!" ) );
+	game_language_set_current( nullptr );
 }
+#endif
 
-static void sun_colour_command( unsigned int argc, char **argv )
-{
-	if ( sun == nullptr )
-	{
-		return;
-	}
-
-	float x = ( float ) atof( argv[ 1 ] );
-	float y = ( float ) atof( argv[ 2 ] );
-	float z = ( float ) atof( argv[ 3 ] );
-	float w = ( float ) atof( argv[ 4 ] );
-
-	ape_light_set_colour( sun, &PL_COLOURF32( x, y, z, w ) );
-}
-
-static bool ss1_initialize( void )
+static bool ss1_initialize()
 {
 	PL_ZERO_( ss1_gameState );
 
-	ss_game_register_standard_entity_components_();
+#if !defined( NDEBUG )
+	run_tests();
+#endif
 
-	PlRegisterConsoleCommand( "sun", "Set the global sun position.", 3, sun_command );
-	PlRegisterConsoleCommand( "sun_colour", "Sets the global sun colour.", 4, sun_colour_command );
+	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
+	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
+
+	game_register_standard_entity_components_();
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
 	for ( uint i = 0; i < SS1_MAX_PROFESSIONS; ++i )
 	{
-		assert( ss1_professions[ i ].name != nullptr );
+		assert( ss1_professions[ i ].name != nullptr && ss1_professions[ i ].description != nullptr );
 	}
 #endif
 
@@ -83,7 +71,7 @@ static bool ss1_initialize( void )
 	ss1_gameState.config = com_get_config( SS1_CONFIG );
 
 	// determine if it's the first time we've launched
-	const char *name = nd_branch_get_child_string( ss1_gameState.config, "name", nullptr );
+	const char *name = acm_branch_get_child_string( ss1_gameState.config, "name", nullptr );
 	if ( name != nullptr )
 	{
 		snprintf( ss1_gameState.players[ 0 ].name, sizeof( ss1_gameState.players[ 0 ].name ), "%s", name );
@@ -100,6 +88,8 @@ static bool ss1_initialize( void )
 		return false;
 	}
 
+	game_physics_rope_setup( &debugRope, 16, 1.0f );
+
 	return true;
 }
 
@@ -111,15 +101,17 @@ static bool ss1_shutdown( void )
 
 	if ( ss1_gameState.camera != nullptr )
 	{
-		ape_world_node_destroy( ape_camera_get_world_node( ss1_gameState.camera ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) ss1_gameState.camera );
 		ss1_gameState.camera = nullptr;
 	}
 
 	if ( ss1_gameState.world != nullptr )
 	{
-		ape_world_node_destroy( ape_world_get_world_node( ss1_gameState.world ) );
+		ape_world_node_destroy( ( ApeWorldNode * ) ss1_gameState.world );
 		ss1_gameState.world = nullptr;
 	}
+
+	game_integrations_discord_shutdown_();
 
 	return true;
 }
@@ -147,11 +139,26 @@ static void handle_input( void )
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
 	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-	pos = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
-	pos = PlSubtractVector3( pos, PlScaleVector3F( left, leftStick.x ) );
+	pos                 = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
+	pos                 = PlSubtractVector3( pos, PlScaleVector3F( left, leftStick.x ) );
 
 	ape_camera_set_position( ss1_gameState.camera, &pos );
 	ape_camera_set_angles( ss1_gameState.camera, &ang );
+}
+
+/**
+ * This is a very convoluted way to set the pitch and yaw, but
+ * unfortunately *this* idiot decided to make the sun a position
+ */
+static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
+{
+	PLVector3 position = { 1.0f, pitch, 0.0f };
+	PLMatrix4 matrix   = PlMatrix4Identity();
+	matrix             = PlMultiplyMatrix4( PlTranslateMatrix4( position ), &matrix );
+	matrix             = PlMultiplyMatrix4( PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ), &matrix );
+	position.x         = matrix.m[ 0 ];
+	position.z         = matrix.m[ 8 ];
+	return position;
 }
 
 static bool ss1_tick( void )
@@ -161,7 +168,35 @@ static bool ss1_tick( void )
 
 	handle_input();
 
-	world_simulation_tick( &ss1_gameState.simulation );
+	ApeWorld *world = ss_game_get_current_world();
+	if ( world != nullptr )
+	{
+		if ( suns[ 0 ] != nullptr )
+		{
+			static float p = -2.0f;
+			static float y = 0.0f;
+
+			y += 0.5f;
+
+			PLVector3 sunPosition;
+			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
+			ape_light_set_position( suns[ 1 ], &sunPosition );
+
+			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 0.0f + cosf( y / 20.0f ) * 10.0f, 24.0f + sinf( y / 50.0f ) * 10.0f, -20.0f ), true );
+
+			sunPosition = game_physics_rope_get_end_position( &debugRope );
+			ape_light_set_position( suns[ 0 ], &sunPosition );
+		}
+
+		ape_world_set_ambience( world, &( PLColourF32 ){ 0.25f, 0.25f, 0.25f, 1.f } );
+
+		world_simulation_tick( &ss1_gameState.simulation );
+
+		game_physics_rope_tick( &debugRope, 1.0f );
+		game_physics_rope_debug_draw( &debugRope );
+	}
+
+	game_integrations_discord_tick_();
 
 	return true;
 }
@@ -183,27 +218,14 @@ static bool ss1_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &ss1_gameState.simulation );
 
-	ape_world_node_attach( ape_camera_get_world_node( ss1_gameState.camera ),
-	                       world->header.node );
+	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, &world->base );
 
-	ApeWorldNode *worldNode;
-	// attempt to fetch the terrain
-	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "terrain" ) ) != nullptr )
-	{
-		ss1_gameState.terrain = ape_world_node_get_brush_data( worldNode );
-		if ( ss1_gameState.terrain == nullptr )
-		{
-			game_warning_( "Terrain node is not a valid brush!\n" );
-		}
-	}
-	if ( ( worldNode = ape_world_node_get_child_by_name( world->root, "sun" ) ) != nullptr )
-	{
-		sun = ape_world_node_get_light_data( worldNode );
-		if ( sun == nullptr )
-		{
-			game_warning_( "Sun node is not a valid light!\n" );
-		}
-	}
+	suns[ 0 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
+	                              APE_LIGHT_TYPE_OMNI,
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_FLARE | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+	suns[ 1 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
+	                              APE_LIGHT_TYPE_SUN,
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 
 	return true;
 }
@@ -233,13 +255,39 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 	return false;
 }
 
+static void server_client_connected( ApeServerClientHandle *clientHandle )
+{
+	game_server_client_connected_( clientHandle );
+}
+
+static void server_client_disconnected( ApeServerClientHandle *clientHandle )
+{
+	game_server_client_disconnected_( clientHandle );
+}
+
+static void server_process_message( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
+{
+	game_server_process_message_( clientHandle, buf, bufSize );
+}
+
+static void client_process_message( const void *buf, size_t bufSize )
+{
+	game_client_process_message_( buf, bufSize );
+}
+
 const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
-	        .version = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion = SS1_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
-	        .identifier = "ss1",
+	        .version               = APE_GAME_INTERFACE_VERSION,
+	        .protocolVersion       = SS1_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
+	        .identifier            = "ss1",
 	        .requestCallbackMethod = request_handler,
+
+	        .serverClientConnected    = server_client_connected,
+	        .serverClientDisconnected = server_client_disconnected,
+	        .serverProcessMessage     = server_process_message,
+
+	        .clientProcessMessage = client_process_message,
 	};
 	return &gameMode;
 }

@@ -30,17 +30,37 @@ typedef struct ApeSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
-	PLGTexture *texture;
+	PLGTexture  *texture;
 } ApeSpriteFrame;
 
 #define APE_CAMERA_MAX_ROOM_VISITS    4  // Maximum number of times we can visit the same room. TODO: hook up to var
 #define APE_CAMERA_MAX_VISIBLE_ROOMS  256// we'll go through 256 portals maximum (maybe hook this to a var)
 #define APE_CAMERA_MAX_VISIBLE_LIGHTS 512//TODO: hook up to var
 
+typedef struct ApeCameraVisibleSet
+{
+	bool      dirty;
+	PLVector3 oldPosition, oldAngles;
+
+	ApeLight    *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
+	unsigned int numLights;
+
+	PLVectorArray *nodes;//ApeWorldNode
+
+	struct
+	{
+		PLMatrix4    transform;
+		unsigned int numVisits;
+		ApeRoom     *room;
+	} rooms[ APE_CAMERA_MAX_VISIBLE_ROOMS ];
+	unsigned int numRooms;
+	PLHashTable *visitedRooms;
+} ApeCameraVisibleSet;
+
 typedef struct ApeCamera
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	char tag[ 32 ];
 
@@ -53,30 +73,11 @@ typedef struct ApeCamera
 
 	ApeRoom *room;
 
-	// For visibility
-	struct
-	{
-		bool dirty;
-		PLVector3 oldPosition, oldAngles;
-
-		ApeLight *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
-		unsigned int numLights;
-
-		PLVectorArray *nodes;//ApeWorldNode
-
-		struct
-		{
-			PLMatrix4 transform;
-			unsigned int numVisits;
-			ApeRoom *room;
-		} rooms[ APE_CAMERA_MAX_VISIBLE_ROOMS ];
-		unsigned int numRooms;
-		PLHashTable *visitedRooms;
-	} visibility;
+	ApeCameraVisibleSet visibility;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	PLVector3 forward;// calculated on call to SetCameraAngle
+	PLVector3         forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
 } ApeCamera;
 
@@ -89,17 +90,17 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 typedef struct ApeLight
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	ApeLightType type;
 
 	PLColourF32 colour;
-	float radius;
+	float       radius;
 
 	bool isHidden;
 
 	unsigned int flags;
-	int state;
+	int          state;
 
 	bool isCacheDirty;
 
@@ -118,19 +119,19 @@ typedef enum ApeCullMode
 
 typedef enum ApeRendererPassStage
 {
-	SS_ARL_RENDERER_PASS_DEFAULT,
+	APE_RENDERER_PASS_DEFAULT,
 	SS_ARL_RENDERER_PASS_DEPTH,
 } ApeRendererPassStage;
 
 typedef struct ApeRendererPassState
 {
-	ApeCullMode cullMode;// override default cull mode
+	ApeCullMode          cullMode;// override default cull mode
 	ApeRendererPassStage passStage;
 
 	PLGBlend blendModeA, blendModeB;
-	bool overrideBlendMode;
+	bool     overrideBlendMode;
 
-	bool mirror;
+	bool         mirror;
 	unsigned int depth;
 
 	ApeCamera *camera;
@@ -141,6 +142,13 @@ extern ApeRendererPassState ape_rendererState_;
 
 void ape_initialize_renderer_( void );
 void ape_shutdown_renderer_( void );
+
+/**
+ * Returns the camera currently being used to draw the scene.
+ *
+ * @return	Pointer to the currently active camera. Null if no camera active.
+ */
+ApeCamera *ape_renderer_get_current_camera_();
 
 bool ape_get_capture_state_( void );
 
@@ -160,5 +168,14 @@ PLGTexture *ape_texture_get_fallback( void );
 
 void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity );
 void ape_clear_flare_queue_( void );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Debug Draw
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_draw_initialize_debug_mesh_();
+void ape_draw_destroy_debug_mesh_();
+void ape_draw_debug_clear_();
+void ape_draw_debug_mesh_display_();
 
 ////////////////////////////////////////////////////////////////////

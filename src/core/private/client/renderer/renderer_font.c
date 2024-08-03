@@ -98,7 +98,7 @@ void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, f
 
 	PlLoadIdentityMatrix();
 
-	ape_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL );
 
 	PlPopMatrix();
 }
@@ -133,7 +133,7 @@ void ape_bitmap_font_draw( ApeBitmapFont *font )
 
 	//PlLoadIdentityMatrix();
 
-	ape_material_draw( font->material, font->mesh, NULL, 0 );
+	ape_material_draw( font->material, font->mesh, NULL );
 
 	//PlPopMatrix();
 }
@@ -155,7 +155,7 @@ void ape_shutdown_bitmap_fonts_( void )
 
 ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	ApeBitmapFont *font = apeGetCachedData( materialPath, APE_CACHE_POOL_FONTS );
+	ApeBitmapFont *font = ape_cache_get_data_( materialPath, APE_CACHE_POOL_FONTS );
 	if ( font != NULL )
 	{
 		ape_mm_add_reference( &font->mem );
@@ -189,7 +189,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	apeAddToCachePool( materialPath, APE_CACHE_POOL_FONTS, font );
+	ape_cache_add_to_pool_( materialPath, APE_CACHE_POOL_FONTS, font );
 
 	ape_mm_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
 	ape_mm_add_reference( &font->mem );

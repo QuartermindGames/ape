@@ -228,9 +228,6 @@ void ape_tick_client_( void )
 
 	ape_tick_input_();
 	ape_tick_gui_();
-
-	ape_clear_flare_queue_();
-
 	ape_tick_materials_();
 	ape_tick_audio_();
 

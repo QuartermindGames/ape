@@ -3,27 +3,11 @@
 #include "game_private.h"
 #include "game_menu.h"
 
-uint8_t menuOptionSelection = 0;
-
-void gameInitializeMenu( void )
-{
-}
-
-void gameShutdownMenu( void )
-{
-}
-
 static Menu *currentMenu = NULL;
 
 void Game_Menu_SetCurrent( Menu *menu )
 {
 	currentMenu = menu;
-	menuOptionSelection = 0;
-}
-
-Menu *Game_Menu_GetCurrent( void )
-{
-	return currentMenu;
 }
 
 typedef enum HUDElement

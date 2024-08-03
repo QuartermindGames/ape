@@ -10,7 +10,7 @@
 #include <yin/core_world.h>
 
 #include "ape_memory_manager.h"
-#include "nodes/entity/entity.h"
+#include "nodes/node_entity.h"
 #include "audio/audio.h"
 
 #define WORLD_PROP_TAG_LENGTH 64
@@ -119,7 +119,7 @@ typedef struct ApeWorldPortal
 typedef struct ApeRoom
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	bool isDetail;
 
@@ -146,25 +146,33 @@ typedef struct ApeRoom
 typedef struct ApeWorldEntity
 {
 	char className[ APE_ENTITY_MAX_NAME ];
-	NdBranch *properties;
+	AcmBranch *properties;
 } ApeWorldEntity;
 
 PL_EXTERN_C
 
 ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces );
 
-void ape_world_serialize_( const ApeWorld *world, NdBranch *root );
+void ape_world_serialize_( const ApeWorld *world, AcmBranch *root );
 
 /// Deserialize world from a node tree.
 /// \param world World that deserialized data will be added to.
 /// \param root Handle to the world root.
 /// \return On success, returns the world pointer, otherwise null.
-ApeWorld *ape_world_deserialize_( NdBranch *root );
+ApeWorld *ape_world_deserialize_( AcmBranch *root );
 
 void ape_world_spawn_entities_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
 void ape_calc_world_node_bounds( ApeWorldNode *root );
+
+/**
+ * Iterates over the children of the world and returns the first room.
+ *
+ * @param self	Pointer to instance of world.
+ * @return 		Pointer to instance of room. Null on fail.
+ */
+ApeRoom *ape_world_get_first_room_( ApeWorld *self );
 
 PL_EXTERN_C_END

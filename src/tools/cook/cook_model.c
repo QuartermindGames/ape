@@ -2,27 +2,19 @@
 // Purpose: Cooking methods specific to models.
 // Author:  Mark E. Sowden
 
-#include "cook.h"
-
-#include "model/model.h"
-#include "model/model_obj.h"
-
-#include "ape/ape_formats.h"
-
 #include "plcore/pl_hashtable.h"
+#include "plcore/pl_timer.h"
+
+#include "cook.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-extern CookModelFormatInterface modelSmdInterface;
-extern CookModelFormatInterface modelObjInterface;
-extern CookModelFormatInterface modelHowPCInterface;
-extern CookModelFormatInterface modelPsiInterface;
+extern const CookModelFormatInterface  modelSmdInterface;
+extern const CookModelFormatInterface  modelObjInterface;
 static const CookModelFormatInterface *modelCookFormats[] = {
         &modelObjInterface,
         &modelSmdInterface,
-        &modelHowPCInterface,
-        &modelPsiInterface,
         nullptr,
 };
 
@@ -63,23 +55,25 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 
 #endif
 
-static void deserialize_model_animations( NdBranch *root, ApeFormatModel *dst, const char *folder )
+static void deserialize_model_animations( AcmBranch *root, ApeFormatModel *dst, const char *folder )
 {
 }
 
-static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const char *folder )
+static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char *folder )
 {
-	const char *name = nd_branch_get_child_string( root, "name", nullptr );
+	const char *name = acm_branch_get_child_string( root, "name", nullptr );
 	if ( name == nullptr )
 	{
 		WARN( "No name specified for model!\n" );
 		return;
 	}
 
-	const char *materialPath = nd_branch_get_child_string( root, "materialPath", folder );
+	const char *materialPath = acm_branch_get_child_string( root, "materialPath", folder );
 	PlSetupPath( dst->materialPath, true, "%s", materialPath );
 
-	const char *body = nd_branch_get_child_string( root, "body", nullptr );
+	dst->scale = acm_branch_get_child_float32( root, "scale", 1.0f );
+
+	const char *body = acm_branch_get_child_string( root, "body", nullptr );
 	if ( body != nullptr )
 	{
 		const char *ext = PlGetFileExtension( body );
@@ -92,27 +86,34 @@ static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const
 		PLPath bodyPath;
 		PlSetupPath( bodyPath, true, "%s/%s", folder, body );
 
-		const CookModelFormatInterface *interface = ( const CookModelFormatInterface * ) modelCookFormats;
-		while ( interface != nullptr )
+		const CookModelFormatInterface **interface = modelCookFormats;
+		while ( ( *interface ) != nullptr )
 		{
-			if ( interface->extension != nullptr && ( pl_strcasecmp( interface->extension, ext ) == 0 ) )
+			if ( ( *interface )->extension != nullptr && ( pl_strcasecmp( ( *interface )->extension, ext ) == 0 ) )
 			{
-				assert( interface->loadFunction );
-				assert( interface->convertFunction );
-				assert( interface->deleteFunction );
+				assert( ( *interface )->loadFunction );
+				assert( ( *interface )->convertFunction );
+				assert( ( *interface )->deleteFunction );
 
-				CookModel *model = interface->loadFunction( bodyPath );
+				CookModel *model = ( *interface )->loadFunction( bodyPath );
 				if ( model == nullptr )
 				{
 					interface++;
 					continue;
 				}
 
-				interface->convertFunction( model, dst );
-				interface->deleteFunction( model );
+				( *interface )->convertFunction( model, dst );
+				( *interface )->deleteFunction( model );
 				break;
 			}
 			interface++;
+		}
+
+		// apply the scale here...
+		for ( uint i = 0; i < dst->numVertices; ++i )
+		{
+			dst->vertices[ i ].position = PlScaleVector3F( dst->vertices[ i ].position, dst->scale );
+			dst->vertices[ i ].normal   = PlScaleVector3F( dst->vertices[ i ].normal, dst->scale );
 		}
 
 		if ( interface == nullptr )
@@ -127,152 +128,126 @@ static void deserialize_model_config( NdBranch *root, ApeFormatModel *dst, const
 		return;
 	}
 
-	NdBranch *child;
-	if ( dst->numBones > 0 )
+	dst->isStatic = acm_branch_get_child_bool( root, "isStatic", false );
+	if ( !dst->isStatic )
 	{
-		if ( ( child = nd_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+		if ( dst->numBones > 0 )
 		{
-			deserialize_model_animations( child, dst, folder );
-		}
-		else
-		{
-			WARN( "Skeletal model, but no animations specified!\n" );
+			AcmBranch *child;
+			if ( ( child = acm_branch_get_child_by_name( root, "animations" ) ) != nullptr )
+			{
+				deserialize_model_animations( child, dst, folder );
+			}
+			else
+			{
+				WARN( "Skeletal model, but no animations specified!\n" );
+			}
 		}
 	}
 
-	if ( ( child = nd_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
+	AcmBranch *child;
+	if ( ( child = acm_branch_get_child_by_name( root, "attachments" ) ) != nullptr )
 	{
 	}
 
 	snprintf( dst->name, sizeof( dst->name ), "%s", name );
 }
 
+#if 0// originally had a bunch of fancy crap for only storing unique vertices, but the complexity doesn't seem worth it
 typedef struct VectorIndex
 {
 	const PLVector3 *vec;
-	unsigned int pos;
+	uint             pos;
 } VectorIndex;
 
-static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
+static uint get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
 {
 	const VectorIndex *index = PlLookupHashTableUserData( vectorTable, v, sizeof( PLVector3 ) );
 	if ( index == nullptr )
 	{
-		return ( unsigned int ) -1;
+		return ( uint ) -1;
 	}
 
 	return index->pos;
 }
+#endif
 
-static void serialize_triangle( NdBranch *root, const ApeFormatTriangle *triangle, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
+static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices )
 {
-	NdBranch *triangleBranch = nd_branch_push_back_object( root, nullptr );
+	char *c = strrchr( mesh->material, '/' );
+	printf( "\tSerialising mesh (%s)\n", c != nullptr ? ( c + 1 ) : mesh->material );
 
-	const ApeFormatVertex *a = &vertices[ triangle->indices[ 0 ] ];
-	const ApeFormatVertex *b = &vertices[ triangle->indices[ 1 ] ];
-	const ApeFormatVertex *c = &vertices[ triangle->indices[ 2 ] ];
-
-	unsigned int vertexIndices[ 3 ] = {
-	        get_vector_index( &a->position, vertexTable ),
-	        get_vector_index( &b->position, vertexTable ),
-	        get_vector_index( &c->position, vertexTable ),
-	};
-	nd_branch_push_back_uint32_array( triangleBranch, "vertex", vertexIndices, 3 );
-
-	unsigned int normalIndices[ 3 ] = {
-	        get_vector_index( &a->normal, normalsTable ),
-	        get_vector_index( &b->normal, normalsTable ),
-	        get_vector_index( &c->normal, normalsTable ),
-	};
-	nd_branch_push_back_uint32_array( triangleBranch, "normal", normalIndices, 3 );
-}
-
-static void serialize_mesh( NdBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices, PLHashTable *vertexTable, PLHashTable *normalsTable )
-{
-	NdBranch *meshBranch = nd_branch_push_back_object( root, nullptr );
+	AcmBranch *meshBranch = acm_branch_push_back_object( root, nullptr );
 
 	//TODO: should go ahead and ensure material exists, and associated texture for material is cooked, etc.
-	nd_branch_push_back_string( meshBranch, "material", mesh->material );
+	acm_branch_push_back_string( meshBranch, "material", mesh->material );
 
-	NdBranch *trianglesBranch = nd_branch_push_back_object_array( meshBranch, "triangles" );
-	for ( unsigned int i = 0; i < mesh->numTriangles; ++i )
+	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
+	printf( "\t\t%u triangles\n", mesh->numTriangles );
+	for ( uint i = 0; i < mesh->numTriangles; ++i )
 	{
-		serialize_triangle( trianglesBranch, &mesh->triangles[ i ], vertices, vertexTable, normalsTable );
+		AcmBranch *triangleBranch = acm_branch_push_back_object( trianglesBranch, nullptr );
+		acm_branch_push_back_uint32_array( triangleBranch, "vertex", mesh->triangles[ i ].indices, 3 );
 	}
 }
 
-static void serialize_bone( NdBranch *root, const ApeFormatBone *bone )
+static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 {
-	NdBranch *boneBranch = nd_branch_push_back_object( root, nullptr );
-	nd_branch_push_back_string( boneBranch, "name", bone->name );
-	nd_branch_push_back_uint32( boneBranch, "parent", bone->parent );
-	nd_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
-	nd_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
+	printf( "\tSerialising bone (%s)\n", bone->name );
+
+	AcmBranch *boneBranch = acm_branch_push_back_object( root, nullptr );
+	acm_branch_push_back_string( boneBranch, "name", bone->name );
+	acm_branch_push_back_uint32( boneBranch, "parent", bone->parent );
+	acm_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
+	acm_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
 
-static NdBranch *serialize_ape_format_model( const ApeFormatModel *model )
+static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 {
-	NdBranch *root = nd_branch_push_back_object( nullptr, "model" );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "model" );
 
-	nd_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
+	acm_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
 
-	// build up lists of unique vertex data sets...
-	PLHashTable *vertexTable = PlCreateHashTable();
-	for ( unsigned int i = 0; i < model->numVertices; ++i )
+	AcmBranch *branch;
+
+	//TODO: this is pretty basic and hard-coded for now... meh...
+	//TODO: allow us to store vertex data as other data types besides floats...
+	branch = acm_branch_push_back_object( root, "vertexFormatDescriptor" );
+	acm_branch_push_back_uint32( branch, "numFloatElements", 8 );
+	acm_branch_push_back_bool( branch, "hasPosition", true );
+	acm_branch_push_back_bool( branch, "hasNormal", true );
+	acm_branch_push_back_bool( branch, "hasUV", true );
+
+	branch = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	for ( uint i = 0; i < model->numVertices; ++i )
 	{
-		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos = i;
-		index->vec = &model->vertices[ i ].position;
-		PlInsertHashTableNode( vertexTable, &model->vertices[ i ].position, sizeof( PLVector3 ), index );
-	}
-	PLHashTable *normalsTable = PlCreateHashTable();
-	for ( unsigned int i = 0; i < model->numVertices; ++i )
-	{
-		VectorIndex *index = PL_NEW( VectorIndex );
-		index->pos = i;
-		index->vec = &model->vertices[ i ].normal;
-		PlInsertHashTableNode( normalsTable, &model->vertices[ i ].normal, sizeof( PLVector3 ), index );
-	}
-
-	NdBranch *child;
-	PLHashTableNode *childHashNode;
-
-	child = nd_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
-	childHashNode = PlGetFirstHashTableNode( vertexTable );
-	while ( childHashNode != nullptr )
-	{
-		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		nd_branch_push_back_float32( child, nullptr, v->x );
-		nd_branch_push_back_float32( child, nullptr, v->y );
-		nd_branch_push_back_float32( child, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( childHashNode );
+		const ApeFormatVertex *vertexIndex = &model->vertices[ i ];
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.y );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.z );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.y );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->normal.z );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->uv.x );
+		acm_branch_push_back_float32( branch, nullptr, vertexIndex->uv.y );
 	}
 
-	child = nd_branch_push_back_float32_array( root, "normals", nullptr, 0 );
-	childHashNode = PlGetFirstHashTableNode( normalsTable );
-	while ( childHashNode != nullptr )
+	acm_branch_push_back_bool( root, "isStatic", model->isStatic );
+	if ( model->numBones > 0 )
 	{
-		const PLVector3 *v = ( ( VectorIndex * ) ( PlGetHashTableNodeUserData( childHashNode ) ) )->vec;
-		nd_branch_push_back_float32( child, nullptr, v->x );
-		nd_branch_push_back_float32( child, nullptr, v->y );
-		nd_branch_push_back_float32( child, nullptr, v->z );
-		childHashNode = PlGetNextHashTableNode( childHashNode );
+		branch = acm_branch_push_back_object_array( root, "bones" );
+		for ( uint i = 0; i < model->numBones; ++i )
+		{
+			serialize_bone( branch, &model->bones[ i ] );
+		}
 	}
 
-	child = nd_branch_push_back_object_array( root, "bones" );
-	for ( unsigned int i = 0; i < model->numBones; ++i )
+	printf( "%u meshes\n", model->numMeshes );
+	branch = acm_branch_push_back_object_array( root, "meshes" );
+	for ( uint i = 0; i < model->numMeshes; ++i )
 	{
-		serialize_bone( child, &model->bones[ i ] );
+		serialize_mesh( branch, &model->meshes[ i ], model->vertices );
 	}
-
-	child = nd_branch_push_back_object_array( root, "meshes" );
-	for ( unsigned int i = 0; i < model->numMeshes; ++i )
-	{
-		serialize_mesh( child, &model->meshes[ i ], model->vertices, vertexTable, normalsTable );
-	}
-
-	PlDestroyHashTableEx( normalsTable, pl_free );
-	PlDestroyHashTableEx( vertexTable, pl_free );
 
 	return root;
 }
@@ -305,7 +280,7 @@ static bool create_file_path( const char *path )
 
 static void write_ape_format_model( const ApeFormatModel *model, const char *folder )
 {
-	NdBranch *root = serialize_ape_format_model( model );
+	AcmBranch *root = serialize_ape_format_model( model );
 	if ( root == nullptr )
 	{
 		WARN( "Failed to serialize model!\n" );
@@ -319,9 +294,9 @@ static void write_ape_format_model( const ApeFormatModel *model, const char *fol
 		return;
 	}
 
-	if ( !nd_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
-		WARN( "Failed to write model file: %s\n", nd_get_error_message() );
+		WARN( "Failed to write model file: %s\n", acm_get_error_message() );
 	}
 }
 
@@ -342,18 +317,24 @@ void cook_model_process( const char *modelName )
 
 	ApeFormatModel *model = PL_NEW( ApeFormatModel );
 
-	NdBranch *root = nd_load_file( path, "cookModel" );
+	AcmBranch *root = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
-		deserialize_model_config( root, model, folder );
+		double startTime = PlGetCurrentSeconds();
 
-		nd_branch_destroy( root );
+		parse_model_config( root, model, folder );
+
+		acm_branch_destroy( root );
 
 		write_ape_format_model( model, folder );
+
+		double endTime = PlGetCurrentSeconds();
+
+		printf( "Processed model in %.2lfs\n", endTime - startTime );
 	}
 	else
 	{
-		WARN( "Failed to open model cook file (%s): %s\n", path, nd_get_error_message() );
+		WARN( "Failed to open model cook file (%s): %s\n", path, acm_get_error_message() );
 	}
 
 	PL_DELETE( model );

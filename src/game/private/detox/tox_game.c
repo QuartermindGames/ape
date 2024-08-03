@@ -231,7 +231,7 @@ static bool initialize_game( void )
 
 	tox_ui_initialize();
 
-	ss_game_register_standard_entity_components_();
+	game_register_standard_entity_components_();
 
 	ape_register_entity_class( tox_characterClass );
 
@@ -249,7 +249,7 @@ static bool shutdown_game( void )
 {
 	tox_ui_shutdown();
 
-	ape_world_node_destroy( ape_camera_get_world_node( playerCamera ) );
+	ape_world_node_destroy( ( ApeWorldNode * ) playerCamera );
 	playerCamera = nullptr;
 
 	return true;
@@ -265,7 +265,6 @@ static void ss1_handle_input( void )
 	{
 		int mx, my;
 		ape_client_input_get_mouse_delta( &mx, &my );
-
 
 		ang.y += ( float ) mx;
 		ang.x += ( float ) my;

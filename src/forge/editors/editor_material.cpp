@@ -4,33 +4,33 @@
 
 #include "editor_material.h"
 
-#include "../viewport_frame.h"
+#include "forge/forge_viewport.h"
 
-FXDEFMAP( ss::forge::editor_material )
+FXDEFMAP( forge::MaterialEditor )
 materialEditorMap[] = {
 
 };
-FXIMPLEMENT( ss::forge::editor_material, FXTabItem, materialEditorMap, ARRAYNUMBER( materialEditorMap ) )
+FXIMPLEMENT( forge::MaterialEditor, FXTabItem, materialEditorMap, ARRAYNUMBER( materialEditorMap ) )
 
-ss::forge::editor_material::editor_material( FXTabBook *owner, const FXString &worldName, ApeMaterial *material ) : FXTabItem( owner, "Material Editor" )
+forge::MaterialEditor::MaterialEditor( FXTabBook *owner, const FXString &worldName, ApeMaterial *material ) : FXTabItem( owner, "Material Editor" )
 {
-	setIcon( ss::forge::load_fx_icon( getApp(), "resources/material_editor.gif" ) );
+	setIcon( forge::load_fx_icon( getApp(), "resources/material_editor.gif" ) );
 
 	auto *frame = new FXVerticalFrame( owner, LAYOUT_FILL );
 
 	auto *toolbar = new FXToolBar( frame, FRAME_RAISED | FRAME_THICK );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/save.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 
 	new FXVerticalSeparator( toolbar );
-	new FXToggleButton( toolbar, "", "", ss::forge::load_fx_icon( getApp(), "resources/grid.gif" ), 0, &_gridSizeTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/grid.gif" ), 0, &_gridSizeTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	new FXTextField( toolbar, 4, &_gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	new FXVerticalSeparator( toolbar );
-	new FXButton( toolbar, "", ss::forge::load_fx_icon( getApp(), "resources/play.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/play.gif" ) );
 
 	unsigned int mode = APE_CAMERA_MODE_PERSPECTIVE;
-	auto *hs = new FX4Splitter( frame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
-	_viewport = new viewport_frame( hs, get_shared_gl_visual(), nullptr, ( ApeCameraViewMode ) mode++ );
+	auto        *hs   = new FX4Splitter( frame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
+	_viewport         = new Viewport( hs, get_shared_gl_visual(), nullptr, ( ApeCameraViewMode ) mode++ );
 
 	frame->create();
 
@@ -40,4 +40,4 @@ ss::forge::editor_material::editor_material( FXTabBook *owner, const FXString &w
 	}
 }
 
-ss::forge::editor_material::~editor_material() = default;
+forge::MaterialEditor::~MaterialEditor() = default;

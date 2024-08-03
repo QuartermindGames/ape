@@ -12,15 +12,17 @@
 #include "yin/core_input.h"
 #include "yin/core_game.h"
 #include "yin/gui_public.h"
-#include "yin/node.h"
+#include "acm/public/acm/acm.h"
 
 #include "ape/ape_public_client.h"
 
 #include "game/game_public.h"
 
+#include "game_language.h"
+
 PL_EXTERN_C
 
-void ss_game_register_standard_entity_components_( void );
+void game_register_standard_entity_components_( void );
 
 void game_interface_import_setup_( ApeGameInterfaceImport *import, unsigned int version, unsigned int protocolVersion, const char *id );
 
@@ -33,6 +35,13 @@ void game_debug_( const char *message, ... );
 #else
 #	define game_debug_( ... )
 #endif
+
+/**
+ * Get the base game config.
+ *
+ * @return	Returns a pointer to the base game config.
+ */
+AcmBranch *game_get_config();
 
 /////////////////////////////////////////////////////////////////
 

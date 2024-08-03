@@ -5,45 +5,45 @@
 
 CookState cook_state;
 
-static void process_collection( NdBranch *root, const char *tag, void ( *callback )( const char * ) )
+static void process_collection( AcmBranch *root, const char *tag, void ( *callback )( const char * ) )
 {
 	assert( root != nullptr );
 	assert( tag != nullptr );
 	assert( callback != nullptr );
 
-	NdBranch *child = nd_branch_get_child_by_name( root, tag );
+	AcmBranch *child = acm_branch_get_child_by_name( root, tag );
 	if ( child == nullptr )
 	{
 		printf( "No \"%s\" collection, skipping\n", tag );
 		return;
 	}
 
-	unsigned int numTotal = nd_branch_get_num_of_children( child );
+	unsigned int numTotal = acm_branch_get_num_of_children( child );
 	printf( "Processing %u %s...\n", numTotal, tag );
 
 	unsigned int num = 1;
-	child = nd_branch_get_first_child( child );
+	child            = acm_branch_get_first_child( child );
 	while ( child != nullptr )
 	{
 		char name[ 64 ];
-		nd_branch_get_string( child, name, sizeof( name ) );
+		acm_branch_get_string( child, name, sizeof( name ) );
 
 		printf( "(%u/%u) %s\n", num, numTotal, name );
 		callback( name );
 
-		child = nd_get_next_child( child );
+		child = acm_get_next_child( child );
 		num++;
 	}
 }
 
-static void cook_project( NdBranch *root )
+static void cook_project( AcmBranch *root )
 {
 	const char *projectName = com_project_get_name();
 	printf( "------------------------------------------------------\n"
 	        "Cooking \"%s\" project...\n",
 	        projectName );
 
-	NdBranch *cookBranch = nd_branch_get_child_by_name( root, "cook" );
+	AcmBranch *cookBranch = acm_branch_get_child_by_name( root, "cook" );
 	if ( cookBranch == NULL )
 	{
 		ERROR( "No cook configuration specified for project, aborting!\n" );
@@ -76,7 +76,7 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
 
-	NdBranch *config;
+	AcmBranch  *config;
 	const char *projectName = argv[ 1 ];
 	if ( ( config = com_project_mount( projectName ) ) == NULL )
 	{
@@ -92,8 +92,8 @@ int main( int argc, char **argv )
 	// Collect up all commands we've been issued, if any,
 	// as we might not want to operate on the entire project
 	static const unsigned int MAX_COMMANDS = 16;
-	unsigned int numCommands = 0;
-	LaunchCommand commands[ MAX_COMMANDS ];
+	unsigned int              numCommands  = 0;
+	LaunchCommand             commands[ MAX_COMMANDS ];
 	for ( unsigned int i = 2; i < argc; ++i )
 	{
 		if ( argv[ i ] == NULL )
@@ -109,7 +109,7 @@ int main( int argc, char **argv )
 
 		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 || pl_strcasecmp( argv[ i ], "/model" ) == 0 )
 		{
-			commands[ numCommands ].command = argv[ i ];
+			commands[ numCommands ].command  = argv[ i ];
 			commands[ numCommands ].argument = argv[ ++i ];
 			numCommands++;
 		}

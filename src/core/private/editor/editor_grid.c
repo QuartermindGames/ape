@@ -12,8 +12,8 @@
 /////////////////////////////////////////////////////////////////////////////////////
 
 static constexpr unsigned int DEFAULT_GRID_SCALE = 16;
-static constexpr unsigned int MAX_GRID_SCALE = 256;
-static constexpr unsigned int MIN_GRID_SCALE = 2;
+static constexpr unsigned int MAX_GRID_SCALE     = 256;
+static constexpr unsigned int MIN_GRID_SCALE     = 2;
 #define GRID_SIZE     256
 #define GRID_ELEMENTS ( GRID_SIZE * GRID_SIZE )
 
@@ -21,12 +21,12 @@ static PLMatrix4 gridTransform;
 
 typedef struct GridSelectable
 {
-	PLColour colour;
+	PLColour  colour;
 	PLVector3 position;
 } GridSelectable;
-static GridSelectable gridSelectables[ GRID_ELEMENTS ];
+static GridSelectable  gridSelectables[ GRID_ELEMENTS ];
 static GridSelectable *activeGridSelectable;
-static PLHashTable *gridSelectablesTable;
+static PLHashTable    *gridSelectablesTable;
 
 static unsigned int gridOldScale = DEFAULT_GRID_SCALE;
 
@@ -34,14 +34,14 @@ static const float GRID_SELECTABLE_SCALE = 0.5f;
 
 static void grid_update_selection_points( void );
 
-void grid_initialize_( ApeEditorState *instance )
+void ape_grid_initialize_( ApeEditorState *instance )
 {
 	instance->gridVisible = true;
-	instance->gridScale = DEFAULT_GRID_SCALE;
+	instance->gridScale   = DEFAULT_GRID_SCALE;
 
-	gridTransform = PlMatrix4Identity();
+	gridTransform          = PlMatrix4Identity();
 	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
-	gridTransform = PlMultiplyMatrix4( gridTransform, &gridRotation );
+	gridTransform          = PlMultiplyMatrix4( gridTransform, &gridRotation );
 
 	gridSelectablesTable = PlCreateHashTable();
 
@@ -61,16 +61,16 @@ void grid_initialize_( ApeEditorState *instance )
 	grid_update_selection_points();
 }
 
-void grid_shutdown_( void )
+void ape_grid_shutdown_( void )
 {
 	PlDestroyHashTable( gridSelectablesTable );
 	gridSelectablesTable = nullptr;
 }
 
-void ape_toggle_grid_command_( unsigned int, char ** )
+void ape_grid_toggle_command_( unsigned int, char ** )
 {
 	ApeEditorState *state = ape_editor_get_active_instance();
-	state->gridVisible = !state->gridVisible;
+	state->gridVisible    = !state->gridVisible;
 }
 
 static void grid_update_selection_points( void )
@@ -80,8 +80,8 @@ static void grid_update_selection_points( void )
 		for ( unsigned int c = 0; c < GRID_SIZE; ++c )
 		{
 			GridSelectable *selectable = &gridSelectables[ r * GRID_SIZE + c ];
-			selectable->position.x = ( float ) r - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
-			selectable->position.y = ( float ) c - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
+			selectable->position.x     = ( float ) r - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
+			selectable->position.y     = ( float ) c - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
 		}
 	}
 
@@ -92,9 +92,8 @@ static void grid_batch_selection_point( const ApeCamera *camera, const GridSelec
 {
 	PLCollisionAABB bounds = ( PLCollisionAABB ){
 	        .origin = PlTransformVector3( &selectable->position, &gridTransform ),
-	        .maxs = ( PLVector3 ){GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE },
-	        .mins = ( PLVector3 ){-GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE}
-    };
+	        .maxs   = ( PLVector3 ){ GRID_SELECTABLE_SCALE, GRID_SELECTABLE_SCALE, GRID_SELECTABLE_SCALE },
+	        .mins   = ( PLVector3 ){ -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE } };
 	if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
 	{
 		return;
@@ -142,15 +141,15 @@ static void grid_batch_selection_point( const ApeCamera *camera, const GridSelec
 
 static void update_active_grid_selection( void )
 {
-	ApeViewport *selectionViewport = get_selection_viewport_();
-	PLGFrameBuffer *frameBuffer = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
+	ApeViewport    *selectionViewport = get_selection_viewport_();
+	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{
 		return;
 	}
 
-	size_t size = frameBuffer->width * frameBuffer->height * 4;
-	PLColour *buf = PL_NEW_( PLColour, size );
+	size_t    size = frameBuffer->width * frameBuffer->height * 4;
+	PLColour *buf  = PL_NEW_( PLColour, size );
 	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
 		int x, y;
@@ -162,9 +161,9 @@ static void update_active_grid_selection( void )
 
 		if ( x < frameBuffer->width && y < frameBuffer->height )
 		{
-			const PLColour *pixel = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
+			const PLColour *pixel      = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
 			GridSelectable *selectable = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
-			activeGridSelectable = selectable;
+			activeGridSelectable       = selectable;
 		}
 	}
 	else
@@ -228,7 +227,7 @@ void ape_grid_increase_size( void )
 		return;
 	}
 
-	instance->gridScale = PlClamp( MIN_GRID_SCALE, ( instance->gridScale * 2 ), MAX_GRID_SCALE );
+	instance->gridScale  = PlClamp( MIN_GRID_SCALE, ( instance->gridScale * 2 ), MAX_GRID_SCALE );
 	activeGridSelectable = nullptr;
 }
 
@@ -240,7 +239,7 @@ void ape_grid_decrease_size( void )
 		return;
 	}
 
-	instance->gridScale = PlClamp( MIN_GRID_SCALE, ( instance->gridScale / 2 ), MAX_GRID_SCALE );
+	instance->gridScale  = PlClamp( MIN_GRID_SCALE, ( instance->gridScale / 2 ), MAX_GRID_SCALE );
 	activeGridSelectable = nullptr;
 }
 
@@ -264,7 +263,7 @@ void ape_grid_set_visibility( bool visible )
 	}
 
 	instance->gridVisible = visible;
-	activeGridSelectable = nullptr;
+	activeGridSelectable  = nullptr;
 }
 
 void ape_grid_draw_( ApeCamera *camera )
@@ -315,8 +314,8 @@ void ape_grid_draw_( ApeCamera *camera )
 
 		PLCollisionAABB bounds = {
 		        .origin = activeGridSelectable->position,
-		        .mins = {-GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE},
-		        .maxs = {GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE },
+		        .mins   = { -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE },
+		        .maxs   = { GRID_HIGHLIGHT_SCALE, GRID_HIGHLIGHT_SCALE, GRID_HIGHLIGHT_SCALE },
 		};
 		PlgDrawBoundingVolume( &bounds, &( PLColour ){ 255, 255, 255, 255 } );
 	}

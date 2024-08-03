@@ -10,24 +10,24 @@
 typedef struct Flare
 {
 	PLColourF32 colour;
-	PLVector2 screenPos;
-	float size;
-	float intensity;
-	float distance;
+	PLVector2   screenPos;
+	float       size;
+	float       intensity;
+	float       distance;
 } Flare;
 
 static constexpr unsigned int MAX_FLARES = 64;
-static unsigned int numFlares;
-static Flare flares[ MAX_FLARES ];
+static unsigned int           numFlares;
+static Flare                  flares[ MAX_FLARES ];
 
-static const char *flareMaterialPath = "materials/effects/effect_flare_sheet.mat.n";
+static const char  *flareMaterialPath = "materials/effects/effect_flare_sheet.mat.n";
 static ApeMaterial *flareMaterial;
 
 static bool flareEnabled = true;
 
 static constexpr float MAX_FLARE_DISTANCE = 256.0f;
 
-static constexpr float FLARE_ELEMENT_WIDTH = 128.0f;
+static constexpr float FLARE_ELEMENT_WIDTH  = 128.0f;
 static constexpr float FLARE_ELEMENT_HEIGHT = 128.0f;
 
 typedef struct FlareElement
@@ -36,11 +36,11 @@ typedef struct FlareElement
 	float h;
 	float x;
 	float y;
-	bool rotate;
+	bool  rotate;
 } FlareElement;
 
-static constexpr unsigned int NUM_FLARE_ELEMENTS = 4;
-static const FlareElement flareElements[ NUM_FLARE_ELEMENTS ] = {
+static constexpr unsigned int NUM_FLARE_ELEMENTS                  = 4;
+static const FlareElement     flareElements[ NUM_FLARE_ELEMENTS ] = {
         { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = 0.0f, .y = 0.0f, .rotate = true },
         { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH, .y = 0.0f },
         { .w = FLARE_ELEMENT_WIDTH, .h = FLARE_ELEMENT_HEIGHT, .x = FLARE_ELEMENT_WIDTH * 2, .y = 0.0f },
@@ -88,19 +88,20 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos,
 	float w = ( float ) viewport->width;
 	float h = ( float ) viewport->height;
 
-	PLMatrix4 m = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-	PLVector2 screenPos = PlConvertWorldToScreen( worldPos, &m, viewport->width, viewport->height, viewport->x, viewport->y, true );
+	PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+	int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
+	PLVector2 screenPos      = PlConvertWorldToScreen( worldPos, &m, viewportSize, true );
 	if ( screenPos.x > w || screenPos.y > h || screenPos.x < 0.f || screenPos.y < 0.f )
 	{
 		return;
 	}
 
-	Flare *flare = &flares[ numFlares++ ];
-	flare->colour = *colour;
-	flare->size = size;
+	Flare *flare     = &flares[ numFlares++ ];
+	flare->colour    = *colour;
+	flare->size      = size;
 	flare->intensity = intensity;
 	flare->screenPos = screenPos;
-	flare->distance = distance;
+	flare->distance  = distance;
 }
 
 void ape_clear_flare_queue_( void )
@@ -117,11 +118,11 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 		float s = 2.0f;
 
 		// sprite properties
-		const FlareElement *element = &flareElements[ i ];
-		PLColourF32 colour = { 1.0f, 1.0f, 1.0f, intensity };
-		PLVector3 position = { x, y, 0.0f };
-		PLVector3 origin = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
-		PLVector3 angles = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
+		const FlareElement *element  = &flareElements[ i ];
+		PLColourF32         colour   = { 1.0f, 1.0f, 1.0f, intensity };
+		PLVector3           position = { x, y, 0.0f };
+		PLVector3           origin   = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
+		PLVector3           angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
 
 		// area of the texture we want to use
 		PLQuad quad = { element->x, element->y, element->w, element->h };
@@ -161,7 +162,7 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 
 		float maxDistance = PlGetVector2Length( &PL_VECTOR2( w, h ) ) / 4.0f;
-		float intensity = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &PL_VECTOR2( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
+		float intensity   = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &PL_VECTOR2( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
 		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );

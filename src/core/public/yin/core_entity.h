@@ -6,7 +6,7 @@
 
 PL_EXTERN_C
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
 typedef struct ApeEntityClassDefinition ApeEntityClassDefinition;
 typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
@@ -15,6 +15,9 @@ typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
 
 typedef struct ApeEntity
 {
+	// This should always come first!
+	ApeWorldNode base;
+
 	char name[ APE_ENTITY_MAX_NAME ];               // identifier
 	const ApeEntityClassDefinition *classDefinition;// class that the actor is derived from
 	void *classData;                                // pointer to the unique data of the class
@@ -50,14 +53,14 @@ typedef struct ApeEntityClassDefinition
 	unsigned int numProperties;
 
 	void ( *cacheFunction )( void );                                   // called upon registration
-	void *( *createFunction )( ApeEntity *self, NdBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
+	void *( *createFunction )( ApeEntity *self, AcmBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
 	void ( *destroyFunction )( ApeEntity *self );                      // called when the entity is free'd, which should be done for the class too
 	void ( *spawnFunction )( ApeEntity *self );                        // this gets called when the entity is actually spawned into the world, at which point the class state can be reset
 	void ( *tickFunction )( ApeEntity *self );                         // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self );
 
-	NdBranch *( *serializeFunction )( ApeEntity *self );
-	void ( *deserializeFunction )( ApeEntity *self, NdBranch *root );
+	AcmBranch *( *serializeFunction )( ApeEntity *self );
+	void ( *deserializeFunction )( ApeEntity *self, AcmBranch *root );
 } ApeEntityClassDefinition;
 
 typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )( void );
@@ -65,11 +68,10 @@ typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )(
 void ape_register_entity_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className );
 
-ApeEntity *ape_create_entity( const char *className, NdBranch *properties );
-void ape_entity_destroy( ApeEntity *entity );
+ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent );
 
-void ape_entity_tick( ApeEntity *entity );
-void ape_entity_draw( ApeEntity *entity );
+void ape_entity_tick( ApeEntity *self );
+void ape_entity_draw( ApeEntity *self );
 
 ////////////////////////////////////////////////////////////////////
 // Components
@@ -81,14 +83,14 @@ typedef struct ApeEntityComponentDefinition
 	void *( *Create )( void );// required!!
 	void ( *Destroy )( void *data );
 
-	NdBranch *( *Serialize )( void );
-	void ( *Deserialize )( NdBranch *root );
+	AcmBranch *( *Serialize )( void );
+	void ( *Deserialize )( AcmBranch *root );
 } ApeEntityComponentDefinition;
 
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
 
 void ape_register_entity_component( const ApeEntityComponentDefinition *definition );
-void *ss_acl_entity_add_component( ApeEntity *entity, const char *name );
-void *ss_acl_entity_get_component( ApeEntity *entity, const char *name );
+void *ape_entity_add_component( ApeEntity *self, const char *name );
+void *ape_entity_get_component( ApeEntity *self, const char *name );
 
 PL_EXTERN_C_END

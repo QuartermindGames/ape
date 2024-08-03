@@ -8,19 +8,19 @@
 PL_EXTERN_C
 
 typedef struct PLVectorArray PLVectorArray;
-typedef struct PLLinkedList PLLinkedList;
+typedef struct PLLinkedList  PLLinkedList;
 
-typedef struct NdBranch NdBranch;
+typedef struct AcmBranch AcmBranch;
 
 /* external elements */
 typedef struct ApeMaterial ApeMaterial;
-typedef struct ApeCamera ApeCamera;
+typedef struct ApeCamera   ApeCamera;
 typedef struct ApeViewport ApeViewport;
-typedef struct ApeLight ApeLight;
-typedef struct ApeEntity ApeEntity;// core_entity.h
-typedef struct ApeRoom ApeRoom;    // world.h
-typedef struct ApeBrush ApeBrush;
-typedef struct ApeWorld ApeWorld;
+typedef struct ApeLight    ApeLight;
+typedef struct ApeEntity   ApeEntity;// core_entity.h
+typedef struct ApeRoom     ApeRoom;  // world.h
+typedef struct ApeBrush    ApeBrush;
+typedef struct ApeWorld    ApeWorld;
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -44,6 +44,7 @@ typedef enum ApeWorldNodeType
 	APE_WORLD_NODE_TYPE_ROOT, // the world itself
 	APE_WORLD_NODE_TYPE_ROOM, // and then brushes, lights, cameras and entities should be attached to this
 	APE_WORLD_NODE_TYPE_BRUSH,// geometry that makes up the room
+	APE_WORLD_NODE_TYPE_MODEL,
 	APE_WORLD_NODE_TYPE_LIGHT,
 	APE_WORLD_NODE_TYPE_CAMERA,
 	APE_WORLD_NODE_TYPE_ENTITY,// can add dynamic behaviours to any children
@@ -53,27 +54,18 @@ typedef enum ApeWorldNodeType
 
 typedef struct ApeWorldNodeClass
 {
-	const char *identifier;
+	const char       *identifier;
 	ApeWorldNodeMagic magic;
 	void ( *destroyFunction )( void *data );
 } ApeWorldNodeClass;
 
-/// This should be the first thing under any data considered a node type.
-/// This is so that validation can be done, and one can easily fetch the associated node.
-typedef struct ApeWorldNodeHeader
-{
-	ApeWorldNodeMagic magic;
-	ApeWorldNodeMagic typeMagic;
-	ApeWorldNode *node;
-} ApeWorldNodeHeader;
-
 typedef struct ApeWorldNode
 {
-	char name[ 64 ];
-	ApeWorldNodeType type;
-	const ApeWorldNodeClass *classType;
+	ApeWorldNodeMagic magic;
 
-	void *data;
+	char                     name[ 64 ];
+	ApeWorldNodeType         type;
+	const ApeWorldNodeClass *classType;
 
 	// Originally used a transform matrix here, but for simplicity...
 	PLVector3 position;
@@ -83,20 +75,25 @@ typedef struct ApeWorldNode
 	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
 	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
 
-	ApeWorldNode *parent;
+	ApeWorldNode            *parent;
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
 
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
-ApeWorldNode *ape_world_node_create( ApeWorldNode *parent, ApeWorldNodeType type, const PLVector3 *position, const PLVector3 *angles, void *data );
-void ape_world_node_destroy( ApeWorldNode *self );
+bool ape_world_node_is_valid_( const ApeWorldNode *self, ApeWorldNodeType expectedType );
+
+ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const PLVector3 *position, const PLVector3 *angles );
+void          ape_world_node_destroy( ApeWorldNode *self );
 
 void ape_world_node_dettach( ApeWorldNode *self );
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
 
-void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position );
-void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles );
+PLVector3 ape_world_node_get_position( const ApeWorldNode *self );
+void      ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position );
+
+PLVector3 ape_world_node_get_angles( const ApeWorldNode *self );
+void      ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles );
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs );
 
@@ -108,19 +105,8 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self );
 ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self );
 ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name );
 
-ApeWorld *ape_world_node_get_root_data( ApeWorldNode *self );
-ApeRoom *ape_world_node_get_room_data( ApeWorldNode *self );
-ApeLight *ape_world_node_get_light_data( ApeWorldNode *self );
-ApeCamera *ape_world_node_get_camera_data( ApeWorldNode *self );
-ApeEntity *ape_world_node_get_entity_data( ApeWorldNode *self );
-ApeBrush *ape_world_node_get_brush_data( ApeWorldNode *self );
-
-ApeWorldNode *ape_world_get_world_node( ApeWorld *self );
-ApeWorldNode *ape_room_get_world_node( ApeRoom *self );
-ApeWorldNode *ape_light_get_world_node( ApeLight *self );
-ApeWorldNode *ape_camera_get_world_node( ApeCamera *self );
-ApeWorldNode *ape_entity_get_world_node( ApeEntity *self );
-ApeWorldNode *ape_brush_get_world_node( ApeBrush *self );
+#define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
+#define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ape World Brush - the building blocks of the world.
@@ -143,10 +129,10 @@ typedef enum ApeBrushType
 
 typedef struct ApeBrushFaceVertex
 {
-	PLVector2 textureCoords;
-	PLVector2 lightmapCoords;
-	PLVector3 position;
-	PLVector3 normal;
+	PLVector2   textureCoords;
+	PLVector2   lightmapCoords;
+	PLVector3   position;
+	PLVector3   normal;
 	PLColourF32 colour;
 } ApeBrushFaceVertex;
 
@@ -155,7 +141,7 @@ typedef struct ApeBrushFace
 	int materialIndex;
 
 	PLVectorArray *vertices;//ApeBrushFaceVertex
-	PLLinkedList *edgeLoop; //ApeBrushFaceVertex
+	PLLinkedList  *edgeLoop;//ApeBrushFaceVertex
 
 	unsigned int flags;
 
@@ -165,7 +151,7 @@ typedef struct ApeBrushFace
 typedef struct ApeBrush
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
 	ApeBrushType type;
 
@@ -173,8 +159,8 @@ typedef struct ApeBrush
 
 	PLVectorArray *faces;//ApeBrushFace
 
-	PLGMesh *mesh;    // cached mesh
-	bool isMeshCached;// if false, mesh cache will be updated
+	PLGMesh *mesh;        // cached mesh
+	bool     isMeshCached;// if false, mesh cache will be updated
 } ApeBrush;
 
 ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles );
@@ -185,27 +171,25 @@ void ape_brush_draw( ApeBrush *self );
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ApeWorldFace ApeWorldFace;
-typedef struct ApeWorldMesh ApeWorldMesh;
+typedef struct ApeWorldFace   ApeWorldFace;
+typedef struct ApeWorldMesh   ApeWorldMesh;
 typedef struct ApeWorldObject ApeWorldObject;
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeRoom        ApeRoom;
 
 typedef struct PLVectorArray PLVectorArray;
-typedef struct PLLinkedList PLLinkedList;
+typedef struct PLLinkedList  PLLinkedList;
 
 typedef struct ApeWorld
 {
 	// This should always come first!
-	ApeWorldNodeHeader header;
+	ApeWorldNode base;
 
-	char *name;
+	char  *name;
 	PLPath path;
 
 	PLVectorArray *meshes;
 
 	PLLinkedList *entitySpawns;
-
-	ApeWorldNode *root;
 
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
@@ -216,11 +200,11 @@ typedef struct ApeWorld
 	PLColourF32 clearColour;
 
 	PLColourF32 fogColour;
-	float fogNear;
-	float fogFar;
+	float       fogNear;
+	float       fogFar;
 
 	/* additional generic properties */
-	struct NdBranch *globalProperties;
+	struct AcmBranch *globalProperties;
 } ApeWorld;
 
 #define APE_WORLD_VERSION       3
@@ -239,11 +223,11 @@ ApeWorld *ape_world_load( const char *path );
 /// \return On success, returns true but false otherwise.
 bool ape_world_save( ApeWorld *self, const char *path );
 
-NdBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera );
-void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly );
+void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha );
 void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light );
 
 void ape_world_set_global_defaults( ApeWorld *level );
@@ -257,22 +241,23 @@ void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
+/**
+ * This crudely tries to determine the sector by an origin point.
+ * Should only be used for vague, but fast, lookup.
+ */
 ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
-/// Attach a node to the world's root node.
-void ape_world_attach_node( ApeWorld *self, ApeWorldNode *node );
-
 unsigned int ape_sky_add_layer( const char *path, float scale, float y, float alpha );
-void ape_sky_set_layer_alpha( unsigned int slot, float alpha );
-void ape_sky_set_layer_offset( unsigned int slot, float x, float y );
-void ape_sky_clear_layers( void );
-void ape_sky_draw_( ApeCamera *camera );
+void         ape_sky_set_layer_alpha( unsigned int slot, float alpha );
+void         ape_sky_set_layer_offset( unsigned int slot, float x, float y );
+void         ape_sky_clear_layers( void );
+void         ape_sky_draw_( ApeCamera *camera );
 
 ////////////////////////////////////////////////////////////////////
 // Room
 
-ApeRoom *ape_create_room( ApeWorldNode *parent );
-void ape_world_room_destroy( ApeRoom *self );
+ApeRoom *ape_room_create( ApeWorldNode *parent );
+void     ape_world_room_destroy( ApeRoom *self );
 
 ////////////////////////////////////////////////////////////////////
 // Face
@@ -307,11 +292,11 @@ typedef enum ApeLightType
 
 typedef enum ApeLightFlag
 {
-	PL_BITFLAG( SS_ARL_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
-	PL_BITFLAG( SS_ARL_LIGHT_FLAG_SHADOWS, 1U ),        // if enabled without runtime shadows flag, will cast lightmap shadows
-	PL_BITFLAG( SS_ARL_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
-	PL_BITFLAG( SS_ARL_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
-	PL_BITFLAG( APE_LIGHT_FLAG_FLARE, 4U ),             // light will produce a lensflare effect when visible
+	PL_BITFLAG( APE_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
+	PL_BITFLAG( SS_ARL_LIGHT_FLAG_SHADOWS, 1U ),     // if enabled without runtime shadows flag, will cast lightmap shadows
+	PL_BITFLAG( APE_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
+	PL_BITFLAG( APE_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
+	PL_BITFLAG( APE_LIGHT_FLAG_FLARE, 4U ),          // light will produce a lensflare effect when visible
 } ApeLightFlag;
 
 /// A light can only be spawned in while the world is active.
@@ -319,16 +304,18 @@ typedef enum ApeLightFlag
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
-void ape_light_destroy( ApeLight *light );
+void      ape_light_destroy( ApeLight *light );
 
 PLColourF32 ape_light_get_colour( const ApeLight *light );
-void ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
+void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
 
 PLVector3 ape_light_get_position( const ApeLight *light );
-void ape_light_set_position( ApeLight *light, const PLVector3 *position );
+void      ape_light_set_position( ApeLight *light, const PLVector3 *position );
 
 PLVector3 ape_light_get_angles( const ApeLight *self );
-void ape_light_set_angles( ApeLight *self, const PLVector3 *angles );
+void      ape_light_set_angles( ApeLight *self, const PLVector3 *angles );
+
+void ape_light_set_radius( ApeLight *self, float radius );
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 
@@ -336,5 +323,14 @@ bool ape_light_is_active( const ApeLight *light );
 
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
+
+/**
+ * Test whether or not the light is visible to the given camera.
+ *
+ * @param self 		Instance of light.
+ * @param camera 	Instance of camera.
+ * @return 			True on visible, false otherwise.
+ */
+bool ape_light_is_visible( const ApeLight *self, const ApeCamera *camera );
 
 PL_EXTERN_C_END

@@ -1,6 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <yin/node.h>
+#include "acm/public/acm/acm.h"
 
 #include "game_private.h"
 #include "game_component_transform.h"

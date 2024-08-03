@@ -17,10 +17,10 @@
 static PLLinkedList *cameras;
 
 static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
-static int compare_lights( const void *a, const void *b )
+static int       compare_lights( const void *a, const void *b )
 {
-	float da = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) a )->header.node->position, viewPos ) );
-	float db = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) b )->header.node->position, viewPos ) );
+	float da = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) a )->base.position, viewPos ) );
+	float db = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) b )->base.position, viewPos ) );
 	return ( da > db ) ? 1 : -1;
 }
 
@@ -47,23 +47,34 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
 		//TODO: let us configure draw distance per light
-		float distance = PlVector3Length( PlSubtractVector3( light->header.node->position, ape_camera_get_position( camera ) ) );
+		float distance = PlVector3Length( PlSubtractVector3( light->base.position, ape_camera_get_position( camera ) ) );
 		if ( distance > ape_config_.renderer.maxLightDistance )
 		{
 			return;
 		}
 
-		PLCollisionSphere sphere = PlSetupCollisionSphere( light->header.node->position, light->radius );
+		PLCollisionSphere sphere = PlSetupCollisionSphere( light->base.position, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
 		{
 			return;
 		}
 	}
 
+	if ( ape_config_.renderer.showLights )
+	{
+		PLVector3 pos = ape_light_get_position( light );
+		ape_draw_debug_sphere( pos, PlColourF32ToU8( &light->colour ), light->radius );
+		if ( light->type != APE_LIGHT_TYPE_OMNI )
+		{
+			PLVector3 end = PlAddVector3( pos, PlScaleVector3F( light->base.angles, 2.0f ) );
+			ape_draw_debug_arrow( pos, end, PlColourF32ToU8( &light->colour ) );
+		}
+	}
+
 	PL_GET_CVAR( "renderer.testFlares", testFlares );
 	if ( testFlares != nullptr && testFlares->b_value )
 	{
-		PLVector3 pos = light->header.node->position;
+		PLVector3 pos = light->base.position;
 		pos.z += 16.0f;
 		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, light->colour.a );
 		pos.z += 16.0f;
@@ -74,7 +85,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 
 	if ( light->flags & APE_LIGHT_FLAG_FLARE )
 	{
-		ape_add_flare_to_queue( camera, &light->header.node->position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		ape_add_flare_to_queue( camera, &light->base.position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 	}
 
 	camera->visibility.lights[ camera->visibility.numLights ] = light;
@@ -89,10 +100,13 @@ static void light_vis_navigate_tree( ApeCamera *camera, ApeWorldNode *node )
 		return;
 	}
 
-	ApeLight *light = ape_world_node_get_light_data( node );
-	if ( light != nullptr )
+	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
-		queue_light( camera, light );
+		ApeLight *light = ( ApeLight * ) node;
+		if ( light != nullptr )
+		{
+			queue_light( camera, light );
+		}
 	}
 
 	PLLinkedListNode *i = PlGetFirstNode( node->children );
@@ -115,21 +129,23 @@ static void build_visible_light_list( ApeCamera *camera, ApeWorldNode *root )
 	// for now this operates over all the lights in the world, urgh...
 	camera->visibility.numLights = 0;
 
+	ape_clear_flare_queue_();
+
 	light_vis_navigate_tree( camera, root );
 
 	sort_lights( camera );
 }
 
-static void test_room_visibility( ApeCamera *self, ApeRoom *room )
+static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *camera, ApeRoom *room )
 {
-	if ( self->visibility.numRooms >= APE_CAMERA_MAX_VISIBLE_ROOMS )
+	if ( visibleSet->numRooms >= APE_CAMERA_MAX_VISIBLE_ROOMS )
 	{
-		ape_warning_( "Maximum visible room limit reached (%u >= %u)!\n", self->visibility.numRooms, APE_CAMERA_MAX_VISIBLE_ROOMS );
+		ape_warning_( "Maximum visible room limit reached (%u >= %u)!\n", visibleSet->numRooms, APE_CAMERA_MAX_VISIBLE_ROOMS );
 		return;
 	}
 
 	//TODO: get rid of this and use the node boundary instead per the caller!
-	if ( !PlgIsBoxInsideView( self->internal, &room->header.node->bounds ) )
+	if ( !PlgIsBoxInsideView( camera, &room->base.bounds ) )
 	{
 		return;
 	}
@@ -143,18 +159,25 @@ static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 
 	PlPushMatrix();
 
-	unsigned int numFaces;
+	unsigned int   numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
-		const ApeWorldFace *face = faces[ i ];
+		const ApeWorldFace        *face       = faces[ i ];
 		static const ApeWorldFace *portalFace = nullptr;
 		if ( portalFace != nullptr && face == portalFace )
 		{
 			continue;
 		}
 
-		if ( !PlgIsBoxInsideView( self->internal, &face->bounds ) || PlVector3DotProduct( self->forward, face->normal ) > 0.f )
+#if 0
+		PLVector3 endPos = PlAddVector3( face->origin, PlScaleVector3F( face->normal, 0.5f ) );
+		ape_draw_debug_arrow( face->origin, endPos, PL_COLOUR_RED );
+#endif
+
+		PLVector3 forward;
+		PlAnglesAxes( camera->angles, nullptr, nullptr, &forward );
+		if ( !PlgIsBoxInsideView( camera, &face->bounds ) || PlVector3DotProduct( forward, face->normal ) > 0.f )
 		{
 			continue;
 		}
@@ -175,58 +198,16 @@ static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 		}
 
 		portalFace = face;
-		test_room_visibility( self, nextRoom );
+		test_room_visibility( visibleSet, camera, nextRoom );
 
 		ape_rendererPerformance_.numVisiblePortals++;
 	}
 
 	room->numVisits--;
 
-	self->visibility.rooms[ self->visibility.numRooms ].transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	self->visibility.rooms[ self->visibility.numRooms ].room = room;
-	self->visibility.numRooms++;
-
-	PlPopMatrix();
-}
-
-static void camera_build_visibility_lists( ApeCamera *self )
-{
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadIdentityMatrix();
-
-	ApeWorldNode *rootNode = ape_world_node_get_root( self->header.node );
-	if ( rootNode == nullptr )
-	{
-		return;
-	}
-
-	ApeRoom *room = ape_world_node_get_room( self->header.node );
-	if ( room == nullptr )
-	{
-		PLLinkedListNode *childNode = PlGetFirstNode( rootNode->children );
-		while ( childNode != nullptr )
-		{
-			ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( childNode );
-			assert( childWorldNode != nullptr );
-			childNode = PlGetNextLinkedListNode( childNode );
-
-			room = ape_world_node_get_room_data( childWorldNode );
-			if ( room != nullptr )
-			{
-				// this just draws every room we can see from the
-				// root though will be incredibly costly for more
-				// complex scenes, so best avoid!!!
-				test_room_visibility( self, room );
-			}
-		}
-	}
-	else
-	{
-		test_room_visibility( self, room );
-	}
-
-	build_visible_light_list( self, rootNode );
+	visibleSet->rooms[ visibleSet->numRooms ].transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
+	visibleSet->rooms[ visibleSet->numRooms ].room      = room;
+	visibleSet->numRooms++;
 
 	PlPopMatrix();
 }
@@ -246,18 +227,19 @@ void ape_camera_make_active( ApeCamera *camera )
 
 ApeWorld *ape_camera_get_world( ApeCamera *self )
 {
-	ApeWorldNode *worldNode = ape_world_node_get_root( self->header.node );
+	ApeWorldNode *worldNode = ape_world_node_get_root( &self->base );
 	if ( worldNode == nullptr )
 	{
 		return nullptr;
 	}
 
-	return ape_world_node_get_root_data( worldNode );
+	assert( ape_world_node_is_valid_( worldNode, APE_WORLD_NODE_TYPE_ROOT ) );
+	return ( ApeWorld * ) worldNode;
 }
 
 ApeRoom *ape_camera_get_room( ApeCamera *self )
 {
-	return ape_world_node_get_room( self->header.node );
+	return ape_world_node_get_room( &self->base );
 }
 
 void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode )
@@ -310,9 +292,9 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
-	ape_world_node_create( parent, APE_WORLD_NODE_TYPE_CAMERA, position, angles, camera );
+	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, position, angles );
 
-	camera->mode = cameraMode;
+	camera->mode     = cameraMode;
 	camera->drawMode = drawMode;
 
 	camera->internal = PlgCreateCamera();
@@ -321,29 +303,29 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, c
 		ape_error_( true, "Failed to create camera: %s\n", PlGetError() );
 	}
 
-	static const float DEFAULT_FAR = 1000000.0f;
-	static const float DEFAULT_FOV = 75.0f;
+	static const float DEFAULT_FAR  = 1000000.0f;
+	static const float DEFAULT_FOV  = 75.0f;
 	static const float DEFAULT_NEAR = 0.1f;
 
 	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
-		camera->internal->fov = DEFAULT_FOV;
-		camera->internal->far = DEFAULT_FAR;
+		camera->internal->fov  = DEFAULT_FOV;
+		camera->internal->far  = DEFAULT_FAR;
 		camera->internal->near = DEFAULT_NEAR;
 	}
 	else if ( camera->mode == APE_CAMERA_MODE_ISOMETRIC )
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
-		camera->internal->fov = DEFAULT_FOV;
-		camera->internal->far = DEFAULT_FAR;
+		camera->internal->fov  = DEFAULT_FOV;
+		camera->internal->far  = DEFAULT_FAR;
 		camera->internal->near = DEFAULT_NEAR;
 	}
 	else
 	{
 		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 		camera->internal->near = -10000.0f;
-		camera->internal->far = 10000.0f;
+		camera->internal->far  = 10000.0f;
 	}
 
 	ape_camera_set_position( camera, position );
@@ -359,7 +341,7 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const PLVector3 *position, c
 	}
 
 	camera->visibility.visitedRooms = PlCreateHashTable();
-	camera->visibility.nodes = PlCreateVectorArray( 0 );
+	camera->visibility.nodes        = PlCreateVectorArray( 0 );
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
 
@@ -512,28 +494,79 @@ ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+void ape_camera_build_visibility_lists_( ApeCamera *self )
+{
+	PlClearHashTable( self->visibility.visitedRooms );
+	self->visibility.numLights = 0;
+	self->visibility.numRooms  = 0;
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
+
+	ApeRoom *room = ape_world_node_get_room( &self->base );
+	if ( room == nullptr )
+	{
+		ApeWorldNode *rootNode = ape_world_node_get_root( &self->base );
+		if ( rootNode == nullptr )
+		{
+			return;
+		}
+
+		PLLinkedListNode *childNode = PlGetFirstNode( rootNode->children );
+		while ( childNode != nullptr )
+		{
+			ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( childNode );
+			assert( childWorldNode != nullptr );
+			childNode = PlGetNextLinkedListNode( childNode );
+
+			if ( ape_config_.world.showNodeVolumes )
+			{
+				ape_draw_debug_aabb( &childWorldNode->bounds, PL_COLOUR_RED );
+			}
+
+			if ( childWorldNode->type != APE_WORLD_NODE_TYPE_ROOM )
+			{
+				continue;
+			}
+
+			room = ( ApeRoom * ) childWorldNode;
+			if ( room != nullptr )
+			{
+				// this just draws every room we can see from the
+				// root though will be incredibly costly for more
+				// complex scenes, so best avoid!!!
+				test_room_visibility( &self->visibility, self->internal, room );
+			}
+		}
+
+		build_visible_light_list( self, rootNode );
+	}
+	else
+	{
+		test_room_visibility( &self->visibility, self->internal, room );
+		build_visible_light_list( self, ( ApeWorldNode * ) room );
+	}
+
+	PlPopMatrix();
+
+	ape_rendererPerformance_.numRooms += self->visibility.numRooms;
+	ape_rendererPerformance_.numLights += self->visibility.numLights;
+}
+
 void ape_build_camera_visibility_lists_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ape_rendererPerformance_.numRooms = 0;
-	ape_rendererPerformance_.numLights = 0;
+	ape_rendererPerformance_.numRooms          = 0;
+	ape_rendererPerformance_.numLights         = 0;
 	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	PLLinkedListNode *node = PlGetFirstNode( cameras );
 	while ( node != nullptr )
 	{
 		ApeCamera *camera = PlGetLinkedListNodeUserData( node );
-
-		PlClearHashTable( camera->visibility.visitedRooms );
-		camera->visibility.numLights = 0;
-		camera->visibility.numRooms = 0;
-
-		camera_build_visibility_lists( camera );
-
-		ape_rendererPerformance_.numRooms += camera->visibility.numRooms;
-		ape_rendererPerformance_.numLights += camera->visibility.numLights;
-
+		ape_camera_build_visibility_lists_( camera );
 		node = PlGetNextLinkedListNode( node );
 	}
 
@@ -544,8 +577,8 @@ void ape_clear_camera_visibility_lists_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ape_rendererPerformance_.numRooms = 0;
-	ape_rendererPerformance_.numLights = 0;
+	ape_rendererPerformance_.numRooms          = 0;
+	ape_rendererPerformance_.numLights         = 0;
 	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	PLLinkedListNode *node = PlGetFirstNode( cameras );
@@ -554,8 +587,8 @@ void ape_clear_camera_visibility_lists_( void )
 		ApeCamera *camera = PlGetLinkedListNodeUserData( node );
 		PlClearHashTable( camera->visibility.visitedRooms );
 		camera->visibility.numLights = 0;
-		camera->visibility.numRooms = 0;
-		node = PlGetNextLinkedListNode( node );
+		camera->visibility.numRooms  = 0;
+		node                         = PlGetNextLinkedListNode( node );
 	}
 
 	COM_PROFILE_FUNCTION_END();
