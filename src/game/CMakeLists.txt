@@ -21,7 +21,6 @@ if (MINGW)
             -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
             plcore
             plgraphics
-            plmodel
             ApeCommon
             ApeCore
     )
@@ -29,7 +28,6 @@ else ()
     set(GAME_LINK_LIBS
             plcore
             plgraphics
-            plmodel
             ApeCommon
             ApeCore
     )

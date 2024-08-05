@@ -83,7 +83,6 @@ add_library(ApeCore STATIC
 add_dependencies(ApeCore
         plcore
         plgraphics
-        plmodel
         pl_gl_driver
 )
 
@@ -112,7 +111,6 @@ endif ()
 target_link_libraries(ApeCore
         plcore
         plgraphics
-        plmodel
         ApeCommon
         acm
 )

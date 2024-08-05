@@ -1,11 +1,8 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <plmodel/plm.h>
-
 #include "ape_private.h"
 #include "../actor.h"
 
-#include "client/ape_client_input.h"
 #include "client/renderer/renderer.h"
 
 #define PLAYER_VIEW_OFFSET   0.0f
@@ -36,7 +33,7 @@ typedef struct APlayer
 
 	ApeCamera *eyeCamera;
 
-	PLMModel *model;
+	//PLMModel *model;
 } APlayer;
 
 #define APLAYER( X ) ( ( APlayer * ) ( X )->userData )
@@ -78,7 +75,7 @@ static void Player_Spawn( Actor *self )
 	APlayer *playerData = PlMAlloc( sizeof( APlayer ), true );
 	Act_SetUserData( self, playerData );
 
-	playerData->model = PlmLoadModel( "models/test/md2/bird_final.md2" );
+	//playerData->model = PlmLoadModel( "models/test/md2/bird_final.md2" );
 
 	Act_SetBounds( self, PLAYER_BOUNDS_MINS, PLAYER_BOUNDS_MAXS );
 
@@ -153,11 +150,11 @@ static void Player_Tick( Actor *self, void *userData )
 	}
 
 	/* clamp the velocity as necessary */
-	float maxVelocity = ss_shell_get_button_state( INPUT_LEFT_STICK ) || ss_shell_get_key_state( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+	float maxVelocity                = ss_shell_get_button_state( INPUT_LEFT_STICK ) || ss_shell_get_key_state( KEY_LEFT_SHIFT ) ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 	APLAYER( self )->forwardVelocity = PlClamp( -maxVelocity, APLAYER( self )->forwardVelocity, maxVelocity );
-	APLAYER( self )->strafeVelocity = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
+	APLAYER( self )->strafeVelocity  = PlClamp( -maxVelocity, APLAYER( self )->strafeVelocity, maxVelocity );
 
-	APLAYER( self )->viewAngles = self->angles;
+	APLAYER( self )->viewAngles   = self->angles;
 	APLAYER( self )->viewAngles.z = self->viewPitch;
 
 	PLVector3 left;
@@ -173,6 +170,7 @@ static void Player_Tick( Actor *self, void *userData )
 
 static void Player_Draw( Actor *self, void *userData )
 {
+#if 0
 	if ( APLAYER( self )->model == NULL )
 		return;
 
@@ -186,6 +184,7 @@ static void Player_Draw( Actor *self, void *userData )
 		ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK ), APLAYER( self )->model->meshes[ i ], NULL );
 
 	PlPopMatrix();
+#endif
 }
 
 static void Player_Collide( Actor *self, Actor *other, void *userData )
@@ -196,12 +195,12 @@ static void Player_Collide( Actor *self, Actor *other, void *userData )
 }
 
 const ActorSetup actorPlayerSetup = {
-        .id = "point.player",
-        .Spawn = Player_Spawn,
-        .Tick = Player_Tick,
-        .Draw = Player_Draw,
-        .Collide = Player_Collide,
-        .Destroy = NULL,
-        .Serialize = NULL,
+        .id          = "point.player",
+        .Spawn       = Player_Spawn,
+        .Tick        = Player_Tick,
+        .Draw        = Player_Draw,
+        .Collide     = Player_Collide,
+        .Destroy     = NULL,
+        .Serialize   = NULL,
         .Deserialize = NULL,
 };

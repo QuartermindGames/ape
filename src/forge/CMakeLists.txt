@@ -25,7 +25,6 @@ add_library(Forge STATIC
 add_dependencies(Forge
         plcore
         plgraphics
-        plmodel
         pl_gl_driver
         ApeCore
         FOX-1.6)

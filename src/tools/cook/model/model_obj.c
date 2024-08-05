@@ -49,7 +49,6 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		}
 		else if ( strcmp( token, "map_Kd" ) == 0 )
 		{
-			assert( material != NULL );
 			if ( material == NULL )
 			{
 				ERROR( "Invalid MTL file encountered!\n" );
@@ -73,7 +72,6 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
 		{
 			PLVector3 *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
-			assert( vertex != NULL );
 			if ( vertex == NULL )
 			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
