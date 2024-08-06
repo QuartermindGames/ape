@@ -3,7 +3,7 @@
 #include "ss1_menu.h"
 #include "../../shared/game_menu_pie.h"
 
-static const char *menuFontPath = "guis/fonts/uroob_42.fnt";
+static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static GuiFont    *menuFont;
 
 static bool isMainMenuOpen = true;
