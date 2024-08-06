@@ -180,16 +180,12 @@ public:
 		ID_SELECT_FONT = FXMainWindow::ID_LAST,
 	};
 
-	long on_select_font( FXObject *, FXSelector, void * );
-
 protected:
 	inline MainWindow() = default;
 };
 
 FXDEFMAP( MainWindow )
-mainWindowMap[] = {
-        FXMAPFUNC( SEL_COMMAND, MainWindow::ID_SELECT_FONT, MainWindow::on_select_font ),
-};
+mainWindowMap[] = {};
 
 FXIMPLEMENT( MainWindow, FXMainWindow, mainWindowMap, ARRAYNUMBER( mainWindowMap ) )
 
@@ -328,12 +324,6 @@ void MainWindow::create()
 	}
 
 	exit( EXIT_FAILURE );
-}
-
-long MainWindow::on_select_font( FXObject *, FXSelector, void * )
-{
-
-	return 1;
 }
 
 int main( int argc, char **argv )
