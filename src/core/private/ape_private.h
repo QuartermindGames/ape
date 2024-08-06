@@ -144,7 +144,6 @@ typedef struct ApeConfig
 
 		bool showPortals;
 		bool showAllRooms;
-		bool showRoomVolumes;
 		bool showNodeVolumes;
 
 		bool sortLights;

@@ -23,6 +23,8 @@ static MenuOption debugMenuOptions[] = {
         { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
         { "FPS Counter\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
         { "Show Lights\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
+        { "Show Node Volumes\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" } },
+        { "Show Portals\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" } },
         { "Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
         { "Shadow Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
         { "Post-Processing\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },

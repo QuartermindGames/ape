@@ -111,6 +111,8 @@ static bool ss1_shutdown( void )
 		ss1_gameState.world = nullptr;
 	}
 
+	ss1_menu_shutdown();
+
 	game_integrations_discord_shutdown_();
 
 	return true;
