@@ -73,18 +73,25 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			acm_branch_push_back_float32_array( roomBranch, "maxs", ( float * ) &model->subObjects[ i ].maxs, 3 );
 		}
 
+		acm_branch_push_back_bool( root, "hasColour", model->storesColour );
 		child = acm_branch_push_back_float32_array( root, "vertices", NULL, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
-			PLVector3 *v = PlGetVectorArrayElementAt( model->vertices, j );
+			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
 			if ( v == NULL )
 			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
 			}
 
-			acm_branch_push_back_float32( child, NULL, v->x );
-			acm_branch_push_back_float32( child, NULL, v->y );
-			acm_branch_push_back_float32( child, NULL, v->z );
+			acm_branch_push_back_float32( child, NULL, v->position.x );
+			acm_branch_push_back_float32( child, NULL, v->position.y );
+			acm_branch_push_back_float32( child, NULL, v->position.z );
+			if ( model->storesColour )
+			{
+				acm_branch_push_back_float32( child, NULL, v->colour.x );
+				acm_branch_push_back_float32( child, NULL, v->colour.y );
+				acm_branch_push_back_float32( child, NULL, v->colour.z );
+			}
 		}
 
 #if 0

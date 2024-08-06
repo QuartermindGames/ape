@@ -25,25 +25,23 @@
 
 typedef struct PLFile PLFile;
 
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeRoom            ApeRoom;
 typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
-typedef struct ApeWorldFace ApeWorldFace;
-typedef struct ApeWorldMesh ApeWorldMesh;
-typedef struct ApeWorldPortal ApeWorldPortal;
+typedef struct ApeWorldFace       ApeWorldFace;
+typedef struct ApeWorldMesh       ApeWorldMesh;
+typedef struct ApeWorldPortal     ApeWorldPortal;
 
 typedef struct ApeWorldVertex
 {
-	PLVector3 position;
+	PLVector3      position;
+	PLVector3      colour;
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
 typedef struct ApeWorldFaceVertex
 {
-	PLVector2 uv;
-	PLVector3 normal;
-	PLColour colour;
-	float lightmapU, lightmapV;
-
+	PLVector2       uv;
+	PLVector3       normal;
 	ApeWorldVertex *u;
 } ApeWorldFaceVertex;
 
@@ -60,17 +58,17 @@ typedef struct ApeWorldFaceVertex
 
 typedef struct ApeWorldFace
 {
-	float offset;
+	float     offset;
 	PLVector3 normal;
 	PLVector3 origin;
 
 	ApeWorldPortal *portal;
 
 	struct ApeMaterial *material;
-	int materialIndex;// index into world's material list
+	int                 materialIndex;// index into world's material list
 
 	PLVectorArray *vertices;// ApeWorldFaceVertex
-	PLLinkedList *edgeLoop; // ApeWorldFaceVertex
+	PLLinkedList  *edgeLoop;// ApeWorldFaceVertex
 
 	unsigned int flags; /* portal, mirror, skip etc. */
 
@@ -82,13 +80,13 @@ typedef struct ApeWorldMesh
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
 	struct ApeMaterial **materials;
-	unsigned int numMaterials;
+	unsigned int         numMaterials;
 
 	ApeWorldVertex *vertices;
-	unsigned int numVertices;
-	unsigned int maxVertices;
+	unsigned int    numVertices;
+	unsigned int    maxVertices;
 
-	PLLinkedList *faces;
+	PLLinkedList     *faces;
 	PLLinkedListNode *node;
 
 	ApeMemoryReference mem;
@@ -100,7 +98,7 @@ typedef struct ApeWorldObject
 
 	union
 	{
-		const ApeWorldMesh *collisionMesh;
+		const ApeWorldMesh    *collisionMesh;
 		const PLCollisionAABB *collisionBounds;
 	} collisionPtr;
 } ApeWorldObject;
@@ -132,8 +130,8 @@ typedef struct ApeRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	PLGMesh *mesh;    // cached mesh
-	bool isMeshCached;// if false, mesh cache will be updated
+	PLGMesh *mesh;        // cached mesh
+	bool     isMeshCached;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
@@ -145,7 +143,7 @@ typedef struct ApeRoom
 
 typedef struct ApeWorldEntity
 {
-	char className[ APE_ENTITY_MAX_NAME ];
+	char       className[ APE_ENTITY_MAX_NAME ];
 	AcmBranch *properties;
 } ApeWorldEntity;
 

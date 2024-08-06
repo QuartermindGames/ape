@@ -6,6 +6,7 @@
 #include "../cook.h"
 
 #include "model_obj.h"
+#include "plgraphics/plg_mesh.h"
 
 static void parse_material_template_library( ObjModel *obj, const char *path )
 {
@@ -71,18 +72,18 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 	{
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
 		{
-			PLVector3 *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
+			ObjVertex *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
 			if ( vertex == NULL )
 			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
 			}
 
-			if ( vertex->x < subObject->mins.x ) subObject->mins.x = vertex->x;
-			if ( vertex->y < subObject->mins.y ) subObject->mins.y = vertex->y;
-			if ( vertex->z < subObject->mins.z ) subObject->mins.z = vertex->z;
-			if ( vertex->x > subObject->maxs.x ) subObject->maxs.x = vertex->x;
-			if ( vertex->y > subObject->maxs.y ) subObject->maxs.y = vertex->y;
-			if ( vertex->z > subObject->maxs.z ) subObject->maxs.z = vertex->z;
+			if ( vertex->position.x < subObject->mins.x ) subObject->mins.x = vertex->position.x;
+			if ( vertex->position.y < subObject->mins.y ) subObject->mins.y = vertex->position.y;
+			if ( vertex->position.z < subObject->mins.z ) subObject->mins.z = vertex->position.z;
+			if ( vertex->position.x > subObject->maxs.x ) subObject->maxs.x = vertex->position.x;
+			if ( vertex->position.y > subObject->maxs.y ) subObject->maxs.y = vertex->position.y;
+			if ( vertex->position.z > subObject->maxs.z ) subObject->maxs.z = vertex->position.z;
 		}
 	}
 }
@@ -126,10 +127,26 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 2;
 			char      *end;
-			PLVector3 *vertex = PL_NEW( PLVector3 );
-			vertex->x         = strtof( c, &end );
-			vertex->y         = strtof( end, &end );
-			vertex->z         = strtof( end, NULL );
+			ObjVertex *vertex  = PL_NEW( ObjVertex );
+			vertex->position.x = strtof( c, &end );
+			vertex->position.y = strtof( end, &end );
+			vertex->position.z = strtof( end, &end );
+
+			if ( !PlIsEndOfLine( end ) )
+			{
+				obj->storesColour = true;
+				vertex->colour.x  = strtof( end, &end );
+				vertex->colour.y  = strtof( end, &end );
+				vertex->colour.z  = strtof( end, NULL );
+			}
+#if 0// unsure about this for now...
+			else
+			{
+				vertex->colour.x = 1.0f;
+				vertex->colour.y = 1.0f;
+				vertex->colour.z = 1.0f;
+			}
+#endif
 
 			if ( obj->vertices == NULL )
 			{
@@ -235,7 +252,7 @@ ObjModel *model_obj_load( const char *path )
 				}
 
 				unsigned int      numVertices;
-				const PLVector3 **v = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
+				const ObjVertex **v = ( const ObjVertex ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
 
 				PLVector3 normals[ OBJ_MAX_EDGES ];
 				PL_ZERO_( normals );
@@ -245,9 +262,9 @@ ObjModel *model_obj_load( const char *path )
 					unsigned int y = indices[ idx + 1 ];
 					unsigned int z = indices[ idx + 2 ];
 
-					PLVector3 n = PlgGenerateVertexNormal( *v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ],
-					                                       *v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ],
-					                                       *v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ] );
+					PLVector3 n = PlgGenerateVertexNormal( v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ]->position,
+					                                       v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ]->position,
+					                                       v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ]->position );
 
 					normals[ x ] = PlAddVector3( normals[ x ], n );
 					normals[ y ] = PlAddVector3( normals[ y ], n );

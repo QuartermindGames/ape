@@ -11,6 +11,12 @@ PL_EXTERN_C
 #define OBJ_MAX_EDGES       16
 #define OBJ_MAX_MATERIALS   64
 
+typedef struct ObjVertex
+{
+	PLVector3 position;
+	PLVector3 colour;
+} ObjVertex;
+
 typedef struct ObjMaterial
 {
 	char name[ 64 ];
@@ -52,7 +58,9 @@ typedef struct ObjSubObject
 
 typedef struct ObjModel
 {
-	PLVectorArray *vertices;     // PLVector3
+	bool storesColour;
+
+	PLVectorArray *vertices;     // ObjVertex
 	PLVectorArray *normals;      // PLVector3
 	PLVectorArray *textureCoords;// PLVector2
 

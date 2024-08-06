@@ -159,8 +159,8 @@ typedef struct ApeBrush
 
 	PLVectorArray *faces;//ApeBrushFace
 
-	PLGMesh *mesh;        // cached mesh
-	bool     isMeshCached;// if false, mesh cache will be updated
+	struct PLGMesh *mesh;        // cached mesh
+	bool            isMeshCached;// if false, mesh cache will be updated
 } ApeBrush;
 
 ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles );
