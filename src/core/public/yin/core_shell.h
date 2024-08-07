@@ -14,8 +14,6 @@
 
 PL_EXTERN_C
 
-#define SS_SHELL_TICK_RATE ( 1000 / 60 ) /* ms */
-
 typedef enum SS_Shell_MessageBoxType
 {
 	SS_SHELL_MESSAGE_BOX_TYPE_ERROR,
@@ -45,10 +43,10 @@ ApeViewport *ss_shell_viewport_get_active( void );
 // Low Level Input
 ApeInputState ss_shell_get_button_state( ApeInputButton inputButton );
 ApeInputState ss_shell_get_key_state( int key );
-void ss_shell_get_mouse_position( int *x, int *y );
-void shell_set_mouse_position( int x, int y );
-void ss_shell_grab_mouse( bool grab );
-void ss_shell_push_message( int level, const char *msg, const PLColour *colour );
+void          ss_shell_get_mouse_position( int *x, int *y );
+void          shell_set_mouse_position( int x, int y );
+void          ss_shell_grab_mouse( bool grab );
+void          ss_shell_push_message( int level, const char *msg, const PLColour *colour );
 
 void ss_shell_shutdown( void );
 

@@ -265,7 +265,7 @@ void ape_render_frame( ApeViewport *viewport )
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_CALL( ape_render_frame_( viewport ) );
+	ape_render_frame_( viewport );
 }
 
 void ape_input_handle_keyboard_event( int key, bool isPressed )

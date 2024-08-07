@@ -20,10 +20,10 @@
 static GuiCanvas *canvas;
 
 static const GuiStyleSheet *defaultStyle;
-static GuiPanel *rootPanel;
-static GuiPanel *cursor;
+static GuiPanel            *rootPanel;
+static GuiPanel            *cursor;
 
-static int guiWidth = 800;
+static int guiWidth  = 800;
 static int guiHeight = 600;
 
 static bool drawGUI = false;
@@ -38,13 +38,15 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	if ( debugOverlay->i_value <= 0 )
 		return;
 
+	COM_PROFILE_FUNCTION_START();
+
 	ApeBitmapFont *defaultFont = ape_get_default_small_bitmap_font();
 	ape_bitmap_font_begin_draw( defaultFont );
 
 	static const float sy = 8;
 	static const float sx = 8;
 	static const float tx = 8 + 4;
-	float y = sy;
+	float              y  = sy;
 
 	float ch = ( float ) defaultFont->ch;
 
@@ -93,7 +95,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	ape_bitmap_font_batch_string( defaultFont, tx, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
-		double taskDelay;
+		double      taskDelay;
 		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
 		ape_bitmap_font_batch_string( defaultFont, tx + 8, y += ch, 1.0f, PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
@@ -112,8 +114,8 @@ static void draw_debug_overlay( ApeViewport *viewport )
 
 	if ( debugOverlay->i_value > 1 )
 	{
-		static const float Y_SPACING = 4.0f;
-		static const float X_SPACING = 4.0f;
+		static const float Y_SPACING    = 4.0f;
+		static const float X_SPACING    = 4.0f;
 		static const float GRAPH_HEIGHT = 32.0f;
 
 		y += Y_SPACING;
@@ -129,15 +131,17 @@ static void draw_debug_overlay( ApeViewport *viewport )
 				x += ( bw + X_SPACING );
 			}
 
-			unsigned int numPoints;
+			unsigned int  numPoints;
 			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
-			const char *name = comGetProfilingGroupName( group );
+			const char   *name  = comGetProfilingGroupName( group );
 			ape_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
 			y += GRAPH_HEIGHT + Y_SPACING;
 
 			group = comGetNextProfilingGroup( group );
 		}
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -278,8 +282,8 @@ void ape_draw_gui_( ApeViewport *viewport )
 	if ( !ape_is_editor_active() )
 	{
 		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]";
-		float sw, sh;
-		GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+		float              sw, sh;
+		GuiFont           *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 		gui_font_get_string_pixel_size( font, 1.0f, buildIdentifier, strlen( buildIdentifier ), &sw, &sh );
 		gui_font_draw_string( font, w / 2 - ( sw / 2 ), h - sh, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, buildIdentifier, strlen( buildIdentifier ), false );
 		gui_font_display( font );
@@ -327,7 +331,11 @@ void ape_draw_menu_( ApeViewport *viewport )
 
 void ape_tick_gui_( void )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	gui_panel_tick( rootPanel );
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ss_acl_resize_gui_( int w, int h )

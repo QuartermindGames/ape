@@ -183,8 +183,27 @@ void ape_console_register_commands_( bool isDedicated )
 	}
 }
 
+static void validate_tick_frequency( PLConsoleVariable *variable )
+{
+	if ( variable->i_value > 0 )
+	{
+		return;
+	}
+
+	ape_warning_( "Invalid value specified for tick frequency (%i), resetting to default!\n", variable->i_value );
+
+	char tmp[ 64 ];
+	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
+	PlSetConsoleVariable( variable, tmp );
+}
+
 void ape_console_register_variables_( bool isDedicated )
 {
+	char tmp[ 64 ];
+	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
+	PlRegisterConsoleVariable( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, nullptr, validate_tick_frequency, false );
+	PlRegisterConsoleVariable( "renderTimeLock", "Will only render a frame on tick.", "true", PL_VAR_BOOL, nullptr, nullptr, true );
+
 	// server
 	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
 	PlRegisterConsoleVariable( "server.password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );

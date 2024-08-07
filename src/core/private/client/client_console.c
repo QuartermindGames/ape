@@ -439,7 +439,7 @@ void ape_console_draw_( const ApeViewport *viewport )
  * CLIENT CONSOLE INIT
  ****************************************/
 
-static void input_mlook_command( const PLConsoleVariable *consoleVariable )
+static void input_mlook_command( PLConsoleVariable *consoleVariable )
 {
 	if ( !consoleVariable->b_value )
 	{

@@ -3,10 +3,10 @@
 #include <SDL2/SDL.h>
 
 #ifdef _WIN32
-#include <crtdbg.h>
+#	include <crtdbg.h>
 #elif __linux__
-#include <sys/prctl.h>
-#include <signal.h>
+#	include <sys/prctl.h>
+#	include <signal.h>
 #endif
 
 #include <yin/core.h>
@@ -17,6 +17,8 @@
 #include "launcher.h"
 
 static AcmBranch *shellConfig;
+
+static PLConsoleVariable *tickFrequencyVar;
 
 void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
 {
@@ -125,13 +127,13 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 	}
 
 #if 0
-#if !NDEBUG// for debug builds, throw it onto a second display if available
+#	if !NDEBUG// for debug builds, throw it onto a second display if available
 	if ( SDL_GetNumVideoDisplays() > 1 )
 	{
 		SDL_SetWindowPosition( sdlWindow, SDL_WINDOWPOS_CENTERED_DISPLAY( 1 ), SDL_WINDOWPOS_CENTERED_DISPLAY( 1 ) );
 		SDL_MaximizeWindow( sdlWindow );
 	}
-#endif
+#	endif
 #endif
 
 	if ( mode == SS_SHELL_GRAPHICS_MODE_OPENGL )
@@ -377,7 +379,8 @@ static unsigned int timer_callback( unsigned int interval, void *param )
 
 	SDL_PushEvent( &event );
 
-	return interval;
+	assert( tickFrequencyVar->i_value > 0 );
+	return tickFrequencyVar->i_value;
 }
 
 /****************************************
@@ -586,10 +589,21 @@ int launcher_initialize( int argc, char **argv )
 	}
 
 	// setup our timers, in this case we're just setting up our tick
-	sdlTimer = SDL_AddTimer( SS_SHELL_TICK_RATE, timer_callback, NULL );
+
+	tickFrequencyVar = PlGetConsoleVariable( "tickFrequency" );
+	if ( tickFrequencyVar == nullptr )
+	{
+		PrintError( "No tick frequency variable found: %s\n", PlGetError() );
+	}
+
+	sdlTimer = SDL_AddTimer( tickFrequencyVar->i_value, timer_callback, NULL );
+
+	// this variable denotes whether we should only draw a frame on tick, or always draw
+	PL_GET_CVAR( "renderTimeLock", renderTimeLockVar );
 
 	SDL_StartTextInput();
 
+	static bool shouldDraw = true;
 	while ( ape_is_running() )
 	{
 		COM_PROFILE_START( "frametime" );
@@ -601,6 +615,7 @@ int launcher_initialize( int argc, char **argv )
 			{
 				case SDL_USEREVENT:
 					ape_tick_frame();
+					shouldDraw = true;
 					break;
 
 				case SDL_TEXTINPUT:
@@ -658,9 +673,13 @@ int launcher_initialize( int argc, char **argv )
 			}
 		}
 
-		ape_render_frame( windowViewport );
+		if ( !renderTimeLockVar->b_value || ( renderTimeLockVar->b_value && shouldDraw ) )
+		{
+			ape_render_frame( windowViewport );
 
-		SDL_GL_SwapWindow( sdlWindow );
+			SDL_GL_SwapWindow( sdlWindow );
+			shouldDraw = false;
+		}
 
 		COM_PROFILE_END( "frametime" );
 
@@ -685,7 +704,7 @@ int launcher_initialize( int argc, char **argv )
 
 #if defined( _WIN32 )
 
-#include <windows.h>
+#	include <windows.h>
 
 int APIENTRY WinMain( HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow )
 {

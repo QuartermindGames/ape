@@ -109,7 +109,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 	// Add the console at the bottom
 	console = new forge::ConsoleFrame( verticalSplitter );
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
 }
 
 void forge::MainWindow::create()
@@ -124,7 +124,7 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 {
 	ape_tick_frame();
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, SS_SHELL_TICK_RATE );
+	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
 	return 0;
 }
 
