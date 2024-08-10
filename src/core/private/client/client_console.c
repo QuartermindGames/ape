@@ -471,7 +471,7 @@ void ape_console_register_cl_variables_( void )
 	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
 
 	ape_register_renderer_console_variables_();
-	ss_acl_audio_register_console_variables_();
+	ape_audio_register_console_variables_();
 	ape_register_world_console_variables_();
 	ape_register_editor_console_variables_();
 }

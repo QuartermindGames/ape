@@ -32,7 +32,7 @@ static bool FindChunk( PLFile *file, uint32_t fourCC, uint32_t *chunkSize, uint3
 
 		if ( type == fourCC )
 		{
-			*chunkSize = size;
+			*chunkSize         = size;
 			*chunkDataPosition = offset;
 			return true;
 		}
@@ -61,7 +61,7 @@ static bool ReadChunkData( PLFile *file, void *buffer, uint32_t bufferSize, uint
 	return true;
 }
 
-static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
+static void *ParseWav( PLFile *file, ApeAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
 {
 	/* ensure the type is valid */
 	uint32_t chunkSize;
@@ -86,13 +86,13 @@ static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsign
 	/* fetch the format */
 	if ( FindChunk( file, CHUNK_FMT, &chunkSize, &chunkPosition ) )
 	{
-		if ( chunkSize <= sizeof( YNCoreAudioWaveFormat ) )
+		if ( chunkSize <= sizeof( ApeAudioWaveFormat ) )
 		{
 			PRINT_WARNING( "Chunk size is too small to hold format data!\n" );
 			return NULL;
 		}
 
-		if ( !ReadChunkData( file, waveFormatEx, sizeof( YNCoreAudioWaveFormat ), chunkPosition ) )
+		if ( !ReadChunkData( file, waveFormatEx, sizeof( ApeAudioWaveFormat ), chunkPosition ) )
 			return NULL;
 	}
 	else
@@ -115,7 +115,7 @@ static void *ParseWav( PLFile *file, YNCoreAudioWaveFormat *waveFormatEx, unsign
 	return NULL;
 }
 
-void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
+void *ape_audio_wav_load_( const char *path, ApeAudioWaveFormat *waveFormatEx, unsigned int *bufferSize )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )

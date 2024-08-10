@@ -179,7 +179,7 @@ void ape_initialize_client_( void )
 	strcpy( clientState.userName, "Anon" );
 
 	ape_initialize_renderer_();
-	ape_initialize_audio_();
+	ape_audio_initialize_();
 	ape_initialize_gui_();
 	ape_initialize_input_();
 
@@ -194,7 +194,7 @@ void ape_shutdown_client_( void )
 {
 	ape_shutdown_input_();
 	ape_shutdown_gui_();
-	ape_shutdown_audio_();
+	ape_audio_shutdown_();
 	ape_shutdown_renderer_();
 }
 
@@ -229,7 +229,7 @@ void ape_tick_client_( void )
 	ape_tick_input_();
 	ape_tick_gui_();
 	ape_tick_materials_();
-	ape_tick_audio_();
+	ape_audio_tick_();
 
 	handle_connection_state();
 

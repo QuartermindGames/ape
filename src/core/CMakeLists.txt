@@ -68,7 +68,6 @@ add_library(ApeCore STATIC
         private/audio/audio_openal.c
         private/audio/audio_wav.c
         private/audio/audio_xaudio2.cpp
-        private/audio/audio_xwb.c
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}
 

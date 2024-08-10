@@ -4,6 +4,7 @@
 #include "audio.h"
 
 #if defined( _WIN32 )
+
 #	include <Windows.h>
 #	define XAUDIO2_HELPER_FUNCTIONS
 #	include <xaudio2.h>
@@ -15,16 +16,16 @@
 #		include <x3daudio.h>
 
 static X3DAUDIO_HANDLE audio3DHandle;
-static bool audio3DSupported = false;
-#	endif
+static bool            audio3DSupported = false;
+#    endif
 
-static IXAudio2 *audioEngineInstance = nullptr;
+static IXAudio2               *audioEngineInstance = nullptr;
 static IXAudio2MasteringVoice *audioMasteringVoice = nullptr;
 
 typedef struct VoiceWrapper
 {
 	IXAudio2SourceVoice *voice;
-	bool autoCleanup;
+	bool                 autoCleanup;
 } VoiceWrapper;
 PLLinkedList *voicesList;
 
@@ -108,11 +109,11 @@ static void Audio_XAudio2_Tick()
 	PL_ZERO_( listener );
 
 	PLVector3 v;
-	v = Audio_GetListenerPosition();
+	v                   = Audio_GetListenerPosition();
 	listener.Position.x = v.x;
 	listener.Position.y = v.y;
 	listener.Position.z = v.z;
-	v = Audio_GetListenerVelocity();
+	v                   = Audio_GetListenerVelocity();
 	listener.Velocity.x = v.x;
 	listener.Velocity.y = v.y;
 	listener.Velocity.z = v.z;
@@ -148,7 +149,7 @@ static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, int8_t volume
 	PL_ZERO_( buffer );
 	buffer.AudioBytes = audioSample->bufferSize;
 	buffer.pAudioData = audioSample->buffer;
-	buffer.Flags = XAUDIO2_END_OF_STREAM;
+	buffer.Flags      = XAUDIO2_END_OF_STREAM;
 }
 
 static bool Audio_XAudio2_CreateSource( ApeAudioSource *source )
@@ -180,14 +181,14 @@ extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 	PL_ZERO_( driverInterface );
 
 	driverInterface.Initialize = Audio_XAudio2_Initialize;
-	driverInterface.Shutdown = Audio_XAudio2_Shutdown;
-	driverInterface.Tick = Audio_XAudio2_Tick;
-	driverInterface.Pause = Audio_XAudio2_Pause;
+	driverInterface.Shutdown   = Audio_XAudio2_Shutdown;
+	driverInterface.Tick       = Audio_XAudio2_Tick;
+	driverInterface.Pause      = Audio_XAudio2_Pause;
 
 	driverInterface.EmitSample = Audio_XAudio2_EmitSample;
 	driverInterface.FreeSample = Audio_XAudio2_FreeSample;
 
-	driverInterface.CreateSource = Audio_XAudio2_CreateSource;
+	driverInterface.CreateSource  = Audio_XAudio2_CreateSource;
 	driverInterface.DestroySource = Audio_XAudio2_DestroySource;
 
 	return &driverInterface;

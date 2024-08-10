@@ -7,10 +7,10 @@
 PL_EXTERN_C
 
 typedef struct YNCoreAudioXWBRecord YNCoreAudioXWBRecord;
-typedef struct AclAudioXwb AclAudioXwb;
+typedef struct AclAudioXwb          AclAudioXwb;
 
 AclAudioXwb *acl_audio_xwb_load_file( const char *path );
-void acl_audio_xwb_destroy( AclAudioXwb *xwb );
+void         acl_audio_xwb_destroy( AclAudioXwb *xwb );
 
 /**
  * This list provides a number of
@@ -54,20 +54,20 @@ typedef enum ApeAudioReverbPreset
 	APE_AUDIO_MAX_REVERB_PRESETS
 } ApeAudioReverbPreset;
 
-typedef struct AclAudioEffectType
+typedef struct ApeAudioEffectType
 {
-	const char *name;
+	const char          *name;
 	ApeAudioReverbPreset effect;
-} AclAudioEffectType;
-extern const AclAudioEffectType APE_AUDIO_EFFECT_TYPES[];
-extern const unsigned int APE_NUM_AUDIO_EFFECT_TYPES;
+} ApeAudioEffectType;
+extern const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[];
+extern const unsigned int       APE_NUM_AUDIO_EFFECT_TYPES;
 
 /**
  * WARNING: DO NOT CHANGE THIS!!
  * This should match with the 'fmt ' structure
  * within a WAV file.
  */
-typedef struct YNCoreAudioWaveFormat
+typedef struct ApeAudioWaveFormat
 {
 	uint16_t formatTag;
 	uint16_t channels;
@@ -76,68 +76,69 @@ typedef struct YNCoreAudioWaveFormat
 	uint16_t blockAlign;
 	uint16_t bitsPerSample;
 	uint16_t size;
-} YNCoreAudioWaveFormat;
+} ApeAudioWaveFormat;
 
 typedef struct ApeAudioSample
 {
-	char path[ PL_SYSTEM_MAX_PATH ];
-	bool reserved;
-	int numReferences;
-	int channel;
-	YNCoreAudioWaveFormat format;
-	uint8_t *buffer;
-	unsigned int bufferSize;
-	void *user;
+	char               path[ PL_SYSTEM_MAX_PATH ];
+	bool               reserved;
+	int                numReferences;
+	int                channel;
+	ApeAudioWaveFormat format;
+	uint8_t           *buffer;
+	unsigned int       bufferSize;
+	void              *user;
 } ApeAudioSample;
 
 typedef struct ApeAudioSource
 {
 	PLVector3 position;
 	PLVector3 velocity;
-	void *user;
+	void     *user;
 } ApeAudioSource;
 
-void ape_initialize_audio_( void );
-void ape_shutdown_audio_( void );
+void ape_audio_initialize_( void );
+void ape_audio_shutdown_( void );
 
-void ss_acl_audio_register_console_variables_( void );
+void ape_audio_register_console_variables_( void );
 
-void ape_tick_audio_( void );
-void Audio_Pause( bool pause );
+void ape_audio_tick_( void );
+void ape_audio_pause_( bool pause );
 
-void Audio_UpdateListener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity );
-void apeClearAudioListener( void );
-PLVector3 Audio_GetListenerPosition( void );
-PLVector3 Audio_GetListenerAngles( void );
-PLVector3 Audio_GetListenerVelocity( void );
+void      ape_audio_update_listener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity );
+void      ape_audio_clear_listener( void );
+PLVector3 ape_audio_get_listener_position( void );
+PLVector3 ape_audio_get_listener_angles( void );
+PLVector3 ape_audio_get_listener_velocity( void );
 
-float Audio_GetGlobalVolume( void );
+float ape_audio_get_global_volume_( void );
 
-void Audio_CleanupSamples( bool force );
-ApeAudioSample *Audio_CacheSample( const char *path );
-void YnCore_AudioSample_Emit( ApeAudioSample *audioSample, int8_t volume );
-void apeReleaseAudioSample( ApeAudioSample *audioSample );
+void ape_audio_cleanup_samples_( bool force );
 
-ApeAudioSource *YnCore_AudioSource_Create( const PLVector3 *position, const PLVector3 *velocity );
-void YnCore_AudioSource_Destroy( ApeAudioSource *audioSource );
-void YnCore_AudioSource_Emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
+ApeAudioSample *ape_audio_sample_cache_( const char *path );
+void            ape_audio_sample_emit( ApeAudioSample *audioSample, int8_t volume );
+void            ape_audio_sample_release_( ApeAudioSample *audioSample );
 
-void *apeLoadWav( const char *path, YNCoreAudioWaveFormat *waveFormatEx, unsigned int *bufferSize );
+ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity );
+void            ape_audio_source_destroy( ApeAudioSource *audioSource );
+void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
+
+void *ape_audio_wav_load_( const char *path, ApeAudioWaveFormat *waveFormatEx, unsigned int *bufferSize );
 
 typedef struct ApeAudioDriverInterface
 {
-	bool ( *Initialize )( void );
-	void ( *Shutdown )( void );
-	void ( *Tick )( void );
+	bool ( *initialize )( void );
+	void ( *shutdown )( void );
+	void ( *tick )( void );
 
-	void ( *Pause )( bool pause );
+	void ( *pause )( bool pause );
 
-	bool ( *CacheSample )( ApeAudioSample *audioSample );
-	void ( *FreeSample )( ApeAudioSample *audioSample );
-	void ( *EmitSample )( ApeAudioSample *audioSample, int8_t volume );
+	bool ( *cacheSample )( ApeAudioSample *audioSample );
+	void ( *freeSample )( ApeAudioSample *audioSample );
+	void ( *emitSample )( ApeAudioSample *audioSample, int8_t volume );
 
-	bool ( *CreateSource )( ApeAudioSource *audioSource );
-	void ( *DestroySource )( ApeAudioSource *audioSource );
+	bool ( *createSource )( ApeAudioSource *audioSource );
+	void ( *destroySource )( ApeAudioSource *audioSource );
 } ApeAudioDriverInterface;
 
 PL_EXTERN_C_END
