@@ -6,6 +6,9 @@
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static GuiFont    *menuFont;
 
+static const char *menuTitleFontPath = "guis/fonts/six_caps_48.fnt";
+static GuiFont    *menuTitleFont;
+
 static bool isMainMenuOpen = true;
 
 static Menu  mainMenu;
@@ -69,7 +72,7 @@ static MenuOption mainMenuOptions[] = {
         { "Quit\n", &confirmQuitMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
 };
 static Menu mainMenu = {
-        "Project SS1\n",
+        "Main Menu\n",
         mainMenuOptions,
         PL_ARRAY_ELEMENTS( mainMenuOptions ),
 };
@@ -99,6 +102,12 @@ void ss1_menu_initialize( void )
 	if ( menuFont == nullptr )
 	{
 		game_error_( "Failed to load menu font (%s)!\n", menuFontPath );
+	}
+
+	menuTitleFont = guiLoadFontFile( menuTitleFontPath );
+	if ( menuTitleFont == nullptr )
+	{
+		game_error_( "Failed to load title font (%s)!\n", menuTitleFontPath );
 	}
 
 	// mmm delicious pie
@@ -133,7 +142,14 @@ void ss1_menu_draw( const ApeViewport *viewport )
 
 		float x = 50.0f;
 		float y = 64.0f;
-		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, currentMenu->heading, strlen( currentMenu->heading ), true );
+
+		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, "Otherlands", strlen( "Otherlands" ), true );
+		gui_font_draw_string( menuTitleFont, x, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, "INC.\n", strlen( "INC.\n" ), true );
+
+		y = 200.0f;
+		x = 80.0f;
+
+		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, G_STR_( currentMenu->heading ), strlen( currentMenu->heading ), true );
 		x += 30.0f;
 		for ( uint i = 0; i < currentMenu->numOptions; ++i )
 		{
@@ -166,6 +182,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		}
 
 		gui_font_display( menuFont );
+		gui_font_display( menuTitleFont );
 		return;
 	}
 

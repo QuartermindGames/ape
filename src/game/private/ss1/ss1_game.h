@@ -7,6 +7,8 @@
 #include "../shared/game_client.h"
 #include "../shared/game_world_simulation.h"
 
+#define SS1_GAME_TITLE "Otherlands INC."
+
 #define SS1_GAME_MILESTONE     "ss1_proto_1"
 #define SS1_GAME_VERSION_MAJOR 0
 #define SS1_GAME_VERSION_MINOR 0
@@ -64,7 +66,7 @@ typedef struct SS1GameState
 	ApeRoom   *room;   // everything in the scene should be tied to this!
 	ApeBrush  *terrain;// proc terrain brush
 
-	bool      isFirstLaunch;
+	bool       isFirstLaunch;
 	AcmBranch *config;
 } SS1GameState;
 extern SS1GameState ss1_gameState;
