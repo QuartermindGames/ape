@@ -7,6 +7,10 @@
 
 PL_EXTERN_C
 
+typedef unsigned char  uchar;
+typedef unsigned int   uint;
+typedef unsigned short ushort;
+
 typedef struct AcmBranch AcmBranch;
 
 #define ACM_DEFAULT_EXTENSION ".n"

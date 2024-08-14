@@ -256,7 +256,7 @@ void gui_font_get_string_pixel_size( const GuiFont *font, float scale, const cha
 			continue;
 		}
 
-		uint32_t c = ( uint32_t ) string[ i ];
+		uint32_t c = decode_utf8_char( &string );
 
 		const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
 		if ( glyph == NULL )
