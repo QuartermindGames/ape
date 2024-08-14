@@ -197,7 +197,7 @@ void model_smd_destroy( SmdModel *model )
 	PL_DELETE( model );
 }
 
-static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
+static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 {
 	out->numMeshes = smd->numMeshes;
 	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
@@ -221,7 +221,7 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
-		ApeFormatMesh *mesh = &out->meshes[ i ];
+		CookModelMesh *mesh = &out->meshes[ i ];
 
 		PLPath tmp;
 		strcpy( tmp, smd->meshes[ i ].material );
@@ -253,7 +253,7 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 			const SmdTriangle *smdTriangle = &smd->meshes[ i ].triangles[ tri ];
 			for ( unsigned int vtx = 0; vtx < 3; ++vtx, ++out->numVertices )
 			{
-				ApeFormatVertex *vertex = &out->vertices[ out->numVertices ];
+				CookModelVertex *vertex = &out->vertices[ out->numVertices ];
 				vertex->position        = smdTriangle->vertices[ vtx ].position;
 				vertex->normal          = smdTriangle->vertices[ vtx ].normal;
 				vertex->uv              = smdTriangle->vertices[ vtx ].uv;
@@ -273,8 +273,8 @@ static ApeFormatModel *smd_to_ape( const SmdModel *smd, ApeFormatModel *out )
 	return out;
 }
 
-static CookModel      *load_smd( const char *path ) { return ( CookModel      *) model_smd_load( path ); }
-static ApeFormatModel *conv_smd( const CookModel *model, ApeFormatModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
-static void            destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel            *) model ); }
+static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
+static CookModel *conv_smd( const CookModel *model, CookModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
+static void       destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel       *) model ); }
 
 const CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };

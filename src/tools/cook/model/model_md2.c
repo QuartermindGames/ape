@@ -168,7 +168,7 @@ static void model_md2_destroy( Md2Model *self )
 	PL_DELETE( self );
 }
 
-static ApeFormatModel *md2_to_ape( const Md2Model *model, ApeFormatModel *out )
+static CookModel *md2_to_ape( const Md2Model *model, CookModel *out )
 {
 	//todo
 #if 0
@@ -231,7 +231,7 @@ static void destroy_md2( CookModel *self )
 	model_md2_destroy( ( Md2Model * ) self );
 }
 
-static ApeFormatModel *conv_md2( const CookModel *model, ApeFormatModel *out )
+static CookModel *conv_md2( const CookModel *model, CookModel *out )
 {
 	return md2_to_ape( ( const Md2Model * ) model, out );
 }

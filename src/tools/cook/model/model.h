@@ -63,4 +63,49 @@ typedef struct SmdModel
 SmdModel *model_smd_load( const char *path );
 void      model_smd_destroy( SmdModel *model );
 
+/////////////////////////////////////////////////////////////
+
+typedef struct CookModelVertex
+{
+	PLVector3 position;
+	PLVector3 normal;
+	PLVector2 uv;
+
+	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
+	unsigned int    numWeights;
+} CookModelVertex;
+
+typedef struct CookModelTriangle
+{
+	unsigned int indices[ 3 ];
+} CookModelTriangle;
+
+typedef struct CookModelMesh
+{
+	PLPath material;
+
+	CookModelTriangle triangles[ APE_FORMAT_MODEL_MAX_TRIANGLES ];
+	unsigned int      numTriangles;
+} CookModelMesh;
+
+typedef struct CookModel
+{
+	char name[ 64 ];
+
+	PLPath materialPath;
+
+	CookModelVertex vertices[ APE_FORMAT_MODEL_MAX_VERTICES ];
+	unsigned int    numVertices;
+
+	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
+	unsigned int  numBones;
+
+	CookModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
+	unsigned int  numMeshes;
+
+	float scale;
+
+	bool isStatic;
+} CookModel;
+
 PL_EXTERN_C_END

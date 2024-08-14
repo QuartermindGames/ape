@@ -38,6 +38,12 @@ typedef enum ApeModelAnimationFlag
 	PL_BITFLAG( APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
 } ApeModelAnimationFlag;
 
+typedef struct ApeFormatWeight
+{
+	float        weight;
+	unsigned int bone;
+} ApeFormatWeight;
+
 typedef struct ApeFormatBone
 {
 	char         name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
@@ -45,55 +51,6 @@ typedef struct ApeFormatBone
 	PLVector3    rotation;
 	PLVector3    position;
 } ApeFormatBone;
-
-typedef struct ApeFormatWeight
-{
-	float        weight;
-	unsigned int bone;
-} ApeFormatWeight;
-
-typedef struct ApeFormatVertex
-{
-	PLVector3 position;
-	PLVector3 normal;
-	PLVector2 uv;
-
-	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
-	unsigned int    numWeights;
-} ApeFormatVertex;
-
-typedef struct ApeFormatTriangle
-{
-	unsigned int indices[ 3 ];
-} ApeFormatTriangle;
-
-typedef struct ApeFormatMesh
-{
-	PLPath material;
-
-	ApeFormatTriangle triangles[ APE_FORMAT_MODEL_MAX_TRIANGLES ];
-	unsigned int      numTriangles;
-} ApeFormatMesh;
-
-typedef struct ApeFormatModel
-{
-	char name[ 64 ];
-
-	PLPath materialPath;
-
-	ApeFormatVertex vertices[ APE_FORMAT_MODEL_MAX_VERTICES ];
-	unsigned int    numVertices;
-
-	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
-	unsigned int  numBones;
-
-	ApeFormatMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	unsigned int  numMeshes;
-
-	float scale;
-
-	bool isStatic;
-} ApeFormatModel;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Material Format

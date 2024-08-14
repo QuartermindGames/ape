@@ -33,19 +33,18 @@ extern CookState cook_state;
 #define COOK_WORLD_EXTENSION "cwf.n"
 #define COOK_MODEL_EXTENSION "cmf.n"
 
-struct CookModel;
 typedef struct CookModel CookModel;
 
 typedef CookModel *( *CookModelLoadFunction )( const char *path );
-typedef ApeFormatModel *( *CookModelConvertFunction )( const CookModel *model, ApeFormatModel *out );
+typedef CookModel *( *CookModelConvertFunction )( const CookModel *model, CookModel *out );
 typedef void ( *CookModelDeleteFunction )( CookModel *model );
 
 typedef struct CookModelFormatInterface
 {
-	const char *extension;
-	CookModelLoadFunction loadFunction;
+	const char              *extension;
+	CookModelLoadFunction    loadFunction;
 	CookModelConvertFunction convertFunction;
-	CookModelDeleteFunction deleteFunction;
+	CookModelDeleteFunction  deleteFunction;
 } CookModelFormatInterface;
 
 void cook_world_process( const char *worldName );

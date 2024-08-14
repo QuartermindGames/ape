@@ -4,6 +4,7 @@
 #include <float.h>
 
 #include "../cook.h"
+#include "model.h"
 
 #include "model_obj.h"
 #include "plgraphics/plg_mesh.h"
@@ -355,7 +356,7 @@ void model_obj_destroy( ObjModel *obj )
 	PL_DELETE( obj );
 }
 
-ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
+CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
 {
 	out->numMeshes = obj->numSubObjects;
 	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
@@ -366,7 +367,7 @@ ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
 	{
-		ApeFormatMesh *mesh = &out->meshes[ i ];
+		CookModelMesh *mesh = &out->meshes[ i ];
 
 		unsigned int numFaces;
 		ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
@@ -378,8 +379,8 @@ ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out )
 	}
 }
 
-static CookModel      *load_obj( const char *path ) { return ( CookModel      *) model_obj_load( path ); }
-static ApeFormatModel *conv_obj( const CookModel *model, ApeFormatModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
-static void            destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel            *) model ); }
+static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
+static CookModel *conv_obj( const CookModel *model, CookModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
+static void       destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel       *) model ); }
 
 const CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

@@ -74,6 +74,6 @@ typedef struct ObjModel
 ObjModel *model_obj_load( const char *path );
 void      model_obj_destroy( ObjModel *obj );
 
-ApeFormatModel *model_obj_to_ape( const ObjModel *obj, ApeFormatModel *out );
+CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out );
 
 PL_EXTERN_C_END

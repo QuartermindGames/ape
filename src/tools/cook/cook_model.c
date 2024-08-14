@@ -6,6 +6,7 @@
 #include "plcore/pl_timer.h"
 
 #include "cook.h"
+#include "model/model.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -55,11 +56,11 @@ static NdBranch *serialize_ape_model( const ApeFormatModel *model )
 
 #endif
 
-static void deserialize_model_animations( AcmBranch *root, ApeFormatModel *dst, const char *folder )
+static void deserialize_model_animations( AcmBranch *root, CookModel *dst, const char *folder )
 {
 }
 
-static void parse_model_config( AcmBranch *root, ApeFormatModel *dst, const char *folder )
+static void parse_model_config( AcmBranch *root, CookModel *dst, const char *folder )
 {
 	const char *name = acm_branch_get_child_string( root, "name", nullptr );
 	if ( name == nullptr )
@@ -172,7 +173,7 @@ static uint get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
 }
 #endif
 
-static void serialize_mesh( AcmBranch *root, const ApeFormatMesh *mesh, const ApeFormatVertex *vertices )
+static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const CookModelVertex *vertices )
 {
 	char *c = strrchr( mesh->material, '/' );
 	printf( "\tSerialising mesh (%s)\n", c != nullptr ? ( c + 1 ) : mesh->material );
@@ -202,7 +203,7 @@ static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 	acm_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
 
-static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
+static AcmBranch *serialize_ape_format_model( const CookModel *model )
 {
 	AcmBranch *root = acm_branch_push_back_object( nullptr, "model" );
 
@@ -221,7 +222,7 @@ static AcmBranch *serialize_ape_format_model( const ApeFormatModel *model )
 	branch = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
 	for ( uint i = 0; i < model->numVertices; ++i )
 	{
-		const ApeFormatVertex *vertexIndex = &model->vertices[ i ];
+		const CookModelVertex *vertexIndex = &model->vertices[ i ];
 		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.x );
 		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.y );
 		acm_branch_push_back_float32( branch, nullptr, vertexIndex->position.z );
@@ -278,7 +279,7 @@ static bool create_file_path( const char *path )
 	return true;
 }
 
-static void write_ape_format_model( const ApeFormatModel *model, const char *folder )
+static void write_ape_format_model( const CookModel *model, const char *folder )
 {
 	AcmBranch *root = serialize_ape_format_model( model );
 	if ( root == nullptr )
@@ -315,7 +316,7 @@ void cook_model_process( const char *modelName )
 		return;
 	}
 
-	ApeFormatModel *model = PL_NEW( ApeFormatModel );
+	CookModel *model = PL_NEW( CookModel );
 
 	AcmBranch *root = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
