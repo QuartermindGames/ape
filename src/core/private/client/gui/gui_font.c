@@ -36,7 +36,7 @@ static uint32_t decode_utf8_char( const char **string )
 	uint32_t c = 0;
 	if ( ( **string & 0x80 ) == 0 )
 	{
-		c = ( uint32_t ) * ( *string )++;
+		c = ( uint32_t ) *( *string )++;
 	}
 	else if ( ( **string & 0xE0 ) == 0xC0 )
 	{
@@ -235,44 +235,41 @@ float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t char
 	return w;
 }
 
-void gui_font_get_string_pixel_size( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh )
+void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
 	float h = 0;
-	for ( size_t i = 0; i < length; ++i )
+
+	const char *end = string + length;
+	while ( string < end )
 	{
-		if ( string[ i ] == '\0' )
+		uint32_t c = decode_utf8_char( &string );
+		if ( c == '\0' )
 		{
 			break;
 		}
-		else if ( string[ i ] == '\n' )
+		else if ( c == '\n' )
 		{
-			h += ( font->lineSpacing * scale );
+			h += ( self->lineSpacing * scale );
 			continue;
 		}
-		else if ( string[ i ] == '\t' )
+		else if ( c == '\t' )
 		{
-			w += ( font->lineSpacing * scale ) * 4.0f;
+			w += ( self->lineSpacing * scale ) * 4.0f;
 			continue;
 		}
 
-		uint32_t c = decode_utf8_char( &string );
-
-		const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &c, sizeof( uint32_t ) );
-		if ( glyph == NULL )
+		const ComFontGlyph *glyph = PlLookupHashTableUserData( self->glyphTable, &c, sizeof( uint32_t ) );
+		if ( glyph == nullptr )
 		{
 			continue;
 		}
 
 		w += ( ( float ) glyph->w ) * scale;
-		if ( ( ( float ) glyph->h ) > h )
-		{
-			h += ( ( float ) glyph->h );
-		}
 	}
 
-	if ( dw != NULL ) *dw = w;
-	if ( dh != NULL ) *dh = h;
+	if ( dw != NULL ) { *dw = w; }
+	if ( dh != NULL ) { *dh = h; }
 }
 
 void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
