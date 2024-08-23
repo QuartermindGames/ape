@@ -66,7 +66,8 @@ add_library(ApeCore STATIC
         ${YIN_CORE_CLIENT}
         private/audio/audio.c
         private/audio/audio_openal.c
-        private/audio/audio_wav.c
+        private/audio/audio_format_vorbis.c
+        private/audio/audio_format_wav.c
         private/audio/audio_xaudio2.cpp
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}

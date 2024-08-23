@@ -1,6 +1,7 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
+
 #include "audio.h"
 
 #define AUDIO_SAMPLE_FREQ 48000
@@ -49,14 +50,10 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = PL_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
 static const ApeAudioDriverInterface *audioDriverInterface = nullptr;
-#define CallAudioDriverFunction( FUNCTION, ... )                                                                                \
+#define DRIVER_CALLBACK( FUNCTION, ... )                                                                                        \
 	{                                                                                                                           \
 		if ( audioDriverInterface != nullptr && audioDriverInterface->FUNCTION ) audioDriverInterface->FUNCTION( __VA_ARGS__ ); \
 	}
-
-static ApeAudioSample *audioSamples = nullptr;
-static uint32_t        numSamples   = 0;
-static uint32_t        maxSamples   = 4096;
 
 static bool audioInitialized = false;
 static bool audioPaused      = false;
@@ -76,7 +73,7 @@ static struct
 
 static void test_audio_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
-	ApeAudioSample *sample = ape_audio_sample_cache_( "sounds/testing/ping.wav" );
+	ApeAudioSample *sample = ape_audio_sample_cache( "sounds/testing/ping.wav" );
 	if ( sample == nullptr )
 	{
 		ape_warning_( "Failed to load test sample!\n" );
@@ -84,8 +81,7 @@ static void test_audio_command( PL_UNUSED unsigned int argc, PL_UNUSED char **ar
 	}
 
 	ape_audio_sample_emit( sample, 100 );
-
-	ape_audio_sample_release_( sample );
+	ape_audio_sample_release( sample );
 }
 
 static void play_audio_command( unsigned int argc, char **argv )
@@ -120,9 +116,6 @@ void ape_audio_initialize_( void )
 	}
 #endif
 
-	/* allocate storage for our samples */
-	audioSamples = PlCAlloc( maxSamples, sizeof( ApeAudioSample ), true );
-
 	PlRegisterConsoleCommand( "audio/test", "Test the audio system.", 0, test_audio_command );
 	PlRegisterConsoleCommand( "audio/play", "Play a specific sound.", 1, play_audio_command );
 
@@ -137,161 +130,86 @@ void ape_audio_register_console_variables_( void )
 	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, nullptr, true );
 }
 
-static void free_sample( uint32_t s )
+static void destroy_sample( void *user )
 {
-	audioSamples[ s ].path[ 0 ] = '\0';
+	ApeAudioSample *sample = ( ApeAudioSample * ) user;
+	assert( sample != nullptr );
 
-	CallAudioDriverFunction( freeSample, &audioSamples[ s ] );
+	DRIVER_CALLBACK( freeSample, sample );
 
-	PL_DELETE( audioSamples[ s ].buffer );
-	audioSamples[ s ].buffer = nullptr;
-
-	/* mark it as unreserved, so we can utilise it again later */
-	audioSamples[ s ].reserved = false;
-
-	numSamples--;
+	PL_DELETE( sample->buffer );
+	PL_DELETE( sample );
 }
 
-void ape_audio_sample_release_( ApeAudioSample *audioSample )
+void ape_audio_sample_release( ApeAudioSample *audioSample )
 {
-	audioSample->numReferences--;
-	assert( audioSample->numReferences > 0 );
-	if ( audioSample->numReferences < 0 )
-	{
-		ape_warning_( "A sample was released too many times!\n" );
-	}
+	ape_mm_release( &audioSample->reference );
 }
 
-void ape_audio_cleanup_samples_( bool force )
+ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file );
+ApeAudioSample *ape_audio_format_wav_load_( PLFile *file );
+ApeAudioSample *ape_audio_sample_cache( const char *path )
 {
-	/* if we're not forcing cleanup, allocate a
-     * new sound list to fill with the ones we
-     * will retain... */
-	maxSamples = numSamples;
-	ApeAudioSample *newAudioSounds;
-	if ( !force )
-		newAudioSounds = PlCAllocA( maxSamples, sizeof( ApeAudioSample ) );
-
-	uint32_t j = 0;
-	for ( uint32_t i = 0; i < numSamples; ++i )
+	ApeAudioSample *sample = ape_cache_get_data_( path, APE_CACHE_POOL_SAMPLES );
+	if ( sample != nullptr )
 	{
-		if ( audioSamples[ i ].numReferences > 0 && !force )
-		{
-			newAudioSounds[ j++ ] = audioSamples[ i ];
-			continue;
-		}
-
-		if ( force && audioSamples[ i ].numReferences > 0 )
-		{
-			ape_warning_( "Force cleaning dirty slot %d!\n", i );
-		}
-
-		free_sample( i );
+		ape_mm_add_reference( &sample->reference );
+		return sample;
 	}
 
-	numSamples = j;
-	if ( !force )
+	const char *extension = PlGetFileExtension( path );
+	if ( extension == nullptr )
 	{
-		PL_DELETE( audioSamples );
-		audioSamples = newAudioSounds;
-	}
-}
-
-static int FetchCachedSoundSlotByPath( const char *path )
-{
-	for ( uint32_t i = 0; i < numSamples; ++i )
-	{
-		if ( !audioSamples[ i ].reserved )
-		{
-			continue;
-		}
-
-		if ( pl_strcasecmp( path, audioSamples[ i ].path ) != 0 )
-		{
-			continue;
-		}
-
-		return ( int ) i;
-	}
-
-	return -1;
-}
-
-/**
- * Fetches and adds the specified sound to memory,
- * if it's not in there already.
- *
- * Be sure to release the sound once you're done with
- * it!
- */
-ApeAudioSample *ape_audio_sample_cache_( const char *path )
-{
-	/* check if it's cached already */
-	int s = FetchCachedSoundSlotByPath( path );
-	if ( s != -1 )
-	{
-		audioSamples[ s ].numReferences++;
-		return &audioSamples[ s ];
-	}
-
-	/* setup our new sound slot */
-	uint32_t freeSlot = 0;
-	for ( ; freeSlot < maxSamples; ++freeSlot )
-	{
-		if ( audioSamples[ freeSlot ].reserved )
-		{
-			continue;
-		}
-
-		break;
-	}
-
-	if ( freeSlot >= maxSamples )
-	{
-		maxSamples += 256;
-		audioSamples = PlReAllocA( audioSamples, maxSamples );
-	}
-
-	ApeAudioSample *newSound = &audioSamples[ freeSlot ];
-	snprintf( newSound->path, sizeof( newSound->path ), "%s", path );
-
-	/* attempt to load in the wav */
-	uint32_t           bufferSize;
-	ApeAudioWaveFormat format;
-	uint8_t           *data = ape_audio_wav_load_( path, &format, &bufferSize );
-	if ( data == nullptr )
-	{
-		ape_warning_( "Failed to load wav: %s\n", path );
+		ape_warning_( "Failed to get audio file extension (%s)!\n", path );
 		return nullptr;
 	}
 
-	/* setup our sound structure */
-	newSound->reserved   = true;
-	newSound->buffer     = data;
-	newSound->bufferSize = bufferSize;
-	newSound->format     = format;
+	PLFile *file = PlOpenFile( path, false );
+	if ( file == nullptr )
+	{
+		ape_warning_( "Failed to open audio file (%s): %s\n", path, PlGetError() );
+		return nullptr;
+	}
 
-	numSamples++;
+	if ( pl_strcasecmp( extension, "wav" ) == 0 )
+	{
+		sample = ape_audio_format_wav_load_( file );
+	}
+	else if ( pl_strcasecmp( extension, "ogg" ) == 0 )
+	{
+		sample = ape_audio_format_vorbis_load_( file );
+	}
+
+	PlCloseFile( file );
+
+	if ( sample == nullptr )
+	{
+		// this comes over a little shit given we're just checking the extension, but meh...
+		ape_warning_( "Unknown audio format (%s)!\n", path );
+		return nullptr;
+	}
+
+	if ( audioDriverInterface != nullptr && audioDriverInterface->cacheSample != nullptr )
+	{
+		if ( !audioDriverInterface->cacheSample( sample ) )
+		{
+			ape_warning_( "Driver upload for audio sample failed!\n" );
+			destroy_sample( sample );
+			return nullptr;
+		}
+	}
+
+	ape_cache_add_to_pool_( path, APE_CACHE_POOL_SAMPLES, sample );
+	ape_mm_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
 
 	PRINT_DEBUG( "Cached sound, \"%s\"\n", path );
 
-	return newSound;
+	return sample;
 }
 
 void ape_audio_sample_emit( ApeAudioSample *audioSample, int8_t volume )
 {
-#if 0
-	s->channel = Mix_PlayChannel( -1, s->sample, 0 );
-	if ( s->channel == -1 )
-	{
-		ape_warning_( "Mix_PlayChannel: %s\n", Mix_GetError() );
-		return;
-	}
-
-	Mix_Volume( s->channel, volume );
-#endif
-
-	CallAudioDriverFunction( emitSample, audioSample, volume );
+	DRIVER_CALLBACK( emitSample, audioSample, volume );
 }
 
 void ape_audio_shutdown_( void )
@@ -301,7 +219,7 @@ void ape_audio_shutdown_( void )
 		return;
 	}
 
-	CallAudioDriverFunction( shutdown );
+	DRIVER_CALLBACK( shutdown );
 
 	audioInitialized = false;
 }
@@ -315,7 +233,7 @@ void ape_audio_tick_( void )
 
 	COM_PROFILE_FUNCTION_START();
 
-	CallAudioDriverFunction( tick );
+	DRIVER_CALLBACK( tick );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -327,7 +245,7 @@ void ape_audio_pause_( bool pause )
 		return;
 	}
 
-	CallAudioDriverFunction( pause, pause );
+	DRIVER_CALLBACK( pause, pause );
 
 	audioPaused = pause;
 }
@@ -340,11 +258,15 @@ ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVect
 {
 	ApeAudioSource *source = PL_NEW( ApeAudioSource );
 	if ( position != nullptr )
+	{
 		source->position = *position;
+	}
 	if ( velocity != nullptr )
+	{
 		source->velocity = *velocity;
+	}
 
-	CallAudioDriverFunction( createSource, source );
+	DRIVER_CALLBACK( createSource, source );
 
 	return source;
 }
@@ -356,7 +278,7 @@ void ape_audio_source_destroy( ApeAudioSource *audioSource )
 		return;
 	}
 
-	CallAudioDriverFunction( destroySource, audioSource );
+	DRIVER_CALLBACK( destroySource, audioSource );
 
 	PL_DELETE( audioSource );
 }
@@ -416,27 +338,4 @@ PLVector3 ape_audio_get_listener_angles( void )
 PLVector3 ape_audio_get_listener_velocity( void )
 {
 	return audioListener.velocity;
-}
-
-/****************************************
- * Music Player
- ****************************************/
-
-static ApeAudioSample *music = nullptr;
-
-void ape_audio_destroy_music( void )
-{
-	if ( music == nullptr )
-		return;
-
-	free_sample( FetchCachedSoundSlotByPath( music->path ) );
-	music = nullptr;
-}
-
-void Audio_CacheMusic( const char *path )
-{
-	/* free up anything we cached already */
-	ape_audio_destroy_music();
-
-	music = ape_audio_sample_cache_( path );
 }

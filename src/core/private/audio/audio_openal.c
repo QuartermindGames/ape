@@ -25,16 +25,6 @@
 #	define XAL_CALL( X ) X
 #endif
 
-typedef struct XALAudioSample
-{
-	ALuint id;
-} XALAudioSample;
-
-typedef struct XALAudioSource
-{
-	ALuint id;
-} XALAudioSource;
-
 static ALCdevice  *xalDevice;
 static ALCcontext *xalContext;
 
@@ -64,17 +54,17 @@ static void shutdown_openal( void );
 
 static bool initialize_openal( void )
 {
-	xalDevice = alcOpenDevice( NULL );
+	xalDevice = alcOpenDevice( nullptr );
 	if ( xalDevice == NULL )
 	{
-		PRINT_WARNING( "Failed to open default OpenAL device!\n" );
+		ape_warning_( "Failed to open default OpenAL device!\n" );
 		return false;
 	}
 
-	xalContext = alcCreateContext( xalDevice, NULL );
+	xalContext = alcCreateContext( xalDevice, nullptr );
 	if ( xalContext == NULL )
 	{
-		PRINT_WARNING( "Failed to create OpenAL context!\n" );
+		ape_warning_( "Failed to create OpenAL context!\n" );
 		shutdown_openal();
 		return false;
 	}
@@ -83,7 +73,7 @@ static bool initialize_openal( void )
 	status = alcMakeContextCurrent( xalContext );
 	if ( !status )
 	{
-		PRINT_WARNING( "Failed to make OpenAL context current!\n" );
+		ape_warning_( "Failed to make OpenAL context current!\n" );
 		shutdown_openal();
 		return false;
 	}
@@ -151,13 +141,13 @@ static void shutdown_openal( void )
 	ape_print_( "Shutting down OpenAL interface\n" );
 
 	alcDestroyContext( xalContext );
-	xalContext = NULL;
+	xalContext = nullptr;
 
 	alcCloseDevice( xalDevice );
-	xalDevice = NULL;
+	xalDevice = nullptr;
 }
 
-static void Audio_OpenAL_Tick( void )
+static void al_tick( void )
 {
 	PLVector3 position = ape_audio_get_listener_position();
 	XAL_CALL( alListenerfv( AL_POSITION, ( ALfloat * ) &position ) );
@@ -181,55 +171,73 @@ static void Audio_OpenAL_Tick( void )
 	XAL_CALL( alListenerf( AL_GAIN, ape_audio_get_global_volume_() ) );
 }
 
-static void Pause( bool pause )
+static void al_pause( bool pause )
 {
 }
 
-static bool cache_sample( ApeAudioSample *sample )
+static bool al_cache_sample( ApeAudioSample *sample )
 {
+	ALenum format;
+	assert( sample->type != APE_AUDIO_SAMPLE_FORMAT_INVALID );
+	switch ( sample->type )
+	{
+		default:
+			ape_warning_( "Invalid or unsupported sample type (%u) for OpenAL!\n", sample->type );
+			return false;
+		case APE_AUDIO_SAMPLE_FORMAT_MONO8:
+			format = AL_FORMAT_MONO8;
+			break;
+		case APE_AUDIO_SAMPLE_FORMAT_STEREO8:
+			format = AL_FORMAT_STEREO8;
+			break;
+		case APE_AUDIO_SAMPLE_FORMAT_MONO16:
+			format = AL_FORMAT_MONO16;
+			break;
+		case APE_AUDIO_SAMPLE_FORMAT_STEREO16:
+			format = AL_FORMAT_STEREO16;
+			break;
+	}
+
+	XAL_CALL( alGenBuffers( 1, &sample->user ) );
+	XAL_CALL( alBufferData( sample->user, format, sample->buffer, ( ALsizei ) sample->bufferSize, ( ALsizei ) sample->sampleRate ) );
+
 	return true;
 }
 
-static void FreeSample( ApeAudioSample *sample )
+static void al_free_sample( ApeAudioSample *sample )
 {
+	XAL_CALL( alDeleteBuffers( 1, &sample->user ) );
 }
 
-static void emit_sample( ApeAudioSample *sample, int8_t volume )
+static void al_emit_sample( ApeAudioSample *sample, int8_t volume )
 {
+	XAL_CALL( alSourcePlay( sample->user ) );
 }
 
-static bool create_source( ApeAudioSource *source )
+static bool al_create_source( ApeAudioSource *source )
 {
-	source->user = PL_NEW( XALAudioSource );
-	XAL_CALL( alGenSources( 1, &( ( XALAudioSource * ) source->user )->id ) );
+	XAL_CALL( alGenSources( 1, &source->user ) );
 	return true;
 }
 
-static void destroy_source( ApeAudioSource *source )
+static void al_destroy_source( ApeAudioSource *source )
 {
-	if ( source->user == NULL )
-		return;
-
-	XAL_CALL( alSourcei( ( ( XALAudioSource * ) source->user )->id, AL_LOOPING, AL_FALSE ) );
-	XAL_CALL( alSourcei( ( ( XALAudioSource * ) source->user )->id, AL_BUFFER, 0 ) );
-	XAL_CALL( alDeleteSources( 1, &( ( XALAudioSource * ) source->user )->id ) );
-	source->user = NULL;
+	XAL_CALL( alDeleteSources( 1, &source->user ) );
 }
 
 const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
 {
 	static ApeAudioDriverInterface driverInterface;
-	PL_ZERO_( driverInterface );
 
 	driverInterface.initialize    = initialize_openal;
 	driverInterface.shutdown      = shutdown_openal;
-	driverInterface.tick          = Audio_OpenAL_Tick;
-	driverInterface.pause         = Pause;
-	driverInterface.cacheSample   = cache_sample;
-	driverInterface.freeSample    = FreeSample;
-	driverInterface.emitSample    = emit_sample;
-	driverInterface.createSource  = create_source;
-	driverInterface.destroySource = destroy_source;
+	driverInterface.tick          = al_tick;
+	driverInterface.pause         = al_pause;
+	driverInterface.cacheSample   = al_cache_sample;
+	driverInterface.freeSample    = al_free_sample;
+	driverInterface.emitSample    = al_emit_sample;
+	driverInterface.createSource  = al_create_source;
+	driverInterface.destroySource = al_destroy_source;
 
 	return &driverInterface;
 }

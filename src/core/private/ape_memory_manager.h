@@ -16,6 +16,7 @@ typedef enum ApeCachePool
 	APE_CACHE_POOL_MATERIALS,
 	APE_CACHE_POOL_MODELS,
 	APE_CACHE_POOL_PARTICLES,
+	APE_CACHE_POOL_SAMPLES,
 
 	APE_CACHE_POOL_WORLDS,
 	APE_CACHE_POOL_WORLD_MESHES,
@@ -45,14 +46,14 @@ void *ape_cache_get_data_( const char *id, ApeCachePool pool );
 typedef void ( *MMReference_CleanupFunction )( void *userData );
 typedef struct ApeMemoryReference
 {
-	bool                        isInitialized;     // Indicates whether the handle was set up
-	char                        id[ 64 ];          // identifier
-	int                         numReferences;     // Number of total references
-	unsigned int                timeToLive;        // Time to live
-	void                       *userData;          // Pointer to original data struct
-	ApeMemoryCacheHeader       *cache;             // Pointer to sample on cache
-	MMReference_CleanupFunction cleanupFunction;   // Function that deals with the *real* cleanup
-	struct PLLinkedListNode    *node;              // Index into the memory reference list
+	bool                        isInitialized;  // Indicates whether the handle was set up
+	char                        id[ 64 ];       // identifier
+	int                         numReferences;  // Number of total references
+	unsigned int                timeToLive;     // Time to live
+	void                       *userData;       // Pointer to original data struct
+	ApeMemoryCacheHeader       *cache;          // Pointer to sample on cache
+	MMReference_CleanupFunction cleanupFunction;// Function that deals with the *real* cleanup
+	struct PLLinkedListNode    *node;           // Index into the memory reference list
 } ApeMemoryReference;
 
 ApeMemoryReference *ape_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );

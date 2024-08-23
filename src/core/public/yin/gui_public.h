@@ -151,7 +151,7 @@ GuiFont *guiLoadFontFile( const char *path );
 void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh );
 float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character );
 
-void gui_font_get_string_pixel_size( const GuiFont *font, float scale, const char *string, size_t length, float *dw, float *dh );
+void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh );
 void gui_font_draw_character( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
 void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
 void gui_font_display( GuiFont *font );
