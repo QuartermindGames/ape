@@ -16,3 +16,20 @@ Below are various points in addition.
 - Forge is a little different given it's written in C++—my suggestion there is to just go with what you see...
 
 Some functions are also prefixed with `ss_`; this is a shorthand for SnortySoft, but it's an old convention.
+
+## Console Commands and Variables
+
+Here are some rules for command and variable conventions.
+
+### Variables
+
+These should follow the same conventions we have for code (`thisIsName`), but should be prefixed with the name of their "container", i.e. source file.
+For instance, any variables specific to audio should be `audio.volume` or `renderer.superSampling`.
+
+If the variable already has "audio" in its name, use some common-sense and don't duplicate it.
+
+### Commands
+
+Commands should follow the same convention we use for functions (`this_is_name`), but again, should be prefixed with the name of their "container", i.e. source file.
+
+For instance, `audio_play_sound`.

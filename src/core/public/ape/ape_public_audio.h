@@ -14,6 +14,12 @@ typedef struct ApeAudioSample ApeAudioSample;
  */
 typedef struct ApeAudioSource ApeAudioSource;
 
+typedef enum ApeAudioSourceGroup
+{
+	APE_AUDIO_SOURCE_GROUP_GENERIC,
+	APE_AUDIO_SOURCE_MAX_GROUPS
+} ApeAudioSourceGroup;
+
 /**
  * This list provides a number of
  * somewhat standard presets for

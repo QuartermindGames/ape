@@ -87,7 +87,7 @@ static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int
 	ApeTexture *texture = PL_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
 
-	ape_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_memory_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
 	return texture;
 }
@@ -174,7 +174,7 @@ ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
 	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
 	if ( texture != NULL )
 	{
-		ape_mm_add_reference( &texture->reference );
+		ape_memory_add_reference( &texture->reference );
 		return texture;
 	}
 
@@ -193,8 +193,8 @@ ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
 
 	fetch_texture_config( texture );
 
-	ape_mm_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
-	ape_mm_add_reference( &texture->reference );
+	ape_memory_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_memory_add_reference( &texture->reference );
 
 	//TODO: thrown in for Rayman Alive, but we should probably implement a proper API for this
 	PlgSetTextureAnisotropy( texture->internal, 16 );

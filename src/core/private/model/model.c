@@ -208,10 +208,10 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 ApeModel *ape_model_load( const char *path )
 {
-	ApeModel *model = ape_cache_get_data_( path, APE_CACHE_POOL_MODELS );
+	ApeModel *model = ape_memory_get_from_pool_( path, APE_CACHE_POOL_MODELS );
 	if ( model != NULL )
 	{
-		ape_mm_add_reference( &model->reference );
+		ape_memory_add_reference( &model->reference );
 		return model;
 	}
 
@@ -225,10 +225,10 @@ ApeModel *ape_model_load( const char *path )
 	model = PL_NEW( ApeModel );
 	if ( deserialize_model( model, root ) != nullptr )
 	{
-		ape_cache_add_to_pool_( path, APE_CACHE_POOL_MODELS, model );
+		ape_memory_add_to_pool_( path, APE_CACHE_POOL_MODELS, model );
 
-		ape_mm_setup_reference( "model", APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
-		ape_mm_add_reference( &model->reference );
+		ape_memory_setup_reference( "model", APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
+		ape_memory_add_reference( &model->reference );
 	}
 	else
 	{
@@ -243,7 +243,7 @@ ApeModel *ape_model_load( const char *path )
 
 void ape_model_release( ApeModel *model )
 {
-	ape_mm_release( &model->reference );
+	ape_memory_release( &model->reference );
 }
 
 void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )

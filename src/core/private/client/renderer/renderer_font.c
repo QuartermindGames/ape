@@ -155,10 +155,10 @@ void ape_shutdown_bitmap_fonts_( void )
 
 ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end )
 {
-	ApeBitmapFont *font = ape_cache_get_data_( materialPath, APE_CACHE_POOL_FONTS );
+	ApeBitmapFont *font = ape_memory_get_from_pool_( materialPath, APE_CACHE_POOL_FONTS );
 	if ( font != NULL )
 	{
-		ape_mm_add_reference( &font->mem );
+		ape_memory_add_reference( &font->mem );
 		return font;
 	}
 
@@ -189,17 +189,17 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	ape_cache_add_to_pool_( materialPath, APE_CACHE_POOL_FONTS, font );
+	ape_memory_add_to_pool_( materialPath, APE_CACHE_POOL_FONTS, font );
 
-	ape_mm_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
-	ape_mm_add_reference( &font->mem );
+	ape_memory_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
+	ape_memory_add_reference( &font->mem );
 
 	return font;
 }
 
 void ss_arl_bitmap_font_release( ApeBitmapFont *font )
 {
-	ape_mm_release( &font->mem );
+	ape_memory_release( &font->mem );
 }
 
 ApeBitmapFont *ss_arl_get_default_bitmap_font( void ) { return defaultFont; }

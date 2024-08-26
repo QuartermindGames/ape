@@ -97,7 +97,7 @@ void ape_initialize_materials_( void )
 void ape_shutdown_materials_( void )
 {
 	/* Flush any objects pending deletion in case they are holding a material handle. */
-	ape_memory_manager_flush_unreferenced_resources();
+	ape_memory_flush_unreferenced_resources();
 
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;
@@ -854,7 +854,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 				ape_warning_( "Failed to cache material, \"%s\" (%s)!\n", path, acm_get_error_message() );
 			}
 		}
-		ape_mm_add_reference( &material->mem );
+		ape_memory_add_reference( &material->mem );
 		return material;
 	}
 
@@ -876,8 +876,8 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
-	ape_mm_setup_reference( "material", APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
-	ape_mm_add_reference( &material->mem );
+	ape_memory_setup_reference( "material", APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
+	ape_memory_add_reference( &material->mem );
 
 	return material;
 }
@@ -900,7 +900,7 @@ void ape_material_release( ApeMaterial *material )
 		return;
 	}
 
-	ape_mm_release( &material->mem );
+	ape_memory_release( &material->mem );
 }
 
 int8_t ape_material_get_surface_type( const ApeMaterial *material )

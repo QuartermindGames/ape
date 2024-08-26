@@ -40,7 +40,7 @@ AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
 
 void ss_arl_cache_particle_emitter_template( const char *path )
 {
-	SS_Arl_ParticleEmitter *emitter = ape_cache_get_data_( path, APE_CACHE_POOL_PARTICLES );
+	SS_Arl_ParticleEmitter *emitter = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
@@ -70,15 +70,15 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	emitter->startColourVar = acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
 	emitter->endColourVar = acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
-	ape_cache_add_to_pool_( path, APE_CACHE_POOL_PARTICLES, emitter );
+	ape_memory_add_to_pool_( path, APE_CACHE_POOL_PARTICLES, emitter );
 
-	ape_mm_setup_reference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
-	ape_mm_add_reference( &emitter->mem );
+	ape_memory_setup_reference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	ape_memory_add_reference( &emitter->mem );
 }
 
 SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 {
-	SS_Arl_ParticleEmitter *emitterTemplate = ape_cache_get_data_( path, APE_CACHE_POOL_PARTICLES );
+	SS_Arl_ParticleEmitter *emitterTemplate = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );

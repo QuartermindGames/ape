@@ -12,40 +12,40 @@
 // seemingly removed EAX effects, only to bring them back and
 // invent their own presets (with mixed-case names)...
 const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
-        { "none", APE_AUDIO_REVERB_PRESET_NONE },
-        { "forest", APE_AUDIO_REVERB_PRESET_FOREST },
-        { "default", APE_AUDIO_REVERB_PRESET_DEFAULT },
-        { "generic", APE_AUDIO_REVERB_PRESET_GENERIC },
-        { "paddedcell", APE_AUDIO_REVERB_PRESET_PADDEDCELL },
-        { "room", APE_AUDIO_REVERB_PRESET_ROOM },
-        { "bathroom", APE_AUDIO_REVERB_PRESET_BATHROOM },
-        { "livingroom", APE_AUDIO_REVERB_PRESET_LIVINGROOM },
-        { "stoneroom", APE_AUDIO_REVERB_PRESET_STONEROOM },
-        { "auditorium", APE_AUDIO_REVERB_PRESET_AUDITORIUM },
-        { "concerthall", APE_AUDIO_REVERB_PRESET_CONCERTHALL },
-        { "cave", APE_AUDIO_REVERB_PRESET_CAVE },
-        { "arena", APE_AUDIO_REVERB_PRESET_ARENA },
-        { "hangar", APE_AUDIO_REVERB_PRESET_HANGAR },
-        { "carpetedhallway", APE_AUDIO_REVERB_PRESET_CARPETEDHALLWAY },
-        { "hallway", APE_AUDIO_REVERB_PRESET_HALLWAY },
-        { "stonecorridor", APE_AUDIO_REVERB_PRESET_STONECORRIDOR },
-        { "alley", APE_AUDIO_REVERB_PRESET_ALLEY },
-        { "city", APE_AUDIO_REVERB_PRESET_CITY },
-        { "mountains", APE_AUDIO_REVERB_PRESET_MOUNTAINS },
-        { "quarry", APE_AUDIO_REVERB_PRESET_QUARRY },
-        { "plain", APE_AUDIO_REVERB_PRESET_PLAIN },
-        { "parkinglot", APE_AUDIO_REVERB_PRESET_PARKINGLOT },
-        { "sewerpipe", APE_AUDIO_REVERB_PRESET_SEWERPIPE },
-        { "underwater", APE_AUDIO_REVERB_PRESET_UNDERWATER },
-        { "smallroom", APE_AUDIO_REVERB_PRESET_SMALLROOM },
-        { "mediumroom", APE_AUDIO_REVERB_PRESET_MEDIUMROOM },
-        { "largeroom", APE_AUDIO_REVERB_PRESET_LARGEROOM },
-        { "mediumhall", APE_AUDIO_REVERB_PRESET_MEDIUMHALL },
-        { "largehall", APE_AUDIO_REVERB_PRESET_LARGEHALL },
-        { "plate", APE_AUDIO_REVERB_PRESET_PLATE },
+        {"none",            APE_AUDIO_REVERB_PRESET_NONE           },
+        {"forest",          APE_AUDIO_REVERB_PRESET_FOREST         },
+        {"default",         APE_AUDIO_REVERB_PRESET_DEFAULT        },
+        {"generic",         APE_AUDIO_REVERB_PRESET_GENERIC        },
+        {"paddedcell",      APE_AUDIO_REVERB_PRESET_PADDEDCELL     },
+        {"room",            APE_AUDIO_REVERB_PRESET_ROOM           },
+        {"bathroom",        APE_AUDIO_REVERB_PRESET_BATHROOM       },
+        {"livingroom",      APE_AUDIO_REVERB_PRESET_LIVINGROOM     },
+        {"stoneroom",       APE_AUDIO_REVERB_PRESET_STONEROOM      },
+        {"auditorium",      APE_AUDIO_REVERB_PRESET_AUDITORIUM     },
+        {"concerthall",     APE_AUDIO_REVERB_PRESET_CONCERTHALL    },
+        {"cave",            APE_AUDIO_REVERB_PRESET_CAVE           },
+        {"arena",           APE_AUDIO_REVERB_PRESET_ARENA          },
+        {"hangar",          APE_AUDIO_REVERB_PRESET_HANGAR         },
+        {"carpetedhallway", APE_AUDIO_REVERB_PRESET_CARPETEDHALLWAY},
+        {"hallway",         APE_AUDIO_REVERB_PRESET_HALLWAY        },
+        {"stonecorridor",   APE_AUDIO_REVERB_PRESET_STONECORRIDOR  },
+        {"alley",           APE_AUDIO_REVERB_PRESET_ALLEY          },
+        {"city",            APE_AUDIO_REVERB_PRESET_CITY           },
+        {"mountains",       APE_AUDIO_REVERB_PRESET_MOUNTAINS      },
+        {"quarry",          APE_AUDIO_REVERB_PRESET_QUARRY         },
+        {"plain",           APE_AUDIO_REVERB_PRESET_PLAIN          },
+        {"parkinglot",      APE_AUDIO_REVERB_PRESET_PARKINGLOT     },
+        {"sewerpipe",       APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
+        {"underwater",      APE_AUDIO_REVERB_PRESET_UNDERWATER     },
+        {"smallroom",       APE_AUDIO_REVERB_PRESET_SMALLROOM      },
+        {"mediumroom",      APE_AUDIO_REVERB_PRESET_MEDIUMROOM     },
+        {"largeroom",       APE_AUDIO_REVERB_PRESET_LARGEROOM      },
+        {"mediumhall",      APE_AUDIO_REVERB_PRESET_MEDIUMHALL     },
+        {"largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
+        {"plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
         // types introduced in RFII
-        { "hall", APE_AUDIO_REVERB_PRESET_HALLWAY },
-        { "pipe", APE_AUDIO_REVERB_PRESET_SEWERPIPE },
+        {"hall",            APE_AUDIO_REVERB_PRESET_HALLWAY        },
+        {"pipe",            APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
 };
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = PL_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
@@ -55,11 +55,11 @@ static const ApeAudioDriverInterface *audioDriverInterface = nullptr;
 		if ( audioDriverInterface != nullptr && audioDriverInterface->FUNCTION ) audioDriverInterface->FUNCTION( __VA_ARGS__ ); \
 	}
 
-static bool audioInitialized = false;
-static bool audioPaused      = false;
+static bool  audioInitialized = false;
+static bool  audioPaused      = false;
+static float audioVolume      = 1.0f;
 
-static float audioVolume = 1.0f;
-float        ape_audio_get_global_volume_( void )
+float ape_audio_get_global_volume_( void )
 {
 	return audioVolume;
 }
@@ -71,21 +71,22 @@ static struct
 	PLVector3 velocity;
 } audioListener;
 
-static void test_audio_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void play_audio_command( unsigned int argc, char **argv )
 {
-	ApeAudioSample *sample = ape_audio_sample_cache( "sounds/testing/ping.wav" );
+	const char     *path   = ( argc > 1 ) ? argv[ 1 ] : "sounds/testing/ping.wav";
+	ApeAudioSample *sample = ape_audio_sample_cache( path );
 	if ( sample == nullptr )
 	{
-		ape_warning_( "Failed to load test sample!\n" );
 		return;
 	}
 
-	ape_audio_sample_emit( sample, 100 );
+	ape_audio_sample_emit( sample, nullptr, 100 );
 	ape_audio_sample_release( sample );
 }
 
-static void play_audio_command( unsigned int argc, char **argv )
+static void pause_audio_command( unsigned int argc, char **argv )
 {
+	ape_audio_pause_( !audioPaused );
 }
 
 void ape_audio_initialize_( void )
@@ -95,8 +96,9 @@ void ape_audio_initialize_( void )
 		return;
 	}
 
-	PRINT( "Initializing audio\n" );
+	ape_print_( "Initializing audio\n" );
 
+	//todo: make these selectable
 	/* initialize the driver interface */
 #if ( PL_SYSTEM_OS == PL_SYSTEM_OS_WINDOWS ) && defined( _MSC_VER )
 	const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface( void );
@@ -116,8 +118,8 @@ void ape_audio_initialize_( void )
 	}
 #endif
 
-	PlRegisterConsoleCommand( "audio/test", "Test the audio system.", 0, test_audio_command );
-	PlRegisterConsoleCommand( "audio/play", "Play a specific sound.", 1, play_audio_command );
+	PlRegisterConsoleCommand( "audio_play", "Play a specific sound. If no sound is specified, plays a test sound.", -1, play_audio_command );
+	PlRegisterConsoleCommand( "audio_pause", "Pause all audio.", 0, pause_audio_command );
 
 	// reset listener
 	ape_audio_clear_listener();
@@ -127,7 +129,7 @@ void ape_audio_initialize_( void )
 
 void ape_audio_register_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "audio/volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, nullptr, true );
+	PlRegisterConsoleVariable( "audio.volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, nullptr, true );
 }
 
 static void destroy_sample( void *user )
@@ -143,17 +145,17 @@ static void destroy_sample( void *user )
 
 void ape_audio_sample_release( ApeAudioSample *audioSample )
 {
-	ape_mm_release( &audioSample->reference );
+	ape_memory_release( &audioSample->reference );
 }
 
 ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file );
 ApeAudioSample *ape_audio_format_wav_load_( PLFile *file );
 ApeAudioSample *ape_audio_sample_cache( const char *path )
 {
-	ApeAudioSample *sample = ape_cache_get_data_( path, APE_CACHE_POOL_SAMPLES );
+	ApeAudioSample *sample = ape_memory_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
 	if ( sample != nullptr )
 	{
-		ape_mm_add_reference( &sample->reference );
+		ape_memory_add_reference( &sample->reference );
 		return sample;
 	}
 
@@ -199,15 +201,18 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 		}
 	}
 
-	ape_cache_add_to_pool_( path, APE_CACHE_POOL_SAMPLES, sample );
-	ape_mm_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
+	//todo: there's an issue with this at the moment...
+	//ape_memory_manager_add_to_pool_( path, APE_CACHE_POOL_SAMPLES, sample );
+
+	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
+	ape_memory_add_reference( &sample->reference );
 
 	PRINT_DEBUG( "Cached sound, \"%s\"\n", path );
 
 	return sample;
 }
 
-void ape_audio_sample_emit( ApeAudioSample *audioSample, int8_t volume )
+void ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume )
 {
 	DRIVER_CALLBACK( emitSample, audioSample, volume );
 }
@@ -248,15 +253,18 @@ void ape_audio_pause_( bool pause )
 	DRIVER_CALLBACK( pause, pause );
 
 	audioPaused = pause;
+
+	PRINT_DEBUG( "Audio %s\n", audioPaused ? "paused" : "unpaused" );
 }
 
 /****************************************
  * Sources
  ****************************************/
 
-ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity )
+ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group )
 {
 	ApeAudioSource *source = PL_NEW( ApeAudioSource );
+
 	if ( position != nullptr )
 	{
 		source->position = *position;

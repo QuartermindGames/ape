@@ -165,7 +165,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_print_( "Initializing core services...\n" );
 
 	ape_initialize_scheduler_();
-	ape_initialize_memory_manager_();
+	ape_memory_initialize_();
 	ape_initialize_net_();
 	ape_initialize_server_();
 	ape_initialize_client_();
@@ -194,7 +194,7 @@ void ape_shutdown( void )
 	ape_shutdown_client_();
 	ape_shutdown_server_();
 	ape_shutdown_console_();
-	ape_shutdown_memory_manager_();
+	ape_memory_shutdown_();
 	ape_shutdown_scheduler_();
 	ape_shutdown_net_();
 

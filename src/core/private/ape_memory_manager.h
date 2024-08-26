@@ -2,14 +2,14 @@
 
 #pragma once
 
-void ape_initialize_memory_manager_( void );
-void ape_shutdown_memory_manager_( void );
+void ape_memory_initialize_( void );
+void ape_memory_shutdown_( void );
 
 /* ======================================================================
  * Active Cache
  * ====================================================================*/
 
-typedef enum ApeCachePool
+typedef enum ApeMemoryCachePool
 {
 	APE_CACHE_POOL_FONTS,
 	APE_CACHE_POOL_TEXTURES,
@@ -22,7 +22,7 @@ typedef enum ApeCachePool
 	APE_CACHE_POOL_WORLD_MESHES,
 
 	APE_MAX_CACHE_POOLS
-} ApeCachePool;
+} ApeMemoryCachePool;
 
 /**
  * Header for cached data item.
@@ -36,32 +36,32 @@ typedef struct ApeMemoryCacheHeader
 	struct PLLinkedListNode *node;              /* index in pool */
 } ApeMemoryCacheHeader;
 
-void  ape_cache_add_to_pool_( const char *id, ApeCachePool pool, void *data );
-void *ape_cache_get_data_( const char *id, ApeCachePool pool );
+void  ape_memory_add_to_pool_( const char *id, ApeMemoryCachePool pool, void *data );
+void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool );
 
 /* ======================================================================
  * Reference Counting and Garbage Collection
  * ====================================================================*/
 
-typedef void ( *MMReference_CleanupFunction )( void *userData );
+typedef void ( *ApeMemoryCleanupCallback )( void *userData );
 typedef struct ApeMemoryReference
 {
-	bool                        isInitialized;  // Indicates whether the handle was set up
-	char                        id[ 64 ];       // identifier
-	int                         numReferences;  // Number of total references
-	unsigned int                timeToLive;     // Time to live
-	void                       *userData;       // Pointer to original data struct
-	ApeMemoryCacheHeader       *cache;          // Pointer to sample on cache
-	MMReference_CleanupFunction cleanupFunction;// Function that deals with the *real* cleanup
-	struct PLLinkedListNode    *node;           // Index into the memory reference list
+	bool                     isInitialized;  // Indicates whether the handle was set up
+	char                     id[ 64 ];       // identifier
+	int                      numReferences;  // Number of total references
+	unsigned int             timeToLive;     // Time to live
+	void                    *userData;       // Pointer to original data struct
+	ApeMemoryCacheHeader    *cache;          // Pointer to sample on cache
+	ApeMemoryCleanupCallback cleanupFunction;// Function that deals with the *real* cleanup
+	struct PLLinkedListNode *node;           // Index into the memory reference list
 } ApeMemoryReference;
 
-ApeMemoryReference *ape_mm_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, MMReference_CleanupFunction cleanupFunction, void *userData );
+ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData );
 
-void         ape_mm_add_reference( ApeMemoryReference *m );
-void         ape_mm_release( ApeMemoryReference *m );
-int          apeGetNumberOfReferences( const ApeMemoryReference *m );
-unsigned int ape_memory_manager_flush_unreferenced_resources( void );
+void         ape_memory_add_reference( ApeMemoryReference *m );
+void         ape_memory_release( ApeMemoryReference *m );
+int          ape_memory_get_num_references( const ApeMemoryReference *m );
+unsigned int ape_memory_flush_unreferenced_resources( void );
 
-void *apeTempAlloc( ApeMemoryReference *m, size_t size );
-void  apeTempFree( ApeMemoryReference *m );
+void *ape_memory_temp_alloc( ApeMemoryReference *m, size_t size );
+void  ape_memory_temp_free( ApeMemoryReference *m );

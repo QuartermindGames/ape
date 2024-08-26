@@ -44,14 +44,14 @@ void ape_initialize_render_targets_( void )
 
 void ape_shutdown_render_targets_( void )
 {
-	ape_memory_manager_flush_unreferenced_resources();
+	ape_memory_flush_unreferenced_resources();
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( renderTargets );
 	while ( node != NULL )
 	{
 		ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) PlGetHashTableNodeUserData( node );
 
-		int numReferences = apeGetNumberOfReferences( &renderTarget->reference );
+		int numReferences = ape_memory_get_num_references( &renderTarget->reference );
 		if ( numReferences > 0 )
 			ape_print_( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
 
@@ -76,7 +76,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 		if ( flags == 0 )
 		{
 			PRINT_DEBUG( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
-			ape_mm_add_reference( &renderTarget->reference );
+			ape_memory_add_reference( &renderTarget->reference );
 			return renderTarget;
 		}
 
@@ -92,7 +92,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 
 		PRINT_DEBUG( "Render target already exists, updating size\n" );
 		ape_render_target_set_size( renderTarget, width, height );
-		ape_mm_add_reference( &renderTarget->reference );
+		ape_memory_add_reference( &renderTarget->reference );
 		return renderTarget;
 	}
 
@@ -127,8 +127,8 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	renderTarget->textureAttachmentFilter = textureAttachmentFilter;
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
-	ape_mm_setup_reference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
-	ape_mm_add_reference( &renderTarget->reference );
+	ape_memory_setup_reference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
+	ape_memory_add_reference( &renderTarget->reference );
 
 	PlInsertHashTableNode( renderTargets, key, strlen( key ), renderTarget );
 
@@ -137,7 +137,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 
 void ape_render_target_release( ApeRenderTarget *renderTarget )
 {
-	ape_mm_release( &renderTarget->reference );
+	ape_memory_release( &renderTarget->reference );
 }
 
 void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height )
