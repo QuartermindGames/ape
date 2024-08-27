@@ -48,10 +48,24 @@ static void test_translate_command( unsigned int argc, char **argv )
 	game_print_( "%s -> %s\n", argv[ 1 ], G_STR_( argv[ 1 ] ) );
 }
 
+static void test_command( unsigned int, char ** )
+{
+	// store the old language
+	char tmp[ sizeof( currentLanguage ) ];
+	strcpy( tmp, currentLanguage );
+
+	game_language_set_current( "ger" );
+	game_print_( "%s", G_STR( "test_message", "Test failed!" ) );
+
+	// restore the original language
+	game_language_set_current( tmp );
+}
+
 void game_language_initialize_()
 {
-	PlRegisterConsoleVariable( "language", "The current language.", "", PL_VAR_STRING, currentLanguage, NULL, true );
-	PlRegisterConsoleCommand( "test_translate", "Test language translations.", 1, test_translate_command );
+	PlRegisterConsoleVariable( "language", "The current language.", "", PL_VAR_STRING, currentLanguage, nullptr, true );
+	PlRegisterConsoleCommand( "language_test_translate", "Test language translations.", 1, test_translate_command );
+	PlRegisterConsoleCommand( "language_test", "Generic test for language translation.", 0, test_command );
 
 	static const char *languagesPath = "scripts/strings.cfg.n";
 	AcmBranch         *root          = acm_load_file( languagesPath, "languages" );
