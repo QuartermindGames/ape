@@ -51,24 +51,3 @@ set_target_properties(SS1 PROPERTIES FOLDER "Shells")
 add_executable(SS1Forge WIN32 ${SS1_SOURCES})
 target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
 set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")
-
-#############################################
-# DETOX / SS2
-#############################################
-set(TOX_SOURCES
-        ${GAME_SHARED_FILES}
-        private/detox/entities/light_night.c
-        private/detox/ui/tox_ui.c
-        private/detox/tox_character.c
-        private/detox/tox_game.c
-        private/detox/tox_quest.c
-        private/detox/tox_world.c
-)
-
-add_executable(Tox WIN32 ${TOX_SOURCES} ../shells/launcher_sdl2/launcher.c)
-target_link_libraries(Tox ${GAME_LINK_LIBS})
-set_target_properties(Tox PROPERTIES FOLDER "Shells")
-
-add_executable(ToxForge WIN32 ${TOX_SOURCES})
-target_link_libraries(ToxForge Forge ${GAME_LINK_LIBS})
-set_target_properties(ToxForge PROPERTIES FOLDER "Shells")

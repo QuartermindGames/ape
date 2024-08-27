@@ -62,13 +62,4 @@ static void deserialize_character_class( ApeEntity *self, AcmBranch *root )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void tox_character_randomize_stats( ToxCharacter *self )
-{
-}
-
-int16_t tox_character_xp_to_next( const ToxCharacter *self )
-{
-	return ( int16_t ) round( 100 * ( self->stats[ TOX_CHARACTER_STAT_LEVEL ] ^ 3 ) );
-}
-
 const ApeEntityClassDefinition *tox_characterClass = &characterClass;
