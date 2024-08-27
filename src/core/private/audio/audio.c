@@ -4,13 +4,7 @@
 
 #include "audio.h"
 
-#define AUDIO_SAMPLE_FREQ 48000
-#define AUDIO_CHANNELS    2
-
 // Provided as a list so we can hand this to the tools later...
-// There are some odd ones in here, because the RFII developers
-// seemingly removed EAX effects, only to bring them back and
-// invent their own presets (with mixed-case names)...
 const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"none",            APE_AUDIO_REVERB_PRESET_NONE           },
         {"forest",          APE_AUDIO_REVERB_PRESET_FOREST         },
@@ -43,9 +37,6 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"mediumhall",      APE_AUDIO_REVERB_PRESET_MEDIUMHALL     },
         {"largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
         {"plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
-        // types introduced in RFII
-        {"hall",            APE_AUDIO_REVERB_PRESET_HALLWAY        },
-        {"pipe",            APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
 };
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = PL_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
@@ -214,7 +205,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 
 void ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume )
 {
-	DRIVER_CALLBACK( emitSample, audioSample, volume );
+	DRIVER_CALLBACK( emitSample, audioSample, position, volume );
 }
 
 void ape_audio_shutdown_( void )

@@ -9,7 +9,7 @@
 
 #include <yin/core_world.h>
 
-#include "ape_memory_manager.h"
+#include "ape_memory.h"
 #include "nodes/node_entity.h"
 #include "audio/audio.h"
 

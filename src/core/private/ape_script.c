@@ -1,0 +1,13 @@
+// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+
+#include "ape_private.h"
+
+#include "3rdparty/lua/include/lua.h"
+
+void ape_script_initialize_()
+{
+}
+
+void ape_script_shutdown_()
+{
+}

@@ -41,7 +41,7 @@ PL_EXTERN_C
 void apeUpdateProfilerGraphs( void );
 
 #include "ape_scheduler.h"
-#include "ape_memory_manager.h"
+#include "ape_memory.h"
 
 /****************************************
  * CONSOLE

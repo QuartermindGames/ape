@@ -295,7 +295,7 @@ static void al_free_sample( ApeAudioSample *sample )
 	XAL_CALL( alDeleteBuffers( 1, &sample->user ) );
 }
 
-static void al_emit_sample( ApeAudioSample *sample, float volume )
+static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, float volume )
 {
 	TemporarySource *source = get_free_temporary_source();
 	if ( source == nullptr )
@@ -304,9 +304,16 @@ static void al_emit_sample( ApeAudioSample *sample, float volume )
 		return;
 	}
 
+	if ( position == nullptr )
+	{
+		position = &pl_vecOrigin3;
+	}
+
 	XAL_CALL( alSourcei( source->user, AL_BUFFER, sample->user ) );
 	XAL_CALL( alSourcef( source->user, AL_GAIN, volume ) );
-	XAL_CALL( alSourcePlay( sample->user ) );
+	XAL_CALL( alSourcef( source->user, AL_PITCH, PlGenerateRandomFloat( 2.0f ) ) );
+	XAL_CALL( alSource3f( source->user, AL_POSITION, position->x, position->y, position->z ) );
+	XAL_CALL( alSourcePlay( source->user ) );
 
 	ape_memory_add_reference( &sample->reference );
 
@@ -321,6 +328,13 @@ static bool al_create_source( ApeAudioSource *source )
 
 static void al_destroy_source( ApeAudioSource *source )
 {
+	if ( source->sample != nullptr )
+	{
+		XAL_CALL( alSourceStop( source->user ) );
+		XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
+		ape_audio_sample_release( source->sample );
+	}
+
 	XAL_CALL( alDeleteSources( 1, &source->user ) );
 }
 
