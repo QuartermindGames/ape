@@ -60,7 +60,7 @@ float ape_audio_get_global_volume_( void );
 // Sample
 
 ApeAudioSample *ape_audio_sample_cache( const char *path );
-void            ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume );
+void            ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch );
 void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ typedef struct ApeAudioDriverInterface
 
 	bool ( *cacheSample )( ApeAudioSample *audioSample );
 	void ( *freeSample )( ApeAudioSample *audioSample );
-	void ( *emitSample )( ApeAudioSample *audioSample, const PLVector3 *position, float volume );
+	void ( *emitSample )( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch );
 
 	bool ( *createSource )( ApeAudioSource *audioSource );
 	void ( *destroySource )( ApeAudioSource *audioSource );

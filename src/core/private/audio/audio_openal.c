@@ -86,14 +86,9 @@ static LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots;
 static LPALISAUXILIARYEFFECTSLOT      alIsAuxiliaryEffectSlot;
 static LPALAUXILIARYEFFECTSLOTI       alAuxiliaryEffectSloti;
 
-typedef struct TemporarySource
-{
-	ALuint          user;
-	ApeAudioSample *sample;
-} TemporarySource;
-
 static constexpr unsigned int MAX_TEMPORARY_SOURCES = 4096;
-static TemporarySource        temporarySources[ MAX_TEMPORARY_SOURCES ];
+static ApeAudioSource         temporarySources[ MAX_TEMPORARY_SOURCES ];
+static PLLinkedList          *activeSources;
 
 static void shutdown_openal( void );
 
@@ -178,6 +173,12 @@ static bool initialize_openal( void )
 	}
 	XAL_CALL( alDistanceModel( AL_EXPONENT_DISTANCE ) );
 
+	activeSources = PlCreateLinkedList();
+	if ( activeSources == nullptr )
+	{
+		ape_error_( true, "Failed to create active sources list: %s\n", PlGetError() );
+	}
+
 	return true;
 }
 
@@ -185,14 +186,18 @@ static void shutdown_openal( void )
 {
 	ape_print_( "Shutting down OpenAL interface\n" );
 
+#pragma message "TODO: need to make sure *all* sources are wiped out and references released..."
+
 	alcDestroyContext( xalContext );
 	xalContext = nullptr;
 
 	alcCloseDevice( xalDevice );
 	xalDevice = nullptr;
+
+	PlDestroyLinkedList( activeSources );
 }
 
-static TemporarySource *get_free_temporary_source()
+static ApeAudioSource *get_free_temporary_source()
 {
 	for ( unsigned int i = 0; i < MAX_TEMPORARY_SOURCES; ++i )
 	{
@@ -236,23 +241,25 @@ static void al_tick( void )
 
 	XAL_CALL( alListenerf( AL_GAIN, ape_audio_get_global_volume_() ) );
 
-	for ( unsigned int i = 0; i < MAX_TEMPORARY_SOURCES; ++i )
+	PLLinkedListNode *node = PlGetFirstNode( activeSources );
+	while ( node != nullptr )
 	{
-		if ( temporarySources[ i ].user == 0 )
-		{
-			continue;
-		}
+		PLLinkedListNode *curNode = node;
+		ApeAudioSource   *source  = PlGetLinkedListNodeUserData( curNode );
+		node                      = PlGetNextLinkedListNode( node );
 
 		ALint state;
-		XAL_CALL( alGetSourcei( temporarySources[ i ].user, AL_SOURCE_STATE, &state ) );
+		XAL_CALL( alGetSourcei( source->user, AL_SOURCE_STATE, &state ) );
 		if ( state != AL_PLAYING )
 		{
-			XAL_CALL( alSourcei( temporarySources[ i ].user, AL_BUFFER, 0 ) );
-			if ( temporarySources[ i ].sample != nullptr )
+			XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
+			if ( source->sample != nullptr )
 			{
-				ape_audio_sample_release( temporarySources[ i ].sample );
-				temporarySources[ i ].sample = nullptr;
+				ape_audio_sample_release( source->sample );
+				source->sample = nullptr;
 			}
+
+			PlDestroyLinkedListNode( curNode );
 		}
 	}
 }
@@ -295,9 +302,9 @@ static void al_free_sample( ApeAudioSample *sample )
 	XAL_CALL( alDeleteBuffers( 1, &sample->user ) );
 }
 
-static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, float volume )
+static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, float volume, float pitch )
 {
-	TemporarySource *source = get_free_temporary_source();
+	ApeAudioSource *source = get_free_temporary_source();
 	if ( source == nullptr )
 	{
 		ape_warning_( "Failed to get a free audio source!\n" );
@@ -311,13 +318,14 @@ static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, f
 
 	XAL_CALL( alSourcei( source->user, AL_BUFFER, sample->user ) );
 	XAL_CALL( alSourcef( source->user, AL_GAIN, volume ) );
-	XAL_CALL( alSourcef( source->user, AL_PITCH, PlGenerateRandomFloat( 2.0f ) ) );
+	XAL_CALL( alSourcef( source->user, AL_PITCH, pitch ) );
 	XAL_CALL( alSource3f( source->user, AL_POSITION, position->x, position->y, position->z ) );
 	XAL_CALL( alSourcePlay( source->user ) );
 
 	ape_memory_add_reference( &sample->reference );
 
 	source->sample = sample;
+	PlInsertLinkedListNode( activeSources, source );
 }
 
 static bool al_create_source( ApeAudioSource *source )

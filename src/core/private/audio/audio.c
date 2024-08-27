@@ -71,7 +71,7 @@ static void play_audio_command( unsigned int argc, char **argv )
 		return;
 	}
 
-	ape_audio_sample_emit( sample, nullptr, 100 );
+	ape_audio_sample_emit( sample, nullptr, 100, 1.0 );
 	ape_audio_sample_release( sample );
 }
 
@@ -203,9 +203,9 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	return sample;
 }
 
-void ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume )
+void ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch )
 {
-	DRIVER_CALLBACK( emitSample, audioSample, position, volume );
+	DRIVER_CALLBACK( emitSample, audioSample, position, volume, pitch );
 }
 
 void ape_audio_shutdown_( void )
