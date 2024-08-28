@@ -339,6 +339,7 @@ static void al_destroy_source( ApeAudioSource *source )
 	if ( source->sample != nullptr )
 	{
 		XAL_CALL( alSourceStop( source->user ) );
+		XAL_CALL( alSourceUnqueueBuffers( source->user, 1, &source->sample->user ) );
 		XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
 		ape_audio_sample_release( source->sample );
 	}
