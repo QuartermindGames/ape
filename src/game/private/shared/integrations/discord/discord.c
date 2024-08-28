@@ -124,12 +124,17 @@ void game_integrations_discord_shutdown_()
 
 void game_integrations_discord_update_activity_( const char *details, const char *state, const char *image, const char *imageText )
 {
+	if ( !discordEnabled )
+	{
+		return;
+	}
+
 	struct DiscordActivity activity = {
 	        .type       = DiscordActivityType_Playing,
 	        .timestamps = {
-	                .start = 0,
-	                .end   = 0,
-	        },
+	                       .start = 0,
+	                       .end   = 0,
+	                       },
 	};
 
 	snprintf( activity.details, sizeof( activity.details ), "%s", details );
