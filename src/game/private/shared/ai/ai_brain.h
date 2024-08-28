@@ -16,7 +16,7 @@ typedef enum AIBrainMotorAction
 typedef struct AIBrainNeed
 {
 	const char *description;
-	double value;
+	double      value;
 } AIBrainNeed;
 
 typedef enum AIBrainDisposition
@@ -35,6 +35,9 @@ typedef enum AIBrainMood
 	AI_BRAIN_MOOD_SAD,
 	AI_BRAIN_MOOD_NEUTRAL,
 	AI_BRAIN_MOOD_HAPPY,
+	AI_BRAIN_MOOD_ANGRY,
+	AI_BRAIN_MOOD_EXCITED,
+	AI_BRAIN_MOOD_DEPRESSED,
 
 	AI_MAX_MOODS
 } AIBrainMood;
@@ -44,12 +47,12 @@ typedef enum AIBrainMood
 
 typedef struct AIBrainDirective
 {
-	AIBrainMotorAction type;
-	double weight;
-	bool completed;
-	const char *description;
+	AIBrainMotorAction       type;
+	double                   weight;
+	bool                     completed;
+	const char              *description;
 	struct AIBrainDirective *subDirectives;
-	unsigned int numSubDirectives;
+	unsigned int             numSubDirectives;
 } AIBrainDirective;
 
 typedef struct AIBrain
@@ -59,5 +62,5 @@ typedef struct AIBrain
 	AIBrainMood mood;
 
 	AIBrainDirective directives[ AI_BRAIN_MAX_DIRECTIVES ];
-	unsigned int numDirectives;
+	unsigned int     numDirectives;
 } AIBrain;

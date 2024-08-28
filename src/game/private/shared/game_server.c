@@ -42,7 +42,7 @@ void game_server_process_message_( ApeServerClientHandle *clientHandle, const vo
 			while ( hashNode != nullptr )
 			{
 				GameServerClient *otherClient = PlGetHashTableNodeUserData( hashNode );
-				hashNode = PlGetNextHashTableNode( hashNode );
+				hashNode                      = PlGetNextHashTableNode( hashNode );
 				if ( otherClient->internalHandle == clientHandle )
 				{
 					continue;

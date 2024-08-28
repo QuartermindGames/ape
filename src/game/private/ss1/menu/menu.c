@@ -1,6 +1,6 @@
 // Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include "ss1_menu.h"
+#include "menu.h"
 #include "../../shared/game_menu_pie.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
@@ -54,8 +54,8 @@ static Menu confirmQuitMenu = {
 };
 
 static MenuOption startMenuOptions[] = {
-        { "test_room\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world test_room" } },
-        { "zoo_shaders\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world zoo_shaders" } },
+        {"test_room\n",   nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world test_room" }  },
+        {"zoo_shaders\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world zoo_shaders" }},
 };
 static Menu startMenu = {
         "Start Server\n",
@@ -66,10 +66,10 @@ static Menu startMenu = {
 
 static MenuOption mainMenuOptions[] = {
 #if !defined( NDEBUG )
-        { "Debug\n", &debugMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
+        {"Debug\n",        &debugMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
 #endif
-        { "Start Server\n", &startMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
-        { "Quit\n", &confirmQuitMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
+        {"Start Server\n", &startMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
+        {"Quit\n",         &confirmQuitMenu, nullptr, MENU_OPTION_TYPE_BUTTON},
 };
 static Menu mainMenu = {
         "Main Menu\n",

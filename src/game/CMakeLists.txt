@@ -38,10 +38,11 @@ endif ()
 #############################################
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
-        private/ss1/menu/ss1_menu.c
+        private/ss1/menu/menu.c
         private/ss1/ss1_game.c
-        private/ss1/ss1_character.c
+        private/ss1/ss1_mission.c
         private/ss1/ss1_name_generator.c
+        private/ss1/ss1_pawn.c
 )
 
 add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)

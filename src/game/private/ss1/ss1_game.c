@@ -2,7 +2,7 @@
 
 #include "acm/public/acm/acm.h"
 #include "ss1_game.h"
-#include "game/private/ss1/menu/ss1_menu.h"
+#include "game/private/ss1/menu/menu.h"
 
 #include "../shared/integrations/integrations.h"
 #include "../shared/physics/physics.h"
@@ -17,46 +17,33 @@ SS1GameState ss1_gameState;
 
 const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
         [SS1_PROFESSION_SHAMAN] = {
-                .name        = "Shaman",
-                .description = "Temp",
-        },
+                                   .name        = "Shaman",
+                                   .description = "Temp",
+                                   },
         [SS1_PROFESSION_MACHINIST] = {
-                .name        = "Machinist",
-                .description = "Temp",
-        },
+                                   .name        = "Machinist",
+                                   .description = "Temp",
+                                   },
         [SS1_PROFESSION_TRICKSTER] = {
-                .name        = "Trickster",
-                .description = "Temp",
-        },
+                                   .name        = "Trickster",
+                                   .description = "Temp",
+                                   },
         [SS1_PROFESSION_POUNDER] = {
-                .name        = "Pounder",
-                .description = "Temp",
-        },
+                                   .name        = "Pounder",
+                                   .description = "Temp",
+                                   },
 };
 
 static ApeLight *suns[ 2 ];
 
-#if !defined( NDEBUG )
-static void run_tests()
-{
-	game_language_set_current( "ger" );
-	game_print_( "%s", G_STR( "test_message", "Test failed!" ) );
-	game_language_set_current( nullptr );
-}
-#endif
-
 static bool ss1_initialize()
 {
-	PL_ZERO_( ss1_gameState );
-
-#if !defined( NDEBUG )
-	run_tests();
-#endif
-
 	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
 	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
 
 	game_register_standard_entity_components_();
+
+	PL_ZERO_( ss1_gameState );
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
@@ -66,9 +53,9 @@ static bool ss1_initialize()
 	}
 #endif
 
-	ss1_menu_initialize();
-
 	ss1_gameState.config = com_get_config( SS1_CONFIG );
+
+	ss1_menu_initialize();
 
 	// determine if it's the first time we've launched
 	const char *name = acm_branch_get_child_string( ss1_gameState.config, "name", nullptr );
@@ -138,7 +125,7 @@ static void handle_input( void )
 	ang.y -= rightStick.x * 2.0f;
 
 	PLVector3 forward, left;
-	PlAnglesAxes( ang, &left, NULL, &forward );
+	PlAnglesAxes( ang, &left, nullptr, &forward );
 
 	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
 	pos                 = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
@@ -195,7 +182,7 @@ static bool ss1_tick( void )
 		world_simulation_tick( &ss1_gameState.simulation );
 
 		game_physics_rope_tick( &debugRope, 1.0f );
-		game_physics_rope_debug_draw( &debugRope );
+		//game_physics_rope_debug_draw( &debugRope );
 	}
 
 	game_integrations_discord_tick_();
@@ -224,7 +211,7 @@ static bool ss1_spawn_world( ApeWorld *world )
 
 	suns[ 0 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
 	                              APE_LIGHT_TYPE_OMNI,
-	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_FLARE | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | /*APE_LIGHT_FLAG_FLARE |*/ APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 	suns[ 1 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
