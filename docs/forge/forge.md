@@ -6,7 +6,7 @@ When Forge is opened, it will first ask you to select or create a project.
 
 <div align="center">
 
-![img.png](img.png)
+![img.png](../images/img.png)
 
 </div>
 
@@ -18,7 +18,7 @@ Once your project is open, it will mount the appropriate locations for you autom
 
 <div align="center">
 
-![img_1.png](img_1.png)
+![img_1.png](../images/img_1.png)
 
 </div>
 
