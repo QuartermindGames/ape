@@ -63,7 +63,7 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
 
 	//PlMatrixMode( PL_MODELVIEW_MATRIX );
 	//PlPushMatrix();
@@ -184,7 +184,12 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 #pragma message "TODO: update this to use material system!!!"
 			PlgSetShaderProgram( ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX )->internal );
 			PlgDrawBoundingVolume( &faces[ i ]->bounds, &PL_COLOUR_WHITE );
-			PlgDrawBoundingVolume( &( PLCollisionAABB ){ .origin = faces[ i ]->origin, .mins = { -0.1f, -0.1f, -0.1f }, .maxs = { 0.1f, 0.1f, 0.1f } }, &PL_COLOUR_BLUE );
+			PlgDrawBoundingVolume( &( PLCollisionAABB ){
+			                               .origin = faces[ i ]->origin,
+			                               .mins   = {-0.1f, -0.1f, -0.1f},
+			                               .maxs   = {0.1f,  0.1f,  0.1f }
+            },
+			                       &PL_COLOUR_BLUE );
 		}
 
 		assert( numSubMeshes[ materialIndex ] < MAX_SUB_MESHES );
@@ -372,7 +377,9 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, ApeLight *light )
 {
 	if ( light == NULL )
+	{
 		return;
+	}
 
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 	{
@@ -432,23 +439,9 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	for ( uint i = 0; i < camera->visibility.numRooms; ++i )
 	{
 		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
+
 		draw_room( world, camera->visibility.rooms[ i ].room, camera, light, ambienceOnly, alpha );
 	}
-
-#pragma message "Decide how we're going to do this..."
-#if 0
-	uint numWorldNodes;
-	ApeWorldNode **worldNodes = ape_camera_get_visible_nodes_( camera, &numWorldNodes );
-	for ( uint i = 0; i < numWorldNodes; ++i )
-	{
-		if ( !worldNodes[ i ]->classType->drawFunction )
-		{
-			continue;
-		}
-
-		worldNodes[ i ]->classType->drawFunction();
-	}
-#endif
 
 	PlPopMatrix();
 }

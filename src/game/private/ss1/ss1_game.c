@@ -68,7 +68,7 @@ static bool ss1_initialize()
 		ss1_gameState.isFirstLaunch = true;
 	}
 
-	ss1_gameState.camera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
+	ss1_gameState.camera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( ss1_gameState.camera == nullptr )
 	{
 		game_error_( "Failed to create player camera!\n" );
@@ -203,9 +203,37 @@ static bool ss1_draw_menu( const ApeViewport *viewport )
 	return true;
 }
 
+typedef struct ToxSkyLayer
+{
+	unsigned int id;
+	const char  *material;
+
+	float baseScale;
+	float baseY;
+	float baseAlpha;
+
+	float parallaxDiff;
+} ToxSkyLayer;
+static ToxSkyLayer skyLayers[] = {
+        {0, "materials/sky/cloudlayer00.mat.n",      0.85f, 12.0f, 0.5f, 100.0f},
+        {0, "materials/sky/cloudlayer00.mat.n",      0.25f, 14.0f, 0.5f, 500.0f},
+        {0, "materials/clouds/cloud_layer_01.mat.n", 0.1f,  16.0f, 1.0f, 700.0f},
+};
+static constexpr unsigned int MAX_SKY_LAYERS = PL_ARRAY_ELEMENTS( skyLayers );
+
 static bool ss1_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &ss1_gameState.simulation );
+
+	//todo: move this all out into the engine, fetch it from the world properties
+	ape_sky_clear_layers();
+	for ( unsigned int i = 0; i < MAX_SKY_LAYERS; ++i )
+	{
+		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,
+		                                       skyLayers[ i ].baseScale,
+		                                       skyLayers[ i ].baseY,
+		                                       skyLayers[ i ].baseAlpha );
+	}
 
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, &world->base );
 

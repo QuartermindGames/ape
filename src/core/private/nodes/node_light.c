@@ -15,7 +15,7 @@
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
 {
 	ApeLight *light = PL_NEW( ApeLight );
-	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, position, &pl_vecOrigin3 );
+	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, nullptr, position, &pl_vecOrigin3 );
 
 	light->colour = *colour;
 	light->type   = type;

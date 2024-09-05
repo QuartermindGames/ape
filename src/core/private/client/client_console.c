@@ -457,18 +457,18 @@ void ape_console_register_cl_commands_( void )
 void ape_register_renderer_console_variables_( void );
 void ape_console_register_cl_variables_( void )
 {
-	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, NULL, true );
+	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, true );
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
-	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, NULL, false );
-	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, NULL, false );
+	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, nullptr, false );
+	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, nullptr, false );
 
-	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, NULL, true );
-	PlRegisterConsoleVariable( "console_alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, NULL, true );
+	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );
+	PlRegisterConsoleVariable( "console_alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, nullptr, true );
 	PlRegisterConsoleVariable( "console_text_shadow", "Shadow for text, which will improve legibility. "
 	                                                  "Disabling might yield a slight performance boost on slower machines.",
-	                           "false", PL_VAR_BOOL, &drawShadow, NULL, true );
+	                           "false", PL_VAR_BOOL, &drawShadow, nullptr, true );
 
 	ape_register_renderer_console_variables_();
 	ape_audio_register_console_variables_();

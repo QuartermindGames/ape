@@ -3,14 +3,14 @@
 
 #include "../world/world.h"
 
-ApeRoom *ape_room_create( ApeWorldNode *parent )
+ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 {
 	ApeRoom *room = PL_NEW( ApeRoom );
-	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	room->detailRooms = PlCreateVectorArray( 0 );
-	room->faces = PlCreateVectorArray( 0 );
-	room->portals = PlCreateVectorArray( 0 );
+	room->faces       = PlCreateVectorArray( 0 );
+	room->portals     = PlCreateVectorArray( 0 );
 
 	// assign the room a random colour so it can be identified per debugging
 	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),

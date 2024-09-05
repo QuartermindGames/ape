@@ -36,7 +36,16 @@ static void deserialize_lights( ApeWorld *world, AcmBranch *root )
 
 static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 {
-	ApeRoom *room = ape_room_create( &world->base );
+	// urgh, try to fetch the name but if it's not there, use a temporary name
+	char        tmp[ 64 ];
+	const char *name = acm_branch_get_child_string( root, "name", nullptr );
+	if ( name == nullptr )
+	{
+		snprintf( tmp, sizeof( tmp ), "unnamed room %u", PlGetNumVectorArrayElements( world->rooms ) );
+		name = tmp;
+	}
+
+	ApeRoom *room = ape_room_create( &world->base, name );
 
 	PLVector3 mins = acm_get_vector3( root, "mins", &pl_vecOrigin3 );
 	PLVector3 maxs = acm_get_vector3( root, "maxs", &pl_vecOrigin3 );
@@ -45,9 +54,6 @@ static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 	room->isDetail     = acm_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );
 	room->flags        = acm_branch_get_child_uint( root, "flags", 0 );
-
-	char tmp[ 64 ];
-	snprintf( tmp, sizeof( tmp ), "room_%u", PlGetNumVectorArrayElements( world->rooms ) );
 
 	return room;
 }

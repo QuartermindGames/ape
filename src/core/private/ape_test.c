@@ -48,8 +48,8 @@ static void draw_model_( ApeCamera *camera, ApeLight *light )
 	PlLoadIdentityMatrix();
 
 	PlTranslateMatrix( PL_VECTOR3( 15.0f, 0.0f, 5.0f ) );
-	PlRotateMatrix( PL_DEG2RAD( -90.0f ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( PL_DEG2RAD( -90.0f ), 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix3f( PL_DEG2RAD( -90.0f ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix3f( PL_DEG2RAD( -90.0f ), 0.0f, 0.0f, 1.0f );
 
 	ApeModelAnimationState animationState = {};
 	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );

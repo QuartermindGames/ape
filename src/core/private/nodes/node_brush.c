@@ -88,11 +88,11 @@ static void upload_mesh( ApeBrush *self )
 		while ( faceVertexNode != nullptr )
 		{
 			ApeBrushFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-			unsigned int v = PlgAddMeshVertex( self->mesh,
-			                                   &vertex->position,
-			                                   &vertex->normal,
-			                                   &faceColour,
-			                                   &vertex->textureCoords );
+			unsigned int        v      = PlgAddMeshVertex( self->mesh,
+			                                               &vertex->position,
+			                                               &vertex->normal,
+			                                               &faceColour,
+			                                               &vertex->textureCoords );
 			PlgSetMeshVertexSTv( self->mesh, 1, v, 2, ( float * ) &vertex->lightmapCoords );
 
 			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
@@ -107,7 +107,7 @@ static void upload_mesh( ApeBrush *self )
 
 static void draw_faces( ApeBrush *self )
 {
-	unsigned int numFaces;
+	unsigned int   numFaces;
 	ApeBrushFace **faces = get_faces( self, &numFaces );
 	if ( numFaces == 0 )
 	{
@@ -139,7 +139,7 @@ static void draw_faces( ApeBrush *self )
 ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeBrush *brush = PL_NEW( ApeBrush );
-	ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, position, angles );
+	ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, nullptr, position, angles );
 	return brush;
 }
 
@@ -156,8 +156,11 @@ void ape_brush_destroy_( void *data )
 	PL_DELETE( self );
 }
 
-void ape_brush_draw( ApeBrush *self )
+void ape_brush_node_draw_( void *data, const PLMatrix4 *transform )
 {
+	ApeBrush *self = ( ApeBrush * ) data;
+	assert( self != nullptr );
+
 	// It's assumed all vis checks were done beforehand...
 
 	upload_mesh( self );

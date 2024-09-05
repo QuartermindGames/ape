@@ -85,7 +85,7 @@ void ape_tick_game_server_( void )
 	ApeWorld *world = ss_game_get_current_world();
 	if ( world != nullptr )
 	{
-		ape_calc_world_node_bounds( &world->base );
+		ape_world_node_generate_bounds_( &world->base );
 	}
 
 	ape_build_camera_visibility_lists_();

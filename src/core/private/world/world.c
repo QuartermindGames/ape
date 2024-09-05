@@ -22,7 +22,7 @@ void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { wo
 ApeWorld *ape_create_world( void )
 {
 	ApeWorld *world = PL_NEW( ApeWorld );
-	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	world->globalProperties = acm_branch_push_back_object( nullptr, "properties" );
 	acm_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );

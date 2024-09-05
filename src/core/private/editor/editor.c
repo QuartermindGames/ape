@@ -46,7 +46,7 @@ static void release_node_icons( void )
 		}
 
 		ape_material_release( nodeIcons[ i ] );
-		nodeIcons[ i ] = NULL;
+		nodeIcons[ i ] = nullptr;
 	}
 }
 
@@ -125,7 +125,7 @@ static void release_preview_materials( void )
 void ape_grid_initialize_( ApeEditorState *instance );
 void ape_grid_shutdown_( void );
 
-static ApeEditorState *editorInstance = NULL;
+static ApeEditorState *editorInstance = nullptr;
 
 ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 {
@@ -137,7 +137,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 	if ( self->brushPlotPoints == NULL )
 	{
 		ape_warning_( "Failed to create brush plot points list: %s\n", PlGetError() );
-		return NULL;
+		return nullptr;
 	}
 
 	ape_grid_initialize_( self );
@@ -150,7 +150,7 @@ void ape_editor_instance_shutdown( ApeEditorState *self )
 	if ( self->brushPlotPoints != NULL )
 	{
 		PlDestroyLinkedList( self->brushPlotPoints );
-		self->brushPlotPoints = NULL;
+		self->brushPlotPoints = nullptr;
 	}
 }
 
@@ -209,7 +209,7 @@ static void save_world_command( unsigned int argc, char **argv )
 
 	const char *dataPath = com_get_local_data_directory();
 
-	AcmBranch *root = acm_branch_push_back_object( NULL, "world" );
+	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
 
 	ape_world_serialize_( world, root );
 }
@@ -277,7 +277,7 @@ void ape_grid_toggle_command_( unsigned int, char ** );
 void ape_register_editor_console_variables_( void )
 {
 	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
-	PlRegisterConsoleCommand( "toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
+	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 
 	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
@@ -310,7 +310,8 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
+	// this is handled during simulation now via debug draw api
+	//PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
 
 	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
 	while ( node != NULL )
@@ -343,7 +344,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 
 		char msg[ 16 ];
 		snprintf( msg, sizeof( msg ), "%u", num++ );
-		gui_font_draw_string( font, screenPos.x, screenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
+		gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 
 		node = PlGetNextLinkedListNode( node );
 
@@ -367,7 +368,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 		// determine the point between the two on the screen
 		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
 		snprintf( msg, sizeof( msg ), "%f", PlVector3Length( PlSubtractVector3( *e, *p ) ) );
-		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, NULL, NULL, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
+		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 }
 
@@ -388,7 +389,7 @@ static void pre_render_brush( ApeEditorState *instance )
 
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
 
-	ape_material_draw( planeMaterial, mesh, NULL );
+	ape_material_draw( planeMaterial, mesh, nullptr );
 
 	// draw boundary
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
@@ -406,8 +407,8 @@ static void pre_render_brush( ApeEditorState *instance )
 
 		PLCollisionAABB bounds = {
 		        .origin = *p,
-		        .mins   = { -0.1f, -0.1f, -0.1f },
-		        .maxs   = { 0.1f, 0.1f, 0.1f },
+		        .mins   = {-0.1f, -0.1f, -0.1f},
+		        .maxs   = {0.1f,  0.1f,  0.1f },
 		};
 		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
 
@@ -459,19 +460,21 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
-	bool isWireframe = PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME );
-	if ( isWireframe )
-	{
-		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-	}
-
 	const ApeWorld *world = ape_camera_get_world( camera );
-	assert( world != nullptr );
-	pre_render_nodes( camera, world, &world->base );
-
-	if ( isWireframe )
+	if ( world != nullptr )
 	{
-		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+		bool isWireframe = PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME );
+		if ( isWireframe )
+		{
+			PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+		}
+
+		pre_render_nodes( camera, world, &world->base );
+
+		if ( isWireframe )
+		{
+			PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+		}
 	}
 }
 
@@ -497,7 +500,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 	float dw, dh;
 	gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
-	gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), NULL, NULL, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+	gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
 
 	draw_brush_gui( viewport, font );
 

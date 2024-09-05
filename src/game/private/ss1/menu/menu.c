@@ -143,8 +143,11 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		float x = 50.0f;
 		float y = 64.0f;
 
-		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, "Otherlands", strlen( "Otherlands" ), true );
-		gui_font_draw_string( menuTitleFont, x, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, "INC.\n", strlen( "INC.\n" ), true );
+		static const char *title    = "embrace";
+		static const char *subtitle = "INC.\n";
+
+		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, title, strlen( title ), true );
+		gui_font_draw_string( menuTitleFont, x, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
 		x = 80.0f;

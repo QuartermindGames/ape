@@ -7,7 +7,7 @@
 #include "../shared/game_client.h"
 #include "../shared/game_world_simulation.h"
 
-#define SS1_GAME_TITLE "Otherlands INC."
+#define SS1_GAME_TITLE "embrace INC."
 
 #define SS1_GAME_MILESTONE     "ss1_proto_1"
 #define SS1_GAME_VERSION_MAJOR 0

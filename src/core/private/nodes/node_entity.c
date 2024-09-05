@@ -91,7 +91,7 @@ ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeW
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
-	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 	entity->classDefinition = classDefinition;
 	entity->componentTable  = PlCreateHashTable();
 

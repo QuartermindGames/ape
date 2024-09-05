@@ -195,14 +195,10 @@ static void write_screenshot( void )
 
 	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer( renderTarget );
 	assert( fboBuffer != NULL );
-	if ( fboBuffer == NULL )
-	{
-		return;
-	}
 
 	size_t         bufSize = ( ( w * h ) * 4 );
 	unsigned char *buf     = PL_NEW_( unsigned char, bufSize );
-	if ( PlgReadFrameBufferRegion( NULL, 0, 0, w, h, bufSize, buf ) != NULL )
+	if ( PlgReadFrameBufferRegion( nullptr, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
 		if ( isCapturing )
 		{
@@ -219,18 +215,20 @@ static void write_screenshot( void )
 		}
 
 		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
-		assert( image != NULL );
 		if ( image != NULL )
 		{
 			PlFlipImageVertical( image );
 			PlClearImageAlpha( image );
 
+			char filename[ 64 ];
+			PlGetFormattedTime( "%Y-%m-%d %H-%M-%S", filename, sizeof( filename ) );
+
 			PLPath       path;
 			unsigned int num = 0;
-			PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), num );
+			PlSetupPath( path, true, "%s/%s.png", com_get_app_data_directory(), filename );
 			while ( PlFileExists( path ) )
 			{
-				PlSetupPath( path, true, "%s/screen%u.png", com_get_app_data_directory(), ++num );
+				PlSetupPath( path, true, "%s/%s (%u).png", com_get_app_data_directory(), filename, ++num );
 			}
 
 			PlWriteImage( image, path, 90 );
@@ -304,32 +302,34 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture_command );
 
 	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
-	PlRegisterConsoleVariable( "capture.numThreads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, NULL, true );
-	PlRegisterConsoleVariable( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, NULL, true );
-	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, NULL, true );
+	PlRegisterConsoleVariable( "capture.numThreads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, nullptr, true );
+	PlRegisterConsoleVariable( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, nullptr, true );
+	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, nullptr, true );
 
-	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, NULL, true );
-	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, NULL, true );
-	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, NULL, false );
-	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, NULL, NULL, false );
-	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, NULL, false );
+	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, nullptr, false );
+	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
+	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
+	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
+	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, nullptr, false );
 
-	PlRegisterConsoleVariable( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, NULL, false );
-	PlRegisterConsoleVariable( "renderer.skipRoomCull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, NULL, false );
+	PlRegisterConsoleVariable( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, nullptr, false );
+	PlRegisterConsoleVariable( "renderer.skipRoomCull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, nullptr, false );
 
-	PlRegisterConsoleVariable( "renderer.maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, NULL, true );
-	PlRegisterConsoleVariable( "renderer.showLights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, NULL, false );
+	PlRegisterConsoleVariable( "renderer.maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.showLights", "Display a sprite showing where lights are.", "false", PL_VAR_BOOL, &ape_config_.renderer.showLights, nullptr, false );
 
-	PlRegisterConsoleVariable( "renderer.useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, NULL, true );
-	PlRegisterConsoleVariable( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, NULL, false );
-	PlRegisterConsoleVariable( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, NULL, false );
+	PlRegisterConsoleVariable( "renderer.useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, nullptr, false );
+	PlRegisterConsoleVariable( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, nullptr, false );
 
-	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, NULL, false );
-	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, NULL, false );
+	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, nullptr, false );
+	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, nullptr, false );
 
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
+
+	PlRegisterConsoleVariable( "renderer.useNewSceneRenderer", "Use new scene-graph renderer.", "false", PL_VAR_BOOL, &ape_config_.renderer.useNewSceneRenderer, nullptr, false );
 
 	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();
@@ -353,7 +353,7 @@ void ape_initialize_renderer_( void )
 
 	ape_draw_initialize_debug_mesh_();
 
-	ape_setup_default_draw_state_( NULL );
+	ape_setup_default_draw_state_( nullptr );
 
 	defaultRenderTarget = ape_render_target_create( "default",
 	                                                800, 600,
@@ -485,17 +485,17 @@ void ape_sky_draw_( ApeCamera *camera )
 
 	static unsigned int indices[][ 3 ] = {
 	        /* corners */
-	        { 2, 1, 0 },
-	        { 3, 1, 2 },
-	        { 4, 3, 2 },
-	        { 5, 3, 4 },
-	        { 6, 5, 4 },
-	        { 7, 5, 6 },
-	        { 0, 7, 6 },
-	        { 1, 7, 0 },
+	        {2, 1, 0},
+	        {3, 1, 2},
+	        {4, 3, 2},
+	        {5, 3, 4},
+	        {6, 5, 4},
+	        {7, 5, 6},
+	        {0, 7, 6},
+	        {1, 7, 0},
 	        /* middle */
-	        { 4, 2, 0 },
-	        { 6, 4, 0 },
+	        {4, 2, 0},
+	        {6, 4, 0},
 	};
 	unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
 
@@ -518,8 +518,7 @@ void ape_sky_draw_( ApeCamera *camera )
 
 	for ( unsigned int i = 0; i < numSkyLayers; ++i )
 	{
-		PLVector3 location = camera->base.position;
-		location.y += ( skyLayers[ i ].y + 10.0f );
+		PLVector3 location = { 0.0f, 100.0f + skyLayers[ i ].y, 0.0f };
 
 		PlgClearMesh( mesh );
 

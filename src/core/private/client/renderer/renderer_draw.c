@@ -46,9 +46,9 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColo
 	PlPushMatrix();
 
 	PlTranslateMatrix( *position );
-	PlRotateMatrix( PL_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( PL_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix3f( PL_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix3f( PL_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix3f( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
 
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
@@ -130,9 +130,9 @@ void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 
 	PlTranslateMatrix( position );
 
-	PlRotateMatrix( angles.x, 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( angles.y, 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix( angles.z, 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix3f( angles.x, 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix3f( angles.y, 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix3f( angles.z, 0.0f, 0.0f, 1.0f );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
 	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );

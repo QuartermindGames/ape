@@ -163,7 +163,7 @@ void ape_world_spawn_entities_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
-void ape_calc_world_node_bounds( ApeWorldNode *root );
+void ape_world_node_generate_bounds_( ApeWorldNode *root );
 
 /**
  * Iterates over the children of the world and returns the first room.

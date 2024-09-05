@@ -56,6 +56,7 @@ typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
+	void ( *drawFunction )( void *data, const PLMatrix4 *transform );
 	void ( *destroyFunction )( void *data );
 } ApeWorldNodeClass;
 
@@ -67,10 +68,12 @@ typedef struct ApeWorldNode
 	ApeWorldNodeType         type;
 	const ApeWorldNodeClass *classType;
 
-	// Originally used a transform matrix here, but for simplicity...
+	//todo: remove these once transform matrix is used more widely
 	PLVector3 position;
 	PLVector3 angles;
 	PLVector3 scale;
+
+	PLMatrix4 transform;
 
 	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
 	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
@@ -83,7 +86,7 @@ typedef struct ApeWorldNode
 
 bool ape_world_node_is_valid_( const ApeWorldNode *self, ApeWorldNodeType expectedType );
 
-ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const PLVector3 *position, const PLVector3 *angles );
+ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
 void          ape_world_node_destroy( ApeWorldNode *self );
 
 void ape_world_node_dettach( ApeWorldNode *self );
@@ -102,8 +105,32 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
  */
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self );
 
+/**
+ * Attaches the given node, and in-turn its children, to the specific room.
+ *
+ * @param self	Instance of the node.
+ * @param room 	Pointer to the specific room.
+ */
+void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room );
+
 ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self );
 ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name );
+
+/**
+ * Fetch the name of the given node.
+ *
+ * @param self 	Instance of the node.
+ * @return 		Name of the node.
+ */
+const char *ape_world_node_get_name( ApeWorldNode *self );
+
+/**
+ * Set the name of the given node.
+ *
+ * @param self 	Instance of the node.
+ * @param name 	New name to set.
+ */
+void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
 #define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
 #define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
@@ -166,7 +193,6 @@ typedef struct ApeBrush
 ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles );
 
 void ape_brush_destroy( ApeBrush *self );
-void ape_brush_draw( ApeBrush *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +282,7 @@ void         ape_sky_draw_( ApeCamera *camera );
 ////////////////////////////////////////////////////////////////////
 // Room
 
-ApeRoom *ape_room_create( ApeWorldNode *parent );
+ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name );
 void     ape_world_room_destroy( ApeRoom *self );
 
 ////////////////////////////////////////////////////////////////////
