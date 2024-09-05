@@ -31,6 +31,8 @@ static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
 static GuiFont       *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
+static float fontSlant = 0.0f;
+
 static uint32_t decode_utf8_char( const char **string )
 {
 	uint32_t c = 0;
@@ -235,6 +237,11 @@ float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t char
 	return w;
 }
 
+void gui_font_set_slant( float slant )
+{
+	fontSlant = slant;
+}
+
 void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
@@ -279,9 +286,9 @@ void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const
 	float tx = ( float ) glyph->x / ( float ) font->texture->w;
 	float ty = ( float ) glyph->y / ( float ) font->texture->h;
 
-	unsigned int vX = PlgAddMeshVertex( font->mesh, &PLVector3( x, y, 0 ), &pl_vecOrigin3, colour, &PLVector2( tx, ty ) );
+	unsigned int vX = PlgAddMeshVertex( font->mesh, &PLVector3( x + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PLVector2( tx, ty ) );
 	unsigned int vY = PlgAddMeshVertex( font->mesh, &PLVector3( x, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &PLVector2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PLVector3( x + ( ( float ) glyph->w * scale ), y, 0 ), &pl_vecOrigin3, colour, &PLVector2( tx + tw, ty ) );
+	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PLVector3( x + ( ( float ) glyph->w * scale ) + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PLVector2( tx + tw, ty ) );
 	unsigned int vW = PlgAddMeshVertex( font->mesh, &PLVector3( x + ( ( float ) glyph->w * scale ), y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &PLVector2( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( font->mesh, vX, vY, vZ );

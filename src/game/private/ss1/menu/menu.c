@@ -6,7 +6,7 @@
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static GuiFont    *menuFont;
 
-static const char *menuTitleFontPath = "guis/fonts/six_caps_48.fnt";
+static const char *menuTitleFontPath = "guis/fonts/odibee_sans_64.fnt";
 static GuiFont    *menuTitleFont;
 
 static bool isMainMenuOpen = true;
@@ -146,8 +146,11 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		static const char *title    = "embrace";
 		static const char *subtitle = "INC.\n";
 
+		gui_font_set_slant( 20.0f );
 		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, title, strlen( title ), true );
-		gui_font_draw_string( menuTitleFont, x, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
+
+		gui_font_set_slant( 0.0f );
+		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
 		x = 80.0f;

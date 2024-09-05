@@ -21,16 +21,16 @@ typedef struct GUIVector2
 
 typedef struct GuiCanvas GuiCanvas;// represents what the GUI draws to
 
-GuiCanvas *ape_gui_canvas_create( int width, int height );
-void guiDestroyCanvas( GuiCanvas *canvas );
-void gui_canvas_set_size( GuiCanvas *canvas, int width, int height );
-void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height );
+GuiCanvas  *ape_gui_canvas_create( int width, int height );
+void        guiDestroyCanvas( GuiCanvas *canvas );
+void        gui_canvas_set_size( GuiCanvas *canvas, int width, int height );
+void        guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height );
 PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas );
 
 /****************************************
  ****************************************/
 
-typedef struct GuiFont GuiFont;
+typedef struct GuiFont       GuiFont;
 typedef struct GuiStyleSheet GuiStyleSheet;
 
 typedef struct GuiPanel GuiPanel;
@@ -39,7 +39,7 @@ bool ape_gui_initialize_( void );
 void ape_gui_shutdown_( void );
 
 const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path );
-void ape_gui_set_style_sheet( const GuiStyleSheet *styleSheet );
+void                 ape_gui_set_style_sheet( const GuiStyleSheet *styleSheet );
 const GuiStyleSheet *guiGetActiveStyleSheet( void );
 
 void gui_panel_tick( GuiPanel *root );
@@ -78,7 +78,7 @@ typedef enum GuiPanelBorder
 } GuiPanelBorder;
 
 GuiPanel *ape_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
-void ape_gui_panel_destroy( GuiPanel *self );
+void      ape_gui_panel_destroy( GuiPanel *self );
 
 void guiSetPanelStyleSheet( GuiPanel *self, const GuiStyleSheet *styleSheet );
 
@@ -86,7 +86,7 @@ void guiDrawPanel( GuiPanel *self );
 void guiDrawPanelBackground( GuiPanel *self );
 void guiTickPanel( GuiPanel *self );
 
-void guiSetPanelBackgroundColour( GuiPanel *self, const PLColour *colour );
+void     guiSetPanelBackgroundColour( GuiPanel *self, const PLColour *colour );
 PLColour guiGetPanelBackgroundColour( GuiPanel *self );
 
 void guiSetPanelBorder( GuiPanel *self, GuiPanelBorder border );
@@ -117,7 +117,7 @@ void ape_gui_panel_set_visible( GuiPanel *self, bool flag );
  ****************************************/
 
 GuiPanel *ape_gui_cursor_create( GuiPanel *parent, int x, int y );
-void guiDestroyCursor( GuiPanel *self );
+void      guiDestroyCursor( GuiPanel *self );
 
 /****************************************
  ****************************************/
@@ -148,8 +148,10 @@ void guiDestroyFont( GuiFont *font );
 GuiFont *guiDeserializeFont( PLFile *file );
 GuiFont *guiLoadFontFile( const char *path );
 
-void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh );
+void  guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh );
 float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character );
+
+void gui_font_set_slant( float slant );
 
 void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh );
 void gui_font_draw_character( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
@@ -165,6 +167,6 @@ void gui_font_display( GuiFont *font );
 typedef struct GuiDesktop GuiDesktop;
 
 GuiDesktop *guiCreateDesktop( GuiPanel *parent );
-void guiDestroyDesktop( GuiDesktop *desktop );
+void        guiDestroyDesktop( GuiDesktop *desktop );
 
 PL_EXTERN_C_END
