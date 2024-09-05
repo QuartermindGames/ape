@@ -3,7 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include "forge_viewport.h"
-#include "forge/editors/editor_world.h"
+#include "forge/editors/WorldEditor.h"
 #include "forge_window_main.h"
 
 #include <plgraphics/plg.h>
@@ -13,6 +13,7 @@
 #include <FXGLVisual.h>
 
 #include <X11/Xlib.h>
+#include <unordered_map>
 
 using namespace forge;
 
@@ -150,7 +151,25 @@ void Viewport::draw()
 
 	if ( camera == nullptr )
 	{
-		camera = ape_create_camera( nullptr, &pl_vecOrigin3, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
+		// this, again, is a gross piece of crap - it should be handled earlier!
+		// lookup the first room to attach the camera to
+		ApeWorldNode *parent      = nullptr;
+		WorldEditor  *worldEditor = dynamic_cast< WorldEditor  * >( editor );
+		if ( worldEditor != nullptr )
+		{
+			// fetch the first room to attach the cameras to
+			PL_ITERATE_LINKED_LIST( parent, ApeWorldNode, worldEditor->get_world()->base.children )
+			{
+				if ( parent->type != APE_WORLD_NODE_TYPE_ROOM )
+				{
+					continue;
+				}
+
+				break;
+			}
+		}
+
+		camera = ape_create_camera( parent, "editor_camera", &pl_vecOrigin3, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 		ape_camera_set_draw_mode( camera, drawMode_ );
 	}
 
@@ -158,16 +177,6 @@ void Viewport::draw()
 	ape_viewport_set_size( internalViewport_, w, h );
 
 	ape_camera_make_active( camera );
-
-	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
-	if ( worldEditor != nullptr )
-	{
-		ApeWorld *world = worldEditor->get_world();
-		if ( world != nullptr )
-		{
-			ape_world_node_attach( ( ApeWorldNode * ) camera, ( ApeWorldNode * ) world );
-		}
-	}
 
 	ape_render_frame( internalViewport_ );
 }
@@ -475,7 +484,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 long Viewport::on_create( FXObject *object, FXSelector selector, void * )
 {
-	auto *worldEditor = dynamic_cast< editor_world * >( this->editor );
+	auto *worldEditor = dynamic_cast< WorldEditor * >( this->editor );
 	if ( worldEditor == nullptr )
 	{
 		return FALSE;

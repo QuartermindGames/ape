@@ -16,7 +16,7 @@ FXIMPLEMENT( forge::editor_model, forge::EditorTab, modelEditorMap, ARRAYNUMBER(
 
 forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, ApeModel *model ) : forge::EditorTab( owner, "Model Editor" )
 {
-	setIcon( forge::load_fx_icon( getApp(), "resources/model_editor.gif" ) );
+	setIcon( forge::load_fx_icon( getApp(), "resources/model.gif" ) );
 
 	auto *frame = new FXVerticalFrame( owner, LAYOUT_FILL );
 

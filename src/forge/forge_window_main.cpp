@@ -4,7 +4,7 @@
 #include "forge_about_dialog.h"
 #include "forge_model_editor.h"
 
-#include "editors/editor_world.h"
+#include "forge/editors/WorldEditor.h"
 #include "editors/editor_material.h"
 
 #include "common_project.h"
@@ -108,6 +108,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 
 	// Add the console at the bottom
 	console = new forge::ConsoleFrame( verticalSplitter );
+	console->hide();
 
 	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
 }
@@ -137,9 +138,9 @@ long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	ape_room_create( &world->base );
+	ape_room_create( &world->base, "room" );
 
-	auto *editor = ( editor_world * ) add_tab( new editor_world( _tabBook, "", world ) );
+	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, "", world ) );
 	editor->update_tree();
 
 	return TRUE;
@@ -165,7 +166,7 @@ long forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	auto *editor = ( editor_world * ) add_tab( new editor_world( _tabBook, PlGetFileName( filename.text() ), world ) );
+	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
 	editor->update_tree();
 
 	return TRUE;
