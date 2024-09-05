@@ -3,6 +3,7 @@
 Hi there, thanks for your interest in APE Tech! These documents will hopefully give you some guidance on how you can use the engine.
 
 - [Forge Documentation](forge/forge.md)
+- [World](world.md)
 - [Changelog](changelog.md)
 
 # Getting Started

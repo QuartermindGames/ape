@@ -23,8 +23,6 @@
 - Process a level directly from a .map rather than from an .obj, and process the entities
   - Process entities from a .map
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
-- **(Editor)** Expose API for adding new brush types
-- **(Editor)** Allow for picking the type of brush we're placing
 - 'current' world selection in editor
 - **(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others
 - **(Editor)** Draw bounding volumes for rooms
