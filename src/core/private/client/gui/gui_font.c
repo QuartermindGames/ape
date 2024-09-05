@@ -96,7 +96,7 @@ void guiDestroyFont( GuiFont *font )
 	PL_DELETE( font );
 }
 
-GuiFont *guiDeserializeFont( PLFile *file )
+static GuiFont *font_deserialize( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
@@ -175,16 +175,16 @@ GuiFont *guiDeserializeFont( PLFile *file )
 	return font;
 }
 
-GuiFont *guiLoadFontFile( const char *path )
+GuiFont *gui_font_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
 		GUI_WARNING( "Failed to load font: %s\n", PlGetError() );
-		return NULL;
+		return nullptr;
 	}
 
-	GuiFont *font = guiDeserializeFont( file );
+	GuiFont *font = font_deserialize( file );
 
 	PlCloseFile( file );
 
@@ -204,7 +204,7 @@ bool guiInitializeFonts_( void )
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{
-		defaultFonts[ i ] = guiLoadFontFile( fontPaths[ i ] );
+		defaultFonts[ i ] = gui_font_load( fontPaths[ i ] );
 		assert( defaultFonts[ i ] != NULL );
 		if ( defaultFonts[ i ] == NULL )
 		{

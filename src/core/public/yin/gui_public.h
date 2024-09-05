@@ -145,8 +145,7 @@ GuiFont *gui_get_default_font( GuiFontDefaultType defaultType );
 
 void guiDestroyFont( GuiFont *font );
 
-GuiFont *guiDeserializeFont( PLFile *file );
-GuiFont *guiLoadFontFile( const char *path );
+GuiFont *gui_font_load( const char *path );
 
 void  guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh );
 float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character );

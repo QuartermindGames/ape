@@ -98,13 +98,13 @@ static void initialize_menu( Menu *menu )
 
 void ss1_menu_initialize( void )
 {
-	menuFont = guiLoadFontFile( menuFontPath );
+	menuFont = gui_font_load( menuFontPath );
 	if ( menuFont == nullptr )
 	{
 		game_error_( "Failed to load menu font (%s)!\n", menuFontPath );
 	}
 
-	menuTitleFont = guiLoadFontFile( menuTitleFontPath );
+	menuTitleFont = gui_font_load( menuTitleFontPath );
 	if ( menuTitleFont == nullptr )
 	{
 		game_error_( "Failed to load title font (%s)!\n", menuTitleFontPath );
