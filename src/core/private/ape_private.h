@@ -125,6 +125,7 @@ typedef struct ApeConfig
 		bool showShadowWireframe;
 		bool showFps;
 		bool showFaceBounds;
+		bool showFaceNormals;
 		bool showLights;
 		bool forceShadows;
 		bool skipRoomCull;

@@ -49,8 +49,10 @@ typedef struct ApeEditorGrid
 	unsigned int scale;
 } ApeEditorGrid;
 
-typedef struct ApeEditorState
+typedef struct ApeEditorInstance
 {
+	ApeCamera *camera;
+
 	ApeEditorGeometryMode geometryMode;
 	ApeEditorGrid         grid;
 
@@ -58,12 +60,12 @@ typedef struct ApeEditorState
 	float turnSpeed;
 
 	PLLinkedList *brushPlotPoints;
-} ApeEditorState;
+} ApeEditorInstance;
 
-ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self );
-void            ape_editor_instance_shutdown( ApeEditorState *self );
-void            ape_editor_set_active_instance( ApeEditorState *self );
-ApeEditorState *ape_editor_get_active_instance( void );
+ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self );
+void               ape_editor_instance_shutdown( ApeEditorInstance *self );
+void               ape_editor_set_active_instance( ApeEditorInstance *self );
+ApeEditorInstance *ape_editor_get_active_instance( void );
 
 ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
 
@@ -84,8 +86,8 @@ void         ape_grid_set_visibility( bool visible );
  * @param state The editor state that the action is being performed within.
  * @return True if the point is at the same location as the origin.
  */
-bool ape_editor_plot_point( ApeEditorState *state );
+bool ape_editor_plot_point( ApeEditorInstance *state );
 
-void ape_editor_clear_plot_points( ApeEditorState *state );
+void ape_editor_clear_plot_points( ApeEditorInstance *state );
 
 PL_EXTERN_C_END

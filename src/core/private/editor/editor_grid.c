@@ -32,7 +32,7 @@ static const float GRID_SELECTABLE_SCALE = 0.5f;
 
 static void grid_update_selection_points( void );
 
-void ape_grid_initialize_( ApeEditorState *instance )
+void ape_grid_initialize_( ApeEditorInstance *instance )
 {
 	instance->grid.visible = true;
 	instance->grid.scale   = DEFAULT_GRID_SCALE;
@@ -67,7 +67,7 @@ void ape_grid_shutdown_( void )
 
 void ape_grid_toggle_command_( unsigned int, char ** )
 {
-	ApeEditorState *state = ape_editor_get_active_instance();
+	ApeEditorInstance *state = ape_editor_get_active_instance();
 	state->grid.visible   = !state->grid.visible;
 }
 
@@ -86,7 +86,7 @@ static void grid_update_selection_points( void )
 	//todo: mesh should also be regenerated here
 }
 
-static void grid_batch_selection_point( const ApeEditorState *instance, const ApeCamera *camera, const GridSelectable *selectable )
+static void grid_batch_selection_point( const ApeEditorInstance *instance, const ApeCamera *camera, const GridSelectable *selectable )
 {
 	PLCollisionAABB bounds = ( PLCollisionAABB ){
 	        .origin = PlTransformVector3( &selectable->position, &instance->grid.transform ),
@@ -178,7 +178,7 @@ static void update_active_grid_selection( void )
  */
 static void draw_selection_grid( ApeCamera *camera )
 {
-	ApeEditorState *state = ape_editor_get_active_instance();
+	ApeEditorInstance *state = ape_editor_get_active_instance();
 
 	if ( gridOldScale != state->grid.scale )
 	{
@@ -209,7 +209,7 @@ static void draw_selection_grid( ApeCamera *camera )
 
 PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst )
 {
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
 		return nullptr;
@@ -226,7 +226,7 @@ PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst )
 
 void ape_grid_increase_size( void )
 {
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
 		return;
@@ -238,7 +238,7 @@ void ape_grid_increase_size( void )
 
 void ape_grid_decrease_size( void )
 {
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
 		return;
@@ -250,7 +250,7 @@ void ape_grid_decrease_size( void )
 
 unsigned int ape_grid_get_size( void )
 {
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
 		return 0;
@@ -261,7 +261,7 @@ unsigned int ape_grid_get_size( void )
 
 void ape_grid_set_visibility( bool visible )
 {
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
 		return;
@@ -279,7 +279,7 @@ void ape_grid_draw_( ApeCamera *camera )
 		return;
 	}
 
-	ApeEditorState *state = ape_editor_get_active_instance();
+	ApeEditorInstance *state = ape_editor_get_active_instance();
 	if ( !ape_config_.editor || !state->grid.visible || state->grid.scale <= 1 )
 	{
 		return;

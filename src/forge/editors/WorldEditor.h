@@ -60,7 +60,7 @@ namespace forge
 		Viewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 	public:
-		class RoomCreationDialog : FXDialogBox
+		class RoomCreationDialog : public FXDialogBox
 		{
 			FXDECLARE( RoomCreationDialog )
 
@@ -75,7 +75,7 @@ namespace forge
 		private:
 		};
 
-		class RoomPropertiesDialog : FXDialogBox
+		class RoomPropertiesDialog : public FXDialogBox
 		{
 			FXDECLARE( RoomPropertiesDialog )
 

@@ -52,6 +52,10 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	geometryModeButtons[ this->instance.geometryMode ]->setState( true );
 
 	new FXVerticalSeparator( toolbar );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/group.gif" ) );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/ungroup.gif" ) );
+
+	new FXVerticalSeparator( toolbar );
 	new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/grid.gif" ), nullptr, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_up.gif" ), this, ID_GRID_UP );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_down.gif" ), this, ID_GRID_DOWN );
@@ -219,7 +223,7 @@ long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 	ApeRoom *room = ( ApeRoom * ) roomSelectBox->getItemData( current );
 	if ( room == nullptr )
 	{
-		return FALSE;
+		return false;
 	}
 
 	ape_world_node_set_name( ( ApeWorldNode * ) room, roomSelectBox->getItemText( current ).text() );
@@ -229,12 +233,18 @@ long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 		ape_camera_set_room( viewport->camera, room );
 	}
 
-	return TRUE;
+	return true;
 }
 
 long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 {
-	return 0;
+	RoomCreationDialog roomCreationDialog( this );
+	if ( roomCreationDialog.execute() )
+	{
+		return true;
+	}
+
+	return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

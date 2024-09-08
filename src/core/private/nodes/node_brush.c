@@ -170,21 +170,6 @@ void ape_brush_node_draw_( void *data, const PLMatrix4 *transform )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool ape_world_face_is_backface( const ApeWorldFace *self, const ApeCamera *camera )
-{
-	PLVector3 angles = ape_camera_get_angles( camera );
-	PLVector3 forward;
-	PlAnglesAxes( angles, nullptr, nullptr, &forward );
-
-	PLVector3 cameraPos = ape_camera_get_position( camera );
-	if ( PlVector3DotProduct( self->normal, forward ) >= 0 )
-	{
-		return true;
-	}
-
-	return false;
-}
-
 bool ape_world_face_is_mirror( const ApeWorldFace *self )
 {
 	unsigned int flags = ape_material_get_flags( self->material );

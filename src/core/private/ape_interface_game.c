@@ -14,23 +14,33 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static void world_command( unsigned int argc, char **argv )
+static void world_command( PL_UNUSED unsigned int argc, char **argv )
 {
+	const char *worldName = argv[ 1 ];
+
 	PLPath path;
-	PlSetupPath( path, true, "worlds/%s.wld.n", argv[ 1 ] );
+	PlSetupPath( path, true, "worlds/%s/%s.wld.n", worldName, worldName );
 
 	ape_spawn_world_( path );
 }
 
 static void print_world_name( const char *path, void * )
 {
+	// verify it's a valid world
+	if ( strcmp( &path[ strlen( path ) - 6 ], "." APE_WORLD_EXTENSION ) != 0 )
+	{
+		return;
+	}
+
+	//TODO: just print the name of the world itself?
+
 	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
 	ape_print_( "%s\n", name );
 }
 
 static void list_worlds_command( uint, char ** )
 {
-	PlScanDirectory( "worlds", "n", print_world_name, false, nullptr );
+	PlScanDirectory( "worlds", "n", print_world_name, true, nullptr );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

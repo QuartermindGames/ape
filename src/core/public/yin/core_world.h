@@ -197,6 +197,8 @@ void ape_brush_destroy( ApeBrush *self );
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
+//#define APE_USE_NEW_WORLD_LAYOUT
+
 typedef struct ApeWorldFace   ApeWorldFace;
 typedef struct ApeWorldMesh   ApeWorldMesh;
 typedef struct ApeWorldObject ApeWorldObject;
@@ -236,6 +238,12 @@ typedef struct ApeWorld
 #define APE_WORLD_VERSION       3
 #define APE_WORLD_EXTENSION     "wld.n"
 #define APE_WORLD_EXTENSION_CFG "wpf.n"
+
+#define APE_WORLD_ROOM_VERSION   1
+#define APE_WORLD_ROOM_EXTENSION "rom.n"
+
+#define APE_WORLD_BRUSH_VERSION   1
+#define APE_WORLD_BRUSH_EXTENSION "brs.n"
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.

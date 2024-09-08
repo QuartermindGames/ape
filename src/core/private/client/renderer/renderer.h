@@ -77,7 +77,6 @@ typedef struct ApeCamera
 
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	PLVector3         forward;// calculated on call to SetCameraAngle
 	PLLinkedListNode *node;
 } ApeCamera;
 

@@ -11,7 +11,7 @@ static int subMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
 static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
 static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
 
-static void draw_face_wireframe( ApeWorldFace *face )
+static void draw_face_wireframe( ApeWorldFace *face, ApeCamera *camera )
 {
 	uint                 numVertices;
 	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayDataEx( face->vertices, &numVertices );
@@ -41,13 +41,13 @@ static void draw_face_wireframe( ApeWorldFace *face )
 	}
 }
 
-static void draw_room_wireframe( ApeWorld *world, ApeRoom *room )
+static void draw_room_wireframe( ApeRoom *room, ApeCamera *camera )
 {
 	uint           numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 	for ( uint j = 0; j < numFaces; ++j )
 	{
-		draw_face_wireframe( faces[ j ] );
+		draw_face_wireframe( faces[ j ], camera );
 	}
 }
 
@@ -79,7 +79,7 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 			ApeWorldNode *worldNode = PlGetLinkedListNodeUserData( node );
 			if ( worldNode->type == APE_WORLD_NODE_TYPE_ROOM )
 			{
-				draw_room_wireframe( world, ( ApeRoom * ) worldNode );
+				draw_room_wireframe( ( ApeRoom * ) worldNode, camera );
 			}
 
 			node = PlGetNextLinkedListNode( node );
@@ -87,7 +87,7 @@ void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
 	}
 	else
 	{
-		draw_room_wireframe( world, camera->room );
+		draw_room_wireframe( camera->room, camera );
 	}
 	PlgImmDraw();
 
@@ -337,7 +337,7 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 		// but let's go ahead and store all the indices into a dynamic array
 		uint numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
 		numIndices += ( numVertices * 2 );// * 2 for edges
-		static uint *indices    = NULL;
+		static uint *indices    = nullptr;
 		static uint  maxIndices = 0;
 		if ( indices == NULL )
 		{
@@ -369,7 +369,7 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 		return;
 	}
 
-	ape_material_draw( shadowMaterial, mesh, NULL );
+	ape_material_draw( shadowMaterial, mesh, nullptr );
 
 #endif
 }
@@ -433,6 +433,8 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
@@ -444,4 +446,6 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	}
 
 	PlPopMatrix();
+
+	COM_PROFILE_FUNCTION_END();
 }

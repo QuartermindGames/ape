@@ -154,7 +154,7 @@ void Viewport::draw()
 		// this, again, is a gross piece of crap - it should be handled earlier!
 		// lookup the first room to attach the camera to
 		ApeWorldNode *parent      = nullptr;
-		WorldEditor  *worldEditor = dynamic_cast< WorldEditor  * >( editor );
+		WorldEditor  *worldEditor = dynamic_cast< WorldEditor  *>( editor );
 		if ( worldEditor != nullptr )
 		{
 			// fetch the first room to attach the cameras to
@@ -171,6 +171,9 @@ void Viewport::draw()
 
 		camera = ape_create_camera( parent, "editor_camera", &pl_vecOrigin3, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 		ape_camera_set_draw_mode( camera, drawMode_ );
+
+		// make sure the given editor knows about the camera
+		editor->set_camera( camera );
 	}
 
 	ape_viewport_set_camera( internalViewport_, camera );
@@ -394,7 +397,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		return TRUE;
 	}
 
-	ApeEditorState *instance = editor->get_internal();
+	ApeEditorInstance *instance = editor->get_internal();
 	if ( instance == nullptr )
 	{
 		return FALSE;
@@ -496,7 +499,7 @@ long Viewport::on_create( FXObject *object, FXSelector selector, void * )
 		return FALSE;
 	}
 
-	ApeEditorState *instance = worldEditor->get_internal();
+	ApeEditorInstance *instance = worldEditor->get_internal();
 	assert( instance != nullptr );
 
 	const char      *name;

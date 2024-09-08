@@ -47,9 +47,8 @@ static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 
 	ApeRoom *room = ape_room_create( &world->base, name );
 
-	PLVector3 mins = acm_get_vector3( root, "mins", &pl_vecOrigin3 );
-	PLVector3 maxs = acm_get_vector3( root, "maxs", &pl_vecOrigin3 );
-	ape_world_node_set_local_bounds( &room->base, &mins, &maxs );
+	// this will be recalculated later...
+	ape_world_node_set_local_bounds( &room->base, &PL_VECTOR3( -1024.0f, -1024.0f, -1024.0f ), &PL_VECTOR3( 1024.0f, 1024.0f, 1024.0f ) );
 
 	room->isDetail     = acm_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );

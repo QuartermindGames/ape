@@ -16,9 +16,6 @@
 #include "world/world.h"
 #include "yin/gui_public.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 static AcmBranch *editorConfigRoot;
 
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
@@ -118,18 +115,31 @@ static void release_preview_materials( void )
 	PlDestroyVectorArray( materialsArray );
 }
 
+static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
+{
+	switch ( mode )
+	{
+		default: return "unknown";
+		case APE_EDITOR_GEOMETRY_MODE_SELECT: return "select";
+		case APE_EDITOR_GEOMETRY_MODE_FACE: return "face";
+		case APE_EDITOR_GEOMETRY_MODE_EDGE: return "edge";
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX: return "vertex";
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: return "transform";
+	}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_initialize_( ApeEditorState *instance );
+void ape_grid_initialize_( ApeEditorInstance *instance );
 void ape_grid_shutdown_( void );
 
-static ApeEditorState *editorInstance = nullptr;
+static ApeEditorInstance *editorInstance = nullptr;
 
-ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
+ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self )
 {
-	PL_ZERO( self, sizeof( ApeEditorState ) );
+	PL_ZERO( self, sizeof( ApeEditorInstance ) );
 
 	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_SELECT;
 
@@ -145,7 +155,7 @@ ApeEditorState *ape_editor_instance_initialize( ApeEditorState *self )
 	return self;
 }
 
-void ape_editor_instance_shutdown( ApeEditorState *self )
+void ape_editor_instance_shutdown( ApeEditorInstance *self )
 {
 	if ( self->brushPlotPoints != NULL )
 	{
@@ -154,12 +164,12 @@ void ape_editor_instance_shutdown( ApeEditorState *self )
 	}
 }
 
-void ape_editor_set_active_instance( ApeEditorState *instance )
+void ape_editor_set_active_instance( ApeEditorInstance *instance )
 {
 	editorInstance = instance;
 }
 
-ApeEditorState *ape_editor_get_active_instance( void )
+ApeEditorInstance *ape_editor_get_active_instance( void )
 {
 	return editorInstance;
 }
@@ -342,6 +352,9 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 			return;
 		}
 
+		screenPos.x = roundf( screenPos.x );
+		screenPos.y = roundf( screenPos.y );
+
 		char msg[ 16 ];
 		snprintf( msg, sizeof( msg ), "%u", num++ );
 		gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
@@ -372,7 +385,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 	}
 }
 
-static void pre_render_brush( ApeEditorState *instance )
+static void pre_render_brush( ApeEditorInstance *instance )
 {
 	PLGMesh          *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
@@ -428,7 +441,7 @@ static void pre_render_brush( ApeEditorState *instance )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-static void pre_render_vertex( ApeEditorState *instance, ApeCamera *camera )
+static void pre_render_vertex( ApeEditorInstance *instance, ApeCamera *camera )
 {
 	const ApeWorld *world = ape_camera_get_world( camera );
 	assert( world != NULL );
@@ -441,7 +454,7 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		return;
 	}
 
-	ApeEditorState *instance = ape_editor_get_active_instance();
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == NULL )
 	{
 		return;
@@ -491,16 +504,34 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		return;
 	}
 
-	char label[ 64 ] = {};
-	S_STRCAT( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
-	S_STRCAT( label, " / " );
-	S_STRCAT( label, ape_get_camera_view_mode_label( camera->mode ) );
-
 	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 
-	float dw, dh;
-	gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
-	gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+	if ( editorInstance->camera != nullptr )
+	{
+
+		char label[ 64 ] = {};
+		S_STRCAT( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
+		S_STRCAT( label, " / " );
+		S_STRCAT( label, ape_get_camera_view_mode_label( camera->mode ) );
+
+		float dw, dh;
+		gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
+		gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+
+		// check the camera has a valid room, otherwise display a warning
+		ApeRoom *room = ape_camera_get_room( editorInstance->camera );
+		if ( room != nullptr )
+		{
+			char buf[ 256 ];
+			snprintf( buf, sizeof( buf ), "Room: %s\nMode: %s\n", room->base.name, edit_mode_descriptor( editorInstance->geometryMode ) );
+			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_WHITE, buf, strlen( buf ), false );
+		}
+		else
+		{
+			static const char *warning = "No active room for camera!\n";
+			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_CRIMSON, warning, strlen( warning ), false );
+		}
+	}
 
 	draw_brush_gui( viewport, font );
 
@@ -593,7 +624,7 @@ ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials )
 // Brush Plotting
 /////////////////////////////////////////////////////////////////////////////////////
 
-static bool validate_plotted_plane( ApeEditorState *state )
+static bool validate_plotted_plane( ApeEditorInstance *state )
 {
 	// this determines that the plane is convex, hopefully
 
@@ -631,7 +662,7 @@ static bool validate_plotted_plane( ApeEditorState *state )
 	return true;
 }
 
-bool ape_editor_plot_point( ApeEditorState *state )
+bool ape_editor_plot_point( ApeEditorInstance *state )
 {
 	PLVector3 cursor;
 	if ( ape_grid_get_cursor_position( &cursor ) == NULL )
@@ -659,7 +690,7 @@ static void destroy_plot_point( void *user )
 	PL_DELETE( ( PLVector3 * ) user );
 }
 
-void ape_editor_clear_plot_points( ApeEditorState *state )
+void ape_editor_clear_plot_points( ApeEditorInstance *state )
 {
 	PlDestroyLinkedListNodesEx( state->brushPlotPoints, destroy_plot_point );
 }

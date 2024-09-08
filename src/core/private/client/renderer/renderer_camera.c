@@ -184,37 +184,29 @@ void ape_camera_destroy_( void *data )
 void ape_camera_set_position( ApeCamera *self, const PLVector3 *position )
 {
 	self->internal->position = *position;
-
-	ApeWorld *world = ape_camera_get_world( self );
-	if ( world == nullptr )
-	{
-		return;
-	}
-
-	//if ( camera->room == nullptr )
-	//{
-	//	camera->room = ape_world_get_room_at_position( camera->world, &camera->internal->position );
-	//}
+	ape_world_node_set_position( &self->base, position );
 }
 
 void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
 {
 	camera->internal->angles = *angles;
+	ape_world_node_set_angles( &camera->base, angles );
 }
 
 PLVector3 ape_camera_get_position( const ApeCamera *camera )
 {
-	return camera->internal->position;
+	return ape_world_node_get_position( &camera->base );
 }
 
 PLVector3 ape_camera_get_angles( const ApeCamera *camera )
 {
-	return camera->internal->angles;
+	return ape_world_node_get_angles( &camera->base );
 }
 
 PLVector3 ape_camera_get_forward( const ApeCamera *camera )
 {
-	return camera->forward;
+	PLMatrix4 view = camera->internal->internal.view;
+	return PL_VECTOR3( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
@@ -449,10 +441,10 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 			continue;
 		}
 
-#if 0
-		PLVector3 endPos = PlAddVector3( face->origin, PlScaleVector3F( face->normal, 0.5f ) );
-		ape_draw_debug_arrow( face->origin, endPos, PL_COLOUR_RED );
-#endif
+		if ( ape_config_.renderer.showFaceNormals )
+		{
+			ape_draw_debug_arrow( face->origin, PlAddVector3( face->origin, PlScaleVector3F( face->normal, 0.5f ) ), PL_COLOUR_CRIMSON );
+		}
 
 		PLVector3 forward;
 		PlAnglesAxes( camera->angles, nullptr, nullptr, &forward );
@@ -506,7 +498,7 @@ void ape_camera_build_visibility_lists_( ApeCamera *self )
 	{
 		if ( ape_config_.world.showNodeVolumes || ape_editor_get_active_instance() != nullptr )
 		{
-			ape_draw_debug_aabb( &room->base.bounds, PL_COLOUR_RED );
+			ape_draw_debug_aabb( &room->base.bounds, PL_COLOUR_CRIMSON );
 		}
 
 		test_room_visibility( &self->visibility, self->internal, room );
@@ -531,6 +523,11 @@ void ape_camera_build_visibility_lists_( ApeCamera *self )
 			room = ( ApeRoom * ) child;
 			if ( room != nullptr )
 			{
+				if ( ape_config_.world.showNodeVolumes )
+				{
+					ape_draw_debug_aabb( &room->base.bounds, PL_COLOUR_CRIMSON );
+				}
+
 				// this just draws every room we can see from the
 				// root though will be incredibly costly for more
 				// complex scenes, so best avoid!!!

@@ -315,6 +315,7 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, nullptr, false );
 
 	PlRegisterConsoleVariable( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, nullptr, false );
+	PlRegisterConsoleVariable( "renderer.showFaceNormals", "Show normals for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceNormals, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.skipRoomCull", "Skip room culling; means that rooms are always visible.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipRoomCull, nullptr, false );
 
 	PlRegisterConsoleVariable( "renderer.maxLightDistance", "Maximum distance before lights are culled.", "1024", PL_VAR_F32, &ape_config_.renderer.maxLightDistance, nullptr, true );
@@ -573,7 +574,7 @@ static void render_transparent_world( ApeWorld *world, ApeCamera *camera )
 static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeViewport *viewport )
 {
 	// Ambient pass
-	ape_world_draw( world, camera, NULL, true, false );
+	ape_world_draw( world, camera, nullptr, true, false );
 
 	PlgDepthMask( false );
 
@@ -678,9 +679,10 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 
 void ape_test_draw_( ApeCamera *camera );
 
-PLVector2   screenPosTest;
 static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	ape_rendererPerformance_.numLights = 0;
 
 	ape_editor_pre_render_scene_( camera );
@@ -701,8 +703,8 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 					break;
 				case APE_CAMERA_DRAW_MODE_SOLID:
 				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw( world, camera, NULL, true, false );
-					ape_world_draw( world, camera, NULL, true, true );
+					ape_world_draw( world, camera, nullptr, true, false );
+					ape_world_draw( world, camera, nullptr, true, true );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
 					render_solid_world( world, camera, viewport );
@@ -720,6 +722,8 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 #endif
 
 	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
@@ -748,7 +752,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
-	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
+	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	currentCamera = nullptr;
 
