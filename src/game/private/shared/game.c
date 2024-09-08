@@ -52,6 +52,10 @@ void game_warning_( const char *message, ... )
 	PlLogMessage( globalGameWarningLog, buf );
 }
 
+#if !defined( NDEBUG )
+#	include <signal.h>
+#endif
+
 void game_error_( const char *message, ... )
 {
 	va_list args;
@@ -61,6 +65,10 @@ void game_error_( const char *message, ... )
 	va_end( args );
 
 	PlLogMessage( globalGameErrorLog, buf );
+
+#if !defined( NDEBUG )
+	raise( SIGINT );
+#endif
 }
 
 void game_server_initialize_();
