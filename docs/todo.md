@@ -20,19 +20,16 @@
   - Add some logic for swapping out first texture, so we can convey different expressions
 - Implement DetachShaderStage in graphics driver
 - Allow for reloading materials on command
-- Process a level directly from a .map rather than from an .obj, and process the entities
-  - Process entities from a .map
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
 - 'current' world selection in editor
 - **(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others
-- **(Editor)** Draw bounding volumes for rooms
 - **(Editor)** Add texture selection frame
 - Implement a new tab type with close button, so we can easily close editors
 - **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
 - **(Editor)** Look into the concept of supporting multiple grids
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Recycle the parser from Dickens for ACM
-- Sky plane should display irrelevent of camera position
+- Skybox w/ clouds
 - String table for binary-based node format
 - Update cook tool to convert obj geom to brush rather than room geo
 - Finish implementing support for the receive shadow flag (might need self-shadow too)
@@ -42,27 +39,24 @@
 - When an item is removed from memory, it's not being correctly removed from the cache
 
 ## In-Progress
-- Model import from SMD/QC etc.
+
 
 ## Done
 
-### 2024-07
+- ~~**(Editor)** Draw bounding volumes for rooms~~
+- ~~Model import from SMD/QC etc.~~
 - ~~Test the rope physics and confirm they're working~~
 - ~~Introduce a way for the game to draw debug crap more *cleanly*, maybe some sort of deferred drawing API for basic wireframe primitives~~
 - ~~Per-vertex lighting shader~~
 - ~~Shadows from multiple sources don't work!~~
 - ~~Add 'list_worlds' command~~
 - ~~Add basic menu~~
-
-### 2024-06
 - ~~Migrate rope physics from Doom 3~~
 - ~~Versioning for binary node format~~
 - ~~Remove class API per brushes; we'll have just poly-brushes now~~
 - ~~Bitshift protocol version~~
 - ~~Disconnect currently just crashes~~
 - ~~Terrain brush type using heightmap with variable height specific textures~~
-
-### Older...
 - ~~Fix post-processing, again~~
 - ~~Allow for reloading shaders on command (hot-reload feature?)~~
 - ~~Icons for nodes within viewport~~

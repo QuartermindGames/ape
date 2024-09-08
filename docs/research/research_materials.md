@@ -1,4 +1,6 @@
-# APE 4 Materials
+# ApeTech Materials
+
+This is a general guideline as to the desired direction with materials in ApeTech.
 
 ## Goals
 
