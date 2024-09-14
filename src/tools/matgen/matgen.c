@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: For when you just can't be bothered to do it by hand...
 
 #include <plcore/pl.h>

@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "menu.h"
 #include "../../shared/game_menu_pie.h"

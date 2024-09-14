@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Model editor tab
 // Author:  Mark E. Sowden
 

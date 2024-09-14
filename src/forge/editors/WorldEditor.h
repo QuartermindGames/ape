@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -19,7 +19,7 @@ namespace forge
 	public:
 		enum
 		{
-			ID_SELECT_MODE = FXTabItem::ID_LAST,
+			ID_POLY_MODE = FXTabItem::ID_LAST,
 			ID_FACE_MODE,
 			ID_EDGE_MODE,
 			ID_VERTEX_MODE,

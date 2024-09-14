@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Forge viewport implementation.
 // Author:  Mark E. Sowden
 
@@ -459,7 +459,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case KEY_Escape:
 		{
-			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT )
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 			{
 				ape_editor_clear_plot_points( instance );
 			}

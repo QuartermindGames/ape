@@ -1,9 +1,7 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "plcore/pl_hashtable.h"
-
 #include "ape_private.h"
-
 #include "client/renderer/renderer.h"
 #include "editor/editor.h"
 
@@ -11,41 +9,40 @@
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////
 
-static constexpr unsigned int DEFAULT_GRID_SCALE = 16;
-static constexpr unsigned int MAX_GRID_SCALE     = 256;
-static constexpr unsigned int MIN_GRID_SCALE     = 2;
-#define GRID_SIZE     256
-#define GRID_ELEMENTS ( GRID_SIZE * GRID_SIZE )
+static constexpr uint DEFAULT_GRID_SCALE = 16;
+static constexpr uint MIN_GRID_SCALE     = 2;
 
 typedef struct GridSelectable
 {
 	PLColour  colour;
 	PLVector3 position;
 } GridSelectable;
-static GridSelectable  gridSelectables[ GRID_ELEMENTS ];
+static GridSelectable  gridSelectables[ APE_EDITOR_GRID_MAX_POINTS ];
 static GridSelectable *activeGridSelectable;
 static PLHashTable    *gridSelectablesTable;
 
-static unsigned int gridOldScale = DEFAULT_GRID_SCALE;
+static const float GRID_SELECTABLE_SCALE = 1.0f;
 
-static const float GRID_SELECTABLE_SCALE = 0.5f;
-
-static void grid_update_selection_points( void );
-
-void ape_grid_initialize_( ApeEditorInstance *instance )
+void ape_grid_setup_( ApeEditorGrid *self )
 {
-	instance->grid.visible = true;
-	instance->grid.scale   = DEFAULT_GRID_SCALE;
+	self->visible = true;
+	self->scale   = DEFAULT_GRID_SCALE;
 
-	instance->grid.transform = PlMatrix4Identity();
-	PLMatrix4 gridRotation   = PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
-	instance->grid.transform = PlMultiplyMatrix4( instance->grid.transform, &gridRotation );
+	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
+	self->transform        = PlMultiplyMatrix4( PlMatrix4Identity(), &gridRotation );
+
+	self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, 0, 0 );
+	if ( self->mesh == nullptr )
+	{
+		ape_error_( true, "Failed to create grid mesh: %s\n", PlGetError() );
+	}
+	self->rebuildMesh = true;
 
 	gridSelectablesTable = PlCreateHashTable();
 
 	// assign colours to each of the selection cubes
-	unsigned int aaa = 1;
-	for ( unsigned int i = 0; i < GRID_ELEMENTS; ++i )
+	uint aaa = 1;
+	for ( uint i = 0; i < APE_EDITOR_GRID_MAX_POINTS; ++i )
 	{
 		gridSelectables[ i ].colour.r = aaa & 0xFF;
 		gridSelectables[ i ].colour.g = ( aaa & 0xFF00 ) >> 8;
@@ -55,87 +52,62 @@ void ape_grid_initialize_( ApeEditorInstance *instance )
 
 		PlInsertHashTableNode( gridSelectablesTable, &gridSelectables[ i ].colour, sizeof( PLColour ), &gridSelectables[ i ] );
 	}
-
-	grid_update_selection_points();
 }
 
-void ape_grid_shutdown_( void )
+void ape_grid_cleanup_( ApeEditorGrid *self )
 {
 	PlDestroyHashTable( gridSelectablesTable );
 	gridSelectablesTable = nullptr;
+
+	PlgDestroyMesh( self->mesh );
 }
 
-void ape_grid_toggle_command_( unsigned int, char ** )
+void ape_grid_toggle_command_( uint, char ** )
 {
 	ApeEditorInstance *state = ape_editor_get_active_instance();
-	state->grid.visible   = !state->grid.visible;
+	state->grid.visible      = !state->grid.visible;
 }
 
-static void grid_update_selection_points( void )
+static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSelectable *selectable )
 {
-	for ( unsigned int r = 0; r < GRID_SIZE; ++r )
-	{
-		for ( unsigned int c = 0; c < GRID_SIZE; ++c )
-		{
-			GridSelectable *selectable = &gridSelectables[ r * GRID_SIZE + c ];
-			selectable->position.x     = ( float ) r - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
-			selectable->position.y     = ( float ) c - ( ( ( float ) GRID_SIZE / 2.0f ) /* + ( GRID_SELECTABLE_SCALE / 2.0f )*/ );
-		}
-	}
+	float scale = ( GRID_SELECTABLE_SCALE * ( float ) self->scale ) / 8.0f;
 
-	//todo: mesh should also be regenerated here
-}
+	uint x, y, z, w;
+	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y + scale, 0.0f );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y - scale, 0.0f );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y + scale, 0.0f );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y - scale, 0.0f );
+	PlgColour4bv( self->mesh, &selectable->colour );
 
-static void grid_batch_selection_point( const ApeEditorInstance *instance, const ApeCamera *camera, const GridSelectable *selectable )
-{
-	PLCollisionAABB bounds = ( PLCollisionAABB ){
-	        .origin = PlTransformVector3( &selectable->position, &instance->grid.transform ),
-	        .maxs   = ( PLVector3 ){GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE,  GRID_SELECTABLE_SCALE },
-	        .mins   = ( PLVector3 ){-GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE, -GRID_SELECTABLE_SCALE}
-    };
-	if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
-	{
-		return;
-	}
+	PlgPushTriangle( self->mesh, x, y, z );
+	PlgPushTriangle( self->mesh, y, z, w );
 
-	float scale = GRID_SELECTABLE_SCALE / 2.0f;
+	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y, scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y, scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y, -scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y, -scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
 
-	unsigned int x, y, z, w;
-	x = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y + scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y - scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y + scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y - scale, 0.0f );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
+	PlgPushTriangle( self->mesh, x, y, z );
+	PlgPushTriangle( self->mesh, y, z, w );
 
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
+	x = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y + scale, scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y - scale, scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y + scale, -scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y - scale, -scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
 
-	x = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x + scale, selectable->position.y, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x - scale, selectable->position.y, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
-
-	x = PlgImmPushVertex( selectable->position.x, selectable->position.y + scale, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	y = PlgImmPushVertex( selectable->position.x, selectable->position.y - scale, scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	z = PlgImmPushVertex( selectable->position.x, selectable->position.y + scale, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-	w = PlgImmPushVertex( selectable->position.x, selectable->position.y - scale, -scale );
-	PlgImmColour( selectable->colour.r, selectable->colour.g, selectable->colour.b, selectable->colour.a );
-
-	PlgImmPushTriangle( x, y, z );
-	PlgImmPushTriangle( y, z, w );
+	PlgPushTriangle( self->mesh, x, y, z );
+	PlgPushTriangle( self->mesh, y, z, w );
 }
 
 static void update_active_grid_selection( void )
@@ -162,7 +134,10 @@ static void update_active_grid_selection( void )
 		{
 			const PLColour *pixel      = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
 			GridSelectable *selectable = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
-			activeGridSelectable       = selectable;
+			if ( selectable != nullptr )
+			{
+				activeGridSelectable = selectable;
+			}
 		}
 	}
 	else
@@ -176,79 +151,84 @@ static void update_active_grid_selection( void )
 /**
  * this draws what should be selectable to the selection buffer.
  */
-static void draw_selection_grid( ApeCamera *camera )
+static void draw_selection_grid( ApeEditorGrid *self )
 {
-	ApeEditorInstance *state = ape_editor_get_active_instance();
-
-	if ( gridOldScale != state->grid.scale )
-	{
-		grid_update_selection_points();
-		gridOldScale = state->grid.scale;
-	}
-
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-	PlLoadMatrix( &state->grid.transform );
+	PlLoadMatrix( &self->transform );
 
-	PlgImmBegin( PLG_MESH_TRIANGLES );
-	for ( unsigned int i = 0; i < GRID_ELEMENTS; i++ )
+	if ( self->rebuildMesh )
 	{
-		grid_batch_selection_point( state, camera, &gridSelectables[ i ] );
+		PlgClearMesh( self->mesh );
+
+		uint size = APE_EDITOR_GRID_MAX_SIZE / ( self->scale / 2 );
+		for ( uint r = 0; r < size; ++r )
+		{
+			for ( uint c = 0; c < size; ++c )
+			{
+				GridSelectable *selectable = &gridSelectables[ r * APE_EDITOR_GRID_MAX_SIZE + c ];
+				selectable->position.x     = ( float ) r * ( ( ( float ) self->scale / 2.0f ) ) - ( APE_EDITOR_GRID_MAX_SIZE / 2.0f );
+				selectable->position.y     = ( float ) c * ( ( ( float ) self->scale / 2.0f ) ) - ( APE_EDITOR_GRID_MAX_SIZE / 2.0f );
+				grid_batch_selection_point( self, selectable );
+			}
+		}
+
+		PlgUploadMesh( self->mesh );
+		self->rebuildMesh = false;
 	}
 
 	PlgSetCullMode( PLG_CULL_NONE );
 
-	PlgImmDraw();
+	PlgSetShaderUniformValue( PlgGetCurrentShaderProgram(), "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	PlgDrawMesh( self->mesh );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
 
 	PlPopMatrix();
 }
 
-PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst )
+PLVector3 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector3 *dst )
 {
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
-	{
-		return nullptr;
-	}
-
 	if ( activeGridSelectable == nullptr )
 	{
 		return nullptr;
 	}
 
-	*dst = PlTransformVector3( &activeGridSelectable->position, &instance->grid.transform );
+	*dst = PlTransformVector3( &activeGridSelectable->position, &self->transform );
 	return dst;
 }
 
 void ape_grid_increase_size( void )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
+	if ( instance == nullptr || instance->grid.scale == APE_EDITOR_GRID_MAX_SIZE )
 	{
 		return;
 	}
 
-	instance->grid.scale = PlClamp( MIN_GRID_SCALE, ( instance->grid.scale * 2 ), MAX_GRID_SCALE );
+	instance->grid.scale = PlClamp( MIN_GRID_SCALE, ( instance->grid.scale * 2 ), APE_EDITOR_GRID_MAX_SIZE );
 	activeGridSelectable = nullptr;
+
+	instance->grid.rebuildMesh = true;
 }
 
 void ape_grid_decrease_size( void )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
+	if ( instance == nullptr || instance->grid.scale == MIN_GRID_SCALE )
 	{
 		return;
 	}
 
-	instance->grid.scale = PlClamp( MIN_GRID_SCALE, ( instance->grid.scale / 2 ), MAX_GRID_SCALE );
+	instance->grid.scale = PlClamp( MIN_GRID_SCALE, ( instance->grid.scale / 2 ), APE_EDITOR_GRID_MAX_SIZE );
 	activeGridSelectable = nullptr;
+
+	instance->grid.rebuildMesh = true;
 }
 
-unsigned int ape_grid_get_size( void )
+uint ape_grid_get_size( void )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -271,7 +251,7 @@ void ape_grid_set_visibility( bool visible )
 	activeGridSelectable   = nullptr;
 }
 
-void ape_grid_draw_( ApeCamera *camera )
+void ape_grid_draw_()
 {
 	ApeViewport *viewport = ape_viewport_get_active();
 	if ( viewport == nullptr )
@@ -279,51 +259,45 @@ void ape_grid_draw_( ApeCamera *camera )
 		return;
 	}
 
-	ApeEditorInstance *state = ape_editor_get_active_instance();
-	if ( !ape_config_.editor || !state->grid.visible || state->grid.scale <= 1 )
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( !ape_config_.editor || !instance->grid.visible || instance->grid.scale <= 1 )
 	{
 		return;
 	}
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	ApeViewport *selectionViewport = get_selection_viewport_();
-	if ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT )
+	//#define DEBUG_GRID_SELECTION
+	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
-		unsigned int sw = viewport->width / 2;
-		unsigned int sh = viewport->height / 2;
+#if !defined( DEBUG_GRID_SELECTION )
+		ApeViewport *selectionViewport = get_selection_viewport_();
+
+		uint sw = viewport->width / 2;
+		uint sh = viewport->height / 2;
 		ape_viewport_set_size( selectionViewport, sw, sh );
 		ape_viewport_make_active( selectionViewport );
 		ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
+#endif
 
 		//todo: just shove this here for now for testing...
-		draw_selection_grid( camera );
+		draw_selection_grid( &instance->grid );
 
 		update_active_grid_selection();
 
+#if !defined( DEBUG_GRID_SELECTION )
 		ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 		ape_viewport_make_active( viewport );
+#endif
 	}
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-	PlLoadMatrix( &state->grid.transform );
+	PlLoadMatrix( &instance->grid.transform );
 
-	PlgDrawGrid( -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE, state->grid.scale / 2, &( PLColour ){ 0, 0, 255, 255 } );
-
-	if ( ( state->geometryMode == APE_EDITOR_GEOMETRY_MODE_SELECT ) && activeGridSelectable != nullptr )
-	{
-		static const float GRID_HIGHLIGHT_SCALE = GRID_SELECTABLE_SCALE / 8.0f;
-
-		PLCollisionAABB bounds = {
-		        .origin = activeGridSelectable->position,
-		        .mins   = {-GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE, -GRID_HIGHLIGHT_SCALE},
-		        .maxs   = {GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE,  GRID_HIGHLIGHT_SCALE },
-		};
-		PlgDrawBoundingVolume( &bounds, &( PLColour ){ 255, 255, 255, 255 } );
-	}
+	PlgDrawGrid( -APE_EDITOR_GRID_MAX_SIZE / 2, -APE_EDITOR_GRID_MAX_SIZE / 2, APE_EDITOR_GRID_MAX_SIZE, APE_EDITOR_GRID_MAX_SIZE, instance->grid.scale / 2, &( PLColour ){ 0, 0, 255, 255 } );
 
 	PlPopMatrix();
 }

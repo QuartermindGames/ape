@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -197,7 +197,7 @@ void ape_brush_destroy( ApeBrush *self );
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
-//#define APE_USE_NEW_WORLD_LAYOUT
+#define APE_USE_NEW_WORLD_LAYOUT
 
 typedef struct ApeWorldFace   ApeWorldFace;
 typedef struct ApeWorldMesh   ApeWorldMesh;

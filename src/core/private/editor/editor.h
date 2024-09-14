@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -14,7 +14,7 @@ void ape_register_editor_console_variables_( void );
 void ape_editor_pre_render_scene_( ApeCamera *camera );
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );
-void ape_grid_draw_( ApeCamera *camera );
+void ape_grid_draw_();
 
 bool ape_is_editor_active( void );
 

@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: World editor tab
 // Author:  Mark E. Sowden
 
@@ -11,7 +11,7 @@
 
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
-        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_SELECT_MODE, forge::WorldEditor::on_change_geometry_mode ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_POLY_MODE, forge::WorldEditor::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_FACE_MODE, forge::WorldEditor::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_EDGE_MODE, forge::WorldEditor::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_VERTEX_MODE, forge::WorldEditor::on_change_geometry_mode ),
@@ -44,10 +44,10 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
 	new FXVerticalSeparator( toolbar );
 
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_SELECT ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/select.gif" ), nullptr, this, ID_SELECT_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_vertex.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	//geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), nullptr, this, ID_EDGE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ this->instance.geometryMode ]->setState( true );
 
@@ -103,7 +103,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 	}
 
 	PLVector3 pos;
-	ape_grid_get_cursor_position( &pos );
+	ape_grid_get_cursor_position( &instance.grid, &pos );
 
 	static const PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -155,8 +155,8 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 	{
 		default:
 			break;
-		case ID_SELECT_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_SELECT;
+		case ID_POLY_MODE:
+			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 			break;
 		case ID_FACE_MODE:
 			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_FACE;

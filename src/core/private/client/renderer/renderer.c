@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <pthread.h>
 
@@ -738,7 +738,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	ape_grid_draw_( camera );
+	ape_grid_draw_();
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 	{

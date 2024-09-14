@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -32,7 +32,7 @@ typedef struct ApeEditorField
 
 typedef enum ApeEditorGeometryMode
 {
-	APE_EDITOR_GEOMETRY_MODE_SELECT,   // brush creation mode
+	APE_EDITOR_GEOMETRY_MODE_PLOT,     // brush creation mode
 	APE_EDITOR_GEOMETRY_MODE_FACE,     // face selection mode
 	APE_EDITOR_GEOMETRY_MODE_EDGE,     // edge selection mode
 	APE_EDITOR_GEOMETRY_MODE_VERTEX,   // vertex selection mode
@@ -41,12 +41,19 @@ typedef enum ApeEditorGeometryMode
 	APE_EDITOR_MAX_GEOMETRY_MODES
 } ApeEditorGeometryMode;
 
+#define APE_EDITOR_GRID_MAX_SIZE   256
+#define APE_EDITOR_GRID_MAX_POINTS ( APE_EDITOR_GRID_MAX_SIZE * APE_EDITOR_GRID_MAX_SIZE )
+
 typedef struct ApeEditorGrid
 {
-	PLMatrix4     transform;
+	unsigned int scale;
+	PLMatrix4    transform;
+
+	bool     rebuildMesh;
+	PLGMesh *mesh;
+
 	unsigned char visible;// unsigned char, because otherwise
 	                      // can't hook it with frontend :(
-	unsigned int scale;
 } ApeEditorGrid;
 
 typedef struct ApeEditorInstance
@@ -69,7 +76,7 @@ ApeEditorInstance *ape_editor_get_active_instance( void );
 
 ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
 
-PLVector3 *ape_grid_get_cursor_position( PLVector3 *dst );
+PLVector3 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector3 *dst );
 
 void         ape_grid_increase_size( void );
 void         ape_grid_decrease_size( void );

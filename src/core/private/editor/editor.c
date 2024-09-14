@@ -1,18 +1,12 @@
-// Copyright © 2020-2024 SnortySoft, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "plcore/pl_hashtable.h"
-
 #include "ape_private.h"
-
 #include "common_project.h"
-
 #include "editor.h"
-
 #include "client/renderer/renderer.h"
-
 #include "game/game_public.h"
-
 #include "world/world.h"
 #include "yin/gui_public.h"
 
@@ -120,10 +114,10 @@ static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
 	switch ( mode )
 	{
 		default: return "unknown";
-		case APE_EDITOR_GEOMETRY_MODE_SELECT: return "select";
+		case APE_EDITOR_GEOMETRY_MODE_PLOT: return "poly";
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX: return "vertex";
 		case APE_EDITOR_GEOMETRY_MODE_FACE: return "face";
 		case APE_EDITOR_GEOMETRY_MODE_EDGE: return "edge";
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX: return "vertex";
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: return "transform";
 	}
 }
@@ -132,8 +126,8 @@ static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_initialize_( ApeEditorInstance *instance );
-void ape_grid_shutdown_( void );
+void ape_grid_setup_( ApeEditorGrid *self );
+void ape_grid_cleanup_( ApeEditorGrid *self );
 
 static ApeEditorInstance *editorInstance = nullptr;
 
@@ -141,7 +135,7 @@ ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self )
 {
 	PL_ZERO( self, sizeof( ApeEditorInstance ) );
 
-	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_SELECT;
+	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 
 	self->brushPlotPoints = PlCreateLinkedList();
 	if ( self->brushPlotPoints == NULL )
@@ -150,7 +144,7 @@ ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self )
 		return nullptr;
 	}
 
-	ape_grid_initialize_( self );
+	ape_grid_setup_( &self->grid );
 
 	return self;
 }
@@ -162,6 +156,8 @@ void ape_editor_instance_shutdown( ApeEditorInstance *self )
 		PlDestroyLinkedList( self->brushPlotPoints );
 		self->brushPlotPoints = nullptr;
 	}
+
+	ape_grid_cleanup_( &self->grid );
 }
 
 void ape_editor_set_active_instance( ApeEditorInstance *instance )
@@ -276,8 +272,6 @@ void ape_shutdown_editor_( void )
 	PlDestroyHashTable( selectionObjectTable );
 
 	ape_viewport_destroy( selectionViewport );
-
-	ape_grid_shutdown_();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -464,10 +458,12 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 	switch ( instance->geometryMode )
 	{
+		case APE_EDITOR_GEOMETRY_MODE_PLOT:
+			pre_render_brush( instance );
+			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
 		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
-			pre_render_brush( instance );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
@@ -508,7 +504,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 	if ( editorInstance->camera != nullptr )
 	{
-
 		char label[ 64 ] = {};
 		S_STRCAT( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
 		S_STRCAT( label, " / " );
@@ -530,6 +525,25 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		{
 			static const char *warning = "No active room for camera!\n";
 			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_CRIMSON, warning, strlen( warning ), false );
+		}
+
+		if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
+		{
+			PLVector3 pos;
+			if ( ape_grid_get_cursor_position( &editorInstance->grid, &pos ) != nullptr )
+			{
+				// sigh...
+				PLMatrix4 view     = camera->internal->internal.view;
+				PLMatrix4 proj     = camera->internal->internal.proj;
+				PLMatrix4 viewProj = PlMultiplyMatrix4( proj, &view );
+
+				ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+				static constexpr float scale = 16.0f;
+
+				PLVector2 screenPos = PlConvertWorldToScreen( &pos, &viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, true );
+				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
+			}
 		}
 	}
 
@@ -665,7 +679,7 @@ static bool validate_plotted_plane( ApeEditorInstance *state )
 bool ape_editor_plot_point( ApeEditorInstance *state )
 {
 	PLVector3 cursor;
-	if ( ape_grid_get_cursor_position( &cursor ) == NULL )
+	if ( ape_grid_get_cursor_position( &state->grid, &cursor ) == NULL )
 	{
 		return false;
 	}
