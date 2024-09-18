@@ -473,5 +473,5 @@ void ape_console_register_cl_variables_( void )
 	ape_register_renderer_console_variables_();
 	ape_audio_register_console_variables_();
 	ape_register_world_console_variables_();
-	ape_register_editor_console_variables_();
+	ape_editor_register_console_();
 }

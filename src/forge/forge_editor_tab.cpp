@@ -10,7 +10,7 @@ FXDEFMAP( forge::EditorTab )
 editorTabMap[] = {};
 FXIMPLEMENT( forge::EditorTab, FXTabItem, editorTabMap, ARRAYNUMBER( editorTabMap ) )
 
-forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon )
+forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon, ApeEditorMode mode )
     : FXTabItem( owner, heading )
 {
 	if ( icon != nullptr )
@@ -18,7 +18,7 @@ forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *
 		setIcon( icon );
 	}
 
-	if ( ape_editor_instance_initialize( &instance ) == nullptr )
+	if ( ape_editor_instance_setup( &instance, mode ) == nullptr )
 	{
 		throw std::runtime_error( "Failed to initialize ApeEditorState" );
 	}
@@ -26,5 +26,5 @@ forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *
 
 forge::EditorTab::~EditorTab()
 {
-	ape_editor_instance_shutdown( &instance );
+	ape_editor_instance_cleanup( &instance );
 }

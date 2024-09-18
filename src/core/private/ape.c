@@ -20,8 +20,8 @@ static unsigned int numTicks = 0;
 static AcmBranch *engineConfig;
 static AcmBranch *userConfig;
 
-static bool engineTerminalMode = false;
-static bool engineInitialized  = false;
+static bool engineTerminalMode;
+static bool engineInitialized;
 
 static void execute_launch_commands( unsigned int argc, char **argv )
 {
@@ -129,9 +129,11 @@ void ape_error_( bool die, const char *message, ... )
 void ape_initialize_world_();
 void ape_shutdown_world_();
 
-bool ape_initialize( unsigned int argc, char **argv, const char *config )
+bool ape_initialize( unsigned int argc, char **argv, const char *config, bool embedded )
 {
 	PL_ZERO_( ape_config_ );
+
+	ape_config_.embedded = embedded;
 
 	PlRegisterStandardPackageLoaders( PL_PACKAGE_LOAD_FORMAT_ALL );
 

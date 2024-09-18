@@ -34,6 +34,7 @@ set(APE_SOURCE_EDITORS
         private/editor/editor.c
         private/editor/editor_grid.c
         private/editor/editor_light.c
+        private/editor/editor_vector.c
 )
 
 add_library(ApeCore STATIC

@@ -14,7 +14,7 @@ modelEditorMap[] = {
 };
 FXIMPLEMENT( forge::editor_model, forge::EditorTab, modelEditorMap, ARRAYNUMBER( modelEditorMap ) )
 
-forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, ApeModel *model ) : forge::EditorTab( owner, "Model Editor" )
+forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, ApeModel *model ) : forge::EditorTab( owner, "Model Editor", nullptr, APE_EDITOR_MODE_MODEL )
 {
 	setIcon( forge::load_fx_icon( getApp(), "resources/model.gif" ) );
 

@@ -354,12 +354,12 @@ void gui_font_display( GuiFont *font )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-
 	PlLoadIdentityMatrix();
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_FONT );
 	PlgSetShaderProgram( program->internal );
 	PlgSetShaderUniformValue( program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	PlgSetShaderUniformValue( program->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 

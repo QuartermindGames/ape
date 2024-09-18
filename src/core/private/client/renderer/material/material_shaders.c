@@ -20,21 +20,24 @@ static bool         hotReload         = false;
 static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
 static unsigned int hotReloadTicks    = HOT_RELOAD_TICKS_DEFAULT;
 
-static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_PROGRAM_MAX_GLOBAL_UNIFORMS ] = {
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR] = "fogColour",
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR]   = "fogNear",
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR]    = "fogFar",
+static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
+        [APE_SHADER_UNIFORM_FOG_COLOUR] = "fogColour",
+        [APE_SHADER_UNIFORM_FOG_NEAR]   = "fogNear",
+        [APE_SHADER_UNIFORM_FOG_FAR]    = "fogFar",
 
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR]   = "light.colour",
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION] = "light.position",
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS]   = "light.radius",
+        [APE_SHADER_UNIFORM_LIGHT_COLOUR]   = "light.colour",
+        [APE_SHADER_UNIFORM_LIGHT_POSITION] = "light.position",
+        [APE_SHADER_UNIFORM_LIGHT_RADIUS]   = "light.radius",
 
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR]   = "sun.colour",
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION] = "sun.position",
+        [APE_SHADER_UNIFORM_SUN_COLOUR]   = "sun.colour",
+        [APE_SHADER_UNIFORM_SUN_POSITION] = "sun.position",
 
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE] = "sun.ambience",
+        [APE_SHADER_UNIFORM_AMBIENCE] = "sun.ambience",
 
-        [APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET] = "textureOffset",
+        [APE_SHADER_UNIFORM_TEXTURE_MATRIX]    = "pl_texture",
+        [APE_SHADER_UNIFORM_VIEW_MATRIX]       = "pl_view",
+        [APE_SHADER_UNIFORM_PROJECTION_MATRIX] = "pl_proj",
+        [APE_SHADER_UNIFORM_MODEL_MATRIX]      = "pl_model",
 };
 
 static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
@@ -106,20 +109,20 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		return nullptr;
 	}
 
-	const char *vertexPath   = acm_branch_get_child_string( root, "vertexPath", NULL );
-	const char *fragmentPath = acm_branch_get_child_string( root, "fragmentPath", NULL );
+	const char *vertexPath   = acm_branch_get_child_string( root, "vertexPath", nullptr );
+	const char *fragmentPath = acm_branch_get_child_string( root, "fragmentPath", nullptr );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
 		ape_warning_( "No vertex/fragment stage defined in program!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	PLGShaderProgram *internal = PlgCreateShaderProgram();
 	if ( internal == NULL )
 	{
 		ape_warning_( "Failed to create shader program!\nPL: %s\n", PlGetError() );
-		return NULL;
+		return nullptr;
 	}
 
 	if ( PlResolveVirtualPath( vertexPath, program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ], sizeof( program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ] ) ) != nullptr )
@@ -213,7 +216,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
-	 * a material can of course overwrite these. */
+	 * a material can, of course, overwrite these. */
 	child = acm_branch_get_child_by_name( root, "defaultPass" );
 	if ( child != NULL )
 	{
@@ -231,7 +234,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	}
 
 	// now lookup all the default uniforms
-	for ( uint i = 0; i < APE_SHADER_PROGRAM_MAX_GLOBAL_UNIFORMS; ++i )
+	for ( uint i = 0; i < APE_SHADER_MAX_UNIFORMS; ++i )
 	{
 		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
 		if ( program->globalUniforms[ i ] < 0 )

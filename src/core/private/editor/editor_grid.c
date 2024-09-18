@@ -112,7 +112,7 @@ static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSel
 
 static void update_active_grid_selection( void )
 {
-	ApeViewport    *selectionViewport = get_selection_viewport_();
+	ApeViewport    *selectionViewport = ape_editor_get_selection_viewport_();
 	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{
@@ -253,14 +253,19 @@ void ape_grid_set_visibility( bool visible )
 
 void ape_grid_draw_()
 {
-	ApeViewport *viewport = ape_viewport_get_active();
-	if ( viewport == nullptr )
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
 	{
 		return;
 	}
 
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( !ape_config_.editor || !instance->grid.visible || instance->grid.scale <= 1 )
+	if ( !instance->grid.visible || instance->grid.scale <= 1 )
+	{
+		return;
+	}
+
+	ApeViewport *viewport = ape_viewport_get_active();
+	if ( viewport == nullptr )
 	{
 		return;
 	}
@@ -271,7 +276,7 @@ void ape_grid_draw_()
 	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
 #if !defined( DEBUG_GRID_SELECTION )
-		ApeViewport *selectionViewport = get_selection_viewport_();
+		ApeViewport *selectionViewport = ape_editor_get_selection_viewport_();
 
 		uint sw = viewport->width / 2;
 		uint sh = viewport->height / 2;

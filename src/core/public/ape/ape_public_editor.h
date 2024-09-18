@@ -8,6 +8,16 @@
 
 PL_EXTERN_C
 
+typedef enum ApeEditorMode
+{
+	APE_EDITOR_MODE_INVALID,
+	APE_EDITOR_MODE_WORLD,
+	APE_EDITOR_MODE_MODEL,
+	APE_EDITOR_MODE_VECTOR,
+
+	APE_EDITOR_MAX_MODES
+} ApeEditorMode;
+
 #define APE_EDITOR_MAX_VIEWPORTS      4
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
@@ -56,10 +66,13 @@ typedef struct ApeEditorGrid
 	                      // can't hook it with frontend :(
 } ApeEditorGrid;
 
+#define APE_EDITOR_MAX_POINTS 128
+
 typedef struct ApeEditorInstance
 {
 	ApeCamera *camera;
 
+	ApeEditorMode         mode;
 	ApeEditorGeometryMode geometryMode;
 	ApeEditorGrid         grid;
 
@@ -67,10 +80,15 @@ typedef struct ApeEditorInstance
 	float turnSpeed;
 
 	PLLinkedList *brushPlotPoints;
+
+	void *modeData;
+
+	struct PLLinkedListNode *listNode;// index in the table of instances
+	bool                     managed; // indicates the engine manages the instance
 } ApeEditorInstance;
 
-ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self );
-void               ape_editor_instance_shutdown( ApeEditorInstance *self );
+ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditorMode mode );
+void               ape_editor_instance_cleanup( ApeEditorInstance *self );
 void               ape_editor_set_active_instance( ApeEditorInstance *self );
 ApeEditorInstance *ape_editor_get_active_instance( void );
 

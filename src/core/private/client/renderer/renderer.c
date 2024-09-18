@@ -156,6 +156,8 @@ void ape_setup_default_draw_state_( const ApeViewport *viewport )
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
 	PlgSetShaderProgram( program->internal );
+
+	//PlMatrixMode( PL_MODELVIEW_MATRIX );
 }
 
 void ape_draw_begin_( ApeViewport *viewport )

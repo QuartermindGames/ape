@@ -14,7 +14,7 @@ namespace forge
 		inline EditorTab() = default;
 
 	public:
-		EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon = nullptr );
+		EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *icon, ApeEditorMode mode );
 		~EditorTab() override;
 
 	protected:

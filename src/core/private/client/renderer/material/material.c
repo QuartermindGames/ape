@@ -770,50 +770,50 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	ApeWorld *world = ss_game_get_current_world();
 
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
 		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_COLOUR ], &fogColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &fogColour, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
 	{
 		float fogNear = ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_NEAR ], &fogNear, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &fogNear, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )
 	{
 		float fogFar = ( ( ape_config_.renderer.fogFarOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogFarOverride : world->fogFar;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_FOG_FAR ], &fogFar, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &fogFar, false );
 	}
 
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
 		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
 		PLVector3 lightPosition = ( light != NULL ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
 	{
 		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
 	}
 
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
 		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_COLOUR ], &sunColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
 		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_SUN_POSITION ], &lightPosition, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ] >= 0 )
 	{
 		PLColourF32 sunAmbience;
 		if ( ape_rendererState_.camera != NULL && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
@@ -825,12 +825,28 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 			sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
 		}
 
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_AMBIENCE ], &sunAmbience, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ], &sunAmbience, false );
 	}
 
-	if ( program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET ] >= 0 )
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_PROGRAM_GLOBAL_UNIFORM_TEXTURE_OFFSET ], &pass->textureOffset, false );
+		PLMatrixMode oldMode = PlGetMatrixMode();
+		PlMatrixMode( PL_TEXTURE_MATRIX );
+		PlPushMatrix();
+		PlTranslateMatrix( PL_VECTOR3( pass->textureOffset.x, pass->textureOffset.y, 0.0f ) );
+
+		PlgSetShaderUniformValueByIndex( program->internal,
+		                                 program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
+		                                 PlGetMatrix( PL_TEXTURE_MATRIX ), false );
+
+		PlPopMatrix();
+		PlMatrixMode( oldMode );
+	}
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
+	{
+		PlgSetShaderUniformValueByIndex( program->internal,
+		                                 program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
+		                                 PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 	}
 }
 
@@ -924,7 +940,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	{
 		if ( ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) || ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID ) )
 		{
-			lights = NULL;
+			lights = nullptr;
 		}
 		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 		{
@@ -993,20 +1009,21 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		{
 			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX );
 			ape_shader_set_active_( program );
-			PlgSetShaderUniformValue( program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-			PlgSetTexture( NULL, 0 );
+
+			set_global_uniforms( curPass->program, curPass, nullptr );
+
+			PlgSetTexture( nullptr, 0 );
 		}
 		else
 		{
 			PlgSetShaderProgram( curPass->program->internal );
-			PlgSetShaderUniformValue( curPass->program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 
 			if ( !ape_rendererState_.overrideBlendMode )
 			{
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 			}
 
-			set_global_uniforms( curPass->program, curPass, lights != NULL ? lights[ 0 ] : NULL );
+			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
@@ -1020,7 +1037,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 				else if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
-					if ( skipDiffuse != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
+					if ( skipDiffuse != nullptr && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
 					{
 						continue;
 					}

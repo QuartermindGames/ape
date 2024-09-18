@@ -319,7 +319,7 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME ) )
+	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME, true ) )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;

@@ -29,7 +29,7 @@ static void cache_node_icons( void )
 
 static void release_node_icons( void )
 {
-	for ( unsigned int i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
+	for ( uint i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
 	{
 		if ( nodeIcons[ i ] == NULL )
 		{
@@ -90,7 +90,7 @@ static void cache_preview_materials( void )
 		child = acm_get_next_child( child );
 	}
 
-	unsigned int  numMaterials;
+	uint          numMaterials;
 	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
 	PRINT( "Found %u materials\n", numMaterials );
 
@@ -99,9 +99,9 @@ static void cache_preview_materials( void )
 
 static void release_preview_materials( void )
 {
-	unsigned int  numMaterials;
+	uint          numMaterials;
 	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
-	for ( unsigned int i = 0; i < numMaterials; ++i )
+	for ( uint i = 0; i < numMaterials; ++i )
 	{
 		ape_material_release( materials[ i ] );
 	}
@@ -126,15 +126,36 @@ static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
+extern const ApeEditorModeInterface ape_editorVectorModeInterface_;
+
+static const ApeEditorModeInterface *editorModeInterfaces[ APE_EDITOR_MAX_MODES ] = {
+        [APE_EDITOR_MODE_VECTOR] = &ape_editorVectorModeInterface_,
+};
+
 void ape_grid_setup_( ApeEditorGrid *self );
 void ape_grid_cleanup_( ApeEditorGrid *self );
 
-static ApeEditorInstance *editorInstance = nullptr;
+static PLLinkedList      *editorInstanceList;
+static ApeEditorInstance *editorInstance;
 
-ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self )
+ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
+{
+	ApeEditorInstance *instance = PL_NEW( ApeEditorInstance );
+
+	instance->managed = true;
+	if ( ape_editor_instance_setup( instance, mode ) == nullptr )
+	{
+		PL_DELETEN( instance );
+	}
+
+	return instance;
+}
+
+ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditorMode mode )
 {
 	PL_ZERO( self, sizeof( ApeEditorInstance ) );
 
+	self->mode         = mode;
 	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 
 	self->brushPlotPoints = PlCreateLinkedList();
@@ -146,11 +167,38 @@ ApeEditorInstance *ape_editor_instance_initialize( ApeEditorInstance *self )
 
 	ape_grid_setup_( &self->grid );
 
+	if ( editorModeInterfaces[ self->mode ]->setup != nullptr )
+	{
+		if ( !editorModeInterfaces[ self->mode ]->setup( self ) )
+		{
+			return nullptr;
+		}
+	}
+
+	if ( editorInstanceList == nullptr )
+	{
+		editorInstanceList = PlCreateLinkedList();
+		if ( editorInstanceList == nullptr )
+		{
+			ape_error_( true, "Failed to create editor instance list: %s\n", PlGetError() );
+		}
+
+		cache_preview_materials();
+		cache_node_icons();
+	}
+
+	self->listNode = PlInsertLinkedListNode( editorInstanceList, self );
+
 	return self;
 }
 
-void ape_editor_instance_shutdown( ApeEditorInstance *self )
+void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
+	if ( editorModeInterfaces[ self->mode ]->cleanup != nullptr )
+	{
+		editorModeInterfaces[ self->mode ]->cleanup( self );
+	}
+
 	if ( self->brushPlotPoints != NULL )
 	{
 		PlDestroyLinkedList( self->brushPlotPoints );
@@ -158,6 +206,26 @@ void ape_editor_instance_shutdown( ApeEditorInstance *self )
 	}
 
 	ape_grid_cleanup_( &self->grid );
+
+	PlDestroyLinkedListNode( self->listNode );
+	self->listNode = nullptr;
+
+	if ( editorInstanceList != nullptr && PlIsLinkedListEmpty( editorInstanceList ) )
+	{
+		// no instances left, completely clean up!
+
+		PlDestroyLinkedList( editorInstanceList );
+		editorInstanceList = nullptr;
+
+		release_preview_materials();
+		release_node_icons();
+	}
+
+	// the engine needs to destroy managed ones itself
+	if ( self->managed )
+	{
+		PL_DELETE( self );
+	}
 }
 
 void ape_editor_set_active_instance( ApeEditorInstance *instance )
@@ -177,29 +245,64 @@ ApeEditorInstance *ape_editor_get_active_instance( void )
 static ApeViewport *selectionViewport;
 static PLHashTable *selectionObjectTable;
 
-ApeViewport *get_selection_viewport_( void )
+ApeViewport *ape_editor_get_selection_viewport_( void )
 {
 	return selectionViewport;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static void toggle_editor_command( unsigned int, char ** )
+static void editor_command( uint argc, char **argv )
 {
-	ape_config_.editor = !ape_config_.editor;
-	if ( ape_config_.editor )
+	ApeEditorMode mode = APE_EDITOR_MODE_INVALID;
+
+	const char *cmd = argv[ 1 ];
+	if ( strcmp( cmd, "vector" ) == 0 )
 	{
-		cache_preview_materials();
-		cache_node_icons();
+		mode = APE_EDITOR_MODE_VECTOR;
+	}
+	else if ( strcmp( cmd, "world" ) == 0 )
+	{
+		mode = APE_EDITOR_MODE_WORLD;
+	}
+	else if ( strcmp( cmd, "model" ) == 0 )
+	{
+		mode = APE_EDITOR_MODE_MODEL;
 	}
 	else
 	{
-		release_preview_materials();
-		release_node_icons();
+		ape_warning_( "Unknown editor mode specified (%s)!\n", cmd );
+		return;
 	}
+
+	ApeEditorInstance *instance = ape_editor_instance_create_( mode );
+	if ( instance == nullptr )
+	{
+		return;
+	}
+
+	ape_editor_set_active_instance( instance );
 }
 
-static void save_world_command( unsigned int argc, char **argv )
+static void close_editor_command( uint, char ** )
+{
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
+	{
+		ape_warning_( "No active instance to close!\n" );
+		return;
+	}
+
+	if ( !instance->managed )
+	{
+		ape_warning_( "Current context isn't managed by the engine!\n" );
+		return;
+	}
+
+	ape_editor_instance_cleanup( instance );
+}
+
+static void save_world_command( uint argc, char **argv )
 {
 	if ( !ape_is_editor_active() )
 	{
@@ -220,7 +323,7 @@ static void save_world_command( unsigned int argc, char **argv )
 	ape_world_serialize_( world, root );
 }
 
-static void create_world_command( unsigned int, char ** )
+static void create_world_command( uint, char ** )
 {
 	if ( !ape_is_editor_active() )
 	{
@@ -276,15 +379,19 @@ void ape_shutdown_editor_( void )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_toggle_command_( unsigned int, char ** );
+void ape_grid_toggle_command_( uint, char ** );
+void ape_editor_vector_register_console_();
 
-void ape_register_editor_console_variables_( void )
+void ape_editor_register_console_( void )
 {
-	PlRegisterConsoleCommand( "editor", "Toggle main editor functionality.", 0, toggle_editor_command );
+	PlRegisterConsoleCommand( "editor", "Launch an editor instance.", 1, editor_command );
+	PlRegisterConsoleCommand( "editor_close", "Close the current instance.", 0, close_editor_command );
 	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 
 	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
 	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
+
+	ape_editor_vector_register_console_();
 }
 
 static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
@@ -331,7 +438,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 	ApeCamera *camera = viewport->camera;
 	assert( camera != NULL );
 
-	unsigned int      num  = 1;
+	uint              num  = 1;
 	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
 	while ( node != NULL )
 	{
@@ -435,12 +542,6 @@ static void pre_render_brush( ApeEditorInstance *instance )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-static void pre_render_vertex( ApeEditorInstance *instance, ApeCamera *camera )
-{
-	const ApeWorld *world = ape_camera_get_world( camera );
-	assert( world != NULL );
-}
-
 void ape_editor_pre_render_scene_( ApeCamera *camera )
 {
 	if ( !ape_is_editor_active() )
@@ -492,6 +593,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	if ( !ape_is_editor_active() || editorInstance == nullptr )
 	{
 		return;
+	}
+
+	if ( editorModeInterfaces[ editorInstance->mode ]->drawOverlay != nullptr )
+	{
+		editorModeInterfaces[ editorInstance->mode ]->drawOverlay( editorInstance );
 	}
 
 	ApeCamera *camera = viewport->camera;
@@ -621,14 +727,14 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 bool ape_is_editor_active( void )
 {
-	return ape_config_.editor;
+	return ( ape_editor_get_active_instance() != nullptr );
 }
 
-ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials )
+ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
 {
 	if ( materialsArray == NULL )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, numMaterials );
@@ -642,15 +748,15 @@ static bool validate_plotted_plane( ApeEditorInstance *state )
 {
 	// this determines that the plane is convex, hopefully
 
-	unsigned int numVertices;
-	PLVector3  **vertices = ( PLVector3  **) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
+	uint        numVertices;
+	PLVector3 **vertices = ( PLVector3 ** ) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
 	if ( numVertices < 4 )
 	{
 		return true;
 	}
 
 	bool sign = false;
-	for ( unsigned int i = 0; i < numVertices; ++i )
+	for ( uint i = 0; i < numVertices; ++i )
 	{
 		PLVector2 a;
 		a.x = vertices[ ( i + 2 ) % numVertices ]->x - vertices[ ( i + 1 ) % numVertices ]->x;

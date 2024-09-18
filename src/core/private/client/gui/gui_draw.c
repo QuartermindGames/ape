@@ -181,8 +181,10 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 
 	ApeShaderProgram *defaultProgram = ape_get_default_shader( APE_SHADER_DEFAULT );
 	PlgSetShaderUniformValue( defaultProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	PlgSetShaderUniformValue( defaultProgram->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 	ApeShaderProgram *vertexProgram = ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX );
 	PlgSetShaderUniformValue( vertexProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	PlgSetShaderUniformValue( vertexProgram->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )

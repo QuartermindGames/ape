@@ -575,7 +575,7 @@ int launcher_initialize( int argc, char **argv )
 		PrintError( "Failed to initialize display!\nCheck debug logs.\n" );
 	}
 
-	if ( !ape_initialize( argc, argv, NULL ) )
+	if ( !ape_initialize( argc, argv, nullptr, false ) )
 	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}

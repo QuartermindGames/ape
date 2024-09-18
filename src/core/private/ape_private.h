@@ -153,6 +153,7 @@ typedef struct ApeConfig
 	} world;
 
 	bool editor;
+	bool embedded;
 } ApeConfig;
 
 extern ApeConfig ape_config_;
