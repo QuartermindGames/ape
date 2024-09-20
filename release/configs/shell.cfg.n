@@ -1,5 +1,5 @@
 node.utf8
 object config
 {
-    string defaultProject "detox"
+    string defaultProject "ss1"
 }
