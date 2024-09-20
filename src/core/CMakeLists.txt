@@ -21,14 +21,15 @@ set(YIN_CORE_CLIENT
         private/client/renderer/renderer_sprite.c)
 
 set(APE_SOURCE_GUI
-        private/client/gui/gui.c
-        private/client/gui/gui_button.c
-        private/client/gui/gui_desktop.c
-        private/client/gui/gui_cursor.c
-        private/client/gui/gui_draw.c
-        private/client/gui/gui_font.c
-        private/client/gui/gui_image.c
-        private/client/gui/gui_panel.c)
+        private/gui/gui.c
+        private/gui/gui_button.c
+        private/gui/gui_desktop.c
+        private/gui/gui_cursor.c
+        private/gui/gui_draw.c
+        private/gui/gui_font.c
+        private/gui/gui_image.c
+        private/gui/gui_panel.c
+)
 
 set(APE_SOURCE_EDITORS
         private/editor/editor.c

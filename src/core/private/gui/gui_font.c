@@ -3,7 +3,7 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_array_vector.h>
 
-#include "../../ape_private.h"
+#include "ape_private.h"
 
 #include "gui_private.h"
 #include "common_format_fnt.h"

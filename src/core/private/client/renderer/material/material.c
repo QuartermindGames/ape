@@ -8,7 +8,7 @@
 #include "material.h"
 #include "world/world.h"
 #include "game/game_public.h"
-#include "client/gui/gui_private.h"
+#include "gui/gui_private.h"
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
