@@ -132,7 +132,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 void forge::WorldEditor::update_tree()
 {
 	ApeWorldNode *child;
-	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, _world->base.children )
+	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, _world->base.children, i )
 	{
 		if ( child->type != APE_WORLD_NODE_TYPE_ROOM )
 		{

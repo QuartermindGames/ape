@@ -7,7 +7,7 @@
 #include "ape_private.h"
 
 #if !defined( NDEBUG )
-#	define DEBUG_MEMORY
+//#	define DEBUG_MEMORY
 #endif
 
 static PLMemoryGroup *cacheMemoryGroups[ APE_MAX_CACHE_POOLS ];
@@ -256,7 +256,7 @@ void ape_memory_add_reference( ApeMemoryReference *m )
 
 void ape_memory_release( ApeMemoryReference *m )
 {
-	assert( m->numReferences > 0 );
+	//assert( m->numReferences > 0 );
 
 #if defined( DEBUG_MEMORY )
 	PRINT_DEBUG( "Releasing reference: %s (%d) (%u)\n",

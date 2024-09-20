@@ -197,6 +197,8 @@ static void validate_tick_frequency( PLConsoleVariable *variable )
 	PlSetConsoleVariable( variable, tmp );
 }
 
+void ape_server_register_console_();
+
 void ape_console_register_variables_( bool isDedicated )
 {
 	char tmp[ 64 ];
@@ -204,9 +206,7 @@ void ape_console_register_variables_( bool isDedicated )
 	PlRegisterConsoleVariable( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, nullptr, validate_tick_frequency, false );
 	PlRegisterConsoleVariable( "renderTimeLock", "Will only render a frame on tick.", "true", PL_VAR_BOOL, nullptr, nullptr, true );
 
-	// server
-	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, NULL, NULL, false );
-	PlRegisterConsoleVariable( "server.password", "Password to access server functions.", "", PL_VAR_STRING, NULL, NULL, false );
+	ape_server_register_console_();
 
 	// Client variables
 	if ( !isDedicated )
@@ -248,24 +248,25 @@ void ape_initialize_console_( void )
 {
 	PlSetConsoleOutputCallback( output_callback );
 
-	logLevels[ APE_LOG_ERROR ]       = PlAddLogLevel( "yin/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_WARNING ]     = PlAddLogLevel( "yin/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "yin", PL_COLOUR_WHITE, true );
-	logLevels[ ACL_LOG_DEBUG ]       = PlAddLogLevel( "yin/debug", PL_COLOUR_ORCHID,
+	logLevels[ APE_LOG_ERROR ]       = PlAddLogLevel( "ape/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_WARNING ]     = PlAddLogLevel( "ape/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "ape", PL_COLOUR_WHITE, true );
+	logLevels[ ACL_LOG_DEBUG ]       = PlAddLogLevel( "ape/debug", PL_COLOUR_ORCHID,
 #if !defined( NDEBUG )
 	                                            true
 #else
 	                                            false
 #endif
 	);
+	logLevels[ APE_LOG_VERBOSE ] = PlAddLogLevel( "ape/verbose", PL_COLOUR_BLUE, false );
 
-	logLevels[ APE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "yin/client/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "yin/client/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "yin/client", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "ape/client/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "ape/client/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "ape/client", PL_COLOUR_WHITE, true );
 
-	logLevels[ APE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "yin/server/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "yin/server/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "yin/server", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "ape/server/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "ape/server/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "ape/server", PL_COLOUR_WHITE, true );
 }
 
 void ape_shutdown_console_( void )

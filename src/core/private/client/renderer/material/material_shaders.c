@@ -239,7 +239,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
 		if ( program->globalUniforms[ i ] < 0 )
 		{
-			PRINT_DEBUG( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
+			ape_verbose_( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
 		}
 	}
 

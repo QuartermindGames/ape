@@ -9,7 +9,10 @@
 
 #define SERVER_CLIENT_TIMEOUT 1024
 
-static ApeNetSocket *hostSocket = NULL;
+static ApeNetSocket *hostSocket;
+
+static char serverName[ PL_VAR_VALUE_LENGTH ];
+static char serverPass[ PL_VAR_VALUE_LENGTH ];
 
 typedef enum ServerClientState
 {
@@ -21,7 +24,7 @@ typedef enum ServerClientState
 
 typedef struct ApeServerClient
 {
-	ApeNetSocket *netSocket;
+	ApeNetSocket     *netSocket;
 	PLLinkedListNode *node;
 
 	ServerClientState state;
@@ -30,11 +33,17 @@ typedef struct ApeServerClient
 
 	unsigned int lastMessageTick;
 } ApeServerClient;
-static PLLinkedList *connectedClients = NULL;
+static PLLinkedList *connectedClients;
 
-static void drop_client_callback( void *userData, bool *breakEarly )
+static void drop_client_callback( void *userData, PL_UNUSED bool *breakEarly )
 {
 	ape_server_drop_client_( ( ApeServerClient * ) userData );
+}
+
+void ape_server_register_console_()
+{
+	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, NULL, true );
+	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, NULL, true );
 }
 
 bool ape_server_start( const char *ip, unsigned short port )
@@ -139,7 +148,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 
 		ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ){
 		                                          .length = sizeof( ApeProtocolMessageHeader ),
-		                                          .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
+		                                          .type   = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
 		                                  },
 		               sizeof( ApeProtocolMessageHeader ) );
 		return;
@@ -216,9 +225,9 @@ void ape_tick_server_( void )
 		if ( connectedSocket != NULL )
 		{
 			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
-			serverClient->netSocket = connectedSocket;
-			serverClient->node = PlInsertLinkedListNode( connectedClients, serverClient );
-			serverClient->state = SERVER_CLIENT_STATE_VALIDATING;
+			serverClient->netSocket       = connectedSocket;
+			serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
+			serverClient->state           = SERVER_CLIENT_STATE_VALIDATING;
 			// validation still needs to be performed
 			ape_print_( "Client connected, awaiting validation...\n" );
 		}

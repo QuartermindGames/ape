@@ -20,14 +20,14 @@ typedef struct ApeMaterial
 {
 	char              path[ PL_SYSTEM_MAX_PATH ];
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
-	unsigned int      numPasses;
+	uint              numPasses;
 	bool              isCached;// if false, it's just the preview
 	PLGTexture       *preview; // preview utilised for editor
 	PLLinkedListNode *node;
 
 	int8_t surfaceType;
 
-	unsigned int flags;
+	uint flags;
 
 	ApeMemoryReference mem;
 } ApeMaterial;
@@ -40,38 +40,44 @@ ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
 	return defaultMaterials[ defaultMaterial ];
 }
 
-PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint )
+PLGTexture *ape_material_get_texture_( ApeMaterial *self, uint pass, const char *hint )
 {
 	if ( pass >= self->numPasses )
 	{
 		ape_warning_( "Invalid material pass (%u >= %u)!\n", pass, self->numPasses );
-		return NULL;
+		return nullptr;
 	}
 
 	ApeMaterialPass *materialPass = &self->passes[ pass ];
-	for ( unsigned int i = 0; i < materialPass->numVariables; ++i )
+	for ( uint i = 0; i < materialPass->numVariables; ++i )
 	{
 		if ( materialPass->variables[ i ].type != APE_MATERIAL_VAR_TEXTURE )
+		{
 			continue;
+		}
 
 		if ( strcmp( materialPass->variables[ i ].name, hint ) != 0 )
+		{
 			continue;
+		}
 
 		return ( PLGTexture * ) materialPass->variables[ i ].data.ptr;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void ape_initialize_materials_( void )
 {
-	PRINT( "Initializing material system\n" );
+	ape_print_( "Initializing material system\n" );
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
-			PRINT_ERROR( "Failed to create materials list: %s\n", PlGetError() );
+		{
+			ape_error_( true, "Failed to create materials list: %s\n", PlGetError() );
+		}
 	}
 
 	normalFallbackTexture   = ape_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
@@ -86,11 +92,13 @@ void ape_initialize_materials_( void )
 	                "materials/engine/shadow.mat.n",
 	                "materials/engine/depth.mat.n",
 	        };
-	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
+	for ( uint i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
-			PRINT_ERROR( "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
+		{
+			ape_error_( true, "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
+		}
 	}
 }
 
@@ -99,12 +107,12 @@ void ape_shutdown_materials_( void )
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	ape_memory_flush_unreferenced_resources();
 
-	unsigned int totalCachedMaterials = 0;
-	unsigned int orphanedCaches       = 0;
+	uint totalCachedMaterials = 0;
+	uint orphanedCaches       = 0;
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
-		unsigned int cached_materials = PlGetNumLinkedListNodes( materials[ i ] );
+		uint cached_materials = PlGetNumLinkedListNodes( materials[ i ] );
 		totalCachedMaterials += cached_materials;
 
 		if ( cached_materials == 0 )
@@ -136,7 +144,7 @@ PLGTexture *ape_material_get_preview_texture( ApeMaterial *material )
 	return material->preview;
 }
 
-unsigned int ape_material_get_flags( const ApeMaterial *self )
+uint ape_material_get_flags( const ApeMaterial *self )
 {
 	return self->flags;
 }
@@ -165,7 +173,9 @@ static int get_blend_mode_by_tag( const char *tag )
 	for ( int i = 0; i < PLG_MAX_BLEND_MODES; ++i )
 	{
 		if ( strcmp( tag, blendModeTags[ i ] ) != 0 )
+		{
 			continue;
+		}
 
 		return i;
 	}
@@ -350,12 +360,18 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
+					{
 						status = acm_branch_get_bool_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					}
 					else
+					{
 						status = acm_branch_get_bool( node, materialVariable->data.ptr );
+					}
 
 					if ( status != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_BOOL;
 					break;
@@ -367,12 +383,18 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
+					{
 						status = acm_branch_get_float32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					}
 					else
+					{
 						status = acm_branch_get_float32( node, materialVariable->data.ptr );
+					}
 
 					if ( status != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_FLOAT;
 					break;
@@ -383,12 +405,18 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
+					{
 						status = acm_branch_get_float64_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					}
 					else
+					{
 						status = acm_branch_get_float64( node, materialVariable->data.ptr );
+					}
 
 					if ( status != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_DOUBLE;
 					break;
@@ -400,12 +428,18 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
+					{
 						status = acm_branch_get_uint32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					}
 					else
+					{
 						status = acm_branch_get_uint32( node, materialVariable->data.ptr );
+					}
 
 					if ( status != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_UINT;
 					break;
@@ -416,12 +450,18 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
+					{
 						status = acm_branch_get_int32_array( node, materialVariable->data.ptr, materialVariable->numElements );
+					}
 					else
+					{
 						status = acm_branch_get_int32( node, materialVariable->data.ptr );
+					}
 
 					if ( status != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_INT;
 					break;
@@ -431,7 +471,9 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 				{
 					materialVariable->data.ptr = PL_NEW_( PLVector2, materialVariable->numElements );
 					if ( acm_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					materialVariable->type = SS_ARL_MATERIAL_VAR_VEC2;
 					break;
@@ -446,14 +488,22 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 				{
 					PLPath texturePath;
 					if ( acm_branch_get_string( node, texturePath, sizeof( PLPath ) ) != ND_ERROR_SUCCESS )
+					{
 						break;
+					}
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
+					{
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_DIFFUSE;
+					}
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
+					{
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_NORMAL;
+					}
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
+					{
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
+					}
 
 					materialVariable->type     = APE_MATERIAL_VAR_TEXTURE;
 					materialVariable->data.ptr = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
@@ -510,32 +560,64 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	materialPass->depthTest = acm_branch_get_child_bool( root, "depthTest", materialPass->depthTest );
 	materialPass->cullMode  = ACM_GET_INT32( root, "cullMode", materialPass->cullMode );
 
-	const char *textureFilterPtr = acm_branch_get_child_string( root, "textureFilterMode", NULL );
+	const char *textureFilterPtr = acm_branch_get_child_string( root, "textureFilterMode", nullptr );
 	if ( textureFilterPtr != NULL )
 	{
 		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
+		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear_nearest" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR_NEAREST;
+		}
 		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest_linear" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST_LINEAR;
+		}
 		else if ( pl_strcasecmp( textureFilterPtr, "nearest" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_NEAREST;
+		}
 		else if ( pl_strcasecmp( textureFilterPtr, "linear" ) == 0 )
+		{
 			materialPass->textureFilter = PLG_TEXTURE_FILTER_LINEAR;
+		}
 	}
 
 	/* now handle any specific parameters the material provides */
 	if ( ( subNode = acm_branch_get_child_by_name( root, "textureScroll" ) ) != NULL )
+	{
 		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScroll, 2 );
+	}
 	if ( ( subNode = acm_branch_get_child_by_name( root, "textureOffset" ) ) != NULL )
+	{
 		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureOffset, 2 );
+	}
+	if ( ( subNode = acm_branch_get_child_by_name( root, "textureScale" ) ) != nullptr )
+	{
+		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScale, 2 );
+		if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
+		{
+			ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
+		}
+	}
+	else
+	{
+		materialPass->textureScale.x = 1.0f;
+		materialPass->textureScale.y = 1.0f;
+	}
+
 	if ( ( subNode = acm_branch_get_child_by_name( root, "shaderParameters" ) ) != NULL )
+	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
 		parse_shader_parameters( materialPass, subNode );
+	}
 
 	/* not sure whether the above section should be required yet, there might be
 	 * a case where we only want to use the shader defaults? */
@@ -547,14 +629,18 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	if ( material->preview == NULL )
 	{
 		material->preview          = previewFallbackTexture;
-		const char *previewTexture = acm_branch_get_child_string( root, "previewTexture", NULL );
+		const char *previewTexture = acm_branch_get_child_string( root, "previewTexture", nullptr );
 		if ( previewTexture != NULL )
+		{
 			material->preview = ape_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+		}
 	}
 
 	// If it's just the preview we want, then stop here
 	if ( preview )
+	{
 		return material;
+	}
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
@@ -619,22 +705,26 @@ static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
 	{
 		ApeMaterial *material = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( material->path, path ) == 0 )
+		{
 			return material;
+		}
 
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static void destroy_material( ApeMaterial *material )
 {
 	if ( material == NULL )
-		return;
-
-	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j )
+		return;
+	}
+
+	for ( uint i = 0; i < material->numPasses; ++i )
+	{
+		for ( uint j = 0; j < material->passes[ i ].numVariables; ++j )
 		{
 			switch ( material->passes[ i ].variables[ j ].type )
 			{
@@ -704,7 +794,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 	reject = nullptr;
 }
 
-static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, unsigned int *curUnit )
+static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, uint *curUnit )
 {
 	if ( variable == -1 )
 	{
@@ -716,7 +806,7 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 	{
 		case APE_MATERIAL_BUILTIN_TIME:
 		{
-			unsigned int numTicks = ape_get_num_ticks();
+			uint numTicks = ape_get_num_ticks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
@@ -766,8 +856,6 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 
 static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
-	//TODO: we should be caching these slots rather than looking them up every time...
-
 	ApeWorld *world = ss_game_get_current_world();
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
@@ -832,14 +920,21 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	{
 		PLMatrixMode oldMode = PlGetMatrixMode();
 		PlMatrixMode( PL_TEXTURE_MATRIX );
+
 		PlPushMatrix();
+
 		PlTranslateMatrix( PL_VECTOR3( pass->textureOffset.x, pass->textureOffset.y, 0.0f ) );
+
+		float scaleX = ( pass->textureScale.x != 0.0f ) ? 1.0f / pass->textureScale.x : 1.0f;
+		float scaleY = ( pass->textureScale.y != 0.0f ) ? 1.0f / pass->textureScale.y : 1.0f;
+		PlScaleMatrix( PL_VECTOR3( scaleX, scaleY, 1.0f ) );
 
 		PlgSetShaderUniformValueByIndex( program->internal,
 		                                 program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
 		                                 PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
 		PlPopMatrix();
+
 		PlMatrixMode( oldMode );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
@@ -906,7 +1001,7 @@ void ape_material_release( ApeMaterial *material )
 	}
 
 	// don't flush default materials...
-	for ( unsigned int i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
+	for ( uint i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		if ( material != defaultMaterials[ i ] )
 		{
@@ -962,7 +1057,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
 	}
 
-	for ( unsigned int i = 0; i < material->numPasses; ++i )
+	for ( uint i = 0; i < material->numPasses; ++i )
 	{
 		ApeMaterialPass *curPass = &material->passes[ i ];
 
@@ -1025,8 +1120,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
 
-			unsigned int curUnit = 0;
-			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
+			uint curUnit = 0;
+			for ( uint j = 0; j < curPass->numVariables; ++j )
 			{
 				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_BUILTIN )
 				{
@@ -1116,18 +1211,34 @@ void ape_tick_materials_( void )
 {
 	ape_hot_reload_shaders_();
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
-		PLLinkedListNode *node = PlGetFirstNode( materials[ i ] );
-		while ( node != NULL )
+		ApeMaterial *material;
+		COM_ITERATE_LINKED_LIST( material, materials[ i ], itr )
 		{
-			ApeMaterial *material = PlGetLinkedListNodeUserData( node );
-			for ( unsigned int j = 0; j < material->numPasses; ++j )
+			for ( uint j = 0; j < material->numPasses; ++j )
 			{
-				material->passes[ j ].textureOffset = PlAddVector2( material->passes[ j ].textureOffset, material->passes[ j ].textureScroll );
-			}
+				if ( fabsf( material->passes[ j ].textureScroll.x ) < PL_EPSILON &&
+				     fabsf( material->passes[ j ].textureScroll.y ) < PL_EPSILON )
+				{
+					continue;
+				}
 
-			node = PlGetNextLinkedListNode( node );
+				PLGTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
+				if ( texture == nullptr )
+				{
+					continue;
+				}
+
+				float w = ( float ) texture->w;
+				float h = ( float ) texture->h;
+
+				PLVector2 scroll;
+				scroll = PlDivideVector2( material->passes[ j ].textureScroll, PL_VECTOR2( w, h ) );
+				scroll = PlScaleVector2( &scroll, &PL_VECTOR2( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
+
+				material->passes[ j ].textureOffset = PlAddVector2( material->passes[ j ].textureOffset, scroll );
+			}
 		}
 	}
 }

@@ -96,6 +96,7 @@ typedef struct ApeMaterialPass
 	PLGTextureFilter textureFilter;
 	PLVector2        textureScroll;
 	PLVector2        textureOffset;
+	PLVector2        textureScale;
 
 	PLGBlend            blendMode[ 2 ];
 	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];

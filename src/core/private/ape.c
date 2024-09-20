@@ -99,6 +99,17 @@ void ape_print_( const char *message, ... )
 	PlLogMessage( Console_GetLogLevel( APE_LOG_INFORMATION ), buf );
 }
 
+void ape_verbose_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( Console_GetLogLevel( APE_LOG_VERBOSE ), buf );
+}
+
 void ape_warning_( const char *message, ... )
 {
 	va_list args;

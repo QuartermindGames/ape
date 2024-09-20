@@ -54,6 +54,8 @@ typedef enum ApeConsoleLogLevel
 	APE_LOG_INFORMATION,
 	ACL_LOG_DEBUG,
 
+	APE_LOG_VERBOSE,
+
 	APE_LOG_CLIENT_ERROR,
 	APE_LOG_CLIENT_WARNING,
 	APE_LOG_CLIENT_INFORMATION,
@@ -97,6 +99,7 @@ void ape_console_register_cl_commands_( void );
 void ape_console_register_cl_variables_( void );
 
 void ape_print_( const char *message, ... );
+void ape_verbose_( const char *message, ... );
 void ape_warning_( const char *message, ... );
 void ape_error_( bool die, const char *message, ... );
 

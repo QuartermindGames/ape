@@ -276,7 +276,7 @@ bool ape_console_handle_text_event_( const char *key )
 
 static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 {
-	const float ch = guiGetFontLineSpacing( font );
+	const float ch = gui_font_get_line_spacing( font );
 	float       cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
 	gui_font_draw_character( font, 1.0f, ( float ) viewport->height - ch, 1.0f, &PL_COLOUR_LIME, '>' );
 
@@ -341,7 +341,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -352,7 +352,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
 
-	float lineSpacing   = guiGetFontLineSpacing( font );
+	float lineSpacing   = gui_font_get_line_spacing( font );
 	float width         = ( float ) viewport->width;
 	float height        = ( float ) viewport->height;
 	float consoleHeight = height - lineSpacing;
@@ -377,7 +377,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			gui_font_draw_string( font, 12.0f, y, NULL, NULL, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			gui_font_draw_string( font, 12.0f, y, nullptr, nullptr, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
 
 			y -= lineSpacing;
 			if ( y < 0 )
@@ -389,7 +389,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
 
 	gui_font_display( font );
 
@@ -399,18 +399,38 @@ void ape_console_draw_( const ApeViewport *viewport )
 		float autoCompleteHeight = 0.0f;
 		float autoCompleteWidth  = 0.0f;
 
+		PLVector2 selectionBox;
+
+		//HACK: because the height depends on a newline, we'll have to call this... fuck
+		float ch = gui_font_get_line_spacing( font );
+
+		// determine the box size
+		for ( uint i = 1; autoComplete[ i ] != nullptr; ++i )
+		{
+			float w;
+			gui_font_get_string_pixel_size( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, nullptr );
+
+			if ( w > autoCompleteWidth )
+			{
+				autoCompleteWidth = w;
+			}
+
+			autoCompleteHeight += ch;
+
+			if ( autoCompleteSelection == i )
+			{
+				selectionBox.x = autoCompleteHeight;
+				selectionBox.y = w;
+			}
+		}
+
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-		// iterate over the options to determine height, width
-		unsigned int i = 1;
-		while ( autoComplete[ i ] != NULL )
+		PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) autoCompleteHeight ) - ch, autoCompleteWidth, autoCompleteHeight, CON_INPUT_COLOUR );
+		if ( autoCompleteSelection > 0 )
 		{
-			float w, h;
-			gui_font_get_string_pixel_size( font, 1.0f, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, &h );
-			if ( w > autoCompleteWidth ) { autoCompleteWidth = w; }
-			autoCompleteHeight += h;
-			PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) h ) - autoCompleteHeight, ( w + 8.0f ), h, ( autoCompleteSelection == i ) ? CON_INDICATOR_COLOUR : CON_INPUT_COLOUR );
-			++i;
+			// draw the selection box on top
+			PlgDrawRectangle( consoleScrollBarWidth, ( height - selectionBox.x ) - ch, selectionBox.y, ch, CON_INDICATOR_COLOUR );
 		}
 	}
 
@@ -420,14 +440,14 @@ void ape_console_draw_( const ApeViewport *viewport )
 	GuiFont *tinyFont = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 	if ( tinyFont != NULL )
 	{
-		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]";
+		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n";
 
 		float strW, strH;
 		gui_font_get_string_pixel_size( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
 
-		float x = width - strW - 2.0f;
-		float y = height - strH - 2.0f;
-		gui_font_draw_string( tinyFont, x, y, NULL, NULL, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+		float x = width - strW;
+		float y = height - strH;
+		gui_font_draw_string( tinyFont, x, y, nullptr, nullptr, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
 
 		gui_font_display( tinyFont );
 	}

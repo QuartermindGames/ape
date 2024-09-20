@@ -383,7 +383,7 @@ static void light_vis_navigate_tree( ApeCamera *camera, ApeWorldNode *node )
 	}
 
 	ApeWorldNode *child;
-	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, node->children )
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
 		light_vis_navigate_tree( camera, child );
 	}
@@ -513,7 +513,7 @@ void ape_camera_build_visibility_lists_( ApeCamera *self )
 		}
 
 		ApeWorldNode *child;
-		PL_ITERATE_LINKED_LIST( child, ApeWorldNode, rootNode->children )
+		COM_ITERATE_LINKED_LIST( child, rootNode->children, i )
 		{
 			if ( child->type != APE_WORLD_NODE_TYPE_ROOM )
 			{
@@ -553,7 +553,7 @@ void ape_build_camera_visibility_lists_( void )
 	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	ApeCamera *camera;
-	PL_ITERATE_LINKED_LIST( camera, ApeCamera, cameras )
+	COM_ITERATE_LINKED_LIST( camera, cameras, i )
 	{
 		ape_camera_build_visibility_lists_( camera );
 	}
@@ -570,7 +570,7 @@ void ape_clear_camera_visibility_lists_( void )
 	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	ApeCamera *camera;
-	PL_ITERATE_LINKED_LIST( camera, ApeCamera, cameras )
+	COM_ITERATE_LINKED_LIST( camera, cameras, i )
 	{
 		PlClearHashTable( camera->visibility.visitedRooms );
 		camera->visibility.numLights = 0;

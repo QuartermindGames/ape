@@ -158,7 +158,7 @@ void Viewport::draw()
 		if ( worldEditor != nullptr )
 		{
 			// fetch the first room to attach the cameras to
-			PL_ITERATE_LINKED_LIST( parent, ApeWorldNode, worldEditor->get_world()->base.children )
+			PL_ITERATE_LINKED_LIST( parent, ApeWorldNode, worldEditor->get_world()->base.children, i )
 			{
 				if ( parent->type != APE_WORLD_NODE_TYPE_ROOM )
 				{

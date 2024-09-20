@@ -126,8 +126,7 @@ static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
-extern const ApeEditorModeInterface ape_editorVectorModeInterface_;
-
+extern const ApeEditorModeInterface  ape_editorVectorModeInterface_;
 static const ApeEditorModeInterface *editorModeInterfaces[ APE_EDITOR_MAX_MODES ] = {
         [APE_EDITOR_MODE_VECTOR] = &ape_editorVectorModeInterface_,
 };
@@ -142,10 +141,14 @@ ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
 {
 	ApeEditorInstance *instance = PL_NEW( ApeEditorInstance );
 
-	instance->managed = true;
 	if ( ape_editor_instance_setup( instance, mode ) == nullptr )
 	{
 		PL_DELETEN( instance );
+	}
+
+	if ( instance != NULL )
+	{
+		instance->managed = true;
 	}
 
 	return instance;
@@ -167,7 +170,7 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 	ape_grid_setup_( &self->grid );
 
-	if ( editorModeInterfaces[ self->mode ]->setup != nullptr )
+	if ( editorModeInterfaces[ self->mode ] != nullptr && editorModeInterfaces[ self->mode ]->setup != nullptr )
 	{
 		if ( !editorModeInterfaces[ self->mode ]->setup( self ) )
 		{
@@ -219,6 +222,11 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 
 		release_preview_materials();
 		release_node_icons();
+	}
+
+	if ( editorInstance == self )
+	{
+		ape_editor_set_active_instance( nullptr );
 	}
 
 	// the engine needs to destroy managed ones itself
@@ -302,44 +310,42 @@ static void close_editor_command( uint, char ** )
 	ape_editor_instance_cleanup( instance );
 }
 
-static void save_world_command( uint argc, char **argv )
+static void save_command( uint, char **argv )
 {
-	if ( !ape_is_editor_active() )
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
 	{
+		ape_warning_( "No active instance to close!\n" );
 		return;
 	}
 
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world == NULL )
+	const char *cmd = argv[ 1 ];
+	if ( editorModeInterfaces[ instance->mode ] == nullptr || editorModeInterfaces[ instance->mode ]->save == nullptr )
 	{
-		PRINT_WARNING( "No active world, can't save!\n" );
+		ape_warning_( "No save function available for this editor mode!\n" );
 		return;
 	}
 
-	const char *dataPath = com_get_local_data_directory();
-
-	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
-
-	ape_world_serialize_( world, root );
+	editorModeInterfaces[ instance->mode ]->save( instance, cmd );
 }
 
-static void create_world_command( uint, char ** )
+static void load_command( uint, char **argv )
 {
-	if ( !ape_is_editor_active() )
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
 	{
+		ape_warning_( "No active instance to close!\n" );
 		return;
 	}
 
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world != NULL )
+	const char *cmd = argv[ 1 ];
+	if ( editorModeInterfaces[ instance->mode ] == nullptr || editorModeInterfaces[ instance->mode ]->load == nullptr )
 	{
-		PRINT_WARNING( "Please unload current world before creating another!\n" );
+		ape_warning_( "No load function available for this editor mode!\n" );
 		return;
 	}
 
-	world = ape_create_world();
-
-	game_spawn_world( world );
+	editorModeInterfaces[ instance->mode ]->load( instance, cmd );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -368,10 +374,30 @@ void ape_initialize_editor_( void )
 	}
 
 	planeMaterial = ape_material_cache( "materials/editor/plane.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+
+	for ( uint i = 0; i < APE_EDITOR_MAX_MODES; ++i )
+	{
+		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->initialize == nullptr )
+		{
+			continue;
+		}
+
+		editorModeInterfaces[ i ]->initialize();
+	}
 }
 
 void ape_shutdown_editor_( void )
 {
+	for ( uint i = 0; i < APE_EDITOR_MAX_MODES; ++i )
+	{
+		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->shutdown == nullptr )
+		{
+			continue;
+		}
+
+		editorModeInterfaces[ i ]->shutdown();
+	}
+
 	PlDestroyHashTable( selectionObjectTable );
 
 	ape_viewport_destroy( selectionViewport );
@@ -380,18 +406,14 @@ void ape_shutdown_editor_( void )
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_grid_toggle_command_( uint, char ** );
-void ape_editor_vector_register_console_();
 
 void ape_editor_register_console_( void )
 {
 	PlRegisterConsoleCommand( "editor", "Launch an editor instance.", 1, editor_command );
 	PlRegisterConsoleCommand( "editor_close", "Close the current instance.", 0, close_editor_command );
 	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
-
-	PlRegisterConsoleCommand( "editor_save_world", "Save the current level with the specified name.", 1, save_world_command );
-	PlRegisterConsoleCommand( "editor_create_world", "Create a new world instance.", 0, create_world_command );
-
-	ape_editor_vector_register_console_();
+	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
+	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
 }
 
 static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
@@ -595,7 +617,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		return;
 	}
 
-	if ( editorModeInterfaces[ editorInstance->mode ]->drawOverlay != nullptr )
+	if ( editorModeInterfaces[ editorInstance->mode ] != nullptr && editorModeInterfaces[ editorInstance->mode ]->drawOverlay != nullptr )
 	{
 		editorModeInterfaces[ editorInstance->mode ]->drawOverlay( editorInstance );
 	}
@@ -744,6 +766,7 @@ ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
 // Brush Plotting
 /////////////////////////////////////////////////////////////////////////////////////
 
+//TODO: update to use com_math_is_plane_convex!!
 static bool validate_plotted_plane( ApeEditorInstance *state )
 {
 	// this determines that the plane is convex, hopefully

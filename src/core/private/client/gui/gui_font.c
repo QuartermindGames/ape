@@ -80,7 +80,7 @@ static uint32_t decode_utf8_char( const char **string )
 	return c;
 }
 
-float guiGetFontLineSpacing( const GuiFont *font ) { return font->lineSpacing; }
+float gui_font_get_line_spacing( const GuiFont *font ) { return font->lineSpacing; }
 
 GuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 {

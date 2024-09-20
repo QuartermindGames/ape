@@ -44,6 +44,16 @@ static Menu debugMenu = {
         &mainMenu,
 };
 
+static MenuOption editorMenuOptions[] = {
+        { "Vector Shape Editor", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "editor vector" } },
+};
+static Menu editorMenu = {
+        "Editor Menu\n",
+        editorMenuOptions,
+        PL_ARRAY_ELEMENTS( editorMenuOptions ),
+        &mainMenu,
+};
+
 static MenuOption quitMenuOptions[] = {
         { "Yes\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "quit" } },
         { "No\n", &mainMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
@@ -68,6 +78,7 @@ static Menu startMenu = {
 
 static MenuOption mainMenuOptions[] = {
 #if !defined( NDEBUG )
+        {"Editors\n",      &editorMenu,      nullptr, MENU_OPTION_TYPE_BUTTON},
         {"Debug\n",        &debugMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
 #endif
         {"Start Server\n", &startMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
@@ -152,7 +163,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, title, strlen( title ), true );
 
 		gui_font_set_slant( 0.0f );
-		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( guiGetFontLineSpacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
+		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
 		x = 80.0f;
@@ -163,7 +174,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		{
 			if ( currentMenu->options[ i ].type == MENU_OPTION_TYPE_SEPERATOR )
 			{
-				y += guiGetFontLineSpacing( menuFont ) / 2.0f;
+				y += gui_font_get_line_spacing( menuFont ) / 2.0f;
 				continue;
 			}
 

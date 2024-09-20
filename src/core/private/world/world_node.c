@@ -183,7 +183,7 @@ void ape_world_node_move( ApeWorldNode *self, PLVector3 translation )
 	self->position = PlAddVector3( self->position, translation );
 
 	ApeWorldNode *child;
-	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, self->children )
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
 		ape_world_node_move( child, translation );
 	}
@@ -213,7 +213,7 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
 	self->bounds = self->localBounds;
 
 	ApeWorldNode *child;
-	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, self->children )
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
 #pragma message "THIS SHOULD BE ACCOUNTING FOR TRANSFORMS YOU DUMB BASTARD"
 		if ( child->bounds.mins.x < self->bounds.mins.x ) { self->bounds.mins.x = child->bounds.mins.x; }
@@ -273,18 +273,15 @@ ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *
 {
 	assert( ape_world_node_is_valid_( self, self->type ) );
 
-	ApeWorldNode     *child = nullptr;
-	PLLinkedListNode *node  = PlGetFirstNode( self->children );
-	while ( node != nullptr )
+	ApeWorldNode *child = nullptr;
+	ApeWorldNode *current;
+	COM_ITERATE_LINKED_LIST( current, self->children, i )
 	{
-		ApeWorldNode *current = PlGetLinkedListNodeUserData( node );
 		if ( strcmp( current->name, name ) == 0 )
 		{
 			child = current;
 			break;
 		}
-
-		node = PlGetNextLinkedListNode( node );
 	}
 
 	return child;

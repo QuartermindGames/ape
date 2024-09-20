@@ -8,24 +8,21 @@ PL_EXTERN_C
 
 typedef struct ApeEditorModeInterface
 {
-	bool ( *setup )( ApeEditorInstance *self );
-	void ( *cleanup )( ApeEditorInstance *self );
-	void ( *drawScene )( ApeEditorInstance *self );
-	void ( *drawOverlay )( ApeEditorInstance *self );
-	bool ( *save )( ApeEditorInstance *self, const char *path );
-	bool ( *load )( ApeEditorInstance *self, const char *path );
+	void ( *initialize )();// global initialisation for the mode
+	void ( *shutdown )();  // global shutdown for the mode
+
+	bool ( *setup )( ApeEditorInstance *self );                 // setup instance for mode
+	void ( *cleanup )( ApeEditorInstance *self );               // cleanup instance for mode
+	void ( *drawScene )( ApeEditorInstance *self );             // draw the 3d scene for mode
+	void ( *drawOverlay )( ApeEditorInstance *self );           // draw the 2d scene for mode
+	void ( *tick )( ApeEditorInstance *self );                  // tick mode
+	bool ( *save )( ApeEditorInstance *self, const char *path );// save current instance data
+	bool ( *load )( ApeEditorInstance *self, const char *path );// load current instance data
 } ApeEditorModeInterface;
 
 void ape_initialize_editor_( void );
 void ape_shutdown_editor_( void );
 
-/**
- * Creates a new instance of ApeEditorInstance in the specified mode.
- *
- * @param mode The editor mode to initialize the instance with.
- * @return 		A pointer to the newly created ApeEditorInstance.
- *         		If the instance could not be created, returns nullptr.
- */
 ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode );
 
 void ape_editor_register_console_( void );

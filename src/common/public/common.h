@@ -6,7 +6,7 @@
 
 // These are non-standard, so declare them here
 #if !defined( _POSIX_SOURCE )
-#define _POSIX_SOURCE 1
+#	define _POSIX_SOURCE 1
 #endif
 typedef unsigned char  uchar;
 typedef unsigned short ushort;
@@ -34,11 +34,11 @@ typedef enum ComDataType
 
 PL_EXTERN_C
 
-void             com_initialize( void );
-const char      *com_get_local_data_directory( void );
-const char      *com_get_app_data_directory( void );
+void              com_initialize( void );
+const char       *com_get_local_data_directory( void );
+const char       *com_get_app_data_directory( void );
 struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
-bool             com_write_config( struct AcmBranch *root, const char *name );
+bool              com_write_config( struct AcmBranch *root, const char *name );
 
 void com_pkg_write_header( FILE *pack, uint numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
@@ -78,7 +78,23 @@ void com_update_profiler_samples( void );
 		comEndProfiling( #FUNCTION );         \
 	}
 
+// Wrapper for Hei macro to take advantage of C23 features
+#define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *VAR ), LIST, ITR )
+
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Determines if a given set of vertices form a convex polygon.
+ *
+ * This function checks whether the vertices provided form a convex polygon by examining the cross products
+ * of edges extending from consecutive vertices. If all cross products have the same sign, the polygon is convex,
+ * otherwise it is not.
+ *
+ * @param vertices 		The array of vertices representing the polygon.
+ * @param numVertices 	The number of vertices in the polygon.
+ * @return 				true if the polygon is convex, false otherwise.
+ */
+bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
 
 PL_EXTERN_C_END

@@ -77,8 +77,31 @@ typedef enum GuiPanelBorder
 	GUI_MAX_BORDER_STYLES
 } GuiPanelBorder;
 
+/**
+ * Creates a new GUI panel with the given parameters.
+ *
+ * @param parent      The parent panel. Position will be relative to parent.
+ * @param x           The x-coordinate of the panel. Absolute if no parent.
+ * @param y           The y-coordinate of the panel. Absolute if no parent.
+ * @param w           The width of the panel. Absolute if no parent.
+ * @param h           The height of the panel. Absolute if no parent.
+ * @param background  The background type of the panel.
+ * @param border      The border type of the panel.
+ * @return            A pointer to the newly created GuiPanel.
+ */
 GuiPanel *ape_gui_panel_create( GuiPanel *parent, int x, int y, int w, int h, GuiPanelBackground background, GuiPanelBorder border );
-void      ape_gui_panel_destroy( GuiPanel *self );
+
+/**
+ * Destroys the given GuiPanel instance and all its children.
+ *
+ * This function will first ensure the panel is not NULL and then remove the panel
+ * from its parent's child list if it has a parent. It will then recursively destroy
+ * all children of the panel and finally destroy the panel's child list and free
+ * the panel memory itself.
+ *
+ * @param self A pointer to the GuiPanel to be destroyed.
+ */
+void ape_gui_panel_destroy( GuiPanel *self );
 
 void guiSetPanelStyleSheet( GuiPanel *self, const GuiStyleSheet *styleSheet );
 
@@ -103,6 +126,15 @@ void guiSetPanelPosition( GuiPanel *self, int x, int y );
 void guiGetPanelSize( GuiPanel *self, int *w, int *h );
 void guiGetPanelContentSize( GuiPanel *self, int *w, int *h );
 
+/**
+ * Sets the size of the specified GUI panel.
+ *
+ * Adjusts the width and height of the given `GuiPanel` object to the provided values.
+ *
+ * @param self 	A pointer to the GuiPanel object to be resized.
+ * @param w 	The new width for the panel.
+ * @param h 	The new height for the panel.
+ */
 void gui_panel_set_size( GuiPanel *self, int w, int h );
 
 bool guiIsMouseOverPanel( GuiPanel *self, int mx, int my );
@@ -110,6 +142,16 @@ bool guiIsMouseOverPanel( GuiPanel *self, int mx, int my );
 bool guiHandleMousePanelEvent( GuiPanel *self, int mx, int my, int wheel, int button, bool buttonUp );
 bool guiHandleKeyboardPanelEvent( GuiPanel *self, int button, bool buttonUp );
 
+/**
+ * Sets the visibility state of the specified GuiPanel.
+ *
+ * This function updates the visibility flag of the GuiPanel, determining
+ * whether the panel should be shown or hidden.
+ *
+ * @param self Pointer to the GuiPanel whose visibility is to be set.
+ * @param flag Boolean value indicating the desired visibility state.
+ *             If true, the panel will be visible; if false, it will be hidden.
+ */
 void ape_gui_panel_set_visible( GuiPanel *self, bool flag );
 
 /****************************************
@@ -136,7 +178,13 @@ typedef enum GuiFontDefaultType
 	GUI_MAX_FONT_DEFAULTS
 } GuiFontDefaultType;
 
-float guiGetFontLineSpacing( const GuiFont *font );
+/**
+ * Retrieves the line spacing value from the specified GuiFont.
+ *
+ * @param font 	Pointer to the GuiFont structure from which to get the line spacing.
+ * @return 		The line spacing value of the given font.
+ */
+float gui_font_get_line_spacing( const GuiFont *font );
 
 /**
  * Returns the specified default font.
@@ -145,16 +193,89 @@ GuiFont *gui_get_default_font( GuiFontDefaultType defaultType );
 
 void guiDestroyFont( GuiFont *font );
 
+/**
+ * Loads a GUI font from a file specified by the given path.
+ *
+ * This function attempts to open the font file at the specified path,
+ * deserialize its contents into a GuiFont structure, and return a pointer
+ * to the newly loaded GuiFont. If the font file cannot be opened or
+ * deserialized, a warning message will be logged and a null pointer will be returned.
+ *
+ * @param path 	The file path to the font file to be loaded.
+ * @return 		A pointer to the loaded GuiFont structure, or nullptr if loading failed.
+ */
 GuiFont *gui_font_load( const char *path );
 
 void  guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh );
 float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character );
 
+/**
+ * @brief Sets the font slant angle for the GUI.
+ *
+ * This function adjusts the angle of inclination for the font used in the graphical user interface.
+ *
+ * @param slant The new slant angle for the font, in degrees. Positive values indicate a forward slant,
+ * 				while negative values indicate a backward slant.
+ */
 void gui_font_set_slant( float slant );
 
+/**
+ * Calculates the pixel size of a given string when rendered with the specified font and scale.
+ *
+ * This function computes the width and height in pixels that a string would occupy when rendered
+ * using the provided font at a specific scale. It takes into account special characters like
+ * newlines and tabs, which affect the height and width calculations respectively.
+ *
+ * <b>WARNING: the height will only increment if a new line is provided!</b>
+ *
+ * @param self   Pointer to the GuiFont structure containing font information.
+ * @param scale  Scaling factor to apply to the font sizes.
+ * @param string The string for which to calculate the pixel size.
+ * @param length Length of the string in characters.
+ * @param dw     Pointer to a float where the calculated width will be stored (can be NULL).
+ * @param dh     Pointer to a float where the calculated height will be stored (can be NULL).
+ */
 void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh );
+
+/**
+ * Draws a single character from a font at specified coordinates with a given scale and color.
+ *
+ * @param font 		Pointer to a GuiFont structure containing font information.
+ * @param x 		The x-coordinate where the character will be drawn.
+ * @param y 		The y-coordinate where the character will be drawn.
+ * @param scale 	Scaling factor for the character size.
+ * @param colour 	Pointer to a PLColour structure defining the color for the character.
+ * @param character Unicode code point of the character to be drawn.
+ */
 void gui_font_draw_character( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
+
+/**
+ * Draws a string using the specified font.
+ *
+ * <b>WARNING: the height will only increment if a new line is provided!</b>
+ *
+ * @param self 		A pointer to the GuiFont structure containing font data.
+ * @param x 		The starting x-coordinate for the string.
+ * @param y 		The starting y-coordinate for the string.
+ * @param ox 		Output parameter. If not NULL, it will be updated with the x-coordinate after drawing the string.
+ * @param oy 		Output parameter. If not NULL, it will be updated with the y-coordinate after drawing the string.
+ * @param scale 	The scale factor applied to the font size.
+ * @param colour 	A pointer to the PLColour structure defining the colour of the text.
+ * @param string 	The string to be drawn.
+ * @param length 	The length of the string to be drawn.
+ * @param shadow 	If true, the text will be drawn with a shadow effect.
+ */
 void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
+
+/**
+ * @brief Renders the given bitmap font on the screen.
+ *
+ * This function sets up the necessary state in the rendering pipeline,
+ * configures the appropriate shader program for font rendering, and
+ * draws the font's associated mesh.
+ *
+ * @param font A pointer to a GuiFont structure containing the font's texture, glyphs, and mesh data.
+ */
 void gui_font_display( GuiFont *font );
 
 /****************************************

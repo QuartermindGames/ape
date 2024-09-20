@@ -28,7 +28,7 @@ void editor_light_build_light_list_( ApeRoom *room )
 {
 
 	ApeWorldNode *worldNode;
-	PL_ITERATE_LINKED_LIST( worldNode, ApeWorldNode, room->base.children )
+	COM_ITERATE_LINKED_LIST( worldNode, room->base.children, i )
 	{
 		if ( worldNode->type == APE_WORLD_NODE_TYPE_LIGHT )
 		{
@@ -50,7 +50,7 @@ void editor_light_generate_( ApeRoom *room )
 	editor_light_build_light_list_( room );
 
 	ApeLight *light;
-	PL_ITERATE_LINKED_LIST( light, ApeLight, lightList )
+	COM_ITERATE_LINKED_LIST( light, lightList, i )
 	{
 	}
 }
