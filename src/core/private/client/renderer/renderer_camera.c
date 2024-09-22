@@ -31,7 +31,7 @@ ApeWorld *ape_camera_get_world( ApeCamera *self )
 		return nullptr;
 	}
 
-	assert( ape_world_node_is_valid_( worldNode, APE_WORLD_NODE_TYPE_ROOT ) );
+	assert( ape_world_node_is_valid( worldNode, APE_WORLD_NODE_TYPE_ROOT ) );
 	return ( ApeWorld * ) worldNode;
 }
 

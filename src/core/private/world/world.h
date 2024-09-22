@@ -119,8 +119,6 @@ typedef struct ApeRoom
 	// This should always come first!
 	ApeWorldNode base;
 
-	bool isDetail;
-
 	unsigned int flags;
 
 	PLColourF32 colour;// an identifying colour
@@ -172,5 +170,10 @@ void ape_world_node_generate_bounds_( ApeWorldNode *root );
  * @return 		Pointer to instance of room. Null on fail.
  */
 ApeRoom *ape_world_get_first_room_( ApeWorld *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Brushes
+
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale );
 
 PL_EXTERN_C_END

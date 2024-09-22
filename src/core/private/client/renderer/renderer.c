@@ -625,7 +625,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 
 #endif
 
-		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )
 		{
 			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;

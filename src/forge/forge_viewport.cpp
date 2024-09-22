@@ -3,7 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include "forge_viewport.h"
-#include "forge/editors/WorldEditor.h"
+#include "forge/editors/editor_world.h"
 #include "forge_window_main.h"
 
 #include <plgraphics/plg.h>
@@ -17,8 +17,7 @@
 
 using namespace forge;
 
-FXGLCanvas  *Viewport::displayList_ = nullptr;
-unsigned int Viewport::cameraTagNum = 0;
+FXGLCanvas *Viewport::displayList_ = nullptr;
 
 FXDEFMAP( Viewport )
 editorViewportMap[] = {
@@ -243,8 +242,8 @@ long Viewport::on_chore( FXObject *, FXSelector, void * )
 	{
 		if ( useMouseLook )
 		{
-			int          mx, my;
-			unsigned int tmp;
+			int  mx, my;
+			uint tmp;
 			getCursorPosition( mx, my, tmp );
 			setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
 
@@ -305,14 +304,17 @@ long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
-long Viewport::on_left_click( FX::FXObject *, FX::FXSelector, void * )
+long Viewport::on_left_click( FX::FXObject *, FX::FXSelector selector, void * )
 {
 	if ( !hasFocus() || editor == nullptr )
 	{
 		return FALSE;
 	}
 
-	ape_editor_plot_point( editor->get_internal() );
+	if ( mainWindow->is_game_running() )
+	{
+		//ape_input_handle_mouse_button_event( APE_INPUT_MOUSE_BUTTON_LEFT, ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+	}
 
 	return FALSE;
 }
@@ -336,6 +338,7 @@ long Viewport::on_right_click( FXObject *, FXSelector, void *ptr )
 		return TRUE;
 	}
 
+#if 0
 	// Create a pop-up menu
 	auto popup = new FXMenuPane( this );
 	new FXMenuCommand( popup, "Create Brush...", forge::load_fx_icon( getApp(), "resources/new_brush.gif" ), this, ID_BUTTON_CREATE_BRUSH );
@@ -353,8 +356,9 @@ long Viewport::on_right_click( FXObject *, FXSelector, void *ptr )
 	getApp()->runModalWhileShown( popup );
 
 	delete popup;
+#endif
 
-	return TRUE;
+	return FALSE;
 }
 
 long Viewport::on_middle_click( FXObject *, FXSelector, void * )
@@ -414,16 +418,15 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 	{
 		default:
 			break;
+
 		case KEY_Up:
-		case 'w':
 		{
-			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			ang.x += SPEED;
 			break;
 		}
 		case KEY_Down:
-		case 's':
 		{
-			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			ang.x -= SPEED;
 			break;
 		}
 		case KEY_Left:
@@ -434,6 +437,17 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		case KEY_Right:
 		{
 			ang.y -= 1.5f;
+			break;
+		}
+
+		case 'w':
+		{
+			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			break;
+		}
+		case 's':
+		{
+			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
 			break;
 		}
 		case 'a':
@@ -454,27 +468,6 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		case 'e':
 		{
 			pos.y -= 0.5f;
-			break;
-		}
-
-		case KEY_Escape:
-		{
-			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
-			{
-				ape_editor_clear_plot_points( instance );
-			}
-			break;
-		}
-
-		// grid controls
-		case KEY_KP_Subtract:
-		{
-			ape_grid_decrease_size();
-			break;
-		}
-		case KEY_KP_Add:
-		{
-			ape_grid_increase_size();
 			break;
 		}
 	}

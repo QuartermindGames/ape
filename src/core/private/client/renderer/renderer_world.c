@@ -220,6 +220,20 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 
 static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
 {
+	// new (temporary) stuff!
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, room->base.children, i )
+	{
+		// for now just dealing with brushes
+		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		void ape_brush_node_draw_( void *data, const PLMatrix4 *transform );
+		ape_brush_node_draw_( child, nullptr );
+	}
+
 	if ( PlIsVectorArrayEmpty( room->faces ) )
 	{
 		return;
@@ -242,6 +256,7 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 		world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
 	}
 
+	// old stuff!
 	build_display_lists( world, room, camera, light, alpha );
 	for ( uint i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
 	{
@@ -391,14 +406,11 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 		return;
 	}
 
-	if ( !room->isDetail )
+	uint      numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
+	ApeRoom **detailRooms    = ( ApeRoom    **) PlGetVectorArrayData( room->detailRooms );
+	for ( uint j = 0; j < numDetailRooms; ++j )
 	{
-		uint      numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-		ApeRoom **detailRooms    = ( ApeRoom    **) PlGetVectorArrayData( room->detailRooms );
-		for ( uint j = 0; j < numDetailRooms; ++j )
-		{
-			draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
-		}
+		draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
 	}
 
 	draw_room_stencil_shadow_volumes( room, light );
@@ -438,11 +450,19 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
-	for ( uint i = 0; i < camera->visibility.numRooms; ++i )
+	if ( camera->room != nullptr )
 	{
-		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
+		draw_room( world, camera->room, camera, light, ambienceOnly, alpha );
+	}
+	else
+	{
+		// legacy path...
+		for ( uint i = 0; i < camera->visibility.numRooms; ++i )
+		{
+			PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
 
-		draw_room( world, camera->visibility.rooms[ i ].room, camera, light, ambienceOnly, alpha );
+			draw_room( world, camera->visibility.rooms[ i ].room, camera, light, ambienceOnly, alpha );
+		}
 	}
 
 	PlPopMatrix();

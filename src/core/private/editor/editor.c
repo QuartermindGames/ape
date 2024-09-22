@@ -2,7 +2,9 @@
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "plcore/pl_hashtable.h"
+
 #include "ape_private.h"
+
 #include "common_project.h"
 #include "editor.h"
 #include "client/renderer/renderer.h"
@@ -161,13 +163,6 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 	self->mode         = mode;
 	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 
-	self->brushPlotPoints = PlCreateLinkedList();
-	if ( self->brushPlotPoints == NULL )
-	{
-		ape_warning_( "Failed to create brush plot points list: %s\n", PlGetError() );
-		return nullptr;
-	}
-
 	ape_grid_setup_( &self->grid );
 
 	if ( editorModeInterfaces[ self->mode ] != nullptr && editorModeInterfaces[ self->mode ]->setup != nullptr )
@@ -197,16 +192,12 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
-	if ( editorModeInterfaces[ self->mode ]->cleanup != nullptr )
+	if ( editorModeInterfaces[ self->mode ] != nullptr && editorModeInterfaces[ self->mode ]->cleanup != nullptr )
 	{
 		editorModeInterfaces[ self->mode ]->cleanup( self );
 	}
 
-	if ( self->brushPlotPoints != NULL )
-	{
-		PlDestroyLinkedList( self->brushPlotPoints );
-		self->brushPlotPoints = nullptr;
-	}
+	self->numPolygonPoints = 0;
 
 	ape_grid_cleanup_( &self->grid );
 
@@ -460,42 +451,26 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 	ApeCamera *camera = viewport->camera;
 	assert( camera != NULL );
 
-	uint              num  = 1;
-	PLLinkedListNode *node = PlGetFirstNode( editorInstance->brushPlotPoints );
-	while ( node != NULL )
+	for ( uint i = 0, num = 1; i < editorInstance->numPolygonPoints; ++i )
 	{
-		PLVector3 *p = PlGetLinkedListNodeUserData( node );
-		assert( p != NULL );
-
 		PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 		int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
-		PLVector2 screenPos      = PlConvertWorldToScreen( p, &m, viewportSize, true );
+		PLVector2 screenPos      = PlConvertWorldToScreen( &editorInstance->polygonPoints[ i ], &m, viewportSize, true );
 		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
 		{
 			return;
 		}
 
-		screenPos.x = roundf( screenPos.x );
-		screenPos.y = roundf( screenPos.y );
+		screenPos.x = floorf( screenPos.x );
+		screenPos.y = floorf( screenPos.y );
 
 		char msg[ 16 ];
 		snprintf( msg, sizeof( msg ), "%u", num++ );
 		gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 
-		node = PlGetNextLinkedListNode( node );
+		PLVector3 end = ( i + 1 >= editorInstance->numPolygonPoints ) ? editorInstance->polygonPoints[ 0 ] : editorInstance->polygonPoints[ i + 1 ];
 
-		PLVector3 *e;
-		if ( node == NULL )
-		{
-			e = PlGetLinkedListNodeUserData( PlGetFirstNode( editorInstance->brushPlotPoints ) );
-		}
-		else
-		{
-			e = PlGetLinkedListNodeUserData( node );
-		}
-		assert( e != NULL );
-
-		PLVector2 otherScreenPos = PlConvertWorldToScreen( e, &m, viewportSize, true );
+		PLVector2 otherScreenPos = PlConvertWorldToScreen( &end, &m, viewportSize, true );
 		if ( otherScreenPos.x == 0.0f && otherScreenPos.y == 0.0f )
 		{
 			return;
@@ -503,24 +478,18 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 
 		// determine the point between the two on the screen
 		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
-		snprintf( msg, sizeof( msg ), "%f", PlVector3Length( PlSubtractVector3( *e, *p ) ) );
+		snprintf( msg, sizeof( msg ), "%f", PlVector3Length( PlSubtractVector3( end, editorInstance->polygonPoints[ i ] ) ) );
 		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 }
 
 static void pre_render_brush( ApeEditorInstance *instance )
 {
-	PLGMesh          *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-	PLLinkedListNode *node = PlGetFirstNode( instance->brushPlotPoints );
-	while ( node != NULL )
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+	for ( uint i = 0; i < instance->numPolygonPoints; ++i )
 	{
-		const PLVector3 *p = PlGetLinkedListNodeUserData( node );
-		assert( p != NULL );
-
-		PlgImmPushVertex( p->x, p->y, p->z );
+		PlgImmPushVertex( instance->polygonPoints[ i ].x, instance->polygonPoints[ i ].y, instance->polygonPoints[ i ].z );
 		PlgImmColour( 255, 255, 0, 255 );
-
-		node = PlGetNextLinkedListNode( node );
 	}
 
 	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
@@ -530,37 +499,19 @@ static void pre_render_brush( ApeEditorInstance *instance )
 	// draw boundary
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
-	node = PlGetFirstNode( instance->brushPlotPoints );
-	while ( true )
+	for ( uint i = 0; i < instance->numPolygonPoints; ++i )
 	{
-		if ( node == NULL )
-		{
-			break;
-		}
-
-		const PLVector3 *p = PlGetLinkedListNodeUserData( node );
-		assert( p != NULL );
-
 		PLCollisionAABB bounds = {
-		        .origin = *p,
+		        .origin = instance->polygonPoints[ i ],
 		        .mins   = {-0.1f, -0.1f, -0.1f},
 		        .maxs   = {0.1f,  0.1f,  0.1f },
 		};
 		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
 
-		const PLVector3 *e;
-		node = PlGetNextLinkedListNode( node );
-		if ( node != NULL )
-		{
-			e = PlGetLinkedListNodeUserData( node );
-		}
-		else
-		{
-			e = PlGetLinkedListNodeUserData( PlGetFirstNode( instance->brushPlotPoints ) );
-		}
-		assert( e != NULL );
-		PlgDrawSimpleLine( PlMatrix4Identity(), *p, *e, PL_COLOUR_PURPLE );
+		PLVector3 end = ( i + 1 >= instance->numPolygonPoints ) ? instance->polygonPoints[ 0 ] : instance->polygonPoints[ i + 1 ];
+		PlgDrawSimpleLine( PlMatrix4Identity(), instance->polygonPoints[ i ], end, PL_COLOUR_PURPLE );
 	}
+
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
@@ -763,16 +714,14 @@ ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Brush Plotting
+// Polygon Plotting
+// TODO: move into editor_world.c
 /////////////////////////////////////////////////////////////////////////////////////
 
-//TODO: update to use com_math_is_plane_convex!!
-static bool validate_plotted_plane( ApeEditorInstance *state )
+static bool validate_plotted_plane( const PLVector3 *vertices, uint numVertices )
 {
 	// this determines that the plane is convex, hopefully
 
-	uint        numVertices;
-	PLVector3 **vertices = ( PLVector3 ** ) PlArrayFromLinkedList( state->brushPlotPoints, &numVertices );
 	if ( numVertices < 4 )
 	{
 		return true;
@@ -782,12 +731,12 @@ static bool validate_plotted_plane( ApeEditorInstance *state )
 	for ( uint i = 0; i < numVertices; ++i )
 	{
 		PLVector2 a;
-		a.x = vertices[ ( i + 2 ) % numVertices ]->x - vertices[ ( i + 1 ) % numVertices ]->x;
-		a.y = vertices[ ( i + 2 ) % numVertices ]->y - vertices[ ( i + 1 ) % numVertices ]->y;
+		a.x = vertices[ ( i + 2 ) % numVertices ].x - vertices[ ( i + 1 ) % numVertices ].x;
+		a.y = vertices[ ( i + 2 ) % numVertices ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
 		PLVector2 b;
-		b.x = vertices[ i ]->x - vertices[ ( i + 1 ) % numVertices ]->x;
-		b.y = vertices[ i ]->y - vertices[ ( i + 1 ) % numVertices ]->y;
+		b.x = vertices[ i ].x - vertices[ ( i + 1 ) % numVertices ].x;
+		b.y = vertices[ i ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
 		float cp = a.x * b.y - a.y * b.x;
 		if ( i == 0 )
@@ -800,40 +749,96 @@ static bool validate_plotted_plane( ApeEditorInstance *state )
 		}
 	}
 
-	PL_DELETE( vertices );
-
 	return true;
 }
 
-bool ape_editor_plot_point( ApeEditorInstance *state )
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
 {
+	if ( self->numPolygonPoints < 3 )
+	{
+		ape_warning_( "Not enough points to create a brush.\n" );
+		return nullptr;
+	}
+
+	ApeCamera *camera = self->camera;
+	assert( camera != nullptr );
+
+	ApeRoom *room = ape_camera_get_room( camera );
+	if ( room == nullptr )
+	{
+		ape_warning_( "No valid room for brush!\n" );
+		return nullptr;
+	}
+
+	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( room ), nullptr, &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+	if ( brush == nullptr )
+	{
+		return nullptr;
+	}
+
+	// determine the orientation of the grid
+	PLVector3 dir;
+	PlExtractMatrix4Directions( &self->grid.transform, nullptr, nullptr, &dir );
+
+	if ( !ape_brush_build_from_polygon_( brush, self->polygonPoints, self->numPolygonPoints, dir, self->grid.scale ) )
+	{
+		ape_warning_( "Failed to create brush from polygon!\n" );
+		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
+		brush = nullptr;
+	}
+
+	self->numPolygonPoints = 0;
+
+	return brush;
+}
+
+void ape_editor_remove_polygon_point( ApeEditorInstance *self )
+{
+	if ( self->numPolygonPoints == 0 )
+	{
+		return;
+	}
+
+	self->numPolygonPoints--;
+}
+
+bool ape_editor_add_polygon_point( ApeEditorInstance *self )
+{
+	if ( self->numPolygonPoints >= APE_BRUSH_MAX_FACE_VERTICES )
+	{
+		ape_warning_( "Hit polygon vertex limit (%u >= %u)!\n", self->numPolygonPoints, APE_BRUSH_MAX_FACE_VERTICES );
+		return false;
+	}
+
 	PLVector3 cursor;
-	if ( ape_grid_get_cursor_position( &state->grid, &cursor ) == NULL )
+	if ( ape_grid_get_cursor_position( &self->grid, &cursor ) == NULL )
 	{
 		return false;
 	}
 
-	PLVector3        *p    = PL_NEW( PLVector3 );
-	PLLinkedListNode *node = PlInsertLinkedListNode( state->brushPlotPoints, p );
-	*p                     = cursor;
+	if ( self->numPolygonPoints > 0 )
+	{
+		const PLVector3 *start = &self->polygonPoints[ 0 ];
+		if ( PlCompareVector3( start, &cursor ) )
+		{
+			ape_editor_brush_from_polygon( self );
+			return true;
+		}
+	}
+
+	self->polygonPoints[ self->numPolygonPoints++ ] = cursor;
 
 	// validate and then if this fails, remove the last element
-	if ( !validate_plotted_plane( state ) )
+	if ( !validate_plotted_plane( self->polygonPoints, self->numPolygonPoints ) )
 	{
-		PlDestroyLinkedListNode( node );
-		PL_DELETE( p );
+		self->numPolygonPoints--;
 		return false;
 	}
 
 	return true;
 }
 
-static void destroy_plot_point( void *user )
+void ape_editor_clear_plot_points( ApeEditorInstance *instance )
 {
-	PL_DELETE( ( PLVector3 * ) user );
-}
-
-void ape_editor_clear_plot_points( ApeEditorInstance *state )
-{
-	PlDestroyLinkedListNodesEx( state->brushPlotPoints, destroy_plot_point );
+	instance->numPolygonPoints = 0;
 }

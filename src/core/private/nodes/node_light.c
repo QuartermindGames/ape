@@ -68,14 +68,14 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 {
 	if ( ape_config_.renderer.forceShadows || ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS || ( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & SS_ARL_LIGHT_FLAG_SHADOWS ) ) )
 	{
-		return SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC;
+		return APE_LIGHT_SHADOW_TYPE_DYNAMIC;
 	}
 	else if ( light->flags & SS_ARL_LIGHT_FLAG_SHADOWS )
 	{
-		return SS_APE_LIGHT_SHADOW_TYPE_STATIC;
+		return APE_LIGHT_SHADOW_TYPE_STATIC;
 	}
 
-	return SS_APE_LIGHT_SHADOW_TYPE_NONE;
+	return APE_LIGHT_SHADOW_TYPE_NONE;
 }
 
 bool ape_light_is_active( const ApeLight *light )
@@ -117,7 +117,7 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
  */
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane )
 {
-	if ( ape_light_get_shadow_type( self ) != SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC )
+	if ( ape_light_get_shadow_type( self ) != APE_LIGHT_SHADOW_TYPE_DYNAMIC )
 	{
 		return false;
 	}

@@ -35,6 +35,11 @@ void ape_room_destroy_( void *data )
 	PL_DELETE( self );
 }
 
+void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience )
+{
+	self->ambientLight = ambience;
+}
+
 ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces )
 {
 	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( self->faces, numFaces );

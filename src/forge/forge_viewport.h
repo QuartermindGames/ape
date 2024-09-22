@@ -63,10 +63,10 @@ namespace forge
 		long on_chore( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
 		long on_motion( FXObject *, FXSelector, void * );
-		long on_left_click( FXObject *, FXSelector, void * );
-		long on_right_click( FXObject *, FXSelector, void * );
+		virtual long on_left_click( FXObject *, FXSelector, void * );
+		virtual long on_right_click( FXObject *, FXSelector, void * );
 		long on_middle_click( FXObject *, FXSelector, void * );
-		long on_key( FXObject *, FXSelector, void * );
+		virtual long on_key( FXObject *, FXSelector, void * );
 		long on_create( FXObject *, FXSelector, void * );
 		long on_reset_camera( FXObject *, FXSelector, void * );
 
@@ -85,18 +85,17 @@ namespace forge
 	protected:
 		inline Viewport() = default;
 
+		EditorTab *editor{};
+
 	public:
 		ApeViewport        *internalViewport_{};
 		ApeCamera          *camera{};
-		static unsigned int cameraTagNum;
 
 	private:
 		FXDataTarget forwardSpeedTarget;
 		FXDataTarget turnSpeedTarget;
 
 		static FXGLCanvas *displayList_;
-
-		EditorTab *editor{};
 
 		bool  useMouseLook{};
 		FXint originCursorPos[ 2 ];

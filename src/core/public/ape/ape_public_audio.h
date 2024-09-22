@@ -62,6 +62,14 @@ typedef enum ApeAudioReverbPreset
 	APE_AUDIO_MAX_REVERB_PRESETS
 } ApeAudioReverbPreset;
 
+typedef struct ApeAudioEffectType
+{
+	const char          *name;
+	ApeAudioReverbPreset effect;
+} ApeAudioEffectType;
+extern const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[];
+extern const unsigned int       APE_NUM_AUDIO_EFFECT_TYPES;
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Listener
 

@@ -211,7 +211,7 @@ ApeWorld *ape_world_load( const char *path )
 		{
 			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != nullptr );
-			if ( room->isDetail || room->isMeshCached )
+			if ( room->isMeshCached )
 			{
 				continue;
 			}

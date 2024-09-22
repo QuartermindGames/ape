@@ -132,12 +132,8 @@ static void update_active_grid_selection( void )
 
 		if ( x < frameBuffer->width && y < frameBuffer->height )
 		{
-			const PLColour *pixel      = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
-			GridSelectable *selectable = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
-			if ( selectable != nullptr )
-			{
-				activeGridSelectable = selectable;
-			}
+			const PLColour *pixel = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
+			activeGridSelectable  = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
 		}
 	}
 	else

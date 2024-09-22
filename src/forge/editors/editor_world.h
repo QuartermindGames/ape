@@ -7,8 +7,7 @@
 
 namespace forge
 {
-	class Viewport;
-
+	class WorldViewport;
 	class WorldEditor : public EditorTab
 	{
 		FXDECLARE( WorldEditor )
@@ -27,6 +26,7 @@ namespace forge
 
 			ID_ROOM_NEW,
 			ID_ROOM_EDIT,
+			ID_ROOM_DELETE,
 			ID_ROOM_SELECT,
 
 			ID_GRID_UP,
@@ -57,7 +57,7 @@ namespace forge
 		FXTreeList *nodeTree{};
 		FXComboBox *roomSelectBox{};
 
-		Viewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
+		WorldViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 	public:
 		class RoomCreationDialog : public FXDialogBox
@@ -71,8 +71,21 @@ namespace forge
 			explicit RoomCreationDialog( FXWindow *parent );
 			~RoomCreationDialog() override = default;
 
+			inline FXString get_room_name() { return nameField->getText(); }
+
+			inline PLColourF32 get_room_ambience()
+			{
+				FXColor color = ambienceField->getRGBA();
+				return PL_COLOURF32( PlByteToFloat( FXREDVAL( color ) ),
+				                     PlByteToFloat( FXGREENVAL( color ) ),
+				                     PlByteToFloat( FXBLUEVAL( color ) ),
+				                     PlByteToFloat( FXALPHAVAL( color ) ) );
+			}
+
 		protected:
 		private:
+			FXTextField *nameField;
+			FXColorWell *ambienceField;
 		};
 
 		class RoomPropertiesDialog : public FXDialogBox
@@ -83,8 +96,12 @@ namespace forge
 			inline RoomPropertiesDialog() = default;
 
 		public:
-			explicit RoomPropertiesDialog( FXWindow *parent );
+			explicit RoomPropertiesDialog( FXWindow *parent, ApeRoom *room );
 			~RoomPropertiesDialog() override = default;
+
+		private:
+			FXTextField *nameField;
+			FXColorWell *ambienceField;
 		};
 
 		class EntityCreationDialog : FXDialogBox
@@ -101,6 +118,21 @@ namespace forge
 		private:
 			FXListBox *classSelection{};
 		};
+
+		class TexturePicker : FXTopWindow
+		{
+			FXDECLARE( TexturePicker )
+
+		protected:
+			inline TexturePicker() = default;
+
+		public:
+			explicit TexturePicker( FXWindow *parent );
+			~TexturePicker() override = default;
+		};
+
+	private:
+		TexturePicker *texturePicker;
 
 	public:
 		inline ApeWorld *get_world() { return _world; }

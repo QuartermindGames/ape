@@ -97,4 +97,18 @@ void com_update_profiler_samples( void );
  */
 bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
 
+/**
+ * Computes the face normal of a polygon composed of multiple triangles.
+ *
+ * @param vertices		A pointer to an array of PLVector3 structures representing the vertices of the polygon.
+ * @param numVertices 	The number of vertices in the polygon. This should be a multiple of 3, as each face is a triangle.
+ * @return 				A PLVector3 structure representing the normalized face normal vector of the polygon.
+ *
+ * This function calculates the normal vector for a polygon by considering it as a collection of
+ * triangles. Each set of three vertices is treated as a triangle. The function computes the cross
+ * product of vectors formed by these vertices to determine the normal for each triangle, sums these
+ * normal vectors, and finally normalizes the resulting vector to generate the face normal.
+ */
+PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices );
+
 PL_EXTERN_C_END

@@ -50,7 +50,6 @@ static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 	// this will be recalculated later...
 	ape_world_node_set_local_bounds( &room->base, &PL_VECTOR3( -1024.0f, -1024.0f, -1024.0f ), &PL_VECTOR3( 1024.0f, 1024.0f, 1024.0f ) );
 
-	room->isDetail     = acm_branch_get_child_bool( root, "isDetail", false );
 	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );
 	room->flags        = acm_branch_get_child_uint( root, "flags", 0 );
 

@@ -2,12 +2,14 @@
 // Purpose: World editor tab
 // Author:  Mark E. Sowden
 
-#include <memory>
 #include <unordered_map>
+#include <regex>
 
-#include "WorldEditor.h"
-
+#include "editor_world.h"
 #include "forge/forge_viewport.h"
+#include "forge/forge_viewport_world.h"
+
+#include "ape/ape_public_audio.h"
 
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
@@ -42,6 +44,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	roomSelectBox->setNumVisible( 8 );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/trash.gif" ), this, ID_ROOM_DELETE );
 	new FXVerticalSeparator( toolbar );
 
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
@@ -66,11 +69,14 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
-	ApeCameraViewMode viewModes[ APE_EDITOR_MAX_VIEWPORTS ] = { APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_MODE_TOP, APE_CAMERA_MODE_LEFT, APE_CAMERA_MODE_FRONT };
+#if 1
 	for ( unsigned int i = 0; i < APE_EDITOR_MAX_VIEWPORTS; ++i )
 	{
-		viewports[ i ] = new Viewport( hs, get_shared_gl_visual(), this, viewModes[ i ] );
+		viewports[ i ] = new WorldViewport( hs, get_shared_gl_visual(), this, ( ApeCameraViewMode ) ( APE_CAMERA_MODE_PERSPECTIVE + i ) );
 	}
+#else
+	new WorldViewport( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
+#endif
 
 	owner->create();
 
@@ -114,7 +120,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 		case APE_WORLD_NODE_TYPE_EMPTY:
 			break;
 		case APE_WORLD_NODE_TYPE_BRUSH:
-			data = ape_create_brush( parentNode, &pos, &pl_vecOrigin3 );
+			data = ape_brush_create( parentNode, nullptr, &pos, &pl_vecOrigin3 );
 			break;
 		case APE_WORLD_NODE_TYPE_LIGHT:
 			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED );
@@ -194,12 +200,12 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 			break;
 		case ID_GRID_UP:
 		{
-			PlTranslateMatrix( PlInverseVector3( forward ) );
+			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( forward, instance.grid.scale ) ) );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			PlTranslateMatrix( forward );
+			PlTranslateMatrix( PlScaleVector3F( forward, instance.grid.scale ) );
 			break;
 		}
 		case ID_GRID_ALIGN:
@@ -240,6 +246,18 @@ long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 	RoomCreationDialog roomCreationDialog( this );
 	if ( roomCreationDialog.execute() )
 	{
+		FXString roomName = roomCreationDialog.get_room_name();
+		if ( roomName.empty() )
+		{
+			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No name specified for room!" );
+			return false;
+		}
+
+		ApeRoom *room = ape_room_create( ( ApeWorldNode * ) _world, roomName.text() );
+		ape_room_set_ambience( room, roomCreationDialog.get_room_ambience() );
+
+		update_tree();
+
 		return true;
 	}
 
@@ -253,6 +271,71 @@ FXDEFMAP( forge::WorldEditor::RoomCreationDialog )
 roomCreationMap[] = {};
 FXIMPLEMENT( forge::WorldEditor::RoomCreationDialog, FXDialogBox, roomCreationMap, ARRAYNUMBER( roomCreationMap ) )
 
-forge::WorldEditor::RoomCreationDialog::RoomCreationDialog( FXWindow *parent ) : FXDialogBox( parent, "Room Creation" )
+forge::WorldEditor::RoomCreationDialog::RoomCreationDialog( FXWindow *parent ) : FXDialogBox( parent, "Room Creation", DECOR_TITLE | DECOR_BORDER )
+{
+	FXMatrix *matrix = new FXMatrix( this, 2, MATRIX_BY_COLUMNS );
+
+	new FXLabel( matrix, "Name:" );
+	nameField = new FXTextField( matrix, 20 );
+
+	new FXLabel( matrix, "Audio Preset:" );
+	FXListBox *audioPresetField = new FXListBox( matrix );
+	audioPresetField->setNumVisible( 8 );
+	for ( uint i = 0; i < APE_NUM_AUDIO_EFFECT_TYPES; ++i )
+	{
+		audioPresetField->appendItem( APE_AUDIO_EFFECT_TYPES[ i ].name );
+	}
+
+	new FXLabel( matrix, "Ambience:" );
+	ambienceField = new FXColorWell( matrix, FXRGB( 0, 0, 0 ) );
+
+	new FXSeparator( this );
+
+	FXHorizontalFrame *buttonFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_RIGHT | PACK_UNIFORM_WIDTH );
+	new FXButton( buttonFrame, "&OK", nullptr, this, FXDialogBox::ID_ACCEPT, BUTTON_NORMAL | BUTTON_INITIAL );
+	new FXButton( buttonFrame, "&Cancel", nullptr, this, FXDialogBox::ID_CANCEL, BUTTON_NORMAL );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Room Properties Dialog
+
+FXDEFMAP( forge::WorldEditor::RoomPropertiesDialog )
+roomPropertiesMap[] = {};
+FXIMPLEMENT( forge::WorldEditor::RoomPropertiesDialog, FXDialogBox, roomPropertiesMap, ARRAYNUMBER( roomPropertiesMap ) )
+
+forge::WorldEditor::RoomPropertiesDialog::RoomPropertiesDialog( FX::FXWindow *parent, ApeRoom *room ) : FXDialogBox( parent, "Room Properties", DECOR_TITLE | DECOR_BORDER )
+{
+	FXMatrix *matrix = new FXMatrix( this, 2, MATRIX_BY_COLUMNS );
+
+	new FXLabel( matrix, "Name:" );
+	nameField = new FXTextField( matrix, 20 );
+	nameField->setText( ape_world_node_get_name( APE_WORLD_NODE( room ) ) );
+
+	new FXLabel( matrix, "Audio Preset:" );
+	FXListBox *audioPresetField = new FXListBox( matrix );
+	audioPresetField->setNumVisible( 8 );
+	for ( uint i = 0; i < APE_NUM_AUDIO_EFFECT_TYPES; ++i )
+	{
+		audioPresetField->appendItem( APE_AUDIO_EFFECT_TYPES[ i ].name );
+	}
+
+	new FXLabel( matrix, "Ambience:" );
+	ambienceField = new FXColorWell( matrix, FXRGB( 0, 0, 0 ) );
+
+	new FXSeparator( this );
+
+	FXHorizontalFrame *buttonFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_RIGHT | PACK_UNIFORM_WIDTH );
+	new FXButton( buttonFrame, "&OK", nullptr, this, FXDialogBox::ID_ACCEPT, BUTTON_NORMAL | BUTTON_INITIAL );
+	new FXButton( buttonFrame, "&Cancel", nullptr, this, FXDialogBox::ID_CANCEL, BUTTON_NORMAL );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Texture Picker
+
+FXDEFMAP( forge::WorldEditor::TexturePicker )
+texturePickerMap[] = {};
+FXIMPLEMENT( forge::WorldEditor::TexturePicker, FXTopWindow, texturePickerMap, ARRAYNUMBER( texturePickerMap ) )
+
+forge::WorldEditor::TexturePicker::TexturePicker( FX::FXWindow *parent )
 {
 }

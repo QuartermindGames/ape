@@ -18,7 +18,7 @@ typedef enum ApeEditorMode
 	APE_EDITOR_MAX_MODES
 } ApeEditorMode;
 
-#define APE_EDITOR_MAX_VIEWPORTS      4
+#define APE_EDITOR_MAX_VIEWPORTS      1
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
 typedef struct ApeEditorField
@@ -66,8 +66,6 @@ typedef struct ApeEditorGrid
 	                      // can't hook it with frontend :(
 } ApeEditorGrid;
 
-#define APE_EDITOR_MAX_POINTS 128
-
 typedef struct ApeEditorInstance
 {
 	ApeCamera *camera;
@@ -79,7 +77,8 @@ typedef struct ApeEditorInstance
 	float forwardSpeed;
 	float turnSpeed;
 
-	PLLinkedList *brushPlotPoints;
+	PLVector3 polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
+	uint      numPolygonPoints;
 
 	void *modeData;
 
@@ -106,13 +105,31 @@ void         ape_grid_set_visibility( bool visible );
 /////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Creates an `ApeBrush` from the polygon points stored in the `ApeEditorInstance`.
+ *
+ * @param self 	Pointer to the `ApeEditorInstance` which holds the polygon points and other relevant data.
+ * @return 		A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
+ */
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self );
+
+/**
+ * This function decreases the number of points in the polygon managed by the
+ * given `ApeEditorInstance`. If there are no points in the polygon (`numPolygonPoints` is 0),
+ * the function does nothing.
+ *
+ * @param self A pointer to the `ApeEditorInstance` from which the last polygon point will be removed.
+ */
+void ape_editor_remove_polygon_point( ApeEditorInstance *self );
+
+/**
  * Plots a new point for a brush. Keep in mind this is merely triggering it to occur,
  * and it will operate off whatever is the current grid point.
- * @param state The editor state that the action is being performed within.
- * @return True if the point is at the same location as the origin.
+ *
+ * @param self 	The editor state that the action is being performed within.
+ * @return 			True if the point is at the same location as the origin.
  */
-bool ape_editor_plot_point( ApeEditorInstance *state );
+bool ape_editor_add_polygon_point( ApeEditorInstance *self );
 
-void ape_editor_clear_plot_points( ApeEditorInstance *state );
+void ape_editor_clear_plot_points( ApeEditorInstance *instance );
 
 PL_EXTERN_C_END

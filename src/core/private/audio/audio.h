@@ -8,14 +8,6 @@
 
 PL_EXTERN_C
 
-typedef struct ApeAudioEffectType
-{
-	const char          *name;
-	ApeAudioReverbPreset effect;
-} ApeAudioEffectType;
-extern const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[];
-extern const unsigned int       APE_NUM_AUDIO_EFFECT_TYPES;
-
 typedef enum ApeAudioSampleFormat
 {
 	APE_AUDIO_SAMPLE_FORMAT_INVALID,

@@ -27,6 +27,7 @@ typedef struct ApeWorld    ApeWorld;
  * ====================================================================*/
 
 typedef struct ApeWorldNode ApeWorldNode;
+#define APE_WORLD_NODE( X ) ( ( ApeWorldNode * ) ( X ) )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ape World Node - foundation of all objects associated with the world.
@@ -84,7 +85,7 @@ typedef struct ApeWorldNode
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
-bool ape_world_node_is_valid_( const ApeWorldNode *self, ApeWorldNodeType expectedType );
+bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );
 
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
 void          ape_world_node_destroy( ApeWorldNode *self );
@@ -142,7 +143,10 @@ void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 // can introduce a terrain brush type, or a mesh brush type, etc.
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ApeBrush ApeBrush;
+#define APE_BRUSH_MAX_FACE_VERTICES 32
+
+typedef struct ApeBrush     ApeBrush;
+typedef struct ApeBrushFace ApeBrushFace;
 
 typedef enum ApeBrushType
 {
@@ -156,23 +160,30 @@ typedef enum ApeBrushType
 
 typedef struct ApeBrushFaceVertex
 {
-	PLVector2   textureCoords;
+	PLVector3  *position;
 	PLVector2   lightmapCoords;
-	PLVector3   position;
 	PLVector3   normal;
 	PLColourF32 colour;
 } ApeBrushFaceVertex;
 
 typedef struct ApeBrushFace
 {
-	int materialIndex;
+	int       materialIndex;
+	PLVector3 materialScale;
+	PLVector3 materialOffset;
+	PLVector3 materialAngle;
 
-	PLVectorArray *vertices;//ApeBrushFaceVertex
-	PLLinkedList  *edgeLoop;//ApeBrushFaceVertex
+	PLVector3   normal;
+	PLColourF32 colour;
 
-	unsigned int flags;
+	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
+	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+	uint                numVertices;
 
-	struct ApeBrushFace *connectedPortalFace;
+	uint flags;
+
+	char          id[ 64 ];// required for connecting portals
+	ApeBrushFace *destination;
 } ApeBrushFace;
 
 typedef struct ApeBrush
@@ -184,15 +195,14 @@ typedef struct ApeBrush
 
 	ApeMaterial *materials[ APE_BRUSH_MAX_SUB_MESHES ];
 
-	PLVectorArray *faces;//ApeBrushFace
+	PLVector3 *vertices;
+	uint       numVertices;
 
-	struct PLGMesh *mesh;        // cached mesh
-	bool            isMeshCached;// if false, mesh cache will be updated
+	ApeBrushFace *faces;
+	uint          numFaces;
 } ApeBrush;
 
-ApeBrush *ape_create_brush( ApeWorldNode *parent, const PLVector3 *position, const PLVector3 *angles );
-
-void ape_brush_destroy( ApeBrush *self );
+ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -281,17 +291,42 @@ void ape_world_attach_light( ApeWorld *world, ApeLight *light );
  */
 ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
-unsigned int ape_sky_add_layer( const char *path, float scale, float y, float alpha );
-void         ape_sky_set_layer_alpha( unsigned int slot, float alpha );
-void         ape_sky_set_layer_offset( unsigned int slot, float x, float y );
-void         ape_sky_clear_layers( void );
-void         ape_sky_draw_( ApeCamera *camera );
+uint ape_sky_add_layer( const char *path, float scale, float y, float alpha );
+void ape_sky_set_layer_alpha( uint slot, float alpha );
+void ape_sky_set_layer_offset( uint slot, float x, float y );
+void ape_sky_clear_layers( void );
+void ape_sky_draw_( ApeCamera *camera );
 
 ////////////////////////////////////////////////////////////////////
 // Room
 
+/**
+ * Creates a new ApeRoom object.
+ *
+ * This function allocates memory for a new ApeRoom and initializes it with
+ * the provided parent and name. It assigns default values to the room's
+ * fields, including a random color for debugging purposes.
+ *
+ * @param parent 	Pointer to the parent ApeWorldNode. The newly created
+ *        			ApeRoom will be set up as a child of this node.
+ * @param name 		A string representing the name of the new ApeRoom. This name
+ *        			will be used to identify the room.
+ * @return 			A pointer to the newly created ApeRoom.
+ */
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name );
-void     ape_world_room_destroy( ApeRoom *self );
+
+/**
+ * @brief Sets the ambient light color of a given room.
+ *
+ * This function assigns the specified color to the ambient light property
+ * of the given ApeRoom instance.
+ *
+ * @param self 		Pointer to the ApeRoom instance.
+ * @param ambience 	The new ambient light color to be set.
+ */
+void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience );
+
+void ape_world_room_destroy( ApeRoom *self );
 
 ////////////////////////////////////////////////////////////////////
 // Face
@@ -308,11 +343,11 @@ typedef struct ApeMaterial ApeMaterial;
 
 typedef enum ApeLightShadowType
 {
-	SS_APE_LIGHT_SHADOW_TYPE_NONE,
-	SS_APE_LIGHT_SHADOW_TYPE_DYNAMIC,
-	SS_APE_LIGHT_SHADOW_TYPE_STATIC,
+	APE_LIGHT_SHADOW_TYPE_NONE,
+	APE_LIGHT_SHADOW_TYPE_DYNAMIC,
+	APE_LIGHT_SHADOW_TYPE_STATIC,
 
-	SS_APE_MAX_LIGHT_SHADOW_TYPES
+	APE_MAX_LIGHT_SHADOW_TYPES
 } ApeLightShadowType;
 
 typedef enum ApeLightType
@@ -337,7 +372,7 @@ typedef enum ApeLightFlag
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
+ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, uint flags );
 void      ape_light_destroy( ApeLight *light );
 
 PLColourF32 ape_light_get_colour( const ApeLight *light );

@@ -73,7 +73,7 @@ void ape_world_node_generate_bounds_( ApeWorldNode *root )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool ape_world_node_is_valid_( const ApeWorldNode *self, ApeWorldNodeType expectedType )
+bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType )
 {
 	if ( self->magic != APE_WORLD_NODE_MAGIC )
 	{
@@ -119,7 +119,7 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 
 void ape_world_node_destroy( ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	PLLinkedListNode *node = PlGetFirstNode( self->children );
 	while ( node != NULL )
@@ -137,7 +137,7 @@ void ape_world_node_destroy( ApeWorldNode *self )
 
 void ape_world_node_dettach( ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	if ( self->parent == nullptr )
 	{
@@ -153,7 +153,7 @@ void ape_world_node_dettach( ApeWorldNode *self )
 
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	if ( self->parent == parent )
 	{
@@ -168,13 +168,13 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 
 PLVector3 ape_world_node_get_position( const ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 	return self->position;
 }
 
 void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 	self->position = *position;
 }
 
@@ -191,19 +191,19 @@ void ape_world_node_move( ApeWorldNode *self, PLVector3 translation )
 
 PLVector3 ape_world_node_get_angles( const ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 	return self->angles;
 }
 
 void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 	self->angles = *angles;
 }
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	self->localBounds.mins = *mins;
 	self->localBounds.maxs = *maxs;
@@ -229,14 +229,14 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
 
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	ApeWorldNode *next = self->parent;
 	while ( next != nullptr )
 	{
 		if ( next->type == APE_WORLD_NODE_TYPE_ROOM )
 		{
-			assert( ape_world_node_is_valid_( next, APE_WORLD_NODE_TYPE_ROOM ) );
+			assert( ape_world_node_is_valid( next, APE_WORLD_NODE_TYPE_ROOM ) );
 			break;
 		}
 
@@ -248,7 +248,7 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 
 void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	// just explicitly set the node to it's new parent
 	ape_world_node_attach( self, &room->base );
@@ -256,7 +256,7 @@ void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room )
 
 ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	ApeWorldNode *root = self;
 	ApeWorldNode *next = self->parent;
@@ -271,7 +271,7 @@ ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )
 
 ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name )
 {
-	assert( ape_world_node_is_valid_( self, self->type ) );
+	assert( ape_world_node_is_valid( self, self->type ) );
 
 	ApeWorldNode *child = nullptr;
 	ApeWorldNode *current;
