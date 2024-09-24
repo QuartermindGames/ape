@@ -24,7 +24,7 @@ forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, 
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
 	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ] = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/vertex_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ]   = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	//_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_EDGE ]   = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edge_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	_editModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]   = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), 0, this, 0, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	//editModeButtons[ currentEditMode ]->setState( true );
 

@@ -413,7 +413,7 @@ static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector
 	PlTranslateMatrix( *location );
 
 	/* todo: do this in shader... */
-	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PLVector2( x, y ), PLVector2( scale * 500.0f, scale * 500.0f ) );
+	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PL_VECTOR2( x, y ), PL_VECTOR2( scale * 500.0f, scale * 500.0f ) );
 
 	ape_material_draw( material, mesh, NULL );
 
@@ -525,14 +525,14 @@ void ape_sky_draw_( ApeCamera *camera )
 
 		PlgClearMesh( mesh );
 
-		PlgAddMeshVertex( mesh, &PLVector3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );   /* top right */
-		PlgAddMeshVertex( mesh, &PLVector3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                         /* top right far */
-		PlgAddMeshVertex( mesh, &PLVector3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* lower right */
-		PlgAddMeshVertex( mesh, &PLVector3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* lower right far */
-		PlgAddMeshVertex( mesh, &PLVector3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 ); /* lower left */
-		PlgAddMeshVertex( mesh, &PLVector3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                       /* lower left far */
-		PlgAddMeshVertex( mesh, &PLVector3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* top left */
-		PlgAddMeshVertex( mesh, &PLVector3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* top left far */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );   /* top right */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                         /* top right far */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* lower right */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* lower right far */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 ); /* lower left */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                       /* lower left far */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* top left */
+		PlgAddMeshVertex( mesh, &PL_VECTOR3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* top left far */
 
 		for ( unsigned int j = 0; j < numTriangles; ++j )
 		{

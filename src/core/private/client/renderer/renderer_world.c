@@ -218,6 +218,8 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 	}
 }
 
+void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, const PLMatrix4 *transform );
+
 static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
 {
 	// new (temporary) stuff!
@@ -230,8 +232,7 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 			continue;
 		}
 
-		void ape_brush_node_draw_( void *data, const PLMatrix4 *transform );
-		ape_brush_node_draw_( child, nullptr );
+		ape_brush_node_draw_( ( ApeBrush * ) child, camera->drawMode, nullptr );
 	}
 
 	if ( PlIsVectorArrayEmpty( room->faces ) )
@@ -316,7 +317,7 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 
 static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 {
-	ApeMaterial *shadowMaterial = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_SHADOW );
+	ApeMaterial *shadowMaterial = ape_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
 	assert( shadowMaterial != NULL );
 
 #if 0// entirely done with vertex shader...

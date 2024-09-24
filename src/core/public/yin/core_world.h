@@ -143,7 +143,7 @@ void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 // can introduce a terrain brush type, or a mesh brush type, etc.
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define APE_BRUSH_MAX_FACE_VERTICES 32
+#define APE_BRUSH_MAX_FACE_VERTICES 16
 
 typedef struct ApeBrush     ApeBrush;
 typedef struct ApeBrushFace ApeBrushFace;
@@ -161,6 +161,7 @@ typedef enum ApeBrushType
 typedef struct ApeBrushFaceVertex
 {
 	PLVector3  *position;
+	PLVector2   textureCoords;
 	PLVector2   lightmapCoords;
 	PLVector3   normal;
 	PLColourF32 colour;
@@ -168,16 +169,17 @@ typedef struct ApeBrushFaceVertex
 
 typedef struct ApeBrushFace
 {
-	int       materialIndex;
-	PLVector3 materialScale;
-	PLVector3 materialOffset;
-	PLVector3 materialAngle;
+	int          materialIndex;
+	ApeMaterial *material;
+	PLVector3    materialScale;
+	PLVector3    materialOffset;
+	PLVector3    materialAngle;
 
 	PLVector3   normal;
 	PLColourF32 colour;
 
-	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
-	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
+	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];// list of vertices
 	uint                numVertices;
 
 	uint flags;

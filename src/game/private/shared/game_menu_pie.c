@@ -249,13 +249,13 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 		float yc = fabsf( cursorY - yo ) / ( float ) menu->h;
 
 		// and now the scale
-		float dc = menu->scale * ( PlGetVector2Length( &PLVector2( 1.0f, 1.0f ) ) - PlGetVector2Length( &PLVector2( xc, yc ) ) );
+		float dc = menu->scale * ( PlGetVector2Length( &PL_VECTOR2( 1.0f, 1.0f ) ) - PlGetVector2Length( &PL_VECTOR2( xc, yc ) ) );
 
 		GamePieMenuOption *option = PlGetLinkedListNodeUserData( node );
 		bool isSelected = ( option == get_selected_option( menu ) );
 		draw_pie_option( option, xo, yo, isSelected, dc );
 		if ( isSelected )
-			PlgDrawSimpleLine( PlMatrix4Identity(), PLVector3( x, y, 0.0f ), PLVector3( xo, yo, 0.0f ), PL_COLOUR_RED );
+			PlgDrawSimpleLine( PlMatrix4Identity(), PL_VECTOR3( x, y, 0.0f ), PL_VECTOR3( xo, yo, 0.0f ), PL_COLOUR_RED );
 
 		node = PlGetNextLinkedListNode( node );
 	}

@@ -43,8 +43,8 @@ PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int 
 		PLVector3 b = vertices[ i + 1 ];
 		PLVector3 c = vertices[ i + 2 ];
 
-		PLVector3 x = PLVector3( c.x - b.x, c.y - b.y, c.z - b.z );
-		PLVector3 y = PLVector3( a.x - b.x, a.y - b.y, a.z - b.z );
+		PLVector3 x = PL_VECTOR3( c.x - b.x, c.y - b.y, c.z - b.z );
+		PLVector3 y = PL_VECTOR3( a.x - b.x, a.y - b.y, a.z - b.z );
 		PLVector3 n = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
 
 		normal = PlAddVector3( normal, n );

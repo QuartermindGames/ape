@@ -14,6 +14,7 @@
 
 static AcmBranch *editorConfigRoot;
 
+static bool         showIcons;
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
 static void cache_node_icons( void )
@@ -119,7 +120,7 @@ static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
 		case APE_EDITOR_GEOMETRY_MODE_PLOT: return "poly";
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: return "vertex";
 		case APE_EDITOR_GEOMETRY_MODE_FACE: return "face";
-		case APE_EDITOR_GEOMETRY_MODE_EDGE: return "edge";
+		//case APE_EDITOR_GEOMETRY_MODE_EDGE: return "edge";
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: return "transform";
 	}
 }
@@ -405,6 +406,8 @@ void ape_editor_register_console_( void )
 	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
+
+	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "false", PL_VAR_BOOL, &showIcons, nullptr, true );
 }
 
 static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
@@ -418,24 +421,27 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 		return;
 	}
 
-	const PLVector3 position = worldNode->position;
-	if ( nodeIcons[ worldNode->type ] != NULL )
+	if ( showIcons )
 	{
-		static const float size  = 64.0f;
-		static const float scale = 0.1f;
-		ape_draw_sprite( nodeIcons[ worldNode->type ],
-		                 &PL_QUAD( 0.0f, 0.0f, size, size ),
-		                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),
-		                 &PL_VECTOR3( position.x, position.y, position.z ),
-		                 &PL_VECTOR3( -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ) ),
-		                 &PL_VECTOR3( 0.0f, camera->internal->angles.y, 0.0f ),
-		                 scale );
+		const PLVector3 position = worldNode->position;
+		if ( nodeIcons[ worldNode->type ] != NULL )
+		{
+			static const float size  = 64.0f;
+			static const float scale = 0.1f;
+			ape_draw_sprite( nodeIcons[ worldNode->type ],
+			                 &PL_QUAD( 0.0f, 0.0f, size, size ),
+			                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),
+			                 &PL_VECTOR3( position.x, position.y, position.z ),
+			                 &PL_VECTOR3( -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ) ),
+			                 &PL_VECTOR3( 0.0f, camera->internal->angles.y, 0.0f ),
+			                 scale );
+		}
 	}
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	// this is handled during simulation now via debug draw api
-	//PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
+	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
 
 	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
 	while ( node != NULL )
@@ -464,9 +470,9 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 		screenPos.x = floorf( screenPos.x );
 		screenPos.y = floorf( screenPos.y );
 
-		char msg[ 16 ];
+		char msg[ 64 ];
 		snprintf( msg, sizeof( msg ), "%u", num++ );
-		gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
+		//gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 
 		PLVector3 end = ( i + 1 >= editorInstance->numPolygonPoints ) ? editorInstance->polygonPoints[ 0 ] : editorInstance->polygonPoints[ i + 1 ];
 
@@ -478,17 +484,19 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 
 		// determine the point between the two on the screen
 		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
-		snprintf( msg, sizeof( msg ), "%f", PlVector3Length( PlSubtractVector3( end, editorInstance->polygonPoints[ i ] ) ) );
+		snprintf( msg, sizeof( msg ), "%f (%s)", PlVector3Length( PlSubtractVector3( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
 		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 }
 
-static void pre_render_brush( ApeEditorInstance *instance )
+static bool validate_convex_polygon( const PLVector3 *vertices, uint numVertices );
+
+static void pre_render_brush( ApeEditorInstance *self )
 {
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-	for ( uint i = 0; i < instance->numPolygonPoints; ++i )
+	for ( uint i = 0; i < self->numPolygonPoints; ++i )
 	{
-		PlgImmPushVertex( instance->polygonPoints[ i ].x, instance->polygonPoints[ i ].y, instance->polygonPoints[ i ].z );
+		PlgImmPushVertex( self->polygonPoints[ i ].x, self->polygonPoints[ i ].y, self->polygonPoints[ i ].z );
 		PlgImmColour( 255, 255, 0, 255 );
 	}
 
@@ -496,21 +504,45 @@ static void pre_render_brush( ApeEditorInstance *instance )
 
 	ape_material_draw( planeMaterial, mesh, nullptr );
 
-	// draw boundary
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
-	for ( uint i = 0; i < instance->numPolygonPoints; ++i )
-	{
-		PLCollisionAABB bounds = {
-		        .origin = instance->polygonPoints[ i ],
-		        .mins   = {-0.1f, -0.1f, -0.1f},
-		        .maxs   = {0.1f,  0.1f,  0.1f },
-		};
-		PlgDrawBoundingVolume( &bounds, &PL_COLOUR_PURPLE );
 
-		PLVector3 end = ( i + 1 >= instance->numPolygonPoints ) ? instance->polygonPoints[ 0 ] : instance->polygonPoints[ i + 1 ];
-		PlgDrawSimpleLine( PlMatrix4Identity(), instance->polygonPoints[ i ], end, PL_COLOUR_PURPLE );
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+	// draw pending polygon
+	// and attempt to draw it to the cursor too
+	PLVector3 cursor;
+	if ( self->numPolygonPoints > 0 )
+	{
+		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
+		{
+			PLColour colour = PL_COLOUR_WHITE;
+			if ( self->numPolygonPoints < APE_BRUSH_MAX_FACE_VERTICES )
+			{
+				self->polygonPoints[ self->numPolygonPoints ] = cursor;
+				if ( !validate_convex_polygon( self->polygonPoints, self->numPolygonPoints + 1 ) )
+				{
+					colour = PL_COLOUR_RED;
+				}
+			}
+
+			for ( uint i = 0; i < self->numPolygonPoints; ++i )
+			{
+				PLVector3 end = ( i + 1 >= self->numPolygonPoints ) ? cursor : self->polygonPoints[ i + 1 ];
+				PlgDrawSimpleLine( PlMatrix4Identity(), self->polygonPoints[ i ], end, colour );
+			}
+
+			PlgDrawSimpleLine( PlMatrix4Identity(), cursor, self->polygonPoints[ 0 ], colour );
+		}
+		else
+		{
+			for ( uint i = 0; i < self->numPolygonPoints; ++i )
+			{
+				PLVector3 end = ( i + 1 >= self->numPolygonPoints ) ? self->polygonPoints[ 0 ] : self->polygonPoints[ i + 1 ];
+				PlgDrawSimpleLine( PlMatrix4Identity(), self->polygonPoints[ i ], end, PL_COLOUR_WHITE );
+			}
+		}
 	}
+
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
@@ -536,7 +568,6 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 			pre_render_brush( instance );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
-		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
@@ -718,7 +749,63 @@ ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
 // TODO: move into editor_world.c
 /////////////////////////////////////////////////////////////////////////////////////
 
-static bool validate_plotted_plane( const PLVector3 *vertices, uint numVertices )
+typedef struct Segment
+{
+	PLVector2 start;
+	PLVector2 end;
+} Segment;
+
+static bool test_intersection( Segment s1, Segment s2 )
+{
+	float d1, d2, d3, d4;
+	float x1 = s1.start.x, y1 = s1.start.y, x2 = s1.end.x, y2 = s1.end.y;
+	float x3 = s2.start.x, y3 = s2.start.y, x4 = s2.end.x, y4 = s2.end.y;
+
+	d1 = ( x4 - x3 ) * ( y1 - y3 ) - ( y4 - y3 ) * ( x1 - x3 );
+	d2 = ( x4 - x3 ) * ( y2 - y3 ) - ( y4 - y3 ) * ( x2 - x3 );
+	d3 = ( x2 - x1 ) * ( y3 - y1 ) - ( y2 - y1 ) * ( x3 - x1 );
+	d4 = ( x2 - x1 ) * ( y4 - y1 ) - ( y2 - y1 ) * ( x4 - x1 );
+
+	if ( ( ( d1 > 0 && d2 < 0 ) || ( d1 < 0 && d2 > 0 ) ) &&
+	     ( ( d3 > 0 && d4 < 0 ) || ( d3 < 0 && d4 > 0 ) ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+static bool validate_concave_polygon( const PLVector3 *vertices, uint numVertices )
+{
+	if ( numVertices < 4 )
+	{
+		return true;
+	}
+
+	Segment segments[ numVertices ];
+	for ( uint i = 0; i < numVertices; ++i )
+	{
+		segments[ i ].start.x = vertices[ i ].x;
+		segments[ i ].start.y = vertices[ i ].y;
+		segments[ i ].end.x   = vertices[ ( i + 1 ) % numVertices ].x;
+		segments[ i ].end.y   = vertices[ ( i + 1 ) % numVertices ].y;
+	}
+
+	for ( uint i = 0; i < numVertices; ++i )
+	{
+		for ( uint j = i + 1; j < numVertices; ++j )
+		{
+			if ( i != j && test_intersection( segments[ i ], segments[ j ] ) )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+static bool validate_convex_polygon( const PLVector3 *vertices, uint numVertices )
 {
 	// this determines that the plane is convex, hopefully
 
@@ -780,7 +867,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
 	PLVector3 dir;
 	PlExtractMatrix4Directions( &self->grid.transform, nullptr, nullptr, &dir );
 
-	if ( !ape_brush_build_from_polygon_( brush, self->polygonPoints, self->numPolygonPoints, dir, self->grid.scale ) )
+	if ( !ape_brush_build_from_polygon_( brush, self->polygonPoints, self->numPolygonPoints, dir, self->grid.scale / 2.0f ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
@@ -829,7 +916,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 	self->polygonPoints[ self->numPolygonPoints++ ] = cursor;
 
 	// validate and then if this fails, remove the last element
-	if ( !validate_plotted_plane( self->polygonPoints, self->numPolygonPoints ) )
+	if ( !validate_convex_polygon( self->polygonPoints, self->numPolygonPoints ) )
 	{
 		self->numPolygonPoints--;
 		return false;

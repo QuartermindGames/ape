@@ -237,10 +237,10 @@ static bool ss1_spawn_world( ApeWorld *world )
 
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, &world->base );
 
-	suns[ 0 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
+	suns[ 0 ] = ape_create_light( &world->base, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
 	                              APE_LIGHT_TYPE_OMNI,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | /*APE_LIGHT_FLAG_FLARE |*/ APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-	suns[ 1 ] = ape_create_light( &world->base, &PLVector3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
+	suns[ 1 ] = ape_create_light( &world->base, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 

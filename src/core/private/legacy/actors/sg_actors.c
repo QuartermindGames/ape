@@ -75,7 +75,7 @@ static ASGActor *SGActor_Generic_Spawn( Actor *self )
 static void SGActor_Generic_UpdateParticleEmitter( Actor *self, ASGActor *sgSelf )
 {
 	PLVector3 forward, left;
-	PlAnglesAxes( PLVector3( 0, self->angles.y, 0 ), &left, NULL, &forward );
+	PlAnglesAxes( PL_VECTOR3( 0, self->angles.y, 0 ), &left, NULL, &forward );
 
 	if ( sgSelf->particleEmitter != NULL )
 	{
@@ -232,8 +232,8 @@ static void SGActor_Generic_Draw( Actor *self, void *userData )
  * point.sg.ship
  ****************************************/
 
-#define SHIP_BOUNDS_MAXS PLVector3( 16.0f, 90.0f, 16.0f )
-#define SHIP_BOUNDS_MINS PLVector3( -16.0f, 0.0f, -16.0f )
+#define SHIP_BOUNDS_MAXS PL_VECTOR3( 16.0f, 90.0f, 16.0f )
+#define SHIP_BOUNDS_MINS PL_VECTOR3( -16.0f, 0.0f, -16.0f )
 
 #define SHIP_MAX_PARTICLES 100
 
@@ -258,9 +258,9 @@ static void Ship_Spawn( Actor *self )
 	ship->particleEmitter->startColour     = PL_COLOURF32( 1.0f, 0.5f, 0.5f, 1.0f );
 	//ship->particleEmitter->startColourVar			= PlColourF32( 0.02f, 0.05f, 0.1f, 0.0f );
 	ship->particleEmitter->endColour                = PL_COLOURF32( 1.0f, 0.2f, 0.2f, 0.0f );
-	ship->particleEmitter->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
+	ship->particleEmitter->forceVar                 = PL_VECTOR3( 0.0f, 0.05f, 0.0f );
 	ship->particleEmitter->transform.translation    = Act_GetPosition( self );
-	ship->particleEmitter->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	ship->particleEmitter->transformVar.translation = PL_VECTOR3( 10.0f, 10.0f, 10.0f );
 	ship->particleEmitter->material                 = ape_material_cache( "materials/effects/particle.mat.n", APE_CACHE_GROUP_WORLD, true, false );
 
 	ship->emitLeft                           = ss_arl_particle_emitter_create();
@@ -273,9 +273,9 @@ static void Ship_Spawn( Actor *self )
 	ship->emitLeft->maxParticles             = SHIP_MAX_PARTICLES;
 	ship->emitLeft->startColour              = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
 	ship->emitLeft->endColour                = PL_COLOURF32( 0.2f, 0.2f, 0.2f, 0.0f );
-	ship->emitLeft->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
+	ship->emitLeft->forceVar                 = PL_VECTOR3( 0.0f, 0.05f, 0.0f );
 	ship->emitLeft->transform.translation    = Act_GetPosition( self );
-	ship->emitLeft->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	ship->emitLeft->transformVar.translation = PL_VECTOR3( 10.0f, 10.0f, 10.0f );
 	ship->emitLeft->material                 = ape_material_cache( "materials/effects/particle.mat.n", APE_CACHE_GROUP_WORLD, true, false );
 
 	ship->emitRight                           = ss_arl_particle_emitter_create();
@@ -288,9 +288,9 @@ static void Ship_Spawn( Actor *self )
 	ship->emitRight->maxParticles             = SHIP_MAX_PARTICLES;
 	ship->emitRight->startColour              = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
 	ship->emitRight->endColour                = PL_COLOURF32( 0.2f, 0.2f, 0.2f, 0.0f );
-	ship->emitRight->forceVar                 = PLVector3( 0.0f, 0.05f, 0.0f );
+	ship->emitRight->forceVar                 = PL_VECTOR3( 0.0f, 0.05f, 0.0f );
 	ship->emitRight->transform.translation    = Act_GetPosition( self );
-	ship->emitRight->transformVar.translation = PLVector3( 10.0f, 10.0f, 10.0f );
+	ship->emitRight->transformVar.translation = PL_VECTOR3( 10.0f, 10.0f, 10.0f );
 	ship->emitRight->material                 = ape_material_cache( "materials/effects/particle.mat.n", APE_CACHE_GROUP_WORLD, true, false );
 
 	//SSArlCamera *camera = ss_arl_camera_get_active();

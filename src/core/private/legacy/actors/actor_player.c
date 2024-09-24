@@ -17,8 +17,8 @@
 #define PLAYER_MAX_PITCH 85.0f
 #define PLAYER_MIN_PITCH -85.0f
 
-#define PLAYER_BOUNDS_MAXS PLVector3( 16.0f, 90.0f, 16.0f )
-#define PLAYER_BOUNDS_MINS PLVector3( -16.0f, 0.0f, -16.0f )
+#define PLAYER_BOUNDS_MAXS PL_VECTOR3( 16.0f, 90.0f, 16.0f )
+#define PLAYER_BOUNDS_MINS PL_VECTOR3( -16.0f, 0.0f, -16.0f )
 
 typedef struct APlayer
 {

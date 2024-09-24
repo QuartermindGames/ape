@@ -35,6 +35,15 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 {
 	auto *middleFrame = new FXVerticalFrame( owner, FRAME_RAISED | LAYOUT_FILL );
 
+#if 0
+	auto *menuBar  = new FXMenuBar( middleFrame, LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
+	auto *menuPane = new FXMenuPane( menuBar->getParent() );
+	new FXMenuCommand( menuPane, "Import Room...\t\tImport an existing room.", forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, 0 );
+	new FXMenuCommand( menuPane, "Import Brush...\t\tImport an existing brush.", forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, 0 );
+	new FXMenuSeparator( menuPane );
+	new FXMenuTitle( menuBar, "&File", nullptr, menuPane );
+#endif
+
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ) );
 	new FXVerticalSeparator( toolbar );
@@ -166,9 +175,9 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 		case ID_FACE_MODE:
 			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_FACE;
 			break;
-		case ID_EDGE_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_EDGE;
-			break;
+		//case ID_EDGE_MODE:
+		//	this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_EDGE;
+		//	break;
 		case ID_VERTEX_MODE:
 			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
 			break;
@@ -187,8 +196,8 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 
 long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * )
 {
-	PLVector3 forward;
-	PlExtractMatrix4Directions( &instance.grid.transform, nullptr, &forward, nullptr );
+	PLVector3 up;
+	PlExtractMatrix4Directions( &instance.grid.transform, nullptr, &up, nullptr );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -200,12 +209,12 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 			break;
 		case ID_GRID_UP:
 		{
-			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( forward, instance.grid.scale ) ) );
+			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) ) );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			PlTranslateMatrix( PlScaleVector3F( forward, instance.grid.scale ) );
+			PlTranslateMatrix( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
 			break;
 		}
 		case ID_GRID_ALIGN:

@@ -22,10 +22,10 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
-	unsigned int vX = PlgAddMeshVertex( mesh, &PLVector3( x, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( mesh, &PLVector3( x, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( mesh, &PLVector3( x + w, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( mesh, &PLVector3( x + w, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PLVector2( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( mesh, vZ, vY, vW );
@@ -135,9 +135,9 @@ void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 	PlRotateMatrix3f( angles.z, 0.0f, 0.0f, 1.0f );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PLVector3( 0, 0, 0 ), PLVector3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
+	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
 	PlPopMatrix();
@@ -364,8 +364,8 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
 	direction           = PlNormalizeVector3( direction );
 
 	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, 0.5f ) );
-	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PLVector3( 0.0f, 0.0f, 1.0f ) ) ), 0.5f ) );
-	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PLVector3( 0.0f, 0.0f, 1.0f ), direction ) ), 0.5f ) );
+	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PL_VECTOR3( 0.0f, 0.0f, 1.0f ) ) ), 0.5f ) );
+	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PL_VECTOR3( 0.0f, 0.0f, 1.0f ), direction ) ), 0.5f ) );
 
 	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
 	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );

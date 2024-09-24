@@ -227,10 +227,10 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
 {
 	unsigned int vertices[] = {
-	        PlgAddMeshVertex( mesh, &PLVector3( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( x, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( x + w, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( x + w, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
 	};
 
 	PlgAddMeshTriangle( mesh, vertices[ 0 ], vertices[ 1 ], vertices[ 2 ] );
@@ -246,10 +246,10 @@ void guiDrawQuad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GU
 	PLColour bColour = PlColourF32ToU8( colour );
 
 	unsigned int vertices[] = {
-	        PlgAddMeshVertex( mesh, &PLVector3( tl.x, tl.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( tr.x, tr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( ll.x, ll.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &PLVector3( lr.x, lr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( tl.x, tl.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( tr.x, tr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( ll.x, ll.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &PL_VECTOR3( lr.x, lr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
 	};
 
 	PlgAddMeshTriangle( mesh, vertices[ 0 ], vertices[ 1 ], vertices[ 2 ] );

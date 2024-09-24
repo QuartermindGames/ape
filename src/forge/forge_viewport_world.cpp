@@ -39,7 +39,7 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 			return TRUE;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
-		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
+		//case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 	}
@@ -67,7 +67,7 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
-		case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
+		//case APE_EDITOR_GEOMETRY_MODE_EDGE: break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 	}

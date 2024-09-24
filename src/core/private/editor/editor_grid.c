@@ -28,7 +28,7 @@ void ape_grid_setup_( ApeEditorGrid *self )
 	self->visible = true;
 	self->scale   = DEFAULT_GRID_SCALE;
 
-	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( 90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
+	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( -90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
 	self->transform        = PlMultiplyMatrix4( PlMatrix4Identity(), &gridRotation );
 
 	self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, 0, 0 );
@@ -299,6 +299,21 @@ void ape_grid_draw_()
 	PlLoadMatrix( &instance->grid.transform );
 
 	PlgDrawGrid( -APE_EDITOR_GRID_MAX_SIZE / 2, -APE_EDITOR_GRID_MAX_SIZE / 2, APE_EDITOR_GRID_MAX_SIZE, APE_EDITOR_GRID_MAX_SIZE, instance->grid.scale / 2, &( PLColour ){ 0, 0, 255, 255 } );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+	static constexpr float AXIS_SCALE = 8.0f;
+	static const PLVector3 axis[]     = {
+            {0.0f,       0.0f,       0.0f      },
+            {AXIS_SCALE, 0.0f,       0.0f      },
+            {0.0f,       0.0f,       0.0f      },
+            {0.0f,       AXIS_SCALE, 0.0f      },
+            {0.0f,       0.0f,       0.0f      },
+            {0.0f,       0.0f,       AXIS_SCALE},
+    };
+	PlgDrawLines( axis, PL_ARRAY_ELEMENTS( axis ), PL_COLOUR_RED, 1.0f );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 
 	PlPopMatrix();
 }

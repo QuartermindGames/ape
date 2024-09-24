@@ -32,11 +32,11 @@ typedef struct ApeMaterial
 	ApeMemoryReference mem;
 } ApeMaterial;
 
-static ApeMaterial *defaultMaterials[ SS_ARL_MAX_DEFAULT_MATERIALS ];
+static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
 
-ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial )
+ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial )
 {
-	assert( defaultMaterial != SS_ARL_MAX_DEFAULT_MATERIALS );
+	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
 	return defaultMaterials[ defaultMaterial ];
 }
 
@@ -85,14 +85,14 @@ void ape_initialize_materials_( void )
 	previewFallbackTexture  = ape_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	// cache default materials we need
-	static const char *defaultMaterialPaths[ SS_ARL_MAX_DEFAULT_MATERIALS ] =
+	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
 	        {
-	                "materials/engine/fallback.mat.n",
-	                "materials/engine/vertex.mat.n",
-	                "materials/engine/shadow.mat.n",
-	                "materials/engine/depth.mat.n",
+	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
+	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
+	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
+	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default_unlit.mat.n",
 	        };
-	for ( uint i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
+	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
@@ -839,7 +839,7 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 		{
 			int w, h;
 			ape_get_2d_viewport_size_( &w, &h );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PLVector2( ( float ) w, ( float ) h ), false );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PL_VECTOR2( ( float ) w, ( float ) h ), false );
 			break;
 		}
 
@@ -970,7 +970,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ] : NULL;
+	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : NULL;
 
 	AcmBranch *root = acm_load_file( path, "material" );
 	if ( root == NULL )
@@ -1001,7 +1001,7 @@ void ape_material_release( ApeMaterial *material )
 	}
 
 	// don't flush default materials...
-	for ( uint i = 0; i < SS_ARL_MAX_DEFAULT_MATERIALS; ++i )
+	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		if ( material != defaultMaterials[ i ] )
 		{
@@ -1039,7 +1039,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		}
 		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 		{
-			material = defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_VERTEX ];
+			material = defaultMaterials[ APE_MATERIAL_DEFAULT_VERTEX ];
 		}
 	}
 
@@ -1048,7 +1048,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	assert( material->isCached );
 	if ( !material->isCached )
 	{
-		material = defaultMaterials[ SS_ARL_MATERIAL_DEFAULT_FALLBACK ];
+		material = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 	}
 
 	if ( ape_rendererState_.overrideBlendMode )

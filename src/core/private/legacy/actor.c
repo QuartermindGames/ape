@@ -59,8 +59,8 @@ Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree )
 	}
 
 	/* give everything a set of basic bounds */
-	actor->collisionVolume.maxs = PLVector3( 16.0f, 16.0f, 16.0f );
-	actor->collisionVolume.mins = PLVector3( -16.0f, -16.0f, -16.0f );
+	actor->collisionVolume.maxs = PL_VECTOR3( 16.0f, 16.0f, 16.0f );
+	actor->collisionVolume.mins = PL_VECTOR3( -16.0f, -16.0f, -16.0f );
 	actor->visibilityVolume = actor->collisionVolume;
 
 	if ( actor->setup.Spawn != NULL )

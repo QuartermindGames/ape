@@ -16,8 +16,6 @@
 #define APE_WORLD_NODE_CAMERA_MAGIC PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' )
 #define APE_WORLD_NODE_ENTITY_MAGIC PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' )
 
-void ape_brush_node_draw_( void *data, const PLMatrix4 *transform );
-
 void ape_world_destroy_( void *data );
 void ape_room_destroy_( void *data );
 void ape_brush_destroy_( void *data );
@@ -41,7 +39,6 @@ static const ApeWorldNodeClass nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_BRUSH] = {
                                       .identifier      = "brush",
                                       .magic           = APE_WORLD_NODE_BRUSH_MAGIC,
-                                      .drawFunction    = ape_brush_node_draw_,
                                       .destroyFunction = ape_brush_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_LIGHT] = {

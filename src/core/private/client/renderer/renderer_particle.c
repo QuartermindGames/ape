@@ -206,8 +206,8 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		float endScale = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
-		particle->bounds.maxs = PLVector3( 2.0f, 2.0f, 2.0f );
-		particle->bounds.mins = PLVector3( -2.0f, -2.0f, -2.0f );
+		particle->bounds.maxs = PL_VECTOR3( 2.0f, 2.0f, 2.0f );
+		particle->bounds.mins = PL_VECTOR3( -2.0f, -2.0f, -2.0f );
 
 		particle->node = PlInsertLinkedListNode( emitter->particles, particle );
 
@@ -233,7 +233,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		++i;
 	}
 
-	emitter->bounds.absOrigin = PLVector3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
+	emitter->bounds.absOrigin = PL_VECTOR3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
 	emitter->bounds.origin = emitter->transform.translation;
 
 	emitter->numTicks++;
@@ -268,8 +268,8 @@ void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const 
 
 		PLColour colour = PlColourF32ToU8( &particle->colour );
 
-		unsigned int a = PlgAddMeshVertex( emitter->mesh, &PLVector3( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &PLVector2( 0.0f, 0.0f ) );
-		unsigned int b = PlgAddMeshVertex( emitter->mesh, &PLVector3( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &PLVector2( 0.0f, 1.0f ) );
+		unsigned int a = PlgAddMeshVertex( emitter->mesh, &PL_VECTOR3( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &PL_VECTOR2( 0.0f, 0.0f ) );
+		unsigned int b = PlgAddMeshVertex( emitter->mesh, &PL_VECTOR3( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &PL_VECTOR2( 0.0f, 1.0f ) );
 		//unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
 		//unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
 

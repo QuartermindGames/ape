@@ -44,7 +44,6 @@ typedef enum ApeEditorGeometryMode
 {
 	APE_EDITOR_GEOMETRY_MODE_PLOT,     // brush creation mode
 	APE_EDITOR_GEOMETRY_MODE_FACE,     // face selection mode
-	APE_EDITOR_GEOMETRY_MODE_EDGE,     // edge selection mode
 	APE_EDITOR_GEOMETRY_MODE_VERTEX,   // vertex selection mode
 	APE_EDITOR_GEOMETRY_MODE_TRANSFORM,// object transform mode
 

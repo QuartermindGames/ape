@@ -7,8 +7,8 @@
 #include "world/world.h"
 #include "client/renderer/material/material.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
+static constexpr uint BRUSH_MAX_FACE_TRIANGLES = ( APE_BRUSH_MAX_FACE_VERTICES - 3 );
+static constexpr uint BRUSH_MAX_FACE_INDICES   = BRUSH_MAX_FACE_TRIANGLES * 3;
 
 #if 0
 //TODO: eventually we should do away with this
@@ -160,6 +160,40 @@ void ape_brush_destroy_( void *data )
 	PL_DELETE( self );
 }
 
+static uint convert_brush_polygon_to_triangles( const ApeBrushFace *face, uint *indices )
+{
+	assert( face->numVertices >= 3 );
+
+	uint  numTriangles = 0;
+	uint *index        = indices;
+
+#if 0// concave polygon
+
+	/**
+	 * Here's an algorithm I think could work - two passes...
+	 * 	1. Follow edge loop as we do for convex, but if there is an overlap, skip and mark
+	 * 	2. Now continue on from those we skipped in a similar way to the above, with the first skipped being the start, if there is another overlap then repeat for those
+	 *
+	 * Math isn't my strong point, so it's probably dumb.
+	 */
+
+#else// convex polygon
+
+	for ( uint i = 1; i + 1 < face->numVertices; ++i )
+	{
+		index[ 0 ] = ( face->edgeLoop[ 0 ] - face->vertices );
+		index[ 1 ] = ( face->edgeLoop[ i ] - face->vertices );
+		index[ 2 ] = ( face->edgeLoop[ i + 1 ] - face->vertices );
+		index += 3;
+
+		numTriangles++;
+	}
+
+#endif
+
+	return numTriangles;
+}
+
 static void compute_brush_face_normal( ApeBrushFace *face )
 {
 	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
@@ -173,13 +207,62 @@ static void compute_brush_face_normal( ApeBrushFace *face )
 		const PLVector3 *next    = face->vertices[ j ].position;
 		const PLVector3 *prev    = face->vertices[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ].position;
 
-		PLVector3 edge1 = PLVector3( next->x - current->x, next->y - current->y, next->z - current->z );
-		PLVector3 edge2 = PLVector3( prev->x - current->x, prev->y - current->y, prev->z - current->z );
+		PLVector3 edge1 = PL_VECTOR3( next->x - current->x, next->y - current->y, next->z - current->z );
+		PLVector3 edge2 = PL_VECTOR3( prev->x - current->x, prev->y - current->y, prev->z - current->z );
 
 		PLVector3 n  = PlVector3CrossProduct( edge1, edge2 );
 		face->normal = PlAddVector3( face->normal, n );
 	}
 	face->normal = PlNormalizeVector3( face->normal );
+}
+
+static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
+{
+	for ( unsigned int i = 0, x, y; i < face->numVertices; ++i )
+	{
+		if ( ( fabsf( face->normal.x ) > fabsf( face->normal.y ) ) &&
+		     ( fabsf( face->normal.x ) > fabsf( face->normal.z ) ) )
+		{
+			x = ( face->normal.x > 0.0 ) ? 1 : 2;
+			y = ( face->normal.x > 0.0 ) ? 2 : 1;
+		}
+		else if ( ( fabsf( face->normal.z ) > fabsf( face->normal.x ) ) &&
+		          ( fabsf( face->normal.z ) > fabsf( face->normal.y ) ) )
+		{
+			x = ( face->normal.z > 0.0 ) ? 0 : 1;
+			y = ( face->normal.z > 0.0 ) ? 1 : 0;
+		}
+		else
+		{
+			x = ( face->normal.y > 0.0 ) ? 2 : 0;
+			y = ( face->normal.y > 0.0 ) ? 0 : 2;
+		}
+
+		face->edgeLoop[ i ]->textureCoords.x = ( PL_VECTOR3_I( *face->edgeLoop[ i ]->position, x ) + face->materialOffset.x ) * face->materialScale.x;
+		face->edgeLoop[ i ]->textureCoords.y = ( PL_VECTOR3_I( *face->edgeLoop[ i ]->position, y ) + face->materialOffset.y ) * face->materialScale.y;
+	}
+}
+
+static void compute_brush_bounds( ApeBrush *self )
+{
+	assert( self->numVertices > 0 );
+
+	self->base.bounds.mins = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	self->base.bounds.maxs = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	for ( uint i = 0; i < self->numVertices; ++i )
+	{
+		for ( uint j = 0; j < 3; ++j )
+		{
+			if ( PL_VECTOR3_I( self->vertices[ i ], j ) > PL_VECTOR3_I( self->base.bounds.maxs, j ) )
+			{
+				PL_VECTOR3_I( self->base.bounds.maxs, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
+			}
+			if ( PL_VECTOR3_I( self->vertices[ i ], j ) < PL_VECTOR3_I( self->base.bounds.mins, j ) )
+			{
+				PL_VECTOR3_I( self->base.bounds.mins, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
+			}
+		}
+	}
 }
 
 bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale )
@@ -189,6 +272,14 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	{
 		ape_warning_( "Invalid number of vertices for building brush from polygon (%u < 3)!\n", numVertices );
 		return false;
+	}
+
+	// use this to determine the order, so we can reverse for edge loop if needed
+	float signedArea = 0.0f;
+	for ( uint i = 0; i < numVertices; ++i )
+	{
+		uint next = ( i + 1 ) % numVertices;
+		signedArea += ( vertices[ i ].x * vertices[ next ].y - vertices[ next ].x * vertices[ i ].y );
 	}
 
 	self->numVertices = numVertices * 2;
@@ -202,83 +293,127 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	self->faces[ 0 ].numVertices = self->faces[ 1 ].numVertices = numVertices;
 	for ( uint i = 0; i < numVertices; ++i )
 	{
-		// bottom
+		// sort out the top and bottom
 		self->faces[ 0 ].vertices[ i ].position = &self->vertices[ i ];
-		self->faces[ 0 ].edgeLoop[ i ]          = &self->faces[ 0 ].vertices[ i ];
-		// top (edge loop reversed)
-		self->faces[ 1 ].vertices[ i ].position          = &self->vertices[ i + numVertices ];
-		self->faces[ 1 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 1 ].vertices[ i ];
+		self->faces[ 1 ].vertices[ i ].position = &self->vertices[ i + numVertices ];
+		if ( signedArea < 0.0f )
+		{
+			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
+			self->faces[ 1 ].edgeLoop[ i ]                   = &self->faces[ 1 ].vertices[ i ];
+		}
+		else
+		{
+			self->faces[ 0 ].edgeLoop[ i ]                   = &self->faces[ 0 ].vertices[ i ];
+			self->faces[ 1 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 1 ].vertices[ i ];
+		}
+
 		// extrude the vertices for the top
-		self->vertices[ i + numVertices ] = PlSubtractVector3( self->vertices[ i ], PlScaleVector3F( dir, scale ) );
-	}
+		self->vertices[ i + numVertices ] = PlAddVector3( self->vertices[ i ], PlScaleVector3F( dir, scale ) );
 
-	compute_brush_face_normal( &self->faces[ 0 ] );
-	compute_brush_face_normal( &self->faces[ 1 ] );
+		// set up the faces for the edges
 
-	// set up the faces for the edges
-	for ( uint i = 0; i < numVertices; ++i )
-	{
 		uint next = ( i + 1 ) % numVertices;
 
-		PLVector3 *a = &self->vertices[ i ];
-		PLVector3 *b = &self->vertices[ next ];
-		PLVector3 *c = &self->vertices[ i + numVertices ];
-		PLVector3 *d = &self->vertices[ next + numVertices ];
+		PLVector3 *quad[ 4 ];
+		quad[ 0 ] = &self->vertices[ i ];
+		quad[ 1 ] = &self->vertices[ next ];
+		quad[ 2 ] = &self->vertices[ i + numVertices ];
+		quad[ 3 ] = &self->vertices[ next + numVertices ];
 
 		self->faces[ i + 2 ].numVertices            = 4;
-		self->faces[ i + 2 ].vertices[ 0 ].position = a;
-		self->faces[ i + 2 ].vertices[ 1 ].position = b;
-		self->faces[ i + 2 ].vertices[ 2 ].position = d;
-		self->faces[ i + 2 ].vertices[ 3 ].position = c;
+		self->faces[ i + 2 ].vertices[ 0 ].position = quad[ 0 ];
+		self->faces[ i + 2 ].vertices[ 1 ].position = quad[ 1 ];
+		self->faces[ i + 2 ].vertices[ 2 ].position = quad[ 3 ];
+		self->faces[ i + 2 ].vertices[ 3 ].position = quad[ 2 ];
 
-		self->faces[ i + 2 ].edgeLoop[ 0 ] = &self->faces[ i + 2 ].vertices[ 0 ];
-		self->faces[ i + 2 ].edgeLoop[ 1 ] = &self->faces[ i + 2 ].vertices[ 1 ];
-		self->faces[ i + 2 ].edgeLoop[ 2 ] = &self->faces[ i + 2 ].vertices[ 2 ];
-		self->faces[ i + 2 ].edgeLoop[ 3 ] = &self->faces[ i + 2 ].vertices[ 3 ];
+		for ( uint j = 0; j < 4; ++j )
+		{
+			self->faces[ i + 2 ].edgeLoop[ j ] = ( signedArea < 0.0f ) ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
+		}
 
-		compute_brush_face_normal( &self->faces[ i + 2 ] );
+		self->faces[ i + 2 ].materialScale = PL_VECTOR3( 1.0f, 1.0f, 1.0f );
 	}
 
-#if 1
 	for ( uint i = 0; i < self->numFaces; ++i )
 	{
-		self->faces[ i ].colour = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
-		                                        PlGenerateRandomFloat( 1.0f ),
-		                                        PlGenerateRandomFloat( 1.0f ), 255 );
+		self->faces[ i ].colour   = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
+		                                          PlGenerateRandomFloat( 1.0f ),
+		                                          PlGenerateRandomFloat( 1.0f ), 255 );
+		self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
+
+		compute_brush_face_normal( &self->faces[ i ] );
+		compute_brush_face_texture_coordinates( &self->faces[ i ] );
 	}
-#endif
+
+	compute_brush_bounds( self );
 
 	return true;
 }
 
-void ape_brush_node_draw_( void *data, const PLMatrix4 *transform )
+void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, const PLMatrix4 *transform )
 {
-	ApeBrush *self = ( ApeBrush * ) data;
-	assert( self != nullptr );
+	ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
 
 	//FIXME: temporary code!!! this should use the display list crap...
 	for ( uint i = 0; i < self->numFaces; ++i )
 	{
-		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		if ( self->faces[ i ].material == nullptr )
+		{
+			continue;
+		}
+
+#if 0// we can use this when concave polys are supported
+
+		uint indices[ BRUSH_MAX_FACE_INDICES ] = {};
+
+		uint numTriangles = convert_brush_polygon_to_triangles( &self->faces[ i ], indices );
+		assert( numTriangles > 0 );
+
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
 		for ( uint j = 0; j < self->faces[ i ].numVertices; ++j )
 		{
-			PlgImmPushVertex( self->faces[ i ].edgeLoop[ j ]->position->x,
-			                  self->faces[ i ].edgeLoop[ j ]->position->y,
-			                  self->faces[ i ].edgeLoop[ j ]->position->z );
+			const ApeBrushFaceVertex *vertex = &self->faces[ i ].vertices[ j ];
+			PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+			PlgImmNormal( self->faces[ i ].normal.x, self->faces[ i ].normal.y, self->faces[ i ].normal.z );
+			PlgImmTextureCoord( vertex->textureCoords.x, vertex->textureCoords.y );
 			PlgImmColour( PlFloatToByte( self->faces[ i ].colour.r ),
 			              PlFloatToByte( self->faces[ i ].colour.g ),
 			              PlFloatToByte( self->faces[ i ].colour.b ), 255 );
 		}
 
-		ApeMaterial *material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_VERTEX );
-		assert( material != nullptr );
-		ape_material_draw( material, mesh, nullptr );
+		for ( uint j = 0; j < ( numTriangles * 3 ); j += 3 )
+		{
+			PlgImmPushTriangle( indices[ j ], indices[ j + 1 ], indices[ j + 2 ] );
+		}
+
+#else// but alas, for now...
+
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		for ( uint j = 0; j < self->faces[ i ].numVertices; ++j )
+		{
+			const ApeBrushFaceVertex *vertex = self->faces[ i ].edgeLoop[ j ];
+			PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+			PlgImmNormal( self->faces[ i ].normal.x, self->faces[ i ].normal.y, self->faces[ i ].normal.z );
+			PlgImmTextureCoord( vertex->textureCoords.x, vertex->textureCoords.y );
+			PlgImmColour( PlFloatToByte( self->faces[ i ].colour.r ),
+			              PlFloatToByte( self->faces[ i ].colour.g ),
+			              PlFloatToByte( self->faces[ i ].colour.b ), 255 );
+		}
+
+#endif
+
+		ape_material_draw( self->faces[ i ].material, mesh, nullptr );
 	}
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, self->base.children, i )
 	{
-		ape_brush_node_draw_( child, nullptr );
+		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		ape_brush_node_draw_( ( ApeBrush * ) child, APE_CAMERA_DRAW_MODE_INVALID, nullptr );
 	}
 }
 

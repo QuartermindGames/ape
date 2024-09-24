@@ -17,13 +17,13 @@ typedef enum ApeCacheGroup
 
 PL_EXTERN_C
 
-typedef struct ApeCamera ApeCamera;
-typedef struct ApeViewport ApeViewport;
-typedef struct ApeLight ApeLight;
+typedef struct ApeCamera       ApeCamera;
+typedef struct ApeViewport     ApeViewport;
+typedef struct ApeLight        ApeLight;
 typedef struct ApeRenderTarget ApeRenderTarget;
-typedef struct ApeTexture ApeTexture;
-typedef struct ApeMaterial ApeMaterial;
-typedef struct ApeWorld ApeWorld;
+typedef struct ApeTexture      ApeTexture;
+typedef struct ApeMaterial     ApeMaterial;
+typedef struct ApeWorld        ApeWorld;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Viewport API
@@ -39,17 +39,17 @@ typedef struct ApeViewport
 
 	float zoom;// used for the editor / 2D views
 
-	ApeCamera *camera;
+	ApeCamera       *camera;
 	ApeRenderTarget *renderTarget;
 
 	struct
 	{
-		double frameTime, oldTime;
+		double       frameTime, oldTime;
 		unsigned int frameIndex;
 
 		unsigned int lastFramerate;
 		unsigned int lastFramerateUpdate;
-		double frameReadings[ APE_MAX_FPS_READINGS ];
+		double       frameReadings[ APE_MAX_FPS_READINGS ];
 
 		unsigned int numBatches;
 		unsigned int numTriangles;
@@ -63,18 +63,18 @@ typedef struct ApeViewport
 ApeViewport *ape_get_viewport_by_slot( unsigned int slot );
 
 ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle );
-void ape_viewport_destroy( ApeViewport *self );
+void         ape_viewport_destroy( ApeViewport *self );
 
-void ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera );
+void       ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera );
 ApeCamera *ape_viewport_get_camera( ApeViewport *viewport );
 
 void ape_viewport_set_size( ApeViewport *self, int width, int height );
 void ape_viewport_get_size( const ApeViewport *self, int *width, int *height );
 
-unsigned int ape_viewport_get_framerate( ApeViewport *self );
+unsigned int     ape_viewport_get_framerate( ApeViewport *self );
 ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self );
 
-void ape_viewport_make_active( ApeViewport *self );
+void         ape_viewport_make_active( ApeViewport *self );
 ApeViewport *ape_viewport_get_active( void );
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -86,10 +86,10 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport );
 // Render Target API
 
 ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter );
-void ape_render_target_release( ApeRenderTarget *renderTarget );
-void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
-void ape_render_target_get_size( const ApeRenderTarget *renderTarget, unsigned int *width, unsigned int *height );
-PLGTexture *ape_render_target_get_texture( ApeRenderTarget *renderTarget );
+void             ape_render_target_release( ApeRenderTarget *renderTarget );
+void             ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
+void             ape_render_target_get_size( const ApeRenderTarget *renderTarget, unsigned int *width, unsigned int *height );
+PLGTexture      *ape_render_target_get_texture( ApeRenderTarget *renderTarget );
 
 /**
  * If the provided render target is null, this will clear whatever is currently set back to the default.
@@ -126,17 +126,17 @@ ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderP
 
 /**********************************************************/
 
-typedef enum SSArlDefaultMaterial
+typedef enum ApeDefaultMaterial
 {
-	SS_ARL_MATERIAL_DEFAULT_FALLBACK,
-	SS_ARL_MATERIAL_DEFAULT_VERTEX,
-	SS_ARL_MATERIAL_DEFAULT_SHADOW,
-	SS_ARL_MATERIAL_DEFAULT_DEPTH,
+	APE_MATERIAL_DEFAULT_FALLBACK,// fallback for missing materials
+	APE_MATERIAL_DEFAULT_VERTEX,  // basic vertex, no texture
+	APE_MATERIAL_DEFAULT_SHADOW,  // material used per shadow volumes
+	APE_MATERIAL_DEFAULT_EDITOR,   // default material to use per new brushes
 
-	SS_ARL_MAX_DEFAULT_MATERIALS
-} SSArlDefaultMaterial;
+	APE_MAX_DEFAULT_MATERIALS
+} ApeDefaultMaterial;
 
-ApeMaterial *ss_arl_get_default_material( SSArlDefaultMaterial defaultMaterial );
+ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial );
 
 /**
  * Returns the original path the material was loaded from.
@@ -184,7 +184,7 @@ unsigned int ape_material_get_flags( const ApeMaterial *self );
 typedef struct ApeBitmapFont ApeBitmapFont;
 
 ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h, int cw, int ch, unsigned int start, unsigned int end );
-void ss_arl_bitmap_font_release( ApeBitmapFont *font );
+void           ss_arl_bitmap_font_release( ApeBitmapFont *font );
 
 ApeBitmapFont *ape_get_default_small_bitmap_font( void );
 

@@ -68,9 +68,9 @@ static void calculate_face_normal( IdBrushFace *face )
 	PLVector3 x, y, z;
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
-		PlVectorIndex( x, i ) = PlVectorIndex( face->x, i ) - PlVectorIndex( face->y, i );
-		PlVectorIndex( y, i ) = PlVectorIndex( face->z, i ) - PlVectorIndex( face->y, i );
-		PlVectorIndex( z, i ) = PlVectorIndex( face->y, i );
+		PL_VECTOR_I( x, i ) = PL_VECTOR_I( face->x, i ) - PL_VECTOR_I( face->y, i );
+		PL_VECTOR_I( y, i ) = PL_VECTOR_I( face->z, i ) - PL_VECTOR_I( face->y, i );
+		PL_VECTOR_I( z, i ) = PL_VECTOR_I( face->y, i );
 	}
 
 	face->normal = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
@@ -285,9 +285,9 @@ static bool get_intersection( const IdBrushFace *faceA, const IdBrushFace *faceB
 
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
-		PlVectorIndex( p, i ) = -PlVectorIndex( faceB->x, i ) * PlVectorIndex( c1, i ) -
-		                        PlVectorIndex( faceB->y, i ) * PlVectorIndex( c2, i ) -
-		                        PlVectorIndex( faceB->z, i ) * PlVectorIndex( c3, i ) / denom;
+		PL_VECTOR_I( p, i ) = -PL_VECTOR_I( faceB->x, i ) * PL_VECTOR_I( c1, i ) -
+		                      PL_VECTOR_I( faceB->y, i ) * PL_VECTOR_I( c2, i ) -
+		                      PL_VECTOR_I( faceB->z, i ) * PL_VECTOR_I( c3, i ) / denom;
 	}
 
 	return true;

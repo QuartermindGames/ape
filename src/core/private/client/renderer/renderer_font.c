@@ -32,10 +32,10 @@ void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, flo
 	float tx = ( float ) cX / ( float ) font->w;
 	float ty = ( float ) cY / ( float ) font->h;
 
-	unsigned int vX = PlgAddMeshVertex( font->mesh, &PLVector3( x, y, 0 ), &pl_vecOrigin3, &colour, &PLVector2( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( font->mesh, &PLVector3( x, y + ( ( float ) font->ch * scale ), 0 ), &pl_vecOrigin3, &colour, &PLVector2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PLVector3( x + ( ( float ) font->cw * scale ), y, 0 ), &pl_vecOrigin3, &colour, &PLVector2( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( font->mesh, &PLVector3( x + ( ( float ) font->cw * scale ), y + ( ( float ) font->ch * scale ), 0 ), &pl_vecOrigin3, &colour, &PLVector2( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x, y, 0 ), &pl_vecOrigin3, &colour, &PL_VECTOR2( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x, y + ( ( float ) font->ch * scale ), 0 ), &pl_vecOrigin3, &colour, &PL_VECTOR2( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + ( ( float ) font->cw * scale ), y, 0 ), &pl_vecOrigin3, &colour, &PL_VECTOR2( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + ( ( float ) font->cw * scale ), y + ( ( float ) font->ch * scale ), 0 ), &pl_vecOrigin3, &colour, &PL_VECTOR2( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( font->mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );

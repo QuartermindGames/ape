@@ -91,7 +91,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, AcmBranch *root )
 	if ( face->material == NULL )
 	{
 		ape_warning_( "Encountered an invalid material index (%u) for world!\n", face->materialIndex );
-		face->material = ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK );
+		face->material = ape_material_get_default( APE_MATERIAL_DEFAULT_FALLBACK );
 	}
 
 	face->edgeLoop = PlCreateLinkedList();
