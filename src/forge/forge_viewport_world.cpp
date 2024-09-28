@@ -29,13 +29,7 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
 		{
-			PLVector3 pos;
-			if ( ape_grid_get_cursor_position( &instance->grid, &pos ) == nullptr )
-			{
-				return FALSE;
-			}
-
-			ape_editor_add_polygon_point( editor->get_internal() );
+			ape_editor_add_polygon_point( instance );
 			return TRUE;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE: break;

@@ -116,8 +116,9 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 		return;
 	}
 
+#if 0
 	PLVector3 pos;
-	ape_grid_get_cursor_position( &instance.grid, &pos );
+	ape_grid_get_cursor_position( &instance.grid, &pos, true );
 
 	static const PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -140,6 +141,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 		case APE_WORLD_NODE_TYPE_ENTITY: break;
 	}
 	assert( data != nullptr );
+#endif
 
 	update_tree();
 }
@@ -209,12 +211,12 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 			break;
 		case ID_GRID_UP:
 		{
-			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) ) );
+			PlTranslateMatrix( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			PlTranslateMatrix( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
+			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) ) );
 			break;
 		}
 		case ID_GRID_ALIGN:

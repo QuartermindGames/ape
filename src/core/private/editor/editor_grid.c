@@ -15,7 +15,7 @@ static constexpr uint MIN_GRID_SCALE     = 2;
 typedef struct GridSelectable
 {
 	PLColour  colour;
-	PLVector3 position;
+	PLVector2 position;
 } GridSelectable;
 static GridSelectable  gridSelectables[ APE_EDITOR_GRID_MAX_POINTS ];
 static GridSelectable *activeGridSelectable;
@@ -28,8 +28,16 @@ void ape_grid_setup_( ApeEditorGrid *self )
 	self->visible = true;
 	self->scale   = DEFAULT_GRID_SCALE;
 
+#if 0
+
 	PLMatrix4 gridRotation = PlRotateMatrix4( PL_DEG2RAD( -90.0f ), &( PLVector3 ){ 1.0f, 0.0f, 0.0f } );
 	self->transform        = PlMultiplyMatrix4( PlMatrix4Identity(), &gridRotation );
+
+#else
+
+	self->transform = PlMatrix4Identity();
+
+#endif
 
 	self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, 0, 0 );
 	if ( self->mesh == nullptr )
@@ -73,37 +81,37 @@ static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSel
 	float scale = ( GRID_SELECTABLE_SCALE * ( float ) self->scale ) / 8.0f;
 
 	uint x, y, z, w;
-	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y + scale, 0.0f );
+	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, 0.0f, selectable->position.y - scale );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	y = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y - scale, 0.0f );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x + scale, 0.0f, selectable->position.y + scale );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	z = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y + scale, 0.0f );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x - scale, 0.0f, selectable->position.y - scale );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y - scale, 0.0f );
-	PlgColour4bv( self->mesh, &selectable->colour );
-
-	PlgPushTriangle( self->mesh, x, y, z );
-	PlgPushTriangle( self->mesh, y, z, w );
-
-	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y, scale );
-	PlgColour4bv( self->mesh, &selectable->colour );
-	y = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y, scale );
-	PlgColour4bv( self->mesh, &selectable->colour );
-	z = PlgPushVertex3f( self->mesh, selectable->position.x + scale, selectable->position.y, -scale );
-	PlgColour4bv( self->mesh, &selectable->colour );
-	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, selectable->position.y, -scale );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, 0.0f, selectable->position.y + scale );
 	PlgColour4bv( self->mesh, &selectable->colour );
 
 	PlgPushTriangle( self->mesh, x, y, z );
 	PlgPushTriangle( self->mesh, y, z, w );
 
-	x = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y + scale, scale );
+	x = PlgPushVertex3f( self->mesh, selectable->position.x + scale, scale, selectable->position.y );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	y = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y - scale, scale );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x - scale, scale, selectable->position.y );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	z = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y + scale, -scale );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x + scale, -scale, selectable->position.y );
 	PlgColour4bv( self->mesh, &selectable->colour );
-	w = PlgPushVertex3f( self->mesh, selectable->position.x, selectable->position.y - scale, -scale );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x - scale, -scale, selectable->position.y );
+	PlgColour4bv( self->mesh, &selectable->colour );
+
+	PlgPushTriangle( self->mesh, x, y, z );
+	PlgPushTriangle( self->mesh, y, z, w );
+
+	x = PlgPushVertex3f( self->mesh, selectable->position.x, scale, selectable->position.y - scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	y = PlgPushVertex3f( self->mesh, selectable->position.x, scale, selectable->position.y + scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	z = PlgPushVertex3f( self->mesh, selectable->position.x, -scale, selectable->position.y - scale );
+	PlgColour4bv( self->mesh, &selectable->colour );
+	w = PlgPushVertex3f( self->mesh, selectable->position.x, -scale, selectable->position.y + scale );
 	PlgColour4bv( self->mesh, &selectable->colour );
 
 	PlgPushTriangle( self->mesh, x, y, z );
@@ -151,10 +159,6 @@ static void draw_selection_grid( ApeEditorGrid *self )
 {
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadMatrix( &self->transform );
-
 	if ( self->rebuildMesh )
 	{
 		PlgClearMesh( self->mesh );
@@ -181,19 +185,22 @@ static void draw_selection_grid( ApeEditorGrid *self )
 	PlgDrawMesh( self->mesh );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
-
-	PlPopMatrix();
 }
 
-PLVector3 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector3 *dst )
+PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst )
 {
 	if ( activeGridSelectable == nullptr )
 	{
 		return nullptr;
 	}
 
-	*dst = PlTransformVector3( &activeGridSelectable->position, &self->transform );
+	*dst = activeGridSelectable->position;
 	return dst;
+}
+
+PLVector3 ape_grid_transform_point( ApeEditorGrid *self, const PLVector2 *point )
+{
+	return PlTransformVector3( &PL_VECTOR3( point->x, 0.0f, point->y ), &self->transform );
 }
 
 void ape_grid_increase_size( void )
@@ -268,6 +275,10 @@ void ape_grid_draw_()
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadMatrix( &instance->grid.transform );
+
 	//#define DEBUG_GRID_SELECTION
 	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
@@ -283,7 +294,6 @@ void ape_grid_draw_()
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 #endif
 
-		//todo: just shove this here for now for testing...
 		draw_selection_grid( &instance->grid );
 
 		update_active_grid_selection();
@@ -294,11 +304,32 @@ void ape_grid_draw_()
 #endif
 	}
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadMatrix( &instance->grid.transform );
+	int w        = APE_EDITOR_GRID_MAX_SIZE;
+	int h        = APE_EDITOR_GRID_MAX_SIZE;
+	int x        = -APE_EDITOR_GRID_MAX_SIZE / 2;
+	int y        = -APE_EDITOR_GRID_MAX_SIZE / 2;
+	int gridSize = ( instance->grid.scale / 2 );
 
-	PlgDrawGrid( -APE_EDITOR_GRID_MAX_SIZE / 2, -APE_EDITOR_GRID_MAX_SIZE / 2, APE_EDITOR_GRID_MAX_SIZE, APE_EDITOR_GRID_MAX_SIZE, instance->grid.scale / 2, &( PLColour ){ 0, 0, 255, 255 } );
+	PLColour colour = PL_COLOURU8( 0, 0, 255, 255 );
+
+	//TODO: cache this...
+	PlgImmBegin( PLG_MESH_LINES );
+	int c = 0, r = 0;
+	for ( ; r < h + 1; r += gridSize )
+	{
+		PlgImmPushVertex( x, 0.0f, y + r );
+		PlgImmColour( colour.r, colour.g, colour.b, colour.a );
+		PlgImmPushVertex( x + w, 0.0f, r + y );
+		PlgImmColour( colour.r, colour.g, colour.b, colour.a );
+		for ( ; c < w + 1; c += gridSize )
+		{
+			PlgImmPushVertex( c + x, 0.0f, y );
+			PlgImmColour( colour.r, colour.g, colour.b, colour.a );
+			PlgImmPushVertex( c + x, 0.0f, y + h );
+			PlgImmColour( colour.r, colour.g, colour.b, colour.a );
+		}
+	}
+	PlgImmDraw();
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 

@@ -255,7 +255,7 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 		bool isSelected = ( option == get_selected_option( menu ) );
 		draw_pie_option( option, xo, yo, isSelected, dc );
 		if ( isSelected )
-			PlgDrawSimpleLine( PlMatrix4Identity(), PL_VECTOR3( x, y, 0.0f ), PL_VECTOR3( xo, yo, 0.0f ), PL_COLOUR_RED );
+			PlgDrawSimpleLine( PL_VECTOR3( x, y, 0.0f ), PL_VECTOR3( xo, yo, 0.0f ), PL_COLOUR_RED );
 
 		node = PlGetNextLinkedListNode( node );
 	}

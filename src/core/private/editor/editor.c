@@ -440,6 +440,10 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
+
 	// this is handled during simulation now via debug draw api
 	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
 
@@ -450,10 +454,13 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 		pre_render_nodes( camera, world, childWorldNode );
 		node = PlGetNextLinkedListNode( node );
 	}
+
+	PlPopMatrix();
 }
 
 static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 {
+#if 0//todo
 	ApeCamera *camera = viewport->camera;
 	assert( camera != NULL );
 
@@ -487,30 +494,24 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 		snprintf( msg, sizeof( msg ), "%f (%s)", PlVector3Length( PlSubtractVector3( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
 		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
+#endif
 }
 
-static bool validate_convex_polygon( const PLVector3 *vertices, uint numVertices );
+static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices );
 
 static void pre_render_brush( ApeEditorInstance *self )
 {
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-	for ( uint i = 0; i < self->numPolygonPoints; ++i )
-	{
-		PlgImmPushVertex( self->polygonPoints[ i ].x, self->polygonPoints[ i ].y, self->polygonPoints[ i ].z );
-		PlgImmColour( 255, 255, 0, 255 );
-	}
-
-	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, pl_vecOrigin2, PL_VECTOR2( 0.5f, 0.5f ) );
-
-	ape_material_draw( planeMaterial, mesh, nullptr );
-
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadMatrix( &self->grid.transform );
+
 	// draw pending polygon
 	// and attempt to draw it to the cursor too
-	PLVector3 cursor;
+	PLVector2 cursor;
 	if ( self->numPolygonPoints > 0 )
 	{
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
@@ -527,22 +528,32 @@ static void pre_render_brush( ApeEditorInstance *self )
 
 			for ( uint i = 0; i < self->numPolygonPoints; ++i )
 			{
-				PLVector3 end = ( i + 1 >= self->numPolygonPoints ) ? cursor : self->polygonPoints[ i + 1 ];
-				PlgDrawSimpleLine( PlMatrix4Identity(), self->polygonPoints[ i ], end, colour );
+				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
+				PlgDrawSimpleLine(
+				        PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ),
+				        PL_VECTOR3( end->x, 0.0f, end->y ),
+				        colour );
 			}
 
-			PlgDrawSimpleLine( PlMatrix4Identity(), cursor, self->polygonPoints[ 0 ], colour );
+			PlgDrawSimpleLine(
+			        PL_VECTOR3( cursor.x, 0.0f, cursor.y ),
+			        PL_VECTOR3( self->polygonPoints[ 0 ].x, 0.0f, self->polygonPoints[ 0 ].y ),
+			        colour );
 		}
 		else
 		{
 			for ( uint i = 0; i < self->numPolygonPoints; ++i )
 			{
-				PLVector3 end = ( i + 1 >= self->numPolygonPoints ) ? self->polygonPoints[ 0 ] : self->polygonPoints[ i + 1 ];
-				PlgDrawSimpleLine( PlMatrix4Identity(), self->polygonPoints[ i ], end, PL_COLOUR_WHITE );
+				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
+				PlgDrawSimpleLine(
+				        PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ),
+				        PL_VECTOR3( end->x, 0.0f, end->y ),
+				        PL_COLOUR_WHITE );
 			}
 		}
 	}
 
+	PlPopMatrix();
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
@@ -614,10 +625,8 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 	if ( editorInstance->camera != nullptr )
 	{
-		char label[ 64 ] = {};
-		S_STRCAT( label, ape_get_camera_draw_mode_label( camera->drawMode ) );
-		S_STRCAT( label, " / " );
-		S_STRCAT( label, ape_get_camera_view_mode_label( camera->mode ) );
+		char label[ 64 ];
+		snprintf( label, sizeof( label ), "%s/%s\n", ape_get_camera_view_mode_label( camera->mode ), ape_get_camera_draw_mode_label( camera->drawMode ) );
 
 		float dw, dh;
 		gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
@@ -625,13 +634,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		// check the camera has a valid room, otherwise display a warning
 		ApeRoom *room = ape_camera_get_room( editorInstance->camera );
-		if ( room != nullptr )
-		{
-			char buf[ 256 ];
-			snprintf( buf, sizeof( buf ), "Room: %s\nMode: %s\n", room->base.name, edit_mode_descriptor( editorInstance->geometryMode ) );
-			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_WHITE, buf, strlen( buf ), false );
-		}
-		else
+		if ( room == nullptr )
 		{
 			static const char *warning = "No active room for camera!\n";
 			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_CRIMSON, warning, strlen( warning ), false );
@@ -639,7 +642,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
 		{
-			PLVector3 pos;
+			PLVector2 pos;
 			if ( ape_grid_get_cursor_position( &editorInstance->grid, &pos ) != nullptr )
 			{
 				// sigh...
@@ -651,7 +654,8 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 				static constexpr float scale = 16.0f;
 
-				PLVector2 screenPos = PlConvertWorldToScreen( &pos, &viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, true );
+				PLVector3 worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
+				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, true );
 				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
 			}
 		}
@@ -749,6 +753,7 @@ ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
 // TODO: move into editor_world.c
 /////////////////////////////////////////////////////////////////////////////////////
 
+#if 0// concave supporting implementation... doesn't really work :(
 typedef struct Segment
 {
 	PLVector2 start;
@@ -775,7 +780,7 @@ static bool test_intersection( Segment s1, Segment s2 )
 	return false;
 }
 
-static bool validate_concave_polygon( const PLVector3 *vertices, uint numVertices )
+static bool validate_concave_polygon( const PLVector2 *vertices, uint numVertices )
 {
 	if ( numVertices < 4 )
 	{
@@ -804,8 +809,9 @@ static bool validate_concave_polygon( const PLVector3 *vertices, uint numVertice
 
 	return true;
 }
+#endif
 
-static bool validate_convex_polygon( const PLVector3 *vertices, uint numVertices )
+static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices )
 {
 	// this determines that the plane is convex, hopefully
 
@@ -865,14 +871,23 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
 
 	// determine the orientation of the grid
 	PLVector3 dir;
-	PlExtractMatrix4Directions( &self->grid.transform, nullptr, nullptr, &dir );
+	PlExtractMatrix4Directions( &self->grid.transform, nullptr, &dir, nullptr );
 
-	if ( !ape_brush_build_from_polygon_( brush, self->polygonPoints, self->numPolygonPoints, dir, self->grid.scale / 2.0f ) )
+	// because the grid operates in 2D space, we need to transform all the vertices into 3D space
+	PLVector3 *vertices = PL_NEW_( PLVector3, self->numPolygonPoints );
+	for ( uint i = 0; i < self->numPolygonPoints; ++i )
+	{
+		vertices[ i ] = PlTransformVector3( &PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
+	}
+
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
 	}
+
+	PL_DELETE( vertices );
 
 	self->numPolygonPoints = 0;
 
@@ -897,7 +912,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		return false;
 	}
 
-	PLVector3 cursor;
+	PLVector2 cursor;
 	if ( ape_grid_get_cursor_position( &self->grid, &cursor ) == NULL )
 	{
 		return false;
@@ -905,8 +920,8 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 
 	if ( self->numPolygonPoints > 0 )
 	{
-		const PLVector3 *start = &self->polygonPoints[ 0 ];
-		if ( PlCompareVector3( start, &cursor ) )
+		const PLVector2 *start = &self->polygonPoints[ 0 ];
+		if ( PlCompareVector2( start, &cursor ) )
 		{
 			ape_editor_brush_from_polygon( self );
 			return true;

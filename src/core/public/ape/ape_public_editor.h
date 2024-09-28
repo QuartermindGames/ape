@@ -76,7 +76,8 @@ typedef struct ApeEditorInstance
 	float forwardSpeed;
 	float turnSpeed;
 
-	PLVector3 polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
+	// polygon points are always interpreted on a 2D plane for simplicity’s sake
+	PLVector2 polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
 	uint      numPolygonPoints;
 
 	void *modeData;
@@ -92,7 +93,16 @@ ApeEditorInstance *ape_editor_get_active_instance( void );
 
 ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
 
-PLVector3 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector3 *dst );
+PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
+
+/**
+ * Transforms a 2D point into 3D space using the grid's transformation matrix.
+ *
+ * @param self 	A pointer to an ApeEditorGrid structure containing transformation information.
+ * @param point A pointer to a PLVector2 structure representing the 2D point to be transformed.
+ * @return 		A PLVector3 structure representing the transformed 3D point.
+ */
+PLVector3 ape_grid_transform_point( ApeEditorGrid *self, const PLVector2 *point );
 
 void         ape_grid_increase_size( void );
 void         ape_grid_decrease_size( void );

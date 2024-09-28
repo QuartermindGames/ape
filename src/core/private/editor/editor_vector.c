@@ -144,7 +144,7 @@ static void draw_vector_overlay( ApeEditorInstance *self )
 	{
 		PLVector3 start = PL_VECTOR3( vector->points[ i - 1 ].x, vector->points[ i - 1 ].y, 0.0f );
 		PLVector3 end   = PL_VECTOR3( vector->points[ i ].x, vector->points[ i ].y, 0.0f );
-		PlgDrawSimpleLine( PlMatrix4Identity(), start, end, PL_COLOUR_WHITE );
+		PlgDrawSimpleLine( start, end, PL_COLOUR_WHITE );
 		PlgDrawRectangle( end.x - ( CURSOR_SIZE / 2.0f ), end.y - ( CURSOR_SIZE / 2.0f ), CURSOR_SIZE, CURSOR_SIZE, PL_COLOUR_YELLOW );
 	}
 

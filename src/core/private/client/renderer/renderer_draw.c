@@ -135,9 +135,9 @@ void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 	PlRotateMatrix3f( angles.z, 0.0f, 0.0f, 1.0f );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
-	PlgDrawSimpleLine( transform, PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
+	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
 	PlPopMatrix();

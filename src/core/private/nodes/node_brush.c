@@ -275,11 +275,12 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	}
 
 	// use this to determine the order, so we can reverse for edge loop if needed
+	// todo: leave this to the caller, not here!!
 	float signedArea = 0.0f;
 	for ( uint i = 0; i < numVertices; ++i )
 	{
 		uint next = ( i + 1 ) % numVertices;
-		signedArea += ( vertices[ i ].x * vertices[ next ].y - vertices[ next ].x * vertices[ i ].y );
+		signedArea += ( vertices[ i ].x * vertices[ next ].z - vertices[ next ].x * vertices[ i ].z );
 	}
 
 	self->numVertices = numVertices * 2;
