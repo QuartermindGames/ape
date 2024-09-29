@@ -263,6 +263,8 @@ static void compute_brush_bounds( ApeBrush *self )
 			}
 		}
 	}
+
+	//self->base.bounds.origin = PlGetAabbAbsOrigin( &self->base.bounds, self->base.position );
 }
 
 bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale )

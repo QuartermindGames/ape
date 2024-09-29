@@ -245,14 +245,13 @@ long Viewport::on_chore( FXObject *, FXSelector, void * )
 			int  mx, my;
 			uint tmp;
 			getCursorPosition( mx, my, tmp );
-			setCursorPosition( originCursorPos[ 0 ], originCursorPos[ 1 ] );
 
 			int dx = originCursorPos[ 0 ] - mx;
 			int dy = originCursorPos[ 1 ] - my;
 
 			PLVector3 angles = ape_camera_get_angles( camera );
-			angles.y += ( ( float ) dx ) / 8.0f;
-			angles.x += ( ( float ) dy ) / 8.0f;
+			angles.y += ( ( float ) dx ) / ( this->width / 2.0f );
+			angles.x += ( ( float ) dy ) / ( this->height / 2.0f );
 
 			ape_camera_set_angles( camera, &angles );
 		}
@@ -271,17 +270,31 @@ long Viewport::on_chore( FXObject *, FXSelector, void * )
 long Viewport::on_zoom( FXObject *, FXSelector, void *ptr )
 {
 	auto *event = ( FXEvent * ) ptr;
-	float dir   = ( float ) event->code / 120;
+	float dir   = ( float ) event->code;
 
 	if ( viewMode_ != APE_CAMERA_MODE_PERSPECTIVE && viewMode_ != APE_CAMERA_MODE_ISOMETRIC )
 	{
-		internalViewport_->zoom += dir;
-		printf( "zoom: %f\n", internalViewport_->zoom );
+		internalViewport_->zoom += ( dir / 120.0f );
 	}
 	else
 	{
-		//TODO: check if the game is currently active
-		ape_input_handle_mouse_wheel_event( 0.0f, dir );
+		PLVector3 pos = ape_camera_get_position( camera );
+		PLVector3 ang = ape_camera_get_angles( camera );
+
+		PLVector3 forward, left;
+		PlAnglesAxes( ang, &left, nullptr, &forward );
+
+		dir /= 50.0f;
+		if ( dir )
+		{
+			pos = PlAddVector3( pos, PlScaleVector3F( forward, dir ) );
+		}
+		else
+		{
+			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, dir ) );
+		}
+
+		ape_camera_set_position( camera, &pos );
 	}
 
 	return TRUE;
@@ -361,7 +374,7 @@ long Viewport::on_right_click( FXObject *, FXSelector, void *ptr )
 	return FALSE;
 }
 
-long Viewport::on_middle_click( FXObject *, FXSelector, void * )
+long Viewport::on_middle_click( FXObject *, FXSelector selector, void * )
 {
 	if ( !hasFocus() )
 	{

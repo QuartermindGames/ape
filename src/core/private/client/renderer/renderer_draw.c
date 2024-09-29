@@ -360,7 +360,6 @@ void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour )
 void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
 {
 	PLVector3 direction = PlSubtractVector3( end, start );
-	float     length    = PlVector3Length( direction );
 	direction           = PlNormalizeVector3( direction );
 
 	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, 0.5f ) );
