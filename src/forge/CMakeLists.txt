@@ -21,8 +21,8 @@ add_library(Forge STATIC
         forge_model_editor.cpp forge_model_editor.h
         forge_model_viewport.cpp forge_model_viewport.h
 
-        editors/editor_material.cpp
-        editors/editor_world.cpp
+        forge_editor_material.cpp
+        forge_editor_world.cpp
 )
 
 add_dependencies(Forge

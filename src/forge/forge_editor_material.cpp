@@ -2,7 +2,7 @@
 // Purpose: Material editor tab
 // Author:  Mark E. Sowden
 
-#include "editor_material.h"
+#include "forge_editor_material.h"
 
 #include "forge/forge_viewport.h"
 

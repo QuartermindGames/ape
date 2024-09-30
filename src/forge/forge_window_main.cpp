@@ -4,8 +4,8 @@
 #include "forge_about_dialog.h"
 #include "forge_model_editor.h"
 
-#include "forge/editors/editor_world.h"
-#include "editors/editor_material.h"
+#include "forge_editor_world.h"
+#include "forge_editor_material.h"
 
 #include "common_project.h"
 #include "ape/ape_public_model.h"

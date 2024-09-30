@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <regex>
 
-#include "editor_world.h"
+#include "forge_editor_world.h"
 #include "forge/forge_viewport.h"
 #include "forge/forge_viewport_world.h"
 

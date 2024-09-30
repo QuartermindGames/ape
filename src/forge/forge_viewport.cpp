@@ -3,7 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include "forge_viewport.h"
-#include "forge/editors/editor_world.h"
+#include "forge_editor_world.h"
 #include "forge_window_main.h"
 
 #include <plgraphics/plg.h>
