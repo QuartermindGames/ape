@@ -8,7 +8,6 @@
 #include "common_project.h"
 #include "editor.h"
 #include "client/renderer/renderer.h"
-#include "game/game_public.h"
 #include "world/world.h"
 #include "yin/gui_public.h"
 
@@ -43,8 +42,6 @@ static void release_node_icons( void )
 		nodeIcons[ i ] = nullptr;
 	}
 }
-
-static ApeMaterial *planeMaterial;
 
 static PLVectorArray *materialsArray;// ApeMaterial
 
@@ -110,19 +107,6 @@ static void release_preview_materials( void )
 	}
 
 	PlDestroyVectorArray( materialsArray );
-}
-
-static const char *edit_mode_descriptor( ApeEditorGeometryMode mode )
-{
-	switch ( mode )
-	{
-		default: return "unknown";
-		case APE_EDITOR_GEOMETRY_MODE_PLOT: return "poly";
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX: return "vertex";
-		case APE_EDITOR_GEOMETRY_MODE_FACE: return "face";
-		//case APE_EDITOR_GEOMETRY_MODE_EDGE: return "edge";
-		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: return "transform";
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -365,8 +349,6 @@ void ape_initialize_editor_( void )
 		ape_error_( true, "Failed to create selection viewport!\n" );
 	}
 
-	planeMaterial = ape_material_cache( "materials/editor/plane.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-
 	for ( uint i = 0; i < APE_EDITOR_MAX_MODES; ++i )
 	{
 		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->initialize == nullptr )
@@ -410,9 +392,9 @@ void ape_editor_register_console_( void )
 	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "false", PL_VAR_BOOL, &showIcons, nullptr, true );
 }
 
-static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const ApeWorldNode *worldNode )
+static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const ApeWorldNode *worldNode )
 {
-	assert( world != NULL && worldNode != NULL );
+	assert( worldNode != NULL );
 
 	// don't draw the sprite for the camera...
 	const ApeWorldNode *cameraNode = ( ApeWorldNode * ) camera;
@@ -423,7 +405,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 
 	if ( showIcons )
 	{
-		const PLVector3 position = worldNode->position;
+		const PLVector3 position = worldNode->bounds.origin;
 		if ( nodeIcons[ worldNode->type ] != NULL )
 		{
 			static const float size  = 64.0f;
@@ -451,7 +433,7 @@ static void pre_render_nodes( ApeCamera *camera, const ApeWorld *world, const Ap
 	while ( node != NULL )
 	{
 		ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( node );
-		pre_render_nodes( camera, world, childWorldNode );
+		pre_render_nodes( self, camera, childWorldNode );
 		node = PlGetNextLinkedListNode( node );
 	}
 
@@ -585,8 +567,8 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 
-	const ApeWorld *world = ape_camera_get_world( camera );
-	if ( world != nullptr )
+	const ApeRoom *room = ape_camera_get_room( camera );
+	if ( room != nullptr )
 	{
 		bool isWireframe = PlgIsGraphicsStateEnabled( PLG_GFX_STATE_WIREFRAME );
 		if ( isWireframe )
@@ -594,7 +576,7 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 			PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 		}
 
-		pre_render_nodes( camera, world, &world->base );
+		pre_render_nodes( instance, camera, &room->base );
 
 		if ( isWireframe )
 		{
@@ -654,7 +636,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 				static constexpr float scale = 16.0f;
 
-				PLVector3 worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
+				PLVector3 worldPos  = ape_grid_transform_point( &editorInstance->grid, &pos );
 				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, true );
 				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
 			}
