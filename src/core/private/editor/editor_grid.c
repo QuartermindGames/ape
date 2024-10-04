@@ -73,7 +73,12 @@ void ape_grid_cleanup_( ApeEditorGrid *self )
 void ape_grid_toggle_command_( uint, char ** )
 {
 	ApeEditorInstance *state = ape_editor_get_active_instance();
-	state->grid.visible      = !state->grid.visible;
+	if ( state == nullptr )
+	{
+		return;
+	}
+
+	state->grid.visible = !state->grid.visible;
 }
 
 static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSelectable *selectable )
@@ -118,45 +123,19 @@ static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSel
 	PlgPushTriangle( self->mesh, y, z, w );
 }
 
-static void update_active_grid_selection( void )
+void ape_grid_update_selection_( ApeEditorGrid *self )
 {
-	ApeViewport    *selectionViewport = ape_editor_get_selection_viewport_();
-	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
-	if ( frameBuffer == nullptr )
-	{
-		return;
-	}
-
-	size_t    size = frameBuffer->width * frameBuffer->height * 4;
-	PLColour *buf  = PL_NEW_( PLColour, size );
-	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
-	{
-		int x, y;
-		ape_client_input_get_mouse_position( &x, &y );
-
-		// selection buffer is half of the source
-		x /= 2;
-		y /= 2;
-
-		if ( x < frameBuffer->width && y < frameBuffer->height )
-		{
-			const PLColour *pixel = &buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
-			activeGridSelectable  = PlLookupHashTableUserData( gridSelectablesTable, pixel, sizeof( PLColour ) );
-		}
-	}
-	else
-	{
-		ape_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
-	}
-
-	PL_DELETE( buf );
 }
 
 /**
  * this draws what should be selectable to the selection buffer.
  */
-static void draw_selection_grid( ApeEditorGrid *self )
+void ape_grid_draw_selection_( ApeEditorGrid *self )
 {
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadMatrix( &self->transform );
+
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	if ( self->rebuildMesh )
@@ -185,6 +164,19 @@ static void draw_selection_grid( ApeEditorGrid *self )
 	PlgDrawMesh( self->mesh );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
+
+	PlPopMatrix();
+
+	// update the active selection
+	PLColour pixel;
+	if ( ape_editor_get_pixel_under_cursor( &pixel ) != nullptr )
+	{
+		activeGridSelectable = PlLookupHashTableUserData( gridSelectablesTable, &pixel, sizeof( PLColour ) );
+	}
+	else
+	{
+		activeGridSelectable = nullptr;
+	}
 }
 
 PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst )
@@ -231,27 +223,34 @@ void ape_grid_decrease_size( void )
 	instance->grid.rebuildMesh = true;
 }
 
-uint ape_grid_get_size( void )
+uint ape_grid_get_size( ApeEditorGrid *self )
 {
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
-	{
-		return 0;
-	}
-
-	return instance->grid.scale;
+	return self->scale;
 }
 
-void ape_grid_set_visibility( bool visible )
+void ape_grid_set_visibility( ApeEditorGrid *self, bool visible )
 {
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
-	{
-		return;
-	}
+	self->visible        = visible;
+	activeGridSelectable = nullptr;
+}
 
-	instance->grid.visible = visible;
-	activeGridSelectable   = nullptr;
+void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
+{
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadIdentityMatrix();
+
+	assert( face->numVertices > 0 );
+	PlTranslateMatrix( *face->vertices[ 0 ].position );
+
+	PLVector3 up    = { 0.0f, 1.0f, 0.0f };
+	PLVector3 axis  = PlNormalizeVector3( PlVector3CrossProduct( up, face->normal ) );
+	float     angle = acosf( PlVector3DotProduct( up, face->normal ) );
+
+	PlRotateMatrix( angle, &axis );
+
+	self->transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
+	PlPopMatrix();
 }
 
 void ape_grid_draw_()
@@ -278,31 +277,6 @@ void ape_grid_draw_()
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadMatrix( &instance->grid.transform );
-
-	//#define DEBUG_GRID_SELECTION
-	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
-	{
-#if !defined( DEBUG_GRID_SELECTION )
-		ApeViewport *selectionViewport = ape_editor_get_selection_viewport_();
-
-		uint sw = viewport->width / 2;
-		uint sh = viewport->height / 2;
-		ape_viewport_set_size( selectionViewport, sw, sh );
-		ape_viewport_make_active( selectionViewport );
-		ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
-
-		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
-#endif
-
-		draw_selection_grid( &instance->grid );
-
-		update_active_grid_selection();
-
-#if !defined( DEBUG_GRID_SELECTION )
-		ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
-		ape_viewport_make_active( viewport );
-#endif
-	}
 
 	int w        = APE_EDITOR_GRID_MAX_SIZE;
 	int h        = APE_EDITOR_GRID_MAX_SIZE;

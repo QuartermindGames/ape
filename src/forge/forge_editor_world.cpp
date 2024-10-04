@@ -167,31 +167,34 @@ void forge::WorldEditor::update_tree()
 
 long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selector, void * )
 {
+	ApeEditorGeometryMode geometryMode;
 	switch ( FXSELID( selector ) )
 	{
 		default:
 			break;
 		case ID_POLY_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
+			geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 			break;
 		case ID_FACE_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_FACE;
+			geometryMode = APE_EDITOR_GEOMETRY_MODE_FACE;
 			break;
 		//case ID_EDGE_MODE:
 		//	this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_EDGE;
 		//	break;
 		case ID_VERTEX_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
+			geometryMode = APE_EDITOR_GEOMETRY_MODE_VERTEX;
 			break;
 		case ID_TRANSFORM_MODE:
-			this->instance.geometryMode = APE_EDITOR_GEOMETRY_MODE_TRANSFORM;
+			geometryMode = APE_EDITOR_GEOMETRY_MODE_TRANSFORM;
 			break;
 	}
 
 	for ( unsigned int i = 0; i < APE_EDITOR_MAX_GEOMETRY_MODES; ++i )
 	{
-		geometryModeButtons[ i ]->setState( this->instance.geometryMode == i );
+		geometryModeButtons[ i ]->setState( geometryMode == i );
 	}
+
+	ape_editor_set_geometry_mode( &this->instance, geometryMode );
 
 	return TRUE;
 }

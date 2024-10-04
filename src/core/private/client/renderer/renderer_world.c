@@ -218,33 +218,10 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 	}
 }
 
-void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, const PLMatrix4 *transform );
+void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, ApeLight *light );
 
 static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
 {
-	// new (temporary) stuff!
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, room->base.children, i )
-	{
-		// for now just dealing with brushes
-		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
-		{
-			continue;
-		}
-
-		ape_brush_node_draw_( ( ApeBrush * ) child, camera->drawMode, nullptr );
-	}
-
-	if ( PlIsVectorArrayEmpty( room->faces ) )
-	{
-		return;
-	}
-
-	if ( !PlgIsBoxInsideView( camera->internal, &room->base.bounds ) && !ape_config_.renderer.skipRoomCull )
-	{
-		return;
-	}
-
 	if ( ( !ambienceOnly && light == NULL ) /*|| ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) )*/ )
 	{
 		return;
@@ -257,19 +234,36 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 		world->ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
 	}
 
-	// old stuff!
-	build_display_lists( world, room, camera, light, alpha );
-	for ( uint i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+	//todo: all the below is old and deprecated
+	if ( !PlIsVectorArrayEmpty( room->faces ) )
 	{
-		if ( numSubMeshes[ i ] == 0 )
+		// old stuff!
+		build_display_lists( world, room, camera, light, alpha );
+		for ( uint i = 0; i < PlGetNumVectorArrayElements( world->materials ); ++i )
+		{
+			if ( numSubMeshes[ i ] == 0 )
+			{
+				continue;
+			}
+
+			ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
+			assert( material != NULL );
+
+			draw_room_submesh( room->mesh, material, i, ambienceOnly ? nullptr : light );
+		}
+	}
+
+	//todo: new (temporary) stuff!
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, room->base.children, i )
+	{
+		// for now just dealing with brushes
+		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
 		{
 			continue;
 		}
 
-		ApeMaterial *material = PlGetVectorArrayElementAt( world->materials, i );
-		assert( material != NULL );
-
-		draw_room_submesh( room->mesh, material, i, ambienceOnly ? NULL : light );
+		ape_brush_node_draw_( ( ApeBrush * ) child, camera->drawMode, light );
 	}
 
 	if ( light != NULL )
@@ -402,18 +396,6 @@ static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, Ape
 		return;
 	}
 
-	if ( !PlgIsBoxInsideView( camera->internal, &room->base.bounds ) && !ape_config_.renderer.skipRoomCull )
-	{
-		return;
-	}
-
-	uint      numDetailRooms = PlGetNumVectorArrayElements( room->detailRooms );
-	ApeRoom **detailRooms    = ( ApeRoom    **) PlGetVectorArrayData( room->detailRooms );
-	for ( uint j = 0; j < numDetailRooms; ++j )
-	{
-		draw_room_stencil_shadow_volumes( detailRooms[ j ], light );
-	}
-
 	draw_room_stencil_shadow_volumes( room, light );
 }
 
@@ -453,7 +435,11 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 
 	if ( camera->room != nullptr )
 	{
+		COM_PROFILE_START( "draw_room" );
+
 		draw_room( world, camera->room, camera, light, ambienceOnly, alpha );
+
+		COM_PROFILE_END( "draw_room" );
 	}
 	else
 	{

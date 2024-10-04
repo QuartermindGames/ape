@@ -116,6 +116,45 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 			ape_grid_increase_size();
 			return TRUE;
 		}
+
+		// for testing
+		case KEY_r:
+		{
+			if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+			{
+				break;
+			}
+
+			if ( instance->selectedFace == nullptr )
+			{
+				break;
+			}
+
+			ape_grid_align_to_face( &instance->grid, instance->selectedFace );
+			return TRUE;
+		}
+		case KEY_n:
+		{
+			ApeRoom *room = ape_camera_get_room( camera );
+			assert( room != nullptr );
+
+			PLVector3 pos;
+			if ( ape_grid_get_cursor_position( &instance->grid, ( PLVector2 * ) &pos ) == nullptr )
+			{
+				return TRUE;
+			}
+
+			pos = ape_grid_transform_point( &instance->grid, ( PLVector2 * ) &pos );
+
+			PLColourF32 colour = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
+			                                   PlGenerateRandomFloat( 1.0f ),
+			                                   PlGenerateRandomFloat( 1.0f ), 1.0f );
+
+			ape_create_light( ( ApeWorldNode * ) room, &pos,
+			                  &colour, 16.0f,
+			                  APE_LIGHT_TYPE_OMNI,
+			                  APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+		}
 	}
 
 	return Viewport::on_key( object, selector, ptr );

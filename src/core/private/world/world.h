@@ -174,6 +174,6 @@ ApeRoom *ape_world_get_first_room_( ApeWorld *self );
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale );
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea );
 
 PL_EXTERN_C_END

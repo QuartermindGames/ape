@@ -90,7 +90,7 @@ void ape_initialize_materials_( void )
 	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
 	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
 	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
-	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default_unlit.mat.n",
+	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default.mat.n",
 	        };
 	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{

@@ -172,6 +172,12 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 	self->listNode = PlInsertLinkedListNode( editorInstanceList, self );
 
+	self->selectionTable = PlCreateHashTable();
+	if ( self->selectionTable == nullptr )
+	{
+		ape_error_( true, "Failed to create selection table for instance: %s\n", PlGetError() );
+	}
+
 	return self;
 }
 
@@ -188,6 +194,9 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 
 	PlDestroyLinkedListNode( self->listNode );
 	self->listNode = nullptr;
+
+	PlDestroyHashTable( self->selectionTable );
+	self->selectionTable = nullptr;
 
 	if ( editorInstanceList != nullptr && PlIsLinkedListEmpty( editorInstanceList ) )
 	{
@@ -226,8 +235,207 @@ ApeEditorInstance *ape_editor_get_active_instance( void )
 // Selection Buffer
 /////////////////////////////////////////////////////////////////////////////////////
 
+// todo: these should be linked against the active instance
 static ApeViewport *selectionViewport;
-static PLHashTable *selectionObjectTable;
+
+void ape_grid_draw_selection_( ApeEditorGrid *self );
+
+static void add_brush_faces_to_selection_table( ApeEditorInstance *self, ApeBrush *brush )
+{
+	for ( uint i = 0; i < brush->numFaces; ++i )
+	{
+		uint64_t hash = PlGenerateHashFNV1( &brush->faces[ i ], sizeof( ApeBrushFace ) );
+
+		brush->faces[ i ].selectColour.r = ( hash >> 16 ) & 0xFF;
+		brush->faces[ i ].selectColour.g = ( hash >> 8 ) & 0xFF;
+		brush->faces[ i ].selectColour.b = hash & 0xFF;
+		brush->faces[ i ].selectColour.a = 255;
+
+		PlInsertHashTableNode( self->selectionTable, &brush->faces[ i ].selectColour, sizeof( PLColour ), &brush->faces[ i ] );
+	}
+
+	ApeWorldNode *node;
+	COM_ITERATE_LINKED_LIST( node, brush->base.children, i )
+	{
+		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		add_brush_faces_to_selection_table( self, ( ApeBrush * ) node );
+	}
+}
+
+static void rebuild_selection_object_table( ApeEditorInstance *self )
+{
+	self->selectedObject = nullptr;
+	PlClearHashTable( self->selectionTable );
+
+	ApeCamera *camera = self->camera;
+	assert( camera != nullptr );
+
+	ApeRoom *room = ape_camera_get_room( camera );
+	assert( room != nullptr );
+
+	switch ( self->geometryMode )
+	{
+		default:
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+		{
+			ApeWorldNode *node;
+			COM_ITERATE_LINKED_LIST( node, room->base.children, i )
+			{
+				if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+				{
+					continue;
+				}
+
+				add_brush_faces_to_selection_table( self, ( ApeBrush * ) node );
+			}
+			break;
+		}
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
+		{
+			ApeWorldNode *node;
+			COM_ITERATE_LINKED_LIST( node, room->base.children, i )
+			{
+			}
+			break;
+		}
+	}
+}
+
+static void render_brush_faces( ApeEditorInstance *self, ApeWorldNode *root )
+{
+	ApeWorldNode *node;
+	COM_ITERATE_LINKED_LIST( node, root->children, i )
+	{
+		render_brush_faces( self, node );
+
+		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		//todo: optimize this... :(
+		ApeBrush *brush = ( ApeBrush * ) node;
+		for ( uint i = 0; i < brush->numFaces; ++i )
+		{
+			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+			for ( uint j = 0; j < brush->faces[ i ].numVertices; ++j )
+			{
+				const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
+				PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+				PlgImmColour( brush->faces[ i ].selectColour.r, brush->faces[ i ].selectColour.g, brush->faces[ i ].selectColour.b, 255 );
+			}
+
+			ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+			assert( material != nullptr );
+
+			ape_material_draw( material, mesh, nullptr );
+		}
+	}
+}
+
+static void render_selection_buffer( ApeEditorInstance *self )
+{
+	ApeViewport *viewport = ape_viewport_get_active();
+	if ( viewport == nullptr )
+	{
+		return;
+	}
+
+	ApeCamera *camera = self->camera;
+	assert( camera != nullptr );
+
+	ApeRoom *room = ape_camera_get_room( camera );
+	assert( room != nullptr );
+
+//#define DEBUG_GRID_SELECTION
+#if !defined( DEBUG_GRID_SELECTION )
+	ApeViewport *selectionViewport = ape_editor_get_selection_viewport_();
+
+	uint sw = viewport->width / 2;
+	uint sh = viewport->height / 2;
+	ape_viewport_set_size( selectionViewport, sw, sh );
+	ape_viewport_make_active( selectionViewport );
+	ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
+
+	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
+#endif
+
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
+	{
+		ape_grid_draw_selection_( &self->grid );
+	}
+	else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		render_brush_faces( self, &room->base );
+	}
+
+#if !defined( DEBUG_GRID_SELECTION )
+	ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_viewport_make_active( viewport );
+#endif
+}
+
+PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst )
+{
+	ApeViewport    *selectionViewport = ape_editor_get_selection_viewport_();
+	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
+	if ( frameBuffer == nullptr )
+	{
+		return nullptr;
+	}
+
+	size_t    size = frameBuffer->width * frameBuffer->height * 4;
+	PLColour *buf  = PL_NEW_( PLColour, size );
+	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
+	{
+		int x, y;
+		ape_client_input_get_mouse_position( &x, &y );
+
+		// selection buffer is half of the source
+		x /= 2;
+		y /= 2;
+
+		if ( x < frameBuffer->width && y < frameBuffer->height )
+		{
+			*dst = buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
+			PL_DELETE( buf );
+			return dst;
+		}
+	}
+	else
+	{
+		ape_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
+	}
+
+	PL_DELETE( buf );
+	return nullptr;
+}
+
+void *ape_editor_get_object_under_cursor( ApeEditorInstance *self )
+{
+	PLColour pixel;
+	if ( ape_editor_get_pixel_under_cursor( &pixel ) == nullptr )
+	{
+		return nullptr;
+	}
+
+	return PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( PLColour ) );
+}
+
+ApeBrushFace *ape_editor_get_selected_brush_face( ApeEditorInstance *self )
+{
+	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return nullptr;
+	}
+
+	return self->selectedFace;
+}
 
 ApeViewport *ape_editor_get_selection_viewport_( void )
 {
@@ -337,12 +545,6 @@ void ape_initialize_editor_( void )
 		editorConfigRoot = acm_branch_push_back_object( root, "editor" );
 	}
 
-	selectionObjectTable = PlCreateHashTable();
-	if ( selectionObjectTable == NULL )
-	{
-		ape_error_( true, "Failed to create selection object hash table: %s\n", PlGetError() );
-	}
-
 	selectionViewport = ape_viewport_create( 0, 0, 640, 480, NULL );
 	if ( selectionViewport == NULL )
 	{
@@ -372,9 +574,19 @@ void ape_shutdown_editor_( void )
 		editorModeInterfaces[ i ]->shutdown();
 	}
 
-	PlDestroyHashTable( selectionObjectTable );
-
 	ape_viewport_destroy( selectionViewport );
+}
+
+void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode )
+{
+	if ( self->geometryMode == geometryMode )
+	{
+		return;
+	}
+
+	self->geometryMode = geometryMode;
+
+	rebuild_selection_object_table( self );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -389,7 +601,7 @@ void ape_editor_register_console_( void )
 	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
 
-	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "false", PL_VAR_BOOL, &showIcons, nullptr, true );
+	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, true );
 }
 
 static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const ApeWorldNode *worldNode )
@@ -405,16 +617,17 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 
 	if ( showIcons )
 	{
-		const PLVector3 position = worldNode->bounds.origin;
 		if ( nodeIcons[ worldNode->type ] != NULL )
 		{
-			static const float size  = 64.0f;
-			static const float scale = 0.1f;
+			static const float size   = 64.0f;
+			static const float scale  = 0.1f;
+			static const float origin = -( size / 2.0f );
+
 			ape_draw_sprite( nodeIcons[ worldNode->type ],
 			                 &PL_QUAD( 0.0f, 0.0f, size, size ),
 			                 &PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f ),
-			                 &PL_VECTOR3( position.x, position.y, position.z ),
-			                 &PL_VECTOR3( -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ), -( ( size / 2.0f ) * scale ) ),
+			                 &worldNode->position,
+			                 &PL_VECTOR3( origin, origin, origin ),
 			                 &PL_VECTOR3( 0.0f, camera->internal->angles.y, 0.0f ),
 			                 scale );
 		}
@@ -426,15 +639,16 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	// this is handled during simulation now via debug draw api
-	PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 255, 0, 255, 255 ) );
-
-	PLLinkedListNode *node = PlGetFirstNode( worldNode->children );
-	while ( node != NULL )
+	if ( self->currentNode == worldNode )
 	{
-		ApeWorldNode *childWorldNode = PlGetLinkedListNodeUserData( node );
-		pre_render_nodes( self, camera, childWorldNode );
-		node = PlGetNextLinkedListNode( node );
+		// this is handled during simulation now via debug draw api
+		PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 0, 255, 0, 255 ) );
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+	{
+		pre_render_nodes( self, camera, child );
 	}
 
 	PlPopMatrix();
@@ -555,6 +769,8 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 	// slow, unoptimised, jelly
 
+	render_selection_buffer( instance );
+
 	switch ( instance->geometryMode )
 	{
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
@@ -581,6 +797,41 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		if ( isWireframe )
 		{
 			PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+		}
+	}
+}
+
+void ape_editor_post_render_scene_( ApeCamera *camera )
+{
+	ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
+	if ( editorInstance == nullptr )
+	{
+		return;
+	}
+
+	if ( editorInstance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		editorInstance->selectedFace = ape_editor_get_object_under_cursor( editorInstance );
+		if ( editorInstance->selectedFace != nullptr )
+		{
+			ApeBrushFace *face = editorInstance->selectedFace;
+
+			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+			ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+			assert( material != nullptr );
+
+			PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINE_LOOP );
+			for ( uint i = 0; i < face->numVertices; ++i )
+			{
+				const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
+				PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+				PlgImmColour( 255, 255, 0, 255 );
+			}
+
+			ape_material_draw( material, mesh, nullptr );
+
+			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 		}
 	}
 }
@@ -856,17 +1107,29 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
 	PlExtractMatrix4Directions( &self->grid.transform, nullptr, &dir, nullptr );
 
 	// because the grid operates in 2D space, we need to transform all the vertices into 3D space
-	PLVector3 *vertices = PL_NEW_( PLVector3, self->numPolygonPoints );
+	// and use this time to determine the order too...so we can reverse for edge loop if needed
+	float      signedArea = 0.0f;
+	PLVector3 *vertices   = PL_NEW_( PLVector3, self->numPolygonPoints );
 	for ( uint i = 0; i < self->numPolygonPoints; ++i )
 	{
+		// determine order
+		uint next = ( i + 1 ) % self->numPolygonPoints;
+		signedArea += ( self->polygonPoints[ i ].x * self->polygonPoints[ next ].y - self->polygonPoints[ next ].x * self->polygonPoints[ i ].y );
+
+		// now transform it into 3D space
 		vertices[ i ] = PlTransformVector3( &PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
 	}
 
-	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f ) )
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f, signedArea ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
+	}
+	else
+	{
+		// make it selected
+		self->currentNode = &brush->base;
 	}
 
 	PL_DELETE( vertices );

@@ -689,6 +689,11 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_editor_pre_render_scene_( camera );
 
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	{
+		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
+
 	if ( !ape_config_.world.skipDraw )
 	{
 		ape_sky_draw_( camera );
@@ -725,6 +730,13 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	{
+		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+	}
+
+	ape_editor_post_render_scene_( camera );
+
 	COM_PROFILE_FUNCTION_END();
 }
 
@@ -742,17 +754,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_grid_draw_();
 
-	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
-	{
-		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-	}
-
 	render_scene( camera, viewport );
-
-	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
-	{
-		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-	}
 
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 

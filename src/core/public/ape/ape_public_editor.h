@@ -82,6 +82,14 @@ typedef struct ApeEditorInstance
 
 	void *modeData;
 
+	struct PLHashTable *selectionTable;
+	union
+	{
+		void         *selectedObject;
+		ApeBrushFace *selectedFace;
+	};
+	ApeWorldNode *currentNode;//todo: there is some overlap with the above...
+
 	struct PLLinkedListNode *listNode;// index in the table of instances
 	bool                     managed; // indicates the engine manages the instance
 } ApeEditorInstance;
@@ -91,7 +99,16 @@ void               ape_editor_instance_cleanup( ApeEditorInstance *self );
 void               ape_editor_set_active_instance( ApeEditorInstance *self );
 ApeEditorInstance *ape_editor_get_active_instance( void );
 
+void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
+
 ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
+
+PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst );
+void     *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Grid
+/////////////////////////////////////////////////////////////////////////////////////
 
 PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
 
@@ -104,10 +121,12 @@ PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
  */
 PLVector3 ape_grid_transform_point( ApeEditorGrid *self, const PLVector2 *point );
 
-void         ape_grid_increase_size( void );
-void         ape_grid_decrease_size( void );
-unsigned int ape_grid_get_size( void );
-void         ape_grid_set_visibility( bool visible );
+void ape_grid_increase_size( void );
+void ape_grid_decrease_size( void );
+uint ape_grid_get_size( ApeEditorGrid *self );
+void ape_grid_set_visibility( ApeEditorGrid *self, bool visible );
+
+void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush Plotting

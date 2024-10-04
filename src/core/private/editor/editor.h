@@ -28,6 +28,7 @@ ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode );
 void ape_editor_register_console_( void );
 
 void ape_editor_pre_render_scene_( ApeCamera *camera );
+void ape_editor_post_render_scene_( ApeCamera *camera );
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );
 void ape_grid_draw_();

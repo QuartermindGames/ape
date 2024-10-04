@@ -82,6 +82,8 @@ static void pause_audio_command( unsigned int argc, char **argv )
 
 void ape_audio_initialize_( void )
 {
+	return;
+
 	if ( audioInitialized )
 	{
 		return;

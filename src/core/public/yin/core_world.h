@@ -162,6 +162,7 @@ typedef struct ApeBrushFaceVertex
 {
 	PLVector3  *position;
 	PLVector2   textureCoords;
+	PLVector3   tangent, bitangent;
 	PLVector2   lightmapCoords;
 	PLVector3   normal;
 	PLColourF32 colour;
@@ -177,10 +178,13 @@ typedef struct ApeBrushFace
 
 	PLVector3   normal;
 	PLColourF32 colour;
+	PLColour    selectColour;
 
 	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
 	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];// list of vertices
 	uint                numVertices;
+
+	PLCollisionAABB bounds;
 
 	uint flags;
 

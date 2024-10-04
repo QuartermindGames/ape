@@ -430,6 +430,28 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 
 	PlPushMatrix();
 
+#if 0
+	//todo: temp
+	//if ( ape_config_.renderer.showFaceNormals )
+	{
+		ApeWorldNode *node;
+		COM_ITERATE_LINKED_LIST( node, room->base.children, i )
+		{
+			if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+			{
+				continue;
+			}
+
+			ApeBrush *brush = ( ApeBrush * ) node;
+			for ( uint j = 0; j < brush->numFaces; ++j )
+			{
+				ApeBrushFace *face = &brush->faces[ j ];
+				ape_draw_debug_arrow( face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( face->normal, 1.0f ) ), PL_COLOUR_CRIMSON );
+			}
+		}
+	}
+#endif
+
 	unsigned int   numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
