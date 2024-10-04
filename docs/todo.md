@@ -1,6 +1,5 @@
 # Todo
 
-## Future
 - Look into PSK/PSA formats for cook tool
 - Initial Lua mock-up
 - Investigate a solution for giving stencil shadows a softer appearance
@@ -11,8 +10,6 @@
 - Look into the light-bleeding issue...
 - Restrict vertices for stencil shadows based on point of intersection
   - If point doesn't cross/intersect, we should have a reasonable limit
-
-## Current
 - Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
 - We don't have spotlights...
 - Prototype 'eyes' for SS2 & SS1
@@ -21,12 +18,12 @@
 - Implement DetachShaderStage in graphics driver
 - Allow for reloading materials on command
 - World deserialiser should perform deserialisation on context of a node tree, rather than explicitly by type
-- 'current' world selection in editor
-- **(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others
+- ~~'current' world selection in editor~~
+- ~~**(Editor)** Different viewport implementations, as some logic for viewport isn't necessary for others~~
 - **(Editor)** Add texture selection frame
 - Implement a new tab type with close button, so we can easily close editors
 - **(Editor)** Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
-- **(Editor)** Look into the concept of supporting multiple grids
+- ~~**(Editor)** Look into the concept of supporting multiple grids~~
 - **(Editor)** Make the console correctly hide/show, and resize with a window
 - Recycle the parser from Dickens for ACM
 - Skybox w/ clouds
@@ -37,12 +34,6 @@
 - Pass vertex weights as attributes for vertex shader
 - Make attributes automatically derive from shader; open up API for specifying additional attributes (see vertex-desc branch per Hei)
 - When an item is removed from memory, it's not being correctly removed from the cache
-
-## In-Progress
-
-
-## Done
-
 - ~~**(Editor)** Draw bounding volumes for rooms~~
 - ~~Model import from SMD/QC etc.~~
 - ~~Test the rope physics and confirm they're working~~
