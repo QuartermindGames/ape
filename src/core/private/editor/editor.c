@@ -306,12 +306,12 @@ static void rebuild_selection_object_table( ApeEditorInstance *self )
 	}
 }
 
-static void render_brush_faces( ApeEditorInstance *self, ApeWorldNode *root )
+static void render_face_selection( ApeEditorInstance *self, ApeWorldNode *root )
 {
 	ApeWorldNode *node;
 	COM_ITERATE_LINKED_LIST( node, root->children, i )
 	{
-		render_brush_faces( self, node );
+		render_face_selection( self, node );
 
 		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
 		{
@@ -335,6 +335,15 @@ static void render_brush_faces( ApeEditorInstance *self, ApeWorldNode *root )
 
 			ape_material_draw( material, mesh, nullptr );
 		}
+	}
+}
+
+static void render_transform_selection( ApeEditorInstance *self, ApeWorldNode *root )
+{
+	ApeWorldNode *node;
+	COM_ITERATE_LINKED_LIST( node, root->children, i )
+	{
+		render_transform_selection( self, node );
 	}
 }
 
@@ -365,13 +374,20 @@ static void render_selection_buffer( ApeEditorInstance *self )
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 #endif
 
-	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
+	switch ( self->geometryMode )
 	{
-		ape_grid_draw_selection_( &self->grid );
-	}
-	else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
-	{
-		render_brush_faces( self, &room->base );
+		default:
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_PLOT:
+			ape_grid_draw_selection_( &self->grid );
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+			render_face_selection( self, &room->base );
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
+			render_transform_selection( self, &room->base );
+			break;
 	}
 
 #if !defined( DEBUG_GRID_SELECTION )
@@ -425,16 +441,6 @@ void *ape_editor_get_object_under_cursor( ApeEditorInstance *self )
 	}
 
 	return PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( PLColour ) );
-}
-
-ApeBrushFace *ape_editor_get_selected_brush_face( ApeEditorInstance *self )
-{
-	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
-	{
-		return nullptr;
-	}
-
-	return self->selectedFace;
 }
 
 ApeViewport *ape_editor_get_selection_viewport_( void )
@@ -710,9 +716,11 @@ static void pre_render_brush( ApeEditorInstance *self )
 	PLVector2 cursor;
 	if ( self->numPolygonPoints > 0 )
 	{
+		PLColour   colour                               = PL_COLOUR_WHITE;
+		PLVector3  lines[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
+		PLVector3 *line                                 = lines;
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
 		{
-			PLColour colour = PL_COLOUR_WHITE;
 			if ( self->numPolygonPoints < APE_BRUSH_MAX_FACE_VERTICES )
 			{
 				self->polygonPoints[ self->numPolygonPoints ] = cursor;
@@ -725,28 +733,44 @@ static void pre_render_brush( ApeEditorInstance *self )
 			for ( uint i = 0; i < self->numPolygonPoints; ++i )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
-				PlgDrawSimpleLine(
-				        PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ),
-				        PL_VECTOR3( end->x, 0.0f, end->y ),
-				        colour );
+
+				line->x = self->polygonPoints[ i ].x;
+				line->y = 0.0f;
+				line->z = self->polygonPoints[ i ].y;
+				line++;
+				line->x = end->x;
+				line->y = 0.0f;
+				line->z = end->y;
+				line++;
 			}
 
-			PlgDrawSimpleLine(
-			        PL_VECTOR3( cursor.x, 0.0f, cursor.y ),
-			        PL_VECTOR3( self->polygonPoints[ 0 ].x, 0.0f, self->polygonPoints[ 0 ].y ),
-			        colour );
+			line->x = cursor.x;
+			line->y = 0.0f;
+			line->z = cursor.y;
+			line++;
+			line->x = self->polygonPoints[ 0 ].x;
+			line->y = 0.0f;
+			line->z = self->polygonPoints[ 0 ].y;
+			line++;
 		}
 		else
 		{
 			for ( uint i = 0; i < self->numPolygonPoints; ++i )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
-				PlgDrawSimpleLine(
-				        PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ),
-				        PL_VECTOR3( end->x, 0.0f, end->y ),
-				        PL_COLOUR_WHITE );
+
+				line->x = self->polygonPoints[ i ].x;
+				line->y = 0.0f;
+				line->z = self->polygonPoints[ i ].y;
+				line++;
+				line->x = end->x;
+				line->y = 0.0f;
+				line->z = end->y;
+				line++;
 			}
 		}
+
+		PlgDrawLines( lines, line - lines, colour, 1.0f );
 	}
 
 	PlPopMatrix();
@@ -836,6 +860,34 @@ void ape_editor_post_render_scene_( ApeCamera *camera )
 	}
 }
 
+static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root, const ApeViewport *viewport, GuiFont *font, const PLMatrix4 *viewProj )
+{
+	ApeWorldNode *node;
+	COM_ITERATE_LINKED_LIST( node, root->children, i )
+	{
+		draw_node_text_overlay( self, node, viewport, font, viewProj );
+
+		PLVector3 origin;
+		if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			origin = node->bounds.absOrigin;
+		}
+		else
+		{
+			origin = node->position;
+		}
+
+		const char *id   = node->classType->identifier;
+		size_t      size = strlen( id );
+
+		float sw;
+		gui_font_get_string_pixel_size( font, 1.0f, id, size, &sw, nullptr );
+
+		PLVector2 screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, true );
+		gui_font_draw_string( font, screenPos.x - ( sw / 2.0f ), screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, id, size, true );
+	}
+}
+
 void ape_editor_draw_gui_( const ApeViewport *viewport )
 {
 	if ( !ape_is_editor_active() || editorInstance == nullptr )
@@ -856,6 +908,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 
+	// sigh...
+	PLMatrix4 view     = camera->internal->internal.view;
+	PLMatrix4 proj     = camera->internal->internal.proj;
+	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
+
 	if ( editorInstance->camera != nullptr )
 	{
 		char label[ 64 ];
@@ -867,7 +924,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		// check the camera has a valid room, otherwise display a warning
 		ApeRoom *room = ape_camera_get_room( editorInstance->camera );
-		if ( room == nullptr )
+		if ( room != nullptr )
+		{
+			draw_node_text_overlay( editorInstance, &room->base, viewport, font, &viewProj );
+		}
+		else
 		{
 			static const char *warning = "No active room for camera!\n";
 			gui_font_draw_string( font, 0.0f, 0.0f, &dw, &dh, 1.0f, &PL_COLOUR_CRIMSON, warning, strlen( warning ), false );
@@ -878,11 +939,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 			PLVector2 pos;
 			if ( ape_grid_get_cursor_position( &editorInstance->grid, &pos ) != nullptr )
 			{
-				// sigh...
-				PLMatrix4 view     = camera->internal->internal.view;
-				PLMatrix4 proj     = camera->internal->internal.proj;
-				PLMatrix4 viewProj = PlMultiplyMatrix4( proj, &view );
-
 				ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 				static constexpr float scale = 16.0f;

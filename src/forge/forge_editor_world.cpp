@@ -3,10 +3,8 @@
 // Author:  Mark E. Sowden
 
 #include <unordered_map>
-#include <regex>
 
 #include "forge_editor_world.h"
-#include "forge/forge_viewport.h"
 #include "forge/forge_viewport_world.h"
 
 #include "ape/ape_public_audio.h"
@@ -70,7 +68,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/grid.gif" ), nullptr, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_up.gif" ), this, ID_GRID_UP );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_down.gif" ), this, ID_GRID_DOWN );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_orient.gif" ), this, ID_GRID_ALIGN );
+	//new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_orient.gif" ), this, ID_GRID_ALIGN );
 	new FXTextField( toolbar, 4, &_gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_READONLY | TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	new FXVerticalSeparator( toolbar );
@@ -204,33 +202,28 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 	PLVector3 up;
 	PlExtractMatrix4Directions( &instance.grid.transform, nullptr, &up, nullptr );
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-	PlLoadMatrix( &instance.grid.transform );
-
+	PLMatrix4 m;
 	switch ( FXSELID( selector ) )
 	{
 		default:
 			break;
 		case ID_GRID_UP:
 		{
-			PlTranslateMatrix( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
+			up = PlScaleVector3F( up, instance.grid.scale / 2.0f );
+			printf( "UP UP: %s\n", PlPrintVector3( &up, PL_VAR_F32 ) );
+			m = PlTranslateMatrix4( up );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			PlTranslateMatrix( PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) ) );
-			break;
-		}
-		case ID_GRID_ALIGN:
-		{
-			//todo: depends on being able to select a face
+			up = PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
+			printf( "UP DOWN: %s\n", PlPrintVector3( &up, PL_VAR_F32 ) );
+			m = PlTranslateMatrix4( up );
 			break;
 		}
 	}
 
-	instance.grid.transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlPopMatrix();
+	instance.grid.transform = PlMultiplyMatrix4( &m, &instance.grid.transform );
 
 	return TRUE;
 }

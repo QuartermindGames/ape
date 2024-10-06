@@ -25,7 +25,7 @@ void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
 
 int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
-PLPath    forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
+PLPath     forge::cachedPaths[ MAX_CACHED_PATHS ] = {};
 AcmBranch *forge::editorConfig;
 
 static FXGLVisual *glVisual = nullptr;
@@ -144,7 +144,7 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 	PLPath fullPath;
 	PlSetupPath( fullPath, true, "../../%s", path );
 
-#if 1
+#if 0
 
 	PLImage *image;
 	auto     i = cachedImages.find( fullPath );
@@ -164,14 +164,14 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 		cachedImages.emplace( fullPath, image );
 	}
 
-	auto *icon = new FXIcon( app );
+	FXIcon *icon = new FXIcon( app );
 	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
 	icon->create();
 	return icon;
 
 #else
 
-	FXIconSource const iconSource( app );
+	FXIconSource iconSource( app );
 	return iconSource.loadIconFile( fullPath );
 
 #endif
@@ -199,6 +199,10 @@ void    setup_icons( FXApp &app )
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = forge::load_fx_icon( &app, "resources/brush_mode.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_EDGE ]  = forge::load_fx_icon( &app, "resources/edge_mode.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ]  = forge::load_fx_icon( &app, "resources/face_mode.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ] = forge::load_fx_icon( &app, "resources/grid_orient.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ] = forge::load_fx_icon( &app, "resources/face_portal.gif" );
 
 	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ]    = forge::load_fx_icon( &app, "resources/node.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ]   = forge::load_fx_icon( &app, "resources/world_editor.gif" );

@@ -156,6 +156,11 @@ typedef enum ApeBrushType
 	APE_MAX_WORLD_BRUSH_TYPES
 } ApeBrushType;
 
+typedef enum ApeBrushFaceFlag
+{
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0 ),
+} ApeBrushFaceFlag;
+
 #define APE_BRUSH_MAX_SUB_MESHES 8192
 
 typedef struct ApeBrushFaceVertex

@@ -6,7 +6,6 @@
 
 #include "world/world.h"
 #include "client/renderer/material/material.h"
-#include "editor/editor.h"
 #include "client/renderer/renderer.h"
 
 static constexpr uint BRUSH_MAX_FACE_TRIANGLES = ( APE_BRUSH_MAX_FACE_VERTICES - 3 );

@@ -88,7 +88,7 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos,
 	float w = ( float ) viewport->width;
 	float h = ( float ) viewport->height;
 
-	PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
+	PLMatrix4 m              = PlMultiplyMatrix4( &camera->internal->internal.proj, &camera->internal->internal.view );
 	int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
 	PLVector2 screenPos      = PlConvertWorldToScreen( worldPos, &m, viewportSize, true );
 	if ( screenPos.x > w || screenPos.y > h || screenPos.x < 0.f || screenPos.y < 0.f )

@@ -143,10 +143,13 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 {
 	PLVector3 position = { 1.0f, pitch, 0.0f };
 	PLMatrix4 matrix   = PlMatrix4Identity();
-	matrix             = PlMultiplyMatrix4( PlTranslateMatrix4( position ), &matrix );
-	matrix             = PlMultiplyMatrix4( PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ), &matrix );
-	position.x         = matrix.m[ 0 ];
-	position.z         = matrix.m[ 8 ];
+	PLMatrix4 m2;
+	m2         = PlTranslateMatrix4( position );
+	matrix     = PlMultiplyMatrix4( &m2, &matrix );
+	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } );
+	matrix     = PlMultiplyMatrix4( &m2, &matrix );
+	position.x = matrix.m[ 0 ];
+	position.z = matrix.m[ 8 ];
 	return position;
 }
 
