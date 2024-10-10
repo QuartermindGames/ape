@@ -34,10 +34,17 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
 		{
-			ape_editor_add_polygon_point( instance );
+			if ( FXSELTYPE( selector ) == SEL_LEFTBUTTONPRESS )
+			{
+				ape_editor_add_polygon_point( instance );
+			}
 			return TRUE;
 		}
-		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+		{
+			printf( "Clicking...\n" );
+			break;
+		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 	}
@@ -73,14 +80,19 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			if ( instance->selectedFace == nullptr )
+			ApeBrushFace *face = instance->selectedFace;
+			if ( face == nullptr )
 			{
 				return TRUE;
 			}
 
 			// Create a pop-up menu
 			auto popup = new FXMenuPane( this );
-			new FXMenuCommand( popup, "Toggle Face", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_TOGGLE );
+
+			FXMenuCheck *toggleFace = new FXMenuCheck( popup, "Toggle Face", this, ID_FACE_TOGGLE );
+			toggleFace->setCheck( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN );
+
+			new FXMenuCommand( popup, "Flip Face", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_TOGGLE );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
 			new FXMenuSeparator( popup );
@@ -90,7 +102,10 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 			// Show the menu
 			popup->create();
 			popup->popup( nullptr, event->root_x, event->root_y );
-			getApp()->runModalWhileShown( popup );
+			if ( getApp()->runModalWhileShown( popup ) )
+			{
+
+			}
 
 			delete popup;
 			return TRUE;
@@ -214,6 +229,17 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 	}
 
 	return Viewport::on_key( object, selector, ptr );
+}
+
+long forge::WorldViewport::on_motion( FXObject *object, FXSelector selector, void *ptr )
+{
+	Viewport::on_motion( object, selector, ptr );
+
+	auto     *event = ( FXEvent     *) ptr;
+	int const x     = event->win_x;
+	int const y     = event->win_y;
+
+	return TRUE;
 }
 
 long forge::WorldViewport::on_grid_align( FXObject *, FXSelector, void * )

@@ -48,23 +48,23 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 
 typedef struct ComProfilingGroup ComProfilingGroup;
 
-ComProfilingGroup *comGetProfilingGroup( const char *key );
+ComProfilingGroup *com_profiler_get_group( const char *key );
 
 void comStartProfiling( const char *key );
 void comEndProfiling( const char *key );
 
-const char *comGetProfilingGroupName( const ComProfilingGroup *group );
+const char *com_profiler_get_group_name( const ComProfilingGroup *group );
 
-ComProfilingGroup *comGetFirstProfilingGroup( void );
-ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group );
+ComProfilingGroup *com_profiler_get_first_group( void );
+ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group );
 
-double        comGetProfilingGroupTimeTaken( const ComProfilingGroup *group );
-double        comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group );
-const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, uint *numPoints );
+double        com_profiler_get_time_taken( const ComProfilingGroup *group );
+double        com_profiler_get_time_average( const ComProfilingGroup *group );
+const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *numPoints );
 
-uint comGetNumProfilerGroups( void );
+uint com_profiler_get_num_groups( void );
 
-void com_update_profiler_samples( void );
+void com_profiler_update_samples( void );
 
 #define COM_PROFILE_START( NAME ) comStartProfiling( ( NAME ) )
 #define COM_PROFILE_END( NAME )   comEndProfiling( ( NAME ) )
@@ -79,7 +79,7 @@ void com_update_profiler_samples( void );
 	}
 
 // Wrapper for Hei macro to take advantage of C23 features
-#define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *VAR ), LIST, ITR )
+#define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////

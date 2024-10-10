@@ -40,6 +40,21 @@ void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience )
 	self->ambientLight = ambience;
 }
 
+PLColourF32 ape_room_get_ambience( ApeRoom *self )
+{
+	return self->ambientLight;
+}
+
+void ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset )
+{
+	self->reverbPreset = reverbPreset;
+}
+
+ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self )
+{
+	return self->reverbPreset;
+}
+
 ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces )
 {
 	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( self->faces, numFaces );

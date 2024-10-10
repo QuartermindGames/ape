@@ -286,6 +286,10 @@ void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const
 	float tx = ( float ) glyph->x / ( float ) font->texture->w;
 	float ty = ( float ) glyph->y / ( float ) font->texture->h;
 
+	//HACK: round it, to stop shit looking blurry...
+	x = roundf( x );
+	y = roundf( y );
+
 	unsigned int vX = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx, ty ) );
 	unsigned int vY = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx, ty + th ) );
 	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + ( ( float ) glyph->w * scale ) + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx + tw, ty ) );

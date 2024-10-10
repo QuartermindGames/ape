@@ -27,6 +27,7 @@ namespace forge
 		long on_left_click( FXObject *, FXSelector, void * ) override;
 		long on_right_click( FXObject *, FXSelector, void * ) override;
 		long on_key( FXObject *, FXSelector, void * ) override;
+		long on_motion( FXObject *, FXSelector, void * ) override;
 
 		long on_grid_align( FXObject *, FXSelector, void * );
 		long on_face_toggle( FXObject *, FXSelector, void * );

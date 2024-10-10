@@ -29,7 +29,7 @@ static PLHashTable *profilingGroups = NULL;
  * PUBLIC
  ****************************************/
 
-ComProfilingGroup *comGetProfilingGroup( const char *key )
+ComProfilingGroup *com_profiler_get_group( const char *key )
 {
 	if ( profilingGroups == NULL )
 	{
@@ -48,7 +48,7 @@ ComProfilingGroup *comGetProfilingGroup( const char *key )
 
 static ComProfilingGroup *RegisterProfilerGroup( const char *key, const char *description )
 {
-	ComProfilingGroup *group = comGetProfilingGroup( key );
+	ComProfilingGroup *group = com_profiler_get_group( key );
 	if ( group != NULL )
 	{
 		return group;
@@ -106,9 +106,9 @@ void comEndProfiling( const char *key )
 	group->timeTaken += ( PlGetCurrentSeconds() * 1000.0 ) - group->startTime;
 }
 
-const char *comGetProfilingGroupName( const ComProfilingGroup *group ) { return group->key; }
+const char *com_profiler_get_group_name( const ComProfilingGroup *group ) { return group->key; }
 
-ComProfilingGroup *comGetFirstProfilingGroup( void )
+ComProfilingGroup *com_profiler_get_first_group( void )
 {
 	if ( profilingGroups == NULL )
 	{
@@ -119,7 +119,7 @@ ComProfilingGroup *comGetFirstProfilingGroup( void )
 	return ( ComProfilingGroup * ) PlGetHashTableNodeUserData( node );
 }
 
-ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group )
+ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group )
 {
 	if ( profilingGroups == NULL )
 	{
@@ -135,12 +135,12 @@ ComProfilingGroup *comGetNextProfilingGroup( ComProfilingGroup *group )
 	return NULL;
 }
 
-double comGetProfilingGroupTimeTaken( const ComProfilingGroup *group )
+double com_profiler_get_time_taken( const ComProfilingGroup *group )
 {
 	return group->timeTaken == -1.0 ? group->oldTimeTaken : group->timeTaken;
 }
 
-double comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group )
+double com_profiler_get_time_average( const ComProfilingGroup *group )
 {
 	double samples = 0.0;
 	for ( unsigned int i = 0; i < NUM_SAMPLES; ++i )
@@ -151,13 +151,13 @@ double comGetProfilingGroupTimeTakenAverage( const ComProfilingGroup *group )
 	return ( samples / NUM_SAMPLES );
 }
 
-const double *comGetProfilerGroupSamples( const ComProfilingGroup *group, unsigned int *numPoints )
+const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *numPoints )
 {
 	*numPoints = NUM_SAMPLES;
 	return group->results;
 }
 
-unsigned int comGetNumProfilerGroups( void )
+unsigned int com_profiler_get_num_groups( void )
 {
 	if ( profilingGroups == NULL )
 	{
@@ -167,14 +167,14 @@ unsigned int comGetNumProfilerGroups( void )
 	return PlGetNumHashTableNodes( profilingGroups );
 }
 
-void com_update_profiler_samples( void )
+void com_profiler_update_samples( void )
 {
 	if ( profilingGroups == NULL )
 	{
 		return;
 	}
 
-	ComProfilingGroup *group = comGetFirstProfilingGroup();
+	ComProfilingGroup *group = com_profiler_get_first_group();
 	while ( group != NULL )
 	{
 		// Shuffle the list along
@@ -183,8 +183,8 @@ void com_update_profiler_samples( void )
 			group->results[ i ] = group->results[ i + 1 ];
 		}
 
-		group->results[ NUM_SAMPLES - 1 ] = comGetProfilingGroupTimeTaken( group );
-		group = comGetNextProfilingGroup( group );
+		group->results[ NUM_SAMPLES - 1 ] = com_profiler_get_time_taken( group );
+		group = com_profiler_get_next_group( group );
 	}
 }
 

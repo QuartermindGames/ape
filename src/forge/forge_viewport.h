@@ -62,7 +62,7 @@ namespace forge
 
 		long on_chore( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
-		long on_motion( FXObject *, FXSelector, void * );
+		virtual long on_motion( FXObject *, FXSelector, void * );
 		virtual long on_left_click( FXObject *, FXSelector, void * );
 		virtual long on_right_click( FXObject *, FXSelector, void * );
 		long on_middle_click( FXObject *, FXSelector, void * );

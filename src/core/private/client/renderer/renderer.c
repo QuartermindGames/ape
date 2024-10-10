@@ -752,8 +752,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
-	ape_grid_draw_();
-
 	render_scene( camera, viewport );
 
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );

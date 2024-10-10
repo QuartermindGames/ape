@@ -3,6 +3,7 @@
 #pragma once
 
 #include <plcore/pl.h>
+#include <plcore/pl_math.h>
 
 #include "common.h"
 #include "common_project.h"

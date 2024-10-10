@@ -25,6 +25,7 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_MOTION, Viewport::ID_CANVAS, Viewport::on_motion ),
         FXMAPFUNC( SEL_MOUSEWHEEL, Viewport::ID_CANVAS, Viewport::on_zoom ),
         FXMAPFUNC( SEL_LEFTBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_left_click ),
+        FXMAPFUNC( SEL_LEFTBUTTONRELEASE, Viewport::ID_CANVAS, Viewport::on_left_click ),
         FXMAPFUNC( SEL_RIGHTBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_right_click ),
         FXMAPFUNC( SEL_MIDDLEBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_middle_click ),
         FXMAPFUNC( SEL_MIDDLEBUTTONRELEASE, Viewport::ID_CANVAS, Viewport::on_middle_click ),
@@ -168,7 +169,9 @@ void Viewport::draw()
 			}
 		}
 
-		camera = ape_create_camera( parent, "editor_camera", &pl_vecOrigin3, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
+		PLVector3 position = PL_VECTOR3( 0.0f, -16.0f, 0.0f );
+
+		camera = ape_create_camera( parent, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 		ape_camera_set_draw_mode( camera, drawMode_ );
 
 		// make sure the given editor knows about the camera

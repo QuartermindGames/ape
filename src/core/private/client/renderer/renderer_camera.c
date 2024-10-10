@@ -430,7 +430,7 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 
 	PlPushMatrix();
 
-#if 0
+#if 1
 	//todo: temp
 	//if ( ape_config_.renderer.showFaceNormals )
 	{

@@ -122,7 +122,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 
 		float x = sx;
 
-		ComProfilingGroup *group = comGetFirstProfilingGroup();
+		ComProfilingGroup *group = com_profiler_get_first_group();
 		while ( group != NULL )
 		{
 			if ( y + GRAPH_HEIGHT >= ( float ) viewport->height )
@@ -132,12 +132,12 @@ static void draw_debug_overlay( ApeViewport *viewport )
 			}
 
 			unsigned int  numPoints;
-			const double *graph = comGetProfilerGroupSamples( group, &numPoints );
-			const char   *name  = comGetProfilingGroupName( group );
+			const double *graph = com_profiler_get_samples( group, &numPoints );
+			const char   *name  = com_profiler_get_group_name( group );
 			ape_draw_graph( name, x, y, bw, GRAPH_HEIGHT, graph, numPoints, .0f, 1.0f );
 			y += GRAPH_HEIGHT + Y_SPACING;
 
-			group = comGetNextProfilingGroup( group );
+			group = com_profiler_get_next_group( group );
 		}
 	}
 

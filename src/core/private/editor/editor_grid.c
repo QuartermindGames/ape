@@ -247,6 +247,8 @@ void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
 	PLVector3 axis  = PlNormalizeVector3( PlVector3CrossProduct( up, face->normal ) );
 	float     angle = acosf( PlVector3DotProduct( up, face->normal ) );
 
+	ape_print_( "AXIS: %s, ANGLE: %f\n", PlPrintVector3( &axis, PL_VAR_F32 ), angle );
+
 	PlRotateMatrix( angle, &axis );
 
 	self->transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );

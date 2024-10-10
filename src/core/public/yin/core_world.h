@@ -5,6 +5,8 @@
 #include <plcore/pl.h>
 #include <plcore/pl_physics.h>
 
+#include "ape/ape_public_audio.h"
+
 PL_EXTERN_C
 
 typedef struct PLVectorArray PLVectorArray;
@@ -326,16 +328,11 @@ void ape_sky_draw_( ApeCamera *camera );
  */
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name );
 
-/**
- * @brief Sets the ambient light color of a given room.
- *
- * This function assigns the specified color to the ambient light property
- * of the given ApeRoom instance.
- *
- * @param self 		Pointer to the ApeRoom instance.
- * @param ambience 	The new ambient light color to be set.
- */
-void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience );
+void        ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience );
+PLColourF32 ape_room_get_ambience( ApeRoom *self );
+
+void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
+ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self );
 
 void ape_world_room_destroy( ApeRoom *self );
 

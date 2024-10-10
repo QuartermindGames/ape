@@ -45,9 +45,11 @@ namespace forge
 		long on_shift_grid( FXObject *, FXSelector, void * );
 		long on_room_select( FXObject *, FXSelector, void * );
 		long on_new_room( FXObject *, FXSelector, void * );
+		long on_edit_room( FXObject *, FXSelector, void * );
 
 	private:
 		ApeWorld *_world{};
+		ApeRoom  *activeRoom{};
 
 		FXDataTarget _gridHideTarget;
 		FXDataTarget _gridSizeTarget;
@@ -60,16 +62,16 @@ namespace forge
 		WorldViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 	public:
-		class RoomCreationDialog : public FXDialogBox
+		class RoomDialog : public FXDialogBox
 		{
-			FXDECLARE( RoomCreationDialog )
+			FXDECLARE( RoomDialog )
 
 		protected:
-			inline RoomCreationDialog() = default;
+			inline RoomDialog() = default;
 
 		public:
-			explicit RoomCreationDialog( FXWindow *parent );
-			~RoomCreationDialog() override = default;
+			explicit RoomDialog( FXWindow *parent, ApeRoom *room );
+			~RoomDialog() override = default;
 
 			inline FXString get_room_name() { return nameField->getText(); }
 
@@ -82,26 +84,16 @@ namespace forge
 				                     PlByteToFloat( FXALPHAVAL( color ) ) );
 			}
 
+			inline ApeAudioReverbPreset get_room_audio_preset()
+			{
+				return ( ApeAudioReverbPreset ) audioPresetField->getCurrentItem();
+			}
+
 		protected:
 		private:
 			FXTextField *nameField;
 			FXColorWell *ambienceField;
-		};
-
-		class RoomPropertiesDialog : public FXDialogBox
-		{
-			FXDECLARE( RoomPropertiesDialog )
-
-		protected:
-			inline RoomPropertiesDialog() = default;
-
-		public:
-			explicit RoomPropertiesDialog( FXWindow *parent, ApeRoom *room );
-			~RoomPropertiesDialog() override = default;
-
-		private:
-			FXTextField *nameField;
-			FXColorWell *ambienceField;
+			FXListBox   *audioPresetField;
 		};
 
 		class EntityCreationDialog : FXDialogBox

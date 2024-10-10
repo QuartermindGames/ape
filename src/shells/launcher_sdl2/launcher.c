@@ -689,7 +689,7 @@ int launcher_initialize( int argc, char **argv )
 			continue;
 		}
 
-		com_update_profiler_samples();
+		com_profiler_update_samples();
 
 		PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
 		refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;

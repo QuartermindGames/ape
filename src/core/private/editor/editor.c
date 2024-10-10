@@ -701,7 +701,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 
 static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices );
 
-static void pre_render_brush( ApeEditorInstance *self )
+static void render_plot_polygon( ApeEditorInstance *self )
 {
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
@@ -716,9 +716,9 @@ static void pre_render_brush( ApeEditorInstance *self )
 	PLVector2 cursor;
 	if ( self->numPolygonPoints > 0 )
 	{
-		PLColour   colour                               = PL_COLOUR_WHITE;
-		PLVector3  lines[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
-		PLVector3 *line                                 = lines;
+		PLColour   colour                                            = PL_COLOUR_WHITE;
+		PLVector3  points[ ( APE_BRUSH_MAX_FACE_VERTICES * 2 ) + 1 ] = {};
+		PLVector3 *point                                             = points;
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
 		{
 			if ( self->numPolygonPoints < APE_BRUSH_MAX_FACE_VERTICES )
@@ -734,43 +734,47 @@ static void pre_render_brush( ApeEditorInstance *self )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
 
-				line->x = self->polygonPoints[ i ].x;
-				line->y = 0.0f;
-				line->z = self->polygonPoints[ i ].y;
-				line++;
-				line->x = end->x;
-				line->y = 0.0f;
-				line->z = end->y;
-				line++;
+				point->x = self->polygonPoints[ i ].x;
+				point->y = 0.0f;
+				point->z = self->polygonPoints[ i ].y;
+				point++;
+				point->x = end->x;
+				point->y = 0.0f;
+				point->z = end->y;
+				point++;
 			}
 
-			line->x = cursor.x;
-			line->y = 0.0f;
-			line->z = cursor.y;
-			line++;
-			line->x = self->polygonPoints[ 0 ].x;
-			line->y = 0.0f;
-			line->z = self->polygonPoints[ 0 ].y;
-			line++;
+			if ( self->numPolygonPoints > 1 )
+			{
+				// end line, from cursor to first polygon
+				point->x = cursor.x;
+				point->y = 0.0f;
+				point->z = cursor.y;
+				point++;
+				point->x = self->polygonPoints[ 0 ].x;
+				point->y = 0.0f;
+				point->z = self->polygonPoints[ 0 ].y;
+				point++;
+			}
 		}
-		else
+		else if ( self->numPolygonPoints > 1 )
 		{
 			for ( uint i = 0; i < self->numPolygonPoints; ++i )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
 
-				line->x = self->polygonPoints[ i ].x;
-				line->y = 0.0f;
-				line->z = self->polygonPoints[ i ].y;
-				line++;
-				line->x = end->x;
-				line->y = 0.0f;
-				line->z = end->y;
-				line++;
+				point->x = self->polygonPoints[ i ].x;
+				point->y = 0.0f;
+				point->z = self->polygonPoints[ i ].y;
+				point++;
+				point->x = end->x;
+				point->y = 0.0f;
+				point->z = end->y;
+				point++;
 			}
 		}
 
-		PlgDrawLines( lines, line - lines, colour, 1.0f );
+		PlgDrawLines( points, point - points, colour, 1.0f );
 	}
 
 	PlPopMatrix();
@@ -791,21 +795,11 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		return;
 	}
 
+	ape_grid_draw_();
+
 	// slow, unoptimised, jelly
 
 	render_selection_buffer( instance );
-
-	switch ( instance->geometryMode )
-	{
-		case APE_EDITOR_GEOMETRY_MODE_PLOT:
-			pre_render_brush( instance );
-			break;
-		case APE_EDITOR_GEOMETRY_MODE_FACE: break;
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
-			break;
-		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
-		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
-	}
 
 	const ApeRoom *room = ape_camera_get_room( camera );
 	if ( room != nullptr )
@@ -827,36 +821,45 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 void ape_editor_post_render_scene_( ApeCamera *camera )
 {
-	ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
-	if ( editorInstance == nullptr )
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
 	{
 		return;
 	}
 
-	if ( editorInstance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	switch ( instance->geometryMode )
 	{
-		editorInstance->selectedFace = ape_editor_get_object_under_cursor( editorInstance );
-		if ( editorInstance->selectedFace != nullptr )
-		{
-			ApeBrushFace *face = editorInstance->selectedFace;
-
-			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-
-			ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
-			assert( material != nullptr );
-
-			PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINE_LOOP );
-			for ( uint i = 0; i < face->numVertices; ++i )
+		case APE_EDITOR_GEOMETRY_MODE_PLOT:
+			render_plot_polygon( instance );
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+			instance->selectedFace = ape_editor_get_object_under_cursor( instance );
+			if ( instance->selectedFace != nullptr )
 			{
-				const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
-				PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
-				PlgImmColour( 255, 255, 0, 255 );
+				ApeBrushFace *face = instance->selectedFace;
+
+				PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+				ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+				assert( material != nullptr );
+
+				PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINE_LOOP );
+				for ( uint i = 0; i < face->numVertices; ++i )
+				{
+					const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
+					PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+					PlgImmColour( 255, 255, 0, 255 );
+				}
+
+				ape_material_draw( material, mesh, nullptr );
+
+				PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 			}
-
-			ape_material_draw( material, mesh, nullptr );
-
-			PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-		}
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
+		case APE_EDITOR_MAX_GEOMETRY_MODES: break;
 	}
 }
 
@@ -870,12 +873,10 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 		PLVector3 origin;
 		if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 		{
-			origin = node->bounds.absOrigin;
+			continue;
 		}
-		else
-		{
-			origin = node->position;
-		}
+
+		origin = node->position;
 
 		const char *id   = node->classType->identifier;
 		size_t      size = strlen( id );
@@ -1112,6 +1113,17 @@ static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices
 	bool sign = false;
 	for ( uint i = 0; i < numVertices; ++i )
 	{
+		// ensure any point isn't doubling up
+		for ( uint j = i + 1; j < numVertices; ++j )
+		{
+			if ( !PlCompareVector2( &vertices[ i ], &vertices[ j ] ) )
+			{
+				continue;
+			}
+
+			return false;
+		}
+
 		PLVector2 a;
 		a.x = vertices[ ( i + 2 ) % numVertices ].x - vertices[ ( i + 1 ) % numVertices ].x;
 		a.y = vertices[ ( i + 2 ) % numVertices ].y - vertices[ ( i + 1 ) % numVertices ].y;
