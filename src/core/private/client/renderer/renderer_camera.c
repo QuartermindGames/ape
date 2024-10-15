@@ -430,9 +430,8 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 
 	PlPushMatrix();
 
-#if 1
 	//todo: temp
-	//if ( ape_config_.renderer.showFaceNormals )
+	if ( ape_config_.renderer.showFaceNormals )
 	{
 		ApeWorldNode *node;
 		COM_ITERATE_LINKED_LIST( node, room->base.children, i )
@@ -450,7 +449,6 @@ static void test_room_visibility( ApeCameraVisibleSet *visibleSet, PLGCamera *ca
 			}
 		}
 	}
-#endif
 
 	unsigned int   numFaces;
 	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );

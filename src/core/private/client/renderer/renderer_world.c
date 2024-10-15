@@ -433,11 +433,12 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
-	if ( camera->room != nullptr )
+	ApeRoom *room = ape_camera_get_room( camera );
+	if ( room != nullptr )
 	{
 		COM_PROFILE_START( "draw_room" );
 
-		draw_room( world, camera->room, camera, light, ambienceOnly, alpha );
+		draw_room( world, room, camera, light, ambienceOnly, alpha );
 
 		COM_PROFILE_END( "draw_room" );
 	}

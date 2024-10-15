@@ -102,7 +102,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	if ( magic != COM_FORMAT_FONT_MAGIC )
 	{
 		GUI_WARNING( "Invalid font file!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	uint16_t version = PL_READUINT16( file, false, NULL );
@@ -110,14 +110,14 @@ static GuiFont *font_deserialize( PLFile *file )
 	if ( version > COM_FORMAT_FONT_VERSION )
 	{
 		GUI_WARNING( "Unsupported font version (%u)!\n", version );
-		return NULL;
+		return nullptr;
 	}
 
 	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
 	if ( numGlyphs == 0 )
 	{
 		GUI_WARNING( "Empty font file!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	GuiFont *font    = PL_NEW( GuiFont );
@@ -147,7 +147,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	{
 		guiDestroyFont( font );
 		GUI_WARNING( "Invalid bitmap size for font!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	size_t   bitmapSize  = bitmapW * bitmapH;
@@ -156,7 +156,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	{
 		guiDestroyFont( font );
 		GUI_WARNING( "Failed to load entirity of bitmap image from font!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	font->texture         = PlgCreateTexture();
@@ -165,7 +165,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	{
 		guiDestroyFont( font );
 		GUI_WARNING( "Failed to upload texture data for font!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	PlDestroyImage( bitmapImage );
@@ -279,7 +279,7 @@ void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const cha
 	if ( dh != NULL ) { *dh = h; }
 }
 
-void guiDrawFontGlyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
+void gui_font_draw_glyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
 {
 	float tw = ( float ) glyph->w / ( float ) font->texture->w;
 	float th = ( float ) glyph->h / ( float ) font->texture->h;
@@ -307,7 +307,7 @@ void gui_font_draw_character( const GuiFont *font, float x, float y, float scale
 		return;
 	}
 
-	guiDrawFontGlyph( font, x, y, scale, colour, glyph );
+	gui_font_draw_glyph( font, x, y, scale, colour, glyph );
 }
 
 void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
@@ -343,10 +343,10 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 
 		if ( shadow )
 		{
-			guiDrawFontGlyph( self, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
+			gui_font_draw_glyph( self, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
 		}
 
-		guiDrawFontGlyph( self, nx, ny, scale, colour, glyph );
+		gui_font_draw_glyph( self, nx, ny, scale, colour, glyph );
 		nx += ( ( float ) glyph->w ) * scale;
 	}
 
@@ -379,6 +379,6 @@ void gui_font_display( GuiFont *font )
 
 	PlgClearMesh( font->mesh );
 
-	PlgSetShaderProgram( NULL );
+	PlgSetShaderProgram( nullptr );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }

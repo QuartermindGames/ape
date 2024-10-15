@@ -248,26 +248,26 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 {
 	for ( unsigned int i = 0, x, y; i < face->numVertices; ++i )
 	{
+		PLVector3 u, v;
 		if ( ( fabsf( face->normal.x ) > fabsf( face->normal.y ) ) &&
 		     ( fabsf( face->normal.x ) > fabsf( face->normal.z ) ) )
 		{
-			x = ( face->normal.x > 0.0 ) ? 1 : 2;
-			y = ( face->normal.x > 0.0 ) ? 2 : 1;
-		}
-		else if ( ( fabsf( face->normal.z ) > fabsf( face->normal.x ) ) &&
-		          ( fabsf( face->normal.z ) > fabsf( face->normal.y ) ) )
-		{
-			x = ( face->normal.z > 0.0 ) ? 0 : 1;
-			y = ( face->normal.z > 0.0 ) ? 1 : 0;
+			u = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
 		}
 		else
 		{
-			x = ( face->normal.y > 0.0 ) ? 2 : 0;
-			y = ( face->normal.y > 0.0 ) ? 0 : 2;
+			u = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
 		}
 
-		face->edgeLoop[ i ]->textureCoords.x = ( PL_VECTOR3_I( *face->edgeLoop[ i ]->position, x ) - face->materialOffset.x ) * face->materialScale.x;
-		face->edgeLoop[ i ]->textureCoords.y = ( PL_VECTOR3_I( *face->edgeLoop[ i ]->position, y ) - face->materialOffset.y ) * face->materialScale.y;
+		u = PlNormalizeVector3( PlVector3CrossProduct( face->normal, u ) );
+		v = PlVector3CrossProduct( face->normal, u );
+
+		PLVector2 coord;
+		coord.x = PlVector3DotProduct( *face->edgeLoop[ i ]->position, u );
+		coord.y = PlVector3DotProduct( *face->edgeLoop[ i ]->position, v );
+
+		face->edgeLoop[ i ]->textureCoords.x = ( coord.x - face->materialOffset.x ) * face->materialScale.x;
+		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) * face->materialScale.y;
 	}
 }
 
@@ -380,6 +380,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 	for ( uint i = 0; i < self->numFaces; ++i )
 	{
+		self->faces[ i ].parent = self;
 #if 0
 		self->faces[ i ].colour   = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
 		                                          PlGenerateRandomFloat( 1.0f ),
@@ -415,7 +416,7 @@ void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, ApeLight 
 	//FIXME: temporary code!!! this should use the display list crap...
 	for ( uint i = 0; i < self->numFaces; ++i )
 	{
-		if ( self->faces[ i ].material == nullptr )
+		if ( self->faces[ i ].material == nullptr || self->faces[ i ].flags & APE_BRUSH_FACE_FLAG_HIDDEN )
 		{
 			continue;
 		}
@@ -471,6 +472,8 @@ void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, ApeLight 
 		ApeLightPointerArray lights;
 		lights[ 0 ] = light;
 		ape_material_draw( material, mesh, lights );
+
+		ape_rendererPerformance_.numFacesDrawn++;
 
 #endif
 	}

@@ -254,11 +254,6 @@ ApeInputState        ss_shell_get_key_state( int key )
 	return keyStates[ key ];
 }
 
-void ss_shell_get_mouse_position( int *x, int *y )
-{
-	SDL_GetMouseState( x, y );
-}
-
 void shell_set_mouse_position( int x, int y )
 {
 	SDL_WarpMouseInWindow( sdlWindow, x, y );
