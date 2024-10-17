@@ -8,18 +8,21 @@ endif ()
 add_library(Forge STATIC
         forge.cpp
         forge_about_dialog.cpp
-        forge_project_dialog.cpp
         forge_console_frame.cpp
+        forge_project_dialog.cpp
 
         forge_viewport.cpp
         forge_viewport_world.cpp
 
         forge_window_main.cpp
 
-        forge_editor_tab.cpp forge_editor_tab.h
+        forge_editor_tab.cpp
+        forge_editor_tab.h
 
-        forge_model_editor.cpp forge_model_editor.h
-        forge_model_viewport.cpp forge_model_viewport.h
+        forge_model_editor.cpp
+        forge_model_editor.h
+        forge_model_viewport.cpp
+        forge_model_viewport.h
 
         forge_editor_material.cpp
         forge_editor_world.cpp

@@ -41,31 +41,19 @@ forge::MainWindow::MainWindow( FXApp *app )
 
 	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
 
-	new FXMenuCommand( menuPane, "New World\t\tCreate a new world.", forge::load_fx_icon( getApp(), "resources/new_world.gif" ), this, ID_WORLD_NEW );
-	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", forge::load_fx_icon( getApp(), "resources/open_world.gif" ), this, ID_WORLD_OPEN );
+	new FXMenuCommand( menuPane, "New World...\t\tCreate a new world.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ], this, ID_WORLD_NEW );
+	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ], this, ID_WORLD_OPEN );
+	new FXMenuCommand( menuPane, "Save World\t\tSave the current world.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
+	new FXMenuCommand( menuPane, "Save World As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
 	new FXMenuSeparator( menuPane );
-	new FXMenuCommand( menuPane, "Open Model...\t\tOpen an existing model.", forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, ID_MODEL_OPEN );
+	new FXMenuCommand( menuPane, "Import Room\t\tImport an existing room into the active world.", nullptr, this, 0 );
+	new FXMenuCommand( menuPane, "Export Room\t\tExport the currently active room.", nullptr, this, 0 );
 	new FXMenuSeparator( menuPane );
 
-	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", forge::load_fx_icon( getApp(), "resources/close.gif" ), this, ID_CLOSE_EDITOR );
+	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", forge_cachedIcons[ FORGE_ICON_TYPE_CLOSE ], this, ID_CLOSE_EDITOR );
 	closeEditorCommand->disable();
 
 	new FXMenuSeparator( menuPane );
-
-#if 0
-	new FXMenuCommand( menuPane, "Open Model...\t\tOpen an existing model.", forge::load_fx_icon( getApp(), "resources/open_model.gif" ), this, ID_MODEL_OPEN );
-	new FXMenuSeparator( menuPane );
-
-	new FXMenuCommand( menuPane, "New Material\t\tCreate a new material.", forge::load_fx_icon( getApp(), "resources/new_material.gif" ), this, ID_MATERIAL_NEW );
-	new FXMenuCommand( menuPane, "Open Material...\t\tOpen an existing material.", forge::load_fx_icon( getApp(), "resources/open_material.gif" ), this, ID_MATERIAL_OPEN );
-	new FXMenuSeparator( menuPane );
-
-	new FXMenuCommand( menuPane, "Package Project\t\tPackage the current project.", nullptr, this, ID_PROJECT_PACKAGE );
-	new FXMenuSeparator( menuPane );
-	new FXMenuCommand( menuPane, "Settings...\t\tConfigure editor settings and more.", forge::load_fx_icon( getApp(), "resources/wrench.gif" ), this, ID_SETTINGS );
-	new FXMenuSeparator( menuPane );
-#endif
-
 	new FXMenuCommand( menuPane, "&Quit\t\tQuit the application.", nullptr, this, ID_CLOSE );
 	new FXMenuTitle( menuBar_, "&File", nullptr, menuPane );
 
@@ -131,6 +119,34 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 {
+	PLPath origin;
+	PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
+
+	FXString path = FXFileDialog::getSaveFilename( this, "New World", origin, "*." APE_WORLD_ROOM_EXTENSION );
+	if ( path.empty() )
+	{
+		return FALSE;
+	}
+
+	const char *c        = path.text();
+	const char *filename = strrchr( c, '/' );
+	if ( filename == nullptr )
+	{
+		return FALSE;
+	}
+
+	char roomName[ 64 ];
+	snprintf( roomName, sizeof( roomName ), "%s", filename + 1 );
+	char *p = strrchr( roomName, '.' );
+	if ( p != nullptr )
+	{
+		*p = '\0';
+	}
+	else
+	{
+		path += "." APE_WORLD_ROOM_EXTENSION;
+	}
+
 	ApeWorld *world = ape_create_world();
 	if ( world == nullptr )
 	{
@@ -138,10 +154,17 @@ long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	ape_room_create( &world->base, "room" );
+	ApeRoom *room = ape_room_create( &world->base, roomName );
+	if ( room == nullptr )
+	{
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create room!\nSee logs for details." );
+		ape_world_node_destroy( &world->base );
+		return FALSE;
+	}
 
-	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, "", world ) );
+	WorldEditor *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, "", world ) );
 	editor->update_tree();
+	editor->set_active_room( room );
 
 	return TRUE;
 }

@@ -144,7 +144,7 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 	PLPath fullPath;
 	PlSetupPath( fullPath, true, "../../%s", path );
 
-#if 0
+#if 1
 
 	PLImage *image;
 	auto     i = cachedImages.find( fullPath );
@@ -193,8 +193,8 @@ static void setup_colours( FXApp &app )
 	app.setShadowColor( forge::themeColours[ forge::THEME_COLOUR_HILITE ] );
 }
 
-FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
-void    setup_icons( FXApp &app )
+FXIcon     *forge_cachedIcons[ MAX_FORGE_ICONS ];
+static void cache_icons( FXApp &app )
 {
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = forge::load_fx_icon( &app, "resources/brush_mode.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_EDGE ]  = forge::load_fx_icon( &app, "resources/edge_mode.gif" );
@@ -203,12 +203,21 @@ void    setup_icons( FXApp &app )
 	forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ] = forge::load_fx_icon( &app, "resources/grid_orient.gif" );
 
 	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ] = forge::load_fx_icon( &app, "resources/face_portal.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ] = forge::load_fx_icon( &app, "resources/face_toggle.gif" );
 
 	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ]    = forge::load_fx_icon( &app, "resources/node.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ]   = forge::load_fx_icon( &app, "resources/world_editor.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ]    = forge::load_fx_icon( &app, "resources/room.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_ENTITY ]  = forge::load_fx_icon( &app, "resources/entity.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_TEXTURE ] = forge::load_fx_icon( &app, "resources/texture.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ]     = forge::load_fx_icon( &app, "resources/room.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_NEW_ROOM ] = forge::load_fx_icon( &app, "resources/new_room.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ]  = forge::load_fx_icon( &app, "resources/new_world.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ] = forge::load_fx_icon( &app, "resources/open_world.gif" );
+
+	forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ]  = forge::load_fx_icon( &app, "resources/save.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_CLOSE ] = forge::load_fx_icon( &app, "resources/close.gif" );
 }
 
 int main( int argc, char **argv )
@@ -267,9 +276,9 @@ int main( int argc, char **argv )
 	app.init( argc, argv );
 
 	setup_colours( app );
-	setup_icons( app );
+	cache_icons( app );
 
-	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
+	glVisual = new FXGLVisual( &app, VISUAL_DOUBLEBUFFER );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
 	forge::mainWindow = new forge::MainWindow( &app );
@@ -338,8 +347,6 @@ extern "C"
 {
 	void shell_get_window_size( int *width, int *height ) {}
 
-	void shell_swap_window( ApeViewport *viewport ) {}
-
 	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
 		switch ( messageType )
@@ -365,8 +372,8 @@ extern "C"
 
 	ApeInputState ss_shell_get_button_state( ApeInputButton inputButton ) { return APE_INPUT_STATE_NONE; }
 	ApeInputState ss_shell_get_key_state( int key ) { return APE_INPUT_STATE_NONE; }
-	void          ss_shell_get_mouse_position( int *x, int *y ) {}
-	void          shell_set_mouse_position( int x, int y )
+
+	void shell_set_mouse_position( int x, int y )
 	{
 	}
 

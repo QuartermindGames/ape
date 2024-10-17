@@ -42,10 +42,10 @@ add_library(ApeCore STATIC
         private/ape_console.c
 
         # Scene Node System
-        private/nodes/node_brush.c
-        private/nodes/node_entity.c
-        private/nodes/node_light.c
-        private/nodes/node_room.c
+        private/node/node_brush.c
+        private/node/node_entity.c
+        private/node/node_light.c
+        private/node/node_room.c
 
         # Networking
         private/net/net.c

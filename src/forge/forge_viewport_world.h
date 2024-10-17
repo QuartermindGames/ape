@@ -20,6 +20,7 @@ namespace forge
 			ID_GRID_ALIGN = Viewport::ID_LAST,
 
 			ID_FACE_TOGGLE,
+			ID_FACE_TOGGLE_OTHERS,
 
 			ID_LAST,
 		};

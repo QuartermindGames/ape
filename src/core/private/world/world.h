@@ -10,7 +10,7 @@
 #include <yin/core_world.h>
 
 #include "ape_memory.h"
-#include "nodes/node_entity.h"
+#include "node/node_entity.h"
 #include "audio/audio.h"
 
 #define WORLD_PROP_TAG_LENGTH 64

@@ -10,6 +10,7 @@ FXDEFMAP( forge::WorldViewport )
 worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_GRID_ALIGN, forge::WorldViewport::on_grid_align ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE, forge::WorldViewport::on_face_toggle ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE_OTHERS, forge::WorldViewport::on_face_toggle ),
 };
 FXIMPLEMENT( forge::WorldViewport, forge::Viewport, worldViewportMap, ARRAYNUMBER( worldViewportMap ) )
 
@@ -89,9 +90,10 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 			// Create a pop-up menu
 			auto popup = new FXMenuPane( this );
 
-			FXMenuCheck *toggleFace = new FXMenuCheck( popup, "Toggle Face", this, ID_FACE_TOGGLE );
-			toggleFace->setCheck( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN );
-
+			FXMenuCheck *toggleFace = new FXMenuCheck( popup, "Show Face", this, ID_FACE_TOGGLE );
+			toggleFace->setCheck( !( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) );
+			new FXMenuCommand( popup, "Toggle Other Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ], this, ID_FACE_TOGGLE_OTHERS );
+			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Flip Face", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_TOGGLE );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
@@ -102,10 +104,7 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 			// Show the menu
 			popup->create();
 			popup->popup( nullptr, event->root_x, event->root_y );
-			if ( getApp()->runModalWhileShown( popup ) )
-			{
-
-			}
+			getApp()->runModalWhileShown( popup );
 
 			delete popup;
 			return TRUE;
@@ -125,6 +124,11 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 
 	ApeEditorInstance *instance = editor->get_internal();
 	if ( instance == nullptr )
+	{
+		return FALSE;
+	}
+
+	if ( FXSELTYPE( selector ) != SEL_KEYPRESS )
 	{
 		return FALSE;
 	}
@@ -189,18 +193,53 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 
 		case KEY_r:
 		{
-			if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
-				break;
+				ApeBrushFace *face = instance->selectedFace;
+				if ( face == nullptr )
+				{
+					break;
+				}
+
+				ape_grid_align_to_face( &instance->grid, face );
+				return TRUE;
 			}
 
-			if ( instance->selectedFace == nullptr )
+			return FALSE;
+		}
+		case KEY_H:
+		case KEY_h:
+		{
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
-				break;
+				ApeBrushFace *face = instance->selectedFace;
+				if ( face == nullptr )
+				{
+					break;
+				}
+
+				if ( event->state & SHIFTMASK )
+				{
+					ApeBrush *brush = face->parent;
+					assert( brush != nullptr );
+					for ( uint i = 0; i < brush->numFaces; ++i )
+					{
+						if ( &brush->faces[ i ] == face )
+						{
+							continue;
+						}
+
+						brush->faces[ i ].flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+					}
+				}
+				else
+				{
+					face->flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+				}
+				return TRUE;
 			}
 
-			ape_grid_align_to_face( &instance->grid, instance->selectedFace );
-			return TRUE;
+			return FALSE;
 		}
 
 		// for testing
@@ -228,7 +267,7 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 		}
 	}
 
-	return Viewport::on_key( object, selector, ptr );
+	return FALSE;
 }
 
 long forge::WorldViewport::on_motion( FXObject *object, FXSelector selector, void *ptr )
@@ -251,9 +290,35 @@ long forge::WorldViewport::on_grid_align( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector, void * )
+long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector selector, void * )
 {
 	ApeEditorInstance *instance = editor->get_internal();
 	assert( instance != nullptr );
-	return 0;
+
+	ApeBrushFace *face = instance->selectedFace;
+	if ( face == nullptr )
+	{
+		return FALSE;
+	}
+
+	if ( FXSELID( selector ) == ID_FACE_TOGGLE_OTHERS )
+	{
+		ApeBrush *brush = face->parent;
+		assert( brush != nullptr );
+		for ( uint i = 0; i < brush->numFaces; ++i )
+		{
+			if ( &brush->faces[ i ] == face )
+			{
+				continue;
+			}
+
+			brush->faces[ i ].flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+		}
+	}
+	else
+	{
+		face->flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+	}
+
+	return TRUE;
 }

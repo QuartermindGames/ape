@@ -6,7 +6,7 @@
 
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
-#include "nodes/node_entity.h"
+#include "node/node_entity.h"
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -145,8 +145,6 @@ static void save_user_config( void )
 
 	PRINT( "User config saved.\n" );
 }
-
-void ape_world_node_test_command_( unsigned int, char ** );
 
 static void toggle_command( unsigned int, char **argv )
 {

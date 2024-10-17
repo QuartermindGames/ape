@@ -47,6 +47,8 @@ namespace forge
 		long on_new_room( FXObject *, FXSelector, void * );
 		long on_edit_room( FXObject *, FXSelector, void * );
 
+		void set_active_room( ApeRoom *room );
+
 	private:
 		ApeWorld *_world{};
 		ApeRoom  *activeRoom{};

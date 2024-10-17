@@ -60,7 +60,7 @@ namespace forge
 	public:
 		long on_change_camera_modes( FXObject *, FXSelector, void * );
 
-		long on_chore( FXObject *, FXSelector, void * );
+		long         on_timer( FXObject *, FXSelector, void * );
 		long on_zoom( FXObject *, FXSelector, void * );
 		virtual long on_motion( FXObject *, FXSelector, void * );
 		virtual long on_left_click( FXObject *, FXSelector, void * );

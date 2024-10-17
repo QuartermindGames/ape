@@ -481,7 +481,7 @@ void ape_console_register_cl_variables_( void )
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
-	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, nullptr, false );
+	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "1", PL_VAR_I32, NULL, nullptr, false );
 	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, nullptr, false );
 
 	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );

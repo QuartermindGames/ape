@@ -7,8 +7,6 @@
 #include "forge_editor_world.h"
 #include "forge/forge_viewport_world.h"
 
-#include "ape/ape_public_audio.h"
-
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_POLY_MODE, forge::WorldEditor::on_change_geometry_mode ),
@@ -231,18 +229,15 @@ long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 {
 	FXint current = roomSelectBox->getCurrentItem();
 
-	activeRoom = ( ApeRoom * ) roomSelectBox->getItemData( current );
-	if ( activeRoom == nullptr )
+	ApeRoom *room = ( ApeRoom * ) roomSelectBox->getItemData( current );
+	if ( room == nullptr )
 	{
 		return false;
 	}
 
-	ape_world_node_set_name( APE_WORLD_NODE( activeRoom ), roomSelectBox->getItemText( current ).text() );
+	ape_world_node_set_name( APE_WORLD_NODE( room ), roomSelectBox->getItemText( current ).text() );
 
-	for ( auto *viewport : viewports )
-	{
-		ape_camera_set_room( viewport->camera, activeRoom );
-	}
+	set_active_room( room );
 
 	return true;
 }
@@ -295,6 +290,21 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 	}
 
 	return false;
+}
+
+void forge::WorldEditor::set_active_room( ApeRoom *room )
+{
+	if ( activeRoom == room )
+	{
+		return;
+	}
+
+	for ( auto *viewport : viewports )
+	{
+		ape_camera_set_room( viewport->camera, room );
+	}
+
+	activeRoom = room;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

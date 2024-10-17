@@ -21,7 +21,8 @@ FXGLCanvas *Viewport::displayList_ = nullptr;
 
 FXDEFMAP( Viewport )
 editorViewportMap[] = {
-        FXMAPFUNC( SEL_CHORE, Viewport::ID_DRAW, Viewport::on_chore ),
+        FXMAPFUNC( SEL_TIMEOUT, Viewport::ID_DRAW, Viewport::on_timer ),
+
         FXMAPFUNC( SEL_MOTION, Viewport::ID_CANVAS, Viewport::on_motion ),
         FXMAPFUNC( SEL_MOUSEWHEEL, Viewport::ID_CANVAS, Viewport::on_zoom ),
         FXMAPFUNC( SEL_LEFTBUTTONPRESS, Viewport::ID_CANVAS, Viewport::on_left_click ),
@@ -86,6 +87,17 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 	{
 		canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	}
+
+	PLVector3 position = PL_VECTOR3( 0.0f, -16.0f, 0.0f );
+
+	camera = ape_create_camera( nullptr, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
+	ape_camera_set_draw_mode( camera, drawMode_ );
+
+	if ( editor != nullptr )
+	{
+		// make sure the given editor knows about the camera
+		editor->set_camera( camera );
+	}
 }
 
 Viewport::~Viewport()
@@ -108,7 +120,7 @@ void Viewport::create()
 		displayList_->makeCurrent();
 	}
 
-	getApp()->addChore( this, ID_DRAW );
+	getApp()->addTimeout( this, ID_DRAW, APE_DEFAULT_TICK_RATE );
 }
 
 void Viewport::draw()
@@ -239,7 +251,7 @@ long Viewport::on_change_camera_modes( FXObject *, FX::FXSelector selector, void
 	return TRUE;
 }
 
-long Viewport::on_chore( FXObject *, FXSelector, void * )
+long Viewport::on_timer( FXObject *, FXSelector, void * )
 {
 	//if ( is_editor_active() )
 	{
@@ -253,8 +265,8 @@ long Viewport::on_chore( FXObject *, FXSelector, void * )
 			int dy = originCursorPos[ 1 ] - my;
 
 			PLVector3 angles = ape_camera_get_angles( camera );
-			angles.y += ( ( float ) dx ) / ( this->width / 2.0f );
-			angles.x += ( ( float ) dy ) / ( this->height / 2.0f );
+			angles.y += ( ( float ) dx ) / ( this->width / 10.0f );
+			angles.x += ( ( float ) dy ) / ( this->height / 10.0f );
 
 			ape_camera_set_angles( camera, &angles );
 		}
@@ -266,7 +278,7 @@ long Viewport::on_chore( FXObject *, FXSelector, void * )
 		canvas_->swapBuffers();
 	}
 
-	getApp()->addChore( this, ID_DRAW );
+	getApp()->addTimeout( this, ID_DRAW, APE_DEFAULT_TICK_RATE );
 	return TRUE;
 }
 
@@ -427,12 +439,11 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 	PLVector3          pos   = ape_camera_get_position( camera );
 	PLVector3          ang   = ape_camera_get_angles( camera );
 
-	PLVector3 forward, left;
-	PlAnglesAxes( ang, &left, nullptr, &forward );
-
+	bool handled = true;
 	switch ( event->code )
 	{
 		default:
+			handled = false;
 			break;
 
 		case KEY_Up:
@@ -458,21 +469,29 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case 'w':
 		{
+			PLVector3 forward;
+			PlAnglesAxes( ang, nullptr, nullptr, &forward );
 			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
 			break;
 		}
 		case 's':
 		{
+			PLVector3 forward;
+			PlAnglesAxes( ang, nullptr, nullptr, &forward );
 			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
 			break;
 		}
 		case 'a':
 		{
+			PLVector3 left;
+			PlAnglesAxes( ang, &left, nullptr, nullptr );
 			pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
 			break;
 		}
 		case 'd':
 		{
+			PLVector3 left;
+			PlAnglesAxes( ang, &left, nullptr, nullptr );
 			pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
 			break;
 		}
@@ -491,7 +510,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 	ape_camera_set_position( camera, &pos );
 	ape_camera_set_angles( camera, &ang );
 
-	return TRUE;
+	return handled;
 }
 
 long Viewport::on_create( FXObject *object, FXSelector selector, void * )
