@@ -24,7 +24,7 @@ Here are some rules for command and variable conventions.
 ### Variables
 
 These should follow the same conventions we have for code (`thisIsName`), but should be prefixed with the name of their "container", i.e. source file.
-For instance, any variables specific to audio should be `audio.volume` or `renderer.superSampling`.
+For instance, any variables specific to audio should be `audio.volume` or `renderer.framebufferScale`.
 
 If the variable already has "audio" in its name, use some common-sense and don't duplicate it.
 

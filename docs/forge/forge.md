@@ -24,7 +24,7 @@ Once your project is open, it will mount the appropriate locations for you autom
 
 From here you can now go into *File* in the top menu, and either choose to create or open an existing item. Of course, this isn't something we'll go into here but you can find a list of different categories below that will aid you with each of the individual editors available within.
 
-- [World Editor](forge_world_editor.md)
+- [World Editor](forge_room_editor)
 - [Material Editor]()
 - [Model Editor](forge_model_editor.md)
 
