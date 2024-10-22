@@ -24,6 +24,7 @@ namespace forge
 			ID_VERTEX_MODE,
 			ID_TRANSFORM_MODE,
 
+			ID_ROOM_SAVE,
 			ID_ROOM_NEW,
 			ID_ROOM_EDIT,
 			ID_ROOM_DELETE,
@@ -43,6 +44,8 @@ namespace forge
 
 		long on_change_geometry_mode( FXObject *, FXSelector, void * );
 		long on_shift_grid( FXObject *, FXSelector, void * );
+
+		long on_room_save( FXObject *, FXSelector, void * );
 		long on_room_select( FXObject *, FXSelector, void * );
 		long on_new_room( FXObject *, FXSelector, void * );
 		long on_edit_room( FXObject *, FXSelector, void * );

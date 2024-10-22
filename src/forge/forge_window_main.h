@@ -20,8 +20,8 @@ namespace forge
 
 	public:
 		long on_tick( FXObject *, FXSelector, void * );
-		long on_new_world( FXObject *, FXSelector, void * );
-		long on_open_world( FXObject *, FXSelector, void * );
+		long on_new_room( FXObject *, FXSelector, void * );
+		long on_open_room( FXObject *, FXSelector, void * );
 
 		long open_model( FXObject *, FXSelector, void * );
 		long open_material( FXObject *, FXSelector, void * );
@@ -39,8 +39,8 @@ namespace forge
 		{
 			ID_CANVAS = FXMainWindow::ID_LAST,
 
-			ID_WORLD_NEW,
-			ID_WORLD_OPEN,
+			ID_ROOM_NEW,
+			ID_ROOM_OPEN,
 
 			ID_MODEL_OPEN,
 			ID_MATERIAL_NEW,

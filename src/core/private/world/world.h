@@ -119,6 +119,7 @@ typedef struct ApeRoom
 	// This should always come first!
 	ApeWorldNode base;
 
+	PLPath       path;
 	unsigned int flags;
 
 	PLColourF32 colour;// an identifying colour

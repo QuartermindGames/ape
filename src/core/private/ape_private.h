@@ -137,10 +137,10 @@ typedef struct ApeConfig
 		float fogNearOverride;
 		float fogFarOverride;
 
-		bool useNewSceneRenderer;
-
-		float superSampling;
+		float framebufferScale;
 		float maxLightDistance;
+
+		int msaaSamples;
 	} renderer;
 
 	struct

@@ -59,8 +59,8 @@ typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
-	void ( *drawFunction )( void *data, const PLMatrix4 *transform );
 	void ( *destroyFunction )( void *data );
+	AcmBranch *( *serializeFunction )( void *data, AcmBranch *root );
 } ApeWorldNodeClass;
 
 typedef struct ApeWorldNode
@@ -83,6 +83,10 @@ typedef struct ApeWorldNode
 
 	ApeWorldNode            *parent;
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
+
+#if !defined( APE_NO_EDITOR )
+	PLColour selectColour;
+#endif
 
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
@@ -135,6 +139,8 @@ const char *ape_world_node_get_name( ApeWorldNode *self );
  */
 void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
+AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
+
 #define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
 #define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
 
@@ -180,7 +186,7 @@ typedef struct ApeBrushFace
 {
 	int          materialIndex;
 	ApeMaterial *material;
-	PLVector3    materialScale;
+	PLVector2    materialScale;
 	PLVector3    materialOffset;
 	PLVector3    materialAngle;
 
@@ -335,6 +341,9 @@ PLColourF32 ape_room_get_ambience( ApeRoom *self );
 
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self );
+
+bool        ape_room_set_path( ApeRoom *self, const char *path );
+const char *ape_room_get_path( const ApeRoom *self );
 
 void ape_world_room_destroy( ApeRoom *self );
 

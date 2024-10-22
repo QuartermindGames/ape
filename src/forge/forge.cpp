@@ -42,18 +42,18 @@ FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
 	AcmBranch *root = acm_branch_push_back_object( nullptr, "project" );
-	acm_branch_push_back_string( root, "name", name );
+	acm_branch_push_back_string( root, "name", name, false );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
 	acm_branch_push_back_int32_array( root, "version", version, 3 );
 
 	AcmBranch *child;
 	child = acm_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
-	acm_branch_push_back_string( child, nullptr, "ship" );
-	acm_branch_push_back_string( child, nullptr, "dev" );
+	acm_branch_push_back_string( child, nullptr, "ship", false );
+	acm_branch_push_back_string( child, nullptr, "dev", false );
 
 	child = acm_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
-	acm_branch_push_back_string( child, nullptr, "base" );
+	acm_branch_push_back_string( child, nullptr, "base", false );
 
 	acm_write_file( path, root, ND_FILE_UTF8 );
 	return root;

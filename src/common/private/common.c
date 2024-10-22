@@ -21,8 +21,8 @@ static int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
 void com_initialize( void )
 {
-	com_logLevels_[ COM_LOG_LEVEL_INFO ] = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
-	com_logLevels_[ COM_LOG_LEVEL_WARN ] = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
+	com_logLevels_[ COM_LOG_LEVEL_INFO ]  = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
+	com_logLevels_[ COM_LOG_LEVEL_WARN ]  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
 	com_logLevels_[ COM_LOG_LEVEL_DEBUG ] = PlAddLogLevel( "common/debug", PL_COLOUR_WHITE, true );
 
@@ -40,9 +40,11 @@ void com_initialize( void )
 const char *com_get_local_data_directory( void )
 {
 	// cache it
-	static PLPath dataPath = { '\0' };
+	static PLPath dataPath;
 	if ( *dataPath != '\0' )
+	{
 		return dataPath;
+	}
 
 	PLPath exeDir;
 	if ( PlGetExecutableDirectory( exeDir, sizeof( exeDir ) ) != NULL )
@@ -51,33 +53,53 @@ const char *com_get_local_data_directory( void )
 		if ( PlPathExists( dataPath ) )
 		{
 			PlSetupPath( dataPath, true, "%s/../..", exeDir );
-			return dataPath;
 		}
-
-		PlSetupPath( dataPath, true, "%s", exeDir );
-		return dataPath;
+		else
+		{
+			PlSetupPath( dataPath, true, "%s", exeDir );
+		}
+	}
+	else
+	{
+		// oh dear oh dear...
+		const char *cwd = PlGetWorkingDirectory();
+		PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
+		if ( PlPathExists( dataPath ) )
+		{
+			PlSetupPath( dataPath, true, "%s/../..", cwd );
+		}
+		else
+		{
+			PlSetupPath( dataPath, true, "%s", cwd );
+		}
 	}
 
-	// oh dear oh dear...
+#if defined( __unix__ )
 
-	const char *cwd = PlGetWorkingDirectory();
-	PlSetupPath( dataPath, true, "%s/../../runtime", cwd );
-	if ( PlPathExists( dataPath ) )
-		PlSetupPath( dataPath, true, "%s/../..", cwd );
-	else
-		PlSetupPath( dataPath, true, "%s", cwd );
+	char *rpath;
+	if ( ( rpath = realpath( dataPath, nullptr ) ) != nullptr )
+	{
+		PlSetupPath( dataPath, true, "%s", rpath );
+		free( rpath );
+	}
+
+#endif//todo: windows...
 
 	return dataPath;
 }
 
 const char *com_get_app_data_directory( void )
 {
-	static PLPath appDataPath = "";
+	static PLPath appDataPath;
 	if ( *appDataPath != '\0' )
+	{
 		return appDataPath;
+	}
 
 	if ( PlGetApplicationDataDirectory( "ape", appDataPath, sizeof( appDataPath ) ) != NULL )
+	{
 		return appDataPath;
+	}
 
 	com_warning_( "Failed to fetch application data directory: %s\n", PlGetError() );
 

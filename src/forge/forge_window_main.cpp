@@ -18,8 +18,8 @@ forge::MainWindow *forge::mainWindow = nullptr;
 
 FXDEFMAP( forge::MainWindow )
 MainWindowMap[] = {
-        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_WORLD_NEW, forge::MainWindow::on_new_world ),
-        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_WORLD_OPEN, forge::MainWindow::on_open_world ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_NEW, forge::MainWindow::on_new_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_OPEN, forge::MainWindow::on_open_room ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_MODEL_OPEN, forge::MainWindow::open_model ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_MATERIAL_OPEN, forge::MainWindow::open_material ),
@@ -41,10 +41,10 @@ forge::MainWindow::MainWindow( FXApp *app )
 
 	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
 
-	new FXMenuCommand( menuPane, "New World...\t\tCreate a new world.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ], this, ID_WORLD_NEW );
-	new FXMenuCommand( menuPane, "Open World...\t\tOpen an existing world.", forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ], this, ID_WORLD_OPEN );
-	new FXMenuCommand( menuPane, "Save World\t\tSave the current world.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
-	new FXMenuCommand( menuPane, "Save World As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
+	new FXMenuCommand( menuPane, "New Room...\t\tCreate a new room.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ], this, ID_ROOM_NEW );
+	new FXMenuCommand( menuPane, "Open Room...\t\tOpen an existing room.", forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ], this, ID_ROOM_OPEN );
+	new FXMenuCommand( menuPane, "Save Room\t\tSave the current room.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
+	new FXMenuCommand( menuPane, "Save Room As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Import Room\t\tImport an existing room into the active world.", nullptr, this, 0 );
 	new FXMenuCommand( menuPane, "Export Room\t\tExport the currently active room.", nullptr, this, 0 );
@@ -117,12 +117,12 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 	return 0;
 }
 
-long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
+long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 {
+#if 0
 	PLPath origin;
 	PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
-
-	FXString path = FXFileDialog::getSaveFilename( this, "New World", origin, "*." APE_WORLD_ROOM_EXTENSION );
+	FXString path = FXFileDialog::getSaveFilename( this, "New Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
 	if ( path.empty() )
 	{
 		return FALSE;
@@ -135,6 +135,7 @@ long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
+	c = c + strlen( com_project_get_local_path() );
 	char roomName[ 64 ];
 	snprintf( roomName, sizeof( roomName ), "%s", filename + 1 );
 	char *p = strrchr( roomName, '.' );
@@ -146,15 +147,16 @@ long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 	{
 		path += "." APE_WORLD_ROOM_EXTENSION;
 	}
+#endif
 
 	ApeWorld *world = ape_create_world();
 	if ( world == nullptr )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world!\nSee logs for details." );
+		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world instance!\nSee logs for details." );
 		return FALSE;
 	}
 
-	ApeRoom *room = ape_room_create( &world->base, roomName );
+	ApeRoom *room = ape_room_create( &world->base, "index" );
 	if ( room == nullptr )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create room!\nSee logs for details." );
@@ -169,7 +171,7 @@ long forge::MainWindow::on_new_world( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long forge::MainWindow::on_open_world( FXObject *, FXSelector, void * )
+long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 {
 	const char *path     = com_project_get_local_path();
 	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );

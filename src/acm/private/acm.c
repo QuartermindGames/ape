@@ -4,12 +4,12 @@
 
 #include "acm_private.h"
 
-int nd_LogLevelPrint_ = -1;
-int nd_LogLevelWarn_ = -1;
+int  nd_LogLevelPrint_ = -1;
+int  nd_LogLevelWarn_  = -1;
 void acm_setup_logs( void )
 {
 	nd_LogLevelPrint_ = PlAddLogLevel( "node", PL_COLOUR_DARK_SLATE_BLUE, true );
-	nd_LogLevelWarn_ = PlAddLogLevel( "node/warning", PL_COLOUR_YELLOW, true );
+	nd_LogLevelWarn_  = PlAddLogLevel( "node/warning", PL_COLOUR_YELLOW, true );
 	Message( "Logs are now active for NODE library\n" );
 }
 
@@ -25,17 +25,17 @@ static const char *string_for_property_type( AcmPropertyType propertyType )
 	        // Special types
 	        [ND_PROPERTY_OBJECT] = "object",
 	        [ND_PROPERTY_STRING] = "string",
-	        [ND_PROPERTY_BOOL] = "bool",
-	        [ND_PROPERTY_ARRAY] = "array",
+	        [ND_PROPERTY_BOOL]   = "bool",
+	        [ND_PROPERTY_ARRAY]  = "array",
 	        // Generic types
-	        [ND_PROPERTY_INT8] = "int8",
-	        [ND_PROPERTY_INT16] = "int16",
-	        [ND_PROPERTY_INT32] = "int32",
-	        [ND_PROPERTY_INT64] = "int64",
-	        [ND_PROPERTY_UI8] = "uint8",
-	        [ND_PROPERTY_UI16] = "uint16",
-	        [ND_PROPERTY_UI32] = "uint32",
-	        [ND_PROPERTY_UI64] = "uint64",
+	        [ND_PROPERTY_INT8]    = "int8",
+	        [ND_PROPERTY_INT16]   = "int16",
+	        [ND_PROPERTY_INT32]   = "int32",
+	        [ND_PROPERTY_INT64]   = "int64",
+	        [ND_PROPERTY_UI8]     = "uint8",
+	        [ND_PROPERTY_UI16]    = "uint16",
+	        [ND_PROPERTY_UI32]    = "uint32",
+	        [ND_PROPERTY_UI64]    = "uint64",
 	        [ND_PROPERTY_FLOAT32] = "float",
 	        [ND_PROPERTY_FLOAT64] = "float64",
 	};
@@ -48,12 +48,12 @@ static const char *string_for_property_type( AcmPropertyType propertyType )
 	return propToStr[ propertyType ];
 }
 
-static char *nlErrorMsg = NULL;
+static char        *nlErrorMsg  = NULL;
 static AcmErrorCode nlErrorType = ND_ERROR_SUCCESS;
-static void clear_error_message( void )
+static void         clear_error_message( void )
 {
 	PlFree( nlErrorMsg );
-	nlErrorMsg = NULL;
+	nlErrorMsg  = NULL;
 	nlErrorType = ND_ERROR_SUCCESS;
 }
 
@@ -83,13 +83,13 @@ static void set_error_message( AcmErrorCode type, const char *msg, ... )
 	va_end( args );
 }
 
-const char *acm_get_error_message( void ) { return nlErrorMsg; }
+const char  *acm_get_error_message( void ) { return nlErrorMsg; }
 AcmErrorCode acm_get_error( void ) { return nlErrorType; }
 
 static char *alloc_var_string( const char *string, uint16_t *lengthOut )
 {
 	*lengthOut = ( uint16_t ) strlen( string ) + 1;
-	char *buf = PlCAllocA( 1, *lengthOut );
+	char *buf  = PlCAllocA( 1, *lengthOut );
 	strcpy( buf, string );
 	return buf;
 }
@@ -565,7 +565,7 @@ AcmBranch *acm_push_back_new_branch( AcmBranch *parent, const char *name, AcmPro
 		node->name.buf = alloc_var_string( name, &node->name.length );
 	}
 
-	node->type = propertyType;
+	node->type       = propertyType;
 	node->linkedList = PlCreateLinkedList();
 
 	/* if root is provided, this is treated as a child of that node */
@@ -577,7 +577,7 @@ AcmBranch *acm_push_back_new_branch( AcmBranch *parent, const char *name, AcmPro
 		}
 
 		node->linkedListNode = PlInsertLinkedListNode( parent->linkedList, node );
-		node->parent = parent;
+		node->parent         = parent;
 	}
 
 	return node;
@@ -585,8 +585,8 @@ AcmBranch *acm_push_back_new_branch( AcmBranch *parent, const char *name, AcmPro
 
 AcmBranch *acm_branch_push_back_branch( AcmBranch *parent, AcmBranch *child )
 {
-	AcmBranch *childCopy = acm_copy_branch( child );
-	childCopy->parent = parent;
+	AcmBranch *childCopy      = acm_copy_branch( child );
+	childCopy->parent         = parent;
 	childCopy->linkedListNode = PlInsertLinkedListNode( parent->linkedList, childCopy );
 	return childCopy;
 }
@@ -596,11 +596,18 @@ AcmBranch *acm_branch_push_back_object( AcmBranch *node, const char *name )
 	return acm_push_back_new_branch( node, name, ND_PROPERTY_OBJECT );
 }
 
-AcmBranch *acm_branch_push_back_string( AcmBranch *parent, const char *name, const char *var )
+AcmBranch *acm_branch_push_back_string( AcmBranch *parent, const char *name, const char *var, bool conditional )
 {
+	if ( conditional && *var == '\0' )
+	{
+		return NULL;
+	}
+
 	AcmBranch *node = acm_push_back_new_branch( parent, name, ND_PROPERTY_STRING );
 	if ( node != NULL )
+	{
 		node->data.buf = alloc_var_string( var, &node->data.length );
+	}
 
 	return node;
 }
@@ -613,7 +620,7 @@ AcmBranch *acm_branch_push_back_string_array( AcmBranch *parent, const char *nam
 		node->childType = ND_PROPERTY_STRING;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
-			acm_branch_push_back_string( node, NULL, array[ i ] );
+			acm_branch_push_back_string( node, NULL, array[ i ], false );
 		}
 	}
 	return node;
@@ -758,6 +765,36 @@ AcmBranch *acm_branch_push_back_float32_array( AcmBranch *parent, const char *na
 	return node;
 }
 
+AcmBranch *acm_branch_push_back_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector2( vector, &pl_vecOrigin2 ) )
+	{
+		return NULL;
+	}
+
+	return acm_branch_push_back_float32_array( parent, name, ( float * ) vector, 2 );
+}
+
+AcmBranch *acm_branch_push_back_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector3( vector, &pl_vecOrigin3 ) )
+	{
+		return NULL;
+	}
+
+	return acm_branch_push_back_float32_array( parent, name, ( float * ) vector, 3 );
+}
+
+AcmBranch *acm_branch_push_back_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector4( vector, &pl_vecOrigin4 ) )
+	{
+		return NULL;
+	}
+
+	return acm_branch_push_back_float32_array( parent, name, ( float * ) vector, 4 );
+}
+
 AcmBranch *acm_branch_push_back_object_array( AcmBranch *parent, const char *name )
 {
 	AcmBranch *node = acm_push_back_new_branch( parent, name, ND_PROPERTY_ARRAY );
@@ -771,7 +808,7 @@ AcmBranch *acm_branch_push_back_object_array( AcmBranch *parent, const char *nam
 
 static char *copy_var_string( const NdVarString *varString, uint16_t *length )
 {
-	*length = varString->length;
+	*length   = varString->length;
 	char *buf = PL_NEW_( char, *length + 1 );
 	strncpy( buf, varString->buf, *length );
 	return buf;
@@ -783,10 +820,10 @@ static char *copy_var_string( const NdVarString *varString, uint16_t *length )
 AcmBranch *acm_copy_branch( AcmBranch *node )
 {
 	AcmBranch *newNode = PL_NEW( AcmBranch );
-	newNode->type = node->type;
+	newNode->type      = node->type;
 	newNode->childType = node->childType;
-	newNode->data.buf = copy_var_string( &node->data, &newNode->data.length );
-	newNode->name.buf = copy_var_string( &node->name, &newNode->name.length );
+	newNode->data.buf  = copy_var_string( &node->data, &newNode->data.length );
+	newNode->name.buf  = copy_var_string( &node->name, &newNode->name.length );
 	// Not setting the parent is intentional here, since we likely don't want that link
 
 	AcmBranch *child = acm_branch_get_first_child( node );
@@ -795,9 +832,9 @@ AcmBranch *acm_copy_branch( AcmBranch *node )
 		if ( newNode->linkedList == NULL )
 			newNode->linkedList = PlCreateLinkedList();
 
-		AcmBranch *newChild = acm_copy_branch( child );
+		AcmBranch *newChild      = acm_copy_branch( child );
 		newChild->linkedListNode = PlInsertLinkedListNode( newNode->linkedList, newChild );
-		newChild->parent = newNode;
+		newChild->parent         = newNode;
 
 		child = acm_get_next_child( child );
 	}
@@ -856,10 +893,10 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 {
 	/* try to fetch the name, not all nodes necessarily have a name... */
 	NdVarString name;
-	name.buf = deserialize_string_var( file, &name.length );
+	name.buf          = deserialize_string_var( file, &name.length );
 	const char *dname = ( name.buf != NULL ) ? name.buf : "unknown";
 
-	bool status;
+	bool            status;
 	AcmPropertyType type = ( AcmPropertyType ) PlReadInt8( file, &status );
 	if ( !status )
 	{
@@ -903,14 +940,14 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 		}
 		case ND_PROPERTY_BOOL:
 		{
-			bool v = PlReadInt8( file, NULL );
+			bool v         = PlReadInt8( file, NULL );
 			node->data.buf = alloc_var_string( v ? "true" : "false", &node->data.length );
 			break;
 		}
 		case ND_PROPERTY_FLOAT32:
 		{
 			float v = PlReadFloat32( file, false, NULL );
-			char str[ 32 ];
+			char  str[ 32 ];
 			snprintf( str, sizeof( str ), PL_FMT_float, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
@@ -918,7 +955,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 		case ND_PROPERTY_FLOAT64:
 		{
 			double v = PlReadFloat64( file, false, NULL );
-			char str[ 32 ];
+			char   str[ 32 ];
 			snprintf( str, sizeof( str ), PL_FMT_double, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
@@ -926,7 +963,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 		case ND_PROPERTY_INT8:
 		{
 			int8_t v = PlReadInt8( file, NULL );
-			char str[ 32 ];
+			char   str[ 32 ];
 			snprintf( str, sizeof( str ), PL_FMT_int32, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
@@ -935,7 +972,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 		case ND_PROPERTY_INT32:
 		{
 			int32_t v = PlReadInt32( file, false, NULL );
-			char str[ 32 ];
+			char    str[ 32 ];
 			snprintf( str, sizeof( str ), node->type == ND_PROPERTY_INT32 ? PL_FMT_int32 : PL_FMT_uint32, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
@@ -944,7 +981,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 		case ND_PROPERTY_INT64:
 		{
 			int64_t v = PlReadInt64( file, false, NULL );
-			char str[ 32 ];
+			char    str[ 32 ];
 			snprintf( str, sizeof( str ), node->type == ND_PROPERTY_INT64 ? PL_FMT_int64 : PL_FMT_uint64, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
@@ -996,7 +1033,7 @@ AcmBranch *acm_parse_file( PLFile *file, const char *objectType )
 {
 	AcmBranch *root = NULL;
 
-	uint32_t version;
+	uint32_t   version;
 	NdFileType fileType = parse_node_file_type( file, &version );
 	if ( fileType == ND_FILE_BINARY )
 	{
@@ -1012,14 +1049,14 @@ AcmBranch *acm_parse_file( PLFile *file, const char *objectType )
 		}
 		else
 		{
-			size_t headerSize = strlen( ND_FORMAT_UTF8_HEADER );
-			const char *data = ( const char * ) ( ( uint8_t * ) PlGetFileData( file ) + headerSize );
+			size_t      headerSize = strlen( ND_FORMAT_UTF8_HEADER );
+			const char *data       = ( const char       *) ( ( uint8_t       *) PlGetFileData( file ) + headerSize );
 
 			length -= headerSize;
 			char *buf = PL_NEW_( char, length + 1 );
 			memcpy( buf, data, length );
 
-			buf = acm_preprocess_script_( buf, &length, true );
+			buf  = acm_preprocess_script_( buf, &length, true );
 			root = acm_parse_buffer( buf, length );
 
 			PL_DELETE( buf );
@@ -1108,8 +1145,8 @@ static void serialize_string_var( const NdVarString *string, NdFileType fileType
 		return;
 	}
 
-	bool encloseString = false;
-	const char *c = string->buf;
+	bool        encloseString = false;
+	const char *c             = string->buf;
 	if ( *c == '\0' )
 	{
 		/* enclose an empty string!!! */

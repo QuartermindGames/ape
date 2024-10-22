@@ -133,7 +133,7 @@ static void save_user_config( void )
 				acm_branch_push_back_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
 				break;
 			default:
-				acm_branch_push_back_string( root, cvars[ i ]->name, cvars[ i ]->s_value );
+				acm_branch_push_back_string( root, cvars[ i ]->name, cvars[ i ]->s_value, false );
 				break;
 		}
 	}

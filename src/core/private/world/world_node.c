@@ -23,40 +23,40 @@ void ape_light_destroy_( void *data );
 void ape_camera_destroy_( void *data );
 void ape_entity_destroy_( void *data );
 
+AcmBranch *ape_room_serialize_( void *self, AcmBranch *root );
+AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root );
+
 static const ApeWorldNodeClass nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_ROOT] = {
                                       .identifier      = "root",
                                       .magic           = APE_WORLD_NODE_ROOT_MAGIC,
-                                      .drawFunction    = nullptr,
                                       .destroyFunction = ape_world_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_ROOM] = {
-                                      .identifier      = "room",
-                                      .magic           = APE_WORLD_NODE_ROOM_MAGIC,
-                                      .drawFunction    = nullptr,
-                                      .destroyFunction = ape_room_destroy_,
+                                      .identifier        = "room",
+                                      .magic             = APE_WORLD_NODE_ROOM_MAGIC,
+                                      .destroyFunction   = ape_room_destroy_,
+                                      .serializeFunction = ape_room_serialize_,
                                       },
         [APE_WORLD_NODE_TYPE_BRUSH] = {
-                                      .identifier      = "brush",
-                                      .magic           = APE_WORLD_NODE_BRUSH_MAGIC,
-                                      .destroyFunction = ape_brush_destroy_,
+                                      .identifier        = "brush",
+                                      .magic             = APE_WORLD_NODE_BRUSH_MAGIC,
+                                      .destroyFunction   = ape_brush_destroy_,
+                                      .serializeFunction = ape_brush_serialize_,
                                       },
         [APE_WORLD_NODE_TYPE_LIGHT] = {
                                       .identifier      = "light",
                                       .magic           = APE_WORLD_NODE_LIGHT_MAGIC,
-                                      .drawFunction    = nullptr,
                                       .destroyFunction = ape_light_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_CAMERA] = {
                                       .identifier      = "camera",
                                       .magic           = APE_WORLD_NODE_CAMERA_MAGIC,
-                                      .drawFunction    = nullptr,
                                       .destroyFunction = ape_camera_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_ENTITY] = {
                                       .identifier      = "entity",
                                       .magic           = APE_WORLD_NODE_ENTITY_MAGIC,
-                                      .drawFunction    = nullptr,
                                       .destroyFunction = ape_entity_destroy_,
                                       },
 };
@@ -295,10 +295,40 @@ void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 	printf( "%s\n", self->name );
 }
 
-void ape_world_node_draw_bounding_volume_( ApeWorldNode *self )
+AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 {
-}
+	AcmBranch *nodeBranch = acm_branch_push_back_object( root, "node" );
+	acm_branch_push_back_uint32( nodeBranch, "magic", self->classType->magic );
 
-void ape_world_node_draw_( ApeWorldNode *self, const PLMatrix4 *transform )
-{
+	if ( *self->name != '\0' )
+	{
+		acm_branch_push_back_string( nodeBranch, "name", self->name, false );
+	}
+
+	acm_branch_push_back_vector3( nodeBranch, "position", &self->position, true );
+	acm_branch_push_back_vector3( nodeBranch, "angles", &self->angles, true );
+	acm_branch_push_back_vector3( nodeBranch, "scale", &self->scale, true );
+
+	acm_branch_push_back_float32_array( nodeBranch, "transform", ( float * ) &self->transform, 16 );
+
+	acm_branch_push_back_float32_array( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
+	acm_branch_push_back_float32_array( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
+
+	if ( self->classType->serializeFunction != nullptr )
+	{
+		AcmBranch *classBranch = acm_branch_push_back_object( nodeBranch, "class" );
+		self->classType->serializeFunction( self, classBranch );
+	}
+
+	if ( PlGetNumLinkedListNodes( self->children ) > 0 )
+	{
+		AcmBranch    *childBranch = acm_branch_push_back_object_array( nodeBranch, "children" );
+		ApeWorldNode *child;
+		COM_ITERATE_LINKED_LIST( child, self->children, i )
+		{
+			ape_world_node_serialize( child, childBranch );
+		}
+	}
+
+	return nodeBranch;
 }

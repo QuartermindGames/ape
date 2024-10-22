@@ -308,13 +308,16 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, nullptr, true );
 	PlRegisterConsoleVariable( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, nullptr, true );
 
-	PlRegisterConsoleVariable( "renderer.superSampling", "Resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.superSampling, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.framebufferScale", "Framebuffer resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.framebufferScale, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, nullptr, false );
+	//TODO: move these into the material system
 	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
 	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
 	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, nullptr, false );
+	//TODO: clamp msaa level - add a callback to check if it's valid before we regen render targets!
+	PlRegisterConsoleVariable( "renderer.msaaSamples", "Set number of MSAA samples.", "4", PL_VAR_I32, &ape_config_.renderer.msaaSamples, nullptr, true );
 
 	PlRegisterConsoleVariable( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.showFaceNormals", "Show normals for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceNormals, nullptr, false );
@@ -327,12 +330,12 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, nullptr, false );
 
+	//TODO: move these into the material system
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, nullptr, false );
 
+	//TODO: move into flare code...
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
-
-	PlRegisterConsoleVariable( "renderer.useNewSceneRenderer", "Use new scene-graph renderer.", "false", PL_VAR_BOOL, &ape_config_.renderer.useNewSceneRenderer, nullptr, false );
 
 	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();

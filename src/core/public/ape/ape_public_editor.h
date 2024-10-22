@@ -59,7 +59,7 @@ typedef struct ApeEditorGrid
 	PLMatrix4    transform;
 
 	bool     rebuildMesh;
-	PLGMesh *mesh;
+	PLGMesh *selectionMesh;
 
 	unsigned char visible;// unsigned char, because otherwise
 	                      // can't hook it with frontend :(
@@ -127,6 +127,9 @@ uint ape_grid_get_size( ApeEditorGrid *self );
 void ape_grid_set_visibility( ApeEditorGrid *self, bool visible );
 
 void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face );
+
+void ape_grid_move_forward( ApeEditorGrid *self );
+void ape_grid_move_backward( ApeEditorGrid *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush Plotting

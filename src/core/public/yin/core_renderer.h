@@ -131,7 +131,9 @@ typedef enum ApeDefaultMaterial
 	APE_MATERIAL_DEFAULT_FALLBACK,// fallback for missing materials
 	APE_MATERIAL_DEFAULT_VERTEX,  // basic vertex, no texture
 	APE_MATERIAL_DEFAULT_SHADOW,  // material used per shadow volumes
-	APE_MATERIAL_DEFAULT_EDITOR,   // default material to use per new brushes
+	APE_MATERIAL_DEFAULT_EDITOR,  // default material to use per new brushes
+
+	APE_MATERIAL_DEFAULT_DEBUG_NORMALS,
 
 	APE_MAX_DEFAULT_MATERIALS
 } ApeDefaultMaterial;

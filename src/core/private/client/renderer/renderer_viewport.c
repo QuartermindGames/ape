@@ -125,8 +125,8 @@ static void update_render_target_size( ApeViewport *self )
 	unsigned int rw, rh;
 	ape_render_target_get_size( self->renderTarget, &rw, &rh );
 
-	unsigned int nw = self->width * ( int ) ape_config_.renderer.superSampling;
-	unsigned int nh = self->height * ( int ) ape_config_.renderer.superSampling;
+	unsigned int nw = self->width * ( int ) ape_config_.renderer.framebufferScale;
+	unsigned int nh = self->height * ( int ) ape_config_.renderer.framebufferScale;
 	if ( nw == rw && nh == rh )
 	{
 		return;
@@ -186,8 +186,8 @@ void ape_viewport_make_active( ApeViewport *self )
 	// though to be honest, it probably shouldn't be called as often from the editor either...
 	update_render_target_size( self );
 
-	int rw = self->width * ( int ) ape_config_.renderer.superSampling;
-	int rh = self->height * ( int ) ape_config_.renderer.superSampling;
+	int rw = self->width * ( int ) ape_config_.renderer.framebufferScale;
+	int rh = self->height * ( int ) ape_config_.renderer.framebufferScale;
 
 	PlgClipViewport( self->x, self->y, rw, rh );
 	PlgSetViewport( self->x, self->y, rw, rh );

@@ -45,7 +45,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		{
 			AcmBranch *faceBranch = acm_branch_push_back_object( child, nullptr );
 			acm_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
-			acm_branch_push_back_string( faceBranch, "material", model->materials[ faces[ j ]->material ].name );
+			acm_branch_push_back_string( faceBranch, "material", model->materials[ faces[ j ]->material ].name, false );
 
 #if 0
 			// determine the validity of the face
@@ -141,7 +141,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			}
 
 			printf( " %u \"%s\"\n", acm_branch_get_num_of_children( child ), tmp );
-			acm_branch_push_back_string( child, nullptr, tmp );
+			acm_branch_push_back_string( child, nullptr, tmp, false );
 		}
 	}
 	printf( "%u materials\n", acm_branch_get_num_of_children( child ) );
@@ -229,7 +229,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 	{
 		AcmBranch *roomBranch = acm_branch_push_back_object( acm_branch_push_back_object_array( root, "rooms" ), nullptr );
 		acm_branch_push_back_uint32( roomBranch, "version", APE_WORLD_ROOM_VERSION );
-		acm_branch_push_back_string( roomBranch, "name", worldName );
+		acm_branch_push_back_string( roomBranch, "name", worldName, false );
 		acm_branch_push_back_int32( roomBranch, "uid", 0 );
 
 #if defined( APE_USE_NEW_WORLD_LAYOUT )
@@ -243,8 +243,8 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			}
 
 			AcmBranch *nodeBranch = acm_branch_push_back_object( nodesBranch, "node" );
-			acm_branch_push_back_string( nodeBranch, "class", "brush" );
-			acm_branch_push_back_string( nodeBranch, "path", path );
+			acm_branch_push_back_string( nodeBranch, "class", "brush", false );
+			acm_branch_push_back_string( nodeBranch, "path", path, false );
 		}
 
 		PlSetupPath( path, true, "%s/ship/worlds/%s/rooms", com_project_get_local_path(), worldName );
@@ -260,7 +260,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		}
 
 		PlSetupPath( path, true, "worlds/%s/rooms/%s." APE_WORLD_ROOM_EXTENSION, worldName, worldName );
-		acm_branch_push_back_string( root, "startRoom", path );
+		acm_branch_push_back_string( root, "startRoom", path, false );
 #endif
 	}
 

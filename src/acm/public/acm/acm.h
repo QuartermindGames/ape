@@ -108,17 +108,17 @@ typedef struct AcmStructDescriptor
 	        .items    = { __VA_ARGS__ } };
 #define ACM_DECLARE_STRUCT_ITEM( TYPE, VAR, DATATYPE ) \
 	{                                                  \
-		.name   = #VAR,                                \
-		.type   = ( DATATYPE ),                        \
-		.offset = PL_OFFSETOF( TYPE, VAR ),            \
+	        .name   = #VAR,                            \
+	        .type   = ( DATATYPE ),                    \
+	        .offset = PL_OFFSETOF( TYPE, VAR ),        \
 	}
 #define ACM_DECLARE_STRUCT_ITEM_ARRAY( TYPE, VAR, SUBTYPE, SIZE ) \
 	{                                                             \
-		.name        = #VAR,                                      \
-		.type        = ND_PROPERTY_ARRAY,                         \
-		.subType     = ( SUBTYPE ),                               \
-		.numElements = ( SIZE ),                                  \
-		.offset      = PL_OFFSETOF( TYPE, VAR ),                  \
+	        .name        = #VAR,                                  \
+	        .type        = ND_PROPERTY_ARRAY,                     \
+	        .subType     = ( SUBTYPE ),                           \
+	        .numElements = ( SIZE ),                              \
+	        .offset      = PL_OFFSETOF( TYPE, VAR ),              \
 	}
 #define ND_DECLARE_STRUCT_ITEM_OBJECT( NAME, STRUCT )
 
@@ -187,7 +187,7 @@ PLColourF32 acm_get_colour_f32( AcmBranch *root, const char *name, const PLColou
 
 AcmBranch *acm_branch_push_back_branch( AcmBranch *parent, AcmBranch *child );
 AcmBranch *acm_branch_push_back_object( AcmBranch *node, const char *name );
-AcmBranch *acm_branch_push_back_string( AcmBranch *parent, const char *name, const char *var );
+AcmBranch *acm_branch_push_back_string( AcmBranch *parent, const char *name, const char *var, bool conditional );
 AcmBranch *acm_branch_push_back_bool( AcmBranch *parent, const char *name, bool var );
 AcmBranch *acm_branch_push_back_int8( AcmBranch *parent, const char *name, int8_t var );
 AcmBranch *acm_branch_push_back_int16( AcmBranch *parent, const char *name, int16_t var );
@@ -202,6 +202,11 @@ AcmBranch *acm_branch_push_back_int16_array( AcmBranch *root, const char *name, 
 AcmBranch *acm_branch_push_back_int32_array( AcmBranch *parent, const char *name, const int32_t *array, uint numElements );
 AcmBranch *acm_branch_push_back_uint32_array( AcmBranch *parent, const char *name, const uint32_t *array, uint numElements );
 AcmBranch *acm_branch_push_back_float32_array( AcmBranch *parent, const char *name, const float *array, uint numElements );
+
+// special
+AcmBranch *acm_branch_push_back_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional );
+AcmBranch *acm_branch_push_back_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional );
+AcmBranch *acm_branch_push_back_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional );
 
 AcmBranch *acm_copy_branch( AcmBranch *node );
 void       acm_branch_destroy( AcmBranch *node );

@@ -99,10 +99,10 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 			{
 				AcmBranch *pass = acm_branch_push_back_object( passesArray, NULL );
 				{
-					acm_branch_push_back_string( pass, "shaderProgram", matGen.shader );
+					acm_branch_push_back_string( pass, "shaderProgram", matGen.shader, false );
 					AcmBranch *parameters = acm_branch_push_back_object( pass, "shaderParameters" );
 					{
-						acm_branch_push_back_string( parameters, "diffuseMap", path );
+						acm_branch_push_back_string( parameters, "diffuseMap", path, false );
 					}
 				}
 			}

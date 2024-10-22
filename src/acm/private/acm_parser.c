@@ -201,7 +201,7 @@ static AcmBranch *ParseArrayNode( AcmBranch *parent, const char **buf, size_t le
 					break;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				acm_branch_push_back_string( arrayNode, NULL, i );
+				acm_branch_push_back_string( arrayNode, NULL, i, false );
 				SkipToNextToken( buf, &currentLine );
 			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
 			break;
@@ -365,7 +365,7 @@ static AcmBranch *ParseNode( AcmBranch *parent, const char **buf, size_t length,
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				return acm_branch_push_back_string( parent, name, i );
+				return acm_branch_push_back_string( parent, name, i, false );
 			}
 			case ND_PROPERTY_BOOL:
 			{

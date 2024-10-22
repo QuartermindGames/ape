@@ -6,6 +6,7 @@
 
 #include "forge_editor_world.h"
 #include "forge/forge_viewport_world.h"
+#include "common_project.h"
 
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
@@ -15,6 +16,7 @@ worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_VERTEX_MODE, forge::WorldEditor::on_change_geometry_mode ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_TRANSFORM_MODE, forge::WorldEditor::on_change_geometry_mode ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_SAVE, forge::WorldEditor::on_room_save ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_SELECT, forge::WorldEditor::on_room_select ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_NEW, forge::WorldEditor::on_new_room ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_EDIT, forge::WorldEditor::on_edit_room ),
@@ -26,7 +28,7 @@ worldEditorMap[] = {
 FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
 forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
-    : EditorTab( owner, "World Editor", forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ], APE_EDITOR_MODE_WORLD ),
+    : EditorTab( owner, "Room Editor", forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ], APE_EDITOR_MODE_WORLD ),
       _gridSizeTarget( this->instance.grid.scale ),
       _gridHideTarget( this->instance.grid.visible )
 {
@@ -42,11 +44,10 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 #endif
 
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ) );
-	new FXVerticalSeparator( toolbar );
 
 	// room selection box
-	roomSelectBox = new FXComboBox( toolbar, 16, this, ID_ROOM_SELECT, COMBOBOX_REPLACE | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ), this, ID_ROOM_SAVE );
+	roomSelectBox = new FXComboBox( toolbar, 16, this, ID_ROOM_SELECT, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
 	roomSelectBox->setNumVisible( 8 );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
@@ -90,7 +91,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 
 	if ( !worldName.empty() )
 	{
-		setText( "World Editor (" + worldName + ")" );
+		setText( "Room Editor (" + worldName + ")" );
 	}
 
 	ape_editor_set_active_instance( &this->instance );
@@ -158,7 +159,8 @@ void forge::WorldEditor::update_tree()
 			continue;
 		}
 
-		roomSelectBox->appendItem( child->name, child );
+		const char *path = ape_room_get_path( ( ApeRoom * ) child );
+		roomSelectBox->appendItem( path, child );
 	}
 }
 
@@ -198,44 +200,62 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 
 long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * )
 {
-	PLVector3 up;
-	PlExtractMatrix4Directions( &instance.grid.transform, nullptr, &up, nullptr );
-
-	PLMatrix4 m;
 	switch ( FXSELID( selector ) )
 	{
 		default:
 			break;
 		case ID_GRID_UP:
 		{
-			up = PlScaleVector3F( up, instance.grid.scale / 2.0f );
-			m  = PlTranslateMatrix4( up );
+			ape_grid_move_forward( &instance.grid );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			up = PlInverseVector3( PlScaleVector3F( up, instance.grid.scale / 2.0f ) );
-			m  = PlTranslateMatrix4( up );
+			ape_grid_move_backward( &instance.grid );
 			break;
 		}
 	}
-
-	instance.grid.transform = PlMultiplyMatrix4( &m, &instance.grid.transform );
-
 	return TRUE;
+}
+
+long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
+{
+	FXint    current = roomSelectBox->getCurrentItem();
+	ApeRoom *room    = ( ApeRoom    *) roomSelectBox->getItemData( current );
+	if ( room == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No active room currently selected!" );
+		return false;
+	}
+
+	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
+	if ( root == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to serialize room!" );
+		return false;
+	}
+
+	PLPath path;
+	PlSetupPath( path, true, "%s", com_project_get_local_path() );
+	PlAppendPathEx( path, true, "/%s", ape_room_get_path( room ) );
+
+	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
+	{
+		FXMessageBox::warning( this, FX::MBOX_OK, "Warning", "%s", acm_get_error_message() );
+		return false;
+	}
+
+	return true;
 }
 
 long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 {
-	FXint current = roomSelectBox->getCurrentItem();
-
-	ApeRoom *room = ( ApeRoom * ) roomSelectBox->getItemData( current );
+	FXint    current = roomSelectBox->getCurrentItem();
+	ApeRoom *room    = ( ApeRoom    *) roomSelectBox->getItemData( current );
 	if ( room == nullptr )
 	{
 		return false;
 	}
-
-	ape_world_node_set_name( APE_WORLD_NODE( room ), roomSelectBox->getItemText( current ).text() );
 
 	set_active_room( room );
 

@@ -218,7 +218,7 @@ static void build_display_lists( ApeWorld *world, ApeRoom *room, ApeCamera *came
 	}
 }
 
-void ape_brush_node_draw_( ApeBrush *self, ApeCameraDrawMode drawMode, ApeLight *light );
+void ape_brush_node_draw_( ApeBrush *self, ApeCamera *camera, ApeLight *light );
 
 static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
 {
@@ -226,6 +226,8 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 	{
 		return;
 	}
+
+	COM_PROFILE_FUNCTION_START();
 
 	PLColourF32 oldAmbience;
 	if ( light != NULL )
@@ -253,23 +255,28 @@ static void draw_room( ApeWorld *world, ApeRoom *room, ApeCamera *camera, ApeLig
 		}
 	}
 
-	//todo: new (temporary) stuff!
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, room->base.children, i )
+	if ( !alpha )
 	{
-		// for now just dealing with brushes
-		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+		//todo: new (temporary) stuff!
+		ApeWorldNode *child;
+		COM_ITERATE_LINKED_LIST( child, room->base.children, i )
 		{
-			continue;
-		}
+			// for now just dealing with brushes
+			if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+			{
+				continue;
+			}
 
-		ape_brush_node_draw_( ( ApeBrush * ) child, camera->drawMode, light );
+			ape_brush_node_draw_( ( ApeBrush * ) child, camera, ambienceOnly ? nullptr : light );
+		}
 	}
 
 	if ( light != NULL )
 	{
 		world->ambience = oldAmbience;
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static const float F_INFINITY = 10000.0f;
@@ -278,10 +285,18 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 {
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		return PlNormalizeVector3( PlSubtractVector3( *origin, light->base.position ) );
-	}
+		PLVector3 sub    = PlNormalizeVector3( PlSubtractVector3( *origin, light->base.position ) );
+		float     dif    = PlVector3Length( PlSubtractVector3( *origin, light->base.position ) );
+		float     radius = light->radius * 4;//HACK: works well for high-dense geometry, but not so much for anything else... so
+		if ( dif > radius )
+		{
+			dif = radius;
+		}
 
-	return PlNormalizeVector3( light->base.position );
+		sub = PlScaleVector3F( sub, radius - dif );
+		return sub;
+	}
+	return PlScaleVector3F( PlNormalizeVector3( light->base.position ), F_INFINITY );
 }
 
 static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *light, bool start, uint *indices )
@@ -294,9 +309,9 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 		assert( vertex->u != NULL );
 		//TODO: yes yes, all this bollocks should be in a vertex shader...
 		PLVector3 projDirection = start ? pl_vecOrigin3 : get_projection( light, &vertex->u->position );
-		indices[ i ]            = PlgImmPushVertex( vertex->u->position.x + ( projDirection.x * F_INFINITY ),
-		                                            vertex->u->position.y + ( projDirection.y * F_INFINITY ),
-		                                            vertex->u->position.z + ( projDirection.z * F_INFINITY ) );
+		indices[ i ]            = PlgImmPushVertex( vertex->u->position.x + ( projDirection.x ),
+		                                            vertex->u->position.y + ( projDirection.y ),
+		                                            vertex->u->position.z + ( projDirection.z ) );
 #if 1// for debugging
 		PlgImmColour( start ? 255 : 0, start ? 0 : 255, 255, 255 );
 #endif
@@ -306,6 +321,88 @@ static void draw_stencil_shadow_cap( const ApeWorldFace *face, const ApeLight *l
 	for ( uint i = 1; i + 1 < numVertices; ++i )
 	{
 		PlgImmPushTriangle( indices[ 0 ], indices[ start ? i : ( i + 1 ) ], indices[ start ? ( i + 1 ) : i ] );
+	}
+}
+
+static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLight *light, bool start, uint *indices )
+{
+	for ( uint i = 0; i < face->numVertices; ++i )
+	{
+		ApeBrushFaceVertex *vertex        = face->edgeLoop[ i ];
+		PLVector3           projDirection = start ? pl_vecOrigin3 : get_projection( light, vertex->position );
+		indices[ i ]                      = PlgImmPushVertex( vertex->position->x + projDirection.x,
+		                                                      vertex->position->y + projDirection.y,
+		                                                      vertex->position->z + projDirection.z );
+#if 1// for debugging
+		PlgImmColour( start ? 255 : 0, start ? 0 : 255, 255, 255 );
+#endif
+	}
+
+	for ( uint i = 1; i + 1 < face->numVertices; ++i )
+	{
+		PlgImmPushTriangle( indices[ 0 ], indices[ start ? i : ( i + 1 ) ], indices[ start ? ( i + 1 ) : i ] );
+	}
+}
+
+static void draw_node_shadow_volume( ApeWorldNode *node, const ApeLight *light, PLGMesh *mesh, uint *numIndices )
+{
+	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		ApeBrush *brush = ( ApeBrush * ) node;
+		for ( uint i = 0; i < brush->numFaces; ++i )
+		{
+			const ApeBrushFace *face = &brush->faces[ i ];
+			if ( !ape_material_shadows_enabled( face->material ) )
+			{
+				continue;
+			}
+
+			PLCollisionPlane plane = ( PLCollisionPlane ){ .normal = brush->faces[ i ].normal, .origin = brush->faces[ i ].bounds.absOrigin };
+			if ( ape_light_test_plane( light, &plane ) )
+			{
+				continue;
+			}
+
+			//todo: this check should probably be integrated into light_test_plane...
+			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->base.position, light->radius ), &brush->faces[ i ].bounds ) )
+			{
+				continue;
+			}
+
+			// There's probably a more efficient way of doing this,
+			// but let's go ahead and store all the indices into a dynamic array
+			*numIndices += ( face->numVertices * 2 );// * 2 for edges
+			static uint *indices    = nullptr;
+			static uint  maxIndices = 0;
+			if ( indices == NULL )
+			{
+				maxIndices = ( *numIndices * brush->numFaces );
+				indices    = PL_NEW_( uint, maxIndices );
+			}
+			else if ( *numIndices > maxIndices )
+			{
+				maxIndices = *numIndices + 16;
+				indices    = PL_REALLOCA( indices, sizeof( uint ) * maxIndices );
+			}
+
+			uint *fl = &indices[ *numIndices - ( face->numVertices * 2 ) ];
+			draw_brush_stencil_shadow_cap( face, light, false, fl );
+			uint *sl = &indices[ *numIndices - face->numVertices ];
+			draw_brush_stencil_shadow_cap( face, light, true, sl );
+
+			// Now produce the edges
+			for ( int j = 0; j < face->numVertices; j++ )
+			{
+				PlgImmPushTriangle( fl[ j ], fl[ ( j + 1 ) % face->numVertices ], sl[ j ] );
+				PlgImmPushTriangle( sl[ j ], fl[ ( j + 1 ) % face->numVertices ], sl[ ( j + 1 ) % face->numVertices ] );
+			}
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		draw_node_shadow_volume( child, light, mesh, numIndices );
 	}
 }
 
@@ -339,6 +436,12 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 
 		PLCollisionPlane plane = ( PLCollisionPlane ){ .normal = faces[ i ]->normal, .origin = faces[ i ]->origin };
 		if ( ape_light_test_plane( light, &plane ) )
+		{
+			continue;
+		}
+
+		//todo: this check should probably be integrated into light_test_plane...
+		if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->base.position, light->radius ), &faces[ i ]->bounds ) )
 		{
 			continue;
 		}
@@ -384,36 +487,65 @@ static void draw_room_stencil_shadow_volumes( ApeRoom *room, ApeLight *light )
 #endif
 }
 
-static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeCamera *camera, ApeLight *light )
+static void draw_room_stencil_shadow_pass( ApeRoom *room, ApeLight *light )
 {
 	if ( light == NULL )
 	{
 		return;
 	}
 
-	if ( PlIsVectorArrayEmpty( room->faces ) )
+	if ( !PlIsVectorArrayEmpty( room->faces ) )
+	{
+		draw_room_stencil_shadow_volumes( room, light );
+	}
+
+	//todo: new (temporary) stuff!
+
+	ApeMaterial *shadowMaterial = ape_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
+	assert( shadowMaterial != NULL );
+
+	uint     numIndices = 0;
+	PLGMesh *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
+
+	draw_node_shadow_volume( APE_WORLD_NODE( room ), light, mesh, &numIndices );
+
+	// if num indices are zero, probably didn't hit any faces...
+	if ( numIndices == 0 )
 	{
 		return;
 	}
 
-	draw_room_stencil_shadow_volumes( room, light );
+	ape_material_draw( shadowMaterial, mesh, nullptr );
 }
 
 void ape_world_draw_stencil_shadows( ApeWorld *world, ApeCamera *camera, ApeLight *light )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	for ( uint i = 0; i < camera->visibility.numRooms; ++i )
+	ApeRoom *room = ape_camera_get_room( camera );
+	if ( room != nullptr )
 	{
-		PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
+		draw_room_stencil_shadow_pass( room, light );
+	}
+	else
+	{
+		// legacy path...
+		for ( uint i = 0; i < camera->visibility.numRooms; ++i )
+		{
+			PlLoadMatrix( &camera->visibility.rooms[ i ].transform );
 
-		draw_room_stencil_shadow_pass( camera->visibility.rooms[ i ].room, camera, light );
+			draw_room_stencil_shadow_pass( camera->visibility.rooms[ i ].room, light );
+		}
 	}
 
 	PlPopMatrix();
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
@@ -436,11 +568,7 @@ void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool a
 	ApeRoom *room = ape_camera_get_room( camera );
 	if ( room != nullptr )
 	{
-		COM_PROFILE_START( "draw_room" );
-
 		draw_room( world, room, camera, light, ambienceOnly, alpha );
-
-		COM_PROFILE_END( "draw_room" );
 	}
 	else
 	{

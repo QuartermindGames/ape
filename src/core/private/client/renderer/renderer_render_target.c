@@ -14,11 +14,11 @@ typedef struct ApeRenderTarget
 {
 	char id[ 16 ];// 'rt_menu_0'
 
-	PLGTexture *textureAttachment;
-	unsigned int textureAttachmentComponent;
+	PLGTexture      *textureAttachment;
+	unsigned int     textureAttachmentComponent;
 	PLGTextureFilter textureAttachmentFilter;
 
-	PLGFrameBuffer *frameBuffer;
+	PLGFrameBuffer    *frameBuffer;
 	ApeMemoryReference reference;
 } ApeRenderTarget;
 
@@ -97,7 +97,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	}
 
 	PLGFrameBuffer *frameBuffer;
-	PLGTexture *textureAttachment;
+	PLGTexture     *textureAttachment;
 	if ( flags != 0 )
 	{
 		frameBuffer = PlgCreateFrameBuffer( width, height, flags );
@@ -107,7 +107,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 			return NULL;
 		}
 
-		textureAttachment = PlgGetFrameBufferTextureAttachment( frameBuffer, textureAttachmentComponent, textureAttachmentFilter );
+		textureAttachment = PlgGetFrameBufferTextureAttachment( frameBuffer, textureAttachmentComponent, textureAttachmentFilter, PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
 		if ( textureAttachment == NULL )
 		{
 			ape_warning_( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
@@ -116,15 +116,15 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	else
 	{
 		PRINT_DEBUG( "Creating placeholder render target, \"%s\"\n", key );
-		frameBuffer = NULL;
+		frameBuffer       = NULL;
 		textureAttachment = NULL;
 	}
 
-	renderTarget = PL_NEW( ApeRenderTarget );
-	renderTarget->frameBuffer = frameBuffer;
-	renderTarget->textureAttachment = textureAttachment;
+	renderTarget                             = PL_NEW( ApeRenderTarget );
+	renderTarget->frameBuffer                = frameBuffer;
+	renderTarget->textureAttachment          = textureAttachment;
 	renderTarget->textureAttachmentComponent = textureAttachmentComponent;
-	renderTarget->textureAttachmentFilter = textureAttachmentFilter;
+	renderTarget->textureAttachmentFilter    = textureAttachmentFilter;
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
 	ape_memory_setup_reference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
@@ -155,12 +155,13 @@ void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int wid
 	renderTarget->textureAttachment = PlgGetFrameBufferTextureAttachment(
 	        renderTarget->frameBuffer,
 	        renderTarget->textureAttachmentComponent,
-	        renderTarget->textureAttachmentFilter );
+	        renderTarget->textureAttachmentFilter,
+	        PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
 }
 
 void ape_render_target_get_size( const ApeRenderTarget *renderTarget, unsigned int *width, unsigned int *height )
 {
-	*width = renderTarget->frameBuffer->width;
+	*width  = renderTarget->frameBuffer->width;
 	*height = renderTarget->frameBuffer->height;
 }
 

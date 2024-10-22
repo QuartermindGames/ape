@@ -87,13 +87,16 @@ void ape_initialize_materials_( void )
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
 	        {
-	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
-	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
-	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
-	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default.mat.n",
+	                [APE_MATERIAL_DEFAULT_FALLBACK]      = "materials/engine/fallback.mat.n",
+	                [APE_MATERIAL_DEFAULT_VERTEX]        = "materials/engine/vertex.mat.n",
+	                [APE_MATERIAL_DEFAULT_SHADOW]        = "materials/engine/shadow.mat.n",
+	                [APE_MATERIAL_DEFAULT_EDITOR]        = "materials/editor/default.mat.n",
+
+	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
 	        };
 	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
+		assert( *defaultMaterialPaths[ i ] != '\0' );
 		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false, false );
 		if ( defaultMaterials[ i ] == NULL )
 		{

@@ -161,11 +161,21 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 		// grid controls
 		case KEY_KP_Subtract:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				ape_grid_move_backward( &instance->grid );
+				return TRUE;
+			}
 			ape_grid_decrease_size();
 			return TRUE;
 		}
 		case KEY_KP_Add:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				ape_grid_move_forward( &instance->grid );
+				return TRUE;
+			}
 			ape_grid_increase_size();
 			return TRUE;
 		}

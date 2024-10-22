@@ -181,7 +181,7 @@ static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const Co
 	AcmBranch *meshBranch = acm_branch_push_back_object( root, nullptr );
 
 	//TODO: should go ahead and ensure material exists, and associated texture for material is cooked, etc.
-	acm_branch_push_back_string( meshBranch, "material", mesh->material );
+	acm_branch_push_back_string( meshBranch, "material", mesh->material, false );
 
 	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
 	printf( "\t\t%u triangles\n", mesh->numTriangles );
@@ -197,7 +197,7 @@ static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 	printf( "\tSerialising bone (%s)\n", bone->name );
 
 	AcmBranch *boneBranch = acm_branch_push_back_object( root, nullptr );
-	acm_branch_push_back_string( boneBranch, "name", bone->name );
+	acm_branch_push_back_string( boneBranch, "name", bone->name, false );
 	acm_branch_push_back_uint32( boneBranch, "parent", bone->parent );
 	acm_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
 	acm_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );

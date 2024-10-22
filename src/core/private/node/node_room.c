@@ -55,7 +55,37 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self )
 	return self->reverbPreset;
 }
 
+//TODO: deprecate!!! we use brushes now :(
 ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces )
 {
 	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( self->faces, numFaces );
+}
+
+AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
+{
+	ApeRoom   *room       = ( ApeRoom         *) self;
+	AcmBranch *roomBranch = acm_branch_push_back_object( root, "room" );
+	acm_branch_push_back_string( roomBranch, "path", room->path, true );
+	acm_branch_push_back_uint32( roomBranch, "flags", room->flags );
+	acm_branch_push_back_float32_array( roomBranch, "colour", ( float * ) &room->colour, 4 );
+	acm_branch_push_back_float32_array( roomBranch, "ambience", ( float * ) &room->ambientLight, 4 );
+	acm_branch_push_back_uint32( roomBranch, "reverb", room->reverbPreset );
+
+	return root;
+}
+
+bool ape_room_set_path( ApeRoom *self, const char *path )
+{
+	if ( PlSetupPath( self->path, false, "%s", path ) == nullptr )
+	{
+		ape_warning_( "Invalid path provided: %s\n", PlGetError() );
+		return false;
+	}
+
+	return true;
+}
+
+const char *ape_room_get_path( const ApeRoom *self )
+{
+	return self->path;
 }
