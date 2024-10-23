@@ -365,7 +365,7 @@ void ape_initialize_renderer_( void )
 	                                                800, 600,
 	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
 	                                                PLG_BUFFER_COLOUR,
-	                                                PLG_TEXTURE_FILTER_LINEAR );
+	                                                PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( defaultRenderTarget == NULL )
 	{
 		ape_error_( true, "Failed to create default render target!\n" );

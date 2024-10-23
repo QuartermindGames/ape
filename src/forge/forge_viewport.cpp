@@ -157,7 +157,7 @@ void Viewport::draw()
 
 	if ( internalViewport_ == nullptr )
 	{
-		internalViewport_ = ape_viewport_create( 0, 0, w, h, this );
+		internalViewport_ = ape_viewport_create( 0, 0, w, h, this, true );
 		ape_viewport_set_camera( internalViewport_, camera );
 	}
 

@@ -16,14 +16,14 @@
 
 #define MAX_VIEWPORTS 16
 static ApeViewport *viewports[ MAX_VIEWPORTS ];
-static bool isInitialized = false;
+static bool         isInitialized = false;
 
 static ApeViewport *activeViewport;
 
 /**
  * Attempts to create a new viewport. Only a maximum of 4 are supported.
  */
-ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle )
+ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle, bool msaa )
 {
 	if ( !isInitialized )
 	{
@@ -44,18 +44,18 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 
 	if ( i >= MAX_VIEWPORTS )
 	{
-		PRINT_WARNING( "Hit maximum viewport limit! Viewport will not be created.\n" );
-		return NULL;
+		ape_warning_( "Hit maximum viewport limit! Viewport will not be created.\n" );
+		return nullptr;
 	}
 
-	viewports[ i ] = PL_NEW( ApeViewport );
-	viewports[ i ]->x = x;
-	viewports[ i ]->y = y;
-	viewports[ i ]->width = width;
-	viewports[ i ]->height = height;
-	viewports[ i ]->index = i;
+	viewports[ i ]               = PL_NEW( ApeViewport );
+	viewports[ i ]->x            = x;
+	viewports[ i ]->y            = y;
+	viewports[ i ]->width        = width;
+	viewports[ i ]->height       = height;
+	viewports[ i ]->index        = i;
 	viewports[ i ]->windowHandle = windowHandle;
-	viewports[ i ]->zoom = 1.0f;
+	viewports[ i ]->zoom         = 1.0f;
 
 #if 1
 	char viewportTag[ 64 ];
@@ -64,10 +64,10 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	                                                         width, height,
 	                                                         PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
 	                                                         PLG_BUFFER_COLOUR,
-	                                                         PLG_TEXTURE_FILTER_LINEAR );
+	                                                         PLG_TEXTURE_FILTER_LINEAR, msaa );
 	if ( viewports[ i ]->renderTarget == NULL )
 	{
-		PRINT_WARNING( "Failed to create render target for viewport!\n" );
+		ape_warning_( "Failed to create render target for viewport!\n" );
 		PL_DELETEN( viewports[ i ] );
 	}
 #endif
@@ -101,7 +101,7 @@ ApeViewport *ape_get_viewport_by_slot( unsigned int slot )
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS )
 	{
-		PRINT_WARNING( "Invalid slot specified!\n" );
+		ape_warning_( "Invalid slot specified!\n" );
 		return NULL;
 	}
 
@@ -137,7 +137,7 @@ static void update_render_target_size( ApeViewport *self )
 
 void ape_viewport_set_size( ApeViewport *self, int width, int height )
 {
-	self->width = width;
+	self->width  = width;
 	self->height = height;
 
 	update_render_target_size( self );
@@ -169,7 +169,7 @@ unsigned int ape_viewport_get_framerate( ApeViewport *self )
 		}
 
 		self->perf.lastFramerateUpdate = APE_MAX_FPS_READINGS;
-		self->perf.lastFramerate = ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
+		self->perf.lastFramerate       = ( unsigned int ) ( t / APE_MAX_FPS_READINGS );
 	}
 
 	return self->perf.lastFramerate;

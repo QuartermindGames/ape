@@ -577,7 +577,7 @@ int launcher_initialize( int argc, char **argv )
 
 	int w, h;
 	shell_get_window_size( &w, &h );
-	windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow );
+	windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow, true );
 	if ( windowViewport == NULL )
 	{
 		PrintError( "Failed to create virtual window viewport!\n" );

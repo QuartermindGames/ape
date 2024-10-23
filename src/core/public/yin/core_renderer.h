@@ -62,7 +62,7 @@ typedef struct ApeViewport
 
 ApeViewport *ape_get_viewport_by_slot( unsigned int slot );
 
-ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle );
+ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *windowHandle, bool msaa );
 void         ape_viewport_destroy( ApeViewport *self );
 
 void       ape_viewport_set_camera( ApeViewport *self, ApeCamera *camera );
@@ -85,7 +85,7 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport );
 /////////////////////////////////////////////////////////////////////////////////////
 // Render Target API
 
-ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter );
+ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter, bool useMsaa );
 void             ape_render_target_release( ApeRenderTarget *renderTarget );
 void             ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int width, unsigned int height );
 void             ape_render_target_get_size( const ApeRenderTarget *renderTarget, unsigned int *width, unsigned int *height );

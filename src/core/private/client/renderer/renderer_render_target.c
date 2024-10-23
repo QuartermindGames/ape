@@ -66,9 +66,10 @@ ApeRenderTarget *ape_render_target_get_by_key( const char *key )
 	return ( ApeRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
-ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags,
-                                           unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter )
+ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter, bool useMsaa )
 {
+	unsigned int numSamples = useMsaa ? ape_config_.renderer.msaaSamples : 0;
+
 	// Check if it's already been created, and if so, update size to match
 	ApeRenderTarget *renderTarget = ape_render_target_get_by_key( key );
 	if ( renderTarget != NULL )
@@ -82,7 +83,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 
 		if ( renderTarget->frameBuffer == NULL )
 		{
-			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags );
+			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
 			if ( renderTarget->frameBuffer == NULL )
 			{
 				ape_warning_( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
@@ -100,7 +101,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	PLGTexture     *textureAttachment;
 	if ( flags != 0 )
 	{
-		frameBuffer = PlgCreateFrameBuffer( width, height, flags );
+		frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
 		if ( frameBuffer == NULL )
 		{
 			ape_warning_( "Failed to create specified framebuffer: %s\n", PlGetError() );

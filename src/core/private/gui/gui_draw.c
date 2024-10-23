@@ -36,7 +36,7 @@ GuiCanvas *ape_gui_canvas_create( int width, int height )
 	GuiCanvas *canvas = PL_NEW( GuiCanvas );
 	canvas->width = width;
 	canvas->height = height;
-	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 	return canvas;
 }
 

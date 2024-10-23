@@ -322,7 +322,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 					ApeRenderTarget *renderTarget = ape_render_target_get_by_key( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = ape_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR );
+						renderTarget = ape_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 					}
 
 					materialVariable->type     = APE_MATERIAL_VAR_RENDERTARGET;

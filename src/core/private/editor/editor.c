@@ -558,7 +558,7 @@ void ape_initialize_editor_( void )
 		editorConfigRoot = acm_branch_push_back_object( root, "editor" );
 	}
 
-	selectionViewport = ape_viewport_create( 0, 0, 640, 480, NULL );
+	selectionViewport = ape_viewport_create( 0, 0, 640, 480, NULL, false );
 	if ( selectionViewport == NULL )
 	{
 		ape_error_( true, "Failed to create selection viewport!\n" );

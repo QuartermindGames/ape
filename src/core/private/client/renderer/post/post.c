@@ -72,7 +72,7 @@ void ape_postfx_setup_( void )
 	                                           800, 600,
 	                                           PLG_BUFFER_COLOUR,
 	                                           PLG_BUFFER_COLOUR,
-	                                           PLG_TEXTURE_FILTER_LINEAR );
+	                                           PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( ppRenderTarget == NULL )
 	{
 		ape_error_( true, "Failed to create postfx render target: %s\n", PlGetError() );
