@@ -63,7 +63,10 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	// this is currently pretty shit due to limitations in the plgraphics implementation,
 	// so we have to do it in more passes than we should
 
-	PLGTexture *viewportTexture = ape_render_target_get_texture( viewport->renderTarget );
+	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target();
+	assert( postRenderTarget != nullptr );
+
+	PLGTexture *viewportTexture = ape_render_target_get_texture( postRenderTarget );
 	assert( viewportTexture != nullptr );
 
 	// we use the texture here because supersampling madness...
