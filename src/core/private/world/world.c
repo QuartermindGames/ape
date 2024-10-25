@@ -79,28 +79,6 @@ static unsigned int get_total_verts_for_room( ApeRoom *room, bool detail )
 	return numVerts;
 }
 
-static unsigned int get_total_faces_for_room( ApeRoom *room, bool detail )
-{
-	unsigned int numFaces = PlGetNumVectorArrayElements( room->faces );
-
-	if ( detail )
-	{
-		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( room->detailRooms ); ++j )
-		{
-			ApeRoom *detailRoom = PlGetVectorArrayElementAt( room->detailRooms, j );
-			assert( detailRoom != nullptr );
-			if ( detailRoom == nullptr )
-			{
-				continue;
-			}
-
-			numFaces += PlGetNumVectorArrayElements( detailRoom->faces );
-		}
-	}
-
-	return numFaces;
-}
-
 static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 {
 	if ( room->mesh == nullptr )
@@ -115,7 +93,7 @@ static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 
 	PlgClearMesh( room->mesh );
 
-	unsigned int numFaces = get_total_faces_for_room( room, false );
+	unsigned int numFaces = PlGetNumVectorArrayElements( room->faces );
 	for ( unsigned int j = 0; j < numFaces; ++j )
 	{
 		ApeWorldFace *face = PlGetVectorArrayElementAt( room->faces, j );
@@ -184,7 +162,7 @@ static void cache_room_mesh( const ApeWorld *world, ApeRoom *room )
 
 	PlgUploadMesh( room->mesh );
 
-	room->isMeshCached = true;
+	room->isDirty = true;
 }
 
 ApeWorld *ape_world_load( const char *path )
@@ -211,7 +189,7 @@ ApeWorld *ape_world_load( const char *path )
 		{
 			ApeRoom *room = PlGetVectorArrayElementAt( world->rooms, i );
 			assert( room != nullptr );
-			if ( room->isMeshCached )
+			if ( room->isDirty )
 			{
 				continue;
 			}

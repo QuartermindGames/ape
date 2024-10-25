@@ -638,7 +638,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 				ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
+				ape_world_draw_stencil_shadows_( camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 			}
 
@@ -650,7 +650,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
 			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
 
-			ape_world_draw_stencil_shadows( world, camera, lights[ i ] );
+			ape_world_draw_stencil_shadows_( camera, lights[ i ] );
 
 			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
 			PlgColourMask( true, true, true, true );

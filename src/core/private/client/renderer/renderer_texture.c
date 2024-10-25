@@ -23,7 +23,7 @@ PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterM
 // Private
 
 static PLHashTable *textureTable;
-static ApeTexture *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
+static ApeTexture  *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
 
 static void destroy_texture( void *userData )
 {
@@ -40,7 +40,7 @@ static void destroy_texture( void *userData )
 static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
 {
 	PLColourFormat cFormat;
-	PLImageFormat iFormat;
+	PLImageFormat  iFormat;
 
 	switch ( numChannels )
 	{
@@ -87,7 +87,7 @@ static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int
 	ApeTexture *texture = PL_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
 
-	ape_memory_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
 	return texture;
 }
@@ -160,12 +160,12 @@ void ape_initialize_textures_( void )
 
 	// generate fallback texture
 	static PLColour fallbackData[] = {
-	        {128,  0,   128, 255},
-	        { 0,   128, 128, 255},
-	        { 0,   128, 128, 255},
-	        { 128, 0,   128, 255},
+	        {128, 0,   128, 255},
+	        {0,   128, 128, 255},
+	        {0,   128, 128, 255},
+	        {128, 0,   128, 255},
 	};
-	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( NULL, ( uint8_t * ) fallbackData, 2, 2, 4, false );
+	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( "fallback", ( uint8_t * ) fallbackData, 2, 2, 4, false );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
@@ -185,15 +185,15 @@ ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
 		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : NULL;
 	}
 
-	texture = PL_NEW( ApeTexture );
-	texture->internal = internalTexture;
+	texture             = PL_NEW( ApeTexture );
+	texture->internal   = internalTexture;
 	texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-	texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
+	texture->wrapMode   = PLG_TEXTURE_WRAP_MODE_REPEAT;
 	PlSetupPath( texture->path, true, "%s", path );
 
 	fetch_texture_config( texture );
 
-	ape_memory_setup_reference( "texture", APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 	ape_memory_add_reference( &texture->reference );
 
 	//TODO: thrown in for Rayman Alive, but we should probably implement a proper API for this

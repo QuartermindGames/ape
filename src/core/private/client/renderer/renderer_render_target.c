@@ -128,7 +128,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	renderTarget->textureAttachmentFilter    = textureAttachmentFilter;
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
-	ape_memory_setup_reference( "RenderTarget", APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
+	ape_memory_setup_reference( renderTarget->id, APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
 	ape_memory_add_reference( &renderTarget->reference );
 
 	PlInsertHashTableNode( renderTargets, key, strlen( key ), renderTarget );

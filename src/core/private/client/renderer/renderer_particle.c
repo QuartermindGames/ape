@@ -57,22 +57,20 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
 	emitter->emissionRate = acm_branch_get_child_int( root, "emissionRate", 2 );
-	emitter->emissionVar = acm_branch_get_child_int( root, "emissionVar", 2 );
+	emitter->emissionVar  = acm_branch_get_child_int( root, "emissionVar", 2 );
 
-	emitter->particleLife = acm_branch_get_child_int( root, "particleLife", 10 );
+	emitter->particleLife    = acm_branch_get_child_int( root, "particleLife", 10 );
 	emitter->particleLifeVar = acm_branch_get_child_int( root, "particleLifeVar", 5 );
-	emitter->maxParticles = acm_branch_get_child_int( root, "maxParticles", 100 );
+	emitter->maxParticles    = acm_branch_get_child_int( root, "maxParticles", 100 );
 
 	emitter->life = acm_branch_get_child_int( root, "life", 0 );
 
-	emitter->startColour = acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
-	emitter->endColour = acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColour    = acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour      = acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
 	emitter->startColourVar = acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
-	emitter->endColourVar = acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
+	emitter->endColourVar   = acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
-	ape_memory_add_to_pool_( path, APE_CACHE_POOL_PARTICLES, emitter );
-
-	ape_memory_setup_reference( "psemitter", APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
 	ape_memory_add_reference( &emitter->mem );
 }
 
@@ -94,14 +92,14 @@ SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void )
 {
 	SS_Arl_ParticleEmitter *emitter = PL_NEW( SS_Arl_ParticleEmitter );
-	emitter->particles = PlCreateLinkedList();
+	emitter->particles              = PlCreateLinkedList();
 
 	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
 	if ( emitter->mesh == NULL )
 		PRINT_ERROR( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 
 	emitter->startScale = 10.0f;
-	emitter->endScale = 0.0f;
+	emitter->endScale   = 0.0f;
 
 	return emitter;
 }
@@ -118,7 +116,7 @@ void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
 	while ( node != NULL )
 	{
 		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
+		node                      = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
 
@@ -155,7 +153,7 @@ static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *em
 	particle->bounds.origin = particle->transform.translation;
 
 	particle->oldColour = particle->colour;
-	particle->colour = PlAddColourF32( &particle->colour, &particle->deltaColour );
+	particle->colour    = PlAddColourF32( &particle->colour, &particle->deltaColour );
 
 	particle->scale += particle->deltaScale;
 
@@ -176,12 +174,12 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
 		SS_Arl_Particle *particle = PlMAlloc( sizeof( SS_Arl_Particle ), true );
-		particle->emitter = emitter;
+		particle->emitter         = emitter;
 
 		PLVector3 translationMod;
-		translationMod.x = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
-		translationMod.y = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
-		translationMod.z = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
+		translationMod.x                = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
+		translationMod.y                = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
+		translationMod.z                = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
 		particle->life = emitter->particleLife + ( emitter->particleLifeVar * rand_int( 100 ) );
@@ -191,19 +189,19 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		startColour.g = emitter->startColour.g + ( emitter->startColourVar.g * PlGenerateRandomFloat( 1.0f ) );
 		startColour.b = emitter->startColour.b + ( emitter->startColourVar.b * PlGenerateRandomFloat( 1.0f ) );
 		startColour.a = emitter->startColour.a + ( emitter->startColourVar.a * PlGenerateRandomFloat( 1.0f ) );
-		endColour.r = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
-		endColour.g = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
-		endColour.b = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
-		endColour.a = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
+		endColour.r   = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
+		endColour.g   = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
+		endColour.b   = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
+		endColour.a   = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
 
-		particle->colour = startColour;
+		particle->colour        = startColour;
 		particle->deltaColour.r = ( ( endColour.r - startColour.r ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.g = ( ( endColour.g - startColour.g ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
-		float startScale = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
-		float endScale = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float startScale     = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float endScale       = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
 		particle->bounds.maxs = PL_VECTOR3( 2.0f, 2.0f, 2.0f );
@@ -216,7 +214,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	}
 
 	/* simulate all of the existing particles that we've emitted */
-	unsigned int i = 0;
+	unsigned int      i    = 0;
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
@@ -234,7 +232,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	}
 
 	emitter->bounds.absOrigin = PL_VECTOR3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
-	emitter->bounds.origin = emitter->transform.translation;
+	emitter->bounds.origin    = emitter->transform.translation;
 
 	emitter->numTicks++;
 }

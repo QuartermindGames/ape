@@ -36,8 +36,9 @@ typedef struct ApeMemoryCacheHeader
 	struct PLLinkedListNode *node;              /* index in pool */
 } ApeMemoryCacheHeader;
 
-void  ape_memory_add_to_pool_( const char *id, ApeMemoryCachePool pool, void *data );
 void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool );
+
+PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool );
 
 /* ======================================================================
  * Reference Counting and Garbage Collection
@@ -47,7 +48,6 @@ typedef void ( *ApeMemoryCleanupCallback )( void *userData );
 typedef struct ApeMemoryReference
 {
 	bool                     isInitialized;  // Indicates whether the handle was set up
-	char                     id[ 64 ];       // identifier
 	int                      numReferences;  // Number of total references
 	unsigned int             timeToLive;     // Time to live
 	void                    *userData;       // Pointer to original data struct

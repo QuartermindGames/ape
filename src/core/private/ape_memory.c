@@ -34,7 +34,7 @@ static void initialize_cache_pools( void )
 	}
 }
 
-void ape_memory_add_to_pool_( const char *id, ApeMemoryCachePool pool, void *data )
+static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCachePool pool, void *data )
 {
 	/* ensure the data hasn't been cached already */
 	void *cachedData = ape_memory_get_from_pool_( id, pool );
@@ -55,6 +55,8 @@ void ape_memory_add_to_pool_( const char *id, ApeMemoryCachePool pool, void *dat
 	}
 
 	ape_print_( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
+
+	return header;
 }
 
 static ApeMemoryCacheHeader *get_cache( uint32_t id, uint8_t pool )
@@ -84,6 +86,11 @@ void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool )
 	}
 
 	return NULL;
+}
+
+PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool )
+{
+	return cachePoolsList[ pool ];
 }
 
 static void remove_from_cache( uint32_t id, uint8_t pool )
@@ -233,8 +240,12 @@ unsigned int ape_memory_flush_unreferenced_resources( void )
 
 ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData )
 {
-	snprintf( m->id, sizeof( m->id ), "%s", id );
-	m->cache           = ape_memory_get_from_pool_( id, pool );
+	m->cache = ape_memory_get_from_pool_( id, pool );
+	if ( m->cache == nullptr )
+	{
+		m->cache = add_to_cache_pool_( id, pool, userData );
+	}
+
 	m->userData        = userData;
 	m->cleanupFunction = cleanupFunction;
 	m->isInitialized   = true;

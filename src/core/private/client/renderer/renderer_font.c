@@ -140,7 +140,7 @@ void ape_bitmap_font_draw( ApeBitmapFont *font )
 
 void ape_initialize_bitmap_fonts_( void )
 {
-	defaultFont = ss_arl_bitmap_font_cache( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
+	defaultFont      = ss_arl_bitmap_font_cache( "materials/ui/fonts/default.mat.n", 256, 48, 8, 12, 0, 128 );
 	defaultFontSmall = ss_arl_bitmap_font_cache( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
@@ -177,21 +177,19 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 		return NULL;
 	}
 
-	font = PlMAlloc( sizeof( ApeBitmapFont ), true );
+	font           = PlMAlloc( sizeof( ApeBitmapFont ), true );
 	font->material = material;
-	font->mesh = mesh;
-	font->w = w;
-	font->h = h;
-	font->cw = cw;
-	font->ch = ch;
-	font->start = start;
-	font->end = end;
+	font->mesh     = mesh;
+	font->w        = w;
+	font->h        = h;
+	font->cw       = cw;
+	font->ch       = ch;
+	font->start    = start;
+	font->end      = end;
 
 	strncpy( font->path, materialPath, sizeof( font->path ) );
 
-	ape_memory_add_to_pool_( materialPath, APE_CACHE_POOL_FONTS, font );
-
-	ape_memory_setup_reference( "bitmapFont", APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
+	ape_memory_setup_reference( font->path, APE_CACHE_POOL_FONTS, &font->mem, DestroyBitmapFont, font );
 	ape_memory_add_reference( &font->mem );
 
 	return font;

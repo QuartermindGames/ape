@@ -26,9 +26,9 @@
 #define ENGINE_APP_NAME "ape"
 
 #define VERSION_MAJOR    0
-#define VERSION_MINOR    4
+#define VERSION_MINOR    5
 #define VERSION_PATCH    0
-#define VERSION_CODENAME "Artemis"
+#define VERSION_CODENAME "Pelham-Holles"
 
 #define S_STRCAT( DST, SOURCE ) strncat( ( DST ), ( SOURCE ), sizeof( ( DST ) ) - strlen( ( DST ) ) - 1 )
 

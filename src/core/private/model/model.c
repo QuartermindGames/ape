@@ -219,15 +219,13 @@ ApeModel *ape_model_load( const char *path )
 	if ( root == NULL )
 	{
 		ape_warning_( "Invalid model: %s (%s)\n", acm_get_error_message(), path );
-		return NULL;
+		return nullptr;
 	}
 
 	model = PL_NEW( ApeModel );
 	if ( deserialize_model( model, root ) != nullptr )
 	{
-		ape_memory_add_to_pool_( path, APE_CACHE_POOL_MODELS, model );
-
-		ape_memory_setup_reference( "model", APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
+		ape_memory_setup_reference( path, APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
 		ape_memory_add_reference( &model->reference );
 	}
 	else

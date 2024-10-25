@@ -130,7 +130,7 @@ typedef struct ApeRoom
 	PLVectorArray *faces;      // ApeWorldFace
 
 	PLGMesh *mesh;        // cached mesh
-	bool     isMeshCached;// if false, mesh cache will be updated
+	bool     isDirty;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
