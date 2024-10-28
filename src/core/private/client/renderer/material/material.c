@@ -90,7 +90,8 @@ void ape_initialize_materials_( void )
 	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
 	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
 	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
-	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default.mat.n",
+	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default_64.mat.n",
+	                [APE_MATERIAL_DEFAULT_HIDDEN]   = "materials/editor/hidden.mat.n",
 
 	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
 	        };

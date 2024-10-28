@@ -217,7 +217,7 @@ bool ape_world_save( ApeWorld *self, const char *path )
 	return true;
 }
 
-void ape_world_destroy_( void *data )
+void ape_world_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeWorld *self = ( ApeWorld * ) data;
 	if ( self == nullptr )

@@ -132,6 +132,7 @@ typedef enum ApeDefaultMaterial
 	APE_MATERIAL_DEFAULT_VERTEX,  // basic vertex, no texture
 	APE_MATERIAL_DEFAULT_SHADOW,  // material used per shadow volumes
 	APE_MATERIAL_DEFAULT_EDITOR,  // default material to use per new brushes
+	APE_MATERIAL_DEFAULT_HIDDEN,  // material to display when a surface is marked hidden
 
 	APE_MATERIAL_DEFAULT_DEBUG_NORMALS,
 

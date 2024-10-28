@@ -113,6 +113,15 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 {
 	ape_tick_frame();
 
+	static unsigned int refreshTime = 0;
+	if ( refreshTime <= ape_get_num_ticks() )
+	{
+		com_profiler_update_samples();
+
+		PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
+		refreshTime += ( profilerFrequency != nullptr ) ? profilerFrequency->i_value : 16;
+	}
+
 	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
 	return 0;
 }

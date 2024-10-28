@@ -59,7 +59,7 @@ typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
-	void ( *destroyFunction )( void *data );
+	void ( *destroyFunction )( void *data, ApeWorldNode *parent );
 	AcmBranch *( *serializeFunction )( void *data, AcmBranch *root );
 } ApeWorldNodeClass;
 
@@ -91,6 +91,7 @@ typedef struct ApeWorldNode
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
+bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );
 
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
@@ -292,7 +293,7 @@ AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
 
 // TODO: move these under the renderer sub-system
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera );
-void ape_world_draw( ApeWorld *world, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha );
+void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha );
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 
 void ape_world_set_global_defaults( ApeWorld *level );
@@ -311,12 +312,6 @@ void ape_world_attach_light( ApeWorld *world, ApeLight *light );
  * Should only be used for vague, but fast, lookup.
  */
 ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
-
-uint ape_sky_add_layer( const char *path, float scale, float y, float alpha );
-void ape_sky_set_layer_alpha( uint slot, float alpha );
-void ape_sky_set_layer_offset( uint slot, float x, float y );
-void ape_sky_clear_layers( void );
-void ape_sky_draw_( ApeCamera *camera );
 
 ////////////////////////////////////////////////////////////////////
 // Room

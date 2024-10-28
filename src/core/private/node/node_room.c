@@ -20,7 +20,7 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	return room;
 }
 
-void ape_room_destroy_( void *data )
+void ape_room_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeRoom *self = ( ApeRoom * ) data;
 

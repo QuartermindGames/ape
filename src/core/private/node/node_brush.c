@@ -147,12 +147,19 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 	return brush;
 }
 
-void ape_brush_destroy_( void *data )
+void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeBrush *self = ( ApeBrush * ) data;
 	if ( self == nullptr )
 	{
 		return;
+	}
+
+	//HACK: notify the room it's rebuild time!
+	ApeRoom *room = ape_world_node_get_room( parent );
+	if ( room != nullptr )
+	{
+		room->isDirty = true;
 	}
 
 	PL_DELETE( self->vertices );
@@ -214,7 +221,12 @@ static void compute_brush_face_normal( ApeBrushFace *face )
 		PLVector3 n  = PlVector3CrossProduct( edge1, edge2 );
 		face->normal = PlAddVector3( face->normal, n );
 	}
+
 	face->normal = PlNormalizeVector3( face->normal );
+	for ( uint i = 0; i < face->numVertices; ++i )
+	{
+		face->vertices[ i ].normal = face->normal;
+	}
 }
 
 static void compute_brush_face_tangents( ApeBrushFace *face )
@@ -394,6 +406,12 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	}
 
 	compute_brush_bounds( self );
+
+	ApeRoom *room = ape_world_node_get_room( &self->base );
+	if ( room != nullptr )
+	{
+		room->isDirty = true;
+	}
 
 	return true;
 }

@@ -228,16 +228,6 @@ static bool ss1_spawn_world( ApeWorld *world )
 {
 	world_simulation_initialize( &ss1_gameState.simulation );
 
-	//todo: move this all out into the engine, fetch it from the world properties
-	ape_sky_clear_layers();
-	for ( unsigned int i = 0; i < MAX_SKY_LAYERS; ++i )
-	{
-		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,
-		                                       skyLayers[ i ].baseScale,
-		                                       skyLayers[ i ].baseY,
-		                                       skyLayers[ i ].baseAlpha );
-	}
-
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, &world->base );
 
 	suns[ 0 ] = ape_create_light( &world->base, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,

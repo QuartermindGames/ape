@@ -156,7 +156,7 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const PLVe
  * of calling PlgDestroyCamera directly, as it
  * will free up user data.
  */
-void ape_camera_destroy_( void *data )
+void ape_camera_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeCamera *self = ( ApeCamera * ) data;
 	if ( self == nullptr )

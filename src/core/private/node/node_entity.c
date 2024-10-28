@@ -106,7 +106,7 @@ ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeW
 	return entity;
 }
 
-void ape_entity_destroy_( void *data )
+void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeEntity *self = ( ApeEntity * ) data;
 	if ( self == nullptr )

@@ -238,12 +238,12 @@ static void write_screenshot( void )
 		}
 		else
 		{
-			PRINT_WARNING( "Failed to create image for screenshot: %s\n", PlGetError() );
+			ape_warning_( "Failed to create image for screenshot: %s\n", PlGetError() );
 		}
 	}
 	else
 	{
-		PRINT_WARNING( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+		ape_warning_( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 	}
 
 	PL_DELETE( buf );
@@ -388,171 +388,9 @@ void ape_shutdown_renderer_( void )
 }
 
 /****************************************
- * SKY
- * Scrapped and then reintroduced for the
- * ALIVE event... *sigh*
  ****************************************/
 
-typedef struct SkyLayer
-{
-	ApeMaterial *material;
-	float        scale;
-	float        alpha;
-	float        y;
-
-	PLVector2 offset;
-} SkyLayer;
-
-#define MAX_SKY_LAYERS 4
-static unsigned int numSkyLayers = 0;
-static SkyLayer     skyLayers[ MAX_SKY_LAYERS ];
-
-static void draw_sky_layer( PLGMesh *mesh, ApeMaterial *material, const PLVector3 *location, float x, float y, float scale )
-{
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	PlLoadIdentityMatrix();
-	PlTranslateMatrix( *location );
-
-	/* todo: do this in shader... */
-	PlgGenerateTextureCoordinates( mesh->vertices, mesh->num_verts, PL_VECTOR2( x, y ), PL_VECTOR2( scale * 500.0f, scale * 500.0f ) );
-
-	ape_material_draw( material, mesh, NULL );
-
-	PlPopMatrix();
-}
-
-unsigned int ape_sky_add_layer( const char *path, float scale, float y, float alpha )
-{
-	assert( numSkyLayers < MAX_SKY_LAYERS );
-	if ( numSkyLayers >= MAX_SKY_LAYERS )
-	{
-		PRINT_WARNING( "Hit sky layer limit (%u >= %u)!\n", numSkyLayers, MAX_SKY_LAYERS );
-		return ( unsigned int ) -1;
-	}
-
-	skyLayers[ numSkyLayers ].material = ape_material_cache( path, APE_CACHE_GROUP_WORLD, true, false );
-	skyLayers[ numSkyLayers ].scale    = scale;
-	skyLayers[ numSkyLayers ].alpha    = alpha;
-	skyLayers[ numSkyLayers ].y        = y;
-
-	numSkyLayers++;
-	return ( numSkyLayers - 1 );
-}
-
-void ape_sky_set_layer_alpha( unsigned int slot, float alpha )
-{
-	assert( slot < numSkyLayers );
-	if ( slot >= numSkyLayers )
-	{
-		PRINT_WARNING( "Invalid sky layer slot (%u)!\n", slot );
-		return;
-	}
-
-	skyLayers[ slot ].alpha = alpha;
-}
-
-void ape_sky_set_layer_offset( unsigned int slot, float x, float y )
-{
-	assert( slot < numSkyLayers );
-	if ( slot >= numSkyLayers )
-	{
-		PRINT_WARNING( "Invalid sky layer slot (%u)!\n", slot );
-		return;
-	}
-
-	skyLayers[ slot ].offset = ( PLVector2 ){ x, y };
-}
-
-void ape_sky_clear_layers( void )
-{
-	for ( unsigned int i = 0; i < numSkyLayers; ++i )
-	{
-		if ( skyLayers[ i ].material == NULL )
-			continue;
-
-		ape_material_release( skyLayers[ i ].material );
-		skyLayers[ i ].material = NULL;
-	}
-
-	numSkyLayers = 0;
-}
-
-/**
- * Draw scrolling clouds.
- */
-void ape_sky_draw_( ApeCamera *camera )
-{
-	if ( numSkyLayers == 0 )
-	{
-		return;
-	}
-
-	static unsigned int indices[][ 3 ] = {
-	        /* corners */
-	        {2, 1, 0},
-	        {3, 1, 2},
-	        {4, 3, 2},
-	        {5, 3, 4},
-	        {6, 5, 4},
-	        {7, 5, 6},
-	        {0, 7, 6},
-	        {1, 7, 0},
-	        /* middle */
-	        {4, 2, 0},
-	        {6, 4, 0},
-	};
-	unsigned int numTriangles = PL_ARRAY_ELEMENTS( indices );
-
-	static PLGMesh *mesh = NULL;
-	if ( mesh == NULL )
-	{
-		mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numTriangles, 8 );
-		assert( mesh != NULL );
-		if ( mesh == NULL )
-		{
-			PRINT_WARNING( "Failed to create sky mesh: %s\n", PlGetError() );
-			return;
-		}
-	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
-	PlgDepthMask( false );
-
-	//TODO: this is all very slow and very gross, but cobbled together to meet a deadline...
-
-	for ( unsigned int i = 0; i < numSkyLayers; ++i )
-	{
-		PLVector3 location = { 0.0f, 100.0f + skyLayers[ i ].y, 0.0f };
-
-		PlgClearMesh( mesh );
-
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( 100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );   /* top right */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( 200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                         /* top right far */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( 100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* lower right */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( 200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* lower right far */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( -100.0f, 10.0f, -100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 ); /* lower left */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( -200.0f, 10.0f, -200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                       /* lower left far */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( -100.0f, 10.0f, 100.0f ), &pl_vecOrigin3, &( PLColour ){ 255, 255, 255, PlFloatToByte( skyLayers[ i ].alpha ) }, &pl_vecOrigin2 );  /* top left */
-		PlgAddMeshVertex( mesh, &PL_VECTOR3( -200.0f, 10.0f, 200.0f ), &pl_vecOrigin3, &PLColourA( 0 ), &pl_vecOrigin2 );                                                        /* top left far */
-
-		for ( unsigned int j = 0; j < numTriangles; ++j )
-		{
-			PlgAddMeshTriangle( mesh, indices[ j ][ 0 ], indices[ j ][ 1 ], indices[ j ][ 2 ] );
-		}
-
-		draw_sky_layer( mesh, skyLayers[ i ].material, &location, skyLayers[ i ].offset.x, skyLayers[ i ].offset.y, skyLayers[ i ].scale );
-	}
-
-	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-	PlgDepthMask( true );
-}
-
-/****************************************
- ****************************************/
-
-static void render_transparent_world( ApeWorld *world, ApeCamera *camera )
+static void render_transparent_world( ApeCamera *camera )
 {
 	unsigned int numLights;
 	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
@@ -569,17 +407,17 @@ static void render_transparent_world( ApeWorld *world, ApeCamera *camera )
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw( world, camera, lights[ i ], false, true );
+		ape_world_draw( camera, lights[ i ], false, true );
 
 		ape_rendererState_.overrideBlendMode = false;
 		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 	}
 }
 
-static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeViewport *viewport )
+static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 {
 	// Ambient pass
-	ape_world_draw( world, camera, nullptr, true, false );
+	ape_world_draw( camera, nullptr, true, false );
 
 	PlgDepthMask( false );
 
@@ -666,7 +504,7 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw( world, camera, lights[ i ], false, false );
+		ape_world_draw( camera, lights[ i ], false, false );
 
 		ape_rendererState_.overrideBlendMode = false;
 		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
@@ -682,13 +520,19 @@ static void render_solid_world( ApeWorld *world, ApeCamera *camera, const ApeVie
 	PlgDepthMask( true );
 }
 
-void ape_test_draw_( ApeCamera *camera );
-
-static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
+void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
+	assert( camera != NULL );
+	assert( viewport != NULL );
+
 	COM_PROFILE_FUNCTION_START();
 
+	currentCamera = camera;
+
 	ape_rendererPerformance_.numLights = 0;
+
+	PlgDepthMask( true );
+	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	ape_editor_pre_render_scene_( camera );
 
@@ -696,11 +540,9 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
-
+	
 	if ( !ape_config_.world.skipDraw )
 	{
-		ape_sky_draw_( camera );
-
 		ApeWorld *world = ape_camera_get_world( camera );
 		if ( world != NULL )
 		{
@@ -713,23 +555,18 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 					break;
 				case APE_CAMERA_DRAW_MODE_SOLID:
 				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw( world, camera, nullptr, true, false );
-					ape_world_draw( world, camera, nullptr, true, true );
+					ape_world_draw( camera, nullptr, true, false );
+					ape_world_draw( camera, nullptr, true, true );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
-					render_solid_world( world, camera, viewport );
-					render_transparent_world( world, camera );
+					render_solid_world( camera, viewport );
+					render_transparent_world( camera );
 					break;
 			}
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
-
-#if !defined( NDEBUG )
-	ape_draw_debug_mesh_display_();
-	ape_test_draw_( camera );
-#endif
 
 	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
@@ -738,24 +575,7 @@ static void render_scene( ApeCamera *camera, const ApeViewport *viewport )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
-	ape_editor_post_render_scene_( camera );
-
-	COM_PROFILE_FUNCTION_END();
-}
-
-void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
-{
-	assert( camera != NULL );
-	assert( viewport != NULL );
-
-	COM_PROFILE_FUNCTION_START();
-
-	currentCamera = camera;
-
-	PlgDepthMask( true );
-	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
-
-	render_scene( camera, viewport );
+	ape_editor_post_render_scene_();
 
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 

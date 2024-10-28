@@ -16,12 +16,12 @@
 #define APE_WORLD_NODE_CAMERA_MAGIC PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' )
 #define APE_WORLD_NODE_ENTITY_MAGIC PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' )
 
-void ape_world_destroy_( void *data );
-void ape_room_destroy_( void *data );
-void ape_brush_destroy_( void *data );
-void ape_light_destroy_( void *data );
-void ape_camera_destroy_( void *data );
-void ape_entity_destroy_( void *data );
+void ape_world_destroy_( void *data, ApeWorldNode *parent );
+void ape_room_destroy_( void *data, ApeWorldNode *parent );
+void ape_brush_destroy_( void *data, ApeWorldNode *parent );
+void ape_light_destroy_( void *data, ApeWorldNode *parent );
+void ape_camera_destroy_( void *data, ApeWorldNode *parent );
+void ape_entity_destroy_( void *data, ApeWorldNode *parent );
 
 AcmBranch *ape_room_serialize_( void *self, AcmBranch *root );
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root );
@@ -69,6 +69,11 @@ void ape_world_node_generate_bounds_( ApeWorldNode *root )
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+bool ape_world_node_has_magic( const ApeWorldNode *self )
+{
+	return ( self->magic == APE_WORLD_NODE_MAGIC );
+}
 
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType )
 {
@@ -118,6 +123,10 @@ void ape_world_node_destroy( ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 
+	// dettach it from the parent (but grab so we can pass to destructor)
+	ApeWorldNode *parent = self->parent;
+	ape_world_node_dettach( self );
+
 	PLLinkedListNode *node = PlGetFirstNode( self->children );
 	while ( node != NULL )
 	{
@@ -129,7 +138,7 @@ void ape_world_node_destroy( ApeWorldNode *self )
 	PlDestroyLinkedList( self->children );
 
 	assert( self->classType->destroyFunction );
-	self->classType->destroyFunction( self );
+	self->classType->destroyFunction( self, parent );
 }
 
 void ape_world_node_dettach( ApeWorldNode *self )
@@ -227,6 +236,12 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
+
+	// return early if the node provided is already a room
+	if ( self->type == APE_WORLD_NODE_TYPE_ROOM )
+	{
+		return ( ApeRoom * ) self;
+	}
 
 	ApeWorldNode *next = self->parent;
 	while ( next != nullptr )

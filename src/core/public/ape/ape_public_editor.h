@@ -83,11 +83,9 @@ typedef struct ApeEditorInstance
 	void *modeData;
 
 	struct PLHashTable *selectionTable;
-	union
-	{
-		void         *selectedObject;
-		ApeBrushFace *selectedFace;
-	};
+	PLLinkedList       *selectedObjects;
+	void               *hoverSelection;
+
 	ApeWorldNode *currentNode;//todo: there is some overlap with the above...
 
 	struct PLLinkedListNode *listNode;// index in the table of instances
@@ -105,6 +103,13 @@ ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
 
 PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst );
 void     *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
+void      ape_editor_clear_selection( ApeEditorInstance *self );
+void      ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
+void     *ape_editor_get_first_selected( ApeEditorInstance *self );
+void      ape_editor_delete_selection( ApeEditorInstance *self );
+
+void ape_editor_toggle_faces( ApeEditorInstance *self );
+void ape_editor_toggle_other_faces( ApeEditorInstance *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid

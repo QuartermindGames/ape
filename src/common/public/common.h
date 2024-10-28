@@ -66,17 +66,20 @@ uint com_profiler_get_num_groups( void );
 
 void com_profiler_update_samples( void );
 
-#define COM_PROFILE_START( NAME ) comStartProfiling( ( NAME ) )
-#define COM_PROFILE_END( NAME )   comEndProfiling( ( NAME ) )
+#define COM_ENABLE_PROFILER
 
-#define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
-#define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
-#define COM_PROFILE_FUNCTION_CALL( FUNCTION ) \
-	{                                         \
-		comStartProfiling( #FUNCTION );       \
-		FUNCTION;                             \
-		comEndProfiling( #FUNCTION );         \
-	}
+#if defined( COM_ENABLE_PROFILER )
+#	define COM_PROFILE_START( NAME ) comStartProfiling( ( NAME ) )
+#	define COM_PROFILE_END( NAME )   comEndProfiling( ( NAME ) )
+
+#	define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
+#else
+#	define COM_PROFILE_START( NAME )
+#	define COM_PROFILE_END( NAME )
+#	define COM_PROFILE_FUNCTION_START()
+#	define COM_PROFILE_FUNCTION_END()
+#endif
 
 // Wrapper for Hei macro to take advantage of C23 features
 #define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )

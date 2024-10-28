@@ -202,8 +202,10 @@ static void cache_icons( FXApp &app )
 
 	forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ] = forge::load_fx_icon( &app, "resources/grid_orient.gif" );
 
-	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ] = forge::load_fx_icon( &app, "resources/face_portal.gif" );
-	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ] = forge::load_fx_icon( &app, "resources/face_toggle.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ]       = forge::load_fx_icon( &app, "resources/face_portal.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ]       = forge::load_fx_icon( &app, "resources/face_toggle.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE_OTHER ] = forge::load_fx_icon( &app, "resources/face_toggle_other.gif" );
+	forge_cachedIcons[ FORGE_ICON_TYPE_FACE_SMOOTH ]       = forge::load_fx_icon( &app, "resources/face_smooth.gif" );
 
 	forge_cachedIcons[ FORGE_ICON_TYPE_NODE ]    = forge::load_fx_icon( &app, "resources/node.gif" );
 	forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ]   = forge::load_fx_icon( &app, "resources/world_editor.gif" );

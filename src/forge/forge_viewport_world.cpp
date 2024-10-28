@@ -29,25 +29,39 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 	ApeEditorInstance *instance = editor->get_internal();
 	assert( instance != nullptr );
 
+	if ( FXSELTYPE( selector ) != SEL_LEFTBUTTONPRESS )
+	{
+		return FALSE;
+	}
+
+	auto *event = ( FXEvent * ) ptr;
+	if ( !( event->state & CONTROLMASK ) )
+	{
+		ape_editor_clear_selection( instance );
+	}
+
 	switch ( instance->geometryMode )
 	{
 		default:
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
 		{
-			if ( FXSELTYPE( selector ) == SEL_LEFTBUTTONPRESS )
-			{
-				ape_editor_add_polygon_point( instance );
-			}
+			ape_editor_add_polygon_point( instance );
 			return TRUE;
 		}
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			printf( "Clicking...\n" );
-			break;
+			void *p = ape_editor_get_object_under_cursor( instance );
+			if ( p == nullptr )
+			{
+				return TRUE;
+			}
+
+			ape_editor_add_object_to_selection( instance, p );
+			return TRUE;
 		}
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
-		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
 	}
 
 	return FALSE;
@@ -81,20 +95,18 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			ApeBrushFace *face = instance->selectedFace;
-			if ( face == nullptr )
+			if ( PlGetNumLinkedListNodes( instance->selectedObjects ) == 0 )
 			{
 				return TRUE;
 			}
 
 			// Create a pop-up menu
-			auto popup = new FXMenuPane( this );
-
-			FXMenuCheck *toggleFace = new FXMenuCheck( popup, "Show Face", this, ID_FACE_TOGGLE );
-			toggleFace->setCheck( !( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) );
-			new FXMenuCommand( popup, "Toggle Other Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ], this, ID_FACE_TOGGLE_OTHERS );
+			FXMenuPane *popup = new FXMenuPane( this );
+			new FXMenuCommand( popup, "Toggle Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ], this, ID_FACE_TOGGLE );
+			new FXMenuCommand( popup, "Toggle Other Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE_OTHER ], this, ID_FACE_TOGGLE_OTHERS );
 			new FXMenuSeparator( popup );
-			new FXMenuCommand( popup, "Flip Face", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_TOGGLE );
+			new FXMenuCommand( popup, "Flip Faces", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_FLIP );
+			new FXMenuCommand( popup, "Smooth Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_SMOOTH ], this, ID_FACE_SMOOTH );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
 			new FXMenuSeparator( popup );
@@ -146,6 +158,10 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 				ape_editor_remove_polygon_point( instance );
 				return TRUE;
 			}
+			else if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+			{
+				ape_editor_delete_selection( instance );
+			}
 			break;
 		}
 		case KEY_Escape:
@@ -159,6 +175,7 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 		}
 
 		// grid controls
+		case KEY_bracketleft:
 		case KEY_KP_Subtract:
 		{
 			if ( event->state & SHIFTMASK )
@@ -169,6 +186,7 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 			ape_grid_decrease_size();
 			return TRUE;
 		}
+		case KEY_bracketright:
 		case KEY_KP_Add:
 		{
 			if ( event->state & SHIFTMASK )
@@ -205,10 +223,10 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 		{
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
-				ApeBrushFace *face = instance->selectedFace;
+				ApeBrushFace *face = ( ApeBrushFace * ) ape_editor_get_first_selected( instance );
 				if ( face == nullptr )
 				{
-					break;
+					return TRUE;
 				}
 
 				ape_grid_align_to_face( &instance->grid, face );
@@ -222,29 +240,13 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 		{
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
-				ApeBrushFace *face = instance->selectedFace;
-				if ( face == nullptr )
-				{
-					break;
-				}
-
 				if ( event->state & SHIFTMASK )
 				{
-					ApeBrush *brush = face->parent;
-					assert( brush != nullptr );
-					for ( uint i = 0; i < brush->numFaces; ++i )
-					{
-						if ( &brush->faces[ i ] == face )
-						{
-							continue;
-						}
-
-						brush->faces[ i ].flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
-					}
+					ape_editor_toggle_other_faces( instance );
 				}
 				else
 				{
-					face->flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+					ape_editor_toggle_faces( instance );
 				}
 				return TRUE;
 			}
@@ -296,7 +298,18 @@ long forge::WorldViewport::on_grid_align( FXObject *, FXSelector, void * )
 	ApeEditorInstance *instance = editor->get_internal();
 	assert( instance != nullptr );
 
-	ape_grid_align_to_face( &instance->grid, instance->selectedFace );
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return FALSE;
+	}
+
+	ApeBrushFace *face = ( ApeBrushFace * ) ape_editor_get_first_selected( instance );
+	if ( face == nullptr )
+	{
+		return FALSE;
+	}
+
+	ape_grid_align_to_face( &instance->grid, face );
 	return TRUE;
 }
 
@@ -305,29 +318,13 @@ long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector selector, void
 	ApeEditorInstance *instance = editor->get_internal();
 	assert( instance != nullptr );
 
-	ApeBrushFace *face = instance->selectedFace;
-	if ( face == nullptr )
-	{
-		return FALSE;
-	}
-
 	if ( FXSELID( selector ) == ID_FACE_TOGGLE_OTHERS )
 	{
-		ApeBrush *brush = face->parent;
-		assert( brush != nullptr );
-		for ( uint i = 0; i < brush->numFaces; ++i )
-		{
-			if ( &brush->faces[ i ] == face )
-			{
-				continue;
-			}
-
-			brush->faces[ i ].flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
-		}
+		ape_editor_toggle_other_faces( instance );
 	}
 	else
 	{
-		face->flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
+		ape_editor_toggle_faces( instance );
 	}
 
 	return TRUE;

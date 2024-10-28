@@ -25,7 +25,7 @@ ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, con
 	return light;
 }
 
-void ape_light_destroy_( void *data )
+void ape_light_destroy_( void *data, ApeWorldNode *parent )
 {
 	ApeLight *self = ( ApeLight * ) data;
 	if ( self == NULL )

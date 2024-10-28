@@ -71,8 +71,6 @@ typedef struct ApeCamera
 	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;
 
-	ApeRoom *room;
-
 	ApeCameraVisibleSet visibility;
 
 	/////////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ typedef unsigned long int  ulong;
 typedef unsigned short int ushort;
 typedef unsigned int       uint;
 
-#define APE_DEFAULT_TICK_RATE ( 1000 / 60 ) // ms
+#define APE_DEFAULT_TICK_RATE ( 1000 / 60 )// ms
 
 #define APE_SELF_CAST( X, Y ) ( ( X * ) ( Y ) )
 

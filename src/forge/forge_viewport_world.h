@@ -21,6 +21,8 @@ namespace forge
 
 			ID_FACE_TOGGLE,
 			ID_FACE_TOGGLE_OTHERS,
+			ID_FACE_FLIP,
+			ID_FACE_SMOOTH,
 
 			ID_LAST,
 		};

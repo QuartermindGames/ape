@@ -475,13 +475,14 @@ void ape_console_register_cl_commands_( void )
 }
 
 void ape_register_renderer_console_variables_( void );
+void ape_renderer_world_register_console_variables_();
 void ape_console_register_cl_variables_( void )
 {
 	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, true );
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
-	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "2", PL_VAR_I32, NULL, nullptr, false );
+	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "1", PL_VAR_I32, NULL, nullptr, false );
 	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, nullptr, false );
 
 	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );
@@ -491,6 +492,8 @@ void ape_console_register_cl_variables_( void )
 	                           "false", PL_VAR_BOOL, &drawShadow, nullptr, true );
 
 	ape_register_renderer_console_variables_();
+	ape_renderer_world_register_console_variables_();
+
 	ape_audio_register_console_variables_();
 	ape_register_world_console_variables_();
 	ape_editor_register_console_();

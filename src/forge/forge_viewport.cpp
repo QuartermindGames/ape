@@ -88,7 +88,7 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 		canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	}
 
-	PLVector3 position = PL_VECTOR3( 0.0f, -16.0f, 0.0f );
+	PLVector3 position = PL_VECTOR3( 0.0f, 32.0f, 0.0f );
 
 	camera = ape_create_camera( nullptr, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 	ape_camera_set_draw_mode( camera, drawMode_ );
@@ -115,7 +115,7 @@ void Viewport::create()
 	show();
 	enable();
 
-	if ( displayList_->getCurrentContext() == nullptr )
+	if ( FX::FXGLCanvas::getCurrentContext() == nullptr )
 	{
 		displayList_->makeCurrent();
 	}
@@ -296,8 +296,8 @@ long Viewport::on_zoom( FXObject *, FXSelector, void *ptr )
 		PLVector3 pos = ape_camera_get_position( camera );
 		PLVector3 ang = ape_camera_get_angles( camera );
 
-		PLVector3 forward, left;
-		PlAnglesAxes( ang, &left, nullptr, &forward );
+		PLVector3 forward;
+		PlAnglesAxes( ang, nullptr, nullptr, &forward );
 
 		dir /= 50.0f;
 		if ( dir )
@@ -471,28 +471,28 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		{
 			PLVector3 forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
 			break;
 		}
 		case 's':
 		{
 			PLVector3 forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
 			break;
 		}
 		case 'a':
 		{
 			PLVector3 left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+			pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
 			break;
 		}
 		case 'd':
 		{
 			PLVector3 left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+			pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
 			break;
 		}
 		case 'q':

@@ -277,21 +277,9 @@ void ape_grid_move_backward( ApeEditorGrid *self )
 	self->transform = PlMultiplyMatrix4( &m, &self->transform );
 }
 
-void ape_grid_draw_()
+void ape_grid_draw_( const ApeEditorGrid *self )
 {
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
-	{
-		return;
-	}
-
-	if ( !instance->grid.visible || instance->grid.scale <= 1 )
-	{
-		return;
-	}
-
-	ApeViewport *viewport = ape_viewport_get_active();
-	if ( viewport == nullptr )
+	if ( !self->visible || self->scale <= 1 )
 	{
 		return;
 	}
@@ -300,15 +288,15 @@ void ape_grid_draw_()
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-	PlLoadMatrix( &instance->grid.transform );
+	PlLoadMatrix( &self->transform );
 
 	int w        = APE_EDITOR_GRID_MAX_SIZE;
 	int h        = APE_EDITOR_GRID_MAX_SIZE;
 	int x        = -APE_EDITOR_GRID_MAX_SIZE / 2;
 	int y        = -APE_EDITOR_GRID_MAX_SIZE / 2;
-	int gridSize = ( instance->grid.scale / 2 );
+	int gridSize = ( self->scale / 2 );
 
-	PLColour colour = PL_COLOURU8( 0, 0, 255, 255 );
+	PLColour colour = PL_COLOURU8( 100, 100, 100, 255 );
 
 	//TODO: cache this...
 	PlgImmBegin( PLG_MESH_LINES );
@@ -329,18 +317,41 @@ void ape_grid_draw_()
 	}
 	PlgImmDraw();
 
+	PlPopMatrix();
+}
+
+void ape_grid_post_draw_( const ApeEditorGrid *self )
+{
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadMatrix( &self->transform );
+
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
+	PlgImmBegin( PLG_MESH_LINES );
+
 	static constexpr float AXIS_SCALE = 8.0f;
-	static const PLVector3 axis[]     = {
-            {0.0f,       0.0f,       0.0f      },
-            {AXIS_SCALE, 0.0f,       0.0f      },
-            {0.0f,       0.0f,       0.0f      },
-            {0.0f,       AXIS_SCALE, 0.0f      },
-            {0.0f,       0.0f,       0.0f      },
-            {0.0f,       0.0f,       AXIS_SCALE},
-    };
-	PlgDrawLines( axis, PL_ARRAY_ELEMENTS( axis ), PL_COLOUR_RED, 1.0f );
+
+	//x
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	PlgImmPushVertex( AXIS_SCALE, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	//y
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+	PlgImmPushVertex( 0.0f, AXIS_SCALE, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+	//z
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 0, 0, 255, 255 );
+	PlgImmPushVertex( 0.0f, 0.0f, AXIS_SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+
+	PlgImmSetPrimitiveScale( 2.0f );
+	PlgImmDraw();
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 
