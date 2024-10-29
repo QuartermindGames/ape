@@ -247,15 +247,11 @@ typedef struct ApeWorld
 	char  *name;
 	PLPath path;
 
-	PLVectorArray *meshes;
-
 	PLLinkedList *entitySpawns;
 
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *vertices; // ApeWorldVertex
-
-	PLColourF32 ambience;
 
 	PLColourF32 clearColour;
 
@@ -297,7 +293,6 @@ void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 
 void ape_world_set_global_defaults( ApeWorld *level );
-void ape_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience );
 void ape_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
 void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
 

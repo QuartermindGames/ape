@@ -914,7 +914,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		}
 		else
 		{
-			sunAmbience = ( light == NULL && world != NULL ) ? world->ambience : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+			sunAmbience = ape_rendererState_.ambience;
 		}
 
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ], &sunAmbience, false );

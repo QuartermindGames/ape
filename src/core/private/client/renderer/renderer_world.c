@@ -265,11 +265,9 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool a
 
 	COM_PROFILE_FUNCTION_START();
 
-	PLColourF32 oldAmbience;
-	if ( light != NULL )
+	if ( ambienceOnly )
 	{
-		oldAmbience        = room->ambientLight;
-		room->ambientLight = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f );
+		ape_rendererState_.ambience = room->ambientLight;
 	}
 
 	update_mesh_cache_( room );
@@ -313,9 +311,9 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool a
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
 
-	if ( light != NULL )
+	if ( ambienceOnly )
 	{
-		room->ambientLight = oldAmbience;
+		ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
 	COM_PROFILE_FUNCTION_END();

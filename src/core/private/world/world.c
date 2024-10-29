@@ -11,11 +11,9 @@
 
 void ape_world_set_global_defaults( ApeWorld *level )
 {
-	level->ambience    = WORLD_DEFAULT_AMBIENCE;
 	level->clearColour = WORLD_DEFAULT_CLEARCOLOUR;
 }
 
-void ape_world_set_ambience( ApeWorld *world, const PLColourF32 *ambience ) { world->ambience = *ambience; }
 void ape_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour ) { world->clearColour = *colour; }
 void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour ) { world->fogColour = *colour; }
 
@@ -28,7 +26,6 @@ ApeWorld *ape_create_world( void )
 	acm_branch_push_back_float32_array( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
 	acm_branch_push_back_float32_array( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
-	world->meshes       = PlCreateVectorArray( 0 );
 	world->entitySpawns = PlCreateLinkedList();
 
 	ape_world_set_global_defaults( world );

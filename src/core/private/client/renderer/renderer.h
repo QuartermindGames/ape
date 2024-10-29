@@ -117,13 +117,15 @@ typedef enum ApeCullMode
 typedef enum ApeRendererPassStage
 {
 	APE_RENDERER_PASS_DEFAULT,
-	SS_ARL_RENDERER_PASS_DEPTH,
+	APE_RENDERER_PASS_DEPTH,
 } ApeRendererPassStage;
 
 typedef struct ApeRendererPassState
 {
 	ApeCullMode          cullMode;// override default cull mode
 	ApeRendererPassStage passStage;
+
+	PLColourF32 ambience;
 
 	PLGBlend blendModeA, blendModeB;
 	bool     overrideBlendMode;

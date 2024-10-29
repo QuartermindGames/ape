@@ -518,12 +518,6 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 		PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 0, 255, 0, 255 ) );
 	}
 
-	PLVector3 forward, left, up;
-	PlAnglesAxes( worldNode->angles, &left, &up, &forward );
-	PlgDrawSimpleLine( worldNode->position, PlAddVector3( worldNode->position, PlScaleVector3F( left, 16.0f ) ), PL_COLOUR_RED );
-	PlgDrawSimpleLine( worldNode->position, PlAddVector3( worldNode->position, PlScaleVector3F( up, 16.0f ) ), PL_COLOUR_GREEN );
-	PlgDrawSimpleLine( worldNode->position, PlAddVector3( worldNode->position, PlScaleVector3F( forward, 16.0f ) ), PL_COLOUR_BLUE );
-
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
 	{

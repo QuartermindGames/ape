@@ -315,8 +315,6 @@ ApeWorld *ape_world_deserialize_( AcmBranch *root )
 
 		// Get the global properties of the world from the branch
 
-		world->ambience = acm_get_colour_f32( world->globalProperties, "ambience", &WORLD_DEFAULT_AMBIENCE );
-
 		world->clearColour = acm_get_colour_f32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
 		world->fogColour = acm_get_colour_f32( world->globalProperties, "fogColour", &WORLD_DEFAULT_CLEARCOLOUR );
