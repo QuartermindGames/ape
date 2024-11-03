@@ -61,6 +61,8 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 
 static ApeMemoryCacheHeader *get_cache( uint32_t id, uint8_t pool )
 {
+	assert( cachePoolsList[ pool ] != NULL );
+
 	PLLinkedListNode *node = PlGetFirstNode( cachePoolsList[ pool ] );
 	while ( node != NULL )
 	{
@@ -212,6 +214,10 @@ void ape_memory_shutdown_( void )
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
 	{
 		PlDestroyMemoryGroup( cacheMemoryGroups[ i ] );
+		cacheMemoryGroups[ i ] = nullptr;
+
+		PlDestroyLinkedList( cachePoolsList[ i ] );
+		cachePoolsList[ i ] = nullptr;
 	}
 }
 
