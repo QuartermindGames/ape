@@ -78,9 +78,9 @@ bool game_initialize( void )
 {
 	gameConfig = com_get_config( "game_shared" );
 
-	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_branch_get_child_bool( gameConfig, "log", true ) );
-	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, acm_branch_get_child_bool( gameConfig, "logWarning", true ) );
-	globalGameErrorLog   = PlAddLogLevel( "game/error", PL_COLOUR_RED, acm_branch_get_child_bool( gameConfig, "logError", true ) );
+	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
+	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
+	globalGameErrorLog   = PlAddLogLevel( "game/error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
 
 	globalGameDebugLog = PlAddLogLevel( "game/debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )

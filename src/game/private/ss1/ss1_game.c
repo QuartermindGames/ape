@@ -180,8 +180,6 @@ static bool ss1_tick( void )
 			ape_light_set_position( suns[ 0 ], &sunPosition );
 		}
 
-		ape_world_set_ambience( world, &( PLColourF32 ){ 0.25f, 0.25f, 0.25f, 1.f } );
-
 		world_simulation_tick( &ss1_gameState.simulation );
 
 		game_physics_rope_tick( &debugRope, 1.0f );

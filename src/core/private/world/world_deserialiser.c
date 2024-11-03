@@ -14,14 +14,14 @@ static void deserialize_light( ApeWorld *world, AcmBranch *root )
 	PLVector3   position = acm_get_vector3( root, "position", &pl_vecOrigin3 );
 	PLColourF32 colour   = acm_get_colour_f32( root, "colour", &PL_COLOURF32_WHITE );
 	ApeLight   *light    = ape_create_light( ( ApeWorldNode      *) world, &position, &colour,
-	                                         acm_branch_get_child_float32( root, "radius", 0.0f ),
-	                                         acm_branch_get_child_uint( root, "type", APE_LIGHT_TYPE_OMNI ),
-	                                         acm_branch_get_child_uint( root, "flags", 0 ) );
+	                                         acm_get_f32( root, "radius", 0.0f ),
+	                                         acm_get_uint( root, "type", APE_LIGHT_TYPE_OMNI ),
+	                                         acm_get_uint( root, "flags", 0 ) );
 
 	PLVector3 angles = acm_get_vector3( root, "angles", &pl_vecOrigin3 );
 	ape_light_set_angles( light, &angles );
 
-	light->isHidden = acm_branch_get_child_bool( root, "isHidden", false );
+	light->isHidden = acm_get_bool( root, "isHidden", false );
 }
 
 static void deserialize_lights( ApeWorld *world, AcmBranch *root )
@@ -51,7 +51,7 @@ static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 	ape_world_node_set_local_bounds( &room->base, &PL_VECTOR3( -1024.0f, -1024.0f, -1024.0f ), &PL_VECTOR3( 1024.0f, 1024.0f, 1024.0f ) );
 
 	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32_BLACK );
-	room->flags        = acm_branch_get_child_uint( root, "flags", 0 );
+	room->flags        = acm_get_uint( root, "flags", 0 );
 
 	return room;
 }
@@ -61,11 +61,11 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, AcmBranch *root )
 	ApeWorldFace *face = PL_NEW( ApeWorldFace );
 
 	face->normal = acm_get_vector3( root, "normal", &pl_vecOrigin3 );
-	face->offset = acm_branch_get_child_float32( root, "offset", 0.0f );
+	face->offset = acm_get_f32( root, "offset", 0.0f );
 
-	face->flags = acm_branch_get_child_uint( root, "flags", 0 );
+	face->flags = acm_get_uint( root, "flags", 0 );
 
-	unsigned int roomIndex = acm_branch_get_child_uint( root, "roomIndex", ( unsigned int ) -1 );
+	unsigned int roomIndex = acm_get_uint( root, "roomIndex", ( unsigned int ) -1 );
 	if ( roomIndex == ( unsigned int ) -1 )
 	{
 		ape_warning_( "No room index for face!\n" );
@@ -107,7 +107,7 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, AcmBranch *root )
 		while ( branch != NULL )
 		{
 			ApeWorldVertex *worldVertex;
-			unsigned int    vertexIndex = acm_branch_get_child_uint( branch, "vertexIndex", ( unsigned int ) -1 );
+			unsigned int    vertexIndex = acm_get_uint( branch, "vertexIndex", ( unsigned int ) -1 );
 			assert( vertexIndex != ( unsigned int ) -1 );
 			if ( ( worldVertex = PlGetVectorArrayElementAt( world->vertices, vertexIndex ) ) == NULL )
 			{
@@ -194,7 +194,7 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 
 	// Attempt to fetch the list of vertices - these are just an immediate
 	// list of coordinates
-	bool hasColour = acm_branch_get_child_bool( root, "hasColour", false );
+	bool hasColour = acm_get_bool( root, "hasColour", false );
 	if ( ( branch = acm_branch_get_child_by_name( root, "vertices" ) ) != NULL )
 	{
 		unsigned int numElements = hasColour ? 6 : 3;
@@ -291,7 +291,7 @@ ApeWorld *ape_world_deserialize_( AcmBranch *root )
 	}
 
 	// Get the world version from the branch
-	unsigned int version = acm_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
+	unsigned int version = acm_get_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 )
 	{
 		// Print a warning and return NULL if the version is not found
@@ -318,8 +318,8 @@ ApeWorld *ape_world_deserialize_( AcmBranch *root )
 		world->clearColour = acm_get_colour_f32( world->globalProperties, "clearColour", &WORLD_DEFAULT_CLEARCOLOUR );
 
 		world->fogColour = acm_get_colour_f32( world->globalProperties, "fogColour", &WORLD_DEFAULT_CLEARCOLOUR );
-		world->fogFar    = acm_branch_get_child_float32( world->globalProperties, "fogFar", 32.0f );
-		world->fogNear   = acm_branch_get_child_float32( world->globalProperties, "fogNear", 0.01f );
+		world->fogFar    = acm_get_f32( world->globalProperties, "fogFar", 32.0f );
+		world->fogNear   = acm_get_f32( world->globalProperties, "fogNear", 0.01f );
 	}
 
 	if ( ( branch = acm_branch_get_child_by_name( root, "geometry" ) ) != NULL )

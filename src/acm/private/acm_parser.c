@@ -92,7 +92,7 @@ static AcmBranch *ParseArrayNode( AcmBranch *parent, const char **buf, size_t le
 	}
 	( *buf )++;
 
-	AcmBranch *arrayNode = acm_push_back_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	AcmBranch *arrayNode = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
 	if ( arrayNode == NULL )
 		return NULL;
 
@@ -117,7 +117,7 @@ static AcmBranch *ParseArrayNode( AcmBranch *parent, const char **buf, size_t le
 					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
 					break;
 				}
-				acm_branch_push_back_uint32( arrayNode, NULL, i );
+				acm_push_uint32( arrayNode, NULL, i );
 				SkipToNextToken( buf, &currentLine );
 			}
 			break;
@@ -201,7 +201,7 @@ static AcmBranch *ParseArrayNode( AcmBranch *parent, const char **buf, size_t le
 					break;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				acm_branch_push_back_string( arrayNode, NULL, i, false );
+				acm_push_string( arrayNode, NULL, i, false );
 				SkipToNextToken( buf, &currentLine );
 			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
 			break;
@@ -318,7 +318,7 @@ static AcmBranch *ParseNode( AcmBranch *parent, const char **buf, size_t length,
 					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
 					return NULL;
 				}
-				return acm_branch_push_back_uint32( parent, name, i );
+				return acm_push_uint32( parent, name, i );
 			}
 			case ND_PROPERTY_INT8:
 			{
@@ -365,7 +365,7 @@ static AcmBranch *ParseNode( AcmBranch *parent, const char **buf, size_t length,
 					return NULL;
 				}
 				DEBUG_PARSER( "PushBack String: %s\n", i );
-				return acm_branch_push_back_string( parent, name, i, false );
+				return acm_push_string( parent, name, i, false );
 			}
 			case ND_PROPERTY_BOOL:
 			{

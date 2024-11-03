@@ -59,8 +59,9 @@ typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
-	void ( *destroyFunction )( void *data, ApeWorldNode *parent );
-	AcmBranch *( *serializeFunction )( void *data, AcmBranch *root );
+	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
+	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
+	ApeWorldNode *( *deserializeFunction )( void *self, AcmBranch *root );
 } ApeWorldNodeClass;
 
 typedef struct ApeWorldNode
@@ -140,7 +141,8 @@ const char *ape_world_node_get_name( ApeWorldNode *self );
  */
 void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
-AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
+AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
+ApeWorldNode *ape_world_node_deserialize( AcmBranch *root );
 
 #define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
 #define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
@@ -334,6 +336,11 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self );
 
 bool        ape_room_set_path( ApeRoom *self, const char *path );
 const char *ape_room_get_path( const ApeRoom *self );
+
+#if !defined( APE_NO_EDITOR )
+bool        ape_room_set_save_path( ApeRoom *self, const char *path );
+const char *ape_room_get_save_path( const ApeRoom *self );
+#endif
 
 void ape_world_room_destroy( ApeRoom *self );
 

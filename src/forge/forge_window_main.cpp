@@ -20,6 +20,8 @@ FXDEFMAP( forge::MainWindow )
 MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_NEW, forge::MainWindow::on_new_room ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_OPEN, forge::MainWindow::on_open_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_SAVE, forge::MainWindow::on_save_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ROOM_SAVE_AS, forge::MainWindow::on_save_room ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_MODEL_OPEN, forge::MainWindow::open_model ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_MATERIAL_OPEN, forge::MainWindow::open_material ),
@@ -43,7 +45,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 
 	new FXMenuCommand( menuPane, "New Room...\t\tCreate a new room.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ], this, ID_ROOM_NEW );
 	new FXMenuCommand( menuPane, "Open Room...\t\tOpen an existing room.", forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ], this, ID_ROOM_OPEN );
-	new FXMenuCommand( menuPane, "Save Room\t\tSave the current room.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
+	new FXMenuCommand( menuPane, "Save Room\t\tSave the current room.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, ID_ROOM_SAVE );
 	new FXMenuCommand( menuPane, "Save Room As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Import Room\t\tImport an existing room into the active world.", nullptr, this, 0 );
@@ -128,36 +130,6 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 {
-#if 0
-	PLPath origin;
-	PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
-	FXString path = FXFileDialog::getSaveFilename( this, "New Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
-	if ( path.empty() )
-	{
-		return FALSE;
-	}
-
-	const char *c        = path.text();
-	const char *filename = strrchr( c, '/' );
-	if ( filename == nullptr )
-	{
-		return FALSE;
-	}
-
-	c = c + strlen( com_project_get_local_path() );
-	char roomName[ 64 ];
-	snprintf( roomName, sizeof( roomName ), "%s", filename + 1 );
-	char *p = strrchr( roomName, '.' );
-	if ( p != nullptr )
-	{
-		*p = '\0';
-	}
-	else
-	{
-		path += "." APE_WORLD_ROOM_EXTENSION;
-	}
-#endif
-
 	ApeWorld *world = ape_create_world();
 	if ( world == nullptr )
 	{
@@ -183,27 +155,50 @@ long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 {
 	const char *path     = com_project_get_local_path();
-	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a world", FXString( path ) + "/", "*.wld.n" );
+	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/", "*." APE_WORLD_ROOM_EXTENSION );
 	if ( filename.empty() )
 	{
 		return FALSE;
 	}
 
-	ApeWorld *world = ape_world_load( filename.text() );
-	if ( world == nullptr )
+	AcmBranch *root = acm_load_file( filename.text(), "room" );
+	if ( root == nullptr )
 	{
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK,
-		                       "Warning",
-		                       "Failed to open world (%s)!\n"
-		                       "See logs for details.",
-		                       filename.text() );
 		return FALSE;
 	}
+
+	ApeWorldNode *roomNode = ape_world_node_deserialize( root );
+	if ( roomNode == nullptr )
+	{
+		return FALSE;
+	}
+
+	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Selected file is not a valid room file!" );
+		ape_world_node_destroy( roomNode );
+		return FALSE;
+	}
+
+	ApeWorld *world = ape_create_world();
+	ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
 
 	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
 	editor->update_tree();
 
 	return TRUE;
+}
+
+long forge::MainWindow::on_save_room( FX::FXObject *, FX::FXSelector, void * )
+{
+	WorldEditor *editor = dynamic_cast< WorldEditor * >( get_active_tab() );
+	if ( editor == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Can't save room for current editor!" );
+		return false;
+	}
+
+	return editor->on_room_save( nullptr, 0, nullptr );
 }
 
 long forge::MainWindow::open_model( FXObject *, FXSelector, void * )

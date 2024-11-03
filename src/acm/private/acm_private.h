@@ -55,4 +55,4 @@ typedef struct AcmBranch
 } AcmBranch;
 
 char *acm_preprocess_script_( char *buf, size_t *length, bool isHead );
-AcmBranch *acm_push_back_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType );
+AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType );

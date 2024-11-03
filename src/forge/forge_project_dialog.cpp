@@ -76,7 +76,7 @@ void forge::ProjectDialog::register_project_callback( const char *path, void *da
 		return;
 	}
 
-	if ( acm_branch_get_child_bool( root, "visibleInEditor", true ) )
+	if ( acm_get_bool( root, "visibleInEditor", true ) )
 	{
 		const char *name = acm_branch_get_child_string( root, "name", nullptr );
 		if ( name == nullptr )

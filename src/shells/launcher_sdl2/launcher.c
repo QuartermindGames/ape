@@ -442,7 +442,7 @@ static bool initialize_display( void )
 	int height = 1080;
 	if ( shellConfig != NULL )
 	{
-		fullscreen = acm_branch_get_child_bool( shellConfig, "fullscreen", fullscreen );
+		fullscreen = acm_get_bool( shellConfig, "fullscreen", fullscreen );
 		width      = ( int ) acm_branch_get_child_int( shellConfig, "width", width );
 		height     = ( int ) acm_branch_get_child_int( shellConfig, "height", height );
 	}

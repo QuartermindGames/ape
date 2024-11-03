@@ -22,6 +22,7 @@ namespace forge
 		long on_tick( FXObject *, FXSelector, void * );
 		long on_new_room( FXObject *, FXSelector, void * );
 		long on_open_room( FXObject *, FXSelector, void * );
+		long on_save_room( FXObject *, FXSelector, void * );
 
 		long open_model( FXObject *, FXSelector, void * );
 		long open_material( FXObject *, FXSelector, void * );
@@ -41,6 +42,8 @@ namespace forge
 
 			ID_ROOM_NEW,
 			ID_ROOM_OPEN,
+			ID_ROOM_SAVE,
+			ID_ROOM_SAVE_AS,
 
 			ID_MODEL_OPEN,
 			ID_MATERIAL_NEW,

@@ -7,7 +7,7 @@
 
 void ape_world_serialize_( const ApeWorld *world, AcmBranch *root )
 {
-	acm_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
+	acm_push_uint32( root, "version", APE_WORLD_VERSION );
 
 	if ( world->globalProperties != NULL )
 	{

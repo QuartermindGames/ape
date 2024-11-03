@@ -42,18 +42,18 @@ FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
 	AcmBranch *root = acm_branch_push_back_object( nullptr, "project" );
-	acm_branch_push_back_string( root, "name", name, false );
+	acm_push_string( root, "name", name, false );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
 	acm_branch_push_back_int32_array( root, "version", version, 3 );
 
 	AcmBranch *child;
 	child = acm_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
-	acm_branch_push_back_string( child, nullptr, "ship", false );
-	acm_branch_push_back_string( child, nullptr, "dev", false );
+	acm_push_string( child, nullptr, "ship", false );
+	acm_push_string( child, nullptr, "dev", false );
 
 	child = acm_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
-	acm_branch_push_back_string( child, nullptr, "base", false );
+	acm_push_string( child, nullptr, "base", false );
 
 	acm_write_file( path, root, ND_FILE_UTF8 );
 	return root;
@@ -179,10 +179,10 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 
 static void setup_colours( FXApp &app )
 {
-	forge::themeColours[ forge::THEME_COLOUR_BASE ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
-	forge::themeColours[ forge::THEME_COLOUR_FORE ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
-	forge::themeColours[ forge::THEME_COLOUR_HILITE ] = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
-	forge::themeColours[ forge::THEME_COLOUR_BACK ]   = ( FXColor ) acm_branch_get_child_uint( forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BASE ]   = ( FXColor ) acm_get_uint( forge::editorConfig, "baseColour", FXRGB( 50, 50, 50 ) );
+	forge::themeColours[ forge::THEME_COLOUR_FORE ]   = ( FXColor ) acm_get_uint( forge::editorConfig, "foreColour", FXRGB( 255, 255, 255 ) );
+	forge::themeColours[ forge::THEME_COLOUR_HILITE ] = ( FXColor ) acm_get_uint( forge::editorConfig, "hiliteColour", FXRGB( 100, 100, 100 ) );
+	forge::themeColours[ forge::THEME_COLOUR_BACK ]   = ( FXColor ) acm_get_uint( forge::editorConfig, "backColour", FXRGB( 10, 10, 10 ) );
 
 	app.setBackColor( forge::themeColours[ forge::THEME_COLOUR_BACK ] );
 	app.setBaseColor( forge::themeColours[ forge::THEME_COLOUR_BASE ] );

@@ -18,7 +18,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		AcmBranch *root = acm_branch_push_back_object( nullptr, "brush" );
 
 		acm_branch_push_back_bool( root, "hasColour", model->storesColour );
-		child = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
 		for ( uint j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
@@ -44,8 +44,8 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		for ( uint j = 0; j < numFaces; ++j )
 		{
 			AcmBranch *faceBranch = acm_branch_push_back_object( child, nullptr );
-			acm_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
-			acm_branch_push_back_string( faceBranch, "material", model->materials[ faces[ j ]->material ].name, false );
+			acm_push_array_f32( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
+			acm_push_string( faceBranch, "material", model->materials[ faces[ j ]->material ].name, false );
 
 #if 0
 			// determine the validity of the face
@@ -76,17 +76,17 @@ static void import_obj_geometry( const char *path, const char *worldName )
 			for ( uint k = 0; k < faces[ j ]->numEdges; ++k )
 			{
 				AcmBranch *edgeBranch = acm_branch_push_back_object( verticesBranch, nullptr );
-				acm_branch_push_back_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+				acm_push_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
 
 				PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 				if ( normal != NULL )
 				{
-					acm_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
+					acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 				}
 				PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 				if ( uv != NULL )
 				{
-					acm_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
 				}
 			}
 		}
@@ -141,7 +141,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			}
 
 			printf( " %u \"%s\"\n", acm_branch_get_num_of_children( child ), tmp );
-			acm_branch_push_back_string( child, nullptr, tmp, false );
+			acm_push_string( child, nullptr, tmp, false );
 		}
 	}
 	printf( "%u materials\n", acm_branch_get_num_of_children( child ) );
@@ -162,7 +162,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		}
 
 		acm_branch_push_back_bool( root, "hasColour", model->storesColour );
-		child = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
 		for ( uint j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
@@ -195,15 +195,15 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 				}
 
 				AcmBranch *faceBranch = acm_branch_push_back_object( child, nullptr );
-				acm_branch_push_back_float32_array( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
-				acm_branch_push_back_uint32( faceBranch, "material", faces[ j ]->material );
-				acm_branch_push_back_uint32( faceBranch, "roomIndex", 0 );
+				acm_push_array_f32( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
+				acm_push_uint32( faceBranch, "material", faces[ j ]->material );
+				acm_push_uint32( faceBranch, "roomIndex", 0 );
 
 				AcmBranch *verticesBranch = acm_branch_push_back_object_array( faceBranch, "edges" );
 				for ( uint k = 0; k < faces[ j ]->numEdges; ++k )
 				{
 					AcmBranch *edgeBranch = acm_branch_push_back_object( verticesBranch, nullptr );
-					acm_branch_push_back_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+					acm_push_uint32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
 					//ndPushBackUI32( edgeBranch, "normalIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					//ndPushBackUI32( edgeBranch, "uvIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 
@@ -213,12 +213,12 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 					PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
 					{
-						acm_branch_push_back_float32_array( edgeBranch, "normal", ( float * ) normal, 3 );
+						acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 					}
 					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
 					{
-						acm_branch_push_back_float32_array( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
 					}
 				}
 			}
@@ -228,8 +228,8 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 
 	{
 		AcmBranch *roomBranch = acm_branch_push_back_object( acm_branch_push_back_object_array( root, "rooms" ), nullptr );
-		acm_branch_push_back_uint32( roomBranch, "version", APE_WORLD_ROOM_VERSION );
-		acm_branch_push_back_string( roomBranch, "name", worldName, false );
+		acm_push_uint32( roomBranch, "version", APE_WORLD_ROOM_VERSION );
+		acm_push_string( roomBranch, "name", worldName, false );
 		acm_branch_push_back_int32( roomBranch, "uid", 0 );
 
 #if defined( APE_USE_NEW_WORLD_LAYOUT )
@@ -243,8 +243,8 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			}
 
 			AcmBranch *nodeBranch = acm_branch_push_back_object( nodesBranch, "node" );
-			acm_branch_push_back_string( nodeBranch, "class", "brush", false );
-			acm_branch_push_back_string( nodeBranch, "path", path, false );
+			acm_push_string( nodeBranch, "class", "brush", false );
+			acm_push_string( nodeBranch, "path", path, false );
 		}
 
 		PlSetupPath( path, true, "%s/ship/worlds/%s/rooms", com_project_get_local_path(), worldName );
@@ -260,7 +260,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		}
 
 		PlSetupPath( path, true, "worlds/%s/rooms/%s." APE_WORLD_ROOM_EXTENSION, worldName, worldName );
-		acm_branch_push_back_string( root, "startRoom", path, false );
+		acm_push_string( root, "startRoom", path, false );
 #endif
 	}
 
@@ -272,7 +272,7 @@ void cook_world_process( const char *worldName )
 	printf( "Processing world: %s\n", worldName );
 
 	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
-	acm_branch_push_back_uint32( root, "version", APE_WORLD_VERSION );
+	acm_push_uint32( root, "version", APE_WORLD_VERSION );
 
 	process_geometry( worldName, root );
 

@@ -65,13 +65,23 @@ AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
 	ApeRoom   *room       = ( ApeRoom         *) self;
 	AcmBranch *roomBranch = acm_branch_push_back_object( root, "room" );
-	acm_branch_push_back_string( roomBranch, "path", room->path, true );
-	acm_branch_push_back_uint32( roomBranch, "flags", room->flags );
-	acm_branch_push_back_float32_array( roomBranch, "colour", ( float * ) &room->colour, 4 );
-	acm_branch_push_back_float32_array( roomBranch, "ambience", ( float * ) &room->ambientLight, 4 );
-	acm_branch_push_back_uint32( roomBranch, "reverb", room->reverbPreset );
+	acm_push_string( roomBranch, "path", room->path, true );
+	acm_push_uint32( roomBranch, "flags", room->flags );
+	acm_push_array_f32( roomBranch, "colour", ( float * ) &room->colour, 4 );
+	acm_push_array_f32( roomBranch, "ambience", ( float * ) &room->ambientLight, 4 );
+	acm_push_uint32( roomBranch, "reverb", room->reverbPreset );
 
 	return root;
+}
+
+ApeWorldNode *ape_room_deserialize_( void *self, AcmBranch *root )
+{
+	ApeRoom *room      = ( ApeRoom      *) self;
+	room->flags        = acm_get_uint( root, "flags", 0 );
+	room->colour       = acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	room->reverbPreset = acm_get_uint( root, "reverb", 0 );
+	return self;
 }
 
 bool ape_room_set_path( ApeRoom *self, const char *path )
@@ -89,3 +99,28 @@ const char *ape_room_get_path( const ApeRoom *self )
 {
 	return self->path;
 }
+
+#if !defined( APE_NO_EDITOR )
+
+bool ape_room_set_save_path( ApeRoom *self, const char *path )
+{
+	if ( PlSetupPath( self->savePath, false, "%s", path ) == nullptr )
+	{
+		ape_warning_( "Invalid path provided: %s\n", PlGetError() );
+		return false;
+	}
+
+	return true;
+}
+
+const char *ape_room_get_save_path( const ApeRoom *self )
+{
+	if ( *self->savePath == '\0' )
+	{
+		return nullptr;
+	}
+
+	return self->savePath;
+}
+
+#endif

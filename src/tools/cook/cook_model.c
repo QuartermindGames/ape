@@ -72,7 +72,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 	const char *materialPath = acm_branch_get_child_string( root, "materialPath", folder );
 	PlSetupPath( dst->materialPath, true, "%s", materialPath );
 
-	dst->scale = acm_branch_get_child_float32( root, "scale", 1.0f );
+	dst->scale = acm_get_f32( root, "scale", 1.0f );
 
 	const char *body = acm_branch_get_child_string( root, "body", nullptr );
 	if ( body != nullptr )
@@ -129,7 +129,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		return;
 	}
 
-	dst->isStatic = acm_branch_get_child_bool( root, "isStatic", false );
+	dst->isStatic = acm_get_bool( root, "isStatic", false );
 	if ( !dst->isStatic )
 	{
 		if ( dst->numBones > 0 )
@@ -181,7 +181,7 @@ static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const Co
 	AcmBranch *meshBranch = acm_branch_push_back_object( root, nullptr );
 
 	//TODO: should go ahead and ensure material exists, and associated texture for material is cooked, etc.
-	acm_branch_push_back_string( meshBranch, "material", mesh->material, false );
+	acm_push_string( meshBranch, "material", mesh->material, false );
 
 	AcmBranch *trianglesBranch = acm_branch_push_back_object_array( meshBranch, "triangles" );
 	printf( "\t\t%u triangles\n", mesh->numTriangles );
@@ -197,29 +197,29 @@ static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
 	printf( "\tSerialising bone (%s)\n", bone->name );
 
 	AcmBranch *boneBranch = acm_branch_push_back_object( root, nullptr );
-	acm_branch_push_back_string( boneBranch, "name", bone->name, false );
-	acm_branch_push_back_uint32( boneBranch, "parent", bone->parent );
-	acm_branch_push_back_float32_array( boneBranch, "position", ( float * ) &bone->position, 3 );
-	acm_branch_push_back_float32_array( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
+	acm_push_string( boneBranch, "name", bone->name, false );
+	acm_push_uint32( boneBranch, "parent", bone->parent );
+	acm_push_array_f32( boneBranch, "position", ( float * ) &bone->position, 3 );
+	acm_push_array_f32( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
 
 static AcmBranch *serialize_ape_format_model( const CookModel *model )
 {
 	AcmBranch *root = acm_branch_push_back_object( nullptr, "model" );
 
-	acm_branch_push_back_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
+	acm_push_uint32( root, "version", APE_FORMAT_MODEL_VERSION );
 
 	AcmBranch *branch;
 
 	//TODO: this is pretty basic and hard-coded for now... meh...
 	//TODO: allow us to store vertex data as other data types besides floats...
 	branch = acm_branch_push_back_object( root, "vertexFormatDescriptor" );
-	acm_branch_push_back_uint32( branch, "numFloatElements", 8 );
+	acm_push_uint32( branch, "numFloatElements", 8 );
 	acm_branch_push_back_bool( branch, "hasPosition", true );
 	acm_branch_push_back_bool( branch, "hasNormal", true );
 	acm_branch_push_back_bool( branch, "hasUV", true );
 
-	branch = acm_branch_push_back_float32_array( root, "vertices", nullptr, 0 );
+	branch = acm_push_array_f32( root, "vertices", nullptr, 0 );
 	for ( uint i = 0; i < model->numVertices; ++i )
 	{
 		const CookModelVertex *vertexIndex = &model->vertices[ i ];

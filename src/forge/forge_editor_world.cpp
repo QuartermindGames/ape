@@ -228,6 +228,21 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 		return false;
 	}
 
+	FXString    saveFilename;
+	const char *path = ape_room_get_save_path( room );
+	if ( path == nullptr )
+	{
+		PLPath origin;
+		PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
+		saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
+		if ( saveFilename.empty() )
+		{
+			return false;
+		}
+
+		path = saveFilename.text();
+	}
+
 	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
 	if ( root == nullptr )
 	{
@@ -235,15 +250,13 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 		return false;
 	}
 
-	PLPath path;
-	PlSetupPath( path, true, "%s", com_project_get_local_path() );
-	PlAppendPathEx( path, true, "/%s", ape_room_get_path( room ) );
-
 	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
 	{
 		FXMessageBox::warning( this, FX::MBOX_OK, "Warning", "%s", acm_get_error_message() );
 		return false;
 	}
+
+	ape_room_set_save_path( room, path );
 
 	return true;
 }

@@ -58,7 +58,7 @@ static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
 	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
 
-	unsigned int version = acm_branch_get_child_uint( root, "version", ( unsigned int ) -1 );
+	unsigned int version = acm_get_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
 	{
 		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
@@ -87,7 +87,7 @@ static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 	c = acm_branch_get_child_by_name( root, "borders" );
 	if ( c != NULL )
 	{
-		unsigned int style = acm_branch_get_child_uint( c, "style", -1 );
+		unsigned int style = acm_get_uint( c, "style", -1 );
 		if ( style < GUI_MAX_BORDER_STYLES )
 			guiStyleSheet->borderStyle = style;
 		else

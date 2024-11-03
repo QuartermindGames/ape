@@ -561,7 +561,7 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 		materialPass->blendMode[ 1 ] = PLG_BLEND_NONE;
 	}
 
-	materialPass->depthTest = acm_branch_get_child_bool( root, "depthTest", materialPass->depthTest );
+	materialPass->depthTest = acm_get_bool( root, "depthTest", materialPass->depthTest );
 	materialPass->cullMode  = ACM_GET_INT32( root, "cullMode", materialPass->cullMode );
 
 	const char *textureFilterPtr = acm_branch_get_child_string( root, "textureFilterMode", nullptr );
@@ -675,19 +675,19 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	}
 
 	material->surfaceType = ACM_GET_INT8( root, "surfaceType", 0 );
-	if ( acm_branch_get_child_bool( root, "enableShadows", true ) )
+	if ( acm_get_bool( root, "enableShadows", true ) )
 	{
 		material->flags |= APE_MATERIAL_FLAG_CAST_SHADOWS | APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !acm_branch_get_child_bool( root, "receiveShadows", ( material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) ) )
+	if ( !acm_get_bool( root, "receiveShadows", ( material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !acm_branch_get_child_bool( root, "castShadows", ( material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) ) )
+	if ( !acm_get_bool( root, "castShadows", ( material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_CAST_SHADOWS;
 	}
-	if ( acm_branch_get_child_bool( root, "mirror", false ) )
+	if ( acm_get_bool( root, "mirror", false ) )
 	{
 		material->flags |= APE_MATERIAL_FLAG_MIRROR;
 	}

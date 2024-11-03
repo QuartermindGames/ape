@@ -76,7 +76,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 
 static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 {
-	uint version = acm_branch_get_child_uint( root, "version", ( uint ) -1 );
+	uint version = acm_get_uint( root, "version", ( uint ) -1 );
 	if ( version == ( uint ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
 		ape_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
@@ -88,7 +88,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	uint numFloatElements;
 	if ( ( branch = acm_branch_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
 	{
-		numFloatElements = acm_branch_get_child_uint( branch, "numFloatElements", 0 );
+		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
 		if ( numFloatElements == 0 )
 		{
 			ape_warning_( "Invalid number of float elements per vertex descriptor!\n" );
@@ -189,7 +189,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			child = acm_get_next_child( child );
 		}
 
-		uint rootBone = acm_branch_get_child_uint( root, "rootBone", 0 );
+		uint rootBone = acm_get_uint( root, "rootBone", 0 );
 		if ( rootBone >= model->numBones )
 		{
 			ape_warning_( "Invalid root bone (%u), defaulting to 0!\n", rootBone );

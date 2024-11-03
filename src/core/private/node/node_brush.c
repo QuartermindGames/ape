@@ -438,8 +438,8 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 {
 	ApeBrush  *brush       = ( ApeBrush  *) self;
 	AcmBranch *brushBranch = acm_branch_push_back_object( root, "brush" );
-	acm_branch_push_back_uint32( brushBranch, "type", brush->type );
-	acm_branch_push_back_float32_array( brushBranch, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
+	acm_push_uint32( brushBranch, "type", brush->type );
+	acm_push_array_f32( brushBranch, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 
 	AcmBranch *facesBranch = acm_branch_push_back_object_array( brushBranch, "faces" );
 	for ( uint i = 0; i < brush->numFaces; ++i )
@@ -447,22 +447,22 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 		const ApeBrushFace *face       = &brush->faces[ i ];
 		AcmBranch          *faceBranch = acm_branch_push_back_object( facesBranch, "face" );
 
-		acm_branch_push_back_string( faceBranch, "id", face->id, true );
+		acm_push_string( faceBranch, "id", face->id, true );
 		if ( face->destination != nullptr )
 		{
 			assert( *face->destination->id != '\0' );
-			acm_branch_push_back_string( faceBranch, "destination", face->destination->id, false );
+			acm_push_string( faceBranch, "destination", face->destination->id, false );
 		}
 
 		assert( face->material != nullptr );
-		acm_branch_push_back_string( faceBranch, "material", ape_material_get_path( face->material ), false );
+		acm_push_string( faceBranch, "material", ape_material_get_path( face->material ), false );
 		acm_branch_push_back_vector2( faceBranch, "materialScale", &face->materialScale, true );
 		acm_branch_push_back_vector3( faceBranch, "materialOffset", &face->materialOffset, true );
 		acm_branch_push_back_vector3( faceBranch, "materialAngle", &face->materialAngle, true );
 
 		acm_branch_push_back_vector3( faceBranch, "normal", &face->normal, true );
-		acm_branch_push_back_float32_array( faceBranch, "colour", ( float * ) &face->colour, 4 );
-		acm_branch_push_back_float32_array( faceBranch, "bounds", ( float * ) &face->bounds, 12 );
+		acm_push_array_f32( faceBranch, "colour", ( float * ) &face->colour, 4 );
+		acm_push_array_f32( faceBranch, "bounds", ( float * ) &face->bounds, 12 );
 
 		AcmBranch *edgeBranch     = acm_branch_push_back_int16_array( faceBranch, "edgeLoop", nullptr, 0 );
 		AcmBranch *verticesBranch = acm_branch_push_back_object_array( faceBranch, "vertices" );
@@ -473,7 +473,7 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 			acm_branch_push_back_int16( vertexBranch, "position", vertex->position - brush->vertices );
 			acm_branch_push_back_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
 			acm_branch_push_back_vector3( vertexBranch, "normal", &vertex->normal, true );
-			acm_branch_push_back_float32_array( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
+			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
 
 			acm_branch_push_back_int16( edgeBranch, "vertex", face->edgeLoop[ j ] - face->vertices );
 		}

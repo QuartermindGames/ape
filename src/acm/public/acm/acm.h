@@ -164,13 +164,13 @@ AcmErrorCode acm_branch_get_uint32_array( AcmBranch *self, uint32_t *buf, uint n
 AcmErrorCode acm_branch_get_float32_array( AcmBranch *self, float *buf, uint numElements );
 AcmErrorCode acm_branch_get_float64_array( AcmBranch *self, double *buf, uint numElements );
 
-bool        acm_branch_get_child_bool( AcmBranch *root, const char *name, bool fallback );
+bool        acm_get_bool( AcmBranch *root, const char *name, bool fallback );
 const char *acm_branch_get_child_string( AcmBranch *node, const char *name, const char *fallback );
-float       acm_branch_get_child_float32( AcmBranch *node, const char *name, float fallback );
-double      acm_branch_get_child_float64( AcmBranch *node, const char *name, double fallback );
+float       acm_get_f32( AcmBranch *node, const char *name, float fallback );
+double      acm_get_f64( AcmBranch *node, const char *name, double fallback );
 
 intmax_t  acm_branch_get_child_int( AcmBranch *root, const char *name, intmax_t fallback );
-uintmax_t acm_branch_get_child_uint( AcmBranch *root, const char *name, uintmax_t fallback );
+uintmax_t acm_get_uint( AcmBranch *root, const char *name, uintmax_t fallback );
 
 #define ACM_GET_INT8( ROOT, NAME, FALLBACK )  ( int8_t ) acm_branch_get_child_int( ( ROOT ), ( NAME ), ( FALLBACK ) )
 #define ACM_GET_INT16( ROOT, NAME, FALLBACK ) ( int16_t ) acm_branch_get_child_int( ( ROOT ), ( NAME ), ( FALLBACK ) )
@@ -187,12 +187,12 @@ PLColourF32 acm_get_colour_f32( AcmBranch *root, const char *name, const PLColou
 
 AcmBranch *acm_branch_push_back_branch( AcmBranch *parent, AcmBranch *child );
 AcmBranch *acm_branch_push_back_object( AcmBranch *node, const char *name );
-AcmBranch *acm_branch_push_back_string( AcmBranch *parent, const char *name, const char *var, bool conditional );
+AcmBranch *acm_push_string( AcmBranch *parent, const char *name, const char *var, bool conditional );
 AcmBranch *acm_branch_push_back_bool( AcmBranch *parent, const char *name, bool var );
 AcmBranch *acm_branch_push_back_int8( AcmBranch *parent, const char *name, int8_t var );
 AcmBranch *acm_branch_push_back_int16( AcmBranch *parent, const char *name, int16_t var );
 AcmBranch *acm_branch_push_back_int32( AcmBranch *parent, const char *name, int32_t var );
-AcmBranch *acm_branch_push_back_uint32( AcmBranch *parent, const char *name, uint32_t var );
+AcmBranch *acm_push_uint32( AcmBranch *parent, const char *name, uint32_t var );
 AcmBranch *acm_branch_push_back_float32( AcmBranch *parent, const char *name, float var );
 AcmBranch *acm_branch_push_back_float64( AcmBranch *parent, const char *name, double var );
 
@@ -201,7 +201,7 @@ AcmBranch *acm_branch_push_back_string_array( AcmBranch *parent, const char *nam
 AcmBranch *acm_branch_push_back_int16_array( AcmBranch *root, const char *name, const int16_t *array, uint numElements );
 AcmBranch *acm_branch_push_back_int32_array( AcmBranch *parent, const char *name, const int32_t *array, uint numElements );
 AcmBranch *acm_branch_push_back_uint32_array( AcmBranch *parent, const char *name, const uint32_t *array, uint numElements );
-AcmBranch *acm_branch_push_back_float32_array( AcmBranch *parent, const char *name, const float *array, uint numElements );
+AcmBranch *acm_push_array_f32( AcmBranch *parent, const char *name, const float *array, uint numElements );
 
 // special
 AcmBranch *acm_branch_push_back_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional );

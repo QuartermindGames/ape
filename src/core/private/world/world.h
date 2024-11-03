@@ -129,7 +129,7 @@ typedef struct ApeRoom
 	PLVectorArray *portals;    // ApeWorldPortal
 	PLVectorArray *faces;      // ApeWorldFace
 
-	PLGMesh *mesh;        // cached mesh
+	PLGMesh *mesh;   // cached mesh
 	bool     isDirty;// if false, mesh cache will be updated
 
 	PLLinkedList *actors;// Actors currently in this sector
@@ -138,6 +138,10 @@ typedef struct ApeRoom
 	ApeAudioReverbPreset reverbPreset;
 
 	unsigned int numVisits;
+
+#if !defined( APE_NO_EDITOR )
+	PLPath savePath;
+#endif
 } ApeRoom;
 
 typedef struct ApeWorldEntity
