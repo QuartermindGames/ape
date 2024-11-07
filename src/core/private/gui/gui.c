@@ -66,25 +66,25 @@ static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 	}
 
 	AcmBranch *c;
-	c = acm_branch_get_child_by_name( root, "colours" );
+	c = acm_get_child_by_name( root, "colours" );
 	if ( c != NULL )
 	{
 		AcmBranch *i;
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
-		if ( ( i = acm_branch_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
 			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
 	}
 
-	c = acm_branch_get_child_by_name( root, "borders" );
+	c = acm_get_child_by_name( root, "borders" );
 	if ( c != NULL )
 	{
 		unsigned int style = acm_get_uint( c, "style", -1 );
@@ -94,7 +94,7 @@ static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 			GUI_WARNING( "No border style specified, using default.\n" );
 
 		AcmBranch *i;
-		if ( ( i = acm_branch_get_child_by_name( c, "padding" ) ) != NULL )
+		if ( ( i = acm_get_child_by_name( c, "padding" ) ) != NULL )
 			acm_branch_get_int32_array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
 	}
 

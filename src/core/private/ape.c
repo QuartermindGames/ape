@@ -44,14 +44,14 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		return;
 	}
 
-	AcmBranch *branch = acm_branch_get_child_by_name( engineConfig, "launchCommands" );
+	AcmBranch *branch = acm_get_child_by_name( engineConfig, "launchCommands" );
 	if ( branch == NULL )
 	{
 		return;
 	}
 
 	static const unsigned int MAX_COMMANDS = 256;
-	unsigned int              numCommands  = acm_branch_get_num_of_children( branch );
+	unsigned int              numCommands  = acm_get_num_of_children( branch );
 	if ( numCommands == 0 )
 	{
 		return;

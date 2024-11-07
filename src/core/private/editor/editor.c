@@ -74,14 +74,14 @@ static void cache_preview_materials( void )
 	}
 
 	// Cache all the materials in a preview state
-	AcmBranch *child = acm_branch_get_child_by_name( editorConfigRoot, "materialPaths" );
+	AcmBranch *child = acm_get_child_by_name( editorConfigRoot, "materialPaths" );
 	if ( child == nullptr )
 	{
 		ape_warning_( "No material paths specified for editor!\n" );
 		return;
 	}
 
-	child = acm_branch_get_first_child( child );
+	child = acm_get_first_child( child );
 	while ( child != nullptr )
 	{
 		PLPath buf;
@@ -397,10 +397,10 @@ void ape_initialize_editor_( void )
 {
 	AcmBranch *root = com_project_get_config();
 	assert( root != NULL );
-	editorConfigRoot = acm_branch_get_child_by_name( root, "editor" );
+	editorConfigRoot = acm_get_child_by_name( root, "editor" );
 	if ( editorConfigRoot == nullptr )
 	{
-		editorConfigRoot = acm_branch_push_back_object( root, "editor" );
+		editorConfigRoot = acm_push_object( root, "editor" );
 	}
 
 	ape_editor_selection_initialize_();

@@ -276,7 +276,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
  */
 static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *root )
 {
-	AcmBranch *node = acm_branch_get_first_child( root );
+	AcmBranch *node = acm_get_first_child( root );
 	while ( node != NULL )
 	{
 		/* fetch the next node, so we can roll onto the next element early */
@@ -309,7 +309,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program->internal, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
-		if ( acm_branch_get_type( node ) == ND_PROPERTY_STRING )
+		if ( acm_branch_get_type( node ) == ACM_PROPERTY_TYPE_STRING )
 		{
 			PLPath value;
 			acm_branch_get_string( node, value, sizeof( value ) );
@@ -540,7 +540,7 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 {
 	/* fetch the blend mode we'll use for the pass */
 	AcmBranch *subNode;
-	if ( ( subNode = acm_branch_get_child_by_name( root, "blendMode" ) ) != NULL )
+	if ( ( subNode = acm_get_child_by_name( root, "blendMode" ) ) != NULL )
 	{
 		char *blendModesArray[ 2 ];
 		if ( acm_branch_get_string_array( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
@@ -562,9 +562,9 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	}
 
 	materialPass->depthTest = acm_get_bool( root, "depthTest", materialPass->depthTest );
-	materialPass->cullMode  = ACM_GET_INT32( root, "cullMode", materialPass->cullMode );
+	materialPass->cullMode  = ACM_GET_UINT( materialPass->cullMode, root, "cullMode", materialPass->cullMode );
 
-	const char *textureFilterPtr = acm_branch_get_child_string( root, "textureFilterMode", nullptr );
+	const char *textureFilterPtr = acm_get_string( root, "textureFilterMode", nullptr );
 	if ( textureFilterPtr != NULL )
 	{
 		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
@@ -594,15 +594,15 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	}
 
 	/* now handle any specific parameters the material provides */
-	if ( ( subNode = acm_branch_get_child_by_name( root, "textureScroll" ) ) != NULL )
+	if ( ( subNode = acm_get_child_by_name( root, "textureScroll" ) ) != NULL )
 	{
 		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScroll, 2 );
 	}
-	if ( ( subNode = acm_branch_get_child_by_name( root, "textureOffset" ) ) != NULL )
+	if ( ( subNode = acm_get_child_by_name( root, "textureOffset" ) ) != NULL )
 	{
 		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureOffset, 2 );
 	}
-	if ( ( subNode = acm_branch_get_child_by_name( root, "textureScale" ) ) != nullptr )
+	if ( ( subNode = acm_get_child_by_name( root, "textureScale" ) ) != nullptr )
 	{
 		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScale, 2 );
 		if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
@@ -616,7 +616,7 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 		materialPass->textureScale.y = 1.0f;
 	}
 
-	if ( ( subNode = acm_branch_get_child_by_name( root, "shaderParameters" ) ) != NULL )
+	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
 	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
@@ -633,7 +633,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	if ( material->preview == NULL )
 	{
 		material->preview          = previewFallbackTexture;
-		const char *previewTexture = acm_branch_get_child_string( root, "previewTexture", nullptr );
+		const char *previewTexture = acm_get_string( root, "previewTexture", nullptr );
 		if ( previewTexture != NULL )
 		{
 			material->preview = ape_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
@@ -649,9 +649,9 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
 	AcmBranch *node;
-	if ( ( node = acm_branch_get_child_by_name( root, "passes" ) ) != NULL )
+	if ( ( node = acm_get_child_by_name( root, "passes" ) ) != NULL )
 	{
-		node = acm_branch_get_first_child( node );
+		node = acm_get_first_child( node );
 		while ( node != NULL )
 		{
 			ApeMaterialPass *currentPass = &material->passes[ material->numPasses++ ];
@@ -659,7 +659,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 			 * so no need to reset the state for some crap */
 
 			/* fetch the shader program we need to use for this pass */
-			const char       *programName  = acm_branch_get_child_string( node, "shaderProgram", "default" );
+			const char       *programName  = acm_get_string( node, "shaderProgram", "default" );
 			ApeShaderProgram *programIndex = ape_get_shader_by_name( programName, APE_SHADER_DEFAULT );
 			*currentPass                   = programIndex->defaultPass;
 			currentPass->program           = programIndex;
@@ -674,7 +674,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 		}
 	}
 
-	material->surfaceType = ACM_GET_INT8( root, "surfaceType", 0 );
+	material->surfaceType = ACM_GET_UINT( material->surfaceType, root, "surfaceType", 0 );
 	if ( acm_get_bool( root, "enableShadows", true ) )
 	{
 		material->flags |= APE_MATERIAL_FLAG_CAST_SHADOWS | APE_MATERIAL_FLAG_RECEIVE_SHADOWS;

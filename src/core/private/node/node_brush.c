@@ -437,15 +437,14 @@ bool ape_world_face_is_portal( const ApeWorldFace *self )
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 {
 	ApeBrush  *brush       = ( ApeBrush  *) self;
-	AcmBranch *brushBranch = acm_branch_push_back_object( root, "brush" );
-	acm_push_uint32( brushBranch, "type", brush->type );
-	acm_push_array_f32( brushBranch, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
+	acm_push_ui32( root, "type", brush->type );
+	acm_push_array_f32( root, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 
-	AcmBranch *facesBranch = acm_branch_push_back_object_array( brushBranch, "faces" );
+	AcmBranch *facesBranch = acm_push_array_object( root, "faces" );
 	for ( uint i = 0; i < brush->numFaces; ++i )
 	{
 		const ApeBrushFace *face       = &brush->faces[ i ];
-		AcmBranch          *faceBranch = acm_branch_push_back_object( facesBranch, "face" );
+		AcmBranch          *faceBranch = acm_push_object( facesBranch, "face" );
 
 		acm_push_string( faceBranch, "id", face->id, true );
 		if ( face->destination != nullptr )
@@ -456,28 +455,110 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 
 		assert( face->material != nullptr );
 		acm_push_string( faceBranch, "material", ape_material_get_path( face->material ), false );
-		acm_branch_push_back_vector2( faceBranch, "materialScale", &face->materialScale, true );
-		acm_branch_push_back_vector3( faceBranch, "materialOffset", &face->materialOffset, true );
-		acm_branch_push_back_vector3( faceBranch, "materialAngle", &face->materialAngle, true );
+		acm_push_vector2( faceBranch, "materialScale", &face->materialScale, true );
+		acm_push_vector3( faceBranch, "materialOffset", &face->materialOffset, true );
+		acm_push_vector3( faceBranch, "materialAngle", &face->materialAngle, true );
 
-		acm_branch_push_back_vector3( faceBranch, "normal", &face->normal, true );
+		acm_push_vector3( faceBranch, "normal", &face->normal, true );
 		acm_push_array_f32( faceBranch, "colour", ( float * ) &face->colour, 4 );
 		acm_push_array_f32( faceBranch, "bounds", ( float * ) &face->bounds, 12 );
 
-		AcmBranch *edgeBranch     = acm_branch_push_back_int16_array( faceBranch, "edgeLoop", nullptr, 0 );
-		AcmBranch *verticesBranch = acm_branch_push_back_object_array( faceBranch, "vertices" );
+		AcmBranch *edgeBranch     = acm_push_array_i16( faceBranch, "edgeLoop", nullptr, 0 );
+		AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "vertices" );
 		for ( uint j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *vertex       = &face->vertices[ j ];
-			AcmBranch                *vertexBranch = acm_branch_push_back_object( verticesBranch, "vertex" );
-			acm_branch_push_back_int16( vertexBranch, "position", vertex->position - brush->vertices );
-			acm_branch_push_back_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
-			acm_branch_push_back_vector3( vertexBranch, "normal", &vertex->normal, true );
+			AcmBranch                *vertexBranch = acm_push_object( verticesBranch, "vertex" );
+			acm_push_i16( vertexBranch, "position", vertex->position - brush->vertices );
+			acm_push_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
+			acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
 			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
 
-			acm_branch_push_back_int16( edgeBranch, "vertex", face->edgeLoop[ j ] - face->vertices );
+			acm_push_i16( edgeBranch, "vertex", face->edgeLoop[ j ] - face->vertices );
 		}
 	}
 
 	return root;
+}
+
+ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
+{
+	ApeBrush *self = ape_brush_create( parent, "temp", &( PLVector3 ){}, &( PLVector3 ){} );
+
+	self->type = ACM_GET_INT( self->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
+
+	AcmBranch *branch;
+	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
+	{
+		self->numVertices = acm_get_num_of_children( branch ) / 3;
+		self->vertices    = PL_NEW_( PLVector3, self->numVertices );
+		acm_branch_get_float32_array( branch, ( float * ) self->vertices, self->numVertices );
+	}
+	else
+	{
+		ape_warning_( "No vertices specified for brush!\n" );
+		ape_world_node_destroy( APE_WORLD_NODE( self ) );
+		return nullptr;
+	}
+
+	if ( ( branch = acm_get_child_by_name( root, "faces" ) ) != nullptr )
+	{
+		self->numFaces = acm_get_num_of_children( branch );
+		self->faces    = PL_NEW_( ApeBrushFace, self->numFaces );
+
+		branch = acm_get_first_child( branch );
+		for ( uint i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
+		{
+			snprintf( self->faces[ i ].id, sizeof( self->faces[ i ].id ), "%s", acm_get_string( branch, "id", "" ) );
+
+			// material
+			const char *str;
+			if ( ( str = acm_get_string( branch, "material", nullptr ) ) != nullptr )
+			{
+				self->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true, false );
+			}
+			else
+			{
+				ape_warning_( "No material specified for a brush face, using default!\n" );
+				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
+			}
+			self->faces[ i ].materialScale  = acm_get_vector2( branch, "materialScale", &( PLVector2 ){} );
+			self->faces[ i ].materialOffset = acm_get_vector3( branch, "materialOffset", &( PLVector3 ){} );
+			self->faces[ i ].materialAngle  = acm_get_vector3( branch, "materialAngle", &( PLVector3 ){} );
+
+			self->faces[ i ].normal = acm_get_vector3( branch, "normal", &( PLVector3 ){} );
+			self->faces[ i ].colour = acm_get_colour_f32( branch, "colour", &( PLColourF32 ){ .a = 1.0f } );
+			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
+
+			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
+			if ( vertexBranch != nullptr )
+			{
+				vertexBranch = acm_get_first_child( vertexBranch );
+				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
+				{
+					uint vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
+					assert( vertexIndex <= self->numVertices );
+					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
+					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ){} );
+					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ){} );
+					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ){ .a = 1.0f } );
+				}
+			}
+
+			int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
+			acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
+			for ( uint i = 0; i < self->faces[ i ].numVertices; ++i )
+			{
+				self->faces[ i ].edgeLoop[ i ] = &self->faces[ i ].vertices[ edgeLoop[ i ] ];
+			}
+		}
+	}
+	else
+	{
+		ape_warning_( "No faces specified for brush!\n" );
+		ape_world_node_destroy( APE_WORLD_NODE( self ) );
+		return nullptr;
+	}
+
+	return APE_WORLD_NODE( self );
 }

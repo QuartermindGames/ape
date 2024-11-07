@@ -20,19 +20,19 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 
 AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
 {
-	AcmBranch *root = acm_branch_push_back_object( NULL, "particleEmitter" );
+	AcmBranch *root = acm_push_object( NULL, "particleEmitter" );
 	if ( root != NULL )
 	{
-		acm_branch_push_back_int32( root, "emissionRate", emitter->emissionRate );
-		acm_branch_push_back_int32( root, "emissionVar", emitter->emissionVar );
+		acm_push_i32( root, "emissionRate", emitter->emissionRate );
+		acm_push_i32( root, "emissionVar", emitter->emissionVar );
 
-		acm_branch_push_back_int32( root, "particleLife", emitter->particleLife );
-		acm_branch_push_back_int32( root, "particleLifeVar", emitter->particleLifeVar );
+		acm_push_i32( root, "particleLife", emitter->particleLife );
+		acm_push_i32( root, "particleLifeVar", emitter->particleLifeVar );
 
-		acm_branch_push_back_float32( root, "speed", emitter->speed );
-		acm_branch_push_back_float32( root, "speedVar", emitter->speedVar );
+		acm_push_f32( root, "speed", emitter->speed );
+		acm_push_f32( root, "speedVar", emitter->speedVar );
 
-		acm_branch_push_back_int32( root, "maxParticles", emitter->maxParticles );
+		acm_push_i32( root, "maxParticles", emitter->maxParticles );
 	}
 
 	return root;

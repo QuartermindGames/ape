@@ -84,7 +84,7 @@ static void LoadUserConfig( void )
 		return;
 
 	/* now iterate through the list and update all our children */
-	AcmBranch *child = acm_branch_get_first_child( root );
+	AcmBranch *child = acm_get_first_child( root );
 	while ( child != NULL )
 	{
 		const char *cvarName = acm_branch_get_name( child );
@@ -112,7 +112,7 @@ static void save_user_config( void )
 	size_t              numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
-	AcmBranch *root = acm_branch_push_back_object( NULL, "config" );
+	AcmBranch *root = acm_push_object( NULL, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i )
 	{
 		if ( !cvars[ i ]->archive )
@@ -124,13 +124,13 @@ static void save_user_config( void )
 		switch ( cvars[ i ]->type )
 		{
 			case PL_VAR_F32:
-				acm_branch_push_back_float32( root, cvars[ i ]->name, cvars[ i ]->f_value );
+				acm_push_f32( root, cvars[ i ]->name, cvars[ i ]->f_value );
 				break;
 			case PL_VAR_I32:
-				acm_branch_push_back_int32( root, cvars[ i ]->name, cvars[ i ]->i_value );
+				acm_push_i32( root, cvars[ i ]->name, cvars[ i ]->i_value );
 				break;
 			case PL_VAR_BOOL:
-				acm_branch_push_back_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
+				acm_push_bool( root, cvars[ i ]->name, cvars[ i ]->b_value );
 				break;
 			default:
 				acm_push_string( root, cvars[ i ]->name, cvars[ i ]->s_value, false );
@@ -140,7 +140,7 @@ static void save_user_config( void )
 
 	ape_serialize_input_config_( root );
 
-	acm_write_file( path, root, ND_FILE_UTF8 );
+	acm_write_file( path, root, ACM_FILE_TYPE_UTF8 );
 	acm_branch_destroy( root );
 
 	PRINT( "User config saved.\n" );

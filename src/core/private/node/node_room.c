@@ -63,25 +63,34 @@ ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces 
 
 AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
-	ApeRoom   *room       = ( ApeRoom         *) self;
-	AcmBranch *roomBranch = acm_branch_push_back_object( root, "room" );
-	acm_push_string( roomBranch, "path", room->path, true );
-	acm_push_uint32( roomBranch, "flags", room->flags );
-	acm_push_array_f32( roomBranch, "colour", ( float * ) &room->colour, 4 );
-	acm_push_array_f32( roomBranch, "ambience", ( float * ) &room->ambientLight, 4 );
-	acm_push_uint32( roomBranch, "reverb", room->reverbPreset );
+	ApeRoom *room = ( ApeRoom * ) self;
+	acm_push_string( root, "path", room->path, true );
+	acm_push_ui32( root, "flags", room->flags );
+	acm_push_array_f32( root, "colour", ( float * ) &room->colour, 4 );
+	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
+	acm_push_ui32( root, "reverb", room->reverbPreset );
 
 	return root;
 }
 
-ApeWorldNode *ape_room_deserialize_( void *self, AcmBranch *root )
+ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeRoom *room      = ( ApeRoom      *) self;
-	room->flags        = acm_get_uint( root, "flags", 0 );
-	room->colour       = acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	room->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	room->reverbPreset = acm_get_uint( root, "reverb", 0 );
-	return self;
+	ApeRoom *self = ape_room_create( parent, "temp" );
+
+	const char *path = acm_get_string( root, "path", nullptr );
+	if ( path != nullptr )
+	{
+		snprintf( self->path, sizeof( self->path ), "%s", path );
+	}
+
+	self->flags        = ACM_GET_INT( self->flags, root, "flags", 0 );
+	self->colour       = acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	self->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	self->reverbPreset = ACM_GET_INT( self->flags, root, "reverb", 0 );
+
+	self->isDirty = true;
+
+	return &self->base;
 }
 
 bool ape_room_set_path( ApeRoom *self, const char *path )

@@ -161,13 +161,13 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	AcmBranch *root = acm_load_file( filename.text(), "room" );
+	AcmBranch *root = acm_load_file( filename.text(), "node" );
 	if ( root == nullptr )
 	{
 		return FALSE;
 	}
 
-	ApeWorldNode *roomNode = ape_world_node_deserialize( root );
+	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
 	if ( roomNode == nullptr )
 	{
 		return FALSE;
@@ -185,6 +185,7 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 
 	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
 	editor->update_tree();
+	editor->set_active_room( ( ApeRoom * ) roomNode );
 
 	return TRUE;
 }

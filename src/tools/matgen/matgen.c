@@ -88,19 +88,19 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 #endif
 
 		// now build the node tree for the material
-		AcmBranch *root = acm_branch_push_back_object( NULL, "material" );
+		AcmBranch *root = acm_push_object( NULL, "material" );
 		{
 			if ( surfaceType != GAME_MATERIAL_SURFACE_TYPE_NONE )
 			{
-				acm_branch_push_back_int8( root, "surfaceType", surfaceType );
+				acm_push_i8( root, "surfaceType", surfaceType );
 			}
 
-			AcmBranch *passesArray = acm_branch_push_back_object_array( root, "passes" );
+			AcmBranch *passesArray = acm_push_array_object( root, "passes" );
 			{
-				AcmBranch *pass = acm_branch_push_back_object( passesArray, NULL );
+				AcmBranch *pass = acm_push_object( passesArray, NULL );
 				{
 					acm_push_string( pass, "shaderProgram", matGen.shader, false );
-					AcmBranch *parameters = acm_branch_push_back_object( pass, "shaderParameters" );
+					AcmBranch *parameters = acm_push_object( pass, "shaderParameters" );
 					{
 						acm_push_string( parameters, "diffuseMap", path, false );
 					}
@@ -109,7 +109,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 		}
 
 		// write it out and destroy it
-		acm_write_file( writePath, root, ND_FILE_UTF8 );
+		acm_write_file( writePath, root, ACM_FILE_TYPE_UTF8 );
 		acm_branch_destroy( root );
 
 		numMaterialsGenerated++;
@@ -134,20 +134,20 @@ static bool LoadSurfacesConfig( const char *path )
 		return false;
 	}
 
-	matGen.numSurfaces   = ( int8_t ) acm_branch_get_num_of_children( root );
+	matGen.numSurfaces   = ( int8_t ) acm_get_num_of_children( root );
 	matGen.surfaceLookup = PL_NEW_( GameMaterialSurface, matGen.numSurfaces );
 
 	GameMaterialSurface *surface = matGen.surfaceLookup;
-	AcmBranch           *child   = acm_branch_get_first_child( root );
+	AcmBranch           *child   = acm_get_first_child( root );
 	while ( child != NULL )
 	{
 		snprintf( surface->description, sizeof( surface->description ),
-		          "%s", acm_branch_get_child_string( child, "description", "none" ) );
+		          "%s", acm_get_string( child, "description", "none" ) );
 
-		AcmBranch *aliases = acm_branch_get_child_by_name( child, "aliases" );
+		AcmBranch *aliases = acm_get_child_by_name( child, "aliases" );
 		if ( aliases != NULL )
 		{
-			surface->numAliases = acm_branch_get_num_of_children( aliases );
+			surface->numAliases = acm_get_num_of_children( aliases );
 			surface->aliases    = PL_NEW_( char *, surface->numAliases );
 			acm_branch_get_string_array( aliases, surface->aliases, surface->numAliases );
 			//for ( uint8_t i = 0; i < surface->numAliases; ++i )

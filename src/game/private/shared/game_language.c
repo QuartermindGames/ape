@@ -13,10 +13,10 @@ static char           currentLanguage[ PL_VAR_VALUE_LENGTH ];
 
 static void parse_language_entry( const char *name, AcmBranch *stringsBranch )
 {
-	AcmBranch *child = acm_branch_get_first_child( stringsBranch );
+	AcmBranch *child = acm_get_first_child( stringsBranch );
 	while ( child != nullptr )
 	{
-		const char *id = acm_branch_get_child_string( child, "id", nullptr );
+		const char *id = acm_get_string( child, "id", nullptr );
 		if ( id == nullptr )
 		{
 			game_warning_( "Language (%s) entry without a valid ID!\n", name );
@@ -24,7 +24,7 @@ static void parse_language_entry( const char *name, AcmBranch *stringsBranch )
 			continue;
 		}
 
-		const char *value = acm_branch_get_child_string( child, "value", nullptr );
+		const char *value = acm_get_string( child, "value", nullptr );
 		if ( value == nullptr )
 		{
 			game_warning_( "Language (%s) entry without a valid value!\n", value );
@@ -78,10 +78,10 @@ void game_language_initialize_()
 	languages            = PlCreateVectorArray( 4 );
 	languageStringsTable = PlCreateHashTable();
 
-	AcmBranch *child = acm_branch_get_first_child( root );
+	AcmBranch *child = acm_get_first_child( root );
 	while ( child != nullptr )
 	{
-		const char *id = acm_branch_get_child_string( child, "id", nullptr );
+		const char *id = acm_get_string( child, "id", nullptr );
 		if ( id == nullptr )
 		{
 			game_warning_( "Encountered a language entry without a valid name!\n" );
@@ -89,9 +89,9 @@ void game_language_initialize_()
 			continue;
 		}
 
-		const char *description = acm_branch_get_child_string( child, "description", id );
+		const char *description = acm_get_string( child, "description", id );
 
-		AcmBranch *stringsBranch = acm_branch_get_child_by_name( child, "strings" );
+		AcmBranch *stringsBranch = acm_get_child_by_name( child, "strings" );
 		if ( stringsBranch == nullptr )
 		{
 			game_warning_( "Encountered a language (%s) without any strings!\n", id );
@@ -111,7 +111,7 @@ void game_language_initialize_()
 
 	game_print_( "Found %u language/s.\n", PlGetNumVectorArrayElements( languages ) );
 
-	const char *languageConfig = acm_branch_get_child_string( game_get_config(), "language", nullptr );
+	const char *languageConfig = acm_get_string( game_get_config(), "language", nullptr );
 	game_language_set_current( languageConfig );
 }
 

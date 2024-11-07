@@ -87,7 +87,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 
 static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBranch *root )
 {
-	const char *internalName = acm_branch_get_child_string( root, "description", nullptr );
+	const char *internalName = acm_get_string( root, "description", nullptr );
 	if ( internalName == nullptr )
 	{
 		ape_warning_( "Shader program not assigned a valid 'description'!\n" );
@@ -109,8 +109,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		return nullptr;
 	}
 
-	const char *vertexPath   = acm_branch_get_child_string( root, "vertexPath", nullptr );
-	const char *fragmentPath = acm_branch_get_child_string( root, "fragmentPath", nullptr );
+	const char *vertexPath   = acm_get_string( root, "vertexPath", nullptr );
+	const char *fragmentPath = acm_get_string( root, "fragmentPath", nullptr );
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
@@ -147,19 +147,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
 	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
 
-	AcmBranch *child = acm_branch_get_child_by_name( root, "definitions" );
+	AcmBranch *child = acm_get_child_by_name( root, "definitions" );
 	if ( child != NULL )
 	{
 		AcmBranch *subChild;
-		if ( ( subChild = acm_branch_get_child_by_name( child, "fragment" ) ) != NULL )
+		if ( ( subChild = acm_get_child_by_name( child, "fragment" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = acm_branch_get_num_of_children( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = acm_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = acm_branch_get_first_child( subChild );
+			subChild = acm_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -173,15 +173,15 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 				subChild = acm_get_next_child( subChild );
 			}
 		}
-		if ( ( subChild = acm_branch_get_child_by_name( child, "vertex" ) ) != NULL )
+		if ( ( subChild = acm_get_child_by_name( child, "vertex" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = acm_branch_get_num_of_children( subChild );
+			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = acm_get_num_of_children( subChild );
 			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
 			{
 				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
 			}
 
-			subChild = acm_branch_get_first_child( subChild );
+			subChild = acm_get_first_child( subChild );
 			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
 			{
 				if ( subChild == NULL )
@@ -217,7 +217,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can, of course, overwrite these. */
-	child = acm_branch_get_child_by_name( root, "defaultPass" );
+	child = acm_get_child_by_name( root, "defaultPass" );
 	if ( child != NULL )
 	{
 		// zero in-case we're reloading...

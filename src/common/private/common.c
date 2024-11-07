@@ -115,7 +115,7 @@ AcmBranch *com_get_config( const char *name )
 	if ( root == NULL )
 	{
 		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", acm_get_error_message() );
-		root = acm_branch_push_back_object( NULL, "config" );
+		root = acm_push_object( nullptr, "config" );
 	}
 
 	return root;
@@ -132,7 +132,7 @@ bool com_write_config( struct AcmBranch *root, const char *name )
 	}
 
 	PlSetupPath( path, true, "%s/configs/%s.cfg.n", com_get_app_data_directory(), name );
-	return acm_write_file( path, root, ND_FILE_UTF8 );
+	return acm_write_file( path, root, ACM_FILE_TYPE_UTF8 );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

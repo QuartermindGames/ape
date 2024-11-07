@@ -1,393 +1,281 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// SPDX-License-Identifier: MIT
+// Ape Config Markup
+// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include "kernel/plcore/include/plcore/pl_linkedlist.h"
-#include "kernel/plcore/include/plcore/pl_parse.h"
+#include <plcore/pl_linkedlist.h>
 
 #include "acm_private.h"
 
-//#define DEBUG_PARSER_MESSAGES
-#if !defined( NDEBUG ) && defined( DEBUG_PARSER_MESSAGES )
-#define DEBUG_PARSER( FORMAT, ... ) Message( "PARSE: " FORMAT, ##__VA_ARGS__ )
-#else
-#define DEBUG_PARSER( FORMAT, ... )
-#endif
-
-static void SkipToNextToken( const char **buf, unsigned int *line )
+static const AcmLexerToken *get_next_token( const AcmLexerToken *token )
 {
-	DEBUG_PARSER( "START:%s\n", ( *buf ) );
-	while ( *( *buf ) == ' ' || *( *buf ) == '\t' || *( *buf ) == '\n' || *( *buf ) == '\r' )
+	AcmLexerToken    *nextToken = NULL;
+	PLLinkedListNode *nextNode  = PlGetNextLinkedListNode( token->node );
+	if ( nextNode != NULL )
 	{
-		if ( *( *buf ) == '\n' ) line++;
-		( *buf )++;
+		nextToken = PlGetLinkedListNodeUserData( nextNode );
 	}
-	DEBUG_PARSER( "END:%s\n", ( *buf ) );
+
+	return nextToken;
 }
 
-static const char *ParseToken( const char **buf, char *token, size_t size, unsigned int *line )
+typedef struct VariableProcessor
 {
-	DEBUG_PARSER( "START:%s\n", ( *buf ) );
-	SkipToNextToken( buf, line );
-	const char *p = PlParseToken( buf, token, size );
-	DEBUG_PARSER( "TOKEN:%s\n", p );
-	DEBUG_PARSER( "END:%s\n", ( *buf ) );
-	return p;
+	const char     *symbol;
+	AcmPropertyType propertyType;
+	AcmTokenType   *acceptedTokenTypes;
+	unsigned int    numTokenTypes;
+} VariableProcessor;
+
+static VariableProcessor variableProcessors[] = {
+        {"string",  ACM_PROPERTY_TYPE_STRING,  ( AcmTokenType[] ){ ACM_TOKEN_TYPE_STRING, ACM_TOKEN_TYPE_IDENTIFIER }, 2},
+        {"bool",    ACM_PROPERTY_TYPE_BOOL,    ( AcmTokenType[] ){ ACM_TOKEN_TYPE_STRING, ACM_TOKEN_TYPE_IDENTIFIER }, 2},
+        {"uint8",   ND_PROPERTY_UI8,           ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"uint16",  ND_PROPERTY_UI16,          ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"uint32",  ND_PROPERTY_UI32,          ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"uint",    ND_PROPERTY_UI32,          ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1}, // shorthand uint32
+        {"uint64",  ND_PROPERTY_UI64,          ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"int8",    ND_PROPERTY_INT8,          ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"int16",   ND_PROPERTY_INT16,         ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"int32",   ND_PROPERTY_INT32,         ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"int",     ND_PROPERTY_INT32,         ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1}, // shorthand int32
+        {"int64",   ND_PROPERTY_INT64,         ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER },                           1},
+        {"float",   ACM_PROPERTY_TYPE_FLOAT32, ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER, ACM_TOKEN_TYPE_DECIMAL },   2},
+        {"float64", ACM_PROPERTY_TYPE_FLOAT64, ( AcmTokenType[] ){ ACM_TOKEN_TYPE_INTEGER, ACM_TOKEN_TYPE_DECIMAL },   2},
+};
+#define NUM_VARIABLE_TYPES PL_ARRAY_ELEMENTS( variableProcessors )
+
+static AcmBranch *parse_branch_variable( const char *name, const AcmLexerToken *typeToken, const AcmLexerToken *valueToken, AcmBranch *parent, const AcmLexerToken **currentToken )
+{
+	AcmBranch *branch = NULL;
+
+	for ( uint i = 0; i < NUM_VARIABLE_TYPES; ++i )
+	{
+		if ( strcmp( typeToken->symbol, variableProcessors[ i ].symbol ) != 0 )
+		{
+			continue;
+		}
+
+		bool valid = false;
+		for ( uint j = 0; j < variableProcessors[ i ].numTokenTypes; ++j )
+		{
+			valid = ( valueToken->type == variableProcessors[ i ].acceptedTokenTypes[ j ] );
+			if ( valid )
+			{
+				break;
+			}
+		}
+
+		if ( !valid )
+		{
+			Warning( "Unexpected value type for %s (%s): %u:%u (%s)\n",
+			         typeToken->symbol,
+			         valueToken->symbol, valueToken->lineNum, valueToken->linePos, valueToken->path );
+			break;
+		}
+
+		branch = acm_push_variable_( parent, name, valueToken->symbol, variableProcessors[ i ].propertyType );
+		break;
+	}
+
+	*currentToken = get_next_token( *currentToken );
+	return branch;
 }
 
-static AcmPropertyType PropertyTypeForString( const char *type )
+static AcmBranch *parse_branch( const AcmLexerToken *token, AcmBranch *parent, const AcmLexerToken **currentToken );
+static AcmBranch *parse_branch_object( const AcmLexerToken *token, AcmBranch *parent, const AcmLexerToken **currentToken )
 {
-	if ( pl_strcasecmp( type, "string" ) == 0 )
-		return ND_PROPERTY_STRING;
-	if ( pl_strcasecmp( type, "bool" ) == 0 )
-		return ND_PROPERTY_BOOL;
-	if ( pl_strcasecmp( type, "object" ) == 0 )
-		return ND_PROPERTY_OBJECT;
-	if ( pl_strcasecmp( type, "array" ) == 0 )
-		return ND_PROPERTY_ARRAY;
-	if ( pl_strcasecmp( type, "uint8" ) == 0 )
-		return ND_PROPERTY_UI8;
-	if ( pl_strcasecmp( type, "uint" ) == 0 || pl_strcasecmp( type, "uint32" ) == 0 )
-		return ND_PROPERTY_UI32;
-	if ( pl_strcasecmp( type, "uint64" ) == 0 )
-		return ND_PROPERTY_UI64;
-	if ( pl_strcasecmp( type, "int8" ) == 0 )
-		return ND_PROPERTY_INT8;
-	if ( pl_strcasecmp( type, "int" ) == 0 || pl_strcasecmp( type, "int32" ) == 0 )
-		return ND_PROPERTY_INT32;
-	if ( pl_strcasecmp( type, "int64" ) == 0 )
-		return ND_PROPERTY_INT64;
-	if ( pl_strcasecmp( type, "float" ) == 0 )
-		return ND_PROPERTY_FLOAT32;
-	if ( pl_strcasecmp( type, "float64" ) == 0 )
-		return ND_PROPERTY_FLOAT64;
-
-	return ND_PROPERTY_INVALID;
-}
-
-static AcmBranch *ParseObjectNode( AcmBranch *parent, const char **buf, size_t length, unsigned int currentLine );
-static AcmBranch *ParseArrayNode( AcmBranch *parent, const char **buf, size_t length, unsigned int currentLine )
-{
-	DEBUG_PARSER( "Entering ParseArrayNode\n" );
-
-	char childType[ ND_MAX_TYPE_LENGTH ];
-	if ( ParseToken( buf, childType, sizeof( childType ), &currentLine ) == NULL )
+	const AcmLexerToken *peekToken;
+	if ( parent == NULL || parent->type != ACM_PROPERTY_TYPE_ARRAY )
 	{
-		Warning( "Failed to parse child type for array!\n" );
-		return NULL;
-	}
-	DEBUG_PARSER( "childType( %s )\n", childType );
-
-	char name[ ND_MAX_NAME_LENGTH ];
-	if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
-	{
-		Warning( "Failed to parse name!\n" );
-		return NULL;
-	}
-	DEBUG_PARSER( "name( %s )\n", name );
-
-	SkipToNextToken( buf, &currentLine );
-	if ( *( *buf ) != '{' )
-	{
-		Warning( "No opening brace for array, \"%s\"!\n", name );
-		return NULL;
-	}
-	( *buf )++;
-
-	AcmBranch *arrayNode = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
-	if ( arrayNode == NULL )
-		return NULL;
-
-	SkipToNextToken( buf, &currentLine );
-
-	arrayNode->childType = PropertyTypeForString( childType );
-	switch ( arrayNode->childType )
-	{
-		default:
+		if ( token->type != ACM_TOKEN_TYPE_IDENTIFIER )
 		{
-			Warning( "Invalid child type for array, \"%s\"!\n", name );
-			break;
-		}
-		case ND_PROPERTY_UI32:
-		{
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-			{
-				bool     status;
-				uint32_t i = PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
-					break;
-				}
-				acm_push_uint32( arrayNode, NULL, i );
-				SkipToNextToken( buf, &currentLine );
-			}
-			break;
-		}
-		case ND_PROPERTY_INT32:
-		{
-			DEBUG_PARSER( "Reading I32\n" );
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-			{
-				bool    status;
-				int32_t i = PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
-					break;
-				}
-				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-				acm_branch_push_back_int32( arrayNode, NULL, i );
-				SkipToNextToken( buf, &currentLine );
-			}
-			break;
-		}
-		case ND_PROPERTY_FLOAT32:
-		{
-			DEBUG_PARSER( "Reading float\n" );
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-			{
-				bool  status;
-				float i = PlParseFloat( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
-					break;
-				}
-				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				acm_branch_push_back_float32( arrayNode, NULL, i );
-				SkipToNextToken( buf, &currentLine );
-			}
-			break;
-		}
-		case ND_PROPERTY_OBJECT:
-		{
-			DEBUG_PARSER( "Reading object\n" );
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-			{
-				if ( ParseObjectNode( arrayNode, buf, length, 0 ) == NULL )
-				{
-					Warning( "Failed to parse object node for array, \"%s\"!\n", name );
-					break;
-				}
-				SkipToNextToken( buf, &currentLine );
-			}
-			break;
-		}
-		case ND_PROPERTY_BOOL:
-		{
-			DEBUG_PARSER( "Reading boolean\n" );
-			while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-			{
-				bool status;
-				int  i = PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer for array, \"%s\"!\n", name );
-					break;
-				}
-				DEBUG_PARSER( "PushBack Boolean: %d\n", i );
-				acm_branch_push_back_int32( arrayNode, NULL, i );
-				SkipToNextToken( buf, &currentLine );
-			}
-			break;
-		}
-		case ND_PROPERTY_STRING:
-		{
-			DEBUG_PARSER( "Reading string\n" );
-			do {
-				char i[ ND_MAX_STRING_LENGTH ];
-				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL )
-				{
-					Warning( "Failed to parse enclosed string for array, \"%s\"!\n", name );
-					break;
-				}
-				DEBUG_PARSER( "PushBack String: %s\n", i );
-				acm_push_string( arrayNode, NULL, i, false );
-				SkipToNextToken( buf, &currentLine );
-			} while ( *( *buf ) != '\0' && *( *buf ) != '}' );
-			break;
-		}
-		case ND_PROPERTY_LINK:
-		{
-			DEBUG_PARSER( "Reading link\n" );
-			assert( 0 );
-			break;
-		}
-	}
-
-	if ( *( *buf ) != '}' )
-	{
-		Warning( "No closing brace for array, \"%s\"!\n", name );
-		return arrayNode;
-	}
-	( *buf )++;
-
-	DEBUG_PARSER( "Leaving ParseArrayNode\n" );
-	return arrayNode;
-}
-
-static AcmBranch *ParseNode( AcmBranch *parent, const char **buf, size_t length, unsigned int currentLine );
-static AcmBranch *ParseObjectNode( AcmBranch *parent, const char **buf, size_t length, unsigned int currentLine )
-{
-	DEBUG_PARSER( "Entering ParseObjectNode\n" );
-
-	char name[ ND_MAX_NAME_LENGTH ] = { '\0' };
-	if ( parent == NULL || parent->type != ND_PROPERTY_ARRAY )
-	{
-		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
-		{
-			Warning( "Failed to parse name!\n" );
+			Warning( "Unexpected token type for object: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
 			return NULL;
 		}
+
+		peekToken = get_next_token( token );
 	}
-	DEBUG_PARSER( "name( %s )\n", name );
-
-	/* make sure the object is followed by an opening brace */
-	SkipToNextToken( buf, &currentLine );
-	if ( *( *buf ) != '{' )
-	{
-		Warning( "No opening brace for object, \"%s\"!\n", name );
-		return NULL;
-	}
-	( *buf )++;
-
-	AcmBranch *objectNode = acm_branch_push_back_object( parent, name );
-	if ( objectNode == NULL )
-	{
-		return NULL;
-	}
-
-	/* read in all the children nodes */
-	SkipToNextToken( buf, &currentLine );
-	while ( *( *buf ) != '\0' && *( *buf ) != '}' )
-	{
-		if ( ParseNode( objectNode, buf, length, 0 ) == NULL )
-		{
-			Warning( "Failed to parse child node for object, \"%s\" [%d]!\n", name, currentLine );
-			break;
-		}
-
-		SkipToNextToken( buf, &currentLine );
-	}
-
-	if ( *( *buf ) != '}' )
-	{
-		Warning( "No closing brace for object, \"%s\"!\n", name );
-		return objectNode;
-	}
-	( *buf )++;
-
-	DEBUG_PARSER( "Leaving ParseObjectNode\n" );
-	return objectNode;
-}
-
-static AcmBranch *ParseNode( AcmBranch *parent, const char **buf, size_t length, unsigned int currentLine )
-{
-	DEBUG_PARSER( "Entering ParseNode\n" );
-
-	/* now try reading in the type */
-	char type[ ND_MAX_TYPE_LENGTH ];
-	if ( ParseToken( buf, type, sizeof( type ), &currentLine ) == NULL )
-		return NULL;
-	DEBUG_PARSER( "type( %s )\n", type );
-
-	AcmPropertyType propertyType = PropertyTypeForString( type );
-	/* an array is a special case, parsing-wise */
-	if ( propertyType == ND_PROPERTY_ARRAY )
-		return ParseArrayNode( parent, buf, length, currentLine );
-	else if ( propertyType == ND_PROPERTY_OBJECT )
-		return ParseObjectNode( parent, buf, length, currentLine );
 	else
 	{
-		char name[ ND_MAX_NAME_LENGTH ];
-		if ( ParseToken( buf, name, sizeof( name ), &currentLine ) == NULL )
-		{
-			Warning( "Failed to parse name [%d]!\n", currentLine );
-			return NULL;
-		}
-		DEBUG_PARSER( "name( %s )\n", name );
-
-		/* figure out what data type it is and read in it's result */
-		switch ( propertyType )
-		{
-			case ND_PROPERTY_UI32:
-			{
-				bool     status;
-				uint32_t i = PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				return acm_push_uint32( parent, name, i );
-			}
-			case ND_PROPERTY_INT8:
-			{
-				bool   status;
-				int8_t i = ( int8_t ) PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				DEBUG_PARSER( "PushBack I8: %d\n", i );
-				return acm_branch_push_back_int8( parent, name, i );
-			}
-			case ND_PROPERTY_INT32:
-			{
-				bool status;
-				int  i = PlParseInteger( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse integer, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				DEBUG_PARSER( "PushBack Integer: %d\n", i );
-				return acm_branch_push_back_int32( parent, name, i );
-			}
-			case ND_PROPERTY_FLOAT32:
-			{
-				bool  status;
-				float i = PlParseFloat( buf, &status );
-				if ( !status )
-				{
-					Warning( "Failed to parse float, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				DEBUG_PARSER( "PushBack Float: %f\n", i );
-				return acm_branch_push_back_float32( parent, name, i );
-			}
-			case ND_PROPERTY_STRING:
-			{
-				char i[ ND_MAX_STRING_LENGTH ];
-				if ( PlParseEnclosedString( buf, i, sizeof( i ) ) == NULL )
-				{
-					Warning( "Failed to parse string, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				DEBUG_PARSER( "PushBack String: %s\n", i );
-				return acm_push_string( parent, name, i, false );
-			}
-			case ND_PROPERTY_BOOL:
-			{
-				char i[ ND_MAX_BOOL_LENGTH ];
-				if ( ParseToken( buf, i, sizeof( i ), &currentLine ) == NULL )
-				{
-					Warning( "Failed to parse boolean, \"%s\" [%d]!\n", name, currentLine );
-					return NULL;
-				}
-				DEBUG_PARSER( "PushBack Boolean: %s\n", i );
-				return acm_branch_push_back_bool( parent, name, ( pl_strcasecmp( i, "true" ) == 0 || i[ 0 ] == '1' ) );
-			}
-			default:
-				Warning( "Unknown property type, \"%s\" [%d]!\n", type, currentLine );
-				break;
-		}
+		peekToken = token;
 	}
 
-	return NULL;
+	if ( peekToken == NULL || peekToken->type != ACM_TOKEN_TYPE_OPEN_BRACKET )
+	{
+		Warning( "No opening bracket following object: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	AcmBranch *branch = acm_push_object( parent, token->symbol );
+
+	peekToken = get_next_token( peekToken );
+	while ( peekToken != NULL && peekToken->type != ACM_TOKEN_TYPE_CLOSE_BRACKET )
+	{
+		*currentToken = peekToken;
+		parse_branch( *currentToken, branch, currentToken );
+		peekToken = *currentToken;
+	}
+
+	if ( peekToken == NULL )
+	{
+		Warning( "No closing bracket following object: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
+	}
+
+	*currentToken = get_next_token( *currentToken );
+	return branch;
 }
 
-AcmBranch *acm_parse_buffer( const char *buf, size_t length )
+static AcmBranch *parse_branch_array( const AcmLexerToken *token, AcmBranch *parent, const AcmLexerToken **currentToken )
 {
-	return ParseNode( NULL, &buf, length, 1 );
+	if ( token->type != ACM_TOKEN_TYPE_TYPENAME )
+	{
+		Warning( "Expected typename to follow array (%s): %u:%u (%s)\n", token->symbol, token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	bool isObject = false;
+	if ( strcmp( token->symbol, "object" ) == 0 )
+	{
+		isObject = true;
+	}
+	else if ( strcmp( token->symbol, "array" ) == 0 )
+	{
+		Warning( "Invalid typename following array (%s): %u:%u (%s)\n", token->symbol, token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	const AcmLexerToken *identifierToken = get_next_token( token );
+	if ( identifierToken == NULL || identifierToken->type != ACM_TOKEN_TYPE_IDENTIFIER )
+	{
+		Warning( "Expected identifier to follow typename: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	const AcmLexerToken *peekToken = get_next_token( identifierToken );
+	if ( peekToken == NULL || peekToken->type != ACM_TOKEN_TYPE_OPEN_BRACKET )
+	{
+		Warning( "No opening bracket following object: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	// determine child property type
+	AcmPropertyType childType = ACM_PROPERTY_TYPE_INVALID;
+	if ( strcmp( token->symbol, "object" ) == 0 )
+	{
+		childType = ACM_PROPERTY_TYPE_OBJECT;
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < NUM_VARIABLE_TYPES; ++i )
+		{
+			if ( strcmp( token->symbol, variableProcessors[ i ].symbol ) != 0 )
+			{
+				continue;
+			}
+
+			childType = variableProcessors[ i ].propertyType;
+			break;
+		}
+	}
+	if ( childType == ACM_PROPERTY_TYPE_INVALID )
+	{
+		Warning( "Unsupported typename following array (%s): %u:%u (%s)\n", token->symbol, token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	AcmBranch *branch = acm_push_new_branch( parent, identifierToken->symbol, ACM_PROPERTY_TYPE_ARRAY, childType );
+
+	peekToken = get_next_token( peekToken );
+	while ( peekToken != NULL && peekToken->type != ACM_TOKEN_TYPE_CLOSE_BRACKET )
+	{
+		*currentToken = peekToken;
+		if ( isObject )
+		{
+			parse_branch_object( *currentToken, branch, currentToken );
+		}
+		else
+		{
+			parse_branch_variable( NULL, token, *currentToken, branch, currentToken );
+		}
+		peekToken = *currentToken;
+	}
+
+	if ( peekToken == NULL )
+	{
+		Warning( "No closing bracket following object: %u:%u (%s)\n", token->lineNum, token->linePos, token->path );
+	}
+
+	*currentToken = get_next_token( peekToken );
+	return branch;
+}
+
+static AcmBranch *parse_branch( const AcmLexerToken *token, AcmBranch *parent, const AcmLexerToken **currentToken )
+{
+	if ( token->type != ACM_TOKEN_TYPE_TYPENAME )
+	{
+		Warning( "Unexpected token type (%u): %u:%u (%s)\n", token->type, token->lineNum, token->linePos, token->path );
+		return NULL;
+	}
+
+	const AcmLexerToken *peekToken = get_next_token( token );
+	if ( peekToken == NULL )
+	{
+		Warning( "Next token missing for branch: %u:%u (%s)\n", peekToken->lineNum, peekToken->linePos, peekToken->path );
+		return NULL;
+	}
+
+	AcmBranch *branch = NULL;
+	if ( peekToken->type == ACM_TOKEN_TYPE_IDENTIFIER )
+	{
+		*currentToken = peekToken;
+		if ( strcmp( token->symbol, "object" ) == 0 )
+		{
+			branch = parse_branch_object( peekToken, parent, currentToken );
+		}
+		else
+		{
+			// get the value too
+			const AcmLexerToken *nameToken = *currentToken;
+			*currentToken                  = get_next_token( *currentToken );
+			if ( *currentToken == NULL )
+			{
+				Warning( "Unexpected end of input for variable: %u:%u (%s)\n", nameToken->lineNum, nameToken->linePos, nameToken->path );
+				return NULL;
+			}
+
+			branch = parse_branch_variable( nameToken->symbol, token, *currentToken, parent, currentToken );
+		}
+	}
+	else if ( peekToken->type == ACM_TOKEN_TYPE_TYPENAME && strcmp( peekToken->symbol, "array" ) != 0 )
+	{
+		*currentToken = peekToken;
+		branch        = parse_branch_array( peekToken, parent, currentToken );
+	}
+	else
+	{
+		Warning( "Unexpected token (%s): %u:%u (%s)\n", token->symbol, token->lineNum, token->linePos, token->path );
+	}
+
+	return branch;
+}
+
+AcmBranch *acm_parse_buffer( const char *buf, const char *file )
+{
+	AcmBranch *root  = NULL;
+	AcmLexer  *lexer = acm_lexer_parse_buffer_( NULL, buf, file );
+	if ( lexer == NULL )
+	{
+		return NULL;
+	}
+
+	PLLinkedListNode *firstNode = PlGetFirstNode( lexer->tokens );
+	if ( firstNode != NULL )
+	{
+		const AcmLexerToken *token = PlGetLinkedListNodeUserData( firstNode );
+		root                       = parse_branch( token, NULL, &token );
+	}
+
+	PL_DELETE( lexer );
+
+	return root;
 }

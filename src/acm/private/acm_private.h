@@ -1,4 +1,6 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// SPDX-License-Identifier: MIT
+// Ape Config Markup
+// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #pragma once
 
@@ -38,21 +40,63 @@ extern int nd_LogLevelWarn_;
 
 typedef struct NdVarString
 {
-	char *buf;
+	char    *buf;
 	uint16_t length;
 } NdVarString;
 
 typedef struct AcmBranch
 {
-	NdVarString name;
+	NdVarString     name;
 	AcmPropertyType type;
 	AcmPropertyType childType; /* used for array types */
-	NdVarString data;
-	AcmBranch     *parent;
+	NdVarString     data;
+	AcmBranch      *parent;
 
 	PLLinkedListNode *linkedListNode;
-	PLLinkedList *linkedList;
+	PLLinkedList     *linkedList;
 } AcmBranch;
 
-char *acm_preprocess_script_( char *buf, size_t *length, bool isHead );
-AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType );
+char      *acm_preprocess_script_( char *buf, size_t *length, bool isHead );
+AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType, AcmPropertyType childType );
+
+AcmBranch *acm_push_variable_( AcmBranch *parent, const char *name, const char *value, AcmPropertyType type );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Lexer
+
+typedef enum AcmTokenType
+{
+	ACM_TOKEN_TYPE_INVALID,
+
+	ACM_TOKEN_TYPE_EOF,
+
+	ACM_TOKEN_TYPE_TYPENAME,
+	ACM_TOKEN_TYPE_IDENTIFIER,
+	ACM_TOKEN_TYPE_STRING,
+	ACM_TOKEN_TYPE_INTEGER,
+	ACM_TOKEN_TYPE_DECIMAL,
+
+	ACM_TOKEN_TYPE_OPEN_BRACKET, // {
+	ACM_TOKEN_TYPE_CLOSE_BRACKET,// }
+} AcmTokenType;
+
+#define ACM_MAX_SYMBOL_LENGTH 128
+typedef char AcmSymbolName[ ACM_MAX_SYMBOL_LENGTH ];
+
+typedef struct AcmLexerToken
+{
+	AcmSymbolName     symbol;
+	AcmTokenType      type;
+	PLPath            path;
+	unsigned int      lineNum;
+	unsigned int      linePos;
+	PLLinkedListNode *node;
+} AcmLexerToken;
+
+typedef struct AcmLexer
+{
+	PLPath        originPath;
+	PLLinkedList *tokens;
+} AcmLexer;
+
+AcmLexer *acm_lexer_parse_buffer_( AcmLexer *self, const char *buf, const char *file );

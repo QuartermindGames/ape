@@ -29,7 +29,7 @@ static void model_cleanup_callback_( void *userData )
 
 static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmBranch *root )
 {
-	const char *materialPath = acm_branch_get_child_string( root, "material", nullptr );
+	const char *materialPath = acm_get_string( root, "material", nullptr );
 	if ( materialPath == nullptr )
 	{
 		ape_warning_( "No material provided for mesh!\n" );
@@ -39,16 +39,16 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true, false );
 
 	AcmBranch *branch;
-	if ( ( branch = acm_branch_get_child_by_name( root, "triangles" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "triangles" ) ) != NULL )
 	{
 		uint i = 0;
-		branch = acm_branch_get_first_child( branch );
+		branch = acm_get_first_child( branch );
 		while ( branch != nullptr )
 		{
 			uint vertexIndices[ 3 ];
 
 			AcmBranch *childBranch;
-			if ( ( childBranch = acm_branch_get_child_by_name( branch, "vertex" ) ) != nullptr )
+			if ( ( childBranch = acm_get_child_by_name( branch, "vertex" ) ) != nullptr )
 			{
 				acm_branch_get_uint32_array( childBranch, vertexIndices, 3 );
 			}
@@ -86,7 +86,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	AcmBranch *branch;
 
 	uint numFloatElements;
-	if ( ( branch = acm_branch_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
+	if ( ( branch = acm_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
 	{
 		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
 		if ( numFloatElements == 0 )
@@ -103,9 +103,9 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 	float *vertices    = NULL;
 	uint   numVertices = 0;
-	if ( ( branch = acm_branch_get_child_by_name( root, "vertices" ) ) != nullptr )
+	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
 	{
-		uint numIndices = acm_branch_get_num_of_children( branch );
+		uint numIndices = acm_get_num_of_children( branch );
 		if ( numIndices >= 3 )
 		{
 			vertices    = PL_NEW_( float, numIndices );
@@ -141,8 +141,8 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		                  ( const PLVector2 * ) &v[ 6 ] );
 	}
 
-	AcmBranch *meshArray = acm_branch_get_child_by_name( root, "meshes" );
-	if ( meshArray == NULL || ( ( model->numMaterials = acm_branch_get_num_of_children( meshArray ) ) == 0 ) )
+	AcmBranch *meshArray = acm_get_child_by_name( root, "meshes" );
+	if ( meshArray == NULL || ( ( model->numMaterials = acm_get_num_of_children( meshArray ) ) == 0 ) )
 	{
 		ape_warning_( "No meshes for model!\n" );
 		return NULL;
@@ -155,7 +155,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 	if ( meshArray != nullptr )
 	{
-		AcmBranch *meshNode = acm_branch_get_first_child( meshArray );
+		AcmBranch *meshNode = acm_get_first_child( meshArray );
 		for ( uint i = 0; i < model->numMaterials; ++i )
 		{
 			assert( meshNode != NULL );
@@ -169,16 +169,16 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		}
 	}
 
-	AcmBranch *bonesList = acm_branch_get_child_by_name( root, "bones" );
+	AcmBranch *bonesList = acm_get_child_by_name( root, "bones" );
 	if ( bonesList != NULL )
 	{
-		model->numBones = acm_branch_get_num_of_children( bonesList );
+		model->numBones = acm_get_num_of_children( bonesList );
 		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
 		{
 			ape_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
 			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
-		AcmBranch *child = acm_branch_get_first_child( bonesList );
+		AcmBranch *child = acm_get_first_child( bonesList );
 		for ( uint i = 0; i < model->numBones; ++i )
 		{
 			if ( child == NULL )

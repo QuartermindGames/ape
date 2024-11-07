@@ -415,7 +415,7 @@ static bool initialize_display( void )
 	}
 
 	unsigned int driverMode;
-	const char  *driverName = acm_branch_get_child_string( shellConfig, "shell.driver", "opengl" );
+	const char  *driverName = acm_get_string( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
 		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
@@ -541,7 +541,7 @@ int launcher_initialize( int argc, char **argv )
 	const char *projectName;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
 	{
-		projectName = acm_branch_get_child_string( shellConfig, "defaultProject", "base" );
+		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
 	}
 
 	if ( com_project_mount( projectName ) == nullptr )

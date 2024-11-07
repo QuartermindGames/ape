@@ -91,7 +91,6 @@ void Act_DrawActors( ApeCamera *camera, ApeRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
 Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree );
-Actor *Act_SpawnActorById( const char *id, AcmBranch *nodeTree );
 Actor *Act_DestroyActor( Actor *self );
 
 ActorType Act_GetType( const Actor *self );

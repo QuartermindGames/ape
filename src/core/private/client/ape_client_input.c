@@ -69,7 +69,7 @@ typedef struct ApeInputController
 } ApeInputController;
 
 ACM_DECLARE_STRUCT( ApeInputController, 2,
-                    ACM_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ND_PROPERTY_FLOAT32, 2 ) )
+                    ACM_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ACM_PROPERTY_TYPE_FLOAT32, 2 ) )
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
 static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
@@ -323,10 +323,10 @@ void ape_initialize_input_( void )
 
 	// attempt to fetch and then init config
 	AcmBranch *userConfig = ape_get_user_config();
-	inputConfig = acm_branch_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
+	inputConfig = acm_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
 	if ( inputConfig == NULL )
 	{
-		inputConfig = acm_branch_push_back_object( userConfig, SERIALISATION_NODE_NAME );
+		inputConfig = acm_push_object( userConfig, SERIALISATION_NODE_NAME );
 	}
 
 	check_for_controllers();
@@ -346,7 +346,7 @@ void ape_shutdown_input_( void )
 
 void ape_serialize_input_config_( AcmBranch *root )
 {
-	AcmBranch *controllersBranch = acm_branch_push_back_object_array( root, "controllers" );
+	AcmBranch *controllersBranch = acm_push_array_object( root, "controllers" );
 	for ( unsigned int i = 0; i < numControllers; ++i )
 	{
 		AcmErrorCode errorCode;
@@ -357,13 +357,13 @@ void ape_serialize_input_config_( AcmBranch *root )
 			break;
 		}
 
-		acm_branch_push_back_branch( controllersBranch, controllerBranch );
+		acm_push_branch( controllersBranch, controllerBranch );
 	}
 }
 
 void ape_deserialize_input_config_( AcmBranch *root )
 {
-	AcmBranch *inputNode = acm_branch_get_child_by_name( root, SERIALISATION_NODE_NAME );
+	AcmBranch *inputNode = acm_get_child_by_name( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 	{
 		return;

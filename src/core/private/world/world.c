@@ -22,7 +22,7 @@ ApeWorld *ape_create_world( void )
 	ApeWorld *world = PL_NEW( ApeWorld );
 	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	world->globalProperties = acm_branch_push_back_object( nullptr, "properties" );
+	world->globalProperties = acm_push_object( nullptr, "properties" );
 	acm_push_array_f32( world->globalProperties, "ambience", ( const float * ) &WORLD_DEFAULT_AMBIENCE, 4 );
 	acm_push_array_f32( world->globalProperties, "clearColour", ( const float * ) &WORLD_DEFAULT_CLEARCOLOUR, 4 );
 
@@ -200,12 +200,12 @@ ApeWorld *ape_world_load( const char *path )
 
 bool ape_world_save( ApeWorld *self, const char *path )
 {
-	AcmBranch *root = acm_branch_push_back_object( nullptr, "world" );
+	AcmBranch *root = acm_push_object( nullptr, "world" );
 
 	ape_world_serialize_( self, root );
 	snprintf( self->path, sizeof( self->path ), "%s", path );
 
-	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
 		ape_warning_( "Failed to save world (%s): %s\n", path, acm_get_error_message() );
 		return false;
@@ -282,7 +282,7 @@ AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName )
 		return nullptr;
 	}
 
-	return acm_branch_get_child_by_name( world->globalProperties, propertyName );
+	return acm_get_child_by_name( world->globalProperties, propertyName );
 }
 
 /****************************************

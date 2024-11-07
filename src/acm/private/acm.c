@@ -1,4 +1,6 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// SPDX-License-Identifier: MIT
+// Ape Config Markup
+// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_filesystem.h>
 
@@ -21,28 +23,28 @@ void acm_setup_logs( void )
 
 static const char *string_for_property_type( AcmPropertyType propertyType )
 {
-	const char *propToStr[ ND_MAX_PROPERTY_TYPES ] = {
+	const char *propToStr[ ACM_MAX_PROPERTY_TYPES ] = {
 	        // Special types
-	        [ND_PROPERTY_OBJECT] = "object",
-	        [ND_PROPERTY_STRING] = "string",
-	        [ND_PROPERTY_BOOL]   = "bool",
-	        [ND_PROPERTY_ARRAY]  = "array",
+	        [ACM_PROPERTY_TYPE_OBJECT] = "object",
+	        [ACM_PROPERTY_TYPE_STRING] = "string",
+	        [ACM_PROPERTY_TYPE_BOOL]   = "bool",
+	        [ACM_PROPERTY_TYPE_ARRAY]  = "array",
 	        // Generic types
-	        [ND_PROPERTY_INT8]    = "int8",
-	        [ND_PROPERTY_INT16]   = "int16",
-	        [ND_PROPERTY_INT32]   = "int32",
-	        [ND_PROPERTY_INT64]   = "int64",
-	        [ND_PROPERTY_UI8]     = "uint8",
-	        [ND_PROPERTY_UI16]    = "uint16",
-	        [ND_PROPERTY_UI32]    = "uint32",
-	        [ND_PROPERTY_UI64]    = "uint64",
-	        [ND_PROPERTY_FLOAT32] = "float",
-	        [ND_PROPERTY_FLOAT64] = "float64",
+	        [ND_PROPERTY_INT8]          = "int8",
+	        [ND_PROPERTY_INT16]         = "int16",
+	        [ND_PROPERTY_INT32]         = "int32",
+	        [ND_PROPERTY_INT64]         = "int64",
+	        [ND_PROPERTY_UI8]           = "uint8",
+	        [ND_PROPERTY_UI16]          = "uint16",
+	        [ND_PROPERTY_UI32]          = "uint32",
+	        [ND_PROPERTY_UI64]          = "uint64",
+	        [ACM_PROPERTY_TYPE_FLOAT32] = "float",
+	        [ACM_PROPERTY_TYPE_FLOAT64] = "float64",
 	};
 
-	if ( propertyType == ND_PROPERTY_INVALID )
+	if ( propertyType == ACM_PROPERTY_TYPE_INVALID )
 	{
-		return "undefined";
+		return "invalid";
 	}
 
 	return propToStr[ propertyType ];
@@ -94,12 +96,12 @@ static char *alloc_var_string( const char *string, uint16_t *lengthOut )
 	return buf;
 }
 
-unsigned int acm_branch_get_num_of_children( const AcmBranch *self )
+unsigned int acm_get_num_of_children( const AcmBranch *self )
 {
 	return PlGetNumLinkedListNodes( self->linkedList );
 }
 
-AcmBranch *acm_branch_get_first_child( AcmBranch *self )
+AcmBranch *acm_get_first_child( AcmBranch *self )
 {
 	PLLinkedListNode *n = PlGetFirstNode( self->linkedList );
 	if ( n == NULL )
@@ -119,15 +121,15 @@ AcmBranch *acm_get_next_child( AcmBranch *node )
 	return PlGetLinkedListNodeUserData( n );
 }
 
-AcmBranch *acm_branch_get_child_by_name( AcmBranch *self, const char *name )
+AcmBranch *acm_get_child_by_name( AcmBranch *self, const char *name )
 {
-	if ( self->type != ND_PROPERTY_OBJECT )
+	if ( self->type != ACM_PROPERTY_TYPE_OBJECT )
 	{
 		set_error_message( ND_ERROR_INVALID_TYPE, "Attempted to get child from an invalid node type!\n" );
 		return NULL;
 	}
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	while ( child != NULL )
 	{
 		if ( strcmp( name, child->name.buf ) == 0 )
@@ -143,7 +145,7 @@ AcmBranch *acm_branch_get_child_by_name( AcmBranch *self, const char *name )
 
 static const NdVarString *get_value_by_name( AcmBranch *root, const char *name )
 {
-	const AcmBranch *field = acm_branch_get_child_by_name( root, name );
+	const AcmBranch *field = acm_get_child_by_name( root, name );
 	if ( field == NULL )
 	{
 		return NULL;
@@ -152,7 +154,7 @@ static const NdVarString *get_value_by_name( AcmBranch *root, const char *name )
 	return &field->data;
 }
 
-AcmBranch *acm_branch_get_parent( AcmBranch *self )
+AcmBranch *acm_get_parent( AcmBranch *self )
 {
 	return self->parent;
 }
@@ -169,14 +171,14 @@ AcmPropertyType acm_branch_get_type( const AcmBranch *self )
 
 AcmErrorCode acm_branch_get_string( const AcmBranch *self, char *dest, size_t length )
 {
-	if ( self->type != ND_PROPERTY_STRING ) return ND_ERROR_INVALID_TYPE;
+	if ( self->type != ACM_PROPERTY_TYPE_STRING ) return ND_ERROR_INVALID_TYPE;
 	snprintf( dest, length, "%s", self->data.buf );
 	return ND_ERROR_SUCCESS;
 }
 
 AcmErrorCode acm_branch_get_bool( const AcmBranch *self, bool *dest )
 {
-	if ( self->type != ND_PROPERTY_BOOL ) return ND_ERROR_INVALID_TYPE;
+	if ( self->type != ACM_PROPERTY_TYPE_BOOL ) return ND_ERROR_INVALID_TYPE;
 
 	if ( ( strcmp( self->data.buf, "true" ) == 0 ) || ( self->data.buf[ 0 ] == '1' && self->data.buf[ 1 ] == '\0' ) )
 	{
@@ -195,14 +197,14 @@ AcmErrorCode acm_branch_get_bool( const AcmBranch *self, bool *dest )
 
 AcmErrorCode acm_branch_get_float32( const AcmBranch *self, float *dest )
 {
-	if ( self->type != ND_PROPERTY_FLOAT32 ) return ND_ERROR_INVALID_TYPE;
+	if ( self->type != ACM_PROPERTY_TYPE_FLOAT32 ) return ND_ERROR_INVALID_TYPE;
 	*dest = strtof( self->data.buf, NULL );
 	return ND_ERROR_SUCCESS;
 }
 
 AcmErrorCode acm_branch_get_float64( const AcmBranch *self, double *dest )
 {
-	if ( self->type != ND_PROPERTY_FLOAT64 ) return ND_ERROR_INVALID_TYPE;
+	if ( self->type != ACM_PROPERTY_TYPE_FLOAT64 ) return ND_ERROR_INVALID_TYPE;
 	*dest = strtod( self->data.buf, NULL );
 	return ND_ERROR_SUCCESS;
 }
@@ -265,12 +267,12 @@ AcmErrorCode acm_branch_get_uint64( const AcmBranch *self, uint64_t *dest )
 
 AcmErrorCode acm_branch_get_string_array( AcmBranch *self, char **buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_STRING )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ACM_PROPERTY_TYPE_STRING )
 	{
 		return ND_ERROR_INVALID_TYPE;
 	}
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -289,10 +291,10 @@ AcmErrorCode acm_branch_get_string_array( AcmBranch *self, char **buf, uint numE
 
 AcmErrorCode acm_branch_get_bool_array( AcmBranch *self, bool *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_FLOAT64 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ACM_PROPERTY_TYPE_FLOAT64 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -310,10 +312,10 @@ AcmErrorCode acm_branch_get_bool_array( AcmBranch *self, bool *buf, uint numElem
 
 AcmErrorCode acm_branch_get_int8_array( AcmBranch *self, int8_t *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_INT8 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ND_PROPERTY_INT8 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -331,10 +333,10 @@ AcmErrorCode acm_branch_get_int8_array( AcmBranch *self, int8_t *buf, uint numEl
 
 AcmErrorCode acm_branch_get_int16_array( AcmBranch *self, int16_t *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_INT16 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ND_PROPERTY_INT16 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -352,10 +354,10 @@ AcmErrorCode acm_branch_get_int16_array( AcmBranch *self, int16_t *buf, uint num
 
 AcmErrorCode acm_branch_get_int32_array( AcmBranch *self, int32_t *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_INT32 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ND_PROPERTY_INT32 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -373,10 +375,10 @@ AcmErrorCode acm_branch_get_int32_array( AcmBranch *self, int32_t *buf, uint num
 
 AcmErrorCode acm_branch_get_uint32_array( AcmBranch *self, uint32_t *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_UI32 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ND_PROPERTY_UI32 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -394,10 +396,10 @@ AcmErrorCode acm_branch_get_uint32_array( AcmBranch *self, uint32_t *buf, uint n
 
 AcmErrorCode acm_branch_get_float32_array( AcmBranch *self, float *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_FLOAT32 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ACM_PROPERTY_TYPE_FLOAT32 )
 		return ND_ERROR_INVALID_TYPE;
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -405,7 +407,9 @@ AcmErrorCode acm_branch_get_float32_array( AcmBranch *self, float *buf, uint num
 
 		AcmErrorCode errorCode = acm_branch_get_float32( child, &buf[ i ] );
 		if ( errorCode != ND_ERROR_SUCCESS )
+		{
 			return errorCode;
+		}
 
 		child = acm_get_next_child( child );
 	}
@@ -415,12 +419,12 @@ AcmErrorCode acm_branch_get_float32_array( AcmBranch *self, float *buf, uint num
 
 AcmErrorCode acm_branch_get_float64_array( AcmBranch *self, double *buf, uint numElements )
 {
-	if ( self->type != ND_PROPERTY_ARRAY || self->childType != ND_PROPERTY_FLOAT64 )
+	if ( self->type != ACM_PROPERTY_TYPE_ARRAY || self->childType != ACM_PROPERTY_TYPE_FLOAT64 )
 	{
 		return ND_ERROR_INVALID_TYPE;
 	}
 
-	AcmBranch *child = acm_branch_get_first_child( self );
+	AcmBranch *child = acm_get_first_child( self );
 	for ( unsigned int i = 0; i < numElements; ++i )
 	{
 		if ( child == NULL )
@@ -443,7 +447,7 @@ AcmErrorCode acm_branch_get_float64_array( AcmBranch *self, double *buf, uint nu
 
 bool acm_get_bool( AcmBranch *root, const char *name, bool fallback )
 {
-	const AcmBranch *child = acm_branch_get_child_by_name( root, name );
+	const AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
 	{
 		return fallback;
@@ -458,7 +462,7 @@ bool acm_get_bool( AcmBranch *root, const char *name, bool fallback )
 	return out;
 }
 
-const char *acm_branch_get_child_string( AcmBranch *node, const char *name, const char *fallback )
+const char *acm_get_string( AcmBranch *node, const char *name, const char *fallback )
 {
 	/* todo: warning on fail */
 	const NdVarString *var = get_value_by_name( node, name );
@@ -468,6 +472,22 @@ const char *acm_branch_get_child_string( AcmBranch *node, const char *name, cons
 float acm_get_f32( AcmBranch *node, const char *name, float fallback )
 {
 	return ( float ) acm_get_f64( node, name, fallback );
+}
+
+float *acm_get_array_f32( AcmBranch *branch, const char *name, float *destination, uint32_t numElements )
+{
+	AcmBranch *child = acm_get_child_by_name( branch, name );
+	if ( child == NULL )
+	{
+		return NULL;
+	}
+
+	if ( acm_branch_get_float32_array( child, destination, numElements ) != ND_ERROR_SUCCESS )
+	{
+		return NULL;
+	}
+
+	return destination;
 }
 
 double acm_get_f64( AcmBranch *node, const char *name, double fallback )
@@ -489,9 +509,25 @@ uintmax_t acm_get_uint( AcmBranch *root, const char *name, uintmax_t fallback )
 	return ( var != NULL ) ? strtoull( var->buf, NULL, 10 ) : fallback;
 }
 
+int16_t *acm_get_array_i16( AcmBranch *branch, const char *name, int16_t *destination, uint numElements )
+{
+	AcmBranch *child = acm_get_child_by_name( branch, name );
+	if ( child == NULL )
+	{
+		return NULL;
+	}
+
+	if ( acm_branch_get_int16_array( child, destination, numElements ) != ND_ERROR_SUCCESS )
+	{
+		return NULL;
+	}
+
+	return destination;
+}
+
 PLVector2 acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *fallback )
 {
-	AcmBranch *child = acm_branch_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
@@ -508,7 +544,7 @@ PLVector2 acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *f
 
 PLVector3 acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 *fallback )
 {
-	AcmBranch *child = acm_branch_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
@@ -525,7 +561,7 @@ PLVector3 acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 *f
 
 PLVector4 acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback )
 {
-	AcmBranch *child = acm_branch_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
@@ -548,10 +584,10 @@ PLColourF32 acm_get_colour_f32( AcmBranch *root, const char *name, const PLColou
 
 /******************************************/
 
-AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType )
+AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType, AcmPropertyType childType )
 {
 	/* arrays are special cases */
-	if ( parent != NULL && parent->type == ND_PROPERTY_ARRAY && propertyType != parent->childType )
+	if ( parent != NULL && parent->type == ACM_PROPERTY_TYPE_ARRAY && propertyType != parent->childType )
 	{
 		set_error_message( ND_ERROR_INVALID_TYPE, "attempted to add invalid type (%s)", string_for_property_type( propertyType ) );
 		return NULL;
@@ -560,12 +596,13 @@ AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmProperty
 	AcmBranch *node = PL_NEW( AcmBranch );
 
 	/* assign the node name, if provided */
-	if ( ( parent == NULL || parent->type != ND_PROPERTY_ARRAY ) && name != NULL )
+	if ( ( parent == NULL || parent->type != ACM_PROPERTY_TYPE_ARRAY ) && name != NULL )
 	{
 		node->name.buf = alloc_var_string( name, &node->name.length );
 	}
 
 	node->type       = propertyType;
+	node->childType  = childType;// only matters for array
 	node->linkedList = PlCreateLinkedList();
 
 	/* if root is provided, this is treated as a child of that node */
@@ -583,7 +620,19 @@ AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmProperty
 	return node;
 }
 
-AcmBranch *acm_branch_push_back_branch( AcmBranch *parent, AcmBranch *child )
+AcmBranch *acm_push_variable_( AcmBranch *parent, const char *name, const char *value, AcmPropertyType type )
+{
+	AcmBranch *branch = acm_push_new_branch( parent, name, type, ACM_PROPERTY_TYPE_INVALID );
+	if ( branch == NULL )
+	{
+		return NULL;
+	}
+
+	branch->data.buf = alloc_var_string( value, &branch->data.length );
+	return branch;
+}
+
+AcmBranch *acm_push_branch( AcmBranch *parent, AcmBranch *child )
 {
 	AcmBranch *childCopy      = acm_copy_branch( child );
 	childCopy->parent         = parent;
@@ -591,9 +640,9 @@ AcmBranch *acm_branch_push_back_branch( AcmBranch *parent, AcmBranch *child )
 	return childCopy;
 }
 
-AcmBranch *acm_branch_push_back_object( AcmBranch *node, const char *name )
+AcmBranch *acm_push_object( AcmBranch *node, const char *name )
 {
-	return acm_push_new_branch( node, name, ND_PROPERTY_OBJECT );
+	return acm_push_new_branch( node, name, ACM_PROPERTY_TYPE_OBJECT, ACM_PROPERTY_TYPE_INVALID );
 }
 
 AcmBranch *acm_push_string( AcmBranch *parent, const char *name, const char *var, bool conditional )
@@ -603,21 +652,14 @@ AcmBranch *acm_push_string( AcmBranch *parent, const char *name, const char *var
 		return NULL;
 	}
 
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_STRING );
-	if ( node != NULL )
-	{
-		node->data.buf = alloc_var_string( var, &node->data.length );
-	}
-
-	return node;
+	return acm_push_variable_( parent, name, var, ACM_PROPERTY_TYPE_STRING );
 }
 
-AcmBranch *acm_branch_push_back_string_array( AcmBranch *parent, const char *name, const char **array, unsigned int numElements )
+AcmBranch *acm_push_array_string( AcmBranch *parent, const char *name, const char **array, uint numElements )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	AcmBranch *node = acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ACM_PROPERTY_TYPE_STRING );
 	if ( node != NULL )
 	{
-		node->childType = ND_PROPERTY_STRING;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
 			acm_push_string( node, NULL, array[ i ], false );
@@ -626,126 +668,87 @@ AcmBranch *acm_branch_push_back_string_array( AcmBranch *parent, const char *nam
 	return node;
 }
 
-AcmBranch *acm_branch_push_back_bool( AcmBranch *parent, const char *name, bool var )
+AcmBranch *acm_push_bool( AcmBranch *parent, const char *name, bool var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_BOOL );
-	if ( node != NULL )
-	{
-		node->data.buf = alloc_var_string( var ? "true" : "false", &node->data.length );
-	}
-
-	return node;
+	return acm_push_variable_( parent, name, var ? "true" : "false", ACM_PROPERTY_TYPE_BOOL );
 }
 
-AcmBranch *acm_branch_push_back_int8( AcmBranch *parent, const char *name, int8_t var )
+AcmBranch *acm_push_i8( AcmBranch *parent, const char *name, int8_t var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_INT8 );
-	if ( node != NULL )
-	{
-		char buf[ 4 ];
-		pl_itoa( var, buf, sizeof( buf ), 10 );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 4 ];
+	pl_itoa( var, buf, sizeof( buf ), 10 );
+	return acm_push_variable_( parent, name, buf, ND_PROPERTY_INT8 );
 }
 
-AcmBranch *acm_branch_push_back_int16( AcmBranch *parent, const char *name, int16_t var )
+AcmBranch *acm_push_i16( AcmBranch *parent, const char *name, int16_t var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_INT16 );
-	if ( node != NULL )
-	{
-		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), PL_FMT_int16, var );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 32 ];
+	snprintf( buf, sizeof( buf ), PL_FMT_int16, var );
+	return acm_push_variable_( parent, name, buf, ND_PROPERTY_INT16 );
 }
 
-AcmBranch *acm_branch_push_back_int32( AcmBranch *parent, const char *name, int32_t var )
+AcmBranch *acm_push_i32( AcmBranch *parent, const char *name, int32_t var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_INT32 );
-	if ( node != NULL )
-	{
-		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), PL_FMT_int32, var );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 32 ];
+	snprintf( buf, sizeof( buf ), PL_FMT_int32, var );
+	return acm_push_variable_( parent, name, buf, ND_PROPERTY_INT32 );
 }
 
-AcmBranch *acm_push_uint32( AcmBranch *parent, const char *name, uint32_t var )
+AcmBranch *acm_push_ui32( AcmBranch *parent, const char *name, uint32_t var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_UI32 );
-	if ( node != NULL )
-	{
-		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), PL_FMT_uint32, var );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 32 ];
+	snprintf( buf, sizeof( buf ), PL_FMT_uint32, var );
+	return acm_push_variable_( parent, name, buf, ND_PROPERTY_UI32 );
 }
 
-AcmBranch *acm_branch_push_back_float32( AcmBranch *parent, const char *name, float var )
+AcmBranch *acm_push_f32( AcmBranch *parent, const char *name, float var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_FLOAT32 );
-	if ( node != NULL )
-	{
-		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), PL_FMT_float, var );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 32 ];
+	snprintf( buf, sizeof( buf ), PL_FMT_float, var );
+	return acm_push_variable_( parent, name, buf, ACM_PROPERTY_TYPE_FLOAT32 );
 }
 
-AcmBranch *acm_branch_push_back_float64( AcmBranch *parent, const char *name, double var )
+AcmBranch *acm_push_f64( AcmBranch *parent, const char *name, double var )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_FLOAT64 );
-	if ( node != NULL )
-	{
-		char buf[ 32 ];
-		snprintf( buf, sizeof( buf ), PL_FMT_double, var );
-		node->data.buf = alloc_var_string( buf, &node->data.length );
-	}
-	return node;
+	char buf[ 32 ];
+	snprintf( buf, sizeof( buf ), PL_FMT_double, var );
+	return acm_push_variable_( parent, name, buf, ACM_PROPERTY_TYPE_FLOAT64 );
 }
 
-AcmBranch *acm_branch_push_back_int16_array( AcmBranch *root, const char *name, const int16_t *array, uint numElements )
+AcmBranch *acm_push_array_i16( AcmBranch *root, const char *name, const int16_t *array, uint numElements )
 {
-	AcmBranch *node = acm_push_new_branch( root, name, ND_PROPERTY_ARRAY );
+	AcmBranch *node = acm_push_new_branch( root, name, ACM_PROPERTY_TYPE_ARRAY, ND_PROPERTY_INT16 );
 	if ( node != NULL )
 	{
-		node->childType = ND_PROPERTY_INT16;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
-			acm_branch_push_back_int16( node, NULL, array[ i ] );
+			acm_push_i16( node, NULL, array[ i ] );
 		}
 	}
 	return node;
 }
 
-AcmBranch *acm_branch_push_back_int32_array( AcmBranch *parent, const char *name, const int32_t *array, uint numElements )
+AcmBranch *acm_push_array_i32( AcmBranch *parent, const char *name, const int32_t *array, uint numElements )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	AcmBranch *node = acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ND_PROPERTY_INT32 );
 	if ( node != NULL )
 	{
-		node->childType = ND_PROPERTY_INT32;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
-			acm_branch_push_back_int32( node, NULL, array[ i ] );
+			acm_push_i32( node, NULL, array[ i ] );
 		}
 	}
 	return node;
 }
 
-AcmBranch *acm_branch_push_back_uint32_array( AcmBranch *parent, const char *name, const uint32_t *array, uint numElements )
+AcmBranch *acm_push_array_ui32( AcmBranch *parent, const char *name, const uint32_t *array, uint numElements )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	AcmBranch *node = acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ND_PROPERTY_UI32 );
 	if ( node != NULL )
 	{
-		node->childType = ND_PROPERTY_UI32;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
-			acm_push_uint32( node, NULL, array[ i ] );
+			acm_push_ui32( node, NULL, array[ i ] );
 		}
 	}
 	return node;
@@ -753,19 +756,18 @@ AcmBranch *acm_branch_push_back_uint32_array( AcmBranch *parent, const char *nam
 
 AcmBranch *acm_push_array_f32( AcmBranch *parent, const char *name, const float *array, uint numElements )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
+	AcmBranch *node = acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ACM_PROPERTY_TYPE_FLOAT32 );
 	if ( node != NULL )
 	{
-		node->childType = ND_PROPERTY_FLOAT32;
 		for ( unsigned int i = 0; i < numElements; ++i )
 		{
-			acm_branch_push_back_float32( node, NULL, array[ i ] );
+			acm_push_f32( node, NULL, array[ i ] );
 		}
 	}
 	return node;
 }
 
-AcmBranch *acm_branch_push_back_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
+AcmBranch *acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
 {
 	if ( conditional && PlCompareVector2( vector, &pl_vecOrigin2 ) )
 	{
@@ -775,7 +777,7 @@ AcmBranch *acm_branch_push_back_vector2( AcmBranch *parent, const char *name, co
 	return acm_push_array_f32( parent, name, ( float * ) vector, 2 );
 }
 
-AcmBranch *acm_branch_push_back_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional )
+AcmBranch *acm_push_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional )
 {
 	if ( conditional && PlCompareVector3( vector, &pl_vecOrigin3 ) )
 	{
@@ -785,7 +787,7 @@ AcmBranch *acm_branch_push_back_vector3( AcmBranch *parent, const char *name, co
 	return acm_push_array_f32( parent, name, ( float * ) vector, 3 );
 }
 
-AcmBranch *acm_branch_push_back_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
+AcmBranch *acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
 {
 	if ( conditional && PlCompareVector4( vector, &pl_vecOrigin4 ) )
 	{
@@ -795,15 +797,9 @@ AcmBranch *acm_branch_push_back_vector4( AcmBranch *parent, const char *name, co
 	return acm_push_array_f32( parent, name, ( float * ) vector, 4 );
 }
 
-AcmBranch *acm_branch_push_back_object_array( AcmBranch *parent, const char *name )
+AcmBranch *acm_push_array_object( AcmBranch *parent, const char *name )
 {
-	AcmBranch *node = acm_push_new_branch( parent, name, ND_PROPERTY_ARRAY );
-	if ( node != NULL )
-	{
-		node->childType = ND_PROPERTY_OBJECT;
-	}
-
-	return node;
+	return acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ACM_PROPERTY_TYPE_OBJECT );
 }
 
 static char *copy_var_string( const NdVarString *varString, uint16_t *length )
@@ -826,7 +822,7 @@ AcmBranch *acm_copy_branch( AcmBranch *node )
 	newNode->name.buf  = copy_var_string( &node->name, &newNode->name.length );
 	// Not setting the parent is intentional here, since we likely don't want that link
 
-	AcmBranch *child = acm_branch_get_first_child( node );
+	AcmBranch *child = acm_get_first_child( node );
 	while ( child != NULL )
 	{
 		if ( newNode->linkedList == NULL )
@@ -853,9 +849,9 @@ void acm_branch_destroy( AcmBranch *node )
 	PL_DELETE( node->data.buf );
 
 	/* if it's an object/array, we'll need to clean up all it's children */
-	if ( node->type == ND_PROPERTY_OBJECT || node->type == ND_PROPERTY_ARRAY )
+	if ( node->type == ACM_PROPERTY_TYPE_OBJECT || node->type == ACM_PROPERTY_TYPE_ARRAY )
 	{
-		AcmBranch *child = acm_branch_get_first_child( node );
+		AcmBranch *child = acm_get_first_child( node );
 		while ( child != NULL )
 		{
 			AcmBranch *nextChild = acm_get_next_child( child );
@@ -906,7 +902,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 	}
 
 	/* binary implementation is pretty damn straight forward */
-	AcmBranch *node = acm_push_new_branch( parent, NULL, type );
+	AcmBranch *node = acm_push_new_branch( parent, NULL, type, ACM_PROPERTY_TYPE_INVALID );
 	if ( node == NULL )
 	{
 		PlFree( name.buf );
@@ -923,28 +919,30 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 			acm_branch_destroy( node );
 			node = NULL;
 			break;
-		case ND_PROPERTY_ARRAY:
+		case ACM_PROPERTY_TYPE_ARRAY:
 			/* only extra component we get here is the child type */
 			node->childType = ( AcmPropertyType ) PlReadInt8( file, NULL );
-		case ND_PROPERTY_OBJECT:
+		case ACM_PROPERTY_TYPE_OBJECT:
 		{
 			unsigned int numChildren = PlReadInt32( file, false, NULL );
 			for ( unsigned int i = 0; i < numChildren; ++i )
+			{
 				deserialize_binary_node( file, node );
+			}
 			break;
 		}
-		case ND_PROPERTY_STRING:
+		case ACM_PROPERTY_TYPE_STRING:
 		{
 			node->data.buf = deserialize_string_var( file, &node->data.length );
 			break;
 		}
-		case ND_PROPERTY_BOOL:
+		case ACM_PROPERTY_TYPE_BOOL:
 		{
 			bool v         = PlReadInt8( file, NULL );
 			node->data.buf = alloc_var_string( v ? "true" : "false", &node->data.length );
 			break;
 		}
-		case ND_PROPERTY_FLOAT32:
+		case ACM_PROPERTY_TYPE_FLOAT32:
 		{
 			float v = PlReadFloat32( file, false, NULL );
 			char  str[ 32 ];
@@ -952,7 +950,7 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
 		}
-		case ND_PROPERTY_FLOAT64:
+		case ACM_PROPERTY_TYPE_FLOAT64:
 		{
 			double v = PlReadFloat64( file, false, NULL );
 			char   str[ 32 ];
@@ -967,6 +965,14 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 			snprintf( str, sizeof( str ), PL_FMT_int32, v );
 			node->data.buf = alloc_var_string( str, &node->data.length );
 			break;
+		}
+		case ND_PROPERTY_UI16:
+		case ND_PROPERTY_INT16:
+		{
+			int16_t v = PlReadInt16( file, false, NULL );
+			char    str[ 32 ];
+			snprintf( str, sizeof( str ), node->type == ND_PROPERTY_INT16 ? PL_FMT_int16 : PL_FMT_uint16, v );
+			node->data.buf = alloc_var_string( str, &node->data.length );
 		}
 		case ND_PROPERTY_UI32:
 		case ND_PROPERTY_INT32:
@@ -991,13 +997,13 @@ static AcmBranch *deserialize_binary_node( PLFile *file, AcmBranch *parent )
 	return node;
 }
 
-static NdFileType parse_node_file_type( PLFile *file, uint32_t *dstVersion )
+static AcmFileType parse_node_file_type( PLFile *file, uint32_t *dstVersion )
 {
 	char token[ 32 ];
 	if ( PlReadString( file, token, sizeof( token ) ) == NULL )
 	{
 		set_error_message( ND_ERROR_IO_READ, "Failed to read in file type: %s", PlGetError() );
-		return ND_FILE_INVALID;
+		return ACM_FILE_TYPE_INVALID;
 	}
 
 	if ( strncmp( token, ND_FORMAT_BINARY_HEADER_2, strlen( ND_FORMAT_BINARY_HEADER_2 ) ) == 0 )
@@ -1006,42 +1012,41 @@ static NdFileType parse_node_file_type( PLFile *file, uint32_t *dstVersion )
 		if ( version == 0 || version > ND_FORMAT_BINARY_VERSION )
 		{
 			set_error_message( ND_ERROR_IO_READ, "invalid binary node format (%u == 0 || %u > %u)", version, version, ND_FORMAT_BINARY_VERSION );
-			return ND_FILE_INVALID;
+			return ACM_FILE_TYPE_INVALID;
 		}
 
 		*dstVersion = version;
-		return ND_FILE_BINARY;
+		return ACM_FILE_TYPE_BINARY;
 	}
 	else if ( strncmp( token, ND_FORMAT_BINARY_HEADER, strlen( ND_FORMAT_BINARY_HEADER ) ) == 0 )
 	{
 		*dstVersion = 1;
-		return ND_FILE_BINARY;
+		return ACM_FILE_TYPE_BINARY;
 	}
 	/* we still check for 'ascii' here, just for backwards compat, but they're handled the
 	 * same either way */
 	else if ( strncmp( token, ND_FORMAT_UTF8_HEADER, strlen( ND_FORMAT_UTF8_HEADER ) ) == 0 )
 	{
 		*dstVersion = 1;
-		return ND_FILE_UTF8;
+		return ACM_FILE_TYPE_UTF8;
 	}
 
 	set_error_message( ND_ERROR_INVALID_ARGUMENT, "Unknown file type \"%s\"", token );
-	return ND_FILE_INVALID;
+	return ACM_FILE_TYPE_INVALID;
 }
 
 AcmBranch *acm_parse_file( PLFile *file, const char *objectType )
 {
 	AcmBranch *root = NULL;
 
-	uint32_t   version;
-	NdFileType fileType = parse_node_file_type( file, &version );
-	if ( fileType == ND_FILE_BINARY )
+	uint32_t    version;
+	AcmFileType fileType = parse_node_file_type( file, &version );
+	if ( fileType == ACM_FILE_TYPE_BINARY )
 	{
 		root = deserialize_binary_node( file, NULL );
 	}
-	else if ( fileType == ND_FILE_UTF8 )
+	else if ( fileType == ACM_FILE_TYPE_UTF8 )
 	{
-		/* first need to run the pre-processor on it */
 		size_t length = PlGetFileSize( file );
 		if ( length <= strlen( ND_FORMAT_UTF8_HEADER ) )
 		{
@@ -1056,8 +1061,7 @@ AcmBranch *acm_parse_file( PLFile *file, const char *objectType )
 			char *buf = PL_NEW_( char, length + 1 );
 			memcpy( buf, data, length );
 
-			buf  = acm_preprocess_script_( buf, &length, true );
-			root = acm_parse_buffer( buf, length );
+			root = acm_parse_buffer( buf, PlGetFilePath( file ) );
 
 			PL_DELETE( buf );
 		}
@@ -1124,9 +1128,9 @@ static void write_line( FILE *file, const char *string, bool tabify )
 	fprintf( file, "%s", string );
 }
 
-static void serialize_string_var( const NdVarString *string, NdFileType fileType, FILE *file )
+static void serialize_string_var( const NdVarString *string, AcmFileType fileType, FILE *file )
 {
-	if ( fileType == ND_FILE_BINARY )
+	if ( fileType == ACM_FILE_TYPE_BINARY )
 	{
 		fwrite( &string->length, sizeof( uint16_t ), 1, file );
 		/* slightly paranoid here, because strBuf is probably null if length is 0
@@ -1177,18 +1181,18 @@ static void serialize_string_var( const NdVarString *string, NdFileType fileType
 	}
 }
 
-static void serialize_node_tree( FILE *file, AcmBranch *root, NdFileType fileType );
-static void serialize_node( FILE *file, AcmBranch *node, NdFileType fileType )
+static void serialize_node_tree( FILE *file, AcmBranch *root, AcmFileType fileType );
+static void serialize_node( FILE *file, AcmBranch *node, AcmFileType fileType )
 {
-	if ( fileType == ND_FILE_UTF8 )
+	if ( fileType == ACM_FILE_TYPE_UTF8 )
 	{
 		/* write out the line identifying this node */
 		write_line( file, NULL, true );
-		AcmBranch *parent = acm_branch_get_parent( node );
-		if ( parent == NULL || parent->type != ND_PROPERTY_ARRAY )
+		AcmBranch *parent = acm_get_parent( node );
+		if ( parent == NULL || parent->type != ACM_PROPERTY_TYPE_ARRAY )
 		{
 			fprintf( file, "%s ", string_for_property_type( node->type ) );
-			if ( node->type == ND_PROPERTY_ARRAY )
+			if ( node->type == ACM_PROPERTY_TYPE_ARRAY )
 			{
 				fprintf( file, "%s ", string_for_property_type( node->childType ) );
 			}
@@ -1197,9 +1201,9 @@ static void serialize_node( FILE *file, AcmBranch *node, NdFileType fileType )
 		}
 
 		/* if this node has children, serialize all those */
-		if ( node->type == ND_PROPERTY_OBJECT || node->type == ND_PROPERTY_ARRAY )
+		if ( node->type == ACM_PROPERTY_TYPE_OBJECT || node->type == ACM_PROPERTY_TYPE_ARRAY )
 		{
-			write_line( file, "{\n", ( parent != NULL && parent->type == ND_PROPERTY_ARRAY ) );
+			write_line( file, "{\n", ( parent != NULL && parent->type == ACM_PROPERTY_TYPE_ARRAY ) );
 			sDepth++;
 			serialize_node_tree( file, node, fileType );
 			sDepth--;
@@ -1223,14 +1227,14 @@ static void serialize_node( FILE *file, AcmBranch *node, NdFileType fileType )
 			Warning( "Invalid node type: " PL_FMT_uint32 "/n", node->type );
 			abort();
 		}
-		case ND_PROPERTY_FLOAT32:
+		case ACM_PROPERTY_TYPE_FLOAT32:
 		{
 			float v;
 			acm_branch_get_float32( node, &v );
 			fwrite( &v, sizeof( float ), 1, file );
 			break;
 		}
-		case ND_PROPERTY_FLOAT64:
+		case ACM_PROPERTY_TYPE_FLOAT64:
 		{
 			double v;
 			acm_branch_get_float64( node, &v );
@@ -1291,24 +1295,24 @@ static void serialize_node( FILE *file, AcmBranch *node, NdFileType fileType )
 			fwrite( &v, sizeof( uint64_t ), 1, file );
 			break;
 		}
-		case ND_PROPERTY_STRING:
+		case ACM_PROPERTY_TYPE_STRING:
 		{
 			serialize_string_var( &node->data, fileType, file );
 			break;
 		}
-		case ND_PROPERTY_BOOL:
+		case ACM_PROPERTY_TYPE_BOOL:
 		{
 			bool v;
 			acm_branch_get_bool( node, &v );
 			fwrite( &v, sizeof( uint8_t ), 1, file );
 			break;
 		}
-		case ND_PROPERTY_ARRAY:
+		case ACM_PROPERTY_TYPE_ARRAY:
 		{
 			/* only extra component here is the child type */
 			fwrite( &node->childType, sizeof( uint8_t ), 1, file );
 		}
-		case ND_PROPERTY_OBJECT:
+		case ACM_PROPERTY_TYPE_OBJECT:
 		{
 			uint32_t i = PlGetNumLinkedListNodes( node->linkedList );
 			fwrite( &i, sizeof( uint32_t ), 1, file );
@@ -1318,7 +1322,7 @@ static void serialize_node( FILE *file, AcmBranch *node, NdFileType fileType )
 	}
 }
 
-static void serialize_node_tree( FILE *file, AcmBranch *root, NdFileType fileType )
+static void serialize_node_tree( FILE *file, AcmBranch *root, AcmFileType fileType )
 {
 	PLLinkedListNode *i = PlGetFirstNode( root->linkedList );
 	while ( i != NULL )
@@ -1332,7 +1336,7 @@ static void serialize_node_tree( FILE *file, AcmBranch *root, NdFileType fileTyp
 /**
  * Serialize the given node set.
  */
-bool acm_write_file( const char *path, AcmBranch *root, NdFileType fileType )
+bool acm_write_file( const char *path, AcmBranch *root, AcmFileType fileType )
 {
 	FILE *file = fopen( path, "wb" );
 	if ( file == NULL )
@@ -1341,7 +1345,7 @@ bool acm_write_file( const char *path, AcmBranch *root, NdFileType fileType )
 		return false;
 	}
 
-	if ( fileType == ND_FILE_BINARY )
+	if ( fileType == ACM_FILE_TYPE_BINARY )
 	{
 		fprintf( file, ND_FORMAT_BINARY_HEADER_2 "\n" );
 		static const unsigned int version = ND_FORMAT_BINARY_VERSION;
@@ -1373,7 +1377,7 @@ AcmBranch *acm_serialize_struct( const AcmStructDescriptor *descriptor, const vo
 
 	*errorCode = ND_ERROR_SUCCESS;
 
-	AcmBranch *branch = acm_push_new_branch( NULL, descriptor->name, ND_PROPERTY_OBJECT );
+	AcmBranch *branch = acm_push_new_branch( NULL, descriptor->name, ACM_PROPERTY_TYPE_OBJECT, ACM_PROPERTY_TYPE_INVALID );
 	if ( branch == NULL )
 	{
 		*errorCode = acm_get_error();
@@ -1392,38 +1396,37 @@ AcmBranch *acm_serialize_struct( const AcmStructDescriptor *descriptor, const vo
 				*errorCode = ND_ERROR_INVALID_TYPE;
 				return branch;
 			}
-			case ND_PROPERTY_OBJECT: break;
-			case ND_PROPERTY_LINK: break;
-			case ND_PROPERTY_ARRAY: break;
-			case ND_PROPERTY_STRING: break;
-			case ND_PROPERTY_BOOL:
+			case ACM_PROPERTY_TYPE_OBJECT: break;
+			case ACM_PROPERTY_TYPE_ARRAY: break;
+			case ACM_PROPERTY_TYPE_STRING: break;
+			case ACM_PROPERTY_TYPE_BOOL:
 			{
-				acm_branch_push_back_bool( branch, item->name, *( bool * ) data );
+				acm_push_bool( branch, item->name, *( bool * ) data );
 				break;
 			}
-			case ND_PROPERTY_FLOAT32:
+			case ACM_PROPERTY_TYPE_FLOAT32:
 			{
-				acm_branch_push_back_float32( branch, item->name, *( float * ) data );
+				acm_push_f32( branch, item->name, *( float * ) data );
 				break;
 			}
-			case ND_PROPERTY_FLOAT64:
+			case ACM_PROPERTY_TYPE_FLOAT64:
 			{
-				acm_branch_push_back_float64( branch, item->name, *( double * ) data );
+				acm_push_f64( branch, item->name, *( double * ) data );
 				break;
 			}
 			case ND_PROPERTY_INT8:
 			{
-				acm_branch_push_back_int8( branch, item->name, *( int8_t * ) data );
+				acm_push_i8( branch, item->name, *( int8_t * ) data );
 				break;
 			}
 			case ND_PROPERTY_INT16:
 			{
-				acm_branch_push_back_int16( branch, item->name, *( int16_t * ) data );
+				acm_push_i16( branch, item->name, *( int16_t * ) data );
 				break;
 			}
 			case ND_PROPERTY_INT32:
 			{
-				acm_branch_push_back_int32( branch, item->name, *( int32_t * ) data );
+				acm_push_i32( branch, item->name, *( int32_t * ) data );
 				break;
 			}
 			case ND_PROPERTY_INT64: break;
@@ -1442,32 +1445,57 @@ AcmBranch *acm_serialize_struct( const AcmStructDescriptor *descriptor, const vo
 /******************************************/
 /** API Testing **/
 
-void acm_branch_print_tree( AcmBranch *self, int index )
+void acm_print_tree( AcmBranch *self, int index )
 {
 	for ( int i = 0; i < index; ++i ) printf( "\t" );
-	if ( self->type == ND_PROPERTY_OBJECT || self->type == ND_PROPERTY_ARRAY )
+	if ( self->type == ACM_PROPERTY_TYPE_OBJECT || self->type == ACM_PROPERTY_TYPE_ARRAY )
 	{
 		index++;
 
 		const char *name = ( self->name.buf != NULL ) ? self->name.buf : "";
-		if ( self->type == ND_PROPERTY_OBJECT )
+		if ( self->type == ACM_PROPERTY_TYPE_OBJECT )
 			Message( "%s (%s)\n", name, string_for_property_type( self->type ) );
 		else
 			Message( "%s (%s %s)\n", name, string_for_property_type( self->type ), string_for_property_type( self->childType ) );
 
-		AcmBranch *child = acm_branch_get_first_child( self );
+		AcmBranch *child = acm_get_first_child( self );
 		while ( child != NULL )
 		{
-			acm_branch_print_tree( child, index );
+			acm_print_tree( child, index );
 			child = acm_get_next_child( child );
 		}
 	}
 	else
 	{
-		AcmBranch *parent = acm_branch_get_parent( self );
-		if ( parent != NULL && parent->type == ND_PROPERTY_ARRAY )
+		AcmBranch *parent = acm_get_parent( self );
+		if ( parent != NULL && parent->type == ACM_PROPERTY_TYPE_ARRAY )
 			Message( "%s %s\n", string_for_property_type( self->type ), self->data.buf );
 		else
 			Message( "%s %s %s\n", string_for_property_type( self->type ), self->name.buf, self->data.buf );
 	}
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Testing
+/////////////////////////////////////////////////////////////////////////////////////
+
+#if defined( ACM_TEST )
+
+int main( PL_UNUSED int argc, PL_UNUSED char **argv )
+{
+	PlInitialize( argc, argv );
+
+	acm_setup_logs();
+
+	AcmBranch *branch = acm_load_file( "projects/base/base.prj.n", NULL );
+	if ( branch == NULL )
+	{
+		return EXIT_FAILURE;
+	}
+
+	acm_print_tree( branch, 0 );
+
+	return EXIT_SUCCESS;
+}
+
+#endif

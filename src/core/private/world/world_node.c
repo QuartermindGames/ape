@@ -4,17 +4,7 @@
 
 #include "world.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 #define APE_WORLD_NODE_MAGIC PL_MAGIC_TO_NUM( 'N', 'O', 'D', 'E' )
-
-#define APE_WORLD_NODE_ROOT_MAGIC   PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' )
-#define APE_WORLD_NODE_ROOM_MAGIC   PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' )
-#define APE_WORLD_NODE_BRUSH_MAGIC  PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' )
-#define APE_WORLD_NODE_LIGHT_MAGIC  PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' )
-#define APE_WORLD_NODE_CAMERA_MAGIC PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' )
-#define APE_WORLD_NODE_ENTITY_MAGIC PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' )
 
 void ape_world_destroy_( void *data, ApeWorldNode *parent );
 void ape_light_destroy_( void *data, ApeWorldNode *parent );
@@ -23,46 +13,63 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent );
 
 void          ape_room_destroy_( void *data, ApeWorldNode *parent );
 AcmBranch    *ape_room_serialize_( void *self, AcmBranch *root );
-ApeWorldNode *ape_room_deserialize_( void *self, AcmBranch *root );
+ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root );
 
-void       ape_brush_destroy_( void *data, ApeWorldNode *parent );
-AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root );
+void          ape_brush_destroy_( void *data, ApeWorldNode *parent );
+AcmBranch    *ape_brush_serialize_( void *self, AcmBranch *root );
+ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root );
 
 static const ApeWorldNodeClass nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_ROOT] = {
                                       .identifier      = "root",
-                                      .magic           = APE_WORLD_NODE_ROOT_MAGIC,
+                                      .magic           = PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
                                       .destroyFunction = ape_world_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_ROOM] = {
                                       .identifier          = "room",
-                                      .magic               = APE_WORLD_NODE_ROOM_MAGIC,
+                                      .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
                                       .destroyFunction     = ape_room_destroy_,
                                       .serializeFunction   = ape_room_serialize_,
                                       .deserializeFunction = ape_room_deserialize_,
                                       },
         [APE_WORLD_NODE_TYPE_BRUSH] = {
-                                      .identifier        = "brush",
-                                      .magic             = APE_WORLD_NODE_BRUSH_MAGIC,
-                                      .destroyFunction   = ape_brush_destroy_,
-                                      .serializeFunction = ape_brush_serialize_,
+                                      .identifier          = "brush",
+                                      .magic               = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
+                                      .destroyFunction     = ape_brush_destroy_,
+                                      .serializeFunction   = ape_brush_serialize_,
+                                      .deserializeFunction = ape_brush_deserialize_,
                                       },
         [APE_WORLD_NODE_TYPE_LIGHT] = {
                                       .identifier      = "light",
-                                      .magic           = APE_WORLD_NODE_LIGHT_MAGIC,
+                                      .magic           = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
                                       .destroyFunction = ape_light_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_CAMERA] = {
                                       .identifier      = "camera",
-                                      .magic           = APE_WORLD_NODE_CAMERA_MAGIC,
+                                      .magic           = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
                                       .destroyFunction = ape_camera_destroy_,
                                       },
         [APE_WORLD_NODE_TYPE_ENTITY] = {
                                       .identifier      = "entity",
-                                      .magic           = APE_WORLD_NODE_ENTITY_MAGIC,
+                                      .magic           = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
                                       .destroyFunction = ape_entity_destroy_,
                                       },
 };
+
+static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )
+{
+	for ( uint i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
+	{
+		if ( nodeClasses[ i ].magic != magic )
+		{
+			continue;
+		}
+
+		return &nodeClasses[ i ];
+	}
+
+	return nullptr;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
@@ -76,6 +83,12 @@ void ape_world_node_generate_bounds_( ApeWorldNode *root )
 bool ape_world_node_has_magic( const ApeWorldNode *self )
 {
 	return ( self->magic == APE_WORLD_NODE_MAGIC );
+}
+
+uint32_t ape_world_node_get_class_magic( const ApeWorldNode *self )
+{
+	assert( self->classType != nullptr );
+	return self->classType->magic;
 }
 
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType )
@@ -310,37 +323,38 @@ const char *ape_world_node_get_name( ApeWorldNode *self )
 void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 {
 	snprintf( self->name, sizeof( self->name ), "%s", name );
-	printf( "%s\n", self->name );
 }
 
 AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 {
-	AcmBranch *nodeBranch = acm_branch_push_back_object( root, "node" );
-	acm_push_uint32( nodeBranch, "magic", self->classType->magic );
+	assert( self->classType != nullptr );
+
+	AcmBranch *nodeBranch = acm_push_object( root, "node" );
 
 	if ( *self->name != '\0' )
 	{
 		acm_push_string( nodeBranch, "name", self->name, false );
 	}
 
-	acm_branch_push_back_vector3( nodeBranch, "position", &self->position, true );
-	acm_branch_push_back_vector3( nodeBranch, "angles", &self->angles, true );
-	acm_branch_push_back_vector3( nodeBranch, "scale", &self->scale, true );
+	acm_push_vector3( nodeBranch, "position", &self->position, true );
+	acm_push_vector3( nodeBranch, "angles", &self->angles, true );
+	acm_push_vector3( nodeBranch, "scale", &self->scale, true );
 
 	acm_push_array_f32( nodeBranch, "transform", ( float * ) &self->transform, 16 );
 
 	acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
 	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
 
+	acm_push_ui32( nodeBranch, "classMagic", self->classType->magic );
 	if ( self->classType->serializeFunction != nullptr )
 	{
-		AcmBranch *classBranch = acm_branch_push_back_object( nodeBranch, "class" );
+		AcmBranch *classBranch = acm_push_object( nodeBranch, "class" );
 		self->classType->serializeFunction( self, classBranch );
 	}
 
 	if ( PlGetNumLinkedListNodes( self->children ) > 0 )
 	{
-		AcmBranch    *childBranch = acm_branch_push_back_object_array( nodeBranch, "children" );
+		AcmBranch    *childBranch = acm_push_array_object( nodeBranch, "children" );
 		ApeWorldNode *child;
 		COM_ITERATE_LINKED_LIST( child, self->children, i )
 		{
@@ -351,20 +365,64 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	return nodeBranch;
 }
 
-ApeWorldNode *ape_world_node_deserialize( AcmBranch *root )
+ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeWorldNodeMagic magic = acm_get_uint( root, "magic", 0 );
+	ApeWorldNodeMagic magic = ACM_GET_INT( magic, root, "classMagic", 0 );
 	if ( magic == 0 )
 	{
 		ape_warning_( "No class provided for world node!\n" );
 		return nullptr;
 	}
 
-	switch ( magic )
+	const ApeWorldNodeClass *worldNodeClass = get_class_by_magic( magic );
+	if ( worldNodeClass == nullptr )
 	{
-		default:
-			ape_warning_( "Unknown class type (%u) for world node!\n", magic );
-			return nullptr;
-		case APE_WORLD_NODE_BRUSH_MAGIC:
+		ape_warning_( "Unknown class type (%u) for world node!\n", magic );
+		return nullptr;
 	}
+
+	//TODO: make this an assert
+	if ( worldNodeClass->deserializeFunction == nullptr )
+	{
+		ape_warning_( "No deserialization method specified for class (%s), skipping!\n", worldNodeClass->identifier );
+		return nullptr;
+	}
+
+	AcmBranch *classBranch = acm_get_child_by_name( root, "class" );
+	if ( classBranch == nullptr )
+	{
+		ape_warning_( "Class data not specified for node!\n" );
+		return nullptr;
+	}
+
+	ApeWorldNode *self = worldNodeClass->deserializeFunction( parent, classBranch );
+	if ( self == nullptr )
+	{
+		ape_warning_( "Failed to deserialize world node!\n" );
+		return nullptr;
+	}
+
+	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
+
+	self->position = acm_get_vector3( root, "position", &pl_vecOrigin3 );
+	self->angles   = acm_get_vector3( root, "angles", &pl_vecOrigin3 );
+	self->scale    = acm_get_vector3( root, "scale", &pl_vecOrigin3 );
+
+	acm_get_array_f32( root, "transform", ( float * ) &self->transform, 16 );
+	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
+	acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
+
+	// deal with the children
+	AcmBranch *childrenBranch = acm_get_child_by_name( root, "children" );
+	if ( childrenBranch != nullptr )
+	{
+		AcmBranch *childBranch = acm_get_first_child( childrenBranch );
+		while ( childBranch != nullptr )
+		{
+			ape_world_node_deserialize( self, childBranch );
+			childBranch = acm_get_next_child( childBranch );
+		}
+	}
+
+	return self;
 }

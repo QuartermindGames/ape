@@ -42,15 +42,15 @@ static ComProject project;
 
 static void parse_mount_config( AcmBranch *root, ComProject *out )
 {
-	unsigned int numChildren = acm_branch_get_num_of_children( root );
+	unsigned int numChildren = acm_get_num_of_children( root );
 	if ( numChildren == 0 )
 	{
 		// nothing to mount, okay then
 		return;
 	}
 
-	AcmBranch *child = acm_branch_get_first_child( root );
-	if ( acm_branch_get_type( child ) != ND_PROPERTY_STRING )
+	AcmBranch *child = acm_get_first_child( root );
+	if ( acm_branch_get_type( child ) != ACM_PROPERTY_TYPE_STRING )
 	{
 		com_warning_( "Invalid child type found in config!\n" );
 		return;
@@ -86,21 +86,21 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 	PlSetupPath( out->localPath, true, "%s", path );
 
 	snprintf( out->baseName, sizeof( out->baseName ), "%s", name );
-	snprintf( out->name, sizeof( out->name ), "%s", acm_branch_get_child_string( root, "name", "none" ) );
-	snprintf( out->developer, sizeof( out->developer ), "%s", acm_branch_get_child_string( root, "developer", "none" ) );
+	snprintf( out->name, sizeof( out->name ), "%s", acm_get_string( root, "name", "none" ) );
+	snprintf( out->developer, sizeof( out->developer ), "%s", acm_get_string( root, "developer", "none" ) );
 
 	AcmBranch *child;
-	if ( ( child = acm_branch_get_child_by_name( root, "version" ) ) != NULL )
+	if ( ( child = acm_get_child_by_name( root, "version" ) ) != NULL )
 	{
 		acm_branch_get_int32_array( child, out->version, 3 );
 	}
-	if ( ( child = acm_branch_get_child_by_name( root, "mountLocations" ) ) != NULL )
+	if ( ( child = acm_get_child_by_name( root, "mountLocations" ) ) != NULL )
 	{
 		parse_mount_config( child, out );
 	}
-	if ( ( child = acm_branch_get_child_by_name( root, "dependencies" ) ) != NULL )
+	if ( ( child = acm_get_child_by_name( root, "dependencies" ) ) != NULL )
 	{
-		child = acm_branch_get_first_child( child );
+		child = acm_get_first_child( child );
 		while ( child != NULL )
 		{
 			char baseName[ COM_MAX_PROJECT_BASENAME ];

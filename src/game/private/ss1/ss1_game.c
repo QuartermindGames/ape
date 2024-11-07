@@ -58,7 +58,7 @@ static bool ss1_initialize()
 	ss1_menu_initialize();
 
 	// determine if it's the first time we've launched
-	const char *name = acm_branch_get_child_string( ss1_gameState.config, "name", nullptr );
+	const char *name = acm_get_string( ss1_gameState.config, "name", nullptr );
 	if ( name != nullptr )
 	{
 		snprintf( ss1_gameState.players[ 0 ].name, sizeof( ss1_gameState.players[ 0 ].name ), "%s", name );

@@ -26,7 +26,7 @@ static void deserialize_light( ApeWorld *world, AcmBranch *root )
 
 static void deserialize_lights( ApeWorld *world, AcmBranch *root )
 {
-	AcmBranch *child = acm_branch_get_first_child( root );
+	AcmBranch *child = acm_get_first_child( root );
 	while ( child != nullptr )
 	{
 		deserialize_light( world, child );
@@ -38,7 +38,7 @@ static ApeRoom *deserialize_room( ApeWorld *world, AcmBranch *root )
 {
 	// urgh, try to fetch the name but if it's not there, use a temporary name
 	char        tmp[ 64 ];
-	const char *name = acm_branch_get_child_string( root, "name", nullptr );
+	const char *name = acm_get_string( root, "name", nullptr );
 	if ( name == nullptr )
 	{
 		snprintf( tmp, sizeof( tmp ), "unnamed room %u", PlGetNumVectorArrayElements( world->rooms ) );
@@ -101,9 +101,9 @@ static ApeWorldFace *deserialize_face( ApeWorld *world, AcmBranch *root )
 	// per the world vertex list rather than for the face itself, which is
 	// inherited, again, from our adventures with RFL (but not necessarily bad)
 	AcmBranch *branch;
-	if ( ( branch = acm_branch_get_child_by_name( root, "edges" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "edges" ) ) != NULL )
 	{
-		branch = acm_branch_get_first_child( branch );
+		branch = acm_get_first_child( branch );
 		while ( branch != NULL )
 		{
 			ApeWorldVertex *worldVertex;
@@ -136,9 +136,9 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 {
 	AcmBranch *branch;
 
-	if ( ( branch = acm_branch_get_child_by_name( root, "materials" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "materials" ) ) != NULL )
 	{
-		unsigned int numMaterials = acm_branch_get_num_of_children( branch );
+		unsigned int numMaterials = acm_get_num_of_children( branch );
 		if ( numMaterials > 0 )
 		{
 			if ( world->materials == NULL )
@@ -146,7 +146,7 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 				world->materials = PlCreateVectorArray( numMaterials );
 			}
 
-			branch = acm_branch_get_first_child( branch );
+			branch = acm_get_first_child( branch );
 			while ( branch != NULL )
 			{
 				PLPath path;
@@ -169,9 +169,9 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 		}
 	}
 
-	if ( ( branch = acm_branch_get_child_by_name( root, "rooms" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "rooms" ) ) != NULL )
 	{
-		unsigned int numRooms = acm_branch_get_num_of_children( branch );
+		unsigned int numRooms = acm_get_num_of_children( branch );
 		if ( numRooms > 0 )
 		{
 			if ( world->rooms == NULL )
@@ -179,7 +179,7 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 				world->rooms = PlCreateVectorArray( numRooms );
 			}
 
-			branch = acm_branch_get_first_child( branch );
+			branch = acm_get_first_child( branch );
 			while ( branch != NULL )
 			{
 				PlPushBackVectorArrayElement( world->rooms, deserialize_room( world, branch ) );
@@ -195,12 +195,12 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 	// Attempt to fetch the list of vertices - these are just an immediate
 	// list of coordinates
 	bool hasColour = acm_get_bool( root, "hasColour", false );
-	if ( ( branch = acm_branch_get_child_by_name( root, "vertices" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != NULL )
 	{
 		unsigned int numElements = hasColour ? 6 : 3;
 		// Vertices should be just a big ol' list of floats
 		// representing x y z coordinates
-		unsigned int numChildren = acm_branch_get_num_of_children( branch );
+		unsigned int numChildren = acm_get_num_of_children( branch );
 		if ( numChildren % numElements == 0 )
 		{
 			unsigned int numVertices = numChildren / numElements;
@@ -237,12 +237,12 @@ static void deserialize_geometry( ApeWorld *world, AcmBranch *root )
 		}
 	}
 
-	if ( ( branch = acm_branch_get_child_by_name( root, "faces" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "faces" ) ) != NULL )
 	{
-		unsigned int numFaces = acm_branch_get_num_of_children( branch );
+		unsigned int numFaces = acm_get_num_of_children( branch );
 		if ( numFaces > 0 )
 		{
-			branch = acm_branch_get_first_child( branch );
+			branch = acm_get_first_child( branch );
 			while ( branch != NULL )
 			{
 				deserialize_face( world, branch );
@@ -308,7 +308,7 @@ ApeWorld *ape_world_deserialize_( AcmBranch *root )
 	AcmBranch *branch;
 
 	// Get the property branch from the root
-	if ( ( branch = acm_branch_get_child_by_name( root, "properties" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "properties" ) ) != NULL )
 	{
 		// Copy the branch, so we can pass it over to the game logic later
 		world->globalProperties = acm_copy_branch( branch );
@@ -322,12 +322,12 @@ ApeWorld *ape_world_deserialize_( AcmBranch *root )
 		world->fogNear   = acm_get_f32( world->globalProperties, "fogNear", 0.01f );
 	}
 
-	if ( ( branch = acm_branch_get_child_by_name( root, "geometry" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "geometry" ) ) != NULL )
 	{
 		deserialize_geometry( world, branch );
 	}
 
-	if ( ( branch = acm_branch_get_child_by_name( root, "lights" ) ) != NULL )
+	if ( ( branch = acm_get_child_by_name( root, "lights" ) ) != NULL )
 	{
 		deserialize_lights( world, branch );
 	}

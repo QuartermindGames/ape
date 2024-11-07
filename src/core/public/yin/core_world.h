@@ -61,7 +61,7 @@ typedef struct ApeWorldNodeClass
 	ApeWorldNodeMagic magic;
 	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
-	ApeWorldNode *( *deserializeFunction )( void *self, AcmBranch *root );
+	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
 } ApeWorldNodeClass;
 
 typedef struct ApeWorldNode
@@ -142,7 +142,7 @@ const char *ape_world_node_get_name( ApeWorldNode *self );
 void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
 AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
-ApeWorldNode *ape_world_node_deserialize( AcmBranch *root );
+ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root );
 
 #define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
 #define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )

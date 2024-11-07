@@ -1,13 +1,17 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// SPDX-License-Identifier: MIT
+// Ape Config Markup
+// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
 
-#include <plcore/pl_parse.h>
-#include <plcore/pl_filesystem.h>
+#if 0//unused...
 
-#include "acm_private.h"
+#	include <plcore/pl_parse.h>
+#	include <plcore/pl_filesystem.h>
 
-#define MAX_MACROS            512
-#define MAX_MACRO_NAME_LENGTH 16
-#define MAX_MACRO_LENGTH      1024
+#	include "acm_private.h"
+
+#	define MAX_MACROS            512
+#	define MAX_MACRO_NAME_LENGTH 16
+#	define MAX_MACRO_LENGTH      1024
 
 typedef struct PreProcessorMacro
 {
@@ -177,3 +181,5 @@ char *acm_preprocess_script_( char *buf, size_t *length, bool isHead )
 
 	return dstBuffer;
 }
+
+#endif

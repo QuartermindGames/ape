@@ -11,14 +11,14 @@ static AcmBranch *fileSystemConfig;
 
 static void parse_aliases( AcmBranch *root )
 {
-	unsigned int numAliases = acm_branch_get_num_of_children( root ) / 2;
+	unsigned int numAliases = acm_get_num_of_children( root ) / 2;
 	if ( numAliases == 0 )
 	{
 		return;
 	}
 
-	AcmBranch *child = acm_branch_get_first_child( root );
-	if ( acm_branch_get_type( child ) != ND_PROPERTY_STRING )
+	AcmBranch *child = acm_get_first_child( root );
+	if ( acm_branch_get_type( child ) != ACM_PROPERTY_TYPE_STRING )
 	{
 		PRINT_WARNING( "Invalid child type found in config!\n" );
 		return;
@@ -45,7 +45,7 @@ static void parse_aliases( AcmBranch *root )
 	}
 }
 
-#define USER_CONFIG "user.cfg" ACM_DEFAULT_EXTENSION
+#define USER_CONFIG "user.cfg" ACM_DEFAULT_EXTENSION_OLD
 static PLPath configPath;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -90,11 +90,11 @@ void ape_fs_setup_config( AcmBranch *root )
 {
 	PlClearFileAliases();
 
-	fileSystemConfig = acm_branch_get_child_by_name( root, "fileSystem" );
+	fileSystemConfig = acm_get_child_by_name( root, "fileSystem" );
 	if ( fileSystemConfig != NULL )
 	{
 		AcmBranch *child;
-		if ( ( child = acm_branch_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
+		if ( ( child = acm_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
 			parse_aliases( child );
 	}
 

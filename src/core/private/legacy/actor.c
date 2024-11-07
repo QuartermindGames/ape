@@ -69,15 +69,15 @@ Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree )
 	if ( nodeTree != NULL )
 	{
 		AcmBranch *node;
-		if ( ( node = acm_branch_get_child_by_name( nodeTree, "tagName" ) ) != NULL )
+		if ( ( node = acm_get_child_by_name( nodeTree, "tagName" ) ) != NULL )
 		{
 			acm_branch_get_string( node, actor->tagName, sizeof( actor->tagName ) );
 		}
-		if ( ( node = acm_branch_get_child_by_name( nodeTree, "position" ) ) != NULL )
+		if ( ( node = acm_get_child_by_name( nodeTree, "position" ) ) != NULL )
 		{
 			//nd_ds_deserialize_vector3( node, &actor->position );
 		}
-		if ( ( node = acm_branch_get_child_by_name( nodeTree, "angles" ) ) != NULL )
+		if ( ( node = acm_get_child_by_name( nodeTree, "angles" ) ) != NULL )
 		{
 			//nd_ds_deserialize_vector3( node, &actor->angles );
 		}
@@ -87,22 +87,6 @@ Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree )
 	}
 
 	return actor;
-}
-
-Actor *Act_SpawnActorById( const char *id, AcmBranch *nodeTree )
-{
-	for ( unsigned int i = 0; i < MAX_ACTOR_TYPES; ++i )
-	{
-		if ( actorSpawnSetup[ i ] == NULL || strcmp( actorSpawnSetup[ i ]->id, id ) != 0 )
-		{
-			continue;
-		}
-
-		return Act_SpawnActor( i, nodeTree );
-	}
-
-	PRINT_WARNING( "Failed to find actor by id: %s\n", id );
-	return NULL;
 }
 
 Actor *Act_DestroyActor( Actor *self )
@@ -120,14 +104,9 @@ Actor *Act_DestroyActor( Actor *self )
 	return NULL;
 }
 
-ActorType Act_GetType( const Actor *self ) { return self->type; }
-
-void Act_SetPosition( Actor *self, const PLVector3 *position ) { self->position = *position; }
 PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
 
 float Act_GetAngle( const Actor *self ) { return self->angle; }
-
-void Act_SetWorldSector( Actor *self, struct ApeRoom *sector ) { self->sector = sector; }
 
 void Act_SetViewOffset( Actor *self, float viewOffset ) { self->viewOffset = viewOffset; }
 float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
@@ -142,20 +121,6 @@ void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs )
 
 	self->collisionVolume.maxs = maxs;
 	self->collisionVolume.mins = mins;
-}
-
-void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs )
-{
-	if ( mins->x > maxs->x || mins->y > maxs->y || mins->z > maxs->z )
-		PRINT_ERROR( "Invalid visibility volume for actor (mins %s, maxs %s)!\n", PlPrintVector3( mins, PL_VAR_I32 ), PlPrintVector3( maxs, PL_VAR_I32 ) );
-
-	self->visibilityVolume.maxs = *maxs;
-	self->visibilityVolume.mins = *mins;
-}
-
-PLVector3 Act_GetForward( const Actor *self )
-{
-	return self->forward;
 }
 
 /****************************************

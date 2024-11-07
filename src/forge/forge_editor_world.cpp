@@ -250,7 +250,7 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 		return false;
 	}
 
-	if ( !acm_write_file( path, root, ND_FILE_BINARY ) )
+	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
 		FXMessageBox::warning( this, FX::MBOX_OK, "Warning", "%s", acm_get_error_message() );
 		return false;

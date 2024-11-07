@@ -41,21 +41,21 @@ FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
 
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
-	AcmBranch *root = acm_branch_push_back_object( nullptr, "project" );
+	AcmBranch *root = acm_push_object( nullptr, "project" );
 	acm_push_string( root, "name", name, false );
 
 	const static constexpr int version[ 3 ] = { 0, 0, 0 };
-	acm_branch_push_back_int32_array( root, "version", version, 3 );
+	acm_push_array_i32( root, "version", version, 3 );
 
 	AcmBranch *child;
-	child = acm_branch_push_back_string_array( root, "mountLocations", nullptr, 0 );
+	child = acm_push_array_string( root, "mountLocations", nullptr, 0 );
 	acm_push_string( child, nullptr, "ship", false );
 	acm_push_string( child, nullptr, "dev", false );
 
-	child = acm_branch_push_back_string_array( root, "dependencies", nullptr, 0 );
+	child = acm_push_array_string( root, "dependencies", nullptr, 0 );
 	acm_push_string( child, nullptr, "base", false );
 
-	acm_write_file( path, root, ND_FILE_UTF8 );
+	acm_write_file( path, root, ACM_FILE_TYPE_UTF8 );
 	return root;
 }
 
@@ -268,7 +268,7 @@ int main( int argc, char **argv )
 
 	forge::editorConfig = com_get_config( "editor" );
 
-	const char *projectPath = acm_branch_get_child_string( forge::editorConfig, "projectsPath", "projects" );
+	const char *projectPath = acm_get_string( forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
 	{
 		snprintf( forge::cachedPaths[ forge::PATH_PROJECTS ], sizeof( PLPath ), "%s", projectPath );
@@ -314,7 +314,7 @@ int main( int argc, char **argv )
 		}
 
 		forge::editorProject               = new forge::Project( projectName );
-		forge::editorProject->name         = acm_branch_get_child_string( branch, "name", "none" );
+		forge::editorProject->name         = acm_get_string( branch, "name", "none" );
 		forge::editorProject->internalName = projectName;
 		forge::editorProject->config       = branch;
 	}
