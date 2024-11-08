@@ -8,134 +8,6 @@
 #include "client/renderer/material/material.h"
 #include "client/renderer/renderer.h"
 
-static constexpr uint BRUSH_MAX_FACE_TRIANGLES = ( APE_BRUSH_MAX_FACE_VERTICES - 3 );
-static constexpr uint BRUSH_MAX_FACE_INDICES   = BRUSH_MAX_FACE_TRIANGLES * 3;
-
-#if 0
-//TODO: eventually we should do away with this
-#	define MAX_MATERIALS_PER_PASS 256
-static int subMeshes[ MAX_MATERIALS_PER_PASS ][ APE_BRUSH_MAX_SUB_MESHES ];
-static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ APE_BRUSH_MAX_SUB_MESHES ];
-static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
-
-#	define SELF( X ) APE_SELF_CAST( ApePolyBrush, X )
-
-static uint get_total_verts( const ApeBrush *self )
-{
-	// determine the total number of vertices
-
-	uint numVerts = 0;
-	for ( uint j = 0; j < PlGetNumVectorArrayElements( self->faces ); ++j )
-	{
-		ApeWorldFace *face = PlGetVectorArrayElementAt( self->faces, j );
-		assert( face != nullptr );
-		if ( face == nullptr )
-		{
-			continue;
-		}
-
-		numVerts += PlGetNumLinkedListNodes( face->edgeLoop );
-	}
-
-	return numVerts;
-}
-
-static uint get_total_faces( ApeBrush *self )
-{
-	return PlGetNumVectorArrayElements( self->faces );
-}
-
-static ApeBrushFace **get_faces( ApeBrush *self, uint *num )
-{
-	return ( ApeBrushFace ** ) PlGetVectorArrayDataEx( self->faces, num );
-}
-
-static void upload_mesh( ApeBrush *self )
-{
-	if ( self->isMeshCached )
-	{
-		return;
-	}
-
-	if ( self->mesh == nullptr )
-	{
-		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, get_total_verts( self ) );
-		if ( self->mesh == nullptr )
-		{
-			ape_warning_( "Failed to create mesh for room: %s\n", PlGetError() );
-			return;
-		}
-	}
-
-	PlgClearMesh( self->mesh );
-
-	uint numFaces = get_total_faces( self );
-	for ( uint j = 0; j < numFaces; ++j )
-	{
-		ApeWorldFace *face = &self->faces[ j ];
-		assert( face != nullptr );
-		if ( face->materialIndex < 0 )
-		{
-			continue;
-		}
-
-		PLColour faceColour = {
-		        .r = ( rand() % 200 ) + 55,
-		        .g = ( rand() % 200 ) + 55,
-		        .b = ( rand() % 200 ) + 55,
-		        .a = 255,
-		};
-
-		PLLinkedListNode *faceVertexNode = PlGetFirstNode( face->edgeLoop );
-		while ( faceVertexNode != nullptr )
-		{
-			ApeBrushFaceVertex *vertex = PlGetLinkedListNodeUserData( faceVertexNode );
-			uint        v      = PlgAddMeshVertex( self->mesh,
-			                                               vertex->position,
-			                                               &vertex->normal,
-			                                               &faceColour,
-			                                               &vertex->textureCoords );
-			PlgSetMeshVertexSTv( self->mesh, 1, v, 2, ( float * ) &vertex->lightmapCoords );
-
-			faceVertexNode = PlGetNextLinkedListNode( faceVertexNode );
-		}
-	}
-
-	PlgGenerateVertexTangentBasis( self->mesh->vertices, self->mesh->num_verts );
-	PlgUploadMesh( self->mesh );
-
-	self->isMeshCached = true;
-}
-
-static void draw_faces( ApeBrush *self )
-{
-	uint   numFaces;
-	ApeBrushFace **faces = get_faces( self, &numFaces );
-	if ( numFaces == 0 )
-	{
-		return;
-	}
-
-	uint numVertices;
-	for ( uint i = 0, offset = 0; i < numFaces; ++i, offset += numVertices )
-	{
-		numVertices = PlGetNumLinkedListNodes( faces[ i ]->edgeLoop );
-
-		if ( faces[ i ]->materialIndex < 0 )
-		{
-			continue;
-		}
-
-		assert( numSubMeshes[ faces[ i ]->materialIndex ] < APE_BRUSH_MAX_SUB_MESHES );
-		if ( numSubMeshes[ faces[ i ]->materialIndex ] >= APE_BRUSH_MAX_SUB_MESHES )
-		{
-			PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
-			break;
-		}
-	}
-}
-#endif
-
 ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeBrush *brush = PL_NEW( ApeBrush );
@@ -388,13 +260,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	for ( uint i = 0; i < self->numFaces; ++i )
 	{
 		self->faces[ i ].parent = self;
-#if 0
-		self->faces[ i ].colour   = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
-		                                          PlGenerateRandomFloat( 1.0f ),
-		                                          PlGenerateRandomFloat( 1.0f ), 1.0f );
-#else
 		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
-#endif
 
 		self->faces[ i ].material      = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 		self->faces[ i ].materialScale = PL_VECTOR2( 8.0f, 8.0f );
@@ -436,7 +302,7 @@ bool ape_world_face_is_portal( const ApeWorldFace *self )
 
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 {
-	ApeBrush  *brush       = ( ApeBrush  *) self;
+	ApeBrush *brush = ( ApeBrush * ) self;
 	acm_push_ui32( root, "type", brush->type );
 	acm_push_array_f32( root, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 
@@ -462,6 +328,8 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 		acm_push_vector3( faceBranch, "normal", &face->normal, true );
 		acm_push_array_f32( faceBranch, "colour", ( float * ) &face->colour, 4 );
 		acm_push_array_f32( faceBranch, "bounds", ( float * ) &face->bounds, 12 );
+
+		acm_push_ui32( faceBranch, "flags", face->flags );
 
 		AcmBranch *edgeBranch     = acm_push_array_i16( faceBranch, "edgeLoop", nullptr, 0 );
 		AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "vertices" );
@@ -492,7 +360,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 	{
 		self->numVertices = acm_get_num_of_children( branch ) / 3;
 		self->vertices    = PL_NEW_( PLVector3, self->numVertices );
-		acm_branch_get_float32_array( branch, ( float * ) self->vertices, self->numVertices );
+		acm_branch_get_float32_array( branch, ( float * ) self->vertices, self->numVertices * 3 );
 	}
 	else
 	{
@@ -509,6 +377,38 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 		branch = acm_get_first_child( branch );
 		for ( uint i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
 		{
+			self->faces[ i ].parent = self;
+
+			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
+			if ( vertexBranch != nullptr )
+			{
+				self->faces[ i ].numVertices = acm_get_num_of_children( vertexBranch );
+
+				vertexBranch = acm_get_first_child( vertexBranch );
+				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
+				{
+					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
+					assert( vertexIndex <= self->numVertices );
+					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
+					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ){} );
+					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ){} );
+					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ){ .a = 1.0f } );
+				}
+
+				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
+				acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
+				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j )
+				{
+					self->faces[ i ].edgeLoop[ j ] = &self->faces[ i ].vertices[ edgeLoop[ j ] ];
+				}
+			}
+			else
+			{
+				ape_warning_( "No vertices specified for brush!\n" );
+				ape_world_node_destroy( APE_WORLD_NODE( self ) );
+				return nullptr;
+			}
+
 			snprintf( self->faces[ i ].id, sizeof( self->faces[ i ].id ), "%s", acm_get_string( branch, "id", "" ) );
 
 			// material
@@ -526,31 +426,13 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 			self->faces[ i ].materialOffset = acm_get_vector3( branch, "materialOffset", &( PLVector3 ){} );
 			self->faces[ i ].materialAngle  = acm_get_vector3( branch, "materialAngle", &( PLVector3 ){} );
 
+			self->faces[ i ].flags = ACM_GET_UINT( self->faces[ i ].flags, branch, "flags", 0 );
+
 			self->faces[ i ].normal = acm_get_vector3( branch, "normal", &( PLVector3 ){} );
 			self->faces[ i ].colour = acm_get_colour_f32( branch, "colour", &( PLColourF32 ){ .a = 1.0f } );
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
-			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
-			if ( vertexBranch != nullptr )
-			{
-				vertexBranch = acm_get_first_child( vertexBranch );
-				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
-				{
-					uint vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
-					assert( vertexIndex <= self->numVertices );
-					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
-					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ){} );
-					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ){} );
-					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ){ .a = 1.0f } );
-				}
-			}
-
-			int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
-			acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
-			for ( uint i = 0; i < self->faces[ i ].numVertices; ++i )
-			{
-				self->faces[ i ].edgeLoop[ i ] = &self->faces[ i ].vertices[ edgeLoop[ i ] ];
-			}
+			compute_brush_face_tangents( &self->faces[ i ] );
 		}
 	}
 	else
