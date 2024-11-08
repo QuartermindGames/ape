@@ -11,6 +11,8 @@ add_library(acm STATIC ${ACM_SOURCE_FILES})
 target_include_directories(acm PUBLIC public)
 target_link_libraries(acm ApeCommon plcore plgraphics)
 
+#[[TODO: this needs a proper test suite!
 add_executable(acm_test ${ACM_SOURCE_FILES})
 target_compile_definitions(acm_test PRIVATE ACM_TEST)
 target_link_libraries(acm_test acm)
+]]
