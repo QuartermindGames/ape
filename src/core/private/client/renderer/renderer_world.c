@@ -485,6 +485,9 @@ void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool
 
 	draw_room( room, camera, light, ambienceOnly, alpha );
 
+	void ape_test_draw_( ApeCamera * camera );
+	ape_test_draw_( camera );
+
 	PlPopMatrix();
 
 	COM_PROFILE_FUNCTION_END();

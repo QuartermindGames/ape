@@ -25,7 +25,7 @@ static void test_model_command( unsigned int argc, char **argv )
 		return;
 	}
 
-	const char *modelPath = ( argc == 1 ) ? "models/p_char_a.mdl.n" : argv[ 1 ];
+	const char *modelPath = ( argc == 1 ) ? "models/cyborg.mdl.n" : argv[ 1 ];
 	testModel             = ape_model_load( modelPath );
 	if ( testModel == nullptr )
 	{
@@ -47,9 +47,7 @@ static void draw_model_( ApeCamera *camera, ApeLight *light )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	PlTranslateMatrix( PL_VECTOR3( 15.0f, 0.0f, 5.0f ) );
-	PlRotateMatrix3f( PL_DEG2RAD( -90.0f ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix3f( PL_DEG2RAD( -90.0f ), 0.0f, 0.0f, 1.0f );
+	//PlScaleMatrix( PL_VECTOR3( 1.3f, 1.3f, 1.3f ) );
 
 	ApeModelAnimationState animationState = {};
 	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
@@ -64,8 +62,9 @@ static void draw_model_( ApeCamera *camera, ApeLight *light )
 
 void ape_test_draw_( ApeCamera *camera )
 {
-	//draw_model_( camera, nullptr );
+	draw_model_( camera, nullptr );
 
+#if 1
 	PlgDepthMask( false );
 
 	ape_rendererState_.overrideBlendMode = true;
@@ -83,6 +82,7 @@ void ape_test_draw_( ApeCamera *camera )
 	ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 
 	PlgDepthMask( true );
+#endif
 }
 
 void ape_test_register_commands_()
