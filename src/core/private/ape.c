@@ -137,9 +137,6 @@ void ape_error_( bool die, const char *message, ... )
 	}
 }
 
-void ape_initialize_world_();
-void ape_shutdown_world_();
-
 bool ape_initialize( unsigned int argc, char **argv, const char *config, bool embedded )
 {
 	PL_ZERO_( ape_config_ );
@@ -182,7 +179,6 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config, bool em
 	ape_initialize_net_();
 	ape_initialize_server_();
 	ape_initialize_client_();
-	ape_initialize_world_();
 	ape_initialize_game_();
 	ape_initialize_editor_();
 
@@ -203,7 +199,6 @@ void ape_shutdown( void )
 
 	ape_shutdown_editor_();
 	ape_shutdown_game_();
-	ape_shutdown_world_();
 	ape_shutdown_client_();
 	ape_shutdown_server_();
 	ape_shutdown_console_();

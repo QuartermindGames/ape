@@ -28,7 +28,7 @@ worldEditorMap[] = {
 FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
 forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
-    : EditorTab( owner, "Room Editor", forge_cachedIcons[ FORGE_ICON_TYPE_WORLD ], APE_EDITOR_MODE_WORLD ),
+    : EditorTab( owner, "Room Editor", forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ], APE_EDITOR_MODE_WORLD ),
       _gridSizeTarget( this->instance.grid.scale ),
       _gridHideTarget( this->instance.grid.visible )
 {

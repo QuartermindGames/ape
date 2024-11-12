@@ -138,3 +138,9 @@ bool ape_light_is_visible( const ApeLight *self, const ApeCamera *camera )
 	PLCollisionSphere sphere        = PlSetupCollisionSphere( lightPosition, self->radius );
 	return PlgIsSphereInsideView( camera->internal, &sphere );
 }
+
+const ApeWorldNodeClass ape_lightClass = {
+        .identifier      = "light",
+        .magic           = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
+        .destroyFunction = ape_light_destroy_,
+};

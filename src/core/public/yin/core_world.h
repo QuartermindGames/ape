@@ -148,10 +148,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 #define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Ape World Brush - the building blocks of the world.
-// Unlike most engines, you can define your own brush types to APE - so if you want
-// to, say, introduce a brush that works like a minecraft cube, you can do so, or you
-// can introduce a terrain brush type, or a mesh brush type, etc.
+// Brush - the building blocks of the world.
 /////////////////////////////////////////////////////////////////////////////////////
 
 #define APE_BRUSH_MAX_FACE_VERTICES 16
@@ -249,8 +246,6 @@ typedef struct ApeWorld
 	char  *name;
 	PLPath path;
 
-	PLLinkedList *entitySpawns;
-
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
 	PLVectorArray *vertices; // ApeWorldVertex
@@ -260,9 +255,6 @@ typedef struct ApeWorld
 	PLColourF32 fogColour;
 	float       fogNear;
 	float       fogFar;
-
-	/* additional generic properties */
-	struct AcmBranch *globalProperties;
 } ApeWorld;
 
 #define APE_WORLD_VERSION       3
@@ -277,17 +269,7 @@ typedef struct ApeWorld
 
 /// Create an entirely new empty world handle.
 /// \return New world instance.
-ApeWorld *ape_create_world( void );
-
-ApeWorld *ape_world_load( const char *path );
-
-/// Attempts to save the given world to the destination.
-/// \param self
-/// \param path
-/// \return On success, returns true but false otherwise.
-bool ape_world_save( ApeWorld *self, const char *path );
-
-AcmBranch *apeGetWorldProperty( ApeWorld *world, const char *propertyName );
+ApeWorld *ape_world_create( void );
 
 // TODO: move these under the renderer sub-system
 void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera );
@@ -295,20 +277,12 @@ void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 
 void ape_world_set_global_defaults( ApeWorld *level );
-void ape_world_set_clear_colour( ApeWorld *world, const PLColourF32 *colour );
-void ape_world_set_fog_colour( ApeWorld *world, const PLColourF32 *colour );
 
 /**
  * Assigning a light to the world will give the world instance
  * ownership of that light.
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
-
-/**
- * This crudely tries to determine the sector by an origin point.
- * Should only be used for vague, but fast, lookup.
- */
-ApeRoom *ape_world_get_room_at_position( ApeWorld *world, const PLVector3 *position );
 
 ////////////////////////////////////////////////////////////////////
 // Room

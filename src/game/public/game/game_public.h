@@ -15,7 +15,7 @@ void game_shutdown();
 /// \return Handle to the currently active world.
 struct ApeWorld *ss_game_get_current_world( void );
 
-void game_spawn_world( ApeWorld *world );
+void game_spawn_world( ApeWorld *world, ApeRoom *room );
 
 const char *game_get_identifier();
 

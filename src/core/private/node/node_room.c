@@ -133,3 +133,11 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 }
 
 #endif
+
+const ApeWorldNodeClass ape_roomClass = {
+        .identifier          = "room",
+        .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
+        .destroyFunction     = ape_room_destroy_,
+        .serializeFunction   = ape_room_serialize_,
+        .deserializeFunction = ape_room_deserialize_,
+};

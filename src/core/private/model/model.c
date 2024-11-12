@@ -246,8 +246,6 @@ void ape_model_release( ApeModel *model )
 
 void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
 {
-#if 1
-
 	for ( uint i = 0; i < model->numMaterials; ++i )
 	{
 		model->cache->startIndex = model->meshes[ i ].startIndex;
@@ -258,12 +256,6 @@ void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const
 
 		ape_material_draw( model->meshes[ i ].material, model->cache, lights );
 	}
-
-#else
-
-	ape_material_draw( model->meshes[ 0 ].material, model->cache, nullptr, 0 );
-
-#endif
 }
 
 void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms )

@@ -599,3 +599,9 @@ void ape_clear_camera_visibility_lists_( void )
 
 	COM_PROFILE_FUNCTION_END();
 }
+
+const ApeWorldNodeClass ape_cameraClass = {
+        .identifier      = "camera",
+        .magic           = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
+        .destroyFunction = ape_camera_destroy_,
+};

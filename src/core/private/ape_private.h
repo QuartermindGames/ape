@@ -165,6 +165,6 @@ void ape_initialize_game_( void );
 void ape_shutdown_game_( void );
 
 void ape_tick_game_server_( void );
-void ape_spawn_world_( const char *worldPath );
+void ape_spawn_world_( const char *path );
 
 PL_EXTERN_C_END

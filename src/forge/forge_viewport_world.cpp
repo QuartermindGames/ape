@@ -268,10 +268,7 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 
 			pos = ape_grid_transform_point( &instance->grid, ( PLVector2 * ) &pos );
 
-			PLColourF32 colour = PL_COLOURF32( PlGenerateRandomFloat( 1.0f ),
-			                                   PlGenerateRandomFloat( 1.0f ),
-			                                   PlGenerateRandomFloat( 1.0f ), 1.0f );
-
+			PLColourF32 colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 2.0f );
 			ape_create_light( ( ApeWorldNode * ) room, &pos,
 			                  &colour, 32.0f,
 			                  APE_LIGHT_TYPE_OMNI,

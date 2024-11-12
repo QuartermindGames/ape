@@ -18,22 +18,17 @@ typedef enum ApeGameInterfaceRequest
 
 	APE_GAME_INTERFACE_REQUEST_TICK_SERVER,// called after entity tick
 	APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT,
-
-	APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD,// called before entities are spawned in and
-	                                       // before starting and connecting to server
-
-	APE_GAME_INTERFACE_REQUEST_CONNECT,
-	APE_GAME_INTERFACE_REQUEST_DISCONNECT,
 } ApeGameInterfaceRequest;
 
 // Interface imported from game
 typedef struct ApeGameInterfaceImport
 {
-	unsigned int version;   // interface version
-	uint8_t protocolVersion;// protocol version specific to the game itself
-	char identifier[ 8 ];   // identifier for the game (clients will only be able to connect if this matches)
+	unsigned int version;        // interface version
+	uint8_t      protocolVersion;// protocol version specific to the game itself
+	char         identifier[ 8 ];// identifier for the game (clients will only be able to connect if this matches)
 
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
+	void ( *spawnWorld )( ApeWorld *world, ApeRoom *room );
 
 	// client
 	void ( *clientConnect )();

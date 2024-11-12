@@ -14,12 +14,10 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static void world_command( PL_UNUSED unsigned int argc, char **argv )
+static void load_room_command( PL_UNUSED unsigned int argc, char **argv )
 {
-	const char *worldName = argv[ 1 ];
-
 	PLPath path;
-	PlSetupPath( path, true, "worlds/%s/%s.wld.n", worldName, worldName );
+	PlSetupPath( path, true, "rooms/%s." APE_WORLD_ROOM_EXTENSION, argv[ 1 ] );
 
 	ape_spawn_world_( path );
 }
@@ -27,7 +25,7 @@ static void world_command( PL_UNUSED unsigned int argc, char **argv )
 static void print_world_name( const char *path, void * )
 {
 	// verify it's a valid world
-	if ( strcmp( &path[ strlen( path ) - 6 ], "." APE_WORLD_EXTENSION ) != 0 )
+	if ( strcmp( &path[ strlen( path ) - 6 ], "." APE_WORLD_ROOM_EXTENSION ) != 0 )
 	{
 		return;
 	}
@@ -38,9 +36,9 @@ static void print_world_name( const char *path, void * )
 	ape_print_( "%s\n", name );
 }
 
-static void list_worlds_command( uint, char ** )
+static void list_rooms_command( uint, char ** )
 {
-	PlScanDirectory( "worlds", "n", print_world_name, true, nullptr );
+	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +50,8 @@ void ape_initialize_game_( void )
 {
 	ape_print_( "Initializing game...\n" );
 
-	PlRegisterConsoleCommand( "world", "Load in and spawn the specified world.", 1, world_command );
-	PlRegisterConsoleCommand( "list_worlds", "List all of the available worlds.", 0, list_worlds_command );
+	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
+	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
 
 	ape_gameInterface = ape_game_get_interface();
 	if ( ape_gameInterface == nullptr )
@@ -104,19 +102,34 @@ void ape_tick_game_server_( void )
 	game->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
 }
 
-void ape_spawn_world_( const char *worldPath )
+void ape_spawn_world_( const char *path )
 {
-	ApeWorld *world = ape_world_load( worldPath );
-	if ( world == nullptr )
+	// attempt to load the specified room
+	AcmBranch *root = acm_load_file( path, "node" );
+	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to load world, aborting game spawn!\n" );
+		ape_warning_( "Failed to load the specified room (%s): %s\n", path, acm_get_error_message() );
 		return;
 	}
 
-	game_spawn_world( world );
+	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
+	if ( roomNode != nullptr )
+	{
+		ApeWorld *world = ape_world_create();
+		assert( world != nullptr );
+		ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
 
-	ape_world_spawn_entities_( world );
+		game_spawn_world( world, ( ApeRoom * ) roomNode );
 
-	ape_server_start( "localhost", 0 );
-	ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
+		ape_world_spawn_entities_( world );
+
+		ape_server_start( "localhost", 0 );
+		ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
+	}
+	else
+	{
+		ape_warning_( "Failed to deserialize room (%s)!\n", path );
+	}
+
+	acm_branch_destroy( root );
 }

@@ -114,15 +114,20 @@ ApeWorld *ss_game_get_current_world( void )
 	return currentWorld;
 }
 
-void game_spawn_world( ApeWorld *world )
+void game_spawn_world( ApeWorld *world, ApeRoom *room )
 {
 	if ( currentWorld != NULL )
 	{
 		ape_world_node_destroy( ( ApeWorldNode * ) currentWorld );
-		currentWorld = NULL;
+		currentWorld = nullptr;
 	}
 
 	currentWorld = world;
+
+	if ( ape_gameInterface->spawnWorld != nullptr )
+	{
+		ape_gameInterface->spawnWorld( world, room );
+	}
 }
 
 const char *game_get_identifier()

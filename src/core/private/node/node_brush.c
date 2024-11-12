@@ -444,3 +444,11 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 
 	return APE_WORLD_NODE( self );
 }
+
+const ApeWorldNodeClass ape_brushClass = {
+        .identifier          = "brush",
+        .magic               = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
+        .destroyFunction     = ape_brush_destroy_,
+        .serializeFunction   = ape_brush_serialize_,
+        .deserializeFunction = ape_brush_deserialize_,
+};

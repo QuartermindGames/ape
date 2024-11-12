@@ -41,7 +41,7 @@ static unsigned int          captureQuality   = 90;
 static volatile bool         isCapturing      = false;
 static volatile unsigned int numCaptureFrames = 0;
 
-static PLLinkedList *captureQueue = NULL;//CaptureFrame
+static PLLinkedList *captureQueue = nullptr;//CaptureFrame
 
 #define MAX_CAPTURE_THREADS 16
 static unsigned int    numCaptureThreads                    = 4;
@@ -110,16 +110,20 @@ static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv 
 		PlSetupPath( captureDirectory, true, "%s/captures/", com_get_app_data_directory() );
 		PlCreateDirectory( captureDirectory );
 
-		pthread_mutex_init( &captureMutex, NULL );
+		pthread_mutex_init( &captureMutex, nullptr );
 		captureQueue = PlCreateLinkedList();
 
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			pthread_create( &captureThread[ i ], NULL, process_capture_queue, NULL );
+		{
+			pthread_create( &captureThread[ i ], nullptr, process_capture_queue, NULL );
+		}
 	}
 	else
 	{
 		for ( unsigned int i = 0; i < numCaptureThreads; ++i )
-			pthread_join( captureThread[ i ], NULL );
+		{
+			pthread_join( captureThread[ i ], nullptr );
+		}
 
 		pthread_mutex_destroy( &captureMutex );
 		PlDestroyLinkedListEx( captureQueue, destroy_capture_frame );
@@ -540,7 +544,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
-	
+
 	if ( !ape_config_.world.skipDraw )
 	{
 		ApeWorld *world = ape_camera_get_world( camera );
@@ -563,6 +567,12 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 					render_transparent_world( camera );
 					break;
 			}
+
+
+#if !defined( NDEBUG )
+			void ape_test_draw_( ApeCamera * camera );
+			ape_test_draw_( camera );
+#endif
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );
@@ -576,6 +586,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	}
 
 	ape_editor_post_render_scene_();
+
+	ape_draw_debug_mesh_display_();
 
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 

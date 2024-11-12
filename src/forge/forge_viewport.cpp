@@ -88,7 +88,7 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 		canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	}
 
-	PLVector3 position = PL_VECTOR3( 0.0f, 32.0f, 0.0f );
+	PLVector3 position = PL_VECTOR3( 0.0f, 80.0f, 0.0f );
 
 	camera = ape_create_camera( nullptr, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 	ape_camera_set_draw_mode( camera, drawMode_ );
@@ -150,44 +150,10 @@ void Viewport::draw()
 		return;
 	}
 
-	// A lot of this is currently terrible,
-	// simply because the renderer gets its init
-	// at the same time as the rest of the engine...
-	// which happens AFTER the window is created (urgh)
-
 	if ( internalViewport_ == nullptr )
 	{
 		internalViewport_ = ape_viewport_create( 0, 0, w, h, this, true );
 		ape_viewport_set_camera( internalViewport_, camera );
-	}
-
-	if ( camera == nullptr )
-	{
-		// this, again, is a gross piece of crap - it should be handled earlier!
-		// lookup the first room to attach the camera to
-		ApeWorldNode *parent      = nullptr;
-		WorldEditor  *worldEditor = dynamic_cast< WorldEditor  *>( editor );
-		if ( worldEditor != nullptr )
-		{
-			// fetch the first room to attach the cameras to
-			PL_ITERATE_LINKED_LIST( parent, ApeWorldNode, worldEditor->get_world()->base.children, i )
-			{
-				if ( parent->type != APE_WORLD_NODE_TYPE_ROOM )
-				{
-					continue;
-				}
-
-				break;
-			}
-		}
-
-		PLVector3 position = PL_VECTOR3( 0.0f, -16.0f, 0.0f );
-
-		camera = ape_create_camera( parent, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
-		ape_camera_set_draw_mode( camera, drawMode_ );
-
-		// make sure the given editor knows about the camera
-		editor->set_camera( camera );
 	}
 
 	ape_viewport_set_camera( internalViewport_, camera );

@@ -65,9 +65,7 @@ add_library(ApeCore STATIC
         private/model/model.c
 
         private/world/world.c
-        private/world/world_deserialiser.c
         private/world/world_node.c
-        private/world/world_serialiser.c
 
         ${YIN_CORE_CLIENT}
         private/audio/audio.c

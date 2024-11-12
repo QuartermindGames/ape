@@ -133,7 +133,7 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 {
-	ApeWorld *world = ape_create_world();
+	ApeWorld *world = ape_world_create();
 	if ( world == nullptr )
 	{
 		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world instance!\nSee logs for details." );
@@ -183,7 +183,7 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	ApeWorld *world = ape_create_world();
+	ApeWorld *world = ape_world_create();
 	ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
 
 	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );

@@ -6,66 +6,32 @@
 
 #define APE_WORLD_NODE_MAGIC PL_MAGIC_TO_NUM( 'N', 'O', 'D', 'E' )
 
-void ape_world_destroy_( void *data, ApeWorldNode *parent );
-void ape_light_destroy_( void *data, ApeWorldNode *parent );
-void ape_camera_destroy_( void *data, ApeWorldNode *parent );
-void ape_entity_destroy_( void *data, ApeWorldNode *parent );
+extern const ApeWorldNodeClass ape_rootClass;
+extern const ApeWorldNodeClass ape_roomClass;
+extern const ApeWorldNodeClass ape_brushClass;
+extern const ApeWorldNodeClass ape_lightClass;
+extern const ApeWorldNodeClass ape_cameraClass;
+extern const ApeWorldNodeClass ape_entityClass;
 
-void          ape_room_destroy_( void *data, ApeWorldNode *parent );
-AcmBranch    *ape_room_serialize_( void *self, AcmBranch *root );
-ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root );
-
-void          ape_brush_destroy_( void *data, ApeWorldNode *parent );
-AcmBranch    *ape_brush_serialize_( void *self, AcmBranch *root );
-ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root );
-
-static const ApeWorldNodeClass nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
-        [APE_WORLD_NODE_TYPE_ROOT] = {
-                                      .identifier      = "root",
-                                      .magic           = PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
-                                      .destroyFunction = ape_world_destroy_,
-                                      },
-        [APE_WORLD_NODE_TYPE_ROOM] = {
-                                      .identifier          = "room",
-                                      .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
-                                      .destroyFunction     = ape_room_destroy_,
-                                      .serializeFunction   = ape_room_serialize_,
-                                      .deserializeFunction = ape_room_deserialize_,
-                                      },
-        [APE_WORLD_NODE_TYPE_BRUSH] = {
-                                      .identifier          = "brush",
-                                      .magic               = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
-                                      .destroyFunction     = ape_brush_destroy_,
-                                      .serializeFunction   = ape_brush_serialize_,
-                                      .deserializeFunction = ape_brush_deserialize_,
-                                      },
-        [APE_WORLD_NODE_TYPE_LIGHT] = {
-                                      .identifier      = "light",
-                                      .magic           = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
-                                      .destroyFunction = ape_light_destroy_,
-                                      },
-        [APE_WORLD_NODE_TYPE_CAMERA] = {
-                                      .identifier      = "camera",
-                                      .magic           = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
-                                      .destroyFunction = ape_camera_destroy_,
-                                      },
-        [APE_WORLD_NODE_TYPE_ENTITY] = {
-                                      .identifier      = "entity",
-                                      .magic           = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
-                                      .destroyFunction = ape_entity_destroy_,
-                                      },
+static const ApeWorldNodeClass *nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
+        [APE_WORLD_NODE_TYPE_ROOT]   = &ape_rootClass,
+        [APE_WORLD_NODE_TYPE_ROOM]   = &ape_roomClass,
+        [APE_WORLD_NODE_TYPE_BRUSH]  = &ape_brushClass,
+        [APE_WORLD_NODE_TYPE_LIGHT]  = &ape_lightClass,
+        [APE_WORLD_NODE_TYPE_CAMERA] = &ape_cameraClass,
+        [APE_WORLD_NODE_TYPE_ENTITY] = &ape_entityClass,
 };
 
 static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )
 {
 	for ( uint i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
 	{
-		if ( nodeClasses[ i ].magic != magic )
+		if ( nodeClasses[ i ] == nullptr || nodeClasses[ i ]->magic != magic )
 		{
 			continue;
 		}
 
-		return &nodeClasses[ i ];
+		return nodeClasses[ i ];
 	}
 
 	return nullptr;
@@ -125,7 +91,7 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 	self->angles   = *angles;
 
 	self->type      = type;
-	self->classType = &nodeClasses[ self->type ];
+	self->classType = nodeClasses[ self->type ];
 
 	if ( parent != nullptr )
 	{

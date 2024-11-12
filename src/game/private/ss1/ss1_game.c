@@ -128,8 +128,8 @@ static void handle_input( void )
 	PlAnglesAxes( ang, &left, nullptr, &forward );
 
 	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-	pos                 = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
-	pos                 = PlSubtractVector3( pos, PlScaleVector3F( left, leftStick.x ) );
+	pos                 = PlAddVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
+	pos                 = PlAddVector3( pos, PlScaleVector3F( left, leftStick.x ) );
 
 	ape_camera_set_position( ss1_gameState.camera, &pos );
 	ape_camera_set_angles( ss1_gameState.camera, &ang );
@@ -204,38 +204,19 @@ static bool ss1_draw_menu( const ApeViewport *viewport )
 	return true;
 }
 
-typedef struct ToxSkyLayer
-{
-	unsigned int id;
-	const char  *material;
-
-	float baseScale;
-	float baseY;
-	float baseAlpha;
-
-	float parallaxDiff;
-} ToxSkyLayer;
-static ToxSkyLayer skyLayers[] = {
-        {0, "materials/sky/cloudlayer00.mat.n",      0.85f, 12.0f, 0.5f, 100.0f},
-        {0, "materials/sky/cloudlayer00.mat.n",      0.25f, 14.0f, 0.5f, 500.0f},
-        {0, "materials/clouds/cloud_layer_01.mat.n", 0.1f,  16.0f, 1.0f, 700.0f},
-};
-static constexpr unsigned int MAX_SKY_LAYERS = PL_ARRAY_ELEMENTS( skyLayers );
-
-static bool ss1_spawn_world( ApeWorld *world )
+static void ss1_spawn_world( ApeWorld *world, ApeRoom *room )
 {
 	world_simulation_initialize( &ss1_gameState.simulation );
 
-	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, &world->base );
+	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
+	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
 
-	suns[ 0 ] = ape_create_light( &world->base, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
+	suns[ 0 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
 	                              APE_LIGHT_TYPE_OMNI,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | /*APE_LIGHT_FLAG_FLARE |*/ APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-	suns[ 1 ] = ape_create_light( &world->base, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
+	suns[ 1 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
-	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-
-	return true;
+	                              APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )
@@ -252,10 +233,6 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 			return ss1_draw_menu( user );
 		case APE_GAME_INTERFACE_REQUEST_TICK_SERVER:
 			return ss1_tick();
-		case APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT:
-			break;
-		case APE_GAME_INTERFACE_REQUEST_SPAWN_WORLD:
-			return ss1_spawn_world( ( ApeWorld * ) user );
 		default:
 			break;
 	}
@@ -290,6 +267,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .protocolVersion       = SS1_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
 	        .identifier            = "ss1",
 	        .requestCallbackMethod = request_handler,
+	        .spawnWorld            = ss1_spawn_world,
 
 	        .serverClientConnected    = server_client_connected,
 	        .serverClientDisconnected = server_client_disconnected,

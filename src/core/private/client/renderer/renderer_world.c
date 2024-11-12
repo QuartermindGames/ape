@@ -327,7 +327,7 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 	{
 		PLVector3 sub    = PlNormalizeVector3( PlSubtractVector3( *origin, light->base.position ) );
 		float     dif    = PlVector3Length( PlSubtractVector3( *origin, light->base.position ) );
-		float     radius = light->radius * 4;//HACK: works well for high-dense geometry, but not so much for anything else... so
+		float     radius = light->radius;
 		if ( dif > radius )
 		{
 			dif = radius;
@@ -336,6 +336,7 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin 
 		sub = PlScaleVector3F( sub, radius - dif );
 		return sub;
 	}
+
 	return PlScaleVector3F( PlNormalizeVector3( light->base.position ), F_INFINITY );
 }
 
@@ -376,7 +377,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 		for ( uint i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
-			if ( !ape_material_shadows_enabled( face->material ) )
+			if ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) || !ape_material_shadows_enabled( face->material ) )
 			{
 				continue;
 			}
@@ -484,9 +485,6 @@ void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool
 	PlPushMatrix();
 
 	draw_room( room, camera, light, ambienceOnly, alpha );
-
-	void ape_test_draw_( ApeCamera * camera );
-	ape_test_draw_( camera );
 
 	PlPopMatrix();
 

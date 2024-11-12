@@ -8,8 +8,8 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static PLHashTable *entityComponentDefinitions = NULL;
-static PLHashTable *entityClassDefinitions     = NULL;
+static PLHashTable *entityComponentDefinitions = nullptr;
+static PLHashTable *entityClassDefinitions     = nullptr;
 
 static void list_entity_classes_command( unsigned int, char ** )
 {
@@ -199,3 +199,9 @@ void *ape_entity_get_component( ApeEntity *self, const char *name )
 {
 	return PlLookupHashTableUserData( self->componentTable, name, strlen( name ) );
 }
+
+const ApeWorldNodeClass ape_entityClass = {
+        .identifier      = "entity",
+        .magic           = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+        .destroyFunction = ape_entity_destroy_,
+};
