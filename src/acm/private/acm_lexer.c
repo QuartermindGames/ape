@@ -2,6 +2,8 @@
 // Ape Config Markup
 // Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
 
+//#define ACM_TEST
+
 #include <plcore/pl_parse.h>
 #if defined( ACM_TEST )
 #	include <plcore/pl_timer.h>
@@ -66,26 +68,35 @@ static void parse_line( const char *p, const char *file, unsigned int lineNum, P
 	{
 		PlSkipWhitespace( &p );
 
-		if ( *p == '\0' || *p == ';' )
-		{// single-line comment
+		if ( *p == '\0' )
+		{
 			break;
 		}
-		else if ( *p == ';' && *( p + 1 ) == '*' )
-		{// multi-line comment
-			p += 2;
-			while ( *p != '*' && *( p + 1 ) != ';' )
+		else if ( *p == ';' )
+		{
+			if ( *( p + 1 ) == '*' )
 			{
-				int l = PlGetLineEndType( p );
-				if ( l != PL_PARSE_NL_INVALID )
+				// multi-line comment
+				p += 2;
+				while ( *p != '*' && *( p + 1 ) != ';' )
 				{
-					p += l;
-					continue;
-				}
+					int l = PlGetLineEndType( p );
+					if ( l != PL_PARSE_NL_INVALID )
+					{
+						p += l;
+						continue;
+					}
 
-				p++;
+					p++;
+				}
+				p += 2;
+				continue;
 			}
-			p += 2;
-			continue;
+			else
+			{
+				// single-line comment
+				break;
+			}
 		}
 
 		AcmTokenType type = ACM_TOKEN_TYPE_INVALID;
@@ -175,6 +186,32 @@ AcmLexer *acm_lexer_parse_buffer_( AcmLexer *self, const char *buf, const char *
 	while ( *p != '\0' )
 	{
 		curLineNum++;
+
+		if ( *p == ';' )
+		{
+			if ( *( p + 1 ) == '*' )
+			{
+				// multi-line comment
+				p += 2;
+				while ( *p != '*' && *( p + 1 ) != ';' )
+				{
+					int l = PlGetLineEndType( p );
+					if ( l != PL_PARSE_NL_INVALID )
+					{
+						p += l;
+						continue;
+					}
+
+					p++;
+				}
+				p += 2;
+				continue;
+			}
+
+			// single-line comment
+			PlSkipLine( &p );
+			continue;
+		}
 
 		// tokenise the line
 		unsigned int bufSize = PlDetermineLineLength( p ) + 1;
