@@ -66,8 +66,8 @@ static Menu confirmQuitMenu = {
 };
 
 static MenuOption startMenuOptions[] = {
-        {"test_room\n",   nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world test_room" }  },
-        {"zoo_shaders\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "world zoo_shaders" }},
+        {"test\n",                  nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test" }                 },
+        {"reference_human_scale\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room reference_human_scale" }},
 };
 static Menu startMenu = {
         "Start Server\n",
