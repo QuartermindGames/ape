@@ -289,7 +289,7 @@ static void write_ape_format_model( const CookModel *model, const char *folder )
 	}
 
 	PLPath path = {};
-	PlSetupPath( path, true, "%s/ship/models/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), model->name );
+	PlSetupPath( path, true, "%s/ship/%s/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), folder, model->name );
 	if ( !create_file_path( path ) )
 	{
 		return;
