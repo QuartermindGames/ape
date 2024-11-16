@@ -50,4 +50,20 @@ void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const
  */
 void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms );
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Model World Node Class
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ApeModelNode ApeModelNode;
+
+/**
+ * Create a model node instance.
+ *
+ * @param parent 	Node to attach to.
+ * @param name 		Name of the node.
+ * @param path		Path for the model resource to load.
+ * @return 			Pointer to the new node.
+ */
+ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, const char *path );
+
 PL_EXTERN_C_END

@@ -12,6 +12,7 @@ extern const ApeWorldNodeClass ape_brushClass;
 extern const ApeWorldNodeClass ape_lightClass;
 extern const ApeWorldNodeClass ape_cameraClass;
 extern const ApeWorldNodeClass ape_entityClass;
+extern const ApeWorldNodeClass ape_modelClass;
 
 static const ApeWorldNodeClass *nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_ROOT]   = &ape_rootClass,
@@ -20,6 +21,7 @@ static const ApeWorldNodeClass *nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
         [APE_WORLD_NODE_TYPE_LIGHT]  = &ape_lightClass,
         [APE_WORLD_NODE_TYPE_CAMERA] = &ape_cameraClass,
         [APE_WORLD_NODE_TYPE_ENTITY] = &ape_entityClass,
+        [APE_WORLD_NODE_TYPE_MODEL]  = &ape_modelClass,
 };
 
 static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )

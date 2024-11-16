@@ -18,11 +18,11 @@ typedef enum ApeDefaultTexture
 typedef struct ApeTexture
 {
 	ApeMemoryReference reference;
-	PLGTexture *internal;
+	PLGTexture        *internal;
 
 	PLGTextureWrapMode wrapMode;
-	PLGTextureFilter filterMode;
-	unsigned int flags;
+	PLGTextureFilter   filterMode;
+	unsigned int       flags;
 
 	PLPath path;// for reloading
 } ApeTexture;

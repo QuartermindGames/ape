@@ -117,7 +117,9 @@ typedef enum ApeCullMode
 typedef enum ApeRendererPassStage
 {
 	APE_RENDERER_PASS_DEFAULT,
-	APE_RENDERER_PASS_DEPTH,
+	APE_RENDERER_PASS_DEPTH_PREPASS,
+	APE_RENDERER_PASS_OPAQUE,
+	APE_RENDERER_PASS_TRANSLUCENT,
 } ApeRendererPassStage;
 
 typedef struct ApeRendererPassState

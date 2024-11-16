@@ -29,6 +29,7 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_ABOUT, forge::MainWindow::on_about ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_CONSOLE, forge::MainWindow::on_toggle_console ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_NODE_VOLUMES, forge::MainWindow::on_toggle_node_volumes ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_PROJECT_PACKAGE, forge::MainWindow::on_package_project ),
         FXMAPFUNC( SEL_TIMEOUT, forge::MainWindow::ID_TICK, forge::MainWindow::on_tick ),
@@ -59,29 +60,11 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCommand( menuPane, "&Quit\t\tQuit the application.", nullptr, this, ID_CLOSE );
 	new FXMenuTitle( menuBar_, "&File", nullptr, menuPane );
 
-#if 0
-	menuPane = new FXMenuPane( menuBar_->getParent() );
-	new FXMenuTitle( menuBar_, "&Edit", nullptr, menuPane );
-
-	menuPane = new FXMenuPane( menuBar_->getParent() );
-	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
-
-	menuPane = new FXMenuPane( menuBar_->getParent() );
-	new FXMenuTitle( menuBar_, "&Tools", nullptr, menuPane );
-	auto *subMenu = new FXMenuCascade( menuPane, "Cook" );
-	auto *subMenuPane = new FXMenuPane( this );
-	new FXMenuCommand( subMenuPane, "Convert Model...\t\tConvert a model from another format.", nullptr, this, 0 );
-	new FXMenuCommand( subMenuPane, "Import Texture...\t\tImport an existing texture.", nullptr, this, 0 );
-	subMenu->setMenu( subMenuPane );
-	if ( !isCookAvailable )
-	{
-		subMenu->disable();
-	}
-#endif
-
 	// view
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCheck( menuPane, "&Console\t\tShow/hide the console.", this, ID_TOGGLE_CONSOLE );
+	new FXMenuSeparator( menuPane );
+	new FXMenuCheck( menuPane, "&Show Node Volumes\t\tToggle node boundaries.", this, ID_TOGGLE_NODE_VOLUMES );
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
@@ -279,13 +262,14 @@ long forge::MainWindow::on_close_editor( FXObject *, FXSelector, void * )
 			throw;
 		}
 
-		auto it   = _tabs.begin() + index;
+		auto it = _tabs.begin() + index;
+		_tabs.erase( it );
+
 		auto item = *it;
 		item->destroy();
 
 		_tabBook->recalc();
 
-		_tabs.erase( it );
 		delete item;
 
 		return true;
@@ -323,6 +307,12 @@ long forge::MainWindow::on_toggle_console( FXObject *object, FXSelector, void * 
 	return TRUE;
 }
 
+long forge::MainWindow::on_toggle_node_volumes( FX::FXObject *object, FX::FXSelector, void * )
+{
+	PlSetConsoleVariableByName( "world.showNodeVolumes", ( ( FXMenuCheck * ) object )->getCheck() ? "true" : "false" );
+	return TRUE;
+}
+
 /**
  * Push a message to the console.
  */
@@ -351,7 +341,7 @@ FXTabItem *forge::MainWindow::get_active_tab()
 
 FXTabItem *forge::MainWindow::add_tab( FXTabItem *item )
 {
-	auto tab = _tabs.emplace_back( item );
+	FXTabItem *tab = _tabs.emplace_back( item );
 	tab->create();
 
 	_tabBook->layout();

@@ -9,9 +9,6 @@
 #include "world/world.h"
 #include "client/renderer/renderer.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 static void model_cleanup_callback_( void *userData )
 {
 	ApeModel *model = ( ApeModel * ) userData;
@@ -80,7 +77,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	if ( version == ( uint ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
 		ape_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
-		return NULL;
+		return nullptr;
 	}
 
 	AcmBranch *branch;
@@ -101,7 +98,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		return nullptr;
 	}
 
-	float *vertices    = NULL;
+	float *vertices    = nullptr;
 	uint   numVertices = 0;
 	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
 	{
@@ -145,7 +142,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	if ( meshArray == NULL || ( ( model->numMaterials = acm_get_num_of_children( meshArray ) ) == 0 ) )
 	{
 		ape_warning_( "No meshes for model!\n" );
-		return NULL;
+		return nullptr;
 	}
 	else if ( model->numMaterials >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
@@ -203,9 +200,6 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	return model;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
 ApeModel *ape_model_load( const char *path )
 {
 	ApeModel *model = ape_memory_get_from_pool_( path, APE_CACHE_POOL_MODELS );
@@ -262,3 +256,84 @@ void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, ui
 {
 	//TODO: only will work with static models for now...
 }
+
+static PLCollisionAABB compute_model_bounds( ApeModel *model )
+{
+	PLCollisionAABB bounds = {};
+	assert( model->cache->num_verts > 0 );
+	float max = model->cache->vertices[ 0 ].position.x;
+	float min = model->cache->vertices[ 0 ].position.x;
+	for ( uint i = 0; i < model->cache->num_verts; ++i )
+	{
+		if ( model->cache->vertices[ i ].position.x > max ) max = model->cache->vertices[ i ].position.x;
+		if ( model->cache->vertices[ i ].position.y > max ) max = model->cache->vertices[ i ].position.y;
+		if ( model->cache->vertices[ i ].position.z > max ) max = model->cache->vertices[ i ].position.z;
+		if ( model->cache->vertices[ i ].position.x < min ) min = model->cache->vertices[ i ].position.x;
+		if ( model->cache->vertices[ i ].position.y < min ) min = model->cache->vertices[ i ].position.y;
+		if ( model->cache->vertices[ i ].position.z < min ) min = model->cache->vertices[ i ].position.z;
+	}
+
+	if ( ( min * -1 ) > max ) max = ( min * -1 );
+	bounds.mins = PL_VECTOR3( -max, -max, -max );
+	bounds.maxs = PL_VECTOR3( max, max, max );
+
+	return bounds;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Model World Node Class
+/////////////////////////////////////////////////////////////////////////////////////
+
+ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, const char *path )
+{
+	ApeModel *model = ape_model_load( path );
+	if ( model == nullptr )
+	{
+		ape_warning_( "Failed to load the specified model (%s) for node!\n", path );
+		return nullptr;
+	}
+
+	ApeModelNode *modelNode = PL_NEW( ApeModelNode );
+	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, name, &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	modelNode->model = model;
+	PlSetupPath( modelNode->modelPath, true, "%s", path );
+	modelNode->base.bounds      = compute_model_bounds( modelNode->model );
+	modelNode->base.localBounds = modelNode->base.bounds;
+
+	return modelNode;
+}
+
+static void destroy_model_node( void *data, ApeWorldNode *parent )
+{
+	ApeModelNode *self = ( ApeModelNode * ) data;
+
+	ape_model_release( self->model );
+
+	PL_DELETE( self );
+}
+
+AcmBranch *serialize_model_node( void *data, AcmBranch *root )
+{
+	ApeModelNode *self = ( ApeModelNode * ) data;
+	acm_push_string( root, "path", self->modelPath, true );
+
+	return root;
+}
+
+ApeWorldNode *deserialize_model_node( ApeWorldNode *parent, AcmBranch *root )
+{
+	PLPath modelPath;
+	PlSetupPath( modelPath, true, "%s", acm_get_string( root, "path", "" ) );
+	ApeModelNode *modelNode = ape_model_node_create( parent, nullptr, modelPath );
+
+	return ( ApeWorldNode * ) modelNode;
+}
+
+const ApeWorldNodeClass ape_modelClass = {
+        .identifier          = "model",
+        .magic               = PL_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
+        .destroyFunction     = destroy_model_node,
+        .serializeFunction   = serialize_model_node,
+        .deserializeFunction = deserialize_model_node,
+};

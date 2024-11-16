@@ -5,6 +5,7 @@
 #include "forge.h"
 #include "forge_viewport_world.h"
 #include "forge_editor_world.h"
+#include "ape/ape_public_model.h"
 
 FXDEFMAP( forge::WorldViewport )
 worldViewportMap[] = {
@@ -273,6 +274,8 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 			                  &colour, 32.0f,
 			                  APE_LIGHT_TYPE_OMNI,
 			                  APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+
+			//ape_model_node_create( APE_WORLD_NODE( room ), "test", "models/characters/elite.mdl.n" );
 		}
 	}
 

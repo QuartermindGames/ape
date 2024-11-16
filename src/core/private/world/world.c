@@ -76,6 +76,20 @@ void ape_world_spawn_entities_( ApeWorld *world )
 {
 }
 
+ApeRoom *ape_world_get_first_room_( ApeWorld *world )
+{
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, APE_WORLD_NODE( world )->children, i )
+	{
+		if ( child->type == APE_WORLD_NODE_TYPE_ROOM )
+		{
+			return ( ApeRoom * ) child;
+		}
+	}
+
+	return nullptr;
+}
+
 void ape_register_world_console_variables_( void )
 {
 	PlRegisterConsoleVariable( "world.skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.world.skipDraw, nullptr, false );

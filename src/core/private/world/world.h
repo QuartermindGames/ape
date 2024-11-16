@@ -12,6 +12,7 @@
 #include "ape_memory.h"
 #include "node/node_entity.h"
 #include "audio/audio.h"
+#include "client/renderer/renderer.h"
 
 #define WORLD_PROP_TAG_LENGTH 64
 
@@ -152,15 +153,25 @@ typedef struct ApeWorldEntity
 
 PL_EXTERN_C
 
-ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces );
-
 void ape_world_serialize_( const ApeWorld *world, AcmBranch *root );
 
 void ape_world_spawn_entities_( ApeWorld *world );
 
+/**
+ * Returns the first available room childed to the world.
+ *
+ * @param world 	Instance of the world.
+ * @return 			A room instance on success, otherwise null.
+ */
+ApeRoom *ape_world_get_first_room_( ApeWorld *world );
+
 void ape_register_world_console_variables_( void );
 
 void ape_world_node_generate_bounds_( ApeWorldNode *root );
+
+void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage );
+void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
+void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes

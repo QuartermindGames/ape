@@ -33,6 +33,7 @@ namespace forge
 		long on_close_editor( FXObject *, FXSelector, void * );
 
 		long on_toggle_console( FXObject *, FXSelector, void * );
+		long on_toggle_node_volumes( FXObject *, FXSelector, void * );
 
 		Project *GetProject() { return currentProject; }
 
@@ -55,6 +56,7 @@ namespace forge
 			ID_ABOUT,
 
 			ID_TOGGLE_CONSOLE,
+			ID_TOGGLE_NODE_VOLUMES,
 
 			ID_PROJECT_PACKAGE,
 

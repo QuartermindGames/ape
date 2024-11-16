@@ -33,8 +33,6 @@ typedef struct ApeModelVertexWeight
 	unsigned int    numWeights;
 } ApeModelVertexWeight;
 
-#define APE_MODEL_MAX_SUBMESHES ( APE_FORMAT_MODEL_MAX_TRIANGLES / 2 )
-
 typedef struct ApeModelMesh
 {
 	ApeMaterial         *material;
@@ -57,5 +55,14 @@ typedef struct ApeModel
 
 	ApeMemoryReference reference;
 } ApeModel;
+
+typedef struct ApeModelNode
+{
+	// This should always come first!
+	ApeWorldNode base;
+
+	PLPath    modelPath;
+	ApeModel *model;
+} ApeModelNode;
 
 PL_EXTERN_C_END

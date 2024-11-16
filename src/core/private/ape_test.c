@@ -5,7 +5,8 @@
 #include "ape_private.h"
 
 #include "model/model.h"
-#include "client/renderer/renderer.h"
+#include "game/game_public.h"
+#include "world/world.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Models
@@ -13,77 +14,37 @@
 
 #if !defined( NDEBUG )
 
-static ApeModel *testModel;
-
 static void test_model_command( unsigned int argc, char **argv )
 {
-	// if no argument provided and a test model is active, release it
-	if ( argc == 1 && testModel )
+	ApeWorld *world = ss_game_get_current_world();
+	if ( world == nullptr )
 	{
-		ape_model_release( testModel );
-		testModel = nullptr;
+		ape_warning_( "No world loaded, please create a world first!\n" );
 		return;
 	}
 
-	const char *modelPath = ( argc == 1 ) ? "models/elite.mdl.n" : argv[ 1 ];
-	testModel             = ape_model_load( modelPath );
-	if ( testModel == nullptr )
+	ApeRoom *room = ape_world_get_first_room_( world );
+	if ( room == nullptr )
 	{
-		ape_warning_( "Failed to load the specified model (%s)!\n", modelPath );
-	}
-}
-
-#endif
-
-static void draw_model_( ApeCamera *camera, ApeLight *light )
-{
-#if !defined( NDEBUG )
-
-	if ( testModel == nullptr )
-	{
+		ape_warning_( "World has no rooms!\n" );
 		return;
 	}
 
-	PlPushMatrix();
-	PlLoadIdentityMatrix();
-
-	ApeModelAnimationState animationState = {};
-	ape_model_draw( testModel, &animationState, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
-
-	PlPopMatrix();
-
-#endif
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-
-void ape_test_draw_( ApeCamera *camera )
-{
-#if 1
-	ape_rendererState_.ambience = PL_COLOURF32( 0.35f, 0.35f, 0.35f, 1.0f );
-	draw_model_( camera, nullptr );
-	ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
-
-	PlgDepthMask( false );
-
-	ape_rendererState_.overrideBlendMode = true;
-	ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
-	ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
-
-	uint       numLights;
-	ApeLight **lights = ape_camera_get_visible_lights_( camera, &numLights );
-	for ( uint i = 0; i < numLights; ++i )
+	ApeWorldNode *modelNode = ape_world_node_get_child_by_name( APE_WORLD_NODE( room ), "test_model" );
+	if ( modelNode != nullptr )
 	{
-		draw_model_( camera, lights[ i ] );
+		ape_world_node_destroy( modelNode );
+		return;
 	}
 
-	ape_rendererState_.overrideBlendMode = false;
-	ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
-
-	PlgDepthMask( true );
-#endif
+	const char *modelPath = ( argc == 1 ) ? "models/characters/elite.mdl.n" : argv[ 1 ];
+	ape_model_node_create( APE_WORLD_NODE( room ), "test_model", modelPath );
 }
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 void ape_test_register_commands_()
 {

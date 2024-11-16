@@ -2,7 +2,9 @@
 
 #include "ape_private.h"
 #include "renderer.h"
+
 #include "world/world.h"
+#include "model/model.h"
 
 //TODO: eventually we should do away with this
 #define MAX_MATERIALS_PER_PASS 256
@@ -49,12 +51,6 @@ static void draw_face_wireframe( ApeWorldFace *face, ApeCamera *camera )
 
 static void draw_room_wireframe( ApeRoom *room, ApeCamera *camera )
 {
-	uint           numFaces;
-	ApeWorldFace **faces = ape_world_room_get_faces_( room, &numFaces );
-	for ( uint j = 0; j < numFaces; ++j )
-	{
-		draw_face_wireframe( faces[ j ], camera );
-	}
 }
 
 /**
@@ -63,7 +59,7 @@ static void draw_room_wireframe( ApeRoom *room, ApeCamera *camera )
  * it in such a mode ourselves. This is mostly for the sake of the
  * editor.
  */
-void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera )
+void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera )
 {
 	assert( ( camera != NULL ) && ( world != NULL ) );
 
@@ -256,19 +252,39 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 	}
 }
 
-static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
+static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light )
 {
-	if ( ( !ambienceOnly && light == NULL ) /*|| ( light != NULL && !PlIsPointIntersectingAabb( &room->bounds, light->position ) )*/ )
+	unsigned int   num;
+	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &num );
+	for ( unsigned int i = 0; i < num; ++i )
+	{
+		if ( visibleNodes[ i ]->type != APE_WORLD_NODE_TYPE_MODEL )
+		{
+			continue;
+		}
+
+		ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
+		ape_model_draw( modelNode->model, &( ApeModelAnimationState ){}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
+	}
+}
+
+static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage )
+{
+	if ( ( !( stage == APE_RENDERER_PASS_DEPTH_PREPASS ) && light == NULL ) )
 	{
 		return;
 	}
 
 	COM_PROFILE_FUNCTION_START();
 
-	if ( ambienceOnly )
+	if ( stage == APE_RENDERER_PASS_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
 	}
+
+	// draw other node types
+	//TODO: all this needs sorting for transparency... temporary!!!
+	draw_visible_camera_nodes( camera, light );
 
 	update_mesh_cache_( room );
 
@@ -282,7 +298,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool a
 		assert( material != nullptr );
 
 		// blended materials get drawn later
-		if ( alpha != ape_material_is_blended( material ) )
+		if ( ( stage == APE_RENDERER_PASS_TRANSLUCENT ) != ape_material_is_blended( material ) )
 		{
 			continue;
 		}
@@ -311,7 +327,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool a
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
 
-	if ( ambienceOnly )
+	if ( stage == APE_RENDERER_PASS_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
@@ -466,9 +482,9 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha )
+void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage )
 {
-	if ( ambienceOnly && ape_config_.renderer.skipAmbience )
+	if ( ( stage == APE_RENDERER_PASS_DEPTH_PREPASS ) && ape_config_.renderer.skipAmbience )
 	{
 		return;
 	}
@@ -484,7 +500,7 @@ void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
-	draw_room( room, camera, light, ambienceOnly, alpha );
+	draw_room( room, camera, light, stage );
 
 	PlPopMatrix();
 

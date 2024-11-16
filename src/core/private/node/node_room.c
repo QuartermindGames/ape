@@ -20,7 +20,7 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	return room;
 }
 
-void ape_room_destroy_( void *data, ApeWorldNode *parent )
+static void destroy_room( void *data, ApeWorldNode *parent )
 {
 	ApeRoom *self = ( ApeRoom * ) data;
 
@@ -137,7 +137,7 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 const ApeWorldNodeClass ape_roomClass = {
         .identifier          = "room",
         .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
-        .destroyFunction     = ape_room_destroy_,
+        .destroyFunction     = destroy_room,
         .serializeFunction   = ape_room_serialize_,
         .deserializeFunction = ape_room_deserialize_,
 };

@@ -271,11 +271,6 @@ typedef struct ApeWorld
 /// \return New world instance.
 ApeWorld *ape_world_create( void );
 
-// TODO: move these under the renderer sub-system
-void ape_world_draw_wireframe( ApeWorld *world, ApeCamera *camera );
-void ape_world_draw( ApeCamera *camera, ApeLight *light, bool ambienceOnly, bool alpha );
-void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
-
 void ape_world_set_global_defaults( ApeWorld *level );
 
 /**

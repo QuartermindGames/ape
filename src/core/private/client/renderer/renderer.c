@@ -411,7 +411,7 @@ static void render_transparent_world( ApeCamera *camera )
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw( camera, lights[ i ], false, true );
+		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_TRANSLUCENT );
 
 		ape_rendererState_.overrideBlendMode = false;
 		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
@@ -421,7 +421,7 @@ static void render_transparent_world( ApeCamera *camera )
 static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 {
 	// Ambient pass
-	ape_world_draw( camera, nullptr, true, false );
+	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_DEPTH_PREPASS );
 
 	PlgDepthMask( false );
 
@@ -508,7 +508,7 @@ static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw( camera, lights[ i ], false, false );
+		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_OPAQUE );
 
 		ape_rendererState_.overrideBlendMode = false;
 		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
@@ -555,24 +555,18 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 				default:
 					break;
 				case APE_CAMERA_DRAW_MODE_WIREFRAME:
-					ape_world_draw_wireframe( world, camera );
+					ape_world_draw_wireframe_( world, camera );
 					break;
 				case APE_CAMERA_DRAW_MODE_SOLID:
 				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw( camera, nullptr, true, false );
-					ape_world_draw( camera, nullptr, true, true );
+					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_DEPTH_PREPASS );
+					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_TRANSLUCENT );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
 					render_solid_world( camera, viewport );
 					render_transparent_world( camera );
 					break;
 			}
-
-
-#if !defined( NDEBUG )
-			void ape_test_draw_( ApeCamera * camera );
-			ape_test_draw_( camera );
-#endif
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );
