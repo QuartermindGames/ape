@@ -3,6 +3,7 @@
 #include "forge_window_main.h"
 #include "forge_about_dialog.h"
 #include "forge_model_editor.h"
+#include "forge_browser_materials.h"
 
 #include "forge_editor_world.h"
 #include "forge_editor_material.h"
@@ -311,6 +312,17 @@ long forge::MainWindow::on_toggle_node_volumes( FX::FXObject *object, FX::FXSele
 {
 	PlSetConsoleVariableByName( "world.showNodeVolumes", ( ( FXMenuCheck * ) object )->getCheck() ? "true" : "false" );
 	return TRUE;
+}
+
+void forge::MainWindow::open_material_browser()
+{
+	if ( materialBrowser == nullptr )
+	{
+		materialBrowser = new MaterialBrowser( this );
+		materialBrowser->create();
+	}
+
+	materialBrowser->show();
 }
 
 /**

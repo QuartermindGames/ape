@@ -8,6 +8,7 @@
 
 namespace forge
 {
+	class MaterialBrowser;
 	class MainWindow : public FXMainWindow
 	{
 		FXDECLARE( MainWindow )
@@ -34,6 +35,8 @@ namespace forge
 
 		long on_toggle_console( FXObject *, FXSelector, void * );
 		long on_toggle_node_volumes( FXObject *, FXSelector, void * );
+
+		void open_material_browser();
 
 		Project *GetProject() { return currentProject; }
 
@@ -91,6 +94,8 @@ namespace forge
 
 	private:
 		FXMenuCommand *closeEditorCommand;
+
+		MaterialBrowser *materialBrowser{};
 
 	public:
 		FXTabItem *get_active_tab();

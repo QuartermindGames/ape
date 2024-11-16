@@ -169,6 +169,8 @@ PLVector3   acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 
 PLVector4   acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback );
 PLColourF32 acm_get_colour_f32( AcmBranch *root, const char *name, const PLColourF32 *fallback );
 
+AcmBranch *acm_linear_lookup( AcmBranch *root, const char *name );
+
 AcmBranch *acm_push_branch( AcmBranch *parent, AcmBranch *child );
 AcmBranch *acm_push_object( AcmBranch *node, const char *name );
 AcmBranch *acm_push_string( AcmBranch *parent, const char *name, const char *var, bool conditional );

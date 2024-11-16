@@ -7,6 +7,7 @@
 #include "forge_editor_world.h"
 #include "forge/forge_viewport_world.h"
 #include "common_project.h"
+#include "forge_window_main.h"
 
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
@@ -24,6 +25,8 @@ worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_UP, forge::WorldEditor::on_shift_grid ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_DOWN, forge::WorldEditor::on_shift_grid ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_ALIGN, forge::WorldEditor::on_shift_grid ),
+
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_MATERIAL_BROWSER, forge::WorldEditor::on_material_browser ),
 };
 FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
@@ -52,8 +55,11 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
 	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/trash.gif" ), this, ID_ROOM_DELETE );
-	new FXVerticalSeparator( toolbar );
 
+	new FXVerticalSeparator( toolbar );
+	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
+
+	new FXVerticalSeparator( toolbar );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_vertex.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
@@ -338,6 +344,12 @@ void forge::WorldEditor::set_active_room( ApeRoom *room )
 	}
 
 	activeRoom = room;
+}
+
+long forge::WorldEditor::on_material_browser( FX::FXObject *, FX::FXSelector, void * )
+{
+	mainWindow->open_material_browser();
+	return TRUE;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

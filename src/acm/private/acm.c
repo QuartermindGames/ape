@@ -582,6 +582,26 @@ PLColourF32 acm_get_colour_f32( AcmBranch *root, const char *name, const PLColou
 	return PlVector4ToColourF32( &v );
 }
 
+AcmBranch *acm_linear_lookup( AcmBranch *root, const char *name )
+{
+	if ( root->name.buf != NULL && ( pl_strcasecmp( root->name.buf, name ) == 0 ) )
+	{
+		return root;
+	}
+
+	AcmBranch *child;
+	PL_ITERATE_LINKED_LIST( child, AcmBranch, root->linkedList, i )
+	{
+		AcmBranch *c = acm_linear_lookup( child, name );
+		if ( c != NULL )
+		{
+			return c;
+		}
+	}
+
+	return NULL;
+}
+
 /******************************************/
 
 AcmBranch *acm_push_new_branch( AcmBranch *parent, const char *name, AcmPropertyType propertyType, AcmPropertyType childType )

@@ -174,7 +174,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
  * Can be used to see what a texture looks like without loading the whole
  * thing into memory if material is loaded with 'preview'.
  */
-PLGTexture *ape_material_get_preview_texture( ApeMaterial *material );
+PLImage *ape_material_get_preview( ApeMaterial *material );
 
 unsigned int ape_material_get_flags( const ApeMaterial *self );
 

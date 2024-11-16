@@ -22,8 +22,11 @@ typedef struct ApeMaterial
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
 	uint              numPasses;
 	bool              isCached;// if false, it's just the preview
-	PLGTexture       *preview; // preview utilised for editor
 	PLLinkedListNode *node;
+
+#if !defined( APE_NO_EDITOR )
+	PLImage *preview;// preview utilised for editor
+#endif
 
 	int8_t surfaceType;
 
@@ -123,7 +126,7 @@ void ape_shutdown_materials_( void )
 		{
 			/* and now destroy the list */
 			PlDestroyLinkedList( materials[ i ] );
-			materials[ i ] = NULL;
+			materials[ i ] = nullptr;
 		}
 		else
 		{
@@ -143,10 +146,12 @@ const char *ape_material_get_path( const ApeMaterial *material )
 	return material->path;
 }
 
-PLGTexture *ape_material_get_preview_texture( ApeMaterial *material )
+#if !defined( APE_NO_EDITOR )
+PLImage *ape_material_get_preview( ApeMaterial *material )
 {
 	return material->preview;
 }
+#endif
 
 uint ape_material_get_flags( const ApeMaterial *self )
 {
@@ -594,26 +599,12 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	}
 
 	/* now handle any specific parameters the material provides */
-	if ( ( subNode = acm_get_child_by_name( root, "textureScroll" ) ) != NULL )
+	materialPass->textureScroll = acm_get_vector2( root, "textureScroll", &PL_VECTOR2( 0.0f, 0.0f ) );
+	materialPass->textureOffset = acm_get_vector2( root, "textureOffset", &PL_VECTOR2( 0.0f, 0.0f ) );
+	materialPass->textureScale  = acm_get_vector2( root, "textureScale", &PL_VECTOR2( 1.0f, 1.0f ) );
+	if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
 	{
-		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScroll, 2 );
-	}
-	if ( ( subNode = acm_get_child_by_name( root, "textureOffset" ) ) != NULL )
-	{
-		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureOffset, 2 );
-	}
-	if ( ( subNode = acm_get_child_by_name( root, "textureScale" ) ) != nullptr )
-	{
-		acm_branch_get_float32_array( subNode, ( float * ) &materialPass->textureScale, 2 );
-		if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
-		{
-			ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
-		}
-	}
-	else
-	{
-		materialPass->textureScale.x = 1.0f;
-		materialPass->textureScale.y = 1.0f;
+		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
 	}
 
 	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
@@ -629,14 +620,53 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 
 static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool preview )
 {
+#if !defined( APE_NO_EDITOR )
 	// see if the preview texture is specified
 	if ( material->preview == NULL )
 	{
-		material->preview          = previewFallbackTexture;
-		const char *previewTexture = acm_get_string( root, "previewTexture", nullptr );
-		if ( previewTexture != NULL )
+		const char *path = acm_get_string( root, "previewTexture", nullptr );
+		if ( path != NULL )
 		{
-			material->preview = ape_texture_load_direct_( previewTexture, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+			material->preview = PlLoadImage( path );
+		}
+		else
+		{
+			// the painful way...
+			AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
+			if ( diffuseNode != nullptr )
+			{
+				PLPath buf;
+				if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) == ND_ERROR_SUCCESS )
+				{
+					material->preview = PlLoadImage( buf );
+				}
+				else
+				{
+					ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", material->path );
+				}
+			}
+			else
+			{
+				ape_warning_( "Failed to find preview texture to use under material (%s)!\n", material->path );
+			}
+		}
+
+		if ( material->preview != nullptr )
+		{
+			PLImage *newPreview = PlResizeImage( material->preview, 128, 128 );
+			if ( newPreview != nullptr )
+			{
+				PlDestroyImage( material->preview );
+				material->preview = newPreview;
+			}
+			else
+			{
+				ape_warning_( "Failed to resize preview for material (%s): %s\n", material->path, PlGetError() );
+			}
+		}
+		else
+		{
+			ape_warning_( "Failed to load preview image for material (%s): %s\n", material->path, PlGetError() );
 		}
 	}
 
@@ -645,6 +675,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	{
 		return material;
 	}
+#endif
 
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
@@ -984,11 +1015,12 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	}
 
 	material = PL_NEW( ApeMaterial );
+	snprintf( material->path, sizeof( material->path ), "%s", path );
+
 	parse_material( material, root, preview );
 
 	acm_branch_destroy( root );
 
-	snprintf( material->path, sizeof( material->path ), "%s", path );
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
 	ape_memory_setup_reference( material->path, APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
@@ -1100,6 +1132,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		PlgSetCullMode( cullMode );
 
 		//TODO: breaks crap if called... :(
+		//		need to keep track of global requested state, and override
 		//PlgDepthMask( curPass->depthTest );
 
 		// we have an awkward check for wireframe here because we don't want to just blindly handle it globally,
