@@ -148,6 +148,8 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 
 		SDL_GL_MakeCurrent( sdlWindow, sdlGLContext );
 		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
+
+		SDL_GL_SetSwapInterval( 0 );
 	}
 
 	// Okay, so apparently setting borderless fullscreen under Windows is messing around with the display...
@@ -417,13 +419,21 @@ static bool initialize_display( void )
 	unsigned int driverMode;
 	const char  *driverName = acm_get_string( shellConfig, "shell.driver", "opengl" );
 	if ( strcmp( driverName, "opengl" ) == 0 )
+	{
 		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
+	}
 	else if ( strcmp( driverName, "vulkan" ) == 0 )
+	{
 		driverMode = SS_SHELL_GRAPHICS_MODE_VULKAN;
+	}
 	else if ( strcmp( driverName, "software" ) == 0 )
+	{
 		driverMode = SS_SHELL_GRAPHICS_MODE_SOFTWARE;
+	}
 	else
+	{
 		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
+	}
 
 	const char *windowTitle = com_project_get_name();
 	if ( windowTitle == NULL )
@@ -520,7 +530,9 @@ int launcher_initialize( int argc, char **argv )
 	{
 		const char *path = PlGetCommandLineArgumentValue( "/log" );
 		if ( path == NULL )
+		{
 			path = "log.txt";
+		}
 
 		PlSetupLogOutput( path );
 	}
@@ -529,7 +541,9 @@ int launcher_initialize( int argc, char **argv )
 	Print( "Log output initialized!\n" );
 
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
+	{
 		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
+	}
 
 	com_initialize();
 
