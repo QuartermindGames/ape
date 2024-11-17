@@ -189,7 +189,7 @@ void ape_initialize_gui_( void )
 
 	ape_gui_panel_set_visible( rootPanel, true );
 
-	baseGuiMat = ape_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_GROUP_WORLD, false, false );
+	baseGuiMat = ape_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_GROUP_WORLD, false );
 	if ( baseGuiMat == NULL )
 	{
 		ape_error_( true, "Failed to cache base material for ui!\n" );

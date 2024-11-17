@@ -106,7 +106,7 @@ static void initialize_vector_interface()
 static bool setup_vector_instance( ApeEditorInstance *self )
 {
 	VectorEditor *vector   = PL_NEW( VectorEditor );
-	vector->cursorMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	vector->cursorMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_EDITOR, true );
 
 	self->grid.scale = 64;
 

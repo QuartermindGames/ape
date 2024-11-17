@@ -198,7 +198,7 @@ static void compute_brush_bounds( ApeBrush *self )
 	self->base.bounds.absOrigin = PlGetAabbAbsOrigin( &self->base.bounds, self->base.position );
 }
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea )
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material )
 {
 	// extrude and build the brush geometry from the given polygon shape
 	if ( numVertices < 3 )
@@ -262,7 +262,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].parent = self;
 		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
 
-		self->faces[ i ].material      = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
+		self->faces[ i ].material      = material;
 		self->faces[ i ].materialScale = PL_VECTOR2( 8.0f, 8.0f );
 
 		compute_brush_face_normal( &self->faces[ i ] );
@@ -415,7 +415,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 			const char *str;
 			if ( ( str = acm_get_string( branch, "material", nullptr ) ) != nullptr )
 			{
-				self->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true, false );
+				self->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true );
 			}
 			else
 			{

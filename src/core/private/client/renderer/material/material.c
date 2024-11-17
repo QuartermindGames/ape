@@ -14,19 +14,13 @@ static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
 static PLGTexture *specularFallbackTexture;
 static PLGTexture *normalFallbackTexture;
-static PLGTexture *previewFallbackTexture;
 
 typedef struct ApeMaterial
 {
 	char              path[ PL_SYSTEM_MAX_PATH ];
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
 	uint              numPasses;
-	bool              isCached;// if false, it's just the preview
 	PLLinkedListNode *node;
-
-#if !defined( APE_NO_EDITOR )
-	PLImage *preview;// preview utilised for editor
-#endif
 
 	int8_t surfaceType;
 
@@ -85,7 +79,6 @@ void ape_initialize_materials_( void )
 
 	normalFallbackTexture   = ape_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
 	specularFallbackTexture = ape_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
-	previewFallbackTexture  = ape_texture_load_direct_( "materials/editor/no_preview.png", PLG_TEXTURE_FILTER_NEAREST );
 
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
@@ -101,7 +94,7 @@ void ape_initialize_materials_( void )
 	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		assert( *defaultMaterialPaths[ i ] != '\0' );
-		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false, false );
+		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false );
 		if ( defaultMaterials[ i ] == NULL )
 		{
 			ape_error_( true, "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
@@ -145,13 +138,6 @@ const char *ape_material_get_path( const ApeMaterial *material )
 {
 	return material->path;
 }
-
-#if !defined( APE_NO_EDITOR )
-PLImage *ape_material_get_preview( ApeMaterial *material )
-{
-	return material->preview;
-}
-#endif
 
 uint ape_material_get_flags( const ApeMaterial *self )
 {
@@ -618,65 +604,63 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	 * a case where we only want to use the shader defaults? */
 }
 
-static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool preview )
+PLImage *ape_material_load_preview( const char *path )
 {
-#if !defined( APE_NO_EDITOR )
-	// see if the preview texture is specified
-	if ( material->preview == NULL )
+	AcmBranch *root = acm_load_file( path, "material" );
+	if ( root == nullptr )
 	{
-		const char *path = acm_get_string( root, "previewTexture", nullptr );
-		if ( path != NULL )
-		{
-			material->preview = PlLoadImage( path );
-		}
-		else
-		{
-			// the painful way...
-			AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
-			if ( diffuseNode != nullptr )
-			{
-				PLPath buf;
-				if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) == ND_ERROR_SUCCESS )
-				{
-					material->preview = PlLoadImage( buf );
-				}
-				else
-				{
-					ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", material->path );
-				}
-			}
-			else
-			{
-				ape_warning_( "Failed to find preview texture to use under material (%s)!\n", material->path );
-			}
-		}
-
-		if ( material->preview != nullptr )
-		{
-			PLImage *newPreview = PlResizeImage( material->preview, 128, 128 );
-			if ( newPreview != nullptr )
-			{
-				PlDestroyImage( material->preview );
-				material->preview = newPreview;
-			}
-			else
-			{
-				ape_warning_( "Failed to resize preview for material (%s): %s\n", material->path, PlGetError() );
-			}
-		}
-		else
-		{
-			ape_warning_( "Failed to load preview image for material (%s): %s\n", material->path, PlGetError() );
-		}
+		ape_warning_( "Failed to load material (%s) for preview!\n", path );
+		return nullptr;
 	}
 
-	// If it's just the preview we want, then stop here
-	if ( preview )
+	PLImage    *preview;
+	const char *previewPath = acm_get_string( root, "previewTexture", nullptr );
+	if ( previewPath != NULL )
 	{
-		return material;
+		preview = PlLoadImage( previewPath );
 	}
-#endif
+	else
+	{
+		// the painful way...
+		AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
+		if ( diffuseNode == nullptr )
+		{
+			ape_warning_( "Failed to find preview texture to use under material (%s)!\n", path );
+			return nullptr;
+		}
 
+		PLPath buf;
+		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ND_ERROR_SUCCESS )
+		{
+			ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
+			return nullptr;
+		}
+
+		preview = PlLoadImage( buf );
+	}
+
+	if ( preview == nullptr )
+	{
+		ape_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
+		return nullptr;
+	}
+
+	PLImage *newPreview = PlResizeImage( preview, 128, 128 );
+	if ( newPreview != nullptr )
+	{
+		PlDestroyImage( preview );
+		preview = newPreview;
+	}
+	else
+	{
+		ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
+	}
+
+	return preview;
+}
+
+static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
+{
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
 	AcmBranch *node;
@@ -727,8 +711,6 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root, bool
 	{
 		ape_warning_( "No passes specified for material!\n" );
 	}
-
-	material->isCached = true;
 
 	return material;
 }
@@ -980,32 +962,18 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 }
 
-ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback, bool preview )
+ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback )
 {
 	/* check if it's already cached */
 	ApeMaterial *material = get_material( path, group );
 	if ( material != NULL )
 	{
-		// If it's not cached, and we're not asking for the preview, load the full thing
-		if ( !material->isCached && !preview )
-		{
-			AcmBranch *root = acm_load_file( path, "material" );
-			if ( root != NULL )
-			{
-				parse_material( material, root, false );
-				acm_branch_destroy( root );
-			}
-			else
-			{
-				ape_warning_( "Failed to cache material, \"%s\" (%s)!\n", path, acm_get_error_message() );
-			}
-		}
 		ape_memory_add_reference( &material->mem );
 		return material;
 	}
 
 	/* fallback should be optional, as in some cases we might actually care */
-	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : NULL;
+	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : nullptr;
 
 	AcmBranch *root = acm_load_file( path, "material" );
 	if ( root == NULL )
@@ -1017,7 +985,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	material = PL_NEW( ApeMaterial );
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 
-	parse_material( material, root, preview );
+	parse_material( material, root );
 
 	acm_branch_destroy( root );
 
@@ -1077,14 +1045,6 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		{
 			material = defaultMaterials[ APE_MATERIAL_DEFAULT_VERTEX ];
 		}
-	}
-
-	// If it's not had a full cache, use the fallback,
-	// though ideally this shouldn't happen!
-	assert( material->isCached );
-	if ( !material->isCached )
-	{
-		material = defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ];
 	}
 
 	if ( ape_rendererState_.overrideBlendMode )

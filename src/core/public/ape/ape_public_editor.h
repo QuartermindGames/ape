@@ -97,9 +97,9 @@ void               ape_editor_instance_cleanup( ApeEditorInstance *self );
 void               ape_editor_set_active_instance( ApeEditorInstance *self );
 ApeEditorInstance *ape_editor_get_active_instance( void );
 
-void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
+AcmBranch *ape_editor_get_config();
 
-ApeMaterial **ape_editor_get_available_materials( unsigned int *numMaterials );
+void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
 
 PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst );
 void     *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
@@ -146,7 +146,7 @@ void ape_grid_move_backward( ApeEditorGrid *self );
  * @param self 	Pointer to the `ApeEditorInstance` which holds the polygon points and other relevant data.
  * @return 		A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
  */
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self );
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath );
 
 /**
  * This function decreases the number of points in the polygon managed by the

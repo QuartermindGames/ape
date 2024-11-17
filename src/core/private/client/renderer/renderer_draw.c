@@ -322,7 +322,7 @@ void ape_draw_initialize_debug_mesh_()
 		ape_error_( true, "Failed to create debug draw mesh: %s\n", PlGetError() );
 	}
 
-	debugDrawMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_GLOBAL, false, false );
+	debugDrawMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_GLOBAL, false );
 	if ( debugDrawMaterial == nullptr )
 	{
 		ape_error_( true, "Failed to cache debug draw material!\n" );

@@ -18,14 +18,14 @@ static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
 static void cache_node_icons( void )
 {
-	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true );
 	nodeIcons[ APE_WORLD_NODE_TYPE_MODEL ]  = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
 	nodeIcons[ APE_WORLD_NODE_TYPE_ROOT ]   = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
-	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ]   = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ]  = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ]  = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
-	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true, false );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ]   = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ]  = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ]  = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true );
 
 	// root is weird; as in theory, you shouldn't see it...
 	nodeIcons[ APE_WORLD_NODE_TYPE_ROOT ] = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
@@ -45,70 +45,9 @@ static void release_node_icons( void )
 	}
 }
 
-static PLVectorArray *materialsArray;// ApeMaterial
-
-static void cache_material_preview_callback( const char *path, void *user )
+AcmBranch *ape_editor_get_config()
 {
-	ApeMaterial *material = ape_material_cache( path, APE_CACHE_GROUP_EDITOR, false, true );
-	if ( material == NULL )
-	{
-		return;
-	}
-
-	PlPushBackVectorArrayElement( materialsArray, material );
-}
-
-static int compare_materials( const void *a, const void *b )
-{
-	const char *strA = ape_material_get_path( ( ApeMaterial * ) a );
-	const char *strB = ape_material_get_path( ( ApeMaterial * ) b );
-	return strcmp( strA, strB );
-}
-
-static void cache_preview_materials( void )
-{
-	ape_print_( "Attempting to cache preview materials...\n" );
-
-	materialsArray = PlCreateVectorArray( 256 );
-	if ( materialsArray == NULL )
-	{
-		ape_error_( true, "Failed to create material array for editor: %s\n", PlGetError() );
-	}
-
-	// Cache all the materials in a preview state
-	AcmBranch *child = acm_get_child_by_name( editorConfigRoot, "materialPaths" );
-	if ( child == nullptr )
-	{
-		ape_warning_( "No material paths specified for editor!\n" );
-		return;
-	}
-
-	child = acm_get_first_child( child );
-	while ( child != nullptr )
-	{
-		PLPath buf;
-		acm_branch_get_string( child, buf, sizeof( buf ) );
-		PlScanDirectory( buf, "n", cache_material_preview_callback, true, NULL );
-		child = acm_get_next_child( child );
-	}
-
-	uint          numMaterials;
-	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
-	PRINT( "Found %u materials\n", numMaterials );
-
-	qsort( materials, numMaterials, sizeof( ApeMaterial * ), compare_materials );
-}
-
-static void release_preview_materials( void )
-{
-	uint          numMaterials;
-	ApeMaterial **materials = ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, &numMaterials );
-	for ( uint i = 0; i < numMaterials; ++i )
-	{
-		ape_material_release( materials[ i ] );
-	}
-
-	PlDestroyVectorArray( materialsArray );
+	return editorConfigRoot;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +107,6 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 			ape_error_( true, "Failed to create editor instance list: %s\n", PlGetError() );
 		}
 
-		cache_preview_materials();
 		cache_node_icons();
 	}
 
@@ -217,7 +155,6 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 		PlDestroyLinkedList( editorInstanceList );
 		editorInstanceList = nullptr;
 
-		release_preview_materials();
 		release_node_icons();
 	}
 
@@ -1033,16 +970,6 @@ bool ape_is_editor_active( void )
 	return ( ape_editor_get_active_instance() != nullptr );
 }
 
-ApeMaterial **ape_editor_get_available_materials( uint *numMaterials )
-{
-	if ( materialsArray == NULL )
-	{
-		return nullptr;
-	}
-
-	return ( ApeMaterial ** ) PlGetVectorArrayDataEx( materialsArray, numMaterials );
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 // Polygon Plotting
 // TODO: move into editor_world.c
@@ -1151,7 +1078,7 @@ static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices
 	return true;
 }
 
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath )
 {
 	if ( self->numPolygonPoints < 3 )
 	{
@@ -1193,9 +1120,20 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self )
 		vertices[ i ] = PlTransformVector3( &PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
 	}
 
-	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f, signedArea ) )
+	ApeMaterial *material;
+	if ( materialPath != nullptr )
+	{
+		material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+	}
+	else
+	{
+		material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
+	}
+
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f, signedArea, material ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
+		ape_material_release( material );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
 	}
@@ -1241,7 +1179,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		const PLVector2 *start = &self->polygonPoints[ 0 ];
 		if ( PlCompareVector2( start, &cursor ) )
 		{
-			ape_editor_brush_from_polygon( self );
+			ape_editor_brush_from_polygon( self, nullptr );
 			return true;
 		}
 	}

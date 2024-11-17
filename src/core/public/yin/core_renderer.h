@@ -147,11 +147,19 @@ ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial );
 const char *ape_material_get_path( const ApeMaterial *material );
 
 /**
+ * Loads a preview of the specified material, rather than loading the entire thing.
+ *
+ * @param path	Path to the specific material.
+ * @return 		Pointer to an image instance or null on fail.
+ */
+PLImage *ape_material_load_preview( const char *path );
+
+/**
  * Cache a new material into memory if not so already, otherwise
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
  */
-ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback, bool preview );
+ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback );
 
 /**
  * Releases a reference to the material, allowing it to clean up.
@@ -168,13 +176,6 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
  * so ideally you should always use this when drawing any mesh.
  */
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights );
-
-/**
- * Returns the texture representing a material.
- * Can be used to see what a texture looks like without loading the whole
- * thing into memory if material is loaded with 'preview'.
- */
-PLImage *ape_material_get_preview( ApeMaterial *material );
 
 unsigned int ape_material_get_flags( const ApeMaterial *self );
 

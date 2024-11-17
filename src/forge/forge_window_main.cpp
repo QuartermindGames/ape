@@ -223,7 +223,7 @@ long forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	ApeMaterial *material = ape_material_cache( filename.text(), APE_CACHE_GROUP_EDITOR, false, false );
+	ApeMaterial *material = ape_material_cache( filename.text(), APE_CACHE_GROUP_EDITOR, false );
 	if ( material == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to load material (%s)!", filename.text() );
@@ -323,6 +323,16 @@ void forge::MainWindow::open_material_browser()
 	}
 
 	materialBrowser->show();
+}
+
+const char *forge::MainWindow::get_active_material()
+{
+	if ( materialBrowser == nullptr )
+	{
+		return nullptr;
+	}
+
+	return materialBrowser->get_current();
 }
 
 /**

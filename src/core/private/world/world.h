@@ -176,6 +176,6 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea );
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
 
 PL_EXTERN_C_END

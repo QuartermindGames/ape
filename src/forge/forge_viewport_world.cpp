@@ -2,10 +2,12 @@
 // Purpose: Forge world viewport implementation.
 // Author:  Mark E. Sowden
 
+#include <condition_variable>
 #include "forge.h"
 #include "forge_viewport_world.h"
 #include "forge_editor_world.h"
 #include "ape/ape_public_model.h"
+#include "forge_window_main.h"
 
 FXDEFMAP( forge::WorldViewport )
 worldViewportMap[] = {
@@ -90,7 +92,7 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
 		{
-			ape_editor_brush_from_polygon( instance );
+			ape_editor_brush_from_polygon( instance, mainWindow->get_active_material() );
 			return TRUE;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;

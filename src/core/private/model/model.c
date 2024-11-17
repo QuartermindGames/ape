@@ -33,7 +33,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 		return nullptr;
 	}
 
-	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true, false );
+	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
 
 	AcmBranch *branch;
 	if ( ( branch = acm_get_child_by_name( root, "triangles" ) ) != NULL )

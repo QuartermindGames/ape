@@ -169,7 +169,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 		return NULL;
 	}
 
-	ApeMaterial *material = ape_material_cache( materialPath, 0, false, false );
+	ApeMaterial *material = ape_material_cache( materialPath, 0, false );
 	if ( material == NULL )
 	{
 		PlgDestroyMesh( mesh );

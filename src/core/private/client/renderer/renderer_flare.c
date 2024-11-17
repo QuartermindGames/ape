@@ -49,7 +49,7 @@ static const FlareElement     flareElements[ NUM_FLARE_ELEMENTS ] = {
 
 void ape_initialize_flares_( void )
 {
-	flareMaterial = ape_material_cache( flareMaterialPath, APE_CACHE_GROUP_GLOBAL, true, false );
+	flareMaterial = ape_material_cache( flareMaterialPath, APE_CACHE_GROUP_GLOBAL, true );
 }
 
 void ape_register_flare_console_variables_( void )

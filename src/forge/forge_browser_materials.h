@@ -11,7 +11,7 @@ namespace forge
 		explicit MaterialBrowser( FXWindow *parent );
 		inline ~MaterialBrowser() = default;
 
-		ApeMaterial *get_current();
+		const char *get_current();
 
 		void create() override;
 
@@ -19,6 +19,20 @@ namespace forge
 		inline MaterialBrowser() = default;
 
 	private:
+		struct MaterialPreview
+		{
+			std::string path;
+			PLImage    *icon;
+
+			inline ~MaterialPreview()
+			{
+				PlDestroyImage( icon );
+			}
+		};
+		std::vector< MaterialPreview * > materialPreviews;
+
+		static void cache_preview_callback( const char *path, void *user );
+
 		FXIconList *materialList;
 
 		std::map< std::string, ApeMaterial * > materialMap;

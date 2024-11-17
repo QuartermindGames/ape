@@ -36,7 +36,8 @@ namespace forge
 		long on_toggle_console( FXObject *, FXSelector, void * );
 		long on_toggle_node_volumes( FXObject *, FXSelector, void * );
 
-		void open_material_browser();
+		void        open_material_browser();
+		const char *get_active_material();
 
 		Project *GetProject() { return currentProject; }
 

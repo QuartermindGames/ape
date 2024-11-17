@@ -18,7 +18,7 @@ static void register_fxaa_console_variables( void )
 
 static bool setup_fxaa_effect( void )
 {
-	fxaaMaterial = ape_material_cache( "materials/post/fxaa.mat.n", APE_CACHE_GROUP_WORLD, false, false );
+	fxaaMaterial = ape_material_cache( "materials/post/fxaa.mat.n", APE_CACHE_GROUP_WORLD, false );
 	if ( fxaaMaterial == NULL )
 	{
 		return false;
