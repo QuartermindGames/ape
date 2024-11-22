@@ -50,13 +50,15 @@ typedef enum ApeEditorGeometryMode
 	APE_EDITOR_MAX_GEOMETRY_MODES
 } ApeEditorGeometryMode;
 
-#define APE_EDITOR_GRID_MAX_SIZE   256
-#define APE_EDITOR_GRID_MAX_POINTS ( APE_EDITOR_GRID_MAX_SIZE * APE_EDITOR_GRID_MAX_SIZE )
+#define APE_EDITOR_GRID_MAX_POINTS_ROW 256
+#define APE_EDITOR_GRID_MAX_POINTS     ( APE_EDITOR_GRID_MAX_POINTS_ROW * APE_EDITOR_GRID_MAX_POINTS_ROW )
 
 typedef struct ApeEditorGrid
 {
-	unsigned int scale;
-	PLMatrix4    transform;
+	unsigned int size;
+	unsigned int sizeScale;
+
+	PLMatrix4 transform;
 
 	bool     rebuildMesh;
 	PLGMesh *selectionMesh;
@@ -110,6 +112,7 @@ void      ape_editor_delete_selection( ApeEditorInstance *self );
 
 void ape_editor_toggle_faces( ApeEditorInstance *self );
 void ape_editor_toggle_other_faces( ApeEditorInstance *self );
+void ape_editor_flip_faces( ApeEditorInstance *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid
@@ -128,8 +131,6 @@ PLVector3 ape_grid_transform_point( ApeEditorGrid *self, const PLVector2 *point 
 
 void ape_grid_increase_size( void );
 void ape_grid_decrease_size( void );
-uint ape_grid_get_size( ApeEditorGrid *self );
-void ape_grid_set_visibility( ApeEditorGrid *self, bool visible );
 
 void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face );
 

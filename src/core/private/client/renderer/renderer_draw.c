@@ -357,14 +357,14 @@ void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour )
 	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
 }
 
-void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour )
+void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, float scale )
 {
 	PLVector3 direction = PlSubtractVector3( end, start );
 	direction           = PlNormalizeVector3( direction );
 
-	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, 0.5f ) );
-	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PL_VECTOR3( 0.0f, 0.0f, 1.0f ) ) ), 0.5f ) );
-	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PL_VECTOR3( 0.0f, 0.0f, 1.0f ), direction ) ), 0.5f ) );
+	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, scale ) );
+	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PL_VECTOR3( 0.0f, 0.0f, 1.0f ) ) ), scale ) );
+	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PL_VECTOR3( 0.0f, 0.0f, 1.0f ), direction ) ), scale ) );
 
 	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
 	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
@@ -426,9 +426,9 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale )
 void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale )
 {
 	//TODO: represent angles...
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ scale, 0.0f, 0.0f } ), PL_COLOUR_RED );
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN );
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ scale, 0.0f, 0.0f } ), PL_COLOUR_RED, 1.0f );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN, 1.0f );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE, 1.0f );
 }
 
 void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )

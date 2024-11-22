@@ -193,6 +193,7 @@ AcmBranch *acm_push_array_f32( AcmBranch *parent, const char *name, const float 
 AcmBranch *acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional );
 AcmBranch *acm_push_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional );
 AcmBranch *acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional );
+AcmBranch *acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional );
 
 /**
  * Returns a copy of the given branch, inc. all its children.

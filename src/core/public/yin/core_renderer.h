@@ -131,8 +131,10 @@ typedef enum ApeDefaultMaterial
 	APE_MATERIAL_DEFAULT_FALLBACK,// fallback for missing materials
 	APE_MATERIAL_DEFAULT_VERTEX,  // basic vertex, no texture
 	APE_MATERIAL_DEFAULT_SHADOW,  // material used per shadow volumes
-	APE_MATERIAL_DEFAULT_EDITOR,  // default material to use per new brushes
 	APE_MATERIAL_DEFAULT_HIDDEN,  // material to display when a surface is marked hidden
+
+	APE_MATERIAL_DEFAULT_EDITOR,          // default material to use per new brushes
+	APE_MATERIAL_DEFAULT_EDITOR_SELECTION,// used to highlight faces/objects that are selected
 
 	APE_MATERIAL_DEFAULT_DEBUG_NORMALS,
 
@@ -232,7 +234,7 @@ void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour );
  * @param end 		Point the line ends. Arrow will point in this direction.
  * @param colour	Colour of the line.
  */
-void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour );
+void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, float scale );
 
 /**
  * Draw a wireframe sphere at the given location.

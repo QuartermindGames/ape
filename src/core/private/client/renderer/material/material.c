@@ -1,6 +1,7 @@
 // Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <plcore/pl_linkedlist.h>
+#include <float.h>
 
 #include "ape_private.h"
 #include "../renderer.h"
@@ -21,6 +22,9 @@ typedef struct ApeMaterial
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
 	uint              numPasses;
 	PLLinkedListNode *node;
+
+	uint width;
+	uint height;
 
 	int8_t surfaceType;
 
@@ -86,8 +90,10 @@ void ape_initialize_materials_( void )
 	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
 	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
 	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
-	                [APE_MATERIAL_DEFAULT_EDITOR]   = "materials/editor/default_64.mat.n",
 	                [APE_MATERIAL_DEFAULT_HIDDEN]   = "materials/editor/hidden.mat.n",
+
+	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/editor/default_64.mat.n",//TODO: get rid of and make this configurable
+	                [APE_MATERIAL_DEFAULT_EDITOR_SELECTION] = "materials/engine/selection.mat.n",
 
 	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
 	        };
@@ -265,7 +271,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
  * Iterate through each of the parameters provided in the 'shaderParameters'
  * block of the material.
  */
-static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *root )
+static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *materialPass, AcmBranch *root )
 {
 	AcmBranch *node = acm_get_first_child( root );
 	while ( node != NULL )
@@ -500,8 +506,23 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
 					}
 
+					PLGTexture *texture = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
+					/* this sucks, but shaders only deal with a default "pass" rather than a whole material, so
+					 * it needs to be able to pass a null material... probably revisit this later. */
+					if ( material != nullptr )
+					{
+						if ( material->width < texture->w )
+						{
+							material->width = texture->w;
+						}
+						if ( material->height < texture->h )
+						{
+							material->height = texture->h;
+						}
+					}
+
+					materialVariable->data.ptr = texture;
 					materialVariable->type     = APE_MATERIAL_VAR_TEXTURE;
-					materialVariable->data.ptr = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
 					break;
 				}
 			}
@@ -527,7 +548,7 @@ static void parse_shader_parameters( ApeMaterialPass *materialPass, AcmBranch *r
 	}
 }
 
-void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *materialPass )
+void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	AcmBranch *subNode;
@@ -597,7 +618,7 @@ void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *material
 	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
-		parse_shader_parameters( materialPass, subNode );
+		parse_shader_parameters( material, materialPass, subNode );
 	}
 
 	/* not sure whether the above section should be required yet, there might be
@@ -679,7 +700,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 			*currentPass                   = programIndex->defaultPass;
 			currentPass->program           = programIndex;
 
-			ape_parse_material_pass_( node, currentPass );
+			ape_parse_material_pass_( material, node, currentPass );
 			if ( currentPass->blendMode[ 0 ] != PLG_BLEND_NONE || currentPass->blendMode[ 1 ] != PLG_BLEND_NONE )
 			{
 				material->flags |= APE_MATERIAL_FLAG_BLENDED;
@@ -877,12 +898,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
-		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &fogColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
 	{
-		float fogNear = ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear;
+		float fogNear = PlClamp( 0.0f, ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear, FLT_MAX );
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &fogNear, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )
@@ -893,12 +914,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
-		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL ) ? light->base.position : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
@@ -909,12 +930,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
-		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ){ 0.0f, 0.0f, 0.0f, 0.0f };
+		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->base.position : ( PLVector3 ){ 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->base.position : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
@@ -923,7 +944,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		PLColourF32 sunAmbience;
 		if ( ape_rendererState_.camera != NULL && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
 		{
-			sunAmbience = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+			sunAmbience = ( PLColourF32 ) { 1.0f, 1.0f, 1.0f, 1.0f };
 		}
 		else
 		{
@@ -1060,15 +1081,15 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
-		if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_FRONT )
+		if ( ape_rendererState_.cullMode == APE_RENDERER_CULL_MODE_FRONT )
 		{
 			cullMode = PLG_CULL_POSITIVE;
 		}
-		else if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_BACK )
+		else if ( ape_rendererState_.cullMode == APE_RENDERER_CULL_MODE_BACK )
 		{
 			cullMode = PLG_CULL_NEGATIVE;
 		}
-		else if ( ape_rendererState_.cullMode == SS_ARL_CULL_MODE_NONE )
+		else if ( ape_rendererState_.cullMode == APE_RENDERER_CULL_MODE_NONE )
 		{
 			cullMode = PLG_CULL_NONE;
 		}
@@ -1221,14 +1242,11 @@ void ape_tick_materials_( void )
 					continue;
 				}
 
-				PLGTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
-				if ( texture == nullptr )
-				{
-					continue;
-				}
-
-				float w = ( float ) texture->w;
-				float h = ( float ) texture->h;
+				// before it was operating by the current pass texture
+				// honestly this might not really be the best approach,
+				// with the former being better, will see...
+				float w = ( float ) material->width;
+				float h = ( float ) material->height;
 
 				PLVector2 scroll;
 				scroll = PlDivideVector2( material->passes[ j ].textureScroll, PL_VECTOR2( w, h ) );
@@ -1238,4 +1256,14 @@ void ape_tick_materials_( void )
 			}
 		}
 	}
+}
+
+uint ape_material_get_width( const ApeMaterial *self )
+{
+	return self->width;
+}
+
+uint ape_material_get_height( const ApeMaterial *self )
+{
+	return self->height;
 }

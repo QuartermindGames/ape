@@ -32,7 +32,7 @@ FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEd
 
 forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
     : EditorTab( owner, "Room Editor", forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ], APE_EDITOR_MODE_WORLD ),
-      _gridSizeTarget( this->instance.grid.scale ),
+      _gridSizeTarget( this->instance.grid.size ),
       _gridHideTarget( this->instance.grid.visible )
 {
 	auto *middleFrame = new FXVerticalFrame( owner, FRAME_RAISED | LAYOUT_FILL );

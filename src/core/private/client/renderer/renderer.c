@@ -36,21 +36,21 @@ typedef struct CaptureFrame
 	unsigned char *buf;
 } CaptureFrame;
 
-static bool                  useCaptureToQoi  = true;
-static unsigned int          captureQuality   = 90;
-static volatile bool         isCapturing      = false;
-static volatile unsigned int numCaptureFrames = 0;
+static bool                  useCaptureToQoi = true;
+static unsigned int          captureQuality  = 90;
+static volatile bool         isCapturing;
+static volatile unsigned int numCaptureFrames;
 
-static PLLinkedList *captureQueue = nullptr;//CaptureFrame
+static PLLinkedList *captureQueue;//CaptureFrame
 
 #define MAX_CAPTURE_THREADS 16
-static unsigned int    numCaptureThreads                    = 4;
-static pthread_mutex_t captureMutex                         = {};
-static pthread_t       captureThread[ MAX_CAPTURE_THREADS ] = {};
+static unsigned int    numCaptureThreads = 4;
+static pthread_mutex_t captureMutex;
+static pthread_t       captureThread[ MAX_CAPTURE_THREADS ];
 
 static void destroy_capture_frame( void *ptr )
 {
-	CaptureFrame *frame = ( CaptureFrame * ) ptr;
+	CaptureFrame *frame = ptr;
 	PL_DELETE( frame->buf );
 	PL_DELETE( frame );
 }
@@ -396,6 +396,10 @@ void ape_shutdown_renderer_( void )
 
 static void render_transparent_world( ApeCamera *camera )
 {
+	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+
+	PlgDepthMask( false );
+
 	unsigned int numLights;
 	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
 	for ( unsigned int i = 0; i < numLights; ++i )
@@ -411,26 +415,29 @@ static void render_transparent_world( ApeCamera *camera )
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_TRANSLUCENT );
+		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
 		ape_rendererState_.overrideBlendMode = false;
-		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 	}
+
+	PlgDepthMask( true );
 }
 
 static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 {
 	// Ambient pass
-	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_DEPTH_PREPASS );
+	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	PlgDepthMask( false );
 
 	unsigned int numLights;
 	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
-
 	for ( unsigned int i = 0; i < numLights; ++i )
 	{
-		assert( lights[ i ]->colour.a > 0.0f );
+		if ( lights[ i ]->colour.a <= 0.0f )
+		{
+			continue;
+		}
 
 		PlgClearBuffers( PLG_BUFFER_STENCIL );
 
@@ -473,12 +480,10 @@ static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )
 		{
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_NONE;
+			ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
 
 			if ( ape_config_.renderer.showShadowWireframe )
 			{
-				ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
-
 				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 				ape_world_draw_stencil_shadows_( camera, lights[ i ] );
 				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
@@ -501,24 +506,21 @@ static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
 			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
 
-			ape_rendererState_.cullMode = SS_ARL_CULL_MODE_DEFAULT;
+			ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_DEFAULT;
 		}
 
 		ape_rendererState_.overrideBlendMode = true;
 		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_OPAQUE );
+		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_FLAG_OPAQUE );
 
 		ape_rendererState_.overrideBlendMode = false;
-		ape_rendererState_.passStage         = APE_RENDERER_PASS_DEFAULT;
 
 		if ( drawShadows )
 		{
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 		}
-
-		ape_rendererPerformance_.numLights++;
 	}
 
 	PlgDepthMask( true );
@@ -533,7 +535,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	currentCamera = camera;
 
-	ape_rendererPerformance_.numLights = 0;
+	ape_camera_get_visible_lights_( camera, &ape_rendererPerformance_.numLights );
 
 	PlgDepthMask( true );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
@@ -559,8 +561,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 					break;
 				case APE_CAMERA_DRAW_MODE_SOLID:
 				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_DEPTH_PREPASS );
-					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_TRANSLUCENT );
+					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
+					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 					break;
 				case APE_CAMERA_DRAW_MODE_SHADED:
 					render_solid_world( camera, viewport );
@@ -571,8 +573,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
-
-	ape_rendererState_.passStage = APE_RENDERER_PASS_DEFAULT;
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
 	{

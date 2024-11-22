@@ -266,7 +266,7 @@ int main( int argc, char **argv )
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
 
-	forge::editorConfig = com_get_config( "editor" );
+	forge::editorConfig = com_get_config( "forge" );
 
 	const char *projectPath = acm_get_string( forge::editorConfig, "projectsPath", "projects" );
 	if ( projectPath != nullptr )
@@ -280,7 +280,7 @@ int main( int argc, char **argv )
 	setup_colours( app );
 	cache_icons( app );
 
-	glVisual = new FXGLVisual( &app, VISUAL_DOUBLEBUFFER );
+	glVisual = new FXGLVisual( &app, VISUAL_DEFAULT );
 
 	// create our editor window with it's GLContext etc., so we can then init our GL driver
 	forge::mainWindow = new forge::MainWindow( &app );

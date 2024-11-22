@@ -140,7 +140,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self )
 			continue;
 		}
 
-		ape_draw_debug_arrow( self->particles[ i - 1 ].position, self->particles[ i ].position, PL_COLOUR_MAGENTA );
+		ape_draw_debug_arrow( self->particles[ i - 1 ].position, self->particles[ i ].position, PL_COLOUR_MAGENTA, 1.0f );
 	}
 }
 

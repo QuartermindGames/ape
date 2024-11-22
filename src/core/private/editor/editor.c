@@ -201,13 +201,13 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 	{
 		ApeBrush *brush = selectedFace->parent;
 		assert( brush != nullptr );
-		for ( uint i = 0; i < brush->numFaces; ++i )
+		for ( uint j = 0; j < brush->numFaces; ++j )
 		{
-			ApeBrushFace *currentFace = &brush->faces[ i ];
+			ApeBrushFace *currentFace = &brush->faces[ j ];
 			bool          isSelected  = false;
 
 			ApeBrushFace *otherSelectedFace;
-			COM_ITERATE_LINKED_LIST( otherSelectedFace, self->selectedObjects, j )
+			COM_ITERATE_LINKED_LIST( otherSelectedFace, self->selectedObjects, k )
 			{
 				if ( currentFace == otherSelectedFace )
 				{
@@ -236,6 +236,15 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 				currentFace->flags |= APE_BRUSH_FACE_FLAG_HIDDEN;
 			}
 		}
+	}
+}
+
+void ape_editor_flip_faces( ApeEditorInstance *self )
+{
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	{
+		ape_brush_flip_face_( face );
 	}
 }
 
@@ -632,10 +641,10 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
-		for ( uint i = 0; i < face->numVertices; ++i )
+		for ( uint j = 0; j < face->numVertices; ++j )
 		{
-			const ApeBrushFaceVertex *v0 = face->edgeLoop[ i ];
-			const ApeBrushFaceVertex *v1 = ( i + 1 ) < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
+			const ApeBrushFaceVertex *v1 = ( j + 1 ) < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
 			PlgImmPushVertex( v0->position->x, v0->position->y, v0->position->z );
 			PlgImmColour( 0, 0, 255, 255 );
 			PlgImmPushVertex( v1->position->x, v1->position->y, v1->position->z );
@@ -758,8 +767,16 @@ void ape_editor_post_render_scene_()
 			render_plot_polygon( instance );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
+		{
+			ApeRoom *room = ape_camera_get_room( instance->camera );
+			if ( room != nullptr )
+			{
+				ape_room_draw_selected_( room, instance );
+			}
+
 			render_selected_faces( instance );
 			break;
+		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 			render_selected_objects( instance );
@@ -796,7 +813,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 		gui_font_get_string_pixel_size( font, 1.0f, id, size, &sw, nullptr );
 
 		float     depth;
-		PLVector2 screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, &depth, true );
+		PLVector2 screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 		if ( depth <= 0.0f )
 		{
 			continue;
@@ -887,7 +904,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 				static constexpr float scale = 16.0f;
 
 				PLVector3 worldPos  = ape_grid_transform_point( &editorInstance->grid, &pos );
-				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ){ 0, 0, viewport->width, viewport->height }, NULL, true );
+				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, NULL, true );
 				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
 			}
 		}
@@ -1130,7 +1147,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 	}
 
-	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.scale / 2.0f, signedArea, material ) )
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, signedArea, material ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
 		ape_material_release( material );

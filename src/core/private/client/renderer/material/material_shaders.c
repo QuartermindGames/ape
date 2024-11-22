@@ -229,7 +229,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		program->defaultPass.depthTest     = true;
 		program->defaultPass.textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
-		ape_parse_material_pass_( child, &program->defaultPass );
+		ape_parse_material_pass_( nullptr, child, &program->defaultPass );
 #pragma message "TODO: materials won't automatically inherit these default changes yet..."
 	}
 
@@ -457,7 +457,7 @@ void ape_initialize_shaders_( void )
 	isEnumeratingShaders = true;
 
 	ape_print_( "Scanning for shader programs...\n" );
-	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, false, NULL );
+	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, true, NULL );
 
 	isEnumeratingShaders = false;
 

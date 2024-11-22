@@ -14,6 +14,7 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_GRID_ALIGN, forge::WorldViewport::on_grid_align ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE, forge::WorldViewport::on_face_toggle ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE_OTHERS, forge::WorldViewport::on_face_toggle ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLIP, forge::WorldViewport::on_face_flip ),
 };
 FXIMPLEMENT( forge::WorldViewport, forge::Viewport, worldViewportMap, ARRAYNUMBER( worldViewportMap ) )
 
@@ -273,7 +274,7 @@ long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector
 
 			PLColourF32 colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 2.0f );
 			ape_create_light( ( ApeWorldNode * ) room, &pos,
-			                  &colour, 32.0f,
+			                  &colour, 128.0f,
 			                  APE_LIGHT_TYPE_OMNI,
 			                  APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 
@@ -288,7 +289,7 @@ long forge::WorldViewport::on_motion( FXObject *object, FXSelector selector, voi
 {
 	Viewport::on_motion( object, selector, ptr );
 
-	auto     *event = ( FXEvent     *) ptr;
+	auto     *event = ( FXEvent * ) ptr;
 	int const x     = event->win_x;
 	int const y     = event->win_y;
 
@@ -329,5 +330,14 @@ long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector selector, void
 		ape_editor_toggle_faces( instance );
 	}
 
+	return TRUE;
+}
+
+long forge::WorldViewport::on_face_flip( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+
+	ape_editor_flip_faces( instance );
 	return TRUE;
 }

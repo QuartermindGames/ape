@@ -34,6 +34,7 @@ namespace forge
 
 		long on_grid_align( FXObject *, FXSelector, void * );
 		long on_face_toggle( FXObject *, FXSelector, void * );
+		long on_face_flip( FXObject *, FXSelector, void * );
 
 	protected:
 		inline WorldViewport() = default;

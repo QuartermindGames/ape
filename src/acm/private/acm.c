@@ -817,6 +817,16 @@ AcmBranch *acm_push_vector4( AcmBranch *parent, const char *name, const PLVector
 	return acm_push_array_f32( parent, name, ( float * ) vector, 4 );
 }
 
+AcmBranch *acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional )
+{
+	if ( conditional && PlColour4fCompare( colour, &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f ) ) )
+	{
+		return NULL;
+	}
+
+	return acm_push_array_f32( parent, name, ( float * ) colour, 4 );
+}
+
 AcmBranch *acm_push_array_object( AcmBranch *parent, const char *name )
 {
 	return acm_push_new_branch( parent, name, ACM_PROPERTY_TYPE_ARRAY, ACM_PROPERTY_TYPE_OBJECT );
@@ -1075,7 +1085,7 @@ AcmBranch *acm_parse_file( PLFile *file, const char *objectType )
 		else
 		{
 			size_t      headerSize = strlen( ND_FORMAT_UTF8_HEADER );
-			const char *data       = ( const char       *) ( ( uint8_t       *) PlGetFileData( file ) + headerSize );
+			const char *data       = ( const char * ) ( ( uint8_t * ) PlGetFileData( file ) + headerSize );
 
 			length -= headerSize;
 			char *buf = PL_NEW_( char, length + 1 );

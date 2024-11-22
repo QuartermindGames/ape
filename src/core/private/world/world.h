@@ -169,12 +169,16 @@ void ape_register_world_console_variables_( void );
 
 void ape_world_node_generate_bounds_( ApeWorldNode *root );
 
-void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage );
+void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassFlag stage );
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
+void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes
+
+void ape_brush_flip_face_( ApeBrushFace *face );
 
 bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
 

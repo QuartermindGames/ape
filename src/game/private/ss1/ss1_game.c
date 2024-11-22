@@ -9,8 +9,6 @@
 
 static GamePhysicsRope debugRope;
 
-static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
-
 SS1GameState ss1_gameState;
 
 #define SS1_CONFIG "game_ss1"
@@ -38,6 +36,7 @@ static ApeLight *suns[ 2 ];
 
 static bool ss1_initialize()
 {
+	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
 	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
 
@@ -128,8 +127,8 @@ static void handle_input( void )
 	PlAnglesAxes( ang, &left, nullptr, &forward );
 
 	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-	pos                 = PlAddVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
-	pos                 = PlAddVector3( pos, PlScaleVector3F( left, leftStick.x ) );
+	pos                 = PlAddVector3( pos, PlScaleVector3F( forward, ( leftStick.y * 4 ) ) );
+	pos                 = PlAddVector3( pos, PlScaleVector3F( left, ( leftStick.x * 4 ) ) );
 
 	ape_camera_set_position( ss1_gameState.camera, &pos );
 	ape_camera_set_angles( ss1_gameState.camera, &ang );
@@ -146,7 +145,7 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 	PLMatrix4 m2;
 	m2         = PlTranslateMatrix4( position );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
-	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } );
+	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ) { 0.0f, 1.0f, 0.0f } );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
 	position.x = matrix.m[ 0 ];
 	position.z = matrix.m[ 8 ];
@@ -165,25 +164,24 @@ static bool ss1_tick( void )
 	{
 		if ( suns[ 0 ] != nullptr )
 		{
-			static float p = -2.0f;
-			static float y = 0.0f;
-
-			y += 0.5f;
+			float y = world_simulation_get_seconds_in_day( &ss1_gameState.simulation ) / ( world_simulation_get_seconds_to_day( &ss1_gameState.simulation ) / 360.0f );
+			float p = sinf( PL_DEG2RAD( y + 90.0f ) ) * 2.0f;
+			float b = PlClamp( 0.0f, ( -p ) / 1.0f, 1.25f );
 
 			PLVector3 sunPosition;
-			sunPosition = pitch_yaw_to_position( p + 0.5f, y + 90.0f );
+			sunPosition = pitch_yaw_to_position( p, y );
 			ape_light_set_position( suns[ 1 ], &sunPosition );
+			ape_light_set_colour( suns[ 1 ], &PL_COLOURF32( 1.0f, 1.0f, 1.0f, b ) );
 
 			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 0.0f + cosf( y / 20.0f ) * 10.0f, 24.0f + sinf( y / 50.0f ) * 10.0f, -20.0f ), true );
-
 			sunPosition = game_physics_rope_get_end_position( &debugRope );
 			ape_light_set_position( suns[ 0 ], &sunPosition );
 		}
 
-		world_simulation_tick( &ss1_gameState.simulation );
-
 		game_physics_rope_tick( &debugRope, 1.0f );
-		//game_physics_rope_debug_draw( &debugRope );
+		game_physics_rope_debug_draw( &debugRope );
+
+		world_simulation_tick( &ss1_gameState.simulation );
 	}
 
 	game_integrations_discord_tick_();
@@ -211,7 +209,7 @@ static void ss1_spawn_world( ApeWorld *world, ApeRoom *room )
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
 
-	suns[ 0 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 32.0f,
+	suns[ 0 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 128.0f,
 	                              APE_LIGHT_TYPE_OMNI,
 	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | /*APE_LIGHT_FLAG_FLARE |*/ APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 	suns[ 1 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,

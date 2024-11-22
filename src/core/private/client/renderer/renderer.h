@@ -108,24 +108,23 @@ typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
 typedef enum ApeCullMode
 {
-	SS_ARL_CULL_MODE_DEFAULT,
-	SS_ARL_CULL_MODE_FRONT,
-	SS_ARL_CULL_MODE_BACK,
-	SS_ARL_CULL_MODE_NONE,
+	APE_RENDERER_CULL_MODE_DEFAULT,
+	APE_RENDERER_CULL_MODE_FRONT,
+	APE_RENDERER_CULL_MODE_BACK,
+	APE_RENDERER_CULL_MODE_NONE,
 } ApeCullMode;
 
-typedef enum ApeRendererPassStage
+typedef enum ApeRendererPassFlag
 {
-	APE_RENDERER_PASS_DEFAULT,
-	APE_RENDERER_PASS_DEPTH_PREPASS,
-	APE_RENDERER_PASS_OPAQUE,
-	APE_RENDERER_PASS_TRANSLUCENT,
-} ApeRendererPassStage;
+	PL_BITFLAG( APE_RENDERER_PASS_FLAG_DEPTH_PREPASS, 0 ),
+	PL_BITFLAG( APE_RENDERER_PASS_FLAG_OPAQUE, 1 ),
+	PL_BITFLAG( APE_RENDERER_PASS_FLAG_TRANSLUCENT, 2 ),
+} ApeRendererPassFlag;
 
 typedef struct ApeRendererPassState
 {
-	ApeCullMode          cullMode;// override default cull mode
-	ApeRendererPassStage passStage;
+	ApeCullMode cullMode;// override default cull mode
+	//ApeRendererPassFlag passStage;
 
 	PLColourF32 ambience;
 

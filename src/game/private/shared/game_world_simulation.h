@@ -33,12 +33,7 @@ typedef struct WorldSimulation
 {
 	WorldSimulationConfig config;
 
-	// these will just be computed based on config
-	uint secondsToHour;
-	uint secondsToDay;
-
 	uint seconds;// not *real* seconds!
-
 	uint speedMultiplier;
 } WorldSimulation;
 
@@ -46,7 +41,16 @@ static void world_simulation_initialize( WorldSimulation *simulation )
 {
 	// setup some defaults...
 	simulation->config.nightHour = 17;
+
+	simulation->config.secondsToMinute = 60;
+	simulation->config.minutesToHour   = 60;
+	simulation->config.hoursToDay      = 24;
+
+	simulation->speedMultiplier = 128.0f;
 }
+
+static inline uint world_simulation_get_seconds_to_hour( const WorldSimulation *simulation ) { return simulation->config.secondsToMinute * simulation->config.minutesToHour; }
+static inline uint world_simulation_get_seconds_to_day( const WorldSimulation *simulation ) { return world_simulation_get_seconds_to_hour( simulation ) * simulation->config.hoursToDay; }
 
 static inline uint world_simulation_get_total_seconds( const WorldSimulation *simulation ) { return simulation->seconds; }
 static inline uint world_simulation_get_total_minutes( const WorldSimulation *simulation ) { return simulation->seconds / simulation->config.secondsToMinute; }
@@ -71,7 +75,7 @@ static inline uint world_simulation_get_current_hour( const WorldSimulation *sim
 /// This returns the total number of seconds for the current day.
 static inline uint world_simulation_get_seconds_in_day( const WorldSimulation *simulation )
 {
-	return ( world_simulation_get_total_seconds( simulation ) ) % simulation->secondsToDay;
+	return ( world_simulation_get_total_seconds( simulation ) ) % world_simulation_get_seconds_to_day( simulation );
 }
 
 static inline WorldSimulationTime world_simulation_get_time_of_day( const WorldSimulation *simulation )

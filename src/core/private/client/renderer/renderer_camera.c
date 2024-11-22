@@ -340,7 +340,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 		if ( light->type != APE_LIGHT_TYPE_OMNI )
 		{
 			PLVector3 end = PlAddVector3( pos, PlScaleVector3F( light->base.angles, 2.0f ) );
-			ape_draw_debug_arrow( pos, end, PlColourF32ToU8( &light->colour ) );
+			ape_draw_debug_arrow( pos, end, PlColourF32ToU8( &light->colour ), 1.0f );
 		}
 	}
 
@@ -432,7 +432,12 @@ static void test_room_visibility( ApeCamera *self, ApeRoom *room )
 			for ( uint j = 0; j < brush->numFaces; ++j )
 			{
 				ApeBrushFace *face = &brush->faces[ j ];
-				ape_draw_debug_arrow( face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( face->normal, 1.0f ) ), PL_COLOUR_CRIMSON );
+				if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+				{
+					continue;
+				}
+
+				ape_draw_debug_arrow( face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( face->normal, 8.0f ) ), PL_COLOUR_WHITE, 2.0f );
 			}
 		}
 	}
@@ -495,7 +500,7 @@ void ape_camera_build_visibility_lists_( ApeCamera *self )
 	PlPopMatrix();
 
 	ape_rendererPerformance_.numRooms += self->visibility.numRooms;
-	ape_rendererPerformance_.numLights += self->visibility.numLights;
+	//ape_rendererPerformance_.numLights += self->visibility.numLights;
 }
 
 void ape_build_camera_visibility_lists_( void )
@@ -517,8 +522,8 @@ void ape_clear_camera_visibility_lists_( void )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ape_rendererPerformance_.numRooms          = 0;
-	ape_rendererPerformance_.numLights         = 0;
+	ape_rendererPerformance_.numRooms = 0;
+	//ape_rendererPerformance_.numLights         = 0;
 	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	ape_clear_flare_queue_();

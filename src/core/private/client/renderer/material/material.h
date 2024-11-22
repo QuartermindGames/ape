@@ -161,7 +161,7 @@ void ape_shader_set_active_( ApeShaderProgram *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_parse_material_pass_( struct AcmBranch *root, ApeMaterialPass *materialPass );
+void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass );
 
 void ape_initialize_materials_( void );
 void ape_shutdown_materials_( void );
@@ -172,5 +172,8 @@ bool ape_material_shadows_enabled( const ApeMaterial *self );
 bool ape_material_is_blended( const ApeMaterial *self );
 
 void ape_tick_materials_( void );
+
+unsigned int ape_material_get_width( const ApeMaterial *self );
+unsigned int ape_material_get_height( const ApeMaterial *self );
 
 PL_EXTERN_C_END

@@ -196,6 +196,70 @@ static void update_mesh_cache_( ApeRoom *self )
 	COM_PROFILE_FUNCTION_END();
 }
 
+static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance *instance, uint *offset )
+{
+	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		bool      selected = false;
+		ApeBrush *brush    = ( ApeBrush * ) node;
+		if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+		{
+			void *p;
+			COM_ITERATE_LINKED_LIST( p, instance->selectedObjects, i )
+			{
+				if ( ( ApeBrush * ) p == brush )
+				{
+					selected = true;
+					break;
+				}
+			}
+
+			if ( !selected )
+			{
+				return;
+			}
+		}
+
+		for ( uint i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+		{
+			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
+			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
+			{
+				PRINT_WARNING( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+				break;
+			}
+
+			ApeBrushFace *face = &brush->faces[ i ];
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+			{
+				void *p;
+				COM_ITERATE_LINKED_LIST( p, instance->selectedObjects, i )
+				{
+					if ( ( ApeBrushFace * ) p == face )
+					{
+						if ( PlgIsBoxInsideView( instance->camera->internal, &face->bounds ) )
+						{
+							subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
+							firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
+							numSubMeshes[ 0 ]++;
+
+							ape_rendererPerformance_.numFacesDrawn++;
+						}
+
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		build_selection_display_list( child, instance, offset );
+	}
+}
+
 static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, uint *offset )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
@@ -264,20 +328,20 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light )
 		}
 
 		ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
-		ape_model_draw( modelNode->model, &( ApeModelAnimationState ){}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
+		ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
 	}
 }
 
-static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage )
+static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRendererPassFlag stage )
 {
-	if ( ( !( stage == APE_RENDERER_PASS_DEPTH_PREPASS ) && light == NULL ) )
+	if ( ( !( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == NULL ) )
 	{
 		return;
 	}
 
 	COM_PROFILE_FUNCTION_START();
 
-	if ( stage == APE_RENDERER_PASS_DEPTH_PREPASS )
+	if ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
 	}
@@ -288,6 +352,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRen
 
 	update_mesh_cache_( room );
 
+	//TODO: this is operating off a universal list, should only operate on *world* materials!!!
 	PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
 	assert( materialList != nullptr );
 
@@ -298,7 +363,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRen
 		assert( material != nullptr );
 
 		// blended materials get drawn later
-		if ( ( stage == APE_RENDERER_PASS_TRANSLUCENT ) != ape_material_is_blended( material ) )
+		if ( ( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) && !ape_material_is_blended( material ) )
 		{
 			continue;
 		}
@@ -327,7 +392,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, ApeRen
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
 
-	if ( stage == APE_RENDERER_PASS_DEPTH_PREPASS )
+	if ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
@@ -398,7 +463,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 				continue;
 			}
 
-			PLCollisionPlane plane = ( PLCollisionPlane ){ .normal = brush->faces[ i ].normal, .origin = brush->faces[ i ].bounds.absOrigin };
+			PLCollisionPlane plane = ( PLCollisionPlane ) { .normal = brush->faces[ i ].normal, .origin = brush->faces[ i ].bounds.absOrigin };
 			if ( ape_light_test_plane( light, &plane ) )
 			{
 				continue;
@@ -482,9 +547,36 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassStage stage )
+void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 {
-	if ( ( stage == APE_RENDERER_PASS_DEPTH_PREPASS ) && ape_config_.renderer.skipAmbience )
+	if ( PlIsLinkedListEmpty( instance->selectedObjects ) )
+	{
+		return;
+	}
+
+	uint offset = 0;
+	build_selection_display_list( &room->base, instance, &offset );
+
+	if ( numSubMeshes[ 0 ] == 0 )
+	{
+		return;
+	}
+
+	PLGMesh *mesh        = room->mesh;
+	mesh->numSubMeshes   = numSubMeshes[ 0 ];
+	mesh->firstSubMeshes = firstSubMeshes[ 0 ];
+	mesh->subMeshes      = subMeshes[ 0 ];
+
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
+	assert( material != nullptr );
+	ape_material_draw( material, mesh, nullptr );
+
+	mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
+}
+
+void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassFlag stage )
+{
+	if ( ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && ape_config_.renderer.skipAmbience )
 	{
 		return;
 	}

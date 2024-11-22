@@ -145,8 +145,13 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 		coord.x = PlVector3DotProduct( *face->edgeLoop[ i ]->position, u );
 		coord.y = PlVector3DotProduct( *face->edgeLoop[ i ]->position, v );
 
-		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / face->materialScale.x;
-		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / face->materialScale.y;
+		ApeMaterial *material = face->material;
+		assert( material != nullptr );
+		uint width  = ape_material_get_width( material );
+		uint height = ape_material_get_height( material );
+
+		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
+		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
 	}
 }
 
@@ -196,6 +201,30 @@ static void compute_brush_bounds( ApeBrush *self )
 	}
 
 	self->base.bounds.absOrigin = PlGetAabbAbsOrigin( &self->base.bounds, self->base.position );
+}
+
+void ape_brush_flip_face_( ApeBrushFace *face )
+{
+	uint start = 0;
+	uint end   = face->numVertices - 1;
+	while ( start < end )
+	{
+		ApeBrushFaceVertex *temp = face->edgeLoop[ start ];
+		face->edgeLoop[ start ]  = face->edgeLoop[ end ];
+		face->edgeLoop[ end ]    = temp;
+
+		start++;
+		end--;
+	}
+
+	compute_brush_face_normal( face );
+
+	ApeBrush *brush = face->parent;
+	ApeRoom  *room  = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
+	if ( room != nullptr )
+	{
+		room->isDirty = true;
+	}
 }
 
 bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material )
@@ -263,7 +292,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		self->faces[ i ].material      = material;
-		self->faces[ i ].materialScale = PL_VECTOR2( 8.0f, 8.0f );
+		self->faces[ i ].materialScale = PL_VECTOR2( 0.5f, 0.5f );
 
 		compute_brush_face_normal( &self->faces[ i ] );
 		compute_brush_face_bounds( &self->faces[ i ] );
@@ -351,7 +380,7 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 
 ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeBrush *self = ape_brush_create( parent, "temp", &( PLVector3 ){}, &( PLVector3 ){} );
+	ApeBrush *self = ape_brush_create( parent, "temp", &( PLVector3 ) {}, &( PLVector3 ) {} );
 
 	self->type = ACM_GET_INT( self->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
 
@@ -390,9 +419,9 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
 					assert( vertexIndex <= self->numVertices );
 					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
-					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ){} );
-					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ){} );
-					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ){ .a = 1.0f } );
+					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ) {} );
+					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ) {} );
+					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ) { .a = 1.0f } );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
@@ -422,14 +451,14 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 				ape_warning_( "No material specified for a brush face, using default!\n" );
 				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
-			self->faces[ i ].materialScale  = acm_get_vector2( branch, "materialScale", &( PLVector2 ){} );
-			self->faces[ i ].materialOffset = acm_get_vector3( branch, "materialOffset", &( PLVector3 ){} );
-			self->faces[ i ].materialAngle  = acm_get_vector3( branch, "materialAngle", &( PLVector3 ){} );
+			self->faces[ i ].materialScale  = acm_get_vector2( branch, "materialScale", &( PLVector2 ) {} );
+			self->faces[ i ].materialOffset = acm_get_vector3( branch, "materialOffset", &( PLVector3 ) {} );
+			self->faces[ i ].materialAngle  = acm_get_vector3( branch, "materialAngle", &( PLVector3 ) {} );
 
 			self->faces[ i ].flags = ACM_GET_UINT( self->faces[ i ].flags, branch, "flags", 0 );
 
-			self->faces[ i ].normal = acm_get_vector3( branch, "normal", &( PLVector3 ){} );
-			self->faces[ i ].colour = acm_get_colour_f32( branch, "colour", &( PLColourF32 ){ .a = 1.0f } );
+			self->faces[ i ].normal = acm_get_vector3( branch, "normal", &( PLVector3 ) {} );
+			self->faces[ i ].colour = acm_get_colour_f32( branch, "colour", &( PLColourF32 ) { .a = 1.0f } );
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );

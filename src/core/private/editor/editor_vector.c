@@ -108,7 +108,7 @@ static bool setup_vector_instance( ApeEditorInstance *self )
 	VectorEditor *vector   = PL_NEW( VectorEditor );
 	vector->cursorMaterial = ape_material_cache( "materials/engine/vertex.mat.n", APE_CACHE_GROUP_EDITOR, true );
 
-	self->grid.scale = 64;
+	self->grid.size = 64;
 
 	self->modeData = vector;
 	return true;
@@ -139,7 +139,7 @@ static void draw_vector_overlay( ApeEditorInstance *self )
 
 	static constexpr float CURSOR_SIZE = 8.0f;
 
-	PlgDrawGrid( 0, 0, viewport->width, viewport->height, self->grid.scale, &( PLColour ){ 0, 0, 255, 255 } );
+	PlgDrawGrid( 0, 0, viewport->width, viewport->height, self->grid.size, &( PLColour ){ 0, 0, 255, 255 } );
 	for ( uint i = 1; i < vector->numPoints; ++i )
 	{
 		PLVector3 start = PL_VECTOR3( vector->points[ i - 1 ].x, vector->points[ i - 1 ].y, 0.0f );
@@ -150,8 +150,8 @@ static void draw_vector_overlay( ApeEditorInstance *self )
 
 	ape_client_input_get_mouse_position( &vector->cx, &vector->cy );
 
-	vector->cx = PlRoundUp( vector->cx, self->grid.scale );
-	vector->cy = PlRoundUp( vector->cy, self->grid.scale );
+	vector->cx = PlRoundUp( vector->cx, self->grid.size );
+	vector->cy = PlRoundUp( vector->cy, self->grid.size );
 
 	ape_draw_textured_quad( vector->cursorMaterial, vector->cx - ( CURSOR_SIZE / 2.0f ), vector->cy - ( CURSOR_SIZE / 2.0f ), CURSOR_SIZE, CURSOR_SIZE, &PL_COLOUR_RED );
 }

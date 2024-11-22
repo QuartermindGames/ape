@@ -2,7 +2,10 @@
 
 ## Immediate
 - Add a filter menu to the material browser
-- Determine width/height for material at load time by the largest texture w/h
+- Introduce flags for shaders to indicate support for lighting
+- Extrude for brushes
+- Move for brushes
+- Get the sun working again
 
 ## Queue
 - Initial Lua mock-up
