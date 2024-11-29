@@ -7,6 +7,10 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_driver_interface.h>
 
+#if USE_GTK
+#	include <adwaita.h>
+#endif
+
 #include "forge.h"
 #include "forge_window_main.h"
 #include "forge_project_dialog.h"
@@ -256,7 +260,7 @@ int main( int argc, char **argv )
 	PLPath tmp;
 	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
 	{
-		FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to get executable location (%s)!", PlGetError() );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -265,6 +269,15 @@ int main( int argc, char **argv )
 
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
+
+#if USE_GTK
+	adw_init();
+	if ( !adw_is_initialized() )
+	{
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize ADW library!" );
+		return EXIT_FAILURE;
+	}
+#endif
 
 	forge::editorConfig = com_get_config( "forge" );
 
@@ -298,7 +311,7 @@ int main( int argc, char **argv )
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to set OpenGL driver: %s\n", PlGetError() );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to set OpenGL driver: %s\n", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -309,7 +322,7 @@ int main( int argc, char **argv )
 		AcmBranch *branch;
 		if ( ( branch = com_project_mount( projectName ) ) == nullptr )
 		{
-			ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Invalid project specified (%s), aborting!", projectName );
+			shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Invalid project specified (%s), aborting!", projectName );
 			return EXIT_FAILURE;
 		}
 
@@ -330,13 +343,13 @@ int main( int argc, char **argv )
 
 	if ( forge::editorProject == nullptr )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "No project selected, aborting!" );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
 
 	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME, true ) )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize APE Tech!" );
 		return EXIT_FAILURE;
 	}
 
@@ -349,7 +362,7 @@ extern "C"
 {
 	void shell_get_window_size( int *width, int *height ) {}
 
-	void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
+	void shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 	{
 		switch ( messageType )
 		{

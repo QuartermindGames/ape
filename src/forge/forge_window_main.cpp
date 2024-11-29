@@ -120,14 +120,14 @@ long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 	ApeWorld *world = ape_world_create();
 	if ( world == nullptr )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world instance!\nSee logs for details." );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create world instance!\nSee logs for details." );
 		return FALSE;
 	}
 
 	ApeRoom *room = ape_room_create( &world->base, "index" );
 	if ( room == nullptr )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create room!\nSee logs for details." );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create room!\nSee logs for details." );
 		ape_world_node_destroy( &world->base );
 		return FALSE;
 	}

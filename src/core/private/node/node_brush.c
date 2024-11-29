@@ -155,6 +155,61 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 	}
 }
 
+void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
+{
+	if ( self->material != nullptr )
+	{
+		ape_material_release( self->material );
+	}
+
+	self->material = material;
+	//TODO: reference should be added here - for now it's done by caller :(
+
+	// recompute face texture coordinates, as this is relative to the material size
+	compute_brush_face_texture_coordinates( self );
+
+	// need to notify the room to update
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self->parent ) );
+	assert( room != nullptr );
+	room->isDirty = true;
+}
+
+bool ape_brush_face_is_portal( const ApeBrushFace *self )
+{
+	if ( self->destination != nullptr )
+	{
+		return true;
+	}
+
+	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR;
+}
+
+ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
+{
+	if ( self->destination != nullptr )
+	{
+		return self->destination;
+	}
+
+	if ( self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR )
+	{
+		return self;
+	}
+
+	return nullptr;
+}
+
+ApeRoom *ape_brush_face_get_room( ApeBrushFace *self )
+{
+	ApeBrush *brush = self->parent;
+	assert( brush != nullptr );
+
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
+	assert( room != nullptr );
+
+	return room;
+}
+
 static void compute_brush_face_bounds( ApeBrushFace *face )
 {
 	assert( face->numVertices > 0 );

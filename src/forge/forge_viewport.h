@@ -61,18 +61,20 @@ namespace forge
 		long on_change_camera_modes( FXObject *, FXSelector, void * );
 
 		long         on_timer( FXObject *, FXSelector, void * );
-		long on_zoom( FXObject *, FXSelector, void * );
+		long         on_zoom( FXObject *, FXSelector, void * );
 		virtual long on_motion( FXObject *, FXSelector, void * );
 		virtual long on_left_click( FXObject *, FXSelector, void * );
 		virtual long on_right_click( FXObject *, FXSelector, void * );
-		long on_middle_click( FXObject *, FXSelector, void * );
+		long         on_middle_click( FXObject *, FXSelector, void * );
 		virtual long on_key( FXObject *, FXSelector, void * );
-		long on_create( FXObject *, FXSelector, void * );
-		long on_reset_camera( FXObject *, FXSelector, void * );
+		long         on_create( FXObject *, FXSelector, void * );
+		long         on_reset_camera( FXObject *, FXSelector, void * );
 
 	private:
 		FXGLCanvas *canvas_;
 		FXToolBar  *toolBar;
+
+		FXSlider *cameraSpeedSlider;
 
 		FXToggleButton *viewModeButtons[ APE_CAMERA_MAX_MODES ];
 		FXToggleButton *drawModeButtons[ APE_CAMERA_MAX_DRAW_MODES ];
@@ -88,8 +90,8 @@ namespace forge
 		EditorTab *editor{};
 
 	public:
-		ApeViewport        *internalViewport_{};
-		ApeCamera          *camera{};
+		ApeViewport *internalViewport_{};
+		ApeCamera   *camera{};
 
 	private:
 		FXDataTarget forwardSpeedTarget;

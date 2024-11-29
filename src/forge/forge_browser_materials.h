@@ -9,14 +9,21 @@ namespace forge
 
 	public:
 		explicit MaterialBrowser( FXWindow *parent );
-		inline ~MaterialBrowser() = default;
+		~MaterialBrowser() = default;
 
-		const char *get_current();
+		const char *get_current() const;
 
 		void create() override;
 
+		enum
+		{
+			ID_MATERIAL_LIST = FXDialogBox::ID_LAST,
+		};
+
+		long on_material_select( FXObject *, FXSelector, void * );
+
 	protected:
-		inline MaterialBrowser() = default;
+		MaterialBrowser() = default;
 
 	private:
 		struct MaterialPreview

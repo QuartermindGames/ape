@@ -28,14 +28,14 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
  * WINDOW MANAGEMENT
  ****************************************/
 
-static SDL_Window   *sdlWindow    = NULL;
+static SDL_Window   *sdlWindow    = nullptr;
 static SDL_GLContext sdlGLContext = NULL;
 
-static ApeViewport *windowViewport = NULL;
+static ApeViewport *windowViewport = nullptr;
 
 static int drawW, drawH;
 
-void ss_shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
+void shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
 {
 	const char         *title;
 	SDL_MessageBoxFlags flags;
@@ -478,7 +478,7 @@ static bool initialize_display( void )
 
 	if ( ( sdlWindow = create_window( windowTitle, width, height, fullscreen, driverMode ) ) == NULL )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
 	}
 

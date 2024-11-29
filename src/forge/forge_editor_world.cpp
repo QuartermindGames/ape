@@ -116,7 +116,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 	auto *parentNode = ( ApeWorldNode * ) nodeTree->getCurrentItem()->getData();
 	if ( parentNode == nullptr )
 	{
-		ss_shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create object, no valid node selected!" );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, "Failed to create object, no valid node selected!" );
 		return;
 	}
 
@@ -227,7 +227,7 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 {
 	FXint    current = roomSelectBox->getCurrentItem();
-	ApeRoom *room    = ( ApeRoom    *) roomSelectBox->getItemData( current );
+	ApeRoom *room    = ( ApeRoom * ) roomSelectBox->getItemData( current );
 	if ( room == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No active room currently selected!" );
@@ -270,7 +270,7 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 {
 	FXint    current = roomSelectBox->getCurrentItem();
-	ApeRoom *room    = ( ApeRoom    *) roomSelectBox->getItemData( current );
+	ApeRoom *room    = ( ApeRoom * ) roomSelectBox->getItemData( current );
 	if ( room == nullptr )
 	{
 		return false;

@@ -1,14 +1,19 @@
 #include "forge.h"
 #include "forge_browser_materials.h"
 
+#include "forge_editor_world.h"
+#include "forge_window_main.h"
+
 FXDEFMAP( forge::MaterialBrowser )
-materialBrowserMap[] = {};
+materialBrowserMap[] = {
+        FXMAPFUNC( SEL_COMMAND, forge::MaterialBrowser::ID_MATERIAL_LIST, forge::MaterialBrowser::on_material_select ),
+};
 
 FXIMPLEMENT( forge::MaterialBrowser, FXDialogBox, materialBrowserMap, ARRAYNUMBER( materialBrowserMap ) )
 
 void forge::MaterialBrowser::cache_preview_callback( const char *path, void *user )
 {
-	forge::MaterialBrowser *self = ( forge::MaterialBrowser * ) user;
+	MaterialBrowser *self = static_cast< MaterialBrowser * >( user );
 
 	MaterialPreview *preview = new MaterialPreview;
 
@@ -51,7 +56,7 @@ forge::MaterialBrowser::MaterialBrowser( FX::FXWindow *parent )
 
 	FXVerticalFrame *frame = new FXVerticalFrame( this, LAYOUT_FILL | FRAME_NORMAL );
 
-	materialList = new FXIconList( frame, nullptr, 0,
+	materialList = new FXIconList( frame, this, ID_MATERIAL_LIST,
 	                               ICONLIST_BIG_ICONS | ICONLIST_ROWS | ICONLIST_COLUMNS | ICONLIST_AUTOSIZE | ICONLIST_BROWSESELECT | LAYOUT_FILL );
 	materialList->appendHeader( "Name", nullptr, 200 );
 	materialList->appendHeader( "Size", nullptr, 60 );
@@ -75,7 +80,7 @@ forge::MaterialBrowser::MaterialBrowser( FX::FXWindow *parent )
 	materialList->setCurrentItem( itemIndex > -1 ? itemIndex : 0 );
 }
 
-const char *forge::MaterialBrowser::get_current()
+const char *forge::MaterialBrowser::get_current() const
 {
 	FXint item = materialList->getCurrentItem();
 	if ( item == -1 )
@@ -83,7 +88,7 @@ const char *forge::MaterialBrowser::get_current()
 		return nullptr;
 	}
 
-	const MaterialPreview *preview = ( MaterialPreview * ) materialList->getItemData( item );
+	const MaterialPreview *preview = static_cast< MaterialPreview * >( materialList->getItemData( item ) );
 	if ( preview == nullptr )
 	{
 		return nullptr;
@@ -97,4 +102,40 @@ void forge::MaterialBrowser::create()
 	FXDialogBox::create();
 
 	show();
+}
+
+long forge::MaterialBrowser::on_material_select( FXObject *, FXSelector, void * )
+{
+	const char *currentPath = get_current();
+	if ( currentPath == nullptr )
+	{
+		return 0;
+	}
+
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr || instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return 0;
+	}
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	{
+		// check if it's set already
+		const char *oldPath = ape_material_get_path( face->material );
+		if ( oldPath != nullptr && strcmp( oldPath, currentPath ) == 0 )
+		{
+			continue;
+		}
+
+		ApeMaterial *material = ape_material_cache( currentPath, APE_CACHE_GROUP_WORLD, false );
+		if ( material == nullptr )
+		{
+			continue;
+		}
+
+		ape_brush_face_apply_material( face, material );
+	}
+
+	return 0;
 }

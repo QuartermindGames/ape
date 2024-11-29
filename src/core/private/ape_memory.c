@@ -119,7 +119,7 @@ static PLLinkedList *mmReferenceList;
 
 #define MEM_CLEANUP_DELAY 200.0
 
-//#	define DEBUG_MEMORY
+#define DEBUG_MEMORY
 
 static bool free_reference( ApeMemoryReference *m, bool force )
 {
@@ -135,7 +135,7 @@ static bool free_reference( ApeMemoryReference *m, bool force )
 	if ( m->numReferences <= 0 && ( force || m->timeToLive < ape_get_num_ticks() ) )
 	{
 #if defined( DEBUG_MEMORY )
-		PRINT_DEBUG( "Freeing reference: %s\n", m->id );
+		PRINT_DEBUG( "Freeing reference: %s\n", m->cache->description );
 #endif
 
 		/* remove it from whatever cached list it exists in */
@@ -265,7 +265,7 @@ void ape_memory_add_reference( ApeMemoryReference *m )
 	m->timeToLive = ( ape_get_num_ticks() + 1024 );
 #if defined( DEBUG_MEMORY )
 	PRINT_DEBUG( "Adding reference: %s (%d) (%u)\n",
-	             m->id,
+	             m->cache->description,
 	             m->numReferences,
 	             m->timeToLive );
 #endif
@@ -277,7 +277,7 @@ void ape_memory_release( ApeMemoryReference *m )
 
 #if defined( DEBUG_MEMORY )
 	PRINT_DEBUG( "Releasing reference: %s (%d) (%u)\n",
-	             m->id,
+	             m->cache->description,
 	             m->numReferences,
 	             m->timeToLive );
 #endif

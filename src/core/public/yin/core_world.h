@@ -182,6 +182,9 @@ typedef struct ApeBrushFaceVertex
 	PLColourF32 colour;
 } ApeBrushFaceVertex;
 
+////////////////////////////////////////////////////////////////////
+// Brush Face
+
 typedef struct ApeBrushFace
 {
 	int          materialIndex;
@@ -206,6 +209,16 @@ typedef struct ApeBrushFace
 	ApeBrushFace *destination;
 	ApeBrush     *parent;
 } ApeBrushFace;
+
+void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
+
+bool          ape_brush_face_is_portal( const ApeBrushFace *self );
+ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self );
+
+ApeRoom *ape_brush_face_get_room( ApeBrushFace *self );
+
+////////////////////////////////////////////////////////////////////
+// Brush
 
 typedef struct ApeBrush
 {
@@ -347,7 +360,7 @@ typedef enum ApeLightType
 typedef enum ApeLightFlag
 {
 	PL_BITFLAG( APE_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
-	PL_BITFLAG( SS_ARL_LIGHT_FLAG_SHADOWS, 1U ),     // if enabled without runtime shadows flag, will cast lightmap shadows
+	PL_BITFLAG( APE_LIGHT_FLAG_SHADOWS, 1U ),        // if enabled without runtime shadows flag, will cast lightmap shadows
 	PL_BITFLAG( APE_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
 	PL_BITFLAG( APE_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
 	PL_BITFLAG( APE_LIGHT_FLAG_FLARE, 4U ),          // light will produce a lensflare effect when visible

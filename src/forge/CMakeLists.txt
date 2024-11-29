@@ -40,6 +40,12 @@ add_dependencies(Forge
 set_target_properties(Forge PROPERTIES
         FOLDER "Shells")
 
+#[[
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK4 REQUIRED gtk4)
+pkg_check_modules(ADWAITA REQUIRED libadwaita-1)
+]]
+
 if (NOT UNIX)
     target_include_directories(Forge PRIVATE "glew/include/")
     target_link_directories(Forge PRIVATE "glew/lib/Release/x64/")
@@ -51,11 +57,22 @@ else ()
     #target_link_libraries(forge GLEW GL GLU)
 endif ()
 
-target_link_libraries(Forge FOX-1.6)
-target_include_directories(Forge
-        PRIVATE ../kernel/plcore/include
-        PRIVATE ../kernel/plgraphics/include
-        PRIVATE ../common/public
-        PRIVATE ../acm/public
-        PRIVATE ../core/public
+target_link_libraries(Forge
+        FOX-1.6
+        #[[
+        ${GTK4_LIBRARIES}
+        ${ADWAITA_LIBRARIES}
+        ]]
 )
+target_include_directories(Forge PRIVATE
+        ../kernel/plcore/include
+        ../kernel/plgraphics/include
+        ../common/public
+        ../acm/public
+        ../core/public
+        #[[
+        ${GTK4_INCLUDE_DIRS}
+        ${ADWAITA_INCLUDE_DIRS}
+        ]]
+)
+#target_compile_definitions(Forge PRIVATE USE_GTK=1)

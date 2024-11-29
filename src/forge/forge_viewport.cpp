@@ -78,6 +78,15 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ]    = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	drawModeButtons[ drawMode_ ]->setState( true );
 
+	new FXVerticalSeparator( this->toolBar );
+	new FXLabel( this->toolBar, FXString::null, load_fx_icon( getApp(), "resources/cam_static.gif" ) );
+	cameraSpeedSlider = new FXSlider( this->toolBar, nullptr, 0, LAYOUT_FIX_WIDTH | SLIDER_HORIZONTAL | SLIDER_ARROW_RIGHT | SLIDER_TICKS_BOTTOM );
+	cameraSpeedSlider->setWidth( 64 );
+	cameraSpeedSlider->setRange( 1, 8 );
+	cameraSpeedSlider->setIncrement( 1 );
+	cameraSpeedSlider->setValue( 4 );
+	new FXLabel( this->toolBar, FXString::null, load_fx_icon( getApp(), "resources/cam_speed.gif" ) );
+
 	if ( displayList_ == nullptr )
 	{
 		canvas_      = new FXGLCanvas( this, visual, this, ID_CANVAS, LAYOUT_FILL );
@@ -288,7 +297,7 @@ long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 		//	return FALSE;
 	}
 
-	auto     *event = ( FXEvent     *) ptr;
+	auto     *event = ( FXEvent * ) ptr;
 	int const x     = event->win_x;
 	int const y     = event->win_y;
 
@@ -401,9 +410,9 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		return FALSE;
 	}
 
-	static const float SPEED = 2.0f;
-	PLVector3          pos   = ape_camera_get_position( camera );
-	PLVector3          ang   = ape_camera_get_angles( camera );
+	float     speed = ( float ) cameraSpeedSlider->getValue();
+	PLVector3 pos   = ape_camera_get_position( camera );
+	PLVector3 ang   = ape_camera_get_angles( camera );
 
 	bool handled = true;
 	switch ( event->code )
@@ -414,12 +423,12 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case KEY_Up:
 		{
-			ang.x += SPEED;
+			ang.x += speed;
 			break;
 		}
 		case KEY_Down:
 		{
-			ang.x -= SPEED;
+			ang.x -= speed;
 			break;
 		}
 		case KEY_Left:
@@ -437,28 +446,28 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		{
 			PLVector3 forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, speed ) );
 			break;
 		}
 		case 's':
 		{
 			PLVector3 forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+			pos = PlAddVector3( pos, PlScaleVector3F( forward, speed ) );
 			break;
 		}
 		case 'a':
 		{
 			PLVector3 left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( left, SPEED ) );
+			pos = PlSubtractVector3( pos, PlScaleVector3F( left, speed ) );
 			break;
 		}
 		case 'd':
 		{
 			PLVector3 left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+			pos = PlAddVector3( pos, PlScaleVector3F( left, speed ) );
 			break;
 		}
 		case 'q':

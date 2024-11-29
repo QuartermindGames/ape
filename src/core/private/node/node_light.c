@@ -66,11 +66,11 @@ void ape_light_set_radius( ApeLight *self, float radius )
 
 ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 {
-	if ( ape_config_.renderer.forceShadows || ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS || ( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & SS_ARL_LIGHT_FLAG_SHADOWS ) ) )
+	if ( ape_config_.renderer.forceShadows || ( light->flags & APE_LIGHT_FLAG_RUNTIME_SHADOWS || ( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & APE_LIGHT_FLAG_SHADOWS ) ) )
 	{
 		return APE_LIGHT_SHADOW_TYPE_DYNAMIC;
 	}
-	else if ( light->flags & SS_ARL_LIGHT_FLAG_SHADOWS )
+	else if ( light->flags & APE_LIGHT_FLAG_SHADOWS )
 	{
 		return APE_LIGHT_SHADOW_TYPE_STATIC;
 	}
