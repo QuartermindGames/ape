@@ -6,7 +6,7 @@
 
 #include "client/ape_client.h"
 #include "client/ape_client_input.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 #include "server/server.h"
 #include "net/net.h"

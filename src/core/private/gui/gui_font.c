@@ -7,7 +7,7 @@
 
 #include "gui_private.h"
 #include "common_format_fnt.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 /****************************************
  * GUI BITMAP FONT API

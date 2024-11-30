@@ -1,13 +1,10 @@
 // Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include <plcore/pl_filesystem.h>
-#include <plgraphics/plg_mesh.h>
 
 #include "ape_private.h"
 #include "world.h"
-#include "client/renderer/renderer.h"
-#include "game/game_public.h"
-#include "yin/core_game.h"
+#include "renderer/renderer.h"
 
 void ape_world_set_global_defaults( ApeWorld *level )
 {

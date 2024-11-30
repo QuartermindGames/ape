@@ -3,22 +3,24 @@ set(YIN_CORE_CLIENT
         private/client/client_console.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
-        private/client/renderer/material/material.c
-        private/client/renderer/material/material_shaders.c
-        private/client/renderer/post/post_bloom.c
-        private/client/renderer/post/post_fxaa.c
-        private/client/renderer/post/post.c
-        private/client/renderer/renderer_camera.c
-        private/client/renderer/renderer_flare.c
-        private/client/renderer/renderer_font.c
-        private/client/renderer/renderer_particle.c
-        private/client/renderer/renderer.c
-        private/client/renderer/renderer_draw.c
-        private/client/renderer/renderer_render_target.c
-        private/client/renderer/renderer_texture.c
-        private/client/renderer/renderer_viewport.c
-        private/client/renderer/renderer_world.c
-        private/client/renderer/renderer_sprite.c)
+
+        private/renderer/material/material.c
+        private/renderer/material/material_shaders.c
+        private/renderer/post/post_bloom.c
+        private/renderer/post/post_fxaa.c
+        private/renderer/post/post.c
+        private/renderer/renderer_camera.c
+        private/renderer/renderer_flare.c
+        private/renderer/renderer_font.c
+        private/renderer/renderer_particle.c
+        private/renderer/renderer.c
+        private/renderer/renderer_draw.c
+        private/renderer/renderer_render_target.c
+        private/renderer/renderer_texture.c
+        private/renderer/renderer_viewport.c
+        private/renderer/renderer_world.c
+        private/renderer/renderer_sprite.c
+)
 
 set(APE_SOURCE_GUI
         private/gui/gui.c

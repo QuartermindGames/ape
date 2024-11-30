@@ -5,7 +5,7 @@
 #include "ape_private.h"
 #include "../actor.h"
 
-#include "client/renderer/renderer_particle.h"
+#include "renderer/renderer_particle.h"
 
 #define MODEL_SCALE 10.0f
 

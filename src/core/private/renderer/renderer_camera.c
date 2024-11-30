@@ -220,7 +220,6 @@ void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport )
 
 	COM_PROFILE_FUNCTION_START();
 
-	float speed;
 	switch ( camera->mode )
 	{
 		default:
@@ -358,6 +357,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 
 	if ( light->flags & APE_LIGHT_FLAG_FLARE )
 	{
+		//TODO: test the flare is actually visible!!
 		ape_add_flare_to_queue( camera, &light->base.position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 	}
 
@@ -391,6 +391,26 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 	else if ( PlgIsBoxInsideView( self->internal, &node->bounds ) )
 	{
 		PlPushBackVectorArrayElement( self->visibility.nodes, node );
+	}
+
+	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		ApeBrush *brush = ( ApeBrush * ) node;
+		for ( uint j = 0; j < brush->numFaces; ++j )
+		{
+			ApeBrushFace *face = &brush->faces[ j ];
+			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+			{
+				continue;
+			}
+
+			if ( ape_brush_face_is_portal( face ) )
+			{
+				ape_rendererPerformance_.numVisiblePortals++;
+
+				ApeRoom *room = ( ApeRoom * ) node;
+			}
+		}
 	}
 
 	ApeWorldNode *child;

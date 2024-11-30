@@ -5,7 +5,7 @@
 #include "world/world.h"
 
 #include "client/ape_client.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 #include "server/server.h"
 

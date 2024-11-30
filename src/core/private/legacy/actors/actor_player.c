@@ -3,7 +3,7 @@
 #include "ape_private.h"
 #include "../actor.h"
 
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 #define PLAYER_VIEW_OFFSET   0.0f
 #define PLAYER_CROUCH_OFFSET 4.0f

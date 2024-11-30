@@ -7,7 +7,7 @@
 #include "ape_private.h"
 #include "model.h"
 #include "world/world.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 static void model_cleanup_callback_( void *userData )
 {

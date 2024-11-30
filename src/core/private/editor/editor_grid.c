@@ -2,7 +2,7 @@
 
 #include "plcore/pl_hashtable.h"
 #include "ape_private.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 #include "editor/editor.h"
 
 /////////////////////////////////////////////////////////////////////////////////////

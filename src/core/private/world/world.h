@@ -12,7 +12,7 @@
 #include "ape_memory.h"
 #include "node/node_entity.h"
 #include "audio/audio.h"
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 #define WORLD_PROP_TAG_LENGTH 64
 

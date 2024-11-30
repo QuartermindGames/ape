@@ -8,9 +8,9 @@
 #include "actor.h"
 #include "world/world.h"
 
-#include "client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
-void Monster_Collide( struct Actor *self, struct Actor *other, float force )
+void Monster_Collide( Actor *self, Actor *other, float force )
 {
 	/* decide what direction to push out from */
 	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );

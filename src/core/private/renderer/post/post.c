@@ -4,8 +4,7 @@
 
 #include "post.h"
 
-#include "client/renderer/renderer_render_target.h"
-#include "editor/editor.h"
+#include "renderer/renderer_render_target.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -23,7 +22,7 @@ static const ApePostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool                        postProcessInit    = false;
 static bool                        postProcessEnabled = true;
 
-static ApeRenderTarget *ppRenderTarget = NULL;
+static ApeRenderTarget *ppRenderTarget = nullptr;
 
 static void register_post_effects( void )
 {

@@ -4,7 +4,7 @@
 
 #include "ape_private.h"
 
-#include "../client/renderer/renderer.h"
+#include "renderer/renderer.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

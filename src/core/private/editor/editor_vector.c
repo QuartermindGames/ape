@@ -5,7 +5,7 @@
 #include "../ape_private.h"
 
 #include "editor.h"
-#include "client/renderer/material/material.h"
+#include "renderer/material/material.h"
 
 #define APE_VECTOR_SHAPE_MAX_POINTS 32
 
