@@ -11,7 +11,7 @@
 
 static void model_cleanup_callback_( void *userData )
 {
-	ApeModel *model = ( ApeModel * ) userData;
+	ApeModel *model = userData;
 	assert( model != NULL );
 
 	for ( uint i = 0; i < model->numMaterials; ++i )
@@ -144,7 +144,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		ape_warning_( "No meshes for model!\n" );
 		return nullptr;
 	}
-	else if ( model->numMaterials >= APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( model->numMaterials >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
 		ape_warning_( "Unexpected number of meshes (%u >= %u)!\n", model->numMaterials, APE_FORMAT_MODEL_MAX_MATERIALS );
 		model->numMaterials = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
@@ -306,7 +306,7 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 
 static void destroy_model_node( void *data, ApeWorldNode *parent )
 {
-	ApeModelNode *self = ( ApeModelNode * ) data;
+	ApeModelNode *self = data;
 
 	ape_model_release( self->model );
 
@@ -315,7 +315,7 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 
 AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 {
-	ApeModelNode *self = ( ApeModelNode * ) data;
+	ApeModelNode *self = data;
 	acm_push_string( root, "path", self->modelPath, true );
 
 	return root;
