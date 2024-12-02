@@ -39,7 +39,7 @@ void ape_model_release( ApeModel *model );
  * @param model Pointer to instance of model.
  * @param state	Current animation state of the model. Can be null if not animated.
  */
-void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light );
+void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light );
 
 /**
  * Draw an instanced version of the model.

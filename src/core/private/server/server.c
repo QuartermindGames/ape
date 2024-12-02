@@ -40,7 +40,7 @@ static void drop_client_callback( void *userData, PL_UNUSED bool *breakEarly )
 	ape_server_drop_client_( ( ApeServerClient * ) userData );
 }
 
-void ape_server_register_console_()
+void ape_server_register_console_variables_()
 {
 	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, NULL, true );
 	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, NULL, true );

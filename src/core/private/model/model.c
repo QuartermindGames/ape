@@ -9,6 +9,13 @@
 #include "world/world.h"
 #include "renderer/renderer.h"
 
+static bool modelShowSkeleton;
+
+void ape_model_register_console_variables_()
+{
+	PlRegisterConsoleVariable( "model.showSkeleton", "Toggle display of a model skeleton.", "false", PL_VAR_BOOL, &modelShowSkeleton, nullptr, false );
+}
+
 static void model_cleanup_callback_( void *userData )
 {
 	ApeModel *model = userData;
@@ -238,7 +245,7 @@ void ape_model_release( ApeModel *model )
 	ape_memory_release( &model->reference );
 }
 
-void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
+void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
 {
 	for ( uint i = 0; i < model->numMaterials; ++i )
 	{
@@ -249,6 +256,27 @@ void ape_model_draw( ApeModel *model, const ApeModelAnimationState *state, const
 		lights[ 0 ] = light;
 
 		ape_material_draw( model->meshes[ i ].material, model->cache, lights );
+	}
+
+	if ( modelShowSkeleton )
+	{
+		for ( uint i = 0; i < model->numBones; ++i )
+		{
+			if ( model->bones[ i ].parent >= model->numBones )
+			{
+				continue;
+			}
+
+			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
+
+			const ApeFormatBone *a  = &model->bones[ i ];
+			const PLVector3      pa = PlTransformVector3( &a->position, mat );
+
+			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
+			const PLVector3      pb = PlTransformVector3( &b->position, mat );
+
+			ape_draw_debug_line( pa, pb, PL_COLOUR_WHITE );
+		}
 	}
 }
 
