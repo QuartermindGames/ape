@@ -15,9 +15,9 @@ static SmdModel *parse_smd( const char *path, const char *p )
 	SmdModel *model = PL_NEW( SmdModel );
 
 	bool isValidated = false;
-	char token[ MAX_TOKEN ];
 	while ( *p != '\0' )
 	{
+		char token[ MAX_TOKEN ];
 		PlParseToken( &p, token, sizeof( token ) );
 		if ( *token == '\0' || ( token[ 0 ] == '/' && token[ 1 ] == '/' ) )
 		{
@@ -56,6 +56,21 @@ static SmdModel *parse_smd( const char *path, const char *p )
 					break;
 				}
 
+				// Unique ID number (does not have to be sequential)
+				// https://developer.valvesoftware.com/wiki/SMD#Nodes
+				const int index = strtol( token, nullptr, 10 );// bone index
+				assert( index < SMD_MAX_BONES );
+				SmdBone *bone = &model->bones[ index ];
+				model->numBones++;
+
+				PlParseEnclosedString( &p, bone->name, sizeof( bone->name ) );// bone name
+
+				const int parent = PlParseInteger( &p, nullptr );// parent index
+				if ( parent >= 0 )
+				{
+					bone->parent = &model->bones[ parent ];
+				}
+
 				PlSkipLine( &p );
 			}
 
@@ -67,6 +82,8 @@ static SmdModel *parse_smd( const char *path, const char *p )
 		if ( strcmp( token, "skeleton" ) == 0 )
 		{
 			PlSkipLine( &p );
+
+			int frame = 0;
 			while ( *p != '\0' )
 			{
 				PlParseToken( &p, token, sizeof( token ) );
@@ -74,6 +91,29 @@ static SmdModel *parse_smd( const char *path, const char *p )
 				{
 					break;
 				}
+
+				if ( strcmp( token, "time" ) == 0 )
+				{
+					frame = PlParseInteger( &p, nullptr );
+					PlSkipLine( &p );
+					continue;
+				}
+
+				const int index = strtol( token, nullptr, 10 );// bone index
+				assert( index < SMD_MAX_BONES && index >= 0 && index < model->numBones );
+				SmdBone *bone = &model->bones[ index ];
+
+				//printf( "index: %d, frame: %d, ", index, frame );
+
+				bone->frames[ frame ].position.x = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].position.y = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].position.z = PlParseFloat( &p, nullptr );
+				//printf( "pos: %f %f %f, ", bone->frames[ frame ].position.x, bone->frames[ frame ].position.y, bone->frames[ frame ].position.z );
+
+				bone->frames[ frame ].rotation.x = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].rotation.y = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].rotation.z = PlParseFloat( &p, nullptr );
+				//printf( "rot: %f %f %f\n", bone->frames[ frame ].rotation.x, bone->frames[ frame ].rotation.y, bone->frames[ frame ].rotation.z );
 
 				PlSkipLine( &p );
 			}
@@ -104,7 +144,7 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				// figure out what slot it falls into
 
-				SmdMesh *smdMesh = NULL;
+				SmdMesh *smdMesh = nullptr;
 				for ( unsigned int i = 0; i < SMD_MAX_MESHES; ++i )
 				{
 					if ( *model->meshes[ i ].material == '\0' )
@@ -133,7 +173,8 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				for ( unsigned int i = 0; i < 3; ++i )
 				{
-					PlParseInteger( &p, nullptr );// bone index
+					int boneIndex = PlParseInteger( &p, nullptr );// bone index
+					//smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].numWeights = PlParseInteger( &p, nullptr );// num weights
 
 					PLVector3 position;
 					position.x = PlParseFloat( &p, nullptr );
@@ -215,8 +256,20 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 
 	for ( unsigned int i = 0; i < out->numBones; ++i )
 	{
-		out->bones[ i ].parent = ( smd->bones[ i ].parent - &smd->bones[ i ] );
+		if ( smd->bones[ i ].parent != nullptr )
+		{
+			out->bones[ i ].parent = ( &smd->bones[ i ] - smd->bones[ i ].parent );
+		}
+		else
+		{
+			out->bones[ i ].parent = -1;
+		}
+
 		snprintf( out->bones[ i ].name, sizeof( out->bones[ i ].name ), "%s", smd->bones[ i ].name );
+		out->bones[ i ].position = smd->bones[ i ].frames[ 0 ].position;
+		out->bones[ i ].rotation = smd->bones[ i ].frames[ 0 ].rotation;
+
+		//printf( "pos: %s, rot: %s\n", PlPrintVector3( &out->bones[ i ].position, PL_VAR_F32 ), PlPrintVector3( &out->bones[ i ].rotation, PL_VAR_F32 ) );
 	}
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )
@@ -275,6 +328,6 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 
 static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
 static CookModel *conv_smd( const CookModel *model, CookModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
-static void       destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel       *) model ); }
+static void       destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
 
 const CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };

@@ -182,6 +182,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			ape_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
 			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
+
 		AcmBranch *child = acm_get_first_child( bonesList );
 		for ( uint i = 0; i < model->numBones; ++i )
 		{
@@ -189,6 +190,10 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			{
 				break;
 			}
+
+			model->bones[ i ].parent   = acm_branch_get_child_int( child, "parent", -1 );
+			model->bones[ i ].position = acm_get_vector3( child, "position", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+			model->bones[ i ].rotation = acm_get_vector3( child, "rotation", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
 
 			child = acm_get_next_child( child );
 		}
@@ -245,8 +250,47 @@ void ape_model_release( ApeModel *model )
 	ape_memory_release( &model->reference );
 }
 
+static PLVector3 get_transformed_bone_position( const ApeModel *model, const ApeFormatBone *bone, const PLMatrix4 *transform )
+{
+	PLVector3 pos = bone->position;
+	while ( bone->parent != -1 )
+	{
+		const ApeFormatBone *parent = &model->bones[ bone->parent ];
+
+		pos  = PlTransformVector3( &pos, transform );
+		pos  = PlAddVector3( pos, parent->position );
+		bone = parent;
+	}
+
+	return pos;
+}
+
 void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
 {
+	if ( modelShowSkeleton )
+	{
+		for ( uint i = 0; i < model->numBones; ++i )
+		{
+			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
+
+			const ApeFormatBone *a  = &model->bones[ i ];
+			const PLVector3      pa = get_transformed_bone_position( model, a, mat );
+			ape_draw_debug_sphere( pa, PL_COLOUR_CYAN, 1.0f );
+
+			if ( model->bones[ i ].parent == -1 )
+			{
+				continue;
+			}
+
+			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
+			const PLVector3      pb = get_transformed_bone_position( model, b, mat );
+			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
+		}
+
+		ape_draw_debug_mesh_display_();
+		return;
+	}
+
 	for ( uint i = 0; i < model->numMaterials; ++i )
 	{
 		model->cache->startIndex = model->meshes[ i ].startIndex;
@@ -257,27 +301,6 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 
 		ape_material_draw( model->meshes[ i ].material, model->cache, lights );
 	}
-
-	if ( modelShowSkeleton )
-	{
-		for ( uint i = 0; i < model->numBones; ++i )
-		{
-			if ( model->bones[ i ].parent >= model->numBones )
-			{
-				continue;
-			}
-
-			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
-
-			const ApeFormatBone *a  = &model->bones[ i ];
-			const PLVector3      pa = PlTransformVector3( &a->position, mat );
-
-			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
-			const PLVector3      pb = PlTransformVector3( &b->position, mat );
-
-			ape_draw_debug_line( pa, pb, PL_COLOUR_WHITE );
-		}
-	}
 }
 
 void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms )
@@ -285,7 +308,7 @@ void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, ui
 	//TODO: only will work with static models for now...
 }
 
-static PLCollisionAABB compute_model_bounds( ApeModel *model )
+static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 {
 	PLCollisionAABB bounds = {};
 	assert( model->cache->num_verts > 0 );
@@ -343,7 +366,7 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 
 AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 {
-	ApeModelNode *self = data;
+	const ApeModelNode *self = data;
 	acm_push_string( root, "path", self->modelPath, true );
 
 	return root;

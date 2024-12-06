@@ -12,12 +12,21 @@ PL_EXTERN_C
 #define SMD_MAX_TRIANGLES APE_FORMAT_MODEL_MAX_TRIANGLES
 #define SMD_MAX_WEIGHTS   4
 #define SMD_MAX_BONES     APE_FORMAT_MODEL_MAX_BONES
+#define SMD_MAX_FRAMES    2048
+
+typedef struct SmdFrame
+{
+	int       bone;
+	PLVector3 position;
+	PLVector3 rotation;
+} SmdFrame;
 
 typedef struct SmdBone
 {
 	int             id;
 	char            name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
 	struct SmdBone *parent;
+	SmdFrame        frames[ SMD_MAX_FRAMES ];
 } SmdBone;
 
 typedef struct SmdWeight

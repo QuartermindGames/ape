@@ -192,14 +192,19 @@ static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const Co
 	}
 }
 
-static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone )
+static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone, const CookModel *model )
 {
-	printf( "\tSerialising bone (%s)\n", bone->name );
+	//printf( "\tSerialising bone (%s)\n", bone->name );
 
 	AcmBranch *boneBranch = acm_push_object( root, nullptr );
 	acm_push_string( boneBranch, "name", bone->name, false );
-	acm_push_ui32( boneBranch, "parent", bone->parent );
-	acm_push_array_f32( boneBranch, "position", ( float * ) &bone->position, 3 );
+	if ( bone->parent > -1 )
+	{
+		acm_push_i32( boneBranch, "parent", bone->parent );
+	}
+
+	PLVector3 bonePosition = PlScaleVector3F( bone->position, model->scale );
+	acm_push_array_f32( boneBranch, "position", ( float * ) &bonePosition, 3 );
 	acm_push_array_f32( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
 
@@ -209,11 +214,9 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 
 	acm_push_ui32( root, "version", APE_FORMAT_MODEL_VERSION );
 
-	AcmBranch *branch;
-
 	//TODO: this is pretty basic and hard-coded for now... meh...
 	//TODO: allow us to store vertex data as other data types besides floats...
-	branch = acm_push_object( root, "vertexFormatDescriptor" );
+	AcmBranch *branch = acm_push_object( root, "vertexFormatDescriptor" );
 	acm_push_ui32( branch, "numFloatElements", 8 );
 	acm_push_bool( branch, "hasPosition", true );
 	acm_push_bool( branch, "hasNormal", true );
@@ -236,10 +239,11 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 	acm_push_bool( root, "isStatic", model->isStatic );
 	if ( model->numBones > 0 )
 	{
+		printf( "%u bones\n", model->numBones );
 		branch = acm_push_array_object( root, "bones" );
 		for ( uint i = 0; i < model->numBones; ++i )
 		{
-			serialize_bone( branch, &model->bones[ i ] );
+			serialize_bone( branch, &model->bones[ i ], model );
 		}
 	}
 

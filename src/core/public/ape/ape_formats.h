@@ -46,10 +46,10 @@ typedef struct ApeFormatWeight
 
 typedef struct ApeFormatBone
 {
-	char         name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
-	unsigned int parent;
-	PLVector3    rotation;
-	PLVector3    position;
+	char      name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
+	int       parent;
+	PLVector3 rotation;
+	PLVector3 position;
 } ApeFormatBone;
 
 /////////////////////////////////////////////////////////////////////////////////////

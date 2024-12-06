@@ -54,7 +54,7 @@ add_library(ApeCore STATIC
         private/net/net.c
         private/net/net_var.c
 
-        private/core_fs.c
+        private/ape_filesystem.c
         private/ape_interface_game.c
         private/ape_image.c
         private/ape_memory.c
