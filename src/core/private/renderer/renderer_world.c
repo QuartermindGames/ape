@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 OldTimes Software, Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
 #include "renderer.h"
@@ -19,15 +19,13 @@ void        ape_renderer_world_register_console_variables_()
 	PlRegisterConsoleVariable( "renderer_world.showHiddenFaces", "Toggle hidden faces.", "false", PL_VAR_BOOL, &showHiddenFaces, nullptr, false );
 }
 
-static void draw_face_wireframe( ApeWorldFace *face, ApeCamera *camera )
+static void draw_face_wireframe( ApeBrushFace *face, ApeCamera *camera )
 {
-	uint                 numVertices;
-	ApeWorldFaceVertex **vertices = ( ApeWorldFaceVertex ** ) PlGetVectorArrayDataEx( face->vertices, &numVertices );
-	for ( uint i = 0; i < numVertices; ++i )
+	for ( uint i = 0; i < face->numVertices; ++i )
 	{
-		ApeWorldVertex *a = vertices[ i ]->u;
-		PlgImmPushVertex( a->position.x, a->position.y, a->position.z );
-		if ( face->portal != NULL )
+		const ApeBrushFaceVertex *a = face->edgeLoop[ i ];
+		PlgImmPushVertex( a->position->x, a->position->y, a->position->z );
+		if ( ape_brush_face_is_portal( face ) )
 		{
 			PlgImmColour( 255, 0, 255, 255 );
 		}
@@ -36,9 +34,9 @@ static void draw_face_wireframe( ApeWorldFace *face, ApeCamera *camera )
 			PlgImmColour( 255, 255, 255, 255 );
 		}
 
-		ApeWorldVertex *b = ( ( i + 1 ) < numVertices ) ? vertices[ i + 1 ]->u : vertices[ 0 ]->u;
-		PlgImmPushVertex( b->position.x, b->position.y, b->position.z );
-		if ( face->portal != NULL )
+		const ApeBrushFaceVertex *b = ( ( i + 1 ) < face->numVertices ) ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+		PlgImmPushVertex( b->position->x, b->position->y, b->position->z );
+		if ( ape_brush_face_is_portal( face ) )
 		{
 			PlgImmColour( 255, 0, 255, 255 );
 		}
@@ -51,6 +49,18 @@ static void draw_face_wireframe( ApeWorldFace *face, ApeCamera *camera )
 
 static void draw_room_wireframe( ApeRoom *room, ApeCamera *camera )
 {
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+	PlgImmBegin( PLG_MESH_LINES );
+
+	unsigned int   numFaces;
+	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visibleFaces, &numFaces );
+	for ( uint i = 0; i < numFaces; ++i )
+	{
+		draw_face_wireframe( faces[ i ], camera );
+	}
+
+	PlgImmDraw();
 }
 
 /**
@@ -63,38 +73,30 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera )
 {
 	assert( ( camera != NULL ) && ( world != NULL ) );
 
-	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
-
-	PlgSetTexture( nullptr, 0 );
-
 	ApeRoom *room = ape_camera_get_room( camera );
 	if ( room == nullptr )
 	{
 		return;
 	}
 
-	PlgImmBegin( PLG_MESH_LINES );
-
 	draw_room_wireframe( room, camera );
-
-	PlgImmDraw();
 }
 
 static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
-		ApeBrush *brush = ( ApeBrush * ) node;
+		const ApeBrush *brush = ( ApeBrush * ) node;
 		for ( uint i = 0; i < brush->numFaces; ++i )
 		{
-			ApeBrushFace *face = &brush->faces[ i ];
+			const ApeBrushFace *face = &brush->faces[ i ];
 			for ( uint j = 0; j < face->numVertices; ++j )
 			{
 				const ApeBrushFaceVertex *vertex = face->edgeLoop[ j ];
 
 				//TODO: handle transforms for the brush in software here
 
-				uint idx = PlgAddMeshVertex( mesh, vertex->position, &vertex->normal, &PL_COLOURU8( 255, 255, 255, 255 ), &vertex->textureCoords );
+				const uint idx = PlgAddMeshVertex( mesh, vertex->position, &vertex->normal, &PL_COLOURU8( 255, 255, 255, 255 ), &vertex->textureCoords );
 
 				// these have to be set seperate for now, need an api for it
 				mesh->vertices[ idx ].tangent   = vertex->tangent;
@@ -115,7 +117,7 @@ static uint get_total_verts_for_tree( ApeWorldNode *node )
 	uint numVertices = 0;
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
-		ApeBrush *brush = ( ApeBrush * ) node;
+		const ApeBrush *brush = ( ApeBrush * ) node;
 		numVertices     = brush->numVertices;
 	}
 
@@ -610,12 +612,153 @@ void ape_world_draw_( ApeCamera *camera, ApeLight *light, ApeRendererPassFlag st
 		return;
 	}
 
+	draw_room( room, camera, light, stage );
+}
+
+static void draw_translucent_room( ApeRoom *room, ApeCamera *camera )
+{
+	// and now depth pre-pass
+	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
+	{
+		PlgDepthMask( false );
+
+		unsigned int numLights;
+		ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
+		for ( unsigned int i = 0; i < numLights; ++i )
+		{
+			if ( lights[ i ]->colour.a == 0.0f )
+			{
+				continue;
+			}
+
+			//TODO: viewport clipping per light volume
+
+			ape_rendererState_.overrideBlendMode = true;
+			ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+			ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
+
+			draw_room( room, camera, lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+
+			ape_rendererState_.overrideBlendMode = false;
+		}
+
+		PlgDepthMask( true );
+	}
+}
+
+static void draw_solid_room( ApeRoom *room, ApeCamera *camera )
+{
+	// and now depth pre-pass
+	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
+
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
+	{
+		PlgDepthMask( false );
+
+		unsigned int numLights;
+		ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
+		for ( unsigned int i = 0; i < numLights; ++i )
+		{
+			if ( lights[ i ]->colour.a <= 0.0f )
+			{
+				continue;
+			}
+
+			PlgClearBuffers( PLG_BUFFER_STENCIL );
+
+			//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
+
+			bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+			if ( drawShadows )
+			{
+				ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
+
+				if ( ape_config_.renderer.showShadowWireframe )
+				{
+					PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+					ape_world_draw_stencil_shadows_( camera, lights[ i ] );
+					PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+				}
+
+				PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+				PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+				PlgColourMask( false, false, false, false );
+
+				PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
+				PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+				PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+
+				ape_world_draw_stencil_shadows_( camera, lights[ i ] );
+
+				PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+				PlgColourMask( true, true, true, true );
+
+				PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+				PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
+				PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+				ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_DEFAULT;
+			}
+
+			ape_rendererState_.overrideBlendMode = true;
+			ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+			ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
+
+			draw_room( room, camera, lights[ i ], APE_RENDERER_PASS_FLAG_OPAQUE );
+
+			ape_rendererState_.overrideBlendMode = false;
+
+			if ( drawShadows )
+			{
+				PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+			}
+		}
+
+		PlgDepthMask( true );
+	}
+}
+
+//TODO: move into room code
+void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport )
+{
 	COM_PROFILE_FUNCTION_START();
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
-	draw_room( room, camera, light, stage );
+	//TODO: first thing to do is to deal with the portals
+
+#if 0
+	switch ( camera->drawMode )
+	{
+		default:
+			break;
+		case APE_CAMERA_DRAW_MODE_WIREFRAME:
+			ape_world_draw_wireframe_( world, camera );
+		break;
+		case APE_CAMERA_DRAW_MODE_SOLID:
+		case APE_CAMERA_DRAW_MODE_TEXTURED:
+			ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
+		ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+		break;
+		case APE_CAMERA_DRAW_MODE_SHADED:
+			render_solid_world( camera, viewport );
+		render_transparent_world( camera );
+		break;
+	}
+#endif
+
+	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME )
+	{
+		draw_room_wireframe( room, camera );
+	}
+	else
+	{
+		draw_solid_room( room, camera );
+		draw_translucent_room( room, camera );
+	}
 
 	PlPopMatrix();
 

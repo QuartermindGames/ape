@@ -394,104 +394,6 @@ void ape_shutdown_renderer_( void )
 /****************************************
  ****************************************/
 
-static void render_transparent_world( ApeCamera *camera )
-{
-	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
-
-	PlgDepthMask( false );
-
-	unsigned int numLights;
-	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
-	for ( unsigned int i = 0; i < numLights; ++i )
-	{
-		if ( lights[ i ]->colour.a == 0.0f )
-		{
-			continue;
-		}
-
-		//TODO: viewport clipping per light volume
-
-		ape_rendererState_.overrideBlendMode = true;
-		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
-		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
-
-		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
-
-		ape_rendererState_.overrideBlendMode = false;
-	}
-
-	PlgDepthMask( true );
-}
-
-static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
-{
-	// Ambient pass
-	ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
-
-	PlgDepthMask( false );
-
-	unsigned int numLights;
-	ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
-	for ( unsigned int i = 0; i < numLights; ++i )
-	{
-		if ( lights[ i ]->colour.a <= 0.0f )
-		{
-			continue;
-		}
-
-		PlgClearBuffers( PLG_BUFFER_STENCIL );
-
-		//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
-
-		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
-		if ( drawShadows )
-		{
-			ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
-
-			if ( ape_config_.renderer.showShadowWireframe )
-			{
-				PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				ape_world_draw_stencil_shadows_( camera, lights[ i ] );
-				PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-			}
-
-			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-			PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-			PlgColourMask( false, false, false, false );
-
-			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
-			PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
-
-			ape_world_draw_stencil_shadows_( camera, lights[ i ] );
-
-			PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-			PlgColourMask( true, true, true, true );
-
-			PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
-			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
-
-			ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_DEFAULT;
-		}
-
-		ape_rendererState_.overrideBlendMode = true;
-		ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
-		ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
-
-		ape_world_draw_( camera, lights[ i ], APE_RENDERER_PASS_FLAG_OPAQUE );
-
-		ape_rendererState_.overrideBlendMode = false;
-
-		if ( drawShadows )
-		{
-			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-		}
-	}
-
-	PlgDepthMask( true );
-}
-
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	assert( camera != NULL );
@@ -515,26 +417,10 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	if ( !ape_config_.world.skipDraw )
 	{
-		ApeWorld *world = ape_camera_get_world( camera );
-		if ( world != NULL )
+		ApeRoom *room = ape_camera_get_room( camera );
+		if ( room != NULL )
 		{
-			switch ( camera->drawMode )
-			{
-				default:
-					break;
-				case APE_CAMERA_DRAW_MODE_WIREFRAME:
-					ape_world_draw_wireframe_( world, camera );
-					break;
-				case APE_CAMERA_DRAW_MODE_SOLID:
-				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
-					ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
-					break;
-				case APE_CAMERA_DRAW_MODE_SHADED:
-					render_solid_world( camera, viewport );
-					render_transparent_world( camera );
-					break;
-			}
+			ape_room_draw_( room, camera, viewport );
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );

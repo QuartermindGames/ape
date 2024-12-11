@@ -182,4 +182,9 @@ void ape_brush_flip_face_( ApeBrushFace *face );
 
 bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Room
+
+void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport );
+
 PL_EXTERN_C_END
