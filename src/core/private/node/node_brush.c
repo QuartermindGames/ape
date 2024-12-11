@@ -184,6 +184,11 @@ bool ape_brush_face_is_portal( const ApeBrushFace *self )
 	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR;
 }
 
+bool ape_brush_face_is_mirror( const ApeBrushFace *self )
+{
+	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR;
+}
+
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
 {
 	if ( self->destination != nullptr )

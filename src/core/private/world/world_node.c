@@ -227,6 +227,7 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 		return ( ApeRoom * ) self;
 	}
 
+	// iterate up the tree until we find a room - the room should always be at the top!
 	ApeWorldNode *next = self->parent;
 	while ( next != nullptr )
 	{
@@ -239,14 +240,14 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 		next = next->parent;
 	}
 
-	return ( next != nullptr ) ? ( ApeRoom * ) next : nullptr;
+	return next != nullptr ? ( ApeRoom * ) next : nullptr;
 }
 
 void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 
-	// just explicitly set the node to it's new parent
+	// just explicitly set the node to its new parent
 	ape_world_node_attach( self, &room->base );
 }
 

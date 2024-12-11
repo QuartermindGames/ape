@@ -80,7 +80,7 @@ ApeViewport *ape_viewport_get_active( void );
 /////////////////////////////////////////////////////////////////////////////////////
 // Camera API
 
-void ape_camera_draw_perspective( ApeCamera *camera, ApeViewport *viewport );
+void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Render Target API

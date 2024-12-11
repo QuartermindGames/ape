@@ -37,7 +37,7 @@ static void test_model_command( unsigned int argc, char **argv )
 		return;
 	}
 
-	const char *modelPath = ( argc == 1 ) ? "models/characters/elite.mdl.n" : argv[ 1 ];
+	const char *modelPath = ( argc == 1 ) ? "models/characters/character_test.mdl.n" : argv[ 1 ];
 	ape_model_node_create( APE_WORLD_NODE( room ), "test_model", modelPath );
 }
 

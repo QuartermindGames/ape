@@ -827,7 +827,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 
 	// save some of the camera state, so we can do dumb shit
 
-	ape_camera_build_visibility_lists_( camera );
+	ape_camera_build_pvs_( camera );
 
 	reject = nullptr;
 }

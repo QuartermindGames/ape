@@ -45,7 +45,9 @@ typedef struct ApeCameraVisibleSet
 	ApeLight    *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
 	unsigned int numLights;
 
-	PLVectorArray *nodes;//ApeWorldNode
+	PLVectorArray *nodes;         //ApeWorldNode
+	PLVectorArray *visibleFaces;  //ApeBrushFace
+	PLVectorArray *visiblePortals;//ApeBrushFace
 
 	struct
 	{
@@ -71,7 +73,7 @@ typedef struct ApeCamera
 	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;
 
-	ApeCameraVisibleSet visibility;
+	ApeCameraVisibleSet pvs;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +121,7 @@ typedef enum ApeRendererPassFlag
 	PL_BITFLAG( APE_RENDERER_PASS_FLAG_DEPTH_PREPASS, 0 ),
 	PL_BITFLAG( APE_RENDERER_PASS_FLAG_OPAQUE, 1 ),
 	PL_BITFLAG( APE_RENDERER_PASS_FLAG_TRANSLUCENT, 2 ),
+	PL_BITFLAG( APE_RENDERER_PASS_FLAG_PORTAL, 3 ),
 } ApeRendererPassFlag;
 
 typedef struct ApeRendererPassState

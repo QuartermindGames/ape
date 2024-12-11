@@ -11,7 +11,7 @@ forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
 {
 	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
 
-	new FXLabel( infoFrame, FXString( FORGE_APP_TITLE ) + " (" FORGE_APP_VERSION ")\n" SS_COM_COPYRIGHT "\n"
+	new FXLabel( infoFrame, FXString( FORGE_APP_TITLE ) + " (" FORGE_APP_VERSION ")\n" COM_COPYRIGHT "\n"
 	                                                      "Editor environment for use with APE Tech.",
 	             nullptr,
 	             LAYOUT_LEFT | LAYOUT_SIDE_LEFT | JUSTIFY_LEFT );

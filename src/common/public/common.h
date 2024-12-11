@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SS_COM_COPYRIGHT "Copyright © 2020-2024 SnortySoft, Mark E Sowden"
+#define COM_COPYRIGHT "Copyright © 2020-2024 Quartermind Games, Mark E Sowden"
 
 // These are non-standard, so declare them here
 #if !defined( _POSIX_SOURCE )
@@ -34,9 +34,41 @@ typedef enum ComDataType
 
 PL_EXTERN_C
 
-void              com_initialize( void );
-const char       *com_get_local_data_directory( void );
-const char       *com_get_app_data_directory( void );
+/**
+ * @brief Initializes common library components and settings.
+ *
+ * This function sets up logging levels, registers packages, and initializes
+ * necessary directories for the application's operation. It prepares the
+ * common library for use by setting up various subsystems like logging and
+ * directory lookups essential for the application's functionality.
+ */
+void com_initialize( void );
+
+/**
+ * @brief Retrieves the local data directory path for the application.
+ *
+ * This function determines the local data directory path by analyzing the
+ * executable directory and sets the path accordingly. It attempts to resolve
+ * the directory using relative paths from the executable directory or the
+ * current working directory. On Unix systems, it further resolves the path
+ * using realpath to obtain the canonicalized absolute pathname.
+ *
+ * @return A const char pointer to the resolved local data directory path.
+ */
+const char *com_get_local_data_directory( void );
+
+/**
+ * @brief Retrieves the application data directory path.
+ *
+ * This function returns the path to the application's data directory,
+ * where application-specific data is stored. It attempts to fetch the
+ * directory path using system functions, and if unsuccessful, defaults
+ * to the current directory. The result is cached for subsequent calls.
+ *
+ * @return A pointer to a string containing the application's data directory path.
+ */
+const char *com_get_app_data_directory( void );
+
 struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool              com_write_config( struct AcmBranch *root, const char *name );
 
@@ -48,22 +80,81 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 
 typedef struct ComProfilingGroup ComProfilingGroup;
 
+/**
+ * @brief Retrieves a profiling group based on the given key.
+ *
+ * This function searches for an existing profiling group associated with the specified key.
+ * If the profiling group is found, it is returned. If no such group exists, the function returns NULL.
+ * Profiling groups are part of a system for monitoring performance metrics.
+ *
+ * @param key	The key identifying the desired profiling group.
+ * @return		A pointer to the ComProfilingGroup if found, or NULL if no group exists for the provided key.
+ */
 ComProfilingGroup *com_profiler_get_group( const char *key );
 
 void comStartProfiling( const char *key );
 void comEndProfiling( const char *key );
 
+/**
+ * @brief Retrieves the name of a profiling group.
+ *
+ * This function returns the name of the profiling group by accessing the key associated
+ * with the given ComProfilingGroup structure. The key is intended to serve as a unique
+ * identifier for the group.
+ *
+ * @param group	A pointer to the ComProfilingGroup structure from which to retrieve the name.
+ * @return		A pointer to a constant character string representing the name of the profiling group.
+ */
 const char *com_profiler_get_group_name( const ComProfilingGroup *group );
 
+/**
+ * @brief Retrieves the first profiling group in the sequence.
+ *
+ * This function returns a pointer to the first profiling group within the
+ * profiling groups hash table. If the profiling group hash table is empty
+ * or uninitialized, the function returns NULL.
+ *
+ * @return A pointer to the first ComProfilingGroup if available, or NULL if
+ * the profiling groups list is empty or unavailable.
+ */
 ComProfilingGroup *com_profiler_get_first_group( void );
+
+/**
+ * @brief Retrieves the next profiling group in the sequence.
+ *
+ * This function returns the next profiling group following the provided group in the sequence of profiling groups.
+ * If there are no more groups, the function returns NULL.
+ * Profiling groups are used to collect and analyze performance metrics.
+ *
+ * @param group   A pointer to the current ComProfilingGroup from which the next group is retrieved.
+ * @return        A pointer to the next ComProfilingGroup, or NULL if there are no more groups.
+ */
 ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group );
 
 double        com_profiler_get_time_taken( const ComProfilingGroup *group );
 double        com_profiler_get_time_average( const ComProfilingGroup *group );
 const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *numPoints );
 
+/**
+ * @brief Returns the number of existing profiling groups.
+ *
+ * This function calculates and returns the total number of profiling groups currently available.
+ * It checks if the internal hash table for profiling groups has been initialized. If it has not
+ * been initialized, the function returns 0, indicating no groups are present.
+ *
+ * @return The total number of profiling groups, or 0 if no groups exist.
+ */
 uint com_profiler_get_num_groups( void );
 
+/**
+ * @brief Updates the profiling samples for each profiling group.
+ *
+ * This function iterates over all profiling groups and updates their sample data.
+ * It shifts existing sample results within the group and assigns the latest time taken
+ * to the last sample position. The operation helps in maintaining a rolling history
+ * of time taken for profiling analyses.
+ * The function performs no operation if no profiling groups are initialized.
+ */
 void com_profiler_update_samples( void );
 
 #define COM_ENABLE_PROFILER

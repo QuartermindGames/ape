@@ -441,41 +441,7 @@ static void render_solid_world( ApeCamera *camera, const ApeViewport *viewport )
 
 		PlgClearBuffers( PLG_BUFFER_STENCIL );
 
-		//TODO: viewport clipping per light volume
-#if 0
-
-		PLMatrix4 viewProj = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
-
-		int       viewportSize[] = { viewport->width, viewport->height, viewport->x, viewport->y };
-		PLVector2 lightScreenPos = PlConvertWorldToScreen( &lightPosition, &viewProj, viewportSize, true );
-		PLVector3 lightRadi      = PlAddVector3F( lightPosition, lights[ i ]->radius );
-		PLVector2 lightRadiusPos = PlConvertWorldToScreen( &lightRadi, &viewProj, viewportSize, true );
-
-		static int radius = 256;
-
-		PLRectangleI32 screenRect;
-		screenRect.x = ( int ) lightScreenPos.x - ( radius / 2 );
-		if ( screenRect.x < viewport->x ) screenRect.x = viewport->x;
-		screenRect.y = ( int ) lightScreenPos.y - ( radius / 2 );
-		if ( screenRect.y < viewport->y ) screenRect.y = viewport->y;
-
-		screenRect.w = ( int ) radius;
-		if ( screenRect.x + screenRect.w > viewport->width ) screenRect.w = ( screenRect.x + screenRect.w ) - viewport->width;
-		screenRect.h = ( int ) radius;
-		if ( screenRect.y + screenRect.h > viewport->height ) screenRect.h = ( screenRect.y + screenRect.h ) - viewport->height;
-
-		if ( screenRect.w < 0 || screenRect.h < 0 )
-		{
-			continue;
-		}
-
-		ape_print_( "light pos 		%s\n", PlPrintVector3( &lightPosition, PL_VAR_F32 ) );
-		ape_print_( "screen pos		%s\n", PlPrintVector2( &lightScreenPos, PL_VAR_F32 ) );
-		ape_print_( "screen bounds	%u %u %u %u\n", screenRect.x, screenRect.y, screenRect.w, screenRect.h );
-
-		//PlgClipViewport( screenRect.x, screenRect.y, screenRect.w, screenRect.h );
-
-#endif
+		//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
 
 		bool drawShadows = ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
 		if ( drawShadows )

@@ -64,8 +64,9 @@ struct PLGCamera *ape_camera_get_internal( ApeCamera *camera );
 ApeLight     **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num );
 ApeRoom      **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
 ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num );
+ApeBrushFace **ape_camera_get_visible_portals_( ApeCamera *self, unsigned int *num );
 
-void ape_camera_build_visibility_lists_( ApeCamera *self );
+void ape_camera_build_pvs_( ApeCamera *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 
