@@ -204,7 +204,7 @@ ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
 	return nullptr;
 }
 
-ApeRoom *ape_brush_face_get_room( ApeBrushFace *self )
+ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self )
 {
 	ApeBrush *brush = self->parent;
 	assert( brush != nullptr );

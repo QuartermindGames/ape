@@ -414,6 +414,12 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 					continue;
 				}
 
+				PLVector3 view = PlNormalizeVector3( PlSubtractVector3( ape_camera_get_position( self ), face->bounds.absOrigin ) );
+				if ( PlVector3DotProduct( face->normal, view ) < 0.0f )
+				{
+					continue;
+				}
+
 				if ( ape_config_.renderer.showFaceNormals )
 				{
 					ape_draw_debug_arrow( face->bounds.absOrigin, PlAddVector3( face->bounds.absOrigin, PlScaleVector3F( face->normal, 8.0f ) ), PL_COLOUR_WHITE, 2.0f );
@@ -504,6 +510,10 @@ void ape_camera_clear_pvs_( ApeCamera *camera )
 void ape_build_camera_visibility_lists_( void )
 {
 	COM_PROFILE_FUNCTION_START();
+
+	ape_rendererPerformance_.numRooms          = 0;
+	ape_rendererPerformance_.numLights         = 0;
+	ape_rendererPerformance_.numVisiblePortals = 0;
 
 	ApeCamera *camera;
 	COM_ITERATE_LINKED_LIST( camera, cameras, i )

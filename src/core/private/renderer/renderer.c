@@ -271,7 +271,6 @@ void ape_draw_end_( ApeViewport *viewport )
 	}
 }
 
-
 void ape_initialize_textures_( void ); /* texture.c */
 
 // renderer_flare.c
@@ -410,7 +409,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_editor_pre_render_scene_( camera );
 
-	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	if ( ape_config_.renderer.wireframe )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
@@ -426,7 +425,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
 
-	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME || ape_config_.renderer.wireframe )
+	if ( ape_config_.renderer.wireframe )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}

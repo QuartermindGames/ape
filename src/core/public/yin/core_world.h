@@ -216,7 +216,7 @@ bool          ape_brush_face_is_portal( const ApeBrushFace *self );
 bool          ape_brush_face_is_mirror( const ApeBrushFace *self );
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self );
 
-ApeRoom *ape_brush_face_get_room( ApeBrushFace *self );
+ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self );
 
 ////////////////////////////////////////////////////////////////////
 // Brush
