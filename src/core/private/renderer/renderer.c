@@ -416,6 +416,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	if ( !ape_config_.world.skipDraw )
 	{
+		PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+
 		ApeRoom *room = ape_camera_get_room( camera );
 		if ( room != NULL )
 		{
