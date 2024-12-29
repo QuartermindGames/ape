@@ -39,8 +39,35 @@ static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )
 	return nullptr;
 }
 
+const ApeWorldNodeClass **ape_world_node_get_classes( uint *numClasses )
+{
+	*numClasses = APE_WORLD_MAX_NODE_TYPES;
+	return nodeClasses;
+}
+
+const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties )
+{
+	static const ApeWorldNodeProperty properties[] = {
+	        APE_WORLD_NODE_PROPERTY_STRING( "Name", "Name of the node.", ApeWorldNode, name ),
+	        APE_WORLD_NODE_PROPERTY_BASIC( "Position", "Position of the node in 3D space.", ApeWorldNode, position, VEC3 ),
+	        APE_WORLD_NODE_PROPERTY_BASIC( "Angles", "Angles of the node in 3D space.", ApeWorldNode, angles, VEC3 ),
+	        APE_WORLD_NODE_PROPERTY_BASIC( "Scale", "Scale of the node in 3D space.", ApeWorldNode, scale, VEC3 ),
+	};
+	*numProperties = PL_ARRAY_ELEMENTS( properties );
+
+	return properties;
+}
+
+const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProperties, ApeWorldNodeType type )
+{
+	const ApeWorldNodeClass *nodeClass = nodeClasses[ type ];
+	assert( nodeClass->properties != nullptr );
+	*numProperties = nodeClass->numProperties;
+
+	return nodeClass->properties;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
-// Public
 
 void ape_world_node_generate_bounds_( ApeWorldNode *root )
 {

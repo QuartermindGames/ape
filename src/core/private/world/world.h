@@ -46,16 +46,11 @@ typedef struct ApeWorldFaceVertex
 	ApeWorldVertex *u;
 } ApeWorldFaceVertex;
 
-#define APE_WORLD_FACE_FLAG_SKY        0x01
-#define APE_WORLD_FACE_FLAG_MIRRORED   0x02
-#define APE_WORLD_FACE_FLAG_LIQUID     0x04
-#define APE_WORLD_FACE_FLAG_DETAIL     0x08
-#define APE_WORLD_FACE_FLAG_SCROLL     0x10
-#define APE_WORLD_FACE_FLAG_FULLBRIGHT 0x20
-#define APE_WORLD_FACE_FLAG_ALPHA      0x40
-#define APE_WORLD_FACE_FLAG_HOLES      0x80
-#define APE_WORLD_FACE_FLAG_LIGHTMAP   0x0300
-#define APE_WORLD_FACE_FLAG_INVISIBLE  0x2000
+typedef enum ApeWorldFaceFlag : uint32_t
+{
+	PL_BITFLAG( APE_WORLD_FACE_FLAG_SKY, 0 ),
+	PL_BITFLAG( APE_WORLD_FACE_FLAG_MIRRORED, 1 ),
+} ApeWorldFaceFlag;
 
 typedef struct ApeWorldFace
 {
@@ -65,13 +60,13 @@ typedef struct ApeWorldFace
 
 	ApeWorldPortal *portal;
 
-	struct ApeMaterial *material;
-	int                 materialIndex;// index into world's material list
+	ApeMaterial *material;
+	int          materialIndex;// index into world's material list
 
 	PLVectorArray *vertices;// ApeWorldFaceVertex
 	PLLinkedList  *edgeLoop;// ApeWorldFaceVertex
 
-	unsigned int flags; /* portal, mirror, skip etc. */
+	ApeWorldFaceFlag flags; /* portal, mirror, skip etc. */
 
 	PLCollisionAABB bounds;
 } ApeWorldFace;
@@ -80,8 +75,8 @@ typedef struct ApeWorldMesh
 {
 	char id[ WORLD_PROP_TAG_LENGTH ];
 
-	struct ApeMaterial **materials;
-	unsigned int         numMaterials;
+	ApeMaterial **materials;
+	unsigned int  numMaterials;
 
 	ApeWorldVertex *vertices;
 	unsigned int    numVertices;

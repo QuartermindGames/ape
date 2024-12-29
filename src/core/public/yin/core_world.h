@@ -55,6 +55,62 @@ typedef enum ApeWorldNodeType
 	APE_WORLD_MAX_NODE_TYPES
 } ApeWorldNodeType;
 
+typedef enum ApeWorldNodePropertyType
+{
+	APE_WORLD_NODE_PROPERTY_TYPE_INVALID = 0,
+	APE_WORLD_NODE_PROPERTY_TYPE_FLOAT,
+	APE_WORLD_NODE_PROPERTY_TYPE_VEC2,
+	APE_WORLD_NODE_PROPERTY_TYPE_VEC3,
+	APE_WORLD_NODE_PROPERTY_TYPE_VEC4,
+	APE_WORLD_NODE_PROPERTY_TYPE_ENUM,
+	APE_WORLD_NODE_PROPERTY_TYPE_COLOUR,
+	APE_WORLD_NODE_PROPERTY_TYPE_INTEGER,
+	APE_WORLD_NODE_PROPERTY_TYPE_STRING,
+	APE_WORLD_NODE_PROPERTY_TYPE_PATH,
+	APE_WORLD_NODE_PROPERTY_TYPE_BOOLEAN,
+
+	APE_WORLD_NODE_MAX_PROPERTY_TYPES,
+} ApeWorldNodePropertyType;
+
+typedef struct ApeWorldNodePropertyEnum
+{
+	const char *name;
+	uint        value;
+} ApeWorldNodePropertyEnum;
+
+typedef struct ApeWorldNodeProperty
+{
+	const char              *name;
+	const char              *description;
+	uint64_t                 offset;
+	ApeWorldNodePropertyType type;
+
+	union
+	{
+		struct
+		{
+			ApeWorldNodePropertyEnum *enums;
+			uint                      numEnums;
+		} enumType;
+		struct
+		{
+			uint maxSize;
+		} stringType;
+	};
+} ApeWorldNodeProperty;
+
+#define APE_WORLD_NODE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_##PROP }
+#define APE_WORLD_NODE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
+	{                                                                                                                                      \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
+	}
+#define APE_WORLD_NODE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                        \
+	{                                                                                                                       \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                       \
+			                                                                                   PL_ARRAY_ELEMENTS( ENUMS ) } \
+	}
+
 typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
@@ -62,6 +118,9 @@ typedef struct ApeWorldNodeClass
 	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
 	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
+
+	const ApeWorldNodeProperty *properties;
+	uint                        numProperties;
 } ApeWorldNodeClass;
 
 typedef struct ApeWorldNode
@@ -91,6 +150,31 @@ typedef struct ApeWorldNode
 
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
+
+/**
+ * Returns a list of all available node classes.
+ *
+ * @param numClasses	Total number of classes available.
+ * @return				Pointer to the list of available classes.
+ */
+const ApeWorldNodeClass **ape_world_node_get_classes( uint *numClasses );
+
+/**
+ * Returns the global list of properties for a world node.
+ *
+ * @param numProperties	Total number of properties available.
+ * @return				Pointer to the list of properties.
+ */
+const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties );
+
+/**
+ * Returns the list of properties for the given node type.
+ *
+ * @param numProperties Total number of properties available.
+ * @param type			World node class type.
+ * @return				Pointer to the list of properties.
+ */
+const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProperties, ApeWorldNodeType type );
 
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );
@@ -312,10 +396,10 @@ void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name );
 
 void        ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience );
-PLColourF32 ape_room_get_ambience( ApeRoom *self );
+PLColourF32 ape_room_get_ambience( const ApeRoom *self );
 
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
-ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self );
+ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
 bool        ape_room_set_path( ApeRoom *self, const char *path );
 const char *ape_room_get_path( const ApeRoom *self );

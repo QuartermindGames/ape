@@ -40,7 +40,7 @@ void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience )
 	self->ambientLight = ambience;
 }
 
-PLColourF32 ape_room_get_ambience( ApeRoom *self )
+PLColourF32 ape_room_get_ambience( const ApeRoom *self )
 {
 	return self->ambientLight;
 }
@@ -50,7 +50,7 @@ void ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPrese
 	self->reverbPreset = reverbPreset;
 }
 
-ApeAudioReverbPreset ape_room_get_reverb_preset( ApeRoom *self )
+ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self )
 {
 	return self->reverbPreset;
 }
@@ -134,10 +134,52 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 
 #endif
 
+static const ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
+        {"None",             0 },
+        {"Forest",           1 },
+        {"Default",          2 },
+        {"Generic",          3 },
+        {"Padded Cell",      4 },
+        {"Room",             5 },
+        {"Bathroom",         6 },
+        {"Living Room",      7 },
+        {"Stone Room",       8 },
+        {"Auditorium",       9 },
+        {"Concert Hall",     10},
+        {"Cave",             11},
+        {"Arena",            12},
+        {"Hangar",           13},
+        {"Carpeted Hallway", 14},
+        {"Hallway",          15},
+        {"Stone Corridor",   16},
+        {"Alley",            17},
+        {"City",             18},
+        {"Mountains",        19},
+        {"Quarry",           20},
+        {"Plain",            21},
+        {"Parking Lot",      22},
+        {"Sewer Pipe",       23},
+        {"Underwater",       24},
+        {"Small Room",       25},
+        {"Medium Room",      26},
+        {"Large Room",       27},
+        {"Medium Hall",      28},
+        {"Large Hall",       29},
+        {"Plate",            30},
+};
+
+static const ApeWorldNodeProperty properties[] = {
+        APE_WORLD_NODE_PROPERTY_BASIC( "Ambience", "Set the ambient light level.", ApeRoom, ambientLight, COLOUR ),
+        APE_WORLD_NODE_PROPERTY_ENUM( "Reverb", "Type of reverb to fallback to for the given room.", ApeRoom, reverbPreset, reverbPresetsEnum ),
+};
+
 const ApeWorldNodeClass ape_roomClass = {
         .identifier          = "room",
         .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
         .destroyFunction     = destroy_room,
         .serializeFunction   = ape_room_serialize_,
         .deserializeFunction = ape_room_deserialize_,
+
+        .properties    = properties,
+        .numProperties = PL_ARRAY_ELEMENTS( properties ),
 };

@@ -6,12 +6,6 @@
 
 #include "renderer/renderer.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
 {
 	ApeLight *light = PL_NEW( ApeLight );
@@ -164,10 +158,25 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 	return APE_WORLD_NODE( light );
 }
 
+static ApeWorldNodePropertyEnum lightTypesEnum[] = {
+        {"Omni", 0},
+        {"Spot", 1},
+        {"Sun",  2},
+};
+
+static ApeWorldNodeProperty properties[] = {
+        APE_WORLD_NODE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
+        APE_WORLD_NODE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
+        APE_WORLD_NODE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
+};
+
 const ApeWorldNodeClass ape_lightClass = {
         .identifier          = "light",
         .magic               = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
         .destroyFunction     = ape_light_destroy_,
         .serializeFunction   = serialize_light,
         .deserializeFunction = deserialize_light,
+
+        .properties    = properties,
+        .numProperties = PL_ARRAY_ELEMENTS( properties ),
 };
