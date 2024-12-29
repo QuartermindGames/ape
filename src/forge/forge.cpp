@@ -301,7 +301,6 @@ int main( int argc, char **argv )
 	app.create();
 
 	forge::mainWindow->show();
-	forge::mainWindow->maximize();
 
 	//HACK: make the engine initialisation happy...
 	auto *dummy = new forge::Viewport( forge::mainWindow, forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
