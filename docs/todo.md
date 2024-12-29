@@ -5,6 +5,7 @@
 - Introduce flags for shaders to indicate support for lighting
 
 ## Editor
+- Expose node properties via the editor
 - Add a way to move the grid around
 - Vertex editing
 - Extrude for brushes
@@ -23,7 +24,9 @@ System can also be expanded to support height-maps once introduced.
 - Initial Lua mock-up
 - Restrict vertices for stencil shadows based on point of intersection
   - If point doesn't cross/intersect, we should have a reasonable limit
-- Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms
+- ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
+  - Recursion for portals/mirrors isn't working right
+  - Can't combine stencil shadow volumes with mirrors
 - We don't have spotlights...
 - Prototype 'eyes' for QM2 & QM1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
