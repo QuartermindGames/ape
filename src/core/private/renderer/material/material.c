@@ -666,15 +666,19 @@ PLImage *ape_material_load_preview( const char *path )
 		return nullptr;
 	}
 
-	PLImage *newPreview = PlResizeImage( preview, 128, 128 );
-	if ( newPreview != nullptr )
+	static constexpr uint MAX_PREVIEW_SIZE = 128;
+	if ( preview->width > MAX_PREVIEW_SIZE || preview->height > MAX_PREVIEW_SIZE )
 	{
-		PlDestroyImage( preview );
-		preview = newPreview;
-	}
-	else
-	{
-		ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
+		PLImage *newPreview = PlResizeImage( preview, MAX_PREVIEW_SIZE, MAX_PREVIEW_SIZE );
+		if ( newPreview != nullptr )
+		{
+			PlDestroyImage( preview );
+			preview = newPreview;
+		}
+		else
+		{
+			ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
+		}
 	}
 
 	return preview;

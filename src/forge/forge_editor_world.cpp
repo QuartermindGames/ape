@@ -49,36 +49,36 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
 
 	// room selection box
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/save.gif" ), this, ID_ROOM_SAVE );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_ROOM_SAVE );
 	roomSelectBox = new FXComboBox( toolbar, 16, this, ID_ROOM_SELECT, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
 	roomSelectBox->setNumVisible( 8 );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/trash.gif" ), this, ID_ROOM_DELETE );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/trash.gif" ), this, ID_ROOM_DELETE );
 
 	new FXVerticalSeparator( toolbar );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
 
 	new FXVerticalSeparator( toolbar );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/edit_vertex.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/edit_vertex.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ this->instance.geometryMode ]->setState( true );
 
 	new FXVerticalSeparator( toolbar );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/group.gif" ) );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/ungroup.gif" ) );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/group.gif" ) );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/ungroup.gif" ) );
 
 	new FXVerticalSeparator( toolbar );
-	new FXToggleButton( toolbar, "", "", forge::load_fx_icon( getApp(), "resources/grid.gif" ), nullptr, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_up.gif" ), this, ID_GRID_UP );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_down.gif" ), this, ID_GRID_DOWN );
+	new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/grid.gif" ), nullptr, &_gridHideTarget, FXDataTarget::ID_VALUE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_NORMAL );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/grid_up.gif" ), this, ID_GRID_UP );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/grid_down.gif" ), this, ID_GRID_DOWN );
 	//new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/grid_orient.gif" ), this, ID_GRID_ALIGN );
 	new FXTextField( toolbar, 4, &_gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_READONLY | TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	new FXVerticalSeparator( toolbar );
-	new FXButton( toolbar, "", forge::load_fx_icon( getApp(), "resources/play.gif" ) );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/play.gif" ) );
 
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
@@ -224,23 +224,22 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 	return TRUE;
 }
 
-long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
+long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 {
 	FXint    current = roomSelectBox->getCurrentItem();
-	ApeRoom *room    = ( ApeRoom * ) roomSelectBox->getItemData( current );
+	ApeRoom *room    = static_cast< ApeRoom * >( roomSelectBox->getItemData( current ) );
 	if ( room == nullptr )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No active room currently selected!" );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "No active room currently selected!" );
 		return false;
 	}
 
-	FXString    saveFilename;
 	const char *path = ape_room_get_save_path( room );
 	if ( path == nullptr )
 	{
 		PLPath origin;
 		PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
-		saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
+		const FXString saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
 		if ( saveFilename.empty() )
 		{
 			return false;
@@ -252,13 +251,13 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
 	if ( root == nullptr )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to serialize room!" );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to serialize room!" );
 		return false;
 	}
 
 	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
-		FXMessageBox::warning( this, FX::MBOX_OK, "Warning", "%s", acm_get_error_message() );
+		FXMessageBox::warning( this, MBOX_OK, "Warning", "%s", acm_get_error_message() );
 		return false;
 	}
 
@@ -269,8 +268,8 @@ long forge::WorldEditor::on_room_save( FX::FXObject *, FX::FXSelector, void * )
 
 long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 {
-	FXint    current = roomSelectBox->getCurrentItem();
-	ApeRoom *room    = ( ApeRoom * ) roomSelectBox->getItemData( current );
+	const FXint current = roomSelectBox->getCurrentItem();
+	ApeRoom    *room    = static_cast< ApeRoom * >( roomSelectBox->getItemData( current ) );
 	if ( room == nullptr )
 	{
 		return false;
@@ -286,14 +285,14 @@ long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 	RoomDialog roomCreationDialog( this, nullptr );
 	if ( roomCreationDialog.execute() )
 	{
-		FXString roomName = roomCreationDialog.get_room_name();
+		const FXString roomName = roomCreationDialog.get_room_name();
 		if ( roomName.empty() )
 		{
 			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No name specified for room!" );
 			return false;
 		}
 
-		ApeRoom *room = ape_room_create( ( ApeWorldNode * ) _world, roomName.text() );
+		ApeRoom *room = ape_room_create( reinterpret_cast< ApeWorldNode * >( _world ), roomName.text() );
 		ape_room_set_ambience( room, roomCreationDialog.get_room_ambience() );
 		ape_room_set_reverb_preset( room, roomCreationDialog.get_room_audio_preset() );
 
@@ -312,7 +311,7 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 	RoomDialog roomCreationDialog( this, activeRoom );
 	if ( roomCreationDialog.execute() )
 	{
-		FXString roomName = roomCreationDialog.get_room_name();
+		const FXString roomName = roomCreationDialog.get_room_name();
 		if ( roomName.empty() )
 		{
 			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No name specified for room!" );
