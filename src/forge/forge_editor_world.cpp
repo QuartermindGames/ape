@@ -59,7 +59,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
-	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_OPEN_PROPERTIES );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/entity_edit.gif" ), this, ID_OPEN_PROPERTIES );
 
 	new FXVerticalSeparator( toolbar );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );

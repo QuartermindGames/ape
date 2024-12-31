@@ -45,7 +45,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 
 	auto *menuPane = new FXMenuPane( menuBar_->getParent() );
 
-	new FXMenuCommand( menuPane, "New Room...\t\tCreate a new room.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_WORLD ], this, ID_ROOM_NEW );
+	new FXMenuCommand( menuPane, "New Room...\t\tCreate a new room.", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_ROOM ], this, ID_ROOM_NEW );
 	new FXMenuCommand( menuPane, "Open Room...\t\tOpen an existing room.", forge_cachedIcons[ FORGE_ICON_TYPE_OPEN_WORLD ], this, ID_ROOM_OPEN );
 	new FXMenuCommand( menuPane, "Save Room\t\tSave the current room.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, ID_ROOM_SAVE );
 	new FXMenuCommand( menuPane, "Save Room As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );

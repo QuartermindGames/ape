@@ -208,17 +208,17 @@ long Viewport::on_change_camera_modes( FXObject *, FX::FXSelector selector, void
 			break;
 	}
 
-	drawModeButtons[ drawMode_ ]->setState( false );
-	viewModeButtons[ viewMode_ ]->setState( false );
 	if ( viewMode != APE_CAMERA_MODE_INVALID )
 	{
 		ape_camera_set_view_mode( camera, viewMode );
+		viewModeButtons[ viewMode_ ]->setState( false );
 		viewMode_ = viewMode;
 		viewModeButtons[ viewMode_ ]->setState( true );
 	}
 	if ( drawMode != APE_CAMERA_DRAW_MODE_INVALID )
 	{
 		ape_camera_set_draw_mode( camera, drawMode );
+		drawModeButtons[ drawMode_ ]->setState( false );
 		drawMode_ = drawMode;
 		drawModeButtons[ drawMode_ ]->setState( true );
 	}
