@@ -310,7 +310,7 @@ long forge::MainWindow::on_toggle_console( FXObject *object, FXSelector, void * 
 
 long forge::MainWindow::on_toggle_node_volumes( FX::FXObject *object, FX::FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "world.showNodeVolumes", ( ( FXMenuCheck * ) object )->getCheck() ? "true" : "false" );
+	PlSetConsoleVariableByName( "world.showNodeVolumes", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
@@ -333,6 +333,18 @@ const char *forge::MainWindow::get_active_material()
 	}
 
 	return materialBrowser->get_current();
+}
+
+void forge::MainWindow::open_properties( ApeWorldNode *node )
+{
+	if ( propertiesDialog == nullptr )
+	{
+		propertiesDialog = new PropertiesDialog( this, node );
+		propertiesDialog->create();
+	}
+
+	propertiesDialog->set_node( node );
+	propertiesDialog->show();
 }
 
 /**

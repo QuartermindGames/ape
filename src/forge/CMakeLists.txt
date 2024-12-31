@@ -28,6 +28,7 @@ add_library(Forge STATIC
         forge_editor_world.cpp
 
         forge_browser_materials.cpp
+        forge_dialog_properties.cpp
 )
 
 add_dependencies(Forge

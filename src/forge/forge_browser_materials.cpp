@@ -6,7 +6,9 @@
 #include "forge_editor_world.h"
 #include "forge_window_main.h"
 
-#include <sys/wait.h>
+#if ( PL_SYSTEM_OS == PL_SYSTEM_OS_LINUX )
+#	include <sys/wait.h>
+#endif
 
 FXDEFMAP( forge::MaterialBrowser )
 materialBrowserMap[] = {
@@ -232,7 +234,7 @@ long forge::MaterialBrowser::on_material_edit( FXObject *, FXSelector, void * )
 	PLPath resolvedPath;
 	PlResolveVirtualPath( path, resolvedPath, sizeof( resolvedPath ) );
 
-#if !defined( _WIN32 )
+#if ( PL_SYSTEM_OS == PL_SYSTEM_OS_LINUX )
 	pid_t pid = fork();
 	if ( pid == 0 )
 	{

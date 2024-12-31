@@ -67,6 +67,11 @@ const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProper
 	return nodeClass->properties;
 }
 
+void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeProperty *property )
+{
+	return self + property->offset;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_world_node_generate_bounds_( ApeWorldNode *root )

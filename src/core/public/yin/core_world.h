@@ -176,6 +176,8 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties )
  */
 const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProperties, ApeWorldNodeType type );
 
+void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeProperty *property );
+
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );
 

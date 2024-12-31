@@ -5,6 +5,7 @@
 #include "forge.h"
 #include "forge_viewport.h"
 #include "forge_console_frame.h"
+#include "forge_dialog_properties.h"
 
 namespace forge
 {
@@ -38,6 +39,8 @@ namespace forge
 
 		void        open_material_browser();
 		const char *get_active_material();
+
+		void open_properties( ApeWorldNode *node );
 
 		Project *GetProject() { return currentProject; }
 
@@ -96,7 +99,8 @@ namespace forge
 	private:
 		FXMenuCommand *closeEditorCommand;
 
-		MaterialBrowser *materialBrowser{};
+		MaterialBrowser  *materialBrowser{};
+		PropertiesDialog *propertiesDialog{};
 
 	public:
 		FXTabItem *get_active_tab();

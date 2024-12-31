@@ -31,6 +31,7 @@ namespace forge
 			ID_ROOM_SELECT,
 
 			ID_MATERIAL_BROWSER,
+			ID_OPEN_PROPERTIES,
 
 			ID_GRID_UP,
 			ID_GRID_DOWN,
@@ -55,6 +56,7 @@ namespace forge
 		void set_active_room( ApeRoom *room );
 
 		long on_material_browser( FXObject *, FXSelector, void * );
+		long on_properties( FXObject *, FXSelector, void * );
 
 	private:
 		ApeWorld *_world{};

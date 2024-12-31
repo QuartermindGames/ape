@@ -27,6 +27,7 @@ worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_ALIGN, forge::WorldEditor::on_shift_grid ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_MATERIAL_BROWSER, forge::WorldEditor::on_material_browser ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_OPEN_PROPERTIES, forge::WorldEditor::on_properties ),
 };
 FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
@@ -58,6 +59,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_OPEN_PROPERTIES );
 
 	new FXVerticalSeparator( toolbar );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_PLOT ]      = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/edit_polygon.gif" ), nullptr, this, ID_POLY_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
@@ -348,6 +350,24 @@ void forge::WorldEditor::set_active_room( ApeRoom *room )
 long forge::WorldEditor::on_material_browser( FX::FXObject *, FX::FXSelector, void * )
 {
 	mainWindow->open_material_browser();
+	return TRUE;
+}
+
+long forge::WorldEditor::on_properties( FXObject *, FXSelector, void * )
+{
+	ApeWorldNode      *node;
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance != nullptr && instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		node = static_cast< ApeWorldNode * >( ape_editor_get_first_selected( instance ) );
+	}
+	else
+	{
+		node = nullptr;
+	}
+
+	mainWindow->open_properties( node );
+
 	return TRUE;
 }
 
