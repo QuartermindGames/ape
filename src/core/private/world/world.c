@@ -23,7 +23,7 @@ ApeWorld *ape_world_create( void )
 
 void ape_world_destroy_( void *data, ApeWorldNode *parent )
 {
-	ApeWorld *self = ( ApeWorld * ) data;
+	ApeWorld *self = data;
 	if ( self == nullptr )
 	{
 		return;
@@ -50,23 +50,6 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 
 	PlDestroyVectorArray( self->rooms );
 	self->rooms = nullptr;
-
-	if ( self->vertices != nullptr )
-	{
-		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( self->vertices ); ++i )
-		{
-			ApeWorldVertex *vertex = PlGetVectorArrayElementAt( self->vertices, i );
-			if ( vertex == nullptr )
-			{
-				continue;
-			}
-
-			PlDestroyVectorArray( vertex->adjacentFaces );
-			PL_DELETE( vertex );
-		}
-		PlDestroyVectorArray( self->vertices );
-		self->vertices = nullptr;
-	}
 }
 
 void ape_world_spawn_entities_( ApeWorld *world )

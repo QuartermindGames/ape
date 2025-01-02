@@ -8,9 +8,9 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	ApeRoom *room = PL_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	room->detailRooms = PlCreateVectorArray( 0 );
-	room->faces       = PlCreateVectorArray( 0 );
-	room->portals     = PlCreateVectorArray( 0 );
+	room->subRooms = PlCreateVectorArray( 0 );
+	room->faces    = PlCreateVectorArray( 0 );
+	room->portals  = PlCreateVectorArray( 0 );
 
 	// assign the room a random colour so it can be identified per debugging
 	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
@@ -24,7 +24,7 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 {
 	ApeRoom *self = ( ApeRoom * ) data;
 
-	PlDestroyVectorArray( self->detailRooms );
+	PlDestroyVectorArray( self->subRooms );
 	PlDestroyVectorArray( self->faces );
 	PlDestroyVectorArray( self->portals );
 
@@ -55,15 +55,9 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self )
 	return self->reverbPreset;
 }
 
-//TODO: deprecate!!! we use brushes now :(
-ApeWorldFace **ape_world_room_get_faces_( ApeRoom *self, unsigned int *numFaces )
-{
-	return ( ApeWorldFace ** ) PlGetVectorArrayDataEx( self->faces, numFaces );
-}
-
 AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
-	ApeRoom *room = ( ApeRoom * ) self;
+	ApeRoom *room = self;
 	acm_push_string( root, "path", room->path, true );
 	acm_push_ui32( root, "flags", room->flags );
 	acm_push_array_f32( root, "colour", ( float * ) &room->colour, 4 );

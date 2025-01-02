@@ -373,22 +373,6 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool ape_world_face_is_mirror( const ApeWorldFace *self )
-{
-	uint flags = ape_material_get_flags( self->material );
-	if ( flags & APE_MATERIAL_FLAG_MIRROR )
-	{
-		return true;
-	}
-
-	return ( self->flags & APE_WORLD_FACE_FLAG_MIRRORED );
-}
-
-bool ape_world_face_is_portal( const ApeWorldFace *self )
-{
-	return ( ape_world_face_is_mirror( self ) || ( self->portal != NULL ) );
-}
-
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 {
 	ApeBrush *brush = ( ApeBrush * ) self;

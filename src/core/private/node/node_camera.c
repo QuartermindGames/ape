@@ -1,15 +1,12 @@
 // Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Core camera implementation.
 
-#include <plcore/pl_linkedlist.h>
 #include <plcore/pl_hashtable.h>
 
-#include "ape_private.h"
-#include "renderer.h"
+#include "../ape_private.h"
+#include "../renderer/renderer.h"
 
-#include "world/world.h"
-
-#include "game/game_public.h"
+#include "../world/world.h"
 
 static PLLinkedList *cameras;
 

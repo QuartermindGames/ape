@@ -170,7 +170,7 @@ static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *em
 
 void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 {
-	int numParticles = ( int ) PlGetNumLinkedListNodes( emitter->particles );
+	int numParticles = PlGetNumLinkedListNodes( emitter->particles );
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
 		SS_Arl_Particle *particle = PlMAlloc( sizeof( SS_Arl_Particle ), true );

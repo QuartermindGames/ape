@@ -6,10 +6,11 @@ set(YIN_CORE_CLIENT
 
         private/renderer/material/material.c
         private/renderer/material/material_shaders.c
+
         private/renderer/post/post_bloom.c
         private/renderer/post/post_fxaa.c
         private/renderer/post/post.c
-        private/renderer/renderer_camera.c
+
         private/renderer/renderer_flare.c
         private/renderer/renderer_font.c
         private/renderer/renderer_particle.c
@@ -46,6 +47,7 @@ add_library(ApeCore STATIC
 
         # Scene Node System
         private/node/node_brush.c
+        private/node/node_camera.c
         private/node/node_entity.c
         private/node/node_light.c
         private/node/node_room.c

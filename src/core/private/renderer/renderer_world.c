@@ -303,32 +303,6 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light )
 	}
 }
 
-static void draw_portal_faces( ApeCamera *camera )
-{
-	const ApeViewport *viewport = ape_viewport_get_active();
-	assert( viewport != nullptr );
-
-	unsigned int   numPortals;
-	ApeBrushFace **faces = ape_camera_get_visible_portals_( camera, &numPortals );
-	for ( unsigned int i = 0; i < numPortals; ++i )
-	{
-		ApeBrushFace *face = faces[ i ];
-
-		// fetch the face we're connected to
-		ApeBrushFace *dest = ape_brush_face_get_portal_destination( face );
-		assert( dest != nullptr );
-
-		// and then the room that's connected to
-		const ApeRoom *room = ape_brush_face_get_room( dest );
-		assert( room != NULL );
-
-		if ( ape_brush_face_is_mirror( face ) )
-		{
-			//TODO: do mirror shit...
-		}
-	}
-}
-
 static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag stage )
 {
 	if ( !( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == NULL )
@@ -396,6 +370,10 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 
 	COM_PROFILE_FUNCTION_END();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Stencil Shadows
+/////////////////////////////////////////////////////////////////////////////////////
 
 static constexpr float F_INFINITY = 10000.0f;
 
@@ -543,6 +521,9 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
 
 	COM_PROFILE_FUNCTION_END();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 {

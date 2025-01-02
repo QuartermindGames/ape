@@ -330,9 +330,6 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 
 #define APE_USE_NEW_WORLD_LAYOUT
 
-typedef struct ApeWorldFace   ApeWorldFace;
-typedef struct ApeWorldMesh   ApeWorldMesh;
-typedef struct ApeWorldObject ApeWorldObject;
 typedef struct ApeRoom        ApeRoom;
 
 typedef struct PLVectorArray PLVectorArray;
@@ -348,7 +345,6 @@ typedef struct ApeWorld
 
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
-	PLVectorArray *vertices; // ApeWorldVertex
 
 	PLColourF32 clearColour;
 
@@ -412,14 +408,6 @@ const char *ape_room_get_save_path( const ApeRoom *self );
 #endif
 
 void ape_world_room_destroy( ApeRoom *self );
-
-////////////////////////////////////////////////////////////////////
-// Face
-
-void ape_world_face_generate_bounds( ApeWorldFace *face );
-
-bool ape_world_face_is_mirror( const ApeWorldFace *self );
-bool ape_world_face_is_portal( const ApeWorldFace *self );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting
