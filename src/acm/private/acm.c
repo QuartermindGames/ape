@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Ape Config Markup
-// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2025 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include <plcore/pl_filesystem.h>
 
