@@ -112,6 +112,11 @@ typedef struct ApeWorldNodeProperty
 			                                                                                   PL_ARRAY_ELEMENTS( ENUMS ) } \
 	}
 
+typedef enum ApeWorldNodeClassFlag
+{
+	PL_BITFLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
+} ApeWorldNodeClassFlag;
+
 typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
@@ -120,8 +125,14 @@ typedef struct ApeWorldNodeClass
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
 	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
 
+#if !defined( APE_NO_EDITOR )
 	const ApeWorldNodeProperty *properties;
 	uint                        numProperties;
+
+	const char *editorIcon;
+#endif
+
+	unsigned int flags;
 } ApeWorldNodeClass;
 
 typedef struct ApeWorldNode

@@ -536,4 +536,6 @@ const ApeWorldNodeClass ape_brushClass = {
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),
+
+        .flags = APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR,
 };

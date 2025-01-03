@@ -176,4 +176,6 @@ const ApeWorldNodeClass ape_roomClass = {
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),
+
+        .flags = APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR,
 };

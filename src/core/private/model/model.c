@@ -387,4 +387,10 @@ const ApeWorldNodeClass ape_modelClass = {
         .destroyFunction     = destroy_model_node,
         .serializeFunction   = serialize_model_node,
         .deserializeFunction = deserialize_model_node,
+
+#if !defined( APE_NO_EDITOR )
+
+        .editorIcon = "resources/new_model.gif",
+
+#endif
 };

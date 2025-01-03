@@ -179,4 +179,10 @@ const ApeWorldNodeClass ape_lightClass = {
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),
+
+#if !defined( APE_NO_EDITOR )
+
+        .editorIcon = "resources/new_light.gif",
+
+#endif
 };

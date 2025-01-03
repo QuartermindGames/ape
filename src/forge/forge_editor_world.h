@@ -107,36 +107,6 @@ namespace forge
 			FXListBox   *audioPresetField;
 		};
 
-		class EntityCreationDialog : FXDialogBox
-		{
-			FXDECLARE( EntityCreationDialog )
-
-		public:
-			explicit EntityCreationDialog( FXWindow *parent );
-			~EntityCreationDialog() = default;
-
-		protected:
-			inline EntityCreationDialog() = default;
-
-		private:
-			FXListBox *classSelection{};
-		};
-
-		class TexturePicker : FXTopWindow
-		{
-			FXDECLARE( TexturePicker )
-
-		protected:
-			inline TexturePicker() = default;
-
-		public:
-			explicit TexturePicker( FXWindow *parent );
-			~TexturePicker() override = default;
-		};
-
-	private:
-		TexturePicker *texturePicker;
-
 	public:
 		inline ApeWorld *get_world() { return _world; }
 	};

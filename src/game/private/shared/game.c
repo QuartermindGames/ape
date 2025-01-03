@@ -135,11 +135,11 @@ const char *game_get_identifier()
 	return ape_gameInterface->identifier;
 }
 
-extern ApeEntityClassDefinition game_entityLightClass;
+extern ApeEntityClassDefinition game_triggerEntityClass;
 
 void game_register_standard_entity_components_( void )
 {
-	ape_register_entity_class( &game_entityLightClass );
+	ape_register_entity_class( &game_triggerEntityClass );
 }
 
 AcmBranch *game_get_config()

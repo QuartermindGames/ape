@@ -11,7 +11,7 @@ set(GAME_SHARED_FILES
 
         private/shared/integrations/discord/discord.c
 
-        private/shared/entities/entity_light.c
+        private/shared/entities/entity_trigger.c
 )
 
 include_directories(public/)

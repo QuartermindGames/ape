@@ -13,7 +13,7 @@ namespace forge
 
 	public:
 		WorldViewport( FXComposite *composite, FXGLVisual *visual, WorldEditor *editor, ApeCameraViewMode viewMode );
-		inline ~WorldViewport() override = default;
+		~WorldViewport() override = default;
 
 		enum
 		{
@@ -23,6 +23,9 @@ namespace forge
 			ID_FACE_TOGGLE_OTHERS,
 			ID_FACE_FLIP,
 			ID_FACE_SMOOTH,
+
+			ID_CREATE_NODE,
+			ID_CREATE_NODE_END = ID_CREATE_NODE + APE_WORLD_MAX_NODE_TYPES,
 
 			ID_LAST,
 		};
@@ -36,7 +39,9 @@ namespace forge
 		long on_face_toggle( FXObject *, FXSelector, void * );
 		long on_face_flip( FXObject *, FXSelector, void * );
 
+		long on_create_node( FXObject *, FXSelector, void * );
+
 	protected:
-		inline WorldViewport() = default;
+		WorldViewport() = default;
 	};
 }// namespace forge

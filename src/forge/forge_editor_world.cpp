@@ -9,6 +9,84 @@
 #include "common_project.h"
 #include "forge_window_main.h"
 
+#if 0
+/////////////////////////////////////////////////////////////////////////////////////
+// Node Selection Dialog
+/////////////////////////////////////////////////////////////////////////////////////
+
+namespace forge
+{
+	class NodeSelectionDialog : public FXDialogBox
+	{
+		FXDECLARE( NodeSelectionDialog )
+
+		FXListBox *list;
+
+	protected:
+		NodeSelectionDialog() = default;
+
+	public:
+		explicit NodeSelectionDialog( FXWindow *parent ) : FXDialogBox( parent, "Select Node Type" )
+		{
+			setWidth( 256 );
+
+			FXVerticalFrame *frame = new FXVerticalFrame( this, LAYOUT_FILL );
+
+			unsigned int              numClasses;
+			const ApeWorldNodeClass **classes = ape_world_node_get_classes( &numClasses );
+			assert( numClasses != 0 && classes != nullptr );
+
+			list = new FXListBox( frame, nullptr, 0, FRAME_SUNKEN | FRAME_THICK | LAYOUT_FILL_X | LISTBOX_NORMAL );
+			for ( unsigned int i = 0; i < numClasses; ++i )
+			{
+				if ( classes[ i ] == nullptr || classes[ i ]->flags & APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR )
+				{
+					continue;
+				}
+
+				FXIcon *icon;
+				if ( classes[ i ]->editorIcon != nullptr )
+				{
+					icon = load_fx_icon( getApp(), classes[ i ]->editorIcon );
+				}
+				else
+				{
+					icon = nullptr;
+				}
+
+				list->appendItem( classes[ i ]->identifier, icon, &classes[ i ] );
+			}
+			list->setNumVisible( PlClamp( 4, list->getNumItems(), 8 ) );
+
+			new FXHorizontalSeparator( frame );
+
+			auto *hf = new FXHorizontalFrame( frame, LAYOUT_FILL | LAYOUT_RIGHT );
+			new FXButton( hf, "Accept", nullptr, this, ID_ACCEPT, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
+			new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
+		}
+
+		~NodeSelectionDialog() override = default;
+
+		[[nodiscard]] ApeWorldNodeMagic get_selected_type() const
+		{
+			const int item = list->getCurrentItem();
+			if ( item == -1 )
+			{
+				return APE_WORLD_NODE_TYPE_EMPTY;
+			}
+
+			const ApeWorldNodeClass *cls = static_cast< const ApeWorldNodeClass * >( list->getItemData( item ) );
+			assert( cls != nullptr );
+			return cls->magic;
+		}
+	};
+
+	FXIMPLEMENT( NodeSelectionDialog, FXDialogBox, nullptr, 0 )
+}// namespace forge
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif
+
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_POLY_MODE, forge::WorldEditor::on_change_geometry_mode ),
@@ -87,7 +165,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 #if 1
 	for ( unsigned int i = 0; i < APE_EDITOR_MAX_VIEWPORTS; ++i )
 	{
-		viewports[ i ] = new WorldViewport( hs, get_shared_gl_visual(), this, ( ApeCameraViewMode ) ( APE_CAMERA_MODE_PERSPECTIVE + i ) );
+		viewports[ i ] = new WorldViewport( hs, get_shared_gl_visual(), this, static_cast< ApeCameraViewMode >( APE_CAMERA_MODE_PERSPECTIVE + i ) );
 	}
 #else
 	new WorldViewport( hs, get_shared_gl_visual(), this, APE_CAMERA_MODE_PERSPECTIVE );
@@ -123,9 +201,6 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 	}
 
 #if 0
-	PLVector3 pos;
-	ape_grid_get_cursor_position( &instance.grid, &pos, true );
-
 	static const PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	void *data = nullptr;
@@ -236,7 +311,7 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	FXString saveFilename;
+	FXString    saveFilename;
 	const char *path = ape_room_get_save_path( room );
 	if ( path == nullptr )
 	{
@@ -421,15 +496,4 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 		        PlFloatToByte( ambience.b ),
 		        PlFloatToByte( ambience.a ) ) );
 	}
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Texture Picker
-
-FXDEFMAP( forge::WorldEditor::TexturePicker )
-texturePickerMap[] = {};
-FXIMPLEMENT( forge::WorldEditor::TexturePicker, FXTopWindow, texturePickerMap, ARRAYNUMBER( texturePickerMap ) )
-
-forge::WorldEditor::TexturePicker::TexturePicker( FX::FXWindow *parent )
-{
 }

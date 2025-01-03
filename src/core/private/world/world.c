@@ -84,4 +84,5 @@ const ApeWorldNodeClass ape_rootClass = {
         .identifier      = "root",
         .magic           = PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
         .destroyFunction = ape_world_destroy_,
+        .flags           = APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR,
 };

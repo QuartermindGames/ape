@@ -65,8 +65,9 @@ typedef struct ApeEntityClassDefinition
 
 typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )( void );
 
-void                            ape_register_entity_class( const ApeEntityClassDefinition *definition );
-const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className );
+void                             ape_register_entity_class( const ApeEntityClassDefinition *definition );
+const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses );
+const ApeEntityClassDefinition  *ape_get_entity_class_table( const char *className );
 
 ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent );
 

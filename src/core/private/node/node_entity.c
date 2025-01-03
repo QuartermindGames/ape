@@ -8,19 +8,20 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static PLHashTable *entityComponentDefinitions = nullptr;
-static PLHashTable *entityClassDefinitions     = nullptr;
+static PLHashTable   *entityComponentDefinitions;
+static PLHashTable   *entityClassLookup;
+static PLVectorArray *entityClasses;
 
 static void list_entity_classes_command( unsigned int, char ** )
 {
-	if ( entityClassDefinitions == NULL )
+	if ( entityClassLookup == NULL )
 	{
 		return;
 	}
 
-	ape_print_( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassDefinitions ) );
+	ape_print_( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassLookup ) );
 
-	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassDefinitions );
+	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassLookup );
 	while ( node != NULL )
 	{
 		ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
@@ -50,12 +51,13 @@ void ape_entity_register_commands_( void )
 
 void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 {
-	if ( entityClassDefinitions == NULL )
+	if ( entityClassLookup == NULL )
 	{
-		entityClassDefinitions = PlCreateHashTable();
+		entityClassLookup = PlCreateHashTable();
+		entityClasses     = PlCreateVectorArray( 0 );
 	}
 
-	if ( PlLookupHashTableUserData( entityClassDefinitions, definition->name, strlen( definition->name ) ) != NULL )
+	if ( PlLookupHashTableUserData( entityClassLookup, definition->name, strlen( definition->name ) ) != NULL )
 	{
 		ape_warning_( "Attempted to register a duplicate entity class (%s)\n", definition->name );
 		return;
@@ -67,7 +69,8 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 		return;
 	}
 
-	PlInsertHashTableNode( entityClassDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
+	PlInsertHashTableNode( entityClassLookup, definition->name, strlen( definition->name ), ( void * ) definition );
+	PlPushBackVectorArrayElement( entityClasses, ( void * ) definition );
 
 	// call the cache function, so we can load resources into memory
 	if ( definition->cacheFunction != NULL )
@@ -76,9 +79,14 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 	}
 }
 
+const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses )
+{
+	return ( const ApeEntityClassDefinition ** ) PlGetVectorArrayDataEx( entityClasses, numClasses );
+}
+
 const ApeEntityClassDefinition *ape_get_entity_class_table( const char *className )
 {
-	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassDefinitions, className, strlen( className ) );
+	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassLookup, className, strlen( className ) );
 }
 
 ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent )
@@ -87,7 +95,7 @@ ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeW
 	if ( classDefinition == NULL )
 	{
 		ape_warning_( "Failed to find entity class (%s)!\n", className );
-		return NULL;
+		return nullptr;
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
@@ -108,7 +116,7 @@ ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeW
 
 void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 {
-	ApeEntity *self = ( ApeEntity * ) data;
+	ApeEntity *self = data;
 	if ( self == nullptr )
 	{
 		return;
@@ -204,4 +212,10 @@ const ApeWorldNodeClass ape_entityClass = {
         .identifier      = "entity",
         .magic           = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
         .destroyFunction = ape_entity_destroy_,
+
+#if !defined( APE_NO_EDITOR )
+
+        .editorIcon = "resources/new_entity.gif",
+
+#endif
 };
