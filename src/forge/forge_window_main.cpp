@@ -142,7 +142,7 @@ long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 {
 	const char *path     = com_project_get_local_path();
-	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/", "*." APE_WORLD_ROOM_EXTENSION );
+	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
 	if ( filename.empty() )
 	{
 		return FALSE;
