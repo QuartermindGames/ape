@@ -57,6 +57,7 @@ typedef enum ApeWorldNodeType
 
 typedef enum ApeWorldNodePropertyType
 {
+	// DO NOT CHANGE THE ORDER OF THESE!!!
 	APE_WORLD_NODE_PROPERTY_TYPE_INVALID = 0,
 	APE_WORLD_NODE_PROPERTY_TYPE_FLOAT,
 	APE_WORLD_NODE_PROPERTY_TYPE_VEC2,
@@ -330,7 +331,7 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 
 #define APE_USE_NEW_WORLD_LAYOUT
 
-typedef struct ApeRoom        ApeRoom;
+typedef struct ApeRoom ApeRoom;
 
 typedef struct PLVectorArray PLVectorArray;
 typedef struct PLLinkedList  PLLinkedList;

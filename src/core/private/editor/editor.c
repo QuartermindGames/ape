@@ -671,11 +671,11 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ape_material_draw( material, mesh, nullptr );
 }
 
-static void render_wireframe_brush( PLGMesh *lineMesh, ApeBrush *brush, const PLColour *colour )
+static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const PLColour *colour )
 {
 	for ( uint i = 0; i < brush->numFaces; ++i )
 	{
-		ApeBrushFace *face = &brush->faces[ i ];
+		const ApeBrushFace *face = &brush->faces[ i ];
 		for ( uint j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
@@ -685,6 +685,18 @@ static void render_wireframe_brush( PLGMesh *lineMesh, ApeBrush *brush, const PL
 			PlgImmPushVertex( v1->position->x, v1->position->y, v1->position->z );
 			PlgColour4bv( lineMesh, colour );
 		}
+	}
+}
+
+static void render_selected_wireframe( ApeWorldNode *node, const PLColour *colour, bool selected )
+{
+	static constexpr float CUBE_SIZE = 3.0f;
+	ape_draw_debug_aabb( &PL_COLLISION_AABB( node->position, PL_VECTOR3( -CUBE_SIZE, -CUBE_SIZE, -CUBE_SIZE ), PL_VECTOR3( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ) ), *colour );
+
+	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT && selected )
+	{
+		const ApeLight *light = ( ApeLight * ) node;
+		ape_draw_debug_sphere( node->position, PlColourF32ToU8( &light->colour ), light->radius );
 	}
 }
 
@@ -702,18 +714,15 @@ static void render_selected_objects( ApeEditorInstance *self )
 		switch ( worldNode->type )
 		{
 			default:
-			case APE_WORLD_NODE_TYPE_EMPTY: break;
-			case APE_WORLD_NODE_TYPE_ROOT: break;
-			case APE_WORLD_NODE_TYPE_ROOM: break;
+			{
+				render_selected_wireframe( worldNode, &PL_COLOUR_BLUE, true );
+				break;
+			}
 			case APE_WORLD_NODE_TYPE_BRUSH:
 			{
 				render_wireframe_brush( mesh, ( ApeBrush * ) worldNode, &PL_COLOUR_BLUE );
 				break;
 			}
-			case APE_WORLD_NODE_TYPE_MODEL: break;
-			case APE_WORLD_NODE_TYPE_LIGHT: break;
-			case APE_WORLD_NODE_TYPE_CAMERA: break;
-			case APE_WORLD_NODE_TYPE_ENTITY: break;
 		}
 	}
 
@@ -728,18 +737,15 @@ static void render_selected_objects( ApeEditorInstance *self )
 			switch ( worldNode->type )
 			{
 				default:
-				case APE_WORLD_NODE_TYPE_EMPTY: break;
-				case APE_WORLD_NODE_TYPE_ROOT: break;
-				case APE_WORLD_NODE_TYPE_ROOM: break;
+				{
+					render_selected_wireframe( worldNode, &PL_COLOUR_YELLOW, false );
+					break;
+				}
 				case APE_WORLD_NODE_TYPE_BRUSH:
 				{
 					render_wireframe_brush( mesh, ( ApeBrush * ) worldNode, &PL_COLOUR_YELLOW );
 					break;
 				}
-				case APE_WORLD_NODE_TYPE_MODEL: break;
-				case APE_WORLD_NODE_TYPE_LIGHT: break;
-				case APE_WORLD_NODE_TYPE_CAMERA: break;
-				case APE_WORLD_NODE_TYPE_ENTITY: break;
 			}
 		}
 	}
