@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #pragma once
 
@@ -42,14 +42,24 @@ typedef struct SS1Profession
 } SS1Profession;
 extern const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ];
 
+typedef enum SS1ResourceType : uint8_t
+{
+	SS1_RESOURCE_TYPE_MANA,
+	SS1_RESOURCE_TYPE_GOLD,
+
+	SS1_MAX_RESOURCE_TYPES
+} SS1ResourceType;
+
 typedef struct SS1Team
 {
-	char name[ SS1_MAX_TEAM_NAME ];
+	char         name[ SS1_MAX_TEAM_NAME ];
+	unsigned int resources[ SS1_MAX_RESOURCE_TYPES ];
 } SS1Team;
 
 typedef struct SS1Player
 {
-	char name[ SS1_MAX_PLAYER_NAME ];
+	char         name[ SS1_MAX_PLAYER_NAME ];
+	unsigned int resources[ SS1_MAX_RESOURCE_TYPES ];
 
 	SS1Team *team;
 } SS1Player;

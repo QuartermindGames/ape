@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "menu.h"
 #include "../../shared/game_menu_pie.h"
@@ -147,8 +147,28 @@ void ss1_menu_tick( void )
 	menu_pie_tick( interactPie );
 }
 
+static void draw_debug_overlay()
+{
+	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+	assert( font != nullptr );
+
+	char  buf[ 64 ];
+	float y = 10.0f;
+
+	snprintf( buf, sizeof( buf ), "Player Mana:   %u\n", 0 );
+	gui_font_draw_string( font, 10.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Player Gold:   %u\n", 0 );
+	gui_font_draw_string( font, 10.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Player Health: %u\n", 0 );
+	gui_font_draw_string( font, 10.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, buf, strlen( buf ), false );
+
+	gui_font_display( font );
+}
+
 void ss1_menu_draw( const ApeViewport *viewport )
 {
+	draw_debug_overlay();
+
 	if ( isMainMenuOpen )
 	{
 		assert( currentMenu != nullptr );
@@ -202,7 +222,6 @@ void ss1_menu_draw( const ApeViewport *viewport )
 
 		gui_font_display( menuFont );
 		gui_font_display( menuTitleFont );
-		return;
 	}
 
 	// draw our fancy little pie menu for interactions
