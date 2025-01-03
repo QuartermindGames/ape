@@ -107,19 +107,34 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 	void *value = ape_world_node_get_property_value( node, &property );
 	table->setItemData( row, 1, value );
 
-	const char *iconPath = nullptr;
+	static const char *icons[ APE_WORLD_NODE_MAX_PROPERTY_TYPES ] = {
+	        nullptr,                     // invalid
+	        "resources/integer.gif",     // float
+	        "resources/transform.gif",   // vec2
+	        "resources/transform.gif",   // vec3
+	        "resources/transform.gif",   // vec4
+	        "resources/list_details.png",// enum
+	        "resources/colours.gif",     // colour
+	        "resources/integer.gif",     // integer
+	        "resources/string.gif",      // string
+	        "resources/path.gif",        // path
+	        "resources/boolean.png",     // boolean
+	};
+
 	switch ( property.type )
 	{
 		default:
 			assert( 0 );
 			break;
 		case APE_WORLD_NODE_PROPERTY_TYPE_FLOAT:
-			iconPath = "resources/integer.gif";
+		{
+			char buf[ 128 ];
+			snprintf( buf, sizeof( buf ), "%f", *static_cast< const float * >( value ) );
+			table->setItemText( row, 1, buf );
 			break;
+		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC2:
 		{
-			iconPath = "resources/transform.gif";
-
 			const PLVector2 *vector = static_cast< const PLVector2 * >( value );
 
 			char buf[ 128 ];
@@ -129,8 +144,6 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC3:
 		{
-			iconPath = "resources/transform.gif";
-
 			const PLVector3 *vector = static_cast< const PLVector3 * >( value );
 
 			char buf[ 128 ];
@@ -140,8 +153,6 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC4:
 		{
-			iconPath = "resources/transform.gif";
-
 			const PLVector4 *vector = static_cast< const PLVector4 * >( value );
 
 			char buf[ 128 ];
@@ -151,8 +162,6 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_ENUM:
 		{
-			iconPath = "resources/list_details.png";
-
 			FXString options;
 			for ( unsigned int i = 0; i < property.enumType.numEnums; ++i )
 			{
@@ -163,13 +172,16 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 			table->setItem( row, 1, new FXComboTableItem( options ) );
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR: break;
+		case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR:
+		{
+
+			break;
+		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_INTEGER:
 		{
-			iconPath = "resources/integer.gif";
-
-			const int *integer = static_cast< const int * >( value );
-
+			char buf[ 128 ];
+			snprintf( buf, sizeof( buf ), "%d", *static_cast< const int * >( value ) );
+			table->setItemText( row, 1, buf );
 			break;
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_STRING:
@@ -180,15 +192,14 @@ void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty
 		case APE_WORLD_NODE_PROPERTY_TYPE_PATH: break;
 		case APE_WORLD_NODE_PROPERTY_TYPE_BOOLEAN:
 		{
-			iconPath = "resources/boolean.png";
 			table->setItem( row, 1, new FXComboTableItem( "False\nTrue\n" ) );
 			break;
 		}
 	}
 
-	if ( iconPath != nullptr )
+	if ( icons[ property.type ] != nullptr )
 	{
-		table->setItemIcon( row, 0, load_fx_icon( getApp(), iconPath ) );
+		table->setItemIcon( row, 0, load_fx_icon( getApp(), icons[ property.type ] ) );
 		table->setItemIconPosition( row, 0, FXTableItem::AFTER );
 	}
 
