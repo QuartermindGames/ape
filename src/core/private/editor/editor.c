@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Primary code for dealing with editor functionality.
 
 #include "plcore/pl_hashtable.h"

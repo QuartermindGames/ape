@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Memory management system
 // Author:  Mark E. Sowden
 
@@ -97,6 +97,7 @@ PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool )
 
 static void remove_from_cache( uint32_t id, uint8_t pool )
 {
+	return;
 	ApeMemoryCacheHeader *header = get_cache( id, pool );
 	if ( header == NULL )
 	{

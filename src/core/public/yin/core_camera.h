@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Camera APIs
 
 #pragma once
@@ -22,9 +22,10 @@ typedef enum ApeCameraDrawMode
 	APE_CAMERA_DRAW_MODE_INVALID = -1,
 
 	// "basic" draw modes
-	APE_CAMERA_DRAW_MODE_WIREFRAME,
-	APE_CAMERA_DRAW_MODE_SOLID,
-	APE_CAMERA_DRAW_MODE_TEXTURED,
+	APE_CAMERA_DRAW_MODE_WIREFRAME,// typical wireframe mode
+	APE_CAMERA_DRAW_MODE_PORTALS,  // debug view that lets you see objects shaded by their portal
+	APE_CAMERA_DRAW_MODE_SOLID,    // solid colours, no textures or lighting
+	APE_CAMERA_DRAW_MODE_TEXTURED, // textured, but with no lighting
 	// and "complete" - uses material system
 	APE_CAMERA_DRAW_MODE_SHADED,
 
