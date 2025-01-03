@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: World editor tab
 // Author:  Mark E. Sowden
 
@@ -236,12 +236,13 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		return false;
 	}
 
+	FXString saveFilename;
 	const char *path = ape_room_get_save_path( room );
 	if ( path == nullptr )
 	{
 		PLPath origin;
 		PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
-		const FXString saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
+		saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
 		if ( saveFilename.empty() )
 		{
 			return false;

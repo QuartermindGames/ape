@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright © 2020-2024 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2025 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "forge_about_dialog.h"
 

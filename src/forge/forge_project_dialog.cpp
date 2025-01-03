@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2025 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "forge_project_dialog.h"
 #include "common_project.h"

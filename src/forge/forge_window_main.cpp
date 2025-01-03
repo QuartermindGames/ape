@@ -1,4 +1,4 @@
-// Copyright © 2020-2024 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "forge_window_main.h"
 #include "forge_about_dialog.h"
@@ -75,16 +75,16 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXStatusBar( this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X );
 
 	mainFrame              = new FXVerticalFrame( this, LAYOUT_FILL );
-	auto *verticalSplitter = new FXSplitter( mainFrame, LAYOUT_MIN_HEIGHT | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_VERTICAL );
+	auto *verticalSplitter = new FXSplitter( mainFrame, LAYOUT_FILL | SPLITTER_TRACKING | SPLITTER_VERTICAL );
 
 	_tabBook = new FXTabBook( verticalSplitter, nullptr, 0, LAYOUT_FILL | LAYOUT_RIGHT );
 	_tabBook->setHeight( getHeight() - 128 );
 
 	// Add the console at the bottom
-	console = new forge::ConsoleFrame( verticalSplitter );
+	console = new ConsoleFrame( verticalSplitter );
 	console->hide();
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
+	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
 }
 
 void forge::MainWindow::create()
@@ -111,7 +111,7 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 		}
 	}
 
-	getApp()->addTimeout( this, MainWindow::ID_TICK, APE_DEFAULT_TICK_RATE );
+	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
 	return 0;
 }
 
@@ -170,14 +170,14 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 	ApeWorld *world = ape_world_create();
 	ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
 
-	auto *editor = ( WorldEditor * ) add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) );
+	auto *editor = static_cast< WorldEditor * >( add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) ) );
 	editor->update_tree();
-	editor->set_active_room( ( ApeRoom * ) roomNode );
+	editor->set_active_room( reinterpret_cast< ApeRoom * >( roomNode ) );
 
 	return TRUE;
 }
 
-long forge::MainWindow::on_save_room( FX::FXObject *, FX::FXSelector, void * )
+long forge::MainWindow::on_save_room( FXObject *, FXSelector, void * )
 {
 	WorldEditor *editor = dynamic_cast< WorldEditor * >( get_active_tab() );
 	if ( editor == nullptr )
@@ -237,14 +237,14 @@ long forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::on_about( FXObject *, FXSelector, void * )
 {
-	auto *aboutDialog = new forge::AboutDialog( this );
+	auto *aboutDialog = new AboutDialog( this );
 	aboutDialog->execute();
 	return true;
 }
 
 long forge::MainWindow::on_package_project( FXObject *, FXSelector, void * )
 {
-	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( forge::cachedPaths[ forge::PATH_PROJECTS ] ) + "/", "*.pkg" );
+	FXString filename = FXFileDialog::getSaveFilename( this, "Select a destination", FXString( cachedPaths[ PATH_PROJECTS ] ) + "/", "*.pkg" );
 	if ( filename.empty() )
 	{
 		return false;
@@ -308,7 +308,7 @@ long forge::MainWindow::on_toggle_console( FXObject *object, FXSelector, void * 
 	return TRUE;
 }
 
-long forge::MainWindow::on_toggle_node_volumes( FX::FXObject *object, FX::FXSelector, void * )
+long forge::MainWindow::on_toggle_node_volumes( FXObject *object, FXSelector, void * )
 {
 	PlSetConsoleVariableByName( "world.showNodeVolumes", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;

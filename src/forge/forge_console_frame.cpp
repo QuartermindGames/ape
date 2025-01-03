@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 Mark E Sowden <hogsy@oldtimes-software.com>
+// Copyright © 2020-2025 Mark E Sowden <hogsy@oldtimes-software.com>
 
 #include "forge_console_frame.h"
 
@@ -12,7 +12,7 @@ consoleFrameMap[] = {
 FXIMPLEMENT( forge::ConsoleFrame, FXVerticalFrame, consoleFrameMap, ARRAYNUMBER( consoleFrameMap ) )
 
 forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
-    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_FIX_Y )
+    : FXVerticalFrame( composite, FRAME_NORMAL | LAYOUT_FILL | LAYOUT_SIDE_BOTTOM )
 {
 	setPadBottom( 0 );
 	setPadTop( 0 );
