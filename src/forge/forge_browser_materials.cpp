@@ -326,7 +326,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 		ApeWorldNode *node;
 		COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
 		{
-			if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+			if ( !ape_world_node_has_magic( node ) || node->type != APE_WORLD_NODE_TYPE_BRUSH )
 			{
 				continue;
 			}
