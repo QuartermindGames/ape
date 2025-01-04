@@ -1,7 +1,7 @@
 # Todo
 
 ## Immediate
-- Add a filter menu to the material browser
+- ~~Add a filter menu to the material browser~~
 - Introduce flags for shaders to indicate support for lighting
 
 ## Editor
@@ -26,7 +26,7 @@ System can also be expanded to support height-maps once introduced.
   - If point doesn't cross/intersect, we should have a reasonable limit
 - ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
   - Recursion for portals/mirrors isn't working right
-  - Can't combine stencil shadow volumes with mirrors
+  - ~~Can't combine stencil shadow volumes with mirrors~~ (for now we'll just disable shadows in mirrors)
 - We don't have spotlights...
 - Prototype 'eyes' for QM2 & QM1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
