@@ -18,14 +18,14 @@ static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 
 static void cache_node_icons( void )
 {
-	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icons/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true );
 	nodeIcons[ APE_WORLD_NODE_TYPE_MODEL ]  = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
 	nodeIcons[ APE_WORLD_NODE_TYPE_ROOT ]   = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
-	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ]   = ape_material_cache( "materials/editor/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true );
-	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ]  = ape_material_cache( "materials/editor/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true );
-	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ]  = ape_material_cache( "materials/editor/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true );
-	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true );
-	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ROOM ]   = ape_material_cache( "materials/editor/icons/icon_room.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_BRUSH ]  = ape_material_cache( "materials/editor/icons/icon_brush.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_LIGHT ]  = ape_material_cache( "materials/editor/icons/icon_light.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_CAMERA ] = ape_material_cache( "materials/editor/icons/icon_camera.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ] = ape_material_cache( "materials/editor/icons/icon_entity.mat.n", APE_CACHE_GROUP_EDITOR, true );
 
 	// root is weird; as in theory, you shouldn't see it...
 	nodeIcons[ APE_WORLD_NODE_TYPE_ROOT ] = nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ];
