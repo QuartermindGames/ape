@@ -69,7 +69,7 @@ void                             ape_register_entity_class( const ApeEntityClass
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses );
 const ApeEntityClassDefinition  *ape_get_entity_class_table( const char *className );
 
-ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent );
+ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const PLVector3 *position, const PLVector3 *angles );
 
 void ape_entity_tick( ApeEntity *self );
 void ape_entity_draw( ApeEntity *self );

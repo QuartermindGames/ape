@@ -89,7 +89,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassLookup, className, strlen( className ) );
 }
 
-ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeWorldNode *parent )
+ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const PLVector3 *position, const PLVector3 *angles )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( classDefinition == NULL )
@@ -99,7 +99,7 @@ ApeEntity *ape_create_entity( const char *className, AcmBranch *properties, ApeW
 	}
 
 	ApeEntity *entity = PL_NEW( ApeEntity );
-	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, name, position, angles );
 	entity->classDefinition = classDefinition;
 	entity->componentTable  = PlCreateHashTable();
 

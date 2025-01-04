@@ -44,7 +44,7 @@ namespace forge
 					continue;
 				}
 
-				list->appendItem( classes[ i ]->name, icon, &classes[ i ] );
+				list->appendItem( classes[ i ]->name, icon, ( void * ) classes[ i ] );
 			}
 			list->setNumVisible( PlClamp( 4, list->getNumItems(), 8 ) );
 
@@ -467,7 +467,7 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_CAMERA:
 		{
-			ape_create_camera( APE_WORLD_NODE( room ), "temp", &tpos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
+			ape_create_camera( APE_WORLD_NODE( room ), nullptr, &tpos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 			break;
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_ENTITY:
@@ -481,7 +481,7 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 					break;
 				}
 
-				ape_create_entity( cls->name, nullptr, APE_WORLD_NODE( room ) );
+				ape_entity_create( APE_WORLD_NODE( room ), cls->name, nullptr, nullptr, &tpos, &pl_vecOrigin3 );
 			}
 			break;
 		}
