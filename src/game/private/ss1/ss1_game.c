@@ -154,7 +154,6 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 
 static bool ss1_tick( void )
 {
-	ss1_menu_handle_input();
 	ss1_menu_tick();
 
 	handle_input();

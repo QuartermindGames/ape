@@ -109,6 +109,107 @@ static void initialize_menu( Menu *menu )
 	}
 }
 
+static void next_menu_option()
+{
+	currentMenuOption++;
+	if ( currentMenuOption >= currentMenu->numOptions )
+	{
+		currentMenuOption = 0;
+	}
+}
+
+static void prev_menu_option()
+{
+	if ( currentMenuOption == 0 )
+	{
+		currentMenuOption = currentMenu->numOptions - 1;
+	}
+	else
+	{
+		currentMenuOption--;
+	}
+}
+
+static void handle_menu_action( ApeInputState state, const char *id )
+{
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	{
+		return;
+	}
+
+	if ( strcmp( id, "menu_toggle" ) == 0 )
+	{
+		isMainMenuOpen    = !isMainMenuOpen;
+		currentMenuOption = 0;
+		return;
+	}
+
+	if ( !isMainMenuOpen )
+	{
+		return;
+	}
+
+	if ( strcmp( id, "menu_down" ) == 0 )
+	{
+		do
+		{
+			next_menu_option();
+		} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
+	}
+	else if ( strcmp( id, "menu_up" ) == 0 )
+	{
+		do
+		{
+			prev_menu_option();
+		} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
+	}
+	else if ( strcmp( id, "menu_select" ) == 0 )
+	{
+		const MenuOption *option = &currentMenu->options[ currentMenuOption ];
+		if ( option->callback != nullptr )
+		{
+			option->callback( option );
+		}
+
+		switch ( option->type )
+		{
+			default:
+				break;
+			case MENU_OPTION_TYPE_BUTTON:
+			{
+				if ( option->button.command != nullptr )
+				{
+					PlParseConsoleString( option->button.command );
+				}
+				break;
+			}
+			case MENU_OPTION_TYPE_CHECKBOX:
+			{
+				if ( option->checkbox.var != nullptr )
+				{
+					PlSetConsoleVariable( option->checkbox.var, option->checkbox.var->b_value ? "0" : "1" );
+				}
+				break;
+			}
+		}
+
+		if ( option->nextMenu != nullptr )
+		{
+			currentMenu->lastOption = currentMenuOption;
+			currentMenu             = option->nextMenu;
+			currentMenuOption       = currentMenu->lastOption;
+		}
+	}
+	else if ( strcmp( id, "menu_back" ) == 0 )
+	{
+		if ( currentMenu->parent != nullptr )
+		{
+			currentMenu       = currentMenu->parent;
+			currentMenuOption = currentMenu->lastOption;
+		}
+	}
+}
+
 void ss1_menu_initialize( void )
 {
 	menuFont = gui_font_load( menuFontPath );
@@ -135,6 +236,14 @@ void ss1_menu_initialize( void )
 	initialize_menu( &debugMenu );
 
 	Game_Menu_SetCurrent( &mainMenu );
+
+	ape_client_input_register_action( "menu_up", &( ApeInputButton ) { APE_INPUT_UP }, 1, &( ApeInputKey ) { APE_INPUT_KEY_UP }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_down", &( ApeInputButton ) { APE_INPUT_DOWN }, 1, &( ApeInputKey ) { APE_INPUT_KEY_DOWN }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_left", &( ApeInputButton ) { INPUT_LEFT }, 1, &( ApeInputKey ) { APE_INPUT_KEY_LEFT }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_right", &( ApeInputButton ) { INPUT_RIGHT }, 1, &( ApeInputKey ) { APE_INPUT_KEY_RIGHT }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_select", &( ApeInputButton ) { INPUT_A }, 1, &( ApeInputKey ) { KEY_ENTER }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_back", &( ApeInputButton ) { INPUT_B }, 1, &( ApeInputKey ) { APE_INPUT_KEY_LEFT }, 1, handle_menu_action );
+	ape_client_input_register_action( "menu_toggle", &( ApeInputButton ) { INPUT_START }, 1, &( ApeInputKey ) {}, 0, handle_menu_action );
 }
 
 void ss1_menu_shutdown()
@@ -226,118 +335,4 @@ void ss1_menu_draw( const ApeViewport *viewport )
 
 	// draw our fancy little pie menu for interactions
 	//menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
-}
-
-static void next_menu_option()
-{
-	currentMenuOption++;
-	if ( currentMenuOption >= currentMenu->numOptions )
-	{
-		currentMenuOption = 0;
-	}
-}
-
-static void prev_menu_option()
-{
-	if ( currentMenuOption == 0 )
-	{
-		currentMenuOption = currentMenu->numOptions - 1;
-	}
-	else
-	{
-		currentMenuOption--;
-	}
-}
-
-bool ss1_menu_handle_input( void )
-{
-	if ( isMainMenuOpen )
-	{
-		if ( ape_client_input_get_button_state( 0, APE_INPUT_DOWN ) == APE_INPUT_STATE_PRESSED )
-		{
-			do
-			{
-				next_menu_option();
-			} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
-			return true;
-		}
-		else if ( ape_client_input_get_button_state( 0, APE_INPUT_UP ) == APE_INPUT_STATE_PRESSED )
-		{
-			do
-			{
-				prev_menu_option();
-			} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
-			return true;
-		}
-		else if ( ape_client_input_get_button_state( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED )
-		{
-			const MenuOption *option = &currentMenu->options[ currentMenuOption ];
-			if ( option->callback != nullptr )
-			{
-				option->callback( option );
-			}
-
-			switch ( option->type )
-			{
-				default:
-					break;
-				case MENU_OPTION_TYPE_BUTTON:
-				{
-					if ( option->button.command != nullptr )
-					{
-						PlParseConsoleString( option->button.command );
-					}
-					break;
-				}
-				case MENU_OPTION_TYPE_CHECKBOX:
-				{
-					if ( option->checkbox.var != nullptr )
-					{
-						PlSetConsoleVariable( option->checkbox.var, option->checkbox.var->b_value ? "0" : "1" );
-					}
-					break;
-				}
-			}
-
-			if ( option->nextMenu != nullptr )
-			{
-				currentMenu->lastOption = currentMenuOption;
-				currentMenu             = option->nextMenu;
-				currentMenuOption       = currentMenu->lastOption;
-			}
-			return true;
-		}
-		else if ( ape_client_input_get_button_state( 0, INPUT_B ) == APE_INPUT_STATE_PRESSED )
-		{
-			if ( currentMenu->parent != nullptr )
-			{
-				currentMenu       = currentMenu->parent;
-				currentMenuOption = currentMenu->lastOption;
-			}
-			return true;
-		}
-	}
-
-	if ( ape_client_input_get_button_state( 0, INPUT_START ) == APE_INPUT_STATE_PRESSED )
-	{
-		isMainMenuOpen    = !isMainMenuOpen;
-		currentMenuOption = 0;
-		return true;
-	}
-
-#if 0
-	// pie menu crap...
-	static bool blah = true;
-	if ( ape_client_input_get_button_state( 0, INPUT_X ) == APE_INPUT_STATE_PRESSED )
-	{
-		menu_pie_add_option( interactPie, "testing 4", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true, false ), NULL );
-		return true;
-	}
-	if ( menu_pie_handle_input( interactPie ) )
-	{
-		return true;
-	}
-#endif
-
-	return false;
 }
