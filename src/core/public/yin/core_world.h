@@ -309,6 +309,7 @@ typedef struct ApeBrushFace
 } ApeBrushFace;
 
 void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
+void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation );
 
 bool          ape_brush_face_is_portal( const ApeBrushFace *self );
 bool          ape_brush_face_is_mirror( const ApeBrushFace *self );

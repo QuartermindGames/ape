@@ -41,7 +41,7 @@ forge::Project *forge::editorProject = nullptr;
 
 static std::map< std::string, PLImage * > cachedImages;
 
-FXColor forge::themeColours[ ThemeColour::MAX_THEME_COLOURS ]{};
+FXColor forge::themeColours[ MAX_THEME_COLOURS ]{};
 
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
@@ -71,17 +71,17 @@ forge::Project *forge::create_project( const std::string &name, const std::strin
 	auto *project = PL_NEW( Project );
 
 	PLPath projectPath;
-	PlSetupPath( projectPath, true, "%s/%s", forge::cachedPaths[ forge::PATH_PROJECTS ], folderName.c_str() );
+	PlSetupPath( projectPath, true, "%s/%s", cachedPaths[ PATH_PROJECTS ], folderName.c_str() );
 
 	if ( PlLocalPathExists( projectPath ) )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create project, path (%s) already exists!", projectPath );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create project, path (%s) already exists!", projectPath );
 		return nullptr;
 	}
 
 	if ( !PlCreatePath( projectPath ) )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create project path (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create project path (%s)!", PlGetError() );
 		return nullptr;
 	}
 
@@ -93,7 +93,7 @@ forge::Project *forge::create_project( const std::string &name, const std::strin
 	PLPath nodePath;
 	project->config = generate_project_config( name.c_str(),
 	                                           PlSetupPath( nodePath, true, "%s/%s/%s.prj.n",
-	                                                        forge::cachedPaths[ forge::PATH_PROJECTS ],
+	                                                        cachedPaths[ PATH_PROJECTS ],
 	                                                        folderName.c_str(),
 	                                                        folderName.c_str() ) );
 
@@ -115,7 +115,7 @@ static void setup_paths( const char *exePath )
 	if ( !PlFileExists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
 	{
 		forge::isCookAvailable = false;
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
 		                       forge::cachedPaths[ forge::PATH_COOK ] );
 	}
 
@@ -128,12 +128,12 @@ static void setup_paths( const char *exePath )
 		}
 		else
 		{
-			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
+			FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
 		}
 	}
 	else
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
 	}
 
 	// fallback to local location if it failed...
@@ -147,8 +147,6 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 {
 	PLPath fullPath;
 	PlSetupPath( fullPath, true, "../../%s", path );
-
-#if 1
 
 	PLImage *image;
 	auto     i = cachedImages.find( fullPath );
@@ -168,17 +166,11 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 		cachedImages.emplace( fullPath, image );
 	}
 
-	FXIcon *icon = new FXIcon( app );
-	icon->setData( ( FXColor * ) PlGetImageData( image, 0, 0 ), IMAGE_KEEP | IMAGE_ALPHACOLOR, ( int ) image->width, ( int ) image->height );
+	FXIcon *icon = new FXIcon( app, static_cast< FXColor * >( PlGetImageData( image, 0, 0 ) ), 0, IMAGE_KEEP,
+	                           static_cast< int >( image->width ),
+	                           static_cast< int >( image->height ) );
 	icon->create();
 	return icon;
-
-#else
-
-	FXIconSource iconSource( app );
-	return iconSource.loadIconFile( fullPath );
-
-#endif
 }
 
 static void setup_colours( FXApp &app )
@@ -230,13 +222,13 @@ int main( int argc, char **argv )
 {
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
 	if ( PlgInitializeGraphics() != PL_RESULT_SUCCESS )
 	{
-		FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
 
@@ -366,13 +358,13 @@ extern "C"
 		switch ( messageType )
 		{
 			case SS_SHELL_MESSAGE_BOX_TYPE_ERROR:
-				FXMessageBox::error( FXApp::instance(), FX::MBOX_OK, "Forge Error", "%s", message );
+				FXMessageBox::error( FXApp::instance(), MBOX_OK, "Forge Error", "%s", message );
 				break;
 			case SS_SHELL_MESSAGE_BOX_TYPE_INFO:
-				FXMessageBox::information( FXApp::instance(), FX::MBOX_OK, "Forge Info", "%s", message );
+				FXMessageBox::information( FXApp::instance(), MBOX_OK, "Forge Info", "%s", message );
 				break;
 			case SS_SHELL_MESSAGE_BOX_TYPE_WARNING:
-				FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Forge Warning", "%s", message );
+				FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Forge Warning", "%s", message );
 				break;
 			default:
 				break;

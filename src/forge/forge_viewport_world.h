@@ -19,6 +19,7 @@ namespace forge
 		{
 			ID_GRID_ALIGN = Viewport::ID_LAST,
 
+			ID_FACE_INSPECTOR,
 			ID_FACE_TOGGLE,
 			ID_FACE_TOGGLE_OTHERS,
 			ID_FACE_FLIP,
@@ -36,6 +37,7 @@ namespace forge
 		long on_motion( FXObject *, FXSelector, void * ) override;
 
 		long on_grid_align( FXObject *, FXSelector, void * );
+		long on_face_inspector( FXObject *, FXSelector, void * );
 		long on_face_toggle( FXObject *, FXSelector, void * );
 		long on_face_flip( FXObject *, FXSelector, void * );
 

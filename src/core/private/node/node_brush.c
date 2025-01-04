@@ -145,10 +145,16 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 		coord.x = PlVector3DotProduct( *face->edgeLoop[ i ]->position, u );
 		coord.y = PlVector3DotProduct( *face->edgeLoop[ i ]->position, v );
 
-		ApeMaterial *material = face->material;
+		const ApeMaterial *material = face->material;
 		assert( material != nullptr );
 		uint width  = ape_material_get_width( material );
 		uint height = ape_material_get_height( material );
+
+		// apply rotation
+		float cos = cosf( face->materialAngle.x );
+		float sin = sinf( face->materialAngle.x );
+		coord.x   = coord.x * cos - coord.y * sin;
+		coord.y   = coord.x * sin + coord.y * cos;
 
 		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
 		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
@@ -164,6 +170,24 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 
 	self->material = material;
 	//TODO: reference should be added here - for now it's done by caller :(
+
+	// recompute face texture coordinates, as this is relative to the material size
+	compute_brush_face_texture_coordinates( self );
+
+	// need to notify the room to update
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self->parent ) );
+	assert( room != nullptr );
+	room->isDirty = true;
+}
+
+void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation )
+{
+	self->materialScale = *scale;
+	self->materialAngle = *rotation;
+
+	//TODO: well this is a cockup, offset is a vec3!? why did I do that... :(
+	self->materialOffset.x = offset->x;
+	self->materialOffset.y = offset->y;
 
 	// recompute face texture coordinates, as this is relative to the material size
 	compute_brush_face_texture_coordinates( self );

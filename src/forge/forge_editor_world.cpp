@@ -9,83 +9,131 @@
 #include "common_project.h"
 #include "forge_window_main.h"
 
-#if 0
 /////////////////////////////////////////////////////////////////////////////////////
-// Node Selection Dialog
+// Surface Inspector
 /////////////////////////////////////////////////////////////////////////////////////
 
 namespace forge
 {
-	class NodeSelectionDialog : public FXDialogBox
+	class SurfaceInspector : public FXDialogBox
 	{
-		FXDECLARE( NodeSelectionDialog )
+		FXDECLARE( SurfaceInspector )
 
-		FXListBox *list;
+		ApeBrushFace *face;
+
+		FXTextField *tagField;
+
+		FXTextField *scaleFieldX;
+		FXTextField *scaleFieldY;
+
+		FXTextField *offsetFieldX;
+		FXTextField *offsetFieldY;
+
+		FXTextField *rotationField;
 
 	protected:
-		NodeSelectionDialog() = default;
+		SurfaceInspector() = default;
 
 	public:
-		explicit NodeSelectionDialog( FXWindow *parent ) : FXDialogBox( parent, "Select Node Type" )
+		enum
+		{
+			ID_SURFACE_PROPERTY = ID_LAST,
+		};
+
+		explicit SurfaceInspector( FXWindow *parent ) : FXDialogBox( parent, "Surface Inspector", DECOR_TITLE | DECOR_CLOSE | DECOR_BORDER | DECOR_MENU )
 		{
 			setWidth( 256 );
+			//setHeight( 512 );
 
-			FXVerticalFrame *frame = new FXVerticalFrame( this, LAYOUT_FILL );
+			setPadLeft( 0 );
+			setPadRight( 0 );
+			setPadBottom( 0 );
+			setPadTop( 0 );
 
-			unsigned int              numClasses;
-			const ApeWorldNodeClass **classes = ape_world_node_get_classes( &numClasses );
-			assert( numClasses != 0 && classes != nullptr );
+			FXVerticalFrame *vf = new FXVerticalFrame( this, LAYOUT_FILL );
 
-			list = new FXListBox( frame, nullptr, 0, FRAME_SUNKEN | FRAME_THICK | LAYOUT_FILL_X | LISTBOX_NORMAL );
-			for ( unsigned int i = 0; i < numClasses; ++i )
-			{
-				if ( classes[ i ] == nullptr || classes[ i ]->flags & APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR )
-				{
-					continue;
-				}
+			FXHorizontalFrame *hf;
 
-				FXIcon *icon;
-				if ( classes[ i ]->editorIcon != nullptr )
-				{
-					icon = load_fx_icon( getApp(), classes[ i ]->editorIcon );
-				}
-				else
-				{
-					icon = nullptr;
-				}
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXLabel( hf, "Tag", nullptr, 0, LAYOUT_FILL_X );
+			tagField = new FXTextField( hf, 4, nullptr, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
 
-				list->appendItem( classes[ i ]->identifier, icon, &classes[ i ] );
-			}
-			list->setNumVisible( PlClamp( 4, list->getNumItems(), 8 ) );
+			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
 
-			new FXHorizontalSeparator( frame );
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXLabel( hf, "Scale", nullptr, 0, LAYOUT_FILL_X );
+			scaleFieldX = new FXTextField( hf, 4, this, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | TEXTFIELD_REAL | LAYOUT_FILL_X );
+			scaleFieldY = new FXTextField( hf, 4, this, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | TEXTFIELD_REAL | LAYOUT_FILL_X );
 
-			auto *hf = new FXHorizontalFrame( frame, LAYOUT_FILL | LAYOUT_RIGHT );
-			new FXButton( hf, "Accept", nullptr, this, ID_ACCEPT, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
-			new FXButton( hf, "Cancel", nullptr, this, ID_CANCEL, BUTTON_INITIAL | BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_TOP | LAYOUT_LEFT | LAYOUT_CENTER_X );
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXLabel( hf, "Offset", nullptr, 0, LAYOUT_FILL_X );
+			offsetFieldX = new FXTextField( hf, 4, this, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | TEXTFIELD_REAL | LAYOUT_FILL_X );
+			offsetFieldY = new FXTextField( hf, 4, this, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | TEXTFIELD_REAL | LAYOUT_FILL_X );
+
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXLabel( hf, "Rotation", nullptr, 0, LAYOUT_FILL_X );
+			rotationField = new FXTextField( hf, 4, this, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | TEXTFIELD_REAL | LAYOUT_FILL_X );
+
+			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
+
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXButton( hf, "Fit to Surface", nullptr, 0, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "Reset", nullptr, 0, BUTTON_NORMAL | LAYOUT_FILL_X );
 		}
 
-		~NodeSelectionDialog() override = default;
+		~SurfaceInspector() override = default;
 
-		[[nodiscard]] ApeWorldNodeMagic get_selected_type() const
+		void set_current( ApeBrushFace *face )
 		{
-			const int item = list->getCurrentItem();
-			if ( item == -1 )
+			this->face = face;
+			if ( this->face == nullptr )
 			{
-				return APE_WORLD_NODE_TYPE_EMPTY;
+				return;
 			}
 
-			const ApeWorldNodeClass *cls = static_cast< const ApeWorldNodeClass * >( list->getItemData( item ) );
-			assert( cls != nullptr );
-			return cls->magic;
+			scaleFieldX->setText( std::to_string( this->face->materialScale.x ).c_str() );
+			scaleFieldY->setText( std::to_string( this->face->materialScale.y ).c_str() );
+
+			offsetFieldX->setText( std::to_string( this->face->materialOffset.x ).c_str() );
+			offsetFieldY->setText( std::to_string( this->face->materialOffset.y ).c_str() );
+
+			rotationField->setText( std::to_string( this->face->materialAngle.x ).c_str() );
+		}
+
+		long on_update( FXObject *, FXSelector, void * )
+		{
+			if ( face == nullptr )
+			{
+				return TRUE;
+			}
+
+			PLVector2 scale;
+			scale.x = std::strtof( scaleFieldX->getText().text(), nullptr );
+			scale.y = std::strtof( scaleFieldY->getText().text(), nullptr );
+
+			PLVector2 offset;
+			offset.x = std::strtof( offsetFieldX->getText().text(), nullptr );
+			offset.y = std::strtof( offsetFieldY->getText().text(), nullptr );
+
+			PLVector3 rotation = {};
+			rotation.x         = std::strtof( rotationField->getText().text(), nullptr );
+
+			ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation );
+
+			return TRUE;
 		}
 	};
 
-	FXIMPLEMENT( NodeSelectionDialog, FXDialogBox, nullptr, 0 )
+	FXDEFMAP( SurfaceInspector )
+	surfaceInspectorMap[] = {
+	        FXMAPFUNC( SEL_CHANGED, SurfaceInspector::ID_SURFACE_PROPERTY, SurfaceInspector::on_update ),
+	};
+
+	FXIMPLEMENT( SurfaceInspector, FXDialogBox, surfaceInspectorMap, ARRAYNUMBER( surfaceInspectorMap ) )
 }// namespace forge
 
 /////////////////////////////////////////////////////////////////////////////////////
-#endif
+/////////////////////////////////////////////////////////////////////////////////////
 
 FXDEFMAP( forge::WorldEditor )
 worldEditorMap[] = {
@@ -445,6 +493,47 @@ long forge::WorldEditor::on_properties( FXObject *, FXSelector, void * )
 	mainWindow->open_properties( node );
 
 	return TRUE;
+}
+
+void forge::WorldEditor::open_face_inspector()
+{
+	if ( instance.geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return;
+	}
+
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	assert( instance != nullptr );
+
+	ApeBrushFace *face = static_cast< ApeBrushFace * >( ape_editor_get_first_selected( instance ) );
+	if ( face == nullptr )
+	{
+		return;
+	}
+
+	if ( surfaceInspector == nullptr )
+	{
+		surfaceInspector = new SurfaceInspector( this );
+		surfaceInspector->create();
+	}
+
+	surfaceInspector->set_current( face );
+	surfaceInspector->show();
+}
+
+void forge::WorldEditor::set_face_inspector_surface( ApeBrushFace *face )
+{
+	if ( surfaceInspector == nullptr )
+	{
+		return;
+	}
+
+	surfaceInspector->set_current( face );
+
+	if ( face == nullptr )
+	{
+		surfaceInspector->hide();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

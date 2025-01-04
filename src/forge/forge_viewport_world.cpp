@@ -79,6 +79,7 @@ namespace forge
 FXDEFMAP( forge::WorldViewport )
 worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_GRID_ALIGN, forge::WorldViewport::on_grid_align ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_INSPECTOR, forge::WorldViewport::on_face_inspector ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE, forge::WorldViewport::on_face_toggle ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE_OTHERS, forge::WorldViewport::on_face_toggle ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLIP, forge::WorldViewport::on_face_flip ),
@@ -129,13 +130,18 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
+			WorldEditor *worldEditor = static_cast< WorldEditor * >( editor );
+
 			void *p = ape_editor_get_object_under_cursor( instance );
 			if ( p == nullptr )
 			{
+				worldEditor->set_face_inspector_surface( nullptr );
 				return TRUE;
 			}
 
 			ape_editor_add_object_to_selection( instance, p );
+
+			worldEditor->set_face_inspector_surface( static_cast< ApeBrushFace * >( p ) );
 			return TRUE;
 		}
 	}
@@ -221,6 +227,8 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 
 			// Create a pop-up menu
 			FXMenuPane *popup = new FXMenuPane( this );
+			new FXMenuCommand( popup, "Inspector", load_fx_icon( getApp(), "resources/silk/zoom.png" ), this, ID_FACE_INSPECTOR );
+			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Toggle Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ], this, ID_FACE_TOGGLE );
 			new FXMenuCommand( popup, "Toggle Other Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE_OTHER ], this, ID_FACE_TOGGLE_OTHERS );
 			new FXMenuSeparator( popup );
@@ -408,6 +416,12 @@ long forge::WorldViewport::on_grid_align( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
+long forge::WorldViewport::on_face_inspector( FXObject *, FXSelector, void * )
+{
+	static_cast< WorldEditor * >( editor )->open_face_inspector();
+	return TRUE;
+}
+
 long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector selector, void * )
 {
 	ApeEditorInstance *instance = editor->get_internal();
@@ -462,7 +476,7 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT:
 		{
 			static constexpr PLColourF32 DEFAULT_COLOUR = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
-			ape_create_light( APE_WORLD_NODE( room ), &tpos, &DEFAULT_COLOUR, 128.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_SHADOWS );
+			ape_create_light( APE_WORLD_NODE( room ), &tpos, &DEFAULT_COLOUR, 128.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS | APE_LIGHT_FLAG_SHADOWS );
 			break;
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_CAMERA:

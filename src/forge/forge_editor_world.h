@@ -8,9 +8,12 @@
 namespace forge
 {
 	class WorldViewport;
+	class SurfaceInspector;
 	class WorldEditor : public EditorTab
 	{
 		FXDECLARE( WorldEditor )
+
+		SurfaceInspector *surfaceInspector{};
 
 	protected:
 		inline WorldEditor() = default;
@@ -57,6 +60,9 @@ namespace forge
 
 		long on_material_browser( FXObject *, FXSelector, void * );
 		long on_properties( FXObject *, FXSelector, void * );
+
+		void open_face_inspector();
+		void set_face_inspector_surface( ApeBrushFace *face );
 
 	private:
 		ApeWorld *_world{};
