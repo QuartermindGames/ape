@@ -211,15 +211,18 @@ static AcmBranch *parse_branch_array( const AcmLexerToken *token, AcmBranch *par
 
 static AcmBranch *parse_branch( const AcmLexerToken *token, AcmBranch *parent, const AcmLexerToken **currentToken )
 {
+	const AcmLexerToken *peekToken = get_next_token( token );
+
 	if ( token->type != ACM_TOKEN_TYPE_TYPENAME )
 	{
+		*currentToken = peekToken;
 		Warning( "Unexpected token type (%u): %u:%u (%s)\n", token->type, token->lineNum, token->linePos, token->path );
 		return NULL;
 	}
 
-	const AcmLexerToken *peekToken = get_next_token( token );
 	if ( peekToken == NULL )
 	{
+		*currentToken = peekToken;
 		Warning( "Next token missing for branch: %u:%u (%s)\n", peekToken->lineNum, peekToken->linePos, peekToken->path );
 		return NULL;
 	}
@@ -253,6 +256,7 @@ static AcmBranch *parse_branch( const AcmLexerToken *token, AcmBranch *parent, c
 	}
 	else
 	{
+		*currentToken = peekToken;
 		Warning( "Unexpected token (%s): %u:%u (%s)\n", token->symbol, token->lineNum, token->linePos, token->path );
 	}
 
