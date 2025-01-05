@@ -17,6 +17,8 @@ typedef struct MatGen
 	const char *shader;
 	bool        overwrite;
 
+	const char *filterMode;
+
 	GameMaterialSurface *surfaceLookup;
 	int8_t               numSurfaces;
 } MatGen;
@@ -53,11 +55,10 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 	// search for the extension
 	char *c = strrchr( name, '.' );
-	assert( c != NULL );
 	if ( c == NULL )
 	{
-		printf( "Failed to fetch file extension! Skipping...\n" );
 		PL_DELETE( name );
+		printf( "Failed to fetch file extension! Skipping...\n" );
 		return;
 	}
 
@@ -88,7 +89,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 #endif
 
 		// now build the node tree for the material
-		AcmBranch *root = acm_push_object( NULL, "material" );
+		AcmBranch *root = acm_push_object( nullptr, "material" );
 		{
 			if ( surfaceType != GAME_MATERIAL_SURFACE_TYPE_NONE )
 			{
@@ -97,8 +98,12 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 			AcmBranch *passesArray = acm_push_array_object( root, "passes" );
 			{
-				AcmBranch *pass = acm_push_object( passesArray, NULL );
 				{
+					AcmBranch *pass = acm_push_object( passesArray, nullptr );
+					if ( matGen.filterMode != NULL )
+					{
+						acm_push_string( pass, "textureFilterMode", matGen.filterMode, false );
+					}
 					acm_push_string( pass, "shaderProgram", matGen.shader, false );
 					AcmBranch *parameters = acm_push_object( pass, "shaderParameters" );
 					{
@@ -184,7 +189,6 @@ int main( int argc, char **argv )
 	if ( !LoadSurfacesConfig( "materials/surfaces." APE_FORMAT_CONFIG_EXTENSION ) )
 	{
 		printf( "Failed to load surfaces config!\n" );
-		return EXIT_FAILURE;
 	}
 
 	matGen.dir = PlGetCommandLineArgumentValueByIndex( 1 );
@@ -202,6 +206,10 @@ int main( int argc, char **argv )
 	else
 	{
 		matGen.shader = "default";
+	}
+	if ( ( arg = PlGetCommandLineArgumentValue( "-f" ) ) != NULL )
+	{
+		matGen.filterMode = arg;
 	}
 
 	matGen.overwrite = PlHasCommandLineArgument( "-o" );
