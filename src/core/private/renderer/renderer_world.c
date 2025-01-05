@@ -334,7 +334,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		assert( material != nullptr );
 
 		// blended materials get drawn later
-		if ( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) )
+		if ( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) || ( stage & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
 		{
 			continue;
 		}
@@ -356,9 +356,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		mesh->firstSubMeshes = firstSubMeshes[ 0 ];
 		mesh->subMeshes      = subMeshes[ 0 ];
 
-		ApeLightPointerArray lights;
-		lights[ 0 ] = light;
-		ape_material_draw( material, mesh, lights );
+		ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
@@ -850,9 +848,9 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	else
 	{
 		PlgInsertDebugMarker( "Solid room pass" );
-		draw_solid_room( room, camera, true );
+		draw_solid_room( room, camera, false );
 		PlgInsertDebugMarker( "Translucent room pass" );
-		draw_translucent_room( room, camera, true );
+		draw_translucent_room( room, camera, false );
 	}
 
 	PlPopMatrix();

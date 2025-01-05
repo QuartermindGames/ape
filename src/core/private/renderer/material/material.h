@@ -134,6 +134,11 @@ typedef enum ApeShaderProgramGlobalUniform
 	APE_SHADER_MAX_UNIFORMS
 } ApeShaderProgramGlobalUniform;
 
+typedef enum ApeShaderprogramFlag
+{
+	PL_BITFLAG( APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING, 0 ),
+} ApeShaderProgramFlag;
+
 typedef struct ApeShaderProgram
 {
 	char internalName[ RS_PROGRAM_NAME_LENGTH ];
@@ -149,6 +154,8 @@ typedef struct ApeShaderProgram
 	ApeMaterialPass defaultPass;
 
 	PLGShaderProgram *internal;
+
+	uint flags;
 } ApeShaderProgram;
 
 void ape_hot_reload_shaders_();

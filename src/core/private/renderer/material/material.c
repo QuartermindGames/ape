@@ -1062,7 +1062,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 {
 	if ( ape_rendererState_.camera != NULL )
 	{
-		if ( ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) || ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID ) )
+		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED || ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 		{
 			lights = nullptr;
 		}
@@ -1081,6 +1081,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	for ( uint i = 0; i < material->numPasses; ++i )
 	{
 		ApeMaterialPass *curPass = &material->passes[ i ];
+		if ( !( curPass->program->flags & APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING ) && lights != nullptr )
+		{
+			continue;
+		}
 
 		// Mirror mode requires flipping the matrix,
 		// so we'll need to update the cull mode
@@ -1151,7 +1155,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 					continue;
 				}
 				// textures just need to be set per their respective unit
-				else if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
+				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 				{
 					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
 					if ( skipDiffuse != nullptr && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
@@ -1162,7 +1166,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = ape_render_target_get_texture( ( ApeRenderTarget * ) curPass->variables[ j ].data.ptr );
+						texture = ape_render_target_get_texture( curPass->variables[ j ].data.ptr );
 						if ( texture == NULL )
 						{
 							texture = ape_texture_get_fallback();

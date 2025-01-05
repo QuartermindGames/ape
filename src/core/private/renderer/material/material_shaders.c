@@ -214,6 +214,12 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 	program->internal = internal;
 
+	if ( ( child = acm_get_child_by_name( root, "baseLightingPass" ) ) != nullptr )
+	{
+		// for now just apply a flag, we'll deal with fancy things later...
+		program->flags |= APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING;
+	}
+
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can, of course, overwrite these. */
