@@ -33,6 +33,8 @@ namespace forge
 
 		long on_left_click( FXObject *, FXSelector, void * ) override;
 		long on_right_click( FXObject *, FXSelector, void * ) override;
+		long on_middle_click( FXObject *, FXSelector, void * ) override;
+
 		long on_key( FXObject *, FXSelector, void * ) override;
 		long on_motion( FXObject *, FXSelector, void * ) override;
 

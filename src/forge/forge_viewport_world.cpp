@@ -254,6 +254,44 @@ long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector 
 	return FALSE;
 }
 
+long forge::WorldViewport::on_middle_click( FXObject *fx_object, FXSelector fx_selector, void *p )
+{
+	if ( Viewport::on_middle_click( fx_object, fx_selector, p ) )
+	{
+		return TRUE;
+	}
+
+	auto event = static_cast< FXEvent * >( p );
+	if ( event->moved )
+	{
+		return TRUE;
+	}
+
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		const ApeBrushFace *face = static_cast< ApeBrushFace * >( ape_editor_get_first_selected( instance ) );
+		if ( face == nullptr )
+		{
+			return TRUE;
+		}
+
+		ApeBrushFace *highlightedFace = static_cast< ApeBrushFace * >( ape_editor_get_object_under_cursor( instance ) );
+		if ( highlightedFace == nullptr )
+		{
+			return TRUE;
+		}
+
+		ape_brush_face_apply_material( highlightedFace, face->material );
+
+		const PLVector2 offset = PL_VECTOR2( face->materialOffset.x, face->materialOffset.y );
+		ape_brush_face_apply_material_coordinates( highlightedFace, &face->materialScale, &offset, &face->materialAngle );
+	}
+
+	return FALSE;
+}
+
 long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector, void *ptr )
 {
 	if ( Viewport::on_key( object, selector, ptr ) )

@@ -6,7 +6,7 @@
 FXIcon *forge::AboutDialog::editorIcon    = nullptr;
 FXIcon *forge::AboutDialog::developerIcon = nullptr;
 
-forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
+forge::AboutDialog::AboutDialog( FXWindow *parent )
     : FXDialogBox( parent, FXString( "About " ) + FORGE_APP_TITLE )
 {
 	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
@@ -17,9 +17,13 @@ forge::AboutDialog::AboutDialog( FX::FXWindow *parent )
 	             LAYOUT_LEFT | LAYOUT_SIDE_LEFT | JUSTIFY_LEFT );
 
 	if ( editorIcon == nullptr )
-		editorIcon = forge::load_fx_icon( FXApp::instance(), "resources/logo_editor.gif" );
+	{
+		editorIcon = load_fx_icon( FXApp::instance(), "resources/logo_editor.gif" );
+	}
 	if ( developerIcon == nullptr )
-		developerIcon = forge::load_fx_icon( FXApp::instance(), "resources/logo_developer.gif" );
+	{
+		developerIcon = load_fx_icon( FXApp::instance(), "resources/logo_developer.gif" );
+	}
 
 	auto hframe = new FXHorizontalFrame( infoFrame, LAYOUT_FILL_X );
 	new FXLabel( hframe, FXString::null, editorIcon, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | JUSTIFY_CENTER_Y | LAYOUT_CENTER_Y );

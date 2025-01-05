@@ -3,9 +3,6 @@
 #include "forge.h"
 #include "forge_browser_materials.h"
 
-#include "forge_editor_world.h"
-#include "forge_window_main.h"
-
 #if ( PL_SYSTEM_OS == PL_SYSTEM_OS_LINUX )
 #	include <sys/wait.h>
 #endif

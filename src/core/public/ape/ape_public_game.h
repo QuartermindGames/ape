@@ -4,6 +4,9 @@
 
 PL_EXTERN_C
 
+typedef struct ApeWorld ApeWorld;
+typedef struct ApeRoom ApeRoom;
+
 #define APE_GAME_INTERFACE_VERSION 1
 
 typedef struct ApeServerClient ApeServerClientHandle;
