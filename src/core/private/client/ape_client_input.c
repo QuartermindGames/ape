@@ -19,25 +19,25 @@ static const float DEFAULT_DEADZONE = 0.2f;
 
 typedef struct ApeInputAction
 {
-	char id[ 32 ];
+	char                   id[ 32 ];
 	ApeInputActionCallback callback;
 
 	ApeInputButton buttons[ APE_MAX_BUTTON_INPUTS ];
-	unsigned int numButtonBinds;
+	unsigned int   numButtonBinds;
 
-	ApeInputKey keys[ APE_MAX_KEY_INPUTS ];
+	ApeInputKey  keys[ APE_MAX_KEY_INPUTS ];
 	unsigned int numKeyBinds;
 
 	PLLinkedListNode *node;
 } ApeInputAction;
 
-static PLLinkedList *actionableList = NULL;
+static PLLinkedList *actionableList = nullptr;
 
 static struct
 {
-	int x, y;
-	int ox, oy;
-	int dx, dy;
+	int           x, y;
+	int           ox, oy;
+	int           dx, dy;
 	ApeInputState buttons[ APE_MAX_INPUT_MOUSE_BUTTONS ];
 
 	PLVector2 wheel, oldWheel;
@@ -45,13 +45,13 @@ static struct
 
 typedef struct Key
 {
-	ApeInputState state;
+	ApeInputState     state;
 	PLLinkedListNode *activeNode;
 } Key;
 
 static struct
 {
-	Key keys[ APE_MAX_KEY_INPUTS ];
+	Key           keys[ APE_MAX_KEY_INPUTS ];
 	PLLinkedList *activeKeyList;
 } inputKeyboard = {};
 
@@ -73,7 +73,7 @@ ACM_DECLARE_STRUCT( ApeInputController, 2,
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
 static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
-static unsigned int numControllers = 0;
+static unsigned int       numControllers = 0;
 
 static ApeInputController *get_empty_controller( unsigned int *id )
 {
@@ -88,16 +88,16 @@ static ApeInputController *get_empty_controller( unsigned int *id )
 		return &controllers[ i ];
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static void iterate_action( void *userData, PL_UNUSED bool *breakEarly )
 {
-	ApeInputAction *action = ( ApeInputAction * ) userData;
+	const ApeInputAction *action = userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
-		ApeInputState state = ss_shell_get_button_state( action->buttons[ i ] );
-		if ( ( ape_is_console_open() && state != APE_INPUT_STATE_RELEASED ) || ( ( state != APE_INPUT_STATE_DOWN ) && ( state != APE_INPUT_STATE_PRESSED ) ) )
+		ApeInputState state = controllers[ 0 ].buttons[ action->buttons[ i ] ];
+		if ( ( ape_is_console_open() && !( state & APE_INPUT_STATE_RELEASED ) ) || ( !( state & APE_INPUT_STATE_DOWN ) && !( state & APE_INPUT_STATE_PRESSED ) ) )
 		{
 			continue;
 		}
@@ -130,7 +130,8 @@ static void check_for_controllers( void )
 		PRINT_WARNING( "Failed to fetch the number of available joysticks: %s\n", SDL_GetError() );
 		return;
 	}
-	else if ( num > CLIENT_INPUT_MAX_CONTROLLERS )
+
+	if ( num > CLIENT_INPUT_MAX_CONTROLLERS )
 	{
 		num = CLIENT_INPUT_MAX_CONTROLLERS;
 	}
@@ -143,8 +144,8 @@ static void check_for_controllers( void )
 		}
 
 		// right, uh, check if it's already open
-		SDL_JoystickID joyId = SDL_JoystickGetDeviceInstanceID( i );
-		bool isMatched = false;
+		SDL_JoystickID joyId     = SDL_JoystickGetDeviceInstanceID( i );
+		bool           isMatched = false;
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
 			if ( controllers[ j ].sdlGameController == NULL )
@@ -166,7 +167,7 @@ static void check_for_controllers( void )
 		}
 
 		// try and fetch an empty slot - break if one isn't available
-		unsigned int id;
+		unsigned int        id;
 		ApeInputController *controller = get_empty_controller( &id );
 		if ( controller == NULL )
 		{
@@ -205,7 +206,7 @@ static void unregister_controller( unsigned int id )
 	if ( controllers[ id ].sdlGameController != NULL )
 	{
 		SDL_GameControllerClose( controllers[ id ].sdlGameController );
-		controllers[ id ].sdlGameController = NULL;
+		controllers[ id ].sdlGameController = nullptr;
 	}
 	PL_ZERO_( controllers[ id ] );
 
@@ -306,7 +307,7 @@ void ape_initialize_input_( void )
 	{
 		// read it into a null-terminated buffer
 		size_t size = PlGetFileSize( mapFile );
-		char *buf = PL_NEW_( char, size + 1 );
+		char  *buf  = PL_NEW_( char, size + 1 );
 		PlReadFile( mapFile, buf, sizeof( char ), size );
 		PlCloseFile( mapFile );
 
@@ -323,7 +324,7 @@ void ape_initialize_input_( void )
 
 	// attempt to fetch and then init config
 	AcmBranch *userConfig = ape_get_user_config();
-	inputConfig = acm_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
+	inputConfig           = acm_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
 	if ( inputConfig == NULL )
 	{
 		inputConfig = acm_push_object( userConfig, SERIALISATION_NODE_NAME );
@@ -341,7 +342,7 @@ void ape_shutdown_input_( void )
 	ape_clear_input_devices();
 
 	PlDestroyLinkedList( inputKeyboard.activeKeyList );
-	inputKeyboard.activeKeyList = NULL;
+	inputKeyboard.activeKeyList = nullptr;
 }
 
 void ape_serialize_input_config_( AcmBranch *root )
@@ -350,7 +351,7 @@ void ape_serialize_input_config_( AcmBranch *root )
 	for ( unsigned int i = 0; i < numControllers; ++i )
 	{
 		AcmErrorCode errorCode;
-		AcmBranch  *controllerBranch = acm_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
+		AcmBranch   *controllerBranch = acm_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
 		if ( errorCode != ND_ERROR_SUCCESS )
 		{
 			ape_warning_( "Failed to serialize controller: %s\n", acm_get_error_message() );
@@ -385,12 +386,12 @@ void ape_clear_input_devices( void )
 
 unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 {
-	unsigned int id;
+	unsigned int        id;
 	ApeInputController *device = get_empty_controller( &id );
 	if ( device == NULL )
 	{
 		PRINT_WARNING( "Failed to find an empty input device slot!\n" );
-		return ( unsigned int ) -1;
+		return -1;
 	}
 
 	PL_ZERO( device, sizeof( ApeInputController ) );
@@ -450,8 +451,8 @@ bool ape_console_handle_mouse_wheel_event_( float x, float y );
 void ape_client_input_handle_mouse_wheel_event( float x, float y )
 {
 	inputMouse.oldWheel = inputMouse.wheel;
-	inputMouse.wheel.x = x;
-	inputMouse.wheel.y = y;
+	inputMouse.wheel.x  = x;
+	inputMouse.wheel.y  = y;
 
 	if ( ape_console_handle_mouse_wheel_event_( x, y ) )
 	{
@@ -465,8 +466,8 @@ void Client_Input_HandleMouseMotionEvent( int x, int y )
 {
 	inputMouse.ox = inputMouse.x;
 	inputMouse.oy = inputMouse.y;
-	inputMouse.x = x;
-	inputMouse.y = y;
+	inputMouse.x  = x;
+	inputMouse.y  = y;
 
 	guiUpdateMousePosition( inputMouse.x, inputMouse.y );
 }
@@ -532,18 +533,15 @@ void ape_tick_input_( void )
 		for ( unsigned int j = 0; j < APE_MAX_BUTTON_INPUTS; ++j )
 		{
 			bool state = get_sdl_button_state( controllers[ i ].sdlGameController, j );
-			if ( !state )
+			if ( state && controllers[ i ].buttons[ j ] == APE_INPUT_STATE_NONE )
 			{
-				controllers[ i ].buttons[ j ] = APE_INPUT_STATE_NONE;
-				continue;
+				controllers[ i ].buttons[ j ] |= APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN;
 			}
-
-			if ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_DOWN )
+			else if ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_DOWN )
 			{
-				continue;
+				controllers[ i ].buttons[ j ] &= ~APE_INPUT_STATE_DOWN | APE_INPUT_STATE_PRESSED;
+				controllers[ i ].buttons[ j ] |= APE_INPUT_STATE_RELEASED;
 			}
-
-			controllers[ i ].buttons[ j ] = ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_PRESSED ) ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_PRESSED;
 		}
 
 		controllers[ i ].stickLOld = controllers[ i ].stickL;
@@ -563,10 +561,10 @@ void ape_tick_input_( void )
 	while ( node != NULL )
 	{
 		Key *key = PlGetLinkedListNodeUserData( node );
-		node = PlGetNextLinkedListNode( node );
+		node     = PlGetNextLinkedListNode( node );
 		key->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
 		PlDestroyLinkedListNode( key->activeNode );
-		key->activeNode = NULL;
+		key->activeNode = nullptr;
 	}
 
 	//PRINT( "L: %s\n", PlPrintVector2( &controllers[ 0 ].stickL, PL_VAR_F32 ) );
@@ -609,26 +607,16 @@ unsigned int apeGetNumControllers( void ) { return numControllers; }
 ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButton button )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
-	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
-	{
-		return APE_INPUT_STATE_NONE;
-	}
-
 	return controllers[ slot ].buttons[ button ];
 }
 
 PLVector2 ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
-	if ( slot >= CLIENT_INPUT_MAX_CONTROLLERS )
-	{
-		return pl_vecOrigin2;
-	}
-
 	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
 }
 
-void ape_client_input_register_action( const char *id,
+void ape_client_input_register_action( const char    *id,
                                        ApeInputButton buttons[], unsigned int numDefaultButtons,
                                        ApeInputKey keys[], unsigned int numDefaultKeys,
                                        ApeInputActionCallback actionCallback )

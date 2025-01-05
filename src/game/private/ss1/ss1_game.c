@@ -225,7 +225,7 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 		case APE_GAME_INTERFACE_REQUEST_SHUTDOWN:
 			return ss1_shutdown();
 		case APE_GAME_INTERFACE_REQUEST_DRAW:
-			return ss1_draw( ( ApeViewport * ) user );
+			return ss1_draw( user );
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
 			return ss1_draw_menu( user );
 		case APE_GAME_INTERFACE_REQUEST_TICK_SERVER:
