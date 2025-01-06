@@ -91,7 +91,7 @@ worldViewportMap[] = {
 };
 FXIMPLEMENT( forge::WorldViewport, forge::Viewport, worldViewportMap, ARRAYNUMBER( worldViewportMap ) )
 
-forge::WorldViewport::WorldViewport( FXComposite *composite, FXGLVisual *visual, forge::WorldEditor *editor, ApeCameraViewMode viewMode )
+forge::WorldViewport::WorldViewport( FXComposite *composite, FXGLVisual *visual, WorldEditor *editor, ApeCameraViewMode viewMode )
     : Viewport( composite, visual, editor, viewMode )
 {
 }
@@ -149,7 +149,7 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 	return FALSE;
 }
 
-long forge::WorldViewport::on_right_click( FX::FXObject *object, FX::FXSelector selector, void *ptr )
+long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector, void *ptr )
 {
 	if ( Viewport::on_right_click( object, selector, ptr ) )
 	{
@@ -292,7 +292,7 @@ long forge::WorldViewport::on_middle_click( FXObject *fx_object, FXSelector fx_s
 	return FALSE;
 }
 
-long forge::WorldViewport::on_key( FX::FXObject *object, FX::FXSelector selector, void *ptr )
+long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *ptr )
 {
 	if ( Viewport::on_key( object, selector, ptr ) )
 	{

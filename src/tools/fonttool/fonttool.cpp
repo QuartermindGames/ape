@@ -55,9 +55,9 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 
 		// first determine the size we need for the surface
 
-		static const int32_t  MAX_WIDTH = 512;
-		static const uint32_t MAX_ASCII = 512;
-		static const int32_t  PADDING   = 4;
+		static constexpr int32_t  MAX_WIDTH = 512;
+		static constexpr uint32_t MAX_ASCII = 512;
+		static constexpr int32_t  PADDING   = 4;
 
 		int32_t width = 8, height = 8;
 		int32_t x = 0, y = 0;
