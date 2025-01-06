@@ -33,6 +33,12 @@ typedef struct ApeInputAction
 
 static PLLinkedList *actionableList = nullptr;
 
+typedef struct Button
+{
+	ApeInputState     state;
+	PLLinkedListNode *activeNode;
+} Button;
+
 static struct
 {
 	int           x, y;
@@ -43,52 +49,43 @@ static struct
 	PLVector2 wheel, oldWheel;
 } inputMouse = {};
 
-typedef struct Key
-{
-	ApeInputState     state;
-	PLLinkedListNode *activeNode;
-} Key;
-
 static struct
 {
-	Key           keys[ APE_MAX_KEY_INPUTS ];
+	Button        keys[ APE_MAX_KEY_INPUTS ];
 	PLLinkedList *activeKeyList;
 } inputKeyboard = {};
 
-typedef struct ApeInputController
+#define CLIENT_INPUT_MAX_CONTROLLERS 4
+
+static struct
 {
 	bool isActive;
 
-	ApeInputState buttons[ APE_MAX_BUTTON_INPUTS ];
+	Button        buttons[ APE_MAX_BUTTON_INPUTS ];
+	PLLinkedList *activeButtonList;
 
 	PLVector2 stickL, stickLOld, stickLDelta;
 	PLVector2 stickR, stickROld, stickRDelta;
 	PLVector2 deadzones;
 
 	SDL_GameController *sdlGameController;
-} ApeInputController;
+} inputControllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
+static unsigned int numControllers;
 
-ACM_DECLARE_STRUCT( ApeInputController, 2,
-                    ACM_DECLARE_STRUCT_ITEM_ARRAY( ApeInputController, deadzones, ACM_PROPERTY_TYPE_FLOAT32, 2 ) )
-
-#define CLIENT_INPUT_MAX_CONTROLLERS 4
-static ApeInputController controllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
-static unsigned int       numControllers = 0;
-
-static ApeInputController *get_empty_controller( unsigned int *id )
+static unsigned int get_empty_controller( unsigned int *id )
 {
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
-		if ( controllers[ i ].isActive )
+		if ( inputControllers[ i ].isActive )
 		{
 			continue;
 		}
 
 		*id = i;
-		return &controllers[ i ];
+		return i;
 	}
 
-	return nullptr;
+	return -1;
 }
 
 static void iterate_action( void *userData, PL_UNUSED bool *breakEarly )
@@ -96,13 +93,17 @@ static void iterate_action( void *userData, PL_UNUSED bool *breakEarly )
 	const ApeInputAction *action = userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
-		ApeInputState state = controllers[ 0 ].buttons[ action->buttons[ i ] ];
-		if ( ( ape_is_console_open() && !( state & APE_INPUT_STATE_RELEASED ) ) || ( !( state & APE_INPUT_STATE_DOWN ) && !( state & APE_INPUT_STATE_PRESSED ) ) )
+		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
-			continue;
-		}
+			ApeInputState state = inputControllers[ j ].buttons[ action->buttons[ i ] ].state;
+			if ( ( ape_is_console_open() && !( state & APE_INPUT_STATE_RELEASED ) ) || ( !( state & APE_INPUT_STATE_DOWN ) && !( state & APE_INPUT_STATE_PRESSED ) ) )
+			{
+				continue;
+			}
 
-		action->callback( state, action->id );
+			//TODO: callback should take controller index
+			action->callback( state, action->id );
+		}
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i )
 	{
@@ -148,12 +149,12 @@ static void check_for_controllers( void )
 		bool           isMatched = false;
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
-			if ( controllers[ j ].sdlGameController == NULL )
+			if ( inputControllers[ j ].sdlGameController == NULL )
 			{
 				continue;
 			}
 
-			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( SDL_GameControllerGetJoystick( controllers[ j ].sdlGameController ) );
+			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( SDL_GameControllerGetJoystick( inputControllers[ j ].sdlGameController ) );
 			if ( compareJoyId == joyId )
 			{
 				isMatched = true;
@@ -167,53 +168,64 @@ static void check_for_controllers( void )
 		}
 
 		// try and fetch an empty slot - break if one isn't available
-		unsigned int        id;
-		ApeInputController *controller = get_empty_controller( &id );
-		if ( controller == NULL )
+		unsigned int id;
+		unsigned int slot = get_empty_controller( &id );
+		if ( slot == ( unsigned int ) -1 )
 		{
 			break;
 		}
 
-		if ( ( controller->sdlGameController = SDL_GameControllerOpen( i ) ) == NULL )
+		if ( ( inputControllers[ slot ].sdlGameController = SDL_GameControllerOpen( i ) ) == NULL )
 		{
 			PRINT_WARNING( "Failed to open game controller: %s\n", SDL_GetError() );
 			continue;
 		}
 
-		const char *name = SDL_GameControllerName( controller->sdlGameController );
+		const char *name = SDL_GameControllerName( inputControllers[ slot ].sdlGameController );
 		if ( name == NULL )
 		{
 			name = "Unknown";
 		}
-		const char *serial = SDL_GameControllerGetSerial( controller->sdlGameController );
+		const char *serial = SDL_GameControllerGetSerial( inputControllers[ slot ].sdlGameController );
 		if ( serial == NULL )
 		{
 			serial = "Unknown";
 		}
 
-		controller->deadzones = PL_VECTOR2( DEFAULT_DEADZONE, DEFAULT_DEADZONE );
+		inputControllers[ slot ].deadzones = PL_VECTOR2( DEFAULT_DEADZONE, DEFAULT_DEADZONE );
+
+		if ( inputControllers[ slot ].activeButtonList == nullptr )
+		{
+			inputControllers[ slot ].activeButtonList = PlCreateLinkedList();
+		}
+		PlDestroyLinkedListNodes( inputControllers[ slot ].activeButtonList );
 
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
-		PRINT( "%s", tmp );
+		ape_print_( "%s", tmp );
 
 		numControllers++;
 	}
 }
 
-static void unregister_controller( unsigned int id )
+static void unregister_controller( unsigned int slot )
 {
-	if ( controllers[ id ].sdlGameController != NULL )
+	if ( inputControllers[ slot ].sdlGameController != NULL )
 	{
-		SDL_GameControllerClose( controllers[ id ].sdlGameController );
-		controllers[ id ].sdlGameController = nullptr;
+		SDL_GameControllerClose( inputControllers[ slot ].sdlGameController );
+		inputControllers[ slot ].sdlGameController = nullptr;
 	}
-	PL_ZERO_( controllers[ id ] );
+	PL_ZERO_( inputControllers[ slot ] );
 
 	if ( numControllers > 0 )
 	{
 		numControllers--;
 	}
+
+	PlDestroyLinkedList( inputControllers[ slot ].activeButtonList );
+	inputControllers[ slot ].activeButtonList = nullptr;
+
+	memset( inputControllers[ slot ].buttons, 0, sizeof( Button ) );
 }
 
 static bool get_sdl_button_state( SDL_GameController *gameController, ApeInputButton button )
@@ -347,6 +359,7 @@ void ape_shutdown_input_( void )
 
 void ape_serialize_input_config_( AcmBranch *root )
 {
+#if 0
 	AcmBranch *controllersBranch = acm_push_array_object( root, "controllers" );
 	for ( unsigned int i = 0; i < numControllers; ++i )
 	{
@@ -360,6 +373,7 @@ void ape_serialize_input_config_( AcmBranch *root )
 
 		acm_push_branch( controllersBranch, controllerBranch );
 	}
+#endif
 }
 
 void ape_deserialize_input_config_( AcmBranch *root )
@@ -380,23 +394,22 @@ void ape_clear_input_devices( void )
 	numControllers = 0;
 
 	// Zero out and clear the active keys
-	memset( inputKeyboard.keys, 0, sizeof( Key ) );
+	memset( inputKeyboard.keys, 0, sizeof( Button ) );
 	PlDestroyLinkedListNodes( inputKeyboard.activeKeyList );
 }
 
 unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 {
-	unsigned int        id;
-	ApeInputController *device = get_empty_controller( &id );
-	if ( device == NULL )
+	unsigned int id;
+	unsigned int slot = get_empty_controller( &id );
+	if ( slot == ( unsigned int ) -1 )
 	{
 		PRINT_WARNING( "Failed to find an empty input device slot!\n" );
 		return -1;
 	}
 
-	PL_ZERO( device, sizeof( ApeInputController ) );
-
-	device->isActive = true;
+	PL_ZERO_( inputControllers[ slot ] );
+	inputControllers[ slot ].isActive = true;
 
 	numControllers++;
 
@@ -413,12 +426,12 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 		return;
 	}
 
-	Key *key = &inputKeyboard.keys[ keyIndex ];
+	Button *key = &inputKeyboard.keys[ keyIndex ];
 	if ( isPressed && key->state == APE_INPUT_STATE_NONE )
 	{
 		key->state |= ( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN );
 	}
-	else if ( key->state & APE_INPUT_STATE_DOWN )
+	else if ( !isPressed && key->state & APE_INPUT_STATE_DOWN )
 	{
 		key->state &= ~APE_INPUT_STATE_DOWN | APE_INPUT_STATE_PRESSED;
 		key->state |= APE_INPUT_STATE_RELEASED;
@@ -518,50 +531,64 @@ void ape_tick_input_( void )
 	// now update the state of all the connected devices
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
-		if ( controllers[ i ].sdlGameController == NULL )
+		if ( inputControllers[ i ].sdlGameController == NULL )
 		{
 			continue;
 		}
 
-		if ( !SDL_GameControllerGetAttached( controllers[ i ].sdlGameController ) )
+		if ( !SDL_GameControllerGetAttached( inputControllers[ i ].sdlGameController ) )
 		{
 			PRINT( "Controller disconnected from slot %u.\n", i );
 			unregister_controller( i );
 			continue;
 		}
 
+		Button *button;
+		// first update the state for any controllers from the last tick
+		COM_ITERATE_LINKED_LIST( button, inputControllers[ i ].activeButtonList, j )
+		{
+			button->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
+			PlDestroyLinkedListNode( button->activeNode );
+			button->activeNode = nullptr;
+		}
+
 		for ( unsigned int j = 0; j < APE_MAX_BUTTON_INPUTS; ++j )
 		{
-			bool state = get_sdl_button_state( controllers[ i ].sdlGameController, j );
-			if ( state && controllers[ i ].buttons[ j ] == APE_INPUT_STATE_NONE )
+			button = &inputControllers[ i ].buttons[ j ];
+
+			bool state = get_sdl_button_state( inputControllers[ i ].sdlGameController, j );
+			if ( state && button->state == APE_INPUT_STATE_NONE )
 			{
-				controllers[ i ].buttons[ j ] |= APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN;
+				button->state |= APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN;
 			}
-			else if ( controllers[ i ].buttons[ j ] == APE_INPUT_STATE_DOWN )
+			else if ( !state && button->state & APE_INPUT_STATE_DOWN )
 			{
-				controllers[ i ].buttons[ j ] &= ~APE_INPUT_STATE_DOWN | APE_INPUT_STATE_PRESSED;
-				controllers[ i ].buttons[ j ] |= APE_INPUT_STATE_RELEASED;
+				button->state &= ~APE_INPUT_STATE_DOWN | APE_INPUT_STATE_PRESSED;
+				button->state |= APE_INPUT_STATE_RELEASED;
+			}
+
+			if ( button->state != APE_INPUT_STATE_NONE && button->activeNode == NULL )
+			{
+				button->activeNode = PlInsertLinkedListNode( inputControllers[ i ].activeButtonList, button );
 			}
 		}
 
-		controllers[ i ].stickLOld = controllers[ i ].stickL;
-		controllers[ i ].stickROld = controllers[ i ].stickR;
+		inputControllers[ i ].stickLOld = inputControllers[ i ].stickL;
+		inputControllers[ i ].stickROld = inputControllers[ i ].stickR;
 
-		controllers[ i ].stickL.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTX ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.x );
-		controllers[ i ].stickL.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTY ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.x );
+		inputControllers[ i ].stickL.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
+		inputControllers[ i ].stickL.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
 
-		controllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.y );
-		controllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( controllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, controllers[ i ].deadzones.y );
+		inputControllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
+		inputControllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
 
-		controllers[ i ].stickLDelta = PlSubtractVector2( &controllers[ i ].stickLOld, &controllers[ i ].stickL );
-		controllers[ i ].stickRDelta = PlSubtractVector2( &controllers[ i ].stickROld, &controllers[ i ].stickR );
+		inputControllers[ i ].stickLDelta = PlSubtractVector2( &inputControllers[ i ].stickLOld, &inputControllers[ i ].stickL );
+		inputControllers[ i ].stickRDelta = PlSubtractVector2( &inputControllers[ i ].stickROld, &inputControllers[ i ].stickR );
 	}
 
-	PLLinkedListNode *node = PlGetFirstNode( inputKeyboard.activeKeyList );
-	while ( node != NULL )
+	Button *key;
+	COM_ITERATE_LINKED_LIST( key, inputKeyboard.activeKeyList, i )
 	{
-		Key *key = PlGetLinkedListNodeUserData( node );
-		node     = PlGetNextLinkedListNode( node );
 		key->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
 		PlDestroyLinkedListNode( key->activeNode );
 		key->activeNode = nullptr;
@@ -607,13 +634,13 @@ unsigned int apeGetNumControllers( void ) { return numControllers; }
 ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButton button )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
-	return controllers[ slot ].buttons[ button ];
+	return inputControllers[ slot ].buttons[ button ].state;
 }
 
 PLVector2 ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
-	return ( stickNum == 0 ) ? controllers[ slot ].stickL : controllers[ slot ].stickR;
+	return ( stickNum == 0 ) ? inputControllers[ slot ].stickL : inputControllers[ slot ].stickR;
 }
 
 void ape_client_input_register_action( const char    *id,
