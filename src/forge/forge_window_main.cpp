@@ -154,21 +154,21 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
+	ApeWorld *world = ape_world_create();
+
+	ApeWorldNode *roomNode = ape_world_node_deserialize( APE_WORLD_NODE( world ), root );
 	if ( roomNode == nullptr )
 	{
+		ape_world_node_destroy( APE_WORLD_NODE( world ) );
 		return FALSE;
 	}
 
 	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Selected file is not a valid room file!" );
-		ape_world_node_destroy( roomNode );
+		ape_world_node_destroy( APE_WORLD_NODE( world ) );
 		return FALSE;
 	}
-
-	ApeWorld *world = ape_world_create();
-	ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
 
 	auto *editor = static_cast< WorldEditor * >( add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) ) );
 	editor->update_tree();
