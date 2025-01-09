@@ -202,6 +202,7 @@ static void render_node_selection( ApeEditorInstance *self, ApeWorldNode *node, 
 			render_brush_selection( ( ApeBrush * ) node, mode );
 			break;
 		}
+		case APE_WORLD_NODE_TYPE_ENTITY:
 		case APE_WORLD_NODE_TYPE_LIGHT:
 		case APE_WORLD_NODE_TYPE_CAMERA:
 		{
