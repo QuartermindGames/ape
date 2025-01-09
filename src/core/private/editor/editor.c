@@ -812,12 +812,6 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 
 		origin = node->position;
 
-		const char *id   = node->classType->identifier;
-		size_t      size = strlen( id );
-
-		float sw;
-		gui_font_get_string_pixel_size( font, 1.0f, id, size, &sw, nullptr );
-
 		float     depth;
 		PLVector2 screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 		if ( depth <= 0.0f )
@@ -832,7 +826,27 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 			continue;
 		}
 
-		gui_font_draw_string( font, screenPos.x - ( sw / 2.0f ), screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, id, size, true );
+		if ( node->type == APE_WORLD_NODE_TYPE_ENTITY )
+		{
+			const ApeEntity                *entity          = ( ApeEntity * ) node;
+			const ApeEntityClassDefinition *classDefinition = entity->classDefinition;
+			assert( classDefinition != nullptr );
+			size_t size = strlen( classDefinition->name );
+
+			float sw;
+			gui_font_get_string_pixel_size( font, 1.0f, classDefinition->name, size, &sw, nullptr );
+			gui_font_draw_string( font, screenPos.x - sw / 2.0f, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_GOLD, classDefinition->name, size, true );
+		}
+		else
+		{
+			const ApeWorldNodeClass *classType = node->classType;
+			assert( classType != nullptr );
+			size_t size = strlen( classType->identifier );
+
+			float sw;
+			gui_font_get_string_pixel_size( font, 1.0f, classType->identifier, size, &sw, nullptr );
+			gui_font_draw_string( font, screenPos.x - ( sw / 2.0f ), screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, classType->identifier, size, true );
+		}
 
 		ApeMaterial *material = nodeIcons[ node->type ];
 		if ( material != nullptr )
