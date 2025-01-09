@@ -20,18 +20,6 @@ void ape_camera_make_active( ApeCamera *camera )
 	ape_rendererState_.camera = camera;
 }
 
-ApeWorld *ape_camera_get_world( ApeCamera *self )
-{
-	ApeWorldNode *worldNode = ape_world_node_get_root( &self->base );
-	if ( worldNode == nullptr )
-	{
-		return nullptr;
-	}
-
-	assert( ape_world_node_is_valid( worldNode, APE_WORLD_NODE_TYPE_ROOT ) );
-	return ( ApeWorld * ) worldNode;
-}
-
 ApeRoom *ape_camera_get_room( ApeCamera *self )
 {
 	return ape_world_node_get_room( &self->base );
