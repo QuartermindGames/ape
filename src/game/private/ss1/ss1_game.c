@@ -7,8 +7,6 @@
 #include "../shared/integrations/integrations.h"
 #include "../shared/physics/physics.h"
 
-static GamePhysicsRope debugRope;
-
 SS1GameState ss1_gameState;
 
 #define SS1_CONFIG "game_ss1"
@@ -73,8 +71,6 @@ static bool ss1_initialize()
 		game_error_( "Failed to create player camera!\n" );
 		return false;
 	}
-
-	game_physics_rope_setup( &debugRope, 16, 1.0f );
 
 	return true;
 }
@@ -161,7 +157,7 @@ static bool ss1_tick( void )
 	ApeWorld *world = ss_game_get_current_world();
 	if ( world != nullptr )
 	{
-		if ( suns[ 0 ] != nullptr )
+		if ( suns[ 1 ] != nullptr )
 		{
 			float y = world_simulation_get_seconds_in_day( &ss1_gameState.simulation ) / ( world_simulation_get_seconds_to_day( &ss1_gameState.simulation ) / 360.0f );
 			float p = sinf( PL_DEG2RAD( y + 90.0f ) ) * 2.0f;
@@ -172,13 +168,10 @@ static bool ss1_tick( void )
 			ape_light_set_position( suns[ 1 ], &sunPosition );
 			ape_light_set_colour( suns[ 1 ], &PL_COLOURF32( 1.0f, 1.0f, 1.0f, b ) );
 
-			game_physics_rope_attach( &debugRope, &PL_VECTOR3( 0.0f + cosf( y / 20.0f ) * 10.0f, 24.0f + sinf( y / 50.0f ) * 10.0f, -20.0f ), true );
-			sunPosition = game_physics_rope_get_end_position( &debugRope );
-			ape_light_set_position( suns[ 0 ], &sunPosition );
+			//game_physics_rope_attach( &debugRope, &PL_VECTOR3( 0.0f + cosf( y / 20.0f ) * 10.0f, 24.0f + sinf( y / 50.0f ) * 10.0f, -20.0f ), true );
+			//sunPosition = game_physics_rope_get_end_position( &debugRope );
+			//ape_light_set_position( suns[ 0 ], &sunPosition );
 		}
-
-		game_physics_rope_tick( &debugRope, 1.0f );
-		game_physics_rope_debug_draw( &debugRope );
 
 		world_simulation_tick( &ss1_gameState.simulation );
 	}
@@ -208,12 +201,9 @@ static void ss1_spawn_world( ApeWorld *world, ApeRoom *room )
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
 
-	suns[ 0 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 128.0f,
-	                              APE_LIGHT_TYPE_OMNI,
-	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | /*APE_LIGHT_FLAG_FLARE |*/ APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 	suns[ 1 ] = ape_create_light( roomNode, &PL_VECTOR3( -2.0f, -2.0f, 0.0f ), &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f ), 0.0f,
 	                              APE_LIGHT_TYPE_SUN,
-	                              APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )

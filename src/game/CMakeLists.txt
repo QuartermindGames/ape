@@ -11,6 +11,7 @@ set(GAME_SHARED_FILES
 
         private/shared/integrations/discord/discord.c
 
+        private/shared/entities/entity_rope.c
         private/shared/entities/entity_trigger.c
 )
 

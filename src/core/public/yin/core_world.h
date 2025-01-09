@@ -359,6 +359,8 @@ typedef struct ApeWorld
 	PLVectorArray *materials;// ApeMaterial
 	PLVectorArray *rooms;    // ApeWorldRoom
 
+	PLLinkedList *entities;//ApeEntity
+
 	PLColourF32 clearColour;
 
 	PLColourF32 fogColour;

@@ -94,6 +94,7 @@ void ape_tick_game_server_( void )
 	if ( world != nullptr )
 	{
 		ape_world_node_generate_bounds_( &world->base );
+		ape_world_tick_entities_( world );
 	}
 
 	ape_build_camera_visibility_lists_();
@@ -112,13 +113,12 @@ void ape_spawn_world_( const char *path )
 		return;
 	}
 
-	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
-	if ( roomNode != nullptr )
-	{
-		ApeWorld *world = ape_world_create();
-		assert( world != nullptr );
-		ape_world_node_attach( roomNode, APE_WORLD_NODE( world ) );
+	ApeWorld *world = ape_world_create();
+	assert( world != nullptr );
 
+	ApeWorldNode *roomNode;
+	if ( ( roomNode = ape_world_node_deserialize( APE_WORLD_NODE( world ), root ) ) != nullptr )
+	{
 		game_spawn_world( world, ( ApeRoom * ) roomNode );
 
 		ape_world_spawn_entities_( world );
@@ -128,6 +128,7 @@ void ape_spawn_world_( const char *path )
 	}
 	else
 	{
+		ape_world_node_destroy( APE_WORLD_NODE( world ) );
 		ape_warning_( "Failed to deserialize room (%s)!\n", path );
 	}
 

@@ -136,10 +136,12 @@ const char *game_get_identifier()
 }
 
 extern ApeEntityClassDefinition game_triggerEntityClass;
+extern ApeEntityClassDefinition game_ropeEntityClass;
 
 void game_register_standard_entity_components_( void )
 {
 	ape_register_entity_class( &game_triggerEntityClass );
+	ape_register_entity_class( &game_ropeEntityClass );
 }
 
 AcmBranch *game_get_config()

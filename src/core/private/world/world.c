@@ -18,6 +18,8 @@ ApeWorld *ape_world_create( void )
 
 	ape_world_set_global_defaults( world );
 
+	world->entities = PlCreateLinkedList();
+
 	return world;
 }
 
@@ -49,11 +51,28 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 	}
 
 	PlDestroyVectorArray( self->rooms );
-	self->rooms = nullptr;
+
+	PlDestroyLinkedList( self->entities );
+
+	PL_DELETE( self );
 }
 
-void ape_world_spawn_entities_( ApeWorld *world )
+void ape_world_spawn_entities_( ApeWorld *self )
 {
+	ApeEntity *entity;
+	COM_ITERATE_LINKED_LIST( entity, self->entities, i )
+	{
+		ape_entity_spawn( entity );
+	}
+}
+
+void ape_world_tick_entities_( ApeWorld *self )
+{
+	ApeEntity *entity;
+	COM_ITERATE_LINKED_LIST( entity, self->entities, i )
+	{
+		ape_entity_tick( entity );
+	}
 }
 
 ApeRoom *ape_world_get_first_room_( ApeWorld *world )

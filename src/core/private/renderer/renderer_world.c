@@ -287,39 +287,42 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 	}
 }
 
-static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light )
+static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	unsigned int   num;
 	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &num );
 	for ( unsigned int i = 0; i < num; ++i )
 	{
-		if ( visibleNodes[ i ]->type != APE_WORLD_NODE_TYPE_MODEL )
+		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_MODEL )
 		{
-			continue;
+			const ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
+			ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
 		}
-
-		const ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
-		ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
+		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_ENTITY )
+		{
+			ApeEntity *entity = ( ApeEntity * ) visibleNodes[ i ];
+			ape_entity_draw( entity, light, flags );
+		}
 	}
 }
 
-static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag stage )
+static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
-	if ( !( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == NULL )
+	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == NULL )
 	{
 		return;
 	}
 
 	COM_PROFILE_FUNCTION_START();
 
-	if ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
+	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
 	}
 
 	// draw other node types
 	//TODO: all this needs sorting for transparency... temporary!!!
-	draw_visible_camera_nodes( camera, light );
+	draw_visible_camera_nodes( camera, light, flags );
 
 	update_mesh_cache_( room );
 
@@ -334,7 +337,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		assert( material != nullptr );
 
 		// blended materials get drawn later
-		if ( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) || ( stage & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
+		if ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
 		{
 			continue;
 		}
@@ -342,7 +345,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		COM_PROFILE_START( "build_brush_display_list" );
 
 		uint offset = 0;
-		build_brush_display_list( &room->base, material, light, camera, &offset, stage );
+		build_brush_display_list( &room->base, material, light, camera, &offset, flags );
 
 		COM_PROFILE_END( "build_brush_display_list" );
 
@@ -361,7 +364,7 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
 
-	if ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
+	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
 	}

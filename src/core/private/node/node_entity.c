@@ -107,8 +107,15 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 	if ( entity->classData == nullptr )
 	{
 		ape_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
-		ape_world_node_destroy( ( ApeWorldNode * ) entity );
+		ape_world_node_destroy( APE_WORLD_NODE( entity ) );
 		return nullptr;
+	}
+
+	ApeWorldNode *rootNode = ape_world_node_get_root( parent );
+	if ( rootNode != nullptr && rootNode->type == APE_WORLD_NODE_TYPE_ROOT )
+	{
+		ApeWorld *world       = ( ApeWorld * ) rootNode;
+		entity->worldListNode = PlInsertLinkedListNode( world->entities, entity );
 	}
 
 	return entity;
@@ -131,7 +138,20 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 	}
 	PlDestroyHashTable( self->componentTable );
 
+	PlDestroyLinkedListNode( self->worldListNode );
+
 	PL_DELETE( self );
+}
+
+void ape_entity_spawn( ApeEntity *self )
+{
+	assert( self->classDefinition != NULL );
+	if ( self->classDefinition->spawnFunction == NULL )
+	{
+		return;
+	}
+
+	self->classDefinition->spawnFunction( self );
 }
 
 void ape_entity_tick( ApeEntity *self )
@@ -145,7 +165,7 @@ void ape_entity_tick( ApeEntity *self )
 	self->classDefinition->tickFunction( self );
 }
 
-void ape_entity_draw( ApeEntity *self )
+void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags )
 {
 	assert( self->classDefinition != NULL );
 	if ( self->classDefinition->drawFunction == NULL )
@@ -153,7 +173,7 @@ void ape_entity_draw( ApeEntity *self )
 		return;
 	}
 
-	self->classDefinition->drawFunction( self );
+	self->classDefinition->drawFunction( self, light, flags );
 }
 
 void ape_register_entity_component( const ApeEntityComponentDefinition *definition )
@@ -208,10 +228,52 @@ void *ape_entity_get_component( ApeEntity *self, const char *name )
 	return PlLookupHashTableUserData( self->componentTable, name, strlen( name ) );
 }
 
+static AcmBranch *serialize_entity( void *self, AcmBranch *root )
+{
+	ApeEntity *entity = self;
+	acm_push_string( root, "className", entity->classDefinition->name, false );
+
+	const ApeEntityClassDefinition *classDefinition = entity->classDefinition;
+	if ( classDefinition->serializeFunction != nullptr )
+	{
+		classDefinition->serializeFunction( entity );
+	}
+
+	return root;
+}
+
+static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
+{
+	const char *className = acm_get_string( root, "className", nullptr );
+	if ( className == nullptr )
+	{
+		ape_warning_( "Failed to deserialize entity: no class name!\n" );
+		return nullptr;
+	}
+
+	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
+	if ( classDefinition == nullptr )
+	{
+		ape_warning_( "Failed to deserialize entity: class (%s) not found!\n", className );
+		return nullptr;
+	}
+
+	ApeEntity *entity = ape_entity_create( parent, className, "", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	if ( classDefinition->deserializeFunction != nullptr )
+	{
+		classDefinition->deserializeFunction( entity, root );
+	}
+
+	return APE_WORLD_NODE( entity );
+}
+
 const ApeWorldNodeClass ape_entityClass = {
-        .identifier      = "entity",
-        .magic           = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
-        .destroyFunction = ape_entity_destroy_,
+        .identifier          = "entity",
+        .magic               = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+        .destroyFunction     = ape_entity_destroy_,
+        .serializeFunction   = serialize_entity,
+        .deserializeFunction = deserialize_entity,
 
 #if !defined( APE_NO_EDITOR )
 

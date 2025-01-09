@@ -64,7 +64,6 @@ typedef struct ApeRoom
 	PLGMesh *mesh;   // cached mesh
 	bool     isDirty;// if false, mesh cache will be updated
 
-	PLLinkedList *actors;// Actors currently in this sector
 	PLLinkedList *lights;// Lights in this sector
 
 	ApeAudioReverbPreset reverbPreset;
@@ -76,17 +75,12 @@ typedef struct ApeRoom
 #endif
 } ApeRoom;
 
-typedef struct ApeWorldEntity
-{
-	char       className[ APE_ENTITY_MAX_NAME ];
-	AcmBranch *properties;
-} ApeWorldEntity;
-
 PL_EXTERN_C
 
 void ape_world_serialize_( const ApeWorld *world, AcmBranch *root );
 
-void ape_world_spawn_entities_( ApeWorld *world );
+void ape_world_spawn_entities_( ApeWorld *self );
+void ape_world_tick_entities_( ApeWorld *self );
 
 /**
  * Returns the first available room childed to the world.
