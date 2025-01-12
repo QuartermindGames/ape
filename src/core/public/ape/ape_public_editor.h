@@ -113,6 +113,7 @@ void      ape_editor_delete_selection( ApeEditorInstance *self );
 void ape_editor_toggle_faces( ApeEditorInstance *self );
 void ape_editor_toggle_other_faces( ApeEditorInstance *self );
 void ape_editor_flip_faces( ApeEditorInstance *self );
+void ape_editor_smooth_faces( ApeEditorInstance *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid

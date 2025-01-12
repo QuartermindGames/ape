@@ -241,11 +241,87 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 
 void ape_editor_flip_faces( ApeEditorInstance *self )
 {
+	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return;
+	}
+
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
 		ape_brush_flip_face_( face );
 	}
+}
+
+void ape_editor_smooth_faces( ApeEditorInstance *self )
+{
+	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return;
+	}
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	{
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			face->vertices[ j ].normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
+		}
+	}
+
+	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	{
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			unsigned int  numAdjacentFaces = 0;
+			ApeBrushFace *adjacentFaces[ APE_BRUSH_MAX_FACE_VERTICES ];
+			ApeBrushFace *adjacentFace;
+			COM_ITERATE_LINKED_LIST( adjacentFace, self->selectedObjects, k )
+			{
+				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
+				{
+					if ( com_math_vector_check_epsilon( face->vertices[ j ].position, adjacentFace->vertices[ l ].position ) )
+					{
+						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;
+					}
+
+					if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
+					{
+						break;
+					}
+				}
+
+				if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
+				{
+					ape_warning_( "Too many adjacent faces to smooth face!\n" );
+					break;
+				}
+			}
+
+			PLVector3 normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
+			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
+			{
+				const ApeBrushFace *adjFace = adjacentFaces[ k ];
+				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
+				{
+					const PLVector3 *a = adjFace->edgeLoop[ l ]->position;
+					const PLVector3 *b = adjFace->edgeLoop[ l + 1 ]->position;
+					const PLVector3 *c = adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->position;
+
+					PLVector3 n = PlgGenerateVertexNormal( *a, *b, *c );
+
+					normal = PlAddVector3( normal, n );
+				}
+			}
+
+			face->vertices[ j ].normal = PlNormalizeVector3( normal );
+		}
+	}
+
+	face          = ape_editor_get_first_selected( self );
+	ApeRoom *room = ape_brush_face_get_room( face );
+	assert( room != nullptr );
+	room->isDirty = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

@@ -31,3 +31,10 @@ static inline ComMathVectorType com_math_vector_classify( const PLVector3 *vecto
 		return COM_MATH_VECTOR_FACING_ANY;
 	}
 }
+
+static inline bool com_math_vector_check_epsilon( const PLVector3 *va, const PLVector3 *vb )
+{
+	return fabsf( va->x - vb->x ) <= PL_EPSILON &&
+	       fabsf( va->y - vb->y ) <= PL_EPSILON &&
+	       fabsf( va->z - vb->z ) <= PL_EPSILON;
+}

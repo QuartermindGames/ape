@@ -399,7 +399,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 {
-	ApeBrush *brush = ( ApeBrush * ) self;
+	ApeBrush *brush = self;
 	acm_push_ui32( root, "type", brush->type );
 	acm_push_array_f32( root, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 

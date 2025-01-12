@@ -82,6 +82,7 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_INSPECTOR, forge::WorldViewport::on_face_inspector ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE, forge::WorldViewport::on_face_toggle ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_TOGGLE_OTHERS, forge::WorldViewport::on_face_toggle ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_SMOOTH, forge::WorldViewport::on_face_smooth ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLIP, forge::WorldViewport::on_face_flip ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL, forge::WorldViewport::on_create_node ),
@@ -233,7 +234,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			new FXMenuCommand( popup, "Toggle Other Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE_OTHER ], this, ID_FACE_TOGGLE_OTHERS );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Flip Faces", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_FACE ], this, ID_FACE_FLIP );
-			//new FXMenuCommand( popup, "Smooth Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_SMOOTH ], this, ID_FACE_SMOOTH );
+			new FXMenuCommand( popup, "Smooth Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_SMOOTH ], this, ID_FACE_SMOOTH );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
 			//new FXMenuSeparator( popup );
@@ -323,9 +324,10 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 				ape_editor_remove_polygon_point( instance );
 				return TRUE;
 			}
-			else if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
 			{
 				ape_editor_delete_selection( instance );
+				return TRUE;
 			}
 			break;
 		}
@@ -477,11 +479,18 @@ long forge::WorldViewport::on_face_toggle( FXObject *, FXSelector selector, void
 	return TRUE;
 }
 
+long forge::WorldViewport::on_face_smooth( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+	ape_editor_smooth_faces( instance );
+	return TRUE;
+}
+
 long forge::WorldViewport::on_face_flip( FXObject *, FXSelector, void * )
 {
 	ApeEditorInstance *instance = editor->get_internal();
 	assert( instance != nullptr );
-
 	ape_editor_flip_faces( instance );
 	return TRUE;
 }

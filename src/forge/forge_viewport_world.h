@@ -41,6 +41,7 @@ namespace forge
 		long on_grid_align( FXObject *, FXSelector, void * );
 		long on_face_inspector( FXObject *, FXSelector, void * );
 		long on_face_toggle( FXObject *, FXSelector, void * );
+		long on_face_smooth( FXObject *, FXSelector, void * );
 		long on_face_flip( FXObject *, FXSelector, void * );
 
 		long on_create_node( FXObject *, FXSelector, void * );
