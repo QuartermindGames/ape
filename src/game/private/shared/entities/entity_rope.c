@@ -101,6 +101,7 @@ static void tick_rope( ApeEntity *self )
 	}
 
 	game_physics_rope_tick( &rope->physics, 1.0f );
+	game_physics_rope_debug_draw( &rope->physics );
 
 	update_bounds( self );
 }
@@ -109,8 +110,6 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 {
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
-
-	game_physics_rope_debug_draw( &rope->physics );
 }
 
 ApeEntityClassDefinition game_ropeEntityClass = {
