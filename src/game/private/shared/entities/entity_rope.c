@@ -15,6 +15,13 @@ typedef struct RopeEntity
 } RopeEntity;
 #define ROPE_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), RopeEntity )
 
+static bool showRopeDebug;
+
+static void cache_rope()
+{
+	PlRegisterConsoleVariable( "game_debug_rope", "Toggle the display of wireframe ropes.", "false", PL_VAR_BOOL, &showRopeDebug, nullptr, false );
+}
+
 static void *create_rope( ApeEntity *self, AcmBranch *properties )
 {
 	return PL_NEW( RopeEntity );
@@ -101,7 +108,10 @@ static void tick_rope( ApeEntity *self )
 	}
 
 	game_physics_rope_tick( &rope->physics, 1.0f );
-	game_physics_rope_debug_draw( &rope->physics );
+	if ( showRopeDebug )
+	{
+		game_physics_rope_debug_draw( &rope->physics );
+	}
 
 	update_bounds( self );
 }
@@ -116,6 +126,7 @@ ApeEntityClassDefinition game_ropeEntityClass = {
         .name           = "rope",
         .description    = "Physics-driven rope handler."
                           "Rope can have a start attachment and end attachment.",
+        .cacheFunction  = cache_rope,
         .createFunction = create_rope,
         .spawnFunction  = spawn_rope,
         .tickFunction   = tick_rope,
