@@ -62,12 +62,12 @@ PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int 
 bool com_math_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result )
 {
 	float denom = PlVector3DotProduct( plane->normal, ray->direction );
-	if ( fabsf( denom ) < 1e-6f )
+	if ( denom >= 0.0f || fabsf( denom ) < 1e-6f )
 	{
 		return false;
 	}
 
-	float d = -5.0f; //PlVector3DotProduct( plane->normal, plane->origin );
+	float d = PlVector3DotProduct( plane->normal, plane->origin );
 	float t = ( d - PlVector3DotProduct( plane->normal, ray->origin ) ) / denom;
 	if ( t < 0.0f )
 	{
@@ -102,7 +102,7 @@ bool com_math_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 
 		PLVector3 normal = PlVector3CrossProduct( edge1, edge2 );
 
 		float denom = PlVector3DotProduct( normal, ray->direction );
-		if ( fabsf( denom ) < 1e-6 )
+		if ( denom >= 0.0f || fabsf( denom ) < 1e-6 )
 		{
 			continue;
 		}
