@@ -178,6 +178,9 @@ void com_profiler_update_samples( void );
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 
+typedef struct PLCollisionRay   PLCollisionRay;
+typedef struct PLCollisionPlane PLCollisionPlane;
+
 /**
  * @brief Determines if a given set of vertices form a convex polygon.
  *
@@ -204,5 +207,8 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
  * normal vectors, and finally normalizes the resulting vector to generate the face normal.
  */
 PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices );
+
+bool com_math_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
+bool com_math_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, uint numVertices, PLVector3 *result );
 
 PL_EXTERN_C_END
