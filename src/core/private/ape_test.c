@@ -8,11 +8,12 @@
 #include "game/game_public.h"
 #include "world/world.h"
 
+#define APE_COMPILE_TESTS !defined( NDEBUG )//TODO: hook this with a proper flag
+#ifdef APE_COMPILE_TESTS
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Models
 /////////////////////////////////////////////////////////////////////////////////////
-
-#if !defined( NDEBUG )
 
 static void test_model_command( unsigned int argc, char **argv )
 {
@@ -41,18 +42,14 @@ static void test_model_command( unsigned int argc, char **argv )
 	ape_model_node_create( APE_WORLD_NODE( room ), "test_model", modelPath );
 }
 
-#endif
-
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_test_register_commands_()
 {
-#if !defined( NDEBUG )
-
 	PlRegisterConsoleCommand( "test_model",
 	                          "Test a specific model. The given test model will be drawn into the world.",
 	                          -1, test_model_command );
+}
 
 #endif
-}
