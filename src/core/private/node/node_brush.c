@@ -74,7 +74,7 @@ static uint convert_brush_polygon_to_triangles( const ApeBrushFace *face, uint *
 	return numTriangles;
 }
 
-static void compute_brush_face_normal( ApeBrushFace *face )
+void ape_brush_face_compute_normal( ApeBrushFace *face )
 {
 	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
 
@@ -301,7 +301,7 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 		end--;
 	}
 
-	compute_brush_face_normal( face );
+	ape_brush_face_compute_normal( face );
 
 	ApeBrush *brush = face->parent;
 	ApeRoom  *room  = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
@@ -378,7 +378,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].material      = material;
 		self->faces[ i ].materialScale = PL_VECTOR2( 0.5f, 0.5f );
 
-		compute_brush_face_normal( &self->faces[ i ] );
+		ape_brush_face_compute_normal( &self->faces[ i ] );
 		compute_brush_face_bounds( &self->faces[ i ] );
 		compute_brush_face_texture_coordinates( &self->faces[ i ] );
 		compute_brush_face_tangents( &self->faces[ i ] );

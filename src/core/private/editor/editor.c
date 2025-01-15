@@ -253,7 +253,7 @@ void ape_editor_flip_faces( ApeEditorInstance *self )
 	}
 }
 
-void ape_editor_smooth_faces( ApeEditorInstance *self )
+void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 {
 	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
 	{
@@ -318,6 +318,27 @@ void ape_editor_smooth_faces( ApeEditorInstance *self )
 		}
 	}
 
+	//TODO: get rid of this!
+	face          = ape_editor_get_first_selected( self );
+	ApeRoom *room = ape_brush_face_get_room( face );
+	assert( room != nullptr );
+	room->isDirty = true;
+}
+
+void ape_editor_shade_faces_flat( ApeEditorInstance *self )
+{
+	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return;
+	}
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	{
+		ape_brush_face_compute_normal( face );
+	}
+
+	//TODO: get rid of this!
 	face          = ape_editor_get_first_selected( self );
 	ApeRoom *room = ape_brush_face_get_room( face );
 	assert( room != nullptr );

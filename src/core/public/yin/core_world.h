@@ -308,6 +308,8 @@ typedef struct ApeBrushFace
 	ApeBrush     *parent;
 } ApeBrushFace;
 
+void ape_brush_face_compute_normal( ApeBrushFace *face );
+
 void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
 void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation );
 

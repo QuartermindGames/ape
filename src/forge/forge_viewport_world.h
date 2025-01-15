@@ -23,7 +23,8 @@ namespace forge
 			ID_FACE_TOGGLE,
 			ID_FACE_TOGGLE_OTHERS,
 			ID_FACE_FLIP,
-			ID_FACE_SMOOTH,
+			ID_FACE_SHADE_SMOOTH,
+			ID_FACE_SHADE_FLAT,
 
 			ID_CREATE_NODE,
 			ID_CREATE_NODE_END = ID_CREATE_NODE + APE_WORLD_MAX_NODE_TYPES,
@@ -41,7 +42,8 @@ namespace forge
 		long on_grid_align( FXObject *, FXSelector, void * );
 		long on_face_inspector( FXObject *, FXSelector, void * );
 		long on_face_toggle( FXObject *, FXSelector, void * );
-		long on_face_smooth( FXObject *, FXSelector, void * );
+		long on_face_shade_smooth( FXObject *, FXSelector, void * );
+		long on_face_shade_flat( FXObject *, FXSelector, void * );
 		long on_face_flip( FXObject *, FXSelector, void * );
 
 		long on_create_node( FXObject *, FXSelector, void * );
