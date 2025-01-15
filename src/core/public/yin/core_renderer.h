@@ -262,6 +262,24 @@ void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
  */
 void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
 
+/**
+ * Draw the specified plane.
+ *
+ * @param plane		Plane to draw, will draw from origin.
+ * @param colour	Colour of the plane.
+ * @param scale
+ */
+void ape_draw_debug_plane( const PLCollisionPlane *plane, PLColour colour, float scale );
+
+/**
+ * Draw a polygon derived from the given vertices.
+ *
+ * @param vertices		An array of vertices.
+ * @param numVertices	The number of vertices in the array.
+ * @param colour		Colour of the polygon.
+ */
+void ape_draw_debug_polygon( const PLVector3 *vertices, unsigned int numVertices, PLColour colour );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 

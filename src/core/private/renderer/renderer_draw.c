@@ -426,9 +426,9 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale )
 void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale )
 {
 	//TODO: represent angles...
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ scale, 0.0f, 0.0f } ), PL_COLOUR_RED, 1.0f );
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN, 1.0f );
-	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ){ 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE, 1.0f );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ) { scale, 0.0f, 0.0f } ), PL_COLOUR_RED, 1.0f );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ) { 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN, 1.0f );
+	ape_draw_debug_arrow( origin, PlAddVector3( origin, ( PLVector3 ) { 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE, 1.0f );
 }
 
 void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )
@@ -462,4 +462,44 @@ void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )
 	ape_draw_debug_line( corners[ 1 ], corners[ 5 ], colour );
 	ape_draw_debug_line( corners[ 2 ], corners[ 6 ], colour );
 	ape_draw_debug_line( corners[ 3 ], corners[ 7 ], colour );
+}
+
+void ape_draw_debug_plane( const PLCollisionPlane *plane, PLColour colour, float scale )
+{
+	PLVector3 normal = PlNormalizeVector3( plane->normal );
+
+	ape_draw_debug_arrow( plane->origin, PlAddVector3( plane->origin, PlScaleVector3F( normal, 4.0f ) ), colour, 1.0f );
+
+	PLVector3 tangent;
+	if ( fabsf( normal.x ) > fabsf( normal.y ) )
+	{
+		tangent = ( PLVector3 ) { -normal.z, 0, normal.x };
+	}
+	else
+	{
+		tangent = ( PLVector3 ) { 0, normal.z, -normal.y };
+	}
+	tangent = PlNormalizeVector3( tangent );
+
+	PLVector3 bitangent = PlVector3CrossProduct( normal, tangent );
+	tangent             = PlScaleVector3F( tangent, scale );
+	bitangent           = PlScaleVector3F( bitangent, scale );
+
+	PLVector3 corner1 = PlAddVector3( plane->origin, PlAddVector3( tangent, bitangent ) );
+	PLVector3 corner2 = PlAddVector3( plane->origin, PlSubtractVector3( tangent, bitangent ) );
+	PLVector3 corner3 = PlSubtractVector3( plane->origin, PlAddVector3( tangent, bitangent ) );
+	PLVector3 corner4 = PlSubtractVector3( plane->origin, PlSubtractVector3( tangent, bitangent ) );
+
+	ape_draw_debug_line( corner1, corner2, colour );
+	ape_draw_debug_line( corner2, corner3, colour );
+	ape_draw_debug_line( corner3, corner4, colour );
+	ape_draw_debug_line( corner4, corner1, colour );
+}
+
+void ape_draw_debug_polygon( const PLVector3 *vertices, unsigned int numVertices, PLColour colour )
+{
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		ape_draw_debug_line( vertices[ i ], vertices[ ( i + 1 ) % numVertices ], colour );
+	}
 }
