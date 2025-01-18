@@ -809,6 +809,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 {
 #pragma message "TODO: draw_rt_sphere"
 
+#if 0
 	// make sure we don't draw this again during pass
 	static ApeMaterial *reject;
 	if ( reject == material )
@@ -834,6 +835,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 	ape_camera_build_pvs_( camera );
 
 	reject = nullptr;
+#endif
 }
 
 static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, uint *curUnit )

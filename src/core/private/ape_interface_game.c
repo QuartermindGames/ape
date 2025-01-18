@@ -97,8 +97,6 @@ void ape_tick_game_server_( void )
 		ape_world_tick_entities_( world );
 	}
 
-	ape_build_camera_visibility_lists_();
-
 	const ApeGameInterfaceImport *game = ape_game_get_interface();
 	game->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
 }

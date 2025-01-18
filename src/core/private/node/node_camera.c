@@ -203,6 +203,9 @@ PLVector3 ape_camera_get_forward( const ApeCamera *camera )
 	return PL_VECTOR3( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
 }
 
+void ape_camera_clear_pvs_( ApeCamera *self );
+void ape_camera_build_pvs_( ApeCamera *self );
+
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
 void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport )
 {
@@ -243,6 +246,9 @@ void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport
 #endif
 
 	PlgSetupCamera( camera->internal );
+
+	ape_camera_clear_pvs_( camera );
+	ape_camera_build_pvs_( camera );
 
 	// Draw the scene into a buffer
 	ape_draw_scene_( camera, viewport );
@@ -482,52 +488,14 @@ void ape_camera_build_pvs_( ApeCamera *self )
 	//ape_rendererPerformance_.numLights += self->visibility.numLights;
 }
 
-void ape_camera_clear_pvs_( ApeCamera *camera )
+void ape_camera_clear_pvs_( ApeCamera *self )
 {
-	PlClearHashTable( camera->pvs.visitedRooms );
-	PlClearVectorArray( camera->pvs.nodes );
-	PlClearVectorArray( camera->pvs.visibleFaces );
-	PlClearVectorArray( camera->pvs.visiblePortals );
-	camera->pvs.numLights = 0;
-	camera->pvs.numRooms  = 0;
-}
-
-void ape_build_camera_visibility_lists_( void )
-{
-	COM_PROFILE_FUNCTION_START();
-
-	ape_rendererPerformance_.numRooms          = 0;
-	ape_rendererPerformance_.numLights         = 0;
-	ape_rendererPerformance_.numVisiblePortals = 0;
-
-	ApeCamera *camera;
-	COM_ITERATE_LINKED_LIST( camera, cameras, i )
-	{
-		ape_camera_clear_pvs_( camera );
-		ape_camera_build_pvs_( camera );
-	}
-
-	COM_PROFILE_FUNCTION_END();
-}
-
-void ape_clear_camera_visibility_lists_( void )
-{
-	COM_PROFILE_FUNCTION_START();
-
-	ape_rendererPerformance_.numRooms          = 0;
-	ape_rendererPerformance_.numLights         = 0;
-	ape_rendererPerformance_.numVisiblePortals = 0;
-
-	//TODO: flares should be determined per-camera from lights in pvs!
-	ape_clear_flare_queue_();
-
-	ApeCamera *camera;
-	COM_ITERATE_LINKED_LIST( camera, cameras, i )
-	{
-		ape_camera_clear_pvs_( camera );
-	}
-
-	COM_PROFILE_FUNCTION_END();
+	PlClearHashTable( self->pvs.visitedRooms );
+	PlClearVectorArray( self->pvs.nodes );
+	PlClearVectorArray( self->pvs.visibleFaces );
+	PlClearVectorArray( self->pvs.visiblePortals );
+	self->pvs.numLights = 0;
+	self->pvs.numRooms  = 0;
 }
 
 const ApeWorldNodeClass ape_cameraClass = {

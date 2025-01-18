@@ -31,8 +31,6 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 		return;
 	}
 
-	ape_clear_camera_visibility_lists_();
-
 	if ( self->materials != nullptr )
 	{
 		for ( unsigned int i = 0; i < PlGetNumVectorArrayElements( self->materials ); ++i )

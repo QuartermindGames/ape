@@ -66,11 +66,4 @@ ApeRoom      **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *n
 ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num );
 ApeBrushFace **ape_camera_get_visible_portals_( ApeCamera *self, unsigned int *num );
 
-void ape_camera_build_pvs_( ApeCamera *self );
-
-/////////////////////////////////////////////////////////////////////////////////////
-
-void ape_build_camera_visibility_lists_( void );
-void ape_clear_camera_visibility_lists_( void );
-
 PL_EXTERN_C_END
