@@ -12,6 +12,13 @@ typedef unsigned char  uchar;
 typedef unsigned short ushort;
 typedef unsigned int   uint;
 
+// new types to replace the above,
+// follows our convention and less prone to conflict
+typedef unsigned char  Byte;
+typedef unsigned char  UChar;
+typedef unsigned short UShort;
+typedef unsigned int   UInt;
+
 typedef enum ComDataType
 {
 	COM_DATATYPE_BOOL,
