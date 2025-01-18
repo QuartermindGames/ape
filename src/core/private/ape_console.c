@@ -8,6 +8,8 @@
 #include "yin/core_fs.h"
 #include "node/node_entity.h"
 
+void ape_console_push_notification_( const char *buffer, PLColour colour );
+
 /****************************************
  * CONSOLE OUTPUT BUFFER
  ****************************************/
@@ -33,6 +35,8 @@ static void clear_console_command( unsigned int argc, char **argv )
 
 static void output_callback( int level, const char *message, PLColour colour )
 {
+	ape_console_push_notification_( message, colour );
+
 	size_t l = strlen( message );
 	if ( l >= CONSOLE_BUFFER_MAX_LENGTH )
 	{

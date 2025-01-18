@@ -22,7 +22,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config, bool em
 void ape_shutdown( void );
 
 void ape_render_frame( ApeViewport *viewport );
-void ape_tick_frame( void );
+void ape_tick_frame();
 
 struct AcmBranch *ape_get_config( void );
 struct AcmBranch *ape_get_user_config( void );

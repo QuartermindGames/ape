@@ -329,9 +329,13 @@ void ape_draw_menu_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_tick_gui_( void )
+void ape_console_update_notifications_( double delta );// client_console.c
+
+void ape_tick_gui_( double delta )
 {
 	COM_PROFILE_FUNCTION_START();
+
+	ape_console_update_notifications_( delta );
 
 	gui_panel_tick( rootPanel );
 

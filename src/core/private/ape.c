@@ -222,7 +222,9 @@ unsigned int ape_get_num_ticks( void )
 	return numTicks;
 }
 
-void ape_tick_frame( void )
+static double lastTime;
+
+void ape_tick_frame()
 {
 	if ( !engineInitialized )
 	{
@@ -231,10 +233,14 @@ void ape_tick_frame( void )
 
 	COM_PROFILE_FUNCTION_START();
 
+	double now   = PlGetCurrentSeconds();
+	double delta = PlClamp( 0.0, now - lastTime, 1.0 );
+	lastTime     = now;
+
 	ape_tick_tasks_();
 	//TODO: what order should these be?
 	ape_tick_server_();
-	ape_tick_client_();
+	ape_tick_client_( delta );
 
 	if ( ape_get_capture_state_() )
 	{

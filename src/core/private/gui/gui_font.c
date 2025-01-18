@@ -323,13 +323,15 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 		{
 			break;
 		}
-		else if ( c == '\n' )
+
+		if ( c == '\n' )
 		{
 			ny += ( self->lineSpacing * scale );
 			nx = x;
 			continue;
 		}
-		else if ( c == '\t' )
+
+		if ( c == '\t' )
 		{
 			nx += ( self->lineSpacing * scale ) * 4.0f;
 			continue;
@@ -343,7 +345,7 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 
 		if ( shadow )
 		{
-			gui_font_draw_glyph( self, nx + 2, ny + 2, scale, &PLColourRGB( 0, 0, 0 ), glyph );
+			gui_font_draw_glyph( self, nx + 1, ny + 1, scale, &PLColour( 0, 0, 0, colour->a ), glyph );
 		}
 
 		gui_font_draw_glyph( self, nx, ny, scale, colour, glyph );
@@ -356,6 +358,8 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 
 void gui_font_display( GuiFont *font )
 {
+	//TODO: update this to use the material system instead!
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
@@ -380,5 +384,6 @@ void gui_font_display( GuiFont *font )
 	PlgClearMesh( font->mesh );
 
 	PlgSetShaderProgram( nullptr );
+
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 }

@@ -29,16 +29,16 @@ typedef struct ClientState
 	ClientServerState state;
 
 	ApeNetSocket *netSocket;
-	bool isConnected;
+	bool          isConnected;
 
 	ApeProtocolMessage message;
-	unsigned int lastMessageTick;
+	unsigned int       lastMessageTick;
 
 	char userName[ 32 ];
 } ClientState;
 static ClientState clientState;
 
-void ape_prepare_screenshot_capture_( void );
+void        ape_prepare_screenshot_capture_( void );
 static void capture_screenshot_action( ApeInputState state, const char * )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
@@ -103,12 +103,12 @@ static void handle_connection_state( void )
 			return;
 		}
 
-		const ApeGameInterfaceImport *game = ape_game_get_interface();
-		ApeProtocolValidationMessage validationMessage = {
-		        .header = { .length = sizeof( ApeProtocolValidationMessage ), .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATION },
-		        .magic = APE_PROTOCOL_MAGIC,
-		        .version = ( ( uint16_t ) APE_PROTOCOL_VERSION << 8 ) | game->protocolVersion,
-		};
+		const ApeGameInterfaceImport *game              = ape_game_get_interface();
+		ApeProtocolValidationMessage  validationMessage = {
+		         .header  = { .length = sizeof( ApeProtocolValidationMessage ), .type = APE_PROTOCOL_MESSAGE_TYPE_VALIDATION },
+		         .magic   = APE_PROTOCOL_MAGIC,
+		         .version = ( ( uint16_t ) APE_PROTOCOL_VERSION << 8 ) | game->protocolVersion,
+        };
 
 		const char *id = game_get_identifier();
 		strncpy( validationMessage.identifier, id, sizeof( validationMessage.identifier ) );
@@ -116,7 +116,7 @@ static void handle_connection_state( void )
 		ape_net_send_( clientState.netSocket, &validationMessage, sizeof( ApeProtocolValidationMessage ) );
 
 		clientState.isConnected = true;
-		clientState.state = CLIENT_SERVER_STATE_VALIDATING;
+		clientState.state       = CLIENT_SERVER_STATE_VALIDATING;
 		CLIENT_PRINT( "Connected successfully!\n" );
 		return;
 	}
@@ -187,7 +187,7 @@ void ape_initialize_client_( void )
 	                          "Attempt to connect to the specified server.",
 	                          1, connect_command );
 
-	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ){ KEY_F12 }, 1, capture_screenshot_action );
+	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ) { KEY_F12 }, 1, capture_screenshot_action );
 }
 
 void ape_shutdown_client_( void )
@@ -220,14 +220,14 @@ void ape_render_frame_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_tick_client_( void )
+void ape_tick_client_( double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	ape_begin_input_frame_();
 
 	ape_tick_input_();
-	ape_tick_gui_();
+	ape_tick_gui_( delta );
 	ape_tick_materials_();
 	ape_audio_tick_();
 

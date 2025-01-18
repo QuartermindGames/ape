@@ -14,10 +14,6 @@ static bool drawShadow    = false;
 
 static int consoleAlpha = 200;
 
-/****************************************
- * CONSOLE INPUT BUFFER
- ****************************************/
-
 static char inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 static UInt inputBufferLength;
 
@@ -26,8 +22,9 @@ static char history[ MAX_HISTORY_RESULTS ][ CONSOLE_BUFFER_MAX_LENGTH ];
 static UInt numHistoryItems;
 static UInt historySelection;
 
-/////////////////////////////////////////////////////////////////
-// AUTOCOMPLETE
+/////////////////////////////////////////////////////////////////////////////////////
+// Autocomplete
+/////////////////////////////////////////////////////////////////////////////////////
 
 #define MAX_AUTOCOMPLETE_RESULTS 8
 static const char *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
@@ -56,16 +53,146 @@ static void update_auto_complete_result( const char *input )
 	{
 		autoComplete[ i ] = list[ i ];
 	}
-	autoComplete[ numOptions ] = NULL;
+	autoComplete[ numOptions ] = nullptr;
 
 	autoCompleteSelection = 0;
 }
 
-/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+// Notifications
+/////////////////////////////////////////////////////////////////////////////////////
 
-/****************************************
- * GENERAL INPUT
- ****************************************/
+typedef struct ConsoleNotification
+{
+	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+	PLColour colour;
+	double   time;
+} ConsoleNotification;
+
+static double consoleNotificationFadeThreshold = 0.8;
+static double consoleMaxNotificationTime       = 3.0;
+
+static int                  consoleMaxNotifications = 8;
+static ConsoleNotification *consoleNotifications;
+static UInt                 consoleNumNotifications;
+
+static void update_notification_limit( PLConsoleVariable * )
+{
+	if ( consoleMaxNotifications == 0 )
+	{
+		PL_DELETE( consoleNotifications );
+		consoleNotifications    = nullptr;
+		consoleNumNotifications = 0;
+		return;
+	}
+
+	if ( consoleNumNotifications > consoleMaxNotifications )
+	{
+		consoleNumNotifications = consoleMaxNotifications;
+	}
+
+	consoleNotifications = PL_REALLOCA( consoleNotifications, sizeof( ConsoleNotification ) * consoleMaxNotifications );
+	PL_ZERO( consoleNotifications, sizeof( ConsoleNotification ) * consoleMaxNotifications );
+}
+
+void ape_console_push_notification_( const char *buffer, PLColour colour )
+{
+	if ( consoleMaxNotifications == 0 )
+	{
+		return;
+	}
+
+	if ( consoleNotifications == nullptr )
+	{
+		update_notification_limit( nullptr );
+	}
+
+	// shuffle everything forward
+	if ( consoleNumNotifications > 0 )
+	{
+		for ( UInt i = consoleNumNotifications; i > 0; --i )
+		{
+			if ( i < consoleMaxNotifications )
+			{
+				consoleNotifications[ i ] = consoleNotifications[ i - 1 ];
+			}
+		}
+	}
+
+	// and now add the new result to the head
+	ConsoleNotification *notification = &consoleNotifications[ 0 ];
+	snprintf( notification->buffer, sizeof( notification->buffer ), "%s", buffer );
+	notification->colour = colour;
+	notification->time   = 0.0;
+
+	consoleNumNotifications = PlClamp( 0, consoleNumNotifications + 1, consoleMaxNotifications );
+}
+
+void ape_console_update_notifications_( double delta )
+{
+	if ( consoleNumNotifications == 0 )
+	{
+		return;
+	}
+
+	for ( UInt i = 0; i < consoleNumNotifications; ++i )
+	{
+		ConsoleNotification *notification = &consoleNotifications[ i ];
+		notification->time += delta;
+
+		if ( notification->time >= consoleMaxNotificationTime )
+		{
+			for ( UInt j = i; j < consoleNumNotifications; ++j )
+			{
+				consoleNotifications[ j ] = consoleNotifications[ j + 1 ];
+			}
+
+			--consoleNumNotifications;
+			--i;
+		}
+	}
+}
+
+static void draw_notifications( const ApeViewport *viewport )
+{
+	if ( consoleNumNotifications == 0 )
+	{
+		return;
+	}
+
+	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+	assert( font != nullptr );
+
+	float y = 8.0f;
+	for ( UInt i = consoleNumNotifications; i > 0; --i )
+	{
+		if ( y >= viewport->height )
+		{
+			break;
+		}
+
+		ConsoleNotification *notification = &consoleNotifications[ i - 1 ];
+
+		double timeLeft = consoleMaxNotificationTime - notification->time;
+		if ( timeLeft > consoleMaxNotificationTime * ( 1.0 - consoleNotificationFadeThreshold ) )
+		{
+			notification->colour.a = PlFloatToByte( 1.0f );
+		}
+		else
+		{
+			float fadeProgress     = timeLeft / ( consoleMaxNotificationTime * ( 1.0 - consoleNotificationFadeThreshold ) );
+			notification->colour.a = PlFloatToByte( PlClamp( 0.0f, fadeProgress, 1.0f ) );
+		}
+
+		gui_font_draw_string( font, 8.0f, y, nullptr, &y, 1.0f, &notification->colour, notification->buffer, strlen( notification->buffer ), true );
+	}
+
+	gui_font_display( font );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Input
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void toggle_console( void )
 {
@@ -79,12 +206,12 @@ static void toggle_console( void )
 	}
 }
 
-static void toggle_console_command( PL_UNUSED UInt argc, PL_UNUSED char **argv )
+static void toggle_console_command( UInt, char ** )
 {
 	toggle_console();
 }
 
-static void clear_history_command( PL_UNUSED UInt argc, PL_UNUSED char **argv )
+static void clear_history_command( UInt, char ** )
 {
 	numHistoryItems  = 0;
 	historySelection = 0;
@@ -360,6 +487,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 {
 	if ( !ape_is_console_open() )
 	{
+		draw_notifications( viewport );
 		return;
 	}
 
@@ -532,6 +660,9 @@ void ape_console_register_cl_variables_( void )
 	PlRegisterConsoleVariable( "console.drawShadow",
 	                           "Shadow for text, which will improve legibility. Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, nullptr, true );
+	PlRegisterConsoleVariable( "console.maxNotifications",
+	                           "Maximum number of notifications to show from the console buffer.",
+	                           "8", PL_VAR_I32, &consoleMaxNotifications, update_notification_limit, true );
 
 	ape_register_renderer_console_variables_();
 	ape_renderer_world_register_console_variables_();
