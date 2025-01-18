@@ -1,8 +1,9 @@
 # Introduction
 
-Hi there, thanks for your interest in APE Tech! These documents will hopefully give you some guidance on how you can use the engine.
+Hi there, thanks for your interest in ApeTech! These documents will hopefully give you some guidance on how you can use the engine.
 
 - [Forge Documentation](forge/forge.md)
+- [Networking](networking.md)
 - [World](world.md)
 - [Changelog](changelog.md)
 
