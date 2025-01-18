@@ -18,21 +18,21 @@ static int consoleAlpha = 200;
  * CONSOLE INPUT BUFFER
  ****************************************/
 
-static char         inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ] = { '\0' };
-static unsigned int inputBufferLength                        = 0;
+static char inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+static UInt inputBufferLength;
 
 #define MAX_HISTORY_RESULTS 64
-static char         history[ MAX_HISTORY_RESULTS ][ 64 ] = { { '\0' } };
-static unsigned int numHistoryItems                      = 0;
-static unsigned int historySelection                     = 0;
+static char history[ MAX_HISTORY_RESULTS ][ CONSOLE_BUFFER_MAX_LENGTH ];
+static UInt numHistoryItems;
+static UInt historySelection;
 
 /////////////////////////////////////////////////////////////////
 // AUTOCOMPLETE
 
 #define MAX_AUTOCOMPLETE_RESULTS 8
-static const char  *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ] = { NULL };
-static bool         enableAutoCompleteList;
-static unsigned int autoCompleteSelection = 0;
+static const char *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
+static bool        enableAutoCompleteList;
+static UInt        autoCompleteSelection;
 
 static void update_auto_complete_result( const char *input )
 {
@@ -44,7 +44,7 @@ static void update_auto_complete_result( const char *input )
 	}
 
 	// fetch all matching results
-	unsigned int numOptions;
+	UInt         numOptions;
 	const char **list = PlAutocompleteConsoleString( input, &numOptions );
 	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS )
 	{
@@ -52,7 +52,7 @@ static void update_auto_complete_result( const char *input )
 	}
 
 	// fill the list, leaving the last item null so we know where it ends
-	for ( unsigned int i = 0; i < numOptions; ++i )
+	for ( UInt i = 0; i < numOptions; ++i )
 	{
 		autoComplete[ i ] = list[ i ];
 	}
@@ -79,11 +79,15 @@ static void toggle_console( void )
 	}
 }
 
-static void toggle_console_command( unsigned int argc, char **argv )
+static void toggle_console_command( PL_UNUSED UInt argc, PL_UNUSED char **argv )
 {
-	( void ) ( argc );
-	( void ) ( argv );
 	toggle_console();
+}
+
+static void clear_history_command( PL_UNUSED UInt argc, PL_UNUSED char **argv )
+{
+	numHistoryItems  = 0;
+	historySelection = 0;
 }
 
 static void scroll_forward( ApeConsoleOutput *output )
@@ -133,7 +137,7 @@ static void clear_input_buffer( void )
 	update_auto_complete_result( inputBuffer );
 }
 
-bool ape_console_handle_key_event_( int key, unsigned int keyState )
+bool ape_console_handle_key_event_( int key, UInt keyState )
 {
 	if ( keyState == APE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
 	{
@@ -143,10 +147,14 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 
 	/* only do anything if the console is open */
 	if ( !consoleIsOpen )
+	{
 		return false;
+	}
 	/* but we don't care about these... */
 	if ( keyState != APE_INPUT_STATE_PRESSED && keyState != APE_INPUT_STATE_DOWN )
+	{
 		return true;
+	}
 
 	ApeConsoleOutput *output = apeGetConsoleOutput();
 	switch ( key )
@@ -174,12 +182,16 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 		{
 			if ( autoComplete[ 0 ] == NULL )
 			{
-				// in this case, cycle the history
-
+				if ( numHistoryItems > 0 )
+				{
+					historySelection = ( historySelection + 1 ) % numHistoryItems;
+					snprintf( inputBuffer, sizeof( inputBuffer ), "%s", history[ historySelection ] );
+					inputBufferLength = strlen( inputBuffer );
+				}
 				break;
 			}
 
-			unsigned int nextSlot = autoCompleteSelection + 1;
+			UInt nextSlot = autoCompleteSelection + 1;
 			if ( nextSlot >= MAX_AUTOCOMPLETE_RESULTS || autoComplete[ nextSlot ] == NULL )
 			{
 				autoCompleteSelection = 0;
@@ -193,6 +205,12 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 		{
 			if ( autoComplete[ 0 ] == NULL )
 			{
+				if ( numHistoryItems > 0 )
+				{
+					historySelection = ( historySelection - 1 ) % numHistoryItems;
+					snprintf( inputBuffer, sizeof( inputBuffer ), "%s", history[ historySelection ] );
+					inputBufferLength = strlen( inputBuffer );
+				}
 				break;
 			}
 
@@ -216,12 +234,24 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 				update_auto_complete_result( inputBuffer );
 				break;
 			}
-			else if ( inputBuffer[ 0 ] != '\0' )
+
+			if ( inputBuffer[ 0 ] != '\0' )
 			{
 				ape_print_( inputBuffer );
 				PlParseConsoleString( inputBuffer );
+
+				// shuffle everything back and then tack it onto our history list
+				for ( int i = numHistoryItems - 1; i > 0; i-- )
+				{
+					strcpy( history[ i ], history[ i - 1 ] );
+				}
+				// and now add the new result to the head
+				snprintf( history[ 0 ], sizeof( history[ 0 ] ), "%s", inputBuffer );
+				numHistoryItems = PlClamp( 0, numHistoryItems + 1, MAX_HISTORY_RESULTS );
+
 				clear_input_buffer();
 			}
+
 			break;
 		}
 		case KEY_BACKSPACE:
@@ -282,7 +312,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 
 	/* cursor blinker */
 #define SPACER 4.0f
-	static unsigned int v = 0;
+	static UInt v = 0;
 	if ( v < ape_get_num_ticks() )
 	{
 		v = ape_get_num_ticks() + 20;
@@ -303,7 +333,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
-			unsigned int i = 1;
+			UInt i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
@@ -374,7 +404,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
 		float y = consoleHeight - 20.0f;
-		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
+		for ( UInt i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
 			gui_font_draw_string( font, 12.0f, y, nullptr, nullptr, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
@@ -471,7 +501,11 @@ static void input_mlook_command( PLConsoleVariable *consoleVariable )
 
 void ape_console_register_cl_commands_( void )
 {
-	PlRegisterConsoleCommand( "toggle_console", "Toggle the console.", 0, toggle_console_command );
+	PlRegisterConsoleCommand( "console_toggle",
+	                          "Toggle the console.", 0, toggle_console_command );
+	PlRegisterConsoleCommand( "console_clear_history",
+	                          "Clear the console input history. Not to be confused with the \"clear\" command.",
+	                          0, clear_history_command );
 }
 
 void ape_register_renderer_console_variables_( void );
@@ -482,13 +516,21 @@ void ape_console_register_cl_variables_( void )
 
 	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
-	PlRegisterConsoleVariable( "debug/overlay", "Enable/disable debug overlays.", "0", PL_VAR_I32, NULL, nullptr, false );
-	PlRegisterConsoleVariable( "debug/profilerFrequency", "Set frequency at which profile graph updates.", "32", PL_VAR_I32, NULL, nullptr, false );
+	PlRegisterConsoleVariable( "debug/overlay",
+	                           "Enable/disable debug overlays.",
+	                           "0", PL_VAR_I32, NULL, nullptr, false );
+	PlRegisterConsoleVariable( "debug/profilerFrequency",
+	                           "Set frequency at which profile graph updates.",
+	                           "32", PL_VAR_I32, NULL, nullptr, false );
 
-	PlRegisterConsoleVariable( "console_auto_list", "Enable/disable list of options that are presented for auto-completion.", "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );
-	PlRegisterConsoleVariable( "console_alpha", "Level of transparency to use for the console background.", "200", PL_VAR_I32, &consoleAlpha, nullptr, true );
-	PlRegisterConsoleVariable( "console_text_shadow", "Shadow for text, which will improve legibility. "
-	                                                  "Disabling might yield a slight performance boost on slower machines.",
+	PlRegisterConsoleVariable( "console.autoCompleteList",
+	                           "Enable/disable list of options that are presented for auto-completion.",
+	                           "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );
+	PlRegisterConsoleVariable( "console.alpha",
+	                           "Level of transparency to use for the console background.",
+	                           "200", PL_VAR_I32, &consoleAlpha, nullptr, true );
+	PlRegisterConsoleVariable( "console.drawShadow",
+	                           "Shadow for text, which will improve legibility. Disabling might yield a slight performance boost on slower machines.",
 	                           "false", PL_VAR_BOOL, &drawShadow, nullptr, true );
 
 	ape_register_renderer_console_variables_();
