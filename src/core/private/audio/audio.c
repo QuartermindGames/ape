@@ -82,26 +82,14 @@ static void pause_audio_command( unsigned int argc, char **argv )
 
 void ape_audio_initialize_( void )
 {
-	return;
-
-	if ( audioInitialized )
+	if ( PlHasCommandLineArgument( "/nosound" ) || audioInitialized )
 	{
 		return;
 	}
 
 	ape_print_( "Initializing audio\n" );
 
-	//todo: make these selectable
-	/* initialize the driver interface */
-#if ( PL_SYSTEM_OS == PL_SYSTEM_OS_WINDOWS ) && defined( _MSC_VER )
-	const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface( void );
-	audioDriverInterface = Audio_XAudio2_GetDriverInterface();
-	if ( audioDriverInterface == nullptr || !audioDriverInterface->Initialize() )
-	{
-		ape_warning_( "Failed to initialize audio driver!\n" );
-		return;
-	}
-#else
+	// initialise the driver interface (TODO: allow us to pick the backend we want)
 	const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void );
 	audioDriverInterface = ape_audio_get_driver_interface_();
 	if ( audioDriverInterface == nullptr || !audioDriverInterface->initialize() )
@@ -109,7 +97,6 @@ void ape_audio_initialize_( void )
 		ape_warning_( "Failed to initialize audio driver!\n" );
 		return;
 	}
-#endif
 
 	PlRegisterConsoleCommand( "audio_play", "Play a specific sound. If no sound is specified, plays a test sound.", -1, play_audio_command );
 	PlRegisterConsoleCommand( "audio_pause", "Pause all audio.", 0, pause_audio_command );
@@ -127,7 +114,7 @@ void ape_audio_register_console_variables_( void )
 
 static void destroy_sample( void *user )
 {
-	ApeAudioSample *sample = ( ApeAudioSample * ) user;
+	ApeAudioSample *sample = user;
 	assert( sample != nullptr );
 
 	DRIVER_CALLBACK( freeSample, sample );
