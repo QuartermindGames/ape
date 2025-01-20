@@ -299,7 +299,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		ApeLightPointerArray lights;
 		lights[ 0 ] = light;
 
-		ape_material_draw( model->meshes[ i ].material, model->cache, lights );
+		ape_material_draw( model->meshes[ i ].material, model->cache, light == nullptr ? nullptr : lights );
 	}
 }
 
