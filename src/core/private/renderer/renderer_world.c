@@ -308,7 +308,7 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const
 
 static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
-	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == NULL )
+	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == nullptr )
 	{
 		return;
 	}
@@ -553,22 +553,6 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 }
 
-void ape_world_draw_( ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag stage )
-{
-	if ( ( stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && ape_config_.renderer.skipAmbience )
-	{
-		return;
-	}
-
-	ApeRoom *room = ape_camera_get_room( camera );
-	if ( room == nullptr )
-	{
-		return;
-	}
-
-	draw_room( room, camera, light, stage );
-}
-
 static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth )
 {
 	// and now depth pre-pass
@@ -602,6 +586,65 @@ static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth
 	}
 }
 
+static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool depth )
+{
+	if ( light->colour.a <= 0.0f )
+	{
+		return;
+	}
+
+	//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
+
+	const bool drawShadows = !depth && ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( light ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+	if ( drawShadows )
+	{
+		ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
+
+		if ( ape_config_.renderer.showShadowWireframe )
+		{
+			PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+			ape_world_draw_stencil_shadows_( camera, light );
+			PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
+		}
+
+		PlgClearBuffers( PLG_BUFFER_STENCIL );
+
+		PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+		PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+		PlgColourMask( false, false, false, false );
+
+		PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
+		PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
+
+		ape_world_draw_stencil_shadows_( camera, light );
+
+		PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
+		PlgColourMask( true, true, true, true );
+
+		PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+		ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_DEFAULT;
+	}
+
+	ape_rendererState_.overrideBlendMode = true;
+	ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
+	ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
+
+	draw_room( room, camera, light, APE_RENDERER_PASS_FLAG_OPAQUE );
+
+	ape_rendererState_.overrideBlendMode = false;
+
+	if ( drawShadows )
+	{
+		if ( !depth )
+		{
+			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+		}
+	}
+}
+
 static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 {
 	// and now depth pre-pass
@@ -617,58 +660,32 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 		ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
 		for ( unsigned int i = 0; i < numLights; ++i )
 		{
-			if ( lights[ i ]->colour.a <= 0.0f )
+			ApeLight *light = lights[ i ];
+
+			if ( ape_config_.renderer.lightJitterSamples > 0 )
 			{
+			    srand( ape_config_.renderer.lightJitterSamples );
+
+				PLVector3 storePos   = light->base.position;
+				float     storePower = light->colour.a;
+				for ( uint j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
+				{
+#define JITTER_VARIATION ( PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
+	                       PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) )
+					light->base.position.x += JITTER_VARIATION;
+					light->base.position.y += JITTER_VARIATION;
+					light->base.position.z += JITTER_VARIATION;
+					light->colour.a = ( i * 1.0f / ape_config_.renderer.lightJitterSamples );
+
+					draw_solid_room_lit( room, camera, lights[ i ], depth );
+				}
+
+				light->base.position = storePos;
+				light->colour.a      = storePower;
 				continue;
 			}
 
-			//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
-
-			const bool drawShadows = false;//ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( lights[ i ] ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
-			if ( drawShadows )
-			{
-				PlgClearBuffers( PLG_BUFFER_STENCIL );
-
-				ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
-
-				if ( ape_config_.renderer.showShadowWireframe )
-				{
-					PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-					ape_world_draw_stencil_shadows_( camera, lights[ i ] );
-					PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
-				}
-
-				PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-				PlgEnableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-				PlgColourMask( false, false, false, false );
-
-				PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 0x0, 0xFF );
-				PlgStencilOp( PLG_STENCIL_FACE_FRONT, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_INCRWRAP, PLG_STENCIL_OP_KEEP );
-				PlgStencilOp( PLG_STENCIL_FACE_BACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_DECRWRAP, PLG_STENCIL_OP_KEEP );
-
-				ape_world_draw_stencil_shadows_( camera, lights[ i ] );
-
-				PlgDisableGraphicsState( PLG_GFX_STATE_DEPTH_CLAMP );
-				PlgColourMask( true, true, true, true );
-
-				PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 0x0, 0xFF );
-				PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
-
-				ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_DEFAULT;
-			}
-
-			ape_rendererState_.overrideBlendMode = true;
-			ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
-			ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
-
-			draw_room( room, camera, lights[ i ], APE_RENDERER_PASS_FLAG_OPAQUE );
-
-			ape_rendererState_.overrideBlendMode = false;
-
-			if ( drawShadows )
-			{
-				PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-			}
+			draw_solid_room_lit( room, camera, light, depth );
 		}
 
 		PlgDepthMask( depth );
@@ -727,28 +744,6 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
-
-	//TODO: first thing to do is to deal with the portals
-
-#if 0
-	switch ( camera->drawMode )
-	{
-		default:
-			break;
-		case APE_CAMERA_DRAW_MODE_WIREFRAME:
-			ape_world_draw_wireframe_( world, camera );
-		break;
-		case APE_CAMERA_DRAW_MODE_SOLID:
-		case APE_CAMERA_DRAW_MODE_TEXTURED:
-			ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
-		ape_world_draw_( camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
-		break;
-		case APE_CAMERA_DRAW_MODE_SHADED:
-			render_solid_world( camera, viewport );
-		render_transparent_world( camera );
-		break;
-	}
-#endif
 
 	// first draw the portals
 	PlgInsertDebugMarker( "Portal pass" );
@@ -813,10 +808,14 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			float     d          = -PlVector3DotProduct( portal->normal, planePoint );
 			PlgSetClipPlane( &PL_VECTOR4( portal->normal.x, portal->normal.y, portal->normal.z, d ) );
 
+#if 1
 			PlgInsertDebugMarker( "Solid portal room pass" );
 			draw_solid_room( destinationRoom, camera, ape_rendererState_.depth > 0 );
-			//PlgInsertDebugMarker( "Translucent portal room pass" );
-			//draw_translucent_room( room, camera );
+			PlgInsertDebugMarker( "Translucent portal room pass" );
+			draw_translucent_room( room, camera, ape_rendererState_.depth > 0 );
+#else
+			ape_room_draw_( destinationRoom, camera, viewport );
+#endif
 
 			PlgSetClipPlane( nullptr );
 

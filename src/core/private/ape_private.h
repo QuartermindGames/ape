@@ -140,6 +140,7 @@ typedef struct ApeConfig
 		float framebufferScale;
 		float maxLightDistance;
 
+		int lightJitterSamples;
 		int msaaSamples;
 	} renderer;
 

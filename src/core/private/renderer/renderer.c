@@ -337,6 +337,8 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, nullptr, false );
 
+	PlRegisterConsoleVariable( "renderer.lightJitterSamples", "Jitter lights to emulate smooth shadows.", "0", PL_VAR_I32, &ape_config_.renderer.lightJitterSamples, nullptr, false );
+
 	//TODO: move into flare code...
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
