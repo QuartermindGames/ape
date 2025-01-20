@@ -38,55 +38,6 @@ typedef struct APlayer
 
 #define APLAYER( X ) ( ( APlayer * ) ( X )->userData )
 
-ApeCamera *Player_GetCamera( Actor *self )
-{
-	APlayer *playerData = Act_GetUserData( self );
-	if ( playerData == NULL )
-		return NULL;
-
-	return playerData->eyeCamera;
-}
-
-static void Player_CalculateViewFrustum( Actor *self )
-{
-#if 0
-	APlayer *playerData = Act_GetUserData( self );
-
-	PLVector3 forward, left;
-	PlAnglesAxes( PLVector3( 0, Act_GetAngle( self ), 0 ), &left, NULL, &forward );
-
-	PLVector3 curPos = Act_GetPosition( self );
-	curPos.y += Act_GetViewOffset( self );
-
-	playerData->centerView = PlAddVector3( curPos, PlScaleVector3F( forward, 1000.0f ) );
-
-	playerData->llViewPos = PlAddVector3( curPos, PlScaleVector3F( left, 64.0f ) );
-	playerData->lrViewPos = PlSubtractVector3( curPos, PlScaleVector3F( left, 64.0f ) );
-
-	/* in future, set this up properly relative to view */
-#endif
-}
-
-/* move this somewhere else... */
-static unsigned int numPlayers = 0;
-
-static void Player_Spawn( Actor *self )
-{
-	APlayer *playerData = PlMAlloc( sizeof( APlayer ), true );
-	Act_SetUserData( self, playerData );
-
-	//playerData->model = PlmLoadModel( "models/test/md2/bird_final.md2" );
-
-	Act_SetBounds( self, PLAYER_BOUNDS_MINS, PLAYER_BOUNDS_MAXS );
-
-	Act_SetViewOffset( self, PLAYER_VIEW_OFFSET );
-	Player_CalculateViewFrustum( self );
-
-	self->movementType = ACTOR_MOVEMENT_PHYSICS;
-
-	numPlayers++;
-}
-
 static void Player_ApplyViewBob( Actor *self )
 {
 	/* apply view bob */
@@ -165,26 +116,7 @@ static void Player_Tick( Actor *self, void *userData )
 	                                       PlScaleVector3F( self->forward, APLAYER( self )->forwardVelocity ),
 	                                       PlScaleVector3F( left, APLAYER( self )->strafeVelocity ) ) );
 
-	Player_CalculateViewFrustum( self );
-}
-
-static void Player_Draw( Actor *self, void *userData )
-{
-#if 0
-	if ( APLAYER( self )->model == NULL )
-		return;
-
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	PlLoadIdentityMatrix();
-	PlTranslateMatrix( Act_GetPosition( self ) );
-
-	for ( unsigned int i = 0; i < APLAYER( self )->model->numMeshes; ++i )
-		ape_material_draw( ss_arl_get_default_material( SS_ARL_MATERIAL_DEFAULT_FALLBACK ), APLAYER( self )->model->meshes[ i ], NULL );
-
-	PlPopMatrix();
-#endif
+	//Player_CalculateViewFrustum( self );
 }
 
 static void Player_Collide( Actor *self, Actor *other, void *userData )
@@ -193,14 +125,3 @@ static void Player_Collide( Actor *self, Actor *other, void *userData )
 
 	APLAYER( self )->forwardVelocity = ( APLAYER( self )->forwardVelocity / 2.0f ) * -1.0f;
 }
-
-const ActorSetup actorPlayerSetup = {
-        .id          = "point.player",
-        .Spawn       = Player_Spawn,
-        .Tick        = Player_Tick,
-        .Draw        = Player_Draw,
-        .Collide     = Player_Collide,
-        .Destroy     = NULL,
-        .Serialize   = NULL,
-        .Deserialize = NULL,
-};

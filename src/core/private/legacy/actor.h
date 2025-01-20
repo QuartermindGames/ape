@@ -90,9 +90,6 @@ typedef struct Actor
 void Act_DrawActors( ApeCamera *camera, ApeRoom *sector );
 void Act_TickActors( void *userData, double delta );
 
-Actor *Act_SpawnActor( ActorType type, AcmBranch *nodeTree );
-Actor *Act_DestroyActor( Actor *self );
-
 ActorType Act_GetType( const Actor *self );
 
 void Act_SetPosition( Actor *self, const PLVector3 *position );
@@ -105,19 +102,14 @@ void Act_SetWorldSector( Actor *self, struct ApeRoom *sector );
 void Act_SetUserData( Actor *self, void *userData );
 void *Act_GetUserData( Actor *self );
 
-void Act_SetViewOffset( Actor *self, float viewOffset );
 float Act_GetViewOffset( Actor *self );
 
-void Act_SetBounds( Actor *self, PLVector3 mins, PLVector3 maxs );
 bool Act_IsColliding( Actor *self, Actor *other );
 Actor *Act_CheckCollisions( Actor *self );
 
 void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-bool Act_IsVisible( Actor *self, ApeCamera *camera );
 
 PLVector3 Act_GetForward( const Actor *self );
-
-Actor *Act_GetByTag( const char *tag, Actor *start );
 
 /* generic monster functions */
 void Monster_Collide( struct Actor *self, struct Actor *other, float force );

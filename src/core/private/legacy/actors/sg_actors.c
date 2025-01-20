@@ -1,44 +1,8 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include "acm/public/acm/acm.h"
-
-#include "ape_private.h"
-#include "../actor.h"
-
-#include "renderer/renderer_particle.h"
-
-#define MODEL_SCALE 10.0f
-
-typedef struct ASGActor
-{
-	//PLMModel *model;
-
-	float forwardVelocity;
-	float scale;
-
-	SS_Arl_ParticleEmitter *particleEmitter;
-	SS_Arl_ParticleEmitter *emitLeft, *emitRight;
-
-	PLVector3 spawnPosition;
-	PLVector3 spawnAngles;
-
-	PLVector3 variance;
-
-	unsigned int fireDelay;
-
-	bool isSolid;
-} ASGActor;
-
-typedef struct AsteroidManager
-{
-	ASGActor     base;
-	unsigned int numAsteroids;
-} AsteroidManager;
-static AsteroidManager *asteroidManager = NULL;
-
+#if 0
 static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 {
-#if 0
 	ASGActor *sg = self->userData;
 	if ( sg == NULL )
 	{
@@ -118,5 +82,5 @@ static void SGActor_Generic_Collide( Actor *self, Actor *other, void *userData )
 	}
 
 	Monster_Collide( self, other, 2.0f ); //2.0f + sg->scale );
-#endif
 }
+#endif
