@@ -371,6 +371,12 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 			return false;
 		}
 
+		// add the extension if it's missing
+		if ( saveFilename.find_last_of( '.' ) == -1 )
+		{
+			saveFilename += "." APE_WORLD_ROOM_EXTENSION;
+		}
+
 		path = saveFilename.text();
 	}
 
