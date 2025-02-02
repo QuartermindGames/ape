@@ -99,8 +99,8 @@ typedef struct ComProfilingGroup ComProfilingGroup;
  */
 ComProfilingGroup *com_profiler_get_group( const char *key );
 
-void comStartProfiling( const char *key );
-void comEndProfiling( const char *key );
+void com_profiler_start( const char *key );
+void com_profiler_end( const char *key );
 
 /**
  * @brief Retrieves the name of a profiling group.
@@ -167,11 +167,11 @@ void com_profiler_update_samples( void );
 #define COM_ENABLE_PROFILER
 
 #if defined( COM_ENABLE_PROFILER )
-#	define COM_PROFILE_START( NAME ) comStartProfiling( ( NAME ) )
-#	define COM_PROFILE_END( NAME )   comEndProfiling( ( NAME ) )
+#	define COM_PROFILE_START( NAME ) com_profiler_start( ( NAME ) )
+#	define COM_PROFILE_END( NAME )   com_profiler_end( ( NAME ) )
 
-#	define COM_PROFILE_FUNCTION_START() comStartProfiling( PL_FUNCTION )
-#	define COM_PROFILE_FUNCTION_END()   comEndProfiling( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_START() com_profiler_start( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_END()   com_profiler_end( PL_FUNCTION )
 #else
 #	define COM_PROFILE_START( NAME )
 #	define COM_PROFILE_END( NAME )
@@ -179,12 +179,14 @@ void com_profiler_update_samples( void );
 #	define COM_PROFILE_FUNCTION_END()
 #endif
 
-// Wrapper for Hei macro to take advantage of C23 features
+// Wrappers for Hei macros to take advantage of C23 features
 #define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
+#define COM_ITERATE_HASHED_LIST( VAR, LIST, ITR ) PL_ITERATE_HASHED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 
+typedef struct PLCollisionAABB  PLCollisionAABB;
 typedef struct PLCollisionRay   PLCollisionRay;
 typedef struct PLCollisionPlane PLCollisionPlane;
 
@@ -215,6 +217,7 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
  */
 PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices );
 
+bool com_math_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_math_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
 bool com_math_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, uint numVertices, PLVector3 *result );
 

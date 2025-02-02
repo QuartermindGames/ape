@@ -73,7 +73,7 @@ static ComProfilingGroup *RegisterProfilerGroup( const char *key, const char *de
 	return group;
 }
 
-void comStartProfiling( const char *key )
+void com_profiler_start( const char *key )
 {
 	ComProfilingGroup *group = RegisterProfilerGroup( key, NULL );
 	assert( group != NULL );
@@ -87,9 +87,7 @@ void comStartProfiling( const char *key )
 	group->timeTaken = -1.0;
 }
 
-static uint64_t numTicks = 0;
-
-void comEndProfiling( const char *key )
+void com_profiler_end( const char *key )
 {
 	ComProfilingGroup *group = RegisterProfilerGroup( key, NULL );
 	assert( group != NULL );

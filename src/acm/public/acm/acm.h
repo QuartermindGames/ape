@@ -15,6 +15,10 @@ typedef unsigned int  uint;
 
 typedef struct AcmBranch AcmBranch;
 
+// these are just simple helpers for code structuring
+typedef AcmBranch *( *AcmSerializeFunction )( void *ptr, AcmBranch *root );
+typedef void *( *AcmDeserializeFunction )( void *ptr, AcmBranch *root );
+
 #define ACM_DEFAULT_EXTENSION_OLD ".n"//TODO: should eventually remove this once ApeTech scripts are updated...
 #define ACM_DEFAULT_EXTENSION     ".acm"
 
@@ -254,5 +258,9 @@ AcmBranch *acm_parse_buffer( const char *buf, const char *file );
  * @param index Should be passed as 0 - this is to track the depth into the tree.
  */
 void acm_print_tree( AcmBranch *self, int index );
+
+#define ACM_ITERATE_BRANCH( LIST, ITR ) for ( AcmBranch * ( ITR ) = acm_get_first_child( LIST ); \
+	                                          ( ITR ) != nullptr;                                \
+	                                          ( ITR ) = acm_get_next_child( ( ITR ) ) )
 
 PL_EXTERN_C_END

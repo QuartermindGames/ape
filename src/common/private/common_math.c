@@ -59,6 +59,11 @@ PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int 
 // Ray Casting
 /////////////////////////////////////////////////////////////////////////////////////
 
+bool com_math_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result )
+{
+	return PlIsRayIntersectingAabb( aabb, ray, result );
+}
+
 bool com_math_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result )
 {
 	float denom = PlVector3DotProduct( plane->normal, ray->direction );
