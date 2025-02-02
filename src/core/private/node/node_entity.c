@@ -39,6 +39,18 @@ static void list_entity_classes_command( unsigned int, char ** )
 
 		node = PlGetNextHashTableNode( node );
 	}
+
+	ape_print_( "\nListing %u entity components...\n", PlGetNumHashTableNodes( entityComponentDefinitions ) );
+
+	node = PlGetFirstHashTableNode( entityComponentDefinitions );
+	while ( node != NULL )
+	{
+		ApeEntityComponentDefinition *componentDefinition = PlGetHashTableNodeUserData( node );
+		ape_print_( "-------------------------------------------------\n" );
+		ape_print_( "%s\n", componentDefinition->name );
+
+		node = PlGetNextHashTableNode( node );
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -132,8 +144,13 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 	PLHashTableNode *node = PlGetFirstHashTableNode( self->componentTable );
 	while ( node != NULL )
 	{
-		//TODO: should be calling destructor for component!!!
-		PL_DELETE( PlGetHashTableNodeUserData( node ) );
+		ApeEntityComponent *component = PlGetHashTableNodeUserData( node );
+		if ( component->data != nullptr && component->componentDefinition->destroyFunction != nullptr )
+		{
+			component->componentDefinition->destroyFunction( component->data );
+		}
+
+		PL_DELETE( component );
 		node = PlGetNextHashTableNode( node );
 	}
 	PlDestroyHashTable( self->componentTable );
@@ -202,18 +219,18 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 	}
 
 	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	if ( componentDefinition->Create != NULL )
+	if ( componentDefinition->createFunction != NULL )
 	{
-		component->data = componentDefinition->Create();
+		component->data = componentDefinition->createFunction();
 	}
 
 	if ( !PlInsertHashTableNode( self->componentTable, name, strlen( name ), component ) )
 	{
 		ape_warning_( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
-		if ( componentDefinition->Destroy != NULL )
+		if ( componentDefinition->destroyFunction != NULL )
 		{
-			componentDefinition->Destroy( component );
+			componentDefinition->destroyFunction( component );
 		}
 
 		PL_DELETE( component );
@@ -239,6 +256,24 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 		classDefinition->serializeFunction( entity );
 	}
 
+	// attempt to serialize components
+	if ( PlGetNumHashTableNodes( entity->componentTable ) > 0 )
+	{
+		AcmBranch          *branch = acm_push_array_object( root, "components" );
+		ApeEntityComponent *component;
+		COM_ITERATE_HASHED_LIST( component, entity->componentTable, i )
+		{
+			const ApeEntityComponentDefinition *componentDefinition = component->componentDefinition;
+
+			AcmBranch *componentBranch = acm_push_object( branch, componentDefinition->name );
+			acm_push_string( componentBranch, "name", componentDefinition->name, false );
+			if ( componentDefinition->serializeFunction != nullptr )
+			{
+				componentDefinition->serializeFunction( component, componentBranch );
+			}
+		}
+	}
+
 	return root;
 }
 
@@ -259,6 +294,35 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 	}
 
 	ApeEntity *entity = ape_entity_create( parent, className, "", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	// for deserialization, it's going to be wiser to do this before we start
+	// deserializing the class as it'll probably want to look these up!
+	AcmBranch *branch;
+	if ( ( branch = acm_get_child_by_name( root, "components" ) ) != nullptr )
+	{
+		ACM_ITERATE_BRANCH( branch, i )
+		{
+			const char *name = acm_get_string( i, "name", nullptr );
+			if ( name == nullptr )
+			{
+				ape_warning_( "No name provided for entity component!\n" );
+				continue;
+			}
+
+			const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
+			if ( componentDefinition == NULL )
+			{
+				ape_warning_( "Failed to find entity component (%s)!\n", name );
+				continue;
+			}
+
+			void *component = ape_entity_add_component( entity, name );
+			if ( componentDefinition->deserializeFunction != nullptr && componentDefinition->deserializeFunction( component, i ) == nullptr )
+			{
+				ape_warning_( "Failed to deserialize entity component (%s)!\n", name );
+			}
+		}
+	}
 
 	if ( classDefinition->deserializeFunction != nullptr )
 	{

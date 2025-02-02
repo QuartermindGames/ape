@@ -142,6 +142,9 @@ void game_register_standard_entity_components_( void )
 {
 	ape_register_entity_class( &game_triggerEntityClass );
 	ape_register_entity_class( &game_ropeEntityClass );
+
+	ApeEntityComponentDefinition game_healthComponent;
+	ape_register_entity_component( &game_healthComponent );
 }
 
 AcmBranch *game_get_config()

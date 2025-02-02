@@ -2,17 +2,24 @@ set(GAME_SHARED_FILES
         private/shared/physics/physics_rope.c
         private/shared/game.c
         private/shared/game_client.c
+        private/shared/game_client_actions.c
         private/shared/game_language.c
         private/shared/game_menu.c
         private/shared/game_menu_pie.c
         private/shared/game_server.c
+        private/shared/game_team.c
+
         #############################################
+
         private/shared/ai/ai_brain.c
 
-        private/shared/integrations/discord/discord.c
+        private/shared/components/component_health.c
 
+        private/shared/entities/entity_player_spawn.c
         private/shared/entities/entity_rope.c
         private/shared/entities/entity_trigger.c
+
+        private/shared/integrations/discord/discord.c
 )
 
 include_directories(public/)
@@ -39,6 +46,7 @@ endif ()
 #############################################
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
+
         private/ss1/menu/menu.c
         private/ss1/ss1_game.c
         private/ss1/ss1_mission.c

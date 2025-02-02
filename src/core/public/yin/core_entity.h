@@ -83,11 +83,11 @@ typedef struct ApeEntityComponentDefinition
 {
 	const char *name;
 
-	void *( *Create )( void );// required!!
-	void ( *Destroy )( void *data );
+	void *( *createFunction )( void );// required!!
+	void ( *destroyFunction )( void *data );
 
-	AcmBranch *( *Serialize )( void );
-	void ( *Deserialize )( AcmBranch *root );
+	AcmSerializeFunction   serializeFunction;
+	AcmDeserializeFunction deserializeFunction;
 } ApeEntityComponentDefinition;
 
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
