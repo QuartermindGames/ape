@@ -43,7 +43,7 @@ static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *n
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		ApeBrush *brush = ( ApeBrush * ) node;
-		for ( uint i = 0; i < brush->numFaces; ++i )
+		for ( UInt i = 0; i < brush->numFaces; ++i )
 		{
 			uint64_t hash                  = PlGenerateHashFNV1( &brush->faces[ i ], sizeof( ApeBrushFace ) );
 			brush->faces[ i ].selectColour = encode_hash_to_colour( hash );
@@ -101,52 +101,48 @@ void ape_editor_selection_rebuild_( ApeEditorInstance *self )
 	}
 }
 
-static void render_brush_selection( const ApeBrush *brush, const ApeEditorGeometryMode mode )
+static void render_brush_face_selection( const ApeBrush *brush )
 {
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	if ( mode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	//todo: optimize this... :(
+	for ( UInt i = 0; i < brush->numFaces; ++i )
 	{
-		//todo: optimize this... :(
-		for ( uint i = 0; i < brush->numFaces; ++i )
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		for ( UInt j = 0; j < brush->faces[ i ].numVertices; ++j )
 		{
-			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-			for ( uint j = 0; j < brush->faces[ i ].numVertices; ++j )
-			{
-				const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
-				PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
-				PlgColour4bv( mesh, &brush->faces[ i ].selectColour );
-			}
-
-			ape_material_draw( material, mesh, nullptr );
+			const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
+			PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+			PlgColour4bv( mesh, &brush->faces[ i ].selectColour );
 		}
-	}
-	else if ( mode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
-	{
-		//todo: optimize this... :(
-		for ( uint i = 0; i < brush->numFaces; ++i )
-		{
-			PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-			for ( uint j = 0; j < brush->faces[ i ].numVertices; ++j )
-			{
-				const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
-				PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
-				PlgColour4bv( mesh, &brush->base.selectColour );
-			}
 
-			ape_material_draw( material, mesh, nullptr );
-		}
+		ape_material_draw( material, mesh, nullptr );
 	}
 }
 
-static void render_generic_selection( const ApeWorldNode *node, const ApeEditorGeometryMode mode )
+static void render_brush_selection( const ApeBrush *brush )
 {
-	if ( mode != APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
-	{
-		return;
-	}
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+	assert( material != nullptr );
 
+	//todo: optimize this... :(
+	for ( UInt i = 0; i < brush->numFaces; ++i )
+	{
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		for ( UInt j = 0; j < brush->faces[ i ].numVertices; ++j )
+		{
+			const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
+			PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+			PlgColour4bv( mesh, &brush->base.selectColour );
+		}
+
+		ape_material_draw( material, mesh, nullptr );
+	}
+}
+
+static void draw_selection_cube( const PLVector3 *position, const PLColour *colour, float scale )
+{
 	static constexpr float CUBE_VERTICES[ 8 ][ 3 ] = {
 	        {-1.0f, -1.0f, -1.0f},
 	        {1.0f,  -1.0f, -1.0f},
@@ -157,7 +153,7 @@ static void render_generic_selection( const ApeWorldNode *node, const ApeEditorG
 	        {1.0f,  1.0f,  1.0f },
 	        {-1.0f, 1.0f,  1.0f }
     };
-	static constexpr uint CUBE_INDICES[ 12 ][ 3 ] = {
+	static constexpr UInt CUBE_INDICES[ 12 ][ 3 ] = {
 	        {2, 1, 0},
 	        {3, 2, 0},
 	        {4, 5, 6},
@@ -177,47 +173,25 @@ static void render_generic_selection( const ApeWorldNode *node, const ApeEditorG
 	assert( material != nullptr );
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
-	for ( uint i = 0; i < PL_ARRAY_ELEMENTS( CUBE_INDICES ); ++i )
+	for ( UInt i = 0; i < PL_ARRAY_ELEMENTS( CUBE_INDICES ); ++i )
 	{
-		for ( uint j = 0; j < 3; ++j )
+		for ( UInt j = 0; j < 3; ++j )
 		{
-			PlgImmPushVertex( node->position.x + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 0 ] * CUBE_SIZE,
-			                  node->position.y + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 1 ] * CUBE_SIZE,
-			                  node->position.z + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 2 ] * CUBE_SIZE );
-			PlgColour4bv( mesh, &node->selectColour );
+			PlgImmPushVertex( position->x + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 0 ] * CUBE_SIZE,
+			                  position->y + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 1 ] * CUBE_SIZE,
+			                  position->z + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 2 ] * CUBE_SIZE );
+			PlgColour4bv( mesh, colour );
 		}
 	}
 
 	ape_material_draw( material, mesh, nullptr );
 }
 
-static void render_node_selection( ApeEditorInstance *self, ApeWorldNode *node, ApeEditorGeometryMode mode )
-{
-	switch ( node->type )
-	{
-		default:
-			break;
-		case APE_WORLD_NODE_TYPE_BRUSH:
-		{
-			render_brush_selection( ( ApeBrush * ) node, mode );
-			break;
-		}
-		case APE_WORLD_NODE_TYPE_ENTITY:
-		case APE_WORLD_NODE_TYPE_LIGHT:
-		case APE_WORLD_NODE_TYPE_CAMERA:
-		{
-			render_generic_selection( node, mode );
-			break;
-		}
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		render_node_selection( self, child, mode );
-	}
-}
-
+/**
+ * Draw objects into the selection buffer.
+ *
+ * @param self Editor instance.
+ */
 void ape_editor_selection_render_( ApeEditorInstance *self )
 {
 	ApeViewport *viewport = ape_viewport_get_active();
@@ -236,8 +210,8 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 #if !defined( DEBUG_GRID_SELECTION )
 	ApeViewport *selectionViewport = ape_editor_selection_get_viewport_();
 
-	uint sw = viewport->width / 2;
-	uint sh = viewport->height / 2;
+	UInt sw = viewport->width / 2;
+	UInt sh = viewport->height / 2;
 	ape_viewport_set_size( selectionViewport, sw, sh );
 	ape_viewport_make_active( selectionViewport );
 	ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
@@ -245,18 +219,48 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 #endif
 
-	switch ( self->geometryMode )
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
-		default:
-			break;
-		case APE_EDITOR_GEOMETRY_MODE_PLOT:
-			ape_grid_draw_selection_( &self->grid );
-			break;
-		case APE_EDITOR_GEOMETRY_MODE_FACE:
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
-		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
-			render_node_selection( self, &room->base, self->geometryMode );
-			break;
+		ape_grid_draw_selection_( &self->grid );
+	}
+	else
+	{
+		UInt           numVisibleNodes;
+		ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &numVisibleNodes );
+
+		for ( UInt i = 0; i < numVisibleNodes; ++i )
+		{
+			const ApeWorldNode *node = visibleNodes[ i ];
+
+			if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+			{
+				switch ( node->type )
+				{
+					default:
+						break;
+					case APE_WORLD_NODE_TYPE_BRUSH:
+						render_brush_selection( ( ApeBrush * ) node );
+						break;
+					case APE_WORLD_NODE_TYPE_ENTITY:
+					case APE_WORLD_NODE_TYPE_LIGHT:
+					case APE_WORLD_NODE_TYPE_CAMERA:
+						draw_selection_cube( &node->position, &node->selectColour, 3.0f );
+						break;
+				}
+			}
+			else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE && node->type == APE_WORLD_NODE_TYPE_BRUSH )
+			{
+				render_brush_face_selection( ( ApeBrush * ) node );
+			}
+			else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX && node->type == APE_WORLD_NODE_TYPE_BRUSH )
+			{
+				ApeBrush *brush = ( ApeBrush * ) node;
+				for ( UInt j = 0; j < brush->numVertices; ++j )
+				{
+					draw_selection_cube( &brush->vertices[ j ], &node->selectColour, 2.0f );
+				}
+			}
+		}
 	}
 
 #if !defined( DEBUG_GRID_SELECTION )
