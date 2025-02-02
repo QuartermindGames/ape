@@ -22,6 +22,10 @@
 
 PL_EXTERN_C
 
+typedef struct GameServerClient GameServerClient;
+
+#define GAME_MAX_PLAYERS 64
+
 void game_register_standard_entity_components_( void );
 
 void game_interface_import_setup_( ApeGameInterfaceImport *import, unsigned int version, unsigned int protocolVersion, const char *id );
@@ -58,6 +62,15 @@ typedef struct __attribute( ( packed ) ) GameNetMessageHeader
 {
 	GameNetMessageType type;
 } GameNetMessageHeader;
+
+typedef char GamePlayerName[ 64 ];
+
+typedef struct GamePlayer
+{
+	GamePlayerName    name;
+	GameServerClient *serverClient;
+	UInt              team;
+} GamePlayer;
 
 /////////////////////////////////////////////////////////////////
 
