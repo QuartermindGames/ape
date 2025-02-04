@@ -2,14 +2,11 @@
 
 #pragma once
 
-#include <plcore/pl_physics.h>
 #include <plcore/pl_array_vector.h>
 
 #include <plgraphics/plg_mesh.h>
 
-#include <yin/core_world.h>
-
-#include "ape_memory.h"
+#include "yin/core_world.h"
 #include "node/node_entity.h"
 #include "audio/audio.h"
 #include "renderer/renderer.h"
@@ -92,7 +89,7 @@ ApeRoom *ape_world_get_first_room_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
-void ape_world_node_generate_bounds_( ApeWorldNode *root );
+void ape_world_node_generate_bounds_( ApeWorldNode *self );
 
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );

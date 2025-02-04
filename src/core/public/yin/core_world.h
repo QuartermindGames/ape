@@ -75,8 +75,8 @@ typedef enum ApeWorldNodePropertyType
 
 typedef struct ApeWorldNodePropertyEnum
 {
-	const char *name;
-	uint        value;
+	const char  *name;
+	unsigned int value;
 } ApeWorldNodePropertyEnum;
 
 typedef struct ApeWorldNodeProperty
@@ -91,11 +91,11 @@ typedef struct ApeWorldNodeProperty
 		struct
 		{
 			ApeWorldNodePropertyEnum *enums;
-			uint                      numEnums;
+			unsigned int              numEnums;
 		} enumType;
 		struct
 		{
-			uint maxSize;
+			unsigned int maxSize;
 		} stringType;
 	};
 } ApeWorldNodeProperty;
@@ -127,7 +127,7 @@ typedef struct ApeWorldNodeClass
 
 #if !defined( APE_NO_EDITOR )
 	const ApeWorldNodeProperty *properties;
-	uint                        numProperties;
+	unsigned int                numProperties;
 
 	const char *editorIcon;
 #endif
@@ -169,7 +169,7 @@ typedef struct ApeWorldNode
  * @param numClasses	Total number of classes available.
  * @return				Pointer to the list of available classes.
  */
-const ApeWorldNodeClass **ape_world_node_get_classes( uint *numClasses );
+const ApeWorldNodeClass **ape_world_node_get_classes( unsigned int *numClasses );
 
 /**
  * Returns the global list of properties for a world node.
@@ -177,7 +177,7 @@ const ApeWorldNodeClass **ape_world_node_get_classes( uint *numClasses );
  * @param numProperties	Total number of properties available.
  * @return				Pointer to the list of properties.
  */
-const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties );
+const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProperties );
 
 /**
  * Returns the list of properties for the given node type.
@@ -186,7 +186,7 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties )
  * @param type			World node class type.
  * @return				Pointer to the list of properties.
  */
-const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProperties, ApeWorldNodeType type );
+const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
 
 void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeProperty *property );
 
@@ -297,11 +297,11 @@ typedef struct ApeBrushFace
 
 	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
 	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];// list of vertices
-	uint                numVertices;
+	unsigned int        numVertices;
 
 	PLCollisionAABB bounds;
 
-	uint flags;
+	unsigned int flags;
 
 	char          id[ 64 ];// required for connecting portals
 	ApeBrushFace *destination;
@@ -331,11 +331,16 @@ typedef struct ApeBrush
 
 	ApeMaterial *materials[ APE_BRUSH_MAX_SUB_MESHES ];
 
-	PLVector3 *vertices;
-	uint       numVertices;
+	PLVector3   *vertices;
+	unsigned int numVertices;
+
+#if !defined( APE_NO_EDITOR )
+	PLColour    *vertexSelectColours;   // colours used for selection of vertices
+	unsigned int numVertexSelectColours;// should match num vertices
+#endif
 
 	ApeBrushFace *faces;
-	uint          numFaces;
+	unsigned int  numFaces;
 } ApeBrush;
 
 ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles );
@@ -462,7 +467,7 @@ typedef enum ApeLightFlag
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, uint flags );
+ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
 void      ape_light_destroy( ApeLight *light );
 
 PLColourF32 ape_light_get_colour( const ApeLight *light );

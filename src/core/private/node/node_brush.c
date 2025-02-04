@@ -21,7 +21,7 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 
 void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 {
-	ApeBrush *self = ( ApeBrush * ) data;
+	ApeBrush *self = data;
 	if ( self == nullptr )
 	{
 		return;
@@ -36,6 +36,9 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 
 	PL_DELETE( self->vertices );
 	PL_DELETE( self->faces );
+#if !defined( APE_NO_EDITOR )
+	PL_DELETE( self->vertexSelectColours );
+#endif
 
 	PL_DELETE( self );
 }

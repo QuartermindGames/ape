@@ -33,7 +33,7 @@ static void cache_node_icons( void )
 
 static void release_node_icons( void )
 {
-	for ( uint i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
+	for ( unsigned int i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
 	{
 		if ( nodeIcons[ i ] == NULL )
 		{
@@ -201,7 +201,7 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 	{
 		ApeBrush *brush = selectedFace->parent;
 		assert( brush != nullptr );
-		for ( uint j = 0; j < brush->numFaces; ++j )
+		for ( unsigned int j = 0; j < brush->numFaces; ++j )
 		{
 			ApeBrushFace *currentFace = &brush->faces[ j ];
 			bool          isSelected  = false;
@@ -347,7 +347,7 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static void editor_command( uint argc, char **argv )
+static void editor_command( unsigned int argc, char **argv )
 {
 	ApeEditorMode mode = APE_EDITOR_MODE_INVALID;
 
@@ -379,7 +379,7 @@ static void editor_command( uint argc, char **argv )
 	ape_editor_set_active_instance( instance );
 }
 
-static void close_editor_command( uint, char ** )
+static void close_editor_command( unsigned int, char ** )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -397,7 +397,7 @@ static void close_editor_command( uint, char ** )
 	ape_editor_instance_cleanup( instance );
 }
 
-static void save_command( uint, char **argv )
+static void save_command( unsigned int, char **argv )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -416,7 +416,7 @@ static void save_command( uint, char **argv )
 	editorModeInterfaces[ instance->mode ]->save( instance, cmd );
 }
 
-static void load_command( uint, char **argv )
+static void load_command( unsigned int, char **argv )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -450,7 +450,7 @@ void ape_initialize_editor_( void )
 
 	ape_editor_selection_initialize_();
 
-	for ( uint i = 0; i < APE_EDITOR_MAX_MODES; ++i )
+	for ( unsigned int i = 0; i < APE_EDITOR_MAX_MODES; ++i )
 	{
 		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->initialize == nullptr )
 		{
@@ -463,7 +463,7 @@ void ape_initialize_editor_( void )
 
 void ape_shutdown_editor_( void )
 {
-	for ( uint i = 0; i < APE_EDITOR_MAX_MODES; ++i )
+	for ( unsigned int i = 0; i < APE_EDITOR_MAX_MODES; ++i )
 	{
 		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->shutdown == nullptr )
 		{
@@ -490,7 +490,7 @@ void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMod
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_toggle_command_( uint, char ** );
+void ape_grid_toggle_command_( unsigned int, char ** );
 
 void ape_editor_register_console_( void )
 {
@@ -578,7 +578,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 	ApeCamera *camera = viewport->camera;
 	assert( camera != NULL );
 
-	for ( uint i = 0, num = 1; i < editorInstance->numPolygonPoints; ++i )
+	for ( unsigned int i = 0, num = 1; i < editorInstance->numPolygonPoints; ++i )
 	{
 		PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 		int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
@@ -611,7 +611,7 @@ static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
 #endif
 }
 
-static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices );
+static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int numVertices );
 
 static void render_plot_polygon( ApeEditorInstance *self )
 {
@@ -640,7 +640,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 				}
 			}
 
-			for ( uint i = 0; i < self->numPolygonPoints; ++i )
+			for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
 
@@ -669,7 +669,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 		}
 		else if ( self->numPolygonPoints > 1 )
 		{
-			for ( uint i = 0; i < self->numPolygonPoints; ++i )
+			for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 			{
 				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
 
@@ -738,7 +738,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
-		for ( uint j = 0; j < face->numVertices; ++j )
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
 			const ApeBrushFaceVertex *v1 = ( j + 1 ) < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
@@ -754,7 +754,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	if ( self->hoverSelection != nullptr )
 	{
 		face = self->hoverSelection;
-		for ( uint i = 0; i < face->numVertices; ++i )
+		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
 			const ApeBrushFaceVertex *v0 = face->edgeLoop[ i ];
 			const ApeBrushFaceVertex *v1 = ( i + 1 ) < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
@@ -770,10 +770,10 @@ static void render_selected_faces( ApeEditorInstance *self )
 
 static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const PLColour *colour )
 {
-	for ( uint i = 0; i < brush->numFaces; ++i )
+	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
 		const ApeBrushFace *face = &brush->faces[ i ];
-		for ( uint j = 0; j < face->numVertices; ++j )
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
 			const ApeBrushFaceVertex *v1 = ( j + 1 ) < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
@@ -1136,7 +1136,7 @@ static bool test_intersection( Segment s1, Segment s2 )
 	return false;
 }
 
-static bool validate_concave_polygon( const PLVector2 *vertices, uint numVertices )
+static bool validate_concave_polygon( const PLVector2 *vertices, unsigned int numVertices )
 {
 	if ( numVertices < 4 )
 	{
@@ -1144,7 +1144,7 @@ static bool validate_concave_polygon( const PLVector2 *vertices, uint numVertice
 	}
 
 	Segment segments[ numVertices ];
-	for ( uint i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		segments[ i ].start.x = vertices[ i ].x;
 		segments[ i ].start.y = vertices[ i ].y;
@@ -1152,9 +1152,9 @@ static bool validate_concave_polygon( const PLVector2 *vertices, uint numVertice
 		segments[ i ].end.y   = vertices[ ( i + 1 ) % numVertices ].y;
 	}
 
-	for ( uint i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
-		for ( uint j = i + 1; j < numVertices; ++j )
+		for ( unsigned int j = i + 1; j < numVertices; ++j )
 		{
 			if ( i != j && test_intersection( segments[ i ], segments[ j ] ) )
 			{
@@ -1167,7 +1167,7 @@ static bool validate_concave_polygon( const PLVector2 *vertices, uint numVertice
 }
 #endif
 
-static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices )
+static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int numVertices )
 {
 	// this determines that the plane is convex, hopefully
 
@@ -1177,10 +1177,10 @@ static bool validate_convex_polygon( const PLVector2 *vertices, uint numVertices
 	}
 
 	bool sign = false;
-	for ( uint i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		// ensure any point isn't doubling up
-		for ( uint j = i + 1; j < numVertices; ++j )
+		for ( unsigned int j = i + 1; j < numVertices; ++j )
 		{
 			if ( !PlCompareVector2( &vertices[ i ], &vertices[ j ] ) )
 			{
@@ -1244,10 +1244,10 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 	// and use this time to determine the order too...so we can reverse for edge loop if needed
 	float      signedArea = 0.0f;
 	PLVector3 *vertices   = PL_NEW_( PLVector3, self->numPolygonPoints );
-	for ( uint i = 0; i < self->numPolygonPoints; ++i )
+	for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 	{
 		// determine order
-		uint next = ( i + 1 ) % self->numPolygonPoints;
+		unsigned int next = ( i + 1 ) % self->numPolygonPoints;
 		signedArea += ( self->polygonPoints[ i ].x * self->polygonPoints[ next ].y - self->polygonPoints[ next ].x * self->polygonPoints[ i ].y );
 
 		// now transform it into 3D space

@@ -4,16 +4,10 @@
 
 #define COM_COPYRIGHT "Copyright © 2020-2024 Quartermind Games, Mark E Sowden"
 
-// These are non-standard, so declare them here
 #if !defined( _POSIX_SOURCE )
 #	define _POSIX_SOURCE 1
 #endif
-typedef unsigned char  uchar;
-typedef unsigned short ushort;
-typedef unsigned int   uint;
 
-// new types to replace the above,
-// follows our convention and less prone to conflict
 typedef unsigned char  Byte;
 typedef unsigned char  UChar;
 typedef unsigned short UShort;

@@ -38,23 +38,39 @@ static PLColour encode_hash_to_colour( uint64_t hash )
 	return PL_COLOURU8( ( hash >> 16 ) & 0xFF, ( hash >> 8 ) & 0xFF, hash & 0xFF, 255 );
 }
 
-static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *node )
+static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *node, ApeEditorGeometryMode mode )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		ApeBrush *brush = ( ApeBrush * ) node;
-		for ( UInt i = 0; i < brush->numFaces; ++i )
+		if ( mode == APE_EDITOR_GEOMETRY_MODE_FACE )
 		{
-			uint64_t hash                  = PlGenerateHashFNV1( &brush->faces[ i ], sizeof( ApeBrushFace ) );
-			brush->faces[ i ].selectColour = encode_hash_to_colour( hash );
-			PlInsertHashTableNode( self->selectionTable, &brush->faces[ i ].selectColour, sizeof( PLColour ), &brush->faces[ i ] );
+			for ( UInt i = 0; i < brush->numFaces; ++i )
+			{
+				uint64_t hash                  = PlGenerateHashFNV1( &brush->faces[ i ], sizeof( ApeBrushFace ) );
+				brush->faces[ i ].selectColour = encode_hash_to_colour( hash );
+				PlInsertHashTableNode( self->selectionTable, &brush->faces[ i ].selectColour, sizeof( PLColour ), &brush->faces[ i ] );
+			}
+		}
+		else if ( mode == APE_EDITOR_GEOMETRY_MODE_VERTEX )
+		{
+			if ( brush->numVertices != brush->numVertexSelectColours )
+			{
+				brush->vertexSelectColours    = PL_REALLOCA( brush->vertexSelectColours, sizeof( PLColour ) * brush->numVertices );
+				brush->numVertexSelectColours = brush->numVertices;
+			}
+			for ( UInt i = 0; i < brush->numVertices; ++i )
+			{
+				brush->vertexSelectColours[ i ] = encode_hash_to_colour( ( uintptr_t ) &brush->vertices[ i ] );
+				PlInsertHashTableNode( self->selectionTable, &brush->vertexSelectColours[ i ], sizeof( PLColour ), &brush->vertices[ i ] );
+			}
 		}
 	}
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		add_node_to_face_selection( self, child );
+		add_node_to_face_selection( self, child, mode );
 	}
 }
 
@@ -88,9 +104,10 @@ void ape_editor_selection_rebuild_( ApeEditorInstance *self )
 	{
 		default:
 			break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			add_node_to_face_selection( self, &room->base );
+			add_node_to_face_selection( self, &room->base, self->geometryMode );
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
