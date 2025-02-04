@@ -22,7 +22,7 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 
 static void destroy_room( void *data, ApeWorldNode *parent )
 {
-	ApeRoom *self = ( ApeRoom * ) data;
+	ApeRoom *self = data;
 
 	PlDestroyVectorArray( self->subRooms );
 	PlDestroyVectorArray( self->faces );
@@ -85,6 +85,94 @@ ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 	self->isDirty = true;
 
 	return &self->base;
+}
+
+static constexpr UInt RAY_HIT_INC = 256;
+
+static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeRayIntersection *hits, UInt *numHits, UInt *maxHits )
+{
+	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
+	{
+		PLVector3 intersection;
+		if ( !com_math_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
+		{
+			return false;
+		}
+
+		switch ( node->type )
+		{
+			default:
+				break;
+			case APE_WORLD_NODE_TYPE_BRUSH:
+			{
+				ApeBrush *brush = ( ApeBrush * ) node;
+				for ( UInt i = 0; i < brush->numFaces; ++i )
+				{
+					ApeBrushFace *face = &brush->faces[ i ];
+
+					PLVector3 vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+					for ( uint j = 0; j < face->numVertices; ++j )
+					{
+						vertices[ j ] = *face->edgeLoop[ j ]->position;
+					}
+
+					if ( !com_math_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
+					{
+						continue;
+					}
+
+					ApeRayIntersection *hit = &hits[ *numHits ];
+					hit->node               = APE_WORLD_NODE( brush );
+					hit->face               = face;
+					hit->intersection       = intersection;
+					hit->distance           = PlVector3Length( PlSubtractVector3( intersection, ray->origin ) );
+					( *numHits )++;
+				}
+				break;
+			}
+		}
+
+		if ( *numHits >= *maxHits )
+		{
+			*maxHits = *maxHits + RAY_HIT_INC;
+			hits     = PL_REALLOCA( hits, sizeof( ApeRayIntersection ) * *maxHits );
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		intersect_ray_children( self, child, ray, hits, numHits, maxHits );
+	}
+
+	return true;
+}
+
+bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeRayIntersection *result )
+{
+	UInt                maxHits = RAY_HIT_INC;
+	UInt                numHits = 0;
+	ApeRayIntersection *hits    = PL_NEW_( ApeRayIntersection, maxHits );
+
+	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits ) || numHits == 0 )
+	{
+		PL_DELETE( hits );
+		return false;
+	}
+
+	// now determine which was the closest hit;
+	*result = hits[ 0 ];
+	for ( UInt i = 1; i < numHits; i++ )
+	{
+		if ( hits[ i ].distance < result->distance )
+		{
+			*result = hits[ i ];
+		}
+	}
+
+	PL_DELETE( hits );
+
+	return true;
 }
 
 bool ape_room_set_path( ApeRoom *self, const char *path )
