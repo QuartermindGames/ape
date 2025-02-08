@@ -40,7 +40,7 @@ static void output_callback( int level, const char *message, PLColour colour )
 	size_t l = strlen( message );
 	if ( l >= CONSOLE_BUFFER_MAX_LENGTH )
 	{
-		PRINT_WARNING( "Attempting to push message to console with an unexpected length!\n" );
+		ape_warning_( "Attempting to push message to console with an unexpected length!\n" );
 		l = CONSOLE_BUFFER_MAX_LENGTH - 2;
 	}
 
@@ -75,13 +75,14 @@ CMD_CALLBACK( Version )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	PRINT( "Version: v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n" );
+	ape_print_( "Version:  v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n"
+	            "Compiled: " __DATE__ "\n" );
 }
 
 /*------------------------------------------------------------------*/
 
 static void save_user_config( void );
-static void LoadUserConfig( void )
+static void load_user_config( void )
 {
 	AcmBranch *root = acm_load_file( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
@@ -116,7 +117,7 @@ static void save_user_config( void )
 	size_t              numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
-	AcmBranch *root = acm_push_object( NULL, "config" );
+	AcmBranch *root = acm_push_object( nullptr, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i )
 	{
 		if ( !cvars[ i ]->archive )
@@ -158,7 +159,7 @@ static void toggle_command( unsigned int, char **argv )
 		ape_warning_( "Failed to find the specified variable (%s)!\n" );
 		return;
 	}
-	else if ( variable->type != PL_VAR_BOOL )
+	if ( variable->type != PL_VAR_BOOL )
 	{
 		ape_warning_( "Console variable is not a boolean type!\n" );
 		return;
@@ -276,4 +277,6 @@ void ape_initialize_console_( void )
 void ape_shutdown_console_( void )
 {
 	clear_output_buffer();
+
+	//save_user_config();
 }

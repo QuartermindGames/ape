@@ -148,7 +148,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config, bool em
 	// Call this first, so we can buffer console output
 	ape_initialize_console_();
 
-	ape_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), Copyright (C) 2020-2024 SnortySoft, Mark E. Sowden\n",
+	ape_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), " COM_COPYRIGHT "\n",
 	            VERSION_MAJOR,
 	            ENGINE_VERSION_STR,
 	            GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );

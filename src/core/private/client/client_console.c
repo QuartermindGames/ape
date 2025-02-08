@@ -14,22 +14,22 @@ static bool drawShadow    = false;
 
 static int consoleAlpha = 200;
 
-static char inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ];
-static UInt inputBufferLength;
+static char         inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+static unsigned int inputBufferLength;
 
 #define MAX_HISTORY_RESULTS 64
-static char history[ MAX_HISTORY_RESULTS ][ CONSOLE_BUFFER_MAX_LENGTH ];
-static UInt numHistoryItems;
-static UInt historySelection;
+static char         history[ MAX_HISTORY_RESULTS ][ CONSOLE_BUFFER_MAX_LENGTH ];
+static unsigned int numHistoryItems;
+static unsigned int historySelection;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Autocomplete
 /////////////////////////////////////////////////////////////////////////////////////
 
 #define MAX_AUTOCOMPLETE_RESULTS 8
-static const char *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
-static bool        enableAutoCompleteList;
-static UInt        autoCompleteSelection;
+static const char  *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
+static bool         enableAutoCompleteList;
+static unsigned int autoCompleteSelection;
 
 static void update_auto_complete_result( const char *input )
 {
@@ -41,7 +41,7 @@ static void update_auto_complete_result( const char *input )
 	}
 
 	// fetch all matching results
-	UInt         numOptions;
+	unsigned int numOptions;
 	const char **list = PlAutocompleteConsoleString( input, &numOptions );
 	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS )
 	{
@@ -49,7 +49,7 @@ static void update_auto_complete_result( const char *input )
 	}
 
 	// fill the list, leaving the last item null so we know where it ends
-	for ( UInt i = 0; i < numOptions; ++i )
+	for ( unsigned int i = 0; i < numOptions; ++i )
 	{
 		autoComplete[ i ] = list[ i ];
 	}
@@ -74,7 +74,7 @@ static double consoleMaxNotificationTime       = 3.0;
 
 static int                  consoleMaxNotifications = 8;
 static ConsoleNotification *consoleNotifications;
-static UInt                 consoleNumNotifications;
+static unsigned int         consoleNumNotifications;
 
 static void update_notification_limit( PLConsoleVariable * )
 {
@@ -110,7 +110,7 @@ void ape_console_push_notification_( const char *buffer, PLColour colour )
 	// shuffle everything forward
 	if ( consoleNumNotifications > 0 )
 	{
-		for ( UInt i = consoleNumNotifications; i > 0; --i )
+		for ( unsigned int i = consoleNumNotifications; i > 0; --i )
 		{
 			if ( i < consoleMaxNotifications )
 			{
@@ -135,14 +135,14 @@ void ape_console_update_notifications_( double delta )
 		return;
 	}
 
-	for ( UInt i = 0; i < consoleNumNotifications; ++i )
+	for ( unsigned int i = 0; i < consoleNumNotifications; ++i )
 	{
 		ConsoleNotification *notification = &consoleNotifications[ i ];
 		notification->time += delta;
 
 		if ( notification->time >= consoleMaxNotificationTime )
 		{
-			for ( UInt j = i; j < consoleNumNotifications; ++j )
+			for ( unsigned int j = i; j < consoleNumNotifications; ++j )
 			{
 				consoleNotifications[ j ] = consoleNotifications[ j + 1 ];
 			}
@@ -164,7 +164,7 @@ static void draw_notifications( const ApeViewport *viewport )
 	assert( font != nullptr );
 
 	float y = 8.0f;
-	for ( UInt i = consoleNumNotifications; i > 0; --i )
+	for ( unsigned int i = consoleNumNotifications; i > 0; --i )
 	{
 		if ( y >= viewport->height )
 		{
@@ -206,12 +206,12 @@ static void toggle_console( void )
 	}
 }
 
-static void toggle_console_command( UInt, char ** )
+static void toggle_console_command( unsigned int, char ** )
 {
 	toggle_console();
 }
 
-static void clear_history_command( UInt, char ** )
+static void clear_history_command( unsigned int, char ** )
 {
 	numHistoryItems  = 0;
 	historySelection = 0;
@@ -264,7 +264,7 @@ static void clear_input_buffer( void )
 	update_auto_complete_result( inputBuffer );
 }
 
-bool ape_console_handle_key_event_( int key, UInt keyState )
+bool ape_console_handle_key_event_( int key, unsigned int keyState )
 {
 	if ( keyState == APE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
 	{
@@ -318,7 +318,7 @@ bool ape_console_handle_key_event_( int key, UInt keyState )
 				break;
 			}
 
-			UInt nextSlot = autoCompleteSelection + 1;
+			unsigned int nextSlot = autoCompleteSelection + 1;
 			if ( nextSlot >= MAX_AUTOCOMPLETE_RESULTS || autoComplete[ nextSlot ] == NULL )
 			{
 				autoCompleteSelection = 0;
@@ -439,7 +439,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 
 	/* cursor blinker */
 #define SPACER 4.0f
-	static UInt v = 0;
+	static unsigned int v = 0;
 	if ( v < ape_get_num_ticks() )
 	{
 		v = ape_get_num_ticks() + 20;
@@ -460,7 +460,7 @@ static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
 		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, NULL, NULL, 1.0f, &PL_COLOUR_GREEN, autoComplete[ 0 ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
-			UInt i = 1;
+			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
@@ -532,7 +532,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
 
 		float y = consoleHeight - 20.0f;
-		for ( UInt i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
+		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
 			gui_font_draw_string( font, 12.0f, y, nullptr, nullptr, 1.0f, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
