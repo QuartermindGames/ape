@@ -20,15 +20,15 @@ typedef struct ApeMaterial
 {
 	char              path[ PL_SYSTEM_MAX_PATH ];
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
-	uint              numPasses;
+	unsigned int      numPasses;
 	PLLinkedListNode *node;
 
-	uint width;
-	uint height;
+	unsigned int width;
+	unsigned int height;
 
 	int8_t surfaceType;
 
-	uint flags;
+	unsigned int flags;
 
 	ApeMemoryReference mem;
 } ApeMaterial;
@@ -41,7 +41,7 @@ ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial )
 	return defaultMaterials[ defaultMaterial ];
 }
 
-PLGTexture *ape_material_get_texture_( ApeMaterial *self, uint pass, const char *hint )
+PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint )
 {
 	if ( pass >= self->numPasses )
 	{
@@ -50,7 +50,7 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, uint pass, const char 
 	}
 
 	ApeMaterialPass *materialPass = &self->passes[ pass ];
-	for ( uint i = 0; i < materialPass->numVariables; ++i )
+	for ( unsigned int i = 0; i < materialPass->numVariables; ++i )
 	{
 		if ( materialPass->variables[ i ].type != APE_MATERIAL_VAR_TEXTURE )
 		{
@@ -72,7 +72,7 @@ void ape_initialize_materials_( void )
 {
 	ape_print_( "Initializing material system\n" );
 
-	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
@@ -97,7 +97,7 @@ void ape_initialize_materials_( void )
 
 	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
 	        };
-	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		assert( *defaultMaterialPaths[ i ] != '\0' );
 		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false );
@@ -113,12 +113,12 @@ void ape_shutdown_materials_( void )
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	ape_memory_flush_unreferenced_resources();
 
-	uint totalCachedMaterials = 0;
-	uint orphanedCaches       = 0;
+	unsigned int totalCachedMaterials = 0;
+	unsigned int orphanedCaches       = 0;
 
-	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
-		uint cached_materials = PlGetNumLinkedListNodes( materials[ i ] );
+		unsigned int cached_materials = PlGetNumLinkedListNodes( materials[ i ] );
 		totalCachedMaterials += cached_materials;
 
 		if ( cached_materials == 0 )
@@ -145,7 +145,7 @@ const char *ape_material_get_path( const ApeMaterial *material )
 	return material->path;
 }
 
-uint ape_material_get_flags( const ApeMaterial *self )
+unsigned int ape_material_get_flags( const ApeMaterial *self )
 {
 	return self->flags;
 }
@@ -666,7 +666,7 @@ PLImage *ape_material_load_preview( const char *path )
 		return nullptr;
 	}
 
-	static constexpr uint MAX_PREVIEW_SIZE = 128;
+	static constexpr unsigned int MAX_PREVIEW_SIZE = 128;
 	if ( preview->width > MAX_PREVIEW_SIZE || preview->height > MAX_PREVIEW_SIZE )
 	{
 		PLImage *newPreview = PlResizeImage( preview, MAX_PREVIEW_SIZE, MAX_PREVIEW_SIZE );
@@ -764,9 +764,9 @@ static void destroy_material( ApeMaterial *material )
 		return;
 	}
 
-	for ( uint i = 0; i < material->numPasses; ++i )
+	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		for ( uint j = 0; j < material->passes[ i ].numVariables; ++j )
+		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j )
 		{
 			switch ( material->passes[ i ].variables[ j ].type )
 			{
@@ -838,7 +838,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 #endif
 }
 
-static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, uint *curUnit )
+static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, unsigned int *curUnit )
 {
 	if ( variable == -1 )
 	{
@@ -850,7 +850,7 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 	{
 		case APE_MATERIAL_BUILTIN_TIME:
 		{
-			uint numTicks = ape_get_num_ticks();
+			unsigned int numTicks = ape_get_num_ticks();
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
 			break;
 		}
@@ -1032,7 +1032,7 @@ void ape_material_release( ApeMaterial *material )
 	}
 
 	// don't flush default materials...
-	for ( uint i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		if ( material != defaultMaterials[ i ] )
 		{
@@ -1080,7 +1080,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
 	}
 
-	for ( uint i = 0; i < material->numPasses; ++i )
+	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
 		ApeMaterialPass *curPass = &material->passes[ i ];
 		if ( !( curPass->program->flags & APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING ) && lights != nullptr )
@@ -1148,8 +1148,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
 
-			uint curUnit = 0;
-			for ( uint j = 0; j < curPass->numVariables; ++j )
+			unsigned int curUnit = 0;
+			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
 			{
 				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_BUILTIN )
 				{
@@ -1239,12 +1239,12 @@ void ape_tick_materials_( void )
 {
 	ape_hot_reload_shaders_();
 
-	for ( uint i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		ApeMaterial *material;
 		COM_ITERATE_LINKED_LIST( material, materials[ i ], itr )
 		{
-			for ( uint j = 0; j < material->numPasses; ++j )
+			for ( unsigned int j = 0; j < material->numPasses; ++j )
 			{
 				if ( fabsf( material->passes[ j ].textureScroll.x ) < PL_EPSILON &&
 				     fabsf( material->passes[ j ].textureScroll.y ) < PL_EPSILON )
@@ -1268,12 +1268,12 @@ void ape_tick_materials_( void )
 	}
 }
 
-uint ape_material_get_width( const ApeMaterial *self )
+unsigned int ape_material_get_width( const ApeMaterial *self )
 {
 	return self->width;
 }
 
-uint ape_material_get_height( const ApeMaterial *self )
+unsigned int ape_material_get_height( const ApeMaterial *self )
 {
 	return self->height;
 }
