@@ -47,6 +47,8 @@ endif ()
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
 
+        private/ss1/entities/entity_airship.c
+
         private/ss1/menu/menu.c
         private/ss1/ss1_game.c
         private/ss1/ss1_mission.c

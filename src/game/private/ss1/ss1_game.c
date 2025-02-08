@@ -30,7 +30,7 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
                                    },
 };
 
-static ApeLight *suns[ 2 ];
+extern ApeEntityClassDefinition ss1_airshipEntityClass;
 
 static bool ss1_initialize()
 {
@@ -39,6 +39,8 @@ static bool ss1_initialize()
 	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
 
 	game_register_standard_entity_components_();
+
+	ape_register_entity_class( &ss1_airshipEntityClass );
 
 	PL_ZERO_( ss1_gameState );
 
@@ -184,6 +186,15 @@ static void ss1_spawn_world( ApeWorld *world, ApeRoom *room )
 
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
+
+	//ApeWorldNode *modelNode = APE_WORLD_NODE( ape_model_node_create( roomNode, "airship", "models/airship.mdl.n" ) );
+	//ape_world_node_set_position( modelNode, &PL_VECTOR3( 0.0f, 4096.0f, 0.0f ) );
+
+	//ApeAudioSample *sample = ape_audio_sample_cache( "sounds/water/water_waves_lapping_05.wav" );
+	//ApeAudioSource *source = ape_audio_source_create( &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), APE_AUDIO_SOURCE_GROUP_GENERIC );
+	//ape_audio_source_emit( source, sample );
+
+	ape_entity_create( roomNode, "airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )
