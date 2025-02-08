@@ -53,6 +53,8 @@ typedef struct ApeModel
 
 	PLGMesh *cache;
 
+	PLLinkedList *sceneNodes;
+
 	ApeMemoryReference reference;
 } ApeModel;
 
@@ -63,6 +65,8 @@ typedef struct ApeModelNode
 
 	PLPath    modelPath;
 	ApeModel *model;
+
+	PLLinkedListNode *modelSceneNode;
 } ApeModelNode;
 
 PL_EXTERN_C_END

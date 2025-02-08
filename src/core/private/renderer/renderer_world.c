@@ -293,11 +293,12 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const
 	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &num );
 	for ( unsigned int i = 0; i < num; ++i )
 	{
-		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_MODEL )
-		{
-			const ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
-			ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, PlGetMatrix( PL_MODELVIEW_MATRIX ), light );
-		}
+		//if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_MODEL )
+		//{
+		//	PLMatrix4           transform = ape_world_node_get_transform( visibleNodes[ i ] );
+		//	const ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
+		//	ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, &transform, light );
+		//}
 		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_ENTITY )
 		{
 			ApeEntity *entity = ( ApeEntity * ) visibleNodes[ i ];
@@ -306,6 +307,7 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const
 	}
 }
 
+void        ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
 static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == nullptr )
@@ -363,6 +365,8 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
+
+	ape_model_draw_models( room, camera, light );
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{

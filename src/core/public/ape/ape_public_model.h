@@ -13,8 +13,8 @@ typedef struct ApeModelAnimationState
 	ApeModelAnimation *currentAnimation;
 	ApeModelAnimation *oldAnimation;
 
-	uint frame;
-	uint oldFrame;
+	unsigned int frame;
+	unsigned int oldFrame;
 } ApeModelAnimationState;
 
 /**
@@ -48,7 +48,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
  * @param transforms 	List of transforms to use.
  * @param numTransforms Number of transforms in the list.
  */
-void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms );
+void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, unsigned int numTransforms );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Model World Node Class

@@ -21,10 +21,12 @@ static void model_cleanup_callback_( void *userData )
 	ApeModel *model = userData;
 	assert( model != NULL );
 
-	for ( uint i = 0; i < model->numMaterials; ++i )
+	for ( unsigned int i = 0; i < model->numMaterials; ++i )
 	{
 		ape_material_release( model->meshes[ i ].material );
 	}
+
+	PlDestroyLinkedList( model->sceneNodes );
 
 	PlgDestroyMesh( model->cache );
 
@@ -45,11 +47,11 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	AcmBranch *branch;
 	if ( ( branch = acm_get_child_by_name( root, "triangles" ) ) != NULL )
 	{
-		uint i = 0;
-		branch = acm_get_first_child( branch );
+		unsigned int i = 0;
+		branch         = acm_get_first_child( branch );
 		while ( branch != nullptr )
 		{
-			uint vertexIndices[ 3 ];
+			unsigned int vertexIndices[ 3 ];
 
 			AcmBranch *childBranch;
 			if ( ( childBranch = acm_get_child_by_name( branch, "vertex" ) ) != nullptr )
@@ -57,7 +59,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 				acm_branch_get_uint32_array( childBranch, vertexIndices, 3 );
 			}
 
-			uint tri = PlgAddMeshTriangle( model->cache, vertexIndices[ 0 ], vertexIndices[ 1 ], vertexIndices[ 2 ] );
+			unsigned int tri = PlgAddMeshTriangle( model->cache, vertexIndices[ 0 ], vertexIndices[ 1 ], vertexIndices[ 2 ] );
 			if ( i == 0 )
 			{
 				mesh->startIndex = tri;
@@ -80,8 +82,8 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 
 static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 {
-	uint version = acm_get_uint( root, "version", ( uint ) -1 );
-	if ( version == ( uint ) -1 || version > APE_FORMAT_MODEL_VERSION )
+	unsigned int version = acm_get_uint( root, "version", ( unsigned int ) -1 );
+	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
 		ape_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
 		return nullptr;
@@ -89,7 +91,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 	AcmBranch *branch;
 
-	uint numFloatElements;
+	unsigned int numFloatElements;
 	if ( ( branch = acm_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
 	{
 		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
@@ -105,11 +107,11 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		return nullptr;
 	}
 
-	float *vertices    = nullptr;
-	uint   numVertices = 0;
+	float       *vertices    = nullptr;
+	unsigned int numVertices = 0;
 	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
 	{
-		uint numIndices = acm_get_num_of_children( branch );
+		unsigned int numIndices = acm_get_num_of_children( branch );
 		if ( numIndices >= 3 )
 		{
 			vertices    = PL_NEW_( float, numIndices );
@@ -137,7 +139,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	}
 
 	const float *v = vertices;
-	for ( uint i = 0; i < numVertices; ++i, v += numFloatElements )
+	for ( unsigned int i = 0; i < numVertices; ++i, v += numFloatElements )
 	{
 		PlgAddMeshVertex( model->cache,
 		                  ( const PLVector3 * ) &v[ 0 ],
@@ -160,7 +162,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	if ( meshArray != nullptr )
 	{
 		AcmBranch *meshNode = acm_get_first_child( meshArray );
-		for ( uint i = 0; i < model->numMaterials; ++i )
+		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			assert( meshNode != NULL );
 			if ( deserialize_mesh( model, &model->meshes[ i ], meshNode ) == nullptr )
@@ -184,7 +186,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		}
 
 		AcmBranch *child = acm_get_first_child( bonesList );
-		for ( uint i = 0; i < model->numBones; ++i )
+		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
 			if ( child == NULL )
 			{
@@ -198,7 +200,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			child = acm_get_next_child( child );
 		}
 
-		uint rootBone = acm_get_uint( root, "rootBone", 0 );
+		unsigned int rootBone = acm_get_uint( root, "rootBone", 0 );
 		if ( rootBone >= model->numBones )
 		{
 			ape_warning_( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
@@ -208,6 +210,8 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	}
 
 	PL_DELETE( vertices );
+
+	model->sceneNodes = PlCreateLinkedList();
 
 	return model;
 }
@@ -269,7 +273,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 {
 	if ( modelShowSkeleton )
 	{
-		for ( uint i = 0; i < model->numBones; ++i )
+		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
 			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
 
@@ -291,7 +295,11 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		return;
 	}
 
-	for ( uint i = 0; i < model->numMaterials; ++i )
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+	PlLoadMatrix( transform );
+
+	for ( unsigned int i = 0; i < model->numMaterials; ++i )
 	{
 		model->cache->startIndex = model->meshes[ i ].startIndex;
 		model->cache->endIndex   = model->meshes[ i ].endIndex;
@@ -301,9 +309,11 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 
 		ape_material_draw( model->meshes[ i ].material, model->cache, light == nullptr ? nullptr : lights );
 	}
+
+	PlPopMatrix();
 }
 
-void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, uint numTransforms )
+void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, unsigned int numTransforms )
 {
 	//TODO: only will work with static models for now...
 }
@@ -314,7 +324,7 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 	assert( model->cache->num_verts > 0 );
 	float max = model->cache->vertices[ 0 ].position.x;
 	float min = model->cache->vertices[ 0 ].position.x;
-	for ( uint i = 0; i < model->cache->num_verts; ++i )
+	for ( unsigned int i = 0; i < model->cache->num_verts; ++i )
 	{
 		if ( model->cache->vertices[ i ].position.x > max ) max = model->cache->vertices[ i ].position.x;
 		if ( model->cache->vertices[ i ].position.y > max ) max = model->cache->vertices[ i ].position.y;
@@ -329,6 +339,37 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 	bounds.maxs = PL_VECTOR3( max, max, max );
 
 	return bounds;
+}
+
+void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light )
+{
+	// fetch all the models currently cached in the scene
+	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
+
+	// now iterate over those, and then all the nodes that reference them
+	ApeMemoryCacheHeader *header;
+	COM_ITERATE_LINKED_LIST( header, models, i )
+	{
+		ApeModel *model = header->userData;
+
+		ApeModelNode *sceneNode;
+		COM_ITERATE_LINKED_LIST( sceneNode, model->sceneNodes, j )
+		{
+			if ( APE_WORLD_NODE( sceneNode )->room != room )
+			{
+				continue;
+			}
+
+			PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( sceneNode ) );
+			if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
+			{
+				continue;
+			}
+
+			PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( sceneNode ) );
+			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, light );
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -349,8 +390,12 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 
 	modelNode->model = model;
 	PlSetupPath( modelNode->modelPath, true, "%s", path );
+
+	//TODO: these should be reversed!
 	modelNode->base.bounds      = compute_model_bounds( modelNode->model );
 	modelNode->base.localBounds = modelNode->base.bounds;
+
+	modelNode->modelSceneNode = PlInsertLinkedListNode( model->sceneNodes, modelNode );
 
 	return modelNode;
 }
@@ -358,6 +403,8 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 static void destroy_model_node( void *data, ApeWorldNode *parent )
 {
 	ApeModelNode *self = data;
+
+	PlDestroyLinkedListNode( self->modelSceneNode );
 
 	ape_model_release( self->model );
 
