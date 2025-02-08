@@ -2,8 +2,17 @@
 
 #pragma once
 
+typedef enum GameHealthStatus
+{
+	GAME_HEALTH_ALIVE,
+	GAME_HEALTH_DYING,
+	GAME_HEALTH_DEAD,
+} GameHealthStatus;
+
 typedef struct GameHealthComponent
 {
 	uint16_t health;
 	uint16_t maxHealth;
+
+	GameHealthStatus status;
 } GameHealthComponent;
