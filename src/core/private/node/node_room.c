@@ -256,8 +256,9 @@ static const ApeWorldNodeProperty properties[] = {
 };
 
 const ApeWorldNodeClass ape_roomClass = {
-        .identifier          = "room",
-        .magic               = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
+        .identifier = "room",
+        .magic      = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
+
         .destroyFunction     = destroy_room,
         .serializeFunction   = ape_room_serialize_,
         .deserializeFunction = ape_room_deserialize_,

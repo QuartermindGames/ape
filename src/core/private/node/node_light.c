@@ -171,8 +171,9 @@ static ApeWorldNodeProperty properties[] = {
 };
 
 const ApeWorldNodeClass ape_lightClass = {
-        .identifier          = "light",
-        .magic               = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
+        .identifier = "light",
+        .magic      = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
+
         .destroyFunction     = ape_light_destroy_,
         .serializeFunction   = serialize_light,
         .deserializeFunction = deserialize_light,

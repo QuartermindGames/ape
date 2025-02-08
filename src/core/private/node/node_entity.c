@@ -269,7 +269,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 			acm_push_string( componentBranch, "name", componentDefinition->name, false );
 			if ( componentDefinition->serializeFunction != nullptr )
 			{
-				componentDefinition->serializeFunction( component, componentBranch );
+				componentDefinition->serializeFunction( component->data, componentBranch );
 			}
 		}
 	}

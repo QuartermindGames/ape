@@ -86,8 +86,8 @@ typedef struct ApeEntityComponentDefinition
 	void *( *createFunction )( void );// required!!
 	void ( *destroyFunction )( void *data );
 
-	AcmSerializeFunction   serializeFunction;
-	AcmDeserializeFunction deserializeFunction;
+	AcmBranch *( *serializeFunction )( void *ptr, AcmBranch *root );
+	void *( *deserializeFunction )( void *ptr, AcmBranch *root );
 } ApeEntityComponentDefinition;
 
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );
