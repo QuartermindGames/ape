@@ -15,6 +15,7 @@ static AcmBranch *editorConfigRoot;
 
 static bool         showIcons;
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
+static float        iconFade = 0.25f;
 
 static void cache_node_icons( void )
 {
@@ -501,6 +502,7 @@ void ape_editor_register_console_( void )
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
 
 	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, true );
+	PlRegisterConsoleVariable( "editor.iconFade", "Fade range for icons displayed in the editor.", "0.25", PL_VAR_F32, &iconFade, nullptr, true );
 }
 
 static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const ApeWorldNode *worldNode )
@@ -916,8 +918,10 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 			continue;
 		}
 
-		static constexpr float pixelScale = 64.0f;
-		float                  scale      = PlClamp( 0.0f, ( pixelScale * 2.0f ) - ( depth * ( ( pixelScale ) / 100.0f ) ), 64.0f );
+		ApeMaterial *material = nodeIcons[ node->type ];
+
+		const float pixelScale = material != nullptr ? ape_material_get_width( material ) : 64.0f;
+		float       scale      = PlClamp( 0.0f, ( pixelScale * 2.0f ) - ( depth * ( ( pixelScale ) / 100.0f ) ) * iconFade, 64.0f );
 		if ( scale <= 0.0f )
 		{
 			continue;
@@ -945,7 +949,6 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 			gui_font_draw_string( font, screenPos.x - ( sw / 2.0f ), screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, classType->identifier, size, true );
 		}
 
-		ApeMaterial *material = nodeIcons[ node->type ];
 		if ( material != nullptr )
 		{
 			PLColour colour;
