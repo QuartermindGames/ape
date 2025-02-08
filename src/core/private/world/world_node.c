@@ -74,8 +74,25 @@ void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeP
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_world_node_generate_bounds_( ApeWorldNode *root )
+void ape_world_node_generate_bounds_( ApeWorldNode *self )
 {
+	for ( UInt i = 0; i < 3; ++i )
+	{
+		if ( PL_VECTOR3_I( self->localBounds.maxs, i ) > PL_VECTOR3_I( self->bounds.maxs, i ) )
+		{
+			PL_VECTOR3_I( self->bounds.maxs, i ) = PL_VECTOR3_I( self->localBounds.maxs, i );
+		}
+		if ( PL_VECTOR3_I( self->localBounds.mins, i ) < PL_VECTOR3_I( self->bounds.mins, i ) )
+		{
+			PL_VECTOR3_I( self->bounds.mins, i ) = PL_VECTOR3_I( self->localBounds.mins, i );
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
+	{
+		ape_world_node_generate_bounds_( child );
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +123,18 @@ bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expecte
 	}
 
 	return true;
+}
+
+static ApeRoom *lookup_parent_room( ApeWorldNode *self )
+{
+	ApeWorldNode *roomNode = ape_world_node_get_parent_by_type( self, APE_WORLD_NODE_TYPE_ROOM );
+	if ( roomNode == nullptr )
+	{
+		ape_warning_( "Encountered a node (%s) without an associated room!\n", PlPrintVector3( &self->position, PL_VAR_F32 ) );
+		return nullptr;
+	}
+
+	return ( ApeRoom * ) roomNode;
 }
 
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles )
@@ -171,6 +200,8 @@ void ape_world_node_dettach( ApeWorldNode *self )
 
 	self->parent         = nullptr;
 	self->parentListNode = nullptr;
+
+	self->room = nullptr;
 }
 
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
@@ -186,6 +217,9 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 
 	self->parent         = parent;
 	self->parentListNode = PlInsertLinkedListNode( self->parent->children, self );
+
+	// determine if we're now under a new room
+	self->room = lookup_parent_room( self );
 }
 
 PLVector3 ape_world_node_get_position( const ApeWorldNode *self )
@@ -249,30 +283,25 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
 	// and now wake our parents up...
 }
 
-ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
+ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type )
 {
-	assert( ape_world_node_is_valid( self, self->type ) );
-
-	// return early if the node provided is already a room
-	if ( self->type == APE_WORLD_NODE_TYPE_ROOM )
+	ApeWorldNode *parent = self->parent;
+	while ( parent != nullptr )
 	{
-		return ( ApeRoom * ) self;
-	}
-
-	// iterate up the tree until we find a room - the room should always be at the top!
-	ApeWorldNode *next = self->parent;
-	while ( next != nullptr )
-	{
-		if ( next->type == APE_WORLD_NODE_TYPE_ROOM )
+		if ( parent->type == type )
 		{
-			assert( ape_world_node_is_valid( next, APE_WORLD_NODE_TYPE_ROOM ) );
 			break;
 		}
 
-		next = next->parent;
+		parent = parent->parent;
 	}
 
-	return next != nullptr ? ( ApeRoom * ) next : nullptr;
+	return parent;
+}
+
+ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
+{
+	return self->room;
 }
 
 void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room )
@@ -324,6 +353,52 @@ const char *ape_world_node_get_name( ApeWorldNode *self )
 void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 {
 	snprintf( self->name, sizeof( self->name ), "%s", name );
+}
+
+PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self )
+{
+	PLCollisionAABB bounds    = self->localBounds;
+	PLMatrix4       transform = ape_world_node_get_transform( self );
+	bounds.origin             = PlGetMatrix4Translation( &transform );
+	return bounds;
+}
+
+PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self )
+{
+	return self->bounds;
+}
+
+PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self )
+{
+	PLMatrix4 transform = ape_world_node_get_local_transform( self );
+
+	ApeWorldNode *parent = self->parent;
+	while ( parent != nullptr )
+	{
+		PLMatrix4 parentTransform = ape_world_node_get_local_transform( parent );
+		transform                 = PlMultiplyMatrix4( &parentTransform, &transform );
+		parent                    = parent->parent;
+	}
+
+	return transform;
+}
+
+PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self )
+{
+	PLMatrix4 transform = PlMatrix4Identity();
+
+	PLMatrix4 translate = PlTranslateMatrix4( self->position );
+	transform           = PlMultiplyMatrix4( &transform, &translate );
+
+	PLMatrix4 rotate;
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &PL_VECTOR3( 1.0f, 0.0f, 0.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &PL_VECTOR3( 0.0f, 1.0f, 0.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &PL_VECTOR3( 0.0f, 0.0f, 1.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+
+	return transform;
 }
 
 AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )

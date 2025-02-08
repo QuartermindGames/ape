@@ -121,6 +121,7 @@ typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
+
 	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
 	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
@@ -153,6 +154,7 @@ typedef struct ApeWorldNode
 	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
 	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
 
+	ApeRoom                 *room;
 	ApeWorldNode            *parent;
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
 
@@ -207,6 +209,8 @@ void      ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs );
 
+ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type );
+
 /**
  * Travels up the tree until it encounters a room.
  */
@@ -239,11 +243,14 @@ const char *ape_world_node_get_name( ApeWorldNode *self );
  */
 void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
+PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self );
+PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self );
+
+PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self );
+PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
+
 AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
 ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root );
-
-#define APE_SG_NODE_GET_POSITION( X ) ape_world_node_get_position( ( ApeWorldNode * ) ( X ) )
-#define APE_SG_NODE_DESTROY( X )      ape_world_node_destroy( ( ApeWorldNode * ) ( X ) )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush - the building blocks of the world.
