@@ -3,9 +3,6 @@
 #include "game_private.h"
 #include "game_client.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 static void say_command( unsigned int argc, char **argv )
 {
 	if ( !ape_is_client_connected() )
@@ -39,8 +36,7 @@ static void say_command( unsigned int argc, char **argv )
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
+void game_client_actions_register();
 
 void game_client_initialize_()
 {
@@ -49,6 +45,9 @@ void game_client_initialize_()
 	PlRegisterConsoleCommand( "game.say",
 	                          "Broadcast a text message to other clients.",
 	                          1, say_command );
+
+	// register our standard input actions
+	game_client_actions_register();
 }
 
 void game_client_process_message_( const void *buf, size_t bufSize )
