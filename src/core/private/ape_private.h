@@ -133,6 +133,7 @@ typedef struct ApeConfig
 		bool forceShadows;
 		bool skipRoomCull;
 		bool skipAmbience;
+		bool showSelectionBuffer;
 
 		float fogNearOverride;
 		float fogFarOverride;

@@ -142,15 +142,7 @@ bool ape_get_capture_state_( void )
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport )
 {
-	PLColour clearColour = { 0, 0, 0, 255 };
-
-	ApeWorld *world = ss_game_get_current_world();
-	if ( world != NULL && ( viewport->camera == NULL || viewport->camera->mode == APE_CAMERA_MODE_PERSPECTIVE ) )
-	{
-		clearColour = PlColourF32ToU8( &world->clearColour );
-	}
-
-	PlgSetClearColour( clearColour );
+	PlgSetClearColour( PL_COLOURU8( 0, 0, 0, 255 ) );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 	PlgDepthMask( true );
@@ -332,6 +324,8 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.useStencilShadowVolumes", "Use stencil shadow volumes.", "true", PL_VAR_BOOL, &ape_config_.renderer.useStencilShadowVolumes, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, nullptr, false );
 	PlRegisterConsoleVariable( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, nullptr, false );
+
+	PlRegisterConsoleVariable( "renderer.showSelectionBuffer", "Show the selection buffer.", "false", PL_VAR_BOOL, &ape_config_.renderer.showSelectionBuffer, nullptr, false );
 
 	//TODO: move these into the material system
 	PlRegisterConsoleVariable( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, nullptr, false );
