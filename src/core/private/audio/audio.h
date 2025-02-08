@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "ape_private.h"
+#include "../ape_private.h"
 
 #include "ape/ape_public_audio.h"
 
@@ -47,20 +47,6 @@ void ape_audio_tick_( void );
 void ape_audio_pause_( bool pause );
 
 float ape_audio_get_global_volume_( void );
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Sample
-
-ApeAudioSample *ape_audio_sample_cache( const char *path );
-void            ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch );
-void            ape_audio_sample_release( ApeAudioSample *audioSample );
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Source
-
-ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group );
-void            ape_audio_source_destroy( ApeAudioSource *audioSource );
-void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Driver Interface

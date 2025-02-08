@@ -109,5 +109,17 @@ PLVector3 ape_audio_get_listener_angles( void );
 PLVector3 ape_audio_get_listener_velocity( void );
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Sample
+
+ApeAudioSample *ape_audio_sample_cache( const char *path );
+void            ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch );
+void            ape_audio_sample_release( ApeAudioSample *audioSample );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Source
+
+ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group );
+void            ape_audio_source_destroy( ApeAudioSource *audioSource );
+void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 PL_EXTERN_C_END
