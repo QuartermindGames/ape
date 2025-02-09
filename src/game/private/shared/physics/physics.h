@@ -81,7 +81,7 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num );
  * @param self 		Pointer to instance.
  * @param delta 	Time delta of the frame.
  */
-void game_physics_rope_tick( GamePhysicsRope *self, float delta );
+void game_physics_rope_tick( GamePhysicsRope *self, double delta );
 
 /**
  * Sets up the initial rope state. Should be called before simulation.

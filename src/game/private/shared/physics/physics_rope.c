@@ -4,14 +4,6 @@
 
 #include "physics.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
-static constexpr uint DEFAULT_NUM_PARTICLES = 8;
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
 float game_physics_rope_get_average_segment_length( const GamePhysicsRope *self )
 {
 	return self->length / ( float ) ( self->numParticles - 1 );
@@ -41,13 +33,14 @@ void game_physics_rope_dettach( GamePhysicsRope *self, bool start )
 	self->particles[ slot ].fixed = false;
 }
 
-void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num )
+void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int num )
 {
 	if ( num == self->numParticles )
 	{
 		return;
 	}
-	else if ( num < 2 )
+
+	if ( num < 2 )
 	{
 		game_warning_( "Invalid number of particles for rope (%u); must be greater than 2!\n", num );
 		num = 2;
@@ -75,31 +68,32 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num )
 	}
 }
 
-void game_physics_rope_tick( GamePhysicsRope *self, float delta )
+void game_physics_rope_tick( GamePhysicsRope *self, double delta )
 {
 	// add forces
-	for ( uint i = 0; i < self->numParticles; ++i )
+	for ( unsigned int i = 0; i < self->numParticles; ++i )
 	{
 		if ( self->particles[ i ].fixed )
 		{
 			continue;
 		}
 
-		self->particles[ i ].velocity = PL_VECTOR3( 0.0f, -0.005f, 0.0f );
+		self->particles[ i ].velocity = PL_VECTOR3( 0.0f, -0.001f, 0.0f );
 
 		PLVector3 temp                   = self->particles[ i ].position;
 		self->particles[ i ].position    = PlAddVector3( self->particles[ i ].position,
 		                                                 PlAddVector3(
                                                               PlSubtractVector3( self->particles[ i ].position, self->particles[ i ].oldPosition ),
+                                                              //TODO: there is a risk of a division by zero here...
                                                               PlDivideVector3F( self->particles[ i ].velocity, delta ) ) );
 		self->particles[ i ].oldPosition = temp;
 	}
 
 	// satisfy constraints
-	uint numIterations = 2;
-	for ( uint i = 0; i < numIterations; ++i )
+	unsigned int numIterations = 2;
+	for ( unsigned int i = 0; i < numIterations; ++i )
 	{
-		for ( uint j = 0; j < self->numParticles - 1; ++j )
+		for ( unsigned int j = 0; j < self->numParticles - 1; ++j )
 		{
 			GamePhysicsRopeParticle *a = &self->particles[ j ];
 			GamePhysicsRopeParticle *b = &self->particles[ j + 1 ];
@@ -121,7 +115,7 @@ void game_physics_rope_tick( GamePhysicsRope *self, float delta )
 	}
 }
 
-void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length )
+void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length )
 {
 	game_physics_rope_set_num_particles( self, numParticles );
 
@@ -130,7 +124,7 @@ void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float le
 
 void game_physics_rope_debug_draw( GamePhysicsRope *self )
 {
-	for ( uint i = 0; i < self->numParticles; ++i )
+	for ( unsigned int i = 0; i < self->numParticles; ++i )
 	{
 		const PLColour colour = ( self->particles[ i ].fixed ) ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
 		ape_draw_debug_sphere( self->particles[ i ].position, colour, 0.1f );
@@ -144,7 +138,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self )
 	}
 }
 
-PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, uint particle )
+PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle )
 {
 	if ( particle >= self->numParticles )
 	{

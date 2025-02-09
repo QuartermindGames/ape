@@ -107,7 +107,7 @@ static void tick_rope( ApeEntity *self, double delta )
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
-	game_physics_rope_tick( &rope->physics, 1.0f );
+	game_physics_rope_tick( &rope->physics, delta );
 	if ( showRopeDebug )
 	{
 		game_physics_rope_debug_draw( &rope->physics );
