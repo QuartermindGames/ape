@@ -6,6 +6,7 @@
 
 #include "../shared/integrations/integrations.h"
 #include "../shared/physics/physics.h"
+#include "../shared/game_team.h"
 
 SS1GameState ss1_gameState;
 
@@ -31,6 +32,7 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
 };
 
 extern ApeEntityClassDefinition ss1_airshipEntityClass;
+extern ApeEntityClassDefinition ss1_pawnEntityClass;
 
 static bool ss1_initialize()
 {
@@ -41,6 +43,7 @@ static bool ss1_initialize()
 	game_register_standard_entity_components_();
 
 	ape_register_entity_class( &ss1_airshipEntityClass );
+	ape_register_entity_class( &ss1_pawnEntityClass );
 
 	PL_ZERO_( ss1_gameState );
 
@@ -180,21 +183,21 @@ static bool ss1_draw_menu( const ApeViewport *viewport )
 	return true;
 }
 
-static void ss1_spawn_world( ApeWorld *world, ApeRoom *room )
+static void ss1_spawn_world( ApeRoom *room )
 {
-	world_simulation_initialize( &ss1_gameState.simulation );
+	game_world_simulation_initialize( &ss1_gameState.simulation );
+
+	game_team_init( SS1_MAX_TEAMS );
 
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
 	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
-
-	//ApeWorldNode *modelNode = APE_WORLD_NODE( ape_model_node_create( roomNode, "airship", "models/airship.mdl.n" ) );
-	//ape_world_node_set_position( modelNode, &PL_VECTOR3( 0.0f, 4096.0f, 0.0f ) );
 
 	//ApeAudioSample *sample = ape_audio_sample_cache( "sounds/water/water_waves_lapping_05.wav" );
 	//ApeAudioSource *source = ape_audio_source_create( &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), APE_AUDIO_SOURCE_GROUP_GENERIC );
 	//ape_audio_source_emit( source, sample );
 
-	ape_entity_create( roomNode, "airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_entity_create( roomNode, "ss1_pawn", "player_0", nullptr, &PL_VECTOR3( 0.0f, 128.0f, 0.0f ), &pl_vecOrigin3 );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )

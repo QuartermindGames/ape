@@ -26,7 +26,7 @@ static const ApeWorldNodeClass *nodeClasses[ APE_WORLD_MAX_NODE_TYPES ] = {
 
 static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )
 {
-	for ( uint i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
+	for ( unsigned int i = 0; i < APE_WORLD_MAX_NODE_TYPES; ++i )
 	{
 		if ( nodeClasses[ i ] == nullptr || nodeClasses[ i ]->magic != magic )
 		{
@@ -39,13 +39,13 @@ static const ApeWorldNodeClass *get_class_by_magic( ApeWorldNodeMagic magic )
 	return nullptr;
 }
 
-const ApeWorldNodeClass **ape_world_node_get_classes( uint *numClasses )
+const ApeWorldNodeClass **ape_world_node_get_classes( unsigned int *numClasses )
 {
 	*numClasses = APE_WORLD_MAX_NODE_TYPES;
 	return nodeClasses;
 }
 
-const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties )
+const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProperties )
 {
 	static const ApeWorldNodeProperty properties[] = {
 	        APE_WORLD_NODE_PROPERTY_STRING( "Name", "Name of the node.", ApeWorldNode, name ),
@@ -58,7 +58,7 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( uint *numProperties )
 	return properties;
 }
 
-const ApeWorldNodeProperty *ape_world_node_get_class_properties( uint *numProperties, ApeWorldNodeType type )
+const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type )
 {
 	const ApeWorldNodeClass *nodeClass = nodeClasses[ type ];
 	assert( nodeClass->properties != nullptr );
@@ -76,15 +76,19 @@ void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeP
 
 void ape_world_node_generate_bounds_( ApeWorldNode *self )
 {
-	for ( UInt i = 0; i < 3; ++i )
+	for ( unsigned int i = 0; i < 3; ++i )
 	{
-		if ( PL_VECTOR3_I( self->localBounds.maxs, i ) > PL_VECTOR3_I( self->bounds.maxs, i ) )
+		PLCollisionAABB localBounds = ape_world_node_get_transformed_local_bounds( self );
+		localBounds.mins            = PlAddVector3( localBounds.mins, localBounds.origin );
+		localBounds.maxs            = PlAddVector3( localBounds.maxs, localBounds.origin );
+
+		if ( PL_VECTOR3_I( localBounds.maxs, i ) > PL_VECTOR3_I( self->bounds.maxs, i ) )
 		{
-			PL_VECTOR3_I( self->bounds.maxs, i ) = PL_VECTOR3_I( self->localBounds.maxs, i );
+			PL_VECTOR3_I( self->bounds.maxs, i ) = PL_VECTOR3_I( localBounds.maxs, i );
 		}
-		if ( PL_VECTOR3_I( self->localBounds.mins, i ) < PL_VECTOR3_I( self->bounds.mins, i ) )
+		if ( PL_VECTOR3_I( localBounds.mins, i ) < PL_VECTOR3_I( self->bounds.mins, i ) )
 		{
-			PL_VECTOR3_I( self->bounds.mins, i ) = PL_VECTOR3_I( self->localBounds.mins, i );
+			PL_VECTOR3_I( self->bounds.mins, i ) = PL_VECTOR3_I( localBounds.mins, i );
 		}
 	}
 
@@ -219,7 +223,10 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	self->parentListNode = PlInsertLinkedListNode( self->parent->children, self );
 
 	// determine if we're now under a new room
-	self->room = lookup_parent_room( self );
+	if ( self->type != APE_WORLD_NODE_TYPE_ROOM )
+	{
+		self->room = lookup_parent_room( self );
+	}
 }
 
 PLVector3 ape_world_node_get_position( const ApeWorldNode *self )

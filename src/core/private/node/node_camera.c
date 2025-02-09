@@ -129,9 +129,9 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const PLVe
 	}
 
 	camera->pvs.visitedRooms   = PlCreateHashTable();
-	camera->pvs.nodes          = PlCreateVectorArray( 0 );
-	camera->pvs.visibleFaces   = PlCreateVectorArray( 0 );
-	camera->pvs.visiblePortals = PlCreateVectorArray( 0 );
+	camera->pvs.nodes          = PlCreateVectorArray( 2048 );
+	camera->pvs.visibleFaces   = PlCreateVectorArray( 4096 );
+	camera->pvs.visiblePortals = PlCreateVectorArray( 1024 );
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
 
@@ -366,8 +366,12 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 {
 	if ( ape_config_.world.showNodeVolumes )
 	{
+		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( node );
+		PLMatrix4       transform         = ape_world_node_get_transform( node );
+		PLVector3       pos               = PlGetMatrix4Translation( &transform );
+		ape_draw_debug_axis( pos, node->angles, 16.0f );
 		ape_draw_debug_aabb( &node->bounds, PL_COLOUR_PURPLE );
-		ape_draw_debug_aabb( &node->localBounds, PL_COLOUR_ORANGE );
+		ape_draw_debug_aabb( &transformedBounds, PL_COLOUR_ORANGE );
 	}
 
 	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
@@ -400,6 +404,7 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 				{
 					continue;
 				}
+
 				if ( !PlgIsBoxInsideView( self->internal, &face->bounds ) )
 				{
 					continue;
@@ -478,6 +483,22 @@ void ape_camera_build_pvs_( ApeCamera *self )
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
+
+#if 0
+	PLCollisionRay ray = {};
+	ray.origin         = PL_VECTOR3( 0.0f, s, -r );
+	ray.direction      = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+
+	ApeRayIntersection intersection = {};
+	if ( ape_room_ray_intersect( room, &ray, &intersection ) )
+	{
+		ape_draw_debug_arrow( ray.origin, intersection.intersection, PL_COLOUR_GREEN, 2.0f );
+	}
+	else
+	{
+		ape_draw_debug_arrow( ray.origin, PlAddVector3( ray.origin, PlScaleVector3F( ray.direction, 128.0f ) ), PL_COLOUR_RED, 2.0f );
+	}
+#endif
 
 	test_room_visibility( self, room );
 	sort_lights( self );

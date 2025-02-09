@@ -137,11 +137,11 @@ void ape_error_( bool die, const char *message, ... )
 	}
 }
 
-bool ape_initialize( unsigned int argc, char **argv, const char *config, bool embedded )
+static double lastTime;
+
+bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
-
-	ape_config_.embedded = embedded;
 
 	PlRegisterStandardPackageLoaders( PL_PACKAGE_LOAD_FORMAT_ALL );
 
@@ -184,6 +184,8 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config, bool em
 
 	ape_print_( "Initialization complete!\n" );
 
+	lastTime = PlGetCurrentSeconds();
+
 	engineInitialized = true;
 
 	execute_launch_commands( argc, argv );
@@ -222,8 +224,6 @@ unsigned int ape_get_num_ticks( void )
 	return numTicks;
 }
 
-static double lastTime;
-
 void ape_tick_frame()
 {
 	if ( !engineInitialized )
@@ -233,13 +233,13 @@ void ape_tick_frame()
 
 	COM_PROFILE_FUNCTION_START();
 
-	double now   = PlGetCurrentSeconds();
-	double delta = PlClamp( 0.0, now - lastTime, 1.0 );
-	lastTime     = now;
+	const double now   = PlGetCurrentSeconds();
+	const double delta = PlClamp( 0.0, now - lastTime, 1.0 );
+	lastTime           = now;
 
 	ape_tick_tasks_();
 	//TODO: what order should these be?
-	ape_tick_server_();
+	ape_tick_server_( delta );
 	ape_tick_client_( delta );
 
 	if ( ape_get_capture_state_() )

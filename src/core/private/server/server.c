@@ -37,7 +37,7 @@ static PLLinkedList *connectedClients;
 
 static void drop_client_callback( void *userData, PL_UNUSED bool *breakEarly )
 {
-	ape_server_drop_client_( ( ApeServerClient * ) userData );
+	ape_server_drop_client_( userData );
 }
 
 void ape_server_register_console_variables_()
@@ -146,7 +146,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 		assert( game->serverClientConnected != nullptr );
 		game->serverClientConnected( client );
 
-		ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ){
+		ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ) {
 		                                          .length = sizeof( ApeProtocolMessageHeader ),
 		                                          .type   = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
 		                                  },
@@ -161,6 +161,9 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 
 	switch ( messageHeader->type )
 	{
+		default:
+			ape_warning_( "Unhandled server message (%u)!\n", messageHeader->type );
+			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
 			const ApeGameInterfaceImport *game = ape_game_get_interface();
@@ -215,7 +218,7 @@ static void tick_server_client( void *userData, bool *breakEarly )
 	}
 }
 
-void ape_tick_server_( void )
+void ape_tick_server_( double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -235,7 +238,7 @@ void ape_tick_server_( void )
 		PlIterateLinkedList( connectedClients, tick_server_client, true );
 	}
 
-	ape_tick_game_server_();
+	ape_tick_game_server_( delta );
 
 	COM_PROFILE_FUNCTION_END();
 }

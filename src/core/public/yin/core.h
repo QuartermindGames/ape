@@ -18,7 +18,7 @@ typedef unsigned int       uint;
 
 #define APE_SELF_CAST( X, Y ) ( ( X * ) ( Y ) )
 
-bool ape_initialize( unsigned int argc, char **argv, const char *config, bool embedded );
+bool ape_initialize( unsigned int argc, char **argv, const char *config );
 void ape_shutdown( void );
 
 void ape_render_frame( ApeViewport *viewport );

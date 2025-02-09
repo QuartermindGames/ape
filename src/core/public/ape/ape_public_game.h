@@ -5,7 +5,7 @@
 PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
-typedef struct ApeRoom ApeRoom;
+typedef struct ApeRoom  ApeRoom;
 
 #define APE_GAME_INTERFACE_VERSION 1
 
@@ -31,7 +31,7 @@ typedef struct ApeGameInterfaceImport
 	char         identifier[ 8 ];// identifier for the game (clients will only be able to connect if this matches)
 
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
-	void ( *spawnWorld )( ApeWorld *world, ApeRoom *room );
+	void ( *spawnWorld )( ApeRoom *room );
 
 	// client
 	void ( *clientConnect )();

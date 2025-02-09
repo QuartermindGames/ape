@@ -37,7 +37,7 @@ typedef struct WorldSimulation
 	uint speedMultiplier;
 } WorldSimulation;
 
-static void world_simulation_initialize( WorldSimulation *simulation )
+static void game_world_simulation_initialize( WorldSimulation *simulation )
 {
 	// setup some defaults...
 	simulation->config.nightHour = 17;

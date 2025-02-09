@@ -16,6 +16,8 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
+static PLConsoleString clientName = "anonymous";
+
 typedef enum ClientServerState
 {
 	CLIENT_SERVER_STATE_DISCONNECTED,// has lost connection with the server
@@ -72,6 +74,9 @@ static void process_server_message()
 
 	switch ( messageHeader->type )
 	{
+		default:
+			ape_warning_( "Unhandled client message (%u)!\n", messageHeader->type );
+			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
 			const ApeGameInterfaceImport *game = ape_game_get_interface();
@@ -187,7 +192,7 @@ void ape_initialize_client_( void )
 	                          "Attempt to connect to the specified server.",
 	                          1, connect_command );
 
-	ape_client_input_register_action( "capture", NULL, 0, &( ApeInputKey ) { KEY_F12 }, 1, capture_screenshot_action );
+	ape_client_input_register_action( "capture", nullptr, 0, &( ApeInputKey ) { KEY_F12 }, 1, capture_screenshot_action );
 }
 
 void ape_shutdown_client_( void )
@@ -307,4 +312,9 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 	}
 
 	return true;
+}
+
+void ape_client_register_console_variables_()
+{
+	PlRegisterConsoleVariable( "client.name", "Identifying name for the client.", "anonymous", PL_VAR_STRING, clientName, nullptr, true );
 }

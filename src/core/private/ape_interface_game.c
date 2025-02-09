@@ -86,7 +86,7 @@ void ape_shutdown_game_( void )
 	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, nullptr );
 }
 
-void ape_tick_game_server_( void )
+void ape_tick_game_server_( double delta )
 {
 	ape_draw_debug_clear_();
 
@@ -94,11 +94,11 @@ void ape_tick_game_server_( void )
 	if ( world != nullptr )
 	{
 		ape_world_node_generate_bounds_( &world->base );
-		ape_world_tick_entities_( world );
+		ape_world_tick_entities_( world, delta );
 	}
 
 	const ApeGameInterfaceImport *game = ape_game_get_interface();
-	game->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, NULL );
+	game->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_TICK_SERVER, &delta );
 }
 
 void ape_spawn_world_( const char *path )

@@ -200,6 +200,9 @@ static void validate_tick_frequency( PLConsoleVariable *variable )
 	PlSetConsoleVariable( variable, tmp );
 }
 
+void ape_server_register_console_variables_();
+void ape_client_register_console_variables_();
+void ape_model_register_console_variables_();
 void ape_console_register_variables_( bool isDedicated )
 {
 	char tmp[ 64 ];
@@ -207,15 +210,13 @@ void ape_console_register_variables_( bool isDedicated )
 	PlRegisterConsoleVariable( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, nullptr, validate_tick_frequency, false );
 	PlRegisterConsoleVariable( "renderTimeLock", "Will only render a frame on tick.", "true", PL_VAR_BOOL, nullptr, nullptr, true );
 
-	void ape_server_register_console_variables_();
 	ape_server_register_console_variables_();
-
-	void ape_model_register_console_variables_();
 	ape_model_register_console_variables_();
 
 	// Client variables
 	if ( !isDedicated )
 	{
+		ape_client_register_console_variables_();
 		ape_console_register_cl_variables_();
 	}
 }

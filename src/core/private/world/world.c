@@ -64,12 +64,12 @@ void ape_world_spawn_entities_( ApeWorld *self )
 	}
 }
 
-void ape_world_tick_entities_( ApeWorld *self )
+void ape_world_tick_entities_( ApeWorld *self, double delta )
 {
 	ApeEntity *entity;
 	COM_ITERATE_LINKED_LIST( entity, self->entities, i )
 	{
-		ape_entity_tick( entity );
+		ape_entity_tick( entity, delta );
 	}
 }
 

@@ -77,7 +77,7 @@ PL_EXTERN_C
 void ape_world_serialize_( const ApeWorld *world, AcmBranch *root );
 
 void ape_world_spawn_entities_( ApeWorld *self );
-void ape_world_tick_entities_( ApeWorld *self );
+void ape_world_tick_entities_( ApeWorld *self, double delta );
 
 /**
  * Returns the first available room childed to the world.

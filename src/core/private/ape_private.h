@@ -158,7 +158,6 @@ typedef struct ApeConfig
 	} world;
 
 	bool editor;
-	bool embedded;
 } ApeConfig;
 
 extern ApeConfig ape_config_;
@@ -166,7 +165,7 @@ extern ApeConfig ape_config_;
 void ape_initialize_game_( void );
 void ape_shutdown_game_( void );
 
-void ape_tick_game_server_( void );
+void ape_tick_game_server_( double delta );
 void ape_spawn_world_( const char *path );
 
 PL_EXTERN_C_END

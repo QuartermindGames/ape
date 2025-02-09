@@ -57,7 +57,7 @@ typedef struct ApeEntityClassDefinition
 	void *( *createFunction )( ApeEntity *self, AcmBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
 	void ( *destroyFunction )( ApeEntity *self );                       // called when the entity is free'd, which should be done for the class too
 	void ( *spawnFunction )( ApeEntity *self );                         // this gets called when the entity is actually spawned into the world, at which point the class state can be reset
-	void ( *tickFunction )( ApeEntity *self );                          // called per ticket, allowing for behaviours
+	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self, ApeLight *light, int flags );
 
 	AcmBranch *( *serializeFunction )( ApeEntity *self );
@@ -73,7 +73,7 @@ const ApeEntityClassDefinition  *ape_get_entity_class_table( const char *classNa
 ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const PLVector3 *position, const PLVector3 *angles );
 
 void ape_entity_spawn( ApeEntity *self );
-void ape_entity_tick( ApeEntity *self );
+void ape_entity_tick( ApeEntity *self, double delta );
 void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags );
 
 ////////////////////////////////////////////////////////////////////

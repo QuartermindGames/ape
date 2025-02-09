@@ -126,7 +126,7 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 
 	if ( ape_gameInterface->spawnWorld != nullptr )
 	{
-		ape_gameInterface->spawnWorld( world, room );
+		ape_gameInterface->spawnWorld( room );
 	}
 }
 
@@ -138,12 +138,13 @@ const char *game_get_identifier()
 extern ApeEntityClassDefinition game_triggerEntityClass;
 extern ApeEntityClassDefinition game_ropeEntityClass;
 
+extern ApeEntityComponentDefinition game_healthComponent;
+
 void game_register_standard_entity_components_( void )
 {
 	ape_register_entity_class( &game_triggerEntityClass );
 	ape_register_entity_class( &game_ropeEntityClass );
 
-	ApeEntityComponentDefinition game_healthComponent;
 	ape_register_entity_component( &game_healthComponent );
 }
 

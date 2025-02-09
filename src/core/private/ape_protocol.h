@@ -24,7 +24,7 @@ typedef struct __attribute__( ( packed ) ) ApeProtocolMessageHeader
 
 typedef struct ApeProtocolMessage
 {
-	char receiveBuffer[ APE_PROTOCOL_MESSAGE_SIZE ];
+	char   receiveBuffer[ APE_PROTOCOL_MESSAGE_SIZE ];
 	size_t receivedBytes;
 } ApeProtocolMessage;
 
@@ -45,9 +45,9 @@ static inline const void *ape_protocol_validate_message( const ApeProtocolMessag
 typedef struct __attribute__( ( packed ) ) ApeProtocolValidationMessage
 {
 	ApeProtocolMessageHeader header;
-	uint32_t magic;
-	uint16_t version;
-	char identifier[ 8 ];
+	uint32_t                 magic;
+	uint16_t                 version;
+	char                     identifier[ 8 ];
 } ApeProtocolValidationMessage;
 
 #define APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( NAME, TYPE )          \

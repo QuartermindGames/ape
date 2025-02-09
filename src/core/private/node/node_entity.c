@@ -171,7 +171,7 @@ void ape_entity_spawn( ApeEntity *self )
 	self->classDefinition->spawnFunction( self );
 }
 
-void ape_entity_tick( ApeEntity *self )
+void ape_entity_tick( ApeEntity *self, double delta )
 {
 	assert( self->classDefinition != NULL );
 	if ( self->classDefinition->tickFunction == NULL )
@@ -179,7 +179,7 @@ void ape_entity_tick( ApeEntity *self )
 		return;
 	}
 
-	self->classDefinition->tickFunction( self );
+	self->classDefinition->tickFunction( self, delta );
 }
 
 void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags )

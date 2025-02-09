@@ -91,7 +91,7 @@ static void spawn_rope( ApeEntity *self )
 	update_bounds( self );
 }
 
-static void tick_rope( ApeEntity *self )
+static void tick_rope( ApeEntity *self, double delta )
 {
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );

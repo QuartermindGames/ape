@@ -42,5 +42,7 @@ typedef struct SS1Pawn
 	SS1PawnRelationshipGroup relationshipGroup;
 	unsigned int             team;
 
+	struct GameHealthComponent *healthComponent;
+
 	struct ApeModelNode *model;
 } SS1Pawn;

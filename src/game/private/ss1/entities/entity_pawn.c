@@ -2,8 +2,9 @@
 // Purpose: Pawns represent anything *living* in the world.
 // Author:  Mark E. Sowden
 
-#include "ss1_game.h"
-#include "ss1_pawn.h"
+#include "../ss1_game.h"
+
+#include "entity_pawn.h"
 
 static void *create_class( ApeEntity *self, AcmBranch *properties )
 {
@@ -28,8 +29,8 @@ static void deserialize_class( ApeEntity *self, AcmBranch *root )
 {
 }
 
-ApeEntityClassDefinition classDefinition = {
-        .name                = "SS1Pawn",
+ApeEntityClassDefinition ss1_pawnEntityClass = {
+        .name                = "ss1_pawn",
         .description         = "Any \"living\" entity in the world.",
         .createFunction      = create_class,
         .destroyFunction     = destroy_class,

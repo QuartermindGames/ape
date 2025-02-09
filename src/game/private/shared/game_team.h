@@ -9,20 +9,20 @@ typedef char GameTeamName[ 64 ];
 typedef struct GameTeam
 {
 	GameTeamName name;
-	UInt         numPlayers;
+	unsigned int numPlayers;
 } GameTeam;
 
 /**
  * Initialize teams.
  */
-void game_team_init( UInt teamCount );
+void game_team_init( unsigned int teamCount );
 
 /**
  * Get the number of active teams.
  *
  * @return The number of currently active teams.
  */
-UInt game_team_get_num_active();
+unsigned int game_team_get_num_active();
 
 /**
  * Get a desired team by its index.
@@ -30,7 +30,7 @@ UInt game_team_get_num_active();
  * @param index Index of the desired team.
  * @return		Pointer to the desired team if successful (otherwise null).
  */
-GameTeam *game_team_get( UInt index );
+GameTeam *game_team_get( unsigned int index );
 
 /**
  * Try to get an available slot on a team.
@@ -47,4 +47,4 @@ int game_team_assign( GamePlayer *player );
  * @param teamIndex Index of the desired team.
  * @return			The index on success, otherwise -1 on fail.
  */
-int game_team_set( GamePlayer *player, UInt teamIndex );
+int game_team_set( GamePlayer *player, unsigned int teamIndex );
