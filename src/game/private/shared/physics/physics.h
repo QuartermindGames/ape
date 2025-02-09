@@ -79,9 +79,10 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num );
  * Simulate the rope. Should be called once per tick.
  *
  * @param self 		Pointer to instance.
+ * @param room		Specify the room, for collisions. If left null, collisions are disabled.
  * @param delta 	Time delta of the frame.
  */
-void game_physics_rope_tick( GamePhysicsRope *self, double delta );
+void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta );
 
 /**
  * Sets up the initial rope state. Should be called before simulation.
@@ -89,8 +90,9 @@ void game_physics_rope_tick( GamePhysicsRope *self, double delta );
  * @param self 			Pointer to instance.
  * @param numParticles 	Number of particles for the rope.
  * @param length 		Length of the rope / slack.
+ * @param initPosition	Initial position of the rope. All particles will init at this position.
  */
-void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length );
+void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length, const PLVector3 *initPosition );
 
 /**
  * Provides a visual of the rope using the debug drawing API.

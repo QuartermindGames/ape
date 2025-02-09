@@ -35,31 +35,31 @@ static void update_bounds( ApeEntity *self )
 	PLVector3 startPos = game_physics_rope_get_start_position( &rope->physics );
 	PLVector3 endPos   = game_physics_rope_get_end_position( &rope->physics );
 
-	self->base.bounds.mins = startPos;
-	self->base.bounds.maxs = startPos;
+	self->base.localBounds.mins = startPos;
+	self->base.localBounds.maxs = startPos;
 	if ( endPos.x > startPos.x )
 	{
-		self->base.bounds.maxs.x = endPos.x;
+		self->base.localBounds.maxs.x = endPos.x;
 	}
 	else
 	{
-		self->base.bounds.mins.x = endPos.x;
+		self->base.localBounds.mins.x = endPos.x;
 	}
 	if ( endPos.y > startPos.y )
 	{
-		self->base.bounds.maxs.y = endPos.y;
+		self->base.localBounds.maxs.y = endPos.y;
 	}
 	else
 	{
-		self->base.bounds.mins.y = endPos.y;
+		self->base.localBounds.mins.y = endPos.y;
 	}
 	if ( endPos.z > startPos.z )
 	{
-		self->base.bounds.maxs.z = endPos.z;
+		self->base.localBounds.maxs.z = endPos.z;
 	}
 	else
 	{
-		self->base.bounds.mins.z = endPos.z;
+		self->base.localBounds.mins.z = endPos.z;
 	}
 }
 
@@ -68,24 +68,26 @@ static void spawn_rope( ApeEntity *self )
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
-	game_physics_rope_setup( &rope->physics, 16, 1.0f );
+	PLVector3 position = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	game_physics_rope_setup( &rope->physics, 8, 4.0f, &position );
 
 	rope->startConnection = APE_WORLD_NODE( self );
 	if ( rope->startConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_position( rope->startConnection );
+		position = ape_world_node_get_position( rope->startConnection );
 		game_physics_rope_attach( &rope->physics, &position, true );
 	}
 	if ( rope->endConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_position( rope->endConnection );
+		position = ape_world_node_get_position( rope->endConnection );
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
 	// simulate it a bit so it can settle
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < 512; ++i )
 	{
-		game_physics_rope_tick( &rope->physics, 1.0f );
+		game_physics_rope_tick( &rope->physics, room, 1.0f );
 	}
 
 	update_bounds( self );
@@ -107,7 +109,8 @@ static void tick_rope( ApeEntity *self, double delta )
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
-	game_physics_rope_tick( &rope->physics, delta );
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	game_physics_rope_tick( &rope->physics, room, delta );
 	if ( showRopeDebug )
 	{
 		game_physics_rope_debug_draw( &rope->physics );

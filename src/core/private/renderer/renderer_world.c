@@ -21,7 +21,7 @@ void        ape_renderer_world_register_console_variables_()
 
 static void draw_face_wireframe( const ApeBrushFace *face )
 {
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		const ApeBrushFaceVertex *a = face->edgeLoop[ i ];
 		PlgImmPushVertex( a->position->x, a->position->y, a->position->z );
@@ -53,9 +53,9 @@ static void draw_room_wireframe( const ApeCamera *camera )
 
 	PlgImmBegin( PLG_MESH_LINES );
 
-	uint           numFaces;
+	unsigned int   numFaces;
 	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visibleFaces, &numFaces );
-	for ( uint i = 0; i < numFaces; ++i )
+	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		draw_face_wireframe( faces[ i ] );
 	}
@@ -87,10 +87,10 @@ static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( uint i = 0; i < brush->numFaces; ++i )
+		for ( unsigned int i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
-			for ( uint j = 0; j < face->numVertices; ++j )
+			for ( unsigned int j = 0; j < face->numVertices; ++j )
 			{
 				const ApeBrushFaceVertex *vertex = face->edgeLoop[ j ];
 
@@ -112,9 +112,9 @@ static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
 	}
 }
 
-static uint get_total_verts_for_tree( ApeWorldNode *node )
+static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
 {
-	uint numVertices = 0;
+	unsigned int numVertices = 0;
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
@@ -162,7 +162,7 @@ static void update_mesh_cache_( ApeRoom *self )
 	COM_PROFILE_FUNCTION_END();
 }
 
-static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance *instance, uint *offset )
+static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance *instance, unsigned int *offset )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
@@ -186,7 +186,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 			}
 		}
 
-		for ( uint i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 		{
 			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
 			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
@@ -226,12 +226,12 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 	}
 }
 
-static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, uint *offset, ApeRendererPassFlag stage )
+static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, unsigned int *offset, ApeRendererPassFlag stage )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( uint i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 		{
 			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
 			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
@@ -339,14 +339,14 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		assert( material != nullptr );
 
 		// blended materials get drawn later
-		if ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
+		if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
 		{
 			continue;
 		}
 
 		COM_PROFILE_START( "build_brush_display_list" );
 
-		uint offset = 0;
+		unsigned int offset = 0;
 		build_brush_display_list( &room->base, material, light, camera, &offset, flags );
 
 		COM_PROFILE_END( "build_brush_display_list" );
@@ -415,13 +415,13 @@ static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLi
 #endif
 	}
 
-	for ( uint i = 1; i + 1 < face->numVertices; ++i )
+	for ( unsigned int i = 1; i + 1 < face->numVertices; ++i )
 	{
 		PlgImmPushTriangle( indices[ 0 ], indices[ start ? i : ( i + 1 ) ], indices[ start ? ( i + 1 ) : i ] );
 	}
 }
 
-static void draw_node_shadow_volume( ApeWorldNode *node, const ApeLight *light, PLGMesh *mesh, uint *numIndices )
+static void draw_node_shadow_volume( ApeWorldNode *node, const ApeLight *light, PLGMesh *mesh, unsigned int *numIndices )
 {
 #if 0// projection on gpu
 if ( !build_shadow_display_list( room, light ) )
@@ -435,7 +435,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( uint i = 0; i < brush->numFaces; ++i )
+		for ( unsigned int i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
 			if ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) || !ape_material_shadows_enabled( face->material ) )
@@ -458,22 +458,22 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 			// There's probably a more efficient way of doing this,
 			// but let's go ahead and store all the indices into a dynamic array
 			*numIndices += ( face->numVertices * 2 );// * 2 for edges
-			static uint *indices    = nullptr;
-			static uint  maxIndices = 0;
+			static unsigned int *indices    = nullptr;
+			static unsigned int  maxIndices = 0;
 			if ( indices == NULL )
 			{
 				maxIndices = ( *numIndices * brush->numFaces );
-				indices    = PL_NEW_( uint, maxIndices );
+				indices    = PL_NEW_( unsigned int, maxIndices );
 			}
 			else if ( *numIndices > maxIndices )
 			{
 				maxIndices = *numIndices + 16;
-				indices    = PL_REALLOCA( indices, sizeof( uint ) * maxIndices );
+				indices    = PL_REALLOCA( indices, sizeof( unsigned int ) * maxIndices );
 			}
 
-			uint *fl = &indices[ *numIndices - ( face->numVertices * 2 ) ];
+			unsigned int *fl = &indices[ *numIndices - ( face->numVertices * 2 ) ];
 			draw_brush_stencil_shadow_cap( face, light, false, fl );
-			uint *sl = &indices[ *numIndices - face->numVertices ];
+			unsigned int *sl = &indices[ *numIndices - face->numVertices ];
 			draw_brush_stencil_shadow_cap( face, light, true, sl );
 
 			// Now produce the edges
@@ -510,8 +510,8 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
 	//todo: new (temporary) stuff!
 	//todo: cache!!!!
 
-	uint     numIndices = 0;
-	PLGMesh *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
+	unsigned int numIndices = 0;
+	PLGMesh     *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
 
 	draw_node_shadow_volume( APE_WORLD_NODE( room ), light, mesh, &numIndices );
 
@@ -537,7 +537,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 		return;
 	}
 
-	uint offset = 0;
+	unsigned int offset = 0;
 	build_selection_display_list( &room->base, instance, &offset );
 
 	if ( numSubMeshes[ 0 ] == 0 )
@@ -668,11 +668,11 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 
 			if ( ape_config_.renderer.lightJitterSamples > 0 )
 			{
-			    srand( ape_config_.renderer.lightJitterSamples );
+				srand( ape_config_.renderer.lightJitterSamples );
 
 				PLVector3 storePos   = light->base.position;
 				float     storePower = light->colour.a;
-				for ( uint j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
+				for ( unsigned int j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
 				{
 #define JITTER_VARIATION ( PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
 	                       PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) )
@@ -730,7 +730,7 @@ static void draw_portal_face( const ApeBrushFace *portal )
 
 	PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 
-	for ( uint j = 0; j < portal->numVertices; ++j )
+	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
 		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
 		//TODO: handle transforms for the brush in software here
@@ -746,6 +746,11 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 {
 	COM_PROFILE_FUNCTION_START();
 
+	if ( ape_config_.renderer.showSelectionBuffer )
+	{
+		return;
+	}
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
@@ -753,10 +758,10 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	PlgInsertDebugMarker( "Portal pass" );
 	if ( ape_rendererState_.depth == 0 )
 	{
-		uint                       numPortals;
+		unsigned int               numPortals;
 		static const ApeBrushFace *current[ 4 ] = {};
 		ApeBrushFace             **portals      = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visiblePortals, &numPortals );
-		for ( uint i = 0; i < numPortals; ++i )
+		for ( unsigned int i = 0; i < numPortals; ++i )
 		{
 			const ApeBrushFace *portal          = portals[ i ];
 			ApeRoom            *destinationRoom = ape_brush_face_get_room( portal );
