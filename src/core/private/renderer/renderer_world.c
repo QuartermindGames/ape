@@ -382,37 +382,79 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 
 static constexpr float F_INFINITY = 10000.0f;
 
-static PLVector3 get_projection( const ApeLight *light, const PLVector3 *origin )
+static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex, const PLVector3 *faceOrigin )
 {
-	if ( light->type != APE_LIGHT_TYPE_SUN )
+	if ( light->type == APE_LIGHT_TYPE_SUN )
 	{
-		PLVector3   sub    = PlNormalizeVector3( PlSubtractVector3( *origin, light->base.position ) );
-		float       dif    = PlVector3Length( PlSubtractVector3( *origin, light->base.position ) );
-		const float radius = light->radius;
-		if ( dif > radius )
-		{
-			dif = radius;
-		}
-
-		sub = PlScaleVector3F( sub, radius - dif );
-		return sub;
+		return PlScaleVector3F( PlNormalizeVector3( light->base.position ), F_INFINITY );
 	}
 
-	return PlScaleVector3F( PlNormalizeVector3( light->base.position ), F_INFINITY );
+#if 0// this doesn't work right now...
+
+	/* Because brushes are fairly primitive, this code needs to determine the extent relative to the face projection,
+	 * otherwise the vertices at both extreme ends will hit the extent of the light radius and the shadow wont actually
+	 * project for the total extent - leaving you with weirdly cut-off shadows.
+	 */
+
+	// first determine the project from the face origin
+
+	static constexpr float F_PI = 4.0f / 3.0f * PL_PI;
+
+	float c = light->radius * light->radius * light->radius;
+	float r = powf( F_PI * c, 1.0f / 3.0f );
+
+	float range = PlVector3Length( PlNormalizeVector3( PlSubtractVector3( *faceOrigin, light->base.position ) ) );
+	if ( range > r )
+	{
+		range = r;
+	}
+
+	range = r - range;
+
+	PLVector3 fdir = PlNormalizeVector3( PlSubtractVector3( *faceOrigin, light->base.position ) );
+	PLVector3 fpos = PlAddVector3( *faceOrigin, PlScaleVector3F( fdir, range ) );
+
+	PLVector3 vdir = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
+	PLVector3 vpos = PlAddVector3( *vertex, PlScaleVector3F( vdir, range ) );
+
+	ape_draw_debug_arrow( *faceOrigin, fpos, PL_COLOUR_GREEN, 1.0f );
+	ape_draw_debug_arrow( *vertex, vpos, PL_COLOUR_RED, 1.0f );
+
+	return PlAddVector3( *vertex, vpos );
+
+#elif 0// this restricts each vertex to the extent of the light radius
+
+	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
+	float     r = PlVector3Length( PlSubtractVector3( *vertex, light->base.position ) );
+	if ( r > light->radius )
+	{
+		r = light->radius;
+	}
+
+	return PlAddVector3( *vertex, PlScaleVector3F( s, light->radius - r ) );
+
+#else// this restricts each vertex to a volume derived from the light radius
+
+	static constexpr float F_PI = 4.0f / 3.0f * PL_PI;
+
+	float     c = light->radius * light->radius * light->radius;
+	float     r = powf( F_PI * c, 1.0f / 3.0f );
+	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
+	return PlAddVector3( *vertex, PlScaleVector3F( s, r ) );
+
+#endif
 }
 
-static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLight *light, bool start, uint *indices )
+static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLight *light, bool start, unsigned int *indices )
 {
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		const ApeBrushFaceVertex *vertex        = face->edgeLoop[ i ];
-		const PLVector3           projDirection = start ? pl_vecOrigin3 : get_projection( light, vertex->position );
-		indices[ i ]                            = PlgImmPushVertex( vertex->position->x + projDirection.x,
-		                                                            vertex->position->y + projDirection.y,
-		                                                            vertex->position->z + projDirection.z );
-#if 1// for debugging
-		PlgImmColour( start ? 255 : 0, start ? 0 : 255, 255, 255 );
-#endif
+		const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
+
+		// get the projected position (if start, just uses the initial position)
+		const PLVector3 ppos = start ? *vertex->position : get_projection( light, vertex->position, &face->bounds.absOrigin );
+
+		indices[ i ] = PlgImmPushVertex( ppos.x, ppos.y, ppos.z );
 	}
 
 	for ( unsigned int i = 1; i + 1 < face->numVertices; ++i )
