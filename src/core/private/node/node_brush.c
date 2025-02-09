@@ -270,24 +270,24 @@ static void compute_brush_bounds( ApeBrush *self )
 {
 	assert( self->numVertices > 0 );
 
-	self->base.bounds.mins = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
-	self->base.bounds.maxs = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	self->base.localBounds.mins = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	self->base.localBounds.maxs = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
 	for ( uint i = 0; i < self->numVertices; ++i )
 	{
 		for ( uint j = 0; j < 3; ++j )
 		{
-			if ( PL_VECTOR3_I( self->vertices[ i ], j ) > PL_VECTOR3_I( self->base.bounds.maxs, j ) )
+			if ( PL_VECTOR3_I( self->vertices[ i ], j ) > PL_VECTOR3_I( self->base.localBounds.maxs, j ) )
 			{
-				PL_VECTOR3_I( self->base.bounds.maxs, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
+				PL_VECTOR3_I( self->base.localBounds.maxs, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
 			}
-			if ( PL_VECTOR3_I( self->vertices[ i ], j ) < PL_VECTOR3_I( self->base.bounds.mins, j ) )
+			if ( PL_VECTOR3_I( self->vertices[ i ], j ) < PL_VECTOR3_I( self->base.localBounds.mins, j ) )
 			{
-				PL_VECTOR3_I( self->base.bounds.mins, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
+				PL_VECTOR3_I( self->base.localBounds.mins, j ) = PL_VECTOR3_I( self->vertices[ i ], j );
 			}
 		}
 	}
 
-	self->base.bounds.absOrigin = PlGetAabbAbsOrigin( &self->base.bounds, self->base.position );
+	self->base.localBounds.absOrigin = PlGetAabbAbsOrigin( &self->base.localBounds, self->base.position );
 }
 
 void ape_brush_flip_face_( ApeBrushFace *face )
@@ -555,8 +555,9 @@ static const ApeWorldNodeProperty properties[] = {
 };
 
 const ApeWorldNodeClass ape_brushClass = {
-        .identifier          = "brush",
-        .magic               = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
+        .identifier = "brush",
+        .magic      = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
+
         .destroyFunction     = ape_brush_destroy_,
         .serializeFunction   = ape_brush_serialize_,
         .deserializeFunction = ape_brush_deserialize_,
