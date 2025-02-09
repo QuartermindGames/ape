@@ -233,7 +233,7 @@ ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *
  * @param self 	Instance of the node.
  * @return 		Name of the node.
  */
-const char *ape_world_node_get_name( ApeWorldNode *self );
+const char *ape_world_node_get_name( const ApeWorldNode *self );
 
 /**
  * Set the name of the given node.

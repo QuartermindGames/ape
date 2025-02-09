@@ -2,10 +2,7 @@
 
 #pragma once
 
-#define APE_PROTOCOL_MAGIC   PL_MAGIC_TO_NUM( 'A', 'P', 'E', '0' )
-#define APE_PROTOCOL_VERSION 1
-
-#define APE_PROTOCOL_MESSAGE_SIZE 4096
+#include "ape/ape_public_protocol.h"
 
 PL_EXTERN_C
 
@@ -47,7 +44,8 @@ typedef struct __attribute__( ( packed ) ) ApeProtocolValidationMessage
 	ApeProtocolMessageHeader header;
 	uint32_t                 magic;
 	uint16_t                 version;
-	char                     identifier[ 8 ];
+	char                     identifier[ APE_PROTOCOL_MAX_IDENTIFIER ];
+	char                     clientName[ APE_PROTOCOL_MAX_CLIENT_NAME ];
 } ApeProtocolValidationMessage;
 
 #define APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( NAME, TYPE )          \

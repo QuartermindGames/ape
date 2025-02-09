@@ -16,8 +16,6 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static PLConsoleString clientName = "anonymous";
-
 typedef enum ClientServerState
 {
 	CLIENT_SERVER_STATE_DISCONNECTED,// has lost connection with the server
@@ -36,7 +34,7 @@ typedef struct ClientState
 	ApeProtocolMessage message;
 	unsigned int       lastMessageTick;
 
-	char userName[ 32 ];
+	PLConsoleString name;
 } ClientState;
 static ClientState clientState;
 
@@ -117,6 +115,7 @@ static void handle_connection_state( void )
 
 		const char *id = game_get_identifier();
 		strncpy( validationMessage.identifier, id, sizeof( validationMessage.identifier ) );
+		strncpy( validationMessage.clientName, clientState.name, sizeof( validationMessage.clientName ) - 1 );
 
 		ape_net_send_( clientState.netSocket, &validationMessage, sizeof( ApeProtocolValidationMessage ) );
 
@@ -133,7 +132,7 @@ static void handle_connection_state( void )
 		ape_client_disconnect_();
 		return;
 	}
-	else if ( r > 0 )
+	if ( r > 0 )
 	{
 		clientState.lastMessageTick = ape_get_num_ticks();
 	}
@@ -167,7 +166,7 @@ static void handle_connection_state( void )
 	}
 }
 
-static void connect_command( unsigned int argc, char **argv )
+static void connect_command( PL_UNUSED unsigned int argc, char **argv )
 {
 	uint16_t port = strtoul( argv[ 1 ], nullptr, 10 );
 	ape_initiate_client_connection_( "localhost", port );
@@ -181,7 +180,7 @@ void ape_initialize_client_( void )
 	CLIENT_PRINT( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
-	strcpy( clientState.userName, "Anon" );
+	snprintf( clientState.name, sizeof( clientState.name ), "anonymous" );
 
 	ape_initialize_renderer_();
 	ape_audio_initialize_();
@@ -265,7 +264,7 @@ void ape_client_disconnect_( void )
 	{
 		/* todo: let the server know first? */
 		ape_net_close_socket_( clientState.netSocket );
-		clientState.netSocket = NULL;
+		clientState.netSocket = nullptr;
 	}
 
 	clientState.state = CLIENT_SERVER_STATE_DISCONNECTED;
@@ -316,5 +315,5 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 
 void ape_client_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "client.name", "Identifying name for the client.", "anonymous", PL_VAR_STRING, clientName, nullptr, true );
+	PlRegisterConsoleVariable( "client.name", "Identifying name for the client.", "anonymous", PL_VAR_STRING, &clientState.name, nullptr, true );
 }

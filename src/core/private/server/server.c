@@ -24,6 +24,8 @@ typedef enum ServerClientState
 
 typedef struct ApeServerClient
 {
+	char name[ APE_PROTOCOL_MAX_CLIENT_NAME ];
+
 	ApeNetSocket     *netSocket;
 	PLLinkedListNode *node;
 
@@ -42,8 +44,8 @@ static void drop_client_callback( void *userData, PL_UNUSED bool *breakEarly )
 
 void ape_server_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, NULL, true );
-	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, NULL, true );
+	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, nullptr, true );
+	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, nullptr, true );
 }
 
 bool ape_server_start( const char *ip, unsigned short port )
@@ -140,7 +142,16 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 			return;
 		}
 
-		ape_print_( "Client validated successfully\n" );
+		if ( *message->clientName == '\0' )
+		{
+			ape_warning_( "No name specified for client!\n" );
+			client->state = SERVER_CLIENT_STATE_REJECTED;
+			return;
+		}
+
+		snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
+		ape_print_( "Client (%s) validated successfully\n", client->name );
+
 		client->state = SERVER_CLIENT_STATE_ACCEPTED;
 
 		assert( game->serverClientConnected != nullptr );
