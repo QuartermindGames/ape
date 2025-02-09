@@ -21,6 +21,9 @@ namespace forge
 
 		ApeBrushFace *face;
 
+		PLImage *preview{};
+		FXLabel *previewIcon;
+
 		FXTextField *tagField;
 
 		FXTextField *scaleFieldX;
@@ -53,6 +56,15 @@ namespace forge
 			FXVerticalFrame *vf = new FXVerticalFrame( this, LAYOUT_FILL );
 
 			FXHorizontalFrame *hf;
+
+#if 0
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X | LAYOUT_CENTER_X );
+			previewIcon = new FXLabel( hf, FXString::null, nullptr, 0, LAYOUT_CENTER_X );
+			previewIcon->setWidth( 64 );
+			previewIcon->setHeight( 64 );
+
+			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
+#endif
 
 			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
 			new FXLabel( hf, "Tag", nullptr, 0, LAYOUT_FILL_X );
@@ -91,6 +103,34 @@ namespace forge
 				return;
 			}
 
+			if ( preview != nullptr )
+			{
+				delete preview;
+				preview = nullptr;
+			}
+
+#if 0
+			const ApeMaterial *material     = face->material;
+			const char        *materialPath = ape_material_get_path( material );
+			preview                         = ape_material_load_preview( materialPath );
+			if ( preview != nullptr )
+			{
+				PLImage *smallImage = PlResizeImage( preview, 64, 64 );
+				if ( smallImage != nullptr )
+				{
+					PlDestroyImage( preview );
+					preview = smallImage;
+
+					FXIcon *icon = new FXIcon( getApp(), reinterpret_cast< FXColor * >( preview->data[ 0 ] ), 0, IMAGE_KEEP | IMAGE_ALPHACOLOR,
+					                           static_cast< int >( preview->width ),
+					                           static_cast< int >( preview->height ) );
+					icon->create();
+
+					previewIcon->setIcon( icon );
+				}
+			}
+#endif
+
 			scaleFieldX->setText( std::to_string( this->face->materialScale.x ).c_str() );
 			scaleFieldY->setText( std::to_string( this->face->materialScale.y ).c_str() );
 
@@ -98,6 +138,8 @@ namespace forge
 			offsetFieldY->setText( std::to_string( this->face->materialOffset.y ).c_str() );
 
 			rotationField->setText( std::to_string( this->face->materialAngle.x ).c_str() );
+
+			recalc();
 		}
 
 		long on_update( FXObject *, FXSelector, void * )
