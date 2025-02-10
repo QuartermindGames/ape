@@ -10,3 +10,6 @@
 [submodule "src/3rdparty/fox"]
 	path = src/3rdparty/fox
 	url = ../../OldTimes-Software/fox-1.6.57_cmake.git
+[submodule "src/acm"]
+	path = src/acm
+	url = ../acm.git
