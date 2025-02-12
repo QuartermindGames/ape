@@ -15,15 +15,17 @@ static ApeShaderProgram *bloomBlurShader;
 static ApeRenderTarget *bloomFilterTarget;
 static ApeRenderTarget *bloomBlurTarget;
 
-static bool bloomEnabled;
+static bool  bloomEnabled;
 static float bloomIntensity;
 static float bloomThreshold;
+static bool  bloomAdditive;
 
 static void register_bloom_console_variables( void )
 {
 	PlRegisterConsoleVariable( "post_bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, &bloomEnabled, nullptr, true );
 	PlRegisterConsoleVariable( "post_bloom.intensity", "Set the intensity of the bloom effect.", "2.0", PL_VAR_F32, &bloomIntensity, nullptr, true );
 	PlRegisterConsoleVariable( "post_bloom.threshold", "Sets the threshold of the bloom effect.", "0.15", PL_VAR_F32, &bloomThreshold, nullptr, true );
+	PlRegisterConsoleVariable( "post_bloom.additive", "Enable additive blending instead.", "false", PL_VAR_BOOL, &bloomAdditive, nullptr, true );
 }
 
 static bool setup_bloom_effect( void )
@@ -114,7 +116,14 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 		ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
 
-		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
+		if ( bloomAdditive )
+		{
+			PlgSetBlendMode( PLG_BLEND_ADDITIVE );
+		}
+		else
+		{
+			PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
+		}
 		PlgSetTexture( bloomBlurTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
@@ -131,8 +140,8 @@ const ApePostProcessEffect *ape_postfx_get_bloom_( void )
 	static ApePostProcessEffect renderBloomPostProcess;
 	PL_ZERO_( renderBloomPostProcess );
 	renderBloomPostProcess.registerConsoleVariables = register_bloom_console_variables;
-	renderBloomPostProcess.setup = setup_bloom_effect;
-	renderBloomPostProcess.cleanup = cleanup_bloom_effect;
-	renderBloomPostProcess.draw = draw_bloom_effect;
+	renderBloomPostProcess.setup                    = setup_bloom_effect;
+	renderBloomPostProcess.cleanup                  = cleanup_bloom_effect;
+	renderBloomPostProcess.draw                     = draw_bloom_effect;
 	return &renderBloomPostProcess;
 }

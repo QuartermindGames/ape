@@ -14,6 +14,7 @@ typedef enum PostEffect
 	POST_EFFECT_FXAA,
 	POST_EFFECT_DOF,
 	POST_EFFECT_BLOOM,
+	POST_EFFECT_DITHER,
 
 	MAX_POST_EFFECTS
 } PostEffect;
@@ -24,6 +25,8 @@ static bool                        postProcessEnabled = true;
 
 static ApeRenderTarget *ppRenderTarget = nullptr;
 
+extern ApePostProcessEffect ape_postDitherEffect_;
+
 static void register_post_effects( void )
 {
 	if ( postProcessInit )
@@ -31,10 +34,9 @@ static void register_post_effects( void )
 		return;
 	}
 
-	PL_ZERO( postProcessEffects, sizeof( ApePostProcessEffect * ) * MAX_POST_EFFECTS );
-
-	postProcessEffects[ POST_EFFECT_FXAA ]  = ape_postfx_get_fxaa_();
-	postProcessEffects[ POST_EFFECT_BLOOM ] = ape_postfx_get_bloom_();
+	postProcessEffects[ POST_EFFECT_FXAA ]   = ape_postfx_get_fxaa_();
+	postProcessEffects[ POST_EFFECT_BLOOM ]  = ape_postfx_get_bloom_();
+	postProcessEffects[ POST_EFFECT_DITHER ] = &ape_postDitherEffect_;
 
 	postProcessInit = true;
 }
@@ -51,13 +53,13 @@ void ape_postfx_cleanup_( void )
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
-		if ( postProcessEffects[ i ] == NULL )
+		if ( postProcessEffects[ i ] == nullptr )
 		{
 			continue;
 		}
 
 		postProcessEffects[ i ]->cleanup();
-		postProcessEffects[ i ] = NULL;
+		postProcessEffects[ i ] = nullptr;
 	}
 
 	postProcessInit = false;
