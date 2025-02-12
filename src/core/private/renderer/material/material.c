@@ -606,9 +606,9 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	}
 
 	/* now handle any specific parameters the material provides */
-	materialPass->textureScroll = acm_get_vector2( root, "textureScroll", &PL_VECTOR2( 0.0f, 0.0f ) );
-	materialPass->textureOffset = acm_get_vector2( root, "textureOffset", &PL_VECTOR2( 0.0f, 0.0f ) );
-	materialPass->textureScale  = acm_get_vector2( root, "textureScale", &PL_VECTOR2( 1.0f, 1.0f ) );
+	materialPass->textureScroll = com_acm_get_vector2( root, "textureScroll", &PL_VECTOR2( 0.0f, 0.0f ) );
+	materialPass->textureOffset = com_acm_get_vector2( root, "textureOffset", &PL_VECTOR2( 0.0f, 0.0f ) );
+	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &PL_VECTOR2( 1.0f, 1.0f ) );
 	if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
 	{
 		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
@@ -627,7 +627,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 
 PLImage *ape_material_load_preview( const char *path )
 {
-	AcmBranch *root = acm_load_file( path, "material" );
+	AcmBranch *root = com_acm_load_file( path, "material" );
 	if ( root == nullptr )
 	{
 		ape_warning_( "Failed to load material (%s) for preview!\n", path );
@@ -1002,7 +1002,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	/* fallback should be optional, as in some cases we might actually care */
 	ApeMaterial *fallbackPtr = useFallback ? defaultMaterials[ APE_MATERIAL_DEFAULT_FALLBACK ] : nullptr;
 
-	AcmBranch *root = acm_load_file( path, "material" );
+	AcmBranch *root = com_acm_load_file( path, "material" );
 	if ( root == NULL )
 	{
 		ape_warning_( "Failed to load material, \"%s\" (%s)!\n", path, acm_get_error_message() );

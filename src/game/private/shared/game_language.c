@@ -68,7 +68,8 @@ void game_language_initialize_()
 	PlRegisterConsoleCommand( "language_test", "Generic test for language translation.", 0, test_command );
 
 	static const char *languagesPath = "scripts/strings.cfg.n";
-	AcmBranch         *root          = acm_load_file( languagesPath, "languages" );
+
+	AcmBranch *root = com_acm_load_file( languagesPath, "languages" );
 	if ( root == nullptr )
 	{
 		game_warning_( "No languages file found (%s), translations will be unavailable and strings may display incorrectly!\n", languagesPath );

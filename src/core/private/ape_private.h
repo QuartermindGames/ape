@@ -14,13 +14,14 @@
 #include <plgraphics/plg_camera.h>
 #include <plgraphics/plg_polygon.h>
 
+#include <acm/acm.h>
+
 #include <assert.h>
 
 #include "common.h"
 #include "common/common_math.h"
 
 #include <yin/core.h>
-#include "acm/public/acm/acm.h"
 
 #define ENGINE_NAME     "APE Tech"
 #define ENGINE_APP_NAME "ape"

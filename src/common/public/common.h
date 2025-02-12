@@ -77,6 +77,23 @@ void com_pkg_write_header( FILE *pack, uint numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
 
 /////////////////////////////////////////////////////////////////
+// ACM Extensions
+
+typedef struct AcmBranch AcmBranch;
+
+PLVector2   com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *fallback );
+PLVector3   com_acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 *fallback );
+PLVector4   com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback );
+PLColourF32 com_acm_get_colour_f32( AcmBranch *root, const char *name, const PLColourF32 *fallback );
+
+AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional );
+AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional );
+AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional );
+AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional );
+
+AcmBranch *com_acm_load_file( const char *path, const char *object );
+
+/////////////////////////////////////////////////////////////////
 // PROFILER
 
 typedef struct ComProfilingGroup ComProfilingGroup;

@@ -15,11 +15,12 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_linkedlist.h>
 
+#include <acm/acm.h>
+
 #include "common.h"
 
 // Yin
 #include <yin/core.h>
-#include "acm/public/acm/acm.h"
 
 // FOX Toolkit
 #include <fx.h>

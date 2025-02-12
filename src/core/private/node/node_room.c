@@ -78,8 +78,8 @@ ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 	}
 
 	self->flags        = ACM_GET_INT( self->flags, root, "flags", 0 );
-	self->colour       = acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	self->ambientLight = acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	self->colour       = com_acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->reverbPreset = ACM_GET_INT( self->flags, root, "reverb", 0 );
 
 	self->isDirty = true;

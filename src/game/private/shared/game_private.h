@@ -7,12 +7,13 @@
 #include <plcore/pl_linkedlist.h>
 #include <plcore/pl_hashtable.h>
 
+#include <acm/acm.h>
+
 #include "yin/core.h"
 #include "yin/core_entity.h"
 #include "yin/core_input.h"
 #include "yin/core_game.h"
 #include "yin/gui_public.h"
-#include "acm/public/acm/acm.h"
 
 #include "ape/ape_public_client.h"
 

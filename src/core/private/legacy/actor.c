@@ -2,8 +2,6 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "acm/public/acm/acm.h"
-
 #include "ape_private.h"
 #include "actor.h"
 #include "world/world.h"

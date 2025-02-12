@@ -84,7 +84,7 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void load_user_config( void )
 {
-	AcmBranch *root = acm_load_file( ss_acl_fs_get_user_config_location(), "config" );
+	AcmBranch *root = com_acm_load_file( ss_acl_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
 		return;
 

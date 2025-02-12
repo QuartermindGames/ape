@@ -264,7 +264,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 {
 	ape_print_( "Loading program: \"%s\"\n", path );
 
-	AcmBranch *root = acm_load_file( path, "program" );
+	AcmBranch *root = com_acm_load_file( path, "program" );
 	if ( root == NULL )
 	{
 		ape_warning_( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -301,7 +301,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 
 static void reload_shader_program( ApeShaderProgram *program )
 {
-	AcmBranch *root = acm_load_file( program->path, "program" );
+	AcmBranch *root = com_acm_load_file( program->path, "program" );
 	if ( root == nullptr )
 	{
 		ape_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, acm_get_error_message() );

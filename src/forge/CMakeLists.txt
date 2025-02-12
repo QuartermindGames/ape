@@ -60,6 +60,7 @@ endif ()
 
 target_link_libraries(Forge
         FOX-1.6
+        acm
         #[[
         ${GTK4_LIBRARIES}
         ${ADWAITA_LIBRARIES}

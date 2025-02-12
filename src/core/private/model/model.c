@@ -194,8 +194,8 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			}
 
 			model->bones[ i ].parent   = acm_branch_get_child_int( child, "parent", -1 );
-			model->bones[ i ].position = acm_get_vector3( child, "position", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
-			model->bones[ i ].rotation = acm_get_vector3( child, "rotation", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+			model->bones[ i ].position = com_acm_get_vector3( child, "position", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+			model->bones[ i ].rotation = com_acm_get_vector3( child, "rotation", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
 
 			child = acm_get_next_child( child );
 		}
@@ -225,7 +225,7 @@ ApeModel *ape_model_load( const char *path )
 		return model;
 	}
 
-	AcmBranch *root = acm_load_file( path, "model" );
+	AcmBranch *root = com_acm_load_file( path, "model" );
 	if ( root == NULL )
 	{
 		ape_warning_( "Invalid model: %s (%s)\n", acm_get_error_message(), path );

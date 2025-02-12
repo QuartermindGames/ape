@@ -44,7 +44,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	if ( emitter != NULL )
 		return;
 
-	AcmBranch *root = acm_load_file( path, "particleEmitter" );
+	AcmBranch *root = com_acm_load_file( path, "particleEmitter" );
 	if ( root == NULL )
 	{
 		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
@@ -65,10 +65,10 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 
 	emitter->life = acm_branch_get_child_int( root, "life", 0 );
 
-	emitter->startColour    = acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
-	emitter->endColour      = acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
-	emitter->startColourVar = acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
-	emitter->endColourVar   = acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
+	emitter->startColour    = com_acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
+	emitter->endColour      = com_acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );
+	emitter->startColourVar = com_acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
+	emitter->endColourVar   = com_acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
 	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
 	ape_memory_add_reference( &emitter->mem );

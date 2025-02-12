@@ -2,10 +2,10 @@
 
 #include <plcore/pl_filesystem.h>
 
+#include <acm/acm.h>
+
 #include "common_private.h"
 #include "common_project.h"
-
-#include "acm/public/acm/acm.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -112,7 +112,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 
 			PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), baseName, baseName );
 
-			AcmBranch *croot = acm_load_file( path, "project" );
+			AcmBranch *croot = com_acm_load_file( path, "project" );
 			if ( croot == NULL )
 			{
 				com_warning_( "Failed to load depedency (%s) project file: %s\n", baseName, acm_get_error_message() );
@@ -203,17 +203,17 @@ AcmBranch *com_project_mount( const char *name )
 	if ( project.isActive )
 	{
 		com_warning_( "A project is already active! Unmount current project first.\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s/%s.prj.n", com_get_local_data_directory(), name, name );
 
-	AcmBranch *root = acm_load_file( path, "project" );
+	AcmBranch *root = com_acm_load_file( path, "project" );
 	if ( root == NULL )
 	{
 		com_warning_( "Failed to load project file: %s\n", acm_get_error_message() );
-		return NULL;
+		return nullptr;
 	}
 
 	if ( deserialize_project( root, name, &project ) == NULL )

@@ -9,8 +9,9 @@
 #	include <signal.h>
 #endif
 
+#include <acm/acm.h>
+
 #include <yin/core.h>
-#include "acm/public/acm/acm.h"
 
 #include "common.h"
 #include "common_project.h"

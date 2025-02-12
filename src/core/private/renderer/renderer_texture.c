@@ -114,11 +114,15 @@ static void fetch_texture_config( ApeTexture *texture )
 	strcat( configPath, ".tex.n" );
 
 	if ( !PlFileExists( configPath ) )
+	{
 		return;
+	}
 
-	AcmBranch *root = acm_load_file( configPath, "texture" );
+	AcmBranch *root = com_acm_load_file( configPath, "texture" );
 	if ( root == NULL )
+	{
 		return;
+	}
 
 	const char *wrapMode = acm_get_string( root, "wrapMode", "repeat" );
 	if ( strcmp( wrapMode, "repeat" ) == 0 )

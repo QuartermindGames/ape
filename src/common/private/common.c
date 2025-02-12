@@ -3,7 +3,7 @@
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_console.h>
 
-#include "acm/public/acm/acm.h"
+#include <acm/acm.h>
 
 #include "common_private.h"
 
@@ -27,8 +27,6 @@ void com_initialize( void )
 	com_logLevels_[ COM_LOG_LEVEL_DEBUG ] = PlAddLogLevel( "common/debug", PL_COLOUR_WHITE, true );
 
 	com_print_( "Common Library initialized\n" );
-
-	acm_setup_logs();
 
 	com_pack_pkg_register_();
 
@@ -111,7 +109,7 @@ AcmBranch *com_get_config( const char *name )
 {
 	PLPath path;
 	PlSetupPath( path, true, "configs/%s.cfg.n", name );
-	AcmBranch *root = acm_load_file( path, "config" );
+	AcmBranch *root = com_acm_load_file( path, "config" );
 	if ( root == NULL )
 	{
 		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", acm_get_error_message() );
@@ -176,4 +174,130 @@ void com_error_( const char *m, ... )
 	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_ERROR ], "%s", buf );
 
 	abort();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+PLVector2 com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *fallback )
+{
+	AcmBranch *child = acm_get_child_by_name( root, name );
+	if ( child == NULL )
+	{
+		return *fallback;
+	}
+
+	PLVector2 v;
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 2 ) != ND_ERROR_SUCCESS )
+	{
+		return *fallback;
+	}
+
+	return v;
+}
+
+PLVector3 com_acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 *fallback )
+{
+	AcmBranch *child = acm_get_child_by_name( root, name );
+	if ( child == NULL )
+	{
+		return *fallback;
+	}
+
+	PLVector3 v;
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 3 ) != ND_ERROR_SUCCESS )
+	{
+		return *fallback;
+	}
+
+	return v;
+}
+
+PLVector4 com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback )
+{
+	AcmBranch *child = acm_get_child_by_name( root, name );
+	if ( child == NULL )
+	{
+		return *fallback;
+	}
+
+	PLVector4 v;
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 4 ) != ND_ERROR_SUCCESS )
+	{
+		return *fallback;
+	}
+
+	return v;
+}
+
+PLColourF32 com_acm_get_colour_f32( AcmBranch *root, const char *name, const PLColourF32 *fallback )
+{
+	PLVector4 v = com_acm_get_vector4( root, name, ( PLVector4 * ) fallback );
+	return PlVector4ToColourF32( &v );
+}
+
+AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector2( vector, &pl_vecOrigin2 ) )
+	{
+		return nullptr;
+	}
+
+	return acm_push_array_f32( parent, name, ( float * ) vector, 2 );
+}
+
+AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector3( vector, &pl_vecOrigin3 ) )
+	{
+		return nullptr;
+	}
+
+	return acm_push_array_f32( parent, name, ( float * ) vector, 3 );
+}
+
+AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
+{
+	if ( conditional && PlCompareVector4( vector, &pl_vecOrigin4 ) )
+	{
+		return nullptr;
+	}
+
+	return acm_push_array_f32( parent, name, ( float * ) vector, 4 );
+}
+
+AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional )
+{
+	if ( conditional && PlColour4fCompare( colour, &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f ) ) )
+	{
+		return nullptr;
+	}
+
+	return acm_push_array_f32( parent, name, ( float * ) colour, 4 );
+}
+
+AcmBranch *com_acm_load_file( const char *path, const char *object )
+{
+	PLFile *file = PlOpenFile( path, false );
+	if ( file == nullptr )
+	{
+		return nullptr;
+	}
+
+	AcmBranch *root = nullptr;
+
+	size_t size = PlGetFileSize( file );
+	if ( size > 0 )
+	{
+		uint8_t *buf = PL_NEW_( uint8_t, size + 1 );
+		if ( PlReadFile( file, buf, sizeof( uint8_t ), size ) == size )
+		{
+			root = acm_load_from_memory( buf, size, object, path );
+		}
+
+		PL_DELETE( buf );
+	}
+
+	PlCloseFile( file );
+
+	return root;
 }

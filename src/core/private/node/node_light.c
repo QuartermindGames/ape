@@ -137,7 +137,7 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 {
 	ApeLight *light = self;
 	acm_push_ui32( root, "type", light->type );
-	acm_push_colour4f( root, "colour", &light->colour, true );
+	com_acm_push_colour4f( root, "colour", &light->colour, true );
 	acm_push_f32( root, "radius", light->radius );
 	acm_push_bool( root, "isHidden", light->isHidden );
 	acm_push_ui32( root, "flags", light->flags );
@@ -150,7 +150,7 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 {
 	ApeLight *light = ape_create_light( parent, &pl_vecOrigin3, &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 0.0f ), 0.0f, APE_LIGHT_TYPE_OMNI, 0 );
 	light->type     = acm_get_uint( root, "type", light->type );
-	light->colour   = acm_get_colour_f32( root, "colour", &light->colour );
+	light->colour   = com_acm_get_colour_f32( root, "colour", &light->colour );
 	light->radius   = acm_get_f32( root, "radius", light->radius );
 	light->isHidden = acm_get_bool( root, "isHidden", light->isHidden );
 	light->flags    = acm_get_uint( root, "flags", light->flags );

@@ -2,7 +2,9 @@
 
 #include <plcore/pl_console.h>
 
-#include "acm/public/acm/acm.h"
+#include <acm/acm.h>
+
+#include "common.h"
 
 #include "gui_private.h"
 
@@ -103,7 +105,7 @@ static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
 
 const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path )
 {
-	AcmBranch *root = acm_load_file( path, "guiStyle" );
+	AcmBranch *root = com_acm_load_file( path, "guiStyle" );
 	if ( root == NULL )
 	{
 		GUI_WARNING( "Failed to load node file: %s\n", acm_get_error_message() );

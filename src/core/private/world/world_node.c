@@ -419,9 +419,9 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 		acm_push_string( nodeBranch, "name", self->name, false );
 	}
 
-	acm_push_vector3( nodeBranch, "position", &self->position, true );
-	acm_push_vector3( nodeBranch, "angles", &self->angles, true );
-	acm_push_vector3( nodeBranch, "scale", &self->scale, true );
+	com_acm_push_vector3( nodeBranch, "position", &self->position, true );
+	com_acm_push_vector3( nodeBranch, "angles", &self->angles, true );
+	com_acm_push_vector3( nodeBranch, "scale", &self->scale, true );
 
 	acm_push_array_f32( nodeBranch, "transform", ( float * ) &self->transform, 16 );
 
@@ -487,9 +487,9 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 
 	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
 
-	self->position = acm_get_vector3( root, "position", &pl_vecOrigin3 );
-	self->angles   = acm_get_vector3( root, "angles", &pl_vecOrigin3 );
-	self->scale    = acm_get_vector3( root, "scale", &pl_vecOrigin3 );
+	self->position = com_acm_get_vector3( root, "position", &pl_vecOrigin3 );
+	self->angles   = com_acm_get_vector3( root, "angles", &pl_vecOrigin3 );
+	self->scale    = com_acm_get_vector3( root, "scale", &pl_vecOrigin3 );
 
 	acm_get_array_f32( root, "transform", ( float * ) &self->transform, 16 );
 	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );

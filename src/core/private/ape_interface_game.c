@@ -104,7 +104,7 @@ void ape_tick_game_server_( double delta )
 void ape_spawn_world_( const char *path )
 {
 	// attempt to load the specified room
-	AcmBranch *root = acm_load_file( path, "node" );
+	AcmBranch *root = com_acm_load_file( path, "node" );
 	if ( root == nullptr )
 	{
 		ape_warning_( "Failed to load the specified room (%s): %s\n", path, acm_get_error_message() );

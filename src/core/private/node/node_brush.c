@@ -421,11 +421,11 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 
 		assert( face->material != nullptr );
 		acm_push_string( faceBranch, "material", ape_material_get_path( face->material ), false );
-		acm_push_vector2( faceBranch, "materialScale", &face->materialScale, true );
-		acm_push_vector3( faceBranch, "materialOffset", &face->materialOffset, true );
-		acm_push_vector3( faceBranch, "materialAngle", &face->materialAngle, true );
+		com_acm_push_vector2( faceBranch, "materialScale", &face->materialScale, true );
+		com_acm_push_vector3( faceBranch, "materialOffset", &face->materialOffset, true );
+		com_acm_push_vector3( faceBranch, "materialAngle", &face->materialAngle, true );
 
-		acm_push_vector3( faceBranch, "normal", &face->normal, true );
+		com_acm_push_vector3( faceBranch, "normal", &face->normal, true );
 		acm_push_array_f32( faceBranch, "colour", ( float * ) &face->colour, 4 );
 		acm_push_array_f32( faceBranch, "bounds", ( float * ) &face->bounds, 12 );
 
@@ -438,8 +438,8 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 			const ApeBrushFaceVertex *vertex       = &face->vertices[ j ];
 			AcmBranch                *vertexBranch = acm_push_object( verticesBranch, "vertex" );
 			acm_push_i16( vertexBranch, "position", vertex->position - brush->vertices );
-			acm_push_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
-			acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
+			com_acm_push_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
+			com_acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
 			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
 
 			acm_push_i16( edgeBranch, "vertex", face->edgeLoop[ j ] - face->vertices );
@@ -490,9 +490,9 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
 					assert( vertexIndex <= self->numVertices );
 					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
-					self->faces[ i ].vertices[ j ].textureCoords = acm_get_vector2( vertexBranch, "uv", &( PLVector2 ) {} );
-					self->faces[ i ].vertices[ j ].normal        = acm_get_vector3( vertexBranch, "normal", &( PLVector3 ) {} );
-					self->faces[ i ].vertices[ j ].colour        = acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ) { .a = 1.0f } );
+					self->faces[ i ].vertices[ j ].textureCoords = com_acm_get_vector2( vertexBranch, "uv", &( PLVector2 ) {} );
+					self->faces[ i ].vertices[ j ].normal        = com_acm_get_vector3( vertexBranch, "normal", &( PLVector3 ) {} );
+					self->faces[ i ].vertices[ j ].colour        = com_acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ) { .a = 1.0f } );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
@@ -522,14 +522,14 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 				ape_warning_( "No material specified for a brush face, using default!\n" );
 				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
-			self->faces[ i ].materialScale  = acm_get_vector2( branch, "materialScale", &( PLVector2 ) {} );
-			self->faces[ i ].materialOffset = acm_get_vector3( branch, "materialOffset", &( PLVector3 ) {} );
-			self->faces[ i ].materialAngle  = acm_get_vector3( branch, "materialAngle", &( PLVector3 ) {} );
+			self->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( PLVector2 ) {} );
+			self->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( PLVector3 ) {} );
+			self->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( PLVector3 ) {} );
 
 			self->faces[ i ].flags = ACM_GET_UINT( self->faces[ i ].flags, branch, "flags", 0 );
 
-			self->faces[ i ].normal = acm_get_vector3( branch, "normal", &( PLVector3 ) {} );
-			self->faces[ i ].colour = acm_get_colour_f32( branch, "colour", &( PLColourF32 ) { .a = 1.0f } );
+			self->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( PLVector3 ) {} );
+			self->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( PLColourF32 ) { .a = 1.0f } );
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
