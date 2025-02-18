@@ -8,83 +8,14 @@ static ToxWorldState worldState;
 static unsigned int secondCountdown = 0;
 static const unsigned int TICKS_UNTIL_SECOND = 30;
 
-#define DEFAULT_SUN_POSITION PLVector3( -2.0f, -2.0f, 0.0f )
-#define DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
-#define DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
-
 static ApeLight *sunLight = NULL;
 static float sunYaw = 0.0f;
 static float sunPitch = 0.0f;
 static float sunBrightness = 0.0f;
 
-#define DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
 
 static ApeLight *moonLight = NULL;
 static float moonBrightness = 0.0f;
-
-ToxWorldState *tox_world_get_state( void ) { return &worldState; }
-
-typedef enum ToxSkyLayerType
-{
-	TOX_SKY_LAYER_TYPE_CLOUD,
-	TOX_SKY_LAYER_TYPE_CLOUD_B,
-	TOX_SKY_LAYER_TYPE_STARS,
-
-	TOX_MAX_SKY_LAYER_TYPES
-} ToxSkyLayerType;
-
-typedef struct ToxSkyLayer
-{
-	unsigned int id;
-	const char *material;
-
-	float baseScale;
-	float baseY;
-	float baseAlpha;
-
-	float parallaxDiff;
-} ToxSkyLayer;
-static ToxSkyLayer skyLayers[ TOX_MAX_SKY_LAYER_TYPES ] = {
-        {0, "materials/sky/cloudlayer00.mat.n",      0.85f, 12.0f, 0.5f, 100.0f},
-        {0, "materials/sky/cloudlayer00.mat.n",      0.25f, 14.0f, 0.5f, 500.0f},
-        {0, "materials/clouds/cloud_layer_01.mat.n", 0.1f,  16.0f, 1.0f, 700.0f},
-};
-
-void tox_world_spawn( ApeWorld *world )
-{
-	PL_ZERO_( worldState );
-
-	// kick off during daylight hours
-	//TODO: make this configurable via editor?
-	worldState.seconds = 40000;
-
-	ape_sky_clear_layers();
-	for ( unsigned int i = 0; i < TOX_MAX_SKY_LAYER_TYPES; ++i )
-	{
-		skyLayers[ i ].id = ape_sky_add_layer( skyLayers[ i ].material,
-		                                       skyLayers[ i ].baseScale,
-		                                       skyLayers[ i ].baseY,
-		                                       skyLayers[ i ].baseAlpha );
-	}
-
-	ape_world_set_clear_colour( world, &DEFAULT_CLEAR_COLOUR );
-
-	ApeWorldNode *worldNode = &world->base;
-	sunLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_SUN_COLOUR, 0.0f,
-	                             APE_LIGHT_TYPE_SUN,
-	                             APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-	moonLight = ape_create_light( worldNode, &DEFAULT_SUN_POSITION, &DEFAULT_MOON_COLOUR, 0.0f,
-	                              APE_LIGHT_TYPE_SUN,
-	                              APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-
-	//TODO: scrap this - let's just pass the world into the draw call... it's safer
-	ApeCamera *camera = tox_get_player_camera();
-	assert( camera != nullptr );
-	ape_world_node_attach( ( ApeWorldNode * ) camera, worldNode );
-
-	// do one tick, just to let things settle...
-	tox_world_tick( world );
-}
 
 /**
  * This is a very convoluted way to set the pitch and yaw, but
@@ -100,27 +31,6 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 	position.z = matrix.m[ 8 ];
 	return position;
 }
-
-void tox_world_tick( ApeWorld *world )
-{
-	if ( world == nullptr )
-	{
-		return;
-	}
-
-#if 0
-	// Don't increment a second for every tick,
-	// otherwise in-game time will go superfast
-	if ( secondCountdown == 0 )
-	{
-		worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / TOX_WORLD_MINUTES_TO_HOUR;
-		secondCountdown = TICKS_UNTIL_SECOND;
-	}
-	else
-		secondCountdown--;
-#else
-	worldState.seconds += TOX_WORLD_SECONDS_TO_HOUR / tox_globalVars.timeSpeed;
-#endif
 
 	sunYaw = tox_world_get_seconds_in_day( &worldState ) / ( TOX_WORLD_SECONDS_TO_DAY / 360.0f );
 	sunPitch = sinf( PL_DEG2RAD( sunYaw + 90.0f ) ) * 2.0f;

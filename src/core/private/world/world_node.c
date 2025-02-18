@@ -352,7 +352,7 @@ ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *
 	return child;
 }
 
-const char *ape_world_node_get_name( ApeWorldNode *self )
+const char *ape_world_node_get_name( const ApeWorldNode *self )
 {
 	return self->name;
 }

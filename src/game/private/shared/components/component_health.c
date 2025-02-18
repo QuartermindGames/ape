@@ -1,5 +1,5 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
-// Purpose: Wiggly jiggly ropes!
+// Purpose: Health indicator, used for "living" entities.
 // Author:  Mark E. Sowden
 
 #include "../game_private.h"
@@ -35,7 +35,7 @@ static void *deserialize_health( void *ptr, AcmBranch *root )
 	return self;
 }
 
-ApeEntityComponentDefinition game_healthComponent = {
+ApeEntityComponentDefinition game_healthComponent_ = {
         .name            = "health",
         .createFunction  = create_health,
         .destroyFunction = destroy_health,

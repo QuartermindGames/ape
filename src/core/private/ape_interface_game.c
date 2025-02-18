@@ -90,7 +90,7 @@ void ape_tick_game_server_( double delta )
 {
 	ape_draw_debug_clear_();
 
-	ApeWorld *world = ss_game_get_current_world();
+	ApeWorld *world = game_get_current_world();
 	if ( world != nullptr )
 	{
 		ape_world_node_generate_bounds_( &world->base );

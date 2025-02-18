@@ -25,9 +25,6 @@ typedef enum SS1PawnRelationshipGroup
 
 typedef enum SS1PawnAttribute
 {
-	SS1_PAWN_STAT_HEALTH,
-	SS1_PAWN_STAT_MAX_HEALTH,
-
 	SS1_PAWN_STAT_STAMINA,
 	SS1_PAWN_STAT_MAX_STAMINA,
 
@@ -42,7 +39,7 @@ typedef struct SS1Pawn
 	SS1PawnRelationshipGroup relationshipGroup;
 	unsigned int             team;
 
-	struct GameHealthComponent *healthComponent;
+	struct GameHealthComponent *health;
 
 	struct ApeModelNode *model;
 } SS1Pawn;

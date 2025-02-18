@@ -10,17 +10,17 @@ static void say_command( unsigned int argc, char **argv )
 		return;
 	}
 
-	const char *message = argv[ 1 ];
-	size_t messageSize = strlen( message );
+	const char *message     = argv[ 1 ];
+	size_t      messageSize = strlen( message );
 	if ( messageSize > GAME_NET_MAX_SAY_MESSAGE )
 	{
 		game_warning_( "Invalid say message length (%u > %u)!\n", messageSize, GAME_NET_MAX_SAY_MESSAGE );
 		return;
 	}
 
-	uint16_t size = messageSize;
+	uint16_t    size    = messageSize;
 	const void *items[] = {
-	        &( GameNetMessageHeader ){ .type = GAME_NET_MESSAGE_SAY },
+	        &( GameNetMessageHeader ) { .type = GAME_NET_MESSAGE_SAY },
 	        &size,
 	        message,
 	};
@@ -36,31 +36,45 @@ static void say_command( unsigned int argc, char **argv )
 	}
 }
 
-void game_client_actions_register();
+void game_client_actions_register_();
 
 void game_client_initialize_()
 {
-	//todo: check if we're running in dedicated mode
+	if ( ape_is_dedicated() )
+	{
+		return;
+	}
 
 	PlRegisterConsoleCommand( "game.say",
 	                          "Broadcast a text message to other clients.",
 	                          1, say_command );
 
 	// register our standard input actions
-	game_client_actions_register();
+	game_client_actions_register_();
 }
 
 void game_client_process_message_( const void *buf, size_t bufSize )
 {
-	const GameNetMessageHeader *header = ( const GameNetMessageHeader * ) buf;
+	const GameNetMessageHeader *header = buf;
 	switch ( header->type )
 	{
+		default:
+			game_warning_( "Unhandled server message (%u)!\n", header->type );
+			break;
 		case GAME_NET_MESSAGE_SAY:
 		{
-			uint16_t *p = ( uint16_t * ) ( header + 1 );
-			char buf[ GAME_NET_MAX_SAY_MESSAGE + 1 ] = {};
-			strncpy( buf, ( char * ) ( p + 1 ), *p );
-			game_print_( "%s\n", buf );
+			uint16_t *p                                    = ( uint16_t * ) ( header + 1 );
+			char      sbuf[ GAME_NET_MAX_SAY_MESSAGE + 1 ] = {};
+			strncpy( sbuf, ( char * ) ( p + 1 ), *p );
+			game_print_( "%s\n", sbuf );
+			break;
+		}
+		case GAME_NET_MESSAGE_ANNOUNCE:
+		{
+			uint16_t *p                                    = ( uint16_t * ) ( header + 1 );
+			char      sbuf[ GAME_NET_MAX_SAY_MESSAGE + 1 ] = {};
+			strncpy( sbuf, ( char * ) ( p + 1 ), *p );
+			game_print_( "%s\n", sbuf );
 			break;
 		}
 	}
@@ -69,7 +83,7 @@ void game_client_process_message_( const void *buf, size_t bufSize )
 bool game_client_send_message_( GameNetMessageType type, const void *buf, size_t bufSize )
 {
 	const void *items[] = {
-	        &( GameNetMessageHeader ){ .type = type },
+	        &( GameNetMessageHeader ) { .type = type },
 	        buf,
 	};
 	size_t sizes[] = {

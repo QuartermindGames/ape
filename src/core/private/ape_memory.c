@@ -120,7 +120,7 @@ static PLLinkedList *mmReferenceList;
 
 #define MEM_CLEANUP_DELAY 200.0
 
-#define DEBUG_MEMORY
+//#define DEBUG_MEMORY
 
 static bool free_reference( ApeMemoryReference *m, bool force )
 {

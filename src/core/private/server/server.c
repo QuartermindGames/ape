@@ -91,6 +91,71 @@ void ape_server_drop_client_( ApeServerClient *serverClient )
 	PL_DELETE( serverClient );
 }
 
+static void validate_client( const ApeProtocolValidationMessage *message, ApeServerClient *client )
+{
+	//TODO: reject if its over our limit; this should go to the game-side to check, as that's where we're tracking limits
+
+	if ( message->magic != APE_PROTOCOL_MAGIC )
+	{
+		ape_warning_( "Invalid magic received from client (%u != %u)!\n", message->magic, APE_PROTOCOL_MAGIC );
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	const ApeGameInterfaceImport *game = ape_game_get_interface();
+
+	uint16_t baseProtocolVersion = message->version >> 8;
+	if ( baseProtocolVersion != APE_PROTOCOL_VERSION )
+	{
+		ape_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	uint16_t gameProtocolVersion = ( message->version & 0xFF );
+	if ( gameProtocolVersion != game->protocolVersion )
+	{
+		ape_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	if ( strncmp( message->identifier, game->identifier, sizeof( message->identifier ) ) != 0 )
+	{
+		ape_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	if ( *message->clientName == '\0' )
+	{
+		ape_warning_( "No name specified for client!\n" );
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	if ( game->serverClientValidate && !game->serverClientValidate )
+	{
+		// no warning here as it's assumed the game will spit something out...
+		client->state = SERVER_CLIENT_STATE_REJECTED;
+		return;
+	}
+
+	snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
+	ape_print_( "Client (%s) validated successfully\n", client->name );
+
+	client->state = SERVER_CLIENT_STATE_ACCEPTED;
+
+	assert( game->serverClientConnected != nullptr );
+	game->serverClientConnected( client );
+
+	ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ) {
+	                                          .length = sizeof( ApeProtocolMessageHeader ),
+	                                          .type   = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
+	                                  },
+	               sizeof( ApeProtocolMessageHeader ) );
+}
+
 static void process_client_message( ApeServerClient *client, const void *buf )
 {
 	const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) buf;
@@ -110,58 +175,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 			return;
 		}
 
-		if ( message->magic != APE_PROTOCOL_MAGIC )
-		{
-			ape_warning_( "Invalid magic received from client (%u != %u)!\n", message->magic, APE_PROTOCOL_MAGIC );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
-			return;
-		}
-
-		const ApeGameInterfaceImport *game = ape_game_get_interface();
-
-		uint16_t baseProtocolVersion = message->version >> 8;
-		if ( baseProtocolVersion != APE_PROTOCOL_VERSION )
-		{
-			ape_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
-			return;
-		}
-
-		uint16_t gameProtocolVersion = ( message->version & 0xFF );
-		if ( gameProtocolVersion != game->protocolVersion )
-		{
-			ape_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
-			return;
-		}
-
-		if ( strncmp( message->identifier, game->identifier, sizeof( message->identifier ) ) != 0 )
-		{
-			ape_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
-			return;
-		}
-
-		if ( *message->clientName == '\0' )
-		{
-			ape_warning_( "No name specified for client!\n" );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
-			return;
-		}
-
-		snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
-		ape_print_( "Client (%s) validated successfully\n", client->name );
-
-		client->state = SERVER_CLIENT_STATE_ACCEPTED;
-
-		assert( game->serverClientConnected != nullptr );
-		game->serverClientConnected( client );
-
-		ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ) {
-		                                          .length = sizeof( ApeProtocolMessageHeader ),
-		                                          .type   = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
-		                                  },
-		               sizeof( ApeProtocolMessageHeader ) );
+		validate_client( message, client );
 		return;
 	}
 

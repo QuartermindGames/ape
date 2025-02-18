@@ -39,6 +39,8 @@ typedef struct SS1Profession
 
 	float maxForwardSpeed;
 	float maxStrafeSpeed;
+
+	unsigned int maxHealth;
 } SS1Profession;
 extern const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ];
 
@@ -50,31 +52,27 @@ typedef enum SS1ResourceType : uint8_t
 	SS1_MAX_RESOURCE_TYPES
 } SS1ResourceType;
 
-typedef struct SS1Team
-{
-	char         name[ SS1_MAX_TEAM_NAME ];
-	unsigned int resources[ SS1_MAX_RESOURCE_TYPES ];
-} SS1Team;
+#define SS1_DEFAULT_SUN_POSITION PL_VECTOR3( -2.0f, -2.0f, 0.0f )
+#define SS1_DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
+#define SS1_DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
 
-typedef struct SS1Player
-{
-	char         name[ SS1_MAX_PLAYER_NAME ];
-	unsigned int resources[ SS1_MAX_RESOURCE_TYPES ];
-
-	SS1Team *team;
-} SS1Player;
+#define SS1_DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
 
 typedef struct SS1GameState
 {
-	WorldSimulation simulation;
+	GameWorldSimulation simulation;
 
-	SS1Team   teams[ SS1_MAX_TEAMS ];
-	SS1Player players[ SS1_MAX_PLAYERS ];
+	GamePlayer players[ SS1_MAX_PLAYERS ];
 
-	ApeCamera *camera; // our eyes
-	ApeWorld  *world;  // world container
-	ApeRoom   *room;   // everything in the scene should be tied to this!
-	ApeBrush  *terrain;// proc terrain brush
+	ApeCamera *camera;// our eyes
+	ApeWorld  *world; // world container
+
+	ApeLight *moonLight;
+	float     moonBrightness;
+
+	ApeLight *sunLight;
+	PLVector2 sunAngles;
+	float     sunBrightness;
 
 	bool       isFirstLaunch;
 	AcmBranch *config;

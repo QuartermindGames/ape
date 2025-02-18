@@ -66,8 +66,8 @@ static Menu confirmQuitMenu = {
 };
 
 static MenuOption startMenuOptions[] = {
-        {"test\n",                  nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test" }                 },
-        {"reference_human_scale\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room reference_human_scale" }},
+        {"rundown\n",       nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown" } },
+        {"zoo_materials\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room zoo_materials" }},
 };
 static Menu startMenu = {
         "Start Server\n",
@@ -274,15 +274,18 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		static const char *title    = "embrace";
 		static const char *subtitle = "INC.\n";
 
+		gui_font_set_shadow_offset( 6.0f, 6.0f );
 		gui_font_set_slant( 20.0f );
 		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, title, strlen( title ), true );
 
+		gui_font_set_shadow_offset( 4.0f, 4.0f );
 		gui_font_set_slant( 0.0f );
-		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_CRIMSON, subtitle, strlen( subtitle ), true );
+		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_FIRE_BRICK, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
 		x = 80.0f;
 
+		gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT );
 		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, G_STR_( currentMenu->heading ), strlen( currentMenu->heading ), true );
 		x += 30.0f;
 		for ( uint i = 0; i < currentMenu->numOptions; ++i )

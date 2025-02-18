@@ -1077,7 +1077,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		PlgSetViewMatrix( PlGetMatrix( PL_VIEW_MATRIX ) );
 
-		ApeWorld *world = ss_game_get_current_world();
+		ApeWorld *world = game_get_current_world();
 		if ( world != NULL )
 		{
 			switch ( camera->drawMode )

@@ -24,7 +24,7 @@ static void register_bloom_console_variables( void )
 {
 	PlRegisterConsoleVariable( "post_bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, &bloomEnabled, nullptr, true );
 	PlRegisterConsoleVariable( "post_bloom.intensity", "Set the intensity of the bloom effect.", "2.0", PL_VAR_F32, &bloomIntensity, nullptr, true );
-	PlRegisterConsoleVariable( "post_bloom.threshold", "Sets the threshold of the bloom effect.", "0.15", PL_VAR_F32, &bloomThreshold, nullptr, true );
+	PlRegisterConsoleVariable( "post_bloom.threshold", "Sets the threshold of the bloom effect.", "0.10", PL_VAR_F32, &bloomThreshold, nullptr, true );
 	PlRegisterConsoleVariable( "post_bloom.additive", "Enable additive blending instead.", "false", PL_VAR_BOOL, &bloomAdditive, nullptr, true );
 }
 

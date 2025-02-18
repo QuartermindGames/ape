@@ -29,6 +29,14 @@ struct AcmBranch *ape_get_user_config( void );
 
 unsigned int ape_get_num_ticks( void );
 
+/**
+ * Check if the engine is operating in a dedicated terminal-only mode, so
+ * essentially configured for a dedicated server.
+ *
+ * @return True if the engine is operating in a dedicated terminal-only mode.
+ */
+bool ape_is_dedicated();
+
 bool ape_is_running( void );
 bool ape_is_console_open( void );
 

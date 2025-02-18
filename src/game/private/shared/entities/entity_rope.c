@@ -95,6 +95,8 @@ static void spawn_rope( ApeEntity *self )
 
 static void tick_rope( ApeEntity *self, double delta )
 {
+	delta = game_get_time_delta_( delta );
+
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
@@ -125,7 +127,7 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 	assert( rope != nullptr );
 }
 
-ApeEntityClassDefinition game_ropeEntityClass = {
+ApeEntityClassDefinition game_ropeEntityClass_ = {
         .name           = "rope",
         .description    = "Physics-driven rope handler."
                           "Rope can have a start attachment and end attachment.",

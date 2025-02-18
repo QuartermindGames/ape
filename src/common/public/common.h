@@ -76,8 +76,9 @@ bool              com_write_config( struct AcmBranch *root, const char *name );
 void com_pkg_write_header( FILE *pack, uint numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
 
-/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 // ACM Extensions
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct AcmBranch AcmBranch;
 
@@ -93,8 +94,9 @@ AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const PLC
 
 AcmBranch *com_acm_load_file( const char *path, const char *object );
 
-/////////////////////////////////////////////////////////////////
-// PROFILER
+/////////////////////////////////////////////////////////////////////////////////////
+// Profiler
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct ComProfilingGroup ComProfilingGroup;
 
@@ -194,12 +196,8 @@ void com_profiler_update_samples( void );
 #define COM_ITERATE_LINKED_LIST( VAR, LIST, ITR ) PL_ITERATE_LINKED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
 #define COM_ITERATE_HASHED_LIST( VAR, LIST, ITR ) PL_ITERATE_HASHED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
 
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-
-typedef struct PLCollisionAABB  PLCollisionAABB;
-typedef struct PLCollisionRay   PLCollisionRay;
-typedef struct PLCollisionPlane PLCollisionPlane;
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Determines if a given set of vertices form a convex polygon.
@@ -228,8 +226,21 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
  */
 PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices );
 
-bool com_math_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
-bool com_math_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
-bool com_math_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, uint numVertices, PLVector3 *result );
+/////////////////////////////////////////////////////////////////////////////////////
+// Collisions
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct PLCollisionAABB  PLCollisionAABB;
+typedef struct PLCollisionRay   PLCollisionRay;
+typedef struct PLCollisionPlane PLCollisionPlane;
+
+bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
+
+bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
+bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
+bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, uint numVertices, PLVector3 *result );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 PL_EXTERN_C_END

@@ -36,7 +36,7 @@ static void destroy_trigger( ApeEntity *self )
 	PL_DELETE( trigger );
 }
 
-ApeEntityClassDefinition game_triggerEntityClass = {
+ApeEntityClassDefinition game_triggerEntityClass_ = {
         .name = "trigger",
 
         .createFunction  = create_trigger,

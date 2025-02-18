@@ -900,7 +900,7 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 
 static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
-	ApeWorld *world = ss_game_get_current_world();
+	ApeWorld *world = game_get_current_world();
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{

@@ -20,12 +20,27 @@
 #include "game/game_public.h"
 
 #include "game_language.h"
+#include "game_team.h"
 
 PL_EXTERN_C
 
 typedef struct GameServerClient GameServerClient;
 
+#define GAME_MAX_CLIENTS 128
 #define GAME_MAX_PLAYERS 64
+
+/**
+ * Try to avoid using deltatime on its own, and
+ * instead pass it through this function!
+ *
+ * Why is this not applied engine-side or more globally?
+ * Because you likely don't want absolutely everything
+ * to be influenced by the time modifier.
+ *
+ * @param delta Current deltatime value.
+ * @return		Delta multiplied by the time modifier.
+ */
+double game_get_time_delta_( double delta );
 
 void game_register_standard_entity_components_( void );
 
@@ -54,7 +69,8 @@ AcmBranch *game_get_config();
 
 typedef enum GameNetMessageType : uint16_t
 {
-	GAME_NET_MESSAGE_SAY,
+	GAME_NET_MESSAGE_SAY,     // message from a client
+	GAME_NET_MESSAGE_ANNOUNCE,// an announcement broadcasted from the server
 } GameNetMessageType;
 
 #define GAME_NET_MAX_SAY_MESSAGE UINT8_MAX
@@ -65,12 +81,13 @@ typedef struct __attribute( ( packed ) ) GameNetMessageHeader
 } GameNetMessageHeader;
 
 typedef char GamePlayerName[ 64 ];
-
 typedef struct GamePlayer
 {
-	GamePlayerName    name;
-	GameServerClient *serverClient;
-	UInt              team;
+	GamePlayerName    name;        // name of the player
+	GameServerClient *serverClient;// internal server-side client reference
+	unsigned int      team;        // the team the player is associated with
+
+	ApeEntity *entity;// target entity the player is controlling
 } GamePlayer;
 
 /////////////////////////////////////////////////////////////////

@@ -94,7 +94,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
 		PLVector3 intersection;
-		if ( !com_math_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
+		if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
 		{
 			return false;
 		}
@@ -116,7 +116,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
 					}
 
-					if ( !com_math_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
+					if ( !com_collision_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
 					{
 						continue;
 					}

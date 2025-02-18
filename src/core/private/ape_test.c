@@ -17,7 +17,7 @@
 
 static void test_model_command( unsigned int argc, char **argv )
 {
-	ApeWorld *world = ss_game_get_current_world();
+	ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )
 	{
 		ape_warning_( "No world loaded, please create a world first!\n" );

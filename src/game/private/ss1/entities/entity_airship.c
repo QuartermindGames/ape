@@ -59,6 +59,8 @@ static void spawn_airship( ApeEntity *self )
 
 static void tick_airship( ApeEntity *self, double delta )
 {
+	delta = game_get_time_delta_( delta );
+
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
 
 	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );

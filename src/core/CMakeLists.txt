@@ -7,9 +7,10 @@ set(YIN_CORE_CLIENT
         private/renderer/material/material.c
         private/renderer/material/material_shaders.c
 
-        private/renderer/post/post_bloom.c
-        private/renderer/post/post_fxaa.c
         private/renderer/post/post.c
+        private/renderer/post/post_bloom.c
+        private/renderer/post/post_dither.c
+        private/renderer/post/post_fxaa.c
 
         private/renderer/renderer_flare.c
         private/renderer/renderer_font.c

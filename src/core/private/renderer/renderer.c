@@ -401,6 +401,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	ape_camera_get_visible_lights_( camera, &ape_rendererPerformance_.numLights );
 
 	PlgDepthMask( true );
+	PlgSetClearColour( viewport->clearColour );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	ape_editor_pre_render_scene_( camera );

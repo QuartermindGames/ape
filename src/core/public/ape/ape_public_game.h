@@ -39,6 +39,7 @@ typedef struct ApeGameInterfaceImport
 	void ( *clientProcessMessage )( const void *buf, size_t bufSize );
 
 	// server
+	bool ( *serverClientValidate )( ApeServerClientHandle *clientHandle );
 	void ( *serverClientConnected )( ApeServerClientHandle *clientHandle );
 	void ( *serverClientDisconnected )( ApeServerClientHandle *clientHandle );
 	void ( *serverProcessMessage )( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize );

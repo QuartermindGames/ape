@@ -12,14 +12,13 @@ set(GAME_SHARED_FILES
         #############################################
 
         private/shared/ai/ai_brain.c
-
         private/shared/components/component_health.c
-
+        private/shared/components/component_movement.c
         private/shared/entities/entity_player_spawn.c
         private/shared/entities/entity_rope.c
         private/shared/entities/entity_trigger.c
-
         private/shared/integrations/discord/discord.c
+        private/shared/menu/menu_chat.c
 )
 
 include_directories(public/)
@@ -49,6 +48,7 @@ set(SS1_SOURCES
 
         private/ss1/entities/entity_airship.c
         private/ss1/entities/entity_pawn.c
+        private/ss1/entities/entity_player.c
 
         private/ss1/menu/menu.c
         private/ss1/ss1_game.c

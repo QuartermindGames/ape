@@ -6,38 +6,38 @@
 // World Environment State
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct WorldSimulationConfig
+typedef struct GameWorldSimulationConfig
 {
-	uint secondsToMinute;
-	uint minutesToHour;
-	uint hoursToDay;
+	unsigned int secondsToMinute;
+	unsigned int minutesToHour;
+	unsigned int hoursToDay;
 
 	// different hours for different times of day
-	uint nightHour;
-	uint eveningHour;
-	uint afternoonHour;
-	uint morningHour;
-	uint dawnHour;
-} WorldSimulationConfig;
+	unsigned int nightHour;
+	unsigned int eveningHour;
+	unsigned int afternoonHour;
+	unsigned int morningHour;
+	unsigned int dawnHour;
+} GameWorldSimulationConfig;
 
-typedef enum WorldSimulationTime
+typedef enum GameWorldSimulationTime
 {
 	WORLD_SIMULATION_TIME_DAWN,
 	WORLD_SIMULATION_TIME_MORNING,
 	WORLD_SIMULATION_TIME_AFTERNOON,
 	WORLD_SIMULATION_TIME_EVENING,
 	WORLD_SIMULATION_TIME_NIGHT,
-} WorldSimulationTime;
+} GameWorldSimulationTime;
 
-typedef struct WorldSimulation
+typedef struct GameWorldSimulation
 {
-	WorldSimulationConfig config;
+	GameWorldSimulationConfig config;
 
-	uint seconds;// not *real* seconds!
-	uint speedMultiplier;
-} WorldSimulation;
+	unsigned int seconds;// not *real* seconds!
+	unsigned int speedMultiplier;
+} GameWorldSimulation;
 
-static void game_world_simulation_initialize( WorldSimulation *simulation )
+static void game_world_simulation_initialize( GameWorldSimulation *simulation )
 {
 	// setup some defaults...
 	simulation->config.nightHour = 17;
@@ -46,41 +46,41 @@ static void game_world_simulation_initialize( WorldSimulation *simulation )
 	simulation->config.minutesToHour   = 60;
 	simulation->config.hoursToDay      = 24;
 
-	simulation->speedMultiplier = 128.0f;
+	simulation->speedMultiplier = 256.0f;
 }
 
-static inline uint world_simulation_get_seconds_to_hour( const WorldSimulation *simulation ) { return simulation->config.secondsToMinute * simulation->config.minutesToHour; }
-static inline uint world_simulation_get_seconds_to_day( const WorldSimulation *simulation ) { return world_simulation_get_seconds_to_hour( simulation ) * simulation->config.hoursToDay; }
+static inline unsigned int game_world_simulation_get_seconds_to_hour( const GameWorldSimulation *simulation ) { return simulation->config.secondsToMinute * simulation->config.minutesToHour; }
+static inline unsigned int game_world_simulation_get_seconds_to_day( const GameWorldSimulation *simulation ) { return game_world_simulation_get_seconds_to_hour( simulation ) * simulation->config.hoursToDay; }
 
-static inline uint world_simulation_get_total_seconds( const WorldSimulation *simulation ) { return simulation->seconds; }
-static inline uint world_simulation_get_total_minutes( const WorldSimulation *simulation ) { return simulation->seconds / simulation->config.secondsToMinute; }
-static inline uint world_simulation_get_total_hours( const WorldSimulation *simulation ) { return world_simulation_get_total_minutes( simulation ) / simulation->config.minutesToHour; }
-static inline uint world_simulation_get_total_days( const WorldSimulation *simulation ) { return world_simulation_get_total_hours( simulation ) / simulation->config.hoursToDay; }
+static inline unsigned int game_world_simulation_get_total_seconds( const GameWorldSimulation *simulation ) { return simulation->seconds; }
+static inline unsigned int game_world_simulation_get_total_minutes( const GameWorldSimulation *simulation ) { return simulation->seconds / simulation->config.secondsToMinute; }
+static inline unsigned int game_world_simulation_get_total_hours( const GameWorldSimulation *simulation ) { return game_world_simulation_get_total_minutes( simulation ) / simulation->config.minutesToHour; }
+static inline unsigned int game_world_simulation_get_total_days( const GameWorldSimulation *simulation ) { return game_world_simulation_get_total_hours( simulation ) / simulation->config.hoursToDay; }
 
-static inline uint world_simulation_get_current_second( const WorldSimulation *simulation )
+static inline unsigned int game_world_simulation_get_current_second( const GameWorldSimulation *simulation )
 {
-	return ( world_simulation_get_total_seconds( simulation ) - ( world_simulation_get_total_minutes( simulation ) / simulation->config.secondsToMinute ) ) % simulation->config.secondsToMinute;
+	return ( game_world_simulation_get_total_seconds( simulation ) - ( game_world_simulation_get_total_minutes( simulation ) / simulation->config.secondsToMinute ) ) % simulation->config.secondsToMinute;
 }
 
-static inline uint world_simulation_get_current_minute( const WorldSimulation *simulation )
+static inline unsigned int game_world_simulation_get_current_minute( const GameWorldSimulation *simulation )
 {
-	return ( world_simulation_get_total_minutes( simulation ) - ( world_simulation_get_total_hours( simulation ) / simulation->config.minutesToHour ) ) % simulation->config.minutesToHour;
+	return ( game_world_simulation_get_total_minutes( simulation ) - ( game_world_simulation_get_total_hours( simulation ) / simulation->config.minutesToHour ) ) % simulation->config.minutesToHour;
 }
 
-static inline uint world_simulation_get_current_hour( const WorldSimulation *simulation )
+static inline unsigned int game_world_simulation_get_current_hour( const GameWorldSimulation *simulation )
 {
-	return ( world_simulation_get_total_hours( simulation ) - ( world_simulation_get_total_days( simulation ) / simulation->config.hoursToDay ) ) % simulation->config.hoursToDay;
+	return ( game_world_simulation_get_total_hours( simulation ) - ( game_world_simulation_get_total_days( simulation ) / simulation->config.hoursToDay ) ) % simulation->config.hoursToDay;
 }
 
 /// This returns the total number of seconds for the current day.
-static inline uint world_simulation_get_seconds_in_day( const WorldSimulation *simulation )
+static inline unsigned int game_world_simulation_get_seconds_in_day( const GameWorldSimulation *simulation )
 {
-	return ( world_simulation_get_total_seconds( simulation ) ) % world_simulation_get_seconds_to_day( simulation );
+	return ( game_world_simulation_get_total_seconds( simulation ) ) % game_world_simulation_get_seconds_to_day( simulation );
 }
 
-static inline WorldSimulationTime world_simulation_get_time_of_day( const WorldSimulation *simulation )
+static inline GameWorldSimulationTime game_world_simulation_get_time_of_day( const GameWorldSimulation *simulation )
 {
-	uint hour = world_simulation_get_current_hour( simulation );
+	unsigned int hour = game_world_simulation_get_current_hour( simulation );
 	if ( hour > simulation->config.nightHour ) return WORLD_SIMULATION_TIME_NIGHT;
 	if ( hour > simulation->config.eveningHour ) return WORLD_SIMULATION_TIME_EVENING;
 	if ( hour > simulation->config.afternoonHour ) return WORLD_SIMULATION_TIME_AFTERNOON;
@@ -89,7 +89,7 @@ static inline WorldSimulationTime world_simulation_get_time_of_day( const WorldS
 	return WORLD_SIMULATION_TIME_NIGHT;
 }
 
-static inline const char *world_get_time_of_day_descriptor( WorldSimulationTime time )
+static inline const char *game_world_get_time_of_day_descriptor( GameWorldSimulationTime time )
 {
 	switch ( time )
 	{
@@ -102,7 +102,8 @@ static inline const char *world_get_time_of_day_descriptor( WorldSimulationTime 
 	}
 }
 
-static inline void world_simulation_tick( WorldSimulation *simulation )
+static inline void game_world_simulation_tick( GameWorldSimulation *simulation, double delta )
 {
-	simulation->seconds += simulation->speedMultiplier;
+	//TODO: hookup delta - we're not using this right now, so I can't test and tweak it, hence why it's not done already!
+	simulation->seconds += simulation->speedMultiplier * delta;
 }

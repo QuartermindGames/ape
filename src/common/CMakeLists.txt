@@ -1,5 +1,6 @@
 add_library(ApeCommon STATIC
         private/common.c
+        private/common_collision.c
         private/common_math.c
         private/common_profiler.c
         private/common_project.c

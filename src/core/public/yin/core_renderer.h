@@ -41,6 +41,7 @@ typedef struct ApeViewport
 
 	ApeCamera       *camera;
 	ApeRenderTarget *renderTarget;
+	PLColour         clearColour;
 
 	struct
 	{
@@ -76,6 +77,8 @@ ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self );
 
 void         ape_viewport_make_active( ApeViewport *self );
 ApeViewport *ape_viewport_get_active( void );
+
+void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Camera API

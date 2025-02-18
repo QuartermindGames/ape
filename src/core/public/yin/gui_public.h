@@ -178,6 +178,8 @@ typedef enum GuiFontDefaultType
 	GUI_MAX_FONT_DEFAULTS
 } GuiFontDefaultType;
 
+#define GUI_FONT_SHADOW_DEFAULT 1.0f, 1.0f
+
 /**
  * Retrieves the line spacing value from the specified GuiFont.
  *
@@ -218,6 +220,14 @@ float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t char
  * 				while negative values indicate a backward slant.
  */
 void gui_font_set_slant( float slant );
+
+/**
+ * Sets the shadow offset for the font.
+ *
+ * @param x X offset.
+ * @param y Y offset.
+ */
+void gui_font_set_shadow_offset( float x, float y );
 
 /**
  * Calculates the pixel size of a given string when rendered with the specified font and scale.

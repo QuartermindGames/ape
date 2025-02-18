@@ -31,7 +31,8 @@ static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
 static GuiFont       *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
-static float fontSlant = 0.0f;
+static float     fontSlant        = 0.0f;
+static PLVector2 fontShadowOffset = PL_VECTOR2( 1.0f, 1.0f );
 
 static uint32_t decode_utf8_char( const char **string )
 {
@@ -242,6 +243,12 @@ void gui_font_set_slant( float slant )
 	fontSlant = slant;
 }
 
+void gui_font_set_shadow_offset( float x, float y )
+{
+	fontShadowOffset.x = x;
+	fontShadowOffset.y = y;
+}
+
 void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
@@ -255,12 +262,12 @@ void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const cha
 		{
 			break;
 		}
-		else if ( c == '\n' )
+		if ( c == '\n' )
 		{
 			h += ( self->lineSpacing * scale );
 			continue;
 		}
-		else if ( c == '\t' )
+		if ( c == '\t' )
 		{
 			w += ( self->lineSpacing * scale ) * 4.0f;
 			continue;
@@ -345,7 +352,7 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 
 		if ( shadow )
 		{
-			gui_font_draw_glyph( self, nx + 1, ny + 1, scale, &PLColour( 0, 0, 0, colour->a ), glyph );
+			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &PLColour( 0, 0, 0, colour->a ), glyph );
 		}
 
 		gui_font_draw_glyph( self, nx, ny, scale, colour, glyph );

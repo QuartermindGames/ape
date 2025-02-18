@@ -204,3 +204,8 @@ ApeViewport *ape_viewport_get_active( void )
 {
 	return activeViewport;
 }
+
+void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour )
+{
+	self->clearColour = *clearColour;
+}

@@ -48,19 +48,4 @@ typedef struct __attribute__( ( packed ) ) ApeProtocolValidationMessage
 	char                     clientName[ APE_PROTOCOL_MAX_CLIENT_NAME ];
 } ApeProtocolValidationMessage;
 
-#define APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( NAME, TYPE )          \
-	static inline TYPE NAME( const void **buf )                      \
-	{                                                                \
-		TYPE value;                                                  \
-		memcpy( &value, *buf, sizeof( typeof( value ) ) );           \
-		*buf = ( void * ) ( ( char * ) ( *buf ) + sizeof( value ) ); \
-		return value;                                                \
-	}
-
-APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( ape_protocol_parse_int8, int8_t );
-APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( ape_protocol_parse_int16, int16_t );
-APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( ape_protocol_parse_int32, int32_t );
-APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( ape_protocol_parse_float, float );
-APE_PROTOCOL_IMPLEMENT_PARSE_FUNCTION( ape_protocol_parse_double, double );
-
 PL_EXTERN_C_END

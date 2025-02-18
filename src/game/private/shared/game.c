@@ -14,6 +14,8 @@ static int globalGameDebugLog;
 static int globalGameWarningLog;
 static int globalGameErrorLog;
 
+static float gameTimeModifier = 1.0f;
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -78,6 +80,8 @@ bool game_initialize( void )
 {
 	gameConfig = com_get_config( "game_shared" );
 
+	PlRegisterConsoleVariable( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, false );
+
 	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
 	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
 	globalGameErrorLog   = PlAddLogLevel( "game/error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
@@ -109,7 +113,12 @@ void game_shutdown()
 	game_language_shutdown_();
 }
 
-ApeWorld *ss_game_get_current_world( void )
+double game_get_time_delta_( double delta )
+{
+	return delta * gameTimeModifier;
+}
+
+ApeWorld *game_get_current_world( void )
 {
 	return currentWorld;
 }
@@ -135,17 +144,19 @@ const char *game_get_identifier()
 	return ape_gameInterface->identifier;
 }
 
-extern ApeEntityClassDefinition game_triggerEntityClass;
-extern ApeEntityClassDefinition game_ropeEntityClass;
+extern ApeEntityClassDefinition game_triggerEntityClass_;
+extern ApeEntityClassDefinition game_ropeEntityClass_;
 
-extern ApeEntityComponentDefinition game_healthComponent;
+extern ApeEntityComponentDefinition game_healthComponent_;
+extern ApeEntityComponentDefinition game_movementComponent_;
 
 void game_register_standard_entity_components_( void )
 {
-	ape_register_entity_class( &game_triggerEntityClass );
-	ape_register_entity_class( &game_ropeEntityClass );
+	ape_register_entity_class( &game_triggerEntityClass_ );
+	ape_register_entity_class( &game_ropeEntityClass_ );
 
-	ape_register_entity_component( &game_healthComponent );
+	ape_register_entity_component( &game_healthComponent_ );
+	ape_register_entity_component( &game_movementComponent_ );
 }
 
 AcmBranch *game_get_config()

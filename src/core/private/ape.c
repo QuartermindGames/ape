@@ -137,6 +137,11 @@ void ape_error_( bool die, const char *message, ... )
 	}
 }
 
+bool ape_is_dedicated()
+{
+	return engineTerminalMode;
+}
+
 static double lastTime;
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config )

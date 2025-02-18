@@ -96,7 +96,43 @@ static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
 
 				//TODO: handle transforms for the brush in software here
 
-				const uint idx = PlgAddMeshVertex( mesh, vertex->position, &vertex->normal, &PL_COLOURU8( 255, 255, 255, 255 ), &vertex->textureCoords );
+#if !defined( APE_NO_EDITOR )
+
+				// this is a gross botch to allow us to do special shaded
+				// types via the editor... *sigh*
+				PLColour                 colour;
+				const ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
+				if ( editorInstance != nullptr && editorInstance->camera != nullptr )
+				{
+					const ApeCamera *camera = editorInstance->camera;
+					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
+					{
+						srand( ( unsigned int ) brush );
+						colour = PL_COLOURU8(
+						        ( uint8_t ) ( rand() % 256 ),
+						        ( uint8_t ) ( rand() % 256 ),
+						        ( uint8_t ) ( rand() % 256 ), 255 );
+					}
+					else if ( camera->drawMode == APE_CAMERA_DRAW_MODE_PORTALS )
+					{
+					}
+					else
+					{
+						colour = PL_COLOURU8( 255, 255, 255, 255 );
+					}
+				}
+				else
+				{
+					colour = PL_COLOURU8( 255, 255, 255, 255 );
+				}
+
+#else
+
+				PLColour colour = PL_COLOURU8( 255, 255, 255, 255 );
+
+#endif
+
+				const unsigned int idx = PlgAddMeshVertex( mesh, vertex->position, &vertex->normal, &colour, &vertex->textureCoords );
 
 				// these have to be set seperate for now, need an api for it
 				mesh->vertices[ idx ].tangent   = vertex->tangent;
