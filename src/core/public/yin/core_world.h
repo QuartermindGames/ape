@@ -428,15 +428,16 @@ PLColourF32 ape_room_get_ambience( const ApeRoom *self );
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
-typedef struct ApeRayIntersection
+typedef struct ApeCollisionIntersection
 {
 	ApeWorldNode *node;        // the node that we hit
 	ApeBrushFace *face;        // face we hit, if any
 	PLVector3     intersection;// point on the node that we hit
 	float         distance;    // distance from point of intersection vs. caster
-} ApeRayIntersection;
+} ApeCollisionIntersection;
 
-bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeRayIntersection *result );
+bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
+bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, ApeCollisionIntersection *result );
 
 bool        ape_room_set_path( ApeRoom *self, const char *path );
 const char *ape_room_get_path( const ApeRoom *self );

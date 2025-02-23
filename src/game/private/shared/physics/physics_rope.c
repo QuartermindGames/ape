@@ -81,7 +81,7 @@ static PLVector3 test_particle_collision( const PLVector3 *position, const PLVec
 
 	float distance = PlVector3Length( ray.direction );
 
-	ApeRayIntersection result;
+	ApeCollisionIntersection result;
 	if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= distance )
 	{
 		return result.intersection;

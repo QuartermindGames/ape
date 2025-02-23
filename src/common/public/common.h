@@ -230,11 +230,17 @@ PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int 
 // Collisions
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct PLCollisionAABB  PLCollisionAABB;
-typedef struct PLCollisionRay   PLCollisionRay;
-typedef struct PLCollisionPlane PLCollisionPlane;
+// forward declare these from plcore -
+// eventually we should move these under the common library
+typedef struct PLCollisionAABB   PLCollisionAABB;
+typedef struct PLCollisionRay    PLCollisionRay;
+typedef struct PLCollisionPlane  PLCollisionPlane;
+typedef struct PLCollisionSphere PLCollisionSphere;
 
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
+
+bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, PLVector3 *result );
+bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
 
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );

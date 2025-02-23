@@ -141,6 +141,37 @@ static void handle_input( double delta )
 	pos                 = PlAddVector3( pos, PlScaleVector3F( forward, ( leftStick.y * 100.0f ) * delta ) );
 	pos                 = PlAddVector3( pos, PlScaleVector3F( left, ( leftStick.x * 100.0f ) * delta ) );
 
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.camera ) );
+	if ( room != nullptr )
+	{
+		PLCollisionSphere sphere = {};
+		sphere.origin            = ape_camera_get_position( ss1_gameState.camera );
+		sphere.radius            = 4.0f;
+
+		ApeCollisionIntersection intersection = {};
+		if ( ape_room_sphere_intersect( room, &sphere, &intersection ) )
+		{
+			game_print_( "Hit! (%f)\n", intersection.distance );
+
+			if ( intersection.face != nullptr )
+			{
+				PLCollisionPlane plane = {};
+				plane.origin           = intersection.face->bounds.absOrigin;
+				plane.normal           = intersection.face->normal;
+				ape_draw_debug_plane( &plane, PL_COLOUR_RED, 32.0f );
+			}
+
+			// Calculate the penetration depth
+			float penetrationDepth = sphere.radius - intersection.distance;
+			if ( penetrationDepth > 0.0f )
+			{
+				PLVector3 closestPoint       = intersection.intersection;
+				PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, closestPoint ) );
+				pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, penetrationDepth ) );
+			}
+		}
+	}
+
 	ape_camera_set_position( ss1_gameState.camera, &pos );
 	ape_camera_set_angles( ss1_gameState.camera, &ang );
 }
@@ -256,7 +287,8 @@ static void ss1_spawn_world( ApeRoom *room )
 	}
 
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
-	ape_world_node_attach( ( ApeWorldNode * ) ss1_gameState.camera, roomNode );
+	ape_world_node_attach( APE_WORLD_NODE( ss1_gameState.camera ), roomNode );
+	ape_world_node_set_position( APE_WORLD_NODE( ss1_gameState.camera ), &PL_VECTOR3( 0.0f, 128.0f, 0.0f ) );
 
 	//TODO: make this configurable via editor?
 	ss1_gameState.simulation.seconds = 40000;
