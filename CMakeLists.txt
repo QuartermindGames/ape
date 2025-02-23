@@ -119,6 +119,8 @@ endif ()
 add_subdirectory(src/3rdparty/fox)
 add_subdirectory(src/3rdparty/lua)
 
+#add_compile_definitions(-D_ISOC23_SOURCE)
+
 add_subdirectory(src/common/)
 add_subdirectory(src/core/)
 add_subdirectory(src/acm/)

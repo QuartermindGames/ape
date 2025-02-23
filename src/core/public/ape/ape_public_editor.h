@@ -80,7 +80,7 @@ typedef struct ApeEditorInstance
 
 	// polygon points are always interpreted on a 2D plane for simplicity’s sake
 	PLVector2 polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
-	uint      numPolygonPoints;
+	UInt      numPolygonPoints;
 
 	void *modeData;
 

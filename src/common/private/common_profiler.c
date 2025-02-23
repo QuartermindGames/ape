@@ -149,7 +149,7 @@ double com_profiler_get_time_average( const ComProfilingGroup *group )
 	return ( samples / NUM_SAMPLES );
 }
 
-const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *numPoints )
+const double *com_profiler_get_samples( const ComProfilingGroup *group, UInt *numPoints )
 {
 	*numPoints = NUM_SAMPLES;
 	return group->results;

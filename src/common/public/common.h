@@ -73,7 +73,7 @@ const char *com_get_app_data_directory( void );
 struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool              com_write_config( struct AcmBranch *root, const char *name );
 
-void com_pkg_write_header( FILE *pack, uint numFiles );
+void com_pkg_write_header( FILE *pack, UInt numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +153,7 @@ ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group );
 
 double        com_profiler_get_time_taken( const ComProfilingGroup *group );
 double        com_profiler_get_time_average( const ComProfilingGroup *group );
-const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *numPoints );
+const double *com_profiler_get_samples( const ComProfilingGroup *group, UInt *numPoints );
 
 /**
  * @brief Returns the number of existing profiling groups.
@@ -164,7 +164,7 @@ const double *com_profiler_get_samples( const ComProfilingGroup *group, uint *nu
  *
  * @return The total number of profiling groups, or 0 if no groups exist.
  */
-uint com_profiler_get_num_groups( void );
+UInt com_profiler_get_num_groups( void );
 
 /**
  * @brief Updates the profiling samples for each profiling group.
@@ -210,7 +210,7 @@ void com_profiler_update_samples( void );
  * @param numVertices 	The number of vertices in the polygon.
  * @return 				true if the polygon is convex, false otherwise.
  */
-bool com_math_is_polygon_convex( const PLVector2 *vertices, uint numVertices );
+bool com_math_is_polygon_convex( const PLVector2 *vertices, UInt numVertices );
 
 /**
  * Computes the face normal of a polygon composed of multiple triangles.
@@ -244,7 +244,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
-bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, uint numVertices, PLVector3 *result );
+bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
