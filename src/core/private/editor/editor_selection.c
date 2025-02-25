@@ -14,6 +14,9 @@
 // Selection Buffer
 /////////////////////////////////////////////////////////////////////////////////////
 
+static constexpr float SELECTION_OBJECT_SIZE = 8.0f;
+static constexpr float SELECTION_VERTEX_SIZE = 4.0f;
+
 // todo: these should be linked against the active instance
 static ApeViewport *selectionViewport;
 
@@ -158,8 +161,14 @@ static void render_brush_selection( const ApeBrush *brush )
 	}
 }
 
-static void draw_selection_cube( const PLVector3 *position, const PLColour *colour, float scale )
+static void draw_selection_cube( const PLVector3 *position, const PLColour *colour, float scale, bool wireframe )
 {
+	if ( wireframe )
+	{
+		ape_draw_debug_aabb( &PL_COLLISION_AABB( *position, PL_VECTOR3( -scale, -scale, -scale ), PL_VECTOR3( scale, scale, scale ) ), *colour );
+		return;
+	}
+
 	static constexpr float CUBE_VERTICES[ 8 ][ 3 ] = {
 	        {-1.0f, -1.0f, -1.0f},
 	        {1.0f,  -1.0f, -1.0f},
@@ -184,7 +193,6 @@ static void draw_selection_cube( const PLVector3 *position, const PLColour *colo
 	        {0, 1, 5},
 	        {0, 5, 4}
     };
-	static constexpr float CUBE_SIZE = 3.0f;
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
@@ -194,9 +202,9 @@ static void draw_selection_cube( const PLVector3 *position, const PLColour *colo
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
-			PlgImmPushVertex( position->x + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 0 ] * CUBE_SIZE,
-			                  position->y + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 1 ] * CUBE_SIZE,
-			                  position->z + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 2 ] * CUBE_SIZE );
+			PlgImmPushVertex( position->x + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 0 ] * scale,
+			                  position->y + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 1 ] * scale,
+			                  position->z + CUBE_VERTICES[ CUBE_INDICES[ i ][ j ] ][ 2 ] * scale );
 			PlgColour4bv( mesh, colour );
 		}
 	}
@@ -261,7 +269,7 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 					case APE_WORLD_NODE_TYPE_ENTITY:
 					case APE_WORLD_NODE_TYPE_LIGHT:
 					case APE_WORLD_NODE_TYPE_CAMERA:
-						draw_selection_cube( &node->position, &node->selectColour, 3.0f );
+						draw_selection_cube( &node->position, &node->selectColour, 8.0f, false );
 						break;
 				}
 			}
@@ -274,7 +282,7 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 				ApeBrush *brush = ( ApeBrush * ) node;
 				for ( unsigned int j = 0; j < brush->numVertices; ++j )
 				{
-					draw_selection_cube( &brush->vertices[ j ], &node->selectColour, 2.0f );
+					draw_selection_cube( &brush->vertices[ j ], &node->selectColour, 4.0f, false );
 				}
 			}
 		}
@@ -285,6 +293,156 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 		ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 		ape_viewport_make_active( viewport );
 	}
+}
+
+static void render_selected_faces( ApeEditorInstance *self )
+{
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+	assert( material != nullptr );
+
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINES );
+	PlgImmSetPrimitiveScale( 2.0f );
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	{
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
+			const ApeBrushFaceVertex *v1 = ( j + 1 ) < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
+			PlgImmPushVertex( v0->position->x, v0->position->y, v0->position->z );
+			PlgImmColour( 0, 0, 255, 255 );
+			PlgImmPushVertex( v1->position->x, v1->position->y, v1->position->z );
+			PlgImmColour( 0, 0, 255, 255 );
+		}
+	}
+
+	//todo: unify this somewhere and only fetch if cursor has moved
+	self->hoverSelection = ape_editor_get_object_under_cursor( self );
+	if ( self->hoverSelection != nullptr )
+	{
+		face = self->hoverSelection;
+		for ( unsigned int i = 0; i < face->numVertices; ++i )
+		{
+			const ApeBrushFaceVertex *v0 = face->edgeLoop[ i ];
+			const ApeBrushFaceVertex *v1 = ( i + 1 ) < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+			PlgImmPushVertex( v0->position->x, v0->position->y, v0->position->z );
+			PlgImmColour( 255, 255, 0, 255 );
+			PlgImmPushVertex( v1->position->x, v1->position->y, v1->position->z );
+			PlgImmColour( 255, 255, 0, 255 );
+		}
+	}
+
+	ape_material_draw( material, mesh, nullptr );
+}
+
+static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const PLColour *colour )
+{
+	for ( unsigned int i = 0; i < brush->numFaces; ++i )
+	{
+		const ApeBrushFace *face = &brush->faces[ i ];
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
+			const ApeBrushFaceVertex *v1 = ( j + 1 ) < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
+			PlgImmPushVertex( v0->position->x, v0->position->y, v0->position->z );
+			PlgColour4bv( lineMesh, colour );
+			PlgImmPushVertex( v1->position->x, v1->position->y, v1->position->z );
+			PlgColour4bv( lineMesh, colour );
+		}
+	}
+}
+
+static void render_selected_wireframe( ApeWorldNode *node, const PLColour *colour, bool selected )
+{
+	draw_selection_cube( &node->position, colour, SELECTION_OBJECT_SIZE, true );
+
+	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT && selected )
+	{
+		const ApeLight *light = ( ApeLight * ) node;
+		ape_draw_debug_sphere( node->position, PlColourF32ToU8( &light->colour ), light->radius );
+	}
+}
+
+static void render_selected_objects( ApeEditorInstance *self )
+{
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+	assert( material != nullptr );
+
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINES );
+	PlgImmSetPrimitiveScale( 2.0f );
+
+	ApeWorldNode *worldNode;
+	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	{
+		switch ( worldNode->type )
+		{
+			default:
+			{
+				render_selected_wireframe( worldNode, &PL_COLOUR_BLUE, true );
+				break;
+			}
+			case APE_WORLD_NODE_TYPE_BRUSH:
+			{
+				render_wireframe_brush( mesh, ( ApeBrush * ) worldNode, &PL_COLOUR_BLUE );
+				break;
+			}
+		}
+	}
+
+	//todo: unify this somewhere and only fetch if cursor has moved
+	self->hoverSelection = ape_editor_get_object_under_cursor( self );
+	if ( self->hoverSelection != nullptr )
+	{
+		// sigh... this is going to depend on the type of node we're hovering
+		worldNode = self->hoverSelection;
+		if ( ape_world_node_has_magic( worldNode ) )
+		{
+			switch ( worldNode->type )
+			{
+				default:
+				{
+					render_selected_wireframe( worldNode, &PL_COLOUR_YELLOW, false );
+					break;
+				}
+				case APE_WORLD_NODE_TYPE_BRUSH:
+				{
+					render_wireframe_brush( mesh, ( ApeBrush * ) worldNode, &PL_COLOUR_YELLOW );
+					break;
+				}
+			}
+		}
+	}
+
+	ape_material_draw( material, mesh, nullptr );
+}
+
+void ape_editor_selection_render_post_( ApeEditorInstance *self )
+{
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+	switch ( self->geometryMode )
+	{
+		default:
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+		{
+			ApeRoom *room = ape_camera_get_room( self->camera );
+			if ( room != nullptr )
+			{
+				ape_room_draw_selected_( room, self );
+			}
+
+			render_selected_faces( self );
+			break;
+		}
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
+			render_selected_objects( self );
+			break;
+	}
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
 PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst )
