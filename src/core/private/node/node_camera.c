@@ -189,7 +189,7 @@ void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
 
 PLVector3 ape_camera_get_position( const ApeCamera *camera )
 {
-	return ape_world_node_get_position( &camera->base );
+	return ape_world_node_get_local_position( &camera->base );
 }
 
 PLVector3 ape_camera_get_angles( const ApeCamera *camera )

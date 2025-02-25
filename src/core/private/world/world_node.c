@@ -229,10 +229,16 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	}
 }
 
-PLVector3 ape_world_node_get_position( const ApeWorldNode *self )
+PLVector3 ape_world_node_get_local_position( const ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 	return self->position;
+}
+
+PLVector3 ape_world_node_get_position( const ApeWorldNode *self )
+{
+	PLMatrix4 transform = ape_world_node_get_transform( self );
+	return PlGetMatrix4Translation( &transform );
 }
 
 void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position )

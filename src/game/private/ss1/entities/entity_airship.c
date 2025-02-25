@@ -63,7 +63,7 @@ static void tick_airship( ApeEntity *self, double delta )
 
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	PLVector3 direction = PL_VECTOR3( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );

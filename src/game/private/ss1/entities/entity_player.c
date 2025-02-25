@@ -31,7 +31,7 @@ static void spawn_player_entity( ApeEntity *self )
 	player->healthComponent->maxHealth = ss1_professions[ player->profession ].maxHealth;
 	player->healthComponent->health    = player->healthComponent->maxHealth;
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < SS1_PLAYER_MAX_AUDIO_CHANNELS; ++i )
 	{
 		player->audioSources[ i ] = ape_audio_source_create( &pos, &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );

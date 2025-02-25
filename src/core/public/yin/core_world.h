@@ -201,6 +201,7 @@ void          ape_world_node_destroy( ApeWorldNode *self );
 void ape_world_node_dettach( ApeWorldNode *self );
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
 
+PLVector3 ape_world_node_get_local_position( const ApeWorldNode *self );
 PLVector3 ape_world_node_get_position( const ApeWorldNode *self );
 void      ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position );
 

@@ -35,7 +35,7 @@ void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) {
 
 PLVector3 ape_light_get_position( const ApeLight *self )
 {
-	return ape_world_node_get_position( ( ApeWorldNode * ) self );
+	return ape_world_node_get_position( APE_WORLD_NODE( self ) );
 }
 
 void ape_light_set_position( ApeLight *self, const PLVector3 *position )

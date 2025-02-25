@@ -68,18 +68,18 @@ static void spawn_rope( ApeEntity *self )
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
-	PLVector3 position = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	PLVector3 position = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	game_physics_rope_setup( &rope->physics, 8, 4.0f, &position );
 
 	rope->startConnection = APE_WORLD_NODE( self );
 	if ( rope->startConnection != nullptr )
 	{
-		position = ape_world_node_get_position( rope->startConnection );
+		position = ape_world_node_get_local_position( rope->startConnection );
 		game_physics_rope_attach( &rope->physics, &position, true );
 	}
 	if ( rope->endConnection != nullptr )
 	{
-		position = ape_world_node_get_position( rope->endConnection );
+		position = ape_world_node_get_local_position( rope->endConnection );
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
@@ -102,12 +102,12 @@ static void tick_rope( ApeEntity *self, double delta )
 
 	if ( rope->startConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_position( rope->startConnection );
+		PLVector3 position = ape_world_node_get_local_position( rope->startConnection );
 		game_physics_rope_attach( &rope->physics, &position, true );
 	}
 	if ( rope->endConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_position( rope->endConnection );
+		PLVector3 position = ape_world_node_get_local_position( rope->endConnection );
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
