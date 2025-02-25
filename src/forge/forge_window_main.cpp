@@ -31,6 +31,7 @@ MainWindowMap[] = {
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_CONSOLE, forge::MainWindow::on_toggle_console ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_NODE_VOLUMES, forge::MainWindow::on_toggle_node_volumes ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_SELECTION_BUFFER, forge::MainWindow::on_toggle_selection_buffer ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_PROJECT_PACKAGE, forge::MainWindow::on_package_project ),
         FXMAPFUNC( SEL_TIMEOUT, forge::MainWindow::ID_TICK, forge::MainWindow::on_tick ),
@@ -66,6 +67,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCheck( menuPane, "&Console\t\tShow/hide the console.", this, ID_TOGGLE_CONSOLE );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCheck( menuPane, "&Show Node Volumes\t\tToggle node boundaries.", this, ID_TOGGLE_NODE_VOLUMES );
+	new FXMenuCheck( menuPane, "Show Selection Buffer\t\tFor debugging selection buffer.", this, ID_TOGGLE_SELECTION_BUFFER );
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
@@ -311,6 +313,12 @@ long forge::MainWindow::on_toggle_console( FXObject *object, FXSelector, void * 
 long forge::MainWindow::on_toggle_node_volumes( FXObject *object, FXSelector, void * )
 {
 	PlSetConsoleVariableByName( "world.showNodeVolumes", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	return TRUE;
+}
+
+long forge::MainWindow::on_toggle_selection_buffer( FXObject *object, FXSelector, void * )
+{
+	PlSetConsoleVariableByName( "renderer.showSelectionBuffer", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 

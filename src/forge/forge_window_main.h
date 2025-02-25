@@ -36,6 +36,7 @@ namespace forge
 
 		long on_toggle_console( FXObject *, FXSelector, void * );
 		long on_toggle_node_volumes( FXObject *, FXSelector, void * );
+		long on_toggle_selection_buffer( FXObject *, FXSelector, void * );
 
 		void        open_material_browser();
 		const char *get_active_material();
@@ -64,6 +65,7 @@ namespace forge
 
 			ID_TOGGLE_CONSOLE,
 			ID_TOGGLE_NODE_VOLUMES,
+			ID_TOGGLE_SELECTION_BUFFER,
 
 			ID_PROJECT_PACKAGE,
 
