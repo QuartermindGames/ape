@@ -313,6 +313,7 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 		return;
 	}
 
+	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
 		//TODO: let us configure draw distance per light
@@ -322,7 +323,8 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 			return;
 		}
 
-		const PLCollisionSphere sphere = PlSetupCollisionSphere( light->base.position, light->radius );
+
+		const PLCollisionSphere sphere = PlSetupCollisionSphere( pos, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )
 		{
 			return;
@@ -331,7 +333,6 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 
 	if ( ape_config_.renderer.showLights )
 	{
-		PLVector3 pos = ape_light_get_position( light );
 		ape_draw_debug_sphere( pos, PlColourF32ToU8( &light->colour ), light->radius );
 		if ( light->type != APE_LIGHT_TYPE_OMNI )
 		{
@@ -343,7 +344,6 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 	PL_GET_CVAR( "renderer.testFlares", testFlares );
 	if ( testFlares != nullptr && testFlares->b_value )
 	{
-		PLVector3 pos = light->base.position;
 		pos.z += 16.0f;
 		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( 1.0f, 0, 1.0f ), 1.0f, light->colour.a );
 		pos.z += 16.0f;
@@ -355,8 +355,10 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 	if ( light->flags & APE_LIGHT_FLAG_FLARE )
 	{
 		//TODO: test the flare is actually visible!!
-		ape_add_flare_to_queue( camera, &light->base.position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		ape_add_flare_to_queue( camera, &pos, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 	}
+
+	PlPushBackVectorArrayElement( camera->pvs.nodes, APE_WORLD_NODE( light ) );
 
 	camera->pvs.lights[ camera->pvs.numLights ] = light;
 	camera->pvs.numLights++;
@@ -389,8 +391,7 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 			ape_warning_( "Maximum visible light limit reached (%u >= %u)!\n", self->pvs.numLights, APE_CAMERA_MAX_VISIBLE_LIGHTS );
 		}
 	}
-
-	if ( PlgIsBoxInsideView( self->internal, &node->bounds ) )
+	else if ( PlgIsBoxInsideView( self->internal, &node->bounds ) )
 	{
 		PlPushBackVectorArrayElement( self->pvs.nodes, node );
 
