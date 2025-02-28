@@ -288,8 +288,11 @@ ApeBrushFace **ape_camera_get_visible_portals_( ApeCamera *self, unsigned int *n
 static PLVector3 viewPos = { 0.0f, 0.0f, 0.0f };
 static int       compare_lights( const void *a, const void *b )
 {
-	const float da = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) a )->base.position, viewPos ) );
-	const float db = PlVector3Length( PlSubtractVector3( ( *( ApeLight ** ) b )->base.position, viewPos ) );
+	PLVector3 lightPosA = ape_light_get_position( *( ApeLight ** ) a );
+	PLVector3 lightPosB = ape_light_get_position( *( ApeLight ** ) b );
+
+	const float da = PlVector3Length( PlSubtractVector3( lightPosA, viewPos ) );
+	const float db = PlVector3Length( PlSubtractVector3( lightPosB, viewPos ) );
 	return ( da > db ) ? 1 : -1;
 }
 
@@ -313,16 +316,15 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 		return;
 	}
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
+	PLVector3 pos = ape_light_get_position( light );
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
 		//TODO: let us configure draw distance per light
-		float distance = PlVector3Length( PlSubtractVector3( light->base.position, ape_camera_get_position( camera ) ) );
+		float distance = PlVector3Length( PlSubtractVector3( pos, ape_camera_get_position( camera ) ) );
 		if ( distance > ape_config_.renderer.maxLightDistance )
 		{
 			return;
 		}
-
 
 		const PLCollisionSphere sphere = PlSetupCollisionSphere( pos, light->radius );
 		if ( !PlgIsSphereInsideView( camera->internal, &sphere ) )

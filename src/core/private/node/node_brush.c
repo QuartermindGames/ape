@@ -287,7 +287,9 @@ static void compute_brush_bounds( ApeBrush *self )
 		}
 	}
 
-	self->base.localBounds.absOrigin = PlGetAabbAbsOrigin( &self->base.localBounds, self->base.position );
+	PLVector3 localPos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+
+	self->base.localBounds.absOrigin = PlGetAabbAbsOrigin( &self->base.localBounds, localPos );
 }
 
 void ape_brush_flip_face_( ApeBrushFace *face )

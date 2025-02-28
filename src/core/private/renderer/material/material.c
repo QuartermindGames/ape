@@ -925,7 +925,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL ) ? light->base.position : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
@@ -956,19 +956,19 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
-		PLColourF32 sunColour = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		PLColourF32 sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL && light->type == APE_LIGHT_TYPE_SUN ) ? light->base.position : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
+		PLVector3 lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ] >= 0 )
 	{
 		PLColourF32 sunAmbience;
-		if ( ape_rendererState_.camera != NULL && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
+		if ( ape_rendererState_.camera != nullptr && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
 		{
 			sunAmbience = ( PLColourF32 ) { 1.0f, 1.0f, 1.0f, 1.0f };
 		}

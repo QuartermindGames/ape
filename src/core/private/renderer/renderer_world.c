@@ -292,7 +292,8 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 				continue;
 			}
 
-			if ( light != nullptr && ( light->type == APE_LIGHT_TYPE_OMNI ) && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->base.position, light->radius ), &face->bounds ) )
+			PLVector3 lightPos = ape_light_get_position( light );
+			if ( light != nullptr && ( light->type == APE_LIGHT_TYPE_OMNI ) && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
 			{
 				continue;
 			}
@@ -444,7 +445,7 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 	float c = light->radius * light->radius * light->radius;
 	float r = powf( F_PI * c, 1.0f / 3.0f );
 
-	float range = PlVector3Length( PlNormalizeVector3( PlSubtractVector3( *faceOrigin, light->base.position ) ) );
+	float range = PlVector3Length( PlNormalizeVector3( PlSubtractVector3( *faceOrigin, pos ) ) );
 	if ( range > r )
 	{
 		range = r;
@@ -452,10 +453,10 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 
 	range = r - range;
 
-	PLVector3 fdir = PlNormalizeVector3( PlSubtractVector3( *faceOrigin, light->base.position ) );
+	PLVector3 fdir = PlNormalizeVector3( PlSubtractVector3( *faceOrigin, pos ) );
 	PLVector3 fpos = PlAddVector3( *faceOrigin, PlScaleVector3F( fdir, range ) );
 
-	PLVector3 vdir = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
+	PLVector3 vdir = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
 	PLVector3 vpos = PlAddVector3( *vertex, PlScaleVector3F( vdir, range ) );
 
 	ape_draw_debug_arrow( *faceOrigin, fpos, PL_COLOUR_GREEN, 1.0f );
@@ -465,8 +466,8 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 
 #elif 0// this restricts each vertex to the extent of the light radius
 
-	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
-	float     r = PlVector3Length( PlSubtractVector3( *vertex, light->base.position ) );
+	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
+	float     r = PlVector3Length( PlSubtractVector3( *vertex, pos ) );
 	if ( r > light->radius )
 	{
 		r = light->radius;
@@ -533,7 +534,8 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 			}
 
 			//todo: this check should probably be integrated into light_test_plane...
-			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( light->base.position, light->radius ), &brush->faces[ i ].bounds ) )
+			PLVector3 lightPos = ape_light_get_position( light );
+			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &brush->faces[ i ].bounds ) )
 			{
 				continue;
 			}
