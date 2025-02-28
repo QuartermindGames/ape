@@ -292,10 +292,13 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 				continue;
 			}
 
-			PLVector3 lightPos = ape_light_get_position( light );
-			if ( light != nullptr && ( light->type == APE_LIGHT_TYPE_OMNI ) && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
+			if ( light != nullptr )
 			{
-				continue;
+				PLVector3 lightPos = ape_light_get_position( light );
+				if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
+				{
+					continue;
+				}
 			}
 
 #if 0// ditched for speed...
