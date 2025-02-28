@@ -336,7 +336,10 @@ static void queue_light( ApeCamera *camera, ApeLight *light )
 		ape_draw_debug_sphere( pos, PlColourF32ToU8( &light->colour ), light->radius );
 		if ( light->type != APE_LIGHT_TYPE_OMNI )
 		{
-			PLVector3 end = PlAddVector3( pos, PlScaleVector3F( light->base.angles, 2.0f ) );
+			PLVector3 angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
+			PLVector3 forward;
+			PlAnglesAxes( angles, nullptr, nullptr, &forward );
+			PLVector3 end = PlAddVector3( pos, PlScaleVector3F( forward, 16.0f ) );
 			ape_draw_debug_arrow( pos, end, PlColourF32ToU8( &light->colour ), 1.0f );
 		}
 	}

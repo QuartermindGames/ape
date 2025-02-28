@@ -489,14 +489,17 @@ typedef enum ApeLightFlag
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
 void      ape_light_destroy( ApeLight *light );
 
-PLColourF32 ape_light_get_colour( const ApeLight *light );
+PLColourF32 ape_light_get_colour( const ApeLight *self );
 void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
 
-PLVector3 ape_light_get_position( const ApeLight *light );
+PLVector3 ape_light_get_position( const ApeLight *self );
 void      ape_light_set_position( ApeLight *light, const PLVector3 *position );
 
 PLVector3 ape_light_get_angles( const ApeLight *self );
 void      ape_light_set_angles( ApeLight *self, const PLVector3 *angles );
+
+ApeLightType ape_light_get_type( const ApeLight *self );
+void         ape_light_set_type( ApeLight *self, ApeLightType type );
 
 void ape_light_set_radius( ApeLight *self, float radius );
 

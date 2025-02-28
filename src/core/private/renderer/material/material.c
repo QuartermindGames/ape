@@ -933,6 +933,26 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
 	}
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ] >= 0 )
+	{
+		PLVector3 lightDirection;
+		if ( light != nullptr )
+		{
+			PLVector3 angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
+			PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
+			lightDirection = PlNormalizeVector3( lightDirection );
+		}
+		else
+		{
+			lightDirection = pl_vecOrigin3;
+		}
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
+	}
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ] >= 0 )
+	{
+		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( PL_DEG2RAD( 12.5f ) ) : 0.0f;
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
+	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{

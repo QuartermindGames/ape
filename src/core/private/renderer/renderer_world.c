@@ -420,9 +420,14 @@ static constexpr float F_INFINITY = 10000.0f;
 
 static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex, const PLVector3 *faceOrigin )
 {
+	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
 	if ( light->type == APE_LIGHT_TYPE_SUN )
 	{
-		return PlScaleVector3F( PlNormalizeVector3( light->base.position ), F_INFINITY );
+		return PlScaleVector3F( PlNormalizeVector3( pos ), F_INFINITY );
+	}
+	if ( light->type == APE_LIGHT_TYPE_SPOT )
+	{
+		return PlScaleVector3F( *vertex, light->radius );
 	}
 
 #if 0// this doesn't work right now...
@@ -475,7 +480,7 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 
 	float     c = light->radius * light->radius * light->radius;
 	float     r = powf( F_PI * c, 1.0f / 3.0f );
-	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, light->base.position ) );
+	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
 	return PlAddVector3( *vertex, PlScaleVector3F( s, r ) );
 
 #endif

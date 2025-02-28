@@ -53,6 +53,16 @@ void ape_light_set_angles( ApeLight *self, const PLVector3 *angles )
 	ape_world_node_set_angles( ( ApeWorldNode * ) self, angles );
 }
 
+ApeLightType ape_light_get_type( const ApeLight *self )
+{
+	return self->type;
+}
+
+void ape_light_set_type( ApeLight *self, ApeLightType type )
+{
+	self->type = type;
+}
+
 void ape_light_set_radius( ApeLight *self, float radius )
 {
 	self->radius = radius;
@@ -64,7 +74,7 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light )
 	{
 		return APE_LIGHT_SHADOW_TYPE_DYNAMIC;
 	}
-	else if ( light->flags & APE_LIGHT_FLAG_SHADOWS )
+	if ( light->flags & APE_LIGHT_FLAG_SHADOWS )
 	{
 		return APE_LIGHT_SHADOW_TYPE_STATIC;
 	}
@@ -97,7 +107,6 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 
 	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( origin, ape_light_get_position( self ) ) );
 	float     dot = PlVector3DotProduct( plane->normal, dir );
-
 	if ( self->type == APE_LIGHT_TYPE_SUN )
 	{
 		return ( dot >= 0 );
