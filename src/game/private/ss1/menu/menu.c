@@ -251,7 +251,7 @@ void ss1_menu_shutdown()
 	guiDestroyFont( menuFont );
 }
 
-void ss1_menu_tick( void )
+void ss1_menu_tick( double delta )
 {
 	menu_pie_tick( interactPie );
 }

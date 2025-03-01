@@ -247,15 +247,9 @@ static void world_tick( double delta )
 
 static bool ss1_tick( double delta )
 {
-	ss1_menu_tick();
-
 	delta = game_get_time_delta_( delta );
 
-	handle_input( delta );
-
 	world_tick( delta );
-
-	game_integrations_discord_tick_();
 
 	return true;
 }
@@ -353,6 +347,15 @@ static void client_process_message( const void *buf, size_t bufSize )
 	game_client_process_message_( buf, bufSize );
 }
 
+static void client_tick( double delta )
+{
+	ss1_menu_tick( delta );
+
+	handle_input( delta );
+
+	game_integrations_discord_tick_();
+}
+
 const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
@@ -368,6 +371,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .serverProcessMessage     = server_process_message,
 
 	        .clientProcessMessage = client_process_message,
+	        .clientTick           = client_tick,
 	};
 	return &gameMode;
 }
