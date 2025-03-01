@@ -26,13 +26,8 @@ set(YIN_CORE_CLIENT
 
 set(APE_SOURCE_GUI
         private/gui/gui.c
-        private/gui/gui_button.c
-        private/gui/gui_desktop.c
-        private/gui/gui_cursor.c
         private/gui/gui_draw.c
         private/gui/gui_font.c
-        private/gui/gui_image.c
-        private/gui/gui_panel.c
 )
 
 set(APE_SOURCE_EDITORS

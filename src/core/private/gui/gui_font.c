@@ -13,7 +13,7 @@
  * GUI BITMAP FONT API
  ****************************************/
 
-typedef struct GuiFont
+typedef struct ApeGuiFont
 {
 	PLGTexture *texture;
 
@@ -25,11 +25,11 @@ typedef struct GuiFont
 	float tabWidth;
 
 	PLGMesh *mesh;
-} GuiFont;
+} ApeGuiFont;
 
 static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
-static GuiFont       *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
+static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 static float     fontSlant        = 0.0f;
 static PLVector2 fontShadowOffset = PL_VECTOR2( 1.0f, 1.0f );
@@ -81,14 +81,14 @@ static uint32_t decode_utf8_char( const char **string )
 	return c;
 }
 
-float gui_font_get_line_spacing( const GuiFont *font ) { return font->lineSpacing; }
+float gui_font_get_line_spacing( const ApeGuiFont *font ) { return font->lineSpacing; }
 
-GuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
+ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 {
 	return defaultFonts[ defaultType ];
 }
 
-void guiDestroyFont( GuiFont *font )
+void guiDestroyFont( ApeGuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
 	PlgDestroyTexture( font->texture );
@@ -97,12 +97,12 @@ void guiDestroyFont( GuiFont *font )
 	PL_DELETE( font );
 }
 
-static GuiFont *font_deserialize( PLFile *file )
+static ApeGuiFont *font_deserialize( PLFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
 	{
-		GUI_WARNING( "Invalid font file!\n" );
+		ape_warning_( "Invalid font file!\n" );
 		return nullptr;
 	}
 
@@ -110,18 +110,18 @@ static GuiFont *font_deserialize( PLFile *file )
 	assert( version <= COM_FORMAT_FONT_VERSION );
 	if ( version > COM_FORMAT_FONT_VERSION )
 	{
-		GUI_WARNING( "Unsupported font version (%u)!\n", version );
+		ape_warning_( "Unsupported font version (%u)!\n", version );
 		return nullptr;
 	}
 
 	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
 	if ( numGlyphs == 0 )
 	{
-		GUI_WARNING( "Empty font file!\n" );
+		ape_warning_( "Empty font file!\n" );
 		return nullptr;
 	}
 
-	GuiFont *font    = PL_NEW( GuiFont );
+	ApeGuiFont *font = PL_NEW( ApeGuiFont );
 	font->glyphTable = PlCreateHashTable();
 	font->glyphs     = PL_NEW_( ComFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i )
@@ -147,7 +147,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	if ( bitmapW == 0 || bitmapH == 0 )
 	{
 		guiDestroyFont( font );
-		GUI_WARNING( "Invalid bitmap size for font!\n" );
+		ape_warning_( "Invalid bitmap size for font!\n" );
 		return nullptr;
 	}
 
@@ -156,7 +156,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
 		guiDestroyFont( font );
-		GUI_WARNING( "Failed to load entirity of bitmap image from font!\n" );
+		ape_warning_( "Failed to load entirity of bitmap image from font!\n" );
 		return nullptr;
 	}
 
@@ -165,7 +165,7 @@ static GuiFont *font_deserialize( PLFile *file )
 	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
 	{
 		guiDestroyFont( font );
-		GUI_WARNING( "Failed to upload texture data for font!\n" );
+		ape_warning_( "Failed to upload texture data for font!\n" );
 		return nullptr;
 	}
 
@@ -176,23 +176,23 @@ static GuiFont *font_deserialize( PLFile *file )
 	return font;
 }
 
-GuiFont *gui_font_load( const char *path )
+ApeGuiFont *gui_font_load( const char *path )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		GUI_WARNING( "Failed to load font: %s\n", PlGetError() );
+		ape_warning_( "Failed to load font: %s\n", PlGetError() );
 		return nullptr;
 	}
 
-	GuiFont *font = font_deserialize( file );
+	ApeGuiFont *font = font_deserialize( file );
 
 	PlCloseFile( file );
 
 	return font;
 }
 
-bool guiInitializeFonts_( void )
+bool ape_gui_initialize_fonts_( void )
 {
 	cachedFonts      = PlCreateVectorArray( GUI_MAX_FONT_DEFAULTS );
 	cachedFontsTable = PlCreateHashTable();
@@ -209,7 +209,7 @@ bool guiInitializeFonts_( void )
 		assert( defaultFonts[ i ] != NULL );
 		if ( defaultFonts[ i ] == NULL )
 		{
-			GUI_ERROR( "Failed to load default font (%s)!\n", fontPaths[ i ] );
+			ape_warning_( "Failed to load default font (%s)!\n", fontPaths[ i ] );
 			return false;
 		}
 	}
@@ -217,7 +217,7 @@ bool guiInitializeFonts_( void )
 	return true;
 }
 
-void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t character, float *dw, float *dh )
+void guiGetCharacterPixelSize( const ApeGuiFont *font, float scale, uint32_t character, float *dw, float *dh )
 {
 	const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )
@@ -231,7 +231,7 @@ void guiGetCharacterPixelSize( const GuiFont *font, float scale, uint32_t charac
 	if ( dh != NULL ) { *dh = glyph->h; }
 }
 
-float guiGetCharacterPixelWidth( const GuiFont *font, float scale, uint32_t character )
+float guiGetCharacterPixelWidth( const ApeGuiFont *font, float scale, uint32_t character )
 {
 	float w;
 	guiGetCharacterPixelSize( font, scale, character, &w, NULL );
@@ -249,7 +249,7 @@ void gui_font_set_shadow_offset( float x, float y )
 	fontShadowOffset.y = y;
 }
 
-void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
+void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
 	float h = 0;
@@ -286,7 +286,7 @@ void gui_font_get_string_pixel_size( const GuiFont *self, float scale, const cha
 	if ( dh != NULL ) { *dh = h; }
 }
 
-void gui_font_draw_glyph( const GuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
+void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
 {
 	float tw = ( float ) glyph->w / ( float ) font->texture->w;
 	float th = ( float ) glyph->h / ( float ) font->texture->h;
@@ -306,7 +306,7 @@ void gui_font_draw_glyph( const GuiFont *font, float x, float y, float scale, co
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void gui_font_draw_character( const GuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
+void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
 {
 	ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )
@@ -317,7 +317,7 @@ void gui_font_draw_character( const GuiFont *font, float x, float y, float scale
 	gui_font_draw_glyph( font, x, y, scale, colour, glyph );
 }
 
-void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
+void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
@@ -363,7 +363,7 @@ void gui_font_draw_string( const GuiFont *self, float x, float y, float *ox, flo
 	if ( oy != NULL ) *oy = ny;
 }
 
-void gui_font_display( GuiFont *font )
+void gui_font_display( ApeGuiFont *font )
 {
 	//TODO: update this to use the material system instead!
 

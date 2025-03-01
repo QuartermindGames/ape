@@ -10,23 +10,10 @@
 #include "game/game_public.h"
 
 #include "renderer/renderer.h"
-#include "renderer/renderer_render_target.h"
 #include "renderer/renderer_font.h"
 #include "renderer/post/post.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
-static GuiCanvas *canvas;
-
-static const GuiStyleSheet *defaultStyle;
-static GuiPanel            *rootPanel;
-static GuiPanel            *cursor;
-
-static int guiWidth  = 800;
-static int guiHeight = 600;
-
-static bool drawGUI = false;
+static bool drawGUI = true;
 
 static ApeMaterial *baseGuiMat;
 
@@ -51,7 +38,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	float ch = ( float ) defaultFont->ch;
 
 	const ApeCamera *camera = viewport->camera;
-	if ( camera != NULL )
+	if ( camera != nullptr )
 	{
 		// Draw camera position
 		char buf[ 128 ];
@@ -123,7 +110,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 		float x = sx;
 
 		ComProfilingGroup *group = com_profiler_get_first_group();
-		while ( group != NULL )
+		while ( group != nullptr )
 		{
 			if ( y + GRAPH_HEIGHT >= ( float ) viewport->height )
 			{
@@ -149,56 +136,19 @@ static void draw_debug_overlay( ApeViewport *viewport )
 
 void ape_initialize_gui_( void )
 {
-	PlRegisterConsoleVariable( "gui_draw", "Enable/disable drawing of the GUI.", "0", PL_VAR_BOOL, &drawGUI, NULL, false );
-	PlRegisterConsoleVariable( "gui_width", "Width of the GUI canvas.", "800", PL_VAR_I32, &guiWidth, NULL, false );
-	PlRegisterConsoleVariable( "gui_height", "Height of the GUI canvas.", "600", PL_VAR_I32, &guiHeight, NULL, false );
+	PlRegisterConsoleVariable( "gui_draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &drawGUI, nullptr, false );
 
 	auxCamera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT, APE_CAMERA_DRAW_MODE_SHADED );
-	if ( auxCamera == NULL )
+	if ( auxCamera == nullptr )
 	{
 		ape_error_( true, "Failed to create auxiliary camera!\n" );
 	}
 
 	ape_gui_initialize_();
-
-	defaultStyle = ape_gui_cache_style_sheet( "guis/styles/default.n" );
-	if ( defaultStyle == NULL )
-	{
-		ape_error_( true, "Failed to cache base style for GUI!\n" );
-	}
-
-	ape_gui_set_style_sheet( defaultStyle );
-
-	canvas = ape_gui_canvas_create( guiWidth, guiHeight );
-	if ( canvas == NULL )
-	{
-		ape_error_( true, "Failed to create GUI canvas!\n" );
-	}
-
-	rootPanel = ape_gui_panel_create( NULL, 0, 0, guiWidth, guiHeight, GUI_PANEL_BACKGROUND_NONE, GUI_PANEL_BORDER_NONE );
-	if ( rootPanel == NULL )
-	{
-		ape_error_( true, "Failed to create base panel!\n" );
-	}
-
-	cursor = ape_gui_cursor_create( rootPanel, 0, 0 );
-	if ( cursor == NULL )
-	{
-		ape_error_( true, "Failed to create cursor!\n" );
-	}
-
-	ape_gui_panel_set_visible( rootPanel, true );
-
-	baseGuiMat = ape_material_cache( "materials/ui/ui_rt_base.mat.n", APE_CACHE_GROUP_WORLD, false );
-	if ( baseGuiMat == NULL )
-	{
-		ape_error_( true, "Failed to cache base material for ui!\n" );
-	}
 }
 
 void ape_shutdown_gui_( void )
 {
-	ape_gui_panel_destroy( rootPanel );
 	ape_gui_shutdown_();
 
 	ape_material_release( baseGuiMat );
@@ -212,7 +162,7 @@ void ape_set_2d_viewport_size_( int w, int h )
 
 void ape_get_2d_viewport_size_( int *width, int *height )
 {
-	PlgGetViewport( NULL, NULL, width, height );
+	PlgGetViewport( nullptr, nullptr, width, height );
 }
 
 void ape_flare_draw_( const ApeViewport *viewport );
@@ -221,7 +171,13 @@ void ape_draw_gui_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
+	if ( !drawGUI )
+	{
+		COM_PROFILE_FUNCTION_END();
+		return;
+	}
+
+	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	// Need to call this again to reset the viewport
 	ape_set_2d_viewport_size_( viewport->width, viewport->height );
@@ -232,10 +188,10 @@ void ape_draw_gui_( ApeViewport *viewport )
 	float h = ( float ) viewport->height;
 
 	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
-	if ( renderTarget != NULL )
+	if ( renderTarget != nullptr )
 	{
 		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
-		if ( texture != NULL )
+		if ( texture != nullptr )
 		{
 			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
 			PlgSetShaderProgram( program->internal );
@@ -246,18 +202,6 @@ void ape_draw_gui_( ApeViewport *viewport )
 	}
 
 	ape_flare_draw_( viewport );
-
-	if ( drawGUI )
-	{
-		gui_canvas_set_size( canvas, guiWidth, guiHeight );
-		gui_canvas_draw( canvas, rootPanel );
-
-		// Need to call this again to reset the viewport
-		ape_set_2d_viewport_size_( viewport->width, viewport->height );
-
-		// draw the output of the canvas
-		ape_draw_textured_quad( baseGuiMat, 0, 0, w, h, &PL_COLOUR_WHITE );
-	}
 
 	if ( !ape_is_editor_active() )
 	{
@@ -273,8 +217,8 @@ void ape_draw_gui_( ApeViewport *viewport )
 		char tmp[ 32 ];
 		snprintf( tmp, sizeof( tmp ), "FPS: %u", ape_viewport_get_framerate( viewport ) );
 
-		GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
-		gui_font_draw_string( font, 10.0f, 10.0f, NULL, NULL, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
+		ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+		gui_font_draw_string( font, 10.0f, 10.0f, nullptr, nullptr, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
 		gui_font_display( font );
 	}
 
@@ -283,7 +227,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 	{
 		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]";
 		float              sw, sh;
-		GuiFont           *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+		ApeGuiFont        *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 		gui_font_get_string_pixel_size( font, 1.0f, buildIdentifier, strlen( buildIdentifier ), &sw, &sh );
 		gui_font_draw_string( font, w / 2 - ( sw / 2 ), h - sh, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, buildIdentifier, strlen( buildIdentifier ), false );
 		gui_font_display( font );
@@ -298,7 +242,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 
 void ape_draw_menu_( ApeViewport *viewport )
 {
-	if ( viewport == NULL )
+	if ( viewport == nullptr )
 	{
 		return;
 	}
@@ -320,7 +264,7 @@ void ape_draw_menu_( ApeViewport *viewport )
 
 	draw_debug_overlay( viewport );
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
 
 	PlPopMatrix();
 
@@ -337,17 +281,5 @@ void ape_tick_gui_( double delta )
 
 	ape_console_update_notifications_( delta );
 
-	gui_panel_tick( rootPanel );
-
 	COM_PROFILE_FUNCTION_END();
-}
-
-void ss_acl_resize_gui_( int w, int h )
-{
-	gui_panel_set_size( rootPanel, w, h );
-}
-
-GuiPanel *ss_gui_get_root_panel( void )
-{
-	return rootPanel;
 }

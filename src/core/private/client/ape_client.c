@@ -10,8 +10,8 @@
 #include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
-#include "world/world.h"
 #include "ape_protocol.h"
+#include "yin/core_game.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -234,6 +234,11 @@ void ape_tick_client_( double delta )
 	ape_tick_gui_( delta );
 	ape_tick_materials_();
 	ape_audio_tick_();
+
+	if ( ape_gameInterface->clientTick != nullptr )
+	{
+		ape_gameInterface->clientTick( delta );
+	}
 
 	handle_connection_state();
 

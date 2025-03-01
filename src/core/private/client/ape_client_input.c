@@ -482,7 +482,7 @@ void Client_Input_HandleMouseMotionEvent( int x, int y )
 	inputMouse.x  = x;
 	inputMouse.y  = y;
 
-	guiUpdateMousePosition( inputMouse.x, inputMouse.y );
+	ape_gui_update_mouse_position_( inputMouse.x, inputMouse.y );
 }
 
 void ape_client_input_get_mouse_position( int *x, int *y )

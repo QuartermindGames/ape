@@ -1,186 +1,49 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <plcore/pl_console.h>
-
 #include <acm/acm.h>
-
-#include "common.h"
 
 #include "gui_private.h"
 
-/****************************************
- * GUI
- ****************************************/
+ApeGUIState ape_guiState_;
 
-GuiState guiState;
-
-static PLLinkedList *cachedTextures;
-typedef struct GuiCachedTexture
-{
-	unsigned int hash;
-	PLGTexture *texture;
-} GuiCachedTexture;
-PLGTexture *guiCacheTexture( const char *path )
-{
-	unsigned int hash = PlGenerateHashSDBM( path );
-	PLLinkedListNode *node = PlGetFirstNode( cachedTextures );
-	while ( node != NULL )
-	{
-		GuiCachedTexture *cachedTexture = PlGetLinkedListNodeUserData( node );
-		if ( cachedTexture->hash == hash )
-		{
-			return cachedTexture->texture;
-		}
-
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	PLGTexture *texture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_LINEAR );
-	if ( texture == NULL )
-	{
-		return NULL;
-	}
-
-	GuiCachedTexture *cachedTexture = PL_NEW( GuiCachedTexture );
-	cachedTexture->texture = texture;
-	cachedTexture->hash = hash;
-	PlInsertLinkedListNode( cachedTextures, cachedTexture );
-	return cachedTexture->texture;
-}
-
-#define MAX_STYLE_SHEETS 16
-GuiStyleSheet styleSheets[ MAX_STYLE_SHEETS ];
-const GuiStyleSheet *activeSheet = NULL;
-static unsigned int numStyleSheets = 0;
-
-#define GUI_STYLESHEET_VERSION 1
-
-static GuiStyleSheet *ParseStyleSheet( AcmBranch *root )
-{
-	GuiStyleSheet *guiStyleSheet = &styleSheets[ numStyleSheets ];
-	PL_ZERO( guiStyleSheet, sizeof( GuiStyleSheet ) );
-
-	unsigned int version = acm_get_uint( root, "version", ( unsigned int ) -1 );
-	if ( version == ( unsigned int ) -1 || version > GUI_STYLESHEET_VERSION )
-	{
-		GUI_WARNING( "Unexpected version in stylesheet, expected %d but found %d!\n", GUI_STYLESHEET_VERSION, version );
-		return NULL;
-	}
-
-	AcmBranch *c;
-	c = acm_get_child_by_name( root, "colours" );
-	if ( c != NULL )
-	{
-		AcmBranch *i;
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BACKGROUND ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BACKGROUND ], 4 );
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BACKGROUND ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BACKGROUND ], 4 );
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_TOP ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_TOP ], 4 );
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_INSET_BORDER_BOTTOM ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_INSET_BORDER_BOTTOM ], 4 );
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_TOP ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_TOP ], 4 );
-		if ( ( i = acm_get_child_by_name( c, PL_STRINGIFY( GUI_COLOUR_OUTSET_BORDER_BOTTOM ) ) ) != NULL )
-			acm_branch_get_float32_array( i, ( float * ) &guiStyleSheet->colours[ GUI_COLOUR_OUTSET_BORDER_BOTTOM ], 4 );
-	}
-
-	c = acm_get_child_by_name( root, "borders" );
-	if ( c != NULL )
-	{
-		unsigned int style = acm_get_uint( c, "style", -1 );
-		if ( style < GUI_MAX_BORDER_STYLES )
-			guiStyleSheet->borderStyle = style;
-		else
-			GUI_WARNING( "No border style specified, using default.\n" );
-
-		AcmBranch *i;
-		if ( ( i = acm_get_child_by_name( c, "padding" ) ) != NULL )
-			acm_branch_get_int32_array( i, guiStyleSheet->borderPadding, GUI_MAX_BORDER_ELEMENTS );
-	}
-
-	return guiStyleSheet;
-}
-
-const GuiStyleSheet *ape_gui_cache_style_sheet( const char *path )
-{
-	AcmBranch *root = com_acm_load_file( path, "guiStyle" );
-	if ( root == NULL )
-	{
-		GUI_WARNING( "Failed to load node file: %s\n", acm_get_error_message() );
-		return NULL;
-	}
-
-	return ParseStyleSheet( root );
-}
-
-void ape_gui_set_style_sheet( const GuiStyleSheet *styleSheet )
-{
-	activeSheet = styleSheet;
-}
-
-const GuiStyleSheet *guiGetActiveStyleSheet( void )
-{
-	return activeSheet;
-}
-
-int gui_LogLevels_[ GUI_MAX_LOG_LEVELS ];
+bool ape_gui_initialize_fonts_( void );
+void ape_gui_initialize_draw_( void );
 
 /**
  * Initialize the GUI sub-system.
  */
 bool ape_gui_initialize_( void )
 {
-	PL_ZERO_( guiState );
+	PL_ZERO_( ape_guiState_ );
 
-	gui_LogLevels_[ GUI_LOGLEVEL_DEFAULT ] = PlAddLogLevel( "gui", PL_COLOUR_LIGHT_CORAL, true );
-	gui_LogLevels_[ GUI_LOGLEVEL_WARNING ] = PlAddLogLevel( "gui/warning", PL_COLOUR_YELLOW, true );
-	gui_LogLevels_[ GUI_LOGLEVEL_ERROR ] = PlAddLogLevel( "gui/error", PL_COLOUR_DARK_RED, true );
-	gui_LogLevels_[ GUI_LOGLEVEL_DEBUG ] = PlAddLogLevel( "gui/debug", PL_COLOUR_CRIMSON,
-#ifndef NDEBUG
-	                                                      true
-#else
-	                                                      false
-#endif
-	);
-
-	guiInitializeDraw_();
-	if ( !guiInitializeFonts_() )
+	ape_gui_initialize_draw_();
+	if ( !ape_gui_initialize_fonts_() )
 	{
-		GUI_ERROR( "Font initialization failed!\n" );
+		ape_warning_( "Font initialization failed!\n" );
 		return false;
 	}
 
-	GUI_PRINT( "GUI initialized!\n" );
+	ape_print_( "GUI initialized!\n" );
 	return true;
 }
 
 void ape_gui_shutdown_( void )
 {
 	guiShutdownDraw_();
-
-	for ( unsigned int i = 0; i < GUI_MAX_LOG_LEVELS; ++i )
-		PlRemoveLogLevel( gui_LogLevels_[ i ] );
 }
 
-void gui_panel_tick( GuiPanel *root )
+void ape_gui_update_mouse_position_( int x, int y )
 {
-	guiTickPanel( root );
-}
-
-void guiUpdateMousePosition( int x, int y )
-{
-	guiState.mouseOldPos = guiState.mousePos;
-	guiState.mousePos.x = x;
-	guiState.mousePos.y = y;
+	ape_guiState_.mouseOldPos = ape_guiState_.mousePos;
+	ape_guiState_.mousePos.x  = x;
+	ape_guiState_.mousePos.y  = y;
 }
 
 void gui_update_mouse_wheel( float x, float y )
 {
-	guiState.mouseOldWheel = guiState.mouseWheel;
-	guiState.mouseWheel.x = x;
-	guiState.mouseWheel.y = y;
+	ape_guiState_.mouseOldWheel = ape_guiState_.mouseWheel;
+	ape_guiState_.mouseWheel.x  = x;
+	ape_guiState_.mouseWheel.y  = y;
 }
 
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown )

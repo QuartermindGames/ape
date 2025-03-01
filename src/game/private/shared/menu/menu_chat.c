@@ -8,7 +8,7 @@
 static bool chatIsActive;
 
 static const char *chatFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
-static GuiFont    *chatFont;
+static ApeGuiFont    *chatFont;
 
 typedef struct ChatMessage
 {

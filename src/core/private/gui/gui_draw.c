@@ -11,35 +11,38 @@
  * GUI DRAW API
  ****************************************/
 
-typedef struct GUIDrawBatch
+typedef struct ApeGuiDrawBatch
 {
-	PLGMesh *mesh;
+	PLGMesh    *mesh;
 	PLGTexture *texture;
-	bool usedThisFrame;
-} GUIDrawBatch;
+	bool        usedThisFrame;
+} ApeGuiDrawBatch;
 
 /****************************************
  * Canvas
  ****************************************/
 
-typedef struct GuiCanvas
+typedef struct ApeGuiCanvas
 {
 	ApeRenderTarget *renderTarget;
-	bool filter;
-	int width;
-	int height;
-} GuiCanvas;
+	bool             filter;
+	int              width;
+	int              height;
 
-GuiCanvas *ape_gui_canvas_create( int width, int height )
+	PLMatrix4 viewMatrix, oldViewMatrix;
+	int       oldViewport[ 4 ];
+} ApeGuiCanvas;
+
+ApeGuiCanvas *ape_gui_canvas_create( int width, int height )
 {
-	GuiCanvas *canvas = PL_NEW( GuiCanvas );
-	canvas->width = width;
-	canvas->height = height;
+	ApeGuiCanvas *canvas    = PL_NEW( ApeGuiCanvas );
+	canvas->width        = width;
+	canvas->height       = height;
 	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 	return canvas;
 }
 
-void guiDestroyCanvas( GuiCanvas *canvas )
+void ape_gui_destroy_canvas( ApeGuiCanvas *canvas )
 {
 	if ( canvas == NULL )
 	{
@@ -51,7 +54,7 @@ void guiDestroyCanvas( GuiCanvas *canvas )
 	PL_DELETE( canvas );
 }
 
-void gui_canvas_set_size( GuiCanvas *canvas, int width, int height )
+void ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height )
 {
 	if ( canvas->width == width && canvas->height == height )
 	{
@@ -61,7 +64,7 @@ void gui_canvas_set_size( GuiCanvas *canvas, int width, int height )
 	ape_render_target_set_size( canvas->renderTarget, width, height );
 }
 
-void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height )
+void ape_gui_get_canvas_size( ApeGuiCanvas *canvas, int *width, int *height )
 {
 	if ( width != NULL )
 	{
@@ -73,7 +76,7 @@ void guiGetCanvasSize( GuiCanvas *canvas, int *width, int *height )
 	}
 }
 
-PLGTexture *guiGetCanvasTexture( GuiCanvas *canvas )
+PLGTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas )
 {
 	return ape_render_target_get_texture( canvas->renderTarget );
 }
@@ -85,28 +88,26 @@ static PLGCamera *camera;
 
 static PLLinkedList *batches;
 
-static bool hasBegun = false;
-
-void guiInitializeDraw_( void )
+void ape_gui_initialize_draw_( void )
 {
 	batches = PlCreateLinkedList();
 
-	camera = PlgCreateCamera();
+	camera       = PlgCreateCamera();
 	camera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
 	camera->near = 0.0f;
-	camera->far = 1000.0f;
+	camera->far  = 1000.0f;
 }
 
 void guiShutdownDraw_( void )
 {
 }
 
-PLGMesh *guiGetBatchQueueMesh( PLGTexture *texture )
+PLGMesh *ape_gui_get_batch_queue_mesh( PLGTexture *texture )
 {
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )
 	{
-		GUIDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
+		ApeGuiDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
 		if ( drawBatch->texture == texture )
 		{
 			return drawBatch->mesh;
@@ -116,19 +117,19 @@ PLGMesh *guiGetBatchQueueMesh( PLGTexture *texture )
 	}
 
 	// Texture isn't in the queue, so create a new batch request
-	GUIDrawBatch *drawBatch = PL_NEW( GUIDrawBatch );
-	drawBatch->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
-	drawBatch->texture = texture;
+	ApeGuiDrawBatch *drawBatch = PL_NEW( ApeGuiDrawBatch );
+	drawBatch->mesh            = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
+	drawBatch->texture         = texture;
 	PlInsertLinkedListNode( batches, drawBatch );
 	return drawBatch->mesh;
 }
 
-static void CleanupBatchQueue( void )
+static void cleanup_batch_queue( void )
 {
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )
 	{
-		GUIDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
+		ApeGuiDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
 		if ( drawBatch->mesh->num_triangles == 0 )
 		{
 			PlgDestroyMesh( drawBatch->mesh );
@@ -136,7 +137,7 @@ static void CleanupBatchQueue( void )
 			PL_DELETE( drawBatch );
 
 			PLLinkedListNode *prevNode = node;
-			node = PlGetNextLinkedListNode( node );
+			node                       = PlGetNextLinkedListNode( node );
 			PlDestroyLinkedListNode( prevNode );
 			continue;
 		}
@@ -145,24 +146,22 @@ static void CleanupBatchQueue( void )
 		node = PlGetNextLinkedListNode( node );
 	}
 
-	guiState.lastNumTriangles = guiState.numTriangles;
-	guiState.numTriangles = 0;
-	guiState.lastNumBatches = guiState.numBatches;
-	guiState.numBatches = 0;
+	ape_guiState_.lastNumTriangles = ape_guiState_.numTriangles;
+	ape_guiState_.numTriangles     = 0;
+	ape_guiState_.lastNumBatches   = ape_guiState_.numBatches;
+	ape_guiState_.numBatches       = 0;
 }
 
-void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
+void gui_canvas_make_active( ApeGuiCanvas *canvas )
 {
-	COM_PROFILE_FUNCTION_START();
-
 	// save old state
 	int ox, oy, ow, oh;
 	PlgGetViewport( &ox, &oy, &ow, &oh );
-	PLMatrix4 oldViewMatrix = PlgGetViewMatrix();
+	canvas->oldViewMatrix = PlgGetViewMatrix();
 
 	PlgSetViewport( 0, 0, canvas->width, canvas->height );
 
-	CleanupBatchQueue();
+	cleanup_batch_queue();
 
 	ape_render_target_bind( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
@@ -174,10 +173,11 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 
 	PlLoadIdentityMatrix();
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
+}
 
-	guiDrawPanel( root );
-
+void gui_canvas_display( ApeGuiCanvas *canvas )
+{
 	ApeShaderProgram *defaultProgram = ape_get_default_shader( APE_SHADER_DEFAULT );
 	PlgSetShaderUniformValue( defaultProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 	PlgSetShaderUniformValue( defaultProgram->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
@@ -188,7 +188,7 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )
 	{
-		GUIDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
+		ApeGuiDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
 		PlgSetTexture( drawBatch->texture, 0 );
 		if ( drawBatch->texture == NULL )
 		{
@@ -202,28 +202,26 @@ void gui_canvas_draw( GuiCanvas *canvas, GuiPanel *root )
 		PlgUploadMesh( drawBatch->mesh );
 		PlgDrawMesh( drawBatch->mesh );
 
-		guiState.numTriangles += drawBatch->mesh->num_triangles;
-		guiState.numBatches++;
+		ape_guiState_.numTriangles += drawBatch->mesh->num_triangles;
+		ape_guiState_.numBatches++;
 
 		node = PlGetNextLinkedListNode( node );
 	}
 
 	PlPopMatrix();
 
-	PlgBindFrameBuffer( NULL, PLG_FRAMEBUFFER_DRAW );
+	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
-	PlgSetTexture( NULL, 0 );
+	PlgSetTexture( nullptr, 0 );
 
 	// restore
-	PlgSetViewMatrix( &oldViewMatrix );
-	PlgSetViewport( ox, oy, ow, oh );
+	PlgSetViewMatrix( &canvas->oldViewMatrix );
+	PlgSetViewport( canvas->oldViewport[ 0 ], canvas->oldViewport[ 1 ], canvas->oldViewport[ 2 ], canvas->oldViewport[ 3 ] );
 
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
-
-	COM_PROFILE_FUNCTION_END();
 }
 
-void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
+void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
 {
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
@@ -239,7 +237,7 @@ void guiDrawFilledRectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, c
 /**
  * Similar to Draw_FilledRectangle, only more explicit for the frame coords.
  */
-void guiDrawQuad( PLGMesh *mesh, GUIVector2 tl, GUIVector2 tr, GUIVector2 ll, GUIVector2 lr, int z, const PLColourF32 *colour )
+void ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const PLColourF32 *colour )
 {
 	// todo: drawing API should take floating-point colours!
 	PLColour bColour = PlColourF32ToU8( colour );

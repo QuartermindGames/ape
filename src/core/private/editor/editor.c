@@ -574,7 +574,7 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 	PlPopMatrix();
 }
 
-static void draw_brush_gui( const ApeViewport *viewport, GuiFont *font )
+static void draw_brush_gui( const ApeViewport *viewport, ApeGuiFont *font )
 {
 #if 0//todo
 	ApeCamera *camera = viewport->camera;
@@ -747,7 +747,7 @@ void ape_editor_post_render_scene_()
 	}
 }
 
-static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root, const ApeViewport *viewport, GuiFont *font, const PLMatrix4 *viewProj )
+static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root, const ApeViewport *viewport, ApeGuiFont *font, const PLMatrix4 *viewProj )
 {
 	if ( !showIcons )
 	{
@@ -842,7 +842,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		return;
 	}
 
-	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 
 	// sigh...
 	PLMatrix4 view     = camera->internal->internal.view;

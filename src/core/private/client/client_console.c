@@ -160,7 +160,7 @@ static void draw_notifications( const ApeViewport *viewport )
 		return;
 	}
 
-	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
 	assert( font != nullptr );
 
 	float y = 8.0f;
@@ -431,7 +431,7 @@ bool ape_console_handle_text_event_( const char *key )
  * RENDERING
  ****************************************/
 
-static void draw_input_field( const ApeViewport *viewport, GuiFont *font )
+static void draw_input_field( const ApeViewport *viewport, ApeGuiFont *font )
 {
 	const float ch = gui_font_get_line_spacing( font );
 	float       cw = guiGetCharacterPixelWidth( font, 1.0f, '>' );
@@ -491,7 +491,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		return;
 	}
 
-	GuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 	if ( font == NULL )
 	{
 		return;
@@ -595,7 +595,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 	draw_input_field( viewport, font );
 
 	/* draw version info */
-	GuiFont *tinyFont = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+	ApeGuiFont *tinyFont = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 	if ( tinyFont != NULL )
 	{
 		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n";

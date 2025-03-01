@@ -46,6 +46,4 @@ void ape_input_handle_mouse_button_event( int button, ApeInputState buttonState 
 void ape_input_handle_mouse_wheel_event( float x, float y );
 void ape_input_handle_mouse_motion_event( int x, int y );
 
-struct GuiPanel *ss_gui_get_root_panel( void );
-
 PL_EXTERN_C_END

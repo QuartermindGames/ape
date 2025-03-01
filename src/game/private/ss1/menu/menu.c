@@ -4,10 +4,10 @@
 #include "../../shared/game_menu_pie.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
-static GuiFont    *menuFont;
+static ApeGuiFont    *menuFont;
 
 static const char *menuTitleFontPath = "guis/fonts/odibee_sans_64.fnt";
-static GuiFont    *menuTitleFont;
+static ApeGuiFont    *menuTitleFont;
 
 static bool isMainMenuOpen = true;
 
