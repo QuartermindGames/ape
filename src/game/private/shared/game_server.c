@@ -18,7 +18,7 @@ void game_server_initialize_()
 	PL_ZERO_( serverClients );
 }
 
-bool game_server_client_validate_( PL_UNUSED ApeServerClientHandle *clientHandle )
+bool game_server_client_validate_( PL_UNUSED ApeServerClient *clientHandle )
 {
 	if ( numServerClients >= GAME_MAX_CLIENTS )
 	{
@@ -32,24 +32,24 @@ bool game_server_client_validate_( PL_UNUSED ApeServerClientHandle *clientHandle
 	return true;
 }
 
-void game_server_client_connected_( ApeServerClientHandle *clientHandle )
+void game_server_client_connected_( ApeServerClient *clientHandle )
 {
 	GameServerClient *serverClient = &serverClients[ numServerClients ];
 	serverClient->slot             = numServerClients;
-	PlInsertHashTableNode( serverClientsLookup, clientHandle, sizeof( ApeServerClientHandle * ), serverClient );
+	PlInsertHashTableNode( serverClientsLookup, clientHandle, sizeof( ApeServerClient * ), serverClient );
 	serverClient->internalHandle = clientHandle;
 	numServerClients++;
 }
 
-void game_server_client_disconnected_( ApeServerClientHandle *clientHandle )
+void game_server_client_disconnected_( ApeServerClient *clientHandle )
 {
-	GameServerClient *serverClient = PlLookupHashTableUserData( serverClientsLookup, clientHandle, sizeof( ApeServerClientHandle * ) );
+	GameServerClient *serverClient = PlLookupHashTableUserData( serverClientsLookup, clientHandle, sizeof( ApeServerClient * ) );
 	assert( serverClient != nullptr );
 	PlDestroyHashTableNode( serverClient->hashTableNode );
 	serverClient->slot = 0;
 }
 
-void game_server_process_message_( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
+void game_server_process_message_( ApeServerClient *clientHandle, const void *buf, size_t bufSize )
 {
 	const GameNetMessageHeader *header = buf;
 	switch ( header->type )
@@ -69,7 +69,7 @@ void game_server_process_message_( ApeServerClientHandle *clientHandle, const vo
 	}
 }
 
-bool game_server_send_message_( ApeServerClientHandle *clientHandle, GameNetMessageType type, const void *buf, size_t bufSize )
+bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageType type, const void *buf, size_t bufSize )
 {
 	const void *items[] = {
 	        &( GameNetMessageHeader ) { .type = type },
@@ -145,7 +145,7 @@ void game_server_broadcast_message_( GameNetMessageType type, const void *buf, s
 	}
 }
 
-void game_server_print_( ApeServerClientHandle *clientHandle, const char *message )
+void game_server_print_( ApeServerClient *clientHandle, const char *message )
 {
 	size_t messageSize = strlen( message );
 	if ( messageSize > GAME_NET_MAX_SAY_MESSAGE )

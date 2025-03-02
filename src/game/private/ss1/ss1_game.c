@@ -165,8 +165,7 @@ static void handle_input( double delta )
 			float penetrationDepth = sphere.radius - intersection.distance;
 			if ( penetrationDepth > 0.0f )
 			{
-				PLVector3 closestPoint       = intersection.intersection;
-				PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, closestPoint ) );
+				PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, intersection.intersection ) );
 				pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, penetrationDepth ) );
 			}
 		}
@@ -322,22 +321,22 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 	return false;
 }
 
-static bool server_client_validate( ApeServerClientHandle *clientHandle )
+static bool server_client_validate( ApeServerClient *clientHandle )
 {
 	return game_server_client_validate_( clientHandle );
 }
 
-static void server_client_connected( ApeServerClientHandle *clientHandle )
+static void server_client_connected( ApeServerClient *clientHandle )
 {
 	game_server_client_connected_( clientHandle );
 }
 
-static void server_client_disconnected( ApeServerClientHandle *clientHandle )
+static void server_client_disconnected( ApeServerClient *clientHandle )
 {
 	game_server_client_disconnected_( clientHandle );
 }
 
-static void server_process_message( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
+static void server_process_message( ApeServerClient *clientHandle, const void *buf, size_t bufSize )
 {
 	game_server_process_message_( clientHandle, buf, bufSize );
 }

@@ -4,6 +4,16 @@
 
 PL_EXTERN_C
 
-bool ape_server_send( ApeServerClientHandle *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers );
+typedef struct ApeServerClient ApeServerClient;
+
+typedef enum ApeServerClientState
+{
+	APE_SERVER_CLIENT_STATE_DISCONNECTED,// has lost connection with the server
+	APE_SERVER_CLIENT_STATE_VALIDATING,  // has connected but is pending validation
+	APE_SERVER_CLIENT_STATE_REJECTED,    // client has been rejected and will be dropped
+	APE_SERVER_CLIENT_STATE_ACCEPTED,    // is connected and validation was successful
+} ApeServerClientState;
+
+bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers );
 
 PL_EXTERN_C_END

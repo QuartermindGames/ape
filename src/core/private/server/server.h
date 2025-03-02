@@ -2,12 +2,12 @@
 
 #pragma once
 
+#include "../public/ape/ape_public_server.h"
+
 #include "net/net.h"
 #include "ape_protocol.h"
 
 PL_EXTERN_C
-
-typedef struct ApeServerClient ApeServerClient;
 
 bool ape_server_start( const char *ip, unsigned short port );
 

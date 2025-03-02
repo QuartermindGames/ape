@@ -4,12 +4,13 @@
 
 PL_EXTERN_C
 
+//TODO: urgh...
+#include "ape_public_server.h"
+
 typedef struct ApeWorld ApeWorld;
 typedef struct ApeRoom  ApeRoom;
 
 #define APE_GAME_INTERFACE_VERSION 1
-
-typedef struct ApeServerClient ApeServerClientHandle;
 
 typedef enum ApeGameInterfaceRequest
 {
@@ -40,10 +41,10 @@ typedef struct ApeGameInterfaceImport
 	void ( *clientTick )( double delta );
 
 	// server
-	bool ( *serverClientValidate )( ApeServerClientHandle *clientHandle );
-	void ( *serverClientConnected )( ApeServerClientHandle *clientHandle );
-	void ( *serverClientDisconnected )( ApeServerClientHandle *clientHandle );
-	void ( *serverProcessMessage )( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize );
+	bool ( *serverClientValidate )( ApeServerClient *clientHandle );
+	void ( *serverClientConnected )( ApeServerClient *clientHandle );
+	void ( *serverClientDisconnected )( ApeServerClient *clientHandle );
+	void ( *serverProcessMessage )( ApeServerClient *clientHandle, const void *buf, size_t bufSize );
 } ApeGameInterfaceImport;
 const ApeGameInterfaceImport *ape_game_get_interface( void );
 

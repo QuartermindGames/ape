@@ -14,14 +14,6 @@ static ApeNetSocket *hostSocket;
 static char serverName[ PL_VAR_VALUE_LENGTH ];
 static char serverPass[ PL_VAR_VALUE_LENGTH ];
 
-typedef enum ServerClientState
-{
-	SERVER_CLIENT_STATE_DISCONNECTED,// has lost connection with the server
-	SERVER_CLIENT_STATE_VALIDATING,  // has connected but is pending validation
-	SERVER_CLIENT_STATE_REJECTED,    // client has been rejected and will be dropped
-	SERVER_CLIENT_STATE_ACCEPTED,    // is connected and validation was successful
-} ServerClientState;
-
 typedef struct ApeServerClient
 {
 	char name[ APE_PROTOCOL_MAX_CLIENT_NAME ];
@@ -29,7 +21,7 @@ typedef struct ApeServerClient
 	ApeNetSocket     *netSocket;
 	PLLinkedListNode *node;
 
-	ServerClientState state;
+	ApeServerClientState state;
 
 	ApeProtocolMessage message;
 
@@ -98,7 +90,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	if ( message->magic != APE_PROTOCOL_MAGIC )
 	{
 		ape_warning_( "Invalid magic received from client (%u != %u)!\n", message->magic, APE_PROTOCOL_MAGIC );
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
@@ -108,7 +100,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	if ( baseProtocolVersion != APE_PROTOCOL_VERSION )
 	{
 		ape_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
@@ -116,35 +108,35 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	if ( gameProtocolVersion != game->protocolVersion )
 	{
 		ape_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
 	if ( strncmp( message->identifier, game->identifier, sizeof( message->identifier ) ) != 0 )
 	{
 		ape_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
 	if ( *message->clientName == '\0' )
 	{
 		ape_warning_( "No name specified for client!\n" );
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
-	if ( game->serverClientValidate && !game->serverClientValidate )
+	if ( game->serverClientValidate && !game->serverClientValidate( client ) )
 	{
 		// no warning here as it's assumed the game will spit something out...
-		client->state = SERVER_CLIENT_STATE_REJECTED;
+		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
 	snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
 	ape_print_( "Client (%s) validated successfully\n", client->name );
 
-	client->state = SERVER_CLIENT_STATE_ACCEPTED;
+	client->state = APE_SERVER_CLIENT_STATE_ACCEPTED;
 
 	assert( game->serverClientConnected != nullptr );
 	game->serverClientConnected( client );
@@ -159,19 +151,19 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 static void process_client_message( ApeServerClient *client, const void *buf )
 {
 	const ApeProtocolMessageHeader *messageHeader = ( ApeProtocolMessageHeader * ) buf;
-	if ( client->state == SERVER_CLIENT_STATE_VALIDATING )
+	if ( client->state == APE_SERVER_CLIENT_STATE_VALIDATING )
 	{
 		if ( messageHeader->type != APE_PROTOCOL_MESSAGE_TYPE_VALIDATION )
 		{
 			ape_warning_( "Client answered without validation message, rejecting!\n" );
-			client->state = SERVER_CLIENT_STATE_REJECTED;
+			client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 			return;
 		}
 
 		const ApeProtocolValidationMessage *message;
 		if ( ( message = APE_PROTOCOL_VALIDATE_MESSAGE( &client->message, ApeProtocolValidationMessage ) ) == nullptr )
 		{
-			client->state = SERVER_CLIENT_STATE_REJECTED;
+			client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 			return;
 		}
 
@@ -179,7 +171,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 		return;
 	}
 
-	if ( client->state != SERVER_CLIENT_STATE_ACCEPTED )
+	if ( client->state != APE_SERVER_CLIENT_STATE_ACCEPTED )
 	{
 		return;
 	}
@@ -236,7 +228,7 @@ static void tick_server_client( void *userData, bool *breakEarly )
 			ape_server_drop_client_( serverClient );
 		}
 
-		if ( serverClient->state == SERVER_CLIENT_STATE_REJECTED )
+		if ( serverClient->state == APE_SERVER_CLIENT_STATE_REJECTED )
 		{
 			ape_server_drop_client_( serverClient );
 		}
@@ -255,7 +247,7 @@ void ape_tick_server_( double delta )
 			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
 			serverClient->netSocket       = connectedSocket;
 			serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
-			serverClient->state           = SERVER_CLIENT_STATE_VALIDATING;
+			serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
 			// validation still needs to be performed
 			ape_print_( "Client connected, awaiting validation...\n" );
 		}
@@ -281,7 +273,7 @@ unsigned short ape_server_get_port_( void )
 	return ape_net_get_local_port_( hostSocket );
 }
 
-bool ape_server_send( ApeServerClientHandle *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers )
+bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers )
 {
 	size_t totalSize = 0;
 	for ( uint i = 0; i < numBuffers; ++i )
