@@ -1,8 +1,9 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Delicious pie menu!
 
-#include "game_private.h"
-#include "game_menu_pie.h"
+#include "../game_private.h"
+
+#include "menu_pie.h"
 
 #define PIE_MENU_WIDTH         128
 #define PIE_MENU_HEIGHT        128
@@ -11,31 +12,31 @@
 
 typedef struct GamePieMenu
 {
-	PLLinkedList *options;
+	PLLinkedList     *options;
 	PLLinkedListNode *activeOption;// option we're currently selecting
 	PLLinkedListNode *targetOption;// option we want to be at, for animating
-	bool isActive;
-	float angle, scale, velocity;
-	PLVector2 cursor;
-	int w, h;
+	bool              isActive;
+	float             angle, scale, velocity;
+	PLVector2         cursor;
+	int               w, h;
 } GamePieMenu;
 
 typedef struct GamePieMenuOption
 {
-	PLLinkedListNode *node;
-	char label[ 64 ];
-	struct ApeMaterial *icon;
+	PLLinkedListNode         *node;
+	char                      label[ 64 ];
+	ApeMaterial              *icon;
 	GamePieMenuOptionCallback callback;
-	GamePieMenu *parent;
+	GamePieMenu              *parent;
 } GamePieMenuOption;
 
 GamePieMenu *menu_pie_create( void )
 {
 	// don't need to do much here, just allocate and return
 	GamePieMenu *menu = PL_NEW( GamePieMenu );
-	menu->options = PlCreateLinkedList();
-	menu->w = PIE_MENU_WIDTH;
-	menu->h = PIE_MENU_HEIGHT;
+	menu->options     = PlCreateLinkedList();
+	menu->w           = PIE_MENU_WIDTH;
+	menu->h           = PIE_MENU_HEIGHT;
 	return menu;
 }
 
@@ -127,7 +128,7 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 #endif
 
 	PLVector2 joyPos = ape_client_input_get_controller_axis_state( 0, 0 );
-	menu->cursor = joyPos;
+	menu->cursor     = joyPos;
 
 	if ( ape_client_input_get_button_state( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED )
 	{
@@ -218,7 +219,7 @@ static GamePieMenuOption *get_selected_option( GamePieMenu *menu )
 		return PlGetLinkedListNodeUserData( menu->activeOption );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static void GetOptionAngle( GamePieMenu *menu, GamePieMenuOption *option )
@@ -233,8 +234,8 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 	float cursorX = x + ( menu->cursor.x * ( ( float ) menu->w / 2.0f ) );
 	float cursorY = y + ( menu->cursor.y * ( ( float ) menu->h / 2.0f ) );
 
-	unsigned int numElements = PlGetNumLinkedListNodes( menu->options );
-	PLLinkedListNode *node = PlGetFirstNode( menu->options );
+	unsigned int      numElements = PlGetNumLinkedListNodes( menu->options );
+	PLLinkedListNode *node        = PlGetFirstNode( menu->options );
 	for ( unsigned int i = 0, pos = 0; i < 360; i += ( 360 / numElements ) )
 	{
 		if ( pos >= numElements || node == NULL )
@@ -251,8 +252,8 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 		// and now the scale
 		float dc = menu->scale * ( PlGetVector2Length( &PL_VECTOR2( 1.0f, 1.0f ) ) - PlGetVector2Length( &PL_VECTOR2( xc, yc ) ) );
 
-		GamePieMenuOption *option = PlGetLinkedListNodeUserData( node );
-		bool isSelected = ( option == get_selected_option( menu ) );
+		GamePieMenuOption *option     = PlGetLinkedListNodeUserData( node );
+		bool               isSelected = ( option == get_selected_option( menu ) );
 		draw_pie_option( option, xo, yo, isSelected, dc );
 		if ( isSelected )
 			PlgDrawSimpleLine( PL_VECTOR3( x, y, 0.0f ), PL_VECTOR3( xo, yo, 0.0f ), PL_COLOUR_RED );
@@ -266,16 +267,16 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 void menu_pie_make_active( GamePieMenu *menu, bool active )
 {
 	menu->isActive = active;
-	menu->scale = 0.0f;
+	menu->scale    = 0.0f;
 }
 
 GamePieMenuOption *menu_pie_add_option( GamePieMenu *menu, const char *label, struct ApeMaterial *icon, GamePieMenuOptionCallback callback )
 {
 	GamePieMenuOption *option = PL_NEW( GamePieMenuOption );
-	option->node = PlInsertLinkedListNode( menu->options, option );
-	option->callback = callback;
-	option->icon = icon;
-	option->parent = menu;
+	option->node              = PlInsertLinkedListNode( menu->options, option );
+	option->callback          = callback;
+	option->icon              = icon;
+	option->parent            = menu;
 	snprintf( option->label, sizeof( option->label ), "%s", label );
 
 	menu->w += 32;

@@ -5,20 +5,24 @@ set(GAME_SHARED_FILES
         private/shared/game_client_actions.c
         private/shared/game_language.c
         private/shared/game_menu.c
-        private/shared/game_menu_pie.c
         private/shared/game_server.c
         private/shared/game_team.c
 
         #############################################
 
         private/shared/ai/ai_brain.c
+
         private/shared/components/component_health.c
+        private/shared/components/component_inventory.c
         private/shared/components/component_movement.c
+
         private/shared/entities/entity_player_spawn.c
         private/shared/entities/entity_rope.c
         private/shared/entities/entity_trigger.c
         private/shared/integrations/discord/discord.c
+
         private/shared/menu/menu_chat.c
+        private/shared/menu/menu_pie.c
 )
 
 include_directories(public/)

@@ -1,90 +1,80 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "menu.h"
-#include "../../shared/game_menu_pie.h"
+
+#include "../../shared/menu/menu_pie.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
-static ApeGuiFont    *menuFont;
+static ApeGuiFont *menuFont;
 
-static const char *menuTitleFontPath = "guis/fonts/odibee_sans_64.fnt";
-static ApeGuiFont    *menuTitleFont;
+static const char *menuTitleFontPath = "guis/fonts/anarchist-mustache/anarchist_mustache_96.fnt";
+static ApeGuiFont *menuTitleFont;
 
 static bool isMainMenuOpen = true;
 
-static Menu  mainMenu;
-static Menu *currentMenu       = &mainMenu;
-static uint  currentMenuOption = 0;
+static GameMenu  mainMenu;
+static GameMenu *currentMenu       = &mainMenu;
+static uint      currentMenuOption = 0;
 
-static void capture_screenshot_callback( const MenuOption * )
+static void capture_screenshot_callback( const GameMenuOption * )
 {
 	isMainMenuOpen = false;
 }
 
-static MenuOption debugMenuOptions[] = {
-        { "Test Model\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "test_model" } },
-        { "Test Net\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "test_net" } },
-        { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
-        { "FPS Counter\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
-        { "Show Lights\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
-        { "Show Node Volumes\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" } },
-        { "Show Portals\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" } },
-        { "Show Face Bounds\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" } },
-        { "Show Face Normals\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" } },
-        { "Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
-        { "Shadow Wireframe\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
-        { "Post-Processing\n", nullptr, nullptr, MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
-        { nullptr, nullptr, nullptr, MENU_OPTION_TYPE_SEPERATOR },
-        { "Capture\n", nullptr, capture_screenshot_callback, MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
-        { "Screenshot\n", nullptr, capture_screenshot_callback, MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
+static GameMenuOption debugMenuOptions[] = {
+        { "Test Model\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_model" } },
+        { "Test Net\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_net" } },
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "FPS Counter\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
+        { "Show Lights\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
+        { "Show Node Volumes\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" } },
+        { "Show Portals\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" } },
+        { "Show Face Bounds\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" } },
+        { "Show Face Normals\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" } },
+        { "Wireframe\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
+        { "Shadow Wireframe\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
+        { "Post-Processing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Capture\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
+        { "Screenshot\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
 };
-static Menu debugMenu = {
+static GameMenu debugMenu = {
         "Debug Menu\n",
         debugMenuOptions,
         PL_ARRAY_ELEMENTS( debugMenuOptions ),
         &mainMenu,
 };
 
-static MenuOption editorMenuOptions[] = {
-        { "Vector Shape Editor", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "editor vector" } },
+static GameMenuOption quitMenuOptions[] = {
+        { "Yes\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "quit" } },
+        { "No\n", &mainMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON },
 };
-static Menu editorMenu = {
-        "Editor Menu\n",
-        editorMenuOptions,
-        PL_ARRAY_ELEMENTS( editorMenuOptions ),
-        &mainMenu,
-};
-
-static MenuOption quitMenuOptions[] = {
-        { "Yes\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "quit" } },
-        { "No\n", &mainMenu, nullptr, MENU_OPTION_TYPE_BUTTON },
-};
-static Menu confirmQuitMenu = {
+static GameMenu confirmQuitMenu = {
         "Are you sure?\n",
         quitMenuOptions,
         PL_ARRAY_ELEMENTS( quitMenuOptions ),
         &mainMenu,
 };
 
-static MenuOption startMenuOptions[] = {
-        {"rundown\n",       nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown" } },
-        {"zoo_materials\n", nullptr, nullptr, MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room zoo_materials" }},
+static GameMenuOption startMenuOptions[] = {
+        {"rundown\n",       nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown" } },
+        {"zoo_materials\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room zoo_materials" }},
 };
-static Menu startMenu = {
+static GameMenu startMenu = {
         "Start Server\n",
         startMenuOptions,
         PL_ARRAY_ELEMENTS( startMenuOptions ),
         &mainMenu,
 };
 
-static MenuOption mainMenuOptions[] = {
+static GameMenuOption mainMenuOptions[] = {
+        {"Start Server\n", &startMenu,       nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
 #if !defined( NDEBUG )
-        {"Editors\n",      &editorMenu,      nullptr, MENU_OPTION_TYPE_BUTTON},
-        {"Debug\n",        &debugMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
+        {"Debug\n",        &debugMenu,       nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
 #endif
-        {"Start Server\n", &startMenu,       nullptr, MENU_OPTION_TYPE_BUTTON},
-        {"Quit\n",         &confirmQuitMenu, nullptr, MENU_OPTION_TYPE_BUTTON},
+        {"Quit\n",         &confirmQuitMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
 };
-static Menu mainMenu = {
+static GameMenu mainMenu = {
         "Main Menu\n",
         mainMenuOptions,
         PL_ARRAY_ELEMENTS( mainMenuOptions ),
@@ -92,7 +82,7 @@ static Menu mainMenu = {
 
 static GamePieMenu *interactPie;
 
-static void initialize_menu( Menu *menu )
+static void initialize_menu( GameMenu *menu )
 {
 	for ( uint i = 0; i < menu->numOptions; ++i )
 	{
@@ -101,7 +91,7 @@ static void initialize_menu( Menu *menu )
 			//initialize_menu( menu->options[ i ].nextMenu );
 		}
 
-		if ( menu->options[ i ].type == MENU_OPTION_TYPE_CHECKBOX )
+		if ( menu->options[ i ].type == GAME_MENU_OPTION_TYPE_CHECKBOX )
 		{
 			menu->options[ i ].checkbox.var = PlGetConsoleVariable( menu->options[ i ].checkbox.varName );
 			assert( menu->options[ i ].checkbox.var != nullptr );
@@ -154,18 +144,18 @@ static void handle_menu_action( ApeInputState state, const char *id )
 		do
 		{
 			next_menu_option();
-		} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
+		} while ( currentMenu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
 	}
 	else if ( strcmp( id, "menu_up" ) == 0 )
 	{
 		do
 		{
 			prev_menu_option();
-		} while ( currentMenu->options[ currentMenuOption ].type == MENU_OPTION_TYPE_SEPERATOR );
+		} while ( currentMenu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
 	}
 	else if ( strcmp( id, "menu_select" ) == 0 )
 	{
-		const MenuOption *option = &currentMenu->options[ currentMenuOption ];
+		const GameMenuOption *option = &currentMenu->options[ currentMenuOption ];
 		if ( option->callback != nullptr )
 		{
 			option->callback( option );
@@ -175,7 +165,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 		{
 			default:
 				break;
-			case MENU_OPTION_TYPE_BUTTON:
+			case GAME_MENU_OPTION_TYPE_BUTTON:
 			{
 				if ( option->button.command != nullptr )
 				{
@@ -183,7 +173,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 				}
 				break;
 			}
-			case MENU_OPTION_TYPE_CHECKBOX:
+			case GAME_MENU_OPTION_TYPE_CHECKBOX:
 			{
 				if ( option->checkbox.var != nullptr )
 				{
@@ -226,16 +216,16 @@ void ss1_menu_initialize( void )
 
 	// mmm delicious pie
 	interactPie = menu_pie_create();
-	menu_pie_add_option( interactPie, "testing 1", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true ), NULL );
-	menu_pie_add_option( interactPie, "testing 2", ape_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_GROUP_WORLD, true ), NULL );
-	menu_pie_add_option( interactPie, "testing 3", ape_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_GROUP_WORLD, true ), NULL );
-	menu_pie_make_active( interactPie, true );
+	menu_pie_add_option( interactPie, "testing 1", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
+	menu_pie_add_option( interactPie, "testing 2", ape_material_cache( "materials/ui/pie/icon_mouth.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
+	menu_pie_add_option( interactPie, "testing 3", ape_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
+	//menu_pie_make_active( interactPie, true );
 
 	// iterate over and init the menus
 	initialize_menu( &mainMenu );
 	initialize_menu( &debugMenu );
 
-	Game_Menu_SetCurrent( &mainMenu );
+	game_menu_set_active( &mainMenu );
 
 	ape_client_input_register_action( "menu_up", &( ApeInputButton ) { APE_INPUT_UP }, 1, &( ApeInputKey ) { APE_INPUT_KEY_UP }, 1, handle_menu_action );
 	ape_client_input_register_action( "menu_down", &( ApeInputButton ) { APE_INPUT_DOWN }, 1, &( ApeInputKey ) { APE_INPUT_KEY_DOWN }, 1, handle_menu_action );
@@ -311,8 +301,6 @@ static void draw_hud( const ApeViewport *viewport )
 
 void ss1_menu_draw( const ApeViewport *viewport )
 {
-	draw_hud( viewport );
-
 	if ( isMainMenuOpen )
 	{
 		assert( currentMenu != nullptr );
@@ -320,16 +308,14 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		float x = 50.0f;
 		float y = 64.0f;
 
-		static const char *title    = "embrace";
-		static const char *subtitle = "INC.\n";
+		static const char *title    = "Embrace";
+		static const char *subtitle = "Inc.\n";
 
-		gui_font_set_shadow_offset( 6.0f, 6.0f );
+		gui_font_set_shadow_offset( 2.0f, 2.0f );
 		gui_font_set_slant( 20.0f );
-		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_CRIMSON, title, strlen( title ), true );
-
-		gui_font_set_shadow_offset( 4.0f, 4.0f );
+		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_WHITE, title, strlen( title ), true );
 		gui_font_set_slant( 0.0f );
-		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_FIRE_BRICK, subtitle, strlen( subtitle ), true );
+		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_GHOST_WHITE, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
 		x = 80.0f;
@@ -339,14 +325,14 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		x += 30.0f;
 		for ( uint i = 0; i < currentMenu->numOptions; ++i )
 		{
-			if ( currentMenu->options[ i ].type == MENU_OPTION_TYPE_SEPERATOR )
+			if ( currentMenu->options[ i ].type == GAME_MENU_OPTION_TYPE_SEPERATOR )
 			{
 				y += gui_font_get_line_spacing( menuFont ) / 2.0f;
 				continue;
 			}
 
 			char tmp[ 128 ];
-			if ( currentMenu->options[ i ].type == MENU_OPTION_TYPE_CHECKBOX )
+			if ( currentMenu->options[ i ].type == GAME_MENU_OPTION_TYPE_CHECKBOX )
 			{
 				snprintf( tmp, sizeof( tmp ), "[%s] %s", currentMenu->options[ i ].checkbox.var->b_value ? "X" : " ", currentMenu->options[ i ].string );
 			}
@@ -366,11 +352,14 @@ void ss1_menu_draw( const ApeViewport *viewport )
 			}
 			gui_font_draw_string( menuFont, x, y, nullptr, &y, SCALE, &PL_COLOUR_WHITE, tmp, len, true );
 		}
+
+		gui_font_display( menuFont );
+		gui_font_display( menuTitleFont );
+		return;
 	}
 
-	gui_font_display( menuFont );
-	gui_font_display( menuTitleFont );
+	draw_hud( viewport );
 
 	// draw our fancy little pie menu for interactions
-	//menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
+	menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
 }

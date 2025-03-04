@@ -5,6 +5,8 @@
 
 static PLHashTable *serverClientsLookup;//GameServerClient
 
+//TODO: both serverClients and players would probably be better off as a linked list
+
 static GameServerClient serverClients[ GAME_MAX_CLIENTS ];
 static unsigned int     numServerClients;
 
@@ -32,13 +34,47 @@ bool game_server_client_validate_( PL_UNUSED ApeServerClient *clientHandle )
 	return true;
 }
 
+static void spawn_player( GamePlayer *self );
+
+static void assign_client_to_player( GameServerClient *client )
+{
+	if ( numPlayers >= GAME_MAX_PLAYERS )
+	{
+		game_warning_( "Max players limit hit, rejecting new player!\n" );
+		return;
+	}
+
+	GamePlayer *player = nullptr;
+	for ( UInt i = 0; i < GAME_MAX_PLAYERS; ++i )
+	{
+		player = &players[ i ];
+		if ( player->serverClient == nullptr )
+		{
+			break;
+		}
+	}
+
+	if ( player == nullptr || player->serverClient != nullptr )
+	{
+		game_warning_( "Failed to find an open player slot, rejecting new player!\n" );
+		return;
+	}
+
+	player->serverClient = client;
+	client->playerSlot   = player;
+
+	spawn_player( player );
+}
+
 void game_server_client_connected_( ApeServerClient *clientHandle )
 {
 	GameServerClient *serverClient = &serverClients[ numServerClients ];
 	serverClient->slot             = numServerClients;
+	serverClient->internalHandle   = clientHandle;
 	PlInsertHashTableNode( serverClientsLookup, clientHandle, sizeof( ApeServerClient * ), serverClient );
-	serverClient->internalHandle = clientHandle;
 	numServerClients++;
+
+	assign_client_to_player( serverClient );
 }
 
 void game_server_client_disconnected_( ApeServerClient *clientHandle )
@@ -81,6 +117,20 @@ bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageTyp
 	};
 
 	return ape_server_send( clientHandle, items, sizes, PL_ARRAY_ELEMENTS( items ) );
+}
+
+void game_server_tick_( double delta )
+{
+	// iterate over connected clients, and see if any are waiting for a free slot
+	for ( UInt i = 0; i < GAME_MAX_CLIENTS; ++i )
+	{
+		if ( serverClients[ i ].internalHandle == nullptr || serverClients[ i ].playerSlot != nullptr )
+		{
+			continue;
+		}
+
+		assign_client_to_player( &serverClients[ i ] );
+	}
 }
 
 GameServerClient *game_server_get_host_client_()
@@ -163,4 +213,19 @@ void game_server_print_( ApeServerClient *clientHandle, const char *message )
 	}
 
 	game_server_send_message_( clientHandle, GAME_NET_MESSAGE_ANNOUNCE, message, strlen( message ) );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Player
+// TODO: should probably go out into its own source file eventually
+
+static void spawn_player( GamePlayer *self )
+{
+	//self->entity = ape_entity_create()
+}
+
+const char *game_player_get_name_( const GamePlayer *self )
+{
+	assert( self->serverClient != nullptr );
+	return ape_server_get_client_name( self->serverClient->internalHandle );
 }

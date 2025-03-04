@@ -4,25 +4,26 @@
 
 PL_EXTERN_C
 
-typedef struct MenuOption MenuOption;
+typedef struct GameMenu       GameMenu;
+typedef struct GameMenuOption GameMenuOption;
 
-typedef void ( *MenuCallback )( const MenuOption *option );
+typedef void ( *GameMenuCallback )( const GameMenuOption *option );
 
-typedef enum MenuOptionType
+typedef enum GameMenuOptionType
 {
-	MENU_OPTION_TYPE_BUTTON,     //text-based button
-	MENU_OPTION_TYPE_BUTTON_ICON,//button represented by icon
-	MENU_OPTION_TYPE_CHECKBOX,   //typical checkbox
-	MENU_OPTION_TYPE_SLIDER,     //and typical slider
-	MENU_OPTION_TYPE_SEPERATOR,
-} MenuOptionType;
+	GAME_MENU_OPTION_TYPE_BUTTON,     //text-based button
+	GAME_MENU_OPTION_TYPE_BUTTON_ICON,//button represented by icon
+	GAME_MENU_OPTION_TYPE_CHECKBOX,   //typical checkbox
+	GAME_MENU_OPTION_TYPE_SLIDER,     //and typical slider
+	GAME_MENU_OPTION_TYPE_SEPERATOR,
+} GameMenuOptionType;
 
-typedef struct MenuOption
+typedef struct GameMenuOption
 {
-	const char    *string;
-	struct Menu   *nextMenu;
-	MenuCallback   callback;
-	MenuOptionType type;
+	const char        *string;
+	GameMenu          *nextMenu;
+	GameMenuCallback   callback;
+	GameMenuOptionType type;
 	union
 	{
 		struct
@@ -35,18 +36,18 @@ typedef struct MenuOption
 			const char *command;
 		} button;
 	};
-} MenuOption;
+} GameMenuOption;
 
-typedef struct Menu
+typedef struct GameMenu
 {
-	const char  *heading;
-	MenuOption  *options;
-	uint8_t      numOptions;
-	struct Menu *parent;
-	uint8_t      lastOption;
-} Menu;
+	const char     *heading;
+	GameMenuOption *options;
+	uint8_t         numOptions;
+	GameMenu       *parent;
+	uint8_t         lastOption;
+} GameMenu;
 
-void  Game_Menu_SetCurrent( Menu *menu );
-Menu *Game_Menu_GetCurrent( void );
+void      game_menu_set_active( GameMenu *menu );
+GameMenu *game_menu_get_active( void );
 
 PL_EXTERN_C_END

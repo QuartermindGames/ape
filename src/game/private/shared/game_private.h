@@ -44,8 +44,6 @@ double game_get_time_delta_( double delta );
 
 void game_register_standard_entity_components_( void );
 
-void game_interface_import_setup_( ApeGameInterfaceImport *import, unsigned int version, unsigned int protocolVersion, const char *id );
-
 void game_print_( const char *message, ... );
 void game_warning_( const char *message, ... );
 void game_error_( const char *message, ... );
@@ -83,12 +81,13 @@ typedef struct __attribute( ( packed ) ) GameNetMessageHeader
 typedef char GamePlayerName[ 64 ];
 typedef struct GamePlayer
 {
-	GamePlayerName    name;        // name of the player
 	GameServerClient *serverClient;// internal server-side client reference
 	unsigned int      team;        // the team the player is associated with
 
 	ApeEntity *entity;// target entity the player is controlling
 } GamePlayer;
+
+const char *game_player_get_name_( const GamePlayer *self );
 
 /////////////////////////////////////////////////////////////////
 

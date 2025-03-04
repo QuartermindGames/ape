@@ -3,12 +3,19 @@
 #include "game_private.h"
 #include "game_menu.h"
 
-static Menu *currentMenu = NULL;
+static GameMenu *currentMenu = nullptr;
 
-void Game_Menu_SetCurrent( Menu *menu )
+void game_menu_set_active( GameMenu *menu )
 {
 	currentMenu = menu;
 }
+
+GameMenu *game_menu_get_active( void )
+{
+	return currentMenu;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum HUDElement
 {
@@ -31,20 +38,20 @@ typedef enum HUDElement
 } HUDElement;
 
 static const PLQuad hudElementLayouts[ MAX_HUD_ELEMENTS ] = {
-        [HUD_ELEMENT_BAR_BG_L] = {8,    8,  8,   32 },
-        [HUD_ELEMENT_BAR_BG_M] = { 16,  8,  16,  32 },
-        [HUD_ELEMENT_BAR_BG_R] = { 32,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_BG_L] = {8,   8,  8,   32 },
+        [HUD_ELEMENT_BAR_BG_M] = {16,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_BG_R] = {32,  8,  8,   32 },
 
-        [HUD_ELEMENT_BAR_HP_L] = { 48,  8,  8,   32 },
-        [HUD_ELEMENT_BAR_HP_M] = { 56,  8,  16,  32 },
-        [HUD_ELEMENT_BAR_HP_R] = { 72,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_HP_L] = {48,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_HP_M] = {56,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_HP_R] = {72,  8,  8,   32 },
 
-        [HUD_ELEMENT_BAR_DMG_L] = { 88,  8,  8,   32 },
-        [HUD_ELEMENT_BAR_DMG_M] = { 96,  8,  16,  32 },
-        [HUD_ELEMENT_BAR_DMG_R] = { 112, 8,  8,   32 },
+        [HUD_ELEMENT_BAR_DMG_L] = {88,  8,  8,   32 },
+        [HUD_ELEMENT_BAR_DMG_M] = {96,  8,  16,  32 },
+        [HUD_ELEMENT_BAR_DMG_R] = {112, 8,  8,   32 },
 
-        [HUD_ELEMENT_ICON_HP] = { 120, 8,  40,  32 },
-        [HUD_ELEMENT_ICON_CHAR] = { 8,   40, 104, 112},
+        [HUD_ELEMENT_ICON_HP]   = {120, 8,  40,  32 },
+        [HUD_ELEMENT_ICON_CHAR] = {8,   40, 104, 112},
 };
 
 void Menu_DrawHUDBar( const PLQuad *layouts, HUDElement element, int x, int y, int w, int h )

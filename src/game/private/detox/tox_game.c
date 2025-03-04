@@ -1,20 +1,3 @@
-// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
-// Purpose: Main file for Detox game project.
-
-#include "tox_game.h"
-#include "tox_world.h"
-
-#include "ui/tox_ui.h"
-
-ToxGlobalVars tox_globalVars;
-
-static ApeCamera *playerCamera = NULL;
-
-ApeCamera *tox_get_player_camera( void )
-{
-	return playerCamera;
-}
-
 static void move_camera_iso_callback( ApeInputState state, const char *id )
 {
 	if ( state != APE_INPUT_STATE_DOWN )
@@ -341,42 +324,4 @@ static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 	}
 
 	return false;
-}
-
-static void server_client_connected( ApeServerClientHandle *clientHandle )
-{
-	game_server_client_connected_( clientHandle );
-}
-
-static void server_client_disconnected( ApeServerClientHandle *clientHandle )
-{
-	game_server_client_disconnected_( clientHandle );
-}
-
-static void server_process_message( ApeServerClientHandle *clientHandle, const void *buf, size_t bufSize )
-{
-	game_server_process_message_( clientHandle, buf, bufSize );
-}
-
-static void client_process_message( const void *buf, size_t bufSize )
-{
-	game_client_process_message_( buf, bufSize );
-}
-
-const ApeGameInterfaceImport *ape_game_get_interface( void )
-{
-	static ApeGameInterfaceImport gameMode = {
-	        .version = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion = TOX_GAME_PROTOCOL_VERSION,
-	        .identifier = "ss2",
-
-	        .requestCallbackMethod = handle_request,
-
-	        .serverClientConnected = server_client_connected,
-	        .serverClientDisconnected = server_client_disconnected,
-	        .serverProcessMessage = server_process_message,
-
-	        .clientProcessMessage = client_process_message,
-	};
-	return &gameMode;
 }

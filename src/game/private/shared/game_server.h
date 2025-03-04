@@ -7,7 +7,7 @@
 typedef struct GameServerClient
 {
 	ApeServerClient *internalHandle;
-	PLHashTableNode       *hashTableNode;
+	PLHashTableNode *hashTableNode;
 
 	unsigned int slot;
 	GamePlayer  *playerSlot;
@@ -18,6 +18,7 @@ void game_server_client_connected_( ApeServerClient *clientHandle );
 void game_server_client_disconnected_( ApeServerClient *clientHandle );
 void game_server_process_message_( ApeServerClient *clientHandle, const void *buf, size_t bufSize );
 bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageType type, const void *buf, size_t bufSize );
+void game_server_tick_( double delta );
 
 GameServerClient *game_server_get_host_client_();
 GamePlayer       *game_server_get_host_player_();
