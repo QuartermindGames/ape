@@ -68,6 +68,7 @@ static bool ss1_initialize()
 	ss1_menu_initialize();
 
 	// determine if it's the first time we've launched
+#if 0
 	const char *name = acm_get_string( ss1_gameState.config, "name", nullptr );
 	if ( name != nullptr )
 	{
@@ -77,6 +78,7 @@ static bool ss1_initialize()
 	{
 		ss1_gameState.isFirstLaunch = true;
 	}
+#endif
 
 	ss1_gameState.camera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( ss1_gameState.camera == nullptr )
@@ -244,13 +246,13 @@ static void world_tick( double delta )
 	}
 }
 
-static bool ss1_tick( double delta )
+static void ss1_tick( double delta )
 {
 	delta = game_get_time_delta_( delta );
 
-	world_tick( delta );
+	game_server_tick_( delta );
 
-	return true;
+	world_tick( delta );
 }
 
 static bool ss1_draw( ApeViewport *viewport )
@@ -311,9 +313,6 @@ static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user
 			return ss1_draw( user );
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
 			return ss1_draw_menu( user );
-		case APE_GAME_INTERFACE_REQUEST_TICK_SERVER:
-			assert( user != nullptr );
-			return ss1_tick( *( double * ) user );
 		default:
 			break;
 	}
@@ -368,6 +367,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .serverClientConnected    = server_client_connected,
 	        .serverClientDisconnected = server_client_disconnected,
 	        .serverProcessMessage     = server_process_message,
+	        .serverTick               = ss1_tick,
 
 	        .clientProcessMessage = client_process_message,
 	        .clientTick           = client_tick,

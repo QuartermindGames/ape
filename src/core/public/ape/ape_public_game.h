@@ -20,7 +20,6 @@ typedef enum ApeGameInterfaceRequest
 	APE_GAME_INTERFACE_REQUEST_DRAW,
 	APE_GAME_INTERFACE_REQUEST_DRAW_UI,
 
-	APE_GAME_INTERFACE_REQUEST_TICK_SERVER,// called after entity tick
 	APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT,
 } ApeGameInterfaceRequest;
 
@@ -32,6 +31,7 @@ typedef struct ApeGameInterfaceImport
 	char         identifier[ 8 ];// identifier for the game (clients will only be able to connect if this matches)
 
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
+
 	void ( *spawnWorld )( ApeRoom *room );
 
 	// client
@@ -45,6 +45,7 @@ typedef struct ApeGameInterfaceImport
 	void ( *serverClientConnected )( ApeServerClient *clientHandle );
 	void ( *serverClientDisconnected )( ApeServerClient *clientHandle );
 	void ( *serverProcessMessage )( ApeServerClient *clientHandle, const void *buf, size_t bufSize );
+	void ( *serverTick )( double delta );
 } ApeGameInterfaceImport;
 const ApeGameInterfaceImport *ape_game_get_interface( void );
 

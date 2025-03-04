@@ -16,4 +16,6 @@ typedef enum ApeServerClientState
 
 bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers );
 
+const char *ape_server_get_client_name( ApeServerClient *client );
+
 PL_EXTERN_C_END

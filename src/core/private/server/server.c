@@ -301,3 +301,8 @@ bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *b
 
 	return true;
 }
+
+const char *ape_server_get_client_name( ApeServerClient *client )
+{
+	return client->name;
+}
