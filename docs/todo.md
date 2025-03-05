@@ -29,7 +29,7 @@ System can also be expanded to support height-maps once introduced.
 - ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
   - Recursion for portals/mirrors isn't working right
   - ~~Can't combine stencil shadow volumes with mirrors~~ (for now we'll just disable shadows in mirrors)
-- We don't have spotlights...
+- ~~We don't have spotlights...~~
 - Prototype 'eyes' for QM2 & QM1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
   - Add some logic for swapping out first texture, so we can convey different expressions
