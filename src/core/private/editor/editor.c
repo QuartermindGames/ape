@@ -55,11 +55,6 @@ AcmBranch *ape_editor_get_config()
 // Editor Instance Management
 /////////////////////////////////////////////////////////////////////////////////////
 
-extern const ApeEditorModeInterface  ape_editorVectorModeInterface_;
-static const ApeEditorModeInterface *editorModeInterfaces[ APE_EDITOR_MAX_MODES ] = {
-        [APE_EDITOR_MODE_VECTOR] = &ape_editorVectorModeInterface_,
-};
-
 void ape_grid_setup_( ApeEditorGrid *self );
 void ape_grid_cleanup_( ApeEditorGrid *self );
 
@@ -92,14 +87,6 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 	ape_grid_setup_( &self->grid );
 
-	if ( editorModeInterfaces[ self->mode ] != nullptr && editorModeInterfaces[ self->mode ]->setup != nullptr )
-	{
-		if ( !editorModeInterfaces[ self->mode ]->setup( self ) )
-		{
-			return nullptr;
-		}
-	}
-
 	if ( editorInstanceList == nullptr )
 	{
 		editorInstanceList = PlCreateLinkedList();
@@ -130,11 +117,6 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
-	if ( editorModeInterfaces[ self->mode ] != nullptr && editorModeInterfaces[ self->mode ]->cleanup != nullptr )
-	{
-		editorModeInterfaces[ self->mode ]->cleanup( self );
-	}
-
 	self->numPolygonPoints = 0;
 
 	ape_grid_cleanup_( &self->grid );
@@ -407,14 +389,7 @@ static void save_command( unsigned int, char **argv )
 		return;
 	}
 
-	const char *cmd = argv[ 1 ];
-	if ( editorModeInterfaces[ instance->mode ] == nullptr || editorModeInterfaces[ instance->mode ]->save == nullptr )
-	{
-		ape_warning_( "No save function available for this editor mode!\n" );
-		return;
-	}
-
-	editorModeInterfaces[ instance->mode ]->save( instance, cmd );
+	//TODO
 }
 
 static void load_command( unsigned int, char **argv )
@@ -426,14 +401,7 @@ static void load_command( unsigned int, char **argv )
 		return;
 	}
 
-	const char *cmd = argv[ 1 ];
-	if ( editorModeInterfaces[ instance->mode ] == nullptr || editorModeInterfaces[ instance->mode ]->load == nullptr )
-	{
-		ape_warning_( "No load function available for this editor mode!\n" );
-		return;
-	}
-
-	editorModeInterfaces[ instance->mode ]->load( instance, cmd );
+	//TODO
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -450,30 +418,10 @@ void ape_initialize_editor_( void )
 	}
 
 	ape_editor_selection_initialize_();
-
-	for ( unsigned int i = 0; i < APE_EDITOR_MAX_MODES; ++i )
-	{
-		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->initialize == nullptr )
-		{
-			continue;
-		}
-
-		editorModeInterfaces[ i ]->initialize();
-	}
 }
 
 void ape_shutdown_editor_( void )
 {
-	for ( unsigned int i = 0; i < APE_EDITOR_MAX_MODES; ++i )
-	{
-		if ( editorModeInterfaces[ i ] == nullptr || editorModeInterfaces[ i ]->shutdown == nullptr )
-		{
-			continue;
-		}
-
-		editorModeInterfaces[ i ]->shutdown();
-	}
-
 	ape_editor_selection_shutdown_();
 }
 
@@ -829,11 +777,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	if ( !ape_is_editor_active() || editorInstance == nullptr )
 	{
 		return;
-	}
-
-	if ( editorModeInterfaces[ editorInstance->mode ] != nullptr && editorModeInterfaces[ editorInstance->mode ]->drawOverlay != nullptr )
-	{
-		editorModeInterfaces[ editorInstance->mode ]->drawOverlay( editorInstance );
 	}
 
 	ApeCamera *camera = viewport->camera;
