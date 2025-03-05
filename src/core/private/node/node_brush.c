@@ -535,6 +535,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
+			compute_brush_bounds( self );
 		}
 	}
 	else

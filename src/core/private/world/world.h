@@ -89,7 +89,7 @@ ApeRoom *ape_world_get_first_room_( ApeWorld *world );
 
 void ape_register_world_console_variables_( void );
 
-void ape_world_node_generate_bounds_( ApeWorldNode *self );
+void ape_world_node_compute_bounds_( ApeWorldNode *self );
 
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );

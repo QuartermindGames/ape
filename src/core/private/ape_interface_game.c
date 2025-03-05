@@ -93,7 +93,7 @@ void ape_tick_game_server_( double delta )
 	ApeWorld *world = game_get_current_world();
 	if ( world != nullptr )
 	{
-		ape_world_node_generate_bounds_( &world->base );
+		ape_world_node_compute_bounds_( &world->base );
 		ape_world_tick_entities_( world, delta );
 	}
 

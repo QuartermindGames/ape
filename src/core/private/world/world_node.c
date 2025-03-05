@@ -2,6 +2,8 @@
 // Purpose: Nodes form the foundation of everything in a scene.
 // Author:  Mark E. Sowden
 
+#include <float.h>
+
 #include "world.h"
 
 #define APE_WORLD_NODE_MAGIC PL_MAGIC_TO_NUM( 'N', 'O', 'D', 'E' )
@@ -74,8 +76,11 @@ void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeP
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_world_node_generate_bounds_( ApeWorldNode *self )
+void ape_world_node_compute_bounds_( ApeWorldNode *self )
 {
+	self->bounds.maxs = PL_VECTOR3( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+	self->bounds.mins = PL_VECTOR3( FLT_MAX, FLT_MAX, FLT_MAX );
+
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
 		PLCollisionAABB localBounds = ape_world_node_get_transformed_local_bounds( self );
@@ -95,7 +100,7 @@ void ape_world_node_generate_bounds_( ApeWorldNode *self )
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
-		ape_world_node_generate_bounds_( child );
+		ape_world_node_compute_bounds_( child );
 	}
 }
 
@@ -431,8 +436,8 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 
 	acm_push_array_f32( nodeBranch, "transform", ( float * ) &self->transform, 16 );
 
-	acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
-	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
+	//	acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
+	//	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
 
 	acm_push_ui32( nodeBranch, "classMagic", self->classType->magic );
 	if ( self->classType->serializeFunction != nullptr )
@@ -498,8 +503,8 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 	self->scale    = com_acm_get_vector3( root, "scale", &pl_vecOrigin3 );
 
 	acm_get_array_f32( root, "transform", ( float * ) &self->transform, 16 );
-	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
-	acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
+	//	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
+	//	acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
 
 	// deal with the children
 	AcmBranch *childrenBranch = acm_get_child_by_name( root, "children" );
@@ -512,6 +517,8 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 			childBranch = acm_get_next_child( childBranch );
 		}
 	}
+
+	ape_world_node_compute_bounds_( self );
 
 	return self;
 }
