@@ -366,8 +366,6 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 	//TODO: all this needs sorting for transparency... temporary!!!
 	draw_visible_camera_nodes( camera, light, flags );
 
-	update_mesh_cache_( room );
-
 	//TODO: this is operating off a universal list, should only operate on *world* materials!!!
 	PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
 	assert( materialList != nullptr );
@@ -838,6 +836,8 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	{
 		return;
 	}
+
+	update_mesh_cache_( room );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

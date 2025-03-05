@@ -319,6 +319,12 @@ ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNod
 
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 {
+	// if we want the parent room of a room, well that's us
+	if ( self->type == APE_WORLD_NODE_TYPE_ROOM )
+	{
+		return ( ApeRoom * ) self;
+	}
+
 	return self->room;
 }
 

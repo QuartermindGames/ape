@@ -89,8 +89,8 @@ namespace forge
 			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
 
 			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
-			new FXButton( hf, "Fit to Surface", nullptr, 0, BUTTON_NORMAL | LAYOUT_FILL_X );
-			new FXButton( hf, "Reset", nullptr, 0, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "Fit to Surface", nullptr, nullptr, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "Reset", nullptr, nullptr, BUTTON_NORMAL | LAYOUT_FILL_X );
 		}
 
 		~SurfaceInspector() override = default;
@@ -613,7 +613,7 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 
 	FXHorizontalFrame *buttonFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_RIGHT | PACK_UNIFORM_WIDTH );
 	new FXButton( buttonFrame, ( room == nullptr ) ? "Create" : "&OK", nullptr, this, FXDialogBox::ID_ACCEPT, BUTTON_NORMAL | BUTTON_INITIAL );
-	new FXButton( buttonFrame, "&Cancel", nullptr, this, FXDialogBox::ID_CANCEL, BUTTON_NORMAL );
+	new FXButton( buttonFrame, "&Cancel", nullptr, this, ID_CANCEL, BUTTON_NORMAL );
 
 	// if we've got a room, populate everything
 	if ( room != nullptr )
