@@ -118,10 +118,3 @@ static void Player_Tick( Actor *self, void *userData )
 
 	//Player_CalculateViewFrustum( self );
 }
-
-static void Player_Collide( Actor *self, Actor *other, void *userData )
-{
-	Monster_Collide( self, other, 0.0f );
-
-	APLAYER( self )->forwardVelocity = ( APLAYER( self )->forwardVelocity / 2.0f ) * -1.0f;
-}

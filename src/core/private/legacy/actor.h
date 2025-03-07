@@ -20,20 +20,6 @@ typedef enum ActorType
 	MAX_ACTOR_TYPES
 } ActorType;
 
-typedef enum ActorMovementType
-{
-	ACTOR_MOVEMENT_PHYSICS,
-
-	MAX_ACTOR_MOVEMENT_TYPES
-} ActorMovementType;
-
-typedef enum ActorCollisionGroup
-{
-	PL_BITFLAG( ACTOR_COLLISION_GROUP_WORLD, 0U ),
-	PL_BITFLAG( ACTOR_COLLISION_GROUP_PLAYER, 1U ),
-	PL_BITFLAG( ACTOR_COLLISION_GROUP_MONSTER, 2U ),
-} ActorCollisionGroup;
-
 typedef struct Actor Actor;
 typedef struct ActorSetup
 {
@@ -60,14 +46,6 @@ typedef struct Actor
 
 	char tagName[ 64 ];
 
-	/* collision/vis */
-	struct ApeRoom *sector;
-	ActorMovementType movementType;
-	ActorCollisionGroup collisionGroup;
-	PLCollisionAABB collisionVolume;
-	PLCollisionAABB visibilityVolume;
-	struct PLLinkedList *geoColliders; /* list of faces we're touching to test against */
-
 	/* animation */
 	unsigned int currentFrame;
 	unsigned int frameSwapTime;
@@ -86,30 +64,3 @@ typedef struct Actor
 	struct PLLinkedListNode *node;
 	void *userData;
 } Actor;
-
-void Act_DrawActors( ApeCamera *camera, ApeRoom *sector );
-void Act_TickActors( void *userData, double delta );
-
-ActorType Act_GetType( const Actor *self );
-
-void Act_SetPosition( Actor *self, const PLVector3 *position );
-PLVector3 Act_GetPosition( const Actor *self );
-
-float Act_GetAngle( const Actor *self );
-
-void Act_SetWorldSector( Actor *self, struct ApeRoom *sector );
-
-void Act_SetUserData( Actor *self, void *userData );
-void *Act_GetUserData( Actor *self );
-
-float Act_GetViewOffset( Actor *self );
-
-bool Act_IsColliding( Actor *self, Actor *other );
-Actor *Act_CheckCollisions( Actor *self );
-
-void Act_SetVisibilityVolume( Actor *self, const PLVector3 *mins, const PLVector3 *maxs );
-
-PLVector3 Act_GetForward( const Actor *self );
-
-/* generic monster functions */
-void Monster_Collide( struct Actor *self, struct Actor *other, float force );

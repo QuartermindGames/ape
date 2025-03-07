@@ -75,10 +75,6 @@ add_library(ApeCore STATIC
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}
 
-        private/legacy/actor.c
-        private/legacy/actors/actor_player.c
-        private/legacy/actors/sg_actors.c
-
         private/server/server.c
 
         private/ape_test.c

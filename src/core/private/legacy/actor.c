@@ -19,17 +19,6 @@ void Monster_Collide( Actor *self, Actor *other, float force )
 	//Act_SetVelocity( other, &pushDir );
 }
 
-static PLLinkedList *actorList;
-
-PLVector3 Act_GetPosition( const Actor *self ) { return self->position; }
-
-float Act_GetAngle( const Actor *self ) { return self->angle; }
-
-float Act_GetViewOffset( Actor *self ) { return self->viewOffset; }
-
-void Act_SetUserData( Actor *self, void *userData ) { self->userData = userData; }
-void *Act_GetUserData( Actor *self ) { return self->userData; }
-
 /****************************************
  * COLLISION
  ****************************************/
