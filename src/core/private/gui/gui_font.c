@@ -227,14 +227,14 @@ void guiGetCharacterPixelSize( const ApeGuiFont *font, float scale, uint32_t cha
 		return;
 	}
 
-	if ( dw != NULL ) { *dw = glyph->w; }
-	if ( dh != NULL ) { *dh = glyph->h; }
+	if ( dw != NULL ) { *dw = ( float ) glyph->w * scale; }
+	if ( dh != NULL ) { *dh = ( float ) glyph->h * scale; }
 }
 
 float guiGetCharacterPixelWidth( const ApeGuiFont *font, float scale, uint32_t character )
 {
 	float w;
-	guiGetCharacterPixelSize( font, scale, character, &w, NULL );
+	guiGetCharacterPixelSize( font, scale, character, &w, nullptr );
 	return w;
 }
 
