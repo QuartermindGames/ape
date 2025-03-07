@@ -12,6 +12,7 @@ set(GAME_SHARED_FILES
 
         private/shared/ai/ai_brain.c
 
+        private/shared/components/component_collision.c
         private/shared/components/component_health.c
         private/shared/components/component_inventory.c
         private/shared/components/component_movement.c
