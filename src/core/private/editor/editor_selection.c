@@ -14,8 +14,10 @@
 // Selection Buffer
 /////////////////////////////////////////////////////////////////////////////////////
 
+static void render_transform_widget( ApeEditorInstance *instance );
+
 static constexpr float SELECTION_OBJECT_SIZE = 8.0f;
-static constexpr float SELECTION_VERTEX_SIZE = 4.0f;
+static constexpr float SELECTION_VERTEX_SIZE = 2.0f;
 
 // todo: these should be linked against the active instance
 static ApeViewport *selectionViewport;
@@ -282,7 +284,7 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 				ApeBrush *brush = ( ApeBrush * ) node;
 				for ( unsigned int j = 0; j < brush->numVertices; ++j )
 				{
-					draw_selection_cube( &brush->vertices[ j ], &node->selectColour, 4.0f, false );
+					draw_selection_cube( &brush->vertices[ j ], &brush->vertexSelectColours[ j ], SELECTION_VERTEX_SIZE, false );
 				}
 			}
 		}
@@ -417,6 +419,46 @@ static void render_selected_objects( ApeEditorInstance *self )
 	ape_material_draw( material, mesh, nullptr );
 }
 
+static void render_vertices( ApeEditorInstance *self )
+{
+	//TODO: only do this if the cursor has moved...
+	self->hoverSelection = ape_editor_get_object_under_cursor( self );
+
+	unsigned int   numVisibleNodes;
+	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( self->camera, &numVisibleNodes );
+
+	for ( unsigned int i = 0; i < numVisibleNodes; ++i )
+	{
+		const ApeWorldNode *node = visibleNodes[ i ];
+		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		ApeBrush *brush = ( ApeBrush * ) node;
+		for ( unsigned int j = 0; j < brush->numVertices; ++j )
+		{
+			PLColour colour;
+			if ( self->hoverSelection != nullptr && self->hoverSelection == &brush->vertices[ j ] )
+			{
+				colour = PL_COLOUR_YELLOW;
+			}
+			else
+			{
+				colour = PL_COLOUR_WHITE;
+			}
+
+			draw_selection_cube( &brush->vertices[ j ], &colour, SELECTION_VERTEX_SIZE, true );
+		}
+	}
+
+	PLVector3 *vertex;
+	COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+	{
+		draw_selection_cube( vertex, &PL_COLOUR_BLUE, SELECTION_VERTEX_SIZE, true );
+	}
+}
+
 void ape_editor_selection_render_post_( ApeEditorInstance *self )
 {
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
@@ -436,9 +478,13 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 			render_selected_faces( self );
 			break;
 		}
-		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
+			render_vertices( self );
+			render_transform_widget( self );
+			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 			render_selected_objects( self );
+			render_transform_widget( self );
 			break;
 	}
 
@@ -547,4 +593,89 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 ApeViewport *ape_editor_selection_get_viewport_( void )
 {
 	return selectionViewport;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Transform Widget
+
+static void render_transform_widget( ApeEditorInstance *instance )
+{
+	PLLinkedListNode *node = PlGetFirstNode( instance->selectedObjects );
+	if ( node == nullptr )
+	{
+		return;
+	}
+
+	return;
+
+	ApeWorldNode *selected = PlGetLinkedListNodeUserData( node );
+	assert( selected != nullptr );
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	if ( selected->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		ApeBrush *brush = ( ApeBrush * ) selected;
+		assert( brush->numVertices > 0 );
+		PlTranslateMatrix( brush->vertices[ 0 ] );
+	}
+	else
+	{
+		PLMatrix4 transform = ape_world_node_get_transform( selected );
+		PLVector3 pos       = PlGetMatrix4Translation( &transform );
+		PlTranslateMatrix( pos );
+	}
+
+	static constexpr float SCALE       = 32.0f;
+	static constexpr float ARROW_SCALE = 4.0f;
+
+	PlgImmBegin( PLG_MESH_LINES );
+
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+
+	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	PlgImmPushVertex( SCALE - ARROW_SCALE, ARROW_SCALE, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+	PlgImmPushVertex( SCALE - ARROW_SCALE, -ARROW_SCALE, 0.0f );
+	PlgImmColour( 255, 0, 0, 255 );
+
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+
+	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+	PlgImmPushVertex( 0.0f, SCALE - ARROW_SCALE, ARROW_SCALE );
+	PlgImmColour( 0, 255, 0, 255 );
+	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
+	PlgImmColour( 0, 255, 0, 255 );
+	PlgImmPushVertex( 0.0f, SCALE - ARROW_SCALE, -ARROW_SCALE );
+	PlgImmColour( 0, 255, 0, 255 );
+
+	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
+	PlgImmColour( 0, 0, 255, 255 );
+	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+
+	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+	PlgImmPushVertex( 0.0f, ARROW_SCALE, SCALE - ARROW_SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+	PlgImmPushVertex( 0.0f, -ARROW_SCALE, SCALE - ARROW_SCALE );
+	PlgImmColour( 0, 0, 255, 255 );
+
+	PlgImmSetPrimitiveScale( 2.0f );
+	PlgImmDraw();
+
+	PlPopMatrix();
 }
