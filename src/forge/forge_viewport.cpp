@@ -423,21 +423,37 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case KEY_Up:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				return false;
+			}
 			ang.x += speed;
 			break;
 		}
 		case KEY_Down:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				return false;
+			}
 			ang.x -= speed;
 			break;
 		}
 		case KEY_Left:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				return false;
+			}
 			ang.y += 1.5f;
 			break;
 		}
 		case KEY_Right:
 		{
+			if ( event->state & SHIFTMASK )
+			{
+				return false;
+			}
 			ang.y -= 1.5f;
 			break;
 		}

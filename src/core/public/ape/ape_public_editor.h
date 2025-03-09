@@ -116,6 +116,8 @@ void ape_editor_flip_faces( ApeEditorInstance *self );
 void ape_editor_shade_faces_smooth( ApeEditorInstance *self );
 void ape_editor_shade_faces_flat( ApeEditorInstance *self );
 
+void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////

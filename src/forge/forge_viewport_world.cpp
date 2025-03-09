@@ -425,6 +425,44 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 		}
 	}
 
+	// allow us to use shift + arrows to move things around
+	if ( event->state & SHIFTMASK && ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX || instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM ) )
+	{
+		PLVector3 dir = {};
+		switch ( event->code )
+		{
+			default:
+				break;
+			case KEY_Up:
+			{
+				dir.x = 1.0f;
+				break;
+			}
+			case KEY_Down:
+			{
+				dir.x = -1.0f;
+				break;
+			}
+			case KEY_Left:
+			{
+				dir.z = 1.0f;
+				break;
+			}
+			case KEY_Right:
+			{
+				dir.z = -1.0f;
+				break;
+			}
+		}
+
+		if ( PlCompareVector3( &dir, &pl_vecOrigin3 ) )
+		{
+			return false;
+		}
+
+		ape_editor_shift_selection( instance, &dir );
+	}
+
 	return FALSE;
 }
 

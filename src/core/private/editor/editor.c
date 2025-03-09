@@ -328,57 +328,33 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 	room->isDirty = true;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-
-static void editor_command( unsigned int argc, char **argv )
+void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 {
-	ApeEditorMode mode = APE_EDITOR_MODE_INVALID;
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX )
+	{
+		PLVector3 *vertex;
+		COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+		{
+			*vertex = PlAddVector3( *vertex, PlScaleVector3F( *dir, self->grid.size ) );
+		}
 
-	const char *cmd = argv[ 1 ];
-	if ( strcmp( cmd, "vector" ) == 0 )
-	{
-		mode = APE_EDITOR_MODE_VECTOR;
-	}
-	else if ( strcmp( cmd, "world" ) == 0 )
-	{
-		mode = APE_EDITOR_MODE_WORLD;
-	}
-	else if ( strcmp( cmd, "model" ) == 0 )
-	{
-		mode = APE_EDITOR_MODE_MODEL;
+		//TODO: get rid of this!
+
+		ApeCamera *camera = self->camera;
+		assert( camera != nullptr );
+
+		ApeRoom *room = ape_camera_get_room( camera );
+		assert( room != nullptr );
+
+		room->isDirty = true;
 	}
 	else
 	{
-		ape_warning_( "Unknown editor mode specified (%s)!\n", cmd );
-		return;
+		//TODO
 	}
-
-	ApeEditorInstance *instance = ape_editor_instance_create_( mode );
-	if ( instance == nullptr )
-	{
-		return;
-	}
-
-	ape_editor_set_active_instance( instance );
 }
 
-static void close_editor_command( unsigned int, char ** )
-{
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	if ( instance == nullptr )
-	{
-		ape_warning_( "No active instance to close!\n" );
-		return;
-	}
-
-	if ( !instance->managed )
-	{
-		ape_warning_( "Current context isn't managed by the engine!\n" );
-		return;
-	}
-
-	ape_editor_instance_cleanup( instance );
-}
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void save_command( unsigned int, char **argv )
 {
@@ -443,8 +419,6 @@ void ape_grid_toggle_command_( unsigned int, char ** );
 
 void ape_editor_register_console_( void )
 {
-	PlRegisterConsoleCommand( "editor", "Launch an editor instance.", 1, editor_command );
-	PlRegisterConsoleCommand( "editor_close", "Close the current instance.", 0, close_editor_command );
 	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
@@ -1136,3 +1110,5 @@ void ape_editor_clear_plot_points( ApeEditorInstance *instance )
 {
 	instance->numPolygonPoints = 0;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
