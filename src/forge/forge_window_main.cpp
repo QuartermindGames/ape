@@ -365,20 +365,13 @@ void forge::MainWindow::push_message( int level, const char *msg, const PLColour
 
 FXTabItem *forge::MainWindow::get_active_tab()
 {
-	try
-	{
-		int index = _tabBook->getCurrent();
-		if ( index < 0 || index >= _tabs.size() )
-		{
-			throw;
-		}
-
-		return *( _tabs.begin() + index );
-	}
-	catch ( ... )
+	int index = _tabBook->getCurrent();
+	if ( index < 0 || index >= _tabs.size() )
 	{
 		return nullptr;
 	}
+
+	return *( _tabs.begin() + index );
 }
 
 FXTabItem *forge::MainWindow::add_tab( FXTabItem *item )
