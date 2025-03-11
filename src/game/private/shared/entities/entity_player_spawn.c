@@ -4,23 +4,40 @@
 
 #include "../game_private.h"
 
-typedef struct PlayerSpawnEntity
+#include "entity_player_spawn.h"
+
+static PLLinkedList *playerSpawnPoints;
+
+PLLinkedList *game_player_spawn_get_spawn_points()
 {
-	UInt team;
-} PlayerSpawnEntity;
-#define PLAYER_SPAWN_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), PlayerSpawnEntity )
+	return playerSpawnPoints;
+}
 
 static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( PlayerSpawnEntity );
+	return PL_NEW( GamePlayerSpawnEntity );
 }
 
 static void spawn_player_spawn( ApeEntity *self )
 {
+	if ( playerSpawnPoints == nullptr )
+	{
+		playerSpawnPoints = PlCreateLinkedList();
+	}
+
+	PLAYER_SPAWN_ENTITY( self )->listNode = PlInsertLinkedListNode( playerSpawnPoints, self );
 }
 
 static void destroy_player_spawn( ApeEntity *self )
 {
+	PlDestroyLinkedListNode( PLAYER_SPAWN_ENTITY( self )->listNode );
+	if ( PlGetNumLinkedListNodes( playerSpawnPoints ) == 0 )
+	{
+		PlDestroyLinkedList( playerSpawnPoints );
+		playerSpawnPoints = nullptr;
+	}
+
+	PL_DELETE( PLAYER_SPAWN_ENTITY( self ) );
 }
 
 ApeEntityClassDefinition game_playerSpawnEntityClass_ = {

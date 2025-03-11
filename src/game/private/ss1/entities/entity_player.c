@@ -41,10 +41,17 @@ static void spawn_player_entity( ApeEntity *self )
 	assert( player->model != nullptr );
 }
 
+static void tick_player_entity( double delta )
+{
+	delta = game_get_time_delta_( delta );
+}
+
 ApeEntityClassDefinition ss1_playerEntityClass = {
         .name        = "ss1_player",
         .description = "Player entity. This shouldn't be placed directly!",
 
         .createFunction = create_player_entity,
         .spawnFunction  = spawn_player_entity,
+
+        .tickFunction = tick_player_entity,
 };

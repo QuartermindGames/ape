@@ -144,6 +144,7 @@ const char *game_get_identifier()
 	return ape_gameInterface->identifier;
 }
 
+extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
 extern ApeEntityClassDefinition game_triggerEntityClass_;
 extern ApeEntityClassDefinition game_ropeEntityClass_;
 
@@ -152,6 +153,7 @@ extern ApeEntityComponentDefinition game_movementComponent_;
 
 void game_register_standard_entity_components_( void )
 {
+	ape_register_entity_class( &game_playerSpawnEntityClass_ );
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
 

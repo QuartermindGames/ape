@@ -3,6 +3,10 @@
 #include "game_private.h"
 #include "game_server.h"
 
+#include "entities/entity_player_spawn.h"
+
+#include <common_project.h>
+
 static PLHashTable *serverClientsLookup;//GameServerClient
 
 //TODO: both serverClients and players would probably be better off as a linked list
@@ -60,6 +64,13 @@ static void assign_client_to_player( GameServerClient *client )
 		return;
 	}
 
+	int team = game_team_assign( player );
+	if ( team == -1 )
+	{
+		return;
+	}
+
+	player->team         = team;
 	player->serverClient = client;
 	client->playerSlot   = player;
 
@@ -73,6 +84,8 @@ void game_server_client_connected_( ApeServerClient *clientHandle )
 	serverClient->internalHandle   = clientHandle;
 	PlInsertHashTableNode( serverClientsLookup, clientHandle, sizeof( ApeServerClient * ), serverClient );
 	numServerClients++;
+
+	serverClient->state = GAME_SERVER_CLIENT_STATE_SPECTATING;
 
 	assign_client_to_player( serverClient );
 }
@@ -221,7 +234,45 @@ void game_server_print_( ApeServerClient *clientHandle, const char *message )
 
 static void spawn_player( GamePlayer *self )
 {
-	//self->entity = ape_entity_create()
+	static const char *playerClassName;
+	if ( playerClassName == nullptr )
+	{
+		AcmBranch *root = com_project_get_config();
+		assert( root != nullptr );
+		playerClassName = acm_get_string( root, "playerClassName", nullptr );
+	}
+
+	if ( playerClassName == nullptr )
+	{
+		game_warning_( "Player spawn class not specified in config (see \"playerClassName\")!\n" );
+		return;
+	}
+
+	// lookup a spawn point...
+	//TODO: this is all placeholder logic
+
+	PLLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
+	if ( playerSpawns == nullptr )
+	{
+		game_warning_( "Unable to spawn player, no spawn points!\n" );
+		return;
+	}
+
+	ApeEntity *entity = PlGetLinkedListNodeUserData( PlGetFirstNode( playerSpawns ) );
+	ApeRoom   *room   = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
+	if ( room == nullptr )
+	{
+		game_warning_( "Encountered a player spawn outside a room!\n" );
+		return;
+	}
+
+	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+
+	self->entity = ape_entity_create( APE_WORLD_NODE( room ), playerClassName, "player", nullptr, &pos, &ang );
+
+	ape_entity_spawn( self->entity );
+	self->serverClient->state = GAME_SERVER_CLIENT_STATE_SPAWNED;
 }
 
 const char *game_player_get_name_( const GamePlayer *self )

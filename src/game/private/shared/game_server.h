@@ -4,6 +4,12 @@
 
 #include "ape/ape_public_server.h"
 
+typedef enum GameServerClientState
+{
+	GAME_SERVER_CLIENT_STATE_SPECTATING,
+	GAME_SERVER_CLIENT_STATE_SPAWNED,
+} GameServerClientState;
+
 typedef struct GameServerClient
 {
 	ApeServerClient *internalHandle;
@@ -11,6 +17,8 @@ typedef struct GameServerClient
 
 	unsigned int slot;
 	GamePlayer  *playerSlot;
+
+	GameServerClientState state;
 } GameServerClient;
 
 bool game_server_client_validate_( ApeServerClient *clientHandle );

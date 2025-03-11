@@ -297,8 +297,6 @@ static void ss1_spawn_world( ApeRoom *room )
 	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 
 	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
-
-	ss1_gameState.players[ 0 ].entity = ape_entity_create( roomNode, "ss1_player", "player_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )
@@ -373,4 +371,8 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .clientTick           = client_tick,
 	};
 	return &gameMode;
+}
+
+void game_ss1_spawn_player( GamePlayer *self )
+{
 }
