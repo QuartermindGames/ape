@@ -106,6 +106,12 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 		ape_error_( true, "Failed to create selection table for instance: %s\n", PlGetError() );
 	}
 
+	self->subSelectionTable = PlCreateHashTable();
+	if ( self->subSelectionTable == nullptr )
+	{
+		ape_error_( true, "Failed to create sub-selection table for instance: %s\n", PlGetError() );
+	}
+
 	self->selectedObjects = PlCreateLinkedList();
 	if ( self->selectedObjects == nullptr )
 	{
@@ -126,6 +132,8 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 
 	PlDestroyHashTable( self->selectionTable );
 	self->selectionTable = nullptr;
+	PlDestroyHashTable( self->subSelectionTable );
+	self->subSelectionTable = nullptr;
 
 	PlDestroyLinkedList( self->selectedObjects );
 	self->selectedObjects = nullptr;
@@ -330,27 +338,93 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 
 void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 {
-	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX )
+	ApeCamera *camera = self->camera;
+	assert( camera != nullptr );
+
+	ApeRoom *room = ape_camera_get_room( camera );
+	assert( room != nullptr );
+
+	PLVector3 left, up, forward;
+	PlExtractMatrix4Directions( &self->grid.transform, &left, &up, &forward );
+
+	// transform the dir relative to the grid
+	PLVector3 gridDir = PlScaleVector3F( left, dir->x );
+	gridDir           = PlAddVector3( gridDir, PlScaleVector3F( up, dir->y ) );
+	gridDir           = PlAddVector3( gridDir, PlScaleVector3F( forward, dir->z ) );
+
+	switch ( self->geometryMode )
 	{
-		PLVector3 *vertex;
-		COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+		default:
+			break;
+		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 		{
-			*vertex = PlAddVector3( *vertex, PlScaleVector3F( *dir, self->grid.size ) );
+			PLVector3 *vertex;
+			COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+			{
+				*vertex = PlAddVector3( *vertex, PlScaleVector3F( gridDir, self->grid.size ) );
+
+				// try to determine what faces we need to update... sigh
+				intptr_t  ptr   = ( intptr_t ) vertex;
+				ApeBrush *brush = PlLookupHashTableUserData( self->subSelectionTable, &ptr, sizeof( intptr_t ) );
+				if ( brush != nullptr )
+				{
+					for ( UInt j = 0; j < brush->numFaces; ++j )
+					{
+						for ( UInt k = 0; k < brush->faces[ j ].numVertices; ++k )
+						{
+							if ( brush->faces[ j ].vertices[ k ].position == vertex )
+							{
+								ape_brush_face_compute_normal_( &brush->faces[ j ] );
+								break;
+							}
+						}
+					}
+
+					ape_brush_compute_face_bounds_( brush );
+					ape_brush_compute_bounds_( brush );
+				}
+				else
+				{
+					ape_warning_( "Failed to lookup parent brush when adjusting vertex!\n" );
+				}
+			}
+
+			ape_room_mark_dirty_( room );
+			break;
 		}
+		case APE_EDITOR_GEOMETRY_MODE_FACE:
+		{
+			//TODO
+			break;
+		}
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
+		{
+			ApeWorldNode *node;
+			COM_ITERATE_LINKED_LIST( node, self->selectedObjects, i )
+			{
+				if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+				{
+					// these are special, because we're transforming all the vertices, rather than the explicit position!
 
-		//TODO: get rid of this!
+					ApeBrush *brush = ( ApeBrush * ) node;
+					for ( UInt j = 0; j < brush->numVertices; ++j )
+					{
+						brush->vertices[ j ] = PlAddVector3( brush->vertices[ j ], PlScaleVector3F( gridDir, self->grid.size ) );
+					}
 
-		ApeCamera *camera = self->camera;
-		assert( camera != nullptr );
+					ape_brush_compute_bounds_( brush );
+					//TODO: make faces relative to brush so that this isn't necessary!!!
+					ape_brush_compute_face_bounds_( brush );
 
-		ApeRoom *room = ape_camera_get_room( camera );
-		assert( room != nullptr );
+					ape_room_mark_dirty_( room );
+					continue;
+				}
 
-		room->isDirty = true;
-	}
-	else
-	{
-		//TODO
+				PLVector3 pos = ape_world_node_get_position( node );
+				pos           = PlAddVector3( pos, PlScaleVector3F( gridDir, self->grid.size ) );
+				ape_world_node_set_position( node, &pos );
+			}
+		}
 	}
 }
 

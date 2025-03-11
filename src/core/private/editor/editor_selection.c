@@ -68,6 +68,10 @@ static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *n
 			{
 				brush->vertexSelectColours[ i ] = encode_hash_to_colour( ( uintptr_t ) &brush->vertices[ i ] );
 				PlInsertHashTableNode( self->selectionTable, &brush->vertexSelectColours[ i ], sizeof( PLColour ), &brush->vertices[ i ] );
+
+				// this is dumb as hell, but throw it into our sub selection list too so we can determine the faces we need to update
+				intptr_t ptr = ( intptr_t ) &brush->vertices[ i ];
+				PlInsertHashTableNode( self->subSelectionTable, &ptr, sizeof( intptr_t ), brush );
 			}
 		}
 	}
@@ -97,6 +101,7 @@ void ape_editor_selection_rebuild_( ApeEditorInstance *self )
 	// clear all the selection lists
 	PlDestroyLinkedListNodes( self->selectedObjects );
 	PlClearHashTable( self->selectionTable );
+	PlClearHashTable( self->subSelectionTable );
 	self->hoverSelection = nullptr;
 
 	ApeCamera *camera = self->camera;

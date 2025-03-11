@@ -85,6 +85,7 @@ typedef struct ApeEditorInstance
 	void *modeData;
 
 	struct PLHashTable *selectionTable;
+	struct PLHashTable *subSelectionTable;
 	PLLinkedList       *selectedObjects;
 	void               *hoverSelection;
 
