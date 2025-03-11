@@ -21,7 +21,7 @@ static GridSelectable  gridSelectables[ APE_EDITOR_GRID_MAX_POINTS ];
 static GridSelectable *activeGridSelectable;
 static PLHashTable    *gridSelectablesTable;
 
-static const float GRID_SELECTABLE_SCALE = 1.0f;
+static constexpr float GRID_SELECTABLE_SCALE = 1.0f;
 
 void ape_grid_setup_( ApeEditorGrid *self )
 {

@@ -116,6 +116,13 @@ void ape_editor_flip_faces( ApeEditorInstance *self );
 void ape_editor_shade_faces_smooth( ApeEditorInstance *self );
 void ape_editor_shade_faces_flat( ApeEditorInstance *self );
 
+/**
+ * Attempt to shift the current selection in the given direction.
+ * The direction will be relative to the grid.
+ *
+ * @param self	Editor instance.
+ * @param dir	Direction to shift in.
+ */
 void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir );
 
 /////////////////////////////////////////////////////////////////////////////////////

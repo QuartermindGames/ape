@@ -318,7 +318,7 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
-		ape_brush_face_compute_normal( face );
+		ape_brush_face_compute_normal_( face );
 	}
 
 	//TODO: get rid of this!

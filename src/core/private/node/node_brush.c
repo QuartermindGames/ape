@@ -77,7 +77,7 @@ static uint convert_brush_polygon_to_triangles( const ApeBrushFace *face, uint *
 	return numTriangles;
 }
 
-void ape_brush_face_compute_normal( ApeBrushFace *face )
+void ape_brush_face_compute_normal_( ApeBrushFace *face )
 {
 	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
 
@@ -102,6 +102,9 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 	{
 		face->vertices[ i ].normal = face->normal;
 	}
+
+	// store the normal here, as the face normal may be modified later
+	face->plane.normal = face->normal;
 }
 
 static void compute_brush_face_tangents( ApeBrushFace *face )
@@ -242,7 +245,7 @@ ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self )
 	return room;
 }
 
-static void compute_brush_face_bounds( ApeBrushFace *face )
+void ape_brush_face_compute_bounds_( ApeBrushFace *face )
 {
 	assert( face->numVertices > 0 );
 
@@ -266,7 +269,7 @@ static void compute_brush_face_bounds( ApeBrushFace *face )
 	face->bounds.absOrigin = PlGetAabbAbsOrigin( &face->bounds, face->bounds.origin );
 }
 
-static void compute_brush_bounds( ApeBrush *self )
+void ape_brush_compute_bounds_( ApeBrush *self )
 {
 	assert( self->numVertices > 0 );
 
@@ -295,6 +298,14 @@ static void compute_brush_bounds( ApeBrush *self )
 	ape_world_node_compute_bounds_( APE_WORLD_NODE( self ) );
 }
 
+void ape_brush_compute_face_bounds_( ApeBrush *self )
+{
+	for ( UInt i = 0; i < self->numFaces; ++i )
+	{
+		ape_brush_face_compute_bounds_( &self->faces[ i ] );
+	}
+}
+
 void ape_brush_flip_face_( ApeBrushFace *face )
 {
 	uint start = 0;
@@ -309,7 +320,7 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 		end--;
 	}
 
-	ape_brush_face_compute_normal( face );
+	ape_brush_face_compute_normal_( face );
 
 	ApeBrush *brush = face->parent;
 	ApeRoom  *room  = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
@@ -386,13 +397,13 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].material      = material;
 		self->faces[ i ].materialScale = PL_VECTOR2( 0.5f, 0.5f );
 
-		ape_brush_face_compute_normal( &self->faces[ i ] );
-		compute_brush_face_bounds( &self->faces[ i ] );
+		ape_brush_face_compute_normal_( &self->faces[ i ] );
+		ape_brush_face_compute_bounds_( &self->faces[ i ] );
 		compute_brush_face_texture_coordinates( &self->faces[ i ] );
 		compute_brush_face_tangents( &self->faces[ i ] );
 	}
 
-	compute_brush_bounds( self );
+	ape_brush_compute_bounds_( self );
 
 	ApeRoom *room = ape_world_node_get_room( &self->base );
 	if ( room != nullptr )
@@ -538,7 +549,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
-			compute_brush_bounds( self );
+			ape_brush_compute_bounds_( self );
 		}
 	}
 	else

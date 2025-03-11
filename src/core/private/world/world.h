@@ -96,8 +96,16 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
 void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
 
+void ape_room_mark_dirty_( ApeRoom *self );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes
+
+void ape_brush_face_compute_normal_( ApeBrushFace *face );
+void ape_brush_face_compute_bounds_( ApeBrushFace *face );
+
+void ape_brush_compute_bounds_( ApeBrush *self );
+void ape_brush_compute_face_bounds_( ApeBrush *self );
 
 void ape_brush_flip_face_( ApeBrushFace *face );
 

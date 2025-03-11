@@ -55,7 +55,7 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self )
 	return self->reverbPreset;
 }
 
-AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
+static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
 	ApeRoom *room = self;
 	acm_push_string( root, "path", room->path, true );
@@ -67,7 +67,7 @@ AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 	return root;
 }
 
-ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 {
 	ApeRoom *self = ape_room_create( parent, "temp" );
 
@@ -210,7 +210,7 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
 					}
 
-					PLVector3 normal = PlNormalizeVector3( face->normal );
+					PLVector3 normal = PlNormalizeVector3( face->plane.normal );
 					if ( !com_collision_sphere_intersect_polygon( sphere, &normal, vertices, face->numVertices, &intersection ) )
 					{
 						continue;
@@ -310,6 +310,11 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 }
 
 #endif
+
+void ape_room_mark_dirty_( ApeRoom *self )
+{
+	self->isDirty = true;
+}
 
 static const ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
         {"None",             0 },
