@@ -10,6 +10,7 @@
 
 #include "../../shared/components/component_health.h"
 #include "../../shared/components/component_movement.h"
+#include "../../shared/components/component_collision.h"
 
 static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 {
@@ -24,12 +25,16 @@ static void spawn_player_entity( ApeEntity *self )
 	player->profession = rand() % SS1_MAX_PROFESSIONS;
 
 	player->movementComponent = ape_entity_add_component( self, "movement" );
-	//assert( player->movementComponent != nullptr );
+	assert( player->movementComponent != nullptr );
 
 	player->healthComponent = ape_entity_add_component( self, "health" );
 	assert( player->healthComponent != nullptr );
 	player->healthComponent->maxHealth = ss1_professions[ player->profession ].maxHealth;
 	player->healthComponent->health    = player->healthComponent->maxHealth;
+
+	player->collisionComponent = ape_entity_add_component( self, "collision" );
+	assert( player->collisionComponent != nullptr );
+	player->collisionComponent->type = GAME_COLLISION_TYPE_CAPSULE;
 
 	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < SS1_PLAYER_MAX_AUDIO_CHANNELS; ++i )
@@ -41,7 +46,7 @@ static void spawn_player_entity( ApeEntity *self )
 	assert( player->model != nullptr );
 }
 
-static void tick_player_entity( double delta )
+static void tick_player_entity( ApeEntity *self, double delta )
 {
 	delta = game_get_time_delta_( delta );
 }

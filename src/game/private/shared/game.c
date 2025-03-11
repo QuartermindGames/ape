@@ -148,6 +148,7 @@ extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
 extern ApeEntityClassDefinition game_triggerEntityClass_;
 extern ApeEntityClassDefinition game_ropeEntityClass_;
 
+extern ApeEntityComponentDefinition game_collisionComponent_;
 extern ApeEntityComponentDefinition game_healthComponent_;
 extern ApeEntityComponentDefinition game_movementComponent_;
 
@@ -157,6 +158,7 @@ void game_register_standard_entity_components_( void )
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
 
+	ape_register_entity_component( &game_collisionComponent_ );
 	ape_register_entity_component( &game_healthComponent_ );
 	ape_register_entity_component( &game_movementComponent_ );
 }

@@ -237,10 +237,19 @@ typedef struct PLCollisionRay    PLCollisionRay;
 typedef struct PLCollisionPlane  PLCollisionPlane;
 typedef struct PLCollisionSphere PLCollisionSphere;
 
+typedef struct ComCollisionCapsule
+{
+	float     radius;
+	PLVector3 origin;
+	PLVector3 end;
+} ComCollisionCapsule;
+
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
 
 bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
+
+bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
 
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );

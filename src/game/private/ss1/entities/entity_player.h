@@ -15,8 +15,9 @@ typedef struct SS1PlayerEntity
 	GamePlayer       *player;
 	SS1ProfessionType profession;
 
-	struct GameHealthComponent   *healthComponent;
-	struct GameMovementComponent *movementComponent;
+	struct GameHealthComponent    *healthComponent;
+	struct GameMovementComponent  *movementComponent;
+	struct GameCollisionComponent *collisionComponent;
 
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
 	struct ApeModelNode   *model;

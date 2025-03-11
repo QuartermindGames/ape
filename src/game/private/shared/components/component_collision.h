@@ -2,14 +2,14 @@
 
 #pragma once
 
-typedef enum GameCollisionGroup
+typedef enum GameCollisionGroup : uint8_t
 {
 	PL_BITFLAG( GAME_COLLISION_GROUP_WORLD, 0U ),
 	PL_BITFLAG( GAME_COLLISION_GROUP_PLAYER, 1U ),
 	PL_BITFLAG( GAME_COLLISION_GROUP_MONSTER, 2U ),
 } GameCollisionGroup;
 
-typedef enum GameCollisionType
+typedef enum GameCollisionType : uint8_t
 {
 	GAME_COLLISION_TYPE_SPHERE,
 	GAME_COLLISION_TYPE_AABB,
@@ -22,4 +22,11 @@ typedef struct GameCollisionComponent
 {
 	GameCollisionGroup groups;
 	GameCollisionType  type;
+
+	union
+	{
+		PLCollisionSphere   sphere;
+		PLCollisionAABB     aabb;
+		ComCollisionCapsule capsule;
+	};
 } GameCollisionComponent;
