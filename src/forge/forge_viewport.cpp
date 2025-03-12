@@ -111,6 +111,8 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 
 Viewport::~Viewport()
 {
+	getApp()->removeTimeout( this, ID_DRAW );
+
 	ape_viewport_destroy( internalViewport_ );
 
 	canvas_->makeNonCurrent();

@@ -78,6 +78,8 @@ namespace forge
 
 		WorldViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
+		std::string savePath{};
+
 	public:
 		class RoomDialog : public FXDialogBox
 		{
