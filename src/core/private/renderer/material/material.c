@@ -92,7 +92,7 @@ void ape_initialize_materials_( void )
 	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
 	                [APE_MATERIAL_DEFAULT_HIDDEN]   = "materials/editor/hidden.mat.n",
 
-	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/editor/default_64.mat.n",//TODO: get rid of and make this configurable
+	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/world/dev/dev_tile_generic_00.mat.n",//TODO: get rid of and make this configurable
 	                [APE_MATERIAL_DEFAULT_EDITOR_SELECTION] = "materials/engine/selection.mat.n",
 
 	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
