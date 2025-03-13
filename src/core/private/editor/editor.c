@@ -797,6 +797,8 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	ape_grid_draw_( &instance->grid );
 
 	// slow, unoptimised, jelly
@@ -819,6 +821,8 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 			PlgEnableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 		}
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_editor_post_render_scene_()
@@ -829,6 +833,8 @@ void ape_editor_post_render_scene_()
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	ape_grid_post_draw_( &instance->grid );
 
 	ape_editor_selection_render_post_( instance );
@@ -837,6 +843,8 @@ void ape_editor_post_render_scene_()
 	{
 		render_plot_polygon( instance );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root, const ApeViewport *viewport, ApeGuiFont *font, const PLMatrix4 *viewProj )

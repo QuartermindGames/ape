@@ -7,15 +7,10 @@
 
 #include "renderer.h"
 #include "renderer_font.h"
-#include "renderer_particle.h"
-#include "renderer_render_target.h"
 
-#include "client/ape_client_gui.h"
 #include "editor/editor.h"
 
 #include "post/post.h"
-
-#include "game/game_public.h"
 
 ApeRendererStats     ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;

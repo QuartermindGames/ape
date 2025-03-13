@@ -149,7 +149,8 @@ typedef struct ApeWorldNode
 	PLVector3 angles;
 	PLVector3 scale;
 
-	PLMatrix4 transform;
+	PLMatrix4 localTransform;
+	PLMatrix4 worldTransform;
 
 	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
 	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
@@ -247,7 +248,20 @@ void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self );
 PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self );
 
+/**
+ * Fetch the world transform.
+ *
+ * @param self	Instance of the node.
+ * @return		World transform.
+ */
 PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self );
+
+/**
+ * Fetch the local transform.
+ *
+ * @param self Instance of the node.
+ * @return Local transform.
+ */
 PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
 
 AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
@@ -434,8 +448,11 @@ typedef struct ApeCollisionIntersection
 	float         distance;    // distance from point of intersection vs. caster
 } ApeCollisionIntersection;
 
+typedef struct ComCollisionCapsule ComCollisionCapsule;
+
 bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
 bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, ApeCollisionIntersection *result );
+bool ape_room_capsule_intersect( ApeRoom *self, const ComCollisionCapsule *capsule, ApeCollisionIntersection *result );
 
 bool        ape_room_set_path( ApeRoom *self, const char *path );
 const char *ape_room_get_path( const ApeRoom *self );

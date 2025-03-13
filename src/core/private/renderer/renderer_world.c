@@ -683,6 +683,8 @@ static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *lig
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
 
 	const bool drawShadows = !depth && ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( light ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
@@ -733,10 +735,14 @@ static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *lig
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 		}
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	// and now depth pre-pass
 	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
@@ -782,6 +788,8 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 
 		PlgInsertDebugMarker( "solid room shaded end" );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoint, PLMatrix4 *reflectionMatrix )
@@ -830,12 +838,12 @@ static void draw_portal_face( const ApeBrushFace *portal )
 //TODO: move into room code
 void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport )
 {
-	COM_PROFILE_FUNCTION_START();
-
 	if ( ape_config_.renderer.showSelectionBuffer )
 	{
 		return;
 	}
+
+	COM_PROFILE_FUNCTION_START();
 
 	update_mesh_cache_( room );
 
