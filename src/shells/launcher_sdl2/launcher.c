@@ -274,9 +274,6 @@ void ss_shell_grab_mouse( bool grab )
 
 static int Sys_TranslateSDLKeyInput( int key )
 {
-	if ( key < 128 )
-		return key;
-
 	switch ( key )
 	{
 		default:
@@ -350,11 +347,13 @@ static int Sys_TranslateSDLKeyInput( int key )
 			return KEY_LEFT_ALT;
 		case SDLK_RALT:
 			return KEY_RIGHT_ALT;
-
-			/* temp temp temp */
 		case SDLK_ESCAPE:
-			ape_shutdown();
-			break;
+			return APE_INPUT_KEY_ESCAPE;
+	}
+
+	if ( key < 128 )
+	{
+		return key;
 	}
 
 	return KEY_INVALID;
