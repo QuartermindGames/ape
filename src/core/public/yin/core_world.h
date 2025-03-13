@@ -336,8 +336,6 @@ typedef struct ApeBrush
 
 	ApeBrushType type;
 
-	ApeMaterial *materials[ APE_BRUSH_MAX_SUB_MESHES ];
-
 	PLVector3   *vertices;
 	unsigned int numVertices;
 

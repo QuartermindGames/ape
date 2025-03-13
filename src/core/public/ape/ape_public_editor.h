@@ -118,6 +118,14 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self );
 void ape_editor_shade_faces_flat( ApeEditorInstance *self );
 
 /**
+ * Attempt to duplicate the currently selected world nodes.
+ * Mind that duplication doesn't work for everything.
+ *
+ * @param self Editor instance.
+ */
+void ape_editor_duplicate_selection( ApeEditorInstance *self );
+
+/**
  * Attempt to shift the current selection in the given direction.
  * The direction will be relative to the grid.
  *

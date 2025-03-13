@@ -43,12 +43,12 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 	PL_DELETE( self );
 }
 
-static uint convert_brush_polygon_to_triangles( const ApeBrushFace *face, uint *indices )
+static UInt convert_brush_polygon_to_triangles( const ApeBrushFace *face, UInt *indices )
 {
 	assert( face->numVertices >= 3 );
 
-	uint  numTriangles = 0;
-	uint *index        = indices;
+	UInt  numTriangles = 0;
+	UInt *index        = indices;
 
 #if 0// concave polygon
 
@@ -62,7 +62,7 @@ static uint convert_brush_polygon_to_triangles( const ApeBrushFace *face, uint *
 
 #else// convex polygon
 
-	for ( uint i = 1; i + 1 < face->numVertices; ++i )
+	for ( UInt i = 1; i + 1 < face->numVertices; ++i )
 	{
 		index[ 0 ] = ( face->edgeLoop[ 0 ] - face->vertices );
 		index[ 1 ] = ( face->edgeLoop[ i ] - face->vertices );
@@ -82,9 +82,9 @@ void ape_brush_face_compute_normal_( ApeBrushFace *face )
 	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
 
 	assert( face->numVertices >= 3 );
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( UInt i = 0; i < face->numVertices; ++i )
 	{
-		uint j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
+		UInt j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
 
 		const PLVector3 *current = face->edgeLoop[ i ]->position;
 		const PLVector3 *next    = face->edgeLoop[ j ]->position;
@@ -98,7 +98,7 @@ void ape_brush_face_compute_normal_( ApeBrushFace *face )
 	}
 
 	face->normal = PlNormalizeVector3( face->normal );
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( UInt i = 0; i < face->numVertices; ++i )
 	{
 		face->vertices[ i ].normal = face->normal;
 	}
@@ -110,9 +110,9 @@ void ape_brush_face_compute_normal_( ApeBrushFace *face )
 static void compute_brush_face_tangents( ApeBrushFace *face )
 {
 	assert( face->numVertices >= 3 );
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( UInt i = 0; i < face->numVertices; ++i )
 	{
-		uint j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
+		UInt j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
 
 		ApeBrushFaceVertex *current = face->edgeLoop[ i ];
 		ApeBrushFaceVertex *next    = face->edgeLoop[ j ];
@@ -136,7 +136,7 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 
 static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 {
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( UInt i = 0; i < face->numVertices; ++i )
 	{
 		PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
 		if ( fabsf( PlVector3DotProduct( face->normal, up ) ) > 0.99f )
@@ -153,8 +153,8 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 
 		const ApeMaterial *material = face->material;
 		assert( material != nullptr );
-		uint width  = ape_material_get_width( material );
-		uint height = ape_material_get_height( material );
+		UInt width  = ape_material_get_width( material );
+		UInt height = ape_material_get_height( material );
 
 		// apply rotation
 		float cos = cosf( face->materialAngle.x );
@@ -251,9 +251,9 @@ void ape_brush_face_compute_bounds_( ApeBrushFace *face )
 
 	face->bounds.mins = PL_VECTOR3( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
 	face->bounds.maxs = PL_VECTOR3( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
-	for ( uint i = 0; i < face->numVertices; ++i )
+	for ( UInt i = 0; i < face->numVertices; ++i )
 	{
-		for ( uint j = 0; j < 3; ++j )
+		for ( UInt j = 0; j < 3; ++j )
 		{
 			if ( PL_VECTOR3_I( *face->vertices[ i ].position, j ) > PL_VECTOR3_I( face->bounds.maxs, j ) )
 			{
@@ -275,9 +275,9 @@ void ape_brush_compute_bounds_( ApeBrush *self )
 
 	self->base.localBounds.mins = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
 	self->base.localBounds.maxs = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
-	for ( uint i = 0; i < self->numVertices; ++i )
+	for ( UInt i = 0; i < self->numVertices; ++i )
 	{
-		for ( uint j = 0; j < 3; ++j )
+		for ( UInt j = 0; j < 3; ++j )
 		{
 			if ( PL_VECTOR3_I( self->vertices[ i ], j ) > PL_VECTOR3_I( self->base.localBounds.maxs, j ) )
 			{
@@ -308,8 +308,8 @@ void ape_brush_compute_face_bounds_( ApeBrush *self )
 
 void ape_brush_flip_face_( ApeBrushFace *face )
 {
-	uint start = 0;
-	uint end   = face->numVertices - 1;
+	UInt start = 0;
+	UInt end   = face->numVertices - 1;
 	while ( start < end )
 	{
 		ApeBrushFaceVertex *temp = face->edgeLoop[ start ];
@@ -330,7 +330,7 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 	}
 }
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material )
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, UInt numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material )
 {
 	// extrude and build the brush geometry from the given polygon shape
 	if ( numVertices < 3 )
@@ -348,7 +348,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 	// set up the top and bottom faces first
 	self->faces[ 0 ].numVertices = self->faces[ 1 ].numVertices = numVertices;
-	for ( uint i = 0; i < numVertices; ++i )
+	for ( UInt i = 0; i < numVertices; ++i )
 	{
 		// sort out the top and bottom
 		self->faces[ 0 ].vertices[ i ].position = &self->vertices[ i ];
@@ -369,7 +369,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 		// set up the faces for the edges
 
-		uint next = ( i + 1 ) % numVertices;
+		UInt next = ( i + 1 ) % numVertices;
 
 		PLVector3 *quad[ 4 ];
 		quad[ 0 ] = &self->vertices[ i ];
@@ -383,13 +383,13 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i + 2 ].vertices[ 2 ].position = quad[ 3 ];
 		self->faces[ i + 2 ].vertices[ 3 ].position = quad[ 2 ];
 
-		for ( uint j = 0; j < 4; ++j )
+		for ( UInt j = 0; j < 4; ++j )
 		{
 			self->faces[ i + 2 ].edgeLoop[ j ] = ( signedArea < 0.0f ) ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
 		}
 	}
 
-	for ( uint i = 0; i < self->numFaces; ++i )
+	for ( UInt i = 0; i < self->numFaces; ++i )
 	{
 		self->faces[ i ].parent = self;
 		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -423,7 +423,7 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 	acm_push_array_f32( root, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 
 	AcmBranch *facesBranch = acm_push_array_object( root, "faces" );
-	for ( uint i = 0; i < brush->numFaces; ++i )
+	for ( UInt i = 0; i < brush->numFaces; ++i )
 	{
 		const ApeBrushFace *face       = &brush->faces[ i ];
 		AcmBranch          *faceBranch = acm_push_object( facesBranch, "face" );
@@ -449,7 +449,7 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 
 		AcmBranch *edgeBranch     = acm_push_array_i16( faceBranch, "edgeLoop", nullptr, 0 );
 		AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "vertices" );
-		for ( uint j = 0; j < face->numVertices; ++j )
+		for ( UInt j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *vertex       = &face->vertices[ j ];
 			AcmBranch                *vertexBranch = acm_push_object( verticesBranch, "vertex" );
@@ -491,7 +491,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 		self->faces    = PL_NEW_( ApeBrushFace, self->numFaces );
 
 		branch = acm_get_first_child( branch );
-		for ( uint i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
+		for ( UInt i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
 		{
 			self->faces[ i ].parent = self;
 
@@ -501,7 +501,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 				self->faces[ i ].numVertices = acm_get_num_of_children( vertexBranch );
 
 				vertexBranch = acm_get_first_child( vertexBranch );
-				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
+				for ( UInt j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
 				{
 					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
 					assert( vertexIndex <= self->numVertices );
@@ -513,7 +513,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
 				acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
-				for ( uint j = 0; j < self->faces[ i ].numVertices; ++j )
+				for ( UInt j = 0; j < self->faces[ i ].numVertices; ++j )
 				{
 					self->faces[ i ].edgeLoop[ j ] = &self->faces[ i ].vertices[ edgeLoop[ j ] ];
 				}

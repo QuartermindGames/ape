@@ -336,6 +336,102 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 	room->isDirty = true;
 }
 
+void ape_editor_duplicate_selection( ApeEditorInstance *self )
+{
+	UInt numDuplicates = 0;
+
+	PLLinkedList *newSelectionList = PlCreateLinkedList();
+	if ( newSelectionList == nullptr )
+	{
+		ape_warning_( "Failed to create new selection list: %s\n", PlGetError() );
+		return;
+	}
+
+	ApeWorldNode *worldNode;
+	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	{
+		switch ( worldNode->type )
+		{
+			default:
+				ape_warning_( "Cannot duplicate this type of node (%u)!\n", worldNode->type );
+				break;
+			case APE_WORLD_NODE_TYPE_BRUSH:
+			{
+				ApeBrush *srcBrush = ( ApeBrush * ) worldNode;
+				ApeBrush *dstBrush = ape_brush_create( worldNode->parent, worldNode->name, &worldNode->position, &worldNode->angles );
+				if ( dstBrush == nullptr )
+				{
+					ape_warning_( "Failed to create brush for duplication!\n" );
+					break;
+				}
+
+				dstBrush->type = srcBrush->type;
+
+				dstBrush->numVertices = srcBrush->numVertices;
+				dstBrush->vertices    = PL_NEW_( PLVector3, dstBrush->numVertices );
+				for ( UInt j = 0; j < dstBrush->numVertices; ++j )
+				{
+					dstBrush->vertices[ j ] = srcBrush->vertices[ j ];
+				}
+
+				dstBrush->numFaces = srcBrush->numFaces;
+				dstBrush->faces    = PL_NEW_( ApeBrushFace, dstBrush->numFaces );
+				for ( UInt j = 0; j < dstBrush->numFaces; ++j )
+				{
+					//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
+					const char  *materialPath     = ape_material_get_path( srcBrush->faces[ j ].material );
+					ApeMaterial *material         = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+					dstBrush->faces[ j ].material = material;
+
+					dstBrush->faces[ j ].materialScale  = srcBrush->faces[ j ].materialScale;
+					dstBrush->faces[ j ].materialOffset = srcBrush->faces[ j ].materialOffset;
+					dstBrush->faces[ j ].materialAngle  = srcBrush->faces[ j ].materialAngle;
+
+					dstBrush->faces[ j ].normal = srcBrush->faces[ j ].normal;
+
+					dstBrush->faces[ j ].flags = srcBrush->faces[ j ].flags;
+
+					dstBrush->faces[ j ].bounds      = srcBrush->faces[ j ].bounds;
+					dstBrush->faces[ j ].numVertices = srcBrush->faces[ j ].numVertices;
+					for ( UInt k = 0; k < dstBrush->faces[ j ].numVertices; ++k )
+					{
+						dstBrush->faces[ j ].vertices[ k ].position      = &dstBrush->vertices[ srcBrush->faces[ j ].vertices[ k ].position - srcBrush->vertices ];
+						dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
+						dstBrush->faces[ j ].vertices[ k ].tangent       = srcBrush->faces[ j ].vertices[ k ].tangent;
+						dstBrush->faces[ j ].vertices[ k ].bitangent     = srcBrush->faces[ j ].vertices[ k ].bitangent;
+						dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
+
+						// and now for the edge loop...
+						dstBrush->faces[ j ].edgeLoop[ k ] = &dstBrush->faces[ j ].vertices[ srcBrush->faces[ j ].edgeLoop[ k ] - srcBrush->faces[ j ].vertices ];
+					}
+
+					dstBrush->faces[ j ].destination = srcBrush->faces[ j ].destination;
+					dstBrush->faces[ j ].parent      = dstBrush;
+				}
+
+				ape_brush_compute_bounds_( dstBrush );
+
+				PlInsertLinkedListNode( newSelectionList, dstBrush );
+
+				numDuplicates++;
+				break;
+			}
+		}
+	}
+
+	ape_editor_selection_rebuild_( self );
+
+	// now add the new items to the selection, so we can immediately start adjusting them around if we want
+	COM_ITERATE_LINKED_LIST( worldNode, newSelectionList, i )
+	{
+		ape_editor_add_object_to_selection( self, worldNode );
+	}
+
+	PlDestroyLinkedList( newSelectionList );
+
+	ape_print_( "Duplicated %u nodes\n", numDuplicates );
+}
+
 void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 {
 	ApeCamera *camera = self->camera;

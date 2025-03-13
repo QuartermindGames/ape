@@ -425,6 +425,13 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 		}
 	}
 
+	// duplicate selection
+	if ( event->state & SHIFTMASK && instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM && ( event->code == KEY_D || event->code == KEY_d ) )
+	{
+		ape_editor_duplicate_selection( instance );
+		return true;
+	}
+
 	// allow us to use shift + arrows to move things around
 	if ( event->state & SHIFTMASK && ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX || instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM ) )
 	{
@@ -433,6 +440,8 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 		{
 			default:
 				break;
+
+			// shift move
 			case KEY_Up:
 			{
 				dir.x = 1.0f;
