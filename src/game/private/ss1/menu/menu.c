@@ -16,6 +16,11 @@ static GameMenu  mainMenu;
 static GameMenu *currentMenu       = &mainMenu;
 static uint      currentMenuOption = 0;
 
+bool game_menu_is_open()
+{
+	return isMainMenuOpen;
+}
+
 static void capture_screenshot_callback( const GameMenuOption * )
 {
 	isMainMenuOpen = false;

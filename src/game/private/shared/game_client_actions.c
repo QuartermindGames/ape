@@ -1,6 +1,8 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "game_private.h"
+
+#include "game_menu.h"
 #include "game_server.h"
 #include "components/component_movement.h"
 
@@ -11,6 +13,11 @@ static void say_action( ApeInputState state, const char *id )
 
 static void move_action( ApeInputState state, const char *id )
 {
+	if ( game_menu_is_open() )
+	{
+		return;
+	}
+
 	if ( !( state & APE_INPUT_STATE_DOWN ) )
 	{
 		return;

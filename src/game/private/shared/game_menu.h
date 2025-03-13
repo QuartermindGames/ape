@@ -47,6 +47,8 @@ typedef struct GameMenu
 	uint8_t         lastOption;
 } GameMenu;
 
+bool game_menu_is_open();
+
 void      game_menu_set_active( GameMenu *menu );
 GameMenu *game_menu_get_active( void );
 
