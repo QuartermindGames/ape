@@ -87,9 +87,9 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *roo
 	return &self->base;
 }
 
-static constexpr UInt RAY_HIT_INC = 256;
+static constexpr unsigned int RAY_HIT_INC = 256;
 
-static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, UInt *numHits, UInt *maxHits )
+static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
@@ -106,7 +106,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 			case APE_WORLD_NODE_TYPE_BRUSH:
 			{
 				ApeBrush *brush = ( ApeBrush * ) node;
-				for ( UInt i = 0; i < brush->numFaces; ++i )
+				for ( unsigned int i = 0; i < brush->numFaces; ++i )
 				{
 					ApeBrushFace *face = &brush->faces[ i ];
 					if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
@@ -115,7 +115,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 					}
 
 					PLVector3 vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
-					for ( UInt j = 0; j < face->numVertices; ++j )
+					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
 					}
@@ -154,8 +154,8 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 
 bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result )
 {
-	UInt                      maxHits = RAY_HIT_INC;
-	UInt                      numHits = 0;
+	unsigned int              maxHits = RAY_HIT_INC;
+	unsigned int              numHits = 0;
 	ApeCollisionIntersection *hits    = PL_NEW_( ApeCollisionIntersection, maxHits );
 
 	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits ) || numHits == 0 )
@@ -166,7 +166,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 
 	// now determine which was the closest hit;
 	*result = hits[ 0 ];
-	for ( UInt i = 1; i < numHits; i++ )
+	for ( unsigned int i = 1; i < numHits; i++ )
 	{
 		if ( hits[ i ].distance < result->distance )
 		{
@@ -179,7 +179,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 	return true;
 }
 
-static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionSphere *sphere, ApeCollisionIntersection *hits, UInt *numHits, UInt *maxHits )
+static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionSphere *sphere, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
@@ -196,7 +196,7 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 			case APE_WORLD_NODE_TYPE_BRUSH:
 			{
 				ApeBrush *brush = ( ApeBrush * ) node;
-				for ( UInt i = 0; i < brush->numFaces; ++i )
+				for ( unsigned int i = 0; i < brush->numFaces; ++i )
 				{
 					ApeBrushFace *face = &brush->faces[ i ];
 					if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
@@ -205,12 +205,12 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 					}
 
 					PLVector3 vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
-					for ( UInt j = 0; j < face->numVertices; ++j )
+					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
 					}
 
-					PLVector3 normal = PlNormalizeVector3( face->plane.normal );
+					PLVector3 normal = PlNormalizeVector3( face->normal );
 					if ( !com_collision_sphere_intersect_polygon( sphere, &normal, vertices, face->numVertices, &intersection ) )
 					{
 						continue;
@@ -245,8 +245,8 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 
 bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, ApeCollisionIntersection *result )
 {
-	UInt                      maxHits = RAY_HIT_INC;
-	UInt                      numHits = 0;
+	unsigned int              maxHits = RAY_HIT_INC;
+	unsigned int              numHits = 0;
 	ApeCollisionIntersection *hits    = PL_NEW_( ApeCollisionIntersection, maxHits );
 
 	if ( !intersect_sphere_children( self, &self->base, sphere, hits, &numHits, &maxHits ) || numHits == 0 )

@@ -378,8 +378,8 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, floa
 
 void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale )
 {
-	static constexpr uint  NUM_SEGMENTS = 16;
-	static constexpr float DELTA        = 2.0f * PL_PI / NUM_SEGMENTS;
+	static constexpr unsigned int NUM_SEGMENTS = 16;
+	static constexpr float        DELTA        = 2.0f * PL_PI / NUM_SEGMENTS;
 
 	// array to store the vertices
 	PLVector3 vertices[ NUM_SEGMENTS + 1 ][ NUM_SEGMENTS + 1 ];

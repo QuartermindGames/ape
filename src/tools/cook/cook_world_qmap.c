@@ -4,6 +4,7 @@
 
 #include "plcore/pl_linkedlist.h"
 #include "plcore/pl_parse.h"
+#include <plcore/pl_filesystem.h>
 
 #include "cook.h"
 

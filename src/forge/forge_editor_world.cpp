@@ -609,7 +609,7 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 	new FXLabel( matrix, "Audio Preset:" );
 	audioPresetField = new FXListBox( matrix );
 	audioPresetField->setNumVisible( 8 );
-	for ( uint i = 0; i < APE_NUM_AUDIO_EFFECT_TYPES; ++i )
+	for ( unsigned int i = 0; i < APE_NUM_AUDIO_EFFECT_TYPES; ++i )
 	{
 		audioPresetField->appendItem( APE_AUDIO_EFFECT_TYPES[ i ].name );
 	}

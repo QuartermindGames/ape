@@ -292,7 +292,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 	}
 
 	size_t totalSize = 0;
-	for ( uint i = 0; i < numBuffers; ++i )
+	for ( unsigned int i = 0; i < numBuffers; ++i )
 	{
 		totalSize += bufSizes[ i ];
 	}
@@ -304,7 +304,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 		return false;
 	}
 
-	for ( uint i = 0; i < numBuffers; ++i )
+	for ( unsigned int i = 0; i < numBuffers; ++i )
 	{
 		if ( ape_net_send_( clientState.netSocket, buf[ i ], bufSizes[ i ] ) )
 		{

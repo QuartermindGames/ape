@@ -20,11 +20,11 @@ typedef struct ApeModelAnimation
 	char                  name[ 64 ];
 	ApeModelAnimationFlag flags;
 
-	uint numFrames;
+	unsigned int numFrames;
 
 	float speed;
 
-	uint numBones;
+	unsigned int numBones;
 } ApeModelAnimation;
 
 typedef struct ApeModelVertexWeight
@@ -38,18 +38,18 @@ typedef struct ApeModelMesh
 	ApeMaterial         *material;
 	ApeModelVertexWeight weights[ APE_FORMAT_MODEL_MAX_VERTICES ];
 
-	uint startIndex;
-	uint endIndex;
+	unsigned int startIndex;
+	unsigned int endIndex;
 } ApeModelMesh;
 
 typedef struct ApeModel
 {
 	ApeModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
-	uint         numMaterials;// also corrisponds to number of meshes...
+	unsigned int numMaterials;// also corrisponds to number of meshes...
 
 	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
-	uint           numBones;
+	unsigned int   numBones;
 
 	PLGMesh *cache;
 

@@ -2,6 +2,8 @@
 // Purpose: MD2 loader - carried over from some older code I wrote.
 // Author:  Mark E. Sowden
 
+#include <plcore/pl_filesystem.h>
+
 #include "../cook.h"
 #include "model.h"
 
@@ -157,7 +159,7 @@ static Md2Model *model_md2_load( const char *path )
 
 static void model_md2_destroy( Md2Model *self )
 {
-	for ( uint i = 0; i < self->numFrames; ++i )
+	for ( unsigned int i = 0; i < self->numFrames; ++i )
 	{
 		PL_DELETE( self->frames[ i ].vertices );
 	}

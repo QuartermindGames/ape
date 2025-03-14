@@ -267,7 +267,7 @@ long forge::MaterialBrowser::on_material_icon_size( FXObject *obj, FXSelector, v
 {
 	FXuint          style  = 0;
 	FXToggleButton *button = static_cast< FXToggleButton * >( obj );
-	for ( uint i = 0; i < VIEW_MODE_COUNT; ++i )
+	for ( unsigned int i = 0; i < VIEW_MODE_COUNT; ++i )
 	{
 		viewModes[ i ]->setState( viewModes[ i ] == button );
 		if ( viewModes[ i ] == button )
@@ -329,7 +329,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 			}
 
 			ApeBrush *brush = reinterpret_cast< ApeBrush * >( node );
-			for ( uint j = 0; j < brush->numFaces; ++j )
+			for ( unsigned int j = 0; j < brush->numFaces; ++j )
 			{
 				ApeBrushFace *face = &brush->faces[ j ];
 

@@ -20,11 +20,11 @@ typedef enum ApeAudioSampleFormat
 typedef struct ApeAudioSample
 {
 	ApeAudioSampleFormat type;
-	uint                 channels;
-	uint                 sampleRate;
+	unsigned int         channels;
+	unsigned int         sampleRate;
 	void                *buffer;
-	uint                 bufferSize;
-	uint                 user;
+	unsigned int         bufferSize;
+	unsigned int         user;
 	ApeMemoryReference   reference;
 } ApeAudioSample;
 
@@ -35,7 +35,7 @@ typedef struct ApeAudioSource
 	PLVector3       position;
 	PLVector3       velocity;
 	ApeAudioSample *sample;
-	uint            user;
+	unsigned int    user;
 } ApeAudioSource;
 
 void ape_audio_initialize_( void );

@@ -338,7 +338,7 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 
 void ape_editor_duplicate_selection( ApeEditorInstance *self )
 {
-	UInt numDuplicates = 0;
+	unsigned int numDuplicates = 0;
 
 	PLLinkedList *newSelectionList = PlCreateLinkedList();
 	if ( newSelectionList == nullptr )
@@ -369,14 +369,14 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 
 				dstBrush->numVertices = srcBrush->numVertices;
 				dstBrush->vertices    = PL_NEW_( PLVector3, dstBrush->numVertices );
-				for ( UInt j = 0; j < dstBrush->numVertices; ++j )
+				for ( unsigned int j = 0; j < dstBrush->numVertices; ++j )
 				{
 					dstBrush->vertices[ j ] = srcBrush->vertices[ j ];
 				}
 
 				dstBrush->numFaces = srcBrush->numFaces;
 				dstBrush->faces    = PL_NEW_( ApeBrushFace, dstBrush->numFaces );
-				for ( UInt j = 0; j < dstBrush->numFaces; ++j )
+				for ( unsigned int j = 0; j < dstBrush->numFaces; ++j )
 				{
 					//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
 					const char  *materialPath     = ape_material_get_path( srcBrush->faces[ j ].material );
@@ -393,7 +393,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 
 					dstBrush->faces[ j ].bounds      = srcBrush->faces[ j ].bounds;
 					dstBrush->faces[ j ].numVertices = srcBrush->faces[ j ].numVertices;
-					for ( UInt k = 0; k < dstBrush->faces[ j ].numVertices; ++k )
+					for ( unsigned int k = 0; k < dstBrush->faces[ j ].numVertices; ++k )
 					{
 						dstBrush->faces[ j ].vertices[ k ].position      = &dstBrush->vertices[ srcBrush->faces[ j ].vertices[ k ].position - srcBrush->vertices ];
 						dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
@@ -464,9 +464,9 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 				ApeBrush *brush = PlLookupHashTableUserData( self->subSelectionTable, &ptr, sizeof( intptr_t ) );
 				if ( brush != nullptr )
 				{
-					for ( UInt j = 0; j < brush->numFaces; ++j )
+					for ( unsigned int j = 0; j < brush->numFaces; ++j )
 					{
-						for ( UInt k = 0; k < brush->faces[ j ].numVertices; ++k )
+						for ( unsigned int k = 0; k < brush->faces[ j ].numVertices; ++k )
 						{
 							if ( brush->faces[ j ].vertices[ k ].position == vertex )
 							{
@@ -503,7 +503,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 					// these are special, because we're transforming all the vertices, rather than the explicit position!
 
 					ApeBrush *brush = ( ApeBrush * ) node;
-					for ( UInt j = 0; j < brush->numVertices; ++j )
+					for ( unsigned int j = 0; j < brush->numVertices; ++j )
 					{
 						brush->vertices[ j ] = PlAddVector3( brush->vertices[ j ], PlScaleVector3F( gridDir, self->grid.size ) );
 					}

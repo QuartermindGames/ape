@@ -1,5 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include <plcore/pl_filesystem.h>
+
 #include "cook.h"
 #include "model/model_obj.h"
 #include "yin/core_world.h"
@@ -12,14 +14,14 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
 	}
 
-	for ( uint i = 0; i < model->numSubObjects; ++i )
+	for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 	{
 		AcmBranch *child;
 		AcmBranch *root = acm_push_object( nullptr, "brush" );
 
 		acm_push_bool( root, "hasColour", model->storesColour );
 		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
-		for ( uint j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
+		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
 			if ( v == NULL )
@@ -39,9 +41,9 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		}
 
 		child = acm_push_array_object( root, "faces" );
-		uint      numFaces;
-		ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
-		for ( uint j = 0; j < numFaces; ++j )
+		unsigned int numFaces;
+		ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
 			AcmBranch *faceBranch = acm_push_object( child, nullptr );
 			acm_push_array_f32( faceBranch, "normal", ( float * ) &faces[ j ]->normal, 3 );
@@ -50,7 +52,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 #if 0
 			// determine the validity of the face
 			PLVector3 r;
-			for ( uint k = 0; k < faces[ j ]->numEdges; ++k )
+			for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 			{
 				ObjVertex *va = PlGetVectorArrayElementAt( model->vertices, ( k + 1 ) % faces[ j ]->numEdges );
 				ObjVertex *vb = PlGetVectorArrayElementAt( model->vertices, k );
@@ -73,7 +75,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 #endif
 
 			AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "edges" );
-			for ( uint k = 0; k < faces[ j ]->numEdges; ++k )
+			for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 			{
 				AcmBranch *edgeBranch = acm_push_object( verticesBranch, nullptr );
 				acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
@@ -86,7 +88,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 				PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 				if ( uv != NULL )
 				{
-					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ) { uv->x, -uv->y }, 2 );
 				}
 			}
 		}
@@ -127,7 +129,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 	{
 		printf( "Building material table (%u)...\n", model->numMaterials );
 		child = acm_push_array_string( root, "materials", nullptr, 0 );
-		for ( uint i = 0; i < model->numMaterials; ++i )
+		for ( unsigned int i = 0; i < model->numMaterials; ++i )
 		{
 			char tmp[ 128 ];
 			snprintf( tmp, sizeof( tmp ), "materials/%s.mat.n", model->materials[ i ].name );
@@ -151,7 +153,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		// determine the max extent of the room with all the sub objects into account
 		PLVector3 mins = model->subObjects[ 0 ].mins;
 		PLVector3 maxs = model->subObjects[ 0 ].maxs;
-		for ( uint i = 1; i < model->numSubObjects; ++i )
+		for ( unsigned int i = 1; i < model->numSubObjects; ++i )
 		{
 			if ( mins.x < model->subObjects[ i ].mins.x ) mins.x = model->subObjects[ i ].mins.x;
 			if ( mins.y < model->subObjects[ i ].mins.y ) mins.y = model->subObjects[ i ].mins.y;
@@ -163,7 +165,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 
 		acm_push_bool( root, "hasColour", model->storesColour );
 		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
-		for ( uint j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
+		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
 			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
 			if ( v == NULL )
@@ -183,11 +185,11 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		}
 
 		child = acm_push_array_object( root, "faces" );
-		for ( uint i = 0; i < model->numSubObjects; ++i )
+		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
-			uint      numFaces;
-			ObjFace **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
-			for ( uint j = 0; j < numFaces; ++j )
+			unsigned int numFaces;
+			ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+			for ( unsigned int j = 0; j < numFaces; ++j )
 			{
 				if ( strncmp( model->materials[ faces[ j ]->material ].name, "tools/skip", 10 ) == 0 )
 				{
@@ -200,7 +202,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 				acm_push_ui32( faceBranch, "roomIndex", 0 );
 
 				AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "edges" );
-				for ( uint k = 0; k < faces[ j ]->numEdges; ++k )
+				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 				{
 					AcmBranch *edgeBranch = acm_push_object( verticesBranch, nullptr );
 					acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
@@ -218,7 +220,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
 					{
-						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ){ uv->x, -uv->y }, 2 );
+						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ) { uv->x, -uv->y }, 2 );
 					}
 				}
 			}

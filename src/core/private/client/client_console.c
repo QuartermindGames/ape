@@ -563,7 +563,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		const float ch = gui_font_get_line_spacing( font ) * consoleFontScale;
 
 		// determine the box size
-		for ( UInt i = 1; autoComplete[ i ] != nullptr; ++i )
+		for ( unsigned int i = 1; autoComplete[ i ] != nullptr; ++i )
 		{
 			float w;
 			gui_font_get_string_pixel_size( font, consoleFontScale, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, nullptr );

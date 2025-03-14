@@ -5,11 +5,11 @@
 #include "game_private.h"
 #include "game_team.h"
 
-static GameTeam teams[ GAME_MAX_TEAMS ];
-static UInt     numActiveTeams;
-static UInt     maxPlayersPerTeam;
+static GameTeam     teams[ GAME_MAX_TEAMS ];
+static unsigned int numActiveTeams;
+static unsigned int maxPlayersPerTeam;
 
-void game_team_init( UInt teamCount )
+void game_team_init( unsigned int teamCount )
 {
 	PL_ZERO_( teams );
 
@@ -30,7 +30,7 @@ void game_team_init( UInt teamCount )
 	}
 }
 
-void game_team_set_resource_pools( UInt index, UInt *resourcePools, UInt numResourcePools )
+void game_team_set_resource_pools( unsigned int index, unsigned int *resourcePools, unsigned int numResourcePools )
 {
 	GameTeam *team = game_team_get( index );
 	if ( team == nullptr )
@@ -42,7 +42,7 @@ void game_team_set_resource_pools( UInt index, UInt *resourcePools, UInt numReso
 	team->numResourcePools = numResourcePools;
 }
 
-UInt *game_team_get_resource_pools( UInt index, UInt *numResourcePools )
+unsigned int *game_team_get_resource_pools( unsigned int index, unsigned int *numResourcePools )
 {
 	GameTeam *team = game_team_get( index );
 	if ( team == nullptr )
@@ -54,12 +54,12 @@ UInt *game_team_get_resource_pools( UInt index, UInt *numResourcePools )
 	return team->resourcePools;
 }
 
-UInt game_team_get_num_active()
+unsigned int game_team_get_num_active()
 {
 	return numActiveTeams;
 }
 
-GameTeam *game_team_get( UInt index )
+GameTeam *game_team_get( unsigned int index )
 {
 	if ( index >= GAME_MAX_TEAMS )
 	{
@@ -72,9 +72,9 @@ GameTeam *game_team_get( UInt index )
 int game_team_assign( GamePlayer *player )
 {
 	// search through for the team with the fewest for now
-	bool isUniform = false;
-	UInt teamIndex = 0;
-	for ( UInt i = 1; i < numActiveTeams; ++i )
+	bool         isUniform = false;
+	unsigned int teamIndex = 0;
+	for ( unsigned int i = 1; i < numActiveTeams; ++i )
 	{
 		if ( teams[ i ].numPlayers < teams[ teamIndex ].numPlayers )
 		{
@@ -106,7 +106,7 @@ int game_team_assign( GamePlayer *player )
 	return teamIndex;
 }
 
-int game_team_set( GamePlayer *player, UInt teamIndex )
+int game_team_set( GamePlayer *player, unsigned int teamIndex )
 {
 	if ( player->team == teamIndex )
 	{

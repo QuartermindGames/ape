@@ -26,7 +26,7 @@ typedef struct GamePhysicsRopeParticle
 typedef struct GamePhysicsRope
 {
 	GamePhysicsRopeParticle particles[ GAME_PHYSICS_ROPE_MAX_PARTICLES ];
-	uint                    numParticles;
+	unsigned int            numParticles;
 
 	float width;
 	float length;
@@ -73,7 +73,7 @@ void game_physics_rope_dettach( GamePhysicsRope *self, bool start );
  * @param self 	Pointer to instance.
  * @param num 	Number of particles.
  */
-void game_physics_rope_set_num_particles( GamePhysicsRope *self, uint num );
+void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int num );
 
 /**
  * Simulate the rope. Should be called once per tick.
@@ -92,7 +92,7 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
  * @param length 		Length of the rope / slack.
  * @param initPosition	Initial position of the rope. All particles will init at this position.
  */
-void game_physics_rope_setup( GamePhysicsRope *self, uint numParticles, float length, const PLVector3 *initPosition );
+void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const PLVector3 *initPosition );
 
 /**
  * Provides a visual of the rope using the debug drawing API.
@@ -108,7 +108,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self );
  * @param particle 	Index of the particle.
  * @return 			Position of the specified segment, or NaN on error.
  */
-PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, uint particle );
+PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle );
 
 /**
  * Return the start position of the rope.

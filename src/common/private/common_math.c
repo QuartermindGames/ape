@@ -4,7 +4,7 @@
 
 #include "common_private.h"
 
-bool com_math_is_polygon_convex( const PLVector2 *vertices, UInt numVertices )
+bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices )
 {
 	if ( numVertices < 4 )
 	{
@@ -12,7 +12,7 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, UInt numVertices )
 	}
 
 	bool sign = false;
-	for ( UInt i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		PLVector2 a;
 		a.x = vertices[ ( i + 2 ) % numVertices ].x - vertices[ ( i + 1 ) % numVertices ].x;

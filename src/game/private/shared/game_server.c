@@ -49,7 +49,7 @@ static void assign_client_to_player( GameServerClient *client )
 	}
 
 	GamePlayer *player = nullptr;
-	for ( UInt i = 0; i < GAME_MAX_PLAYERS; ++i )
+	for ( unsigned int i = 0; i < GAME_MAX_PLAYERS; ++i )
 	{
 		player = &players[ i ];
 		if ( player->serverClient == nullptr )
@@ -135,7 +135,7 @@ bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageTyp
 void game_server_tick_( double delta )
 {
 	// iterate over connected clients, and see if any are waiting for a free slot
-	for ( UInt i = 0; i < GAME_MAX_CLIENTS; ++i )
+	for ( unsigned int i = 0; i < GAME_MAX_CLIENTS; ++i )
 	{
 		if ( serverClients[ i ].internalHandle == nullptr || serverClients[ i ].playerSlot != nullptr )
 		{

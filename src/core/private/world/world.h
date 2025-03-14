@@ -109,7 +109,7 @@ void ape_brush_compute_face_bounds_( ApeBrush *self );
 
 void ape_brush_flip_face_( ApeBrushFace *face );
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, uint numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Room

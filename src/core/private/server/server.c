@@ -276,7 +276,7 @@ unsigned short ape_server_get_port_( void )
 bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers )
 {
 	size_t totalSize = 0;
-	for ( uint i = 0; i < numBuffers; ++i )
+	for ( unsigned int i = 0; i < numBuffers; ++i )
 	{
 		totalSize += bufSizes[ i ];
 	}
@@ -288,7 +288,7 @@ bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *b
 		return false;
 	}
 
-	for ( uint i = 0; i < numBuffers; ++i )
+	for ( unsigned int i = 0; i < numBuffers; ++i )
 	{
 		if ( ape_net_send_( clientHandle->netSocket, buf[ i ], bufSizes[ i ] ) )
 		{

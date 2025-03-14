@@ -1,5 +1,6 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include <plcore/pl_filesystem.h>
 #include <plcore/pl_parse.h>
 #include <float.h>
 

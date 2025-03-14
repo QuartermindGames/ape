@@ -7,6 +7,15 @@
 // I'm not going to lie, much of this is stolen from various books,
 // and I'm absolutely clueless how much of it works... so don't ask
 
+static constexpr float EPSILON = 1e-6f;
+
+static PLVector3 closest_point_on_line_segment( const PLVector3 *a, const PLVector3 *b, const PLVector3 *point )
+{
+	PLVector3 ab = PlSubtractVector3( *b, *a );
+	float     t  = PlVector3DotProduct( PlSubtractVector3( *point, *a ), ab ) / PlVector3DotProduct( ab, ab );
+	return PlScaleVector3( PlAddVector3F( *a, fminf( fmaxf( t, 0.0f ), 1.0f ) ), ab );
+}
+
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result )
 {
 	PLVector3 maxA = PlAddVector3( a->maxs, a->origin );
@@ -69,14 +78,13 @@ static void compute_plane_basis_vectors( const PLVector3 *normal, PLVector3 *tan
 	*bitangent = PlNormalizeVector3( *bitangent );
 }
 
-bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result )
+bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
 {
 	static constexpr unsigned int MAX_EDGES = 16;
 	assert( numVertices < MAX_EDGES );
-
 	if ( numVertices < 3 )
 	{
-		return false;// Not a valid polygon
+		return false;
 	}
 
 	// Plane equation: Ax + By + Cz + D = 0
@@ -102,7 +110,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	compute_plane_basis_vectors( normal, &tangent, &bitangent );
 
 	PLVector2 poly2D[ MAX_EDGES ];
-	for ( UInt i = 0; i < numVertices; ++i )
+	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		PLVector3 delta = PlSubtractVector3( vertices[ i ], projectedPoint );
 		poly2D[ i ].x   = PlVector3DotProduct( delta, tangent );
@@ -143,7 +151,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 		PLVector3 edge         = PlSubtractVector3( v1, v0 );
 		PLVector3 toPoint      = PlSubtractVector3( projectedPoint, v0 );
 		float     edgeLengthSq = PlVector3DotProduct( edge, edge );
-		if ( edgeLengthSq < 1e-6f )
+		if ( edgeLengthSq < EPSILON )
 		{
 			continue;
 		}
@@ -218,14 +226,14 @@ bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLColli
 	return true;
 }
 
-bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, UInt numVertices, PLVector3 *result )
+bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
 {
 	if ( numVertices < 3 )
 	{
 		return false;
 	}
 
-	for ( UInt i = 0; i < numVertices - 1; ++i )
+	for ( unsigned int i = 0; i < numVertices - 1; ++i )
 	{
 		const PLVector3 *v0 = &vertices[ 0 ];
 		const PLVector3 *v1 = &vertices[ i ];

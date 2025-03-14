@@ -8,11 +8,6 @@
 #	define _POSIX_SOURCE 1
 #endif
 
-typedef unsigned char  Byte;
-typedef unsigned char  UChar;
-typedef unsigned short UShort;
-typedef unsigned int   UInt;
-
 typedef enum ComDataType
 {
 	COM_DATATYPE_BOOL,
@@ -73,7 +68,7 @@ const char *com_get_app_data_directory( void );
 struct AcmBranch *com_get_config( const char *name );// attempts to fetch the specified config, otherwise returns an empty config
 bool              com_write_config( struct AcmBranch *root, const char *name );
 
-void com_pkg_write_header( FILE *pack, UInt numFiles );
+void com_pkg_write_header( FILE *pack, unsigned int numFiles );
 void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t size );
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +148,7 @@ ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group );
 
 double        com_profiler_get_time_taken( const ComProfilingGroup *group );
 double        com_profiler_get_time_average( const ComProfilingGroup *group );
-const double *com_profiler_get_samples( const ComProfilingGroup *group, UInt *numPoints );
+const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints );
 
 /**
  * @brief Returns the number of existing profiling groups.
@@ -164,7 +159,7 @@ const double *com_profiler_get_samples( const ComProfilingGroup *group, UInt *nu
  *
  * @return The total number of profiling groups, or 0 if no groups exist.
  */
-UInt com_profiler_get_num_groups( void );
+unsigned int com_profiler_get_num_groups( void );
 
 /**
  * @brief Updates the profiling samples for each profiling group.
@@ -210,7 +205,7 @@ void com_profiler_update_samples( void );
  * @param numVertices 	The number of vertices in the polygon.
  * @return 				true if the polygon is convex, false otherwise.
  */
-bool com_math_is_polygon_convex( const PLVector2 *vertices, UInt numVertices );
+bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices );
 
 /**
  * Computes the face normal of a polygon composed of multiple triangles.
@@ -247,13 +242,13 @@ typedef struct ComCollisionCapsule
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
 
 bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, PLVector3 *result );
-bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
+bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 
-bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
+bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
-bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, UInt numVertices, PLVector3 *result );
+bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

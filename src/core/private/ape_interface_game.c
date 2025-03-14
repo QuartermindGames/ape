@@ -36,7 +36,7 @@ static void print_world_name( const char *path, void * )
 	ape_print_( "%s\n", name );
 }
 
-static void list_rooms_command( uint, char ** )
+static void list_rooms_command( unsigned int, char ** )
 {
 	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
 }

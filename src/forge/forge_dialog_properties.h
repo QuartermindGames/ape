@@ -18,7 +18,7 @@ namespace forge
 		PropertiesDialog() = default;
 
 	private:
-		void add_property( uint row, const ApeWorldNodeProperty &property );
+		void add_property( unsigned int row, const ApeWorldNodeProperty &property );
 
 		ApeWorldNode *node{};
 		FXTable      *table{};

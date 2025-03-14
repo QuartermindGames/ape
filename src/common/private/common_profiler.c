@@ -16,9 +16,9 @@ typedef struct ComProfilingGroup
 	const char *key;
 	const char *description;
 
-	double startTime;
-	double timeTaken, oldTimeTaken;
-	double results[ NUM_SAMPLES ];
+	double        startTime;
+	double        timeTaken, oldTimeTaken;
+	double        results[ NUM_SAMPLES ];
 	unsigned char resultsPos;
 
 	PLHashTableNode *node;
@@ -54,8 +54,8 @@ static ComProfilingGroup *RegisterProfilerGroup( const char *key, const char *de
 		return group;
 	}
 
-	group = PL_NEW( ComProfilingGroup );
-	group->key = key;
+	group              = PL_NEW( ComProfilingGroup );
+	group->key         = key;
 	group->description = description;
 
 	if ( profilingGroups == NULL )
@@ -82,9 +82,9 @@ void com_profiler_start( const char *key )
 		return;
 	}
 
-	group->startTime = PlGetCurrentSeconds() * 1000.0;
+	group->startTime    = PlGetCurrentSeconds() * 1000.0;
 	group->oldTimeTaken = group->timeTaken;
-	group->timeTaken = -1.0;
+	group->timeTaken    = -1.0;
 }
 
 void com_profiler_end( const char *key )
@@ -149,7 +149,7 @@ double com_profiler_get_time_average( const ComProfilingGroup *group )
 	return ( samples / NUM_SAMPLES );
 }
 
-const double *com_profiler_get_samples( const ComProfilingGroup *group, UInt *numPoints )
+const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints )
 {
 	*numPoints = NUM_SAMPLES;
 	return group->results;
@@ -182,7 +182,7 @@ void com_profiler_update_samples( void )
 		}
 
 		group->results[ NUM_SAMPLES - 1 ] = com_profiler_get_time_taken( group );
-		group = com_profiler_get_next_group( group );
+		group                             = com_profiler_get_next_group( group );
 	}
 }
 

@@ -4,6 +4,7 @@
 
 #include "plcore/pl_hashtable.h"
 #include "plcore/pl_timer.h"
+#include <plcore/pl_filesystem.h>
 
 #include "cook.h"
 #include "model/model.h"
@@ -111,7 +112,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		}
 
 		// apply the scale here...
-		for ( uint i = 0; i < dst->numVertices; ++i )
+		for ( unsigned int i = 0; i < dst->numVertices; ++i )
 		{
 			dst->vertices[ i ].position = PlScaleVector3F( dst->vertices[ i ].position, dst->scale );
 			dst->vertices[ i ].normal   = PlScaleVector3F( dst->vertices[ i ].normal, dst->scale );
@@ -158,15 +159,15 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 typedef struct VectorIndex
 {
 	const PLVector3 *vec;
-	uint             pos;
+	unsigned int             pos;
 } VectorIndex;
 
-static uint get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
+static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
 {
 	const VectorIndex *index = PlLookupHashTableUserData( vectorTable, v, sizeof( PLVector3 ) );
 	if ( index == nullptr )
 	{
-		return ( uint ) -1;
+		return ( unsigned int ) -1;
 	}
 
 	return index->pos;
@@ -185,7 +186,7 @@ static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const Co
 
 	AcmBranch *trianglesBranch = acm_push_array_object( meshBranch, "triangles" );
 	printf( "\t\t%u triangles\n", mesh->numTriangles );
-	for ( uint i = 0; i < mesh->numTriangles; ++i )
+	for ( unsigned int i = 0; i < mesh->numTriangles; ++i )
 	{
 		AcmBranch *triangleBranch = acm_push_object( trianglesBranch, nullptr );
 		acm_push_array_ui32( triangleBranch, "vertex", mesh->triangles[ i ].indices, 3 );
@@ -223,7 +224,7 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 	acm_push_bool( branch, "hasUV", true );
 
 	branch = acm_push_array_f32( root, "vertices", nullptr, 0 );
-	for ( uint i = 0; i < model->numVertices; ++i )
+	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
 		const CookModelVertex *vertexIndex = &model->vertices[ i ];
 		acm_push_f32( branch, nullptr, vertexIndex->position.x );
@@ -241,7 +242,7 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 	{
 		printf( "%u bones\n", model->numBones );
 		branch = acm_push_array_object( root, "bones" );
-		for ( uint i = 0; i < model->numBones; ++i )
+		for ( unsigned int i = 0; i < model->numBones; ++i )
 		{
 			serialize_bone( branch, &model->bones[ i ], model );
 		}
@@ -249,7 +250,7 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 
 	printf( "%u meshes\n", model->numMeshes );
 	branch = acm_push_array_object( root, "meshes" );
-	for ( uint i = 0; i < model->numMeshes; ++i )
+	for ( unsigned int i = 0; i < model->numMeshes; ++i )
 	{
 		serialize_mesh( branch, &model->meshes[ i ], model->vertices );
 	}

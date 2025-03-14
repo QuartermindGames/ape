@@ -403,7 +403,7 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 		if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 		{
 			const ApeBrush *brush = ( ApeBrush * ) node;
-			for ( uint j = 0; j < brush->numFaces; ++j )
+			for ( unsigned int j = 0; j < brush->numFaces; ++j )
 			{
 				ApeBrushFace *face = &brush->faces[ j ];
 				if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )

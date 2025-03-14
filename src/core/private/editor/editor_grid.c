@@ -9,8 +9,8 @@
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////
 
-static constexpr uint DEFAULT_GRID_SCALE = 16;
-static constexpr uint MIN_GRID_SCALE     = 1;
+static constexpr unsigned int DEFAULT_GRID_SCALE = 16;
+static constexpr unsigned int MIN_GRID_SCALE     = 1;
 
 typedef struct GridSelectable
 {
@@ -39,8 +39,8 @@ void ape_grid_setup_( ApeEditorGrid *self )
 	gridSelectablesTable = PlCreateHashTable();
 
 	// assign colours to each of the selection cubes
-	uint aaa = 1;
-	for ( uint i = 0; i < APE_EDITOR_GRID_MAX_POINTS; ++i )
+	unsigned int aaa = 1;
+	for ( unsigned int i = 0; i < APE_EDITOR_GRID_MAX_POINTS; ++i )
 	{
 		gridSelectables[ i ].colour.r = aaa & 0xFF;
 		gridSelectables[ i ].colour.g = ( aaa & 0xFF00 ) >> 8;
@@ -61,7 +61,7 @@ void ape_grid_cleanup_( ApeEditorGrid *self )
 	self->selectionMesh = nullptr;
 }
 
-void ape_grid_toggle_command_( uint, char ** )
+void ape_grid_toggle_command_( unsigned int, char ** )
 {
 	ApeEditorInstance *state = ape_editor_get_active_instance();
 	if ( state == nullptr )
@@ -76,7 +76,7 @@ static void grid_batch_selection_point( const ApeEditorGrid *self, const GridSel
 {
 	float scale = ( GRID_SELECTABLE_SCALE * ( float ) self->size ) / 8.0f;
 
-	uint x, y, z, w;
+	unsigned int x, y, z, w;
 	x = PlgPushVertex3f( self->selectionMesh, selectable->position.x + scale, 0.0f, selectable->position.y - scale );
 	PlgColour4bv( self->selectionMesh, &selectable->colour );
 	y = PlgPushVertex3f( self->selectionMesh, selectable->position.x + scale, 0.0f, selectable->position.y + scale );
@@ -132,9 +132,9 @@ void ape_grid_draw_selection_( ApeEditorGrid *self )
 		int size = PlClamp( APE_EDITOR_GRID_MAX_POINTS_ROW, self->size * self->size, APE_EDITOR_GRID_MAX_POINTS );
 
 		GridSelectable *selectable = &gridSelectables[ 0 ];
-		for ( uint r = 0; r < size; r += self->size )
+		for ( unsigned int r = 0; r < size; r += self->size )
 		{
-			for ( uint c = 0; c < size; c += self->size )
+			for ( unsigned int c = 0; c < size; c += self->size )
 			{
 				selectable->position.x = ( float ) r - size / 2;
 				selectable->position.y = ( float ) c - size / 2;

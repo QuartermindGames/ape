@@ -242,7 +242,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	}
 
 	// now lookup all the default uniforms
-	for ( uint i = 0; i < APE_SHADER_MAX_UNIFORMS; ++i )
+	for ( unsigned int i = 0; i < APE_SHADER_MAX_UNIFORMS; ++i )
 	{
 		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
 		if ( program->globalUniforms[ i ] < 0 )

@@ -157,7 +157,7 @@ typedef struct ApeShaderProgram
 
 	PLGShaderProgram *internal;
 
-	uint flags;
+	unsigned int flags;
 } ApeShaderProgram;
 
 void ape_hot_reload_shaders_();

@@ -58,11 +58,11 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 		return;
 	}
 
-	uint                        numBaseProperties;
+	unsigned int                numBaseProperties;
 	const ApeWorldNodeProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
 	assert( numBaseProperties > 0 );
 
-	uint                        numProperties;
+	unsigned int                numProperties;
 	const ApeWorldNodeProperty *properties = ape_world_node_get_class_properties( &numProperties, node->type );
 	assert( numProperties > 0 );
 
@@ -78,19 +78,19 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 
 	table->setColumnJustify( 1, FXHeaderItem::LEFT );
 
-	uint row = 0;
-	for ( uint i = 0; i < numBaseProperties; ++i, ++row )
+	unsigned int row = 0;
+	for ( unsigned int i = 0; i < numBaseProperties; ++i, ++row )
 	{
 		add_property( row, baseProperties[ i ] );
 	}
 
-	for ( uint i = 0; i < numProperties; ++i, ++row )
+	for ( unsigned int i = 0; i < numProperties; ++i, ++row )
 	{
 		add_property( row, properties[ i ] );
 	}
 }
 
-void forge::PropertiesDialog::add_property( uint row, const ApeWorldNodeProperty &property )
+void forge::PropertiesDialog::add_property( unsigned int row, const ApeWorldNodeProperty &property )
 {
 	table->setItemText( row, 0, property.name );
 	table->setItemText( row, 2, property.description );

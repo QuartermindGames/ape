@@ -35,7 +35,7 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
                                    },
 };
 
-static UInt teamResourcePools[ SS1_MAX_TEAMS ][ SS1_MAX_RESOURCE_TYPES ];
+static unsigned int teamResourcePools[ SS1_MAX_TEAMS ][ SS1_MAX_RESOURCE_TYPES ];
 
 extern ApeEntityClassDefinition ss1_airshipEntityClass;
 extern ApeEntityClassDefinition ss1_pawnEntityClass;
@@ -57,7 +57,7 @@ static bool ss1_initialize()
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
-	for ( uint i = 0; i < SS1_MAX_PROFESSIONS; ++i )
+	for ( unsigned int i = 0; i < SS1_MAX_PROFESSIONS; ++i )
 	{
 		assert( ss1_professions[ i ].name != nullptr && ss1_professions[ i ].description != nullptr );
 	}
@@ -275,7 +275,7 @@ static void ss1_spawn_world( ApeRoom *room )
 	game_team_init( SS1_MAX_TEAMS );
 
 	// setup the team resource pools
-	for ( UInt i = 0; i < SS1_MAX_TEAMS; ++i )
+	for ( unsigned int i = 0; i < SS1_MAX_TEAMS; ++i )
 	{
 		PL_ZERO_( teamResourcePools[ i ] );
 		game_team_set_resource_pools( i, teamResourcePools[ i ], SS1_MAX_RESOURCE_TYPES );

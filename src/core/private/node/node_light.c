@@ -125,7 +125,7 @@ bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *mater
 		return false;
 	}
 
-	uint flags = ape_material_get_flags( material );
+	unsigned int flags = ape_material_get_flags( material );
 
 	return ( ( flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) && !ape_light_test_plane( self, plane ) );
 }

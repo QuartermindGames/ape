@@ -234,8 +234,8 @@ long Viewport::on_timer( FXObject *, FXSelector, void * )
 	{
 		if ( useMouseLook )
 		{
-			int  mx, my;
-			uint tmp;
+			int          mx, my;
+			unsigned int tmp;
 			getCursorPosition( mx, my, tmp );
 
 			int dx = originCursorPos[ 0 ] - mx;

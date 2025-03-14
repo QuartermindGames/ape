@@ -12,9 +12,9 @@ static ApeGuiFont *menuTitleFont;
 
 static bool isMainMenuOpen = true;
 
-static GameMenu  mainMenu;
-static GameMenu *currentMenu       = &mainMenu;
-static uint      currentMenuOption = 0;
+static GameMenu     mainMenu;
+static GameMenu    *currentMenu       = &mainMenu;
+static unsigned int currentMenuOption = 0;
 
 bool game_menu_is_open()
 {
@@ -89,7 +89,7 @@ static GamePieMenu *interactPie;
 
 static void initialize_menu( GameMenu *menu )
 {
-	for ( uint i = 0; i < menu->numOptions; ++i )
+	for ( unsigned int i = 0; i < menu->numOptions; ++i )
 	{
 		if ( menu->options[ i ].nextMenu != nullptr )
 		{
@@ -328,7 +328,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT );
 		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, G_STR_( currentMenu->heading ), strlen( currentMenu->heading ), true );
 		x += 30.0f;
-		for ( uint i = 0; i < currentMenu->numOptions; ++i )
+		for ( unsigned int i = 0; i < currentMenu->numOptions; ++i )
 		{
 			if ( currentMenu->options[ i ].type == GAME_MENU_OPTION_TYPE_SEPERATOR )
 			{
