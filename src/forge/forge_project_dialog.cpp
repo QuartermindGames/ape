@@ -130,16 +130,16 @@ long forge::ProjectDialog::on_accept( FXObject *obj, FXSelector sel, void *ptr )
 {
 	// urgh, check if we have a valid project selected and if not,
 	// that the user has entered *something*
-	forge::editorProject = ( Project * ) listBox->getItemData( listBox->getCurrentItem() );
-	if ( ( forge::editorProject == nullptr ) && ( projectNameField->getText() != defaultName ) )
+	editorProject = ( Project * ) listBox->getItemData( listBox->getCurrentItem() );
+	if ( ( editorProject == nullptr ) && ( projectNameField->getText() != defaultName ) )
 	{
 		PLPath folderName;
-		forge::editorProject = forge::create_project(
+		editorProject = create_project(
 		        std::string( projectNameField->getText().text() ),
 		        PlSetupPath( folderName, true, "%s", projectNameField->getText().text() ) );
 	}
 
-	forge::open_project( forge::editorProject->internalName.c_str() );
+	open_project( editorProject->internalName.c_str() );
 
-	return FXDialogBox::onCmdAccept( obj, sel, ptr );
+	return onCmdAccept( obj, sel, ptr );
 }

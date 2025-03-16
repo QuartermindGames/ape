@@ -83,7 +83,7 @@ typedef struct ApeWorldNodeProperty
 {
 	const char              *name;
 	const char              *description;
-	uint64_t                 offset;
+	uintptr_t                offset;
 	ApeWorldNodePropertyType type;
 
 	union
@@ -191,7 +191,7 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProp
  */
 const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
 
-void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeProperty *property );
+void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNodeProperty *property );
 
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );

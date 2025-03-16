@@ -14,11 +14,18 @@ namespace forge
 
 		void set_node( ApeWorldNode *node );
 
+		enum
+		{
+			ID_TABLE = ID_LAST,
+		};
+
+		long on_table( FXObject *, FXSelector, void * );
+
 	protected:
 		PropertiesDialog() = default;
 
 	private:
-		void add_property( unsigned int row, const ApeWorldNodeProperty &property );
+		void add_property( unsigned int *row, const ApeWorldNodeProperty *property );
 
 		ApeWorldNode *node{};
 		FXTable      *table{};

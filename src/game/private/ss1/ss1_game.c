@@ -288,6 +288,7 @@ static void ss1_spawn_world( ApeRoom *room )
 	//TODO: make this configurable via editor?
 	ss1_gameState.simulation.seconds = 40000;
 
+#if 0
 	//TODO: these shouldn't be hard-coded this way as we might not want our level to have sun/moon lights
 	ss1_gameState.sunLight  = ape_create_light( roomNode, &SS1_DEFAULT_SUN_POSITION, &SS1_DEFAULT_SUN_COLOUR, 0.0f,
 	                                            APE_LIGHT_TYPE_SUN,
@@ -295,6 +296,7 @@ static void ss1_spawn_world( ApeRoom *room )
 	ss1_gameState.moonLight = ape_create_light( roomNode, &SS1_DEFAULT_SUN_POSITION, &SS1_DEFAULT_MOON_COLOUR, 0.0f,
 	                                            APE_LIGHT_TYPE_SUN,
 	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
+#endif
 
 	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 }

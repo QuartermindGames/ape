@@ -63,15 +63,13 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProp
 const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type )
 {
 	const ApeWorldNodeClass *nodeClass = nodeClasses[ type ];
-	assert( nodeClass->properties != nullptr );
 	*numProperties = nodeClass->numProperties;
-
 	return nodeClass->properties;
 }
 
-void *ape_world_node_get_property_value( ApeWorldNode *self, const ApeWorldNodeProperty *property )
+void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNodeProperty *property )
 {
-	return self + property->offset;
+	return ( char * ) self + property->offset;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
