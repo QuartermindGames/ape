@@ -12,6 +12,8 @@ static ApeGuiFont *menuTitleFont;
 
 static bool isMainMenuOpen = true;
 
+SS1MenuState ss1_menuState_;
+
 static GameMenu     mainMenu;
 static GameMenu    *currentMenu       = &mainMenu;
 static unsigned int currentMenuOption = 0;
@@ -30,7 +32,6 @@ static GameMenuOption debugMenuOptions[] = {
         { "Test Model\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_model" } },
         { "Test Net\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_net" } },
         { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
-        { "FPS Counter\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
         { "Show Lights\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
         { "Show Node Volumes\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" } },
         { "Show Portals\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" } },
@@ -38,7 +39,6 @@ static GameMenuOption debugMenuOptions[] = {
         { "Show Face Normals\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" } },
         { "Wireframe\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" } },
         { "Shadow Wireframe\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" } },
-        { "Post-Processing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
         { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
         { "Capture\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
         { "Screenshot\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
@@ -72,8 +72,35 @@ static GameMenu startMenu = {
         &mainMenu,
 };
 
+static GameMenuOption optionsMenuOptions[] = {
+        { "FPS Counter\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" } },
+
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Post-Processing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
+        { "Bloom\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_bloom" } },
+        { "Dithering\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dither" } },
+        { "FXAA\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx_fxaa" } },
+
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Stencil Shadows\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.useStencilShadowVolumes" } },
+        { "Cap Render Rate to Tick Rate\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderTimeLock" } },
+
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Lens Flares\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.flareEnabled" } },
+
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Use Qoi for Capture\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "capture.useQoi" } },
+};
+static GameMenu optionsMenu = {
+        "Options\n",
+        optionsMenuOptions,
+        PL_ARRAY_ELEMENTS( optionsMenuOptions ),
+        &mainMenu,
+};
+
 static GameMenuOption mainMenuOptions[] = {
         {"Start Server\n", &startMenu,       nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
+        {"Options\n",      &optionsMenu,     nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
 #if !defined( NDEBUG )
         {"Debug\n",        &debugMenu,       nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
 #endif
@@ -229,6 +256,7 @@ void ss1_menu_initialize( void )
 	// iterate over and init the menus
 	initialize_menu( &mainMenu );
 	initialize_menu( &debugMenu );
+	initialize_menu( &optionsMenu );
 
 	game_menu_set_active( &mainMenu );
 
