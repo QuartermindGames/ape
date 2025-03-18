@@ -239,21 +239,24 @@ void ape_tick_server_( double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	if ( hostSocket != NULL )
-	{// check if a new connection is being established
-		ApeNetSocket *connectedSocket = ape_net_accept_( hostSocket );
-		if ( connectedSocket != NULL )
-		{
-			ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
-			serverClient->netSocket       = connectedSocket;
-			serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
-			serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
-			// validation still needs to be performed
-			ape_print_( "Client connected, awaiting validation...\n" );
-		}
-
-		PlIterateLinkedList( connectedClients, tick_server_client, true );
+	if ( hostSocket == nullptr )
+	{
+		return;
 	}
+
+	// check if a new connection is being established
+	ApeNetSocket *connectedSocket = ape_net_accept_( hostSocket );
+	if ( connectedSocket != NULL )
+	{
+		ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
+		serverClient->netSocket       = connectedSocket;
+		serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
+		serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
+		// validation still needs to be performed
+		ape_print_( "Client connected, awaiting validation...\n" );
+	}
+
+	PlIterateLinkedList( connectedClients, tick_server_client, true );
 
 	ape_tick_game_server_( delta );
 
