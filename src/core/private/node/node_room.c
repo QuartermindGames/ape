@@ -179,14 +179,76 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 	return true;
 }
 
-static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionSphere *sphere, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
+static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const ApeCollisionCollider *b, ApeCollisionIntersection *result )
+{
+	switch ( a->type )
+	{
+		default:
+			return nullptr;
+		case APE_COLLISION_TYPE_AABB:
+			switch ( b->type )
+			{
+				default:
+					return nullptr;
+				case APE_COLLISION_TYPE_AABB:
+					if ( !com_collision_aabb_intersect_aabb( a->aabb, b->aabb, &result->intersection ) )
+					{
+						return nullptr;
+					}
+					break;
+				case APE_COLLISION_TYPE_SPHERE:
+					if ( !com_collision_sphere_intersect_aabb( b->sphere, a->aabb, &result->intersection ) )
+					{
+						return nullptr;
+					}
+					break;
+			}
+			break;
+		case APE_COLLISION_TYPE_SPHERE:
+			switch ( b->type )
+			{
+				default:
+					return nullptr;
+				case APE_COLLISION_TYPE_AABB:
+					if ( !com_collision_sphere_intersect_aabb( a->sphere, b->aabb, &result->intersection ) )
+					{
+						return nullptr;
+					}
+					break;
+				case APE_COLLISION_TYPE_SPHERE:
+					if ( !com_collision_sphere_intersect_sphere( a->sphere, b->sphere, &result->intersection ) )
+					{
+						return nullptr;
+					}
+					break;
+			}
+			break;
+	}
+
+	return result;
+}
+
+static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeCollisionCollider *collider, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
 		PLVector3 intersection;
-		if ( !com_collision_sphere_intersect_aabb( sphere, &node->bounds, &intersection ) )
+		switch ( collider->type )
 		{
-			return false;
+			default:
+				break;
+			case APE_COLLISION_TYPE_AABB:
+				if ( !com_collision_aabb_intersect_aabb( collider->aabb, &node->bounds, &intersection ) )
+				{
+					return false;
+				}
+				break;
+			case APE_COLLISION_TYPE_SPHERE:
+				if ( !com_collision_sphere_intersect_aabb( collider->sphere, &node->bounds, &intersection ) )
+				{
+					return false;
+				}
+				break;
 		}
 
 		switch ( node->type )
@@ -210,17 +272,36 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
 					}
 
+					ApeCollisionIntersection *hit = &hits[ *numHits ];
+
 					PLVector3 normal = PlNormalizeVector3( face->normal );
-					if ( !com_collision_sphere_intersect_polygon( sphere, &normal, vertices, face->numVertices, &intersection ) )
+					if ( collider->type == APE_COLLISION_TYPE_CAPSULE )
 					{
-						continue;
+						if ( !com_collision_capsule_intersect_polygon( collider->capsule, &normal, vertices, face->numVertices, &intersection ) )
+						{
+							continue;
+						}
+					}
+					else if ( collider->type == APE_COLLISION_TYPE_SPHERE )
+					{
+						if ( !com_collision_sphere_intersect_polygon( collider->sphere, &normal, vertices, face->numVertices, &intersection ) )
+						{
+							continue;
+						}
+
+						hit->distance = PlVector3Length( PlSubtractVector3( intersection, collider->sphere->origin ) );
+					}
+					else if ( collider->type == APE_COLLISION_TYPE_AABB )
+					{
+						if ( !com_collision_aabb_intersect_polygon( collider->aabb, &normal, vertices, face->numVertices, &intersection ) )
+						{
+							continue;
+						}
 					}
 
-					ApeCollisionIntersection *hit = &hits[ *numHits ];
-					hit->node                     = APE_WORLD_NODE( brush );
-					hit->face                     = face;
-					hit->intersection             = intersection;
-					hit->distance                 = PlVector3Length( PlSubtractVector3( intersection, sphere->origin ) );
+					hit->node         = APE_WORLD_NODE( brush );
+					hit->face         = face;
+					hit->intersection = intersection;
 					( *numHits )++;
 				}
 				break;
@@ -237,27 +318,28 @@ static bool intersect_sphere_children( ApeRoom *self, ApeWorldNode *node, const 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		intersect_sphere_children( self, child, sphere, hits, numHits, maxHits );
+		intersect_children( self, child, collider, hits, numHits, maxHits );
 	}
 
 	return true;
 }
 
-bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, ApeCollisionIntersection *result )
+ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionCollider *collider, unsigned int *numHits )
 {
-	unsigned int              maxHits = RAY_HIT_INC;
-	unsigned int              numHits = 0;
-	ApeCollisionIntersection *hits    = PL_NEW_( ApeCollisionIntersection, maxHits );
+	unsigned int maxHits           = RAY_HIT_INC;
+	*numHits                       = 0;
+	ApeCollisionIntersection *hits = PL_NEW_( ApeCollisionIntersection, maxHits );
 
-	if ( !intersect_sphere_children( self, &self->base, sphere, hits, &numHits, &maxHits ) || numHits == 0 )
+	if ( !intersect_children( self, &self->base, collider, hits, numHits, &maxHits ) || numHits == 0 )
 	{
 		PL_DELETE( hits );
-		return false;
+		return nullptr;
 	}
 
+#if 0
 	// now determine which was the closest hit;
 	*result = hits[ 0 ];
-	for ( UInt i = 1; i < numHits; i++ )
+	for ( unsigned int i = 1; i < numHits; i++ )
 	{
 		if ( hits[ i ].distance < result->distance )
 		{
@@ -266,8 +348,9 @@ bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, 
 	}
 
 	PL_DELETE( hits );
+#endif
 
-	return true;
+	return hits;
 }
 
 bool ape_room_set_path( ApeRoom *self, const char *path )

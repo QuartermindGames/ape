@@ -31,7 +31,7 @@ static void *deserialize_movement( void *ptr, AcmBranch *root )
 	return movement;
 }
 
-void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *direction )
+void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *dir )
 {
 }
 

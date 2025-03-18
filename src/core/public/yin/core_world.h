@@ -440,6 +440,43 @@ PLColourF32 ape_room_get_ambience( const ApeRoom *self );
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
+////////////////////////////////////////////////////////////////////
+// Collisions
+
+typedef struct ComCollisionCapsule ComCollisionCapsule;
+
+typedef enum ApeCollisionType
+{
+	APE_COLLISION_TYPE_NONE,
+	APE_COLLISION_TYPE_AABB,
+	APE_COLLISION_TYPE_SPHERE,
+	APE_COLLISION_TYPE_CAPSULE,
+	APE_COLLISION_TYPE_PLANE,
+} ApeCollisionType;
+
+typedef enum ApeCollisionGroup
+{
+	PL_BITFLAG( APE_COLLISION_GROUP_BRUSHES, 0 ),
+
+	// games can provide custom flags after this...
+	APE_COLLISION_GROUP_END = APE_COLLISION_GROUP_BRUSHES,
+} ApeCollisionGroup;
+
+typedef struct ApeCollisionCollider
+{
+	ApeCollisionType type;
+	union
+	{
+		void                *ptr;
+		PLCollisionAABB     *aabb;
+		PLCollisionSphere   *sphere;
+		ComCollisionCapsule *capsule;
+		PLCollisionPlane    *plane;
+	};
+
+	unsigned int ignoreGroups;
+} ApeCollisionCollider;
+
 typedef struct ApeCollisionIntersection
 {
 	ApeWorldNode *node;        // the node that we hit
@@ -448,11 +485,10 @@ typedef struct ApeCollisionIntersection
 	float         distance;    // distance from point of intersection vs. caster
 } ApeCollisionIntersection;
 
-typedef struct ComCollisionCapsule ComCollisionCapsule;
+ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionCollider *collider, unsigned int *numHits );
 
+//TODO: obsolete
 bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
-bool ape_room_sphere_intersect( ApeRoom *self, const PLCollisionSphere *sphere, ApeCollisionIntersection *result );
-bool ape_room_capsule_intersect( ApeRoom *self, const ComCollisionCapsule *capsule, ApeCollisionIntersection *result );
 
 bool        ape_room_set_path( ApeRoom *self, const char *path );
 const char *ape_room_get_path( const ApeRoom *self );

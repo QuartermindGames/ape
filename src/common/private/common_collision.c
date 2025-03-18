@@ -192,6 +192,280 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	return false;
 }
 
+bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
+{
+	static constexpr unsigned int MAX_EDGES = 16;
+	assert( numVertices < MAX_EDGES );
+	if ( numVertices < 3 )
+	{
+		return false;
+	}
+
+	float D = -PlVector3DotProduct( *normal, vertices[ 0 ] );
+
+	PLVector3 a = capsule->origin;
+	PLVector3 b = capsule->end;
+
+	float da = PlVector3DotProduct( *normal, a ) + D;
+	float db = PlVector3DotProduct( *normal, b ) + D;
+
+	PLVector3 closestPoint;
+	float     distanceToPlane;
+
+	float denom = db - da;
+	if ( fabsf( denom ) < EPSILON )
+	{
+		if ( fabsf( da ) < fabsf( db ) )
+		{
+			closestPoint    = a;
+			distanceToPlane = da;
+		}
+		else
+		{
+			closestPoint    = b;
+			distanceToPlane = db;
+		}
+	}
+	else
+	{
+		float t = -da / denom;
+		if ( t < 0.0f )
+		{
+			closestPoint    = a;
+			distanceToPlane = da;
+		}
+		else if ( t > 1.0f )
+		{
+			closestPoint    = b;
+			distanceToPlane = db;
+		}
+		else
+		{
+			PLVector3 segment = PlSubtractVector3( b, a );
+			closestPoint      = PlAddVector3( a, PlScaleVector3F( segment, t ) );
+			distanceToPlane   = da + t * denom;
+		}
+	}
+
+	if ( fabsf( distanceToPlane ) > capsule->radius )
+	{
+		return false;
+	}
+
+	PLVector3 projectedPoint = PlSubtractVector3( closestPoint, PlScaleVector3F( *normal, distanceToPlane ) );
+
+	PLVector3 tangent, bitangent;
+	compute_plane_basis_vectors( normal, &tangent, &bitangent );
+
+	PLVector2 poly2D[ MAX_EDGES ];
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		PLVector3 delta = PlSubtractVector3( vertices[ i ], projectedPoint );
+		poly2D[ i ].x   = PlVector3DotProduct( delta, tangent );
+		poly2D[ i ].y   = PlVector3DotProduct( delta, bitangent );
+	}
+	bool inside = false;
+	for ( int i = 0, j = numVertices - 1; i < numVertices; j = i++ )
+	{
+		static constexpr PLVector2 point2D = {};
+
+		PLVector2 vi = poly2D[ i ];
+		PLVector2 vj = poly2D[ j ];
+		if ( ( ( vi.y > point2D.y ) != ( vj.y > point2D.y ) ) &&
+		     ( point2D.x < ( vj.x - vi.x ) * ( point2D.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
+		{
+			inside = !inside;
+		}
+	}
+
+	if ( inside )
+	{
+		if ( result != nullptr )
+		{
+			*result = projectedPoint;
+		}
+		return true;
+	}
+
+	float     minDistanceSq = capsule->radius * capsule->radius;
+	PLVector3 returnHit     = projectedPoint;
+
+	bool hit = false;
+	for ( int i = 0; i < numVertices; i++ )
+	{
+		PLVector3 v0 = vertices[ i ];
+		PLVector3 v1 = vertices[ ( i + 1 ) % numVertices ];
+
+		PLVector3 edge         = PlSubtractVector3( v1, v0 );
+		PLVector3 toPoint      = PlSubtractVector3( projectedPoint, v0 );
+		float     edgeLengthSq = PlVector3DotProduct( edge, edge );
+		if ( edgeLengthSq < EPSILON )
+		{
+			continue;
+		}
+
+		float t = PlVector3DotProduct( toPoint, edge ) / edgeLengthSq;
+		t       = fmaxf( 0.0f, fminf( 1.0f, t ) );
+
+		PLVector3 closestOnEdge = PlAddVector3( v0, PlScaleVector3F( edge, t ) );
+		PLVector3 diff          = PlSubtractVector3( closestOnEdge, closestPoint );
+		float     distanceSq    = PlVector3DotProduct( diff, diff );
+
+		if ( distanceSq < minDistanceSq )
+		{
+			minDistanceSq = distanceSq;
+			returnHit     = closestOnEdge;
+			hit           = true;
+		}
+
+		PLVector3 vertexDiff       = PlSubtractVector3( v0, closestPoint );
+		float     vertexDistanceSq = PlVector3DotProduct( vertexDiff, vertexDiff );
+		if ( vertexDistanceSq < minDistanceSq )
+		{
+			minDistanceSq = vertexDistanceSq;
+			returnHit     = v0;
+			hit           = true;
+		}
+	}
+
+	if ( hit )
+	{
+		if ( result != nullptr )
+		{
+			*result = returnHit;
+		}
+		return true;
+	}
+
+	return false;
+}
+
+bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const PLVector3 *normal,
+                                           const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
+{
+	static constexpr unsigned int MAX_EDGES = 16;
+	assert( numVertices < MAX_EDGES );
+	if ( numVertices < 3 )
+	{
+		return false;
+	}
+
+	PLVector3 aabbMin     = PlAddVector3( aabb->origin, aabb->mins );
+	PLVector3 aabbMax     = PlAddVector3( aabb->origin, aabb->maxs );
+	PLVector3 aabbCenter  = PlScaleVector3F( PlAddVector3( aabbMin, aabbMax ), 0.5f );
+	PLVector3 halfExtents = PlScaleVector3F( PlSubtractVector3( aabbMax, aabbMin ), 0.5f );
+
+	float D = -PlVector3DotProduct( *normal, vertices[ 0 ] );
+
+	float distance = PlVector3DotProduct( *normal, aabbCenter ) + D;
+	float radius   = halfExtents.x * fabsf( normal->x ) +
+	               halfExtents.y * fabsf( normal->y ) +
+	               halfExtents.z * fabsf( normal->z );
+
+	if ( distance > radius || distance < -radius )
+	{
+		return false;
+	}
+
+	PLVector3 tangent, bitangent;
+	compute_plane_basis_vectors( normal, &tangent, &bitangent );
+
+	float minT = PlVector3DotProduct( aabbMin, tangent );
+	float maxT = PlVector3DotProduct( aabbMax, tangent );
+	float minB = PlVector3DotProduct( aabbMin, bitangent );
+	float maxB = PlVector3DotProduct( aabbMax, bitangent );
+
+	PLVector2 poly2D[ MAX_EDGES ];
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		poly2D[ i ].x = PlVector3DotProduct( vertices[ i ], tangent );
+		poly2D[ i ].y = PlVector3DotProduct( vertices[ i ], bitangent );
+	}
+
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		if ( poly2D[ i ].x >= minT && poly2D[ i ].x <= maxT &&
+		     poly2D[ i ].y >= minB && poly2D[ i ].y <= maxB )
+		{
+			if ( result ) *result = vertices[ i ];
+			return true;
+		}
+	}
+
+	PLVector2 aabbPoints[ 4 ] = {
+	        {minT, minB},
+	        {maxT, minB},
+	        {maxT, maxB},
+	        {minT, maxB}
+    };
+
+	for ( int i = 0; i < 4; ++i )
+	{
+		bool inside = false;
+		for ( int j = 0, k = numVertices - 1; j < numVertices; k = j++ )
+		{
+			PLVector2 vi = poly2D[ j ];
+			PLVector2 vk = poly2D[ k ];
+
+			if ( ( ( vi.y > aabbPoints[ i ].y ) != ( vk.y > aabbPoints[ i ].y ) ) &&
+			     ( aabbPoints[ i ].x < ( vk.x - vi.x ) * ( aabbPoints[ i ].y - vi.y ) / ( vk.y - vi.y ) + vi.x ) )
+			{
+				inside = !inside;
+			}
+		}
+		if ( inside )
+		{
+			if ( result )
+			{
+				*result = PlAddVector3( aabbCenter,
+				                        PlAddVector3( PlScaleVector3F( tangent, aabbPoints[ i ].x - aabbCenter.x ),
+				                                      PlScaleVector3F( bitangent, aabbPoints[ i ].y - aabbCenter.y ) ) );
+			}
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, const PLCollisionSphere *sphere2, PLVector3 *result )
+{
+	PLVector3 difference = PlSubtractVector3( sphere2->origin, sphere->origin );
+	float     distance   = PlVector3Length( difference );
+	float     r1         = sphere->radius;
+	float     r2         = sphere2->radius;
+	float     sumRadius  = r1 + r2;
+	float     diffRadius = fabsf( r1 - r2 );
+
+	if ( distance > sumRadius || distance < diffRadius )
+	{
+		return false;
+	}
+
+	float     h = ( distance * distance + r1 * r1 - r2 * r2 ) / ( 2 * distance );
+	PLVector3 P = PlAddVector3( sphere->origin, PlScaleVector3F( difference, h / distance ) );
+
+	float a_squared = r1 * r1 - h * h;
+	if ( a_squared < EPSILON )
+	{
+		*result = P;
+		return true;
+	}
+	float a = sqrtf( a_squared );
+
+	PLVector3 dir = PlNormalizeVector3( difference );
+
+	PLVector3 perp = PlVector3CrossProduct( dir, ( PLVector3 ) { 0.0f, 1.0f, 0.0f } );
+	if ( PlVector3Length( perp ) < EPSILON )
+	{
+		perp = PlVector3CrossProduct( dir, ( PLVector3 ) { 0.0f, 0.0f, 1.0f } );
+	}
+	perp = PlNormalizeVector3( perp );
+
+	*result = PlAddVector3( P, PlScaleVector3F( perp, a ) );
+	return true;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Ray Casting
 /////////////////////////////////////////////////////////////////////////////////////

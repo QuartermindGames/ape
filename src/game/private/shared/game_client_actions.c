@@ -4,6 +4,7 @@
 
 #include "game_menu.h"
 #include "game_server.h"
+
 #include "components/component_movement.h"
 
 static void say_action( ApeInputState state, const char *id )
@@ -23,13 +24,7 @@ static void move_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	GamePlayer *player = game_server_get_host_player_();
-	if ( player == nullptr )
-	{
-		return;
-	}
-
-	ApeEntity *entity = player->entity;
+	ApeEntity *entity = game_server_get_host_entity_();
 	if ( entity == nullptr )
 	{
 		return;
@@ -43,6 +38,8 @@ static void move_action( ApeInputState state, const char *id )
 	}
 
 	game_print_( "moving: %s\n", id );
+
+	//game_component_movement_handle_( movementComponent, entity,  );
 }
 
 void game_client_actions_register_()

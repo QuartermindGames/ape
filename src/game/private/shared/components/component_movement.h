@@ -7,4 +7,4 @@ typedef struct GameMovementComponent
 	PLVector3 velocity;
 } GameMovementComponent;
 
-void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *direction );
+void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *dir );

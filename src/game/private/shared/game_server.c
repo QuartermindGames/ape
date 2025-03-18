@@ -169,6 +169,17 @@ GamePlayer *game_server_get_host_player_()
 	return client->playerSlot;
 }
 
+ApeEntity *game_server_get_host_entity_()
+{
+	GamePlayer *player = game_server_get_host_player_();
+	if ( player == nullptr )
+	{
+		return nullptr;
+	}
+
+	return player->entity;
+}
+
 GameServerClient *game_server_get_client_( unsigned int slot )
 {
 	assert( slot < GAME_MAX_CLIENTS );

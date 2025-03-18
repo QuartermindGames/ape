@@ -242,6 +242,8 @@ void ape_tick_frame()
 	const double delta = PlClamp( 0.0, now - lastTime, 1.0 );
 	lastTime           = now;
 
+	ape_draw_debug_clear_();
+
 	ape_tick_tasks_();
 	//TODO: what order should these be?
 	ape_tick_server_( delta );

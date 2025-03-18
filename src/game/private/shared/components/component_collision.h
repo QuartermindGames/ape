@@ -4,24 +4,18 @@
 
 typedef enum GameCollisionGroup : uint8_t
 {
-	PL_BITFLAG( GAME_COLLISION_GROUP_WORLD, 0U ),
-	PL_BITFLAG( GAME_COLLISION_GROUP_PLAYER, 1U ),
-	PL_BITFLAG( GAME_COLLISION_GROUP_MONSTER, 2U ),
+#define GAME_COLLISION_GROUP( NAME, VALUE ) PL_BITFLAG( GAME_COLLISION_GROUP_##NAME, APE_COLLISION_GROUP_END + VALUE )
+	GAME_COLLISION_GROUP( WORLD, 0U ),
+	GAME_COLLISION_GROUP( PLAYER, 1U ),
+	GAME_COLLISION_GROUP( MONSTER, 2U ),
 } GameCollisionGroup;
-
-typedef enum GameCollisionType : uint8_t
-{
-	GAME_COLLISION_TYPE_SPHERE,
-	GAME_COLLISION_TYPE_AABB,
-	GAME_COLLISION_TYPE_CAPSULE,
-} GameCollisionType;
 
 #define GAME_COLLISION_MAX_COLLIDERS 16
 
 typedef struct GameCollisionComponent
 {
 	GameCollisionGroup groups;
-	GameCollisionType  type;
+	ApeCollisionType   type;
 
 	union
 	{

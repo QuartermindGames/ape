@@ -240,7 +240,9 @@ typedef struct ComCollisionCapsule
 } ComCollisionCapsule;
 
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
+bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 
+bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, const PLCollisionSphere *sphere2, PLVector3 *result );
 bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 

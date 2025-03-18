@@ -30,6 +30,7 @@ void game_server_tick_( double delta );
 
 GameServerClient *game_server_get_host_client_();
 GamePlayer       *game_server_get_host_player_();
+ApeEntity        *game_server_get_host_entity_();
 GameServerClient *game_server_get_client_( unsigned int slot );
 
 unsigned int game_server_get_num_clients_();
