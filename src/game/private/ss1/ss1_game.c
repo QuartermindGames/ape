@@ -1,11 +1,14 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ss1_game.h"
-#include "game/private/ss1/menu/menu.h"
+
+#include "menu/menu.h"
 
 #include "../shared/integrations/integrations.h"
 #include "../shared/physics/physics.h"
 #include "../shared/game_team.h"
+#include "../shared/components/component_movement.h"
+
 #include "entities/entity_player.h"
 
 SS1GameState ss1_gameState;
@@ -41,6 +44,17 @@ extern ApeEntityClassDefinition ss1_airshipEntityClass;
 extern ApeEntityClassDefinition ss1_pawnEntityClass;
 extern ApeEntityClassDefinition ss1_playerEntityClass;
 
+static void toggle_camera( ApeInputState state, const char *id )
+{
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	{
+		return;
+	}
+
+	ss1_gameState.oldCameraState = ss1_gameState.cameraState;
+	ss1_gameState.cameraState    = ( ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON ) ? SS1_CAMERA_STATE_FREE : SS1_CAMERA_STATE_THIRD_PERSON;
+}
+
 static bool ss1_initialize()
 {
 	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
@@ -52,6 +66,8 @@ static bool ss1_initialize()
 	ape_register_entity_class( &ss1_airshipEntityClass );
 	ape_register_entity_class( &ss1_pawnEntityClass );
 	ape_register_entity_class( &ss1_playerEntityClass );
+
+	ape_client_input_register_action( "ss1_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
 
 	PL_ZERO_( ss1_gameState );
 
@@ -115,66 +131,139 @@ static bool ss1_shutdown( void )
 	return true;
 }
 
-static void handle_input( double delta )
+static void handle_camera_input( double delta )
 {
+	if ( ss1_gameState.camera == nullptr )
+	{
+		return;
+	}
+
 	PLVector3 ang = ape_camera_get_angles( ss1_gameState.camera );
 	PLVector3 pos = ape_camera_get_position( ss1_gameState.camera );
 
-	//game_print_( "delta=%lf\n", delta );
-
-	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
+	switch ( ss1_gameState.cameraState )
 	{
-		int mx, my;
-		ape_client_input_get_mouse_delta( &mx, &my );
-		ang.y += ( float ) mx;
-		ang.x += ( float ) my;
-		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
-	}
-
-	PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
-	ang.x -= ( rightStick.y * 100.0f ) * delta;
-	ang.y -= ( rightStick.x * 150.0f ) * delta;
-
-	PLVector3 forward, left;
-	PlAnglesAxes( ang, &left, nullptr, &forward );
-
-	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-	pos                 = PlAddVector3( pos, PlScaleVector3F( forward, ( leftStick.y * 100.0f ) * delta ) );
-	pos                 = PlAddVector3( pos, PlScaleVector3F( left, ( leftStick.x * 100.0f ) * delta ) );
-
-	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.camera ) );
-	if ( room != nullptr )
-	{
-		PLCollisionSphere sphere = {};
-		sphere.origin            = ape_camera_get_position( ss1_gameState.camera );
-		sphere.radius            = 4.0f;
-
-		ApeCollisionIntersection intersection = {};
-		if ( ape_room_sphere_intersect( room, &sphere, &intersection ) )
+		default:
+		case SS1_CAMERA_STATE_FREE:
 		{
-			game_print_( "Hit! (%f)\n", intersection.distance );
-
-			if ( intersection.face != nullptr )
+			PL_GET_CVAR( "input/mlook", mouseLook );
+			if ( mouseLook != NULL && mouseLook->b_value )
 			{
-				PLCollisionPlane plane = {};
-				plane.origin           = intersection.face->bounds.absOrigin;
-				plane.normal           = intersection.face->normal;
-				ape_draw_debug_plane( &plane, PL_COLOUR_RED, 32.0f );
+				int mx, my;
+				ape_client_input_get_mouse_delta( &mx, &my );
+				ang.y += ( float ) mx;
+				ang.x += ( float ) my;
+				ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 			}
 
-			// Calculate the penetration depth
-			float penetrationDepth = sphere.radius - intersection.distance;
-			if ( penetrationDepth > 0.0f )
+			PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+			ang.x -= ( rightStick.y * 100.0f ) * delta;
+			ang.y -= ( rightStick.x * 150.0f ) * delta;
+
+			PLVector3 forward, left;
+			PlAnglesAxes( ang, &left, nullptr, &forward );
+
+			PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
+			pos                 = PlAddVector3( pos, PlScaleVector3F( forward, ( leftStick.y * 100.0f ) * delta ) );
+			pos                 = PlAddVector3( pos, PlScaleVector3F( left, ( leftStick.x * 100.0f ) * delta ) );
+
+			ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.camera ) );
+			if ( room != nullptr )
 			{
-				PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, intersection.intersection ) );
-				pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, penetrationDepth ) );
+				PLCollisionSphere sphere = {};
+				sphere.origin            = pos;
+				sphere.radius            = 4.0f;
+
+				ApeCollisionCollider collider = {};
+				collider.type                 = APE_COLLISION_TYPE_SPHERE;
+				collider.sphere               = &sphere;
+
+				unsigned int              numHits;
+				ApeCollisionIntersection *hits;
+				if ( ( hits = ape_room_intersect( room, &collider, &numHits ) ) != nullptr )
+				{
+					for ( unsigned int i = 0; i < numHits; ++i )
+					{
+						if ( hits[ i ].face != nullptr )
+						{
+							PLCollisionPlane plane = {};
+							plane.origin           = hits[ i ].face->bounds.absOrigin;
+							plane.normal           = hits[ i ].face->normal;
+							ape_draw_debug_plane( &plane, PL_COLOUR_RED, 32.0f );
+
+							float penetrationDepth = sphere.radius - hits[ i ].distance;
+							if ( penetrationDepth > 0.0f )
+							{
+								PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, hits[ i ].intersection ) );
+								pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, penetrationDepth ) );
+							}
+						}
+
+						ape_draw_debug_axis( hits[ i ].intersection, pl_vecOrigin3, 2.0f );
+					}
+
+					PL_DELETE( hits );
+				}
 			}
+
+			ape_camera_set_position( ss1_gameState.camera, &pos );
+			ape_camera_set_angles( ss1_gameState.camera, &ang );
+			break;
+		}
+		case SS1_CAMERA_STATE_FIRST_PERSON: break;
+		case SS1_CAMERA_STATE_THIRD_PERSON:
+		{
+			ApeEntity *entity = game_server_get_host_entity_();
+			if ( entity == nullptr )
+			{
+				return;
+			}
+
+			if ( strcmp( entity->classDefinition->name, "ss1_player" ) != 0 )
+			{
+				game_warning_( "Player is possessing an entity that isn't a player!\n" );
+				return;
+			}
+
+			SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+			assert( playerEntity != nullptr );
+
+			PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+
+			// update the pitch
+			playerEntity->cameraAngles.x -= ( rightStick.y * 100.0f ) * delta;
+			if ( playerEntity->cameraAngles.x > 90.0f )
+			{
+				playerEntity->cameraAngles.x = 90.0f;
+			}
+			else if ( playerEntity->cameraAngles.x < -90.0f )
+			{
+				playerEntity->cameraAngles.x = -90.0f;
+			}
+
+			// and the yaw
+			playerEntity->cameraAngles.y -= ( rightStick.x * 150.0f ) * delta;
+			break;
 		}
 	}
+}
 
-	ape_camera_set_position( ss1_gameState.camera, &pos );
-	ape_camera_set_angles( ss1_gameState.camera, &ang );
+static void handle_input( double delta )
+{
+	handle_camera_input( delta );
+
+	ApeEntity *entity = game_server_get_host_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	GameMovementComponent *movementComponent = ape_entity_get_component( entity, "movement" );
+	if ( movementComponent == nullptr )
+	{
+		game_warning_( "Player is possessing an entity without a movement component!\n" );
+		return;
+	}
 }
 
 /**
@@ -195,6 +284,59 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 	return position;
 }
 
+static void camera_tick( double delta )
+{
+	ApeCamera *camera = ss1_gameState.camera;
+	if ( camera == nullptr )
+	{
+		return;
+	}
+
+	if ( ss1_gameState.cameraState == ss1_gameState.oldCameraState )
+	{
+		// probably not transitioning between states...
+		return;
+	}
+
+	PLVector3 cpos = ape_camera_get_position( camera );
+	PLVector3 cang = ape_camera_get_angles( camera );
+
+	if ( ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON )
+	{
+		ApeEntity *entity = game_server_get_host_entity_();
+		if ( entity == nullptr )
+		{
+			return;
+		}
+
+		if ( strcmp( entity->classDefinition->name, "ss1_player" ) != 0 )
+		{
+			game_warning_( "Player is possessing an entity that isn't a player!\n" );
+			return;
+		}
+
+		SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+
+		PLVector3 epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+		epos.y         = epos.y + playerEntity->cameraHeight;
+
+		PLVector3 eang = playerEntity->cameraAngles;
+
+		PLVector3 forward, left;
+		PlAnglesAxes( eang, &left, nullptr, &forward );
+		epos = PlAddVector3( epos, PlScaleVector3F( forward, playerEntity->cameraDistance ) );
+		epos = PlAddVector3( epos, PlScaleVector3F( left, playerEntity->cameraSide ) );
+
+		cpos = PlLinearInterpolateV3f( cpos, epos, 7.0f * delta );
+		cang = PlLinearInterpolateV3f( cang, eang, 7.0f * delta );
+
+		ape_camera_set_position( camera, &cpos );
+		ape_camera_set_angles( camera, &cang );
+
+		// check if we've reached the destination within the threshold
+	}
+}
+
 static void world_tick( double delta )
 {
 	ApeWorld *world = game_get_current_world();
@@ -202,6 +344,8 @@ static void world_tick( double delta )
 	{
 		return;
 	}
+
+	camera_tick( delta );
 
 	GameWorldSimulation *simulation = &ss1_gameState.simulation;
 	game_world_simulation_tick( simulation, delta );
@@ -373,8 +517,4 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .clientTick           = client_tick,
 	};
 	return &gameMode;
-}
-
-void game_ss1_spawn_player( GamePlayer *self )
-{
 }

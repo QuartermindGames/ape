@@ -9,8 +9,11 @@
 #include "entity_player.h"
 
 #include "../../shared/components/component_health.h"
-#include "../../shared/components/component_movement.h"
 #include "../../shared/components/component_collision.h"
+
+static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
+static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;
+static constexpr float PLAYER_CAMERA_SIDE     = 10.0f;
 
 static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 {
@@ -20,6 +23,7 @@ static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 static void spawn_player_entity( ApeEntity *self )
 {
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
+
 
 	// just randomize the initial profession for now
 	player->profession = rand() % SS1_MAX_PROFESSIONS;
@@ -34,7 +38,7 @@ static void spawn_player_entity( ApeEntity *self )
 
 	player->collisionComponent = ape_entity_add_component( self, "collision" );
 	assert( player->collisionComponent != nullptr );
-	player->collisionComponent->type = GAME_COLLISION_TYPE_CAPSULE;
+	player->collisionComponent->type = APE_COLLISION_TYPE_AABB;
 
 	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < SS1_PLAYER_MAX_AUDIO_CHANNELS; ++i )
@@ -44,6 +48,20 @@ static void spawn_player_entity( ApeEntity *self )
 
 	player->model = ape_model_node_create( APE_WORLD_NODE( self ), "player_body", "models/characters/character_test.mdl.n" );
 	assert( player->model != nullptr );
+
+	// setup the camera state
+	player->cameraHeight   = PLAYER_CAMERA_HEIGHT;
+	player->cameraDistance = PLAYER_CAMERA_DISTANCE;
+	player->cameraSide     = PLAYER_CAMERA_SIDE;
+
+	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
+	PLVector3 forward;
+	PlAnglesAxes( ang, nullptr, nullptr, &forward );
+	forward              = PlNormalizeVector3( forward );
+	player->cameraAngles = PL_VECTOR3( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
+
+	//TODO: this shouldn't be here...
+	ss1_gameState.cameraState = SS1_CAMERA_STATE_THIRD_PERSON;
 }
 
 static void tick_player_entity( ApeEntity *self, double delta )

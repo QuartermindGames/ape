@@ -58,14 +58,23 @@ typedef enum SS1ResourceType : uint8_t
 
 #define SS1_DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
 
+typedef enum SS1CameraState
+{
+	SS1_CAMERA_STATE_FREE,
+	SS1_CAMERA_STATE_FIRST_PERSON,
+	SS1_CAMERA_STATE_THIRD_PERSON,
+} SS1CameraState;
+
 typedef struct SS1GameState
 {
 	GameWorldSimulation simulation;
 
 	GamePlayer players[ SS1_MAX_PLAYERS ];
 
-	ApeCamera *camera;// our eyes
-	ApeWorld  *world; // world container
+	ApeCamera     *camera;// our eyes
+	SS1CameraState oldCameraState, cameraState;
+
+	ApeWorld *world;// world container
 
 	ApeLight *moonLight;
 	float     moonBrightness;
