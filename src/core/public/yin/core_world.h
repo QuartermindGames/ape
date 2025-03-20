@@ -117,6 +117,9 @@ typedef enum ApeWorldNodeClassFlag
 	PL_BITFLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
 } ApeWorldNodeClassFlag;
 
+typedef void *( *ApeWorldNodeClassNetSerializeFunction )( ApeWorldNode *self, unsigned int *dstLength );
+typedef void ( *ApeWorldNodeClassNetDeserializeFunction )( ApeWorldNode *self, void *newState, unsigned int length );
+
 typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
@@ -125,6 +128,9 @@ typedef struct ApeWorldNodeClass
 	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
 	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
+
+	ApeWorldNodeClassNetSerializeFunction   netSerializeFunction;
+	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;
 
 #if !defined( APE_NO_EDITOR )
 	const ApeWorldNodeProperty *properties;
@@ -154,6 +160,9 @@ typedef struct ApeWorldNode
 
 	PLCollisionAABB localBounds;// bounds that aren't influenced by child, just whatever is specific to the node
 	PLCollisionAABB bounds;     // bounds which resemble the local bounds of the node and all it's children
+
+	bool needsSyncOnConnect;
+	bool needsSyncOnTick;
 
 	ApeRoom                 *room;
 	ApeWorldNode            *parent;

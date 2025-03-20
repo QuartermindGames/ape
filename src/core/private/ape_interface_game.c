@@ -86,6 +86,29 @@ void ape_shutdown_game_( void )
 	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, nullptr );
 }
 
+static void sync_world_nodes( ApeWorldNode *worldNode )
+{
+	ApeWorldNode *childNode;
+	COM_ITERATE_LINKED_LIST( childNode, worldNode->children, i )
+	{
+		if ( childNode->needsSyncOnTick )
+		{
+			unsigned int length;
+
+			// serialize all the base crap here first
+
+
+			// now serialize all the class-specific crap
+			if ( childNode->classType->netSerializeFunction != nullptr )
+			{
+				void *ptr = childNode->classType->netSerializeFunction( childNode, &length );
+			}
+		}
+
+		sync_world_nodes( childNode );
+	}
+}
+
 void ape_tick_game_server_( double delta )
 {
 	ApeWorld *world = game_get_current_world();
@@ -93,6 +116,9 @@ void ape_tick_game_server_( double delta )
 	{
 		ape_world_node_compute_bounds_( &world->base );
 		ape_world_tick_entities_( world, delta );
+
+		// send any updates from the server to the clients
+		sync_world_nodes( APE_WORLD_NODE( world ) );
 	}
 
 	if ( ape_gameInterface->serverTick != nullptr )
