@@ -243,6 +243,8 @@ static void handle_camera_input( double delta )
 
 			// and the yaw
 			playerEntity->cameraAngles.y -= ( rightStick.x * 150.0f ) * delta;
+
+			com_math_normalize_angles( &playerEntity->cameraAngles, &playerEntity->cameraAngles );
 			break;
 		}
 	}
@@ -328,7 +330,8 @@ static void camera_tick( double delta )
 		epos = PlAddVector3( epos, PlScaleVector3F( left, playerEntity->cameraSide ) );
 
 		cpos = PlLinearInterpolateV3f( cpos, epos, 7.0f * delta );
-		cang = PlLinearInterpolateV3f( cang, eang, 7.0f * delta );
+
+		com_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
 
 		ape_camera_set_position( camera, &cpos );
 		ape_camera_set_angles( camera, &cang );

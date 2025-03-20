@@ -9,6 +9,8 @@
 
 #include <acm/acm.h>
 
+#include "common/common_math.h"
+
 #include "yin/core.h"
 #include "yin/core_entity.h"
 #include "yin/core_input.h"

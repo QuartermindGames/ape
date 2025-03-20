@@ -24,6 +24,8 @@ static void spawn_player_entity( ApeEntity *self )
 {
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
 
+	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	// just randomize the initial profession for now
 	player->profession = rand() % SS1_MAX_PROFESSIONS;
@@ -54,7 +56,6 @@ static void spawn_player_entity( ApeEntity *self )
 	player->cameraDistance = PLAYER_CAMERA_DISTANCE;
 	player->cameraSide     = PLAYER_CAMERA_SIDE;
 
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 	PLVector3 forward;
 	PlAnglesAxes( ang, nullptr, nullptr, &forward );
 	forward              = PlNormalizeVector3( forward );

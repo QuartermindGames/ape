@@ -63,7 +63,7 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProp
 const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type )
 {
 	const ApeWorldNodeClass *nodeClass = nodeClasses[ type ];
-	*numProperties = nodeClass->numProperties;
+	*numProperties                     = nodeClass->numProperties;
 	return nodeClass->properties;
 }
 
@@ -283,7 +283,8 @@ PLVector3 ape_world_node_get_angles( const ApeWorldNode *self )
 void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
-	self->angles = *angles;
+
+	com_math_normalize_angles( angles, &self->angles );
 
 	update_world_transform( self );
 }
