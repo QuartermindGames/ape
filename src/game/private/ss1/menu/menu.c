@@ -31,6 +31,8 @@ static void capture_screenshot_callback( const GameMenuOption * )
 static GameMenuOption debugMenuOptions[] = {
         { "Test Model\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_model" } },
         { "Test Net\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "test_net" } },
+        { "Test Audio\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "audio_play" } },
+        { "Test Audio 3D\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "audio_test_3d" } },
         { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
         { "Show Lights\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" } },
         { "Show Node Volumes\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" } },

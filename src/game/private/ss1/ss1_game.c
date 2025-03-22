@@ -288,6 +288,8 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 
 static void camera_tick( double delta )
 {
+	ape_audio_clear_listener();
+
 	ApeCamera *camera = ss1_gameState.camera;
 	if ( camera == nullptr )
 	{
@@ -302,6 +304,8 @@ static void camera_tick( double delta )
 
 	PLVector3 cpos = ape_camera_get_position( camera );
 	PLVector3 cang = ape_camera_get_angles( camera );
+
+	ss1_gameState.oldCameraPosition = cpos;
 
 	if ( ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON )
 	{
@@ -338,6 +342,11 @@ static void camera_tick( double delta )
 
 		// check if we've reached the destination within the threshold
 	}
+
+	// this is utterly dumb, but we'll use this to determine a vague "velocity"
+	PLVector3 cdiff = PlSubtractVector3( cpos, ss1_gameState.oldCameraPosition );
+
+	ape_audio_update_listener( &cpos, &cang, &cdiff );
 }
 
 static void world_tick( double delta )

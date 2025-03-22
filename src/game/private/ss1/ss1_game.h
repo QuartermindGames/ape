@@ -72,6 +72,7 @@ typedef struct SS1GameState
 	GamePlayer players[ SS1_MAX_PLAYERS ];
 
 	ApeCamera     *camera;// our eyes
+	PLVector3      oldCameraPosition;
 	SS1CameraState oldCameraState, cameraState;
 
 	ApeWorld *world;// world container

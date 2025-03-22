@@ -224,17 +224,11 @@ static void al_tick( void )
 	XAL_CALL( alListenerfv( AL_POSITION, ( ALfloat * ) &position ) );
 
 	PLVector3 angles = ape_audio_get_listener_angles();
-	PLVector3 left, up, forward;
-	PlAnglesAxes( angles, &left, &up, &forward );
-
-	float orientation[ 6 ];
-	orientation[ 0 ] = forward.z;
-	orientation[ 1 ] = forward.y;
-	orientation[ 2 ] = forward.z;
-	orientation[ 3 ] = up.x;
-	orientation[ 4 ] = up.y;
-	orientation[ 5 ] = up.z;
-	XAL_CALL( alListenerfv( AL_ORIENTATION, orientation ) );
+	PLVector3 up, forward;
+	PlAnglesAxes( angles, nullptr, &up, &forward );
+	//TODO: camera is inversed relative to everything else... fuuuuck
+	forward = PlInverseVector3( forward );
+	XAL_CALL( alListenerfv( AL_ORIENTATION, ( float[] ) { forward.x, forward.y, forward.z, up.x, up.y, up.z } ) );
 
 	PLVector3 velocity = ape_audio_get_listener_velocity();
 	XAL_CALL( alListenerfv( AL_VELOCITY, ( ALfloat * ) &velocity ) );

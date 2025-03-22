@@ -80,6 +80,24 @@ static void pause_audio_command( unsigned int argc, char **argv )
 	ape_audio_pause_( !audioPaused );
 }
 
+static void test_3d_command( unsigned int, char ** )
+{
+	ApeAudioSample *sample = ape_audio_sample_cache( "sounds/testing/ping.wav" );
+	if ( sample == nullptr )
+	{
+		return;
+	}
+
+	PLVector3 position = {
+	        .x = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
+	        .y = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
+	        .z = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
+	};
+
+	ape_audio_sample_emit( sample, &position, 100, PlGenerateRandomFloat( 2.0f ) );
+	ape_audio_sample_release( sample );
+}
+
 void ape_audio_initialize_( void )
 {
 	if ( PlHasCommandLineArgument( "/nosound" ) || audioInitialized )
@@ -100,6 +118,7 @@ void ape_audio_initialize_( void )
 
 	PlRegisterConsoleCommand( "audio_play", "Play a specific sound. If no sound is specified, plays a test sound.", -1, play_audio_command );
 	PlRegisterConsoleCommand( "audio_pause", "Pause all audio.", 0, pause_audio_command );
+	PlRegisterConsoleCommand( "audio_test_3d", "Test a 3D audio source.", 0, test_3d_command );
 
 	// reset listener
 	ape_audio_clear_listener();
