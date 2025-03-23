@@ -404,7 +404,13 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
 
-	ape_model_draw_models( room, camera, light );
+#if 1
+	//TODO: botch, we don't check render pass flag under draw models yet
+	if ( !( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
+	{
+		ape_model_draw_models( room, camera, light );
+	}
+#endif
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
@@ -645,6 +651,8 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 
 static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth )
 {
+	PlgPushDebugGroupMarker( "Translucent Room" );
+
 	// and now depth pre-pass
 	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
@@ -674,6 +682,8 @@ static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth
 
 		PlgDepthMask( depth );
 	}
+
+	PlgPopDebugGroupMarker();
 }
 
 static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool depth )
@@ -743,12 +753,14 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 {
 	COM_PROFILE_FUNCTION_START();
 
+	PlgPushDebugGroupMarker( "Solid Room" );
+
 	// and now depth pre-pass
 	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
-		PlgInsertDebugMarker( "solid room shaded" );
+		PlgPushDebugGroupMarker( "Shaded" );
 
 		PlgDepthMask( false );
 
@@ -786,8 +798,10 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 
 		PlgDepthMask( depth );
 
-		PlgInsertDebugMarker( "solid room shaded end" );
+		PlgPopDebugGroupMarker();
 	}
+
+	PlgPopDebugGroupMarker();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -851,9 +865,10 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	PlPushMatrix();
 
 	// first draw the portals
-	PlgInsertDebugMarker( "Portal pass" );
 	if ( ape_rendererState_.depth == 0 )
 	{
+		PlgPushDebugGroupMarker( "Portals" );
+
 		unsigned int               numPortals;
 		static const ApeBrushFace *current[ 4 ] = {};
 		ApeBrushFace             **portals      = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visiblePortals, &numPortals );
@@ -914,9 +929,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			PlgSetClipPlane( &PL_VECTOR4( portal->normal.x, portal->normal.y, portal->normal.z, d ) );
 
 #if 1
-			PlgInsertDebugMarker( "Solid portal room pass" );
 			draw_solid_room( destinationRoom, camera, ape_rendererState_.depth > 0 );
-			PlgInsertDebugMarker( "Translucent portal room pass" );
 			draw_translucent_room( room, camera, ape_rendererState_.depth > 0 );
 #else
 			ape_room_draw_( destinationRoom, camera, viewport );
@@ -945,7 +958,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 		}
 
-		PlgInsertDebugMarker( "Portal pass done" );
+		PlgPopDebugGroupMarker();
 	}
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME )
@@ -954,9 +967,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	}
 	else
 	{
-		PlgInsertDebugMarker( "Solid room pass" );
 		draw_solid_room( room, camera, false );
-		PlgInsertDebugMarker( "Translucent room pass" );
 		draw_translucent_room( room, camera, false );
 	}
 
