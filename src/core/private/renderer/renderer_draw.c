@@ -348,6 +348,11 @@ void ape_draw_debug_clear_()
 
 void ape_draw_debug_mesh_display_()
 {
+	if ( debugDrawMesh->num_verts == 0 )
+	{
+		return;
+	}
+
 	ape_material_draw( debugDrawMaterial, debugDrawMesh, nullptr );
 }
 
