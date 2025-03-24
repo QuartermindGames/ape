@@ -24,8 +24,8 @@ System can also be expanded to support height-maps once introduced.
 
 ## Queue
 - Initial Lua mock-up
-- Restrict vertices for stencil shadows based on point of intersection
-  - If point doesn't cross/intersect, we should have a reasonable limit
+- ~~Restrict vertices for stencil shadows based on point of intersection~~
+  - ~~If point doesn't cross/intersect, we should have a reasonable limit~~
 - ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
   - Recursion for portals/mirrors isn't working right
   - ~~Can't combine stencil shadow volumes with mirrors~~ (for now we'll just disable shadows in mirrors)
