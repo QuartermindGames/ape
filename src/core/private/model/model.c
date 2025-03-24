@@ -271,6 +271,8 @@ static PLVector3 get_transformed_bone_position( const ApeModel *model, const Ape
 
 void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
 {
+	PlgPushDebugGroupMarker( "Draw Model" );
+
 	if ( modelShowSkeleton )
 	{
 		for ( unsigned int i = 0; i < model->numBones; ++i )
@@ -301,8 +303,8 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 
 	for ( unsigned int i = 0; i < model->numMaterials; ++i )
 	{
-		model->cache->startIndex = model->meshes[ i ].startIndex;
-		model->cache->endIndex   = model->meshes[ i ].endIndex;
+		model->cache->start = model->meshes[ i ].startIndex;
+		model->cache->range   = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
 
 		ApeLightPointerArray lights;
 		lights[ 0 ] = light;
@@ -311,6 +313,8 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 	}
 
 	PlPopMatrix();
+
+	PlgPopDebugGroupMarker();
 }
 
 void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, unsigned int numTransforms )
@@ -343,6 +347,10 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 
 void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light )
 {
+	COM_PROFILE_FUNCTION_START();
+
+	PlgPushDebugGroupMarker( "Draw Models" );
+
 	// fetch all the models currently cached in the scene
 	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
 
@@ -370,6 +378,10 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, light );
 		}
 	}
+
+	PlgPopDebugGroupMarker();
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
