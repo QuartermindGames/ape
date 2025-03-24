@@ -14,6 +14,8 @@
 // Selection Buffer
 /////////////////////////////////////////////////////////////////////////////////////
 
+static void setup_transform_widget();
+static void cleanup_transform_widget();
 static void render_transform_widget( ApeEditorInstance *instance );
 
 static constexpr float SELECTION_OBJECT_SIZE = 8.0f;
@@ -31,11 +33,15 @@ void ape_editor_selection_initialize_()
 	{
 		ape_error_( true, "Failed to create selection viewport!\n" );
 	}
+
+	setup_transform_widget();
 }
 
 void ape_editor_selection_shutdown_()
 {
 	ape_viewport_destroy( selectionViewport );
+
+	cleanup_transform_widget();
 }
 
 static PLColour encode_hash_to_colour( uint64_t hash )
@@ -603,6 +609,69 @@ ApeViewport *ape_editor_selection_get_viewport_( void )
 /////////////////////////////////////////////////////////////////////////////////////
 // Transform Widget
 
+static PLGMesh *transformWidgetWireframeMesh;
+static PLGMesh *transformWidgetSelectionMesh;
+
+static void setup_transform_widget()
+{
+	static constexpr float TRANSFORM_SCALE       = 32.0f;
+	static constexpr float TRANSFORM_ARROW_SCALE = 4.0f;
+
+	transformWidgetWireframeMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_STATIC, 0, 18 );
+
+	PlgSetMeshPrimitiveScale( transformWidgetWireframeMesh, 2.0f );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+	PlgPushVertex3f( transformWidgetWireframeMesh, TRANSFORM_SCALE, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, TRANSFORM_SCALE, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+	PlgPushVertex3f( transformWidgetWireframeMesh, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE, TRANSFORM_ARROW_SCALE, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+	PlgPushVertex3f( transformWidgetWireframeMesh, TRANSFORM_SCALE, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+	PlgPushVertex3f( transformWidgetWireframeMesh, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE, -TRANSFORM_ARROW_SCALE, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_SCALE, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_SCALE, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE, TRANSFORM_ARROW_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_SCALE, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE, -TRANSFORM_ARROW_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_GREEN );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, 0.0f );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, TRANSFORM_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, TRANSFORM_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, TRANSFORM_ARROW_SCALE, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, TRANSFORM_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, -TRANSFORM_ARROW_SCALE, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE );
+	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
+
+	PlgUploadMesh( transformWidgetWireframeMesh );
+}
+
+static void cleanup_transform_widget()
+{
+	PlgDestroyMesh( transformWidgetWireframeMesh );
+	PlgDestroyMesh( transformWidgetSelectionMesh );
+}
+
 static void render_transform_widget( ApeEditorInstance *instance )
 {
 	PLLinkedListNode *node = PlGetFirstNode( instance->selectedObjects );
@@ -610,8 +679,6 @@ static void render_transform_widget( ApeEditorInstance *instance )
 	{
 		return;
 	}
-
-	return;
 
 	ApeWorldNode *selected = PlGetLinkedListNodeUserData( node );
 	assert( selected != nullptr );
@@ -632,55 +699,10 @@ static void render_transform_widget( ApeEditorInstance *instance )
 		PlTranslateMatrix( pos );
 	}
 
-	static constexpr float SCALE       = 32.0f;
-	static constexpr float ARROW_SCALE = 4.0f;
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+	assert( material != nullptr );
 
-	PlgImmBegin( PLG_MESH_LINES );
-
-	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-
-	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-	PlgImmPushVertex( SCALE - ARROW_SCALE, ARROW_SCALE, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-	PlgImmPushVertex( SCALE, 0.0f, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-	PlgImmPushVertex( SCALE - ARROW_SCALE, -ARROW_SCALE, 0.0f );
-	PlgImmColour( 255, 0, 0, 255 );
-
-	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
-	PlgImmColour( 0, 255, 0, 255 );
-	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
-	PlgImmColour( 0, 255, 0, 255 );
-
-	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
-	PlgImmColour( 0, 255, 0, 255 );
-	PlgImmPushVertex( 0.0f, SCALE - ARROW_SCALE, ARROW_SCALE );
-	PlgImmColour( 0, 255, 0, 255 );
-	PlgImmPushVertex( 0.0f, SCALE, 0.0f );
-	PlgImmColour( 0, 255, 0, 255 );
-	PlgImmPushVertex( 0.0f, SCALE - ARROW_SCALE, -ARROW_SCALE );
-	PlgImmColour( 0, 255, 0, 255 );
-
-	PlgImmPushVertex( 0.0f, 0.0f, 0.0f );
-	PlgImmColour( 0, 0, 255, 255 );
-	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
-	PlgImmColour( 0, 0, 255, 255 );
-
-	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
-	PlgImmColour( 0, 0, 255, 255 );
-	PlgImmPushVertex( 0.0f, ARROW_SCALE, SCALE - ARROW_SCALE );
-	PlgImmColour( 0, 0, 255, 255 );
-	PlgImmPushVertex( 0.0f, 0.0f, SCALE );
-	PlgImmColour( 0, 0, 255, 255 );
-	PlgImmPushVertex( 0.0f, -ARROW_SCALE, SCALE - ARROW_SCALE );
-	PlgImmColour( 0, 0, 255, 255 );
-
-	PlgImmSetPrimitiveScale( 2.0f );
-	PlgImmDraw();
+	ape_material_draw( material, transformWidgetWireframeMesh, nullptr );
 
 	PlPopMatrix();
 }
