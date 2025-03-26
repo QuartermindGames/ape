@@ -120,6 +120,8 @@ void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
 ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group );
 void            ape_audio_source_destroy( ApeAudioSource *audioSource );
+void            ape_audio_source_set_position( ApeAudioSource *audioSource, const PLVector3 *position );
+void            ape_audio_source_set_velocity( ApeAudioSource *audioSource, const PLVector3 *velocity );
 void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 PL_EXTERN_C_END

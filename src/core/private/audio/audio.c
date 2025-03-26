@@ -290,6 +290,16 @@ void ape_audio_source_destroy( ApeAudioSource *audioSource )
 	PL_DELETE( audioSource );
 }
 
+void ape_audio_source_set_position( ApeAudioSource *audioSource, const PLVector3 *position )
+{
+	audioSource->position = *position;
+}
+
+void ape_audio_source_set_velocity( ApeAudioSource *audioSource, const PLVector3 *velocity )
+{
+	audioSource->velocity = *velocity;
+}
+
 void ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample )
 {
 	if ( audioSource == nullptr )
