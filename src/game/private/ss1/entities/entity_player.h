@@ -20,6 +20,7 @@ typedef struct SS1PlayerEntity
 	struct GameHealthComponent    *healthComponent;
 	struct GameMovementComponent  *movementComponent;
 	struct GameCollisionComponent *collisionComponent;
+	struct GameInventoryComponent *inventoryComponent;
 
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
 	struct ApeModelNode   *model;

@@ -17,9 +17,24 @@ static void destroy_inventory( void *data )
 	PL_DELETE( inventory );
 }
 
+static AcmBranch *serialize_inventory( void *ptr, AcmBranch *root )
+{
+	GameInventoryComponent *inventory = ptr;
+	return root;
+}
+
+static void *deserialize_inventory( void *ptr, AcmBranch *root )
+{
+	GameInventoryComponent *inventory = ptr;
+	return inventory;
+}
+
 ApeEntityComponentDefinition game_inventoryComponent_ = {
         .name = "inventory",
 
         .createFunction  = create_inventory,
         .destroyFunction = destroy_inventory,
+
+        .serializeFunction   = serialize_inventory,
+        .deserializeFunction = deserialize_inventory,
 };

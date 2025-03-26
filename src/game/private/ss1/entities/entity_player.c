@@ -10,6 +10,7 @@
 
 #include "../../shared/components/component_health.h"
 #include "../../shared/components/component_collision.h"
+#include "../../shared/components/component_inventory.h"
 
 static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
 static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;
@@ -20,9 +21,28 @@ static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 	return PL_NEW( SS1PlayerEntity );
 }
 
+static void setup_default_equipment( ApeEntity *self )
+{
+	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
+	assert( player != nullptr );
+
+	switch ( player->profession )
+	{
+		default:
+			//TODO: print name of player... this isn't exposed yet
+			game_warning_( "Player doesn't have a valid profession!\n" );
+			break;
+		case SS1_PROFESSION_SHAMAN: break;
+		case SS1_PROFESSION_MACHINIST: break;
+		case SS1_PROFESSION_TRICKSTER: break;
+		case SS1_PROFESSION_POUNDER: break;
+	}
+}
+
 static void spawn_player_entity( ApeEntity *self )
 {
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
+	assert( player != nullptr );
 
 	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
@@ -42,7 +62,9 @@ static void spawn_player_entity( ApeEntity *self )
 	assert( player->collisionComponent != nullptr );
 	player->collisionComponent->type = APE_COLLISION_TYPE_AABB;
 
-	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	player->inventoryComponent = ape_entity_add_component( self, "inventory" );
+	assert( player->inventoryComponent != nullptr );
+
 	for ( unsigned int i = 0; i < SS1_PLAYER_MAX_AUDIO_CHANNELS; ++i )
 	{
 		player->audioSources[ i ] = ape_audio_source_create( &pos, &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
@@ -63,6 +85,8 @@ static void spawn_player_entity( ApeEntity *self )
 
 	//TODO: this shouldn't be here...
 	ss1_gameState.cameraState = SS1_CAMERA_STATE_THIRD_PERSON;
+
+	setup_default_equipment( self );
 }
 
 static void tick_player_entity( ApeEntity *self, double delta )

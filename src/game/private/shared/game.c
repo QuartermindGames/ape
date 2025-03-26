@@ -151,6 +151,7 @@ extern ApeEntityClassDefinition game_ropeEntityClass_;
 extern ApeEntityComponentDefinition game_collisionComponent_;
 extern ApeEntityComponentDefinition game_healthComponent_;
 extern ApeEntityComponentDefinition game_movementComponent_;
+extern ApeEntityComponentDefinition game_inventoryComponent_;
 
 void game_register_standard_entity_components_( void )
 {
@@ -161,6 +162,7 @@ void game_register_standard_entity_components_( void )
 	ape_register_entity_component( &game_collisionComponent_ );
 	ape_register_entity_component( &game_healthComponent_ );
 	ape_register_entity_component( &game_movementComponent_ );
+	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
 AcmBranch *game_get_config()
