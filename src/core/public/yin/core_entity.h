@@ -32,8 +32,9 @@ typedef struct ApeEntityComponent
 	void                               *data;
 } ApeEntityComponent;
 
-#define APE_ENT_CLASS( SELF, TYPE )     ( ( TYPE * ) ( ( SELF )->classData ) )
-#define APE_ENT_COMPONENT( SELF, TYPE ) ( ( TYPE * ) ( ( SELF )->data ) )
+//TODO: the validation shouldn't be done by a string compare damn it...
+#define APE_ENT_CLASS( SELF, CLASSNAME, TYPE ) ( strcmp( ( SELF )->classDefinition->name, ( CLASSNAME ) ) == 0 ) ? ( ( TYPE * ) ( ( SELF )->classData ) ) : nullptr
+#define APE_ENT_COMPONENT( SELF, TYPE )        ( ( TYPE * ) ( ( SELF )->data ) )
 
 typedef struct ApeEntityProperty
 {

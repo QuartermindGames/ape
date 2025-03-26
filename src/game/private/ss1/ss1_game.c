@@ -219,14 +219,12 @@ static void handle_camera_input( double delta )
 				return;
 			}
 
-			if ( strcmp( entity->classDefinition->name, "ss1_player" ) != 0 )
+			SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+			if ( playerEntity == nullptr )
 			{
 				game_warning_( "Player is possessing an entity that isn't a player!\n" );
 				return;
 			}
-
-			SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
-			assert( playerEntity != nullptr );
 
 			PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
 

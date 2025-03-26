@@ -20,28 +20,34 @@ static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
 
 static void spawn_player_spawn( ApeEntity *self )
 {
+	GamePlayerSpawnEntity *spawnEntity = PLAYER_SPAWN_ENTITY( self );
+	assert( spawnEntity != nullptr );
+
 	if ( playerSpawnPoints == nullptr )
 	{
 		playerSpawnPoints = PlCreateLinkedList();
 	}
 
-	PLAYER_SPAWN_ENTITY( self )->listNode = PlInsertLinkedListNode( playerSpawnPoints, self );
+	spawnEntity->listNode = PlInsertLinkedListNode( playerSpawnPoints, self );
 }
 
 static void destroy_player_spawn( ApeEntity *self )
 {
-	PlDestroyLinkedListNode( PLAYER_SPAWN_ENTITY( self )->listNode );
+	GamePlayerSpawnEntity *spawnEntity = PLAYER_SPAWN_ENTITY( self );
+	assert( spawnEntity != nullptr );
+
+	PlDestroyLinkedListNode( spawnEntity->listNode );
 	if ( PlGetNumLinkedListNodes( playerSpawnPoints ) == 0 )
 	{
 		PlDestroyLinkedList( playerSpawnPoints );
 		playerSpawnPoints = nullptr;
 	}
 
-	PL_DELETE( PLAYER_SPAWN_ENTITY( self ) );
+	PL_DELETE( spawnEntity );
 }
 
 ApeEntityClassDefinition game_playerSpawnEntityClass_ = {
-        .name            = "player_spawn",
+        .name            = GAME_PLAYER_SPAWN_CLASS_NAME,
         .description     = "Creates a marker indicating where the player can spawn.",
         .createFunction  = create_player_spawn,
         .destroyFunction = destroy_player_spawn,

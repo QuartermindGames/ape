@@ -71,7 +71,7 @@ static void tick_player_entity( ApeEntity *self, double delta )
 }
 
 ApeEntityClassDefinition ss1_playerEntityClass = {
-        .name        = "ss1_player",
+        .name        = SS1_PLAYER_CLASS_NAME,
         .description = "Player entity. This shouldn't be placed directly!",
 
         .createFunction = create_player_entity,

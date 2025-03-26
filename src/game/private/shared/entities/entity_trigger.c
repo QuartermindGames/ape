@@ -4,11 +4,13 @@
 
 #include "../game_private.h"
 
+#define TRIGGER_CLASS_NAME "trigger"
+
 typedef struct TriggerEntity
 {
 	ApeWorldNode *body;
 } TriggerEntity;
-#define TRIGGER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), TriggerEntity )
+#define TRIGGER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), TRIGGER_CLASS_NAME, TriggerEntity )
 
 static void *create_trigger( ApeEntity *self, AcmBranch *properties )
 {
@@ -37,7 +39,7 @@ static void destroy_trigger( ApeEntity *self )
 }
 
 ApeEntityClassDefinition game_triggerEntityClass_ = {
-        .name = "trigger",
+        .name = TRIGGER_CLASS_NAME,
 
         .createFunction  = create_trigger,
         .spawnFunction   = spawn_trigger,

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define SS1_PLAYER_CLASS_NAME "ss1_player"
+
 typedef enum SS1PlayerAudioChannel
 {
 	SS1_PLAYER_AUDIO_CHANNEL_VOICE,
@@ -28,4 +30,4 @@ typedef struct SS1PlayerEntity
 	PLVector3 cameraAngles;  // orbital rotation around the entity
 } SS1PlayerEntity;
 
-#define SS1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), SS1PlayerEntity )
+#define SS1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), SS1_PLAYER_CLASS_NAME, SS1PlayerEntity )

@@ -6,6 +6,8 @@
 
 #include "../physics/physics.h"
 
+#define ROPE_CLASS_NAME "rope"
+
 typedef struct RopeEntity
 {
 	ApeWorldNode *startConnection;
@@ -13,7 +15,7 @@ typedef struct RopeEntity
 
 	GamePhysicsRope physics;
 } RopeEntity;
-#define ROPE_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), RopeEntity )
+#define ROPE_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), ROPE_CLASS_NAME, RopeEntity )
 
 static bool showRopeDebug;
 
@@ -128,7 +130,7 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 }
 
 ApeEntityClassDefinition game_ropeEntityClass_ = {
-        .name           = "rope",
+        .name           = ROPE_CLASS_NAME,
         .description    = "Physics-driven rope handler."
                           "Rope can have a start attachment and end attachment.",
         .cacheFunction  = cache_rope,
