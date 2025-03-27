@@ -4,7 +4,12 @@
 
 typedef struct GameMovementComponent
 {
+	float forwardVelocity;
+	float strafeVelocity;
+
 	PLVector3 velocity;
+
+	float maxRunSpeed, maxWalkSpeed;
 } GameMovementComponent;
 
 void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *dir );

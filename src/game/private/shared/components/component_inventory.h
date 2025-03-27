@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "component_item.h"
+
 static constexpr unsigned int GAME_INVENTORY_MAX_SLOTS = 64;
 
 typedef enum GameInventorySlotType
