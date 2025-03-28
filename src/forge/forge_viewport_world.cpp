@@ -7,7 +7,11 @@
 #include "forge_editor_world.h"
 #include "forge_window_main.h"
 
-#include <yin/core_entity.h>
+#include "common_project.h"
+
+#include "ape/ape_public_model.h"
+#include "ape/ape_formats.h"
+#include "yin/core_entity.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Entity Selection Dialog
@@ -103,6 +107,11 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 	if ( Viewport::on_left_click( object, selector, ptr ) )
 	{
 		return TRUE;
+	}
+
+	if ( !hasFocus() )
+	{
+		return FALSE;
 	}
 
 	ApeEditorInstance *instance = editor->get_internal();
@@ -576,6 +585,26 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 		default:
 		{
 			printf( "Unknown selection ID (%u)\n", FXSELID( sel ) );
+			break;
+		}
+		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL:
+		{
+			const char *path     = com_project_get_local_path();
+			FXString    filename = FXFileDialog::getOpenFilename( this, "Select a model", FXString( path ) + "/ship/models/", "*." APE_FORMAT_MODEL_EXTENSION );
+			if ( filename.empty() )
+			{
+				break;
+			}
+
+			//TODO: transform it into a relative path...
+
+			ApeModelNode *node = ape_model_node_create( APE_WORLD_NODE( room ), nullptr, filename.text() );
+			if ( node == nullptr )
+			{
+				break;
+			}
+
+			ape_world_node_set_position( APE_WORLD_NODE( node ), &tpos );
 			break;
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT:

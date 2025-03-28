@@ -296,7 +296,7 @@ long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 {
 	if ( !hasFocus() )
 	{
-		//	return FALSE;
+		return FALSE;
 	}
 
 	auto     *event = ( FXEvent * ) ptr;
@@ -311,7 +311,7 @@ long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 
 long Viewport::on_left_click( FX::FXObject *, FX::FXSelector selector, void * )
 {
-	if ( !hasFocus() || editor == nullptr )
+	if ( !hasFocus() )
 	{
 		return FALSE;
 	}
