@@ -121,11 +121,12 @@ add_subdirectory(src/3rdparty/lua)
 
 #add_compile_definitions(-D_ISOC23_SOURCE)
 
-add_subdirectory(src/common/)
-add_subdirectory(src/core/)
-add_subdirectory(src/acm/)
+add_subdirectory(src/common)
+add_subdirectory(src/core)
+add_subdirectory(src/acm)
 add_subdirectory(src/forge)
-add_subdirectory(src/game/) # includes shells
+add_subdirectory(src/forge2)
+add_subdirectory(src/game) # includes shells
 
 # tools
 add_subdirectory(src/tools/cook)
