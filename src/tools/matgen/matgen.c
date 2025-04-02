@@ -2,6 +2,8 @@
 // Purpose: For when you just can't be bothered to do it by hand...
 
 #include <plcore/pl.h>
+#include <plcore/pl_filesystem.h>
+#include <plcore/pl_math.h>
 
 #include "acm/acm.h"
 #include "ape/ape_formats.h"
