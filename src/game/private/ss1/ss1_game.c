@@ -87,22 +87,10 @@ static bool ss1_initialize()
 	}
 #endif
 
-	ss1_gameState.config = com_get_config( SS1_CONFIG );
+	ss1_gameState.config        = com_get_config( SS1_CONFIG );
+	ss1_gameState.isFirstLaunch = acm_get_bool( ss1_gameState.config, "isFirstLaunch", true );
 
 	ss1_menu_initialize();
-
-	// determine if it's the first time we've launched
-#if 0
-	const char *name = acm_get_string( ss1_gameState.config, "name", nullptr );
-	if ( name != nullptr )
-	{
-		snprintf( ss1_gameState.players[ 0 ].name, sizeof( ss1_gameState.players[ 0 ].name ), "%s", name );
-	}
-	else
-	{
-		ss1_gameState.isFirstLaunch = true;
-	}
-#endif
 
 	ss1_gameState.camera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( ss1_gameState.camera == nullptr )
@@ -114,11 +102,18 @@ static bool ss1_initialize()
 	return true;
 }
 
-static bool ss1_shutdown( void )
+static void serialize_config()
+{
+	acm_set_variable( ss1_gameState.config, "isFirstLaunch", ss1_gameState.isFirstLaunch ? "true" : "false", ACM_PROPERTY_TYPE_BOOL, true );
+
+	com_write_config( ss1_gameState.config, SS1_CONFIG );
+}
+
+static bool ss1_shutdown()
 {
 	//TODO: need mechanism for removing components
 
-	com_write_config( ss1_gameState.config, SS1_CONFIG );
+	serialize_config();
 
 	if ( ss1_gameState.camera != nullptr )
 	{

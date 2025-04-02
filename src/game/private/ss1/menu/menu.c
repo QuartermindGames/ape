@@ -15,7 +15,6 @@ static bool isMainMenuOpen = true;
 SS1MenuState ss1_menuState_;
 
 static GameMenu     mainMenu;
-static GameMenu    *currentMenu       = &mainMenu;
 static unsigned int currentMenuOption = 0;
 
 bool game_menu_is_open()
@@ -114,6 +113,17 @@ static GameMenu mainMenu = {
         PL_ARRAY_ELEMENTS( mainMenuOptions ),
 };
 
+static GameMenuOption backgroundMenuOptions[] = {
+        {"Yes\n", &mainMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
+        {"No\n",  &mainMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
+};
+static GameMenu backgroundPrompt = {
+        .heading    = "Enable 3D menu background?\n",
+        .options    = backgroundMenuOptions,
+        .numOptions = PL_ARRAY_ELEMENTS( backgroundMenuOptions ),
+        .flags      = GAME_MENU_FLAG_PROMPT | GAME_MENU_FLAG_BACKGROUND,
+};
+
 static GamePieMenu *interactPie;
 
 static void initialize_menu( GameMenu *menu )
@@ -133,20 +143,20 @@ static void initialize_menu( GameMenu *menu )
 	}
 }
 
-static void next_menu_option()
+static void next_menu_option( GameMenu *menu )
 {
 	currentMenuOption++;
-	if ( currentMenuOption >= currentMenu->numOptions )
+	if ( currentMenuOption >= menu->numOptions )
 	{
 		currentMenuOption = 0;
 	}
 }
 
-static void prev_menu_option()
+static void prev_menu_option( GameMenu *menu )
 {
 	if ( currentMenuOption == 0 )
 	{
-		currentMenuOption = currentMenu->numOptions - 1;
+		currentMenuOption = menu->numOptions - 1;
 	}
 	else
 	{
@@ -168,7 +178,8 @@ static void handle_menu_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	if ( !isMainMenuOpen )
+	GameMenu *menu = game_menu_get_active();
+	if ( !isMainMenuOpen || menu == nullptr )
 	{
 		return;
 	}
@@ -177,19 +188,19 @@ static void handle_menu_action( ApeInputState state, const char *id )
 	{
 		do
 		{
-			next_menu_option();
-		} while ( currentMenu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
+			next_menu_option( menu );
+		} while ( menu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
 	}
 	else if ( strcmp( id, "menu_up" ) == 0 )
 	{
 		do
 		{
-			prev_menu_option();
-		} while ( currentMenu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
+			prev_menu_option( menu );
+		} while ( menu->options[ currentMenuOption ].type == GAME_MENU_OPTION_TYPE_SEPERATOR );
 	}
 	else if ( strcmp( id, "menu_select" ) == 0 )
 	{
-		const GameMenuOption *option = &currentMenu->options[ currentMenuOption ];
+		const GameMenuOption *option = &menu->options[ currentMenuOption ];
 		if ( option->callback != nullptr )
 		{
 			option->callback( option );
@@ -219,17 +230,18 @@ static void handle_menu_action( ApeInputState state, const char *id )
 
 		if ( option->nextMenu != nullptr )
 		{
-			currentMenu->lastOption = currentMenuOption;
-			currentMenu             = option->nextMenu;
-			currentMenuOption       = currentMenu->lastOption;
+			menu->lastOption  = currentMenuOption;
+			currentMenuOption = menu->lastOption;
+			game_menu_set_active( option->nextMenu );
 		}
 	}
 	else if ( strcmp( id, "menu_back" ) == 0 )
 	{
-		if ( currentMenu->parent != nullptr )
+		if ( menu->parent != nullptr )
 		{
-			currentMenu       = currentMenu->parent;
-			currentMenuOption = currentMenu->lastOption;
+			menu->lastOption  = currentMenuOption;
+			currentMenuOption = menu->parent->lastOption;
+			game_menu_set_active( menu->parent );
 		}
 	}
 }
@@ -260,7 +272,17 @@ void ss1_menu_initialize( void )
 	initialize_menu( &debugMenu );
 	initialize_menu( &optionsMenu );
 
-	game_menu_set_active( &mainMenu );
+	GameMenu *menu;
+	if ( ss1_gameState.isFirstLaunch )
+	{
+		menu = &backgroundPrompt;
+	}
+	else
+	{
+		menu = &startMenu;
+	}
+
+	game_menu_set_active( menu );
 
 	ape_client_input_register_action( "menu_up", &( ApeInputButton ) { APE_INPUT_UP }, 1, &( ApeInputKey ) { APE_INPUT_KEY_UP }, 1, handle_menu_action );
 	ape_client_input_register_action( "menu_down", &( ApeInputButton ) { APE_INPUT_DOWN }, 1, &( ApeInputKey ) { APE_INPUT_KEY_DOWN }, 1, handle_menu_action );
@@ -336,44 +358,58 @@ static void draw_hud( const ApeViewport *viewport )
 
 void ss1_menu_draw( const ApeViewport *viewport )
 {
+	static constexpr float MENU_SCALE = 1.0f;
+
+	GameMenu *menu = game_menu_get_active();
 	if ( isMainMenuOpen )
 	{
-		assert( currentMenu != nullptr );
+		assert( menu != nullptr );
 
 		float x = 50.0f;
 		float y = 64.0f;
 
-		static const char *title    = "Embrace";
-		static const char *subtitle = "Inc.\n";
+		static constexpr char title[]    = "Embrace";
+		static constexpr char subtitle[] = "Inc.\n";
 
 		gui_font_set_shadow_offset( 2.0f, 2.0f );
 		gui_font_set_slant( 20.0f );
-		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, 1.0f, &PL_COLOUR_WHITE, title, strlen( title ), true );
+		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, MENU_SCALE, &PL_COLOUR_WHITE, title, strlen( title ), true );
 		gui_font_set_slant( 0.0f );
-		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, 0.5f, &PL_COLOUR_GHOST_WHITE, subtitle, strlen( subtitle ), true );
+		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), nullptr, nullptr, MENU_SCALE / 2.0f, &PL_COLOUR_GHOST_WHITE, subtitle, strlen( subtitle ), true );
 
 		y = 200.0f;
-		x = 80.0f;
+
+		if ( menu->flags & GAME_MENU_FLAG_PROMPT )
+		{
+			float w;
+			gui_font_get_string_pixel_size( menuFont, MENU_SCALE, G_STR_( menu->heading ), strlen( menu->heading ), &w, nullptr );
+			x = ( viewport->width - w ) / 2.0f;
+			y = ( viewport->height - gui_font_get_line_spacing( menuFont ) * 2.0f ) / 2.0f;
+		}
+		else
+		{
+			x = 80.0f;
+		}
 
 		gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT );
-		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, G_STR_( currentMenu->heading ), strlen( currentMenu->heading ), true );
+		gui_font_draw_string( menuFont, x, y, nullptr, &y, 1.0f, &PL_COLOUR_WHITE, G_STR_( menu->heading ), strlen( menu->heading ), true );
 		x += 30.0f;
-		for ( unsigned int i = 0; i < currentMenu->numOptions; ++i )
+		for ( unsigned int i = 0; i < menu->numOptions; ++i )
 		{
-			if ( currentMenu->options[ i ].type == GAME_MENU_OPTION_TYPE_SEPERATOR )
+			if ( menu->options[ i ].type == GAME_MENU_OPTION_TYPE_SEPERATOR )
 			{
 				y += gui_font_get_line_spacing( menuFont ) / 2.0f;
 				continue;
 			}
 
 			char tmp[ 128 ];
-			if ( currentMenu->options[ i ].type == GAME_MENU_OPTION_TYPE_CHECKBOX )
+			if ( menu->options[ i ].type == GAME_MENU_OPTION_TYPE_CHECKBOX )
 			{
-				snprintf( tmp, sizeof( tmp ), "[%s] %s", currentMenu->options[ i ].checkbox.var->b_value ? "X" : " ", currentMenu->options[ i ].string );
+				snprintf( tmp, sizeof( tmp ), "[%s] %s", menu->options[ i ].checkbox.var->b_value ? "X" : " ", menu->options[ i ].string );
 			}
 			else
 			{
-				snprintf( tmp, sizeof( tmp ), "%s", currentMenu->options[ i ].string );
+				snprintf( tmp, sizeof( tmp ), "%s", menu->options[ i ].string );
 			}
 
 			size_t len = strlen( tmp );
@@ -388,8 +424,17 @@ void ss1_menu_draw( const ApeViewport *viewport )
 			gui_font_draw_string( menuFont, x, y, nullptr, &y, SCALE, &PL_COLOUR_WHITE, tmp, len, true );
 		}
 
+		if ( menu->flags & GAME_MENU_FLAG_BACKGROUND )
+		{
+			ape_draw_textured_quad( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ),
+			                        0.0f, 0.0f,
+			                        viewport->width, viewport->height,
+			                        &PL_COLOUR_BLACK );
+		}
+
 		gui_font_display( menuFont );
 		gui_font_display( menuTitleFont );
+
 		return;
 	}
 

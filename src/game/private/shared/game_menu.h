@@ -38,12 +38,19 @@ typedef struct GameMenuOption
 	};
 } GameMenuOption;
 
+typedef enum GameMenuFlag
+{
+	PL_BITFLAG( GAME_MENU_FLAG_PROMPT, 0U ),    // appears centered in the screen
+	PL_BITFLAG( GAME_MENU_FLAG_BACKGROUND, 1U ),// background is visible
+} GameMenuFlag;
+
 typedef struct GameMenu
 {
 	const char     *heading;
 	GameMenuOption *options;
 	uint8_t         numOptions;
 	GameMenu       *parent;
+	uint16_t        flags;
 	uint8_t         lastOption;
 } GameMenu;
 
