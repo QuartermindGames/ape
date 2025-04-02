@@ -8,7 +8,7 @@ Any legacy documents might use `node` or `world.n` - these should be updated to 
 | Object Type      | Extension | Notes     |
 |------------------|-----------|-----------|
 | `config`         | `.cfg.n`  |
-| `entityTemplate` | `.ent.n`  |
+| `entityTemplate` | `.ent.n`  | Obsolete. |
 | `effect`         | `.eff.n`  |
 | `material`       | `.mat.n`  |
 | `model`          | `.mdl.n`  |
