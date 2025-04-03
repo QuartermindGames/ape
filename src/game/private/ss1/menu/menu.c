@@ -231,7 +231,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 		if ( option->nextMenu != nullptr )
 		{
 			menu->lastOption  = currentMenuOption;
-			currentMenuOption = menu->lastOption;
+			currentMenuOption = option->nextMenu->lastOption;
 			game_menu_set_active( option->nextMenu );
 		}
 	}
