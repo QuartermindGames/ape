@@ -711,6 +711,8 @@ static void render_plot_polygon( ApeEditorInstance *self )
 {
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
+	PlgDisableGraphicsState( PLG_GFX_STATE_DEPTHTEST );
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadMatrix( &self->grid.transform );
@@ -782,6 +784,8 @@ static void render_plot_polygon( ApeEditorInstance *self )
 	}
 
 	PlPopMatrix();
+
+	PlgEnableGraphicsState( PLG_GFX_STATE_DEPTHTEST );
 }
 
 void ape_editor_pre_render_scene_( ApeCamera *camera )
@@ -975,10 +979,22 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 				static constexpr float scale = 16.0f;
 
 				PLVector3 worldPos  = ape_grid_transform_point( &editorInstance->grid, &pos );
-				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, NULL, true );
+				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, nullptr, true );
 				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
 			}
 		}
+	}
+
+	if ( editorInstance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
+	{
+		char label[ 64 ];
+		snprintf( label, sizeof( label ), "x%.0f y%.0f w%d h%d\n",
+		          editorInstance->polySize.x, editorInstance->polySize.y,
+		          ( int ) editorInstance->polySize.w, ( int ) editorInstance->polySize.h );
+
+		float dw, dh;
+		gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
+		gui_font_draw_string( font, viewport->width / 2.0f - dw / 2.0f, viewport->height - dh * 2.0f - 2.0f, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
 	}
 
 	draw_brush_gui( viewport, font );
@@ -1233,9 +1249,40 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 
 	PL_DELETE( vertices );
 
-	self->numPolygonPoints = 0;
+	ape_editor_clear_plot_points( self );
 
 	return brush;
+}
+
+static void compute_polygon_size( ApeEditorInstance *self )
+{
+	self->polySize.x = self->polygonPoints[ 0 ].x;
+	self->polySize.y = self->polygonPoints[ 0 ].y;
+	self->polySize.w = self->polySize.x;
+	self->polySize.h = self->polySize.y;
+	for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
+	{
+		if ( self->polygonPoints[ i ].x < self->polySize.x )
+		{
+			self->polySize.x = self->polygonPoints[ i ].x;
+		}
+		if ( self->polygonPoints[ i ].y < self->polySize.y )
+		{
+			self->polySize.y = self->polygonPoints[ i ].y;
+		}
+
+		if ( self->polygonPoints[ i ].x > self->polySize.w )
+		{
+			self->polySize.w = self->polygonPoints[ i ].x;
+		}
+		if ( self->polygonPoints[ i ].y > self->polySize.h )
+		{
+			self->polySize.h = self->polygonPoints[ i ].y;
+		}
+	}
+
+	self->polySize.w = self->polySize.w - self->polySize.x;
+	self->polySize.h = self->polySize.h - self->polySize.y;
 }
 
 void ape_editor_remove_polygon_point( ApeEditorInstance *self )
@@ -1246,6 +1293,8 @@ void ape_editor_remove_polygon_point( ApeEditorInstance *self )
 	}
 
 	self->numPolygonPoints--;
+
+	compute_polygon_size( self );
 }
 
 bool ape_editor_add_polygon_point( ApeEditorInstance *self )
@@ -1281,12 +1330,15 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		return false;
 	}
 
+	compute_polygon_size( self );
+
 	return true;
 }
 
 void ape_editor_clear_plot_points( ApeEditorInstance *instance )
 {
 	instance->numPolygonPoints = 0;
+	instance->polySize         = ( PLRectangleF32 ) {};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

@@ -31,7 +31,7 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 	ApeRoom *room = ape_world_node_get_room( parent );
 	if ( room != nullptr )
 	{
-		room->isDirty = true;
+		ape_room_mark_dirty_( room );
 	}
 
 	PL_DELETE( self->vertices );
@@ -43,6 +43,7 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 	PL_DELETE( self );
 }
 
+#if 0//unused
 static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face, unsigned int *indices )
 {
 	assert( face->numVertices >= 3 );
@@ -50,7 +51,7 @@ static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face
 	unsigned int  numTriangles = 0;
 	unsigned int *index        = indices;
 
-#if 0// concave polygon
+#	if 0// concave polygon
 
 	/**
 	 * Here's an algorithm I think could work - two passes...
@@ -60,7 +61,7 @@ static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face
 	 * Math isn't my strong point, so it's probably dumb.
 	 */
 
-#else// convex polygon
+#	else// convex polygon
 
 	for ( unsigned int i = 1; i + 1 < face->numVertices; ++i )
 	{
@@ -72,10 +73,11 @@ static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face
 		numTriangles++;
 	}
 
-#endif
+#	endif
 
 	return numTriangles;
 }
+#endif
 
 void ape_brush_face_compute_normal_( ApeBrushFace *face )
 {
@@ -181,9 +183,11 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	compute_brush_face_texture_coordinates( self );
 
 	// need to notify the room to update
-	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self->parent ) );
-	assert( room != nullptr );
-	room->isDirty = true;
+	ApeRoom *room = ape_brush_face_get_room( self );
+	if ( room != nullptr )
+	{
+		ape_room_mark_dirty_( room );
+	}
 }
 
 void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation )
@@ -199,9 +203,11 @@ void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVect
 	compute_brush_face_texture_coordinates( self );
 
 	// need to notify the room to update
-	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self->parent ) );
-	assert( room != nullptr );
-	room->isDirty = true;
+	ApeRoom *room = ape_brush_face_get_room( self );
+	if ( room != nullptr )
+	{
+		ape_room_mark_dirty_( room );
+	}
 }
 
 bool ape_brush_face_is_portal( const ApeBrushFace *self )
@@ -322,11 +328,10 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 
 	ape_brush_face_compute_normal_( face );
 
-	ApeBrush *brush = face->parent;
-	ApeRoom  *room  = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
+	ApeRoom *room = ape_brush_face_get_room( face );
 	if ( room != nullptr )
 	{
-		room->isDirty = true;
+		ape_room_mark_dirty_( room );
 	}
 }
 
@@ -408,7 +413,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	ApeRoom *room = ape_world_node_get_room( &self->base );
 	if ( room != nullptr )
 	{
-		room->isDirty = true;
+		ape_room_mark_dirty_( room );
 	}
 
 	return true;
