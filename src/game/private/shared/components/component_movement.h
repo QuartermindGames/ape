@@ -12,4 +12,4 @@ typedef struct GameMovementComponent
 	float maxRunSpeed, maxWalkSpeed;
 } GameMovementComponent;
 
-void game_component_movement_handle_( GameMovementComponent *self, ApeEntity *entity, const PLVector3 *dir );
+void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *entity, double delta );

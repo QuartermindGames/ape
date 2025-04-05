@@ -10,7 +10,7 @@
 
 #include "../../shared/components/component_health.h"
 #include "../../shared/components/component_collision.h"
-#include "../../shared/components/component_inventory.h"
+#include "../../shared/components/component_movement.h"
 
 static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
 static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;
@@ -92,6 +92,11 @@ static void spawn_player_entity( ApeEntity *self )
 static void tick_player_entity( ApeEntity *self, double delta )
 {
 	delta = game_get_time_delta_( delta );
+
+	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
+	assert( player != nullptr );
+
+	game_component_movement_tick_( player->movementComponent, self, delta );
 }
 
 ApeEntityClassDefinition ss1_playerEntityClass = {
