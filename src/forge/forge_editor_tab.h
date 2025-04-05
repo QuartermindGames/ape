@@ -30,5 +30,7 @@ namespace forge
 		{
 			instance.camera = camera;
 		}
+
+		virtual void autosave() {}
 	};
 }// namespace forge

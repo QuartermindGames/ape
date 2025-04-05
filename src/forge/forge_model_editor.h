@@ -34,5 +34,7 @@ namespace forge
 		FXToggleButton *_editModeButtons[ APE_EDITOR_MAX_GEOMETRY_MODES ]{};
 
 		Viewport *_viewport{};
+
+		void autosave() override {}
 	};
 }// namespace forge

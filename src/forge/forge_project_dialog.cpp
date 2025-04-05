@@ -59,14 +59,14 @@ void forge::ProjectDialog::register_project_callback( const char *path, void *da
 	const char *filename = PlGetFileName( path );
 	if ( filename == nullptr )
 	{
-		EDITOR_PRINT( "Failed to get filename: %s\n", PlGetError() );
+		forge_warning_( "Failed to get filename: %s\n", PlGetError() );
 		return;
 	}
 
 	const char *c = strchr( filename, '.' );
 	if ( c == nullptr )
 	{
-		EDITOR_PRINT( "Failed to get filename terminator (%s)!\n", path );
+		forge_warning_( "Failed to get filename terminator (%s)!\n", path );
 		return;
 	}
 

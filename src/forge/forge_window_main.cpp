@@ -32,6 +32,7 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_CONSOLE, forge::MainWindow::on_toggle_console ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_NODE_VOLUMES, forge::MainWindow::on_toggle_node_volumes ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_SELECTION_BUFFER, forge::MainWindow::on_toggle_selection_buffer ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_POST_PROCESSING, forge::MainWindow::on_toggle_post_processing ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_PROJECT_PACKAGE, forge::MainWindow::on_package_project ),
         FXMAPFUNC( SEL_TIMEOUT, forge::MainWindow::ID_TICK, forge::MainWindow::on_tick ),
@@ -68,6 +69,8 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuSeparator( menuPane );
 	new FXMenuCheck( menuPane, "&Show Node Volumes\t\tToggle node boundaries.", this, ID_TOGGLE_NODE_VOLUMES );
 	new FXMenuCheck( menuPane, "Show Selection Buffer\t\tFor debugging selection buffer.", this, ID_TOGGLE_SELECTION_BUFFER );
+	( new FXMenuCheck( menuPane, "Post Processing\t\tEnable/disable post-processing.", this, ID_TOGGLE_POST_PROCESSING ) )->setCheck( true );
+
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
@@ -87,6 +90,8 @@ forge::MainWindow::MainWindow( FXApp *app )
 	console->hide();
 
 	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
+
+	autosaveTimeout = AUTOSAVE_DELAY;
 }
 
 void forge::MainWindow::create()
@@ -111,6 +116,18 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 			PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
 			refreshTime += ( profilerFrequency != nullptr ) ? profilerFrequency->i_value : 16;
 		}
+	}
+
+	EditorTab *tab = dynamic_cast< EditorTab * >( get_active_tab() );
+	if ( tab != nullptr )
+	{
+		if ( autosaveTimeout <= 0 )
+		{
+			tab->autosave();
+			autosaveTimeout = AUTOSAVE_DELAY;
+		}
+
+		autosaveTimeout--;
 	}
 
 	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
@@ -319,6 +336,12 @@ long forge::MainWindow::on_toggle_node_volumes( FXObject *object, FXSelector, vo
 long forge::MainWindow::on_toggle_selection_buffer( FXObject *object, FXSelector, void * )
 {
 	PlSetConsoleVariableByName( "renderer.showSelectionBuffer", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	return TRUE;
+}
+
+long forge::MainWindow::on_toggle_post_processing( FXObject *object, FXSelector, void * )
+{
+	PlSetConsoleVariableByName( "postfx", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 

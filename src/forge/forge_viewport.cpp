@@ -65,17 +65,17 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 
 	this->toolBar = new FXToolBar( this, FRAME_RAISED | LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | LAYOUT_FILL_X );
 
-	viewModeButtons[ APE_CAMERA_MODE_PERSPECTIVE ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/perspective.gif" ), nullptr, this, ID_PERSPECTIVE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_TOP ]         = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/top.gif" ), nullptr, this, ID_TOP, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_LEFT ]        = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/left.gif" ), nullptr, this, ID_LEFT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	viewModeButtons[ APE_CAMERA_MODE_FRONT ]       = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/front.gif" ), nullptr, this, ID_FRONT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_PERSPECTIVE ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/perspective.gif" ), nullptr, this, ID_PERSPECTIVE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_TOP ]         = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/top.gif" ), nullptr, this, ID_TOP, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_LEFT ]        = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/left.gif" ), nullptr, this, ID_LEFT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	viewModeButtons[ APE_CAMERA_MODE_FRONT ]       = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/front.gif" ), nullptr, this, ID_FRONT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	viewModeButtons[ viewMode_ ]->setState( true );
 
 	new FXVerticalSeparator( this->toolBar );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_WIREFRAME ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/wireframe.gif" ), nullptr, this, ID_WIREFRAME, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_SOLID ]     = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/solid.gif" ), nullptr, this, ID_SOLID, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_TEXTURED ]  = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/textured.gif" ), nullptr, this, ID_TEXTURED, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ]    = new FXToggleButton( this->toolBar, FXString::null, FXString::null, forge::load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_WIREFRAME ] = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/wireframe.gif" ), nullptr, this, ID_WIREFRAME, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_SOLID ]     = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/solid.gif" ), nullptr, this, ID_SOLID, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_TEXTURED ]  = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/textured.gif" ), nullptr, this, ID_TEXTURED, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
+	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ]    = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	drawModeButtons[ drawMode_ ]->setState( true );
 
 	new FXVerticalSeparator( this->toolBar );
@@ -126,7 +126,7 @@ void Viewport::create()
 	show();
 	enable();
 
-	if ( FX::FXGLCanvas::getCurrentContext() == nullptr )
+	if ( FXGLCanvas::getCurrentContext() == nullptr )
 	{
 		displayList_->makeCurrent();
 	}
@@ -175,7 +175,7 @@ void Viewport::draw()
 	ape_render_frame( internalViewport_ );
 }
 
-long Viewport::on_change_camera_modes( FXObject *, FX::FXSelector selector, void * )
+long Viewport::on_change_camera_modes( FXObject *, FXSelector selector, void * )
 {
 	ApeCameraViewMode viewMode = APE_CAMERA_MODE_INVALID;
 	ApeCameraDrawMode drawMode = APE_CAMERA_DRAW_MODE_INVALID;
@@ -309,7 +309,7 @@ long Viewport::on_motion( FXObject *, FXSelector, void *ptr )
 	return TRUE;
 }
 
-long Viewport::on_left_click( FX::FXObject *, FX::FXSelector selector, void * )
+long Viewport::on_left_click( FXObject *, FXSelector selector, void * )
 {
 	if ( !hasFocus() )
 	{

@@ -148,7 +148,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	{
 		default:
 		case APE_WORLD_NODE_PROPERTY_TYPE_INVALID:
-			EDITOR_PRINT( "Unhandled property type (%u)!\n", property->type );
+			forge_warning_( "Unhandled property type (%u)!\n", property->type );
 			break;
 		case APE_WORLD_NODE_PROPERTY_TYPE_FLOAT:
 			*( float * ) ptr = strtof( text, nullptr );

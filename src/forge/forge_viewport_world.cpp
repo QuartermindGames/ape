@@ -90,6 +90,9 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_SHADE_FLAT, forge::WorldViewport::on_face_shade_flat ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLIP, forge::WorldViewport::on_face_flip ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_MIRROR, forge::WorldViewport::on_toggle_face_flag ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_PORTAL, forge::WorldViewport::on_toggle_face_flag ),
+
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL, forge::WorldViewport::on_create_node ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT, forge::WorldViewport::on_create_node ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_CAMERA, forge::WorldViewport::on_create_node ),
@@ -231,7 +234,8 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			if ( PlGetNumLinkedListNodes( instance->selectedObjects ) == 0 )
+			unsigned int numFaces = PlGetNumLinkedListNodes( instance->selectedObjects );
+			if ( numFaces == 0 )
 			{
 				return TRUE;
 			}
@@ -249,9 +253,24 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			new FXMenuCommand( popup, "Shade Faces Flat", load_fx_icon( getApp(), "resources/face_flat.gif" ), this, ID_FACE_SHADE_FLAT );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
-			//new FXMenuSeparator( popup );
-			//new FXMenuCommand( popup, "Set ID...", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ], this, ID_BUTTON_CREATE_BRUSH );
-			//new FXMenuCommand( popup, "Connect Portal...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], this, ID_BUTTON_CREATE_BRUSH );
+			new FXMenuSeparator( popup );
+			new FXMenuCommand( popup, "Link Portal...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], this, ID_FACE_LINK_PORTAL );
+
+			// specific options for the given face...
+			// we could *technically* allow these for multiple faces, but I'm avoiding complexity for now
+			if ( numFaces == 1 )
+			{
+				new FXMenuSeparator( popup );
+
+				FXMenuPane *flagsMenu = new FXMenuPane( this );
+				new FXMenuCascade( popup, "Flags", nullptr, flagsMenu );
+
+				ApeBrushFace *face = static_cast< ApeBrushFace * >( PlGetLinkedListNodeUserData( PlGetFirstNode( instance->selectedObjects ) ) );
+				//new FXMenuCommand( popup, "Set ID...", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ], this, ID_BUTTON_CREATE_BRUSH );
+				( new FXMenuCheck( flagsMenu, "Mirror", this, ID_FACE_FLAG_MIRROR ) )->setCheck( face->flags & APE_BRUSH_FACE_FLAG_MIRROR );
+				( new FXMenuCheck( flagsMenu, "Portal", this, ID_FACE_FLAG_PORTAL ) )->setCheck( face->flags & APE_BRUSH_FACE_FLAG_PORTAL );
+				//new FXMenuCommand( popup, "Connect Portal...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], this, ID_BUTTON_CREATE_BRUSH );
+			}
 
 			// Show the menu
 			popup->create();
@@ -560,6 +579,72 @@ long forge::WorldViewport::on_face_flip( FXObject *, FXSelector, void * )
 	assert( instance != nullptr );
 	ape_editor_flip_faces( instance );
 	return TRUE;
+}
+
+long forge::WorldViewport::on_face_link_portal( FXObject *, FXSelector, void * )
+{
+
+
+	return TRUE;
+}
+
+long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector selector, void * )
+{
+	FXMenuCheck *checkBox = dynamic_cast< FXMenuCheck * >( object );
+	if ( checkBox == nullptr )
+	{
+		return FALSE;
+	}
+
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+
+	ApeBrushFace *face = static_cast< ApeBrushFace * >( ape_editor_get_first_selected( instance ) );
+	if ( face == nullptr )
+	{
+		return FALSE;
+	}
+
+	ApeRoom *room = ape_brush_face_get_room( face );
+	assert( room != nullptr );
+
+	switch ( FXSELID( selector ) )
+	{
+		default:
+			break;
+		case ID_FACE_FLAG_MIRROR:
+		{
+			if ( checkBox->getCheck() )
+			{
+				face->flags |= APE_BRUSH_FACE_FLAG_MIRROR;
+			}
+			else
+			{
+				face->flags &= ~APE_BRUSH_FACE_FLAG_MIRROR;
+			}
+
+			ape_room_compute_zones( room );
+
+			return TRUE;
+		}
+		case ID_FACE_FLAG_PORTAL:
+		{
+			if ( checkBox->getCheck() )
+			{
+				face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
+			}
+			else
+			{
+				face->flags &= ~APE_BRUSH_FACE_FLAG_PORTAL;
+			}
+
+			ape_room_compute_zones( room );
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )

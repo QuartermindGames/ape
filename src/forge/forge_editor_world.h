@@ -29,6 +29,7 @@ namespace forge
 
 			ID_ROOM_SAVE,
 			ID_ROOM_NEW,
+			ID_ROOM_ADD,
 			ID_ROOM_EDIT,
 			ID_ROOM_DELETE,
 			ID_ROOM_SELECT,
@@ -54,7 +55,9 @@ namespace forge
 		long on_room_save( FXObject *, FXSelector, void * );
 		long on_room_select( FXObject *, FXSelector, void * );
 		long on_new_room( FXObject *, FXSelector, void * );
+		long on_add_room( FXObject *, FXSelector, void * );
 		long on_edit_room( FXObject *, FXSelector, void * );
+		long on_remove_room( FXObject *, FXSelector, void * );
 
 		void set_active_room( ApeRoom *room );
 
@@ -79,6 +82,10 @@ namespace forge
 		WorldViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
 		std::string savePath{};
+
+		ApeRoom *get_active_room();
+
+		void autosave() override;
 
 	public:
 		class RoomDialog : public FXDialogBox

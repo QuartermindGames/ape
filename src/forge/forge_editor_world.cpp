@@ -188,7 +188,9 @@ worldEditorMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_SAVE, forge::WorldEditor::on_room_save ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_SELECT, forge::WorldEditor::on_room_select ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_NEW, forge::WorldEditor::on_new_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_ADD, forge::WorldEditor::on_add_room ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_EDIT, forge::WorldEditor::on_edit_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_ROOM_DELETE, forge::WorldEditor::on_remove_room ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_UP, forge::WorldEditor::on_shift_grid ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_GRID_DOWN, forge::WorldEditor::on_shift_grid ),
@@ -218,12 +220,13 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	auto *toolbar = new FXToolBar( middleFrame, FRAME_RAISED | FRAME_THICK );
 
 	// room selection box
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_ROOM_SAVE );
 	roomSelectBox = new FXComboBox( toolbar, 16, this, ID_ROOM_SELECT, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
 	roomSelectBox->setNumVisible( 8 );
-	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
-	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/trash.gif" ), this, ID_ROOM_DELETE );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_add.gif" ), this, ID_ROOM_ADD );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_remove.gif" ), this, ID_ROOM_DELETE );
 
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/material.gif" ), this, ID_MATERIAL_BROWSER );
@@ -342,8 +345,8 @@ void forge::WorldEditor::update_tree()
 			continue;
 		}
 
-		const char *path = ape_room_get_path( ( ApeRoom * ) child );
-		roomSelectBox->appendItem( path, child );
+		const char *name = ape_world_node_get_name( child );
+		roomSelectBox->appendItem( name, child );
 	}
 }
 
@@ -403,8 +406,7 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 
 long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 {
-	FXint    current = roomSelectBox->getCurrentItem();
-	ApeRoom *room    = static_cast< ApeRoom * >( roomSelectBox->getItemData( current ) );
+	ApeRoom *room = get_active_room();
 	if ( room == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "No active room currently selected!" );
@@ -454,36 +456,51 @@ long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 	ApeRoom    *room    = static_cast< ApeRoom * >( roomSelectBox->getItemData( current ) );
 	if ( room == nullptr )
 	{
-		return false;
+		return FALSE;
 	}
 
 	set_active_room( room );
 
-	return true;
+	return TRUE;
 }
 
 long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 {
-	RoomDialog roomCreationDialog( this, nullptr );
-	if ( roomCreationDialog.execute() )
+	//TODO
+	return FALSE;
+}
+
+long forge::WorldEditor::on_add_room( FXObject *, FXSelector, void * )
+{
+	const char *path     = com_project_get_local_path();
+	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
+	if ( filename.empty() )
 	{
-		const FXString roomName = roomCreationDialog.get_room_name();
-		if ( roomName.empty() )
-		{
-			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No name specified for room!" );
-			return false;
-		}
-
-		ApeRoom *room = ape_room_create( reinterpret_cast< ApeWorldNode * >( _world ), roomName.text() );
-		ape_room_set_ambience( room, roomCreationDialog.get_room_ambience() );
-		ape_room_set_reverb_preset( room, roomCreationDialog.get_room_audio_preset() );
-
-		update_tree();
-
-		return true;
+		return FALSE;
 	}
 
-	return false;
+	AcmBranch *root = acm_load_file( filename.text(), "node" );
+	if ( root == nullptr )
+	{
+		return FALSE;
+	}
+
+	ApeWorldNode *roomNode = ape_world_node_deserialize( APE_WORLD_NODE( _world ), root );
+	if ( roomNode == nullptr )
+	{
+		return FALSE;
+	}
+
+	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Selected file is not a valid room file!" );
+		ape_world_node_destroy( APE_WORLD_NODE( roomNode ) );
+		return FALSE;
+	}
+
+	update_tree();
+
+	return TRUE;
 }
 
 long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
@@ -510,6 +527,10 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 	}
 
 	return false;
+}
+
+long forge::WorldEditor::on_remove_room( FXObject *, FXSelector, void * )
+{
 }
 
 void forge::WorldEditor::set_active_room( ApeRoom *room )
@@ -590,6 +611,50 @@ void forge::WorldEditor::set_face_inspector_surface( ApeBrushFace *face )
 	{
 		surfaceInspector->hide();
 	}
+}
+
+ApeRoom *forge::WorldEditor::get_active_room()
+{
+	FXint current = roomSelectBox->getCurrentItem();
+	if ( current == -1 )
+	{
+		return nullptr;
+	}
+
+	ApeRoom *room = static_cast< ApeRoom * >( roomSelectBox->getItemData( current ) );
+	if ( room == nullptr )
+	{
+		return nullptr;
+	}
+
+	return room;
+}
+
+void forge::WorldEditor::autosave()
+{
+	ApeRoom *room = get_active_room();
+	if ( room == nullptr )
+	{
+		forge_warning_( "Skipping autosave, no active room!\n" );
+		return;
+	}
+
+	PLPath path;
+	PlSetupPath( path, true, "%s/dev/rooms/autosave." APE_WORLD_ROOM_EXTENSION, com_project_get_local_path() );
+
+	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
+	if ( root == nullptr )
+	{
+		forge_warning_( "Failed to serialize room!\n" );
+		return;
+	}
+
+	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
+	{
+		FXMessageBox::warning( this, MBOX_OK, "Warning", "%s", acm_get_error_message() );
+	}
+
+	forge_print_( "Autosave completed: %s\n", path );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

@@ -42,6 +42,44 @@ static std::map< std::string, PLImage * > cachedImages;
 
 FXColor forge::themeColours[ MAX_THEME_COLOURS ]{};
 
+void forge_print_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], buf );
+}
+
+void forge_warning_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( editorLogLevels[ EDITOR_LOG_WARNING ], buf );
+}
+
+void forge_error_( bool die, const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	PlLogMessage( editorLogLevels[ EDITOR_LOG_ERROR ], buf );
+
+	if ( die )
+	{
+		abort();
+	}
+}
+
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
 	AcmBranch *root = acm_push_object( nullptr, "project" );
@@ -158,7 +196,7 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 		image = PlLoadImage( fullPath );
 		if ( image == nullptr )
 		{
-			EDITOR_PRINT( "Failed to load icon (%s): %s\n", fullPath, PlGetError() );
+			forge_warning_( "Failed to load icon (%s): %s\n", fullPath, PlGetError() );
 			return nullptr;
 		}
 
@@ -257,6 +295,10 @@ int main( int argc, char **argv )
 
 	// now init common library and fetch the editor config
 	com_initialize();
+
+	editorLogLevels[ EDITOR_LOG_PRINT ]   = PlAddLogLevel( "forge", PL_COLOUR_BLUE_VIOLET, true );
+	editorLogLevels[ EDITOR_LOG_WARNING ] = PlAddLogLevel( "forge/warning", PL_COLOUR_YELLOW, true );
+	editorLogLevels[ EDITOR_LOG_ERROR ]   = PlAddLogLevel( "forge/error", PL_COLOUR_RED, true );
 
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );

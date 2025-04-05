@@ -31,9 +31,9 @@
 static inline constexpr const char *FORGE_APP_NAME  = "forge";
 static inline constexpr const char *FORGE_APP_TITLE = "Forge";
 
-static inline constexpr uint8_t FORGE_VERSION_MAJOR = 0;
-static inline constexpr uint8_t FORGE_VERSION_MINOR = 1;
-static inline constexpr uint8_t FORGE_VERSION_PATCH = 0;
+#define FORGE_VERSION_MAJOR 0
+#define FORGE_VERSION_MINOR 1
+#define FORGE_VERSION_PATCH 0
 
 #define FORGE_CONFIG_FILENAME "editor"
 
@@ -48,7 +48,9 @@ typedef enum EditorLogLevel
 } EditorLogLevel;
 extern int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
 
-#define EDITOR_PRINT( ... ) PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], __VA_ARGS__ )
+void forge_print_( const char *message, ... );
+void forge_warning_( const char *message, ... );
+void forge_error_( bool die, const char *message, ... );
 
 enum ForgeIconType
 {

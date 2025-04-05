@@ -22,9 +22,14 @@ namespace forge
 			ID_FACE_INSPECTOR,
 			ID_FACE_TOGGLE,
 			ID_FACE_TOGGLE_OTHERS,
+
+			ID_FACE_FLAG_MIRROR,
+			ID_FACE_FLAG_PORTAL,
+
 			ID_FACE_FLIP,
 			ID_FACE_SHADE_SMOOTH,
 			ID_FACE_SHADE_FLAT,
+			ID_FACE_LINK_PORTAL,
 
 			ID_CREATE_NODE,
 			ID_CREATE_NODE_END = ID_CREATE_NODE + APE_WORLD_MAX_NODE_TYPES,
@@ -45,6 +50,9 @@ namespace forge
 		long on_face_shade_smooth( FXObject *, FXSelector, void * );
 		long on_face_shade_flat( FXObject *, FXSelector, void * );
 		long on_face_flip( FXObject *, FXSelector, void * );
+		long on_face_link_portal( FXObject *, FXSelector, void * );
+
+		long on_toggle_face_flag( FXObject *, FXSelector, void * );
 
 		long on_create_node( FXObject *, FXSelector, void * );
 
