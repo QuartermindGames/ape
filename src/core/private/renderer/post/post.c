@@ -95,7 +95,7 @@ void ape_register_postfx_console_variables_( void )
 	/* urrrughgdshghfhksd, but yeah... */
 	register_post_effects();
 
-	PlRegisterConsoleVariable( "postfx", "Toggles post-processing pipeline.", "1", PL_VAR_BOOL, &postProcessEnabled, NULL, true );
+	PlRegisterConsoleVariable( "postfx", "Toggles post-processing pipeline.", "true", PL_VAR_BOOL, &postProcessEnabled, NULL, true );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
