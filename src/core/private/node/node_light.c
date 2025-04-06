@@ -27,6 +27,7 @@ void ape_light_destroy_( void *data, ApeWorldNode *parent )
 		return;
 	}
 
+	PL_DELETE( self->lightmap );
 	PL_DELETE( self );
 }
 

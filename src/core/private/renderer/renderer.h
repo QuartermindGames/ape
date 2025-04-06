@@ -85,6 +85,16 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
+static constexpr unsigned int APE_LIGHTMAP_SIZE = 64;
+
+typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
+{
+	unsigned char r, g, b;
+
+	PLVector3 position;
+	PLVector3 normal;
+} ApeLightmapPixel;
+
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
 {
@@ -101,9 +111,9 @@ typedef struct ApeLight
 	unsigned int flags;
 	int          state;
 
-	bool isCacheDirty;
+	ApeLightmapPixel *lightmap;
 
-	ApeWorld *world;
+	bool isCacheDirty;
 } ApeLight;
 
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];

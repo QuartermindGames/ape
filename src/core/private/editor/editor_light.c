@@ -2,57 +2,92 @@
 // Purpose: Lightmapper
 // Author:  Mark E. Sowden
 
-//#define LIGHTMAPPER
+#define LIGHTMAPPER
 #ifdef LIGHTMAPPER
 
 #	include "../ape_private.h"
 #	include "../world/world.h"
 
-static PLLinkedList *lightList;
+/**
+ * Some thoughts...
+ *
+ *	Lightmap per light. This will result in multiple passes, but will allow us to do
+ *	specular etc.? Switching lights on the fly, or recomputing lightmaps at runtime should be cheaper...?
+ *	Our biggest overhead right now are stencil shadows, though we're not caching so, go figure
+ *
+ *	Consider moving this into the cook tool?
+ *	Should the cook tool be turned into a library?
+ */
 
-void editor_light_initialize_()
+static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
+
+static void generate_lightmap_( ApeLight *light )
 {
-	lightList = PlCreateLinkedList();
-	if ( lightList == nullptr )
+	if ( light->lightmap == nullptr )
 	{
-		ape_error_( true, "Failed to create light list for lightmapper!\n" );
+		light->lightmap = PL_NEW_( ApeLightmapPixel, APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE );
 	}
-}
-
-void editor_light_shutdown_()
-{
-	PlDestroyLinkedList( lightList );
-}
-
-void editor_light_build_light_list_( ApeRoom *room )
-{
-
-	ApeWorldNode *worldNode;
-	COM_ITERATE_LINKED_LIST( worldNode, room->base.children, i )
+	else
 	{
-		if ( worldNode->type == APE_WORLD_NODE_TYPE_LIGHT )
-		{
-			ApeLight *light = ( ApeLight * ) worldNode;
-			if ( ape_light_get_shadow_type( light ) != SS_APE_LIGHT_SHADOW_TYPE_STATIC )
-			{
-				continue;
-			}
+		PL_ZERO( light->lightmap, sizeof( ApeLightmapPixel ) * APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE );
+	}
 
-			PlInsertLinkedListNode( lightList, light );
+	float step = 1.0f / ( float ) APE_LIGHTMAP_SIZE;
+	for ( unsigned int i = 0; i < APE_LIGHTMAP_SIZE; ++i )
+	{
+		for ( unsigned int j = 0; j < APE_LIGHTMAP_SIZE; ++j )
+		{
 		}
 	}
 }
 
-void editor_light_generate_( ApeRoom *room )
+static void gather_lights_( ApeWorldNode *node, PLLinkedList *lights )
 {
-	PlDestroyLinkedListNodes( lightList );
-
-	editor_light_build_light_list_( room );
-
-	ApeLight *light;
-	COM_ITERATE_LINKED_LIST( light, lightList, i )
+	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
+		ApeLight *light = ( ApeLight * ) node;
+		//TODO: for now, for the sake of testing, we're ignoring this
+		//if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC ) )
+		{
+			PlInsertLinkedListNode( lights, light );
+		}
 	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		gather_lights_( child, lights );
+	}
+}
+
+void ape_editor_light_generate_( ApeRoom *room )
+{
+	ape_print_( "Generating lightmap...\n" );
+
+	double startTime = PlGetCurrentSeconds();
+
+	// first, gather all the lights for the given room we need to operate on
+
+	PLLinkedList *lights = PlCreateLinkedList();
+	if ( lights == nullptr )
+	{
+		ape_error_( true, "Failed to create lights list: %s\n", PlGetError() );
+	}
+
+	gather_lights_( APE_WORLD_NODE( room ), lights );
+
+	// now, generate the lightmap for each light
+	ApeLight *light;
+	COM_ITERATE_LINKED_LIST( light, lights, i )
+	{
+		generate_lightmap_( light );
+	}
+
+	// cleanup
+	PlDestroyLinkedList( lights );
+
+	double endTime = PlGetCurrentSeconds();
+	ape_print_( "Lightmap generation took %.3f seconds.\n", endTime - startTime );
 }
 
 #endif
