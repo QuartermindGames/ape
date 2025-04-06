@@ -49,7 +49,7 @@ PLVector3 ape_camera_get_forward( const ApeCamera *camera );
 
 void ape_camera_make_active( ApeCamera *camera );
 
-ApeRoom  *ape_camera_get_room( ApeCamera *self );
+ApeRoom *ape_camera_get_room( ApeCamera *self );
 
 void ape_camera_set_room( ApeCamera *self, ApeRoom *room );
 

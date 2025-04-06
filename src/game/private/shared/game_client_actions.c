@@ -37,9 +37,28 @@ static void move_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	game_print_( "moving: %s\n", id );
+	movementComponent->direction = ( PLVector3 ) {};
+	if ( strcmp( id, "game_move_forward" ) == 0 )
+	{
+		movementComponent->direction.z = 1.0f;
+	}
+	else if ( strcmp( id, "game_move_backward" ) == 0 )
+	{
+		movementComponent->direction.z = -1.0f;
+	}
+	if ( strcmp( id, "game_strafe_left" ) == 0 )
+	{
+		movementComponent->direction.x = -1.0f;
+	}
+	else if ( strcmp( id, "game_strafe_right" ) == 0 )
+	{
+		movementComponent->direction.x = 1.0f;
+	}
 
-	//game_component_movement_handle_( movementComponent, entity,  );
+	if ( strcmp( id, "game_jump" ) == 0 && movementComponent->isGrounded )
+	{
+		movementComponent->direction.y = 1.0f;
+	}
 }
 
 void game_client_actions_register_()
@@ -50,4 +69,6 @@ void game_client_actions_register_()
 	ape_client_input_register_action( "game_move_backward", nullptr, 0, ( ApeInputKey[] ) { 's', APE_INPUT_KEY_DOWN }, 2, move_action );
 	ape_client_input_register_action( "game_strafe_left", nullptr, 0, ( ApeInputKey[] ) { 'a', APE_INPUT_KEY_LEFT }, 2, move_action );
 	ape_client_input_register_action( "game_strafe_right", nullptr, 0, ( ApeInputKey[] ) { 'd', APE_INPUT_KEY_RIGHT }, 2, move_action );
+
+	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
 }

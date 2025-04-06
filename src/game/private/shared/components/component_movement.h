@@ -4,12 +4,16 @@
 
 typedef struct GameMovementComponent
 {
+	PLVector3 direction;
+
 	float forwardVelocity;
 	float strafeVelocity;
 
 	PLVector3 velocity;
 
 	float maxRunSpeed, maxWalkSpeed;
+
+	bool isGrounded;
 } GameMovementComponent;
 
 void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *entity, double delta );
