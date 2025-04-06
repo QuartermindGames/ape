@@ -143,7 +143,7 @@ static void initialize_menu( GameMenu *menu )
 	}
 }
 
-static void next_menu_option( GameMenu *menu )
+static void next_menu_option( const GameMenu *menu )
 {
 	currentMenuOption++;
 	if ( currentMenuOption >= menu->numOptions )
@@ -152,7 +152,7 @@ static void next_menu_option( GameMenu *menu )
 	}
 }
 
-static void prev_menu_option( GameMenu *menu )
+static void prev_menu_option( const GameMenu *menu )
 {
 	if ( currentMenuOption == 0 )
 	{
@@ -272,6 +272,8 @@ void ss1_menu_initialize( void )
 	initialize_menu( &debugMenu );
 	initialize_menu( &optionsMenu );
 
+#if 0//TODO: this is what we want to ship with, but the background prompt is going to go
+
 	GameMenu *menu;
 	if ( ss1_gameState.isFirstLaunch )
 	{
@@ -283,6 +285,12 @@ void ss1_menu_initialize( void )
 	}
 
 	game_menu_set_active( menu );
+
+#else
+
+	game_menu_set_active( &mainMenu );
+
+#endif
 
 	ape_client_input_register_action( "menu_up", &( ApeInputButton ) { APE_INPUT_UP }, 1, &( ApeInputKey ) { APE_INPUT_KEY_UP }, 1, handle_menu_action );
 	ape_client_input_register_action( "menu_down", &( ApeInputButton ) { APE_INPUT_DOWN }, 1, &( ApeInputKey ) { APE_INPUT_KEY_DOWN }, 1, handle_menu_action );
