@@ -95,6 +95,9 @@ void ape_register_world_console_variables_( void )
 	PlRegisterConsoleVariable( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, nullptr, false );
 	PlRegisterConsoleVariable( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, nullptr, false );
 	PlRegisterConsoleVariable( "world.showNodeVolumes", "Shows bounding volumes of all nodes currently in the scene.", "false", PL_VAR_BOOL, &ape_config_.world.showNodeVolumes, nullptr, false );
+	PlRegisterConsoleVariable( "world.gravityModifier.x", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.x, nullptr, false );
+	PlRegisterConsoleVariable( "world.gravityModifier.y", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.y, nullptr, false );
+	PlRegisterConsoleVariable( "world.gravityModifier.z", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.z, nullptr, false );
 }
 
 const ApeWorldNodeClass ape_rootClass = {

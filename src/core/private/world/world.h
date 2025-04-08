@@ -63,7 +63,8 @@ typedef struct ApeRoom
 
 	PLLinkedList *lights;// Lights in this sector
 
-	ApeAudioReverbPreset reverbPreset;
+	ApeAudioReverbPreset reverbPreset;// default reverb for the room
+	PLVector3            gravity;     // default gravity for the room
 
 	unsigned int numVisits;
 

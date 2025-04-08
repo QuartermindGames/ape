@@ -17,6 +17,8 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	                                PlUniform0To1Random(),
 	                                PlUniform0To1Random() );
 
+	room->gravity = PL_VECTOR3( 0.0f, -0.9f, 0.0f );
+
 	return room;
 }
 

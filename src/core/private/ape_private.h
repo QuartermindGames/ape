@@ -156,6 +156,8 @@ typedef struct ApeConfig
 		bool showNodeVolumes;
 
 		bool sortLights;
+
+		PLVector3 gravityModifier;
 	} world;
 
 	bool editor;
