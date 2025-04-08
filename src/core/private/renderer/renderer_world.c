@@ -107,7 +107,7 @@ static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
 					const ApeCamera *camera = editorInstance->camera;
 					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 					{
-						srand( ( unsigned int ) brush );
+						srand( ( intptr_t ) brush );
 						colour = PL_COLOURU8(
 						        ( uint8_t ) ( rand() % 256 ),
 						        ( uint8_t ) ( rand() % 256 ),
