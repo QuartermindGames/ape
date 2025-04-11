@@ -59,6 +59,8 @@ static void move_action( ApeInputState state, const char *id )
 	{
 		movementComponent->direction.y = 1.0f;
 	}
+
+	game_debug_( "dir-action: %s\n", PlPrintVector3( &movementComponent->direction, PL_VAR_F32 ) );
 }
 
 void game_client_actions_register_()

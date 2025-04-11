@@ -50,8 +50,10 @@ static void spawn_player_entity( ApeEntity *self )
 	// just randomize the initial profession for now
 	player->profession = rand() % SS1_MAX_PROFESSIONS;
 
-	player->movementComponent = ape_entity_add_component( self, "movement" );
-	assert( player->movementComponent != nullptr );
+	GameMovementComponent *movementComponent = ape_entity_add_component( self, "movement" );
+	assert( movementComponent != nullptr );
+	movementComponent->maxRunSpeed = ss1_professions[ player->profession ].maxForwardSpeed;
+	player->movementComponent      = movementComponent;
 
 	player->healthComponent = ape_entity_add_component( self, "health" );
 	assert( player->healthComponent != nullptr );
