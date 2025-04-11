@@ -276,6 +276,24 @@ PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
 AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
 ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root );
 
+/**
+ * Iterate through all of the children of the given node and collect up children by type.
+ *
+ * @param self	Instance of the node.
+ * @param type	Type of world node to gather.
+ * @return		New instance of PLVectorArray with gathered children.
+ */
+PLVectorArray *ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type );
+
+/**
+ * Attempt to load a world node from a given path.
+ *
+ * @param parent	Parent to attach to.
+ * @param path		Path to load the world node from.
+ * @return			Instance of the new world node on success, null on failure.
+ */
+ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush - the building blocks of the world.
 /////////////////////////////////////////////////////////////////////////////////////

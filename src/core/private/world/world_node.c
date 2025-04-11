@@ -534,3 +534,52 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 
 	return self;
 }
+
+static void gather_children( ApeWorldNode *worldNode, ApeWorldNodeType type, PLVectorArray *array )
+{
+	if ( worldNode->type == type )
+	{
+		PlPushBackVectorArrayElement( array, worldNode );
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+	{
+		gather_children( child, type, array );
+	}
+}
+
+PLVectorArray *ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type )
+{
+	unsigned int   reserve = PlGetNumLinkedListNodes( self->children );
+	PLVectorArray *array   = PlCreateVectorArray( reserve );
+	if ( array == nullptr )
+	{
+		ape_warning_( "Failed to gather children: %s\n", PlGetError() );
+		return nullptr;
+	}
+
+	gather_children( self, type, array );
+
+	return array;
+}
+
+ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
+{
+	AcmBranch *branch = com_acm_load_file( path, "node" );
+	if ( branch == nullptr )
+	{
+		ape_warning_( "Failed to load the specified node (%s): %s\n", path, acm_get_error_message() );
+		return nullptr;
+	}
+
+	ApeWorldNode *worldNode = ape_world_node_deserialize( parent, branch );
+	if ( worldNode == nullptr )
+	{
+		ape_warning_( "Failed to deserialize node (%s)!\n", path );
+	}
+
+	acm_branch_destroy( branch );
+
+	return worldNode;
+}
