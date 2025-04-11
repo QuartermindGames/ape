@@ -61,8 +61,6 @@ typedef struct ApeRoom
 	PLGMesh *mesh;   // cached mesh
 	bool     isDirty;// if false, mesh cache will be updated
 
-	PLLinkedList *lights;// Lights in this sector
-
 	ApeAudioReverbPreset reverbPreset;// default reverb for the room
 	PLVector3            gravity;     // default gravity for the room
 
