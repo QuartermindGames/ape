@@ -30,8 +30,6 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 	PlDestroyVectorArray( self->faces );
 	PlDestroyVectorArray( self->portals );
 
-	PlDestroyLinkedList( self->lights );
-
 	PlgDestroyMesh( self->mesh );
 
 	PL_DELETE( self );

@@ -651,12 +651,6 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	if ( self->currentNode == worldNode )
-	{
-		// this is handled during simulation now via debug draw api
-		PlgDrawBoundingVolume( &worldNode->bounds, &PL_COLOURU8( 0, 255, 0, 255 ) );
-	}
-
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
 	{
@@ -1240,11 +1234,6 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		ape_material_release( material );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
-	}
-	else
-	{
-		// make it selected
-		self->currentNode = &brush->base;
 	}
 
 	PL_DELETE( vertices );

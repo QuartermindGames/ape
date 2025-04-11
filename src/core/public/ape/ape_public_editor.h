@@ -90,8 +90,6 @@ typedef struct ApeEditorInstance
 	PLLinkedList       *selectedObjects;
 	void               *hoverSelection;
 
-	ApeWorldNode *currentNode;//todo: there is some overlap with the above...
-
 	struct PLLinkedListNode *listNode;// index in the table of instances
 	bool                     managed; // indicates the engine manages the instance
 } ApeEditorInstance;
