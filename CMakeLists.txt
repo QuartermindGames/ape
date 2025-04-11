@@ -8,6 +8,11 @@ project(Ape
         LANGUAGES C CXX
 )
 
+option(APE_BUILD_TOOLS "Build tools" ON)
+if (NOT APE_BUILD_TOOLS)
+    add_compile_definitions(-DAPE_NO_EDITOR)
+endif ()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Set all of our output directories.
@@ -124,8 +129,10 @@ add_subdirectory(src/3rdparty/lua)
 add_subdirectory(src/common)
 add_subdirectory(src/core)
 add_subdirectory(src/acm)
-add_subdirectory(src/forge)
-add_subdirectory(src/forge2)
+if (APE_BUILD_TOOLS)
+    add_subdirectory(src/forge)
+    add_subdirectory(src/forge2)
+endif ()
 add_subdirectory(src/game) # includes shells
 
 # tools
