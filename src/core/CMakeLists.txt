@@ -98,15 +98,13 @@ set_target_properties(ApeCore PROPERTIES
 )
 
 if (WIN32)
-    target_link_libraries(ApeCore
-            SDL2_dll)
+    target_link_libraries(ApeCore SDL2_dll)
 else ()
-    target_link_libraries(ApeCore
-            SDL2
-            openal)
+    target_link_libraries(ApeCore SDL2)
 endif ()
 
 target_link_libraries(ApeCore
+        OpenAL
         plcore
         plgraphics
         ApeCommon

@@ -24,7 +24,7 @@ typedef struct ApeAudioSample
 	unsigned int         sampleRate;
 	void                *buffer;
 	unsigned int         bufferSize;
-	unsigned int         user;
+	intptr_t             user;
 	ApeMemoryReference   reference;
 } ApeAudioSample;
 
@@ -35,7 +35,7 @@ typedef struct ApeAudioSource
 	PLVector3       position;
 	PLVector3       velocity;
 	ApeAudioSample *sample;
-	unsigned int    user;
+	intptr_t        user;
 } ApeAudioSource;
 
 void ape_audio_initialize_( void );
