@@ -12,7 +12,9 @@
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
 
-#include <X11/Xlib.h>
+#if !defined( _WIN32 )//TODO: why is this being included here!?
+#	include <X11/Xlib.h>
+#endif
 #include <unordered_map>
 
 using namespace forge;
