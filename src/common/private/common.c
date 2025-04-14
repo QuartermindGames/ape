@@ -112,7 +112,7 @@ AcmBranch *com_get_config( const char *name )
 	AcmBranch *root = com_acm_load_file( path, "config" );
 	if ( root == NULL )
 	{
-		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", acm_get_error_message() );
+		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", path );
 		root = acm_push_object( nullptr, "config" );
 	}
 
