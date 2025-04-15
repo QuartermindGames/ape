@@ -203,7 +203,7 @@ static ApeAudioSource *get_free_temporary_source()
 	{
 		if ( temporarySources[ i ].user == 0 )
 		{
-			XAL_CALL( alGenSources( 1, &temporarySources[ i ].user ) );
+			XAL_CALL( alGenSources( 1, ( ALuint * ) &temporarySources[ i ].user ) );
 			return &temporarySources[ i ];
 		}
 
@@ -285,7 +285,7 @@ static bool al_cache_sample( ApeAudioSample *sample )
 			break;
 	}
 
-	XAL_CALL( alGenBuffers( 1, &sample->user ) );
+	XAL_CALL( alGenBuffers( 1, ( ALuint * ) &sample->user ) );
 	XAL_CALL( alBufferData( sample->user, format, sample->buffer, ( ALsizei ) sample->bufferSize, ( ALsizei ) sample->sampleRate ) );
 
 	return true;
@@ -293,7 +293,7 @@ static bool al_cache_sample( ApeAudioSample *sample )
 
 static void al_free_sample( ApeAudioSample *sample )
 {
-	XAL_CALL( alDeleteBuffers( 1, &sample->user ) );
+	XAL_CALL( alDeleteBuffers( 1, ( ALuint * ) &sample->user ) );
 }
 
 static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, float volume, float pitch )
@@ -324,7 +324,7 @@ static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, f
 
 static bool al_create_source( ApeAudioSource *source )
 {
-	XAL_CALL( alGenSources( 1, &source->user ) );
+	XAL_CALL( alGenSources( 1, ( ALuint * ) &source->user ) );
 	return true;
 }
 
@@ -333,12 +333,12 @@ static void al_destroy_source( ApeAudioSource *source )
 	if ( source->sample != nullptr )
 	{
 		XAL_CALL( alSourceStop( source->user ) );
-		XAL_CALL( alSourceUnqueueBuffers( source->user, 1, &source->sample->user ) );
+		XAL_CALL( alSourceUnqueueBuffers( source->user, 1, ( ALuint * ) &source->sample->user ) );
 		XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
 		ape_audio_sample_release( source->sample );
 	}
 
-	XAL_CALL( alDeleteSources( 1, &source->user ) );
+	XAL_CALL( alDeleteSources( 1, ( ALuint * ) &source->user ) );
 }
 
 const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
