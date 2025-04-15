@@ -53,6 +53,9 @@ void game_client_initialize_()
 	game_client_actions_register_();
 }
 
+void game_client_connected_() {}
+void game_client_disconnected_() {}
+
 void game_client_process_message_( const void *buf, size_t bufSize )
 {
 	const GameNetMessageHeader *header = buf;
