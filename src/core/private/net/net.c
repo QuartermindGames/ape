@@ -285,7 +285,7 @@ static bool flush_send_buffer( ApeNetSocket *netSocket )
 {
 	while ( netSocket->sendBufferUsed > 0 )
 	{
-		ssize_t sent_bytes = send( netSocket->handle, netSocket->sendBuffer, netSocket->sendBufferUsed, 0 );
+		ssize_t sent_bytes = send( netSocket->handle, ( char * ) netSocket->sendBuffer, ( int ) netSocket->sendBufferUsed, 0 );
 		if ( sent_bytes < 0 )
 		{
 #if defined( _WIN32 )
@@ -306,7 +306,7 @@ static bool flush_send_buffer( ApeNetSocket *netSocket )
 			break;
 		}
 
-		memmove( netSocket->sendBuffer, ( netSocket->sendBuffer + netSocket->sendBufferUsed ), ( netSocket->sendBufferUsed - sent_bytes ) );
+		memmove( netSocket->sendBuffer, netSocket->sendBuffer + netSocket->sendBufferUsed, netSocket->sendBufferUsed - sent_bytes );
 		netSocket->sendBufferUsed -= sent_bytes;
 	}
 
@@ -455,7 +455,7 @@ bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize )
 	return true;
 }
 
-size_t ape_net_get_max_send_size_( ApeNetSocket *netSocket )
+size_t ape_net_get_max_send_size_( const ApeNetSocket *netSocket )
 {
 	return netSocket->sendBufferSize;
 }
@@ -465,7 +465,7 @@ bool ape_net_set_send_buffer_size_( ApeNetSocket *netSocket, size_t sendBufferSi
 	assert( sendBufferSize < INT_MAX );
 
 	int sndbuf = ( int ) sendBufferSize;
-	int res = setsockopt( netSocket->handle, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof( sndbuf ) );
+	int res = setsockopt( netSocket->handle, SOL_SOCKET, SO_SNDBUF, ( char * ) &sndbuf, sizeof( sndbuf ) );
 	if ( res != 0 )
 	{
 #ifdef _WIN32

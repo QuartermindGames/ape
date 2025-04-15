@@ -74,7 +74,7 @@ bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize );
  *
  * @return The maximum send size, in bytes.
 */
-size_t ape_net_get_max_send_size_( ApeNetSocket *netSocket );
+size_t ape_net_get_max_send_size_( const ApeNetSocket *netSocket );
 
 /**
  * @brief Sets the send buffer size.
