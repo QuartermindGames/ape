@@ -142,12 +142,12 @@ static void Audio_XAudio2_FreeSample( ApeAudioSample *audioSample )
 {
 }
 
-static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, int8_t volume )
+static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch )
 {
 	XAUDIO2_BUFFER buffer;
 	PL_ZERO_( buffer );
 	buffer.AudioBytes = audioSample->bufferSize;
-	buffer.pAudioData = audioSample->buffer;
+	buffer.pAudioData = static_cast< BYTE * >( audioSample->buffer );
 	buffer.Flags      = XAUDIO2_END_OF_STREAM;
 }
 
@@ -164,13 +164,13 @@ static bool Audio_XAudio2_CreateSource( ApeAudioSource *source )
 	//	return false;
 	//}
 
-	source->user = voice;
+	source->user = reinterpret_cast< intptr_t >( voice );
 	return true;
 }
 
 static void Audio_XAudio2_DestroySource( ApeAudioSource *source )
 {
-	IXAudio2SourceVoice *voice = ( IXAudio2SourceVoice * ) source->user;
+	IXAudio2SourceVoice *voice = reinterpret_cast< IXAudio2SourceVoice * >( source->user );
 	voice->DestroyVoice();
 }
 
@@ -179,16 +179,16 @@ extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 	static ApeAudioDriverInterface driverInterface;
 	PL_ZERO_( driverInterface );
 
-	driverInterface.Initialize = Audio_XAudio2_Initialize;
-	driverInterface.Shutdown   = Audio_XAudio2_Shutdown;
-	driverInterface.Tick       = Audio_XAudio2_Tick;
-	driverInterface.Pause      = Audio_XAudio2_Pause;
+	driverInterface.initialize = Audio_XAudio2_Initialize;
+	driverInterface.shutdown   = Audio_XAudio2_Shutdown;
+	driverInterface.tick       = Audio_XAudio2_Tick;
+	driverInterface.pause      = Audio_XAudio2_Pause;
 
-	driverInterface.EmitSample = Audio_XAudio2_EmitSample;
-	driverInterface.FreeSample = Audio_XAudio2_FreeSample;
+	driverInterface.emitSample = Audio_XAudio2_EmitSample;
+	driverInterface.freeSample = Audio_XAudio2_FreeSample;
 
-	driverInterface.CreateSource  = Audio_XAudio2_CreateSource;
-	driverInterface.DestroySource = Audio_XAudio2_DestroySource;
+	driverInterface.createSource  = Audio_XAudio2_CreateSource;
+	driverInterface.destroySource = Audio_XAudio2_DestroySource;
 
 	return &driverInterface;
 }

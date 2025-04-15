@@ -623,7 +623,7 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 				face->flags &= ~APE_BRUSH_FACE_FLAG_MIRROR;
 			}
 
-			ape_room_compute_zones( room );
+			//ape_room_compute_zones( room );
 
 			return TRUE;
 		}
@@ -638,7 +638,7 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 				face->flags &= ~APE_BRUSH_FACE_FLAG_PORTAL;
 			}
 
-			ape_room_compute_zones( room );
+			//ape_room_compute_zones( room );
 
 			return TRUE;
 		}

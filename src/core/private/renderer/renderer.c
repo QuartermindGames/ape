@@ -63,7 +63,7 @@ static void *process_capture_queue( void * )
 			if ( !isCapturing )
 				break;
 
-			usleep( 1000 );
+			nanosleep( &( struct timespec ) { .tv_nsec = 1000000 }, NULL );
 			continue;
 		}
 
@@ -75,7 +75,6 @@ static void *process_capture_queue( void * )
 		pthread_mutex_unlock( &captureMutex );
 
 		PLImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
-		assert( image != NULL );
 		if ( image != NULL )
 		{
 			PlFlipImageVertical( image );
@@ -86,6 +85,10 @@ static void *process_capture_queue( void * )
 			PlWriteImage( image, path, captureQuality );
 
 			PlDestroyImage( image );
+		}
+		else
+		{
+			ape_warning_( "Failed to create image: %s\n", PlGetError() );
 		}
 
 		destroy_capture_frame( frame );

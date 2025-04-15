@@ -23,7 +23,7 @@ enum
 	NET_IP6,
 };
 
-#if defined( _MSC_VER )
+#if defined( _WIN32 )
 typedef SOCKET ApeNetSocketHandle;
 #else
 typedef int ApeNetSocketHandle;
@@ -31,7 +31,7 @@ typedef int ApeNetSocketHandle;
 
 static void close_socket( ApeNetSocketHandle handle )
 {
-#if defined( _MSC_VER )
+#if defined( _WIN32 )
 	closesocket( handle );
 #else
 	close( handle );

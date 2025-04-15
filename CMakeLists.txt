@@ -121,6 +121,9 @@ elseif (MINGW)
 endif ()
 
 # 3rd party libraries
+add_compile_definitions(AL_LIBTYPE_STATIC)
+set(LIBTYPE STATIC)
+add_subdirectory(src/3rdparty/openal-soft)
 add_subdirectory(src/3rdparty/fox)
 add_subdirectory(src/3rdparty/lua)
 
@@ -131,11 +134,15 @@ add_subdirectory(src/core)
 add_subdirectory(src/acm)
 if (APE_BUILD_TOOLS)
     add_subdirectory(src/forge)
-    add_subdirectory(src/forge2)
+    if (NOT WIN32)
+        add_subdirectory(src/forge2)
+    endif ()
 endif ()
 add_subdirectory(src/game) # includes shells
 
 # tools
 add_subdirectory(src/tools/cook)
-add_subdirectory(src/tools/fonttool)
+if (NOT WIN32)
+    add_subdirectory(src/tools/fonttool)
+endif ()
 add_subdirectory(src/tools/matgen)
