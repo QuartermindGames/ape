@@ -129,32 +129,20 @@ void ape_tick_game_server_( double delta )
 
 void ape_spawn_world_( const char *path )
 {
-	// attempt to load the specified room
-	AcmBranch *root = com_acm_load_file( path, "node" );
-	if ( root == nullptr )
-	{
-		ape_warning_( "Failed to load the specified room (%s): %s\n", path, acm_get_error_message() );
-		return;
-	}
-
 	ApeWorld *world = ape_world_create();
 	assert( world != nullptr );
 
-	ApeWorldNode *roomNode;
-	if ( ( roomNode = ape_world_node_deserialize( APE_WORLD_NODE( world ), root ) ) != nullptr )
-	{
-		game_spawn_world( world, ( ApeRoom * ) roomNode );
-
-		ape_world_spawn_entities_( world );
-
-		ape_server_start( "localhost", 0 );
-		ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
-	}
-	else
+	ApeWorldNode *roomNode = ape_world_node_load( APE_WORLD_NODE( world ), path );
+	if ( roomNode == nullptr )
 	{
 		ape_world_node_destroy( APE_WORLD_NODE( world ) );
-		ape_warning_( "Failed to deserialize room (%s)!\n", path );
+		return;
 	}
 
-	acm_branch_destroy( root );
+	game_spawn_world( world, ( ApeRoom * ) roomNode );
+
+	ape_world_spawn_entities_( world );
+
+	ape_server_start( "localhost", 0 );
+	ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
 }
