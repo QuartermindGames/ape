@@ -242,7 +242,13 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 
 void *ape_entity_get_component( ApeEntity *self, const char *name )
 {
-	return PlLookupHashTableUserData( self->componentTable, name, strlen( name ) );
+	ApeEntityComponent *component = PlLookupHashTableUserData( self->componentTable, name, strlen( name ) );
+	if ( component == nullptr )
+	{
+		return nullptr;
+	}
+
+	return component->data;
 }
 
 static AcmBranch *serialize_entity( void *self, AcmBranch *root )
