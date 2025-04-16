@@ -269,24 +269,6 @@ static void handle_input( double delta )
 	}
 }
 
-/**
- * This is a very convoluted way to set the pitch and yaw, but
- * unfortunately *this* idiot decided to make the sun a position
- */
-static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
-{
-	PLVector3 position = { 1.0f, pitch, 0.0f };
-	PLMatrix4 matrix   = PlMatrix4Identity();
-	PLMatrix4 m2;
-	m2         = PlTranslateMatrix4( position );
-	matrix     = PlMultiplyMatrix4( &m2, &matrix );
-	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ) { 0.0f, 1.0f, 0.0f } );
-	matrix     = PlMultiplyMatrix4( &m2, &matrix );
-	position.x = matrix.m[ 0 ];
-	position.z = matrix.m[ 8 ];
-	return position;
-}
-
 static void camera_tick( double delta )
 {
 	ape_audio_clear_listener();
@@ -372,11 +354,11 @@ static void world_tick( double delta )
 		ss1_gameState.sunAngles.y = sinf( PL_DEG2RAD( ss1_gameState.sunAngles.x + 90.0f ) ) * 2.0f;
 		sunColour.a               = PlClamp( 0.0f, ( -ss1_gameState.sunAngles.y ) / 1.0f, 1.0f );
 
-		PLVector3 sunPosition = pitch_yaw_to_position( ss1_gameState.sunAngles.y, ss1_gameState.sunAngles.x );
+		PLVector3 sunPosition = com_math_pitch_yaw_to_position( ss1_gameState.sunAngles.y, ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.sunLight, &sunPosition );
 		ape_light_set_colour( ss1_gameState.sunLight, &sunColour );
 
-		PLVector3 moonPosition = pitch_yaw_to_position( -ss1_gameState.sunAngles.y, -ss1_gameState.sunAngles.x );
+		PLVector3 moonPosition = com_math_pitch_yaw_to_position( -ss1_gameState.sunAngles.y, -ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.moonLight, &moonPosition );
 		moonColour.a = PlClamp( 0.0f, ( ss1_gameState.sunAngles.y ) / 1.0f, 0.25f );
 		ape_light_set_colour( ss1_gameState.moonLight, &moonColour );

@@ -221,6 +221,15 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVert
  */
 PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices );
 
+/**
+ * Converts the given pitch and yaw into a position around a sphere.
+ *
+ * @param pitch
+ * @param yaw
+ * @return
+ */
+PLVector3 com_math_pitch_yaw_to_position( float pitch, float yaw );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Collisions
 /////////////////////////////////////////////////////////////////////////////////////
