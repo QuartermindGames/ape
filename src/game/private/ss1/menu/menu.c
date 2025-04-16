@@ -10,21 +10,15 @@ static ApeGuiFont *menuFont;
 static const char *menuTitleFontPath = "guis/fonts/anarchist-mustache/anarchist_mustache_96.fnt";
 static ApeGuiFont *menuTitleFont;
 
-static bool isMainMenuOpen = true;
-
 SS1MenuState ss1_menuState_;
 
 static GameMenu     mainMenu;
 static unsigned int currentMenuOption = 0;
 
-bool game_menu_is_open()
-{
-	return isMainMenuOpen;
-}
-
 static void capture_screenshot_callback( const GameMenuOption * )
 {
-	isMainMenuOpen = false;
+	// hide the menu so it's not included in the capture
+	game_menu_set_active( nullptr );
 }
 
 static GameMenuOption debugMenuOptions[] = {
@@ -173,13 +167,14 @@ static void handle_menu_action( ApeInputState state, const char *id )
 
 	if ( strcmp( id, "menu_toggle" ) == 0 )
 	{
-		isMainMenuOpen    = !isMainMenuOpen;
+		GameMenu *menu = game_menu_get_active() ? nullptr : &mainMenu;
+		game_menu_set_active( menu );
 		currentMenuOption = 0;
 		return;
 	}
 
 	GameMenu *menu = game_menu_get_active();
-	if ( !isMainMenuOpen || menu == nullptr )
+	if ( menu == nullptr )
 	{
 		return;
 	}
@@ -369,7 +364,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 	static constexpr float MENU_SCALE = 1.0f;
 
 	GameMenu *menu = game_menu_get_active();
-	if ( isMainMenuOpen )
+	if ( menu != nullptr )
 	{
 		assert( menu != nullptr );
 

@@ -431,6 +431,8 @@ static void ss1_spawn_world( ApeRoom *room )
 
 	game_team_init( SS1_MAX_TEAMS );
 
+	game_menu_set_active( nullptr );
+
 	// setup the team resource pools
 	for ( unsigned int i = 0; i < SS1_MAX_TEAMS; ++i )
 	{

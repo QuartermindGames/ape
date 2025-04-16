@@ -15,6 +15,11 @@ GameMenu *game_menu_get_active( void )
 	return currentMenu;
 }
 
+bool game_menu_is_open()
+{
+	return game_menu_get_active() != nullptr;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum HUDElement
