@@ -36,12 +36,14 @@ typedef struct ApeWorldVertex
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
-typedef struct ApeSubRoom
+typedef struct ApeRoomZone
 {
-	ApeBrushFace  *portal;
-	ApeRoom       *room;
-	PLVectorArray *faces;// ApeBrushFace
-} ApeSubRoom;
+	// we're not using our typical AABB type here, just because these are *always* absolute!
+	PLVector3 mins, maxs;
+
+	PLLinkedList *worldNodes;
+	PLLinkedList *portals;
+} ApeRoomZone;
 
 typedef struct ApeRoom
 {
@@ -54,9 +56,9 @@ typedef struct ApeRoom
 	PLColourF32 colour;// an identifying colour
 	PLColourF32 ambientLight;
 
-	PLVectorArray *subRooms;// ApeSubRoom
-	PLVectorArray *portals; // ApeBrushFace
-	PLVectorArray *faces;   // ApeBrushFace
+	PLVectorArray *zones;  // ApeRoomZone
+	PLVectorArray *portals;// ApeBrushFace
+	PLVectorArray *faces;  // ApeBrushFace
 
 	PLGMesh *mesh;   // cached mesh
 	bool     isDirty;// if false, mesh cache will be updated

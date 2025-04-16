@@ -526,6 +526,20 @@ bool        ape_room_set_save_path( ApeRoom *self, const char *path );
 const char *ape_room_get_save_path( const ApeRoom *self );
 #endif
 
+/**
+ * This will determine all of the sub-rooms of the given room based
+ * on portals that have no destination - these are assumed to be
+ * local vis portals.
+ *
+ * Mind this operation is probably expensive, so try to avoid
+ * calling it frequently!
+ *
+ * @param self Pointer to room instance.
+ */
+void ape_room_compute_zones( ApeRoom *self );
+
+PLVector3 ape_room_get_gravity( const ApeRoom *self );
+
 void ape_world_room_destroy( ApeRoom *self );
 
 ////////////////////////////////////////////////////////////////////

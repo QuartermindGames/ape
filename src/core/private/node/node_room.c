@@ -8,9 +8,9 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	ApeRoom *room = PL_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	room->subRooms = PlCreateVectorArray( 0 );
-	room->faces    = PlCreateVectorArray( 0 );
-	room->portals  = PlCreateVectorArray( 0 );
+	room->zones   = PlCreateVectorArray( 0 );
+	room->faces   = PlCreateVectorArray( 0 );
+	room->portals = PlCreateVectorArray( 0 );
 
 	// assign the room a random colour so it can be identified per debugging
 	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
@@ -26,7 +26,7 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 {
 	ApeRoom *self = data;
 
-	PlDestroyVectorArray( self->subRooms );
+	PlDestroyVectorArrayEx( self->zones, PlFree );
 	PlDestroyVectorArray( self->faces );
 	PlDestroyVectorArray( self->portals );
 
@@ -367,6 +367,48 @@ bool ape_room_set_path( ApeRoom *self, const char *path )
 const char *ape_room_get_path( const ApeRoom *self )
 {
 	return self->path;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Room Zones
+
+static void gather_faces( ApeWorldNode *worldNode, PLLinkedList *faces )
+{
+	if ( worldNode->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		ApeBrush *brush = ( ApeBrush * ) worldNode;
+		for ( unsigned int i = 0; i < brush->numFaces; ++i )
+		{
+			ApeBrushFace *face = &brush->faces[ i ];
+			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+			{
+				continue;
+			}
+		}
+	}
+
+	ApeWorldNode *childNode;
+	COM_ITERATE_LINKED_LIST( childNode, worldNode->children, i )
+	{
+	}
+}
+
+void ape_room_compute_zones( ApeRoom *self )
+{
+	PlDestroyVectorArrayElements( self->zones, PlFree );
+
+	// first collect up all the faces
+	PLLinkedList *faces = PlCreateLinkedList();
+	gather_faces( APE_WORLD_NODE( self ), faces );
+
+	PlDestroyLinkedList( faces );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+PLVector3 ape_room_get_gravity( const ApeRoom *self )
+{
+	return PlAddVector3( self->gravity, ape_config_.world.gravityModifier );
 }
 
 #if !defined( APE_NO_EDITOR )

@@ -69,8 +69,8 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 
 	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 
-	game_print_( "dir: %s\n", PlPrintVector3( &self->direction, PL_VAR_F32 ) );
-	game_print_( "vel: %s\n", PlPrintVector3( &self->velocity, PL_VAR_F32 ) );
+	game_debug_( "dir: %s\n", PlPrintVector3( &self->direction, PL_VAR_F32 ) );
+	game_debug_( "vel: %s\n", PlPrintVector3( &self->velocity, PL_VAR_F32 ) );
 
 	// check if there's a direction we're trying to move
 	self->direction = PlNormalizeVector3( self->direction );
