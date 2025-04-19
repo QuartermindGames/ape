@@ -281,6 +281,8 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 						{
 							continue;
 						}
+
+						hit->origin = collider->capsule->origin;
 					}
 					else if ( collider->type == APE_COLLISION_TYPE_SPHERE )
 					{
@@ -290,6 +292,8 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 						}
 
 						hit->distance = PlVector3Length( PlSubtractVector3( intersection, collider->sphere->origin ) );
+						hit->depth    = collider->sphere->radius - hit->distance;
+						hit->origin   = collider->sphere->origin;
 					}
 					else if ( collider->type == APE_COLLISION_TYPE_AABB )
 					{
@@ -297,6 +301,8 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 						{
 							continue;
 						}
+
+						hit->origin = collider->aabb->origin;
 					}
 
 					hit->node         = APE_WORLD_NODE( brush );

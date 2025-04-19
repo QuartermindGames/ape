@@ -509,8 +509,10 @@ typedef struct ApeCollisionIntersection
 {
 	ApeWorldNode *node;        // the node that we hit
 	ApeBrushFace *face;        // face we hit, if any
+	PLVector3     origin;      // origin position of the original collider
 	PLVector3     intersection;// point on the node that we hit
 	float         distance;    // distance from point of intersection vs. caster
+	float         depth;
 } ApeCollisionIntersection;
 
 ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionCollider *collider, unsigned int *numHits );
