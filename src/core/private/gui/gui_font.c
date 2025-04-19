@@ -269,7 +269,7 @@ void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const 
 		}
 		if ( c == '\t' )
 		{
-			w += ( self->lineSpacing * scale ) * 4.0f;
+			w += ( self->tabWidth * scale ) * 4.0f;
 			continue;
 		}
 
@@ -340,7 +340,7 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 
 		if ( c == '\t' )
 		{
-			nx += ( self->lineSpacing * scale ) * 4.0f;
+			nx += ( self->tabWidth * scale ) * 4.0f;
 			continue;
 		}
 
