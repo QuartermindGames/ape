@@ -128,7 +128,7 @@ static void check_for_controllers( void )
 	int num = SDL_NumJoysticks();
 	if ( num < 0 )
 	{
-		PRINT_WARNING( "Failed to fetch the number of available joysticks: %s\n", SDL_GetError() );
+		ape_warning_( "Failed to fetch the number of available joysticks: %s\n", SDL_GetError() );
 		return;
 	}
 
@@ -145,8 +145,13 @@ static void check_for_controllers( void )
 		}
 
 		// right, uh, check if it's already open
-		SDL_JoystickID joyId     = SDL_JoystickGetDeviceInstanceID( i );
-		bool           isMatched = false;
+		SDL_JoystickID joyId = SDL_JoystickGetDeviceInstanceID( i );
+		if ( joyId == -1 )
+		{
+			continue;
+		}
+
+		bool isMatched = false;
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
 			if ( inputControllers[ j ].sdlGameController == NULL )
@@ -154,7 +159,8 @@ static void check_for_controllers( void )
 				continue;
 			}
 
-			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( SDL_GameControllerGetJoystick( inputControllers[ j ].sdlGameController ) );
+			SDL_Joystick  *joystick     = SDL_GameControllerGetJoystick( inputControllers[ j ].sdlGameController );
+			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( joystick );
 			if ( compareJoyId == joyId )
 			{
 				isMatched = true;
@@ -177,7 +183,7 @@ static void check_for_controllers( void )
 
 		if ( ( inputControllers[ slot ].sdlGameController = SDL_GameControllerOpen( i ) ) == NULL )
 		{
-			PRINT_WARNING( "Failed to open game controller: %s\n", SDL_GetError() );
+			ape_warning_( "Failed to open game controller: %s\n", SDL_GetError() );
 			continue;
 		}
 
@@ -301,7 +307,7 @@ void ape_initialize_input_( void )
 	inputKeyboard.activeKeyList = PlCreateLinkedList();
 	if ( inputKeyboard.activeKeyList == NULL )
 	{
-		PRINT_ERROR( "Failed to create active key list: %s\n", PlGetError() );
+		ape_error_( true, "Failed to create active key list: %s\n", PlGetError() );
 	}
 
 	// initialize the controller structure
@@ -309,7 +315,7 @@ void ape_initialize_input_( void )
 
 	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
 	{
-		PRINT_WARNING( "Failed to initialize SDL input: %s\n", SDL_GetError() );
+		ape_warning_( "Failed to initialize SDL input: %s\n", SDL_GetError() );
 		return;
 	}
 
@@ -326,12 +332,12 @@ void ape_initialize_input_( void )
 		SDL_RWops *rw = SDL_RWFromMem( buf, ( int ) ( size + 1 ) );
 		if ( SDL_GameControllerAddMappingsFromRW( rw, true ) == -1 )
 		{
-			PRINT_WARNING( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
+			ape_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
 		}
 	}
 	else
 	{
-		PRINT_WARNING( "Failed to load game controller mappings: %s\n", PlGetError() );
+		ape_warning_( "Failed to load game controller mappings: %s\n", PlGetError() );
 	}
 
 	// attempt to fetch and then init config
@@ -404,7 +410,7 @@ unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 	unsigned int slot = get_empty_controller( &id );
 	if ( slot == ( unsigned int ) -1 )
 	{
-		PRINT_WARNING( "Failed to find an empty input device slot!\n" );
+		ape_warning_( "Failed to find an empty input device slot!\n" );
 		return -1;
 	}
 
@@ -422,7 +428,7 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 	// update the key state
 	if ( keyIndex >= APE_MAX_KEY_INPUTS )
 	{
-		PRINT_WARNING( "Received invalid key: %d\n", keyIndex );
+		ape_warning_( "Received invalid key: %d\n", keyIndex );
 		return;
 	}
 
@@ -538,7 +544,7 @@ void ape_tick_input_( void )
 
 		if ( !SDL_GameControllerGetAttached( inputControllers[ i ].sdlGameController ) )
 		{
-			PRINT( "Controller disconnected from slot %u.\n", i );
+			ape_print_( "Controller disconnected from slot %u.\n", i );
 			unregister_controller( i );
 			continue;
 		}
@@ -593,9 +599,6 @@ void ape_tick_input_( void )
 		PlDestroyLinkedListNode( key->activeNode );
 		key->activeNode = nullptr;
 	}
-
-	//PRINT( "L: %s\n", PlPrintVector2( &controllers[ 0 ].stickL, PL_VAR_F32 ) );
-	//PRINT( "R: %s\n", PlPrintVector2( &controllers[ 0 ].stickR, PL_VAR_F32 ) );
 
 	// poll for new devices
 	// FYI: rewrote this so that it doesn't interrupt keyboard input used for console etc., as PollEvent *will* unfortunately
@@ -654,19 +657,19 @@ void ape_client_input_register_action( const char    *id,
 		actionableList = PlCreateLinkedList();
 		if ( actionableList == NULL )
 		{
-			PRINT_ERROR( "Failed to create actionable list: %s\n", PlGetError() );
+			ape_error_( true, "Failed to create actionable list: %s\n", PlGetError() );
 		}
 	}
 
 	if ( numDefaultButtons > APE_MAX_BUTTON_INPUTS )
 	{
 		numDefaultButtons = APE_MAX_BUTTON_INPUTS;
-		PRINT_WARNING( "Too many default button inputs for action!\n" );
+		ape_warning_( "Too many default button inputs for action!\n" );
 	}
 	if ( numDefaultKeys > APE_MAX_KEY_INPUTS )
 	{
 		numDefaultKeys = APE_MAX_KEY_INPUTS;
-		PRINT_WARNING( "Too many default key inputs for action!\n" );
+		ape_warning_( "Too many default key inputs for action!\n" );
 	}
 
 	ApeInputAction *inputAction = PL_NEW( ApeInputAction );
