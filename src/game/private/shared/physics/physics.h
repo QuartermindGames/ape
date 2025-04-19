@@ -127,3 +127,14 @@ PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self );
 PLVector3 game_physics_rope_get_end_position( const GamePhysicsRope *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+static inline bool game_physics_get_ground( ApeRoom *room, const PLVector3 *position, ApeCollisionIntersection *result )
+{
+	PLCollisionRay ray = {};
+	ray.origin         = *position;
+	ray.direction      = PL_VECTOR3( 0.0f, -1.0f, 0.0f );
+
+	ape_room_ray_intersect( room, &ray, result );
+
+	return result->face != nullptr;
+}

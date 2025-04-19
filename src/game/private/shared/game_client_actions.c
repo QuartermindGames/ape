@@ -48,19 +48,17 @@ static void move_action( ApeInputState state, const char *id )
 	}
 	if ( strcmp( id, "game_strafe_left" ) == 0 )
 	{
-		movementComponent->direction.x = -1.0f;
+		movementComponent->direction.x = 1.0f;
 	}
 	else if ( strcmp( id, "game_strafe_right" ) == 0 )
 	{
-		movementComponent->direction.x = 1.0f;
+		movementComponent->direction.x = -1.0f;
 	}
 
 	if ( strcmp( id, "game_jump" ) == 0 && movementComponent->isGrounded )
 	{
 		movementComponent->direction.y = 1.0f;
 	}
-
-	game_debug_( "dir-action: %s\n", PlPrintVector3( &movementComponent->direction, PL_VAR_F32 ) );
 }
 
 void game_client_actions_register_()

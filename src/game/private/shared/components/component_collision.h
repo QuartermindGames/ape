@@ -22,5 +22,5 @@ typedef struct GameCollisionComponent
 		PLCollisionSphere   sphere;
 		PLCollisionAABB     aabb;
 		ComCollisionCapsule capsule;
-	};
+	} collider;
 } GameCollisionComponent;

@@ -11,6 +11,8 @@ typedef struct GameMovementComponent
 
 	PLVector3 velocity;
 
+	PLVector3 contactNormal;
+
 	float maxRunSpeed, maxWalkSpeed;
 
 	bool isGrounded;

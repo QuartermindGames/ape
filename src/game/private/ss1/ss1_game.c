@@ -306,24 +306,41 @@ static void camera_tick( double delta )
 
 		SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
 
+		// entity camera position + view height
 		PLVector3 epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 		epos.y         = epos.y + playerEntity->cameraHeight;
-
+		// entity camera angles
 		PLVector3 eang = playerEntity->cameraAngles;
 
 		PLVector3 forward, left;
 		PlAnglesAxes( eang, &left, nullptr, &forward );
-		epos = PlAddVector3( epos, PlScaleVector3F( forward, playerEntity->cameraDistance ) );
-		epos = PlAddVector3( epos, PlScaleVector3F( left, playerEntity->cameraSide ) );
 
-		cpos = PlLinearInterpolateV3f( cpos, epos, 7.0f * delta );
+		// push entity position out and to either side
+		PLVector3 npos = epos;
+		npos           = PlAddVector3( npos, PlScaleVector3F( forward, playerEntity->cameraDistance ) );
+		npos           = PlAddVector3( npos, PlScaleVector3F( left, playerEntity->cameraSide ) );
 
+		// now interpolate the position and angles for the camera to the new position
+		cpos = PlLinearInterpolateV3f( cpos, npos, 7.0f * delta );
 		com_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
+
+		// if the camera is hitting anything, move it
+		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( camera ) );
+		if ( room != nullptr )
+		{
+			PLCollisionRay ray = {};
+			ray.origin         = epos;
+			ray.direction      = PlSubtractVector3( npos, epos );
+
+			ApeCollisionIntersection result = {};
+			if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= playerEntity->cameraDistance )
+			{
+				cpos = result.intersection;
+			}
+		}
 
 		ape_camera_set_position( camera, &cpos );
 		ape_camera_set_angles( camera, &cang );
-
-		// check if we've reached the destination within the threshold
 	}
 
 	// this is utterly dumb, but we'll use this to determine a vague "velocity"

@@ -12,6 +12,9 @@
 #include "../../shared/components/component_collision.h"
 #include "../../shared/components/component_movement.h"
 
+#include "../../shared/physics/physics.h"
+#include "../../shared/game_entity.h"
+
 static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
 static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;
 static constexpr float PLAYER_CAMERA_SIDE     = 10.0f;
@@ -60,9 +63,14 @@ static void spawn_player_entity( ApeEntity *self )
 	player->healthComponent->maxHealth = ss1_professions[ player->profession ].maxHealth;
 	player->healthComponent->health    = player->healthComponent->maxHealth;
 
-	player->collisionComponent = ape_entity_add_component( self, "collision" );
-	assert( player->collisionComponent != nullptr );
-	player->collisionComponent->type = APE_COLLISION_TYPE_AABB;
+	// setup collision component
+	GameCollisionComponent *collisionComponent = ape_entity_add_component( self, "collision" );
+	assert( collisionComponent != nullptr );
+	collisionComponent->groups                 = GAME_COLLISION_GROUP_PLAYER;
+	collisionComponent->type                   = APE_COLLISION_TYPE_SPHERE;//APE_COLLISION_TYPE_AABB;
+	collisionComponent->collider.sphere.radius = 4.0f;
+	collisionComponent->collider.sphere.origin = PL_VECTOR3( 0.0f, collisionComponent->collider.sphere.radius, 0.0f );
+	player->collisionComponent                 = collisionComponent;
 
 	player->inventoryComponent = ape_entity_add_component( self, "inventory" );
 	assert( player->inventoryComponent != nullptr );
@@ -89,6 +97,8 @@ static void spawn_player_entity( ApeEntity *self )
 	ss1_gameState.cameraState = SS1_CAMERA_STATE_THIRD_PERSON;
 
 	setup_default_equipment( self );
+
+	game_entity_place_on_ground( self );
 }
 
 static void tick_player_entity( ApeEntity *self, double delta )

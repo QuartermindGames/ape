@@ -1,0 +1,30 @@
+// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: Code for extending entity functionality beyond what core provides.
+// Author:  Mark E. Sowden
+
+#include "game_private.h"
+#include "game_entity.h"
+
+#include "physics/physics.h"
+
+void game_entity_place_on_ground( ApeEntity *self )
+{
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	if ( room == nullptr )
+	{
+		game_warning_( "Failed to place entity on ground, no room!\n" );
+		return;
+	}
+
+	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+
+	ApeCollisionIntersection result = {};
+	if ( !game_physics_get_ground( room, &pos, &result ) )
+	{
+		game_warning_( "Failed to place entity on ground at %s!\n", PlPrintVector3( &pos, PL_VAR_F32 ) );
+		return;
+	}
+
+	//TODO: account for collisions here...?
+	ape_world_node_set_position( APE_WORLD_NODE( self ), &result.intersection );
+}
