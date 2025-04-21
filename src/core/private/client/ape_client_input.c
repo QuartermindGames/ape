@@ -2,7 +2,7 @@
 // Purpose: Client input management.
 // Author:  Mark E. Sowden
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #include "ape_private.h"
 #include "ape_client_input.h"
@@ -68,7 +68,7 @@ static struct
 	PLVector2 stickR, stickROld, stickRDelta;
 	PLVector2 deadzones;
 
-	SDL_GameController *sdlGameController;
+	SDL_Gamepad *sdlGameController;
 } inputControllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
 static unsigned int numControllers;
 
@@ -125,10 +125,10 @@ static bool sdlInputInitialized = false;
  */
 static void check_for_controllers( void )
 {
-	int num = SDL_NumJoysticks();
-	if ( num < 0 )
+	int             num;
+	SDL_JoystickID *joysticks = SDL_GetJoysticks( &num );
+	if ( joysticks == nullptr || num == 0 )
 	{
-		ape_warning_( "Failed to fetch the number of available joysticks: %s\n", SDL_GetError() );
 		return;
 	}
 
@@ -139,14 +139,7 @@ static void check_for_controllers( void )
 
 	for ( int i = 0; i < num; ++i )
 	{
-		if ( !SDL_IsGameController( i ) )
-		{
-			continue;
-		}
-
-		// right, uh, check if it's already open
-		SDL_JoystickID joyId = SDL_JoystickGetDeviceInstanceID( i );
-		if ( joyId == -1 )
+		if ( !SDL_IsGamepad( joysticks[ i ] ) )
 		{
 			continue;
 		}
@@ -159,9 +152,9 @@ static void check_for_controllers( void )
 				continue;
 			}
 
-			SDL_Joystick  *joystick     = SDL_GameControllerGetJoystick( inputControllers[ j ].sdlGameController );
-			SDL_JoystickID compareJoyId = SDL_JoystickInstanceID( joystick );
-			if ( compareJoyId == joyId )
+			SDL_Joystick  *joystick     = SDL_GetGamepadJoystick( inputControllers[ j ].sdlGameController );
+			SDL_JoystickID compareJoyId = SDL_GetJoystickID( joystick );
+			if ( compareJoyId == joysticks[ i ] )
 			{
 				isMatched = true;
 				break;
@@ -181,18 +174,18 @@ static void check_for_controllers( void )
 			break;
 		}
 
-		if ( ( inputControllers[ slot ].sdlGameController = SDL_GameControllerOpen( i ) ) == NULL )
+		if ( ( inputControllers[ slot ].sdlGameController = SDL_OpenGamepad( joysticks[ i ] ) ) == NULL )
 		{
 			ape_warning_( "Failed to open game controller: %s\n", SDL_GetError() );
 			continue;
 		}
 
-		const char *name = SDL_GameControllerName( inputControllers[ slot ].sdlGameController );
+		const char *name = SDL_GetGamepadName( inputControllers[ slot ].sdlGameController );
 		if ( name == NULL )
 		{
 			name = "Unknown";
 		}
-		const char *serial = SDL_GameControllerGetSerial( inputControllers[ slot ].sdlGameController );
+		const char *serial = SDL_GetGamepadSerial( inputControllers[ slot ].sdlGameController );
 		if ( serial == NULL )
 		{
 			serial = "Unknown";
@@ -218,7 +211,7 @@ static void unregister_controller( unsigned int slot )
 {
 	if ( inputControllers[ slot ].sdlGameController != NULL )
 	{
-		SDL_GameControllerClose( inputControllers[ slot ].sdlGameController );
+		SDL_CloseGamepad( inputControllers[ slot ].sdlGameController );
 		inputControllers[ slot ].sdlGameController = nullptr;
 	}
 	PL_ZERO_( inputControllers[ slot ] );
@@ -234,63 +227,63 @@ static void unregister_controller( unsigned int slot )
 	memset( inputControllers[ slot ].buttons, 0, sizeof( Button ) );
 }
 
-static bool get_sdl_button_state( SDL_GameController *gameController, ApeInputButton button )
+static bool get_sdl_button_state( SDL_Gamepad *gameController, ApeInputButton button )
 {
-	SDL_GameControllerButton sdlButton;
+	SDL_GamepadButton sdlButton;
 	switch ( button )
 	{
 		case APE_INPUT_UP:
-			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_UP;
+			sdlButton = SDL_GAMEPAD_BUTTON_DPAD_UP;
 			break;
 		case APE_INPUT_DOWN:
-			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_DOWN;
+			sdlButton = SDL_GAMEPAD_BUTTON_DPAD_DOWN;
 			break;
 		case INPUT_LEFT:
-			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_LEFT;
+			sdlButton = SDL_GAMEPAD_BUTTON_DPAD_LEFT;
 			break;
 		case INPUT_RIGHT:
-			sdlButton = SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
+			sdlButton = SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
 			break;
 
 		case INPUT_LEFT_STICK:
-			sdlButton = SDL_CONTROLLER_BUTTON_LEFTSTICK;
+			sdlButton = SDL_GAMEPAD_BUTTON_LEFT_STICK;
 			break;
 		case INPUT_RIGHT_STICK:
-			sdlButton = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+			sdlButton = SDL_GAMEPAD_BUTTON_RIGHT_STICK;
 			break;
 
 		case INPUT_START:
-			sdlButton = SDL_CONTROLLER_BUTTON_START;
+			sdlButton = SDL_GAMEPAD_BUTTON_START;
 			break;
 		case INPUT_BACK:
-			sdlButton = SDL_CONTROLLER_BUTTON_BACK;
+			sdlButton = SDL_GAMEPAD_BUTTON_BACK;
 			break;
 
 		case INPUT_A:
-			sdlButton = SDL_CONTROLLER_BUTTON_A;
+			sdlButton = SDL_GAMEPAD_BUTTON_SOUTH;
 			break;
 		case INPUT_B:
-			sdlButton = SDL_CONTROLLER_BUTTON_B;
+			sdlButton = SDL_GAMEPAD_BUTTON_EAST;
 			break;
 		case INPUT_X:
-			sdlButton = SDL_CONTROLLER_BUTTON_X;
+			sdlButton = SDL_GAMEPAD_BUTTON_WEST;
 			break;
 		case INPUT_Y:
-			sdlButton = SDL_CONTROLLER_BUTTON_Y;
+			sdlButton = SDL_GAMEPAD_BUTTON_NORTH;
 			break;
 
 		case INPUT_LB:
-			sdlButton = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+			sdlButton = SDL_GAMEPAD_BUTTON_LEFT_SHOULDER;
 			break;
 		case INPUT_RB:
-			sdlButton = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+			sdlButton = SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER;
 			break;
 
 		default:
 			return false;
 	}
 
-	return SDL_GameControllerGetButton( gameController, sdlButton );
+	return SDL_GetGamepadButton( gameController, sdlButton );
 }
 
 static float clamp_axis_input( float value, float deadzone )
@@ -313,9 +306,9 @@ void ape_initialize_input_( void )
 	// initialize the controller structure
 	ape_clear_input_devices();
 
-	if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
+	if ( !SDL_Init( SDL_INIT_GAMEPAD ) )
 	{
-		ape_warning_( "Failed to initialize SDL input: %s\n", SDL_GetError() );
+		ape_warning_( "Failed to initialize input: %s\n", SDL_GetError() );
 		return;
 	}
 
@@ -329,8 +322,8 @@ void ape_initialize_input_( void )
 		PlReadFile( mapFile, buf, sizeof( char ), size );
 		PlCloseFile( mapFile );
 
-		SDL_RWops *rw = SDL_RWFromMem( buf, ( int ) ( size + 1 ) );
-		if ( SDL_GameControllerAddMappingsFromRW( rw, true ) == -1 )
+		SDL_IOStream *rw = SDL_IOFromMem( buf, ( int ) ( size + 1 ) );
+		if ( SDL_AddGamepadMappingsFromIO( rw, true ) == -1 )
 		{
 			ape_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
 		}
@@ -542,7 +535,7 @@ void ape_tick_input_( void )
 			continue;
 		}
 
-		if ( !SDL_GameControllerGetAttached( inputControllers[ i ].sdlGameController ) )
+		if ( !SDL_GamepadConnected( inputControllers[ i ].sdlGameController ) )
 		{
 			ape_print_( "Controller disconnected from slot %u.\n", i );
 			unregister_controller( i );
@@ -582,11 +575,11 @@ void ape_tick_input_( void )
 		inputControllers[ i ].stickLOld = inputControllers[ i ].stickL;
 		inputControllers[ i ].stickROld = inputControllers[ i ].stickR;
 
-		inputControllers[ i ].stickL.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
-		inputControllers[ i ].stickL.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_LEFTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
+		inputControllers[ i ].stickL.x = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_LEFTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
+		inputControllers[ i ].stickL.y = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_LEFTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.x );
 
-		inputControllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
-		inputControllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GameControllerGetAxis( inputControllers[ i ].sdlGameController, SDL_CONTROLLER_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
+		inputControllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
+		inputControllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
 
 		inputControllers[ i ].stickLDelta = PlSubtractVector2( &inputControllers[ i ].stickLOld, &inputControllers[ i ].stickL );
 		inputControllers[ i ].stickRDelta = PlSubtractVector2( &inputControllers[ i ].stickROld, &inputControllers[ i ].stickR );

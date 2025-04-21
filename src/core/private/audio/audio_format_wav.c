@@ -1,7 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
-// we can just use sdl2 for this :)
-#include <SDL2/SDL.h>
+// we can just use sdl for this :)
+#include <SDL3/SDL.h>
 
 #include "audio.h"
 
@@ -16,16 +16,16 @@ ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 	{
 		uint8_t      *dstBuf;
 		SDL_AudioSpec dstSpec;
-		if ( SDL_LoadWAV_RW( SDL_RWFromConstMem( buf, ( int ) size ), 1, &dstSpec, &dstBuf, &size ) != nullptr )
+		if ( SDL_LoadWAV_IO( SDL_IOFromConstMem( buf, ( int ) size ), 1, &dstSpec, &dstBuf, &size ) )
 		{
 			if ( dstSpec.channels > 0 && dstSpec.channels <= 2 )
 			{
 				ApeAudioSampleFormat format;
-				if ( dstSpec.format == AUDIO_U8 )
+				if ( dstSpec.format == SDL_AUDIO_U8 )
 				{
 					format = ( dstSpec.channels == 1 ) ? APE_AUDIO_SAMPLE_FORMAT_MONO8 : APE_AUDIO_SAMPLE_FORMAT_STEREO8;
 				}
-				else if ( dstSpec.format == AUDIO_S16 )
+				else if ( dstSpec.format == SDL_AUDIO_S16 )
 				{
 					format = ( dstSpec.channels == 1 ) ? APE_AUDIO_SAMPLE_FORMAT_MONO16 : APE_AUDIO_SAMPLE_FORMAT_STEREO16;
 				}
@@ -51,7 +51,7 @@ ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 				ape_warning_( "Unsupported number of channels in wav (%u)!\n", dstSpec.channels );
 			}
 
-			SDL_FreeWAV( dstBuf );
+			SDL_free( dstBuf );
 		}
 		else
 		{

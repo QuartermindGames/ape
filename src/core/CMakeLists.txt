@@ -100,7 +100,7 @@ set_target_properties(ApeCore PROPERTIES
 if (WIN32)
     target_link_libraries(ApeCore SDL2_dll)
 else ()
-    target_link_libraries(ApeCore SDL2)
+    target_link_libraries(ApeCore SDL3)
 endif ()
 
 target_link_libraries(ApeCore

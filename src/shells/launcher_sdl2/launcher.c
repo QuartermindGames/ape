@@ -1,6 +1,6 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #ifdef _WIN32
 #	include <crtdbg.h>
@@ -86,12 +86,7 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 	int flags = 0;
 	if ( fullscreen )
 	{
-		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-
-		SDL_Rect rect;
-		SDL_GetDisplayBounds( 0, &rect );
-		width  = rect.w;
-		height = rect.h;
+		flags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	switch ( mode )
@@ -115,12 +110,7 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 			break;
 	}
 
-	sdlWindow = SDL_CreateWindow(
-	        title,
-	        SDL_WINDOWPOS_CENTERED,
-	        SDL_WINDOWPOS_CENTERED,
-	        width, height,
-	        flags );
+	sdlWindow = SDL_CreateWindow( title, width, height, flags );
 	if ( sdlWindow == NULL )
 	{
 		PrintWarn( "Failed to create SDL window: %s\n", SDL_GetError() );
@@ -148,24 +138,15 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 		}
 
 		SDL_GL_MakeCurrent( sdlWindow, sdlGLContext );
-		SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawH );
-
 		SDL_GL_SetSwapInterval( 0 );
 	}
 
-	// Okay, so apparently setting borderless fullscreen under Windows is messing around with the display...
-	// Let's try this instead *after* the window is created
-#if 0// NOPE, does the same damn thing...
-	if ( fullscreen )
+	if ( !SDL_GetWindowSizeInPixels( sdlWindow, &drawW, &drawH ) )
 	{
-		SDL_SetWindowBordered( sdlWindow, SDL_FALSE );
-
-		SDL_Rect rect;
-		SDL_GetDisplayBounds( 0, &rect );
-		SDL_SetWindowSize( sdlWindow, rect.w, rect.h );
-		SDL_SetWindowPosition( sdlWindow, 0, 0 );
+		PrintWarn( "Failed to get window pixel size: %s\n", SDL_GetError() );
+		drawW = 640;
+		drawH = 480;
 	}
-#endif
 
 	return sdlWindow;
 }
@@ -210,16 +191,7 @@ void shell_get_window_size( int *width, int *height )
 
 void ss_shell_set_window_icon( const PLImage *image )
 {
-	SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
-	        image->data[ 0 ],
-	        ( signed ) image->width,
-	        ( signed ) image->height,
-	        32,
-	        ( signed ) image->width * 4,
-	        0x000000ff,
-	        0x0000ff00,
-	        0x00ff0000,
-	        0xff000000 );
+	SDL_Surface *surface = SDL_CreateSurfaceFrom( ( int ) image->width, ( int ) image->height, SDL_PIXELFORMAT_RGBA8888, image->data[ 0 ], ( int ) image->width * 4 );
 	if ( surface == NULL )
 	{
 		PrintWarn( "Failed to create requested SDL surface: %s\n", SDL_GetError() );
@@ -227,7 +199,7 @@ void ss_shell_set_window_icon( const PLImage *image )
 	}
 
 	SDL_SetWindowIcon( sdlWindow, surface );
-	SDL_FreeSurface( surface );
+	SDL_DestroySurface( surface );
 }
 
 ApeViewport *ss_shell_viewport_get_active( void )
@@ -266,10 +238,17 @@ static bool grabState = false;
 
 void ss_shell_grab_mouse( bool grab )
 {
-	SDL_SetWindowGrab( sdlWindow, grab );
-	SDL_SetRelativeMouseMode( grab );
+	SDL_SetWindowMouseGrab( sdlWindow, grab );
+	SDL_SetWindowRelativeMouseMode( sdlWindow, grab );
 
-	SDL_ShowCursor( !grab );
+	if ( grab )
+	{
+		SDL_ShowCursor();
+	}
+	else
+	{
+		SDL_HideCursor();
+	}
 }
 
 static int Sys_TranslateSDLKeyInput( int key )
@@ -364,14 +343,14 @@ static int Sys_TranslateSDLKeyInput( int key )
  ****************************************/
 
 static SDL_TimerID  sdlTimer = 0;
-static unsigned int timer_callback( unsigned int interval, void *param )
+static unsigned int timer_callback( void *userData, SDL_TimerID timerId, uint32_t interval )
 {
 	SDL_UserEvent userEvent;
-	userEvent.type = SDL_USEREVENT;
+	userEvent.type = SDL_EVENT_USER;
 	userEvent.code = 0;
 
 	SDL_Event event;
-	event.type = SDL_USEREVENT;
+	event.type = SDL_EVENT_USER;
 	event.user = userEvent;
 
 	SDL_PushEvent( &event );
@@ -389,7 +368,9 @@ void ss_shell_shutdown( void )
 	com_write_config( shellConfig, "shell" );
 
 	if ( sdlTimer != 0 )
+	{
 		SDL_RemoveTimer( sdlTimer );
+	}
 
 	exit( EXIT_SUCCESS );
 }
@@ -540,9 +521,9 @@ int launcher_initialize( int argc, char **argv )
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
 	Print( "Log output initialized!\n" );
 
-	if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
+	if ( !SDL_Init( SDL_INIT_EVENTS | SDL_INIT_VIDEO ) )
 	{
-		PrintError( "Failed to initialize SDL2!\nSDL: %s\n", SDL_GetError() );
+		PrintError( "Failed to initialize SDL: %s\n", SDL_GetError() );
 	}
 
 	com_initialize();
@@ -605,12 +586,18 @@ int launcher_initialize( int argc, char **argv )
 		PrintError( "No tick frequency variable found: %s\n", PlGetError() );
 	}
 
-	sdlTimer = SDL_AddTimer( tickFrequencyVar->i_value, timer_callback, NULL );
+	if ( ( sdlTimer = SDL_AddTimer( tickFrequencyVar->i_value, timer_callback, NULL ) ) == 0 )
+	{
+		PrintError( "Failed to setup timer: %s\n", SDL_GetError() );
+	}
+
+	if ( !SDL_StartTextInput( sdlWindow ) )
+	{
+		PrintError( "Failed to start text input: %s\n", SDL_GetError() );
+	}
 
 	// this variable denotes whether we should only draw a frame on tick, or always draw
 	PL_GET_CVAR( "renderTimeLock", renderTimeLockVar );
-
-	SDL_StartTextInput();
 
 	static bool shouldDraw = true;
 	while ( ape_is_running() )
@@ -622,16 +609,19 @@ int launcher_initialize( int argc, char **argv )
 		{
 			switch ( event.type )
 			{
-				case SDL_USEREVENT:
+				default:
+					break;
+
+				case SDL_EVENT_USER:
 					ape_tick_frame();
 					shouldDraw = true;
 					break;
 
-				case SDL_TEXTINPUT:
+				case SDL_EVENT_TEXT_INPUT:
 					ape_input_handle_text_event( event.text.text );
 					break;
 
-				case SDL_MOUSEWHEEL:
+				case SDL_EVENT_MOUSE_WHEEL:
 				{
 					float x = ( event.wheel.x > 0 ) ? 1.0f : ( event.wheel.x < 0 ) ? -1.0f
 					                                                               : 0.0f;
@@ -640,43 +630,40 @@ int launcher_initialize( int argc, char **argv )
 					ape_input_handle_mouse_wheel_event( x, y );
 					break;
 				}
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP:
-					ape_input_handle_mouse_button_event( event.button.button, ( event.button.type == SDL_MOUSEBUTTONDOWN ) );
+				case SDL_EVENT_MOUSE_BUTTON_DOWN:
+				case SDL_EVENT_MOUSE_BUTTON_UP:
+					ape_input_handle_mouse_button_event( event.button.button, event.button.type == SDL_EVENT_MOUSE_BUTTON_DOWN );
 					break;
-				case SDL_MOUSEMOTION:
+				case SDL_EVENT_MOUSE_MOTION:
 					ape_input_handle_mouse_motion_event( event.motion.x, event.motion.y );
 					break;
 
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
+				case SDL_EVENT_KEY_DOWN:
+				case SDL_EVENT_KEY_UP:
 				{
-					int key = Sys_TranslateSDLKeyInput( event.key.keysym.sym );
+					int key = Sys_TranslateSDLKeyInput( event.key.key );
 					if ( key == KEY_INVALID )
 					{
 						//PrintWarn( "Unhandled key, %d\n", key );
 						break;
 					}
 
-					ape_input_handle_keyboard_event( key, ( event.type == SDL_KEYDOWN ) );
+					ape_input_handle_keyboard_event( key, event.type == SDL_EVENT_KEY_DOWN );
 					break;
 				}
 
-				case SDL_WINDOWEVENT:
+				case SDL_EVENT_WINDOW_RESIZED:
+				case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 				{
 					if ( sdlWindow == NULL || event.window.windowID != SDL_GetWindowID( sdlWindow ) )
-						break;
-
-					switch ( event.window.event )
 					{
-						case SDL_WINDOWEVENT_RESIZED:
-						case SDL_WINDOWEVENT_SIZE_CHANGED:
-							//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
-							// originally used the above but it kept returning bogus coords...
-							SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
-							ape_viewport_set_size( windowViewport, drawW, drawH );
-							break;
+						break;
 					}
+
+					//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
+					// originally used the above but it kept returning bogus coords...
+					SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
+					ape_viewport_set_size( windowViewport, drawW, drawH );
 					break;
 				}
 			}
@@ -704,7 +691,7 @@ int launcher_initialize( int argc, char **argv )
 		refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 	}
 
-	SDL_StopTextInput();
+	SDL_StopTextInput( sdlWindow );
 
 	ape_shutdown();
 
