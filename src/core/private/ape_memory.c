@@ -97,6 +97,8 @@ PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool )
 
 static void remove_from_cache( uint32_t id, uint8_t pool )
 {
+	ape_print_( "Removing %u from pool %u\n", id, pool );
+
 	return;
 	ApeMemoryCacheHeader *header = get_cache( id, pool );
 	if ( header == NULL )
