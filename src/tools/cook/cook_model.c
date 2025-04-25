@@ -312,7 +312,11 @@ static void write_ape_format_model( const CookModel *model, const char *folder )
 void cook_model_process( const char *modelName )
 {
 	PLPath path = {};
-	PlSetupPath( path, true, "models/%s.%s", modelName, COOK_MODEL_EXTENSION );
+	if ( PlResolveVirtualPath( modelName, path, sizeof( path ) ) == nullptr )
+	{
+		WARN( "Failed to resolve virtual path: %s\n", PlGetError() );
+		return;
+	}
 
 	PLPath folder = {};
 	if ( PlGetFolderForPath( folder, path ) == nullptr )
