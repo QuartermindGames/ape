@@ -172,6 +172,8 @@ typedef struct ApeWorldNode
 	PLColour selectColour;
 #endif
 
+	PLPath path;// where we were loaded from, if at all (note this isn't always valid)
+
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
 
@@ -293,6 +295,14 @@ PLVectorArray *ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeT
  * @return			Instance of the new world node on success, null on failure.
  */
 ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path );
+
+/**
+ * Fetch the path that the node was originally loaded from.
+ *
+ * @param self	Instance of the node.
+ * @return		Pointer to string; it will be empty if the node wasn't loaded from disk
+ */
+const char *ape_world_node_get_path( const ApeWorldNode *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush - the building blocks of the world.
@@ -541,6 +551,15 @@ const char *ape_room_get_save_path( const ApeRoom *self );
 void ape_room_compute_zones( ApeRoom *self );
 
 PLVector3 ape_room_get_gravity( const ApeRoom *self );
+
+/**
+ * Gathers all of the portal faces for the given room.
+ *
+ * @param self			Room instance.
+ * @param numPortals	Number of portals returned.
+ * @return				An array of pointers to all the portal faces.
+ */
+ApeBrushFace **ape_room_gather_portals( ApeRoom *self, unsigned int *numPortals );
 
 void ape_world_room_destroy( ApeRoom *self );
 

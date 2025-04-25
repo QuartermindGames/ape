@@ -67,7 +67,7 @@ static bool ss1_initialize()
 {
 	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
-	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), G_STR_( "Hello World!" ), "ape_logo", "Blah!" );
+	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), nullptr, "qm1-logo", SS1_GAME_TITLE );
 
 	game_register_standard_entity_components_();
 
@@ -457,6 +457,16 @@ static void ss1_spawn_world( ApeRoom *room )
 #endif
 
 	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+
+	const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
+	if ( *path == '\0' )
+	{
+		path = "unknown";
+	}
+	const char *c = G_STR_( "Invading %s" );
+	char        buf[ 128 ];
+	snprintf( buf, sizeof( buf ), c, path );
+	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", SS1_GAME_TITLE );
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )

@@ -19,9 +19,9 @@ void game_integrations_discord_shutdown_();
  * Update the displayed status/activity per Discord.
  *
  * @param details 	Details of the current activity.
- * @param state 	The state in relation to the activity.
+ * @param state 	The state in relation to the activity. Can be null.
  * @param image 	App image to use.
- * @param imageText App image text to use.
+ * @param imageText App image text to use. Can be null.
  */
 void game_integrations_discord_update_activity_( const char *details, const char *state, const char *image, const char *imageText );
 

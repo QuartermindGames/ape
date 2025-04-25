@@ -574,7 +574,11 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 	}
 
 	ApeWorldNode *worldNode = ape_world_node_deserialize( parent, branch );
-	if ( worldNode == nullptr )
+	if ( worldNode != nullptr )
+	{
+		PlSetupPath( worldNode->path, true, "%s", path );
+	}
+	else
 	{
 		ape_warning_( "Failed to deserialize node (%s)!\n", path );
 	}
@@ -582,4 +586,9 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 	acm_branch_destroy( branch );
 
 	return worldNode;
+}
+
+const char *ape_world_node_get_path( const ApeWorldNode *self )
+{
+	return self->path;
 }

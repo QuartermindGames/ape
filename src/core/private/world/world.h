@@ -21,14 +21,6 @@
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
 #endif
 
-typedef struct PLFile PLFile;
-
-typedef struct ApeRoom            ApeRoom;
-typedef struct ApeWorldFaceVertex ApeWorldFaceVertex;
-typedef struct ApeWorldFace       ApeWorldFace;
-typedef struct ApeWorldMesh       ApeWorldMesh;
-typedef struct ApeWorldPortal     ApeWorldPortal;
-
 typedef struct ApeWorldVertex
 {
 	PLVector3      position;

@@ -106,6 +106,8 @@ bool game_integrations_discord_initialize_( int64_t clientId )
 
 	discordEnabled = true;
 
+	game_debug_( "Initialized Discord integration\n" );
+
 	return true;
 }
 
@@ -120,6 +122,8 @@ void game_integrations_discord_shutdown_()
 	}
 
 	discordEnabled = false;
+
+	game_debug_( "Shutdown Discord integration\n" );
 }
 
 void game_integrations_discord_update_activity_( const char *details, const char *state, const char *image, const char *imageText )
@@ -138,10 +142,10 @@ void game_integrations_discord_update_activity_( const char *details, const char
 	};
 
 	snprintf( activity.details, sizeof( activity.details ), "%s", details );
-	snprintf( activity.state, sizeof( activity.state ), "%s", state );
+	if ( state != nullptr ) snprintf( activity.state, sizeof( activity.state ), "%s", state );
 
 	snprintf( activity.assets.large_image, sizeof( activity.assets.large_image ), "%s", image );
-	snprintf( activity.assets.large_text, sizeof( activity.assets.large_text ), "%s", imageText );
+	if ( imageText != nullptr ) snprintf( activity.assets.large_text, sizeof( activity.assets.large_text ), "%s", imageText );
 
 	discordAppData.activityManager->update_activity( discordAppData.activityManager, &activity, nullptr, activity_callback );
 }
