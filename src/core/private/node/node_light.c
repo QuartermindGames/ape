@@ -5,6 +5,7 @@
 #include "ape_private.h"
 
 #include "renderer/renderer.h"
+#include "world/world.h"
 
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
 {

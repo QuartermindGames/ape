@@ -120,6 +120,7 @@ typedef enum ApeWorldNodeClassFlag
 typedef void *( *ApeWorldNodeClassNetSerializeFunction )( ApeWorldNode *self, unsigned int *dstLength );
 typedef void ( *ApeWorldNodeClassNetDeserializeFunction )( ApeWorldNode *self, void *newState, unsigned int length );
 
+//TODO: why is this public!?
 typedef struct ApeWorldNodeClass
 {
 	const char       *identifier;
@@ -142,6 +143,7 @@ typedef struct ApeWorldNodeClass
 	unsigned int flags;
 } ApeWorldNodeClass;
 
+//TODO: why is this public!?
 typedef struct ApeWorldNode
 {
 	ApeWorldNodeMagic magic;
@@ -163,6 +165,9 @@ typedef struct ApeWorldNode
 
 	bool needsSyncOnConnect;
 	bool needsSyncOnTick;
+
+	struct PLGMesh *mesh;       // used for brush geometry childed to the given node
+	bool            isMeshDirty;// indicates the mesh needs updating
 
 	ApeRoom                 *room;
 	ApeWorldNode            *parent;
@@ -207,8 +212,7 @@ void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNod
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );
 
-ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
-void          ape_world_node_destroy( ApeWorldNode *self );
+void ape_world_node_destroy( ApeWorldNode *self );
 
 void ape_world_node_dettach( ApeWorldNode *self );
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
@@ -280,12 +284,15 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 
 /**
  * Iterate through all of the children of the given node and collect up children by type.
+ * If you just want to iterate over the top-level, you're probably better off just addressing directly rather than using this method!
  *
- * @param self	Instance of the node.
- * @param type	Type of world node to gather.
- * @return		New instance of PLVectorArray with gathered children.
+ * @param self			Instance of the node.
+ * @param type			Type of world node to gather.
+ * @param numChildren	Number of children returned.
+ * @param recursive		Whether to recurse through all child nodes.
+ * @return				Array of all children nodes found.
  */
-PLVectorArray *ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type );
+ApeWorldNode **ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type, unsigned int *numChildren, bool recursive );
 
 /**
  * Attempt to load a world node from a given path.
@@ -303,6 +310,8 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path );
  * @return		Pointer to string; it will be empty if the node wasn't loaded from disk
  */
 const char *ape_world_node_get_path( const ApeWorldNode *self );
+
+ApeWorldNode *ape_world_node_get_parent( ApeWorldNode *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush - the building blocks of the world.
@@ -378,6 +387,9 @@ ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self );
 
 ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self );
 
+void ape_brush_face_compute_normal( ApeBrushFace *face );
+void ape_brush_face_compute_bounds( ApeBrushFace *face );
+
 ////////////////////////////////////////////////////////////////////
 // Brush
 
@@ -401,6 +413,9 @@ typedef struct ApeBrush
 } ApeBrush;
 
 ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles );
+
+void ape_brush_compute_bounds( ApeBrush *self );
+void ape_brush_compute_face_bounds( ApeBrush *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

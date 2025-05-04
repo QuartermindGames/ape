@@ -54,7 +54,7 @@ static void draw_room_wireframe( const ApeCamera *camera )
 	PlgImmBegin( PLG_MESH_LINES );
 
 	unsigned int   numFaces;
-	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visibleFaces, &numFaces );
+	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		draw_face_wireframe( faces[ i ] );
@@ -80,122 +80,6 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera )
 	}
 
 	draw_room_wireframe( camera );
-}
-
-static void build_mesh_cache( PLGMesh *mesh, ApeWorldNode *node )
-{
-	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
-	{
-		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( unsigned int i = 0; i < brush->numFaces; ++i )
-		{
-			const ApeBrushFace *face = &brush->faces[ i ];
-			for ( unsigned int j = 0; j < face->numVertices; ++j )
-			{
-				const ApeBrushFaceVertex *vertex = face->edgeLoop[ j ];
-
-				//TODO: handle transforms for the brush in software here
-
-#if !defined( APE_NO_EDITOR )
-
-				// this is a gross botch to allow us to do special shaded
-				// types via the editor... *sigh*
-				PLColour                 colour;
-				const ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
-				if ( editorInstance != nullptr && editorInstance->camera != nullptr )
-				{
-					const ApeCamera *camera = editorInstance->camera;
-					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
-					{
-						srand( ( intptr_t ) brush );
-						colour = PL_COLOURU8(
-						        ( uint8_t ) ( rand() % 256 ),
-						        ( uint8_t ) ( rand() % 256 ),
-						        ( uint8_t ) ( rand() % 256 ), 255 );
-					}
-					else if ( camera->drawMode == APE_CAMERA_DRAW_MODE_PORTALS )
-					{
-					}
-					else
-					{
-						colour = PL_COLOURU8( 255, 255, 255, 255 );
-					}
-				}
-				else
-				{
-					colour = PL_COLOURU8( 255, 255, 255, 255 );
-				}
-
-#else
-
-				PLColour colour = PL_COLOURU8( 255, 255, 255, 255 );
-
-#endif
-
-				const unsigned int idx = PlgAddMeshVertex( mesh, vertex->position, &vertex->normal, &colour, &vertex->textureCoords );
-
-				// these have to be set seperate for now, need an api for it
-				mesh->vertices[ idx ].tangent   = vertex->tangent;
-				mesh->vertices[ idx ].bitangent = vertex->bitangent;
-			}
-		}
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		build_mesh_cache( mesh, child );
-	}
-}
-
-static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
-{
-	unsigned int numVertices = 0;
-	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
-	{
-		const ApeBrush *brush = ( ApeBrush * ) node;
-		numVertices           = brush->numVertices;
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		numVertices += get_total_verts_for_tree( child );
-	}
-
-	return numVertices;
-}
-
-static void update_mesh_cache_( ApeRoom *self )
-{
-	COM_PROFILE_FUNCTION_START();
-
-	if ( !self->isDirty )
-	{
-		return;
-	}
-
-	if ( self->mesh == nullptr )
-	{
-		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, get_total_verts_for_tree( &self->base ) );
-		if ( self->mesh == nullptr )
-		{
-			ape_warning_( "Failed to create mesh for room: %s\n", PlGetError() );
-			return;
-		}
-	}
-
-	// not an expensive operation, so call regardless
-	PlgClearMesh( self->mesh );
-
-	// iterate over all the brushes under the room, build up the mesh
-	build_mesh_cache( self->mesh, &self->base );
-
-	// finally, upload it
-	PlgUploadMesh( self->mesh );
-	self->isDirty = false;
-
-	COM_PROFILE_FUNCTION_END();
 }
 
 static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance *instance, unsigned int *offset )
@@ -347,6 +231,58 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const
 	}
 }
 
+static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
+{
+	ape_world_node_update_mesh_cache_( worldNode );
+
+	if ( worldNode->mesh != nullptr )
+	{
+		//TODO: this is operating off a universal list, should only operate on *world* materials!!!
+		PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
+		assert( materialList != nullptr );
+
+		ApeMemoryCacheHeader *header;
+		COM_ITERATE_LINKED_LIST( header, materialList, i )
+		{
+			ApeMaterial *material = header->userData;
+			assert( material != nullptr );
+
+			// blended materials get drawn later
+			if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
+			{
+				continue;
+			}
+
+			COM_PROFILE_START( "build_brush_display_list" );
+
+			unsigned int offset = 0;
+			build_brush_display_list( worldNode, material, light, camera, &offset, flags );
+
+			COM_PROFILE_END( "build_brush_display_list" );
+
+			if ( numSubMeshes[ 0 ] == 0 )
+			{
+				continue;
+			}
+
+			PLGMesh *mesh        = worldNode->mesh;
+			mesh->numSubMeshes   = numSubMeshes[ 0 ];
+			mesh->firstSubMeshes = firstSubMeshes[ 0 ];
+			mesh->subMeshes      = subMeshes[ 0 ];
+
+			ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
+
+			mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+	{
+		draw_node_meshes( child, camera, light, flags );
+	}
+}
+
 void        ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
 static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
@@ -366,51 +302,14 @@ static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const 
 	//TODO: all this needs sorting for transparency... temporary!!!
 	draw_visible_camera_nodes( camera, light, flags );
 
-	//TODO: this is operating off a universal list, should only operate on *world* materials!!!
-	PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
-	assert( materialList != nullptr );
+	// recurse down the tree to draw all nodes with explicit meshes
+	draw_node_meshes( APE_WORLD_NODE( room ), camera, light, flags );
 
-	ApeMemoryCacheHeader *header;
-	COM_ITERATE_LINKED_LIST( header, materialList, i )
-	{
-		ApeMaterial *material = header->userData;
-		assert( material != nullptr );
-
-		// blended materials get drawn later
-		if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
-		{
-			continue;
-		}
-
-		COM_PROFILE_START( "build_brush_display_list" );
-
-		unsigned int offset = 0;
-		build_brush_display_list( &room->base, material, light, camera, &offset, flags );
-
-		COM_PROFILE_END( "build_brush_display_list" );
-
-		if ( numSubMeshes[ 0 ] == 0 )
-		{
-			continue;
-		}
-
-		PLGMesh *mesh        = room->mesh;
-		mesh->numSubMeshes   = numSubMeshes[ 0 ];
-		mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-		mesh->subMeshes      = subMeshes[ 0 ];
-
-		ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
-
-		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
-	}
-
-#if 1
 	//TODO: botch, we don't check render pass flag under draw models yet
 	if ( !( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
 	{
 		ape_model_draw_models( room, camera, light );
 	}
-#endif
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
@@ -637,7 +536,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 		return;
 	}
 
-	PLGMesh *mesh        = room->mesh;
+	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
 	mesh->numSubMeshes   = numSubMeshes[ 0 ];
 	mesh->firstSubMeshes = firstSubMeshes[ 0 ];
 	mesh->subMeshes      = subMeshes[ 0 ];
@@ -810,7 +709,6 @@ void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoi
 {
 	const float d = -PlVector3DotProduct( *normal, *planePoint );
 
-	// Fill the reflection matrix
 	reflectionMatrix->mm[ 0 ][ 0 ] = 1.0f - 2.0f * normal->x * normal->x;
 	reflectionMatrix->mm[ 0 ][ 1 ] = -2.0f * normal->x * normal->y;
 	reflectionMatrix->mm[ 0 ][ 2 ] = -2.0f * normal->x * normal->z;
@@ -859,25 +757,40 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 
 	COM_PROFILE_FUNCTION_START();
 
-	update_mesh_cache_( room );
-
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
+	// clamp it to the *absolute* maximum depth;
+	// this setting is here for performance reasons,
+	// so users can toggle it for their system, but not to
+	// rediculous degrees...
+	static constexpr unsigned int MAX_PORTAL_DEPTH = 16;
+	PL_GET_CVAR( "renderer.maxPortalDepth", maxPortalDepth );
+	if ( maxPortalDepth->i_value > MAX_PORTAL_DEPTH )
+	{
+		char tmp[ 64 ];
+		snprintf( tmp, sizeof( tmp ), "%u", MAX_PORTAL_DEPTH );
+		PlSetConsoleVariable( maxPortalDepth, tmp );
+	}
+
 	// first draw the portals
-	if ( ape_rendererState_.depth == 0 )
+	if ( ape_rendererState_.depth < maxPortalDepth->i_value )
 	{
 		PlgPushDebugGroupMarker( "Portals" );
 
 		unsigned int               numPortals;
-		static const ApeBrushFace *current[ 4 ] = {};
-		ApeBrushFace             **portals      = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.visiblePortals, &numPortals );
+		static const ApeBrushFace *current[ MAX_PORTAL_DEPTH ] = {};
+		ApeBrushFace             **portals                     = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.portals, &numPortals );
 		for ( unsigned int i = 0; i < numPortals; ++i )
 		{
-			const ApeBrushFace *portal          = portals[ i ];
-			ApeRoom            *destinationRoom = ape_brush_face_get_room( portal );
-
+			const ApeBrushFace *portal = portals[ i ];
 			if ( portal == current[ ape_rendererState_.depth ] )
+			{
+				continue;
+			}
+
+			ApeRoom *destinationRoom = ape_brush_face_get_room( portal );
+			if ( destinationRoom == nullptr )
 			{
 				continue;
 			}
@@ -928,12 +841,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			float     d          = -PlVector3DotProduct( portal->normal, planePoint );
 			PlgSetClipPlane( &PL_VECTOR4( portal->normal.x, portal->normal.y, portal->normal.z, d ) );
 
-#if 1
-			draw_solid_room( destinationRoom, camera, ape_rendererState_.depth > 0 );
-			draw_translucent_room( room, camera, ape_rendererState_.depth > 0 );
-#else
 			ape_room_draw_( destinationRoom, camera, viewport );
-#endif
 
 			PlgSetClipPlane( nullptr );
 

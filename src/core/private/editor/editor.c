@@ -310,10 +310,13 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 	}
 
 	//TODO: get rid of this!
-	face          = ape_editor_get_first_selected( self );
-	ApeRoom *room = ape_brush_face_get_room( face );
-	assert( room != nullptr );
-	room->isDirty = true;
+	face = ape_editor_get_first_selected( self );
+
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( face->parent ) );
+	if ( parent != nullptr )
+	{
+		ape_world_node_mark_dirty_( parent );
+	}
 }
 
 void ape_editor_shade_faces_flat( ApeEditorInstance *self )
@@ -326,14 +329,17 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
-		ape_brush_face_compute_normal_( face );
+		ape_brush_face_compute_normal( face );
 	}
 
 	//TODO: get rid of this!
-	face          = ape_editor_get_first_selected( self );
-	ApeRoom *room = ape_brush_face_get_room( face );
-	assert( room != nullptr );
-	room->isDirty = true;
+	face = ape_editor_get_first_selected( self );
+
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( face->parent ) );
+	if ( parent != nullptr )
+	{
+		ape_world_node_mark_dirty_( parent );
+	}
 }
 
 void ape_editor_duplicate_selection( ApeEditorInstance *self )
@@ -409,7 +415,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 					dstBrush->faces[ j ].parent      = dstBrush;
 				}
 
-				ape_brush_compute_bounds_( dstBrush );
+				ape_brush_compute_bounds( dstBrush );
 
 				PlInsertLinkedListNode( newSelectionList, dstBrush );
 
@@ -470,14 +476,14 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 						{
 							if ( brush->faces[ j ].vertices[ k ].position == vertex )
 							{
-								ape_brush_face_compute_normal_( &brush->faces[ j ] );
+								ape_brush_face_compute_normal( &brush->faces[ j ] );
 								break;
 							}
 						}
 					}
 
-					ape_brush_compute_face_bounds_( brush );
-					ape_brush_compute_bounds_( brush );
+					ape_brush_compute_face_bounds( brush );
+					ape_brush_compute_bounds( brush );
 				}
 				else
 				{
@@ -485,7 +491,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 				}
 			}
 
-			ape_room_mark_dirty_( room );
+			ape_world_node_mark_dirty_( APE_WORLD_NODE( room ) );
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
@@ -508,11 +514,11 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 						brush->vertices[ j ] = PlAddVector3( brush->vertices[ j ], PlScaleVector3F( gridDir, self->grid.size ) );
 					}
 
-					ape_brush_compute_bounds_( brush );
+					ape_brush_compute_bounds( brush );
 					//TODO: make faces relative to brush so that this isn't necessary!!!
-					ape_brush_compute_face_bounds_( brush );
+					ape_brush_compute_face_bounds( brush );
 
-					ape_room_mark_dirty_( room );
+					ape_world_node_mark_dirty_( APE_WORLD_NODE( room ) );
 					continue;
 				}
 

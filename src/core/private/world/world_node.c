@@ -212,6 +212,8 @@ void ape_world_node_destroy( ApeWorldNode *self )
 
 	PlDestroyLinkedList( self->children );
 
+	PlgDestroyMesh( self->mesh );
+
 	assert( self->classType->destroyFunction );
 	self->classType->destroyFunction( self, parent );
 }
@@ -535,33 +537,46 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 	return self;
 }
 
-static void gather_children( ApeWorldNode *worldNode, ApeWorldNodeType type, PLVectorArray *array )
+static void gather_children( ApeWorldNode *worldNode, ApeWorldNodeType type, PLVectorArray *array, bool recursive )
 {
-	if ( worldNode->type == type )
-	{
-		PlPushBackVectorArrayElement( array, worldNode );
-	}
-
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
 	{
-		gather_children( child, type, array );
+		if ( child->type == type )
+		{
+			PlPushBackVectorArrayElement( array, worldNode );
+		}
+
+		if ( recursive )
+		{
+			gather_children( child, type, array, recursive );
+		}
 	}
 }
 
-PLVectorArray *ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type )
+ApeWorldNode **ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type, unsigned int *numChildren, bool recursive )
 {
-	unsigned int   reserve = PlGetNumLinkedListNodes( self->children );
-	PLVectorArray *array   = PlCreateVectorArray( reserve );
-	if ( array == nullptr )
+	unsigned int reserve = PlGetNumLinkedListNodes( self->children );
+	if ( reserve == 0 )
 	{
-		ape_warning_( "Failed to gather children: %s\n", PlGetError() );
+		*numChildren = 0;
 		return nullptr;
 	}
 
-	gather_children( self, type, array );
+	PLVectorArray *array = PlCreateVectorArray( reserve );
+	if ( array == nullptr )
+	{
+		ape_warning_( "Failed to gather children: %s\n", PlGetError() );
+		*numChildren = 0;
+		return nullptr;
+	}
 
-	return array;
+	gather_children( self, type, array, recursive );
+
+	ApeWorldNode **children = ( ApeWorldNode ** ) PlGetVectorArrayDataEx( array, numChildren );
+	PlDestroyVectorArrayContainer( array );
+
+	return children;
 }
 
 ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
@@ -591,4 +606,145 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 const char *ape_world_node_get_path( const ApeWorldNode *self )
 {
 	return self->path;
+}
+
+ApeWorldNode *ape_world_node_get_parent( ApeWorldNode *self )
+{
+	return self->parent;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Mesh Cache
+// ..................................................................................
+// This really sucks, and will likely get replaced down the line... Let me try and
+// explain my thought process here. So per room, we had a mesh cache that all of the
+// brush geometry was loaded into, that worked great, but then we wanted to move some
+// brushes around at runtime which is when we hit a slight problem; I can't update
+// just *part* of the room mesh (as we don't have an API for doing that) and we need
+// to handle the transforms correctly when drawing it too. Someone much wiser than I
+// can probably come up with a better solution here, but for now, this abomination
+// will be here...
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_world_node_mark_dirty_( ApeWorldNode *self )
+{
+	self->isMeshDirty = true;
+}
+
+PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self )
+{
+	return self->mesh;
+}
+
+static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
+{
+	unsigned int numVertices = 0;
+	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		const ApeBrush *brush = ( ApeBrush * ) node;
+		numVertices           = brush->numVertices;
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		numVertices += get_total_verts_for_tree( child );
+	}
+
+	return numVertices;
+}
+
+void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
+{
+	if ( !self->isMeshDirty )
+	{
+		return;
+	}
+
+	unsigned int numVertices = get_total_verts_for_tree( self );
+	if ( numVertices == 0 )
+	{
+		PlgDestroyMesh( self->mesh );
+		return;
+	}
+
+	if ( self->mesh == nullptr )
+	{
+		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVertices );
+		if ( self->mesh == nullptr )
+		{
+			ape_warning_( "Failed to create mesh for node: %s\n", PlGetError() );
+			return;
+		}
+	}
+
+	COM_PROFILE_FUNCTION_START();
+
+	PlgClearMesh( self->mesh );
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
+	{
+		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		const ApeBrush *brush = ( ApeBrush * ) child;
+		for ( unsigned int j = 0; j < brush->numFaces; ++j )
+		{
+			const ApeBrushFace *face = &brush->faces[ j ];
+			for ( unsigned int k = 0; k < face->numVertices; ++k )
+			{
+				const ApeBrushFaceVertex *vertex = face->edgeLoop[ k ];
+
+#if !defined( APE_NO_EDITOR )
+
+				// this is a gross botch to allow us to do special shaded
+				// types via the editor... *sigh*
+				PLColour                 colour;
+				const ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
+				if ( editorInstance != nullptr && editorInstance->camera != nullptr )
+				{
+					const ApeCamera *camera = editorInstance->camera;
+					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
+					{
+						srand( ( intptr_t ) brush );
+						colour = PL_COLOURU8(
+						        ( uint8_t ) ( rand() % 256 ),
+						        ( uint8_t ) ( rand() % 256 ),
+						        ( uint8_t ) ( rand() % 256 ), 255 );
+					}
+					else if ( camera->drawMode == APE_CAMERA_DRAW_MODE_PORTALS )
+					{
+					}
+					else
+					{
+						colour = PL_COLOURU8( 255, 255, 255, 255 );
+					}
+				}
+				else
+				{
+					colour = PL_COLOURU8( 255, 255, 255, 255 );
+				}
+
+#else
+
+				PLColour colour = PL_COLOURU8( 255, 255, 255, 255 );
+
+#endif
+
+				const unsigned int idx = PlgAddMeshVertex( self->mesh, vertex->position, &vertex->normal, &colour, &vertex->textureCoords );
+
+				// these have to be set seperate for now, need an api for it
+				self->mesh->vertices[ idx ].tangent   = vertex->tangent;
+				self->mesh->vertices[ idx ].bitangent = vertex->bitangent;
+			}
+		}
+	}
+
+	PlgUploadMesh( self->mesh );
+	self->isMeshDirty = false;
+
+	COM_PROFILE_FUNCTION_END();
 }

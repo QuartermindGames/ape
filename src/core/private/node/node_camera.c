@@ -10,6 +10,10 @@
 
 static PLLinkedList *cameras;
 
+static constexpr unsigned int RESERVE_FACES   = 4096;
+static constexpr unsigned int RESERVE_NODES   = 2048;
+static constexpr unsigned int RESERVE_PORTALS = 1024;
+
 void ape_camera_make_active( ApeCamera *camera )
 {
 	if ( camera != nullptr )
@@ -91,9 +95,9 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const PLVe
 		ape_error_( true, "Failed to create camera: %s\n", PlGetError() );
 	}
 
-	static const float DEFAULT_FAR  = 1000000.0f;
-	static const float DEFAULT_FOV  = 75.0f;
-	static const float DEFAULT_NEAR = 0.1f;
+	static constexpr float DEFAULT_FAR  = 1000000.0f;
+	static constexpr float DEFAULT_FOV  = 75.0f;
+	static constexpr float DEFAULT_NEAR = 0.1f;
 
 	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
 	{
@@ -128,10 +132,10 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const PLVe
 		}
 	}
 
-	camera->pvs.visitedRooms   = PlCreateHashTable();
-	camera->pvs.nodes          = PlCreateVectorArray( 2048 );
-	camera->pvs.visibleFaces   = PlCreateVectorArray( 4096 );
-	camera->pvs.visiblePortals = PlCreateVectorArray( 1024 );
+	camera->pvs.visitedRooms = PlCreateHashTable();
+	camera->pvs.nodes        = PlCreateVectorArray( RESERVE_NODES );
+	camera->pvs.faces        = PlCreateVectorArray( RESERVE_FACES );
+	camera->pvs.portals      = PlCreateVectorArray( RESERVE_PORTALS );
 
 	camera->node = PlInsertLinkedListNode( cameras, camera );
 
@@ -142,8 +146,8 @@ static void cleanup_pvs( ApeCameraVisibleSet *pvs )
 {
 	PlDestroyHashTable( pvs->visitedRooms );
 	PlDestroyVectorArray( pvs->nodes );
-	PlDestroyVectorArray( pvs->visibleFaces );
-	PlDestroyVectorArray( pvs->visiblePortals );
+	PlDestroyVectorArray( pvs->faces );
+	PlDestroyVectorArray( pvs->portals );
 }
 
 /**
@@ -280,7 +284,7 @@ ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num
 
 ApeBrushFace **ape_camera_get_visible_portals_( ApeCamera *self, unsigned int *num )
 {
-	return ( ApeBrushFace ** ) PlGetVectorArrayDataEx( self->pvs.visiblePortals, num );
+	return ( ApeBrushFace ** ) PlGetVectorArrayDataEx( self->pvs.portals, num );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -430,11 +434,11 @@ static void test_node_visibility( ApeCamera *self, ApeWorldNode *node )
 				if ( ape_brush_face_is_portal( face ) )
 				{
 					ape_rendererPerformance_.numVisiblePortals++;
-					PlPushBackVectorArrayElement( self->pvs.visiblePortals, face );
+					PlPushBackVectorArrayElement( self->pvs.portals, face );
 					//TODO: traverse connected room
 				}
 
-				PlPushBackVectorArrayElement( self->pvs.visibleFaces, face );
+				PlPushBackVectorArrayElement( self->pvs.faces, face );
 			}
 		}
 	}
@@ -490,37 +494,21 @@ void ape_camera_build_pvs_( ApeCamera *self )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-#if 0
-	PLCollisionRay ray = {};
-	ray.origin         = PL_VECTOR3( 0.0f, s, -r );
-	ray.direction      = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
-
-	ApeRayIntersection intersection = {};
-	if ( ape_room_ray_intersect( room, &ray, &intersection ) )
-	{
-		ape_draw_debug_arrow( ray.origin, intersection.intersection, PL_COLOUR_GREEN, 2.0f );
-	}
-	else
-	{
-		ape_draw_debug_arrow( ray.origin, PlAddVector3( ray.origin, PlScaleVector3F( ray.direction, 128.0f ) ), PL_COLOUR_RED, 2.0f );
-	}
-#endif
-
 	test_room_visibility( self, room );
 	sort_lights( self );
 
 	PlPopMatrix();
 
 	ape_rendererPerformance_.numRooms += self->pvs.numRooms;
-	//ape_rendererPerformance_.numLights += self->visibility.numLights;
+	ape_rendererPerformance_.numLights += self->pvs.numLights;
 }
 
 void ape_camera_clear_pvs_( ApeCamera *self )
 {
 	PlClearHashTable( self->pvs.visitedRooms );
 	PlClearVectorArray( self->pvs.nodes );
-	PlClearVectorArray( self->pvs.visibleFaces );
-	PlClearVectorArray( self->pvs.visiblePortals );
+	PlClearVectorArray( self->pvs.faces );
+	PlClearVectorArray( self->pvs.portals );
 	self->pvs.numLights = 0;
 	self->pvs.numRooms  = 0;
 }

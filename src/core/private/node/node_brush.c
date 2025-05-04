@@ -16,6 +16,11 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 		PL_DELETEN( brush );
 	}
 
+	if ( parent != nullptr )
+	{
+		ape_world_node_mark_dirty_( parent );
+	}
+
 	return brush;
 }
 
@@ -28,10 +33,9 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 	}
 
 	//HACK: notify the room it's rebuild time!
-	ApeRoom *room = ape_world_node_get_room( parent );
-	if ( room != nullptr )
+	if ( parent != nullptr )
 	{
-		ape_room_mark_dirty_( room );
+		ape_world_node_mark_dirty_( parent );
 	}
 
 	PL_DELETE( self->vertices );
@@ -79,7 +83,7 @@ static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face
 }
 #endif
 
-void ape_brush_face_compute_normal_( ApeBrushFace *face )
+void ape_brush_face_compute_normal( ApeBrushFace *face )
 {
 	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
 
@@ -182,11 +186,11 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	// recompute face texture coordinates, as this is relative to the material size
 	compute_brush_face_texture_coordinates( self );
 
-	// need to notify the room to update
-	ApeRoom *room = ape_brush_face_get_room( self );
-	if ( room != nullptr )
+	// need to notify the parent to update
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
+	if ( parent != nullptr )
 	{
-		ape_room_mark_dirty_( room );
+		ape_world_node_mark_dirty_( parent );
 	}
 }
 
@@ -202,17 +206,17 @@ void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVect
 	// recompute face texture coordinates, as this is relative to the material size
 	compute_brush_face_texture_coordinates( self );
 
-	// need to notify the room to update
-	ApeRoom *room = ape_brush_face_get_room( self );
-	if ( room != nullptr )
+	// need to notify the parent to update
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
+	if ( parent != nullptr )
 	{
-		ape_room_mark_dirty_( room );
+		ape_world_node_mark_dirty_( parent );
 	}
 }
 
 bool ape_brush_face_is_portal( const ApeBrushFace *self )
 {
-	if ( self->destination != nullptr )
+	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL && self->destination != nullptr )
 	{
 		return true;
 	}
@@ -251,7 +255,7 @@ ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self )
 	return room;
 }
 
-void ape_brush_face_compute_bounds_( ApeBrushFace *face )
+void ape_brush_face_compute_bounds( ApeBrushFace *face )
 {
 	assert( face->numVertices > 0 );
 
@@ -275,7 +279,7 @@ void ape_brush_face_compute_bounds_( ApeBrushFace *face )
 	face->bounds.absOrigin = PlGetAabbAbsOrigin( &face->bounds, face->bounds.origin );
 }
 
-void ape_brush_compute_bounds_( ApeBrush *self )
+void ape_brush_compute_bounds( ApeBrush *self )
 {
 	assert( self->numVertices > 0 );
 
@@ -304,11 +308,11 @@ void ape_brush_compute_bounds_( ApeBrush *self )
 	ape_world_node_compute_bounds_( APE_WORLD_NODE( self ) );
 }
 
-void ape_brush_compute_face_bounds_( ApeBrush *self )
+void ape_brush_compute_face_bounds( ApeBrush *self )
 {
 	for ( unsigned int i = 0; i < self->numFaces; ++i )
 	{
-		ape_brush_face_compute_bounds_( &self->faces[ i ] );
+		ape_brush_face_compute_bounds( &self->faces[ i ] );
 	}
 }
 
@@ -326,12 +330,12 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 		end--;
 	}
 
-	ape_brush_face_compute_normal_( face );
+	ape_brush_face_compute_normal( face );
 
-	ApeRoom *room = ape_brush_face_get_room( face );
-	if ( room != nullptr )
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( face->parent ) );
+	if ( parent != nullptr )
 	{
-		ape_room_mark_dirty_( room );
+		ape_world_node_mark_dirty_( parent );
 	}
 }
 
@@ -402,18 +406,18 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].material      = material;
 		self->faces[ i ].materialScale = PL_VECTOR2( 0.5f, 0.5f );
 
-		ape_brush_face_compute_normal_( &self->faces[ i ] );
-		ape_brush_face_compute_bounds_( &self->faces[ i ] );
+		ape_brush_face_compute_normal( &self->faces[ i ] );
+		ape_brush_face_compute_bounds( &self->faces[ i ] );
 		compute_brush_face_texture_coordinates( &self->faces[ i ] );
 		compute_brush_face_tangents( &self->faces[ i ] );
 	}
 
-	ape_brush_compute_bounds_( self );
+	ape_brush_compute_bounds( self );
 
-	ApeRoom *room = ape_world_node_get_room( &self->base );
-	if ( room != nullptr )
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self ) );
+	if ( parent != nullptr )
 	{
-		ape_room_mark_dirty_( room );
+		ape_world_node_mark_dirty_( parent );
 	}
 
 	return true;
@@ -554,7 +558,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
-			ape_brush_compute_bounds_( self );
+			ape_brush_compute_bounds( self );
 		}
 	}
 	else
@@ -567,7 +571,7 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 	return APE_WORLD_NODE( self );
 }
 
-static const ApeWorldNodePropertyEnum brushTypeEnums[] = {
+static ApeWorldNodePropertyEnum brushTypeEnums[] = {
         {"Solid", 0},
         {"Air",   1},
 };

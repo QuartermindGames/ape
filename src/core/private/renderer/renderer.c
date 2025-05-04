@@ -160,6 +160,8 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 	double newTime = PlGetCurrentSeconds();
 
+	PL_ZERO_( ape_rendererPerformance_ );
+
 	viewport->perf.frameReadings[ viewport->perf.frameIndex++ ] = 1.0 / ( newTime - viewport->perf.oldTime );
 	if ( viewport->perf.frameIndex >= APE_MAX_FPS_READINGS )
 	{
@@ -333,6 +335,8 @@ void ape_register_renderer_console_variables_( void )
 
 	//TODO: move into flare code...
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
+
+	PlRegisterConsoleVariable( "renderer.maxPortalDepth", "Maximum depth that portals can recurse.", "1", PL_VAR_I32, nullptr, nullptr, true );
 
 	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();

@@ -52,9 +52,6 @@ typedef struct ApeRoom
 	PLVectorArray *portals;// ApeBrushFace
 	PLVectorArray *faces;  // ApeBrushFace
 
-	PLGMesh *mesh;   // cached mesh
-	bool     isDirty;// if false, mesh cache will be updated
-
 	ApeAudioReverbPreset reverbPreset;// default reverb for the room
 	PLVector3            gravity;     // default gravity for the room
 
@@ -87,18 +84,22 @@ void ape_world_node_compute_bounds_( ApeWorldNode *self );
 void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
 void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
-void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
+/////////////////////////////////////////////////////////////////////////////////////
+// Nodes
 
-void ape_room_mark_dirty_( ApeRoom *self );
+ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
+
+void     ape_world_node_mark_dirty_( ApeWorldNode *self );
+PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self );
+void     ape_world_node_update_mesh_cache_( ApeWorldNode *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Rooms
+
+void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brushes
-
-void ape_brush_face_compute_normal_( ApeBrushFace *face );
-void ape_brush_face_compute_bounds_( ApeBrushFace *face );
-
-void ape_brush_compute_bounds_( ApeBrush *self );
-void ape_brush_compute_face_bounds_( ApeBrush *self );
 
 void ape_brush_flip_face_( ApeBrushFace *face );
 

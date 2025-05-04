@@ -45,9 +45,9 @@ typedef struct ApeCameraVisibleSet
 	ApeLight    *lights[ APE_CAMERA_MAX_VISIBLE_LIGHTS ];
 	unsigned int numLights;
 
-	PLVectorArray *nodes;         //ApeWorldNode
-	PLVectorArray *visibleFaces;  //ApeBrushFace
-	PLVectorArray *visiblePortals;//ApeBrushFace
+	PLVectorArray *nodes;  //ApeWorldNode
+	PLVectorArray *faces;  //ApeBrushFace
+	PLVectorArray *portals;//ApeBrushFace
 
 	struct
 	{
