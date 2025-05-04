@@ -157,7 +157,10 @@ void forge::MaterialBrowser::update_material_list( const std::string &filter )
 
 	const ApeMaterial *defaultMaterial = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 	const FXint        itemIndex       = materialList->findItemByData( defaultMaterial );
-	materialList->setCurrentItem( itemIndex > -1 ? itemIndex : 0 );
+	if ( itemIndex >= 0 )
+	{
+		materialList->setCurrentItem( itemIndex );
+	}
 }
 
 const char *forge::MaterialBrowser::get_current() const
