@@ -429,7 +429,7 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		// add the extension if it's missing
 		if ( savePath.substr( savePath.size() - strlen( "." APE_WORLD_ROOM_EXTENSION ) ) != "." APE_WORLD_ROOM_EXTENSION )
 		{
-			savePath += ACM_DEFAULT_EXTENSION_OLD;
+			savePath += ".rom" ACM_DEFAULT_EXTENSION_OLD;
 		}
 	}
 
