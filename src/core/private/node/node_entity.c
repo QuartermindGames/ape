@@ -5,6 +5,8 @@
 #include "ape_private.h"
 #include "node_entity.h"
 
+#include "world/world.h"
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -141,18 +143,17 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 		return;
 	}
 
-	PLHashTableNode *node = PlGetFirstHashTableNode( self->componentTable );
-	while ( node != NULL )
+	ApeEntityComponent *component;
+	COM_ITERATE_HASHED_LIST( component, self->componentTable, i )
 	{
-		ApeEntityComponent *component = PlGetHashTableNodeUserData( node );
 		if ( component->data != nullptr && component->componentDefinition->destroyFunction != nullptr )
 		{
 			component->componentDefinition->destroyFunction( component->data );
 		}
 
 		PL_DELETE( component );
-		node = PlGetNextHashTableNode( node );
 	}
+
 	PlDestroyHashTable( self->componentTable );
 
 	PlDestroyLinkedListNode( self->worldListNode );
@@ -206,6 +207,9 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 		return;
 	}
 
+	assert( definition->createFunction != nullptr );
+	assert( definition->destroyFunction != nullptr );
+
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 }
 
@@ -218,19 +222,20 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 		return NULL;
 	}
 
-	ApeEntityComponent *component = PL_NEW( ApeEntityComponent );
-	if ( componentDefinition->createFunction != NULL )
+	ApeEntityComponent *component  = PL_NEW( ApeEntityComponent );
+	component->componentDefinition = componentDefinition;
+	if ( component->componentDefinition->createFunction != NULL )
 	{
-		component->data = componentDefinition->createFunction();
+		component->data = component->componentDefinition->createFunction();
 	}
 
 	if ( !PlInsertHashTableNode( self->componentTable, name, strlen( name ), component ) )
 	{
 		ape_warning_( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
-		if ( componentDefinition->destroyFunction != NULL )
+		if ( component->componentDefinition->destroyFunction != NULL )
 		{
-			componentDefinition->destroyFunction( component );
+			component->componentDefinition->destroyFunction( component );
 		}
 
 		PL_DELETE( component );

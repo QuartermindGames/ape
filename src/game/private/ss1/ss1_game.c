@@ -67,7 +67,7 @@ static bool ss1_initialize()
 {
 	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
 	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
-	game_integrations_discord_update_activity_( G_STR_( "Testing 123" ), nullptr, "qm1-logo", SS1_GAME_TITLE );
+	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", SS1_GAME_TITLE );
 
 	game_register_standard_entity_components_();
 
@@ -456,7 +456,7 @@ static void ss1_spawn_world( ApeRoom *room )
 	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 #endif
 
-	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	//ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
 	if ( *path == '\0' )
@@ -467,6 +467,16 @@ static void ss1_spawn_world( ApeRoom *room )
 	char        buf[ 128 ];
 	snprintf( buf, sizeof( buf ), c, path );
 	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", SS1_GAME_TITLE );
+}
+
+static void on_destroy_room( ApeRoom *room )
+{
+	ApeWorldNode *worldNode = ape_world_node_get_parent( APE_WORLD_NODE( ss1_gameState.camera ) );
+	if ( worldNode == APE_WORLD_NODE( room ) )
+	{
+		// save the camera from being destroyed!
+		ape_world_node_dettach( APE_WORLD_NODE( ss1_gameState.camera ) );
+	}
 }
 
 static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )
@@ -530,6 +540,8 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .identifier            = "ss1",
 	        .requestCallbackMethod = request_handler,
 	        .spawnWorld            = ss1_spawn_world,
+
+	        .onDestroyRoom = on_destroy_room,
 
 	        .serverClientValidate     = server_client_validate,
 	        .serverClientConnected    = server_client_connected,

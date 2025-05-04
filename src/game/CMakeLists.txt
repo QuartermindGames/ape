@@ -19,8 +19,10 @@ set(GAME_SHARED_FILES
         private/shared/components/component_movement.c
 
         private/shared/entities/entity_player_spawn.c
+        private/shared/entities/entity_portal.c
         private/shared/entities/entity_rope.c
         private/shared/entities/entity_trigger.c
+
         private/shared/integrations/discord/discord.c
 
         private/shared/menu/menu_chat.c
@@ -65,9 +67,11 @@ set(SS1_SOURCES
 add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)
 target_link_libraries(SS1 ${GAME_LINK_LIBS})
 target_compile_definitions(SS1 PRIVATE -DGAME_SS1)
+target_include_directories(SS1 PRIVATE private)
 set_target_properties(SS1 PROPERTIES FOLDER "Shells")
 
 add_executable(SS1Forge WIN32 ${SS1_SOURCES})
 target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
-target_compile_definitions(SS1 PRIVATE -DGAME_SS1)
+target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1)
+target_include_directories(SS1Forge PRIVATE private)
 set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")

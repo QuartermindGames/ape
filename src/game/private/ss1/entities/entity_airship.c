@@ -2,9 +2,9 @@
 // Purpose: A large floating airship that floats around the map.
 // Author:  Mark E. Sowden
 
-#include "../ss1_game.h"
+#include "ss1/ss1_game.h"
 
-#include "../../shared/components/component_health.h"
+#include "shared/components/component_health.h"
 
 #include <ape/ape_public_model.h>
 
@@ -61,6 +61,7 @@ static void update_target_destination( AirshipEntity *self )
 static void spawn_airship( ApeEntity *self )
 {
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
+	assert( airship != nullptr );
 
 	airship->healthComponent = ape_entity_add_component( self, "health" );
 	assert( airship->healthComponent != nullptr );

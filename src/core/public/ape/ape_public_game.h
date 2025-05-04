@@ -33,6 +33,7 @@ typedef struct ApeGameInterfaceImport
 	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
 
 	void ( *spawnWorld )( ApeRoom *room );
+	void ( *onDestroyRoom )( ApeRoom *room );
 
 	// client
 	void ( *clientConnect )();

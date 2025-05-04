@@ -57,8 +57,10 @@ static GameMenu confirmQuitMenu = {
 };
 
 static GameMenuOption startMenuOptions[] = {
-        {"rundown\n",       nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown" } },
-        {"zoo_materials\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room zoo_materials" }},
+        {"rundown\n",        nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown_2" }     },
+        {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }},
+        {"test_portal\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_portal" }   },
+        {"test_smoothing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_smoothing" }},
 };
 static GameMenu startMenu = {
         "Start Server\n",
