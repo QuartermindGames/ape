@@ -462,6 +462,12 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 			break;
 		}
 
+		case KEY_Escape:
+		{
+			ape_editor_clear_selection( instance );
+			break;
+		}
+
 		case 'w':
 		{
 			PLVector3 forward;
