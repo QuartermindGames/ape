@@ -544,7 +544,7 @@ static void gather_children( ApeWorldNode *worldNode, ApeWorldNodeType type, PLV
 	{
 		if ( child->type == type )
 		{
-			PlPushBackVectorArrayElement( array, worldNode );
+			PlPushBackVectorArrayElement( array, child );
 		}
 
 		if ( recursive )
@@ -577,6 +577,28 @@ ApeWorldNode **ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeT
 	PlDestroyVectorArrayContainer( array );
 
 	return children;
+}
+
+unsigned int ape_world_node_visit_children( ApeWorldNode *self, ApeWorldNodeType type, bool recursive, bool ( *callback )( ApeWorldNode *self, void *user ), void *user )
+{
+	unsigned int numVisited = 0;
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
+	{
+		if ( child->type == type )
+		{
+			callback( child, user );
+			numVisited++;
+		}
+
+		if ( recursive )
+		{
+			numVisited += ape_world_node_visit_children( child, type, recursive, callback, user );
+		}
+	}
+
+	return numVisited;
 }
 
 ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )

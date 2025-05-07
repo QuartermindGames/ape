@@ -295,6 +295,18 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 ApeWorldNode **ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeType type, unsigned int *numChildren, bool recursive );
 
 /**
+ * Iterates through all of the children of the given node and executes a callback when the specified type is encountered.
+ *
+ * @param self		Instance of the node.
+ * @param type		Type of world node to visit.
+ * @param recursive	Whether to recurse through all child nodes.
+ * @param callback	Callback method to call if specified type encountered.
+ * @param user		User pointer to pass into callback.
+ * @return			Number of children visited.
+ */
+unsigned int ape_world_node_visit_children( ApeWorldNode *self, ApeWorldNodeType type, bool recursive, bool ( *callback )( ApeWorldNode *self, void *user ), void *user );
+
+/**
  * Attempt to load a world node from a given path.
  *
  * @param parent	Parent to attach to.
