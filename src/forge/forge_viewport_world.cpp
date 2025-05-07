@@ -369,7 +369,9 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 				ape_editor_clear_plot_points( instance );
 				return TRUE;
 			}
-			break;
+
+			ape_editor_clear_selection( instance );
+			return TRUE;
 		}
 
 		// grid controls
