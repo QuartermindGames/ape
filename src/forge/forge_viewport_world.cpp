@@ -463,7 +463,9 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 	}
 
 	// allow us to use shift + arrows to move things around
-	if ( event->state & SHIFTMASK && ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX || instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM ) )
+	if ( event->state & SHIFTMASK && ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_VERTEX ||
+	                                   instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM ||
+	                                   instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE ) )
 	{
 		PLVector3 dir = {};
 		switch ( event->code )

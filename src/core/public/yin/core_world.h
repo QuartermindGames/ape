@@ -429,6 +429,8 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 void ape_brush_compute_bounds( ApeBrush *self );
 void ape_brush_compute_face_bounds( ApeBrush *self );
 
+void ape_brush_mark_parent_dirty( ApeBrush *self );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 

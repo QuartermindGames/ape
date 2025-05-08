@@ -423,6 +423,17 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	return true;
 }
 
+void ape_brush_mark_parent_dirty( ApeBrush *self )
+{
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self ) );
+	if ( parent == nullptr )
+	{
+		return;
+	}
+
+	ape_world_node_mark_dirty_( parent );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )

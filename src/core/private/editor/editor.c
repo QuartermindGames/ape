@@ -484,19 +484,44 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 
 					ape_brush_compute_face_bounds( brush );
 					ape_brush_compute_bounds( brush );
+
+					ape_brush_mark_parent_dirty( brush );
 				}
 				else
 				{
 					ape_warning_( "Failed to lookup parent brush when adjusting vertex!\n" );
 				}
 			}
-
-			ape_world_node_mark_dirty_( APE_WORLD_NODE( room ) );
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			//TODO
+			PLHashTable *vertexTable = PlCreateHashTable();
+
+			// determine what vertices we're shifting
+			ApeBrushFace *face;
+			COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+			{
+				for ( unsigned int j = 0; j < face->numVertices; ++j )
+				{
+					intptr_t ptr = ( intptr_t ) &face->vertices[ j ].position;
+					PlInsertHashTableNode( vertexTable, &ptr, sizeof( intptr_t ), face->vertices[ j ].position );
+				}
+
+				ApeBrush *brush = face->parent;
+				if ( brush != nullptr )
+				{
+					ape_brush_mark_parent_dirty( brush );
+				}
+			}
+
+			PLVector3 *vertex;
+			COM_ITERATE_HASHED_LIST( vertex, vertexTable, i )
+			{
+				*vertex = PlAddVector3( *vertex, PlScaleVector3F( gridDir, self->grid.size ) );
+			}
+
+			PlDestroyHashTable( vertexTable );
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
@@ -518,7 +543,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 					//TODO: make faces relative to brush so that this isn't necessary!!!
 					ape_brush_compute_face_bounds( brush );
 
-					ape_world_node_mark_dirty_( APE_WORLD_NODE( room ) );
+					ape_brush_mark_parent_dirty( brush );
 					continue;
 				}
 
