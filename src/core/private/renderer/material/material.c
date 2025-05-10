@@ -13,8 +13,15 @@
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
+static ApeTexture *diffuseFallbackTexture;
 static PLGTexture *specularFallbackTexture;
 static PLGTexture *normalFallbackTexture;
+
+static PLConsoleString materialTextureFilter;
+static int32_t         materialTextureAnisotropy = 16;
+static bool            materialSkipDiffuse;
+static bool            materialSkipNormal;
+static bool            materialSkipSpecular;
 
 typedef struct ApeMaterial
 {
@@ -68,6 +75,16 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 	return nullptr;
 }
 
+void ape_material_register_console_variables_()
+{
+	PlRegisterConsoleVariable( "material.forceTextureFilter", "Force a specific texture filtering mode.", "", PL_VAR_STRING, materialTextureFilter, nullptr, false );
+	PlRegisterConsoleVariable( "material.textureAnistropy", "", "16", PL_VAR_I32, &materialTextureAnisotropy, nullptr, false );
+
+	PlRegisterConsoleVariable( "material.skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, &materialSkipDiffuse, nullptr, false );
+	PlRegisterConsoleVariable( "material.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, &materialSkipNormal, nullptr, false );
+	PlRegisterConsoleVariable( "material.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, &materialSkipSpecular, nullptr, false );
+}
+
 void ape_initialize_materials_( void )
 {
 	ape_print_( "Initializing material system\n" );
@@ -81,8 +98,9 @@ void ape_initialize_materials_( void )
 		}
 	}
 
-	normalFallbackTexture   = ape_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR );
-	specularFallbackTexture = ape_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR );
+	diffuseFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/white.png", PLG_TEXTURE_FILTER_LINEAR, true );
+	normalFallbackTexture   = ape_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+	specularFallbackTexture = ape_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
 
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
@@ -548,6 +566,42 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 	}
 }
 
+static PLGTextureFilter get_texture_filter_by_name( const char *name )
+{
+	PLGTextureFilter textureFilter;
+	if ( pl_strcasecmp( name, "mipmap_nearest" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
+	}
+	else if ( pl_strcasecmp( name, "mipmap_linear" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+	}
+	else if ( pl_strcasecmp( name, "mipmap_linear_nearest" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR_NEAREST;
+	}
+	else if ( pl_strcasecmp( name, "mipmap_nearest_linear" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST_LINEAR;
+	}
+	else if ( pl_strcasecmp( name, "nearest" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_NEAREST;
+	}
+	else if ( pl_strcasecmp( name, "linear" ) == 0 )
+	{
+		textureFilter = PLG_TEXTURE_FILTER_LINEAR;
+	}
+	else
+	{
+		textureFilter = PLG_TEXTURE_FILTER_LINEAR;
+		ape_warning_( "Encountered an invalid texture filter type (%s), reverting to linear!\n", name );
+	}
+
+	return textureFilter;
+}
+
 void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
@@ -579,30 +633,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	const char *textureFilterPtr = acm_get_string( root, "textureFilterMode", nullptr );
 	if ( textureFilterPtr != NULL )
 	{
-		if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
-		}
-		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-		}
-		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_linear_nearest" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR_NEAREST;
-		}
-		else if ( pl_strcasecmp( textureFilterPtr, "mipmap_nearest_linear" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST_LINEAR;
-		}
-		else if ( pl_strcasecmp( textureFilterPtr, "nearest" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_NEAREST;
-		}
-		else if ( pl_strcasecmp( textureFilterPtr, "linear" ) == 0 )
-		{
-			materialPass->textureFilter = PLG_TEXTURE_FILTER_LINEAR;
-		}
+		materialPass->textureFilter = get_texture_filter_by_name( textureFilterPtr );
 	}
 
 	/* now handle any specific parameters the material provides */
@@ -775,7 +806,7 @@ static void destroy_material( ApeMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case APE_MATERIAL_VAR_RENDERTARGET:
-					ape_render_target_release( ( ApeRenderTarget * ) material->passes[ i ].variables[ j ].data.ptr );
+					ape_render_target_release( material->passes[ i ].variables[ j ].data.ptr );
 					break;
 				default:
 					PL_DELETE( material->passes[ i ].variables[ j ].data.ptr );
@@ -1176,15 +1207,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 					set_built_in_variable( material, curPass, mesh, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
 					continue;
 				}
+
 				// textures just need to be set per their respective unit
 				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 				{
-					PL_GET_CVAR( "r/skipDiffuse", skipDiffuse );
-					if ( skipDiffuse != nullptr && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && skipDiffuse->b_value ) )
-					{
-						continue;
-					}
-
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 					{
@@ -1196,44 +1222,61 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 					}
 					else
 					{
-						texture = ( PLGTexture * ) curPass->variables[ j ].data.ptr;
+						texture = ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse ) ? diffuseFallbackTexture->internal : ( PLGTexture * ) curPass->variables[ j ].data.ptr;
 					}
 
 					assert( texture != NULL );
 
-					PL_GET_CVAR( "r/skipNormal", skipNormal );
-					if ( skipNormal != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && skipNormal->b_value ) )
+					if ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
 					{
 						texture = normalFallbackTexture;
 					}
-					PL_GET_CVAR( "r/skipSpecular", skipSpecular );
-					if ( skipSpecular != NULL && ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && skipSpecular->b_value ) )
+					if ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
 					{
 						texture = specularFallbackTexture;
 					}
 
-					PLGTextureFilter textureFilter = curPass->textureFilter;
+					PlgSetTexture( texture, curUnit );
+
+					// setup the texture filtering mode
+
+					PLGTextureFilter textureFilter;
+					// allow us to override the desired texture filter
+					if ( *materialTextureFilter != '\0' )
+					{
+						textureFilter = get_texture_filter_by_name( materialTextureFilter );
+					}
+					else
+					{
+						textureFilter = curPass->textureFilter;
+					}
+
 					if ( texture->flags & PLG_TEXTURE_FLAG_NOMIPS )
 					{
-						if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR )
+						// ensure that if the texture is flagged with no mips, the filter mode is valid!
+						if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR || textureFilter == PLG_TEXTURE_FILTER_MIPMAP_LINEAR_NEAREST )
 						{
 							textureFilter = PLG_TEXTURE_FILTER_LINEAR;
 						}
-						else
+						else if ( textureFilter == PLG_TEXTURE_FILTER_MIPMAP_NEAREST || textureFilter == PLG_TEXTURE_FILTER_MIPMAP_NEAREST_LINEAR )
 						{
 							textureFilter = PLG_TEXTURE_FILTER_NEAREST;
 						}
 					}
 
-					PlgSetTexture( texture, curUnit );
 					PlgSetTextureFilter( texture, textureFilter );
+
+					if ( !( texture->flags & PLG_TEXTURE_FLAG_NOMIPS ) )
+					{
+						PlgSetTextureAnisotropy( texture, materialTextureAnisotropy );
+					}
 
 					PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, &curUnit, false );
 					curUnit++;
 					continue;
 				}
 
-				PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, ( intmax_t * ) curPass->variables[ j ].data.ptr, false );
+				PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.ptr, false );
 			}
 		}
 

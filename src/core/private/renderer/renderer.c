@@ -306,11 +306,7 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.framebufferScale", "Framebuffer resolution multiplier.", "1.0", PL_VAR_F32, &ape_config_.renderer.framebufferScale, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.showFps", "Toggle FPS counter.", "false", PL_VAR_BOOL, &ape_config_.renderer.showFps, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, nullptr, false );
-	//TODO: move these into the material system
-	PlRegisterConsoleVariable( "r/skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
-	PlRegisterConsoleVariable( "r/skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
-	PlRegisterConsoleVariable( "r/skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, nullptr, nullptr, false );
-	PlRegisterConsoleVariable( "renderer.skipAmbience", "Skip ambient pass.", "0", PL_VAR_BOOL, &ape_config_.renderer.skipAmbience, nullptr, false );
+
 	//TODO: clamp msaa level - add a callback to check if it's valid before we regen render targets!
 	PlRegisterConsoleVariable( "renderer.msaaSamples", "Set number of MSAA samples.", "4", PL_VAR_I32, &ape_config_.renderer.msaaSamples, nullptr, true );
 
@@ -337,6 +333,8 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
 	PlRegisterConsoleVariable( "renderer.maxPortalDepth", "Maximum depth that portals can recurse.", "1", PL_VAR_I32, nullptr, nullptr, true );
+
+	ape_material_register_console_variables_();
 
 	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();

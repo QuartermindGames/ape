@@ -27,7 +27,7 @@ typedef struct ApeTexture
 	PLPath path;// for reloading
 } ApeTexture;
 
-ApeTexture *ape_texture_cache_( const char *path, bool useFallback );
+ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback );
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture );
 

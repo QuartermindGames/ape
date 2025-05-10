@@ -16,7 +16,7 @@ PLGTexture *ape_texture_get_fallback( void )
 
 PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
 {
-	return ape_texture_cache_( path, true )->internal;
+	return ape_texture_cache_( path, filterMode, true )->internal;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -45,8 +45,8 @@ static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int
 	switch ( numChannels )
 	{
 		default:
-			PRINT_WARNING( "Invalid number of colour channels specified!\n" );
-			return NULL;
+			ape_warning_( "Invalid number of colour channels specified!\n" );
+			return nullptr;
 		case 3:
 			cFormat = PL_COLOURFORMAT_RGB;
 			iFormat = PL_IMAGEFORMAT_RGB8;
@@ -58,8 +58,10 @@ static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int
 	}
 
 	PLImage *imageData = PlCreateImage( data, w, h, 0, cFormat, iFormat );
-	if ( imageData == NULL )
-		PRINT_WARNING( "Failed to generate image data!\nPL: %s\n", PlGetError() );
+	if ( imageData == nullptr )
+	{
+		ape_warning_( "Failed to generate image (%s) data: %s\n", id, PlGetError() );
+	}
 
 #if 0
     char outName[ 64 ];
@@ -69,18 +71,23 @@ static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int
 
 	PLGTexture *internalTexture = PlgCreateTexture();
 	if ( internalTexture == NULL )
-		PRINT_ERROR( "Failed to create texture!\nPL: %s\n", PlGetError() );
+	{
+		ape_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
+	}
 
 	if ( !generateMipMap )
 	{
-		internalTexture->flags &= PLG_TEXTURE_FLAG_NOMIPS;
 		internalTexture->filter = PLG_TEXTURE_FILTER_NEAREST;
 	}
 	else
+	{
 		internalTexture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+	}
 
 	if ( !PlgUploadTextureImage( internalTexture, imageData ) )
-		PRINT_ERROR( "Failed to generate texture from image!\nPL: %s\n", PlGetError() );
+	{
+		ape_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
+	}
 
 	PlDestroyImage( imageData );
 
@@ -126,24 +133,40 @@ static void fetch_texture_config( ApeTexture *texture )
 
 	const char *wrapMode = acm_get_string( root, "wrapMode", "repeat" );
 	if ( strcmp( wrapMode, "repeat" ) == 0 )
+	{
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
+	}
 	else if ( strcmp( wrapMode, "mirrored_repeat" ) == 0 )
+	{
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_MIRRORED_REPEAT;
+	}
 	else if ( strcmp( wrapMode, "clamp" ) == 0 )
+	{
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
+	}
 	else if ( strcmp( wrapMode, "clamp_border" ) == 0 )
+	{
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
+	}
 	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
 
 	const char *filterMode = acm_get_string( root, "filterMode", "linear" );
 	if ( strcmp( filterMode, "mipmap_linear" ) == 0 )
+	{
 		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+	}
 	else if ( strcmp( filterMode, "linear" ) == 0 )
+	{
 		texture->filterMode = PLG_TEXTURE_FILTER_LINEAR;
+	}
 	else if ( strcmp( filterMode, "mipmap_nearest" ) == 0 )
+	{
 		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
+	}
 	else if ( strcmp( filterMode, "nearest" ) == 0 )
+	{
 		texture->filterMode = PLG_TEXTURE_FILTER_NEAREST;
+	}
 	PlgSetTextureFilter( texture->internal, texture->filterMode );
 
 	acm_branch_destroy( root );
@@ -160,7 +183,9 @@ void ape_initialize_textures_( void )
 
 	textureTable = PlCreateHashTable();
 	if ( textureTable == NULL )
-		PRINT_ERROR( "Failed to create texture table: %s\n", PlGetError() );
+	{
+		ape_error_( true, "Failed to create texture table: %s\n", PlGetError() );
+	}
 
 	// generate fallback texture
 	static PLColour fallbackData[] = {
@@ -173,7 +198,7 @@ void ape_initialize_textures_( void )
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
-ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
+ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback )
 {
 	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
 	if ( texture != NULL )
@@ -182,26 +207,23 @@ ApeTexture *ape_texture_cache_( const char *path, bool useFallback )
 		return texture;
 	}
 
-	PLGTexture *internalTexture = PlgLoadTextureFromImage( path, PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
-	if ( internalTexture == NULL )
-	{
-		PRINT_WARNING( "Failed to load texture (%s): %s\n", path, PlGetError() );
-		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : NULL;
-	}
-
 	texture             = PL_NEW( ApeTexture );
-	texture->internal   = internalTexture;
-	texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+	texture->filterMode = filter;
 	texture->wrapMode   = PLG_TEXTURE_WRAP_MODE_REPEAT;
 	PlSetupPath( texture->path, true, "%s", path );
 
 	fetch_texture_config( texture );
 
-	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
-	ape_memory_add_reference( &texture->reference );
+	texture->internal = PlgLoadTextureFromImage( path, texture->filterMode );
+	if ( texture->internal == nullptr )
+	{
+		ape_warning_( "Failed to load texture (%s): %s\n", path, PlGetError() );
+		PL_DELETE( texture );
+		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
+	}
 
-	//TODO: thrown in for Rayman Alive, but we should probably implement a proper API for this
-	PlgSetTextureAnisotropy( texture->internal, 16 );
+	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
+	ape_memory_add_reference( &texture->reference );
 
 	return texture;
 }
