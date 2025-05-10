@@ -316,6 +316,14 @@ void ape_brush_compute_face_bounds( ApeBrush *self )
 	}
 }
 
+void ape_brush_compute_face_normals( ApeBrush *self )
+{
+	for ( unsigned int i = 0; i < self->numFaces; ++i )
+	{
+		ape_brush_face_compute_normal( &self->faces[ i ] );
+	}
+}
+
 void ape_brush_flip_face_( ApeBrushFace *face )
 {
 	unsigned int start = 0;

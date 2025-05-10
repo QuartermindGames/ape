@@ -521,6 +521,21 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 				*vertex = PlAddVector3( *vertex, PlScaleVector3F( gridDir, self->grid.size ) );
 			}
 
+			// recompute normals, bounds, etc.
+			//TODO: this will operate on the same brush multiple times if multiple faces are selected :(
+			COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+			{
+				ApeBrush *brush = face->parent;
+				if ( brush == nullptr )
+				{
+					continue;
+				}
+
+				ape_brush_compute_face_bounds( brush );
+				ape_brush_compute_face_normals( brush );
+				ape_brush_compute_bounds( brush );
+			}
+
 			PlDestroyHashTable( vertexTable );
 			break;
 		}
