@@ -154,6 +154,11 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 		PL_DELETE( component );
 	}
 
+	if ( self->classDefinition->destroyFunction != nullptr )
+	{
+		self->classDefinition->destroyFunction( self );
+	}
+
 	PlDestroyHashTable( self->componentTable );
 
 	PlDestroyLinkedListNode( self->worldListNode );
