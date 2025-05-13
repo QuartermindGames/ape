@@ -6,15 +6,61 @@
 
 static constexpr unsigned int MAX_PORTALS = 2;
 
+static constexpr unsigned int NUM_VERTICES           = 4;
+static constexpr float        TALL                   = 64.0f;
+static constexpr float        WIDE                   = 16.0f;
+static constexpr float        GAME_PORTAL_OPEN_SPEED = 2.0f;
+
 static ApeEntity *portals[ MAX_PORTALS ];
+
+static constexpr PLVector3 OPEN_VPOS[ NUM_VERTICES ] = {
+        PL_VECTOR3( -WIDE, 0.0f, 0.0f ),
+        PL_VECTOR3( -WIDE, TALL, 0.0f ),
+        PL_VECTOR3( WIDE, TALL, 0.0f ),
+        PL_VECTOR3( WIDE, 0.0f, 0.0f ),
+};
+static constexpr PLVector3 CLOSED_VPOS[ NUM_VERTICES ] = {
+        PL_VECTOR3( 0.0f, 0.0f, 0.0f ),
+        PL_VECTOR3( 0.0f, TALL, 0.0f ),
+        PL_VECTOR3( 0.0f, TALL, 0.0f ),
+        PL_VECTOR3( 0.0f, 0.0f, 0.0f ),
+};
+
+typedef enum GamePortalState
+{
+	GAME_PORTAL_STATE_OPENING,
+	GAME_PORTAL_STATE_IDLE,
+	GAME_PORTAL_STATE_CLOSING,
+} GamePortalState;
 
 typedef struct GamePortalEntity
 {
 	ApeBrush *brush;
+
+	PLVector3 startPos;
+	PLVector3 startAng;
+
+	GamePortalState state;
 } GamePortalEntity;
 #define GAME_PORTAL_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), "portal", GamePortalEntity )
 
 static ApeMaterial *portalMaterial;
+
+void game_entity_close_all_portals()
+{
+	for ( unsigned int i = 0; i < MAX_PORTALS; ++i )
+	{
+		if ( portals[ i ] == nullptr )
+		{
+			continue;
+		}
+
+		GamePortalEntity *portal = GAME_PORTAL_ENTITY( portals[ i ] );
+		assert( portal != nullptr );
+
+		portal->state = GAME_PORTAL_STATE_CLOSING;
+	}
+}
 
 static void *create_portal( ApeEntity *self, AcmBranch *properties )
 {
@@ -79,15 +125,14 @@ static void spawn_portal( ApeEntity *self )
 	// this is also a pretty good example of how you can
 	// procedurally generate a brush at runtime
 
-	static constexpr float TALL = 64.0f;
-	static constexpr float WIDE = 32.0f;
+	portal->state = GAME_PORTAL_STATE_OPENING;
 
-	brush->numVertices   = 4;
-	brush->vertices      = PL_NEW_( PLVector3, brush->numVertices );
-	brush->vertices[ 0 ] = PL_VECTOR3( -WIDE, 0.0f, 0.0f );
-	brush->vertices[ 1 ] = PL_VECTOR3( -WIDE, TALL, 0.0f );
-	brush->vertices[ 2 ] = PL_VECTOR3( WIDE, TALL, 0.0f );
-	brush->vertices[ 3 ] = PL_VECTOR3( WIDE, 0.0f, 0.0f );
+	brush->numVertices = NUM_VERTICES;
+	brush->vertices    = PL_NEW_( PLVector3, brush->numVertices );
+	for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
+	{
+		brush->vertices[ i ] = CLOSED_VPOS[ i ];
+	}
 
 	brush->numFaces = 1;
 	brush->faces    = PL_NEW_( ApeBrushFace, brush->numFaces );
@@ -95,7 +140,7 @@ static void spawn_portal( ApeEntity *self )
 	ApeBrushFace *face = &brush->faces[ 0 ];
 	face->parent       = brush;
 	face->numVertices  = brush->numVertices;
-	face->flags        = APE_BRUSH_FACE_FLAG_PORTAL;
+	face->flags        = APE_BRUSH_FACE_FLAG_MIRROR;
 	face->material     = portalMaterial;
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
@@ -107,16 +152,89 @@ static void spawn_portal( ApeEntity *self )
 	}
 
 	ape_brush_face_compute_normal( face );
+	ape_brush_face_apply_material_coordinates( face, &PL_VECTOR2( 1.0f, 1.0f ), &PL_VECTOR2( 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
 
 	ape_brush_compute_face_bounds( brush );
-	ape_brush_compute_face_bounds( brush );
+	ape_brush_compute_bounds( brush );
+
+	portal->startPos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	portal->startAng = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	portal->brush = brush;
 }
 
 static void tick_portal( ApeEntity *self, double delta )
 {
+	delta = game_get_time_delta_( delta );
+
+	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
+	assert( portal != nullptr );
+
 	//TODO: cool animation of the portal magically closing and opening
+
+	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
+
+	unsigned int numTicks = ape_get_num_ticks();
+	//pos.y                 = portal->startPos.y + sinf( numTicks / 80.0f ) / 10.0f * 100.0f;
+	//ang.y += 32.0f * delta;
+	//ang.z += 32.0f * delta;
+
+	ape_world_node_set_position( APE_WORLD_NODE( self ), &pos );
+	ape_world_node_set_angles( APE_WORLD_NODE( self ), &ang );
+
+	ApeBrush *brush = portal->brush;
+	switch ( portal->state )
+	{
+		default:
+			break;
+		case GAME_PORTAL_STATE_OPENING:
+		{
+			bool updating = false;
+			for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
+			{
+				if ( com_math_vector_check_epsilon( &brush->vertices[ i ], &OPEN_VPOS[ i ] ) )
+				{
+					continue;
+				}
+
+				brush->vertices[ i ] = PlLinearInterpolateV3f( brush->vertices[ i ], OPEN_VPOS[ i ], GAME_PORTAL_OPEN_SPEED * delta );
+
+				updating = true;
+			}
+
+			ape_brush_compute_face_normals( brush );
+			ape_brush_compute_face_bounds( brush );
+			ape_brush_compute_bounds( brush );
+
+			if ( !updating )
+			{
+				portal->state = GAME_PORTAL_STATE_IDLE;
+			}
+			break;
+		}
+		case GAME_PORTAL_STATE_CLOSING:
+		{
+			bool updating = false;
+			for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
+			{
+				if ( com_math_vector_check_epsilon( &brush->vertices[ i ], &CLOSED_VPOS[ i ] ) )
+				{
+					continue;
+				}
+
+				brush->vertices[ i ] = PlLinearInterpolateV3f( brush->vertices[ i ], CLOSED_VPOS[ i ], ( GAME_PORTAL_OPEN_SPEED * 2.0f ) * delta );
+
+				updating = true;
+			}
+
+			if ( !updating )
+			{
+				ape_world_node_destroy( APE_WORLD_NODE( self ) );
+			}
+			break;
+		}
+	}
 }
 
 ApeEntityClassDefinition game_portalEntityClass_ = {

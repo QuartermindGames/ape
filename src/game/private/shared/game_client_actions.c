@@ -92,6 +92,12 @@ static void spawn_portal_action( ApeInputState state, const char *id )
 	}
 }
 
+static void close_portals_action( ApeInputState state, const char * )
+{
+	void game_entity_close_all_portals();
+	game_entity_close_all_portals();
+}
+
 void game_client_actions_register_()
 {
 	ape_client_input_register_action( "game_say", nullptr, 0, ( ApeInputKey[] ) { 't' }, 1, say_action );
@@ -104,4 +110,5 @@ void game_client_actions_register_()
 	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
 
 	ape_client_input_register_action( "game_spawn_portal", nullptr, 0, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
+	ape_client_input_register_action( "game_close_portals", nullptr, 0, ( ApeInputKey[] ) { 'c' }, 1, close_portals_action );
 }
