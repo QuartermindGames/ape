@@ -188,8 +188,7 @@ void ape_viewport_make_active( ApeViewport *self )
 
 	int rw = self->width * ( int ) ape_config_.renderer.framebufferScale;
 	int rh = self->height * ( int ) ape_config_.renderer.framebufferScale;
-
-	PlgClipViewport( self->x, self->y, rw, rh );
+	ape_viewport_set_clip( self );
 	PlgSetViewport( self->x, self->y, rw, rh );
 
 	if ( self->camera != NULL )
@@ -203,6 +202,13 @@ void ape_viewport_make_active( ApeViewport *self )
 ApeViewport *ape_viewport_get_active( void )
 {
 	return activeViewport;
+}
+
+void ape_viewport_set_clip( const ApeViewport *self )
+{
+	int rw = self->width * ( int ) ape_config_.renderer.framebufferScale;
+	int rh = self->height * ( int ) ape_config_.renderer.framebufferScale;
+	PlgClipViewport( self->x, self->y, rw, rh );
 }
 
 void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour )

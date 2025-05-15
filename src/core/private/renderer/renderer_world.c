@@ -14,7 +14,8 @@ static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
 static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
 
 static bool showHiddenFaces;
-void        ape_renderer_world_register_console_variables_()
+
+void ape_renderer_world_register_console_variables_()
 {
 	PlRegisterConsoleVariable( "renderer_world.showHiddenFaces", "Toggle hidden faces.", "false", PL_VAR_BOOL, &showHiddenFaces, nullptr, false );
 }
@@ -235,6 +236,12 @@ static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLig
 {
 	ape_world_node_update_mesh_cache_( worldNode );
 
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PLMatrix4 transform = ape_world_node_get_transform( worldNode );
+	PlLoadMatrix( &transform );
+
 	if ( worldNode->mesh != nullptr )
 	{
 		//TODO: this is operating off a universal list, should only operate on *world* materials!!!
@@ -275,6 +282,8 @@ static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLig
 			mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 		}
 	}
+
+	PlPopMatrix();
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
@@ -747,6 +756,53 @@ static void draw_portal_face( const ApeBrushFace *portal )
 	PlgImmDraw();
 }
 
+static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera *camera, const ApeViewport *viewport )
+{
+	PLMatrix4 view     = camera->internal->internal.view;
+	PLMatrix4 proj     = camera->internal->internal.proj;
+	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
+
+	PLVector4 rect = PL_VECTOR4( viewport->width, viewport->height, 0.0f, 0.0f );
+
+	// get the transform
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	{
+		PLVector3 vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
+
+		float     depth;
+		PLVector2 screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
+
+		if ( screenPos.x < rect.x )
+		{
+			rect.x = PlClamp( 0.0f, screenPos.x, viewport->width );
+		}
+		if ( screenPos.x > rect.z )
+		{
+			rect.z = PlClamp( 0.0f, screenPos.x, viewport->width );
+		}
+
+		// sigh... we need to flip it, again
+		screenPos.y = viewport->height - screenPos.y;
+		if ( screenPos.y < rect.y )
+		{
+			rect.y = PlClamp( 0.0f, screenPos.y, viewport->height );
+		}
+		if ( screenPos.y > rect.w )
+		{
+			rect.w = PlClamp( 0.0f, screenPos.y, viewport->height );
+		}
+	}
+
+	rect.z -= rect.x;
+	rect.w -= rect.y;
+
+	return rect;
+}
+
 //TODO: move into room code
 void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport )
 {
@@ -795,7 +851,26 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 				continue;
 			}
 
-			PlgClearBuffers( PLG_BUFFER_STENCIL );
+			PLVector4 rect = get_face_screen_rect( portal, camera, viewport );
+			PlgClipViewport( rect.x, rect.y, rect.z, rect.w );
+
+			PlMatrixMode( PL_MODELVIEW_MATRIX );
+			PlPushMatrix();
+
+			PLVector3 portalOrigin = portal->bounds.absOrigin;
+			PLVector3 portalNormal = portal->normal;
+
+			ApeBrush *parent = portal->parent;
+			if ( parent != nullptr )
+			{
+				PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( parent ) );
+				PlLoadMatrix( &transform );
+
+				portalOrigin = PlAddVector3( PlGetMatrix4Translation( &transform ), portalOrigin );
+
+				PLVector4 tmp = PlTransformVector4( &PL_VEC3TO4( portalNormal ), &transform );
+				portalNormal  = PlNormalizeVector3( PL_VEC4TO3( tmp ) );
+			}
 
 			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
@@ -815,7 +890,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			PlMatrixMode( PL_VIEW_MATRIX );
 			PlPushMatrix();
 
-			//TODO: sigh... We need to deal with this twice, because camera does it's own shit!!
+			//TODO: sigh... We need to deal with this twice, because camera does its own shit!!
 			PLMatrix4 store = camera->internal->internal.view;
 			PlLoadMatrix( &camera->internal->internal.view );
 
@@ -824,7 +899,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 				ape_rendererState_.mirror = true;
 
 				PLMatrix4 reflection;
-				setup_reflection_matrix( &portal->normal, &portal->bounds.absOrigin, &reflection );
+				setup_reflection_matrix( &portalNormal, &portalOrigin, &reflection );
 				PlMultiMatrix( &reflection );
 			}
 
@@ -837,9 +912,9 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			ape_rendererState_.depth++;
 			current[ ape_rendererState_.depth ] = portal;
 
-			PLVector3 planePoint = portal->bounds.absOrigin;
-			float     d          = -PlVector3DotProduct( portal->normal, planePoint );
-			PlgSetClipPlane( &PL_VECTOR4( portal->normal.x, portal->normal.y, portal->normal.z, d ) );
+			PLVector3 planePoint = portalOrigin;
+			float     d          = -PlVector3DotProduct( portalNormal, planePoint );
+			PlgSetClipPlane( &PL_VECTOR4( portalNormal.x, portalNormal.y, portalNormal.z, d ) );
 
 			ape_room_draw_( destinationRoom, camera, viewport );
 
@@ -848,7 +923,7 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 			ape_rendererState_.depth--;
 			ape_rendererState_.mirror = false;
 
-			//TODO: sigh... We need to deal with this twice, because camera does it's own shit!!
+			//TODO: sigh... We need to deal with this twice, because camera does its own shit!!
 			camera->internal->internal.view = store;
 			PlgSetViewMatrix( &camera->internal->internal.view );
 			PlgSetupCameraFrustum( camera->internal );
@@ -863,7 +938,12 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 				PlgColourMask( true, true, true, true );
 			}
 
+			PlMatrixMode( PL_MODELVIEW_MATRIX );
+			PlPopMatrix();
+
 			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+
+			ape_viewport_set_clip( viewport );
 		}
 
 		PlgPopDebugGroupMarker();

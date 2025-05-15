@@ -491,7 +491,7 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 
 #endif
 
-static const ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
+static ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
         {"None",             0 },
         {"Forest",           1 },
         {"Default",          2 },
