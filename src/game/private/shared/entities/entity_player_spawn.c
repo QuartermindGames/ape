@@ -37,7 +37,7 @@ static void destroy_player_spawn( ApeEntity *self )
 	assert( spawnEntity != nullptr );
 
 	PlDestroyLinkedListNode( spawnEntity->listNode );
-	if ( PlGetNumLinkedListNodes( playerSpawnPoints ) == 0 )
+	if ( playerSpawnPoints != nullptr && PlGetNumLinkedListNodes( playerSpawnPoints ) == 0 )
 	{
 		PlDestroyLinkedList( playerSpawnPoints );
 		playerSpawnPoints = nullptr;

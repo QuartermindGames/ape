@@ -109,6 +109,6 @@ void game_client_actions_register_()
 
 	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
 
-	ape_client_input_register_action( "game_spawn_portal", nullptr, 0, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
-	ape_client_input_register_action( "game_close_portals", nullptr, 0, ( ApeInputKey[] ) { 'c' }, 1, close_portals_action );
+	ape_client_input_register_action( "game_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
+	ape_client_input_register_action( "game_close_portals", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'c' }, 1, close_portals_action );
 }
