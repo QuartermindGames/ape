@@ -5,8 +5,10 @@
 #define LIGHTMAPPER
 #ifdef LIGHTMAPPER
 
-#	include "../ape_private.h"
-#	include "../world/world.h"
+#	include "ape_private.h"
+
+#	include "world/world.h"
+#	include "renderer/renderer.h"
 
 /**
  * Some thoughts...
