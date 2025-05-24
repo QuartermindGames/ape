@@ -2,6 +2,8 @@
 
 #include "ape_private.h"
 #include "renderer.h"
+#include "camera/camera.h"
+#include "material/material.h"
 
 // Prey '98 inspired flares!
 //TODO: maybe this would be better placed under the game code?

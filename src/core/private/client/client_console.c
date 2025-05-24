@@ -8,6 +8,7 @@
 #include "world/world.h"
 #include "ape_client_input.h"
 #include "editor/editor.h"
+#include "renderer/material/material.h"
 
 static bool consoleIsOpen = false;
 static bool drawShadow    = false;

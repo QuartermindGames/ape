@@ -4,6 +4,7 @@
 #pragma once
 
 #include "core_world.h"
+
 typedef enum ApeCameraViewMode
 {
 	APE_CAMERA_MODE_INVALID = -1,
@@ -61,9 +62,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 
 struct PLGCamera *ape_camera_get_internal( ApeCamera *camera );
 
-ApeLight     **ape_camera_get_visible_lights_( ApeCamera *camera, unsigned int *num );
-ApeRoom      **ape_camera_get_visible_rooms_( ApeCamera *camera, unsigned int *num );
-ApeWorldNode **ape_camera_get_visible_nodes_( ApeCamera *self, unsigned int *num );
-ApeBrushFace **ape_camera_get_visible_portals_( ApeCamera *self, unsigned int *num );
+//TODO: this shouldn't be public...
+void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport );
 
 PL_EXTERN_C_END

@@ -304,7 +304,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 	for ( unsigned int i = 0; i < model->numMaterials; ++i )
 	{
 		model->cache->start = model->meshes[ i ].startIndex;
-		model->cache->range   = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
+		model->cache->range = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
 
 		ApeLightPointerArray lights;
 		lights[ 0 ] = light;
@@ -368,11 +368,13 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 				continue;
 			}
 
+#if 0// already tested earlier down the chain
 			PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( sceneNode ) );
 			if ( !PlgIsBoxInsideView( camera->internal, &bounds ) )
 			{
 				continue;
 			}
+#endif
 
 			PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( sceneNode ) );
 			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, light );

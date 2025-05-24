@@ -5,6 +5,7 @@
 #include "ape_private.h"
 #include "renderer.h"
 #include "renderer_font.h"
+#include "material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

@@ -4,9 +4,10 @@
 
 #include "plcore/pl_hashtable.h"
 
-#include "world/world.h"
+#include "ape_private.h"
 #include "renderer/material/material.h"
-#include "renderer/renderer.h"
+
+#include "world/world.h"
 
 ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles )
 {

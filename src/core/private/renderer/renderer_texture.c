@@ -1,10 +1,12 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "plcore/pl_hashtable.h"
+
 #include "ape_private.h"
-#include "renderer.h"
 #include "ape_image.h"
 
-#include "plcore/pl_hashtable.h"
+#include "renderer.h"
+#include "renderer_texture.h"
 
 /////////////////////////////////////////////////////////////////
 // Old API crap

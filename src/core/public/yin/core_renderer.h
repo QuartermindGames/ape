@@ -83,11 +83,6 @@ void ape_viewport_set_clip( const ApeViewport *self );
 void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour );
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Camera API
-
-void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport );
-
-/////////////////////////////////////////////////////////////////////////////////////
 // Render Target API
 
 ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter, bool useMsaa );

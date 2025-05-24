@@ -7,8 +7,10 @@
 
 #include "renderer.h"
 #include "renderer_font.h"
+#include "camera/camera.h"
 
 #include "editor/editor.h"
+#include "material/material.h"
 
 #include "post/post.h"
 
@@ -333,6 +335,7 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.testFlares", "Test the lens flare effect.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
 	PlRegisterConsoleVariable( "renderer.maxPortalDepth", "Maximum depth that portals can recurse.", "1", PL_VAR_I32, nullptr, nullptr, true );
+	PlRegisterConsoleVariable( "renderer.showPortalVolumes", "Shows the screen-space volume that's produced from a visible portal.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
 	ape_material_register_console_variables_();
 
@@ -398,7 +401,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	currentCamera = camera;
 
-	ape_camera_get_visible_lights_( camera, &ape_rendererPerformance_.numLights );
+	//TODO: this should be during tick, not render!
+	ape_camera_build_pvs_( camera, viewport );
 
 	PlgDepthMask( true );
 	PlgSetClearColour( viewport->clearColour );
@@ -418,7 +422,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 		ApeRoom *room = ape_camera_get_room( camera );
 		if ( room != NULL )
 		{
-			ape_room_draw_( room, camera, viewport );
+			ape_room_draw_( camera, &camera->pvs.rooms[ 0 ], viewport );
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );

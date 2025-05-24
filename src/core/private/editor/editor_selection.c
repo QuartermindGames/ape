@@ -8,6 +8,7 @@
 #include "yin/core_renderer.h"
 
 #include "editor.h"
+#include "renderer/renderer.h"
 #include "world/world.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -263,12 +264,9 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 	}
 	else
 	{
-		unsigned int   numVisibleNodes;
-		ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &numVisibleNodes );
-
-		for ( unsigned int i = 0; i < numVisibleNodes; ++i )
+		for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numNodes; ++i )
 		{
-			const ApeWorldNode *node = visibleNodes[ i ];
+			const ApeWorldNode *node = camera->pvs.rooms[ 0 ].nodes[ i ];
 
 			if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
 			{
@@ -435,12 +433,10 @@ static void render_vertices( ApeEditorInstance *self )
 	//TODO: only do this if the cursor has moved...
 	self->hoverSelection = ape_editor_get_object_under_cursor( self );
 
-	unsigned int   numVisibleNodes;
-	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( self->camera, &numVisibleNodes );
-
-	for ( unsigned int i = 0; i < numVisibleNodes; ++i )
+	ApeCamera *camera = self->camera;
+	for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numNodes; ++i )
 	{
-		const ApeWorldNode *node = visibleNodes[ i ];
+		const ApeWorldNode *node = camera->pvs.rooms[ 0 ].nodes[ i ];
 		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
 		{
 			continue;

@@ -2,9 +2,11 @@
 
 #include "ape_private.h"
 #include "renderer.h"
+#include "material/material.h"
+
+#include "camera/camera.h"
 
 #include "world/world.h"
-#include "model/model.h"
 
 //TODO: eventually we should do away with this
 #define MAX_MATERIALS_PER_PASS 256
@@ -54,6 +56,7 @@ static void draw_room_wireframe( const ApeCamera *camera )
 
 	PlgImmBegin( PLG_MESH_LINES );
 
+#if 0//TODO
 	unsigned int   numFaces;
 	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
@@ -62,6 +65,7 @@ static void draw_room_wireframe( const ApeCamera *camera )
 	}
 
 	PlgImmDraw();
+#endif
 }
 
 /**
@@ -214,22 +218,18 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 
 static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
+#if 0//TODO
 	unsigned int   num;
 	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &num );
 	for ( unsigned int i = 0; i < num; ++i )
 	{
-		//if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_MODEL )
-		//{
-		//	PLMatrix4           transform = ape_world_node_get_transform( visibleNodes[ i ] );
-		//	const ApeModelNode *modelNode = ( ApeModelNode * ) visibleNodes[ i ];
-		//	ape_model_draw( modelNode->model, &( ApeModelAnimationState ) {}, &transform, light );
-		//}
 		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_ENTITY )
 		{
 			ApeEntity *entity = ( ApeEntity * ) visibleNodes[ i ];
 			ape_entity_draw( entity, light, flags );
 		}
 	}
+#endif
 }
 
 static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
@@ -292,8 +292,9 @@ static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLig
 	}
 }
 
-void        ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
-static void draw_room( ApeRoom *room, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
+void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
+
+static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == nullptr )
 	{
@@ -557,22 +558,20 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 }
 
-static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth )
+static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, float depth )
 {
 	PlgPushDebugGroupMarker( "Translucent Room" );
 
 	// and now depth pre-pass
-	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+	draw_room( camera, visibleRoom->room, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
 		PlgDepthMask( false );
 
-		unsigned int numLights;
-		ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
-		for ( unsigned int i = 0; i < numLights; ++i )
+		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
-			if ( lights[ i ]->colour.a == 0.0f )
+			if ( visibleRoom->lights[ i ]->colour.a == 0.0f )
 			{
 				continue;
 			}
@@ -583,7 +582,7 @@ static void draw_translucent_room( ApeRoom *room, ApeCamera *camera, float depth
 			ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 			ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-			draw_room( room, camera, lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+			draw_room( camera, visibleRoom->room, visibleRoom->lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
 			ape_rendererState_.overrideBlendMode = false;
 		}
@@ -642,7 +641,7 @@ static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *lig
 	ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 	ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-	draw_room( room, camera, light, APE_RENDERER_PASS_FLAG_OPAQUE );
+	draw_room( camera, room, light, APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	ape_rendererState_.overrideBlendMode = false;
 
@@ -657,14 +656,14 @@ static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *lig
 	COM_PROFILE_FUNCTION_END();
 }
 
-static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
+static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, bool depth )
 {
 	COM_PROFILE_FUNCTION_START();
 
 	PlgPushDebugGroupMarker( "Solid Room" );
 
 	// and now depth pre-pass
-	draw_room( room, camera, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
+	draw_room( camera, visibleRoom->room, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
@@ -672,12 +671,9 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 
 		PlgDepthMask( false );
 
-		unsigned int numLights;
-		ApeLight   **lights = ape_camera_get_visible_lights_( camera, &numLights );
-		for ( unsigned int i = 0; i < numLights; ++i )
+		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
-			ApeLight *light = lights[ i ];
-
+			ApeLight *light = visibleRoom->lights[ i ];
 			if ( ape_config_.renderer.lightJitterSamples > 0 )
 			{
 				srand( ape_config_.renderer.lightJitterSamples );
@@ -693,7 +689,7 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 					light->base.position.z += JITTER_VARIATION;
 					light->colour.a = ( i * 1.0f / ape_config_.renderer.lightJitterSamples );
 
-					draw_solid_room_lit( room, camera, lights[ i ], depth );
+					draw_solid_room_lit( visibleRoom->room, camera, visibleRoom->lights[ i ], depth );
 				}
 
 				light->base.position = storePos;
@@ -701,7 +697,7 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 				continue;
 			}
 
-			draw_solid_room_lit( room, camera, light, depth );
+			draw_solid_room_lit( visibleRoom->room, camera, light, depth );
 		}
 
 		PlgDepthMask( depth );
@@ -714,33 +710,14 @@ static void draw_solid_room( ApeRoom *room, ApeCamera *camera, bool depth )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoint, PLMatrix4 *reflectionMatrix )
-{
-	const float d = -PlVector3DotProduct( *normal, *planePoint );
-
-	reflectionMatrix->mm[ 0 ][ 0 ] = 1.0f - 2.0f * normal->x * normal->x;
-	reflectionMatrix->mm[ 0 ][ 1 ] = -2.0f * normal->x * normal->y;
-	reflectionMatrix->mm[ 0 ][ 2 ] = -2.0f * normal->x * normal->z;
-	reflectionMatrix->mm[ 0 ][ 3 ] = 0.0f;
-
-	reflectionMatrix->mm[ 1 ][ 0 ] = -2.0f * normal->y * normal->x;
-	reflectionMatrix->mm[ 1 ][ 1 ] = 1.0f - 2.0f * normal->y * normal->y;
-	reflectionMatrix->mm[ 1 ][ 2 ] = -2.0f * normal->y * normal->z;
-	reflectionMatrix->mm[ 1 ][ 3 ] = 0.0f;
-
-	reflectionMatrix->mm[ 2 ][ 0 ] = -2.0f * normal->z * normal->x;
-	reflectionMatrix->mm[ 2 ][ 1 ] = -2.0f * normal->z * normal->y;
-	reflectionMatrix->mm[ 2 ][ 2 ] = 1.0f - 2.0f * normal->z * normal->z;
-	reflectionMatrix->mm[ 2 ][ 3 ] = 0.0f;
-
-	reflectionMatrix->mm[ 3 ][ 0 ] = -2.0f * normal->x * d;
-	reflectionMatrix->mm[ 3 ][ 1 ] = -2.0f * normal->y * d;
-	reflectionMatrix->mm[ 3 ][ 2 ] = -2.0f * normal->z * d;
-	reflectionMatrix->mm[ 3 ][ 3 ] = 1.0f;
-}
-
 static void draw_portal_face( const ApeBrushFace *portal )
 {
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( portal->parent ) );
+	PlMultiMatrix( &transform );
+
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
@@ -754,197 +731,102 @@ static void draw_portal_face( const ApeBrushFace *portal )
 	}
 
 	PlgImmDraw();
-}
 
-static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera *camera, const ApeViewport *viewport )
-{
-	PLMatrix4 view     = camera->internal->internal.view;
-	PLMatrix4 proj     = camera->internal->internal.proj;
-	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
-
-	PLVector4 rect = PL_VECTOR4( viewport->width, viewport->height, 0.0f, 0.0f );
-
-	// get the transform
-	ApeBrush *brush = face->parent;
-	assert( brush != nullptr );
-	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
-
-	for ( unsigned int i = 0; i < face->numVertices; ++i )
-	{
-		PLVector3 vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
-
-		float     depth;
-		PLVector2 screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
-
-		if ( screenPos.x < rect.x )
-		{
-			rect.x = PlClamp( 0.0f, screenPos.x, viewport->width );
-		}
-		if ( screenPos.x > rect.z )
-		{
-			rect.z = PlClamp( 0.0f, screenPos.x, viewport->width );
-		}
-
-		// sigh... we need to flip it, again
-		screenPos.y = viewport->height - screenPos.y;
-		if ( screenPos.y < rect.y )
-		{
-			rect.y = PlClamp( 0.0f, screenPos.y, viewport->height );
-		}
-		if ( screenPos.y > rect.w )
-		{
-			rect.w = PlClamp( 0.0f, screenPos.y, viewport->height );
-		}
-	}
-
-	rect.z -= rect.x;
-	rect.w -= rect.y;
-
-	return rect;
+	PlPopMatrix();
 }
 
 //TODO: move into room code
-void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport )
+void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport )
 {
 	if ( ape_config_.renderer.showSelectionBuffer )
 	{
 		return;
 	}
 
+	PlgPushDebugGroupMarker( "room_draw" );
+
 	COM_PROFILE_FUNCTION_START();
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	// clamp it to the *absolute* maximum depth;
-	// this setting is here for performance reasons,
-	// so users can toggle it for their system, but not to
-	// rediculous degrees...
-	static constexpr unsigned int MAX_PORTAL_DEPTH = 16;
-	PL_GET_CVAR( "renderer.maxPortalDepth", maxPortalDepth );
-	if ( maxPortalDepth->i_value > MAX_PORTAL_DEPTH )
+	// deal with the portals first
+	for ( unsigned int i = 0; i < visibleRoom->numPortals; ++i )
 	{
-		char tmp[ 64 ];
-		snprintf( tmp, sizeof( tmp ), "%u", MAX_PORTAL_DEPTH );
-		PlSetConsoleVariable( maxPortalDepth, tmp );
-	}
-
-	// first draw the portals
-	if ( ape_rendererState_.depth < maxPortalDepth->i_value )
-	{
-		PlgPushDebugGroupMarker( "Portals" );
-
-		unsigned int               numPortals;
-		static const ApeBrushFace *current[ MAX_PORTAL_DEPTH ] = {};
-		ApeBrushFace             **portals                     = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.portals, &numPortals );
-		for ( unsigned int i = 0; i < numPortals; ++i )
+		ApeCameraVisiblePortal *visiblePortal = &visibleRoom->portals[ i ];
+		if ( visiblePortal->nextRoom == nullptr )
 		{
-			const ApeBrushFace *portal = portals[ i ];
-			if ( portal == current[ ape_rendererState_.depth ] )
-			{
-				continue;
-			}
-
-			ApeRoom *destinationRoom = ape_brush_face_get_room( portal );
-			if ( destinationRoom == nullptr )
-			{
-				continue;
-			}
-
-			PLVector4 rect = get_face_screen_rect( portal, camera, viewport );
-			PlgClipViewport( rect.x, rect.y, rect.z, rect.w );
-
-			PlMatrixMode( PL_MODELVIEW_MATRIX );
-			PlPushMatrix();
-
-			PLVector3 portalOrigin = portal->bounds.absOrigin;
-			PLVector3 portalNormal = portal->normal;
-
-			ApeBrush *parent = portal->parent;
-			if ( parent != nullptr )
-			{
-				PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( parent ) );
-				PlLoadMatrix( &transform );
-
-				portalOrigin = PlAddVector3( PlGetMatrix4Translation( &transform ), portalOrigin );
-
-				PLVector4 tmp = PlTransformVector4( &PL_VEC3TO4( portalNormal ), &transform );
-				portalNormal  = PlNormalizeVector3( PL_VEC4TO3( tmp ) );
-			}
-
-			PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-			PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_REPLACE );
-
-			PlgColourMask( false, false, false, false );
-
-			draw_portal_face( portal );
-
-			PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 4, 0xFF );
-			PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
-
-			PlgClearBuffers( PLG_BUFFER_DEPTH );
-
-			PlgColourMask( true, true, true, true );
-
-			PlMatrixMode( PL_VIEW_MATRIX );
-			PlPushMatrix();
-
-			//TODO: sigh... We need to deal with this twice, because camera does its own shit!!
-			PLMatrix4 store = camera->internal->internal.view;
-			PlLoadMatrix( &camera->internal->internal.view );
-
-			if ( ape_brush_face_is_mirror( portal ) )
-			{
-				ape_rendererState_.mirror = true;
-
-				PLMatrix4 reflection;
-				setup_reflection_matrix( &portalNormal, &portalOrigin, &reflection );
-				PlMultiMatrix( &reflection );
-			}
-
-			camera->internal->internal.view = *PlGetMatrix( PL_VIEW_MATRIX );
-			PlgSetViewMatrix( &camera->internal->internal.view );
-			PlgSetupCameraFrustum( camera->internal );
-
-			PlPopMatrix();
-
-			ape_rendererState_.depth++;
-			current[ ape_rendererState_.depth ] = portal;
-
-			PLVector3 planePoint = portalOrigin;
-			float     d          = -PlVector3DotProduct( portalNormal, planePoint );
-			PlgSetClipPlane( &PL_VECTOR4( portalNormal.x, portalNormal.y, portalNormal.z, d ) );
-
-			ape_room_draw_( destinationRoom, camera, viewport );
-
-			PlgSetClipPlane( nullptr );
-
-			ape_rendererState_.depth--;
-			ape_rendererState_.mirror = false;
-
-			//TODO: sigh... We need to deal with this twice, because camera does its own shit!!
-			camera->internal->internal.view = store;
-			PlgSetViewMatrix( &camera->internal->internal.view );
-			PlgSetupCameraFrustum( camera->internal );
-
-			// depth trick...
-			{
-				PlgColourMask( false, false, false, false );
-				PlgDepthMask( true );
-
-				draw_portal_face( portal );
-
-				PlgColourMask( true, true, true, true );
-			}
-
-			PlMatrixMode( PL_MODELVIEW_MATRIX );
-			PlPopMatrix();
-
-			PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-
-			ape_viewport_set_clip( viewport );
+			continue;
 		}
+
+		ApeCameraVisibleRoom *nextVisibleRoom = visiblePortal->nextRoom;
+		if ( nextVisibleRoom->room == nullptr )
+		{
+			continue;
+		}
+
+		const ApeBrushFace *portal = visiblePortal->portalFace;
+
+		PlgPushDebugGroupMarker( "portal" );
+
+		// first draw the portal stencil we'll test again
+
+		PlgClipViewport( visiblePortal->screenRect.x, visiblePortal->screenRect.y,
+		                 visiblePortal->screenRect.z, visiblePortal->screenRect.w );
+
+		PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+		PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_REPLACE );
+
+		PlgColourMask( false, false, false, false );
+
+		draw_portal_face( portal );
+
+		PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 4, 0xFF );
+		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+		//TODO: uuuuuhhhhhgggg
+		PlgClearBuffers( PLG_BUFFER_DEPTH );
+
+		PlgColourMask( true, true, true, true );
+
+		float d = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
+		PlgSetClipPlane( &PL_VECTOR4( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, d ) );
+
+		// now recurse into the next room
+
+		ape_rendererState_.depth++;
+		ape_rendererState_.mirror = ape_brush_face_is_mirror( visiblePortal->portalFace );
+
+		// set the view matrix we need
+		camera->internal->internal.view = nextVisibleRoom->viewMatrix;
+		PlgSetViewMatrix( &nextVisibleRoom->viewMatrix );
+		PlgSetupCameraFrustum( camera->internal );
+
+		ape_room_draw_( camera, nextVisibleRoom, viewport );
+
+		// reset the view matrix back
+		camera->internal->internal.view = visibleRoom->viewMatrix;
+		PlgSetViewMatrix( &camera->internal->internal.view );
+		PlgSetupCameraFrustum( camera->internal );
+
+		// and pop out
+
+		ape_rendererState_.depth--;
+		ape_rendererState_.mirror = false;
+
+		PlgSetClipPlane( nullptr );
+
+		// depth buffer pop
+
+		PlgColourMask( false, false, false, false );
+		PlgDepthMask( true );
+
+		draw_portal_face( portal );
+
+		PlgColourMask( true, true, true, true );
+
+		PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+
+		// reset the viewport
+		ape_viewport_set_clip( viewport );
 
 		PlgPopDebugGroupMarker();
 	}
@@ -955,11 +837,11 @@ void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewpo
 	}
 	else
 	{
-		draw_solid_room( room, camera, false );
-		draw_translucent_room( room, camera, false );
+		draw_solid_room( camera, visibleRoom, false );
+		draw_translucent_room( camera, visibleRoom, false );
 	}
 
-	PlPopMatrix();
-
 	COM_PROFILE_FUNCTION_END();
+
+	PlgPopDebugGroupMarker();
 }

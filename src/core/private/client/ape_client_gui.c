@@ -3,6 +3,7 @@
 #include "ape_private.h"
 #include "ape_client_gui.h"
 
+#include "camera/camera.h"
 #include "yin/core_interfaces.h"
 
 #include "editor/editor.h"
@@ -11,6 +12,7 @@
 
 #include "renderer/renderer.h"
 #include "renderer/renderer_font.h"
+#include "renderer/material/material.h"
 #include "renderer/post/post.h"
 
 static bool drawGUI = true;
@@ -209,6 +211,24 @@ void ape_draw_gui_( ApeViewport *viewport )
 	}
 
 	ape_editor_draw_gui_( viewport );
+
+	PL_GET_CVAR( "renderer.showPortalVolumes", showPortalVolumes );
+	if ( showPortalVolumes && showPortalVolumes->b_value )
+	{
+		const ApeCamera *camera = ape_rendererState_.camera;
+		if ( camera != nullptr && camera->pvs.numRooms > 0 )
+		{
+			ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+			const ApeCameraVisibleRoom *room = &camera->pvs.rooms[ 0 ];
+			for ( unsigned int i = 0; i < room->numPortals; ++i )
+			{
+				PLVector4 screenRect = room->portals[ i ].screenRect;
+				screenRect.y         = viewport->height - screenRect.y - screenRect.w;
+				PlgDrawLineRectangle( screenRect.x, screenRect.y, screenRect.z, screenRect.w, PL_COLOUR_GREEN );
+			}
+		}
+	}
 
 	// todo: this should use GUI
 	PL_GET_CVAR( "debug/overlay", debugOverlay );

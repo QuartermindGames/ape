@@ -4,7 +4,7 @@
 
 #include "post.h"
 
-#include "../renderer_render_target.h"
+#include "renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

@@ -7,7 +7,10 @@
 
 #include "common_project.h"
 #include "editor.h"
+
 #include "renderer/renderer.h"
+#include "renderer/material/material.h"
+
 #include "world/world.h"
 #include "yin/gui_public.h"
 

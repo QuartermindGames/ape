@@ -11,6 +11,7 @@
 #include "renderer/renderer.h"
 #include "audio/audio.h"
 #include "ape_protocol.h"
+#include "renderer/material/material.h"
 #include "yin/core_game.h"
 
 /////////////////////////////////////////////////////////////////////////////////////

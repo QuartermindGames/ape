@@ -9,7 +9,7 @@
 #include "yin/core_world.h"
 #include "node/node_entity.h"
 #include "audio/audio.h"
-#include "renderer/renderer.h"
+#include "camera/camera.h"
 
 #define WORLD_PROP_TAG_LENGTH 64
 
@@ -108,6 +108,6 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 /////////////////////////////////////////////////////////////////////////////////////
 // Room
 
-void ape_room_draw_( ApeRoom *room, ApeCamera *camera, const ApeViewport *viewport );
+void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport );
 
 PL_EXTERN_C_END

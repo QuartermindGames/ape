@@ -40,9 +40,10 @@ set(APE_SOURCE_EDITORS
 add_library(ApeCore STATIC
         private/ape_console.c
 
+        private/camera/camera.c
+
         # Scene Node System
         private/node/node_brush.c
-        private/node/node_camera.c
         private/node/node_entity.c
         private/node/node_light.c
         private/node/node_room.c

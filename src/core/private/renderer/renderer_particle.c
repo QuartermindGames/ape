@@ -4,7 +4,7 @@
 
 #include "ape_private.h"
 #include "renderer_particle.h"
-#include "renderer.h"
+#include "material/material.h"
 
 static void PS_CB_DestroyEmitterTemplate( void *userData )
 {
@@ -20,7 +20,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 
 AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
 {
-	AcmBranch *root = acm_push_object( NULL, "particleEmitter" );
+	AcmBranch *root = acm_push_object( nullptr, "particleEmitter" );
 	if ( root != NULL )
 	{
 		acm_push_i32( root, "emissionRate", emitter->emissionRate );

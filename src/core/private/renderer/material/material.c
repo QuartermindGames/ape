@@ -4,9 +4,13 @@
 #include <float.h>
 
 #include "ape_private.h"
-#include "../renderer.h"
-#include "../renderer_render_target.h"
+
+#include "renderer/renderer.h"
+#include "renderer/renderer_render_target.h"
+#include "renderer/renderer_texture.h"
+
 #include "material.h"
+
 #include "world/world.h"
 #include "game/game_public.h"
 #include "gui/gui_private.h"

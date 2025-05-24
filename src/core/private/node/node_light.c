@@ -5,6 +5,8 @@
 #include "ape_private.h"
 
 #include "renderer/renderer.h"
+#include "renderer/material/material.h"
+
 #include "world/world.h"
 
 ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
@@ -130,18 +132,6 @@ bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *mater
 	unsigned int flags = ape_material_get_flags( material );
 
 	return ( ( flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) && !ape_light_test_plane( self, plane ) );
-}
-
-bool ape_light_is_visible( const ApeLight *self, const ApeCamera *camera )
-{
-	if ( self->type == APE_LIGHT_TYPE_SUN )
-	{
-		return true;
-	}
-
-	PLVector3         lightPosition = ape_light_get_position( self );
-	PLCollisionSphere sphere        = PlSetupCollisionSphere( lightPosition, self->radius );
-	return PlgIsSphereInsideView( camera->internal, &sphere );
 }
 
 static AcmBranch *serialize_light( void *self, AcmBranch *root )

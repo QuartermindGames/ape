@@ -6,6 +6,7 @@
 #include "gui_private.h"
 
 #include "renderer/renderer.h"
+#include "renderer/material/material.h"
 
 /****************************************
  * GUI DRAW API

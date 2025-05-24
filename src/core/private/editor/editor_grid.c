@@ -2,8 +2,8 @@
 
 #include "plcore/pl_hashtable.h"
 #include "ape_private.h"
-#include "renderer/renderer.h"
 #include "editor/editor.h"
+#include "renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid
