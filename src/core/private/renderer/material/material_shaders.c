@@ -477,6 +477,7 @@ void ape_initialize_shaders_( void )
 	        [APE_SHADER_DEFAULT_ALPHA]  = "default_alpha",
 	        [APE_SHADER_DEFAULT_FONT]   = "font",
 	        [APE_SHADER_DEFAULT_SHADOW] = "shadow",
+	        [APE_SHADER_DEFAULT_GRID]   = "editor_grid",
 	};
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_SHADERS; ++i )
 	{

@@ -60,8 +60,7 @@ typedef struct ApeEditorGrid
 
 	PLMatrix4 transform;
 
-	bool     rebuildMesh;
-	PLGMesh *selectionMesh;
+	PLVector2 cursor;
 
 	unsigned char visible;// unsigned char, because otherwise
 	                      // can't hook it with frontend :(
@@ -138,6 +137,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 /////////////////////////////////////////////////////////////////////////////////////
 
 PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
+PLVector3  ape_grid_update_cursor( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport );
 
 /**
  * Transforms a 2D point into 3D space using the grid's transformation matrix.
@@ -146,7 +146,7 @@ PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
  * @param point A pointer to a PLVector2 structure representing the 2D point to be transformed.
  * @return 		A PLVector3 structure representing the transformed 3D point.
  */
-PLVector3 ape_grid_transform_point( ApeEditorGrid *self, const PLVector2 *point );
+PLVector3 ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point );
 
 void ape_grid_increase_size( void );
 void ape_grid_decrease_size( void );

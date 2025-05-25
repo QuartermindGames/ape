@@ -2,7 +2,6 @@
 
 #include "ape_private.h"
 #include "renderer.h"
-#include "renderer_render_target.h"
 
 /**
  * What's a viewport? I hear you ask. Well, I'm glad you did.
@@ -214,4 +213,12 @@ void ape_viewport_set_clip( const ApeViewport *self )
 void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour )
 {
 	self->clearColour = *clearColour;
+}
+
+PLVector3 ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix )
+{
+	return PlConvertScreenToWorld( PL_VECTOR2( pos[ 0 ], ( self->height - pos[ 1 ] ) ),
+	                               viewMatrix,
+	                               projMatrix,
+	                               ( int[] ) { self->x, self->y, self->width, self->height } );
 }

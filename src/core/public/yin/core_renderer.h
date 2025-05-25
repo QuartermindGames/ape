@@ -82,6 +82,17 @@ void ape_viewport_set_clip( const ApeViewport *self );
 
 void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour );
 
+/**
+ * Convert the given position in screen space, into a position in world space.
+ *
+ * @param self			Viewport instance.
+ * @param pos			Screen position.
+ * @param viewMatrix	View matrix.
+ * @param projMatrix	Projection matrix.
+ * @return				World-space position.
+ */
+PLVector3 ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Render Target API
 
@@ -113,10 +124,12 @@ typedef enum ApeDefaultShaderProgram
 {
 	APE_SHADER_DEFAULT,
 
+	//TODO: replace the below with materials, and pipe them through the material system instead
 	APE_SHADER_DEFAULT_VERTEX,
 	APE_SHADER_DEFAULT_ALPHA,
 	APE_SHADER_DEFAULT_FONT,
 	APE_SHADER_DEFAULT_SHADOW,
+	APE_SHADER_DEFAULT_GRID,
 
 	APE_MAX_DEFAULT_SHADERS,
 	APE_SHADER_DEFAULT_NULL = APE_MAX_DEFAULT_SHADERS,

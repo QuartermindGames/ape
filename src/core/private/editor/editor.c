@@ -59,7 +59,6 @@ AcmBranch *ape_editor_get_config()
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_grid_setup_( ApeEditorGrid *self );
-void ape_grid_cleanup_( ApeEditorGrid *self );
 
 static PLLinkedList      *editorInstanceList;
 static ApeEditorInstance *editorInstance;
@@ -127,8 +126,6 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
 	self->numPolygonPoints = 0;
-
-	ape_grid_cleanup_( &self->grid );
 
 	PlDestroyLinkedListNode( self->listNode );
 	self->listNode = nullptr;
@@ -846,8 +843,6 @@ void ape_editor_pre_render_scene_( ApeCamera *camera )
 
 	COM_PROFILE_FUNCTION_START();
 
-	ape_grid_draw_( &instance->grid );
-
 	// slow, unoptimised, jelly
 
 	ape_editor_selection_render_( instance );
@@ -882,6 +877,7 @@ void ape_editor_post_render_scene_()
 
 	COM_PROFILE_FUNCTION_START();
 
+	ape_grid_draw_( &instance->grid );
 	ape_grid_post_draw_( &instance->grid );
 
 	ape_editor_selection_render_post_( instance );
@@ -1028,6 +1024,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		}
 	}
 
+	//TODO: this should be drawn within the grid space, so it's more visible
 	if ( editorInstance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
 		char label[ 64 ];
@@ -1043,73 +1040,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	draw_brush_gui( viewport, font );
 
 	gui_font_display( font );
-
-#if 0
-	if ( camera->mode != APE_CAMERA_MODE_INVALID && camera->mode != APE_CAMERA_MODE_PERSPECTIVE )
-	{
-		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
-
-		float z = viewport->zoom;
-		float zoom = roundf( z ) / 2;
-		if ( zoom <= 0 )
-		{
-			zoom = 1;
-		}
-
-		float x = 500.0f + sinf( zoom * 2 ) * 100.0f;
-		float y = 200.0f + cosf( zoom * 2 ) * 100.0f;
-
-		PlMatrixMode( PL_MODELVIEW_MATRIX );//TODO: should probably be view matrix...
-		PlPushMatrix();
-		PlLoadIdentityMatrix();
-
-		PlgDrawGrid( 0, 0, viewport->width, viewport->height, ( editorInstance->gridScale / 2 ) * zoom, &( PLColour ){ 0, 0, 100, 255 } );
-		PlgDrawGrid( 0, 0, viewport->width, viewport->height, editorInstance->gridScale * zoom, &( PLColour ){ 0, 0, 255, 255 } );
-
-		switch ( camera->mode )
-		{
-			default:
-				break;
-			case APE_CAMERA_MODE_TOP:
-				PlTranslateMatrix( ( PLVector3 ){ x, -0.0f, -y } );
-				PlRotateMatrix( PL_DEG2RAD( 90.0f ), 1.0f, 0.0f, 0.0f );
-				break;
-			case APE_CAMERA_MODE_LEFT:
-				PlTranslateMatrix( ( PLVector3 ){ 0.0f, -y, -x } );
-				PlRotateMatrix( PL_DEG2RAD( 90.0f ), 0.0f, 1.0f, 0.0f );
-				PlRotateMatrix( PL_DEG2RAD( 180.0f ), 0.0f, 0.0f, 1.0f );
-				break;
-			case APE_CAMERA_MODE_FRONT:
-				PlTranslateMatrix( ( PLVector3 ){ -x, -y, 0.0f } );
-				PlRotateMatrix( PL_DEG2RAD( 180.0f ), 0.0f, 0.0f, 1.0f );
-				break;
-		}
-
-		PlgSetViewMatrix( PlGetMatrix( PL_VIEW_MATRIX ) );
-
-		ApeWorld *world = game_get_current_world();
-		if ( world != NULL )
-		{
-			switch ( camera->drawMode )
-			{
-				case APE_CAMERA_DRAW_MODE_WIREFRAME:
-					ape_world_draw_wireframe( world, camera );
-					break;
-				case APE_CAMERA_DRAW_MODE_SOLID:
-				case APE_CAMERA_DRAW_MODE_TEXTURED:
-					ape_world_draw( world, camera, NULL, 0 );
-					break;
-				default:
-					break;
-			}
-		}
-
-		PlPopMatrix();
-
-		// Restore the view matrix back
-		PlgSetViewMatrix( &viewport->camera->internal->internal.view );
-	}
-#endif
 }
 
 bool ape_is_editor_active( void )

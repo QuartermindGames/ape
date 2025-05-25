@@ -258,11 +258,7 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	}
 
-	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
-	{
-		ape_grid_draw_selection_( &self->grid );
-	}
-	else
+	if ( self->geometryMode != APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
 		for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numNodes; ++i )
 		{

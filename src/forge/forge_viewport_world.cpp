@@ -515,6 +515,15 @@ long forge::WorldViewport::on_motion( FXObject *object, FXSelector selector, voi
 	int const x     = event->win_x;
 	int const y     = event->win_y;
 
+	if ( internalViewport_ != nullptr )
+	{
+		ApeEditorInstance *instance = editor->get_internal();
+		if ( instance != nullptr )
+		{
+			ape_grid_update_cursor( &instance->grid, x, y, camera, internalViewport_ );
+		}
+	}
+
 	return TRUE;
 }
 
