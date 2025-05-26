@@ -1,9 +1,3 @@
-=================================================================
-Project Yin, Developer Notes
-=================================================================
-
-This is a collection of instructions/notes that might be looking
-for some information on how various bits of the engine works.
 
 CREATING A NEW MATERIAL
 ----------------------------------------------------
@@ -76,17 +70,16 @@ ADDING NEW SHADER PROGRAMS
 ----------------------------------------------------
 
 Shaders are located under the following directory.
-    materials/shaders/
 
-Each .node under this directory represents a shader
-program. You'll notice the existing node files each
-begin with a "program" object.
+`materials/shaders/`
 
-To introduce a new program, just add a new .node
-under this directory. The name doesn't matter, so
-long as .node is appended to the end of it.
+Each .sha.n under this directory represents a shader program.
+You'll notice the existing node files each begin with a "program" object.
 
-The contents of your node needs to begin with a
+To introduce a new program, add a new .sha.n under this directory.
+The name doesn't matter, so long as .sha.n is appended to the end of it.
+
+The contents of your node need to begin with a
 "program" object. The following fields are then
 required in the object.
 
@@ -107,7 +100,7 @@ includes use of macros that can be enabled/disabled
 to change functionality, you can use the
 "definitions" object.
 
-The definitions object takes a "fragment" string
+The "definitions" object takes a "fragment" string
 array and "vertex" string array. An example is
 provided below.
 
@@ -125,7 +118,7 @@ provided below.
 
 Any uniforms within the program are picked up
 automatically and can be immediately used by any
-materials utilising them.
+materials utilizing them.
 
 A complete example of a program can be seen below.
 
@@ -157,5 +150,3 @@ A complete example of a program can be seen below.
             }
         }
     }
-
-====================================================

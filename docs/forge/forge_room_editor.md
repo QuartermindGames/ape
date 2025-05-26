@@ -43,4 +43,6 @@
 ## Brushes
 
 Brushes are the primary building blocks of the world.
-To create a brush, you need to enter polygon mode
+To create a brush, you need to enter polygon mode and then using the grid, you can plot out the points that will form your brush.
+
+Once you're happy with your shape, right-click and the brush will be created instantly.

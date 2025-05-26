@@ -1,6 +1,6 @@
 # Entity API
 
-The entity system introduced in APE is made up of entity classes and entity components.
+The entity system introduced in Ape is made up of entity classes and entity components.
 Unlike a typical ECS, the components in this case are only used to provide additional blocks of data an entity can use, whereas the "class" is what actually implements the specific behaviours for the given entity.
 
 ## General
