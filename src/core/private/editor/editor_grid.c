@@ -44,7 +44,7 @@ static PLVector2 transform_world_to_grid( ApeEditorGrid *self, const PLVector3 *
 	return ( PLVector2 ) { localPos.x, localPos.z };
 }
 
-PLVector3 ape_grid_update_cursor( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
+PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
 {
 	// convert from screen to world
 	PLVector3 pos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { mx, my }, &camera->internal->internal.view, &camera->internal->internal.proj );

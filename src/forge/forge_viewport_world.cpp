@@ -90,8 +90,13 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_SHADE_FLAT, forge::WorldViewport::on_face_shade_flat ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLIP, forge::WorldViewport::on_face_flip ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_NEW_ROOM, forge::WorldViewport::on_link_new_room ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_UNLINK_PORTAL, forge::WorldViewport::on_face_unlink_portal ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_PORTAL, forge::WorldViewport::on_face_link_portal ),
+
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_MIRROR, forge::WorldViewport::on_toggle_face_flag ),
-        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_PORTAL, forge::WorldViewport::on_toggle_face_flag ),
+
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MOVE_NODE_TO_ROOM, forge::WorldViewport::on_move_node_to_room ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL, forge::WorldViewport::on_create_node ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT, forge::WorldViewport::on_create_node ),
@@ -144,19 +149,20 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			WorldEditor *worldEditor = static_cast< WorldEditor * >( editor );
+			WorldEditor *worldEditor = dynamic_cast< WorldEditor * >( editor );
+			if ( worldEditor == nullptr )
+			{
+				return false;
+			}
 
 			void *p = ape_editor_get_object_under_cursor( instance );
-			if ( p == nullptr )
+			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
-				worldEditor->set_face_inspector_surface( nullptr );
-				return TRUE;
+				worldEditor->set_face_inspector_surface( ( ApeBrushFace * ) p );
 			}
 
 			ape_editor_add_object_to_selection( instance, p );
-
-			worldEditor->set_face_inspector_surface( static_cast< ApeBrushFace * >( p ) );
-			return TRUE;
+			return true;
 		}
 	}
 
@@ -179,6 +185,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 		return TRUE;
 	}
 
+	FXMenuPane *popup = nullptr;
 	switch ( instance->geometryMode )
 	{
 		default:
@@ -197,7 +204,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				return TRUE;
 			}
 
-			FXMenuPane *popup = new FXMenuPane( this );
+			popup = new FXMenuPane( this );
 
 			unsigned int              numClasses;
 			const ApeWorldNodeClass **classes = ape_world_node_get_classes( &numClasses );
@@ -223,25 +230,19 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				new FXMenuCommand( popup, FXString( "Create " ) + identifier, icon, this, ID_CREATE_NODE + i );
 			}
 
-			popup->create();
-			popup->popup( nullptr, event->root_x, event->root_y );
-			getApp()->runModalWhileShown( popup );
-
-			delete popup;
-
-			return TRUE;
+			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			unsigned int numFaces = PlGetNumLinkedListNodes( instance->selectedObjects );
-			if ( numFaces == 0 )
+			ApeBrushFace *face = ( ApeBrushFace * ) ape_editor_get_first_selected( instance );
+			if ( face == nullptr )
 			{
-				return TRUE;
+				return true;
 			}
 
 			// Create a pop-up menu
-			FXMenuPane *popup = new FXMenuPane( this );
+			popup = new FXMenuPane( this );
 			new FXMenuCommand( popup, "Inspector", load_fx_icon( getApp(), "resources/silk/zoom.png" ), this, ID_FACE_INSPECTOR );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Toggle Faces", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_TOGGLE ], this, ID_FACE_TOGGLE );
@@ -253,34 +254,110 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			new FXMenuCommand( popup, "Shade Faces Flat", load_fx_icon( getApp(), "resources/face_flat.gif" ), this, ID_FACE_SHADE_FLAT );
 			new FXMenuSeparator( popup );
 			new FXMenuCommand( popup, "Align Grid to Face", forge_cachedIcons[ FORGE_ICON_TYPE_GRID_ORIENT ], this, ID_GRID_ALIGN );
+
 			new FXMenuSeparator( popup );
-			new FXMenuCommand( popup, "Link Portal...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], this, ID_FACE_LINK_PORTAL );
 
-			// specific options for the given face...
-			// we could *technically* allow these for multiple faces, but I'm avoiding complexity for now
-			if ( numFaces == 1 )
+			ApeRoom *room = ape_brush_face_get_room( face );
+			if ( room != nullptr )
 			{
-				new FXMenuSeparator( popup );
+				ApeWorldNode *rootNode = ape_world_node_get_root( APE_WORLD_NODE( room ) );
+				if ( rootNode != nullptr && rootNode->type == APE_WORLD_NODE_TYPE_ROOT )
+				{
+					unsigned int   numTaggedSurfaces;
+					ApeBrushFace **taggedSurfaces = ape_world_get_tagged_surfaces( ( ApeWorld * ) rootNode, &numTaggedSurfaces );
 
-				FXMenuPane *flagsMenu = new FXMenuPane( this );
-				new FXMenuCascade( popup, "Flags", nullptr, flagsMenu );
+					FXMenuPane *linkMenu = new FXMenuPane( this );
+					new FXMenuCascade( popup, "Link Portal", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], linkMenu );
+					new FXMenuCommand( linkMenu, "New Room...", forge_cachedIcons[ FORGE_ICON_TYPE_NEW_ROOM ], this, ID_FACE_LINK_NEW_ROOM );
 
-				ApeBrushFace *face = static_cast< ApeBrushFace * >( PlGetLinkedListNodeUserData( PlGetFirstNode( instance->selectedObjects ) ) );
-				//new FXMenuCommand( popup, "Set ID...", forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ], this, ID_BUTTON_CREATE_BRUSH );
-				( new FXMenuCheck( flagsMenu, "Mirror", this, ID_FACE_FLAG_MIRROR ) )->setCheck( face->flags & APE_BRUSH_FACE_FLAG_MIRROR );
-				( new FXMenuCheck( flagsMenu, "Portal", this, ID_FACE_FLAG_PORTAL ) )->setCheck( face->flags & APE_BRUSH_FACE_FLAG_PORTAL );
-				//new FXMenuCommand( popup, "Connect Portal...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], this, ID_BUTTON_CREATE_BRUSH );
+					if ( numTaggedSurfaces > 0 )
+					{
+						new FXMenuSeparator( linkMenu );
+						for ( unsigned int i = 0; i < numTaggedSurfaces; ++i )
+						{
+							room = ape_brush_face_get_room( taggedSurfaces[ i ] );
+							assert( room != nullptr );
+
+							const char *path = ape_room_get_path( room );
+							if ( path == nullptr || *path == '\0' )
+							{
+								forge_warning_( "Encountered a room with an invalid path!\n" );
+								continue;
+							}
+
+							new FXMenuCommand( linkMenu, FXString( path ) + ":" + taggedSurfaces[ i ]->tag, nullptr, this, ID_FACE_LINK_PORTAL );
+						}
+					}
+
+					PL_DELETE( taggedSurfaces );
+				}
 			}
 
-			// Show the menu
-			popup->create();
-			popup->popup( nullptr, event->root_x, event->root_y );
-			getApp()->runModalWhileShown( popup );
+			FXMenuCommand *command = new FXMenuCommand( popup, "Unlink Portal", nullptr, this, ID_FACE_UNLINK_PORTAL );
+			if ( ape_brush_face_is_mirror( face ) || !ape_brush_face_is_portal( face ) )
+			{
+				command->disable();
+			}
 
-			delete popup;
-			return TRUE;
+			( new FXMenuCheck( popup, "Mirror", this, ID_FACE_FLAG_MIRROR ) )->setCheck( face->flags & APE_BRUSH_FACE_FLAG_MIRROR );
+
+			break;
 		}
-		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM: break;
+		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
+		{
+			unsigned int numSelectedNodes = PlGetNumLinkedListNodes( instance->selectedObjects );
+			if ( numSelectedNodes == 0 )
+			{
+				return true;
+			}
+
+			popup = new FXMenuPane( this );
+
+			FXMenuPane    *subMenu    = new FXMenuPane( this );
+			FXMenuCascade *moveToMenu = new FXMenuCascade( popup, "Move to Room...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], subMenu );
+
+			WorldEditor *worldEditor = ( WorldEditor * ) editor;
+
+			std::vector< ApeRoom * > rooms;
+			worldEditor->get_rooms( &rooms );
+			if ( rooms.size() > 1 )
+			{
+				ApeRoom *activeRoom = worldEditor->get_active_room();
+				for ( auto &i : rooms )
+				{
+					if ( i == activeRoom )
+					{
+						continue;
+					}
+
+					const char *path = ape_room_get_path( i );
+					if ( path == nullptr || *path == '\0' )
+					{
+						// this shouldn't happen...
+						forge_warning_( "Encountered a room with an invalid path!\n" );
+						continue;
+					}
+
+					new FXMenuCommand( subMenu, path, nullptr, this, ID_MOVE_NODE_TO_ROOM );
+				}
+			}
+			else
+			{
+				moveToMenu->disable();
+			}
+			break;
+		}
+	}
+
+	if ( popup != nullptr )
+	{
+		popup->create();
+		popup->popup( nullptr, event->root_x, event->root_y );
+		FXApp::instance()->runModalWhileShown( popup );
+
+		delete popup;
+
+		return true;
 	}
 
 	return FALSE;
@@ -511,18 +588,19 @@ long forge::WorldViewport::on_motion( FXObject *object, FXSelector selector, voi
 {
 	Viewport::on_motion( object, selector, ptr );
 
-	auto     *event = ( FXEvent * ) ptr;
-	int const x     = event->win_x;
-	int const y     = event->win_y;
-
-	if ( internalViewport_ != nullptr )
+	if ( internalViewport_ == nullptr )
 	{
-		ApeEditorInstance *instance = editor->get_internal();
-		if ( instance != nullptr )
-		{
-			ape_grid_update_cursor( &instance->grid, x, y, camera, internalViewport_ );
-		}
+		return false;
 	}
+
+	ApeEditorInstance *instance = editor->get_internal();
+	if ( instance == nullptr )
+	{
+		return false;
+	}
+
+	auto *event = ( FXEvent * ) ptr;
+	ape_editor_on_mouse_move( instance, internalViewport_, event->win_x, event->win_y );
 
 	return TRUE;
 }
@@ -594,11 +672,111 @@ long forge::WorldViewport::on_face_flip( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long forge::WorldViewport::on_face_link_portal( FXObject *, FXSelector, void * )
+long forge::WorldViewport::on_link_new_room( FXObject *, FXSelector, void * )
 {
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return false;
+	}
 
+	ApeBrushFace *face = ( ApeBrushFace * ) ape_editor_get_first_selected( instance );
+	if ( face == nullptr )
+	{
+		return false;
+	}
 
-	return TRUE;
+	static_cast< WorldEditor * >( editor )->link_new_room( face );
+	return true;
+}
+
+long forge::WorldViewport::on_face_unlink_portal( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return false;
+	}
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	{
+		*face->destinationTag = '\0';
+		face->flags &= ~APE_BRUSH_FACE_FLAG_PORTAL;
+	}
+
+	return true;
+}
+
+long forge::WorldViewport::on_face_link_portal( FXObject *object, FXSelector, void * )
+{
+	FXMenuCommand *command = dynamic_cast< FXMenuCommand * >( object );
+	if ( command == nullptr )
+	{
+		return false;
+	}
+
+	std::string tag = command->getText().text();
+	if ( tag.empty() )
+	{
+		return false;
+	}
+
+	ApeEditorInstance *instance = editor->get_internal();
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		return false;
+	}
+
+	ApeBrushFace *face;
+	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	{
+		snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s", tag.c_str() );
+		face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
+	}
+
+	return true;
+}
+
+long forge::WorldViewport::on_move_node_to_room( FXObject *object, FXSelector, void * )
+{
+	FXMenuCommand *command = dynamic_cast< FXMenuCommand * >( object );
+	if ( command == nullptr )
+	{
+		return false;
+	}
+
+	WorldEditor *worldEditor = dynamic_cast< WorldEditor * >( editor );
+	if ( worldEditor == nullptr )
+	{
+		return false;
+	}
+
+	ApeWorld *world = worldEditor->get_world();
+	if ( world == nullptr )
+	{
+		return false;
+	}
+
+	std::string path = command->getText().text();
+	ApeRoom    *room = ape_world_get_room_by_path( world, path.c_str() );
+	if ( room == nullptr )
+	{
+		forge_warning_( "Failed to find room (%s)!\n", path.c_str() );
+		return false;
+	}
+
+	ApeEditorInstance *instance = worldEditor->get_internal();
+	if ( instance == nullptr )
+	{
+		forge_warning_( "Invalid editor instance!\n" );
+		return false;
+	}
+
+	ape_editor_move_selected_to_room( instance, room );
+
+	return true;
 }
 
 long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector selector, void * )
@@ -635,24 +813,6 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 			{
 				face->flags &= ~APE_BRUSH_FACE_FLAG_MIRROR;
 			}
-
-			//ape_room_compute_zones( room );
-
-			return TRUE;
-		}
-		case ID_FACE_FLAG_PORTAL:
-		{
-			if ( checkBox->getCheck() )
-			{
-				face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
-			}
-			else
-			{
-				face->flags &= ~APE_BRUSH_FACE_FLAG_PORTAL;
-			}
-
-			//ape_room_compute_zones( room );
-
 			return TRUE;
 		}
 	}
@@ -694,9 +854,15 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 				break;
 			}
 
-			//TODO: transform it into a relative path...
+			PLFileSystemMount *mount = PlGetMountLocationForPath( filename.text() );
+			if ( mount == nullptr )
+			{
+				forge_warning_( "Model (%s) must be placed under a mounted location!\n", path );
+				break;
+			}
 
-			ApeModelNode *node = ape_model_node_create( APE_WORLD_NODE( room ), nullptr, filename.text() );
+			const char   *mountPath = PlGetMountLocationPath( mount );
+			ApeModelNode *node      = ape_model_node_create( APE_WORLD_NODE( room ), nullptr, &filename[ strlen( mountPath ) + 1 ] );
 			if ( node == nullptr )
 			{
 				break;

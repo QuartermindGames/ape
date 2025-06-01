@@ -102,12 +102,12 @@ AcmBranch *ape_editor_get_config();
 
 void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
 
-PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst );
 void     *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
 void      ape_editor_clear_selection( ApeEditorInstance *self );
 void      ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
 void     *ape_editor_get_first_selected( ApeEditorInstance *self );
 void      ape_editor_delete_selection( ApeEditorInstance *self );
+void      ape_editor_move_selected_to_room( ApeEditorInstance *self, ApeRoom *room );
 
 void ape_editor_toggle_faces( ApeEditorInstance *self );
 void ape_editor_toggle_other_faces( ApeEditorInstance *self );
@@ -137,7 +137,6 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 /////////////////////////////////////////////////////////////////////////////////////
 
 PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
-PLVector3  ape_grid_update_cursor( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport );
 
 /**
  * Transforms a 2D point into 3D space using the grid's transformation matrix.
@@ -155,6 +154,8 @@ void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face );
 
 void ape_grid_move_forward( ApeEditorGrid *self );
 void ape_grid_move_backward( ApeEditorGrid *self );
+
+void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewport, int x, int y );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Brush Plotting

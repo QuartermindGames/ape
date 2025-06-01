@@ -438,7 +438,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 		for ( unsigned int i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
-			if ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) || !ape_material_shadows_enabled( face->material ) )
+			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN || !ape_material_shadows_enabled( face->material ) )
 			{
 				continue;
 			}
@@ -458,7 +458,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 
 			// There's probably a more efficient way of doing this,
 			// but let's go ahead and store all the indices into a dynamic array
-			*numIndices += ( face->numVertices * 2 );// * 2 for edges
+			*numIndices += face->numVertices * 2;// * 2 for edges
 			static unsigned int *indices    = nullptr;
 			static unsigned int  maxIndices = 0;
 			if ( indices == NULL )
@@ -735,6 +735,161 @@ static void draw_portal_face( const ApeBrushFace *portal )
 	PlPopMatrix();
 }
 
+static void draw_wireframe_portal_face( const ApeBrushFace *portal )
+{
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( portal->parent ) );
+	PlMultiMatrix( &transform );
+
+	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+	PlgImmBegin( PLG_MESH_LINE_LOOP );
+
+	for ( unsigned int j = 0; j < portal->numVertices; ++j )
+	{
+		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
+		PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+		PlgImmColour( 0, 255, 0, 255 );
+	}
+
+	PlgImmDraw();
+
+	PlPopMatrix();
+}
+
+static float sgn( float a )
+{
+	if ( a > 0.0f ) return 1.0f;
+	if ( a < 0.0f ) return -1.0f;
+	return 0.0f;
+}
+
+// based on https://terathon.com/blog/oblique-clipping.html
+static PLMatrix4 modify_portal_projection_matrix( const PLMatrix4 *projMatrix, const PLVector4 *plane )
+{
+	// Calculate the clip-space corner point opposite the clipping plane
+	// as (sgn(clipPlane.x), sgn(clipPlane.y), 1, 1) and
+	// transform it into camera space by multiplying it
+	// by the inverse of the projection matrix
+	PLVector4 q = PL_VECTOR4( ( sgn( plane->x ) + projMatrix->m[ 8 ] ) / projMatrix->m[ 0 ],
+	                          ( sgn( plane->y ) + projMatrix->m[ 9 ] ) / projMatrix->m[ 5 ],
+	                          -1.0f,
+	                          ( 1.0f + projMatrix->m[ 10 ] ) / projMatrix->m[ 14 ] );
+
+	// Calculate the scaled plane vector
+	PLVector4 c = PlScaleVector4F( plane, 2.0f / PlVector4DotProduct( plane, &q ) );
+
+	// Replace the third row of the projection matrix
+	PLMatrix4 matrix = *projMatrix;
+	matrix.m[ 2 ]    = c.x;
+	matrix.m[ 6 ]    = c.y;
+	matrix.m[ 10 ]   = c.z + 1.0f;
+	matrix.m[ 14 ]   = c.w;
+
+	return matrix;
+}
+
+static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const ApeCameraVisibleRoom *visibleRoom, const ApeCameraVisiblePortal *visiblePortal )
+{
+	if ( visiblePortal->nextRoom == nullptr )
+	{
+		return;
+	}
+
+	ApeCameraVisibleRoom *nextVisibleRoom = visiblePortal->nextRoom;
+	if ( nextVisibleRoom->room == nullptr )
+	{
+		return;
+	}
+
+	ApeBrushFace *portal            = visiblePortal->portalFace;
+	ApeBrushFace *destinationPortal = ape_brush_face_get_portal_destination( portal );
+
+	PlgPushDebugGroupMarker( "portal" );
+
+	// first draw the portal stencil we'll test again
+
+	PlgClipViewport( visiblePortal->screenRect.x, visiblePortal->screenRect.y,
+	                 visiblePortal->screenRect.z, visiblePortal->screenRect.w );
+
+	PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+	PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
+	PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_REPLACE );
+
+	PlgColourMask( false, false, false, false );
+
+	draw_portal_face( portal );
+
+	PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 4, 0xFF );
+	PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
+
+	//TODO: uuuuuhhhhhgggg
+	PlgClearBuffers( PLG_BUFFER_DEPTH );
+
+	PlgColourMask( true, true, true, true );
+
+	// setup clipping plane
+
+	ape_rendererState_.mirror = ape_brush_face_is_mirror( visiblePortal->portalFace );
+
+	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
+	ape_draw_debug_sphere( visiblePortal->origin, PL_COLOUR_RED, 16.0f );
+	PLVector4 clipPlane;
+	if ( ape_rendererState_.mirror )
+	{
+		clipPlane   = PL_VEC3TO4( visiblePortal->normal );
+		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
+	}
+	else
+	{
+		clipPlane   = PL_VEC3TO4( visiblePortal->normal );
+		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
+	}
+
+	PlgSetClipPlane( &clipPlane, &clipMatrix, false );
+
+	// now recurse into the next room
+
+	ape_rendererState_.depth++;
+
+	// set the view matrix we need
+	camera->internal->internal.view = nextVisibleRoom->viewMatrix;
+	PlgSetViewMatrix( &nextVisibleRoom->viewMatrix );
+	PlgSetupCameraFrustum( camera->internal );
+
+	ape_room_draw_( camera, nextVisibleRoom, viewport );
+
+	// reset the view matrix back
+	camera->internal->internal.view = visibleRoom->viewMatrix;
+	PlgSetViewMatrix( &camera->internal->internal.view );
+	PlgSetupCameraFrustum( camera->internal );
+
+	// and pop out
+
+	ape_rendererState_.depth--;
+	ape_rendererState_.mirror = false;
+
+	PlgSetClipPlane( nullptr, nullptr, false );
+
+	// depth buffer pop
+
+	PlgColourMask( false, false, false, false );
+	PlgDepthMask( true );
+
+	draw_portal_face( portal );
+
+	PlgColourMask( true, true, true, true );
+
+	PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
+
+	// reset the viewport
+	ape_viewport_set_clip( viewport );
+
+	PlgPopDebugGroupMarker();
+}
+
 //TODO: move into room code
 void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport )
 {
@@ -748,87 +903,45 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 	COM_PROFILE_FUNCTION_START();
 
 	// deal with the portals first
-	for ( unsigned int i = 0; i < visibleRoom->numPortals; ++i )
+	if ( ape_config_.world.showAllRooms )
 	{
-		ApeCameraVisiblePortal *visiblePortal = &visibleRoom->portals[ i ];
-		if ( visiblePortal->nextRoom == nullptr )
+		ApeRoom        *room       = visibleRoom->room;
+		PLCollisionAABB roomBounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( room ) );
+		ape_draw_debug_aabb( &roomBounds, PL_COLOUR_GREEN );
+
+		for ( unsigned int i = 0; i < visibleRoom->numPortals; ++i )
 		{
-			continue;
-		}
+			ApeCameraVisiblePortal *visiblePortal = &visibleRoom->portals[ i ];
+			if ( visiblePortal->nextRoom == nullptr )
+			{
+				continue;
+			}
 
-		ApeCameraVisibleRoom *nextVisibleRoom = visiblePortal->nextRoom;
-		if ( nextVisibleRoom->room == nullptr )
+			ApeCameraVisibleRoom *nextVisibleRoom = visiblePortal->nextRoom;
+			if ( nextVisibleRoom->room == nullptr )
+			{
+				continue;
+			}
+
+			const ApeBrushFace *portal = visiblePortal->portalFace;
+			draw_wireframe_portal_face( portal );
+
+			if ( ape_brush_face_is_mirror( portal ) )
+			{
+				continue;
+			}
+
+			ape_rendererState_.depth++;
+			ape_room_draw_( camera, nextVisibleRoom, viewport );
+			ape_rendererState_.depth--;
+		}
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < visibleRoom->numPortals; ++i )
 		{
-			continue;
+			draw_portal( camera, viewport, visibleRoom, &visibleRoom->portals[ i ] );
 		}
-
-		const ApeBrushFace *portal = visiblePortal->portalFace;
-
-		PlgPushDebugGroupMarker( "portal" );
-
-		// first draw the portal stencil we'll test again
-
-		PlgClipViewport( visiblePortal->screenRect.x, visiblePortal->screenRect.y,
-		                 visiblePortal->screenRect.z, visiblePortal->screenRect.w );
-
-		PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-		PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
-		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_REPLACE );
-
-		PlgColourMask( false, false, false, false );
-
-		draw_portal_face( portal );
-
-		PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 4, 0xFF );
-		PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
-
-		//TODO: uuuuuhhhhhgggg
-		PlgClearBuffers( PLG_BUFFER_DEPTH );
-
-		PlgColourMask( true, true, true, true );
-
-		float d = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
-		PlgSetClipPlane( &PL_VECTOR4( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, d ) );
-
-		// now recurse into the next room
-
-		ape_rendererState_.depth++;
-		ape_rendererState_.mirror = ape_brush_face_is_mirror( visiblePortal->portalFace );
-
-		// set the view matrix we need
-		camera->internal->internal.view = nextVisibleRoom->viewMatrix;
-		PlgSetViewMatrix( &nextVisibleRoom->viewMatrix );
-		PlgSetupCameraFrustum( camera->internal );
-
-		ape_room_draw_( camera, nextVisibleRoom, viewport );
-
-		// reset the view matrix back
-		camera->internal->internal.view = visibleRoom->viewMatrix;
-		PlgSetViewMatrix( &camera->internal->internal.view );
-		PlgSetupCameraFrustum( camera->internal );
-
-		// and pop out
-
-		ape_rendererState_.depth--;
-		ape_rendererState_.mirror = false;
-
-		PlgSetClipPlane( nullptr );
-
-		// depth buffer pop
-
-		PlgColourMask( false, false, false, false );
-		PlgDepthMask( true );
-
-		draw_portal_face( portal );
-
-		PlgColourMask( true, true, true, true );
-
-		PlgDisableGraphicsState( PLG_GFX_STATE_STENCILTEST );
-
-		// reset the viewport
-		ape_viewport_set_clip( viewport );
-
-		PlgPopDebugGroupMarker();
 	}
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME )

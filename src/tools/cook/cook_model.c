@@ -89,7 +89,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		PlSetupPath( bodyPath, true, "%s/%s", folder, body );
 
 		const CookModelFormatInterface **interface = modelCookFormats;
-		while ( ( *interface ) != nullptr )
+		while ( *interface != nullptr )
 		{
 			if ( ( *interface )->extension != nullptr && ( pl_strcasecmp( ( *interface )->extension, ext ) == 0 ) )
 			{
@@ -177,7 +177,7 @@ static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTab
 static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const CookModelVertex *vertices )
 {
 	char *c = strrchr( mesh->material, '/' );
-	printf( "\tSerialising mesh (%s)\n", c != nullptr ? ( c + 1 ) : mesh->material );
+	printf( "\tSerialising mesh (%s)\n", c != nullptr ? c + 1 : mesh->material );
 
 	AcmBranch *meshBranch = acm_push_object( root, nullptr );
 
@@ -294,7 +294,7 @@ static void write_ape_format_model( const CookModel *model, const char *folder )
 	}
 
 	PLPath path = {};
-	PlSetupPath( path, true, "%s/ship/%s/%s." APE_FORMAT_MODEL_EXTENSION, com_project_get_local_path(), folder, model->name );
+	PlSetupPath( path, true, "%s/%s." APE_FORMAT_MODEL_EXTENSION, folder, model->name );
 	if ( !create_file_path( path ) )
 	{
 		return;
@@ -318,19 +318,18 @@ void cook_model_process( const char *modelName )
 		return;
 	}
 
-	PLPath folder = {};
-	if ( PlGetFolderForPath( folder, path ) == nullptr )
-	{
-		WARN( "Failed to get folder from path (%s)!\n", path );
-		return;
-	}
-
 	CookModel *model = PL_NEW( CookModel );
-
-	AcmBranch *root = acm_load_file( path, "cookModel" );
+	AcmBranch *root  = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
 		double startTime = PlGetCurrentSeconds();
+
+		PLPath folder = {};
+		if ( PlGetFolderForPath( folder, path ) == nullptr )
+		{
+			WARN( "Failed to get folder from path (%s)!\n", path );
+			return;
+		}
 
 		parse_model_config( root, model, folder );
 

@@ -9,6 +9,36 @@
 
 #include "world/world.h"
 
+static void clear_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
+{
+	// remove all of the faces from the lookup!
+	for ( unsigned int i = 0; i < self->numFaces; ++i )
+	{
+		ApeBrushFace *face = &self->faces[ i ];
+		if ( *face->tag == '\0' )
+		{
+			continue;
+		}
+
+		ape_room_remove_tagged_surface( room, face );
+	}
+}
+
+static void add_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
+{
+	// add all of the faces from the lookup!
+	for ( unsigned int i = 0; i < self->numFaces; ++i )
+	{
+		ApeBrushFace *face = &self->faces[ i ];
+		if ( *face->tag == '\0' )
+		{
+			continue;
+		}
+
+		ape_room_add_tagged_surface( room, face );
+	}
+}
+
 ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles )
 {
 	ApeBrush *brush = PL_NEW( ApeBrush );
@@ -37,6 +67,12 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 	if ( parent != nullptr )
 	{
 		ape_world_node_mark_dirty_( parent );
+	}
+
+	ApeRoom *room = ape_world_node_get_room( parent );
+	if ( room != nullptr )
+	{
+		clear_tagged_surfaces( self, room );
 	}
 
 	PL_DELETE( self->vertices );
@@ -164,6 +200,7 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 		unsigned int height = ape_material_get_height( material );
 
 		// apply rotation
+		//TODO: this doesn't work :(
 		float cos = cosf( face->materialAngle.x );
 		float sin = sinf( face->materialAngle.x );
 		coord.x   = coord.x * cos - coord.y * sin;
@@ -171,6 +208,43 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
 
 		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
 		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
+	}
+}
+
+void ape_brush_face_fit_material( ApeBrushFace *self )
+{
+	for ( unsigned int i = 0; i < self->numVertices; ++i )
+	{
+		PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
+		if ( fabsf( PlVector3DotProduct( self->normal, up ) ) > 0.99f )
+		{
+			up = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+		}
+
+		PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( self->normal, up ) );
+		PLVector3 v = PlVector3CrossProduct( self->normal, u );
+
+		PLVector2 coord;
+		coord.x = PlVector3DotProduct( *self->edgeLoop[ i ]->position, u );
+		coord.y = PlVector3DotProduct( *self->edgeLoop[ i ]->position, v );
+	}
+
+	const ApeMaterial *material = self->material;
+	assert( material != nullptr );
+
+	unsigned int width  = ape_material_get_width( material );
+	unsigned int height = ape_material_get_height( material );
+
+	self->materialOffset.x = self->bounds.maxs.x - self->bounds.absOrigin.x / self->materialScale.x;
+	self->materialOffset.y = self->bounds.maxs.y - self->bounds.absOrigin.y / self->materialScale.y;
+
+	compute_brush_face_texture_coordinates( self );
+
+	// need to notify the parent to update
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
+	if ( parent != nullptr )
+	{
+		ape_world_node_mark_dirty_( parent );
 	}
 }
 
@@ -217,7 +291,7 @@ void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVect
 
 bool ape_brush_face_is_portal( const ApeBrushFace *self )
 {
-	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL && self->destination != nullptr )
+	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL )
 	{
 		return true;
 	}
@@ -232,14 +306,25 @@ bool ape_brush_face_is_mirror( const ApeBrushFace *self )
 
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
 {
-	if ( self->destination != nullptr )
-	{
-		return self->destination;
-	}
-
 	if ( self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR )
 	{
 		return self;
+	}
+
+	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL )
+	{
+		ApeWorld *world = ( ApeWorld * ) ape_world_node_get_root( APE_WORLD_NODE( self->parent ) );
+		if ( world == nullptr )
+		{
+			return nullptr;
+		}
+
+		if ( *self->destinationTag == '\0' )
+		{
+			return nullptr;
+		}
+
+		return ape_world_get_tagged_surface( world, self->destinationTag );
 	}
 
 	return nullptr;
@@ -254,6 +339,39 @@ ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self )
 	assert( room != nullptr );
 
 	return room;
+}
+
+bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag )
+{
+	// tags are funky, they have a limit of 64 characters,
+	// and we need to pass them into a lookup, urgh
+	// (who designed this shit, oh right, me...)
+
+	if ( strcmp( self->tag, tag ) == 0 )
+	{
+		// tag already set, so nothing to do
+		return true;
+	}
+
+	ApeRoom *room = ape_brush_face_get_room( self );
+	if ( room == nullptr )
+	{
+		ape_warning_( "Failed to set tag (%s) for face, as face isn't attached to a room!\n", tag );
+		return false;
+	}
+
+	if ( *self->tag != '\0' )
+	{
+		ape_room_remove_tagged_surface( room, self );
+	}
+
+	snprintf( self->tag, sizeof( self->tag ), "%s", tag );
+	if ( *self->tag != '\0' )
+	{
+		ape_room_add_tagged_surface( room, self );
+	}
+
+	return true;
 }
 
 void ape_brush_face_compute_bounds( ApeBrushFace *face )
@@ -457,12 +575,8 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 		const ApeBrushFace *face       = &brush->faces[ i ];
 		AcmBranch          *faceBranch = acm_push_object( facesBranch, "face" );
 
-		acm_push_string( faceBranch, "id", face->id, true );
-		if ( face->destination != nullptr )
-		{
-			assert( *face->destination->id != '\0' );
-			acm_push_string( faceBranch, "destination", face->destination->id, false );
-		}
+		acm_push_string( faceBranch, "id", face->tag, true );
+		acm_push_string( faceBranch, "destination", face->destinationTag, true );
 
 		assert( face->material != nullptr );
 		acm_push_string( faceBranch, "material", ape_material_get_path( face->material ), false );
@@ -554,7 +668,15 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 				return nullptr;
 			}
 
-			snprintf( self->faces[ i ].id, sizeof( self->faces[ i ].id ), "%s", acm_get_string( branch, "id", "" ) );
+			snprintf( self->faces[ i ].tag, sizeof( self->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
+			if ( *self->faces[ i ].tag != '\0' )
+			{
+				ApeRoom *room = ape_brush_face_get_room( &self->faces[ i ] );
+				if ( room != nullptr )
+				{
+					ape_room_add_tagged_surface( room, &self->faces[ i ] );
+				}
+			}
 
 			// material
 			const char *str;
@@ -591,6 +713,21 @@ ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 	return APE_WORLD_NODE( self );
 }
 
+static void on_change_room( void *self, ApeRoom *currentRoom, ApeRoom *newRoom )
+{
+	for ( unsigned int i = 0; i < ( ( ApeBrush * ) self )->numFaces; ++i )
+	{
+		ApeBrushFace *face = &( ( ApeBrush * ) self )->faces[ i ];
+		if ( *face->tag == '\0' )
+		{
+			continue;
+		}
+
+		ape_room_remove_tagged_surface( currentRoom, face );
+		ape_room_add_tagged_surface( newRoom, face );
+	}
+}
+
 static ApeWorldNodePropertyEnum brushTypeEnums[] = {
         {"Solid", 0},
         {"Air",   1},
@@ -607,6 +744,8 @@ const ApeWorldNodeClass ape_brushClass = {
         .destroyFunction     = ape_brush_destroy_,
         .serializeFunction   = ape_brush_serialize_,
         .deserializeFunction = ape_brush_deserialize_,
+
+        .onChangeRoom = on_change_room,
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),

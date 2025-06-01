@@ -411,8 +411,9 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 						dstBrush->faces[ j ].edgeLoop[ k ] = &dstBrush->faces[ j ].vertices[ srcBrush->faces[ j ].edgeLoop[ k ] - srcBrush->faces[ j ].vertices ];
 					}
 
-					dstBrush->faces[ j ].destination = srcBrush->faces[ j ].destination;
-					dstBrush->faces[ j ].parent      = dstBrush;
+					strcpy( dstBrush->faces[ j ].destinationTag, srcBrush->faces[ j ].destinationTag );
+
+					dstBrush->faces[ j ].parent = dstBrush;
 				}
 
 				ape_brush_compute_bounds( dstBrush );
@@ -830,7 +831,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 
 void ape_editor_pre_render_scene_( ApeCamera *camera )
 {
-	if ( !ape_is_editor_active() )
+	if ( !ape_is_editor_active_() )
 	{
 		return;
 	}
@@ -969,7 +970,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )
 {
-	if ( !ape_is_editor_active() || editorInstance == nullptr )
+	if ( !ape_is_editor_active_() || editorInstance == nullptr )
 	{
 		return;
 	}
@@ -1042,9 +1043,24 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	gui_font_display( font );
 }
 
-bool ape_is_editor_active( void )
+bool ape_is_editor_active_( void )
 {
-	return ( ape_editor_get_active_instance() != nullptr );
+	return ape_editor_get_active_instance() != nullptr;
+}
+
+void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewport, int x, int y )
+{
+	ape_grid_update_cursor_( &self->grid, x, y, self->camera, viewport );
+
+	PLColour pixel;
+	if ( ape_editor_selection_get_pixel_under_cursor_( &pixel ) != nullptr )
+	{
+		self->hoverSelection = PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( PLColour ) );
+	}
+	else
+	{
+		self->hoverSelection = nullptr;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

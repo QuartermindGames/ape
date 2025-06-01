@@ -6,10 +6,6 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_driver_interface.h>
 
-#if USE_GTK
-#	include <adwaita.h>
-#endif
-
 #include "forge.h"
 #include "forge_window_main.h"
 #include "forge_project_dialog.h"
@@ -80,12 +76,91 @@ void forge_error_( bool die, const char *message, ... )
 	}
 }
 
+ApeRoom *forge_new_room_( const char *path )
+{
+	PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+	if ( mount == nullptr )
+	{
+		forge_warning_( "Room (%s) must be placed under a mounted location!\n", path );
+		return nullptr;
+	}
+
+	ApeRoom   *room = ape_room_create( nullptr, "temp" );
+	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
+	if ( root == nullptr )
+	{
+		forge_warning_( "Failed to serialize room!\n" );
+		ape_world_node_destroy( APE_WORLD_NODE( room ) );
+		return nullptr;
+	}
+
+	const char *mountPath = PlGetMountLocationPath( mount );
+	if ( !ape_room_set_path( room, &path[ strlen( mountPath ) + 1 ] ) )
+	{
+		forge_warning_( "Failed to set room path!\n" );
+		ape_world_node_destroy( APE_WORLD_NODE( room ) );
+		room = nullptr;
+	}
+
+	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
+	{
+		forge_warning_( "Failed to write room (%s): %s\n", path, acm_get_error_message() );
+		ape_world_node_destroy( APE_WORLD_NODE( room ) );
+		room = nullptr;
+	}
+
+	acm_branch_destroy( root );
+
+	return room;
+}
+
+ApeRoom *forge_load_room_( const char *path )
+{
+	PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+	if ( mount == nullptr )
+	{
+		forge_warning_( "Room (%s) must be placed under a mounted location!\n", path );
+		return nullptr;
+	}
+
+	AcmBranch *root = acm_load_file( path, "node" );
+	if ( root == nullptr )
+	{
+		forge_warning_( "Failed to load room (%s)!\n", path );
+		return nullptr;
+	}
+
+	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
+	if ( roomNode == nullptr )
+	{
+		forge_warning_( "Failed to deserialize room (%s)!\n", path );
+		return nullptr;
+	}
+
+	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
+	{
+		forge_warning_( "Room (%s) is not a valid room file!", path );
+		ape_world_node_destroy( roomNode );
+		return FALSE;
+	}
+
+	ApeRoom *room = ( ApeRoom * ) roomNode;
+
+	const char *mountPath = PlGetMountLocationPath( mount );
+	if ( !ape_room_set_path( room, &path[ strlen( mountPath ) + 1 ] ) )
+	{
+		forge_warning_( "Failed to set room path!\n" );
+	}
+
+	return room;
+}
+
 static AcmBranch *generate_project_config( const char *name, const char *path )
 {
 	AcmBranch *root = acm_push_object( nullptr, "project" );
 	acm_push_string( root, "name", name, false );
 
-	const static constexpr int version[ 3 ] = { 0, 0, 0 };
+	static constexpr int version[ 3 ] = { 0, 0, 0 };
 	acm_push_array_i32( root, "version", version, 3 );
 
 	AcmBranch *child;
@@ -226,7 +301,8 @@ static void setup_colours( FXApp &app )
 	app.setShadowColor( forge::themeColours[ forge::THEME_COLOUR_HILITE ] );
 }
 
-FXIcon     *forge_cachedIcons[ MAX_FORGE_ICONS ];
+FXIcon *forge_cachedIcons[ MAX_FORGE_ICONS ];
+
 static void cache_icons( FXApp &app )
 {
 	forge_cachedIcons[ FORGE_ICON_TYPE_MODE_BRUSH ] = forge::load_fx_icon( &app, "resources/brush_mode.gif" );
@@ -302,15 +378,6 @@ int main( int argc, char **argv )
 
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
-
-#if USE_GTK
-	adw_init();
-	if ( !adw_is_initialized() )
-	{
-		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to initialize ADW library!" );
-		return EXIT_FAILURE;
-	}
-#endif
 
 	forge::editorConfig = com_get_config( "forge" );
 

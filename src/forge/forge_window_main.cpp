@@ -11,8 +11,6 @@
 #include "common_project.h"
 #include "ape/ape_public_model.h"
 
-#include <FXGLCanvas.h>
-#include <FXGLVisual.h>
 #include <algorithm>
 
 forge::MainWindow *forge::mainWindow = nullptr;
@@ -33,6 +31,7 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_NODE_VOLUMES, forge::MainWindow::on_toggle_node_volumes ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_SELECTION_BUFFER, forge::MainWindow::on_toggle_selection_buffer ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_POST_PROCESSING, forge::MainWindow::on_toggle_post_processing ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_ROOM_VISIBILITY, forge::MainWindow::on_toggle_room_visibility ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_PROJECT_PACKAGE, forge::MainWindow::on_package_project ),
         FXMAPFUNC( SEL_TIMEOUT, forge::MainWindow::ID_TICK, forge::MainWindow::on_tick ),
@@ -70,6 +69,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCheck( menuPane, "&Show Node Volumes\t\tToggle node boundaries.", this, ID_TOGGLE_NODE_VOLUMES );
 	new FXMenuCheck( menuPane, "Show Selection Buffer\t\tFor debugging selection buffer.", this, ID_TOGGLE_SELECTION_BUFFER );
 	( new FXMenuCheck( menuPane, "Post Processing\t\tEnable/disable post-processing.", this, ID_TOGGLE_POST_PROCESSING ) )->setCheck( true );
+	new FXMenuCheck( menuPane, "Show All Rooms\t\tToggles visibility of all rooms.", this, ID_TOGGLE_ROOM_VISIBILITY );
 
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
 
@@ -167,31 +167,20 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	AcmBranch *root = acm_load_file( filename.text(), "node" );
-	if ( root == nullptr )
+	ApeRoom *room = forge_load_room_( filename.text() );
+	if ( room == nullptr )
 	{
-		return FALSE;
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to open room, check log for details!" );
+		return false;
 	}
 
+	//TODO: move world creation and attachment into world editor class
 	ApeWorld *world = ape_world_create();
-
-	ApeWorldNode *roomNode = ape_world_node_deserialize( APE_WORLD_NODE( world ), root );
-	if ( roomNode == nullptr )
-	{
-		ape_world_node_destroy( APE_WORLD_NODE( world ) );
-		return FALSE;
-	}
-
-	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
-	{
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Selected file is not a valid room file!" );
-		ape_world_node_destroy( APE_WORLD_NODE( world ) );
-		return FALSE;
-	}
+	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( world ) );
 
 	auto *editor = static_cast< WorldEditor * >( add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) ) );
 	editor->update_tree();
-	editor->set_active_room( reinterpret_cast< ApeRoom * >( roomNode ) );
+	editor->set_active_room( room );
 
 	return TRUE;
 }
@@ -343,6 +332,12 @@ long forge::MainWindow::on_toggle_post_processing( FXObject *object, FXSelector,
 {
 	PlSetConsoleVariableByName( "postfx", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
+}
+
+long forge::MainWindow::on_toggle_room_visibility( FXObject *object, FXSelector, void * )
+{
+	PlSetConsoleVariableByName( "world.showAllRooms", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	return true;
 }
 
 void forge::MainWindow::open_material_browser()

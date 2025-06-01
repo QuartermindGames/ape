@@ -1,7 +1,9 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 // Purpose: Specific logic for managing rooms, otherwise known as "sectors", within a world
 
-#include "../world/world.h"
+#include <plcore/pl_hashtable.h>
+
+#include "world/world.h"
 #include "ape/ape_public_game.h"
 
 #include "yin/core_game.h"
@@ -11,16 +13,14 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	ApeRoom *room = PL_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	room->zones   = PlCreateVectorArray( 0 );
-	room->faces   = PlCreateVectorArray( 0 );
-	room->portals = PlCreateVectorArray( 0 );
-
 	// assign the room a random colour so it can be identified per debugging
 	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
 	                                PlUniform0To1Random(),
 	                                PlUniform0To1Random() );
 
 	room->gravity = PL_VECTOR3( 0.0f, -0.9f, 0.0f );
+
+	room->taggedSurfaceLookup = PlCreateHashTable();
 
 	return room;
 }
@@ -35,9 +35,7 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 		ape_gameInterface->onDestroyRoom( self );
 	}
 
-	PlDestroyVectorArrayEx( self->zones, PlFree );
-	PlDestroyVectorArray( self->faces );
-	PlDestroyVectorArray( self->portals );
+	PlDestroyHashTable( self->taggedSurfaceLookup );
 
 	PL_DELETE( self );
 }
@@ -62,10 +60,58 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self )
 	return self->reverbPreset;
 }
 
+void ape_room_add_tagged_surface( ApeRoom *self, ApeBrushFace *face )
+{
+	if ( PlInsertHashTableNode( self->taggedSurfaceLookup, face->tag, strlen( face->tag ), face ) == nullptr )
+	{
+		ape_warning_( "Attempted to add duplicate surface tag (%s)!\n", face->tag );
+		return;
+	}
+
+	PRINT_DEBUG( "Added \"%s\" to room lookup\n", face->tag );
+}
+
+void ape_room_remove_tagged_surface( ApeRoom *self, ApeBrushFace *face )
+{
+	PLHashTableNode *node = PlLookupHashTableNode( self->taggedSurfaceLookup, face->tag, strlen( face->tag ) );
+	if ( node == nullptr )
+	{
+		ape_warning_( "Failed to remove tag (%s), lookup failed!\n", face->tag );
+		return;
+	}
+
+	PlDestroyHashTableNode( node );
+
+	PRINT_DEBUG( "Removed \"%s\" from room lookup\n", face->tag );
+}
+
+ApeBrushFace *ape_room_get_tagged_surface( const ApeRoom *self, const char *tag )
+{
+	return PlLookupHashTableUserData( self->taggedSurfaceLookup, tag, strlen( tag ) );
+}
+
+const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *face )
+{
+	unsigned int numTags = PlGetNumHashTableNodes( self->taggedSurfaceLookup );
+	for ( ;; numTags++ )
+	{
+		char tag[ APE_BRUSH_FACE_MAX_TAG ];
+		snprintf( tag, sizeof( tag ), "entry_%u", numTags );
+
+		ApeBrushFace *taggedFace = ape_room_get_tagged_surface( self, tag );
+		if ( taggedFace == nullptr )
+		{
+			ape_brush_face_set_tag( face, tag );
+			break;
+		}
+	}
+
+	return face->tag;
+}
+
 static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
 	ApeRoom *room = self;
-	acm_push_string( root, "path", room->path, true );
 	acm_push_ui32( root, "flags", room->flags );
 	acm_push_array_f32( root, "colour", ( float * ) &room->colour, 4 );
 	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
@@ -76,14 +122,7 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 
 static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeRoom *self = ape_room_create( parent, "temp" );
-
-	const char *path = acm_get_string( root, "path", nullptr );
-	if ( path != nullptr )
-	{
-		snprintf( self->path, sizeof( self->path ), "%s", path );
-	}
-
+	ApeRoom *self      = ape_room_create( parent, "temp" );
 	self->flags        = ACM_GET_INT( self->flags, root, "flags", 0 );
 	self->colour       = com_acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -383,87 +422,10 @@ const char *ape_room_get_path( const ApeRoom *self )
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Room Zones
-
-static void gather_faces( ApeWorldNode *worldNode, PLLinkedList *faces )
-{
-	if ( worldNode->type == APE_WORLD_NODE_TYPE_BRUSH )
-	{
-		ApeBrush *brush = ( ApeBrush * ) worldNode;
-		for ( unsigned int i = 0; i < brush->numFaces; ++i )
-		{
-			ApeBrushFace *face = &brush->faces[ i ];
-			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
-			{
-				continue;
-			}
-		}
-	}
-
-	ApeWorldNode *childNode;
-	COM_ITERATE_LINKED_LIST( childNode, worldNode->children, i )
-	{
-	}
-}
-
-void ape_room_compute_zones( ApeRoom *self )
-{
-	PlDestroyVectorArrayElements( self->zones, PlFree );
-
-	// first collect up all the faces
-	PLLinkedList *faces = PlCreateLinkedList();
-	gather_faces( APE_WORLD_NODE( self ), faces );
-
-	PlDestroyLinkedList( faces );
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
 
 PLVector3 ape_room_get_gravity( const ApeRoom *self )
 {
 	return PlAddVector3( self->gravity, ape_config_.world.gravityModifier );
-}
-
-static void gather_portals( ApeWorldNode *worldNode, PLVectorArray *array )
-{
-	if ( worldNode->type == APE_WORLD_NODE_TYPE_BRUSH )
-	{
-		ApeBrush *brush = ( ApeBrush * ) worldNode;
-		for ( unsigned int i = 0; i < brush->numFaces; ++i )
-		{
-			if ( !ape_brush_face_is_portal( &brush->faces[ i ] ) )
-			{
-				continue;
-			}
-
-			PlPushBackVectorArrayElement( array, &brush->faces[ i ] );
-		}
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
-	{
-		gather_portals( child, array );
-	}
-}
-
-ApeBrushFace **ape_room_gather_portals( ApeRoom *self, unsigned int *numPortals )
-{
-	PLVectorArray *array = PlCreateVectorArray( 256 );
-	if ( array == nullptr )
-	{
-		ape_warning_( "Failed to gather portals: %s\n", PlGetError() );
-		*numPortals = 0;
-		return nullptr;
-	}
-
-	gather_portals( APE_WORLD_NODE( self ), array );
-
-	ApeBrushFace **portals = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( array, numPortals );
-
-	PlDestroyVectorArrayContainer( array );
-
-	return portals;
 }
 
 #if !defined( APE_NO_EDITOR )

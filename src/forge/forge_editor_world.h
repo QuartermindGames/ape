@@ -45,9 +45,13 @@ namespace forge
 		WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world );
 		~WorldEditor() override;
 
+		std::string show_save_dialog();
+
 		void create_new_object( const char *name, ApeWorldNodeType type );
 
-		void update_tree();
+		void update_tree() const;
+
+		void get_rooms( std::vector< ApeRoom * > *dst ) const;
 
 		long on_change_geometry_mode( FXObject *, FXSelector, void * );
 		long on_shift_grid( FXObject *, FXSelector, void * );
@@ -67,6 +71,8 @@ namespace forge
 		void open_face_inspector();
 		void set_face_inspector_surface( ApeBrushFace *face );
 
+		void link_new_room( ApeBrushFace *face );
+
 	private:
 		ApeWorld *_world{};
 		ApeRoom  *activeRoom{};
@@ -81,10 +87,10 @@ namespace forge
 
 		WorldViewport *viewports[ APE_EDITOR_MAX_VIEWPORTS ];
 
-		std::string savePath{};
+	public:
+		ApeRoom *get_active_room() const;
 
-		ApeRoom *get_active_room();
-
+	private:
 		void autosave() override;
 
 	public:

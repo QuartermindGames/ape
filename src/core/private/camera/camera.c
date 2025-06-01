@@ -328,7 +328,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 	return true;
 }
 
-void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoint, PLMatrix4 *reflectionMatrix )
+static void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoint, PLMatrix4 *reflectionMatrix )
 {
 	const float d = -PlVector3DotProduct( *normal, *planePoint );
 
@@ -418,11 +418,15 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 					continue;
 				}
 
+				ApeBrushFace *destinationFace = ape_brush_face_get_portal_destination( &brush->faces[ i ] );
+				if ( destinationFace == nullptr )
+				{
+					continue;
+				}
+
 				visiblePortal->screenRect = screenRect;
 				visiblePortal->portalFace = &brush->faces[ i ];
-
-				visiblePortal->origin = brush->faces[ i ].bounds.absOrigin;
-				visiblePortal->origin = PlAddVector3( PlGetMatrix4Translation( &transform ), visiblePortal->origin );
+				visiblePortal->origin     = faceOrigin;
 
 				visiblePortal->normal = brush->faces[ i ].normal;
 				PLVector4 tmp         = PlTransformVector4( &PL_VEC3TO4( visiblePortal->normal ), &transform );
@@ -442,15 +446,18 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 						PLMatrix4 reflection;
 						setup_reflection_matrix( &visiblePortal->normal, &visiblePortal->origin, &reflection );
 						visiblePortal->nextRoom->viewMatrix = PlMultiplyMatrix4( &visiblePortal->nextRoom->viewMatrix, &reflection );
-
-						visiblePortal->nextRoom->room = ape_brush_face_get_room( &brush->faces[ i ] );
 					}
 					else
 					{
-						visiblePortal->nextRoom->room = ape_brush_face_get_room( brush->faces[ i ].destination );
+						//TODO: handle the non mirror case
+
+						ApeBrush *destinationBrush     = destinationFace->parent;
+						PLMatrix4 destinationTransform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+
+						visiblePortal->nextRoom->viewMatrix = visibleRoom->viewMatrix;
 					}
 
-					//TODO: handle the non mirror case
+					visiblePortal->nextRoom->room = ape_brush_face_get_room( destinationFace );
 
 					self->internal->internal.view = visiblePortal->nextRoom->viewMatrix;
 					PlgSetViewMatrix( &visiblePortal->nextRoom->viewMatrix );

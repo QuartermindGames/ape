@@ -52,6 +52,9 @@ void forge_print_( const char *message, ... );
 void forge_warning_( const char *message, ... );
 void forge_error_( bool die, const char *message, ... );
 
+ApeRoom *forge_new_room_( const char *path );
+ApeRoom *forge_load_room_( const char *path );
+
 enum ForgeIconType
 {
 	FORGE_ICON_TYPE_MODE_BRUSH,

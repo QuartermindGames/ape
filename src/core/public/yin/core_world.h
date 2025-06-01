@@ -130,6 +130,14 @@ typedef struct ApeWorldNodeClass
 	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
 	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
 
+	void ( *onAttachChild )( void *self, ApeWorldNode *child ); // called just after a child is attached
+	void ( *onDettachChild )( void *self, ApeWorldNode *child );// called just before a child is dettached
+
+	void ( *onAttachParent )( void *self, ApeWorldNode *parent ); // called just after a parent is attached
+	void ( *onDettachParent )( void *self, ApeWorldNode *parent );// called just after a parent is dettached
+
+	void ( *onChangeRoom )( void *self, ApeRoom *currentRoom, ApeRoom *newRoom );// called when the node moves from one room to another, just before the change is set
+
 	ApeWorldNodeClassNetSerializeFunction   netSerializeFunction;
 	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;
 
@@ -344,12 +352,12 @@ typedef enum ApeBrushType
 
 typedef enum ApeBrushFaceFlag
 {
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),    // hides the face
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),    // reflects the current room
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),    // allows for passing through to another destination
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),    // if a portal/mirror, indicates that the vis-test shouldn't pass
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_NO_SHADOWS, 4U ),// skip shadows for the given face
 } ApeBrushFaceFlag;
-
-#define APE_BRUSH_MAX_SUB_MESHES 8192
 
 typedef struct ApeBrushFaceVertex
 {
@@ -363,6 +371,9 @@ typedef struct ApeBrushFaceVertex
 
 ////////////////////////////////////////////////////////////////////
 // Brush Face
+
+static constexpr unsigned int APE_BRUSH_FACE_MAX_TAG  = 64;
+static constexpr unsigned int APE_BRUSH_FACE_MAX_PATH = sizeof( PLPath );
 
 typedef struct ApeBrushFace
 {
@@ -385,10 +396,14 @@ typedef struct ApeBrushFace
 
 	unsigned int flags;
 
-	char          id[ 64 ];// required for connecting portals
+	char          tag[ APE_BRUSH_FACE_MAX_TAG ];                                     // how we can be found
+	char          destinationTag[ APE_BRUSH_FACE_MAX_PATH + APE_BRUSH_FACE_MAX_TAG ];// where we're going
 	ApeBrushFace *destination;
-	ApeBrush     *parent;
+
+	ApeBrush *parent;
 } ApeBrushFace;
+
+void ape_brush_face_fit_material( ApeBrushFace *self );
 
 void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
 void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation );
@@ -398,6 +413,8 @@ bool          ape_brush_face_is_mirror( const ApeBrushFace *self );
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self );
 
 ApeRoom *ape_brush_face_get_room( const ApeBrushFace *self );
+
+bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag );
 
 void ape_brush_face_compute_normal( ApeBrushFace *face );
 void ape_brush_face_compute_bounds( ApeBrushFace *face );
@@ -451,20 +468,17 @@ typedef struct ApeWorld
 	PLPath path;
 
 	PLVectorArray *materials;// ApeMaterial
-	PLVectorArray *rooms;    // ApeWorldRoom
 
-	PLLinkedList *entities;//ApeEntity
-
-	PLColourF32 clearColour;
+	PLLinkedList       *entities;//ApeEntity
+	struct PLHashTable *roomLookup;
 
 	PLColourF32 fogColour;
 	float       fogNear;
 	float       fogFar;
 } ApeWorld;
 
-#define APE_WORLD_VERSION       3
-#define APE_WORLD_EXTENSION     "wld.n"
-#define APE_WORLD_EXTENSION_CFG "wpf.n"
+#define APE_WORLD_VERSION   3
+#define APE_WORLD_EXTENSION "wld.n"
 
 #define APE_WORLD_ROOM_VERSION   1
 #define APE_WORLD_ROOM_EXTENSION "rom.n"
@@ -476,7 +490,25 @@ typedef struct ApeWorld
 /// \return New world instance.
 ApeWorld *ape_world_create( void );
 
-void ape_world_set_global_defaults( ApeWorld *level );
+ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path );
+
+/**
+ * Lookup a tagged surface based on the given path.
+ *
+ * @param self	World instance.
+ * @param path	Path to lookup the tagged surface ('rooms/myroom.rom.n:surfacename').
+ * @return		Surface/face, otherwise null on fail.
+ */
+ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path );
+
+/**
+ * Fetch all the available tagged surfaces.
+ *
+ * @param self		World instance.
+ * @param numDst	Number of tagged surfaces returned.
+ * @return			An allocated array of tagged surfaces; free after use!
+ */
+ApeBrushFace **ape_world_get_tagged_surfaces( ApeWorld *self, unsigned int *numDst );
 
 /**
  * Assigning a light to the world will give the world instance
@@ -507,6 +539,13 @@ PLColourF32 ape_room_get_ambience( const ApeRoom *self );
 
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
+
+void ape_room_add_tagged_surface( ApeRoom *self, ApeBrushFace *face );
+void ape_room_remove_tagged_surface( ApeRoom *self, ApeBrushFace *face );
+
+ApeBrushFace *ape_room_get_tagged_surface( const ApeRoom *self, const char *tag );
+
+const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *face );
 
 ////////////////////////////////////////////////////////////////////
 // Collisions
@@ -568,28 +607,7 @@ bool        ape_room_set_save_path( ApeRoom *self, const char *path );
 const char *ape_room_get_save_path( const ApeRoom *self );
 #endif
 
-/**
- * This will determine all of the sub-rooms of the given room based
- * on portals that have no destination - these are assumed to be
- * local vis portals.
- *
- * Mind this operation is probably expensive, so try to avoid
- * calling it frequently!
- *
- * @param self Pointer to room instance.
- */
-void ape_room_compute_zones( ApeRoom *self );
-
 PLVector3 ape_room_get_gravity( const ApeRoom *self );
-
-/**
- * Gathers all of the portal faces for the given room.
- *
- * @param self			Room instance.
- * @param numPortals	Number of portals returned.
- * @return				An array of pointers to all the portal faces.
- */
-ApeBrushFace **ape_room_gather_portals( ApeRoom *self, unsigned int *numPortals );
 
 void ape_world_room_destroy( ApeRoom *self );
 

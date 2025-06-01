@@ -18,10 +18,16 @@ void ape_editor_post_render_scene_();
 
 void ape_editor_draw_gui_( const ApeViewport *viewport );
 
+bool ape_is_editor_active_( void );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Grid
+/////////////////////////////////////////////////////////////////////////////////////
+
 void ape_grid_draw_( const ApeEditorGrid *self );
 void ape_grid_post_draw_( const ApeEditorGrid *self );
 
-bool ape_is_editor_active( void );
+PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Selection Buffer
@@ -34,5 +40,7 @@ void ape_editor_selection_shutdown_();
 void ape_editor_selection_rebuild_( ApeEditorInstance *self );
 void ape_editor_selection_render_( ApeEditorInstance *self );
 void ape_editor_selection_render_post_( ApeEditorInstance *self );
+
+PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst );
 
 PL_EXTERN_C_END

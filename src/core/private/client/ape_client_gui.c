@@ -205,7 +205,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 
 	ape_flare_draw_( viewport );
 
-	if ( !ape_is_editor_active() )
+	if ( !ape_is_editor_active_() )
 	{
 		ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
 	}
@@ -243,7 +243,7 @@ void ape_draw_gui_( ApeViewport *viewport )
 	}
 
 #if !defined( NDEBUG )
-	if ( !ape_is_editor_active() )
+	if ( !ape_is_editor_active_() )
 	{
 		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]";
 		float              sw, sh;

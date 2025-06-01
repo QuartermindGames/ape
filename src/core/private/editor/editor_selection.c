@@ -273,8 +273,8 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 					case APE_WORLD_NODE_TYPE_BRUSH:
 						render_brush_selection( ( ApeBrush * ) node );
 						break;
+					case APE_WORLD_NODE_TYPE_MODEL:
 					case APE_WORLD_NODE_TYPE_ENTITY:
-					case APE_WORLD_NODE_TYPE_LIGHT:
 					case APE_WORLD_NODE_TYPE_CAMERA:
 						draw_selection_cube( &node->position, &node->selectColour, 8.0f, false );
 						break;
@@ -292,6 +292,16 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 					draw_selection_cube( &brush->vertices[ j ], &brush->vertexSelectColours[ j ], SELECTION_VERTEX_SIZE, false );
 				}
 			}
+		}
+
+		// lights are throw into a different list, so we need to fetch them here
+		for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numLights; ++i )
+		{
+			const ApeLight *light = camera->pvs.rooms[ 0 ].lights[ i ];
+			assert( light != nullptr );
+
+			PLVector3 pos = ape_light_get_position( light );
+			draw_selection_cube( &pos, &light->base.selectColour, 8.0f, false );
 		}
 	}
 
@@ -324,8 +334,6 @@ static void render_selected_faces( ApeEditorInstance *self )
 		}
 	}
 
-	//todo: unify this somewhere and only fetch if cursor has moved
-	self->hoverSelection = ape_editor_get_object_under_cursor( self );
 	if ( self->hoverSelection != nullptr )
 	{
 		face = self->hoverSelection;
@@ -398,7 +406,6 @@ static void render_selected_objects( ApeEditorInstance *self )
 	}
 
 	//todo: unify this somewhere and only fetch if cursor has moved
-	self->hoverSelection = ape_editor_get_object_under_cursor( self );
 	if ( self->hoverSelection != nullptr )
 	{
 		// sigh... this is going to depend on the type of node we're hovering
@@ -426,9 +433,6 @@ static void render_selected_objects( ApeEditorInstance *self )
 
 static void render_vertices( ApeEditorInstance *self )
 {
-	//TODO: only do this if the cursor has moved...
-	self->hoverSelection = ape_editor_get_object_under_cursor( self );
-
 	ApeCamera *camera = self->camera;
 	for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numNodes; ++i )
 	{
@@ -483,7 +487,8 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 			render_vertices( self );
-			render_transform_widget( self );
+			//TODO: this doesn't work for vertices, yet!
+			//render_transform_widget( self );
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 			render_selected_objects( self );
@@ -494,7 +499,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst )
+PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst )
 {
 	ApeViewport    *selectionViewport = ape_editor_selection_get_viewport_();
 	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
@@ -532,13 +537,7 @@ PLColour *ape_editor_get_pixel_under_cursor( PLColour *dst )
 
 void *ape_editor_get_object_under_cursor( ApeEditorInstance *self )
 {
-	PLColour pixel;
-	if ( ape_editor_get_pixel_under_cursor( &pixel ) == nullptr )
-	{
-		return nullptr;
-	}
-
-	return PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( PLColour ) );
+	return self->hoverSelection;
 }
 
 void ape_editor_clear_selection( ApeEditorInstance *self )
@@ -588,6 +587,23 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 		}
 
 		ape_world_node_destroy( worldNode );
+	}
+
+	ape_editor_clear_selection( self );
+}
+
+void ape_editor_move_selected_to_room( ApeEditorInstance *self, ApeRoom *room )
+{
+	ApeWorldNode *worldNode;
+	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	{
+		if ( !ape_world_node_has_magic( worldNode ) )
+		{
+			ape_warning_( "One of the selected items wasn't a valid world node, unable to delete!\n" );
+			continue;
+		}
+
+		ape_world_node_attach( worldNode, APE_WORLD_NODE( room ) );
 	}
 
 	ape_editor_clear_selection( self );
@@ -673,7 +689,10 @@ static void render_transform_widget( ApeEditorInstance *instance )
 	}
 
 	ApeWorldNode *selected = PlGetLinkedListNodeUserData( node );
-	assert( selected != nullptr );
+	if ( selected == nullptr )
+	{
+		return;
+	}
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();

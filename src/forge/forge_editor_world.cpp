@@ -21,8 +21,9 @@ namespace forge
 
 		ApeBrushFace *face;
 
-		PLImage *preview{};
-		FXLabel *previewIcon;
+		PLImage     *preview{};
+		FXLabel     *previewIcon;
+		FXTextField *previewPath;
 
 		FXTextField *tagField;
 
@@ -41,6 +42,17 @@ namespace forge
 		enum
 		{
 			ID_SURFACE_PROPERTY = ID_LAST,
+			ID_SURFACE_FIT,
+			ID_SURFACE_RESET,
+
+			ID_SURFACE_BROWSE,
+			ID_SURFACE_APPLY_TAG,
+
+			ID_SURFACE_ALIGN_LEFT,
+			ID_SURFACE_ALIGN_RIGHT,
+			ID_SURFACE_ALIGN_TOP,
+			ID_SURFACE_ALIGN_BOTTOM,
+			ID_SURFACE_ALIGN_CENTER,
 		};
 
 		explicit SurfaceInspector( FXWindow *parent ) : FXDialogBox( parent, "Surface Inspector", DECOR_TITLE | DECOR_CLOSE | DECOR_BORDER | DECOR_MENU )
@@ -57,18 +69,22 @@ namespace forge
 
 			FXHorizontalFrame *hf;
 
-#if 0
-			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X | LAYOUT_CENTER_X );
-			previewIcon = new FXLabel( hf, FXString::null, nullptr, 0, LAYOUT_CENTER_X );
+			hf          = new FXHorizontalFrame( vf, LAYOUT_FILL_X | LAYOUT_CENTER_X );
+			previewIcon = new FXLabel( hf, FXString::null, load_fx_icon( getApp(), "resources/no_preview.png" ), 0, LAYOUT_CENTER_X );
 			previewIcon->setWidth( 64 );
 			previewIcon->setHeight( 64 );
 
+			FXVerticalFrame *materialSideFrame = new FXVerticalFrame( hf, LAYOUT_FILL );
+			previewPath                        = new FXTextField( materialSideFrame, 4, nullptr, 0, TEXTFIELD_NORMAL | TEXTFIELD_READONLY | LAYOUT_FILL_X );
+			previewPath->setText( "No material selected" );
+			new FXButton( materialSideFrame, "Browse", nullptr, this, ID_SURFACE_BROWSE, BUTTON_NORMAL );
+
 			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
-#endif
 
 			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
 			new FXLabel( hf, "Tag", nullptr, 0, LAYOUT_FILL_X );
-			tagField = new FXTextField( hf, 4, nullptr, ID_SURFACE_PROPERTY, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
+			tagField = new FXTextField( hf, 4, nullptr, 0, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "Apply", nullptr, this, ID_SURFACE_APPLY_TAG, BUTTON_NORMAL );
 
 			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
 
@@ -89,8 +105,14 @@ namespace forge
 			new FXHorizontalSeparator( vf, SEPARATOR_GROOVE | LAYOUT_FILL_X );
 
 			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
-			new FXButton( hf, "Fit to Surface", nullptr, nullptr, BUTTON_NORMAL | LAYOUT_FILL_X );
-			new FXButton( hf, "Reset", nullptr, nullptr, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "Fit to Surface", nullptr, this, ID_SURFACE_FIT, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "L", nullptr, this, ID_SURFACE_ALIGN_LEFT, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "R", nullptr, this, ID_SURFACE_ALIGN_RIGHT, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "T", nullptr, this, ID_SURFACE_ALIGN_TOP, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "B", nullptr, this, ID_SURFACE_ALIGN_BOTTOM, BUTTON_NORMAL | LAYOUT_FILL_X );
+			new FXButton( hf, "C", nullptr, this, ID_SURFACE_ALIGN_CENTER, BUTTON_NORMAL | LAYOUT_FILL_X );
+			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
+			new FXButton( hf, "Reset", nullptr, this, ID_SURFACE_RESET, BUTTON_NORMAL | LAYOUT_FILL_X );
 		}
 
 		~SurfaceInspector() override = default;
@@ -109,10 +131,19 @@ namespace forge
 				preview = nullptr;
 			}
 
-#if 0
-			const ApeMaterial *material     = face->material;
-			const char        *materialPath = ape_material_get_path( material );
-			preview                         = ape_material_load_preview( materialPath );
+			ApeMaterial *material = face->material;
+			assert( material != nullptr );
+
+			const char *materialPath = ape_material_get_path( material );
+			if ( materialPath == nullptr )
+			{
+				materialPath = "Unknown";
+			}
+
+			previewPath->setText( materialPath );
+
+#if 0//TODO: this is causing issues...
+			preview = ape_material_load_preview( materialPath );
 			if ( preview != nullptr )
 			{
 				PLImage *smallImage = PlResizeImage( preview, 64, 64 );
@@ -124,12 +155,15 @@ namespace forge
 					FXIcon *icon = new FXIcon( getApp(), reinterpret_cast< FXColor * >( preview->data[ 0 ] ), 0, IMAGE_KEEP | IMAGE_ALPHACOLOR,
 					                           static_cast< int >( preview->width ),
 					                           static_cast< int >( preview->height ) );
+
 					icon->create();
 
 					previewIcon->setIcon( icon );
 				}
 			}
 #endif
+
+			tagField->setText( face->tag );
 
 			scaleFieldX->setText( std::to_string( this->face->materialScale.x ).c_str() );
 			scaleFieldY->setText( std::to_string( this->face->materialScale.y ).c_str() );
@@ -146,7 +180,7 @@ namespace forge
 		{
 			if ( face == nullptr )
 			{
-				return TRUE;
+				return false;
 			}
 
 			PLVector2 scale;
@@ -162,13 +196,63 @@ namespace forge
 
 			ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation );
 
-			return TRUE;
+			return true;
+		}
+
+		long on_fit( FXObject *, FXSelector, void * )
+		{
+			if ( face == nullptr )
+			{
+				return false;
+			}
+
+			ape_brush_face_fit_material( face );
+
+			set_current( face );
+			return true;
+		}
+
+		long on_reset( FXObject *, FXSelector, void * )
+		{
+			if ( face == nullptr )
+			{
+				return false;
+			}
+
+			static constexpr PLVector2 DEFAULT_SCALE = PL_VECTOR2( 0.5f, 0.5f );
+
+			PLVector2 scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
+			ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3 );
+
+			set_current( face );
+			return true;
+		}
+
+		long on_browse( FXObject *, FXSelector, void * )
+		{
+			mainWindow->open_material_browser();
+			return true;
+		}
+
+		long on_apply_tag( FXObject *, FXSelector, void * )
+		{
+			std::string tag = tagField->getText().text();
+			if ( !ape_brush_face_set_tag( face, tagField->getText().text() ) )
+			{
+				FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to set tag for face, see logs for details!" );
+				tagField->setText( face->tag );
+			}
 		}
 	};
 
 	FXDEFMAP( SurfaceInspector )
 	surfaceInspectorMap[] = {
 	        FXMAPFUNC( SEL_CHANGED, SurfaceInspector::ID_SURFACE_PROPERTY, SurfaceInspector::on_update ),
+	        FXMAPFUNC( SEL_COMMAND, SurfaceInspector::ID_SURFACE_PROPERTY, SurfaceInspector::on_update ),
+	        FXMAPFUNC( SEL_COMMAND, SurfaceInspector::ID_SURFACE_FIT, SurfaceInspector::on_fit ),
+	        FXMAPFUNC( SEL_COMMAND, SurfaceInspector::ID_SURFACE_RESET, SurfaceInspector::on_reset ),
+	        FXMAPFUNC( SEL_COMMAND, SurfaceInspector::ID_SURFACE_BROWSE, SurfaceInspector::on_browse ),
+	        FXMAPFUNC( SEL_COMMAND, SurfaceInspector::ID_SURFACE_APPLY_TAG, SurfaceInspector::on_apply_tag ),
 	};
 
 	FXIMPLEMENT( SurfaceInspector, FXDialogBox, surfaceInspectorMap, ARRAYNUMBER( surfaceInspectorMap ) )
@@ -222,7 +306,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	// room selection box
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/new_room.gif" ), this, ID_ROOM_NEW );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_ROOM_SAVE );
-	roomSelectBox = new FXComboBox( toolbar, 16, this, ID_ROOM_SELECT, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
+	roomSelectBox = new FXComboBox( toolbar, 24, this, ID_ROOM_SELECT, COMBOBOX_STATIC | FRAME_SUNKEN | FRAME_THICK | LAYOUT_CENTER_Y | LAYOUT_FILL_COLUMN | LAYOUT_MIN_WIDTH, 0, 0, 400 );
 	roomSelectBox->setNumVisible( 8 );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_edit.gif" ), this, ID_ROOM_EDIT );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/room_add.gif" ), this, ID_ROOM_ADD );
@@ -288,6 +372,27 @@ forge::WorldEditor::~WorldEditor()
 	}
 }
 
+std::string forge::WorldEditor::show_save_dialog()
+{
+	PLPath origin;
+	PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
+
+	FXString saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
+	if ( saveFilename.empty() )
+	{
+		return {};
+	}
+
+	// add the extension if it's missing
+	std::string filename = saveFilename.text();
+	if ( filename.substr( filename.size() - strlen( "." APE_WORLD_ROOM_EXTENSION ) ) != "." APE_WORLD_ROOM_EXTENSION )
+	{
+		filename += ".rom" ACM_DEFAULT_EXTENSION_OLD;
+	}
+
+	return filename;
+}
+
 void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType type )
 {
 	FXTreeItem *selectedItem = nodeTree->getCurrentItem();
@@ -330,7 +435,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 	update_tree();
 }
 
-void forge::WorldEditor::update_tree()
+void forge::WorldEditor::update_tree() const
 {
 	ApeWorldNode *child;
 	PL_ITERATE_LINKED_LIST( child, ApeWorldNode, _world->base.children, i )
@@ -340,13 +445,23 @@ void forge::WorldEditor::update_tree()
 			continue;
 		}
 
-		if ( roomSelectBox->findItemByData( child ) != -1 )
+		ApeRoom *room = ( ApeRoom * ) child;
+		if ( roomSelectBox->findItemByData( room ) != -1 )
 		{
 			continue;
 		}
 
-		const char *name = ape_world_node_get_name( child );
-		roomSelectBox->appendItem( name, child );
+		const char *name = ape_room_get_path( room );
+		roomSelectBox->appendItem( name, room );
+	}
+}
+
+void forge::WorldEditor::get_rooms( std::vector< ApeRoom * > *dst ) const
+{
+	unsigned int numRooms = roomSelectBox->getNumItems();
+	for ( unsigned int i = 0; i < numRooms; ++i )
+	{
+		dst->push_back( ( ApeRoom * ) roomSelectBox->getItemData( i ) );
 	}
 }
 
@@ -413,24 +528,18 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	if ( savePath.empty() )
+	const char *path = ape_room_get_save_path( room );
+	if ( path == nullptr )
 	{
-		PLPath origin;
-		PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
-
-		FXString saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
-		if ( saveFilename.empty() )
+		std::string savePath = show_save_dialog();
+		if ( savePath.empty() )
 		{
 			return false;
 		}
 
-		savePath = saveFilename.text();
-
-		// add the extension if it's missing
-		if ( savePath.substr( savePath.size() - strlen( "." APE_WORLD_ROOM_EXTENSION ) ) != "." APE_WORLD_ROOM_EXTENSION )
-		{
-			savePath += ".rom" ACM_DEFAULT_EXTENSION_OLD;
-		}
+		ape_room_set_save_path( room, savePath.c_str() );
+		path = ape_room_get_save_path( room );
+		assert( path != nullptr );
 	}
 
 	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
@@ -440,7 +549,6 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	const char *path = savePath.c_str();
 	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
 		FXMessageBox::warning( this, MBOX_OK, "Warning", "%s", acm_get_error_message() );
@@ -466,37 +574,43 @@ long forge::WorldEditor::on_room_select( FXObject *, FXSelector, void * )
 
 long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 {
-	//TODO
-	return FALSE;
+	std::string filename = show_save_dialog();
+	if ( filename.empty() )
+	{
+		return false;
+	}
+
+	ApeRoom *room = forge_new_room_( filename.c_str() );
+	if ( room == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create new room, check log for details!" );
+		return false;
+	}
+
+	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( _world ) );
+
+	update_tree();
+
+	return true;
 }
 
 long forge::WorldEditor::on_add_room( FXObject *, FXSelector, void * )
 {
-	const char *path     = com_project_get_local_path();
-	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
+	const char *projectPath = com_project_get_local_path();
+	FXString    filename    = FXFileDialog::getOpenFilename( this, "Select a room", FXString( projectPath ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
 	if ( filename.empty() )
 	{
-		return FALSE;
+		return false;
 	}
 
-	AcmBranch *root = acm_load_file( filename.text(), "node" );
-	if ( root == nullptr )
+	ApeRoom *room = forge_load_room_( filename.text() );
+	if ( room == nullptr )
 	{
-		return FALSE;
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to open room, check log for details!" );
+		return false;
 	}
 
-	ApeWorldNode *roomNode = ape_world_node_deserialize( APE_WORLD_NODE( _world ), root );
-	if ( roomNode == nullptr )
-	{
-		return FALSE;
-	}
-
-	if ( roomNode->type != APE_WORLD_NODE_TYPE_ROOM )
-	{
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Selected file is not a valid room file!" );
-		ape_world_node_destroy( APE_WORLD_NODE( roomNode ) );
-		return FALSE;
-	}
+	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( _world ) );
 
 	update_tree();
 
@@ -513,7 +627,7 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 		const FXString roomName = roomCreationDialog.get_room_name();
 		if ( roomName.empty() )
 		{
-			FXMessageBox::warning( FXApp::instance(), FX::MBOX_OK, "Warning", "No name specified for room!" );
+			FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "No name specified for room!" );
 			return false;
 		}
 
@@ -531,6 +645,7 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 
 long forge::WorldEditor::on_remove_room( FXObject *, FXSelector, void * )
 {
+	return true;
 }
 
 void forge::WorldEditor::set_active_room( ApeRoom *room )
@@ -540,6 +655,8 @@ void forge::WorldEditor::set_active_room( ApeRoom *room )
 		return;
 	}
 
+	ape_editor_clear_selection( &instance );
+
 	for ( auto *viewport : viewports )
 	{
 		ape_camera_set_room( viewport->camera, room );
@@ -548,7 +665,7 @@ void forge::WorldEditor::set_active_room( ApeRoom *room )
 	activeRoom = room;
 }
 
-long forge::WorldEditor::on_material_browser( FX::FXObject *, FX::FXSelector, void * )
+long forge::WorldEditor::on_material_browser( FXObject *, FXSelector, void * )
 {
 	mainWindow->open_material_browser();
 	return TRUE;
@@ -613,7 +730,94 @@ void forge::WorldEditor::set_face_inspector_surface( ApeBrushFace *face )
 	}
 }
 
-ApeRoom *forge::WorldEditor::get_active_room()
+void forge::WorldEditor::link_new_room( ApeBrushFace *face )
+{
+	ApeRoom *originRoom = ape_brush_face_get_room( face );
+	assert( originRoom != nullptr );
+
+	const char *originRoomPath = ape_room_get_path( originRoom );
+	if ( originRoomPath == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Please save your existing room before attempting to link!" );
+		return;
+	}
+
+	std::string filename = show_save_dialog();
+	if ( filename.empty() )
+	{
+		return;
+	}
+
+	ApeRoom *room = forge_new_room_( filename.c_str() );
+	if ( room == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create new room, check log for details!" );
+		return;
+	}
+
+	// now create a brush with a duplicate face of the one provided,
+	// but flipped, and then linked back to the origin room (blergh)
+
+	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( room ), nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	if ( brush == nullptr )
+	{
+		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create new brush, check log for details!" );
+		ape_world_node_destroy( APE_WORLD_NODE( room ) );
+		return;
+	}
+
+	brush->numVertices = face->numVertices;
+	brush->vertices    = PL_NEW_( PLVector3, brush->numVertices );
+	for ( unsigned int i = 0; i < brush->numVertices; ++i )
+	{
+		brush->vertices[ i ] = *face->vertices[ i ].position;
+	}
+
+	brush->numFaces               = 1;
+	brush->faces                  = PL_NEW_( ApeBrushFace, brush->numFaces );
+	brush->faces[ 0 ].parent      = brush;
+	brush->faces[ 0 ].numVertices = brush->numVertices;
+	brush->faces[ 0 ].flags       = APE_BRUSH_FACE_FLAG_PORTAL;
+	brush->faces[ 0 ].material    = face->material;
+	for ( unsigned int i = 0; i < brush->numVertices; ++i )
+	{
+		ApeBrushFaceVertex *vertex = &brush->faces[ 0 ].vertices[ i ];
+		vertex->position           = &brush->vertices[ i ];
+		vertex->colour             = face->vertices[ i ].colour;
+		vertex->textureCoords      = face->vertices[ i ].textureCoords;
+
+#if 0
+		brush->faces[ 0 ].edgeLoop[ i ] = &brush->faces[ 0 ].vertices[ ( brush->numVertices - 1 ) - i ];
+#else
+		brush->faces[ 0 ].edgeLoop[ i ] = vertex;
+#endif
+	}
+
+	ape_brush_compute_face_normals( brush );
+	ape_brush_compute_face_bounds( brush );
+	ape_brush_compute_bounds( brush );
+
+	// now sort out the tags so both faces can find each other, wheee...
+
+	ape_room_set_unique_surface_tag( room, &brush->faces[ 0 ] );
+	snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s:%s", ape_room_get_path( room ), brush->faces[ 0 ].tag );
+
+	if ( *face->tag == '\0' )
+	{
+		ape_room_set_unique_surface_tag( originRoom, face );
+	}
+
+	snprintf( brush->faces[ 0 ].destinationTag, sizeof( brush->faces[ 0 ].destinationTag ), "%s:%s", originRoomPath, face->tag );
+	face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
+
+	// now attach the new room to the world
+
+	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( _world ) );
+
+	update_tree();
+}
+
+ApeRoom *forge::WorldEditor::get_active_room() const
 {
 	FXint current = roomSelectBox->getCurrentItem();
 	if ( current == -1 )
