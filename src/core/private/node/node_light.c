@@ -18,6 +18,7 @@ ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, con
 	light->type   = type;
 	light->flags  = flags;
 	light->radius = radius;
+	light->angle  = 32.0f;
 
 	return light;
 }
@@ -131,7 +132,7 @@ bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *mater
 
 	unsigned int flags = ape_material_get_flags( material );
 
-	return ( ( flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) && !ape_light_test_plane( self, plane ) );
+	return flags & APE_MATERIAL_FLAG_CAST_SHADOWS && !ape_light_test_plane( self, plane );
 }
 
 static AcmBranch *serialize_light( void *self, AcmBranch *root )
@@ -140,7 +141,7 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 	acm_push_ui32( root, "type", light->type );
 	com_acm_push_colour4f( root, "colour", &light->colour, true );
 	acm_push_f32( root, "radius", light->radius );
-	acm_push_bool( root, "isHidden", light->isHidden );
+	acm_push_f32( root, "angle", light->angle );
 	acm_push_ui32( root, "flags", light->flags );
 	acm_push_i32( root, "state", light->state );
 
@@ -153,7 +154,7 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 	light->type     = acm_get_uint( root, "type", light->type );
 	light->colour   = com_acm_get_colour_f32( root, "colour", &light->colour );
 	light->radius   = acm_get_f32( root, "radius", light->radius );
-	light->isHidden = acm_get_bool( root, "isHidden", light->isHidden );
+	light->angle    = acm_get_f32( root, "angle", light->angle );
 	light->flags    = acm_get_uint( root, "flags", light->flags );
 	light->state    = acm_branch_get_child_int( root, "state", light->state );
 	return APE_WORLD_NODE( light );
@@ -168,6 +169,7 @@ static ApeWorldNodePropertyEnum lightTypesEnum[] = {
 static ApeWorldNodeProperty properties[] = {
         APE_WORLD_NODE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
         APE_WORLD_NODE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
+        APE_WORLD_NODE_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
         APE_WORLD_NODE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
 };
 

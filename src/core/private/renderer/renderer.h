@@ -54,9 +54,8 @@ typedef struct ApeLight
 	ApeLightType type;
 
 	PLColourF32 colour;
-	float       radius;
-
-	bool isHidden;
+	float       radius;// per omni + spotlight
+	float       angle; // per spotlight
 
 	unsigned int flags;
 	int          state;

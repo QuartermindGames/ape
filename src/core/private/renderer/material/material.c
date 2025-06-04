@@ -985,7 +985,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ] >= 0 )
 	{
-		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( PL_DEG2RAD( 12.5f ) ) : 0.0f;
+		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( PL_DEG2RAD( light->angle ) ) : 0.0f;
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
 	}
 
