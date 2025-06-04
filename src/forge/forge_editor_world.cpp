@@ -384,8 +384,9 @@ std::string forge::WorldEditor::show_save_dialog()
 	}
 
 	// add the extension if it's missing
+	size_t      extLen   = strlen( "." APE_WORLD_ROOM_EXTENSION );
 	std::string filename = saveFilename.text();
-	if ( filename.substr( filename.size() - strlen( "." APE_WORLD_ROOM_EXTENSION ) ) != "." APE_WORLD_ROOM_EXTENSION )
+	if ( filename.length() >= extLen && filename.substr( filename.size() - extLen ) != "." APE_WORLD_ROOM_EXTENSION )
 	{
 		filename += "." APE_WORLD_ROOM_EXTENSION;
 	}
