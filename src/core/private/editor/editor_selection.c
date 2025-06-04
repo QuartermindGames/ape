@@ -590,6 +590,8 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 	}
 
 	ape_editor_clear_selection( self );
+
+	self->hoverSelection = nullptr;
 }
 
 void ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room )
