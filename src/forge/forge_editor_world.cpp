@@ -457,13 +457,17 @@ void forge::WorldEditor::update_tree() const
 	}
 }
 
-void forge::WorldEditor::get_rooms( std::vector< ApeRoom * > *dst ) const
+std::vector< ApeRoom * > forge::WorldEditor::get_rooms() const
 {
-	unsigned int numRooms = roomSelectBox->getNumItems();
+	std::vector< ApeRoom * > rooms;
+	unsigned int             numRooms = roomSelectBox->getNumItems();
+	rooms.reserve( numRooms );
 	for ( unsigned int i = 0; i < numRooms; ++i )
 	{
-		dst->push_back( ( ApeRoom * ) roomSelectBox->getItemData( i ) );
+		rooms.push_back( ( ApeRoom * ) roomSelectBox->getItemData( i ) );
 	}
+
+	return rooms;
 }
 
 long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selector, void * )

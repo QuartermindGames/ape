@@ -51,7 +51,7 @@ namespace forge
 
 		void update_tree() const;
 
-		void get_rooms( std::vector< ApeRoom * > *dst ) const;
+		std::vector< ApeRoom * > get_rooms() const;
 
 		long on_change_geometry_mode( FXObject *, FXSelector, void * );
 		long on_shift_grid( FXObject *, FXSelector, void * );

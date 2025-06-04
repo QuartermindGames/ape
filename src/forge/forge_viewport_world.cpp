@@ -318,8 +318,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 
 			WorldEditor *worldEditor = ( WorldEditor * ) editor;
 
-			std::vector< ApeRoom * > rooms;
-			worldEditor->get_rooms( &rooms );
+			std::vector< ApeRoom * > rooms = worldEditor->get_rooms();
 			if ( rooms.size() > 1 )
 			{
 				ApeRoom *activeRoom = worldEditor->get_active_room();
@@ -774,7 +773,7 @@ long forge::WorldViewport::on_move_node_to_room( FXObject *object, FXSelector, v
 		return false;
 	}
 
-	ape_editor_move_selected_to_room( instance, room );
+	ape_editor_move_selection_to_room( instance, room );
 
 	return true;
 }
