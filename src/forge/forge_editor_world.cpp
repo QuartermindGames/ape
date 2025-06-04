@@ -387,7 +387,7 @@ std::string forge::WorldEditor::show_save_dialog()
 	std::string filename = saveFilename.text();
 	if ( filename.substr( filename.size() - strlen( "." APE_WORLD_ROOM_EXTENSION ) ) != "." APE_WORLD_ROOM_EXTENSION )
 	{
-		filename += ".rom" ACM_DEFAULT_EXTENSION_OLD;
+		filename += "." APE_WORLD_ROOM_EXTENSION;
 	}
 
 	return filename;
