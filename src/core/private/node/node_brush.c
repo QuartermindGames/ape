@@ -347,6 +347,13 @@ bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag )
 	// and we need to pass them into a lookup, urgh
 	// (who designed this shit, oh right, me...)
 
+	size_t tagLength = strlen( tag );
+	if ( tagLength + 1 >= sizeof( self->tag ) )
+	{
+		ape_warning_( "Failed to set tag (%s) for face, tag is too long (%u >= %u)!\n", tag, tagLength, sizeof( self->tag ) );
+		return false;
+	}
+
 	if ( strcmp( self->tag, tag ) == 0 )
 	{
 		// tag already set, so nothing to do
