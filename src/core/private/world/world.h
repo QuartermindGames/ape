@@ -48,9 +48,7 @@ typedef struct ApeRoom
 	PLColourF32 colour;// an identifying colour
 	PLColourF32 ambientLight;
 
-	PLVectorArray *zones;  // ApeRoomZone
-	PLVectorArray *portals;// ApeBrushFace
-	PLVectorArray *faces;  // ApeBrushFace
+	struct PLHashTable *taggedSurfaceLookup;
 
 	ApeAudioReverbPreset reverbPreset;// default reverb for the room
 	PLVector3            gravity;     // default gravity for the room

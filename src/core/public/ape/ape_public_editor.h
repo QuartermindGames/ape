@@ -107,7 +107,7 @@ void      ape_editor_clear_selection( ApeEditorInstance *self );
 void      ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
 void     *ape_editor_get_first_selected( ApeEditorInstance *self );
 void      ape_editor_delete_selection( ApeEditorInstance *self );
-void      ape_editor_move_selected_to_room( ApeEditorInstance *self, ApeRoom *room );
+void      ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room );
 
 void ape_editor_toggle_faces( ApeEditorInstance *self );
 void ape_editor_toggle_other_faces( ApeEditorInstance *self );

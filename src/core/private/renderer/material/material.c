@@ -73,7 +73,7 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 			continue;
 		}
 
-		return ( PLGTexture * ) materialPass->variables[ i ].data.ptr;
+		return materialPass->variables[ i ].data.ptr;
 	}
 
 	return nullptr;
@@ -1107,12 +1107,12 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material )
 
 bool ape_material_shadows_enabled( const ApeMaterial *self )
 {
-	return ( self->flags & APE_MATERIAL_FLAG_CAST_SHADOWS );
+	return self->flags & APE_MATERIAL_FLAG_CAST_SHADOWS;
 }
 
 bool ape_material_is_blended( const ApeMaterial *self )
 {
-	return ( self->flags & APE_MATERIAL_FLAG_BLENDED );
+	return self->flags & APE_MATERIAL_FLAG_BLENDED;
 }
 
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights )

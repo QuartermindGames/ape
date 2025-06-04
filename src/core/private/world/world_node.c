@@ -227,6 +227,19 @@ void ape_world_node_dettach( ApeWorldNode *self )
 		return;
 	}
 
+	// allow the class to operate any logic as needed
+	ApeWorldNode *parent = self->parent;
+	if ( parent->classType->onDettachChild != nullptr )
+	{
+		parent->classType->onDettachChild( parent, self );
+	}
+	if ( self->classType->onDettachParent != nullptr )
+	{
+		self->classType->onDettachParent( self, parent );
+	}
+
+	ape_world_node_mark_dirty_( parent );
+
 	assert( self->parentListNode != nullptr );
 	PlDestroyLinkedListNode( self->parentListNode );
 
@@ -253,8 +266,31 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	// determine if we're now under a new room
 	if ( self->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
-		self->room = lookup_parent_room( self );
+		// sigh...this is very specific, so we can notify a brush (or anything else)
+		// that it's moved to a new room.
+		ApeRoom *room = lookup_parent_room( self );
+		if ( self->room != nullptr && room != nullptr && room != self->room )
+		{
+			if ( self->classType->onChangeRoom != nullptr )
+			{
+				self->classType->onChangeRoom( self, self->room, room );
+			}
+		}
+
+		self->room = room;
 	}
+
+	// allow the class to operate any logic as needed
+	if ( parent->classType->onAttachChild != nullptr )
+	{
+		parent->classType->onAttachChild( parent, self );
+	}
+	if ( self->classType->onAttachParent != nullptr )
+	{
+		self->classType->onAttachParent( self, parent );
+	}
+
+	ape_world_node_mark_dirty_( parent );
 }
 
 PLVector3 ape_world_node_get_local_position( const ApeWorldNode *self )
