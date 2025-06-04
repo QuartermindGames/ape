@@ -599,7 +599,7 @@ void ape_editor_move_selected_to_room( ApeEditorInstance *self, ApeRoom *room )
 	{
 		if ( !ape_world_node_has_magic( worldNode ) )
 		{
-			ape_warning_( "One of the selected items wasn't a valid world node, unable to delete!\n" );
+			ape_warning_( "One of the selected items wasn't a valid world node, unable to move!\n" );
 			continue;
 		}
 
