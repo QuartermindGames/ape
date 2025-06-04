@@ -592,7 +592,7 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 	ape_editor_clear_selection( self );
 }
 
-void ape_editor_move_selected_to_room( ApeEditorInstance *self, ApeRoom *room )
+void ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room )
 {
 	ApeWorldNode *worldNode;
 	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
