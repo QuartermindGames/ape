@@ -1018,9 +1018,14 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 				static constexpr float scale = 16.0f;
 
-				PLVector3 worldPos  = ape_grid_transform_point( &editorInstance->grid, &pos );
-				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, nullptr, true );
-				PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
+				PLVector3 worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
+
+				float     w;
+				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &w, true );
+				if ( w > 0.f )
+				{
+					PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
+				}
 			}
 		}
 	}
