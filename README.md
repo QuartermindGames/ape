@@ -4,18 +4,26 @@
 
 </div>
 
-APE is a 3D game engine written in C23, being developed by 
+ApeTech is a 3D game engine written in C23, being developed by 
 [Mark "hogsy" Sowden](https://hogsy.me/), for game jams and prototyping.
 
-APE is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
+ApeTech is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 
-What makes APE a little different in this regard is that it's attempting to go a step further with this, aiming to replicate something similar to what 3D Realms' Prey from 1998 was attempting to do; joining rooms don't necessarily have to be connected physically but can be travelled between via portals that can be added dynamically.
+What makes ApeTech a little different in this regard is that it's attempting to go a step further with this, aiming to replicate something similar to what 3D Realms' Prey from 1998 was attempting to do; joining rooms don't necessarily have to be connected physically but can be travelled between via portals that can be added and moved around dynamically.
 
 It's available here with absolutely no support whatsoever. Additionally, it is not intended as anything close to a professional grade engine but instead just 
 something that's easy to throw things at and modify. 
 It's being developed primarily for **fun**.
 
 Some semblance of documentation can be found [here](docs).
+
+* [Features](#features)
+* [Games](#games)
+* [Screenshots](#screenshots)
+* [Building](#building)
+* [Q&A](#qa)
+
+----
 
 ## Features
 
@@ -84,3 +92,23 @@ The engine primarily supports 64-bit [Ubuntu 24.04 LTS](https://ubuntu.com/downl
 ### macOS
 
 Historically, the engine had been successfully built and run on macOS—but that was quite a few years ago. Given Apple's recent actions and lack of support for open standards, such as Vulkan/OpenGL, I've felt less inclined to support it as a target.
+
+## Q&A
+
+### Why is the commit history not available?
+
+Depending on how you got this, I've likely not made the commit history available because there is a lot of experimental work I'll typically do, and I'm often not terribly happy with it.
+So essentially, what you're seeing is the "clean" version.
+
+### Can I contribute to the project?
+
+I'm afraid I'm not willing to accept contributions.
+I appreciate the notion though!
+But for the same reason as above, this isn't the _current_ version of the engine - as a matter of fact, I'll usually make any copies public a year after a milestone is hit, so what you're seeing is already pretty dated.
+
+### Why did you write it in C?
+
+I'd decided to write a 3D engine in C just for the novelty of it, and because I've got a soft spot for the simplicity of the language.
+
+That said, in hindsight, this would've been written in C++ had I started this project today.
+Maybe for a future version I'll try migrating to C++, though at this stage it'd be a lot of work.
