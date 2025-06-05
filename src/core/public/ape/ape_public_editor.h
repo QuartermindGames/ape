@@ -102,12 +102,12 @@ AcmBranch *ape_editor_get_config();
 
 void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
 
-void     *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
-void      ape_editor_clear_selection( ApeEditorInstance *self );
-void      ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
-void     *ape_editor_get_first_selected( ApeEditorInstance *self );
-void      ape_editor_delete_selection( ApeEditorInstance *self );
-void      ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room );
+void *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
+void  ape_editor_clear_selection( ApeEditorInstance *self );
+void  ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
+void *ape_editor_get_first_selected( ApeEditorInstance *self );
+void  ape_editor_delete_selection( ApeEditorInstance *self );
+void  ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room );
 
 void ape_editor_toggle_faces( ApeEditorInstance *self );
 void ape_editor_toggle_other_faces( ApeEditorInstance *self );
@@ -161,13 +161,21 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 // Brush Plotting
 /////////////////////////////////////////////////////////////////////////////////////
 
+typedef enum ApeEditorBrushType
+{
+	APE_EDITOR_BRUSH_TYPE_BLOCK,// traditional block-type, with 6 faces
+	APE_EDITOR_BRUSH_TYPE_PLANE,// single face
+} ApeEditorBrushType;
+
 /**
  * Creates an `ApeBrush` from the polygon points stored in the `ApeEditorInstance`.
  *
- * @param self 	Pointer to the `ApeEditorInstance` which holds the polygon points and other relevant data.
- * @return 		A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
+ * @param self 			Pointer to the `ApeEditorInstance` which holds the polygon points and other relevant data.
+ * @param materialPath	Path to the material being used for the brush.
+ * @param type			The type of brush to create from the polygon.
+ * @return 				A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
  */
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath );
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type );
 
 /**
  * This function decreases the number of points in the polygon managed by the

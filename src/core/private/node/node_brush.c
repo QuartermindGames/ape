@@ -533,15 +533,8 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 	}
 }
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material )
+static void build_block_brush( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea )
 {
-	// extrude and build the brush geometry from the given polygon shape
-	if ( numVertices < 3 )
-	{
-		ape_warning_( "Invalid number of vertices for building brush from polygon (%u < 3)!\n", numVertices );
-		return false;
-	}
-
 	self->numVertices = numVertices * 2;
 	self->vertices    = PL_NEW_( PLVector3, self->numVertices );
 	memcpy( self->vertices, vertices, numVertices * sizeof( PLVector3 ) );
@@ -590,6 +583,52 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		{
 			self->faces[ i + 2 ].edgeLoop[ j ] = ( signedArea < 0.0f ) ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
 		}
+	}
+}
+
+static void build_plane_brush( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, float signedArea )
+{
+	self->numVertices = numVertices;
+	self->vertices    = PL_NEW_( PLVector3, self->numVertices );
+	memcpy( self->vertices, vertices, numVertices * sizeof( PLVector3 ) );
+
+	self->numFaces               = 1;
+	self->faces                  = PL_NEW_( ApeBrushFace, self->numFaces );
+	self->faces[ 0 ].numVertices = self->numVertices;
+	for ( unsigned int i = 0; i < self->numVertices; ++i )
+	{
+		self->faces[ 0 ].vertices[ i ].position = &self->vertices[ i ];
+		if ( signedArea > 0.0f )
+		{
+			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
+		}
+		else
+		{
+			self->faces[ 0 ].edgeLoop[ i ] = &self->faces[ 0 ].vertices[ i ];
+		}
+	}
+}
+
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type )
+{
+	// extrude and build the brush geometry from the given polygon shape
+	if ( numVertices < 3 )
+	{
+		ape_warning_( "Invalid number of vertices for building brush from polygon (%u < 3)!\n", numVertices );
+		return false;
+	}
+
+	switch ( type )
+	{
+		default:
+			ape_warning_( "Unsupported brush type (%u)!\n", type );
+			return false;
+		case APE_EDITOR_BRUSH_TYPE_BLOCK:
+			build_block_brush( self, vertices, numVertices, dir, scale, signedArea );
+			break;
+		case APE_EDITOR_BRUSH_TYPE_PLANE:
+			build_plane_brush( self, vertices, numVertices, signedArea );
+			break;
 	}
 
 	for ( unsigned int i = 0; i < self->numFaces; ++i )

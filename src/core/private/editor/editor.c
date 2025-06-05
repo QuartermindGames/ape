@@ -1120,7 +1120,7 @@ static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int num
 	return true;
 }
 
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath )
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type )
 {
 	if ( self->numPolygonPoints < 3 )
 	{
@@ -1172,7 +1172,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 	}
 
-	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, signedArea, material ) )
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, signedArea, material, type ) )
 	{
 		ape_warning_( "Failed to create brush from polygon!\n" );
 		ape_material_release( material );
@@ -1249,7 +1249,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		const PLVector2 *start = &self->polygonPoints[ 0 ];
 		if ( PlCompareVector2( start, &cursor ) )
 		{
-			ape_editor_brush_from_polygon( self, nullptr );
+			ape_editor_brush_from_polygon( self, nullptr, APE_EDITOR_BRUSH_TYPE_BLOCK );
 			return true;
 		}
 	}

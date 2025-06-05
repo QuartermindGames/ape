@@ -113,7 +113,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
 
 void ape_brush_flip_face_( ApeBrushFace *face );
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material );
+bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Room
