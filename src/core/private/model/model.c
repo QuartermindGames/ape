@@ -443,11 +443,11 @@ ApeWorldNode *deserialize_model_node( ApeWorldNode *parent, AcmBranch *root )
 }
 
 const ApeWorldNodeClass ape_modelClass = {
-        .identifier          = "model",
-        .magic               = PL_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
-        .destroyFunction     = destroy_model_node,
-        .serializeFunction   = serialize_model_node,
-        .deserializeFunction = deserialize_model_node,
+        .identifier  = "model",
+        .magic       = PL_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
+        .destroy     = destroy_model_node,
+        .serialize   = serialize_model_node,
+        .deserialize = deserialize_model_node,
 
 #if !defined( APE_NO_EDITOR )
 

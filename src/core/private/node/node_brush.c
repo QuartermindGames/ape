@@ -55,7 +55,7 @@ ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVect
 	return brush;
 }
 
-void ape_brush_destroy_( void *data, ApeWorldNode *parent )
+static void destroy_brush( void *data, ApeWorldNode *parent )
 {
 	ApeBrush *self = data;
 	if ( self == nullptr )
@@ -82,6 +82,66 @@ void ape_brush_destroy_( void *data, ApeWorldNode *parent )
 #endif
 
 	PL_DELETE( self );
+}
+
+static ApeWorldNode *clone_brush( ApeWorldNode *src )
+{
+	ApeBrush *srcBrush = ( ApeBrush * ) src;
+	ApeBrush *dstBrush = ape_brush_create( src->parent, src->name, &src->position, &src->angles );
+	if ( dstBrush == nullptr )
+	{
+		ape_warning_( "Failed to create brush for duplication!\n" );
+		return nullptr;
+	}
+
+	dstBrush->type = srcBrush->type;
+
+	dstBrush->numVertices = srcBrush->numVertices;
+	dstBrush->vertices    = PL_NEW_( PLVector3, dstBrush->numVertices );
+	for ( unsigned int j = 0; j < dstBrush->numVertices; ++j )
+	{
+		dstBrush->vertices[ j ] = srcBrush->vertices[ j ];
+	}
+
+	dstBrush->numFaces = srcBrush->numFaces;
+	dstBrush->faces    = PL_NEW_( ApeBrushFace, dstBrush->numFaces );
+	for ( unsigned int j = 0; j < dstBrush->numFaces; ++j )
+	{
+		//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
+		const char  *materialPath     = ape_material_get_path( srcBrush->faces[ j ].material );
+		ApeMaterial *material         = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+		dstBrush->faces[ j ].material = material;
+
+		dstBrush->faces[ j ].materialScale  = srcBrush->faces[ j ].materialScale;
+		dstBrush->faces[ j ].materialOffset = srcBrush->faces[ j ].materialOffset;
+		dstBrush->faces[ j ].materialAngle  = srcBrush->faces[ j ].materialAngle;
+
+		dstBrush->faces[ j ].normal = srcBrush->faces[ j ].normal;
+
+		dstBrush->faces[ j ].flags = srcBrush->faces[ j ].flags;
+
+		dstBrush->faces[ j ].bounds      = srcBrush->faces[ j ].bounds;
+		dstBrush->faces[ j ].numVertices = srcBrush->faces[ j ].numVertices;
+		for ( unsigned int k = 0; k < dstBrush->faces[ j ].numVertices; ++k )
+		{
+			dstBrush->faces[ j ].vertices[ k ].position      = &dstBrush->vertices[ srcBrush->faces[ j ].vertices[ k ].position - srcBrush->vertices ];
+			dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
+			dstBrush->faces[ j ].vertices[ k ].tangent       = srcBrush->faces[ j ].vertices[ k ].tangent;
+			dstBrush->faces[ j ].vertices[ k ].bitangent     = srcBrush->faces[ j ].vertices[ k ].bitangent;
+			dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
+
+			// and now for the edge loop...
+			dstBrush->faces[ j ].edgeLoop[ k ] = &dstBrush->faces[ j ].vertices[ srcBrush->faces[ j ].edgeLoop[ k ] - srcBrush->faces[ j ].vertices ];
+		}
+
+		strcpy( dstBrush->faces[ j ].destinationTag, srcBrush->faces[ j ].destinationTag );
+
+		dstBrush->faces[ j ].parent = dstBrush;
+	}
+
+	ape_brush_compute_bounds( dstBrush );
+
+	return APE_WORLD_NODE( dstBrush );
 }
 
 #if 0//unused
@@ -570,7 +630,7 @@ void ape_brush_mark_parent_dirty( ApeBrush *self )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
+static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 {
 	ApeBrush *brush = self;
 	acm_push_ui32( root, "type", brush->type );
@@ -615,7 +675,7 @@ AcmBranch *ape_brush_serialize_( void *self, AcmBranch *root )
 	return root;
 }
 
-ApeWorldNode *ape_brush_deserialize_( ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 {
 	ApeBrush *self = ape_brush_create( parent, "temp", &( PLVector3 ) {}, &( PLVector3 ) {} );
 
@@ -748,11 +808,13 @@ const ApeWorldNodeClass ape_brushClass = {
         .identifier = "brush",
         .magic      = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
 
-        .destroyFunction     = ape_brush_destroy_,
-        .serializeFunction   = ape_brush_serialize_,
-        .deserializeFunction = ape_brush_deserialize_,
+        .destroy     = destroy_brush,
+        .serialize   = serialize_brush,
+        .deserialize = deserialize_brush,
 
         .onChangeRoom = on_change_room,
+
+        .clone = clone_brush,
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),

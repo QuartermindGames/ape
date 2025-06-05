@@ -218,9 +218,9 @@ PLGCamera *ape_camera_get_internal( ApeCamera *camera )
 }
 
 const ApeWorldNodeClass ape_cameraClass = {
-        .identifier      = "camera",
-        .magic           = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
-        .destroyFunction = ape_camera_destroy_,
+        .identifier = "camera",
+        .magic      = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
+        .destroy    = ape_camera_destroy_,
 
         .editorIcon = "resources/new_camera.gif",
 };

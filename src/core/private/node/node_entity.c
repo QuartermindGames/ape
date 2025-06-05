@@ -349,11 +349,11 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 }
 
 const ApeWorldNodeClass ape_entityClass = {
-        .identifier          = "entity",
-        .magic               = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
-        .destroyFunction     = ape_entity_destroy_,
-        .serializeFunction   = serialize_entity,
-        .deserializeFunction = deserialize_entity,
+        .identifier  = "entity",
+        .magic       = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+        .destroy     = ape_entity_destroy_,
+        .serialize   = serialize_entity,
+        .deserialize = deserialize_entity,
 
 #if !defined( APE_NO_EDITOR )
 

@@ -496,9 +496,9 @@ const ApeWorldNodeClass ape_roomClass = {
         .identifier = "room",
         .magic      = PL_MAGIC_TO_NUM( 'R', 'O', 'O', 'M' ),
 
-        .destroyFunction     = destroy_room,
-        .serializeFunction   = ape_room_serialize_,
-        .deserializeFunction = ape_room_deserialize_,
+        .destroy     = destroy_room,
+        .serialize   = ape_room_serialize_,
+        .deserialize = ape_room_deserialize_,
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),

@@ -224,7 +224,7 @@ const ApeWorldNodeClass ape_rootClass = {
         .identifier = "root",
         .magic      = PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
 
-        .destroyFunction = ape_world_destroy_,
+        .destroy = ape_world_destroy_,
 
         .onAttachChild  = on_attach_child,
         .onDettachChild = on_dettach_child,

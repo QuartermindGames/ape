@@ -13,6 +13,18 @@
 
 #define WORLD_PROP_TAG_LENGTH 64
 
+#define APE_WORLD_NODE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_##PROP }
+#define APE_WORLD_NODE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
+	{                                                                                                                                      \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
+	}
+#define APE_WORLD_NODE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                        \
+	{                                                                                                                       \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                       \
+			                                                                                   PL_ARRAY_ELEMENTS( ENUMS ) } \
+	}
+
 #if 1 /* original values, used for prototype */
 #	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
 #	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )

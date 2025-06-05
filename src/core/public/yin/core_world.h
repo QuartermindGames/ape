@@ -100,18 +100,6 @@ typedef struct ApeWorldNodeProperty
 	};
 } ApeWorldNodeProperty;
 
-#define APE_WORLD_NODE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
-	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_##PROP }
-#define APE_WORLD_NODE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
-	{                                                                                                                                      \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
-	}
-#define APE_WORLD_NODE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                        \
-	{                                                                                                                       \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                       \
-			                                                                                   PL_ARRAY_ELEMENTS( ENUMS ) } \
-	}
-
 typedef enum ApeWorldNodeClassFlag
 {
 	PL_BITFLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
@@ -126,9 +114,10 @@ typedef struct ApeWorldNodeClass
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
 
-	void ( *destroyFunction )( void *self, ApeWorldNode *parent );
-	AcmBranch *( *serializeFunction )( void *self, AcmBranch *root );
-	ApeWorldNode *( *deserializeFunction )( ApeWorldNode *parent, AcmBranch *root );
+	void ( *destroy )( void *self, ApeWorldNode *parent );
+	AcmBranch *( *serialize )( void *self, AcmBranch *root );
+	ApeWorldNode *( *deserialize )( ApeWorldNode *parent, AcmBranch *root );
+	ApeWorldNode *( *clone )( ApeWorldNode *srcNode );
 
 	void ( *onAttachChild )( void *self, ApeWorldNode *child ); // called just after a child is attached
 	void ( *onDettachChild )( void *self, ApeWorldNode *child );// called just before a child is dettached

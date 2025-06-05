@@ -23,7 +23,7 @@ ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, con
 	return light;
 }
 
-void ape_light_destroy_( void *data, ApeWorldNode *parent )
+static void destroy_light( void *data, ApeWorldNode *parent )
 {
 	ApeLight *self = data;
 	if ( self == NULL )
@@ -33,6 +33,25 @@ void ape_light_destroy_( void *data, ApeWorldNode *parent )
 
 	PL_DELETE( self->lightmap );
 	PL_DELETE( self );
+}
+
+static ApeWorldNode *clone_light( ApeWorldNode *src )
+{
+	ApeLight *srcLight = ( ApeLight * ) src;
+	ApeLight *dstLight = ape_create_light( src->parent, &src->position, &srcLight->colour, srcLight->radius, srcLight->type, srcLight->flags );
+	if ( dstLight == nullptr )
+	{
+		ape_warning_( "Failed to create light for duplication!\n" );
+		return nullptr;
+	}
+
+	// sigh...
+	APE_WORLD_NODE( dstLight )->angles = src->angles;
+
+	dstLight->angle = srcLight->angle;
+	dstLight->state = srcLight->state;
+
+	return APE_WORLD_NODE( dstLight );
 }
 
 PLColourF32 ape_light_get_colour( const ApeLight *light ) { return light->colour; }
@@ -177,9 +196,11 @@ const ApeWorldNodeClass ape_lightClass = {
         .identifier = "light",
         .magic      = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
 
-        .destroyFunction     = ape_light_destroy_,
-        .serializeFunction   = serialize_light,
-        .deserializeFunction = deserialize_light,
+        .destroy     = destroy_light,
+        .serialize   = serialize_light,
+        .deserialize = deserialize_light,
+
+        .clone = clone_light,
 
         .properties    = properties,
         .numProperties = PL_ARRAY_ELEMENTS( properties ),

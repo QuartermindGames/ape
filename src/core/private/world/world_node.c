@@ -214,8 +214,8 @@ void ape_world_node_destroy( ApeWorldNode *self )
 
 	PlgDestroyMesh( self->mesh );
 
-	assert( self->classType->destroyFunction );
-	self->classType->destroyFunction( self, parent );
+	assert( self->classType->destroy );
+	self->classType->destroy( self, parent );
 }
 
 void ape_world_node_dettach( ApeWorldNode *self )
@@ -488,10 +488,10 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	//	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
 
 	acm_push_ui32( nodeBranch, "classMagic", self->classType->magic );
-	if ( self->classType->serializeFunction != nullptr )
+	if ( self->classType->serialize != nullptr )
 	{
 		AcmBranch *classBranch = acm_push_object( nodeBranch, "class" );
-		self->classType->serializeFunction( self, classBranch );
+		self->classType->serialize( self, classBranch );
 	}
 
 	if ( PlGetNumLinkedListNodes( self->children ) > 0 )
@@ -524,7 +524,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 	}
 
 	//TODO: make this an assert
-	if ( worldNodeClass->deserializeFunction == nullptr )
+	if ( worldNodeClass->deserialize == nullptr )
 	{
 		ape_warning_( "No deserialization method specified for class (%s), skipping!\n", worldNodeClass->identifier );
 		return nullptr;
@@ -537,7 +537,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 		return nullptr;
 	}
 
-	ApeWorldNode *self = worldNodeClass->deserializeFunction( parent, classBranch );
+	ApeWorldNode *self = worldNodeClass->deserialize( parent, classBranch );
 	if ( self == nullptr )
 	{
 		ape_warning_( "Failed to deserialize world node!\n" );
