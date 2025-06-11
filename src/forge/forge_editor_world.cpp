@@ -242,6 +242,8 @@ namespace forge
 				FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to set tag for face, see logs for details!" );
 				tagField->setText( face->tag );
 			}
+
+			return true;
 		}
 	};
 
