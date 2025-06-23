@@ -18,7 +18,7 @@ forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *
 		setIcon( icon );
 	}
 
-	if ( ape_editor_instance_setup( &instance, mode ) == nullptr )
+	if ( ape_editor_instance_setup( &instance_, mode ) == nullptr )
 	{
 		throw std::runtime_error( "Failed to initialize ApeEditorState" );
 	}
@@ -26,5 +26,5 @@ forge::EditorTab::EditorTab( FXTabBook *owner, const FXString &heading, FXIcon *
 
 forge::EditorTab::~EditorTab()
 {
-	ape_editor_instance_cleanup( &instance );
+	ape_editor_instance_cleanup( &instance_ );
 }

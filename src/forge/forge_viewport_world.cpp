@@ -394,7 +394,7 @@ long forge::WorldViewport::on_middle_click( FXObject *fx_object, FXSelector fx_s
 		ape_brush_face_apply_material( highlightedFace, face->material );
 
 		const PLVector2 offset = PL_VECTOR2( face->materialOffset.x, face->materialOffset.y );
-		ape_brush_face_apply_material_coordinates( highlightedFace, &face->materialScale, &offset, &face->materialAngle );
+		ape_brush_face_apply_material_coordinates( highlightedFace, &face->materialScale, &offset, &face->materialAngle, false );
 	}
 
 	return FALSE;

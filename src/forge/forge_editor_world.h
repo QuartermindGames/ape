@@ -9,10 +9,12 @@ namespace forge
 {
 	class WorldViewport;
 	class SurfaceInspector;
+	class UVTool;
 	class WorldEditor : public EditorTab
 	{
 		FXDECLARE( WorldEditor )
 
+		UVTool           *uvTool_{};
 		SurfaceInspector *surfaceInspector{};
 
 	protected:
@@ -121,7 +123,6 @@ namespace forge
 				return ( ApeAudioReverbPreset ) audioPresetField->getCurrentItem();
 			}
 
-		protected:
 		private:
 			FXTextField *nameField;
 			FXColorWell *ambienceField;

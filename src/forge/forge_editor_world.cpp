@@ -3,6 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include <unordered_map>
+#include <utility>
 
 #include "forge_editor_world.h"
 #include "forge/forge_viewport_world.h"
@@ -13,17 +14,166 @@
 // Surface Inspector
 /////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////
+/// UV Frame - this is what we'll be clicking into
+
 namespace forge
 {
-	class SurfaceInspector : public FXDialogBox
+	class UVFrame final : public FXFrame
+	{
+		FXDECLARE( UVFrame )
+
+		FXImage *background_{};
+
+		std::vector< PLVector2 * > uvCoords_;
+		std::vector< PLVector2 * > selectedUvCoords_;
+
+		FXint view_[ 2 ]{};
+		FXint crosshair_[ 2 ]{};
+
+	protected:
+		UVFrame() = default;
+
+	public:
+		enum
+		{
+			ID_RESET_UV_COORDS = ID_LAST,
+		};
+
+		explicit UVFrame( FXComposite *parent ) : FXFrame( parent, LAYOUT_FILL | FRAME_GROOVE, 0, 0, 256, 256, 0, 0, 0, 0 )
+		{
+			flags |= FLAG_ENABLED;
+		}
+
+		~UVFrame() override = default;
+
+		void set_active( FXImage *background, std::vector< PLVector2 * > uvCoords )
+		{
+			background_ = background;
+			uvCoords_   = std::move( uvCoords );
+
+			update();
+		}
+
+		long on_paint( FXObject *, FXSelector, void *ptr )
+		{
+			FXEvent   *event = ( FXEvent * ) ptr;
+			FXDCWindow dc( this, event );
+
+			dc.setForeground( FXRGBA( 0, 0, 0, 255 ) );
+			dc.setBackground( FXRGBA( 0, 0, 0, 255 ) );
+			dc.fillRectangle( 0, 0, width, height );
+
+			if ( background_ == nullptr )
+			{
+				return TRUE;
+			}
+
+			for ( unsigned int r = 0; r < width; r += background_->getWidth() )
+			{
+				for ( unsigned int c = 0; c < height; c += background_->getHeight() )
+				{
+					dc.drawImage( background_, r, c );
+				}
+			}
+
+			if ( !uvCoords_.empty() )
+			{
+				dc.setForeground( FXRGBA( 255, 255, 255, 128 ) );
+
+				std::vector< FXPoint > points;
+				points.reserve( uvCoords_.size() );
+				for ( unsigned int i = 0; i < uvCoords_.size(); ++i )
+				{
+					static constexpr int POINT_SIZE = 8;
+
+					FXPoint point = {};
+					point.x       = uvCoords_[ i ]->x * background_->getWidth();
+					point.y       = uvCoords_[ i ]->y * background_->getHeight();
+					points.push_back( point );
+
+					if ( i + 1 >= uvCoords_.size() )
+					{
+						point.x = uvCoords_[ 0 ]->x * background_->getWidth();
+						point.y = uvCoords_[ 0 ]->y * background_->getHeight();
+					}
+					else
+					{
+						point.x = uvCoords_[ i + 1 ]->x * background_->getWidth();
+						point.y = uvCoords_[ i + 1 ]->y * background_->getHeight();
+					}
+					points.push_back( point );
+
+					dc.fillRectangle( point.x - POINT_SIZE / 2, point.y - POINT_SIZE / 2, POINT_SIZE, POINT_SIZE );
+
+					dc.setFont( getApp()->getNormalFont() );
+
+					char tmp[ 64 ];
+					snprintf( tmp, sizeof( tmp ), "%.2fx%.2f", uvCoords_[ i ]->x, uvCoords_[ i ]->y );
+					dc.drawText( point.x, point.y + POINT_SIZE, tmp );
+				}
+
+				dc.drawLines( points.data(), points.size() );
+			}
+
+			// draw the cursor
+			dc.setForeground( FXRGBA( 255, 0, 255, 255 ) );
+			dc.drawFocusRectangle( crosshair_[ 0 ], crosshair_[ 1 ], 8, 8 );
+
+			return TRUE;
+		}
+
+		long on_motion( FXObject *, FXSelector, void *ptr )
+		{
+			FXEvent *event = ( FXEvent * ) ptr;
+
+			crosshair_[ 0 ] = event->win_x;
+			crosshair_[ 1 ] = event->win_y;
+
+			repaint();
+			update();
+
+			return TRUE;
+		}
+
+		long on_left_click( FXObject *, FXSelector, void *ptr )
+		{
+			if ( !hasFocus() )
+			{
+				return FALSE;
+			}
+
+			return TRUE;
+		}
+
+		long on_right_click( FXObject *, FXSelector, void *ptr )
+		{
+			return TRUE;
+		}
+	};
+
+	FXDEFMAP( UVFrame )
+	uvFrameProperties[] = {
+	        FXMAPFUNC( SEL_PAINT, 0, UVFrame::on_paint ),
+	        FXMAPFUNC( SEL_MOTION, 0, UVFrame::on_motion ),
+	        FXMAPFUNC( SEL_LEFTBUTTONPRESS, 0, UVFrame::on_left_click ),
+	        FXMAPFUNC( SEL_RIGHTBUTTONPRESS, 0, UVFrame::on_right_click ),
+	        //FXMAPFUNC( SEL_RIGHTBUTTONRELEASE, 0, UVFrame::onRightBtnRelease ),
+	};
+
+	FXIMPLEMENT( UVFrame, FXFrame, uvFrameProperties, ARRAYNUMBER( uvFrameProperties ) )
+
+	class SurfaceInspector final : public FXDialogBox
 	{
 		FXDECLARE( SurfaceInspector )
 
 		ApeBrushFace *face;
 
-		PLImage     *preview{};
+		FXIcon      *previewImage_;
 		FXLabel     *previewIcon;
 		FXTextField *previewPath;
+
+		FXImage *backgroundImage_;
 
 		FXTextField *tagField;
 
@@ -34,6 +184,10 @@ namespace forge
 		FXTextField *offsetFieldY;
 
 		FXTextField *rotationField;
+
+		FXCheckButton *localSpaceCheck;
+
+		UVFrame *uvFrame_;
 
 	protected:
 		SurfaceInspector() = default;
@@ -57,7 +211,7 @@ namespace forge
 
 		explicit SurfaceInspector( FXWindow *parent ) : FXDialogBox( parent, "Surface Inspector", DECOR_TITLE | DECOR_CLOSE | DECOR_BORDER | DECOR_MENU )
 		{
-			setWidth( 256 );
+			setWidth( 512 );
 			//setHeight( 512 );
 
 			setPadLeft( 0 );
@@ -65,12 +219,16 @@ namespace forge
 			setPadBottom( 0 );
 			setPadTop( 0 );
 
-			FXVerticalFrame *vf = new FXVerticalFrame( this, LAYOUT_FILL );
+			FXHorizontalFrame *mainHorFrame = new FXHorizontalFrame( this, LAYOUT_FILL );
+
+			// Left side
+
+			FXVerticalFrame *vf = new FXVerticalFrame( mainHorFrame, LAYOUT_FILL_Y );
+			vf->setWidth( 256 );
 
 			FXHorizontalFrame *hf;
-
 			hf          = new FXHorizontalFrame( vf, LAYOUT_FILL_X | LAYOUT_CENTER_X );
-			previewIcon = new FXLabel( hf, FXString::null, load_fx_icon( getApp(), "resources/no_preview.png" ), 0, LAYOUT_CENTER_X );
+			previewIcon = new FXLabel( hf, FXString::null, nullptr, 0, LAYOUT_CENTER_X );
 			previewIcon->setWidth( 64 );
 			previewIcon->setHeight( 64 );
 
@@ -113,9 +271,24 @@ namespace forge
 			new FXButton( hf, "C", nullptr, this, ID_SURFACE_ALIGN_CENTER, BUTTON_NORMAL | LAYOUT_FILL_X );
 			hf = new FXHorizontalFrame( vf, LAYOUT_FILL_X );
 			new FXButton( hf, "Reset", nullptr, this, ID_SURFACE_RESET, BUTTON_NORMAL | LAYOUT_FILL_X );
+
+			// Right side w/ UV editor
+
+			new FXVerticalSeparator( mainHorFrame, SEPARATOR_RIDGE | LAYOUT_FILL_Y );
+			vf = new FXVerticalFrame( mainHorFrame, LAYOUT_FILL );
+			vf->setWidth( 512 );
+
+			uvFrame_ = new UVFrame( vf );
+
+			localSpaceCheck = new FXCheckButton( vf, "Local Space" );
+			localSpaceCheck->setCheck( false );
 		}
 
-		~SurfaceInspector() override = default;
+		~SurfaceInspector() override
+		{
+			delete previewImage_;
+			delete backgroundImage_;
+		}
 
 		void set_current( ApeBrushFace *face )
 		{
@@ -123,12 +296,6 @@ namespace forge
 			if ( this->face == nullptr )
 			{
 				return;
-			}
-
-			if ( preview != nullptr )
-			{
-				delete preview;
-				preview = nullptr;
 			}
 
 			ApeMaterial *material = face->material;
@@ -142,26 +309,38 @@ namespace forge
 
 			previewPath->setText( materialPath );
 
-#if 0//TODO: this is causing issues...
-			preview = ape_material_load_preview( materialPath );
+			PLImage *preview = ape_material_load_preview( materialPath );
 			if ( preview != nullptr )
 			{
+				FXColor *pixelData = static_cast< FXColor * >( PlGetImageData( preview, 0, 0 ) );
+				FXColor *imageData = new FXColor[ preview->width * preview->height ];
+				memcpy( imageData, pixelData, preview->width * preview->height * 4 );
+
+				backgroundImage_ = new FXImage( getApp(), imageData, IMAGE_KEEP | IMAGE_OWNED, preview->width, preview->height );
+				backgroundImage_->create();
+
 				PLImage *smallImage = PlResizeImage( preview, 64, 64 );
-				if ( smallImage != nullptr )
+				if ( smallImage == nullptr )
 				{
-					PlDestroyImage( preview );
-					preview = smallImage;
+					smallImage = preview;
+				}
 
-					FXIcon *icon = new FXIcon( getApp(), reinterpret_cast< FXColor * >( preview->data[ 0 ] ), 0, IMAGE_KEEP | IMAGE_ALPHACOLOR,
-					                           static_cast< int >( preview->width ),
-					                           static_cast< int >( preview->height ) );
+				pixelData = static_cast< FXColor * >( PlGetImageData( smallImage, 0, 0 ) );
+				imageData = new FXColor[ smallImage->width * smallImage->height ];
+				memcpy( imageData, pixelData, smallImage->width * smallImage->height * 4 );
 
-					icon->create();
+				previewImage_ = new FXIcon( getApp(), imageData, IMAGE_KEEP | IMAGE_OWNED, smallImage->width, smallImage->height );
+				previewImage_->create();
 
-					previewIcon->setIcon( icon );
+				previewIcon->setIcon( previewImage_ );
+
+				if ( smallImage != preview )
+				{
+					PlDestroyImage( smallImage );
 				}
 			}
-#endif
+
+			PlDestroyImage( preview );
 
 			tagField->setText( face->tag );
 
@@ -173,14 +352,22 @@ namespace forge
 
 			rotationField->setText( std::to_string( this->face->materialAngle.x ).c_str() );
 
-			recalc();
+			std::vector< PLVector2 * > uvCoords;
+			for ( unsigned int i = 0; i < face->numVertices; ++i )
+			{
+				uvCoords.push_back( &face->vertices[ i ].textureCoords );
+			}
+
+			uvFrame_->set_active( backgroundImage_, uvCoords );
+
+			update();
 		}
 
 		long on_update( FXObject *, FXSelector, void * )
 		{
 			if ( face == nullptr )
 			{
-				return false;
+				return FALSE;
 			}
 
 			PLVector2 scale;
@@ -194,44 +381,46 @@ namespace forge
 			PLVector3 rotation = {};
 			rotation.x         = std::strtof( rotationField->getText().text(), nullptr );
 
-			ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation );
+			ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation, localSpaceCheck->getCheck() );
 
-			return true;
+			uvFrame_->update();
+
+			return TRUE;
 		}
 
 		long on_fit( FXObject *, FXSelector, void * )
 		{
 			if ( face == nullptr )
 			{
-				return false;
+				return FALSE;
 			}
 
 			ape_brush_face_fit_material( face );
 
 			set_current( face );
-			return true;
+			return TRUE;
 		}
 
 		long on_reset( FXObject *, FXSelector, void * )
 		{
 			if ( face == nullptr )
 			{
-				return false;
+				return FALSE;
 			}
 
 			static constexpr PLVector2 DEFAULT_SCALE = PL_VECTOR2( 0.5f, 0.5f );
 
 			PLVector2 scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
-			ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3 );
+			ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3, localSpaceCheck->getCheck() );
 
 			set_current( face );
-			return true;
+			return TRUE;
 		}
 
 		long on_browse( FXObject *, FXSelector, void * )
 		{
 			mainWindow->open_material_browser();
-			return true;
+			return TRUE;
 		}
 
 		long on_apply_tag( FXObject *, FXSelector, void * )
@@ -243,7 +432,7 @@ namespace forge
 				tagField->setText( face->tag );
 			}
 
-			return true;
+			return TRUE;
 		}
 	};
 
@@ -289,8 +478,8 @@ FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEd
 
 forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world )
     : EditorTab( owner, "Room Editor", forge_cachedIcons[ FORGE_ICON_TYPE_ROOM ], APE_EDITOR_MODE_WORLD ),
-      _gridSizeTarget( this->instance.grid.size ),
-      _gridHideTarget( this->instance.grid.visible )
+      _gridSizeTarget( this->instance_.grid.size ),
+      _gridHideTarget( this->instance_.grid.visible )
 {
 	auto *middleFrame = new FXVerticalFrame( owner, FRAME_RAISED | LAYOUT_FILL );
 
@@ -323,7 +512,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_VERTEX ]    = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/edit_vertex.gif" ), nullptr, this, ID_VERTEX_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_FACE ]      = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/face_mode.gif" ), nullptr, this, ID_FACE_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	geometryModeButtons[ APE_EDITOR_GEOMETRY_MODE_TRANSFORM ] = new FXToggleButton( toolbar, "", "", load_fx_icon( getApp(), "resources/transform.gif" ), nullptr, this, ID_TRANSFORM_MODE, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
-	geometryModeButtons[ this->instance.geometryMode ]->setState( true );
+	geometryModeButtons[ this->instance_.geometryMode ]->setState( true );
 
 	new FXVerticalSeparator( toolbar );
 	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/group.gif" ) );
@@ -359,7 +548,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 		setText( "Room Editor (" + worldName + ")" );
 	}
 
-	ape_editor_set_active_instance( &this->instance );
+	ape_editor_set_active_instance( &this->instance_ );
 }
 
 forge::WorldEditor::~WorldEditor()
@@ -501,7 +690,7 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 		geometryModeButtons[ i ]->setState( geometryMode == i );
 	}
 
-	ape_editor_set_geometry_mode( &this->instance, geometryMode );
+	ape_editor_set_geometry_mode( &this->instance_, geometryMode );
 
 	return TRUE;
 }
@@ -514,12 +703,12 @@ long forge::WorldEditor::on_shift_grid( FXObject *, FXSelector selector, void * 
 			break;
 		case ID_GRID_UP:
 		{
-			ape_grid_move_forward( &instance.grid );
+			ape_grid_move_forward( &instance_.grid );
 			break;
 		}
 		case ID_GRID_DOWN:
 		{
-			ape_grid_move_backward( &instance.grid );
+			ape_grid_move_backward( &instance_.grid );
 			break;
 		}
 	}
@@ -662,7 +851,7 @@ void forge::WorldEditor::set_active_room( ApeRoom *room )
 		return;
 	}
 
-	ape_editor_clear_selection( &instance );
+	ape_editor_clear_selection( &instance_ );
 
 	for ( auto *viewport : viewports )
 	{
@@ -698,15 +887,12 @@ long forge::WorldEditor::on_properties( FXObject *, FXSelector, void * )
 
 void forge::WorldEditor::open_face_inspector()
 {
-	if ( instance.geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+	if ( instance_.geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
 	{
 		return;
 	}
 
-	ApeEditorInstance *instance = ape_editor_get_active_instance();
-	assert( instance != nullptr );
-
-	ApeBrushFace *face = static_cast< ApeBrushFace * >( ape_editor_get_first_selected( instance ) );
+	ApeBrushFace *face = static_cast< ApeBrushFace * >( ape_editor_get_first_selected( &instance_ ) );
 	if ( face == nullptr )
 	{
 		return;

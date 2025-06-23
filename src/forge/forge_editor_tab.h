@@ -18,17 +18,17 @@ namespace forge
 		~EditorTab() override;
 
 	protected:
-		ApeEditorInstance instance{};
+		ApeEditorInstance instance_{};
 
 	public:
 		ApeEditorInstance *get_internal()
 		{
-			return &instance;
+			return &instance_;
 		}
 
 		void set_camera( ApeCamera *camera )
 		{
-			instance.camera = camera;
+			instance_.camera = camera;
 		}
 
 		virtual void autosave() {}

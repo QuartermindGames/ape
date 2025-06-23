@@ -237,34 +237,59 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 	}
 }
 
-static void compute_brush_face_texture_coordinates( ApeBrushFace *face )
+static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool computeLocal )
 {
-	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	const ApeMaterial *material = face->material;
+	assert( material != nullptr );
+	unsigned int width  = ape_material_get_width( material );
+	unsigned int height = ape_material_get_height( material );
+
+	PLVector3 verticies[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
+	if ( computeLocal )
 	{
-		PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
-		if ( fabsf( PlVector3DotProduct( face->normal, up ) ) > 0.99f )
+		PLVector3 origin = {};
+		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			up = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+			origin = PlAddVector3( origin, *face->edgeLoop[ i ]->position );
 		}
 
-		PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( face->normal, up ) );
-		PLVector3 v = PlVector3CrossProduct( face->normal, u );
+		origin = PlDivideVector3F( origin, face->numVertices );
+		for ( unsigned int i = 0; i < face->numVertices; ++i )
+		{
+			verticies[ i ] = PlSubtractVector3( *face->edgeLoop[ i ]->position, origin );
+		}
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < face->numVertices; ++i )
+		{
+			verticies[ i ] = *face->edgeLoop[ i ]->position;
+		}
+	}
 
+	PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
+	if ( fabsf( PlVector3DotProduct( face->normal, up ) ) > 0.99f )
+	{
+		up = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+	}
+
+	PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( face->normal, up ) );
+	PLVector3 v = PlVector3CrossProduct( face->normal, u );
+
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	{
 		PLVector2 coord;
-		coord.x = PlVector3DotProduct( *face->edgeLoop[ i ]->position, u );
-		coord.y = PlVector3DotProduct( *face->edgeLoop[ i ]->position, v );
-
-		const ApeMaterial *material = face->material;
-		assert( material != nullptr );
-		unsigned int width  = ape_material_get_width( material );
-		unsigned int height = ape_material_get_height( material );
+		coord.x = PlVector3DotProduct( verticies[ i ], u );
+		coord.y = PlVector3DotProduct( verticies[ i ], v );
 
 		// apply rotation
-		//TODO: this doesn't work :(
-		float cos = cosf( face->materialAngle.x );
-		float sin = sinf( face->materialAngle.x );
-		coord.x   = coord.x * cos - coord.y * sin;
-		coord.y   = coord.x * sin + coord.y * cos;
+		float ang  = PL_DEG2RAD( face->materialAngle.x );
+		float cos  = cosf( ang );
+		float sin  = sinf( ang );
+		float rotX = coord.x * cos - coord.y * sin;
+		float rotY = coord.x * sin + coord.y * cos;
+		coord.x    = rotX;
+		coord.y    = rotY;
 
 		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
 		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
@@ -298,7 +323,7 @@ void ape_brush_face_fit_material( ApeBrushFace *self )
 	self->materialOffset.x = self->bounds.maxs.x - self->bounds.absOrigin.x / self->materialScale.x;
 	self->materialOffset.y = self->bounds.maxs.y - self->bounds.absOrigin.y / self->materialScale.y;
 
-	compute_brush_face_texture_coordinates( self );
+	compute_brush_face_texture_coordinates( self, true );
 
 	// need to notify the parent to update
 	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
@@ -319,7 +344,7 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	//TODO: reference should be added here - for now it's done by caller :(
 
 	// recompute face texture coordinates, as this is relative to the material size
-	compute_brush_face_texture_coordinates( self );
+	compute_brush_face_texture_coordinates( self, false );
 
 	// need to notify the parent to update
 	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
@@ -329,7 +354,7 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	}
 }
 
-void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation )
+void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation, bool computeLocal )
 {
 	self->materialScale = *scale;
 	self->materialAngle = *rotation;
@@ -339,7 +364,7 @@ void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVect
 	self->materialOffset.y = offset->y;
 
 	// recompute face texture coordinates, as this is relative to the material size
-	compute_brush_face_texture_coordinates( self );
+	compute_brush_face_texture_coordinates( self, computeLocal );
 
 	// need to notify the parent to update
 	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
@@ -641,7 +666,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 
 		ape_brush_face_compute_normal( &self->faces[ i ] );
 		ape_brush_face_compute_bounds( &self->faces[ i ] );
-		compute_brush_face_texture_coordinates( &self->faces[ i ] );
+		compute_brush_face_texture_coordinates( &self->faces[ i ], false );
 		compute_brush_face_tangents( &self->faces[ i ] );
 	}
 
