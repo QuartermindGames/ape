@@ -4,6 +4,32 @@
 
 #include "common_private.h"
 
+ComMathPlaneProjection com_math_compute_plane_projection( const PLVector3 *normal )
+{
+	float nx = fabsf( normal->x );
+	float ny = fabsf( normal->y );
+	float nz = fabsf( normal->z );
+
+	if ( ny > nx && ny < nz )
+	{
+		return COM_MATH_PLANE_PROJECTION_XZ;
+	}
+	if ( nz > nx && nz > ny )
+	{
+		return COM_MATH_PLANE_PROJECTION_XY;
+	}
+
+	return COM_MATH_PLANE_PROJECTION_YZ;
+}
+
+PLVector3 com_math_project_point_onto_plane( const PLVector3 *point, const PLVector3 *planeOrigin, const PLVector3 *planeNormal )
+{
+	float d    = -PlVector3DotProduct( *planeNormal, *planeOrigin );
+	float dist = PlVector3DotProduct( *planeNormal, *point ) + d;
+
+	return PlAddVector3( *point, PlScaleVector3F( *planeNormal, -dist ) );
+}
+
 bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices )
 {
 	if ( numVertices < 4 )

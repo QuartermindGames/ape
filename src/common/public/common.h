@@ -192,7 +192,23 @@ void com_profiler_update_samples( void );
 #define COM_ITERATE_HASHED_LIST( VAR, LIST, ITR ) PL_ITERATE_HASHED_LIST( VAR, typeof( *( VAR ) ), LIST, ITR )
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Math
 /////////////////////////////////////////////////////////////////////////////////////
+
+// Plane
+
+typedef enum ComMathPlaneProjection
+{
+	COM_MATH_PLANE_PROJECTION_YZ,
+	COM_MATH_PLANE_PROJECTION_XZ,
+	COM_MATH_PLANE_PROJECTION_XY,
+} ComMathPlaneProjection;
+
+ComMathPlaneProjection com_math_compute_plane_projection( const PLVector3 *normal );
+
+PLVector3 com_math_project_point_onto_plane( const PLVector3 *point, const PLVector3 *planeOrigin, const PLVector3 *planeNormal );
+
+//////////
 
 /**
  * @brief Determines if a given set of vertices form a convex polygon.
@@ -248,12 +264,23 @@ typedef struct ComCollisionCapsule
 	PLVector3 end;
 } ComCollisionCapsule;
 
+typedef struct ComCollisionCylinder
+{
+	float     radius;
+	float     height;
+	PLVector3 origin;
+} ComCollisionCylinder;
+
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result );
 bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 
 bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, const PLCollisionSphere *sphere2, PLVector3 *result );
 bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
+
+float com_collision_cylinder_get_top( const ComCollisionCylinder *cylinder );
+bool  com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinder, const PLVector3 *point );
+bool  com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylinder, const PLVector3 *vertices, unsigned int numVertices, const PLVector3 *normal );
 
 bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
 

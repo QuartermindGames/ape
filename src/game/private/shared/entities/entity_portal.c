@@ -169,7 +169,7 @@ static void spawn_portal( ApeEntity *self )
 	}
 
 	ape_brush_face_compute_normal( face );
-	ape_brush_face_apply_material_coordinates( face, &PL_VECTOR2( 1.0f, 1.0f ), &PL_VECTOR2( 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+	ape_brush_face_apply_material_coordinates( face, &PL_VECTOR2( 1.0f, 1.0f ), &PL_VECTOR2( 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), false );
 
 	ape_brush_compute_face_bounds( brush );
 	ape_brush_compute_bounds( brush );

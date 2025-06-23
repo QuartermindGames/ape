@@ -115,7 +115,7 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 	}
 }
 
-void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
+void ape_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -468,6 +468,47 @@ void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )
 	ape_draw_debug_line( corners[ 1 ], corners[ 5 ], colour );
 	ape_draw_debug_line( corners[ 2 ], corners[ 6 ], colour );
 	ape_draw_debug_line( corners[ 3 ], corners[ 7 ], colour );
+}
+
+void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColour *colour, unsigned int resolution )
+{
+	static constexpr unsigned int MAX_RESOLUTION = 64;
+
+	if ( resolution == 0 || cylinder->radius == 0.0f )
+	{
+		return;
+	}
+
+	resolution = PL_MIN( resolution, MAX_RESOLUTION - 1 );
+
+	PLVector3 vertices[ MAX_RESOLUTION ] = {};
+	for ( unsigned int i = 0; i < resolution; ++i )
+	{
+		float angle   = PL_DEG2RAD( 360.0f * i / resolution );
+		vertices[ i ] = PL_VECTOR3(
+		        cylinder->origin.x + cosf( angle ) * cylinder->radius,
+		        cylinder->origin.y,
+		        cylinder->origin.z + sinf( angle ) * cylinder->radius );
+	}
+
+	for ( unsigned int i = 0; i < resolution; ++i )
+	{
+		const PLVector3 *a = &vertices[ i ];
+		const PLVector3 *b = &vertices[ i == 0 ? resolution - 1 : i - 1 ];
+
+		// bottom
+		ape_draw_debug_line( *a, *b, *colour );
+
+		// top
+		PLVector3 ua = PL_VECTOR3( a->x, cylinder->origin.y + cylinder->height, a->z );
+		PLVector3 ub = PL_VECTOR3( b->x, cylinder->origin.y + cylinder->height, b->z );
+		ape_draw_debug_line( ua, ub, *colour );
+
+		// line between
+		ape_draw_debug_line( *a, ua, *colour );
+	}
+
+	ape_draw_debug_axis( cylinder->origin, ( PLVector3 ) {}, 2.0f );
 }
 
 void ape_draw_debug_plane( const PLCollisionPlane *plane, PLColour colour, float scale )

@@ -4,6 +4,8 @@
 
 #include "common_private.h"
 
+#include <float.h>
+
 // I'm not going to lie, much of this is stolen from various books,
 // and I'm absolutely clueless how much of it works... so don't ask
 
@@ -14,6 +16,25 @@ static PLVector3 closest_point_on_line_segment( const PLVector3 *a, const PLVect
 	PLVector3 ab = PlSubtractVector3( *b, *a );
 	float     t  = PlVector3DotProduct( PlSubtractVector3( *point, *a ), ab ) / PlVector3DotProduct( ab, ab );
 	return PlScaleVector3( PlAddVector3F( *a, fminf( fmaxf( t, 0.0f ), 1.0f ) ), ab );
+}
+
+static PLVector2 compute_polygon_vertical_bounds( const PLVector3 *vertices, unsigned int numVertices )
+{
+	// compute the maximum and minimum y of the plane
+	float maxY = vertices[ 0 ].y, minY = vertices[ 0 ].y;
+	for ( unsigned int i = 1; i < numVertices; ++i )
+	{
+		if ( vertices[ i ].y > maxY )
+		{
+			maxY = vertices[ i ].y;
+		}
+		if ( vertices[ i ].y < minY )
+		{
+			minY = vertices[ i ].y;
+		}
+	}
+
+	return ( PLVector2 ) { minY, maxY };
 }
 
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, PLVector3 *result )
@@ -191,6 +212,61 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 
 	return false;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Cylinder
+/////////////////////////////////////////////////////////////////////////////////////
+
+float com_collision_cylinder_get_top( const ComCollisionCylinder *cylinder )
+{
+	return cylinder->origin.y + cylinder->height;
+}
+
+bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinder, const PLVector3 *point )
+{
+	float top = com_collision_cylinder_get_top( cylinder );
+	if ( point->y < PL_MIN( cylinder->origin.y, top ) )
+	{
+		return false;
+	}
+	if ( point->y > PL_MAX( cylinder->origin.y, top ) )
+	{
+		return false;
+	}
+
+	PLVector2 x = ( PLVector2 ) { cylinder->origin.x, cylinder->origin.z };
+	PLVector2 y = ( PLVector2 ) { point->x, point->z };
+	if ( PlVector2Distance( &x, &y ) <= cylinder->radius )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylinder, const PLVector3 *vertices, unsigned int numVertices, const PLVector3 *normal )
+{
+	if ( numVertices < 3 )
+	{
+		return false;
+	}
+
+	// compute the maximum and minimum y of the plane
+	PLVector2 vbounds = compute_polygon_vertical_bounds( vertices, numVertices );
+
+	// check if the cylinder is higher or lower than the plane
+	float top = com_collision_cylinder_get_top( cylinder );
+	if ( top < vbounds.x || cylinder->origin.y > vbounds.y )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Capsule
+/////////////////////////////////////////////////////////////////////////////////////
 
 bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
 {

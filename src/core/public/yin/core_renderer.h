@@ -17,6 +17,8 @@ typedef enum ApeCacheGroup
 
 PL_EXTERN_C
 
+typedef struct ComCollisionCylinder ComCollisionCylinder;
+
 typedef struct ApeCamera       ApeCamera;
 typedef struct ApeViewport     ApeViewport;
 typedef struct ApeLight        ApeLight;
@@ -226,7 +228,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColo
  */
 void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour );
 
-void arl_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
+void ape_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
 
 // The following are safe to be called during tick, the above are *not*!
@@ -268,12 +270,21 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
 void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
 
 /**
- * Draw the specified AABB volume at the specified location.
+ * Draw the specified AABB volume at its origin.
  *
  * @param aabb		Pointer to the AABB to draw.
  * @param colour 	Colour of the volume.
  */
 void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
+
+/**
+ * Draw the specified cylinder at its origin.
+ *
+ * @param cylinder		Pointer to the cylinder to draw.
+ * @param colour		Colour of the cylinder.
+ * @param resolution	Resolution of the cylinder.
+ */
+void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColour *colour, unsigned int resolution );
 
 /**
  * Draw the specified plane.
