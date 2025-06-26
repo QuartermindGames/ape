@@ -5,16 +5,16 @@
 - **core:** Introduce flags for shaders to indicate support for lighting
 - ~~**core:** Expose node properties to the editor~~
   - **core:** Allow us to modify and save node properties (possibly need to revise API)
-- Add a way to move the grid around
-- Vertex editing
+- ~~Add a way to move the grid around~~
+- ~~Vertex editing~~
 - Extrude for brushes
-- Move for brushes
+- ~~Move for brushes~~
 - Implement a new tab type with close button, so we can easily close editors
 - Editor is crashing when attempting to close an editor tab (looks like an issue with queued job?)
 - Make the console correctly hide/show, and resize with a window
 
 ## Bugs
-- **forge**: Crash when deleting some objects such as lights (probably due to queue)
+- ~~**forge**: Crash when deleting some objects such as lights (probably due to queue)~~
 
 ## Per-pixel audio maps
 A 16x16 texture (or tiny relative to parent texture) that outlines on a per-pixel basis what sound should be used.
