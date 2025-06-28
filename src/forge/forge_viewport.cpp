@@ -89,14 +89,10 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 	cameraSpeedSlider->setValue( 4 );
 	new FXLabel( this->toolBar, FXString::null, load_fx_icon( getApp(), "resources/cam_speed.gif" ) );
 
+	canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	if ( displayList_ == nullptr )
 	{
-		canvas_      = new FXGLCanvas( this, visual, this, ID_CANVAS, LAYOUT_FILL );
 		displayList_ = canvas_;
-	}
-	else
-	{
-		canvas_ = new FXGLCanvas( this, visual, displayList_, this, ID_CANVAS, LAYOUT_FILL );
 	}
 
 	PLVector3 position = PL_VECTOR3( 0.0f, 80.0f, 0.0f );
@@ -118,6 +114,8 @@ Viewport::~Viewport()
 	ape_viewport_destroy( internalViewport_ );
 
 	canvas_->makeNonCurrent();
+	canvas_->detach();
+
 	delete canvas_;
 }
 
@@ -232,7 +230,7 @@ long Viewport::on_change_camera_modes( FXObject *, FXSelector selector, void * )
 
 long Viewport::on_timer( FXObject *, FXSelector, void * )
 {
-	//if ( is_editor_active() )
+	if ( canvas_->makeCurrent() )
 	{
 		if ( useMouseLook )
 		{
@@ -249,8 +247,6 @@ long Viewport::on_timer( FXObject *, FXSelector, void * )
 
 			ape_camera_set_angles( camera, &angles );
 		}
-
-		canvas_->makeCurrent();
 
 		draw();
 

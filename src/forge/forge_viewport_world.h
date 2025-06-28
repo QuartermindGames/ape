@@ -34,6 +34,8 @@ namespace forge
 
 			ID_MOVE_NODE_TO_ROOM,
 
+			ID_OPEN_PROPERTIES,
+
 			ID_CREATE_NODE,
 			ID_CREATE_NODE_END = ID_CREATE_NODE + APE_WORLD_MAX_NODE_TYPES,
 
@@ -60,6 +62,8 @@ namespace forge
 		long on_move_node_to_room( FXObject *, FXSelector, void * );
 
 		long on_toggle_face_flag( FXObject *, FXSelector, void * );
+
+		long on_open_properties( FXObject *, FXSelector, void * );
 
 		long on_create_node( FXObject *, FXSelector, void * );
 

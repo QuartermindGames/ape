@@ -98,6 +98,8 @@ worldViewportMap[] = {
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MOVE_NODE_TO_ROOM, forge::WorldViewport::on_move_node_to_room ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_OPEN_PROPERTIES, forge::WorldViewport::on_open_properties ),
+
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL, forge::WorldViewport::on_create_node ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT, forge::WorldViewport::on_create_node ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_CAMERA, forge::WorldViewport::on_create_node ),
@@ -344,6 +346,8 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			{
 				moveToMenu->disable();
 			}
+
+			new FXMenuCommand( popup, "Properties...", nullptr, this, ID_OPEN_PROPERTIES );
 			break;
 		}
 	}
@@ -817,6 +821,25 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 	}
 
 	return FALSE;
+}
+
+long forge::WorldViewport::on_open_properties( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	if ( instance == nullptr )
+	{
+		return FALSE;
+	}
+
+	ApeWorldNode *worldNode = ( ApeWorldNode * ) ape_editor_get_first_selected( instance );
+	if ( worldNode == nullptr )
+	{
+		return FALSE;
+	}
+
+	mainWindow->open_properties( worldNode );
+
+	return TRUE;
 }
 
 long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
