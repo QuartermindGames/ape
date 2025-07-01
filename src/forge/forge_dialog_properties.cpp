@@ -214,6 +214,10 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			break;
 	}
 
+	// need to set these again, so transform is updated (because of this dumb idiot)
+	ape_world_node_set_position( node, &node->position );
+	ape_world_node_set_angles( node, &node->angles );
+
 	return true;
 }
 
