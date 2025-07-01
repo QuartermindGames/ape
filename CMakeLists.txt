@@ -134,15 +134,8 @@ add_subdirectory(src/core)
 add_subdirectory(src/acm)
 if (APE_BUILD_TOOLS)
     add_subdirectory(src/forge)
-    if (NOT WIN32)
-        add_subdirectory(src/forge2)
-    endif ()
+    add_subdirectory(src/tools/cook)
+    add_subdirectory(src/tools/fonttool)
+    add_subdirectory(src/tools/matgen)
 endif ()
 add_subdirectory(src/game) # includes shells
-
-# tools
-add_subdirectory(src/tools/cook)
-if (NOT WIN32)
-    add_subdirectory(src/tools/fonttool)
-endif ()
-add_subdirectory(src/tools/matgen)
