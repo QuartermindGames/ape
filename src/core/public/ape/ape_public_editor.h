@@ -132,6 +132,16 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self );
  */
 void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir );
 
+/**
+ * Loads a preview of the specified material, rather than loading the entire thing.
+ *
+ * @param path	Path to the specific material.
+ * @param width
+ * @param height
+ * @return 		Pointer to an image instance or null on fail.
+ */
+PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////

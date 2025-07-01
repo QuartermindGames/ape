@@ -309,38 +309,27 @@ namespace forge
 
 			previewPath->setText( materialPath );
 
-			PLImage *preview = ape_material_load_preview( materialPath );
-			if ( preview != nullptr )
+			PLImage *preview;
+			if ( ( preview = ape_editor_get_material_preview( materialPath, 128, 128 ) ) != nullptr )
+			{
+				FXColor *pixelData = static_cast< FXColor * >( PlGetImageData( preview, 0, 0 ) );
+				FXColor *imageData = new FXColor[ preview->width * preview->height ];
+				memcpy( imageData, pixelData, preview->width * preview->height * sizeof( FXColor ) );
+
+				backgroundImage_ = new FXImage( getApp(), imageData, IMAGE_OWNED, preview->width, preview->height );
+				backgroundImage_->create();
+			}
+			if ( ( preview = ape_editor_get_material_preview( materialPath, 64, 64 ) ) != nullptr )
 			{
 				FXColor *pixelData = static_cast< FXColor * >( PlGetImageData( preview, 0, 0 ) );
 				FXColor *imageData = new FXColor[ preview->width * preview->height ];
 				memcpy( imageData, pixelData, preview->width * preview->height * 4 );
 
-				backgroundImage_ = new FXImage( getApp(), imageData, IMAGE_KEEP | IMAGE_OWNED, preview->width, preview->height );
-				backgroundImage_->create();
-
-				PLImage *smallImage = PlResizeImage( preview, 64, 64 );
-				if ( smallImage == nullptr )
-				{
-					smallImage = preview;
-				}
-
-				pixelData = static_cast< FXColor * >( PlGetImageData( smallImage, 0, 0 ) );
-				imageData = new FXColor[ smallImage->width * smallImage->height ];
-				memcpy( imageData, pixelData, smallImage->width * smallImage->height * 4 );
-
-				previewImage_ = new FXIcon( getApp(), imageData, IMAGE_KEEP | IMAGE_OWNED, smallImage->width, smallImage->height );
+				previewImage_ = new FXIcon( getApp(), imageData, IMAGE_OWNED, preview->width, preview->height );
 				previewImage_->create();
 
 				previewIcon->setIcon( previewImage_ );
-
-				if ( smallImage != preview )
-				{
-					PlDestroyImage( smallImage );
-				}
 			}
-
-			PlDestroyImage( preview );
 
 			tagField->setText( face->tag );
 

@@ -31,14 +31,14 @@ void forge::MaterialBrowser::cache_preview_callback( const char *path, void *use
 	MaterialPreview *preview = new MaterialPreview;
 
 	preview->path = path;
-	preview->icon = ape_material_load_preview( path );
+	preview->icon = ape_editor_get_material_preview( path, 128, 128 );
 	if ( preview->icon == nullptr )
 	{
 		printf( "Failed to load icon preview (%s): %s\n", path, PlGetError() );
 		return;
 	}
 
-	preview->smallIcon = PlResizeImage( preview->icon, 16, 16 );
+	preview->smallIcon = ape_editor_get_material_preview( path, 16, 16 );
 	if ( preview->smallIcon == nullptr )
 	{
 		printf( "Failed to resize icon preview (%s): %s\n", path, PlGetError() );

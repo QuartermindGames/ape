@@ -660,65 +660,6 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	 * a case where we only want to use the shader defaults? */
 }
 
-PLImage *ape_material_load_preview( const char *path )
-{
-	AcmBranch *root = com_acm_load_file( path, "material" );
-	if ( root == nullptr )
-	{
-		ape_warning_( "Failed to load material (%s) for preview!\n", path );
-		return nullptr;
-	}
-
-	PLImage    *preview;
-	const char *previewPath = acm_get_string( root, "previewTexture", nullptr );
-	if ( previewPath != NULL )
-	{
-		preview = PlLoadImage( previewPath );
-	}
-	else
-	{
-		// the painful way...
-		AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
-		if ( diffuseNode == nullptr )
-		{
-			ape_warning_( "Failed to find preview texture to use under material (%s)!\n", path );
-			return nullptr;
-		}
-
-		PLPath buf;
-		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ND_ERROR_SUCCESS )
-		{
-			ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
-			return nullptr;
-		}
-
-		preview = PlLoadImage( buf );
-	}
-
-	if ( preview == nullptr )
-	{
-		ape_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
-		return nullptr;
-	}
-
-	static constexpr unsigned int MAX_PREVIEW_SIZE = 128;
-	if ( preview->width > MAX_PREVIEW_SIZE || preview->height > MAX_PREVIEW_SIZE )
-	{
-		PLImage *newPreview = PlResizeImage( preview, MAX_PREVIEW_SIZE, MAX_PREVIEW_SIZE );
-		if ( newPreview != nullptr )
-		{
-			PlDestroyImage( preview );
-			preview = newPreview;
-		}
-		else
-		{
-			ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
-		}
-	}
-
-	return preview;
-}
-
 static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 {
 	/* each pass specifies how the object should be drawn before

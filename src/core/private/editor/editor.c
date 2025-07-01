@@ -1013,6 +1013,158 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Material Preview
+/////////////////////////////////////////////////////////////////////////////////////
+
+static PLHashTable *editorMaterialPreviews;
+
+static PLImage *get_material_preview_image( const char *path )
+{
+	AcmBranch *root = com_acm_load_file( path, "material" );
+	if ( root == nullptr )
+	{
+		ape_warning_( "Failed to load material (%s) for preview!\n", path );
+		return nullptr;
+	}
+
+	PLImage    *preview;
+	const char *previewPath = acm_get_string( root, "previewTexture", nullptr );
+	if ( previewPath != NULL )
+	{
+		preview = PlLoadImage( previewPath );
+	}
+	else
+	{
+		// the painful way...
+		AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
+		if ( diffuseNode == nullptr )
+		{
+			ape_warning_( "Failed to find preview texture to use under material (%s)!\n", path );
+			return nullptr;
+		}
+
+		PLPath buf;
+		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ND_ERROR_SUCCESS )
+		{
+			ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
+			return nullptr;
+		}
+
+		preview = PlLoadImage( buf );
+	}
+
+	return preview;
+}
+
+static void cleanup_preview( void *user )
+{
+	PLImage *image = user;
+	PlDestroyImage( image );
+}
+
+void ape_editor_flush_material_previews()
+{
+	PlDestroyHashTableEx( editorMaterialPreviews, cleanup_preview );
+	editorMaterialPreviews = nullptr;
+}
+
+PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height )
+{
+	if ( editorMaterialPreviews == nullptr )
+	{
+		editorMaterialPreviews = PlCreateHashTable();
+		if ( editorMaterialPreviews == nullptr )
+		{
+			ape_error_( true, "Failed to create material preview table: %s\n", PlGetError() );
+		}
+	}
+
+	// setup the name we'll use for the cache table
+	PLPath hashName;
+	if ( PlSetupPath( hashName, false, "%s_%u_%u", path, width, height ) == nullptr )
+	{
+		ape_warning_( "Failed to setup hash name for material preview (%s)!\n", path );
+		return nullptr;
+	}
+	size_t hashNameLength = strlen( hashName );
+
+	PLImage *preview = PlLookupHashTableUserData( editorMaterialPreviews, hashName, hashNameLength );
+	if ( preview != nullptr )
+	{
+		return preview;
+	}
+
+	// if the preview is null, then attempt to load it from the preview cache
+
+	const char *appDataDir = com_get_app_data_directory();
+
+	PLPath cachePath;
+	PlSetupPath( cachePath, true, "%s/cache", appDataDir );
+	if ( PlCreatePath( cachePath ) )
+	{
+		PlSetupPath( cachePath, true, "%s/cache/preview_%lu.qoi", appDataDir, PlGenerateHashFNV1( hashName, hashNameLength ) );
+		if ( PlFileExists( cachePath ) )
+		{
+			if ( ( preview = PlLoadImage( cachePath ) ) != nullptr )
+			{
+				PlInsertHashTableNode( editorMaterialPreviews, hashName, hashNameLength, preview );
+				return preview;
+			}
+
+			ape_warning_( "Failed to load cached image (%s): %s\n", cachePath, PlGetError() );
+		}
+		else
+		{
+			ape_print_( "Cache not found for material (%s). Caching...\n", path );
+		}
+	}
+	else
+	{
+		ape_warning_( "Failed to create cache directory (%s): %s\n", cachePath, PlGetError() );
+	}
+
+	// and now the worst case, it's not yet been cached...
+	if ( ( preview = get_material_preview_image( path ) ) == nullptr )
+	{
+		ape_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
+		return nullptr;
+	}
+
+	if ( preview->width > width || preview->height > height )
+	{
+		// maintain aspect if we can
+		if ( preview->width < width )
+		{
+			width = preview->width;
+		}
+		if ( preview->height < height )
+		{
+			height = preview->height;
+		}
+
+		PLImage *newPreview = PlResizeImage( preview, width, height );
+		if ( newPreview != nullptr )
+		{
+			PlDestroyImage( preview );
+			preview = newPreview;
+		}
+		else
+		{
+			ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
+		}
+	}
+
+	if ( !PlWriteImage( preview, cachePath, 0 ) )
+	{
+		ape_warning_( "Failed to write image to cache (%s): %s\n", cachePath, PlGetError() );
+	}
+
+	PlInsertHashTableNode( editorMaterialPreviews, hashName, hashNameLength, preview );
+
+	return preview;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 // Polygon Plotting
 // TODO: move into editor_world.c
 /////////////////////////////////////////////////////////////////////////////////////

@@ -164,14 +164,6 @@ ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial );
 const char *ape_material_get_path( const ApeMaterial *material );
 
 /**
- * Loads a preview of the specified material, rather than loading the entire thing.
- *
- * @param path	Path to the specific material.
- * @return 		Pointer to an image instance or null on fail.
- */
-PLImage *ape_material_load_preview( const char *path );
-
-/**
  * Cache a new material into memory if not so already, otherwise
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
