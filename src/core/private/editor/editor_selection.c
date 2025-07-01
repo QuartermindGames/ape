@@ -293,7 +293,10 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 				}
 			}
 		}
+	}
 
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
 		// lights are throw into a different list, so we need to fetch them here
 		for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numLights; ++i )
 		{
