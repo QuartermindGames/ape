@@ -323,7 +323,7 @@ namespace forge
 			{
 				FXColor *pixelData = static_cast< FXColor * >( PlGetImageData( preview, 0, 0 ) );
 				FXColor *imageData = new FXColor[ preview->width * preview->height ];
-				memcpy( imageData, pixelData, preview->width * preview->height * 4 );
+				memcpy( imageData, pixelData, preview->width * preview->height * sizeof( FXColor ) );
 
 				previewImage_ = new FXIcon( getApp(), imageData, IMAGE_OWNED, preview->width, preview->height );
 				previewImage_->create();
