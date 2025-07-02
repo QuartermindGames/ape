@@ -4,6 +4,11 @@
 
 #include "common.h"
 
+typedef struct ComMathRectI32
+{
+	int x, y, w, h;
+} ComMathRectI32;
+
 static inline bool com_math_vector_check_epsilon( const PLVector3 *va, const PLVector3 *vb )
 {
 	return fabsf( va->x - vb->x ) <= PL_EPSILON &&

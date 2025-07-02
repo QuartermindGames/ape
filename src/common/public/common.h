@@ -248,6 +248,7 @@ PLVector3 com_math_pitch_yaw_to_position( float pitch, float yaw );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Collisions
+// TODO: move these into common/common_collision.h
 /////////////////////////////////////////////////////////////////////////////////////
 
 // forward declare these from plcore -
@@ -256,6 +257,8 @@ typedef struct PLCollisionAABB   PLCollisionAABB;
 typedef struct PLCollisionRay    PLCollisionRay;
 typedef struct PLCollisionPlane  PLCollisionPlane;
 typedef struct PLCollisionSphere PLCollisionSphere;
+
+typedef struct ComMathRectI32 ComMathRectI32;
 
 typedef struct ComCollisionCapsule
 {
@@ -287,6 +290,8 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, PLVector3 *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, PLVector3 *result );
 bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result );
+
+bool com_collision_point_intersect_recti32( const PLVector2 *point, const ComMathRectI32 *rect );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

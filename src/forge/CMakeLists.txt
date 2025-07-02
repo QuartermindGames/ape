@@ -29,6 +29,9 @@ add_library(Forge STATIC
 
         forge_browser_materials.cpp
         forge_dialog_properties.cpp
+
+        SurfaceInspector.cpp
+        UVFrame.cpp
 )
 
 add_dependencies(Forge
@@ -40,12 +43,6 @@ add_dependencies(Forge
 
 set_target_properties(Forge PROPERTIES
         FOLDER "Shells")
-
-#[[
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK4 REQUIRED gtk4)
-pkg_check_modules(ADWAITA REQUIRED libadwaita-1)
-]]
 
 if (NOT UNIX)
     target_include_directories(Forge PRIVATE "glew/include/")

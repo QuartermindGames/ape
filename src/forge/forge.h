@@ -18,6 +18,7 @@
 #include <acm/acm.h>
 
 #include "common.h"
+#include "common/common_math.h"
 
 // Yin
 #include <yin/core.h>

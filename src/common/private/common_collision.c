@@ -1,10 +1,11 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include <float.h>
+
 #include <plcore/pl_physics.h>
 
 #include "common_private.h"
-
-#include <float.h>
+#include "common/common_math.h"
 
 // I'm not going to lie, much of this is stolen from various books,
 // and I'm absolutely clueless how much of it works... so don't ask
@@ -644,4 +645,31 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const PLVec
 	}
 
 	return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 2D Collision
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool com_collision_point_intersect_recti32( const PLVector2 *point, const ComMathRectI32 *rect )
+{
+	if ( point->x <= rect->x )
+	{
+		return false;
+	}
+	if ( point->x >= rect->x + rect->w )
+	{
+		return false;
+	}
+
+	if ( point->y <= rect->y )
+	{
+		return false;
+	}
+	if ( point->y >= rect->y + rect->h )
+	{
+		return false;
+	}
+
+	return true;
 }
