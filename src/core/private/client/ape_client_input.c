@@ -292,6 +292,20 @@ static float clamp_axis_input( float value, float deadzone )
 	return copysignf( ( float ) ( t > 0.0f ), value ) * fminf( t / ( 1.0f - deadzone ), 1.0f ) * ( float ) ( t > 0.0f );
 }
 
+static void list_actions_command( unsigned int argc, char **argv )
+{
+	ApeInputAction *action;
+	COM_ITERATE_LINKED_LIST( action, actionableList, i )
+	{
+		ape_print_( "%s (%u) (%u)\n", action->id, action->numButtonBinds, action->numKeyBinds );
+	}
+}
+
+static void register_console_commands()
+{
+	PlRegisterConsoleCommand( "input_list_actions", "List all registered input actions.", 0, list_actions_command );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -346,6 +360,8 @@ void ape_initialize_input_( void )
 	sdlInputInitialized = true;
 
 	ape_serialize_input_config_( inputConfig );
+
+	register_console_commands();
 }
 
 void ape_shutdown_input_( void )
