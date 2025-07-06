@@ -79,7 +79,7 @@ float gui_font_get_line_spacing( const ApeGuiFont *font );
  */
 ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType );
 
-void guiDestroyFont( ApeGuiFont *font );
+void ape_gui_font_destroy( ApeGuiFont *font );
 
 /**
  * Loads a GUI font from a file specified by the given path.

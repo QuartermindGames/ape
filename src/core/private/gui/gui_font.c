@@ -90,7 +90,7 @@ ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 	return defaultFonts[ defaultType ];
 }
 
-void guiDestroyFont( ApeGuiFont *font )
+void ape_gui_font_destroy( ApeGuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
 	PlgDestroyTexture( font->texture );
@@ -148,7 +148,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	assert( bitmapW != 0 && bitmapH != 0 );
 	if ( bitmapW == 0 || bitmapH == 0 )
 	{
-		guiDestroyFont( font );
+		ape_gui_font_destroy( font );
 		ape_warning_( "Invalid bitmap size for font!\n" );
 		return nullptr;
 	}
@@ -157,7 +157,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	PLImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
 	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
-		guiDestroyFont( font );
+		ape_gui_font_destroy( font );
 		ape_warning_( "Failed to load entirity of bitmap image from font!\n" );
 		return nullptr;
 	}
@@ -166,7 +166,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	font->texture->filter = PLG_TEXTURE_FILTER_LINEAR;
 	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
 	{
-		guiDestroyFont( font );
+		ape_gui_font_destroy( font );
 		ape_warning_( "Failed to upload texture data for font!\n" );
 		return nullptr;
 	}
@@ -319,27 +319,59 @@ void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float sc
 	gui_font_draw_glyph( font, x, y, scale, colour, glyph );
 }
 
+static unsigned char hex_to_num( char c )
+{
+	if ( c >= '0' && c <= '9' ) return c - '0';
+	if ( c >= 'a' && c <= 'f' ) return 10 + ( c - 'a' );
+	if ( c >= 'A' && c <= 'F' ) return 10 + ( c - 'A' );
+	return 0;
+}
+
+static void parse_hex_component( const char **str, const char *end, unsigned char *dst )
+{
+	if ( *str + 1 < end && isxdigit( ( *str )[ 0 ] ) && isxdigit( ( *str )[ 1 ] ) )
+	{
+		*dst = ( hex_to_num( ( *str )[ 0 ] ) << 4 ) | hex_to_num( ( *str )[ 1 ] );
+		*str += 2;
+	}
+	else
+	{
+		*dst = 0;
+	}
+}
+
 void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
 
+	PLColour currentColour = *colour;
+
 	const char *end = string + length;
 	while ( string < end )
 	{
+		if ( *string == '$' && *( string + 1 ) == 'c' )
+		{
+			string += 2;
+
+			parse_hex_component( &string, end, &currentColour.r );
+			parse_hex_component( &string, end, &currentColour.g );
+			parse_hex_component( &string, end, &currentColour.b );
+			parse_hex_component( &string, end, &currentColour.a );
+			continue;
+		}
+
 		uint32_t c = decode_utf8_char( &string );
 		if ( c == '\0' )
 		{
 			break;
 		}
-
 		if ( c == '\n' )
 		{
 			ny += ( self->lineSpacing * scale );
 			nx = x;
 			continue;
 		}
-
 		if ( c == '\t' )
 		{
 			nx += ( self->tabWidth * scale ) * 4.0f;
@@ -354,10 +386,10 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 
 		if ( shadow )
 		{
-			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &PLColour( 0, 0, 0, colour->a ), glyph );
+			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &PLColour( 0, 0, 0, currentColour.a ), glyph );
 		}
 
-		gui_font_draw_glyph( self, nx, ny, scale, colour, glyph );
+		gui_font_draw_glyph( self, nx, ny, scale, &currentColour, glyph );
 		nx += ( ( float ) glyph->w ) * scale;
 	}
 

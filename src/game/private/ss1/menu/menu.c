@@ -300,7 +300,7 @@ void ss1_menu_initialize( void )
 
 void ss1_menu_shutdown()
 {
-	guiDestroyFont( menuFont );
+	ape_gui_font_destroy( menuFont );
 }
 
 void ss1_menu_tick( double delta )
