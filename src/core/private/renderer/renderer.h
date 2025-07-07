@@ -6,7 +6,7 @@
 #include <plgraphics/plg_texture.h>
 #include <plgraphics/plg_mesh.h>
 
-#include "yin/core_camera.h"
+#include "camera/camera.h"
 
 typedef struct PLHashTable PLHashTable;
 
@@ -92,6 +92,9 @@ typedef struct ApeRendererPassState
 
 	PLGBlend blendModeA, blendModeB;
 	bool     overrideBlendMode;
+
+	PLGCompareFunction depthMode;
+	bool               overrideDepthMode;
 
 	bool         mirror;
 	unsigned int depth;

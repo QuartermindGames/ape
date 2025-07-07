@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "core_world.h"
+#include "ape_public_world.h"
 
 typedef enum ApeCameraViewMode
 {

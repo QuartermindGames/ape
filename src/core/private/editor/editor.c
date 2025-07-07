@@ -12,7 +12,7 @@
 #include "renderer/material/material.h"
 
 #include "world/world.h"
-#include "yin/gui_public.h"
+#include "gui/gui_private.h"
 
 static AcmBranch *editorConfigRoot;
 

@@ -4,8 +4,8 @@
 #include "plcore/pl_hashtable.h"
 #include "plcore/pl_linkedlist.h"
 
-#include "yin/core_camera.h"
-#include "yin/core_renderer.h"
+#include "renderer/renderer.h"
+#include "camera/camera.h"
 
 #include "editor.h"
 #include "renderer/renderer.h"

@@ -4,7 +4,8 @@
 
 #include "cook.h"
 #include "model/model_obj.h"
-#include "yin/core_world.h"
+
+#include "ape/ape_public_world.h"
 
 static void import_obj_geometry( const char *path, const char *worldName )
 {

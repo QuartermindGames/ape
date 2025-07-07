@@ -6,7 +6,7 @@
 #include <plgraphics/plg_camera.h>
 #include <plgraphics/plg_texture.h>
 
-#include <yin/core_renderer.h>
+#include "ape_public_renderer.h"
 
 PL_EXTERN_C
 

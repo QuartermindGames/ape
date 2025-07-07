@@ -4,7 +4,8 @@
 
 #include <plcore/pl.h>
 
-#include "core_renderer.h"
+#include "../ape/ape_public_renderer.h"
+
 #include "core_input.h"
 
 /* ======================================================================

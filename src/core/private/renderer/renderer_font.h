@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "yin/core_renderer.h"
+#include "renderer.h"
 
 typedef struct ApeBitmapFont
 {

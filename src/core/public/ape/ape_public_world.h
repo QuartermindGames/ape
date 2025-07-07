@@ -5,7 +5,7 @@
 #include <plcore/pl.h>
 #include <plcore/pl_physics.h>
 
-#include "ape/ape_public_audio.h"
+#include "ape_public_audio.h"
 
 PL_EXTERN_C
 

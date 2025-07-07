@@ -1,6 +1,5 @@
 set(YIN_CORE_CLIENT
         private/client/ape_client.c
-        private/client/client_console.c
         private/client/ape_client_input.c
         private/client/ape_client_gui.c
 
@@ -38,9 +37,18 @@ set(APE_SOURCE_EDITORS
 )
 
 add_library(ApeCore STATIC
-        private/ape_console.c
+        private/ape.c
+        private/ape_filesystem.c
+        private/ape_interface_game.c
+        private/ape_image.c
+        private/ape_memory.c
+        private/ape_scheduler.c
 
         private/camera/camera.c
+
+        # Console
+        private/console/console.c
+        private/console/console_client.c
 
         # Scene Node System
         private/node/node_brush.c
@@ -50,16 +58,6 @@ add_library(ApeCore STATIC
 
         # Networking
         private/net/net.c
-
-        private/ape_filesystem.c
-        private/ape_interface_game.c
-        private/ape_image.c
-        private/ape_memory.c
-        private/ape_scheduler.c
-        private/ape_script.c
-        private/ape_binary_serializer.c
-
-        private/ape.c
 
         private/model/model.c
 

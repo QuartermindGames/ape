@@ -4,8 +4,8 @@
 
 #include "core_shell.h"
 #include "core_scene.h"
-#include "core_camera.h"
 
+#include "ape/ape_public_camera.h"
 #include "ape/ape_public_editor.h"
 
 PL_EXTERN_C

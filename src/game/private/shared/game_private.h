@@ -15,8 +15,8 @@
 #include "yin/core_entity.h"
 #include "yin/core_input.h"
 #include "yin/core_game.h"
-#include "yin/gui_public.h"
 
+#include "ape/ape_public_gui.h"
 #include "ape/ape_public_client.h"
 
 #include "game/game_public.h"

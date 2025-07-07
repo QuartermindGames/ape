@@ -3,7 +3,8 @@
 #pragma once
 
 #include "../ape_private.h"
-#include "yin/gui_public.h"
+
+#include "ape/ape_public_gui.h"
 
 #include <plgraphics/plg.h>
 

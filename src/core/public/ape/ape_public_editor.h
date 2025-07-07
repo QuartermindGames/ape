@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-#include "yin/core_world.h"
+#include "ape_public_world.h"
 
 PL_EXTERN_C
 

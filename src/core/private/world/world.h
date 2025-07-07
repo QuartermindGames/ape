@@ -3,10 +3,10 @@
 #pragma once
 
 #include <plcore/pl_array_vector.h>
-
 #include <plgraphics/plg_mesh.h>
 
-#include "yin/core_world.h"
+#include "ape/ape_public_world.h"
+
 #include "node/node_entity.h"
 #include "audio/audio.h"
 #include "camera/camera.h"
