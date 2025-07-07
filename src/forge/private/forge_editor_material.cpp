@@ -3,8 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include "forge_editor_material.h"
-
-#include "forge/forge_viewport.h"
+#include "forge_viewport.h"
 
 FXDEFMAP( forge::MaterialEditor )
 materialEditorMap[] = {

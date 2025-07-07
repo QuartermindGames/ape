@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "forge/forge.h"
-#include "forge/forge_editor_tab.h"
+#include "forge.h"
+#include "forge_editor_tab.h"
 
 namespace forge
 {

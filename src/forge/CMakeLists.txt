@@ -6,32 +6,32 @@ if (WIN32)
 endif ()
 
 add_library(Forge STATIC
-        forge.cpp
-        forge_about_dialog.cpp
-        forge_console_frame.cpp
-        forge_project_dialog.cpp
+        private/forge.cpp
+        private/forge_about_dialog.cpp
+        private/forge_console_frame.cpp
+        private/forge_project_dialog.cpp
 
-        forge_viewport.cpp
-        forge_viewport_world.cpp
+        private/forge_viewport.cpp
+        private/forge_viewport_world.cpp
 
-        forge_window_main.cpp
+        private/forge_window_main.cpp
 
-        forge_editor_tab.cpp
-        forge_editor_tab.h
+        private/forge_editor_tab.cpp
+        private/forge_editor_tab.h
 
-        forge_model_editor.cpp
-        forge_model_editor.h
-        forge_model_viewport.cpp
-        forge_model_viewport.h
+        private/forge_model_editor.cpp
+        private/forge_model_editor.h
+        private/forge_model_viewport.cpp
+        private/forge_model_viewport.h
 
-        forge_editor_material.cpp
-        forge_editor_world.cpp
+        private/forge_editor_material.cpp
+        private/forge_editor_world.cpp
 
-        forge_browser_materials.cpp
-        forge_dialog_properties.cpp
+        private/forge_browser_materials.cpp
+        private/forge_dialog_properties.cpp
 
-        SurfaceInspector.cpp
-        UVFrame.cpp
+        private/SurfaceInspector.cpp
+        private/UVFrame.cpp
 )
 
 add_dependencies(Forge

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "forge/forge.h"
+#include "forge.h"
 
 namespace forge
 {

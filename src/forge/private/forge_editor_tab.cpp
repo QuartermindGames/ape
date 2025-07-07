@@ -2,7 +2,7 @@
 // Purpose: Base tab implementation for editors.
 // Author:  Mark E. Sowden
 
-#include "forge/forge.h"
+#include "forge.h"
 
 #include "forge_editor_tab.h"
 
