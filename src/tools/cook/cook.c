@@ -85,17 +85,7 @@ int main( int argc, char **argv )
 		ERROR( "Failed to mount project (%s)!\n", projectName );
 	}
 
-	typedef struct LaunchCommand
-	{
-		const char *command;
-		const char *argument;
-	} LaunchCommand;
-
-	// Collect up all commands we've been issued, if any,
-	// as we might not want to operate on the entire project
-	static const unsigned int MAX_COMMANDS = 16;
-	unsigned int              numCommands  = 0;
-	LaunchCommand             commands[ MAX_COMMANDS ];
+	unsigned int numCommands = 0;
 	for ( unsigned int i = 2; i < argc; ++i )
 	{
 		if ( argv[ i ] == NULL )
@@ -103,16 +93,14 @@ int main( int argc, char **argv )
 			break;
 		}
 
-		if ( numCommands >= MAX_COMMANDS )
+		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 )
 		{
-			printf( "Hit command limit for single execution!\n" );
-			break;
+			cook_world_process( argv[ ++i ] );
+			numCommands++;
 		}
-
-		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 || pl_strcasecmp( argv[ i ], "/model" ) == 0 )
+		else if ( pl_strcasecmp( argv[ i ], "/model" ) == 0 )
 		{
-			commands[ numCommands ].command  = argv[ i ];
-			commands[ numCommands ].argument = argv[ ++i ];
+			cook_model_process( argv[ ++i ] );
 			numCommands++;
 		}
 		else
@@ -121,24 +109,8 @@ int main( int argc, char **argv )
 		}
 	}
 
-	// Let's go ahead and operate on them now
 	if ( numCommands > 0 )
 	{
-		printf( "Executing commands...\n" );
-		for ( unsigned int i = 0; i < numCommands; ++i )
-		{
-			printf( " %s \"%s\" -> ", commands[ i ].command, commands[ i ].argument );
-			if ( pl_strcasecmp( commands[ i ].command, "/world" ) == 0 )
-			{
-				cook_world_process( commands[ i ].argument );
-			}
-			else if ( pl_strcasecmp( commands[ i ].command, "/model" ) == 0 )
-			{
-				cook_model_process( commands[ i ].argument );
-			}
-
-			printf( "OK\n" );
-		}
 		return EXIT_SUCCESS;
 	}
 
