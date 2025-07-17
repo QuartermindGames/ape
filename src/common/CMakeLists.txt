@@ -1,4 +1,6 @@
 add_library(ApeCommon STATIC
+        private/memory/memory_shared_ptr.c
+
         private/common.c
         private/common_collision.c
         private/common_math.c
@@ -7,7 +9,7 @@ add_library(ApeCommon STATIC
         private/pack/pack_pkg.c
 )
 
-target_include_directories(ApeCommon PRIVATE ../3rdparty/miniz/)
+target_include_directories(ApeCommon PRIVATE private ../3rdparty/miniz/)
 target_include_directories(ApeCommon PUBLIC public/)
 
 set_target_properties(ApeCommon PROPERTIES

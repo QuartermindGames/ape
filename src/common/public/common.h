@@ -296,4 +296,13 @@ bool com_collision_point_intersect_recti32( const PLVector2 *point, const ComMat
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
+typedef struct ComSharedPtr ComSharedPtr;
+
+ComSharedPtr *com_shared_ptr_create( void *ptr );
+
+void  com_shared_ptr_add( ComSharedPtr *self );
+void  com_shared_ptr_release( ComSharedPtr *self );
+void *com_shared_ptr_get( const ComSharedPtr *self );
+void  com_shared_ptr_set( ComSharedPtr *self, void *ptr );
+
 PL_EXTERN_C_END
