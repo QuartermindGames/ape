@@ -92,5 +92,9 @@ typedef struct GamePlayer
 const char *game_player_get_name_( const GamePlayer *self );
 
 /////////////////////////////////////////////////////////////////
+// Test Methods
+
+void game_test_cylinder_point_collision_( const PLVector3 *pos );
+void game_test_cylinder_polygon_collision_( const PLVector3 *pos );
 
 PL_EXTERN_C_END

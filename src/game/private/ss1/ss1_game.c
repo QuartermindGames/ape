@@ -402,65 +402,6 @@ static void world_tick( double delta )
 	}
 }
 
-static void test_cylinder_point_collision()
-{
-	if ( ss1_gameState.camera == nullptr )
-	{
-		return;
-	}
-
-	ComCollisionCylinder cylinder = {};
-	cylinder.height               = 64.0f;
-	cylinder.origin               = PL_VECTOR3( 16.0f, 16.0f, 32.0f );
-	cylinder.radius               = 16.0f;
-
-	PLVector3 point = ape_camera_get_position( ss1_gameState.camera );
-
-	PLColour colour;
-	if ( com_collision_cylinder_intersect_point( &cylinder, &point ) )
-	{
-		colour = PL_COLOURU8( 0, 255, 0, 255 );
-	}
-	else
-	{
-		colour = PL_COLOURU8( 255, 0, 0, 255 );
-	}
-
-	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
-}
-
-static void test_cylinder_polygon_collision()
-{
-	PLVector3 point = ape_camera_get_position( ss1_gameState.camera );
-	point.y -= 32.0f;
-
-	ComCollisionCylinder cylinder = {};
-	cylinder.height               = 64.0f;
-	cylinder.origin               = point;
-	cylinder.radius               = 16.0f;
-
-	static constexpr PLVector3 vertices[] = {
-	        PL_VECTOR3( 0.0f, 16.0f, 0.0f ),
-	        PL_VECTOR3( 32.0f, 16.0f, 0.0f ),
-	        PL_VECTOR3( 32.0f, 16.0f, 32.0f ),
-	        PL_VECTOR3( 0.0f, 16.0f, 32.0f ),
-	};
-	static constexpr unsigned int numVertices = PL_ARRAY_ELEMENTS( vertices );
-
-	PLColour colour;
-	if ( com_collision_cylinder_intersect_polygon( &cylinder, vertices, numVertices, &PL_VECTOR3( 0.0f, 1.0f, 0.0f ) ) )
-	{
-		colour = PL_COLOURU8( 0, 255, 0, 255 );
-	}
-	else
-	{
-		colour = PL_COLOURU8( 255, 0, 0, 255 );
-	}
-
-	ape_draw_debug_polygon( vertices, numVertices, colour );
-	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
-}
-
 static void ss1_tick( double delta )
 {
 	delta = game_get_time_delta_( delta );
@@ -469,8 +410,14 @@ static void ss1_tick( double delta )
 
 	world_tick( delta );
 
-	//test_cylinder_point_collision();
-	test_cylinder_polygon_collision();
+#if 0
+	if ( ss1_gameState.camera != nullptr )
+	{
+		PLVector3 cameraPos = ape_camera_get_position( ss1_gameState.camera );
+		game_test_cylinder_point_collision_( &cameraPos );
+		game_test_cylinder_polygon_collision_( &cameraPos );
+	}
+#endif
 }
 
 static bool ss1_draw( ApeViewport *viewport )

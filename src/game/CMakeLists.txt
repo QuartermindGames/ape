@@ -8,6 +8,7 @@ set(GAME_SHARED_FILES
         private/shared/game_menu.c
         private/shared/game_server.c
         private/shared/game_team.c
+        private/shared/game_test.c
 
         #############################################
 
