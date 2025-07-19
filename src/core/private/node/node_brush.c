@@ -76,7 +76,20 @@ static void destroy_brush( void *data, ApeWorldNode *parent )
 	}
 
 	PL_DELETE( self->vertices );
+
+	for ( unsigned int i = 0; i < self->numFaces; ++i )
+	{
+		if ( self->faces[ i ].ptr == nullptr )
+		{
+			continue;
+		}
+
+		com_shared_ptr_release( self->faces[ i ].ptr );
+		com_shared_ptr_set( self->faces[ i ].ptr, nullptr );
+		self->faces[ i ].ptr = nullptr;
+	}
 	PL_DELETE( self->faces );
+
 #if !defined( APE_NO_EDITOR )
 	PL_DELETE( self->vertexSelectColours );
 #endif

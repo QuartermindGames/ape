@@ -70,6 +70,8 @@ typedef struct ApeRoom
 #if !defined( APE_NO_EDITOR )
 	PLPath savePath;
 #endif
+
+	struct ApeDecalManager *decalManager;
 } ApeRoom;
 
 PL_EXTERN_C
