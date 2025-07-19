@@ -42,7 +42,7 @@ typedef struct GameServerClient GameServerClient;
  * @param delta Current deltatime value.
  * @return		Delta multiplied by the time modifier.
  */
-double game_get_time_delta_( double delta );
+double game_get_delta_mod_( double delta );
 
 void game_register_standard_entity_components_( void );
 

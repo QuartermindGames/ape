@@ -103,7 +103,7 @@ static void spawn_player_entity( ApeEntity *self )
 
 static void tick_player_entity( ApeEntity *self, double delta )
 {
-	delta = game_get_time_delta_( delta );
+	delta = game_get_delta_mod_( delta );
 
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
 	assert( player != nullptr );

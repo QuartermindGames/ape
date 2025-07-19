@@ -97,7 +97,7 @@ static void spawn_rope( ApeEntity *self )
 
 static void tick_rope( ApeEntity *self, double delta )
 {
-	delta = game_get_time_delta_( delta );
+	delta = game_get_delta_mod_( delta );
 
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );

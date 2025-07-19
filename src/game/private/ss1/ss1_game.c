@@ -404,7 +404,7 @@ static void world_tick( double delta )
 
 static void ss1_tick( double delta )
 {
-	delta = game_get_time_delta_( delta );
+	delta = game_get_delta_mod_( delta );
 
 	game_server_tick_( delta );
 

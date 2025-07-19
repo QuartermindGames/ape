@@ -182,7 +182,7 @@ static void spawn_portal( ApeEntity *self )
 
 static void tick_portal( ApeEntity *self, double delta )
 {
-	delta = game_get_time_delta_( delta );
+	delta = game_get_delta_mod_( delta );
 
 	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
 	assert( portal != nullptr );

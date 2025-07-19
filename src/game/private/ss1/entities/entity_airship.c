@@ -79,7 +79,7 @@ static void spawn_airship( ApeEntity *self )
 
 static void tick_airship( ApeEntity *self, double delta )
 {
-	delta = game_get_time_delta_( delta );
+	delta = game_get_delta_mod_( delta );
 
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
 

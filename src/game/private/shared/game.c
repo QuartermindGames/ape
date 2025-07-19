@@ -113,7 +113,7 @@ void game_shutdown()
 	game_language_shutdown_();
 }
 
-double game_get_time_delta_( double delta )
+double game_get_delta_mod_( double delta )
 {
 	return delta * gameTimeModifier;
 }
