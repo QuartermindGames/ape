@@ -292,7 +292,7 @@ static float clamp_axis_input( float value, float deadzone )
 	return copysignf( ( float ) ( t > 0.0f ), value ) * fminf( t / ( 1.0f - deadzone ), 1.0f ) * ( float ) ( t > 0.0f );
 }
 
-static void list_actions_command( unsigned int argc, char **argv )
+static void list_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	ApeInputAction *action;
 	COM_ITERATE_LINKED_LIST( action, actionableList, i )
@@ -301,9 +301,30 @@ static void list_actions_command( unsigned int argc, char **argv )
 	}
 }
 
+static void dump_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+{
+	static const char *FILENAME = "dump.txt";
+
+	FILE *file = fopen( FILENAME, "w" );
+	if ( file == nullptr )
+	{
+		ape_warning_( "Failed to open destination file (%s)!\n", FILENAME );
+		return;
+	}
+
+	ApeInputAction *action;
+	COM_ITERATE_LINKED_LIST( action, actionableList, i )
+	{
+		fprintf( file, "%s", action->id );
+	}
+
+	fclose( file );
+}
+
 static void register_console_commands()
 {
 	PlRegisterConsoleCommand( "input_list_actions", "List all registered input actions.", 0, list_actions_command );
+	PlRegisterConsoleCommand( "input_dump_actions", "Dumps all of the available actions to a file.", 0, dump_actions_command );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
