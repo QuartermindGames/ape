@@ -25,6 +25,7 @@ typedef struct ApeLight        ApeLight;
 typedef struct ApeRenderTarget ApeRenderTarget;
 typedef struct ApeTexture      ApeTexture;
 typedef struct ApeMaterial     ApeMaterial;
+typedef struct ApeRoom         ApeRoom;
 typedef struct ApeWorld        ApeWorld;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -187,6 +188,15 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights );
 
 unsigned int ape_material_get_flags( const ApeMaterial *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Decal Manager
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ApeDecal        ApeDecal;
+typedef struct ApeDecalManager ApeDecalManager;
+
+////////////////////////////////////////////////////////////////////
 
 /**********************************************************/
 // Fonts

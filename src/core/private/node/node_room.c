@@ -6,6 +6,8 @@
 #include "world/world.h"
 #include "ape/ape_public_game.h"
 
+#include "renderer/renderer.h"
+
 #include "yin/core_game.h"
 
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
@@ -22,6 +24,8 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 
 	room->taggedSurfaceLookup = PlCreateHashTable();
 
+	room->decalManager = ape_decal_manager_create_();
+
 	return room;
 }
 
@@ -36,6 +40,8 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 	}
 
 	PlDestroyHashTable( self->taggedSurfaceLookup );
+
+	ape_decal_manager_destroy_( self->decalManager );
 
 	PL_DELETE( self );
 }
@@ -117,6 +123,8 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
 	acm_push_ui32( root, "reverb", room->reverbPreset );
 
+	ape_decal_manager_serialize_( room->decalManager, root );
+
 	return root;
 }
 
@@ -127,6 +135,8 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *roo
 	self->colour       = com_acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->reverbPreset = ACM_GET_INT( self->flags, root, "reverb", 0 );
+
+	ape_decal_manager_deserialize_( self->decalManager, root );
 
 	ape_world_node_mark_dirty_( APE_WORLD_NODE( self ) );
 
@@ -426,6 +436,11 @@ const char *ape_room_get_path( const ApeRoom *self )
 PLVector3 ape_room_get_gravity( const ApeRoom *self )
 {
 	return PlAddVector3( self->gravity, ape_config_.world.gravityModifier );
+}
+
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir )
+{
+	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir ) != nullptr;
 }
 
 #if !defined( APE_NO_EDITOR )

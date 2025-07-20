@@ -55,3 +55,18 @@ void game_test_cylinder_polygon_collision_( const PLVector3 *pos )
 	ape_draw_debug_polygon( vertices, numVertices, colour );
 	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
 }
+
+bool game_test_fire_decal_( ApeRoom *room, const PLVector3 *pos, const PLVector3 *dir )
+{
+	static ApeMaterial *material = nullptr;
+	if ( material == nullptr )
+	{
+		material = ape_material_cache( "materials/decals/decal_sheet_default.mat.n", APE_CACHE_GROUP_WORLD, false );
+		if ( material == nullptr )
+		{
+			return false;
+		}
+	}
+
+	return ape_room_create_projected_decal( room, material, pos, dir );
+}

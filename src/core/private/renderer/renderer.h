@@ -6,6 +6,8 @@
 #include <plgraphics/plg_texture.h>
 #include <plgraphics/plg_mesh.h>
 
+#include "ape/ape_public_renderer.h"
+
 #include "camera/camera.h"
 
 typedef struct PLHashTable PLHashTable;
@@ -131,6 +133,24 @@ PLGTexture *ape_texture_get_fallback( void );
 
 void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity );
 void ape_clear_flare_queue_( void );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Decal Manager
+/////////////////////////////////////////////////////////////////////////////////////
+
+ApeDecalManager *ape_decal_manager_create_();
+void             ape_decal_manager_destroy_( ApeDecalManager *self );
+
+void ape_decal_manager_deserialize_( ApeDecalManager *self, AcmBranch *root );
+void ape_decal_manager_serialize_( ApeDecalManager *self, AcmBranch *root );
+
+void ape_decal_manager_clear_( ApeDecalManager *self );
+void ape_decal_manager_tick_( ApeDecalManager *self, double delta );
+
+ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos );
+ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir );
+
+void ape_decal_manager_draw_( const ApeDecalManager *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Debug Draw

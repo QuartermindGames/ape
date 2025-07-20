@@ -390,6 +390,8 @@ typedef struct ApeBrushFace
 	ApeBrushFace *destination;
 
 	ApeBrush *parent;
+
+	struct ComSharedPtr *ptr;
 } ApeBrushFace;
 
 void ape_brush_face_fit_material( ApeBrushFace *self );
@@ -598,7 +600,7 @@ const char *ape_room_get_save_path( const ApeRoom *self );
 
 PLVector3 ape_room_get_gravity( const ApeRoom *self );
 
-void ape_world_room_destroy( ApeRoom *self );
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting

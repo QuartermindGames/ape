@@ -11,6 +11,7 @@ set(YIN_CORE_CLIENT
         private/renderer/post/post_dither.c
         private/renderer/post/post_fxaa.c
 
+        private/renderer/renderer_decal.c
         private/renderer/renderer_flare.c
         private/renderer/renderer_font.c
         private/renderer/renderer_particle.c

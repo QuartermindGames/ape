@@ -944,14 +944,23 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		}
 	}
 
-	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_WIREFRAME )
+	switch ( camera->drawMode )
 	{
-		draw_room_wireframe( camera );
-	}
-	else
-	{
-		draw_solid_room( camera, visibleRoom, false );
-		draw_translucent_room( camera, visibleRoom, false );
+		default:
+		case APE_CAMERA_DRAW_MODE_WIREFRAME:
+		{
+			draw_room_wireframe( camera );
+			break;
+		}
+		case APE_CAMERA_DRAW_MODE_TEXTURED:
+		case APE_CAMERA_DRAW_MODE_SHADED:
+		{
+			draw_solid_room( camera, visibleRoom, false );
+			draw_translucent_room( camera, visibleRoom, false );
+
+			ape_decal_manager_draw_( visibleRoom->room->decalManager );
+			break;
+		}
 	}
 
 	COM_PROFILE_FUNCTION_END();

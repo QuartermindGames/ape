@@ -88,6 +88,8 @@ void ape_shutdown_game_( void )
 
 static void sync_world_nodes( ApeWorldNode *worldNode )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	ApeWorldNode *childNode;
 	COM_ITERATE_LINKED_LIST( childNode, worldNode->children, i )
 	{
@@ -107,15 +109,38 @@ static void sync_world_nodes( ApeWorldNode *worldNode )
 
 		sync_world_nodes( childNode );
 	}
+
+	COM_PROFILE_FUNCTION_END();
+}
+
+static bool tick_room_decals( ApeWorldNode *node, void *user )
+{
+	assert( ape_world_node_is_valid( node, APE_WORLD_NODE_TYPE_ROOM ) );
+
+	ApeRoom *room = ( ApeRoom * ) node;
+	if ( room->decalManager == nullptr )
+	{
+		return true;
+	}
+
+	ape_decal_manager_tick_( room->decalManager, *( double * ) user );
+
+	return true;
 }
 
 void ape_tick_game_server_( double delta )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	ApeWorld *world = game_get_current_world();
 	if ( world != nullptr )
 	{
 		ape_world_node_compute_bounds_( &world->base );
 		ape_world_tick_entities_( world, delta );
+
+		// and now we need to tick the decals for each room,
+		// given each has its own decal manager
+		ape_world_node_visit_children( APE_WORLD_NODE( world ), APE_WORLD_NODE_TYPE_ROOM, false, tick_room_decals, &delta );
 
 		// send any updates from the server to the clients
 		sync_world_nodes( APE_WORLD_NODE( world ) );
@@ -125,6 +150,8 @@ void ape_tick_game_server_( double delta )
 	{
 		ape_gameInterface->serverTick( delta );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_spawn_world_( const char *path )

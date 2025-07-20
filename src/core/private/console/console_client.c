@@ -639,6 +639,9 @@ void ape_console_register_cl_commands_( void )
 
 void ape_register_renderer_console_variables_( void );
 void ape_renderer_world_register_console_variables_();
+
+void ape_decal_manager_register_console_();
+
 void ape_console_register_cl_variables_( void )
 {
 	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, true );
@@ -667,6 +670,7 @@ void ape_console_register_cl_variables_( void )
 	PlRegisterConsoleVariable( "console.fontScale", "Set the font scale for the console.", "1.0", PL_VAR_F32, &consoleFontScale, nullptr, true );
 
 	ape_register_renderer_console_variables_();
+	ape_decal_manager_register_console_();
 	ape_renderer_world_register_console_variables_();
 
 	ape_audio_register_console_variables_();

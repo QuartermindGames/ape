@@ -97,4 +97,6 @@ const char *game_player_get_name_( const GamePlayer *self );
 void game_test_cylinder_point_collision_( const PLVector3 *pos );
 void game_test_cylinder_polygon_collision_( const PLVector3 *pos );
 
+bool game_test_fire_decal_( ApeRoom *room, const PLVector3 *pos, const PLVector3 *dir );
+
 PL_EXTERN_C_END

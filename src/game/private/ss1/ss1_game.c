@@ -52,16 +52,7 @@ extern ApeEntityClassDefinition ss1_airshipEntityClass;
 extern ApeEntityClassDefinition ss1_pawnEntityClass;
 extern ApeEntityClassDefinition ss1_playerEntityClass;
 
-static void toggle_camera( ApeInputState state, const char *id )
-{
-	if ( !( state & APE_INPUT_STATE_PRESSED ) )
-	{
-		return;
-	}
-
-	ss1_gameState.oldCameraState = ss1_gameState.cameraState;
-	ss1_gameState.cameraState    = ( ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON ) ? SS1_CAMERA_STATE_FREE : SS1_CAMERA_STATE_THIRD_PERSON;
-}
+void ss1_actions_register_();
 
 static bool ss1_initialize()
 {
@@ -75,7 +66,7 @@ static bool ss1_initialize()
 	ape_register_entity_class( &ss1_pawnEntityClass );
 	ape_register_entity_class( &ss1_playerEntityClass );
 
-	ape_client_input_register_action( "ss1_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
+	ss1_actions_register_();
 
 	PL_ZERO_( ss1_gameState );
 

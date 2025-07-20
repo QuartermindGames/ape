@@ -60,6 +60,8 @@ set(SS1_SOURCES
         private/ss1/entities/entity_player.c
 
         private/ss1/menu/menu.c
+
+        private/ss1/ss1_actions.c
         private/ss1/ss1_game.c
         private/ss1/ss1_mission.c
         private/ss1/ss1_name_generator.c
