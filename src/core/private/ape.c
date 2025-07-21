@@ -15,7 +15,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static unsigned int numTicks = 0;
+static uint64_t numTicks = 0;
 
 static AcmBranch *engineConfig;
 static AcmBranch *userConfig;
@@ -224,7 +224,7 @@ void ape_shutdown( void )
 	engineInitialized = false;
 }
 
-unsigned int ape_get_num_ticks( void )
+uint64_t ape_get_num_ticks( void )
 {
 	return numTicks;
 }
@@ -258,7 +258,17 @@ void ape_tick_frame()
 		}
 	}
 
-	numTicks++;
+	// we would have to run for an infinitely long time to hit this,
+	// but regardless, it makes me feel better having it here...
+	if ( numTicks == INT64_MAX )
+	{
+		ape_warning_( "Hit maximum tick limit, resetting!\n" );
+		numTicks = 0;
+	}
+	else
+	{
+		numTicks++;
+	}
 
 	COM_PROFILE_FUNCTION_END();
 }

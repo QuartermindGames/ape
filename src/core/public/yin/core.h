@@ -27,7 +27,7 @@ void ape_tick_frame();
 struct AcmBranch *ape_get_config( void );
 struct AcmBranch *ape_get_user_config( void );
 
-unsigned int ape_get_num_ticks( void );
+uint64_t ape_get_num_ticks( void );
 
 /**
  * Check if the engine is operating in a dedicated terminal-only mode, so
