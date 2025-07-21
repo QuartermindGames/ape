@@ -139,13 +139,14 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 		{
 			dstBrush->faces[ j ].vertices[ k ].position      = &dstBrush->vertices[ srcBrush->faces[ j ].vertices[ k ].position - srcBrush->vertices ];
 			dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
-			dstBrush->faces[ j ].vertices[ k ].tangent       = srcBrush->faces[ j ].vertices[ k ].tangent;
-			dstBrush->faces[ j ].vertices[ k ].bitangent     = srcBrush->faces[ j ].vertices[ k ].bitangent;
 			dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
 
 			// and now for the edge loop...
 			dstBrush->faces[ j ].edgeLoop[ k ] = &dstBrush->faces[ j ].vertices[ srcBrush->faces[ j ].edgeLoop[ k ] - srcBrush->faces[ j ].vertices ];
 		}
+
+		dstBrush->faces[ j ].tangent   = srcBrush->faces[ j ].tangent;
+		dstBrush->faces[ j ].bitangent = srcBrush->faces[ j ].bitangent;
 
 		strcpy( dstBrush->faces[ j ].destinationTag, srcBrush->faces[ j ].destinationTag );
 
@@ -225,6 +226,36 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 
 static void compute_brush_face_tangents( ApeBrushFace *face )
 {
+	face->tangent = face->bitangent = ( PLVector3 ) {};
+
+	assert( face->numVertices >= 3 );
+
+#if 1
+
+	ApeBrushFaceVertex *v0 = face->edgeLoop[ 0 ];
+	ApeBrushFaceVertex *v1 = face->edgeLoop[ 1 ];
+	ApeBrushFaceVertex *v2 = face->edgeLoop[ 2 ];
+
+	PLVector3 edge1 = PlSubtractVector3( *v1->position, *v0->position );
+	PLVector3 edge2 = PlSubtractVector3( *v2->position, *v0->position );
+
+	PLVector2 deltaUV1 = PlSubtractVector2( &v1->textureCoords, &v0->textureCoords );
+	PLVector2 deltaUV2 = PlSubtractVector2( &v2->textureCoords, &v0->textureCoords );
+
+	float f = 1.0f / ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y );
+
+	face->tangent.x = f * ( deltaUV2.y * edge1.x - deltaUV1.y * edge2.x );
+	face->tangent.y = f * ( deltaUV2.y * edge1.y - deltaUV1.y * edge2.y );
+	face->tangent.z = f * ( deltaUV2.y * edge1.z - deltaUV1.y * edge2.z );
+	face->tangent   = PlNormalizeVector3( face->tangent );
+
+	face->bitangent.x = f * ( -deltaUV2.x * edge1.x + deltaUV1.x * edge2.x );
+	face->bitangent.y = f * ( -deltaUV2.x * edge1.y + deltaUV1.x * edge2.y );
+	face->bitangent.z = f * ( -deltaUV2.x * edge1.z + deltaUV1.x * edge2.z );
+	face->bitangent   = PlNormalizeVector3( face->bitangent );
+
+#else// my original incorrect approach...
+
 	assert( face->numVertices >= 3 );
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
@@ -248,6 +279,8 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 		current->tangent = next->tangent = prev->tangent = tangent;
 		current->bitangent = next->bitangent = prev->bitangent = bitangent;
 	}
+
+#endif
 }
 
 static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool computeLocal )

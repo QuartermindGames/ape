@@ -12,7 +12,8 @@ const char *ss1_name_generator_generate( char *buffer, size_t size )
 	        "he", "fo", "ru", "ku",
 	        "cu", "eu", "hu", "fu" };
 
-	unsigned int maxSize = ( rand() % size - 1 );
+	unsigned int seed    = com_random_seed_initialize();
+	unsigned int maxSize = com_random_int( &seed ) % size - 1;
 	if ( maxSize < 4 )
 	{
 		maxSize = 4;
@@ -21,13 +22,13 @@ const char *ss1_name_generator_generate( char *buffer, size_t size )
 	char *p = buffer;
 	for ( size_t i = 0; i < maxSize; i += 2 )
 	{
-		unsigned int s = rand() % PL_MAX_ARRAY_INDEX( segments );
-		*p++ = segments[ s ][ 0 ];
-		*p++ = segments[ s ][ 1 ];
+		unsigned int s = com_random_int( &seed ) % PL_MAX_ARRAY_INDEX( segments );
+		*p++           = segments[ s ][ 0 ];
+		*p++           = segments[ s ][ 1 ];
 	}
 
 	// Ensure the first character is uppercase and null termination.
-	buffer[ 0 ] = ( char ) toupper( buffer[ 0 ] );
+	buffer[ 0 ]       = ( char ) toupper( buffer[ 0 ] );
 	buffer[ maxSize ] = '\0';
 	return buffer;
 }

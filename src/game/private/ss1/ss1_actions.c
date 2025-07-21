@@ -6,7 +6,13 @@
 
 static void fire_decal( ApeInputState state, const char * )
 {
-	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	static int64_t nextFire = 0;
+	if ( nextFire > ape_get_num_ticks() )
+	{
+		return;
+	}
+
+	if ( state & APE_INPUT_STATE_RELEASED )
 	{
 		return;
 	}
@@ -24,20 +30,24 @@ static void fire_decal( ApeInputState state, const char * )
 
 	PLVector3 pos = ape_camera_get_position( ss1_gameState.camera );
 	PLVector3 dir = ape_camera_get_forward( ss1_gameState.camera );
+	dir           = PlInverseVector3( dir );//TODO: sigh... camera is inverted
 
-	//TODO: sigh...
-	dir = PlInverseVector3( dir );
+	// apply some randomisation to the fire direction
 
-	game_print_( "Firing decal!\n" );
+	unsigned int seed = com_random_seed_initialize();
 
-	if ( !game_test_fire_decal_( room, &pos, &dir ) )
-	{
-		game_print_( "Miss :(\n" );
-	}
-	else
-	{
-		game_print_( "Hit!\n" );
-	}
+	float     spreadAmount = PL_DEG2RAD( 16.0f );
+	PLVector3 spread       = PL_VECTOR3(
+            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
+            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
+            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ) );
+
+	dir = PlAddVector3( dir, spread );
+	dir = PlNormalizeVector3( dir );
+
+	game_test_fire_decal_( room, &pos, &dir );
+
+	nextFire = ape_get_num_ticks() + 8;
 }
 
 static void toggle_camera( ApeInputState state, PL_UNUSED const char *id )

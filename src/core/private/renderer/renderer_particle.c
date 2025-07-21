@@ -80,7 +80,7 @@ SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 	if ( emitterTemplate == NULL )
 	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
-		return NULL;
+		return nullptr;
 	}
 
 	SS_Arl_ParticleEmitter *emitter = PlMAlloc( sizeof( SS_Arl_ParticleEmitter ), true );
@@ -100,6 +100,8 @@ SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void )
 
 	emitter->startScale = 10.0f;
 	emitter->endScale   = 0.0f;
+
+	emitter->seed = com_random_seed_initialize();
 
 	return emitter;
 }
@@ -127,11 +129,6 @@ void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
 	PlFree( emitter );
 }
 
-static int rand_int( int max )
-{
-	return ( rand() % max );
-}
-
 static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *emitter )
 {
 	if ( particle->life <= 0 )
@@ -144,9 +141,9 @@ static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *em
 	particle->oldTransform = particle->transform;
 
 	PLVector3 force;
-	force.x = emitter->force.x + ( PlGenerateRandomFloat( emitter->forceVar.x ) );
-	force.y = emitter->force.y + ( PlGenerateRandomFloat( emitter->forceVar.y ) );
-	force.z = emitter->force.z + ( PlGenerateRandomFloat( emitter->forceVar.z ) );
+	force.x = emitter->force.x + com_random_float( &emitter->seed, emitter->forceVar.x );
+	force.y = emitter->force.y + com_random_float( &emitter->seed, emitter->forceVar.y );
+	force.z = emitter->force.z + com_random_float( &emitter->seed, emitter->forceVar.z );
 
 	particle->transform.translation = PlAddVector3( particle->transform.translation, force );
 
@@ -173,26 +170,27 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	int numParticles = PlGetNumLinkedListNodes( emitter->particles );
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
-		SS_Arl_Particle *particle = PlMAlloc( sizeof( SS_Arl_Particle ), true );
-		particle->emitter         = emitter;
+		SS_Arl_Particle *particle = PL_NEW( SS_Arl_Particle );
+
+		particle->emitter = emitter;
 
 		PLVector3 translationMod;
-		translationMod.x                = emitter->transform.translation.x + ( PlGenerateRandomFloat( emitter->transformVar.translation.x ) + PlGenerateRandomFloat( -emitter->transformVar.translation.x ) );
-		translationMod.y                = emitter->transform.translation.y + ( PlGenerateRandomFloat( emitter->transformVar.translation.y ) + PlGenerateRandomFloat( -emitter->transformVar.translation.y ) );
-		translationMod.z                = emitter->transform.translation.z + ( PlGenerateRandomFloat( emitter->transformVar.translation.z ) + PlGenerateRandomFloat( -emitter->transformVar.translation.z ) );
+		translationMod.x                = emitter->transform.translation.x + ( com_random_float( &emitter->seed, emitter->transformVar.translation.x ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.x ) );
+		translationMod.y                = emitter->transform.translation.y + ( com_random_float( &emitter->seed, emitter->transformVar.translation.y ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.y ) );
+		translationMod.z                = emitter->transform.translation.z + ( com_random_float( &emitter->seed, emitter->transformVar.translation.z ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
-		particle->life = emitter->particleLife + ( emitter->particleLifeVar * rand_int( 100 ) );
+		particle->life = emitter->particleLife + emitter->particleLifeVar * com_random_int( &emitter->seed ) % 100;
 
 		PLColourF32 startColour, endColour;
-		startColour.r = emitter->startColour.r + ( emitter->startColourVar.r * PlGenerateRandomFloat( 1.0f ) );
-		startColour.g = emitter->startColour.g + ( emitter->startColourVar.g * PlGenerateRandomFloat( 1.0f ) );
-		startColour.b = emitter->startColour.b + ( emitter->startColourVar.b * PlGenerateRandomFloat( 1.0f ) );
-		startColour.a = emitter->startColour.a + ( emitter->startColourVar.a * PlGenerateRandomFloat( 1.0f ) );
-		endColour.r   = emitter->endColour.r + ( emitter->endColourVar.r * PlGenerateRandomFloat( 1.0f ) );
-		endColour.g   = emitter->endColour.g + ( emitter->endColourVar.g * PlGenerateRandomFloat( 1.0f ) );
-		endColour.b   = emitter->endColour.b + ( emitter->endColourVar.b * PlGenerateRandomFloat( 1.0f ) );
-		endColour.a   = emitter->endColour.a + ( emitter->endColourVar.a * PlGenerateRandomFloat( 1.0f ) );
+		startColour.r = emitter->startColour.r + emitter->startColourVar.r * com_random_float( &emitter->seed, 1.0f );
+		startColour.g = emitter->startColour.g + emitter->startColourVar.g * com_random_float( &emitter->seed, 1.0f );
+		startColour.b = emitter->startColour.b + emitter->startColourVar.b * com_random_float( &emitter->seed, 1.0f );
+		startColour.a = emitter->startColour.a + emitter->startColourVar.a * com_random_float( &emitter->seed, 1.0f );
+		endColour.r   = emitter->endColour.r + emitter->endColourVar.r * com_random_float( &emitter->seed, 1.0f );
+		endColour.g   = emitter->endColour.g + emitter->endColourVar.g * com_random_float( &emitter->seed, 1.0f );
+		endColour.b   = emitter->endColour.b + emitter->endColourVar.b * com_random_float( &emitter->seed, 1.0f );
+		endColour.a   = emitter->endColour.a + emitter->endColourVar.a * com_random_float( &emitter->seed, 1.0f );
 
 		particle->colour        = startColour;
 		particle->deltaColour.r = ( ( endColour.r - startColour.r ) / 1.0f ) / ( float ) particle->life;
@@ -200,8 +198,8 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
-		float startScale     = emitter->startScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
-		float endScale       = emitter->endScale + ( emitter->scaleVar * PlGenerateRandomFloat( 1.0f ) );
+		float startScale     = emitter->startScale + emitter->scaleVar * com_random_float( &emitter->seed, 1.0f );
+		float endScale       = emitter->endScale + emitter->scaleVar * com_random_float( &emitter->seed, 1.0f );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
 		particle->bounds.maxs = PL_VECTOR3( 2.0f, 2.0f, 2.0f );
@@ -210,7 +208,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		particle->node = PlInsertLinkedListNode( emitter->particles, particle );
 
 		emitter->numTicks = 0;
-		emitter->maxTicks = emitter->emissionRate + ( emitter->emissionVar * rand_int( 100 ) );
+		emitter->maxTicks = emitter->emissionRate + emitter->emissionVar * com_random_int( &emitter->seed ) % 100;
 	}
 
 	/* simulate all of the existing particles that we've emitted */
@@ -221,8 +219,8 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
 		if ( i == 0 )
 		{
-			emitter->bounds.maxs = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
-			emitter->bounds.mins = ( PLVector3 ){ particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
+			emitter->bounds.maxs = ( PLVector3 ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
+			emitter->bounds.mins = ( PLVector3 ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 		}
 
 		node = PlGetNextLinkedListNode( node );

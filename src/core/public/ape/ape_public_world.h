@@ -352,7 +352,6 @@ typedef struct ApeBrushFaceVertex
 {
 	PLVector3  *position;
 	PLVector2   textureCoords;
-	PLVector3   tangent, bitangent;
 	PLVector2   lightmapCoords;
 	PLVector3   normal;
 	PLColourF32 colour;
@@ -371,6 +370,9 @@ typedef struct ApeBrushFace
 	PLVector2    materialScale;
 	PLVector3    materialOffset;
 	PLVector3    materialAngle;
+
+	PLVector3 tangent;
+	PLVector3 bitangent;
 
 	PLVector3   normal;
 	PLColourF32 colour;

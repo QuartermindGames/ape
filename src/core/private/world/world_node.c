@@ -767,11 +767,12 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 					const ApeCamera *camera = editorInstance->camera;
 					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 					{
-						srand( ( intptr_t ) brush );
+						unsigned int seed = ( unsigned int ) brush;
+
 						colour = PL_COLOURU8(
-						        ( uint8_t ) ( rand() % 256 ),
-						        ( uint8_t ) ( rand() % 256 ),
-						        ( uint8_t ) ( rand() % 256 ), 255 );
+						        ( uint8_t ) ( com_random_int( &seed ) % 256 ),
+						        ( uint8_t ) ( com_random_int( &seed ) % 256 ),
+						        ( uint8_t ) ( com_random_int( &seed ) % 256 ), 255 );
 					}
 					else if ( camera->drawMode == APE_CAMERA_DRAW_MODE_PORTALS )
 					{
@@ -795,8 +796,8 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 				const unsigned int idx = PlgAddMeshVertex( self->mesh, vertex->position, &vertex->normal, &colour, &vertex->textureCoords );
 
 				// these have to be set seperate for now, need an api for it
-				self->mesh->vertices[ idx ].tangent   = vertex->tangent;
-				self->mesh->vertices[ idx ].bitangent = vertex->bitangent;
+				self->mesh->vertices[ idx ].tangent   = face->tangent;
+				self->mesh->vertices[ idx ].bitangent = face->bitangent;
 			}
 		}
 	}

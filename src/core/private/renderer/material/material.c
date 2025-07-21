@@ -173,6 +173,37 @@ unsigned int ape_material_get_flags( const ApeMaterial *self )
 }
 
 /**
+ * Convert the given tag into a compare mode type.
+ */
+static PLGCompareFunction get_compare_mode_by_tag( const char *tag )
+{
+	static const char *compareModeTags[] = {
+	        [PLG_COMPARE_NEVER]    = "never",
+	        [PLG_COMPARE_LESS]     = "less",
+	        [PLG_COMPARE_EQUAL]    = "equal",
+	        [PLG_COMPARE_LEQUAL]   = "lequal",
+	        [PLG_COMPARE_GREATER]  = "greater",
+	        [PLG_COMPARE_NOTEQUAL] = "notequal",
+	        [PLG_COMPARE_GEQUAL]   = "gequal",
+	        [PLG_COMPARE_ALWAYS]   = "always",
+	};
+	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( compareModeTags ) == PLG_MAX_COMPARE_FUNCTIONS, "" );
+
+	for ( int i = 0; i < PLG_MAX_COMPARE_FUNCTIONS; ++i )
+	{
+		if ( strcmp( tag, compareModeTags[ i ] ) != 0 )
+		{
+			continue;
+		}
+
+		return i;
+	}
+
+	ape_warning_( "Invalid compare mode specified, \"%s\", defaulting to \"less\"!\n", tag );
+	return PLG_COMPARE_LESS;
+}
+
+/**
  * Convert the given tag into a blend mode type.
  */
 static int get_blend_mode_by_tag( const char *tag )
@@ -631,13 +662,18 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		materialPass->blendMode[ 1 ] = PLG_BLEND_NONE;
 	}
 
+	const char *tmp;
+	if ( ( tmp = acm_get_string( root, "depthMode", "less" ) ) != nullptr )
+	{
+		materialPass->depthMode = get_compare_mode_by_tag( tmp );
+	}
+
 	materialPass->depthTest = acm_get_bool( root, "depthTest", materialPass->depthTest );
 	materialPass->cullMode  = ACM_GET_UINT( materialPass->cullMode, root, "cullMode", materialPass->cullMode );
 
-	const char *textureFilterPtr = acm_get_string( root, "textureFilterMode", nullptr );
-	if ( textureFilterPtr != NULL )
+	if ( ( tmp = acm_get_string( root, "textureFilterMode", nullptr ) ) != NULL )
 	{
-		materialPass->textureFilter = get_texture_filter_by_name( textureFilterPtr );
+		materialPass->textureFilter = get_texture_filter_by_name( tmp );
 	}
 
 	/* now handle any specific parameters the material provides */
@@ -1141,6 +1177,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 			{
 				PlgSetBlendMode( curPass->blendMode[ 0 ], curPass->blendMode[ 1 ] );
 			}
+			if ( !ape_rendererState_.overrideDepthMode )
+			{
+				//PlgDepthBufferFunction( curPass->depthMode );
+			}
 
 			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
 
@@ -1235,8 +1275,13 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		}
 		else
 		{
-			ape_rendererPerformance_.numTriangles += ( mesh->num_verts / 2 );
+			ape_rendererPerformance_.numTriangles += mesh->num_verts / 2;
 		}
+
+		// reset everything back before the next pass
+
+		//PlgDepthBufferFunction( ape_rendererState_.depthMode );
+		//PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
 	}
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );

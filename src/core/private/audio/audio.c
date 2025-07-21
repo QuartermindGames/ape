@@ -88,13 +88,14 @@ static void test_3d_command( unsigned int, char ** )
 		return;
 	}
 
-	PLVector3 position = {
-	        .x = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
-	        .y = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
-	        .z = PlGenerateRandomFloat( 1024.0f ) - PlGenerateRandomFloat( 1024.0f ),
-	};
+	unsigned int seed     = com_random_seed_initialize();
+	PLVector3    position = {
+	           .x = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
+	           .y = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
+	           .z = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
+    };
 
-	ape_audio_sample_emit( sample, &position, 100, PlGenerateRandomFloat( 2.0f ) );
+	ape_audio_sample_emit( sample, &position, 100, com_random_float( &seed, 2.0f ) );
 	ape_audio_sample_release( sample );
 }
 

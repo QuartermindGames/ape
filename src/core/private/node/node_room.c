@@ -15,11 +15,6 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	ApeRoom *room = PL_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	// assign the room a random colour so it can be identified per debugging
-	room->colour = PL_COLOURF32RGB( PlUniform0To1Random(),
-	                                PlUniform0To1Random(),
-	                                PlUniform0To1Random() );
-
 	room->gravity = PL_VECTOR3( 0.0f, -0.9f, 0.0f );
 
 	room->taggedSurfaceLookup = PlCreateHashTable();
@@ -119,7 +114,6 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
 	ApeRoom *room = self;
 	acm_push_ui32( root, "flags", room->flags );
-	acm_push_array_f32( root, "colour", ( float * ) &room->colour, 4 );
 	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
 	acm_push_ui32( root, "reverb", room->reverbPreset );
 
@@ -132,7 +126,6 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *roo
 {
 	ApeRoom *self      = ape_room_create( parent, "temp" );
 	self->flags        = ACM_GET_INT( self->flags, root, "flags", 0 );
-	self->colour       = com_acm_get_colour_f32( root, "colour", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->reverbPreset = ACM_GET_INT( self->flags, root, "reverb", 0 );
 

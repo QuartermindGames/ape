@@ -27,6 +27,8 @@ typedef struct AirshipEntity
 	ApeAudioSource *audioSource;
 
 	ApeModelNode *model;
+
+	unsigned int seed;
 } AirshipEntity;
 #define AIRSHIP_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), SS1_AIRSHIP_CLASS_NAME, AirshipEntity )
 
@@ -53,9 +55,10 @@ static void destroy_airship( ApeEntity *self )
 
 static void update_target_destination( AirshipEntity *self )
 {
-	float x                 = PlGenerateRandomFloat( MAX_RANGE ) - PlGenerateRandomFloat( MAX_RANGE );
-	float z                 = PlGenerateRandomFloat( MAX_RANGE ) - PlGenerateRandomFloat( MAX_RANGE );
-	self->targetDestination = PL_VECTOR3( x, MIN_HEIGHT + PlGenerateRandomFloat( 100.0f ), z );
+	float x = com_random_float( &self->seed, MAX_RANGE ) - com_random_float( &self->seed, MAX_RANGE );
+	float z = com_random_float( &self->seed, MAX_RANGE ) - com_random_float( &self->seed, MAX_RANGE );
+
+	self->targetDestination = PL_VECTOR3( x, MIN_HEIGHT + com_random_float( &self->seed, 100.0f ), z );
 }
 
 static void spawn_airship( ApeEntity *self )
@@ -73,6 +76,8 @@ static void spawn_airship( ApeEntity *self )
 
 	airship->audioSource  = ape_audio_source_create( &PL_VECTOR3( 0.0f, MIN_HEIGHT, 0.0f ), &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
 	airship->engineSample = ape_audio_sample_cache( "sounds/airship/engine.wav" );
+
+	airship->seed = com_random_seed_initialize();
 
 	update_target_destination( airship );
 }

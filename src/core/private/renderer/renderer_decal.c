@@ -8,12 +8,16 @@
 
 static constexpr unsigned int MAX_DECALS = 4096;
 
-static bool showDebugDecals;
+static bool  showDebugDecals;
+static float fadeThreshold;
+static float decalOffset;
 
 typedef struct ApeDecal
 {
 	unsigned int maxLife;
 	unsigned int life;
+
+	float size;
 
 	PLVector3 position;
 	PLVector3 normal;
@@ -68,7 +72,9 @@ static void cleanup_decal( ApeDecal *decal )
 
 void ape_decal_manager_register_console_()
 {
-	PlRegisterConsoleVariable( "decal.showDebug", "Show debug spheres representing active decals.", "true", PL_VAR_BOOL, &showDebugDecals, nullptr, false );
+	PlRegisterConsoleVariable( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, false );
+	PlRegisterConsoleVariable( "decal.fadeThreshold", "", "0.75", PL_VAR_F32, &fadeThreshold, nullptr, true );
+	PlRegisterConsoleVariable( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, true );
 }
 
 ApeDecalManager *ape_decal_manager_create_()
@@ -150,12 +156,18 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 			continue;
 		}
 
-		float       deltaFade = 1.0f - ( float ) decal->life / ( float ) decal->maxLife;
-		PLColourF32 colour    = PL_COLOURF32( 1.0f, 1.0f, 1.0f, deltaFade );
+		float lifetime = 1.0f - ( float ) decal->life / ( float ) decal->maxLife;
+		float fade     = 1.0f;
+		if ( fade > fadeThreshold )
+		{
+			fade = ( lifetime - fadeThreshold ) / fadeThreshold;
+		}
+
+		PLColourF32 colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, fade );
 
 		if ( showDebugDecals )
 		{
-			ape_draw_debug_sphere( decal->position, PL_COLOURF32_TO_U8( colour ), deltaFade );
+			ape_draw_debug_sphere( decal->position, PL_COLOURF32_TO_U8( colour ), decal->size );
 		}
 
 		decal->life++;
@@ -206,7 +218,9 @@ ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *
 		decal->position = *pos;
 		decal->normal   = face->normal;
 
-		decal->maxLife = 200;
+		decal->size = 2.0f;
+
+		decal->maxLife = 500;
 
 		//TODO: add reference
 		decal->material = material;
@@ -251,6 +265,50 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 	ApeDecal *decal;
 	COM_ITERATE_LINKED_LIST( decal, self->decalList, i )
 	{
-		//ape_draw_debug_sphere( decal->position, PL_COLOUR_RED, 1.0f );
+		//TODO: optimise - batch - for now we'll just draw them like this for quickly getting them working
+
+		ApeBrushFace *face = com_shared_ptr_get( decal->facePtr );
+		if ( face == nullptr )
+		{
+			continue;
+		}
+
+		PLVector3 tangent, bitangent;
+		com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = face->normal }, &tangent, &bitangent );
+
+		float     halfSize        = decal->size / 2.0f;
+		PLVector3 tangentOffset   = PlScaleVector3F( tangent, halfSize );
+		PLVector3 bitangentOffset = PlScaleVector3F( bitangent, halfSize );
+
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+
+		static constexpr float UVS[ 4 ][ 2 ] = {
+		        {0.0f, 1.0f}, // bottom-left
+		        {1.0f, 1.0f}, // bottom-right
+		        {0.0f, 0.0f}, // top-left
+		        {1.0f, 0.0f}  // top-right
+		};
+
+		static constexpr float SIGNS[ 4 ][ 2 ] = {
+		        {-1.0f, -1.0f}, // bottom-left
+		        {1.0f,  -1.0f}, // bottom-right
+		        {-1.0f, 1.0f }, // top-left
+		        {1.0f,  1.0f }  // top-right
+		};
+
+		for ( unsigned int j = 0; j < 4; ++j )
+		{
+			// need to project away from the surface ever so slightly...
+			PLVector3 npos   = PlAddVector3( decal->position, PlScaleVector3F( decal->normal, decalOffset ) );
+			PLVector3 vertex = PlAddVector3( npos,
+			                                 PlAddVector3(
+			                                         PlScaleVector3F( tangentOffset, SIGNS[ j ][ 0 ] ),
+			                                         PlScaleVector3F( bitangentOffset, SIGNS[ j ][ 1 ] ) ) );
+
+			PlgImmPushVertex( vertex.x, vertex.y, vertex.z );
+			PlgImmTextureCoord( UVS[ j ][ 0 ], UVS[ j ][ 1 ] );
+		}
+
+		ape_material_draw( decal->material, mesh, nullptr );
 	}
 }

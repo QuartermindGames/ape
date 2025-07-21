@@ -319,10 +319,11 @@ static void draw_dial( int16_t value, float radius, float thickness, float cente
 	assert( material != nullptr );
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	assert( mesh != nullptr );
 
 	static constexpr float RANDOM_VARIATION = 10.0f;
 
-	srand( ( int ) precision );
+	unsigned int seed = ( unsigned int ) precision;
 
 	float endAngle = ( ( ( float ) value ) / 100.0f * 2.0f * PL_PI );
 	for ( float angle = 0.0f; angle <= endAngle; angle += precision )
@@ -330,14 +331,14 @@ static void draw_dial( int16_t value, float radius, float thickness, float cente
 		float x, y;
 
 		// outer
-		x = centerX + ( radius + PlGenerateRandomFloat( RANDOM_VARIATION ) ) * cosf( angle );
-		y = centerY + ( radius + PlGenerateRandomFloat( RANDOM_VARIATION ) ) * sinf( angle );
+		x = centerX + ( radius + com_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
+		y = centerY + ( radius + com_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
 		PlgImmPushVertex( x, y, 0.0f );
 		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 
 		// inner
-		x = centerX + ( ( radius - thickness ) + PlGenerateRandomFloat( RANDOM_VARIATION ) ) * cosf( angle );
-		y = centerY + ( ( radius - thickness ) + PlGenerateRandomFloat( RANDOM_VARIATION ) ) * sinf( angle );
+		x = centerX + ( ( radius - thickness ) + com_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
+		y = centerY + ( ( radius - thickness ) + com_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
 		PlgImmPushVertex( x, y, 0.0f );
 		PlgImmColour( colour->r / 2, colour->g / 2, colour->b / 2, colour->a );
 	}

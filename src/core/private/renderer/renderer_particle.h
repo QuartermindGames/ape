@@ -35,11 +35,13 @@ typedef struct SS_Arl_ParticleEmitter
 
 	PLCollisionAABB bounds;
 
-	struct PLGMesh *mesh;
+	struct PLGMesh     *mesh;
 	struct ApeMaterial *material;
-	ApeMemoryReference mem;
+	ApeMemoryReference  mem;
 
 	struct PLLinkedList *particles;
+
+	unsigned int seed;
 } SS_Arl_ParticleEmitter;
 
 typedef struct SS_Arl_Particle
@@ -54,7 +56,7 @@ typedef struct SS_Arl_Particle
 
 	float scale, oldScale, deltaScale;
 
-	int life;
+	int                     life;
 	SS_Arl_ParticleEmitter *emitter;
 
 	PLCollisionAABB bounds;
@@ -62,9 +64,9 @@ typedef struct SS_Arl_Particle
 	struct PLLinkedListNode *node;
 } SS_Arl_Particle;
 
-void ss_arl_cache_particle_emitter_template( const char *path );
+void                    ss_arl_cache_particle_emitter_template( const char *path );
 SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void );
-void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter );
+void                    ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter );
 
 void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter );
 void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const ApeCamera *camera );

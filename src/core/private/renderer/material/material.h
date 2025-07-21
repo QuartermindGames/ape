@@ -102,6 +102,8 @@ typedef struct ApeMaterialPass
 	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];
 	unsigned int        numVariables;
 
+	PLGCompareFunction depthMode;
+
 	bool depthTest;
 	int  cullMode;
 } ApeMaterialPass;
