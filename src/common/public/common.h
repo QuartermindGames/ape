@@ -195,7 +195,24 @@ void com_profiler_update_samples( void );
 // Math
 /////////////////////////////////////////////////////////////////////////////////////
 
+// forward declare these from plcore -
+// eventually we should move these under the common library
+typedef struct PLCollisionAABB   PLCollisionAABB;
+typedef struct PLCollisionRay    PLCollisionRay;
+typedef struct PLCollisionPlane  PLCollisionPlane;
+typedef struct PLCollisionSphere PLCollisionSphere;
+
 // Plane
+
+typedef struct ComMathPlane
+{
+	PLVector3 normal;
+	float     distance;
+} ComMathPlane;
+
+ComMathPlane *com_math_plane_setup( ComMathPlane *self, const PLVector3 *p0, const PLVector3 *p1, const PLVector3 *p2 );
+float         com_math_plane_distance( const ComMathPlane *self, const PLVector3 *pos );
+void          com_math_plane_basis_vectors( const ComMathPlane *self, PLVector3 *tangentDst, PLVector3 *bitangentDst );
 
 typedef enum ComMathPlaneProjection
 {
@@ -204,9 +221,9 @@ typedef enum ComMathPlaneProjection
 	COM_MATH_PLANE_PROJECTION_XY,
 } ComMathPlaneProjection;
 
-ComMathPlaneProjection com_math_compute_plane_projection( const PLVector3 *normal );
+ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *self );
 
-PLVector3 com_math_project_point_onto_plane( const PLVector3 *point, const PLVector3 *planeOrigin, const PLVector3 *planeNormal );
+PLVector3 com_math_plane_project_point( const ComMathPlane *self, const PLVector3 *point );
 
 //////////
 
@@ -261,13 +278,6 @@ float com_random_uniform_float( unsigned int *seed, float minMax );
 // Collisions
 // TODO: move these into common/common_collision.h
 /////////////////////////////////////////////////////////////////////////////////////
-
-// forward declare these from plcore -
-// eventually we should move these under the common library
-typedef struct PLCollisionAABB   PLCollisionAABB;
-typedef struct PLCollisionRay    PLCollisionRay;
-typedef struct PLCollisionPlane  PLCollisionPlane;
-typedef struct PLCollisionSphere PLCollisionSphere;
 
 typedef struct ComMathRectI32 ComMathRectI32;
 

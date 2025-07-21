@@ -1,14 +1,54 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Purpose: Common math methods.
+// Author:  Mark E. Sowden
 
 #include <plcore/pl_physics.h>
 
 #include "common_private.h"
 
-ComMathPlaneProjection com_math_compute_plane_projection( const PLVector3 *normal )
+/////////////////////////////////////////////////////////////////////////////////////
+// Plane
+/////////////////////////////////////////////////////////////////////////////////////
+
+ComMathPlane *com_math_plane_setup( ComMathPlane *self, const PLVector3 *p0, const PLVector3 *p1, const PLVector3 *p2 )
 {
-	float nx = fabsf( normal->x );
-	float ny = fabsf( normal->y );
-	float nz = fabsf( normal->z );
+	PLVector3 s0 = PlSubtractVector3( *p1, *p0 );
+	PLVector3 s1 = PlSubtractVector3( *p2, *p0 );
+
+	self->normal = PlVector3CrossProduct( s0, s1 );
+	self->normal = PlNormalizeVector3( self->normal );
+
+	self->distance = -PlVector3DotProduct( self->normal, *p0 );
+
+	return self;
+}
+
+float com_math_plane_distance( const ComMathPlane *self, const PLVector3 *pos )
+{
+	return PlVector3DotProduct( self->normal, *pos ) + self->distance;
+}
+
+void com_math_plane_basis_vectors( const ComMathPlane *self, PLVector3 *tangentDst, PLVector3 *bitangentDst )
+{
+	if ( fabsf( self->normal.x ) > fabsf( self->normal.y ) )
+	{
+		*tangentDst = PL_VECTOR3( self->normal.z, 0.0f, -self->normal.x );
+	}
+	else
+	{
+		*tangentDst = PL_VECTOR3( 0.0f, self->normal.z, -self->normal.y );
+	}
+	*tangentDst = PlNormalizeVector3( *tangentDst );
+
+	*bitangentDst = PlVector3CrossProduct( self->normal, *tangentDst );
+	*bitangentDst = PlNormalizeVector3( *bitangentDst );
+}
+
+ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *self )
+{
+	float nx = fabsf( self->normal.x );
+	float ny = fabsf( self->normal.y );
+	float nz = fabsf( self->normal.z );
 
 	if ( ny > nx && ny < nz )
 	{
@@ -22,13 +62,14 @@ ComMathPlaneProjection com_math_compute_plane_projection( const PLVector3 *norma
 	return COM_MATH_PLANE_PROJECTION_YZ;
 }
 
-PLVector3 com_math_project_point_onto_plane( const PLVector3 *point, const PLVector3 *planeOrigin, const PLVector3 *planeNormal )
+PLVector3 com_math_plane_project_point( const ComMathPlane *self, const PLVector3 *point )
 {
-	float d    = -PlVector3DotProduct( *planeNormal, *planeOrigin );
-	float dist = PlVector3DotProduct( *planeNormal, *point ) + d;
-
-	return PlAddVector3( *point, PlScaleVector3F( *planeNormal, -dist ) );
+	float dist = PlVector3DotProduct( self->normal, *point ) + self->distance;
+	return PlAddVector3( *point, PlScaleVector3F( self->normal, -dist ) );
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices )
 {

@@ -84,22 +84,6 @@ bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const
 	return hit;
 }
 
-static void compute_plane_basis_vectors( const PLVector3 *normal, PLVector3 *tangent, PLVector3 *bitangent )
-{
-	if ( fabsf( normal->x ) > fabsf( normal->y ) )
-	{
-		*tangent = PL_VECTOR3( normal->z, 0.0f, -normal->x );
-	}
-	else
-	{
-		*tangent = PL_VECTOR3( 0.0f, normal->z, -normal->y );
-	}
-	*tangent = PlNormalizeVector3( *tangent );
-
-	*bitangent = PlVector3CrossProduct( *normal, *tangent );
-	*bitangent = PlNormalizeVector3( *bitangent );
-}
-
 bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const PLVector3 *normal, const PLVector3 *vertices, unsigned int numVertices, PLVector3 *result )
 {
 	static constexpr unsigned int MAX_EDGES = 16;
@@ -129,7 +113,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	PLVector3 projectedPoint = PlSubtractVector3( sphere->origin, PlScaleVector3F( *normal, distanceToPlane ) );
 
 	PLVector3 tangent, bitangent;
-	compute_plane_basis_vectors( normal, &tangent, &bitangent );
+	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
 	PLVector2 poly2D[ MAX_EDGES ];
 	for ( unsigned int i = 0; i < numVertices; ++i )
@@ -332,7 +316,7 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 	PLVector3 projectedPoint = PlSubtractVector3( closestPoint, PlScaleVector3F( *normal, distanceToPlane ) );
 
 	PLVector3 tangent, bitangent;
-	compute_plane_basis_vectors( normal, &tangent, &bitangent );
+	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
 	PLVector2 poly2D[ MAX_EDGES ];
 	for ( unsigned int i = 0; i < numVertices; ++i )
@@ -445,7 +429,7 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const PL
 	}
 
 	PLVector3 tangent, bitangent;
-	compute_plane_basis_vectors( normal, &tangent, &bitangent );
+	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
 	float minT = PlVector3DotProduct( aabbMin, tangent );
 	float maxT = PlVector3DotProduct( aabbMax, tangent );
