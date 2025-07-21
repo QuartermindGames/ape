@@ -73,7 +73,7 @@ static void cleanup_decal( ApeDecal *decal )
 void ape_decal_manager_register_console_()
 {
 	PlRegisterConsoleVariable( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, false );
-	PlRegisterConsoleVariable( "decal.fadeThreshold", "", "0.75", PL_VAR_F32, &fadeThreshold, nullptr, true );
+	PlRegisterConsoleVariable( "decal.fadeThreshold", "", "0.2", PL_VAR_F32, &fadeThreshold, nullptr, true );
 	PlRegisterConsoleVariable( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, true );
 }
 
@@ -156,18 +156,9 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 			continue;
 		}
 
-		float lifetime = 1.0f - ( float ) decal->life / ( float ) decal->maxLife;
-		float fade     = 1.0f;
-		if ( fade > fadeThreshold )
-		{
-			fade = ( lifetime - fadeThreshold ) / fadeThreshold;
-		}
-
-		PLColourF32 colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, fade );
-
 		if ( showDebugDecals )
 		{
-			ape_draw_debug_sphere( decal->position, PL_COLOURF32_TO_U8( colour ), decal->size );
+			ape_draw_debug_sphere( decal->position, PL_COLOUR_WHITE, decal->size );
 		}
 
 		decal->life++;
@@ -296,6 +287,13 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 		        {1.0f,  1.0f }  // top-right
 		};
 
+		float lifetime = ( float ) decal->life / ( float ) decal->maxLife;
+		float fade     = 1.0f;
+		if ( lifetime > fadeThreshold )
+		{
+			fade = 1.0f - ( lifetime - fadeThreshold ) / ( 1.0f - fadeThreshold );
+		}
+
 		for ( unsigned int j = 0; j < 4; ++j )
 		{
 			// need to project away from the surface ever so slightly...
@@ -306,6 +304,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 			                                         PlScaleVector3F( bitangentOffset, SIGNS[ j ][ 1 ] ) ) );
 
 			PlgImmPushVertex( vertex.x, vertex.y, vertex.z );
+			PlgImmColour( 255, 255, 255, PlFloatToByte( fade ) );
 			PlgImmTextureCoord( UVS[ j ][ 0 ], UVS[ j ][ 1 ] );
 		}
 
