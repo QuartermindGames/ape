@@ -6,9 +6,9 @@
 #include "renderer_particle.h"
 #include "material/material.h"
 
-static void PS_CB_DestroyEmitterTemplate( void *userData )
+static void DestroyEmitterTemplateCallback( void *userData )
 {
-	SS_Arl_ParticleEmitter *emitter = userData;
+	ApeParticleEmitter *emitter = userData;
 	assert( emitter != NULL );
 
 	ape_material_release( emitter->material );
@@ -18,7 +18,7 @@ static void PS_CB_DestroyEmitterTemplate( void *userData )
 	PlFree( emitter );
 }
 
-AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
+AcmBranch *PS_SerializeEmitter( const ApeParticleEmitter *emitter )
 {
 	AcmBranch *root = acm_push_object( nullptr, "particleEmitter" );
 	if ( root != NULL )
@@ -40,7 +40,7 @@ AcmBranch *PS_SerializeEmitter( const SS_Arl_ParticleEmitter *emitter )
 
 void ss_arl_cache_particle_emitter_template( const char *path )
 {
-	SS_Arl_ParticleEmitter *emitter = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
+	ApeParticleEmitter *emitter = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
@@ -51,7 +51,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 		return;
 	}
 
-	emitter = PL_NEW( SS_Arl_ParticleEmitter );
+	emitter = PL_NEW( ApeParticleEmitter );
 
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
@@ -70,28 +70,28 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	emitter->startColourVar = com_acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
 	emitter->endColourVar   = com_acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
-	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, PS_CB_DestroyEmitterTemplate, emitter );
+	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, DestroyEmitterTemplateCallback, emitter );
 	ape_memory_add_reference( &emitter->mem );
 }
 
-SS_Arl_ParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
+ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 {
-	SS_Arl_ParticleEmitter *emitterTemplate = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
+	ApeParticleEmitter *emitterTemplate = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
 		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
 		return nullptr;
 	}
 
-	SS_Arl_ParticleEmitter *emitter = PlMAlloc( sizeof( SS_Arl_ParticleEmitter ), true );
-	memcpy( emitter, emitterTemplate, sizeof( SS_Arl_ParticleEmitter ) );
+	ApeParticleEmitter *emitter = PlMAlloc( sizeof( ApeParticleEmitter ), true );
+	memcpy( emitter, emitterTemplate, sizeof( ApeParticleEmitter ) );
 
 	return emitter;
 }
 
-SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void )
+ApeParticleEmitter *ss_arl_particle_emitter_create( void )
 {
-	SS_Arl_ParticleEmitter *emitter = PL_NEW( SS_Arl_ParticleEmitter );
+	ApeParticleEmitter *emitter = PL_NEW( ApeParticleEmitter );
 	emitter->particles              = PlCreateLinkedList();
 
 	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
@@ -106,7 +106,7 @@ SS_Arl_ParticleEmitter *ss_arl_particle_emitter_create( void )
 	return emitter;
 }
 
-void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
+void ss_arl_particle_emitter_destroy( ApeParticleEmitter *emitter )
 {
 	/* todo: 	push it into a queue to be removed once
 	 * 			all the particles are dead */
@@ -117,7 +117,7 @@ void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
-		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
+		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 		node                      = PlGetNextLinkedListNode( node );
 		PlFree( particle );
 	}
@@ -129,7 +129,7 @@ void ss_arl_particle_emitter_destroy( SS_Arl_ParticleEmitter *emitter )
 	PlFree( emitter );
 }
 
-static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *emitter )
+static void tick_particle( ApeParticle *particle, ApeParticleEmitter *emitter )
 {
 	if ( particle->life <= 0 )
 	{
@@ -165,12 +165,12 @@ static void tick_particle( SS_Arl_Particle *particle, SS_Arl_ParticleEmitter *em
 	particle->life--;
 }
 
-void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
+void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 {
 	int numParticles = PlGetNumLinkedListNodes( emitter->particles );
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
-		SS_Arl_Particle *particle = PL_NEW( SS_Arl_Particle );
+		ApeParticle *particle = PL_NEW( ApeParticle );
 
 		particle->emitter = emitter;
 
@@ -216,7 +216,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
-		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
+		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 		if ( i == 0 )
 		{
 			emitter->bounds.maxs = ( PLVector3 ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
@@ -235,7 +235,7 @@ void ss_arl_particle_emitter_tick( SS_Arl_ParticleEmitter *emitter )
 	emitter->numTicks++;
 }
 
-void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const ApeCamera *camera )
+void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeCamera *camera )
 {
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_ALPHA );
 
@@ -254,7 +254,7 @@ void ss_arl_particle_emitter_draw( const SS_Arl_ParticleEmitter *emitter, const 
 	PLLinkedListNode *node = PlGetFirstNode( emitter->particles );
 	while ( node != NULL )
 	{
-		SS_Arl_Particle *particle = PlGetLinkedListNodeUserData( node );
+		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 
 		//PlgDrawBoundingVolume( &particle->bounds, PlColourF32ToU8( &particle->colour ) );
 

@@ -767,7 +767,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 					const ApeCamera *camera = editorInstance->camera;
 					if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 					{
-						unsigned int seed = ( unsigned int ) brush;
+						unsigned int seed = ( unsigned int ) ( uintptr_t ) brush;
 
 						colour = PL_COLOURU8(
 						        ( uint8_t ) ( com_random_int( &seed ) % 256 ),

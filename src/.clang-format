@@ -51,7 +51,7 @@ NamespaceIndentation: All
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PointerAlignment: Right
-ReflowComments: false
+ReflowComments: Never
 SpaceAfterCStyleCast: true
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false
@@ -71,3 +71,4 @@ SpacesInSquareBrackets: true
 TabWidth: 4
 UseTab: ForIndentation
 SortIncludes: Never
+LineEnding: LF
