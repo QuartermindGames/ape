@@ -6,23 +6,26 @@
 
 #include "renderer.h"
 
-static constexpr unsigned int MAX_DECALS = 4096;
+static constexpr unsigned int MAX_DECALS      = 4096;
+static constexpr unsigned int MAX_DECAL_VERTS = 16;
 
 static bool  showDebugDecals;
 static float fadeThreshold;
 static float decalOffset;
+static int   decalMaxLife;
 
 typedef struct ApeDecal
 {
-	unsigned int maxLife;
 	unsigned int life;
 
-	float size;
+	float angle;
+	float scale;
 
 	PLVector3 position;
 	PLVector3 normal;
 
-	PLVector3 rect[ 4 ];
+	PLVector3    vertices[ MAX_DECAL_VERTS ];
+	unsigned int numVertices;
 
 	PLCollisionAABB bounds;
 
@@ -75,6 +78,7 @@ void ape_decal_manager_register_console_()
 	PlRegisterConsoleVariable( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, false );
 	PlRegisterConsoleVariable( "decal.fadeThreshold", "", "0.2", PL_VAR_F32, &fadeThreshold, nullptr, true );
 	PlRegisterConsoleVariable( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, true );
+	PlRegisterConsoleVariable( "decal.maxLife", "Sets the maximum lifetime of a decal.", "500", PL_VAR_I32, &decalMaxLife, nullptr, true );
 }
 
 ApeDecalManager *ape_decal_manager_create_()
@@ -150,7 +154,7 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 			continue;
 		}
 
-		if ( decal->life >= decal->maxLife )
+		if ( decal->life >= decalMaxLife )
 		{
 			cleanup_decal( decal );
 			continue;
@@ -158,19 +162,128 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 
 		if ( showDebugDecals )
 		{
-			ape_draw_debug_sphere( decal->position, PL_COLOUR_WHITE, decal->size );
+			ape_draw_debug_sphere( decal->position, PL_COLOUR_WHITE, decal->scale );
 		}
 
 		decal->life++;
 	}
 }
 
-static void decal_build_rect( ApeDecal *self )
+static bool decal_build_rect( ApeDecal *self )
 {
+	ApeBrushFace *face = com_shared_ptr_get( self->facePtr );
+	if ( face == nullptr )
+	{
+		return false;
+	}
+
+	PLVector3 tangent, bitangent;
+	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = face->normal }, &tangent, &bitangent );
+
+	if ( self->angle != 0.0f )
+	{
+		PLMatrix4 rotation = PlRotateMatrix4( PL_DEG2RAD( self->angle ), &face->normal );
+		tangent            = PlTransformVector3( &tangent, &rotation );
+		bitangent          = PlTransformVector3( &bitangent, &rotation );
+	}
+
+	float     halfSize        = self->scale / 2.0f;
+	PLVector3 tangentOffset   = PlScaleVector3F( tangent, halfSize );
+	PLVector3 bitangentOffset = PlScaleVector3F( bitangent, halfSize );
+
+	// first, setup the initial quad (and move slightly away from the face to avoid z-fighting)
+	PLVector3 npos      = PlAddVector3( self->position, PlScaleVector3F( self->normal, decalOffset ) );
+	self->numVertices   = 4;
+	self->vertices[ 0 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, -1.0f ), PlScaleVector3F( bitangentOffset, -1.0f ) ) );
+	self->vertices[ 1 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, -1.0f ), PlScaleVector3F( bitangentOffset, 1.0f ) ) );
+	self->vertices[ 2 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, 1.0f ), PlScaleVector3F( bitangentOffset, 1.0f ) ) );
+	self->vertices[ 3 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, 1.0f ), PlScaleVector3F( bitangentOffset, -1.0f ) ) );
+
+	// and now, clip it
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	{
+		const PLVector3 a = *face->edgeLoop[ i ]->position;
+		const PLVector3 b = *face->edgeLoop[ ( i + 1 ) % face->numVertices ]->position;
+
+		PLVector3 edgeNormal = PlSubtractVector3( b, a );
+		edgeNormal           = PlVector3CrossProduct( self->normal, edgeNormal );
+		edgeNormal           = PlNormalizeVector3( edgeNormal );
+
+		// setup the clip plane
+		ComMathPlane plane = {};
+		plane.normal       = edgeNormal;
+		plane.distance     = -PlVector3DotProduct( edgeNormal, a );
+
+		PLVector3 newClippedVertices[ MAX_DECAL_VERTS ] = { {} };
+
+		self->numVertices = ape_renderer_clip_polygon( self->vertices, self->numVertices, &plane, newClippedVertices, MAX_DECAL_VERTS );
+		if ( self->numVertices < 3 || self->numVertices >= MAX_DECAL_VERTS )
+		{
+			return false;
+		}
+
+		memcpy( self->vertices, newClippedVertices, self->numVertices * sizeof( PLVector3 ) );
+	}
+
+	// and FINALLY convert it into a strip *sigh*
+
+#if 1
+	// make sure the order is still the same, if not, flip the face
+	// (this is dumb, why is this happening??)
+
+	self->normal = PlgGenerateVertexNormal( self->vertices[ 0 ], self->vertices[ 1 ], self->vertices[ 2 ] );
+	if ( PlVector3DotProduct( self->normal, face->normal ) < 0.0f )
+	{
+		for ( unsigned int i = 0; i < self->numVertices / 2; i++ )
+		{
+			unsigned int j      = self->numVertices - 1 - i;
+			PLVector3    temp   = self->vertices[ i ];
+			self->vertices[ i ] = self->vertices[ j ];
+			self->vertices[ j ] = temp;
+		}
+	}
+
+#endif
+
+	unsigned int triangleIndex = 0;
+	PLVector3    triangleVertices[ MAX_DECAL_VERTS ];
+	if ( self->numVertices == 4 )
+	{
+		// save us some trouble
+		triangleVertices[ 0 ] = self->vertices[ 0 ];
+		triangleVertices[ 1 ] = self->vertices[ 1 ];
+		triangleVertices[ 2 ] = self->vertices[ 3 ];
+		triangleVertices[ 3 ] = self->vertices[ 2 ];
+		triangleIndex         = 4;
+	}
+	else
+	{
+		for ( unsigned int i = 0; i < self->numVertices; ++i )
+		{
+			if ( triangleIndex >= MAX_DECAL_VERTS - 2 )
+			{
+				ape_warning_( "Hit upper bound decal vertex limit (%u >= %u)!\n", triangleIndex, MAX_DECAL_VERTS - 2 );
+				break;
+			}
+
+			triangleVertices[ triangleIndex++ ] = self->vertices[ i ];
+			if ( i > 1 && i % 2 == 0 )
+			{
+				triangleVertices[ triangleIndex++ ] = self->vertices[ 0 ];
+			}
+		}
+	}
+
+	self->numVertices = triangleIndex;
+	memcpy( self->vertices, triangleVertices, self->numVertices * sizeof( PLVector3 ) );
+
+	return true;
 }
 
-ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos )
+ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos, float angle, float scale )
 {
+	assert( face != nullptr );
+
 	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
 	if ( numDecals >= MAX_DECALS )
 	{
@@ -193,8 +306,6 @@ ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *
 
 		*decal = ( ApeDecal ) {};
 
-		decal->node = PlInsertLinkedListNode( self->decalList, decal );
-
 		if ( face->ptr == nullptr )
 		{
 			// Urgh, this is a botch to work
@@ -208,15 +319,19 @@ ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *
 
 		decal->position = *pos;
 		decal->normal   = face->normal;
-
-		decal->size = 2.0f;
-
-		decal->maxLife = 500;
+		decal->angle    = angle;
+		decal->scale    = scale;
 
 		//TODO: add reference
 		decal->material = material;
 
-		decal_build_rect( decal );
+		if ( !decal_build_rect( decal ) )
+		{
+			com_shared_ptr_release( decal->facePtr );
+			return nullptr;
+		}
+
+		decal->node = PlInsertLinkedListNode( self->decalList, decal );
 
 		return decal;
 	}
@@ -224,7 +339,7 @@ ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *
 	return nullptr;
 }
 
-ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir )
+ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale )
 {
 	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
 	if ( numDecals >= MAX_DECALS )
@@ -242,7 +357,48 @@ ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeR
 		return nullptr;
 	}
 
-	ApeDecal *decal = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection );
+#if 0
+	// cheap shitty way to pass a decal to everything we hit
+	//TODO: a single decal should be able to project onto multiple adjacent faces...
+	//		we don't do this yet because it's not something we track :(
+
+	PLCollisionSphere sphere = {};
+	sphere.origin            = result.intersection;
+	sphere.radius            = scale;
+
+	ApeCollisionCollider collider = {};
+	collider.type                 = APE_COLLISION_TYPE_SPHERE;
+	collider.sphere               = &sphere;
+
+	unsigned int              numHits;
+	ApeCollisionIntersection *hits = ape_room_intersect( room, &collider, &numHits );
+	if ( hits != nullptr )
+	{
+		ApeDecal *decal = nullptr;
+		for ( unsigned int i = 0; i < numHits; ++i )
+		{
+			if ( hits[ i ].face == nullptr )
+			{
+				continue;
+			}
+
+			decal = ape_decal_manager_create_decal_( self, hits[ i ].face, material, &result.intersection, angle, scale );
+			if ( decal == nullptr )
+			{
+				return nullptr;
+			}
+		}
+
+		PL_DELETE( hits );
+
+		return decal;
+	}
+
+	// uh, somehow we hit a ray against a surface but failed to find anything else???
+	// alright then, just make a single decal at the point of intersection...
+#endif
+
+	ApeDecal *decal = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale );
 	if ( decal == nullptr )
 	{
 		return nullptr;
@@ -258,56 +414,46 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 	{
 		//TODO: optimise - batch - for now we'll just draw them like this for quickly getting them working
 
-		ApeBrushFace *face = com_shared_ptr_get( decal->facePtr );
-		if ( face == nullptr )
-		{
-			continue;
-		}
-
-		PLVector3 tangent, bitangent;
-		com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = face->normal }, &tangent, &bitangent );
-
-		float     halfSize        = decal->size / 2.0f;
-		PLVector3 tangentOffset   = PlScaleVector3F( tangent, halfSize );
-		PLVector3 bitangentOffset = PlScaleVector3F( bitangent, halfSize );
-
 		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 
-		static constexpr float UVS[ 4 ][ 2 ] = {
-		        {0.0f, 1.0f}, // bottom-left
-		        {1.0f, 1.0f}, // bottom-right
-		        {0.0f, 0.0f}, // top-left
-		        {1.0f, 0.0f}  // top-right
-		};
-
-		static constexpr float SIGNS[ 4 ][ 2 ] = {
-		        {-1.0f, -1.0f}, // bottom-left
-		        {1.0f,  -1.0f}, // bottom-right
-		        {-1.0f, 1.0f }, // top-left
-		        {1.0f,  1.0f }  // top-right
-		};
-
-		float lifetime = ( float ) decal->life / ( float ) decal->maxLife;
+		float lifetime = ( float ) decal->life / ( float ) decalMaxLife;
 		float fade     = 1.0f;
 		if ( lifetime > fadeThreshold )
 		{
 			fade = 1.0f - ( lifetime - fadeThreshold ) / ( 1.0f - fadeThreshold );
 		}
 
-		for ( unsigned int j = 0; j < 4; ++j )
-		{
-			// need to project away from the surface ever so slightly...
-			PLVector3 npos   = PlAddVector3( decal->position, PlScaleVector3F( decal->normal, decalOffset ) );
-			PLVector3 vertex = PlAddVector3( npos,
-			                                 PlAddVector3(
-			                                         PlScaleVector3F( tangentOffset, SIGNS[ j ][ 0 ] ),
-			                                         PlScaleVector3F( bitangentOffset, SIGNS[ j ][ 1 ] ) ) );
+		PLVector3 tangent, bitangent;
+		com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = decal->normal }, &tangent, &bitangent );
 
-			PlgImmPushVertex( vertex.x, vertex.y, vertex.z );
+		float     cosAngle       = cosf( PL_DEG2RAD( decal->angle ) );
+		float     sinAngle       = sinf( PL_DEG2RAD( decal->angle ) );
+		PLVector3 rotatedTangent = PL_VECTOR3(
+		        tangent.x * cosAngle + bitangent.x * sinAngle,
+		        tangent.y * cosAngle + bitangent.y * sinAngle,
+		        tangent.z * cosAngle + bitangent.z * sinAngle );
+		PLVector3 rotatedBitangent = PL_VECTOR3(
+		        -tangent.x * sinAngle + bitangent.x * cosAngle,
+		        -tangent.y * sinAngle + bitangent.y * cosAngle,
+		        -tangent.z * sinAngle + bitangent.z * cosAngle );
+
+		float textureScale = 1.0f / decal->scale;
+		for ( unsigned int j = 0; j < decal->numVertices; ++j )
+		{
+			PlgImmPushVertex( decal->vertices[ j ].x, decal->vertices[ j ].y, decal->vertices[ j ].z );
+			PlgImmNormal( decal->normal.x, decal->normal.y, decal->normal.z );
 			PlgImmColour( 255, 255, 255, PlFloatToByte( fade ) );
-			PlgImmTextureCoord( UVS[ j ][ 0 ], UVS[ j ][ 1 ] );
+
+			// and now for the texture coords
+			PLVector3 delta = PlSubtractVector3( decal->vertices[ j ], decal->position );
+			PlgImmTextureCoord( 0.5f + PlVector3DotProduct( delta, rotatedTangent ) * textureScale,
+			                    0.5f + PlVector3DotProduct( delta, rotatedBitangent ) * textureScale );
 		}
 
+#if 1
 		ape_material_draw( decal->material, mesh, nullptr );
+#else
+		ape_material_draw( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ), mesh, nullptr );
+#endif
 	}
 }

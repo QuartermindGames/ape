@@ -602,7 +602,7 @@ const char *ape_room_get_save_path( const ApeRoom *self );
 
 PLVector3 ape_room_get_gravity( const ApeRoom *self );
 
-bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir );
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting

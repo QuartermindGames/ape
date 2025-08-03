@@ -448,3 +448,69 @@ ApeCamera *ape_renderer_get_current_camera_()
 {
 	return currentCamera;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Utility Methods
+/////////////////////////////////////////////////////////////////////////////////////
+
+unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int numVertices, const ComMathPlane *plane, PLVector3 *dstVertices, unsigned int dstSize )
+{
+	unsigned int numClippedVertices = 0;
+
+	const PLVector3 *prev     = &vertices[ numVertices - 1 ];
+	float            prevDist = com_math_plane_distance( plane, prev );
+	for ( unsigned int i = 0; i < numVertices; ++i )
+	{
+		const PLVector3 *cur     = &vertices[ i ];
+		float            curDist = com_math_plane_distance( plane, cur );
+		if ( curDist >= 0.f )
+		{
+			if ( prevDist < 0.f )
+			{
+				float t = prevDist / ( prevDist - curDist );
+
+				dstVertices[ numClippedVertices ] = PL_VECTOR3(
+				        prev->x + t * ( cur->x - prev->x ),
+				        prev->y + t * ( cur->y - prev->y ),
+				        prev->z + t * ( cur->z - prev->z ) );
+
+				numClippedVertices++;
+				if ( numClippedVertices >= dstSize )
+				{
+					ape_warning_( "Hit max clip limit for polygon!\n" );
+					break;
+				}
+			}
+
+			dstVertices[ numClippedVertices ] = *cur;
+
+			numClippedVertices++;
+			if ( numClippedVertices >= dstSize )
+			{
+				ape_warning_( "Hit max clip limit for polygon!\n" );
+				break;
+			}
+		}
+		else if ( prevDist >= 0.f )
+		{
+			float t = prevDist / ( prevDist - curDist );
+
+			dstVertices[ numClippedVertices ] = PL_VECTOR3(
+			        prev->x + t * ( cur->x - prev->x ),
+			        prev->y + t * ( cur->y - prev->y ),
+			        prev->z + t * ( cur->z - prev->z ) );
+
+			numClippedVertices++;
+			if ( numClippedVertices >= dstSize )
+			{
+				ape_warning_( "Hit max clip limit for polygon!\n" );
+				break;
+			}
+		}
+
+		prev     = cur;
+		prevDist = curDist;
+	}
+
+	return numClippedVertices;
+}

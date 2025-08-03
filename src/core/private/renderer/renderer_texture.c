@@ -29,7 +29,7 @@ static ApeTexture  *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
 
 static void destroy_texture( void *userData )
 {
-	ApeTexture *texture = ( ApeTexture * ) userData;
+	ApeTexture *texture = userData;
 	if ( texture == NULL || texture->flags & APE_TEXTURE_FLAG_PRESERVE )
 		return;
 
@@ -150,7 +150,6 @@ static void fetch_texture_config( ApeTexture *texture )
 	{
 		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
 	}
-	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
 
 	const char *filterMode = acm_get_string( root, "filterMode", "linear" );
 	if ( strcmp( filterMode, "mipmap_linear" ) == 0 )
@@ -169,7 +168,6 @@ static void fetch_texture_config( ApeTexture *texture )
 	{
 		texture->filterMode = PLG_TEXTURE_FILTER_NEAREST;
 	}
-	PlgSetTextureFilter( texture->internal, texture->filterMode );
 
 	acm_branch_destroy( root );
 }
@@ -196,7 +194,7 @@ void ape_initialize_textures_( void )
 	        {0,   128, 128, 255},
 	        {128, 0,   128, 255},
 	};
-	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( "fallback", ( uint8_t * ) fallbackData, 2, 2, 4, false );
+	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( "fallback", fallbackData, 2, 2, 4, false );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
@@ -223,6 +221,9 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 		PL_DELETE( texture );
 		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
 	}
+
+	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
+	PlgSetTextureFilter( texture->internal, texture->filterMode );
 
 	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
 	ape_memory_add_reference( &texture->reference );

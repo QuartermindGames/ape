@@ -115,6 +115,8 @@ void ape_shutdown_renderer_( void );
  */
 ApeCamera *ape_renderer_get_current_camera_();
 
+unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int numVertices, const struct ComMathPlane *plane, PLVector3 *dstVertices, unsigned int dstSize );
+
 bool ape_get_capture_state_( void );
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport );
@@ -147,8 +149,8 @@ void ape_decal_manager_serialize_( ApeDecalManager *self, AcmBranch *root );
 void ape_decal_manager_clear_( ApeDecalManager *self );
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta );
 
-ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos );
-ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir );
+ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos, float angle, float scale );
+ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale );
 
 void ape_decal_manager_draw_( const ApeDecalManager *self );
 

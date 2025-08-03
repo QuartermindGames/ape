@@ -64,7 +64,7 @@ ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *se
 
 PLVector3 com_math_plane_project_point( const ComMathPlane *self, const PLVector3 *point )
 {
-	float dist = PlVector3DotProduct( self->normal, *point ) + self->distance;
+	float dist = com_math_plane_distance( self, point );
 	return PlAddVector3( *point, PlScaleVector3F( self->normal, -dist ) );
 }
 
