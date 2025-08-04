@@ -469,12 +469,11 @@ unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int 
 			{
 				float t = prevDist / ( prevDist - curDist );
 
-				dstVertices[ numClippedVertices ] = PL_VECTOR3(
+				dstVertices[ numClippedVertices++ ] = PL_VECTOR3(
 				        prev->x + t * ( cur->x - prev->x ),
 				        prev->y + t * ( cur->y - prev->y ),
 				        prev->z + t * ( cur->z - prev->z ) );
 
-				numClippedVertices++;
 				if ( numClippedVertices >= dstSize )
 				{
 					ape_warning_( "Hit max clip limit for polygon!\n" );
@@ -482,9 +481,7 @@ unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int 
 				}
 			}
 
-			dstVertices[ numClippedVertices ] = *cur;
-
-			numClippedVertices++;
+			dstVertices[ numClippedVertices++ ] = *cur;
 			if ( numClippedVertices >= dstSize )
 			{
 				ape_warning_( "Hit max clip limit for polygon!\n" );
@@ -495,12 +492,11 @@ unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int 
 		{
 			float t = prevDist / ( prevDist - curDist );
 
-			dstVertices[ numClippedVertices ] = PL_VECTOR3(
+			dstVertices[ numClippedVertices++ ] = PL_VECTOR3(
 			        prev->x + t * ( cur->x - prev->x ),
 			        prev->y + t * ( cur->y - prev->y ),
 			        prev->z + t * ( cur->z - prev->z ) );
 
-			numClippedVertices++;
 			if ( numClippedVertices >= dstSize )
 			{
 				ape_warning_( "Hit max clip limit for polygon!\n" );

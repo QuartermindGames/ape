@@ -431,9 +431,9 @@ PLVector3 ape_room_get_gravity( const ApeRoom *self )
 	return PlAddVector3( self->gravity, ape_config_.world.gravityModifier );
 }
 
-bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir )
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale )
 {
-	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir ) != nullptr;
+	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale ) != nullptr;
 }
 
 #if !defined( APE_NO_EDITOR )

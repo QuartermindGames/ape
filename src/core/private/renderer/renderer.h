@@ -149,8 +149,8 @@ void ape_decal_manager_serialize_( ApeDecalManager *self, AcmBranch *root );
 void ape_decal_manager_clear_( ApeDecalManager *self );
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta );
 
-ApeDecal *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos, float angle, float scale );
-ApeDecal *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale );
+struct ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos, float angle, float scale );
+struct ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale );
 
 void ape_decal_manager_draw_( const ApeDecalManager *self );
 
