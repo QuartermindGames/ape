@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "qmos/public/qm_os.h"
+
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
 #include <plcore/pl_filesystem.h>

@@ -1,7 +1,6 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
-
 #include "audio.h"
 
 // Provided as a list so we can hand this to the tools later...
@@ -88,14 +87,14 @@ static void test_3d_command( unsigned int, char ** )
 		return;
 	}
 
-	unsigned int seed     = com_random_seed_initialize();
+	unsigned int seed     = qm_os_random_seed_initialize();
 	PLVector3    position = {
-	           .x = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
-	           .y = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
-	           .z = com_random_float( &seed, 1024.0f ) - com_random_float( &seed, 1024.0f ),
+	           .x = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
+	           .y = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
+	           .z = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
     };
 
-	ape_audio_sample_emit( sample, &position, 100, com_random_float( &seed, 2.0f ) );
+	ape_audio_sample_emit( sample, &position, 100, qm_os_random_float( &seed, 2.0f ) );
 	ape_audio_sample_release( sample );
 }
 

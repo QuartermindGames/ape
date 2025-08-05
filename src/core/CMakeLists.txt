@@ -105,6 +105,7 @@ endif ()
 
 target_link_libraries(ApeCore
         OpenAL
+        qm-os
         plcore
         plgraphics
         ApeCommon

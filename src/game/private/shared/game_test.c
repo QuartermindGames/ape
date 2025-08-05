@@ -68,9 +68,9 @@ bool game_test_fire_decal_( ApeRoom *room, const PLVector3 *pos, const PLVector3
 		}
 	}
 
-	unsigned int seed  = com_random_seed_initialize();
-	float        angle = com_random_uniform_float( &seed, 360.0f );
-	float        scale = 1.0f + com_random_float( &seed, 2.0f );
+	unsigned int seed  = qm_os_random_seed_initialize();
+	float        angle = qm_os_random_uniform_float( &seed, 360.0f );
+	float        scale = 1.0f + qm_os_random_float( &seed, 2.0f );
 
 	return ape_room_create_projected_decal( room, material, pos, dir, angle, scale );
 }

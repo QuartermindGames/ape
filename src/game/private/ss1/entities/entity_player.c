@@ -51,8 +51,8 @@ static void spawn_player_entity( ApeEntity *self )
 	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	// just randomize the initial profession for now
-	unsigned int seed  = com_random_seed_initialize();
-	player->profession = com_random_int( &seed ) % SS1_MAX_PROFESSIONS;
+	unsigned int seed  = qm_os_random_seed_initialize();
+	player->profession = qm_os_random_int( &seed ) % SS1_MAX_PROFESSIONS;
 
 	GameMovementComponent *movementComponent = ape_entity_add_component( self, "movement" );
 	assert( movementComponent != nullptr );

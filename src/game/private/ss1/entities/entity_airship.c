@@ -4,9 +4,9 @@
 
 #include "ss1/ss1_game.h"
 
-#include "shared/components/component_health.h"
+#include "ape/ape_public_model.h"
 
-#include <ape/ape_public_model.h>
+#include "shared/components/component_health.h"
 
 static constexpr float MIN_HEIGHT = 4096.0f;
 static constexpr float MAX_RANGE  = 10000.0f;
@@ -55,10 +55,10 @@ static void destroy_airship( ApeEntity *self )
 
 static void update_target_destination( AirshipEntity *self )
 {
-	float x = com_random_float( &self->seed, MAX_RANGE ) - com_random_float( &self->seed, MAX_RANGE );
-	float z = com_random_float( &self->seed, MAX_RANGE ) - com_random_float( &self->seed, MAX_RANGE );
+	float x = qm_os_random_float( &self->seed, MAX_RANGE ) - qm_os_random_float( &self->seed, MAX_RANGE );
+	float z = qm_os_random_float( &self->seed, MAX_RANGE ) - qm_os_random_float( &self->seed, MAX_RANGE );
 
-	self->targetDestination = PL_VECTOR3( x, MIN_HEIGHT + com_random_float( &self->seed, 100.0f ), z );
+	self->targetDestination = PL_VECTOR3( x, MIN_HEIGHT + qm_os_random_float( &self->seed, 100.0f ), z );
 }
 
 static void spawn_airship( ApeEntity *self )
@@ -77,7 +77,7 @@ static void spawn_airship( ApeEntity *self )
 	airship->audioSource  = ape_audio_source_create( &PL_VECTOR3( 0.0f, MIN_HEIGHT, 0.0f ), &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
 	airship->engineSample = ape_audio_sample_cache( "sounds/airship/engine.wav" );
 
-	airship->seed = com_random_seed_initialize();
+	airship->seed = qm_os_random_seed_initialize();
 
 	update_target_destination( airship );
 }

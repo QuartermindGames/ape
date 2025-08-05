@@ -301,33 +301,3 @@ AcmBranch *com_acm_load_file( const char *path, const char *object )
 
 	return root;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Random
-/////////////////////////////////////////////////////////////////////////////////////
-
-unsigned int com_random_seed_initialize()
-{
-	return ( unsigned int ) time( nullptr ) + ( unsigned int ) clock();
-}
-
-int com_random_int( unsigned int *seed )
-{
-	return rand_r( seed );
-}
-
-float com_random_float( unsigned int *seed, float max )
-{
-	return ( float ) rand_r( seed ) / ( RAND_MAX / max );
-}
-
-// http://stackoverflow.com/questions/7978759/generate-float-random-values-also-negative
-static inline float uniform_0_to_1_random( unsigned int *seed )
-{
-	return rand_r( seed ) / ( ( float ) RAND_MAX + 1 );
-}
-
-float com_random_uniform_float( unsigned int *seed, float minMax )
-{
-	return minMax * 2.0f * uniform_0_to_1_random( seed ) - minMax;
-}

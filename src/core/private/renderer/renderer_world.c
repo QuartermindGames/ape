@@ -682,8 +682,8 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 				float     storePower = light->colour.a;
 				for ( unsigned int j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
 				{
-#define JITTER_VARIATION ( PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
-	                       PlGenerateRandomFloat( ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) )
+#define JITTER_VARIATION ( qm_os_random_float( &seed, ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
+	                       qm_os_random_float( &seed, ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) )
 					light->base.position.x += JITTER_VARIATION;
 					light->base.position.y += JITTER_VARIATION;
 					light->base.position.z += JITTER_VARIATION;

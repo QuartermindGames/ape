@@ -101,7 +101,7 @@ ApeParticleEmitter *ss_arl_particle_emitter_create( void )
 	emitter->startScale = 10.0f;
 	emitter->endScale   = 0.0f;
 
-	emitter->seed = com_random_seed_initialize();
+	emitter->seed = qm_os_random_seed_initialize();
 
 	return emitter;
 }
@@ -141,9 +141,9 @@ static void tick_particle( ApeParticle *particle, ApeParticleEmitter *emitter )
 	particle->oldTransform = particle->transform;
 
 	PLVector3 force;
-	force.x = emitter->force.x + com_random_float( &emitter->seed, emitter->forceVar.x );
-	force.y = emitter->force.y + com_random_float( &emitter->seed, emitter->forceVar.y );
-	force.z = emitter->force.z + com_random_float( &emitter->seed, emitter->forceVar.z );
+	force.x = emitter->force.x + qm_os_random_float( &emitter->seed, emitter->forceVar.x );
+	force.y = emitter->force.y + qm_os_random_float( &emitter->seed, emitter->forceVar.y );
+	force.z = emitter->force.z + qm_os_random_float( &emitter->seed, emitter->forceVar.z );
 
 	particle->transform.translation = PlAddVector3( particle->transform.translation, force );
 
@@ -175,22 +175,22 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		particle->emitter = emitter;
 
 		PLVector3 translationMod;
-		translationMod.x                = emitter->transform.translation.x + ( com_random_float( &emitter->seed, emitter->transformVar.translation.x ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.x ) );
-		translationMod.y                = emitter->transform.translation.y + ( com_random_float( &emitter->seed, emitter->transformVar.translation.y ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.y ) );
-		translationMod.z                = emitter->transform.translation.z + ( com_random_float( &emitter->seed, emitter->transformVar.translation.z ) + com_random_float( &emitter->seed, -emitter->transformVar.translation.z ) );
+		translationMod.x                = emitter->transform.translation.x + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.x ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.x ) );
+		translationMod.y                = emitter->transform.translation.y + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.y ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.y ) );
+		translationMod.z                = emitter->transform.translation.z + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.z ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.z ) );
 		particle->transform.translation = translationMod;
 
-		particle->life = emitter->particleLife + emitter->particleLifeVar * com_random_int( &emitter->seed ) % 100;
+		particle->life = emitter->particleLife + emitter->particleLifeVar * qm_os_random_int( &emitter->seed ) % 100;
 
 		PLColourF32 startColour, endColour;
-		startColour.r = emitter->startColour.r + emitter->startColourVar.r * com_random_float( &emitter->seed, 1.0f );
-		startColour.g = emitter->startColour.g + emitter->startColourVar.g * com_random_float( &emitter->seed, 1.0f );
-		startColour.b = emitter->startColour.b + emitter->startColourVar.b * com_random_float( &emitter->seed, 1.0f );
-		startColour.a = emitter->startColour.a + emitter->startColourVar.a * com_random_float( &emitter->seed, 1.0f );
-		endColour.r   = emitter->endColour.r + emitter->endColourVar.r * com_random_float( &emitter->seed, 1.0f );
-		endColour.g   = emitter->endColour.g + emitter->endColourVar.g * com_random_float( &emitter->seed, 1.0f );
-		endColour.b   = emitter->endColour.b + emitter->endColourVar.b * com_random_float( &emitter->seed, 1.0f );
-		endColour.a   = emitter->endColour.a + emitter->endColourVar.a * com_random_float( &emitter->seed, 1.0f );
+		startColour.r = emitter->startColour.r + emitter->startColourVar.r * qm_os_random_float( &emitter->seed, 1.0f );
+		startColour.g = emitter->startColour.g + emitter->startColourVar.g * qm_os_random_float( &emitter->seed, 1.0f );
+		startColour.b = emitter->startColour.b + emitter->startColourVar.b * qm_os_random_float( &emitter->seed, 1.0f );
+		startColour.a = emitter->startColour.a + emitter->startColourVar.a * qm_os_random_float( &emitter->seed, 1.0f );
+		endColour.r   = emitter->endColour.r + emitter->endColourVar.r * qm_os_random_float( &emitter->seed, 1.0f );
+		endColour.g   = emitter->endColour.g + emitter->endColourVar.g * qm_os_random_float( &emitter->seed, 1.0f );
+		endColour.b   = emitter->endColour.b + emitter->endColourVar.b * qm_os_random_float( &emitter->seed, 1.0f );
+		endColour.a   = emitter->endColour.a + emitter->endColourVar.a * qm_os_random_float( &emitter->seed, 1.0f );
 
 		particle->colour        = startColour;
 		particle->deltaColour.r = ( ( endColour.r - startColour.r ) / 1.0f ) / ( float ) particle->life;
@@ -198,8 +198,8 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		particle->deltaColour.b = ( ( endColour.b - startColour.b ) / 1.0f ) / ( float ) particle->life;
 		particle->deltaColour.a = ( ( endColour.a - startColour.a ) / 1.0f ) / ( float ) particle->life;
 
-		float startScale     = emitter->startScale + emitter->scaleVar * com_random_float( &emitter->seed, 1.0f );
-		float endScale       = emitter->endScale + emitter->scaleVar * com_random_float( &emitter->seed, 1.0f );
+		float startScale     = emitter->startScale + emitter->scaleVar * qm_os_random_float( &emitter->seed, 1.0f );
+		float endScale       = emitter->endScale + emitter->scaleVar * qm_os_random_float( &emitter->seed, 1.0f );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
 		particle->bounds.maxs = PL_VECTOR3( 2.0f, 2.0f, 2.0f );
@@ -208,7 +208,7 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		particle->node = PlInsertLinkedListNode( emitter->particles, particle );
 
 		emitter->numTicks = 0;
-		emitter->maxTicks = emitter->emissionRate + emitter->emissionVar * com_random_int( &emitter->seed ) % 100;
+		emitter->maxTicks = emitter->emissionRate + emitter->emissionVar * qm_os_random_int( &emitter->seed ) % 100;
 	}
 
 	/* simulate all of the existing particles that we've emitted */

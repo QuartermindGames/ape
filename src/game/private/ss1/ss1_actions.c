@@ -34,13 +34,13 @@ static void fire_decal( ApeInputState state, const char * )
 
 	// apply some randomisation to the fire direction
 
-	unsigned int seed = com_random_seed_initialize();
+	unsigned int seed = qm_os_random_seed_initialize();
 
 	float     spreadAmount = PL_DEG2RAD( 16.0f );
 	PLVector3 spread       = PL_VECTOR3(
-            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
-            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
-            ( com_random_uniform_float( &seed, spreadAmount ) * spreadAmount ) );
+            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
+            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
+            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ) );
 
 	dir = PlAddVector3( dir, spread );
 	dir = PlNormalizeVector3( dir );
