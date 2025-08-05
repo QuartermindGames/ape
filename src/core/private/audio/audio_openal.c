@@ -186,7 +186,7 @@ static void shutdown_openal( void )
 {
 	ape_print_( "Shutting down OpenAL interface\n" );
 
-#pragma message "TODO: need to make sure *all* sources are wiped out and references released..."
+	//TODO: need to make sure *all* sources are wiped out and references released...
 
 	alcDestroyContext( xalContext );
 	xalContext = nullptr;

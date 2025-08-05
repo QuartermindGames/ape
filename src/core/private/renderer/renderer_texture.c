@@ -39,7 +39,7 @@ static void destroy_texture( void *userData )
 	PL_DELETE( texture );
 }
 
-static ApeTexture *generate_texture( const char *id, uint8_t *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
+static ApeTexture *generate_texture( const char *id, void *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
 {
 	PLColourFormat cFormat;
 	PLImageFormat  iFormat;

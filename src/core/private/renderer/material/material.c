@@ -819,7 +819,7 @@ static void destroy_material_callback( void *userData )
  */
 static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 {
-#pragma message "TODO: draw_rt_sphere"
+	//TODO: draw_rt_sphere
 
 #if 0
 	// make sure we don't draw this again during pass

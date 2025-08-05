@@ -12,6 +12,8 @@
 
 typedef struct PLHashTable PLHashTable;
 
+typedef struct ComMathPlane ComMathPlane;
+
 typedef struct ApeRendererStats
 {
 	unsigned int numBatches;
@@ -115,7 +117,7 @@ void ape_shutdown_renderer_( void );
  */
 ApeCamera *ape_renderer_get_current_camera_();
 
-unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int numVertices, const struct ComMathPlane *plane, PLVector3 *dstVertices, unsigned int dstSize );
+unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int numVertices, const ComMathPlane *plane, PLVector3 *dstVertices, unsigned int dstSize );
 
 bool ape_get_capture_state_( void );
 

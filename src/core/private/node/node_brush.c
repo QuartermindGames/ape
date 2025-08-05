@@ -355,9 +355,9 @@ void ape_brush_face_fit_material( ApeBrushFace *self )
 		PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( self->normal, up ) );
 		PLVector3 v = PlVector3CrossProduct( self->normal, u );
 
-		PLVector2 coord;
-		coord.x = PlVector3DotProduct( *self->edgeLoop[ i ]->position, u );
-		coord.y = PlVector3DotProduct( *self->edgeLoop[ i ]->position, v );
+		//PLVector2 coord;
+		//coord.x = PlVector3DotProduct( *self->edgeLoop[ i ]->position, u );
+		//coord.y = PlVector3DotProduct( *self->edgeLoop[ i ]->position, v );
 	}
 
 	const ApeMaterial *material = self->material;

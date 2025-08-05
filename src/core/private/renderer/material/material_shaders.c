@@ -237,7 +237,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		program->defaultPass.textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 		ape_parse_material_pass_( nullptr, child, &program->defaultPass );
-#pragma message "TODO: materials won't automatically inherit these default changes yet..."
+		//TODO: materials won't automatically inherit these default changes yet...
 	}
 
 	// now lookup all the default uniforms

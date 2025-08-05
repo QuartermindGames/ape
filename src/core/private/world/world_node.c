@@ -341,7 +341,7 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins,
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
-#pragma message "THIS SHOULD BE ACCOUNTING FOR TRANSFORMS YOU DUMB BASTARD"
+		//TODO: THIS SHOULD BE ACCOUNTING FOR TRANSFORMS YOU DUMB BASTARD
 		if ( child->bounds.mins.x < self->bounds.mins.x ) { self->bounds.mins.x = child->bounds.mins.x; }
 		if ( child->bounds.mins.y < self->bounds.mins.y ) { self->bounds.mins.y = child->bounds.mins.y; }
 		if ( child->bounds.mins.z < self->bounds.mins.z ) { self->bounds.mins.z = child->bounds.mins.z; }
