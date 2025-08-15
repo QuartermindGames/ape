@@ -17,4 +17,7 @@ set_target_properties(ApeCommon PROPERTIES
         PREFIX ""
 )
 target_compile_definitions(ApeCommon PRIVATE COMMON_DLL=1)
-target_link_libraries(ApeCommon acm plcore)
+target_link_libraries(ApeCommon acm 
+        qm-os 
+        plcore
+)

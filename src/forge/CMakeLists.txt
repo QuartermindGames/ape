@@ -41,9 +41,6 @@ add_dependencies(Forge
         ApeCore
         FOX-1.6)
 
-set_target_properties(Forge PROPERTIES
-        FOLDER "Shells")
-
 if (NOT UNIX)
     target_include_directories(Forge PRIVATE "glew/include/")
     target_link_directories(Forge PRIVATE "glew/lib/Release/x64/")

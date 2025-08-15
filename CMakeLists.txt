@@ -108,7 +108,7 @@ set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 
 # New QMFW libraries
 add_subdirectory(src/kernel/src/qmos)
-set_target_properties(qm-os PROPERTIES FOLDER "QMFW")
+set_target_properties(qm-os PROPERTIES FOLDER "Kernel")
 
 set(HEI_LIBRARIES qm-os plcore plgraphics)
 
@@ -125,22 +125,45 @@ elseif (MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
 endif ()
 
+####################################################################
 # 3rd party libraries
+
 add_compile_definitions(AL_LIBTYPE_STATIC)
 set(LIBTYPE STATIC)
-add_subdirectory(src/3rdparty/openal-soft)
-add_subdirectory(src/3rdparty/fox)
-add_subdirectory(src/3rdparty/lua)
 
-#add_compile_definitions(-D_ISOC23_SOURCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
+set(ALSOFT_UTILS OFF CACHE BOOL "")
+add_subdirectory(src/3rdparty/openal-soft)
+set_target_properties(alsoft.build_version PROPERTIES FOLDER "3rdParty/OpenAL")
+set_target_properties(alsoft.common PROPERTIES FOLDER "3rdParty/OpenAL")
+set_target_properties(alsoft.excommon PROPERTIES FOLDER "3rdParty/OpenAL")
+set_target_properties(alsoft.fmt PROPERTIES FOLDER "3rdParty/OpenAL")
+set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
+
+add_subdirectory(src/3rdparty/fox)
+set_target_properties(FOX-1.6 PROPERTIES FOLDER "3rdParty")
+
+add_subdirectory(src/3rdparty/lua)
+set_target_properties(lua PROPERTIES FOLDER "3rdParty")
+
+####################################################################
 
 add_subdirectory(src/common)
 add_subdirectory(src/core)
+
 add_subdirectory(src/acm)
+set_target_properties(acm PROPERTIES FOLDER "Kernel")
+
 if (APE_BUILD_TOOLS)
     add_subdirectory(src/forge)
+    set_target_properties(Forge PROPERTIES FOLDER "Tools")
+
     add_subdirectory(src/tools/cook)
+    set_target_properties(cook PROPERTIES FOLDER "Tools")
+
     add_subdirectory(src/tools/fonttool)
+
     add_subdirectory(src/tools/matgen)
+    set_target_properties(matgen PROPERTIES FOLDER "Tools")
 endif ()
 add_subdirectory(src/game) # includes shells
